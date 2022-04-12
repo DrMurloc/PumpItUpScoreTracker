@@ -1,6 +1,4 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-using ScoreTracker.Data;
+using ScoreTracker.Web.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 

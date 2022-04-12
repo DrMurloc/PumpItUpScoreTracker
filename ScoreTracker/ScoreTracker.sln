@@ -3,7 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker", "ScoreTracker\ScoreTracker.csproj", "{EDB5BA85-F16B-4289-8481-6BAAD44FDF32}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.Web", "ScoreTracker\ScoreTracker.Web.csproj", "{EDB5BA85-F16B-4289-8481-6BAAD44FDF32}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{1FF2B02B-1C9D-443C-A0A7-76B2D5C3DA71}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Presentation", "Presentation", "{2C2C3AF1-A1A3-46F0-AB58-B7D784EEB2B7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{9D657636-0E66-469F-9195-1379F737F74F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.Domain", "ScoreTracker.Domain\ScoreTracker.Domain.csproj", "{DD5E1E89-45A8-4DC2-A621-7F28BBBF7CD8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.Application", "ScoreTracker.Application\ScoreTracker.Application.csproj", "{5FE5BBE8-1B05-4295-AF9E-AC89CFFD47C1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.Tests", "ScoreTracker.Tests\ScoreTracker.Tests.csproj", "{D491FB2E-E1CB-47B7-97F3-D154404CEE39}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,9 +27,27 @@ Global
 		{EDB5BA85-F16B-4289-8481-6BAAD44FDF32}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EDB5BA85-F16B-4289-8481-6BAAD44FDF32}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EDB5BA85-F16B-4289-8481-6BAAD44FDF32}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD5E1E89-45A8-4DC2-A621-7F28BBBF7CD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD5E1E89-45A8-4DC2-A621-7F28BBBF7CD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD5E1E89-45A8-4DC2-A621-7F28BBBF7CD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD5E1E89-45A8-4DC2-A621-7F28BBBF7CD8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5FE5BBE8-1B05-4295-AF9E-AC89CFFD47C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FE5BBE8-1B05-4295-AF9E-AC89CFFD47C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FE5BBE8-1B05-4295-AF9E-AC89CFFD47C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FE5BBE8-1B05-4295-AF9E-AC89CFFD47C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D491FB2E-E1CB-47B7-97F3-D154404CEE39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D491FB2E-E1CB-47B7-97F3-D154404CEE39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D491FB2E-E1CB-47B7-97F3-D154404CEE39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D491FB2E-E1CB-47B7-97F3-D154404CEE39}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{EDB5BA85-F16B-4289-8481-6BAAD44FDF32} = {2C2C3AF1-A1A3-46F0-AB58-B7D784EEB2B7}
+		{DD5E1E89-45A8-4DC2-A621-7F28BBBF7CD8} = {1FF2B02B-1C9D-443C-A0A7-76B2D5C3DA71}
+		{5FE5BBE8-1B05-4295-AF9E-AC89CFFD47C1} = {1FF2B02B-1C9D-443C-A0A7-76B2D5C3DA71}
+		{D491FB2E-E1CB-47B7-97F3-D154404CEE39} = {2C2C3AF1-A1A3-46F0-AB58-B7D784EEB2B7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6891F7A7-F4B8-4BAB-BD81-894909DC9465}
