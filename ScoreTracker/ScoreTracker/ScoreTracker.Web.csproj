@@ -6,4 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ScoreTracker.CompositionRoot\ScoreTracker.CompositionRoot.csproj" />
+  </ItemGroup>
+
 </Project>
