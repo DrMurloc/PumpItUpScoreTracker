@@ -1,4 +1,6 @@
 using ScoreTracker.CompositionRoot;
+using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Web.Accessors;
 using ScoreTracker.Web.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,7 +11,9 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
 
 builder.Services.AddCore()
-    .AddInfrastructure();
+    .AddInfrastructure()
+    .AddTransient<ICurrentUserAccessor, HardCodedUserAccessor>()
+    .AddTransient<IDateTimeOffsetAccessor, DateTimeOffsetAccessor>();
 
 var app = builder.Build();
 
