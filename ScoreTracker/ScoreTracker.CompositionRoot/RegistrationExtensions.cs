@@ -22,6 +22,7 @@ public static class RegistrationExtensions
         foreach (var interfaceType in implementationType.GetInterfaces()
                      .Where(i => i.Assembly == typeof(IChartRepository).Assembly))
             builder.AddTransient(interfaceType, implementationType);
+
         return builder.AddDbContext<ChartAttemptDbContext>(o => { o.UseInMemoryDatabase("ChartAttempts"); });
     }
 }
