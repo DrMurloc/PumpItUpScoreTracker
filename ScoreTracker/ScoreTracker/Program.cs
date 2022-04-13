@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using MudBlazor.Services;
 using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
@@ -14,7 +15,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
-builder.Services.AddCore()
+builder.Services.AddMudServices()
+    .AddCore()
     .AddInfrastructure()
     .AddTransient<ICurrentUserAccessor, HardCodedUserAccessor>()
     .AddTransient<IDateTimeOffsetAccessor, DateTimeOffsetAccessor>();

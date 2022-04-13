@@ -7,6 +7,7 @@
 @using System.Reflection.Emit
 @using ScoreTracker.Application.Commands
 @using System.ComponentModel
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
 
 <PageTitle>Record Attempt</PageTitle>
 
@@ -19,44 +20,36 @@
 }
 else
 {
+    
+    <MudItem xs="12" sm="6" md="4">
+        <MudAutocomplete T="string" Value="@_selectedSongName" ResetValueOnEmptyText="true" AutoFocus="true" CoerceText="true" Label="Song" SearchFunc="@SearchSongs" ValueChanged="@SelectSong">
 
-    <select @onchange="SelectSong">
-        <option value="">-- Select Song --</option>
-        @foreach (var name in _songNames)
-        {
-
-            <option value="@name.ToString()">@name</option>
-        }
-    </select>
+        </MudAutocomplete>
+    </MudItem>
     <br/>
 }
 @if (_charts != null)
 {
-    
-    <select @onchange="SelectChart">
+    <MudChipSet Filter="true" Mandatory="true" SelectedValuesChanged="@SelectChart">
         @foreach (var chart in _charts)
         {
-            <option value="@chart">@chart.DifficultyString</option>
+            <MudChip Text="@chart.DifficultyString" Style="@StyleFromChartType(chart.Type)" Value="@chart"></MudChip>
         }
-    </select>
+    </MudChipSet>
     <br/>
 }
 @if (_selectedChart != null && _selectedSongName != null)
 {
-    <select @bind="_selectedLetterGrade">
-        <option value="@LetterGrade.F">@LetterGrade.F.ToString()</option>
-        <option value="@LetterGrade.D">@LetterGrade.D.ToString()</option>
-        <option value="@LetterGrade.C">@LetterGrade.C.ToString()</option>
-        <option value="@LetterGrade.B">@LetterGrade.B.ToString()</option>
-        <option value="@LetterGrade.A">@LetterGrade.A.ToString()</option>
-        <option value="@LetterGrade.S">@LetterGrade.S.ToString()</option>
-        <option value="@LetterGrade.SS">@LetterGrade.SS.ToString()</option>
-        <option value="@LetterGrade.SSS">@LetterGrade.SSS.ToString()</option>
-    </select>
+    <MudRadioGroup @bind-SelectedOption="_selectedLetterGrade">
+        @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
+        {
+            <MudRadio Option="@letterGrade">@letterGrade</MudRadio>
+        }
+    </MudRadioGroup>
     <br/>
-    <label>Broken<input type="checkbox" @bind="_isBroken"/></label>
+    <MudCheckBox @bind-Checked="@_isBroken" Label="Broken"></MudCheckBox>
     <br/>
-    <button class="btn btn-primary" @onclick="SubmitAttempt">Submit</button>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@SubmitAttempt">Record Attempt</MudButton>
 }
 
 @code {
@@ -73,10 +66,24 @@ else
 
     }
 
-    private async Task SelectSong(ChangeEventArgs args)
+    private static string StyleFromChartType(ChartType chartType)
     {
-        _charts = null;
-        var stringValue = args.Value as string;
+        return chartType switch
+        {
+            ChartType.Single => $"color:{Colors.Grey.Lighten5}; background:{Colors.Red.Default}",
+            ChartType.Double =>$"color:{Colors.Grey.Lighten5}; background:{Colors.Green.Default}",
+            ChartType.CoOp => $"color:{Colors.Grey.Darken4}; background:{Colors.Yellow.Default}",
+            ChartType.SinglePerformance => $"color:{Colors.Grey.Lighten5}; background:{Colors.Purple.Default}",
+            ChartType.DoublePerformance => $"color:{Colors.Grey.Darken4}; background:{Colors.Cyan.Lighten2}",
+            _ => $"color:{Colors.Grey.Lighten5}; background:{Colors.Red.Default}"
+            };
+    }
+    private Task<IEnumerable<string>> SearchSongs(string? value)
+    {
+        return Task.FromResult(_songNames?.Where(name => name.ToString().Contains(value??string.Empty, StringComparison.OrdinalIgnoreCase)).Select(name => (string)name) ?? Array.Empty<string>());
+    }
+    private async Task SelectSong(string stringValue)
+    {
         if (string.IsNullOrWhiteSpace(stringValue))
         {
             return;
@@ -84,23 +91,14 @@ else
         var name = (Name)stringValue;
         _selectedSongName = name;
         _charts = await Mediator.Send(new GetChartsBySongQuery(name));
-        _selectedChart = _charts.FirstOrDefault();
     }
 
-    private void SelectChart(ChangeEventArgs args)
+    private void SelectChart(IEnumerable<object> charts)
     {
-        if (args.Value is not string stringValue)
-        {
-            _selectedChart = null;
-            return;
-        }
-        var converter = TypeDescriptor.GetConverter(typeof(Chart));
-        var chartResult = converter.ConvertFrom(stringValue);
-
-        _selectedChart = chartResult as Chart;
+        _selectedChart = charts.FirstOrDefault() as Chart;
 
     }
-
+    
     private async Task SubmitAttempt()
     {
         if (_selectedSongName == null || _selectedChart == null)
