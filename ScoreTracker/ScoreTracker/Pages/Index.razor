@@ -1,9 +1,114 @@
 ﻿@page "/"
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.ValueTypes
+@using System.Reflection.Emit
+@using ScoreTracker.Application.Commands
+@using System.ComponentModel
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Record Attempt</PageTitle>
 
-<h1>Hello, world!</h1>
 
-Welcome to your new app.
+@inject IMediator Mediator
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+<MudCard>
+    <MudCardContent>
+        @if (_songNames == null)
+        {
+            <p>Loading...</p>
+        }
+        else
+        {
+
+            <MudItem xs="12" sm="6" md="4">
+                <MudAutocomplete T="string" Value="@_selectedSongName" ResetValueOnEmptyText="true" AutoFocus="true" CoerceText="true" Label="Song" SearchFunc="@SearchSongs" ValueChanged="@SelectSong">
+
+                </MudAutocomplete>
+            </MudItem>
+            <br/>
+        }
+        @if (_charts != null)
+        {
+            <MudChipSet Filter="true" Mandatory="true" SelectedValuesChanged="@SelectChart">
+                @foreach (var chart in _charts)
+                {
+                    <MudChip Text="@chart.DifficultyString" Style="@StyleFromChartType(chart.Type)" Value="@chart"></MudChip>
+                }
+            </MudChipSet>
+            <br/>
+        }
+        @if (_selectedChart != null && _selectedSongName != null)
+        {
+            <MudRadioGroup @bind-SelectedOption="_selectedLetterGrade">
+                @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
+                {
+                    <MudRadio Option="@letterGrade">@letterGrade</MudRadio>
+                }
+            </MudRadioGroup>
+            <br/>
+            <MudCheckBox @bind-Checked="@_isBroken" Label="Broken"></MudCheckBox>
+        }
+    </MudCardContent>
+    <MudCardActions>
+        <MudButton Disabled="_selectedChart==null || _selectedSongName==null" Variant="Variant.Filled" Color="Color.Primary" OnClick="@SubmitAttempt">Record Attempt</MudButton>
+    </MudCardActions>
+</MudCard>
+@code {
+    private IEnumerable<Name>? _songNames;
+    private IEnumerable<Chart>? _charts;
+
+    private Name? _selectedSongName;
+    private Chart? _selectedChart;
+    private LetterGrade _selectedLetterGrade = LetterGrade.A;
+    private bool _isBroken = false;
+    protected override async Task OnInitializedAsync()
+    {
+        _songNames = await Mediator.Send(new GetSongNamesQuery());
+
+    }
+
+    private static string StyleFromChartType(ChartType chartType)
+    {
+        return chartType switch
+        {
+            ChartType.Single => $"color:{Colors.Grey.Lighten5}; background:{Colors.Red.Default}",
+            ChartType.Double =>$"color:{Colors.Grey.Lighten5}; background:{Colors.Green.Default}",
+            ChartType.CoOp => $"color:{Colors.Grey.Darken4}; background:{Colors.Yellow.Default}",
+            ChartType.SinglePerformance => $"color:{Colors.Grey.Lighten5}; background:{Colors.Purple.Default}",
+            ChartType.DoublePerformance => $"color:{Colors.Grey.Darken4}; background:{Colors.Cyan.Lighten2}",
+            _ => $"color:{Colors.Grey.Lighten5}; background:{Colors.Red.Default}"
+            };
+    }
+    private Task<IEnumerable<string>> SearchSongs(string? value)
+    {
+        return Task.FromResult(_songNames?.Where(name => name.ToString().Contains(value??string.Empty, StringComparison.OrdinalIgnoreCase)).Select(name => (string)name) ?? Array.Empty<string>());
+    }
+    private async Task SelectSong(string stringValue)
+    {
+        if (string.IsNullOrWhiteSpace(stringValue))
+        {
+            return;
+        }
+        var name = (Name)stringValue;
+        _selectedSongName = name;
+        _charts = await Mediator.Send(new GetChartsBySongQuery(name));
+    }
+
+    private void SelectChart(IEnumerable<object> charts)
+    {
+        _selectedChart = charts.FirstOrDefault() as Chart;
+
+    }
+    
+    private async Task SubmitAttempt()
+    {
+        if (_selectedSongName == null || _selectedChart == null)
+        {
+            return;
+        }
+        await Mediator.Send(new RecordAttemptCommand(_selectedSongName.Value, _selectedChart.Level, _selectedChart.Type, _selectedLetterGrade, _isBroken));
+    }
+}

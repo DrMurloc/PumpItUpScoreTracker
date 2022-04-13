@@ -22,6 +22,7 @@ public sealed class ChartAttemptTests
         Assert.True(attemptB < attemptA);
     }
 
+    [Theory]
     [InlineData(LetterGrade.SSS, true)]
     [InlineData(LetterGrade.SS, false)]
     [InlineData(LetterGrade.S, true)]
