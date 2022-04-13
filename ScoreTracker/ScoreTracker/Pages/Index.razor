@@ -1,9 +1,112 @@
 ﻿@page "/"
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.ValueTypes
+@using System.Reflection.Emit
+@using ScoreTracker.Application.Commands
+@using System.ComponentModel
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Record Attempt</PageTitle>
 
-<h1>Hello, world!</h1>
 
-Welcome to your new app.
+@inject IMediator Mediator
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+@if (_songNames == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+
+    <select @onchange="SelectSong">
+        <option value="">-- Select Song --</option>
+        @foreach (var name in _songNames)
+        {
+
+            <option value="@name.ToString()">@name</option>
+        }
+    </select>
+    <br/>
+}
+@if (_charts != null)
+{
+    
+    <select @onchange="SelectChart">
+        @foreach (var chart in _charts)
+        {
+            <option value="@chart">@chart.DifficultyString</option>
+        }
+    </select>
+    <br/>
+}
+@if (_selectedChart != null && _selectedSongName != null)
+{
+    <select @bind="_selectedLetterGrade">
+        <option value="@LetterGrade.F">@LetterGrade.F.ToString()</option>
+        <option value="@LetterGrade.D">@LetterGrade.D.ToString()</option>
+        <option value="@LetterGrade.C">@LetterGrade.C.ToString()</option>
+        <option value="@LetterGrade.B">@LetterGrade.B.ToString()</option>
+        <option value="@LetterGrade.A">@LetterGrade.A.ToString()</option>
+        <option value="@LetterGrade.S">@LetterGrade.S.ToString()</option>
+        <option value="@LetterGrade.SS">@LetterGrade.SS.ToString()</option>
+        <option value="@LetterGrade.SSS">@LetterGrade.SSS.ToString()</option>
+    </select>
+    <br/>
+    <label>Broken<input type="checkbox" @bind="_isBroken"/></label>
+    <br/>
+    <button class="btn btn-primary" @onclick="SubmitAttempt">Submit</button>
+}
+
+@code {
+    private IEnumerable<Name>? _songNames;
+    private IEnumerable<Chart>? _charts;
+
+    private Name? _selectedSongName;
+    private Chart? _selectedChart;
+    private LetterGrade _selectedLetterGrade = LetterGrade.A;
+    private bool _isBroken = false;
+    protected override async Task OnInitializedAsync()
+    {
+        _songNames = await Mediator.Send(new GetSongNamesQuery());
+
+    }
+
+    private async Task SelectSong(ChangeEventArgs args)
+    {
+        _charts = null;
+        var stringValue = args.Value as string;
+        if (string.IsNullOrWhiteSpace(stringValue))
+        {
+            return;
+        }
+        var name = (Name)stringValue;
+        _selectedSongName = name;
+        _charts = await Mediator.Send(new GetChartsBySongQuery(name));
+        _selectedChart = _charts.FirstOrDefault();
+    }
+
+    private void SelectChart(ChangeEventArgs args)
+    {
+        if (args.Value is not string stringValue)
+        {
+            _selectedChart = null;
+            return;
+        }
+        var converter = TypeDescriptor.GetConverter(typeof(Chart));
+        var chartResult = converter.ConvertFrom(stringValue);
+
+        _selectedChart = chartResult as Chart;
+
+    }
+
+    private async Task SubmitAttempt()
+    {
+        if (_selectedSongName == null || _selectedChart == null)
+        {
+            return;
+        }
+        await Mediator.Send(new RecordAttemptCommand(_selectedSongName.Value, _selectedChart.Level, _selectedChart.Type, _selectedLetterGrade, _isBroken));
+    }
+}

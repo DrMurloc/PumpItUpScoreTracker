@@ -1,7 +1,13 @@
+using System.ComponentModel;
 using ScoreTracker.CompositionRoot;
+using ScoreTracker.Data.Persistence;
+using ScoreTracker.Data.Persistence.Entities;
+using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Web.Accessors;
 using ScoreTracker.Web.Data;
+using ScoreTracker.Web.TypeConverters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,4 +40,72 @@ app.UseRouting();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
+//<Data seeding>, remove on external persistence refactor
+
+using (var scope = app.Services.CreateScope())
+{
+    var database = scope.ServiceProvider.GetRequiredService<ChartAttemptDbContext>();
+
+    var songId = Guid.NewGuid();
+    var songs = new SongEntity[]
+    {
+        new()
+        {
+            Id = songId,
+            Name = "I'm So Sick"
+        }
+    };
+    var charts = new ChartEntity[]
+    {
+        new()
+        {
+            Id = Guid.NewGuid(),
+            Level = 3,
+            SongId = songId,
+            Type = ChartType.Single.ToString()
+        },
+        new()
+        {
+            Id = Guid.NewGuid(),
+            Level = 14,
+            SongId = songId,
+            Type = ChartType.Double.ToString()
+        },
+        new()
+        {
+            Id = Guid.NewGuid(),
+            Level = 28,
+            SongId = songId,
+            Type = ChartType.DoublePerformance.ToString()
+        },
+        new()
+        {
+            Id = Guid.NewGuid(),
+            Level = 20,
+            SongId = songId,
+            Type = ChartType.SinglePerformance.ToString()
+        },
+        new()
+        {
+            Id = Guid.NewGuid(),
+            Level = 3,
+            SongId = songId,
+            Type = ChartType.CoOp.ToString()
+        }
+    };
+    database.Song.AddRange(songs);
+    database.Chart.AddRange(charts);
+    database.SaveChanges();
+}
+
+//</Data seeding>
+
+
+AssignTypeConverter<Chart, ChartTypeConverter>();
+
 app.Run();
+
+void AssignTypeConverter<TType, TConverterType>()
+{
+    TypeDescriptor.AddAttributes(typeof(TType), new TypeConverterAttribute(typeof(TConverterType)));
+}

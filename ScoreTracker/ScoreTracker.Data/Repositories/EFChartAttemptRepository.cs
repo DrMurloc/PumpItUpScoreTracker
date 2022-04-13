@@ -65,7 +65,6 @@ public sealed class EFChartAttemptRepository : IChartAttemptRepository
 
         return await (from s in _database.Song
             join c in _database.Chart on s.Id equals c.SongId
-            join ba in _database.BestAttempt on c.Id equals ba.ChartId
             where s.Name == songString && c.Level == levelInt && c.Type == typeString
             select c.Id).SingleAsync(cancellationToken);
     }
