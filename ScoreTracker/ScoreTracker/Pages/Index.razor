@@ -14,44 +14,48 @@
 
 @inject IMediator Mediator
 
-@if (_songNames == null)
-{
-    <p>Loading...</p>
-}
-else
-{
-    
-    <MudItem xs="12" sm="6" md="4">
-        <MudAutocomplete T="string" Value="@_selectedSongName" ResetValueOnEmptyText="true" AutoFocus="true" CoerceText="true" Label="Song" SearchFunc="@SearchSongs" ValueChanged="@SelectSong">
-
-        </MudAutocomplete>
-    </MudItem>
-    <br/>
-}
-@if (_charts != null)
-{
-    <MudChipSet Filter="true" Mandatory="true" SelectedValuesChanged="@SelectChart">
-        @foreach (var chart in _charts)
+<MudCard>
+    <MudCardContent>
+        @if (_songNames == null)
         {
-            <MudChip Text="@chart.DifficultyString" Style="@StyleFromChartType(chart.Type)" Value="@chart"></MudChip>
+            <p>Loading...</p>
         }
-    </MudChipSet>
-    <br/>
-}
-@if (_selectedChart != null && _selectedSongName != null)
-{
-    <MudRadioGroup @bind-SelectedOption="_selectedLetterGrade">
-        @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
+        else
         {
-            <MudRadio Option="@letterGrade">@letterGrade</MudRadio>
-        }
-    </MudRadioGroup>
-    <br/>
-    <MudCheckBox @bind-Checked="@_isBroken" Label="Broken"></MudCheckBox>
-    <br/>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@SubmitAttempt">Record Attempt</MudButton>
-}
 
+            <MudItem xs="12" sm="6" md="4">
+                <MudAutocomplete T="string" Value="@_selectedSongName" ResetValueOnEmptyText="true" AutoFocus="true" CoerceText="true" Label="Song" SearchFunc="@SearchSongs" ValueChanged="@SelectSong">
+
+                </MudAutocomplete>
+            </MudItem>
+            <br/>
+        }
+        @if (_charts != null)
+        {
+            <MudChipSet Filter="true" Mandatory="true" SelectedValuesChanged="@SelectChart">
+                @foreach (var chart in _charts)
+                {
+                    <MudChip Text="@chart.DifficultyString" Style="@StyleFromChartType(chart.Type)" Value="@chart"></MudChip>
+                }
+            </MudChipSet>
+            <br/>
+        }
+        @if (_selectedChart != null && _selectedSongName != null)
+        {
+            <MudRadioGroup @bind-SelectedOption="_selectedLetterGrade">
+                @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
+                {
+                    <MudRadio Option="@letterGrade">@letterGrade</MudRadio>
+                }
+            </MudRadioGroup>
+            <br/>
+            <MudCheckBox @bind-Checked="@_isBroken" Label="Broken"></MudCheckBox>
+        }
+    </MudCardContent>
+    <MudCardActions>
+        <MudButton Disabled="_selectedChart==null || _selectedSongName==null" Variant="Variant.Filled" Color="Color.Primary" OnClick="@SubmitAttempt">Record Attempt</MudButton>
+    </MudCardActions>
+</MudCard>
 @code {
     private IEnumerable<Name>? _songNames;
     private IEnumerable<Chart>? _charts;
