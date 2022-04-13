@@ -6,7 +6,6 @@ using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Web.Accessors;
-using ScoreTracker.Web.Data;
 using ScoreTracker.Web.TypeConverters;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,7 +13,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<WeatherForecastService>();
 
 builder.Services.AddCore()
     .AddInfrastructure()
