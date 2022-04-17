@@ -1,7 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.Data.Persistence.Entities;
 
+[Index(nameof(Level))]
+[Index(nameof(Type))]
+[Index(nameof(SongId))]
 public sealed class ChartEntity
 {
     [Key] public Guid Id { get; set; }

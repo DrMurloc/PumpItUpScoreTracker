@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.Data.Persistence.Entities;
 
+[Index(nameof(UserId), nameof(ChartId))]
 public sealed class BestAttemptEntity
 {
     [Key] public Guid Id { get; set; }
