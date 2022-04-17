@@ -1,12 +1,8 @@
-﻿@page "/BestAttempts"
+﻿@page "/"
 @using MediatR
 @using ScoreTracker.Application.Queries
-@using ScoreTracker.Domain.Enums
-@using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.ValueTypes
-@using ScoreTracker.Application.Commands
 @using ScoreTracker.Web.Dtos
-@using ChartType = ScoreTracker.Domain.Enums.ChartType
 
 <PageTitle>Best Attempts</PageTitle>
 <MudSelect T="DifficultyLevel" Value="@_selectedLevel" ValueChanged="ChangeDifficulty">

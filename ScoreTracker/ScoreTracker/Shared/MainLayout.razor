@@ -5,10 +5,28 @@
 <MudThemeProvider/>
 <MudDialogProvider/>
 <MudSnackbarProvider/>
-<div class="page">
-    <main>
-        <article class="content px-4">
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Edge="Edge.Start" OnClick="_=>_isOpen=!_isOpen"></MudIconButton>
+    </MudAppBar>
+    <MudDrawer @bind-Open="_isOpen">
+        <MudDrawerHeader>
+            <MudText Type="Typo.h6">Score Tracker</MudText>
+        </MudDrawerHeader>
+        <MudNavMenu>
+            <MudNavLink Href="/">Best Attempts</MudNavLink>
+            <MudNavLink Href="/Record">Record Attempt</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+    
+    <MudMainContent>
+       <MudContainer>
             @Body
-        </article>
-    </main>
-</div>
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+@code
+{
+    private bool _isOpen = false;
+}
