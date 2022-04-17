@@ -60,7 +60,7 @@ using (var scope = app.Services.CreateScope())
         new()
         {
             Id = Guid.NewGuid(),
-            Level = 3,
+            Level = 14,
             SongId = songId,
             Type = ChartType.Single.ToString()
         },
@@ -74,21 +74,21 @@ using (var scope = app.Services.CreateScope())
         new()
         {
             Id = Guid.NewGuid(),
-            Level = 28,
+            Level = 14,
             SongId = songId,
             Type = ChartType.DoublePerformance.ToString()
         },
         new()
         {
             Id = Guid.NewGuid(),
-            Level = 20,
+            Level = 14,
             SongId = songId,
             Type = ChartType.SinglePerformance.ToString()
         },
         new()
         {
             Id = Guid.NewGuid(),
-            Level = 3,
+            Level = 14,
             SongId = songId,
             Type = ChartType.CoOp.ToString()
         }

@@ -17,10 +17,10 @@
 </MudSelect>
 
 <MudDataGrid T="BestAttemptDto" Items="_bestAttempts" Hover="true" Striped="true" Dense="true" ReadOnly="false"
-             EditMode="@DataGridEditMode.Cell" CommittedItemChanges="@UpdateBest" EditTrigger="@DataGridEditTrigger.OnRowClick">
+             EditMode="@DataGridEditMode.Cell" CommittedItemChanges="@UpdateBest" EditTrigger="@DataGridEditTrigger.OnRowClick" Groupable="true">
     <Columns>
         <Column T="BestAttemptDto" Field="SongName" Title="Song" IsEditable="false"></Column>
-        <Column T="BestAttemptDto" Field="ChartType" Title="Type" IsEditable="false"></Column>
+        <Column T="BestAttemptDto" Field="ChartType" Title="Type" IsEditable="false" Grouping="true"></Column>
         <Column T="BestAttemptDto" Field="LetterGrade" Title="Letter">
             <EditTemplate>
                 <MudSelect T="string" Value="@context.Item.LetterGrade" ValueChanged="@(newValue => SetLetter(context.Item,newValue))" Clearable="true" Margin="@Margin.Dense">
