@@ -88,7 +88,7 @@ using (var scope = app.Services.CreateScope())
         new()
         {
             Id = Guid.NewGuid(),
-            Level = 14,
+            Level = 3,
             SongId = songId,
             Type = ChartType.CoOp.ToString()
         }

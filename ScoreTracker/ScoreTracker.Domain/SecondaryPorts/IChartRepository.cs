@@ -10,4 +10,6 @@ public interface IChartRepository
 
     Task<IEnumerable<Chart>> GetChartsByDifficulty(DifficultyLevel difficultyLevel,
         CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<Chart>> GetCoOpCharts(CancellationToken cancellationToken = default);
 }
