@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using ScoreTracker.Application.Handlers;
+using ScoreTracker.Data.Configuration;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Repositories;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -15,14 +16,18 @@ public static class RegistrationExtensions
         return builder.AddMediatR(typeof(RecordAttemptHandler));
     }
 
-    public static IServiceCollection AddInfrastructure(this IServiceCollection builder)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection builder, SqlConfiguration configuration)
     {
         foreach (var implementationType in typeof(EFChartRepository).Assembly.GetTypes()
                 )
         foreach (var interfaceType in implementationType.GetInterfaces()
                      .Where(i => i.Assembly == typeof(IChartRepository).Assembly))
             builder.AddTransient(interfaceType, implementationType);
-
-        return builder.AddDbContext<ChartAttemptDbContext>(o => { o.UseInMemoryDatabase("ChartAttempts"); });
+        builder.Configure<SqlConfiguration>(o =>
+        {
+            o.ConnectionString = configuration.ConnectionString;
+            o.Schema = configuration.Schema;
+        });
+        return builder.AddDbContext<ChartAttemptDbContext>(o => { o.UseSqlServer(configuration.ConnectionString); });
     }
 }
