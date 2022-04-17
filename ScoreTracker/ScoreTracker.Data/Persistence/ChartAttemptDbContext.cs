@@ -21,7 +21,7 @@ public sealed class ChartAttemptDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        builder.HasDefaultSchema(_configuration.Schema);
+        builder.HasDefaultSchema("scores");
 
         builder.Entity<BestAttemptEntity>().ToTable("BestAttempt");
 

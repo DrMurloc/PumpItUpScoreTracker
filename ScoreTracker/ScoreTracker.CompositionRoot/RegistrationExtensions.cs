@@ -23,11 +23,7 @@ public static class RegistrationExtensions
         foreach (var interfaceType in implementationType.GetInterfaces()
                      .Where(i => i.Assembly == typeof(IChartRepository).Assembly))
             builder.AddTransient(interfaceType, implementationType);
-        builder.Configure<SqlConfiguration>(o =>
-        {
-            o.ConnectionString = configuration.ConnectionString;
-            o.Schema = configuration.Schema;
-        });
+        builder.Configure<SqlConfiguration>(o => { o.ConnectionString = configuration.ConnectionString; });
         return builder.AddDbContext<ChartAttemptDbContext>(o => { o.UseSqlServer(configuration.ConnectionString); });
     }
 }
