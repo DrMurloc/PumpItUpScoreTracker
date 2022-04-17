@@ -23,9 +23,15 @@ public sealed class ChartAttemptDbContext : DbContext
     {
         builder.HasDefaultSchema("scores");
 
-        builder.Entity<BestAttemptEntity>().ToTable("BestAttempt");
+        builder.Entity<BestAttemptEntity>().ToTable("BestAttempt")
+            .HasOne<ChartEntity>()
+            .WithMany()
+            .HasForeignKey(ba => ba.ChartId);
 
-        builder.Entity<ChartEntity>().ToTable("Chart");
+        builder.Entity<ChartEntity>().ToTable("Chart")
+            .HasOne<SongEntity>()
+            .WithMany()
+            .HasForeignKey(c => c.SongId);
 
         builder.Entity<SongEntity>().ToTable("Song");
     }
