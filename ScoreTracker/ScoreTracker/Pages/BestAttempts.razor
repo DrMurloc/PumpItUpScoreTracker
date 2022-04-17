@@ -9,7 +9,7 @@
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 
 <PageTitle>Best Attempts</PageTitle>
-<MudSelect T="DifficultyLevel" ValueChanged="ChangeDifficulty">
+<MudSelect T="DifficultyLevel" Value="@_selectedLevel" ValueChanged="ChangeDifficulty">
     @for (var level = DifficultyLevel.Min; level <DifficultyLevel.Max; level++)
     {
         var currentLevel = level;
