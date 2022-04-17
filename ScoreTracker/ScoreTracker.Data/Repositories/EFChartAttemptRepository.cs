@@ -27,6 +27,7 @@ public sealed class EFChartAttemptRepository : IChartAttemptRepository
         ).FirstOrDefaultAsync(cancellationToken);
     }
 
+
     public async Task SetBestAttempt(Guid userId, Chart chart, ChartAttempt attempt, DateTimeOffset recordedOn,
         CancellationToken cancellationToken = default)
     {

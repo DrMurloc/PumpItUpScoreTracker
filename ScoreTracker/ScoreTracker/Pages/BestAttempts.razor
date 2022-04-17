@@ -1,0 +1,47 @@
+﻿@page "/BestAttempts"
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Web.Dtos
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+
+<PageTitle>Best Attempts</PageTitle>
+<MudSelect T="DifficultyLevel" Value="@_selectedLevel" ValueChanged="ChangeDifficulty">
+    @for (var level = DifficultyLevel.Min; level <DifficultyLevel.Max; level++)
+    {
+        var currentLevel = level;
+        <MudSelectItem Value="@currentLevel">@currentLevel</MudSelectItem>
+    }
+    <MudSelectItem Value="DifficultyLevel.From(28)">28</MudSelectItem>
+</MudSelect>
+
+<MudDataGrid Items="_bestAttempts" Hover="true" Striped="true" Dense="true">
+    <Columns>
+        <Column T="BestAttemptDto" Field="SongName" Title="Song"></Column>
+        <Column T="BestAttemptDto" Field="ChartType" Title="Type"></Column>
+        <Column T="BestAttemptDto" Field="LetterGrade" Title="Letter"></Column>
+        <Column T="BestAttemptDto" Field="IsBroken" Title="Broken"></Column>
+    </Columns>
+</MudDataGrid>
+@inject IMediator Mediator
+
+
+
+@code {
+    private IEnumerable<BestAttemptDto> _bestAttempts = Array.Empty<BestAttemptDto>();
+    private DifficultyLevel _selectedLevel = 14;
+    private async Task ChangeDifficulty(DifficultyLevel level)
+    {
+        _selectedLevel = level;
+        _bestAttempts = (await Mediator.Send(new GetBestChartAttemptsByDifficultyQuery(level))).Select(BestAttemptDto.From);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await ChangeDifficulty(_selectedLevel);
+
+    }
+
+}
