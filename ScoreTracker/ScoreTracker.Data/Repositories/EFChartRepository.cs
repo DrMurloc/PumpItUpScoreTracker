@@ -29,4 +29,14 @@ public sealed class EFChartRepository : IChartRepository
             where s.Name == nameString
             select new Chart(s.Name, Enum.Parse<ChartType>(c.Type), c.Level)).ToArrayAsync(cancellationToken);
     }
+
+    public async Task<IEnumerable<Chart>> GetChartsByDifficulty(DifficultyLevel difficultyLevel,
+        CancellationToken cancellationToken = default)
+    {
+        var difficultyInt = (int)difficultyLevel;
+        return await (from c in _database.Chart
+            join s in _database.Song on c.SongId equals s.Id
+            where c.Level == difficultyInt
+            select new Chart(s.Name, Enum.Parse<ChartType>(c.Type), c.Level)).ToArrayAsync(cancellationToken);
+    }
 }
