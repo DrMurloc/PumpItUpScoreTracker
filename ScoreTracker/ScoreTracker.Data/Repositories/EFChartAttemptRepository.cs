@@ -27,6 +27,20 @@ public sealed class EFChartAttemptRepository : IChartAttemptRepository
         ).FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task RemoveBestAttempt(Guid userId, Chart chart, CancellationToken cancellationToken = default)
+    {
+        var chartId = await GetChartId(chart, cancellationToken);
+
+        var previousBest = await _database.BestAttempt.Where(ba => ba.ChartId == chartId && ba.UserId == userId)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (previousBest != null)
+        {
+            _database.BestAttempt.Remove(previousBest);
+            await _database.SaveChangesAsync(cancellationToken);
+        }
+    }
+
 
     public async Task SetBestAttempt(Guid userId, Chart chart, ChartAttempt attempt, DateTimeOffset recordedOn,
         CancellationToken cancellationToken = default)

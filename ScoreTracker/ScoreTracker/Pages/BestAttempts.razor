@@ -1,43 +1,87 @@
 ﻿@page "/"
 @using MediatR
+@using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Web.Dtos
-
+@using ChartType = ScoreTracker.Domain.Enums.ChartType;
 <PageTitle>Best Attempts</PageTitle>
-<MudSelect T="DifficultyLevel" Value="@_selectedLevel" ValueChanged="ChangeDifficulty">
+<MudSelect T="string" Value="@_selectedFilter" ValueChanged="ChangeSelectedFilter">
     @for (var level = DifficultyLevel.Min; level <DifficultyLevel.Max; level++)
     {
         var currentLevel = level;
-        <MudSelectItem Value="@currentLevel">@currentLevel</MudSelectItem>
+        <MudSelectItem Value="@currentLevel.ToString()">@currentLevel</MudSelectItem>
     }
-    <MudSelectItem Value="DifficultyLevel.From(28)">28</MudSelectItem>
+    <MudSelectItem Value="@("28")">28</MudSelectItem>
+    <MudSelectItem Value="@(nameof(ChartType.CoOp))">CoOp</MudSelectItem>
 </MudSelect>
 
-<MudDataGrid Items="_bestAttempts" Hover="true" Striped="true" Dense="true">
+<MudDataGrid T="BestAttemptDto" Items="_bestAttempts" Hover="true" Striped="true" Dense="true" ReadOnly="false"
+             EditMode="@DataGridEditMode.Cell" CommittedItemChanges="@UpdateBest" EditTrigger="@DataGridEditTrigger.OnRowClick" Groupable="true">
     <Columns>
-        <Column T="BestAttemptDto" Field="SongName" Title="Song"></Column>
-        <Column T="BestAttemptDto" Field="ChartType" Title="Type"></Column>
-        <Column T="BestAttemptDto" Field="LetterGrade" Title="Letter"></Column>
-        <Column T="BestAttemptDto" Field="IsBroken" Title="Broken"></Column>
+        <Column T="BestAttemptDto" Field="SongName" Title="Song" IsEditable="false"></Column>
+        <Column T="BestAttemptDto" Field="ChartType" Title="Type" IsEditable="false" Hidden="@(_selectedFilter==nameof(ChartType.CoOp))"></Column>
+        <Column T="BestAttemptDto" Field="PlayerCount" Title="Players" IsEditable="false" Hidden="@(_selectedFilter!=nameof(ChartType.CoOp))"></Column>
+        <Column T="BestAttemptDto" Field="LetterGrade" Title="Letter">
+            <EditTemplate>
+                <MudSelect T="string" Value="@context.Item.LetterGrade" ValueChanged="@(newValue => SetLetter(context.Item,newValue))" Clearable="true" Margin="@Margin.Dense">
+                    @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
+                    {
+                        <MudSelectItem Value="@letterGrade.ToString()">@letterGrade.ToString()</MudSelectItem>
+                    }
+                </MudSelect>
+            </EditTemplate>
+        </Column>
+        <Column T="BestAttemptDto" Field="IsBroken" Title="Broken">
+            <EditTemplate>
+                <MudCheckBox T="bool" Checked="context.Item.IsBroken" CheckedChanged="@(newValue=>SetBroken(context.Item,newValue))" Required Margin="@Margin.Dense"></MudCheckBox>
+            </EditTemplate>
+        </Column>
     </Columns>
 </MudDataGrid>
+
 @inject IMediator Mediator
-
-
 
 @code {
     private IEnumerable<BestAttemptDto> _bestAttempts = Array.Empty<BestAttemptDto>();
-    private DifficultyLevel _selectedLevel = 14;
-    private async Task ChangeDifficulty(DifficultyLevel level)
+
+    private string _selectedFilter = "14";
+    
+    private async Task ChangeSelectedFilter(string filter)
     {
-        _selectedLevel = level;
-        _bestAttempts = (await Mediator.Send(new GetBestChartAttemptsByDifficultyQuery(level))).Select(BestAttemptDto.From);
+        _selectedFilter = filter;
+
+        if (DifficultyLevel.TryParse(filter, out var level))
+        {
+            
+            _bestAttempts = (await Mediator.Send(new GetBestChartAttemptsByDifficultyQuery(level))).Select(BestAttemptDto.From).ToArray();
+            return;
+        }
+        _bestAttempts = filter switch
+        {
+            nameof(ChartType.CoOp) => (await Mediator.Send(new GetCoOpBestAttemptsQuery())).Select(BestAttemptDto.From).ToArray(),
+            _ => _bestAttempts
+            };
     }
     protected override async Task OnInitializedAsync()
     {
-        await ChangeDifficulty(_selectedLevel);
+        await ChangeSelectedFilter(_selectedFilter);
 
     }
 
+    private async Task SetBroken(BestAttemptDto dto, bool newBroken)
+    {
+        dto.IsBroken = newBroken;
+        await UpdateBest(dto);
+    }
+    private async Task SetLetter(BestAttemptDto dto, string newLetterGrade)
+    {
+        dto.LetterGrade = newLetterGrade;
+        await UpdateBest(dto);
+    }
+    private async Task UpdateBest(BestAttemptDto dto)
+    {
+        await Mediator.Send(new UpdateBestAttemptCommand(dto.SongName, Enum.Parse<ChartType>(dto.ChartType), dto.Level, Enum.TryParse<LetterGrade>(dto.LetterGrade,out var grade)?grade:null, dto.IsBroken));
+    }
 }

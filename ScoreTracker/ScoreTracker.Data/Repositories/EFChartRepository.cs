@@ -36,7 +36,15 @@ public sealed class EFChartRepository : IChartRepository
         var difficultyInt = (int)difficultyLevel;
         return await (from c in _database.Chart
             join s in _database.Song on c.SongId equals s.Id
-            where c.Level == difficultyInt
+            where c.Level == difficultyInt && c.Type != ChartType.CoOp.ToString()
+            select new Chart(s.Name, Enum.Parse<ChartType>(c.Type), c.Level)).ToArrayAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<Chart>> GetCoOpCharts(CancellationToken cancellationToken = default)
+    {
+        return await (from c in _database.Chart
+            join s in _database.Song on c.SongId equals s.Id
+            where c.Type == ChartType.CoOp.ToString()
             select new Chart(s.Name, Enum.Parse<ChartType>(c.Type), c.Level)).ToArrayAsync(cancellationToken);
     }
 }
