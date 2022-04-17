@@ -22,7 +22,7 @@ public sealed class EFChartAttemptRepository : IChartAttemptRepository
         var chartId = await GetChartId(chart, cancellationToken);
         return await (
             from ba in _database.BestAttempt
-            where ba.ChartId == chartId
+            where ba.ChartId == chartId && ba.UserId == userId
             select new ChartAttempt(Enum.Parse<LetterGrade>(ba.LetterGrade), ba.IsBroken)
         ).FirstOrDefaultAsync(cancellationToken);
     }
