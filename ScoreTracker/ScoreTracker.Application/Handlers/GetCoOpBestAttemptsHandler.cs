@@ -23,15 +23,8 @@ public sealed class
     public async Task<IEnumerable<BestChartAttempt>> Handle(GetCoOpBestAttemptsQuery request,
         CancellationToken cancellationToken)
     {
-        var result = new List<BestChartAttempt>();
         var charts = await _chartRepository.GetCoOpCharts(cancellationToken);
-        foreach (var chart in charts)
-        {
-            var bestAttempt =
-                await _chartAttemptRepository.GetBestAttempt(_currentUser.UserId, chart, cancellationToken);
-            result.Add(new BestChartAttempt(chart, bestAttempt));
-        }
 
-        return result;
+        return await _chartAttemptRepository.GetBestAttempts(_currentUser.UserId, charts, cancellationToken);
     }
 }
