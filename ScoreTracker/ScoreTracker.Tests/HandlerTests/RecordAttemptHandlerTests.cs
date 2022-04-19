@@ -43,12 +43,16 @@ public sealed class RecordAttemptHandlerTests
         A.CallTo(() => repository.GetBestAttempt(userId, A<Chart>.Ignored, A<CancellationToken>.Ignored))
             .Returns(oldAttempt);
 
-        var handler = new RecordAttemptHandler(repository, user, dateTimeOffset);
+        var charts = A.Fake<IChartRepository>();
+
+        A.CallTo(() => charts.GetChart(chart.Song.Name, chart.Type, chart.Level, A<CancellationToken>.Ignored))
+            .Returns(chart);
+        var handler = new RecordAttemptHandler(repository, user, dateTimeOffset, charts);
 
         //Test
 
         await handler.Handle(
-            new RecordAttemptCommand(chart.SongName, chart.Level, chart.Type, newLetterGrade, newIsBroken),
+            new RecordAttemptCommand(chart.Song.Name, chart.Level, chart.Type, newLetterGrade, newIsBroken),
             CancellationToken.None);
 
         //Assert
@@ -85,12 +89,16 @@ public sealed class RecordAttemptHandlerTests
         A.CallTo(() => repository.GetBestAttempt(userId, A<Chart>.Ignored, A<CancellationToken>.Ignored))
             .Returns(oldAttempt);
 
-        var handler = new RecordAttemptHandler(repository, user, dateTimeOffset);
+        var charts = A.Fake<IChartRepository>();
+
+        A.CallTo(() => charts.GetChart(chart.Song.Name, chart.Type, chart.Level, A<CancellationToken>.Ignored))
+            .Returns(chart);
+        var handler = new RecordAttemptHandler(repository, user, dateTimeOffset, charts);
 
         //Test
 
         await handler.Handle(
-            new RecordAttemptCommand(chart.SongName, chart.Level, chart.Type, newLetterGrade, newIsBroken),
+            new RecordAttemptCommand(chart.Song.Name, chart.Level, chart.Type, newLetterGrade, newIsBroken),
             CancellationToken.None);
 
         //Assert
@@ -127,12 +135,16 @@ public sealed class RecordAttemptHandlerTests
         A.CallTo(() => repository.GetBestAttempt(userId, A<Chart>.Ignored, A<CancellationToken>.Ignored))
             .Returns(oldAttempt);
 
-        var handler = new RecordAttemptHandler(repository, user, dateTimeOffset);
+        var charts = A.Fake<IChartRepository>();
+
+        A.CallTo(() => charts.GetChart(chart.Song.Name, chart.Type, chart.Level, A<CancellationToken>.Ignored))
+            .Returns(chart);
+        var handler = new RecordAttemptHandler(repository, user, dateTimeOffset, charts);
 
         //Test
 
         await handler.Handle(
-            new RecordAttemptCommand(chart.SongName, chart.Level, chart.Type, newLetterGrade, newIsBroken),
+            new RecordAttemptCommand(chart.Song.Name, chart.Level, chart.Type, newLetterGrade, newIsBroken),
             CancellationToken.None);
 
         //Assert

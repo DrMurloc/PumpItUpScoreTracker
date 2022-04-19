@@ -8,9 +8,9 @@
 @using ChartType = ScoreTracker.Domain.Enums.ChartType;
 <PageTitle>Best Attempts</PageTitle>
 
-<MudDataGrid @ref="_dataGrid" T="BestAttemptDto" Items="_bestAttempts" Hover="true" Dense="true" ReadOnly="false"
+<MudDataGrid @ref="_dataGrid" T="BestAttemptDto" Items="_bestAttempts" Hover="true" ReadOnly="false"
              EditMode="@DataGridEditMode.Cell" CommittedItemChanges="@UpdateBest" EditTrigger="@DataGridEditTrigger.OnRowClick"
-             Groupable="true">
+             Groupable="true" FixedHeader="true">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Best Attempts</MudText>
         <MudSpacer />
@@ -25,13 +25,20 @@
         </MudSelect>
     </ToolBarContent>
     <Columns>
-        <Column T="BestAttemptDto" Field="SongName" Title="Song" IsEditable="false"></Column>
+        <Column T="BestAttemptDto" Field="ImagePath" Title="Image" IsEditable="false">
+            <CellTemplate>
+                <MudImage Src="@context.Item.ImagePath" Height="35" Alt="@context.Item.SongName" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
+            </CellTemplate>
+
+        </Column>
+        <Column T="BestAttemptDto" Field="SongName" Title="Song" IsEditable="false">
+        </Column>
         <Column T="BestAttemptDto" Field="Category" Title="Type" IsEditable="false" Grouping="true">
             <GroupTemplate>
-                <span style="font-weight:bold">@context.Grouping.Key
-                    @if (context.Grouping.Any(i=>!IsPassing(i)))
+                <span style="font-weight: bold">@context.Grouping.Key
+                    @if (context.Grouping.Any(i => !IsPassing(i)))
                     {
-                        <MudChip Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small">Not Passed: @context.Grouping.Count(i=>!IsPassing(i))</MudChip>
+                        <MudChip Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small">Not Passed: @context.Grouping.Count(i => !IsPassing(i))</MudChip>
                     }
                     @if (context.Grouping.Any(IsPassing))
                     {
