@@ -7,25 +7,29 @@
 @using ScoreTracker.Web.Dtos
 @using ChartType = ScoreTracker.Domain.Enums.ChartType;
 <PageTitle>Best Attempts</PageTitle>
-<MudSelect T="string" Value="@_selectedFilter" ValueChanged="ChangeSelectedFilter">
-    @for (var level = DifficultyLevel.Min; level <DifficultyLevel.Max; level++)
-    {
-        var currentLevel = level;
-        <MudSelectItem Value="@currentLevel.ToString()">@currentLevel</MudSelectItem>
-    }
-    <MudSelectItem Value="@("28")">28</MudSelectItem>
-    <MudSelectItem Value="@(nameof(ChartType.CoOp))">CoOp</MudSelectItem>
-</MudSelect>
 
 <MudDataGrid @ref="_dataGrid" T="BestAttemptDto" Items="_bestAttempts" Hover="true" Dense="true" ReadOnly="false"
              EditMode="@DataGridEditMode.Cell" CommittedItemChanges="@UpdateBest" EditTrigger="@DataGridEditTrigger.OnRowClick"
              Sortable="true" Groupable="true">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Best Attempts</MudText>
+        <MudSpacer />
+        <MudSelect T="string" Label="Difficulty Level" Value="@_selectedFilter" ValueChanged="ChangeSelectedFilter">
+            @for (var level = DifficultyLevel.Min; level <DifficultyLevel.Max; level++)
+            {
+                var currentLevel = level;
+                <MudSelectItem Value="@currentLevel.ToString()">@currentLevel</MudSelectItem>
+            }
+            <MudSelectItem Value="@("28")">28</MudSelectItem>
+            <MudSelectItem Value="@(nameof(ChartType.CoOp))">CoOp</MudSelectItem>
+        </MudSelect>
+    </ToolBarContent>
     <Columns>
         <Column T="BestAttemptDto" Field="SongName" Title="Song" IsEditable="false"></Column>
         <Column T="BestAttemptDto" Field="Category" Title="Type" IsEditable="false" Grouping="true"></Column>
-        <Column T="BestAttemptDto" Field="LetterGrade" Title="Letter" >
+        <Column T="BestAttemptDto" Field="LetterGrade" Title="Letter">
             <EditTemplate>
-                <MudSelect T="string" Value="@context.Item.LetterGrade" ValueChanged="@(newValue => SetLetter(context.Item,newValue))" Clearable="true" Margin="@Margin.Dense">
+                <MudSelect T="string" Value="@context.Item.LetterGrade" ValueChanged="@(newValue => SetLetter(context.Item, newValue))" Clearable="true" Margin="@Margin.Dense">
                     @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
                     {
                         <MudSelectItem Value="@letterGrade.ToString()">@letterGrade.ToString()</MudSelectItem>
@@ -35,7 +39,7 @@
         </Column>
         <Column T="BestAttemptDto" Field="IsBroken" Title="Broken">
             <EditTemplate>
-                <MudCheckBox T="bool" Checked="context.Item.IsBroken" CheckedChanged="@(newValue=>SetBroken(context.Item,newValue))" Required Margin="@Margin.Dense"></MudCheckBox>
+                <MudCheckBox T="bool" Checked="context.Item.IsBroken" CheckedChanged="@(newValue => SetBroken(context.Item, newValue))" Required Margin="@Margin.Dense"></MudCheckBox>
             </EditTemplate>
         </Column>
     </Columns>
