@@ -90,6 +90,7 @@
         _selectedSongName = stringValue;
         if (!Name.TryParse(stringValue,out var name))
         {
+            _charts = Array.Empty<Chart>();
             return;
         }
         _charts = await Mediator.Send(new GetChartsBySongQuery(name));
