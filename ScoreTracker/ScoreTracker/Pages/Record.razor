@@ -41,10 +41,10 @@
         @if (_selectedChart != null && !string.IsNullOrWhiteSpace(_selectedSongName))
         {
             
-            <MudSelect T="LetterGrade" @bind-SelctedValue="_selectedLetterGrade">
+            <MudSelect T="LetterGrade" @bind-Value="_selectedLetterGrade">
                 @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
                 {
-                    <MudSelectItem Value="@letterGrade">@letterGrade.ToString()</MudSelectItem>
+                    <MudSelectItem T="LetterGrade" Value="@letterGrade">@letterGrade.ToString()</MudSelectItem>
                 }
             </MudSelect>
             <br/>
@@ -52,7 +52,7 @@
         }
     </MudCardContent>
     <MudCardActions>
-        <MudButton Disabled="_selectedChart==null || _selectedSongName==null" Variant="Variant.Filled" Color="Color.Primary" OnClick="@SubmitAttempt">Record Attempt</MudButton>
+        <MudButton Disabled="_selectedChart==null || string.IsNullOrWhiteSpace(_selectedSongName)" Variant="Variant.Filled" Color="Color.Primary" OnClick="@SubmitAttempt">Record Attempt</MudButton>
     </MudCardActions>
 </MudCard>
 @code {
@@ -96,12 +96,25 @@
         await _autocomplete.ToggleMenu();
     }
     
-    private void SelectChart(IEnumerable<object> charts)
+    private async Task SelectChart(IEnumerable<object> charts)
     {
         _selectedChart = charts.FirstOrDefault() as Chart;
-
+        await GetBestAttempt();
     }
-    
+
+    private async Task GetBestAttempt()
+    {
+        if (!Name.TryParse(_selectedSongName, out var name) || _selectedChart == null)
+        {
+            return;
+        }
+        var result = await Mediator.Send(new GetBestChartAttemptQuery(name, _selectedChart.Type, _selectedChart.Level));
+        if (result.BestAttempt != null)
+        {
+            _selectedLetterGrade = result.BestAttempt.LetterGrade;
+            _isBroken = result.BestAttempt.IsBroken;
+        }
+    }
     private async Task SubmitAttempt()
     {
         if (!Name.TryParse(_selectedSongName, out var songName) || _selectedChart == null)
