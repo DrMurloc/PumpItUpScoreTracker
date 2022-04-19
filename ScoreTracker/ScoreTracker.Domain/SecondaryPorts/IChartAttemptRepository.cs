@@ -9,4 +9,7 @@ public interface IChartAttemptRepository
 
     Task SetBestAttempt(Guid userId, Chart chart, ChartAttempt attempt, DateTimeOffset recordedOn,
         CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<BestChartAttempt>> GetBestAttempts(Guid userId, IEnumerable<Chart> charts,
+        CancellationToken cancellationToken);
 }

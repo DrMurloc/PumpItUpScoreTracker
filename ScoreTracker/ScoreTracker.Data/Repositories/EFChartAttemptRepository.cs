@@ -72,6 +72,21 @@ public sealed class EFChartAttemptRepository : IChartAttemptRepository
         await _database.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<IEnumerable<BestChartAttempt>> GetBestAttempts(Guid userId, IEnumerable<Chart> charts,
+        CancellationToken cancellationToken)
+    {
+        var result = (from ce in charts
+            join s in _database.Song on (string)ce.SongName equals s.Name
+            join c in _database.Chart on new
+                    { SongId = s.Id, Level = (int)ce.Level, ChartType = ce.Type.ToString() } equals
+                new { c.SongId, c.Level, ChartType = c.Type }
+            join _ in _database.BestAttempt on c.Id equals _.ChartId into gi
+            from ba in gi.DefaultIfEmpty()
+            select new BestChartAttempt(new Chart(s.Name, Enum.Parse<ChartType>(c.Type), c.Level),
+                ba == null ? null : new ChartAttempt(Enum.Parse<LetterGrade>(ba.LetterGrade), ba.IsBroken))).ToArray();
+        return result;
+    }
+
     private async Task<Guid> GetChartId(Chart chart, CancellationToken cancellationToken)
     {
         var songString = (string)chart.SongName;

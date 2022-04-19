@@ -22,7 +22,7 @@
         {
 
             <MudItem xs="12" sm="6" md="4">
-                <MudAutocomplete T="string" Value="@_selectedSongName" ResetValueOnEmptyText="true" AutoFocus="true" CoerceText="true" Label="Song" SearchFunc="@SearchSongs" ValueChanged="@SelectSong">
+                <MudAutocomplete @ref="_autocomplete" T="string" Value="@_selectedSongName" ResetValueOnEmptyText="true" AutoFocus="true" CoerceText="true" Label="Song" SearchFunc="@SearchSongs" ValueChanged="@SelectSong">
 
                 </MudAutocomplete>
             </MudItem>
@@ -31,34 +31,35 @@
         @if (_charts != null)
         {
             <MudChipSet Filter="true" Mandatory="true" SelectedValuesChanged="@SelectChart">
-                @foreach (var chart in _charts)
+                @foreach (var chart in _charts.OrderBy(c=>c.Type).ThenBy(c=>c.Level))
                 {
                     <MudChip Text="@chart.DifficultyString" Style="@StyleFromChartType(chart.Type)" Value="@chart"></MudChip>
                 }
             </MudChipSet>
             <br/>
         }
-        @if (_selectedChart != null && _selectedSongName != null)
+        @if (_selectedChart != null && !string.IsNullOrWhiteSpace(_selectedSongName))
         {
-            <MudRadioGroup @bind-SelectedOption="_selectedLetterGrade">
+            
+            <MudSelect T="LetterGrade" @bind-Value="_selectedLetterGrade">
                 @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
                 {
-                    <MudRadio Option="@letterGrade">@letterGrade</MudRadio>
+                    <MudSelectItem T="LetterGrade" Value="@letterGrade">@letterGrade.ToString()</MudSelectItem>
                 }
-            </MudRadioGroup>
+            </MudSelect>
             <br/>
             <MudCheckBox @bind-Checked="@_isBroken" Label="Broken"></MudCheckBox>
         }
     </MudCardContent>
     <MudCardActions>
-        <MudButton Disabled="_selectedChart==null || _selectedSongName==null" Variant="Variant.Filled" Color="Color.Primary" OnClick="@SubmitAttempt">Record Attempt</MudButton>
+        <MudButton Disabled="_selectedChart==null || string.IsNullOrWhiteSpace(_selectedSongName)" Variant="Variant.Filled" Color="Color.Primary" OnClick="@SubmitAttempt">Record Attempt</MudButton>
     </MudCardActions>
 </MudCard>
 @code {
     private IEnumerable<Name>? _songNames;
     private IEnumerable<Chart>? _charts;
-
-    private Name? _selectedSongName;
+    private MudAutocomplete<string> _autocomplete;
+    private string _selectedSongName = string.Empty;
     private Chart? _selectedChart;
     private LetterGrade _selectedLetterGrade = LetterGrade.A;
     private bool _isBroken = false;
@@ -86,27 +87,41 @@
     }
     private async Task SelectSong(string stringValue)
     {
-        if (string.IsNullOrWhiteSpace(stringValue))
+        _selectedSongName = stringValue;
+        if (!Name.TryParse(stringValue,out var name))
         {
+            _charts = Array.Empty<Chart>();
             return;
         }
-        var name = (Name)stringValue;
-        _selectedSongName = name;
         _charts = await Mediator.Send(new GetChartsBySongQuery(name));
-    }
-
-    private void SelectChart(IEnumerable<object> charts)
-    {
-        _selectedChart = charts.FirstOrDefault() as Chart;
-
+        await _autocomplete.ToggleMenu();
     }
     
-    private async Task SubmitAttempt()
+    private async Task SelectChart(IEnumerable<object> charts)
     {
-        if (_selectedSongName == null || _selectedChart == null)
+        _selectedChart = charts.FirstOrDefault() as Chart;
+        await GetBestAttempt();
+    }
+
+    private async Task GetBestAttempt()
+    {
+        if (!Name.TryParse(_selectedSongName, out var name) || _selectedChart == null)
         {
             return;
         }
-        await Mediator.Send(new RecordAttemptCommand(_selectedSongName.Value, _selectedChart.Level, _selectedChart.Type, _selectedLetterGrade, _isBroken));
+        var result = await Mediator.Send(new GetBestChartAttemptQuery(name, _selectedChart.Type, _selectedChart.Level));
+        if (result.BestAttempt != null)
+        {
+            _selectedLetterGrade = result.BestAttempt.LetterGrade;
+            _isBroken = result.BestAttempt.IsBroken;
+        }
+    }
+    private async Task SubmitAttempt()
+    {
+        if (!Name.TryParse(_selectedSongName, out var songName) || _selectedChart == null)
+        {
+            return;
+        }
+        await Mediator.Send(new RecordAttemptCommand(songName, _selectedChart.Level, _selectedChart.Type, _selectedLetterGrade, _isBroken));
     }
 }

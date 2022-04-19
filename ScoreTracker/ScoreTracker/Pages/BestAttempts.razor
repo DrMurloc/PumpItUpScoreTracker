@@ -7,25 +7,42 @@
 @using ScoreTracker.Web.Dtos
 @using ChartType = ScoreTracker.Domain.Enums.ChartType;
 <PageTitle>Best Attempts</PageTitle>
-<MudSelect T="string" Value="@_selectedFilter" ValueChanged="ChangeSelectedFilter">
-    @for (var level = DifficultyLevel.Min; level <DifficultyLevel.Max; level++)
-    {
-        var currentLevel = level;
-        <MudSelectItem Value="@currentLevel.ToString()">@currentLevel</MudSelectItem>
-    }
-    <MudSelectItem Value="@("28")">28</MudSelectItem>
-    <MudSelectItem Value="@(nameof(ChartType.CoOp))">CoOp</MudSelectItem>
-</MudSelect>
 
-<MudDataGrid T="BestAttemptDto" Items="_bestAttempts" Hover="true" Striped="true" Dense="true" ReadOnly="false"
-             EditMode="@DataGridEditMode.Cell" CommittedItemChanges="@UpdateBest" EditTrigger="@DataGridEditTrigger.OnRowClick" Groupable="true">
+<MudDataGrid @ref="_dataGrid" T="BestAttemptDto" Items="_bestAttempts" Hover="true" Dense="true" ReadOnly="false"
+             EditMode="@DataGridEditMode.Cell" CommittedItemChanges="@UpdateBest" EditTrigger="@DataGridEditTrigger.OnRowClick"
+             Groupable="true">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Best Attempts</MudText>
+        <MudSpacer />
+        <MudSelect T="string" Label="Difficulty Level" Value="@_selectedFilter" ValueChanged="ChangeSelectedFilter">
+            @for (var level = DifficultyLevel.Min; level <DifficultyLevel.Max; level++)
+            {
+                var currentLevel = level;
+                <MudSelectItem Value="@currentLevel.ToString()">@currentLevel</MudSelectItem>
+            }
+            <MudSelectItem Value="@("28")">28</MudSelectItem>
+            <MudSelectItem Value="@(nameof(ChartType.CoOp))">CoOp</MudSelectItem>
+        </MudSelect>
+    </ToolBarContent>
     <Columns>
         <Column T="BestAttemptDto" Field="SongName" Title="Song" IsEditable="false"></Column>
-        <Column T="BestAttemptDto" Field="ChartType" Title="Type" IsEditable="false" Hidden="@(_selectedFilter==nameof(ChartType.CoOp))"></Column>
-        <Column T="BestAttemptDto" Field="PlayerCount" Title="Players" IsEditable="false" Hidden="@(_selectedFilter!=nameof(ChartType.CoOp))"></Column>
+        <Column T="BestAttemptDto" Field="Category" Title="Type" IsEditable="false" Grouping="true">
+            <GroupTemplate>
+                <span style="font-weight:bold">@context.Grouping.Key
+                    @if (context.Grouping.Any(i=>!IsPassing(i)))
+                    {
+                        <MudChip Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small">Not Passed: @context.Grouping.Count(i=>!IsPassing(i))</MudChip>
+                    }
+                    @if (context.Grouping.Any(IsPassing))
+                    {
+                        <MudChip Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small">Passed: @context.Grouping.Count(IsPassing)</MudChip>
+                    }
+                </span>
+            </GroupTemplate>
+        </Column>
         <Column T="BestAttemptDto" Field="LetterGrade" Title="Letter">
             <EditTemplate>
-                <MudSelect T="string" Value="@context.Item.LetterGrade" ValueChanged="@(newValue => SetLetter(context.Item,newValue))" Clearable="true" Margin="@Margin.Dense">
+                <MudSelect T="string" Value="@context.Item.LetterGrade" ValueChanged="@(newValue => SetLetter(context.Item, newValue))" Clearable="true" Margin="@Margin.Dense">
                     @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
                     {
                         <MudSelectItem Value="@letterGrade.ToString()">@letterGrade.ToString()</MudSelectItem>
@@ -35,8 +52,11 @@
         </Column>
         <Column T="BestAttemptDto" Field="IsBroken" Title="Broken">
             <EditTemplate>
-                <MudCheckBox T="bool" Checked="context.Item.IsBroken" CheckedChanged="@(newValue=>SetBroken(context.Item,newValue))" Required Margin="@Margin.Dense"></MudCheckBox>
+                <MudCheckBox T="bool" Checked="context.Item.IsBroken" CheckedChanged="@(newValue => SetBroken(context.Item, newValue))" Required Margin="@Margin.Dense"></MudCheckBox>
             </EditTemplate>
+            <FooterTemplate>
+                Passed @context.Items.Count(IsPassing) / @context.Items.Count()
+            </FooterTemplate>
         </Column>
     </Columns>
 </MudDataGrid>
@@ -44,25 +64,39 @@
 @inject IMediator Mediator
 
 @code {
+    private MudDataGrid<BestAttemptDto>? _dataGrid;
     private IEnumerable<BestAttemptDto> _bestAttempts = Array.Empty<BestAttemptDto>();
 
     private string _selectedFilter = "14";
-    
+
+    private static bool IsPassing(BestAttemptDto dto)
+    {
+        return !string.IsNullOrWhiteSpace(dto.LetterGrade) && !dto.IsBroken;
+    }
     private async Task ChangeSelectedFilter(string filter)
     {
         _selectedFilter = filter;
 
         if (DifficultyLevel.TryParse(filter, out var level))
         {
-            
             _bestAttempts = (await Mediator.Send(new GetBestChartAttemptsByDifficultyQuery(level))).Select(BestAttemptDto.From).ToArray();
-            return;
+            
         }
-        _bestAttempts = filter switch
+        else
         {
-            nameof(ChartType.CoOp) => (await Mediator.Send(new GetCoOpBestAttemptsQuery())).Select(BestAttemptDto.From).ToArray(),
-            _ => _bestAttempts
-            };
+            _bestAttempts = filter switch
+            {
+                nameof(ChartType.CoOp) => (await Mediator.Send(new GetCoOpBestAttemptsQuery())).Select(BestAttemptDto.From).ToArray(),
+                _ => _bestAttempts
+                };
+        }
+        if (_dataGrid != null)
+        {
+            _dataGrid.Items = _bestAttempts;
+            _dataGrid.GroupItems();
+            _dataGrid.CollapseAllGroups();
+
+        }
     }
     protected override async Task OnInitializedAsync()
     {

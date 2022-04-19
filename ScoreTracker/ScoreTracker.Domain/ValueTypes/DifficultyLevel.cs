@@ -2,7 +2,7 @@
 
 namespace ScoreTracker.Domain.ValueTypes;
 
-public readonly struct DifficultyLevel
+public readonly struct DifficultyLevel : IComparable<DifficultyLevel>
 {
     private readonly int _level;
 
@@ -89,5 +89,10 @@ public readonly struct DifficultyLevel
         if (level > Max) throw new InvalidDifficultyLevelException("Level cannot be greater than 28");
 
         return new DifficultyLevel(level);
+    }
+
+    public int CompareTo(DifficultyLevel other)
+    {
+        return _level.CompareTo(other._level);
     }
 }
