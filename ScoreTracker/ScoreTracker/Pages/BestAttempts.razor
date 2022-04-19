@@ -17,13 +17,13 @@
     <MudSelectItem Value="@(nameof(ChartType.CoOp))">CoOp</MudSelectItem>
 </MudSelect>
 
-<MudDataGrid T="BestAttemptDto" Items="_bestAttempts" Hover="true" Striped="true" Dense="true" ReadOnly="false"
-             EditMode="@DataGridEditMode.Cell" CommittedItemChanges="@UpdateBest" EditTrigger="@DataGridEditTrigger.OnRowClick" Groupable="true">
+<MudDataGrid @ref="_dataGrid" T="BestAttemptDto" Items="_bestAttempts" Hover="true" Dense="true" ReadOnly="false"
+             EditMode="@DataGridEditMode.Cell" CommittedItemChanges="@UpdateBest" EditTrigger="@DataGridEditTrigger.OnRowClick"
+             Sortable="true" Groupable="true">
     <Columns>
         <Column T="BestAttemptDto" Field="SongName" Title="Song" IsEditable="false"></Column>
-        <Column T="BestAttemptDto" Field="ChartType" Title="Type" IsEditable="false" Hidden="@(_selectedFilter==nameof(ChartType.CoOp))"></Column>
-        <Column T="BestAttemptDto" Field="PlayerCount" Title="Players" IsEditable="false" Hidden="@(_selectedFilter!=nameof(ChartType.CoOp))"></Column>
-        <Column T="BestAttemptDto" Field="LetterGrade" Title="Letter">
+        <Column T="BestAttemptDto" Field="Category" Title="Type" IsEditable="false" Grouping="true"></Column>
+        <Column T="BestAttemptDto" Field="LetterGrade" Title="Letter" >
             <EditTemplate>
                 <MudSelect T="string" Value="@context.Item.LetterGrade" ValueChanged="@(newValue => SetLetter(context.Item,newValue))" Clearable="true" Margin="@Margin.Dense">
                     @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
@@ -44,6 +44,7 @@
 @inject IMediator Mediator
 
 @code {
+    private MudDataGrid<BestAttemptDto>? _dataGrid;
     private IEnumerable<BestAttemptDto> _bestAttempts = Array.Empty<BestAttemptDto>();
 
     private string _selectedFilter = "14";
@@ -54,15 +55,24 @@
 
         if (DifficultyLevel.TryParse(filter, out var level))
         {
-            
             _bestAttempts = (await Mediator.Send(new GetBestChartAttemptsByDifficultyQuery(level))).Select(BestAttemptDto.From).ToArray();
-            return;
+            
         }
-        _bestAttempts = filter switch
+        else
         {
-            nameof(ChartType.CoOp) => (await Mediator.Send(new GetCoOpBestAttemptsQuery())).Select(BestAttemptDto.From).ToArray(),
-            _ => _bestAttempts
-            };
+            _bestAttempts = filter switch
+            {
+                nameof(ChartType.CoOp) => (await Mediator.Send(new GetCoOpBestAttemptsQuery())).Select(BestAttemptDto.From).ToArray(),
+                _ => _bestAttempts
+                };
+        }
+        if (_dataGrid != null)
+        {
+            _dataGrid.Items = _bestAttempts;
+            _dataGrid.GroupItems();
+            _dataGrid.CollapseAllGroups();
+
+        }
     }
     protected override async Task OnInitializedAsync()
     {
