@@ -9,4 +9,5 @@ public sealed class SongEntity
     [Required] public string Name { get; set; } = string.Empty;
 
     [Key] public Guid Id { get; set; }
+    [Required] public string ImagePath { get; set; } = string.Empty;
 }
