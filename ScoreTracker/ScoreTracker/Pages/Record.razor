@@ -22,7 +22,7 @@
         {
 
             <MudItem xs="12" sm="6" md="4">
-                <MudAutocomplete T="string" Value="@_selectedSongName" ResetValueOnEmptyText="true" AutoFocus="true" CoerceText="true" Label="Song" SearchFunc="@SearchSongs" ValueChanged="@SelectSong">
+                <MudAutocomplete @ref="_autocomplete" T="string" Value="@_selectedSongName" ResetValueOnEmptyText="true" AutoFocus="true" CoerceText="true" Label="Song" SearchFunc="@SearchSongs" ValueChanged="@SelectSong">
 
                 </MudAutocomplete>
             </MudItem>
@@ -31,21 +31,22 @@
         @if (_charts != null)
         {
             <MudChipSet Filter="true" Mandatory="true" SelectedValuesChanged="@SelectChart">
-                @foreach (var chart in _charts)
+                @foreach (var chart in _charts.OrderBy(c=>c.Type).ThenBy(c=>c.Level))
                 {
                     <MudChip Text="@chart.DifficultyString" Style="@StyleFromChartType(chart.Type)" Value="@chart"></MudChip>
                 }
             </MudChipSet>
             <br/>
         }
-        @if (_selectedChart != null && _selectedSongName != null)
+        @if (_selectedChart != null && !string.IsNullOrWhiteSpace(_selectedSongName))
         {
-            <MudRadioGroup @bind-SelectedOption="_selectedLetterGrade">
+            
+            <MudSelect T="LetterGrade" @bind-SelctedValue="_selectedLetterGrade">
                 @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
                 {
-                    <MudRadio Option="@letterGrade">@letterGrade</MudRadio>
+                    <MudSelectItem Value="@letterGrade">@letterGrade.ToString()</MudSelectItem>
                 }
-            </MudRadioGroup>
+            </MudSelect>
             <br/>
             <MudCheckBox @bind-Checked="@_isBroken" Label="Broken"></MudCheckBox>
         }
@@ -57,8 +58,8 @@
 @code {
     private IEnumerable<Name>? _songNames;
     private IEnumerable<Chart>? _charts;
-
-    private Name? _selectedSongName;
+    private MudAutocomplete<string> _autocomplete;
+    private string _selectedSongName = string.Empty;
     private Chart? _selectedChart;
     private LetterGrade _selectedLetterGrade = LetterGrade.A;
     private bool _isBroken = false;
@@ -86,15 +87,15 @@
     }
     private async Task SelectSong(string stringValue)
     {
-        if (string.IsNullOrWhiteSpace(stringValue))
+        _selectedSongName = stringValue;
+        if (!Name.TryParse(stringValue,out var name))
         {
             return;
         }
-        var name = (Name)stringValue;
-        _selectedSongName = name;
         _charts = await Mediator.Send(new GetChartsBySongQuery(name));
+        await _autocomplete.ToggleMenu();
     }
-
+    
     private void SelectChart(IEnumerable<object> charts)
     {
         _selectedChart = charts.FirstOrDefault() as Chart;
@@ -103,10 +104,10 @@
     
     private async Task SubmitAttempt()
     {
-        if (_selectedSongName == null || _selectedChart == null)
+        if (!Name.TryParse(_selectedSongName, out var songName) || _selectedChart == null)
         {
             return;
         }
-        await Mediator.Send(new RecordAttemptCommand(_selectedSongName.Value, _selectedChart.Level, _selectedChart.Type, _selectedLetterGrade, _isBroken));
+        await Mediator.Send(new RecordAttemptCommand(songName, _selectedChart.Level, _selectedChart.Type, _selectedLetterGrade, _isBroken));
     }
 }
