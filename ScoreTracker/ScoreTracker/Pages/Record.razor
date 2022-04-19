@@ -30,6 +30,9 @@
         }
         @if (_charts != null)
         {
+            <div class="d-flex justify-center">
+              <MudImage Fluid="true" Src="@_charts.First().Song.ImagePath.ToString()" Alt="@_charts.First().Song.Name" Elevation="25" ObjectFit="ObjectFit.Contain"/>
+            </div>
             <MudChipSet Filter="true" Mandatory="true" SelectedValuesChanged="@SelectChart">
                 @foreach (var chart in _charts.OrderBy(c=>c.Type).ThenBy(c=>c.Level))
                 {

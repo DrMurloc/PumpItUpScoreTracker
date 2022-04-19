@@ -10,6 +10,7 @@ public class BestAttemptDto
     public string LetterGrade { get; set; } = string.Empty;
     public bool IsBroken { get; set; }
     public string ChartType { get; set; } = string.Empty;
+    public string ImagePath { get; set; } = string.Empty;
 
     public static BestAttemptDto From(BestChartAttempt attempt)
     {
@@ -22,7 +23,8 @@ public class BestAttemptDto
             LetterGrade = attempt.BestAttempt?.LetterGrade.ToString() ?? string.Empty,
             SongName = attempt.Chart.Song.Name,
             Level = attempt.Chart.Level,
-            ChartType = attempt.Chart.Type.ToString()
+            ChartType = attempt.Chart.Type.ToString(),
+            ImagePath = attempt.Chart.Song.ImagePath.ToString()
         };
     }
 }
