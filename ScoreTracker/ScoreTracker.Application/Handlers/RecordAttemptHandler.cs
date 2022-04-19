@@ -8,13 +8,16 @@ namespace ScoreTracker.Application.Handlers;
 public sealed class RecordAttemptHandler : IRequestHandler<RecordAttemptCommand>
 {
     private readonly IChartAttemptRepository _attempts;
+    private readonly IChartRepository _charts;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IDateTimeOffsetAccessor _dateTimeOffset;
 
     public RecordAttemptHandler(IChartAttemptRepository attempts,
         ICurrentUserAccessor currentUser,
-        IDateTimeOffsetAccessor dateTimeOffset)
+        IDateTimeOffsetAccessor dateTimeOffset,
+        IChartRepository charts)
     {
+        _charts = charts;
         _attempts = attempts;
         _currentUser = currentUser;
         _dateTimeOffset = dateTimeOffset;
@@ -22,7 +25,8 @@ public sealed class RecordAttemptHandler : IRequestHandler<RecordAttemptCommand>
 
     public async Task<Unit> Handle(RecordAttemptCommand request, CancellationToken cancellationToken)
     {
-        var chart = new Chart(request.SongName, request.ChartType, request.DifficultyLevel);
+        var chart = await _charts.GetChart(request.SongName, request.ChartType, request.DifficultyLevel,
+            cancellationToken);
         var userId = _currentUser.UserId;
         var now = _dateTimeOffset.Now;
 

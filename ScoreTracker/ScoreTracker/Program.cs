@@ -1,11 +1,8 @@
-using System.ComponentModel;
 using MudBlazor.Services;
 using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Configuration;
-using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Web.Accessors;
-using ScoreTracker.Web.TypeConverters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,12 +35,4 @@ app.UseRouting();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
-
-AssignTypeConverter<Chart, ChartTypeConverter>();
-
 app.Run();
-
-void AssignTypeConverter<TType, TConverterType>()
-{
-    TypeDescriptor.AddAttributes(typeof(TType), new TypeConverterAttribute(typeof(TConverterType)));
-}

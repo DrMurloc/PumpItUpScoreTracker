@@ -20,7 +20,7 @@ public class BestAttemptDto
                 : attempt.Chart.Type.ToString(),
             IsBroken = attempt.BestAttempt?.IsBroken ?? true,
             LetterGrade = attempt.BestAttempt?.LetterGrade.ToString() ?? string.Empty,
-            SongName = attempt.Chart.SongName,
+            SongName = attempt.Chart.Song.Name,
             Level = attempt.Chart.Level,
             ChartType = attempt.Chart.Type.ToString()
         };
