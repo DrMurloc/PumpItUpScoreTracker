@@ -1,7 +1,6 @@
 ﻿using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
@@ -65,14 +64,6 @@ public sealed class LoginController : Controller
         await _mediator.Send(new CreateDiscordLoginCommand(user.Id, id), HttpContext.RequestAborted);
 
         return user;
-    }
-
-    [HttpGet("signout")]
-    [HttpPost("signout")]
-    public IActionResult SignOutCurrentUser()
-    {
-        return SignOut(new AuthenticationProperties { RedirectUri = "/" },
-            CookieAuthenticationDefaults.AuthenticationScheme);
     }
 }
 
