@@ -72,6 +72,7 @@
 @inject IMediator Mediator
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
+@inject ISnackbar Snackbar;
 
 @code {
     private MudDataGrid<BestAttemptDto>? _dataGrid;
@@ -132,5 +133,6 @@
     private async Task UpdateBest(BestAttemptDto dto)
     {
         await Mediator.Send(new UpdateBestAttemptCommand(dto.SongName, Enum.Parse<ChartType>(dto.ChartType), dto.Level, Enum.TryParse<LetterGrade>(dto.LetterGrade,out var grade)?grade:null, dto.IsBroken));
+        Snackbar.Add($"{dto.SongName} updated!", Severity.Success);
     }
 }
