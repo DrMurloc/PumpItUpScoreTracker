@@ -58,7 +58,7 @@ public sealed class LoginController : Controller
             ?.Value ?? "");
         var name = principal.FindFirst(ClaimTypes.Name)?.Value ??
                    "Unknown Name";
-        var user = await _mediator.Send(new GetUserByDiscordLogin(id), HttpContext.RequestAborted);
+        var user = await _mediator.Send(new GetUserByDiscordLoginQuery(id), HttpContext.RequestAborted);
         if (user != null) return user;
 
         user = await _mediator.Send(new CreateUserCommand(name), HttpContext.RequestAborted);
