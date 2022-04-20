@@ -16,7 +16,7 @@ public sealed class HttpContextUserAccessor : ICurrentUserAccessor
 
     public bool IsLoggedIn => _context?.HttpContext?.User.Identity?.IsAuthenticated ?? false;
 
-    public User User => IsLoggedIn
+    public User User => !IsLoggedIn
         ? throw new UserNotLoggedInException()
         : new User(
             Guid.Parse(_context.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString()),
