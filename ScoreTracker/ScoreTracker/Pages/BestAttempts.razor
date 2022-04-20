@@ -11,7 +11,7 @@
 
 <MudDataGrid @ref="_dataGrid" T="BestAttemptDto" Items="_bestAttempts" Hover="true" ReadOnly="false"
              EditMode="@DataGridEditMode.Cell" CommittedItemChanges="@UpdateBest" EditTrigger="@DataGridEditTrigger.OnRowClick"
-             Groupable="true" FixedHeader="true">
+             Groupable="true" FixedHeader="true" Loading="@_isLoading">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Best Attempts</MudText>
         <MudSpacer />
@@ -79,13 +79,14 @@
     private IEnumerable<BestAttemptDto> _bestAttempts = Array.Empty<BestAttemptDto>();
 
     private string _selectedFilter = "14";
-
+    private bool _isLoading = true;
     private static bool IsPassing(BestAttemptDto dto)
     {
         return !string.IsNullOrWhiteSpace(dto.LetterGrade) && !dto.IsBroken;
     }
     private async Task ChangeSelectedFilter(string filter)
     {
+        _isLoading = true;
         _selectedFilter = filter;
 
         if (DifficultyLevel.TryParse(filter, out var level))
@@ -108,6 +109,7 @@
             _dataGrid.CollapseAllGroups();
 
         }
+        _isLoading = false;
     }
     protected override async Task OnInitializedAsync()
     {
