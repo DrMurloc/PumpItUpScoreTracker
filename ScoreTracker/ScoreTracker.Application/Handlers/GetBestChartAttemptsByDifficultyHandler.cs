@@ -25,6 +25,6 @@ public sealed class
         CancellationToken cancellationToken)
     {
         var charts = await _chartRepository.GetChartsByDifficulty(request.Difficulty, cancellationToken);
-        return await _chartAttemptRepository.GetBestAttempts(_currentUser.UserId, charts, cancellationToken);
+        return await _chartAttemptRepository.GetBestAttempts(_currentUser.User.Id, charts, cancellationToken);
     }
 }

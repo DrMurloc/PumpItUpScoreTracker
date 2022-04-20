@@ -1,6 +1,9 @@
-﻿namespace ScoreTracker.Domain.SecondaryPorts;
+﻿using ScoreTracker.Domain.Models;
+
+namespace ScoreTracker.Domain.SecondaryPorts;
 
 public interface ICurrentUserAccessor
 {
-    Guid UserId { get; }
+    bool IsLoggedIn { get; }
+    User User { get; }
 }
