@@ -3,18 +3,29 @@ using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Web.Accessors;
+using ScoreTracker.Web.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+var discordConfig = builder.Configuration.GetSection("Discord").Get<DiscordConfiguration>();
 
+builder.Services.AddAuthentication("DefaultAuthentication")
+    .AddCookie("DefaultAuthentication")
+    .AddDiscord("Discord", o =>
+    {
+        o.ClientId = discordConfig.ClientId;
+        o.ClientSecret = discordConfig.ClientSecret;
+    });
 builder.Services.AddMudServices()
+    .AddTransient<ICurrentUserAccessor, HttpContextUserAccessor>()
+    .AddHttpContextAccessor()
     .AddCore()
     .AddInfrastructure(builder.Configuration.GetSection("SQL").Get<SqlConfiguration>())
-    .AddTransient<ICurrentUserAccessor, HardCodedUserAccessor>()
-    .AddTransient<IDateTimeOffsetAccessor, DateTimeOffsetAccessor>();
+    .AddTransient<IDateTimeOffsetAccessor, DateTimeOffsetAccessor>()
+    .AddControllers();
 
 var app = builder.Build();
 
@@ -31,6 +42,12 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
