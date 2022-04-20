@@ -12,7 +12,7 @@ using ScoreTracker.Data.Persistence;
 namespace ScoreTracker.Data.Migrations
 {
     [DbContext(typeof(ChartAttemptDbContext))]
-    [Migration("20220420011242_AddUserTables")]
+    [Migration("20220420014800_AddUserTables")]
     partial class AddUserTables
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -86,10 +86,7 @@ namespace ScoreTracker.Data.Migrations
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.DiscordLoginEntity", b =>
                 {
                     b.Property<decimal>("DiscordId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("decimal(20,0)");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<decimal>("DiscordId"), 1L, 1);
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");

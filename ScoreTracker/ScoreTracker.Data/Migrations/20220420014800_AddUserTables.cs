@@ -27,8 +27,7 @@ namespace ScoreTracker.Data.Migrations
                 schema: "scores",
                 columns: table => new
                 {
-                    DiscordId = table.Column<decimal>(type: "decimal(20,0)", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    DiscordId = table.Column<decimal>(type: "decimal(20,0)", nullable: false),
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>

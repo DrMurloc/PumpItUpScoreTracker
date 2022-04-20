@@ -84,10 +84,7 @@ namespace ScoreTracker.Data.Migrations
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.DiscordLoginEntity", b =>
                 {
                     b.Property<decimal>("DiscordId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("decimal(20,0)");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<decimal>("DiscordId"), 1L, 1);
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
