@@ -28,11 +28,11 @@ public sealed class UpdateBestAttemptHandler : IRequestHandler<UpdateBestAttempt
     {
         var chart = await _charts.GetChart(request.SongName, request.ChartType, request.Level, cancellationToken);
         if (request.LetterGrade != null)
-            await _attempts.SetBestAttempt(_user.UserId, chart,
+            await _attempts.SetBestAttempt(_user.User.Id, chart,
                 new ChartAttempt(request.LetterGrade.Value, request.IsBroken),
                 _dateTimeOffset.Now, cancellationToken);
         else
-            await _attempts.RemoveBestAttempt(_user.UserId, chart, cancellationToken);
+            await _attempts.RemoveBestAttempt(_user.User.Id, chart, cancellationToken);
 
         return Unit.Value;
     }

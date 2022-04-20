@@ -5,12 +5,15 @@
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Application.Commands
+@using ScoreTracker.Domain.SecondaryPorts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 
 <PageTitle>Record Attempt</PageTitle>
 
 
 @inject IMediator Mediator
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser;
 
 <MudCard>
     <MudCardContent>
@@ -68,6 +71,11 @@
     private bool _isBroken = false;
     protected override async Task OnInitializedAsync()
     {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Login");
+            return;
+        }
         _songNames = await Mediator.Send(new GetSongNamesQuery());
 
     }

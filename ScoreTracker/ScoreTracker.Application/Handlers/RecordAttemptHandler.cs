@@ -27,7 +27,7 @@ public sealed class RecordAttemptHandler : IRequestHandler<RecordAttemptCommand>
     {
         var chart = await _charts.GetChart(request.SongName, request.ChartType, request.DifficultyLevel,
             cancellationToken);
-        var userId = _currentUser.UserId;
+        var userId = _currentUser.User.Id;
         var now = _dateTimeOffset.Now;
 
 

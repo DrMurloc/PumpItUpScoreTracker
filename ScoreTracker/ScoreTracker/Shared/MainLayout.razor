@@ -1,4 +1,6 @@
-﻿@inherits LayoutComponentBase
+﻿@using ScoreTracker.Domain.SecondaryPorts
+@inherits LayoutComponentBase
+@inject ICurrentUserAccessor CurrentUser
 
 <PageTitle>ScoreTracker</PageTitle>
 
@@ -7,21 +9,18 @@
 <MudSnackbarProvider/>
 
 <MudLayout>
-    <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Edge="Edge.Start" OnClick="_=>_isOpen=!_isOpen"></MudIconButton>
-    </MudAppBar>
-    <MudDrawer @bind-Open="_isOpen">
-        <MudDrawerHeader>
-            <MudText Type="Typo.h6">Score Tracker</MudText>
-        </MudDrawerHeader>
-        <MudNavMenu>
-            <MudNavLink Href="/">Best Attempts</MudNavLink>
-            <MudNavLink Href="/Record">Record Attempt</MudNavLink>
-        </MudNavMenu>
-    </MudDrawer>
-    
+    @if (CurrentUser.IsLoggedIn)
+    {
+        <MudDrawer @bind-Open="_isOpen" Variant="@DrawerVariant.Mini" OpenMiniOnHover="true">
+            <MudNavMenu>
+                <MudNavLink Href="/" Icon="@Icons.Filled.Description">Best Attempts</MudNavLink>
+                <MudNavLink Href="/Record" Icon="@Icons.Filled.List">Record Attempt</MudNavLink>
+                <MudNavLink Href="/Logout" Icon="@Icons.Filled.Logout">Logout</MudNavLink>
+            </MudNavMenu>
+        </MudDrawer>
+    }
     <MudMainContent>
-       <MudContainer>
+        <MudContainer>
             @Body
         </MudContainer>
     </MudMainContent>

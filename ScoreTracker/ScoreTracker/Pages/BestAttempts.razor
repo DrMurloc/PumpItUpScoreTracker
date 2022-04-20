@@ -3,6 +3,7 @@
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Web.Dtos
 @using ChartType = ScoreTracker.Domain.Enums.ChartType;
@@ -69,6 +70,8 @@
 </MudDataGrid>
 
 @inject IMediator Mediator
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser;
 
 @code {
     private MudDataGrid<BestAttemptDto>? _dataGrid;
@@ -107,6 +110,11 @@
     }
     protected override async Task OnInitializedAsync()
     {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Login");
+            return;
+        }
         await ChangeSelectedFilter(_selectedFilter);
 
     }

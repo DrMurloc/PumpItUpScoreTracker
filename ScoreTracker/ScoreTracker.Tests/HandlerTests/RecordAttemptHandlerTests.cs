@@ -36,7 +36,7 @@ public sealed class RecordAttemptHandlerTests
 
         var user = A.Fake<ICurrentUserAccessor>();
 
-        A.CallTo(() => user.UserId).Returns(userId);
+        A.CallTo(() => user.User.Id).Returns(userId);
 
         var repository = A.Fake<IChartAttemptRepository>();
 
@@ -82,7 +82,7 @@ public sealed class RecordAttemptHandlerTests
 
         var user = A.Fake<ICurrentUserAccessor>();
 
-        A.CallTo(() => user.UserId).Returns(userId);
+        A.CallTo(() => user.User.Id).Returns(userId);
 
         var repository = A.Fake<IChartAttemptRepository>();
 
@@ -128,7 +128,7 @@ public sealed class RecordAttemptHandlerTests
 
         var user = A.Fake<ICurrentUserAccessor>();
 
-        A.CallTo(() => user.UserId).Returns(userId);
+        A.CallTo(() => user.User.Id).Returns(userId);
 
         var repository = A.Fake<IChartAttemptRepository>();
 
