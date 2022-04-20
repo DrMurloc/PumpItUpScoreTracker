@@ -46,7 +46,7 @@ public sealed class LoginController : Controller
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Name)
-        }));
+        }, "External"));
         await HttpContext.SignOutAsync();
         await HttpContext.SignInAsync(principal);
         return Redirect(returnUrl ?? "/");
