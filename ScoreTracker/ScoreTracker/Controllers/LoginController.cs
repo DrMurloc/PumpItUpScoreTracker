@@ -5,18 +5,23 @@ using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Web.Controllers;
 
 [Route("[controller]")]
 public sealed class LoginController : Controller
 {
+    private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
 
-    public LoginController(IMediator mediator)
+    public LoginController(IMediator mediator,
+        ICurrentUserAccessor currentUser)
     {
         _mediator = mediator;
+        _currentUser = currentUser;
     }
+
 
     [HttpGet("{providerName}")]
     public async Task<IActionResult> SignIn([FromRoute] string providerName)
@@ -40,14 +45,8 @@ public sealed class LoginController : Controller
 
         var user = await GetUserForDiscordLogin(authenticateResult.Principal);
 
+        await _currentUser.SetCurrentUser(user);
 
-        var principal = new ClaimsPrincipal(new ClaimsIdentity(new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Name)
-        }, "External"));
-        await HttpContext.SignOutAsync();
-        await HttpContext.SignInAsync(principal);
         return Redirect(returnUrl ?? "/");
     }
 

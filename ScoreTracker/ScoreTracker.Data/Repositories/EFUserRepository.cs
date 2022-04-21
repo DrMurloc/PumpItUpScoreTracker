@@ -40,6 +40,12 @@ public sealed class EFUserRepository : IUserRepository
         await _database.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<User> GetUser(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await _database.User.Where(u => u.Id == userId).Select(u => new User(u.Id, u.Name))
+            .SingleAsync(cancellationToken);
+    }
+
     public async Task<User?> GetUserByDiscordLogin(ulong discordId, CancellationToken cancellationToken = default)
     {
         return await (from dl in _database.DiscordLogin
