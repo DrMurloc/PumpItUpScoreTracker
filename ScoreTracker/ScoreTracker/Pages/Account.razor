@@ -1,0 +1,62 @@
+﻿@page "/Account"
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.Models
+@using MediatR
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Domain.ValueTypes
+
+<PageTitle>Account</PageTitle>
+
+<MudCard>
+    <MudCardHeader>Account Settings</MudCardHeader>
+    <MudCardContent>
+        <MudTextField Label="Id" Disabled="true" Value="@_id" HelperText="Used primarily for debugging"></MudTextField>
+        <MudTextField T="string" Label="Username" MaxLength="100" Value="@_name" ValueChanged="UpdateName"></MudTextField>
+    </MudCardContent>
+</MudCard>
+
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser;
+@inject IMediator Mediator;
+@inject ISnackbar Snackbar;
+@inject NavigationManager NavigationManager;
+@inject IJSRuntime JSRuntime;
+@code
+{
+    private string _id = string.Empty;
+    private string _name = string.Empty;
+
+    protected override Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Login");
+            return Task.CompletedTask;
+        }
+        _id = CurrentUser.User.Id.ToString();
+        _name = CurrentUser.User.Name;
+        return Task.CompletedTask;
+    }
+
+    private async Task UpdateName(string newName)
+    {
+        _name = newName;
+        if (Name.TryParse(newName, out var name))
+        {
+            await Mediator.Send(new UpdateUserCommand(name));
+            /*
+              Why does it always come back to javascript...
+              Blazor interacts over WebSockets that close HTTP responses before it processes.
+              This means we can't update a user's signed in information (stored in a cookie) utilizing websocket interactions
+              HttpClient interactions all happen via sockets in the back end, so does not contain cookie information for managing user claims.
+              So the conclusion was to do a quick javascript fetch to a Refresh endpoint to log out and log back in a user when their claims
+              are updated.
+              See https://github.com/dotnet/aspnetcore/issues/34095#issuecomment-874012924 for Microsoft's stance on this.
+            */
+            var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
+            await module.InvokeVoidAsync("refreshLogin");
+            Snackbar.Add($"Username set to {name}");
+            _name = name;
+        }
+    }
+}

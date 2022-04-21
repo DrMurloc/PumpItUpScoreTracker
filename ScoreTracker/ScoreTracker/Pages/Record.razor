@@ -14,6 +14,7 @@
 @inject IMediator Mediator
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
+@inject ISnackbar Snackbar
 
 <MudCard>
     <MudCardContent>
@@ -133,6 +134,14 @@
         {
             return;
         }
-        await Mediator.Send(new RecordAttemptCommand(songName, _selectedChart.Level, _selectedChart.Type, _selectedLetterGrade, _isBroken));
+        var wasBetter = await Mediator.Send(new RecordAttemptCommand(songName, _selectedChart.Level, _selectedChart.Type, _selectedLetterGrade, _isBroken));
+        if (wasBetter)
+        {
+            Snackbar.Add("Best Attempt Recorded!", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Your previous best was better.", Severity.Info);
+        }
     }
 }

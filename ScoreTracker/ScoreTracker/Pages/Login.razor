@@ -4,7 +4,37 @@
 
 
 <MudCard>
+    <MudCardHeader>
+        Login
+    </MudCardHeader>
     <MudCardContent>
-        <MudButton Href="/Login/Discord">Login With Discord</MudButton>
+        <MudButton Href="/Login/Discord" StartIcon="@Icons.Custom.Brands.Discord">Login With Discord</MudButton>
     </MudCardContent>
+    <MudCardActions>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(()=>_isDialogVisible=true)">Account Creation?</MudButton>
+    </MudCardActions>
 </MudCard>
+
+<MudDialog @bind-IsVisible="_isDialogVisible">
+    <TitleContent>
+        Account Creation?
+    </TitleContent>
+    <DialogContent>
+        <p>
+            If you do not have an account with Score Tracker, one will be created when you select one of the login providers.
+            <br/><br/>
+            The only information stored about your account from the login provider you select is the external ID (typically a random number or combination of letters), and the username. You can change the username at any time after account creation.
+            <br/><br/>
+            No passwords are stored in Score Tracker, we don't want them, you don't want us to have them, everyone is happier this way.
+        </p>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(()=>_isDialogVisible=false)" Class="px-10">Close</MudButton>
+    </DialogActions>
+
+</MudDialog>
+
+@code
+{
+    private bool _isDialogVisible = false;
+}

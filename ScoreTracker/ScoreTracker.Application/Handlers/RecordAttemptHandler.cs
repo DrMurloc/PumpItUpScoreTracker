@@ -5,7 +5,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Application.Handlers;
 
-public sealed class RecordAttemptHandler : IRequestHandler<RecordAttemptCommand>
+public sealed class RecordAttemptHandler : IRequestHandler<RecordAttemptCommand, bool>
 {
     private readonly IChartAttemptRepository _attempts;
     private readonly IChartRepository _charts;
@@ -23,7 +23,7 @@ public sealed class RecordAttemptHandler : IRequestHandler<RecordAttemptCommand>
         _dateTimeOffset = dateTimeOffset;
     }
 
-    public async Task<Unit> Handle(RecordAttemptCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(RecordAttemptCommand request, CancellationToken cancellationToken)
     {
         var chart = await _charts.GetChart(request.SongName, request.ChartType, request.DifficultyLevel,
             cancellationToken);
@@ -34,9 +34,10 @@ public sealed class RecordAttemptHandler : IRequestHandler<RecordAttemptCommand>
         var newAttempt = new ChartAttempt(request.Grade, request.IsBroken);
         var bestAttempt = await _attempts.GetBestAttempt(userId, chart, cancellationToken);
 
-        if (bestAttempt == null || newAttempt > bestAttempt)
+        var isBetterAttempt = bestAttempt == null || newAttempt > bestAttempt;
+        if (isBetterAttempt)
             await _attempts.SetBestAttempt(userId, chart, newAttempt, now, cancellationToken);
 
-        return Unit.Value;
+        return isBetterAttempt;
     }
 }
