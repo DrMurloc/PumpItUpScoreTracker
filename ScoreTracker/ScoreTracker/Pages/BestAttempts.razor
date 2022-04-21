@@ -125,11 +125,19 @@
     private async Task SetBroken(BestAttemptDto dto, bool newBroken)
     {
         dto.IsBroken = newBroken;
+        if (string.IsNullOrWhiteSpace(dto.LetterGrade) && !newBroken)
+        {
+            dto.LetterGrade = LetterGrade.A.ToString();
+        }
         await UpdateBest(dto);
     }
     private async Task SetLetter(BestAttemptDto dto, string newLetterGrade)
     {
         dto.LetterGrade = newLetterGrade;
+        if (string.IsNullOrWhiteSpace(newLetterGrade) && !dto.IsBroken)
+        {
+            dto.IsBroken = true;
+        }
         await UpdateBest(dto);
     }
     private async Task UpdateBest(BestAttemptDto dto)

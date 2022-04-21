@@ -1,0 +1,53 @@
+﻿@page "/Titles"
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Web.Dtos
+<PageTitle>Titles</PageTitle>
+
+<MudDataGrid @ref="_dataGrid" T="TitleProgressDto" Items="_titleProgress" Hover="true" ReadOnly="true"
+             Groupable="true" FixedHeader="true" Height="500" Loading="@_isLoading">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Titles</MudText>
+    </ToolBarContent>
+    <Columns>
+        <Column T="TitleProgressDto" Field="TitleCategory" Title="Category" Grouping="true"></Column>
+        <Column T="TitleProgressDto" Field="TitleName" Title="Title" Groupable="false"></Column>
+        <Column T="TitleProgressDto" Field="TitleDescription" Title="Description" Groupable="false"></Column>
+        <Column T="TitleProgressDto" Field="IsTrackable" Title="Completion" Groupable="false">
+            <CellTemplate>
+                <MudText Color="@(context.Item.CompletionCount >= context.Item.RequiredCount ? Color.Success : Color.Primary)">
+                    @if (context.Item.IsTrackable)
+                    {
+                        <span>@context.Item.CompletionCount / @context.Item.RequiredCount</span>
+                    }
+                </MudText>
+            </CellTemplate>
+        </Column>
+    </Columns>
+</MudDataGrid>
+
+@inject IMediator Mediator
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser;
+@code {
+    private MudDataGrid<TitleProgressDto> _dataGrid;
+    private IEnumerable<TitleProgressDto> _titleProgress = Array.Empty<TitleProgressDto>();
+    
+    private bool _isLoading = true;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Login");
+            return;
+        }
+        _isLoading = true;
+        _titleProgress = (await Mediator.Send(new GetTitleProgressQuery())).Select(TitleProgressDto.From).ToArray();
+        _isLoading = false;
+        _dataGrid.Items = _titleProgress;
+        _dataGrid.GroupItems();
+
+    }
+}
