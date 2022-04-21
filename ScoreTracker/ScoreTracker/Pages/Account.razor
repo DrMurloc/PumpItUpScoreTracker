@@ -47,11 +47,12 @@
             /*
               Why does it always come back to javascript...
               Blazor interacts over WebSockets that close HTTP responses before it processes.
-              This means we can't update a user's signed in information (stored in a cookie) utilizing websocket interactions
+              This means we can't update a user's signed in information (stored in a cookie) utilizing standard Blazor back end interactions
               HttpClient interactions all happen via sockets in the back end, so does not contain cookie information for managing user claims.
               So the conclusion was to do a quick javascript fetch to a Refresh endpoint to log out and log back in a user when their claims
               are updated.
               See https://github.com/dotnet/aspnetcore/issues/34095#issuecomment-874012924 for Microsoft's stance on this.
+              See: >:(  for my stance on this.
             */
             var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
             await module.InvokeVoidAsync("refreshLogin");
