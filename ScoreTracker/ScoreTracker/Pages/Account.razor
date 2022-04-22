@@ -7,7 +7,6 @@
 @using CsvHelper
 @using System.Globalization
 @using ScoreTracker.Domain.Exceptions
-@using ScoreTracker.Domain.Models.Upload
 @using ScoreTracker.Web.Dtos
 
 <PageTitle>Account</PageTitle>
@@ -91,8 +90,8 @@
         await using var readStream = file.OpenReadStream(500000);
         using var reader = new StreamReader(readStream);
         using var csv = new CsvReader(reader,CultureInfo.InvariantCulture);
-        var result = new List<BestChartAttemptUploadAttempt>();
-        var failedResults = new List<BestChartAttemptUploadFailure>();
+        var result = new List<BestChartAttempt>();
+        var failedResults = new List<SpreadsheetScoreErrorDto>();
         await csv.ReadAsync();
         csv.ReadHeader();
 
@@ -114,22 +113,49 @@
 
         await foreach (var record in csv.GetRecordsAsync<SpreadsheetScoreDto>())
         {
-            result.Add(record.ToUploadAttempt());
+            try
+            {
+                result.Add(record.ToBestAttempt());
+            }
+            catch (Exception ex)
+            {
+                failedResults.Add(record.ToError("Could not parse row"));
+            }
         }
         _isUploading = true;
         _maxUpload = result.Count;
         _currentUpload = 0;
-
-        const int batchSize = 100;
-        foreach (var batch in result.Chunk(batchSize))
+        foreach (var best in result)
         {
             
             StateHasChanged();
-            _currentUpload += batchSize;
-            var errors = await Mediator.Send(new UploadAttemptsCommand(batch));
-            failedResults.AddRange(errors);
+            _currentUpload++;
+            try
+            {
+                await Mediator.Send(new UpdateBestAttemptCommand(best.Chart.Song.Name, best.Chart.Type, best.Chart.Level, best.BestAttempt?.LetterGrade, best.BestAttempt?.IsBroken ?? true));
+            }
+            catch (ChartNotFoundException)
+            {
+                failedResults.Add(new SpreadsheetScoreErrorDto
+                {
+                    Difficulty = best.Chart.DifficultyString,
+                    LetterGrade = best.BestAttempt?.LetterGrade.ToString() ?? "",
+                    Song = best.Chart.Song.Name,
+                    Error = "Could not find chart"
+                });
+            }
+            catch (Exception)
+            {
+                
+                failedResults.Add(new SpreadsheetScoreErrorDto
+                {
+                    Difficulty = best.Chart.DifficultyString,
+                    LetterGrade = best.BestAttempt?.LetterGrade.ToString() ?? "",
+                    Song = best.Chart.Song.Name,
+                    Error = "An unknown error occured"
+                });
+            }
         }
-
     }
     private async Task UpdateName(string newName)
     {
