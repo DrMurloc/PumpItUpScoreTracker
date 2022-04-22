@@ -4,6 +4,10 @@
 @using MediatR
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Domain.ValueTypes
+@using CsvHelper
+@using System.Globalization
+@using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.Web.Dtos
 
 <PageTitle>Account</PageTitle>
 
@@ -12,8 +16,42 @@
     <MudCardContent>
         <MudTextField Label="Id" Disabled="true" Value="@_id" HelperText="Used primarily for debugging"></MudTextField>
         <MudTextField T="string" Label="Username" MaxLength="100" Value="@_name" ValueChanged="UpdateName"></MudTextField>
+        <br/>
+        <MudFab StartIcon="@Icons.Filled.Upload" Label="Upload Charts" Color="@Color.Primary" Size="@Size.Small" OnClick="@(_=>_isUploadShowing=true)"></MudFab>
+        <MudFab StartIcon="@Icons.Filled.Download" Label="Download Charts" Color="@Color.Primary" Size="@Size.Small"></MudFab>
     </MudCardContent>
 </MudCard>
+
+<InputFile id="uploadInput" OnChange="@UploadFile" hidden accept=".csv"/>
+
+<MudDialog @bind-IsVisible="_isUploadShowing">
+    <TitleContent>
+        Upload Charts
+    </TitleContent>
+    <DialogContent>
+        <p>
+            Some players already maintain scores via Spreadsheets.
+            <br/><br/>
+            In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades.
+        </p>
+        @if (_isUploading)
+        {
+            <MudProgressLinear Color="Color.Primary" Size="Size.Large" Value="@_currentUpload" Min="1" Max="@_maxUpload"/>
+        }
+    </DialogContent>
+    <DialogActions>
+        
+        <MudButton HtmlTag="label"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Filled.Upload"
+                   for="uploadInput">
+            Upload Charts
+        </MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => _isUploadShowing = false)" Class="px-10">Close</MudButton>
+    </DialogActions>
+
+</MudDialog>
 
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
@@ -25,7 +63,10 @@
 {
     private string _id = string.Empty;
     private string _name = string.Empty;
-
+    private bool _isUploadShowing = false;
+    private bool _isUploading = false;
+    private int _maxUpload = 0;
+    private int _currentUpload = 0;
     protected override Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn)
@@ -38,6 +79,84 @@
         return Task.CompletedTask;
     }
 
+    private async Task UploadFile(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file.Size > 500000)
+        {
+            Snackbar.Add("File cannot be larger than .5 MB", Severity.Error);
+            return;
+        }
+        await using var readStream = file.OpenReadStream(500000);
+        using var reader = new StreamReader(readStream);
+        using var csv = new CsvReader(reader,CultureInfo.InvariantCulture);
+        var result = new List<BestChartAttempt>();
+        var failedResults = new List<SpreadsheetScoreErrorDto>();
+        await csv.ReadAsync();
+        csv.ReadHeader();
+
+        if (!csv.TryGetField<string>(nameof(SpreadsheetScoreDto.Song), out var _))
+        {
+            Snackbar.Add("Spreadsheet is missing Song column",Severity.Error);
+            return;
+        }
+        if (!csv.TryGetField<string>(nameof(SpreadsheetScoreDto.Difficulty), out _))
+        {
+            Snackbar.Add("Spreadsheet is missing Difficulty column",Severity.Error);
+            return;
+        }
+        if (!csv.TryGetField<string>(nameof(SpreadsheetScoreDto.LetterGrade), out _name))
+        {
+            Snackbar.Add("Spreadsheet is missing LetterGrade column", Severity.Error);
+            return;
+        }
+
+        await foreach (var record in csv.GetRecordsAsync<SpreadsheetScoreDto>())
+        {
+            try
+            {
+                result.Add(record.ToBestAttempt());
+            }
+            catch (Exception ex)
+            {
+                failedResults.Add(record.ToError("Could not parse row"));
+            }
+        }
+        _isUploading = true;
+        _maxUpload = result.Count;
+        _currentUpload = 0;
+        foreach (var best in result)
+        {
+            
+            StateHasChanged();
+            _currentUpload++;
+            try
+            {
+                await Mediator.Send(new UpdateBestAttemptCommand(best.Chart.Song.Name, best.Chart.Type, best.Chart.Level, best.BestAttempt?.LetterGrade, best.BestAttempt?.IsBroken ?? true));
+            }
+            catch (ChartNotFoundException)
+            {
+                failedResults.Add(new SpreadsheetScoreErrorDto
+                {
+                    Difficulty = best.Chart.DifficultyString,
+                    LetterGrade = best.BestAttempt?.LetterGrade.ToString() ?? "",
+                    Song = best.Chart.Song.Name,
+                    Error = "Could not find chart"
+                });
+            }
+            catch (Exception)
+            {
+                
+                failedResults.Add(new SpreadsheetScoreErrorDto
+                {
+                    Difficulty = best.Chart.DifficultyString,
+                    LetterGrade = best.BestAttempt?.LetterGrade.ToString() ?? "",
+                    Song = best.Chart.Song.Name,
+                    Error = "An unknown error occured"
+                });
+            }
+        }
+    }
     private async Task UpdateName(string newName)
     {
         _name = newName;

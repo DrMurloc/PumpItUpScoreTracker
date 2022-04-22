@@ -1,4 +1,6 @@
-﻿using ScoreTracker.Domain.Exceptions;
+﻿using System.Text.RegularExpressions;
+using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.Exceptions;
 
 namespace ScoreTracker.Domain.ValueTypes;
 
@@ -89,6 +91,20 @@ public readonly struct DifficultyLevel : IComparable<DifficultyLevel>
         if (level > Max) throw new InvalidDifficultyLevelException("Level cannot be greater than 28");
 
         return new DifficultyLevel(level);
+    }
+
+    private static readonly Regex _shortHandRegex = new(@"^\s*([A-Za-z]+)([0-9]+)\s*$", RegexOptions.Compiled);
+
+    public static (ChartType chartType, DifficultyLevel level) ParseShortHand(string shortHand)
+    {
+        var match = _shortHandRegex.Match(shortHand);
+        if (!match.Success)
+            throw new InvalidDifficultyLevelException($"Difficulty Level short hand {shortHand} was invalid");
+
+        var chartType = ChartTypeHelperMethods.ParseChartTypeShortHand(match.Groups[1].Value);
+        if (!TryParse(match.Groups[2].Value, out var level))
+            throw new InvalidDifficultyLevelException($"{match.Groups[2]} is not a valid level");
+        return (chartType, level);
     }
 
     public int CompareTo(DifficultyLevel other)
