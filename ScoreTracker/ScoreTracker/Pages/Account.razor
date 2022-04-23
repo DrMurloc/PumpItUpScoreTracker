@@ -29,13 +29,23 @@
         Upload Charts
     </TitleContent>
     <DialogContent>
-        <p>
-            Some players already maintain scores via Spreadsheets.
-            <br/><br/>
-            In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades.
-        </p>
-        @if (_isUploading)
+        
+        @if (!_isUploading)
         {
+            
+            <p>
+                Some players already maintain scores via Spreadsheets.
+                <br/><br/>
+                In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades.
+            </p>
+        }
+        else
+        {
+            <p>
+                If you leave this page, the upload will stop but you will not lose any scores that have already been recorded from your upload.
+            </p>
+            <br/>
+            <span>@_currentUpload/@_maxUpload Uploaded. @_remainingTime.ToString(@"m\:ss") Remaining. @_failedCount Failed to record</span>
             <MudProgressLinear Color="Color.Primary" Size="Size.Large" Value="@_currentUpload" Min="1" Max="@_maxUpload"/>
         }
     </DialogContent>
@@ -45,6 +55,7 @@
                    Variant="Variant.Filled"
                    Color="Color.Primary"
                    StartIcon="@Icons.Filled.Upload"
+                   Disabled="@_isUploading"
                    for="uploadInput">
             Upload Charts
         </MudButton>
@@ -67,6 +78,8 @@
     private bool _isUploading = false;
     private int _maxUpload = 0;
     private int _currentUpload = 0;
+    private int _failedCount = 0;
+    private TimeSpan _remainingTime = TimeSpan.MinValue;
     protected override Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn)
@@ -125,11 +138,14 @@
         _isUploading = true;
         _maxUpload = result.Count;
         _currentUpload = 0;
+        _failedCount = failedResults.Count;
+        var startTime = DateTimeOffset.Now;
         foreach (var best in result)
         {
             
             StateHasChanged();
             _currentUpload++;
+            _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxUpload - (double)_currentUpload) / (double)_currentUpload);
             try
             {
                 await Mediator.Send(new UpdateBestAttemptCommand(best.Chart.Song.Name, best.Chart.Type, best.Chart.Level, best.BestAttempt?.LetterGrade, best.BestAttempt?.IsBroken ?? true));
@@ -143,6 +159,7 @@
                     Song = best.Chart.Song.Name,
                     Error = "Could not find chart"
                 });
+                _failedCount = failedResults.Count;
             }
             catch (Exception)
             {
@@ -154,6 +171,7 @@
                     Song = best.Chart.Song.Name,
                     Error = "An unknown error occured"
                 });
+                _failedCount = failedResults.Count;
             }
         }
     }
