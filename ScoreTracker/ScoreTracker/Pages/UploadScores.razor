@@ -94,9 +94,9 @@
         @if (_failedUploads.Any() && _currentStep is Step.Confirming or Step.Finished)
         {
             <MudButton OnClick="@DownloadFailures"
-                       Variant="@Variant.Filled"
+                       Variant="@Variant.Outlined"
                        Color="@Color.Primary"
-                       StartIcon="@Icons.Filled.Download">Download @_failedUploads.Count Upload Fails</MudButton>
+                       StartIcon="@Icons.Filled.Download">Download Failures</MudButton>
         }
     </MudCardActions>
 </MudCard>
