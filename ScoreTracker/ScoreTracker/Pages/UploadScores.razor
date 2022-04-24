@@ -12,7 +12,7 @@
 <PageTitle>Upload Scores</PageTitle>
 
 <MudCard >
-    <MudCardHeader>Upload Scores</MudCardHeader>
+    <MudCardHeader><h2>Upload Scores</h2></MudCardHeader>
     <MudCardContent>
         @switch (_currentStep)
         {
@@ -27,11 +27,26 @@
                 break;
             case Step.Uploading:
                 <p>
-                    If you leave this page, the upload will stop but you will not lose any scores that have already been recorded from your upload.
+                    Spreadsheet is uploading and being processed...
+                </p>
+                <MudProgressLinear Indeterminate="true" Color="@Color.Primary" Size="@Size.Large"></MudProgressLinear>
+                break;
+            case Step.Confirming:
+                <p>
+                    @_spreadSheetScores.Count scores were found.
+                    <br/><br/>
+                    @_failedUploads.Count rows were unable to be parsed. You can download the failures as a CSV below.
+                    <br/><br/>
+                    Continuing will begin to save the uploaded scores over your existing records. You will not be able to undo this. You will be able to stop the saving process, but it will not roll back uploads.
+                </p>
+                break;
+            case Step.Saving:
+                <p>
+                    If you leave this page or cancel, the upload will stop but you will not lose any scores that have already been recorded from your upload.
                 </p>
                 <br/>
-                <span>@_currentUpload/@_maxUpload Uploaded. @_remainingTime.ToString(@"m\:ss") Remaining. @_failedUploads.Count Failed to record</span>
-                <MudProgressLinear Color="@Color.Primary" Size="@Size.Large" Value="@_currentUpload" Min="1" Max="@_maxUpload"/>
+                <span>@_currentSaved/@_maxSaving Uploaded. @_remainingTime.ToString(@"m\:ss") Remaining. @_failedUploads.Count Failed to record</span>
+                <MudProgressLinear Color="@Color.Primary" Size="@Size.Large" Value="@_currentSaved" Min="1" Max="@_maxSaving"/>
                 break;
             case Step.Finished when _failedUploads.Any():
                 <p>
@@ -51,31 +66,37 @@
         }
     </MudCardContent>
     <MudCardActions>
-        @switch (_currentStep)
+        <MudSpacer></MudSpacer>
+        @if (_currentStep is Step.Uploading or Step.Confirming or Step.Saving)
         {
-            case Step.Information:
-                <MudButton HtmlTag="label"
-                           Variant="@Variant.Filled"
-                           Color="@Color.Primary"
-                           StartIcon="@Icons.Filled.UploadFile"
-                           for="uploadInput">
-                    Upload Charts
-                </MudButton>
-                break;
-            case Step.Uploading:
-                <MudButton Variant="@Variant.Outlined"
-                           Color="@Color.Primary"
-                           StartIcon="@Icons.Filled.Cancel"
-                           OnClick="@(_ => _currentStep = Step.Information)">Cancel</MudButton>
-                break;
-            case Step.Finished when _failedUploads.Any():
-                <MudButton OnClick="@DownloadFailures"
-                           Variant="@Variant.Filled"
-                           Color="@Color.Primary"
-                           StartIcon="@Icons.Filled.Download">Download @_failedUploads.Count Upload Fails</MudButton>
-                break;
-            default:
-                break;
+            <MudButton Variant="@Variant.Text"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Filled.Cancel"
+                       OnClick="@(_ => _currentStep = Step.Information)">Cancel</MudButton>
+        }
+        @if (_currentStep == Step.Information)
+        {
+            <MudButton HtmlTag="label"
+                       Variant="@Variant.Filled"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Filled.UploadFile"
+                       for="uploadInput">
+                Upload Scores
+            </MudButton>
+        }
+        @if (_currentStep == Step.Confirming)
+        {
+            <MudButton Variant="@Variant.Filled"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Filled.Save"
+                       OnClick="@SaveScores">Save Scores</MudButton>
+        }
+        @if (_failedUploads.Any() && _currentStep is Step.Confirming or Step.Finished)
+        {
+            <MudButton OnClick="@DownloadFailures"
+                       Variant="@Variant.Filled"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Filled.Download">Download @_failedUploads.Count Upload Fails</MudButton>
         }
     </MudCardActions>
 </MudCard>
@@ -93,14 +114,17 @@
     {
         Information,
         Uploading,
+        Confirming,
+        Saving,
         Finished
     }
+
     private Step _currentStep = Step.Information;
-    private int _maxUpload = 0;
-    private int _currentUpload = 0;
+    private int _maxSaving = 0;
+    private int _currentSaved = 0;
     private TimeSpan _remainingTime = TimeSpan.MinValue;
     private List<SpreadsheetScoreErrorDto> _failedUploads = new List<SpreadsheetScoreErrorDto>();
-
+    private List<BestChartAttempt> _spreadSheetScores = new List<BestChartAttempt>();
     protected override Task OnInitializedAsync()
     {
         if (CurrentUser.IsLoggedIn) return Task.CompletedTask;
@@ -127,6 +151,52 @@
         await module.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
 
     }
+
+    private async Task SaveScores()
+    {
+        _currentStep = Step.Saving;
+        _maxSaving = _spreadSheetScores.Count;
+        _currentSaved = 0;
+        var startTime = DateTimeOffset.Now;
+        foreach (var best in _spreadSheetScores)
+        {
+
+            if (_currentStep != Step.Saving)
+            {
+                return;
+            }
+
+            StateHasChanged();
+            _currentSaved++;
+            _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxSaving - (double)_currentSaved) / (double)_currentSaved);
+            try
+            {
+                await Mediator.Send(new UpdateBestAttemptCommand(best.Chart.Song.Name, best.Chart.Type, best.Chart.Level, best.BestAttempt?.LetterGrade, best.BestAttempt?.IsBroken ?? true));
+            }
+            catch (ChartNotFoundException)
+            {
+                _failedUploads.Add(new SpreadsheetScoreErrorDto
+                {
+                    Difficulty = best.Chart.DifficultyString,
+                    LetterGrade = best.BestAttempt?.LetterGrade.ToString() ?? "",
+                    Song = best.Chart.Song.Name,
+                    Error = "Could not find chart"
+                });
+            }
+            catch (Exception)
+            {
+                
+                _failedUploads.Add(new SpreadsheetScoreErrorDto
+                {
+                    Difficulty = best.Chart.DifficultyString,
+                    LetterGrade = best.BestAttempt?.LetterGrade.ToString() ?? "",
+                    Song = best.Chart.Song.Name,
+                    Error = "An unknown error occured"
+                });
+            }
+        }
+        _currentStep = Step.Finished;
+    }
     private async Task UploadFile(InputFileChangeEventArgs e)
     {
         var file = e.File;
@@ -139,7 +209,7 @@
         await using var readStream = file.OpenReadStream(500000);
         using var reader = new StreamReader(readStream);
         using var csv = new CsvReader(reader,CultureInfo.InvariantCulture);
-        var result = new List<BestChartAttempt>();
+        _spreadSheetScores = new List<BestChartAttempt>();
         _failedUploads = new List<SpreadsheetScoreErrorDto>();
         await csv.ReadAsync();
         csv.ReadHeader();
@@ -168,54 +238,13 @@
             }
             try
             {
-                result.Add(record.ToBestAttempt());
+                _spreadSheetScores.Add(record.ToBestAttempt());
             }
             catch (Exception ex)
             {
                 _failedUploads.Add(record.ToError("Could not parse row"));
             }
         }
-        _maxUpload = result.Count;
-        _currentUpload = 0;
-        var startTime = DateTimeOffset.Now;
-        foreach (var best in result)
-        {
-
-            if (_currentStep != Step.Uploading)
-            {
-                return;
-            }
-
-            StateHasChanged();
-            _currentUpload++;
-            _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxUpload - (double)_currentUpload) / (double)_currentUpload);
-            try
-            {
-                await Mediator.Send(new UpdateBestAttemptCommand(best.Chart.Song.Name, best.Chart.Type, best.Chart.Level, best.BestAttempt?.LetterGrade, best.BestAttempt?.IsBroken ?? true));
-            }
-            catch (ChartNotFoundException)
-            {
-                _failedUploads.Add(new SpreadsheetScoreErrorDto
-                {
-                    Difficulty = best.Chart.DifficultyString,
-                    LetterGrade = best.BestAttempt?.LetterGrade.ToString() ?? "",
-                    Song = best.Chart.Song.Name,
-                    Error = "Could not find chart"
-                });
-            }
-            catch (Exception)
-            {
-                
-                _failedUploads.Add(new SpreadsheetScoreErrorDto
-                {
-                    Difficulty = best.Chart.DifficultyString,
-                    LetterGrade = best.BestAttempt?.LetterGrade.ToString() ?? "",
-                    Song = best.Chart.Song.Name,
-                    Error = "An unknown error occured"
-                });
-            }
-        }
-        _currentStep = Step.Finished;
-
+        _currentStep = Step.Confirming;
     }
 }
