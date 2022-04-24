@@ -1,0 +1,247 @@
+﻿@page "/UploadScores"
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.Models
+@using MediatR
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Domain.ValueTypes
+@using CsvHelper
+@using System.Globalization
+@using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.Web.Dtos
+@using ScoreTracker.Web.Services
+
+<PageTitle>Upload Scores</PageTitle>
+
+<MudCard >
+    <MudCardHeader><h2>Upload Scores</h2></MudCardHeader>
+    <MudCardContent>
+        @switch (_currentStep)
+        {
+            case Step.Information:
+                <p>
+                    Some players already maintain scores via Spreadsheets.
+                    <br/><br/>
+                    In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades.
+                    <br/><br/>
+                    After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed.
+                </p>
+                break;
+            case Step.Uploading:
+                <p>
+                    Spreadsheet is uploading and being processed...
+                </p>
+                <MudProgressLinear Indeterminate="true" Color="@Color.Primary" Size="@Size.Large"></MudProgressLinear>
+                break;
+            case Step.Confirming:
+                <p>
+                    <b>File type:</b> @_fileType was detected.
+                    <br/>
+                    <b>Scores parsed:</b> @_spreadSheetScores.Count
+                    <br/>
+                    <b>Parse Failures:</b> @_failedUploads.Count
+                    <br/><br/>
+                    Continuing will begin to save the uploaded scores over your existing records. You will not be able to undo this. You will be able to stop the saving process, but it will not roll back uploads.
+                </p>
+                break;
+            case Step.Saving:
+                <p>
+                    If you leave this page or cancel, the upload will stop but you will not lose any scores that have already been recorded from your upload.
+                </p>
+                <br/>
+                <span>@_currentSaved/@_maxSaving Uploaded. @_remainingTime.ToString(@"m\:ss") Remaining. @_failedUploads.Count Failed to record</span>
+                <MudProgressLinear Color="@Color.Primary" Size="@Size.Large" Value="@_currentSaved" Min="1" Max="@_maxSaving"/>
+                break;
+            case Step.Finished when _failedUploads.Any():
+                <p>
+                    You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again.
+                </p>
+                break;
+            case Step.Finished when !_failedUploads.Any():
+                <p>
+                    All charts you uploaded were successfully updated!
+                </p>
+                break;
+            default:
+                <p>
+                    You somehow ended up in a state between realities. Refresh the page to try again.
+                </p>
+                break;
+        }
+    </MudCardContent>
+    <MudCardActions>
+        <MudSpacer></MudSpacer>
+        @if (_currentStep is Step.Uploading or Step.Confirming or Step.Saving)
+        {
+            <MudButton Variant="@Variant.Text"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Filled.Cancel"
+                       OnClick="@Cancel">Cancel</MudButton>
+        }
+        @if (_currentStep == Step.Information)
+        {
+            <MudButton HtmlTag="label"
+                       Variant="@Variant.Filled"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Filled.UploadFile"
+                       for="uploadInput">
+                Upload Scores
+            </MudButton>
+        }
+        @if (_currentStep == Step.Confirming)
+        {
+            <MudButton Variant="@Variant.Filled"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Filled.Save"
+                       OnClick="@SaveScores">Save Scores</MudButton>
+        }
+        @if (_failedUploads.Any() && _currentStep is Step.Confirming or Step.Finished)
+        {
+            <MudButton OnClick="@DownloadFailures"
+                       Variant="@Variant.Outlined"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Filled.FileDownload">Download Failures</MudButton>
+        }
+    </MudCardActions>
+</MudCard>
+<InputFile id="uploadInput" OnChange="@UploadFile" hidden accept=".csv"/>
+
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser;
+@inject IMediator Mediator;
+@inject ISnackbar Snackbar;
+@inject NavigationManager NavigationManager;
+@inject IJSRuntime JSRuntime;
+@code
+{
+    private enum Step
+    {
+        Information,
+        Uploading,
+        Confirming,
+        Saving,
+        Finished
+    }
+
+    private Step _currentStep = Step.Information;
+    private int _maxSaving = 0;
+    private int _currentSaved = 0;
+    private string _fileType = "";
+    private TimeSpan _remainingTime = TimeSpan.MinValue;
+    private List<SpreadsheetScoreErrorDto> _failedUploads = new List<SpreadsheetScoreErrorDto>();
+    private List<BestChartAttempt> _spreadSheetScores = new List<BestChartAttempt>();
+    private CancellationTokenSource _currentCancellation;
+    protected override Task OnInitializedAsync()
+    {
+        if (CurrentUser.IsLoggedIn) return Task.CompletedTask;
+
+        NavManager.NavigateTo("/Login");
+        return Task.CompletedTask;
+    }
+
+    private void Cancel()
+    {
+        _currentStep = Step.Information;
+        _currentCancellation?.Cancel();
+    }
+    private async Task DownloadFailures()
+    {
+        
+        var stream = new MemoryStream();
+        await using var writer = new StreamWriter(stream);
+        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+        await csv.WriteRecordsAsync(_failedUploads);
+        await writer.FlushAsync();
+        await csv.FlushAsync();
+        const string fileName = "failedUploads.csv";
+
+        using var streamRef = new DotNetStreamReference(stream: stream);
+        stream.Seek(0, SeekOrigin.Begin);
+
+        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
+        await module.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+
+    }
+
+    private async Task SaveScores()
+    {
+        _currentStep = Step.Saving;
+        _currentCancellation = new CancellationTokenSource();
+        var cancellationToken = _currentCancellation.Token;
+        _maxSaving = _spreadSheetScores.Count;
+        _currentSaved = 0;
+        var startTime = DateTimeOffset.Now;
+        foreach (var best in _spreadSheetScores)
+        {
+
+            if (_currentCancellation.IsCancellationRequested)
+            {
+                return;
+            }
+
+            StateHasChanged();
+            _currentSaved++;
+            _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxSaving - (double)_currentSaved) / (double)_currentSaved);
+            try
+            {
+                await Mediator.Send(new UpdateBestAttemptCommand(best.Chart.Song.Name, best.Chart.Type, best.Chart.Level, best.BestAttempt?.LetterGrade, best.BestAttempt?.IsBroken ?? true), cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (ChartNotFoundException)
+            {
+                _failedUploads.Add(new SpreadsheetScoreErrorDto
+                {
+                    Difficulty = best.Chart.DifficultyString,
+                    LetterGrade = best.BestAttempt?.LetterGrade.ToString() ?? "",
+                    Song = best.Chart.Song.Name,
+                    Error = "Could not find chart"
+                });
+            }
+            catch (Exception)
+            {
+                
+                _failedUploads.Add(new SpreadsheetScoreErrorDto
+                {
+                    Difficulty = best.Chart.DifficultyString,
+                    LetterGrade = best.BestAttempt?.LetterGrade.ToString() ?? "",
+                    Song = best.Chart.Song.Name,
+                    Error = "An unknown error occured"
+                });
+            }
+        }
+        _currentStep = Step.Finished;
+    }
+    private async Task UploadFile(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file.Size > 500000)
+        {
+            Snackbar.Add("File cannot be larger than .5 MB", Severity.Error);
+            return;
+        }
+        _currentStep = Step.Uploading;
+        await using var readStream = file.OpenReadStream(500000);
+        _currentCancellation = new CancellationTokenSource();
+
+        try
+        {
+            var result = await ScoreFile.ReadAsync(readStream, _currentCancellation.Token);
+            _spreadSheetScores = result.Scores.ToList();
+            _failedUploads = result.Errors.ToList();
+            _fileType = result.TypeDescription;
+            _currentStep = Step.Confirming;
+        }
+        catch (ScoreFileParseException ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+            _currentStep = Step.Information;
+            return;
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+    }
+}

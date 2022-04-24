@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
@@ -28,7 +29,7 @@ public sealed class EFChartRepository : IChartRepository
                 join c in _database.Chart on s.Id equals c.SongId
                 where s.Name == (string)songName && c.Type == chartType.ToString() && c.Level == (int)level
                 select new Chart(new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level))
-            .SingleAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken) ?? throw new ChartNotFoundException();
     }
 
     public async Task<IEnumerable<Chart>> GetChartsForSong(Name songName, CancellationToken cancellationToken = default)

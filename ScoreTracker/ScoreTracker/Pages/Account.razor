@@ -4,6 +4,10 @@
 @using MediatR
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Domain.ValueTypes
+@using CsvHelper
+@using System.Globalization
+@using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.Web.Dtos
 
 <PageTitle>Account</PageTitle>
 
@@ -12,6 +16,8 @@
     <MudCardContent>
         <MudTextField Label="Id" Disabled="true" Value="@_id" HelperText="Used primarily for debugging"></MudTextField>
         <MudTextField T="string" Label="Username" MaxLength="100" Value="@_name" ValueChanged="UpdateName"></MudTextField>
+        <br/>
+        <MudFab StartIcon="@Icons.Filled.Download" Label="Download Charts" Color="@Color.Primary" Size="@Size.Small"></MudFab>
     </MudCardContent>
 </MudCard>
 
@@ -25,7 +31,6 @@
 {
     private string _id = string.Empty;
     private string _name = string.Empty;
-
     protected override Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn)
@@ -37,7 +42,8 @@
         _name = CurrentUser.User.Name;
         return Task.CompletedTask;
     }
-
+    
+    
     private async Task UpdateName(string newName)
     {
         _name = newName;
