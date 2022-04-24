@@ -8,6 +8,7 @@
 @using System.Globalization
 @using ScoreTracker.Domain.Exceptions
 @using ScoreTracker.Web.Dtos
+@using ScoreTracker.Web.Services
 
 <PageTitle>Upload Scores</PageTitle>
 
@@ -72,7 +73,7 @@
             <MudButton Variant="@Variant.Text"
                        Color="@Color.Primary"
                        StartIcon="@Icons.Filled.Cancel"
-                       OnClick="@(_ => _currentStep = Step.Information)">Cancel</MudButton>
+                       OnClick="@Cancel">Cancel</MudButton>
         }
         @if (_currentStep == Step.Information)
         {
@@ -125,6 +126,7 @@
     private TimeSpan _remainingTime = TimeSpan.MinValue;
     private List<SpreadsheetScoreErrorDto> _failedUploads = new List<SpreadsheetScoreErrorDto>();
     private List<BestChartAttempt> _spreadSheetScores = new List<BestChartAttempt>();
+    private CancellationTokenSource _currentCancellation;
     protected override Task OnInitializedAsync()
     {
         if (CurrentUser.IsLoggedIn) return Task.CompletedTask;
@@ -133,6 +135,11 @@
         return Task.CompletedTask;
     }
 
+    private void Cancel()
+    {
+        _currentStep = Step.Information;
+        _currentCancellation?.Cancel();
+    }
     private async Task DownloadFailures()
     {
         
@@ -155,13 +162,15 @@
     private async Task SaveScores()
     {
         _currentStep = Step.Saving;
+        _currentCancellation = new CancellationTokenSource();
+        var cancellationToken = _currentCancellation.Token;
         _maxSaving = _spreadSheetScores.Count;
         _currentSaved = 0;
         var startTime = DateTimeOffset.Now;
         foreach (var best in _spreadSheetScores)
         {
 
-            if (_currentStep != Step.Saving)
+            if (_currentCancellation.IsCancellationRequested)
             {
                 return;
             }
@@ -171,7 +180,11 @@
             _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxSaving - (double)_currentSaved) / (double)_currentSaved);
             try
             {
-                await Mediator.Send(new UpdateBestAttemptCommand(best.Chart.Song.Name, best.Chart.Type, best.Chart.Level, best.BestAttempt?.LetterGrade, best.BestAttempt?.IsBroken ?? true));
+                await Mediator.Send(new UpdateBestAttemptCommand(best.Chart.Song.Name, best.Chart.Type, best.Chart.Level, best.BestAttempt?.LetterGrade, best.BestAttempt?.IsBroken ?? true), cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
             }
             catch (ChartNotFoundException)
             {
@@ -207,43 +220,23 @@
         }
         _currentStep = Step.Uploading;
         await using var readStream = file.OpenReadStream(500000);
-        using var reader = new StreamReader(readStream);
-        using var csv = new CsvReader(reader,CultureInfo.InvariantCulture);
-        _spreadSheetScores = new List<BestChartAttempt>();
-        _failedUploads = new List<SpreadsheetScoreErrorDto>();
-        await csv.ReadAsync();
-        csv.ReadHeader();
+        _currentCancellation = new CancellationTokenSource();
 
-        if (!csv.TryGetField<string>(nameof(SpreadsheetScoreDto.Song), out var _))
+        try
         {
-            Snackbar.Add("Spreadsheet is missing Song column",Severity.Error);
+            var result = await ScoreFile.ReadAsync(readStream, _currentCancellation.Token);
+            _spreadSheetScores = result.Scores.ToList();
+            _failedUploads = result.Errors.ToList();
+        }
+        catch (ScoreFileParseException ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+            _currentStep = Step.Information;
             return;
         }
-        if (!csv.TryGetField<string>(nameof(SpreadsheetScoreDto.Difficulty), out _))
+        catch (OperationCanceledException)
         {
-            Snackbar.Add("Spreadsheet is missing Difficulty column",Severity.Error);
             return;
-        }
-        if (!csv.TryGetField<string>(nameof(SpreadsheetScoreDto.LetterGrade), out _))
-        {
-            Snackbar.Add("Spreadsheet is missing LetterGrade column", Severity.Error);
-            return;
-        }
-
-        await foreach (var record in csv.GetRecordsAsync<SpreadsheetScoreDto>())
-        {
-            if (_currentStep != Step.Uploading)
-            {
-                return;
-            }
-            try
-            {
-                _spreadSheetScores.Add(record.ToBestAttempt());
-            }
-            catch (Exception ex)
-            {
-                _failedUploads.Add(record.ToError("Could not parse row"));
-            }
         }
         _currentStep = Step.Confirming;
     }
