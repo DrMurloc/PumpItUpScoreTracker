@@ -34,9 +34,11 @@
                 break;
             case Step.Confirming:
                 <p>
-                    @_spreadSheetScores.Count scores were found.
-                    <br/><br/>
-                    @_failedUploads.Count rows were unable to be parsed. You can download the failures as a CSV below.
+                    <b>File type:</b> @_fileType was detected.
+                    <br/>
+                    <b>Scores parsed:</b> @_spreadSheetScores.Count
+                    <br/>
+                    <b>Parse Failures:</b> @_failedUploads.Count
                     <br/><br/>
                     Continuing will begin to save the uploaded scores over your existing records. You will not be able to undo this. You will be able to stop the saving process, but it will not roll back uploads.
                 </p>
@@ -97,7 +99,7 @@
             <MudButton OnClick="@DownloadFailures"
                        Variant="@Variant.Outlined"
                        Color="@Color.Primary"
-                       StartIcon="@Icons.Filled.Download">Download Failures</MudButton>
+                       StartIcon="@Icons.Filled.FileDownload">Download Failures</MudButton>
         }
     </MudCardActions>
 </MudCard>
@@ -123,6 +125,7 @@
     private Step _currentStep = Step.Information;
     private int _maxSaving = 0;
     private int _currentSaved = 0;
+    private string _fileType = "";
     private TimeSpan _remainingTime = TimeSpan.MinValue;
     private List<SpreadsheetScoreErrorDto> _failedUploads = new List<SpreadsheetScoreErrorDto>();
     private List<BestChartAttempt> _spreadSheetScores = new List<BestChartAttempt>();
@@ -227,6 +230,8 @@
             var result = await ScoreFile.ReadAsync(readStream, _currentCancellation.Token);
             _spreadSheetScores = result.Scores.ToList();
             _failedUploads = result.Errors.ToList();
+            _fileType = result.TypeDescription;
+            _currentStep = Step.Confirming;
         }
         catch (ScoreFileParseException ex)
         {
@@ -238,6 +243,5 @@
         {
             return;
         }
-        _currentStep = Step.Confirming;
     }
 }

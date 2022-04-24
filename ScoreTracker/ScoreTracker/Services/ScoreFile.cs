@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Globalization;
+using System.Reflection;
 using CsvHelper;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Web.Dtos;
@@ -12,12 +13,16 @@ public sealed class ScoreFile
     private ScoreFile(ScoreFileType type, IEnumerable<BestChartAttempt> scores,
         IEnumerable<SpreadsheetScoreErrorDto> errors)
     {
-        Type = type;
+        FileType = type;
         Scores = scores.ToImmutableList();
         Errors = errors.ToImmutableList();
     }
 
-    public ScoreFileType Type { get; }
+    public ScoreFileType FileType { get; }
+
+    public string TypeDescription => typeof(ScoreFileType).GetField(FileType.ToString())
+        ?.GetCustomAttribute<DescriptionAttribute>()?.Description ?? "";
+
     public IImmutableList<BestChartAttempt> Scores { get; }
     public IImmutableList<SpreadsheetScoreErrorDto> Errors { get; }
 
