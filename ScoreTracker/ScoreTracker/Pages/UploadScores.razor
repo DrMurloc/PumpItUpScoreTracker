@@ -121,6 +121,7 @@
         const string fileName = "failedUploads.csv";
 
         using var streamRef = new DotNetStreamReference(stream: stream);
+        stream.Seek(0, SeekOrigin.Begin);
 
         var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
         await module.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
