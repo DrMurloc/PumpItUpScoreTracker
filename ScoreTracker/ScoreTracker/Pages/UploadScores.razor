@@ -11,63 +11,76 @@
 
 <PageTitle>Upload Scores</PageTitle>
 
-<MudCard>
+<MudCard >
     <MudCardHeader>Upload Scores</MudCardHeader>
     <MudCardContent>
-        <p>
-            Some players already maintain scores via Spreadsheets.
-            <br/><br/>
-            In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades.
-            <br/><br/>
-            After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed.
-        </p>
+        @switch (_currentStep)
+        {
+            case Step.Information:
+                <p>
+                    Some players already maintain scores via Spreadsheets.
+                    <br/><br/>
+                    In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades.
+                    <br/><br/>
+                    After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed.
+                </p>
+                break;
+            case Step.Uploading:
+                <p>
+                    If you leave this page, the upload will stop but you will not lose any scores that have already been recorded from your upload.
+                </p>
+                <br/>
+                <span>@_currentUpload/@_maxUpload Uploaded. @_remainingTime.ToString(@"m\:ss") Remaining. @_failedUploads.Count Failed to record</span>
+                <MudProgressLinear Color="@Color.Primary" Size="@Size.Large" Value="@_currentUpload" Min="1" Max="@_maxUpload"/>
+                break;
+            case Step.Finished when _failedUploads.Any():
+                <p>
+                    You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again.
+                </p>
+                break;
+            case Step.Finished when !_failedUploads.Any():
+                <p>
+                    All charts you uploaded were successfully updated!
+                </p>
+                break;
+            default:
+                <p>
+                    You somehow ended up in a state between realities. Refresh the page to try again.
+                </p>
+                break;
+        }
     </MudCardContent>
     <MudCardActions>
-        <MudButton HtmlTag="label"
-                   Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Filled.Upload"
-                   Disabled="@(_currentStep==Step.Uploading)"
-                   for="uploadInput">
-            Upload Charts
-        </MudButton>
+        @switch (_currentStep)
+        {
+            case Step.Information:
+                <MudButton HtmlTag="label"
+                           Variant="@Variant.Filled"
+                           Color="@Color.Primary"
+                           StartIcon="@Icons.Filled.UploadFile"
+                           for="uploadInput">
+                    Upload Charts
+                </MudButton>
+                break;
+            case Step.Uploading:
+                <MudButton Variant="@Variant.Outlined"
+                           Color="@Color.Primary"
+                           StartIcon="@Icons.Filled.Cancel"
+                           OnClick="@(_ => _currentStep = Step.Information)">Cancel</MudButton>
+                break;
+            case Step.Finished when _failedUploads.Any():
+                <MudButton OnClick="@DownloadFailures"
+                           Variant="@Variant.Filled"
+                           Color="@Color.Primary"
+                           StartIcon="@Icons.Filled.Download">Download @_failedUploads.Count Upload Fails</MudButton>
+                break;
+            default:
+                break;
+        }
     </MudCardActions>
 </MudCard>
-
 <InputFile id="uploadInput" OnChange="@UploadFile" hidden accept=".csv"/>
 
-<MudDialog @bind-IsVisible="_isUploadShowing">
-    <TitleContent>
-        Upload Charts
-    </TitleContent>
-    <DialogContent>
-        <p>
-            If you leave this page, the upload will stop but you will not lose any scores that have already been recorded from your upload.
-        </p>
-        <br/>
-        <span>@_currentUpload/@_maxUpload Uploaded. @_remainingTime.ToString(@"m\:ss") Remaining. @(_failedUploads.Count) Failed to record</span>
-        <MudProgressLinear Color="Color.Primary" Size="Size.Large" Value="@_currentUpload" Min="1" Max="@_maxUpload"/>
-    </DialogContent>
-    <DialogActions>
-        @if (_currentStep==Step.Finished && _failedUploads.Any())
-        {
-            <MudButton OnClick="@DownloadFailures"
-                Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       StartIcon="@Icons.Filled.Download">Download @_failedUploads.Count Upload Fails</MudButton>
-        }
-        <MudButton HtmlTag="label"
-                   Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Filled.Upload"
-                   Disabled="@(_currentStep==Step.Uploading)"
-                   for="uploadInput">
-            Upload Charts
-        </MudButton>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => _isUploadShowing = false)" Class="px-10">Close</MudButton>
-    </DialogActions>
-
-</MudDialog>
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
@@ -82,7 +95,6 @@
         Uploading,
         Finished
     }
-    private bool _isUploadShowing = false;
     private Step _currentStep = Step.Information;
     private int _maxUpload = 0;
     private int _currentUpload = 0;
@@ -149,6 +161,10 @@
 
         await foreach (var record in csv.GetRecordsAsync<SpreadsheetScoreDto>())
         {
+            if (_currentStep != Step.Uploading)
+            {
+                return;
+            }
             try
             {
                 result.Add(record.ToBestAttempt());
@@ -163,7 +179,12 @@
         var startTime = DateTimeOffset.Now;
         foreach (var best in result)
         {
-            
+
+            if (_currentStep != Step.Uploading)
+            {
+                return;
+            }
+
             StateHasChanged();
             _currentUpload++;
             _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxUpload - (double)_currentUpload) / (double)_currentUpload);
