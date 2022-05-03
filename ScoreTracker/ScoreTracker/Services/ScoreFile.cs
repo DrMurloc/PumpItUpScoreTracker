@@ -29,19 +29,25 @@ public sealed class ScoreFile
 
     public static async Task<ScoreFile> ReadAsync(IBrowserFile file, CancellationToken cancellationToken = default)
     {
-        await using var readStream = file.OpenReadStream(500000, cancellationToken);
-        switch (file.ContentType.ToLower())
+        return file.ContentType.ToLower() switch
         {
-            case "text/csv":
-
-                return await BuildFromCsv(readStream, cancellationToken);
-            default:
-                throw new ScoreFileParseException($"Invalid file type {file.ContentType}");
-        }
+            "text/csv" => await BuildFromCsv(file, cancellationToken),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" => await BuildFromExcel(file,
+                cancellationToken),
+            _ => throw new ScoreFileParseException($"Invalid file type {file.ContentType}")
+        };
     }
 
-    private static async Task<ScoreFile> BuildFromCsv(Stream readStream, CancellationToken cancellationToken = default)
+    private static async Task<ScoreFile> BuildFromExcel(IBrowserFile file,
+        CancellationToken cancellationToken = default)
     {
+        return new ScoreFile(ScoreFileType.LetterGradeExcel, Array.Empty<BestChartAttempt>(),
+            Array.Empty<SpreadsheetScoreErrorDto>());
+    }
+
+    private static async Task<ScoreFile> BuildFromCsv(IBrowserFile file, CancellationToken cancellationToken = default)
+    {
+        await using var readStream = file.OpenReadStream(500000, cancellationToken);
         using var reader = new StreamReader(readStream);
         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
         var scores = new List<BestChartAttempt>();
@@ -84,5 +90,6 @@ public sealed class ScoreFileParseException : Exception
 public enum ScoreFileType
 {
     [Description("Unknown")] Unknown,
-    [Description("Letter Grade CSV")] LetterGradeCsv
+    [Description("Letter Grade CSV")] LetterGradeCsv,
+    [Description("Letter Grade Excel")] LetterGradeExcel
 }
