@@ -222,12 +222,11 @@
             return;
         }
         _currentStep = Step.Uploading;
-        await using var readStream = file.OpenReadStream(500000);
         _currentCancellation = new CancellationTokenSource();
 
         try
         {
-            var result = await ScoreFile.ReadAsync(readStream, _currentCancellation.Token);
+            var result = await ScoreFile.ReadAsync(file, _currentCancellation.Token);
             _spreadSheetScores = result.Scores.ToList();
             _failedUploads = result.Errors.ToList();
             _fileType = result.TypeDescription;

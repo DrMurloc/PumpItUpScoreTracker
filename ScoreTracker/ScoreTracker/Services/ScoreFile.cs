@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
 using CsvHelper;
+using Microsoft.AspNetCore.Components.Forms;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Web.Dtos;
 
@@ -26,9 +27,22 @@ public sealed class ScoreFile
     public IImmutableList<BestChartAttempt> Scores { get; }
     public IImmutableList<SpreadsheetScoreErrorDto> Errors { get; }
 
-    public static async Task<ScoreFile> ReadAsync(Stream input, CancellationToken cancellationToken = default)
+    public static async Task<ScoreFile> ReadAsync(IBrowserFile file, CancellationToken cancellationToken = default)
     {
-        using var reader = new StreamReader(input);
+        await using var readStream = file.OpenReadStream(500000, cancellationToken);
+        switch (file.ContentType.ToLower())
+        {
+            case "text/csv":
+
+                return await BuildFromCsv(readStream, cancellationToken);
+            default:
+                throw new ScoreFileParseException($"Invalid file type {file.ContentType}");
+        }
+    }
+
+    private static async Task<ScoreFile> BuildFromCsv(Stream readStream, CancellationToken cancellationToken = default)
+    {
+        using var reader = new StreamReader(readStream);
         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
         var scores = new List<BestChartAttempt>();
         var failures = new List<SpreadsheetScoreErrorDto>();
