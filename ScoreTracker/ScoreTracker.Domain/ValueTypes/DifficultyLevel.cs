@@ -95,6 +95,21 @@ public readonly struct DifficultyLevel : IComparable<DifficultyLevel>
 
     private static readonly Regex _shortHandRegex = new(@"^\s*([A-Za-z]+)([0-9]+)\s*$", RegexOptions.Compiled);
 
+    public static bool TryParseShortHand(string shortHand, out ChartType chartType, out DifficultyLevel level)
+    {
+        try
+        {
+            (chartType, level) = ParseShortHand(shortHand);
+            return true;
+        }
+        catch
+        {
+            chartType = ChartType.Single;
+            level = 1;
+            return false;
+        }
+    }
+
     public static (ChartType chartType, DifficultyLevel level) ParseShortHand(string shortHand)
     {
         var match = _shortHandRegex.Match(shortHand);

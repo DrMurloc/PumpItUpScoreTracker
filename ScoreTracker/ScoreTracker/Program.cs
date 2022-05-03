@@ -1,4 +1,5 @@
 using MudBlazor.Services;
+using OfficeOpenXml;
 using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -7,6 +8,8 @@ using ScoreTracker.Web.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+ExcelPackage.LicenseContext = new LicenseContext();
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();

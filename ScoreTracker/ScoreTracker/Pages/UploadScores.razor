@@ -33,15 +33,36 @@
                 <MudProgressLinear Indeterminate="true" Color="@Color.Primary" Size="@Size.Large"></MudProgressLinear>
                 break;
             case Step.Confirming:
-                <p>
-                    <b>File type:</b> @_fileType was detected.
-                    <br/>
-                    <b>Scores parsed:</b> @_spreadSheetScores.Count
-                    <br/>
-                    <b>Parse Failures:</b> @_failedUploads.Count
-                    <br/><br/>
-                    Continuing will begin to save the uploaded scores over your existing records. You will not be able to undo this. You will be able to stop the saving process, but it will not roll back uploads.
-                </p>
+                @if (_isDialogShowing)
+                {
+                    <MudDataGrid T="BestAttemptDto" Items="_attemptDtos" ReadOnly="true"
+                                 Groupable="true" Height="400px" FixedHeader="true" EditMode="@DataGridEditMode.Cell">
+                        <ToolBarContent>
+                            <MudText Typo="Typo.h6">Parsed Scores</MudText>
+                        </ToolBarContent>
+                        <Columns>
+                            <Column T="BestAttemptDto" Field="SongName" Title="Song" IsEditable="false">
+                            </Column>
+                            <Column T="BestAttemptDto" Field="ChartType" Title="Type" IsEditable="false">
+                            </Column>
+                            <Column T="BestAttemptDto" Field="Level" Title="Level" IsEditable="false">
+                            </Column>
+                            <Column T="BestAttemptDto" Field="LetterGrade" Title="LetterGrade" IsEditable="false"></Column>
+                        </Columns>
+                    </MudDataGrid>
+                }
+                else
+                {
+                    <p>
+                        <b>File type:</b> @_fileType was detected.
+                        <br/>
+                        <b>Scores parsed:</b> @_spreadSheetScores.Count
+                        <br/>
+                        <b>Parse Failures:</b> @_failedUploads.Count
+                        <br/><br/>
+                        Continuing will begin to save the uploaded scores over your existing records. You will not be able to undo this. You will be able to stop the saving process, but it will not roll back uploads.
+                    </p>
+                }
                 break;
             case Step.Saving:
                 <p>
@@ -89,6 +110,10 @@
         }
         @if (_currentStep == Step.Confirming)
         {
+            <MudButton Variant="@Variant.Text"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Filled.ViewList"
+                       OnClick="@(_=>_isDialogShowing=!_isDialogShowing)">@(_isDialogShowing?"Hide":"Show") Scores</MudButton>
             <MudButton Variant="@Variant.Filled"
                        Color="@Color.Primary"
                        StartIcon="@Icons.Filled.Save"
@@ -122,6 +147,7 @@
         Finished
     }
 
+    private bool _isDialogShowing = false;
     private Step _currentStep = Step.Information;
     private int _maxSaving = 0;
     private int _currentSaved = 0;
@@ -129,6 +155,8 @@
     private TimeSpan _remainingTime = TimeSpan.MinValue;
     private List<SpreadsheetScoreErrorDto> _failedUploads = new List<SpreadsheetScoreErrorDto>();
     private List<BestChartAttempt> _spreadSheetScores = new List<BestChartAttempt>();
+    private IEnumerable<BestAttemptDto> _attemptDtos => _spreadSheetScores.Select(BestAttemptDto.From);
+
     private CancellationTokenSource _currentCancellation;
     protected override Task OnInitializedAsync()
     {
@@ -216,9 +244,9 @@
     private async Task UploadFile(InputFileChangeEventArgs e)
     {
         var file = e.File;
-        if (file.Size > 10000000)
+        if (file.Size > ScoreFile.MaxByteCount)
         {
-            Snackbar.Add("File cannot be larger than .5 MB", Severity.Error);
+            Snackbar.Add("File cannot be larger than 10 MB", Severity.Error);
             return;
         }
         _currentStep = Step.Uploading;

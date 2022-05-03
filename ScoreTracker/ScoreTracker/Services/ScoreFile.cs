@@ -4,13 +4,18 @@ using System.Globalization;
 using System.Reflection;
 using CsvHelper;
 using Microsoft.AspNetCore.Components.Forms;
+using OfficeOpenXml;
+using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.ValueTypes;
 using ScoreTracker.Web.Dtos;
 
 namespace ScoreTracker.Web.Services;
 
 public sealed class ScoreFile
 {
+    public const int MaxByteCount = 10000000;
+
     private ScoreFile(ScoreFileType type, IEnumerable<BestChartAttempt> scores,
         IEnumerable<SpreadsheetScoreErrorDto> errors)
     {
@@ -41,13 +46,102 @@ public sealed class ScoreFile
     private static async Task<ScoreFile> BuildFromExcel(IBrowserFile file,
         CancellationToken cancellationToken = default)
     {
-        return new ScoreFile(ScoreFileType.LetterGradeExcel, Array.Empty<BestChartAttempt>(),
-            Array.Empty<SpreadsheetScoreErrorDto>());
+        await using var readStream = file.OpenReadStream(MaxByteCount, cancellationToken);
+
+        using var package = new ExcelPackage();
+        await package.LoadAsync(readStream, cancellationToken);
+        var result = new List<BestChartAttempt>();
+        var errors = new List<SpreadsheetScoreErrorDto>();
+        foreach (var workbook in package.Workbook.Worksheets)
+        {
+            if (workbook == null) continue;
+            if (!DifficultyLevel.TryParseShortHand(workbook.Name, out var chartType, out var level)) continue;
+
+            var (newAttempts, newErrors) = ExtractBestAttempts(chartType, level, workbook);
+            result.AddRange(newAttempts);
+            errors.AddRange(errors);
+        }
+
+        return new ScoreFile(ScoreFileType.LetterGradeExcel, result, errors);
+    }
+
+    private static (IEnumerable<BestChartAttempt>, IEnumerable<SpreadsheetScoreErrorDto>) ExtractBestAttempts(
+        ChartType category, DifficultyLevel level,
+        ExcelWorksheet worksheet)
+    {
+        var currentType = category;
+        var result = new List<BestChartAttempt>();
+        var errors = new List<SpreadsheetScoreErrorDto>();
+        var songNameSuffix = "";
+        foreach (var rowId in Enumerable.Range(1, worksheet.Dimension.Rows))
+        {
+            var songNameField = worksheet.Cells[rowId, 1].Text ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(songNameField)) continue;
+            var letterField = worksheet.Cells[rowId, 2].Text ?? string.Empty;
+            if (songNameField.Equals("Arcade", StringComparison.OrdinalIgnoreCase)
+                || songNameField.Equals("Full", StringComparison.OrdinalIgnoreCase)
+                || songNameField.Equals("Shortcut", StringComparison.OrdinalIgnoreCase)
+                || songNameField.Equals("Remix", StringComparison.OrdinalIgnoreCase))
+            {
+                currentType = category == ChartType.Single ? ChartType.Single : ChartType.Double;
+                songNameSuffix = songNameField.ToLower() switch
+                {
+                    "full" => " Full Song",
+                    "remix" => " Remix",
+                    "shortcut" => " Short Cut",
+                    _ => ""
+                };
+                continue;
+            }
+
+            if (songNameField.Equals("Performance"))
+            {
+                songNameSuffix = "";
+                currentType = category == ChartType.Single ? ChartType.SinglePerformance : ChartType.DoublePerformance;
+                continue;
+            }
+
+            if (!Name.TryParse(songNameField, out var name))
+            {
+                errors.Add(new SpreadsheetScoreErrorDto
+                {
+                    Difficulty = level.ToString(),
+                    LetterGrade = letterField,
+                    Song = songNameField,
+                    Error = "Could not parse song name"
+                });
+                continue;
+            }
+
+            name += songNameSuffix;
+            ChartAttempt? attempt = null;
+            if (Enum.TryParse<LetterGrade>(letterField, out var letterGrade))
+            {
+                attempt = new ChartAttempt(letterGrade, false);
+            }
+            else if (!string.IsNullOrWhiteSpace(letterField))
+            {
+                errors.Add(new SpreadsheetScoreErrorDto
+                {
+                    Difficulty = level.ToString(),
+                    LetterGrade = letterField,
+                    Song = songNameField,
+                    Error = "Could not parse letter grade"
+                });
+                continue;
+            }
+
+
+            result.Add(new BestChartAttempt(
+                new Chart(new Song(name, new Uri("/", UriKind.Relative)), currentType, level), attempt));
+        }
+
+        return (result, errors);
     }
 
     private static async Task<ScoreFile> BuildFromCsv(IBrowserFile file, CancellationToken cancellationToken = default)
     {
-        await using var readStream = file.OpenReadStream(500000, cancellationToken);
+        await using var readStream = file.OpenReadStream(MaxByteCount, cancellationToken);
         using var reader = new StreamReader(readStream);
         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
         var scores = new List<BestChartAttempt>();
