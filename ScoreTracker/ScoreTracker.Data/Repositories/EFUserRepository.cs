@@ -57,6 +57,6 @@ public sealed class EFUserRepository : IUserRepository
             join u in _database.User on e.UserId equals u.Id
             where e.LoginProvider == loginProviderName
                   && e.ExternalId == externalId
-            select new User(u.Id, u.Name)).FirstOrDefaultAsync(cancellationToken);
+            select new User(u.Id, u.Name)).SingleOrDefaultAsync(cancellationToken);
     }
 }
