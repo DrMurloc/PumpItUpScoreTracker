@@ -20,12 +20,14 @@ public sealed class ScoreFile
     {
         { "8 6", "86" },
         { "%X", "%X (Percent X)" },
+        { "%X (Percent  X)", "%X (Percent X)" },
         {
             "2006 Love Song", "2006. LOVE SONG"
         },
         {
             "2006. LOVE SONG", "2006. LOVE SONG"
         },
+        { "Adrenaline Blast", "Adrenaline Blaster" },
         {
             "Ai Yurete...", "Ai, Yurete..."
         },
@@ -60,10 +62,16 @@ public sealed class ScoreFile
             "Asteroid", "Asterios -ReEntry-"
         },
         {
+            "B.P. Classic Remix", "B.P Classic Remix"
+        },
+        {
+            "B.P. Classic Remix 2 Remix", "B.P Classic Remix 2"
+        },
+        {
             "B.P Classic Remix 2 Remix", "B.P Classic Remix 2"
         },
         {
-            "B.P. Classic Remix Remix", "B.P. Classic Remix"
+            "B.P. Classic Remix Remix", "B.P Classic Remix"
         },
         {
             "Bad Apple", "Bad Apple!! feat. Nomico"
@@ -102,6 +110,7 @@ public sealed class ScoreFile
         {
             "Betrayer -act 2-", "Betrayer -act.2-"
         },
+        { "Blaze Emotions Instrumental", "Blaze emotion (Band version)" },
         { "Blaze Emotion Instrumental", "Blaze emotion (Band version)" },
         { "Blaze emotion(Band version)", "Blaze emotion (Band version)" },
         { "Bon Bon Chocolate", "Bon Bon Chocolat" },
@@ -111,6 +120,7 @@ public sealed class ScoreFile
         { "Breakout", "Break Out" },
         { "Broken Karma", "Broken Karma (PIU Edit)" },
         { "Bungee", "BUNGEE (Fall in Love)" },
+        { "Caprise of Otada", "Caprice of Otada" },
         { "Canon X.1", "Cannon X.1" },
         { "Canon-D", "Canon D" },
         { "Carmen", "Carmen Bus" },
@@ -119,6 +129,7 @@ public sealed class ScoreFile
         { "Creed Full Song", "Creed - 1st Desire - Full Song" },
         { "CROSS OVER feat. LyuU", "Cross Over" },
         { "Cycling", "Cycling!" },
+        { "Dange & Danger", "Danger & Danger" },
         { "Dement ~After Legend~", "Dement" },
         { "Did you know that", "Do U Know That-Old School" },
         { "Do U Know That - Old School", "Do U Know That-Old School" },
@@ -127,7 +138,8 @@ public sealed class ScoreFile
         { "Dr.KOA Remix", "Dr. KOA Remix" },
         { "Dual Racing - RED vs BLUE -", "Dual Racing <RED vs BLUE>" },
         { "F(R)IEND", "Friend" },
-        { "FAEP 2-2", "Final Audition Ep. 2-1" },
+        { "FAEP 2-1", "Final Audition Ep. 2-1" },
+        { "FAEP 2-2", "Final Audition Ep. 2-2" },
         { "Final Audition 2-1", "Final Audition Ep. 2-1" },
         { "Final Audition 2-2", "Final Audition Ep. 2-2" },
         { "Final Audition 2-X", "Final Audition Ep. 2-X" },
@@ -159,6 +171,7 @@ public sealed class ScoreFile
         { "Ignis Fatuus", "Ignis Fatuus(DM Ashura Mix)" },
         { "Ignis Fatuus (DM Ashura Mix)", "Ignis Fatuus(DM Ashura Mix)" },
         { "Im so sick", "I'm so sick" },
+        { "Inteference", "Interference" },
         { "J Bong", "JBong" },
         { "Just Hold On", "Just Hold On (To All Fighters)" },
         { "K.O.A Alice in Wonderlan", "K.O.A : Alice In Wonderworld" },
@@ -169,7 +182,8 @@ public sealed class ScoreFile
         { "Keep On", "Keep On!" },
         { "Kill Them", "Kill Them!" },
         { "La La", "Lala" },
-        { "Log-In", "LogIn" },
+        { "Log-In", "Log In" },
+        { "LogIn", "Log In" },
         { "Love is a Danger Zone 2", "Love is a Danger Zone pt. 2" },
         { "Love is a Danger Zone 2 (Another)", "Love is a Danger Zone pt.2 another" },
         { "Love Is A Danger Zone 2 Try To B.P.M Remix", "Love is a danger zone (try to B.P.M.) Remix" },
@@ -197,6 +211,7 @@ public sealed class ScoreFile
         { "Phalanx \"RS2018 edit\"", "Phalanx" },
         { "Phalanx \"RS2018\" edit", "Phalanx" },
         { "Phantom Intermezzo", "Phantom -Intermezzo-" },
+        { "Pumptris 8Bit ver", "Pumptris 8Bit ver." },
         { "Pumptrips 8Bit ver.", "Pumptris 8Bit ver." },
         { "Queen of Red", "Queen of the Red" },
         { "Rave til the earth's end", "Rave 'til the Earth's End" },
@@ -204,6 +219,7 @@ public sealed class ScoreFile
         { "Rave'til the earth's end", "Rave 'til the Earth's End" },
         { "Red VS Blue", "Dual Racing <RED vs BLUE>" },
         { "Removable Disk 0", "Removable Disk0" },
+        { "Renai Yuushu", "Renai Yuusha" },
         { "Scorpion", "Scorpion King" },
         { "Set me uo", "Set me up" },
         { "Sillhouette Effect", "Silhouette Effect" },
@@ -246,19 +262,20 @@ public sealed class ScoreFile
         { "Visual Effect", "Visual Dream II (In Fiction)" },
         { "Wil o the Wisp", "Will-O-The-Wisp" },
         { "Will O The Wisp", "Will-O-The-Wisp" },
-        { "Xtree", "XTREE" },
         { "X-tream", "X Treme" },
+        { "X-Tree", "XTree" },
         { "Yog Sothoth", "Yog-Sothoth" },
         { "Yoropiku Pikuyoro", "Yoropiku Pikuyoro!" },
         { "What Are You Doin Remix", "What Are You Doin? Remix" },
         { "Repeatorment Remix Remix", "Repeatorment Remix" },
         { "Meteo5cience (Gadget Mix) Remix", "Meteo5cience Remix" },
         { "MSGoon PT.6 Remix", "msgoon RMX pt.6 Remix" },
+        { "msgoon pt 6 Remix", "msgoon RMX pt.6 Remix" },
         { "MSGoon RMX Pt.6 Remix", "msgoon RMX pt.6 Remix" },
         { "EXTRA BanYa Remix Remix", "EXTRA BanYa Remix" },
         { "The People didn't know \"Pumping up\" Remix", "The People didn't know Pumping up Remix" },
-        { "Papasito (feat. KuTiNA) Full Song", "Papasito  Full Song" },
-        { "Papasito feat. KuTiNA Full Song", "Papasito  Full Song" },
+        { "Papasito (feat. KuTiNA) Full Song", "Papasito Full Song" },
+        { "Papasito feat. KuTiNA Full Song", "Papasito Full Song" },
         { "NEKKOYA (PICK ME) Full Song", "NEKKOYA Full Song" },
         { "Move That Body Full Song", "Move That Body! Full Song" },
         { "I'm so sick Full Song", "I’m so sick Full Song" },
@@ -277,7 +294,8 @@ public sealed class ScoreFile
         { "Exceed2 Opening Short Cut", "Exceed2 Opening Short Cut" },
         { "Extravaganza Shortcut", "Extravaganza Short Cut" },
         { "Ignis Fatuus Short Cut", "Ignis Fatuus(DM Ashura Mix) Short Cut" },
-        { "K.O.A Short Cut", "K.O.A : Alice in Wonderworld Short Cut" }
+        { "K.O.A Short Cut", "K.O.A : Alice in Wonderworld Short Cut" },
+        { "Prime Time", "Prime Time Remix" }
     };
 
     private ScoreFile(ScoreFileType type, IEnumerable<BestChartAttempt> scores,
@@ -342,14 +360,14 @@ public sealed class ScoreFile
             var songNameField = worksheet.Cells[rowId, 1].Text ?? string.Empty;
             if (string.IsNullOrWhiteSpace(songNameField)) continue;
             var letterField = worksheet.Cells[rowId, 2].Text ?? string.Empty;
-            if (songNameField.Equals("Arcade", StringComparison.OrdinalIgnoreCase)
-                || songNameField.Equals("Full", StringComparison.OrdinalIgnoreCase)
-                || songNameField.Equals("Full Song", StringComparison.OrdinalIgnoreCase)
-                || songNameField.Equals("Shortcut", StringComparison.OrdinalIgnoreCase)
-                || songNameField.Equals("Remix", StringComparison.OrdinalIgnoreCase))
+            if (songNameField.Trim().Equals("Arcade", StringComparison.OrdinalIgnoreCase)
+                || songNameField.Trim().Equals("Full", StringComparison.OrdinalIgnoreCase)
+                || songNameField.Trim().Equals("Full Song", StringComparison.OrdinalIgnoreCase)
+                || songNameField.Trim().Equals("Shortcut", StringComparison.OrdinalIgnoreCase)
+                || songNameField.Trim().Equals("Remix", StringComparison.OrdinalIgnoreCase))
             {
                 currentType = category == ChartType.Single ? ChartType.Single : ChartType.Double;
-                songNameSuffix = songNameField.ToLower() switch
+                songNameSuffix = songNameField.Trim().ToLower() switch
                 {
                     "full song" => " Full Song",
                     "full" => " Full Song",
@@ -360,9 +378,9 @@ public sealed class ScoreFile
                 continue;
             }
 
-            if (songNameField.Equals("Performance", StringComparison.OrdinalIgnoreCase)
-                || songNameField.Equals("Double Performance", StringComparison.OrdinalIgnoreCase)
-                || songNameField.Equals("Single Performance", StringComparison.OrdinalIgnoreCase))
+            if (songNameField.Trim().Equals("Performance", StringComparison.OrdinalIgnoreCase)
+                || songNameField.Trim().Equals("Double Performance", StringComparison.OrdinalIgnoreCase)
+                || songNameField.Trim().Equals("Single Performance", StringComparison.OrdinalIgnoreCase))
             {
                 songNameSuffix = "";
                 currentType = category == ChartType.Single ? ChartType.SinglePerformance : ChartType.DoublePerformance;
