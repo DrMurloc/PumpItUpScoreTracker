@@ -25,6 +25,8 @@ public sealed class EFChartRepository : IChartRepository
     public async Task<Chart> GetChart(Name songName, ChartType chartType, DifficultyLevel level,
         CancellationToken cancellationToken = default)
     {
+        if (!await _database.Song.AnyAsync(s => s.Name == (string)songName, cancellationToken))
+            throw new SongNotFoundException();
         return await (from s in _database.Song
                 join c in _database.Chart on s.Id equals c.SongId
                 where s.Name == (string)songName && c.Type == chartType.ToString() && c.Level == (int)level

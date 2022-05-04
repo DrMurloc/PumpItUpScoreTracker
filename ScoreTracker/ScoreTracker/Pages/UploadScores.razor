@@ -126,6 +126,13 @@
                        Color="@Color.Primary"
                        StartIcon="@Icons.Filled.FileDownload">Download Failures</MudButton>
         }
+        @if (_currentStep == Step.Finished)
+        {
+            <MudButton OnClick="@(_=>_currentStep=Step.Information)"
+                       Variant="@Variant.Text"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Filled.RestartAlt">Restart</MudButton>
+        }
     </MudCardActions>
 </MudCard>
 <InputFile id="uploadInput" OnChange="@UploadFile" hidden accept=".csv,.xlsx"/>
@@ -225,6 +232,16 @@
                     LetterGrade = best.BestAttempt?.LetterGrade.ToString() ?? "",
                     Song = best.Chart.Song.Name,
                     Error = "Could not find chart"
+                });
+            }
+            catch (SongNotFoundException)
+            {
+                _failedUploads.Add(new SpreadsheetScoreErrorDto
+                {
+                    Difficulty = best.Chart.DifficultyString,
+                    LetterGrade = best.BestAttempt?.LetterGrade.ToString()??"",
+                    Song=best.Chart.Song.Name,
+                    Error="Could not find song"
                 });
             }
             catch (Exception)
