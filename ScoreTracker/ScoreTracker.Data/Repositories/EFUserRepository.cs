@@ -30,15 +30,19 @@ public sealed class EFUserRepository : IUserRepository
         await _database.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task CreateDiscordLogin(Guid userId, ulong discordId, CancellationToken cancellationToken = default)
+    public async Task CreateExternalLogin(Guid userId, string loginProviderName, string externalId,
+        CancellationToken cancellationToken = default)
     {
-        await _database.DiscordLogin.AddAsync(new DiscordLoginEntity
+        var entity = new ExternalLoginEntity
         {
-            DiscordId = discordId,
+            ExternalId = externalId,
+            LoginProvider = loginProviderName,
             UserId = userId
-        }, cancellationToken);
+        };
+        await _database.ExternalLogin.AddAsync(entity, cancellationToken);
         await _database.SaveChangesAsync(cancellationToken);
     }
+
 
     public async Task<User> GetUser(Guid userId, CancellationToken cancellationToken = default)
     {
@@ -46,11 +50,13 @@ public sealed class EFUserRepository : IUserRepository
             .SingleAsync(cancellationToken);
     }
 
-    public async Task<User?> GetUserByDiscordLogin(ulong discordId, CancellationToken cancellationToken = default)
+    public async Task<User?> GetUserByExternalLogin(string loginProviderName, string externalId,
+        CancellationToken cancellationToken = default)
     {
-        return await (from dl in _database.DiscordLogin
-            join u in _database.User on dl.UserId equals u.Id
-            where dl.DiscordId == discordId
-            select new User(u.Id, u.Name)).FirstOrDefaultAsync(cancellationToken);
+        return await (from e in _database.ExternalLogin
+            join u in _database.User on e.UserId equals u.Id
+            where e.LoginProvider == loginProviderName
+                  && e.ExternalId == externalId
+            select new User(u.Id, u.Name)).SingleOrDefaultAsync(cancellationToken);
     }
 }

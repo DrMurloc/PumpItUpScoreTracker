@@ -19,7 +19,7 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<ChartEntity> Chart { get; set; }
     public DbSet<SongEntity> Song { get; set; }
     public DbSet<UserEntity> User { get; set; }
-    public DbSet<DiscordLoginEntity> DiscordLogin { get; set; }
+    public DbSet<ExternalLoginEntity> ExternalLogin { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -44,9 +44,12 @@ public sealed class ChartAttemptDbContext : DbContext
 
         builder.Entity<UserEntity>().ToTable("User");
 
-        builder.Entity<DiscordLoginEntity>().ToTable("DiscordLogin")
+        builder.Entity<ExternalLoginEntity>().ToTable("ExternalLogin")
+            .HasKey(e => new { e.LoginProvider, e.ExternalId });
+
+        builder.Entity<ExternalLoginEntity>()
             .HasOne<UserEntity>()
             .WithMany()
-            .HasForeignKey(d => d.UserId);
+            .HasForeignKey(e => e.UserId);
     }
 }

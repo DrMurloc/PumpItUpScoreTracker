@@ -14,6 +14,7 @@ ExcelPackage.LicenseContext = new LicenseContext();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 var discordConfig = builder.Configuration.GetSection("Discord").Get<DiscordConfiguration>();
+var googleConfig = builder.Configuration.GetSection("Google").Get<GoogleConfiguration>();
 
 builder.Services.AddAuthentication("DefaultAuthentication")
     .AddCookie("DefaultAuthentication")
@@ -21,6 +22,11 @@ builder.Services.AddAuthentication("DefaultAuthentication")
     {
         o.ClientId = discordConfig.ClientId;
         o.ClientSecret = discordConfig.ClientSecret;
+    })
+    .AddGoogle("Google", o =>
+    {
+        o.ClientId = googleConfig.ClientId;
+        o.ClientSecret = googleConfig.ClientSecret;
     });
 builder.Services.AddMudServices()
     .AddTransient<ICurrentUserAccessor, HttpContextUserAccessor>()

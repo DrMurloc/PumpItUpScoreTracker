@@ -2,18 +2,25 @@
 
 <PageTitle>Login</PageTitle>
 
+<MudPaper Class="align-center" Elevation="0">
+    <MudContainer Fixed="true" MaxWidth="MaxWidth.Medium">
 
-<MudCard>
-    <MudCardHeader>
-        Login
-    </MudCardHeader>
-    <MudCardContent>
-        <MudButton Href="/Login/Discord" StartIcon="@Icons.Custom.Brands.Discord">Login With Discord</MudButton>
-    </MudCardContent>
-    <MudCardActions>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(()=>_isDialogVisible=true)">Account Creation?</MudButton>
-    </MudCardActions>
-</MudCard>
+        <MudCard>
+            <MudCardHeader>
+                Login
+            </MudCardHeader>
+            <MudCardContent>
+                <MudButton Href="/Login/Discord" StartIcon="@Icons.Custom.Brands.Discord" Variant="Variant.Filled">Login With Discord</MudButton>
+                <br/><br/>
+                <MudButton Href="/Login/Google" StartIcon="@Icons.Custom.Brands.Google" Variant="Variant.Filled">Login with Google</MudButton>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => _isDialogVisible = true)">Account Creation?</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudContainer>
+
+</MudPaper>
 
 <MudDialog @bind-IsVisible="_isDialogVisible">
     <TitleContent>
