@@ -80,7 +80,8 @@ public sealed class EFChartAttemptRepository : IChartAttemptRepository
             join c in _database.Chart on new
                     { SongId = s.Id, Level = (int)ce.Level, ChartType = ce.Type.ToString() } equals
                 new { c.SongId, c.Level, ChartType = c.Type }
-            join _ in _database.BestAttempt on c.Id equals _.ChartId into gi
+            join _ in _database.BestAttempt on new { UserId = userId, ChartId = c.Id } equals new
+                { _.UserId, _.ChartId } into gi
             from ba in gi.DefaultIfEmpty()
             select new BestChartAttempt(
                 new Chart(new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level),
