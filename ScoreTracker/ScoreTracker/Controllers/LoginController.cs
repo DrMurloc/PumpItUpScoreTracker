@@ -12,6 +12,9 @@ namespace ScoreTracker.Web.Controllers;
 [Route("[controller]")]
 public sealed class LoginController : Controller
 {
+    private static readonly ISet<string> AllowedProviders =
+        new HashSet<string>(new[] { "Discord", "Google" }, StringComparer.OrdinalIgnoreCase);
+
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
 
@@ -26,7 +29,8 @@ public sealed class LoginController : Controller
     [HttpGet("{providerName}")]
     public async Task<IActionResult> SignIn([FromRoute] string providerName)
     {
-        if (string.IsNullOrWhiteSpace(providerName)) return BadRequest();
+        if (!AllowedProviders.Contains(providerName)) return BadRequest("Invalid provider name");
+
 
         if (!await HttpContext.IsProviderSupportedAsync(providerName)) return BadRequest();
 
@@ -37,30 +41,36 @@ public sealed class LoginController : Controller
     [HttpGet("{providerName}/Callback")]
     public async Task<IActionResult> ExternalCallback([FromRoute] string providerName)
     {
+        if (!AllowedProviders.Contains(providerName)) return BadRequest("Invalid provider name");
+
         var authenticateResult = await HttpContext.AuthenticateAsync(providerName);
+
         if (authenticateResult.Principal == null) return BadRequest("Principal was missing");
 
         var returnUrl = "";
         authenticateResult.Ticket?.Properties.Items.TryGetValue("returnUrl", out returnUrl);
 
-        var user = await GetUserForDiscordLogin(authenticateResult.Principal);
+
+        var user = await GetUserForExternalLogin(authenticateResult.Principal, providerName);
 
         await _currentUser.SetCurrentUser(user);
 
         return Redirect(returnUrl ?? "/");
     }
 
-    private async Task<User> GetUserForDiscordLogin(ClaimsPrincipal principal)
+    private async Task<User> GetUserForExternalLogin(ClaimsPrincipal principal, string loginProviderName)
     {
-        var id = ulong.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)
-            ?.Value ?? "");
+        var id = principal.FindFirst(ClaimTypes.NameIdentifier)
+            ?.Value ?? "";
         var name = principal.FindFirst(ClaimTypes.Name)?.Value ??
                    "Unknown Name";
-        var user = await _mediator.Send(new GetUserByDiscordLoginQuery(id), HttpContext.RequestAborted);
+        var user = await _mediator.Send(new GetUserByExternalLoginQuery(id, loginProviderName),
+            HttpContext.RequestAborted);
         if (user != null) return user;
 
         user = await _mediator.Send(new CreateUserCommand(name), HttpContext.RequestAborted);
-        await _mediator.Send(new CreateDiscordLoginCommand(user.Id, id), HttpContext.RequestAborted);
+        await _mediator.Send(new CreateExternalLoginCommand(user.Id, id, loginProviderName),
+            HttpContext.RequestAborted);
 
         return user;
     }

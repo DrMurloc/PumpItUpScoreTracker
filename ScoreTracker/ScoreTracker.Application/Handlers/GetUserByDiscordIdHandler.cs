@@ -5,7 +5,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Application.Handlers;
 
-internal class GetUserByDiscordIdHandler : IRequestHandler<GetUserByDiscordLoginQuery, User?>
+internal class GetUserByDiscordIdHandler : IRequestHandler<GetUserByExternalLoginQuery, User?>
 {
     private readonly IUserRepository _user;
 
@@ -14,8 +14,8 @@ internal class GetUserByDiscordIdHandler : IRequestHandler<GetUserByDiscordLogin
         _user = user;
     }
 
-    public async Task<User?> Handle(GetUserByDiscordLoginQuery request, CancellationToken cancellationToken)
+    public async Task<User?> Handle(GetUserByExternalLoginQuery request, CancellationToken cancellationToken)
     {
-        return await _user.GetUserByDiscordLogin(request.DiscordId, cancellationToken);
+        return await _user.GetUserByExternalLogin(request.LoginProviderName, request.ExternalId, cancellationToken);
     }
 }
