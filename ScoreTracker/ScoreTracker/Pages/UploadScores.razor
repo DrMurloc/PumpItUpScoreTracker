@@ -227,6 +227,16 @@
                     Error = "Could not find chart"
                 });
             }
+            catch (SongNotFoundException)
+            {
+                _failedUploads.Add(new SpreadsheetScoreErrorDto
+                {
+                    Difficulty = best.Chart.DifficultyString,
+                    LetterGrade = best.BestAttempt?.LetterGrade.ToString()??"",
+                    Song=best.Chart.Song.Name,
+                    Error="Could not find song"
+                });
+            }
             catch (Exception)
             {
                 

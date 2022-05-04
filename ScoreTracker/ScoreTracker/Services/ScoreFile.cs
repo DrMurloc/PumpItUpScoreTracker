@@ -344,12 +344,14 @@ public sealed class ScoreFile
             var letterField = worksheet.Cells[rowId, 2].Text ?? string.Empty;
             if (songNameField.Equals("Arcade", StringComparison.OrdinalIgnoreCase)
                 || songNameField.Equals("Full", StringComparison.OrdinalIgnoreCase)
+                || songNameField.Equals("Full Song", StringComparison.OrdinalIgnoreCase)
                 || songNameField.Equals("Shortcut", StringComparison.OrdinalIgnoreCase)
                 || songNameField.Equals("Remix", StringComparison.OrdinalIgnoreCase))
             {
                 currentType = category == ChartType.Single ? ChartType.Single : ChartType.Double;
                 songNameSuffix = songNameField.ToLower() switch
                 {
+                    "full song" => " Full Song",
                     "full" => " Full Song",
                     "remix" => " Remix",
                     "shortcut" => " Short Cut",
@@ -358,7 +360,9 @@ public sealed class ScoreFile
                 continue;
             }
 
-            if (songNameField.Equals("Performance"))
+            if (songNameField.Equals("Performance", StringComparison.OrdinalIgnoreCase)
+                || songNameField.Equals("Double Performance", StringComparison.OrdinalIgnoreCase)
+                || songNameField.Equals("Single Performance", StringComparison.OrdinalIgnoreCase))
             {
                 songNameSuffix = "";
                 currentType = category == ChartType.Single ? ChartType.SinglePerformance : ChartType.DoublePerformance;
