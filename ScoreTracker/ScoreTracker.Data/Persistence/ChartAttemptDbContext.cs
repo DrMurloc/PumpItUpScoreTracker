@@ -48,5 +48,13 @@ public sealed class ChartAttemptDbContext : DbContext
             .HasOne<UserEntity>()
             .WithMany()
             .HasForeignKey(d => d.UserId);
+
+        builder.Entity<ExternalLoginEntity>().ToTable("ExternalLogin")
+            .HasKey(e => new { e.LoginProvider, e.ExternalId });
+
+        builder.Entity<ExternalLoginEntity>()
+            .HasOne<UserEntity>()
+            .WithMany()
+            .HasForeignKey(e => e.UserId);
     }
 }
