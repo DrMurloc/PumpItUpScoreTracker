@@ -32,9 +32,10 @@ public sealed class EFUserRepository : IUserRepository
 
     public async Task CreateDiscordLogin(Guid userId, ulong discordId, CancellationToken cancellationToken = default)
     {
-        await _database.DiscordLogin.AddAsync(new DiscordLoginEntity
+        await _database.ExternalLogin.AddAsync(new ExternalLoginEntity
         {
-            DiscordId = discordId,
+            LoginProvider = "Discord",
+            ExternalId = discordId.ToString(),
             UserId = userId
         }, cancellationToken);
         await _database.SaveChangesAsync(cancellationToken);
@@ -48,9 +49,10 @@ public sealed class EFUserRepository : IUserRepository
 
     public async Task<User?> GetUserByDiscordLogin(ulong discordId, CancellationToken cancellationToken = default)
     {
-        return await (from dl in _database.DiscordLogin
+        return await (from dl in _database.ExternalLogin
             join u in _database.User on dl.UserId equals u.Id
-            where dl.DiscordId == discordId
+            where dl.ExternalId == discordId.ToString()
+                  && dl.LoginProvider == "Discord"
             select new User(u.Id, u.Name)).FirstOrDefaultAsync(cancellationToken);
     }
 }
