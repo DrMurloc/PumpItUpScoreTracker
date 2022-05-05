@@ -15,7 +15,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 var discordConfig = builder.Configuration.GetSection("Discord").Get<DiscordConfiguration>();
 var googleConfig = builder.Configuration.GetSection("Google").Get<GoogleConfiguration>();
-
+var facebookConfig = builder.Configuration.GetSection("Facebook").Get<FacebookConfiguration>();
 builder.Services.AddAuthentication("DefaultAuthentication")
     .AddCookie("DefaultAuthentication")
     .AddDiscord("Discord", o =>
@@ -27,6 +27,11 @@ builder.Services.AddAuthentication("DefaultAuthentication")
     {
         o.ClientId = googleConfig.ClientId;
         o.ClientSecret = googleConfig.ClientSecret;
+    })
+    .AddFacebook("Facebook", o =>
+    {
+        o.AppId = facebookConfig.AppId;
+        o.AppSecret = facebookConfig.AppSecret;
     });
 builder.Services.AddMudServices()
     .AddTransient<ICurrentUserAccessor, HttpContextUserAccessor>()

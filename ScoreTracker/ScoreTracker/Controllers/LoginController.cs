@@ -13,7 +13,7 @@ namespace ScoreTracker.Web.Controllers;
 public sealed class LoginController : Controller
 {
     private static readonly ISet<string> AllowedProviders =
-        new HashSet<string>(new[] { "Discord", "Google" }, StringComparer.OrdinalIgnoreCase);
+        new HashSet<string>(new[] { "Discord", "Google", "Facebook" }, StringComparer.OrdinalIgnoreCase);
 
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
