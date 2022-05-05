@@ -1,3 +1,4 @@
+using BlazorApplicationInsights;
 using MudBlazor.Services;
 using OfficeOpenXml;
 using ScoreTracker.CompositionRoot;
@@ -33,7 +34,8 @@ builder.Services.AddAuthentication("DefaultAuthentication")
         o.AppId = facebookConfig.AppId;
         o.AppSecret = facebookConfig.AppSecret;
     });
-builder.Services.AddMudServices()
+builder.Services.AddBlazorApplicationInsights()
+    .AddMudServices()
     .AddTransient<ICurrentUserAccessor, HttpContextUserAccessor>()
     .AddHttpContextAccessor()
     .AddHttpClient()
