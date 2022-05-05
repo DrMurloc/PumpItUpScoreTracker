@@ -3,8 +3,7 @@
 <PageTitle>Login</PageTitle>
 
 <MudPaper Class="align-center" Elevation="0">
-    <MudContainer Fixed="true" MaxWidth="MaxWidth.Medium">
-
+    <MudContainer Fixed="true">
         <MudCard>
             <MudCardHeader>
                 Login
@@ -36,7 +35,8 @@
         </p>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(()=>_isDialogVisible=false)" Class="px-10">Close</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/Privacy">Full Privacy Policy</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => _isDialogVisible = false)" Class="px-10">Close</MudButton>
     </DialogActions>
 
 </MudDialog>
