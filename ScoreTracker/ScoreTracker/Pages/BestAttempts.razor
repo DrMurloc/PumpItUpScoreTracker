@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/Scores"
 @using MediatR
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
@@ -13,7 +13,7 @@
              EditMode="@DataGridEditMode.Cell" CommittedItemChanges="@UpdateBest" EditTrigger="@DataGridEditTrigger.OnRowClick"
              Groupable="true" FixedHeader="true" Loading="@_isLoading">
     <ToolBarContent>
-        <MudText Typo="Typo.h6">Best Attempts</MudText>
+        <MudText Typo="Typo.h5">Best Attempts</MudText>
         <MudSpacer />
         <MudSelect T="string" Label="Difficulty Level" Value="@_selectedFilter" ValueChanged="ChangeSelectedFilter">
             @for (var level = DifficultyLevel.Min; level <DifficultyLevel.Max; level++)

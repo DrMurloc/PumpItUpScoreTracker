@@ -16,9 +16,12 @@
     <MudCardContent>
         <MudTextField Label="Id" Disabled="true" Value="@_id" HelperText="Used primarily for debugging"></MudTextField>
         <MudTextField T="string" Label="Username" MaxLength="100" Value="@_name" ValueChanged="UpdateName"></MudTextField>
-        <br/>
-        <MudFab StartIcon="@Icons.Filled.Download" Label="Download Charts" Color="@Color.Primary" Size="@Size.Small"></MudFab>
     </MudCardContent>
+    <MudCardActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Href="/UploadScores" Icon="@Icons.Filled.UploadFile" Variant="Variant.Filled" Color="Color.Primary">Upload Scores</MudButton>
+        <MudButton Href="/Logout" Icon="@Icons.Filled.Logout" Variant="Variant.Filled" Color="Color.Primary">Logout</MudButton>
+    </MudCardActions>
 </MudCard>
 
 @inject NavigationManager NavManager

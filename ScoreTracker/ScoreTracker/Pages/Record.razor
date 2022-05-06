@@ -1,4 +1,4 @@
-﻿@page "/Record"
+﻿@page "/"
 @using MediatR
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
@@ -17,6 +17,9 @@
 @inject ISnackbar Snackbar
 
 <MudCard>
+    <MudCardHeader>
+        <MudText Typo="Typo.h5">Record Score</MudText>
+    </MudCardHeader>
     <MudCardContent>
         @if (_songNames == null)
         {
@@ -35,10 +38,10 @@
         @if (_charts != null)
         {
             <div class="d-flex justify-center">
-              <MudImage Fluid="true" Src="@_charts.First().Song.ImagePath.ToString()" Alt="@_charts.First().Song.Name" Elevation="25" ObjectFit="ObjectFit.Contain"/>
+                <MudImage Fluid="true" Src="@_charts.First().Song.ImagePath.ToString()" Alt="@_charts.First().Song.Name" Elevation="25" ObjectFit="ObjectFit.Contain"/>
             </div>
             <MudChipSet Filter="true" Mandatory="true" SelectedValuesChanged="@SelectChart">
-                @foreach (var chart in _charts.OrderBy(c=>c.Type).ThenBy(c=>c.Level))
+                @foreach (var chart in _charts.OrderBy(c => c.Type).ThenBy(c => c.Level))
                 {
                     <MudChip Text="@chart.DifficultyString" Style="@StyleFromChartType(chart.Type)" Value="@chart"></MudChip>
                 }
@@ -47,7 +50,7 @@
         }
         @if (_selectedChart != null && !string.IsNullOrWhiteSpace(_selectedSongName))
         {
-            
+
             <MudSelect T="LetterGrade" @bind-Value="_selectedLetterGrade">
                 @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
                 {
@@ -59,7 +62,7 @@
         }
     </MudCardContent>
     <MudCardActions>
-        <MudButton Disabled="_selectedChart==null || string.IsNullOrWhiteSpace(_selectedSongName)" Variant="Variant.Filled" Color="Color.Primary" OnClick="@SubmitAttempt">Record Attempt</MudButton>
+        <MudButton Disabled="_selectedChart == null || string.IsNullOrWhiteSpace(_selectedSongName)" Variant="Variant.Filled" Color="Color.Primary" OnClick="@SubmitAttempt">Record Attempt</MudButton>
     </MudCardActions>
 </MudCard>
 @code {

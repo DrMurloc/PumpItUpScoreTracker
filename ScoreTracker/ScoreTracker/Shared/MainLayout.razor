@@ -14,12 +14,14 @@
         <MudDrawer @bind-Open="_isOpen" Variant="@DrawerVariant.Mini" OpenMiniOnHover="true">
             <MudNavMenu>
                 <MudNavLink Href="/Account" Icon="@Icons.Filled.AccountCircle">Account</MudNavLink>
-                <MudNavLink Href="/Record" Icon="@Icons.Filled.Description">Record Attempt</MudNavLink>
-                <MudNavLink Href="/" Icon="@Icons.Filled.List">Best Attempts</MudNavLink>
+                <MudDivider DividerType="DividerType.Middle"></MudDivider>
+                <MudNavLink Href="/" Icon="@Icons.Filled.Description">Record Score</MudNavLink>
+                <MudDivider DividerType="DividerType.Middle"></MudDivider>
+                <MudNavLink Href="/Scores" Icon="@Icons.Filled.List">Best Attempts</MudNavLink>
+                <MudDivider DividerType="DividerType.Middle"></MudDivider>
                 <MudNavLink Href="/Titles" Icon="@Icons.Filled.Grade">Titles</MudNavLink>
-                <MudNavLink Href="/UploadScores" Icon="@Icons.Filled.UploadFile">Upload Scores</MudNavLink>
-                <MudNavLink Href="/About" Icon="@Icons.Filled.Info">About</MudNavLink>
-                <MudNavLink Href="/Logout" Icon="@Icons.Filled.Logout">Logout</MudNavLink>
+                <MudDivider DividerType="DividerType.Middle"></MudDivider>
+                <MudNavLink Href="/About" Icon="@Icons.Filled.Info" >About</MudNavLink>
             </MudNavMenu>
         </MudDrawer>
     }
