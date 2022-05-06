@@ -1,0 +1,221 @@
+﻿@page "/Progress"
+@using MediatR
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Web.Dtos
+@using System.Collections
+@using ChartType = MudBlazor.ChartType
+<PageTitle>Best Attempts</PageTitle>
+
+<MudPaper>
+    
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+        <MudTabPanel Text="Overview">
+            <MudDataGrid T="DifficultyOverviewDto" ReadOnly="true" Items="_difficultyOverviews" Height="500px" FixedHeader="true" Striped="true">
+                <ToolBarContent>
+                </ToolBarContent>
+                <Columns>
+                    <Column T="DifficultyOverviewDto" Field="Difficulty" Title="Difficulty">
+                        <FooterTemplate>Total</FooterTemplate>
+                    </Column>
+                    <Column T="DifficultyOverviewDto" Field="ACount" Title="As" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}"})"></Column>
+                    <Column T="DifficultyOverviewDto" Field="SCount" Title="Ss" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}"})"></Column>
+                    <Column T="DifficultyOverviewDto" Field="SSCount" Title="SSs" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}"})"></Column>
+                    <Column T="DifficultyOverviewDto" Field="SSSCount" Title="SSSs" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}"})"></Column>
+                    <Column T="DifficultyOverviewDto" Field="PassedCount" Title="Passed" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}"})"></Column>
+                    <Column T="DifficultyOverviewDto" Field="UnpassedCount" Title="Unpassed" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}"})"></Column>
+                </Columns>
+            </MudDataGrid>
+        </MudTabPanel>
+        <MudTabPanel Text="Overall Letters">
+            <MudChart ChartType="ChartType.Pie" InputData="@_letterCounts.ToArray()" InputLabels="@_letterLabels.ToArray()" Width="40%"/>
+        </MudTabPanel>
+        <MudTabPanel Text="Overall Passes">
+            <MudChart ChartType="ChartType.Pie" InputData="@_passCounts.ToArray()" InputLabels="@_passLabels.ToArray()" Width="40%"/>
+        </MudTabPanel>
+        <MudTabPanel Text="Difficulty Letters">
+            <MudChart ChartType="ChartType.Bar" ChartSeries="@_letterBreakdown" XAxisLabels="@_difficulties" Width="100%" Height="350px"></MudChart>
+        </MudTabPanel>
+        <MudTabPanel Text="Difficulty Passes">
+            <MudChart ChartType="ChartType.Bar" ChartSeries="@_passBreakdown" XAxisLabels="@_difficulties" Width="100%" Height="350px"></MudChart>
+        </MudTabPanel>
+    </MudTabs>
+
+</MudPaper>
+
+
+@inject IMediator Mediator
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser;
+
+@code {
+    private List<ChartSeries> _letterBreakdown = new();
+    private List<ChartSeries> _passBreakdown = new();
+    private DifficultyOverviewDto[] _difficultyOverviews = Array.Empty<DifficultyOverviewDto>();
+    private double[] _letterCounts = Array.Empty<double>();
+    private string[] _letterLabels = Array.Empty<string>();
+
+    private double[] _passCounts = Array.Empty<double>();
+    private string[] _passLabels = Array.Empty<string>();
+    private string[] _difficulties = Enumerable.Range(DifficultyLevel.Min, DifficultyLevel.Max).Select(l=>l.ToString()).ToArray();
+
+    private async Task LoadData()
+    {
+        var difficultyLetters = new Dictionary<DifficultyLevel, IDictionary<LetterGrade, int>>();
+        var difficultyUngraded = new Dictionary<DifficultyLevel, int>();
+        var difficultyPasses = new Dictionary<DifficultyLevel, IDictionary<bool, int>>();
+        foreach (var level in Enumerable.Range(DifficultyLevel.Min, DifficultyLevel.Max))
+        {
+            difficultyLetters[level] = new Dictionary<LetterGrade, int>();
+            foreach (var letter in Enum.GetValues<LetterGrade>())
+            {
+                difficultyLetters[level][letter] = 0;
+            }
+            difficultyUngraded[level] = 0;
+            difficultyPasses[level] = new Dictionary<bool, int>();
+            difficultyPasses[level][true] = 0;
+            difficultyPasses[level][false] = 0;
+        }
+
+        var scores = await Mediator.Send(new GetBestChartAttemptsQuery());
+        var difficultyDtos = Enumerable.Range(DifficultyLevel.Min, DifficultyLevel.Max).ToDictionary(l => l, l => new DifficultyOverviewDto
+        {
+            Difficulty = l
+        });
+
+        foreach (var score in scores.Where(s=>s.Chart.Type!=Domain.Enums.ChartType.CoOp))
+        {
+            var level = score.Chart.Level;
+            var letter = score.BestAttempt?.LetterGrade;
+            var isPass = !(score.BestAttempt?.IsBroken ?? true);
+            switch (score.BestAttempt?.LetterGrade)
+            {
+                case LetterGrade.A:
+                    difficultyDtos[score.Chart.Level].ACount++;
+                    break;
+                case LetterGrade.S:
+                    difficultyDtos[score.Chart.Level].SCount++;
+                    break;
+                case LetterGrade.SS:
+                    difficultyDtos[score.Chart.Level].SSCount++;
+                    break;
+                case LetterGrade.SSS:
+                    difficultyDtos[score.Chart.Level].SSSCount++;
+                    break;
+                case null:
+                case LetterGrade.F:
+                case LetterGrade.D:
+                case LetterGrade.C:
+                case LetterGrade.B:
+                default:
+                    break;
+            }
+            switch (score.BestAttempt?.IsBroken ?? true)
+            {
+                case false:
+                    difficultyDtos[score.Chart.Level].PassedCount++;
+                    break;
+                case true:
+                    difficultyDtos[score.Chart.Level].UnpassedCount++;
+                    break;
+            }
+            if (letter != null)
+            {
+                difficultyLetters[level][letter.Value]++;
+            }
+            else
+            {
+                difficultyUngraded[level]++;
+            }
+            difficultyPasses[level][isPass]++;
+        }
+        _difficultyOverviews = difficultyDtos.Values.OrderByDescending(d=>d.Difficulty).ToArray();
+        var letterSeries = new Dictionary<LetterGrade, List<double>>();
+        var ungradedSeries = new List<double>();
+        var passSeries = new Dictionary<bool, List<double>>();
+        foreach (var letter in Enum.GetValues<LetterGrade>())
+        {
+            letterSeries[letter] = new List<double>();
+        }
+        passSeries[true] = new List<double>();
+        passSeries[false] = new List<double>();
+        
+        foreach (var difficulty in Enumerable.Range(DifficultyLevel.Min,DifficultyLevel.Max))
+        {
+            foreach(var letter in difficultyLetters[difficulty].Keys)
+            {
+                letterSeries[letter].Add(difficultyLetters[difficulty][letter]);
+            }
+            
+            ungradedSeries.Add(difficultyUngraded[difficulty]);
+            passSeries[true].Add(difficultyPasses[difficulty][true]);
+            passSeries[false].Add(difficultyPasses[difficulty][false]);
+        }
+        _letterBreakdown = new();
+        
+        var letterLabels = new List<string>();
+        var passLabels = new List<string>();
+
+        var passCounts = new List<double>();
+        var letterCounts = new List<double>();
+
+        if (ungradedSeries.Any(v => v >0 ))
+        {
+            letterLabels.Add("Ungraded");
+            letterCounts.Add(ungradedSeries.Sum());
+            _letterBreakdown.Add(
+                new ChartSeries()
+                {
+                    Name = "Ungraded", Data = ungradedSeries.ToArray()
+                });
+        }
+
+        foreach (var letter in Enum.GetValues<LetterGrade>())
+        {
+            
+            if (!letterSeries[letter].Any(v => v > 0))
+                continue;
+            letterLabels.Add(letter.ToString());
+            letterCounts.Add(letterSeries[letter].Sum());
+            _letterBreakdown.Add(new ChartSeries()
+            {
+                Name=letter.ToString(),
+                Data=letterSeries[letter].ToArray()
+            });
+        }
+
+        passLabels.Add("Unpassed");
+        passCounts.Add(passSeries[false].Sum());
+        passLabels.Add("Passed");
+        passCounts.Add(passSeries[true].Sum());
+        _passBreakdown = new List<ChartSeries>()
+        {
+            new ChartSeries()
+            {
+                Name = "Pass", Data = passSeries[true].ToArray()
+            },
+            new ChartSeries()
+            {
+                Name = "Unpassed", Data = passSeries[false].ToArray()
+            }
+        };
+        _passLabels = passLabels.ToArray();
+        _passCounts = passCounts.ToArray();
+        _letterLabels = letterLabels.ToArray();
+        _letterCounts = letterCounts.ToArray();
+
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Login");
+            return;
+        }
+        await LoadData();
+    }
+    
+}

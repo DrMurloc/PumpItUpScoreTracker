@@ -31,7 +31,7 @@
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
 @code {
-    private MudDataGrid<TitleProgressDto> _dataGrid;
+    private MudDataGrid<TitleProgressDto>? _dataGrid;
     private IEnumerable<TitleProgressDto> _titleProgress = Array.Empty<TitleProgressDto>();
     
     private bool _isLoading = true;
@@ -46,8 +46,12 @@
         _isLoading = true;
         _titleProgress = (await Mediator.Send(new GetTitleProgressQuery())).Select(TitleProgressDto.From).ToArray();
         _isLoading = false;
-        _dataGrid.Items = _titleProgress;
-        _dataGrid.GroupItems();
+        if (_dataGrid != null)
+        {
+            
+            _dataGrid.Items = _titleProgress;
+            _dataGrid?.GroupItems();
+        }
 
     }
 }
