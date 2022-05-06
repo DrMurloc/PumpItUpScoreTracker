@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
-using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Web.Controllers;
@@ -50,29 +49,30 @@ public sealed class LoginController : Controller
         var returnUrl = "";
         authenticateResult.Ticket?.Properties.Items.TryGetValue("returnUrl", out returnUrl);
 
+        var principal = authenticateResult.Principal;
 
-        var user = await GetUserForExternalLogin(authenticateResult.Principal, providerName);
-
-        await _currentUser.SetCurrentUser(user);
-
-        return Redirect(returnUrl ?? "/");
-    }
-
-    private async Task<User> GetUserForExternalLogin(ClaimsPrincipal principal, string loginProviderName)
-    {
         var id = principal.FindFirst(ClaimTypes.NameIdentifier)
             ?.Value ?? "";
         var name = principal.FindFirst(ClaimTypes.Name)?.Value ??
                    "Unknown Name";
-        var user = await _mediator.Send(new GetUserByExternalLoginQuery(id, loginProviderName),
-            HttpContext.RequestAborted);
-        if (user != null) return user;
-
-        user = await _mediator.Send(new CreateUserCommand(name), HttpContext.RequestAborted);
-        await _mediator.Send(new CreateExternalLoginCommand(user.Id, id, loginProviderName),
+        var user = await _mediator.Send(new GetUserByExternalLoginQuery(id, providerName),
             HttpContext.RequestAborted);
 
-        return user;
+        var isNewUser = false;
+
+        if (user == null)
+        {
+            isNewUser = true;
+            user = await _mediator.Send(new CreateUserCommand(name), HttpContext.RequestAborted);
+            await _mediator.Send(new CreateExternalLoginCommand(user.Id, id, providerName),
+                HttpContext.RequestAborted);
+        }
+
+        await _currentUser.SetCurrentUser(user);
+
+        var url = isNewUser ? "/Welcome" : returnUrl;
+
+        return Redirect(url ?? "/");
     }
 }
 

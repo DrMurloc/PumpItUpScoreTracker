@@ -1,4 +1,4 @@
-﻿@page "/Record"
+﻿@page "/"
 @using MediatR
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
@@ -17,6 +17,9 @@
 @inject ISnackbar Snackbar
 
 <MudCard>
+    <MudCardHeader>
+        <MudText Typo="Typo.h5">Record Score</MudText>
+    </MudCardHeader>
     <MudCardContent>
         @if (_songNames == null)
         {
@@ -35,10 +38,10 @@
         @if (_charts != null)
         {
             <div class="d-flex justify-center">
-              <MudImage Fluid="true" Src="@_charts.First().Song.ImagePath.ToString()" Alt="@_charts.First().Song.Name" Elevation="25" ObjectFit="ObjectFit.Contain"/>
+                <MudImage Fluid="true" Src="@_charts.First().Song.ImagePath.ToString()" Alt="@_charts.First().Song.Name" Elevation="25" ObjectFit="ObjectFit.Contain"/>
             </div>
             <MudChipSet Filter="true" Mandatory="true" SelectedValuesChanged="@SelectChart">
-                @foreach (var chart in _charts.OrderBy(c=>c.Type).ThenBy(c=>c.Level))
+                @foreach (var chart in _charts.OrderBy(c => c.Type).ThenBy(c => c.Level))
                 {
                     <MudChip Text="@chart.DifficultyString" Style="@StyleFromChartType(chart.Type)" Value="@chart"></MudChip>
                 }
@@ -47,11 +50,11 @@
         }
         @if (_selectedChart != null && !string.IsNullOrWhiteSpace(_selectedSongName))
         {
-            
-            <MudSelect T="LetterGrade" @bind-Value="_selectedLetterGrade">
+
+            <MudSelect T="LetterGrade?" @bind-Value="_selectedLetterGrade">
                 @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
                 {
-                    <MudSelectItem T="LetterGrade" Value="@letterGrade">@letterGrade.ToString()</MudSelectItem>
+                    <MudSelectItem T="LetterGrade?" Value="@letterGrade">@letterGrade.ToString()</MudSelectItem>
                 }
             </MudSelect>
             <br/>
@@ -59,7 +62,7 @@
         }
     </MudCardContent>
     <MudCardActions>
-        <MudButton Disabled="_selectedChart==null || string.IsNullOrWhiteSpace(_selectedSongName)" Variant="Variant.Filled" Color="Color.Primary" OnClick="@SubmitAttempt">Record Attempt</MudButton>
+        <MudButton Disabled="_selectedChart == null || string.IsNullOrWhiteSpace(_selectedSongName) || _selectedLetterGrade==null" Variant="Variant.Filled" Color="Color.Primary" OnClick="@SubmitAttempt">Record Attempt</MudButton>
     </MudCardActions>
 </MudCard>
 @code {
@@ -68,7 +71,7 @@
     private MudAutocomplete<string> _autocomplete;
     private string _selectedSongName = string.Empty;
     private Chart? _selectedChart;
-    private LetterGrade _selectedLetterGrade = LetterGrade.A;
+    private LetterGrade? _selectedLetterGrade = null;
     private bool _isBroken = false;
     protected override async Task OnInitializedAsync()
     {
@@ -127,14 +130,19 @@
             _selectedLetterGrade = result.BestAttempt.LetterGrade;
             _isBroken = result.BestAttempt.IsBroken;
         }
+        else
+        {
+            _selectedLetterGrade = null;
+            _isBroken = false;
+        }
     }
     private async Task SubmitAttempt()
     {
-        if (!Name.TryParse(_selectedSongName, out var songName) || _selectedChart == null)
+        if (!Name.TryParse(_selectedSongName, out var songName) || _selectedChart == null || _selectedLetterGrade==null)
         {
             return;
         }
-        var wasBetter = await Mediator.Send(new RecordAttemptCommand(songName, _selectedChart.Level, _selectedChart.Type, _selectedLetterGrade, _isBroken));
+        var wasBetter = await Mediator.Send(new RecordAttemptCommand(songName, _selectedChart.Level, _selectedChart.Type, _selectedLetterGrade.Value, _isBroken));
         if (wasBetter)
         {
             Snackbar.Add("Best Attempt Recorded!", Severity.Success);

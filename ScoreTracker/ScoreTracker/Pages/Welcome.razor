@@ -1,0 +1,20 @@
+﻿@page "/Welcome"
+@using ScoreTracker.Domain.SecondaryPorts
+@inject ICurrentUserAccessor _currentUser;
+
+<PageTitle>Welcome</PageTitle>
+
+<MudPaper>
+    <MudCard>
+        
+        <MudCardHeader>
+            
+            <MudText Typo="Typo.h4">Welcome to Score Tracker, @_currentUser.User.Name!</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudText Typo="Typo.body1">To get started you can either <MudButton Href="/" StartIcon="@Icons.Filled.Description">Record Scores Manually</MudButton> or <MudButton Href="/UploadScores" StartIcon="@Icons.Filled.UploadFile">Upload Scores In an Excel Sheet</MudButton></MudText>
+            <br/>
+            <MudText Typo="Typo.body1">If you wish to change your username, check out your <MudButton Href="/Account" StartIcon="@Icons.Filled.AccountCircle">Account</MudButton></MudText>
+        </MudCardContent>
+    </MudCard>
+</MudPaper>
