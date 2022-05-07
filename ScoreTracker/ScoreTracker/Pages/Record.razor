@@ -1,4 +1,4 @@
-﻿@page "/"
+@page "/"
 @using MediatR
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
@@ -142,14 +142,8 @@
         {
             return;
         }
-        var wasBetter = await Mediator.Send(new RecordAttemptCommand(songName, _selectedChart.Level, _selectedChart.Type, _selectedLetterGrade.Value, _isBroken));
-        if (wasBetter)
-        {
-            Snackbar.Add("Best Attempt Recorded!", Severity.Success);
-        }
-        else
-        {
-            Snackbar.Add("Your previous best was better.", Severity.Info);
-        }
+        var wasBetter = await Mediator.Send(new UpdateBestAttemptCommand(songName,_selectedChart.Type, _selectedChart.Level,  _selectedLetterGrade.Value, _isBroken));
+        
+        Snackbar.Add($"Score Recorded for {songName}!", Severity.Success);
     }
 }

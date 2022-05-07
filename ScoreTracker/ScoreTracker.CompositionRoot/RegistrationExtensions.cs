@@ -13,7 +13,7 @@ public static class RegistrationExtensions
 {
     public static IServiceCollection AddCore(this IServiceCollection builder)
     {
-        return builder.AddMediatR(typeof(RecordAttemptHandler));
+        return builder.AddMediatR(typeof(UpdateBestAttemptHandler));
     }
 
     public static IServiceCollection AddInfrastructure(this IServiceCollection builder, SqlConfiguration configuration)
