@@ -232,7 +232,8 @@
                     Difficulty = best.Chart.DifficultyString,
                     LetterGrade = best.BestAttempt?.LetterGrade.ToString() ?? "",
                     Song = best.Chart.Song.Name,
-                    Error = "Could not find chart"
+                    Error = "Could not find chart",
+                    IsBroken = (best.BestAttempt?.IsBroken??true).ToString()
                 });
             }
             catch (SongNotFoundException)
@@ -242,7 +243,8 @@
                     Difficulty = best.Chart.DifficultyString,
                     LetterGrade = best.BestAttempt?.LetterGrade.ToString()??"",
                     Song=best.Chart.Song.Name,
-                    Error="Could not find song"
+                    Error="Could not find song",
+                    IsBroken = (best.BestAttempt?.IsBroken??true).ToString()
                 });
             }
             catch (Exception)
@@ -253,7 +255,8 @@
                     Difficulty = best.Chart.DifficultyString,
                     LetterGrade = best.BestAttempt?.LetterGrade.ToString() ?? "",
                     Song = best.Chart.Song.Name,
-                    Error = "An unknown error occured"
+                    Error = "An unknown error occured",
+                    IsBroken = (best.BestAttempt?.IsBroken??true).ToString()
                 });
             }
         }

@@ -349,21 +349,35 @@ public sealed class ScoreFile
         return new ScoreFile(ScoreFileType.LetterGradeExcel, result, errors);
     }
 
+    private static bool TryParseCellIntoBool(string text, out bool result)
+    {
+        result = false;
+        if (int.TryParse(text, out var intResult))
+        {
+            result = intResult == 1;
+            return true;
+        }
+
+        if (!bool.TryParse(text, out var boolResult)) return false;
+        result = boolResult;
+        return true;
+    }
+
     private static (bool, LetterGrade?) GetScoreFromRow(ExcelWorksheet worksheet, int rowId)
     {
-        if (int.TryParse(worksheet.Cells[rowId, 2].Text, out var isPass)
-            && int.TryParse(worksheet.Cells[rowId, 3].Text, out var isA)
-            && int.TryParse(worksheet.Cells[rowId, 4].Text, out var isS)
-            && int.TryParse(worksheet.Cells[rowId, 5].Text, out var isSS)
-            && int.TryParse(worksheet.Cells[rowId, 6].Text, out var isSSS))
+        if (TryParseCellIntoBool(worksheet.Cells[rowId, 2].Text, out var isBroken)
+            && TryParseCellIntoBool(worksheet.Cells[rowId, 3].Text, out var isA)
+            && TryParseCellIntoBool(worksheet.Cells[rowId, 4].Text, out var isS)
+            && TryParseCellIntoBool(worksheet.Cells[rowId, 5].Text, out var isSS)
+            && TryParseCellIntoBool(worksheet.Cells[rowId, 6].Text, out var isSSS))
         {
-            var isBroken = isPass == 0;
-            LetterGrade? letterGrade = isSSS == 1 ? LetterGrade.SSS :
-                isSS == 1 ? LetterGrade.SS :
-                isS == 1 ? LetterGrade.S :
-                isA == 1 ? LetterGrade.A :
+            LetterGrade? letterGrade = isSSS ? LetterGrade.SSS :
+                isSS ? LetterGrade.SS :
+                isS ? LetterGrade.S :
+                isA ? LetterGrade.A :
                 null;
-            if (isBroken && letterGrade == null) letterGrade = LetterGrade.A;
+
+            if (!isBroken && letterGrade == null) letterGrade = LetterGrade.A;
 
             return (isBroken, letterGrade);
         }
@@ -483,6 +497,12 @@ public sealed class ScoreFile
                 throw new OperationCanceledException("Cancellation was requested");
             try
             {
+                var isBroken = false;
+
+                if (!string.IsNullOrWhiteSpace(record.IsBroken))
+                    if (!TryParseCellIntoBool(record.IsBroken, out isBroken))
+                        failures.Add(record.ToError("Could not parse IsBroken Column"));
+
                 var name = (Name)record.Song;
                 if (NameMappings.ContainsKey(name)) name = NameMappings[name];
                 var (chartType, level) = DifficultyLevel.ParseShortHand(record.Difficulty);
@@ -490,7 +510,7 @@ public sealed class ScoreFile
                     new Chart(new Song(name, new Uri("/", UriKind.Relative)), chartType, level),
                     string.IsNullOrWhiteSpace(record.LetterGrade)
                         ? null
-                        : new ChartAttempt(Enum.Parse<LetterGrade>(record.LetterGrade, true), false));
+                        : new ChartAttempt(Enum.Parse<LetterGrade>(record.LetterGrade, true), isBroken));
 
                 scores.Add(attempt);
             }
