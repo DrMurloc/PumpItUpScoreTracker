@@ -16,57 +16,65 @@
 @inject ICurrentUserAccessor CurrentUser;
 @inject ISnackbar Snackbar
 
-<MudCard>
-    <MudCardHeader>
-        <MudText Typo="Typo.h5">Record Score</MudText>
-    </MudCardHeader>
-    <MudCardContent>
-        @if (_songNames == null)
-        {
-            <p>Loading...</p>
-        }
-        else
-        {
+<MudPaper MaxWidth="500px">
+    <MudCard>
+        <MudCardHeader>
+            <MudText Typo="Typo.h5">Record Score</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+            @if (!_songNames.Any())
+            {
+                <MudProgressCircular Indeterminate="true"></MudProgressCircular>
+            }
+            else
+            {
+                
+                    <MudAutocomplete T="string"
+                                     @ref="_autocomplete"
+                                     Value="@_selectedSongName"
+                                     AdornmentIcon="@Icons.Filled.Search"
+                                     ResetValueOnEmptyText="true"
+                                     CoerceText="true"
+                                     Label="Song"
+                                     SearchFunc="@SearchSongs"
+                                     ValueChanged="@SelectSong">
 
-            <MudItem xs="12" sm="6" md="4">
-                <MudAutocomplete @ref="_autocomplete" T="string" Value="@_selectedSongName" ResetValueOnEmptyText="true" AutoFocus="true" CoerceText="true" Label="Song" SearchFunc="@SearchSongs" ValueChanged="@SelectSong">
+                    </MudAutocomplete>
+                <br/>
+            }
+            @if (_charts != null && _charts.Any())
+            {
+                <div class="d-flex justify-center">
+                    <MudImage Fluid="true" Src="@_charts.First().Song.ImagePath.ToString()" Alt="@_charts.First().Song.Name" Elevation="25" ObjectFit="ObjectFit.Contain"/>
+                </div>
+                <MudChipSet Filter="true" Mandatory="true" SelectedValuesChanged="@SelectChart">
+                    @foreach (var chart in _charts.OrderBy(c => c.Type).ThenBy(c => c.Level))
+                    {
+                        <MudChip Text="@chart.DifficultyString" Style="@StyleFromChartType(chart.Type)" Value="@chart"></MudChip>
+                    }
+                </MudChipSet>
+                <br/>
+            }
+            @if (_selectedChart != null && !string.IsNullOrWhiteSpace(_selectedSongName))
+            {
 
-                </MudAutocomplete>
-            </MudItem>
-            <br/>
-        }
-        @if (_charts != null)
-        {
-            <div class="d-flex justify-center">
-                <MudImage Fluid="true" Src="@_charts.First().Song.ImagePath.ToString()" Alt="@_charts.First().Song.Name" Elevation="25" ObjectFit="ObjectFit.Contain"/>
-            </div>
-            <MudChipSet Filter="true" Mandatory="true" SelectedValuesChanged="@SelectChart">
-                @foreach (var chart in _charts.OrderBy(c => c.Type).ThenBy(c => c.Level))
-                {
-                    <MudChip Text="@chart.DifficultyString" Style="@StyleFromChartType(chart.Type)" Value="@chart"></MudChip>
-                }
-            </MudChipSet>
-            <br/>
-        }
-        @if (_selectedChart != null && !string.IsNullOrWhiteSpace(_selectedSongName))
-        {
-
-            <MudSelect T="LetterGrade?" @bind-Value="_selectedLetterGrade">
-                @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
-                {
-                    <MudSelectItem T="LetterGrade?" Value="@letterGrade">@letterGrade.ToString()</MudSelectItem>
-                }
-            </MudSelect>
-            <br/>
-            <MudCheckBox @bind-Checked="@_isBroken" Label="Broken"></MudCheckBox>
-        }
-    </MudCardContent>
-    <MudCardActions>
-        <MudButton Disabled="_selectedChart == null || string.IsNullOrWhiteSpace(_selectedSongName) || _selectedLetterGrade==null" Variant="Variant.Filled" Color="Color.Primary" OnClick="@SubmitAttempt">Record Attempt</MudButton>
-    </MudCardActions>
-</MudCard>
+                <MudSelect T="LetterGrade?" @bind-Value="_selectedLetterGrade">
+                    @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
+                    {
+                        <MudSelectItem T="LetterGrade?" Value="@letterGrade">@letterGrade.ToString()</MudSelectItem>
+                    }
+                </MudSelect>
+                <br/>
+                <MudCheckBox @bind-Checked="@_isBroken" Label="Broken"></MudCheckBox>
+            }
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Disabled="_selectedChart == null || string.IsNullOrWhiteSpace(_selectedSongName) || _selectedLetterGrade==null" Variant="Variant.Filled" Color="Color.Primary" OnClick="@SubmitAttempt">Record Attempt</MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudPaper>
 @code {
-    private IEnumerable<Name>? _songNames;
+    private IEnumerable<Name> _songNames = Array.Empty<Name>();
     private IEnumerable<Chart>? _charts;
     private MudAutocomplete<string> _autocomplete;
     private string _selectedSongName = string.Empty;
@@ -98,18 +106,27 @@
     }
     private Task<IEnumerable<string>> SearchSongs(string? value)
     {
-        return Task.FromResult(_songNames?.Where(name => name.ToString().Contains(value??string.Empty, StringComparison.OrdinalIgnoreCase)).Select(name => (string)name) ?? Array.Empty<string>());
+        return Task.FromResult(string.IsNullOrWhiteSpace(value)
+            ? _songNames.Select(s => s.ToString())
+            : _songNames.Where(name => name.ToString().Contains(value, StringComparison.OrdinalIgnoreCase)).Select(name => (string)name));
     }
+    
     private async Task SelectSong(string stringValue)
     {
         _selectedSongName = stringValue;
+        if (_autocomplete.IsOpen)
+        {
+            await _autocomplete.ToggleMenu();
+        }
+        _selectedChart = null;
+        _selectedLetterGrade = null;
+        _isBroken = true;
         if (!Name.TryParse(stringValue,out var name))
         {
             _charts = Array.Empty<Chart>();
             return;
         }
         _charts = await Mediator.Send(new GetChartsBySongQuery(name));
-        await _autocomplete.ToggleMenu();
     }
     
     private async Task SelectChart(IEnumerable<object> charts)
@@ -142,14 +159,18 @@
         {
             return;
         }
-        var wasBetter = await Mediator.Send(new RecordAttemptCommand(songName, _selectedChart.Level, _selectedChart.Type, _selectedLetterGrade.Value, _isBroken));
-        if (wasBetter)
+        
+        try
         {
-            Snackbar.Add("Best Attempt Recorded!", Severity.Success);
+            await Mediator.Send(new UpdateBestAttemptCommand(songName,_selectedChart.Type, _selectedChart.Level,  _selectedLetterGrade.Value, _isBroken));
+            
+            var chartName = $"{songName} {DifficultyLevel.ToShorthand(_selectedChart.Type,_selectedChart.Level)}";
+
+            Snackbar.Add( $"Recorded {(_isBroken ? "Broken":"")} {_selectedLetterGrade.Value} for {chartName}", Severity.Success);
         }
-        else
+        catch (Exception e)
         {
-            Snackbar.Add("Your previous best was better.", Severity.Info);
+            Snackbar.Add("There was an error while recording the score", Severity.Error);
         }
     }
 }

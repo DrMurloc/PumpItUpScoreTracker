@@ -143,7 +143,22 @@
     }
     private async Task UpdateBest(BestAttemptDto dto)
     {
-        await Mediator.Send(new UpdateBestAttemptCommand(dto.SongName, Enum.Parse<ChartType>(dto.ChartType), dto.Level, Enum.TryParse<LetterGrade>(dto.LetterGrade,out var grade)?grade:null, dto.IsBroken));
-        Snackbar.Add($"{dto.SongName} updated!", Severity.Success);
+        LetterGrade? letterGrade = Enum.TryParse<LetterGrade>(dto.LetterGrade, out var grade) ? grade : null;
+        var chartType = Enum.Parse<ChartType>(dto.ChartType);
+
+        try
+        {
+            await Mediator.Send(new UpdateBestAttemptCommand(dto.SongName, chartType, dto.Level, letterGrade, dto.IsBroken));
+            
+            var chartName = $"{dto.SongName} {DifficultyLevel.ToShorthand(chartType,dto.Level)}";
+
+            Snackbar.Add(letterGrade == null ? $"Removed score for {chartName}" : $"Recorded {(dto.IsBroken ? "Broken":"")} {letterGrade} for {chartName}", Severity.Success);
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add("There was an error while recording the score", Severity.Error);
+        }
+
+        
     }
 }
