@@ -110,6 +110,11 @@ public readonly struct DifficultyLevel : IComparable<DifficultyLevel>
         }
     }
 
+    public static string ToShorthand(ChartType chartType, DifficultyLevel level)
+    {
+        return $"{chartType.GetShortHand()}{level}";
+    }
+
     public static (ChartType chartType, DifficultyLevel level) ParseShortHand(string shortHand)
     {
         var match = _shortHandRegex.Match(shortHand);

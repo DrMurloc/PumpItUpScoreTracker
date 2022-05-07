@@ -118,7 +118,6 @@
         {
             await _autocomplete.ToggleMenu();
         }
-        StateHasChanged();
         _selectedChart = null;
         _selectedLetterGrade = null;
         _isBroken = true;
@@ -160,8 +159,18 @@
         {
             return;
         }
-        var wasBetter = await Mediator.Send(new UpdateBestAttemptCommand(songName,_selectedChart.Type, _selectedChart.Level,  _selectedLetterGrade.Value, _isBroken));
         
-        Snackbar.Add($"Score Recorded for {songName}!", Severity.Success);
+        try
+        {
+            await Mediator.Send(new UpdateBestAttemptCommand(songName,_selectedChart.Type, _selectedChart.Level,  _selectedLetterGrade.Value, _isBroken));
+            
+            var chartName = $"{songName} {DifficultyLevel.ToShorthand(_selectedChart.Type,_selectedChart.Level)}";
+
+            Snackbar.Add( $"Recorded {(_isBroken ? "Broken":"")} {_selectedLetterGrade.Value} for {chartName}", Severity.Success);
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add("There was an error while recording the score", Severity.Error);
+        }
     }
 }
