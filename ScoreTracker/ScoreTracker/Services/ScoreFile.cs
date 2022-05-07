@@ -295,7 +295,9 @@ public sealed class ScoreFile
         { "Extravaganza Shortcut", "Extravaganza Short Cut" },
         { "Ignis Fatuus Short Cut", "Ignis Fatuus(DM Ashura Mix) Short Cut" },
         { "K.O.A Short Cut", "K.O.A : Alice in Wonderworld Short Cut" },
-        { "Prime Time", "Prime Time Remix" }
+        { "Prime Time", "Prime Time Remix" },
+        { "Mopemope", "Mope Mope" },
+        { "Re: End of a Dream", "Re : End of a Dream" }
     };
 
     private ScoreFile(ScoreFileType type, IEnumerable<BestChartAttempt> scores,
@@ -347,6 +349,32 @@ public sealed class ScoreFile
         return new ScoreFile(ScoreFileType.LetterGradeExcel, result, errors);
     }
 
+    private static (bool, LetterGrade?) GetScoreFromRow(ExcelWorksheet worksheet, int rowId)
+    {
+        if (int.TryParse(worksheet.Cells[rowId, 2].Text, out var isPass)
+            && int.TryParse(worksheet.Cells[rowId, 3].Text, out var isA)
+            && int.TryParse(worksheet.Cells[rowId, 4].Text, out var isS)
+            && int.TryParse(worksheet.Cells[rowId, 5].Text, out var isSS)
+            && int.TryParse(worksheet.Cells[rowId, 6].Text, out var isSSS))
+        {
+            var isBroken = isPass == 0;
+            LetterGrade? letterGrade = isSSS == 1 ? LetterGrade.SSS :
+                isSS == 1 ? LetterGrade.SS :
+                isS == 1 ? LetterGrade.S :
+                isA == 1 ? LetterGrade.A :
+                null;
+            if (isBroken && letterGrade == null) letterGrade = LetterGrade.A;
+
+            return (isBroken, letterGrade);
+        }
+
+        var letterField = worksheet.Cells[rowId, 2].Text;
+        if (string.IsNullOrWhiteSpace(letterField)) return (true, null);
+        if (Enum.TryParse<LetterGrade>(letterField, out var grade)) return (false, grade);
+
+        throw new Exception("Could not parse letter grade from row");
+    }
+
     private static (IEnumerable<BestChartAttempt>, IEnumerable<SpreadsheetScoreErrorDto>) ExtractBestAttempts(
         ChartType category, DifficultyLevel level,
         ExcelWorksheet worksheet)
@@ -359,7 +387,7 @@ public sealed class ScoreFile
         {
             var songNameField = worksheet.Cells[rowId, 1].Text ?? string.Empty;
             if (string.IsNullOrWhiteSpace(songNameField)) continue;
-            var letterField = worksheet.Cells[rowId, 2].Text ?? string.Empty;
+
             if (songNameField.Trim().Equals("Arcade", StringComparison.OrdinalIgnoreCase)
                 || songNameField.Trim().Equals("Full", StringComparison.OrdinalIgnoreCase)
                 || songNameField.Trim().Equals("Full Song", StringComparison.OrdinalIgnoreCase)
@@ -387,12 +415,32 @@ public sealed class ScoreFile
                 continue;
             }
 
+            bool isBroken;
+            LetterGrade? letterGrade;
+            try
+            {
+                (isBroken, letterGrade) = GetScoreFromRow(worksheet, rowId);
+            }
+            catch (Exception e)
+            {
+                errors.Add(new SpreadsheetScoreErrorDto
+                {
+                    Song = songNameField,
+                    Difficulty = level.ToString(),
+                    LetterGrade = "Unknown",
+                    IsBroken = "Unknown",
+                    Error = "Could not parse score"
+                });
+                continue;
+            }
+
             if (!Name.TryParse(songNameField, out var name))
             {
                 errors.Add(new SpreadsheetScoreErrorDto
                 {
                     Difficulty = level.ToString(),
-                    LetterGrade = letterField,
+                    LetterGrade = letterGrade?.ToString() ?? "",
+                    IsBroken = isBroken.ToString(),
                     Song = songNameField,
                     Error = "Could not parse song name"
                 });
@@ -402,21 +450,7 @@ public sealed class ScoreFile
             name += songNameSuffix;
             if (NameMappings.ContainsKey(name)) name = NameMappings[name];
             ChartAttempt? attempt = null;
-            if (Enum.TryParse<LetterGrade>(letterField, out var letterGrade))
-            {
-                attempt = new ChartAttempt(letterGrade, false);
-            }
-            else if (!string.IsNullOrWhiteSpace(letterField))
-            {
-                errors.Add(new SpreadsheetScoreErrorDto
-                {
-                    Difficulty = level.ToString(),
-                    LetterGrade = letterField,
-                    Song = songNameField,
-                    Error = "Could not parse letter grade"
-                });
-                continue;
-            }
+            if (letterGrade != null) attempt = new ChartAttempt(letterGrade.Value, isBroken);
 
 
             result.Add(new BestChartAttempt(

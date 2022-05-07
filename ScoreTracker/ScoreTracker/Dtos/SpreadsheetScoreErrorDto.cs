@@ -6,4 +6,5 @@ public class SpreadsheetScoreErrorDto
     public string Song { get; set; }
     public string LetterGrade { get; set; }
     public string Error { get; set; }
+    public string IsBroken { get; set; }
 }
