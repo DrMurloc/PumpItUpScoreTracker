@@ -1,4 +1,4 @@
-@page "/"
+﻿@page "/"
 @using MediatR
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
@@ -21,21 +21,29 @@
         <MudText Typo="Typo.h5">Record Score</MudText>
     </MudCardHeader>
     <MudCardContent>
-        @if (_songNames == null)
+        @if (!_songNames.Any())
         {
-            <p>Loading...</p>
+            <MudProgressCircular Indeterminate="true"></MudProgressCircular>
         }
         else
         {
 
             <MudItem xs="12" sm="6" md="4">
-                <MudAutocomplete @ref="_autocomplete" T="string" Value="@_selectedSongName" ResetValueOnEmptyText="true" AutoFocus="true" CoerceText="true" Label="Song" SearchFunc="@SearchSongs" ValueChanged="@SelectSong">
+                <MudAutocomplete T="string"
+                                 @ref="_autocomplete"
+                                 Value="@_selectedSongName"
+                                 AdornmentIcon="@Icons.Filled.Search"
+                                 ResetValueOnEmptyText="true"
+                                 CoerceText="true"
+                                 Label="Song"
+                                 SearchFunc="@SearchSongs"
+                                 ValueChanged="@SelectSong">
 
                 </MudAutocomplete>
             </MudItem>
             <br/>
         }
-        @if (_charts != null)
+        @if (_charts != null && _charts.Any())
         {
             <div class="d-flex justify-center">
                 <MudImage Fluid="true" Src="@_charts.First().Song.ImagePath.ToString()" Alt="@_charts.First().Song.Name" Elevation="25" ObjectFit="ObjectFit.Contain"/>
@@ -66,7 +74,7 @@
     </MudCardActions>
 </MudCard>
 @code {
-    private IEnumerable<Name>? _songNames;
+    private IEnumerable<Name> _songNames = Array.Empty<Name>();
     private IEnumerable<Chart>? _charts;
     private MudAutocomplete<string> _autocomplete;
     private string _selectedSongName = string.Empty;
@@ -98,18 +106,28 @@
     }
     private Task<IEnumerable<string>> SearchSongs(string? value)
     {
-        return Task.FromResult(_songNames?.Where(name => name.ToString().Contains(value??string.Empty, StringComparison.OrdinalIgnoreCase)).Select(name => (string)name) ?? Array.Empty<string>());
+        return Task.FromResult(string.IsNullOrWhiteSpace(value)
+            ? _songNames.Select(s => s.ToString())
+            : _songNames.Where(name => name.ToString().Contains(value, StringComparison.OrdinalIgnoreCase)).Select(name => (string)name));
     }
+    
     private async Task SelectSong(string stringValue)
     {
         _selectedSongName = stringValue;
+        if (_autocomplete.IsOpen)
+        {
+            await _autocomplete.ToggleMenu();
+        }
+        StateHasChanged();
+        _selectedChart = null;
+        _selectedLetterGrade = null;
+        _isBroken = true;
         if (!Name.TryParse(stringValue,out var name))
         {
             _charts = Array.Empty<Chart>();
             return;
         }
         _charts = await Mediator.Send(new GetChartsBySongQuery(name));
-        await _autocomplete.ToggleMenu();
     }
     
     private async Task SelectChart(IEnumerable<object> charts)
