@@ -19,7 +19,7 @@
         </MudSelect>
     </MudItem>
     <MudItem xs="6" sm="4">
-        <MudSelect T="string" AdornmentIcon="@Icons.Filled.Label" Label="Chart Type" @bind-Value="_chartTypeFilter" Clearable="true">
+        <MudSelect T="string" AdornmentIcon="@Icons.Filled.Category" Label="Chart Type" @bind-Value="_chartTypeFilter" Clearable="true">
             @foreach (var type in Enum.GetValues<ChartType>())
             {
                 @if (type == ChartType.CoOp && _difficultyFilter != null)
@@ -31,7 +31,7 @@
         </MudSelect>
     </MudItem>
     <MudItem xs="6" sm="4">
-        <MudSelect T="ScoreState?" AdornmentIcon="@Icons.Filled.Grade" Label="Score State" @bind-Value="_scoreStateFilter" Clearable="true">
+        <MudSelect T="ScoreState?" AdornmentIcon="@Icons.Filled.Rule" Label="Score State" @bind-Value="_scoreStateFilter" Clearable="true">
             @foreach(var ss in Enum.GetValues<ScoreState>())
             {
                 <MudSelectItem T="ScoreState?" Value="@ss">@ss.ToString()</MudSelectItem>
@@ -47,19 +47,6 @@
 <MudTable T="BestAttemptDto" Items="@_charts" Filter="FilterChart"  Loading="@_isLoading" Breakpoint="Breakpoint.None">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Charts</MudText>
-        <MudSpacer></MudSpacer>
-        @if (_difficultyFilter != null)
-        {
-            <MudChip Icon="@Icons.Filled.Bolt" CloseIcon="@Icons.Filled.Close" OnClose="()=>_difficultyFilter=null">Difficulty: @(_difficultyFilter??0)</MudChip>
-        }
-        @if (_chartTypeFilter != null)
-        {
-            <MudChip Icon="@Icons.Filled.Label" CloseIcon="@Icons.Filled.Close" OnClocks="()=>_chartTypeFilter=null">Chart Type: @(_chartTypeFilter)</MudChip>
-        }
-        @if (_scoreStateFilter != null)
-        {
-            <MudChip Icon="@Icons.Filled.Grade" CloseIcon="@Icons.Filled.Close" OnClose="()=>_scoreStateFilter=null">Score State: @(_scoreStateFilter?.ToString()??"")</MudChip>
-        }
     </ToolBarContent>
     <HeaderContent>
         <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Level">Level</MudTableSortLabel></MudTh>
