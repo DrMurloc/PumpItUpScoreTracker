@@ -22,6 +22,15 @@ public sealed class DifficultyLevelTitle : Title
         _maximumLevel = level;
     }
 
+    public DifficultyLevelTitle(Name title, DifficultyLevel level, int requiredCount, string additionalRequirements) :
+        base(title,
+            $"{requiredCount} stage passes on {level}s, except Missions. {additionalRequirements}", "Difficulty",
+            requiredCount)
+    {
+        _minimumLevel = level;
+        _maximumLevel = level;
+    }
+
     public override bool DoesAttemptApply(BestChartAttempt attempt)
     {
         if (attempt.BestAttempt == null) return false;
