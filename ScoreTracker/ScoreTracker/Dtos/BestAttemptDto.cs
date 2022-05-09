@@ -14,6 +14,9 @@ public class BestAttemptDto
     public string ImagePath { get; set; } = string.Empty;
     public string DifficultyShorthand { get; set; } = string.Empty;
 
+    public string DifficultyBubblePath =>
+        $"https://piuimages.arroweclip.se/difficulty/{DifficultyShorthand.ToLower()}.png";
+
     public static BestAttemptDto From(BestChartAttempt attempt)
     {
         return new BestAttemptDto
