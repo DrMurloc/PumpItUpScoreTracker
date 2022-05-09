@@ -1,4 +1,5 @@
 ﻿using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Web.Dtos;
 
@@ -11,6 +12,7 @@ public class BestAttemptDto
     public bool IsBroken { get; set; }
     public string ChartType { get; set; } = string.Empty;
     public string ImagePath { get; set; } = string.Empty;
+    public string DifficultyShorthand { get; set; } = string.Empty;
 
     public static BestAttemptDto From(BestChartAttempt attempt)
     {
@@ -24,7 +26,8 @@ public class BestAttemptDto
             SongName = attempt.Chart.Song.Name,
             Level = attempt.Chart.Level,
             ChartType = attempt.Chart.Type.ToString(),
-            ImagePath = attempt.Chart.Song.ImagePath.ToString()
+            ImagePath = attempt.Chart.Song.ImagePath.ToString(),
+            DifficultyShorthand = DifficultyLevel.ToShorthand(attempt.Chart.Type, attempt.Chart.Level)
         };
     }
 }
