@@ -53,6 +53,7 @@
         <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.SongName" InitialDirection="SortDirection.Ascending">Song</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.LetterGrade">Letter</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.IsBroken">Broken</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=> e.Score">Score</MudTableSortLabel></MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd>
@@ -75,6 +76,9 @@
         </MudTd>
         <MudTd>
             <MudCheckBox T="bool" Checked="context.IsBroken" CheckedChanged="@(newValue => SetBroken(context, newValue))" Required Margin="@Margin.Dense"></MudCheckBox>
+        </MudTd>
+        <MudTd>
+            <MudNumericField T="int?" Label="Score" Value="context.Score" ValueChanged="@(newValue=>SetScore(context,newValue))" Min="Score.Min" Max="Score.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
         </MudTd>
     </RowTemplate>
     <PagerContent>
@@ -151,6 +155,15 @@
 
     }
 
+    private async Task SetScore(BestAttemptDto dto, int? newScore)
+    {
+        dto.Score = newScore;
+        if (string.IsNullOrWhiteSpace(dto.LetterGrade) && newScore != null)
+        {
+            dto.LetterGrade = LetterGrade.A.ToString();
+        }
+        await UpdateBest(dto);
+    }
     private async Task SetBroken(BestAttemptDto dto, bool newBroken)
     {
         dto.IsBroken = newBroken;
