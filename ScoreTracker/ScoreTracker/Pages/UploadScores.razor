@@ -33,10 +33,10 @@
                 <MudProgressLinear Indeterminate="true" Color="@Color.Primary" Size="@Size.Large"></MudProgressLinear>
                 break;
             case Step.Confirming:
-                @if (_isDialogShowing)
+                @if (_isScoreTableShowing)
                 {
                     <MudDataGrid T="BestAttemptDto" Items="_attemptDtos" ReadOnly="true"
-                                 Groupable="true" Height="400px" FixedHeader="true" EditMode="@DataGridEditMode.Cell">
+                                 Groupable="true" Height="400px" FixedHeader="true" EditMode="@DataGridEditMode.Cell" Breakpoint="Breakpoint.None">
                         <ToolBarContent>
                             <MudText Typo="Typo.h6">Parsed Scores</MudText>
                         </ToolBarContent>
@@ -101,6 +101,11 @@
         }
         @if (_currentStep == Step.Information)
         {
+            <MudButton Variant="@Variant.Text"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Filled.Info"
+                       OnClick="()=>_isExampleDialogShowing=true">Supported Formats</MudButton>
+
             <MudButton HtmlTag="label"
                        Variant="@Variant.Filled"
                        Color="@Color.Primary"
@@ -114,7 +119,7 @@
             <MudButton Variant="@Variant.Text"
                        Color="@Color.Primary"
                        StartIcon="@Icons.Filled.ViewList"
-                       OnClick="@(_=>_isDialogShowing=!_isDialogShowing)">@(_isDialogShowing?"Hide":"Show") Scores</MudButton>
+                       OnClick="@(_=>_isScoreTableShowing=!_isScoreTableShowing)">@(_isScoreTableShowing?"Hide":"Show") Scores</MudButton>
             <MudButton Variant="@Variant.Filled"
                        Color="@Color.Primary"
                        StartIcon="@Icons.Filled.Save"
@@ -138,6 +143,57 @@
 </MudCard>
 <InputFile id="uploadInput" OnChange="@UploadFile" hidden accept=".csv,.xlsx"/>
 
+<MudDialog @bind-IsVisible="_isExampleDialogShowing">
+    <TitleContent>
+        Supported Formats
+    </TitleContent>
+    <DialogContent>
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+            <MudTabPanel Text="CSV">
+                <MudText>CSV is the most basic upload format. It's typically the suggested format.</MudText>
+                <MudText><b>Column Designation:</b> First row determines the headers of a column</MudText>
+                <MudText><b>Removing Scores: </b> An empty letter grade will remove then score from your saved scores on the site</MudText>
+                <MudButton OnClick="DownloadCSVExample" Variant="Variant.Outlined" Color="Color.Primary">Download Example</MudButton>
+            </MudTabPanel>
+            <MudTabPanel Text="XLSX">
+                <MudText>XLSX is primarily a format for migrating from utilizing spreadsheets as your source of truth. There are a lot of rules, for a quick start check out the templates at the bottom.</MudText>
+                <MudText><b>Column Designation:</b> Unlike CSV, XLSX uploads are picky about column Ordering. Song name must be first column for example.</MudText>
+                <MudText><b>Difficulty:</b> Difficulty is determined by worksheet name (I.E S9, D12).</MudText>
+                <MudText><b>Chart Type:</b> Chart Type (Single, Double, Single Performance etc.) are determined by a combination of worksheet name, and section name (indicated in the first column)</MudText>
+                <MudText><b>Letter Grades:</b> There are two styles of format for letter grade determination: TRUE/FALSE and Letter Grade. (Note that in Letter Grade, all non empty letter grades are considered passing)</MudText>
+                <MudText><b>Song Type:</b> "Remix", "Performance", "Full Song", "Short Cut" in the song name column indicates that the charts beneath are of that type. Suffixes will be added based on song type (I.E "Remix")</MudText>
+                <MudText><b>Removing Scores:</b> Empty Letter grades will remove any score you already have registered on the website</MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="https://docs.google.com/spreadsheets/d/1ZBkB4x3C0wvgmV20-IcIext-8Z6c5xDpwrDKuv9zra0/edit#gid=953736653" Target="_blank">TRUE/FALSE Template</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="https://docs.google.com/spreadsheets/d/1Uz4OA4T9tYXRgPfN1rgPmpG79Jinzhdj/edit?usp=sharing&ouid=105232544737327102121&rtpof=true&sd=true" Target="_blank">Letter Grade Template</MudButton>
+            </MudTabPanel>
+            <MudTabPanel Text="Song Names">
+                <MudText>Some adjustments to account for typos or difference in naming conventions have been accounted for. Song Names are Case Insensitive. (Note that some of these look the same because they are whitespace adjustments)</MudText>
+                <MudTable T="SongMapping" Items="_mappings" Height="300px" FixedHeader="true" Breakpoint="Breakpoint.None" >
+                    <ToolBarContent>
+                        <MudText Typo="Typo.h6">Song Name Mappings</MudText>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel T="SongMapping" SortBy="e => e.From">From</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel T="SongMapping" SortBy="e => e.To" InitialDirection="SortDirection.Ascending">To</MudTableSortLabel></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>
+                            @context.From
+                        </MudTd>
+                        <MudTd>@context.To</MudTd>
+
+                    </RowTemplate>
+
+                </MudTable>
+            </MudTabPanel>
+        </MudTabs>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => _isExampleDialogShowing = false">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
@@ -155,12 +211,20 @@
         Finished
     }
 
-    private bool _isDialogShowing = false;
+    private sealed record SongMapping(string From, string To)
+    {
+
+    }
+
+    private IEnumerable<SongMapping> _mappings => ScoreFile.NameMappings.Select(k => new SongMapping(k.Key, k.Value));
+    private bool _isScoreTableShowing = false;
+    private bool _isExampleDialogShowing = false;
     private Step _currentStep = Step.Information;
     private int _maxSaving = 0;
     private int _currentSaved = 0;
     private string _fileType = "";
     private TimeSpan _remainingTime = TimeSpan.MinValue;
+
     private List<SpreadsheetScoreErrorDto> _failedUploads = new List<SpreadsheetScoreErrorDto>();
     private List<BestChartAttempt> _spreadSheetScores = new List<BestChartAttempt>();
     private IEnumerable<BestAttemptDto> _attemptDtos => _spreadSheetScores.Select(BestAttemptDto.From);
@@ -178,6 +242,60 @@
     {
         _currentStep = Step.Information;
         _currentCancellation?.Cancel();
+    }
+
+    private async Task DownloadCSVExample()
+    {
+        var stream = new MemoryStream();
+        await using var writer = new StreamWriter(stream);
+        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+        await csv.WriteRecordsAsync(new SpreadsheetScoreDto[]
+        {
+            new()
+            {
+                Difficulty = "S17",
+                Song = "Love Scenario",
+                IsBroken = "",
+                LetterGrade = "SS"
+            },
+            new()
+            {
+                Difficulty = "D23",
+                Song = "Baroque Virus Remix",
+                IsBroken = "true",
+                LetterGrade = "A"
+            },
+            new()
+            {
+                Difficulty = "SP10",
+                Song="Pumptris Quattro",
+                IsBroken = "0",
+                LetterGrade = "SSS"
+            },
+            new()
+            {
+                Difficulty = "CoOp2",
+                Song = "Indestructible",
+                IsBroken = "",
+                LetterGrade = ""
+            },
+            new()
+            {
+                Difficulty = "D25",
+                Song="Gargoyle Full Song",
+                IsBroken = "FALSE",
+                LetterGrade = "F"
+            }
+        });
+        await writer.FlushAsync();
+        await csv.FlushAsync();
+        const string fileName = "scoresExample.csv";
+
+        using var streamRef = new DotNetStreamReference(stream: stream);
+        stream.Seek(0, SeekOrigin.Begin);
+
+        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
+        await module.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
     }
     private async Task DownloadFailures()
     {

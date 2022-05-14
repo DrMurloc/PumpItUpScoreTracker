@@ -16,7 +16,7 @@ public sealed class ScoreFile
 {
     public const int MaxByteCount = 10000000;
 
-    private static readonly IDictionary<Name, Name> NameMappings = new Dictionary<Name, Name>
+    public static readonly IDictionary<Name, Name> NameMappings = new Dictionary<Name, Name>
     {
         { "8 6", "86" },
         { "%X", "%X (Percent X)" },
