@@ -7,4 +7,5 @@ public class SpreadsheetScoreErrorDto
     public string LetterGrade { get; set; }
     public string IsBroken { get; set; }
     public string Error { get; set; }
+    public string Score { get; set; }
 }

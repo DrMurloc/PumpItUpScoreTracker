@@ -23,7 +23,7 @@ public sealed class EFChartAttemptRepository : IChartAttemptRepository
         return await (
             from ba in _database.BestAttempt
             where ba.ChartId == chartId && ba.UserId == userId
-            select new ChartAttempt(Enum.Parse<LetterGrade>(ba.LetterGrade), ba.IsBroken)
+            select new ChartAttempt(Enum.Parse<LetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score)
         ).FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -58,7 +58,8 @@ public sealed class EFChartAttemptRepository : IChartAttemptRepository
                 IsBroken = attempt.IsBroken,
                 LetterGrade = attempt.LetterGrade.ToString(),
                 RecordedDate = recordedOn,
-                UserId = userId
+                UserId = userId,
+                Score = attempt.Score
             };
             await _database.BestAttempt.AddAsync(entity, cancellationToken);
         }
@@ -67,6 +68,7 @@ public sealed class EFChartAttemptRepository : IChartAttemptRepository
             previousBest.LetterGrade = attempt.LetterGrade.ToString();
             previousBest.RecordedDate = recordedOn;
             previousBest.IsBroken = attempt.IsBroken;
+            previousBest.Score = attempt.Score;
         }
 
         await _database.SaveChangesAsync(cancellationToken);
@@ -76,16 +78,19 @@ public sealed class EFChartAttemptRepository : IChartAttemptRepository
         CancellationToken cancellationToken)
     {
         var result = (from ce in charts
-            join s in _database.Song on (string)ce.Song.Name equals s.Name
-            join c in _database.Chart on new
-                    { SongId = s.Id, Level = (int)ce.Level, ChartType = ce.Type.ToString() } equals
-                new { c.SongId, c.Level, ChartType = c.Type }
-            join _ in _database.BestAttempt on new { UserId = userId, ChartId = c.Id } equals new
-                { _.UserId, _.ChartId } into gi
-            from ba in gi.DefaultIfEmpty()
-            select new BestChartAttempt(
-                new Chart(new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level),
-                ba == null ? null : new ChartAttempt(Enum.Parse<LetterGrade>(ba.LetterGrade), ba.IsBroken))).ToArray();
+                join s in _database.Song on (string)ce.Song.Name equals s.Name
+                join c in _database.Chart on new
+                        { SongId = s.Id, Level = (int)ce.Level, ChartType = ce.Type.ToString() } equals
+                    new { c.SongId, c.Level, ChartType = c.Type }
+                join _ in _database.BestAttempt on new { UserId = userId, ChartId = c.Id } equals new
+                    { _.UserId, _.ChartId } into gi
+                from ba in gi.DefaultIfEmpty()
+                select new BestChartAttempt(
+                    new Chart(new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level),
+                    ba == null
+                        ? null
+                        : new ChartAttempt(Enum.Parse<LetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score)))
+            .ToArray();
         return result;
     }
 
@@ -93,14 +98,17 @@ public sealed class EFChartAttemptRepository : IChartAttemptRepository
         CancellationToken cancellationToken = default)
     {
         var result = (
-            from s in _database.Song
-            join c in _database.Chart on s.Id equals c.SongId
-            join _ in _database.BestAttempt on new { UserId = userId, ChartId = c.Id } equals new
-                { _.UserId, _.ChartId } into gi
-            from ba in gi.DefaultIfEmpty()
-            select new BestChartAttempt(
-                new Chart(new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level),
-                ba == null ? null : new ChartAttempt(Enum.Parse<LetterGrade>(ba.LetterGrade), ba.IsBroken))).ToArray();
+                from s in _database.Song
+                join c in _database.Chart on s.Id equals c.SongId
+                join _ in _database.BestAttempt on new { UserId = userId, ChartId = c.Id } equals new
+                    { _.UserId, _.ChartId } into gi
+                from ba in gi.DefaultIfEmpty()
+                select new BestChartAttempt(
+                    new Chart(new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level),
+                    ba == null
+                        ? null
+                        : new ChartAttempt(Enum.Parse<LetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score)))
+            .ToArray();
         return result;
     }
 

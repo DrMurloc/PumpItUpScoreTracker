@@ -176,7 +176,7 @@
 
         try
         {
-            await Mediator.Send(new UpdateBestAttemptCommand(dto.SongName, chartType, dto.Level, letterGrade, dto.IsBroken));
+            await Mediator.Send(new UpdateBestAttemptCommand(dto.SongName, chartType, dto.Level, letterGrade, dto.IsBroken, dto.Score));
             
             var chartName = $"{dto.SongName} {DifficultyLevel.ToShorthand(chartType,dto.Level)}";
 

@@ -66,6 +66,8 @@
                 </MudSelect>
                 <br/>
                 <MudCheckBox @bind-Checked="@_isBroken" Label="Broken"></MudCheckBox>
+                <br/>
+                <MudNumericField Label="Score (optional)" @bind-Value="_inputScore" Min="Score.Min" Max="Score.Max" Variant="Variant.Text"></MudNumericField>
             }
         </MudCardContent>
         <MudCardActions>
@@ -81,6 +83,7 @@
     private Chart? _selectedChart;
     private LetterGrade? _selectedLetterGrade = null;
     private bool _isBroken = false;
+    private int? _inputScore = null;
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn)
@@ -121,6 +124,7 @@
         _selectedChart = null;
         _selectedLetterGrade = null;
         _isBroken = true;
+        _inputScore = null;
         if (!Name.TryParse(stringValue,out var name))
         {
             _charts = Array.Empty<Chart>();
@@ -146,11 +150,13 @@
         {
             _selectedLetterGrade = result.BestAttempt.LetterGrade;
             _isBroken = result.BestAttempt.IsBroken;
+            _inputScore = result.BestAttempt.Score;
         }
         else
         {
             _selectedLetterGrade = null;
             _isBroken = false;
+            _inputScore = null;
         }
     }
     private async Task SubmitAttempt()
@@ -162,7 +168,7 @@
         
         try
         {
-            await Mediator.Send(new UpdateBestAttemptCommand(songName,_selectedChart.Type, _selectedChart.Level,  _selectedLetterGrade.Value, _isBroken));
+            await Mediator.Send(new UpdateBestAttemptCommand(songName,_selectedChart.Type, _selectedChart.Level,  _selectedLetterGrade.Value, _isBroken,_inputScore));
             
             var chartName = $"{songName} {DifficultyLevel.ToShorthand(_selectedChart.Type,_selectedChart.Level)}";
 
