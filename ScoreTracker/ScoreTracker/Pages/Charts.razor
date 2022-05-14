@@ -47,39 +47,81 @@
 <MudTable T="BestAttemptDto" Items="@_charts" Filter="FilterChart"  Loading="@_isLoading" Breakpoint="Breakpoint.None">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Charts</MudText>
+        <MudSpacer></MudSpacer>
+        <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+            <MudMenuItem><MudCheckBox @bind-Checked="_isDifficultyShowing" Label="Difficulty"></MudCheckBox></MudMenuItem>
+            <MudMenuItem><MudCheckBox @bind-Checked="_isSongShowing" Label="Song"></MudCheckBox></MudMenuItem>
+            <MudMenuItem><MudCheckBox @bind-Checked="_isGradeShowing" Label="Letter Grade"></MudCheckBox></MudMenuItem>
+            <MudMenuItem><MudCheckBox @bind-Checked="_isBrokenShowing" Label="Broken"></MudCheckBox></MudMenuItem>
+            <MudMenuItem><MudCheckBox @bind-Checked="_isScoreShowing" Label="Score"></MudCheckBox></MudMenuItem>
+        </MudMenu>
     </ToolBarContent>
     <HeaderContent>
-        <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Level">Level</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.SongName" InitialDirection="SortDirection.Ascending">Song</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.LetterGrade">Letter</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.IsBroken">Broken</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=> e.Score">Score</MudTableSortLabel></MudTh>
+        @if (_isDifficultyShowing)
+        {
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Level">Level</MudTableSortLabel></MudTh>
+        }
+        @if (_isSongShowing)
+        {
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.SongName" InitialDirection="SortDirection.Ascending">Song</MudTableSortLabel></MudTh>
+        }
+        @if (_isGradeShowing)
+        {
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.LetterGrade">Letter</MudTableSortLabel></MudTh>
+        }
+        @if (_isBrokenShowing)
+        {
+            
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.IsBroken">Broken</MudTableSortLabel></MudTh>
+        }
+        @if (_isScoreShowing)
+        {
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Score">Score</MudTableSortLabel></MudTh>
+        }
     </HeaderContent>
     <RowTemplate>
-        <MudTd>
-            <MudTooltip Text="@context.DifficultyShorthand">
-                <MudImage Src="@context.DifficultyBubblePath" Height="35" Alt="@context.DifficultyShorthand" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-            </MudTooltip>
-        </MudTd>
-        <MudTd>
-            <MudTooltip Text="@context.SongName">
-                <MudImage Src="@context.ImagePath" Height="35" Alt="@context.SongName" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
-            </MudTooltip>
-        </MudTd>
-        <MudTd>
-            <MudSelect T="string" Value="@context.LetterGrade" ValueChanged="@(newValue => SetLetter(context, newValue))" Clearable="true" Margin="@Margin.Dense">
-                @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
-                {
-                    <MudSelectItem Value="@letterGrade.ToString()">@letterGrade.ToString()</MudSelectItem>
-                }
-            </MudSelect>
-        </MudTd>
-        <MudTd>
-            <MudCheckBox T="bool" Checked="context.IsBroken" CheckedChanged="@(newValue => SetBroken(context, newValue))" Required Margin="@Margin.Dense"></MudCheckBox>
-        </MudTd>
-        <MudTd>
-            <MudNumericField T="int?" Label="Score" Value="context.Score" ValueChanged="@(newValue=>SetScore(context,newValue))" Min="Score.Min" Max="Score.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
-        </MudTd>
+        @if (_isDifficultyShowing)
+        {
+            
+            <MudTd>
+                <MudTooltip Text="@context.DifficultyShorthand">
+                    <MudImage Src="@context.DifficultyBubblePath" Height="35" Alt="@context.DifficultyShorthand" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                </MudTooltip>
+            </MudTd>
+        }
+        @if (_isSongShowing)
+        {
+            
+            <MudTd>
+                <MudTooltip Text="@context.SongName">
+                    <MudImage Src="@context.ImagePath" Height="35" Alt="@context.SongName" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
+                </MudTooltip>
+            </MudTd>
+        }
+        @if (_isGradeShowing)
+        {
+            
+            <MudTd>
+                <MudSelect T="string" Value="@context.LetterGrade" ValueChanged="@(newValue => SetLetter(context, newValue))" Clearable="true" Margin="@Margin.Dense">
+                    @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
+                    {
+                        <MudSelectItem Value="@letterGrade.ToString()">@letterGrade.ToString()</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudTd>
+        }
+        @if (_isBrokenShowing)
+        {
+            <MudTd>
+                <MudCheckBox T="bool" Checked="context.IsBroken" CheckedChanged="@(newValue => SetBroken(context, newValue))" Required Margin="@Margin.Dense"></MudCheckBox>
+            </MudTd>
+        }
+        @if (_isScoreShowing)
+        {
+            <MudTd>
+                <MudNumericField T="int?" Label="Score" Value="context.Score" ValueChanged="@(newValue => SetScore(context, newValue))" Min="Score.Min" Max="Score.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
+            </MudTd>
+        }
     </RowTemplate>
     <PagerContent>
         <MudTablePager></MudTablePager>
@@ -96,6 +138,12 @@
     private BestAttemptDto[] _charts = Array.Empty<BestAttemptDto>();
 
     private MudDataGrid<BestAttemptDto>? _dataGrid;
+
+    private bool _isDifficultyShowing = true;
+    private bool _isSongShowing = true;
+    private bool _isGradeShowing = true;
+    private bool _isBrokenShowing = true;
+    private bool _isScoreShowing = false;
 
     private bool _isLoading = true;
     private int? _difficultyFilter = null;
