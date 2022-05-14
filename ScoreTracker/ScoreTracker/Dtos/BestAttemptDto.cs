@@ -14,6 +14,7 @@ public class BestAttemptDto
     public string ImagePath { get; set; } = string.Empty;
     public string DifficultyShorthand { get; set; } = string.Empty;
     public int? Score { get; set; }
+    public DateTimeOffset? RecordedOn { get; set; }
 
     public string DifficultyBubblePath =>
         $"https://piuimages.arroweclip.se/difficulty/{DifficultyShorthand.ToLower()}.png";
@@ -32,7 +33,8 @@ public class BestAttemptDto
             ChartType = attempt.Chart.Type.ToString(),
             ImagePath = attempt.Chart.Song.ImagePath.ToString(),
             DifficultyShorthand = DifficultyLevel.ToShorthand(attempt.Chart.Type, attempt.Chart.Level),
-            Score = attempt.BestAttempt?.Score
+            Score = attempt.BestAttempt?.Score,
+            RecordedOn = attempt.BestAttempt?.RecordedOn
         };
     }
 }

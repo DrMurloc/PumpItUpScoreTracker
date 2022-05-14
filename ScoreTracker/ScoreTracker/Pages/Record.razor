@@ -57,17 +57,26 @@
             }
             @if (_selectedChart != null && !string.IsNullOrWhiteSpace(_selectedSongName))
             {
-
-                <MudSelect T="LetterGrade?" @bind-Value="_selectedLetterGrade">
-                    @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
-                    {
-                        <MudSelectItem T="LetterGrade?" Value="@letterGrade">@letterGrade.ToString()</MudSelectItem>
-                    }
-                </MudSelect>
-                <br/>
-                <MudCheckBox @bind-Checked="@_isBroken" Label="Broken"></MudCheckBox>
-                <br/>
-                <MudNumericField Label="Score (optional)" @bind-Value="_inputScore" Min="Score.Min" Max="Score.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
+                @if (_recordedOn != null)
+                {
+                    <MudText>Recorded on @_recordedOn.Value.ToString("MMM dd yyyy")</MudText>
+                }
+                <MudGrid>
+                    <MudItem xs="6">
+                        <MudSelect T="LetterGrade?" @bind-Value="_selectedLetterGrade">
+                            @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
+                            {
+                                <MudSelectItem T="LetterGrade?" Value="@letterGrade">@letterGrade.ToString()</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudCheckBox @bind-Checked="@_isBroken" Label="Broken"></MudCheckBox>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudNumericField Label="Score (optional)" @bind-Value="_inputScore" Min="Score.Min" Max="Score.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
+                    </MudItem>
+                </MudGrid>
             }
         </MudCardContent>
         <MudCardActions>
@@ -84,6 +93,7 @@
     private LetterGrade? _selectedLetterGrade = null;
     private bool _isBroken = false;
     private int? _inputScore = null;
+    private DateTimeOffset? _recordedOn = null;
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn)
@@ -121,6 +131,7 @@
         {
             await _autocomplete.ToggleMenu();
         }
+        _recordedOn = null;
         _selectedChart = null;
         _selectedLetterGrade = null;
         _isBroken = true;
@@ -151,12 +162,14 @@
             _selectedLetterGrade = result.BestAttempt.LetterGrade;
             _isBroken = result.BestAttempt.IsBroken;
             _inputScore = result.BestAttempt.Score;
+            _recordedOn = result.BestAttempt.RecordedOn;
         }
         else
         {
             _selectedLetterGrade = null;
             _isBroken = false;
             _inputScore = null;
+            _recordedOn = null;
         }
     }
     private async Task SubmitAttempt()
@@ -172,6 +185,8 @@
             
             var chartName = $"{songName} {DifficultyLevel.ToShorthand(_selectedChart.Type,_selectedChart.Level)}";
 
+            _recordedOn = DateTimeOffset.Now;
+            
             Snackbar.Add( $"Recorded {(_isBroken ? "Broken":"")} {_selectedLetterGrade.Value} for {chartName}", Severity.Success);
         }
         catch (Exception e)
