@@ -464,7 +464,7 @@ public sealed class ScoreFile
             name += songNameSuffix;
             if (NameMappings.ContainsKey(name)) name = NameMappings[name];
             ChartAttempt? attempt = null;
-            if (letterGrade != null) attempt = new ChartAttempt(letterGrade.Value, isBroken);
+            if (letterGrade != null) attempt = new ChartAttempt(letterGrade.Value, isBroken, null);
 
 
             result.Add(new BestChartAttempt(
@@ -491,6 +491,7 @@ public sealed class ScoreFile
         if (!csv.TryGetField<string>(nameof(SpreadsheetScoreDto.LetterGrade), out _))
             throw new ScoreFileParseException("Spreadsheet is missing LetterGrade column");
 
+
         await foreach (var record in csv.GetRecordsAsync<SpreadsheetScoreDto>(cancellationToken))
         {
             if (cancellationToken.IsCancellationRequested)
@@ -501,7 +502,17 @@ public sealed class ScoreFile
 
                 if (!string.IsNullOrWhiteSpace(record.IsBroken))
                     if (!TryParseCellIntoBool(record.IsBroken, out isBroken))
+                    {
                         failures.Add(record.ToError("Could not parse IsBroken Column"));
+                        continue;
+                    }
+
+                if (!Score.TryParse(record.Score, out Score? score))
+                {
+                    failures.Add(record.ToError("Could not parse Score Column"));
+                    continue;
+                }
+
 
                 var name = (Name)record.Song;
                 if (NameMappings.ContainsKey(name)) name = NameMappings[name];
@@ -510,7 +521,7 @@ public sealed class ScoreFile
                     new Chart(new Song(name, new Uri("/", UriKind.Relative)), chartType, level),
                     string.IsNullOrWhiteSpace(record.LetterGrade)
                         ? null
-                        : new ChartAttempt(Enum.Parse<LetterGrade>(record.LetterGrade, true), isBroken));
+                        : new ChartAttempt(Enum.Parse<LetterGrade>(record.LetterGrade, true), isBroken, score));
 
                 scores.Add(attempt);
             }

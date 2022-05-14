@@ -15,4 +15,5 @@ public sealed class BestAttemptEntity
 
     [Required] public string LetterGrade { get; set; } = string.Empty;
     [Required] public bool IsBroken { get; set; }
+    public int? Score { get; set; }
 }

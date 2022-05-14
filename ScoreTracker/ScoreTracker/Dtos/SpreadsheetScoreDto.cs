@@ -6,6 +6,7 @@ public class SpreadsheetScoreDto
     public string Song { get; set; }
     public string LetterGrade { get; set; }
     public string IsBroken { get; set; }
+    public string Score { get; set; }
 
     public SpreadsheetScoreErrorDto ToError(string errorReason)
     {
@@ -15,7 +16,8 @@ public class SpreadsheetScoreDto
             Song = Song,
             LetterGrade = LetterGrade,
             Error = errorReason,
-            IsBroken = IsBroken
+            IsBroken = IsBroken,
+            Score = Score
         };
     }
 }
