@@ -23,7 +23,7 @@ public sealed class EFChartAttemptRepository : IChartAttemptRepository
         return await (
             from ba in _database.BestAttempt
             where ba.ChartId == chartId && ba.UserId == userId
-            select new ChartAttempt(Enum.Parse<LetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score)
+            select new ChartAttempt(Enum.Parse<LetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score, ba.RecordedDate)
         ).FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -89,7 +89,8 @@ public sealed class EFChartAttemptRepository : IChartAttemptRepository
                     new Chart(new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level),
                     ba == null
                         ? null
-                        : new ChartAttempt(Enum.Parse<LetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score)))
+                        : new ChartAttempt(Enum.Parse<LetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score,
+                            ba.RecordedDate)))
             .ToArray();
         return result;
     }
@@ -107,7 +108,8 @@ public sealed class EFChartAttemptRepository : IChartAttemptRepository
                     new Chart(new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level),
                     ba == null
                         ? null
-                        : new ChartAttempt(Enum.Parse<LetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score)))
+                        : new ChartAttempt(Enum.Parse<LetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score,
+                            ba.RecordedDate)))
             .ToArray();
         return result;
     }

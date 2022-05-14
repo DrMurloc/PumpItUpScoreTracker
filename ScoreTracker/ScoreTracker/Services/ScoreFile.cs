@@ -464,7 +464,7 @@ public sealed class ScoreFile
             name += songNameSuffix;
             if (NameMappings.ContainsKey(name)) name = NameMappings[name];
             ChartAttempt? attempt = null;
-            if (letterGrade != null) attempt = new ChartAttempt(letterGrade.Value, isBroken, null);
+            if (letterGrade != null) attempt = new ChartAttempt(letterGrade.Value, isBroken, null, DateTimeOffset.Now);
 
 
             result.Add(new BestChartAttempt(
@@ -521,7 +521,8 @@ public sealed class ScoreFile
                     new Chart(new Song(name, new Uri("/", UriKind.Relative)), chartType, level),
                     string.IsNullOrWhiteSpace(record.LetterGrade)
                         ? null
-                        : new ChartAttempt(Enum.Parse<LetterGrade>(record.LetterGrade, true), isBroken, score));
+                        : new ChartAttempt(Enum.Parse<LetterGrade>(record.LetterGrade, true), isBroken, score,
+                            DateTimeOffset.Now));
 
                 scores.Add(attempt);
             }

@@ -54,6 +54,8 @@
             <MudMenuItem><MudCheckBox @bind-Checked="_isGradeShowing" Label="Letter Grade"></MudCheckBox></MudMenuItem>
             <MudMenuItem><MudCheckBox @bind-Checked="_isBrokenShowing" Label="Broken"></MudCheckBox></MudMenuItem>
             <MudMenuItem><MudCheckBox @bind-Checked="_isScoreShowing" Label="Score"></MudCheckBox></MudMenuItem>
+            <MudMenuItem><MudCheckBox @bind-Checked="_isRecordedOnShowing" Label="Recorded Date"></MudCheckBox></MudMenuItem>
+            
         </MudMenu>
     </ToolBarContent>
     <HeaderContent>
@@ -77,6 +79,10 @@
         @if (_isScoreShowing)
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Score">Score</MudTableSortLabel></MudTh>
+        }
+        @if (_isRecordedOnShowing)
+        {
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.RecordedOn">Recorded On</MudTableSortLabel></MudTh>
         }
     </HeaderContent>
     <RowTemplate>
@@ -122,6 +128,12 @@
                 <MudNumericField T="int?" Label="Score" Value="context.Score" ValueChanged="@(newValue => SetScore(context, newValue))" Min="Score.Min" Max="Score.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
             </MudTd>
         }
+        @if (_isRecordedOnShowing)
+        {
+            <MudTd>
+                <MudTooltip Text="@context.RecordedOn?.ToString("MMM dd yyyy")">@context.RecordedOn?.ToString("MM/dd/yyyy")</MudTooltip>
+            </MudTd>
+        }
     </RowTemplate>
     <PagerContent>
         <MudTablePager></MudTablePager>
@@ -144,6 +156,7 @@
     private bool _isGradeShowing = true;
     private bool _isBrokenShowing = true;
     private bool _isScoreShowing = false;
+    private bool _isRecordedOnShowing = false;
 
     private bool _isLoading = true;
     private int? _difficultyFilter = null;
@@ -238,7 +251,9 @@
         try
         {
             await Mediator.Send(new UpdateBestAttemptCommand(dto.SongName, chartType, dto.Level, letterGrade, dto.IsBroken, dto.Score));
-            
+
+            dto.RecordedOn = letterGrade == null ? null : DateTimeOffset.Now;
+
             var chartName = $"{dto.SongName} {DifficultyLevel.ToShorthand(chartType,dto.Level)}";
 
             Snackbar.Add(letterGrade == null ? $"Removed score for {chartName}" : $"Recorded {(dto.IsBroken ? "Broken":"")} {letterGrade} for {chartName}", Severity.Success);
