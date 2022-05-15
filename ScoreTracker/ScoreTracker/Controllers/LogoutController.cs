@@ -24,6 +24,9 @@ public sealed class LogoutController : Controller
     {
         if (!_currentUser.IsLoggedIn) return BadRequest("Not logged in");
         var user = await _mediator.Send(new GetUserByIdQuery(_currentUser.User.Id));
+
+        if (user == null) return BadRequest("User was not found");
+
         await _currentUser.SetCurrentUser(user);
         return Ok();
     }

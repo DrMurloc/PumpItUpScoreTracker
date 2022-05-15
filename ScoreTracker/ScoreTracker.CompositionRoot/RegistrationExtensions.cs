@@ -6,6 +6,8 @@ using ScoreTracker.Data.Configuration;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Repositories;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.Services;
+using ScoreTracker.Domain.Services.Contracts;
 
 namespace ScoreTracker.CompositionRoot;
 
@@ -13,7 +15,8 @@ public static class RegistrationExtensions
 {
     public static IServiceCollection AddCore(this IServiceCollection builder)
     {
-        return builder.AddMediatR(typeof(UpdateBestAttemptHandler));
+        return builder.AddMediatR(typeof(UpdateBestAttemptHandler))
+            .AddTransient<IUserAccessService, UserAccessService>();
     }
 
     public static IServiceCollection AddInfrastructure(this IServiceCollection builder, SqlConfiguration configuration)

@@ -1,4 +1,5 @@
-﻿@page "/Progress"
+﻿@page "/{RequestedUserId:guid}/Progress"
+@page "/Progress"
 @using MediatR
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
@@ -52,6 +53,9 @@
 @inject ICurrentUserAccessor CurrentUser;
 
 @code {
+    [Parameter]
+    public Guid? RequestedUserId { get; set; }
+
     private bool _isLoading = false;
     private List<ChartSeries> _letterBreakdown = new();
     private List<ChartSeries> _passBreakdown = new();
@@ -63,7 +67,7 @@
     private string[] _passLabels = Array.Empty<string>();
     private string[] _difficulties = Enumerable.Range(DifficultyLevel.Min, DifficultyLevel.Max).Select(l=>l.ToString()).ToArray();
 
-    private async Task LoadData()
+    private async Task LoadData(Guid userId)
     {
 
         _isLoading = true;
@@ -85,7 +89,7 @@
             difficultyPasses[level][false] = 0;
         }
 
-        var scores = await Mediator.Send(new GetBestChartAttemptsQuery());
+        var scores = await Mediator.Send(new GetBestChartAttemptsQuery(userId));
         var difficultyDtos = Enumerable.Range(DifficultyLevel.Min, DifficultyLevel.Max).ToDictionary(l => l, l => new DifficultyOverviewDto
         {
             Difficulty = l
@@ -216,12 +220,17 @@
     }
     protected override async Task OnInitializedAsync()
     {
-        if (!CurrentUser.IsLoggedIn)
+        if (RequestedUserId == null)
         {
-            NavManager.NavigateTo("/Login");
-            return;
+            if (!CurrentUser.IsLoggedIn)
+            {
+                NavManager.NavigateTo("/Login");
+                return;
+            }
+            NavManager.NavigateTo($"/{CurrentUser.User.Id}/Progress");
+            RequestedUserId = CurrentUser.User.Id;
         }
-        await LoadData();
+        await LoadData(RequestedUserId.Value);
     }
     
 }
