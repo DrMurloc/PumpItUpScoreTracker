@@ -220,13 +220,13 @@
     }
     protected override async Task OnInitializedAsync()
     {
-        if (!CurrentUser.IsLoggedIn)
-        {
-            NavManager.NavigateTo("/Login");
-            return;
-        }
         if (RequestedUserId == null)
         {
+            if (!CurrentUser.IsLoggedIn)
+            {
+                NavManager.NavigateTo("/Login");
+                return;
+            }
             NavManager.NavigateTo($"/{CurrentUser.User.Id}/Progress");
             RequestedUserId = CurrentUser.User.Id;
         }
