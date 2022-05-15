@@ -49,6 +49,12 @@
     <ToolBarContent>
         <MudText Typo="Typo.h6">Charts</MudText>
         <MudSpacer></MudSpacer>
+        @if (CurrentUser.IsLoggedIn && CurrentUser.User.IsPublic && CurrentUser.User.Id == RequestedUserId)
+        {
+            <MudTooltip Text="Share Your Chart List">
+                <MudIconButton Icon="@Icons.Filled.Share" OnClick="()=>_showShareDialog=true"></MudIconButton>
+            </MudTooltip>
+        }
         <MudMenu Icon="@Icons.Material.Filled.MoreVert">
             <MudMenuItem><MudCheckBox @bind-Checked="_isDifficultyShowing" Label="Difficulty"></MudCheckBox></MudMenuItem>
             <MudMenuItem><MudCheckBox @bind-Checked="_isSongShowing" Label="Song"></MudCheckBox></MudMenuItem>
@@ -164,18 +170,31 @@
     </PagerContent>
 </MudTable>
 
+<MudDialog @bind-IsVisible="_showShareDialog">
+    <DialogContent>
+        <MudText>Use this link to share your chart list to other players.</MudText>
+        <br/>
+        <MudTextField Value="@ShareUrl" Label="Share Url" Variant="Variant.Outlined" Margin="Margin.Dense" ReadOnly="true"/>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Filled.ContentCopy" OnClick="CopyShareLink">Copy To Clipboard</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Filled.Close" OnClick="()=>_showShareDialog=false">Close</MudButton>
+    </DialogActions>
+</MudDialog>
 @inject IMediator Mediator
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
 @inject ISnackbar Snackbar;
-
+@inject IJSRuntime Javascript;
 @code {
-    
+    private bool _showShareDialog;
+
     [Parameter]
     public Guid? RequestedUserId { get; set; }
 
     private bool CanEdit => CurrentUser.IsLoggedIn && CurrentUser.User.Id == RequestedUserId;
-
+    private string ShareUrl => CurrentUser.IsLoggedIn ? $"{NavManager.BaseUri}{CurrentUser.User.Id}/Charts" : string.Empty;
     private bool _showFilterDialog;
     private BestAttemptDto[] _charts = Array.Empty<BestAttemptDto>();
 
@@ -223,11 +242,11 @@
         return result;
     }
 
-    private static bool IsPassing(BestAttemptDto dto)
+    private async Task CopyShareLink()
     {
-        return !string.IsNullOrWhiteSpace(dto.LetterGrade) && !dto.IsBroken;
+        await Javascript.InvokeVoidAsync("navigator.clipboard.writeText", ShareUrl);
+        Snackbar.Add("Copied to clipboard!", Severity.Success);
     }
-
 
     private async Task LoadCharts(Guid userId)
     {
@@ -244,7 +263,6 @@
                 NavManager.NavigateTo("/Login");
                 return;
             }
-            NavManager.NavigateTo($"/{CurrentUser.User.Id}/Charts");
             RequestedUserId = CurrentUser.User.Id;
         }
         await LoadCharts(RequestedUserId.Value);
