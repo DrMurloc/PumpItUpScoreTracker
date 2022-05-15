@@ -19,13 +19,19 @@ public sealed class EFUserRepository : IUserRepository
     {
         var existingUser = await _database.User.FirstOrDefaultAsync(u => u.Id == user.Id, cancellationToken);
         if (existingUser == null)
+        {
             await _database.User.AddAsync(new UserEntity
             {
                 Name = user.Name,
-                Id = user.Id
+                Id = user.Id,
+                IsPublic = user.IsPublic
             }, cancellationToken);
+        }
         else
+        {
             existingUser.Name = user.Name;
+            existingUser.IsPublic = user.IsPublic;
+        }
 
         await _database.SaveChangesAsync(cancellationToken);
     }
@@ -46,7 +52,7 @@ public sealed class EFUserRepository : IUserRepository
 
     public async Task<User> GetUser(Guid userId, CancellationToken cancellationToken = default)
     {
-        return await _database.User.Where(u => u.Id == userId).Select(u => new User(u.Id, u.Name))
+        return await _database.User.Where(u => u.Id == userId).Select(u => new User(u.Id, u.Name, u.IsPublic))
             .SingleAsync(cancellationToken);
     }
 
@@ -57,6 +63,6 @@ public sealed class EFUserRepository : IUserRepository
             join u in _database.User on e.UserId equals u.Id
             where e.LoginProvider == loginProviderName
                   && e.ExternalId == externalId
-            select new User(u.Id, u.Name)).SingleOrDefaultAsync(cancellationToken);
+            select new User(u.Id, u.Name, u.IsPublic)).SingleOrDefaultAsync(cancellationToken);
     }
 }
