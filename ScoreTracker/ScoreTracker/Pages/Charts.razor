@@ -52,7 +52,7 @@
         @if (CurrentUser.IsLoggedIn && CurrentUser.User.IsPublic && CurrentUser.User.Id == RequestedUserId)
         {
             <MudTooltip Text="Share Your Chart List">
-                <MudIconButton Icon="@Icons.Filled.Share" Size="Size.Small"  OnClick="()=>_showShareDialog=true"></MudIconButton>
+                <MudIconButton Icon="@Icons.Filled.Share" OnClick="()=>_showShareDialog=true"></MudIconButton>
             </MudTooltip>
         }
         <MudMenu Icon="@Icons.Material.Filled.MoreVert">
