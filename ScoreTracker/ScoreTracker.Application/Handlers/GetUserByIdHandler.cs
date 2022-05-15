@@ -5,7 +5,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Application.Handlers;
 
-public sealed class GetUserByIdHandler : IRequestHandler<GetUserByIdQuery, User>
+public sealed class GetUserByIdHandler : IRequestHandler<GetUserByIdQuery, User?>
 {
     private readonly IUserRepository _users;
 
@@ -14,7 +14,7 @@ public sealed class GetUserByIdHandler : IRequestHandler<GetUserByIdQuery, User>
         _users = users;
     }
 
-    public async Task<User> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
+    public async Task<User?> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
     {
         return await _users.GetUser(request.UserId, cancellationToken);
     }

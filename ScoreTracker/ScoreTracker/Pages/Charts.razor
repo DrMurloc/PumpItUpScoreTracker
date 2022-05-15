@@ -1,4 +1,5 @@
-﻿@page "/Charts"
+﻿@page "/{RequestedUserId:guid}/Charts"
+@page "/Charts"
 @using MediatR
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
@@ -108,24 +109,47 @@
         {
             
             <MudTd>
-                <MudSelect T="string" Value="@context.LetterGrade" ValueChanged="@(newValue => SetLetter(context, newValue))" Clearable="true" Margin="@Margin.Dense">
-                    @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
-                    {
-                        <MudSelectItem Value="@letterGrade.ToString()">@letterGrade.ToString()</MudSelectItem>
-                    }
-                </MudSelect>
+                @if (CanEdit)
+                {
+                    
+                    <MudSelect T="string" Value="@context.LetterGrade" ValueChanged="@(newValue => SetLetter(context, newValue))" Clearable="true" Margin="@Margin.Dense">
+                        @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
+                        {
+                            <MudSelectItem Value="@letterGrade.ToString()">@letterGrade.ToString()</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+                else
+                {
+                    <MudText>@context.LetterGrade</MudText>
+                }
             </MudTd>
         }
         @if (_isBrokenShowing)
         {
             <MudTd>
-                <MudCheckBox T="bool" Checked="context.IsBroken" CheckedChanged="@(newValue => SetBroken(context, newValue))" Required Margin="@Margin.Dense"></MudCheckBox>
+                @if (CanEdit)
+                {
+                    <MudCheckBox T="bool" Checked="context.IsBroken" CheckedChanged="@(newValue => SetBroken(context, newValue))" Required Margin="@Margin.Dense"></MudCheckBox>
+                }
+                else
+                {
+                    <MudText>@(context.IsBroken?"Broken":"Passed")</MudText>
+                }
             </MudTd>
         }
         @if (_isScoreShowing)
         {
             <MudTd>
-                <MudNumericField T="int?" Label="Score" Value="context.Score" ValueChanged="@(newValue => SetScore(context, newValue))" Min="Score.Min" Max="Score.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
+                @if (CanEdit)
+                {
+                    <MudNumericField T="int?" Label="Score" Value="context.Score" ValueChanged="@(newValue => SetScore(context, newValue))" Min="Score.Min" Max="Score.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
+                }
+                else
+                {
+                    <MudText>@context.Score</MudText>
+                }
+                
             </MudTd>
         }
         @if (_isRecordedOnShowing)
@@ -146,6 +170,12 @@
 @inject ISnackbar Snackbar;
 
 @code {
+    
+    [Parameter]
+    public Guid? RequestedUserId { get; set; }
+
+    private bool CanEdit => CurrentUser.IsLoggedIn && CurrentUser.User.Id == RequestedUserId;
+
     private bool _showFilterDialog;
     private BestAttemptDto[] _charts = Array.Empty<BestAttemptDto>();
 
@@ -199,20 +229,25 @@
     }
 
 
-    private async Task LoadCharts()
+    private async Task LoadCharts(Guid userId)
     {
         _isLoading = true;
-        _charts = (await Mediator.Send(new GetBestChartAttemptsQuery())).Select(BestAttemptDto.From).ToArray();
+        _charts = (await Mediator.Send(new GetBestChartAttemptsQuery(userId))).Select(BestAttemptDto.From).ToArray();
         _isLoading = false;
     }
     protected override async Task OnInitializedAsync()
     {
-        if (!CurrentUser.IsLoggedIn)
+        if (RequestedUserId == null)
         {
-            NavManager.NavigateTo("/Login");
-            return;
+            if (!CurrentUser.IsLoggedIn)
+            {
+                NavManager.NavigateTo("/Login");
+                return;
+            }
+            NavManager.NavigateTo($"/{CurrentUser.User.Id}/Charts");
+            RequestedUserId = CurrentUser.User.Id;
         }
-        await LoadCharts();
+        await LoadCharts(RequestedUserId.Value);
 
     }
 

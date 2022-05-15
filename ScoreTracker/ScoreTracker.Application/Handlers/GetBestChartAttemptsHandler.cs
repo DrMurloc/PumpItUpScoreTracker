@@ -2,6 +2,7 @@
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.Services.Contracts;
 
 namespace ScoreTracker.Application.Handlers;
 
@@ -10,18 +11,20 @@ public sealed class
         IEnumerable<BestChartAttempt>>
 {
     private readonly IChartAttemptRepository _chartAttemptRepository;
-    private readonly ICurrentUserAccessor _currentUser;
+    private readonly IUserAccessService _userAccess;
 
     public GetBestChartAttemptsHandler(IChartAttemptRepository chartAttemptRepository,
-        IChartRepository chartRepository, ICurrentUserAccessor currentUser)
+        IUserAccessService userAccess)
     {
         _chartAttemptRepository = chartAttemptRepository;
-        _currentUser = currentUser;
+        _userAccess = userAccess;
     }
 
     public async Task<IEnumerable<BestChartAttempt>> Handle(GetBestChartAttemptsQuery request,
         CancellationToken cancellationToken)
     {
-        return await _chartAttemptRepository.GetBestAttempts(_currentUser.User.Id, cancellationToken);
+        if (!await _userAccess.HasAccessTo(request.UserId, cancellationToken)) return Array.Empty<BestChartAttempt>();
+
+        return await _chartAttemptRepository.GetBestAttempts(request.UserId, cancellationToken);
     }
 }
