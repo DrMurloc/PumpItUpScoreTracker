@@ -18,7 +18,7 @@ var discordConfig = builder.Configuration.GetSection("Discord").Get<DiscordConfi
 var googleConfig = builder.Configuration.GetSection("Google").Get<GoogleConfiguration>();
 var facebookConfig = builder.Configuration.GetSection("Facebook").Get<FacebookConfiguration>();
 builder.Services.AddAuthentication("DefaultAuthentication")
-    .AddCookie("DefaultAuthentication")
+    .AddCookie("DefaultAuthentication", o => o.ExpireTimeSpan = TimeSpan.MaxValue)
     .AddDiscord("Discord", o =>
     {
         o.ClientId = discordConfig.ClientId;
