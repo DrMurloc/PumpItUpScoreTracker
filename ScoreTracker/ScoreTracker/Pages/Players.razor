@@ -21,12 +21,20 @@
     </ToolBarContent>
     <HeaderContent>
         <MudTh>Username</MudTh>
+        <MudTh>Chart List</MudTh>
+        <MudTh>Progress</MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Username">
             <MudTooltip Text="@context.Id.ToString()">
                 @context.Name
             </MudTooltip>
+        </MudTd>
+        <MudTd>
+            <MudButton StartIcon="@Icons.Filled.List" Href="@ChartListLink(context.Id)" Color="Color.Primary" Variant="Variant.Text">Charts</MudButton>
+        </MudTd>
+        <MudTd>
+            <MudButton StartIcon="@Icons.Filled.BarChart" Href="@ProgressLink(context.Id)" Color="Color.Primary" Variant="Variant.Text">Progress</MudButton>
         </MudTd>
     </RowTemplate>
     <PagerContent>
@@ -52,7 +60,12 @@
             TotalItems = searchResult.Total
         };
     }
-    
+
+    private string ChartListLink(Guid userId)
+        => $"{userId}/Charts";
+
+    private string ProgressLink(Guid userId)
+        => $"{userId}/Progress";
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn)
