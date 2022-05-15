@@ -1,0 +1,72 @@
+﻿@page "/Players"
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
+<PageTitle>Find Players</PageTitle>
+
+<MudTable Dense="true" Striped="true" ServerData="ServerReload" @ref="_table">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Find Players</MudText>
+        <MudSpacer />
+        <MudTextField 
+            T="string"
+            Placeholder="Search"
+            DebounceInterval="250"
+            Adornment="Adornment.Start"
+            AdornmentIcon="@Icons.Material.Filled.Search"
+            IconSize="Size.Medium"
+            Class="mt-0"
+            ValueChanged="Search"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Username</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Username">
+            <MudTooltip Text="@context.Id.ToString()">
+                @context.Name
+            </MudTooltip>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+@inject IMediator Mediator
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser;
+@inject ISnackbar Snackbar;
+
+@code {
+    private string _searchText = string.Empty;
+    private MudTable<User> _table;
+
+    private async Task<TableData<User>> ServerReload(TableState state)
+    {
+        var searchResult = await Mediator.Send(new SearchForUsersQuery(_searchText, state.Page, state.PageSize));
+        return new TableData<User>
+        {
+            Items = searchResult.Results,
+            TotalItems = searchResult.Total
+        };
+    }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Login");
+            return;
+        }
+
+    }
+
+    private async Task Search(string searchText)
+    {
+        _searchText = searchText;
+        await _table.ReloadServerData();
+    }
+    
+}

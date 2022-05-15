@@ -49,6 +49,14 @@ public sealed class EFUserRepository : IUserRepository
         await _database.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<IEnumerable<User>> SearchForUsersByName(string searchText,
+        CancellationToken cancellationToken = default)
+    {
+        return await _database.User.Where(u => u.Name.Contains(searchText))
+            .Select(u => new User(u.Id, u.Name, u.IsPublic))
+            .ToArrayAsync(cancellationToken);
+    }
+
 
     public async Task<User> GetUser(Guid userId, CancellationToken cancellationToken = default)
     {
