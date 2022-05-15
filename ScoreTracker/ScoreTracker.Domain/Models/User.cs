@@ -2,6 +2,6 @@
 
 namespace ScoreTracker.Domain.Models;
 
-public sealed record User(Guid Id, Name Name)
+public sealed record User(Guid Id, Name Name, bool IsPublic)
 {
 }

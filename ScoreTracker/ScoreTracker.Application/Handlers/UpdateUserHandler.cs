@@ -20,7 +20,7 @@ public sealed class UpdateUserHandler : IRequestHandler<UpdateUserCommand>
     public async Task<Unit> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
         var user = _currentUser.User;
-        var newUser = new User(user.Id, request.newName);
+        var newUser = new User(user.Id, request.newName, request.newIsPublic);
         await _users.SaveUser(newUser, cancellationToken);
         return Unit.Value;
     }

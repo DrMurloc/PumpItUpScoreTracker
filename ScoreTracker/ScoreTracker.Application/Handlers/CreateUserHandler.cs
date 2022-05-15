@@ -16,7 +16,7 @@ public sealed class CreateUserHandler : IRequestHandler<CreateUserCommand, User>
 
     public async Task<User> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
-        var user = new User(Guid.NewGuid(), request.Name);
+        var user = new User(Guid.NewGuid(), request.Name, false);
         await _user.SaveUser(user, cancellationToken);
         return user;
     }
