@@ -10,8 +10,8 @@
     <MudCardHeader>Account Settings</MudCardHeader>
     <MudCardContent>
         <MudTextField Label="Id" Disabled="true" Value="@_id" HelperText="Used primarily for debugging"></MudTextField>
-        <MudTextField T="string" Label="Username" MaxLength="100" Value="@_name" ValueChanged="UpdateName"></MudTextField>
-        <MudSwitch T="bool" Label="Public" Checked="_isPublic" CheckedChanged="UpdateIsPublic" Color="Color.Success"></MudSwitch>
+        <MudTextField T="string" Disabled="_isUpdatingUser" Label="Username" MaxLength="100" Value="@_name" ValueChanged="UpdateName"></MudTextField>
+        <MudSwitch T="bool" Disabled="_isUpdatingUser" Label="Public" Checked="_isPublic" CheckedChanged="()=>_showPublicConfirmDialog=true" Color="Color.Success"></MudSwitch>
     </MudCardContent>
     <MudCardActions>
         <MudSpacer></MudSpacer>
@@ -20,6 +20,30 @@
     </MudCardActions>
 </MudCard>
 
+<MudDialog @bind-IsVisible="_showPublicConfirmDialog">
+    <DialogContent>
+        @if (_isPublic)
+        {
+            <MudText>Making your account private will make your scores and progress no longer be externally visible, even for anyone already following you.</MudText>
+            
+        }
+        else
+        {
+            <MudText>Making your account public will make your scores and progress externally visible. Others will be able to search for your account by name or ID.</MudText>
+            <br/>
+            <MudText>If your account was previously public and you made it private, making it public again will make anyone following you able to see your progress again.</MudText>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text"
+                   OnClick="()=>_showPublicConfirmDialog=false"
+                   Color="Color.Primary">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   OnClick="ToggleIsPublic"
+                   Color="Color.Primary">Make @(_isPublic?"Private":"Public")</MudButton>
+    </DialogActions>
+</MudDialog>
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
@@ -31,6 +55,8 @@
     private string _id = string.Empty;
     private string _name = string.Empty;
     private bool _isPublic = false;
+    private bool _showPublicConfirmDialog = false;
+    private bool _isUpdatingUser = false;
     protected override Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn)
@@ -46,7 +72,7 @@
 
     private async Task UpdateUser()
     {
-        
+        _isUpdatingUser = true;
         await Mediator.Send(new UpdateUserCommand(_name,_isPublic));
        /*
           Why does it always come back to javascript...
@@ -59,14 +85,16 @@
           See: >:(  for my stance on this.*/
         var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
         await module.InvokeVoidAsync("refreshLogin");
+        _isUpdatingUser = false;
     }
 
-    private async Task UpdateIsPublic(bool newIsPublic)
+    private async Task ToggleIsPublic()
     {
-        _isPublic = newIsPublic;
+        _showPublicConfirmDialog = false;
+        _isPublic = !_isPublic;
         await UpdateUser();
-        var message = newIsPublic ? "Public" : "Private";
-        Snackbar.Add($"User made {message}", Severity.Success);
+        var message = _isPublic ? "Public" : "Private";
+        Snackbar.Add($"Account made {message}", Severity.Success);
     }
     private async Task UpdateName(string newName)
     {
