@@ -468,7 +468,7 @@ public sealed class ScoreFile
 
 
             result.Add(new BestChartAttempt(
-                new Chart(new Song(name, new Uri("/", UriKind.Relative)), currentType, level), attempt));
+                new Chart(Guid.Empty, new Song(name, new Uri("/", UriKind.Relative)), currentType, level), attempt));
         }
 
         return (result, errors);
@@ -518,7 +518,7 @@ public sealed class ScoreFile
                 if (NameMappings.ContainsKey(name)) name = NameMappings[name];
                 var (chartType, level) = DifficultyLevel.ParseShortHand(record.Difficulty);
                 var attempt = new BestChartAttempt(
-                    new Chart(new Song(name, new Uri("/", UriKind.Relative)), chartType, level),
+                    new Chart(Guid.Empty, new Song(name, new Uri("/", UriKind.Relative)), chartType, level),
                     string.IsNullOrWhiteSpace(record.LetterGrade)
                         ? null
                         : new ChartAttempt(Enum.Parse<LetterGrade>(record.LetterGrade, true), isBroken, score,

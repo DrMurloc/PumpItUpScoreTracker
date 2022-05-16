@@ -30,7 +30,7 @@ public sealed class EFChartRepository : IChartRepository
         return await (from s in _database.Song
                 join c in _database.Chart on s.Id equals c.SongId
                 where s.Name == (string)songName && c.Type == chartType.ToString() && c.Level == (int)level
-                select new Chart(new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level))
+                select new Chart(c.Id, new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level))
             .FirstOrDefaultAsync(cancellationToken) ?? throw new ChartNotFoundException();
     }
 
@@ -40,7 +40,7 @@ public sealed class EFChartRepository : IChartRepository
         return await (from s in _database.Song
                 join c in _database.Chart on s.Id equals c.SongId
                 where s.Name == nameString
-                select new Chart(new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level))
+                select new Chart(c.Id, new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level))
             .ToArrayAsync(cancellationToken);
     }
 
@@ -51,7 +51,7 @@ public sealed class EFChartRepository : IChartRepository
         return await (from c in _database.Chart
                 join s in _database.Song on c.SongId equals s.Id
                 where c.Level == difficultyInt && c.Type != ChartType.CoOp.ToString()
-                select new Chart(new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level))
+                select new Chart(c.Id, new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level))
             .ToArrayAsync(cancellationToken);
     }
 
@@ -60,7 +60,7 @@ public sealed class EFChartRepository : IChartRepository
         return await (from c in _database.Chart
                 join s in _database.Song on c.SongId equals s.Id
                 where c.Type == ChartType.CoOp.ToString()
-                select new Chart(new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level))
+                select new Chart(c.Id, new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level))
             .ToArrayAsync(cancellationToken);
     }
 }
