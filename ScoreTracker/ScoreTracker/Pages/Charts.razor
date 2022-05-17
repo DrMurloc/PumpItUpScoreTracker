@@ -60,6 +60,7 @@
             <MudMenuItem><MudCheckBox @bind-Checked="_isSongShowing" Label="Song"></MudCheckBox></MudMenuItem>
             <MudMenuItem><MudCheckBox @bind-Checked="_isGradeShowing" Label="Letter Grade"></MudCheckBox></MudMenuItem>
             <MudMenuItem><MudCheckBox @bind-Checked="_isBrokenShowing" Label="Broken"></MudCheckBox></MudMenuItem>
+            <MudMenuItem><MudCheckBox @bind-Checked="_isVideoShowing" Label="Video"></MudCheckBox></MudMenuItem>
             <MudMenuItem><MudCheckBox @bind-Checked="_isScoreShowing" Label="Score"></MudCheckBox></MudMenuItem>
             <MudMenuItem><MudCheckBox @bind-Checked="_isRecordedOnShowing" Label="Recorded Date"></MudCheckBox></MudMenuItem>
             
@@ -73,6 +74,10 @@
         @if (_isSongShowing)
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.SongName" InitialDirection="SortDirection.Ascending">Song</MudTableSortLabel></MudTh>
+        }
+        @if (_isVideoShowing)
+        {
+            <MudTh>Video</MudTh>
         }
         @if (_isGradeShowing)
         {
@@ -111,6 +116,24 @@
                 </MudTooltip>
             </MudTd>
         }
+        @if (_isVideoShowing)
+        {
+            <MudTd>
+                @if (!string.IsNullOrWhiteSpace(context.VideoUrl))
+                {
+                    <MudTooltip Text="Open Embeded Video">
+                        <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="()=>ShowVideo(context.VideoUrl)"></MudIconButton>
+                    </MudTooltip>
+                }
+                else
+                {
+                    <MudTooltip Text="Open Youtube Search for Chart">
+                        <MudIconButton Icon="@Icons.Filled.Search" Href="@ChartSearch(context)" Target="_blank"></MudIconButton>
+                    </MudTooltip>
+                }
+            </MudTd>
+        }
+
         @if (_isGradeShowing)
         {
             
@@ -169,7 +192,21 @@
         <MudTablePager></MudTablePager>
     </PagerContent>
 </MudTable>
+<MudDialog @bind-IsVisible="_showVideoDialog">
+    <DialogContent>
+        <iframe
+            class="video"
+            id="chartVideoFrame"
+            src="@(_currentVideo + "?autoplay=1")"
+            allow="autoplay; encrypted-media"
+            allowfullscreen></iframe>
+    </DialogContent>
 
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Filled.Close" OnClick="()=>_showVideoDialog=false">Close</MudButton>
+    </DialogActions>
+</MudDialog>
 <MudDialog @bind-IsVisible="_showShareDialog">
     <DialogContent>
         <MudText>Use this link to share your chart list to other players.</MudText>
@@ -182,6 +219,8 @@
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Filled.Close" OnClick="()=>_showShareDialog=false">Close</MudButton>
     </DialogActions>
 </MudDialog>
+<link href="/css/charts.css" rel="stylesheet"/>
+
 @inject IMediator Mediator
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
@@ -189,7 +228,8 @@
 @inject IJSRuntime Javascript;
 @code {
     private bool _showShareDialog;
-
+    private string _currentVideo = "";
+    private bool _showVideoDialog;
     [Parameter]
     public Guid? RequestedUserId { get; set; }
 
@@ -206,6 +246,7 @@
     private bool _isBrokenShowing = true;
     private bool _isScoreShowing = false;
     private bool _isRecordedOnShowing = false;
+    private bool _isVideoShowing = true;
 
     private bool _isLoading = true;
     private int? _difficultyFilter = null;
@@ -242,6 +283,16 @@
         return result;
     }
 
+    private string ChartSearch(BestAttemptDto dto)
+    {
+        var searchString = "Pump It Up "+dto.SongName+" "+dto.DifficultyShorthand;
+        return $"https://www.youtube.com/results?search_query={searchString.Replace("%","Percent ").Replace(" ", "+")}";
+    }
+    private void ShowVideo(string url)
+    {
+        _currentVideo = url;
+        _showVideoDialog = true;
+    }
     private async Task CopyShareLink()
     {
         await Javascript.InvokeVoidAsync("navigator.clipboard.writeText", ShareUrl);
@@ -252,6 +303,11 @@
     {
         _isLoading = true;
         _charts = (await Mediator.Send(new GetBestChartAttemptsQuery(userId))).Select(BestAttemptDto.From).ToArray();
+        var videos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId);
+        foreach (var chart in _charts.Where(c=>videos.ContainsKey(c.ChartId)))
+        {
+            chart.VideoUrl = videos[chart.ChartId].VideoUrl.ToString();
+        }
         _isLoading = false;
     }
     protected override async Task OnInitializedAsync()

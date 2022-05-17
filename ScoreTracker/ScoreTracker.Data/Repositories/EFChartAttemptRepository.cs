@@ -86,7 +86,7 @@ public sealed class EFChartAttemptRepository : IChartAttemptRepository
                     { _.UserId, _.ChartId } into gi
                 from ba in gi.DefaultIfEmpty()
                 select new BestChartAttempt(
-                    new Chart(new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level),
+                    new Chart(c.Id, new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level),
                     ba == null
                         ? null
                         : new ChartAttempt(Enum.Parse<LetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score,
@@ -105,7 +105,7 @@ public sealed class EFChartAttemptRepository : IChartAttemptRepository
                     { _.UserId, _.ChartId } into gi
                 from ba in gi.DefaultIfEmpty()
                 select new BestChartAttempt(
-                    new Chart(new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level),
+                    new Chart(c.Id, new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level),
                     ba == null
                         ? null
                         : new ChartAttempt(Enum.Parse<LetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score,

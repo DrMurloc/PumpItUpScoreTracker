@@ -13,8 +13,8 @@ public interface IChartRepository
 
     Task<IEnumerable<Chart>> GetChartsForSong(Name songName, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<Chart>> GetChartsByDifficulty(DifficultyLevel difficultyLevel,
-        CancellationToken cancellationToken = default);
-
     Task<IEnumerable<Chart>> GetCoOpCharts(CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<ChartVideoInformation>> GetChartVideoInformation(IEnumerable<Guid>? chartIds = default,
+        CancellationToken cancellationToken = default);
 }

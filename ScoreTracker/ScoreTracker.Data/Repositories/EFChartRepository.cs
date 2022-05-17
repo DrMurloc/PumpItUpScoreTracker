@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
@@ -30,7 +31,7 @@ public sealed class EFChartRepository : IChartRepository
         return await (from s in _database.Song
                 join c in _database.Chart on s.Id equals c.SongId
                 where s.Name == (string)songName && c.Type == chartType.ToString() && c.Level == (int)level
-                select new Chart(new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level))
+                select new Chart(c.Id, new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level))
             .FirstOrDefaultAsync(cancellationToken) ?? throw new ChartNotFoundException();
     }
 
@@ -40,27 +41,31 @@ public sealed class EFChartRepository : IChartRepository
         return await (from s in _database.Song
                 join c in _database.Chart on s.Id equals c.SongId
                 where s.Name == nameString
-                select new Chart(new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level))
+                select new Chart(c.Id, new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level))
             .ToArrayAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<Chart>> GetChartsByDifficulty(DifficultyLevel difficultyLevel,
-        CancellationToken cancellationToken = default)
-    {
-        var difficultyInt = (int)difficultyLevel;
-        return await (from c in _database.Chart
-                join s in _database.Song on c.SongId equals s.Id
-                where c.Level == difficultyInt && c.Type != ChartType.CoOp.ToString()
-                select new Chart(new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level))
-            .ToArrayAsync(cancellationToken);
-    }
 
     public async Task<IEnumerable<Chart>> GetCoOpCharts(CancellationToken cancellationToken = default)
     {
         return await (from c in _database.Chart
                 join s in _database.Song on c.SongId equals s.Id
                 where c.Type == ChartType.CoOp.ToString()
-                select new Chart(new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level))
+                select new Chart(c.Id, new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level))
+            .ToArrayAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<ChartVideoInformation>> GetChartVideoInformation(
+        IEnumerable<Guid>? chartIds = default, CancellationToken cancellationToken = default)
+    {
+        IQueryable<ChartVideoEntity> query = _database.ChartVideo;
+        if (chartIds != null)
+        {
+            var chartIdArray = chartIds.ToArray();
+            query = query.Where(c => chartIdArray.Contains(c.ChartId));
+        }
+
+        return await query.Select(c => new ChartVideoInformation(c.ChartId, new Uri(c.VideoUrl), c.ChannelName))
             .ToArrayAsync(cancellationToken);
     }
 }
