@@ -5,6 +5,7 @@ namespace ScoreTracker.Web.Dtos;
 
 public class BestAttemptDto
 {
+    public Guid ChartId { get; set; }
     public string Category { get; set; }
     public int Level { get; set; }
     public string SongName { get; set; }
@@ -15,6 +16,7 @@ public class BestAttemptDto
     public string DifficultyShorthand { get; set; } = string.Empty;
     public int? Score { get; set; }
     public DateTimeOffset? RecordedOn { get; set; }
+    public string VideoUrl { get; set; }
 
     public string DifficultyBubblePath =>
         $"https://piuimages.arroweclip.se/difficulty/{DifficultyShorthand.ToLower()}.png";
@@ -23,6 +25,7 @@ public class BestAttemptDto
     {
         return new BestAttemptDto
         {
+            ChartId = attempt.Chart.Id,
             Category = attempt.Chart.Type == Domain.Enums.ChartType.CoOp
                 ? nameof(Domain.Enums.ChartType.CoOp) + " x" + attempt.Chart.PlayerCount
                 : attempt.Chart.Type.ToString(),

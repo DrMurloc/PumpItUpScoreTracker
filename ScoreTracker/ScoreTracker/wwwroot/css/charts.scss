@@ -1,0 +1,38 @@
+﻿.mud-dialog-width-sm {
+    max-width: none !important;
+}
+
+@media (min-width: 410px) {
+    iframe.video {
+        height: 225px;
+        width: 400px;
+    }
+}
+
+@media (min-width: 576px) {
+    iframe.video {
+        height: 240px;
+        width:426px;
+    }
+}
+
+@media (min-width: 768px) {
+    iframe.video {
+        height: 302px;
+        width:538px;
+    }
+}
+
+@media (min-width: 970px) {
+    iframe.video {
+        height: 416px;
+        width:739px;
+    }
+}
+
+@media (min-width: 1170px) {
+    iframe.video {
+        height: 480px;
+        width:854px;
+    }
+}
