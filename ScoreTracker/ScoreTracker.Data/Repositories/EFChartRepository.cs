@@ -18,6 +18,41 @@ public sealed class EFChartRepository : IChartRepository
         _database = database;
     }
 
+    public async Task<IDictionary<Name, int>> GetSongOrder(CancellationToken cancellationToken = default)
+    {
+        return await (
+                from so in _database.SongOrder
+                join s in _database.Song on so.SongId equals s.Id
+                select new { s.Name, so.Order })
+            .ToDictionaryAsync(q => (Name)q.Name, q => q.Order, cancellationToken);
+    }
+
+    public async Task<IEnumerable<Chart>> GetCharts(IEnumerable<DifficultyLevel>? levels = default,
+        IEnumerable<ChartType>? chartTypes = default, string? songNameContains = default,
+        CancellationToken cancellationToken = default)
+    {
+        var query = from c in _database.Chart
+            join s in _database.Song on c.SongId equals s.Id
+            select new { c, s };
+        if (levels != null)
+        {
+            var intLevels = levels.Select(l => (int)l).ToArray();
+            query = query.Where(q => intLevels.Contains(q.c.Level));
+        }
+
+        if (chartTypes != null)
+        {
+            var stringTypes = chartTypes.Select(c => c.ToString()).ToArray();
+            query = query.Where(q => stringTypes.Contains(q.c.Type));
+        }
+
+        if (songNameContains != null) query = query.Where(q => q.s.Name.Contains(songNameContains));
+
+        return await (from q in query
+            select new Chart(q.c.Id, new Song(q.s.Name, new Uri(q.s.ImagePath)), Enum.Parse<ChartType>(q.c.Type),
+                q.c.Level)).ToArrayAsync(cancellationToken);
+    }
+
     public async Task<IEnumerable<Name>> GetSongNames(CancellationToken cancellationToken = default)
     {
         return (await _database.Song.Select(s => s.Name).ToArrayAsync(cancellationToken)).Select(Name.From);

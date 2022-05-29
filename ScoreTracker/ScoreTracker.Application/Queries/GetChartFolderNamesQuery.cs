@@ -3,6 +3,6 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Queries;
 
-public sealed record GetChartFolderNames : IRequest<IEnumerable<Name>>
+public sealed record GetChartFolderNamesQuery : IRequest<IEnumerable<Name>>
 {
 }
