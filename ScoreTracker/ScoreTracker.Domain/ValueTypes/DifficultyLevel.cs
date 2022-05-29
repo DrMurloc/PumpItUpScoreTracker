@@ -16,6 +16,9 @@ public readonly struct DifficultyLevel : IComparable<DifficultyLevel>
     public static readonly DifficultyLevel Max = new(28);
     public static readonly DifficultyLevel Min = new(1);
 
+    public static readonly IEnumerable<DifficultyLevel> AllLevels =
+        Enumerable.Range(Min, Max).Select(i => (DifficultyLevel)i).ToArray();
+
     public override string ToString()
     {
         return _level.ToString();
