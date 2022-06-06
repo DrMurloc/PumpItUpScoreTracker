@@ -9,6 +9,7 @@ namespace ScoreTracker.Application.Handlers;
 
 public sealed class GetChartFolderByNameHandler : IRequestHandler<GetChartFolderByNameQuery, ChartFolder>
 {
+    private static readonly string[] _suffixesToIgnore = { "Full Song", "Short Cut", "Remix" };
     private readonly IChartRepository _chartRepository;
 
     public GetChartFolderByNameHandler(IChartRepository chartRepository)
@@ -31,8 +32,8 @@ public sealed class GetChartFolderByNameHandler : IRequestHandler<GetChartFolder
                 ? new[] { ChartType.Single, ChartType.SinglePerformance }
                 : new[] { ChartType.Double, ChartType.DoublePerformance };
 
-            charts = await _chartRepository.GetCharts(new[] { level }, chartTypes, null,
-                cancellationToken);
+            charts = (await _chartRepository.GetCharts(new[] { level }, chartTypes, null,
+                cancellationToken)).Where(c => !_suffixesToIgnore.Any(s => c.Song.Name.ToString().EndsWith(s)));
         }
         else
         {

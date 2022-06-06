@@ -20,7 +20,7 @@ public sealed class GetChartFolderNamesHandler : IRequestHandler<GetChartFolderN
 
         var names = new List<Name>
         {
-            "Shortcut",
+            "Short Cut",
             "Remix",
             "Full Song"
         };
