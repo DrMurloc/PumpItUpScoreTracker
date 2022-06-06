@@ -1,0 +1,128 @@
+﻿@page "/FolderRecord"
+@using MediatR
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Web.Dtos
+@using ChartType = ScoreTracker.Domain.Enums.ChartType;
+<PageTitle>Record By Folder</PageTitle>
+
+<MudCard>
+    <MudCardHeader>
+        <MudGrid>
+            
+            <MudItem xs="6">
+                <MudSelect T="string" Label="Folder" Value="_currentFolderName" ValueChanged="SelectFolderName">
+                    @foreach (var name in _folderNames)
+                    {
+                        <MudSelectItem T="string" Value="name">@name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            @if (!string.IsNullOrWhiteSpace(_currentFolderName))
+            {
+                <MudItem xs="6">
+                    <MudSelect T="Chart" Label="Chart" Value="_currentChart" ValueChanged="GoToChart">
+                        @foreach (var chart in _charts)
+                        {
+                            <MudSelectItem T="Chart" Value="chart">@chart.Song.Name @chart.DifficultyString</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            }
+            else
+            {
+                <MudItem xs="6"></MudItem>
+            }
+        </MudGrid>
+    </MudCardHeader>
+    <MudCardContent>
+        @if (_currentChart != null)
+        {
+            <div class="d-flex justify-center">
+                <MudImage Fluid="true" Src="@_currentChart.Song.ImagePath.ToString()" Alt="@_currentChart.Song.Name" Elevation="25" ObjectFit="ObjectFit.Contain"/>
+            </div>
+            <MudNumericField T="int?" Label="Score (optional)"></MudNumericField>
+            <MudText Typo="Typo.body1">Passing:</MudText>
+            @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
+            {
+                <MudChip Color="Color.Primary" Variant="Variant.Filled">@letterGrade</MudChip>
+            }
+            <MudText Typo="Typo.body1">Broken:</MudText>
+            @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
+            {
+                <MudChip Color="Color.Primary" Variant="Variant.Outlined">@letterGrade</MudChip>
+            }
+
+        }
+
+    </MudCardContent>
+    <MudCardActions>
+        @if (!string.IsNullOrWhiteSpace(_currentFolderName))
+        {
+            <MudPagination BoundaryCount="1" MiddleCount="1" Count="@_charts.Length" Selected="@(_currentIndex + 1)" SelectedChanged="@(async i=>await GoToChart(i-1))"/>
+        }
+    </MudCardActions>
+</MudCard>
+<link href="/css/charts.css" rel="stylesheet"/>
+
+@inject IMediator Mediator
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser;
+@inject ISnackbar Snackbar;
+@code {
+
+    private IEnumerable<string> _folderNames = Array.Empty<string>();
+    private string? _currentFolderName;
+    private Chart? _currentChart;
+    private Chart[] _charts = Array.Empty<Chart>();
+    private int _currentIndex = 0;
+
+
+    private async Task SelectFolderName(string folderName)
+    {
+        _currentFolderName = folderName;
+        _charts = (await Mediator.Send(new GetChartFolderByNameQuery(folderName))).Charts.ToArray();
+        await GoToStart();
+    }
+
+    private async Task GoToStart()
+    {
+        await GoToChart(0);
+    }
+
+    private async Task GoToChart(int index)
+    {
+        _currentIndex = index;
+
+        _currentChart = _charts[index];
+
+    }
+    private async Task GoToChart(Chart chart)
+    {
+        var index = Array.IndexOf(_charts, chart);
+        if (index <0)
+        {
+            return;
+        }
+        await GoToChart(index);
+    }
+
+    private async Task LoadPageData()
+    {
+        _folderNames = (await Mediator.Send(new GetChartFolderNamesQuery())).Select(n=>(string)n).ToArray();
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/");
+            return;
+        }
+        await LoadPageData();
+    }
+    
+}
