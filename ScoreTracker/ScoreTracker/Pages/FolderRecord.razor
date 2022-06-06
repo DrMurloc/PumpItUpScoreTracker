@@ -13,7 +13,10 @@
 <MudCard>
     <MudCardHeader>
         <MudGrid>
-            
+            <MudItem xs="12">
+                
+                <MudText Typo="Typo.h6">Bulk Folder Record</MudText>
+            </MudItem>
             <MudItem xs="6">
                 <MudSelect T="string" Label="Folder" Value="_currentFolderName" ValueChanged="SelectFolderName">
                     @foreach (var name in _folderNames)
@@ -33,18 +36,29 @@
                     </MudSelect>
                 </MudItem>
             }
-            else
-            {
-                <MudItem xs="6"></MudItem>
-            }
         </MudGrid>
     </MudCardHeader>
     <MudCardContent>
         @if (_currentChart != null)
         {
-            <div class="d-flex justify-center">
-                <MudImage Fluid="true" Src="@_currentChart.Song.ImagePath.ToString()" Alt="@_currentChart.Song.Name" Elevation="25" ObjectFit="ObjectFit.Contain"/>
-            </div>
+            <MudTooltip Text="@_currentChart.Song.Name">
+                <div class="d-flex justify-center">
+                    <MudImage Fluid="true" Src="@_currentChart.Song.ImagePath.ToString()" Alt="@_currentChart.Song.Name" Elevation="25" ObjectFit="ObjectFit.Contain"/>
+                </div>
+            </MudTooltip>
+                @if (_bestAttempt?.BestAttempt == null)
+                {
+                    
+                    <MudText Typo="Typo.body1">
+                        Not Yet Recorded
+                    </MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.body1">
+                        Recorded@(_bestAttempt.BestAttempt.IsBroken?" Broken":"") @_bestAttempt.BestAttempt.LetterGrade on @_bestAttempt.BestAttempt.RecordedOn.ToString("d")
+                    </MudText>
+                }
             <MudNumericField T="int?" Label="Score (optional)"></MudNumericField>
             <MudText Typo="Typo.body1">Passing:</MudText>
             @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
@@ -79,6 +93,7 @@
     private string? _currentFolderName;
     private Chart? _currentChart;
     private Chart[] _charts = Array.Empty<Chart>();
+    private BestChartAttempt? _bestAttempt;
     private int _currentIndex = 0;
 
 
@@ -86,19 +101,15 @@
     {
         _currentFolderName = folderName;
         _charts = (await Mediator.Send(new GetChartFolderByNameQuery(folderName))).Charts.ToArray();
-        await GoToStart();
-    }
-
-    private async Task GoToStart()
-    {
         await GoToChart(0);
     }
-
+    
     private async Task GoToChart(int index)
     {
         _currentIndex = index;
-
         _currentChart = _charts[index];
+        _bestAttempt = await Mediator.Send(new GetBestChartAttemptQuery(_currentChart.Song.Name, _currentChart.Type, _currentChart.Level));
+
 
     }
     private async Task GoToChart(Chart chart)
