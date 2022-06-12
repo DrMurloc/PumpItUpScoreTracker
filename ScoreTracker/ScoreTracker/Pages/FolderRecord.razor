@@ -59,16 +59,16 @@
                         Recorded@(_bestAttempt.BestAttempt.IsBroken?" Broken":"") @_bestAttempt.BestAttempt.LetterGrade on @_bestAttempt.BestAttempt.RecordedOn.ToString("d")
                     </MudText>
                 }
-            <MudNumericField T="int?" Label="Score (optional)"></MudNumericField>
+            <MudNumericField T="int?" Min="Score.Min" Max="Score.Max" Label="Score (optional)" @bind-Value="_currentScore"></MudNumericField>
             <MudText Typo="Typo.body1">Passing:</MudText>
             @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
             {
-                <MudChip Color="Color.Primary" Variant="Variant.Filled">@letterGrade</MudChip>
+                <MudChip Color="Color.Primary" Variant="Variant.Filled" OnClick="@(async ()=>await SelectGrade(letterGrade,false))">@letterGrade</MudChip>
             }
             <MudText Typo="Typo.body1">Broken:</MudText>
             @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
             {
-                <MudChip Color="Color.Primary" Variant="Variant.Outlined">@letterGrade</MudChip>
+                <MudChip Color="Color.Primary" Variant="Variant.Outlined" OnClick="@(async ()=>await SelectGrade(letterGrade,true))">@letterGrade</MudChip>
             }
 
         }
@@ -94,6 +94,7 @@
     private Chart? _currentChart;
     private Chart[] _charts = Array.Empty<Chart>();
     private BestChartAttempt? _bestAttempt;
+    private int? _currentScore;
     private int _currentIndex = 0;
 
 
@@ -109,7 +110,7 @@
         _currentIndex = index;
         _currentChart = _charts[index];
         _bestAttempt = await Mediator.Send(new GetBestChartAttemptQuery(_currentChart.Song.Name, _currentChart.Type, _currentChart.Level));
-
+        _currentScore = _bestAttempt.BestAttempt?.Score;
 
     }
     private async Task GoToChart(Chart chart)
@@ -122,6 +123,17 @@
         await GoToChart(index);
     }
 
+    private async Task SelectGrade(LetterGrade letter, bool isBroken)
+    {
+        await Mediator.Send(new UpdateBestAttemptCommand(_currentChart.Song.Name, _currentChart.Type, _currentChart.Level, letter, isBroken, _currentScore));
+        Snackbar.Add($"Registered {(isBroken ? "Broken " : "")} {letter} for {_currentChart.Song.Name} {_currentChart.DifficultyString}");
+        if (_currentIndex == _charts.Length - 1)
+        {
+            return;
+        }
+        await GoToChart(++_currentIndex);
+
+    }
     private async Task LoadPageData()
     {
         _folderNames = (await Mediator.Send(new GetChartFolderNamesQuery())).Select(n=>(string)n).ToArray();
