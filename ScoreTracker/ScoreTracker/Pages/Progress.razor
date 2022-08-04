@@ -214,21 +214,40 @@
                     Name = "Ungraded", Data = ungradedSeries.ToArray()
                 });
         }
-
+        var graphedLetters = new HashSet<LetterGrade>(new[] { LetterGrade.A, LetterGrade.S, LetterGrade.SS, LetterGrade.SSS });
+        var lessThanA = new double[DifficultyLevel.Max];
         foreach (var letter in Enum.GetValues<LetterGrade>())
         {
             
             if (!letterSeries[letter].Any(v => v > 0))
                 continue;
-            letterLabels.Add(letter.ToString());
             letterCounts.Add(letterSeries[letter].Sum());
+            letterLabels.Add(letter.ToString());
+
+            if (graphedLetters.Contains(letter))
+            {
+                _letterBreakdown.Add(new ChartSeries()
+                {
+                    Name=letter.ToString(),
+                    Data=letterSeries[letter].ToArray()
+                });
+            }
+            else
+            {
+                for (var i = 0; i < letterSeries[letter].Count; i++)
+                {
+                    lessThanA[i] += letterSeries[letter][i];
+                }
+            }
+        }
+        if (lessThanA.Any(c => c > 0))
+        {
             _letterBreakdown.Add(new ChartSeries()
             {
-                Name=letter.ToString(),
-                Data=letterSeries[letter].ToArray()
+                Name="B,C,D,F",
+                Data=lessThanA
             });
         }
-
         passLabels.Add("Unpassed");
         passCounts.Add(passSeries[false].Sum());
         passLabels.Add("Passed");
