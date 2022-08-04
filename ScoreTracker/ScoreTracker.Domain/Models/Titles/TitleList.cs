@@ -111,7 +111,8 @@ public static class TitleList
         new BasicTitle("Half Expert", "Get all 10 Half titles", "Skill"),
         new BasicTitle("Specialist", "Get all 50 skill titles", "Skill"),
         new CustomTitle("Co-Op Beginner", "5 S on CoOp", 5, "CoOp",
-            c => c.Chart.Type == ChartType.CoOp && !(c.BestAttempt?.IsBroken ?? false)),
+            c => c.Chart.Type == ChartType.CoOp &&
+                 c.BestAttempt?.LetterGrade is LetterGrade.S or LetterGrade.SS or LetterGrade.SSS),
         new CustomTitle("Co-Op Intermediate", "20 S/SS (not SSS) on CoOp", 20, "CoOp",
             c => c.Chart.Type == ChartType.CoOp && c.BestAttempt?.LetterGrade is LetterGrade.S or LetterGrade.SS),
         new CustomTitle("Co-Op Advanced", "30 S/SS (not SSS) on CoOp", 30, "CoOp",
