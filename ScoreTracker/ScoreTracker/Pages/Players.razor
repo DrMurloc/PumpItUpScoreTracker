@@ -53,7 +53,7 @@
 
     private async Task<TableData<User>> ServerReload(TableState state)
     {
-        var searchResult = await Mediator.Send(new SearchForUsersQuery(_searchText, state.Page, state.PageSize));
+        var searchResult = await Mediator.Send(new SearchForUsersQuery(_searchText, state.Page+1, state.PageSize));
         return new TableData<User>
         {
             Items = searchResult.Results,
