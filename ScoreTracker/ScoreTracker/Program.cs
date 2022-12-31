@@ -13,7 +13,10 @@ var builder = WebApplication.CreateBuilder(args);
 ExcelPackage.LicenseContext = new LicenseContext();
 // Add services to the container.
 builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+builder.Services.AddServerSideBlazor(options =>
+{
+    options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromHours(1);
+});
 var discordConfig = builder.Configuration.GetSection("Discord").Get<DiscordConfiguration>();
 var googleConfig = builder.Configuration.GetSection("Google").Get<GoogleConfiguration>();
 var facebookConfig = builder.Configuration.GetSection("Facebook").Get<FacebookConfiguration>();
