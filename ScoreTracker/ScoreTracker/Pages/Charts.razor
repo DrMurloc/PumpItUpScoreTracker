@@ -63,7 +63,7 @@
             <MudMenuItem><MudCheckBox @bind-Checked="_isVideoShowing" Label="Video"></MudCheckBox></MudMenuItem>
             <MudMenuItem><MudCheckBox @bind-Checked="_isScoreShowing" Label="Score"></MudCheckBox></MudMenuItem>
             <MudMenuItem><MudCheckBox @bind-Checked="_isRecordedOnShowing" Label="Recorded Date"></MudCheckBox></MudMenuItem>
-            
+            <MudMenuItem><MudCheckBox @bind-Checked="_isActionsShowing" Label="Actions"></MudCheckBox></MudMenuItem>
         </MudMenu>
     </ToolBarContent>
     <HeaderContent>
@@ -95,6 +95,12 @@
         @if (_isRecordedOnShowing)
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.RecordedOn">Recorded On</MudTableSortLabel></MudTh>
+        }
+        @if (CurrentUser.IsLoggedIn && _isActionsShowing)
+        {
+            <MudTh>
+                Actions
+            </MudTh>
         }
     </HeaderContent>
     <RowTemplate>
@@ -187,6 +193,45 @@
                 <MudTooltip Text="@context.RecordedOn?.ToString("MMM dd yyyy")">@context.RecordedOn?.ToString("MM/dd/yyyy")</MudTooltip>
             </MudTd>
         }
+        @if (CurrentUser.IsLoggedIn && _isActionsShowing)
+        {
+            <MudTh>
+                <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                    @if (_favoriteCharts.Contains(context.ChartId))
+                    {
+                        <MudMenuItem>
+                            <MudTooltip Text="Remove from Favorites">
+                                <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" OnClick="()=>RemoveFromFavorites(context.ChartId)"></MudIconButton>
+                            </MudTooltip>
+                        </MudMenuItem>
+                    }
+                    else
+                    {
+                        <MudMenuItem>
+                            <MudTooltip Text="Add to Favorites">
+                                <MudIconButton Icon="@Icons.Material.Outlined.Favorite" OnClick="()=>AddToFavorites(context.ChartId)"></MudIconButton>
+                            </MudTooltip>
+                        </MudMenuItem>
+                    }
+                    @if(_todoCharts.Contains(context.ChartId))
+                    {
+                    <MudMenuItem>
+                        <MudTooltip Text="Remove from To Do List">
+                            <MudIconButton Icon="@Icons.Material.Filled.ListAlt" Color="Color.Secondary" OnClick="()=>RemoveFromToDo(context.ChartId)"></MudIconButton>
+                        </MudTooltip>
+                    </MudMenuItem>
+                    }
+                    else
+                    {
+                    <MudMenuItem>
+                        <MudTooltip Text="Add to To Do List">
+                            <MudIconButton Icon="@Icons.Material.Outlined.ListAlt" OnClick="()=>AddToToDo(context.ChartId)"></MudIconButton>
+                        </MudTooltip>
+                    </MudMenuItem>
+                    }
+                </MudMenu>
+            </MudTh>
+        }
     </RowTemplate>
     <PagerContent>
         <MudTablePager></MudTablePager>
@@ -249,15 +294,15 @@
     private bool _isBrokenShowing = true;
     private bool _isScoreShowing = false;
     private bool _isRecordedOnShowing = false;
+    private bool _isActionsShowing = true;
     private bool _isVideoShowing = true;
-
     private bool _isLoading = true;
     private int? _difficultyFilter = null;
     private string? _chartTypeFilter = null;
     private ScoreState? _scoreStateFilter = null;
-
     private IEnumerable<BestAttemptDto> FileredCharts => _charts.Where(FilterChart);
-
+    private ISet<Guid> _favoriteCharts = new HashSet<Guid>();
+    private ISet<Guid> _todoCharts = new HashSet<Guid>();
     private int NotGradedCount => FileredCharts.Count(c => string.IsNullOrWhiteSpace(c.LetterGrade));
     private int NotPassedCount => FileredCharts.Count(c => c.IsBroken);
     private int PassedCount => FileredCharts.Count(c => !string.IsNullOrWhiteSpace(c.LetterGrade) && !c.IsBroken);
@@ -286,6 +331,37 @@
         return result;
     }
 
+    private async Task RemoveFromToDo(Guid chartId)
+    {
+        await Mediator.Send(new RemoveChartFromListCommand(ChartListType.ToDo, chartId));
+        _todoCharts.Remove(chartId);
+        
+        Snackbar.Add("Chart removed from To Do list", Severity.Success);
+    }
+    private async Task AddToToDo(Guid chartId)
+    {
+        await Mediator.Send(new SaveChartToListCommand(ChartListType.ToDo, chartId));
+        if (!_todoCharts.Contains(chartId))
+        {
+            _todoCharts.Add(chartId);
+        }
+        Snackbar.Add("Chart added to To Do list", Severity.Success);
+    }
+    private async Task RemoveFromFavorites(Guid chartId)
+    {
+        await Mediator.Send(new RemoveChartFromListCommand(ChartListType.Favorite, chartId));
+        _favoriteCharts.Remove(chartId);
+        Snackbar.Add("Chart removed from Favorites", Severity.Success);
+    }
+    private async Task AddToFavorites(Guid chartId)
+    {
+        await Mediator.Send(new SaveChartToListCommand(ChartListType.Favorite, chartId));
+        if (!_favoriteCharts.Contains(chartId))
+        {
+            _favoriteCharts.Add(chartId);
+        }
+        Snackbar.Add("Chart added to Favorites", Severity.Success);
+    }
     private string ChartSearch(BestAttemptDto dto)
     {
         var searchString = "Pump It Up "+dto.SongName+" "+dto.DifficultyShorthand;
@@ -325,7 +401,14 @@
             RequestedUserId = CurrentUser.User.Id;
         }
         await LoadCharts(RequestedUserId.Value);
+        if (CurrentUser.IsLoggedIn)
+        {
+            var chartSaves = (await Mediator.Send(new GetSavedChartsQuery())).ToArray();
+            _favoriteCharts = chartSaves.Where(cs => cs.ListType is ChartListType.Favorite).Select(cs => cs.ChartId).Distinct().ToHashSet();
+            
+            _todoCharts = chartSaves.Where(cs => cs.ListType is ChartListType.ToDo).Select(cs => cs.ChartId).Distinct().ToHashSet();
 
+        }
     }
 
     private async Task SetScore(BestAttemptDto dto, int? newScore)
