@@ -39,6 +39,14 @@
             }
         </MudSelect>
     </MudItem>
+    <MudItem xs="6" sm="4">
+        
+        <MudSelect T="string" AdornmentIcon="@Icons.Material.Filled.ListAlt" Label="Saved Charts" MultiSelection="true" @bind-SelectedValues="_filteredLists" Clearable="true">
+            <MudSelectItem T="string" Value="@ChartListType.ToDo.ToString()">To Do</MudSelectItem>
+            <MudSelectItem T="string" Value="@ChartListType.Favorite.ToString()">Favorites</MudSelectItem>
+            
+        </MudSelect>
+    </MudItem>
 </MudGrid>
 <br/>
 <MudChip Variant="Variant.Outlined" Size="Size.Small">Not Graded: @NotGradedCount</MudChip>
@@ -301,6 +309,7 @@
     private string? _chartTypeFilter = null;
     private ScoreState? _scoreStateFilter = null;
     private IEnumerable<BestAttemptDto> FileredCharts => _charts.Where(FilterChart);
+    private IEnumerable<string> _filteredLists = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     private ISet<Guid> _favoriteCharts = new HashSet<Guid>();
     private ISet<Guid> _todoCharts = new HashSet<Guid>();
     private int NotGradedCount => FileredCharts.Count(c => string.IsNullOrWhiteSpace(c.LetterGrade));
@@ -310,6 +319,10 @@
     private bool FilterChart(BestAttemptDto chart)
     {
         var result = true;
+        if (_filteredLists.Any())
+        {
+            result = result && ((_filteredLists.Contains(ChartListType.Favorite.ToString()) && _favoriteCharts.Contains(chart.ChartId)) || (_filteredLists.Contains(ChartListType.ToDo.ToString()) && _todoCharts.Contains(chart.ChartId)));
+        }
         if (_difficultyFilter != null)
         {
             result = result && (chart.Level == _difficultyFilter.Value && chart.ChartType != ChartType.CoOp.ToString());
