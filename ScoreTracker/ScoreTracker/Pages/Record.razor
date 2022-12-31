@@ -62,7 +62,7 @@
                     <MudText>Recorded on @_recordedOn.Value.ToString("MMM dd yyyy")</MudText>
                 }
                 <MudGrid>
-                    <MudItem xs="6">
+                    <MudItem xs="4">
                         <MudSelect T="LetterGrade?" @bind-Value="_selectedLetterGrade">
                             @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
                             {
@@ -70,8 +70,41 @@
                             }
                         </MudSelect>
                     </MudItem>
-                    <MudItem xs="6">
+                    <MudItem xs="4">
                         <MudCheckBox @bind-Checked="@_isBroken" Label="Broken"></MudCheckBox>
+                    </MudItem>
+                    
+                    <MudItem xs="2">
+                        @if (_favoriteCharts.Contains(_selectedChart.Id))
+                        {
+
+                            <MudTooltip Text="Remove from Favorites">
+                                <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" OnClick="()=>RemoveFromFavorites(_selectedChart.Id)"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+
+                            <MudTooltip Text="Add to Favorites">
+                                <MudIconButton Icon="@Icons.Material.Outlined.Favorite" OnClick="()=>AddToFavorites(_selectedChart.Id)"></MudIconButton>
+                            </MudTooltip>
+                        }
+                    </MudItem>
+                    <MudItem xs="2">
+                        @if (_todoCharts.Contains(_selectedChart.Id))
+                        {
+                            
+                            <MudTooltip Text="Remove from To Do List">
+                                <MudIconButton Icon="@Icons.Material.Filled.ListAlt" Color="Color.Secondary" OnClick="()=>RemoveFromToDo(_selectedChart.Id)"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+
+                            <MudTooltip Text="Add to To Do List">
+                                <MudIconButton Icon="@Icons.Material.Outlined.ListAlt" OnClick="()=>AddToToDo(_selectedChart.Id)"></MudIconButton>
+                            </MudTooltip>
+                        }
                     </MudItem>
                     <MudItem xs="12">
                         <MudNumericField Label="Score (optional)" @bind-Value="_inputScore" Min="Score.Min" Max="Score.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
@@ -94,6 +127,39 @@
     private bool _isBroken = false;
     private int? _inputScore = null;
     private DateTimeOffset? _recordedOn = null;
+    private ISet<Guid> _favoriteCharts = new HashSet<Guid>();
+    private ISet<Guid> _todoCharts = new HashSet<Guid>();
+    private async Task RemoveFromToDo(Guid chartId)
+    {
+        await Mediator.Send(new RemoveChartFromListCommand(ChartListType.ToDo, chartId));
+        _todoCharts.Remove(chartId);
+
+        Snackbar.Add("Chart removed from To Do list", Severity.Success);
+    }
+    private async Task AddToToDo(Guid chartId)
+    {
+        await Mediator.Send(new SaveChartToListCommand(ChartListType.ToDo, chartId));
+        if (!_todoCharts.Contains(chartId))
+        {
+            _todoCharts.Add(chartId);
+        }
+        Snackbar.Add("Chart added to To Do list", Severity.Success);
+    }
+    private async Task RemoveFromFavorites(Guid chartId)
+    {
+        await Mediator.Send(new RemoveChartFromListCommand(ChartListType.Favorite, chartId));
+        _favoriteCharts.Remove(chartId);
+        Snackbar.Add("Chart removed from Favorites", Severity.Success);
+    }
+    private async Task AddToFavorites(Guid chartId)
+    {
+        await Mediator.Send(new SaveChartToListCommand(ChartListType.Favorite, chartId));
+        if (!_favoriteCharts.Contains(chartId))
+        {
+            _favoriteCharts.Add(chartId);
+        }
+        Snackbar.Add("Chart added to Favorites", Severity.Success);
+    }
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn)
@@ -102,6 +168,11 @@
             return;
         }
         _songNames = await Mediator.Send(new GetSongNamesQuery());
+        
+        var chartSaves = (await Mediator.Send(new GetSavedChartsQuery())).ToArray();
+        _favoriteCharts = chartSaves.Where(cs => cs.ListType is ChartListType.Favorite).Select(cs => cs.ChartId).Distinct().ToHashSet();
+            
+        _todoCharts = chartSaves.Where(cs => cs.ListType is ChartListType.ToDo).Select(cs => cs.ChartId).Distinct().ToHashSet();
 
     }
 
