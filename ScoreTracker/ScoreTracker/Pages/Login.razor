@@ -1,4 +1,5 @@
 ﻿@page "/Login"
+@using ScoreTracker.Domain.SecondaryPorts
 
 <PageTitle>Login</PageTitle>
 
@@ -51,7 +52,18 @@
 
 </MudDialog>
 
+@inject ICurrentUserAccessor CurrentUser;
+@inject NavigationManager NavManager
 @code
 {
     private bool _isDialogVisible = false;
+    protected override async Task OnInitializedAsync()
+    {
+        if (CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Charts");
+            return;
+        }
+
+    }
 }
