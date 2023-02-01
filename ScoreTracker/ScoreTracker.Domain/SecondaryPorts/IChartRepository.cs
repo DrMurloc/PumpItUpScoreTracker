@@ -8,6 +8,8 @@ public interface IChartRepository
 {
     Task<IEnumerable<Name>> GetSongNames(CancellationToken cancellationToken = default);
 
+    Task<Chart> GetChart(Guid chartId, CancellationToken cancellationToken = default);
+
     Task<Chart> GetChart(Name songName, ChartType chartType, DifficultyLevel level,
         CancellationToken cancellationToken = default);
 

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Enums;
@@ -21,6 +21,15 @@ public sealed class EFChartRepository : IChartRepository
     public async Task<IEnumerable<Name>> GetSongNames(CancellationToken cancellationToken = default)
     {
         return (await _database.Song.Select(s => s.Name).ToArrayAsync(cancellationToken)).Select(Name.From);
+    }
+
+    public async Task<Chart> GetChart(Guid chartId, CancellationToken cancellationToken = default)
+    {
+        return await (from c in _database.Chart
+                join s in _database.Song on c.SongId equals s.Id
+                where c.Id == chartId
+                select new Chart(c.Id, new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level))
+            .SingleAsync(cancellationToken);
     }
 
     public async Task<Chart> GetChart(Name songName, ChartType chartType, DifficultyLevel level,

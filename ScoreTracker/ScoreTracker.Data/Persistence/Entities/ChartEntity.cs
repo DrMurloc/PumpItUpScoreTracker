@@ -15,4 +15,5 @@ public sealed class ChartEntity
     [Required] public int Level { get; set; }
 
     [Required] public string Type { get; set; } = string.Empty;
+    public ChartDifficultyRatingEntity? DifficultyRating { get; set; }
 }

@@ -22,6 +22,8 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<ExternalLoginEntity> ExternalLogin { get; set; }
     public DbSet<ChartVideoEntity> ChartVideo { get; set; }
     public DbSet<SavedChartEntity> SavedChart { get; set; }
+    public DbSet<UserChartDifficultyRatingEntity> UserChartDifficultyRating { get; set; }
+    public DbSet<ChartDifficultyRatingEntity> ChartDifficultyRating { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -37,6 +39,18 @@ public sealed class ChartAttemptDbContext : DbContext
             .WithMany()
             .HasForeignKey(ba => ba.UserId);
 
+
+        builder.Entity<UserChartDifficultyRatingEntity>().ToTable("UserChartDifficultyRating")
+            .HasOne<UserEntity>()
+            .WithMany()
+            .HasForeignKey(ucdr => ucdr.UserId);
+
+        builder.Entity<UserChartDifficultyRatingEntity>()
+            .HasOne<ChartEntity>()
+            .WithMany()
+            .HasForeignKey(ucdr => ucdr.ChartId);
+
+        builder.Entity<ChartDifficultyRatingEntity>().ToTable("ChartDifficultyRating");
 
         builder.Entity<SavedChartEntity>().ToTable("SavedChart")
             .HasOne<ChartEntity>()
