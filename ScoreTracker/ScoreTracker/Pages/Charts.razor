@@ -173,7 +173,7 @@
             <MudTd>
                 @if (CanEdit)
                 {
-                    <MudCheckBox T="bool" Checked="context.IsBroken" CheckedChanged="@(newValue => SetBroken(context, newValue))" Required Margin="@Margin.Dense"></MudCheckBox>
+                    <MudCheckBox T="bool" Checked="context.IsBroken" CheckedChanged="@(newValue => SetBroken(context, newValue))" Margin="@Margin.Dense"></MudCheckBox>
                 }
                 else
                 {
