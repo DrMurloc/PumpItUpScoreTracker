@@ -4,6 +4,7 @@
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Web.Dtos
@@ -65,6 +66,7 @@
         }
         <MudMenu Icon="@Icons.Material.Filled.MoreVert">
             <MudMenuItem><MudCheckBox @bind-Checked="_isDifficultyShowing" Label="Difficulty"></MudCheckBox></MudMenuItem>
+            <MudMenuItem><MudCheckBox @bind-Checked="_isAdjustedRatingShowing" Label="Adjusted Difficulty"></MudCheckBox></MudMenuItem>
             <MudMenuItem><MudCheckBox @bind-Checked="_isSongShowing" Label="Song"></MudCheckBox></MudMenuItem>
             <MudMenuItem><MudCheckBox @bind-Checked="_isGradeShowing" Label="Letter Grade"></MudCheckBox></MudMenuItem>
             <MudMenuItem><MudCheckBox @bind-Checked="_isBrokenShowing" Label="Broken"></MudCheckBox></MudMenuItem>
@@ -78,6 +80,10 @@
         @if (_isDifficultyShowing)
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Level">Level</MudTableSortLabel></MudTh>
+        }
+        @if (_isAdjustedRatingShowing)
+        {
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>_adjustedDifficulties[e.ChartId].Difficulty">Adjusted Difficulty</MudTableSortLabel></MudTh>
         }
         @if (_isSongShowing)
         {
@@ -118,6 +124,14 @@
             <MudTd>
                 <MudTooltip Text="@context.DifficultyShorthand">
                     <MudImage Src="@context.DifficultyBubblePath" Height="35" Alt="@context.DifficultyShorthand" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                </MudTooltip>
+            </MudTd>
+        }
+        @if (_isAdjustedRatingShowing)
+        {
+            <MudTd>
+                <MudTooltip Text="@CountText(_adjustedDifficulties[@context.ChartId].RatingCount)">
+                    <MudText>@($"{@_adjustedDifficulties[@context.ChartId].Difficulty:N2}")</MudText>
                 </MudTooltip>
             </MudTd>
         }
@@ -293,7 +307,7 @@
     private string ShareUrl => CurrentUser.IsLoggedIn ? $"{NavManager.BaseUri}{CurrentUser.User.Id}/Charts" : string.Empty;
     private bool _showFilterDialog;
     private BestAttemptDto[] _charts = Array.Empty<BestAttemptDto>();
-
+    private IDictionary<Guid, ChartDifficultyRatingRecord> _adjustedDifficulties = new Dictionary<Guid, ChartDifficultyRatingRecord>();
     private MudDataGrid<BestAttemptDto>? _dataGrid;
 
     private bool _isDifficultyShowing = true;
@@ -302,6 +316,7 @@
     private bool _isBrokenShowing = true;
     private bool _isScoreShowing = false;
     private bool _isRecordedOnShowing = false;
+    private bool _isAdjustedRatingShowing = false;
     private bool _isActionsShowing = true;
     private bool _isVideoShowing = true;
     private bool _isLoading = true;
@@ -315,7 +330,7 @@
     private int NotGradedCount => FileredCharts.Count(c => string.IsNullOrWhiteSpace(c.LetterGrade));
     private int NotPassedCount => FileredCharts.Count(c => c.IsBroken);
     private int PassedCount => FileredCharts.Count(c => !string.IsNullOrWhiteSpace(c.LetterGrade) && !c.IsBroken);
-
+    private string CountText(int count) => $"{count} votes";
     private bool FilterChart(BestAttemptDto chart)
     {
         var result = true;
@@ -395,6 +410,15 @@
     {
         _isLoading = true;
         _charts = (await Mediator.Send(new GetBestChartAttemptsQuery(userId))).Select(BestAttemptDto.From).ToArray();
+        var ratings = await Mediator.Send(new GetChartRatingsQuery());
+        _adjustedDifficulties = ratings.ToDictionary(r => r.ChartId);
+        foreach (var chart in _charts)
+        {
+            if (!_adjustedDifficulties.ContainsKey(chart.ChartId))
+            {
+                _adjustedDifficulties[chart.ChartId] = new ChartDifficultyRatingRecord(chart.ChartId, chart.Level + .5, 0);
+            }
+        }
         var videos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId);
         foreach (var chart in _charts.Where(c=>videos.ContainsKey(c.ChartId)))
         {

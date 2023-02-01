@@ -161,6 +161,7 @@
         var newRating = await Mediator.Send(new GetChartRatingQuery(_selectedChart.Id));
         _currentRatedCount = newRating.RatingCount;
         _currentRatedDifficulty = newRating.Difficulty;
+        Snackbar.Add("Suggested Difficulty Rating Submitted", Severity.Success);
     }
     private async Task RemoveFromToDo(Guid chartId)
     {
