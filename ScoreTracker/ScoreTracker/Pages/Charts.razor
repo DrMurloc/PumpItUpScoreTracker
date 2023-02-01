@@ -67,6 +67,7 @@
         <MudMenu Icon="@Icons.Material.Filled.MoreVert">
             <MudMenuItem><MudCheckBox @bind-Checked="_isDifficultyShowing" Label="Difficulty"></MudCheckBox></MudMenuItem>
             <MudMenuItem><MudCheckBox @bind-Checked="_isAdjustedRatingShowing" Label="Adjusted Difficulty"></MudCheckBox></MudMenuItem>
+            <MudMenuItem><MudCheckBox @bind-Checked="_isMyRatingShowing" Label="My Difficulty Adjustments"></MudCheckBox></MudMenuItem>
             <MudMenuItem><MudCheckBox @bind-Checked="_isSongShowing" Label="Song"></MudCheckBox></MudMenuItem>
             <MudMenuItem><MudCheckBox @bind-Checked="_isGradeShowing" Label="Letter Grade"></MudCheckBox></MudMenuItem>
             <MudMenuItem><MudCheckBox @bind-Checked="_isBrokenShowing" Label="Broken"></MudCheckBox></MudMenuItem>
@@ -84,6 +85,12 @@
         @if (_isAdjustedRatingShowing)
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>_adjustedDifficulties[e.ChartId].Difficulty">Adjusted Difficulty</MudTableSortLabel></MudTh>
+        }
+        @if (_isMyRatingShowing)
+        {
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Level + .5 + (_adjustedDifficulties[e.ChartId].MyRating?.GetAdjustment()??0)">
+                My Difficulty Adjustments
+            </MudTableSortLabel></MudTh>
         }
         @if (_isSongShowing)
         {
@@ -134,6 +141,17 @@
                     <MudText>@($"{@_adjustedDifficulties[@context.ChartId].Difficulty:N2}")</MudText>
                 </MudTooltip>
             </MudTd>
+        }
+        @if (_isMyRatingShowing)
+        {
+            <MudTh>
+                <MudSelect Label="Your Difficulty Rating" T="int?" Value="@_adjustedDifficulties[@context.ChartId].MyRating?.GetScale()" ValueChanged="@(r=>UpdateDifficultyRating(context.ChartId,r))">
+                    @foreach (var rating in Enum.GetValues<DifficultyAdjustment>())
+                    {
+                        <MudSelectItem T="int?" Value="@rating.GetScale()">@rating.GetDescription()</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudTh>
         }
         @if (_isSongShowing)
         {
@@ -311,6 +329,7 @@
     private MudDataGrid<BestAttemptDto>? _dataGrid;
 
     private bool _isDifficultyShowing = true;
+    private bool _isMyRatingShowing = false;
     private bool _isSongShowing = true;
     private bool _isGradeShowing = true;
     private bool _isBrokenShowing = true;
@@ -447,7 +466,19 @@
 
         }
     }
+    
+    private async Task UpdateDifficultyRating(Guid chartId, int? scale)
+    {
+        if (scale == null)
+        {
+            return;
+        }
+        await Mediator.Send(new RateChartDifficultyCommand(chartId, DifficultyAdjustmentHelpers.From(scale.Value)));
 
+        var newRating = await Mediator.Send(new GetChartRatingQuery(chartId));
+        _adjustedDifficulties[chartId] = newRating;
+        Snackbar.Add("Suggested Difficulty Rating Submitted", Severity.Success);
+    }
     private async Task SetScore(BestAttemptDto dto, int? newScore)
     {
         dto.Score = newScore;
