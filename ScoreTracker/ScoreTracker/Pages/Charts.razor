@@ -151,20 +151,27 @@
         @if (_isAdjustedRatingShowing)
         {
             <MudTd>
-                <MudTooltip Text="@CountText(_adjustedDifficulties[@context.ChartId].RatingCount)">
-                    <MudText>@($"{@_adjustedDifficulties[@context.ChartId].Difficulty:N2}")</MudText>
-                </MudTooltip>
+                @if (context.ChartType != ChartType.CoOp.ToString())
+                {
+                    <MudTooltip Text="@CountText(_adjustedDifficulties[@context.ChartId].RatingCount)">
+                        <MudText>@($"{@_adjustedDifficulties[@context.ChartId].Difficulty:N2}")</MudText>
+                    </MudTooltip>
+                }
             </MudTd>
         }
         @if (_isMyRatingShowing)
         {
             <MudTh>
-                <MudSelect Label="My Difficulty" T="int?" Value="@_adjustedDifficulties[@context.ChartId].MyRating?.GetScale()" ValueChanged="@(r=>UpdateDifficultyRating(context.ChartId,r))">
-                    @foreach (var rating in Enum.GetValues<DifficultyAdjustment>())
-                    {
-                        <MudSelectItem T="int?" Value="@rating.GetScale()">@rating.GetDescription()</MudSelectItem>
-                    }
-                </MudSelect>
+                
+                @if (context.ChartType != ChartType.CoOp.ToString())
+                {
+                    <MudSelect Label="My Difficulty" T="int?" Value="@_adjustedDifficulties[@context.ChartId].MyRating?.GetScale()" ValueChanged="@(r => UpdateDifficultyRating(context.ChartId, r))">
+                        @foreach (var rating in Enum.GetValues<DifficultyAdjustment>())
+                        {
+                            <MudSelectItem T="int?" Value="@rating.GetScale()">@rating.GetDescription()</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
             </MudTh>
         }
         @if (_isVideoShowing)

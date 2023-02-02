@@ -1,0 +1,463 @@
+﻿@page "/TierLists"
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+
+<PageTitle>Record Attempt</PageTitle>
+
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser;
+
+<MudGrid>
+    <MudItem xs="12" sm="6">
+        <MudSelect T="int" AdornmentIcon="@Icons.Filled.Bolt" Label="Difficulty Level" Value="_difficultyFilter" ValueChanged="@(d=>UpdateSelection(d,_chartTypeFilter))" Clearable="true" Disabled="_chartTypeFilter==ChartType.CoOp.ToString()">
+            @foreach (var level in Enumerable.Range(DifficultyLevel.Min,DifficultyLevel.Max))
+            {
+                <MudSelectItem T="int" Value="@level">@level</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudSelect T="string" AdornmentIcon="@Icons.Filled.Category" Label="Chart Type" Value="_chartTypeFilter" ValueChanged="@(c=>UpdateSelection(_difficultyFilter,c))" Clearable="true">
+            @foreach (var type in Enum.GetValues<ChartType>())
+            {
+                @if (type == ChartType.CoOp)
+                {
+                    continue;
+                }
+                <MudSelectItem T="string" Value="@type.ToString()">@type.ToString()</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+</MudGrid>
+@if (_underratedCharts.Any())
+{
+    
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">Underrated Charts
+                @if (_underratedCharts.All(c=>_passes.Contains(c.Id)))
+                {
+                    <MudTooltip Text="All Passed">
+                        <MudIcon Color="Color.Success" Icon="@Icons.Filled.Check"></MudIcon>
+                    </MudTooltip>
+                }
+
+            </MudText>
+        </MudItem>
+        @foreach (var chart in _underratedCharts)
+        {
+            <MudItem xs="4" sm="3" md="2">
+                
+                <MudCard>
+                    <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()"/>
+                    <MudCardActions>
+
+                        @if (_videos.ContainsKey(chart.Id))
+                        {
+                            <MudTooltip Text="Open Embeded Video">
+                                <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="() => ShowVideo(_videos[chart.Id])"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudTooltip Text="Open Youtube Search for Chart">
+                                <MudIconButton Icon="@Icons.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        @if (_passes.Contains(chart.Id))
+                        {
+                            <MudTooltip Text="Passed">
+                                <MudIcon Color="Color.Success" Icon="@Icons.Filled.Check"></MudIcon>
+                            </MudTooltip>
+                        }
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+@if (_veryHardCharts.Any())
+{
+
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">Very Hard Charts
+                @if (_veryHardCharts.All(c=>_passes.Contains(c.Id)))
+                {
+                    <MudTooltip Text="All Passed">
+                        <MudIcon Color="Color.Success" Icon="@Icons.Filled.Check"></MudIcon>
+                    </MudTooltip>
+                }</MudText>
+        </MudItem>
+        @foreach (var chart in _veryHardCharts)
+        {
+            <MudItem xs="4" sm="3" md="2">
+
+                <MudCard>
+                    <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()" />
+                    <MudCardActions>
+
+                        @if (_videos.ContainsKey(chart.Id))
+                        {
+                            <MudTooltip Text="Open Embeded Video">
+                                <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="() => ShowVideo(_videos[chart.Id])"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudTooltip Text="Open Youtube Search for Chart">
+                                <MudIconButton Icon="@Icons.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        @if (_passes.Contains(chart.Id))
+                        {
+                            <MudTooltip Text="Passed">
+                                <MudIcon Color="Color.Success" Icon="@Icons.Filled.Check"></MudIcon>
+                            </MudTooltip>
+                        }
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+@if (_hardCharts.Any())
+{
+
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">Hard Charts
+                @if (_hardCharts.All(c=>_passes.Contains(c.Id)))
+                {
+                    <MudTooltip Text="All Passed">
+                        <MudIcon Color="Color.Success" Icon="@Icons.Filled.Check"></MudIcon>
+                    </MudTooltip>
+                }</MudText>
+        </MudItem>
+        @foreach (var chart in _hardCharts)
+        {
+            <MudItem xs="4" sm="3" md="2">
+
+                <MudCard>
+                    <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()" />
+                    <MudCardActions>
+
+                        @if (_videos.ContainsKey(chart.Id))
+                        {
+                            <MudTooltip Text="Open Embeded Video">
+                                <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="() => ShowVideo(_videos[chart.Id])"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudTooltip Text="Open Youtube Search for Chart">
+                                <MudIconButton Icon="@Icons.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        @if (_passes.Contains(chart.Id))
+                        {
+                            <MudTooltip Text="Passed">
+                                <MudIcon Color="Color.Success" Icon="@Icons.Filled.Check"></MudIcon>
+                            </MudTooltip>
+                        }
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+@if (_mediumCharts.Any())
+{
+
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">Medium Charts
+                @if (_mediumCharts.All(c=>_passes.Contains(c.Id)))
+                {
+                    <MudTooltip Text="All Passed">
+                        <MudIcon Color="Color.Success" Icon="@Icons.Filled.Check"></MudIcon>
+                    </MudTooltip>
+                }</MudText>
+        </MudItem>
+        @foreach (var chart in _mediumCharts)
+        {
+            <MudItem xs="4" sm="3" md="2">
+
+                <MudCard>
+                    <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()" />
+                    <MudCardActions>
+
+                        @if (_videos.ContainsKey(chart.Id))
+                        {
+                            <MudTooltip Text="Open Embeded Video">
+                                <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="() => ShowVideo(_videos[chart.Id])"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudTooltip Text="Open Youtube Search for Chart">
+                                <MudIconButton Icon="@Icons.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        @if (_passes.Contains(chart.Id))
+                        {
+                            <MudTooltip Text="Passed">
+                                <MudIcon Color="Color.Success" Icon="@Icons.Filled.Check"></MudIcon>
+                            </MudTooltip>
+                        }
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+@if (_easyCharts.Any())
+{
+
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">
+                Easy Charts
+                @if (_easyCharts.All(c => _passes.Contains(c.Id)))
+                {
+                    <MudTooltip Text="All Passed">
+                        <MudIcon Color="Color.Success" Icon="@Icons.Filled.Check"></MudIcon>
+                    </MudTooltip>
+                }
+            </MudText>
+        </MudItem>
+        @foreach (var chart in _easyCharts)
+        {
+            <MudItem xs="4" sm="3" md="2">
+
+                <MudCard>
+                    <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()" />
+                    <MudCardActions>
+
+                        @if (_videos.ContainsKey(chart.Id))
+                        {
+                            <MudTooltip Text="Open Embeded Video">
+                                <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="() => ShowVideo(_videos[chart.Id])"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudTooltip Text="Open Youtube Search for Chart">
+                                <MudIconButton Icon="@Icons.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        @if (_passes.Contains(chart.Id))
+                        {
+                            <MudTooltip Text="Passed">
+                                <MudIcon Color="Color.Success" Icon="@Icons.Filled.Check"></MudIcon>
+                            </MudTooltip>
+                        }
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+@if (_veryEasyCharts.Any())
+{
+
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">Very Easy Charts
+                @if (_veryEasyCharts.All(c => _passes.Contains(c.Id)))
+                {
+                    <MudTooltip Text="All Passed">
+                        <MudIcon Color="Color.Success" Icon="@Icons.Filled.Check"></MudIcon>
+                    </MudTooltip>
+                }</MudText>
+        </MudItem>
+        @foreach (var chart in _veryEasyCharts)
+        {
+            <MudItem xs="4" sm="3" md="2">
+
+                <MudCard>
+                    <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()" />
+                    <MudCardActions>
+
+                        @if (_videos.ContainsKey(chart.Id))
+                        {
+                            <MudTooltip Text="Open Embeded Video">
+                                <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="() => ShowVideo(_videos[chart.Id])"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudTooltip Text="Open Youtube Search for Chart">
+                                <MudIconButton Icon="@Icons.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        @if (_passes.Contains(chart.Id))
+                        {
+                            <MudTooltip Text="Passed">
+                                <MudIcon Color="Color.Success" Icon="@Icons.Filled.Check"></MudIcon>
+                            </MudTooltip>
+                        }
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+@if (_overratedCharts.Any())
+{
+
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">Overrated Charts
+                @if (_overratedCharts.All(c => _passes.Contains(c.Id)))
+                {
+                    <MudTooltip Text="All Passed">
+                        <MudIcon Color="Color.Success" Icon="@Icons.Filled.Check"></MudIcon>
+                    </MudTooltip>
+                }</MudText>
+        </MudItem>
+        @foreach (var chart in _overratedCharts)
+        {
+            <MudItem xs="4" sm="3" md="2">
+
+                <MudCard>
+                    <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()" />
+                    <MudCardActions>
+
+                        @if (_videos.ContainsKey(chart.Id))
+                        {
+                            <MudTooltip Text="Open Embeded Video">
+                                <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="() => ShowVideo(_videos[chart.Id])"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudTooltip Text="Open Youtube Search for Chart">
+                                <MudIconButton Icon="@Icons.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        @if (_passes.Contains(chart.Id))
+                        {
+                            <MudTooltip Text="Passed">
+                                <MudIcon Color="Color.Success" Icon="@Icons.Filled.Check"></MudIcon>
+                            </MudTooltip>
+                        }
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+<MudDialog @bind-IsVisible="_showVideoDialog">
+    <DialogContent>
+        <iframe class="video"
+                id="chartVideoFrame"
+                src="@(_currentVideo + "?autoplay=1")"
+                allow="autoplay; encrypted-media"
+                allowfullscreen></iframe>
+    </DialogContent>
+
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudTooltip Text="Report Low Quality, Broken, or Incorrect Video">
+            <MudButton Href="mailto:sharkingbird@gmail.com" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Filled.Report">Report Video</MudButton>
+        </MudTooltip>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Filled.Close" OnClick="()=>_showVideoDialog=false">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private int _difficultyFilter = 18;
+    private string _chartTypeFilter = ChartType.Single.ToString();
+    private ICollection<Chart> _overratedCharts = Array.Empty<Chart>();
+    private ICollection<Chart> _veryEasyCharts = Array.Empty<Chart>();
+    private ICollection<Chart> _easyCharts = Array.Empty<Chart>();
+    private ICollection<Chart> _mediumCharts = Array.Empty<Chart>();
+    private ICollection<Chart> _hardCharts = Array.Empty<Chart>();
+    private ICollection<Chart> _veryHardCharts = Array.Empty<Chart>();
+    private ICollection<Chart> _underratedCharts = Array.Empty<Chart>();
+    private IDictionary<Guid, string> _videos = new Dictionary<Guid, string>();
+    private bool _showVideoDialog = false;
+    private string _currentVideo = "";
+    private ISet<Guid> _passes = new HashSet<Guid>();
+    private void ShowVideo(string url)
+    {
+        _showVideoDialog = true;
+        _currentVideo = url;
+    }
+
+    private string ChartSearch(Chart chart)
+    {
+        var searchString = "Pump It Up " + chart.Song.Name + " " + chart.DifficultyString;
+        return $"https://www.youtube.com/results?search_query={searchString.Replace("%", "Percent ").Replace(" ", "+")}";
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        _videos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId,cv=>cv.VideoUrl.ToString());
+        if (CurrentUser.IsLoggedIn)
+        {
+            var attempts = await Mediator.Send(new GetBestChartAttemptsQuery(CurrentUser.User.Id));
+            _passes = attempts.Where(a => !(a.BestAttempt?.IsBroken??true)).Select(a => a.Chart.Id).Distinct().ToHashSet();
+        }
+    }
+
+    private async Task UpdateSelection(int difficulty, string chartType)
+    {
+        _difficultyFilter = difficulty;
+        _chartTypeFilter = chartType;
+        var charts = await Mediator.Send(new GetChartsQuery(difficulty,Enum.Parse<ChartType>(chartType)));
+        var ratings = (await Mediator.Send(new GetChartRatingsQuery(difficulty, Enum.Parse<ChartType>(chartType)))).ToDictionary(c => c.ChartId);
+
+        _overratedCharts = new List<Chart>();
+        _veryEasyCharts = new List<Chart>();
+        _easyCharts = new List<Chart>();
+        _mediumCharts = new List<Chart>();
+        _hardCharts = new List<Chart>();
+        _veryHardCharts = new List<Chart>();
+        _underratedCharts = new List<Chart>();
+
+        foreach (var chart in charts.OrderByDescending(c=>ratings.ContainsKey(c.Id)?ratings[c.Id].Difficulty:c.Level+.5))
+        {
+            if (!ratings.ContainsKey(chart.Id))
+            {
+                _mediumCharts.Add(chart);
+                continue;
+            }
+            var diff = ratings[chart.Id].Difficulty - chart.Level - .5;
+            switch (diff)
+            {
+                case < -1:
+                    _overratedCharts.Add(chart);
+                    break;
+                case < -.5:
+                    _veryEasyCharts.Add(chart);
+                    break;
+                case < -.25:
+                    _easyCharts.Add(chart);
+                    break;
+                case <= .25:
+                    _mediumCharts.Add(chart);
+                    break;
+                case <= .5:
+                    _hardCharts.Add(chart);
+                    break;
+                case < 1.0:
+                    _veryHardCharts.Add(chart);
+                    break;
+                default:
+                    _underratedCharts.Add(chart);
+                    break;
+            }
+
+        }
+    }
+
+}

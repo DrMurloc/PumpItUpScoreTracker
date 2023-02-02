@@ -18,6 +18,28 @@ public sealed class EFChartRepository : IChartRepository
         _database = database;
     }
 
+    public async Task<IEnumerable<Chart>> GetCharts(DifficultyLevel? level = null, ChartType? type = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _database.Chart.AsQueryable();
+        if (level != null)
+        {
+            var levelInt = (int)level.Value;
+            query = query.Where(c => c.Level == levelInt);
+        }
+
+        if (type != null)
+        {
+            var typeString = type.Value.ToString();
+            query = query.Where(c => c.Type == typeString);
+        }
+
+        return await (from c in query
+                join s in _database.Song on c.SongId equals s.Id
+                select new Chart(c.Id, new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level))
+            .ToArrayAsync(cancellationToken);
+    }
+
     public async Task<IEnumerable<Name>> GetSongNames(CancellationToken cancellationToken = default)
     {
         return (await _database.Song.Select(s => s.Name).ToArrayAsync(cancellationToken)).Select(Name.From);

@@ -8,19 +8,29 @@ namespace ScoreTracker.Application.Handlers;
 public sealed class
     GetChartRatingsHandler : IRequestHandler<GetChartRatingsQuery, IEnumerable<ChartDifficultyRatingRecord>>
 {
+    private readonly IChartRepository _charts;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IChartDifficultyRatingRepository _ratings;
 
-    public GetChartRatingsHandler(IChartDifficultyRatingRepository ratings, ICurrentUserAccessor currentUser)
+    public GetChartRatingsHandler(IChartDifficultyRatingRepository ratings, ICurrentUserAccessor currentUser,
+        IChartRepository charts)
     {
         _ratings = ratings;
         _currentUser = currentUser;
+        _charts = charts;
     }
 
     public async Task<IEnumerable<ChartDifficultyRatingRecord>> Handle(GetChartRatingsQuery request,
         CancellationToken cancellationToken)
     {
         var result = (await _ratings.GetAllChartRatedDifficulties(cancellationToken)).ToArray();
+        if (request.Level != null || request.Type != null)
+        {
+            var charts = (await _charts.GetCharts(request.Level, request.Type, cancellationToken)).Select(c => c.Id)
+                .ToHashSet();
+            result = result.Where(r => charts.Contains(r.ChartId)).ToArray();
+        }
+
         if (!_currentUser.IsLoggedIn) return result;
 
         var myRatings =

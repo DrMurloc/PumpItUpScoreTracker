@@ -110,19 +110,22 @@
                     <MudItem xs="12">
                         <MudNumericField Label="Score (optional)" @bind-Value="_inputScore" Min="Score.Min" Max="Score.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
                     </MudItem>
-                    <MudItem xs="8">
-                        <MudSelect Label="Your Difficulty Rating" T="int?" Value="_selectedAdjustment" ValueChanged="UpdateDifficultyRating">
-                            @foreach (var rating in Enum.GetValues<DifficultyAdjustment>())
-                            {
-                                <MudSelectItem T="int?" Value="@rating.GetScale()">@rating.GetDescription()</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudTooltip Text="@CountString">
-                           <MudText>Average Rating: @($"{@_currentRatedDifficulty:N2}")</MudText>
-                        </MudTooltip>
-                    </MudItem>
+                    @if (_selectedChart.Type != ChartType.CoOp)
+                    {
+                        <MudItem xs="8">
+                            <MudSelect Label="Your Difficulty Rating" T="int?" Value="_selectedAdjustment" ValueChanged="UpdateDifficultyRating">
+                                @foreach (var rating in Enum.GetValues<DifficultyAdjustment>())
+                                {
+                                    <MudSelectItem T="int?" Value="@rating.GetScale()">@rating.GetDescription()</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudTooltip Text="@CountString">
+                                <MudText>Average Rating: @($"{@_currentRatedDifficulty:N2}")</MudText>
+                            </MudTooltip>
+                        </MudItem>
+                    }
                 </MudGrid>
             }
         </MudCardContent>
