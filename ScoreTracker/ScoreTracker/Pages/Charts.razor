@@ -48,11 +48,14 @@
             
         </MudSelect>
     </MudItem>
+    <MudItem xs="12" sm="4">
+        <MudTextField @bind-Value="_songNameFilter" Label="Song Name" Clearable="true" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" DebounceInterval="150" Variant="Variant.Text"></MudTextField>
+    </MudItem>
 </MudGrid>
 <br/>
-<MudChip Variant="Variant.Outlined" Size="Size.Small">Not Graded: @NotGradedCount</MudChip>
-<MudChip Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small">Not Passed: @NotPassedCount</MudChip>
-<MudChip Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small">Passed: @PassedCount</MudChip>
+<MudChip Variant="Variant.Outlined" Size="Size.Small" OnClick="@(()=>_scoreStateFilter=ScoreState.Ungraded)">Not Graded: @NotGradedCount</MudChip>
+<MudChip Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(()=>_scoreStateFilter=ScoreState.NotPassed)">Not Passed: @NotPassedCount</MudChip>
+<MudChip Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="@(()=>_scoreStateFilter=ScoreState.Passed)">Passed: @PassedCount</MudChip>
 <br/>
 <MudTable T="BestAttemptDto" Items="@_charts" Filter="FilterChart"  Loading="@_isLoading" Breakpoint="Breakpoint.None">
     <ToolBarContent>
@@ -64,23 +67,29 @@
                 <MudIconButton Icon="@Icons.Filled.Share" OnClick="()=>_showShareDialog=true"></MudIconButton>
             </MudTooltip>
         }
-        <MudMenu Icon="@Icons.Material.Filled.MoreVert">
-            <MudMenuItem><MudCheckBox @bind-Checked="_isDifficultyShowing" Label="Difficulty"></MudCheckBox></MudMenuItem>
-            <MudMenuItem><MudCheckBox @bind-Checked="_isAdjustedRatingShowing" Label="Adjusted Difficulty"></MudCheckBox></MudMenuItem>
-            <MudMenuItem><MudCheckBox @bind-Checked="_isMyRatingShowing" Label="My Difficulty Adjustments"></MudCheckBox></MudMenuItem>
-            <MudMenuItem><MudCheckBox @bind-Checked="_isSongShowing" Label="Song"></MudCheckBox></MudMenuItem>
-            <MudMenuItem><MudCheckBox @bind-Checked="_isGradeShowing" Label="Letter Grade"></MudCheckBox></MudMenuItem>
-            <MudMenuItem><MudCheckBox @bind-Checked="_isBrokenShowing" Label="Broken"></MudCheckBox></MudMenuItem>
-            <MudMenuItem><MudCheckBox @bind-Checked="_isVideoShowing" Label="Video"></MudCheckBox></MudMenuItem>
-            <MudMenuItem><MudCheckBox @bind-Checked="_isScoreShowing" Label="Score"></MudCheckBox></MudMenuItem>
-            <MudMenuItem><MudCheckBox @bind-Checked="_isRecordedOnShowing" Label="Recorded Date"></MudCheckBox></MudMenuItem>
-            <MudMenuItem><MudCheckBox @bind-Checked="_isActionsShowing" Label="Actions"></MudCheckBox></MudMenuItem>
-        </MudMenu>
+        <MudTooltip Text="Columns">
+            <MudMenu Icon="@Icons.Material.Filled.ViewColumn">
+                <MudMenuItem><MudCheckBox @bind-Checked="_isDifficultyShowing" Label="Difficulty"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox @bind-Checked="_isSongShowing" Label="Song"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox @bind-Checked="_isAdjustedRatingShowing" Label="Adjusted Difficulty"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox @bind-Checked="_isMyRatingShowing" Label="My Difficulty Adjustments"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox @bind-Checked="_isGradeShowing" Label="Letter Grade"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox @bind-Checked="_isBrokenShowing" Label="Broken"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox @bind-Checked="_isVideoShowing" Label="Video"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox @bind-Checked="_isScoreShowing" Label="Score"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox @bind-Checked="_isRecordedOnShowing" Label="Recorded Date"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox @bind-Checked="_isActionsShowing" Label="Actions"></MudCheckBox></MudMenuItem>
+            </MudMenu>
+        </MudTooltip>
     </ToolBarContent>
     <HeaderContent>
         @if (_isDifficultyShowing)
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Level">Level</MudTableSortLabel></MudTh>
+        }
+        @if (_isSongShowing)
+        {
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.SongName" InitialDirection="SortDirection.Ascending">Song</MudTableSortLabel></MudTh>
         }
         @if (_isAdjustedRatingShowing)
         {
@@ -91,10 +100,6 @@
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Level + .5 + (_adjustedDifficulties[e.ChartId].MyRating?.GetAdjustment()??0)">
                 My Difficulty Adjustments
             </MudTableSortLabel></MudTh>
-        }
-        @if (_isSongShowing)
-        {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.SongName" InitialDirection="SortDirection.Ascending">Song</MudTableSortLabel></MudTh>
         }
         @if (_isVideoShowing)
         {
@@ -134,6 +139,15 @@
                 </MudTooltip>
             </MudTd>
         }
+        @if (_isSongShowing)
+        {
+            
+            <MudTd>
+                <MudTooltip Text="@context.SongName">
+                    <MudImage Src="@context.ImagePath" Height="35" Alt="@context.SongName" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
+                </MudTooltip>
+            </MudTd>
+        }
         @if (_isAdjustedRatingShowing)
         {
             <MudTd>
@@ -145,22 +159,13 @@
         @if (_isMyRatingShowing)
         {
             <MudTh>
-                <MudSelect Label="Your Difficulty Rating" T="int?" Value="@_adjustedDifficulties[@context.ChartId].MyRating?.GetScale()" ValueChanged="@(r=>UpdateDifficultyRating(context.ChartId,r))">
+                <MudSelect Label="My Difficulty" T="int?" Value="@_adjustedDifficulties[@context.ChartId].MyRating?.GetScale()" ValueChanged="@(r=>UpdateDifficultyRating(context.ChartId,r))">
                     @foreach (var rating in Enum.GetValues<DifficultyAdjustment>())
                     {
                         <MudSelectItem T="int?" Value="@rating.GetScale()">@rating.GetDescription()</MudSelectItem>
                     }
                 </MudSelect>
             </MudTh>
-        }
-        @if (_isSongShowing)
-        {
-            
-            <MudTd>
-                <MudTooltip Text="@context.SongName">
-                    <MudImage Src="@context.ImagePath" Height="35" Alt="@context.SongName" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
-                </MudTooltip>
-            </MudTd>
         }
         @if (_isVideoShowing)
         {
@@ -341,6 +346,7 @@
     private bool _isLoading = true;
     private int? _difficultyFilter = null;
     private string? _chartTypeFilter = null;
+    private string _songNameFilter = string.Empty;
     private ScoreState? _scoreStateFilter = null;
     private IEnumerable<BestAttemptDto> FileredCharts => _charts.Where(FilterChart);
     private IEnumerable<string> _filteredLists = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -353,6 +359,10 @@
     private bool FilterChart(BestAttemptDto chart)
     {
         var result = true;
+        if (!string.IsNullOrWhiteSpace(_songNameFilter))
+        {
+            result = result && chart.SongName.Contains(_songNameFilter.Trim(), StringComparison.OrdinalIgnoreCase);
+        }
         if (_filteredLists.Any())
         {
             result = result && ((_filteredLists.Contains(ChartListType.Favorite.ToString()) && _favoriteCharts.Contains(chart.ChartId)) || (_filteredLists.Contains(ChartListType.ToDo.ToString()) && _todoCharts.Contains(chart.ChartId)));
