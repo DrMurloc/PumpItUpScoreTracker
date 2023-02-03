@@ -319,7 +319,6 @@
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Filled.Close" OnClick="()=>_showShareDialog=false">Close</MudButton>
     </DialogActions>
 </MudDialog>
-<link href="/css/charts.css" rel="stylesheet"/>
 
 @inject IMediator Mediator
 @inject NavigationManager NavManager
@@ -530,7 +529,7 @@
 
         try
         {
-            await Mediator.Send(new UpdateBestAttemptCommand(dto.SongName, chartType, dto.Level, letterGrade, dto.IsBroken, dto.Score));
+            await Mediator.Send(new UpdateBestAttemptCommand(dto.ChartId, letterGrade, dto.IsBroken, dto.Score));
 
             dto.RecordedOn = letterGrade == null ? null : DateTimeOffset.Now;
 

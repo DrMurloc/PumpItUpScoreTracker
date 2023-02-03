@@ -22,7 +22,7 @@ public sealed class GetBestChartAttemptHandler : IRequestHandler<GetBestChartAtt
 
     public async Task<BestChartAttempt> Handle(GetBestChartAttemptQuery request, CancellationToken cancellationToken)
     {
-        var chart = await _charts.GetChart(request.SongName, request.ChartType, request.Level, cancellationToken);
+        var chart = await _charts.GetChart(request.ChartId, cancellationToken);
         var bestAttempt = await _chartAttempts.GetBestAttempt(_user.User.Id, chart, cancellationToken);
         return new BestChartAttempt(chart, bestAttempt);
     }

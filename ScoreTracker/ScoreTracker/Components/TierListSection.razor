@@ -1,0 +1,82 @@
+﻿@namespace ScoreTracker.Web.Components
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
+@using MediatR
+@inject ICurrentUserAccessor CurrentUser;
+@inject IMediator Mediator;
+@if (Charts.Any())
+{
+
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">
+                @Name
+                @if (Charts.All(c => Passes.Contains(c.Id)))
+                {
+                    <MudTooltip Text="All Passed">
+                        <MudIcon Color="Color.Success" Icon="@Icons.Filled.Check"></MudIcon>
+                    </MudTooltip>
+                }
+
+            </MudText>
+        </MudItem>
+        @foreach (var chart in Charts)
+        {
+            <MudItem xs="6" sm="3" md="2">
+
+                <MudCard Class="@CardClass(chart.Id)" Style="@CardStyle(chart.Id)">
+                    <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()" />
+                    <MudCardActions>
+
+                        @if (Videos.ContainsKey(chart.Id))
+                        {
+                            <MudTooltip Text="Open Embeded Video">
+                                <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(Videos[chart.Id]))"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudTooltip Text="Open Youtube Search for Chart">
+                                <MudIconButton Icon="@Icons.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        @if (CurrentUser.IsLoggedIn)
+                        {
+                            <MudTooltip Text="Update Grade">
+                                <MudIconButton Icon="@Icons.Filled.Edit" OnClick="@(() => OnEdit(chart.Id))"></MudIconButton>
+                            </MudTooltip>
+                        }
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+@code {
+    private string CardClass(Guid chartId) => Passes.Contains(chartId) || !CurrentUser.IsLoggedIn ? "border-solid border-2" : "border-dashed border-2";
+    private string CardStyle(Guid chartId) => Passes.Contains(chartId)?$@"border-color:{Colors.Green.Darken1}":$@"border-color:{OutlineColor}";
+    [Parameter]
+    public string Name { get; set; } = string.Empty;
+    [Parameter]
+    public string OutlineColor { get; set; } = string.Empty;
+
+    [Parameter]
+    public IEnumerable<Chart> Charts { get; set; } = Array.Empty<Chart>();
+
+    [Parameter]
+    public ISet<Guid> Passes { get; set; } = new HashSet<Guid>();
+    [Parameter]
+    public IDictionary<Guid, string> Videos { get; set; } = new Dictionary<Guid, string>();
+
+    [Parameter]
+    public Action<string> ShowVideo { get; set; } = s => { };
+
+    [Parameter]
+    public Action<Guid> OnEdit { get; set; } = g => { };
+
+    private string ChartSearch(Chart chart)
+    {
+        var searchString = "Pump It Up " + chart.Song.Name + " " + chart.DifficultyString;
+        return $"https://www.youtube.com/results?search_query={searchString.Replace("%", "Percent ").Replace(" ", "+")}";
+    }
+}

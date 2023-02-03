@@ -26,7 +26,7 @@ public sealed class UpdateBestAttemptHandler : IRequestHandler<UpdateBestAttempt
 
     public async Task<Unit> Handle(UpdateBestAttemptCommand request, CancellationToken cancellationToken)
     {
-        var chart = await _charts.GetChart(request.SongName, request.ChartType, request.Level, cancellationToken);
+        var chart = await _charts.GetChart(request.chartId, cancellationToken);
         if (request.LetterGrade != null)
             await _attempts.SetBestAttempt(_user.User.Id, chart,
                 new ChartAttempt(request.LetterGrade.Value, request.IsBroken, request.Score, _dateTimeOffset.Now),

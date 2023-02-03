@@ -7,6 +7,7 @@
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Web.Components;
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 
 <PageTitle>Record Attempt</PageTitle>
@@ -58,145 +59,18 @@
             }
             @if (_selectedChart != null && !string.IsNullOrWhiteSpace(_selectedSongName))
             {
-                @if (_recordedOn != null)
-                {
-                    <MudText>Recorded on @_recordedOn.Value.ToString("MMM dd yyyy")</MudText>
-                }
-                <MudGrid>
-                    <MudItem xs="4">
-                        <MudSelect T="LetterGrade?" @bind-Value="_selectedLetterGrade">
-                            @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
-                            {
-                                <MudSelectItem T="LetterGrade?" Value="@letterGrade">@letterGrade.ToString()</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudCheckBox @bind-Checked="@_isBroken" Label="Broken"></MudCheckBox>
-                    </MudItem>
-                    
-                    <MudItem xs="2">
-                        @if (_favoriteCharts.Contains(_selectedChart.Id))
-                        {
-
-                            <MudTooltip Text="Remove from Favorites">
-                                <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" OnClick="()=>RemoveFromFavorites(_selectedChart.Id)"></MudIconButton>
-                            </MudTooltip>
-                        }
-                        else
-                        {
-
-                            <MudTooltip Text="Add to Favorites">
-                                <MudIconButton Icon="@Icons.Material.Outlined.Favorite" OnClick="()=>AddToFavorites(_selectedChart.Id)"></MudIconButton>
-                            </MudTooltip>
-                        }
-                    </MudItem>
-                    <MudItem xs="2">
-                        @if (_todoCharts.Contains(_selectedChart.Id))
-                        {
-                            
-                            <MudTooltip Text="Remove from To Do List">
-                                <MudIconButton Icon="@Icons.Material.Filled.ListAlt" Color="Color.Secondary" OnClick="()=>RemoveFromToDo(_selectedChart.Id)"></MudIconButton>
-                            </MudTooltip>
-                        }
-                        else
-                        {
-
-                            <MudTooltip Text="Add to To Do List">
-                                <MudIconButton Icon="@Icons.Material.Outlined.ListAlt" OnClick="()=>AddToToDo(_selectedChart.Id)"></MudIconButton>
-                            </MudTooltip>
-                        }
-                    </MudItem>
-                    <MudItem xs="12">
-                        <MudNumericField Label="Score (optional)" @bind-Value="_inputScore" Min="Score.Min" Max="Score.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
-                    </MudItem>
-                    @if (_selectedChart.Type != ChartType.CoOp)
-                    {
-                        <MudItem xs="8">
-                            <MudSelect Label="Your Difficulty Rating" T="int?" Value="_selectedAdjustment" ValueChanged="UpdateDifficultyRating">
-                                @foreach (var rating in Enum.GetValues<DifficultyAdjustment>())
-                                {
-                                    <MudSelectItem T="int?" Value="@rating.GetScale()">@rating.GetDescription()</MudSelectItem>
-                                }
-                            </MudSelect>
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudTooltip Text="@CountString">
-                                <MudText>Average Rating: @($"{@_currentRatedDifficulty:N2}")</MudText>
-                            </MudTooltip>
-                        </MudItem>
-                    }
-                </MudGrid>
+                <EditChartGrid ChartId="_selectedChart.Id"></EditChartGrid>
             }
         </MudCardContent>
-        <MudCardActions>
-            <MudButton Disabled="_selectedChart == null || string.IsNullOrWhiteSpace(_selectedSongName) || _selectedLetterGrade==null" Variant="Variant.Filled" Color="Color.Primary" OnClick="@SubmitAttempt">Record Attempt</MudButton>
-        </MudCardActions>
     </MudCard>
 </MudPaper>
 @code {
     private IEnumerable<Name> _songNames = Array.Empty<Name>();
     private IEnumerable<Chart>? _charts;
-
-    private double _currentRatedDifficulty = 0.0;
-    private int _currentRatedCount = 0;
-    private string CountString => $"{_currentRatedCount} votes";
+    
     private MudAutocomplete<string> _autocomplete;
     private string _selectedSongName = string.Empty;
     private Chart? _selectedChart;
-    private LetterGrade? _selectedLetterGrade = null;
-    private bool _isBroken = false;
-    private int? _inputScore = null;
-    private int? _selectedAdjustment;
-    private DateTimeOffset? _recordedOn = null;
-    private ISet<Guid> _favoriteCharts = new HashSet<Guid>();
-    private ISet<Guid> _todoCharts = new HashSet<Guid>();
-    
-    private async Task UpdateDifficultyRating(int? newValue)
-    {
-        if (newValue == null || _selectedChart == null)
-        {
-            return;
-        }
-        _selectedAdjustment = newValue;
-        await Mediator.Send(new RateChartDifficultyCommand(_selectedChart.Id, DifficultyAdjustmentHelpers.From(newValue.Value)));
-
-        var newRating = await Mediator.Send(new GetChartRatingQuery(_selectedChart.Id));
-        _currentRatedCount = newRating.RatingCount;
-        _currentRatedDifficulty = newRating.Difficulty;
-        Snackbar.Add("Suggested Difficulty Rating Submitted", Severity.Success);
-    }
-    private async Task RemoveFromToDo(Guid chartId)
-    {
-        await Mediator.Send(new RemoveChartFromListCommand(ChartListType.ToDo, chartId));
-        _todoCharts.Remove(chartId);
-
-        Snackbar.Add("Chart removed from To Do list", Severity.Success);
-    }
-    private async Task AddToToDo(Guid chartId)
-    {
-        await Mediator.Send(new SaveChartToListCommand(ChartListType.ToDo, chartId));
-        if (!_todoCharts.Contains(chartId))
-        {
-            _todoCharts.Add(chartId);
-        }
-        Snackbar.Add("Chart added to To Do list", Severity.Success);
-    }
-    private async Task RemoveFromFavorites(Guid chartId)
-    {
-        await Mediator.Send(new RemoveChartFromListCommand(ChartListType.Favorite, chartId));
-        _favoriteCharts.Remove(chartId);
-        Snackbar.Add("Chart removed from Favorites", Severity.Success);
-    }
-    private async Task AddToFavorites(Guid chartId)
-    {
-        await Mediator.Send(new SaveChartToListCommand(ChartListType.Favorite, chartId));
-        if (!_favoriteCharts.Contains(chartId))
-        {
-            _favoriteCharts.Add(chartId);
-        }
-        Snackbar.Add("Chart added to Favorites", Severity.Success);
-    }
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn)
@@ -207,9 +81,6 @@
         _songNames = await Mediator.Send(new GetSongNamesQuery());
         
         var chartSaves = (await Mediator.Send(new GetSavedChartsQuery())).ToArray();
-        _favoriteCharts = chartSaves.Where(cs => cs.ListType is ChartListType.Favorite).Select(cs => cs.ChartId).Distinct().ToHashSet();
-            
-        _todoCharts = chartSaves.Where(cs => cs.ListType is ChartListType.ToDo).Select(cs => cs.ChartId).Distinct().ToHashSet();
 
     }
 
@@ -239,11 +110,7 @@
         {
             await _autocomplete.ToggleMenu();
         }
-        _recordedOn = null;
         _selectedChart = null;
-        _selectedLetterGrade = null;
-        _isBroken = true;
-        _inputScore = null;
         if (!Name.TryParse(stringValue,out var name))
         {
             _charts = Array.Empty<Chart>();
@@ -255,64 +122,7 @@
     private async Task SelectChart(IEnumerable<object> charts)
     {
         _selectedChart = charts.FirstOrDefault() as Chart;
-        await GetBestAttempt();
     }
+    
 
-    private async Task GetBestAttempt()
-    {
-        if (!Name.TryParse(_selectedSongName, out var name) || _selectedChart == null)
-        {
-            return;
-        }
-        var result = await Mediator.Send(new GetBestChartAttemptQuery(name, _selectedChart.Type, _selectedChart.Level));
-        if (result.BestAttempt != null)
-        {
-            _selectedLetterGrade = result.BestAttempt.LetterGrade;
-            _isBroken = result.BestAttempt.IsBroken;
-            _inputScore = result.BestAttempt.Score;
-            _recordedOn = result.BestAttempt.RecordedOn;
-        }
-        else
-        {
-            _selectedLetterGrade = null;
-            _isBroken = false;
-            _inputScore = null;
-            _recordedOn = null;
-        }
-        var rating = await Mediator.Send(new GetChartRatingQuery(_selectedChart.Id));
-        if (rating == null)
-        {
-            _currentRatedDifficulty = _selectedChart.Level + .5;
-            _currentRatedCount = 0;
-            _selectedAdjustment = null;
-        }
-        else
-        {
-            _currentRatedDifficulty = rating.Difficulty;
-            _currentRatedCount = rating.RatingCount;
-            _selectedAdjustment = rating.MyRating?.GetScale();
-        }
-    }
-    private async Task SubmitAttempt()
-    {
-        if (!Name.TryParse(_selectedSongName, out var songName) || _selectedChart == null || _selectedLetterGrade==null)
-        {
-            return;
-        }
-        
-        try
-        {
-            await Mediator.Send(new UpdateBestAttemptCommand(songName,_selectedChart.Type, _selectedChart.Level,  _selectedLetterGrade.Value, _isBroken,_inputScore));
-            
-            var chartName = $"{songName} {DifficultyLevel.ToShorthand(_selectedChart.Type,_selectedChart.Level)}";
-
-            _recordedOn = DateTimeOffset.Now;
-            
-            Snackbar.Add( $"Recorded {(_isBroken ? "Broken":"")} {_selectedLetterGrade.Value} for {chartName}", Severity.Success);
-        }
-        catch (Exception e)
-        {
-            Snackbar.Add("There was an error while recording the score", Severity.Error);
-        }
-    }
 }

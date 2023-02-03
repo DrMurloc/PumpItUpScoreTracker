@@ -337,7 +337,7 @@
             _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxSaving - (double)_currentSaved) / (double)_currentSaved);
             try
             {
-                await Mediator.Send(new UpdateBestAttemptCommand(best.Chart.Song.Name, best.Chart.Type, best.Chart.Level, best.BestAttempt?.LetterGrade, best.BestAttempt?.IsBroken ?? true,null), cancellationToken);
+                await Mediator.Send(new UpdateBestAttemptCommand(best.Chart.Id, best.BestAttempt?.LetterGrade, best.BestAttempt?.IsBroken ?? true,null), cancellationToken);
             }
             catch (OperationCanceledException)
             {

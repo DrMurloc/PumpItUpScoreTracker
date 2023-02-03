@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.Web", "ScoreTracker\ScoreTracker.Web.csproj", "{EDB5BA85-F16B-4289-8481-6BAAD44FDF32}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScoreTracker.Web", "ScoreTracker\ScoreTracker.Web.csproj", "{EDB5BA85-F16B-4289-8481-6BAAD44FDF32}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{1FF2B02B-1C9D-443C-A0A7-76B2D5C3DA71}"
 EndProject
@@ -11,15 +11,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Presentation", "Presentatio
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{9D657636-0E66-469F-9195-1379F737F74F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.Domain", "ScoreTracker.Domain\ScoreTracker.Domain.csproj", "{DD5E1E89-45A8-4DC2-A621-7F28BBBF7CD8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScoreTracker.Domain", "ScoreTracker.Domain\ScoreTracker.Domain.csproj", "{DD5E1E89-45A8-4DC2-A621-7F28BBBF7CD8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.Application", "ScoreTracker.Application\ScoreTracker.Application.csproj", "{5FE5BBE8-1B05-4295-AF9E-AC89CFFD47C1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScoreTracker.Application", "ScoreTracker.Application\ScoreTracker.Application.csproj", "{5FE5BBE8-1B05-4295-AF9E-AC89CFFD47C1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.Tests", "ScoreTracker.Tests\ScoreTracker.Tests.csproj", "{D491FB2E-E1CB-47B7-97F3-D154404CEE39}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScoreTracker.Tests", "ScoreTracker.Tests\ScoreTracker.Tests.csproj", "{D491FB2E-E1CB-47B7-97F3-D154404CEE39}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.Data", "ScoreTracker.Data\ScoreTracker.Data.csproj", "{397C79DD-4BCE-4CD2-834E-989A708D8395}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScoreTracker.Data", "ScoreTracker.Data\ScoreTracker.Data.csproj", "{397C79DD-4BCE-4CD2-834E-989A708D8395}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.CompositionRoot", "ScoreTracker.CompositionRoot\ScoreTracker.CompositionRoot.csproj", "{4D0EC8CE-32D1-496C-A451-DB78108F2E40}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScoreTracker.CompositionRoot", "ScoreTracker.CompositionRoot\ScoreTracker.CompositionRoot.csproj", "{4D0EC8CE-32D1-496C-A451-DB78108F2E40}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

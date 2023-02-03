@@ -1,0 +1,251 @@
+﻿@namespace ScoreTracker.Web.Components
+@using MediatR
+@using Microsoft.AspNetCore.Components
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.ValueTypes
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@inject IMediator Mediator;
+@inject ICurrentUserAccessor CurrentUser;
+@inject ISnackbar Snackbar
+<MudGrid>
+    @if (_selectedChart != null)
+    {
+        @if (ShowChartName)
+        {
+            <MudItem xs="12">
+                <MudText Typo="Typo.h5">@_selectedChart.Song.Name @_selectedChart.DifficultyString</MudText>
+            </MudItem>
+        }
+        <MudItem xs="4">
+            <MudSelect T="LetterGrade?" Value="_selectedLetterGrade" ValueChanged="LetterGradeChanged">
+                @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
+                {
+                    <MudSelectItem T="LetterGrade?" Value="@letterGrade">@letterGrade.ToString()</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="4">
+            <MudCheckBox T="bool" Checked="@_isBroken" CheckedChanged="BrokenChanged" Label="Broken"></MudCheckBox>
+        </MudItem>
+
+        <MudItem xs="2">
+            @if (_favoriteCharts.Contains(_selectedChart.Id))
+            {
+
+                <MudTooltip Text="Remove from Favorites">
+                    <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" OnClick="() => RemoveFromFavorites(_selectedChart.Id)"></MudIconButton>
+                </MudTooltip>
+            }
+            else
+            {
+
+                <MudTooltip Text="Add to Favorites">
+                    <MudIconButton Icon="@Icons.Material.Outlined.Favorite" OnClick="() => AddToFavorites(_selectedChart.Id)"></MudIconButton>
+                </MudTooltip>
+            }
+        </MudItem>
+        <MudItem xs="2">
+            @if (_todoCharts.Contains(_selectedChart.Id))
+            {
+
+                <MudTooltip Text="Remove from To Do List">
+                    <MudIconButton Icon="@Icons.Material.Filled.ListAlt" Color="Color.Secondary" OnClick="() => RemoveFromToDo(_selectedChart.Id)"></MudIconButton>
+                </MudTooltip>
+            }
+            else
+            {
+
+                <MudTooltip Text="Add to To Do List">
+                    <MudIconButton Icon="@Icons.Material.Outlined.ListAlt" OnClick="() => AddToToDo(_selectedChart.Id)"></MudIconButton>
+                </MudTooltip>
+            }
+        </MudItem>
+        <MudItem xs="12">
+            <MudNumericField T="int?" Label="Score (optional)" Value="_inputScore" ValueChanged="ScoreChanged" Min="Score.Min" Max="Score.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
+        </MudItem>
+        @if (_recordedOn != null)
+        {
+            <MudItem xs="12">
+                <MudText>Recorded on @_recordedOn.Value.ToString("MMM dd, yyyy")</MudText>
+            </MudItem>
+        }
+        @if (_selectedChart.Type != ChartType.CoOp)
+        {
+            <MudItem xs="8">
+                <MudSelect Label="Your Difficulty Rating" T="int?" Value="_selectedAdjustment" ValueChanged="UpdateDifficultyRating">
+                    @foreach (var rating in Enum.GetValues<DifficultyAdjustment>())
+                    {
+                        <MudSelectItem T="int?" Value="@rating.GetScale()">@rating.GetDescription()</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="4">
+                <MudTooltip Text="@CountString">
+                    <MudText>Average Rating: @($"{@_currentRatedDifficulty:N2}")</MudText>
+                </MudTooltip>
+            </MudItem>
+        }
+    }
+</MudGrid>
+@code {
+    private LetterGrade? _selectedLetterGrade { get; set; }
+    private int? _selectedAdjustment;
+    private int? _inputScore;
+    private double? _currentRatedDifficulty;
+    private bool _isBroken = true;
+    private int _currentRatedCount = 0;
+    private string CountString => $"{_currentRatedCount} votes";
+    private Chart? _selectedChart;
+    private ISet<Guid> _favoriteCharts;
+    private ISet<Guid> _todoCharts;
+    private DateTimeOffset? _recordedOn;
+
+    [Parameter]
+    public Guid ChartId { get; set; } = Guid.Empty;
+
+    [Parameter]
+    public bool ShowChartName { get; set; } = false;
+
+    [Parameter]
+    public Action<Chart, ChartAttempt> NewAttemptRecorded { get; set; } = (c, b) => { };
+
+    private async Task BrokenChanged(bool newState)
+    {
+        _isBroken = newState;
+        await SaveBest();
+    }
+
+    private async Task LetterGradeChanged(LetterGrade? letterGrade)
+    {
+        _selectedLetterGrade = letterGrade;
+        await SaveBest();
+    }
+
+    private async Task ScoreChanged(int? newScore)
+    {
+        _inputScore = newScore;
+        await SaveBest();
+    }
+    private async Task SaveBest()
+    {
+        
+        if (_selectedChart == null || _selectedLetterGrade==null)
+        {
+            return;
+        }
+    
+        try
+        {
+            await Mediator.Send(new UpdateBestAttemptCommand(_selectedChart.Id,  _selectedLetterGrade.Value, _isBroken,_inputScore));
+        
+            var chartName = $"{_selectedChart.Song.Name} {DifficultyLevel.ToShorthand(_selectedChart.Type,_selectedChart.Level)}";
+            
+            _recordedOn = DateTimeOffset.Now;
+
+            NewAttemptRecorded(_selectedChart, new ChartAttempt(_selectedLetterGrade.Value, _isBroken, _inputScore, DateTimeOffset.Now));
+
+            Snackbar.Add( $"Recorded {(_isBroken ? "Broken":"")} {_selectedLetterGrade.Value} for {chartName}", Severity.Success);
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add("There was an error while recording the score", Severity.Error);
+        }
+    }
+    private async Task RemoveFromToDo(Guid chartId)
+    {
+        await Mediator.Send(new RemoveChartFromListCommand(ChartListType.ToDo, chartId));
+        _todoCharts.Remove(chartId);
+
+        Snackbar.Add("Chart removed from To Do list", Severity.Success);
+    }
+    private async Task AddToToDo(Guid chartId)
+    {
+        await Mediator.Send(new SaveChartToListCommand(ChartListType.ToDo, chartId));
+        if (!_todoCharts.Contains(chartId))
+        {
+            _todoCharts.Add(chartId);
+        }
+        Snackbar.Add("Chart added to To Do list", Severity.Success);
+    }
+    private async Task RemoveFromFavorites(Guid chartId)
+    {
+        await Mediator.Send(new RemoveChartFromListCommand(ChartListType.Favorite, chartId));
+        _favoriteCharts.Remove(chartId);
+        Snackbar.Add("Chart removed from Favorites", Severity.Success);
+    }
+    private async Task AddToFavorites(Guid chartId)
+    {
+        await Mediator.Send(new SaveChartToListCommand(ChartListType.Favorite, chartId));
+        if (!_favoriteCharts.Contains(chartId))
+        {
+            _favoriteCharts.Add(chartId);
+        }
+        Snackbar.Add("Chart added to Favorites", Severity.Success);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        var favorites = (await Mediator.Send(new GetSavedChartsQuery())).ToArray();
+        _favoriteCharts = favorites.Where(f => f.ListType == ChartListType.Favorite).Select(f => f.ChartId).Distinct().ToHashSet();
+        _todoCharts = favorites.Where(f => f.ListType == ChartListType.ToDo).Select(f => f.ChartId).Distinct().ToHashSet();
+
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ChartId != Guid.Empty && (_selectedChart==null || ChartId!=_selectedChart.Id))
+        {
+            await LoadChart(ChartId);
+        }
+    }
+    private async Task LoadChart(Guid chartId)
+    {
+        var bestRecord = await Mediator.Send(new GetBestChartAttemptQuery(chartId));
+        _selectedChart = bestRecord.Chart;
+        if (bestRecord.BestAttempt == null)
+        {
+            _selectedLetterGrade = null;
+            _isBroken = true;
+            _inputScore = null;
+            _recordedOn = null;
+        }
+        else
+        {
+            _selectedLetterGrade = bestRecord.BestAttempt.LetterGrade;
+            _isBroken = bestRecord.BestAttempt.IsBroken;
+            _inputScore = bestRecord.BestAttempt.Score;
+            _recordedOn = bestRecord.BestAttempt.RecordedOn;
+        }
+        var rating = await Mediator.Send(new GetChartRatingQuery(chartId));
+        if (rating == null)
+        {
+            _selectedAdjustment = null;
+            _currentRatedCount = 0;
+            _currentRatedDifficulty = _selectedChart.Level + .5;
+        }
+        else
+        {
+            _selectedAdjustment = rating.MyRating?.GetScale();
+            _currentRatedCount = rating.RatingCount;
+            _currentRatedDifficulty = rating.Difficulty;
+        }
+        StateHasChanged();
+    }
+    private async Task UpdateDifficultyRating(int? newValue)
+    {
+        if (newValue == null || _selectedChart == null)
+        {
+            return;
+        }
+        _selectedAdjustment = newValue;
+        await Mediator.Send(new RateChartDifficultyCommand(_selectedChart.Id, DifficultyAdjustmentHelpers.From(newValue.Value)));
+
+        var newRating = await Mediator.Send(new GetChartRatingQuery(_selectedChart.Id));
+        _currentRatedCount = newRating.RatingCount;
+        _currentRatedDifficulty = newRating.Difficulty;
+        Snackbar.Add("Suggested Difficulty Rating Submitted", Severity.Success);
+    }
+}
