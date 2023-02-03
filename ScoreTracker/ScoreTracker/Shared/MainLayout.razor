@@ -9,32 +9,42 @@
 <MudSnackbarProvider/>
 
 <MudLayout>
-    @if (CurrentUser.IsLoggedIn)
-    {
-        <MudAppBar Color="Color.Primary" Fixed="false">
-            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="() => _isOpen = !_isOpen"/>
-            <MudText Typo="Typo.h6">Score Tracker</MudText>
-            <MudSpacer></MudSpacer>
+    <MudAppBar Color="Color.Primary" Fixed="false">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="() => _isOpen = !_isOpen"/>
+        <MudText Typo="Typo.h6">Score Tracker</MudText>
+        <MudSpacer></MudSpacer>
+        @if (CurrentUser.IsLoggedIn)
+        {
             <MudIconButton Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" Edge="Edge.Start" Href="/Account"></MudIconButton>
-        </MudAppBar>
-        <MudDrawer @bind-Open="_isOpen" Variant="@DrawerVariant.Temporary">
-            <MudNavMenu>
+        }
+        else
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.NoAccounts" Color="Color.Inherit" Edge="Edge.Start" Href="/Login"></MudIconButton>
+        }
+    </MudAppBar>
+    <MudDrawer @bind-Open="_isOpen" Variant="@DrawerVariant.Temporary">
+        <MudNavMenu>
+            @if (CurrentUser.IsLoggedIn)
+            {
                 <MudNavLink Href="/" Icon="@Icons.Filled.Description">Record Score</MudNavLink>
                 <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                <MudNavLink Href="/Charts" Icon="@Icons.Filled.List">Charts List</MudNavLink>
-                <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                <MudNavLink Href="/TierLists" Icon="@Icons.Filled.Topic">Tier Lists</MudNavLink>
-                <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                <MudNavLink Href="/Titles" Icon="@Icons.Filled.Grade">Titles</MudNavLink>
-                <MudDivider DividerType="DividerType.Middle"></MudDivider>
+            }
+            <MudNavLink Href="/Charts" Icon="@Icons.Filled.List">Charts List</MudNavLink>
+            <MudDivider DividerType="DividerType.Middle"></MudDivider>
+            <MudNavLink Href="/TierLists" Icon="@Icons.Filled.Topic">Tier Lists</MudNavLink>
+            <MudDivider DividerType="DividerType.Middle"></MudDivider>
+            <MudNavLink Href="/Titles" Icon="@Icons.Filled.Grade">Titles</MudNavLink>
+            <MudDivider DividerType="DividerType.Middle"></MudDivider>
+            @if (CurrentUser.IsLoggedIn)
+            {
                 <MudNavLink Href="/Progress" Icon="@Icons.Filled.BarChart">Progress</MudNavLink>
                 <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                <MudNavLink Href="/Players" Icon="@Icons.Filled.Person">Find Players</MudNavLink>
-                <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                <MudNavLink Href="/About" Icon="@Icons.Filled.Info">About</MudNavLink>
-            </MudNavMenu>
-        </MudDrawer>
-    }
+            }
+            <MudNavLink Href="/Players" Icon="@Icons.Filled.Person">Find Players</MudNavLink>
+            <MudDivider DividerType="DividerType.Middle"></MudDivider>
+            <MudNavLink Href="/About" Icon="@Icons.Filled.Info">About</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
     <MudMainContent>
         <MudContainer>
             @Body

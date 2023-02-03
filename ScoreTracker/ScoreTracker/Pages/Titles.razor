@@ -14,21 +14,23 @@
         <Column T="TitleProgressDto" Field="TitleCategory" Title="Category" Grouping="true"></Column>
         <Column T="TitleProgressDto" Field="TitleName" Title="Title" Groupable="false"></Column>
         <Column T="TitleProgressDto" Field="TitleDescription" Title="Description" Groupable="false"></Column>
-        <Column T="TitleProgressDto" Field="IsTrackable" Title="Completion" Groupable="false">
-            <CellTemplate>
-                <MudText Color="@(context.Item.CompletionCount >= context.Item.RequiredCount ? Color.Success : Color.Primary)">
-                    @if (context.Item.IsTrackable)
-                    {
-                        <span>@context.Item.CompletionCount / @context.Item.RequiredCount</span>
-                    }
-                </MudText>
-            </CellTemplate>
-        </Column>
+        @if (CurrentUser.IsLoggedIn)
+        {
+            <Column T="TitleProgressDto" Field="IsTrackable" Title="Completion" Groupable="false">
+                <CellTemplate>
+                    <MudText Color="@(context.Item.CompletionCount >= context.Item.RequiredCount ? Color.Success : Color.Primary)">
+                        @if (context.Item.IsTrackable)
+                        {
+                            <span>@context.Item.CompletionCount / @context.Item.RequiredCount</span>
+                        }
+                    </MudText>
+                </CellTemplate>
+            </Column>
+        }
     </Columns>
 </MudDataGrid>
 
 @inject IMediator Mediator
-@inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
 @code {
     private MudDataGrid<TitleProgressDto>? _dataGrid;
@@ -38,11 +40,6 @@
     
     protected override async Task OnInitializedAsync()
     {
-        if (!CurrentUser.IsLoggedIn)
-        {
-            NavManager.NavigateTo("/Login");
-            return;
-        }
         _isLoading = true;
         _titleProgress = (await Mediator.Send(new GetTitleProgressQuery())).Select(TitleProgressDto.From).ToArray();
         _isLoading = false;

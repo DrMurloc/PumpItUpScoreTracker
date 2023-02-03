@@ -43,8 +43,6 @@
 </MudTable>
 
 @inject IMediator Mediator
-@inject NavigationManager NavManager
-@inject ICurrentUserAccessor CurrentUser;
 @inject ISnackbar Snackbar;
 
 @code {
@@ -66,15 +64,7 @@
 
     private string ProgressLink(Guid userId)
         => $"{userId}/Progress";
-    protected override async Task OnInitializedAsync()
-    {
-        if (!CurrentUser.IsLoggedIn)
-        {
-            NavManager.NavigateTo("/Login");
-            return;
-        }
 
-    }
 
     private async Task Search(string searchText)
     {

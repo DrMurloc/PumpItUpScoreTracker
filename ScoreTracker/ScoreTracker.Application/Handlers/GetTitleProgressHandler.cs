@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using ScoreTracker.Application.Queries;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Models.Titles;
 using ScoreTracker.Domain.SecondaryPorts;
 
@@ -20,8 +21,17 @@ public sealed class GetTitleProgressHandler : IRequestHandler<GetTitleProgressQu
     public async Task<IEnumerable<TitleProgress>> Handle(GetTitleProgressQuery request,
         CancellationToken cancellationToken)
     {
-        var userId = _currentUser.User.Id;
-        var attempts = await _chartAttempts.GetBestAttempts(userId, cancellationToken);
+        IEnumerable<BestChartAttempt> attempts;
+        if (_currentUser.IsLoggedIn)
+        {
+            var userId = _currentUser.User.Id;
+            attempts = await _chartAttempts.GetBestAttempts(userId, cancellationToken);
+        }
+        else
+        {
+            attempts = Array.Empty<BestChartAttempt>();
+        }
+
         return TitleList.BuildProgress(attempts);
     }
 }

@@ -4,6 +4,7 @@
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.ValueTypes
@@ -32,31 +33,38 @@
             }
         </MudSelect>
     </MudItem>
-    <MudItem xs="6" sm="4">
-        <MudSelect T="ScoreState?" AdornmentIcon="@Icons.Filled.Rule" Label="Score State" @bind-Value="_scoreStateFilter" Clearable="true">
-            @foreach(var ss in Enum.GetValues<ScoreState>())
-            {
-                <MudSelectItem T="ScoreState?" Value="@ss">@ss.ToString()</MudSelectItem>
-            }
-        </MudSelect>
-    </MudItem>
-    <MudItem xs="6" sm="4">
+
+    @if (RequestedUserId != null)
+    {
+        <MudItem xs="6" sm="4">
+            <MudSelect T="ScoreState?" AdornmentIcon="@Icons.Filled.Rule" Label="Score State" @bind-Value="_scoreStateFilter" Clearable="true">
+                @foreach(var ss in Enum.GetValues<ScoreState>())
+                {
+                    <MudSelectItem T="ScoreState?" Value="@ss">@ss.ToString()</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="6" sm="4">
         
-        <MudSelect T="string" AdornmentIcon="@Icons.Material.Filled.ListAlt" Label="Saved Charts" MultiSelection="true" @bind-SelectedValues="_filteredLists" Clearable="true">
-            <MudSelectItem T="string" Value="@ChartListType.ToDo.ToString()">To Do</MudSelectItem>
-            <MudSelectItem T="string" Value="@ChartListType.Favorite.ToString()">Favorites</MudSelectItem>
+            <MudSelect T="string" AdornmentIcon="@Icons.Material.Filled.ListAlt" Label="Saved Charts" MultiSelection="true" @bind-SelectedValues="_filteredLists" Clearable="true">
+                <MudSelectItem T="string" Value="@ChartListType.ToDo.ToString()">To Do</MudSelectItem>
+                <MudSelectItem T="string" Value="@ChartListType.Favorite.ToString()">Favorites</MudSelectItem>
             
-        </MudSelect>
-    </MudItem>
+            </MudSelect>
+        </MudItem>
+    }
     <MudItem xs="12" sm="4">
         <MudTextField @bind-Value="_songNameFilter" Label="Song Name" Clearable="true" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" DebounceInterval="150" Variant="Variant.Text"></MudTextField>
     </MudItem>
 </MudGrid>
-<br/>
-<MudChip Variant="Variant.Outlined" Size="Size.Small" OnClick="@(()=>_scoreStateFilter=ScoreState.Ungraded)">Not Graded: @NotGradedCount</MudChip>
-<MudChip Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(()=>_scoreStateFilter=ScoreState.NotPassed)">Not Passed: @NotPassedCount</MudChip>
-<MudChip Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="@(()=>_scoreStateFilter=ScoreState.Passed)">Passed: @PassedCount</MudChip>
-<br/>
+@if (RequestedUserId != null)
+{
+    <br/>
+    <MudChip Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => _scoreStateFilter = ScoreState.Ungraded)">Not Graded: @NotGradedCount</MudChip>
+    <MudChip Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(() => _scoreStateFilter = ScoreState.NotPassed)">Not Passed: @NotPassedCount</MudChip>
+    <MudChip Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="@(() => _scoreStateFilter = ScoreState.Passed)">Passed: @PassedCount</MudChip>
+    <br/>
+}
 <MudTable T="BestAttemptDto" Items="@_charts" Filter="FilterChart"  Loading="@_isLoading" Breakpoint="Breakpoint.None">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Charts</MudText>
@@ -72,13 +80,20 @@
                 <MudMenuItem><MudCheckBox @bind-Checked="_isDifficultyShowing" Label="Difficulty"></MudCheckBox></MudMenuItem>
                 <MudMenuItem><MudCheckBox @bind-Checked="_isSongShowing" Label="Song"></MudCheckBox></MudMenuItem>
                 <MudMenuItem><MudCheckBox @bind-Checked="_isAdjustedRatingShowing" Label="Adjusted Difficulty"></MudCheckBox></MudMenuItem>
-                <MudMenuItem><MudCheckBox @bind-Checked="_isMyRatingShowing" Label="My Difficulty Adjustments"></MudCheckBox></MudMenuItem>
-                <MudMenuItem><MudCheckBox @bind-Checked="_isGradeShowing" Label="Letter Grade"></MudCheckBox></MudMenuItem>
-                <MudMenuItem><MudCheckBox @bind-Checked="_isBrokenShowing" Label="Broken"></MudCheckBox></MudMenuItem>
+                @if (CurrentUser.IsLoggedIn)
+                {
+                    <MudMenuItem><MudCheckBox @bind-Checked="_isMyRatingShowing" Label="My Difficulty Adjustments"></MudCheckBox></MudMenuItem>
+
+                }
                 <MudMenuItem><MudCheckBox @bind-Checked="_isVideoShowing" Label="Video"></MudCheckBox></MudMenuItem>
-                <MudMenuItem><MudCheckBox @bind-Checked="_isScoreShowing" Label="Score"></MudCheckBox></MudMenuItem>
-                <MudMenuItem><MudCheckBox @bind-Checked="_isRecordedOnShowing" Label="Recorded Date"></MudCheckBox></MudMenuItem>
-                <MudMenuItem><MudCheckBox @bind-Checked="_isActionsShowing" Label="Actions"></MudCheckBox></MudMenuItem>
+                @if (RequestedUserId != null)
+                {
+                    <MudMenuItem><MudCheckBox @bind-Checked="_isGradeShowing" Label="Letter Grade"></MudCheckBox></MudMenuItem>
+                    <MudMenuItem><MudCheckBox @bind-Checked="_isBrokenShowing" Label="Broken"></MudCheckBox></MudMenuItem>
+                    <MudMenuItem><MudCheckBox @bind-Checked="_isScoreShowing" Label="Score"></MudCheckBox></MudMenuItem>
+                    <MudMenuItem><MudCheckBox @bind-Checked="_isRecordedOnShowing" Label="Recorded Date"></MudCheckBox></MudMenuItem>
+                    <MudMenuItem><MudCheckBox @bind-Checked="_isActionsShowing" Label="Actions"></MudCheckBox></MudMenuItem>
+                }
             </MudMenu>
         </MudTooltip>
     </ToolBarContent>
@@ -441,10 +456,33 @@
         Snackbar.Add("Copied to clipboard!", Severity.Success);
     }
 
-    private async Task LoadCharts(Guid userId)
+    private async Task LoadCharts(Guid? userId)
     {
         _isLoading = true;
-        _charts = (await Mediator.Send(new GetBestChartAttemptsQuery(userId))).Select(BestAttemptDto.From).ToArray();
+
+        var charts = await Mediator.Send(new GetChartsQuery());
+        
+        var bestAttempts = userId == null ? new Dictionary<Guid, ChartAttempt>() :
+            (await Mediator.Send(new GetBestChartAttemptsQuery(userId.Value))).Where(b=>b.BestAttempt!=null)
+                .ToDictionary(b => b.Chart.Id,b=>(ChartAttempt)b.BestAttempt!);
+            
+        _charts = charts.Select(c => new BestAttemptDto
+        {
+            ChartId = c.Id,
+            Category = c.Type == Domain.Enums.ChartType.CoOp
+                ? nameof(Domain.Enums.ChartType.CoOp) + " x" + c.PlayerCount
+                : c.Type.ToString(),
+            IsBroken = !bestAttempts.ContainsKey(c.Id) || bestAttempts[c.Id].IsBroken,
+            LetterGrade = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].LetterGrade.ToString() : string.Empty,
+            SongName = c.Song.Name,
+            Level = c.Level,
+            ChartType = c.Type.ToString(),
+            ImagePath = c.Song.ImagePath.ToString(),
+            DifficultyShorthand = DifficultyLevel.ToShorthand(c.Type, c.Level),
+            Score = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].Score : null,
+            RecordedOn = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].RecordedOn : null
+        }).ToArray();
+
         var ratings = await Mediator.Send(new GetChartRatingsQuery());
         _adjustedDifficulties = ratings.ToDictionary(r => r.ChartId);
         foreach (var chart in _charts)
@@ -463,16 +501,20 @@
     }
     protected override async Task OnInitializedAsync()
     {
-        if (RequestedUserId == null)
+        if (RequestedUserId == null && CurrentUser.IsLoggedIn)
         {
-            if (!CurrentUser.IsLoggedIn)
-            {
-                NavManager.NavigateTo("/Login");
-                return;
-            }
             RequestedUserId = CurrentUser.User.Id;
         }
-        await LoadCharts(RequestedUserId.Value);
+        if (RequestedUserId == null)
+        {
+
+            _isGradeShowing = false;
+            _isBrokenShowing = false;
+            _isActionsShowing = false;
+            _isRecordedOnShowing = false;
+            _isAdjustedRatingShowing = true;
+        }
+        await LoadCharts(RequestedUserId);
         if (CurrentUser.IsLoggedIn)
         {
             var chartSaves = (await Mediator.Send(new GetSavedChartsQuery())).ToArray();

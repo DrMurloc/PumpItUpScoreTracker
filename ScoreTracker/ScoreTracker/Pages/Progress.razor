@@ -276,7 +276,7 @@
         {
             if (!CurrentUser.IsLoggedIn)
             {
-                NavManager.NavigateTo("/Login");
+                NavManager.NavigateTo("/Charts");
                 return;
             }
             RequestedUserId = CurrentUser.User.Id;

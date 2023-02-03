@@ -75,7 +75,7 @@
     {
         if (!CurrentUser.IsLoggedIn)
         {
-            NavManager.NavigateTo("/Login");
+            NavManager.NavigateTo("/Charts");
             return;
         }
         _songNames = await Mediator.Send(new GetSongNamesQuery());
