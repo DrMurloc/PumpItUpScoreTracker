@@ -26,7 +26,15 @@
         <MudNavMenu>
             @if (CurrentUser.IsLoggedIn)
             {
+                <MudNavLink Href="/Account" Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" Edge="Edge.Start">Account</MudNavLink>
+                <MudDivider DividerType="DividerType.Middle"></MudDivider>
                 <MudNavLink Href="/" Icon="@Icons.Filled.Description">Record Score</MudNavLink>
+                <MudDivider DividerType="DividerType.Middle"></MudDivider>
+            }
+            else
+            {
+                
+                <MudNavLink Href="/Login" Icon="@Icons.Material.Filled.NoAccounts" Color="Color.Inherit" Edge="Edge.Start">Log In</MudNavLink>
                 <MudDivider DividerType="DividerType.Middle"></MudDivider>
             }
             <MudNavLink Href="/Charts" Icon="@Icons.Filled.List">Charts List</MudNavLink>
