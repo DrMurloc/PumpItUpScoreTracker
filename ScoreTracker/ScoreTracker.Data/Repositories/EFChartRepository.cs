@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Enums;
-using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
@@ -54,17 +53,6 @@ public sealed class EFChartRepository : IChartRepository
             .SingleAsync(cancellationToken);
     }
 
-    public async Task<Chart> GetChart(Name songName, ChartType chartType, DifficultyLevel level,
-        CancellationToken cancellationToken = default)
-    {
-        if (!await _database.Song.AnyAsync(s => s.Name == (string)songName, cancellationToken))
-            throw new SongNotFoundException();
-        return await (from s in _database.Song
-                join c in _database.Chart on s.Id equals c.SongId
-                where s.Name == (string)songName && c.Type == chartType.ToString() && c.Level == (int)level
-                select new Chart(c.Id, new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level))
-            .FirstOrDefaultAsync(cancellationToken) ?? throw new ChartNotFoundException();
-    }
 
     public async Task<IEnumerable<Chart>> GetChartsForSong(Name songName, CancellationToken cancellationToken = default)
     {

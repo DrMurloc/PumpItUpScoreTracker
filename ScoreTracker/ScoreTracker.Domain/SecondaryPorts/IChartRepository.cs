@@ -13,9 +13,6 @@ public interface IChartRepository
 
     Task<Chart> GetChart(Guid chartId, CancellationToken cancellationToken = default);
 
-    Task<Chart> GetChart(Name songName, ChartType chartType, DifficultyLevel level,
-        CancellationToken cancellationToken = default);
-
     Task<IEnumerable<Chart>> GetChartsForSong(Name songName, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<Chart>> GetCoOpCharts(CancellationToken cancellationToken = default);
