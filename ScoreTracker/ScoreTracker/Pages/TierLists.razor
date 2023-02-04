@@ -18,7 +18,7 @@
 
 <MudGrid>
     <MudItem xs="12" sm="6">
-        <MudSelect T="int" AdornmentIcon="@Icons.Filled.Bolt" Label="Difficulty Level" Value="_difficultyFilter" ValueChanged="@(d=>UpdateSelection(d,_chartTypeFilter))" Clearable="true" Disabled="_chartTypeFilter==ChartType.CoOp.ToString()">
+        <MudSelect T="int" AdornmentIcon="@Icons.Filled.Bolt" Label="Difficulty Level" Value="_difficultyFilter" ValueChanged="@(d=>UpdateSelection(d,_chartTypeFilter))" Disabled="_chartTypeFilter==ChartType.CoOp.ToString()">
             @foreach (var level in Enumerable.Range(DifficultyLevel.Min,DifficultyLevel.Max))
             {
                 <MudSelectItem T="int" Value="@level">@level</MudSelectItem>
@@ -26,7 +26,7 @@
         </MudSelect>
     </MudItem>
     <MudItem xs="12" sm="6">
-        <MudSelect T="string" AdornmentIcon="@Icons.Filled.Category" Label="Chart Type" Value="_chartTypeFilter" ValueChanged="@(c=>UpdateSelection(_difficultyFilter,c))" Clearable="true">
+        <MudSelect T="string" AdornmentIcon="@Icons.Filled.Category" Label="Chart Type" Value="_chartTypeFilter" ValueChanged="@(c=>UpdateSelection(_difficultyFilter,c))">
             @foreach (var type in Enum.GetValues<ChartType>())
             {
                 @if (type == ChartType.CoOp)
