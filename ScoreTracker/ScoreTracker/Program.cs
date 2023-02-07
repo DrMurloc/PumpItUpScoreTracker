@@ -21,7 +21,12 @@ var discordConfig = builder.Configuration.GetSection("Discord").Get<DiscordConfi
 var googleConfig = builder.Configuration.GetSection("Google").Get<GoogleConfiguration>();
 var facebookConfig = builder.Configuration.GetSection("Facebook").Get<FacebookConfiguration>();
 builder.Services.AddAuthentication("DefaultAuthentication")
-    .AddCookie("DefaultAuthentication", o => o.ExpireTimeSpan = TimeSpan.FromDays(30))
+    .AddCookie("DefaultAuthentication", o =>
+    {
+        o.SlidingExpiration = true;
+        o.ExpireTimeSpan = TimeSpan.FromDays(30);
+        o.Cookie.MaxAge = o.ExpireTimeSpan;
+    })
     .AddDiscord("Discord", o =>
     {
         o.ClientId = discordConfig.ClientId;
@@ -46,6 +51,13 @@ builder.Services.AddBlazorApplicationInsights()
     .AddInfrastructure(builder.Configuration.GetSection("SQL").Get<SqlConfiguration>())
     .AddTransient<IDateTimeOffsetAccessor, DateTimeOffsetAccessor>()
     .AddControllers();
+
+builder.Services.AddCookiePolicy(opts =>
+{
+    opts.CheckConsentNeeded = ctx => false;
+    opts.OnAppendCookie = ctx => { ctx.CookieOptions.Expires = DateTimeOffset.UtcNow.AddDays(30); };
+});
+;
 
 var app = builder.Build();
 
