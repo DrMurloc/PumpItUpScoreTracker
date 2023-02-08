@@ -81,6 +81,7 @@
                 <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.SongImage)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.SongImage))" Label="Song Image"></MudCheckBox></MudMenuItem>
                 <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.SongName)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.SongName))" Label="Song Name"></MudCheckBox></MudMenuItem>
                 <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.AdjustedRating)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.AdjustedRating))" Label="Adjusted Difficulty"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.RatingCount)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.RatingCount))" Label="Rating Count"></MudCheckBox></MudMenuItem>
                 @if (CurrentUser.IsLoggedIn)
                 {
                     <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.MyRating)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.MyRating))" Label="My Difficulty Adjustments"></MudCheckBox></MudMenuItem>
@@ -114,6 +115,10 @@
         @if (ColumnStatus(ColumnEnum.AdjustedRating))
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>_adjustedDifficulties[e.ChartId].Difficulty">Adjusted Difficulty</MudTableSortLabel></MudTh>
+        }
+        @if (ColumnStatus(ColumnEnum.RatingCount))
+        {
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>_adjustedDifficulties[e.ChartId].RatingCount">Rating Count</MudTableSortLabel></MudTh>
         }
         @if (ColumnStatus(ColumnEnum.MyRating))
         {
@@ -184,6 +189,12 @@
                         <MudText>@($"{@_adjustedDifficulties[@context.ChartId].Difficulty:N2}")</MudText>
                     </MudTooltip>
                 }
+            </MudTd>
+        }
+        @if (ColumnStatus(ColumnEnum.RatingCount))
+        {
+            <MudTd>
+                <MudText>@_adjustedDifficulties[context.ChartId].RatingCount</MudText>
             </MudTd>
         }
         @if (ColumnStatus(ColumnEnum.MyRating))
@@ -629,6 +640,7 @@
         Score,
         RecordedOn,
         AdjustedRating,
+        RatingCount,
         Actions,
         Video
     }
