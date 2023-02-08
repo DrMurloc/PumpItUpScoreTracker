@@ -14,4 +14,9 @@ public interface IUserRepository
 
     Task<User?> GetUserByExternalLogin(string loginProviderName, string externalId,
         CancellationToken cancellationToken = default);
+
+    Task<IDictionary<string, string>> GetUserUiSettings(Guid userId, CancellationToken cancellationToken = default);
+
+    Task SaveUserUiSettings(Guid userId, IDictionary<string, string> settings,
+        CancellationToken cancellationToken = default);
 }

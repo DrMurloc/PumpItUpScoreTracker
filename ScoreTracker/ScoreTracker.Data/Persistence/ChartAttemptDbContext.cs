@@ -24,10 +24,16 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<SavedChartEntity> SavedChart { get; set; }
     public DbSet<UserChartDifficultyRatingEntity> UserChartDifficultyRating { get; set; }
     public DbSet<ChartDifficultyRatingEntity> ChartDifficultyRating { get; set; }
+    public DbSet<UserSettingsEntity> UserSettings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.HasDefaultSchema("scores");
+
+        builder.Entity<UserSettingsEntity>().ToTable("UserSettings")
+            .HasOne<UserEntity>()
+            .WithMany()
+            .HasForeignKey(us => us.UserId);
 
         builder.Entity<BestAttemptEntity>().ToTable("BestAttempt")
             .HasOne<ChartEntity>()

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Models;
@@ -72,5 +73,34 @@ public sealed class EFUserRepository : IUserRepository
             where e.LoginProvider == loginProviderName
                   && e.ExternalId == externalId
             select new User(u.Id, u.Name, u.IsPublic)).SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IDictionary<string, string>> GetUserUiSettings(Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var settings = await _database.UserSettings.FirstOrDefaultAsync(us => us.UserId == userId, cancellationToken);
+
+        if (settings == null) return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        return JsonSerializer.Deserialize<Dictionary<string, string>>(settings.UiSettings) ??
+               new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    }
+
+    public async Task SaveUserUiSettings(Guid userId, IDictionary<string, string> settings,
+        CancellationToken cancellationToken = default)
+    {
+        var userSettings =
+            await _database.UserSettings.FirstOrDefaultAsync(us => us.UserId == userId, cancellationToken);
+
+        if (userSettings == null)
+            await _database.UserSettings.AddAsync(new UserSettingsEntity
+            {
+                UserId = userId,
+                UiSettings = JsonSerializer.Serialize(settings)
+            }, cancellationToken);
+        else
+            userSettings.UiSettings = JsonSerializer.Serialize(settings);
+
+        await _database.SaveChangesAsync(cancellationToken);
     }
 }

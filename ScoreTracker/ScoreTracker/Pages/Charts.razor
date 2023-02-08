@@ -77,67 +77,67 @@
         }
         <MudTooltip Text="Columns">
             <MudMenu Icon="@Icons.Material.Filled.ViewColumn">
-                <MudMenuItem><MudCheckBox @bind-Checked="_isDifficultyShowing" Label="Difficulty"></MudCheckBox></MudMenuItem>
-                <MudMenuItem><MudCheckBox @bind-Checked="_isSongShowing" Label="Song"></MudCheckBox></MudMenuItem>
-                <MudMenuItem><MudCheckBox @bind-Checked="_isAdjustedRatingShowing" Label="Adjusted Difficulty"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.Difficulty)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.Difficulty))" Label="Difficulty"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.SongImage)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.SongImage))" Label="Song"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.AdjustedRating)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.AdjustedRating))" Label="Adjusted Difficulty"></MudCheckBox></MudMenuItem>
                 @if (CurrentUser.IsLoggedIn)
                 {
-                    <MudMenuItem><MudCheckBox @bind-Checked="_isMyRatingShowing" Label="My Difficulty Adjustments"></MudCheckBox></MudMenuItem>
+                    <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.MyRating)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.MyRating))" Label="My Difficulty Adjustments"></MudCheckBox></MudMenuItem>
 
                 }
-                <MudMenuItem><MudCheckBox @bind-Checked="_isVideoShowing" Label="Video"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.Video)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.Video))" Label="Video"></MudCheckBox></MudMenuItem>
                 @if (RequestedUserId != null)
                 {
-                    <MudMenuItem><MudCheckBox @bind-Checked="_isGradeShowing" Label="Letter Grade"></MudCheckBox></MudMenuItem>
-                    <MudMenuItem><MudCheckBox @bind-Checked="_isBrokenShowing" Label="Broken"></MudCheckBox></MudMenuItem>
-                    <MudMenuItem><MudCheckBox @bind-Checked="_isScoreShowing" Label="Score"></MudCheckBox></MudMenuItem>
-                    <MudMenuItem><MudCheckBox @bind-Checked="_isRecordedOnShowing" Label="Recorded Date"></MudCheckBox></MudMenuItem>
-                    <MudMenuItem><MudCheckBox @bind-Checked="_isActionsShowing" Label="Actions"></MudCheckBox></MudMenuItem>
+                    <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.Grade)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.Grade))" Label="Letter Grade"></MudCheckBox></MudMenuItem>
+                    <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.Broken)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.Broken))" Label="Broken"></MudCheckBox></MudMenuItem>
+                    <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.Score)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.Score))" Label="Score"></MudCheckBox></MudMenuItem>
+                    <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.RecordedOn)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.RecordedOn))" Label="Recorded Date"></MudCheckBox></MudMenuItem>
+                    <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.Actions)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.Actions))" Label="Actions"></MudCheckBox></MudMenuItem>
                 }
             </MudMenu>
         </MudTooltip>
     </ToolBarContent>
     <HeaderContent>
-        @if (_isDifficultyShowing)
+        @if (ColumnStatus(ColumnEnum.Difficulty))
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Level">Level</MudTableSortLabel></MudTh>
         }
-        @if (_isSongShowing)
+        @if (ColumnStatus(ColumnEnum.SongImage))
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.SongName" InitialDirection="SortDirection.Ascending">Song</MudTableSortLabel></MudTh>
         }
-        @if (_isAdjustedRatingShowing)
+        @if (ColumnStatus(ColumnEnum.AdjustedRating))
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>_adjustedDifficulties[e.ChartId].Difficulty">Adjusted Difficulty</MudTableSortLabel></MudTh>
         }
-        @if (_isMyRatingShowing)
+        @if (ColumnStatus(ColumnEnum.MyRating))
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Level + .5 + (_adjustedDifficulties[e.ChartId].MyRating?.GetAdjustment()??0)">
                 My Difficulty Adjustments
             </MudTableSortLabel></MudTh>
         }
-        @if (_isVideoShowing)
+        @if (ColumnStatus(ColumnEnum.Video))
         {
             <MudTh>Video</MudTh>
         }
-        @if (_isGradeShowing)
+        @if (ColumnStatus(ColumnEnum.Grade))
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.LetterGrade">Letter</MudTableSortLabel></MudTh>
         }
-        @if (_isBrokenShowing)
+        @if (ColumnStatus(ColumnEnum.Broken))
         {
             
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.IsBroken">Broken</MudTableSortLabel></MudTh>
         }
-        @if (_isScoreShowing)
+        @if (ColumnStatus(ColumnEnum.Score))
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Score">Score</MudTableSortLabel></MudTh>
         }
-        @if (_isRecordedOnShowing)
+        @if (ColumnStatus(ColumnEnum.RecordedOn))
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.RecordedOn">Recorded On</MudTableSortLabel></MudTh>
         }
-        @if (CurrentUser.IsLoggedIn && _isActionsShowing)
+        @if (CurrentUser.IsLoggedIn && ColumnStatus(ColumnEnum.Actions))
         {
             <MudTh>
                 Actions
@@ -145,7 +145,7 @@
         }
     </HeaderContent>
     <RowTemplate>
-        @if (_isDifficultyShowing)
+        @if (ColumnStatus(ColumnEnum.Difficulty))
         {
             
             <MudTd>
@@ -154,7 +154,7 @@
                 </MudTooltip>
             </MudTd>
         }
-        @if (_isSongShowing)
+        @if (ColumnStatus(ColumnEnum.SongImage))
         {
             
             <MudTd>
@@ -163,7 +163,7 @@
                 </MudTooltip>
             </MudTd>
         }
-        @if (_isAdjustedRatingShowing)
+        @if (ColumnStatus(ColumnEnum.AdjustedRating))
         {
             <MudTd>
                 @if (context.ChartType != ChartType.CoOp.ToString())
@@ -174,7 +174,7 @@
                 }
             </MudTd>
         }
-        @if (_isMyRatingShowing)
+        @if (ColumnStatus(ColumnEnum.MyRating))
         {
             <MudTh>
                 
@@ -189,7 +189,7 @@
                 }
             </MudTh>
         }
-        @if (_isVideoShowing)
+        @if (ColumnStatus(ColumnEnum.Video))
         {
             <MudTd>
                 @if (!string.IsNullOrWhiteSpace(context.VideoUrl))
@@ -207,7 +207,7 @@
             </MudTd>
         }
 
-        @if (_isGradeShowing)
+        @if (ColumnStatus(ColumnEnum.Grade))
         {
             
             <MudTd>
@@ -227,7 +227,7 @@
                 }
             </MudTd>
         }
-        @if (_isBrokenShowing)
+        @if (ColumnStatus(ColumnEnum.Broken))
         {
             <MudTd>
                 @if (CanEdit)
@@ -240,7 +240,7 @@
                 }
             </MudTd>
         }
-        @if (_isScoreShowing)
+        @if (ColumnStatus(ColumnEnum.Score))
         {
             <MudTd>
                 @if (CanEdit)
@@ -254,13 +254,13 @@
                 
             </MudTd>
         }
-        @if (_isRecordedOnShowing)
+        @if (ColumnStatus(ColumnEnum.RecordedOn))
         {
             <MudTd>
                 <MudTooltip Text="@context.RecordedOn?.ToString("MMM dd yyyy")">@context.RecordedOn?.ToString("MM/dd/yyyy")</MudTooltip>
             </MudTd>
         }
-        @if (CurrentUser.IsLoggedIn && _isActionsShowing)
+        @if (CurrentUser.IsLoggedIn && ColumnStatus(ColumnEnum.Actions))
         {
             <MudTh>
                 <MudMenu Icon="@Icons.Material.Filled.MoreVert">
@@ -354,18 +354,10 @@
     private IDictionary<Guid, ChartDifficultyRatingRecord> _adjustedDifficulties = new Dictionary<Guid, ChartDifficultyRatingRecord>();
     private MudDataGrid<BestAttemptDto>? _dataGrid;
 
-    private bool _isDifficultyShowing = true;
-    private bool _isMyRatingShowing = false;
-    private bool _isSongShowing = true;
-    private bool _isGradeShowing = true;
-    private bool _isBrokenShowing = true;
-    private bool _isScoreShowing = false;
-    private bool _isRecordedOnShowing = false;
-    private bool _isAdjustedRatingShowing = false;
-    private bool _isActionsShowing = true;
-    private bool _isVideoShowing = true;
+
     private bool _isLoading = true;
     private int? _difficultyFilter = null;
+    private IDictionary<string, string> _uiSettings = new Dictionary<string, string>();
     private string? _chartTypeFilter = null;
     private string _songNameFilter = string.Empty;
     private ScoreState? _scoreStateFilter = null;
@@ -505,15 +497,6 @@
         {
             RequestedUserId = CurrentUser.User.Id;
         }
-        if (RequestedUserId == null)
-        {
-
-            _isGradeShowing = false;
-            _isBrokenShowing = false;
-            _isActionsShowing = false;
-            _isRecordedOnShowing = false;
-            _isAdjustedRatingShowing = true;
-        }
         await LoadCharts(RequestedUserId);
         if (CurrentUser.IsLoggedIn)
         {
@@ -522,6 +505,21 @@
             
             _todoCharts = chartSaves.Where(cs => cs.ListType is ChartListType.ToDo).Select(cs => cs.ChartId).Distinct().ToHashSet();
 
+            _uiSettings = await Mediator.Send(new GetUserUiSettingsQuery());
+        }
+
+        foreach (var column in Enum.GetValues<ColumnEnum>())
+        {
+            var settingName = ColumnSettingName(column);
+
+            if (_uiSettings.ContainsKey(settingName)) continue;
+
+
+            _uiSettings[settingName] = CurrentUser.IsLoggedIn ? DefaultLoggedInColumns.Contains(column).ToString() : DefaultNotLoggedInColumns.Contains(column).ToString();
+            if (CurrentUser.IsLoggedIn)
+            {
+                await Mediator.Send(new SaveUserUiSettingCommand(settingName, _uiSettings[settingName]));
+            }
         }
     }
     
@@ -587,6 +585,41 @@
         
     }
 
+    private bool ColumnStatus(ColumnEnum column)
+    {
+        
+        var settingName = ColumnSettingName(column);
+        return _uiSettings.ContainsKey(settingName) && _uiSettings[settingName] == true.ToString();
+    }
+    private async Task ToggleColumn(ColumnEnum column)
+    {
+        var settingName = ColumnSettingName(column);
+        
+        _uiSettings[settingName] = (_uiSettings[settingName] == false.ToString()).ToString();
+
+        if (CurrentUser.IsLoggedIn)
+        {
+            await Mediator.Send(new SaveUserUiSettingCommand(settingName, _uiSettings[settingName]));
+        }
+    }
+    private static string ColumnSettingName(ColumnEnum column) => $"Charts__Column__{column.ToString()}";
+
+    private static readonly ISet<ColumnEnum> DefaultLoggedInColumns = new HashSet<ColumnEnum>(new[] { ColumnEnum.Difficulty, ColumnEnum.SongImage, ColumnEnum.Grade, ColumnEnum.Broken, ColumnEnum.Video, ColumnEnum.Actions });
+    private static readonly ISet<ColumnEnum> DefaultNotLoggedInColumns = new HashSet<ColumnEnum>(new[] { ColumnEnum.Difficulty, ColumnEnum.Video, ColumnEnum.AdjustedRating, ColumnEnum.SongImage });
+    private enum ColumnEnum
+    {
+        Difficulty,
+        MyRating,
+        SongImage,
+        SongName,
+        Grade,
+        Broken,
+        Score,
+        RecordedOn,
+        AdjustedRating,
+        Actions,
+        Video
+    }
     private enum ScoreState
     {
         Ungraded,
