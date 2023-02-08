@@ -27,14 +27,8 @@
     </MudItem>
     <MudItem xs="12" sm="6">
         <MudSelect T="string" AdornmentIcon="@Icons.Filled.Category" Label="Chart Type" Value="_chartTypeFilter" ValueChanged="@(c=>UpdateSelection(_difficultyFilter,c))">
-            @foreach (var type in Enum.GetValues<ChartType>())
-            {
-                @if (type == ChartType.CoOp)
-                {
-                    continue;
-                }
-                <MudSelectItem T="string" Value="@type.ToString()">@type.ToString()</MudSelectItem>
-            }
+            <MudSelectItem T="string" Value="ChartType.Single.ToString()">Singles</MudSelectItem>
+            <MudSelectItem T="string" Value="ChartType.Double.ToString()">Doubles</MudSelectItem>
         </MudSelect>
     </MudItem>
 </MudGrid>
@@ -134,9 +128,27 @@
     {
         _difficultyFilter = difficulty;
         _chartTypeFilter = chartType;
-        var charts = await Mediator.Send(new GetChartsQuery(difficulty,Enum.Parse<ChartType>(chartType)));
-        var ratings = (await Mediator.Send(new GetChartRatingsQuery(difficulty, Enum.Parse<ChartType>(chartType)))).ToDictionary(c => c.ChartId);
+        var type = Enum.Parse<ChartType>(chartType);
+        Chart[] charts;
+        IDictionary<Guid, ChartDifficultyRatingRecord> ratings;
+        if (type == ChartType.Single)
+        {
+            charts = (await Mediator.Send(new GetChartsQuery(difficulty, ChartType.Single)))
+                .Concat(await Mediator.Send(new GetChartsQuery(difficulty, ChartType.SinglePerformance))).ToArray();
 
+            ratings = (await Mediator.Send(new GetChartRatingsQuery(difficulty, ChartType.Single)))
+        .Concat(await Mediator.Send(new GetChartRatingsQuery(difficulty, ChartType.SinglePerformance))).ToDictionary(c => c.ChartId);
+
+        }
+        else
+        {
+
+            charts = (await Mediator.Send(new GetChartsQuery(difficulty, ChartType.Double)))
+                .Concat(await Mediator.Send(new GetChartsQuery(difficulty, ChartType.DoublePerformance))).ToArray();
+
+            ratings = (await Mediator.Send(new GetChartRatingsQuery(difficulty, ChartType.Double)))
+                .Concat(await Mediator.Send(new GetChartRatingsQuery(difficulty, ChartType.DoublePerformance))).ToDictionary(c => c.ChartId);
+        }
         _overratedCharts = new List<Chart>();
         _veryEasyCharts = new List<Chart>();
         _easyCharts = new List<Chart>();
