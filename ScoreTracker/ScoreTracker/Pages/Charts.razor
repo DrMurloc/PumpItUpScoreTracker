@@ -78,7 +78,8 @@
         <MudTooltip Text="Columns">
             <MudMenu Icon="@Icons.Material.Filled.ViewColumn">
                 <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.Difficulty)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.Difficulty))" Label="Difficulty"></MudCheckBox></MudMenuItem>
-                <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.SongImage)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.SongImage))" Label="Song"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.SongImage)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.SongImage))" Label="Song Image"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.SongName)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.SongName))" Label="Song Name"></MudCheckBox></MudMenuItem>
                 <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.AdjustedRating)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.AdjustedRating))" Label="Adjusted Difficulty"></MudCheckBox></MudMenuItem>
                 @if (CurrentUser.IsLoggedIn)
                 {
@@ -104,7 +105,11 @@
         }
         @if (ColumnStatus(ColumnEnum.SongImage))
         {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.SongName" InitialDirection="SortDirection.Ascending">Song</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.SongName" InitialDirection="SortDirection.Ascending">Song Image</MudTableSortLabel></MudTh>
+        }
+        @if (ColumnStatus(ColumnEnum.SongName))
+        {
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.SongName">Song Name</MudTableSortLabel></MudTh>
         }
         @if (ColumnStatus(ColumnEnum.AdjustedRating))
         {
@@ -161,6 +166,13 @@
                 <MudTooltip Text="@context.SongName">
                     <MudImage Src="@context.ImagePath" Height="35" Alt="@context.SongName" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
                 </MudTooltip>
+            </MudTd>
+        }
+        @if (ColumnStatus(ColumnEnum.SongName))
+        {
+            
+            <MudTd>
+                <MudText>@context.SongName</MudText>
             </MudTd>
         }
         @if (ColumnStatus(ColumnEnum.AdjustedRating))
