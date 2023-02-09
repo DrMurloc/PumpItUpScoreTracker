@@ -15,10 +15,10 @@
 
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
-
+@inject NavigationManager NavManager;
 <MudGrid>
     <MudItem xs="12" sm="6">
-        <MudSelect T="int" AdornmentIcon="@Icons.Filled.Bolt" Label="Difficulty Level" Value="_difficultyFilter" ValueChanged="@(d=>UpdateSelection(d,_chartTypeFilter))" Disabled="_chartTypeFilter==ChartType.CoOp.ToString()">
+        <MudSelect T="int" AdornmentIcon="@Icons.Filled.Bolt" Label="Difficulty Level" Value="DifficultyFilter" ValueChanged="@(d=>UpdateSelection(d,ChartTypeFilter))">
             @foreach (var level in Enumerable.Range(DifficultyLevel.Min,DifficultyLevel.Max))
             {
                 <MudSelectItem T="int" Value="@level">@level</MudSelectItem>
@@ -26,7 +26,7 @@
         </MudSelect>
     </MudItem>
     <MudItem xs="12" sm="6">
-        <MudSelect T="string" AdornmentIcon="@Icons.Filled.Category" Label="Chart Type" Value="_chartTypeFilter" ValueChanged="@(c=>UpdateSelection(_difficultyFilter,c))">
+        <MudSelect T="string" AdornmentIcon="@Icons.Filled.Category" Label="Chart Type" Value="ChartTypeFilter" ValueChanged="@(c=>UpdateSelection(DifficultyFilter,c))">
             <MudSelectItem T="string" Value="ChartType.Single.ToString()">Singles</MudSelectItem>
             <MudSelectItem T="string" Value="ChartType.Double.ToString()">Doubles</MudSelectItem>
         </MudSelect>
@@ -71,8 +71,6 @@
 </MudDialog>
 
 @code {
-    private int _difficultyFilter = 18;
-    private string _chartTypeFilter = ChartType.Double.ToString();
     private ICollection<Chart> _overratedCharts = Array.Empty<Chart>();
     private ICollection<Chart> _veryEasyCharts = Array.Empty<Chart>();
     private ICollection<Chart> _easyCharts = Array.Empty<Chart>();
@@ -86,6 +84,14 @@
     private string _currentVideo = "";
     private ISet<Guid> _passes = new HashSet<Guid>();
     private Guid _selectedChartId = Guid.Empty;
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "Difficulty")]
+    public int DifficultyFilter { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "ChartType")]
+    public string ChartTypeFilter { get; set; } = string.Empty;
 
     private void AttemptRegistered(Chart chart, ChartAttempt attempt)
     {
@@ -115,19 +121,43 @@
     
     protected override async Task OnInitializedAsync()
     {
-        _videos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId,cv=>cv.VideoUrl.ToString());
+        var isDifficultyValid = DifficultyFilter >= DifficultyLevel.Min && DifficultyFilter <= DifficultyLevel.Max;
+        var isChartTypeValid = !string.IsNullOrWhiteSpace(ChartTypeFilter) && (ChartTypeFilter.Equals(ChartType.Single.ToString()) || ChartTypeFilter.Equals(ChartType.Double.ToString()));
+        if (!isDifficultyValid || !isChartTypeValid)
+        {
+            DifficultyFilter = isDifficultyValid ? DifficultyFilter : 18;
+            ChartTypeFilter = isChartTypeValid ? ChartTypeFilter: ChartType.Double.ToString();
+            NavManager.NavigateTo(NavManager.GetUriWithQueryParameters(new Dictionary<string, object?>
+            {
+                { "Difficulty", DifficultyFilter },
+                { "ChartType", ChartTypeFilter }
+            }));
+        }
+
+        await UpdateSelection(DifficultyFilter, ChartTypeFilter);
+
+        _videos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl.ToString());
+
         if (CurrentUser.IsLoggedIn)
         {
             var attempts = await Mediator.Send(new GetBestChartAttemptsQuery(CurrentUser.User.Id));
             _passes = attempts.Where(a => !(a.BestAttempt?.IsBroken??true)).Select(a => a.Chart.Id).Distinct().ToHashSet();
         }
-        await UpdateSelection(_difficultyFilter, _chartTypeFilter);
     }
 
     private async Task UpdateSelection(int difficulty, string chartType)
     {
-        _difficultyFilter = difficulty;
-        _chartTypeFilter = chartType;
+        
+        if (DifficultyFilter != difficulty || ChartTypeFilter != chartType)
+        {
+            NavManager.NavigateTo(NavManager.GetUriWithQueryParameters(new Dictionary<string, object?>
+            {
+                { "Difficulty", difficulty },
+                { "ChartType", chartType }
+            }));
+            DifficultyFilter = difficulty;
+            ChartTypeFilter = chartType;
+        }
         var type = Enum.Parse<ChartType>(chartType);
         Chart[] charts;
         IDictionary<Guid, ChartDifficultyRatingRecord> ratings;
@@ -191,6 +221,7 @@
             }
 
         }
-    }
 
+    }
+    
 }
