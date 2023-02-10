@@ -76,7 +76,7 @@
             </MudTooltip>
         }
         <MudTooltip Text="Columns">
-            <MudMenu Icon="@Icons.Material.Filled.ViewColumn">
+            <MudMenu Icon="@Icons.Material.Filled.ViewColumn" MaxHeight="300">
                 <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.Difficulty)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.Difficulty))" Label="Difficulty"></MudCheckBox></MudMenuItem>
                 <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.SongImage)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.SongImage))" Label="Song Image"></MudCheckBox></MudMenuItem>
                 <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.SongName)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.SongName))" Label="Song Name"></MudCheckBox></MudMenuItem>
