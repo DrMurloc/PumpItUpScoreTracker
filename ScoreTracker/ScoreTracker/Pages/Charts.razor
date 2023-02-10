@@ -16,7 +16,7 @@
     @if (FilterStatus(FilterEnum.Difficulty))
     {
         <MudItem xs="6" sm="4">
-            <MudSelect T="int?" AdornmentIcon="@Icons.Filled.Bolt" Label="Difficulty Level" @bind-Value="@_difficultyFilter" Clearable="true" Disabled="_chartTypeFilter == ChartType.CoOp.ToString()">
+            <MudSelect T="int?" AdornmentIcon="@Icons.Filled.Bolt" Label="Difficulty Level" Value="@DifficultyFilter" ValueChanged="DifficultyFilterChanged" Clearable="true" Disabled="ChartTypeFilter == ChartType.CoOp.ToString()">
                 @foreach (var level in Enumerable.Range(DifficultyLevel.Min, DifficultyLevel.Max))
                 {
                     <MudSelectItem T="int?" Value="@level">@level</MudSelectItem>
@@ -27,10 +27,10 @@
     @if (FilterStatus(FilterEnum.ChartType))
     {
         <MudItem xs="6" sm="4">
-            <MudSelect T="string" AdornmentIcon="@Icons.Filled.Category" Label="Chart Type" @bind-Value="_chartTypeFilter" Clearable="true">
+            <MudSelect T="string" AdornmentIcon="@Icons.Filled.Category" Label="Chart Type" Value="ChartTypeFilter" ValueChanged="ChartTypeFilterChanged" Clearable="true">
                 @foreach (var type in Enum.GetValues<ChartType>())
                 {
-                    @if (type == ChartType.CoOp && _difficultyFilter != null)
+                    @if (type == ChartType.CoOp && DifficultyFilter != null)
                     {
                         continue;
                     }
@@ -46,7 +46,7 @@
         {
             
             <MudItem xs="6" sm="4">
-                <MudSelect T="ScoreState?" AdornmentIcon="@Icons.Filled.Rule" Label="Score State" @bind-Value="_scoreStateFilter" Clearable="true">
+                <MudSelect T="ScoreState?" AdornmentIcon="@Icons.Filled.Rule" Label="Score State" Value="_scoreStateFilter" ValueChanged="ScoreStateFilterChanged" Clearable="true">
                     @foreach (var ss in Enum.GetValues<ScoreState>())
                     {
                         <MudSelectItem T="ScoreState?" Value="@ss">@ss.ToString()</MudSelectItem>
@@ -58,7 +58,7 @@
         {
             <MudItem xs="6" sm="4">
 
-                <MudSelect T="string" AdornmentIcon="@Icons.Material.Filled.ListAlt" Label="Saved Charts" MultiSelection="true" @bind-SelectedValues="_filteredLists" Clearable="true">
+                <MudSelect T="string" AdornmentIcon="@Icons.Material.Filled.ListAlt" Label="Saved Charts" MultiSelection="true" SelectedValues="_chartListsFilter" SelectedValuesChanged="ChartListFilterChanged" Clearable="true">
                     <MudSelectItem T="string" Value="@ChartListType.ToDo.ToString()">To Do</MudSelectItem>
                     <MudSelectItem T="string" Value="@ChartListType.Favorite.ToString()">Favorites</MudSelectItem>
 
@@ -69,7 +69,7 @@
     @if (FilterStatus(FilterEnum.SongName))
     {
         <MudItem xs="12" sm="4">
-            <MudTextField @bind-Value="_songNameFilter" Label="Song Name" Clearable="true" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" DebounceInterval="150" Variant="Variant.Text"></MudTextField>
+            <MudTextField T="string" Value="SongNameFilter" ValueChanged="SongNameFilterChanged" Label="Song Name" Clearable="true" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" DebounceInterval="150" Variant="Variant.Text"></MudTextField>
         </MudItem>
     }
 </MudGrid>
@@ -405,8 +405,11 @@
     private bool _showVideoDialog;
     private bool _showNotificationDialog = false;
     [Parameter]
-    public Guid? RequestedUserId { get; set; }
+    public Guid? RequestedUserId { get => _requestedUserId;
+        set => _requestedUserId = value ?? (CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null);
+    }
 
+    private Guid? _requestedUserId;
     private bool CanEdit => CurrentUser.IsLoggedIn && CurrentUser.User.Id == RequestedUserId;
     private string ShareUrl => CurrentUser.IsLoggedIn ? $"{NavManager.BaseUri}{CurrentUser.User.Id}/Charts" : string.Empty;
     private BestAttemptDto[] _charts = Array.Empty<BestAttemptDto>();
@@ -414,44 +417,92 @@
 
 
     private bool _isLoading = true;
-    private int? _difficultyFilter = null;
+
+    [Parameter] [SupplyParameterFromQuery(Name = nameof(FilterEnum.Difficulty))] public int? DifficultyFilter { get; set; }
+
+    private void DifficultyFilterChanged(int? difficulty)
+    {
+        DifficultyFilter = difficulty;
+        NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(nameof(FilterEnum.Difficulty),difficulty));
+    }
+    [Parameter] [SupplyParameterFromQuery(Name=nameof(FilterEnum.ChartType))] public string? ChartTypeFilter { get; set; }
+
+    private void ChartTypeFilterChanged(string? chartType)
+    {
+        ChartTypeFilter = chartType;
+        
+        NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(nameof(FilterEnum.ChartType),chartType));
+    }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = nameof(FilterEnum.ScoreState))]
+    public string? ScoreStateFilterString
+    {
+        get => _scoreStateFilter?.ToString();
+        set => _scoreStateFilter =value==null?null: (Enum.TryParse<ScoreState>(value,out var v)?v:null);
+    }
+
+    private ScoreState? _scoreStateFilter;
+    private void ScoreStateFilterChanged(ScoreState? scoreState)
+    {
+            
+        NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(nameof(FilterEnum.ScoreState),scoreState?.ToString()));
+        
+    }
+    [Parameter] [SupplyParameterFromQuery(Name=nameof(FilterEnum.SavedCharts))] public string? ChartListsFilterString {
+        get => _chartListsFilter == null ? null : string.Join(',', _chartListsFilter);
+        set => _chartListsFilter = value?.Split(',');
+    }
+    
+    private IEnumerable<string>? _chartListsFilter { get; set; }
+    private void ChartListFilterChanged(IEnumerable<string>? chartLists)
+    {
+        _chartListsFilter = chartLists ?? Array.Empty<string>();
+
+        NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(nameof(FilterEnum.SavedCharts), _chartListsFilter.Any() ? string.Join(',', _chartListsFilter) : null));
+    }
+    [Parameter] [SupplyParameterFromQuery(Name=nameof(FilterEnum.SongName))] public string? SongNameFilter { get; set; }
+    private void SongNameFilterChanged(string? songName)
+    {
+        SongNameFilter=songName;
+        
+        NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(nameof(FilterEnum.SongName),string.IsNullOrWhiteSpace(songName)?null:songName));
+    }
+    
     private IDictionary<string, string> _uiSettings = new Dictionary<string, string>();
-    private string? _chartTypeFilter = null;
-    private string _songNameFilter = string.Empty;
-    private ScoreState? _scoreStateFilter = null;
+
     private IEnumerable<BestAttemptDto> FileredCharts => _charts.Where(FilterChart);
-    private IEnumerable<string> _filteredLists = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     private ISet<Guid> _favoriteCharts = new HashSet<Guid>();
     private ISet<Guid> _todoCharts = new HashSet<Guid>();
     private int NotGradedCount => FileredCharts.Count(c => string.IsNullOrWhiteSpace(c.LetterGrade));
     private int NotPassedCount => FileredCharts.Count(c => c.IsBroken);
     private int PassedCount => FileredCharts.Count(c => !string.IsNullOrWhiteSpace(c.LetterGrade) && !c.IsBroken);
     private string CountText(int count) => $"{count} votes";
-
+    
     private async Task SetScoreStateFilter(ScoreState state)
     {
-        _scoreStateFilter = state;
+        ScoreStateFilterChanged(state);
         await ToggleFilter(FilterEnum.ScoreState, true);
 
     }
     private bool FilterChart(BestAttemptDto chart)
     {
         var result = true;
-        if (!string.IsNullOrWhiteSpace(_songNameFilter))
+        if (!string.IsNullOrWhiteSpace(SongNameFilter))
         {
-            result = result && chart.SongName.Contains(_songNameFilter.Trim(), StringComparison.OrdinalIgnoreCase);
+            result = result && chart.SongName.Contains(SongNameFilter.Trim(), StringComparison.OrdinalIgnoreCase);
         }
-        if (_filteredLists.Any())
+        if (_chartListsFilter?.Any()??false)
         {
-            result = result && ((_filteredLists.Contains(ChartListType.Favorite.ToString()) && _favoriteCharts.Contains(chart.ChartId)) || (_filteredLists.Contains(ChartListType.ToDo.ToString()) && _todoCharts.Contains(chart.ChartId)));
+            result = result && ((_chartListsFilter.Contains(ChartListType.Favorite.ToString()) && _favoriteCharts.Contains(chart.ChartId)) || (_chartListsFilter.Contains(ChartListType.ToDo.ToString()) && _todoCharts.Contains(chart.ChartId)));
         }
-        if (_difficultyFilter != null)
+        if (DifficultyFilter != null)
         {
-            result = result && (chart.Level == _difficultyFilter.Value && chart.ChartType != ChartType.CoOp.ToString());
+            result = result && (chart.Level == DifficultyFilter.Value && chart.ChartType != ChartType.CoOp.ToString());
         }
-        if (!string.IsNullOrWhiteSpace(_chartTypeFilter))
+        if (!string.IsNullOrWhiteSpace(ChartTypeFilter))
         {
-            result = result && chart.ChartType == _chartTypeFilter;
+            result = result && chart.ChartType == ChartTypeFilter;
         }
         if (_scoreStateFilter != null)
         {
@@ -558,10 +609,6 @@
     }
     protected override async Task OnInitializedAsync()
     {
-        if (RequestedUserId == null && CurrentUser.IsLoggedIn)
-        {
-            RequestedUserId = CurrentUser.User.Id;
-        }
         await LoadCharts(RequestedUserId);
         if (CurrentUser.IsLoggedIn)
         {
