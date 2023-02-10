@@ -13,7 +13,7 @@
 <PageTitle>Best Attempts</PageTitle>
 
 <MudGrid>
-    @if (_isDifficultyFilterShowing)
+    @if (FilterStatus(FilterEnum.Difficulty))
     {
         <MudItem xs="6" sm="4">
             <MudSelect T="int?" AdornmentIcon="@Icons.Filled.Bolt" Label="Difficulty Level" @bind-Value="@_difficultyFilter" Clearable="true" Disabled="_chartTypeFilter == ChartType.CoOp.ToString()">
@@ -24,7 +24,7 @@
             </MudSelect>
         </MudItem>
     }
-    @if (_isChartTypeFilterShowing)
+    @if (FilterStatus(FilterEnum.ChartType))
     {
         <MudItem xs="6" sm="4">
             <MudSelect T="string" AdornmentIcon="@Icons.Filled.Category" Label="Chart Type" @bind-Value="_chartTypeFilter" Clearable="true">
@@ -42,7 +42,7 @@
 
     @if (RequestedUserId != null)
     {
-        @if (_isPassStateShowing)
+        @if (FilterStatus(FilterEnum.ScoreState))
         {
             
             <MudItem xs="6" sm="4">
@@ -54,7 +54,7 @@
                 </MudSelect>
             </MudItem>
         }
-        @if (_isSavedFilterShowing)
+        @if (FilterStatus(FilterEnum.SavedCharts))
         {
             <MudItem xs="6" sm="4">
 
@@ -66,7 +66,7 @@
             </MudItem>
         }
     }
-    @if (_isSongNameFilterShowing)
+    @if (FilterStatus(FilterEnum.SongName))
     {
         <MudItem xs="12" sm="4">
             <MudTextField @bind-Value="_songNameFilter" Label="Song Name" Clearable="true" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" DebounceInterval="150" Variant="Variant.Text"></MudTextField>
@@ -93,13 +93,13 @@
         }
         <MudTooltip Text="Filters">
             <MudMenu Icon="@Icons.Material.Filled.FilterList" MaxHeight="300">
-                <MudMenuItem><MudCheckBox T="bool" @bind-Checked="_isDifficultyFilterShowing" Label="Difficulty"></MudCheckBox></MudMenuItem>
-                <MudMenuItem><MudCheckBox T="bool" @bind-Checked="_isChartTypeFilterShowing" Label="Chart Type"></MudCheckBox></MudMenuItem>
-                <MudMenuItem><MudCheckBox T="bool" @bind-Checked="_isSongNameFilterShowing" Label="Song Name"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox T="bool" Checked="FilterStatus(FilterEnum.Difficulty)" CheckedChanged="@(_=>ToggleFilter(FilterEnum.Difficulty))" Label="Difficulty"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox T="bool" Checked="FilterStatus(FilterEnum.ChartType)" CheckedChanged="@(_=>ToggleFilter(FilterEnum.ChartType))" Label="Chart Type"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox T="bool" Checked="FilterStatus(FilterEnum.SongName)" CheckedChanged="@(_=>ToggleFilter(FilterEnum.SongName))" Label="Song Name"></MudCheckBox></MudMenuItem>
                 @if (CurrentUser.IsLoggedIn)
                 {
-                    <MudMenuItem><MudCheckBox T="bool" @bind-Checked="_isPassStateShowing" Label="Score State"></MudCheckBox></MudMenuItem>
-                    <MudMenuItem><MudCheckBox T="bool" @bind-Checked="_isSavedFilterShowing" Label="Saved Charts"></MudCheckBox></MudMenuItem>
+                    <MudMenuItem><MudCheckBox T="bool" Checked="FilterStatus(FilterEnum.ScoreState)" CheckedChanged="@(_=>ToggleFilter(FilterEnum.ScoreState))" Label="Score State"></MudCheckBox></MudMenuItem>
+                    <MudMenuItem><MudCheckBox T="bool" Checked="FilterStatus(FilterEnum.SavedCharts)" CheckedChanged="@(_=>ToggleFilter(FilterEnum.SavedCharts))" Label="Saved Charts"></MudCheckBox></MudMenuItem>
                 }
             </MudMenu>
         </MudTooltip>
@@ -395,11 +395,6 @@
     private bool _showShareDialog;
     private string _currentVideo = "";
     private bool _showVideoDialog;
-    private bool _isDifficultyFilterShowing = true;
-    private bool _isChartTypeFilterShowing = true;
-    private bool _isPassStateShowing = false;
-    private bool _isSongNameFilterShowing = false;
-    private bool _isSavedFilterShowing = false;
     [Parameter]
     public Guid? RequestedUserId { get; set; }
 
@@ -426,10 +421,11 @@
     private int PassedCount => FileredCharts.Count(c => !string.IsNullOrWhiteSpace(c.LetterGrade) && !c.IsBroken);
     private string CountText(int count) => $"{count} votes";
 
-    private void SetScoreStateFilter(ScoreState state)
+    private async Task SetScoreStateFilter(ScoreState state)
     {
         _scoreStateFilter = state;
-        _isPassStateShowing = true;
+        await ToggleFilter(FilterEnum.ScoreState, true);
+
     }
     private bool FilterChart(BestAttemptDto chart)
     {
@@ -569,7 +565,17 @@
 
             _uiSettings = await Mediator.Send(new GetUserUiSettingsQuery());
         }
+        foreach (var filter in Enum.GetValues<FilterEnum>())
+        {
+            var settingName = FilterSettingName(filter);
+            if (_uiSettings.ContainsKey(settingName)) continue;
 
+            _uiSettings[settingName] = DefaultFilters.Contains(filter).ToString();
+            if (CurrentUser.IsLoggedIn)
+            {
+                await Mediator.Send(new SaveUserUiSettingCommand(settingName,true.ToString()));
+            }
+        }
         foreach (var column in Enum.GetValues<ColumnEnum>())
         {
             var settingName = ColumnSettingName(column);
@@ -647,6 +653,23 @@
         
     }
 
+    private bool FilterStatus(FilterEnum filter)
+    {
+        var settingName = FilterSettingName(filter);
+        return _uiSettings.ContainsKey(settingName) && _uiSettings[settingName] == true.ToString();
+    }
+
+    private async Task ToggleFilter(FilterEnum filter, bool? newState=null)
+    {
+        var settingName = FilterSettingName(filter);
+        _uiSettings[settingName] =newState?.ToString()?? (_uiSettings[settingName] == false.ToString()).ToString();
+        if (CurrentUser.IsLoggedIn)
+        {
+            await Mediator.Send(new SaveUserUiSettingCommand(settingName, _uiSettings[settingName]));
+        }
+    }
+
+    private string FilterSettingName(FilterEnum filter) => $"Charts__Filter__{filter}";
     private bool ColumnStatus(ColumnEnum column)
     {
         
@@ -665,9 +688,18 @@
         }
     }
     private static string ColumnSettingName(ColumnEnum column) => $"Charts__Column__{column.ToString()}";
-
+    private static readonly ISet<FilterEnum> DefaultFilters = new HashSet<FilterEnum>(new[] { FilterEnum.Difficulty, FilterEnum.ChartType });
     private static readonly ISet<ColumnEnum> DefaultLoggedInColumns = new HashSet<ColumnEnum>(new[] { ColumnEnum.Difficulty, ColumnEnum.SongImage, ColumnEnum.Grade, ColumnEnum.Broken, ColumnEnum.Video, ColumnEnum.Actions });
     private static readonly ISet<ColumnEnum> DefaultNotLoggedInColumns = new HashSet<ColumnEnum>(new[] { ColumnEnum.Difficulty, ColumnEnum.Video, ColumnEnum.AdjustedRating, ColumnEnum.SongImage });
+
+    private enum FilterEnum
+    {
+        Difficulty,
+        ChartType,
+        SongName,
+        ScoreState,
+        SavedCharts
+    }
     private enum ColumnEnum
     {
         Difficulty,
