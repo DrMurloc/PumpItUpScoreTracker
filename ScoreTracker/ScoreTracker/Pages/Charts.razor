@@ -13,56 +13,72 @@
 <PageTitle>Best Attempts</PageTitle>
 
 <MudGrid>
-    <MudItem xs="6" sm="4">
-        <MudSelect T="int?" AdornmentIcon="@Icons.Filled.Bolt" Label="Difficulty Level" @bind-Value="@_difficultyFilter" Clearable="true" Disabled="_chartTypeFilter==ChartType.CoOp.ToString()">
-            @foreach (var level in Enumerable.Range(DifficultyLevel.Min,DifficultyLevel.Max))
-            {
-                <MudSelectItem T="int?" Value="@level">@level</MudSelectItem>
-            }
-        </MudSelect>
-    </MudItem>
-    <MudItem xs="6" sm="4">
-        <MudSelect T="string" AdornmentIcon="@Icons.Filled.Category" Label="Chart Type" @bind-Value="_chartTypeFilter" Clearable="true">
-            @foreach (var type in Enum.GetValues<ChartType>())
-            {
-                @if (type == ChartType.CoOp && _difficultyFilter != null)
-                {
-                    continue;
-                }
-                <MudSelectItem T="string" Value="@type.ToString()">@type.ToString()</MudSelectItem>
-            }
-        </MudSelect>
-    </MudItem>
-
-    @if (RequestedUserId != null)
+    @if (_isDifficultyFilterShowing)
     {
         <MudItem xs="6" sm="4">
-            <MudSelect T="ScoreState?" AdornmentIcon="@Icons.Filled.Rule" Label="Score State" @bind-Value="_scoreStateFilter" Clearable="true">
-                @foreach(var ss in Enum.GetValues<ScoreState>())
+            <MudSelect T="int?" AdornmentIcon="@Icons.Filled.Bolt" Label="Difficulty Level" @bind-Value="@_difficultyFilter" Clearable="true" Disabled="_chartTypeFilter == ChartType.CoOp.ToString()">
+                @foreach (var level in Enumerable.Range(DifficultyLevel.Min, DifficultyLevel.Max))
                 {
-                    <MudSelectItem T="ScoreState?" Value="@ss">@ss.ToString()</MudSelectItem>
+                    <MudSelectItem T="int?" Value="@level">@level</MudSelectItem>
                 }
-            </MudSelect>
-        </MudItem>
-        <MudItem xs="6" sm="4">
-        
-            <MudSelect T="string" AdornmentIcon="@Icons.Material.Filled.ListAlt" Label="Saved Charts" MultiSelection="true" @bind-SelectedValues="_filteredLists" Clearable="true">
-                <MudSelectItem T="string" Value="@ChartListType.ToDo.ToString()">To Do</MudSelectItem>
-                <MudSelectItem T="string" Value="@ChartListType.Favorite.ToString()">Favorites</MudSelectItem>
-            
             </MudSelect>
         </MudItem>
     }
-    <MudItem xs="12" sm="4">
-        <MudTextField @bind-Value="_songNameFilter" Label="Song Name" Clearable="true" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" DebounceInterval="150" Variant="Variant.Text"></MudTextField>
-    </MudItem>
+    @if (_isChartTypeFilterShowing)
+    {
+        <MudItem xs="6" sm="4">
+            <MudSelect T="string" AdornmentIcon="@Icons.Filled.Category" Label="Chart Type" @bind-Value="_chartTypeFilter" Clearable="true">
+                @foreach (var type in Enum.GetValues<ChartType>())
+                {
+                    @if (type == ChartType.CoOp && _difficultyFilter != null)
+                    {
+                        continue;
+                    }
+                    <MudSelectItem T="string" Value="@type.ToString()">@type.ToString()</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+    }
+
+    @if (RequestedUserId != null)
+    {
+        @if (_isPassStateShowing)
+        {
+            
+            <MudItem xs="6" sm="4">
+                <MudSelect T="ScoreState?" AdornmentIcon="@Icons.Filled.Rule" Label="Score State" @bind-Value="_scoreStateFilter" Clearable="true">
+                    @foreach (var ss in Enum.GetValues<ScoreState>())
+                    {
+                        <MudSelectItem T="ScoreState?" Value="@ss">@ss.ToString()</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        }
+        @if (_isSavedFilterShowing)
+        {
+            <MudItem xs="6" sm="4">
+
+                <MudSelect T="string" AdornmentIcon="@Icons.Material.Filled.ListAlt" Label="Saved Charts" MultiSelection="true" @bind-SelectedValues="_filteredLists" Clearable="true">
+                    <MudSelectItem T="string" Value="@ChartListType.ToDo.ToString()">To Do</MudSelectItem>
+                    <MudSelectItem T="string" Value="@ChartListType.Favorite.ToString()">Favorites</MudSelectItem>
+
+                </MudSelect>
+            </MudItem>
+        }
+    }
+    @if (_isSongNameFilterShowing)
+    {
+        <MudItem xs="12" sm="4">
+            <MudTextField @bind-Value="_songNameFilter" Label="Song Name" Clearable="true" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" DebounceInterval="150" Variant="Variant.Text"></MudTextField>
+        </MudItem>
+    }
 </MudGrid>
 @if (RequestedUserId != null)
 {
     <br/>
-    <MudChip Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => _scoreStateFilter = ScoreState.Ungraded)">Not Graded: @NotGradedCount</MudChip>
-    <MudChip Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(() => _scoreStateFilter = ScoreState.NotPassed)">Not Passed: @NotPassedCount</MudChip>
-    <MudChip Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="@(() => _scoreStateFilter = ScoreState.Passed)">Passed: @PassedCount</MudChip>
+    <MudChip Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.Ungraded))">Not Graded: @NotGradedCount</MudChip>
+    <MudChip Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.NotPassed))">Not Passed: @NotPassedCount</MudChip>
+    <MudChip Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.Passed))">Passed: @PassedCount</MudChip>
     <br/>
 }
 <MudTable T="BestAttemptDto" Items="@_charts" Filter="FilterChart"  Loading="@_isLoading" Breakpoint="Breakpoint.None">
@@ -75,6 +91,18 @@
                 <MudIconButton Icon="@Icons.Filled.Share" OnClick="()=>_showShareDialog=true"></MudIconButton>
             </MudTooltip>
         }
+        <MudTooltip Text="Filters">
+            <MudMenu Icon="@Icons.Material.Filled.FilterList" MaxHeight="300">
+                <MudMenuItem><MudCheckBox T="bool" @bind-Checked="_isDifficultyFilterShowing" Label="Difficulty"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox T="bool" @bind-Checked="_isChartTypeFilterShowing" Label="Chart Type"></MudCheckBox></MudMenuItem>
+                <MudMenuItem><MudCheckBox T="bool" @bind-Checked="_isSongNameFilterShowing" Label="Song Name"></MudCheckBox></MudMenuItem>
+                @if (CurrentUser.IsLoggedIn)
+                {
+                    <MudMenuItem><MudCheckBox T="bool" @bind-Checked="_isPassStateShowing" Label="Score State"></MudCheckBox></MudMenuItem>
+                    <MudMenuItem><MudCheckBox T="bool" @bind-Checked="_isSavedFilterShowing" Label="Saved Charts"></MudCheckBox></MudMenuItem>
+                }
+            </MudMenu>
+        </MudTooltip>
         <MudTooltip Text="Columns">
             <MudMenu Icon="@Icons.Material.Filled.ViewColumn" MaxHeight="300">
                 <MudMenuItem><MudCheckBox T="bool" Checked="ColumnStatus(ColumnEnum.Difficulty)" CheckedChanged="@(_=>ToggleColumn(ColumnEnum.Difficulty))" Label="Difficulty"></MudCheckBox></MudMenuItem>
@@ -367,6 +395,11 @@
     private bool _showShareDialog;
     private string _currentVideo = "";
     private bool _showVideoDialog;
+    private bool _isDifficultyFilterShowing = true;
+    private bool _isChartTypeFilterShowing = true;
+    private bool _isPassStateShowing = false;
+    private bool _isSongNameFilterShowing = false;
+    private bool _isSavedFilterShowing = false;
     [Parameter]
     public Guid? RequestedUserId { get; set; }
 
@@ -392,6 +425,12 @@
     private int NotPassedCount => FileredCharts.Count(c => c.IsBroken);
     private int PassedCount => FileredCharts.Count(c => !string.IsNullOrWhiteSpace(c.LetterGrade) && !c.IsBroken);
     private string CountText(int count) => $"{count} votes";
+
+    private void SetScoreStateFilter(ScoreState state)
+    {
+        _scoreStateFilter = state;
+        _isPassStateShowing = true;
+    }
     private bool FilterChart(BestAttemptDto chart)
     {
         var result = true;
