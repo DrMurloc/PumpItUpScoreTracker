@@ -93,38 +93,38 @@
         }
         <MudTooltip Text="Filters">
             <MudMenu Icon="@Icons.Material.Filled.FilterList" Dense="true">
-                <MudMenuItem Icon="@(FilterStatus(FilterEnum.Difficulty)?@Icons.Material.Filled.Check:string.Empty)" OnTouch="@(_=>ToggleFilter(FilterEnum.Difficulty))" OnClick="@(_=>ToggleFilter(FilterEnum.Difficulty))">Difficulty</MudMenuItem>
-                <MudMenuItem Icon="@(FilterStatus(FilterEnum.ChartType)?@Icons.Material.Filled.Check:string.Empty)" OnTouch="@(_=>ToggleFilter(FilterEnum.ChartType))" OnClick="@(_=>ToggleFilter(FilterEnum.ChartType))">Chart Type</MudMenuItem>
-                <MudMenuItem Icon="@(FilterStatus(FilterEnum.SongName)?@Icons.Material.Filled.Check:string.Empty)" OnTouch="@(_=>ToggleFilter(FilterEnum.SongName))" OnClick="@(_=>ToggleFilter(FilterEnum.SongName))">Song Name</MudMenuItem>
+                <MudMenuItem Icon="@(FilterStatus(FilterEnum.Difficulty)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.Difficulty))">Difficulty</MudMenuItem>
+                <MudMenuItem Icon="@(FilterStatus(FilterEnum.ChartType)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.ChartType))">Chart Type</MudMenuItem>
+                <MudMenuItem Icon="@(FilterStatus(FilterEnum.SongName)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.SongName))">Song Name</MudMenuItem>
                 @if (CurrentUser.IsLoggedIn)
                 {
-                    <MudMenuItem Icon="@(FilterStatus(FilterEnum.ScoreState)?@Icons.Material.Filled.Check:string.Empty)" OnTouch="@(_=>ToggleFilter(FilterEnum.ScoreState))" OnClick="@(_=>ToggleFilter(FilterEnum.ScoreState))">Score State</MudMenuItem>
-                    <MudMenuItem Icon="@(FilterStatus(FilterEnum.SavedCharts)?@Icons.Material.Filled.Check:string.Empty)" OnTouch="@(_=>ToggleFilter(FilterEnum.SavedCharts))" OnClick="@(_=>ToggleFilter(FilterEnum.SavedCharts))">Saved Charts</MudMenuItem>
+                    <MudMenuItem Icon="@(FilterStatus(FilterEnum.ScoreState)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.ScoreState))">Score State</MudMenuItem>
+                    <MudMenuItem Icon="@(FilterStatus(FilterEnum.SavedCharts)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.SavedCharts))">Saved Charts</MudMenuItem>
                 }
             </MudMenu>
         </MudTooltip>
         <MudTooltip Text="Columns">
             <MudMenu Icon="@Icons.Material.Filled.ViewColumn" Dense="true">
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Difficulty)?@Icons.Material.Filled.Check:string.Empty)" OnTouch="@(_=>ToggleColumn(ColumnEnum.Difficulty))" OnClick="@(_=>ToggleColumn(ColumnEnum.Difficulty))">Difficulty</MudMenuItem>
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongImage)?@Icons.Material.Filled.Check:string.Empty)" OnTouch="@(_=>ToggleColumn(ColumnEnum.SongImage))" OnClick="@(_=>ToggleColumn(ColumnEnum.SongImage))">Song Image</MudMenuItem>
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongName)?@Icons.Material.Filled.Check:string.Empty)" OnTouch="@(_=>ToggleColumn(ColumnEnum.SongName))" OnClick="@(_=>ToggleColumn(ColumnEnum.SongName))">Song Name</MudMenuItem>
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.AdjustedRating)?@Icons.Material.Filled.Check:string.Empty)" OnTouch="@(_=>ToggleColumn(ColumnEnum.AdjustedRating))" OnClick="@(_=>ToggleColumn(ColumnEnum.AdjustedRating))">Adjusted Difficulty</MudMenuItem>
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.RatingCount)?@Icons.Material.Filled.Check:string.Empty)" OnTouch="@(_=>ToggleColumn(ColumnEnum.RatingCount))" OnClick="@(_=>ToggleColumn(ColumnEnum.RatingCount))">Rating Count</MudMenuItem>
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Difficulty)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Difficulty))">Difficulty</MudMenuItem>
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongImage)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongImage))">Song Image</MudMenuItem>
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongName)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongName))">Song Name</MudMenuItem>
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.AdjustedRating)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.AdjustedRating))">Adjusted Difficulty</MudMenuItem>
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.RatingCount)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.RatingCount))">Rating Count</MudMenuItem>
                 @if (CurrentUser.IsLoggedIn)
                 {
                     
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.MyRating)?@Icons.Material.Filled.Check:string.Empty)" OnTouch="@(_=>ToggleColumn(ColumnEnum.MyRating))" OnClick="@(_=>ToggleColumn(ColumnEnum.MyRating))">My Difficulty Adjustments</MudMenuItem>
+                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.MyRating)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.MyRating))">My Difficulty Adjustments</MudMenuItem>
 
                 }
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Video)?@Icons.Material.Filled.Check:string.Empty)" OnTouch="@(_=>ToggleColumn(ColumnEnum.Video))" OnClick="@(_=>ToggleColumn(ColumnEnum.Video))">Video</MudMenuItem>
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Video)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Video))">Video</MudMenuItem>
 
                 @if (RequestedUserId != null)
                 {                
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Grade)?@Icons.Material.Filled.Check:string.Empty)" OnTouch="@(_=>ToggleColumn(ColumnEnum.Grade))" OnClick="@(_=>ToggleColumn(ColumnEnum.Grade))">Letter Grade</MudMenuItem>
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Broken)?@Icons.Material.Filled.Check:string.Empty)" OnTouch="@(_=>ToggleColumn(ColumnEnum.Broken))" OnClick="@(_=>ToggleColumn(ColumnEnum.Broken))">Broken</MudMenuItem>
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Score)?@Icons.Material.Filled.Check:string.Empty)" OnTouch="@(_=>ToggleColumn(ColumnEnum.Score))" OnClick="@(_=>ToggleColumn(ColumnEnum.Score))">Score</MudMenuItem>
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.RecordedOn)?@Icons.Material.Filled.Check:string.Empty)" OnTouch="@(_=>ToggleColumn(ColumnEnum.RecordedOn))" OnClick="@(_=>ToggleColumn(ColumnEnum.RecordedOn))">Recorded Date</MudMenuItem>
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Actions)?@Icons.Material.Filled.Check:string.Empty)" OnTouch="@(_=>ToggleColumn(ColumnEnum.Actions))" OnClick="@(_=>ToggleColumn(ColumnEnum.Actions))">Actions</MudMenuItem>
+                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Grade)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Grade))">Letter Grade</MudMenuItem>
+                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Broken)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Broken))">Broken</MudMenuItem>
+                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Score)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Score))">Score</MudMenuItem>
+                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.RecordedOn)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.RecordedOn))">Recorded Date</MudMenuItem>
+                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Actions)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Actions))">Actions</MudMenuItem>
 
                 }
             </MudMenu>
