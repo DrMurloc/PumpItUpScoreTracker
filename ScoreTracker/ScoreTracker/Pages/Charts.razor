@@ -385,7 +385,15 @@
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Filled.Close" OnClick="()=>_showShareDialog=false">Close</MudButton>
     </DialogActions>
 </MudDialog>
-
+<MudDialog @bind-IsVisible="_showNotificationDialog">
+    <DialogContent>
+        <MudText>Hiya! DrMurloc here!<br/> <br />To cut down on screen bloat, I moved the filters into a menu.<br/><br /> I'll keep track of the filters you use so you don't need to re-toggle your favorites on every time!<br /><br />Look for the <MudIcon Icon="@Icons.Material.Filled.FilterList"></MudIcon> icon! <br /><br />Stay awesome friend!</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Filled.Close" OnClick="() => _showNotificationDialog = false">Close</MudButton>
+    </DialogActions>
+</MudDialog>
 @inject IMediator Mediator
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
@@ -395,6 +403,7 @@
     private bool _showShareDialog;
     private string _currentVideo = "";
     private bool _showVideoDialog;
+    private bool _showNotificationDialog = false;
     [Parameter]
     public Guid? RequestedUserId { get; set; }
 
@@ -562,6 +571,11 @@
             _todoCharts = chartSaves.Where(cs => cs.ListType is ChartListType.ToDo).Select(cs => cs.ChartId).Distinct().ToHashSet();
 
             _uiSettings = await Mediator.Send(new GetUserUiSettingsQuery());
+            if (!_uiSettings.ContainsKey("Charts__FilterListNotification__Seen"))
+            {
+                _showNotificationDialog = true;
+                await Mediator.Send(new SaveUserUiSettingCommand("Charts__FilterListNotification__Seen", true.ToString()));
+            }
         }
         foreach (var filter in Enum.GetValues<FilterEnum>())
         {
@@ -587,6 +601,7 @@
                 await Mediator.Send(new SaveUserUiSettingCommand(settingName, _uiSettings[settingName]));
             }
         }
+        
     }
     
     private async Task UpdateDifficultyRating(Guid chartId, int? scale)
