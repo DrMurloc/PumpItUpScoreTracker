@@ -400,10 +400,8 @@
 
     private bool CanEdit => CurrentUser.IsLoggedIn && CurrentUser.User.Id == RequestedUserId;
     private string ShareUrl => CurrentUser.IsLoggedIn ? $"{NavManager.BaseUri}{CurrentUser.User.Id}/Charts" : string.Empty;
-    private bool _showFilterDialog;
     private BestAttemptDto[] _charts = Array.Empty<BestAttemptDto>();
     private IDictionary<Guid, ChartDifficultyRatingRecord> _adjustedDifficulties = new Dictionary<Guid, ChartDifficultyRatingRecord>();
-    private MudDataGrid<BestAttemptDto>? _dataGrid;
 
 
     private bool _isLoading = true;
