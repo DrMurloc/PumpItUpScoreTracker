@@ -93,9 +93,9 @@
     [SupplyParameterFromQuery(Name = "ChartType")]
     public string ChartTypeFilter { get; set; } = string.Empty;
 
-    private void AttemptRegistered(Chart chart, ChartAttempt attempt)
+    private void AttemptRegistered(Chart chart, ChartAttempt? attempt)
     {
-        switch (attempt.IsBroken)
+        switch (attempt?.IsBroken??true)
         {
             case true when _passes.Contains(chart.Id):
                 _passes.Remove(chart.Id);

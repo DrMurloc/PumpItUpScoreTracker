@@ -21,7 +21,7 @@
             </MudItem>
         }
         <MudItem xs="4">
-            <MudSelect T="LetterGrade?" Value="_selectedLetterGrade" ValueChanged="LetterGradeChanged">
+            <MudSelect T="LetterGrade?" Value="_selectedLetterGrade" ValueChanged="LetterGradeChanged" Clearable="true">
                 @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
                 {
                     <MudSelectItem T="LetterGrade?" Value="@letterGrade">@letterGrade.ToString()</MudSelectItem>
@@ -111,8 +111,8 @@
     public bool ShowChartName { get; set; } = false;
 
     [Parameter]
-    public Action<Chart, ChartAttempt> NewAttemptRecorded { get; set; } = (c, b) => { };
-
+    public Action<Chart, ChartAttempt?> NewAttemptRecorded { get; set; } = (c, b) => { };
+    
     private async Task BrokenChanged(bool newState)
     {
         _isBroken = newState;
@@ -122,6 +122,10 @@
     private async Task LetterGradeChanged(LetterGrade? letterGrade)
     {
         _selectedLetterGrade = letterGrade;
+        if (letterGrade == null)
+        {
+            _isBroken = true;
+        }
         await SaveBest();
     }
 
@@ -133,22 +137,29 @@
     private async Task SaveBest()
     {
         
-        if (_selectedChart == null || _selectedLetterGrade==null)
+        if (_selectedChart == null)
         {
             return;
         }
     
         try
         {
-            await Mediator.Send(new UpdateBestAttemptCommand(_selectedChart.Id,  _selectedLetterGrade.Value, _isBroken,_inputScore));
+            await Mediator.Send(new UpdateBestAttemptCommand(_selectedChart.Id,  _selectedLetterGrade, _isBroken,_inputScore));
         
             var chartName = $"{_selectedChart.Song.Name} {DifficultyLevel.ToShorthand(_selectedChart.Type,_selectedChart.Level)}";
             
             _recordedOn = DateTimeOffset.Now;
+            if (_selectedLetterGrade != null)
+            {
+                NewAttemptRecorded(_selectedChart, new ChartAttempt(_selectedLetterGrade.Value, _isBroken, _inputScore, DateTimeOffset.Now));
+                Snackbar.Add( $"Recorded {(_isBroken ? "Broken":"")} {_selectedLetterGrade.Value} for {chartName}", Severity.Success);
+            }
+            else
+            {
+                NewAttemptRecorded(_selectedChart, null);
+                Snackbar.Add($"Removed record for {chartName}", Severity.Success);
+            }
 
-            NewAttemptRecorded(_selectedChart, new ChartAttempt(_selectedLetterGrade.Value, _isBroken, _inputScore, DateTimeOffset.Now));
-
-            Snackbar.Add( $"Recorded {(_isBroken ? "Broken":"")} {_selectedLetterGrade.Value} for {chartName}", Severity.Success);
         }
         catch (Exception e)
         {
