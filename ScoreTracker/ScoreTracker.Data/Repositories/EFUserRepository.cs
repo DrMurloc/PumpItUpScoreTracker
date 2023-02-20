@@ -54,6 +54,7 @@ public sealed class EFUserRepository : IUserRepository
         CancellationToken cancellationToken = default)
     {
         return await _database.User.Where(u => u.Name.Contains(searchText))
+            .OrderBy(u => u.Name)
             .Select(u => new User(u.Id, u.Name, u.IsPublic))
             .ToArrayAsync(cancellationToken);
     }
