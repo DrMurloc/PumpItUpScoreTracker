@@ -69,7 +69,24 @@
     @if (FilterStatus(FilterEnum.SongName))
     {
         <MudItem xs="12" sm="4">
-            <MudTextField T="string" Value="SongNameFilter" ValueChanged="SongNameFilterChanged" Label="Song Name" Clearable="true" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" DebounceInterval="150" Variant="Variant.Text"></MudTextField>
+            
+            
+            <MudAutocomplete T="string"
+                             Value="SongNameFilter"
+                             ValueChanged="SongNameFilterChanged"
+                             AdornmentIcon="@Icons.Filled.Search"
+                             ResetValueOnEmptyText="true"
+                             Label="Song Name"
+                             Clearable="true"
+                             Adornment="Adornment.End"
+                             SearchFunc="@SearchSongs"
+                             Immediate="true"
+                             Variant="Variant.Text"
+                             CoerceText="true"
+                             CoerceValue="false"
+                             >
+
+            </MudAutocomplete>
         </MudItem>
     }
 </MudGrid>
@@ -477,6 +494,7 @@
     private IEnumerable<BestAttemptDto> FileredCharts => _charts.Where(FilterChart);
     private ISet<Guid> _favoriteCharts = new HashSet<Guid>();
     private ISet<Guid> _todoCharts = new HashSet<Guid>();
+    private IEnumerable<string> _songNames = Array.Empty<string>();
     private int NotGradedCount => FileredCharts.Count(c => string.IsNullOrWhiteSpace(c.LetterGrade));
     private int NotPassedCount => FileredCharts.Count(c => c.IsBroken);
     private int PassedCount => FileredCharts.Count(c => !string.IsNullOrWhiteSpace(c.LetterGrade) && !c.IsBroken);
@@ -493,7 +511,7 @@
         var result = true;
         if (!string.IsNullOrWhiteSpace(SongNameFilter))
         {
-            result = result && chart.SongName.Contains(SongNameFilter.Trim(), StringComparison.OrdinalIgnoreCase);
+            result = result && chart.SongName.Equals(SongNameFilter.Trim(), StringComparison.OrdinalIgnoreCase);
         }
         if (_chartListsFilter?.Any()??false)
         {
@@ -571,7 +589,7 @@
     {
         _isLoading = true;
 
-        var charts = await Mediator.Send(new GetChartsQuery());
+        var charts = (await Mediator.Send(new GetChartsQuery())).ToArray();
         
         var bestAttempts = userId == null ? new Dictionary<Guid, ChartAttempt>() :
             (await Mediator.Send(new GetBestChartAttemptsQuery(userId.Value))).Where(b=>b.BestAttempt!=null)
@@ -608,6 +626,7 @@
         {
             chart.VideoUrl = videos[chart.ChartId].VideoUrl.ToString();
         }
+        _songNames = charts.Select(c => c.Song.Name).Distinct().Select(n=>n.ToString()).OrderBy(n=>n).ToArray();
         _isLoading = false;
     }
     protected override async Task OnInitializedAsync()
@@ -654,6 +673,13 @@
         
     }
     
+    private Task<IEnumerable<string>> SearchSongs(string? value)
+    {
+        return Task.FromResult(string.IsNullOrWhiteSpace(value)
+            ? _songNames.Select(s => s.ToString())
+            : _songNames.Where(name => name.ToString().Contains(value, StringComparison.OrdinalIgnoreCase)).Select(name => (string)name));
+    }
+
     private async Task UpdateDifficultyRating(Guid chartId, int? scale)
     {
         if (scale == null)
