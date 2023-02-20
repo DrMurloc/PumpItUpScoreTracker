@@ -8,6 +8,7 @@
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Web.Dtos
 @using System.Collections
+@using ScoreTracker.Domain.Models
 @using ChartType = MudBlazor.ChartType
 <PageTitle>Best Attempts</PageTitle>
 
@@ -16,12 +17,19 @@
         <MudText Typo="Typo.h6">Progress</MudText>
         <MudSpacer></MudSpacer>
 
+        <MudSelect T="SelectedChartsEnum" Label="Chart Type" Value="_selectedCharts" ValueChanged="ChangeSelectedCharts" FullWidth="false" Style="padding-left:30px;">
+            <MudSelectItem T="SelectedChartsEnum" Value="SelectedChartsEnum.All"></MudSelectItem>
+            <MudSelectItem T="SelectedChartsEnum" Value="SelectedChartsEnum.Singles"></MudSelectItem>
+            <MudSelectItem T="SelectedChartsEnum" Value="SelectedChartsEnum.Doubles"></MudSelectItem>
+        </MudSelect>
         @if (CurrentUser.IsLoggedIn && CurrentUser.User.IsPublic && CurrentUser.User.Id == RequestedUserId)
         {
             <MudTooltip Text="Share Your Progress Page" Inline="true">
                 <MudIconButton Icon="@Icons.Filled.Share" OnClick="() => _showShareDialog = true"></MudIconButton>
             </MudTooltip>
         }
+        <br/>
+        
     </MudToolBar>
     <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
         <MudTabPanel Text="Overview">
@@ -80,7 +88,7 @@
     public Guid? RequestedUserId { get; set; }
 
     private bool _showShareDialog = false;
-    
+    private SelectedChartsEnum _selectedCharts = SelectedChartsEnum.All;
     private string ShareUrl => CurrentUser.IsLoggedIn ? $"{NavManager.BaseUri}{CurrentUser.User.Id}/Progress" : string.Empty;
 
     private bool _isLoading = false;
@@ -100,7 +108,13 @@
         Snackbar.Add("Copied to clipboard!", Severity.Success);
     }
 
-    private async Task LoadData(Guid userId)
+    private async Task ChangeSelectedCharts(SelectedChartsEnum newType)
+    {
+        _selectedCharts = newType;
+        
+        PopulateGraphs();
+    }
+    private void PopulateGraphs()
     {
 
         _isLoading = true;
@@ -122,13 +136,24 @@
             difficultyPasses[level][false] = 0;
         }
 
-        var scores = await Mediator.Send(new GetBestChartAttemptsQuery(userId));
         var difficultyDtos = Enumerable.Range(DifficultyLevel.Min, DifficultyLevel.Max).ToDictionary(l => l, l => new DifficultyOverviewDto
         {
             Difficulty = l
         });
 
-        foreach (var score in scores.Where(s=>s.Chart.Type!=Domain.Enums.ChartType.CoOp))
+        var scores = _scores;
+        if (_selectedCharts == SelectedChartsEnum.Doubles)
+        {
+            scores = scores.Where(c => c.Chart.Type is Domain.Enums.ChartType.Double or Domain.Enums.ChartType.DoublePerformance).ToArray();
+        } else if (_selectedCharts == SelectedChartsEnum.Singles)
+        {
+            scores = scores.Where(c => c.Chart.Type is Domain.Enums.ChartType.Single or Domain.Enums.ChartType.SinglePerformance).ToArray();
+        }
+        else
+        {
+            scores = scores.Where(s => s.Chart.Type != Domain.Enums.ChartType.CoOp).ToArray();
+        }
+        foreach (var score in scores)
         {
             var level = score.Chart.Level;
             var letter = score.BestAttempt?.LetterGrade;
@@ -270,6 +295,8 @@
         _isLoading = false;
 
     }
+
+    private IEnumerable<BestChartAttempt> _scores;
     protected override async Task OnInitializedAsync()
     {
         if (RequestedUserId == null)
@@ -281,7 +308,14 @@
             }
             RequestedUserId = CurrentUser.User.Id;
         }
-        await LoadData(RequestedUserId.Value);
+        _scores = await Mediator.Send(new GetBestChartAttemptsQuery(RequestedUserId.Value));
+        PopulateGraphs();
     }
+    private enum SelectedChartsEnum{
+        All,
+        Singles,
+        Doubles
     
+    }
+
 }
