@@ -11,10 +11,16 @@
         <MudItem xs="12">
             <MudText Typo="Typo.h4">
                 @Name
+                @if (!string.IsNullOrWhiteSpace(Disclaimer))
+                {
+                    <MudTooltip Text="@Disclaimer">
+                        <MudIcon Color="Color.Info" Size="Size.Small" Icon="@Icons.Material.Outlined.QuestionMark"></MudIcon>
+                    </MudTooltip>
+                }
                 @if (Charts.All(c => Passes.Contains(c.Id)))
                 {
                     <MudTooltip Text="All Passed">
-                        <MudIcon Color="Color.Success" Icon="@Icons.Filled.Check"></MudIcon>
+                        <MudIcon Color="Color.Success" Icon="@Icons.Material.Filled.Check"></MudIcon>
                     </MudTooltip>
                 }
 
@@ -59,7 +65,8 @@
     public string Name { get; set; } = string.Empty;
     [Parameter]
     public string OutlineColor { get; set; } = string.Empty;
-
+    [Parameter]
+    public string Disclaimer { get; set; } = string.Empty;
     [Parameter]
     public IEnumerable<Chart> Charts { get; set; } = Array.Empty<Chart>();
 

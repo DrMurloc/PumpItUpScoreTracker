@@ -39,6 +39,8 @@
 <TierListSection Charts="_easyCharts" Name="Easy" OutlineColor="@Colors.Cyan.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
 <TierListSection Charts="_veryEasyCharts" Name="Very Easy" OutlineColor="@Colors.Blue.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
 <TierListSection Charts="_overratedCharts" Name="1+ Level Easier" OutlineColor="@Colors.Purple.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+<TierListSection Charts="_disputedCharts" Disclaimer="Charts with 4 or more votes and more than .4 Standard Deviation" Name="Disputed Charts" OutlineColor="@Colors.Brown.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+<TierListSection Charts="_notRatedCharts" Name="Not Rated" OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
 
 <MudDialog @bind-IsVisible="_showEditDialog">
     <DialogContent>
@@ -78,6 +80,8 @@
     private ICollection<Chart> _hardCharts = Array.Empty<Chart>();
     private ICollection<Chart> _veryHardCharts = Array.Empty<Chart>();
     private ICollection<Chart> _underratedCharts = Array.Empty<Chart>();
+    private ICollection<Chart> _notRatedCharts = Array.Empty<Chart>();
+    private ICollection<Chart> _disputedCharts = Array.Empty<Chart>();
     private IDictionary<Guid, string> _videos = new Dictionary<Guid, string>();
     private bool _showVideoDialog = false;
     private bool _showEditDialog = false;
@@ -186,15 +190,22 @@
         _hardCharts = new List<Chart>();
         _veryHardCharts = new List<Chart>();
         _underratedCharts = new List<Chart>();
-
+        _disputedCharts = new List<Chart>();
+        _notRatedCharts = new List<Chart>();
         foreach (var chart in charts.OrderByDescending(c=>ratings.ContainsKey(c.Id)?ratings[c.Id].Difficulty:c.Level+.5))
         {
             if (!ratings.ContainsKey(chart.Id))
             {
-                _mediumCharts.Add(chart);
+                _notRatedCharts.Add(chart);
                 continue;
             }
-            var diff = ratings[chart.Id].Difficulty - chart.Level - .5;
+            var rating = ratings[chart.Id];
+            if (rating is { RatingCount: >= 4,StandardDeviation: > .4 })
+            {
+                _disputedCharts.Add(chart);
+                continue;
+            }
+            var diff = rating.Difficulty - chart.Level - .5;
             switch (diff)
             {
                 case < -1:
