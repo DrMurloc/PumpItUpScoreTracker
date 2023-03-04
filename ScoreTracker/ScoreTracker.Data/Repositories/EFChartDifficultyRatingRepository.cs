@@ -50,7 +50,7 @@ public sealed class EFChartDifficultyRatingRepository : IChartDifficultyRatingRe
         CancellationToken cancellationToken = default)
     {
         return await _database.ChartDifficultyRating
-            .Select(c => new ChartDifficultyRatingRecord(c.ChartId, c.Difficulty, c.Count))
+            .Select(c => new ChartDifficultyRatingRecord(c.ChartId, c.Difficulty, c.Count, c.StandardDeviation))
             .ToArrayAsync(cancellationToken);
     }
 
@@ -58,31 +58,8 @@ public sealed class EFChartDifficultyRatingRepository : IChartDifficultyRatingRe
         CancellationToken cancellationToken = default)
     {
         return await _database.ChartDifficultyRating.Where(c => c.ChartId == chartId)
-            .Select(c => new ChartDifficultyRatingRecord(c.ChartId, c.Difficulty, c.Count))
+            .Select(c => new ChartDifficultyRatingRecord(c.ChartId, c.Difficulty, c.Count, c.StandardDeviation))
             .FirstOrDefaultAsync(cancellationToken);
-    }
-
-    public async Task SetAdjustedDifficulty(Guid chartId, double difficulty, int count,
-        CancellationToken cancellationToken = default)
-    {
-        var existing =
-            await _database.ChartDifficultyRating.FirstOrDefaultAsync(c => c.ChartId == chartId, cancellationToken);
-        if (existing == null)
-        {
-            await _database.ChartDifficultyRating.AddAsync(new ChartDifficultyRatingEntity
-            {
-                ChartId = chartId,
-                Count = count,
-                Difficulty = difficulty
-            }, cancellationToken);
-        }
-        else
-        {
-            existing.Difficulty = difficulty;
-            existing.Count = count;
-        }
-
-        await _database.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<DifficultyAdjustment?> GetRating(Guid chartId, Guid userId, CancellationToken cancellationToken)
@@ -98,5 +75,30 @@ public sealed class EFChartDifficultyRatingRepository : IChartDifficultyRatingRe
         var results = await _database.UserChartDifficultyRating.Where(c => c.UserId == userId)
             .ToArrayAsync(cancellationToken);
         return results.Select(r => (r.ChartId, DifficultyAdjustmentHelpers.From(r.Scale))).ToArray();
+    }
+
+    public async Task SetAdjustedDifficulty(Guid chartId, double difficulty, int count, double standardDeviation,
+        CancellationToken cancellationToken = default)
+    {
+        var existing =
+            await _database.ChartDifficultyRating.FirstOrDefaultAsync(c => c.ChartId == chartId, cancellationToken);
+        if (existing == null)
+        {
+            await _database.ChartDifficultyRating.AddAsync(new ChartDifficultyRatingEntity
+            {
+                ChartId = chartId,
+                Count = count,
+                Difficulty = difficulty,
+                StandardDeviation = standardDeviation
+            }, cancellationToken);
+        }
+        else
+        {
+            existing.Difficulty = difficulty;
+            existing.Count = count;
+            existing.StandardDeviation = standardDeviation;
+        }
+
+        await _database.SaveChangesAsync(cancellationToken);
     }
 }

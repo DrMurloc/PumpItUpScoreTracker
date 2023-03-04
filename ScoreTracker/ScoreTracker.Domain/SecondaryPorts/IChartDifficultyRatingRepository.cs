@@ -16,7 +16,7 @@ public interface IChartDifficultyRatingRepository
     Task<ChartDifficultyRatingRecord?> GetChartRatedDifficulty(Guid chartId,
         CancellationToken cancellationToken = default);
 
-    Task SetAdjustedDifficulty(Guid chartId, double difficulty, int count,
+    Task SetAdjustedDifficulty(Guid chartId, double difficulty, int count, double standardDeviation,
         CancellationToken cancellationToken = default);
 
     Task<DifficultyAdjustment?> GetRating(Guid chartId, Guid userId, CancellationToken cancellationToken);

@@ -52,6 +52,7 @@ builder.Services.AddBlazorApplicationInsights()
     .AddTransient<IDateTimeOffsetAccessor, DateTimeOffsetAccessor>()
     .AddControllers();
 
+
 builder.Services.AddCookiePolicy(opts =>
 {
     opts.CheckConsentNeeded = ctx => false;

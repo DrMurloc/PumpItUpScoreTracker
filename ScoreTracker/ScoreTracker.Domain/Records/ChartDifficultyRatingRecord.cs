@@ -2,7 +2,8 @@
 
 namespace ScoreTracker.Domain.Records;
 
-public sealed record ChartDifficultyRatingRecord(Guid ChartId, double Difficulty, int RatingCount)
+public sealed record ChartDifficultyRatingRecord(Guid ChartId, double Difficulty, int RatingCount,
+    double StandardDeviation)
 {
     public DifficultyAdjustment? MyRating { get; set; }
 }

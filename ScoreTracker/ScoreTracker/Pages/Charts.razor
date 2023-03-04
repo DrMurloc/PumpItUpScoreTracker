@@ -127,6 +127,7 @@
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongName)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongName))">Song Name</MudMenuItem>
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.AdjustedRating)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.AdjustedRating))">Adjusted Difficulty</MudMenuItem>
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.RatingCount)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.RatingCount))">Rating Count</MudMenuItem>
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.StandardDeviation)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.StandardDeviation))">Standard Deviation</MudMenuItem>
                 @if (CurrentUser.IsLoggedIn)
                 {
                     
@@ -167,6 +168,11 @@
         @if (ColumnStatus(ColumnEnum.RatingCount))
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>_adjustedDifficulties[e.ChartId].RatingCount">Rating Count</MudTableSortLabel></MudTh>
+        }
+        
+        @if (ColumnStatus(ColumnEnum.StandardDeviation))
+        {
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>_adjustedDifficulties[e.ChartId].StandardDeviation">Standard Deviation</MudTableSortLabel></MudTh>
         }
         @if (ColumnStatus(ColumnEnum.MyRating))
         {
@@ -243,6 +249,12 @@
         {
             <MudTd>
                 <MudText>@_adjustedDifficulties[context.ChartId].RatingCount</MudText>
+            </MudTd>
+        }
+        @if (ColumnStatus(ColumnEnum.StandardDeviation))
+        {
+            <MudTd>
+                <MudText>@_adjustedDifficulties[context.ChartId].StandardDeviation</MudText>
             </MudTd>
         }
         @if (ColumnStatus(ColumnEnum.MyRating))
@@ -618,7 +630,7 @@
         {
             if (!_adjustedDifficulties.ContainsKey(chart.ChartId))
             {
-                _adjustedDifficulties[chart.ChartId] = new ChartDifficultyRatingRecord(chart.ChartId, chart.Level + .5, 0);
+                _adjustedDifficulties[chart.ChartId] = new ChartDifficultyRatingRecord(chart.ChartId, chart.Level + .5, 0,0);
             }
         }
         var videos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId);
@@ -802,7 +814,8 @@
         AdjustedRating,
         RatingCount,
         Actions,
-        Video
+        Video,
+        StandardDeviation
     }
     private enum ScoreState
     {

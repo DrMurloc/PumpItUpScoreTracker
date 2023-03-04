@@ -1,0 +1,53 @@
+﻿@page "/Admin"
+@using MediatR
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using System.Drawing.Drawing2D
+
+<PageTitle>Admin</PageTitle>
+
+<MudPaper>
+    <MudCard>
+        <MudButton Disabled="_isReCalculating" OnClick="ReCalculateScores" Color="Color.Primary" Variant="Variant.Filled">ReCalculate Ratings</MudButton>
+
+        @if (_isReCalculating)
+        {
+                    <br />
+            <MudProgressLinear Color="Color.Primary" Max="_maxReCalculate" Min="0" Value="@_currentReCalculate"></MudProgressLinear>
+        }
+    </MudCard>
+</MudPaper>
+@inject ICurrentUserAccessor CurrentUser;
+@inject IMediator Mediator;
+@inject NavigationManager NavManager;
+@code
+{
+    private bool _isReCalculating = false;
+    private int _maxReCalculate = 1;
+    private int _currentReCalculate = 0;
+
+    private async Task ReCalculateScores()
+    {
+        _isReCalculating = true;
+        var ratingsWithVotes = (await Mediator.Send(new GetChartRatingsQuery())).Where(c => c.RatingCount > 0).ToArray();
+
+        _maxReCalculate = ratingsWithVotes.Length;
+        _currentReCalculate = 1;
+        foreach (var rating in ratingsWithVotes)
+        {
+            await Mediator.Send(new ReCalculateChartRatingCommand(rating.ChartId));
+            _currentReCalculate++;
+            StateHasChanged();
+        }
+
+        _isReCalculating = false;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.User.IsAdmin)
+        {
+            NavManager.NavigateTo("/");
+        }
+    }
+}

@@ -20,10 +20,8 @@ public sealed class HttpContextUserAccessor : ICurrentUserAccessor
 
     public User User => !IsLoggedIn
         ? throw new UserNotLoggedInException()
-        : new User(
-            Guid.Parse(_context.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString()),
-            _context.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value ?? "Unauthenticated",
-            bool.Parse(_context.HttpContext?.User.FindFirstValue(ScoreTrackerClaimTypes.IsPublic) ?? ""));
+        : _context.HttpContext?.User.GetUser() ?? throw new UserNotLoggedInException();
+
 
     public async Task SetCurrentUser(User user)
     {
@@ -38,5 +36,16 @@ public sealed class HttpContextUserAccessor : ICurrentUserAccessor
         }, "External"));
         await context.SignOutAsync();
         await context.SignInAsync(principal);
+    }
+}
+
+public static class UserExtensions
+{
+    public static User GetUser(this ClaimsPrincipal claimsPrincipal)
+    {
+        return new User(
+            Guid.Parse(claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString()),
+            claimsPrincipal.FindFirst(ClaimTypes.Name)?.Value ?? "Unauthenticated",
+            bool.Parse(claimsPrincipal.FindFirstValue(ScoreTrackerClaimTypes.IsPublic) ?? ""));
     }
 }
