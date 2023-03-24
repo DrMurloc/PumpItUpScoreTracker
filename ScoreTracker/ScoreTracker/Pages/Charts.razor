@@ -676,7 +676,9 @@
             if (_uiSettings.ContainsKey(settingName)) continue;
 
 
-            _uiSettings[settingName] = CurrentUser.IsLoggedIn ? DefaultLoggedInColumns.Contains(column).ToString() : DefaultNotLoggedInColumns.Contains(column).ToString();
+            _uiSettings[settingName] = CurrentUser.IsLoggedIn ? DefaultLoggedInColumns.Contains(column).ToString() : 
+                RequestedUserId == null?
+                DefaultNotLoggedInColumns.Contains(column).ToString() : DefaultViewingOthersColumns.Contains(column).ToString();
             if (CurrentUser.IsLoggedIn)
             {
                 await Mediator.Send(new SaveUserUiSettingCommand(settingName, _uiSettings[settingName]));
@@ -791,8 +793,9 @@
     private static string ColumnSettingName(ColumnEnum column) => $"Charts__Column__{column.ToString()}";
     private static readonly ISet<FilterEnum> DefaultFilters = new HashSet<FilterEnum>(new[] { FilterEnum.Difficulty, FilterEnum.ChartType });
     private static readonly ISet<ColumnEnum> DefaultLoggedInColumns = new HashSet<ColumnEnum>(new[] { ColumnEnum.Difficulty, ColumnEnum.SongImage, ColumnEnum.Grade, ColumnEnum.Broken, ColumnEnum.Video, ColumnEnum.Actions });
-    private static readonly ISet<ColumnEnum> DefaultNotLoggedInColumns = new HashSet<ColumnEnum>(new[] { ColumnEnum.Difficulty, ColumnEnum.Video, ColumnEnum.AdjustedRating, ColumnEnum.SongImage });
 
+    private static readonly ISet<ColumnEnum> DefaultNotLoggedInColumns = new HashSet<ColumnEnum>(new[] { ColumnEnum.Difficulty, ColumnEnum.Video, ColumnEnum.AdjustedRating, ColumnEnum.SongImage });
+    private static readonly ISet<ColumnEnum> DefaultViewingOthersColumns = new HashSet<ColumnEnum>(DefaultNotLoggedInColumns.Concat(new[] { ColumnEnum.Grade, ColumnEnum.Broken }));
     private enum FilterEnum
     {
         Difficulty,
