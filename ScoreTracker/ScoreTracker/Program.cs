@@ -6,6 +6,8 @@ using ScoreTracker.Data.Configuration;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Web.Accessors;
 using ScoreTracker.Web.Configuration;
+using ScoreTracker.Web.Services;
+using ScoreTracker.Web.Services.Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,6 +45,7 @@ builder.Services.AddAuthentication("DefaultAuthentication")
         o.AppSecret = facebookConfig.AppSecret;
     });
 builder.Services.AddBlazorApplicationInsights()
+    .AddTransient<IScoreImageExtractor, OcrScoreImageExtractor>()
     .AddMudServices()
     .AddTransient<ICurrentUserAccessor, HttpContextUserAccessor>()
     .AddHttpContextAccessor()

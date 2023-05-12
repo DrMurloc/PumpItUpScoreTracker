@@ -1,0 +1,77 @@
+﻿@page "/PhoenixCalculator"
+
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Domain.Records
+
+<PageTitle>Upload Scores</PageTitle>
+@if (ShowScoreUpload)
+{
+    <MudButton HtmlTag="label"
+               Variant="@Variant.Filled"
+               Color="@Color.Primary"
+               StartIcon="@Icons.Filled.UploadFile"
+               for="uploadInput">
+        Upload Scores
+    </MudButton>
+}
+<MudImage Src="https://piuimages.arroweclip.se/PhoenixBanner.png" Style="width:95%; max-width:800px;"></MudImage>
+<MudGrid>
+    <MudItem xs="12" sm="6">
+        <MudTextField T="int" InputType="InputType.Number" Label="Perfects" @bind-Value="_perfects" Immediate="true"></MudTextField>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudTextField T="int" InputType="InputType.Number" Label="Greats" @bind-Value="_greats" Immediate="true"></MudTextField>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudTextField T="int" InputType="InputType.Number" Label="Goods" @bind-Value="_goods" Immediate="true"></MudTextField>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudTextField T="int" InputType="InputType.Number" Label="Bads" @bind-Value="_bads" Immediate="true"></MudTextField>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudTextField T="int" InputType="InputType.Number" Label="Misses" @bind-Value="_misses" Immediate="true"></MudTextField></MudItem>
+    <MudItem xs="12" sm="6">
+        <MudTextField T="int" InputType="InputType.Number" Label="Max Combo" @bind-Value="_maxCombo" Immediate="true"></MudTextField>
+    </MudItem>
+    <MudItem xs="12">
+        <MudText>
+            Phoenix Score: @Score.CalculatePhoenixScore @Score.LetterGrade
+        </MudText>
+    </MudItem>
+</MudGrid>
+<InputFile id="uploadInput" OnChange="@UploadFile" hidden accept=".png,.jpg,jpeg" />
+<br/>
+<br/>
+<MudText>
+    Shout out to MR_WEQ for reverse engineering this formula!
+</MudText>
+
+<MudImage Src="https://piuimages.arroweclip.se/PhoenixFormula.jpg" Style="max-width:85vw; width:auto;"></MudImage>
+@inject ISnackbar Snackbar;
+@inject IScoreImageExtractor ScoreExtractor;
+@inject ILogger<PhoenixCalculator> Logger;
+@code
+{
+    private const bool ShowScoreUpload = false;
+    private int _perfects = 0;
+    private int _greats = 0;
+    private int _goods = 0;
+    private int _bads = 0;
+    private int _misses = 0;
+    private int _maxCombo = 0;
+    private ScoreScreen Score => new (_perfects, _greats, _goods, _bads, _misses, _maxCombo);
+    private async Task UploadFile(InputFileChangeEventArgs e)
+    {
+        try
+        {
+
+            var score = await ScoreExtractor.GetScore(e.File, CancellationToken.None);
+            Snackbar.Add("Done", Severity.Info);
+        }
+        catch (Exception er)
+        {
+            Snackbar.Add("Error", Severity.Error);
+            Logger.LogError(er, "There was an error");
+        }
+    }
+}
