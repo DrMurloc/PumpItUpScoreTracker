@@ -35,7 +35,13 @@
     </MudItem>
     <MudItem xs="12">
         <MudText>
-            Phoenix Score: @Score.CalculatePhoenixScore @Score.LetterGrade
+            <b>Score:</b> @Score.CalculatePhoenixScore
+        </MudText>
+        <MudText>
+            <b>Letter:</b> @Score.LetterGrade
+        </MudText>
+        <MudText>
+            <b>Plate:</b> @Score.PlateText
         </MudText>
     </MudItem>
 </MudGrid>
@@ -43,10 +49,37 @@
 <br/>
 <br/>
 <MudText>
-    Shout out to MR_WEQ for reverse engineering this formula!
+    Shout out to MR_WEQ for reverse engineering this score formula!<br/>
 </MudText>
 
 <MudImage Src="https://piuimages.arroweclip.se/PhoenixFormula.jpg" Style="max-width:85vw; width:auto;"></MudImage>
+<br/>
+<MudText>
+    Note that Letter Grade and Plate Text formulas were pulled from the <MudButton Color="Color.Primary" Href="https://namu.wiki/w/%ED%8E%8C%ED%94%84%20%EC%9E%87%20%EC%97%85%202023%20PHOENIX" Target="_blank">Korean PIU Wikipedia</MudButton>, it is possible for there to be misalignment with actual game logic:<br />
+    <br/><br/>
+    SSS+: 995,000 points or more<br/>
+    SSS: 990,000~994,999 points<br/>
+    SS+: 985,000~989,999 points<br/>
+    SS: 980,000~984,999 points<br/>
+    S+: 975,000~979,999 points<br/>
+    S: 970,000~974,999 points<br/>
+    AAA+: 960,000~ 969,999 points<br/>
+    AAA: 950,000~959,999 points<br/>
+    AA+: 925,000 to 949,999 points<br/>
+    AA: 900,000~924,999 points<br/>
+    A+: 800,000 to 899,999 points<br/>
+    A: 750,000 - 799,999 points<br/>
+    B: 700,000 ~ 749,999 points<br/>
+    C: ~ 699,999 points<br/><br/>
+    Perfect Game: All Perfect (previous SSS)<br/>
+    Ultimate Game: All Perfect + Great (Previous SS) <br/>
+    Extreme Game: All Perfect + Great + Good <br/>
+    Superb Game: No Miss (previous S)<br/>
+    Marvelous Game: 5 misses or less<br/>
+    Talented Game: 10 misses or less<br/>
+    Fair Game: Less than 20 misses<br/>
+    Rough Game: Over 20 misses
+</MudText>
 @inject ISnackbar Snackbar;
 @inject IScoreImageExtractor ScoreExtractor;
 @inject ILogger<PhoenixCalculator> Logger;
