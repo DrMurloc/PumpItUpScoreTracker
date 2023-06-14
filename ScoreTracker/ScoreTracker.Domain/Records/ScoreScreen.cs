@@ -2,10 +2,10 @@
 
 public sealed record ScoreScreen(int Perfects, int Greats, int Goods, int Bads, int Misses, int MaxCombo)
 {
-    private static readonly Random _random = new(1949);
+    private static readonly Random Random = new(1949);
     private int TotalCount => Perfects + Greats + Goods + Bads + Misses;
 
-    public int CalculatePhoenixScore => TotalCount <= 0
+    public int CalculatePhoenixScore => !IsValid
         ? 0
         : (int)((.995 * (1.0 * Perfects + .6 * Greats + .2 * Goods + .1 * Bads) + .005 * MaxCombo) /
             (Perfects + Greats + Goods + Bads + Misses) * 1000000.0);
@@ -47,8 +47,8 @@ public sealed record ScoreScreen(int Perfects, int Greats, int Goods, int Bads, 
     };
 
     public bool IsValid => Perfects >= 0 && Greats >= 0 && Goods >= 0 && Bads >= 0 && Misses >= 0 &&
-                           Perfects + Misses + Goods + Greats + Bads > 0 &&
-                           Perfects + Misses + Goods + Greats + Bads >= MaxCombo
+                           TotalCount is < 10000 and > 0 &&
+                           TotalCount >= MaxCombo
                            && MaxCombo >= 0;
 
     public string NextLetterGrade()
@@ -88,7 +88,7 @@ public sealed record ScoreScreen(int Perfects, int Greats, int Goods, int Bads, 
 
         if (total <= 0) return previous with { MaxCombo = +1 };
 
-        var next = _random.Next(total) + 1;
+        var next = Random.Next(total) + 1;
         if (next > total - previous.Greats)
             return previous with
             {
