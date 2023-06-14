@@ -8,6 +8,7 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.ValueTypes
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using Chart = ScoreTracker.Domain.Models.Chart
 @inject IMediator Mediator;
 @inject ICurrentUserAccessor CurrentUser;
 @inject ISnackbar Snackbar
@@ -37,7 +38,7 @@
             {
 
                 <MudTooltip Text="Remove from Favorites">
-                    <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" OnClick="() => RemoveFromFavorites(_selectedChart.Id)"></MudIconButton>
+                    <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="MudBlazor.Color.Secondary" OnClick="() => RemoveFromFavorites(_selectedChart.Id)"></MudIconButton>
                 </MudTooltip>
             }
             else
@@ -53,7 +54,7 @@
             {
 
                 <MudTooltip Text="Remove from To Do List">
-                    <MudIconButton Icon="@Icons.Material.Filled.ListAlt" Color="Color.Secondary" OnClick="() => RemoveFromToDo(_selectedChart.Id)"></MudIconButton>
+                    <MudIconButton Icon="@Icons.Material.Filled.ListAlt" Color="MudBlazor.Color.Secondary" OnClick="() => RemoveFromToDo(_selectedChart.Id)"></MudIconButton>
                 </MudTooltip>
             }
             else

@@ -2,6 +2,7 @@
 
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Dtos
 
 <PageTitle>Upload Scores</PageTitle>
 @if (ShowScoreUpload)
@@ -17,21 +18,21 @@
 <MudImage Src="https://piuimages.arroweclip.se/PhoenixBanner.png" Style="width:95%; max-width:800px;"></MudImage>
 <MudGrid>
     <MudItem xs="12" sm="6">
-        <MudTextField T="int" MaxLength="5" InputType="InputType.Number" Label="Perfects" @bind-Value="_perfects" Immediate="true"></MudTextField>
+        <MudTextField T="int" MaxLength="5" InputType="InputType.Number" Label="Perfects" Value="_perfects" ValueChanged="n=>SetScore(n,_greats,_goods,_bads,_misses,_maxCombo)" Immediate="true" DebounceInterval="200"></MudTextField>
     </MudItem>
     <MudItem xs="12" sm="6">
-        <MudTextField T="int" MaxLength="5" InputType="InputType.Number" Label="Greats" @bind-Value="_greats" Immediate="true"></MudTextField>
+        <MudTextField T="int" MaxLength="5" InputType="InputType.Number" Label="Greats" Value="_greats" ValueChanged="n=>SetScore(_perfects,n,_goods,_bads,_misses,_maxCombo)" Immediate="true" DebounceInterval="200"></MudTextField>
     </MudItem>
     <MudItem xs="12" sm="6">
-        <MudTextField T="int" MaxLength="5" InputType="InputType.Number" Label="Goods" @bind-Value="_goods" Immediate="true"></MudTextField>
+        <MudTextField T="int" MaxLength="5" InputType="InputType.Number" Label="Goods" Value="_goods" ValueChanged="n=>SetScore(_perfects,_greats,n,_bads,_misses,_maxCombo)" Immediate="true" DebounceInterval="200"></MudTextField>
     </MudItem>
     <MudItem xs="12" sm="6">
-        <MudTextField T="int" MaxLength="5" InputType="InputType.Number" Label="Bads" @bind-Value="_bads" Immediate="true"></MudTextField>
+        <MudTextField T="int" MaxLength="5" InputType="InputType.Number" Label="Bads" Value="_bads" ValueChanged="n=>SetScore(_perfects,_greats,_goods,n,_misses,_maxCombo)" Immediate="true" DebounceInterval="200"></MudTextField>
     </MudItem>
     <MudItem xs="12" sm="6">
-        <MudTextField T="int" MaxLength="5" InputType="InputType.Number" Label="Misses" @bind-Value="_misses" Immediate="true"></MudTextField></MudItem>
+        <MudTextField T="int" MaxLength="5" InputType="InputType.Number" Label="Misses" Value="_misses" ValueChanged="n=>SetScore(_perfects,_greats,_goods,_bads,n,_maxCombo)" Immediate="true" DebounceInterval="200"></MudTextField></MudItem>
     <MudItem xs="12" sm="6">
-        <MudTextField T="int" MaxLength="5" InputType="InputType.Number" Label="Max Combo" @bind-Value="_maxCombo" Immediate="true"></MudTextField>
+        <MudTextField T="int" MaxLength="5" InputType="InputType.Number" Label="Max Combo" Value="_maxCombo" ValueChanged="n=>SetScore(_perfects,_greats,_goods,_bads,_misses,n)" Immediate="true" DebounceInterval="200"></MudTextField>
     </MudItem>
     <MudItem xs="12">
         <MudText>
@@ -48,6 +49,38 @@
             <MudText>
                 <b>Next Letter:</b> @Score.NextLetterGrade()
             </MudText>
+            
+        }
+    </MudItem>
+    <MudItem xs="12">
+
+        @if (_showDistribution)
+        {
+
+            <ApexChart TItem="JudgementAllocation"
+                   Title="Score Distribution">
+                <ApexPointSeries TItem="JudgementAllocation"
+                                 Items="_yourAllocations"
+                                 Name="Your Spread"
+                                 SeriesType="SeriesType.Bar"
+                                 XValue="@(e => e.Type)"
+                                 YAggregate="@(e => e.Sum(z=>z.Count))"
+                                 OrderByDescending="e=>e.Y"
+                                 ShowDataLabels />
+
+                <ApexPointSeries TItem="JudgementAllocation"
+                                 Items="_averageAllocation"
+                                 Name="Average Spread"
+                                 SeriesType="SeriesType.Bar"
+                             XValue="@(e => e.Type)"
+                             YAggregate="@(e => e.Sum(z=>z.Count))"
+                                 OrderByDescending="e=>e.Y"
+                                 ShowDataLabels />
+            </ApexChart>
+        }
+        else
+        {
+            <MudButton Color="Color.Primary" Disabled="!Score.IsValid" Variant="Variant.Outlined" OnClick="ShowDistribution">Show Score Distribution</MudButton>
         }
     </MudItem>
 </MudGrid>
@@ -91,15 +124,73 @@
 @inject ILogger<PhoenixCalculator> Logger;
 @code
 {
+    private ApexChart<ScoreDistributionDto> _distributionChart;
     private const bool ShowScoreUpload = false;
+
+    private sealed record JudgementAllocation(string Type, int Count)
+    {
+
+    }
+    private JudgementAllocation[] _averageAllocation = Array.Empty<JudgementAllocation>();
+    private JudgementAllocation[] _yourAllocations = Array.Empty<JudgementAllocation>();
+
+    private bool _showDistribution = false;
+    private Task SetScore(int perfects, int greats, int goods, int bads, int misses, int maxCombo)
+    {
+        _showDistribution = false;
+        _perfects = perfects;
+        _greats = greats;
+        _goods = goods;
+        _bads = bads;
+        _misses = misses;
+        _maxCombo = maxCombo;
+        Score = new(_perfects, _greats, _goods, _bads, _misses, _maxCombo);
+        return Task.CompletedTask;
+
+    }
+
+    private Task ShowDistribution()
+    {
+        var scoreNoCombo = new ScoreScreen(_perfects, _greats, _goods, _bads, _misses, 0).CalculatePhoenixScore;
+        var distribution = ScoreDistributionDto.Get(scoreNoCombo,Score.TotalCount);
+        var averagePerfect = (distribution.MaxPerfect + distribution.MinPerfect) / 2;
+        var averageGreat = (distribution.MaxGreat + distribution.MinGreat) / 2;
+        var averageGood = (distribution.MaxGood + distribution.MinGood) / 2;
+        var averageBad = (distribution.MaxBad + distribution.MinBad) / 2;
+        var averageMiss = (distribution.MaxMiss + distribution.MinMiss) / 2;
+        var scalingRatio = Score.TotalCount / (double)(averagePerfect + averageGreat + averageGood + averageBad + averageMiss);
+        _averageAllocation = new JudgementAllocation[]
+        {
+            new("Perfects", (int)(averagePerfect*scalingRatio)),
+            new("Greats", (int)(averageGreat*scalingRatio)),
+            new("Goods", (int)(averageGood*scalingRatio)),
+            new("Bads", (int)(averageBad*scalingRatio)),
+            new("Misses",(int)(averageMiss*scalingRatio))
+        };
+        _yourAllocations = new JudgementAllocation[]
+        {
+
+            new("Perfects", _perfects),
+            new("Greats", _greats),
+            new("Goods",_goods),
+            new("Bads",_bads),
+            new("Misses", _misses)
+        };
+
+        _showDistribution = true;
+        return Task.CompletedTask;
+
+    }
+    public IEnumerable<ScoreDistributionDto> ScoreDistributions = ScoreDistributionDto.DefaultList;
     private int _perfects = 0;
     private int _greats = 0;
     private int _goods = 0;
     private int _bads = 0;
     private int _misses = 0;
     private int _maxCombo = 0;
-    private ScoreScreen Score => new (_perfects, _greats, _goods, _bads, _misses, _maxCombo);
+    private ScoreScreen Score = new (0, 0, 0, 0, 0, 0);
     
+
     private async Task UploadFile(InputFileChangeEventArgs e)
     {
         try

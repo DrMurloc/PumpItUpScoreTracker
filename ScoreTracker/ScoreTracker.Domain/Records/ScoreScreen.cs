@@ -3,7 +3,7 @@
 public sealed record ScoreScreen(int Perfects, int Greats, int Goods, int Bads, int Misses, int MaxCombo)
 {
     private static readonly Random Random = new(1949);
-    private int TotalCount => Perfects + Greats + Goods + Bads + Misses;
+    public int TotalCount => Perfects + Greats + Goods + Bads + Misses;
 
     public int CalculatePhoenixScore => !IsValid
         ? 0
