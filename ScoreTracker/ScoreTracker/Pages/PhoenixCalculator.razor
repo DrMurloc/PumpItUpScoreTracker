@@ -43,6 +43,12 @@
         <MudText>
             <b>Plate:</b> @Score.PlateText
         </MudText>
+        @if (Score.IsValid)
+        {
+            <MudText>
+                <b>Next Letter:</b> @Score.NextLetterGrade()
+            </MudText>
+        }
     </MudItem>
 </MudGrid>
 <InputFile id="uploadInput" OnChange="@UploadFile" hidden accept=".png,.jpg,jpeg" />
@@ -93,6 +99,7 @@
     private int _misses = 0;
     private int _maxCombo = 0;
     private ScoreScreen Score => new (_perfects, _greats, _goods, _bads, _misses, _maxCombo);
+    
     private async Task UploadFile(InputFileChangeEventArgs e)
     {
         try
