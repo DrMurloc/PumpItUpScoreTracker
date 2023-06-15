@@ -65,16 +65,14 @@
                                  SeriesType="SeriesType.Bar"
                                  XValue="@(e => e.Type)"
                                  YAggregate="@(e => e.Sum(z=>z.Count))"
-                                 OrderByDescending="e=>e.Y"
                                  ShowDataLabels />
 
                 <ApexPointSeries TItem="JudgementAllocation"
                                  Items="_averageAllocation"
-                                 Name="Average Spread"
+                                 Name="Average Spread For This Score"
                                  SeriesType="SeriesType.Bar"
                              XValue="@(e => e.Type)"
                              YAggregate="@(e => e.Sum(z=>z.Count))"
-                                 OrderByDescending="e=>e.Y"
                                  ShowDataLabels />
             </ApexChart>
         }
@@ -152,12 +150,12 @@
     private Task ShowDistribution()
     {
         var scoreNoCombo = new ScoreScreen(_perfects, _greats, _goods, _bads, _misses, 0).CalculatePhoenixScore;
-        var distribution = ScoreDistributionDto.Get(scoreNoCombo,Score.TotalCount);
-        var averagePerfect = (distribution.MaxPerfect + distribution.MinPerfect) / 2;
-        var averageGreat = (distribution.MaxGreat + distribution.MinGreat) / 2;
-        var averageGood = (distribution.MaxGood + distribution.MinGood) / 2;
-        var averageBad = (distribution.MaxBad + distribution.MinBad) / 2;
-        var averageMiss = (distribution.MaxMiss + distribution.MinMiss) / 2;
+        var distribution = ScoreDistributionDto.Get(scoreNoCombo);
+        var averagePerfect = distribution.AvgPerfect;
+        var averageGreat = distribution.AvgGreat;
+        var averageGood = distribution.AvgGood;
+        var averageBad = distribution.AvgBad;
+        var averageMiss = distribution.AvgMiss;
         var scalingRatio = Score.TotalCount / (double)(averagePerfect + averageGreat + averageGood + averageBad + averageMiss);
         _averageAllocation = new JudgementAllocation[]
         {
