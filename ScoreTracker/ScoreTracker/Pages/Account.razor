@@ -19,9 +19,9 @@
     </MudCardContent>
     <MudCardActions>
         <MudSpacer></MudSpacer>
-        <MudButton Icon="@Icons.Filled.Download" Variant="Variant.Filled" Color="Color.Primary" OnClick="DownloadScores">Download Scores</MudButton>
-        <MudButton Href="/UploadScores" Icon="@Icons.Filled.UploadFile" Variant="Variant.Filled" Color="Color.Primary">Upload Scores</MudButton>
-        <MudButton Href="/Logout" Icon="@Icons.Filled.Logout" Variant="Variant.Filled" Color="Color.Primary">Logout</MudButton>
+        <MudButton Icon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Primary" OnClick="DownloadScores">Download Scores</MudButton>
+        <MudButton Href="/UploadScores" Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Filled" Color="Color.Primary">Upload Scores</MudButton>
+        <MudButton Href="/Logout" Icon="@Icons.Material.Filled.Logout" Variant="Variant.Filled" Color="Color.Primary">Logout</MudButton>
     </MudCardActions>
 </MudCard>
 
@@ -119,7 +119,7 @@
 
     private async Task DownloadScores()
     {
-        var scores = await Mediator.Send(new GetBestChartAttemptsQuery(CurrentUser.User.Id));
+        var scores = await Mediator.Send(new GetXXBestChartAttemptsQuery(CurrentUser.User.Id));
         var scoreDtos = scores.OrderBy(s=>s.Chart.Level).ThenBy(s=>s.Chart.Type).Select(s => new SpreadsheetScoreDto
         {
             Difficulty = s.Chart.DifficultyString,

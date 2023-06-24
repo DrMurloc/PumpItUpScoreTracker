@@ -13,11 +13,12 @@
 <PageTitle>Best Attempts</PageTitle>
 
 <MudPaper>
+    <MudText>Note: The Progress page hasn't been updated to support Phoenix yet.</MudText>
     <MudToolBar>
         <MudText Typo="Typo.h6">Progress</MudText>
         <MudSpacer></MudSpacer>
 
-        <MudSelect T="SelectedChartsEnum" Label="Chart Type" Value="_selectedCharts" ValueChanged="ChangeSelectedCharts" FullWidth="false" Style="padding-left:30px;">
+        <MudSelect T="SelectedChartsEnum" Label="Chart Type" Value="_selectedCharts" ValueChanged="ChangeSelectedCharts" FullWidth="false" Style="padding-left: 30px;">
             <MudSelectItem T="SelectedChartsEnum" Value="SelectedChartsEnum.All"></MudSelectItem>
             <MudSelectItem T="SelectedChartsEnum" Value="SelectedChartsEnum.Singles"></MudSelectItem>
             <MudSelectItem T="SelectedChartsEnum" Value="SelectedChartsEnum.Doubles"></MudSelectItem>
@@ -25,11 +26,11 @@
         @if (CurrentUser.IsLoggedIn && CurrentUser.User.IsPublic && CurrentUser.User.Id == RequestedUserId)
         {
             <MudTooltip Text="Share Your Progress Page" Inline="true">
-                <MudIconButton Icon="@Icons.Filled.Share" OnClick="() => _showShareDialog = true"></MudIconButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Share" OnClick="() => _showShareDialog = true"></MudIconButton>
             </MudTooltip>
         }
         <br/>
-        
+
     </MudToolBar>
     <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
         <MudTabPanel Text="Overview">
@@ -73,8 +74,8 @@
     </DialogContent>
     <DialogActions>
         <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Filled.ContentCopy" OnClick="CopyShareLink">Copy To Clipboard</MudButton>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Filled.Close" OnClick="()=>_showShareDialog=false">Close</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyShareLink">Copy To Clipboard</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showShareDialog=false">Close</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -120,13 +121,13 @@
         _isLoading = true;
         
         StateHasChanged();
-        var difficultyLetters = new Dictionary<DifficultyLevel, IDictionary<LetterGrade, int>>();
+        var difficultyLetters = new Dictionary<DifficultyLevel, IDictionary<XXLetterGrade, int>>();
         var difficultyUngraded = new Dictionary<DifficultyLevel, int>();
         var difficultyPasses = new Dictionary<DifficultyLevel, IDictionary<bool, int>>();
         foreach (var level in Enumerable.Range(DifficultyLevel.Min, DifficultyLevel.Max))
         {
-            difficultyLetters[level] = new Dictionary<LetterGrade, int>();
-            foreach (var letter in Enum.GetValues<LetterGrade>())
+            difficultyLetters[level] = new Dictionary<XXLetterGrade, int>();
+            foreach (var letter in Enum.GetValues<XXLetterGrade>())
             {
                 difficultyLetters[level][letter] = 0;
             }
@@ -160,23 +161,23 @@
             var isPass = !(score.BestAttempt?.IsBroken ?? true);
             switch (score.BestAttempt?.LetterGrade)
             {
-                case LetterGrade.A:
+                case XXLetterGrade.A:
                     difficultyDtos[score.Chart.Level].ACount++;
                     break;
-                case LetterGrade.S:
+                case XXLetterGrade.S:
                     difficultyDtos[score.Chart.Level].SCount++;
                     break;
-                case LetterGrade.SS:
+                case XXLetterGrade.SS:
                     difficultyDtos[score.Chart.Level].SSCount++;
                     break;
-                case LetterGrade.SSS:
+                case XXLetterGrade.SSS:
                     difficultyDtos[score.Chart.Level].SSSCount++;
                     break;
                 case null:
-                case LetterGrade.F:
-                case LetterGrade.D:
-                case LetterGrade.C:
-                case LetterGrade.B:
+                case XXLetterGrade.F:
+                case XXLetterGrade.D:
+                case XXLetterGrade.C:
+                case XXLetterGrade.B:
                 default:
                     break;
             }
@@ -200,10 +201,10 @@
             difficultyPasses[level][isPass]++;
         }
         _difficultyOverviews = difficultyDtos.Values.OrderByDescending(d=>d.Difficulty).ToArray();
-        var letterSeries = new Dictionary<LetterGrade, List<double>>();
+        var letterSeries = new Dictionary<XXLetterGrade, List<double>>();
         var ungradedSeries = new List<double>();
         var passSeries = new Dictionary<bool, List<double>>();
-        foreach (var letter in Enum.GetValues<LetterGrade>())
+        foreach (var letter in Enum.GetValues<XXLetterGrade>())
         {
             letterSeries[letter] = new List<double>();
         }
@@ -239,9 +240,9 @@
                     Name = "Ungraded", Data = ungradedSeries.ToArray()
                 });
         }
-        var graphedLetters = new HashSet<LetterGrade>(new[] { LetterGrade.A, LetterGrade.S, LetterGrade.SS, LetterGrade.SSS });
+        var graphedLetters = new HashSet<XXLetterGrade>(new[] { XXLetterGrade.A, XXLetterGrade.S, XXLetterGrade.SS, XXLetterGrade.SSS });
         var lessThanA = new double[DifficultyLevel.Max];
-        foreach (var letter in Enum.GetValues<LetterGrade>())
+        foreach (var letter in Enum.GetValues<XXLetterGrade>())
         {
             
             if (!letterSeries[letter].Any(v => v > 0))
@@ -296,7 +297,7 @@
 
     }
 
-    private IEnumerable<BestChartAttempt> _scores;
+    private IEnumerable<BestXXChartAttempt> _scores;
     protected override async Task OnInitializedAsync()
     {
         if (RequestedUserId == null)
@@ -308,7 +309,7 @@
             }
             RequestedUserId = CurrentUser.User.Id;
         }
-        _scores = await Mediator.Send(new GetBestChartAttemptsQuery(RequestedUserId.Value));
+        _scores = await Mediator.Send(new GetXXBestChartAttemptsQuery(RequestedUserId.Value));
         PopulateGraphs();
     }
     private enum SelectedChartsEnum{

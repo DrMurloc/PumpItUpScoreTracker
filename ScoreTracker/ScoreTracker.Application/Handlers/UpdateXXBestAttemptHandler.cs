@@ -5,15 +5,15 @@ using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Application.Handlers;
 
-public sealed class UpdateBestAttemptHandler : IRequestHandler<UpdateBestAttemptCommand>
+public sealed class UpdateXXBestAttemptHandler : IRequestHandler<UpdateXXBestAttemptCommand>
 {
-    private readonly IChartAttemptRepository _attempts;
+    private readonly IXXChartAttemptRepository _attempts;
     private readonly IChartRepository _charts;
     private readonly IDateTimeOffsetAccessor _dateTimeOffset;
     private readonly ICurrentUserAccessor _user;
 
-    public UpdateBestAttemptHandler(
-        IChartAttemptRepository attempts,
+    public UpdateXXBestAttemptHandler(
+        IXXChartAttemptRepository attempts,
         ICurrentUserAccessor user,
         IDateTimeOffsetAccessor dateTimeOffset,
         IChartRepository charts)
@@ -24,12 +24,12 @@ public sealed class UpdateBestAttemptHandler : IRequestHandler<UpdateBestAttempt
         _dateTimeOffset = dateTimeOffset;
     }
 
-    public async Task<Unit> Handle(UpdateBestAttemptCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(UpdateXXBestAttemptCommand request, CancellationToken cancellationToken)
     {
         var chart = await _charts.GetChart(request.chartId, cancellationToken);
         if (request.LetterGrade != null)
             await _attempts.SetBestAttempt(_user.User.Id, chart,
-                new ChartAttempt(request.LetterGrade.Value, request.IsBroken, request.Score, _dateTimeOffset.Now),
+                new XXChartAttempt(request.LetterGrade.Value, request.IsBroken, request.Score, _dateTimeOffset.Now),
                 _dateTimeOffset.Now, cancellationToken);
         else
             await _attempts.RemoveBestAttempt(_user.User.Id, chart, cancellationToken);

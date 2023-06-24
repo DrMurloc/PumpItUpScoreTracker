@@ -26,7 +26,8 @@ public sealed class
         var result = (await _ratings.GetAllChartRatedDifficulties(cancellationToken)).ToArray();
         if (request.Level != null || request.Type != null)
         {
-            var charts = (await _charts.GetCharts(request.Level, request.Type, cancellationToken)).Select(c => c.Id)
+            var charts = (await _charts.GetCharts(null, request.Level, request.Type, cancellationToken))
+                .Select(c => c.Id)
                 .ToHashSet();
             result = result.Where(r => charts.Contains(r.ChartId)).ToArray();
         }

@@ -11,7 +11,7 @@ public sealed class TitleProgress
 
     public int CompletionCount { get; private set; }
 
-    public void ApplyAttempt(BestChartAttempt attempt)
+    public void ApplyAttempt(BestXXChartAttempt attempt)
     {
         if (Title.DoesAttemptApply(attempt)) CompletionCount++;
     }

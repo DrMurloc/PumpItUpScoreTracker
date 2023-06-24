@@ -73,7 +73,7 @@ public static class TitleList
         new SkillTitle("Run LV.6", "Bee", ChartType.Double, 20),
         new SkillTitle("Run LV.7", "Sarabande", ChartType.Double, 21),
         new SkillTitle("Run LV.8", "Just Hold On (To All Fighters)", ChartType.Double, 22),
-        new SkillTitle("Run LV.9", "Final Audition EP.2-X", ChartType.Single, 23, LetterGrade.S),
+        new SkillTitle("Run LV.9", "Final Audition EP.2-X", ChartType.Single, 23, XXLetterGrade.S),
         new SkillTitle("Run LV.10", "Yog Sothoth", ChartType.Double, 24),
         new BasicTitle("Run Expert", "Get all 10 Run titles", "Skill"),
         new SkillTitle("Drill LV.1", "Vook", ChartType.Single, 15),
@@ -112,15 +112,15 @@ public static class TitleList
         new BasicTitle("Specialist", "Get all 50 skill titles", "Skill"),
         new CustomTitle("Co-Op Beginner", "5 S on CoOp", 5, "CoOp",
             c => c.Chart.Type == ChartType.CoOp &&
-                 c.BestAttempt?.LetterGrade is LetterGrade.S or LetterGrade.SS or LetterGrade.SSS),
+                 c.BestAttempt?.LetterGrade is XXLetterGrade.S or XXLetterGrade.SS or XXLetterGrade.SSS),
         new CustomTitle("Co-Op Intermediate", "20 S/SS (not SSS) on CoOp", 20, "CoOp",
-            c => c.Chart.Type == ChartType.CoOp && c.BestAttempt?.LetterGrade is LetterGrade.S or LetterGrade.SS),
+            c => c.Chart.Type == ChartType.CoOp && c.BestAttempt?.LetterGrade is XXLetterGrade.S or XXLetterGrade.SS),
         new CustomTitle("Co-Op Advanced", "30 S/SS (not SSS) on CoOp", 30, "CoOp",
-            c => (c.Chart.Type == ChartType.CoOp) & c.BestAttempt?.LetterGrade is LetterGrade.S or LetterGrade.SS),
+            c => (c.Chart.Type == ChartType.CoOp) & c.BestAttempt?.LetterGrade is XXLetterGrade.S or XXLetterGrade.SS),
         new CustomTitle("Co-Op Expert", "40 SSS on CoOp", 40, "CoOp",
-            c => c.Chart.Type == ChartType.CoOp && c.BestAttempt?.LetterGrade == LetterGrade.SSS),
+            c => c.Chart.Type == ChartType.CoOp && c.BestAttempt?.LetterGrade == XXLetterGrade.SSS),
         new CustomTitle("Co-Op Master", "55 SSS on CoOp", 55, "CoOp",
-            c => c.Chart.Type == ChartType.CoOp && c.BestAttempt?.LetterGrade == LetterGrade.SSS),
+            c => c.Chart.Type == ChartType.CoOp && c.BestAttempt?.LetterGrade == XXLetterGrade.SSS),
         new BasicTitle("Macnom", "Stage fail on 2nd song in a credit 10 times"),
         new BasicTitle("Gold Member", "100 Play Count", "Play Count"),
         new BasicTitle("Platinum Member", "500 Play Count", "Play Count"),
@@ -181,7 +181,7 @@ public static class TitleList
         new BasicTitle("Tap Dancer", "Play Papasito FULL SONG 5 times", "Songs")
     };
 
-    public static IEnumerable<TitleProgress> BuildProgress(IEnumerable<BestChartAttempt> attempts)
+    public static IEnumerable<TitleProgress> BuildProgress(IEnumerable<BestXXChartAttempt> attempts)
     {
         var progress = Titles.Select(t => new TitleProgress(t)).ToImmutableArray();
         foreach (var attempt in attempts)

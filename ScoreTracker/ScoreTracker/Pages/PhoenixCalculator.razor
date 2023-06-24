@@ -10,7 +10,7 @@
     <MudButton HtmlTag="label"
                Variant="@Variant.Filled"
                Color="@Color.Primary"
-               StartIcon="@Icons.Filled.UploadFile"
+               StartIcon="@Icons.Material.Filled.UploadFile"
                for="uploadInput">
         Upload Scores
     </MudButton>
@@ -136,12 +136,12 @@
     private Task SetScore(int perfects, int greats, int goods, int bads, int misses, int maxCombo)
     {
         _showDistribution = false;
-        _perfects = perfects;
-        _greats = greats;
-        _goods = goods;
-        _bads = bads;
-        _misses = misses;
-        _maxCombo = maxCombo;
+        _perfects = Math.Abs(perfects);
+        _greats = Math.Abs(greats);
+        _goods = Math.Abs(goods);
+        _bads = Math.Abs(bads);
+        _misses = Math.Abs(misses);
+        _maxCombo = Math.Abs(maxCombo);
         Score = new(_perfects, _greats, _goods, _bads, _misses, _maxCombo);
         return Task.CompletedTask;
 

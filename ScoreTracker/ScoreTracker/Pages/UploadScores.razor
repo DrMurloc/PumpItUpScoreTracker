@@ -47,7 +47,7 @@
                             </Column>
                             <Column T="BestAttemptDto" Field="Level" Title="Level" IsEditable="false">
                             </Column>
-                            <Column T="BestAttemptDto" Field="LetterGrade" Title="LetterGrade" IsEditable="false"></Column>
+                            <Column T="BestAttemptDto" Field="XXLetterGrade" Title="XXLetterGrade" IsEditable="false"></Column>
                             <Column T="BestAttemptDto" Field="IsBroken" Title="IsBroken" IsEditable="false"></Column>
                         </Columns>
                     </MudDataGrid>
@@ -96,20 +96,20 @@
         {
             <MudButton Variant="@Variant.Text"
                        Color="@Color.Primary"
-                       StartIcon="@Icons.Filled.Cancel"
+                       StartIcon="@Icons.Material.Filled.Cancel"
                        OnClick="@Cancel">Cancel</MudButton>
         }
         @if (_currentStep == Step.Information)
         {
             <MudButton Variant="@Variant.Text"
                        Color="@Color.Primary"
-                       StartIcon="@Icons.Filled.Info"
+                       StartIcon="@Icons.Material.Filled.Info"
                        OnClick="()=>_isExampleDialogShowing=true">Supported Formats</MudButton>
 
             <MudButton HtmlTag="label"
                        Variant="@Variant.Filled"
                        Color="@Color.Primary"
-                       StartIcon="@Icons.Filled.UploadFile"
+                       StartIcon="@Icons.Material.Filled.UploadFile"
                        for="uploadInput">
                 Upload Scores
             </MudButton>
@@ -118,11 +118,11 @@
         {
             <MudButton Variant="@Variant.Text"
                        Color="@Color.Primary"
-                       StartIcon="@Icons.Filled.ViewList"
+                       StartIcon="@Icons.Material.Filled.ViewList"
                        OnClick="@(_=>_isScoreTableShowing=!_isScoreTableShowing)">@(_isScoreTableShowing?"Hide":"Show") Scores</MudButton>
             <MudButton Variant="@Variant.Filled"
                        Color="@Color.Primary"
-                       StartIcon="@Icons.Filled.Save"
+                       StartIcon="@Icons.Material.Filled.Save"
                        OnClick="@SaveScores">Save Scores</MudButton>
         }
         @if (_failedUploads.Any() && _currentStep is Step.Confirming or Step.Finished)
@@ -130,14 +130,14 @@
             <MudButton OnClick="@DownloadFailures"
                        Variant="@Variant.Outlined"
                        Color="@Color.Primary"
-                       StartIcon="@Icons.Filled.FileDownload">Download Failures</MudButton>
+                       StartIcon="@Icons.Material.Filled.FileDownload">Download Failures</MudButton>
         }
         @if (_currentStep == Step.Finished)
         {
             <MudButton OnClick="@(_=>_currentStep=Step.Information)"
                        Variant="@Variant.Text"
                        Color="@Color.Primary"
-                       StartIcon="@Icons.Filled.RestartAlt">Restart</MudButton>
+                       StartIcon="@Icons.Material.Filled.RestartAlt">Restart</MudButton>
         }
     </MudCardActions>
 </MudCard>
@@ -226,7 +226,7 @@
     private TimeSpan _remainingTime = TimeSpan.MinValue;
 
     private List<SpreadsheetScoreErrorDto> _failedUploads = new List<SpreadsheetScoreErrorDto>();
-    private List<BestChartAttempt> _spreadSheetScores = new List<BestChartAttempt>();
+    private List<BestXXChartAttempt> _spreadSheetScores = new List<BestXXChartAttempt>();
     private IEnumerable<BestAttemptDto> _attemptDtos => _spreadSheetScores.Select(BestAttemptDto.From);
 
     private CancellationTokenSource _currentCancellation;
@@ -337,7 +337,7 @@
             _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxSaving - (double)_currentSaved) / (double)_currentSaved);
             try
             {
-                await Mediator.Send(new UpdateBestAttemptCommand(best.Chart.Id, best.BestAttempt?.LetterGrade, best.BestAttempt?.IsBroken ?? true,null), cancellationToken);
+                await Mediator.Send(new UpdateXXBestAttemptCommand(best.Chart.Id, best.BestAttempt?.LetterGrade, best.BestAttempt?.IsBroken ?? true,null), cancellationToken);
             }
             catch (OperationCanceledException)
             {

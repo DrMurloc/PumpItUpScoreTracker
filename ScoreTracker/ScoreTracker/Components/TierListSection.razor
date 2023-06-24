@@ -43,13 +43,13 @@
                         else
                         {
                             <MudTooltip Text="Open Youtube Search for Chart">
-                                <MudIconButton Icon="@Icons.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
+                                <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
                             </MudTooltip>
                         }
                         @if (CurrentUser.IsLoggedIn)
                         {
                             <MudTooltip Text="Update Grade">
-                                <MudIconButton Icon="@Icons.Filled.Edit" OnClick="@(() => OnEdit(chart.Id))"></MudIconButton>
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OnEdit(chart.Id))"></MudIconButton>
                             </MudTooltip>
                         }
                     </MudCardActions>

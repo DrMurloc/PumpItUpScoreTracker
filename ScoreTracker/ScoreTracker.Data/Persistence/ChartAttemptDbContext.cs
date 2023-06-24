@@ -9,7 +9,9 @@ public sealed class ChartAttemptDbContext : DbContext
 {
     private readonly SqlConfiguration _configuration;
 
+#pragma warning disable CS8618
     public ChartAttemptDbContext(DbContextOptions<ChartAttemptDbContext> options, IOptions<SqlConfiguration> sqlOptions)
+#pragma warning restore CS8618
         : base(options)
     {
         _configuration = sqlOptions.Value;
@@ -26,6 +28,7 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<SavedChartEntity> SavedChart { get; set; }
     public DbSet<UserChartDifficultyRatingEntity> UserChartDifficultyRating { get; set; }
     public DbSet<ChartDifficultyRatingEntity> ChartDifficultyRating { get; set; }
+    public DbSet<PhoenixRecordEntity> PhoenixBestAttempt { get; set; }
     public DbSet<UserSettingsEntity> UserSettings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -46,6 +49,16 @@ public sealed class ChartAttemptDbContext : DbContext
             .HasOne<UserEntity>()
             .WithMany()
             .HasForeignKey(us => us.UserId);
+
+        builder.Entity<PhoenixRecordEntity>().ToTable("PhoenixRecord")
+            .HasOne<ChartEntity>()
+            .WithMany()
+            .HasForeignKey(ba => ba.ChartId);
+
+        builder.Entity<PhoenixRecordEntity>()
+            .HasOne<UserEntity>()
+            .WithMany()
+            .HasForeignKey(ba => ba.UserId);
 
         builder.Entity<BestAttemptEntity>().ToTable("BestAttempt")
             .HasOne<ChartEntity>()

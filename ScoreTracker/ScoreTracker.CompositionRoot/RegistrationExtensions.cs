@@ -15,7 +15,7 @@ public static class RegistrationExtensions
 {
     public static IServiceCollection AddCore(this IServiceCollection builder)
     {
-        return builder.AddMediatR(typeof(UpdateBestAttemptHandler))
+        return builder.AddMediatR(typeof(UpdateXXBestAttemptHandler))
             .AddTransient<IUserAccessService, UserAccessService>();
     }
 

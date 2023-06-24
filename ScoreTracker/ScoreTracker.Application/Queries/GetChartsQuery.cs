@@ -6,6 +6,7 @@ using ScoreTracker.Domain.ValueTypes;
 namespace ScoreTracker.Application.Queries;
 
 public sealed record GetChartsQuery
-    (DifficultyLevel? Level = null, ChartType? Type = null) : IRequest<IEnumerable<Chart>>
+(MixEnum Mix, DifficultyLevel? Level = null, ChartType? Type = null,
+    IEnumerable<Guid>? ChartIds = null) : IRequest<IEnumerable<Chart>>
 {
 }

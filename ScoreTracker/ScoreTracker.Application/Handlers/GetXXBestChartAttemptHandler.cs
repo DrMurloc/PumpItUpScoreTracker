@@ -5,14 +5,14 @@ using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Application.Handlers;
 
-public sealed class GetBestChartAttemptHandler : IRequestHandler<GetBestChartAttemptQuery, BestChartAttempt>
+public sealed class GetXXBestChartAttemptHandler : IRequestHandler<GetXXBestChartAttemptQuery, BestXXChartAttempt>
 {
-    private readonly IChartAttemptRepository _chartAttempts;
+    private readonly IXXChartAttemptRepository _chartAttempts;
     private readonly IChartRepository _charts;
     private readonly ICurrentUserAccessor _user;
 
-    public GetBestChartAttemptHandler(ICurrentUserAccessor user,
-        IChartAttemptRepository chartAttempts,
+    public GetXXBestChartAttemptHandler(ICurrentUserAccessor user,
+        IXXChartAttemptRepository chartAttempts,
         IChartRepository charts)
     {
         _user = user;
@@ -20,10 +20,11 @@ public sealed class GetBestChartAttemptHandler : IRequestHandler<GetBestChartAtt
         _charts = charts;
     }
 
-    public async Task<BestChartAttempt> Handle(GetBestChartAttemptQuery request, CancellationToken cancellationToken)
+    public async Task<BestXXChartAttempt> Handle(GetXXBestChartAttemptQuery request,
+        CancellationToken cancellationToken)
     {
         var chart = await _charts.GetChart(request.ChartId, cancellationToken);
         var bestAttempt = await _chartAttempts.GetBestAttempt(_user.User.Id, chart, cancellationToken);
-        return new BestChartAttempt(chart, bestAttempt);
+        return new BestXXChartAttempt(chart, bestAttempt);
     }
 }

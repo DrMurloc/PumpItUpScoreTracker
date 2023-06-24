@@ -9,7 +9,7 @@ public sealed class StepArtistTitle : Title
     {
     }
 
-    public override bool DoesAttemptApply(BestChartAttempt attempt)
+    public override bool DoesAttemptApply(BestXXChartAttempt attempt)
     {
         return false;
     }

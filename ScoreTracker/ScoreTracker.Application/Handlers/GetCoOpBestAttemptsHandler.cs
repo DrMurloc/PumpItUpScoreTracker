@@ -6,13 +6,13 @@ using ScoreTracker.Domain.SecondaryPorts;
 namespace ScoreTracker.Application.Handlers;
 
 public sealed class
-    GetCoOpBestAttemptsHandler : IRequestHandler<GetCoOpBestAttemptsQuery, IEnumerable<BestChartAttempt>>
+    GetCoOpBestAttemptsHandler : IRequestHandler<GetXXCoOpBestAttemptsQuery, IEnumerable<BestXXChartAttempt>>
 {
-    private readonly IChartAttemptRepository _chartAttemptRepository;
+    private readonly IXXChartAttemptRepository _chartAttemptRepository;
     private readonly IChartRepository _chartRepository;
     private readonly ICurrentUserAccessor _currentUser;
 
-    public GetCoOpBestAttemptsHandler(IChartAttemptRepository chartAttemptRepository,
+    public GetCoOpBestAttemptsHandler(IXXChartAttemptRepository chartAttemptRepository,
         IChartRepository chartRepository, ICurrentUserAccessor currentUser)
     {
         _chartAttemptRepository = chartAttemptRepository;
@@ -20,7 +20,7 @@ public sealed class
         _currentUser = currentUser;
     }
 
-    public async Task<IEnumerable<BestChartAttempt>> Handle(GetCoOpBestAttemptsQuery request,
+    public async Task<IEnumerable<BestXXChartAttempt>> Handle(GetXXCoOpBestAttemptsQuery request,
         CancellationToken cancellationToken)
     {
         var charts = await _chartRepository.GetCoOpCharts(cancellationToken);

@@ -31,7 +31,7 @@ public sealed class DifficultyLevelTitle : Title
         _maximumLevel = level;
     }
 
-    public override bool DoesAttemptApply(BestChartAttempt attempt)
+    public override bool DoesAttemptApply(BestXXChartAttempt attempt)
     {
         if (attempt.BestAttempt == null) return false;
 

@@ -8,7 +8,7 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.ValueTypes
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
-@using Chart = ScoreTracker.Domain.Models.Chart
+@using System.ComponentModel.DataAnnotations
 @inject IMediator Mediator;
 @inject ICurrentUserAccessor CurrentUser;
 @inject ISnackbar Snackbar
@@ -21,17 +21,44 @@
                 <MudText Typo="Typo.h5">@_selectedChart.Song.Name @_selectedChart.DifficultyString</MudText>
             </MudItem>
         }
-        <MudItem xs="4">
-            <MudSelect T="LetterGrade?" Value="_selectedLetterGrade" ValueChanged="LetterGradeChanged" Clearable="true">
-                @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
-                {
-                    <MudSelectItem T="LetterGrade?" Value="@letterGrade">@letterGrade.ToString()</MudSelectItem>
-                }
-            </MudSelect>
+        
+        <MudItem xs="12">
+            <MudNumericField T="int?" Label="Score" Value="_inputScore" ValueChanged="ScoreChanged" Min="XXScore.Min" Max="XXScore.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
         </MudItem>
+        <MudItem xs="4">
+            @if (CurrentMix == MixEnum.XX)
+            {
+                
+                <MudSelect T="XXLetterGrade?" Value="_selectedLetterGrade" ValueChanged="LetterGradeChanged" Clearable="true">
+                    @foreach (var letterGrade in Enum.GetValues<XXLetterGrade>())
+                    {
+                        <MudSelectItem T="XXLetterGrade?" Value="@letterGrade">@letterGrade.ToString()</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+            else
+            {
+                <MudText>
+                    @PhoenixLetter?.GetName()
+                </MudText>
+            }
+        </MudItem>
+
         <MudItem xs="4">
             <MudCheckBox T="bool" Checked="@_isBroken" CheckedChanged="BrokenChanged" Label="Broken"></MudCheckBox>
-        </MudItem>
+        </MudItem>        
+        @if (CurrentMix == MixEnum.Phoenix)
+        {
+            <MudItem xs="4">
+
+                <MudSelect T="PhoenixPlate?" Label="Plate" Value="_selectedPlate" ValueChanged="PlateChanged" Clearable="true" Margin="@Margin.Dense">
+                    @foreach (var plate in Enum.GetValues<PhoenixPlate>())
+                    {
+                        <MudSelectItem T="PhoenixPlate?" Value="@plate">@plate.GetName()</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        }
 
         <MudItem xs="2">
             @if (_favoriteCharts.Contains(_selectedChart.Id))
@@ -65,16 +92,13 @@
                 </MudTooltip>
             }
         </MudItem>
-        <MudItem xs="12">
-            <MudNumericField T="int?" Label="Score (optional)" Value="_inputScore" ValueChanged="ScoreChanged" Min="Score.Min" Max="Score.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
-        </MudItem>
         @if (_recordedOn != null)
         {
             <MudItem xs="12">
                 <MudText>Recorded on @_recordedOn.Value.ToString("MMM dd, yyyy")</MudText>
             </MudItem>
         }
-        @if (_selectedChart.Type != ChartType.CoOp)
+        @if (_selectedChart.Type != ChartType.CoOp && CurrentMix!=MixEnum.Phoenix)
         {
             <MudItem xs="8">
                 <MudSelect Label="Your Difficulty Rating" T="int?" Value="_selectedAdjustment" ValueChanged="UpdateDifficultyRating">
@@ -93,7 +117,9 @@
     }
 </MudGrid>
 @code {
-    private LetterGrade? _selectedLetterGrade { get; set; }
+    private XXLetterGrade? _selectedLetterGrade { get; set; }
+    private PhoenixLetterGrade? PhoenixLetter => _inputScore == null ? null : PhoenixScore.TryParse(_inputScore.Value, out var score) ? score.LetterGrade : null;
+    private PhoenixPlate? _selectedPlate;
     private int? _selectedAdjustment;
     private int? _inputScore;
     private double? _currentRatedDifficulty;
@@ -106,13 +132,16 @@
     private DateTimeOffset? _recordedOn;
 
     [Parameter]
+    [Required]
+    public MixEnum CurrentMix { get; set; }
+    [Parameter]
     public Guid ChartId { get; set; } = Guid.Empty;
 
     [Parameter]
     public bool ShowChartName { get; set; } = false;
 
     [Parameter]
-    public Action<Chart, ChartAttempt?> NewAttemptRecorded { get; set; } = (c, b) => { };
+    public Action<Chart, XXChartAttempt?> NewAttemptRecorded { get; set; } = (c, b) => { };
     
     private async Task BrokenChanged(bool newState)
     {
@@ -120,7 +149,7 @@
         await SaveBest();
     }
 
-    private async Task LetterGradeChanged(LetterGrade? letterGrade)
+    private async Task LetterGradeChanged(XXLetterGrade? letterGrade)
     {
         _selectedLetterGrade = letterGrade;
         if (letterGrade == null)
@@ -130,6 +159,11 @@
         await SaveBest();
     }
 
+    private async Task PlateChanged(PhoenixPlate? newPlate)
+    {
+        _selectedPlate = newPlate;
+        await SaveBest();
+    }
     private async Task ScoreChanged(int? newScore)
     {
         _inputScore = newScore;
@@ -145,20 +179,36 @@
     
         try
         {
-            await Mediator.Send(new UpdateBestAttemptCommand(_selectedChart.Id,  _selectedLetterGrade, _isBroken,_inputScore));
-        
-            var chartName = $"{_selectedChart.Song.Name} {DifficultyLevel.ToShorthand(_selectedChart.Type,_selectedChart.Level)}";
-            
-            _recordedOn = DateTimeOffset.Now;
-            if (_selectedLetterGrade != null)
+            if (CurrentMix == MixEnum.XX)
             {
-                NewAttemptRecorded(_selectedChart, new ChartAttempt(_selectedLetterGrade.Value, _isBroken, _inputScore, DateTimeOffset.Now));
-                Snackbar.Add( $"Recorded {(_isBroken ? "Broken":"")} {_selectedLetterGrade.Value} for {chartName}", Severity.Success);
+                
+                await Mediator.Send(new UpdateXXBestAttemptCommand(_selectedChart.Id,  _selectedLetterGrade, _isBroken,_inputScore));
+        
+                var chartName = $"{_selectedChart.Song.Name} {DifficultyLevel.ToShorthand(_selectedChart.Type,_selectedChart.Level)}";
+            
+                _recordedOn = DateTimeOffset.Now;
+                if (_selectedLetterGrade != null)
+                {
+                    NewAttemptRecorded(_selectedChart, new XXChartAttempt(_selectedLetterGrade.Value, _isBroken, _inputScore, DateTimeOffset.Now));
+                    Snackbar.Add( $"Recorded {(_isBroken ? "Broken":"")} {_selectedLetterGrade.Value} for {chartName}", Severity.Success);
+                }
+                else
+                {
+                    NewAttemptRecorded(_selectedChart, null);
+                    Snackbar.Add($"Removed record for {chartName}", Severity.Success);
+                }
             }
             else
             {
-                NewAttemptRecorded(_selectedChart, null);
-                Snackbar.Add($"Removed record for {chartName}", Severity.Success);
+                
+                var parsedScore = _inputScore == null ? null : PhoenixScore.TryParse(_inputScore.Value, out var score) ? (PhoenixScore?)score : null;
+
+
+                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(_selectedChart.Id, _isBroken, parsedScore, _selectedPlate));
+                
+                var chartName = $"{_selectedChart.Song.Name} {DifficultyLevel.ToShorthand(_selectedChart.Type,_selectedChart.Level)}";
+                var grade = parsedScore?.LetterGrade.GetName()+" " ?? "";
+                Snackbar.Add($"Recorded {(_isBroken ? "Broken" : "Passing")} {grade}for {chartName}", Severity.Success);
             }
 
         }
@@ -208,28 +258,50 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (ChartId != Guid.Empty && (_selectedChart==null || ChartId!=_selectedChart.Id))
-        {
-            await LoadChart(ChartId);
-        }
+        await LoadChart(ChartId);
+
     }
     private async Task LoadChart(Guid chartId)
     {
-        var bestRecord = await Mediator.Send(new GetBestChartAttemptQuery(chartId));
-        _selectedChart = bestRecord.Chart;
-        if (bestRecord.BestAttempt == null)
+        if (CurrentMix == MixEnum.Phoenix)
         {
-            _selectedLetterGrade = null;
-            _isBroken = true;
-            _inputScore = null;
-            _recordedOn = null;
+            
+            var bestRecord = await Mediator.Send(new GetPhoenixRecordQuery(chartId));
+            _selectedChart = (await Mediator.Send(new GetChartsQuery(CurrentMix, ChartIds: new[] { chartId }))).First();
+            if (bestRecord== null)
+            {
+                _selectedLetterGrade = null;
+                _isBroken = true;
+                _inputScore = null;
+                _recordedOn = null;
+                _selectedPlate = null;
+            }
+            else
+            {
+                _isBroken = bestRecord.IsBroken;
+                _inputScore = bestRecord.Score;
+                _recordedOn = bestRecord.RecordedDate;
+                _selectedPlate = bestRecord.Plate;
+            }
         }
         else
         {
-            _selectedLetterGrade = bestRecord.BestAttempt.LetterGrade;
-            _isBroken = bestRecord.BestAttempt.IsBroken;
-            _inputScore = bestRecord.BestAttempt.Score;
-            _recordedOn = bestRecord.BestAttempt.RecordedOn;
+            var bestRecord = await Mediator.Send(new GetXXBestChartAttemptQuery(chartId));
+            _selectedChart = (await Mediator.Send(new GetChartsQuery(CurrentMix, ChartIds: new[] { chartId }))).First();
+            if (bestRecord.BestAttempt == null)
+            {
+                _selectedLetterGrade = null;
+                _isBroken = true;
+                _inputScore = null;
+                _recordedOn = null;
+            }
+            else
+            {
+                _selectedLetterGrade = bestRecord.BestAttempt.LetterGrade;
+                _isBroken = bestRecord.BestAttempt.IsBroken;
+                _inputScore = bestRecord.BestAttempt.Score;
+                _recordedOn = bestRecord.BestAttempt.RecordedOn;
+            }
         }
         var rating = await Mediator.Send(new GetChartRatingQuery(chartId));
         if (rating == null)

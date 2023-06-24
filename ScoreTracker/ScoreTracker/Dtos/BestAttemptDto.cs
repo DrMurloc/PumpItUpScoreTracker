@@ -1,4 +1,5 @@
-﻿using ScoreTracker.Domain.Models;
+﻿using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Web.Dtos;
@@ -9,7 +10,9 @@ public class BestAttemptDto
     public string Category { get; set; }
     public int Level { get; set; }
     public string SongName { get; set; }
-    public string LetterGrade { get; set; } = string.Empty;
+    public string XXLetterGrade { get; set; } = string.Empty;
+    public PhoenixLetterGrade? PhoenixLetterGrade { get; set; }
+    public PhoenixPlate? PhoenixPlate { get; set; }
     public bool IsBroken { get; set; }
     public string ChartType { get; set; } = string.Empty;
     public string ImagePath { get; set; } = string.Empty;
@@ -21,7 +24,7 @@ public class BestAttemptDto
     public string DifficultyBubblePath =>
         $"https://piuimages.arroweclip.se/difficulty/{DifficultyShorthand.ToLower()}.png";
 
-    public static BestAttemptDto From(BestChartAttempt attempt)
+    public static BestAttemptDto From(BestXXChartAttempt attempt)
     {
         return new BestAttemptDto
         {
@@ -30,7 +33,7 @@ public class BestAttemptDto
                 ? nameof(Domain.Enums.ChartType.CoOp) + " x" + attempt.Chart.PlayerCount
                 : attempt.Chart.Type.ToString(),
             IsBroken = attempt.BestAttempt?.IsBroken ?? true,
-            LetterGrade = attempt.BestAttempt?.LetterGrade.ToString() ?? string.Empty,
+            XXLetterGrade = attempt.BestAttempt?.LetterGrade.ToString() ?? string.Empty,
             SongName = attempt.Chart.Song.Name,
             Level = attempt.Chart.Level,
             ChartType = attempt.Chart.Type.ToString(),

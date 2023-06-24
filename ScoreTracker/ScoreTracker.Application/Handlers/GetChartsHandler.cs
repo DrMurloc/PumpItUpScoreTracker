@@ -16,6 +16,6 @@ public sealed class GetChartsHandler : IRequestHandler<GetChartsQuery, IEnumerab
 
     public async Task<IEnumerable<Chart>> Handle(GetChartsQuery request, CancellationToken cancellationToken)
     {
-        return await _charts.GetCharts(request.Level, request.Type, cancellationToken);
+        return await _charts.GetCharts(request.Mix, request.Level, request.Type, cancellationToken);
     }
 }

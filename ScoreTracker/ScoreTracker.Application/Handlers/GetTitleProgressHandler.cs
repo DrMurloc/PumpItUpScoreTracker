@@ -6,22 +6,22 @@ using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Application.Handlers;
 
-public sealed class GetTitleProgressHandler : IRequestHandler<GetTitleProgressQuery, IEnumerable<TitleProgress>>
+public sealed class GetTitleProgressHandler : IRequestHandler<GetXXTitleProgressQuery, IEnumerable<TitleProgress>>
 {
-    private readonly IChartAttemptRepository _chartAttempts;
+    private readonly IXXChartAttemptRepository _chartAttempts;
     private readonly ICurrentUserAccessor _currentUser;
 
     public GetTitleProgressHandler(ICurrentUserAccessor currentUser,
-        IChartAttemptRepository chartAttempts)
+        IXXChartAttemptRepository chartAttempts)
     {
         _currentUser = currentUser;
         _chartAttempts = chartAttempts;
     }
 
-    public async Task<IEnumerable<TitleProgress>> Handle(GetTitleProgressQuery request,
+    public async Task<IEnumerable<TitleProgress>> Handle(GetXXTitleProgressQuery request,
         CancellationToken cancellationToken)
     {
-        IEnumerable<BestChartAttempt> attempts;
+        IEnumerable<BestXXChartAttempt> attempts;
         if (_currentUser.IsLoggedIn)
         {
             var userId = _currentUser.User.Id;
@@ -29,7 +29,7 @@ public sealed class GetTitleProgressHandler : IRequestHandler<GetTitleProgressQu
         }
         else
         {
-            attempts = Array.Empty<BestChartAttempt>();
+            attempts = Array.Empty<BestXXChartAttempt>();
         }
 
         return TitleList.BuildProgress(attempts);

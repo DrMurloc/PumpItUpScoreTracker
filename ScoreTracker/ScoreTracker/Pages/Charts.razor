@@ -9,14 +9,23 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Web.Dtos
+@using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType;
 <PageTitle>Best Attempts</PageTitle>
 
 <MudGrid>
+    <MudItem xs="6" sm="4">
+        <MudSelect T="MixEnum" AdornmentIcon="@Icons.Material.Filled.LibraryMusic" Label="Mix" Value="_currentMix" ValueChanged="MixChanged">
+            @foreach (var mix in Enum.GetValues<MixEnum>())
+            {
+                <MudSelectItem T="MixEnum" Value="mix">@mix</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
     @if (FilterStatus(FilterEnum.Difficulty))
     {
         <MudItem xs="6" sm="4">
-            <MudSelect T="int?" AdornmentIcon="@Icons.Filled.Bolt" Label="Difficulty Level" Value="@DifficultyFilter" ValueChanged="DifficultyFilterChanged" Clearable="true" Disabled="ChartTypeFilter == ChartType.CoOp.ToString()">
+            <MudSelect T="int?" AdornmentIcon="@Icons.Material.Filled.Bolt" Label="Difficulty Level" Value="@DifficultyFilter" ValueChanged="DifficultyFilterChanged" Clearable="true" Disabled="ChartTypeFilter == ChartType.CoOp.ToString()">
                 @foreach (var level in Enumerable.Range(DifficultyLevel.Min, DifficultyLevel.Max))
                 {
                     <MudSelectItem T="int?" Value="@level">@level</MudSelectItem>
@@ -27,7 +36,7 @@
     @if (FilterStatus(FilterEnum.ChartType))
     {
         <MudItem xs="6" sm="4">
-            <MudSelect T="string" AdornmentIcon="@Icons.Filled.Category" Label="Chart Type" Value="ChartTypeFilter" ValueChanged="ChartTypeFilterChanged" Clearable="true">
+            <MudSelect T="string" AdornmentIcon="@Icons.Material.Filled.Category" Label="Chart Type" Value="ChartTypeFilter" ValueChanged="ChartTypeFilterChanged" Clearable="true">
                 @foreach (var type in Enum.GetValues<ChartType>())
                 {
                     @if (type == ChartType.CoOp && DifficultyFilter != null)
@@ -44,9 +53,9 @@
     {
         @if (FilterStatus(FilterEnum.ScoreState))
         {
-            
+
             <MudItem xs="6" sm="4">
-                <MudSelect T="ScoreState?" AdornmentIcon="@Icons.Filled.Rule" Label="Score State" Value="_scoreStateFilter" ValueChanged="ScoreStateFilterChanged" Clearable="true">
+                <MudSelect T="ScoreState?" AdornmentIcon="@Icons.Material.Filled.Rule" Label="Score State" Value="_scoreStateFilter" ValueChanged="ScoreStateFilterChanged" Clearable="true">
                     @foreach (var ss in Enum.GetValues<ScoreState>())
                     {
                         <MudSelectItem T="ScoreState?" Value="@ss">@ss.ToString()</MudSelectItem>
@@ -69,12 +78,12 @@
     @if (FilterStatus(FilterEnum.SongName))
     {
         <MudItem xs="12" sm="4">
-            
-            
+
+
             <MudAutocomplete T="string"
                              Value="SongNameFilter"
                              ValueChanged="SongNameFilterChanged"
-                             AdornmentIcon="@Icons.Filled.Search"
+                             AdornmentIcon="@Icons.Material.Filled.Search"
                              ResetValueOnEmptyText="true"
                              Label="Song Name"
                              Clearable="true"
@@ -83,8 +92,7 @@
                              Immediate="true"
                              Variant="Variant.Text"
                              CoerceText="true"
-                             CoerceValue="false"
-                             >
+                             CoerceValue="false">
 
             </MudAutocomplete>
         </MudItem>
@@ -105,7 +113,7 @@
         @if (CurrentUser.IsLoggedIn && CurrentUser.User.IsPublic && CurrentUser.User.Id == RequestedUserId)
         {
             <MudTooltip Text="Share Your Chart List">
-                <MudIconButton Icon="@Icons.Filled.Share" OnClick="()=>_showShareDialog=true"></MudIconButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Share" OnClick="()=>_showShareDialog=true"></MudIconButton>
             </MudTooltip>
         }
         <MudTooltip Text="Filters">
@@ -125,22 +133,28 @@
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Difficulty)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Difficulty))">Difficulty</MudMenuItem>
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongImage)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongImage))">Song Image</MudMenuItem>
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongName)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongName))">Song Name</MudMenuItem>
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.AdjustedRating)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.AdjustedRating))">Adjusted Difficulty</MudMenuItem>
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.RatingCount)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.RatingCount))">Rating Count</MudMenuItem>
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.StandardDeviation)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.StandardDeviation))">Standard Deviation</MudMenuItem>
-                @if (CurrentUser.IsLoggedIn)
+                @if (_currentMix == MixEnum.XX)
                 {
+                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.AdjustedRating)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.AdjustedRating))">Adjusted Difficulty</MudMenuItem>
+                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.RatingCount)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.RatingCount))">Rating Count</MudMenuItem>
+                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.StandardDeviation)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.StandardDeviation))">Standard Deviation</MudMenuItem>
                     
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.MyRating)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.MyRating))">My Difficulty Adjustments</MudMenuItem>
-
+                    @if (CurrentUser.IsLoggedIn)
+                    {
+                        <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.MyRating)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.MyRating))">My Difficulty Adjustments</MudMenuItem>
+                    }
                 }
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Video)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Video))">Video</MudMenuItem>
 
                 @if (RequestedUserId != null)
-                {                
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Grade)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Grade))">Letter Grade</MudMenuItem>
+                {         
                     <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Broken)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Broken))">Broken</MudMenuItem>
+                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Grade)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Grade))">Letter Grade</MudMenuItem>
                     <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Score)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Score))">Score</MudMenuItem>
+                    @if (_currentMix == MixEnum.Phoenix)
+                    {
+                        <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Plate)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Plate))">Plate</MudMenuItem>
+                    }
                     <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.RecordedOn)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.RecordedOn))">Recorded Date</MudMenuItem>
                     <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Actions)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Actions))">Actions</MudMenuItem>
 
@@ -161,20 +175,20 @@
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.SongName">Song Name</MudTableSortLabel></MudTh>
         }
-        @if (ColumnStatus(ColumnEnum.AdjustedRating))
+        @if (ColumnStatus(ColumnEnum.AdjustedRating) && _currentMix== MixEnum.XX)
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>_adjustedDifficulties[e.ChartId].Difficulty">Adjusted Difficulty</MudTableSortLabel></MudTh>
         }
-        @if (ColumnStatus(ColumnEnum.RatingCount))
+        @if (ColumnStatus(ColumnEnum.RatingCount) && _currentMix== MixEnum.XX)
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>_adjustedDifficulties[e.ChartId].RatingCount">Rating Count</MudTableSortLabel></MudTh>
         }
         
-        @if (ColumnStatus(ColumnEnum.StandardDeviation))
+        @if (ColumnStatus(ColumnEnum.StandardDeviation) && _currentMix== MixEnum.XX)
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>_adjustedDifficulties[e.ChartId].StandardDeviation">Standard Deviation</MudTableSortLabel></MudTh>
         }
-        @if (ColumnStatus(ColumnEnum.MyRating))
+        @if (ColumnStatus(ColumnEnum.MyRating) && _currentMix == MixEnum.XX)
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Level + .5 + (_adjustedDifficulties[e.ChartId].MyRating?.GetAdjustment()??0)">
                 My Difficulty Adjustments
@@ -184,10 +198,6 @@
         {
             <MudTh>Video</MudTh>
         }
-        @if (ColumnStatus(ColumnEnum.Grade))
-        {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.LetterGrade">Letter</MudTableSortLabel></MudTh>
-        }
         @if (ColumnStatus(ColumnEnum.Broken))
         {
             
@@ -196,6 +206,14 @@
         @if (ColumnStatus(ColumnEnum.Score))
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Score">Score</MudTableSortLabel></MudTh>
+        }
+        @if (ColumnStatus(ColumnEnum.Grade))
+        {
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => _currentMix==MixEnum.XX?e.XXLetterGrade:e.PhoenixLetterGrade">Letter</MudTableSortLabel></MudTh>
+        }
+        @if (ColumnStatus(ColumnEnum.Plate) && _currentMix==MixEnum.Phoenix)
+        {
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.PhoenixPlate">Plate</MudTableSortLabel></MudTh>
         }
         @if (ColumnStatus(ColumnEnum.RecordedOn))
         {
@@ -234,10 +252,10 @@
                 <MudText>@context.SongName</MudText>
             </MudTd>
         }
-        @if (ColumnStatus(ColumnEnum.AdjustedRating))
+        @if (ColumnStatus(ColumnEnum.AdjustedRating) && _currentMix==MixEnum.XX)
         {
             <MudTd>
-                @if (context.ChartType != ChartType.CoOp.ToString())
+                @if (context.ChartType != ChartType.CoOp.ToString() &&_adjustedDifficulties.ContainsKey(context.ChartId))
                 {
                     <MudTooltip Text="@CountText(_adjustedDifficulties[@context.ChartId].RatingCount)">
                         <MudText>@($"{@_adjustedDifficulties[@context.ChartId].Difficulty:N2}")</MudText>
@@ -245,23 +263,23 @@
                 }
             </MudTd>
         }
-        @if (ColumnStatus(ColumnEnum.RatingCount))
+        @if (ColumnStatus(ColumnEnum.RatingCount) && _currentMix==MixEnum.XX)
         {
             <MudTd>
                 <MudText>@_adjustedDifficulties[context.ChartId].RatingCount</MudText>
             </MudTd>
         }
-        @if (ColumnStatus(ColumnEnum.StandardDeviation))
+        @if (ColumnStatus(ColumnEnum.StandardDeviation) && _currentMix==MixEnum.XX)
         {
             <MudTd>
                 <MudText>@_adjustedDifficulties[context.ChartId].StandardDeviation</MudText>
             </MudTd>
         }
-        @if (ColumnStatus(ColumnEnum.MyRating))
+        @if (ColumnStatus(ColumnEnum.MyRating) && _currentMix == MixEnum.XX)
         {
             <MudTh>
-                
-                @if (context.ChartType != ChartType.CoOp.ToString())
+
+                @if (context.ChartType != ChartType.CoOp.ToString() && _adjustedDifficulties.ContainsKey(context.ChartId))
                 {
                     <MudSelect Label="My Difficulty" T="int?" Value="@_adjustedDifficulties[@context.ChartId].MyRating?.GetScale()" ValueChanged="@(r => UpdateDifficultyRating(context.ChartId, r))">
                         @foreach (var rating in Enum.GetValues<DifficultyAdjustment>())
@@ -284,32 +302,12 @@
                 else
                 {
                     <MudTooltip Text="Open Youtube Search for Chart">
-                        <MudIconButton Icon="@Icons.Filled.Search" Href="@ChartSearch(context)" Target="_blank"></MudIconButton>
+                        <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(context)" Target="_blank"></MudIconButton>
                     </MudTooltip>
                 }
             </MudTd>
         }
 
-        @if (ColumnStatus(ColumnEnum.Grade))
-        {
-            
-            <MudTd>
-                @if (CanEdit)
-                {
-                    
-                    <MudSelect T="string" Value="@context.LetterGrade" ValueChanged="@(newValue => SetLetter(context, newValue))" Clearable="true" Margin="@Margin.Dense">
-                        @foreach (var letterGrade in Enum.GetValues<LetterGrade>())
-                        {
-                            <MudSelectItem Value="@letterGrade.ToString()">@letterGrade.ToString()</MudSelectItem>
-                        }
-                    </MudSelect>
-                }
-                else
-                {
-                    <MudText>@context.LetterGrade</MudText>
-                }
-            </MudTd>
-        }
         @if (ColumnStatus(ColumnEnum.Broken))
         {
             <MudTd>
@@ -328,13 +326,54 @@
             <MudTd>
                 @if (CanEdit)
                 {
-                    <MudNumericField T="int?" Label="Score" Value="context.Score" ValueChanged="@(newValue => SetScore(context, newValue))" Min="Score.Min" Max="Score.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
+                    <MudNumericField T="int?" Label="Score" Value="context.Score" ValueChanged="@(newValue => SetScore(context, newValue))" Min="XXScore.Min" Max="XXScore.Max" Variant="Variant.Text" Clearable="true" HideSpinButtons="true"></MudNumericField>
                 }
                 else
                 {
                     <MudText>@context.Score</MudText>
                 }
                 
+            </MudTd>
+        }
+        @if (ColumnStatus(ColumnEnum.Grade))
+        {
+            
+            <MudTd>
+                @if (CanEdit && _currentMix == MixEnum.XX)
+                {
+                    
+                    <MudSelect T="string" Value="@context.XXLetterGrade" ValueChanged="@(newValue => SetLetter(context, newValue))" Clearable="true" Margin="@Margin.Dense">
+                        @foreach (var letterGrade in Enum.GetValues<XXLetterGrade>())
+                        {
+                            <MudSelectItem Value="@letterGrade.ToString()">@letterGrade.ToString()</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+                else
+                {
+                    <MudText>@(_currentMix==MixEnum.XX?context.XXLetterGrade:context.PhoenixLetterGrade?.GetName())</MudText>
+                }
+            </MudTd>
+        }
+        @if (ColumnStatus(ColumnEnum.Plate) && _currentMix==MixEnum.Phoenix)
+        {
+            
+            
+            <MudTd>
+                @if (CanEdit)
+                {
+                    
+                    <MudSelect T="PhoenixPlate?" Label="Plate" Value="@context.PhoenixPlate" ValueChanged="@(newValue => SetPlate(context, newValue))" Clearable="true" Margin="@Margin.Dense">
+                        @foreach (var plate in Enum.GetValues<PhoenixPlate>())
+                        {
+                            <MudSelectItem T="PhoenixPlate?" Value="@plate">@plate.GetName()</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+                else
+                {
+                    <MudText>@context.PhoenixPlate?.GetName()</MudText>
+                }
             </MudTd>
         }
         @if (ColumnStatus(ColumnEnum.RecordedOn))
@@ -400,9 +439,9 @@
     <DialogActions>
         <MudSpacer></MudSpacer>
         <MudTooltip Text="Report Low Quality, Broken, or Incorrect Video">
-            <MudButton Href="mailto:sharkingbird@gmail.com" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Filled.Report">Report Video</MudButton>
+            <MudButton Href="mailto:sharkingbird@gmail.com" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report">Report Video</MudButton>
         </MudTooltip>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Filled.Close" OnClick="()=>_showVideoDialog=false">Close</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">Close</MudButton>
     </DialogActions>
 </MudDialog>
 <MudDialog @bind-IsVisible="_showShareDialog">
@@ -413,29 +452,22 @@
     </DialogContent>
     <DialogActions>
         <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Filled.ContentCopy" OnClick="CopyShareLink">Copy To Clipboard</MudButton>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Filled.Close" OnClick="()=>_showShareDialog=false">Close</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyShareLink">Copy To Clipboard</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showShareDialog=false">Close</MudButton>
     </DialogActions>
 </MudDialog>
-<MudDialog @bind-IsVisible="_showNotificationDialog">
-    <DialogContent>
-        <MudText>Hiya! DrMurloc here!<br/> <br />To cut down on screen bloat, I moved the filters into a menu.<br/><br /> I'll keep track of the filters you use so you don't need to re-toggle your favorites on every time!<br /><br />Look for the <MudIcon Icon="@Icons.Material.Filled.FilterList"></MudIcon> icon! <br /><br />Stay awesome friend!</MudText>
-    </DialogContent>
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Filled.Close" OnClick="() => _showNotificationDialog = false">Close</MudButton>
-    </DialogActions>
-</MudDialog>
+
 @inject IMediator Mediator
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
+@inject IUiSettingsAccessor UiSettings;
 @inject ISnackbar Snackbar;
 @inject IJSRuntime Javascript;
 @code {
     private bool _showShareDialog;
     private string _currentVideo = "";
     private bool _showVideoDialog;
-    private bool _showNotificationDialog = false;
+    private MixEnum _currentMix = MixEnum.XX;
     [Parameter]
     public Guid? RequestedUserId { get => _requestedUserId;
         set => _requestedUserId = value ?? (CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null);
@@ -447,7 +479,12 @@
     private BestAttemptDto[] _charts = Array.Empty<BestAttemptDto>();
     private IDictionary<Guid, ChartDifficultyRatingRecord> _adjustedDifficulties = new Dictionary<Guid, ChartDifficultyRatingRecord>();
 
-
+    private async Task MixChanged(MixEnum newMix)
+    {
+        _currentMix = newMix;
+        await UiSettings.SetSelectedMix(newMix);
+        await LoadCharts(RequestedUserId);
+    }
     private bool _isLoading = true;
 
     [Parameter] [SupplyParameterFromQuery(Name = nameof(FilterEnum.Difficulty))] public int? DifficultyFilter { get; set; }
@@ -507,9 +544,9 @@
     private ISet<Guid> _favoriteCharts = new HashSet<Guid>();
     private ISet<Guid> _todoCharts = new HashSet<Guid>();
     private IEnumerable<string> _songNames = Array.Empty<string>();
-    private int NotGradedCount => FileredCharts.Count(c => string.IsNullOrWhiteSpace(c.LetterGrade));
+    private int NotGradedCount => FileredCharts.Count(c => string.IsNullOrWhiteSpace(c.XXLetterGrade));
     private int NotPassedCount => FileredCharts.Count(c => c.IsBroken);
-    private int PassedCount => FileredCharts.Count(c => !string.IsNullOrWhiteSpace(c.LetterGrade) && !c.IsBroken);
+    private int PassedCount => FileredCharts.Count(c => !string.IsNullOrWhiteSpace(c.XXLetterGrade) && !c.IsBroken);
     private string CountText(int count) => $"{count} votes";
     
     private async Task SetScoreStateFilter(ScoreState state)
@@ -542,8 +579,8 @@
             result = _scoreStateFilter.Value switch
             {
                 ScoreState.NotPassed => result && chart.IsBroken,
-                ScoreState.Passed => result && !string.IsNullOrWhiteSpace(chart.LetterGrade) && !chart.IsBroken,
-                ScoreState.Ungraded => result && string.IsNullOrWhiteSpace(chart.LetterGrade),
+                ScoreState.Passed => result && !string.IsNullOrWhiteSpace(chart.XXLetterGrade) && !chart.IsBroken,
+                ScoreState.Ungraded => result && string.IsNullOrWhiteSpace(chart.XXLetterGrade),
                 _ => result
                 };
         }
@@ -601,28 +638,54 @@
     {
         _isLoading = true;
 
-        var charts = (await Mediator.Send(new GetChartsQuery())).ToArray();
-        
-        var bestAttempts = userId == null ? new Dictionary<Guid, ChartAttempt>() :
-            (await Mediator.Send(new GetBestChartAttemptsQuery(userId.Value))).Where(b=>b.BestAttempt!=null)
-                .ToDictionary(b => b.Chart.Id,b=>(ChartAttempt)b.BestAttempt!);
-            
-        _charts = charts.Select(c => new BestAttemptDto
+        var charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToArray();
+
+        if (_currentMix == MixEnum.XX)
         {
-            ChartId = c.Id,
-            Category = c.Type == Domain.Enums.ChartType.CoOp
-                ? nameof(Domain.Enums.ChartType.CoOp) + " x" + c.PlayerCount
-                : c.Type.ToString(),
-            IsBroken = !bestAttempts.ContainsKey(c.Id) || bestAttempts[c.Id].IsBroken,
-            LetterGrade = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].LetterGrade.ToString() : string.Empty,
-            SongName = c.Song.Name,
-            Level = c.Level,
-            ChartType = c.Type.ToString(),
-            ImagePath = c.Song.ImagePath.ToString(),
-            DifficultyShorthand = DifficultyLevel.ToShorthand(c.Type, c.Level),
-            Score = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].Score : null,
-            RecordedOn = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].RecordedOn : null
-        }).ToArray();
+            var bestAttempts = userId == null ? new Dictionary<Guid, XXChartAttempt>() :
+                (await Mediator.Send(new GetXXBestChartAttemptsQuery(userId.Value))).Where(b=>b.BestAttempt!=null)
+                    .ToDictionary(b => b.Chart.Id,b=>(XXChartAttempt)b.BestAttempt!);
+            
+            _charts = charts.Select(c => new BestAttemptDto
+            {
+                ChartId = c.Id,
+                Category = c.Type == Domain.Enums.ChartType.CoOp
+                    ? nameof(Domain.Enums.ChartType.CoOp) + " x" + c.PlayerCount
+                    : c.Type.ToString(),
+                IsBroken = !bestAttempts.ContainsKey(c.Id) || bestAttempts[c.Id].IsBroken,
+                XXLetterGrade = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].LetterGrade.ToString() : string.Empty,
+                SongName = c.Song.Name,
+                Level = c.Level,
+                ChartType = c.Type.ToString(),
+                ImagePath = c.Song.ImagePath.ToString(),
+                DifficultyShorthand = DifficultyLevel.ToShorthand(c.Type, c.Level),
+                Score = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].Score : null,
+                RecordedOn = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].RecordedOn : null
+            }).ToArray();
+        }
+        else
+        {
+            var records = userId == null ? Array.Empty<RecordedPhoenixScore>() : await Mediator.Send(new GetPhoenixRecordsQuery(userId.Value));
+            var bestAttempts = records.ToDictionary(b => b.ChartId);
+            
+            _charts = charts.Select(c => new BestAttemptDto
+            {
+                ChartId = c.Id,
+                Category = c.Type == Domain.Enums.ChartType.CoOp
+                    ? nameof(Domain.Enums.ChartType.CoOp) + " x" + c.PlayerCount
+                    : c.Type.ToString(),
+                IsBroken = !bestAttempts.ContainsKey(c.Id) || bestAttempts[c.Id].IsBroken,
+                SongName = c.Song.Name,
+                Level = c.Level,
+                ChartType = c.Type.ToString(),
+                ImagePath = c.Song.ImagePath.ToString(),
+                DifficultyShorthand = DifficultyLevel.ToShorthand(c.Type, c.Level),
+                Score = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].Score : null,
+                PhoenixLetterGrade = bestAttempts.ContainsKey(c.Id)?bestAttempts[c.Id].Score?.LetterGrade:null,
+                PhoenixPlate = bestAttempts.ContainsKey(c.Id)? bestAttempts[c.Id].Plate:null,
+                RecordedOn = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].RecordedDate : null
+            }).ToArray();
+        }
 
         var ratings = await Mediator.Send(new GetChartRatingsQuery());
         _adjustedDifficulties = ratings.ToDictionary(r => r.ChartId);
@@ -643,6 +706,7 @@
     }
     protected override async Task OnInitializedAsync()
     {
+        _currentMix = await UiSettings.GetSelectedMix();
         await LoadCharts(RequestedUserId);
         if (CurrentUser.IsLoggedIn)
         {
@@ -652,11 +716,6 @@
             _todoCharts = chartSaves.Where(cs => cs.ListType is ChartListType.ToDo).Select(cs => cs.ChartId).Distinct().ToHashSet();
 
             _uiSettings = await Mediator.Send(new GetUserUiSettingsQuery());
-            if (!_uiSettings.ContainsKey("Charts__FilterListNotification__Seen"))
-            {
-                _showNotificationDialog = true;
-                await Mediator.Send(new SaveUserUiSettingCommand("Charts__FilterListNotification__Seen", true.ToString()));
-            }
         }
         foreach (var filter in Enum.GetValues<FilterEnum>())
         {
@@ -708,25 +767,42 @@
     }
     private async Task SetScore(BestAttemptDto dto, int? newScore)
     {
-        dto.Score = newScore;
-        if (string.IsNullOrWhiteSpace(dto.LetterGrade) && newScore != null)
+        if (_currentMix == MixEnum.XX)
         {
-            dto.LetterGrade = LetterGrade.A.ToString();
+            dto.Score = newScore;
+            if (string.IsNullOrWhiteSpace(dto.XXLetterGrade) && newScore != null)
+            {
+                dto.XXLetterGrade = XXLetterGrade.A.ToString();
+            }
+            await UpdateBest(dto);
         }
+        else
+        {
+            var parsedScore = newScore == null ? null : PhoenixScore.TryParse(newScore.Value, out var score) ? (PhoenixScore?)score : null;
+
+            dto.Score = parsedScore;
+            dto.PhoenixLetterGrade = parsedScore?.LetterGrade;
+            await UpdateBest(dto);
+        }
+    }
+
+    private async Task SetPlate(BestAttemptDto dto, PhoenixPlate? plate)
+    {
+        dto.PhoenixPlate = plate;
         await UpdateBest(dto);
     }
     private async Task SetBroken(BestAttemptDto dto, bool newBroken)
     {
         dto.IsBroken = newBroken;
-        if (string.IsNullOrWhiteSpace(dto.LetterGrade) && !newBroken)
+        if (string.IsNullOrWhiteSpace(dto.XXLetterGrade) && !newBroken && _currentMix==MixEnum.Phoenix)
         {
-            dto.LetterGrade = LetterGrade.A.ToString();
+            dto.XXLetterGrade = XXLetterGrade.A.ToString();
         }
         await UpdateBest(dto);
     }
     private async Task SetLetter(BestAttemptDto dto, string newLetterGrade)
     {
-        dto.LetterGrade = newLetterGrade;
+        dto.XXLetterGrade = newLetterGrade;
         if (string.IsNullOrWhiteSpace(newLetterGrade) && !dto.IsBroken)
         {
             dto.IsBroken = true;
@@ -735,25 +811,44 @@
     }
     private async Task UpdateBest(BestAttemptDto dto)
     {
-        LetterGrade? letterGrade = Enum.TryParse<LetterGrade>(dto.LetterGrade, out var grade) ? grade : null;
         var chartType = Enum.Parse<ChartType>(dto.ChartType);
-
-        try
+        if (_currentMix == MixEnum.XX)
         {
-            await Mediator.Send(new UpdateBestAttemptCommand(dto.ChartId, letterGrade, dto.IsBroken, dto.Score));
+            XXLetterGrade? letterGrade = Enum.TryParse<XXLetterGrade>(dto.XXLetterGrade, out var grade) ? grade : null;
 
-            dto.RecordedOn = letterGrade == null ? null : DateTimeOffset.Now;
+            try
+            {
+                await Mediator.Send(new UpdateXXBestAttemptCommand(dto.ChartId, letterGrade, dto.IsBroken, dto.Score));
 
-            var chartName = $"{dto.SongName} {DifficultyLevel.ToShorthand(chartType,dto.Level)}";
+                dto.RecordedOn = letterGrade == null ? null : DateTimeOffset.Now;
 
-            Snackbar.Add(letterGrade == null ? $"Removed score for {chartName}" : $"Recorded {(dto.IsBroken ? "Broken":"")} {letterGrade} for {chartName}", Severity.Success);
+                var chartName = $"{dto.SongName} {DifficultyLevel.ToShorthand(chartType, dto.Level)}";
+
+                Snackbar.Add(letterGrade == null ? $"Removed score for {chartName}" : $"Recorded {(dto.IsBroken ? "Broken" : "")} {letterGrade} for {chartName}", Severity.Success);
+            }
+            catch (Exception e)
+            {
+                Snackbar.Add("There was an error while recording the score", Severity.Error);
+            }
         }
-        catch (Exception e)
+        else
         {
-            Snackbar.Add("There was an error while recording the score", Severity.Error);
+            try
+            {
+                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(dto.ChartId, dto.IsBroken, dto.Score, dto.PhoenixPlate));
+                dto.RecordedOn = DateTimeOffset.Now;
+                
+
+                var chartName = $"{dto.SongName} {DifficultyLevel.ToShorthand(chartType, dto.Level)}";
+                var grade = dto.PhoenixLetterGrade?.GetName()+" " ?? "";
+                Snackbar.Add($"Recorded {(dto.IsBroken ? "Broken" : "Passing")} {grade}for {chartName}", Severity.Success);
+            }
+            catch (Exception e)
+            {
+                Snackbar.Add("There was an error while recording the score", Severity.Error);
+            }
         }
 
-        
     }
 
     private bool FilterStatus(FilterEnum filter)
@@ -818,7 +913,8 @@
         RatingCount,
         Actions,
         Video,
-        StandardDeviation
+        StandardDeviation,
+        Plate
     }
     private enum ScoreState
     {

@@ -21,5 +21,5 @@ public abstract class Title
     public string Description { get; }
     public int CompletionRequired { get; }
 
-    public abstract bool DoesAttemptApply(BestChartAttempt attempt);
+    public abstract bool DoesAttemptApply(BestXXChartAttempt attempt);
 }

@@ -2,49 +2,49 @@
 
 namespace ScoreTracker.Domain.ValueTypes;
 
-public readonly struct Score
+public readonly struct XXScore
 {
     private readonly int _score;
 
-    private Score(int score)
+    private XXScore(int score)
     {
         _score = score;
     }
 
-    public static Score Min = new(0);
-    public static Score Max = new(200000000);
+    public static XXScore Min = new(0);
+    public static XXScore Max = new(200000000);
 
     public override string ToString()
     {
         return _score.ToString();
     }
 
-    public static implicit operator Score(int scoreInt)
+    public static implicit operator XXScore(int scoreInt)
     {
         return From(scoreInt);
     }
 
-    public static implicit operator int(Score value)
+    public static implicit operator int(XXScore value)
     {
         return value._score;
     }
 
-    public static bool operator ==(Score v1, Score v2)
+    public static bool operator ==(XXScore v1, XXScore v2)
     {
         return v1.Equals(v2);
     }
 
-    public static bool operator !=(Score v1, Score v2)
+    public static bool operator !=(XXScore v1, XXScore v2)
     {
         return !v1.Equals(v2);
     }
 
-    public static bool operator >(Score v1, Score v2)
+    public static bool operator >(XXScore v1, XXScore v2)
     {
         return v1._score > v2._score;
     }
 
-    public static bool operator <(Score v1, Score v2)
+    public static bool operator <(XXScore v1, XXScore v2)
     {
         return v2 > v1;
     }
@@ -53,7 +53,7 @@ public readonly struct Score
     {
         switch (obj)
         {
-            case DifficultyLevel other:
+            case XXScore other:
                 return Equals(other);
             default:
                 return false;
@@ -61,7 +61,7 @@ public readonly struct Score
     }
 
 
-    public static bool TryParse(string scoreString, out Score? result)
+    public static bool TryParse(string scoreString, out XXScore? result)
     {
         if (string.IsNullOrWhiteSpace(scoreString))
         {
@@ -69,18 +69,18 @@ public readonly struct Score
             return true;
         }
 
-        var couldParse = TryParse(scoreString, out Score value);
+        var couldParse = TryParse(scoreString, out XXScore value);
         result = value;
         return couldParse;
     }
 
-    public static bool TryParse(string scoreString, out Score result)
+    public static bool TryParse(string scoreString, out XXScore result)
     {
         result = default;
         return int.TryParse(scoreString, out var scoreInt) && TryParse(scoreInt, out result);
     }
 
-    public static bool TryParse(int scoreInt, out Score result)
+    public static bool TryParse(int scoreInt, out XXScore result)
     {
         try
         {
@@ -95,7 +95,7 @@ public readonly struct Score
     }
 
 
-    private bool Equals(Score otherParam)
+    private bool Equals(XXScore otherParam)
     {
         return _score == otherParam._score;
     }
@@ -105,12 +105,12 @@ public readonly struct Score
         return _score.GetHashCode();
     }
 
-    public static Score From(int score)
+    public static XXScore From(int score)
     {
         if (score < Min._score) throw new InvalidScoreException("Level must be greater than 0");
 
-        if (score > Max._score) throw new InvalidDifficultyLevelException("Level cannot be greater than 28");
+        if (score > Max._score) throw new InvalidScoreException("Level cannot be greater than 28");
 
-        return new Score(score);
+        return new XXScore(score);
     }
 }

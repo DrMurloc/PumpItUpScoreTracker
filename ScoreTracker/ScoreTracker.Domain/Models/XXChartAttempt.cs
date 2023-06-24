@@ -3,9 +3,9 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Models;
 
-public sealed class ChartAttempt
+public sealed class XXChartAttempt
 {
-    public ChartAttempt(LetterGrade letterGrade, bool isBroken, Score? score, DateTimeOffset recordedOn)
+    public XXChartAttempt(XXLetterGrade letterGrade, bool isBroken, XXScore? score, DateTimeOffset recordedOn)
     {
         LetterGrade = letterGrade;
         IsBroken = isBroken;
@@ -13,8 +13,8 @@ public sealed class ChartAttempt
         RecordedOn = recordedOn;
     }
 
-    public LetterGrade LetterGrade { get; }
+    public XXLetterGrade LetterGrade { get; }
     public bool IsBroken { get; }
-    public Score? Score { get; }
+    public XXScore? Score { get; }
     public DateTimeOffset RecordedOn { get; }
 }

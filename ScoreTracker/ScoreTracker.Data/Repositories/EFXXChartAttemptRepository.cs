@@ -7,23 +7,23 @@ using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Data.Repositories;
 
-public sealed class EFChartAttemptRepository : IChartAttemptRepository
+public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
 {
     private readonly ChartAttemptDbContext _database;
 
-    public EFChartAttemptRepository(ChartAttemptDbContext database)
+    public EFXXChartAttemptRepository(ChartAttemptDbContext database)
     {
         _database = database;
     }
 
-    public async Task<ChartAttempt?> GetBestAttempt(Guid userId, Chart chart,
+    public async Task<XXChartAttempt?> GetBestAttempt(Guid userId, Chart chart,
         CancellationToken cancellationToken = default)
     {
         var chartId = await GetChartId(chart, cancellationToken);
         return await (
             from ba in _database.BestAttempt
             where ba.ChartId == chartId && ba.UserId == userId
-            select new ChartAttempt(Enum.Parse<LetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score, ba.RecordedDate)
+            select new XXChartAttempt(Enum.Parse<XXLetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score, ba.RecordedDate)
         ).FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -42,7 +42,7 @@ public sealed class EFChartAttemptRepository : IChartAttemptRepository
     }
 
 
-    public async Task SetBestAttempt(Guid userId, Chart chart, ChartAttempt attempt, DateTimeOffset recordedOn,
+    public async Task SetBestAttempt(Guid userId, Chart chart, XXChartAttempt attempt, DateTimeOffset recordedOn,
         CancellationToken cancellationToken = default)
     {
         var chartId = await GetChartId(chart, cancellationToken);
@@ -74,7 +74,7 @@ public sealed class EFChartAttemptRepository : IChartAttemptRepository
         await _database.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<BestChartAttempt>> GetBestAttempts(Guid userId, IEnumerable<Chart> charts,
+    public async Task<IEnumerable<BestXXChartAttempt>> GetBestAttempts(Guid userId, IEnumerable<Chart> charts,
         CancellationToken cancellationToken)
     {
         var result = (from ce in charts
@@ -85,33 +85,32 @@ public sealed class EFChartAttemptRepository : IChartAttemptRepository
                 join _ in _database.BestAttempt on new { UserId = userId, ChartId = c.Id } equals new
                     { _.UserId, _.ChartId } into gi
                 from ba in gi.DefaultIfEmpty()
-                select new BestChartAttempt(
+                select new BestXXChartAttempt(
                     new Chart(c.Id, new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level),
                     ba == null
                         ? null
-                        : new ChartAttempt(Enum.Parse<LetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score,
+                        : new XXChartAttempt(Enum.Parse<XXLetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score,
                             ba.RecordedDate)))
             .ToArray();
         return result;
     }
 
-    public async Task<IEnumerable<BestChartAttempt>> GetBestAttempts(Guid userId,
+    public async Task<IEnumerable<BestXXChartAttempt>> GetBestAttempts(Guid userId,
         CancellationToken cancellationToken = default)
     {
-        var result = (
+        return await (
                 from s in _database.Song
                 join c in _database.Chart on s.Id equals c.SongId
                 join _ in _database.BestAttempt on new { UserId = userId, ChartId = c.Id } equals new
                     { _.UserId, _.ChartId } into gi
                 from ba in gi.DefaultIfEmpty()
-                select new BestChartAttempt(
+                select new BestXXChartAttempt(
                     new Chart(c.Id, new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type), c.Level),
                     ba == null
                         ? null
-                        : new ChartAttempt(Enum.Parse<LetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score,
+                        : new XXChartAttempt(Enum.Parse<XXLetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score,
                             ba.RecordedDate)))
-            .ToArray();
-        return result;
+            .ToArrayAsync(cancellationToken);
     }
 
     private async Task<Guid> GetChartId(Chart chart, CancellationToken cancellationToken)

@@ -300,7 +300,7 @@ public sealed class ScoreFile
         { "Re: End of a Dream", "Re : End of a Dream" }
     };
 
-    private ScoreFile(ScoreFileType type, IEnumerable<BestChartAttempt> scores,
+    private ScoreFile(ScoreFileType type, IEnumerable<BestXXChartAttempt> scores,
         IEnumerable<SpreadsheetScoreErrorDto> errors)
     {
         FileType = type;
@@ -313,7 +313,7 @@ public sealed class ScoreFile
     public string TypeDescription => typeof(ScoreFileType).GetField(FileType.ToString())
         ?.GetCustomAttribute<DescriptionAttribute>()?.Description ?? "";
 
-    public IImmutableList<BestChartAttempt> Scores { get; }
+    public IImmutableList<BestXXChartAttempt> Scores { get; }
     public IImmutableList<SpreadsheetScoreErrorDto> Errors { get; }
 
     public static async Task<ScoreFile> ReadAsync(IBrowserFile file, CancellationToken cancellationToken = default)
@@ -334,7 +334,7 @@ public sealed class ScoreFile
 
         using var package = new ExcelPackage();
         await package.LoadAsync(readStream, cancellationToken);
-        var result = new List<BestChartAttempt>();
+        var result = new List<BestXXChartAttempt>();
         var errors = new List<SpreadsheetScoreErrorDto>();
         foreach (var workbook in package.Workbook.Worksheets)
         {
@@ -363,7 +363,7 @@ public sealed class ScoreFile
         return true;
     }
 
-    private static (bool, LetterGrade?) GetScoreFromRow(ExcelWorksheet worksheet, int rowId)
+    private static (bool, XXLetterGrade?) GetScoreFromRow(ExcelWorksheet worksheet, int rowId)
     {
         if (TryParseCellIntoBool(worksheet.Cells[rowId, 2].Text, out var isBroken)
             && TryParseCellIntoBool(worksheet.Cells[rowId, 3].Text, out var isA)
@@ -371,30 +371,30 @@ public sealed class ScoreFile
             && TryParseCellIntoBool(worksheet.Cells[rowId, 5].Text, out var isSS)
             && TryParseCellIntoBool(worksheet.Cells[rowId, 6].Text, out var isSSS))
         {
-            LetterGrade? letterGrade = isSSS ? LetterGrade.SSS :
-                isSS ? LetterGrade.SS :
-                isS ? LetterGrade.S :
-                isA ? LetterGrade.A :
+            XXLetterGrade? letterGrade = isSSS ? XXLetterGrade.SSS :
+                isSS ? XXLetterGrade.SS :
+                isS ? XXLetterGrade.S :
+                isA ? XXLetterGrade.A :
                 null;
 
-            if (!isBroken && letterGrade == null) letterGrade = LetterGrade.A;
+            if (!isBroken && letterGrade == null) letterGrade = XXLetterGrade.A;
 
             return (isBroken, letterGrade);
         }
 
         var letterField = worksheet.Cells[rowId, 2].Text;
         if (string.IsNullOrWhiteSpace(letterField)) return (true, null);
-        if (Enum.TryParse<LetterGrade>(letterField, out var grade)) return (false, grade);
+        if (Enum.TryParse<XXLetterGrade>(letterField, out var grade)) return (false, grade);
 
         throw new Exception("Could not parse letter grade from row");
     }
 
-    private static (IEnumerable<BestChartAttempt>, IEnumerable<SpreadsheetScoreErrorDto>) ExtractBestAttempts(
+    private static (IEnumerable<BestXXChartAttempt>, IEnumerable<SpreadsheetScoreErrorDto>) ExtractBestAttempts(
         ChartType category, DifficultyLevel level,
         ExcelWorksheet worksheet)
     {
         var currentType = category;
-        var result = new List<BestChartAttempt>();
+        var result = new List<BestXXChartAttempt>();
         var errors = new List<SpreadsheetScoreErrorDto>();
         var songNameSuffix = "";
         foreach (var rowId in Enumerable.Range(1, worksheet.Dimension.Rows))
@@ -430,7 +430,7 @@ public sealed class ScoreFile
             }
 
             bool isBroken;
-            LetterGrade? letterGrade;
+            XXLetterGrade? letterGrade;
             try
             {
                 (isBroken, letterGrade) = GetScoreFromRow(worksheet, rowId);
@@ -463,11 +463,12 @@ public sealed class ScoreFile
 
             name += songNameSuffix;
             if (NameMappings.ContainsKey(name)) name = NameMappings[name];
-            ChartAttempt? attempt = null;
-            if (letterGrade != null) attempt = new ChartAttempt(letterGrade.Value, isBroken, null, DateTimeOffset.Now);
+            XXChartAttempt? attempt = null;
+            if (letterGrade != null)
+                attempt = new XXChartAttempt(letterGrade.Value, isBroken, null, DateTimeOffset.Now);
 
 
-            result.Add(new BestChartAttempt(
+            result.Add(new BestXXChartAttempt(
                 new Chart(Guid.Empty, new Song(name, new Uri("/", UriKind.Relative)), currentType, level), attempt));
         }
 
@@ -479,7 +480,7 @@ public sealed class ScoreFile
         await using var readStream = file.OpenReadStream(MaxByteCount, cancellationToken);
         using var reader = new StreamReader(readStream);
         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
-        var scores = new List<BestChartAttempt>();
+        var scores = new List<BestXXChartAttempt>();
         var failures = new List<SpreadsheetScoreErrorDto>();
         await csv.ReadAsync();
         csv.ReadHeader();
@@ -489,7 +490,7 @@ public sealed class ScoreFile
         if (!csv.TryGetField<string>(nameof(SpreadsheetScoreDto.Difficulty), out _))
             throw new ScoreFileParseException("Spreadsheet is missing Difficulty column");
         if (!csv.TryGetField<string>(nameof(SpreadsheetScoreDto.LetterGrade), out _))
-            throw new ScoreFileParseException("Spreadsheet is missing LetterGrade column");
+            throw new ScoreFileParseException("Spreadsheet is missing XXLetterGrade column");
 
 
         await foreach (var record in csv.GetRecordsAsync<SpreadsheetScoreDto>(cancellationToken))
@@ -507,7 +508,7 @@ public sealed class ScoreFile
                         continue;
                     }
 
-                if (!Score.TryParse(record.Score, out Score? score))
+                if (!XXScore.TryParse(record.Score, out XXScore? score))
                 {
                     failures.Add(record.ToError("Could not parse Score Column"));
                     continue;
@@ -517,11 +518,11 @@ public sealed class ScoreFile
                 var name = (Name)record.Song;
                 if (NameMappings.ContainsKey(name)) name = NameMappings[name];
                 var (chartType, level) = DifficultyLevel.ParseShortHand(record.Difficulty);
-                var attempt = new BestChartAttempt(
+                var attempt = new BestXXChartAttempt(
                     new Chart(Guid.Empty, new Song(name, new Uri("/", UriKind.Relative)), chartType, level),
                     string.IsNullOrWhiteSpace(record.LetterGrade)
                         ? null
-                        : new ChartAttempt(Enum.Parse<LetterGrade>(record.LetterGrade, true), isBroken, score,
+                        : new XXChartAttempt(Enum.Parse<XXLetterGrade>(record.LetterGrade, true), isBroken, score,
                             DateTimeOffset.Now));
 
                 scores.Add(attempt);

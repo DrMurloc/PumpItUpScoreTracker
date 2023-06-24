@@ -8,6 +8,7 @@
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 
 <PageTitle>Record Attempt</PageTitle>
@@ -16,17 +17,35 @@
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
 @inject NavigationManager NavManager;
+@inject IUiSettingsAccessor UiSettings;
 <MudGrid>
+    @if (ShowMixSelector)
+    {
+        <MudItem xs="12" sm="6">
+            <MudSelect T="MixEnum" AdornmentIcon="@Icons.Material.Filled.LibraryMusic" Label="Mix" Value="_currentMix" ValueChanged="MixChanged">
+                @foreach (var mix in Enum.GetValues<MixEnum>())
+                {
+                    <MudSelectItem T="MixEnum" Value="mix">@mix</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+    }
+    else
+    {
+        <MudItem xs="12">
+            <MudText>Note: Tier Lists haven't been updated to support Phoenix yet.</MudText>
+        </MudItem>
+    }
     <MudItem xs="12" sm="6">
-        <MudSelect T="int" AdornmentIcon="@Icons.Filled.Bolt" Label="Difficulty Level" Value="DifficultyFilter" ValueChanged="@(d=>UpdateSelection(d,ChartTypeFilter))">
-            @foreach (var level in Enumerable.Range(DifficultyLevel.Min,DifficultyLevel.Max))
+        <MudSelect T="int" AdornmentIcon="@Icons.Material.Filled.Bolt" Label="Difficulty Level" Value="DifficultyFilter" ValueChanged="@(d => UpdateSelection(d, ChartTypeFilter))">
+            @foreach (var level in Enumerable.Range(DifficultyLevel.Min, DifficultyLevel.Max))
             {
                 <MudSelectItem T="int" Value="@level">@level</MudSelectItem>
             }
         </MudSelect>
     </MudItem>
     <MudItem xs="12" sm="6">
-        <MudSelect T="string" AdornmentIcon="@Icons.Filled.Category" Label="Chart Type" Value="ChartTypeFilter" ValueChanged="@(c=>UpdateSelection(DifficultyFilter,c))">
+        <MudSelect T="string" AdornmentIcon="@Icons.Material.Filled.Category" Label="Chart Type" Value="ChartTypeFilter" ValueChanged="@(c => UpdateSelection(DifficultyFilter, c))">
             <MudSelectItem T="string" Value="ChartType.Single.ToString()">Singles</MudSelectItem>
             <MudSelectItem T="string" Value="ChartType.Double.ToString()">Doubles</MudSelectItem>
         </MudSelect>
@@ -46,12 +65,12 @@
     <DialogContent>
         @if (_selectedChartId != Guid.Empty)
         {
-            <EditChartGrid ShowChartName="true" ChartId="_selectedChartId" NewAttemptRecorded="AttemptRegistered"></EditChartGrid>
+            <EditChartGrid ShowChartName="true" ChartId="_selectedChartId" NewAttemptRecorded="AttemptRegistered" CurrentMix="_currentMix"></EditChartGrid>
         }
     </DialogContent>
     <DialogActions>
         <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Filled.Close" OnClick="() => _showEditDialog = false">Close</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showEditDialog = false">Close</MudButton>
     </DialogActions>
 </MudDialog>
 <MudDialog @bind-IsVisible="_showVideoDialog">
@@ -66,13 +85,15 @@
     <DialogActions>
         <MudSpacer></MudSpacer>
         <MudTooltip Text="Report Low Quality, Broken, or Incorrect Video">
-            <MudButton Href="mailto:sharkingbird@gmail.com" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Filled.Report">Report Video</MudButton>
+            <MudButton Href="mailto:sharkingbird@gmail.com" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report">Report Video</MudButton>
         </MudTooltip>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Filled.Close" OnClick="()=>_showVideoDialog=false">Close</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">Close</MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
+    private const bool ShowMixSelector=false;
+    private MixEnum _currentMix = MixEnum.XX;
     private ICollection<Chart> _overratedCharts = Array.Empty<Chart>();
     private ICollection<Chart> _veryEasyCharts = Array.Empty<Chart>();
     private ICollection<Chart> _easyCharts = Array.Empty<Chart>();
@@ -97,7 +118,7 @@
     [SupplyParameterFromQuery(Name = "ChartType")]
     public string ChartTypeFilter { get; set; } = string.Empty;
 
-    private void AttemptRegistered(Chart chart, ChartAttempt? attempt)
+    private void AttemptRegistered(Chart chart, XXChartAttempt? attempt)
     {
         switch (attempt?.IsBroken??true)
         {
@@ -122,9 +143,16 @@
         _currentVideo = url;
         StateHasChanged();
     }
-    
+
+    private async Task MixChanged(MixEnum newMix)
+    {
+        _currentMix = newMix;
+        await UiSettings.SetSelectedMix(newMix);
+        await UpdateSelection(DifficultyFilter, ChartTypeFilter);
+    }
     protected override async Task OnInitializedAsync()
     {
+        _currentMix = ShowMixSelector ? await UiSettings.GetSelectedMix() : MixEnum.XX;
         var isDifficultyValid = DifficultyFilter >= DifficultyLevel.Min && DifficultyFilter <= DifficultyLevel.Max;
         var isChartTypeValid = !string.IsNullOrWhiteSpace(ChartTypeFilter) && (ChartTypeFilter.Equals(ChartType.Single.ToString()) || ChartTypeFilter.Equals(ChartType.Double.ToString()));
         if (!isDifficultyValid || !isChartTypeValid)
@@ -144,7 +172,7 @@
 
         if (CurrentUser.IsLoggedIn)
         {
-            var attempts = await Mediator.Send(new GetBestChartAttemptsQuery(CurrentUser.User.Id));
+            var attempts = await Mediator.Send(new GetXXBestChartAttemptsQuery(CurrentUser.User.Id));
             _passes = attempts.Where(a => !(a.BestAttempt?.IsBroken??true)).Select(a => a.Chart.Id).Distinct().ToHashSet();
         }
     }
@@ -167,8 +195,8 @@
         IDictionary<Guid, ChartDifficultyRatingRecord> ratings;
         if (type == ChartType.Single)
         {
-            charts = (await Mediator.Send(new GetChartsQuery(difficulty, ChartType.Single)))
-                .Concat(await Mediator.Send(new GetChartsQuery(difficulty, ChartType.SinglePerformance))).ToArray();
+            charts = (await Mediator.Send(new GetChartsQuery(_currentMix,difficulty, ChartType.Single)))
+                .Concat(await Mediator.Send(new GetChartsQuery(_currentMix, difficulty, ChartType.SinglePerformance))).ToArray();
 
             ratings = (await Mediator.Send(new GetChartRatingsQuery(difficulty, ChartType.Single)))
         .Concat(await Mediator.Send(new GetChartRatingsQuery(difficulty, ChartType.SinglePerformance))).ToDictionary(c => c.ChartId);
@@ -177,8 +205,8 @@
         else
         {
 
-            charts = (await Mediator.Send(new GetChartsQuery(difficulty, ChartType.Double)))
-                .Concat(await Mediator.Send(new GetChartsQuery(difficulty, ChartType.DoublePerformance))).ToArray();
+            charts = (await Mediator.Send(new GetChartsQuery(_currentMix,difficulty, ChartType.Double)))
+                .Concat(await Mediator.Send(new GetChartsQuery(_currentMix, difficulty, ChartType.DoublePerformance))).ToArray();
 
             ratings = (await Mediator.Send(new GetChartRatingsQuery(difficulty, ChartType.Double)))
                 .Concat(await Mediator.Send(new GetChartRatingsQuery(difficulty, ChartType.DoublePerformance))).ToDictionary(c => c.ChartId);

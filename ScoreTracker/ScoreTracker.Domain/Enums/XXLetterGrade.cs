@@ -1,6 +1,6 @@
 ﻿namespace ScoreTracker.Domain.Enums;
 
-public enum LetterGrade
+public enum XXLetterGrade
 {
     F,
     D,

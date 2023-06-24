@@ -12,7 +12,7 @@ public sealed class BasicTitle : Title
     {
     }
 
-    public override bool DoesAttemptApply(BestChartAttempt attempt)
+    public override bool DoesAttemptApply(BestXXChartAttempt attempt)
     {
         return false;
     }

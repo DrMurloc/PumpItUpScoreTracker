@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ScoreTracker.Data.Persistence;
 
@@ -11,9 +12,10 @@ using ScoreTracker.Data.Persistence;
 namespace ScoreTracker.Data.Migrations
 {
     [DbContext(typeof(ChartAttemptDbContext))]
-    partial class ChartAttemptDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230624194434_AddPhoenixRecords")]
+    partial class AddPhoenixRecords
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -204,15 +206,18 @@ namespace ScoreTracker.Data.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("LetterGrade")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Plate")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset>("RecordedDate")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<int?>("Score")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<Guid>("UserId")

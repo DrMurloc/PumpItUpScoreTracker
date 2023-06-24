@@ -41,7 +41,7 @@
     protected override async Task OnInitializedAsync()
     {
         _isLoading = true;
-        _titleProgress = (await Mediator.Send(new GetTitleProgressQuery())).Select(TitleProgressDto.From).ToArray();
+        _titleProgress = (await Mediator.Send(new GetXXTitleProgressQuery())).Select(TitleProgressDto.From).ToArray();
         _isLoading = false;
         if (_dataGrid != null)
         {

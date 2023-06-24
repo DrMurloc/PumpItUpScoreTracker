@@ -6,12 +6,12 @@ namespace ScoreTracker.Domain.Models.Titles;
 public sealed class SkillTitle : Title
 {
     private readonly ChartType _chartType;
-    private readonly LetterGrade _letterGrade;
+    private readonly XXLetterGrade _letterGrade;
     private readonly DifficultyLevel _level;
     private readonly Name _songName;
 
     public SkillTitle(Name title, Name songName, ChartType chartType, DifficultyLevel difficultyLevel,
-        LetterGrade letterGrade) : base(title,
+        XXLetterGrade letterGrade) : base(title,
         $"Achieve {letterGrade} on {songName} {chartType.GetShortHand()}{difficultyLevel}", "Skill")
     {
         _songName = songName;
@@ -21,11 +21,11 @@ public sealed class SkillTitle : Title
     }
 
     public SkillTitle(Name title, Name songName, ChartType chartType, DifficultyLevel difficultyLevel) : this(
-        title, songName, chartType, difficultyLevel, LetterGrade.SS)
+        title, songName, chartType, difficultyLevel, XXLetterGrade.SS)
     {
     }
 
-    public override bool DoesAttemptApply(BestChartAttempt attempt)
+    public override bool DoesAttemptApply(BestXXChartAttempt attempt)
     {
         if (attempt.BestAttempt == null) return false;
 

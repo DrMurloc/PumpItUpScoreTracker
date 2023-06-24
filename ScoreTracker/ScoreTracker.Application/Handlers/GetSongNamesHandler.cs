@@ -16,6 +16,6 @@ public sealed class GetSongNamesHandler : IRequestHandler<GetSongNamesQuery, IEn
 
     public async Task<IEnumerable<Name>> Handle(GetSongNamesQuery request, CancellationToken cancellationToken)
     {
-        return await _charts.GetSongNames(cancellationToken);
+        return await _charts.GetSongNames(request.Mix, cancellationToken);
     }
 }
