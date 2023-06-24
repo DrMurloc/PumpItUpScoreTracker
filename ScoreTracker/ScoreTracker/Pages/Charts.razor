@@ -456,7 +456,15 @@
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showShareDialog=false">Close</MudButton>
     </DialogActions>
 </MudDialog>
-
+<MudDialog @bind-IsVisible="_showNotificationDialog">
+    <DialogContent>
+        <MudText>Hiya! DrMurloc again!<br/> <br />I'm in the process of updating the site to support Phoenix. The goal will be to keep supporting XX, and eventually add in even older mixes!<br/><br /> This will take a month or so, this site will not be a good source of truth for Phoenix songs/charts until I get my hands on a Phoenix Kit or official song/chart list. Please pardon the dust!<br /><br />Stay awesome friend!</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Filled.Close" OnClick="() => _showNotificationDialog = false">Close</MudButton>
+    </DialogActions>
+</MudDialog>
 @inject IMediator Mediator
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
@@ -464,6 +472,7 @@
 @inject ISnackbar Snackbar;
 @inject IJSRuntime Javascript;
 @code {
+    private bool _showNotificationDialog =false;
     private bool _showShareDialog;
     private string _currentVideo = "";
     private bool _showVideoDialog;
@@ -716,6 +725,11 @@
             _todoCharts = chartSaves.Where(cs => cs.ListType is ChartListType.ToDo).Select(cs => cs.ChartId).Distinct().ToHashSet();
 
             _uiSettings = await Mediator.Send(new GetUserUiSettingsQuery());
+            if (!_uiSettings.ContainsKey("Charts__PhoenixDisclaimer__Seen"))
+            {
+                _showNotificationDialog = true;
+                await Mediator.Send(new SaveUserUiSettingCommand("Charts__PhoenixDisclaimer__Seen", true.ToString()));
+            }
         }
         foreach (var filter in Enum.GetValues<FilterEnum>())
         {

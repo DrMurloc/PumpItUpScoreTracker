@@ -4,7 +4,7 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Dtos
 <PageTitle>Titles</PageTitle>
-
+<MudText>Note: This page will not support Phoenix titles until we have confirmed success metrics for a significant amount of titles.</MudText>
 <MudDataGrid @ref="_dataGrid" T="TitleProgressDto" Items="_titleProgress" Hover="true" ReadOnly="true"
              Groupable="true" FixedHeader="true" Height="500" Loading="@_isLoading">
     <ToolBarContent>
