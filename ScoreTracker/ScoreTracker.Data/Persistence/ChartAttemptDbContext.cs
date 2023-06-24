@@ -15,6 +15,8 @@ public sealed class ChartAttemptDbContext : DbContext
         _configuration = sqlOptions.Value;
     }
 
+    public DbSet<MixEntity> Mix { get; set; }
+    public DbSet<ChartMixEntity> ChartMix { get; set; }
     public DbSet<BestAttemptEntity> BestAttempt { get; set; }
     public DbSet<ChartEntity> Chart { get; set; }
     public DbSet<SongEntity> Song { get; set; }
@@ -29,6 +31,16 @@ public sealed class ChartAttemptDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.HasDefaultSchema("scores");
+
+        builder.Entity<ChartMixEntity>().ToTable("ChartMix")
+            .HasOne<ChartEntity>()
+            .WithMany()
+            .HasForeignKey(cm => cm.ChartId);
+
+        builder.Entity<ChartMixEntity>()
+            .HasOne<MixEntity>()
+            .WithMany()
+            .HasForeignKey(cm => cm.MixId);
 
         builder.Entity<UserSettingsEntity>().ToTable("UserSettings")
             .HasOne<UserEntity>()
