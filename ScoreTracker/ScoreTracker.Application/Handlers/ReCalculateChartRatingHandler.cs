@@ -24,7 +24,8 @@ public sealed class
     {
         var chart = await _charts.GetChart(request.ChartId, cancellationToken);
 
-        var ratings = (await _difficultyRatings.GetRatings(request.ChartId, cancellationToken)).ToArray();
+        var ratings = (await _difficultyRatings.GetRatings(request.Mix, request.ChartId, cancellationToken))
+            .ToArray();
 
         var baseDifficulty = (int)chart.Level + .5;
         var average = ratings.Average(rating => baseDifficulty + rating.GetAdjustment());
@@ -32,7 +33,8 @@ public sealed class
         var standardDeviation =
             Math.Sqrt(ratings.Average(r => Math.Pow(baseDifficulty + r.GetAdjustment() - average, 2)));
 
-        await _difficultyRatings.SetAdjustedDifficulty(request.ChartId, average, ratings.Length, standardDeviation,
+        await _difficultyRatings.SetAdjustedDifficulty(request.Mix, request.ChartId, average, ratings.Length,
+            standardDeviation,
             cancellationToken);
 
         return new ChartDifficultyRatingRecord(request.ChartId, baseDifficulty, ratings.Length, standardDeviation);

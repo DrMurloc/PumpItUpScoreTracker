@@ -5,6 +5,6 @@ using ScoreTracker.Domain.Records;
 namespace ScoreTracker.Application.Commands;
 
 public sealed record RateChartDifficultyCommand
-    (Guid ChartId, DifficultyAdjustment Rating) : IRequest<ChartDifficultyRatingRecord>
+    (MixEnum Mix, Guid ChartId, DifficultyAdjustment Rating) : IRequest<ChartDifficultyRatingRecord>
 {
 }

@@ -23,7 +23,7 @@ public sealed class
     public async Task<IEnumerable<ChartDifficultyRatingRecord>> Handle(GetChartRatingsQuery request,
         CancellationToken cancellationToken)
     {
-        var result = (await _ratings.GetAllChartRatedDifficulties(cancellationToken)).ToArray();
+        var result = (await _ratings.GetAllChartRatedDifficulties(request.Mix, cancellationToken)).ToArray();
         if (request.Level != null || request.Type != null)
         {
             var charts =
@@ -36,7 +36,8 @@ public sealed class
         if (!_currentUser.IsLoggedIn) return result;
 
         var myRatings =
-            (await _ratings.GetRatingsByUser(_currentUser.User.Id, cancellationToken)).ToDictionary(r => r.ChartId,
+            (await _ratings.GetRatingsByUser(request.Mix, _currentUser.User.Id, cancellationToken)).ToDictionary(
+                r => r.ChartId,
                 r => r.Rating);
 
         foreach (var r in result)

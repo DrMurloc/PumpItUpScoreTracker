@@ -77,11 +77,15 @@ public sealed class ChartAttemptDbContext : DbContext
             .HasForeignKey(ucdr => ucdr.UserId);
 
         builder.Entity<UserChartDifficultyRatingEntity>()
+            .HasKey(ucdr => new { ucdr.ChartId, ucdr.MixId });
+
+        builder.Entity<UserChartDifficultyRatingEntity>()
             .HasOne<ChartEntity>()
             .WithMany()
             .HasForeignKey(ucdr => ucdr.ChartId);
 
-        builder.Entity<ChartDifficultyRatingEntity>().ToTable("ChartDifficultyRating");
+        builder.Entity<ChartDifficultyRatingEntity>().ToTable("ChartDifficultyRating")
+            .HasKey(cdr => new { cdr.ChartId, cdr.MixId });
 
         builder.Entity<SavedChartEntity>().ToTable("SavedChart")
             .HasOne<ChartEntity>()

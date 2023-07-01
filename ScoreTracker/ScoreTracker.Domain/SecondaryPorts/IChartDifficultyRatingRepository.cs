@@ -5,22 +5,23 @@ namespace ScoreTracker.Domain.SecondaryPorts;
 
 public interface IChartDifficultyRatingRepository
 {
-    Task RateChart(Guid chartId, Guid userId, DifficultyAdjustment adjustment,
+    Task RateChart(MixEnum mix, Guid chartId, Guid userId, DifficultyAdjustment adjustment,
         CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<DifficultyAdjustment>> GetRatings(Guid chartId, CancellationToken cancellationToken = default);
-
-    Task<IEnumerable<ChartDifficultyRatingRecord>> GetAllChartRatedDifficulties(
+    Task<IEnumerable<DifficultyAdjustment>> GetRatings(MixEnum mix, Guid chartId,
         CancellationToken cancellationToken = default);
 
-    Task<ChartDifficultyRatingRecord?> GetChartRatedDifficulty(Guid chartId,
+    Task<IEnumerable<ChartDifficultyRatingRecord>> GetAllChartRatedDifficulties(MixEnum mix,
         CancellationToken cancellationToken = default);
 
-    Task SetAdjustedDifficulty(Guid chartId, double difficulty, int count, double standardDeviation,
+    Task<ChartDifficultyRatingRecord?> GetChartRatedDifficulty(MixEnum mix, Guid chartId,
         CancellationToken cancellationToken = default);
 
-    Task<DifficultyAdjustment?> GetRating(Guid chartId, Guid userId, CancellationToken cancellationToken);
+    Task SetAdjustedDifficulty(MixEnum mix, Guid chartId, double difficulty, int count, double standardDeviation,
+        CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<(Guid ChartId, DifficultyAdjustment Rating)>> GetRatingsByUser(Guid userId,
+    Task<DifficultyAdjustment?> GetRating(MixEnum mix, Guid chartId, Guid userId, CancellationToken cancellationToken);
+
+    Task<IEnumerable<(Guid ChartId, DifficultyAdjustment Rating)>> GetRatingsByUser(MixEnum mix, Guid userId,
         CancellationToken cancellationToken = default);
 }

@@ -2,6 +2,7 @@
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.SecondaryPorts
 @using MediatR
+@using ScoreTracker.Domain.Enums
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
 @if (Charts.Any())
@@ -80,6 +81,7 @@
 
     [Parameter]
     public Action<Guid> OnEdit { get; set; } = g => { };
+
 
     private string ChartSearch(Chart chart)
     {

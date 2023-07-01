@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ScoreTracker.Data.Persistence;
 
@@ -11,9 +12,10 @@ using ScoreTracker.Data.Persistence;
 namespace ScoreTracker.Data.Migrations
 {
     [DbContext(typeof(ChartAttemptDbContext))]
-    partial class ChartAttemptDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230701160659_DifficultyRatingMix")]
+    partial class DifficultyRatingMix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -60,9 +62,7 @@ namespace ScoreTracker.Data.Migrations
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.ChartDifficultyRatingEntity", b =>
                 {
                     b.Property<Guid>("ChartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("MixId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Count")
@@ -71,10 +71,13 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<double>("Difficulty")
                         .HasColumnType("float");
 
+                    b.Property<Guid?>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<double>("StandardDeviation")
                         .HasColumnType("float");
 
-                    b.HasKey("ChartId", "MixId");
+                    b.HasKey("ChartId");
 
                     b.ToTable("ChartDifficultyRating", "scores");
                 });
@@ -86,9 +89,6 @@ namespace ScoreTracker.Data.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("DifficultyRatingChartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("DifficultyRatingMixId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Level")
@@ -103,13 +103,13 @@ namespace ScoreTracker.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DifficultyRatingChartId");
+
                     b.HasIndex("Level");
 
                     b.HasIndex("SongId");
 
                     b.HasIndex("Type");
-
-                    b.HasIndex("DifficultyRatingChartId", "DifficultyRatingMixId");
 
                     b.ToTable("Chart", "scores");
                 });
@@ -283,13 +283,14 @@ namespace ScoreTracker.Data.Migrations
 
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.UserChartDifficultyRatingEntity", b =>
                 {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("ChartId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("MixId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Scale")
@@ -298,7 +299,7 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("ChartId", "MixId");
+                    b.HasKey("Id");
 
                     b.HasIndex("ChartId");
 
@@ -357,15 +358,15 @@ namespace ScoreTracker.Data.Migrations
 
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.ChartEntity", b =>
                 {
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartDifficultyRatingEntity", "DifficultyRating")
+                        .WithMany()
+                        .HasForeignKey("DifficultyRatingChartId");
+
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.SongEntity", null)
                         .WithMany()
                         .HasForeignKey("SongId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartDifficultyRatingEntity", "DifficultyRating")
-                        .WithMany()
-                        .HasForeignKey("DifficultyRatingChartId", "DifficultyRatingMixId");
 
                     b.Navigation("DifficultyRating");
                 });

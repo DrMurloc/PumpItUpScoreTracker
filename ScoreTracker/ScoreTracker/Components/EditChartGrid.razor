@@ -98,7 +98,7 @@
                 <MudText>Recorded on @_recordedOn.Value.ToString("MMM dd, yyyy")</MudText>
             </MudItem>
         }
-        @if (_selectedChart.Type != ChartType.CoOp && CurrentMix!=MixEnum.Phoenix)
+        @if (_selectedChart.Type != ChartType.CoOp)
         {
             <MudItem xs="8">
                 <MudSelect Label="Your Difficulty Rating" T="int?" Value="_selectedAdjustment" ValueChanged="UpdateDifficultyRating">
@@ -303,7 +303,7 @@
                 _recordedOn = bestRecord.BestAttempt.RecordedOn;
             }
         }
-        var rating = await Mediator.Send(new GetChartRatingQuery(chartId));
+        var rating = await Mediator.Send(new GetChartRatingQuery(CurrentMix,chartId));
         if (rating == null)
         {
             _selectedAdjustment = null;
@@ -325,9 +325,9 @@
             return;
         }
         _selectedAdjustment = newValue;
-        await Mediator.Send(new RateChartDifficultyCommand(_selectedChart.Id, DifficultyAdjustmentHelpers.From(newValue.Value)));
+        await Mediator.Send(new RateChartDifficultyCommand(CurrentMix,_selectedChart.Id, DifficultyAdjustmentHelpers.From(newValue.Value)));
 
-        var newRating = await Mediator.Send(new GetChartRatingQuery(_selectedChart.Id));
+        var newRating = await Mediator.Send(new GetChartRatingQuery(CurrentMix,_selectedChart.Id));
         _currentRatedCount = newRating.RatingCount;
         _currentRatedDifficulty = newRating.Difficulty;
         Snackbar.Add("Suggested Difficulty Rating Submitted", Severity.Success);

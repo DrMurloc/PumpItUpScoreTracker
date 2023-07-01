@@ -133,17 +133,16 @@
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Difficulty)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Difficulty))">Difficulty</MudMenuItem>
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongImage)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongImage))">Song Image</MudMenuItem>
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongName)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongName))">Song Name</MudMenuItem>
-                @if (_currentMix == MixEnum.XX)
+
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.AdjustedRating)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.AdjustedRating))">Adjusted Difficulty</MudMenuItem>
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.RatingCount)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.RatingCount))">Rating Count</MudMenuItem>
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.StandardDeviation)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.StandardDeviation))">Standard Deviation</MudMenuItem>
+                
+                @if (CurrentUser.IsLoggedIn)
                 {
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.AdjustedRating)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.AdjustedRating))">Adjusted Difficulty</MudMenuItem>
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.RatingCount)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.RatingCount))">Rating Count</MudMenuItem>
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.StandardDeviation)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.StandardDeviation))">Standard Deviation</MudMenuItem>
-                    
-                    @if (CurrentUser.IsLoggedIn)
-                    {
-                        <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.MyRating)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.MyRating))">My Difficulty Adjustments</MudMenuItem>
-                    }
+                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.MyRating)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.MyRating))">My Difficulty Adjustments</MudMenuItem>
                 }
+
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Video)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Video))">Video</MudMenuItem>
 
                 @if (RequestedUserId != null)
@@ -175,20 +174,20 @@
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.SongName">Song Name</MudTableSortLabel></MudTh>
         }
-        @if (ColumnStatus(ColumnEnum.AdjustedRating) && _currentMix== MixEnum.XX)
+        @if (ColumnStatus(ColumnEnum.AdjustedRating))
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>_adjustedDifficulties[e.ChartId].Difficulty">Adjusted Difficulty</MudTableSortLabel></MudTh>
         }
-        @if (ColumnStatus(ColumnEnum.RatingCount) && _currentMix== MixEnum.XX)
+        @if (ColumnStatus(ColumnEnum.RatingCount))
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>_adjustedDifficulties[e.ChartId].RatingCount">Rating Count</MudTableSortLabel></MudTh>
         }
         
-        @if (ColumnStatus(ColumnEnum.StandardDeviation) && _currentMix== MixEnum.XX)
+        @if (ColumnStatus(ColumnEnum.StandardDeviation))
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>_adjustedDifficulties[e.ChartId].StandardDeviation">Standard Deviation</MudTableSortLabel></MudTh>
         }
-        @if (ColumnStatus(ColumnEnum.MyRating) && _currentMix == MixEnum.XX)
+        @if (ColumnStatus(ColumnEnum.MyRating))
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Level + .5 + (_adjustedDifficulties[e.ChartId].MyRating?.GetAdjustment()??0)">
                 My Difficulty Adjustments
@@ -252,7 +251,7 @@
                 <MudText>@context.SongName</MudText>
             </MudTd>
         }
-        @if (ColumnStatus(ColumnEnum.AdjustedRating) && _currentMix==MixEnum.XX)
+        @if (ColumnStatus(ColumnEnum.AdjustedRating))
         {
             <MudTd>
                 @if (context.ChartType != ChartType.CoOp.ToString() &&_adjustedDifficulties.ContainsKey(context.ChartId))
@@ -263,19 +262,19 @@
                 }
             </MudTd>
         }
-        @if (ColumnStatus(ColumnEnum.RatingCount) && _currentMix==MixEnum.XX)
+        @if (ColumnStatus(ColumnEnum.RatingCount))
         {
             <MudTd>
                 <MudText>@_adjustedDifficulties[context.ChartId].RatingCount</MudText>
             </MudTd>
         }
-        @if (ColumnStatus(ColumnEnum.StandardDeviation) && _currentMix==MixEnum.XX)
+        @if (ColumnStatus(ColumnEnum.StandardDeviation))
         {
             <MudTd>
                 <MudText>@_adjustedDifficulties[context.ChartId].StandardDeviation</MudText>
             </MudTd>
         }
-        @if (ColumnStatus(ColumnEnum.MyRating) && _currentMix == MixEnum.XX)
+        @if (ColumnStatus(ColumnEnum.MyRating))
         {
             <MudTh>
 
@@ -696,7 +695,7 @@
             }).ToArray();
         }
 
-        var ratings = await Mediator.Send(new GetChartRatingsQuery());
+        var ratings = await Mediator.Send(new GetChartRatingsQuery(_currentMix));
         _adjustedDifficulties = ratings.ToDictionary(r => r.ChartId);
         foreach (var chart in _charts)
         {
@@ -773,9 +772,9 @@
         {
             return;
         }
-        await Mediator.Send(new RateChartDifficultyCommand(chartId, DifficultyAdjustmentHelpers.From(scale.Value)));
+        await Mediator.Send(new RateChartDifficultyCommand(_currentMix,chartId, DifficultyAdjustmentHelpers.From(scale.Value)));
 
-        var newRating = await Mediator.Send(new GetChartRatingQuery(chartId));
+        var newRating = await Mediator.Send(new GetChartRatingQuery(_currentMix,chartId));
         _adjustedDifficulties[chartId] = newRating;
         Snackbar.Add("Suggested Difficulty Rating Submitted", Severity.Success);
     }

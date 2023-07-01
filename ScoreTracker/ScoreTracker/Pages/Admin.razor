@@ -4,6 +4,7 @@
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.SecondaryPorts
 @using System.Drawing.Drawing2D
+@using ScoreTracker.Domain.Enums
 
 <PageTitle>Admin</PageTitle>
 
@@ -30,17 +31,24 @@
     private async Task ReCalculateScores()
     {
         _isReCalculating = true;
-        var ratingsWithVotes = (await Mediator.Send(new GetChartRatingsQuery())).Where(c => c.RatingCount > 0).ToArray();
+        var ratingsWithVotes = (await Mediator.Send(new GetChartRatingsQuery(MixEnum.XX))).Where(c => c.RatingCount > 0).ToArray();
+        var phoenixRatingsWithVotes = (await Mediator.Send(new GetChartRatingsQuery(MixEnum.Phoenix))).Where(c => c.RatingCount > 0).ToArray();
 
-        _maxReCalculate = ratingsWithVotes.Length;
+        _maxReCalculate = ratingsWithVotes.Length + phoenixRatingsWithVotes.Length;
         _currentReCalculate = 1;
         foreach (var rating in ratingsWithVotes)
         {
-            await Mediator.Send(new ReCalculateChartRatingCommand(rating.ChartId));
+            await Mediator.Send(new ReCalculateChartRatingCommand(MixEnum.XX, rating.ChartId));
             _currentReCalculate++;
             StateHasChanged();
         }
 
+        foreach (var rating in phoenixRatingsWithVotes)
+        {
+            await Mediator.Send(new ReCalculateChartRatingCommand(MixEnum.Phoenix, rating.ChartId));
+            _currentReCalculate++;
+            StateHasChanged();
+        }
         _isReCalculating = false;
     }
     protected override async Task OnInitializedAsync()

@@ -25,8 +25,9 @@ public sealed class
         CancellationToken cancellationToken)
     {
         var userId = _currentUser.User.Id;
-        await _difficultyRatings.RateChart(request.ChartId, userId, request.Rating, cancellationToken);
+        await _difficultyRatings.RateChart(request.Mix, request.ChartId, userId, request.Rating, cancellationToken);
 
-        return await _mediator.Send(new ReCalculateChartRatingCommand(request.ChartId), cancellationToken);
+        return await _mediator.Send(new ReCalculateChartRatingCommand(request.Mix, request.ChartId),
+            cancellationToken);
     }
 }
