@@ -29,12 +29,19 @@ public sealed class EFChartRepository : IChartRepository
 
     public async Task<IEnumerable<Chart>> GetCharts(MixEnum? mix = null, DifficultyLevel? level = null,
         ChartType? type = null,
+        IEnumerable<Guid>? chartIds = null,
         CancellationToken cancellationToken = default)
     {
         var result =
             (await (mix == null
                 ? GetAllCharts(cancellationToken)
                 : GetAllCharts(MixGuids[mix.Value], cancellationToken))).Values.AsEnumerable();
+        if (chartIds != null)
+        {
+            var chartIdsArray = chartIds.ToArray();
+            result = result.Where(r => chartIdsArray.Contains(r.Id));
+        }
+
         if (level != null)
         {
             var levelInt = (int)level.Value;

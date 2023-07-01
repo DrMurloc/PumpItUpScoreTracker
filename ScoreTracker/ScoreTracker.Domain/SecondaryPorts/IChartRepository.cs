@@ -7,6 +7,7 @@ namespace ScoreTracker.Domain.SecondaryPorts;
 public interface IChartRepository
 {
     Task<IEnumerable<Chart>> GetCharts(MixEnum? mix = null, DifficultyLevel? level = null, ChartType? type = null,
+        IEnumerable<Guid>? chartIds = null,
         CancellationToken cancellationToken = default);
 
     Task<IEnumerable<Name>> GetSongNames(MixEnum? mix = null, CancellationToken cancellationToken = default);
