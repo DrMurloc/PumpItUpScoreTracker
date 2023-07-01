@@ -12,8 +12,8 @@ using ScoreTracker.Data.Persistence;
 namespace ScoreTracker.Data.Migrations
 {
     [DbContext(typeof(ChartAttemptDbContext))]
-    [Migration("20230701161919_FixRatingPrimaryKeys")]
-    partial class FixRatingPrimaryKeys
+    [Migration("20230701163045_UpdatePrimaryKeysForRatings")]
+    partial class UpdatePrimaryKeysForRatings
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -64,7 +64,7 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<Guid>("ChartId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("MixId")
+                    b.Property<Guid>("MixId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Count")
@@ -285,13 +285,14 @@ namespace ScoreTracker.Data.Migrations
 
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.UserChartDifficultyRatingEntity", b =>
                 {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("ChartId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("MixId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("MixId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Scale")
@@ -300,7 +301,7 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("ChartId", "MixId");
+                    b.HasKey("Id");
 
                     b.HasIndex("ChartId");
 

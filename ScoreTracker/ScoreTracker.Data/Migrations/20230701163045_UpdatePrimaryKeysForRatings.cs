@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace ScoreTracker.Data.Migrations
 {
-    public partial class FixRatingPrimaryKeys : Migration
+    public partial class UpdatePrimaryKeysForRatings : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -13,11 +13,6 @@ namespace ScoreTracker.Data.Migrations
                 name: "FK_Chart_ChartDifficultyRating_DifficultyRatingChartId",
                 schema: "scores",
                 table: "Chart");
-
-            migrationBuilder.DropPrimaryKey(
-                name: "PK_UserChartDifficultyRating",
-                schema: "scores",
-                table: "UserChartDifficultyRating");
 
             migrationBuilder.DropPrimaryKey(
                 name: "PK_ChartDifficultyRating",
@@ -59,12 +54,6 @@ namespace ScoreTracker.Data.Migrations
                 nullable: true);
 
             migrationBuilder.AddPrimaryKey(
-                name: "PK_UserChartDifficultyRating",
-                schema: "scores",
-                table: "UserChartDifficultyRating",
-                columns: new[] { "ChartId", "MixId" });
-
-            migrationBuilder.AddPrimaryKey(
                 name: "PK_ChartDifficultyRating",
                 schema: "scores",
                 table: "ChartDifficultyRating",
@@ -92,11 +81,6 @@ namespace ScoreTracker.Data.Migrations
                 name: "FK_Chart_ChartDifficultyRating_DifficultyRatingChartId_DifficultyRatingMixId",
                 schema: "scores",
                 table: "Chart");
-
-            migrationBuilder.DropPrimaryKey(
-                name: "PK_UserChartDifficultyRating",
-                schema: "scores",
-                table: "UserChartDifficultyRating");
 
             migrationBuilder.DropPrimaryKey(
                 name: "PK_ChartDifficultyRating",
@@ -130,12 +114,6 @@ namespace ScoreTracker.Data.Migrations
                 nullable: true,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
-
-            migrationBuilder.AddPrimaryKey(
-                name: "PK_UserChartDifficultyRating",
-                schema: "scores",
-                table: "UserChartDifficultyRating",
-                column: "Id");
 
             migrationBuilder.AddPrimaryKey(
                 name: "PK_ChartDifficultyRating",

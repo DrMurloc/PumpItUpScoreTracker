@@ -62,7 +62,7 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<Guid>("ChartId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("MixId")
+                    b.Property<Guid>("MixId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Count")
@@ -283,13 +283,14 @@ namespace ScoreTracker.Data.Migrations
 
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.UserChartDifficultyRatingEntity", b =>
                 {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("ChartId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("MixId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("MixId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Scale")
@@ -298,7 +299,7 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("ChartId", "MixId");
+                    b.HasKey("Id");
 
                     b.HasIndex("ChartId");
 

@@ -76,8 +76,6 @@ public sealed class ChartAttemptDbContext : DbContext
             .WithMany()
             .HasForeignKey(ucdr => ucdr.UserId);
 
-        builder.Entity<UserChartDifficultyRatingEntity>()
-            .HasKey(ucdr => new { ucdr.ChartId, ucdr.MixId });
 
         builder.Entity<UserChartDifficultyRatingEntity>()
             .HasOne<ChartEntity>()
