@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using ScoreTracker.Application.Queries;
+using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 
@@ -23,7 +24,7 @@ public sealed class
     public async Task<IEnumerable<BestXXChartAttempt>> Handle(GetXXCoOpBestAttemptsQuery request,
         CancellationToken cancellationToken)
     {
-        var charts = await _chartRepository.GetCoOpCharts(cancellationToken);
+        var charts = await _chartRepository.GetCoOpCharts(MixEnum.XX, cancellationToken);
 
         return await _chartAttemptRepository.GetBestAttempts(_currentUser.User.Id, charts, cancellationToken);
     }

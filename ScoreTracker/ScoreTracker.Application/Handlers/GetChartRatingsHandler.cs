@@ -27,7 +27,8 @@ public sealed class
         if (request.Level != null || request.Type != null)
         {
             var charts =
-                (await _charts.GetCharts(null, request.Level, request.Type, cancellationToken: cancellationToken))
+                (await _charts.GetCharts(request.Mix, request.Level, request.Type,
+                    cancellationToken: cancellationToken))
                 .Select(c => c.Id)
                 .ToHashSet();
             result = result.Where(r => charts.Contains(r.ChartId)).ToArray();

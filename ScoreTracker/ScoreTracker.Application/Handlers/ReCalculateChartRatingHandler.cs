@@ -22,7 +22,7 @@ public sealed class
     public async Task<ChartDifficultyRatingRecord> Handle(ReCalculateChartRatingCommand request,
         CancellationToken cancellationToken)
     {
-        var chart = await _charts.GetChart(request.ChartId, cancellationToken);
+        var chart = await _charts.GetChart(request.Mix, request.ChartId, cancellationToken);
 
         var ratings = (await _difficultyRatings.GetRatings(request.Mix, request.ChartId, cancellationToken))
             .ToArray();

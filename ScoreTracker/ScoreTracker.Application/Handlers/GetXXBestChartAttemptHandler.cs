@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using ScoreTracker.Application.Queries;
+using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 
@@ -23,7 +24,7 @@ public sealed class GetXXBestChartAttemptHandler : IRequestHandler<GetXXBestChar
     public async Task<BestXXChartAttempt> Handle(GetXXBestChartAttemptQuery request,
         CancellationToken cancellationToken)
     {
-        var chart = await _charts.GetChart(request.ChartId, cancellationToken);
+        var chart = await _charts.GetChart(MixEnum.XX, request.ChartId, cancellationToken);
         var bestAttempt = await _chartAttempts.GetBestAttempt(_user.User.Id, chart, cancellationToken);
         return new BestXXChartAttempt(chart, bestAttempt);
     }

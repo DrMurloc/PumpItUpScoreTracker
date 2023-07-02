@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using ScoreTracker.Application.Commands;
+using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 
@@ -26,7 +27,7 @@ public sealed class UpdateXXBestAttemptHandler : IRequestHandler<UpdateXXBestAtt
 
     public async Task<Unit> Handle(UpdateXXBestAttemptCommand request, CancellationToken cancellationToken)
     {
-        var chart = await _charts.GetChart(request.chartId, cancellationToken);
+        var chart = await _charts.GetChart(MixEnum.XX, request.chartId, cancellationToken);
         if (request.LetterGrade != null)
             await _attempts.SetBestAttempt(_user.User.Id, chart,
                 new XXChartAttempt(request.LetterGrade.Value, request.IsBroken, request.Score, _dateTimeOffset.Now),
