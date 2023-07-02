@@ -1,0 +1,65 @@
+﻿@page "/ChartCompare"
+
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Dtos
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.ValueTypes
+
+<PageTitle>Chart Compare</PageTitle>
+
+<MudPaper>
+    <MudText Typo="Typo.body1">Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings. Note that this information is not final until referenced against actual released mix.</MudText>
+    <MudText Typo="Typo.h4">Added</MudText>
+    @foreach (var s in _addedSongs.OrderBy(s => s.ToString()))
+    {
+        <MudText Typo="Typo.body1" Color="Color.Success">@s</MudText>
+    }
+    @foreach (var c in _addedCharts)
+    {
+        <MudText Typo="Typo.body1" Color="Color.Success">@c.Song.Name @c.DifficultyString</MudText>
+    }
+    <MudText Typo="Typo.h4">Changed Level</MudText>
+    @foreach (var c in _updatedCharts)
+    {
+        <MudText Typo="Typo.body1" Color="Color.Info">@c.Song.Name @_xxCharts[c.Id].DifficultyString -> @c.Level</MudText>
+    }
+    <MudText Typo="Typo.h4">Removed</MudText>
+    @foreach (var s in _removedSongs.OrderBy(s => s.ToString()))
+    {
+        <MudText Typo="Typo.body1" Color="Color.Error">@s</MudText>
+    }
+    @foreach (var c in _removedCharts)
+    {
+        <MudText Typo="Typo.body1" Color="Color.Error">@c.Song.Name @c.DifficultyString</MudText>
+    }
+</MudPaper>
+@inject IMediator Mediator;
+@code
+{
+    private ISet<Name> _xxSongs = new HashSet<Name>();
+    private ISet<Name> _phoenixSongs = new HashSet<Name>();
+    private IDictionary<Guid, Chart> _xxCharts = new Dictionary<Guid, Chart>();
+    private IDictionary<Guid, Chart> _phoenixCharts = new Dictionary<Guid, Chart>();
+    private ISet<Name> _removedSongs = new HashSet<Name>();
+    private ISet<Name> _addedSongs = new HashSet<Name>();
+    private IEnumerable<Chart> _removedCharts = Array.Empty<Chart>();
+    private IEnumerable<Chart> _addedCharts = Array.Empty<Chart>();
+    private IEnumerable<Chart> _updatedCharts = Array.Empty<Chart>();
+    protected override async Task OnInitializedAsync()
+    {
+        _xxSongs = (await Mediator.Send(new GetSongNamesQuery(MixEnum.XX))).ToHashSet();
+        _phoenixSongs = (await Mediator.Send(new GetSongNamesQuery(MixEnum.Phoenix))).ToHashSet();
+
+        _removedSongs = _xxSongs.Where(c => !_phoenixSongs.Contains(c) && !c.ToString().EndsWith("Short Cut",StringComparison.OrdinalIgnoreCase)).ToHashSet();
+        _addedSongs = _phoenixSongs.Where(c => !_xxSongs.Contains(c)).ToHashSet();
+
+        _xxCharts = (await Mediator.Send(new GetChartsQuery(MixEnum.XX))).ToDictionary(c => c.Id);
+        _phoenixCharts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+        _addedCharts = _phoenixCharts.Values.Where(c => !_addedSongs.Contains(c.Song.Name) && !_xxCharts.ContainsKey(c.Id)).OrderBy(c=>c.Song.Name.ToString()).ToArray();
+        _removedCharts = _xxCharts.Values.Where(c => !_removedSongs.Contains(c.Song.Name) && !c.Song.Name.ToString().EndsWith("Short Cut", StringComparison.OrdinalIgnoreCase) && !_phoenixCharts.ContainsKey(c.Id)).OrderBy(c => c.Song.Name.ToString()).ToArray();
+        _updatedCharts = _phoenixCharts.Values.Where(c => _xxCharts.ContainsKey(c.Id) && _xxCharts[c.Id].Level != c.Level).OrderBy(c=>c.Song.Name.ToString()).ToArray();
+    }
+}
