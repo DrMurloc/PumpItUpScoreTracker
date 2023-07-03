@@ -1,13 +1,13 @@
 ﻿using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Domain.Models.Titles;
+namespace ScoreTracker.Domain.Models.Titles.XX;
 
-public sealed class DifficultyLevelTitle : Title
+public sealed class XXDifficultyLevelTitle : XXTitle
 {
     private readonly DifficultyLevel _maximumLevel;
     private readonly DifficultyLevel _minimumLevel;
 
-    public DifficultyLevelTitle(Name title, DifficultyLevel minimumLevel, DifficultyLevel maximumLevel,
+    public XXDifficultyLevelTitle(Name title, DifficultyLevel minimumLevel, DifficultyLevel maximumLevel,
         int requiredCount) : base(title,
         $"{requiredCount} stage passes on {minimumLevel}-{maximumLevel}s, except Missions", "Difficulty", requiredCount)
     {
@@ -15,14 +15,14 @@ public sealed class DifficultyLevelTitle : Title
         _maximumLevel = maximumLevel;
     }
 
-    public DifficultyLevelTitle(Name title, DifficultyLevel level, int requiredCount) : base(title,
+    public XXDifficultyLevelTitle(Name title, DifficultyLevel level, int requiredCount) : base(title,
         $"{requiredCount} stage passes on {level}s, except Missions", "Difficulty", requiredCount)
     {
         _minimumLevel = level;
         _maximumLevel = level;
     }
 
-    public DifficultyLevelTitle(Name title, DifficultyLevel level, int requiredCount, string additionalRequirements) :
+    public XXDifficultyLevelTitle(Name title, DifficultyLevel level, int requiredCount, string additionalRequirements) :
         base(title,
             $"{requiredCount} stage passes on {level}s, except Missions. {additionalRequirements}", "Difficulty",
             requiredCount)

@@ -1,10 +1,10 @@
 ﻿using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Domain.Models.Titles;
+namespace ScoreTracker.Domain.Models.Titles.XX;
 
-public sealed class StepArtistTitle : Title
+public sealed class XXStepArtistTitle : XXTitle
 {
-    public StepArtistTitle(Name artistName) : base($"{artistName} Follower",
+    public XXStepArtistTitle(Name artistName) : base($"{artistName} Follower",
         $"Play charts made by {artistName} 100 times", "Step Artist")
     {
     }

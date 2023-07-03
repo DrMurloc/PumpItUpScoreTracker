@@ -1,16 +1,16 @@
 ﻿using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Domain.Models.Titles;
+namespace ScoreTracker.Domain.Models.Titles.XX;
 
-public sealed class SkillTitle : Title
+public sealed class XXSkillTitle : XXTitle
 {
     private readonly ChartType _chartType;
     private readonly XXLetterGrade _letterGrade;
     private readonly DifficultyLevel _level;
     private readonly Name _songName;
 
-    public SkillTitle(Name title, Name songName, ChartType chartType, DifficultyLevel difficultyLevel,
+    public XXSkillTitle(Name title, Name songName, ChartType chartType, DifficultyLevel difficultyLevel,
         XXLetterGrade letterGrade) : base(title,
         $"Achieve {letterGrade} on {songName} {chartType.GetShortHand()}{difficultyLevel}", "Skill")
     {
@@ -20,7 +20,7 @@ public sealed class SkillTitle : Title
         _letterGrade = letterGrade;
     }
 
-    public SkillTitle(Name title, Name songName, ChartType chartType, DifficultyLevel difficultyLevel) : this(
+    public XXSkillTitle(Name title, Name songName, ChartType chartType, DifficultyLevel difficultyLevel) : this(
         title, songName, chartType, difficultyLevel, XXLetterGrade.SS)
     {
     }

@@ -8,18 +8,16 @@ public abstract class Title
     {
         Name = name;
         Description = description;
+        Category = category;
         CompletionRequired = completionRequired;
-        Cateogry = category;
     }
 
-    protected Title(Name title, string description, Name category) : this(title, description, category, 0)
+    protected Title(Name name, string description, Name category) : this(name, description, category, 0)
     {
     }
 
     public Name Name { get; }
-    public Name Cateogry { get; }
+    public Name Category { get; }
     public string Description { get; }
     public int CompletionRequired { get; }
-
-    public abstract bool DoesAttemptApply(BestXXChartAttempt attempt);
 }

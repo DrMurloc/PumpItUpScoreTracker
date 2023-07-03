@@ -1,25 +1,26 @@
 ﻿using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Domain.Models.Titles;
+namespace ScoreTracker.Domain.Models.Titles.XX;
 
-public sealed class CustomTitle : Title
+public sealed class XXCustomTitle : XXTitle
 {
     private readonly Func<BestXXChartAttempt, bool> _rule;
 
-    public CustomTitle(Name name, string description, int completionRequired, Name category,
+    public XXCustomTitle(Name name, string description, int completionRequired, Name category,
         Func<BestXXChartAttempt, bool> rule) : base(
         name, description, category, completionRequired)
     {
         _rule = rule;
     }
 
-    public CustomTitle(Name title, string description, Name category, Func<BestXXChartAttempt, bool> rule) : this(title,
+    public XXCustomTitle(Name title, string description, Name category, Func<BestXXChartAttempt, bool> rule) : this(
+        title,
         description, 0, category,
         rule)
     {
     }
 
-    public CustomTitle(Name title, string description, Func<BestXXChartAttempt, bool> rule) : this(title, description,
+    public XXCustomTitle(Name title, string description, Func<BestXXChartAttempt, bool> rule) : this(title, description,
         0,
         "Misc.",
         rule)

@@ -1,10 +1,17 @@
 ﻿@page "/Titles"
 @using MediatR
 @using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Dtos
+@using ScoreTracker.Web.Services.Contracts
 <PageTitle>Titles</PageTitle>
-<MudText>Note: This page will not support Phoenix titles until we have confirmed success metrics for a significant amount of titles.</MudText>
+<MudSelect T="MixEnum" AdornmentIcon="@Icons.Material.Filled.LibraryMusic" Label="Mix" Value="_currentMix" ValueChanged="MixChanged">
+    @foreach (var mix in Enum.GetValues<MixEnum>())
+    {
+        <MudSelectItem T="MixEnum" Value="mix">@mix</MudSelectItem>
+    }
+</MudSelect>
 <MudDataGrid @ref="_dataGrid" T="TitleProgressDto" Items="_titleProgress" Hover="true" ReadOnly="true"
              Groupable="true" FixedHeader="true" Height="500" Loading="@_isLoading">
     <ToolBarContent>
@@ -32,23 +39,36 @@
 
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
+@inject IUiSettingsAccessor UiSettings;
 @code {
     private MudDataGrid<TitleProgressDto>? _dataGrid;
     private IEnumerable<TitleProgressDto> _titleProgress = Array.Empty<TitleProgressDto>();
-    
+    private MixEnum _currentMix;
     private bool _isLoading = true;
-    
-    protected override async Task OnInitializedAsync()
+
+    private async Task MixChanged(MixEnum newMix)
     {
+        _currentMix = newMix;
+        await UiSettings.SetSelectedMix(newMix);
+        await LoadTitles();
+    }
+
+    private async Task LoadTitles()
+    {
+
         _isLoading = true;
-        _titleProgress = (await Mediator.Send(new GetXXTitleProgressQuery())).Select(TitleProgressDto.From).ToArray();
+        _titleProgress = (await Mediator.Send(new GetTitleProgressQuery(_currentMix))).Select(TitleProgressDto.From).ToArray();
         _isLoading = false;
         if (_dataGrid != null)
         {
-            
+
             _dataGrid.Items = _titleProgress;
             _dataGrid?.GroupItems();
         }
-
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        _currentMix = await UiSettings.GetSelectedMix();
+        await LoadTitles();
     }
 }

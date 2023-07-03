@@ -13,11 +13,11 @@ public sealed class TitleProgressDto
 
     public static TitleProgressDto From(TitleProgress progress)
     {
-        return new()
+        return new TitleProgressDto
         {
             CompletionCount = progress.CompletionCount,
             RequiredCount = progress.Title.CompletionRequired,
-            TitleCategory = progress.Title.Cateogry,
+            TitleCategory = progress.Title.Category,
             TitleDescription = progress.Title.Description,
             TitleName = progress.Title.Name
         };
