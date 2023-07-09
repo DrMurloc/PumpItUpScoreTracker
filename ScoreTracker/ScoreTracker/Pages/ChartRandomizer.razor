@@ -5,97 +5,145 @@
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 <PageTitle>Chart Randomizer</PageTitle>
 
-<MudPaper>
-    <MudExpansionPanels>
-        <MudExpansionPanel Text="Levels">
-            <MudGrid>
-                @foreach (var level in _levelWeights.Keys.OrderBy(k => k))
-                {
-                    <MudItem xs="4">
+<MudExpansionPanels>
+    <MudExpansionPanel Text="Levels">
+        <MudGrid>
+            @foreach (var level in _levelWeights.Keys.OrderBy(k => k))
+            {
+                <MudItem xs="4">
+                    @if (_useWeights)
+                    {
                         <MudNumericField T="int" Min="0" Max="99" Label="@LevelString(level)" Value="_levelWeights[level]" ValueChanged="@(v => SetLevelWeight(level, v))"></MudNumericField>
-                    </MudItem>
-                }
-            </MudGrid>
-        </MudExpansionPanel>
-        <MudExpansionPanel Text="Chart Types">
-            <MudGrid>
-                @foreach (var chartType in _chartTypeWeights.Keys)
-                {
-                    <MudItem xs="6">
+                    }
+                    else
+                    {
+                        <MudSwitch T="bool" Label="@LevelString(level)" Color="Color.Primary" Checked="_levelWeights[level]>0" CheckedChanged="@(v=>SetLevelWeight(level,v?1:0))"></MudSwitch>
+                    }
+                </MudItem>
+            }
+        </MudGrid>
+    </MudExpansionPanel>
+    <MudExpansionPanel Text="Chart Types">
+        <MudGrid>
+            @foreach (var chartType in _chartTypeWeights.Keys)
+            {
+                <MudItem xs="6">
+                    @if (_useWeights)
+                    {
                         <MudNumericField T="int" Min="0" Max="99" Label="@chartType.ToString()" Value="_chartTypeWeights[chartType]" ValueChanged="@(v => SetChartTypeWeight(chartType, v))"></MudNumericField>
-                    </MudItem>
-                }
-            </MudGrid>
-        </MudExpansionPanel>
-        <MudExpansionPanel Text="Song Types">
-            <MudGrid>
-                @foreach (var songType in _songTypeWeights.Keys)
-                {
-                    <MudItem xs="6">
+                    }
+                    else
+                    {
+                        <MudSwitch T="bool" Label="@chartType.ToString()" Color="Color.Primary" Checked="_chartTypeWeights[chartType]>0" CheckedChanged="@(v=>SetChartTypeWeight(chartType,v?1:0))"></MudSwitch>
+                    }
+                </MudItem>
+            }
+        </MudGrid>
+    </MudExpansionPanel>
+    <MudExpansionPanel Text="Song Types">
+        <MudGrid>
+            @foreach (var songType in _songTypeWeights.Keys)
+            {
+                <MudItem xs="6">
+                    @if (_useWeights)
+                    {
                         <MudNumericField T="int" Min="0" Max="99" Label="@songType.ToString()" Value="_songTypeWeights[songType]" ValueChanged="@(v => SetSongTypeWeight(songType, v))"></MudNumericField>
-                    </MudItem>
-                }
-            </MudGrid>
-        </MudExpansionPanel>
-        <MudExpansionPanel Text="Charts">
-            <MudGrid>
-                <MudItem xs="12">
-                    <MudText Typo="Typo.body1">Specific Chart Weights will be reset when category weights in above sections are changed, fill this section out last.</MudText>
+                    }
+                    else
+                    {
+                        <MudSwitch T="bool" Label="@songType.ToString()" Color="Color.Primary" Checked="_songTypeWeights[songType]>0" CheckedChanged="@(v=>SetSongTypeWeight(songType,v?1:0))"></MudSwitch>
+                    }
                 </MudItem>
-                <MudItem xs="12">
-                    <MudTextField T="string" Value="_filteredSongName" ValueChanged="FilterCharts" Label="Song Name Search (Required)" Immediate="true"></MudTextField>
-                </MudItem>
-                @foreach (var chart in _filteredCharts)
-                {
-                    <MudItem xs="6" sm="4" md="3">
-                        <MudNumericField T="int" Min="0" Max="99" Label="@ChartString(chart)" Value="_chartWeights[chart.Id]" ValueChanged="@(v => SetChartWeights(chart.Id, v))"></MudNumericField>
-                    </MudItem>
-                }
-            </MudGrid>
-        </MudExpansionPanel>
-        <MudExpansionPanel Text="Additional Settings">
-            <MudGrid>
-                <MudItem xs="4">
-                    <MudNumericField T="int" Min="1" Max="10" Label="Chart Count" @bind-Value="_count"></MudNumericField>
-                </MudItem>
-                <MudItem xs="4">
-                    <MudSwitch Color="Color.Primary" Label="Allow Repeat Charts" @bind-Checked="_allowRepeats"></MudSwitch>
-                </MudItem>
-            </MudGrid>
-        </MudExpansionPanel>
-    </MudExpansionPanels>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RandomizeCharts">Randomize Charts</MudButton>
-    <MudGrid>
-        @foreach (var chart in _pulledCharts)
-        {
-            <MudItem xs="12" sm="6" md="4">
-                <MudCard>
-                    <MudCardMedia Height="300" Image="@chart.Song.ImagePath.ToString()" />
-                    <MudCardActions>
-
-                        @if (Videos.ContainsKey(chart.Id))
-                        {
-                            <MudTooltip Text="Open Embeded Video">
-                                <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(chart.Id))"></MudIconButton>
-                            </MudTooltip>
-                        }
-                        else
-                        {
-                            <MudTooltip Text="Open Youtube Search for Chart">
-                                <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
-                            </MudTooltip>
-                        }
-                        <MudSpacer></MudSpacer>
-                        
-                        <MudTooltip Text="@ChartString(chart)">
-                            <MudImage Src="@BubblePath(chart)" Height="35" Alt="@chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-                        </MudTooltip>
-                    </MudCardActions>
-                </MudCard>
+            }
+        </MudGrid>
+    </MudExpansionPanel>
+    <MudExpansionPanel Text="Charts">
+        <MudGrid>
+            <MudItem xs="12">
+                <MudText Typo="Typo.body1">Specific Chart Weights will be reset when category weights in above sections are changed, fill this section out last.</MudText>
             </MudItem>
-        }
-    </MudGrid>
-</MudPaper>
+            <MudItem xs="12">
+                <MudTextField T="string" Value="_filteredSongName" ValueChanged="FilterCharts" Label="Song Name Search (Required)" Immediate="true"></MudTextField>
+            </MudItem>
+            @foreach (var chart in _filteredCharts)
+            {
+                <MudItem xs="6" sm="4" md="3">
+                    @if (_useWeights)
+                    {
+                        <MudNumericField T="int" Min="0" Max="99" Label="@ChartString(chart)" Value="_chartWeights[chart.Id]" ValueChanged="@(v => SetChartWeights(chart.Id, v))"></MudNumericField>
+                    }
+                    else
+                    {
+                        <MudSwitch T="bool" Label="@ChartString(chart)" Color="Color.Primary" Checked="_chartWeights[chart.Id]>0" CheckedChanged="@(v=>SetChartWeights(chart.Id,v?1:0))"></MudSwitch>
+                    }
+                </MudItem>
+            }
+        </MudGrid>
+    </MudExpansionPanel>
+    <MudExpansionPanel Text="Additional Settings">
+        <MudGrid>
+            <MudItem xs="4">
+                <MudNumericField T="int" Min="1" Max="10" Label="Chart Count" @bind-Value="_count"></MudNumericField>
+            </MudItem>
+            <MudItem xs="4">
+                <MudSwitch Color="Color.Primary" Label="Allow Repeat Charts" @bind-Checked="_allowRepeats"></MudSwitch>
+            </MudItem>
+            <MudItem xs="4">
+                <MudSwitch T="bool" Color="Color.Primary" Label="Use Weights" Checked="_useWeights" CheckedChanged="SetUseWeights"></MudSwitch>
+            </MudItem>
+        </MudGrid>
+    </MudExpansionPanel>
+</MudExpansionPanels>
+<br/>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RandomizeCharts">Randomize Charts</MudButton>
+<br/>
+<MudGrid>
+    @for (var i=0;i<_pulledCharts.Length;i++)
+    {
+        var chart = _pulledCharts[i];
+        var index = i;
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard Class="border-solid border-2" Style="@CardStyle(index)">
+                <MudCardMedia Height="300" Image="@chart.Song.ImagePath.ToString()" />
+                <MudCardActions>
+
+                    @if (_videos.ContainsKey(chart.Id))
+                    {
+                        <MudTooltip Text="Open Embeded Video">
+                            <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(chart.Id))"></MudIconButton>
+                        </MudTooltip>
+                    }
+                    else
+                    {
+                        <MudTooltip Text="Open Youtube Search for Chart">
+                            <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
+                        </MudTooltip>
+                    }
+                    @if (!_protectedCharts.Contains(index) && !_vetoedCharts.Contains(index))
+                    {
+                        <MudTooltip Text="Protect">
+                            <MudIconButton Icon="@Icons.Material.Filled.Shield" OnClick="@(()=>_protectedCharts.Add(index))" Color="Color.Success"></MudIconButton>
+                        </MudTooltip>
+                        <MudTooltip Text="Veto">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(()=>_vetoedCharts.Add(index))" Color="Color.Error"></MudIconButton>
+                        </MudTooltip>
+                    }
+                    <MudSpacer></MudSpacer>
+                    
+                    <MudTooltip Text="@ChartString(chart)">
+                        <MudImage Src="@BubblePath(chart)" Height="35" Alt="@chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                    </MudTooltip>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    }
+    @if (_vetoedCharts.Any())
+    {
+        <MudItem xs="12">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RemoveVetoedCharts">Remove Vetoed Charts</MudButton>
+        </MudItem>
+    }
+</MudGrid>
 <MudDialog @bind-IsVisible="_showVideoDialog">
     <DialogContent>
         <iframe class="video"
@@ -116,11 +164,15 @@
 @inject IMediator Mediator
 @inject ISnackbar Snackbar;
 @code {
+
+    private string CardStyle(int chartOrder) => _protectedCharts.Contains(chartOrder) ? $@"border-color:{Colors.Green.Darken1}" :
+        _vetoedCharts.Contains(chartOrder) ? $@"border-color:{Colors.Red.Darken1}" : "";
     private Random _random = new Random(DateTimeOffset.Now.Year+DateTimeOffset.Now.Month+DateTimeOffset.Now.Day+DateTimeOffset.Now.Hour+DateTimeOffset.Now.Minute+DateTimeOffset.Now.Second+DateTimeOffset.Now.Millisecond);
     private IDictionary<Guid, int> _chartWeights = new Dictionary<Guid, int>();
     private IDictionary<int, int> _levelWeights = new Dictionary<int, int>();
     private IDictionary<ChartType, int> _chartTypeWeights = new Dictionary<ChartType, int>();
     private IDictionary<SongType, int> _songTypeWeights = new Dictionary<SongType, int>();
+    private bool _useWeights = false;
     private bool _allowRepeats = false;
     private int _count = 3;
     private bool _showVideoDialog = false;
@@ -131,12 +183,84 @@
 
     private Chart[] _filteredCharts = Array.Empty<Chart>();
     private Chart[] _pulledCharts = Array.Empty<Chart>();
-    private IDictionary<Guid, string> Videos = new Dictionary<Guid, string>();
+    private List<int> _protectedCharts = new ();
+    private List<int> _vetoedCharts = new();
+    private IDictionary<Guid, string> _videos = new Dictionary<Guid, string>();
 
+    private void RemoveVetoedCharts()
+    {
+        
+        //God only knows how this works anymore.
+        //Because I have an "allow repeats" option index is the only way I can track protect/vetos.
+        //Possibly could clean up with usage of GUIDs to keep track of specific pulls instead of index but whatever.
+        var newCharts = new List<Chart>();
+        var offset = 0;
+        for(var i=0; i<_pulledCharts.Length-offset;i++)
+        {
+            if (_vetoedCharts.Contains(i))
+            {
+                for (var j = 0; j < _protectedCharts.Count; j++)
+                {
+                    if (_protectedCharts[j] > i)
+                    {
+                        _protectedCharts[j]--;
+                    }
+                }
+                for (var j = 0; j < _vetoedCharts.Count; j++)
+                {
+                    if (_vetoedCharts[j] == i)
+                    {
+                        _vetoedCharts[j] = -1;
+                    }
+                    else if (_vetoedCharts[j] > i)
+                    {
+                        _vetoedCharts[j]--;
+                    }
+                }
+                offset++;
+                i--;
+            }
+            else
+            {
+                newCharts.Add(_pulledCharts[i+offset]);
+            }
+        }
+        _vetoedCharts.Clear();
+        _pulledCharts = newCharts.ToArray();
+    }
     private void ShowVideo(Guid chartId)
     {
-        _currentVideo = Videos[chartId];
+        _currentVideo = _videos[chartId];
         _showVideoDialog = true;
+    }
+
+    private void SetUseWeights(bool useWeights)
+    {
+        _useWeights = useWeights;
+        if (useWeights) return;
+
+        foreach (var kv in _levelWeights)
+        {
+            if (kv.Value > 1)
+            {
+                _levelWeights[kv.Key] = 1;
+            }
+        }
+        foreach (var kv in _chartTypeWeights)
+        {
+            if (kv.Value > 1)
+            {
+                _chartTypeWeights[kv.Key] = 1;
+            }
+        }
+        foreach (var kv in _songTypeWeights)
+        {
+            if (kv.Value > 1)
+            {
+                _songTypeWeights[kv.Key] = 1;
+            }
+        }
+        ApplyWeights();
     }
     private void RandomizeCharts()
     {
@@ -174,6 +298,8 @@
             results.Add(_chartDict[nextGuid]);
         }
         _pulledCharts = results.ToArray();
+        _protectedCharts = new();
+        _vetoedCharts = new();
     }
     private void FilterCharts(string songName)
     {
@@ -241,7 +367,7 @@
         _chartDict = _charts.ToDictionary(c => c.Id);
         
         _chartWeights = _charts.ToDictionary(c => c.Id, c => 0);
-        Videos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl.ToString());
+        _videos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl.ToString());
 
 
     }
