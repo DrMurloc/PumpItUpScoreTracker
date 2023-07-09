@@ -1,0 +1,258 @@
+﻿@page "/ChartRandomizer"
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+<PageTitle>Chart Randomizer</PageTitle>
+
+<MudPaper>
+    <MudExpansionPanels>
+        <MudExpansionPanel Text="Levels">
+            <MudGrid>
+                @foreach (var level in _levelWeights.Keys.OrderBy(k => k))
+                {
+                    <MudItem xs="4">
+                        <MudNumericField T="int" Min="0" Max="99" Label="@LevelString(level)" Value="_levelWeights[level]" ValueChanged="@(v => SetLevelWeight(level, v))"></MudNumericField>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudExpansionPanel>
+        <MudExpansionPanel Text="Chart Types">
+            <MudGrid>
+                @foreach (var chartType in _chartTypeWeights.Keys)
+                {
+                    <MudItem xs="6">
+                        <MudNumericField T="int" Min="0" Max="99" Label="@chartType.ToString()" Value="_chartTypeWeights[chartType]" ValueChanged="@(v => SetChartTypeWeight(chartType, v))"></MudNumericField>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudExpansionPanel>
+        <MudExpansionPanel Text="Song Types">
+            <MudGrid>
+                @foreach (var songType in _songTypeWeights.Keys)
+                {
+                    <MudItem xs="6">
+                        <MudNumericField T="int" Min="0" Max="99" Label="@songType.ToString()" Value="_songTypeWeights[songType]" ValueChanged="@(v => SetSongTypeWeight(songType, v))"></MudNumericField>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudExpansionPanel>
+        <MudExpansionPanel Text="Charts">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.body1">Specific Chart Weights will be reset when category weights in above sections are changed, fill this section out last.</MudText>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Value="_filteredSongName" ValueChanged="FilterCharts" Label="Song Name Search (Required)" Immediate="true"></MudTextField>
+                </MudItem>
+                @foreach (var chart in _filteredCharts)
+                {
+                    <MudItem xs="6" sm="4" md="3">
+                        <MudNumericField T="int" Min="0" Max="99" Label="@ChartString(chart)" Value="_chartWeights[chart.Id]" ValueChanged="@(v => SetChartWeights(chart.Id, v))"></MudNumericField>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudExpansionPanel>
+        <MudExpansionPanel Text="Additional Settings">
+            <MudGrid>
+                <MudItem xs="4">
+                    <MudNumericField T="int" Min="1" Max="10" Label="Chart Count" @bind-Value="_count"></MudNumericField>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudSwitch Color="Color.Primary" Label="Allow Repeat Charts" @bind-Checked="_allowRepeats"></MudSwitch>
+                </MudItem>
+            </MudGrid>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RandomizeCharts">Randomize Charts</MudButton>
+    <MudGrid>
+        @foreach (var chart in _pulledCharts)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard>
+                    <MudCardMedia Height="300" Image="@chart.Song.ImagePath.ToString()" />
+                    <MudCardActions>
+
+                        @if (Videos.ContainsKey(chart.Id))
+                        {
+                            <MudTooltip Text="Open Embeded Video">
+                                <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(chart.Id))"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudTooltip Text="Open Youtube Search for Chart">
+                                <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
+                            </MudTooltip>
+                        }
+                        <MudSpacer></MudSpacer>
+                        
+                        <MudTooltip Text="@ChartString(chart)">
+                            <MudImage Src="@BubblePath(chart)" Height="35" Alt="@chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                        </MudTooltip>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+</MudPaper>
+<MudDialog @bind-IsVisible="_showVideoDialog">
+    <DialogContent>
+        <iframe class="video"
+                id="chartVideoFrame"
+                src="@(_currentVideo + "?autoplay=1")"
+                allow="autoplay; encrypted-media"
+                allowfullscreen></iframe>
+    </DialogContent>
+
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudTooltip Text="Report Low Quality, Broken, or Incorrect Video">
+            <MudButton Href="mailto:sharkingbird@gmail.com" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report">Report Video</MudButton>
+        </MudTooltip>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+@inject IMediator Mediator
+@inject ISnackbar Snackbar;
+@code {
+    private Random _random = new Random(DateTimeOffset.Now.Year+DateTimeOffset.Now.Month+DateTimeOffset.Now.Day+DateTimeOffset.Now.Hour+DateTimeOffset.Now.Minute+DateTimeOffset.Now.Second+DateTimeOffset.Now.Millisecond);
+    private IDictionary<Guid, int> _chartWeights = new Dictionary<Guid, int>();
+    private IDictionary<int, int> _levelWeights = new Dictionary<int, int>();
+    private IDictionary<ChartType, int> _chartTypeWeights = new Dictionary<ChartType, int>();
+    private IDictionary<SongType, int> _songTypeWeights = new Dictionary<SongType, int>();
+    private bool _allowRepeats = false;
+    private int _count = 3;
+    private bool _showVideoDialog = false;
+    private string _currentVideo = string.Empty;
+    private string _filteredSongName = string.Empty;
+    private Chart[] _charts = Array.Empty<Chart>();
+    private IDictionary<Guid, Chart> _chartDict = new Dictionary<Guid, Chart>();
+
+    private Chart[] _filteredCharts = Array.Empty<Chart>();
+    private Chart[] _pulledCharts = Array.Empty<Chart>();
+    private IDictionary<Guid, string> Videos = new Dictionary<Guid, string>();
+
+    private void ShowVideo(Guid chartId)
+    {
+        _currentVideo = Videos[chartId];
+        _showVideoDialog = true;
+    }
+    private void RandomizeCharts()
+    {
+        Guid NextRandomGuid(IEnumerable<KeyValuePair<Guid, int>> weights)
+        {
+            var cur = 0;
+            var distribution = new Dictionary<int, Guid>();
+            foreach (var weight in weights)
+            {
+                for (var i = 0; i < weight.Value; i++)
+                {
+                    distribution[cur] = weight.Key;
+                    cur++;
+                }
+            }
+            var result = _random.Next(cur - 1);
+            return distribution[result];
+        }
+
+        
+        var includedCharts = _chartWeights.Where(kv => kv.Value > 0).ToArray();
+        if (!_allowRepeats && includedCharts.Length < _count)
+        {
+            Snackbar.Add("Included Chart Count is lower than Chart Pull Count");
+            return;
+        }
+        var results = new List<Chart>();
+        for (var i = 0; i < _count; i++)
+        {
+            var nextGuid = NextRandomGuid(includedCharts);
+            if (!_allowRepeats)
+            {
+                includedCharts = includedCharts.Where(kv => kv.Key != nextGuid).ToArray();
+            }
+            results.Add(_chartDict[nextGuid]);
+        }
+        _pulledCharts = results.ToArray();
+    }
+    private void FilterCharts(string songName)
+    {
+        _filteredSongName = songName;
+        if (songName.Equals("n", StringComparison.OrdinalIgnoreCase) || songName.Equals("d", StringComparison.OrdinalIgnoreCase))
+        {
+            _filteredCharts = _charts.Where(c => c.Song.Name == songName).ToArray();
+            return;
+        }
+        if (songName.Length < 3)
+        {
+            _filteredCharts= Array.Empty<Chart>();
+            return;
+        }
+        _filteredCharts= _charts.Where(c => c.Song.Name.ToString().Contains(songName, StringComparison.OrdinalIgnoreCase)).OrderBy(c=>c.Song.Name.ToString()).ThenBy(c=>c.Type).ThenBy(c=>c.Level).ToArray();
+    }
+    private void SetChartWeights(Guid chartId, int weight)
+    {
+        _chartWeights[chartId] = weight;
+    }
+    private void SetLevelWeight(int level, int weight)
+    {
+        _levelWeights[level] = weight;
+        ApplyWeights();
+    }
+
+    private void SetChartTypeWeight(ChartType type, int weight)
+    {
+        _chartTypeWeights[type] = weight;
+        ApplyWeights();
+    }
+
+    private void SetSongTypeWeight(SongType type, int weight)
+    {
+        _songTypeWeights[type] = weight;
+        ApplyWeights();
+    }
+    private void ApplyWeights()
+    {
+        foreach (var chart in _charts)
+        {
+            if (_levelWeights[chart.Level] == 0 || _chartTypeWeights[chart.Type] == 0 || _songTypeWeights[chart.Song.Type] == 0)
+            {
+                _chartWeights[chart.Id] = 0;
+            }
+            else
+            {
+                var max = 1;
+                if (_levelWeights[chart.Level] > max)
+                    max = _levelWeights[chart.Level];
+                if (_chartTypeWeights[chart.Type] > max)
+                    max = _chartTypeWeights[chart.Type];
+                if (_songTypeWeights[chart.Song.Type] > max)
+                    max = _songTypeWeights[chart.Song.Type];
+                _chartWeights[chart.Id] = max;
+            }
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToArray();
+        _levelWeights = _charts.Select(c => c.Level).Distinct().Select(d => (int)d).ToDictionary(l=>l,l=>0);
+        _chartTypeWeights = _charts.Select(c => c.Type).Distinct().ToDictionary(c => c, c => 1);
+        _songTypeWeights = _charts.Select(c => c.Song.Type).Distinct().ToDictionary(t => t, t => 1);
+        _chartDict = _charts.ToDictionary(c => c.Id);
+        
+        _chartWeights = _charts.ToDictionary(c => c.Id, c => 0);
+        Videos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl.ToString());
+
+
+    }
+    private string ChartSearch(Chart chart)
+    {
+        var searchString = "Pump It Up " + chart.Song.Name + " " + chart.DifficultyString;
+        return $"https://www.youtube.com/results?search_query={searchString.Replace("%", "Percent ").Replace(" ", "+")}";
+    }
+    private string LevelString(int level) => $"Level {level}";
+    private string ChartString(Chart chart) => $"{chart.Song.Name} {chart.DifficultyString}";
+    private string BubblePath(Chart chart) =>
+        $"https://piuimages.arroweclip.se/difficulty/{chart.DifficultyString.ToLower()}.png";
+
+}
