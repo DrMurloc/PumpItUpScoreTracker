@@ -2,7 +2,11 @@
 @using MediatR
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.Services.Contracts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using System.Text.Json
+@using ScoreTracker.Application.Commands
 <PageTitle>Chart Randomizer</PageTitle>
 
 <MudExpansionPanels>
@@ -122,10 +126,10 @@
                     @if (!_protectedCharts.Contains(index) && !_vetoedCharts.Contains(index))
                     {
                         <MudTooltip Text="Protect">
-                            <MudIconButton Icon="@Icons.Material.Filled.Shield" OnClick="@(()=>_protectedCharts.Add(index))" Color="Color.Success"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Shield" OnClick="@(()=>ProtectChart(index))" Color="Color.Success"></MudIconButton>
                         </MudTooltip>
                         <MudTooltip Text="Veto">
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(()=>_vetoedCharts.Add(index))" Color="Color.Error"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(()=>VetoChart(index))" Color="Color.Error"></MudIconButton>
                         </MudTooltip>
                     }
                     <MudSpacer></MudSpacer>
@@ -163,6 +167,8 @@
 </MudDialog>
 @inject IMediator Mediator
 @inject ISnackbar Snackbar;
+@inject ICurrentUserAccessor CurrentUser;
+@inject ILogger<ChartRandomizer> Logger;
 @code {
 
     private string CardStyle(int chartOrder) => _protectedCharts.Contains(chartOrder) ? $@"border-color:{Colors.Green.Darken1}" :
@@ -187,7 +193,18 @@
     private List<int> _vetoedCharts = new();
     private IDictionary<Guid, string> _videos = new Dictionary<Guid, string>();
 
-    private void RemoveVetoedCharts()
+    private async Task ProtectChart(int order)
+    {
+        _protectedCharts.Add(order);
+        await SaveLastResults();
+    }
+
+    private async Task VetoChart(int order)
+    {
+        _vetoedCharts.Add(order);
+        await SaveLastResults();
+    }
+    private async Task RemoveVetoedCharts()
     {
         
         //God only knows how this works anymore.
@@ -227,6 +244,7 @@
         }
         _vetoedCharts.Clear();
         _pulledCharts = newCharts.ToArray();
+        await SaveLastResults();
     }
     private void ShowVideo(Guid chartId)
     {
@@ -234,6 +252,20 @@
         _showVideoDialog = true;
     }
 
+    private async Task SaveLastResults()
+    {
+        if (CurrentUser.IsLoggedIn)
+        {
+            var savedResults = JsonSerializer.Serialize(new SavedResults
+                {
+                    ChartList = _pulledCharts.Select(c => c.Id).ToArray(),
+                    ProtectedCharts = _protectedCharts.ToArray(),
+                    VetoedCharts = _vetoedCharts.ToArray()
+                });
+            await Mediator.Send(new SaveUserUiSettingCommand(LastResultsKey, savedResults));
+        }
+
+    }
     private void SetUseWeights(bool useWeights)
     {
         _useWeights = useWeights;
@@ -262,7 +294,7 @@
         }
         ApplyWeights();
     }
-    private void RandomizeCharts()
+    private async Task RandomizeCharts()
     {
         Guid NextRandomGuid(IEnumerable<KeyValuePair<Guid, int>> weights)
         {
@@ -300,6 +332,7 @@
         _pulledCharts = results.ToArray();
         _protectedCharts = new();
         _vetoedCharts = new();
+        await SaveLastResults();
     }
     private void FilterCharts(string songName)
     {
@@ -358,6 +391,8 @@
             }
         }
     }
+
+        const string LastResultsKey = $"ChartRandomizer__LastResults";
     protected override async Task OnInitializedAsync()
     {
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToArray();
@@ -368,7 +403,24 @@
         
         _chartWeights = _charts.ToDictionary(c => c.Id, c => 0);
         _videos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl.ToString());
-
+        if (CurrentUser.IsLoggedIn)
+        {
+            var uiSettings = await Mediator.Send(new GetUserUiSettingsQuery());
+            if (uiSettings.ContainsKey(LastResultsKey))
+            {
+                try
+                {
+                    var lastResults = JsonSerializer.Deserialize<SavedResults>(uiSettings[LastResultsKey])?? throw new ArgumentNullException($"Couldn't deserialize Saved  Results settings for Chart Randomizer");
+                    _pulledCharts = lastResults.ChartList.Select(id => _chartDict[id]).ToArray();
+                    _protectedCharts = lastResults.ProtectedCharts.ToList();
+                    _vetoedCharts = lastResults.VetoedCharts.ToList();
+                }
+                catch (Exception e)
+                {
+                    Logger.LogWarning(e,$"There was an issue deserializing LastResults");
+                }
+            }
+        }
 
     }
     private string ChartSearch(Chart chart)
@@ -381,4 +433,11 @@
     private string BubblePath(Chart chart) =>
         $"https://piuimages.arroweclip.se/difficulty/{chart.DifficultyString.ToLower()}.png";
 
+
+    private sealed class SavedResults
+    {
+        public int[] VetoedCharts { get; set; } = Array.Empty<int>();
+        public int[] ProtectedCharts { get; set; } = Array.Empty<int>();
+        public Guid[] ChartList { get; set; } = Array.Empty<Guid>();
+    }
 }
