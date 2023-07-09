@@ -9,6 +9,10 @@
 @using ScoreTracker.Application.Commands
 <PageTitle>Chart Randomizer</PageTitle>
 
+@if (!CurrentUser.IsLoggedIn)
+{
+    <MudText Color="Color.Error" Typo="Typo.body1">You are not logged in, your configuration and results will be lost if you refresh.</MudText>
+}
 <MudExpansionPanels>
     <MudExpansionPanel Text="Levels">
         <MudGrid>
@@ -266,6 +270,25 @@
         }
 
     }
+
+    private async Task SaveLastConfig()
+    {
+        if (CurrentUser.IsLoggedIn)
+        {
+            var savedResults = JsonSerializer.Serialize(new SavedConfiguration()
+            {
+                Count=_count,
+                UseWeights = _useWeights,
+                AllowRepeats = _allowRepeats,
+                ChartTypeWeights = _chartTypeWeights,
+                LevelWeights = _levelWeights,
+                SongTypeWeights = _songTypeWeights,
+                ChartWeights = _chartWeights.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value)
+            });
+            
+            await Mediator.Send(new SaveUserUiSettingCommand(LastConfigKey, savedResults));
+        }
+    }
     private void SetUseWeights(bool useWeights)
     {
         _useWeights = useWeights;
@@ -296,6 +319,7 @@
     }
     private async Task RandomizeCharts()
     {
+        await SaveLastConfig();
         Guid NextRandomGuid(IEnumerable<KeyValuePair<Guid, int>> weights)
         {
             var cur = 0;
@@ -393,6 +417,7 @@
     }
 
         const string LastResultsKey = $"ChartRandomizer__LastResults";
+        const string LastConfigKey = $"ChartRandomizer__LastConfig";
     protected override async Task OnInitializedAsync()
     {
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToArray();
@@ -420,6 +445,35 @@
                     Logger.LogWarning(e,$"There was an issue deserializing LastResults");
                 }
             }
+            if (uiSettings.ContainsKey(LastConfigKey))
+            {
+                try
+                {
+                    var lastConfig = JsonSerializer.Deserialize<SavedConfiguration>(uiSettings[LastConfigKey]) ?? throw new ArgumentNullException($"Couldn't deserialize configuration for Chart Randomizer");
+                    _levelWeights = lastConfig.LevelWeights;
+                    _chartTypeWeights = lastConfig.ChartTypeWeights;
+                    _songTypeWeights = lastConfig.SongTypeWeights;
+                    _useWeights = lastConfig.UseWeights;
+                    _allowRepeats = lastConfig.AllowRepeats;
+                    _count = lastConfig.Count;
+                    foreach (var kv in _chartWeights)
+                    {
+                        if (lastConfig.ChartWeights.ContainsKey(kv.Key))
+                        {
+                            _chartWeights[kv.Key] = lastConfig.ChartWeights[kv.Key];
+                            
+                        }
+                        else
+                        {
+                            _chartWeights[kv.Key] = 0;
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.LogWarning(e, $"There was an issue deserializing Last Configs");
+                }
+            }
         }
 
     }
@@ -439,5 +493,16 @@
         public int[] VetoedCharts { get; set; } = Array.Empty<int>();
         public int[] ProtectedCharts { get; set; } = Array.Empty<int>();
         public Guid[] ChartList { get; set; } = Array.Empty<Guid>();
+    }
+
+    private sealed class SavedConfiguration
+    {
+        public IDictionary<int, int> LevelWeights { get; set; } = new Dictionary<int, int>();
+        public IDictionary<ChartType, int> ChartTypeWeights { get; set; } = new Dictionary<ChartType, int>();
+        public IDictionary<SongType, int> SongTypeWeights { get; set; } = new Dictionary<SongType, int>();
+        public IDictionary<Guid, int> ChartWeights { get; set; } = new Dictionary<Guid, int>();
+        public bool UseWeights { get; set; }
+        public int Count { get; set; }
+        public bool AllowRepeats { get; set; }
     }
 }
