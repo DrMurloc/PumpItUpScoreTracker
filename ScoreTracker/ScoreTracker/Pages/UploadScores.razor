@@ -6,6 +6,8 @@
 @using ScoreTracker.Domain.ValueTypes
 @using CsvHelper
 @using System.Globalization
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Exceptions
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services
@@ -337,7 +339,8 @@
             _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxSaving - (double)_currentSaved) / (double)_currentSaved);
             try
             {
-                await Mediator.Send(new UpdateXXBestAttemptCommand(best.Chart.Id, best.BestAttempt?.LetterGrade, best.BestAttempt?.IsBroken ?? true,null), cancellationToken);
+                var chart = await Mediator.Send(new GetChartQuery(MixEnum.XX, best.Chart.Song.Name,best.Chart.Level,best.Chart.Type), cancellationToken);
+                await Mediator.Send(new UpdateXXBestAttemptCommand(chart.Id, best.BestAttempt?.LetterGrade, best.BestAttempt?.IsBroken ?? true,null), cancellationToken);
             }
             catch (OperationCanceledException)
             {
