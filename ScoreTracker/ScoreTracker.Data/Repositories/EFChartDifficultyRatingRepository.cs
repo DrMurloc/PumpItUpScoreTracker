@@ -76,6 +76,18 @@ public sealed class EFChartDifficultyRatingRepository : IChartDifficultyRatingRe
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task ClearAdjustedDifficulty(MixEnum mix, Guid chartId, CancellationToken cancellationToken = default)
+    {
+        var mixId = MixGuids[mix];
+        var entry = await _database.ChartDifficultyRating.Where(c => c.ChartId == chartId && c.MixId == mixId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (entry != null)
+        {
+            _database.Remove(entry);
+            await _database.SaveChangesAsync(cancellationToken);
+        }
+    }
+
     public async Task<DifficultyAdjustment?> GetRating(MixEnum mix, Guid chartId, Guid userId,
         CancellationToken cancellationToken)
     {

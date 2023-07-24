@@ -31,21 +31,20 @@
     private async Task ReCalculateScores()
     {
         _isReCalculating = true;
-        var ratingsWithVotes = (await Mediator.Send(new GetChartRatingsQuery(MixEnum.XX))).Where(c => c.RatingCount > 0).ToArray();
-        var phoenixRatingsWithVotes = (await Mediator.Send(new GetChartRatingsQuery(MixEnum.Phoenix))).Where(c => c.RatingCount > 0).ToArray();
-
-        _maxReCalculate = ratingsWithVotes.Length + phoenixRatingsWithVotes.Length;
+        //var ratingsWithVotes = (await Mediator.Send(new GetChartRatingsQuery(MixEnum.Phoenix))).Where(c => c.RatingCount > 0).ToArray();
+        var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToArray();
+        _maxReCalculate = charts.Length;
         _currentReCalculate = 1;
-        foreach (var rating in ratingsWithVotes)
+        /*foreach (var rating in ratingsWithVotes)
         {
             await Mediator.Send(new ReCalculateChartRatingCommand(MixEnum.XX, rating.ChartId));
             _currentReCalculate++;
             StateHasChanged();
-        }
+        }*/
 
-        foreach (var rating in phoenixRatingsWithVotes)
+        foreach (var chart in charts)
         {
-            await Mediator.Send(new ReCalculateChartRatingCommand(MixEnum.Phoenix, rating.ChartId));
+            await Mediator.Send(new ReCalculateChartRatingCommand(MixEnum.Phoenix, chart.Id));
             _currentReCalculate++;
             StateHasChanged();
         }

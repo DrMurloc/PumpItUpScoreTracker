@@ -17,6 +17,8 @@ public interface IChartDifficultyRatingRepository
     Task<ChartDifficultyRatingRecord?> GetChartRatedDifficulty(MixEnum mix, Guid chartId,
         CancellationToken cancellationToken = default);
 
+    Task ClearAdjustedDifficulty(MixEnum mix, Guid chartId, CancellationToken cancellationToken = default);
+
     Task SetAdjustedDifficulty(MixEnum mix, Guid chartId, double difficulty, int count, double standardDeviation,
         CancellationToken cancellationToken = default);
 

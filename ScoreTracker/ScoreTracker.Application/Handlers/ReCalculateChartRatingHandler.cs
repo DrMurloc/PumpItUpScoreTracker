@@ -28,6 +28,12 @@ public sealed class
             .ToArray();
 
         var baseDifficulty = (int)chart.Level + .5;
+        if (!ratings.Any())
+        {
+            await _difficultyRatings.ClearAdjustedDifficulty(request.Mix, request.ChartId, cancellationToken);
+            return new ChartDifficultyRatingRecord(request.ChartId, baseDifficulty, 0, 0);
+        }
+
         var average = ratings.Average(rating => baseDifficulty + rating.GetAdjustment());
 
         var standardDeviation =
