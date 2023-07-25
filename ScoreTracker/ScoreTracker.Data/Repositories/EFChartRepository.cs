@@ -140,7 +140,8 @@ public sealed class EFChartRepository : IChartRepository
                     join c in _database.Chart on cm.ChartId equals c.Id
                     join s in _database.Song on c.SongId equals s.Id
                     where cm.MixId == mixId
-                    select new Chart(c.Id, new Song(s.Name, new Uri(s.ImagePath)), Enum.Parse<ChartType>(c.Type),
+                    select new Chart(c.Id, new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath)),
+                        Enum.Parse<ChartType>(c.Type),
                         cm.Level))
                 .ToDictionaryAsync(c => c.Id, c => c, cancellationToken);
         });
