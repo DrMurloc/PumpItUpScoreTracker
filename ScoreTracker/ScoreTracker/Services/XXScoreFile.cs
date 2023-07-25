@@ -12,7 +12,7 @@ using ScoreTracker.Web.Dtos;
 
 namespace ScoreTracker.Web.Services;
 
-public sealed class ScoreFile
+public sealed class XXScoreFile
 {
     public const int MaxByteCount = 10000000;
 
@@ -300,7 +300,7 @@ public sealed class ScoreFile
         { "Re: End of a Dream", "Re : End of a Dream" }
     };
 
-    private ScoreFile(ScoreFileType type, IEnumerable<BestXXChartAttempt> scores,
+    private XXScoreFile(ScoreFileType type, IEnumerable<BestXXChartAttempt> scores,
         IEnumerable<SpreadsheetScoreErrorDto> errors)
     {
         FileType = type;
@@ -316,7 +316,7 @@ public sealed class ScoreFile
     public IImmutableList<BestXXChartAttempt> Scores { get; }
     public IImmutableList<SpreadsheetScoreErrorDto> Errors { get; }
 
-    public static async Task<ScoreFile> ReadAsync(IBrowserFile file, CancellationToken cancellationToken = default)
+    public static async Task<XXScoreFile> ReadAsync(IBrowserFile file, CancellationToken cancellationToken = default)
     {
         return file.ContentType.ToLower() switch
         {
@@ -327,7 +327,7 @@ public sealed class ScoreFile
         };
     }
 
-    private static async Task<ScoreFile> BuildFromExcel(IBrowserFile file,
+    private static async Task<XXScoreFile> BuildFromExcel(IBrowserFile file,
         CancellationToken cancellationToken = default)
     {
         await using var readStream = file.OpenReadStream(MaxByteCount, cancellationToken);
@@ -346,7 +346,7 @@ public sealed class ScoreFile
             errors.AddRange(errors);
         }
 
-        return new ScoreFile(ScoreFileType.LetterGradeExcel, result, errors);
+        return new XXScoreFile(ScoreFileType.LetterGradeExcel, result, errors);
     }
 
     private static bool TryParseCellIntoBool(string text, out bool result)
@@ -475,7 +475,8 @@ public sealed class ScoreFile
         return (result, errors);
     }
 
-    private static async Task<ScoreFile> BuildFromCsv(IBrowserFile file, CancellationToken cancellationToken = default)
+    private static async Task<XXScoreFile> BuildFromCsv(IBrowserFile file,
+        CancellationToken cancellationToken = default)
     {
         await using var readStream = file.OpenReadStream(MaxByteCount, cancellationToken);
         using var reader = new StreamReader(readStream);
@@ -485,15 +486,15 @@ public sealed class ScoreFile
         await csv.ReadAsync();
         csv.ReadHeader();
 
-        if (!csv.TryGetField<string>(nameof(SpreadsheetScoreDto.Song), out var _))
+        if (!csv.TryGetField<string>(nameof(XXSpreadsheetScoreDto.Song), out var _))
             throw new ScoreFileParseException("Spreadsheet is missing Song column");
-        if (!csv.TryGetField<string>(nameof(SpreadsheetScoreDto.Difficulty), out _))
+        if (!csv.TryGetField<string>(nameof(XXSpreadsheetScoreDto.Difficulty), out _))
             throw new ScoreFileParseException("Spreadsheet is missing Difficulty column");
-        if (!csv.TryGetField<string>(nameof(SpreadsheetScoreDto.LetterGrade), out _))
+        if (!csv.TryGetField<string>(nameof(XXSpreadsheetScoreDto.LetterGrade), out _))
             throw new ScoreFileParseException("Spreadsheet is missing XXLetterGrade column");
 
 
-        await foreach (var record in csv.GetRecordsAsync<SpreadsheetScoreDto>(cancellationToken))
+        await foreach (var record in csv.GetRecordsAsync<XXSpreadsheetScoreDto>(cancellationToken))
         {
             if (cancellationToken.IsCancellationRequested)
                 throw new OperationCanceledException("Cancellation was requested");
@@ -533,7 +534,7 @@ public sealed class ScoreFile
             }
         }
 
-        return new ScoreFile(ScoreFileType.LetterGradeCsv, scores, failures);
+        return new XXScoreFile(ScoreFileType.LetterGradeCsv, scores, failures);
     }
 }
 

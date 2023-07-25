@@ -8,4 +8,5 @@ public class SpreadsheetScoreErrorDto
     public string IsBroken { get; set; }
     public string Error { get; set; }
     public string Score { get; set; }
+    public string Plate { get; set; }
 }

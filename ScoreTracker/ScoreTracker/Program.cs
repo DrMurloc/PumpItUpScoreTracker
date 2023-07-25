@@ -45,7 +45,7 @@ builder.Services.AddAuthentication("DefaultAuthentication")
         o.AppSecret = facebookConfig.AppSecret;
     });
 builder.Services.AddBlazorApplicationInsights()
-    .AddTransient<IScoreImageExtractor, OcrScoreImageExtractor>()
+    .AddTransient<IPhoenixScoreFileExtractor, PhoenixScoreFileExtractor>()
     .AddMudServices()
     .AddTransient<ICurrentUserAccessor, HttpContextUserAccessor>()
     .AddTransient<IUiSettingsAccessor, UiSettingsAccessor>()

@@ -5,16 +5,7 @@
 @using ScoreTracker.Web.Dtos
 
 <PageTitle>Phoenix Calculator</PageTitle>
-@if (ShowScoreUpload)
-{
-    <MudButton HtmlTag="label"
-               Variant="@Variant.Filled"
-               Color="@Color.Primary"
-               StartIcon="@Icons.Material.Filled.UploadFile"
-               for="uploadInput">
-        Upload Scores
-    </MudButton>
-}
+
 <MudImage Src="https://piuimages.arroweclip.se/PhoenixBanner.png" Style="width:95%; max-width:800px;"></MudImage>
 <MudGrid>
     <MudItem xs="12" sm="6">
@@ -82,7 +73,6 @@
         }
     </MudItem>
 </MudGrid>
-<InputFile id="uploadInput" OnChange="@UploadFile" hidden accept=".png,.jpg,jpeg" />
 <br/>
 <br/>
 <MudText>
@@ -118,12 +108,10 @@
     Rough Game: Over 20 misses
 </MudText>
 @inject ISnackbar Snackbar;
-@inject IScoreImageExtractor ScoreExtractor;
 @inject ILogger<PhoenixCalculator> Logger;
 @code
 {
     private ApexChart<ScoreDistributionDto> _distributionChart;
-    private const bool ShowScoreUpload = false;
 
     private sealed record JudgementAllocation(string Type, int Count)
     {
@@ -189,18 +177,5 @@
     private ScoreScreen Score = new (0, 0, 0, 0, 0, 0);
     
 
-    private async Task UploadFile(InputFileChangeEventArgs e)
-    {
-        try
-        {
 
-            var score = await ScoreExtractor.GetScore(e.File, CancellationToken.None);
-            Snackbar.Add("Done", Severity.Info);
-        }
-        catch (Exception er)
-        {
-            Snackbar.Add("Error", Severity.Error);
-            Logger.LogError(er, "There was an error");
-        }
-    }
 }

@@ -20,12 +20,12 @@ public static class ChartTypeHelperMethods
             if (Attribute.GetCustomAttribute(field,
                     typeof(DescriptionAttribute)) is DescriptionAttribute attribute)
             {
-                if (attribute.Description == shortHand)
+                if (attribute.Description.Equals(shortHand, StringComparison.OrdinalIgnoreCase))
                     return (ChartType)(field.GetValue(null) ?? ChartType.Single);
             }
             else
             {
-                if (field.Name == shortHand)
+                if (field.Name.Equals(shortHand, StringComparison.OrdinalIgnoreCase))
                     return (ChartType)(field.GetValue(null) ?? ChartType.Single);
             }
 

@@ -12,11 +12,9 @@
 
 
 @inject ISnackbar Snackbar;
-@inject IScoreImageExtractor ScoreExtractor;
 @inject ILogger<PhoenixCalculator> Logger;
 @code
 {
-    private const bool ShowScoreUpload = false;
     private string _text = "";
     private IEnumerable<ScoreDistributionDto> Reports => _scoreReports.Values;
   private readonly IDictionary<int, ScoreDistributionDto> _scoreReports = _previousData.Split(";").Select(l =>

@@ -1,12 +1,11 @@
 ﻿namespace ScoreTracker.Web.Dtos;
 
-public class SpreadsheetScoreDto
+public class PhoenixSpreadsheetScoreDto
 {
     public string Difficulty { get; set; }
     public string Song { get; set; }
-    public string LetterGrade { get; set; }
-    public string IsBroken { get; set; }
     public string Score { get; set; }
+    public string Plate { get; set; }
 
     public SpreadsheetScoreErrorDto ToError(string errorReason)
     {
@@ -14,10 +13,9 @@ public class SpreadsheetScoreDto
         {
             Difficulty = Difficulty,
             Song = Song,
-            LetterGrade = LetterGrade,
             Error = errorReason,
-            IsBroken = IsBroken,
-            Score = Score
+            Score = Score,
+            Plate = Plate
         };
     }
 }

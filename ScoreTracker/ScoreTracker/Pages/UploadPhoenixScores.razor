@@ -1,0 +1,287 @@
+﻿@page "/UploadPhoenixScores"
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.Models
+@using MediatR
+@using CsvHelper
+@using System.Globalization
+@using ScoreTracker.Web.Dtos
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+
+<PageTitle>Upload Phoenix Scores</PageTitle>
+
+<MudCard >
+    <MudCardHeader><h2>Upload Phoenix Scores</h2></MudCardHeader>
+    <MudCardContent>
+        @switch (_currentStep)
+        {
+            case Step.Information:
+                <p>
+                    Use the Copy Script button below.
+                    <br/><br/>
+                    Use that script in the dev tools while logged in on <a href="https://piugame.com" target="_blank">The Official PIU Site</a> to download a CSV of your scores.
+                    <br/><br/>
+                    You can then upload that csv here for your scores to show up.
+                </p>
+                break;
+            case Step.Uploading:
+                <p>
+                    Spreadsheet is uploading and being processed...
+                </p>
+                <MudProgressLinear Indeterminate="true" Color="@Color.Primary" Size="@Size.Large"></MudProgressLinear>
+                break;
+            case Step.Confirming:
+                <p>
+                    <b>Scores parsed:</b> @_spreadSheetScores.Count
+                    <br/>
+                    <b>Parse Failures:</b> @_failedUploads.Count
+                    <br/><br/>
+                    Continuing will begin to save the uploaded scores over your existing records. You will not be able to undo this. You will be able to stop the saving process, but it will not roll back uploads.
+                </p>
+                break;
+            case Step.Saving:
+                <p>
+                    If you leave this page or cancel, the upload will stop but you will not lose any scores that have already been recorded from your upload.
+                </p>
+                <br/>
+                <span>@_currentSaved/@_maxSaving Uploaded. @_remainingTime.ToString(@"m\:ss") Remaining. @_failedUploads.Count Failed to record</span>
+                <MudProgressLinear Color="@Color.Primary" Size="@Size.Large" Value="@_currentSaved" Min="1" Max="@_maxSaving"/>
+                break;
+            case Step.Finished when _failedUploads.Any():
+                <p>
+                    You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again.
+                </p>
+                break;
+            case Step.Finished when !_failedUploads.Any():
+                <p>
+                    All charts you uploaded were successfully updated!
+                </p>
+                break;
+            default:
+                <p>
+                    You somehow ended up in a state between realities. Refresh the page to try again.
+                </p>
+                break;
+        }
+    </MudCardContent>
+    <MudCardActions>
+        <MudSpacer></MudSpacer>
+        @if (_currentStep is Step.Uploading or Step.Confirming or Step.Saving)
+        {
+            <MudButton Variant="@Variant.Text"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Cancel"
+                       OnClick="@Cancel">Cancel</MudButton>
+        }
+        @if (_currentStep == Step.Information)
+        {
+            <MudButton Variant="Variant.Outlined"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Material.Filled.ContentCopy"
+                   OnClick="CopyPIUGameScript">
+                Copy Script
+            </MudButton>
+            <MudButton HtmlTag="label"
+                       Variant="@Variant.Filled"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Material.Filled.UploadFile"
+                       for="uploadInput">
+                Upload Scores
+            </MudButton>
+        }
+        @if (_currentStep == Step.Confirming)
+        {
+            <MudButton Variant="@Variant.Text"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Material.Filled.ViewList"
+                       OnClick="@(_=>_isScoreTableShowing=!_isScoreTableShowing)">@(_isScoreTableShowing?"Hide":"Show") Scores</MudButton>
+            <MudButton Variant="@Variant.Filled"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       OnClick="@SaveScores">Save Scores</MudButton>
+        }
+        @if (_failedUploads.Any() && _currentStep is Step.Confirming or Step.Finished)
+        {
+            <MudButton OnClick="@DownloadFailures"
+                       Variant="@Variant.Outlined"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Material.Filled.FileDownload">Download Failures</MudButton>
+        }
+        @if (_currentStep == Step.Finished)
+        {
+            <MudButton OnClick="@(_=>_currentStep=Step.Information)"
+                       Variant="@Variant.Text"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Material.Filled.RestartAlt">Restart</MudButton>
+        }
+    </MudCardActions>
+</MudCard>
+<InputFile id="uploadInput" OnChange="@UploadFile" hidden accept=".csv,.xlsx"/>
+
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser;
+@inject IMediator Mediator;
+@inject ISnackbar Snackbar;
+@inject IPhoenixScoreFileExtractor Extractor;
+@inject IJSRuntime JSRuntime;
+@code
+{
+    private enum Step
+    {
+        Information,
+        Uploading,
+        Confirming,
+        Saving,
+        Finished
+    }
+
+    private sealed record SongMapping(string From, string To)
+    {
+
+    }
+    
+    private bool _isScoreTableShowing = false;
+    private Step _currentStep = Step.Information;
+    private int _maxSaving = 0;
+    private int _currentSaved = 0;
+    private TimeSpan _remainingTime = TimeSpan.MinValue;
+
+    private List<SpreadsheetScoreErrorDto> _failedUploads = new List<SpreadsheetScoreErrorDto>();
+    private List<RecordedPhoenixScore> _spreadSheetScores = new List<RecordedPhoenixScore>();
+
+    private CancellationTokenSource _currentCancellation = new CancellationTokenSource();
+    protected override Task OnInitializedAsync()
+    {
+        if (CurrentUser.IsLoggedIn) return Task.CompletedTask;
+
+        NavManager.NavigateTo("/Login");
+        return Task.CompletedTask;
+    }
+
+    private void Cancel()
+    {
+        _currentStep = Step.Information;
+        _currentCancellation?.Cancel();
+    }
+
+    
+    private async Task DownloadFailures()
+    {
+        
+        var stream = new MemoryStream();
+        await using var writer = new StreamWriter(stream);
+        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+        await csv.WriteRecordsAsync(_failedUploads);
+        await writer.FlushAsync();
+        await csv.FlushAsync();
+        const string fileName = "failedUploads.csv";
+
+        using var streamRef = new DotNetStreamReference(stream: stream);
+        stream.Seek(0, SeekOrigin.Begin);
+
+        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
+        await module.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+
+    }
+
+    private async Task SaveScores()
+    {
+        _currentStep = Step.Saving;
+        _currentCancellation = new CancellationTokenSource();
+        var cancellationToken = _currentCancellation.Token;
+        _maxSaving = _spreadSheetScores.Count;
+        _currentSaved = 0;
+        var startTime = DateTimeOffset.Now;
+        foreach (var best in _spreadSheetScores)
+        {
+
+            if (_currentCancellation.IsCancellationRequested)
+            {
+                return;
+            }
+
+            StateHasChanged();
+            _currentSaved++;
+            _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxSaving - (double)_currentSaved) / (double)_currentSaved);
+            try
+            {
+                await Mediator.Send(new RecordedPhoenixScore(best.ChartId,best.Score,best.Plate,best.IsBroken,best.RecordedDate), cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+        }
+        _currentStep = Step.Finished;
+    }
+    private async Task UploadFile(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file.Size > XXScoreFile.MaxByteCount)
+        {
+            Snackbar.Add("File cannot be larger than 10 MB", Severity.Error);
+            return;
+        }
+        _currentStep = Step.Uploading;
+        _currentCancellation = new CancellationTokenSource();
+
+        try
+        {
+            var result = await Extractor.GetScores(file, _currentCancellation.Token);
+            _spreadSheetScores = result.Scores.ToList();
+            _failedUploads = result.Errors.ToList();
+            _currentStep = Step.Confirming;
+        }
+        catch (ScoreFileParseException ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+            _currentStep = Step.Information;
+            return;
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("There was an unknown error while parsing the file", Severity.Error);
+            _currentStep = Step.Information;
+            return;
+        }
+    }
+    private async Task CopyPIUGameScript()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _piuGameScript);
+        Snackbar.Add("Copied to clipboard!", Severity.Success);
+    }
+
+
+        private const string _piuGameScript = @"
+var csvString=""data:text/csv;charset=utf-8,"";
+    csvString+=""Song,Difficulty,Score,LetterGrade,Plate\r\n"";
+    var pageIndex=1;
+    while(true) {
+    
+        var nextPageString = await $.get(""https://piugame.com/my_page/my_best_score.php?&&page=""+pageIndex)
+        var page=$(nextPageString);
+        var foundScores=$(""ul.my_best_scoreList>li>div.in"",page);
+        foundScores.each(function(){
+            var songName = $('.song_name',this)[0].children[0].innerText;
+            var chartType = $($('.stepBall_img_wrap .imG img',this)[0]).attr(""src"").substring(40,41);
+            var difficultyLevel = $('.stepBall_img_wrap .imG img',this).map((index,i)=> $(i).attr(""src"").substring(46,47)).get().join("""");
+            var scoreList = $("".etc_con>ul"",this)[0];
+            var letter = $(scoreList.children[1].children[0].children[0].children[0]).attr('src').substring(32).replace("".png"","""").replace(""_p"",""+"");
+            var score = $(scoreList.children[0].children[0].children[0].children[0])[0].innerText.replace("","","""");
+            var plate = $(scoreList.children[2].children[0].children[0].children[0]).attr(""src"").substring(32,34);
+            csvString+=songName+"",""+chartType+difficultyLevel+"",""+score+"",""+letter+"",""+plate+""\r\n"";
+        });
+        pageIndex++;
+        console.log(""Page ""+pageIndex);
+        if(foundScores.length<6){
+            break;
+        }
+    }
+    console.log(csvString);
+    var encodedUri = encodeURI(csvString);
+    window.open(encodedUri);";
+}

@@ -1,4 +1,4 @@
-﻿@page "/UploadScores"
+﻿@page "/UploadXXScores"
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.Models
 @using MediatR
@@ -12,10 +12,10 @@
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services
 
-<PageTitle>Upload Scores</PageTitle>
+<PageTitle>Upload XX Scores</PageTitle>
 
 <MudCard >
-    <MudCardHeader><h2>Upload Scores</h2></MudCardHeader>
+    <MudCardHeader><h2>Upload XX Scores</h2></MudCardHeader>
     <MudCardContent>
         @switch (_currentStep)
         {
@@ -218,7 +218,7 @@
 
     }
 
-    private IEnumerable<SongMapping> _mappings => ScoreFile.NameMappings.Select(k => new SongMapping(k.Key, k.Value));
+    private IEnumerable<SongMapping> _mappings => XXScoreFile.NameMappings.Select(k => new SongMapping(k.Key, k.Value));
     private bool _isScoreTableShowing = false;
     private bool _isExampleDialogShowing = false;
     private Step _currentStep = Step.Information;
@@ -251,7 +251,7 @@
         var stream = new MemoryStream();
         await using var writer = new StreamWriter(stream);
         await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-        await csv.WriteRecordsAsync(new SpreadsheetScoreDto[]
+        await csv.WriteRecordsAsync(new XXSpreadsheetScoreDto[]
         {
             new()
             {
@@ -386,7 +386,7 @@
     private async Task UploadFile(InputFileChangeEventArgs e)
     {
         var file = e.File;
-        if (file.Size > ScoreFile.MaxByteCount)
+        if (file.Size > XXScoreFile.MaxByteCount)
         {
             Snackbar.Add("File cannot be larger than 10 MB", Severity.Error);
             return;
@@ -396,7 +396,7 @@
 
         try
         {
-            var result = await ScoreFile.ReadAsync(file, _currentCancellation.Token);
+            var result = await XXScoreFile.ReadAsync(file, _currentCancellation.Token);
             _spreadSheetScores = result.Scores.ToList();
             _failedUploads = result.Errors.ToList();
             _fileType = result.TypeDescription;
