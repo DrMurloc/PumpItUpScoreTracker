@@ -4,6 +4,7 @@
 @using MediatR
 @using CsvHelper
 @using System.Globalization
+@using ScoreTracker.Application.Commands
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
@@ -205,7 +206,7 @@
             _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxSaving - (double)_currentSaved) / (double)_currentSaved);
             try
             {
-                await Mediator.Send(new RecordedPhoenixScore(best.ChartId,best.Score,best.Plate,best.IsBroken,best.RecordedDate), cancellationToken);
+                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(best.ChartId,false,best.Score,best.Plate), cancellationToken);
             }
             catch (OperationCanceledException)
             {
