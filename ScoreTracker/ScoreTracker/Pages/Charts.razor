@@ -33,6 +33,17 @@
             </MudSelect>
         </MudItem>
     }
+    @if (FilterStatus(FilterEnum.SongType))
+    {
+        <MudItem xs="6" sm="4">
+            <MudSelect T="string" AdornmentIcon="@Icons.Material.Filled.MusicNote" Label="Song Type" Value="SongTypeFilter" ValueChanged="SongTypeFilterChanged" Clearable="true">
+                @foreach (var type in Enum.GetValues<SongType>())
+                {
+                    <MudSelectItem T="string" Value="@type.ToString()">@type.ToString()</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+    }
     @if (FilterStatus(FilterEnum.ChartType))
     {
         <MudItem xs="6" sm="4">
@@ -48,7 +59,7 @@
             </MudSelect>
         </MudItem>
     }
-
+    
     @if (RequestedUserId != null)
     {
         @if (FilterStatus(FilterEnum.ScoreState))
@@ -120,6 +131,7 @@
             <MudMenu Icon="@Icons.Material.Filled.FilterList" Dense="true">
                 <MudMenuItem Icon="@(FilterStatus(FilterEnum.Difficulty)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.Difficulty))">Difficulty</MudMenuItem>
                 <MudMenuItem Icon="@(FilterStatus(FilterEnum.ChartType)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.ChartType))">Chart Type</MudMenuItem>
+                <MudMenuItem Icon="@(FilterStatus(FilterEnum.SongType)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.SongType))">Song Type</MudMenuItem>
                 <MudMenuItem Icon="@(FilterStatus(FilterEnum.SongName)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.SongName))">Song Name</MudMenuItem>
                 @if (CurrentUser.IsLoggedIn)
                 {
@@ -530,13 +542,20 @@
         NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(nameof(FilterEnum.SavedCharts), _chartListsFilter.Any() ? string.Join(',', _chartListsFilter) : null));
     }
     [Parameter] [SupplyParameterFromQuery(Name=nameof(FilterEnum.SongName))] public string? SongNameFilter { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name=nameof(FilterEnum.SongType))] public string? SongTypeFilter { get; set; }
     private void SongNameFilterChanged(string? songName)
     {
         SongNameFilter=songName;
         
         NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(nameof(FilterEnum.SongName),string.IsNullOrWhiteSpace(songName)?null:songName));
     }
-    
+
+    private void SongTypeFilterChanged(string? songType)
+    {
+        SongTypeFilter = songType;
+        
+        NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(nameof(FilterEnum.SongType),string.IsNullOrWhiteSpace(songType)?null:songType));
+    }
     private IDictionary<string, string> _uiSettings = new Dictionary<string, string>();
 
     private IEnumerable<BestAttemptDto> FileredCharts => _charts.Where(FilterChart);
@@ -572,6 +591,10 @@
         if (!string.IsNullOrWhiteSpace(ChartTypeFilter))
         {
             result = result && chart.ChartType == ChartTypeFilter;
+        }
+        if (!string.IsNullOrWhiteSpace(SongTypeFilter))
+        {
+            result = result && chart.SongType == SongTypeFilter;
         }
         if (_scoreStateFilter != null)
         {
@@ -656,6 +679,7 @@
                 SongName = c.Song.Name,
                 Level = c.Level,
                 ChartType = c.Type.ToString(),
+                SongType = c.Song.Type.ToString(),
                 ImagePath = c.Song.ImagePath.ToString(),
                 DifficultyShorthand = DifficultyLevel.ToShorthand(c.Type, c.Level),
                 Score = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].Score : null,
@@ -677,6 +701,7 @@
                 SongName = c.Song.Name,
                 Level = c.Level,
                 ChartType = c.Type.ToString(),
+                SongType=c.Song.Type.ToString(),
                 ImagePath = c.Song.ImagePath.ToString(),
                 DifficultyShorthand = DifficultyLevel.ToShorthand(c.Type, c.Level),
                 Score = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].Score : null,
@@ -896,6 +921,7 @@
         Difficulty,
         ChartType,
         SongName,
+        SongType,
         ScoreState,
         SavedCharts
     }

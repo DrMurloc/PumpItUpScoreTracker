@@ -15,6 +15,7 @@ public class BestAttemptDto
     public PhoenixPlate? PhoenixPlate { get; set; }
     public bool IsBroken { get; set; }
     public string ChartType { get; set; } = string.Empty;
+    public string SongType { get; set; } = string.Empty;
     public string ImagePath { get; set; } = string.Empty;
     public string DifficultyShorthand { get; set; } = string.Empty;
     public int? Score { get; set; }
@@ -29,6 +30,7 @@ public class BestAttemptDto
         return new BestAttemptDto
         {
             ChartId = attempt.Chart.Id,
+            SongType = attempt.Chart.Song.Type.ToString(),
             Category = attempt.Chart.Type == Domain.Enums.ChartType.CoOp
                 ? nameof(Domain.Enums.ChartType.CoOp) + " x" + attempt.Chart.PlayerCount
                 : attempt.Chart.Type.ToString(),
