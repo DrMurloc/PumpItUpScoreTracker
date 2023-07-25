@@ -101,7 +101,9 @@ public sealed class ChartAttemptDbContext : DbContext
             .HasForeignKey(c => c.SongId);
 
         builder.Entity<SongEntity>().ToTable("Song");
-
+        builder.Entity<SongEntity>()
+            .Property(s => s.Type)
+            .HasDefaultValue("Arcade");
         builder.Entity<UserEntity>().ToTable("User");
 
         builder.Entity<ExternalLoginEntity>().ToTable("ExternalLogin")

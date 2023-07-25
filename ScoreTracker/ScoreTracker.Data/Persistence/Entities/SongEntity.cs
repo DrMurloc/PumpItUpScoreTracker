@@ -10,4 +10,5 @@ public sealed class SongEntity
 
     [Key] public Guid Id { get; set; }
     [Required] public string ImagePath { get; set; } = string.Empty;
+    [Required] [MaxLength(8)] public string Type { get; set; } = "Arcade";
 }
