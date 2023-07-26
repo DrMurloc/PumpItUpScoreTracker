@@ -25,7 +25,7 @@ public sealed class PhoenixTitleProgress : TitleProgress
                                    (PhoenixLetterGrade.SSSPlus.GetModifier() * difficultyTitle.Level.BaseRating));
             var max = Math.Ceiling((Title.CompletionRequired - CompletionCount) /
                                    (PhoenixLetterGrade.AA.GetModifier() * difficultyTitle.Level.BaseRating));
-            return $"{min}-{max} Remaining, assuming AA or higher";
+            return $"{min}-{max} Charts, assuming AA or higher";
         }
     }
 

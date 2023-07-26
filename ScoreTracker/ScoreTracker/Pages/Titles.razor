@@ -35,6 +35,9 @@
                     </MudTooltip>
                 </CellTemplate>
             </Column>
+        } else if (_titleProgress.Any(p => !string.IsNullOrWhiteSpace(p.AdditionalNote)))
+        {
+            <Column T="TitleProgressDto" Field="AdditionalNote" Title="Notes" Groupable="false"></Column>
         }
     </Columns>
 </MudDataGrid>
