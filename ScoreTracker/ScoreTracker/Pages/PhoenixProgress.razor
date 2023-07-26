@@ -220,23 +220,23 @@
 
         public static IEnumerable<BoxPlotData> From(RecordedPhoenixScore[] scores, Func<RecordedPhoenixScore, object> getLabel) =>
             scores.Any(s => s.Score != null) ? scores.Where(s => s.Score != null).GroupBy(getLabel).Select(group =>
-                new BoxPlotData(group.Key, group.Min(s => (int)s.Score), group.Max(s => (int)s.Score), Median(group.Select(s => (int)s.Score).ToArray()), Q1(group.Select(s => (int)s.Score).ToArray()), Q3(group.Select(s => (int)s.Score).ToArray()))):
+                new BoxPlotData(group.Key, group.Min(s => (int)s.Score), group.Max(s => (int)s.Score), Median(group), Q1(group), Q3(group))):
                 Array.Empty<BoxPlotData>();
     }
 
-    private static int Q1(int[] values)
+    private static int Q1(IEnumerable<RecordedPhoenixScore> values)
     {
-        var sorted = values.OrderBy(v => v).ToArray();
+        var sorted = values.Select(s=>(int)s.Score).OrderBy(v => v).ToArray();
         return sorted[sorted.Length / 4];
     }
-    private static int Q3(int[] values)
+    private static int Q3(IEnumerable<RecordedPhoenixScore> values)
     {
-        var sorted = values.OrderBy(v => v).ToArray();
+        var sorted = values.Select(s => (int)s.Score).OrderBy(v => v).ToArray();
         return sorted[3* sorted.Length / 4];
     }
-    private static int Median(int[] values)
+    private static int Median(IEnumerable<RecordedPhoenixScore> values)
     {
-        var sorted = values.OrderBy(v => v).ToArray();
+        var sorted = values.Select(s => (int)s.Score).OrderBy(v => v).ToArray();
         return sorted[sorted.Length / 2];
     }
 }
