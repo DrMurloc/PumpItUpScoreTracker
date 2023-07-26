@@ -13,5 +13,8 @@ public abstract class PhoenixTitle : Title
     {
     }
 
-    public abstract bool DoesAttemptApply(RecordedPhoenixScore attempt);
+    public virtual int CompletionProgress(Chart chart, RecordedPhoenixScore attempt)
+    {
+        return 0;
+    }
 }

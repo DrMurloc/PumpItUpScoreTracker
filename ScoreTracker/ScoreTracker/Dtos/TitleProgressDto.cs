@@ -4,12 +4,13 @@ namespace ScoreTracker.Web.Dtos;
 
 public sealed class TitleProgressDto
 {
-    public string TitleName { get; set; }
-    public string TitleDescription { get; set; }
-    public string TitleCategory { get; set; }
+    public string TitleName { get; set; } = string.Empty;
+    public string TitleDescription { get; set; } = string.Empty;
+    public string TitleCategory { get; set; } = string.Empty;
     public bool IsTrackable => RequiredCount > 0;
     public int CompletionCount { get; set; }
     public int RequiredCount { get; set; }
+    public string AdditionalNote { get; set; } = string.Empty;
 
     public static TitleProgressDto From(TitleProgress progress)
     {
@@ -19,7 +20,8 @@ public sealed class TitleProgressDto
             RequiredCount = progress.Title.CompletionRequired,
             TitleCategory = progress.Title.Category,
             TitleDescription = progress.Title.Description,
-            TitleName = progress.Title.Name
+            TitleName = progress.Title.Name,
+            AdditionalNote = progress.AdditionalNote
         };
     }
 }

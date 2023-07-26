@@ -11,9 +11,4 @@ public sealed class PhoenixBasicTitle : PhoenixTitle
     public PhoenixBasicTitle(Name name, string description, Name category) : base(name, description, category)
     {
     }
-
-    public override bool DoesAttemptApply(RecordedPhoenixScore attempt)
-    {
-        return false;
-    }
 }

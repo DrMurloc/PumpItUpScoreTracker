@@ -25,12 +25,14 @@
         {
             <Column T="TitleProgressDto" Field="IsTrackable" Title="Completion" Groupable="false">
                 <CellTemplate>
-                    <MudText Color="@(context.Item.CompletionCount >= context.Item.RequiredCount ? Color.Success : Color.Primary)">
-                        @if (context.Item.IsTrackable)
-                        {
-                            <span>@context.Item.CompletionCount / @context.Item.RequiredCount</span>
-                        }
-                    </MudText>
+                    <MudTooltip Text="@context.Item.AdditionalNote">
+                        <MudText Color="@(context.Item.CompletionCount >= context.Item.RequiredCount ? Color.Success : Color.Primary)">
+                            @if (context.Item.IsTrackable)
+                            {
+                                <span>@context.Item.CompletionCount / @context.Item.RequiredCount</span>
+                            }
+                        </MudText>
+                    </MudTooltip>
                 </CellTemplate>
             </Column>
         }

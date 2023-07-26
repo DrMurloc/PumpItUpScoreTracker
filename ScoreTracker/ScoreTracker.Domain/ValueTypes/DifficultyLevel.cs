@@ -131,4 +131,6 @@ public readonly struct DifficultyLevel : IComparable<DifficultyLevel>
     {
         return _level.CompareTo(other._level);
     }
+
+    public int BaseRating => _level <= 10 ? 0 : 100 + 5 * (_level - 10) * (_level - 9);
 }

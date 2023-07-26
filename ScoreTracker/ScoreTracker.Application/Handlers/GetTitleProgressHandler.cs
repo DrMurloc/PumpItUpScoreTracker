@@ -12,16 +12,19 @@ namespace ScoreTracker.Application.Handlers;
 public sealed class GetTitleProgressHandler : IRequestHandler<GetTitleProgressQuery, IEnumerable<TitleProgress>>
 {
     private readonly IXXChartAttemptRepository _chartAttempts;
+    private readonly IChartRepository _charts;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IPhoenixRecordRepository _phoenixScores;
 
     public GetTitleProgressHandler(ICurrentUserAccessor currentUser,
         IXXChartAttemptRepository chartAttempts,
-        IPhoenixRecordRepository phoenixScores)
+        IPhoenixRecordRepository phoenixScores,
+        IChartRepository charts)
     {
         _currentUser = currentUser;
         _chartAttempts = chartAttempts;
         _phoenixScores = phoenixScores;
+        _charts = charts;
     }
 
     public async Task<IEnumerable<TitleProgress>> Handle(GetTitleProgressQuery request,
@@ -54,6 +57,9 @@ public sealed class GetTitleProgressHandler : IRequestHandler<GetTitleProgressQu
             scores = Array.Empty<RecordedPhoenixScore>();
         }
 
-        return PhoenixTitleList.BuildProgress(scores);
+        var charts = (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
+            .ToDictionary(c => c.Id);
+
+        return PhoenixTitleList.BuildProgress(charts, scores);
     }
 }
