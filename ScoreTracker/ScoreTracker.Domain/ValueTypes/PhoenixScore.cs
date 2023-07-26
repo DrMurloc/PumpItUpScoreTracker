@@ -15,6 +15,11 @@ public readonly struct PhoenixScore
     public static PhoenixScore Min = new(0);
     public static PhoenixScore Max = new(1000000);
 
+    public PhoenixScore Round(int zeros = 4)
+    {
+        return (int)(Math.Round(_score / Math.Pow(10, zeros)) * Math.Pow(10, zeros));
+    }
+
     public override string ToString()
     {
         return _score.ToString();

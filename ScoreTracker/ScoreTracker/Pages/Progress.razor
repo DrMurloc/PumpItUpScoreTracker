@@ -1,5 +1,10 @@
 ﻿@page "/{RequestedUserId:guid}/Progress"
 @page "/Progress"
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Components;
+<PageTitle>Best Attempts</PageTitle>
 @using MediatR
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
@@ -10,67 +15,65 @@
 @using System.Collections
 @using ScoreTracker.Domain.Models
 @using ChartType = MudBlazor.ChartType
-<PageTitle>Best Attempts</PageTitle>
 
 <MudPaper>
-    <MudText>Note: The Progress page hasn't been updated to support Phoenix yet.</MudText>
-    <MudToolBar>
-        <MudText Typo="Typo.h6">Progress</MudText>
-        <MudSpacer></MudSpacer>
+<MudToolBar>
+    <MudText Typo="Typo.h6">XX Progress</MudText>
+    <MudButton Style="padding-left:5px;" Href="/Phoenix/Progress" Variant="Variant.Outlined" Color="Color.Primary">Phoenix Progress (Beta)</MudButton>
+    <MudSpacer></MudSpacer>
 
-        <MudSelect T="SelectedChartsEnum" Label="Chart Type" Value="_selectedCharts" ValueChanged="ChangeSelectedCharts" FullWidth="false" Style="padding-left: 30px;">
-            <MudSelectItem T="SelectedChartsEnum" Value="SelectedChartsEnum.All"></MudSelectItem>
-            <MudSelectItem T="SelectedChartsEnum" Value="SelectedChartsEnum.Singles"></MudSelectItem>
-            <MudSelectItem T="SelectedChartsEnum" Value="SelectedChartsEnum.Doubles"></MudSelectItem>
-        </MudSelect>
-        @if (CurrentUser.IsLoggedIn && CurrentUser.User.IsPublic && CurrentUser.User.Id == RequestedUserId)
-        {
-            <MudTooltip Text="Share Your Progress Page" Inline="true">
-                <MudIconButton Icon="@Icons.Material.Filled.Share" OnClick="() => _showShareDialog = true"></MudIconButton>
-            </MudTooltip>
-        }
-        <br/>
+    <MudSelect T="SelectedChartsEnum" Label="Chart Type" Value="_selectedCharts" ValueChanged="ChangeSelectedCharts" FullWidth="false" Style="padding-left: 30px;">
+        <MudSelectItem T="SelectedChartsEnum" Value="SelectedChartsEnum.All"></MudSelectItem>
+        <MudSelectItem T="SelectedChartsEnum" Value="SelectedChartsEnum.Singles"></MudSelectItem>
+        <MudSelectItem T="SelectedChartsEnum" Value="SelectedChartsEnum.Doubles"></MudSelectItem>
+    </MudSelect>
+    @if (CurrentUser.IsLoggedIn && CurrentUser.User.IsPublic && CurrentUser.User.Id == RequestedUserId)
+    {
+        <MudTooltip Text="Share Your Progress Page" Inline="true">
+            <MudIconButton Icon="@Icons.Material.Filled.Share" OnClick="() => _showShareDialog = true"></MudIconButton>
+        </MudTooltip>
+    }
+    <br />
 
-    </MudToolBar>
-    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
-        <MudTabPanel Text="Overview">
-            <MudDataGrid T="DifficultyOverviewDto" ReadOnly="true" Items="_difficultyOverviews" Height="500px" FixedHeader="true" Striped="true" Loading="@_isLoading">
-                <ToolBarContent>
-                </ToolBarContent>
-                <Columns>
-                    <Column T="DifficultyOverviewDto" Field="Difficulty" Title="Difficulty">
-                        <FooterTemplate>Total</FooterTemplate>
-                    </Column>
-                    <Column T="DifficultyOverviewDto" Field="ACount" Title="As" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></Column>
-                    <Column T="DifficultyOverviewDto" Field="SCount" Title="Ss" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></Column>
-                    <Column T="DifficultyOverviewDto" Field="SSCount" Title="SSs" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></Column>
-                    <Column T="DifficultyOverviewDto" Field="SSSCount" Title="SSSs" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></Column>
-                    <Column T="DifficultyOverviewDto" Field="PassedCount" Title="Passed" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></Column>
-                    <Column T="DifficultyOverviewDto" Field="UnpassedCount" Title="Unpassed" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></Column>
-                </Columns>
-            </MudDataGrid>
-        </MudTabPanel>
-        <MudTabPanel Text="Overall Letters">
-            <MudChart ChartType="ChartType.Pie" InputData="@_letterCounts.ToArray()" InputLabels="@_letterLabels.ToArray()" Width="40%"/>
-        </MudTabPanel>
-        <MudTabPanel Text="Overall Passes">
-            <MudChart ChartType="ChartType.Pie" InputData="@_passCounts.ToArray()" InputLabels="@_passLabels.ToArray()" Width="40%"/>
-        </MudTabPanel>
-        <MudTabPanel Text="Difficulty Letters">
-            <MudChart ChartType="ChartType.Bar" ChartSeries="@_letterBreakdown" XAxisLabels="@_difficulties" Width="100%" Height="350px"></MudChart>
-        </MudTabPanel>
-        <MudTabPanel Text="Difficulty Passes">
-            <MudChart ChartType="ChartType.Bar" ChartSeries="@_passBreakdown" XAxisLabels="@_difficulties" Width="100%" Height="350px"></MudChart>
-        </MudTabPanel>
-    </MudTabs>
+</MudToolBar>
+<MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+    <MudTabPanel Text="Overview">
+        <MudDataGrid T="DifficultyOverviewDto" ReadOnly="true" Items="_difficultyOverviews" Height="500px" FixedHeader="true" Striped="true" Loading="@_isLoading">
+            <ToolBarContent>
+            </ToolBarContent>
+            <Columns>
+                <Column T="DifficultyOverviewDto" Field="Difficulty" Title="Difficulty">
+                    <FooterTemplate>Total</FooterTemplate>
+                </Column>
+                <Column T="DifficultyOverviewDto" Field="ACount" Title="As" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></Column>
+                <Column T="DifficultyOverviewDto" Field="SCount" Title="Ss" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></Column>
+                <Column T="DifficultyOverviewDto" Field="SSCount" Title="SSs" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></Column>
+                <Column T="DifficultyOverviewDto" Field="SSSCount" Title="SSSs" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></Column>
+                <Column T="DifficultyOverviewDto" Field="PassedCount" Title="Passed" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></Column>
+                <Column T="DifficultyOverviewDto" Field="UnpassedCount" Title="Unpassed" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></Column>
+            </Columns>
+        </MudDataGrid>
+    </MudTabPanel>
+    <MudTabPanel Text="Overall Letters">
+        <MudChart ChartType="ChartType.Pie" InputData="@_letterCounts.ToArray()" InputLabels="@_letterLabels.ToArray()" Width="40%" />
+    </MudTabPanel>
+    <MudTabPanel Text="Overall Passes">
+        <MudChart ChartType="ChartType.Pie" InputData="@_passCounts.ToArray()" InputLabels="@_passLabels.ToArray()" Width="40%" />
+    </MudTabPanel>
+    <MudTabPanel Text="Difficulty Letters">
+        <MudChart ChartType="ChartType.Bar" ChartSeries="@_letterBreakdown" XAxisLabels="@_difficulties" Width="100%" Height="350px"></MudChart>
+    </MudTabPanel>
+    <MudTabPanel Text="Difficulty Passes">
+        <MudChart ChartType="ChartType.Bar" ChartSeries="@_passBreakdown" XAxisLabels="@_difficulties" Width="100%" Height="350px"></MudChart>
+    </MudTabPanel>
+</MudTabs>
 
-</MudPaper>
 
 <MudDialog @bind-IsVisible="_showShareDialog">
     <DialogContent>
         <MudText>Use this link to share your chart list to other players.</MudText>
-        <br/>
-        <MudTextField Value="@ShareUrl" Label="Share Url" Variant="Variant.Outlined" Margin="Margin.Dense" ReadOnly="true"/>
+        <br />
+        <MudTextField Value="@ShareUrl" Label="Share Url" Variant="Variant.Outlined" Margin="Margin.Dense" ReadOnly="true" />
     </DialogContent>
     <DialogActions>
         <MudSpacer></MudSpacer>
@@ -78,7 +81,7 @@
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showShareDialog=false">Close</MudButton>
     </DialogActions>
 </MudDialog>
-
+</MudPaper>
 @inject IMediator Mediator
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
@@ -101,8 +104,8 @@
 
     private double[] _passCounts = Array.Empty<double>();
     private string[] _passLabels = Array.Empty<string>();
-    private string[] _difficulties = Enumerable.Range(DifficultyLevel.Min, DifficultyLevel.Max).Select(l=>l.ToString()).ToArray();
-    
+    private string[] _difficulties = Enumerable.Range(DifficultyLevel.Min, DifficultyLevel.Max).Select(l => l.ToString()).ToArray();
+
     private async Task CopyShareLink()
     {
         await Javascript.InvokeVoidAsync("navigator.clipboard.writeText", ShareUrl);
@@ -112,14 +115,14 @@
     private async Task ChangeSelectedCharts(SelectedChartsEnum newType)
     {
         _selectedCharts = newType;
-        
+
         PopulateGraphs();
     }
     private void PopulateGraphs()
     {
 
         _isLoading = true;
-        
+
         StateHasChanged();
         var difficultyLetters = new Dictionary<DifficultyLevel, IDictionary<XXLetterGrade, int>>();
         var difficultyUngraded = new Dictionary<DifficultyLevel, int>();
@@ -138,15 +141,16 @@
         }
 
         var difficultyDtos = Enumerable.Range(DifficultyLevel.Min, DifficultyLevel.Max).ToDictionary(l => l, l => new DifficultyOverviewDto
-        {
-            Difficulty = l
-        });
+            {
+                Difficulty = l
+            });
 
         var scores = _scores;
         if (_selectedCharts == SelectedChartsEnum.Doubles)
         {
             scores = scores.Where(c => c.Chart.Type is Domain.Enums.ChartType.Double or Domain.Enums.ChartType.DoublePerformance).ToArray();
-        } else if (_selectedCharts == SelectedChartsEnum.Singles)
+        }
+        else if (_selectedCharts == SelectedChartsEnum.Singles)
         {
             scores = scores.Where(c => c.Chart.Type is Domain.Enums.ChartType.Single or Domain.Enums.ChartType.SinglePerformance).ToArray();
         }
@@ -200,7 +204,7 @@
             }
             difficultyPasses[level][isPass]++;
         }
-        _difficultyOverviews = difficultyDtos.Values.OrderByDescending(d=>d.Difficulty).ToArray();
+        _difficultyOverviews = difficultyDtos.Values.OrderByDescending(d => d.Difficulty).ToArray();
         var letterSeries = new Dictionary<XXLetterGrade, List<double>>();
         var ungradedSeries = new List<double>();
         var passSeries = new Dictionary<bool, List<double>>();
@@ -210,41 +214,42 @@
         }
         passSeries[true] = new List<double>();
         passSeries[false] = new List<double>();
-        
-        foreach (var difficulty in Enumerable.Range(DifficultyLevel.Min,DifficultyLevel.Max))
+
+        foreach (var difficulty in Enumerable.Range(DifficultyLevel.Min, DifficultyLevel.Max))
         {
-            foreach(var letter in difficultyLetters[difficulty].Keys)
+            foreach (var letter in difficultyLetters[difficulty].Keys)
             {
                 letterSeries[letter].Add(difficultyLetters[difficulty][letter]);
             }
-            
+
             ungradedSeries.Add(difficultyUngraded[difficulty]);
             passSeries[true].Add(difficultyPasses[difficulty][true]);
             passSeries[false].Add(difficultyPasses[difficulty][false]);
         }
         _letterBreakdown = new();
-        
+
         var letterLabels = new List<string>();
         var passLabels = new List<string>();
 
         var passCounts = new List<double>();
         var letterCounts = new List<double>();
 
-        if (ungradedSeries.Any(v => v >0 ))
+        if (ungradedSeries.Any(v => v > 0))
         {
             letterLabels.Add("Ungraded");
             letterCounts.Add(ungradedSeries.Sum());
             _letterBreakdown.Add(
                 new ChartSeries()
-                {
-                    Name = "Ungraded", Data = ungradedSeries.ToArray()
-                });
+                    {
+                        Name = "Ungraded",
+                        Data = ungradedSeries.ToArray()
+                    });
         }
         var graphedLetters = new HashSet<XXLetterGrade>(new[] { XXLetterGrade.A, XXLetterGrade.S, XXLetterGrade.SS, XXLetterGrade.SSS });
         var lessThanA = new double[DifficultyLevel.Max];
         foreach (var letter in Enum.GetValues<XXLetterGrade>())
         {
-            
+
             if (!letterSeries[letter].Any(v => v > 0))
                 continue;
             letterCounts.Add(letterSeries[letter].Sum());
@@ -253,10 +258,10 @@
             if (graphedLetters.Contains(letter))
             {
                 _letterBreakdown.Add(new ChartSeries()
-                {
-                    Name=letter.ToString(),
-                    Data=letterSeries[letter].ToArray()
-                });
+                    {
+                        Name = letter.ToString(),
+                        Data = letterSeries[letter].ToArray()
+                    });
             }
             else
             {
@@ -269,10 +274,10 @@
         if (lessThanA.Any(c => c > 0))
         {
             _letterBreakdown.Add(new ChartSeries()
-            {
-                Name="B,C,D,F",
-                Data=lessThanA
-            });
+                {
+                    Name = "B,C,D,F",
+                    Data = lessThanA
+                });
         }
         passLabels.Add("Unpassed");
         passCounts.Add(passSeries[false].Sum());
@@ -312,11 +317,12 @@
         _scores = await Mediator.Send(new GetXXBestChartAttemptsQuery(RequestedUserId.Value));
         PopulateGraphs();
     }
-    private enum SelectedChartsEnum{
+    private enum SelectedChartsEnum
+    {
         All,
         Singles,
         Doubles
-    
+
     }
 
 }
