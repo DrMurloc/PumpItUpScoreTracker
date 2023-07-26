@@ -215,28 +215,18 @@
         await Filter();
     }
 
-    private sealed record BoxPlotData(object Label, int Min, int Max, int Median, int Q1, int Q3)
+    private sealed record BoxPlotData(string Label, int Min, int Max, int Median, int Q1, int Q3)
     {
 
-        public static IEnumerable<BoxPlotData> From(RecordedPhoenixScore[] scores, Func<RecordedPhoenixScore, object> getLabel) =>
+        public static IEnumerable<BoxPlotData> From(RecordedPhoenixScore[] scores, Func<RecordedPhoenixScore, string> getLabel) =>
             scores.Any(s => s.Score != null) ? scores.Where(s => s.Score != null).GroupBy(getLabel).Select(group =>
-                new BoxPlotData(group.Key, group.Min(s => (int)s.Score), group.Max(s => (int)s.Score), Median(group), Q1(group), Q3(group))):
+            {
+                var sorted = group.Select(s=>(int)s.Score).OrderBy(v => v).ToArray();
+                var median = sorted[sorted.Length / 2];
+                var q1 = sorted[sorted.Length / 4];
+                var q3 = sorted[3 * sorted.Length / 4];
+                return new BoxPlotData(group.Key, group.Min(s => (int)s.Score), group.Max(s => (int)s.Score), median, q1, q3);
+            }):
                 Array.Empty<BoxPlotData>();
-    }
-
-    private static int Q1(IEnumerable<RecordedPhoenixScore> values)
-    {
-        var sorted = values.Select(s=>(int)s.Score).OrderBy(v => v).ToArray();
-        return sorted[sorted.Length / 4];
-    }
-    private static int Q3(IEnumerable<RecordedPhoenixScore> values)
-    {
-        var sorted = values.Select(s => (int)s.Score).OrderBy(v => v).ToArray();
-        return sorted[3* sorted.Length / 4];
-    }
-    private static int Median(IEnumerable<RecordedPhoenixScore> values)
-    {
-        var sorted = values.Select(s => (int)s.Score).OrderBy(v => v).ToArray();
-        return sorted[sorted.Length / 2];
     }
 }
