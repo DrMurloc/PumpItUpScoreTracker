@@ -6,8 +6,8 @@ namespace ScoreTracker.Domain.Enums;
 public enum PhoenixLetterGrade
 {
     [Modifier(0)] C,
-    [Modifier(0)] B,
-    [Modifier(0)] A,
+    [Modifier(.7)] B,
+    [Modifier(.8)] A,
     [Modifier(.9)] [Description("A+")] APlus,
     [Modifier(1)] AA,
     [Modifier(1.05)] [Description("AA+")] AAPlus,

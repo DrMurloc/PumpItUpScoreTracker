@@ -3,6 +3,7 @@
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services.Contracts
 <PageTitle>Titles</PageTitle>
@@ -41,7 +42,28 @@
         }
     </Columns>
 </MudDataGrid>
-
+<br/>
+<MudCard>
+    <MudCardHeader>Rating Calculator</MudCardHeader>
+    <MudCardContent>
+        <MudSelect T="PhoenixLetterGrade" @bind-Value="_selectedGrade" Label="@LetterGradeLabel()">
+            @foreach (var letterGrade in Enum.GetValues<PhoenixLetterGrade>())
+            {
+                <MudSelectItem T="PhoenixLetterGrade" Value="letterGrade">@letterGrade</MudSelectItem>
+            }
+        </MudSelect>
+        <MudSelect T="DifficultyLevel" @bind-Value="_selectedDifficulty" Label="@DifficultyLabel()">
+            @for (int level = DifficultyLevel.Min; level <= DifficultyLevel.Max; level++)
+            {
+                var level1 = level;
+                <MudSelectItem T="DifficultyLevel" Value="level1">@level1</MudSelectItem>
+            }
+        </MudSelect>
+        <MudText>
+            Rating: @((int)(_selectedDifficulty.BaseRating * _selectedGrade.GetModifier()))
+        </MudText>
+    </MudCardContent>
+</MudCard>
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
 @inject IUiSettingsAccessor UiSettings;
@@ -50,7 +72,10 @@
     private IEnumerable<TitleProgressDto> _titleProgress = Array.Empty<TitleProgressDto>();
     private MixEnum _currentMix;
     private bool _isLoading = true;
-
+    private PhoenixLetterGrade _selectedGrade = PhoenixLetterGrade.AA;
+    private DifficultyLevel _selectedDifficulty = 18;
+    private string LetterGradeLabel() => $"{_selectedGrade.GetModifier()}X Modifier";
+    private string DifficultyLabel() => $"{_selectedDifficulty.BaseRating} Base Rating";
     private async Task MixChanged(MixEnum newMix)
     {
         _currentMix = newMix;

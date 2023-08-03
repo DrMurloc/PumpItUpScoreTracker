@@ -6,7 +6,7 @@ namespace ScoreTracker.Domain.Models.Titles.Phoenix;
 public sealed class PhoenixDifficultyTitle : PhoenixTitle
 {
     public PhoenixDifficultyTitle(Name name, DifficultyLevel level, int ratingRequired) : base(name,
-        $"Get {ratingRequired} Rating on {level}s", "Difficulty", ratingRequired)
+        $"Get {ratingRequired} Rating on {level}s ({level.BaseRating} per AA)", "Difficulty", ratingRequired)
     {
         Level = level;
         RequiredRating = ratingRequired;

@@ -23,6 +23,7 @@ public static class PhoenixTitleList
         new PhoenixDifficultyTitle("Advanced Lv. 4", 21, 15000),
         new PhoenixDifficultyTitle("Advanced Lv. 5", 21, 30000),
         new PhoenixDifficultyTitle("Advanced Lv. 6", 21, 45000),
+        new PhoenixDifficultyTitle("Advanced Lv. 7", 22, 17500),
         new PhoenixDifficultyTitle("Advanced Lv. 8", 22, 35000),
         new PhoenixDifficultyTitle("Advanced Lv. 9", 22, 52500),
         new PhoenixDifficultyTitle("Advanced Lv. 10", 22, 70000),

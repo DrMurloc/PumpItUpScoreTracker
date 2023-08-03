@@ -32,8 +32,11 @@
         <br/>
 
     </MudToolBar>
+    <MudTabs Elevation="2" Rounded="true">
+
+    </MudTabs>
     <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" @ref="_tabs">
-        <MudTabPanel Text="Score Distribution Lines">
+        <MudTabPanel Text="Score Distribution Counts">
             <ApexChart TItem="RecordedPhoenixScore"
                        Title="Score Distribution"
                        @ref="_scoreDdistribution"
@@ -65,6 +68,49 @@
                 }
             </ApexChart>
 
+        </MudTabPanel>
+        <MudTabPanel Text="Score Distribution Lines">
+            <ApexChart TItem="BoxPlotData"
+                       Title="Score Distribution"
+                       @ref="_scoreDistLines"
+                       Options="_scoreBoxesOptions">
+                <ApexPointSeries TItem="BoxPlotData"
+                                 Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level.ToString()).ToArray()"
+                                 Name="Min"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(e => e.Label)"
+                                 YValue="@(e=>e.Min)"
+                                 OrderBy="e => e.X"/>
+                <ApexPointSeries TItem="BoxPlotData"
+                                 Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level.ToString()).ToArray()"
+                                 Name="Q1"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(e => e.Label)"
+                                 YValue="@(e=>e.Q1)"
+                                 OrderBy="e => e.X"/>
+                <ApexPointSeries TItem="BoxPlotData"
+                                 Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level.ToString()).ToArray()"
+                                 Name="Median"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(e => e.Label)"
+                                 YValue="@(e=>e.Median)"
+                                 OrderBy="e => e.X" />
+                <ApexPointSeries TItem="BoxPlotData"
+                                 Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level.ToString()).ToArray()"
+                                 Name="Q3"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(e => e.Label)"
+                                 YValue="@(e=>e.Q3)"
+                                 OrderBy="e => e.X" />
+
+                <ApexPointSeries TItem="BoxPlotData"
+                                 Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level.ToString()).ToArray()"
+                                 Name="Max"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(e => e.Label)"
+                                 YValue="@(e=>e.Max)"
+                                 OrderBy="e => e.X" />
+            </ApexChart>
         </MudTabPanel>
         <MudTabPanel Text="Score Distribution Boxes">
 
@@ -127,13 +173,22 @@
     private const string AllLevelsString = "All Levels";
     private ApexChart<RecordedPhoenixScore>? _scoreDdistribution;
     private ApexChart<BoxPlotData>? _scoreBoxes;
+    private ApexChart<BoxPlotData>? _scoreDistLines;
     private bool _separateLevels = false;
     private MudTabs _tabs;
 
     private readonly ApexChartOptions<RecordedPhoenixScore> _scoreDistributionOptions = new ApexChartOptions<RecordedPhoenixScore>()
     {
         Stroke = new Stroke { Curve = Curve.Smooth }
-    };
+        };
+    private readonly ApexChartOptions<BoxPlotData> _scoreBoxesOptions = new ApexChartOptions<BoxPlotData>()
+        {
+            Stroke = new Stroke { Curve = Curve.Smooth },
+            Yaxis = new[]{new YAxis()
+            {
+                Max=1000000
+            }}.ToList()
+        };
 
     [Parameter]
     public Guid? RequestedUserId { get; set; }
@@ -182,11 +237,16 @@
         results = results.Where(c => _charts[c.ChartId].Level <= _maxLevel);
         _filteredScores = results.ToArray();
         StateHasChanged();
-        if (_scoreDdistribution != null && _tabs.ActivePanel.Text=="Score Distribution Lines")
+        if (_scoreDdistribution != null && _tabs.ActivePanel.Text=="Score Distribution Counts")
         {
             
             await _scoreDdistribution.UpdateSeriesAsync(true);
             await _scoreDdistribution.UpdateOptionsAsync(true,true,true);
+        }
+        if (_scoreDistLines != null && _tabs.ActivePanel.Text == "Score Distribution Lines")
+        {
+            await _scoreDistLines.UpdateSeriesAsync(true);
+            await _scoreDistLines.UpdateOptionsAsync(true, true, true);
         }
         if (_scoreBoxes != null && _tabs.ActivePanel.Text == "Score Distribution Boxes")
         {
@@ -225,7 +285,7 @@
                 var median = sorted[sorted.Length / 2];
                 var q1 = sorted[sorted.Length / 4];
                 var q3 = sorted[3 * sorted.Length / 4];
-                return new BoxPlotData(group.Key, group.Min(s => (int)s.Score), group.Max(s => (int)s.Score), median, q1, q3);
+                return new BoxPlotData(group.Key, sorted[0], sorted[^1], median, q1, q3);
             }):
                 Array.Empty<BoxPlotData>();
     }
