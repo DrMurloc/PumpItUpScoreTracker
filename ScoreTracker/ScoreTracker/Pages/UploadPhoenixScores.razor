@@ -20,7 +20,7 @@
                 <p>
                     Use the Copy Script button below.
                     <br/><br/>
-                    Use that script in the dev tools while logged in on <a href="https://piugame.com" target="_blank">The Official PIU Site</a> to download a CSV of your scores.
+                    Use that script in the dev tools while logged in on <a href="https://piugame.com" target="_blank">The Official PIU Site</a> (make sure you aren't on phoenix.piugame.com, just piugame.com)' to download a CSV of your scores.
                     <br/><br/>
                     You can then upload that csv here for your scores to show up.
                     <br/><br/>
@@ -280,7 +280,7 @@ var csvString=""data:text/csv;charset=utf-8,"";
         });
         pageIndex++;
         console.log(""Page ""+pageIndex);
-        if($("".xi.next"",page).length==0){
+        if($("".xi.last"",page).length==0){
             break;
         }
     }

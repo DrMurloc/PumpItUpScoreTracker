@@ -16,6 +16,10 @@ public static class ChartTypeHelperMethods
 {
     public static ChartType ParseChartTypeShortHand(string shortHand)
     {
+        if (shortHand.Equals("c", StringComparison.OrdinalIgnoreCase))
+        {
+            return ChartType.CoOp;
+        }
         foreach (var field in typeof(ChartType).GetFields())
             if (Attribute.GetCustomAttribute(field,
                     typeof(DescriptionAttribute)) is DescriptionAttribute attribute)

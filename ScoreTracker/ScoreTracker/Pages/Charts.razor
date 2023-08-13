@@ -111,7 +111,8 @@
 </MudGrid>
 @if (RequestedUserId != null)
 {
-    <br/>
+    <br />
+    <MudChip Variant="Variant.Outlined" Size="Size.Small" Color="Color.Info">Total: @FileredCharts.Count()</MudChip>
     <MudChip Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.Ungraded))">Not Graded: @NotGradedCount</MudChip>
     <MudChip Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.NotPassed))">Not Passed: @NotPassedCount</MudChip>
     <MudChip Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.Passed))">Passed: @PassedCount</MudChip>
@@ -562,9 +563,13 @@
     private ISet<Guid> _favoriteCharts = new HashSet<Guid>();
     private ISet<Guid> _todoCharts = new HashSet<Guid>();
     private IEnumerable<string> _songNames = Array.Empty<string>();
-    private int NotGradedCount => FileredCharts.Count(c => string.IsNullOrWhiteSpace(c.XXLetterGrade));
+    private int NotGradedCount => _currentMix==MixEnum.XX? FileredCharts.Count(c => string.IsNullOrWhiteSpace(c.XXLetterGrade))
+    :FileredCharts.Count(c=>c.PhoenixLetterGrade==null);
     private int NotPassedCount => FileredCharts.Count(c => c.IsBroken);
-    private int PassedCount => FileredCharts.Count(c => !string.IsNullOrWhiteSpace(c.XXLetterGrade) && !c.IsBroken);
+
+    private int PassedCount => _currentMix == MixEnum.XX ?
+        FileredCharts.Count(c => !string.IsNullOrWhiteSpace(c.XXLetterGrade) && !c.IsBroken)
+        : FileredCharts.Count(c => c.PhoenixLetterGrade != null && !c.IsBroken);
     private string CountText(int count) => $"{count} votes";
     
     private async Task SetScoreStateFilter(ScoreState state)
@@ -601,8 +606,8 @@
             result = _scoreStateFilter.Value switch
             {
                 ScoreState.NotPassed => result && chart.IsBroken,
-                ScoreState.Passed => result && !string.IsNullOrWhiteSpace(chart.XXLetterGrade) && !chart.IsBroken,
-                ScoreState.Ungraded => result && string.IsNullOrWhiteSpace(chart.XXLetterGrade),
+                ScoreState.Passed => result && (_currentMix==MixEnum.XX?!string.IsNullOrWhiteSpace(chart.XXLetterGrade):chart.PhoenixLetterGrade!=null) && !chart.IsBroken,
+                ScoreState.Ungraded => result && (_currentMix==MixEnum.XX?string.IsNullOrWhiteSpace(chart.XXLetterGrade):chart.PhoenixLetterGrade==null),
                 _ => result
                 };
         }
