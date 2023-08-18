@@ -163,8 +163,17 @@
 
         if (CurrentUser.IsLoggedIn)
         {
-            var attempts = await Mediator.Send(new GetXXBestChartAttemptsQuery(CurrentUser.User.Id));
-            _passes = attempts.Where(a => !(a.BestAttempt?.IsBroken??true)).Select(a => a.Chart.Id).Distinct().ToHashSet();
+            if (_currentMix == MixEnum.XX)
+            {
+                
+                var attempts = await Mediator.Send(new GetXXBestChartAttemptsQuery(CurrentUser.User.Id));
+                _passes = attempts.Where(a => !(a.BestAttempt?.IsBroken??true)).Select(a => a.Chart.Id).Distinct().ToHashSet();
+            }
+            else
+            {
+                var attempts = await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id));
+                _passes = attempts.Where(a => !a.IsBroken).Select(a => a.ChartId).Distinct().ToHashSet();
+            }
         }
     }
 
