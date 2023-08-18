@@ -247,22 +247,22 @@
             var diff = rating.Difficulty - chart.Level - .5;
             switch (diff)
             {
-                case <= -1:
+                case <= -.75:
                     _overratedCharts.Add(chart);
                     break;
-                case <= -.5:
+                case <= -.375:
                     _veryEasyCharts.Add(chart);
                     break;
-                case <= -.25:
+                case <= -.125:
                     _easyCharts.Add(chart);
                     break;
-                case < .25:
+                case < .125:
                     _mediumCharts.Add(chart);
                     break;
-                case < .5:
+                case < .375:
                     _hardCharts.Add(chart);
                     break;
-                case < 1.0:
+                case < .75:
                     _veryHardCharts.Add(chart);
                     break;
                 default:

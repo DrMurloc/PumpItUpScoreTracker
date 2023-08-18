@@ -133,4 +133,7 @@ public readonly struct DifficultyLevel : IComparable<DifficultyLevel>
     }
 
     public int BaseRating => _level < 10 ? 0 : 100 + 5 * (_level - 10) * (_level - 9);
+
+    public static readonly IEnumerable<DifficultyLevel> All = Enumerable.Range(Min, Max)
+        .Select(i => (DifficultyLevel)i);
 }

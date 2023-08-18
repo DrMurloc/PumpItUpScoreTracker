@@ -1,0 +1,131 @@
+﻿@page "/BulkVote"
+@using ScoreTracker.Domain.SecondaryPorts
+@using MediatR
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.ValueTypes
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+
+<PageTitle>Bulk Vote</PageTitle>
+
+<MudGrid>
+    <MudItem xs="6">
+        <MudSelect T="DifficultyLevel" Value="_selectedLevel" ValueChanged="SetLevel" Label="Level">
+            @foreach (var level in DifficultyLevel.All)
+            {
+                <MudSelectItem T="DifficultyLevel" Value="level">@level</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="6">
+        <MudSelect T="ChartType" Label="Chart Type" Value="_chartType" ValueChanged="SetChartType">
+            <MudSelectItem T="ChartType" Value="ChartType.Single">Singles</MudSelectItem>
+            <MudSelectItem T="ChartType" Value="ChartType.Double">Doubles</MudSelectItem>
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12">
+        <MudAutocomplete T="string"
+                         Value="@_selectedSongName"
+                         AdornmentIcon="@Icons.Material.Filled.Search"
+                         ResetValueOnEmptyText="true"
+                         CoerceText="true"
+                         Label="Song"
+                         SearchFunc="@SearchSongs"
+                         ValueChanged="@SelectSongName">
+
+        </MudAutocomplete>
+    </MudItem>
+    @foreach (var chart in _selectedCharts)
+    {
+        <MudItem xs="4">
+            @chart.Song.Name
+        </MudItem>
+        <MudItem xs="4">
+            <MudImage Src="@chart.Song.ImagePath.ToString()" Height="35" Alt="@chart.Song.Name" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
+        </MudItem>
+        <MudItem xs="4">
+            <MudIconButton Icon="@Icons.Material.Filled.Remove" Color="Color.Error" OnClick="_=>RemoveChart(chart)"></MudIconButton>
+        </MudItem>
+    }
+    <MudItem xs="6">
+        <MudSelect Label="Your Difficulty Rating" T="DifficultyAdjustment" @bind-Value="_selectedAdjustment">
+            @foreach (var rating in Enum.GetValues<DifficultyAdjustment>())
+            {
+                <MudSelectItem T="DifficultyAdjustment" Value="@rating">@rating.GetDescription()</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="6">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAdjustment" Disabled="_isSaving">Save</MudButton>
+    </MudItem>
+</MudGrid>
+@inject ICurrentUserAccessor CurrentUser;
+@inject IMediator Mediator;
+@inject NavigationManager NavManager;
+@inject ISnackbar Snackbar;
+@code
+{
+    private IEnumerable<Chart> _charts = Array.Empty<Chart>();
+    private IEnumerable<string> _filteredSongNames = Array.Empty<string>();
+    private ChartType _chartType = ChartType.Double;
+    private DifficultyLevel _selectedLevel = 18;
+    private ICollection<Chart> _selectedCharts = new List<Chart>();
+    private string _selectedSongName = string.Empty;
+    private DifficultyAdjustment _selectedAdjustment = DifficultyAdjustment.Medium;
+    private bool _isSaving;
+    private async Task SaveAdjustment()
+    {
+        _isSaving = true;
+        foreach (var chart in _selectedCharts)
+        {
+            await Mediator.Send(new RateChartDifficultyCommand(MixEnum.Phoenix, chart.Id, _selectedAdjustment));
+        }
+        _isSaving = false;
+        Snackbar.Add("Saved!", Severity.Success);
+    }
+    private void SetLevel(DifficultyLevel level)
+    {
+        _selectedLevel = level;
+        FilterCharts();
+    }
+
+    private async Task<IEnumerable<string>> SearchSongs(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? _filteredSongNames.Select(s => s.ToString())
+            : _filteredSongNames.Where(name => name.ToString().Contains(value, StringComparison.OrdinalIgnoreCase)).Select(name => (string)name);
+    }
+
+    private void RemoveChart(Chart chart)
+    {
+        _selectedCharts.Remove(chart);
+    }
+    private void SetChartType(ChartType chartType)
+    {
+        _chartType = chartType;
+        FilterCharts();
+    }
+    private void FilterCharts()
+    {
+        _selectedCharts.Clear();
+        _filteredSongNames = _charts.Where(c => c.Type == _chartType && c.Level == _selectedLevel).Select(c => c.Song.Name.ToString()).Distinct();
+    }
+
+    private void SelectSongName(string songName)
+    {
+        _selectedSongName = songName;
+        var chart = _charts.SingleOrDefault(c => c.Type == _chartType && c.Level == _selectedLevel && c.Song.Name.ToString() == songName);
+        if (chart == null)
+        {
+            return;
+        }
+        _selectedCharts.Add(chart);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        _charts = await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix));
+        FilterCharts();
+    }
+
+}
