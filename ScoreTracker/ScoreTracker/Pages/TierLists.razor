@@ -194,7 +194,7 @@ else
     {
         _currentMix = await UiSettings.GetSelectedMix();
         var isDifficultyValid = DifficultyFilter >= DifficultyLevel.Min && DifficultyFilter <= DifficultyLevel.Max;
-        var isChartTypeValid = !string.IsNullOrWhiteSpace(ChartTypeFilter) && (ChartTypeFilter.Equals(ChartType.Single.ToString()) || ChartTypeFilter.Equals(ChartType.Double.ToString()));
+        var isChartTypeValid = !string.IsNullOrWhiteSpace(ChartTypeFilter) && (ChartTypeFilter.Equals(ChartType.CoOp.ToString())||ChartTypeFilter.Equals(ChartType.Single.ToString()) || ChartTypeFilter.Equals(ChartType.Double.ToString()));
         if (!isDifficultyValid || !isChartTypeValid)
         {
             DifficultyFilter = isDifficultyValid ? DifficultyFilter : 18;
