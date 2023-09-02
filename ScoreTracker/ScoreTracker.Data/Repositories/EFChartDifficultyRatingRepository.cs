@@ -2,8 +2,10 @@
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Data.Repositories;
 
@@ -106,6 +108,107 @@ public sealed class EFChartDifficultyRatingRepository : IChartDifficultyRatingRe
         var results = await _database.UserChartDifficultyRating.Where(c => c.UserId == userId && c.MixId == mixId)
             .ToArrayAsync(cancellationToken);
         return results.Select(r => (r.ChartId, DifficultyAdjustmentHelpers.From(r.Scale))).ToArray();
+    }
+
+    public async Task<IEnumerable<CoOpRating>> GetAllCoOpRatings(CancellationToken cancellationToken = default)
+    {
+        return (await _database.CoOpRating.ToArrayAsync(cancellationToken)).GroupBy(c => c.ChartId)
+            .Select(g => new CoOpRating(g.Key, g.Count(g => g.Player == 1),
+                g.ToDictionary(g => g.Player, g => (DifficultyLevel)g.Difficulty)))
+            .ToArray();
+    }
+
+    public async Task<CoOpRating?> GetCoOpRating(Guid chartId, CancellationToken cancellationToken = default)
+    {
+        return (await _database.CoOpRating.Where(c => c.ChartId == chartId).ToArrayAsync(cancellationToken))
+            .GroupBy(c => c.ChartId)
+            .Select(g => new CoOpRating(g.Key, g.Count(g => g.Player == 1),
+                g.ToDictionary(g => g.Player, g => (DifficultyLevel)g.Difficulty)))
+            .FirstOrDefault();
+    }
+
+    public async Task SaveCoOpRating(CoOpRating rating, CancellationToken cancellationToken = default)
+    {
+        var savedRatings = (await _database.CoOpRating.Where(c => c.ChartId == rating.ChartId)
+            .ToArrayAsync(cancellationToken));
+        if (savedRatings.Any())
+        {
+            foreach (var r in savedRatings)
+            {
+                r.Difficulty = rating.Ratings[r.Player];
+            }
+        }
+        else
+        {
+            var newEntities = rating.Ratings.Select(r => new CoOpRatingEntity
+            {
+                Id = Guid.NewGuid(),
+                ChartId = rating.ChartId,
+                Difficulty = r.Value,
+                Player = r.Key
+            });
+            await _database.CoOpRating.AddRangeAsync(newEntities, cancellationToken);
+        }
+
+        await _database.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task ClearCoOpRating(Guid chartId, CancellationToken cancellationToken = default)
+    {
+        var entities = await _database.CoOpRating.Where(c => c.ChartId == chartId).ToArrayAsync(cancellationToken);
+        _database.CoOpRating.RemoveRange(entities);
+        await _database.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IDictionary<int, DifficultyLevel>?> GetMyCoOpRating(Guid userId, Guid chartId,
+        CancellationToken cancellationToken = default)
+    {
+        var entities = await _database.UserCoOpRating.Where(ucr => ucr.ChartId == chartId && ucr.UserId == userId)
+            .ToArrayAsync(cancellationToken);
+        return entities.Any() ? entities.ToDictionary(e => e.Player, e => (DifficultyLevel)e.Difficulty) : null;
+    }
+
+    public async Task SetMyCoOpRating(Guid userId, Guid chartId, IDictionary<int, DifficultyLevel>? playerLevels,
+        CancellationToken cancellationToken = default)
+    {
+        var entities = await _database.UserCoOpRating.Where(ucr => ucr.ChartId == chartId && ucr.UserId == userId)
+            .ToArrayAsync(cancellationToken);
+        if (playerLevels == null)
+        {
+            _database.UserCoOpRating.RemoveRange(entities);
+        }
+        else
+        {
+            if (entities.Any())
+            {
+                foreach (var e in entities)
+                {
+                    e.Difficulty = playerLevels[e.Player];
+                }
+            }
+            else
+            {
+                var newEntities = playerLevels.Select(kv => new UserCoOpRatingEntity
+                {
+                    Id = Guid.NewGuid(),
+                    ChartId = chartId,
+                    UserId = userId,
+                    Player = kv.Key,
+                    Difficulty = kv.Value
+                });
+                await _database.UserCoOpRating.AddRangeAsync(newEntities, cancellationToken);
+            }
+        }
+
+        await _database.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IDictionary<int, IEnumerable<DifficultyLevel>>> GetCoOpRatings(Guid chartId,
+        CancellationToken cancellationToken = default)
+    {
+        return (await _database.UserCoOpRating.Where(c => c.ChartId == chartId).ToArrayAsync(cancellationToken))
+            .GroupBy(c => c.Player).ToDictionary(kv => kv.Key,
+                kv => kv.Select(l => (DifficultyLevel)l.Difficulty).ToArray().AsEnumerable());
     }
 
     public async Task SetAdjustedDifficulty(MixEnum mix, Guid chartId, double difficulty, int count,

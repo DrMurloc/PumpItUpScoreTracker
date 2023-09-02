@@ -1,6 +1,6 @@
-﻿using ScoreTracker.Domain.ValueTypes;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Reflection;
+using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Enums;
 
@@ -84,14 +84,18 @@ public static class PhoenixLetterGradeHelperMethods
             g => typeof(PhoenixLetterGrade).GetField(g.ToString())?.GetCustomAttribute<ScoreRangeAttribute>() ??
                  throw new Exception($"Score Range not set up for {g}"));
 
-    public static PhoenixScore GetMinimumScore(this PhoenixLetterGrade letterGrade) =>
-        CachedRanges[letterGrade].MinimumScore;
-
-    public static PhoenixScore GetMaximumScore(this PhoenixLetterGrade letterGrade) =>
-        CachedRanges[letterGrade].MaximumScore;
-
     private static readonly IDictionary<string, PhoenixLetterGrade> Parser =
         Enum.GetValues<PhoenixLetterGrade>().ToDictionary(e => e.GetName());
+
+    public static PhoenixScore GetMinimumScore(this PhoenixLetterGrade letterGrade)
+    {
+        return CachedRanges[letterGrade].MinimumScore;
+    }
+
+    public static PhoenixScore GetMaximumScore(this PhoenixLetterGrade letterGrade)
+    {
+        return CachedRanges[letterGrade].MaximumScore;
+    }
 
     public static double GetModifier(this PhoenixLetterGrade enumValue)
     {

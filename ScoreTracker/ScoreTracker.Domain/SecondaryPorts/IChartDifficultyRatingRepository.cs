@@ -1,5 +1,7 @@
 ﻿using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.SecondaryPorts;
 
@@ -25,5 +27,19 @@ public interface IChartDifficultyRatingRepository
     Task<DifficultyAdjustment?> GetRating(MixEnum mix, Guid chartId, Guid userId, CancellationToken cancellationToken);
 
     Task<IEnumerable<(Guid ChartId, DifficultyAdjustment Rating)>> GetRatingsByUser(MixEnum mix, Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<CoOpRating>> GetAllCoOpRatings(CancellationToken cancellationToken = default);
+    Task<CoOpRating?> GetCoOpRating(Guid chartId, CancellationToken cancellationToken = default);
+    Task SaveCoOpRating(CoOpRating rating, CancellationToken cancellationToken = default);
+    Task ClearCoOpRating(Guid chartId, CancellationToken cancellationToken = default);
+
+    Task<IDictionary<int, DifficultyLevel>?> GetMyCoOpRating(Guid userId, Guid chartId,
+        CancellationToken cancellationToken = default);
+
+    Task SetMyCoOpRating(Guid userId, Guid chartId, IDictionary<int, DifficultyLevel>? playerLevels,
+        CancellationToken cancellationToken = default);
+
+    Task<IDictionary<int, IEnumerable<DifficultyLevel>>> GetCoOpRatings(Guid chartId,
         CancellationToken cancellationToken = default);
 }

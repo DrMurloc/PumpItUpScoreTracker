@@ -31,10 +31,25 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<PhoenixRecordEntity> PhoenixBestAttempt { get; set; }
     public DbSet<UserSettingsEntity> UserSettings { get; set; }
 
+    public DbSet<UserCoOpRatingEntity> UserCoOpRating { get; set; }
+    public DbSet<CoOpRatingEntity> CoOpRating { get; set; }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.HasDefaultSchema("scores");
 
+        builder.Entity<CoOpRatingEntity>().ToTable("CoOpRating")
+            .HasOne<ChartEntity>()
+            .WithMany()
+            .HasForeignKey(c => c.ChartId);
+        builder.Entity<UserCoOpRatingEntity>().ToTable("UserCoOpRating")
+            .HasOne<ChartEntity>()
+            .WithMany()
+            .HasForeignKey(c => c.ChartId);
+        builder.Entity<UserCoOpRatingEntity>()
+            .HasOne<UserEntity>()
+            .WithMany()
+            .HasForeignKey(c => c.UserId);
         builder.Entity<ChartMixEntity>().ToTable("ChartMix")
             .HasOne<ChartEntity>()
             .WithMany()
