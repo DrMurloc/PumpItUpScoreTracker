@@ -100,23 +100,15 @@ public readonly struct PhoenixScore
         }
     }
 
-    public PhoenixLetterGrade LetterGrade => _score switch
+    public PhoenixLetterGrade LetterGrade
     {
-        >= 995000 => PhoenixLetterGrade.SSSPlus,
-        >= 990000 => PhoenixLetterGrade.SSS,
-        >= 985000 => PhoenixLetterGrade.SSPlus,
-        >= 980000 => PhoenixLetterGrade.SS,
-        >= 975000 => PhoenixLetterGrade.SPlus,
-        >= 970000 => PhoenixLetterGrade.S,
-        >= 960000 => PhoenixLetterGrade.AAAPlus,
-        >= 950000 => PhoenixLetterGrade.AAA,
-        >= 925000 => PhoenixLetterGrade.AAPlus,
-        >= 900000 => PhoenixLetterGrade.AA,
-        >= 800000 => PhoenixLetterGrade.APlus,
-        >= 750000 => PhoenixLetterGrade.A,
-        >= 700000 => PhoenixLetterGrade.B,
-        _ => PhoenixLetterGrade.C
-    };
+        get
+        {
+            var score = _score;
+            return Enum.GetValues<PhoenixLetterGrade>().First(letter =>
+                letter.GetMinimumScore() <= score && score <= letter.GetMaximumScore());
+        }
+    }
 
     private bool Equals(PhoenixScore otherParam)
     {

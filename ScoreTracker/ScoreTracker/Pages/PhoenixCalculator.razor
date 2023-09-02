@@ -3,6 +3,7 @@
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Web.Dtos
+@using ScoreTracker.Domain.Enums
 
 <PageTitle>Phoenix Calculator</PageTitle>
 
@@ -84,20 +85,10 @@
 <MudText>
     Note that Letter Grade and Plate Text formulas were pulled from the <MudButton Color="Color.Primary" Href="https://namu.wiki/w/%ED%8E%8C%ED%94%84%20%EC%9E%87%20%EC%97%85%202023%20PHOENIX" Target="_blank">Korean PIU Wikipedia</MudButton>, it is possible for there to be misalignment with actual game logic:<br />
     <br/><br/>
-    SSS+: 995,000 points or more<br/>
-    SSS: 990,000~994,999 points<br/>
-    SS+: 985,000~989,999 points<br/>
-    SS: 980,000~984,999 points<br/>
-    S+: 975,000~979,999 points<br/>
-    S: 970,000~974,999 points<br/>
-    AAA+: 960,000~ 969,999 points<br/>
-    AAA: 950,000~959,999 points<br/>
-    AA+: 925,000 to 949,999 points<br/>
-    AA: 900,000~924,999 points<br/>
-    A+: 800,000 to 899,999 points<br/>
-    A: 750,000 - 799,999 points<br/>
-    B: 700,000 ~ 749,999 points<br/>
-    C: ~ 699,999 points<br/><br/>
+    @foreach (var grade in Enum.GetValues<PhoenixLetterGrade>().OrderByDescending(g => (int)g.GetMinimumScore()))
+    {
+        <span>@grade.GetName(): @grade.GetMinimumScore() ~ @grade.GetMaximumScore() points</span><br/>
+    }
     Perfect Game: All Perfect (previous SSS)<br/>
     Ultimate Game: All Perfect + Great (Previous SS) <br/>
     Extreme Game: All Perfect + Great + Good <br/>

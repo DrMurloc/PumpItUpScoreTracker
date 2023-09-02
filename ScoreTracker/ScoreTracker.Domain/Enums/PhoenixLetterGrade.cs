@@ -1,30 +1,69 @@
-﻿using System.ComponentModel;
+﻿using ScoreTracker.Domain.ValueTypes;
+using System.ComponentModel;
 using System.Reflection;
 
 namespace ScoreTracker.Domain.Enums;
 
 public enum PhoenixLetterGrade
 {
-    [Modifier(0)] C,
-    [Modifier(.7)] B,
-    [Modifier(.8)] A,
-    [Modifier(.9)] [Description("A+")] APlus,
-    [Modifier(1)] AA,
-    [Modifier(1.05)] [Description("AA+")] AAPlus,
+    [ScoreRange(0, 449999)] [Modifier(0)] F,
 
-    [Modifier(1.10)] AAA,
+    [ScoreRange(450000, 549999)] [Modifier(0)]
+    D,
 
-    [Modifier(1.15)] [Description("AAA+")] AAAPlus,
+    [ScoreRange(550000, 674999)] [Modifier(0)]
+    C,
 
-    [Modifier(1.20)] S,
-    [Modifier(1.26)] [Description("S+")] SPlus,
-    [Modifier(1.32)] SS,
+    [ScoreRange(675000, 749999)] [Modifier(.7)]
+    B,
 
-    [Modifier(1.38)] [Description("SS+")] SSPlus,
+    [ScoreRange(750000, 824999)] [Modifier(.8)]
+    A,
 
-    [Modifier(1.44)] SSS,
+    [ScoreRange(825000, 899999)] [Modifier(.9)] [Description("A+")]
+    APlus,
 
-    [Modifier(1.50)] [Description("SSS+")] SSSPlus
+    [ScoreRange(900000, 924999)] [Modifier(1)]
+    AA,
+
+    [ScoreRange(925000, 949999)] [Modifier(1.05)] [Description("AA+")]
+    AAPlus,
+
+    [ScoreRange(950000, 959999)] [Modifier(1.10)]
+    AAA,
+
+    [ScoreRange(960000, 969999)] [Modifier(1.15)] [Description("AAA+")]
+    AAAPlus,
+
+    [ScoreRange(970000, 974999)] [Modifier(1.20)]
+    S,
+
+    [ScoreRange(975000, 979999)] [Modifier(1.26)] [Description("S+")]
+    SPlus,
+
+    [ScoreRange(980000, 984999)] [Modifier(1.32)]
+    SS,
+
+    [ScoreRange(985000, 989999)] [Modifier(1.38)] [Description("SS+")]
+    SSPlus,
+
+    [ScoreRange(990000, 994999)] [Modifier(1.44)]
+    SSS,
+
+    [ScoreRange(995000, 1000000)] [Modifier(1.50)] [Description("SSS+")]
+    SSSPlus
+}
+
+internal sealed class ScoreRangeAttribute : Attribute
+{
+    public ScoreRangeAttribute(int minimumScore, int maximumScore)
+    {
+        MinimumScore = minimumScore;
+        MaximumScore = maximumScore;
+    }
+
+    public PhoenixScore MinimumScore { get; }
+    public PhoenixScore MaximumScore { get; }
 }
 
 internal sealed class ModifierAttribute : Attribute
@@ -39,6 +78,18 @@ internal sealed class ModifierAttribute : Attribute
 
 public static class PhoenixLetterGradeHelperMethods
 {
+    private static readonly IDictionary<PhoenixLetterGrade, ScoreRangeAttribute> CachedRanges = Enum
+        .GetValues<PhoenixLetterGrade>()
+        .ToDictionary(g => g,
+            g => typeof(PhoenixLetterGrade).GetField(g.ToString())?.GetCustomAttribute<ScoreRangeAttribute>() ??
+                 throw new Exception($"Score Range not set up for {g}"));
+
+    public static PhoenixScore GetMinimumScore(this PhoenixLetterGrade letterGrade) =>
+        CachedRanges[letterGrade].MinimumScore;
+
+    public static PhoenixScore GetMaximumScore(this PhoenixLetterGrade letterGrade) =>
+        CachedRanges[letterGrade].MaximumScore;
+
     private static readonly IDictionary<string, PhoenixLetterGrade> Parser =
         Enum.GetValues<PhoenixLetterGrade>().ToDictionary(e => e.GetName());
 
