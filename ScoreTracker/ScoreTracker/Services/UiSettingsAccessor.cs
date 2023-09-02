@@ -21,11 +21,11 @@ public sealed class UiSettingsAccessor : IUiSettingsAccessor
 
     public async Task<MixEnum> GetSelectedMix(CancellationToken cancellationToken = default)
     {
-        if (!_currentUser.IsLoggedIn) return MixEnum.XX;
+        if (!_currentUser.IsLoggedIn) return MixEnum.Phoenix;
 
         var settings = await _mediator.Send(new GetUserUiSettingsQuery(), cancellationToken);
-        if (!settings.ContainsKey(MixKey)) return MixEnum.XX;
-        return Enum.TryParse<MixEnum>(settings[MixKey], out var mix) ? mix : MixEnum.XX;
+        if (!settings.ContainsKey(MixKey)) return MixEnum.Phoenix;
+        return Enum.TryParse<MixEnum>(settings[MixKey], out var mix) ? mix : MixEnum.Phoenix;
     }
 
     public async Task SetSelectedMix(MixEnum mix, CancellationToken cancellationToken = default)
