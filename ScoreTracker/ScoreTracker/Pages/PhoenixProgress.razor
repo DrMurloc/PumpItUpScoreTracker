@@ -42,28 +42,28 @@
                        @ref="_scoreDistLines"
                        Options="_scoreBoxesOptions">
                 <ApexPointSeries TItem="BoxPlotData"
-                                 Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level.ToString()).ToArray()"
+                                 Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
                                  Name="Min"
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
                                  YValue="@(e=>e.Min)"
                                  OrderBy="e => e.X"/>
                 <ApexPointSeries TItem="BoxPlotData"
-                                 Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level.ToString()).ToArray()"
+                                 Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
                                  Name="Q1"
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
                                  YValue="@(e=>e.Q1)"
                                  OrderBy="e => e.X"/>
                 <ApexPointSeries TItem="BoxPlotData"
-                                 Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level.ToString()).ToArray()"
+                                 Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
                                  Name="Median"
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
                                  YValue="@(e=>e.Median)"
                                  OrderBy="e => e.X" />
                 <ApexPointSeries TItem="BoxPlotData"
-                                 Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level.ToString()).ToArray()"
+                                 Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
                                  Name="Q3"
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
@@ -71,7 +71,7 @@
                                  OrderBy="e => e.X" />
 
                 <ApexPointSeries TItem="BoxPlotData"
-                                 Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level.ToString()).ToArray()"
+                                 Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
                                  Name="Max"
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
@@ -86,7 +86,7 @@
                        Options="_scoreBoxesOptions">
                 <ApexPointSeries TItem="BoxPlotData"
                                  Color="#EA3F24"
-                                 Items="BoxPlotData.From(_scores.Where(s => s.Score != null && _charts[s.ChartId].Type==ChartType.Single).ToArray(), s => _charts[s.ChartId].Level.ToString()).ToArray()"
+                                 Items="BoxPlotData.From(_scores.Where(s => s.Score != null && _charts[s.ChartId].Type==ChartType.Single).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
                                  Name="Singles"
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
@@ -94,7 +94,7 @@
                                  OrderBy="e => e.X" />
                 <ApexPointSeries TItem="BoxPlotData"
                                  Color="#76FA4F"
-                                 Items="BoxPlotData.From(_scores.Where(s => s.Score != null && _charts[s.ChartId].Type==ChartType.Double).ToArray(), s => _charts[s.ChartId].Level.ToString()).ToArray()"
+                                 Items="BoxPlotData.From(_scores.Where(s => s.Score != null && _charts[s.ChartId].Type==ChartType.Double).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
                                  Name="Doubles"
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
@@ -216,10 +216,10 @@
         await Filter();
     }
 
-    private sealed record BoxPlotData(string Label, int Min, int Max, int Median, int Q1, int Q3, int Average)
+    private sealed record BoxPlotData(int Label, int Min, int Max, int Median, int Q1, int Q3, int Average)
     {
 
-        public static IEnumerable<BoxPlotData> From(RecordedPhoenixScore[] scores, Func<RecordedPhoenixScore, string> getLabel) =>
+        public static IEnumerable<BoxPlotData> From(RecordedPhoenixScore[] scores, Func<RecordedPhoenixScore, int> getLabel) =>
             scores.Any(s => s.Score != null) ? scores.Where(s => s.Score != null).GroupBy(getLabel).Select(group =>
             {
                 var sorted = group.Select(s=>(int)s.Score).OrderBy(v => v).ToArray();
