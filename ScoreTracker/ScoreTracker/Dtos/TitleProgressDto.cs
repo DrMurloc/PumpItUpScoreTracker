@@ -1,4 +1,5 @@
 ﻿using ScoreTracker.Domain.Models.Titles;
+using ScoreTracker.Domain.Models.Titles.Phoenix;
 
 namespace ScoreTracker.Web.Dtos;
 
@@ -11,6 +12,7 @@ public sealed class TitleProgressDto
     public int CompletionCount { get; set; }
     public int RequiredCount { get; set; }
     public string AdditionalNote { get; set; } = string.Empty;
+    public int? DifficultyLevel { get; set; }
 
     public static TitleProgressDto From(TitleProgress progress)
     {
@@ -21,7 +23,8 @@ public sealed class TitleProgressDto
             TitleCategory = progress.Title.Category,
             TitleDescription = progress.Title.Description,
             TitleName = progress.Title.Name,
-            AdditionalNote = progress.AdditionalNote
+            AdditionalNote = progress.AdditionalNote,
+            DifficultyLevel = progress.Title is PhoenixDifficultyTitle pdt ? pdt.Level : null
         };
     }
 }
