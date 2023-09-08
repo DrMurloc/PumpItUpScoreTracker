@@ -71,7 +71,8 @@ public sealed class PhoenixScoreFileExtractor : IPhoenixScoreFileExtractor
                 //These keep coming over with corrupted strings?
                 if (name.ToString().StartsWith("Cross Ray (feat", StringComparison.OrdinalIgnoreCase))
                     name = "Cross Ray";
-
+                if (name.ToString().Equals("Witch Doctor Num1", StringComparison.OrdinalIgnoreCase))
+                    name = "Witch Doctor #1";
                 if (name.ToString().EndsWith("End of a Dream", StringComparison.OrdinalIgnoreCase))
                     name = "Re:End of a Dream";
                 var chart = await _mediator.Send(new GetChartQuery(MixEnum.Phoenix, name, level, chartType),
