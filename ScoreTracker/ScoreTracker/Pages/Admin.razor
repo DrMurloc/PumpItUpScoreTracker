@@ -5,21 +5,69 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using System.Drawing.Drawing2D
 @using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.ValueTypes
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
 
 <PageTitle>Admin</PageTitle>
 
-<MudPaper>
-    <MudCard>
-        <MudButton Disabled="_isReCalculating" OnClick="ReCalculateScores" Color="Color.Primary" Variant="Variant.Filled">ReCalculate Ratings</MudButton>
+<MudCard>
+    <MudButton Disabled="_isReCalculating" OnClick="ReCalculateScores" Color="Color.Primary" Variant="Variant.Filled">ReCalculate Ratings</MudButton>
 
-        @if (_isReCalculating)
-        {
-                    <br />
-            <MudProgressLinear Color="Color.Primary" Max="_maxReCalculate" Min="0" Value="@_currentReCalculate"></MudProgressLinear>
-        }
-    </MudCard>
-</MudPaper>
+    @if (_isReCalculating)
+    {
+        <br />
+        <MudProgressLinear Color="Color.Primary" Max="_maxReCalculate" Min="0" Value="@_currentReCalculate"></MudProgressLinear>
+    }
+</MudCard>
+<MudCard>
+    <MudCardHeader>Create Song</MudCardHeader>
+    <MudCardContent>
+        <MudGrid>
+            <MudItem xs="4">
+                <MudTextField T="string" @bind-Value="_songName" Label="Song Name"></MudTextField>
+            </MudItem>
+            <MudItem xs="4">
+                <MudTextField T="string" @bind-Value="_imageUrl" Label="Image Name"></MudTextField>
+            </MudItem>
+            <MudItem xs="4">
+                <MudSelect T="SongType" @bind-Value="_songType" Label="Song Type">
+                    @foreach (var type in Enum.GetValues<SongType>())
+                    {
+                        <MudSelectItem T="SongType" Value="type">@type.ToString()</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            @foreach (var chart in _newCharts)
+            {
+                <MudItem xs="3">
+                    <MudSelect T="ChartType" @bind-Value="chart.Type" Label="Chart Type">
+                        @foreach (var type in Enum.GetValues<ChartType>())
+                        {
+                            <MudSelectItem T="ChartType" Value="type">@type.ToString()</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="3">
+                    <MudNumericField T="int" Min="(int)DifficultyLevel.Min" Max="(int)DifficultyLevel.Max" @bind-Value="chart.Level" Label="Level/Players"></MudNumericField>
+                </MudItem>
+                <MudItem xs="3">
+                    <MudTextField T="string" @bind-Value="chart.YoutubeHash" Label="Youtube Hash"></MudTextField>
+                </MudItem>
+                <MudItem xs="3">
+                    <MudTextField T="string" @bind-Value="chart.ChannelName" Label="Channel Name"></MudTextField>
+                </MudItem>
+            }
+            <MudItem xs="12">
+                <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="()=>_newCharts.Add(new NewChart())"></MudIconButton>
+            </MudItem>
+            <MudItem xs="12">
+                <MudButton StartIcon="@Icons.Material.Filled.Save" Disabled="_isSaving||!IsValid" OnClick="CreateSong">Create</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudCardContent>
+</MudCard>
 @inject ICurrentUserAccessor CurrentUser;
+@inject IChartRepository _charts;
 @inject IMediator Mediator;
 @inject NavigationManager NavManager;
 @code
@@ -27,7 +75,30 @@
     private bool _isReCalculating = false;
     private int _maxReCalculate = 1;
     private int _currentReCalculate = 0;
+    private readonly ICollection<NewChart> _newCharts = new List<NewChart>();
+    private string _songName = string.Empty;
+    private string _imageUrl = string.Empty;
+    private SongType _songType = SongType.Arcade;
+    private bool IsValid => Name.TryParse(_songName, out var name) && !string.IsNullOrWhiteSpace(_imageUrl) && _newCharts.Any() && _newCharts.All(c => !string.IsNullOrWhiteSpace(c.YoutubeHash) && Name.TryParse(c.ChannelName, out var channelName));
+    private bool _isSaving = false;
 
+    private async Task CreateSong()
+    {
+        _isSaving = true;
+        var songId = await _charts.CreateSong(_songName, new Uri($"https://piuimages.arroweclip.se/songs/{_imageUrl}"), _songType);
+        foreach (var chart in _newCharts)
+        {
+            await _charts.CreateChart(MixEnum.Phoenix, songId, chart.Type, chart.Level, chart.ChannelName,new Uri($"https://www.youtube.com/embed/{chart.YoutubeHash}"));
+
+        }
+        _charts.ClearCache();
+        _songName = string.Empty;
+        _imageUrl = string.Empty;
+        _songType = SongType.Arcade;
+        _newCharts.Clear();
+        _isSaving = false;
+
+    }
     private async Task ReCalculateScores()
     {
         _isReCalculating = true;
@@ -56,5 +127,14 @@
         {
             NavManager.NavigateTo("/");
         }
+    }
+
+    private sealed class NewChart
+    {
+        public ChartType Type { get; set; } = ChartType.Single;
+        public int Level { get; set; } = 14;
+        public string ChannelName { get; set; } = "펌프잇업공식PUMP IT UP Official";
+        public string YoutubeHash { get; set; } = string.Empty;
+
     }
 }

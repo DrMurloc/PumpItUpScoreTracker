@@ -78,6 +78,65 @@ public sealed class EFChartRepository : IChartRepository
         return chartIds != null ? chartIds.Select(id => chartVideos[id]) : chartVideos.Values;
     }
 
+    public async Task<Guid> CreateSong(Name name, Uri imageUrl, SongType type,
+        CancellationToken cancellationToken = default)
+    {
+        var newSong = new SongEntity
+        {
+            Id = Guid.NewGuid(),
+            ImagePath = imageUrl.ToString(),
+            Name = name,
+            Type = type.ToString()
+        };
+        await _database.Song.AddAsync(newSong, cancellationToken);
+        await _database.SaveChangesAsync(cancellationToken);
+
+        return newSong.Id;
+    }
+
+    public void ClearCache()
+    {
+        foreach (var mixId in MixGuids.Values)
+        {
+            var key = $"{nameof(EFChartRepository)}_{nameof(GetAllCharts)}_Mix:{mixId}";
+            _cache.Remove(key);
+        }
+
+        _cache.Remove($"{nameof(EFChartRepository)}_{nameof(GetChartVideoInformation)}");
+    }
+
+    public async Task<Guid> CreateChart(MixEnum mix, Guid songId, ChartType type, DifficultyLevel level,
+        Name channelName, Uri videoUrl,
+        CancellationToken cancellationToken = default)
+    {
+        var newChart = new ChartEntity
+        {
+            DifficultyRating = null,
+            Id = Guid.NewGuid(),
+            Level = level,
+            SongId = songId,
+            Type = type.ToString()
+        };
+        var newChartMix = new ChartMixEntity
+        {
+            ChartId = newChart.Id,
+            Id = Guid.NewGuid(),
+            Level = level,
+            MixId = MixGuids[mix]
+        };
+        var newChartVideo = new ChartVideoEntity
+        {
+            ChartId = newChart.Id,
+            ChannelName = channelName,
+            VideoUrl = videoUrl.ToString()
+        };
+        await _database.Chart.AddAsync(newChart, cancellationToken);
+        await _database.ChartMix.AddAsync(newChartMix, cancellationToken);
+        await _database.ChartVideo.AddAsync(newChartVideo, cancellationToken);
+        await _database.SaveChangesAsync(cancellationToken);
+        return newChart.Id;
+    }
+
     public async Task UpgradeSong(Name songName, CancellationToken cancellationToken = default)
     {
         var phoenixId = MixGuids[MixEnum.Phoenix];

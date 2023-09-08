@@ -23,4 +23,13 @@ public interface IChartRepository
 
     Task<IEnumerable<ChartVideoInformation>> GetChartVideoInformation(IEnumerable<Guid>? chartIds = default,
         CancellationToken cancellationToken = default);
+
+    Task<Guid> CreateSong(Name name, Uri imageUrl, SongType type,
+        CancellationToken cancellationToken = default);
+
+    Task<Guid> CreateChart(MixEnum mix, Guid songId, ChartType type, DifficultyLevel level,
+        Name channelName, Uri videoUrl,
+        CancellationToken cancellationToken = default);
+
+    void ClearCache();
 }

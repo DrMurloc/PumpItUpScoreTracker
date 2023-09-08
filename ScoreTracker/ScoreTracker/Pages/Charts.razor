@@ -479,7 +479,7 @@
     private bool _showShareDialog;
     private string _currentVideo = "";
     private bool _showVideoDialog;
-    private MixEnum _currentMix = MixEnum.XX;
+    private MixEnum _currentMix = MixEnum.Phoenix;
     [Parameter]
     public Guid? RequestedUserId { get => _requestedUserId;
         set => _requestedUserId = value ?? (CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null);
