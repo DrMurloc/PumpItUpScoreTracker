@@ -14,6 +14,12 @@ public sealed record ScoreScreen(StepCount Perfects, StepCount Greats, StepCount
         : (int)((.995 * (1.0 * Perfects + .6 * Greats + .2 * Goods + .1 * Bads) + .005 * MaxCombo) /
             (Perfects + Greats + Goods + Bads + Misses) * 1000000.0);
 
+    public int GreatLoss => (int)(.995 * .4 * Greats / TotalCount * 1000000.0);
+    public int GoodLoss => (int)(.995 * .8 * Goods / TotalCount * 1000000.0);
+    public int BadLoss => (int)(.995 * .9 * Bads / TotalCount * 1000000.0);
+    public int MissLoss => (int)(.995 * Misses / TotalCount * 1000000.0);
+    public int ComboLoss => (int)(.005 * (TotalCount - MaxCombo) / TotalCount * 1000000.0);
+
     public PhoenixPlate PlateText
     {
         get
@@ -51,7 +57,7 @@ public sealed record ScoreScreen(StepCount Perfects, StepCount Greats, StepCount
         var goods = Goods - next.Goods;
         var greats = Greats - next.Greats;
         var comboGain = misses + bads + goods;
-        var result = $"Get a {next.LetterGrade} with";
+        var result = $"Get a {next.LetterGrade.GetName()} with";
         if (perfects > 0) result += $" {perfects} more Perfects,";
 
         if (misses > 0) result += $" {misses} fewer Misses,";

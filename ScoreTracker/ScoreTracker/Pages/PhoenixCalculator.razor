@@ -31,19 +31,32 @@
             <b>Score:</b> @Score.CalculatePhoenixScore
         </MudText>
         <MudText>
-            <b>Letter:</b> @Score.LetterGrade
+            <b>Letter:</b> @Score.LetterGrade.GetName()
         </MudText>
         <MudText>
             <b>Plate:</b> @Score.PlateText
         </MudText>
+
         @if (Score.IsValid)
         {
             <MudText>
                 <b>Next Letter:</b> @Score.NextLetterGrade()
             </MudText>
+
+            <MudText><b>Greats Score Loss:</b> @Score.GreatLoss</MudText>
+
+            <MudText><b>Goods Score Loss:</b> @Score.GoodLoss</MudText>
+
+            <MudText><b>Bads Score Loss:</b> @Score.BadLoss</MudText>
+
+            <MudText><b>Miss Score Loss:</b> @Score.MissLoss</MudText>
+
+            <MudText><b>Combo Score Loss:</b> @Score.ComboLoss</MudText>
+            <MudText>(Note: Score loss may be off by 1-4 points due to rounding)</MudText>
             
         }
     </MudItem>
+
     <MudItem xs="12">
 
         @if (_showDistribution)
