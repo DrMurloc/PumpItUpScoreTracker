@@ -118,10 +118,10 @@
             
             var charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToDictionary(c => c.Id);
             _difficultyCounts = charts.Values.GroupBy(c => (int)c.Level).ToDictionary(g => g.Key, g => g.Count());
-            _completedCounts = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id)))
+            _completedCounts = CurrentUser.IsLoggedIn?(await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id)))
                 .Where(r => !r.IsBroken)
                 .GroupBy(r => (int)charts[r.ChartId].Level)
-                .ToDictionary(g => g.Key, g => g.Count());
+                .ToDictionary(g => g.Key, g => g.Count()) : new Dictionary<int, int>();
             foreach (var key in _difficultyCounts.Keys.Where(k => !_completedCounts.ContainsKey(k)))
             {
                 _completedCounts[key] = 0;
