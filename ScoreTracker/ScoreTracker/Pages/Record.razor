@@ -60,11 +60,15 @@
                 </MudChipSet>
                 <br/>
             }
-            @if (_selectedChart != null && !string.IsNullOrWhiteSpace(_selectedSongName) && _chartScoreCounts.ContainsKey(_selectedChart.Id) && _chartScoreCounts[_selectedChart.Id]>0)
+            @if (_selectedChart != null && !string.IsNullOrWhiteSpace(_selectedSongName))
             {
                 <EditChartGrid ChartId="_selectedChart.Id" CurrentMix="_currentMix"></EditChartGrid>
-                <br/>
-                <MudButton StartIcon="@Icons.Material.Filled.Leaderboard" OnClick="()=>_showChartOverview=true">Score Chart LeaderBoard</MudButton>
+                @if (_chartScoreCounts.ContainsKey(_selectedChart.Id) && _chartScoreCounts[_selectedChart.Id] > 0)
+                {
+                    
+                    <br/>
+                    <MudButton StartIcon="@Icons.Material.Filled.Leaderboard" OnClick="()=>_showChartOverview=true">Score Chart LeaderBoard</MudButton>
+                }
             }
         </MudCardContent>
     </MudCard>
