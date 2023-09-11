@@ -11,6 +11,7 @@
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType;
+@using ScoreTracker.Web.Components
 <PageTitle>Best Attempts</PageTitle>
 
 <MudGrid>
@@ -157,7 +158,10 @@
                 }
 
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Video)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Video))">Video</MudMenuItem>
-
+                @if (_currentMix == MixEnum.Phoenix)
+                {
+                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Overview)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Overview))">Leaderboard</MudMenuItem>
+                }
                 @if (RequestedUserId != null)
                 {         
                     <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Broken)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Broken))">Broken</MudMenuItem>
@@ -209,6 +213,10 @@
         @if (ColumnStatus(ColumnEnum.Video))
         {
             <MudTh>Video</MudTh>
+        }
+        @if (_currentMix == MixEnum.Phoenix && ColumnStatus(ColumnEnum.Overview))
+        {
+            <MudTh>LeaderBoard</MudTh>
         }
         @if (ColumnStatus(ColumnEnum.Broken))
         {
@@ -319,7 +327,17 @@
                 }
             </MudTd>
         }
-
+        @if (_currentMix==MixEnum.Phoenix && ColumnStatus(ColumnEnum.Overview))
+        {
+            <MudTd>
+                @if (_chartScoreCount.ContainsKey(context.ChartId) && _chartScoreCount[context.ChartId] > 0)
+                {
+                    <MudTooltip Text="Show Leaderboard">
+                        <MudIconButton Icon="@Icons.Material.Filled.Leaderboard" OnClick="@(_ => ShowLeaderboard(context.ChartId))"></MudIconButton>
+                    </MudTooltip>
+                }
+            </MudTd>
+        }
         @if (ColumnStatus(ColumnEnum.Broken))
         {
             <MudTd>
@@ -468,7 +486,18 @@
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showShareDialog=false">Close</MudButton>
     </DialogActions>
 </MudDialog>
-
+<MudDialog @bind-IsVisible="_showChartOverview">
+    <DialogContent>
+        @if (_overViewChart != null && _currentMix == MixEnum.Phoenix)
+        {
+            <ChartOverview ChartId="_overViewChart.Value"></ChartOverview>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showChartOverview = false">Close</MudButton>
+    </DialogActions>
+</MudDialog>
 @inject IMediator Mediator
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
@@ -479,12 +508,20 @@
     private bool _showShareDialog;
     private string _currentVideo = "";
     private bool _showVideoDialog;
+    private bool _showChartOverview = false;
+    private Guid? _overViewChart = null;
     private MixEnum _currentMix = MixEnum.Phoenix;
+
     [Parameter]
     public Guid? RequestedUserId { get => _requestedUserId;
         set => _requestedUserId = value ?? (CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null);
     }
 
+                        private void ShowLeaderboard(Guid chartId)
+        {
+                _overViewChart = chartId;
+                _showChartOverview = true;
+                }
     private Guid? _requestedUserId;
     private bool CanEdit => CurrentUser.IsLoggedIn && CurrentUser.User.Id == RequestedUserId;
     private string ShareUrl => CurrentUser.IsLoggedIn ? $"{NavManager.BaseUri}{CurrentUser.User.Id}/Charts" : string.Empty;
@@ -571,7 +608,7 @@
         FileredCharts.Count(c => !string.IsNullOrWhiteSpace(c.XXLetterGrade) && !c.IsBroken)
         : FileredCharts.Count(c => c.PhoenixLetterGrade != null && !c.IsBroken);
     private string CountText(int count) => $"{count} votes";
-    
+    private IDictionary<Guid, int> _chartScoreCount = new Dictionary<Guid, int>();
     private async Task SetScoreStateFilter(ScoreState state)
     {
         ScoreStateFilterChanged(state);
@@ -736,6 +773,7 @@
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();
+        _chartScoreCount = (await Mediator.Send(new GetAllChartScoreAggregatesQuery())).ToDictionary(c => c.ChartId, c => c.Count);
         await LoadCharts(RequestedUserId);
         if (CurrentUser.IsLoggedIn)
         {
@@ -945,7 +983,8 @@
         Actions,
         Video,
         StandardDeviation,
-        Plate
+        Plate,
+        Overview
     }
     private enum ScoreState
     {

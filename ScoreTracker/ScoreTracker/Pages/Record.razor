@@ -3,15 +3,11 @@
 @using MediatR
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
-@using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.ValueTypes
-@using ScoreTracker.Application.Commands
-@using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Components;
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
-
 <PageTitle>Record Attempt</PageTitle>
 
 
@@ -38,17 +34,17 @@
                     }
                 </MudSelect>
                 <br/>
-                    <MudAutocomplete T="string"
-                                     @ref="_autocomplete"
-                                     Value="@_selectedSongName"
-                                     AdornmentIcon="@Icons.Material.Filled.Search"
-                                     ResetValueOnEmptyText="true"
-                                     CoerceText="true"
-                                     Label="Song"
-                                     SearchFunc="@SearchSongs"
-                                     ValueChanged="@SelectSong">
+                <MudAutocomplete T="string"
+                                 @ref="_autocomplete"
+                                 Value="@_selectedSongName"
+                                 AdornmentIcon="@Icons.Material.Filled.Search"
+                                 ResetValueOnEmptyText="true"
+                                 CoerceText="true"
+                                 Label="Song"
+                                 SearchFunc="@SearchSongs"
+                                 ValueChanged="@SelectSong">
 
-                    </MudAutocomplete>
+                </MudAutocomplete>
                 <br/>
             }
             @if (_charts != null && _charts.Any())
@@ -64,18 +60,32 @@
                 </MudChipSet>
                 <br/>
             }
-            @if (_selectedChart != null && !string.IsNullOrWhiteSpace(_selectedSongName))
+            @if (_selectedChart != null && !string.IsNullOrWhiteSpace(_selectedSongName) && _chartScoreCounts.ContainsKey(_selectedChart.Id) && _chartScoreCounts[_selectedChart.Id]>0)
             {
                 <EditChartGrid ChartId="_selectedChart.Id" CurrentMix="_currentMix"></EditChartGrid>
+                <br/>
+                <MudButton StartIcon="@Icons.Material.Filled.Leaderboard" OnClick="()=>_showChartOverview=true">Score Chart LeaderBoard</MudButton>
             }
         </MudCardContent>
     </MudCard>
 </MudPaper>
+<MudDialog @bind-IsVisible="_showChartOverview">
+    <DialogContent>
+        @if (_selectedChart != null && _currentMix == MixEnum.Phoenix)
+        {
+            <ChartOverview ChartId="_selectedChart.Id"></ChartOverview>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showChartOverview = false">Close</MudButton>
+    </DialogActions>
+</MudDialog>
 @code {
     private MixEnum _currentMix = MixEnum.Phoenix;
     private IEnumerable<Name> _songNames = Array.Empty<Name>();
     private IEnumerable<Chart>? _charts;
-
+    private bool _showChartOverview = false;
     private async Task MixChanged(MixEnum newMix)
     {
         _currentMix = newMix;
@@ -96,6 +106,7 @@
     private MudAutocomplete<string> _autocomplete;
     private string _selectedSongName = string.Empty;
     private Chart? _selectedChart;
+    private IDictionary<Guid, int> _chartScoreCounts = new Dictionary<Guid, int>();
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();
@@ -105,7 +116,7 @@
             return;
         }
         _songNames = await Mediator.Send(new GetSongNamesQuery(_currentMix));
-
+        _chartScoreCounts = (await Mediator.Send(new GetAllChartScoreAggregatesQuery())).ToDictionary(c => c.ChartId, c => c.Count);
     }
 
     private static string StyleFromChartType(ChartType chartType)

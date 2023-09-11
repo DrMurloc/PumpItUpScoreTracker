@@ -21,12 +21,12 @@
         <MudText Typo="Typo.h6">Titles</MudText>
     </ToolBarContent>
     <Columns>
-        <Column T="TitleProgressDto" Field="TitleCategory" Title="Category" Grouping="true"></Column>
-        <Column T="TitleProgressDto" Field="TitleName" Title="Title" Groupable="false"></Column>
-        <Column T="TitleProgressDto" Field="TitleDescription" Title="Description" Groupable="false"></Column>
+        <PropertyColumn Property="t=>t.TitleCategory" Title="Category" Grouping="true"></PropertyColumn>
+        <PropertyColumn Property="t=>t.TitleName" Title="Title" Groupable="false"></PropertyColumn>
+        <PropertyColumn Property="t=>t.TitleDescription" Title="Description" Groupable="false"></PropertyColumn>
         @if (CurrentUser.IsLoggedIn)
         {
-            <Column T="TitleProgressDto" Field="IsTrackable" Title="Completion" Groupable="false">
+            <TemplateColumn T="TitleProgressDto" Field="IsTrackable" Title="Completion" Groupable="false">
                 <CellTemplate>
                     @if (context.Item.IsTrackable)
                     {
@@ -41,9 +41,9 @@
                     }
 
                 </CellTemplate>
-            </Column>
-            
-            <Column T="TitleProgressDto" Field="IsTrackable" Title="Breakdown" Groupable="false">
+            </TemplateColumn>
+
+            <TemplateColumn T="TitleProgressDto" Field="IsTrackable" Title="Breakdown" Groupable="false">
                 <CellTemplate>
                     @if (!string.IsNullOrWhiteSpace(context.Item.AdditionalNote))
                     {
@@ -57,10 +57,10 @@
                     }
 
                 </CellTemplate>
-            </Column>
+            </TemplateColumn>
         } else if (_titleProgress.Any(p => !string.IsNullOrWhiteSpace(p.AdditionalNote)))
         {
-            <Column T="TitleProgressDto" Field="AdditionalNote" Title="Notes" Groupable="false"></Column>
+            <PropertyColumn Property="t=>t.AdditionalNote" Title="Notes" Groupable="false"></PropertyColumn>
         }
     </Columns>
 </MudDataGrid>

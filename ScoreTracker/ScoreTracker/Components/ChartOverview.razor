@@ -1,0 +1,88 @@
+﻿@namespace ScoreTracker.Web.Components
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.Records
+@inject IMediator Mediator;
+@inject ICurrentUserAccessor CurrentUser;
+@inject ISnackbar Snackbar
+<MudGrid>
+    @if (_chart != null)
+    {
+        <MudItem xs="12">
+            <MudDataGrid T="UserPhoenixScore" Items="_scores">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">@(_chart?.Song.Name ?? "Unknown") @(_chart?.DifficultyString ?? "Unknown") Scores</MudText>
+                </ToolBarContent>
+                <Columns>
+                    <PropertyColumn Property="t => t.UserName" Title="Player" Grouping="true"></PropertyColumn>
+                    <PropertyColumn Property="t => t.Score" Title="Score" Groupable="false"></PropertyColumn>
+                </Columns>
+                <PagerContent>
+                    <MudDataGridPager T="UserPhoenixScore"/>
+                </PagerContent>
+            </MudDataGrid>
+        </MudItem>
+
+    }
+    else
+    {
+        <MudText>No Recorded Scores</MudText>
+    }
+</MudGrid>
+@code {
+    [Parameter]
+    public Guid ChartId { get; set; } = Guid.Empty;
+
+    private UserPhoenixScore[] _scores = Array.Empty<UserPhoenixScore>();
+
+    private Chart? _chart = null;
+    private IEnumerable<BoxItem> _boxes = Array.Empty<BoxItem>();
+    protected override async Task OnInitializedAsync()
+    {
+
+
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadChart(ChartId);
+
+    }
+
+    private sealed class BoxItem
+    {
+        public int Min { get; set; }
+        public int Max { get; set; }
+        public int Median { get; set; }
+        public int Q1 { get; set; }
+        public int Q3 { get; set; }
+    }
+    private async Task LoadChart(Guid chartId)
+    {
+        _scores = (await Mediator.Send(new GetPhoenixScoresForChartQuery(chartId))).OrderByDescending(s => (int)s.Score).ToArray();
+        if (_scores.Any())
+        {
+            
+            _chart = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, ChartIds: new[] { chartId }))).Single();
+            _boxes = new[]
+            {
+                new BoxItem
+                {
+
+                    Min = _scores[^1].Score,
+                    Max = _scores[0].Score,
+                    Median = _scores[_scores.Length / 2].Score,
+                    Q1 = _scores[_scores.Length / 4].Score,
+                    Q3 = _scores[3 * _scores.Length / 4].Score
+                }
+            };
+        }
+        else
+        {
+            _chart = null;
+            _boxes = Array.Empty<BoxItem>();
+        }
+    }
+}

@@ -42,15 +42,15 @@
             <ToolBarContent>
             </ToolBarContent>
             <Columns>
-                <Column T="DifficultyOverviewDto" Field="Difficulty" Title="Difficulty">
+                <PropertyColumn Property="t=>t.Difficulty" Title="Difficulty">
                     <FooterTemplate>Total</FooterTemplate>
-                </Column>
-                <Column T="DifficultyOverviewDto" Field="ACount" Title="As" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></Column>
-                <Column T="DifficultyOverviewDto" Field="SCount" Title="Ss" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></Column>
-                <Column T="DifficultyOverviewDto" Field="SSCount" Title="SSs" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></Column>
-                <Column T="DifficultyOverviewDto" Field="SSSCount" Title="SSSs" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></Column>
-                <Column T="DifficultyOverviewDto" Field="PassedCount" Title="Passed" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></Column>
-                <Column T="DifficultyOverviewDto" Field="UnpassedCount" Title="Unpassed" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></Column>
+                </PropertyColumn>
+                <PropertyColumn Property="t=>t.ACount" Title="As" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></PropertyColumn>
+                <PropertyColumn Property="t=>t.SCount" Title="Ss" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></PropertyColumn>
+                <PropertyColumn Property="t=>t.SSCount" Title="SSs" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></PropertyColumn>
+                <PropertyColumn Property="t=>t.SSSCount" Title="SSSs" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></PropertyColumn>
+                <PropertyColumn Property="t=>t.PassedCount" Title="Passed" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></PropertyColumn>
+                <PropertyColumn Property="t=>t.UnpassedCount" Title="Unpassed" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></PropertyColumn>
             </Columns>
         </MudDataGrid>
     </MudTabPanel>

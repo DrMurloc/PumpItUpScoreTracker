@@ -1,4 +1,5 @@
 ﻿using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 
 namespace ScoreTracker.Domain.SecondaryPorts;
 
@@ -11,4 +12,9 @@ public interface IPhoenixRecordRepository
 
     Task<RecordedPhoenixScore?> GetRecordedScore(Guid userId, Guid chartId,
         CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<UserPhoenixScore>> GetRecordedUserScores(Guid chartId,
+        CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<ChartScoreAggregate>> GetAllChartScoreAggregates(CancellationToken cancellationToken);
 }

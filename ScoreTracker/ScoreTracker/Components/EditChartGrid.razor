@@ -337,6 +337,10 @@
     }
     private async Task LoadChart(Guid chartId)
     {
+        if (_selectedChart != null && _selectedChart.Id == chartId)
+        {
+            return;
+        }
         _selectedChart = (await Mediator.Send(new GetChartsQuery(CurrentMix, ChartIds: new[] { chartId }))).First();
         if (CurrentMix == MixEnum.Phoenix)
         {

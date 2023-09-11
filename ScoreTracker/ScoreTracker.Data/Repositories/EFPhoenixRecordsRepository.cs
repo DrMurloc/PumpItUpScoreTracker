@@ -3,6 +3,7 @@ using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Data.Repositories;
@@ -71,5 +72,24 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
         return new RecordedPhoenixScore(result.ChartId, result.Score, PhoenixPlateHelperMethods.TryParse(result.Plate),
             result.IsBroken,
             result.RecordedDate);
+    }
+
+    public async Task<IEnumerable<UserPhoenixScore>> GetRecordedUserScores(Guid chartId,
+        CancellationToken cancellationToken = default)
+    {
+        return await (from pba in _database.PhoenixBestAttempt
+                join u in _database.User on pba.UserId equals u.Id
+                where pba.ChartId == chartId && pba.Score != null
+                select new UserPhoenixScore(pba.ChartId, u.IsPublic ? u.Name : "Anonymous", pba.Score.Value))
+            .ToArrayAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<ChartScoreAggregate>> GetAllChartScoreAggregates(CancellationToken cancellationToken)
+    {
+        return await (from pba in _database.PhoenixBestAttempt
+            where pba.Score != null
+            group pba by pba.ChartId
+            into g
+            select new ChartScoreAggregate(g.Key, g.Count())).ToArrayAsync(cancellationToken);
     }
 }
