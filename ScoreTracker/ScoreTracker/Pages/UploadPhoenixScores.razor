@@ -26,6 +26,14 @@
                     <br/><br/>
                     Note: This tool is still under construction, I'm fixing issues with mismatched song names etc. before this tool is officially sustainable.
                 </p>
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField T="int" Min="1" Label="Starting Page" @bind-Value="_startPage"></MudNumericField>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField T="int?" Min="1" Label="Ending Page" @bind-Value="_endPage" Clearable="true"></MudNumericField>
+                    </MudItem>
+                </MudGrid>
                 break;
             case Step.Uploading:
                 <p>
@@ -147,6 +155,8 @@
     private Step _currentStep = Step.Information;
     private int _maxSaving = 0;
     private int _currentSaved = 0;
+    private int _startPage = 1;
+    private int? _endPage = null;
     private TimeSpan _remainingTime = TimeSpan.MinValue;
 
     private List<SpreadsheetScoreErrorDto> _failedUploads = new List<SpreadsheetScoreErrorDto>();
@@ -254,21 +264,21 @@
     }
     private async Task CopyPIUGameScript()
     {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _piuGameScript);
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _piuGameScript());
         Snackbar.Add("Copied to clipboard!", Severity.Success);
     }
 
-
-        private const string _piuGameScript = @"
+    private string _pageLimitString() => _endPage == null ? "" : $"pageIndex>{_endPage}||";
+        private string _piuGameScript() => $@"
 var csvString=""data:text/csv;charset=utf-8,"";
     csvString+=""Song,Difficulty,Score,LetterGrade,Plate\r\n"";
-    var pageIndex=1;
-    while(true) {
+    var pageIndex={_startPage};
+    while(true) {{
     
         var nextPageString = await $.get(""https://piugame.com/my_page/my_best_score.php?&&page=""+pageIndex)
         var page=$(nextPageString);
         var foundScores=$(""ul.my_best_scoreList>li>div.in"",page);
-        foundScores.each(function(){
+        foundScores.each(function(){{
             var songName = $('.song_name',this)[0].children[0].innerText.replaceAll('""','""""').replaceAll('#','Num');
             var chartType = $($('.stepBall_img_wrap .imG img',this)[0]).attr(""src"").substring(40,41);
             var difficultyLevel = $('.stepBall_img_wrap .imG img',this).map((index,i)=> $(i).attr(""src"").substring(46,47)).get().join("""");
@@ -277,13 +287,13 @@ var csvString=""data:text/csv;charset=utf-8,"";
             var score = $(scoreList.children[0].children[0].children[0].children[0])[0].innerText.replaceAll("","","""");
             var plate = $(scoreList.children[2].children[0].children[0].children[0]).attr(""src"").substring(32,34);
             csvString+='""'+songName+'"",'+chartType+difficultyLevel+"",""+score+"",""+letter+"",""+plate+""\r\n"";
-        });
+        }});
         pageIndex++;
         console.log(""Page ""+pageIndex);
-        if($("".xi.last"",page).length==0){
+        if({_pageLimitString()}$("".xi.last"",page).length==0){{
             break;
-        }
-    }
+        }}
+    }}
     console.log(csvString);
     var encodedUri = encodeURI(csvString);
     window.open(encodedUri);";
