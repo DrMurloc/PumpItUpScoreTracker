@@ -79,7 +79,7 @@
         <MudTabPanel Text="Singles vs Doubles">
             <ApexChart TItem="BoxPlotData"
                        Title="Singles vs Doubles"
-            @ref="_sdChart"
+                       @ref="_sdChart"
                        Options="_scoreBoxesOptions">
                 <ApexPointSeries TItem="BoxPlotData"
                                  Color="#EA3F24"
@@ -116,6 +116,14 @@
         </DialogActions>
     </MudDialog>
 </MudPaper>
+<style>
+    .apexcharts-text tspan {
+        fill:#FFFFFF
+    }
+    .apexcharts-legend-text {
+        color:#FFFFFF
+    }
+</style>
 @inject IMediator Mediator
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
@@ -136,7 +144,8 @@
             Yaxis = new[]{new YAxis()
             {
                 Max=1000000
-            }}.ToList()
+            }}.ToList(),
+            
         };
 
     [Parameter]

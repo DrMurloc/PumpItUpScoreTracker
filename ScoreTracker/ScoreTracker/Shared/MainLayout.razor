@@ -4,7 +4,7 @@
 
 <PageTitle>ScoreTracker</PageTitle>
 
-<MudThemeProvider/>
+<MudThemeProvider Theme="Theme" />
 <MudDialogProvider/>
 <MudSnackbarProvider/>
 
@@ -71,4 +71,29 @@
 @code
 {
     private bool _isOpen = false;
+    private static readonly MudTheme Theme = new()
+        {
+            Palette = new()
+            {
+                //77BCDC
+                //466E8d
+                Primary = "#327CAC",
+                Secondary = "#8FBCD8",
+                Error = "#C72020",
+                Success = "#6EDE7F",
+                Warning = "#FFC433",
+                TextPrimary = "#EDF1F5",
+                TextSecondary = "#EDF1F5",
+                ActionDefault = "#EDF1F5",
+                ActionDisabled = "#d3d3d3",
+                Background = "#18191A",
+                BackgroundGrey = "#3A3B3C",
+                Surface = "#242526",
+                TextDisabled = "#d3d3d3",
+                DrawerBackground = "#283E5C",
+                DrawerIcon = "#EDF1F5",
+                DrawerText = "#EDF1F5"
+
+            }
+        };
 }
