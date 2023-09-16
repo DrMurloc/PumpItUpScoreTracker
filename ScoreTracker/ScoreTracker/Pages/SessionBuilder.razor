@@ -9,6 +9,24 @@
 @using MediatR
 
 <PageTitle>Session Builder</PageTitle>
+<MudGrid>
+    <MudItem xs="6">
+        <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>Configuration=new StaminaSessionConfiguration()">Reset to Default</MudButton>
+    </MudItem>
+    <MudItem xs="6">
+        <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>Configuration=BuildMarchOfMurlocs()">Set to March of Murlocs</MudButton>
+    </MudItem>
+    <MudItem xs="12">
+        <MudSelect T="Guid?" Value="_currentUser" Clearable="true" ValueChanged="SetUser">
+            @foreach (var user in _users)
+            {
+                <MudSelectItem T="Guid?" Value="user.Id">@user.Name.ToString() (@user.Id)</MudSelectItem>
+            }
+        </MudSelect>
+        </MudItem>
+</MudGrid>
+<br/>
+<br/>
 <MudExpansionPanels>
     <MudExpansionPanel Text="Levels">
         <MudGrid>
@@ -80,11 +98,21 @@
 <br/>
 <MudDataGrid T="ChartSessionEffectiveness" Items="@Scores">
     <Columns>
-        <PropertyColumn Property="x => x.SongName" Title="Song" Sortable="true" />
-        <PropertyColumn Property="x => x.DifficultyBubblePath" Title="Chart" Sortable="true" />
-        <PropertyColumn Property="x => x.Seconds" Title="Seconds" Sortable="true" />
-        <PropertyColumn Property="x => x.Points" Title="Your Points" Sortable="true" />
-        <PropertyColumn Property="x => x.PointsPerSecond" Title="Your Points per Second" Sortable="true" />
+        <TemplateColumn T="ChartSessionEffectiveness" Title="Difficulty" Sortable="true" SortBy="x=>x.Level">
+            <CellTemplate>
+                <MudImage Src="@context.Item.DifficultyBubblePath" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn T="ChartSessionEffectiveness" Title="Song" Sortable="true" SortBy="x=>x.SongName">
+            <CellTemplate>
+                <MudTooltip Text="@context.Item.SongName">
+                    <MudImage Src="@context.Item.SongImage" Height="35" Alt="@context.Item.SongName" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
+                </MudTooltip>
+            </CellTemplate>
+        </TemplateColumn>
+        <PropertyColumn Property="x => x.Seconds" Title="Seconds" Sortable="true"/>
+        <PropertyColumn Property="x => x.Points" Title="Your Points" Sortable="true"/>
+        <PropertyColumn Property="x => x.PointsPerSecond" Title="Your Points per Second" Sortable="true"/>
     </Columns>
     <PagerContent>
         <MudDataGridPager T="ChartSessionEffectiveness" />
@@ -96,18 +124,40 @@
 
 @code
 {
-    private readonly StaminaSessionConfiguration Configuration = new StaminaSessionConfiguration();
+    private StaminaSessionConfiguration BuildMarchOfMurlocs()
+    {
+        var configuration = new StaminaSessionConfiguration();
+        configuration.LetterGradeModifiers[PhoenixLetterGrade.APlus] = .8;
+        configuration.LetterGradeModifiers[PhoenixLetterGrade.A] = .6;
+        configuration.LetterGradeModifiers[PhoenixLetterGrade.B] = 0;
+        configuration.LetterGradeModifiers[PhoenixLetterGrade.C] = 0;
+        configuration.LetterGradeModifiers[PhoenixLetterGrade.D] = 0;
+        configuration.LetterGradeModifiers[PhoenixLetterGrade.F] = 0;
+        configuration.ChartTypeModifiers[ChartType.Single] = 0;
+        return configuration;
+    }
+    private StaminaSessionConfiguration Configuration = new StaminaSessionConfiguration();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private RecordedPhoenixScore[] _records = Array.Empty<RecordedPhoenixScore>();
-
+    private User[] _users = Array.Empty<User>();
+    private Guid _currentUser = Guid.Empty;
     private IEnumerable<ChartSessionEffectiveness> Scores => _records.Select(r => new ChartSessionEffectiveness
     {
         SongName = _charts[r.ChartId].Song.Name,
         SongImage = _charts[r.ChartId].Song.ImagePath.ToString(),
-        DifficultyBubblePath = _charts[r.ChartId].DifficultyString, //$"https://piuimages.arroweclip.se/difficulty/{_charts[r.ChartId].DifficultyString.ToLower()}.png",
+        DifficultyBubblePath = $"https://piuimages.arroweclip.se/difficulty/{_charts[r.ChartId].DifficultyString.ToLower()}.png",
         Seconds = (int)_charts[r.ChartId].Song.Duration.TotalSeconds,
-        Points = Configuration.GetScore(_charts[r.ChartId], r.Score!.Value, r.Plate!.Value)
+        Points = Configuration.GetScore(_charts[r.ChartId], r.Score!.Value, r.Plate!.Value),
+        Level = _charts[r.ChartId].Level
     });
+
+    private async Task SetUser(Guid? userId)
+    {
+        _currentUser = userId ?? CurrentUser.User.Id;
+
+        _records = (await Mediator.Send(new GetPhoenixRecordsQuery(_currentUser)))
+            .Where(r => r is { Score: not null, Plate: not null }).ToArray();
+    }
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn)
@@ -115,11 +165,10 @@
             NavManager.NavigateTo("/Charts");
             return;
         }
-        _records = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id)))
-            .Where(r=>r is { Score: not null,Plate: not null }).ToArray();
-
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
 
+        _users = (await Mediator.Send(new SearchForUsersQuery("", 1, 1000))).Results.OrderBy(u=>u.Name.ToString()).ToArray();
+        await SetUser(CurrentUser.User.Id);
     }
 
 
@@ -130,6 +179,7 @@
         public string SongImage { get; set; }
         public string SongName { get; set; }
         public string DifficultyBubblePath { get; set; } 
+        public int Level { get; set; }
         public int Seconds { get; set; }
         public int Points { get; set; }
         public double PointsPerSecond => (double)Points / (double)Seconds;
