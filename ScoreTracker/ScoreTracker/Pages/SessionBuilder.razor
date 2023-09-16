@@ -1,0 +1,137 @@
+﻿@page "/SessionBuilder"
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.ValueTypes
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Data.Persistence.Entities
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using MediatR
+
+<PageTitle>Session Builder</PageTitle>
+<MudExpansionPanels>
+    <MudExpansionPanel Text="Levels">
+        <MudGrid>
+            @foreach (var level in DifficultyLevel.All)
+            {
+                <MudItem xs="6">
+                    <MudNumericField T="int" Min="0" Max="1000000" Label="@level.ToString()" @bind-Value="Configuration.LevelRatings[level]"></MudNumericField>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudExpansionPanel>
+    <MudExpansionPanel Text="Chart Types">
+        <MudGrid>
+            @foreach (var chartType in Enum.GetValues<ChartType>())
+            {
+                <MudItem xs="6">
+                    <MudNumericField T="double" Min="0" Max="100" Label="@chartType.ToString()" @bind-Value="Configuration.ChartTypeModifiers[chartType]"></MudNumericField>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudExpansionPanel>
+    
+    <MudExpansionPanel Text="Song Types">
+        <MudGrid>
+            @foreach (var songType in Enum.GetValues<SongType>())
+            {
+                <MudItem xs="6">
+                    <MudNumericField T="double" Min="0" Max="100" Label="@songType.ToString()" @bind-Value="Configuration.SongTypeModifiers[songType]"></MudNumericField>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudExpansionPanel>
+
+    <MudExpansionPanel Text="Letter Grades">
+        <MudGrid>
+            @foreach (var letterGrade in Enum.GetValues<PhoenixLetterGrade>())
+            {
+                <MudItem xs="6">
+                    <MudNumericField T="double" Min="0" Max="100" Label="@letterGrade.GetName()" @bind-Value="Configuration.LetterGradeModifiers[letterGrade]"></MudNumericField>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudExpansionPanel>
+    <MudExpansionPanel Text="Plates">
+        <MudGrid>
+            @foreach (var plate in Enum.GetValues<PhoenixPlate>())
+            {
+                <MudItem xs="6">
+                    <MudNumericField T="double" Min="0" Max="100" Label="@plate.GetName()" @bind-Value="Configuration.PlateModifiers[plate]"></MudNumericField>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudExpansionPanel>
+    <MudExpansionPanel Text="Extra Settings">
+        <MudGrid>
+            <MudItem xs="6">
+                <MudSwitch T="bool" Label="Adjust Scores to Song Duration" @bind-Checked="Configuration.AdjustToTime" Color="Color.Primary"></MudSwitch>
+            </MudItem>
+            <MudItem xs="6">
+                <MudSwitch T="bool" Label="Allow Repeats" @bind-Checked="Configuration.AllowRepeats" Color="Color.Primary"></MudSwitch>
+            </MudItem>
+            <MudItem xs="6">
+                <MudNumericField T="int" Label="Session Duration (Minutes)" Value="(int)Configuration.MaxTime.TotalMinutes" ValueChanged="m=>Configuration.MaxTime=TimeSpan.FromMinutes(m)"></MudNumericField>
+            </MudItem>
+        </MudGrid>
+    </MudExpansionPanel>
+</MudExpansionPanels>
+<br/>
+<br/>
+<MudDataGrid T="ChartSessionEffectiveness" Items="@Scores">
+    <Columns>
+        <PropertyColumn Property="x => x.SongName" Title="Song" Sortable="true" />
+        <PropertyColumn Property="x => x.DifficultyBubblePath" Title="Chart" Sortable="true" />
+        <PropertyColumn Property="x => x.Seconds" Title="Seconds" Sortable="true" />
+        <PropertyColumn Property="x => x.Points" Title="Your Points" Sortable="true" />
+        <PropertyColumn Property="x => x.PointsPerSecond" Title="Your Points per Second" Sortable="true" />
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="ChartSessionEffectiveness" />
+    </PagerContent>
+</MudDataGrid>
+@inject IMediator Mediator
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser;
+
+@code
+{
+    private readonly StaminaSessionConfiguration Configuration = new StaminaSessionConfiguration();
+    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private RecordedPhoenixScore[] _records = Array.Empty<RecordedPhoenixScore>();
+
+    private IEnumerable<ChartSessionEffectiveness> Scores => _records.Select(r => new ChartSessionEffectiveness
+    {
+        SongName = _charts[r.ChartId].Song.Name,
+        SongImage = _charts[r.ChartId].Song.ImagePath.ToString(),
+        DifficultyBubblePath = _charts[r.ChartId].DifficultyString, //$"https://piuimages.arroweclip.se/difficulty/{_charts[r.ChartId].DifficultyString.ToLower()}.png",
+        Seconds = (int)_charts[r.ChartId].Song.Duration.TotalSeconds,
+        Points = Configuration.GetScore(_charts[r.ChartId], r.Score!.Value, r.Plate!.Value)
+    });
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Charts");
+            return;
+        }
+        _records = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id)))
+            .Where(r=>r is { Score: not null,Plate: not null }).ToArray();
+
+        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+
+    }
+
+
+
+        
+    private sealed class ChartSessionEffectiveness
+    {
+        public string SongImage { get; set; }
+        public string SongName { get; set; }
+        public string DifficultyBubblePath { get; set; } 
+        public int Seconds { get; set; }
+        public int Points { get; set; }
+        public double PointsPerSecond => (double)Points / (double)Seconds;
+    }
+}
