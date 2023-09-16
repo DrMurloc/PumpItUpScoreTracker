@@ -97,6 +97,8 @@
 <br/>
 <br/>
 <MudSwitch Label="Hide Record-less Charts" @bind-Checked="_hideUnRecordedCharts" Color="Color.Primary"></MudSwitch>
+<br/>
+<MudSwitch Label="Hide Zero Scoring Charts" @bind-Checked="_hideZeroScoredCharts" Color="Color.Primary"></MudSwitch>
 <MudDataGrid T="ChartSessionEffectiveness" Items="@Scores">
     <Columns>
         <TemplateColumn T="ChartSessionEffectiveness" Title="Difficulty" Sortable="true" SortBy="x=>x.Level">
@@ -140,6 +142,7 @@
     }
 
     private bool _hideUnRecordedCharts = false;
+    private bool _hideZeroScoredCharts = true;
     private StaminaSessionConfiguration Configuration = new StaminaSessionConfiguration();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private IDictionary<Guid, RecordedPhoenixScore> _records = new Dictionary<Guid, RecordedPhoenixScore>();
@@ -156,7 +159,8 @@
         PointsWithoutScore = (int)Configuration.GetScorelessScore(c),
         Points = _records.ContainsKey(c.Id) ? Configuration.GetScore(c, _records[c.Id].Score!.Value, _records[c.Id].Plate!.Value) : 0,
         Level = c.Level
-    });
+    })
+        .Where(c=>!_hideZeroScoredCharts||c.PointsWithoutScore>0);
 
     private async Task SetUser(Guid? userId)
     {
