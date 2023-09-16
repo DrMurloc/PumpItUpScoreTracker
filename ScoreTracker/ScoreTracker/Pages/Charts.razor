@@ -147,7 +147,7 @@
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Difficulty)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Difficulty))">Difficulty</MudMenuItem>
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongImage)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongImage))">Song Image</MudMenuItem>
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongName)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongName))">Song Name</MudMenuItem>
-
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongDuration)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongDuration))">Song Duration</MudMenuItem>
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.AdjustedRating)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.AdjustedRating))">Adjusted Difficulty</MudMenuItem>
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.RatingCount)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.RatingCount))">Rating Count</MudMenuItem>
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.StandardDeviation)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.StandardDeviation))">Standard Deviation</MudMenuItem>
@@ -190,6 +190,10 @@
         @if (ColumnStatus(ColumnEnum.SongName))
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.SongName">Song Name</MudTableSortLabel></MudTh>
+        }
+        @if (ColumnStatus(ColumnEnum.SongDuration))
+        {
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.SongDuration">Song Duration</MudTableSortLabel></MudTh>
         }
         @if (ColumnStatus(ColumnEnum.AdjustedRating))
         {
@@ -270,6 +274,12 @@
             
             <MudTd>
                 <MudText>@context.SongName</MudText>
+            </MudTd>
+        }
+        @if (ColumnStatus(ColumnEnum.SongDuration))
+        {
+            <MudTd>
+                <MudText>@context.SongDuration.ToString(@"m\:ss")</MudText>
             </MudTd>
         }
         @if (ColumnStatus(ColumnEnum.AdjustedRating))
@@ -719,6 +729,7 @@
                 IsBroken = !bestAttempts.ContainsKey(c.Id) || bestAttempts[c.Id].IsBroken,
                 XXLetterGrade = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].LetterGrade.ToString() : string.Empty,
                 SongName = c.Song.Name,
+                SongDuration = c.Song.Duration,
                 Level = c.Level,
                 ChartType = c.Type.ToString(),
                 SongType = c.Song.Type.ToString(),
@@ -742,7 +753,8 @@
                 IsBroken = !bestAttempts.ContainsKey(c.Id) || bestAttempts[c.Id].IsBroken,
                 SongName = c.Song.Name,
                 Level = c.Level,
-                ChartType = c.Type.ToString(),
+                    ChartType = c.Type.ToString(),
+                    SongDuration = c.Song.Duration,
                 SongType=c.Song.Type.ToString(),
                 ImagePath = c.Song.ImagePath.ToString(),
                 DifficultyShorthand = DifficultyLevel.ToShorthand(c.Type, c.Level),
@@ -974,6 +986,7 @@
         MyRating,
         SongImage,
         SongName,
+        SongDuration,
         Grade,
         Broken,
         Score,

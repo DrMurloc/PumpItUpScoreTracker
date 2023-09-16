@@ -78,7 +78,7 @@ public sealed class EFChartRepository : IChartRepository
         return chartIds != null ? chartIds.Select(id => chartVideos[id]) : chartVideos.Values;
     }
 
-    public async Task<Guid> CreateSong(Name name, Uri imageUrl, SongType type,
+    public async Task<Guid> CreateSong(Name name, Uri imageUrl, SongType type, TimeSpan duration,
         CancellationToken cancellationToken = default)
     {
         var newSong = new SongEntity
@@ -86,12 +86,22 @@ public sealed class EFChartRepository : IChartRepository
             Id = Guid.NewGuid(),
             ImagePath = imageUrl.ToString(),
             Name = name,
-            Type = type.ToString()
+            Type = type.ToString(),
+            Duration = duration
         };
         await _database.Song.AddAsync(newSong, cancellationToken);
         await _database.SaveChangesAsync(cancellationToken);
 
         return newSong.Id;
+    }
+
+    public async Task SetSongDuration(Name songName, TimeSpan duration, CancellationToken cancellationToken = default)
+    {
+        var nameString = songName.ToString();
+        var song = await _database.Song.SingleAsync(s => s.Name == nameString, cancellationToken);
+        song.Duration = duration;
+        await _database.SaveChangesAsync(cancellationToken);
+        ClearCache();
     }
 
     public void ClearCache()
@@ -199,7 +209,8 @@ public sealed class EFChartRepository : IChartRepository
                     join c in _database.Chart on cm.ChartId equals c.Id
                     join s in _database.Song on c.SongId equals s.Id
                     where cm.MixId == mixId
-                    select new Chart(c.Id, new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath)),
+                    select new Chart(c.Id,
+                        new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration),
                         Enum.Parse<ChartType>(c.Type),
                         cm.Level))
                 .ToDictionaryAsync(c => c.Id, c => c, cancellationToken);

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.Data.Persistence.Entities;
@@ -11,4 +12,6 @@ public sealed class SongEntity
     [Key] public Guid Id { get; set; }
     [Required] public string ImagePath { get; set; } = string.Empty;
     [Required] [MaxLength(8)] public string Type { get; set; } = "Arcade";
+
+    public TimeSpan Duration { get; set; } = TimeSpan.FromMinutes(0);
 }

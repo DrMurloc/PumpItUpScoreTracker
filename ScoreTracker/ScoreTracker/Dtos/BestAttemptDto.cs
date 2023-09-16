@@ -10,6 +10,7 @@ public class BestAttemptDto
     public string Category { get; set; }
     public int Level { get; set; }
     public string SongName { get; set; }
+    public TimeSpan SongDuration { get; set; }
     public string XXLetterGrade { get; set; } = string.Empty;
     public PhoenixLetterGrade? PhoenixLetterGrade { get; set; }
     public PhoenixPlate? PhoenixPlate { get; set; }
@@ -31,6 +32,7 @@ public class BestAttemptDto
         {
             ChartId = attempt.Chart.Id,
             SongType = attempt.Chart.Song.Type.ToString(),
+            SongDuration = attempt.Chart.Song.Duration,
             Category = attempt.Chart.Type == Domain.Enums.ChartType.CoOp
                 ? nameof(Domain.Enums.ChartType.CoOp) + " x" + attempt.Chart.PlayerCount
                 : attempt.Chart.Type.ToString(),

@@ -3,6 +3,6 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Models;
 
-public sealed record Song(Name Name, SongType Type, Uri ImagePath)
+public sealed record Song(Name Name, SongType Type, Uri ImagePath, TimeSpan Duration)
 {
 }

@@ -119,6 +119,10 @@ public sealed class ChartAttemptDbContext : DbContext
         builder.Entity<SongEntity>()
             .Property(s => s.Type)
             .HasDefaultValue("Arcade");
+
+        builder.Entity<SongEntity>().Property(s => s.Duration)
+            .HasDefaultValue(TimeSpan.FromMinutes(0))
+            .HasConversion<long>();
         builder.Entity<UserEntity>().ToTable("User");
 
         builder.Entity<ExternalLoginEntity>().ToTable("ExternalLogin")

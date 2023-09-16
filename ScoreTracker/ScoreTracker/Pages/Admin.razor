@@ -37,6 +37,13 @@
                     }
                 </MudSelect>
             </MudItem>
+            <MudItem xs="3">
+                <MudNumericField T="int" Min="0" Max="60" Label="Minutes" @bind-Value="_minutes"></MudNumericField>
+            </MudItem>
+            <MudItem xs="3">
+                <MudNumericField T="int" Min="0" Max="60" Label="Seconds" @bind-Value="_seconds"></MudNumericField>
+            </MudItem>
+            <MudItem xs="6"></MudItem>
             @foreach (var chart in _newCharts)
             {
                 <MudItem xs="3">
@@ -78,6 +85,8 @@
     private readonly ICollection<NewChart> _newCharts = new List<NewChart>();
     private string _songName = string.Empty;
     private string _imageUrl = string.Empty;
+    private int _minutes = 2;
+    private int _seconds = 0;
     private SongType _songType = SongType.Arcade;
     private bool IsValid => Name.TryParse(_songName, out var name) && !string.IsNullOrWhiteSpace(_imageUrl) && _newCharts.Any() && _newCharts.All(c => !string.IsNullOrWhiteSpace(c.YoutubeHash) && Name.TryParse(c.ChannelName, out var channelName));
     private bool _isSaving = false;
@@ -85,7 +94,7 @@
     private async Task CreateSong()
     {
         _isSaving = true;
-        var songId = await _charts.CreateSong(_songName, new Uri($"https://piuimages.arroweclip.se/songs/{_imageUrl}"), _songType);
+        var songId = await _charts.CreateSong(_songName, new Uri($"https://piuimages.arroweclip.se/songs/{_imageUrl}"), _songType,TimeSpan.FromMinutes(_minutes).Add(TimeSpan.FromSeconds(_seconds)));
         foreach (var chart in _newCharts)
         {
             await _charts.CreateChart(MixEnum.Phoenix, songId, chart.Type, chart.Level, chart.ChannelName,new Uri($"https://www.youtube.com/embed/{chart.YoutubeHash}"));

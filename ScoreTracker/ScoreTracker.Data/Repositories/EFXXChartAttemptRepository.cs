@@ -86,7 +86,7 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                     { _.UserId, _.ChartId } into gi
                 from ba in gi.DefaultIfEmpty()
                 select new BestXXChartAttempt(
-                    new Chart(c.Id, new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath)),
+                    new Chart(c.Id, new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration),
                         Enum.Parse<ChartType>(c.Type), c.Level),
                     ba == null
                         ? null
@@ -106,7 +106,7 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                     { _.UserId, _.ChartId } into gi
                 from ba in gi.DefaultIfEmpty()
                 select new BestXXChartAttempt(
-                    new Chart(c.Id, new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath)),
+                    new Chart(c.Id, new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration),
                         Enum.Parse<ChartType>(c.Type), c.Level),
                     ba == null
                         ? null
