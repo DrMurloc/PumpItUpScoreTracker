@@ -10,7 +10,7 @@
 <PageTitle>Session Builder</PageTitle>
 <MudGrid>
     <MudItem xs="6">
-        <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>Configuration=new StaminaSessionConfiguration()">Reset to Default Config</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>Configuration=new TournamentConfiguration()">Reset to Default Config</MudButton>
     </MudItem>
     <MudItem xs="6">
         <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>Configuration=BuildMarchOfMurlocs()">Set to March of Murlocs Config</MudButton>
@@ -179,9 +179,9 @@
 
 @code
 {
-    private StaminaSessionConfiguration BuildMarchOfMurlocs()
+    private TournamentConfiguration BuildMarchOfMurlocs()
     {
-        var configuration = new StaminaSessionConfiguration();
+        var configuration = new TournamentConfiguration();
         configuration.LetterGradeModifiers[PhoenixLetterGrade.APlus] = .8;
         configuration.LetterGradeModifiers[PhoenixLetterGrade.A] = .6;
         configuration.LetterGradeModifiers[PhoenixLetterGrade.B] = 0;
@@ -194,13 +194,13 @@
 
     private bool _hideUnRecordedCharts = false;
     private bool _hideZeroScoredCharts = true;
-    private StaminaSessionConfiguration Configuration = new StaminaSessionConfiguration();
+    private TournamentConfiguration Configuration = new TournamentConfiguration();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private IDictionary<Guid, RecordedPhoenixScore> _records = new Dictionary<Guid, RecordedPhoenixScore>();
     private User[] _users = Array.Empty<User>();
     private Guid _currentUser = Guid.Empty;
     private int _restSeconds = 30;
-    private StaminaSession? _currentSession;
+    private TournamentSession? _currentSession;
 
     private async Task BuildSession()
     {

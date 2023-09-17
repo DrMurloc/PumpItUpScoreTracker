@@ -4,14 +4,14 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Models
 {
-    public sealed class StaminaSession
+    public sealed class TournamentSession
     {
-        private readonly StaminaSessionConfiguration _configuration;
+        private readonly TournamentConfiguration _configuration;
         public ICollection<Entry> Entries { get; }
 
         public int CurrentScore { get; }
 
-        public StaminaSession(StaminaSessionConfiguration configuration)
+        public TournamentSession(TournamentConfiguration configuration)
         {
             _configuration = configuration;
             Entries = new List<Entry>();

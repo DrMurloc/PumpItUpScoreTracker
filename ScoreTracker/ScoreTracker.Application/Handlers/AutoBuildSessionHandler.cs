@@ -6,7 +6,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Application.Handlers
 {
-    public sealed class AutoBuildSessionHandler : IRequestHandler<AutoBuildSessionQuery, StaminaSession>
+    public sealed class AutoBuildSessionHandler : IRequestHandler<AutoBuildSessionQuery, TournamentSession>
     {
         private readonly IChartRepository _charts;
         private readonly IPhoenixRecordRepository _phoenixRecords;
@@ -17,7 +17,7 @@ namespace ScoreTracker.Application.Handlers
             _phoenixRecords = phoenixRecords;
         }
 
-        public async Task<StaminaSession> Handle(AutoBuildSessionQuery request, CancellationToken cancellationToken)
+        public async Task<TournamentSession> Handle(AutoBuildSessionQuery request, CancellationToken cancellationToken)
         {
             var charts = (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
                 .ToDictionary(c => c.Id);
@@ -30,7 +30,7 @@ namespace ScoreTracker.Application.Handlers
                     charts[r.ChartId].Song.Duration /
                     request.Configuration.GetScore(charts[r.ChartId], r.Score!.Value, r.Plate!.Value, r.IsBroken));
 
-            var session = new StaminaSession(request.Configuration);
+            var session = new TournamentSession(request.Configuration);
 
             foreach (var score in orderedScores)
             {

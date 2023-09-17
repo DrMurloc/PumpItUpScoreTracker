@@ -9,16 +9,16 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Models
 {
-    public sealed class StaminaSessionConfiguration
+    public sealed class TournamentConfiguration
     {
         public Guid Id { get; }
         public Name Name { get; }
 
-        public StaminaSessionConfiguration() : this(Guid.NewGuid(), "Unnamed")
+        public TournamentConfiguration() : this(Guid.NewGuid(), "Unnamed")
         {
         }
 
-        public StaminaSessionConfiguration(Guid id, Name name)
+        public TournamentConfiguration(Guid id, Name name)
         {
             Id = id;
             Name = name;
