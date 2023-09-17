@@ -1,21 +1,31 @@
-﻿using System.Data;
-using ScoreTracker.Domain.Enums;
+﻿using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Models
 {
     public sealed class TournamentSession
     {
+        public Guid UsersId { get; }
+        public Guid TournamentId => _configuration.Id;
         private readonly TournamentConfiguration _configuration;
         public ICollection<Entry> Entries { get; }
 
         public int CurrentScore { get; }
 
-        public TournamentSession(TournamentConfiguration configuration)
+        public TournamentSession(Guid userId, TournamentConfiguration configuration)
         {
             _configuration = configuration;
             Entries = new List<Entry>();
             CurrentScore = 0;
+            UsersId = userId;
+        }
+
+        public TournamentSession(Guid userId, TournamentConfiguration configuration, IEnumerable<Entry> entries)
+        {
+            _configuration = configuration;
+            Entries = entries.ToList();
+            CurrentScore = Entries.Sum(e => e.SessionScore);
+            UsersId = userId;
         }
 
         public TimeSpan CurrentRestTime => _configuration.MaxTime - TotalPlayTime;
@@ -47,6 +57,11 @@ namespace ScoreTracker.Domain.Models
 
             return _configuration.AllowRepeats || !Entries.Any(c =>
                 c.Chart.Level == chart.Level && c.Chart.Type == chart.Type && c.Chart.Song.Name == chart.Song.Name);
+        }
+
+        public void Remove(Entry entry)
+        {
+            Entries.Remove(entry);
         }
 
         public void Add(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)

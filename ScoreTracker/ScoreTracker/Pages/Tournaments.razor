@@ -29,14 +29,17 @@
         </TemplateColumn>
         <TemplateColumn T="TournamentRecord" Title="Leaderboard" Sortable="false">
             <CellTemplate>
-                <MudIconButton Disabled="_isLoading" Icon="@Icons.Material.Filled.Leaderboard" OnClick="() => ShowRules(context.Item.Id)"></MudIconButton>
+                <MudIconButton Disabled="_isLoading" Icon="@Icons.Material.Filled.Leaderboard" OnClick="() => ShowLeaderboard(context.Item.Id)"></MudIconButton>
             </CellTemplate>
         </TemplateColumn>
-        <TemplateColumn T="TournamentRecord" Title="Submit" Sortable="false">
-            <CellTemplate>
-                <MudIconButton Disabled="_isLoading" Icon="@Icons.Material.Filled.Upload" OnClick="() => ShowRules(context.Item.Id)"></MudIconButton>
-            </CellTemplate>
-        </TemplateColumn>
+        @if (CurrentUser.IsLoggedIn)
+        {
+            <TemplateColumn T="TournamentRecord" Title="Submit" Sortable="false">
+                <CellTemplate>
+                    <MudIconButton Disabled="_isLoading" Icon="@Icons.Material.Filled.Upload" OnClick="() => GoToSubmit(context.Item.Id)"></MudIconButton>
+                </CellTemplate>
+            </TemplateColumn>
+        }
     </Columns>
 </MudDataGrid>
 <MudDialog @bind-IsVisible="_showRules">
@@ -108,13 +111,45 @@
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showRules = false">Close</MudButton>
     </DialogActions>
 </MudDialog>
+
+<MudDialog @bind-IsVisible="_showLeaderboard">
+    <DialogContent>
+        <MudDataGrid T="LeaderboardRecord" Items="_leaderboard">
+            <Columns>
+                <PropertyColumn T="LeaderboardRecord" TProperty="int" Property="l=>l.Place" Sortable="true"></PropertyColumn>
+                <PropertyColumn T="LeaderboardRecord" TProperty="string" Property="l=>l.UserName" Sortable="true"></PropertyColumn>
+                <PropertyColumn T="LeaderboardRecord" TProperty="int" Property="l=>l.TotalScore" Sortable="true"></PropertyColumn>
+            </Columns>
+        </MudDataGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showLeaderboard = false">Close</MudButton>
+    </DialogActions>
+</MudDialog>
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
+@inject ITournamentRepository TournamentRepository;
+@inject NavigationManager NavManager;
 @code
 {
     private bool _showRules = false;
+    private bool _showLeaderboard = false;
     private bool _isLoading = false;
     private TournamentConfiguration _currentConfig = new TournamentConfiguration();
+    private IEnumerable<LeaderboardRecord> _leaderboard = Array.Empty<LeaderboardRecord>();
+
+    private void GoToSubmit(Guid tournamentId)
+    {
+        NavManager.NavigateTo($"/Tournament/{tournamentId}/Record");
+    }
+    private async Task ShowLeaderboard(Guid tournamentId)
+    {
+        _isLoading = true;
+        _leaderboard = (await TournamentRepository.GetLeaderboardRecords(tournamentId, CancellationToken.None)).OrderByDescending(l => l.Place).ToArray();
+        _isLoading = false;
+        _showLeaderboard = true;
+    }
     public async Task ShowRules(Guid tournamentId)
     {
         _isLoading = true;

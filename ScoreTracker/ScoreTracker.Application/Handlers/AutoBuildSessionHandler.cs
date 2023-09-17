@@ -30,7 +30,7 @@ namespace ScoreTracker.Application.Handlers
                     charts[r.ChartId].Song.Duration /
                     request.Configuration.GetScore(charts[r.ChartId], r.Score!.Value, r.Plate!.Value, r.IsBroken));
 
-            var session = new TournamentSession(request.Configuration);
+            var session = new TournamentSession(request.UserId, request.Configuration);
 
             foreach (var score in orderedScores)
             {

@@ -206,18 +206,6 @@
 {
     private DateRange _dateRange = new DateRange(null, null);
     private IEnumerable<TournamentRecord> _tournaments = Array.Empty<TournamentRecord>();
-    private TournamentConfiguration BuildMarchOfMurlocs()
-    {
-        var configuration = new TournamentConfiguration();
-        configuration.LetterGradeModifiers[PhoenixLetterGrade.APlus] = .8;
-        configuration.LetterGradeModifiers[PhoenixLetterGrade.A] = .6;
-        configuration.LetterGradeModifiers[PhoenixLetterGrade.B] = 0;
-        configuration.LetterGradeModifiers[PhoenixLetterGrade.C] = 0;
-        configuration.LetterGradeModifiers[PhoenixLetterGrade.D] = 0;
-        configuration.LetterGradeModifiers[PhoenixLetterGrade.F] = 0;
-        configuration.ChartTypeModifiers[ChartType.Single] = 0;
-        return configuration;
-    }
 
     private bool _hideUnRecordedCharts = false;
     private bool _hideZeroScoredCharts = true;

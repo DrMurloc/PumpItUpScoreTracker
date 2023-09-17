@@ -8,5 +8,10 @@ namespace ScoreTracker.Domain.SecondaryPorts
         Task<IEnumerable<TournamentRecord>> GetAllTournaments(CancellationToken cancellationToken);
         Task<TournamentConfiguration> GetTournament(Guid id, CancellationToken cancellationToken);
         Task CreateOrSaveTournament(TournamentConfiguration tournament, CancellationToken cancellationToken);
+        Task SaveSession(TournamentSession session, CancellationToken cancellationToken);
+        Task<TournamentSession> GetSession(Guid tournamentId, Guid userId, CancellationToken cancellationToken);
+
+        Task<IEnumerable<LeaderboardRecord>> GetLeaderboardRecords(Guid tournamentId,
+            CancellationToken cancellationToken);
     }
 }
