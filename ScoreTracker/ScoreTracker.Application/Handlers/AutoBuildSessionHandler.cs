@@ -23,8 +23,10 @@ namespace ScoreTracker.Application.Handlers
                 .ToDictionary(c => c.Id);
 
             var orderedScores = (await _phoenixRecords.GetRecordedScores(request.UserId, cancellationToken))
-                .Where(s => s is { Score: not null, Plate: not null })
-                .OrderByDescending(r =>
+                .Where(s => s is { Score: not null, Plate: not null } &&
+                            request.Configuration.GetScore(charts[s.ChartId], s.Score!.Value, s.Plate!.Value) > 0)
+                .OrderBy(r =>
+                    charts[r.ChartId].Song.Duration /
                     request.Configuration.GetScore(charts[r.ChartId], r.Score!.Value, r.Plate!.Value));
 
             var session = new StaminaSession(request.Configuration);

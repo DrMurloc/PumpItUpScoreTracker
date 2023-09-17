@@ -167,7 +167,7 @@
                 <MudText>@chart.Song.Name @chart.DifficultyString</MudText>
             </MudItem>
             <MudItem xs="2">@chart.Song.Duration.ToString(@"m\:ss")</MudItem>
-            <MudItem xs="4"> @_currentSession.Scores[chart.Id] - @_currentSession.Plates[chart.Id]</MudItem>
+            <MudItem xs="4"> @_currentSession.Scores[chart.Id] - @_currentSession.Plates[chart.Id].GetName()</MudItem>
             <MudItem xs="2"> @_currentSession.SessionScores[chart.Id]</MudItem>
         }
     }
