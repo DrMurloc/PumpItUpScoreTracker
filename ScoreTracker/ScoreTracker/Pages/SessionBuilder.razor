@@ -1,4 +1,5 @@
 ﻿@page "/SessionBuilder"
+@page "/TournamentBuilder"
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.ValueTypes
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
@@ -6,23 +7,22 @@
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.SecondaryPorts
 @using MediatR
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Domain.Records
 
-<PageTitle>Session Builder</PageTitle>
+<PageTitle>Tournament Builder</PageTitle>
+
+<MudText Typo="Typo.h3">Tournament Settings</MudText>
 <MudGrid>
-    <MudItem xs="6">
-        <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>Configuration=new TournamentConfiguration()">Reset to Default Config</MudButton>
-    </MudItem>
-    <MudItem xs="6">
-        <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>Configuration=BuildMarchOfMurlocs()">Set to March of Murlocs Config</MudButton>
-    </MudItem>
     <MudItem xs="12">
-        <MudSelect T="Guid?" Value="_currentUser" Clearable="true" ValueChanged="SetUser">
-            @foreach (var user in _users)
+        <MudSelect T="Guid?" Label="PreBuilt Tournament Configuration" Value="_currentTourney" ValueChanged="SelectTourney" Clearable>
+            <MudSelectItem T="Guid?" Value="null">Default</MudSelectItem>
+            @foreach (var tourney in _tournaments)
             {
-                <MudSelectItem T="Guid?" Value="user.Id">@user.Name.ToString() (@user.Id)</MudSelectItem>
+                <MudSelectItem T="Guid?" Value="@tourney.Id">@tourney.Name</MudSelectItem>
             }
         </MudSelect>
-        </MudItem>
+    </MudItem>
 </MudGrid>
 <br/>
 <br/>
@@ -95,12 +95,40 @@
             </MudItem>
         </MudGrid>
     </MudExpansionPanel>
+    @if (CurrentUser.IsLoggedIn && CurrentUser.User.IsAdmin)
+    {
+        <MudExpansionPanel Text="Admin Settings">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudDateRangePicker Label="Tournament Dates (EST)" @bind-DateRange="_dateRange" Clearable="true" Color="Color.Primary"/>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Value="Configuration.Name" ValueChanged="s=>Configuration.Name=s" Label="Tournament Name"></MudTextField>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudButton Color="Color.Primary" OnClick="SaveTourney" Variant="Variant.Filled">Save</MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudExpansionPanel>
+    }
 </MudExpansionPanels>
 <br/>
+
+<MudText Typo="Typo.h3">Test With Player Data</MudText>
+<br/>
+<MudButton Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Filled" Color="Color.Primary">Import Your Phoenix Scores</MudButton>
+
 <br/>
 <MudSwitch Label="Hide Record-less Charts" @bind-Checked="_hideUnRecordedCharts" Color="Color.Primary"></MudSwitch>
 <br/>
 <MudSwitch Label="Hide Zero Scoring Charts" @bind-Checked="_hideZeroScoredCharts" Color="Color.Primary"></MudSwitch>
+<br/>
+<MudSelect T="Guid?" Value="_currentUser" Clearable="true" ValueChanged="SetUser" Label="Player To Test (Must Be Set To Public)">
+    @foreach (var user in _users)
+    {
+        <MudSelectItem T="Guid?" Value="user.Id">@user.Name.ToString() (@user.Id)</MudSelectItem>
+    }
+</MudSelect>
 <MudDataGrid T="ChartSessionEffectiveness" Items="@Scores">
     <Columns>
         <TemplateColumn T="ChartSessionEffectiveness" Title="Difficulty" Sortable="true" SortBy="x=>x.Level">
@@ -128,11 +156,8 @@
 <br/>
 <br/>
 <MudGrid>
-    <MudItem xs="8">
-        <MudText Typo="Typo.h2">Example Set Builder</MudText>
-    </MudItem>
-    <MudItem xs="4">
-        <MudButton Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Filled" Color="Color.Primary">Import Phoenix Scores</MudButton>
+    <MudItem xs="12">
+        <MudText Typo="Typo.h3">Example Set Builder</MudText>
     </MudItem>
     <MudItem xs="6">
         <MudNumericField Min="10" Max="300" HideSpinButtons="true" @bind-Value="_restSeconds" Label="Seconds of Rest Per Chart"></MudNumericField>
@@ -179,6 +204,8 @@
 
 @code
 {
+    private DateRange _dateRange = new DateRange(null, null);
+    private IEnumerable<TournamentRecord> _tournaments = Array.Empty<TournamentRecord>();
     private TournamentConfiguration BuildMarchOfMurlocs()
     {
         var configuration = new TournamentConfiguration();
@@ -199,12 +226,32 @@
     private IDictionary<Guid, RecordedPhoenixScore> _records = new Dictionary<Guid, RecordedPhoenixScore>();
     private User[] _users = Array.Empty<User>();
     private Guid _currentUser = Guid.Empty;
+    private Guid? _currentTourney = null;
     private int _restSeconds = 30;
     private TournamentSession? _currentSession;
 
     private async Task BuildSession()
     {
         _currentSession = await Mediator.Send(new AutoBuildSessionQuery(Configuration, _currentUser, TimeSpan.FromSeconds(_restSeconds)));
+    }
+
+    private async Task SaveTourney()
+    {
+        Configuration.StartDate = _dateRange.Start == null ? null : new DateTimeOffset(_dateRange.Start.Value, TimeSpan.FromHours(-5));
+        Configuration.EndDate = _dateRange.End == null ? null : new DateTimeOffset(_dateRange.End.Value, TimeSpan.FromHours(-5));
+        await Mediator.Send(new SaveTournamentCommand(Configuration));
+    }
+    private async Task SelectTourney(Guid? tourneyId)
+    {
+        if (tourneyId == null)
+        {
+            Configuration = new TournamentConfiguration();
+        }
+        else
+        {
+            Configuration = await Mediator.Send(new GetTournamentQuery(tourneyId.Value));
+        }
+        _currentTourney = tourneyId;
     }
     private IEnumerable<ChartSessionEffectiveness> Scores => _charts.Values.Where(c=>!_hideUnRecordedCharts||_records.ContainsKey(c.Id))
         .Select(c => new ChartSessionEffectiveness
@@ -233,6 +280,9 @@
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
 
         await SetUser(CurrentUser.IsLoggedIn ? CurrentUser.User.Id : _users.First(u => u.Name=="DrMurloc").Id);
+
+        _tournaments = await Mediator.Send(new GetAllTournamentsQuery());
+        await SelectTourney(null);
     }
 
 

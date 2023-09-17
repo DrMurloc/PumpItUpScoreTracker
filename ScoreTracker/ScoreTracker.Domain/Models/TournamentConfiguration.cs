@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using ScoreTracker.Domain.Enums;
+﻿using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Models
@@ -12,7 +6,7 @@ namespace ScoreTracker.Domain.Models
     public sealed class TournamentConfiguration
     {
         public Guid Id { get; }
-        public Name Name { get; }
+        public Name Name { get; set; }
 
         public TournamentConfiguration() : this(Guid.NewGuid(), "Unnamed")
         {
@@ -26,6 +20,9 @@ namespace ScoreTracker.Domain.Models
 
 
         private static readonly TimeSpan BaseAverageTime = TimeSpan.FromMinutes(2);
+
+        public DateTimeOffset? EndDate { get; set; }
+        public DateTimeOffset? StartDate { get; set; }
 
         public IDictionary<DifficultyLevel, int> LevelRatings { get; set; } =
             DifficultyLevel.All.ToDictionary(l => l, l => l.BaseRating);

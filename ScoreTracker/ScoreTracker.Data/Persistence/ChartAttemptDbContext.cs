@@ -33,6 +33,7 @@ public sealed class ChartAttemptDbContext : DbContext
 
     public DbSet<UserCoOpRatingEntity> UserCoOpRating { get; set; }
     public DbSet<CoOpRatingEntity> CoOpRating { get; set; }
+    public DbSet<TournamentEntity> Tournament { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
