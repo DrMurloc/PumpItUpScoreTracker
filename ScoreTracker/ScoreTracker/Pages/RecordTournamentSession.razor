@@ -32,6 +32,14 @@
             <MudButton Disabled="_isSaving" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Variant="Variant.Outlined" OnClick="ShowAddDialog">Add Chart</MudButton>
         </MudItem>
         <MudItem xs="12">
+            <MudRadioGroup @bind-SelectedOption="_validation">
+                <MudRadio Option="@("Unverified")" Color="Color.Primary">Unverified</MudRadio>
+                <MudRadio Option="@("Photo")" Color="Color.Primary" Disabled="true">Photo Verified (coming soon)</MudRadio>
+                <MudRadio Option="@("Video")" Color="Color.Primary" Disabled="true">Video Verified (coming soon)</MudRadio>
+                <MudRadio Option="@("In Person")" Color="Color.Primary" Disabled="true">In Person (coming soon)</MudRadio>
+            </MudRadioGroup>
+        </MudItem>
+        <MudItem xs="12">
             <MudButton Disabled="_isSaving" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary" Variant="Variant.Outlined" OnClick="Save">Save</MudButton>
         </MudItem>
     </MudGrid>
@@ -91,7 +99,7 @@
 @inject ISnackbar Snackbar;
 @code
 {
-
+    private string _validation = "Unverified";
     private MudAutocomplete<string> _autocomplete;
     [Parameter] public Guid TournamentId { get; set; }
     private PhoenixPlate _plate = PhoenixPlate.MarvelousGame;
