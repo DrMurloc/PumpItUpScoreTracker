@@ -3,7 +3,6 @@
 @using ScoreTracker.Domain.ValueTypes
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using ScoreTracker.Domain.Enums
-@using ScoreTracker.Data.Persistence.Entities
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.SecondaryPorts
 @using MediatR
@@ -51,6 +50,9 @@
     
     <MudExpansionPanel Text="Song Types">
         <MudGrid>
+            <MudItem xs="12">
+                <MudSwitch T="bool" Label="Adjust Scores to Song Duration (uses 2 minutes as average chart duration)" @bind-Checked="Configuration.AdjustToTime" Color="Color.Primary"></MudSwitch>
+            </MudItem>
             @foreach (var songType in Enum.GetValues<SongType>())
             {
                 <MudItem xs="6">
@@ -83,10 +85,10 @@
     <MudExpansionPanel Text="Extra Settings">
         <MudGrid>
             <MudItem xs="6">
-                <MudSwitch T="bool" Label="Adjust Scores to Song Duration" @bind-Checked="Configuration.AdjustToTime" Color="Color.Primary"></MudSwitch>
+                <MudSwitch T="bool" Label="Allow Repeats" @bind-Checked="Configuration.AllowRepeats" Color="Color.Primary"></MudSwitch>
             </MudItem>
             <MudItem xs="6">
-                <MudSwitch T="bool" Label="Allow Repeats" @bind-Checked="Configuration.AllowRepeats" Color="Color.Primary"></MudSwitch>
+                <MudNumericField T="double" Min="0" Max="100" Label="Stage Break Modifier" @bind-Value="Configuration.StageBreakModifier"></MudNumericField>
             </MudItem>
             <MudItem xs="6">
                 <MudNumericField T="int" Label="Session Duration (Minutes)" Value="(int)Configuration.MaxTime.TotalMinutes" ValueChanged="m=>Configuration.MaxTime=TimeSpan.FromMinutes(m)"></MudNumericField>
@@ -127,7 +129,7 @@
 <br/>
 <MudGrid>
     <MudItem xs="8">
-        <MudText Typo="Typo.h2">Set Builder</MudText>
+        <MudText Typo="Typo.h2">Example Set Builder</MudText>
     </MudItem>
     <MudItem xs="4">
         <MudButton Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Filled" Color="Color.Primary">Import Phoenix Scores</MudButton>
@@ -144,7 +146,7 @@
             <MudText>Score: @_currentSession.TotalScore</MudText>
         </MudItem>
         <MudItem xs="4">
-            <MudText>Total Charts: @_currentSession.Charts.Count()</MudText>
+            <MudText>Total Charts: @_currentSession.Entries.Count()</MudText>
         </MudItem>
         <MudItem xs="4">
             <MudText>Rest Time Per Chart: @_currentSession.AverageTimeBetweenCharts.ToString(@"m\:ss")</MudText>
@@ -161,14 +163,14 @@
         <MudItem xs="2">
             <MudText>Session Score</MudText>
         </MudItem>
-        @foreach (var chart in _currentSession.Charts)
+        @foreach (var entry in _currentSession.Entries)
         {
             <MudItem xs="4">
-                <MudText>@chart.Song.Name @chart.DifficultyString</MudText>
+                <MudText>@entry.Chart.Song.Name @entry.Chart.DifficultyString</MudText>
             </MudItem>
-            <MudItem xs="2">@chart.Song.Duration.ToString(@"m\:ss")</MudItem>
-            <MudItem xs="4"> @_currentSession.Scores[chart.Id] - @_currentSession.Plates[chart.Id].GetName()</MudItem>
-            <MudItem xs="2"> @_currentSession.SessionScores[chart.Id]</MudItem>
+            <MudItem xs="2">@entry.Chart.Song.Duration.ToString(@"m\:ss")</MudItem>
+            <MudItem xs="4"> @entry.Score - @entry.Plate.GetName()</MudItem>
+            <MudItem xs="2"> @entry.SessionScore</MudItem>
         }
     }
 </MudGrid>
@@ -212,7 +214,7 @@
         DifficultyBubblePath = $"https://piuimages.arroweclip.se/difficulty/{c.DifficultyString.ToLower()}.png",
         Seconds = (int)c.Song.Duration.TotalSeconds,
         PointsWithoutScore = (int)Configuration.GetScorelessScore(c),
-        Points = _records.ContainsKey(c.Id) ? Configuration.GetScore(c, _records[c.Id].Score!.Value, _records[c.Id].Plate!.Value) : 0,
+        Points = _records.ContainsKey(c.Id) ? Configuration.GetScore(c, _records[c.Id].Score!.Value, _records[c.Id].Plate!.Value,_records[c.Id].IsBroken) : 0,
         Level = c.Level
     })
         .Where(c=>!_hideZeroScoredCharts||c.PointsWithoutScore>0);

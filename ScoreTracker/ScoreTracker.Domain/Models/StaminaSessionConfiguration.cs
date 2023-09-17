@@ -11,9 +11,19 @@ namespace ScoreTracker.Domain.Models
 {
     public sealed class StaminaSessionConfiguration
     {
-        public StaminaSessionConfiguration()
+        public Guid Id { get; }
+        public Name Name { get; }
+
+        public StaminaSessionConfiguration() : this(Guid.NewGuid(), "Unnamed")
         {
         }
+
+        public StaminaSessionConfiguration(Guid id, Name name)
+        {
+            Id = id;
+            Name = name;
+        }
+
 
         private static readonly TimeSpan BaseAverageTime = TimeSpan.FromMinutes(2);
 
@@ -39,6 +49,7 @@ namespace ScoreTracker.Domain.Models
         public IDictionary<PhoenixPlate, double> PlateModifiers { get; set; } = Enum.GetValues<PhoenixPlate>()
             .ToDictionary(p => p, p => 1.0);
 
+        public double StageBreakModifier { get; set; } = 1.0;
         public bool AdjustToTime { get; set; } = true;
 
         public TimeSpan MaxTime { get; set; } = TimeSpan.FromMinutes(105);
@@ -58,12 +69,17 @@ namespace ScoreTracker.Domain.Models
         }
 
 
-        public int GetScore(Chart chart, PhoenixScore score, PhoenixPlate plate)
+        public int GetScore(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)
         {
             var result = GetScorelessScore(chart);
             result *=
                 LetterGradeModifiers[score.LetterGrade]
                 * PlateModifiers[plate];
+            if (isBroken)
+            {
+                result *= StageBreakModifier;
+            }
+
             return (int)result;
         }
     }

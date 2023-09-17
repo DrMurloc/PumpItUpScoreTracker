@@ -1,4 +1,5 @@
-﻿using ScoreTracker.Domain.Enums;
+﻿using System.Data;
+using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Models
@@ -6,36 +7,35 @@ namespace ScoreTracker.Domain.Models
     public sealed class StaminaSession
     {
         private readonly StaminaSessionConfiguration _configuration;
-        public ICollection<Chart> Charts { get; }
-        public IDictionary<Guid, PhoenixScore> Scores { get; } = new Dictionary<Guid, PhoenixScore>();
-        public IDictionary<Guid, PhoenixPlate> Plates { get; } = new Dictionary<Guid, PhoenixPlate>();
-        public IDictionary<Guid, int> SessionScores { get; } = new Dictionary<Guid, int>();
+        public ICollection<Entry> Entries { get; }
+
         public int CurrentScore { get; }
 
         public StaminaSession(StaminaSessionConfiguration configuration)
         {
             _configuration = configuration;
-            Charts = new List<Chart>();
+            Entries = new List<Entry>();
             CurrentScore = 0;
         }
 
         public TimeSpan CurrentRestTime => _configuration.MaxTime - TotalPlayTime;
 
         public TimeSpan AverageTimeBetweenCharts =>
-            Charts.Count <= 1 ? _configuration.MaxTime : CurrentRestTime / Charts.Count;
+            Entries.Count <= 1 ? _configuration.MaxTime : CurrentRestTime / Entries.Count;
 
         public TimeSpan AverageTimeWithAddedChart(Chart chart)
         {
-            var charts = Charts.Append(chart).ToArray();
+            var charts = Entries.Select(e => e.Chart).Append(chart).ToArray();
             var totalPlayTime = TimeSpan.FromTicks(charts.Sum(c => c.Song.Duration.Ticks));
             var restTime = _configuration.MaxTime - totalPlayTime;
 
             return charts.Length <= 1 ? _configuration.MaxTime : restTime / charts.Length;
         }
 
-        public int TotalScore => SessionScores.Values.Sum();
+        public int TotalScore => Entries.Sum(c => c.SessionScore);
 
-        public TimeSpan TotalPlayTime => TimeSpan.FromTicks(Charts.Sum(c => c.Song.Duration.Ticks));
+        public TimeSpan TotalPlayTime =>
+            TimeSpan.FromTicks(Entries.Select(e => e.Chart).Sum(c => c.Song.Duration.Ticks));
 
         public bool CanAdd(Chart chart)
         {
@@ -45,21 +45,23 @@ namespace ScoreTracker.Domain.Models
                 return false;
             }
 
-            return _configuration.AllowRepeats || !Charts.Any(c =>
-                c.Level == chart.Level && c.Type == chart.Type && c.Song.Name == chart.Song.Name);
+            return _configuration.AllowRepeats || !Entries.Any(c =>
+                c.Chart.Level == chart.Level && c.Chart.Type == chart.Type && c.Chart.Song.Name == chart.Song.Name);
         }
 
-        public void Add(Chart chart, PhoenixScore score, PhoenixPlate plate)
+        public void Add(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)
         {
             if (!CanAdd(chart))
             {
                 throw new ArgumentException($"{chart.Song.Name} {chart.DifficultyString} is invalid for this session");
             }
 
-            Scores[chart.Id] = score;
-            Plates[chart.Id] = plate;
-            Charts.Add(chart);
-            SessionScores[chart.Id] = _configuration.GetScore(chart, score, plate);
+            Entries.Add(
+                new Entry(chart, score, plate, isBroken, _configuration.GetScore(chart, score, plate, isBroken)));
+        }
+
+        public sealed record Entry(Chart Chart, PhoenixScore Score, PhoenixPlate Plate, bool IsBroken, int SessionScore)
+        {
         }
     }
 }
