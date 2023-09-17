@@ -9,6 +9,7 @@ namespace ScoreTracker.Domain.Models
         public ICollection<Chart> Charts { get; }
         public IDictionary<Guid, PhoenixScore> Scores { get; } = new Dictionary<Guid, PhoenixScore>();
         public IDictionary<Guid, PhoenixPlate> Plates { get; } = new Dictionary<Guid, PhoenixPlate>();
+        public IDictionary<Guid, int> SessionScores { get; } = new Dictionary<Guid, int>();
         public int CurrentScore { get; }
 
         public StaminaSession(StaminaSessionConfiguration configuration)
@@ -32,7 +33,7 @@ namespace ScoreTracker.Domain.Models
             return charts.Length <= 1 ? _configuration.MaxTime : restTime / charts.Length;
         }
 
-        public int TotalScore => Charts.Sum(c => _configuration.GetScore(c, Scores[c.Id], Plates[c.Id]));
+        public int TotalScore => SessionScores.Values.Sum();
 
         public TimeSpan TotalPlayTime => TimeSpan.FromTicks(Charts.Sum(c => c.Song.Duration.Ticks));
 
@@ -58,6 +59,7 @@ namespace ScoreTracker.Domain.Models
             Scores[chart.Id] = score;
             Plates[chart.Id] = plate;
             Charts.Add(chart);
+            SessionScores[chart.Id] = _configuration.GetScore(chart, score, plate);
         }
     }
 }

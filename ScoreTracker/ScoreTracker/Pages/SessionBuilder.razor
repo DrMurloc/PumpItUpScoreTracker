@@ -11,10 +11,10 @@
 <PageTitle>Session Builder</PageTitle>
 <MudGrid>
     <MudItem xs="6">
-        <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>Configuration=new StaminaSessionConfiguration()">Reset to Default</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>Configuration=new StaminaSessionConfiguration()">Reset to Default Config</MudButton>
     </MudItem>
     <MudItem xs="6">
-        <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>Configuration=BuildMarchOfMurlocs()">Set to March of Murlocs</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>Configuration=BuildMarchOfMurlocs()">Set to March of Murlocs Config</MudButton>
     </MudItem>
     <MudItem xs="12">
         <MudSelect T="Guid?" Value="_currentUser" Clearable="true" ValueChanged="SetUser">
@@ -123,6 +123,55 @@
         <MudDataGridPager T="ChartSessionEffectiveness" />
     </PagerContent>
 </MudDataGrid>
+<br/>
+<br/>
+<MudGrid>
+    <MudItem xs="8">
+        <MudText Typo="Typo.h2">Set Builder</MudText>
+    </MudItem>
+    <MudItem xs="4">
+        <MudButton Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Filled" Color="Color.Primary">Import Phoenix Scores</MudButton>
+    </MudItem>
+    <MudItem xs="6">
+        <MudNumericField Min="10" Max="300" HideSpinButtons="true" @bind-Value="_restSeconds" Label="Seconds of Rest Per Chart"></MudNumericField>
+    </MudItem>
+    <MudItem xs="6">
+        <MudButton Color="Color.Primary" OnClick="BuildSession" Variant="Variant.Filled">Build Session</MudButton>
+    </MudItem>
+    @if (_currentSession != null)
+    {
+        <MudItem xs="4">
+            <MudText>Score: @_currentSession.TotalScore</MudText>
+        </MudItem>
+        <MudItem xs="4">
+            <MudText>Total Charts: @_currentSession.Charts.Count()</MudText>
+        </MudItem>
+        <MudItem xs="4">
+            <MudText>Rest Time Per Chart: @_currentSession.AverageTimeBetweenCharts.ToString(@"m\:ss")</MudText>
+        </MudItem>
+        <MudItem xs="4">
+            <MudText>Song</MudText>
+        </MudItem>
+        <MudItem xs="2">
+            <MudText>Duration</MudText>
+        </MudItem>
+        <MudItem xs="4">
+            <MudText>Chart Score</MudText>
+        </MudItem>
+        <MudItem xs="2">
+            <MudText>Session Score</MudText>
+        </MudItem>
+        @foreach (var chart in _currentSession.Charts)
+        {
+            <MudItem xs="4">
+                <MudText>@chart.Song.Name @chart.DifficultyString</MudText>
+            </MudItem>
+            <MudItem xs="2">@chart.Song.Duration.ToString(@"m\:ss")</MudItem>
+            <MudItem xs="4"> @_currentSession.Scores[chart.Id] - @_currentSession.Plates[chart.Id]</MudItem>
+            <MudItem xs="2"> @_currentSession.SessionScores[chart.Id]</MudItem>
+        }
+    }
+</MudGrid>
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
 
@@ -148,7 +197,13 @@
     private IDictionary<Guid, RecordedPhoenixScore> _records = new Dictionary<Guid, RecordedPhoenixScore>();
     private User[] _users = Array.Empty<User>();
     private Guid _currentUser = Guid.Empty;
+    private int _restSeconds = 30;
+    private StaminaSession? _currentSession;
 
+    private async Task BuildSession()
+    {
+        _currentSession = await Mediator.Send(new AutoBuildSessionQuery(Configuration, _currentUser, TimeSpan.FromSeconds(_restSeconds)));
+    }
     private IEnumerable<ChartSessionEffectiveness> Scores => _charts.Values.Where(c=>!_hideUnRecordedCharts||_records.ContainsKey(c.Id))
         .Select(c => new ChartSessionEffectiveness
     {

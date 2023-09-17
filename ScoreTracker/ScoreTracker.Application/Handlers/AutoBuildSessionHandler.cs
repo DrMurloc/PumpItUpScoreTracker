@@ -10,14 +10,11 @@ namespace ScoreTracker.Application.Handlers
     {
         private readonly IChartRepository _charts;
         private readonly IPhoenixRecordRepository _phoenixRecords;
-        private readonly ICurrentUserAccessor _currentUser;
 
-        public AutoBuildSessionHandler(IChartRepository charts, IPhoenixRecordRepository phoenixRecords,
-            ICurrentUserAccessor currentUser)
+        public AutoBuildSessionHandler(IChartRepository charts, IPhoenixRecordRepository phoenixRecords)
         {
             _charts = charts;
             _phoenixRecords = phoenixRecords;
-            _currentUser = currentUser;
         }
 
         public async Task<StaminaSession> Handle(AutoBuildSessionQuery request, CancellationToken cancellationToken)
@@ -25,7 +22,7 @@ namespace ScoreTracker.Application.Handlers
             var charts = (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
                 .ToDictionary(c => c.Id);
 
-            var orderedScores = (await _phoenixRecords.GetRecordedScores(_currentUser.User.Id, cancellationToken))
+            var orderedScores = (await _phoenixRecords.GetRecordedScores(request.UserId, cancellationToken))
                 .Where(s => s is { Score: not null, Plate: not null })
                 .OrderByDescending(r =>
                     request.Configuration.GetScore(charts[r.ChartId], r.Score!.Value, r.Plate!.Value));
