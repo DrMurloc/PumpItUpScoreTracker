@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
@@ -17,5 +18,8 @@ namespace ScoreTracker.Data.Persistence.Entities
 
         [Required] public int SessionScore { get; set; }
         [Required] public string ChartEntries { get; set; } = string.Empty;
+        [Required] public TimeSpan RestTime { get; set; } = TimeSpan.MinValue;
+        [Required] public double AverageDifficulty { get; set; } = 1;
+        [Required] public int ChartsPlayed { get; set; } = 0;
     }
 }

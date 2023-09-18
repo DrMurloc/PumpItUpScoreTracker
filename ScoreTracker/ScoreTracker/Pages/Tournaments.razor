@@ -116,9 +116,12 @@
     <DialogContent>
         <MudDataGrid T="LeaderboardRecord" Items="_leaderboard">
             <Columns>
-                <PropertyColumn T="LeaderboardRecord" TProperty="int" Property="l=>l.Place" Sortable="true"></PropertyColumn>
-                <PropertyColumn T="LeaderboardRecord" TProperty="string" Property="l=>l.UserName" Sortable="true"></PropertyColumn>
-                <PropertyColumn T="LeaderboardRecord" TProperty="int" Property="l=>l.TotalScore" Sortable="true"></PropertyColumn>
+                <PropertyColumn T="LeaderboardRecord" TProperty="int" Property="l=>l.Place" Sortable="true" Title="Place"></PropertyColumn>
+                <PropertyColumn T="LeaderboardRecord" TProperty="string" Property="l=>l.UserName" Sortable="true" Title="Name"></PropertyColumn>
+                <PropertyColumn T="LeaderboardRecord" TProperty="int" Property="l=>l.TotalScore" Sortable="true" Title="Score"></PropertyColumn>
+                <PropertyColumn T="LeaderboardRecord" TProperty="int" Property="l=>l.ChartsPlayed" Sortable="true" Title="Chart Count"></PropertyColumn>
+                <PropertyColumn T="LeaderboardRecord" TProperty="string" Property="l=>TwoDecimalPlaces(l.AverageDifficulty)" Sortable="true" SortBy="l=>l.AverageDifficulty" Title="Avg Difficulty"></PropertyColumn>
+                <PropertyColumn T="LeaderboardRecord" TProperty="string" Property="l=>RestTime(l.TotalRestTime)" Sortable="true" SortBy="l=>l.TotalRestTime"></PropertyColumn>
             </Columns>
         </MudDataGrid>
     </DialogContent>
@@ -138,7 +141,8 @@
     private bool _isLoading = false;
     private TournamentConfiguration _currentConfig = new TournamentConfiguration();
     private IEnumerable<LeaderboardRecord> _leaderboard = Array.Empty<LeaderboardRecord>();
-
+    private string RestTime(TimeSpan time) => time.ToString(@"h\:mm\:ss");
+    private string TwoDecimalPlaces(double value) => $"{value:F1}";
     private void GoToSubmit(Guid tournamentId)
     {
         NavManager.NavigateTo($"/Tournament/{tournamentId}/Record");

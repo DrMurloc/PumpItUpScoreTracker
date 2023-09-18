@@ -98,6 +98,9 @@ namespace ScoreTracker.Data.Repositories
                     UserId = session.UsersId,
                     TournamentId = session.TournamentId,
                     SessionScore = session.TotalScore,
+                    RestTime = session.CurrentRestTime,
+                    ChartsPlayed = session.Entries.Count(),
+                    AverageDifficulty = session.Entries.Average(e => e.Chart.Level),
                     ChartEntries = JsonSerializer.Serialize(session.Entries.Select(e => new SessionEntryEntity
                     {
                         ChartId = e.Chart.Id,
@@ -111,6 +114,9 @@ namespace ScoreTracker.Data.Repositories
             else
             {
                 entity.SessionScore = session.TotalScore;
+                entity.RestTime = session.CurrentRestTime;
+                entity.ChartsPlayed = session.Entries.Count();
+                entity.AverageDifficulty = session.Entries.Average(e => e.Chart.Level);
                 entity.ChartEntries = JsonSerializer.Serialize(session.Entries.Select(e => new SessionEntryEntity
                 {
                     ChartId = e.Chart.Id,
@@ -151,12 +157,15 @@ namespace ScoreTracker.Data.Repositories
             return (await (from uts in _database.UserTournamentSession
                     join u in _database.User on uts.UserId equals u.Id
                     where uts.TournamentId == tournamentId
-                    select new UserEntryDto(u.Id, u.Name, uts.SessionScore)).ToArrayAsync(cancellationToken))
+                    select new UserEntryDto(u.Id, u.Name, uts.SessionScore, uts.RestTime, uts.ChartsPlayed,
+                        uts.AverageDifficulty)).ToArrayAsync(cancellationToken))
                 .OrderByDescending(ue => ue.Score)
-                .Select((ue, index) => new LeaderboardRecord(index + 1, ue.UserId, ue.Name, ue.Score));
+                .Select((ue, index) => new LeaderboardRecord(index + 1, ue.UserId, ue.Name, ue.Score, ue.RestTime,
+                    ue.AverageDifficulty, ue.ChartsPlayed));
         }
 
-        private sealed record UserEntryDto(Guid UserId, string Name, int Score)
+        private sealed record UserEntryDto(Guid UserId, string Name, int Score, TimeSpan RestTime, int ChartsPlayed,
+            double AverageDifficulty)
         {
         }
     }

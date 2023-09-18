@@ -139,5 +139,15 @@ public sealed class ChartAttemptDbContext : DbContext
             .HasOne<ChartEntity>()
             .WithMany()
             .HasForeignKey(e => e.ChartId);
+
+        builder.Entity<UserTournamentSessionEntity>()
+            .Property(u => u.RestTime)
+            .HasDefaultValue(TimeSpan.Zero);
+        builder.Entity<UserTournamentSessionEntity>()
+            .Property(u => u.ChartsPlayed)
+            .HasDefaultValue(0);
+        builder.Entity<UserTournamentSessionEntity>()
+            .Property(u => u.AverageDifficulty)
+            .HasDefaultValue(1);
     }
 }
