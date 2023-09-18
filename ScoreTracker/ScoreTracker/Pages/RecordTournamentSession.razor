@@ -115,7 +115,8 @@
     private IEnumerable<string> SongNames => ValidCharts.Select(c => c.Song.Name.ToString()).Distinct(StringComparer.OrdinalIgnoreCase);
     private bool _showAddDialog = false;
     private bool _isSaving = false;
-    private Task<IEnumerable<string>> Search(string song) => Task.FromResult(SongNames.Where(n => n.ToLower().Contains(song.ToLower())).ToArray().AsEnumerable());
+    private Task<IEnumerable<string>> Search(string song) =>
+        Task.FromResult(SongNames.Where(n => n.ToLower().Contains(song?.ToLower()??"")).ToArray().AsEnumerable());
     private async Task SelectSong(string songName)
     {
         songName = songName ?? string.Empty;
