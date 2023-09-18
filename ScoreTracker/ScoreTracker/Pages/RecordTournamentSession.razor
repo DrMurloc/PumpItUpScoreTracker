@@ -19,7 +19,7 @@
                     <MudCardMedia Height="100" Image="@entry.Chart.Song.ImagePath.ToString()" />
                     <MudCardActions>
                         <MudText>
-                            @entry.Score
+                            @entry.SessionScore
                         </MudText>
                         <MudTooltip Text="Remove">
                             <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Delete" OnClick="@(()=>_session.Remove(entry))"></MudIconButton>
