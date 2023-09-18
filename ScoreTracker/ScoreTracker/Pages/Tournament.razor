@@ -1,0 +1,98 @@
+﻿@page "/Tournament/{TournamentId:guid}"
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Enums
+<PageTitle>Tournament</PageTitle>
+@if (_isLoaded)
+{
+    
+    <MudText Typo="Typo.h3">@_configuration.Name</MudText>
+    <MudTable T="LeaderboardRecord" Items="_leaderboard" FixedHeader="true" Striped="true">
+        <HeaderContent>
+            <MudTh>Place</MudTh>
+            <MudTh>UserName</MudTh>
+            <MudTh>Score</MudTh>
+            <MudTh>Chart Count</MudTh>
+            <MudTh>Average Difficulty</MudTh>
+            <MudTh>Rest Time</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Place</MudTd>
+            <MudTd>@context.UserName</MudTd>
+            <MudTd>@context.TotalScore</MudTd>
+            <MudTd><MudButton StartIcon="@Icons.Material.Filled.ViewList" Color="Color.Primary" Variant="Variant.Outlined" Disabled="_isLoadingUser" OnClick="()=>ShowUserCharts(context.UserId)">@context.ChartsPlayed Charts</MudButton></MudTd>
+            <MudTd>@TwoDecimalPlaces(context.AverageDifficulty)</MudTd>
+            <MudTd>@RestTime(context.TotalRestTime)</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[]{50, 100}" />
+        </PagerContent>
+        <ChildRowContent>
+            <MudTr>
+                <td colspan="6">
+                @if (_showingSession != null && _showingSession.UsersId == context.UserId)
+                {
+                    <MudGrid>
+                        @foreach (var entry in _showingSession.Entries)
+                        {
+
+                            <MudItem xs="6" sm="3" md="2">
+                                <MudCard>
+                                    <MudCardMedia Height="100" Image="@entry.Chart.Song.ImagePath.ToString()"/>
+                                    <MudCardContent>
+                                        <MudText>@entry.Chart.DifficultyString</MudText>
+                                        <MudText>@entry.Score</MudText>
+                                        <MudText>@entry.Score.LetterGrade.GetName() @entry.Plate.GetShorthand()</MudText>
+                                        @if (entry.IsBroken)
+                                        {
+                                            <MudText>Broken</MudText>
+                                        }
+                                        <MudText>
+                                            @entry.SessionScore Points
+                                        </MudText>
+                                        <MudText>
+                                            @(TwoDecimalPlaces(entry.SessionScore / (double)entry.Chart.Song.Duration.TotalSeconds)) PPS
+                                        </MudText>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                }
+                </td>
+            </MudTr>
+        </ChildRowContent>
+    </MudTable>
+}
+@inject ITournamentRepository TournamentRepository;
+@code
+{
+    private IEnumerable<LeaderboardRecord> _leaderboard = Array.Empty<LeaderboardRecord>();
+    private string RestTime(TimeSpan time) => time.ToString(@"h\:mm\:ss");
+    private string TwoDecimalPlaces(double value) => $"{value:F2}";
+    private TournamentConfiguration _configuration = new TournamentConfiguration();
+    private bool _isLoaded = false;
+    private bool _isLoadingUser = false;
+    private TournamentSession? _showingSession = null;
+    private async Task ShowUserCharts(Guid showingUser)
+    {
+        if (_showingSession != null && _showingSession.UsersId == showingUser)
+        {
+            _showingSession = null;
+            return;
+        }
+        _isLoadingUser = true;
+        _showingSession = await TournamentRepository.GetSession(TournamentId, showingUser, CancellationToken.None);
+        _isLoadingUser = false;
+    }
+    [Parameter] public Guid TournamentId { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        _configuration = await TournamentRepository.GetTournament(TournamentId,CancellationToken.None);
+        _leaderboard = (await TournamentRepository.GetLeaderboardRecords(TournamentId, CancellationToken.None)).OrderByDescending(l => l.Place).ToArray();
+        _isLoaded = true;
+
+
+    }
+}
