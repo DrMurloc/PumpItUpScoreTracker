@@ -116,7 +116,8 @@
     private bool _showAddDialog = false;
     private bool _isSaving = false;
     private Task<IEnumerable<string>> Search(string song) =>
-        Task.FromResult(SongNames.Where(n => n.ToLower().Contains(song?.ToLower()??"")).ToArray().AsEnumerable());
+        Task.FromResult(SongNames.Where(n => n.ToLower().Contains(song?.ToLower()??""))
+            .OrderBy(n=>n.Equals(song,StringComparison.OrdinalIgnoreCase)?0:1).ToArray().AsEnumerable());
     private async Task SelectSong(string songName)
     {
         songName = songName ?? string.Empty;
