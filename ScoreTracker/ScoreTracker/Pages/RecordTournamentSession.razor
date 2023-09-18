@@ -118,12 +118,12 @@
     private Task<IEnumerable<string>> Search(string song) => Task.FromResult(SongNames.Where(n => n.ToLower().Contains(song.ToLower())).ToArray().AsEnumerable());
     private async Task SelectSong(string songName)
     {
-
+        songName = songName ?? string.Empty;
         if (_autocomplete.IsOpen)
         {
             await _autocomplete.ToggleMenu();
         }
-        Charts = ValidCharts.Where(c => c.Song.Name == songName).OrderBy(c => c.Type).ThenBy(c => (int)c.Level).ToArray();
+        Charts = ValidCharts.Where(c => c.Song.Name.ToString() == songName).OrderBy(c => c.Type).ThenBy(c => (int)c.Level).ToArray();
         _songSearchString = songName;
 
     }
