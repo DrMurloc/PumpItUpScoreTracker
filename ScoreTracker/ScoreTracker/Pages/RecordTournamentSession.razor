@@ -1,11 +1,16 @@
 ﻿@page "/Tournament/{TournamentId:guid}/Record"
 @using ScoreTracker.Domain.SecondaryPorts
 @using MediatR
+@using Microsoft.AspNetCore.Mvc.ModelBinding
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Models
 
 <PageTitle>Submit Tournament Session</PageTitle>
+@if (CurrentUser.IsLoggedIn && CurrentUser.User.IsAdmin && _session!=null)
+{
+    <MudTextField T="string" Value="_session.UsersId.ToString()" ValueChanged="SetUser"  Label="User Id"></MudTextField>
+}
 @if (_session != null)
 {
     <MudGrid>
@@ -31,16 +36,82 @@
         <MudItem xs="6" sm="3" md="2">
             <MudButton Disabled="_isSaving" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Variant="Variant.Outlined" OnClick="ShowAddDialog">Add Chart</MudButton>
         </MudItem>
-        <MudItem xs="12">
-            <MudRadioGroup @bind-SelectedOption="_validation">
-                <MudRadio Option="@("Unverified")" Color="Color.Primary">Unverified</MudRadio>
-                <MudRadio Option="@("Photo")" Color="Color.Primary" Disabled="true">Photo Verified (coming soon)</MudRadio>
-                <MudRadio Option="@("Video")" Color="Color.Primary" Disabled="true">Video Verified (coming soon)</MudRadio>
-                <MudRadio Option="@("In Person")" Color="Color.Primary" Disabled="true">In Person (coming soon)</MudRadio>
-            </MudRadioGroup>
+    </MudGrid>
+    <MudGrid>
+        <MudItem xs="6">
+            <MudSelect T="SubmissionVerificationType" Label="Verification Type" Value="_session.VerificationType" ValueChanged="t=>_session.SetVerificationType(t)">
+                <MudSelectItem T="SubmissionVerificationType" Value="SubmissionVerificationType.Unverified">Unverified</MudSelectItem>
+                <MudSelectItem T="SubmissionVerificationType" Value="SubmissionVerificationType.Photo">Photos</MudSelectItem>
+                <MudSelectItem T="SubmissionVerificationType" Value="SubmissionVerificationType.Video">Video</MudSelectItem>
+                @if (CurrentUser.IsLoggedIn && CurrentUser.User.IsAdmin)
+                {
+                    <MudSelectItem T="SubmissionVerificationType" Value="SubmissionVerificationType.InPerson">In Person</MudSelectItem>
+                }
+            </MudSelect>
         </MudItem>
+        <MudItem xs="6">
+            @if (_session.VerificationType is SubmissionVerificationType.Photo or SubmissionVerificationType.Video)
+            {
+                <MudItem xs="6">
+                @if (!CurrentUser.User.IsAdmin)
+                {
+                        <MudText>Status: @(_session.NeedsApproval ? "Pending Approval" : "Approved!")</MudText>
+                
+                }
+                else
+                {
+                    @if (_session.NeedsApproval)
+                    {
+                        <MudButton StartIcon="@Icons.Material.Filled.Approval" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => _session.Approve()">Approve</MudButton>
+                    }
+                    else
+                    {
+                        <MudText>Approved!</MudText>
+                    }
+                }
+                </MudItem>
+            }
+        </MudItem>
+        @if (_session.VerificationType is SubmissionVerificationType.Video or SubmissionVerificationType.InPerson)
+        {
+            <MudItem xs="12">
+                <MudTextField T="string" @bind-Value="_videoUrl" Required="_session.VerificationType==SubmissionVerificationType.Video" AdornmentIcon="@Icons.Material.Filled.VideoFile" Label="Video URL"></MudTextField>
+            </MudItem>
+        }
+        @if (_session.VerificationType == SubmissionVerificationType.Photo)
+        {
+            @foreach (var photo in _session.PhotoUrls)
+            {
+                <MudItem xs="6" sm="3" md="2">
+                    <MudCard>
+                        <MudCardMedia Height="100" Image="@photo.ToString()" />
+                        <MudCardActions>
+                            <MudTooltip Text="Remove">
+                                <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Delete" OnClick="@(()=>_session.RemovePhoto(photo))"></MudIconButton>
+                            </MudTooltip>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+            <MudItem xs="6" sm="3" md="2">
+                <MudFileUpload T="IReadOnlyList<IBrowserFile>" Accept=".png, .gif, .jpg, .jpeg," FilesChanged="UploadFiles">
+                    <ButtonTemplate>
+                        <MudButton HtmlTag="label"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.CloudUpload"
+                                   for="@context">
+                            Upload Images
+                        </MudButton>
+                    </ButtonTemplate>
+                </MudFileUpload>
+            </MudItem>
+        }
         <MudItem xs="12">
             <MudButton Disabled="_isSaving" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary" Variant="Variant.Outlined" OnClick="Save">Save</MudButton>
+        </MudItem>
+        <MudItem xs="12">
+            <MudText>Clicking save will make your score public on the leaderboard, even if your profile is set to private. Once approved all Photos and Videos will be public as well.</MudText>
         </MudItem>
     </MudGrid>
     <MudDialog @bind-IsVisible="_showAddDialog">
@@ -55,7 +126,7 @@
                                      CoerceText="true"
                                      Label="Song"
                                      SearchFunc="Search"
-                                     ValueChanged="@SelectSong">
+                                     ValueChanged="@SelectSong" MaxItems="100">
 
                     </MudAutocomplete>
                 </MudItem>
@@ -95,11 +166,15 @@
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
 @inject ITournamentRepository TournamentRepository;
+@inject IFileUploadClient FileUpload;
 @inject NavigationManager NavManager;
 @inject ISnackbar Snackbar;
+@inject ILogger<RecordTournamentSession> Logger;
 @code
 {
     private string _validation = "Unverified";
+    private string _videoUrl = string.Empty;
+    public Uri? VideoUrl => Uri.TryCreate(_videoUrl, UriKind.Absolute, out var result) ? result : null;
     private MudAutocomplete<string> _autocomplete;
     [Parameter] public Guid TournamentId { get; set; }
     private PhoenixPlate _plate = PhoenixPlate.MarvelousGame;
@@ -118,6 +193,55 @@
     private Task<IEnumerable<string>> Search(string song) =>
         Task.FromResult(SongNames.Where(n => n.ToLower().Contains(song?.ToLower()??""))
             .OrderBy(n=>n.Equals(song,StringComparison.OrdinalIgnoreCase)?0:1).ToArray().AsEnumerable());
+
+        private const long MaxFileSize = 20000000;
+
+    private async Task UploadFiles(IReadOnlyList<IBrowserFile> files)
+    {
+        if (_session == null)
+        {
+            return;
+        }
+        var hasOversizedFile = false;
+        var hasError = false;
+        foreach (var file in files)
+        {
+
+            if (file.Size > MaxFileSize)
+            {
+                hasOversizedFile = true;
+                continue;
+            }
+            try
+            {
+                
+                var path = $"tournaments/{_configuration.Id}/users/{_session.UsersId}/{Guid.NewGuid()}.{file.Name.Split('.')[^1]}";
+                var url = await FileUpload.UploadFile(path, file.OpenReadStream(MaxFileSize));
+                _session.AddPhoto(url);
+            }
+            catch (Exception e)
+            {
+                hasError = true;
+                Logger.LogError(e,$"There was an error while uploading a photo: {e.Message} - {file.Name} {file.Size}");
+            }
+        }
+        if (hasError)
+        {
+            Snackbar.Add($"There was an error while uploading at least one of your scores, please try again. If the problem persists contact DrMurloc", Severity.Error);
+        }
+        if (hasOversizedFile)
+        {
+            Snackbar.Add($"One of your files was more than 20MB, please reduce your file size and try again.", Severity.Error);
+        }
+    }
+    private async Task SetUser(string userIdString)
+    {
+        if (!Guid.TryParse(userIdString, out var userId))
+        {
+            return;
+        }
+        await LoadUser(userId);
+    }
     private async Task SelectSong(string songName)
     {
         songName = songName ?? string.Empty;
@@ -150,10 +274,31 @@
 
     private async Task Save()
     {
+        if (_session == null)
+        {
+            return;
+        }
+        if (_session.VerificationType == SubmissionVerificationType.Video && VideoUrl == null)
+        {
+            Snackbar.Add("You must input a link to a video of your attempt.",Severity.Warning);
+            return;
+        }
+        if (_session.VerificationType == SubmissionVerificationType.Photo && !_session.PhotoUrls.Any())
+        {
+            Snackbar.Add("You must submit at least one photo.", Severity.Warning);
+            return;
+        }
         _isSaving = true;
-        await TournamentRepository.SaveSession(_session!, CancellationToken.None);
+        _session.VideoUrl= VideoUrl;
+        await TournamentRepository.SaveSession(_session, CancellationToken.None);
         _isSaving = false;
         Snackbar.Add("Session Saved!", Severity.Success);
+    }
+
+    private async Task LoadUser(Guid userId)
+    {
+        _session = await TournamentRepository.GetSession(TournamentId, userId, CancellationToken.None);
+        _videoUrl = _session.VideoUrl?.ToString() ?? "";
     }
     protected override async Task OnInitializedAsync()
     {
@@ -162,7 +307,7 @@
             NavManager.NavigateTo("/Tournaments");
         }
         _configuration = await Mediator.Send(new GetTournamentQuery(TournamentId));
-        _session = await TournamentRepository.GetSession(TournamentId, CurrentUser.User.Id,CancellationToken.None);
         _allCharts = await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix));
+        await LoadUser(CurrentUser.User.Id);
     }
 }

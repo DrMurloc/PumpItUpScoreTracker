@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using ScoreTracker.Domain.Enums;
 
 namespace ScoreTracker.Data.Persistence.Entities
 {
@@ -21,5 +22,8 @@ namespace ScoreTracker.Data.Persistence.Entities
         [Required] public TimeSpan RestTime { get; set; } = TimeSpan.MinValue;
         [Required] public double AverageDifficulty { get; set; } = 1;
         [Required] public int ChartsPlayed { get; set; } = 0;
+        public string? VideoUrl { get; set; }
+        [Required] public string VerificationType { get; set; } = SubmissionVerificationType.Unverified.ToString();
+        [Required] public bool NeedsApproval { get; set; } = false;
     }
 }

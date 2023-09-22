@@ -27,9 +27,6 @@ namespace ScoreTracker.Data.Repositories
         private static string TourneyCacheKey = $@"{nameof(EFTournamentRepository)}_Tournies";
         private static string TourneyIdCacheKey(Guid id) => $@"{nameof(EFTournamentRepository)}_Tourney_{id}";
 
-        private sealed record TouramentParticpantCount(Guid TournamentId, int count)
-        {
-        }
 
         public async Task<IEnumerable<TournamentRecord>> GetAllTournaments(CancellationToken cancellationToken)
         {
@@ -101,6 +98,9 @@ namespace ScoreTracker.Data.Repositories
                     RestTime = session.CurrentRestTime,
                     ChartsPlayed = session.Entries.Count(),
                     AverageDifficulty = session.Entries.Average(e => e.Chart.Level),
+                    NeedsApproval = session.NeedsApproval,
+                    VideoUrl = session.VideoUrl?.ToString(),
+                    VerificationType = session.VerificationType.ToString(),
                     ChartEntries = JsonSerializer.Serialize(session.Entries.Select(e => new SessionEntryEntity
                     {
                         ChartId = e.Chart.Id,
@@ -115,7 +115,10 @@ namespace ScoreTracker.Data.Repositories
             {
                 entity.SessionScore = session.TotalScore;
                 entity.RestTime = session.CurrentRestTime;
+                entity.NeedsApproval = session.NeedsApproval;
+                entity.VerificationType = session.VerificationType.ToString();
                 entity.ChartsPlayed = session.Entries.Count();
+                entity.VideoUrl = session.VideoUrl?.ToString();
                 entity.AverageDifficulty = session.Entries.Average(e => e.Chart.Level);
                 entity.ChartEntries = JsonSerializer.Serialize(session.Entries.Select(e => new SessionEntryEntity
                 {
@@ -127,6 +130,23 @@ namespace ScoreTracker.Data.Repositories
                 }));
             }
 
+            var existingPhotos = await _database.PhotoVerification
+                .Where(p => p.TournamentId == session.TournamentId && p.UserId == session.UsersId)
+                .ToArrayAsync(cancellationToken);
+
+            var newUrls = session.PhotoUrls.Select(u => u.ToString()).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var toDelete = existingPhotos.Where(p => !newUrls.Contains(p.PhotoUrl));
+            var toCreate = newUrls.Where(u =>
+                    !existingPhotos.Any(p => p.PhotoUrl.Equals(u, StringComparison.OrdinalIgnoreCase)))
+                .Select(p => new PhotoVerificationEntity
+                {
+                    Id = Guid.NewGuid(),
+                    PhotoUrl = p,
+                    TournamentId = session.TournamentId,
+                    UserId = session.UsersId
+                });
+            _database.PhotoVerification.RemoveRange(toDelete);
+            await _database.PhotoVerification.AddRangeAsync(toCreate, cancellationToken);
             await _database.SaveChangesAsync(cancellationToken);
         }
 
@@ -148,24 +168,53 @@ namespace ScoreTracker.Data.Repositories
                 cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
             var entries = entryEntities.Select(e => new TournamentSession.Entry(charts[e.ChartId], e.Score,
                 Enum.Parse<PhoenixPlate>(e.Plate), e.IsBroken, e.SessionScore));
-            return new TournamentSession(userId, tournamentConfig, entries);
+            var session = new TournamentSession(userId, tournamentConfig, entries);
+            session.SetVerificationType(Enum.Parse<SubmissionVerificationType>(entity.VerificationType));
+            if (Uri.TryCreate(entity.VideoUrl, UriKind.Absolute, out var videoUrl))
+            {
+                session.VideoUrl = videoUrl;
+            }
+
+            var photos = await _database.PhotoVerification
+                .Where(p => p.TournamentId == tournamentId && p.UserId == userId)
+                .ToArrayAsync(cancellationToken);
+            foreach (var photo in photos.Select(p => p.PhotoUrl))
+            {
+                if (!Uri.TryCreate(photo, UriKind.Absolute, out var photoUrl))
+                {
+                    continue;
+                }
+
+                session.PhotoUrls.Add(photoUrl);
+            }
+
+            if (!entity.NeedsApproval)
+            {
+                session.Approve();
+            }
+
+            return session;
         }
 
         public async Task<IEnumerable<LeaderboardRecord>> GetLeaderboardRecords(Guid tournamentId,
             CancellationToken cancellationToken)
         {
             return (await (from uts in _database.UserTournamentSession
-                    join u in _database.User on uts.UserId equals u.Id
-                    where uts.TournamentId == tournamentId
-                    select new UserEntryDto(u.Id, u.Name, uts.SessionScore, uts.RestTime, uts.ChartsPlayed,
-                        uts.AverageDifficulty)).ToArrayAsync(cancellationToken))
+                        join u in _database.User on uts.UserId equals u.Id
+                        where uts.TournamentId == tournamentId
+                        select new UserEntryDto(u.Id, u.Name, uts.SessionScore, uts.RestTime, uts.ChartsPlayed,
+                            uts.AverageDifficulty, uts.VerificationType, uts.NeedsApproval, uts.VideoUrl))
+                    .ToArrayAsync(cancellationToken))
                 .OrderByDescending(ue => ue.Score)
                 .Select((ue, index) => new LeaderboardRecord(index + 1, ue.UserId, ue.Name, ue.Score, ue.RestTime,
-                    ue.AverageDifficulty, ue.ChartsPlayed));
+                    ue.AverageDifficulty, ue.ChartsPlayed, Enum.Parse<SubmissionVerificationType>(ue.VerificationType),
+                    ue.NeedsApproval,
+                    ue.VideoUrl == null ? null :
+                    Uri.TryCreate(ue.VideoUrl, UriKind.Absolute, out var vidUrl) ? vidUrl : null));
         }
 
         private sealed record UserEntryDto(Guid UserId, string Name, int Score, TimeSpan RestTime, int ChartsPlayed,
-            double AverageDifficulty)
+            double AverageDifficulty, string VerificationType, bool NeedsApproval, string? VideoUrl)
         {
         }
     }

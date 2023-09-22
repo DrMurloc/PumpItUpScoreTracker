@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Data.Persistence.Entities;
+using ScoreTracker.Domain.Enums;
 
 namespace ScoreTracker.Data.Persistence;
 
@@ -35,6 +36,7 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<CoOpRatingEntity> CoOpRating { get; set; }
     public DbSet<TournamentEntity> Tournament { get; set; }
     public DbSet<UserTournamentSessionEntity> UserTournamentSession { get; set; }
+    public DbSet<PhotoVerificationEntity> PhotoVerification { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -149,5 +151,13 @@ public sealed class ChartAttemptDbContext : DbContext
         builder.Entity<UserTournamentSessionEntity>()
             .Property(u => u.AverageDifficulty)
             .HasDefaultValue(1);
+
+        builder.Entity<UserTournamentSessionEntity>()
+            .Property(u => u.NeedsApproval)
+            .HasDefaultValue(true);
+
+        builder.Entity<UserTournamentSessionEntity>()
+            .Property(u => u.VerificationType)
+            .HasDefaultValue(SubmissionVerificationType.Unverified.ToString());
     }
 }

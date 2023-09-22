@@ -19,7 +19,8 @@ public static class RegistrationExtensions
             .AddTransient<IUserAccessService, UserAccessService>();
     }
 
-    public static IServiceCollection AddInfrastructure(this IServiceCollection builder, SqlConfiguration configuration)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection builder,
+        AzureBlobConfiguration blobConfig, SqlConfiguration configuration)
     {
         foreach (var implementationType in typeof(EFChartRepository).Assembly.GetTypes()
                 )
@@ -27,6 +28,7 @@ public static class RegistrationExtensions
                      .Where(i => i.Assembly == typeof(IChartRepository).Assembly))
             builder.AddTransient(interfaceType, implementationType);
         builder.Configure<SqlConfiguration>(o => { o.ConnectionString = configuration.ConnectionString; });
+        builder.Configure<AzureBlobConfiguration>(o => { o.ConnectionString = blobConfig.ConnectionString; });
         return builder.AddDbContext<ChartAttemptDbContext>(o => { o.UseSqlServer(configuration.ConnectionString); });
     }
 }

@@ -16,6 +16,7 @@
             <MudTh>Chart Count</MudTh>
             <MudTh>Average Difficulty</MudTh>
             <MudTh>Rest Time</MudTh>
+            <MudTh>Verification</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.Place</MudTd>
@@ -24,6 +25,39 @@
             <MudTd><MudButton StartIcon="@Icons.Material.Filled.ViewList" Color="Color.Primary" Variant="Variant.Outlined" Disabled="_isLoadingUser" OnClick="()=>ShowUserCharts(context.UserId)">@context.ChartsPlayed Charts</MudButton></MudTd>
             <MudTd>@TwoDecimalPlaces(context.AverageDifficulty)</MudTd>
             <MudTd>@RestTime(context.TotalRestTime)</MudTd>
+            <MudTd>
+                @if (context.NeedsApproval)
+                {
+                    <MudText>Pending</MudText>
+                }
+                else
+                {
+                    @switch (context.VerificationType)
+                    {
+                        case SubmissionVerificationType.Unverified:
+                            <MudText>None</MudText>
+                            break;
+                        case SubmissionVerificationType.Photo:
+                            <MudButton StartIcon="@Icons.Material.Filled.PhotoLibrary" Color="Color.Primary" OnClick="()=>ShowPhotos(context.UserId)">Photos</MudButton>
+                            break;
+                        case SubmissionVerificationType.Video:
+                            <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.MusicVideo" Href="@(context.VideoUrl?.ToString()??"")" Target="_blank">Video</MudButton>
+                            break;
+                        case SubmissionVerificationType.InPerson:
+                            @if (context.VideoUrl != null)
+                            {
+                                <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.MusicVideo" Href="@(context.VideoUrl?.ToString()??"")" Target="_blank">In Person</MudButton>
+                            }
+                            else
+                            {
+                                <MudText>In Person</MudText>
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            </MudTd>
         </RowTemplate>
         <PagerContent>
             <MudTablePager PageSizeOptions="new int[]{50, 100}" />
@@ -65,6 +99,25 @@
         </ChildRowContent>
     </MudTable>
 }
+<MudDialog @bind-IsVisible="_showPhotoDialog">
+    <DialogContent>
+        @if (_photoSession != null)
+        {
+            <MudGrid>
+                @foreach (var item in _photoSession.PhotoUrls)
+                {
+                    <MudItem xs="6" sm="4" md="3">
+                        <MudImage Src="@item.ToString()" ObjectFit="ObjectFit.Contain" Height="200"></MudImage>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showPhotoDialog = false">Close</MudButton>
+    </DialogActions>
+</MudDialog>
 @inject ITournamentRepository TournamentRepository;
 @code
 {
@@ -74,7 +127,17 @@
     private TournamentConfiguration _configuration = new TournamentConfiguration();
     private bool _isLoaded = false;
     private bool _isLoadingUser = false;
+    private bool _showPhotoDialog = false;
+    private TournamentSession? _photoSession;
     private TournamentSession? _showingSession = null;
+
+    private async Task ShowPhotos(Guid userId)
+    {
+        _isLoadingUser = true;
+        _photoSession = await TournamentRepository.GetSession(TournamentId, userId, CancellationToken.None);
+        _showPhotoDialog = true;
+        _isLoadingUser = false;
+    }
     private async Task ShowUserCharts(Guid showingUser)
     {
         if (_showingSession != null && _showingSession.UsersId == showingUser)
@@ -90,7 +153,7 @@
     protected override async Task OnInitializedAsync()
     {
         _configuration = await TournamentRepository.GetTournament(TournamentId,CancellationToken.None);
-        _leaderboard = (await TournamentRepository.GetLeaderboardRecords(TournamentId, CancellationToken.None)).OrderByDescending(l => l.Place).ToArray();
+        _leaderboard = (await TournamentRepository.GetLeaderboardRecords(TournamentId, CancellationToken.None)).OrderBy(l => l.Place).ToArray();
         _isLoaded = true;
 
 

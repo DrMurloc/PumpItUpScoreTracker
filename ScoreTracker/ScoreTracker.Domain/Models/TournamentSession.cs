@@ -5,6 +5,46 @@ namespace ScoreTracker.Domain.Models
 {
     public sealed class TournamentSession
     {
+        public bool NeedsApproval { get; private set; } = true;
+        public SubmissionVerificationType? ApprovedVerificationType { get; private set; }
+
+        public void Approve()
+        {
+            NeedsApproval = false;
+            ApprovedVerificationType = VerificationType;
+        }
+
+        public SubmissionVerificationType VerificationType { get; private set; }
+        public ICollection<Uri> PhotoUrls { get; } = new List<Uri>();
+        public Uri? VideoUrl { get; set; }
+
+        public void AddPhoto(Uri photo)
+        {
+            PhotoUrls.Add(photo);
+            NeedsApproval = true;
+        }
+
+        public void RemovePhoto(Uri photo)
+        {
+            PhotoUrls.Remove(photo);
+            NeedsApproval = true;
+        }
+
+        public void SetVerificationType(SubmissionVerificationType type)
+        {
+            if (type == SubmissionVerificationType.InPerson || type == SubmissionVerificationType.Unverified ||
+                type == ApprovedVerificationType)
+            {
+                NeedsApproval = false;
+            }
+            else
+            {
+                NeedsApproval = true;
+            }
+
+            VerificationType = type;
+        }
+
         public Guid UsersId { get; }
         public Guid TournamentId => _configuration.Id;
         private readonly TournamentConfiguration _configuration;
@@ -62,6 +102,7 @@ namespace ScoreTracker.Domain.Models
         public void Remove(Entry entry)
         {
             Entries.Remove(entry);
+            NeedsApproval = true;
         }
 
         public void Add(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)
@@ -71,6 +112,7 @@ namespace ScoreTracker.Domain.Models
                 throw new ArgumentException($"{chart.Song.Name} {chart.DifficultyString} is invalid for this session");
             }
 
+            NeedsApproval = true;
             Entries.Add(
                 new Entry(chart, score, plate, isBroken, _configuration.GetScore(chart, score, plate, isBroken)));
         }

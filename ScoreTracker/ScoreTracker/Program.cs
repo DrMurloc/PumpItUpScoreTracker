@@ -52,7 +52,8 @@ builder.Services.AddBlazorApplicationInsights()
     .AddHttpContextAccessor()
     .AddHttpClient()
     .AddCore()
-    .AddInfrastructure(builder.Configuration.GetSection("SQL").Get<SqlConfiguration>())
+    .AddInfrastructure(builder.Configuration.GetSection("AzureBlob").Get<AzureBlobConfiguration>(),
+        builder.Configuration.GetSection("SQL").Get<SqlConfiguration>())
     .AddTransient<IDateTimeOffsetAccessor, DateTimeOffsetAccessor>()
     .AddControllers();
 
