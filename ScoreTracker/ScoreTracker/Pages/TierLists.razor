@@ -112,12 +112,13 @@ else
     <DialogActions>
         <MudSpacer></MudSpacer>
         <MudTooltip Text="Report Low Quality, Broken, or Incorrect Video">
-            <MudButton Href="mailto:sharkingbird@gmail.com" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report">Report Video</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report" OnClick="NotifyBadVideo">Report Video</MudButton>
         </MudTooltip>
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">Close</MudButton>
     </DialogActions>
 </MudDialog>
-
+@inject IAdminNotificationClient Notifications;
+@inject ISnackbar Snackbar;
 @code {
     private MixEnum _currentMix = MixEnum.Phoenix;
     private ICollection<Chart> _overratedCharts = Array.Empty<Chart>();
@@ -135,6 +136,13 @@ else
     private bool _showVideoDialog = false;
     private bool _showEditDialog = false;
     private string _currentVideo = "";
+    private string _currentVideoDescription = string.Empty;
+
+    private async Task NotifyBadVideo()
+    {
+        await Notifications.NotifyAdmin($"The video for{_currentVideoDescription} was reported", CancellationToken.None);
+        Snackbar.Add("Notification was sent", Severity.Success);
+    }
     private CoOpSortType _coOpSortType = CoOpSortType.Average;
     private ISet<Guid> _passes = new HashSet<Guid>();
     private Guid _selectedChartId = Guid.Empty;
@@ -166,10 +174,11 @@ else
         _showEditDialog = true;
         StateHasChanged();
     }
-    private void ShowVideo(string url)
+    private void ShowVideo(string url, Chart chart)
     {
         _showVideoDialog = true;
         _currentVideo = url;
+        _currentVideoDescription = $"{chart.Song.Name} - {chart.DifficultyString}";
         StateHasChanged();
     }
 

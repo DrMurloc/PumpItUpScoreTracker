@@ -38,7 +38,7 @@
                         @if (Videos.ContainsKey(chart.Id))
                         {
                             <MudTooltip Text="Open Embeded Video">
-                                <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(Videos[chart.Id]))"></MudIconButton>
+                                <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(Videos[chart.Id],chart))"></MudIconButton>
                             </MudTooltip>
                         }
                         else
@@ -77,7 +77,7 @@
     public IDictionary<Guid, string> Videos { get; set; } = new Dictionary<Guid, string>();
 
     [Parameter]
-    public Action<string> ShowVideo { get; set; } = s => { };
+    public Action<string, Chart> ShowVideo { get; set; } = (s,c) => { };
 
     [Parameter]
     public Action<Guid> OnEdit { get; set; } = g => { };

@@ -170,6 +170,7 @@
 @inject NavigationManager NavManager;
 @inject ISnackbar Snackbar;
 @inject ILogger<RecordTournamentSession> Logger;
+@inject IAdminNotificationClient Notifications;
 @code
 {
     private string _validation = "Unverified";
@@ -292,6 +293,10 @@
         _isSaving = true;
         _session.VideoUrl= VideoUrl;
         await TournamentRepository.SaveSession(_session, CancellationToken.None);
+        if (_session.NeedsApproval)
+        {
+            await Notifications.NotifyAdmin("There's a session that needs approved!", CancellationToken.None);
+        }
         _isSaving = false;
         Snackbar.Add("Session Saved!", Severity.Success);
     }

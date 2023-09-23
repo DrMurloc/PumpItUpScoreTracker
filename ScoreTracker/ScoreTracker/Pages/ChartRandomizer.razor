@@ -175,7 +175,7 @@
                     @if (_videos.ContainsKey(chart.Id))
                     {
                         <MudTooltip Text="Open Embeded Video">
-                            <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(chart.Id))"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(chart))"></MudIconButton>
                         </MudTooltip>
                     }
                     else
@@ -221,7 +221,7 @@
     <DialogActions>
         <MudSpacer></MudSpacer>
         <MudTooltip Text="Report Low Quality, Broken, or Incorrect Video">
-            <MudButton Href="mailto:sharkingbird@gmail.com" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report">Report Video</MudButton>
+            <MudButton OnClick="NotifyBadVideo" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report">Report Video</MudButton>
         </MudTooltip>
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">Close</MudButton>
     </DialogActions>
@@ -255,6 +255,7 @@
 @inject ISnackbar Snackbar;
 @inject ICurrentUserAccessor CurrentUser;
 @inject ILogger<ChartRandomizer> Logger;
+@inject IAdminNotificationClient Notifications;
 @code {
 
     private string CardStyle(int chartOrder) => _protectedCharts.Contains(chartOrder) ? $@"border-color:{Colors.Green.Darken1}" :
@@ -272,6 +273,7 @@
     private bool _separateDoubleLevels = false;
     private bool _showVideoDialog = false;
     private bool _showChartList = false;
+    private string _currentVideoDescription = string.Empty;
     private string _currentVideo = string.Empty;
     private string _filteredSongName = string.Empty;
     private string LevelLabel => _separateDoubleLevels ? "Singles Levels" : "Levels";
@@ -287,6 +289,11 @@
     private bool ShowDoublesLevels => _separateDoubleLevels && ((_chartTypeWeights.TryGetValue(ChartType.Double, out var d) && d > 0) ||
                                                                 (_chartTypeWeights.TryGetValue(ChartType.DoublePerformance, out var dp) && dp > 0));
 
+    private async Task NotifyBadVideo()
+    {
+        await Notifications.NotifyAdmin($"The video for{_currentVideoDescription} was reported", CancellationToken.None);
+        Snackbar.Add("Notification was sent", Severity.Success);
+    }
     private bool ShowSinglesLevels => (!_separateDoubleLevels && (
         (_chartTypeWeights.TryGetValue(ChartType.Single, out var d2) && d2 > 0) ||
          (_chartTypeWeights.TryGetValue(ChartType.SinglePerformance, out var dp2) && dp2 > 0) ||
@@ -347,9 +354,10 @@
         _pulledCharts = newCharts.ToArray();
         await SaveLastResults();
     }
-    private void ShowVideo(Guid chartId)
+    private void ShowVideo(Chart chart)
     {
-        _currentVideo = _videos[chartId];
+        _currentVideo = _videos[chart.Id];
+        _currentVideoDescription = $"{chart.Song.Name} {chart.DifficultyString}";
         _showVideoDialog = true;
     }
 

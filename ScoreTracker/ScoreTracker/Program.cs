@@ -53,7 +53,8 @@ builder.Services.AddBlazorApplicationInsights()
     .AddHttpClient()
     .AddCore()
     .AddInfrastructure(builder.Configuration.GetSection("AzureBlob").Get<AzureBlobConfiguration>(),
-        builder.Configuration.GetSection("SQL").Get<SqlConfiguration>())
+        builder.Configuration.GetSection("SQL").Get<SqlConfiguration>(),
+        builder.Configuration.GetSection("Sendgrid").Get<SendGridConfiguration>())
     .AddTransient<IDateTimeOffsetAccessor, DateTimeOffsetAccessor>()
     .AddControllers();
 
