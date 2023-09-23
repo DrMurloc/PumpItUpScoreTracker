@@ -28,7 +28,14 @@
             <MudTd>
                 @if (context.NeedsApproval)
                 {
-                    <MudText>Pending</MudText>
+                    @if (CurrentUser.IsLoggedInAsAdmin)
+                    {
+                        <MudButton Href="@UserSessionlink(context.UserId)" Color="Color.Primary" Variant="Variant.Filled">Pending</MudButton>
+                    }
+                    else
+                    {
+                        <MudText>Pending</MudText>
+                    }
                 }
                 else
                 {
@@ -119,6 +126,7 @@
     </DialogActions>
 </MudDialog>
 @inject ITournamentRepository TournamentRepository;
+@inject ICurrentUserAccessor CurrentUser;
 @code
 {
     private IEnumerable<LeaderboardRecord> _leaderboard = Array.Empty<LeaderboardRecord>();
@@ -130,6 +138,7 @@
     private bool _showPhotoDialog = false;
     private TournamentSession? _photoSession;
     private TournamentSession? _showingSession = null;
+    private string UserSessionlink(Guid userId) => $"/Tournament/{TournamentId}/Record?UserId={userId}";
 
     private async Task ShowPhotos(Guid userId)
     {

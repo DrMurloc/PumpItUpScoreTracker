@@ -177,6 +177,7 @@
     public Uri? VideoUrl => Uri.TryCreate(_videoUrl, UriKind.Absolute, out var result) ? result : null;
     private MudAutocomplete<string> _autocomplete;
     [Parameter] public Guid TournamentId { get; set; }
+    [Parameter][SupplyParameterFromQuery(Name = "UserId")] public Guid? UserId { get; set; }
     private PhoenixPlate _plate = PhoenixPlate.MarvelousGame;
     private bool _isBroken = false;
     private int _score = 0;
@@ -308,6 +309,11 @@
         }
         _configuration = await Mediator.Send(new GetTournamentQuery(TournamentId));
         _allCharts = await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix));
-        await LoadUser(CurrentUser.User.Id);
+        var userId = CurrentUser.User.Id;
+        if (CurrentUser.User.IsAdmin && UserId != null)
+        {
+            userId = UserId.Value;
+        }
+        await LoadUser(userId);
     }
 }

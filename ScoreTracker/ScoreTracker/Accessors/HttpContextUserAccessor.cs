@@ -37,6 +37,8 @@ public sealed class HttpContextUserAccessor : ICurrentUserAccessor
         await context.SignOutAsync();
         await context.SignInAsync(principal);
     }
+
+    public bool IsLoggedInAsAdmin => IsLoggedIn && User.IsAdmin;
 }
 
 public static class UserExtensions
