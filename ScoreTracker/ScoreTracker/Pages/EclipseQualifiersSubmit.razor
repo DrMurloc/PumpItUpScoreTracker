@@ -1,0 +1,284 @@
+﻿@page "/Eclipse/Qualifiers/Submit"
+@using ScoreTracker.Domain.SecondaryPorts
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.ValueTypes
+
+<PageTitle>Submit Eclipse Qualifiers Session</PageTitle>
+
+<MudGrid>
+    <MudItem xs="12" sm="8">
+        <MudText Typo="Typo.h3">Eclipse Qualifier Submission</MudText>
+    </MudItem>
+    <MudItem xs="12" sm="4">
+        <MudButton Href="/Eclipse/Qualifiers" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Leaderboard">To Leaderboard</MudButton>
+    </MudItem>
+    <MudItem xs="12">
+        <MudAutocomplete T="string" Label="Username (must match Discord or Start.GG name)" Value="_username" ValueChanged="SetUsername" SearchFunc="@(t=>Task.FromResult(_usernames.Where(u=>u.Contains(t,StringComparison.OrdinalIgnoreCase))))"/>
+    </MudItem>
+    @if (_currentQualifiers != null)
+    {
+        @foreach (var chart in Configuration.Charts.OrderBy(c => c.Level))
+        {
+            <MudItem xs="6" sm="3" md="2">
+                <MudCard>
+                    <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()" />
+                    <MudCardActions>
+                        <MudImage Src="@DifficultyBubblePath(chart.DifficultyString)" Height="40" ></MudImage>
+                        <MudSpacer></MudSpacer>
+                        <MudButton StartIcon="@Icons.Material.Filled.UploadFile" Variant="Variant.Outlined" Color="Color.Primary" OnClick="() => OpenSubmit(chart)">Submit</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    }
+</MudGrid>
+<MudDialog @bind-IsVisible="_showSubmit">
+    <DialogContent>
+        @if (_submittingChart != null)
+        {
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h5">@_submittingChart.Song.Name @_submittingChart.DifficultyString</MudText>
+                </MudItem>
+                @if (_currentQualifiers!=null && _currentQualifiers.Submissions.TryGetValue(_submittingChart.Id, out var submission))
+                {
+                    <MudItem xs="12">
+                        Current Score: @submission.Score (@_currentQualifiers.Rating(_submittingChart.Id) Points)
+                    </MudItem>
+                }
+                <MudItem xs="12">
+                    <MudRadioGroup T="MixEnum" @bind-SelectedOption="_addingMix">
+                        <MudRadio Option="@MixEnum.Phoenix" Color="Color.Primary">Phoenix</MudRadio>
+                        <MudRadio Option="@MixEnum.XX" Color="Color.Primary">XX</MudRadio>
+                    </MudRadioGroup>
+                </MudItem>
+                @if (_addingMix == MixEnum.Phoenix)
+                {
+                    <MudItem xs="12">
+                        <MudNumericField T="int" Min="0" Max="1000000" Label="Score" Value="_score" ValueChanged="i=>_score=i"></MudNumericField>
+                    </MudItem>
+                    @if (_score.LetterGrade < PhoenixLetterGrade.AA)
+                    {
+                        <MudItem xs="12">
+                            <MudText Color="Color.Warning">A grade of AA or higher is required.</MudText>
+                        </MudItem>
+                    }
+                }
+                else
+                {
+                    <MudItem xs="6">
+                        <MudNumericField T="int" Min="0" Max="2000" Label="Perfects" Value="_perfects" ValueChanged="i=>_perfects=i"></MudNumericField>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="int" Min="0" Max="2000" Label="Greats" Value="_greats" ValueChanged="i=>_greats=i"></MudNumericField>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="int" Min="0" Max="2000" Label="Goods" Value="_goods" ValueChanged="i=>_goods=i"></MudNumericField>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="int" Min="0" Max="2000" Label="Bads" Value="_bads" ValueChanged="i=>_bads=i"></MudNumericField>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="int" Min="0" Max="2000" Label="Misses" Value="_misses" ValueChanged="i=>_misses=i"></MudNumericField>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="int" Min="0" Max="2000" Label="Max Combo" Value="_maxCombo" ValueChanged="i=>_maxCombo=i"></MudNumericField>
+                    </MudItem>
+                    <MudItem xs="12">
+                        @if (Screen.IsValid)
+                        {
+                            <MudText>Phoenix Score (with note count adjustments): @(new ScoreScreen(_perfects + Configuration.NoteCountAdjustments[_submittingChart.Id], _greats, _goods, _bads, _misses, _maxCombo + Configuration.NoteCountAdjustments[_submittingChart.Id]).CalculatePhoenixScore)</MudText>
+                        }
+                    </MudItem>
+                    @if (Screen is { IsValid: true,CalculatePhoenixScore.LetterGrade: < PhoenixLetterGrade.AA })
+                    {
+                        <MudItem xs="12">
+                            <MudText Color="Color.Warning">A grade of AA or higher is required.</MudText>
+                        </MudItem>
+                    }
+                }
+                @if (_photoUrl != null)
+                {
+                    
+                    <MudItem xs="6" sm="3" md="2">
+                        <MudCard>
+                            <MudCardMedia Height="100" Image="@_photoUrl.ToString()" />
+                        </MudCard>
+                    </MudItem>
+                                     
+                }
+                <MudItem xs="6" sm="3" md="2">
+                    <MudFileUpload T="IBrowserFile" Accept=".png, .gif, .jpg, .jpeg," MaximumFileCount="1" FilesChanged="UploadFiles">
+                        <ButtonTemplate>
+                            <MudButton HtmlTag="label"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.CloudUpload"
+                                       for="@context">
+                                Upload Image
+                            </MudButton>
+                        </ButtonTemplate>
+                    </MudFileUpload>
+                </MudItem>   
+            </MudGrid>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="AddScore" Disabled="_isSaving || !Validated">Add</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showSubmit = false">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+@inject IMediator Mediator
+@inject IQualifiersRepository Qualifiers
+@inject ICurrentUserAccessor CurrentUser
+@inject ISnackbar Snackbar
+@inject IFileUploadClient FileUpload
+@inject ILogger<EclipseQualifiers> Logger
+@code
+{
+    public static QualifiersConfiguration Configuration = new QualifiersConfiguration(Array.Empty<Chart>(), new Dictionary<Guid, int>());
+    private UserQualifiers? _currentQualifiers;
+    private Chart? _submittingChart;
+    private bool _showSubmit = false;
+    private string _username = string.Empty;
+    private bool _isSaving = false;
+    private MixEnum _addingMix = MixEnum.Phoenix;
+    private StepCount _perfects = 0;
+    private StepCount _greats = 0;
+    private StepCount _goods = 0;
+    private StepCount _bads = 0;
+    private StepCount _misses = 0;
+    private StepCount _maxCombo = 0;
+    private ScoreScreen Screen => new ScoreScreen(_perfects, _greats, _goods, _bads, _misses, _maxCombo);
+    private PhoenixScore _score = 0;
+    private Uri? _photoUrl;
+    private IEnumerable<string> _usernames = Array.Empty<string>();
+
+    public string DifficultyBubblePath(string difficultyShorthand) =>
+        $"https://piuimages.arroweclip.se/difficulty/{difficultyShorthand.ToLower()}.png";
+    private const long MaxFileSize = 20000000;
+    private async Task SetUsername(string nameString)
+    {
+        _username = nameString;
+        if (Name.TryParse(nameString, out var name))
+        {
+            var qualifiers = await Qualifiers.GetQualifiers(name,Configuration);
+            if (qualifiers == null)
+            {
+                _currentQualifiers = new UserQualifiers(Configuration)
+                {
+                    UserName = nameString
+                };
+            }
+            else
+            {
+                _currentQualifiers = qualifiers;
+                _username = _currentQualifiers.UserName;
+            }
+        }
+    }
+
+    private bool Validated => _photoUrl != null && ((_addingMix == MixEnum.Phoenix && _score.LetterGrade >= PhoenixLetterGrade.AA) || (_addingMix == MixEnum.XX && Screen is { IsValid: true,CalculatePhoenixScore.LetterGrade: >= PhoenixLetterGrade.AA }));
+    private void OpenSubmit(Chart chart)
+    {
+        _submittingChart = chart;
+        _showSubmit = true;
+        Clear();
+        if (_currentQualifiers!=null && _currentQualifiers.Submissions.TryGetValue(chart.Id, out var submission))
+        {
+            _photoUrl = submission.PhotoUrl;
+        }
+    }
+
+    private void Clear()
+    {
+        _perfects = 0;
+        _greats = 0;
+        _goods = 0;
+        _bads = 0;
+        _misses = 0;
+        _maxCombo = 0;
+        _score = 0;
+        _photoUrl = null;
+    }
+
+    private async Task AddScore()
+    {
+        if (_submittingChart == null || _currentQualifiers==null || _photoUrl==null)
+        {
+            return;
+        }
+        var result = _addingMix == MixEnum.Phoenix ? _currentQualifiers.AddPhoenixScore(_submittingChart.Id, _score, _photoUrl)
+            : _currentQualifiers.AddXXScore(_submittingChart.Id, _perfects, _greats, _goods, _bads, _misses, _maxCombo, _photoUrl);
+        if (!result)
+        {
+            Snackbar.Add("Your previous score for this chart was higher!", Severity.Error);
+            return;
+        }
+        await Save();
+    }
+
+    private async Task Save()
+    {
+        if (_currentQualifiers == null)
+        {
+            return;
+        }
+        _isSaving = true;
+        await Qualifiers.SaveQualifiers(_currentQualifiers);
+        _isSaving = false;
+        Snackbar.Add($"Qualifier saved! Pending Approval!", Severity.Success);
+    }
+
+    private async Task UploadFiles(IBrowserFile file)
+    {
+        if (_submittingChart == null)
+        {
+            return;
+        }
+        if (file.Size > MaxFileSize)
+        {
+            Snackbar.Add($"Your file was more than 20MB, please reduce your file size and try again.", Severity.Error);
+            return;
+        }
+        try
+        {
+            var path = $"qualifiers/eclipse2023/{_username}/{Guid.NewGuid()}.{file.Name.Split('.')[^1]}";
+            _photoUrl= await FileUpload.UploadFile(path, file.OpenReadStream(MaxFileSize));
+
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add($"There was an error while uploading your image, please try again. If the problem persists contact DrMurloc", Severity.Error);
+            Logger.LogError(e, $"There was an error while uploading a photo: {e.Message} - {file.Name} {file.Size}");
+        }
+
+    }
+    private static readonly ISet<Guid> ChartIds = new HashSet<Guid>(new[]
+    {
+        new Guid("1D1606A0-BC43-417D-8867-B574D6F3E92C"),
+        new Guid("E2D622A3-ED44-456E-8572-29DA5AA90F92"),
+        new Guid("0FD50D96-1F0C-4CB0-A179-9282132EF9BB"),
+        new Guid("41DCE283-0C6B-4899-96DD-50CE10DC49B9"),
+        new Guid("4182B09A-F1C5-407E-8B2A-C4CF847654CF"),
+        new Guid("8501B01A-8D67-4CAF-AEA2-5AD0206A6255")
+    });
+
+    protected override async Task OnInitializedAsync()
+    {
+        var charts = await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, ChartIds: ChartIds));
+        Configuration = new QualifiersConfiguration(charts, new Dictionary<Guid, int>());
+        var allQuals = await Qualifiers.GetAllUserQualifiers(Configuration);
+        _usernames = allQuals.Select(u => u.UserName).Distinct().Select(s=>s.ToString()).ToArray();
+        if (CurrentUser.IsLoggedIn)
+        {
+            await SetUsername(CurrentUser.User.Name);
+        }
+
+    }
+}

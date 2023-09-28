@@ -37,6 +37,8 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<TournamentEntity> Tournament { get; set; }
     public DbSet<UserTournamentSessionEntity> UserTournamentSession { get; set; }
     public DbSet<PhotoVerificationEntity> PhotoVerification { get; set; }
+    public DbSet<UserQualifierEntity> UserQualifier { get; set; }
+    public DbSet<UserQualifierHistoryEntity> UserQualifierHistory { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

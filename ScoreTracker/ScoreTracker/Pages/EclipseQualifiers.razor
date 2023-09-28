@@ -1,0 +1,104 @@
+﻿@page "/Eclipse/Qualifiers"
+@using ScoreTracker.Domain.SecondaryPorts
+@using MediatR
+@using ScoreTracker.Domain.Models
+
+<PageTitle>Submit Eclipse Qualifiers Session</PageTitle>
+
+<MudGrid>
+    <MudItem xs="12" sm="8">
+        <MudText Typo="Typo.h3">Eclipse Qualifiers Leaderboard</MudText>
+    </MudItem>
+    <MudItem xs="12" sm="4">
+        <MudButton Href="/Eclipse/Qualifiers/Submit" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">Submission Page</MudButton>
+    </MudItem>
+
+</MudGrid>
+<MudTable T="Entry" Items="_leaderboard" FixedHeader="true" Striped="true">
+    <HeaderContent>
+        <MudTh>Place</MudTh>
+        <MudTh>UserName</MudTh>
+        <MudTh>Score</MudTh>
+        <MudTh>Division</MudTh>
+        <MudTh>Photos</MudTh>
+        @if (CurrentUser.IsLoggedInAsAdmin)
+        {
+            <MudTh>Approve</MudTh>
+        }
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Place</MudTd>
+        <MudTd>@context.UserName</MudTd>
+        <MudTd>@context.Score</MudTd>
+        <MudTd>@context.Division</MudTd>
+        <MudTd>
+            @if (context.IsApproved || CurrentUser.IsLoggedInAsAdmin)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.PhotoAlbum" Color="Color.Primary" OnClick="() => SelectEntry(context)"></MudIconButton>
+            }
+            else
+            {
+                <MudText>Pending</MudText>
+            }
+        </MudTd>
+        @if (CurrentUser.IsLoggedInAsAdmin)
+        {
+            <MudTd>
+                @if (!context.IsApproved)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Check" Color="Color.Primary" OnClick="()=>Approve(context.Record)"></MudIconButton>
+                }
+            </MudTd>
+        }
+    </RowTemplate>
+    <ChildRowContent>
+        <MudTr>
+            <td colspan="6">
+                @if (_selectedEntry != null && _selectedEntry.UserName==context.UserName)
+                {
+                    <MudGrid>
+                        @foreach (var item in _selectedEntry.Photos)
+                        {
+                            <MudItem xs="6" sm="4" md="3">
+                                <MudImage Src="@item.ToString()" ObjectFit="ObjectFit.Contain" Height="200" Width="200"></MudImage>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                }
+            </td>
+        </MudTr>
+    </ChildRowContent>
+</MudTable>
+@inject ICurrentUserAccessor CurrentUser
+@inject IQualifiersRepository Qualifiers
+@inject ISnackbar Snackbar
+@code
+{
+    private IEnumerable<Entry> _leaderboard;
+    private Entry? _selectedEntry = null;
+
+    private void SelectEntry(Entry entry)
+    {
+        _selectedEntry = entry;
+    }
+
+    private async Task Approve(UserQualifiers qual)
+    {
+        qual.Approve();
+        await Qualifiers.SaveQualifiers(qual);
+        Snackbar.Add("Approved!", Severity.Success);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+
+        _leaderboard = (await Qualifiers.GetAllUserQualifiers(EclipseQualifiersSubmit.Configuration)).OrderByDescending(q => q.CalculateScore()).Select((q, index) => new Entry(index + 1, q.UserName, 
+            index<=23?"Pros":index<=23+48?"Mids":"Lowers",q.IsApproved,
+            q.CalculateScore(), q.Submissions.Select(s => s.Value.PhotoUrl).ToArray(),q));
+
+    }
+
+    private sealed record Entry(int Place, string UserName, string Division, bool IsApproved, int Score, IEnumerable<Uri> Photos, UserQualifiers Record)
+    {
+
+    }
+}
