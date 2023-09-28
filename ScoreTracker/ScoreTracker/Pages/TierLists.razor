@@ -18,6 +18,10 @@
 @inject ICurrentUserAccessor CurrentUser;
 @inject NavigationManager NavManager;
 @inject IUiSettingsAccessor UiSettings;
+@if (_showDisclaimer)
+{
+    <MudText Color="Color.Warning">While I figure out why the dropdowns on this screen have been so slow, I'm switching one or two fields to other input field types. Apologies for the inconvenience. <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="DismissDisclaimer">Dismiss</MudButton></MudText>
+}
 <MudGrid>
 
     <MudItem xs="12" sm="4">
@@ -31,12 +35,8 @@
     @if (ChartTypeFilter == nameof(ChartType.CoOp))
     {
         <MudItem xs="12" sm="4">
-            <MudSelect T="int" AdornmentIcon="@Icons.Material.Filled.Bolt" Label="Players" Value="DifficultyFilter" ValueChanged="@(d => UpdateSelection(d, ChartTypeFilter, _coOpSortType))">
-                @foreach (var level in Enumerable.Range(2, 4))
-                {
-                    <MudSelectItem T="int" Value="@level">@level</MudSelectItem>
-                }
-            </MudSelect>
+            
+                <MudNumericField T="int" AdornmentIcon="@Icons.Material.Filled.Group" HideSpinButtons="true" Clearable="false" Min="2" Max="5" Label="Players" Value="DifficultyFilter" ValueChanged="@(d=>UpdateSelection(d,ChartTypeFilter,_coOpSortType))"></MudNumericField>
         </MudItem>
         <MudItem xs="12" sm="4">
             <MudSelect T="CoOpSortType" AdornmentIcon="@Icons.Material.Filled.Numbers" Label="CoOp Aggregation" Value="_coOpSortType" ValueChanged="@(d => UpdateSelection(DifficultyFilter, ChartTypeFilter, d))">
@@ -50,45 +50,15 @@
     {
             
         <MudItem xs="12" sm="4">
-            <MudSelect T="int" AdornmentIcon="@Icons.Material.Filled.Bolt" Label="Difficulty Level" Value="DifficultyFilter" ValueChanged="@(d => UpdateSelection(d, ChartTypeFilter, _coOpSortType))">
-                
-                <MudSelectItem T="int" Value="1">1</MudSelectItem>
-                <MudSelectItem T="int" Value="2">2</MudSelectItem>
-                <MudSelectItem T="int" Value="3">3</MudSelectItem>
-                <MudSelectItem T="int" Value="4">4</MudSelectItem>
-                <MudSelectItem T="int" Value="5">5</MudSelectItem>
-                <MudSelectItem T="int" Value="6">6</MudSelectItem>
-                <MudSelectItem T="int" Value="7">7</MudSelectItem>
-                <MudSelectItem T="int" Value="8">8</MudSelectItem>
-                <MudSelectItem T="int" Value="9">9</MudSelectItem>
-                <MudSelectItem T="int" Value="10">10</MudSelectItem>
-                <MudSelectItem T="int" Value="11">11</MudSelectItem>
-                <MudSelectItem T="int" Value="12">12</MudSelectItem>
-                <MudSelectItem T="int" Value="13">13</MudSelectItem>
-                <MudSelectItem T="int" Value="14">14</MudSelectItem>
-                <MudSelectItem T="int" Value="15">15</MudSelectItem>
-                <MudSelectItem T="int" Value="16">16</MudSelectItem>
-                <MudSelectItem T="int" Value="17">17</MudSelectItem>
-                <MudSelectItem T="int" Value="18">18</MudSelectItem>
-                <MudSelectItem T="int" Value="19">19</MudSelectItem>
-                <MudSelectItem T="int" Value="20">20</MudSelectItem>
-                <MudSelectItem T="int" Value="21">21</MudSelectItem>
-                <MudSelectItem T="int" Value="22">22</MudSelectItem>
-                <MudSelectItem T="int" Value="23">23</MudSelectItem>
-                <MudSelectItem T="int" Value="24">24</MudSelectItem>
-                <MudSelectItem T="int" Value="25">25</MudSelectItem>
-                <MudSelectItem T="int" Value="26">26</MudSelectItem>
-                <MudSelectItem T="int" Value="27">27</MudSelectItem>
-                <MudSelectItem T="int" Value="28">28</MudSelectItem>
-            </MudSelect>
+            <MudNumericField T="int" AdornmentIcon="@Icons.Material.Filled.Bolt" HideSpinButtons="true" Clearable="false" Min="1" Max="28" Label="Difficulty Level" Value="DifficultyFilter" ValueChanged="@(d=>UpdateSelection(d,ChartTypeFilter,_coOpSortType))"></MudNumericField>
         </MudItem>
     }
-    <MudItem xs="12" sm="4">
-        <MudSelect T="string" AdornmentIcon="@Icons.Material.Filled.Category" Label="Chart Type" Value="ChartTypeFilter" ValueChanged="@(c => UpdateSelection(DifficultyFilter, c,_coOpSortType))">
-            <MudSelectItem T="string" Value="ChartType.Single.ToString()">Singles</MudSelectItem>
-            <MudSelectItem T="string" Value="ChartType.Double.ToString()">Doubles</MudSelectItem>
-            <MudSelectItem T="string" Value="ChartType.CoOp.ToString()">CoOp</MudSelectItem>
-        </MudSelect>
+    <MudItem xs="12" sm="12">
+        <MudRadioGroup T="string" SelectedOption="@ChartTypeFilter" SelectedOptionChanged="@(c => UpdateSelection(DifficultyFilter, c, _coOpSortType))">
+            <MudRadio Option="@ChartType.Single.ToString()" Color="Color.Primary">Singles</MudRadio>
+            <MudRadio Option="@ChartType.Double.ToString()" Color="Color.Primary">Doubles</MudRadio>
+            <MudRadio Option="@ChartType.CoOp.ToString()" Color="Color.Primary">CoOp</MudRadio>
+        </MudRadioGroup>
     </MudItem>
 </MudGrid>
 @if (ChartTypeFilter == nameof(ChartType.CoOp))
@@ -144,6 +114,7 @@ else
 </MudDialog>
 @inject IAdminNotificationClient Notifications;
 @inject ISnackbar Snackbar;
+
 @code {
     private MixEnum _currentMix = MixEnum.Phoenix;
     private ICollection<Chart> _overratedCharts = Array.Empty<Chart>();
@@ -162,7 +133,17 @@ else
     private bool _showEditDialog = false;
     private string _currentVideo = "";
     private string _currentVideoDescription = string.Empty;
+    private bool _showDisclaimer = false;
+        private const string ShowTierListDisclaimer = "TierLists_ShowUIDisclaimer";
 
+    private async Task DismissDisclaimer()
+    {
+        _showDisclaimer = false;
+        if (CurrentUser.IsLoggedIn)
+        {
+            await Mediator.Send(new SaveUserUiSettingCommand(ShowTierListDisclaimer, bool.TrueString));
+        }
+    }
     private async Task NotifyBadVideo()
     {
         await Notifications.NotifyAdmin($"The video for{_currentVideoDescription} was reported", CancellationToken.None);
@@ -246,6 +227,7 @@ else
 
         if (CurrentUser.IsLoggedIn)
         {
+            _showDisclaimer = !(await Mediator.Send(new GetUserUiSettingsQuery())).ContainsKey(ShowTierListDisclaimer);
             if (_currentMix == MixEnum.XX)
             {
                 
@@ -257,6 +239,10 @@ else
                 var attempts = await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id));
                 _passes = attempts.Where(a => !a.IsBroken).Select(a => a.ChartId).Distinct().ToHashSet();
             }
+        }
+        else
+        {
+            _showDisclaimer = true;
         }
     }
 
