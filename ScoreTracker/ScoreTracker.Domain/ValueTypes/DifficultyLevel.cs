@@ -1,6 +1,6 @@
-﻿using System.Text.RegularExpressions;
-using ScoreTracker.Domain.Enums;
+﻿using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Exceptions;
+using System.Text.RegularExpressions;
 
 namespace ScoreTracker.Domain.ValueTypes;
 

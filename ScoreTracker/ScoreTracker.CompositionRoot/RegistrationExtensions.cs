@@ -1,6 +1,5 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Data.Configuration;
@@ -9,7 +8,6 @@ using ScoreTracker.Data.Repositories;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
-using Twilio;
 
 namespace ScoreTracker.CompositionRoot;
 

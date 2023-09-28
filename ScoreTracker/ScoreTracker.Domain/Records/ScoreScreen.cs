@@ -85,21 +85,28 @@ public sealed record ScoreScreen(StepCount Perfects, StepCount Greats, StepCount
         if (next > total - previous.Greats)
             return previous with
             {
-                Greats = previous.Greats - 1, Perfects = previous.Perfects + 1
+                Greats = previous.Greats - 1,
+                Perfects = previous.Perfects + 1
             };
         if (next > total - previous.Greats - previous.Goods)
             return previous with
             {
-                Goods = previous.Goods - 1, Perfects = previous.Perfects + 1, MaxCombo = previous.MaxCombo + 1
+                Goods = previous.Goods - 1,
+                Perfects = previous.Perfects + 1,
+                MaxCombo = previous.MaxCombo + 1
             };
         if (next > total - previous.Greats - previous.Goods - previous.Bads)
             return previous with
             {
-                Bads = previous.Bads - 1, Perfects = previous.Perfects + 1, MaxCombo = previous.MaxCombo + 1
+                Bads = previous.Bads - 1,
+                Perfects = previous.Perfects + 1,
+                MaxCombo = previous.MaxCombo + 1
             };
         return previous with
         {
-            Misses = previous.Misses - 1, Perfects = previous.Perfects + 1, MaxCombo = previous.MaxCombo + 1
+            Misses = previous.Misses - 1,
+            Perfects = previous.Perfects + 1,
+            MaxCombo = previous.MaxCombo + 1
         };
     }
 }

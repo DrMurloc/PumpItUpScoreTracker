@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ScoreTracker.Data.Persistence.Entities
+﻿namespace ScoreTracker.Data.Persistence.Entities
 {
     public sealed class SessionEntryEntity
     {

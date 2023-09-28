@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using CsvHelper;
+﻿using CsvHelper;
 using MediatR;
 using Microsoft.AspNetCore.Components.Forms;
 using ScoreTracker.Application.Queries;
@@ -8,6 +7,7 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.ValueTypes;
 using ScoreTracker.Web.Dtos;
 using ScoreTracker.Web.Services.Contracts;
+using System.Globalization;
 
 namespace ScoreTracker.Web.Services;
 

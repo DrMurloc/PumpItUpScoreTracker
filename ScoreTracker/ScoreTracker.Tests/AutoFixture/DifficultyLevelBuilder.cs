@@ -1,6 +1,6 @@
-﻿using System;
-using AutoFixture.Kernel;
+﻿using AutoFixture.Kernel;
 using ScoreTracker.Domain.ValueTypes;
+using System;
 
 namespace ScoreTracker.Tests.AutoFixture;
 

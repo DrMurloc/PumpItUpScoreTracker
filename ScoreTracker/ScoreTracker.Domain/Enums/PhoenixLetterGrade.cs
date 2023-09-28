@@ -1,6 +1,6 @@
-﻿using System.ComponentModel;
+﻿using ScoreTracker.Domain.ValueTypes;
+using System.ComponentModel;
 using System.Reflection;
-using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Enums;
 
