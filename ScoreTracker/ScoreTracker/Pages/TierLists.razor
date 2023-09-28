@@ -348,7 +348,10 @@ else
                     ratings[c.Id].Maximum).ToDictionary(c => c.Key, c => c.ToArray().AsEnumerable());
 
         }
-
+        if (CurrentUser.IsLoggedInAsAdmin)
+        {
+            Snackbar.Add("Finished Updating", Severity.Success);
+        }
     }
 
     private enum CoOpSortType
