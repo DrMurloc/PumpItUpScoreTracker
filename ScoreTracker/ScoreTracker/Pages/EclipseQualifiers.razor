@@ -1,6 +1,5 @@
 ﻿@page "/Eclipse/Qualifiers"
 @using ScoreTracker.Domain.SecondaryPorts
-@using MediatR
 @using ScoreTracker.Domain.Models
 
 <PageTitle>Submit Eclipse Qualifiers Session</PageTitle>
@@ -18,6 +17,8 @@
     <HeaderContent>
         <MudTh>Place</MudTh>
         <MudTh>UserName</MudTh>
+        <MudTh>Best Song</MudTh>
+        <MudTh>Second Best</MudTh>
         <MudTh>Score</MudTh>
         <MudTh>Division</MudTh>
         <MudTh>Photos</MudTh>
@@ -29,6 +30,22 @@
     <RowTemplate>
         <MudTd>@context.Place</MudTd>
         <MudTd>@context.UserName</MudTd>
+        <MudTd>
+            @if (context.First != null)
+            {
+                <MudTooltip Text="@(context.First.Song.Name+' '+context.First.DifficultyString)">
+                    <MudImage Src="@context.First.Song.ImagePath.ToString()" Height="35" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
+                </MudTooltip>
+            }
+        </MudTd>
+        <MudTd>
+            @if (context.Second != null)
+            {
+                <MudTooltip Text="@(context.Second.Song.Name+' '+context.Second.DifficultyString)">
+                    <MudImage Src="@context.Second.Song.ImagePath.ToString()" Height="35" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
+                </MudTooltip>
+            }
+        </MudTd>
         <MudTd>@context.Score</MudTd>
         <MudTd>@context.Division</MudTd>
         <MudTd>
@@ -92,12 +109,13 @@
     {
 
         _leaderboard = (await Qualifiers.GetAllUserQualifiers(EclipseQualifiersSubmit.Configuration)).OrderByDescending(q => q.CalculateScore()).Select((q, index) => new Entry(index + 1, q.UserName, 
+            q.BestCharts().First,q.BestCharts().Second,
             index<=23?"Pros":index<=23+48?"Mids":"Lowers",q.IsApproved,
             q.CalculateScore(), q.Submissions.Select(s => s.Value.PhotoUrl).ToArray(),q));
 
     }
 
-    private sealed record Entry(int Place, string UserName, string Division, bool IsApproved, int Score, IEnumerable<Uri> Photos, UserQualifiers Record)
+    private sealed record Entry(int Place, string UserName, Chart? First, Chart? Second, string Division, bool IsApproved, int Score, IEnumerable<Uri> Photos, UserQualifiers Record)
     {
 
     }

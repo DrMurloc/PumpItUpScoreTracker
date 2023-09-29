@@ -17,14 +17,14 @@
         <MudButton Href="/Eclipse/Qualifiers" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Leaderboard">To Leaderboard</MudButton>
     </MudItem>
     <MudItem xs="12">
-        <MudAutocomplete T="string" Label="Username (must match Discord or Start.GG name)" Value="_username" ValueChanged="SetUsername" SearchFunc="@(t=>Task.FromResult(_usernames.Where(u=>u.Contains(t,StringComparison.OrdinalIgnoreCase))))"/>
+        <MudAutocomplete T="string" CoerceText="false" CoerceValue="false" Label="Username (must match Discord or Start.GG name)" Value="_username" ValueChanged="SetUsername" SearchFunc="@(t=>Task.FromResult(_usernames.Where(u=>u.Contains(t,StringComparison.OrdinalIgnoreCase)).Append(t).Distinct()))" />
     </MudItem>
     @if (_currentQualifiers != null)
     {
         @foreach (var chart in Configuration.Charts.OrderBy(c => c.Level))
         {
             <MudItem xs="6" sm="3" md="2">
-                <MudCard>
+                <MudCard Class="@CardClass(chart.Id)" Style="@CardStyle(chart.Id)">
                     <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()" />
                     <MudCardActions>
                         <MudImage Src="@DifficultyBubblePath(chart.DifficultyString)" Height="40" ></MudImage>
@@ -36,6 +36,36 @@
         }
     }
 </MudGrid>
+@if (_currentQualifiers != null)
+{
+    <MudGrid>
+        @if (_currentPlace != null)
+        {
+            <MudItem xs="12">
+                <MudText>You are @_currentPlace Place!</MudText>
+            </MudItem>
+            @if (_nextPlace != null)
+            {
+                <MudItem xs="12">
+                    <MudText>Next Place is ahead by @(_nextPlace.CalculateScore()-_currentQualifiers.CalculateScore())</MudText>
+                </MudItem>
+            }
+        }
+        @if (FirstChart != null)
+        {
+            <MudItem xs="12">
+                <MudText>Best Score: @FirstChart.Song.Name @FirstChart.DifficultyString - @_currentQualifiers.Submissions[FirstChart.Id].Score (@_currentQualifiers.Submissions[FirstChart.Id].Score.LetterGrade.GetName()), @_currentQualifiers.Rating(FirstChart.Id) Points</MudText>
+            </MudItem>
+        }
+        @if (SecondChart != null)
+        {
+
+            <MudItem xs="12">
+                <MudText>Best Score: @SecondChart.Song.Name @SecondChart.DifficultyString - @_currentQualifiers.Submissions[SecondChart.Id].Score (@_currentQualifiers.Submissions[SecondChart.Id].Score.LetterGrade.GetName()), @_currentQualifiers.Rating(SecondChart.Id) Points</MudText>
+            </MudItem>
+        }
+    </MudGrid>
+}
 <MudDialog @bind-IsVisible="_showSubmit">
     <DialogContent>
         @if (_submittingChart != null)
@@ -144,9 +174,14 @@
     public static QualifiersConfiguration Configuration = new QualifiersConfiguration(Array.Empty<Chart>(), new Dictionary<Guid, int>());
     private UserQualifiers? _currentQualifiers;
     private Chart? _submittingChart;
+    private Chart? FirstChart => _currentQualifiers?.BestCharts().First;
+    private Chart? SecondChart => _currentQualifiers?.BestCharts().Second;
+    private string CardClass(Guid chartId) => FirstChart?.Id == chartId || SecondChart?.Id == chartId ? "border-solid border-2" : _currentQualifiers?.Submissions.ContainsKey(chartId)??false ? "border-dashed border-2" : string.Empty;
+    private string CardStyle(Guid chartId) => FirstChart?.Id == chartId || SecondChart?.Id == chartId ? $@"border-color:{Colors.Green.Darken1}" : _currentQualifiers?.Submissions.ContainsKey(chartId) ?? false ?$"border-color:{Colors.Grey.Darken1}": string.Empty;
     private bool _showSubmit = false;
     private string _username = string.Empty;
     private bool _isSaving = false;
+    private IEnumerable<UserQualifiers> Leaderboard = Array.Empty<UserQualifiers>();
     private MixEnum _addingMix = MixEnum.Phoenix;
     private StepCount _perfects = 0;
     private StepCount _greats = 0;
@@ -231,10 +266,27 @@
         }
         _isSaving = true;
         await Qualifiers.SaveQualifiers(_currentQualifiers);
+        await RefreshLeaderboard();
         _isSaving = false;
         Snackbar.Add($"Qualifier saved! Pending Approval!", Severity.Success);
     }
 
+    private int? _currentPlace = null;
+    private UserQualifiers? _nextPlace = null;
+    private async Task RefreshLeaderboard()
+    {
+
+        var allQuals = (await Qualifiers.GetAllUserQualifiers(Configuration)).OrderByDescending(q => q.CalculateScore()).ToArray();
+        _usernames = allQuals.Select(u => u.UserName).Distinct().Select(s => s.ToString()).ToArray();
+        if (_currentQualifiers == null)
+        {
+            return;
+        }
+        var ordered = allQuals.Select((q, index) => (q, index)).ToArray();
+        _currentPlace = ordered.Where(q => q.q.UserName == _currentQualifiers.UserName).Select(q => q.index + 1).FirstOrDefault();
+        _nextPlace = _currentPlace is null or 1 ? null : ordered.Where(q => q.index == _currentPlace - 1).Select(q => q.q).FirstOrDefault();
+
+    }
     private async Task UploadFiles(IBrowserFile file)
     {
         if (_submittingChart == null)
@@ -273,8 +325,7 @@
     {
         var charts = await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, ChartIds: ChartIds));
         Configuration = new QualifiersConfiguration(charts, new Dictionary<Guid, int>());
-        var allQuals = await Qualifiers.GetAllUserQualifiers(Configuration);
-        _usernames = allQuals.Select(u => u.UserName).Distinct().Select(s=>s.ToString()).ToArray();
+        await RefreshLeaderboard();
         if (CurrentUser.IsLoggedIn)
         {
             await SetUsername(CurrentUser.User.Name);
