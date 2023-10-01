@@ -321,10 +321,15 @@
         new Guid("8501B01A-8D67-4CAF-AEA2-5AD0206A6255")
     });
 
+    private static readonly IDictionary<Guid, int> Modifiers = new Dictionary<Guid, int>()
+    {
+        { new Guid("41DCE283-0C6B-4899-96DD-50CE10DC49B9"), 106 },
+
+    };
     protected override async Task OnInitializedAsync()
     {
         var charts = await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, ChartIds: ChartIds));
-        Configuration = new QualifiersConfiguration(charts, new Dictionary<Guid, int>());
+        Configuration = new QualifiersConfiguration(charts, Modifiers);
         await RefreshLeaderboard();
         if (CurrentUser.IsLoggedIn)
         {
