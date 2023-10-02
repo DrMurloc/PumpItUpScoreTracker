@@ -81,6 +81,17 @@
                             </MudItem>
                         }
                     </MudGrid>
+                    @if (CurrentUser.IsLoggedInAsAdmin)
+                    {
+                        <MudGrid>
+                            @foreach (var entry in _selectedEntry.Record.Submissions.Values)
+                            {
+                                <MudItem xs="6" sm="4" md="3">
+                                    @_charts[entry.ChartId].Song.Name @_charts[entry.ChartId].DifficultyString: @entry.Score
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    }
                 }
             </td>
         </MudTr>
@@ -112,6 +123,7 @@
 {
     private IEnumerable<Entry> _leaderboard;
     private Entry? _selectedEntry = null;
+    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
 
     private void SelectEntry(Entry entry)
     {
@@ -127,6 +139,10 @@
     protected override async Task OnInitializedAsync()
     {
         var config = await Qualifiers.GetQualifiersConfiguration();
+        foreach (var chart in config.Charts)
+        {
+            _charts[chart.Id] = chart;
+        }
         _leaderboard = (await Qualifiers.GetAllUserQualifiers(config)).OrderByDescending(q => q.CalculateScore()).Select((q, index) => new Entry(index + 1, q.UserName,
             q.BestCharts().First,q.BestCharts().Second,
             index<=23?"Pros":index<=23+48?"Mids":"Lowers",q.IsApproved,

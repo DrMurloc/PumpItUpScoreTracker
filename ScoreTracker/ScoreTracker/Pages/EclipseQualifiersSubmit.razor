@@ -139,6 +139,12 @@
                     <MudItem xs="6">
                         <MudNumericField T="int" Min="0" Max="2000" Label="Max Combo" Value="_maxCombo" ValueChanged="i=>_maxCombo=i"></MudNumericField>
                     </MudItem>
+                    @if (_configuration.NoteCountAdjustments[_submittingChart.Id] != 0)
+                    {
+                        <MudItem xs="12">
+                            <MudText Color="Color.Info">Perfects and MaxCombo will get @_configuration.NoteCountAdjustments[_submittingChart.Id] added as Phoenix Adjustment.</MudText>
+                        </MudItem>
+                    }
                     <MudItem xs="12">
                         @if (Screen.IsValid)
                         {
