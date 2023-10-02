@@ -72,39 +72,40 @@
         <ChildRowContent>
             <MudTr>
                 <td colspan="6">
-                @if (_showingSession != null && _showingSession.UsersId == context.UserId)
-                {
-                    <MudGrid>
-                        @foreach (var entry in _showingSession.Entries)
-                        {
+                    @if (_showingSession != null && _showingSession.UsersId == context.UserId)
+                    {
+                        <MudGrid>
+                            @foreach (var entry in _showingSession.Entries)
+                            {
 
-                            <MudItem xs="6" sm="3" md="2">
-                                <MudCard>
-                                    <MudCardMedia Height="100" Image="@entry.Chart.Song.ImagePath.ToString()"/>
-                                    <MudCardContent>
-                                        <MudText>@entry.Chart.DifficultyString</MudText>
-                                        <MudText>@entry.Score</MudText>
-                                        <MudText>@entry.Score.LetterGrade.GetName() @entry.Plate.GetShorthand()</MudText>
-                                        @if (entry.IsBroken)
-                                        {
-                                            <MudText>Broken</MudText>
-                                        }
-                                        <MudText>
-                                            @entry.SessionScore Points
-                                        </MudText>
-                                        <MudText>
-                                            @(TwoDecimalPlaces(entry.SessionScore / (double)entry.Chart.Song.Duration.TotalSeconds)) PPS
-                                        </MudText>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-                        }
-                    </MudGrid>
-                }
+                                <MudItem xs="6" sm="3" md="2">
+                                    <MudCard>
+                                        <MudCardMedia Height="100" Image="@entry.Chart.Song.ImagePath.ToString()"/>
+                                        <MudCardContent>
+                                            <MudText>@entry.Chart.DifficultyString</MudText>
+                                            <MudText>@entry.Score</MudText>
+                                            <MudText>@entry.Score.LetterGrade.GetName() @entry.Plate.GetShorthand()</MudText>
+                                            @if (entry.IsBroken)
+                                            {
+                                                <MudText>Broken</MudText>
+                                            }
+                                            <MudText>
+                                                @entry.SessionScore Points
+                                            </MudText>
+                                            <MudText>
+                                                @(TwoDecimalPlaces(entry.SessionScore / (double)entry.Chart.Song.Duration.TotalSeconds)) PPS
+                                            </MudText>
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    }
                 </td>
             </MudTr>
         </ChildRowContent>
     </MudTable>
+    
 }
 <MudDialog @bind-IsVisible="_showPhotoDialog">
     <DialogContent>

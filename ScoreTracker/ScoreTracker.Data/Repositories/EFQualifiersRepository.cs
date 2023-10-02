@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
+using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
@@ -11,10 +12,27 @@ namespace ScoreTracker.Data.Repositories
     public sealed class EFQualifiersRepository : IQualifiersRepository
     {
         private readonly ChartAttemptDbContext _database;
+        private IChartRepository _charts;
 
-        public EFQualifiersRepository(ChartAttemptDbContext database)
+        private static readonly ISet<Guid> ChartIds = new HashSet<Guid>(new[]
+        {
+            new Guid("1D1606A0-BC43-417D-8867-B574D6F3E92C"),
+            new Guid("E2D622A3-ED44-456E-8572-29DA5AA90F92"),
+            new Guid("0FD50D96-1F0C-4CB0-A179-9282132EF9BB"),
+            new Guid("41DCE283-0C6B-4899-96DD-50CE10DC49B9"),
+            new Guid("99E9BED2-3C4A-47E3-A058-ACCAE532F117"),
+            new Guid("8501B01A-8D67-4CAF-AEA2-5AD0206A6255")
+        });
+
+        private static readonly IDictionary<Guid, int> Modifiers = new Dictionary<Guid, int>()
+        {
+            { new Guid("41DCE283-0C6B-4899-96DD-50CE10DC49B9"), 106 },
+        };
+
+        public EFQualifiersRepository(ChartAttemptDbContext database, IChartRepository charts)
         {
             _database = database;
+            _charts = charts;
         }
 
         public async Task<UserQualifiers?> GetQualifiers(Name userName, QualifiersConfiguration config,
@@ -82,6 +100,14 @@ namespace ScoreTracker.Data.Repositories
         {
             var entities = await _database.UserQualifier.ToArrayAsync(cancellationToken);
             return entities.Select(e => From(e, config)).ToArray();
+        }
+
+        public async Task<QualifiersConfiguration> GetQualifiersConfiguration(
+            CancellationToken cancellationToken = default)
+        {
+            var charts = await _charts.GetCharts(MixEnum.Phoenix, chartIds: ChartIds,
+                cancellationToken: cancellationToken);
+            return new QualifiersConfiguration(charts, Modifiers);
         }
     }
 }

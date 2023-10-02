@@ -86,6 +86,25 @@
         </MudTr>
     </ChildRowContent>
 </MudTable>
+<br/>
+<br/>
+<MudGrid>
+    <MudItem xs="12">
+        <MudText Typo="Typo.h4">Event Links</MudText>
+    </MudItem>
+    <MudItem xs="6" sm="4" md="3">
+        <MudButton StartIcon="@Icons.Material.Filled.Rule" Href="https://docs.google.com/document/d/1MTzk28rTkXyCDagb9ceYhuaje0YoMN7VD_HmdanHr18/edit?usp=sharing" Color="Color.Primary" Variant="Variant.Text" Target="_blank">Rules</MudButton>
+    </MudItem>
+    <MudItem xs="6" sm="4" md="3">
+        <MudButton StartIcon="@Icons.Material.Filled.Event" Href="https://www.start.gg/tournament/eclipse-2023/details" Color="Color.Primary" Variant="Variant.Text" Target="_blank">Event</MudButton>
+    </MudItem>
+    <MudItem xs="6" sm="4" md="3">
+        <MudButton StartIcon="@Icons.Material.Filled.Store" Href="https://www.rhythmeclipse.com/shop" Color="Color.Primary" Variant="Variant.Text" Target="_blank">Merchandise</MudButton>
+    </MudItem>
+    <MudItem xs="6" sm="4" md="3">
+        <MudButton StartIcon="@Icons.Custom.Brands.Discord" Href="https://discord.gg/vJbEaHvBV" Color="Color.Primary" Variant="Variant.Text" Target="_blank">Discord</MudButton>
+    </MudItem>
+</MudGrid>
 @inject ICurrentUserAccessor CurrentUser
 @inject IQualifiersRepository Qualifiers
 @inject ISnackbar Snackbar
@@ -96,7 +115,7 @@
 
     private void SelectEntry(Entry entry)
     {
-        _selectedEntry = entry;
+        _selectedEntry = _selectedEntry?.UserName == entry.UserName ? null : entry;
     }
 
     private async Task Approve(UserQualifiers qual)
@@ -107,8 +126,8 @@
     }
     protected override async Task OnInitializedAsync()
     {
-
-        _leaderboard = (await Qualifiers.GetAllUserQualifiers(EclipseQualifiersSubmit.Configuration)).OrderByDescending(q => q.CalculateScore()).Select((q, index) => new Entry(index + 1, q.UserName, 
+        var config = await Qualifiers.GetQualifiersConfiguration();
+        _leaderboard = (await Qualifiers.GetAllUserQualifiers(config)).OrderByDescending(q => q.CalculateScore()).Select((q, index) => new Entry(index + 1, q.UserName,
             q.BestCharts().First,q.BestCharts().Second,
             index<=23?"Pros":index<=23+48?"Mids":"Lowers",q.IsApproved,
             q.CalculateScore(), q.Submissions.Select(s => s.Value.PhotoUrl).ToArray(),q));

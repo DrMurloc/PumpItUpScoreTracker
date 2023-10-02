@@ -12,5 +12,8 @@ namespace ScoreTracker.Domain.SecondaryPorts
 
         Task<IEnumerable<UserQualifiers>> GetAllUserQualifiers(QualifiersConfiguration config,
             CancellationToken cancellationToken = default);
+
+        Task<QualifiersConfiguration> GetQualifiersConfiguration(
+            CancellationToken cancellationToken = default);
     }
 }
