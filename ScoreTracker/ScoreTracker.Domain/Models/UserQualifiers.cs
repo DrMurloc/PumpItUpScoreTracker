@@ -107,7 +107,7 @@ namespace ScoreTracker.Domain.Models
 
         public bool AddPhoenixScore(Guid chartId, PhoenixScore score, Uri uri)
         {
-            if (Submissions.ContainsKey(chartId) && Submissions[chartId].Score >= score) return false;
+            if (Submissions.ContainsKey(chartId) && Submissions[chartId].Score > score) return false;
 
             Submissions[chartId] = new Submission
             {
