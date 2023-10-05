@@ -47,6 +47,14 @@
                                 <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
                             </MudTooltip>
                         }
+                        <MudSpacer></MudSpacer>
+                        @if (CurrentUser.IsLoggedIn)
+                        {
+                            <MudTooltip Text="Toggle ToDo">
+                                <MudIconButton Icon="@Icons.Material.Outlined.ListAlt" OnClick="()=>ToggleToDo(chart.Id)" Color="ToDos.Contains(chart.Id)?Color.Primary:Color.Default"></MudIconButton>
+                            </MudTooltip>
+                            <MudSpacer></MudSpacer>
+                        }
                         @if (CurrentUser.IsLoggedIn)
                         {
                             <MudTooltip Text="Update Grade">
@@ -61,7 +69,9 @@
 }
 @code {
     private string CardClass(Guid chartId) => Passes.Contains(chartId) || !CurrentUser.IsLoggedIn ? "border-solid border-2" : "border-dashed border-2";
-    private string CardStyle(Guid chartId) => Passes.Contains(chartId)?$@"border-color:{Colors.Green.Darken1}":$@"border-color:{OutlineColor}";
+    private string CardStyle(Guid chartId) => Passes.Contains(chartId) ? $@"border-color:{Colors.Green.Darken1}" :
+    ToDos.Contains(chartId) ? $@"border-color:{Colors.Green.Darken1}" :
+    $@"border-color:{OutlineColor}";
     [Parameter]
     public string Name { get; set; } = string.Empty;
     [Parameter]
@@ -82,7 +92,10 @@
     [Parameter]
     public Action<Guid> OnEdit { get; set; } = g => { };
 
-
+    [Parameter]
+    public ISet<Guid> ToDos { get; set; } = new HashSet<Guid>();
+    [Parameter]
+    public Func<Guid, Task> ToggleToDo { get; set; } = g => Task.CompletedTask;
     private string ChartSearch(Chart chart)
     {
         var searchString = "Pump It Up " + chart.Song.Name + " " + chart.DifficultyString;

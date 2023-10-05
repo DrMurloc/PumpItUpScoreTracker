@@ -33,7 +33,7 @@
                         <MudProgressLinear Color="@(context.Item.CompletionCount >= context.Item.RequiredCount ? Color.Success : Color.Primary)" Value="100.0 * (context.Item.CompletionCount / (double)context.Item.RequiredCount)">
                             @if (context.Item.CompletionCount < context.Item.RequiredCount)
                             {
-                                <MudText Typo="Typo.subtitle1" Color="Color.Dark">
+                                <MudText Typo="Typo.subtitle1">
                                     @context.Item.CompletionCount / @context.Item.RequiredCount
                                 </MudText>
                             }

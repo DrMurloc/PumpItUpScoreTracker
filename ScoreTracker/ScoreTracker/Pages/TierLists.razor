@@ -3,11 +3,14 @@
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Models.Titles;
+@using ScoreTracker.Domain.Models.Titles.Phoenix;
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Web.Dtos;
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 
@@ -60,6 +63,15 @@
             <MudRadio Option="@ChartType.CoOp.ToString()" Color="Color.Primary">CoOp</MudRadio>
         </MudRadioGroup>
     </MudItem>
+    @if (CurrentUser.IsLoggedIn)
+    {
+        <MudItem xs="6"> 
+            <MudSwitch T="bool" Label="Hide Completed Charts" Checked="_hideCompleted" CheckedChanged="v=>ToggleVisibility(v,_showOnlyTodos)" Color="Color.Primary"></MudSwitch>
+        </MudItem>
+        <MudItem xs="6">
+            <MudSwitch T="bool" Label="Show Only ToDo Charts" Checked="_showOnlyTodos" CheckedChanged="v=>ToggleVisibility(_hideCompleted,v)" Color="Color.Primary"></MudSwitch>
+        </MudItem>
+    }
 </MudGrid>
 @if (ChartTypeFilter == nameof(ChartType.CoOp))
 {
@@ -72,17 +84,79 @@
 else
 {
 
-    <TierListSection Charts="_underratedCharts" Name="1+ Level Harder" OutlineColor="@Colors.Red.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_veryHardCharts" Name="Very Hard" OutlineColor="@Colors.Orange.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_hardCharts" Name="Hard" OutlineColor="@Colors.Yellow.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_mediumCharts" Name="Medium" OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_easyCharts" Name="Easy" OutlineColor="@Colors.Cyan.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_veryEasyCharts" Name="Very Easy" OutlineColor="@Colors.Blue.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_overratedCharts" Name="1+ Level Easier" OutlineColor="@Colors.Purple.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_disputedCharts" Disclaimer="Charts with 4 or more votes, within .5 levels of adjusted rating, and more than .4 Standard Deviation" Name="Disputed Charts" OutlineColor="@Colors.Brown.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_notRatedCharts" Name="Not Rated" OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Charts="_underratedCharts" Name="1+ Level Harder" OutlineColor="@Colors.Red.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Charts="_veryHardCharts" Name="Very Hard" OutlineColor="@Colors.Orange.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Charts="_hardCharts" Name="Hard" OutlineColor="@Colors.Yellow.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Charts="_mediumCharts" Name="Medium" OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Charts="_easyCharts" Name="Easy" OutlineColor="@Colors.Cyan.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Charts="_veryEasyCharts" Name="Very Easy" OutlineColor="@Colors.Blue.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Charts="_overratedCharts" Name="1+ Level Easier" OutlineColor="@Colors.Purple.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Charts="_disputedCharts" Disclaimer="Charts with 4 or more votes, within .5 levels of adjusted rating, and more than .4 Standard Deviation" Name="Disputed Charts" OutlineColor="@Colors.Brown.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Charts="_notRatedCharts" Name="Not Rated" OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
 
 }
+
+@if (CurrentUser.IsLoggedIn && _currentMix == MixEnum.Phoenix && ChartTypeFilter != ChartType.CoOp.ToString() && _titleProgress.Where(t => t.Title is PhoenixDifficultyTitle pdt && pdt.Level == DifficultyFilter).Any())
+{
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">
+                Title Progress
+            </MudText>
+        </MudItem>
+        @foreach (var progress in _titleProgress.Where(t => t.Title is PhoenixDifficultyTitle pdt && pdt.Level == DifficultyFilter))
+        {
+            var difficultyLevel = progress.Title as PhoenixDifficultyTitle;
+            if (difficultyLevel == null)
+            {
+                continue;
+            }
+            <MudItem xs="12" sm="4" md="3">
+                <MudText Typo="Typo.h5">@progress.Title.Name</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="8" md="9">
+                <MudProgressLinear Color="@(progress.CompletionCount >= progress.Title.CompletionRequired ? Color.Success : Color.Primary)" Value="100.0 * (progress.CompletionCount / (double)progress.Title.CompletionRequired)">
+                    @if (progress.CompletionCount < progress.Title.CompletionRequired)
+                    {
+                        <MudText Typo="Typo.subtitle1">
+                            @progress.CompletionCount / @progress.Title.CompletionRequired
+                        </MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.subtitle1">
+                            Completed
+                        </MudText>
+                    }
+                </MudProgressLinear>
+            </MudItem>
+            @if (progress.CompletionCount < progress.Title.CompletionRequired)
+            {
+
+                <MudItem xs="12">
+                    @((int)((progress.Title.CompletionRequired - progress.CompletionCount) / (difficultyLevel.Level.BaseRating * PhoenixLetterGrade.SSSPlus.GetModifier()))) (SSS+) -
+                    @((int)((progress.Title.CompletionRequired - progress.CompletionCount) / (difficultyLevel.Level.BaseRating * PhoenixLetterGrade.AA.GetModifier()))) (AA) Charts Remaining:
+                    @if (_averageRating != null)
+                    {
+                        @($"{(int)(progress.Title.CompletionRequired - progress.CompletionCount) / (_averageRating)} Charts Estimated for You")
+                    }
+                </MudItem>
+            }
+        }
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4"></MudText>
+        </MudItem>
+        <MudItem xs="12">
+            You have @_toPassCharts.Count() level @DifficultyFilter charts marked To Do that you haven't passed.
+        </MudItem>
+        @foreach(var chart in _toPassCharts){
+        <MudItem xs="12">
+            @chart.Song.Name - @chart.DifficultyString
+        </MudItem>
+        }
+    </MudGrid>
+}
+
 <MudDialog @bind-IsVisible="_showEditDialog">
     <DialogContent>
         @if (_selectedChartId != Guid.Empty)
@@ -126,6 +200,7 @@ else
     private ICollection<Chart> _underratedCharts = Array.Empty<Chart>();
     private ICollection<Chart> _notRatedCharts = Array.Empty<Chart>();
     private ICollection<Chart> _disputedCharts = Array.Empty<Chart>();
+    private int? _averageRating = null;
     private IDictionary<DifficultyLevel, IEnumerable<Chart>> _coOpLevels = new Dictionary<DifficultyLevel, IEnumerable<Chart>>();
     private ICollection<Chart> _unratedCoOps = Array.Empty<Chart>();
     private IDictionary<Guid, string> _videos = new Dictionary<Guid, string>();
@@ -134,7 +209,7 @@ else
     private string _currentVideo = "";
     private string _currentVideoDescription = string.Empty;
     private bool _showDisclaimer = false;
-        private const string ShowTierListDisclaimer = "TierLists_ShowUIDisclaimer";
+    private const string ShowTierListDisclaimer = "TierLists_ShowUIDisclaimer";
 
     private async Task DismissDisclaimer()
     {
@@ -144,6 +219,31 @@ else
             await Mediator.Send(new SaveUserUiSettingCommand(ShowTierListDisclaimer, bool.TrueString));
         }
     }
+    public async Task ToggleTodo(Guid chartId)
+    {
+        if (!_todos.Contains(chartId))
+        {
+            await Mediator.Send(new SaveChartToListCommand(ChartListType.ToDo, chartId));
+            Snackbar.Add("Added to ToDo List!", Severity.Success);
+            _todos.Add(chartId);
+            if (!_passes.Contains(chartId))
+            {
+                var chart = (await Mediator.Send(new GetChartsQuery(_currentMix,ChartIds:new []{chartId}))).Single();
+                _toPassCharts.Add(chart);
+            }
+        } else
+        {
+            await Mediator.Send(new RemoveChartFromListCommand(ChartListType.ToDo, chartId));
+            Snackbar.Add("Removed from ToDo List!",Severity.Success);
+            _todos.Remove(chartId);
+            var chart = _toPassCharts.FirstOrDefault(p=>p.Id==chartId);
+            if (chart != null)
+            {
+                _toPassCharts.Remove(chart);
+            }
+        }
+        StateHasChanged();
+    }
     private async Task NotifyBadVideo()
     {
         await Notifications.NotifyAdmin($"The video for{_currentVideoDescription} was reported", CancellationToken.None);
@@ -152,7 +252,18 @@ else
     private CoOpSortType _coOpSortType = CoOpSortType.Average;
     private ISet<Guid> _passes = new HashSet<Guid>();
     private Guid _selectedChartId = Guid.Empty;
+    private ICollection<Chart> _toPassCharts = new List<Chart>();
+    private bool _hideCompleted = false;
+    private bool _showOnlyTodos = false;
+    private void ToggleVisibility(bool hideCompleted, bool showOnlyTodos)
+    {
+        _hideCompleted=hideCompleted;
+        _showOnlyTodos=showOnlyTodos;
+        RefilterCharts();
 
+    }
+    private IEnumerable<TitleProgress> _titleProgress = Array.Empty<TitleProgress>();
+    private ISet<Guid> _todos = new HashSet<Guid>();
     [Parameter]
     [SupplyParameterFromQuery(Name = "Difficulty")]
     public int DifficultyFilter { get; set; }
@@ -187,27 +298,38 @@ else
         _currentVideoDescription = $"{chart.Song.Name} - {chart.DifficultyString}";
         StateHasChanged();
     }
-
+    private IReadOnlyCollection<RecordedPhoenixScore> _phoenixScores = Array.Empty<RecordedPhoenixScore>();
     private async Task MixChanged(MixEnum newMix)
     {
         _currentMix = newMix;
+        _titleProgress = (await Mediator.Send(new GetTitleProgressQuery(_currentMix))).ToArray();
         await UiSettings.SetSelectedMix(newMix);
-        await UpdateSelection(DifficultyFilter, ChartTypeFilter,_coOpSortType);
-        if (_currentMix == MixEnum.XX)
+
+        if (CurrentUser.IsLoggedIn)
         {
-                
-            var attempts = await Mediator.Send(new GetXXBestChartAttemptsQuery(CurrentUser.User.Id));
-            _passes = attempts.Where(a => !(a.BestAttempt?.IsBroken??true)).Select(a => a.Chart.Id).Distinct().ToHashSet();
+
+            if (_currentMix == MixEnum.XX)
+            {
+
+                var attempts = await Mediator.Send(new GetXXBestChartAttemptsQuery(CurrentUser.User.Id));
+                _passes = attempts.Where(a => !(a.BestAttempt?.IsBroken ?? true)).Select(a => a.Chart.Id).Distinct().ToHashSet();
+            }
+            else
+            {
+                var attempts = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id))).ToArray();
+                _phoenixScores = attempts;
+                _passes = attempts.Where(a => !a.IsBroken).Select(a => a.ChartId).Distinct().ToHashSet();
+            }
         }
-        else
-        {
-            var attempts = await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id));
-            _passes = attempts.Where(a => !a.IsBroken).Select(a => a.ChartId).Distinct().ToHashSet();
-        }
+        await UpdateSelection(DifficultyFilter, ChartTypeFilter, _coOpSortType);
     }
+
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();
+
+        _titleProgress = (await Mediator.Send(new GetTitleProgressQuery(_currentMix))).ToArray();
+        _todos = CurrentUser.IsLoggedIn ? (await Mediator.Send(new GetSavedChartsQuery())).Where(t=>t.ListType==ChartListType.ToDo).Select(t=>t.ChartId).ToHashSet() : new HashSet<Guid>() ;
         var isDifficultyValid = DifficultyFilter >= DifficultyLevel.Min && DifficultyFilter <= DifficultyLevel.Max;
         var isChartTypeValid = !string.IsNullOrWhiteSpace(ChartTypeFilter) && (ChartTypeFilter.Equals(ChartType.CoOp.ToString())||ChartTypeFilter.Equals(ChartType.Single.ToString()) || ChartTypeFilter.Equals(ChartType.Double.ToString()));
         if (!isDifficultyValid || !isChartTypeValid)
@@ -221,51 +343,25 @@ else
             }));
         }
 
-        await UpdateSelection(DifficultyFilter, ChartTypeFilter,CoOpSortType.Average);
 
         _videos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl.ToString());
 
         if (CurrentUser.IsLoggedIn)
         {
             _showDisclaimer = !(await Mediator.Send(new GetUserUiSettingsQuery())).ContainsKey(ShowTierListDisclaimer);
-            if (_currentMix == MixEnum.XX)
-            {
-                
-                var attempts = await Mediator.Send(new GetXXBestChartAttemptsQuery(CurrentUser.User.Id));
-                _passes = attempts.Where(a => !(a.BestAttempt?.IsBroken??true)).Select(a => a.Chart.Id).Distinct().ToHashSet();
-            }
-            else
-            {
-                var attempts = await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id));
-                _passes = attempts.Where(a => !a.IsBroken).Select(a => a.ChartId).Distinct().ToHashSet();
-            }
         }
         else
         {
             _showDisclaimer = true;
         }
+        await MixChanged(_currentMix);
     }
-
-    private async Task UpdateSelection(int difficulty, string chartType, CoOpSortType coOpSortType)
+    private IDictionary<Guid,Chart> _difficultyAndTypeFilteredCharts = new Dictionary<Guid,Chart>();
+    private IDictionary<Guid, ChartDifficultyRatingRecord> _ratings = new Dictionary<Guid, ChartDifficultyRatingRecord>();
+    private IDictionary<Guid, CoOpRating> _coOpRatings = new Dictionary<Guid, CoOpRating>();
+    private void RefilterCharts()
     {
-        _coOpSortType = coOpSortType;
-        if (chartType == "CoOp" && difficulty > 5)
-        {
-            difficulty = 2;
-        }
-        if (DifficultyFilter != difficulty || ChartTypeFilter != chartType)
-        {
-            NavManager.NavigateTo(NavManager.GetUriWithQueryParameters(new Dictionary<string, object?>
-            {
-                { "Difficulty", difficulty },
-                { "ChartType", chartType }
-            }));
-            DifficultyFilter = difficulty;
-            ChartTypeFilter = chartType;
-        }
-        var type = Enum.Parse<ChartType>(chartType);
-        Chart[] charts;
-        
+
         _overratedCharts = new List<Chart>();
         _veryEasyCharts = new List<Chart>();
         _easyCharts = new List<Chart>();
@@ -275,36 +371,26 @@ else
         _underratedCharts = new List<Chart>();
         _disputedCharts = new List<Chart>();
         _notRatedCharts = new List<Chart>();
-        if (type is ChartType.Single or ChartType.Double)
+        var type = Enum.Parse<ChartType>(ChartTypeFilter);
+        if(type is ChartType.Single or ChartType.Double)
         {
-
-            IDictionary<Guid, ChartDifficultyRatingRecord> ratings;
-            if (type == ChartType.Single)
+            var filtered = _difficultyAndTypeFilteredCharts.Values.OrderByDescending(c => _ratings.ContainsKey(c.Id) ? _ratings[c.Id].Difficulty : c.Level + .5).AsEnumerable();
+            if (_hideCompleted)
             {
-                charts = (await Mediator.Send(new GetChartsQuery(_currentMix, difficulty, ChartType.Single)))
-                    .Concat(await Mediator.Send(new GetChartsQuery(_currentMix, difficulty, ChartType.SinglePerformance))).ToArray();
-
-                ratings = (await Mediator.Send(new GetChartRatingsQuery(_currentMix, difficulty, ChartType.Single)))
-            .Concat(await Mediator.Send(new GetChartRatingsQuery(_currentMix, difficulty, ChartType.SinglePerformance))).ToDictionary(c => c.ChartId);
-
+                filtered = filtered.Where(c => !_passes.Contains(c.Id));
             }
-            else
+            if (_showOnlyTodos)
             {
-
-                charts = (await Mediator.Send(new GetChartsQuery(_currentMix, difficulty, ChartType.Double)))
-                    .Concat(await Mediator.Send(new GetChartsQuery(_currentMix, difficulty, ChartType.DoublePerformance))).ToArray();
-
-                ratings = (await Mediator.Send(new GetChartRatingsQuery(_currentMix, difficulty, ChartType.Double)))
-                    .Concat(await Mediator.Send(new GetChartRatingsQuery(_currentMix, difficulty, ChartType.DoublePerformance))).ToDictionary(c => c.ChartId);
+                filtered = filtered.Where(c => _todos.Contains(c.Id));
             }
-            foreach (var chart in charts.OrderByDescending(c => ratings.ContainsKey(c.Id) ? ratings[c.Id].Difficulty : c.Level + .5))
+            foreach (var chart in filtered)
             {
-                if (!ratings.ContainsKey(chart.Id))
+                if (!_ratings.ContainsKey(chart.Id))
                 {
                     _notRatedCharts.Add(chart);
                     continue;
                 }
-                var rating = ratings[chart.Id];
+                var rating = _ratings[chart.Id];
                 if (rating is { RatingCount: >= 4, StandardDeviation: > .4 } && Math.Abs(rating.Difficulty - chart.Level) <= .5)
                 {
                     _disputedCharts.Add(chart);
@@ -340,18 +426,78 @@ else
         }
         else
         {
-            charts = (await Mediator.Send(new GetChartsQuery(_currentMix, null, ChartType.CoOp))).Where(c => c.PlayerCount == DifficultyFilter).ToArray();
-            var ratings = (await Mediator.Send(new GetCoOpRatingsQuery())).ToDictionary(c => c.ChartId);
-            _unratedCoOps = charts.Where(c => !ratings.ContainsKey(c.Id)).ToArray();
-            _coOpLevels = charts.Where(c => ratings.ContainsKey(c.Id)).GroupBy(c => coOpSortType == CoOpSortType.Average ? ratings[c.Id].Average :
-                coOpSortType == CoOpSortType.EasiestPlayer ? ratings[c.Id].Minimum :
-                    ratings[c.Id].Maximum).ToDictionary(c => c.Key, c => c.ToArray().AsEnumerable());
+
+            var filtered = _difficultyAndTypeFilteredCharts.Values.OrderByDescending(c => _ratings.ContainsKey(c.Id) ? _ratings[c.Id].Difficulty : c.Level + .5).AsEnumerable();
+            if (_hideCompleted)
+            {
+                filtered = filtered.Where(c => !_passes.Contains(c.Id));
+            }
+            if (_showOnlyTodos)
+            {
+                filtered = filtered.Where(c => _todos.Contains(c.Id));
+            }
+            _unratedCoOps = filtered.Where(c => !_ratings.ContainsKey(c.Id)).ToArray();
+            _coOpLevels = filtered.Where(c => _coOpRatings.ContainsKey(c.Id)).GroupBy(c => _coOpSortType == CoOpSortType.Average ? _coOpRatings[c.Id].Average :
+                _coOpSortType == CoOpSortType.EasiestPlayer ? _coOpRatings[c.Id].Minimum :
+                    _coOpRatings[c.Id].Maximum).ToDictionary(c => c.Key, c => c.ToArray().AsEnumerable());
+        }
+    }
+    private async Task UpdateSelection(int difficulty, string chartType, CoOpSortType coOpSortType)
+    {
+        _coOpSortType = coOpSortType;
+        if (chartType == "CoOp" && difficulty > 5)
+        {
+            difficulty = 2;
+        }
+        if (DifficultyFilter != difficulty || ChartTypeFilter != chartType)
+        {
+            NavManager.NavigateTo(NavManager.GetUriWithQueryParameters(new Dictionary<string, object?>
+            {
+                { "Difficulty", difficulty },
+                { "ChartType", chartType }
+            }));
+            DifficultyFilter = difficulty;
+            ChartTypeFilter = chartType;
+        }
+        var type = Enum.Parse<ChartType>(chartType);
+        if (type is ChartType.Single or ChartType.Double)
+        {
+            var charts = (await Mediator.Send(new GetChartsQuery(_currentMix, difficulty))).ToDictionary(c=>c.Id);
+            var ratings = (await Mediator.Send(new GetChartRatingsQuery(_currentMix, difficulty))).ToArray();
+            if(_currentMix == MixEnum.Phoenix){
+                var matchingScores = _phoenixScores.Where(a => !a.IsBroken && a.Score != null && charts.ContainsKey(a.ChartId)).ToDictionary(s=>s.ChartId);
+                var passingScores = _phoenixScores.Where(a => !a.IsBroken && charts.ContainsKey(a.ChartId)).ToDictionary(s => s.ChartId);
+                _toPassCharts = _todos.Where(t => charts.ContainsKey(t) && !passingScores.ContainsKey(t)).Select(t=>charts[t]).ToList();
+                var baseRating = DifficultyLevel.From(difficulty).BaseRating;
+                _averageRating = matchingScores.Any() ? (int)matchingScores.Values.Average(s => s.Score!.Value.LetterGrade.GetModifier() * baseRating) : null;
+            } else
+            {
+                _averageRating = null;
+            }
+            if (type == ChartType.Single)
+            {
+                _difficultyAndTypeFilteredCharts = charts.Values.Where(c => c.Type is ChartType.Single or ChartType.SinglePerformance).ToDictionary(c => c.Id);
+
+                _ratings = ratings.Where(r => charts[r.ChartId].Type is ChartType.Single or ChartType.SinglePerformance).ToDictionary(c=>c.ChartId);
+
+            }
+            else
+            {
+
+                _difficultyAndTypeFilteredCharts = charts.Values.Where(c => c.Type is ChartType.Double or ChartType.DoublePerformance).ToDictionary(c => c.Id);
+
+                _ratings = ratings.Where(r => charts[r.ChartId].Type is ChartType.Double or ChartType.DoublePerformance).ToDictionary(c => c.ChartId);
+            }
+        }
+        else
+        {
+            
+            _difficultyAndTypeFilteredCharts = (await Mediator.Send(new GetChartsQuery(_currentMix, null, ChartType.CoOp))).Where(c => c.PlayerCount == DifficultyFilter).ToDictionary(c=>c.Id);
+            _coOpRatings = (await Mediator.Send(new GetCoOpRatingsQuery())).ToDictionary(c => c.ChartId);
+            _averageRating = null;
 
         }
-        if (CurrentUser.IsLoggedInAsAdmin)
-        {
-            Snackbar.Add("Finished Updating", Severity.Success);
-        }
+        RefilterCharts();
     }
 
     private enum CoOpSortType
