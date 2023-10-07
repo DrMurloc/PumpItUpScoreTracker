@@ -1,6 +1,6 @@
-﻿using ScoreTracker.Domain.ValueTypes;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Reflection;
+using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Enums;
 
@@ -11,10 +11,10 @@ public enum PhoenixLetterGrade
     [ScoreRange(450000, 549999)] [Modifier(0)]
     D,
 
-    [ScoreRange(550000, 674999)] [Modifier(0)]
+    [ScoreRange(550000, 649999)] [Modifier(0)]
     C,
 
-    [ScoreRange(675000, 749999)] [Modifier(.7)]
+    [ScoreRange(650000, 749999)] [Modifier(.7)]
     B,
 
     [ScoreRange(750000, 824999)] [Modifier(.8)]

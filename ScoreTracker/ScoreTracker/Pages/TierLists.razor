@@ -134,11 +134,11 @@ else
             {
 
                 <MudItem xs="12">
-                    @((int)((progress.Title.CompletionRequired - progress.CompletionCount) / (difficultyLevel.Level.BaseRating * PhoenixLetterGrade.SSSPlus.GetModifier()))) (SSS+) -
-                    @((int)((progress.Title.CompletionRequired - progress.CompletionCount) / (difficultyLevel.Level.BaseRating * PhoenixLetterGrade.AA.GetModifier()))) (AA) Charts Remaining:
+                    @((int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / (difficultyLevel.Level.BaseRating * PhoenixLetterGrade.SSSPlus.GetModifier()))) (SSS+) -
+                    @((int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / (difficultyLevel.Level.BaseRating * PhoenixLetterGrade.AA.GetModifier()))) (AA) Charts Remaining:
                     @if (_averageRating != null)
                     {
-                        @($"{(int)(progress.Title.CompletionRequired - progress.CompletionCount) / (_averageRating)} Charts Estimated for You")
+                        @($"{(int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / ((double)_averageRating.Value))} Charts Estimated for You")
                     }
                 </MudItem>
             }

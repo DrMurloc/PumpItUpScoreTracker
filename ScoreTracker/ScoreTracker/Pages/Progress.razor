@@ -19,7 +19,6 @@
 <MudPaper>
 <MudToolBar>
     <MudText Typo="Typo.h6">XX Progress</MudText>
-    <MudButton Style="padding-left:5px;" Href="/Phoenix/Progress" Variant="Variant.Outlined" Color="Color.Primary">Phoenix Progress (Beta)</MudButton>
     <MudSpacer></MudSpacer>
 
     <MudSelect T="SelectedChartsEnum" Label="Chart Type" Value="_selectedCharts" ValueChanged="ChangeSelectedCharts" FullWidth="false" Style="padding-left: 30px;">
@@ -87,6 +86,7 @@
 @inject ICurrentUserAccessor CurrentUser;
 @inject IJSRuntime Javascript;
 @inject ISnackbar Snackbar;
+@inject IUiSettingsAccessor UiSettings;
 @code {
     [Parameter]
     public Guid? RequestedUserId { get; set; }
@@ -305,6 +305,11 @@
     private IEnumerable<BestXXChartAttempt> _scores;
     protected override async Task OnInitializedAsync()
     {
+        if (await UiSettings.GetSelectedMix() == MixEnum.Phoenix)
+        {
+            NavManager.NavigateTo("/Phoenix/Progress");
+            return;
+        }
         if (RequestedUserId == null)
         {
             if (!CurrentUser.IsLoggedIn)

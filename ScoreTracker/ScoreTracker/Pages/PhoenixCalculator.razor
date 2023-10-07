@@ -96,7 +96,7 @@
 <MudImage Src="https://piuimages.arroweclip.se/PhoenixFormula.jpg" Style="max-width:85vw; width:auto;"></MudImage>
 <br/>
 <MudText>
-    Note that Letter Grade and Plate Text formulas were pulled from the <MudButton Color="Color.Primary" Href="https://namu.wiki/w/%ED%8E%8C%ED%94%84%20%EC%9E%87%20%EC%97%85%202023%20PHOENIX" Target="_blank">Korean PIU Wikipedia</MudButton>, it is possible for there to be misalignment with actual game logic:<br />
+    Shout out to daryen for collecting data and finalizing the score ranges for letter grades!
     <br/><br/>
     @foreach (var grade in Enum.GetValues<PhoenixLetterGrade>().OrderByDescending(g => (int)g.GetMinimumScore()))
     {
