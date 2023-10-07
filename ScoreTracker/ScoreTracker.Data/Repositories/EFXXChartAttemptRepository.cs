@@ -11,9 +11,9 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
 {
     private readonly ChartAttemptDbContext _database;
 
-    public EFXXChartAttemptRepository(ChartAttemptDbContext database)
+    public EFXXChartAttemptRepository(IDbContextFactory<ChartAttemptDbContext> factory)
     {
-        _database = database;
+        _database = factory.CreateDbContext();
     }
 
     public async Task<XXChartAttempt?> GetBestAttempt(Guid userId, Chart chart,

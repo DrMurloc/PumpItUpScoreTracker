@@ -1,9 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
-using System.Text.Json;
 
 namespace ScoreTracker.Data.Repositories;
 
@@ -11,9 +11,9 @@ public sealed class EFUserRepository : IUserRepository
 {
     private readonly ChartAttemptDbContext _database;
 
-    public EFUserRepository(ChartAttemptDbContext database)
+    public EFUserRepository(IDbContextFactory<ChartAttemptDbContext> factory)
     {
-        _database = database;
+        _database = factory.CreateDbContext();
     }
 
     public async Task SaveUser(User user, CancellationToken cancellationToken = default)

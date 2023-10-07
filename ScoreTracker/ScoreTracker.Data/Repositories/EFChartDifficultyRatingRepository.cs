@@ -21,9 +21,9 @@ public sealed class EFChartDifficultyRatingRepository : IChartDifficultyRatingRe
 
     private readonly ChartAttemptDbContext _database;
 
-    public EFChartDifficultyRatingRepository(ChartAttemptDbContext database)
+    public EFChartDifficultyRatingRepository(IDbContextFactory<ChartAttemptDbContext> factory)
     {
-        _database = database;
+        _database = factory.CreateDbContext();
     }
 
     public async Task RateChart(MixEnum mix, Guid chartId, Guid userId, DifficultyAdjustment adjustment,

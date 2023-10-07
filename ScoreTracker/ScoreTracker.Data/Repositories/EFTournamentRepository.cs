@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
@@ -6,7 +7,6 @@ using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
-using System.Text.Json;
 
 namespace ScoreTracker.Data.Repositories
 {
@@ -16,10 +16,11 @@ namespace ScoreTracker.Data.Repositories
         private readonly ChartAttemptDbContext _database;
         private readonly IChartRepository _charts;
 
-        public EFTournamentRepository(IMemoryCache memoryCache, IChartRepository charts, ChartAttemptDbContext database)
+        public EFTournamentRepository(IMemoryCache memoryCache, IChartRepository charts,
+            IDbContextFactory<ChartAttemptDbContext> factory)
         {
+            _database = factory.CreateDbContext();
             _memoryCache = memoryCache;
-            _database = database;
             _charts = charts;
         }
 

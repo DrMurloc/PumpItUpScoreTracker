@@ -29,9 +29,9 @@ namespace ScoreTracker.Data.Repositories
             { new Guid("41DCE283-0C6B-4899-96DD-50CE10DC49B9"), 106 },
         };
 
-        public EFQualifiersRepository(ChartAttemptDbContext database, IChartRepository charts)
+        public EFQualifiersRepository(IChartRepository charts, IDbContextFactory<ChartAttemptDbContext> factory)
         {
-            _database = database;
+            _database = factory.CreateDbContext();
             _charts = charts;
         }
 

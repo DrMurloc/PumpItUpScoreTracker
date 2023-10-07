@@ -11,9 +11,9 @@ public sealed class EFChartListRepository : IChartListRepository
 {
     private readonly ChartAttemptDbContext _dbContext;
 
-    public EFChartListRepository(ChartAttemptDbContext dbContext)
+    public EFChartListRepository(IDbContextFactory<ChartAttemptDbContext> factory)
     {
-        _dbContext = dbContext;
+        _dbContext = factory.CreateDbContext();
     }
 
     public async Task<IEnumerable<SavedChartRecord>> GetSavedChartsByUser(Guid userId,

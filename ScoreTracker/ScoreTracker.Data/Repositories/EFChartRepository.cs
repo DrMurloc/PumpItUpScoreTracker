@@ -22,9 +22,9 @@ public sealed class EFChartRepository : IChartRepository
     private readonly IMemoryCache _cache;
     private readonly ChartAttemptDbContext _database;
 
-    public EFChartRepository(ChartAttemptDbContext database, IMemoryCache cache)
+    public EFChartRepository(IMemoryCache cache, IDbContextFactory<ChartAttemptDbContext> factory)
     {
-        _database = database;
+        _database = factory.CreateDbContext();
         _cache = cache;
     }
 

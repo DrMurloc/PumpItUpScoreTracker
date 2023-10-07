@@ -12,9 +12,9 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
 {
     private readonly ChartAttemptDbContext _database;
 
-    public EFPhoenixRecordsRepository(ChartAttemptDbContext database)
+    public EFPhoenixRecordsRepository(IDbContextFactory<ChartAttemptDbContext> factory)
     {
-        _database = database;
+        _database = factory.CreateDbContext();
     }
 
     public async Task UpdateBestAttempt(Guid userId, RecordedPhoenixScore score,

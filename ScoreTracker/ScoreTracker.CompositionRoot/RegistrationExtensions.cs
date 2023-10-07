@@ -28,6 +28,7 @@ public static class RegistrationExtensions
                      .Where(i => i.Assembly == typeof(IChartRepository).Assembly))
             builder.AddTransient(interfaceType, implementationType);
 
+        builder.AddTransient<IDbContextFactory<ChartAttemptDbContext>, ChartDbContextFactory>();
         builder.Configure<SendGridConfiguration>(o =>
         {
             o.FromEmail = twilioConfig.FromEmail;
