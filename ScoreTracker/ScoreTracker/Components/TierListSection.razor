@@ -37,27 +37,27 @@
 
                         @if (Videos.ContainsKey(chart.Id))
                         {
-                            <MudTooltip Text="Open Embeded Video">
+                            <MudTooltip Text=@L["Search Youtube"]>
                                 <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(Videos[chart.Id],chart))"></MudIconButton>
                             </MudTooltip>
                         }
                         else
                         {
-                            <MudTooltip Text="Open Youtube Search for Chart">
+                            <MudTooltip Text=@L["Toggle ToDo"]>
                                 <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
                             </MudTooltip>
                         }
                         <MudSpacer></MudSpacer>
                         @if (CurrentUser.IsLoggedIn)
                         {
-                            <MudTooltip Text="Toggle ToDo">
+                            <MudTooltip Text=@L["Toggle ToDo"]>
                                 <MudIconButton Icon="@Icons.Material.Outlined.ListAlt" OnClick="()=>ToggleToDo(chart.Id)" Color="ToDos.Contains(chart.Id)?Color.Primary:Color.Default"></MudIconButton>
                             </MudTooltip>
                             <MudSpacer></MudSpacer>
                         }
                         @if (CurrentUser.IsLoggedIn)
                         {
-                            <MudTooltip Text="Update Grade">
+                            <MudTooltip Text=@L["Update Grade"]>
                                 <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OnEdit(chart.Id))"></MudIconButton>
                             </MudTooltip>
                         }

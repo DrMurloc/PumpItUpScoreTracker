@@ -9,63 +9,69 @@
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 
-<PageTitle>Upload Phoenix Scores</PageTitle>
+<PageTitle>@L["Import Phoenix Scores"]</PageTitle>
 
 <MudCard >
-    <MudCardHeader><h2>Upload Phoenix Scores</h2></MudCardHeader>
+    <MudCardHeader><h2>@L["Import Phoenix Scores"]</h2></MudCardHeader>
     <MudCardContent>
         @switch (_currentStep)
         {
             case Step.Information:
                 <p>
-                    Use the Copy Script button below.
+                    @L["Phoenix Import Info 1"]
                     <br/><br/>
-                    Use that script in the dev tools while logged in on <a href="https://piugame.com" target="_blank">The Official PIU Site</a> (make sure you aren't on phoenix.piugame.com, just piugame.com)' to download a CSV of your scores.
+                    
+                    @L["Phoenix Import Info 2"]
                     <br/><br/>
-                    You can then upload that csv here for your scores to show up.
+                    
+                    @L["Phoenix Import Info 3"]
                     <br/><br/>
-                    Note: This tool is still under construction, I'm fixing issues with mismatched song names etc. before this tool is officially sustainable.
-                </p>
+                
+                    @L["Phoenix Import Info 4"]
+                    </p>
                 <MudGrid>
                     <MudItem xs="12" sm="6">
-                        <MudNumericField T="int" Min="1" Label="Starting Page" @bind-Value="_startPage"></MudNumericField>
+                        <MudNumericField T="int" Min="1" Label=@L["Starting Page"] @bind-Value="_startPage"></MudNumericField>
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudNumericField T="int?" Min="1" Label="Ending Page" @bind-Value="_endPage" Clearable="true"></MudNumericField>
+                        <MudNumericField T="int?" Min="1" Label=@L["Ending Page"] @bind-Value="_endPage" Clearable="true"></MudNumericField>
                     </MudItem>
                 </MudGrid>
                 break;
             case Step.Uploading:
                 <p>
-                    Spreadsheet is uploading and being processed...
+                    @L["Phoenix Import Uploading"]
                 </p>
                 <MudProgressLinear Indeterminate="true" Color="@Color.Primary" Size="@Size.Large"></MudProgressLinear>
                 break;
             case Step.Confirming:
                 <p>
-                    <b>Scores parsed:</b> @_spreadSheetScores.Count
+                    <b>@L["Scores Parsed"]:</b> @_spreadSheetScores.Count
                     <br/>
-                    <b>Parse Failures:</b> @_failedUploads.Count
+                    <b>@L["Parse Failures"]:</b> @_failedUploads.Count
                     <br/><br/>
-                    Continuing will begin to save the uploaded scores over your existing records. You will not be able to undo this. You will be able to stop the saving process, but it will not roll back uploads.
-                </p>
+                    @L["Phoenix Import Confirming"]
+                
+                    </p>
                 break;
             case Step.Saving:
                 <p>
-                    If you leave this page or cancel, the upload will stop but you will not lose any scores that have already been recorded from your upload.
+                    @L["Phoenix Import Saving"]
                 </p>
                 <br/>
-                <span>@_currentSaved/@_maxSaving Uploaded. @_remainingTime.ToString(@"m\:ss") Remaining. @_failedUploads.Count Failed to record</span>
+                <span>
+                    @L["Phoenix Import Saving Progress",_currentSaved,_maxSaving,_remainingTime.ToString(@"m\:ss"), _failedUploads.Count]
+                </span>
                 <MudProgressLinear Color="@Color.Primary" Size="@Size.Large" Value="@_currentSaved" Min="1" Max="@_maxSaving"/>
                 break;
             case Step.Finished when _failedUploads.Any():
                 <p>
-                    You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again.
-                </p>
+                  @L["Phoenix Import Saving Failures"]
+                    </p>
                 break;
             case Step.Finished when !_failedUploads.Any():
                 <p>
-                    All charts you uploaded were successfully updated!
+                    @L["Phoenix Import Saving Success"]
                 </p>
                 break;
             default:
@@ -82,7 +88,7 @@
             <MudButton Variant="@Variant.Text"
                        Color="@Color.Primary"
                        StartIcon="@Icons.Material.Filled.Cancel"
-                       OnClick="@Cancel">Cancel</MudButton>
+                       OnClick="@Cancel">@L["Cancel"]</MudButton>
         }
         @if (_currentStep == Step.Information)
         {
@@ -90,40 +96,36 @@
                        Color="@Color.Primary"
                        StartIcon="@Icons.Material.Filled.ContentCopy"
                    OnClick="CopyPIUGameScript">
-                Copy Script
+                @L["Copy Script"]
             </MudButton>
             <MudButton HtmlTag="label"
                        Variant="@Variant.Filled"
                        Color="@Color.Primary"
                        StartIcon="@Icons.Material.Filled.UploadFile"
                        for="uploadInput">
-                Upload Scores
+                @L["Upload Scores"]
             </MudButton>
         }
         @if (_currentStep == Step.Confirming)
         {
-            <MudButton Variant="@Variant.Text"
-                       Color="@Color.Primary"
-                       StartIcon="@Icons.Material.Filled.ViewList"
-                       OnClick="@(_=>_isScoreTableShowing=!_isScoreTableShowing)">@(_isScoreTableShowing?"Hide":"Show") Scores</MudButton>
             <MudButton Variant="@Variant.Filled"
                        Color="@Color.Primary"
                        StartIcon="@Icons.Material.Filled.Save"
-                       OnClick="@SaveScores">Save Scores</MudButton>
+                       OnClick="@SaveScores">@L["Save Scores"]</MudButton>
         }
         @if (_failedUploads.Any() && _currentStep is Step.Confirming or Step.Finished)
         {
             <MudButton OnClick="@DownloadFailures"
                        Variant="@Variant.Outlined"
                        Color="@Color.Primary"
-                       StartIcon="@Icons.Material.Filled.FileDownload">Download Failures</MudButton>
+                       StartIcon="@Icons.Material.Filled.FileDownload">@L["Download Failures"]</MudButton>
         }
         @if (_currentStep == Step.Finished)
         {
             <MudButton OnClick="@(_=>_currentStep=Step.Information)"
                        Variant="@Variant.Text"
                        Color="@Color.Primary"
-                       StartIcon="@Icons.Material.Filled.RestartAlt">Restart</MudButton>
+                       StartIcon="@Icons.Material.Filled.RestartAlt">@L["Restart"]</MudButton>
         }
     </MudCardActions>
 </MudCard>

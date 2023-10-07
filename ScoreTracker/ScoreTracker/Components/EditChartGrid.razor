@@ -23,13 +23,13 @@
         }
         
         <MudItem xs="12">
-            <MudNumericField T="int?" Label="Score" Value="_inputScore" ValueChanged="ScoreChanged" Min="XXScore.Min" Max="XXScore.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
+            <MudNumericField T="int?" Label=@L["Score"] Value="_inputScore" ValueChanged="ScoreChanged" Min="XXScore.Min" Max="XXScore.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
         </MudItem>
         <MudItem xs="4">
             @if (CurrentMix == MixEnum.XX)
             {
                 
-                <MudSelect T="XXLetterGrade?" Value="_selectedLetterGrade" ValueChanged="LetterGradeChanged" Clearable="true">
+                <MudSelect T="XXLetterGrade?" Label=@L["Letter Grade"] Value="_selectedLetterGrade" ValueChanged="LetterGradeChanged" Clearable="true">
                     @foreach (var letterGrade in Enum.GetValues<XXLetterGrade>())
                     {
                         <MudSelectItem T="XXLetterGrade?" Value="@letterGrade">@letterGrade.ToString()</MudSelectItem>
@@ -45,13 +45,13 @@
         </MudItem>
 
         <MudItem xs="4">
-            <MudCheckBox T="bool" Checked="@_isBroken" CheckedChanged="BrokenChanged" Label="Broken"></MudCheckBox>
+            <MudCheckBox T="bool" Checked="@_isBroken" CheckedChanged="BrokenChanged" Label=@L["Broken"]></MudCheckBox>
         </MudItem>        
         @if (CurrentMix == MixEnum.Phoenix)
         {
             <MudItem xs="4">
 
-                <MudSelect T="PhoenixPlate?" Label="Plate" Value="_selectedPlate" ValueChanged="PlateChanged" Clearable="true" Margin="@Margin.Dense">
+                <MudSelect T="PhoenixPlate?" Label=@L["Plate"] Value="_selectedPlate" ValueChanged="PlateChanged" Clearable="true" Margin="@Margin.Dense">
                     @foreach (var plate in Enum.GetValues<PhoenixPlate>())
                     {
                         <MudSelectItem T="PhoenixPlate?" Value="@plate">@plate.GetName()</MudSelectItem>
@@ -64,14 +64,14 @@
             @if (_favoriteCharts.Contains(_selectedChart.Id))
             {
 
-                <MudTooltip Text="Remove from Favorites">
+                <MudTooltip Text=@L["Remove from Favorites"]>
                     <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="MudBlazor.Color.Secondary" OnClick="() => RemoveFromFavorites(_selectedChart.Id)"></MudIconButton>
                 </MudTooltip>
             }
             else
             {
 
-                <MudTooltip Text="Add to Favorites">
+                <MudTooltip Text=@L["Add to Favorites"]>
                     <MudIconButton Icon="@Icons.Material.Outlined.Favorite" OnClick="() => AddToFavorites(_selectedChart.Id)"></MudIconButton>
                 </MudTooltip>
             }
@@ -80,14 +80,14 @@
             @if (_todoCharts.Contains(_selectedChart.Id))
             {
 
-                <MudTooltip Text="Remove from To Do List">
+                <MudTooltip Text=@L["Remove from ToDo"]>
                     <MudIconButton Icon="@Icons.Material.Filled.ListAlt" Color="MudBlazor.Color.Secondary" OnClick="() => RemoveFromToDo(_selectedChart.Id)"></MudIconButton>
                 </MudTooltip>
             }
             else
             {
 
-                <MudTooltip Text="Add to To Do List">
+                <MudTooltip Text=@L["Add to ToDo"]>
                     <MudIconButton Icon="@Icons.Material.Outlined.ListAlt" OnClick="() => AddToToDo(_selectedChart.Id)"></MudIconButton>
                 </MudTooltip>
             }
@@ -95,13 +95,13 @@
         @if (_recordedOn != null)
         {
             <MudItem xs="12">
-                <MudText>Recorded on @_recordedOn.Value.ToString("MMM dd, yyyy")</MudText>
+                <MudText>@L["Recorded On",_recordedOn.Value.ToString("MMM dd, yyyy")]</MudText>
             </MudItem>
         }
         @if (_selectedChart.Type != ChartType.CoOp)
         {
             <MudItem xs="8">
-                <MudSelect Label="Your Difficulty Rating" T="int?" Value="_selectedAdjustment" ValueChanged="UpdateDifficultyRating">
+                <MudSelect Label=@L["Your Difficulty Rating"] T="int?" Value="_selectedAdjustment" ValueChanged="UpdateDifficultyRating">
                     @foreach (var rating in Enum.GetValues<DifficultyAdjustment>())
                     {
                         <MudSelectItem T="int?" Value="@rating.GetScale()">@rating.GetDescription()</MudSelectItem>
@@ -110,7 +110,7 @@
             </MudItem>
             <MudItem xs="4">
                 <MudTooltip Text="@CountString">
-                    <MudText>Average Rating: @($"{@_currentRatedDifficulty:N2}")</MudText>
+                    <MudText>@L["Average Rating"]: @($"{@_currentRatedDifficulty:N2}")</MudText>
                 </MudTooltip>
             </MudItem>
         }
@@ -129,7 +129,8 @@
                         @if (_coOpRating != null)
                         {
                             
-                            <MudText>Average For Player @player: @_coOpRating.Ratings[player] (@_coOpRating.VoteCount votes)</MudText>
+                            <MudText>@L["Average for CoOp Player",@player,_coOpRating.Ratings[player],_coOpRating.VoteCount]
+                            </MudText>
                         }
                     </MudItem>
                 }
@@ -137,17 +138,17 @@
             else
             {
                 <MudItem sm="4" xs="12">
-                    <MudNumericField T="int?" Clearable="true" Min="DifficultyLevel.Min" Max="DifficultyLevel.Max" Label="Rated Difficulty Level" Value="_myCoOpRatings[1]" ValueChanged="SetAllCoOpDifficulty"></MudNumericField>
+                    <MudNumericField T="int?" Clearable="true" Min="DifficultyLevel.Min" Max="DifficultyLevel.Max" Label=@L["Rated Difficulty Level"] Value="_myCoOpRatings[1]" ValueChanged="SetAllCoOpDifficulty"></MudNumericField>
                 </MudItem>
                 <MudItem sm="8" xs="12">
                     @if (_coOpRating != null)
                     {
-                        <MudText>Average For Chart: @_coOpRating.Average (@_coOpRating.VoteCount votes)</MudText>
+                        <MudText>@L["Average for CoOp Chart",_coOpRating.Average,_coOpRating.VoteCount]</MudText>
                     }
                 </MudItem>
             }
             <MudItem xs="12">
-                <MudSwitch T="bool" Color="Color.Primary" Label="Different Player Difficulties" @bind-Checked="_rateCoOpSeparately"></MudSwitch>
+                <MudSwitch T="bool" Color="Color.Primary" Label=@L["Different Player Difficulties"] @bind-Checked="_rateCoOpSeparately"></MudSwitch>
             </MudItem>
         }
     }
@@ -161,7 +162,7 @@
     private double? _currentRatedDifficulty;
     private bool _isBroken = true;
     private int _currentRatedCount = 0;
-    private string CountString => $"{_currentRatedCount} votes";
+    private string CountString => L["Vote Count", _currentRatedCount];
     private Chart? _selectedChart;
     private ISet<Guid> _favoriteCharts;
     private ISet<Guid> _todoCharts;

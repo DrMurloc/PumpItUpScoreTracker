@@ -12,11 +12,11 @@
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType;
 @using ScoreTracker.Web.Components
-<PageTitle>Best Attempts</PageTitle>
+<PageTitle>@L["Charts"]</PageTitle>
 
 <MudGrid>
     <MudItem xs="6" sm="4">
-        <MudSelect T="MixEnum" AdornmentIcon="@Icons.Material.Filled.LibraryMusic" Label="Mix" Value="_currentMix" ValueChanged="MixChanged">
+        <MudSelect T="MixEnum" AdornmentIcon="@Icons.Material.Filled.LibraryMusic" Label=@L["Mix"] Value="_currentMix" ValueChanged="MixChanged">
             @foreach (var mix in Enum.GetValues<MixEnum>())
             {
                 <MudSelectItem T="MixEnum" Value="mix">@mix</MudSelectItem>
@@ -26,7 +26,7 @@
     @if (FilterStatus(FilterEnum.Difficulty))
     {
         <MudItem xs="6" sm="4">
-            <MudSelect T="int?" AdornmentIcon="@Icons.Material.Filled.Bolt" Label="Difficulty Level" Value="@DifficultyFilter" ValueChanged="DifficultyFilterChanged" Clearable="true" Disabled="ChartTypeFilter == ChartType.CoOp.ToString()">
+            <MudSelect T="int?" AdornmentIcon="@Icons.Material.Filled.Bolt" Label=@L["Difficulty Level"] Value="@DifficultyFilter" ValueChanged="DifficultyFilterChanged" Clearable="true" Disabled="ChartTypeFilter == ChartType.CoOp.ToString()">
                 @foreach (var level in Enumerable.Range(DifficultyLevel.Min, DifficultyLevel.Max))
                 {
                     <MudSelectItem T="int?" Value="@level">@level</MudSelectItem>
@@ -37,7 +37,7 @@
     @if (FilterStatus(FilterEnum.SongType))
     {
         <MudItem xs="6" sm="4">
-            <MudSelect T="string" AdornmentIcon="@Icons.Material.Filled.MusicNote" Label="Song Type" Value="SongTypeFilter" ValueChanged="SongTypeFilterChanged" Clearable="true">
+            <MudSelect T="string" AdornmentIcon="@Icons.Material.Filled.MusicNote" Label=@L["Song Type"] Value="SongTypeFilter" ValueChanged="SongTypeFilterChanged" Clearable="true">
                 @foreach (var type in Enum.GetValues<SongType>())
                 {
                     <MudSelectItem T="string" Value="@type.ToString()">@type.ToString()</MudSelectItem>
@@ -48,7 +48,7 @@
     @if (FilterStatus(FilterEnum.ChartType))
     {
         <MudItem xs="6" sm="4">
-            <MudSelect T="string" AdornmentIcon="@Icons.Material.Filled.Category" Label="Chart Type" Value="ChartTypeFilter" ValueChanged="ChartTypeFilterChanged" Clearable="true">
+            <MudSelect T="string" AdornmentIcon="@Icons.Material.Filled.Category" Label=@L["Chart Type"] Value="ChartTypeFilter" ValueChanged="ChartTypeFilterChanged" Clearable="true">
                 @foreach (var type in Enum.GetValues<ChartType>())
                 {
                     @if (type == ChartType.CoOp && DifficultyFilter != null)
@@ -67,7 +67,7 @@
         {
 
             <MudItem xs="6" sm="4">
-                <MudSelect T="ScoreState?" AdornmentIcon="@Icons.Material.Filled.Rule" Label="Score State" Value="_scoreStateFilter" ValueChanged="ScoreStateFilterChanged" Clearable="true">
+                <MudSelect T="ScoreState?" AdornmentIcon="@Icons.Material.Filled.Rule" Label=@L["Score State"] Value="_scoreStateFilter" ValueChanged="ScoreStateFilterChanged" Clearable="true">
                     @foreach (var ss in Enum.GetValues<ScoreState>())
                     {
                         <MudSelectItem T="ScoreState?" Value="@ss">@ss.ToString()</MudSelectItem>
@@ -80,8 +80,8 @@
             <MudItem xs="6" sm="4">
 
                 <MudSelect T="string" AdornmentIcon="@Icons.Material.Filled.ListAlt" Label="Saved Charts" MultiSelection="true" SelectedValues="_chartListsFilter" SelectedValuesChanged="ChartListFilterChanged" Clearable="true">
-                    <MudSelectItem T="string" Value="@ChartListType.ToDo.ToString()">To Do</MudSelectItem>
-                    <MudSelectItem T="string" Value="@ChartListType.Favorite.ToString()">Favorites</MudSelectItem>
+                    <MudSelectItem T="string" Value="@ChartListType.ToDo.ToString()">@L["To Do"]</MudSelectItem>
+                    <MudSelectItem T="string" Value="@ChartListType.Favorite.ToString()">@L["Favorites"]</MudSelectItem>
 
                 </MudSelect>
             </MudItem>
@@ -97,7 +97,7 @@
                              ValueChanged="SongNameFilterChanged"
                              AdornmentIcon="@Icons.Material.Filled.Search"
                              ResetValueOnEmptyText="true"
-                             Label="Song Name"
+                             Label=@L["Song Name"]
                              Clearable="true"
                              Adornment="Adornment.End"
                              SearchFunc="@SearchSongs"
@@ -113,10 +113,10 @@
 @if (RequestedUserId != null)
 {
     <br />
-    <MudChip Variant="Variant.Outlined" Size="Size.Small" Color="Color.Info">Total: @FileredCharts.Count()</MudChip>
-    <MudChip Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.Ungraded))">Not Graded: @NotGradedCount</MudChip>
-    <MudChip Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.NotPassed))">Not Passed: @NotPassedCount</MudChip>
-    <MudChip Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.Passed))">Passed: @PassedCount</MudChip>
+    <MudChip Variant="Variant.Outlined" Size="Size.Small" Color="Color.Info">@L["Total Count"]: @FileredCharts.Count()</MudChip>
+    <MudChip Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.Ungraded))">@L["Not Graded Count"]: @NotGradedCount</MudChip>
+    <MudChip Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.NotPassed))">@L["Not Passed Count"]: @NotPassedCount</MudChip>
+    <MudChip Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.Passed))">@L["Passed Count"]: @PassedCount</MudChip>
     <br/>
 }
 <MudTable T="BestAttemptDto" Items="@_charts" Filter="FilterChart"  Loading="@_isLoading" Breakpoint="Breakpoint.None">
@@ -131,48 +131,48 @@
         }
         <MudTooltip Text="Filters">
             <MudMenu Icon="@Icons.Material.Filled.FilterList" Dense="true">
-                <MudMenuItem Icon="@(FilterStatus(FilterEnum.Difficulty)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.Difficulty))">Difficulty</MudMenuItem>
-                <MudMenuItem Icon="@(FilterStatus(FilterEnum.ChartType)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.ChartType))">Chart Type</MudMenuItem>
-                <MudMenuItem Icon="@(FilterStatus(FilterEnum.SongType)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.SongType))">Song Type</MudMenuItem>
-                <MudMenuItem Icon="@(FilterStatus(FilterEnum.SongName)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.SongName))">Song Name</MudMenuItem>
+                <MudMenuItem Icon="@(FilterStatus(FilterEnum.Difficulty)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.Difficulty))">@L["Difficulty Level"]</MudMenuItem>
+                <MudMenuItem Icon="@(FilterStatus(FilterEnum.ChartType)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.ChartType))">@L["Chart Type"]</MudMenuItem>
+                <MudMenuItem Icon="@(FilterStatus(FilterEnum.SongType)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.SongType))">@L["Song Type"]</MudMenuItem>
+                <MudMenuItem Icon="@(FilterStatus(FilterEnum.SongName)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.SongName))">@L["Song Name"]</MudMenuItem>
                 @if (CurrentUser.IsLoggedIn)
                 {
-                    <MudMenuItem Icon="@(FilterStatus(FilterEnum.ScoreState)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.ScoreState))">Score State</MudMenuItem>
-                    <MudMenuItem Icon="@(FilterStatus(FilterEnum.SavedCharts)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.SavedCharts))">Saved Charts</MudMenuItem>
+                    <MudMenuItem Icon="@(FilterStatus(FilterEnum.ScoreState)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.ScoreState))">@L["Score State"]</MudMenuItem>
+                    <MudMenuItem Icon="@(FilterStatus(FilterEnum.SavedCharts)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.SavedCharts))">@L["Saved Charts"]</MudMenuItem>
                 }
             </MudMenu>
         </MudTooltip>
         <MudTooltip Text="Columns">
             <MudMenu Icon="@Icons.Material.Filled.ViewColumn" Dense="true">
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Difficulty)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Difficulty))">Difficulty</MudMenuItem>
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongImage)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongImage))">Song Image</MudMenuItem>
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongName)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongName))">Song Name</MudMenuItem>
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongDuration)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongDuration))">Song Duration</MudMenuItem>
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.AdjustedRating)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.AdjustedRating))">Adjusted Difficulty</MudMenuItem>
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.RatingCount)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.RatingCount))">Rating Count</MudMenuItem>
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.StandardDeviation)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.StandardDeviation))">Standard Deviation</MudMenuItem>
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Difficulty)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Difficulty))">@L["Difficulty Level"]</MudMenuItem>
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongImage)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongImage))">@L["Song Image"]</MudMenuItem>
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongName)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongName))">@L["Song Name"]</MudMenuItem>
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongDuration)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongDuration))">@L["Song Duration"]</MudMenuItem>
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.AdjustedRating)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.AdjustedRating))">@L["Adjusted Difficulty"]</MudMenuItem>
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.RatingCount)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.RatingCount))">@L["Rating Count"]</MudMenuItem>
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.StandardDeviation)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.StandardDeviation))">@L["Standard Deviation"]</MudMenuItem>
                 
                 @if (CurrentUser.IsLoggedIn)
                 {
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.MyRating)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.MyRating))">My Difficulty Adjustments</MudMenuItem>
+                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.MyRating)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.MyRating))">@L["My Difficulty Adjustments"]</MudMenuItem>
                 }
 
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Video)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Video))">Video</MudMenuItem>
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Video)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Video))">@L["Video"]</MudMenuItem>
                 @if (_currentMix == MixEnum.Phoenix)
                 {
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Overview)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Overview))">Leaderboard</MudMenuItem>
+                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Overview)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Overview))">@L["Leaderboard"]</MudMenuItem>
                 }
                 @if (RequestedUserId != null)
                 {         
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Broken)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Broken))">Broken</MudMenuItem>
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Grade)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Grade))">Letter Grade</MudMenuItem>
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Score)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Score))">Score</MudMenuItem>
+                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Broken)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Broken))">@L["Broken"]</MudMenuItem>
+                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Grade)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Grade))">@L["Letter Grade"]</MudMenuItem>
+                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Score)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Score))">@L["Score"]</MudMenuItem>
                     @if (_currentMix == MixEnum.Phoenix)
                     {
-                        <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Plate)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Plate))">Plate</MudMenuItem>
+                        <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Plate)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Plate))">@L["Plate"]</MudMenuItem>
                     }
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.RecordedOn)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.RecordedOn))">Recorded Date</MudMenuItem>
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Actions)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Actions))">Actions</MudMenuItem>
+                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.RecordedOn)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.RecordedOn))">@L["Recorded Date"]</MudMenuItem>
+                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Actions)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Actions))">@L["Actions"]</MudMenuItem>
 
                 }
             </MudMenu>
@@ -181,72 +181,72 @@
     <HeaderContent>
         @if (ColumnStatus(ColumnEnum.Difficulty))
         {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Level">Level</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Level">@L["Difficulty Level"]</MudTableSortLabel></MudTh>
         }
         @if (ColumnStatus(ColumnEnum.SongImage))
         {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.SongName" InitialDirection="SortDirection.Ascending">Song Image</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.SongName" InitialDirection="SortDirection.Ascending">@L["Song Image"]</MudTableSortLabel></MudTh>
         }
         @if (ColumnStatus(ColumnEnum.SongName))
         {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.SongName">Song Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.SongName">@L["Song Name"]</MudTableSortLabel></MudTh>
         }
         @if (ColumnStatus(ColumnEnum.SongDuration))
         {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.SongDuration">Song Duration</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.SongDuration">@L["Song Duration"]</MudTableSortLabel></MudTh>
         }
         @if (ColumnStatus(ColumnEnum.AdjustedRating))
         {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>_adjustedDifficulties[e.ChartId].Difficulty">Adjusted Difficulty</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>_adjustedDifficulties[e.ChartId].Difficulty">@L["Adjusted Difficulty"]</MudTableSortLabel></MudTh>
         }
         @if (ColumnStatus(ColumnEnum.RatingCount))
         {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>_adjustedDifficulties[e.ChartId].RatingCount">Rating Count</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>_adjustedDifficulties[e.ChartId].RatingCount">@L["Rating Count"]</MudTableSortLabel></MudTh>
         }
         
         @if (ColumnStatus(ColumnEnum.StandardDeviation))
         {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>_adjustedDifficulties[e.ChartId].StandardDeviation">Standard Deviation</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>_adjustedDifficulties[e.ChartId].StandardDeviation">@L["Standard Deviation"]</MudTableSortLabel></MudTh>
         }
         @if (ColumnStatus(ColumnEnum.MyRating))
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Level + .5 + (_adjustedDifficulties[e.ChartId].MyRating?.GetAdjustment()??0)">
-                My Difficulty Adjustments
+                @L["My Difficulty Adjustments"]
             </MudTableSortLabel></MudTh>
         }
         @if (ColumnStatus(ColumnEnum.Video))
         {
-            <MudTh>Video</MudTh>
+            <MudTh>@L["Video"]</MudTh>
         }
         @if (_currentMix == MixEnum.Phoenix && ColumnStatus(ColumnEnum.Overview))
         {
-            <MudTh>LeaderBoard</MudTh>
+            <MudTh>@L["Leaderboard"]</MudTh>
         }
         @if (ColumnStatus(ColumnEnum.Broken))
         {
             
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.IsBroken">Broken</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.IsBroken">@L["Broken"]</MudTableSortLabel></MudTh>
         }
         @if (ColumnStatus(ColumnEnum.Score))
         {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Score">Score</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Score">@L["Score"]</MudTableSortLabel></MudTh>
         }
         @if (ColumnStatus(ColumnEnum.Grade))
         {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => _currentMix==MixEnum.XX?e.XXLetterGrade:e.PhoenixLetterGrade">Letter</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => _currentMix==MixEnum.XX?e.XXLetterGrade:e.PhoenixLetterGrade">@L["Letter Grade"]</MudTableSortLabel></MudTh>
         }
         @if (ColumnStatus(ColumnEnum.Plate) && _currentMix==MixEnum.Phoenix)
         {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.PhoenixPlate">Plate</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.PhoenixPlate">@L["Plate"]</MudTableSortLabel></MudTh>
         }
         @if (ColumnStatus(ColumnEnum.RecordedOn))
         {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.RecordedOn">Recorded On</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.RecordedOn">@L["Recorded Date"]</MudTableSortLabel></MudTh>
         }
         @if (CurrentUser.IsLoggedIn && ColumnStatus(ColumnEnum.Actions))
         {
             <MudTh>
-                Actions
+                @L["Actions"]
             </MudTh>
         }
     </HeaderContent>
@@ -311,7 +311,7 @@
 
                 @if (context.ChartType != ChartType.CoOp.ToString() && _adjustedDifficulties.ContainsKey(context.ChartId))
                 {
-                    <MudSelect Label="My Difficulty" T="int?" Value="@_adjustedDifficulties[@context.ChartId].MyRating?.GetScale()" ValueChanged="@(r => UpdateDifficultyRating(context.ChartId, r))">
+                    <MudSelect Label=@L["My Difficulty Adjustments"] T="int?" Value="@_adjustedDifficulties[@context.ChartId].MyRating?.GetScale()" ValueChanged="@(r => UpdateDifficultyRating(context.ChartId, r))">
                         @foreach (var rating in Enum.GetValues<DifficultyAdjustment>())
                         {
                             <MudSelectItem T="int?" Value="@rating.GetScale()">@rating.GetDescription()</MudSelectItem>
@@ -366,7 +366,7 @@
             <MudTd>
                 @if (CanEdit)
                 {
-                    <MudNumericField T="int?" Label="Score" Value="context.Score" ValueChanged="@(newValue => SetScore(context, newValue))" Min="XXScore.Min" Max="XXScore.Max" Variant="Variant.Text" Clearable="true" HideSpinButtons="true"></MudNumericField>
+                    <MudNumericField T="int?" Label=@L["Score"] Value="context.Score" ValueChanged="@(newValue => SetScore(context, newValue))" Min="XXScore.Min" Max="XXScore.Max" Variant="Variant.Text" Clearable="true" HideSpinButtons="true"></MudNumericField>
                 }
                 else
                 {
@@ -403,7 +403,7 @@
                 @if (CanEdit)
                 {
                     
-                    <MudSelect T="PhoenixPlate?" Label="Plate" Value="@context.PhoenixPlate" ValueChanged="@(newValue => SetPlate(context, newValue))" Clearable="true" Margin="@Margin.Dense">
+                    <MudSelect T="PhoenixPlate?" Label=@L["Plate"] Value="@context.PhoenixPlate" ValueChanged="@(newValue => SetPlate(context, newValue))" Clearable="true" Margin="@Margin.Dense">
                         @foreach (var plate in Enum.GetValues<PhoenixPlate>())
                         {
                             <MudSelectItem T="PhoenixPlate?" Value="@plate">@plate.GetName()</MudSelectItem>
@@ -429,7 +429,7 @@
                     @if (_favoriteCharts.Contains(context.ChartId))
                     {
                         <MudMenuItem>
-                            <MudTooltip Text="Remove from Favorites">
+                            <MudTooltip Text=@L["Remove from Favorites"]>
                                 <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" OnClick="()=>RemoveFromFavorites(context.ChartId)"></MudIconButton>
                             </MudTooltip>
                         </MudMenuItem>
@@ -437,7 +437,7 @@
                     else
                     {
                         <MudMenuItem>
-                            <MudTooltip Text="Add to Favorites">
+                            <MudTooltip Text=@L["Add to Favorites"]>
                                 <MudIconButton Icon="@Icons.Material.Outlined.Favorite" OnClick="()=>AddToFavorites(context.ChartId)"></MudIconButton>
                             </MudTooltip>
                         </MudMenuItem>
@@ -445,7 +445,7 @@
                     @if(_todoCharts.Contains(context.ChartId))
                     {
                     <MudMenuItem>
-                        <MudTooltip Text="Remove from To Do List">
+                        <MudTooltip Text=@L["Remove from ToDo"]>
                             <MudIconButton Icon="@Icons.Material.Filled.ListAlt" Color="Color.Secondary" OnClick="()=>RemoveFromToDo(context.ChartId)"></MudIconButton>
                         </MudTooltip>
                     </MudMenuItem>
@@ -453,7 +453,7 @@
                     else
                     {
                     <MudMenuItem>
-                        <MudTooltip Text="Add to To Do List">
+                        <MudTooltip Text=@L["Add to ToDo"]>
                             <MudIconButton Icon="@Icons.Material.Outlined.ListAlt" OnClick="()=>AddToToDo(context.ChartId)"></MudIconButton>
                         </MudTooltip>
                     </MudMenuItem>
@@ -478,22 +478,22 @@
 
     <DialogActions>
         <MudSpacer></MudSpacer>
-        <MudTooltip Text="Report Low Quality, Broken, or Incorrect Video">
-            <MudButton OnClick="NotifyBadVideo" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report">Report Video</MudButton>
+        <MudTooltip Text=@L["Report Video Tooltip"]>
+            <MudButton OnClick="NotifyBadVideo" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report">@L["Report Video"]</MudButton>
         </MudTooltip>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">Close</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
 <MudDialog @bind-IsVisible="_showShareDialog">
     <DialogContent>
-        <MudText>Use this link to share your chart list to other players.</MudText>
+        <MudText>@L["Chart List Share Description"]</MudText>
         <br/>
         <MudTextField Value="@ShareUrl" Label="Share Url" Variant="Variant.Outlined" Margin="Margin.Dense" ReadOnly="true"/>
     </DialogContent>
     <DialogActions>
         <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyShareLink">Copy To Clipboard</MudButton>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showShareDialog=false">Close</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyShareLink">@L["Copy to Clipboard"]</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showShareDialog=false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
 <MudDialog @bind-IsVisible="_showChartOverview">
@@ -505,7 +505,7 @@
     </DialogContent>
     <DialogActions>
         <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showChartOverview = false">Close</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showChartOverview = false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
 @inject IMediator Mediator

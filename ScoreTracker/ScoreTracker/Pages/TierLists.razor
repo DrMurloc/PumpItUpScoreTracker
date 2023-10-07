@@ -14,21 +14,18 @@
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 
-<PageTitle>Record Attempt</PageTitle>
+<PageTitle>@L["Tier Lists"]</PageTitle>
 
 
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
 @inject NavigationManager NavManager;
 @inject IUiSettingsAccessor UiSettings;
-@if (_showDisclaimer)
-{
-    <MudText Color="Color.Warning">While I figure out why the dropdowns on this screen have been so slow, I'm switching one or two fields to other input field types. Apologies for the inconvenience. <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="DismissDisclaimer">Dismiss</MudButton></MudText>
-}
+
 <MudGrid>
 
     <MudItem xs="12" sm="4">
-        <MudSelect T="MixEnum" AdornmentIcon="@Icons.Material.Filled.LibraryMusic" Label="Mix" Value="_currentMix" ValueChanged="MixChanged">
+        <MudSelect T="MixEnum" AdornmentIcon="@Icons.Material.Filled.LibraryMusic" Label=@L["Mix"] Value="_currentMix" ValueChanged="MixChanged">
             @foreach (var mix in Enum.GetValues<MixEnum>())
             {
                 <MudSelectItem T="MixEnum" Value="mix">@mix</MudSelectItem>
@@ -38,14 +35,13 @@
     @if (ChartTypeFilter == nameof(ChartType.CoOp))
     {
         <MudItem xs="12" sm="4">
-            
-                <MudNumericField T="int" AdornmentIcon="@Icons.Material.Filled.Group" HideSpinButtons="true" Clearable="false" Min="2" Max="5" Label="Players" Value="DifficultyFilter" ValueChanged="@(d=>UpdateSelection(d,ChartTypeFilter,_coOpSortType))"></MudNumericField>
+            <MudNumericField T="int" AdornmentIcon="@Icons.Material.Filled.Group" HideSpinButtons="true" Clearable="false" Min="2" Max="5" Label=@L["Players"] Value="DifficultyFilter" ValueChanged="@(d=>UpdateSelection(d,ChartTypeFilter,_coOpSortType))"></MudNumericField>
         </MudItem>
         <MudItem xs="12" sm="4">
-            <MudSelect T="CoOpSortType" AdornmentIcon="@Icons.Material.Filled.Numbers" Label="CoOp Aggregation" Value="_coOpSortType" ValueChanged="@(d => UpdateSelection(DifficultyFilter, ChartTypeFilter, d))">
-                <MudSelectItem T="CoOpSortType" Value="CoOpSortType.Average">Average</MudSelectItem>
-                <MudSelectItem T="CoOpSortType" Value="CoOpSortType.EasiestPlayer">Easiest Player</MudSelectItem>
-                <MudSelectItem T="CoOpSortType" Value="CoOpSortType.HardestPlayer">Hardest Player</MudSelectItem>
+            <MudSelect T="CoOpSortType" AdornmentIcon="@Icons.Material.Filled.Numbers" Label=@L["CoOp Aggregation"] Value="_coOpSortType" ValueChanged="@(d => UpdateSelection(DifficultyFilter, ChartTypeFilter, d))">
+                <MudSelectItem T="CoOpSortType" Value="CoOpSortType.Average">@L.GetString("Average")</MudSelectItem>
+                <MudSelectItem T="CoOpSortType" Value="CoOpSortType.EasiestPlayer">@L.GetString("Easiest Player")</MudSelectItem>
+                <MudSelectItem T="CoOpSortType" Value="CoOpSortType.HardestPlayer">@L.GetString("Hardest Player")</MudSelectItem>
             </MudSelect>
         </MudItem>
     }
@@ -53,23 +49,23 @@
     {
             
         <MudItem xs="12" sm="4">
-            <MudNumericField T="int" AdornmentIcon="@Icons.Material.Filled.Bolt" HideSpinButtons="true" Clearable="false" Min="1" Max="28" Label="Difficulty Level" Value="DifficultyFilter" ValueChanged="@(d=>UpdateSelection(d,ChartTypeFilter,_coOpSortType))"></MudNumericField>
+            <MudNumericField T="int" AdornmentIcon="@Icons.Material.Filled.Bolt" HideSpinButtons="true" Clearable="false" Min="1" Max="28" Label=@L["Difficulty Level"] Value="DifficultyFilter" ValueChanged="@(d=>UpdateSelection(d,ChartTypeFilter,_coOpSortType))"></MudNumericField>
         </MudItem>
     }
     <MudItem xs="12" sm="12">
         <MudRadioGroup T="string" SelectedOption="@ChartTypeFilter" SelectedOptionChanged="@(c => UpdateSelection(DifficultyFilter, c, _coOpSortType))">
-            <MudRadio Option="@ChartType.Single.ToString()" Color="Color.Primary">Singles</MudRadio>
-            <MudRadio Option="@ChartType.Double.ToString()" Color="Color.Primary">Doubles</MudRadio>
-            <MudRadio Option="@ChartType.CoOp.ToString()" Color="Color.Primary">CoOp</MudRadio>
+            <MudRadio Option="@ChartType.Single.ToString()" Color="Color.Primary">@L.GetString("Singles")</MudRadio>
+            <MudRadio Option="@ChartType.Double.ToString()" Color="Color.Primary">@L.GetString("Doubles")</MudRadio>
+            <MudRadio Option="@ChartType.CoOp.ToString()" Color="Color.Primary">@L.GetString("CoOp")</MudRadio>
         </MudRadioGroup>
     </MudItem>
     @if (CurrentUser.IsLoggedIn)
     {
         <MudItem xs="6"> 
-            <MudSwitch T="bool" Label="Hide Completed Charts" Checked="_hideCompleted" CheckedChanged="v=>ToggleVisibility(v,_showOnlyTodos)" Color="Color.Primary"></MudSwitch>
+            <MudSwitch T="bool" Label=@L["Hide Completed Charts"] Checked="_hideCompleted" CheckedChanged="v=>ToggleVisibility(v,_showOnlyTodos)" Color="Color.Primary"></MudSwitch>
         </MudItem>
         <MudItem xs="6">
-            <MudSwitch T="bool" Label="Show Only ToDo Charts" Checked="_showOnlyTodos" CheckedChanged="v=>ToggleVisibility(_hideCompleted,v)" Color="Color.Primary"></MudSwitch>
+            <MudSwitch T="bool" Label=@L["Show Only ToDo Charts"] Checked="_showOnlyTodos" CheckedChanged="v=>ToggleVisibility(_hideCompleted,v)" Color="Color.Primary"></MudSwitch>
         </MudItem>
     }
 </MudGrid>
@@ -84,15 +80,15 @@
 else
 {
 
-    <TierListSection Charts="_underratedCharts" Name="1+ Level Harder" OutlineColor="@Colors.Red.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_veryHardCharts" Name="Very Hard" OutlineColor="@Colors.Orange.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_hardCharts" Name="Hard" OutlineColor="@Colors.Yellow.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_mediumCharts" Name="Medium" OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_easyCharts" Name="Easy" OutlineColor="@Colors.Cyan.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_veryEasyCharts" Name="Very Easy" OutlineColor="@Colors.Blue.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_overratedCharts" Name="1+ Level Easier" OutlineColor="@Colors.Purple.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_disputedCharts" Disclaimer="Charts with 4 or more votes, within .5 levels of adjusted rating, and more than .4 Standard Deviation" Name="Disputed Charts" OutlineColor="@Colors.Brown.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_notRatedCharts" Name="Not Rated" OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Charts="_underratedCharts" Name=@L.GetString("1+ Level Harder") OutlineColor="@Colors.Red.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Charts="_veryHardCharts" Name=@L.GetString("Very Hard") OutlineColor="@Colors.Orange.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Charts="_hardCharts" Name=@L.GetString("Hard") OutlineColor="@Colors.Yellow.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Charts="_mediumCharts" Name=@L.GetString("Medium") OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Charts="_easyCharts" Name=@L.GetString("Easy") OutlineColor="@Colors.Cyan.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Charts="_veryEasyCharts" Name=@L.GetString("Very Easy") OutlineColor="@Colors.Blue.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Charts="_overratedCharts" Name=@L.GetString("1+ Level Easier") OutlineColor="@Colors.Purple.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Charts="_disputedCharts" Disclaimer=@L.GetString("Disputed Charts Disclaimer") Name=@L.GetString("Disputed Charts") OutlineColor="@Colors.Brown.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Charts="_notRatedCharts" Name=@L.GetString("Not Rated") OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
 
 }
 
@@ -101,7 +97,7 @@ else
     <MudGrid>
         <MudItem xs="12">
             <MudText Typo="Typo.h4">
-                Title Progress
+                @L.GetString("Title Progress")
             </MudText>
         </MudItem>
         @foreach (var progress in _titleProgress.Where(t => t.Title is PhoenixDifficultyTitle pdt && pdt.Level == DifficultyFilter))
@@ -125,7 +121,7 @@ else
                     else
                     {
                         <MudText Typo="Typo.subtitle1">
-                            Completed
+                            @L.GetString("Completed")
                         </MudText>
                     }
                 </MudProgressLinear>
@@ -134,11 +130,11 @@ else
             {
 
                 <MudItem xs="12">
-                    @((int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / (difficultyLevel.Level.BaseRating * PhoenixLetterGrade.SSSPlus.GetModifier()))) (SSS+) -
-                    @((int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / (difficultyLevel.Level.BaseRating * PhoenixLetterGrade.AA.GetModifier()))) (AA) Charts Remaining:
+                    @L["Remaining Charts",((int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / (difficultyLevel.Level.BaseRating * PhoenixLetterGrade.SSSPlus.GetModifier()))),
+                        ((int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / (difficultyLevel.Level.BaseRating * PhoenixLetterGrade.AA.GetModifier())))];
                     @if (_averageRating != null)
                     {
-                        @($"{(int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / ((double)_averageRating.Value))} Charts Estimated for You")
+                        @L["Remaining Charts For You",(int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / ((double)_averageRating.Value))];
                     }
                 </MudItem>
             }
@@ -147,7 +143,7 @@ else
             <MudText Typo="Typo.h4"></MudText>
         </MudItem>
         <MudItem xs="12">
-            You have @_toPassCharts.Count() level @DifficultyFilter charts marked To Do that you haven't passed.
+            @L.GetString("Unpassed ToDos",_toPassCharts.Count(),@DifficultyFilter)
         </MudItem>
         @foreach(var chart in _toPassCharts){
         <MudItem xs="12">
@@ -166,7 +162,7 @@ else
     </DialogContent>
     <DialogActions>
         <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showEditDialog = false">Close</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showEditDialog = false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
 <MudDialog @bind-IsVisible="_showVideoDialog">
@@ -180,10 +176,10 @@ else
 
     <DialogActions>
         <MudSpacer></MudSpacer>
-        <MudTooltip Text="Report Low Quality, Broken, or Incorrect Video">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report" OnClick="NotifyBadVideo">Report Video</MudButton>
+        <MudTooltip Text=@L["Report Video Tooltip"]>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report" OnClick="NotifyBadVideo">@L["Report Video"]</MudButton>
         </MudTooltip>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">Close</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
 @inject IAdminNotificationClient Notifications;
@@ -208,17 +204,8 @@ else
     private bool _showEditDialog = false;
     private string _currentVideo = "";
     private string _currentVideoDescription = string.Empty;
-    private bool _showDisclaimer = false;
     private const string ShowTierListDisclaimer = "TierLists_ShowUIDisclaimer";
-
-    private async Task DismissDisclaimer()
-    {
-        _showDisclaimer = false;
-        if (CurrentUser.IsLoggedIn)
-        {
-            await Mediator.Send(new SaveUserUiSettingCommand(ShowTierListDisclaimer, bool.TrueString));
-        }
-    }
+    
     public async Task ToggleTodo(Guid chartId)
     {
         if (!_todos.Contains(chartId))
@@ -346,14 +333,6 @@ else
 
         _videos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl.ToString());
 
-        if (CurrentUser.IsLoggedIn)
-        {
-            _showDisclaimer = !(await Mediator.Send(new GetUserUiSettingsQuery())).ContainsKey(ShowTierListDisclaimer);
-        }
-        else
-        {
-            _showDisclaimer = true;
-        }
         await MixChanged(_currentMix);
     }
     private IDictionary<Guid,Chart> _difficultyAndTypeFilteredCharts = new Dictionary<Guid,Chart>();

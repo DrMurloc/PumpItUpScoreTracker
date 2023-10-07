@@ -8,22 +8,22 @@
 @using CsvHelper
 @using System.Globalization
 
-<PageTitle>Account</PageTitle>
+<PageTitle>@L["Account"]</PageTitle>
 
 <MudCard>
-    <MudCardHeader>Account Settings</MudCardHeader>
+    <MudCardHeader>@L["Account"]</MudCardHeader>
     <MudCardContent>
-        <MudTextField Label="Id" Disabled="true" Value="@_id" HelperText="Used primarily for debugging"></MudTextField>
-        <MudTextField T="string" Disabled="_isUpdatingUser" Label="Username" MaxLength="100" Value="@_name" ValueChanged="UpdateName"></MudTextField>
-        <MudSwitch T="bool" Disabled="_isUpdatingUser" Label="Public" Checked="_isPublic" CheckedChanged="()=>_showPublicConfirmDialog=true" Color="Color.Success"></MudSwitch>
+        <MudTextField Label="Id" Disabled="true" Value="@_id" HelperText=@L["Used Primarily for debugging"]></MudTextField>
+        <MudTextField T="string" Disabled="_isUpdatingUser" Label=@L["Username"] MaxLength="100" Value="@_name" ValueChanged="UpdateName"></MudTextField>
+        <MudSwitch T="bool" Disabled="_isUpdatingUser" Label=@L["Public"] Checked="_isPublic" CheckedChanged="()=>_showPublicConfirmDialog=true" Color="Color.Success"></MudSwitch>
     </MudCardContent>
     <MudCardActions>
         <MudSpacer></MudSpacer>
-        <MudButton Icon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Primary" OnClick="DownloadScores">Download Scores</MudButton>
-        <MudButton Href="/UploadXXScores" Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Filled" Color="Color.Primary">Upload XX Scores</MudButton>
-        <MudButton Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Filled" Color="Color.Primary">Import Phoenix Scores</MudButton>
+        <MudButton Icon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Primary" OnClick="DownloadScores">@L["Download Scores"]</MudButton>
+        <MudButton Href="/UploadXXScores" Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Filled" Color="Color.Primary">@L["Upload XX Scores"]</MudButton>
+        <MudButton Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Filled" Color="Color.Primary">@L["Import Phoenix Scores"]</MudButton>
         
-        <MudButton Href="/Logout" Icon="@Icons.Material.Filled.Logout" Variant="Variant.Filled" Color="Color.Primary">Logout</MudButton>
+        <MudButton Href="/Logout" Icon="@Icons.Material.Filled.Logout" Variant="Variant.Filled" Color="Color.Primary">@L["Logout"]</MudButton>
     </MudCardActions>
 </MudCard>
 
@@ -31,14 +31,14 @@
     <DialogContent>
         @if (_isPublic)
         {
-            <MudText>Making your account private will make your scores and progress no longer be externally visible, even for anyone already following you.</MudText>
+            <MudText>@L["Make Not Public Disclaimer"]</MudText>
             
         }
         else
         {
-            <MudText>Making your account public will make your scores and progress externally visible. Others will be able to search for your account by name or ID.</MudText>
+            <MudText>@L["Make Public Disclaimer 1"]</MudText>
             <br/>
-            <MudText>If your account was previously public and you made it private, making it public again will make anyone following you able to see your progress again.</MudText>
+            <MudText>@L["Make Public Disclaimer 2"]</MudText>
         }
     </DialogContent>
     <DialogActions>
@@ -48,7 +48,7 @@
                    Color="Color.Primary">Cancel</MudButton>
         <MudButton Variant="Variant.Filled"
                    OnClick="ToggleIsPublic"
-                   Color="Color.Primary">Make @(_isPublic?"Private":"Public")</MudButton>
+                   Color="Color.Primary">@(_isPublic?@L["Make Private"]:@L["Make Public"])</MudButton>
     </DialogActions>
 </MudDialog>
 

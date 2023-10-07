@@ -28,31 +28,31 @@
     </MudItem>
     <MudItem xs="12">
         <MudText>
-            <b>Score:</b> @Score.CalculatePhoenixScore
+            <b>@L["Score"]:</b> @Score.CalculatePhoenixScore
         </MudText>
         <MudText>
-            <b>Letter:</b> @Score.LetterGrade.GetName()
+            <b>@L["Letter Grade"]:</b> @Score.LetterGrade.GetName()
         </MudText>
         <MudText>
-            <b>Plate:</b> @Score.PlateText
+            <b>@L["Plate"]:</b> @Score.PlateText
         </MudText>
 
         @if (Score.IsValid)
         {
             <MudText>
-                <b>Next Letter:</b> @Score.NextLetterGrade()
+                <b>@L["Next Letter"]:</b> @Score.NextLetterGrade()
             </MudText>
 
-            <MudText><b>Greats Score Loss:</b> @Score.GreatLoss</MudText>
+            <MudText><b>@L["Score Loss","Greats"]:</b> @Score.GreatLoss</MudText>
 
-            <MudText><b>Goods Score Loss:</b> @Score.GoodLoss</MudText>
+            <MudText><b>@L["Score Loss","Goods"]:</b> @Score.GoodLoss</MudText>
 
-            <MudText><b>Bads Score Loss:</b> @Score.BadLoss</MudText>
+            <MudText><b>@L["Score Loss","Bads"]:</b> @Score.BadLoss</MudText>
 
-            <MudText><b>Miss Score Loss:</b> @Score.MissLoss</MudText>
+            <MudText><b>@L["Score Loss","Misses"]:</b> @Score.MissLoss</MudText>
 
-            <MudText><b>Combo Score Loss:</b> @Score.ComboLoss</MudText>
-            <MudText>(Note: Score loss may be off by 1-4 points due to rounding)</MudText>
+            <MudText><b>@L["Score Loss","Combo"]:</b> @Score.ComboLoss</MudText>
+            <MudText>(@L["Score Loss Note"])</MudText>
             
         }
     </MudItem>
@@ -83,33 +83,33 @@
         }
         else
         {
-            <MudButton Color="Color.Primary" Disabled="!Score.IsValid" Variant="Variant.Outlined" OnClick="ShowDistribution">Show Score Distribution</MudButton>
+            <MudButton Color="Color.Primary" Disabled="!Score.IsValid" Variant="Variant.Outlined" OnClick="ShowDistribution">@L["Show Score Distribution"]</MudButton>
         }
     </MudItem>
 </MudGrid>
 <br/>
 <br/>
 <MudText>
-    Shout out to MR_WEQ for reverse engineering this score formula!<br/>
+    @L["Score Formula Shoutout"]<br/>
 </MudText>
 
 <MudImage Src="https://piuimages.arroweclip.se/PhoenixFormula.jpg" Style="max-width:85vw; width:auto;"></MudImage>
 <br/>
 <MudText>
-    Shout out to daryen for collecting data and finalizing the score ranges for letter grades!
+    @L["Score Range Shoutout"]
     <br/><br/>
     @foreach (var grade in Enum.GetValues<PhoenixLetterGrade>().OrderByDescending(g => (int)g.GetMinimumScore()))
     {
         <span>@grade.GetName(): @grade.GetMinimumScore() ~ @grade.GetMaximumScore() points</span><br/>
     }
-    Perfect Game: All Perfect (previous SSS)<br/>
-    Ultimate Game: All Perfect + Great (Previous SS) <br/>
-    Extreme Game: All Perfect + Great + Good <br/>
-    Superb Game: No Miss (previous S)<br/>
-    Marvelous Game: 5 misses or less<br/>
-    Talented Game: 10 misses or less<br/>
-    Fair Game: Less than or Equal to 20 misses<br/>
-    Rough Game: Over 20 misses
+    Perfect Game: 100% Perfect<br/>
+    Ultimate Game: 100% Perfect + Great<br/>
+    Extreme Game: 100% Perfect + Great + Good <br/>
+    Superb Game: 0 Miss (previous S)<br/>
+    Marvelous Game: &lt;= 5 misses<br/>
+    Talented Game: &lt;= 10 misses<br/>
+    Fair Game: &lt;= 20 misses<br/>
+    Rough Game: > 20 misses
 </MudText>
 @inject ISnackbar Snackbar;
 @inject ILogger<PhoenixCalculator> Logger;

@@ -26,48 +26,48 @@
         <MudNavMenu>
             @if (CurrentUser.IsLoggedIn)
             {
-                <MudNavLink Href="/Account" Icon="@Icons.Material.Filled.AccountCircle">Account</MudNavLink>
+                <MudNavLink Href="/Account" Icon="@Icons.Material.Filled.AccountCircle">@L["Account"]</MudNavLink>
                 <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                <MudNavLink Href="/Record" Icon="@Icons.Material.Filled.Description">Record Score</MudNavLink>
+                <MudNavLink Href="/Record" Icon="@Icons.Material.Filled.Description">@L["Record Score"]</MudNavLink>
                 <MudDivider DividerType="DividerType.Middle"></MudDivider>
             }
             else
             {
                 
-                <MudNavLink Href="/Login" Icon="@Icons.Material.Filled.NoAccounts">Log In</MudNavLink>
+                <MudNavLink Href="/Login" Icon="@Icons.Material.Filled.NoAccounts">@L["Login"]</MudNavLink>
                 <MudDivider DividerType="DividerType.Middle"></MudDivider>
             }
-            <MudNavLink Href="/Charts" Icon="@Icons.Material.Filled.List">Charts List</MudNavLink>
+            <MudNavLink Href="/Charts" Icon="@Icons.Material.Filled.List">@L["Charts List"]</MudNavLink>
             <MudDivider DividerType="DividerType.Middle"></MudDivider>
-            <MudNavLink Href="/TierLists" Icon="@Icons.Material.Filled.Topic">Tier Lists</MudNavLink>
+            <MudNavLink Href="/TierLists" Icon="@Icons.Material.Filled.Topic">@L["Tier Lists"]</MudNavLink>
             <MudDivider DividerType="DividerType.Middle"></MudDivider>
-            <MudNavGroup Title="Progress" Icon="@Icons.Material.Filled.TrendingUp" Expanded="false">
-                <MudNavLink Href="/Titles" Icon="@Icons.Material.Filled.Grade">Titles</MudNavLink>
+            <MudNavGroup Title=@L["Progress"] Icon="@Icons.Material.Filled.TrendingUp" Expanded="false">
+                <MudNavLink Href="/Titles" Icon="@Icons.Material.Filled.Grade">@L["Titles"]</MudNavLink>
                 <MudDivider DividerType="DividerType.Middle"></MudDivider>
                 @if (CurrentUser.IsLoggedIn)
                 {
-                    <MudNavLink Href="/Progress" Icon="@Icons.Material.Filled.BarChart">Charts</MudNavLink>
+                    <MudNavLink Href="/Progress" Icon="@Icons.Material.Filled.BarChart">@L["Progress Charts"]</MudNavLink>
                     <MudDivider DividerType="DividerType.Middle"></MudDivider>
                 }
             </MudNavGroup>
             <MudDivider DividerType="DividerType.Middle"></MudDivider>
-            <MudNavGroup Title="Tools" Icon="@Icons.Material.Filled.Build" Expanded="false">
-                <MudNavLink Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">Phoenix Score Calculator</MudNavLink>
+            <MudNavGroup Title=@L["Tools"] Icon="@Icons.Material.Filled.Build" Expanded="false">
+                <MudNavLink Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</MudNavLink>
                 <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                <MudNavLink Href="/ChartRandomizer" Icon="@Icons.Material.Filled.QuestionMark">Chart Randomizer</MudNavLink>
+                <MudNavLink Href="/ChartRandomizer" Icon="@Icons.Material.Filled.QuestionMark">@L["Chart Randomizer"]</MudNavLink>
             </MudNavGroup>
             <MudDivider DividerType="DividerType.Middle"></MudDivider>
-            <MudNavGroup Title="Tournaments" Icon="@Icons.Material.Filled.Leaderboard" Expanded="false">
-                <MudNavLink Href="/Tournaments" Icon="@Icons.Material.Filled.Leaderboard">Tournaments</MudNavLink>
+            <MudNavGroup Title=@L["Tournaments"] Icon="@Icons.Material.Filled.Leaderboard" Expanded="false">
+                <MudNavLink Href="/Tournaments" Icon="@Icons.Material.Filled.Leaderboard">@L["Tournaments"]</MudNavLink>
                 <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                <MudNavLink Href="/TournamentBuilder" Icon="@Icons.Material.Filled.Calculate">Tournament Builder</MudNavLink>
+                <MudNavLink Href="/TournamentBuilder" Icon="@Icons.Material.Filled.Calculate">@L["Tournament Builder"]</MudNavLink>
                 <MudDivider></MudDivider>
                 <MudNavLink Href="/Eclipse/Qualifiers" Icon="@Icons.Material.Filled.Event">Eclipse 2023</MudNavLink>
             </MudNavGroup>
             <MudDivider DividerType="DividerType.Middle"></MudDivider>
-            <MudNavLink Href="/Players" Icon="@Icons.Material.Filled.Person">Find Players</MudNavLink>
+            <MudNavLink Href="/Players" Icon="@Icons.Material.Filled.Person">@L["Find Players"]</MudNavLink>
             <MudDivider DividerType="DividerType.Middle"></MudDivider>
-            <MudNavLink Href="/About" Icon="@Icons.Material.Filled.Info">About</MudNavLink>
+            <MudNavLink Href="/About" Icon="@Icons.Material.Filled.Info">@L["About"]</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>

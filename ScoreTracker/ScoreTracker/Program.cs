@@ -1,9 +1,11 @@
 using BlazorApplicationInsights;
+using Microsoft.Extensions.Localization;
 using MudBlazor.Services;
 using OfficeOpenXml;
 using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Web;
 using ScoreTracker.Web.Accessors;
 using ScoreTracker.Web.Configuration;
 using ScoreTracker.Web.Services;
@@ -57,7 +59,8 @@ builder.Services.AddBlazorApplicationInsights()
         builder.Configuration.GetSection("Sendgrid").Get<SendGridConfiguration>())
     .AddTransient<IDateTimeOffsetAccessor, DateTimeOffsetAccessor>()
     .AddControllers();
-
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+builder.Services.AddScoped<IStringLocalizer<App>, StringLocalizer<App>>();
 
 builder.Services.AddCookiePolicy(opts =>
 {
@@ -67,7 +70,10 @@ builder.Services.AddCookiePolicy(opts =>
 ;
 
 var app = builder.Build();
-
+app.UseRequestLocalization(new RequestLocalizationOptions()
+    .AddSupportedCultures("en-US")
+    .AddSupportedUICultures("en-US")
+    .SetDefaultCulture("en-US"));
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
