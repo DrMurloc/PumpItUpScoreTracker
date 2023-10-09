@@ -31,6 +31,7 @@ public interface IChartRepository
         Name channelName, Uri videoUrl,
         CancellationToken cancellationToken = default);
 
+    Task SetChartVideo(Guid id, Uri videoUrl, Name channelName, CancellationToken cancellationToken = default);
     Task SetSongDuration(Name songName, TimeSpan duration, CancellationToken cancellationToken = default);
     void ClearCache();
 }

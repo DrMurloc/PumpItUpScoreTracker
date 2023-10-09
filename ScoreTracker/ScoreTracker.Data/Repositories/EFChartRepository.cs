@@ -62,11 +62,12 @@ public sealed class EFChartRepository : IChartRepository
         return charts.Values.Where(c => c.Type == ChartType.CoOp);
     }
 
+    private const string VideoCacheKey = $"{nameof(EFChartRepository)}_{nameof(GetChartVideoInformation)}";
+
     public async Task<IEnumerable<ChartVideoInformation>> GetChartVideoInformation(
         IEnumerable<Guid>? chartIds = default, CancellationToken cancellationToken = default)
     {
-        const string key = $"{nameof(EFChartRepository)}_{nameof(GetChartVideoInformation)}";
-        var chartVideos = await _cache.GetOrCreateAsync<IDictionary<Guid, ChartVideoInformation>>(key,
+        var chartVideos = await _cache.GetOrCreateAsync<IDictionary<Guid, ChartVideoInformation>>(VideoCacheKey,
             async entry =>
             {
                 entry.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromDays(14);
@@ -95,13 +96,35 @@ public sealed class EFChartRepository : IChartRepository
         return newSong.Id;
     }
 
+    public async Task SetChartVideo(Guid id, Uri videoUrl, Name channelName,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await _database.ChartVideo.FirstOrDefaultAsync(c => c.ChartId == id, cancellationToken);
+        if (entity == null)
+        {
+            await _database.ChartVideo.AddAsync(new ChartVideoEntity
+            {
+                ChartId = id,
+                ChannelName = channelName,
+                VideoUrl = videoUrl.ToString()
+            }, cancellationToken);
+        }
+        else
+        {
+            entity.VideoUrl = videoUrl.ToString();
+            entity.ChannelName = channelName;
+        }
+
+        await _database.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task SetSongDuration(Name songName, TimeSpan duration, CancellationToken cancellationToken = default)
     {
         var nameString = songName.ToString();
         var song = await _database.Song.SingleAsync(s => s.Name == nameString, cancellationToken);
         song.Duration = duration;
         await _database.SaveChangesAsync(cancellationToken);
-        ClearCache();
+        _cache.Remove(VideoCacheKey);
     }
 
     public void ClearCache()
