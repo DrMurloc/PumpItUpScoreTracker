@@ -158,7 +158,7 @@
                         </MudItem>
                     }
                 }
-                @if (_photoUrl != null)
+                @if (_photoUrl != null && !_isUploading)
                 {
                     
                     <MudItem xs="6" sm="3" md="2">
@@ -168,8 +168,14 @@
                     </MudItem>
                                      
                 }
+                @if (_isUploading)
+                {
+                    <MudItem xs="6" sm="3" md="2">
+                        <MudProgressCircular Indeterminate="true" Color="Color.Primary"></MudProgressCircular>
+                    </MudItem>
+                }
                 <MudItem xs="6" sm="3" md="2">
-                    <MudFileUpload T="IBrowserFile" Accept=".png, .gif, .jpg, .jpeg," MaximumFileCount="1" FilesChanged="UploadFiles">
+                    <MudFileUpload T="IBrowserFile" Disabled="_isUploading" Accept=".png, .gif, .jpg, .jpeg," MaximumFileCount="1" FilesChanged="UploadFiles">
                         <ButtonTemplate>
                             <MudButton HtmlTag="label"
                                        Variant="Variant.Filled"
@@ -246,6 +252,8 @@
 
     public string DifficultyBubblePath(string difficultyShorthand) =>
         $"https://piuimages.arroweclip.se/difficulty/{difficultyShorthand.ToLower()}.png";
+
+    private bool _isUploading = false;
     private const long MaxFileSize = 20000000;
     private async Task NotifyBadVideo()
     {
@@ -367,6 +375,8 @@
             Snackbar.Add($"Your file was more than 20MB, please reduce your file size and try again.", Severity.Error);
             return;
         }
+
+        _isUploading = true;
         try
         {
             var path = $"qualifiers/eclipse2023/{_username}/{Guid.NewGuid()}.{file.Name.Split('.')[^1]}";
@@ -378,6 +388,7 @@
             Snackbar.Add($"There was an error while uploading your image, please try again. If the problem persists contact DrMurloc", Severity.Error);
             Logger.LogError(e, $"There was an error while uploading a photo: {e.Message} - {file.Name} {file.Size}");
         }
+        _isUploading = false;
 
     }
     protected override async Task OnInitializedAsync()

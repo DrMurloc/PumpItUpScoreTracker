@@ -93,8 +93,14 @@
                     </MudCard>
                 </MudItem>
             }
+            if (_isUploadingPhoto)
+            {
+                <MudItem xs="6" sm="3" md="2">
+                    <MudProgressCircular Indeterminate="true" Color="Color.Primary"></MudProgressCircular>
+                </MudItem>
+            }
             <MudItem xs="6" sm="3" md="2">
-                <MudFileUpload T="IReadOnlyList<IBrowserFile>" Accept=".png, .gif, .jpg, .jpeg," FilesChanged="UploadFiles">
+                <MudFileUpload T="IReadOnlyList<IBrowserFile>" Disabled="_isUploadingPhoto" Accept=".png, .gif, .jpg, .jpeg," FilesChanged="UploadFiles">
                     <ButtonTemplate>
                         <MudButton HtmlTag="label"
                                    Variant="Variant.Filled"
@@ -181,6 +187,7 @@
     [Parameter][SupplyParameterFromQuery(Name = "UserId")] public Guid? UserId { get; set; }
     private PhoenixPlate _plate = PhoenixPlate.MarvelousGame;
     private bool _isBroken = false;
+    private bool _isUploadingPhoto = false;
     private int _score = 0;
     private TournamentSession? _session;
     private TournamentConfiguration _configuration = new TournamentConfiguration();
@@ -206,6 +213,7 @@
         }
         var hasOversizedFile = false;
         var hasError = false;
+        _isUploadingPhoto = true;
         foreach (var file in files)
         {
 
@@ -235,6 +243,7 @@
         {
             Snackbar.Add($"One of your files was more than 20MB, please reduce your file size and try again.", Severity.Error);
         }
+        _isUploadingPhoto = false;
     }
     private async Task SetUser(string userIdString)
     {
