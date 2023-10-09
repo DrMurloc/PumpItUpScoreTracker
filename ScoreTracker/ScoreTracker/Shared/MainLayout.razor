@@ -1,4 +1,7 @@
 ﻿@using ScoreTracker.Domain.SecondaryPorts
+@using MediatR
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Queries
 @inherits LayoutComponentBase
 @inject ICurrentUserAccessor CurrentUser
 
@@ -73,12 +76,41 @@
     <MudMainContent>
         <MudContainer>
             @Body
+            
+            <MudDialog @bind-IsVisible="_showDiscordDialog">
+                <DialogContent>
+                    <MudText Typo="Typo.h4">@L["New Discord"]</MudText>
+                    @L["New Discord Disclaimer"]<br/><MudButton Href="https://discord.gg/MEYvr3bFte" Target="_blank" StartIcon="@Icons.Custom.Brands.Discord" Variant="Variant.Filled" Color="Color.Primary">PiuScores Discord</MudButton>
+                </DialogContent>
+                <DialogActions>
+                    <MudSpacer></MudSpacer>
+                    <MudButton Variant="Variant.Text"
+                               OnClick="()=>_showDiscordDialog=false"
+                               Color="Color.Primary">@L["Close"]</MudButton>
+                </DialogActions>
+            </MudDialog>
         </MudContainer>
     </MudMainContent>
 </MudLayout>
+@inject IMediator Mediator;
 @code
 {
     private bool _isOpen = false;
+    private bool _showDiscordDialog = false;
+        private const string DiscordPopupKey = "MainLayout__DiscordPopupShown";
+    protected override async Task OnInitializedAsync()
+    {
+        if (CurrentUser.IsLoggedIn)
+        {
+            var settings = await Mediator.Send(new GetUserUiSettingsQuery());
+            if (!settings.ContainsKey(DiscordPopupKey))
+            {
+                _showDiscordDialog = true;
+                await Mediator.Send(new SaveUserUiSettingCommand(DiscordPopupKey, "true"));
+            }
+        }
+    }
+
     private static readonly MudTheme Theme = new()
         {
             Palette = new()

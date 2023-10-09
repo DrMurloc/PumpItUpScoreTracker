@@ -302,6 +302,12 @@
     <value>My Difficulty Adjustments</value>
     <comment>I.E chart difficulty vote</comment>
   </data>
+  <data name="New Discord" xml:space="preserve">
+    <value>New Discord</value>
+  </data>
+  <data name="New Discord Disclaimer" xml:space="preserve">
+    <value>I created a discord for updates and feedback! Feel free to join:</value>
+  </data>
   <data name="Next Letter" xml:space="preserve">
     <value>Next Letter</value>
   </data>

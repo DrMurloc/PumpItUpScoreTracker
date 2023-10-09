@@ -294,6 +294,12 @@
   <data name="My Difficulty Adjustments" xml:space="preserve">
     <value>Meus ajustes de dificuldade</value>
   </data>
+  <data name="New Discord" xml:space="preserve">
+    <value>Novo Discord</value>
+  </data>
+  <data name="New Discord Disclaimer" xml:space="preserve">
+    <value>Eu criei um Discord para atualizações e feedback! Sinta-se à vontade para entrar:</value>
+  </data>
   <data name="Next Letter" xml:space="preserve">
     <value>Próxima letra</value>
   </data>
