@@ -87,7 +87,6 @@ else
     <TierListSection Charts="_easyCharts" Name=@L.GetString("Easy") OutlineColor="@Colors.Cyan.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
     <TierListSection Charts="_veryEasyCharts" Name=@L.GetString("Very Easy") OutlineColor="@Colors.Blue.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
     <TierListSection Charts="_overratedCharts" Name=@L.GetString("1+ Level Easier") OutlineColor="@Colors.Purple.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_disputedCharts" Disclaimer=@L.GetString("Disputed Charts Disclaimer") Name=@L.GetString("Disputed Charts") OutlineColor="@Colors.Brown.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
     <TierListSection Charts="_notRatedCharts" Name=@L.GetString("Not Rated") OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
 
 }
@@ -195,7 +194,6 @@ else
     private ICollection<Chart> _veryHardCharts = Array.Empty<Chart>();
     private ICollection<Chart> _underratedCharts = Array.Empty<Chart>();
     private ICollection<Chart> _notRatedCharts = Array.Empty<Chart>();
-    private ICollection<Chart> _disputedCharts = Array.Empty<Chart>();
     private int? _averageRating = null;
     private IDictionary<DifficultyLevel, IEnumerable<Chart>> _coOpLevels = new Dictionary<DifficultyLevel, IEnumerable<Chart>>();
     private ICollection<Chart> _unratedCoOps = Array.Empty<Chart>();
@@ -348,7 +346,6 @@ else
         _hardCharts = new List<Chart>();
         _veryHardCharts = new List<Chart>();
         _underratedCharts = new List<Chart>();
-        _disputedCharts = new List<Chart>();
         _notRatedCharts = new List<Chart>();
         var type = Enum.Parse<ChartType>(ChartTypeFilter);
         if(type is ChartType.Single or ChartType.Double)
@@ -370,11 +367,6 @@ else
                     continue;
                 }
                 var rating = _ratings[chart.Id];
-                if (rating is { RatingCount: >= 4, StandardDeviation: > .4 } && Math.Abs(rating.Difficulty - chart.Level) <= .5)
-                {
-                    _disputedCharts.Add(chart);
-                    continue;
-                }
                 var diff = rating.Difficulty - chart.Level - .5;
                 switch (diff)
                 {

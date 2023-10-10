@@ -23,13 +23,13 @@
         }
         
         <MudItem xs="12">
-            <MudNumericField T="int?" Label=@L["Score"] Value="_inputScore" ValueChanged="ScoreChanged" Min="XXScore.Min" Max="XXScore.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
+            <MudNumericField T="int?" Disabled="_isSaving" Label=@L["Score"] Value="_inputScore" ValueChanged="ScoreChanged" Min="XXScore.Min" Max="XXScore.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
         </MudItem>
         <MudItem xs="4">
             @if (CurrentMix == MixEnum.XX)
             {
-                
-                <MudSelect T="XXLetterGrade?" Label=@L["Letter Grade"] Value="_selectedLetterGrade" ValueChanged="LetterGradeChanged" Clearable="true">
+
+                <MudSelect T="XXLetterGrade?" Disabled="_isSaving" Label=@L["Letter Grade"] Value="_selectedLetterGrade" ValueChanged="LetterGradeChanged" Clearable="true">
                     @foreach (var letterGrade in Enum.GetValues<XXLetterGrade>())
                     {
                         <MudSelectItem T="XXLetterGrade?" Value="@letterGrade">@letterGrade.ToString()</MudSelectItem>
@@ -45,13 +45,13 @@
         </MudItem>
 
         <MudItem xs="4">
-            <MudCheckBox T="bool" Checked="@_isBroken" CheckedChanged="BrokenChanged" Label=@L["Broken"]></MudCheckBox>
+            <MudCheckBox T="bool" Disabled="_isSaving" Checked="@_isBroken" CheckedChanged="BrokenChanged" Label=@L["Broken"]></MudCheckBox>
         </MudItem>        
         @if (CurrentMix == MixEnum.Phoenix)
         {
             <MudItem xs="4">
 
-                <MudSelect T="PhoenixPlate?" Label=@L["Plate"] Value="_selectedPlate" ValueChanged="PlateChanged" Clearable="true" Margin="@Margin.Dense">
+                <MudSelect T="PhoenixPlate?" Disabled="_isSaving" Label=@L["Plate"] Value="_selectedPlate" ValueChanged="PlateChanged" Clearable="true" Margin="@Margin.Dense">
                     @foreach (var plate in Enum.GetValues<PhoenixPlate>())
                     {
                         <MudSelectItem T="PhoenixPlate?" Value="@plate">@plate.GetName()</MudSelectItem>
@@ -65,14 +65,14 @@
             {
 
                 <MudTooltip Text=@L["Remove from Favorites"]>
-                    <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="MudBlazor.Color.Secondary" OnClick="() => RemoveFromFavorites(_selectedChart.Id)"></MudIconButton>
+                    <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Favorite" Color="MudBlazor.Color.Secondary" OnClick="() => RemoveFromFavorites(_selectedChart.Id)"></MudIconButton>
                 </MudTooltip>
             }
             else
             {
 
                 <MudTooltip Text=@L["Add to Favorites"]>
-                    <MudIconButton Icon="@Icons.Material.Outlined.Favorite" OnClick="() => AddToFavorites(_selectedChart.Id)"></MudIconButton>
+                    <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Outlined.Favorite" OnClick="() => AddToFavorites(_selectedChart.Id)"></MudIconButton>
                 </MudTooltip>
             }
         </MudItem>
@@ -81,14 +81,14 @@
             {
 
                 <MudTooltip Text=@L["Remove from ToDo"]>
-                    <MudIconButton Icon="@Icons.Material.Filled.ListAlt" Color="MudBlazor.Color.Secondary" OnClick="() => RemoveFromToDo(_selectedChart.Id)"></MudIconButton>
+                    <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.ListAlt" Color="MudBlazor.Color.Secondary" OnClick="() => RemoveFromToDo(_selectedChart.Id)"></MudIconButton>
                 </MudTooltip>
             }
             else
             {
 
                 <MudTooltip Text=@L["Add to ToDo"]>
-                    <MudIconButton Icon="@Icons.Material.Outlined.ListAlt" OnClick="() => AddToToDo(_selectedChart.Id)"></MudIconButton>
+                    <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Outlined.ListAlt" OnClick="() => AddToToDo(_selectedChart.Id)"></MudIconButton>
                 </MudTooltip>
             }
         </MudItem>
@@ -101,7 +101,7 @@
         @if (_selectedChart.Type != ChartType.CoOp)
         {
             <MudItem xs="8">
-                <MudSelect Label=@L["Your Difficulty Rating"] T="int?" Value="_selectedAdjustment" ValueChanged="UpdateDifficultyRating">
+                <MudSelect Disabled="_isSaving" Label=@L["Your Difficulty Rating"] T="int?" Value="_selectedAdjustment" ValueChanged="UpdateDifficultyRating">
                     @foreach (var rating in Enum.GetValues<DifficultyAdjustment>())
                     {
                         <MudSelectItem T="int?" Value="@rating.GetScale()">@rating.GetDescription()</MudSelectItem>
@@ -123,7 +123,7 @@
                 @foreach (var player in _myCoOpRatings.Keys.OrderBy(k=>k))
                 {
                     <MudItem sm="4" xs="12">
-                        <MudNumericField T="int?" Clearable="true" Min="DifficultyLevel.Min" Max="DifficultyLevel.Max" Label="@PlayerLabel(player)" Value="_myCoOpRatings[player]" ValueChanged="(v=>SetCoOpDifficulty(player,v))"></MudNumericField>
+                        <MudNumericField T="int?" Disabled="_isSaving" Clearable="true" Min="DifficultyLevel.Min" Max="DifficultyLevel.Max" Label="@PlayerLabel(player)" Value="_myCoOpRatings[player]" ValueChanged="(v=>SetCoOpDifficulty(player,v))"></MudNumericField>
                     </MudItem>
                     <MudItem sm="8" xs="12">
                         @if (_coOpRating != null)
@@ -138,7 +138,7 @@
             else
             {
                 <MudItem sm="4" xs="12">
-                    <MudNumericField T="int?" Clearable="true" Min="DifficultyLevel.Min" Max="DifficultyLevel.Max" Label=@L["Rated Difficulty Level"] Value="_myCoOpRatings[1]" ValueChanged="SetAllCoOpDifficulty"></MudNumericField>
+                    <MudNumericField T="int?" Disabled="_isSaving" Clearable="true" Min="DifficultyLevel.Min" Max="DifficultyLevel.Max" Label=@L["Rated Difficulty Level"] Value="_myCoOpRatings[1]" ValueChanged="SetAllCoOpDifficulty"></MudNumericField>
                 </MudItem>
                 <MudItem sm="8" xs="12">
                     @if (_coOpRating != null)
@@ -148,7 +148,7 @@
                 </MudItem>
             }
             <MudItem xs="12">
-                <MudSwitch T="bool" Color="Color.Primary" Label=@L["Different Player Difficulties"] @bind-Checked="_rateCoOpSeparately"></MudSwitch>
+                <MudSwitch T="bool" Disabled="_isSaving" Color="Color.Primary" Label=@L["Different Player Difficulties"] @bind-Checked="_rateCoOpSeparately"></MudSwitch>
             </MudItem>
         }
     }
@@ -161,6 +161,7 @@
     private int? _inputScore;
     private double? _currentRatedDifficulty;
     private bool _isBroken = true;
+    private bool _isSaving = false;
     private int _currentRatedCount = 0;
     private string CountString => L["Vote Count", _currentRatedCount];
     private Chart? _selectedChart;
@@ -251,7 +252,8 @@
         {
             return;
         }
-    
+
+        _isSaving = true;
         try
         {
             if (CurrentMix == MixEnum.XX)
@@ -291,37 +293,46 @@
         {
             Snackbar.Add("There was an error while recording the score", Severity.Error);
         }
+        _isSaving = false;
     }
     private async Task RemoveFromToDo(Guid chartId)
     {
+        _isSaving = true;
         await Mediator.Send(new RemoveChartFromListCommand(ChartListType.ToDo, chartId));
         _todoCharts.Remove(chartId);
 
         Snackbar.Add("Chart removed from To Do list", Severity.Success);
+        _isSaving = false;
     }
     private async Task AddToToDo(Guid chartId)
     {
+        _isSaving = true;
         await Mediator.Send(new SaveChartToListCommand(ChartListType.ToDo, chartId));
         if (!_todoCharts.Contains(chartId))
         {
             _todoCharts.Add(chartId);
         }
         Snackbar.Add("Chart added to To Do list", Severity.Success);
+        _isSaving = false;
     }
     private async Task RemoveFromFavorites(Guid chartId)
     {
+        _isSaving = true;
         await Mediator.Send(new RemoveChartFromListCommand(ChartListType.Favorite, chartId));
         _favoriteCharts.Remove(chartId);
         Snackbar.Add("Chart removed from Favorites", Severity.Success);
+        _isSaving = false;
     }
     private async Task AddToFavorites(Guid chartId)
     {
+        _isSaving = true;
         await Mediator.Send(new SaveChartToListCommand(ChartListType.Favorite, chartId));
         if (!_favoriteCharts.Contains(chartId))
         {
             _favoriteCharts.Add(chartId);
         }
         Snackbar.Add("Chart added to Favorites", Severity.Success);
+        _isSaving = false;
     }
     protected override async Task OnInitializedAsync()
     {
@@ -420,6 +431,7 @@
         {
             return;
         }
+        _isSaving = true;
         _selectedAdjustment = newValue;
         await Mediator.Send(new RateChartDifficultyCommand(CurrentMix,_selectedChart.Id, DifficultyAdjustmentHelpers.From(newValue.Value)));
 
@@ -427,5 +439,6 @@
         _currentRatedCount = newRating.RatingCount;
         _currentRatedDifficulty = newRating.Difficulty;
         Snackbar.Add("Suggested Difficulty Rating Submitted", Severity.Success);
+        _isSaving = false;
     }
 }
