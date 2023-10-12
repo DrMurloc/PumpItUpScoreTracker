@@ -39,6 +39,8 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<PhotoVerificationEntity> PhotoVerification { get; set; }
     public DbSet<UserQualifierEntity> UserQualifier { get; set; }
     public DbSet<UserQualifierHistoryEntity> UserQualifierHistory { get; set; }
+    public DbSet<UserPreferenceRatingEntity> UserPreferenceRating { get; set; }
+    public DbSet<ChartPreferenceRatingEntity> ChartPreferenceRating { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

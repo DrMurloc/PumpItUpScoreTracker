@@ -3,6 +3,8 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using MediatR
 @using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Web.Enums
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
 @if (Charts.Any())
@@ -33,6 +35,12 @@
 
                 <MudCard Class="@CardClass(chart.Id)" Style="@CardStyle(chart.Id)">
                     <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()" />
+                    @if (CurrentUser.IsLoggedIn && Type == TierListType.Preference)
+                    {
+                        <MudCardContent>
+                            <MudRating Disabled="_isSaving" SelectedValue="PlayerRatings.TryGetValue(chart.Id,out var value)?value:0" SelectedValueChanged="rating=>UpdateRating(chart.Id,rating)" Color=@(PlayerRatings.ContainsKey(chart.Id)?Color.Default:Color.Primary)></MudRating>
+                        </MudCardContent>
+                    }
                     <MudCardActions>
 
                         @if (Videos.ContainsKey(chart.Id))
@@ -43,7 +51,7 @@
                         }
                         else
                         {
-                            <MudTooltip Text=@L["Toggle ToDo"]>
+                            <MudTooltip Text=@L["Search Youtube"]>
                                 <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
                             </MudTooltip>
                         }
@@ -54,13 +62,11 @@
                                 <MudIconButton Icon="@Icons.Material.Outlined.ListAlt" OnClick="()=>ToggleToDo(chart.Id)" Color="ToDos.Contains(chart.Id)?Color.Primary:Color.Default"></MudIconButton>
                             </MudTooltip>
                             <MudSpacer></MudSpacer>
-                        }
-                        @if (CurrentUser.IsLoggedIn)
-                        {
                             <MudTooltip Text=@L["Update Grade"]>
                                 <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OnEdit(chart.Id))"></MudIconButton>
                             </MudTooltip>
                         }
+                        
                     </MudCardActions>
                 </MudCard>
             </MudItem>
@@ -68,18 +74,27 @@
     </MudGrid>
 }
 @code {
-    private string CardClass(Guid chartId) => Passes.Contains(chartId) || !CurrentUser.IsLoggedIn ? "border-solid border-2" : "border-dashed border-2";
-    private string CardStyle(Guid chartId) => Passes.Contains(chartId) ? $@"border-color:{Colors.Green.Darken1}" :
+    private string CardClass(Guid chartId) => 
+        Passes.Contains(chartId) || !CurrentUser.IsLoggedIn ? "border-solid border-2" : "border-dashed border-2";
+    private string CardStyle(Guid chartId) =>
+        Passes.Contains(chartId) ? $@"border-color:{Colors.Green.Darken1}" :
     ToDos.Contains(chartId) ? $@"border-color:{Colors.Green.Darken1}" :
     $@"border-color:{OutlineColor}";
     [Parameter]
     public string Name { get; set; } = string.Empty;
     [Parameter]
     public string OutlineColor { get; set; } = string.Empty;
+
+    [Parameter]
+    public TierListType Type { get; set; } = TierListType.Difficulty;
+
     [Parameter]
     public string Disclaimer { get; set; } = string.Empty;
     [Parameter]
     public IEnumerable<Chart> Charts { get; set; } = Array.Empty<Chart>();
+
+    [Parameter]
+    public IDictionary<Guid, int> PlayerRatings { get; set; } = new Dictionary<Guid, int>();
 
     [Parameter]
     public ISet<Guid> Passes { get; set; } = new HashSet<Guid>();
@@ -96,6 +111,21 @@
     public ISet<Guid> ToDos { get; set; } = new HashSet<Guid>();
     [Parameter]
     public Func<Guid, Task> ToggleToDo { get; set; } = g => Task.CompletedTask;
+
+    [Parameter]
+    public Func<Guid, int, Task> ToggleRating { get; set; } = (c,r) => Task.CompletedTask;
+
+    private bool _isSaving = false;
+    private async Task UpdateRating(Guid chartId, int rating)
+    {
+        if (_isSaving)
+        {
+            return;
+        }
+        _isSaving = true;
+        await ToggleRating(chartId, rating);
+        _isSaving = false;
+    }
     private string ChartSearch(Chart chart)
     {
         var searchString = "Pump It Up " + chart.Song.Name + " " + chart.DifficultyString;

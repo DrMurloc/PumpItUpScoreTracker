@@ -357,6 +357,9 @@
   <data name="Players" xml:space="preserve">
     <value>Jogadores</value>
   </data>
+  <data name="Preference" xml:space="preserve">
+    <value>Preference</value>
+  </data>
   <data name="Progress" xml:space="preserve">
     <value>Progresso</value>
   </data>
@@ -455,6 +458,9 @@
   </data>
   <data name="Standard Deviation" xml:space="preserve">
     <value>Desvio padrão</value>
+  </data>
+  <data name="Star Rating" xml:space="preserve">
+    <value>{0} - {1} Stars</value>
   </data>
   <data name="Starting Page" xml:space="preserve">
     <value>Página inicial</value>

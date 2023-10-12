@@ -48,4 +48,27 @@ public sealed class UiSettingsAccessor : IUiSettingsAccessor
 
         await _mediator.Send(new SaveUserUiSettingCommand(MixKey, mix.ToString()), cancellationToken);
     }
+
+    public async Task<string?> GetSetting(string key, CancellationToken cancellationToken = default)
+    {
+        if (_currentUser.IsLoggedIn)
+        {
+            var setting = await _mediator.Send(new GetUserUiSettingsQuery(), cancellationToken);
+            return setting.TryGetValue(key, out var value) ? value : null;
+        }
+
+        var browserValue = await _browserStorage.GetAsync<string>(key);
+        return browserValue.Success ? browserValue.Value : null;
+    }
+
+    public async Task SetSetting(string key, string value, CancellationToken cancellationToken = default)
+    {
+        if (_currentUser.IsLoggedIn)
+        {
+            await _mediator.Send(new SaveUserUiSettingCommand(key, value), cancellationToken);
+            return;
+        }
+
+        await _browserStorage.SetAsync(key, value);
+    }
 }

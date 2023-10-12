@@ -11,6 +11,7 @@
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Dtos;
+@using ScoreTracker.Web.Enums
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 
@@ -23,19 +24,28 @@
 @inject IUiSettingsAccessor UiSettings;
 
 <MudGrid>
-    
+    <MudItem xs="12" sm="4">
+        <MudSelect T="TierListType" Label=@L["Tier Lists"] Value="_currentTierList" ValueChanged="SetTierList" AdornmentIcon="@Icons.Material.Filled.Topic">
+            <MudSelectItem T="TierListType" Value="TierListType.Difficulty">@L["Difficulty Level"]</MudSelectItem>
+            <MudSelectItem T="TierListType" Value="TierListType.Preference">@L["Preference"]</MudSelectItem>
+        </MudSelect>
+    </MudItem>
     @if (ChartTypeFilter == nameof(ChartType.CoOp))
     {
         <MudItem xs="12" sm="4">
             <MudNumericField T="int" AdornmentIcon="@Icons.Material.Filled.Group" HideSpinButtons="true" Clearable="false" Min="2" Max="5" Label=@L["Players"] Value="DifficultyFilter" ValueChanged="@(d=>UpdateSelection(d,ChartTypeFilter,_coOpSortType))"></MudNumericField>
         </MudItem>
-        <MudItem xs="12" sm="4">
-            <MudSelect T="CoOpSortType" AdornmentIcon="@Icons.Material.Filled.Numbers" Label=@L["CoOp Aggregation"] Value="_coOpSortType" ValueChanged="@(d => UpdateSelection(DifficultyFilter, ChartTypeFilter, d))">
-                <MudSelectItem T="CoOpSortType" Value="CoOpSortType.Average">@L.GetString("Average")</MudSelectItem>
-                <MudSelectItem T="CoOpSortType" Value="CoOpSortType.EasiestPlayer">@L.GetString("Easiest Player")</MudSelectItem>
-                <MudSelectItem T="CoOpSortType" Value="CoOpSortType.HardestPlayer">@L.GetString("Hardest Player")</MudSelectItem>
-            </MudSelect>
-        </MudItem>
+        @if (_currentTierList == TierListType.Difficulty)
+        {
+            <MudItem xs="12" sm="4">
+                <MudSelect T="CoOpSortType" AdornmentIcon="@Icons.Material.Filled.Numbers" Label=@L["CoOp Aggregation"] Value="_coOpSortType" ValueChanged="@(d => UpdateSelection(DifficultyFilter, ChartTypeFilter, d))">
+                    <MudSelectItem T="CoOpSortType" Value="CoOpSortType.Average">@L.GetString("Average")</MudSelectItem>
+                    <MudSelectItem T="CoOpSortType" Value="CoOpSortType.EasiestPlayer">@L.GetString("Easiest Player")</MudSelectItem>
+                    <MudSelectItem T="CoOpSortType" Value="CoOpSortType.HardestPlayer">@L.GetString("Hardest Player")</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+
+        }
     }
     else
     {
@@ -61,29 +71,43 @@
         </MudItem>
     }
 </MudGrid>
-@if (ChartTypeFilter == nameof(ChartType.CoOp))
+@if (_currentTierList == TierListType.Difficulty)
 {
-    @foreach (var group in _coOpLevels.OrderByDescending(g => g.Key))
+    @if (ChartTypeFilter == nameof(ChartType.CoOp))
     {
-        <TierListSection Charts="group.Value" Name="@group.Key.ToString()" OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+        @foreach (var group in _coOpLevels.OrderByDescending(g => g.Key))
+        {
+            <TierListSection Type="TierListType.Difficulty" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="group.Value" Name="@group.Key.ToString()" OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+        }
+        <TierListSection Type="TierListType.Difficulty" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_unratedCoOps" Name="Unrated" OutlineCOlor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
     }
-    <TierListSection Charts="_unratedCoOps" Name="Unrated" OutlineCOlor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    else
+    {
+
+        <TierListSection Type="TierListType.Difficulty" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_underratedCharts" Name=@L.GetString("1+ Level Harder") OutlineColor="@Colors.Red.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+        <TierListSection Type="TierListType.Difficulty" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_veryHardCharts" Name=@L.GetString("Very Hard") OutlineColor="@Colors.Orange.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+        <TierListSection Type="TierListType.Difficulty" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_hardCharts" Name=@L.GetString("Hard") OutlineColor="@Colors.Yellow.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+        <TierListSection Type="TierListType.Difficulty" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_mediumCharts" Name=@L.GetString("Medium") OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+        <TierListSection Type="TierListType.Difficulty" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_easyCharts" Name=@L.GetString("Easy") OutlineColor="@Colors.Cyan.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+        <TierListSection Type="TierListType.Difficulty" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_veryEasyCharts" Name=@L.GetString("Very Easy") OutlineColor="@Colors.Blue.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+        <TierListSection Type="TierListType.Difficulty" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_overratedCharts" Name=@L.GetString("1+ Level Easier") OutlineColor="@Colors.Purple.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+        <TierListSection Type="TierListType.Difficulty" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_notRatedCharts" Name=@L.GetString("Not Rated") OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+
+    }
 }
 else
 {
-
-    <TierListSection Charts="_underratedCharts" Name=@L.GetString("1+ Level Harder") OutlineColor="@Colors.Red.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_veryHardCharts" Name=@L.GetString("Very Hard") OutlineColor="@Colors.Orange.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_hardCharts" Name=@L.GetString("Hard") OutlineColor="@Colors.Yellow.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_mediumCharts" Name=@L.GetString("Medium") OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_easyCharts" Name=@L.GetString("Easy") OutlineColor="@Colors.Cyan.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_veryEasyCharts" Name=@L.GetString("Very Easy") OutlineColor="@Colors.Blue.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_overratedCharts" Name=@L.GetString("1+ Level Easier") OutlineColor="@Colors.Purple.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Charts="_notRatedCharts" Name=@L.GetString("Not Rated") OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="TierListType.Preference" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_fiveStar" Name=@L["Star Rating",4.5,5] OutlineColor="@Colors.Blue.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="TierListType.Preference" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_fourStar" Name=@L["Star Rating",3.5,4.5] OutlineColor="@Colors.Cyan.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="TierListType.Preference" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_threeStar" Name=@L["Star Rating",2.5,3.5] OutlineColor="@Colors.Green.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="TierListType.Preference" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_twoStar" Name=@L["Star Rating",1.5,2.5] OutlineColor="@Colors.Yellow.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="TierListType.Preference" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_oneStar" Name=@L["Star Rating",0.5,1.5] OutlineColor="@Colors.Orange.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="TierListType.Preference" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_zeroStar" Name=@L["Star Rating",0,.5] OutlineColor="@Colors.Red.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="TierListType.Preference" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_noPreference" Name=@L["Not Rated"] OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
 
 }
 
-@if (CurrentUser.IsLoggedIn && _currentMix == MixEnum.Phoenix && ChartTypeFilter != ChartType.CoOp.ToString() && _titleProgress.Where(t => t.Title is PhoenixDifficultyTitle pdt && pdt.Level == DifficultyFilter).Any())
+@if (CurrentUser.IsLoggedIn && _currentMix == MixEnum.Phoenix && ChartTypeFilter != ChartType.CoOp.ToString() && _titleProgress.Any(t => t.Title is PhoenixDifficultyTitle pdt && pdt.Level == DifficultyFilter))
 {
     <MudGrid>
         <MudItem xs="12">
@@ -186,6 +210,14 @@ else
     private ICollection<Chart> _veryHardCharts = Array.Empty<Chart>();
     private ICollection<Chart> _underratedCharts = Array.Empty<Chart>();
     private ICollection<Chart> _notRatedCharts = Array.Empty<Chart>();
+    private ICollection<Chart> _fiveStar = Array.Empty<Chart>();
+    private ICollection<Chart> _fourStar = Array.Empty<Chart>();
+    private ICollection<Chart> _threeStar = Array.Empty<Chart>();
+    private ICollection<Chart> _twoStar = Array.Empty<Chart>();
+    private ICollection<Chart> _oneStar = Array.Empty<Chart>();
+    private ICollection<Chart> _zeroStar = Array.Empty<Chart>();
+    private ICollection<Chart> _noPreference = Array.Empty<Chart>();
+    private IDictionary<Guid, int> _userRatings = new Dictionary<Guid, int>();
     private int? _averageRating = null;
     private IDictionary<DifficultyLevel, IEnumerable<Chart>> _coOpLevels = new Dictionary<DifficultyLevel, IEnumerable<Chart>>();
     private ICollection<Chart> _unratedCoOps = Array.Empty<Chart>();
@@ -194,8 +226,16 @@ else
     private bool _showEditDialog = false;
     private string _currentVideo = "";
     private string _currentVideoDescription = string.Empty;
-    private const string ShowTierListDisclaimer = "TierLists_ShowUIDisclaimer";
-    
+
+    private async Task UpdateRating(Guid chartId, int rating)
+    {
+        var result = await Mediator.Send(new UpdatePreferenceRatingCommand(_currentMix, chartId, rating));
+        _userRatings[chartId] = rating;
+        _chartRatings[chartId] = result;
+        RefilterRatings();
+        Snackbar.Add("Rating Set!", Severity.Success);
+    }
+
     public async Task ToggleTodo(Guid chartId)
     {
         if (!_todos.Contains(chartId))
@@ -241,6 +281,7 @@ else
     }
     private IEnumerable<TitleProgress> _titleProgress = Array.Empty<TitleProgress>();
     private ISet<Guid> _todos = new HashSet<Guid>();
+    private TierListType _currentTierList = TierListType.Difficulty;
     [Parameter]
     [SupplyParameterFromQuery(Name = "Difficulty")]
     public int DifficultyFilter { get; set; }
@@ -277,9 +318,11 @@ else
     }
     private IReadOnlyCollection<RecordedPhoenixScore> _phoenixScores = Array.Empty<RecordedPhoenixScore>();
 
+    private const string TierListTypeKey = "TierLists__CurrentList";
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();
+        _currentTierList = Enum.TryParse<TierListType>(await UiSettings.GetSetting(TierListTypeKey), out var value) ? value : TierListType.Difficulty;
 
         _titleProgress = (await Mediator.Send(new GetTitleProgressQuery(_currentMix))).ToArray();
         _todos = CurrentUser.IsLoggedIn ? (await Mediator.Send(new GetSavedChartsQuery())).Where(t=>t.ListType==ChartListType.ToDo).Select(t=>t.ChartId).ToHashSet() : new HashSet<Guid>() ;
@@ -298,7 +341,7 @@ else
 
 
         _videos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl.ToString());
-        
+
         _titleProgress = (await Mediator.Send(new GetTitleProgressQuery(_currentMix))).ToArray();
 
         if (CurrentUser.IsLoggedIn)
@@ -316,12 +359,15 @@ else
                 _phoenixScores = attempts;
                 _passes = attempts.Where(a => !a.IsBroken).Select(a => a.ChartId).Distinct().ToHashSet();
             }
+            _userRatings = (await Mediator.Send(new GetUserPreferenceRatingsQuery(_currentMix))).ToDictionary(r => r.ChartId, r => (int)r.Rating);
         }
+        _chartRatings = (await Mediator.Send(new GetAllPreferenceRatingsQuery(_currentMix))).ToDictionary(cr => cr.ChartId);
         await UpdateSelection(DifficultyFilter, ChartTypeFilter, _coOpSortType);
     }
     private IDictionary<Guid,Chart> _difficultyAndTypeFilteredCharts = new Dictionary<Guid,Chart>();
     private IDictionary<Guid, ChartDifficultyRatingRecord> _ratings = new Dictionary<Guid, ChartDifficultyRatingRecord>();
     private IDictionary<Guid, CoOpRating> _coOpRatings = new Dictionary<Guid, CoOpRating>();
+    private IDictionary<Guid, ChartPreferenceRatingRecord> _chartRatings = new Dictionary<Guid, ChartPreferenceRatingRecord>();
     private void RefilterCharts()
     {
 
@@ -398,6 +444,67 @@ else
                 _coOpSortType == CoOpSortType.EasiestPlayer ? _coOpRatings[c.Id].Minimum :
                     _coOpRatings[c.Id].Maximum).ToDictionary(c => c.Key, c => c.ToArray().AsEnumerable());
         }
+        RefilterRatings();
+    }
+
+    private void RefilterRatings()
+    {
+
+        _fiveStar = new List<Chart>();
+        _fourStar = new List<Chart>();
+        _threeStar = new List<Chart>();
+        _twoStar = new List<Chart>();
+        _oneStar = new List<Chart>();
+        _zeroStar = new List<Chart>();
+        _noPreference = new List<Chart>();
+
+        var filtered = _difficultyAndTypeFilteredCharts.Values.OrderByDescending(c => _userRatings.ContainsKey(c.Id) ? _userRatings[c.Id] : 0).AsEnumerable();
+        if (_hideCompleted)
+        {
+            filtered = filtered.Where(c => !_passes.Contains(c.Id));
+        }
+        if (_showOnlyTodos)
+        {
+            filtered = filtered.Where(c => _todos.Contains(c.Id));
+        }
+        foreach (var chart in filtered)
+        {
+            if (!_chartRatings.TryGetValue(chart.Id, out var record))
+            {
+                _noPreference.Add(chart);
+                continue;
+            }
+            decimal rating = record.Rating;
+
+            switch (rating)
+            {
+                case >= 4.5M:
+                    _fiveStar.Add(chart);
+                    break;
+                case >= 3.5M:
+                    _fourStar.Add(chart);
+                    break;
+                case >= 2.5M:
+                    _threeStar.Add(chart);
+                    break;
+                case >= 1.5M:
+                    _twoStar.Add(chart);
+                    break;
+                case >= .5M:
+                    _oneStar.Add(chart);
+                    break;
+                default:
+                    _zeroStar.Add(chart);
+                    break;
+            }
+        }
+        StateHasChanged();
+    }
+
+    private async Task SetTierList(TierListType newType)
+    {
+        _currentTierList = newType;
+        await UiSettings.SetSetting(TierListTypeKey, newType.ToString());
     }
     private async Task UpdateSelection(int difficulty, string chartType, CoOpSortType coOpSortType)
     {
