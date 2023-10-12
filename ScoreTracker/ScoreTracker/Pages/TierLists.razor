@@ -23,15 +23,7 @@
 @inject IUiSettingsAccessor UiSettings;
 
 <MudGrid>
-
-    <MudItem xs="12" sm="4">
-        <MudSelect T="MixEnum" AdornmentIcon="@Icons.Material.Filled.LibraryMusic" Label=@L["Mix"] Value="_currentMix" ValueChanged="MixChanged">
-            @foreach (var mix in Enum.GetValues<MixEnum>())
-            {
-                <MudSelectItem T="MixEnum" Value="mix">@mix</MudSelectItem>
-            }
-        </MudSelect>
-    </MudItem>
+    
     @if (ChartTypeFilter == nameof(ChartType.CoOp))
     {
         <MudItem xs="12" sm="4">
@@ -284,30 +276,6 @@ else
         StateHasChanged();
     }
     private IReadOnlyCollection<RecordedPhoenixScore> _phoenixScores = Array.Empty<RecordedPhoenixScore>();
-    private async Task MixChanged(MixEnum newMix)
-    {
-        _currentMix = newMix;
-        _titleProgress = (await Mediator.Send(new GetTitleProgressQuery(_currentMix))).ToArray();
-        await UiSettings.SetSelectedMix(newMix);
-
-        if (CurrentUser.IsLoggedIn)
-        {
-
-            if (_currentMix == MixEnum.XX)
-            {
-
-                var attempts = await Mediator.Send(new GetXXBestChartAttemptsQuery(CurrentUser.User.Id));
-                _passes = attempts.Where(a => !(a.BestAttempt?.IsBroken ?? true)).Select(a => a.Chart.Id).Distinct().ToHashSet();
-            }
-            else
-            {
-                var attempts = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id))).ToArray();
-                _phoenixScores = attempts;
-                _passes = attempts.Where(a => !a.IsBroken).Select(a => a.ChartId).Distinct().ToHashSet();
-            }
-        }
-        await UpdateSelection(DifficultyFilter, ChartTypeFilter, _coOpSortType);
-    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -330,8 +298,26 @@ else
 
 
         _videos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl.ToString());
+        
+        _titleProgress = (await Mediator.Send(new GetTitleProgressQuery(_currentMix))).ToArray();
 
-        await MixChanged(_currentMix);
+        if (CurrentUser.IsLoggedIn)
+        {
+
+            if (_currentMix == MixEnum.XX)
+            {
+
+                var attempts = await Mediator.Send(new GetXXBestChartAttemptsQuery(CurrentUser.User.Id));
+                _passes = attempts.Where(a => !(a.BestAttempt?.IsBroken ?? true)).Select(a => a.Chart.Id).Distinct().ToHashSet();
+            }
+            else
+            {
+                var attempts = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id))).ToArray();
+                _phoenixScores = attempts;
+                _passes = attempts.Where(a => !a.IsBroken).Select(a => a.ChartId).Distinct().ToHashSet();
+            }
+        }
+        await UpdateSelection(DifficultyFilter, ChartTypeFilter, _coOpSortType);
     }
     private IDictionary<Guid,Chart> _difficultyAndTypeFilteredCharts = new Dictionary<Guid,Chart>();
     private IDictionary<Guid, ChartDifficultyRatingRecord> _ratings = new Dictionary<Guid, ChartDifficultyRatingRecord>();

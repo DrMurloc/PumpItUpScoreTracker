@@ -9,12 +9,7 @@
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services.Contracts
 <PageTitle>Titles</PageTitle>
-<MudSelect T="MixEnum" AdornmentIcon="@Icons.Material.Filled.LibraryMusic" Label="Mix" Value="_currentMix" ValueChanged="MixChanged">
-    @foreach (var mix in Enum.GetValues<MixEnum>())
-    {
-        <MudSelectItem T="MixEnum" Value="mix">@mix</MudSelectItem>
-    }
-</MudSelect>
+
 <MudDataGrid @ref="_dataGrid" T="TitleProgressDto" Items="_titleProgress" Hover="true" ReadOnly="true"
              Groupable="true" FixedHeader="true" Height="500" Loading="@_isLoading">
     <ToolBarContent>
@@ -100,12 +95,6 @@
     private DifficultyLevel _selectedDifficulty = 18;
     private string LetterGradeLabel() => $"{_selectedGrade.GetModifier()}X Modifier";
     private string DifficultyLabel() => $"{_selectedDifficulty.BaseRating} Base Rating";
-    private async Task MixChanged(MixEnum newMix)
-    {
-        _currentMix = newMix;
-        await UiSettings.SetSelectedMix(newMix);
-        await LoadTitles();
-    }
 
     private async Task LoadTitles()
     {

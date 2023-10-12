@@ -2,6 +2,8 @@
 @using MediatR
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Web.Services.Contracts
 @inherits LayoutComponentBase
 @inject ICurrentUserAccessor CurrentUser
 
@@ -49,7 +51,7 @@
                 <MudDivider DividerType="DividerType.Middle"></MudDivider>
                 @if (CurrentUser.IsLoggedIn)
                 {
-                    <MudNavLink Href="/Progress" Icon="@Icons.Material.Filled.BarChart">@L["Progress Charts"]</MudNavLink>
+                    <MudNavLink Href=@(_currentMix==MixEnum.Phoenix?"/Phoenix/Progress":"/Progress") Icon="@Icons.Material.Filled.BarChart">@L["Progress Charts"]</MudNavLink>
                     <MudDivider DividerType="DividerType.Middle"></MudDivider>
                 }
             </MudNavGroup>
@@ -71,6 +73,13 @@
             <MudNavLink Href="/Players" Icon="@Icons.Material.Filled.Person">@L["Find Players"]</MudNavLink>
             <MudDivider DividerType="DividerType.Middle"></MudDivider>
             <MudNavLink Href="/About" Icon="@Icons.Material.Filled.Info">@L["About"]</MudNavLink>
+            <MudDivider DividerType="DividerType.Middle"></MudDivider>
+            <MudNavGroup Title=@(L["Mix"]+" ("+_currentMix+")") Icon="@Icons.Material.Filled.LibraryMusic">
+                @foreach (var value in Enum.GetValues<MixEnum>())
+                {
+                    <MudNavLink OnClick="()=>SetMix(value)">@value</MudNavLink>
+                }
+            </MudNavGroup>
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
@@ -93,11 +102,20 @@
     </MudMainContent>
 </MudLayout>
 @inject IMediator Mediator;
+@inject IUiSettingsAccessor UiSettings;
+@inject NavigationManager NavManager;
 @code
 {
     private bool _isOpen = false;
     private bool _showDiscordDialog = false;
         private const string DiscordPopupKey = "MainLayout__DiscordPopupShown";
+    private MixEnum _currentMix = MixEnum.Phoenix;
+
+    private async Task SetMix(MixEnum mix)
+    {
+        await UiSettings.SetSelectedMix(mix);
+        NavManager.NavigateTo(NavManager.Uri, true);
+    }
     protected override async Task OnInitializedAsync()
     {
         if (CurrentUser.IsLoggedIn)
@@ -109,6 +127,7 @@
                 await Mediator.Send(new SaveUserUiSettingCommand(DiscordPopupKey, "true"));
             }
         }
+        _currentMix = await UiSettings.GetSelectedMix();
     }
 
     private static readonly MudTheme Theme = new()

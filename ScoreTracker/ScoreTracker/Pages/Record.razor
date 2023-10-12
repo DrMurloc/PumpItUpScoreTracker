@@ -27,13 +27,6 @@
             }
             else
             {
-                <MudSelect T="MixEnum" AdornmentIcon="@Icons.Material.Filled.LibraryMusic" Label="Mix" Value="_currentMix" ValueChanged="MixChanged">
-                    @foreach (var mix in Enum.GetValues<MixEnum>())
-                    {
-                        <MudSelectItem T="MixEnum" Value="mix">@mix</MudSelectItem>
-                    }
-                </MudSelect>
-                <br/>
                 <MudAutocomplete T="string"
                                  @ref="_autocomplete"
                                  Value="@_selectedSongName"
@@ -90,23 +83,6 @@
     private IEnumerable<Name> _songNames = Array.Empty<Name>();
     private IEnumerable<Chart>? _charts;
     private bool _showChartOverview = false;
-    private async Task MixChanged(MixEnum newMix)
-    {
-        _currentMix = newMix;
-        await UiSettings.SetSelectedMix(newMix);
-        _songNames = await Mediator.Send(new GetSongNamesQuery(_currentMix));
-        _selectedChart = null;
-        if (!_songNames.Contains(_selectedSongName))
-        {
-            
-            _selectedSongName = string.Empty;
-            _charts = Array.Empty<Chart>();
-        }
-        else
-        {
-            await SelectSong(_selectedSongName);
-        }
-    }
     private MudAutocomplete<string> _autocomplete;
     private string _selectedSongName = string.Empty;
     private Chart? _selectedChart;

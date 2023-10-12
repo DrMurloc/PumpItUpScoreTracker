@@ -15,14 +15,6 @@
 <PageTitle>@L["Charts"]</PageTitle>
 
 <MudGrid>
-    <MudItem xs="6" sm="4">
-        <MudSelect T="MixEnum" AdornmentIcon="@Icons.Material.Filled.LibraryMusic" Label=@L["Mix"] Value="_currentMix" ValueChanged="MixChanged">
-            @foreach (var mix in Enum.GetValues<MixEnum>())
-            {
-                <MudSelectItem T="MixEnum" Value="mix">@mix</MudSelectItem>
-            }
-        </MudSelect>
-    </MudItem>
     @if (FilterStatus(FilterEnum.Difficulty))
     {
         <MudItem xs="6" sm="4">
@@ -545,13 +537,7 @@
     private string ShareUrl => CurrentUser.IsLoggedIn ? $"{NavManager.BaseUri}{CurrentUser.User.Id}/Charts" : string.Empty;
     private BestAttemptDto[] _charts = Array.Empty<BestAttemptDto>();
     private IDictionary<Guid, ChartDifficultyRatingRecord> _adjustedDifficulties = new Dictionary<Guid, ChartDifficultyRatingRecord>();
-
-    private async Task MixChanged(MixEnum newMix)
-    {
-        _currentMix = newMix;
-        await UiSettings.SetSelectedMix(newMix);
-        await LoadCharts(RequestedUserId);
-    }
+    
     private bool _isLoading = true;
 
     [Parameter] [SupplyParameterFromQuery(Name = nameof(FilterEnum.Difficulty))] public int? DifficultyFilter { get; set; }

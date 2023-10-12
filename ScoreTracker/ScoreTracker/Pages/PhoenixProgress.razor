@@ -5,6 +5,7 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @page "/{RequestedUserId:guid}/Phoenix/Progress"
 @page "/Phoenix/Progress"
@@ -126,6 +127,7 @@
 @inject ICurrentUserAccessor CurrentUser;
 @inject IJSRuntime Javascript;
 @inject ISnackbar Snackbar;
+@inject IUiSettingsAccessor UiSettings;
 @code {
     private ApexChart<BoxPlotData>? _scoreDistLines;
     private ApexChart<BoxPlotData>? _sdChart;
@@ -212,6 +214,10 @@
                 return;
             }
             RequestedUserId = CurrentUser.User.Id;
+        }
+        if (await UiSettings.GetSelectedMix() == MixEnum.XX)
+        {
+            NavManager.NavigateTo("/Progress");
         }
         _scores = await Mediator.Send(new GetPhoenixRecordsQuery(RequestedUserId.Value));
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
