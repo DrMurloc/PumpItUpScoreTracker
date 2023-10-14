@@ -20,7 +20,7 @@
                         <MudIcon Color="Color.Info" Size="Size.Small" Icon="@Icons.Material.Outlined.QuestionMark"></MudIcon>
                     </MudTooltip>
                 }
-                @if (Charts.All(c => Passes.Contains(c.Id)))
+                @if (Type!=TierListType.MyScores && Charts.All(c => Passes.Contains(c.Id)))
                 {
                     <MudTooltip Text="All Passed">
                         <MudIcon Color="Color.Success" Icon="@Icons.Material.Filled.Check"></MudIcon>
@@ -41,33 +41,44 @@
                             <MudRating Disabled="_isSaving" SelectedValue="PlayerRatings.TryGetValue(chart.Id,out var value)?value:0" SelectedValueChanged="rating=>UpdateRating(chart.Id,rating)" Color=@(PlayerRatings.ContainsKey(chart.Id)?Color.Default:Color.Primary)></MudRating>
                         </MudCardContent>
                     }
-                    <MudCardActions>
-
-                        @if (Videos.ContainsKey(chart.Id))
-                        {
-                            <MudTooltip Text=@L["Search Youtube"]>
-                                <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(Videos[chart.Id],chart))"></MudIconButton>
-                            </MudTooltip>
-                        }
-                        else
-                        {
-                            <MudTooltip Text=@L["Search Youtube"]>
-                                <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
-                            </MudTooltip>
-                        }
-                        <MudSpacer></MudSpacer>
-                        @if (CurrentUser.IsLoggedIn)
-                        {
-                            <MudTooltip Text=@L["Toggle ToDo"]>
-                                <MudIconButton Icon="@Icons.Material.Outlined.ListAlt" OnClick="()=>ToggleToDo(chart.Id)" Color="ToDos.Contains(chart.Id)?Color.Primary:Color.Default"></MudIconButton>
-                            </MudTooltip>
-                            <MudSpacer></MudSpacer>
-                            <MudTooltip Text=@L["Update Grade"]>
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OnEdit(chart.Id))"></MudIconButton>
-                            </MudTooltip>
-                        }
+                    @if (Type == TierListType.MyScores && Scores.TryGetValue(chart.Id,out var score) && score.Score!=null)
+                    {
+                        <MudCardContent>
+                            @score.Score (@score.Score.Value.LetterGrade.GetName(), @(score.Plate?.GetShorthand() ?? "??"))
+                        </MudCardContent>
+                    }
+                    @if (Type != TierListType.MyScores)
+                    {
                         
-                    </MudCardActions>
+                        <MudCardActions>
+
+                            @if (Videos.ContainsKey(chart.Id))
+                            {
+                                <MudTooltip Text=@L["Search Youtube"]>
+                                    <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(Videos[chart.Id],chart))"></MudIconButton>
+                                </MudTooltip>
+                            }
+                            else
+                            {
+                                <MudTooltip Text=@L["Search Youtube"]>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
+                                </MudTooltip>
+                            }
+                            <MudSpacer></MudSpacer>
+                            @if (CurrentUser.IsLoggedIn)
+                            {
+                                <MudTooltip Text=@L["Toggle ToDo"]>
+                                    <MudIconButton Icon="@Icons.Material.Outlined.ListAlt" OnClick="()=>ToggleToDo(chart.Id)" Color="ToDos.Contains(chart.Id)?Color.Primary:Color.Default"></MudIconButton>
+                                </MudTooltip>
+                                <MudSpacer></MudSpacer>
+                                <MudTooltip Text=@L["Update Grade"]>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OnEdit(chart.Id))"></MudIconButton>
+                                </MudTooltip>
+                            }
+                    
+                        </MudCardActions>
+                    }
+                    
                 </MudCard>
             </MudItem>
         }
@@ -76,15 +87,30 @@
 @code {
     private string CardClass(Guid chartId) => 
         Passes.Contains(chartId) || !CurrentUser.IsLoggedIn ? "border-solid border-2" : "border-dashed border-2";
-    private string CardStyle(Guid chartId) =>
+    private string CardStyle(Guid chartId) => Type == TierListType.MyScores ? $@"border-color:{PlateColor(chartId)}":
         Passes.Contains(chartId) ? $@"border-color:{Colors.Green.Darken1}" :
     ToDos.Contains(chartId) ? $@"border-color:{Colors.Green.Darken1}" :
     $@"border-color:{OutlineColor}";
+
+    private string PlateColor(Guid chartId) => Scores.TryGetValue(chartId, out var record) ?
+        record.Plate switch{
+            PhoenixPlate.RoughGame => Colors.DeepOrange.Darken3,
+            PhoenixPlate.FairGame => Colors.DeepOrange.Darken3,
+            PhoenixPlate.TalentedGame => Colors.Grey.Lighten1,
+            PhoenixPlate.MarvelousGame => Colors.Grey.Lighten1,
+            PhoenixPlate.ExtremeGame => Colors.Amber.Lighten1,
+            PhoenixPlate.SuperbGame => Colors.Amber.Lighten1,
+            PhoenixPlate.UltimateGame => Colors.LightBlue.Lighten1,
+            PhoenixPlate.PerfectGame => Colors.LightBlue.Lighten1,
+            _=>Colors.Grey.Darken1
+            } :
+        Colors.Purple.Darken1;
     [Parameter]
     public string Name { get; set; } = string.Empty;
     [Parameter]
     public string OutlineColor { get; set; } = string.Empty;
-
+    [Parameter]
+    public IDictionary<Guid, RecordedPhoenixScore> Scores { get; set; } = new Dictionary<Guid, RecordedPhoenixScore>();
     [Parameter]
     public TierListType Type { get; set; } = TierListType.Difficulty;
 
