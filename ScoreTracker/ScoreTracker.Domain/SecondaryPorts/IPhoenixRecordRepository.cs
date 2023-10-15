@@ -1,5 +1,7 @@
-﻿using ScoreTracker.Domain.Models;
+﻿using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.SecondaryPorts;
 
@@ -17,4 +19,7 @@ public interface IPhoenixRecordRepository
         CancellationToken cancellationToken = default);
 
     Task<IEnumerable<ChartScoreAggregate>> GetAllChartScoreAggregates(CancellationToken cancellationToken);
+
+    Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetAllPlayerScores(ChartType chartType,
+        DifficultyLevel difficulty, CancellationToken cancellationToken = default);
 }

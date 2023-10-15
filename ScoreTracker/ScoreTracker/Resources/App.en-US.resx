@@ -302,6 +302,9 @@
     <value>My Difficulty Adjustments</value>
     <comment>I.E chart difficulty vote</comment>
   </data>
+  <data name="My Score" xml:space="preserve">
+    <value>My Score</value>
+  </data>
   <data name="New Discord" xml:space="preserve">
     <value>New Discord</value>
   </data>
@@ -472,6 +475,9 @@
   <data name="Song Type" xml:space="preserve">
     <value>Song Type</value>
     <comment>Song Types = Arcade, Full Song, etc.</comment>
+  </data>
+  <data name="Stage Break" xml:space="preserve">
+    <value>Stage Break</value>
   </data>
   <data name="Standard Deviation" xml:space="preserve">
     <value>Standard Deviation</value>

@@ -294,6 +294,9 @@
   <data name="My Difficulty Adjustments" xml:space="preserve">
     <value>Meus ajustes de dificuldade</value>
   </data>
+  <data name="My Score" xml:space="preserve">
+    <value>Minhas Pontuações</value>
+  </data>
   <data name="New Discord" xml:space="preserve">
     <value>Novo Discord</value>
   </data>
@@ -455,6 +458,9 @@
   </data>
   <data name="Song Type" xml:space="preserve">
     <value>Tipo de música</value>
+  </data>
+  <data name="Stage Break" xml:space="preserve">
+    <value>Stage Break</value>
   </data>
   <data name="Standard Deviation" xml:space="preserve">
     <value>Desvio padrão</value>

@@ -4,6 +4,7 @@
     {
         Difficulty,
         Preference,
+        Scores,
         MyScores
     }
 }

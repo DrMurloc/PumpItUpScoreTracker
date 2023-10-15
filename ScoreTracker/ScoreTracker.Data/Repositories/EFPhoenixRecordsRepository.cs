@@ -5,6 +5,7 @@ using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Data.Repositories;
 
@@ -91,5 +92,29 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
             group pba by pba.ChartId
             into g
             select new ChartScoreAggregate(g.Key, g.Count())).ToArrayAsync(cancellationToken);
+    }
+
+    //Will  need to refactor this if I ever support non prod environments
+    //Mostly saving some tedious joins for now.
+    private static readonly IDictionary<MixEnum, Guid> MixGuids = new Dictionary<MixEnum, Guid>
+    {
+        { MixEnum.XX, Guid.Parse("20F8CCF8-94B1-418D-B923-C375B042BDA8") },
+        { MixEnum.Phoenix, Guid.Parse("1ABB8F5A-BDA3-40F0-9CE7-1C4F9F8F1D3B") }
+    };
+
+    public async Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetAllPlayerScores(ChartType chartType,
+        DifficultyLevel difficulty, CancellationToken cancellationToken = default)
+    {
+        var mixId = MixGuids[MixEnum.Phoenix];
+        var intLevel = (int)difficulty;
+        var chartTypeString = chartType.ToString();
+        return (await (from cm in _database.ChartMix
+                join c in _database.Chart on cm.ChartId equals c.Id
+                join pba in _database.PhoenixBestAttempt on c.Id equals pba.ChartId
+                where cm.MixId == mixId && cm.Level == intLevel && c.Type == chartTypeString
+                select pba).ToArrayAsync(cancellationToken))
+            .Select(pb => (pb.UserId,
+                new RecordedPhoenixScore(pb.ChartId, pb.Score, PhoenixPlateHelperMethods.TryParse(pb.Plate),
+                    pb.IsBroken, pb.RecordedDate)));
     }
 }

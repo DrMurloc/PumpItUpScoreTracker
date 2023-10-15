@@ -41,10 +41,13 @@
                             <MudRating Disabled="_isSaving" SelectedValue="PlayerRatings.TryGetValue(chart.Id,out var value)?value:0" SelectedValueChanged="rating=>UpdateRating(chart.Id,rating)" Color=@(PlayerRatings.ContainsKey(chart.Id)?Color.Default:Color.Primary)></MudRating>
                         </MudCardContent>
                     }
-                    @if (Type == TierListType.MyScores && Scores.TryGetValue(chart.Id,out var score) && score.Score!=null)
+                    @if (Type == TierListType.MyScores)
                     {
                         <MudCardContent>
-                            @score.Score (@score.Score.Value.LetterGrade.GetName(), @(score.Plate?.GetShorthand() ?? "??"))
+                            @if (Scores.TryGetValue(chart.Id, out var score) && score.Score != null)
+                            {
+                                <MudText>@score.Score (@score.Score.Value.LetterGrade.GetName(), @(score.Plate?.GetShorthand() ?? "??"))</MudText>
+                            }
                         </MudCardContent>
                     }
                     @if (Type != TierListType.MyScores)
