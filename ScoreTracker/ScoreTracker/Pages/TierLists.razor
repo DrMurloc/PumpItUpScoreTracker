@@ -69,16 +69,44 @@
             <MudRadio Option="@ChartType.CoOp.ToString()" Color="Color.Primary">@L.GetString("CoOp")</MudRadio>
         </MudRadioGroup>
     </MudItem>
-    @if (CurrentUser.IsLoggedIn && _currentTierList!= TierListType.MyScores)
-    {
-        <MudItem xs="6"> 
-            <MudSwitch T="bool" Label=@L["Hide Completed Charts"] Checked="_hideCompleted" CheckedChanged="v=>ToggleVisibility(v,_showOnlyTodos)" Color="Color.Primary"></MudSwitch>
+    <MudHidden Breakpoint="Breakpoint.SmAndDown">
+        @if (CurrentUser.IsLoggedIn && _currentTierList!= TierListType.MyScores)
+        {
+            <MudItem sm="4"> 
+                <MudSwitch T="bool" Label=@L["Hide Completed Charts"] Checked="_hideCompleted" CheckedChanged="v=>ToggleVisibility(v,_showOnlyTodos)" Color="Color.Primary"></MudSwitch>
+            </MudItem>
+            <MudItem sm="4">
+                <MudSwitch T="bool" Label=@L["Show Only ToDo Charts"] Checked="_showOnlyTodos" CheckedChanged="v=>ToggleVisibility(_hideCompleted,v)" Color="Color.Primary"></MudSwitch>
+            </MudItem>
+        }
+        <MudItem sm="4">
+            <MudAutocomplete T="string" Label=@L["Song Name"] AdornmentIcon="@Icons.Material.Filled.Search" Value="_songFilter" ValueChanged="ToggleSongSearch" SearchFunc="FilterSongName" CoerceText="false" CoerceValue="true"></MudAutocomplete>
         </MudItem>
-        <MudItem xs="6">
-            <MudSwitch T="bool" Label=@L["Show Only ToDo Charts"] Checked="_showOnlyTodos" CheckedChanged="v=>ToggleVisibility(_hideCompleted,v)" Color="Color.Primary"></MudSwitch>
-        </MudItem>
-    }
+    </MudHidden>
 </MudGrid>
+<MudHidden Breakpoint="Breakpoint.MdAndUp">
+    <MudFab Icon="@Icons.Material.Filled.Settings" Color="Color.Primary" Variant="Variant.Filled" Size="Size.Medium" OnClick="()=>_showSettings=true" Style="position:fixed;right:10px;bottom:10px;z-index:10;"></MudFab>
+</MudHidden>
+<MudDrawer @bind-Open="_showSettings" Variant="@DrawerVariant.Temporary" Anchor="Anchor.Right" Id="SettingsDrawer">
+ 
+        <MudGrid>
+            @if (CurrentUser.IsLoggedIn && _currentTierList != TierListType.MyScores)
+            {
+                <MudItem xs="12">
+                    <MudSwitch T="bool" Label=@L["Hide Completed Charts"] Checked="_hideCompleted" CheckedChanged="v => ToggleVisibility(v, _showOnlyTodos)" Color="Color.Primary"></MudSwitch>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudSwitch T="bool" Label=@L["Show Only ToDo Charts"] Checked="_showOnlyTodos" CheckedChanged="v => ToggleVisibility(_hideCompleted, v)" Color="Color.Primary"></MudSwitch>
+                </MudItem>
+            }
+            <MudItem xs="12">
+                <MudAutocomplete T="string" Label=@L["Song Name"] AdornmentIcon="@Icons.Material.Filled.Search" Value="_songFilter" ValueChanged="ToggleSongSearch" SearchFunc="FilterSongName" CoerceText="false" CoerceValue="true"></MudAutocomplete>
+            </MudItem>
+            <MudItem xs="12">
+                <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>_showSettings=false">@L["Close"]</MudButton>
+                </MudItem>
+        </MudGrid>
+</MudDrawer>
 @if (_currentTierList is TierListType.Difficulty or TierListType.MyScores or TierListType.Scores)
 {
     @if (ChartTypeFilter == nameof(ChartType.CoOp) && _currentTierList==TierListType.Difficulty)
@@ -205,6 +233,11 @@ else
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
+<style>
+    #SettingsDrawer .mud-drawer-content {
+        padding: 15px;
+    }
+</style>
 @inject IAdminNotificationClient Notifications;
 @inject ISnackbar Snackbar;
 @inject IPhoenixRecordRepository PhoenixRecords;
@@ -233,6 +266,8 @@ else
     private IDictionary<Guid, string> _videos = new Dictionary<Guid, string>();
     private bool _showVideoDialog = false;
     private bool _showEditDialog = false;
+    private bool _showSettings = false;
+    private string _songFilter = string.Empty;
     private string _currentVideo = "";
     private string _currentVideoDescription = string.Empty;
 
@@ -281,6 +316,12 @@ else
     private ICollection<Chart> _toPassCharts = new List<Chart>();
     private bool _hideCompleted = false;
     private bool _showOnlyTodos = false;
+
+    private void ToggleSongSearch(string search)
+    {
+        _songFilter = search;
+        RefilterCharts();
+    }
     private void ToggleVisibility(bool hideCompleted, bool showOnlyTodos)
     {
         _hideCompleted=hideCompleted;
@@ -291,6 +332,9 @@ else
     private IEnumerable<TitleProgress> _titleProgress = Array.Empty<TitleProgress>();
     private ISet<Guid> _todos = new HashSet<Guid>();
     private TierListType _currentTierList = TierListType.Difficulty;
+
+    private Task<IEnumerable<string>> FilterSongName(string search) => Task.FromResult(_difficultyAndTypeFilteredCharts.Values.Select(c => c.Song.Name.ToString()).Distinct().Where(
+        n => n.Contains(search, StringComparison.OrdinalIgnoreCase)));
     [Parameter]
     [SupplyParameterFromQuery(Name = "Difficulty")]
     public int DifficultyFilter { get; set; }
@@ -396,235 +440,216 @@ else
         _veryHardCharts = new List<Chart>();
         _underratedCharts = new List<Chart>();
         _notRatedCharts = new List<Chart>();
-        if (_currentTierList == TierListType.Difficulty)
+        var filtered = _difficultyAndTypeFilteredCharts.Values.AsEnumerable();
+        if (_hideCompleted)
         {
-
-            var type = Enum.Parse<ChartType>(ChartTypeFilter);
-            if (type is ChartType.Single or ChartType.Double)
+            filtered = filtered.Where(c => !_passes.Contains(c.Id));
+        }
+        if (_showOnlyTodos)
+        {
+            filtered = filtered.Where(c => _todos.Contains(c.Id));
+        }
+        if (!string.IsNullOrWhiteSpace(_songFilter))
+        {
+            filtered = filtered.Where(c => c.Song.Name.ToString().Contains(_songFilter, StringComparison.OrdinalIgnoreCase));
+        }
+        switch (_currentTierList)
+        {
+            case TierListType.Difficulty:
             {
-                var filtered = _difficultyAndTypeFilteredCharts.Values.OrderByDescending(c => _ratings.ContainsKey(c.Id) ? _ratings[c.Id].Difficulty : c.Level + .5).AsEnumerable();
-                if (_hideCompleted)
+                var type = Enum.Parse<ChartType>(ChartTypeFilter);
+                if (type is ChartType.Single or ChartType.Double)
                 {
-                    filtered = filtered.Where(c => !_passes.Contains(c.Id));
-                }
-                if (_showOnlyTodos)
-                {
-                    filtered = filtered.Where(c => _todos.Contains(c.Id));
-                }
-                foreach (var chart in filtered)
-                {
-                    if (!_ratings.ContainsKey(chart.Id))
+                    foreach (var chart in filtered.OrderByDescending(c => _ratings.ContainsKey(c.Id) ? _ratings[c.Id].Difficulty : c.Level + .5))
                     {
-                        _notRatedCharts.Add(chart);
+                        if (!_ratings.ContainsKey(chart.Id))
+                        {
+                            _notRatedCharts.Add(chart);
+                            continue;
+                        }
+                        var rating = _ratings[chart.Id];
+                        var diff = rating.Difficulty - chart.Level - .5;
+                        switch (diff)
+                        {
+                            case <= -.75:
+                                _overratedCharts.Add(chart);
+                                break;
+                            case <= -.375:
+                                _veryEasyCharts.Add(chart);
+                                break;
+                            case <= -.125:
+                                _easyCharts.Add(chart);
+                                break;
+                            case < .125:
+                                _mediumCharts.Add(chart);
+                                break;
+                            case < .375:
+                                _hardCharts.Add(chart);
+                                break;
+                            case < .75:
+                                _veryHardCharts.Add(chart);
+                                break;
+                            default:
+                                _underratedCharts.Add(chart);
+                                break;
+                        }
+
+                    }
+                }
+                else
+                {
+                
+                    var filteredArray = filtered.ToArray();
+                    _unratedCoOps = filteredArray.Where(c => !_ratings.ContainsKey(c.Id)).ToArray();
+                    _coOpLevels = filteredArray.Where(c => _coOpRatings.ContainsKey(c.Id)).GroupBy(c => _coOpSortType == CoOpSortType.Average ? _coOpRatings[c.Id].Average :
+                        _coOpSortType == CoOpSortType.EasiestPlayer ? _coOpRatings[c.Id].Minimum :
+                            _coOpRatings[c.Id].Maximum).ToDictionary(c => c.Key, c => c.ToArray().AsEnumerable());
+                }
+                break;
+            }
+            case TierListType.Scores:
+            {
+                var validCharts = _allPhoenixScores.Values.SelectMany(g => g.Where(r => r.Score != null)).Select(r => r.ChartId).Distinct().ToHashSet();
+
+                var filteredArray = filtered.Where(c => validCharts.Contains(c.Id)).ToArray();
+                if (!filteredArray.Any())
+                {
+                    RefilterRatings();
+                    return;
+                }
+                var chartCount = filteredArray.ToDictionary(c => c.Id, c => 0);
+                var chartTotal = filteredArray.ToDictionary(c => c.Id, c => 0);
+                foreach (var scores in _allPhoenixScores.Values)
+                {
+                    var scoresDict = scores.ToDictionary(s => s.ChartId);
+                    var scoreInts = scoresDict.Values.Where(s => s.Score != null).Select(s => (int)s.Score!.Value).ToArray();
+                    if (!scoreInts.Any())
+                    {
                         continue;
                     }
-                    var rating = _ratings[chart.Id];
-                    var diff = rating.Difficulty - chart.Level - .5;
-                    switch (diff)
+                    var standardDeviation = StdDev(scoreInts, false);
+                    var average = scoreInts.Average();
+                    var mediumMin = average - standardDeviation / 2;
+                    var easyMin = average + standardDeviation / 2;
+                    var veryEasyMin = average + standardDeviation;
+                    var oneLevelOverrated = average + standardDeviation * 1.5;
+                    var hardMin = average - standardDeviation;
+                    var veryHardMin = average - standardDeviation * 1.5;
+                    foreach (var chart in filteredArray.Where(c => scoresDict.ContainsKey(c.Id)))
                     {
-                        case <= -.75:
+                        var score = (int)(scoresDict[chart.Id]?.Score ?? 0);
+                        chartCount[chart.Id]++;
+                        if (score < veryHardMin)
+                        {
+                            chartTotal[chart.Id] += 3;
+                        }
+                        else if (score < hardMin)
+                        {
+                            chartTotal[chart.Id] += 2;
+                        }
+                        else if (score < mediumMin)
+                        {
+                            chartTotal[chart.Id] += 1;
+                        }
+                        else if (score < easyMin)
+                        {
+                            chartTotal[chart.Id] += 0;
+                        }
+                        else if (score < veryEasyMin)
+                        {
+                            chartTotal[chart.Id] += -1;
+                        }
+                        else if (score < oneLevelOverrated)
+                        {
+                            chartTotal[chart.Id] += -2;
+                        }
+                        else
+                        {
+                            chartTotal[chart.Id] += -3;
+                        }
+                    }
+                }
+                var averages = chartTotal.ToDictionary(kv => kv.Key, kv => chartTotal[kv.Key] / (double)chartCount[kv.Key]);
+                foreach (var chart in filteredArray.OrderByDescending(c => averages[c.Id]))
+                {
+                    var average = averages[chart.Id];
+                    switch (average)
+                    {
+                        case < -2.5:
                             _overratedCharts.Add(chart);
                             break;
-                        case <= -.375:
+                        case < -1.5:
                             _veryEasyCharts.Add(chart);
                             break;
-                        case <= -.125:
+                        case < -.5:
                             _easyCharts.Add(chart);
                             break;
-                        case < .125:
+                        case <= .5:
                             _mediumCharts.Add(chart);
                             break;
-                        case < .375:
+                        case <= 1.5:
                             _hardCharts.Add(chart);
                             break;
-                        case < .75:
+                        case <= 2.5:
                             _veryHardCharts.Add(chart);
                             break;
                         default:
                             _underratedCharts.Add(chart);
                             break;
                     }
-
                 }
+                break;
             }
-            else
+            case TierListType.MyScores:
             {
-
-                var filtered = _difficultyAndTypeFilteredCharts.Values.OrderByDescending(c => _ratings.ContainsKey(c.Id) ? _ratings[c.Id].Difficulty : c.Level + .5).AsEnumerable();
-                if (_hideCompleted)
-                {
-                    filtered = filtered.Where(c => !_passes.Contains(c.Id));
-                }
-                if (_showOnlyTodos)
-                {
-                    filtered = filtered.Where(c => _todos.Contains(c.Id));
-                }
-                _unratedCoOps = filtered.Where(c => !_ratings.ContainsKey(c.Id)).ToArray();
-                _coOpLevels = filtered.Where(c => _coOpRatings.ContainsKey(c.Id)).GroupBy(c => _coOpSortType == CoOpSortType.Average ? _coOpRatings[c.Id].Average :
-                    _coOpSortType == CoOpSortType.EasiestPlayer ? _coOpRatings[c.Id].Minimum :
-                        _coOpRatings[c.Id].Maximum).ToDictionary(c => c.Key, c => c.ToArray().AsEnumerable());
-            }
-        }
-        else if(_currentTierList==TierListType.Scores)
-        {
-            var validCharts = _allPhoenixScores.Values.SelectMany(g => g.Where(r => r.Score != null)).Select(r => r.ChartId).Distinct().ToHashSet();
-            var filtered = _difficultyAndTypeFilteredCharts.Values
-                .Where(c => validCharts.Contains(c.Id));
-            if (_hideCompleted)
-            {
-                filtered = filtered.Where(c => !_passes.Contains(c.Id));
-            }
-            if (_showOnlyTodos)
-            {
-                filtered = filtered.Where(c => _todos.Contains(c.Id));
-            }
-
-            var filteredArray = filtered.ToArray();
-            if (!filteredArray.Any())
-            {
-                RefilterRatings();
-                return;
-            }
-            var chartCount = filteredArray.ToDictionary(c => c.Id, c => 0);
-            var chartTotal = filteredArray.ToDictionary(c => c.Id, c => 0);
-            foreach (var scores in _allPhoenixScores.Values)
-            {
-                var scoresDict = scores.ToDictionary(s => s.ChartId);
-                var scoreInts = scoresDict.Values.Where(s => s.Score != null).Select(s => (int)s.Score!.Value).ToArray();
-                if (!scoreInts.Any())
-                {
-                    continue;
-                }
-                var standardDeviation = StdDev(scoreInts, false);
-                var average = scoreInts.Average();
-                var mediumMin = average - standardDeviation / 2;
-                var easyMin = average + standardDeviation / 2;
-                var veryEasyMin = average + standardDeviation;
-                var oneLevelOverrated = average + standardDeviation * 1.5;
-                var hardMin = average - standardDeviation;
+                var filteredArray = filtered.Where(c=>_phoenixScores.ContainsKey(c.Id) && _phoenixScores[c.Id].Score!=null) 
+                    .OrderBy(c => _phoenixScores.ContainsKey(c.Id) ? (int)(_phoenixScores[c.Id]?.Score??0) : 0).ToArray(); 
+                if (!filteredArray.Any()) 
+                { 
+                    RefilterRatings(); 
+                    return; 
+                }   
+                var standardDeviation = StdDev(filteredArray.Select(s => (int)(_phoenixScores[s.Id].Score ?? 0)), false); 
+                var average = filteredArray.Average(s => (int)(_phoenixScores[s.Id]?.Score ?? 0)); 
+                var mediumMin = average - standardDeviation / 2; 
+                var easyMin = average + standardDeviation / 2; 
+                var veryEasyMin = average + standardDeviation; 
+                var oneLevelOverrated = average + standardDeviation * 1.5; 
+                var hardMin = average - standardDeviation; 
                 var veryHardMin = average - standardDeviation * 1.5;
-                foreach (var chart in filteredArray.Where(c => scoresDict.ContainsKey(c.Id)))
+                foreach (var chart in filteredArray)
                 {
-                    var score = (int)(scoresDict[chart.Id]?.Score ?? 0);
-                    chartCount[chart.Id]++;
+                    var score = (int)(_phoenixScores[chart.Id]?.Score ?? 0);
                     if (score < veryHardMin)
                     {
-                        chartTotal[chart.Id] += 3;
+                        _underratedCharts.Add(chart);
                     }
                     else if (score < hardMin)
                     {
-                        chartTotal[chart.Id] += 2;
+                        _veryHardCharts.Add(chart);
                     }
                     else if (score < mediumMin)
                     {
-                        chartTotal[chart.Id] += 1;
+                        _hardCharts.Add(chart);
                     }
                     else if (score < easyMin)
                     {
-                        chartTotal[chart.Id] += 0;
+                        _mediumCharts.Add(chart);
                     }
                     else if (score < veryEasyMin)
                     {
-                        chartTotal[chart.Id] += -1;
+                        _easyCharts.Add(chart);
                     }
                     else if (score < oneLevelOverrated)
                     {
-                        chartTotal[chart.Id] += -2;
+                        _veryEasyCharts.Add(chart);
                     }
                     else
                     {
-                        chartTotal[chart.Id] += -3;
+                        _overratedCharts.Add(chart);
                     }
                 }
-            }
-            var averages = chartTotal.ToDictionary(kv => kv.Key, kv => chartTotal[kv.Key] / (double)chartCount[kv.Key]);
-            foreach (var chart in filteredArray.OrderByDescending(c => averages[c.Id]))
-            {
-                var average = averages[chart.Id];
-                switch (average)
-                {
-                    case < -2.5:
-                        _overratedCharts.Add(chart);
-                        break;
-                    case < -1.5:
-                        _veryEasyCharts.Add(chart);
-                        break;
-                    case < -.5:
-                        _easyCharts.Add(chart);
-                        break;
-                    case <= .5:
-                        _mediumCharts.Add(chart);
-                        break;
-                    case <= 1.5:
-                        _hardCharts.Add(chart);
-                        break;
-                    case <= 2.5:
-                        _veryHardCharts.Add(chart);
-                        break;
-                    default:
-                        _underratedCharts.Add(chart);
-                        break;
-                }
-            }
-        
-        } else if (_currentTierList == TierListType.MyScores)
-        {
-            var filtered = _difficultyAndTypeFilteredCharts.Values 
-                .Where(c=>_phoenixScores.ContainsKey(c.Id) && _phoenixScores[c.Id].Score!=null) 
-                .OrderBy(c => _phoenixScores.ContainsKey(c.Id) ? (int)(_phoenixScores[c.Id]?.Score??0) : 0).AsEnumerable(); 
-            if (_hideCompleted) 
-            { 
-                filtered = filtered.Where(c => !_passes.Contains(c.Id)); 
-            } 
-            if (_showOnlyTodos) 
-            { 
-                filtered = filtered.Where(c => _todos.Contains(c.Id)); 
-            } 
-            var filteredArray = filtered.ToArray(); 
-            if (!filteredArray.Any()) 
-            { 
-                RefilterRatings(); 
-                return; 
-            }   
-            var standardDeviation = StdDev(filteredArray.Select(s => (int)(_phoenixScores[s.Id].Score ?? 0)), false); 
-            var average = filteredArray.Average(s => (int)(_phoenixScores[s.Id]?.Score ?? 0)); 
-            var mediumMin = average - standardDeviation / 2; 
-            var easyMin = average + standardDeviation / 2; 
-            var veryEasyMin = average + standardDeviation; 
-            var oneLevelOverrated = average + standardDeviation * 1.5; 
-            var hardMin = average - standardDeviation; 
-            var veryHardMin = average - standardDeviation * 1.5;
-            foreach (var chart in filteredArray)
-            {
-                var score = (int)(_phoenixScores[chart.Id]?.Score ?? 0);
-                if (score < veryHardMin)
-                {
-                    _underratedCharts.Add(chart);
-                }
-                else if (score < hardMin)
-                {
-                    _veryHardCharts.Add(chart);
-                }
-                else if (score < mediumMin)
-                {
-                    _hardCharts.Add(chart);
-                }
-                else if (score < easyMin)
-                {
-                    _mediumCharts.Add(chart);
-                }
-                else if (score < veryEasyMin)
-                {
-                    _easyCharts.Add(chart);
-                }
-                else if (score < oneLevelOverrated)
-                {
-                    _veryEasyCharts.Add(chart);
-                }
-                else
-                {
-                    _overratedCharts.Add(chart);
-                }
+                break;
             }
         }
         RefilterRatings();
