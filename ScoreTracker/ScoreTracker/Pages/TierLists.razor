@@ -523,7 +523,7 @@ else
                 {
                     var scoresDict = scores.ToDictionary(s => s.ChartId);
                     var scoreInts = scoresDict.Values.Where(s => s.Score != null).Select(s => (int)s.Score!.Value).ToArray();
-                    if (!scoreInts.Any())
+                    if (scoreInts.Length<5)
                     {
                         continue;
                     }
