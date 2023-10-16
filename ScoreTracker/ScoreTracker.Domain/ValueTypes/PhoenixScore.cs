@@ -86,6 +86,11 @@ public readonly struct PhoenixScore
         return int.TryParse(scoreString, out var scoreInt) && TryParse(scoreInt, out result);
     }
 
+    public static bool IsValid(int scoreInt)
+    {
+        return TryParse(scoreInt, out _);
+    }
+
     public static bool TryParse(int scoreInt, out PhoenixScore result)
     {
         try

@@ -7,6 +7,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 namespace ScoreTracker.Web.Controllers;
 
 [Route("[controller]")]
+[ApiExplorerSettings(IgnoreApi = true)]
 public sealed class LogoutController : Controller
 {
     private readonly ICurrentUserAccessor _currentUser;

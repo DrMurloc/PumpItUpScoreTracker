@@ -13,9 +13,32 @@
 <MudCard>
     <MudCardHeader>@L["Account"]</MudCardHeader>
     <MudCardContent>
-        <MudTextField Label="Id" Disabled="true" Value="@_id" HelperText=@L["Used Primarily for debugging"]></MudTextField>
-        <MudTextField T="string" Disabled="_isUpdatingUser" Label=@L["Username"] MaxLength="100" Value="@_name" ValueChanged="UpdateName"></MudTextField>
-        <MudSwitch T="bool" Disabled="_isUpdatingUser" Label=@L["Public"] Checked="_isPublic" CheckedChanged="()=>_showPublicConfirmDialog=true" Color="Color.Success"></MudSwitch>
+        <MudGrid>
+            <MudItem xs="12">
+                <MudTextField Label="Id" Disabled="true" Value="@_id" HelperText=@L["Used Primarily for debugging"]></MudTextField>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField T="string" Disabled="_isUpdatingUser" Label=@L["Username"] MaxLength="100" Value="@_name" ValueChanged="UpdateName"></MudTextField>
+            </MudItem>
+            <MudItem xs="12">
+                <MudSwitch T="bool" Disabled="_isUpdatingUser" Label=@L["Public"] Checked="_isPublic" CheckedChanged="() => _showPublicConfirmDialog = true" Color="Color.Success"></MudSwitch>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField Label="API Token" Disabled="true" Value="@(_apiToken?.ToString()??string.Empty)" HelperText=@($"Authorization Header: Basic {Base64Encode(":"+_apiToken)}")></MudTextField>
+            </MudItem>
+            <MudItem xs="6" sm="4">
+                <MudButton OnClick="GenerateToken" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.GeneratingTokens">New Token</MudButton>
+            </MudItem>
+            @if (_apiToken != null)
+            {
+                <MudItem xs="6" sm="4">
+                    <MudButton OnClick="CopyToken" Disabled="_apiToken==null" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy">Copy Token</MudButton>
+                </MudItem>
+                <MudItem xs="6" sm="4">
+                    <MudButton Href="/swagger" Target="_blank" Variant="Variant.Outlined">API Documentation</MudButton>
+                </MudItem>
+            }
+        </MudGrid>
     </MudCardContent>
     <MudCardActions>
         <MudSpacer></MudSpacer>
@@ -65,19 +88,37 @@
     private bool _showPublicConfirmDialog = false;
     private bool _isDownloading = false;
     private bool _isUpdatingUser = false;
-    protected override Task OnInitializedAsync()
+    private Guid? _apiToken;
+    public static string Base64Encode(string plainText) 
+    {
+        var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
+        return System.Convert.ToBase64String(plainTextBytes);
+    }
+    protected override async Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn)
         {
             NavManager.NavigateTo("/Login");
-            return Task.CompletedTask;
+            return;
         }
         _id = CurrentUser.User.Id.ToString();
         _name = CurrentUser.User.Name;
         _isPublic = CurrentUser.User.IsPublic;
-        return Task.CompletedTask;
+        _apiToken = await Mediator.Send(new GetUserApiTokenQuery());
+        return;
     }
 
+    private async Task CopyToken()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _apiToken!.Value);
+        Snackbar.Add("Copied to Clipboard!", Severity.Success);
+    }
+
+    private async Task GenerateToken()
+    {
+        _apiToken = await Mediator.Send(new SetApiTokenCommand());
+        Snackbar.Add("New API Token Generated!", Severity.Success);
+    }
     private async Task UpdateUser()
     {
         _isUpdatingUser = true;

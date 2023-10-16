@@ -19,4 +19,8 @@ public interface IUserRepository
 
     Task SaveUserUiSettings(Guid userId, IDictionary<string, string> settings,
         CancellationToken cancellationToken = default);
+
+    Task<Guid?> GetUserApiToken(Guid userId, CancellationToken cancellationToken = default);
+    Task<User?> GetUserByApiToken(Guid apiToken, CancellationToken cancellationToken = default);
+    Task SetUserApiToken(Guid userId, Guid apiToken, CancellationToken cancellationToken = default);
 }

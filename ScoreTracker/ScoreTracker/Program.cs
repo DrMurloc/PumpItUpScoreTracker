@@ -1,5 +1,7 @@
 using BlazorApplicationInsights;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Localization;
+using Microsoft.OpenApi.Models;
 using MudBlazor.Services;
 using OfficeOpenXml;
 using ScoreTracker.CompositionRoot;
@@ -8,8 +10,11 @@ using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Accessors;
 using ScoreTracker.Web.Configuration;
+using ScoreTracker.Web.Security;
 using ScoreTracker.Web.Services;
 using ScoreTracker.Web.Services.Contracts;
+using ScoreTracker.Web.Swagger;
+using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,11 +50,46 @@ builder.Services.AddAuthentication("DefaultAuthentication")
     {
         o.AppId = facebookConfig.AppId;
         o.AppSecret = facebookConfig.AppSecret;
+    })
+    .AddScheme<AuthenticationSchemeOptions, ApiTokenAuthenticationScheme>("ApiToken", o => { });
+
+builder.Services.AddSwaggerExamplesFromAssemblyOf<RecordPhoenixScoreDtoExample>();
+builder.Services.AddSwaggerGen(o =>
+{
+    o.ExampleFilters();
+    o.UseInlineDefinitionsForEnums();
+    o.AddSecurityDefinition("basic", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        In = ParameterLocation.Header,
+        Scheme = "basic",
+        Description = "ApiToken from Account page. Put anything in for username."
+    });
+    o.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "basic"
+                }
+            },
+            new string[] { }
+        }
+    });
+    o.SchemaFilter<EnumSchemaFilter>();
+});
+builder.Services.AddAuthorization(o =>
+    {
+        o.AddPolicy(nameof(ApiTokenAttribute), p => p.RequireAssertion(ApiTokenAttribute.AuthPolicy));
     });
 builder.Services.AddBlazorApplicationInsights()
     .AddTransient<IPhoenixScoreFileExtractor, PhoenixScoreFileExtractor>()
     .AddMudServices()
-    .AddTransient<ICurrentUserAccessor, HttpContextUserAccessor>()
+    .AddScoped<ICurrentUserAccessor, HttpContextUserAccessor>()
     .AddTransient<IUiSettingsAccessor, UiSettingsAccessor>()
     .AddHttpContextAccessor()
     .AddHttpClient()
@@ -85,7 +125,8 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
-
+app.UseSwagger();
+app.UseSwaggerUI(c => { });
 app.UseRouting();
 
 app.UseAuthentication();

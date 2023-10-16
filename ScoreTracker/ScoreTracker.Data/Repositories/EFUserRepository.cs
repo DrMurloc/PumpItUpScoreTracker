@@ -104,4 +104,45 @@ public sealed class EFUserRepository : IUserRepository
 
         await _database.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<Guid?> GetUserApiToken(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return (await _database.UserApiToken.FirstOrDefaultAsync(upt => upt.UserId == userId, cancellationToken))
+            ?.Token;
+    }
+
+    public async Task<User?> GetUserByApiToken(Guid apiToken, CancellationToken cancellationToken = default)
+    {
+        var apiEntity =
+            await _database.UserApiToken.FirstOrDefaultAsync(api => api.Token == apiToken, cancellationToken);
+        if (apiEntity == null) return null;
+
+        apiEntity.CurrentTokenUsageCount++;
+        apiEntity.TotalUsageCount++;
+        await _database.SaveChangesAsync(cancellationToken);
+        return await GetUser(apiEntity.UserId, cancellationToken);
+    }
+
+    public async Task SetUserApiToken(Guid userId, Guid apiToken, CancellationToken cancellationToken = default)
+    {
+        var entity = await _database.UserApiToken.FirstOrDefaultAsync(api => api.Token == apiToken, cancellationToken);
+        if (entity == null)
+        {
+            await _database.UserApiToken.AddAsync(new UserApiTokenEntity
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Token = apiToken,
+                CurrentTokenUsageCount = 0,
+                TotalUsageCount = 0
+            }, cancellationToken);
+        }
+        else
+        {
+            entity.CurrentTokenUsageCount = 0;
+            entity.Token = apiToken;
+        }
+
+        await _database.SaveChangesAsync(cancellationToken);
+    }
 }

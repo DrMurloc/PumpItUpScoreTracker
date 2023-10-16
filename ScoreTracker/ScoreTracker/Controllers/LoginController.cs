@@ -1,14 +1,15 @@
-﻿using MediatR;
+﻿using System.Security.Claims;
+using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
-using System.Security.Claims;
 
 namespace ScoreTracker.Web.Controllers;
 
 [Route("[controller]")]
+[ApiExplorerSettings(IgnoreApi = true)]
 public sealed class LoginController : Controller
 {
     private static readonly ISet<string> AllowedProviders =

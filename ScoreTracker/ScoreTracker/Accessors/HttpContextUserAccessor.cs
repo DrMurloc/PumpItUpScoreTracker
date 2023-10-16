@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Web.Security;
-using System.Security.Claims;
 
 namespace ScoreTracker.Web.Accessors;
 
@@ -27,13 +27,7 @@ public sealed class HttpContextUserAccessor : ICurrentUserAccessor
     {
         var context = _context.HttpContext;
         if (context == null) return;
-        var principal = new ClaimsPrincipal(new ClaimsIdentity(new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Name),
-            new Claim(ClaimTypes.Role, "User"),
-            new Claim(ScoreTrackerClaimTypes.IsPublic, user.IsPublic.ToString())
-        }, "External"));
+        var principal = user.GetClaimsPrincipal();
         await context.SignOutAsync();
         await context.SignInAsync(principal);
     }
@@ -43,6 +37,17 @@ public sealed class HttpContextUserAccessor : ICurrentUserAccessor
 
 public static class UserExtensions
 {
+    public static ClaimsPrincipal GetClaimsPrincipal(this User user)
+    {
+        return new(new ClaimsIdentity(new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Name, user.Name),
+            new Claim(ClaimTypes.Role, "User"),
+            new Claim(ScoreTrackerClaimTypes.IsPublic, user.IsPublic.ToString())
+        }, "External"));
+    }
+
     public static User GetUser(this ClaimsPrincipal claimsPrincipal)
     {
         return new User(

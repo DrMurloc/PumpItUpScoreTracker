@@ -1,6 +1,6 @@
-﻿using ScoreTracker.Domain.Enums;
+﻿using System.Text.RegularExpressions;
+using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Exceptions;
-using System.Text.RegularExpressions;
 
 namespace ScoreTracker.Domain.ValueTypes;
 
@@ -57,6 +57,11 @@ public readonly struct DifficultyLevel : IComparable<DifficultyLevel>
     {
         result = default;
         return int.TryParse(levelString, out var levelInt) && TryParse(levelInt, out result);
+    }
+
+    public static bool IsValid(int levelInt)
+    {
+        return TryParse(levelInt, out _);
     }
 
     public static bool TryParse(int levelInt, out DifficultyLevel result)

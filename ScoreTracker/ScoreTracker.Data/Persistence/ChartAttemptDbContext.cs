@@ -41,7 +41,7 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<UserQualifierHistoryEntity> UserQualifierHistory { get; set; }
     public DbSet<UserPreferenceRatingEntity> UserPreferenceRating { get; set; }
     public DbSet<ChartPreferenceRatingEntity> ChartPreferenceRating { get; set; }
-
+    public DbSet<UserApiTokenEntity> UserApiToken { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.HasDefaultSchema("scores");
