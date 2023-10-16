@@ -107,6 +107,7 @@
     <br />
     <MudChip Variant="Variant.Outlined" Size="Size.Small" Color="Color.Info">@L["Total Count"]: @FileredCharts.Count()</MudChip>
     <MudChip Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.Ungraded))">@L["Not Graded Count"]: @NotGradedCount</MudChip>
+    <MudChip Variant="Variant.Outlined" Size="Size.Small" Color="Color.Warning" OnClick="@(()=>SetScoreStateFilter(ScoreState.Broken))">@L["Broken"] @BrokenCount</MudChip>
     <MudChip Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.NotPassed))">@L["Not Passed Count"]: @NotPassedCount</MudChip>
     <MudChip Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.Passed))">@L["Passed Count"]: @PassedCount</MudChip>
     <br/>
@@ -607,6 +608,7 @@
     private int NotGradedCount => _currentMix==MixEnum.XX? FileredCharts.Count(c => string.IsNullOrWhiteSpace(c.XXLetterGrade))
     :FileredCharts.Count(c=>c.PhoenixLetterGrade==null);
     private int NotPassedCount => FileredCharts.Count(c => c.IsBroken);
+    private int BrokenCount => FileredCharts.Count(c => c is { Score: { },IsBroken: true });
 
     private int PassedCount => _currentMix == MixEnum.XX ?
         FileredCharts.Count(c => !string.IsNullOrWhiteSpace(c.XXLetterGrade) && !c.IsBroken)
@@ -647,6 +649,7 @@
             result = _scoreStateFilter.Value switch
             {
                 ScoreState.NotPassed => result && chart.IsBroken,
+                ScoreState.Broken=>result && chart is { Score: { },IsBroken: true },
                 ScoreState.Passed => result && (_currentMix==MixEnum.XX?!string.IsNullOrWhiteSpace(chart.XXLetterGrade):chart.PhoenixLetterGrade!=null) && !chart.IsBroken,
                 ScoreState.Ungraded => result && (_currentMix==MixEnum.XX?string.IsNullOrWhiteSpace(chart.XXLetterGrade):chart.PhoenixLetterGrade==null),
                 _ => result
@@ -998,6 +1001,7 @@
     {
         Ungraded,
         NotPassed,
-        Passed
+        Passed,
+        Broken
     }
 }
