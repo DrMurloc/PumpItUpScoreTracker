@@ -31,8 +31,12 @@ namespace ScoreTracker.Application.Handlers
                 .Select((q, i) => (q, i + 1)).ToArray();
 
             if (orderedOldLeaderboard.All(o => o.q.UserName != user))
+            {
                 await _botClient.PublishQualifiersMessage(
                     $"A new challenger approaches! Welcome {user} to the qualifier leaderboard!", cancellationToken);
+                return Unit.Value;
+            }
+
 
             var oldPlace = orderedOldLeaderboard.First(kv => kv.q.UserName == user).Item2;
             var newPlace = orderedNewLeaderboard.First(kv => kv.q.UserName == user).Item2;
