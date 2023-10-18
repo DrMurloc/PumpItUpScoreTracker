@@ -107,8 +107,8 @@
     <br />
     <MudChip Variant="Variant.Outlined" Size="Size.Small" Color="Color.Info">@L["Total Count"]: @FileredCharts.Count()</MudChip>
     <MudChip Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.Ungraded))">@L["Not Graded Count"]: @NotGradedCount</MudChip>
-    <MudChip Variant="Variant.Outlined" Size="Size.Small" Color="Color.Warning" OnClick="@(()=>SetScoreStateFilter(ScoreState.Broken))">@L["Broken"] @BrokenCount</MudChip>
     <MudChip Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.NotPassed))">@L["Not Passed Count"]: @NotPassedCount</MudChip>
+    <MudChip Variant="Variant.Outlined" Size="Size.Small" Color="Color.Warning" OnClick="@(()=>SetScoreStateFilter(ScoreState.Broken))">@L["Broken"] @BrokenCount</MudChip>
     <MudChip Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.Passed))">@L["Passed Count"]: @PassedCount</MudChip>
     <br/>
 }

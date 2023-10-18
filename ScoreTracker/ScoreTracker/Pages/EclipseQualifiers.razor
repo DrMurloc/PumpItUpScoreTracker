@@ -1,6 +1,8 @@
 ﻿@page "/Eclipse/Qualifiers"
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Domain.Enums
 
 <PageTitle>Submit Eclipse Qualifiers Session</PageTitle>
 
@@ -35,6 +37,8 @@
             {
                 <MudTooltip Text="@(context.First.Song.Name+' '+context.First.DifficultyString)">
                     <MudImage Src="@context.First.Song.ImagePath.ToString()" Height="35" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
+                    <br>
+                    @(context.FirstScore?.ToString()??"") @(context.FirstScore?.LetterGrade.GetName()??"")
                 </MudTooltip>
             }
         </MudTd>
@@ -43,6 +47,8 @@
             {
                 <MudTooltip Text="@(context.Second.Song.Name+' '+context.Second.DifficultyString)">
                     <MudImage Src="@context.Second.Song.ImagePath.ToString()" Height="35" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
+                    <br>
+                    @(context.SecondScore?.ToString() ?? "") @(context.SecondScore?.LetterGrade.GetName() ?? "")
                 </MudTooltip>
             }
         </MudTd>
@@ -144,13 +150,13 @@
             _charts[chart.Id] = chart;
         }
         _leaderboard = (await Qualifiers.GetAllUserQualifiers(config)).OrderByDescending(q => q.CalculateScore()).Select((q, index) => new Entry(index + 1, q.UserName,
-            q.BestCharts().First,q.BestCharts().Second,
+            q.BestCharts().First, q.BestCharts().FirstScore,q.BestCharts().Second,q.BestCharts().SecondScore,
             index<=23?"Pros":index<=23+48?"Mids":"Lowers",q.IsApproved,
             q.CalculateScore(), q.Submissions.Select(s => s.Value.PhotoUrl).ToArray(),q));
 
     }
 
-    private sealed record Entry(int Place, string UserName, Chart? First, Chart? Second, string Division, bool IsApproved, int Score, IEnumerable<Uri> Photos, UserQualifiers Record)
+    private sealed record Entry(int Place, string UserName, Chart? First, PhoenixScore? FirstScore, Chart? Second, PhoenixScore? SecondScore, string Division, bool IsApproved, int Score, IEnumerable<Uri> Photos, UserQualifiers Record)
     {
 
     }

@@ -13,30 +13,35 @@ namespace ScoreTracker.Domain.Models
 
         public IDictionary<Guid, Submission> Submissions { get; }
 
-        public (Chart? First, Chart? Second) BestCharts()
+        public (Chart? First, Chart? Second, PhoenixScore? FirstScore, PhoenixScore? SecondScore) BestCharts()
         {
             Chart? first = null;
             Chart? second = null;
             var best = 0;
             var secondBest = 0;
+            var bestScore = 0;
+            var secondBestScore = 0;
             foreach (var chart in Configuration.Charts)
             {
                 var rating = Rating(chart.Id);
                 if (rating > best)
                 {
                     secondBest = best;
+                    secondBestScore = bestScore;
                     second = first;
                     best = rating;
                     first = chart;
+                    bestScore = Submissions[chart.Id].Score;
                 }
                 else if (rating > secondBest)
                 {
                     secondBest = rating;
                     second = chart;
+                    secondBestScore = Submissions[chart.Id].Score;
                 }
             }
 
-            return (first, second);
+            return (first, second, bestScore == 0 ? null : bestScore, secondBestScore == 0 ? null : secondBestScore);
         }
 
         public int Rating(Guid chartId)
