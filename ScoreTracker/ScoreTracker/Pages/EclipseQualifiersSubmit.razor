@@ -1,6 +1,7 @@
 ﻿@page "/Eclipse/Qualifiers/Submit"
 @using ScoreTracker.Domain.SecondaryPorts
 @using MediatR
+@using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Models
@@ -341,7 +342,7 @@
             return;
         }
         _isSaving = true;
-        await Qualifiers.SaveQualifiers(_currentQualifiers);
+        await Mediator.Send(new SaveQualifiersCommand(_currentQualifiers));
         await RefreshLeaderboard();
         _isSaving = false;
         _isNew = false;

@@ -10,6 +10,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Accessors;
 using ScoreTracker.Web.Configuration;
+using ScoreTracker.Web.HostedServices;
 using ScoreTracker.Web.Security;
 using ScoreTracker.Web.Services;
 using ScoreTracker.Web.Services.Contracts;
@@ -29,6 +30,7 @@ builder.Services.AddServerSideBlazor(options =>
 var discordConfig = builder.Configuration.GetSection("Discord").Get<DiscordConfiguration>();
 var googleConfig = builder.Configuration.GetSection("Google").Get<GoogleConfiguration>();
 var facebookConfig = builder.Configuration.GetSection("Facebook").Get<FacebookConfiguration>();
+builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSection("Discord"));
 builder.Services.AddAuthentication("DefaultAuthentication")
     .AddCookie("DefaultAuthentication", o =>
     {
@@ -93,6 +95,7 @@ builder.Services.AddBlazorApplicationInsights()
     .AddTransient<IUiSettingsAccessor, UiSettingsAccessor>()
     .AddHttpContextAccessor()
     .AddHttpClient()
+    .AddHostedService<BotHostedService>()
     .AddCore()
     .AddInfrastructure(builder.Configuration.GetSection("AzureBlob").Get<AzureBlobConfiguration>(),
         builder.Configuration.GetSection("SQL").Get<SqlConfiguration>(),

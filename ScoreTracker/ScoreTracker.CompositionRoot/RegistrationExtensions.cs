@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using ScoreTracker.Application.Handlers;
+using ScoreTracker.Data.Clients;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Repositories;
@@ -25,9 +26,10 @@ public static class RegistrationExtensions
         foreach (var implementationType in typeof(EFChartRepository).Assembly.GetTypes()
                 )
         foreach (var interfaceType in implementationType.GetInterfaces()
-                     .Where(i => i.Assembly == typeof(IChartRepository).Assembly))
+                     .Where(i => i.Assembly == typeof(IChartRepository).Assembly && i != typeof(IBotClient)))
             builder.AddTransient(interfaceType, implementationType);
 
+        builder.AddSingleton<IBotClient, DiscordBotClient>();
         builder.AddTransient<IDbContextFactory<ChartAttemptDbContext>, ChartDbContextFactory>();
         builder.Configure<SendGridConfiguration>(o =>
         {
