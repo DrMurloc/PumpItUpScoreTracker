@@ -53,8 +53,16 @@ namespace ScoreTracker.Domain.Models
 
             var grade = Submissions[chartId].Score.LetterGrade;
             var difficulty = Configuration.Charts.First(c => c.Id == chartId).Level;
+            if (grade == PhoenixLetterGrade.SSSPlus) return (int)(difficulty.BaseRating * grade.GetModifier());
 
-            return (int)(difficulty.BaseRating * grade.GetModifier());
+            var nextGrade = grade + 1;
+            var currentModifier = grade.GetModifier();
+            var nextModifier = nextGrade.GetModifier();
+            var actualModifier = currentModifier + (nextModifier - currentModifier) *
+                (Submissions[chartId].Score - grade.GetMinimumScore()) /
+                ((double)nextGrade.GetMinimumScore() - grade.GetMinimumScore());
+
+            return (int)(difficulty.BaseRating * actualModifier);
         }
 
         public int CalculateScore()
