@@ -7,7 +7,7 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Handlers
 {
-    public sealed class RateCoOpDifficultyHandler : IRequestHandler<RateCoOpDifficultyCommand, CoOpRating>
+    public sealed class RateCoOpDifficultyHandler : IRequestHandler<RateCoOpDifficultyCommand, CoOpRating?>
     {
         private readonly IChartRepository _chartRepository;
         private readonly IChartDifficultyRatingRepository _ratingRepository;

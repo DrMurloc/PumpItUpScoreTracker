@@ -81,7 +81,7 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
         return await (from pba in _database.PhoenixBestAttempt
                 join u in _database.User on pba.UserId equals u.Id
                 where pba.ChartId == chartId && pba.Score != null
-                select new UserPhoenixScore(pba.ChartId, u.IsPublic ? u.Name : "Anonymous", pba.Score.Value))
+                select new UserPhoenixScore(pba.ChartId, u.IsPublic ? u.Name : "Anonymous", pba.Score!.Value))
             .ToArrayAsync(cancellationToken);
     }
 

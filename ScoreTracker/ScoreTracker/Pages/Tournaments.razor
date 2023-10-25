@@ -124,9 +124,10 @@
     {
         NavManager.NavigateTo($"/Tournament/{tournamentId}/Record");
     }
-    private async Task ShowLeaderboard(Guid tournamentId)
+    private Task ShowLeaderboard(Guid tournamentId)
     {
         NavManager.NavigateTo($"/Tournament/{tournamentId}");
+        return Task.CompletedTask;
     }
     public async Task ShowRules(Guid tournamentId)
     {

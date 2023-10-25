@@ -435,7 +435,7 @@ public sealed class XXScoreFile
             {
                 (isBroken, letterGrade) = GetScoreFromRow(worksheet, rowId);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 errors.Add(new SpreadsheetScoreErrorDto
                 {
@@ -532,7 +532,7 @@ public sealed class XXScoreFile
 
                 scores.Add(attempt);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 failures.Add(record.ToError("Could not parse row"));
             }

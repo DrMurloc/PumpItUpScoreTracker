@@ -3,7 +3,6 @@
 @using ScoreTracker.Domain.Models
 @using MediatR
 @using ScoreTracker.Application.Commands
-@using ScoreTracker.Domain.ValueTypes
 @using CsvHelper
 @using System.Globalization
 @using ScoreTracker.Application.Queries
@@ -412,7 +411,7 @@
         {
             return;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             Snackbar.Add("There was an unknown error while parsing the file", Severity.Error);
             _currentStep = Step.Information;

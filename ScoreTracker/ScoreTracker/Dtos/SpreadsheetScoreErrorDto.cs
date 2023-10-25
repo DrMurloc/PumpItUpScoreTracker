@@ -2,11 +2,11 @@
 
 public class SpreadsheetScoreErrorDto
 {
-    public string Difficulty { get; set; }
-    public string Song { get; set; }
-    public string LetterGrade { get; set; }
-    public string IsBroken { get; set; }
-    public string Error { get; set; }
-    public string Score { get; set; }
-    public string Plate { get; set; }
+    public string Difficulty { get; set; } = string.Empty;
+    public string Song { get; set; } = string.Empty;
+    public string LetterGrade { get; set; } = string.Empty;
+    public string IsBroken { get; set; } = string.Empty;
+    public string Error { get; set; } = string.Empty;
+    public string Score { get; set; } = string.Empty;
+    public string Plate { get; set; } = string.Empty;
 }

@@ -2,8 +2,8 @@
 {
     public sealed class SendGridConfiguration
     {
-        public string ApiKey { get; set; }
-        public string ToEmail { get; set; }
-        public string FromEmail { get; set; }
+        public string ApiKey { get; set; } = string.Empty;
+        public string ToEmail { get; set; } = string.Empty;
+        public string FromEmail { get; set; } = string.Empty;
     }
 }

@@ -57,13 +57,13 @@
 @code
 {
     private bool _isDialogVisible = false;
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
         if (CurrentUser.IsLoggedIn)
         {
             NavManager.NavigateTo("/Charts");
-            return;
+            
         }
-
+        return Task.CompletedTask;
     }
 }

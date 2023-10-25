@@ -90,11 +90,11 @@
         FilterCharts();
     }
 
-    private async Task<IEnumerable<string>> SearchSongs(string? value)
+    private Task<IEnumerable<string>> SearchSongs(string? value)
     {
-        return string.IsNullOrWhiteSpace(value)
+        return Task.FromResult(string.IsNullOrWhiteSpace(value)
             ? _filteredSongNames.Select(s => s.ToString())
-            : _filteredSongNames.Where(name => name.ToString().Contains(value, StringComparison.OrdinalIgnoreCase)).Select(name => (string)name);
+            : _filteredSongNames.Where(name => name.ToString().Contains(value, StringComparison.OrdinalIgnoreCase)).Select(name => (string)name));
     }
 
     private void RemoveChart(Chart chart)

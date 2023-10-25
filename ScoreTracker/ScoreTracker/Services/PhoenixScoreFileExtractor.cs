@@ -84,7 +84,7 @@ public sealed class PhoenixScoreFileExtractor : IPhoenixScoreFileExtractor
 
                 scores.Add(attempt);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 failures.Add(record.ToError("Could not parse row"));
             }

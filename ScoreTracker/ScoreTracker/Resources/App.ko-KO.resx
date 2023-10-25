@@ -1,0 +1,522 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="1+ Level Easier" xml:space="preserve">
+    <value>1 레벨 쉬움</value>
+  </data>
+  <data name="1+ Level Harder" xml:space="preserve">
+    <value>1 레벨 어려움</value>
+  </data>
+  <data name="About" xml:space="preserve">
+    <value>Score Tracker 소개</value>
+  </data>
+  <data name="Account" xml:space="preserve">
+    <value>나의 계정</value>
+  </data>
+  <data name="Account Creation Line 1" xml:space="preserve">
+    <value>Score Tracker와 연동되는 계정이 없다면, 로그인 업체 중 하나를 선택할시 계정이 자동으로 생성됩니다</value>
+  </data>
+  <data name="Account Creation Line 2" xml:space="preserve">
+    <value>선택한 로그인 업체에 저장되는 유일한 정보는 외부 ID (무작위 숫자, 글자 조합)와 사용자 이름입니다. 계정 생성후 언제든지 사용자 이름을 변경할수 있습니다.</value>
+  </data>
+  <data name="Account Creation Line 3" xml:space="preserve">
+    <value>Score Tracker에는 암호가 저장되지 않습니다.</value>
+  </data>
+  <data name="Account Creation?" xml:space="preserve">
+    <value>회원가입</value>
+  </data>
+  <data name="Actions" xml:space="preserve">
+    <value>실행</value>
+  </data>
+  <data name="Add to Favorites" xml:space="preserve">
+    <value>좋아요</value>
+  </data>
+  <data name="Add to ToDo" xml:space="preserve">
+    <value>목표 목록에 추가</value>
+  </data>
+  <data name="Adjusted Difficulty" xml:space="preserve">
+    <value>조정된 난이도</value>
+  </data>
+  <data name="Average" xml:space="preserve">
+    <value>중급</value>
+  </data>
+  <data name="Average for CoOp Chart" xml:space="preserve">
+    <value>코옵 채보 난이도 평균</value>
+  </data>
+  <data name="Average for CoOp Player" xml:space="preserve">
+    <value>코옵 유저 난이도 평균</value>
+  </data>
+  <data name="Average Rating" xml:space="preserve">
+    <value>평균 레이팅</value>
+  </data>
+  <data name="Broken" xml:space="preserve">
+    <value>브레이크 오프</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>취소</value>
+  </data>
+  <data name="Chart List Share Description" xml:space="preserve">
+    <value>이 링크를 사용하여 차트 목록을 다른 유저와 공유해보세요.</value>
+  </data>
+  <data name="Chart Randomizer" xml:space="preserve">
+    <value>채보 무작위 생성기</value>
+  </data>
+  <data name="Chart Type" xml:space="preserve">
+    <value>채보 종류</value>
+  </data>
+  <data name="Charts" xml:space="preserve">
+    <value>채보들</value>
+  </data>
+  <data name="Charts List" xml:space="preserve">
+    <value>채보 목록</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>닫기</value>
+  </data>
+  <data name="Completed" xml:space="preserve">
+    <value>완료</value>
+  </data>
+  <data name="CoOp" xml:space="preserve">
+    <value>코옵</value>
+  </data>
+  <data name="CoOp Aggregation" xml:space="preserve">
+    <value>코옵 난이도</value>
+  </data>
+  <data name="Copy Script" xml:space="preserve">
+    <value>스크립트 복사</value>
+  </data>
+  <data name="Copy to Clipboard" xml:space="preserve">
+    <value>클립보드에 복사</value>
+  </data>
+  <data name="Different Player Difficulties" xml:space="preserve">
+    <value>다른 유저 난이도</value>
+  </data>
+  <data name="Difficulty Level" xml:space="preserve">
+    <value>난이도</value>
+  </data>
+  <data name="Disputed Charts" xml:space="preserve">
+    <value>개인차</value>
+  </data>
+  <data name="Disputed Charts Disclaimer" xml:space="preserve">
+    <value>4개 이상의 투표를 받은 채보, 조정된 평점에서 0.5레벨 이내, 표준 편차가 0.4이상인 채보</value>
+  </data>
+  <data name="Doubles" xml:space="preserve">
+    <value>더블</value>
+  </data>
+  <data name="Download Failures" xml:space="preserve">
+    <value>다운로드 실패</value>
+  </data>
+  <data name="Download Scores" xml:space="preserve">
+    <value>스코어 다운로드</value>
+  </data>
+  <data name="Easiest Player" xml:space="preserve">
+    <value>하급</value>
+  </data>
+  <data name="Easy" xml:space="preserve">
+    <value>쉬움</value>
+  </data>
+  <data name="Ending Page" xml:space="preserve">
+    <value>마지막 페이지</value>
+  </data>
+  <data name="Favorites" xml:space="preserve">
+    <value>즐겨찾기</value>
+  </data>
+  <data name="Find Players" xml:space="preserve">
+    <value>유저찾기</value>
+  </data>
+  <data name="Full Privacy Policy" xml:space="preserve">
+    <value>개인정보 방침</value>
+  </data>
+  <data name="Hard" xml:space="preserve">
+    <value>어려움</value>
+  </data>
+  <data name="Hardest Player" xml:space="preserve">
+    <value>상급</value>
+  </data>
+  <data name="Hide Completed Charts" xml:space="preserve">
+    <value>클리어한 차트 숨기기</value>
+  </data>
+  <data name="Import Phoenix Scores" xml:space="preserve">
+    <value>Phoenix 점수 불러오기</value>
+  </data>
+  <data name="Leaderboard" xml:space="preserve">
+    <value>리더보드</value>
+  </data>
+  <data name="Letter Grade" xml:space="preserve">
+    <value>랭크</value>
+  </data>
+  <data name="Log In With" xml:space="preserve">
+    <value>-로 로그인</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>로그인</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>로그아웃</value>
+  </data>
+  <data name="Make Not Public Disclaimer" xml:space="preserve">
+    <value>계정을 비공개로 설정하면 이미 팔로우하는 사람들에게도 점수와 진행 상황이 외부에서 더이상 보이지 않게 됩니다.</value>
+  </data>
+  <data name="Make Private" xml:space="preserve">
+    <value>비공개하기</value>
+  </data>
+  <data name="Make Public" xml:space="preserve">
+    <value>공개하기</value>
+  </data>
+  <data name="Make Public Disclaimer 1" xml:space="preserve">
+    <value>계정을 공개로 설정하면 본인의 스코어와 진행 상황이 다른 유저들에게 보이게 됩니다. 다른 사용자는 이름 또는 ID로 검색할 수 있습니다.</value>
+  </data>
+  <data name="Make Public Disclaimer 2" xml:space="preserve">
+    <value>본인의 계정이 이전에 공개로 설정되었고 비공개로 전환한 경우, 다시 공개로 설정하면 본인을 팔로우하는 누구나 본인의 진행상황을 다시 볼 수 있습니다.</value>
+  </data>
+  <data name="Medium" xml:space="preserve">
+    <value>중간</value>
+  </data>
+  <data name="Mix" xml:space="preserve">
+    <value>시리즈</value>
+  </data>
+  <data name="My Difficulty Adjustments" xml:space="preserve">
+    <value>나의 조정된 난이도</value>
+  </data>
+  <data name="New Discord" xml:space="preserve">
+    <value>새 디스코드</value>
+  </data>
+  <data name="New Discord Disclaimer" xml:space="preserve">
+    <value>업데이트와 피드백을 위해 이 디스코드를 만들었습니다! 언제든지 참여해 주세요</value>
+  </data>
+  <data name="Next Letter" xml:space="preserve">
+    <value>다음 랭크</value>
+  </data>
+  <data name="Not Graded Count" xml:space="preserve">
+    <value>랭크 없음</value>
+  </data>
+  <data name="Not Passed Count" xml:space="preserve">
+    <value>실패</value>
+  </data>
+  <data name="Open Video" xml:space="preserve">
+    <value>동영상 보기</value>
+  </data>
+  <data name="Parse Failures" xml:space="preserve">
+    <value>구문 분석 실패</value>
+  </data>
+  <data name="Passed Count" xml:space="preserve">
+    <value>성공</value>
+  </data>
+  <data name="Phoenix Import Confirming" xml:space="preserve">
+    <value>계속 진행할시 업로드된 기존 점수 기록들이 사라지고 되돌릴 수 없게 됩니다. 저장 프로세스를 중지할 수는 있지만 업로드는 되돌릴 수 없습니다.</value>
+  </data>
+  <data name="Phoenix Import Info 1" xml:space="preserve">
+    <value>아래의 '스크립트 복사' 버튼을 사용하세요</value>
+  </data>
+  <data name="Phoenix Import Info 2" xml:space="preserve">
+    <value>https://piugame.com에 로그인한 상태에서 해당 스크립트를 사용하여 점수의 CSV를 다운로드하세요 (https://phoenix.piugame.com에서 작업하지 않도록 주의하세요)</value>
+  </data>
+  <data name="Phoenix Import Info 3" xml:space="preserve">
+    <value>CSV 파일을 이곳에 업로드하시면 점수가 표시됩니다.</value>
+  </data>
+  <data name="Phoenix Import Info 4" xml:space="preserve">
+    <value>참고: 이 과정은 상당히 불안정할 수 있으며 작동을 위해 일부 디버깅이 필요할 수 있습니다. 광고 차단기를 비활성화 하셔야 합니다. </value>
+  </data>
+  <data name="Phoenix Import Saving" xml:space="preserve">
+    <value>이 페이지를 떠나시거나 취소하시면 업로드는 중단됩니다. 하지만 이미 업로드된 기록 중에서는 어떠한 점수도 손실되지 않습니다.</value>
+  </data>
+  <data name="Phoenix Import Saving Failures" xml:space="preserve">
+    <value>특정 채보를 다운로드 할 수 없었습니다. 조정을 위해 실패한 채보의 CSV를 다운로드하고 다시 시도할 수 있습니다. </value>
+  </data>
+  <data name="Phoenix Import Saving Progress" xml:space="preserve">
+    <value>{0}/{1} 업로드됨 {2} 남음 {3} 기록 실패</value>
+  </data>
+  <data name="Phoenix Import Saving Success" xml:space="preserve">
+    <value>업로드한 모든 채보가 성공적으로 업데이트 되었습니다!</value>
+  </data>
+  <data name="Phoenix Import Uploading" xml:space="preserve">
+    <value>Spreadsheet이 업로드되고 있습니다</value>
+  </data>
+  <data name="Phoenix Score Calculator" xml:space="preserve">
+    <value>Phoenix 점수 계산기</value>
+  </data>
+  <data name="Plate" xml:space="preserve">
+    <value>플레이트</value>
+  </data>
+  <data name="Players" xml:space="preserve">
+    <value>유저</value>
+  </data>
+  <data name="Progress" xml:space="preserve">
+    <value>진행상황</value>
+  </data>
+  <data name="Progress Charts" xml:space="preserve">
+    <value>진행중인 채보</value>
+  </data>
+  <data name="Public" xml:space="preserve">
+    <value>공개</value>
+  </data>
+  <data name="Rated Difficulty Level" xml:space="preserve">
+    <value>채점된 난이도 레벨</value>
+  </data>
+  <data name="Rating Count" xml:space="preserve">
+    <value>레이팅</value>
+  </data>
+  <data name="Record Score" xml:space="preserve">
+    <value>점수 기록</value>
+  </data>
+  <data name="Recorded Date" xml:space="preserve">
+    <value>기록된 날짜</value>
+  </data>
+  <data name="Recorded On" xml:space="preserve">
+    <value>기록됨</value>
+  </data>
+  <data name="Remaining Charts" xml:space="preserve">
+    <value>남은 채보</value>
+  </data>
+  <data name="Remaining Charts For You" xml:space="preserve">
+    <value>{0}개의 채보가 남았습니다</value>
+  </data>
+  <data name="Remove from Favorites" xml:space="preserve">
+    <value>즐겨찾기에서 빼기</value>
+  </data>
+  <data name="Remove from ToDo" xml:space="preserve">
+    <value>목표 목록에서 빼기</value>
+  </data>
+  <data name="Report Video" xml:space="preserve">
+    <value>동영상 신고</value>
+  </data>
+  <data name="Report Video Tooltip" xml:space="preserve">
+    <value>저화질, 깨짐, 관련없는 동영상 신고</value>
+  </data>
+  <data name="Restart" xml:space="preserve">
+    <value>재시작</value>
+  </data>
+  <data name="Save Scores" xml:space="preserve">
+    <value>점수 저장</value>
+  </data>
+  <data name="Saved Charts" xml:space="preserve">
+    <value>저장된 채보</value>
+  </data>
+  <data name="Score" xml:space="preserve">
+    <value>점수</value>
+  </data>
+  <data name="Score Formula Shoutout" xml:space="preserve">
+    <value>이 점수공식을 제작해주신 Mr_WEQ 님에게 감사드립니다</value>
+  </data>
+  <data name="Score Loss" xml:space="preserve">
+    <value>{0} 점수 감소</value>
+  </data>
+  <data name="Score Loss Note" xml:space="preserve">
+    <value>참고: 점수 감소는 반올림으로 인해서 1-4점 차이가 날 수 있습니다.</value>
+  </data>
+  <data name="Score Range Shoutout" xml:space="preserve">
+    <value>데이터 수집과 점수 등급의 범위를 정리해주신 daryen님에게 감사드립니다.</value>
+  </data>
+  <data name="Score State" xml:space="preserve">
+    <value>기록 상태</value>
+  </data>
+  <data name="Scores Parsed" xml:space="preserve">
+    <value>분석된 점수</value>
+  </data>
+  <data name="Search Youtube" xml:space="preserve">
+    <value>YouTube 검색</value>
+  </data>
+  <data name="Show Only ToDo Charts" xml:space="preserve">
+    <value>목표 채보만 보기</value>
+  </data>
+  <data name="Show Score Distribution" xml:space="preserve">
+    <value>점수 분포 표시</value>
+  </data>
+  <data name="Singles" xml:space="preserve">
+    <value>싱글</value>
+  </data>
+  <data name="Song Duration" xml:space="preserve">
+    <value>노래 길이</value>
+  </data>
+  <data name="Song Image" xml:space="preserve">
+    <value>노래 이미지</value>
+  </data>
+  <data name="Song Name" xml:space="preserve">
+    <value>노래 이름</value>
+  </data>
+  <data name="Song Type" xml:space="preserve">
+    <value>노래 종류</value>
+  </data>
+  <data name="Standard Deviation" xml:space="preserve">
+    <value>표준 편차 </value>
+  </data>
+  <data name="Starting Page" xml:space="preserve">
+    <value>홈페이지</value>
+  </data>
+  <data name="Tier Lists" xml:space="preserve">
+    <value>서열표</value>
+  </data>
+  <data name="Title Progress" xml:space="preserve">
+    <value>칭호 진행상태</value>
+  </data>
+  <data name="Titles" xml:space="preserve">
+    <value>칭호</value>
+  </data>
+  <data name="To Do" xml:space="preserve">
+    <value>목표</value>
+  </data>
+  <data name="Toggle ToDo" xml:space="preserve">
+    <value>목표 전환</value>
+  </data>
+  <data name="Tools" xml:space="preserve">
+    <value>도구</value>
+  </data>
+  <data name="Total Count" xml:space="preserve">
+    <value>총</value>
+  </data>
+  <data name="Tournament Builder" xml:space="preserve">
+    <value>대회 도우미</value>
+  </data>
+  <data name="Tournaments" xml:space="preserve">
+    <value>대회 목록</value>
+  </data>
+  <data name="Unpassed ToDos" xml:space="preserve">
+    <value>{0}레벨 {1}채보에 '목표'로 표시된 것 중 아직 브레이크 오프가 있습니다.</value>
+  </data>
+  <data name="Update Grade" xml:space="preserve">
+    <value>랭크 바꾸기</value>
+  </data>
+  <data name="Upload Scores" xml:space="preserve">
+    <value>점수 등록</value>
+  </data>
+  <data name="Upload XX Scores" xml:space="preserve">
+    <value>XX 점수 등록</value>
+  </data>
+  <data name="Used Primarily for debugging" xml:space="preserve">
+    <value>주로 디버깅을 위해 사용함</value>
+  </data>
+  <data name="Username" xml:space="preserve">
+    <value>아이디</value>
+  </data>
+  <data name="Very Easy" xml:space="preserve">
+    <value>아주 쉬움</value>
+  </data>
+  <data name="Very Hard" xml:space="preserve">
+    <value>아주 어려움</value>
+  </data>
+  <data name="Video" xml:space="preserve">
+    <value>동영상</value>
+  </data>
+  <data name="Vote Count" xml:space="preserve">
+    <value>투표 회수</value>
+  </data>
+  <data name="Your Difficulty Rating" xml:space="preserve">
+    <value>난이도 레이팅</value>
+  </data>
+</root>

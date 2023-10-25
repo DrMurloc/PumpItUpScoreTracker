@@ -278,9 +278,9 @@
         
     private sealed class ChartSessionEffectiveness
     {
-        public string SongImage { get; set; }
-        public string SongName { get; set; }
-        public string DifficultyBubblePath { get; set; } 
+        public string SongImage { get; set; } = string.Empty;
+        public string SongName { get; set; } = string.Empty;
+        public string DifficultyBubblePath { get; set; } = string.Empty;
         public int Level { get; set; }
         public int Seconds { get; set; }
         public int PointsWithoutScore { get; set; }

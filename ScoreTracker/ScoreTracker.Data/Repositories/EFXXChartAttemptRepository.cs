@@ -74,7 +74,7 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
         await _database.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<BestXXChartAttempt>> GetBestAttempts(Guid userId, IEnumerable<Chart> charts,
+    public Task<IEnumerable<BestXXChartAttempt>> GetBestAttempts(Guid userId, IEnumerable<Chart> charts,
         CancellationToken cancellationToken)
     {
         var result = (from ce in charts
@@ -93,7 +93,7 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                         : new XXChartAttempt(Enum.Parse<XXLetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score,
                             ba.RecordedDate)))
             .ToArray();
-        return result;
+        return Task.FromResult<IEnumerable<BestXXChartAttempt>>(result);
     }
 
     public async Task<IEnumerable<BestXXChartAttempt>> GetBestAttempts(Guid userId,

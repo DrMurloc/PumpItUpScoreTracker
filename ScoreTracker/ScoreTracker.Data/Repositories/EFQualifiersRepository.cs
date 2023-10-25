@@ -47,7 +47,7 @@ namespace ScoreTracker.Data.Repositories
         private static UserQualifiers From(UserQualifierEntity entity, QualifiersConfiguration config)
         {
             var entries = JsonSerializer.Deserialize<QualifierSubmissionDto[]>(entity.Entries);
-            return new UserQualifiers(config, entity.IsApproved, entity.Name, entries.ToDictionary(e => e.ChartId, e =>
+            return new UserQualifiers(config, entity.IsApproved, entity.Name, entries!.ToDictionary(e => e.ChartId, e =>
                 new UserQualifiers.Submission
                 {
                     ChartId = e.ChartId,

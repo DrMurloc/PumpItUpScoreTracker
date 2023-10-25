@@ -41,7 +41,7 @@ namespace ScoreTracker.Web.Security
             {
                 usernamePassword = encoding.GetString(Convert.FromBase64String(encodedToken));
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return AuthenticateResult.Fail("Could not decode token");
             }
