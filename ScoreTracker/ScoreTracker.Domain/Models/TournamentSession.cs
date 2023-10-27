@@ -89,11 +89,8 @@ namespace ScoreTracker.Domain.Models
 
         public bool CanAdd(Chart chart)
         {
-            if (_configuration.GetScorelessScore(chart) == 0) return false;
-            if (TotalPlayTime + chart.Song.Duration > _configuration.MaxTime)
-            {
-                return false;
-            }
+            if (_configuration.Scoring.GetScorelessScore(chart) == 0) return false;
+            if (TotalPlayTime + chart.Song.Duration > _configuration.MaxTime) return false;
 
             return _configuration.AllowRepeats || !Entries.Any(c =>
                 c.Chart.Level == chart.Level && c.Chart.Type == chart.Type && c.Chart.Song.Name == chart.Song.Name);
@@ -114,7 +111,8 @@ namespace ScoreTracker.Domain.Models
 
             NeedsApproval = true;
             Entries.Add(
-                new Entry(chart, score, plate, isBroken, _configuration.GetScore(chart, score, plate, isBroken)));
+                new Entry(chart, score, plate, isBroken,
+                    _configuration.Scoring.GetScore(chart, score, plate, isBroken)));
         }
 
         public sealed record Entry(Chart Chart, PhoenixScore Score, PhoenixPlate Plate, bool IsBroken, int SessionScore)

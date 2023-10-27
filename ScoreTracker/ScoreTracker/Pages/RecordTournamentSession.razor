@@ -189,7 +189,7 @@
     private bool _isUploadingPhoto = false;
     private int _score = 0;
     private TournamentSession? _session;
-    private TournamentConfiguration _configuration = new TournamentConfiguration();
+    private TournamentConfiguration _configuration = new TournamentConfiguration(new ScoringConfiguration());
     private IEnumerable<Chart> _allCharts = Array.Empty<Chart>();
     private Chart? _selectedChart;
     private string _songSearchString = string.Empty;

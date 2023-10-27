@@ -133,7 +133,7 @@
     private IEnumerable<LeaderboardRecord> _leaderboard = Array.Empty<LeaderboardRecord>();
     private string RestTime(TimeSpan time) => time.ToString(@"h\:mm\:ss");
     private string TwoDecimalPlaces(double value) => $"{value:F2}";
-    private TournamentConfiguration _configuration = new TournamentConfiguration();
+    private TournamentConfiguration _configuration = new TournamentConfiguration(new ScoringConfiguration());
     private bool _isLoaded = false;
     private bool _isLoadingUser = false;
     private bool _showPhotoDialog = false;

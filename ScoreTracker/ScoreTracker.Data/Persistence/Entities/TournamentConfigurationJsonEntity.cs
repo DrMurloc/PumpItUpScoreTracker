@@ -24,34 +24,35 @@ namespace ScoreTracker.Data.Persistence.Entities
         public TimeSpan MaxTime { get; set; } = TimeSpan.Zero;
         public bool AllowRepeats { get; set; }
 
-        public static TournamentConfigurationJsonEntity From(TournamentConfiguration config) =>
-            new()
+        public static TournamentConfigurationJsonEntity From(TournamentConfiguration config)
+        {
+            return new TournamentConfigurationJsonEntity
             {
                 Id = config.Id,
                 Name = config.Name,
                 StartDate = config.StartDate,
                 EndDate = config.EndDate,
-                StageBreakModifier = config.StageBreakModifier,
-                AdjustToTime = config.AdjustToTime,
+                StageBreakModifier = config.Scoring.StageBreakModifier,
+                AdjustToTime = config.Scoring.AdjustToTime,
                 MaxTime = config.MaxTime,
                 AllowRepeats = config.AllowRepeats,
-                LevelRatings = config.LevelRatings.ToDictionary(kv => (int)kv.Key, kv => kv.Value),
-                SongTypeModifiers = config.SongTypeModifiers.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value),
-                ChartTypeModifiers = config.ChartTypeModifiers.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value),
+                LevelRatings = config.Scoring.LevelRatings.ToDictionary(kv => (int)kv.Key, kv => kv.Value),
+                SongTypeModifiers =
+                    config.Scoring.SongTypeModifiers.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value),
+                ChartTypeModifiers =
+                    config.Scoring.ChartTypeModifiers.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value),
                 LetterGradeModifiers =
-                    config.LetterGradeModifiers.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value),
-                PlateModifiers = config.PlateModifiers.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value)
+                    config.Scoring.LetterGradeModifiers.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value),
+                PlateModifiers = config.Scoring.PlateModifiers.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value)
             };
+        }
 
-        public TournamentConfiguration To() =>
-            new(Id, Name)
+        public TournamentConfiguration To()
+        {
+            return new TournamentConfiguration(Id, Name, new ScoringConfiguration()
             {
-                StartDate = StartDate,
-                EndDate = EndDate,
                 StageBreakModifier = StageBreakModifier,
                 AdjustToTime = AdjustToTime,
-                MaxTime = MaxTime,
-                AllowRepeats = AllowRepeats,
                 LevelRatings = LevelRatings.ToDictionary(kv => (DifficultyLevel)kv.Key, kv => kv.Value),
                 SongTypeModifiers = SongTypeModifiers.ToDictionary(kv => Enum.Parse<SongType>(kv.Key), kv => kv.Value),
                 ChartTypeModifiers =
@@ -59,6 +60,13 @@ namespace ScoreTracker.Data.Persistence.Entities
                 LetterGradeModifiers =
                     LetterGradeModifiers.ToDictionary(kv => Enum.Parse<PhoenixLetterGrade>(kv.Key), kv => kv.Value),
                 PlateModifiers = PlateModifiers.ToDictionary(kv => Enum.Parse<PhoenixPlate>(kv.Key), kv => kv.Value)
+            })
+            {
+                StartDate = StartDate,
+                EndDate = EndDate,
+                MaxTime = MaxTime,
+                AllowRepeats = AllowRepeats
             };
+        }
     }
 }

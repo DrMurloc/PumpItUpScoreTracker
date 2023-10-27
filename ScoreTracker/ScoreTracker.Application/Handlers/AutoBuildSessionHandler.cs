@@ -24,11 +24,12 @@ namespace ScoreTracker.Application.Handlers
 
             var orderedScores = (await _phoenixRecords.GetRecordedScores(request.UserId, cancellationToken))
                 .Where(s => s is { Score: not null, Plate: not null } &&
-                            request.Configuration.GetScore(charts[s.ChartId], s.Score!.Value, s.Plate!.Value,
+                            request.Configuration.Scoring.GetScore(charts[s.ChartId], s.Score!.Value, s.Plate!.Value,
                                 s.IsBroken) > 0)
                 .OrderBy(r =>
                     charts[r.ChartId].Song.Duration /
-                    request.Configuration.GetScore(charts[r.ChartId], r.Score!.Value, r.Plate!.Value, r.IsBroken));
+                    request.Configuration.Scoring.GetScore(charts[r.ChartId], r.Score!.Value, r.Plate!.Value,
+                        r.IsBroken));
 
             var session = new TournamentSession(request.UserId, request.Configuration);
 
