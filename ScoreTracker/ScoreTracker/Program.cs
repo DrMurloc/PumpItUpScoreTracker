@@ -114,8 +114,8 @@ builder.Services.AddCookiePolicy(opts =>
 
 var app = builder.Build();
 app.UseRequestLocalization(new RequestLocalizationOptions()
-    .AddSupportedCultures("en-US", "pt-BR", "ko-KR")
-    .AddSupportedUICultures("en-US", "pt-BR", "ko-KR")
+    .AddSupportedCultures("en-US", "pt-BR", "ko-KR", "en-ZW")
+    .AddSupportedUICultures("en-US", "pt-BR", "ko-KR", "en-ZW")
     .SetDefaultCulture("en-US"));
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
