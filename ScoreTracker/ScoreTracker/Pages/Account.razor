@@ -7,6 +7,9 @@
 @using ScoreTracker.Web.Dtos
 @using CsvHelper
 @using System.Globalization
+@using System.Web
+@using Microsoft.AspNetCore.Localization
+@using ScoreTracker.Web.Services.Contracts
 
 <PageTitle>@L["Account"]</PageTitle>
 
@@ -19,6 +22,13 @@
             </MudItem>
             <MudItem xs="12" sm="6">
                 <MudTextField T="string" Disabled="_isUpdatingUser" Label=@L["Username"] MaxLength="100" Value="@_name" ValueChanged="UpdateName"></MudTextField>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect T="string" Disabled="_isUpdatingUser" Label="@L["Language"]" Value="_currentCulture" ValueChanged="UpdateCulture">
+                    <MudSelectItem T="string" Value=@("en-US")>English</MudSelectItem>
+                    <MudSelectItem T="string" Value=@("pt-BR")>Português</MudSelectItem>
+                    <MudSelectItem T="string" Value=@("ko-KR")>한국어</MudSelectItem>
+                </MudSelect>
             </MudItem>
             <MudItem xs="12">
                 <MudSwitch T="bool" Disabled="_isUpdatingUser" Label=@L["Public"] Checked="_isPublic" CheckedChanged="() => _showPublicConfirmDialog = true" Color="Color.Success"></MudSwitch>
@@ -79,19 +89,28 @@
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
 @inject ISnackbar Snackbar;
+@inject IUiSettingsAccessor UiSettings;
 @inject IJSRuntime JSRuntime;
 @code
 {
+
     private string _id = string.Empty;
     private string _name = string.Empty;
     private bool _isPublic = false;
     private bool _showPublicConfirmDialog = false;
     private bool _isUpdatingUser = false;
     private Guid? _apiToken;
+    private string _currentCulture = "en-US";
     public static string Base64Encode(string plainText) 
     {
         var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
         return System.Convert.ToBase64String(plainTextBytes);
+    }
+    private async Task UpdateCulture(string newCulture)
+    {
+        _isUpdatingUser = true;
+        await UiSettings.SetSetting("Culture", newCulture);
+        NavManager.NavigateTo($"/Culture/Set?culture={newCulture}&redirectUrl="+HttpUtility.UrlEncode("/Account"),forceLoad:true);
     }
     protected override async Task OnInitializedAsync()
     {
@@ -100,6 +119,8 @@
             NavManager.NavigateTo("/Login");
             return;
         }
+        var culture = await UiSettings.GetSetting("Culture");
+        _currentCulture = culture??CultureInfo.CurrentUICulture.ToString();
         _id = CurrentUser.User.Id.ToString();
         _name = CurrentUser.User.Name;
         _isPublic = CurrentUser.User.IsPublic;

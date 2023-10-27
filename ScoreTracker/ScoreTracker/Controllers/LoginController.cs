@@ -1,10 +1,13 @@
 ﻿using System.Security.Claims;
+using System.Text.RegularExpressions;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Web.Services.Contracts;
 
 namespace ScoreTracker.Web.Controllers;
 
@@ -17,12 +20,15 @@ public sealed class LoginController : Controller
 
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
+    private readonly IUiSettingsAccessor _uiSettings;
 
     public LoginController(IMediator mediator,
-        ICurrentUserAccessor currentUser)
+        ICurrentUserAccessor currentUser,
+        IUiSettingsAccessor uiSettings)
     {
         _mediator = mediator;
         _currentUser = currentUser;
+        _uiSettings = uiSettings;
     }
 
 
@@ -71,9 +77,15 @@ public sealed class LoginController : Controller
 
         await _currentUser.SetCurrentUser(user);
 
+        var culture = await _uiSettings.GetSetting("Culture", HttpContext.RequestAborted, user.Id);
+        if (culture != null)
+            HttpContext.Response.Cookies.Append(
+                CookieRequestCultureProvider.DefaultCookieName,
+                CookieRequestCultureProvider.MakeCookieValue(
+                    new RequestCulture(culture, culture)));
         var url = isNewUser ? "/Welcome" : returnUrl;
 
-        return Redirect(url ?? "/");
+        return LocalRedirect(url ?? "/");
     }
 }
 

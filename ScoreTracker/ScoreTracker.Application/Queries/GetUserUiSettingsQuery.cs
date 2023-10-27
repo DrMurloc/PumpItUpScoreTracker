@@ -2,6 +2,6 @@
 
 namespace ScoreTracker.Application.Queries;
 
-public sealed record GetUserUiSettingsQuery : IRequest<IDictionary<string, string>>
+public sealed record GetUserUiSettingsQuery(Guid? UserId = null) : IRequest<IDictionary<string, string>>
 {
 }

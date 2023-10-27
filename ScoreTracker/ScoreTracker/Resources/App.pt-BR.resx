@@ -255,6 +255,9 @@
   <data name="Import Phoenix Scores" xml:space="preserve">
     <value>Importar pontuações da Phoenix</value>
   </data>
+  <data name="Language" xml:space="preserve">
+    <value>Linguagem</value>
+  </data>
   <data name="Leaderboard" xml:space="preserve">
     <value>Classificação</value>
   </data>

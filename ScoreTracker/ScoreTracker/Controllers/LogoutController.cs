@@ -1,8 +1,10 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
+using System.Text.RegularExpressions;
 
 namespace ScoreTracker.Web.Controllers;
 
@@ -35,6 +37,8 @@ public sealed class LogoutController : Controller
     [HttpGet("")]
     public async Task<IActionResult> LogOut()
     {
+        HttpContext.Response.Cookies.Delete(
+            CookieRequestCultureProvider.DefaultCookieName);
         await HttpContext.SignOutAsync();
         return Redirect("/Login");
     }

@@ -18,6 +18,6 @@ public sealed class GetUserUiSettingsHandler : IRequestHandler<GetUserUiSettings
     public async Task<IDictionary<string, string>> Handle(GetUserUiSettingsQuery request,
         CancellationToken cancellationToken)
     {
-        return await _users.GetUserUiSettings(_currentUser.User.Id, cancellationToken);
+        return await _users.GetUserUiSettings(request.UserId ?? _currentUser.User.Id, cancellationToken);
     }
 }

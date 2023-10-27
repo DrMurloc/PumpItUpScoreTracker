@@ -49,11 +49,12 @@ public sealed class UiSettingsAccessor : IUiSettingsAccessor
         await _mediator.Send(new SaveUserUiSettingCommand(MixKey, mix.ToString()), cancellationToken);
     }
 
-    public async Task<string?> GetSetting(string key, CancellationToken cancellationToken = default)
+    public async Task<string?> GetSetting(string key, CancellationToken cancellationToken = default,
+        Guid? userId = null)
     {
         if (_currentUser.IsLoggedIn)
         {
-            var setting = await _mediator.Send(new GetUserUiSettingsQuery(), cancellationToken);
+            var setting = await _mediator.Send(new GetUserUiSettingsQuery(userId), cancellationToken);
             return setting.TryGetValue(key, out var value) ? value : null;
         }
 

@@ -255,6 +255,9 @@
   <data name="Import Phoenix Scores" xml:space="preserve">
     <value>Phoenix 점수 불러오기</value>
   </data>
+  <data name="Language" xml:space="preserve">
+    <value>언어</value>
+  </data>
   <data name="Leaderboard" xml:space="preserve">
     <value>리더보드</value>
   </data>

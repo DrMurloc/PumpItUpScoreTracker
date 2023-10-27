@@ -110,7 +110,7 @@ builder.Services.AddCookiePolicy(opts =>
     opts.CheckConsentNeeded = ctx => false;
     opts.OnAppendCookie = ctx => { ctx.CookieOptions.Expires = DateTimeOffset.UtcNow.AddDays(30); };
 });
-;
+
 
 var app = builder.Build();
 app.UseRequestLocalization(new RequestLocalizationOptions()
