@@ -71,6 +71,14 @@ public sealed class PhoenixScoreFileExtractor : IPhoenixScoreFileExtractor
                 //These keep coming over with corrupted strings?
                 if (name.ToString().StartsWith("Cross Ray (feat", StringComparison.OrdinalIgnoreCase))
                     name = "Cross Ray";
+                if (name.ToString().Contains("Amai Yuuwaku Dangerous", StringComparison.OrdinalIgnoreCase))
+                    name = "Amai Yuuwaku Dangerous";
+                if (name.ToString().StartsWith("Kasou Shinja", StringComparison.OrdinalIgnoreCase) &&
+                    !name.ToString().Contains("Short", StringComparison.OrdinalIgnoreCase))
+                    name = "Kasou Shinja";
+                if (name.ToString().StartsWith("Kasou Shinja", StringComparison.OrdinalIgnoreCase) &&
+                    name.ToString().Contains("Short", StringComparison.OrdinalIgnoreCase))
+                    name = "Kasou Shinja - SHORT CUT -";
                 if (name.ToString().Equals("Witch Doctor Num1", StringComparison.OrdinalIgnoreCase))
                     name = "Witch Doctor #1";
                 if (name.ToString().EndsWith("End of a Dream", StringComparison.OrdinalIgnoreCase))
