@@ -517,11 +517,12 @@ else
                 }
                 var chartCount = filteredScoreArray.ToDictionary(c => c.Id, c => 0);
                 var chartTotal = filteredScoreArray.ToDictionary(c => c.Id, c => 0);
+                
                 foreach (var scores in _allPhoenixScores.Values)
                 {
                     var scoresDict = scores.ToDictionary(s => s.ChartId);
                     var scoreInts = scoresDict.Values.Where(s => s.Score != null).Select(s => (int)s.Score!.Value).ToArray();
-                    if (scoreInts.Length<5)
+                    if (scoreInts.Length<5 || (DifficultyFilter>23 && scoreInts.Length<3))
                     {
                         continue;
                     }
@@ -568,7 +569,8 @@ else
                     }
                 }
                 var averages = chartTotal.ToDictionary(kv => kv.Key, kv => chartTotal[kv.Key] / (double)chartCount[kv.Key]);
-                    foreach (var chart in filteredScoreArray.OrderByDescending(c => averages[c.Id]))
+                    
+                foreach (var chart in filteredScoreArray.OrderByDescending(c => averages[c.Id]))
                 {
                     var average = averages[chart.Id];
                     switch (average)
@@ -596,6 +598,10 @@ else
                             break;
                     }
                 }
+                foreach (var chart in _difficultyAndTypeFilteredCharts.Values.Where(c => !averages.ContainsKey(c.Id)))
+                {
+                    _notRatedCharts.Add(chart);
+                }
                 break;
             }
             case TierListType.MyScores:
@@ -603,7 +609,11 @@ else
                 var filteredMyScoreArray = filtered.Where(c=>_phoenixScores.ContainsKey(c.Id) && _phoenixScores[c.Id].Score!=null) 
                     .OrderBy(c => _phoenixScores.ContainsKey(c.Id) ? (int)(_phoenixScores[c.Id]?.Score??0) : 0).ToArray(); 
                 if (!filteredMyScoreArray.Any()) 
-                { 
+                {
+                    foreach (var chart in _difficultyAndTypeFilteredCharts.Values)
+                    {
+                        _notRatedCharts.Add(chart);
+                    }
                     return; 
                 }   
                 var standardDeviation = StdDev(filteredMyScoreArray.Select(s => (int)(_phoenixScores[s.Id].Score ?? 0)), false); 
@@ -614,6 +624,7 @@ else
                 var oneLevelOverrated = average + standardDeviation * 1.5; 
                 var hardMin = average - standardDeviation; 
                 var veryHardMin = average - standardDeviation * 1.5;
+                var chartIds = filteredMyScoreArray.Select(c => c.Id).ToHashSet();
                     foreach (var chart in filteredMyScoreArray)
                 {
                     var score = (int)(_phoenixScores[chart.Id]?.Score ?? 0);
@@ -645,6 +656,10 @@ else
                     {
                         _overratedCharts.Add(chart);
                     }
+                }
+                foreach (var chart in _difficultyAndTypeFilteredCharts.Values.Where(c => !chartIds.Contains(c.Id)))
+                {
+                    _notRatedCharts.Add(chart);
                 }
                 break;
             }
