@@ -248,18 +248,16 @@
         {
             
             <MudTd>
-                <MudTooltip Text="@context.DifficultyShorthand">
-                    <MudImage Src="@context.DifficultyBubblePath" Height="35" Alt="@context.DifficultyShorthand" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-                </MudTooltip>
+                <MudImage Src="@context.DifficultyBubblePath" Height="35" Alt="@context.DifficultyShorthand" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+         
             </MudTd>
         }
         @if (ColumnStatus(ColumnEnum.SongImage))
         {
             
             <MudTd>
-                <MudTooltip Text="@context.SongName">
-                    <MudImage Src="@context.ImagePath" Height="35" Alt="@context.SongName" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
-                </MudTooltip>
+                <MudImage Src="@context.ImagePath" Height="35" Alt="@context.SongName" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
+              
             </MudTd>
         }
         @if (ColumnStatus(ColumnEnum.SongName))
@@ -280,9 +278,7 @@
             <MudTd>
                 @if (context.ChartType != ChartType.CoOp.ToString() &&_adjustedDifficulties.ContainsKey(context.ChartId))
                 {
-                    <MudTooltip Text="@CountText(_adjustedDifficulties[@context.ChartId].RatingCount)">
-                        <MudText>@($"{@_adjustedDifficulties[@context.ChartId].Difficulty:N2}")</MudText>
-                    </MudTooltip>
+                    <MudText>@($"{@_adjustedDifficulties[@context.ChartId].Difficulty:N2}")</MudText>
                 }
             </MudTd>
         }
@@ -318,15 +314,13 @@
             <MudTd>
                 @if (!string.IsNullOrWhiteSpace(context.VideoUrl))
                 {
-                    <MudTooltip Text="Open Embeded Video">
                         <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="()=>ShowVideo(context)"></MudIconButton>
-                    </MudTooltip>
+                  
                 }
                 else
                 {
-                    <MudTooltip Text="Open Youtube Search for Chart">
-                        <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(context)" Target="_blank"></MudIconButton>
-                    </MudTooltip>
+                    <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(context)" Target="_blank"></MudIconButton>
+               
                 }
             </MudTd>
         }
@@ -335,9 +329,8 @@
             <MudTd>
                 @if (_chartScoreCount.ContainsKey(context.ChartId) && _chartScoreCount[context.ChartId] > 0)
                 {
-                    <MudTooltip Text="Show Leaderboard">
-                        <MudIconButton Icon="@Icons.Material.Filled.Leaderboard" OnClick="@(_ => ShowLeaderboard(context.ChartId))"></MudIconButton>
-                    </MudTooltip>
+                    <MudIconButton Icon="@Icons.Material.Filled.Leaderboard" OnClick="@(_ => ShowLeaderboard(context.ChartId))"></MudIconButton>
+                
                 }
             </MudTd>
         }
@@ -412,7 +405,7 @@
         @if (ColumnStatus(ColumnEnum.RecordedOn))
         {
             <MudTd>
-                <MudTooltip Text="@context.RecordedOn?.ToString("MMM dd yyyy")">@context.RecordedOn?.ToString("MM/dd/yyyy")</MudTooltip>
+            @context.RecordedOn?.ToString("MM/dd/yyyy")
             </MudTd>
         }
         @if (CurrentUser.IsLoggedIn && ColumnStatus(ColumnEnum.Actions))
@@ -422,33 +415,27 @@
                     @if (_favoriteCharts.Contains(context.ChartId))
                     {
                         <MudMenuItem>
-                            <MudTooltip Text=@L["Remove from Favorites"]>
-                                <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" OnClick="()=>RemoveFromFavorites(context.ChartId)"></MudIconButton>
-                            </MudTooltip>
+                            <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" OnClick="()=>RemoveFromFavorites(context.ChartId)"></MudIconButton>
+                   
                         </MudMenuItem>
                     }
                     else
                     {
                         <MudMenuItem>
-                            <MudTooltip Text=@L["Add to Favorites"]>
-                                <MudIconButton Icon="@Icons.Material.Outlined.Favorite" OnClick="()=>AddToFavorites(context.ChartId)"></MudIconButton>
-                            </MudTooltip>
+                            <MudIconButton Icon="@Icons.Material.Outlined.Favorite" OnClick="()=>AddToFavorites(context.ChartId)"></MudIconButton>
                         </MudMenuItem>
                     }
                     @if(_todoCharts.Contains(context.ChartId))
                     {
                     <MudMenuItem>
-                        <MudTooltip Text=@L["Remove from ToDo"]>
-                            <MudIconButton Icon="@Icons.Material.Filled.ListAlt" Color="Color.Secondary" OnClick="()=>RemoveFromToDo(context.ChartId)"></MudIconButton>
-                        </MudTooltip>
+                        <MudIconButton Icon="@Icons.Material.Filled.ListAlt" Color="Color.Secondary" OnClick="()=>RemoveFromToDo(context.ChartId)"></MudIconButton>
                     </MudMenuItem>
                     }
                     else
                     {
                     <MudMenuItem>
-                        <MudTooltip Text=@L["Add to ToDo"]>
-                            <MudIconButton Icon="@Icons.Material.Outlined.ListAlt" OnClick="()=>AddToToDo(context.ChartId)"></MudIconButton>
-                        </MudTooltip>
+                        <MudIconButton Icon="@Icons.Material.Outlined.ListAlt" OnClick="()=>AddToToDo(context.ChartId)"></MudIconButton>
+                    
                     </MudMenuItem>
                     }
                 </MudMenu>

@@ -63,10 +63,7 @@
         <MudItem xs="2">
             @if (_favoriteCharts.Contains(_selectedChart.Id))
             {
-
-                <MudTooltip Text=@L["Remove from Favorites"]>
-                    <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Favorite" Color="MudBlazor.Color.Secondary" OnClick="() => RemoveFromFavorites(_selectedChart.Id)"></MudIconButton>
-                </MudTooltip>
+                <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Favorite" Color="MudBlazor.Color.Secondary" OnClick="() => RemoveFromFavorites(_selectedChart.Id)"></MudIconButton>
             }
             else
             {
