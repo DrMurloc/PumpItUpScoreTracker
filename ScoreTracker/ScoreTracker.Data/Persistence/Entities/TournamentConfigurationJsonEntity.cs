@@ -21,6 +21,7 @@ namespace ScoreTracker.Data.Persistence.Entities
 
         public double StageBreakModifier { get; set; }
         public bool AdjustToTime { get; set; }
+        public bool ContinuousLetterGradeScale { get; set; } = false;
         public TimeSpan MaxTime { get; set; } = TimeSpan.Zero;
         public bool AllowRepeats { get; set; }
 
@@ -32,6 +33,7 @@ namespace ScoreTracker.Data.Persistence.Entities
                 Name = config.Name,
                 StartDate = config.StartDate,
                 EndDate = config.EndDate,
+                ContinuousLetterGradeScale = config.Scoring.ContinuousLetterGradeScale,
                 StageBreakModifier = config.Scoring.StageBreakModifier,
                 AdjustToTime = config.Scoring.AdjustToTime,
                 MaxTime = config.MaxTime,
@@ -53,6 +55,7 @@ namespace ScoreTracker.Data.Persistence.Entities
             {
                 StageBreakModifier = StageBreakModifier,
                 AdjustToTime = AdjustToTime,
+                ContinuousLetterGradeScale = ContinuousLetterGradeScale,
                 LevelRatings = LevelRatings.ToDictionary(kv => (DifficultyLevel)kv.Key, kv => kv.Value),
                 SongTypeModifiers = SongTypeModifiers.ToDictionary(kv => Enum.Parse<SongType>(kv.Key), kv => kv.Value),
                 ChartTypeModifiers =

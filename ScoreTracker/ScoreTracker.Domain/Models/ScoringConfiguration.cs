@@ -34,7 +34,7 @@ namespace ScoreTracker.Domain.Models
 
         public double StageBreakModifier { get; set; } = 1.0;
         public bool AdjustToTime { get; set; } = true;
-
+        public bool ContinuousLetterGradeScale { get; set; } = false;
         private static readonly TimeSpan BaseAverageTime = TimeSpan.FromMinutes(2);
 
         public double GetScorelessScore(Chart chart)
@@ -51,8 +51,21 @@ namespace ScoreTracker.Domain.Models
         public int GetScore(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)
         {
             var result = GetScorelessScore(chart);
+            var letterGrade = score.LetterGrade;
+            var letterGradeModifier = LetterGradeModifiers[letterGrade];
+            if (ContinuousLetterGradeScale && letterGrade != PhoenixLetterGrade.SSSPlus)
+            {
+                var nextGrade = letterGrade + 1;
+                var threshold = letterGrade.GetMinimumScore();
+                var nextThreshold = nextGrade.GetMinimumScore();
+                var modifier = LetterGradeModifiers[letterGrade];
+                var nextModifier = LetterGradeModifiers[nextGrade];
+                letterGradeModifier =
+                    modifier + (nextModifier - modifier) * (score - threshold) / (nextThreshold - threshold);
+            }
+
             result *=
-                LetterGradeModifiers[score.LetterGrade]
+                letterGradeModifier
                 * PlateModifiers[plate];
             if (isBroken) result *= StageBreakModifier;
 

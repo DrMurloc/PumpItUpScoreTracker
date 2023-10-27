@@ -9,6 +9,8 @@
 @using MediatR
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Domain.Records
+@using Twilio.TwiML.Voice
+@using Task = System.Threading.Tasks.Task
 
 <PageTitle>Tournament Builder</PageTitle>
 
@@ -51,7 +53,7 @@
     <MudExpansionPanel Text="Song Types">
         <MudGrid>
             <MudItem xs="12">
-                <MudSwitch T="bool" Label="Adjust Scores to Song Duration (uses 2 minutes as average chart duration)" @bind-Checked="Configuration.Scoring.AdjustToTime" Color="Color.Primary"></MudSwitch>
+                <MudSwitch T="bool" Color="Color.Primary" Label="Adjust Scores to Song Duration (uses 2 minutes as average chart duration)" @bind-Checked="Configuration.Scoring.AdjustToTime"></MudSwitch>
             </MudItem>
             @foreach (var songType in Enum.GetValues<SongType>())
             {
@@ -64,6 +66,9 @@
 
     <MudExpansionPanel Text="Letter Grades">
         <MudGrid>
+            <MudItem xs="12">
+                <MudSwitch T="bool" Label="Continous Modifier Scale (modifier increments between letter grades)" Color="Color.Primary" @bind-Checked="Configuration.Scoring.ContinuousLetterGradeScale"></MudSwitch>
+            </MudItem>
             @foreach (var letterGrade in Enum.GetValues<PhoenixLetterGrade>())
             {
                 <MudItem xs="6">
