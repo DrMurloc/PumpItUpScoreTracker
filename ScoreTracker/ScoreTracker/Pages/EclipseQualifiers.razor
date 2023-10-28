@@ -151,7 +151,7 @@
         }
         _leaderboard = (await Qualifiers.GetAllUserQualifiers(config)).OrderByDescending(q => q.CalculateScore()).Select((q, index) => new Entry(index + 1, q.UserName,
             q.BestCharts().First, q.BestCharts().FirstScore,q.BestCharts().Second,q.BestCharts().SecondScore,
-            index<=23?"Pros":index<=23+48?"Mids":"Lowers",q.IsApproved,
+            index<22?"Pros":index<22+48?"Mids":"Lowers",q.IsApproved,
             q.CalculateScore(), q.Submissions.Select(s => s.Value.PhotoUrl).ToArray(),q));
 
     }
