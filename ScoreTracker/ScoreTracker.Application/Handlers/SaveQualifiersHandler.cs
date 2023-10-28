@@ -47,7 +47,7 @@ namespace ScoreTracker.Application.Handlers
             await _botClient.PublishQualifiersMessage($"{user} has progressed to {newPlace} on the leaderboard!",
                 cancellationToken);
 
-            if (newPlace <= 22 && oldPlace > 22) return Unit.Value;
+            if (newPlace > 22 || oldPlace <= 22) return Unit.Value;
 
             var place23 = userQualifiersEnumerable[22];
             await _botClient.PublishQualifiersMessage($"{place23.UserName} has been knocked out of Pros!",
