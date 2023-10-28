@@ -13,6 +13,8 @@
 @using ScoreTracker.Web.Enums
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using System.Drawing
+@using System.Net
 
 <PageTitle>@L["Tier Lists"]</PageTitle>
 
@@ -355,6 +357,7 @@ else
         }
         StateHasChanged();
     }
+
     private void EditChart(Guid chartId)
     {
         _selectedChartId = chartId;
@@ -513,6 +516,10 @@ else
                 var filteredScoreArray = filtered.Where(c => validCharts.Contains(c.Id)).ToArray();
                 if (!filteredScoreArray.Any())
                 {
+                    foreach (var chart in filtered)
+                    {
+                        _notRatedCharts.Add(chart);
+                    }
                     return;
                 }
                 var chartCount = filteredScoreArray.ToDictionary(c => c.Id, c => 0);
@@ -598,7 +605,7 @@ else
                             break;
                     }
                 }
-                foreach (var chart in _difficultyAndTypeFilteredCharts.Values.Where(c => !averages.ContainsKey(c.Id)))
+                foreach (var chart in filtered.Where(c => !chartCount.TryGetValue(c.Id, out  var total)||total==0))
                 {
                     _notRatedCharts.Add(chart);
                 }
@@ -610,7 +617,7 @@ else
                     .OrderBy(c => _phoenixScores.ContainsKey(c.Id) ? (int)(_phoenixScores[c.Id]?.Score??0) : 0).ToArray(); 
                 if (!filteredMyScoreArray.Any()) 
                 {
-                    foreach (var chart in _difficultyAndTypeFilteredCharts.Values)
+                    foreach (var chart in filtered)
                     {
                         _notRatedCharts.Add(chart);
                     }
@@ -657,7 +664,7 @@ else
                         _overratedCharts.Add(chart);
                     }
                 }
-                foreach (var chart in _difficultyAndTypeFilteredCharts.Values.Where(c => !chartIds.Contains(c.Id)))
+                foreach (var chart in filtered.Where(c => !chartIds.Contains(c.Id)))
                 {
                     _notRatedCharts.Add(chart);
                 }
