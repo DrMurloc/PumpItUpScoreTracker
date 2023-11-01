@@ -31,6 +31,7 @@
             <MudSelectItem T="TierListType" Value="TierListType.Preference">@L["Preference"]</MudSelectItem>
             @if (_currentMix == MixEnum.Phoenix)
             {
+                <MudSelectItem T="TierListType" Value="TierListType.OfficialScores">@L["Official Scores"]</MudSelectItem>
                 <MudSelectItem T="TierListType" Value="TierListType.Scores">@L["Score"]</MudSelectItem>
             }
             @if (_currentMix == MixEnum.Phoenix && CurrentUser.IsLoggedIn)
@@ -108,7 +109,7 @@
                 </MudItem>
         </MudGrid>
 </MudDrawer>
-@if (_currentTierList is TierListType.Difficulty or TierListType.MyScores or TierListType.Scores)
+@if (_currentTierList is TierListType.Difficulty or TierListType.MyScores or TierListType.Scores or TierListType.OfficialScores)
 {
     @if (ChartTypeFilter == nameof(ChartType.CoOp) && _currentTierList==TierListType.Difficulty)
     {
@@ -377,6 +378,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();
+        _officialScoreTierListEntries = (await Mediator.Send(new GetTierListQuery("Official Scores"))).ToDictionary(s=>s.ChartId);
         _currentTierList = Enum.TryParse<TierListType>(await UiSettings.GetSetting(TierListTypeKey), out var value) ? value : TierListType.Difficulty;
         if (_currentTierList == TierListType.MyScores && (_currentMix == MixEnum.XX || !CurrentUser.IsLoggedIn))
         {
@@ -431,6 +433,7 @@ else
     private IDictionary<Guid, CoOpRating> _coOpRatings = new Dictionary<Guid, CoOpRating>();
     private IDictionary<Guid, ChartPreferenceRatingRecord> _chartRatings = new Dictionary<Guid, ChartPreferenceRatingRecord>();
     private IDictionary<Guid, IEnumerable<RecordedPhoenixScore>> _allPhoenixScores = new Dictionary<Guid, IEnumerable<RecordedPhoenixScore>>();
+    private IDictionary<Guid, SongTierListEntry> _officialScoreTierListEntries = new Dictionary<Guid, SongTierListEntry>();
     private void RefilterCharts()
     {
 
@@ -457,6 +460,44 @@ else
         }
         switch (_currentTierList)
         {
+            case TierListType.OfficialScores:
+
+                foreach (var chart in filtered.OrderByDescending(c=>_officialScoreTierListEntries.TryGetValue(c.Id, out var entry)?entry.Order:0))
+                {
+                    if (!_officialScoreTierListEntries.TryGetValue(chart.Id, out var score))
+                    {
+                        _notRatedCharts.Add(chart);
+                        continue;
+                    }
+                    switch (score.Category)
+                    {
+                        case TierListCategory.Overrated:
+                            _overratedCharts.Add(chart);
+                            break;
+                        case TierListCategory.VeryEasy:
+                            _veryEasyCharts.Add(chart);
+                            break;
+                        case TierListCategory.Easy:
+                            _easyCharts.Add(chart);
+                            break;
+                        case TierListCategory.Medium:
+                            _mediumCharts.Add(chart);
+                            break;
+                        case TierListCategory.Hard:
+                            _hardCharts.Add(chart);
+                            break;
+                        case TierListCategory.VeryHard:
+                            _veryHardCharts.Add(chart);
+                            break;
+                        case TierListCategory.Underrated:
+                            _underratedCharts.Add(chart);
+                            break;
+                        default:
+                            _notRatedCharts.Add(chart);
+                            break;
+                    }
+                }
+                break;
             case TierListType.Difficulty:
             {
                 var type = Enum.Parse<ChartType>(ChartTypeFilter);
@@ -533,7 +574,7 @@ else
                     {
                         continue;
                     }
-                    var standardDeviation = StdDev(scoreInts, false);
+                    var standardDeviation = StdDev(scoreInts, true);
                     var average = scoreInts.Average();
                     var mediumMin = average - standardDeviation / 2;
                     var easyMin = average + standardDeviation / 2;
@@ -623,7 +664,7 @@ else
                     }
                     return; 
                 }   
-                var standardDeviation = StdDev(filteredMyScoreArray.Select(s => (int)(_phoenixScores[s.Id].Score ?? 0)), false); 
+                var standardDeviation = StdDev(filteredMyScoreArray.Select(s => (int)(_phoenixScores[s.Id].Score ?? 0)), true); 
                 var average = filteredMyScoreArray.Average(s => (int)(_phoenixScores[s.Id]?.Score ?? 0)); 
                 var mediumMin = average - standardDeviation / 2; 
                 var easyMin = average + standardDeviation / 2; 

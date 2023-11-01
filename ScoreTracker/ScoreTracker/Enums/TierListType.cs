@@ -5,6 +5,7 @@
         Difficulty,
         Preference,
         Scores,
-        MyScores
+        MyScores,
+        OfficialScores
     }
 }

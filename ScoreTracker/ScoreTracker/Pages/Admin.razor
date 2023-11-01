@@ -10,6 +10,7 @@
 
 <PageTitle>Admin</PageTitle>
 
+<MudButton Variant="Variant.Filled" OnClick="RebuildOfficialLeaderboard" Color="Color.Error">Test</MudButton>
 <MudCard>
     <MudButton Disabled="_isReCalculating" OnClick="ReCalculateScores" Color="Color.Primary" Variant="Variant.Filled">ReCalculate Ratings</MudButton>
 
@@ -122,6 +123,8 @@
 @inject IUiSettingsAccessor UiSettings;
 @inject ISnackbar Snackbar;
 @inject NavigationManager NavManager;
+@inject IOfficialSiteClient OfficialSite;
+@inject ITierListRepository TierLists;
 @code
 {
     private MudAutocomplete<string> _autocomplete;
@@ -135,6 +138,14 @@
         Task.FromResult(SongNames.Where(n => n.ToLower().Contains(song?.ToLower() ?? ""))
             .OrderBy(n => n.Equals(song, StringComparison.OrdinalIgnoreCase) ? 0 : 1).ToArray().AsEnumerable());
 
+    private async Task RebuildOfficialLeaderboard()
+    {
+        var result = await OfficialSite.GetScoresLeaderboard(CancellationToken.None);
+        foreach (var r in result)
+        {
+            await TierLists.SaveEntry(r, CancellationToken.None);
+        }
+    }
     private async Task SelectChart(Chart chart)
     {
         var video = await Mediator.Send(new GetChartVideosQuery(new[] { chart.Id }));

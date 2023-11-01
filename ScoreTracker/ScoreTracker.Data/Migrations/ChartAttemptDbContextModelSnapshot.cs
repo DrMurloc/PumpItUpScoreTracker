@@ -361,6 +361,33 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("Song", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.TierListEntryEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TierListName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TierListName");
+
+                    b.ToTable("TierListEntry", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.TournamentEntity", b =>
                 {
                     b.Property<Guid>("Id")

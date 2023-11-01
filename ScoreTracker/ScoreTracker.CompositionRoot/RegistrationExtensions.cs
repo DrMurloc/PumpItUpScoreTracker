@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using ScoreTracker.Application.Handlers;
+using ScoreTracker.Data.Apis;
+using ScoreTracker.Data.Apis.Contracts;
 using ScoreTracker.Data.Clients;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Data.Persistence;
@@ -37,8 +39,10 @@ public static class RegistrationExtensions
             o.ToEmail = twilioConfig.ToEmail;
             o.ApiKey = twilioConfig.ApiKey;
         });
+        builder.AddHttpClient<IPiuGameApi, PiuGameApi>();
         builder.Configure<SqlConfiguration>(o => { o.ConnectionString = configuration.ConnectionString; });
         builder.Configure<AzureBlobConfiguration>(o => { o.ConnectionString = blobConfig.ConnectionString; });
+
         return builder.AddDbContext<ChartAttemptDbContext>(o => { o.UseSqlServer(configuration.ConnectionString); });
     }
 }
