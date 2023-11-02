@@ -7,41 +7,107 @@
 @using ScoreTracker.Domain.Records
 <PageTitle>Tournaments</PageTitle>
 
-<MudText Typo="Typo.body1" Color="Color.Warning">Note that tournaments are currently in Beta. Many features here are still super early in development and will lack polish</MudText>
+@if (_active.Any())
+{
 
-<MudDataGrid T="TournamentRecord" Items="_tournaments">
-    <Columns>
-        <PropertyColumn T="TournamentRecord" TProperty="string" Property="x => x.Name" Title="Tournament" Sortable="false"></PropertyColumn>
-        <TemplateColumn T="TournamentRecord" Title="Start Date" Sortable="true" SortBy="x => x.StartDate ?? DateTimeOffset.MinValue">
-            <CellTemplate>
-                <MudText>@(context.Item.StartDate?.ToString("D")??"")</MudText>
-            </CellTemplate>
-        </TemplateColumn>
-        <TemplateColumn T="TournamentRecord" Title="End Date" Sortable="true" SortBy="x => x.EndDate ?? DateTimeOffset.MaxValue">
-            <CellTemplate>
-                <MudText>@(context.Item.EndDate?.ToString("D")??"")</MudText>
-            </CellTemplate>
-        </TemplateColumn>
-        <TemplateColumn T="TournamentRecord" Title="Rules" Sortable="false">
-            <CellTemplate>
-                <MudIconButton Disabled="_isLoading" Icon="@Icons.Material.Filled.RuleFolder" OnClick="() => ShowRules(context.Item.Id)"></MudIconButton>
-            </CellTemplate>
-        </TemplateColumn>
-        <TemplateColumn T="TournamentRecord" Title="Leaderboard" Sortable="false">
-            <CellTemplate>
-                <MudIconButton Disabled="_isLoading" Icon="@Icons.Material.Filled.Leaderboard" OnClick="() => ShowLeaderboard(context.Item.Id)"></MudIconButton>
-            </CellTemplate>
-        </TemplateColumn>
-        @if (CurrentUser.IsLoggedIn)
-        {
-            <TemplateColumn T="TournamentRecord" Title="Submit" Sortable="false">
+    <MudText Typo="Typo.h4">Active Tournaments</MudText>
+    <MudDataGrid T="TournamentRecord" Items="_active">
+        <Columns>
+            <PropertyColumn T="TournamentRecord" TProperty="string" Property="x => x.Name" Title="Tournament" Sortable="false"></PropertyColumn>
+            <TemplateColumn T="TournamentRecord" Title="Start Date" Sortable="true" SortBy="x => x.StartDate ?? DateTimeOffset.MinValue">
                 <CellTemplate>
-                    <MudIconButton Disabled="_isLoading" Icon="@Icons.Material.Filled.Upload" OnClick="() => GoToSubmit(context.Item.Id)"></MudIconButton>
+                    <MudText>@(context.Item.StartDate?.ToString("D")??"")</MudText>
                 </CellTemplate>
             </TemplateColumn>
-        }
-    </Columns>
-</MudDataGrid>
+            <TemplateColumn T="TournamentRecord" Title="End Date" Sortable="true" SortBy="x => x.EndDate ?? DateTimeOffset.MaxValue">
+                <CellTemplate>
+                    <MudText>@(context.Item.EndDate?.ToString("D")??"")</MudText>
+                </CellTemplate>
+            </TemplateColumn>
+            <TemplateColumn T="TournamentRecord" Title="Rules" Sortable="false">
+                <CellTemplate>
+                    <MudIconButton Disabled="_isLoading" Icon="@Icons.Material.Filled.RuleFolder" OnClick="() => ShowRules(context.Item.Id)"></MudIconButton>
+                </CellTemplate>
+            </TemplateColumn>
+            <TemplateColumn T="TournamentRecord" Title="Leaderboard" Sortable="false">
+                <CellTemplate>
+                    <MudIconButton Disabled="_isLoading" Icon="@Icons.Material.Filled.Leaderboard" OnClick="() => ShowLeaderboard(context.Item.Id)"></MudIconButton>
+                </CellTemplate>
+            </TemplateColumn>
+            @if (CurrentUser.IsLoggedIn)
+            {
+                <TemplateColumn T="TournamentRecord" Title="Submit" Sortable="false">
+                    <CellTemplate>
+                        <MudIconButton Disabled="_isLoading" Icon="@Icons.Material.Filled.Upload" OnClick="() => GoToSubmit(context.Item.Id)"></MudIconButton>
+                    </CellTemplate>
+                </TemplateColumn>
+            }
+        </Columns>
+    </MudDataGrid>
+}
+@if (_upcoming.Any())
+{
+    <br/>
+    <br/>
+    <MudText Typo="Typo.h4">Upcoming Tournaments</MudText>
+    <MudDataGrid T="TournamentRecord" Items="_upcoming">
+        <Columns>
+            <PropertyColumn T="TournamentRecord" TProperty="string" Property="x => x.Name" Title="Tournament" Sortable="false"></PropertyColumn>
+            <TemplateColumn T="TournamentRecord" Title="Start Date" Sortable="true" SortBy="x => x.StartDate ?? DateTimeOffset.MinValue">
+                <CellTemplate>
+                    <MudText>@(context.Item.StartDate?.ToString("D") ?? "")</MudText>
+                </CellTemplate>
+            </TemplateColumn>
+            <TemplateColumn T="TournamentRecord" Title="End Date" Sortable="true" SortBy="x => x.EndDate ?? DateTimeOffset.MaxValue">
+                <CellTemplate>
+                    <MudText>@(context.Item.EndDate?.ToString("D") ?? "")</MudText>
+                </CellTemplate>
+            </TemplateColumn>
+            <TemplateColumn T="TournamentRecord" Title="Rules" Sortable="false">
+                <CellTemplate>
+                    <MudIconButton Disabled="_isLoading" Icon="@Icons.Material.Filled.RuleFolder" OnClick="() => ShowRules(context.Item.Id)"></MudIconButton>
+                </CellTemplate>
+            </TemplateColumn>
+            <TemplateColumn T="TournamentRecord" Title="Leaderboard" Sortable="false">
+                <CellTemplate>
+                    <MudIconButton Disabled="_isLoading" Icon="@Icons.Material.Filled.Leaderboard" OnClick="() => ShowLeaderboard(context.Item.Id)"></MudIconButton>
+                </CellTemplate>
+            </TemplateColumn>
+        </Columns>
+    </MudDataGrid>
+}
+@if (_previous.Any())
+{
+    
+    <br/>
+    <br/>
+    <MudText Typo="Typo.h4">Previous Tournaments</MudText>
+    <MudDataGrid T="TournamentRecord" Items="_previous">
+        <Columns>
+            <PropertyColumn T="TournamentRecord" TProperty="string" Property="x => x.Name" Title="Tournament" Sortable="false"></PropertyColumn>
+            <TemplateColumn T="TournamentRecord" Title="Start Date" Sortable="true" SortBy="x => x.StartDate ?? DateTimeOffset.MinValue">
+                <CellTemplate>
+                    <MudText>@(context.Item.StartDate?.ToString("D") ?? "")</MudText>
+                </CellTemplate>
+            </TemplateColumn>
+            <TemplateColumn T="TournamentRecord" Title="End Date" Sortable="true" SortBy="x => x.EndDate ?? DateTimeOffset.MaxValue">
+                <CellTemplate>
+                    <MudText>@(context.Item.EndDate?.ToString("D") ?? "")</MudText>
+                </CellTemplate>
+            </TemplateColumn>
+            <TemplateColumn T="TournamentRecord" Title="Rules" Sortable="false">
+                <CellTemplate>
+                    <MudIconButton Disabled="_isLoading" Icon="@Icons.Material.Filled.RuleFolder" OnClick="() => ShowRules(context.Item.Id)"></MudIconButton>
+                </CellTemplate>
+            </TemplateColumn>
+            <TemplateColumn T="TournamentRecord" Title="Leaderboard" Sortable="false">
+                <CellTemplate>
+                    <MudIconButton Disabled="_isLoading" Icon="@Icons.Material.Filled.Leaderboard" OnClick="() => ShowLeaderboard(context.Item.Id)"></MudIconButton>
+                </CellTemplate>
+            </TemplateColumn>
+        </Columns>
+    </MudDataGrid>
+}
 <MudDialog @bind-IsVisible="_showRules">
     <DialogContent>
         <MudGrid>
@@ -136,9 +202,16 @@
         _isLoading = false;
         _showRules = true;
     }
-    private IEnumerable<TournamentRecord> _tournaments = Array.Empty<TournamentRecord>();
+
+    private TournamentRecord[] _upcoming = Array.Empty<TournamentRecord>();
+    private TournamentRecord[] _previous = Array.Empty<TournamentRecord>();
+    private TournamentRecord[] _active = Array.Empty<TournamentRecord>();
     protected override async Task OnInitializedAsync()
     {
-        _tournaments = (await Mediator.Send(new GetAllTournamentsQuery())).ToArray();
+        var tournaments = (await Mediator.Send(new GetAllTournamentsQuery())).ToArray();
+        _upcoming = tournaments.Where(t => t.StartDate != null && t.StartDate > DateTimeOffset.Now).ToArray();
+        _previous = tournaments.Where(t => t.EndDate != null && t.EndDate < DateTimeOffset.Now).ToArray();
+        _active = tournaments.Where(t => (t.StartDate == null || t.StartDate <= DateTimeOffset.Now) && (t.EndDate == null || t.EndDate >= DateTimeOffset.Now)).ToArray();
+
     }
 }

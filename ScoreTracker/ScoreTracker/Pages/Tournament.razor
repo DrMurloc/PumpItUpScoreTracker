@@ -128,6 +128,7 @@
 </MudDialog>
 @inject ITournamentRepository TournamentRepository;
 @inject ICurrentUserAccessor CurrentUser;
+@inject NavigationManager NavManager;
 @code
 {
     private IEnumerable<LeaderboardRecord> _leaderboard = Array.Empty<LeaderboardRecord>();
@@ -165,7 +166,10 @@
         _configuration = await TournamentRepository.GetTournament(TournamentId,CancellationToken.None);
         _leaderboard = (await TournamentRepository.GetLeaderboardRecords(TournamentId, CancellationToken.None)).OrderBy(l => l.Place).ToArray();
         _isLoaded = true;
-
+        if (!_configuration.IsActive)
+        {
+            NavManager.NavigateTo("/Tournaments");
+        }
 
     }
 }
