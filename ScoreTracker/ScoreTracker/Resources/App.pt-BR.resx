@@ -315,6 +315,9 @@
   <data name="Not Passed Count" xml:space="preserve">
     <value>Contagem de músicas sem pass</value>
   </data>
+  <data name="Official Scores" xml:space="preserve">
+    <value>Pontuações oficiais</value>
+  </data>
   <data name="Open Video" xml:space="preserve">
     <value>Abrir vídeo</value>
   </data>

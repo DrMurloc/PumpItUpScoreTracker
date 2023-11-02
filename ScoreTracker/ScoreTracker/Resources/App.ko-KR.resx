@@ -312,6 +312,9 @@
   <data name="Not Passed Count" xml:space="preserve">
     <value>실패</value>
   </data>
+  <data name="Official Scores" xml:space="preserve">
+    <value>공식 점수</value>
+  </data>
   <data name="Open Video" xml:space="preserve">
     <value>동영상 보기</value>
   </data>
