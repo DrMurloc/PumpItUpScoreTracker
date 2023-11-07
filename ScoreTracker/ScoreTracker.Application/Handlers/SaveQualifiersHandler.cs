@@ -32,26 +32,32 @@ namespace ScoreTracker.Application.Handlers
             var orderedNewLeaderboard = userQualifiersEnumerable.OrderByDescending(q => q.CalculateScore())
                 .Select((q, i) => (q, i + 1)).ToArray();
 
+            var newPlace = orderedNewLeaderboard.First(kv => kv.q.UserName == user).Item2;
             if (orderedOldLeaderboard.All(o => o.q.UserName != user))
             {
                 await _botClient.PublishQualifiersMessage(
                     $"A new challenger approaches! Welcome {user} to the qualifier leaderboard!", cancellationToken);
-                return Unit.Value;
+
+                if (newPlace > 22 || userQualifiersEnumerable.Length < 23) return Unit.Value;
+
+                var place23 = userQualifiersEnumerable[22];
+                await _botClient.PublishQualifiersMessage($"{place23.UserName} has been knocked out of Pros!",
+                    cancellationToken);
             }
+            else
+            {
+                var oldPlace = orderedOldLeaderboard.First(kv => kv.q.UserName == user).Item2;
+                if (oldPlace == newPlace) return Unit.Value;
 
+                await _botClient.PublishQualifiersMessage($"{user} has progressed to {newPlace} on the leaderboard!",
+                    cancellationToken);
 
-            var oldPlace = orderedOldLeaderboard.First(kv => kv.q.UserName == user).Item2;
-            var newPlace = orderedNewLeaderboard.First(kv => kv.q.UserName == user).Item2;
-            if (oldPlace == newPlace) return Unit.Value;
+                if (newPlace > 22 || oldPlace <= 22 || userQualifiersEnumerable.Length < 23) return Unit.Value;
 
-            await _botClient.PublishQualifiersMessage($"{user} has progressed to {newPlace} on the leaderboard!",
-                cancellationToken);
-
-            if (newPlace > 22 || oldPlace <= 22) return Unit.Value;
-
-            var place23 = userQualifiersEnumerable[22];
-            await _botClient.PublishQualifiersMessage($"{place23.UserName} has been knocked out of Pros!",
-                cancellationToken);
+                var place23 = userQualifiersEnumerable[22];
+                await _botClient.PublishQualifiersMessage($"{place23.UserName} has been knocked out of Pros!",
+                    cancellationToken);
+            }
 
             return Unit.Value;
         }
