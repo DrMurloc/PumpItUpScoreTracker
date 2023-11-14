@@ -11,7 +11,7 @@ public sealed class PhoenixTitleProgress : TitleProgress
 
     public PhoenixTitle PhoenixTitle { get; }
 
-    public override int CompletionCount { get; protected set; }
+    public override double CompletionCount { get; protected set; }
 
     public override string AdditionalNote
     {

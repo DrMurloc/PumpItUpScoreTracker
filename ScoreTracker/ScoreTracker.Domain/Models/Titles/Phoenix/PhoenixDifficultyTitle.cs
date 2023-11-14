@@ -15,9 +15,9 @@ public sealed class PhoenixDifficultyTitle : PhoenixTitle
     public DifficultyLevel Level { get; }
     public int RequiredRating { get; }
 
-    public override int CompletionProgress(Chart chart, RecordedPhoenixScore attempt)
+    public override double CompletionProgress(Chart chart, RecordedPhoenixScore attempt)
     {
         if (chart.Level != Level || attempt.IsBroken || attempt.Score == null) return 0;
-        return (int)(chart.Level.BaseRating * attempt.Score.Value.LetterGrade.GetModifier());
+        return chart.Level.BaseRating * attempt.Score.Value.LetterGrade.GetModifier();
     }
 }

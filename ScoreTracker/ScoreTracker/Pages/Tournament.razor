@@ -166,10 +166,6 @@
         _configuration = await TournamentRepository.GetTournament(TournamentId,CancellationToken.None);
         _leaderboard = (await TournamentRepository.GetLeaderboardRecords(TournamentId, CancellationToken.None)).OrderBy(l => l.Place).ToArray();
         _isLoaded = true;
-        if (!_configuration.IsActive)
-        {
-            NavManager.NavigateTo("/Tournaments");
-        }
 
     }
 }

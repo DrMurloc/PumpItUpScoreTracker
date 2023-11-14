@@ -56,6 +56,7 @@
             </MudItem>
         }
     }
+
 </MudGrid>
 
 @if (_currentQualifiers != null)
@@ -86,6 +87,26 @@
                 <MudText>Best Score: @SecondChart.Song.Name @SecondChart.DifficultyString - @_currentQualifiers.Submissions[SecondChart.Id].Score (@_currentQualifiers.Submissions[SecondChart.Id].Score.LetterGrade.GetName()), @_currentQualifiers.Rating(SecondChart.Id) Points</MudText>
             </MudItem>
         }
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">Rating Calculator</MudText>
+        </MudItem>
+        <MudItem xs="6" sm="4" md="3">
+            <MudNumericField T="int" Label=@L["Score"] Value="_testScore" ValueChanged="s=>_testScore=s" Min="0" Max="1000000" HideSpinButtons="true" Clearable="false"></MudNumericField>
+        </MudItem>
+        <MudItem xs="6" sm="4" md="3">
+            <MudSelect T="PhoenixLetterGrade" Label=@L["Letter Grade"] Value="_testScore.LetterGrade" ValueChanged="SetLetterGrade">
+                @foreach (var grade in Enum.GetValues<PhoenixLetterGrade>())
+                {
+                    <MudSelectItem T="PhoenixLetterGrade" Value="grade">@grade.GetName()</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="6" sm="4" md="3">
+            <MudNumericField T="int" Label=@L["Difficulty Level"] Value="_level" ValueChanged="l=>_level=l" Min="@DifficultyLevel.Min" Max="@DifficultyLevel.Max" HideSpinButtons="true" Clearable="false"></MudNumericField>
+        </MudItem>
+        <MudItem xs="6" sm="4" md="3">
+            <MudText>Rating: @_currentQualifiers.Rating(_level,_testScore)</MudText>
+        </MudItem>
     </MudGrid>
 }
 <MudDialog @bind-IsVisible="_showSubmit">
@@ -236,7 +257,14 @@
     private string _username = string.Empty;
     private bool _showVideoDialog;
     private bool _isSaving = false;
+    private DifficultyLevel _level = 20;
     private bool _isNew = false;
+    private PhoenixScore _testScore = 950000;
+
+    private void SetLetterGrade(PhoenixLetterGrade grade)
+    {
+        _testScore = grade.GetMinimumScore();
+    }
     private MixEnum _addingMix = MixEnum.Phoenix;
     private StepCount _perfects = 0;
     private StepCount _greats = 0;

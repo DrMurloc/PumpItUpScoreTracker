@@ -9,6 +9,6 @@ public abstract class TitleProgress
 
     public Title Title { get; }
 
-    public abstract int CompletionCount { get; protected set; }
+    public abstract double CompletionCount { get; protected set; }
     public virtual string AdditionalNote => string.Empty;
 }

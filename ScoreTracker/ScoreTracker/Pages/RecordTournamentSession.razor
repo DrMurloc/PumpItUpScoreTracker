@@ -321,6 +321,10 @@
             NavManager.NavigateTo("/Tournaments");
         }
         _configuration = await Mediator.Send(new GetTournamentQuery(TournamentId));
+        if (!_configuration.IsActive)
+        {
+            NavManager.NavigateTo("/Tournaments");
+        }
         _allCharts = await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix));
         var userId = CurrentUser.User.Id;
         if (CurrentUser.User.IsAdmin && UserId != null)

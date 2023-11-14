@@ -13,7 +13,7 @@ public abstract class PhoenixTitle : Title
     {
     }
 
-    public virtual int CompletionProgress(Chart chart, RecordedPhoenixScore attempt)
+    public virtual double CompletionProgress(Chart chart, RecordedPhoenixScore attempt)
     {
         return 0;
     }

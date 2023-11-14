@@ -44,6 +44,22 @@ namespace ScoreTracker.Domain.Models
             return (first, second, bestScore == 0 ? null : bestScore, secondBestScore == 0 ? null : secondBestScore);
         }
 
+        public int Rating(DifficultyLevel level, PhoenixScore score)
+        {
+            if (score.LetterGrade < PhoenixLetterGrade.AA) return 0;
+            var grade = score.LetterGrade;
+            if (grade == PhoenixLetterGrade.SSSPlus) return (int)(level.BaseRating * grade.GetModifier());
+
+            var nextGrade = grade + 1;
+            var currentModifier = grade.GetModifier();
+            var nextModifier = nextGrade.GetModifier();
+            var actualModifier = currentModifier + (nextModifier - currentModifier) *
+                (score - grade.GetMinimumScore()) /
+                ((double)nextGrade.GetMinimumScore() - grade.GetMinimumScore());
+
+            return (int)(level.BaseRating * actualModifier);
+        }
+
         public int Rating(Guid chartId)
         {
             if (!Submissions.ContainsKey(chartId))
@@ -51,18 +67,8 @@ namespace ScoreTracker.Domain.Models
                 return 0;
             }
 
-            var grade = Submissions[chartId].Score.LetterGrade;
             var difficulty = Configuration.Charts.First(c => c.Id == chartId).Level;
-            if (grade == PhoenixLetterGrade.SSSPlus) return (int)(difficulty.BaseRating * grade.GetModifier());
-
-            var nextGrade = grade + 1;
-            var currentModifier = grade.GetModifier();
-            var nextModifier = nextGrade.GetModifier();
-            var actualModifier = currentModifier + (nextModifier - currentModifier) *
-                (Submissions[chartId].Score - grade.GetMinimumScore()) /
-                ((double)nextGrade.GetMinimumScore() - grade.GetMinimumScore());
-
-            return (int)(difficulty.BaseRating * actualModifier);
+            return Rating(difficulty, Submissions[chartId].Score);
         }
 
         public int CalculateScore()
