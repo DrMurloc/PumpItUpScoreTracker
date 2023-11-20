@@ -148,58 +148,57 @@ namespace ScoreTracker.Data.Repositories
             _database.PhotoVerification.RemoveRange(toDelete);
             await _database.PhotoVerification.AddRangeAsync(toCreate, cancellationToken);
             await _database.SaveChangesAsync(cancellationToken);
+            _memoryCache.Remove(CacheKey(session.TournamentId, session.UsersId));
+        }
+
+        private string CacheKey(Guid tournamentId, Guid userId)
+        {
+            return $"{nameof(EFTournamentRepository)}__Tournament:{tournamentId}__User:{userId}";
         }
 
         public async Task<TournamentSession> GetSession(Guid tournamentId, Guid userId,
             CancellationToken cancellationToken)
         {
-            var entity = await _database.UserTournamentSession.FirstOrDefaultAsync(
-                uts => uts.TournamentId == tournamentId && uts.UserId == userId, cancellationToken);
-            var tournamentConfig = await GetTournament(tournamentId, cancellationToken);
-            if (entity == null)
+            return await _memoryCache.GetOrCreateAsync(CacheKey(tournamentId, userId), async o =>
             {
-                return new TournamentSession(userId, tournamentConfig);
-            }
+                o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromDays(1);
 
-            var entryEntities = JsonSerializer.Deserialize<SessionEntryEntity[]>(entity.ChartEntries) ??
-                                Array.Empty<SessionEntryEntity>();
-            var charts = (await _charts.GetCharts(MixEnum.Phoenix,
-                chartIds: entryEntities.Select(e => e.ChartId).Distinct().ToArray(),
-                cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
-            var entries = entryEntities.Select(e => new TournamentSession.Entry(charts[e.ChartId], e.Score,
-                Enum.Parse<PhoenixPlate>(e.Plate), e.IsBroken, e.SessionScore));
-            var session = new TournamentSession(userId, tournamentConfig, entries);
-            session.SetVerificationType(Enum.Parse<SubmissionVerificationType>(entity.VerificationType));
-            if (Uri.TryCreate(entity.VideoUrl, UriKind.Absolute, out var videoUrl))
-            {
-                session.VideoUrl = videoUrl;
-            }
+                var entity = await _database.UserTournamentSession.FirstOrDefaultAsync(
+                    uts => uts.TournamentId == tournamentId && uts.UserId == userId, cancellationToken);
+                var tournamentConfig = await GetTournament(tournamentId, cancellationToken);
+                if (entity == null) return new TournamentSession(userId, tournamentConfig);
 
-            var photos = await _database.PhotoVerification
-                .Where(p => p.TournamentId == tournamentId && p.UserId == userId)
-                .ToArrayAsync(cancellationToken);
-            foreach (var photo in photos.Select(p => p.PhotoUrl))
-            {
-                if (!Uri.TryCreate(photo, UriKind.Absolute, out var photoUrl))
+                var entryEntities = JsonSerializer.Deserialize<SessionEntryEntity[]>(entity.ChartEntries) ??
+                                    Array.Empty<SessionEntryEntity>();
+                var charts = (await _charts.GetCharts(MixEnum.Phoenix,
+                    chartIds: entryEntities.Select(e => e.ChartId).Distinct().ToArray(),
+                    cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
+                var entries = entryEntities.Select(e => new TournamentSession.Entry(charts[e.ChartId], e.Score,
+                    Enum.Parse<PhoenixPlate>(e.Plate), e.IsBroken, e.SessionScore));
+                var session = new TournamentSession(userId, tournamentConfig, entries);
+                session.SetVerificationType(Enum.Parse<SubmissionVerificationType>(entity.VerificationType));
+                if (Uri.TryCreate(entity.VideoUrl, UriKind.Absolute, out var videoUrl)) session.VideoUrl = videoUrl;
+
+                var photos = await _database.PhotoVerification
+                    .Where(p => p.TournamentId == tournamentId && p.UserId == userId)
+                    .ToArrayAsync(cancellationToken);
+                foreach (var photo in photos.Select(p => p.PhotoUrl))
                 {
-                    continue;
+                    if (!Uri.TryCreate(photo, UriKind.Absolute, out var photoUrl)) continue;
+
+                    session.PhotoUrls.Add(photoUrl);
                 }
 
-                session.PhotoUrls.Add(photoUrl);
-            }
+                if (!entity.NeedsApproval) session.Approve();
 
-            if (!entity.NeedsApproval)
-            {
-                session.Approve();
-            }
-
-            return session;
+                return session;
+            });
         }
 
         public async Task<IEnumerable<LeaderboardRecord>> GetLeaderboardRecords(Guid tournamentId,
             CancellationToken cancellationToken)
         {
-            return (await (from uts in _database.UserTournamentSession
+            var results = (await (from uts in _database.UserTournamentSession
                         join u in _database.User on uts.UserId equals u.Id
                         where uts.TournamentId == tournamentId
                         select new UserEntryDto(u.Id, u.Name, uts.SessionScore, uts.RestTime, uts.ChartsPlayed,
@@ -210,7 +209,11 @@ namespace ScoreTracker.Data.Repositories
                     ue.AverageDifficulty, ue.ChartsPlayed, Enum.Parse<SubmissionVerificationType>(ue.VerificationType),
                     ue.NeedsApproval,
                     ue.VideoUrl == null ? null :
-                    Uri.TryCreate(ue.VideoUrl, UriKind.Absolute, out var vidUrl) ? vidUrl : null));
+                    Uri.TryCreate(ue.VideoUrl, UriKind.Absolute, out var vidUrl) ? vidUrl : null)).ToArray();
+            foreach (var result in results)
+                result.Session = await GetSession(tournamentId, result.UserId, cancellationToken);
+
+            return results;
         }
 
         private sealed record UserEntryDto(Guid UserId, string Name, int Score, TimeSpan RestTime, int ChartsPlayed,

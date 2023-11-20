@@ -8,16 +8,26 @@
 {
     
     <MudText Typo="Typo.h3">@_configuration.Name</MudText>
+    <br/>
+    <MudSwitch Label="Show Extra Info" @bind-Checked="_showExtraData" Color="Color.Primary"></MudSwitch>
+    <br/>
     <MudTable T="LeaderboardRecord" Items="_leaderboard" FixedHeader="true" Striped="true">
         <HeaderContent>
             <MudTh>Place</MudTh>
             <MudTh>UserName</MudTh>
             <MudTh>Score</MudTh>
             <MudTh>Chart Count</MudTh>
-            <MudTh>Average Difficulty</MudTh>
-            <MudTh>Rest Time</MudTh>
+            <MudTh>Difficulty Range</MudTh>
+            @if (_showExtraData)
+            {
+                <MudTh>Average Difficulty</MudTh>
+                <MudTh>Average Score</MudTh>
+                <MudTh>Average Plate</MudTh>
+                <MudTh>Pass Rate</MudTh>
+                <MudTh>Rest Time</MudTh>
+            }
             <MudTh>Verification</MudTh>
-            @if (CurrentUser.IsLoggedInAsAdmin)
+            @if (CurrentUser.IsLoggedInAsAdmin && _showExtraData)
             {
                 <MudTh>Edit</MudTh>
             }
@@ -27,8 +37,15 @@
             <MudTd>@context.UserName</MudTd>
             <MudTd>@context.TotalScore</MudTd>
             <MudTd><MudButton StartIcon="@Icons.Material.Filled.ViewList" Color="Color.Primary" Variant="Variant.Outlined" Disabled="_isLoadingUser" OnClick="()=>ShowUserCharts(context.UserId)">@context.ChartsPlayed Charts</MudButton></MudTd>
-            <MudTd>@TwoDecimalPlaces(context.AverageDifficulty)</MudTd>
-            <MudTd>@RestTime(context.TotalRestTime)</MudTd>
+            <MudTd>@context.LowestLevel - @context.HighestLevel</MudTd>
+            @if (_showExtraData)
+            {
+                <MudTd>@TwoDecimalPlaces(context.AverageDifficulty)</MudTd>
+                <MudTd>@context.AverageScore (@context.AverageScore.LetterGrade.GetName())</MudTd>
+                <MudTd>@context.AveragePlate.GetShorthand()</MudTd>
+                <MudTd>@TwoDecimalPlaces((double)context.PassRate*100.0)</MudTd>
+                <MudTd>@RestTime(context.TotalRestTime)</MudTd>
+            }
             <MudTd>
                 @if (context.NeedsApproval)
                 {
@@ -63,9 +80,11 @@
                     }
                 }
             </MudTd>
-            @if (CurrentUser.IsLoggedInAsAdmin)
+            @if (CurrentUser.IsLoggedInAsAdmin && _showExtraData)
             {
-                <MudButton Href="@UserSessionlink(context.UserId)" Color="Color.Primary" Variant="Variant.Filled">Edit</MudButton>
+                <MudTd>
+                    <MudButton Href="@UserSessionlink(context.UserId)" Color="Color.Primary" Variant="Variant.Filled">Edit</MudButton>
+                </MudTd>
             }
         </RowTemplate>
         <PagerContent>
@@ -140,6 +159,7 @@
     private bool _isLoaded = false;
     private bool _isLoadingUser = false;
     private bool _showPhotoDialog = false;
+    private bool _showExtraData = false;
     private TournamentSession? _photoSession;
     private TournamentSession? _showingSession = null;
     private string UserSessionlink(Guid userId) => $"/Tournament/{TournamentId}/Record?UserId={userId}";
