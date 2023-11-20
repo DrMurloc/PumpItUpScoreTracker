@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
+﻿using System.Globalization;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using HtmlAgilityPack;
 using ScoreTracker.Data.Apis.Contracts;
 using ScoreTracker.Data.Apis.Dtos;
 using ScoreTracker.Domain.Enums;
-using SendGrid.Helpers.Mail;
 
 namespace ScoreTracker.Data.Apis
 {
@@ -111,15 +105,12 @@ namespace ScoreTracker.Data.Apis
             var document = new HtmlDocument();
             document.LoadHtml(response);
             var results = new List<PiuGameGetSongLeaderboardResult.EntryResultDto>();
-            foreach (var li in document.DocumentNode.SelectNodes("//div[contains(@class,'rangking_list_w')]//li"))
-            {
-                var scoreNode = li.SelectSingleNode(
-                    ".//div[contains(@class,'score')]//i[contains(@class,'tt')]");
-                results.Add(new PiuGameGetSongLeaderboardResult.EntryResultDto
-                {
-                    Score = int.Parse(scoreNode.InnerText, NumberStyles.AllowThousands)
-                });
-            }
+            var lis = document.DocumentNode.SelectNodes("//div[contains(@class,'rangking_list_w')]//li");
+            if (lis != null)
+                results.AddRange(lis
+                    .Select(li => li.SelectSingleNode(".//div[contains(@class,'score')]//i[contains(@class,'tt')]"))
+                    .Select(scoreNode => new PiuGameGetSongLeaderboardResult.EntryResultDto
+                        { Score = int.Parse(scoreNode.InnerText, NumberStyles.AllowThousands) }));
 
             return new PiuGameGetSongLeaderboardResult()
             {

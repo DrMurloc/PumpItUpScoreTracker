@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using EllipticCurve;
+﻿using Microsoft.Extensions.Logging;
 using ScoreTracker.Data.Apis.Contracts;
 using ScoreTracker.Data.Apis.Dtos;
-using ScoreTracker.Data.Migrations;
 using ScoreTracker.Domain.Enums;
-using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
@@ -18,11 +11,13 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
 {
     private readonly IPiuGameApi _piuGame;
     private readonly IChartRepository _charts;
+    private readonly ILogger _logger;
 
-    public OfficialSiteClient(IPiuGameApi piuGame, IChartRepository charts)
+    public OfficialSiteClient(IPiuGameApi piuGame, IChartRepository charts, ILogger<OfficialSiteClient> logger)
     {
         _piuGame = piuGame;
         _charts = charts;
+        _logger = logger;
     }
 
 
@@ -40,18 +35,20 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         }
 
         var averages = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-
+        var current = 1;
+        var max = songs.Count;
         foreach (var song in songs)
         {
+            _logger.LogInformation($"Song {current++} out of {max}");
             var scores = await _piuGame.GetSongLeaderboard(song.Id, cancellationToken);
-            averages[song.Id] = (int)scores.Results.Average(r => r.Score);
+            averages[song.Id] = scores.Results.Any() ? (int)scores.Results.Average(r => r.Score) : -1;
         }
 
         var levelGroup = songs.GroupBy(s => (s.Type, s.Difficulty));
         var result = new List<SongTierListEntry>();
         foreach (var group in levelGroup)
         {
-            var scores = group.Select(g => averages[g.Id]).ToArray();
+            var scores = group.Where(g => averages[g.Id] != -1).Select(g => averages[g.Id]).ToArray();
             var orders = group.OrderByDescending(s => averages[s.Id]).Select((s, i) => (s, i))
                 .ToDictionary(kv => kv.s.Id, kv => kv.i);
             var average = (int)scores.Average();
@@ -66,7 +63,9 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
             {
                 var score = averages[song.Id];
                 var category = TierListCategory.Unrecorded;
-                if (score < veryHardMin)
+                if (score == -1)
+                    category = TierListCategory.Unrecorded;
+                else if (score < veryHardMin)
                     category = TierListCategory.Underrated;
                 else if (score < hardMin)
                     category = TierListCategory.VeryHard;

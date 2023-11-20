@@ -17,6 +17,10 @@
             <MudTh>Average Difficulty</MudTh>
             <MudTh>Rest Time</MudTh>
             <MudTh>Verification</MudTh>
+            @if (CurrentUser.IsLoggedInAsAdmin)
+            {
+                <MudTh>Edit</MudTh>
+            }
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.Place</MudTd>
@@ -28,14 +32,8 @@
             <MudTd>
                 @if (context.NeedsApproval)
                 {
-                    @if (CurrentUser.IsLoggedInAsAdmin)
-                    {
-                        <MudButton Href="@UserSessionlink(context.UserId)" Color="Color.Primary" Variant="Variant.Filled">Pending</MudButton>
-                    }
-                    else
-                    {
-                        <MudText>Pending</MudText>
-                    }
+                    <MudText>Pending</MudText>
+                    
                 }
                 else
                 {
@@ -65,6 +63,10 @@
                     }
                 }
             </MudTd>
+            @if (CurrentUser.IsLoggedInAsAdmin)
+            {
+                <MudButton Href="@UserSessionlink(context.UserId)" Color="Color.Primary" Variant="Variant.Filled">Edit</MudButton>
+            }
         </RowTemplate>
         <PagerContent>
             <MudTablePager PageSizeOptions="new int[]{50, 100}" />

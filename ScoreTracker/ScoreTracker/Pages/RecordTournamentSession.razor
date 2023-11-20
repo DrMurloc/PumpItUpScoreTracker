@@ -2,8 +2,10 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using MediatR
 @using ScoreTracker.Application.Queries
+@using ScoreTracker.Data.Persistence.Entities
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.ValueTypes
 
 <PageTitle>Submit Tournament Session</PageTitle>
 @if (CurrentUser.IsLoggedIn && CurrentUser.User.IsAdmin && _session!=null)
@@ -27,6 +29,10 @@
                         </MudText>
                         <MudTooltip Text="Remove">
                             <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Delete" OnClick="@(()=>_session.Remove(entry))"></MudIconButton>
+                        </MudTooltip>
+                        <MudSpacer></MudSpacer>
+                        <MudTooltip Text="Edit">
+                            <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Edit" OnClick="(()=>EditEntry(entry))"></MudIconButton>
                         </MudTooltip>
                     </MudCardActions>
                 </MudCard>
@@ -167,6 +173,41 @@
             <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showAddDialog = false">Close</MudButton>
         </DialogActions>
     </MudDialog>
+
+    <MudDialog @bind-IsVisible="_showEditDialog">
+        <DialogContent>
+            @if (_editingEntry != null)
+            {
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudText>@_editingEntry.Chart.Song.Name @_editingEntry.Chart.DifficultyString</MudText>
+                    </MudItem>
+                    <MudItem sm="4" xs="12">
+                        <MudNumericField T="int" Label="Score" Value="(int)_editScore" ValueChanged="v=>_editScore=v
+=v" Min="0" Max="1000000" Variant="Variant.Text" Clearable="false" HideSpinButtons="true"></MudNumericField>
+                    </MudItem>
+                    <MudItem sm="4" xs="12">
+
+                        <MudSelect T="PhoenixPlate" Label="Plate" @bind-Value="_editPlate" Margin="@Margin.Dense">
+                            @foreach (var plate in Enum.GetValues<PhoenixPlate>())
+                            {
+                                <MudSelectItem T="PhoenixPlate" Value="@plate">@plate.GetName()</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+
+                    <MudItem sm="4" xs="12">
+                        <MudCheckBox T="bool" @bind-Checked="@_editBroken" Label="Broken"></MudCheckBox>
+                    </MudItem>
+                </MudGrid>
+            }
+        </DialogContent>
+        <DialogActions>
+            <MudSpacer></MudSpacer>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="UpdateEntry">Save</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showEditDialog=false">Close</MudButton>
+        </DialogActions>
+    </MudDialog>
 }
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
@@ -203,7 +244,29 @@
             .OrderBy(n=>n.Equals(song,StringComparison.OrdinalIgnoreCase)?0:1).ToArray().AsEnumerable());
 
         private const long MaxFileSize = 20000000;
-
+    private TournamentSession.Entry? _editingEntry;
+    private bool _showEditDialog = false;
+    private bool _editBroken = false;
+    private PhoenixScore _editScore = 0;
+    private PhoenixPlate _editPlate = PhoenixPlate.MarvelousGame;
+    private void UpdateEntry()
+    {
+        if (_editingEntry == null || _session==null)
+        {
+            return;
+        }
+        _session.Swap(_editingEntry,_editScore,_editPlate,_editBroken);
+        _editingEntry = null;
+        _showEditDialog = false;
+    }
+    private void EditEntry(TournamentSession.Entry entry)
+    {
+        _editingEntry = entry;
+        _editBroken = entry.IsBroken;
+        _editScore = entry.Score;
+        _editPlate = entry.Plate;
+        _showEditDialog = true;
+    }
     private async Task UploadFiles(IReadOnlyList<IBrowserFile> files)
     {
         if (_session == null)

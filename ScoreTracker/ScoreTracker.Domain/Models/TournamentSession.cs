@@ -48,7 +48,7 @@ namespace ScoreTracker.Domain.Models
         public Guid UsersId { get; }
         public Guid TournamentId => _configuration.Id;
         private readonly TournamentConfiguration _configuration;
-        public ICollection<Entry> Entries { get; }
+        public IList<Entry> Entries { get; }
 
         public int CurrentScore { get; }
 
@@ -96,6 +96,19 @@ namespace ScoreTracker.Domain.Models
                 c.Chart.Level == chart.Level && c.Chart.Type == chart.Type && c.Chart.Song.Name == chart.Song.Name);
         }
 
+        public void Swap(Entry oldEntry, PhoenixScore score, PhoenixPlate plate, bool isBroken)
+        {
+            var index = Entries.IndexOf(oldEntry);
+            if (index == -1) return;
+
+            Entries[index] = oldEntry with
+            {
+                Score = score, Plate = plate, IsBroken = isBroken,
+                SessionScore = _configuration.Scoring.GetScore(oldEntry.Chart, score, plate, isBroken)
+            };
+            NeedsApproval = true;
+        }
+
         public void Remove(Entry entry)
         {
             Entries.Remove(entry);
@@ -115,7 +128,8 @@ namespace ScoreTracker.Domain.Models
                     _configuration.Scoring.GetScore(chart, score, plate, isBroken)));
         }
 
-        public sealed record Entry(Chart Chart, PhoenixScore Score, PhoenixPlate Plate, bool IsBroken, int SessionScore)
+        public sealed record Entry(Chart Chart, PhoenixScore Score, PhoenixPlate Plate, bool IsBroken,
+            int SessionScore)
         {
         }
     }
