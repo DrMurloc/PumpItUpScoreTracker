@@ -13,18 +13,18 @@
     <br/>
     <MudTable T="LeaderboardRecord" Items="_leaderboard" FixedHeader="true" Striped="true">
         <HeaderContent>
-            <MudTh>Place</MudTh>
-            <MudTh>UserName</MudTh>
-            <MudTh>Score</MudTh>
-            <MudTh>Chart Count</MudTh>
-            <MudTh>Difficulty Range</MudTh>
+            <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.Place">Place</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.UserName">Player</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.TotalScore">Score</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.ChartsPlayed">Chart Count</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.AverageDifficulty">Difficulty Range</MudTableSortLabel></MudTh>
             @if (_showExtraData)
             {
-                <MudTh>Average Difficulty</MudTh>
-                <MudTh>Average Score</MudTh>
-                <MudTh>Average Plate</MudTh>
-                <MudTh>Pass Rate</MudTh>
-                <MudTh>Rest Time</MudTh>
+                <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.AverageDifficulty">Average Difficulty</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>(int)e.AverageScore">Average Score</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.AveragePlate">Average Plate</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.PassRate">Pass Rate</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.TotalRestTime">Rest Time</MudTableSortLabel></MudTh>
             }
             <MudTh>Verification</MudTh>
             @if (CurrentUser.IsLoggedInAsAdmin && _showExtraData)

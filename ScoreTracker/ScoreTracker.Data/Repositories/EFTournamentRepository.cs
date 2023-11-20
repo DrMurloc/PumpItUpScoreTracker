@@ -85,6 +85,7 @@ namespace ScoreTracker.Data.Repositories
         public async Task SaveSession(TournamentSession session, CancellationToken cancellationToken)
         {
             _memoryCache.Remove(TourneyCacheKey);
+
             var entity = await _database.UserTournamentSession.FirstOrDefaultAsync(
                 uts => uts.TournamentId == session.TournamentId && uts.UserId == session.UsersId, cancellationToken);
             if (entity == null)
@@ -113,21 +114,28 @@ namespace ScoreTracker.Data.Repositories
             }
             else
             {
-                entity.SessionScore = session.TotalScore;
-                entity.RestTime = session.CurrentRestTime;
-                entity.NeedsApproval = session.NeedsApproval;
-                entity.VerificationType = session.VerificationType.ToString();
-                entity.ChartsPlayed = session.Entries.Count();
-                entity.VideoUrl = session.VideoUrl?.ToString();
-                entity.AverageDifficulty = session.Entries.Average(e => e.Chart.Level);
-                entity.ChartEntries = JsonSerializer.Serialize(session.Entries.Select(e => new SessionEntryEntity
+                if (!session.Entries.Any())
                 {
-                    ChartId = e.Chart.Id,
-                    IsBroken = e.IsBroken,
-                    Plate = e.Plate.ToString(),
-                    Score = e.Score,
-                    SessionScore = e.SessionScore
-                }));
+                    _database.UserTournamentSession.Remove(entity);
+                }
+                else
+                {
+                    entity.SessionScore = session.TotalScore;
+                    entity.RestTime = session.CurrentRestTime;
+                    entity.NeedsApproval = session.NeedsApproval;
+                    entity.VerificationType = session.VerificationType.ToString();
+                    entity.ChartsPlayed = session.Entries.Count();
+                    entity.VideoUrl = session.VideoUrl?.ToString();
+                    entity.AverageDifficulty = session.Entries.Average(e => e.Chart.Level);
+                    entity.ChartEntries = JsonSerializer.Serialize(session.Entries.Select(e => new SessionEntryEntity
+                    {
+                        ChartId = e.Chart.Id,
+                        IsBroken = e.IsBroken,
+                        Plate = e.Plate.ToString(),
+                        Score = e.Score,
+                        SessionScore = e.SessionScore
+                    }));
+                }
             }
 
             var existingPhotos = await _database.PhotoVerification
