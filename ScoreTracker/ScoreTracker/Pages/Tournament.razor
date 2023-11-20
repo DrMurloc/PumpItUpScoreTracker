@@ -3,6 +3,7 @@
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.ValueTypes
 <PageTitle>Tournament</PageTitle>
 @if (_isLoaded)
 {
@@ -92,7 +93,7 @@
         </PagerContent>
         <ChildRowContent>
             <MudTr>
-                <td colspan="6">
+                <td colspan="@(_showExtraData?11:6)">
                     @if (_showingSession != null && _showingSession.UsersId == context.UserId)
                     {
                         <MudGrid>
@@ -126,7 +127,50 @@
             </MudTr>
         </ChildRowContent>
     </MudTable>
-    
+    <br/>
+    <MudText Typo="Typo.h3">Chart Statistics</MudText>
+    <br/>
+    <MudTable T="ChartStatistics" Items="_chartStats" FixedHeader="true" Striped="true">
+        <HeaderContent>
+            <MudTh><MudTableSortLabel T="ChartStatistics" SortBy="e=>e.Chart.Song.Name">Song</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="ChartStatistics" SortBy="e=>e.Chart.Level">Difficulty</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="ChartStatistics" SortBy="e=>e.PlayCount">Play Count</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="ChartStatistics" SortBy="e=>(int)e.AverageScore">Average Score</MudTableSortLabel></MudTh>
+            <MudTh>Best Score</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+
+            <MudTd>
+                <MudTooltip Text="@context.Chart.Song.Name">
+                    <MudImage Src="@context.Chart.Song.ImagePath.ToString()" Height="35" Alt="@context.Chart.Song.Name" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
+                </MudTooltip>
+
+            </MudTd>
+            <MudTd>
+                <MudImage Src="@context.Chart.DifficultyBubblePath" Height="35" Alt="@context.Chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+
+            </MudTd>
+            <MudTd><MudButton StartIcon="@Icons.Material.Filled.ViewList" Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>ToggleBoard(context.Chart.Id)">@context.PlayCount Plays</MudButton></MudTd>
+            <MudTd>@context.AverageScore</MudTd>
+            <MudTd>@context.Scores.First()</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[]{50, 100}" />
+        </PagerContent>
+        <ChildRowContent>
+            <MudTr>
+                <td colspan="5">
+                    @if (_showingChartBoard==context.Chart.Id)
+                    {
+                        @foreach (var score in context.Scores)
+                        {
+                            <MudText>@score</MudText><br/>
+                        }
+                    }
+                </td>
+            </MudTr>
+        </ChildRowContent>
+    </MudTable>
 }
 <MudDialog @bind-IsVisible="_showPhotoDialog">
     <DialogContent>
@@ -163,7 +207,28 @@
     private TournamentSession? _photoSession;
     private TournamentSession? _showingSession = null;
     private string UserSessionlink(Guid userId) => $"/Tournament/{TournamentId}/Record?UserId={userId}";
+    private Guid? _showingChartBoard = null;
 
+    private void ToggleBoard(Guid chartId)
+    {
+        if (_showingChartBoard == chartId)
+        {
+            _showingChartBoard = null;
+        }
+        else
+        {
+            _showingChartBoard = chartId;
+        }
+    }
+    private ChartStatistics[] _chartStats = Array.Empty<ChartStatistics>();
+
+    private sealed class ChartStatistics
+    {
+        public Chart Chart { get; set; }
+        public int PlayCount { get; set; }
+        public string[] Scores { get; set; }
+        public PhoenixScore AverageScore { get; set; }
+    }
     private async Task ShowPhotos(Guid userId)
     {
         _isLoadingUser = true;
@@ -187,7 +252,10 @@
     {
         _configuration = await TournamentRepository.GetTournament(TournamentId,CancellationToken.None);
         _leaderboard = (await TournamentRepository.GetLeaderboardRecords(TournamentId, CancellationToken.None)).OrderBy(l => l.Place).ToArray();
+        _chartStats=_leaderboard.SelectMany(l => l.Session.Entries.Select(e => (e ,l.UserName))).GroupBy(e => e.e.Chart.Id).Select(chartGroup => new ChartStatistics
+        {
+            Chart = chartGroup.First().e.Chart, AverageScore = (int)chartGroup.Average(c => (int)c.e.Score), Scores = chartGroup.OrderByDescending(v => (int)v.e.Score).Select(v => $"{v.UserName} ({v.e.Score})").ToArray(), PlayCount = chartGroup.Count()
+            }).OrderByDescending(c => c.PlayCount).ToArray();
         _isLoaded = true;
-
     }
 }
