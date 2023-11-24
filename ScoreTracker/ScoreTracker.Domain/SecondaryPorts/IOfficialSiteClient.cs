@@ -1,10 +1,12 @@
 ﻿
 using ScoreTracker.Domain.Records;
 
-namespace ScoreTracker.Domain.SecondaryPorts
+namespace ScoreTracker.Domain.SecondaryPorts;
+
+public interface IOfficialSiteClient
 {
-    public interface IOfficialSiteClient
-    {
-        Task<IEnumerable<SongTierListEntry>> GetScoresLeaderboard(CancellationToken cancellationToken);
-    }
+    Task<IEnumerable<OfficialChartLeaderboardEntry>> GetAllOfficialChartScores(
+        CancellationToken cancellationToken);
+
+    Task<IEnumerable<UserOfficialLeaderboard>> GetLeaderboardEntries(CancellationToken cancellationToken);
 }

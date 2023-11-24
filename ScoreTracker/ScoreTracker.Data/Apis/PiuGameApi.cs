@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
+using Microsoft.VisualBasic.FileIO;
 using ScoreTracker.Data.Apis.Contracts;
 using ScoreTracker.Data.Apis.Dtos;
 using ScoreTracker.Domain.Enums;
@@ -25,10 +26,29 @@ namespace ScoreTracker.Data.Apis
         private static readonly Regex
             IdRegex = new(@"over_ranking_view\.php\?no=([a-zA-Z0-9]+)", RegexOptions.Compiled);
 
+        private async Task<string> GetWithRetries(string url, CancellationToken cancellationToken = default)
+        {
+            var retry = 0;
+            while (true)
+                try
+                {
+                    return await _client.GetStringAsync(url, cancellationToken);
+                    break;
+                }
+                catch
+                {
+                    if (retry == 3) throw;
+
+                    retry++;
+                    await Task.Delay(1000, cancellationToken);
+                }
+        }
+
         public async Task<PiuGameGetSongsResult> Get20AboveSongs(int page, CancellationToken cancellationToken)
         {
-            var response = await _client.GetStringAsync(
-                $"https://piugame.com/leaderboard/over_ranking.php?lv=&search=&&page={page}", cancellationToken);
+            var response = await GetWithRetries(
+                $"https://piugame.com/leaderboard/over_ranking.php?lv=&search=&&page={page}",
+                cancellationToken);
             var document = new HtmlDocument();
             document.LoadHtml(response);
             var result = new List<PiuGameGetSongsResult.SongDto>();
@@ -100,21 +120,84 @@ namespace ScoreTracker.Data.Apis
             CancellationToken cancellationToken)
         {
             var response =
-                await _client.GetStringAsync($"https://piugame.com/leaderboard/over_ranking_view.php?no={songId}",
+                await GetWithRetries($"https://piugame.com/leaderboard/over_ranking_view.php?no={songId}",
                     cancellationToken);
             var document = new HtmlDocument();
             document.LoadHtml(response);
             var results = new List<PiuGameGetSongLeaderboardResult.EntryResultDto>();
             var lis = document.DocumentNode.SelectNodes("//div[contains(@class,'rangking_list_w')]//li");
             if (lis != null)
-                results.AddRange(lis
-                    .Select(li => li.SelectSingleNode(".//div[contains(@class,'score')]//i[contains(@class,'tt')]"))
-                    .Select(scoreNode => new PiuGameGetSongLeaderboardResult.EntryResultDto
-                        { Score = int.Parse(scoreNode.InnerText, NumberStyles.AllowThousands) }));
+                foreach (var li in lis)
+                {
+                    var scoreNode = li.SelectSingleNode(".//div[contains(@class,'score')]//i[contains(@class,'tt')]");
+                    var profileName = string.Join("", li.SelectNodes(".//div[contains(@class,'profile_name')]")
+                        .Select(n => n.InnerText));
+
+                    results.Add(new PiuGameGetSongLeaderboardResult.EntryResultDto
+                    {
+                        Score = int.Parse(scoreNode.InnerText, NumberStyles.AllowThousands),
+                        ProfileName = profileName
+                    });
+                }
 
             return new PiuGameGetSongLeaderboardResult()
             {
                 Results = results.ToArray()
+            };
+        }
+
+        public async Task<PiuGameGetLeaderboardListResult> GetLeaderboards(CancellationToken cancellationToken)
+        {
+            var response =
+                await GetWithRetries("https://piugame.com/leaderboard/rating_ranking.php", cancellationToken);
+
+            var document = new HtmlDocument();
+            document.LoadHtml(response);
+
+            var results = new List<PiuGameGetLeaderboardListResult.Entry>();
+            var options = document.DocumentNode.SelectNodes(".//div[contains(@class,'search')]//option");
+            if (options != null)
+                results.AddRange(options.Select(option => new PiuGameGetLeaderboardListResult.Entry
+                    { Id = option.GetAttributeValue("value", ""), Name = option.InnerText }));
+            else throw new MalformedLineException("Missing options to search for leaderboards");
+
+
+            return new PiuGameGetLeaderboardListResult
+            {
+                Entries = results.ToArray()
+            };
+        }
+
+        public async Task<PiuGameGetLeaderboardResult> GetLeaderboard(string leaderboardId,
+            CancellationToken cancellationToken)
+        {
+            var response =
+                await GetWithRetries("https://piugame.com/leaderboard/rating_ranking.php?lv=" + leaderboardId,
+                    cancellationToken);
+
+            var document = new HtmlDocument();
+            document.LoadHtml(response);
+            var lis = document.DocumentNode.SelectNodes(".//div[contains(@class,'rating_ranking_wrap')]//li");
+            if (lis == null)
+                throw new MalformedLineException($"Couldn't get lis from {leaderboardId} leaderboard");
+
+            var results = new List<PiuGameGetLeaderboardResult.Entry>();
+            foreach (var li in lis)
+            {
+                var userName = string.Join("",
+                    li.SelectNodes(".//div[contains(@class,'profile_name')]").Select(n => n.InnerText));
+                var rating = int.Parse(li.SelectSingleNode(".//div[contains(@class,'score')]/i").InnerText,
+                    NumberStyles.AllowThousands);
+                results.Add(new PiuGameGetLeaderboardResult.Entry
+                {
+                    ProfileName = userName,
+                    Rating = rating
+                });
+            }
+
+            return new PiuGameGetLeaderboardResult
+            {
+                Entries = results.ToArray()
             };
         }
     }

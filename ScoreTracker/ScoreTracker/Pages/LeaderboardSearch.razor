@@ -1,0 +1,99 @@
+﻿@page "/OfficialLeaderboards"
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.SecondaryPorts
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ScoreTracker.Domain.Records
+<PageTitle>Official Leaderboard Search</PageTitle>
+<MudText>@L["Last Updated"] - @_lastUpdated.ToLocalTime().ToString()</MudText>
+<MudAutocomplete T="string" AdornmentIcon="@Icons.Material.Filled.Search"
+                 ResetValueOnEmptyText="true"
+                 CoerceText="true"
+                 Label=@L["Username"]
+                 Value="_selectedUsername"
+                 SearchFunc="s=>Task.FromResult(_usernames.Where(u=>u.Contains(s,StringComparison.OrdinalIgnoreCase)))"
+                 ValueChanged="SelectUser"></MudAutocomplete>
+                 
+@if (_chartResults.Any())
+{
+    <MudItem xs="12">
+        <MudText Typo="Typo.h4">Chart</MudText>
+    </MudItem>
+    <MudTable T="UserOfficialLeaderboard" Items="_chartResults">
+        <HeaderContent>
+            <MudTh>
+                <MudTableSortLabel T="UserOfficialLeaderboard" SortBy="@(e=>_chartMap[e.LeaderboardName].Song.Name.ToString())">Song</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel T="UserOfficialLeaderboard" SortBy="e=>_chartMap[e.LeaderboardName].Song.Name.ToString()">Name</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel T="UserOfficialLeaderboard" SortBy="e=>(int)_chartMap[e.LeaderboardName].Level">Difficulty</MudTableSortLabel>
+            </MudTh>
+            <MudTh><MudTableSortLabel T="UserOfficialLeaderboard" SortBy="e=>e.Place">Place</MudTableSortLabel></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudTooltip Text="@_chartMap[context.LeaderboardName].Song.Name.ToString()">
+                    <MudImage Src="@_chartMap[context.LeaderboardName].Song.ImagePath.ToString()" Height="35" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
+                </MudTooltip>
+            </MudTd>
+            <MudTd>
+                @_chartMap[context.LeaderboardName].Song.Name
+            </MudTd>
+            <MudTd>
+                <MudImage Src="@_chartMap[context.LeaderboardName].DifficultyBubblePath" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+            </MudTd>
+            <MudTd>
+                @context.Place
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+<MudGrid>
+    @foreach (var group in _nonChartResults.GroupBy(r => r.OfficialLeaderboardType))
+    {
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">@group.Key</MudText>
+        </MudItem>
+        @foreach (var result in group)
+        {
+            <MudItem xs="12">
+                <MudText>@result.LeaderboardName: @result.Place</MudText>
+            </MudItem>
+        }
+    }
+</MudGrid>
+@inject IOfficialLeaderboardRepository Leaderboards;
+@inject IChartRepository Charts;
+@code {
+    private string _selectedUsername = string.Empty;
+    private static readonly DateTimeOffset _lastUpdated = new DateTimeOffset(2023, 11, 24, 11, 12, 0, TimeSpan.FromHours(-5));
+    private string[] _usernames = Array.Empty<string>();
+    private UserOfficialLeaderboard[] _chartResults = Array.Empty<UserOfficialLeaderboard>();
+    private UserOfficialLeaderboard[] _nonChartResults = Array.Empty<UserOfficialLeaderboard>();
+    private IDictionary<string, Chart> _chartMap = new Dictionary<string, Chart>();
+    private async Task SelectUser(string username)
+    {
+        var results = (await Leaderboards.GetOfficialLeaderboardStatuses(username, CancellationToken.None))
+            .OrderBy(e=>e.OfficialLeaderboardType)
+            .ThenBy(e=>e.LeaderboardName)
+            .ThenBy(e=>e.Place)
+            .ToArray();
+        _nonChartResults = results.Where(r => r.OfficialLeaderboardType != "Chart").ToArray();
+        _chartResults = results.Where(r => r.OfficialLeaderboardType == "Chart").ToArray();
+        var charts = (await Charts.GetCharts(MixEnum.Phoenix))
+            .ToDictionary(c => c.Song.Name.ToString() + " " + c.DifficultyString, StringComparer.OrdinalIgnoreCase);
+        foreach (var result in _chartResults)
+        {
+            _chartMap[result.LeaderboardName] = charts[result.LeaderboardName];
+        }
+
+
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        _usernames = (await Leaderboards.GetOfficialLeaderboardUsernames(CancellationToken.None)).ToArray();
+
+
+    }
+}

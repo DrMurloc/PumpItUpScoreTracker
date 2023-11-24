@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ScoreTracker.Data.Apis.Dtos
+﻿namespace ScoreTracker.Data.Apis.Dtos
 {
     public sealed class PiuGameGetSongLeaderboardResult
     {
@@ -12,6 +6,7 @@ namespace ScoreTracker.Data.Apis.Dtos
 
         public sealed class EntryResultDto
         {
+            public string ProfileName { get; set; } = string.Empty;
             public int Score { get; set; }
         }
     }

@@ -264,6 +264,9 @@
   <data name="Language" xml:space="preserve">
     <value>Mrglrglrglrglrglrglrgl</value>
   </data>
+  <data name="Last Updated" xml:space="preserve">
+    <value>Mrgl mrrrglrglrlgmrgl</value>
+  </data>
   <data name="Leaderboard" xml:space="preserve">
     <value>Mrglrmrgl</value>
   </data>
@@ -322,6 +325,9 @@
   </data>
   <data name="Not Passed Count" xml:space="preserve">
     <value>Mrgl Mrrrgl</value>
+  </data>
+  <data name="Official Leaderboard Search" xml:space="preserve">
+    <value>Mrrrglrlgl mrgl mrrrrrrgl</value>
   </data>
   <data name="Official Scores" xml:space="preserve">
     <value>Mrrgl mrgl</value>

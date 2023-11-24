@@ -34,4 +34,10 @@
     <ProjectReference Include="..\ScoreTracker.CompositionRoot\ScoreTracker.CompositionRoot.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="Pages\LeaderboardSearch.razor">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+  </ItemGroup>
+
 </Project>

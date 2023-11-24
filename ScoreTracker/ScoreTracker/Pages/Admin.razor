@@ -123,7 +123,6 @@
 @inject IUiSettingsAccessor UiSettings;
 @inject ISnackbar Snackbar;
 @inject NavigationManager NavManager;
-@inject IOfficialSiteClient OfficialSite;
 @inject ITierListRepository TierLists;
 @code
 {
@@ -140,11 +139,7 @@
 
     private async Task RebuildOfficialLeaderboard()
     {
-        var result = await OfficialSite.GetScoresLeaderboard(CancellationToken.None);
-        foreach (var r in result)
-        {
-            await TierLists.SaveEntry(r, CancellationToken.None);
-        }
+        await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
     }
     private async Task SelectChart(Chart chart)
     {
