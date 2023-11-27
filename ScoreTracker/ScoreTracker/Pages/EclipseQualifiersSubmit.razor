@@ -243,8 +243,11 @@
 @inject IFileUploadClient FileUpload
 @inject ILogger<EclipseQualifiers> Logger
 @inject IAdminNotificationClient Notifications;
+@inject NavigationManager NavManager;
 @code
 {
+
+    private static readonly DateTimeOffset CutoffTime = new DateTimeOffset(2023, 11, 27, 2, 59, 59, TimeSpan.FromHours(-5));
     private QualifiersConfiguration _configuration = new QualifiersConfiguration(Array.Empty<Chart>(), new Dictionary<Guid, int>());
     private UserQualifiers? _currentQualifiers;
     private Chart? _submittingChart;
@@ -365,6 +368,11 @@
 
     private async Task Save()
     {
+        if (!CurrentUser.IsLoggedInAsAdmin && DateTimeOffset.Now > CutoffTime)
+        {
+            Snackbar.Add("Submission period has ended, submit your qualifiers directly to DrMurloc!", Severity.Error);
+            return;
+        }
         if (_currentQualifiers == null)
         {
             return;
@@ -422,6 +430,11 @@
     }
     protected override async Task OnInitializedAsync()
     {
+        if (!CurrentUser.IsLoggedInAsAdmin && DateTimeOffset.Now > CutoffTime)
+        {
+            NavManager.NavigateTo("/Eclipse/Qualifiers");
+            return;
+        }
         _configuration = await Qualifiers.GetQualifiersConfiguration();
 
         _chartvideos = (await Mediator.Send(new GetChartVideosQuery(_configuration.Charts.Select(c=>c.Id)))).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl.ToString());
