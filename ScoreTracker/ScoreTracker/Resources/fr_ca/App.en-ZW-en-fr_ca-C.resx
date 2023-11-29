@@ -1,0 +1,565 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="1+ Level Easier" xml:space="preserve">
+    <value>1+ Mrgl Margler</value>
+  </data>
+  <data name="1+ Level Harder" xml:space="preserve">
+    <value>1+ Mrgl Mrglrgler</value>
+  </data>
+  <data name="About" xml:space="preserve">
+    <value>Rrglrmrgl</value>
+  </data>
+  <data name="Account" xml:space="preserve">
+    <value>Grgl</value>
+  </data>
+  <data name="Account Creation Line 1" xml:space="preserve">
+    <value>Mrglrgl, grlmgrgl, mrgl mrg rglmrgl, mrglrlgrlgrlgrlgl.</value>
+  </data>
+  <data name="Account Creation Line 2" xml:space="preserve">
+    <value>mrrrrrrrgl mrglrlgrl grlglmrgl mrglrlgrmgrl, murp murglrp mrglmrgl mrgl mrgl mrglrlgrgl.</value>
+  </data>
+  <data name="Account Creation Line 3" xml:space="preserve">
+    <value>Grglrmgrl.</value>
+  </data>
+  <data name="Account Creation?" xml:space="preserve">
+    <value>Grgl Murpmrgl ?</value>
+    <comment>Button that pops up explination of account creation process</comment>
+  </data>
+  <data name="Actions" xml:space="preserve">
+    <value>Grlgmrg</value>
+  </data>
+  <data name="Add to Favorites" xml:space="preserve">
+    <value>Mrg Mrglrlgl</value>
+  </data>
+  <data name="Add to ToDo" xml:space="preserve">
+    <value>Mrg Mrglrgl</value>
+  </data>
+  <data name="Adjusted Difficulty" xml:space="preserve">
+    <value>Rorglmurgl</value>
+    <comment>I.E After Player votes</comment>
+  </data>
+  <data name="Average" xml:space="preserve">
+    <value>Rorg</value>
+  </data>
+  <data name="Average for CoOp Chart" xml:space="preserve">
+    <value>Rorg Murgl : (votes)</value>
+    <comment>Talking about CoOp rating: I.E Average for Chart: 14 (2 votes)</comment>
+  </data>
+  <data name="Average for CoOp Player" xml:space="preserve">
+    <value>Rog Mrrg : (votes)</value>
+    <comment>Talking about CoOps, I.E Average for Player 3: 14 (2 votes)</comment>
+  </data>
+  <data name="Average Rating" xml:space="preserve">
+    <value>Rog Mrglrg</value>
+  </data>
+  <data name="Broken" xml:space="preserve">
+    <value>Morgl</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Margl</value>
+  </data>
+  <data name="Chart List Share Description" xml:space="preserve">
+    <value>Rorgmurgalrg murgalgurg murp</value>
+  </data>
+  <data name="Chart Randomizer" xml:space="preserve">
+    <value>Murgl Rmrgmrml</value>
+  </data>
+  <data name="Chart Type" xml:space="preserve">
+    <value>Murgl Morg</value>
+    <comment>Chart Types = single, double, co op</comment>
+  </data>
+  <data name="Charts" xml:space="preserve">
+    <value>Murgl</value>
+  </data>
+  <data name="Charts List" xml:space="preserve">
+    <value>Murgl grog</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Groupe</value>
+  </data>
+  <data name="Completed" xml:space="preserve">
+    <value>Morgrorp</value>
+  </data>
+  <data name="CoOp" xml:space="preserve">
+    <value>Mrglrl</value>
+  </data>
+  <data name="CoOp Aggregation" xml:space="preserve">
+    <value>Mrglrl Grglrmrg</value>
+  </data>
+  <data name="Copy Script" xml:space="preserve">
+    <value>Mrglrglgl</value>
+  </data>
+  <data name="Copy to Clipboard" xml:space="preserve">
+    <value>Mrglrlglorgrogl</value>
+  </data>
+  <data name="Different Player Difficulties" xml:space="preserve">
+    <value>Mrglrgl murg rrrrorglm</value>
+    <comment>Specifies if a co op chart has different difficulties per player</comment>
+  </data>
+  <data name="Difficulty Level" xml:space="preserve">
+    <value>Rrorglmrp mrgl</value>
+  </data>
+  <data name="Disputed Charts" xml:space="preserve">
+    <value>Grmgrlg Murgl</value>
+  </data>
+  <data name="Disputed Charts Disclaimer" xml:space="preserve">
+    <value>Murglrorm Murgl murglgmrrgl murglrglruglr murgl</value>
+  </data>
+  <data name="Doubles" xml:space="preserve">
+    <value>Goggl</value>
+  </data>
+  <data name="Download Failures" xml:space="preserve">
+    <value>Murray Mourrgl</value>
+  </data>
+  <data name="Download Scores" xml:space="preserve">
+    <value>Mgrlgmrg mgrlgmrg</value>
+  </data>
+  <data name="Easiest Player" xml:space="preserve">
+    <value>Murgorg Rgromgrg</value>
+  </data>
+  <data name="Easy" xml:space="preserve">
+    <value>Mrgl</value>
+  </data>
+  <data name="Ending Page" xml:space="preserve">
+    <value>Megl Morgl</value>
+  </data>
+  <data name="Favorites" xml:space="preserve">
+    <value>Gromorg</value>
+  </data>
+  <data name="Find Players" xml:space="preserve">
+    <value>Rormg Murgl</value>
+  </data>
+  <data name="Full Privacy Policy" xml:space="preserve">
+    <value>Mrglmurglmrg</value>
+  </data>
+  <data name="Hard" xml:space="preserve">
+    <value>Mrglmrgl</value>
+  </data>
+  <data name="Hardest Player" xml:space="preserve">
+    <value>Mrglgrogmrgl</value>
+  </data>
+  <data name="Hide Completed Charts" xml:space="preserve">
+    <value>Mrrrgl mrrgl mrgl</value>
+  </data>
+  <data name="Import Phoenix Scores" xml:space="preserve">
+    <value>Mrglrlglrlgm mrgl grorg</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Mrglrglrglrglrglrgl</value>
+  </data>
+  <data name="Last Updated" xml:space="preserve">
+    <value>Mrrrglrglrlgmrgl</value>
+  </data>
+  <data name="Leaderboard" xml:space="preserve">
+    <value>Mrglrmrgl</value>
+  </data>
+  <data name="Letter Grade" xml:space="preserve">
+    <value>Mrgl Rorgl</value>
+  </data>
+  <data name="Log In With" xml:space="preserve">
+    <value>Mrgl Rorgmurgl {0}</value>
+    <comment>I.E Log In With Discord</comment>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Mrglmrp</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>Mrglmrg</value>
+  </data>
+  <data name="Make Not Public Disclaimer" xml:space="preserve">
+    <value>Mrrrrrrrrglrglrllglrgl mrgl mrgl mrgl mrrlglrlgrlgrlgrl mrglrglrgl</value>
+  </data>
+  <data name="Make Private" xml:space="preserve">
+    <value>Mrrrrrgl</value>
+  </data>
+  <data name="Make Public" xml:space="preserve">
+    <value>Mrrrrrrrrrrgl</value>
+  </data>
+  <data name="Make Public Disclaimer 1" xml:space="preserve">
+    <value>Mrgl mrrrrrglmrgl mrrglr mrgl mrgl grorgl murp mrrrrrrgl</value>
+  </data>
+  <data name="Make Public Disclaimer 2" xml:space="preserve">
+    <value>Mrgl mrgl mrrrglrglrglrgl rgorgl mrgl</value>
+  </data>
+  <data name="Medium" xml:space="preserve">
+    <value>Mmmmrgl</value>
+  </data>
+  <data name="Mix" xml:space="preserve">
+    <value>Mrg</value>
+  </data>
+  <data name="My Difficulty Adjustments" xml:space="preserve">
+    <value>Mrgl Rog Mrgl</value>
+    <comment>I.E chart difficulty vote</comment>
+  </data>
+  <data name="My Score" xml:space="preserve">
+    <value>Mrgl Mrg</value>
+  </data>
+  <data name="New Discord" xml:space="preserve">
+    <value>Mrgl Mrgl</value>
+  </data>
+  <data name="New Discord Disclaimer" xml:space="preserve">
+    <value>Mrglrgrlgrgl Mrgl</value>
+  </data>
+  <data name="Next Letter" xml:space="preserve">
+    <value>Mrgl Rog Mrgl</value>
+  </data>
+  <data name="Not Graded Count" xml:space="preserve">
+    <value>Mrglrglrgl</value>
+  </data>
+  <data name="Not Passed Count" xml:space="preserve">
+    <value>Mrgl Mrrrgl</value>
+  </data>
+  <data name="Official Leaderboard Search" xml:space="preserve">
+    <value>Mrrrglrlgl mrgl mrrrrgl</value>
+  </data>
+  <data name="Official Scores" xml:space="preserve">
+    <value>Mrgl Mrgl</value>
+  </data>
+  <data name="Open Video" xml:space="preserve">
+    <value>Mrgl mrg mrrrrgl</value>
+  </data>
+  <data name="Parse Failures" xml:space="preserve">
+    <value>Mrgl Mrglrgl</value>
+  </data>
+  <data name="Passed Count" xml:space="preserve">
+    <value>Rorgl Murp</value>
+  </data>
+  <data name="Phoenix Import Confirming" xml:space="preserve">
+    <value>Mrglrglrlgl Mrglmrgl rglmrgl mrlrlgrlgmrlgmrlgmrlgmrlgmrm mrgl rgmlrgl rgmlrgl rgmlrgl rgmlrgl</value>
+  </data>
+  <data name="Phoenix Import Info 1" xml:space="preserve">
+    <value>Mrgl murgl mrrlglrgll</value>
+  </data>
+  <data name="Phoenix Import Info 2" xml:space="preserve">
+    <value>Mrglrmgurmmurgl mrglrlgrlgrlg murgl murp mrgl</value>
+  </data>
+  <data name="Phoenix Import Info 3" xml:space="preserve">
+    <value>Mrgl mrglrrlgrlglrgl grglrgl</value>
+  </data>
+  <data name="Phoenix Import Info 4" xml:space="preserve">
+    <value>Mrgl : Mrglrglrglrlg mrgl mrrglrgl</value>
+  </data>
+  <data name="Phoenix Import Saving" xml:space="preserve">
+    <value>Mrgl rorgl mrglgrlgrlglrgl rgl</value>
+  </data>
+  <data name="Phoenix Import Saving Failures" xml:space="preserve">
+    <value>Mrgl mrgl murp morp mrglrglglgrgl grogl</value>
+  </data>
+  <data name="Phoenix Import Saving Progress" xml:space="preserve">
+    <value>{0}/Mrglrglrgl. {2} Mrglrlg. {3} Mrgl morp</value>
+    <comment>I.E 4/192 Uploaded. 3:29 Remaining. 2 Failed to record</comment>
+  </data>
+  <data name="Phoenix Import Saving Success" xml:space="preserve">
+    <value>Mrgl mrglrglrglrlg, mrgl !</value>
+  </data>
+  <data name="Phoenix Import Uploading" xml:space="preserve">
+    <value>Grrrrrglrmgrlgm mrglmrgl...</value>
+  </data>
+  <data name="Phoenix Score Calculator" xml:space="preserve">
+    <value>Mrglrlgl Mrgl</value>
+  </data>
+  <data name="Plate" xml:space="preserve">
+    <value>Murp</value>
+    <comment>I.E MG, PG, UG</comment>
+  </data>
+  <data name="Players" xml:space="preserve">
+    <value>Morp</value>
+  </data>
+  <data name="Preference" xml:space="preserve">
+    <value>Mrglrgl</value>
+  </data>
+  <data name="Progress" xml:space="preserve">
+    <value>Mrglrlgl</value>
+  </data>
+  <data name="Progress Charts" xml:space="preserve">
+    <value>Mrglrgl Mrgl</value>
+  </data>
+  <data name="Public" xml:space="preserve">
+    <value>Mrglrgll</value>
+    <comment>(on/off, if account is set to public)</comment>
+  </data>
+  <data name="Rated Difficulty Level" xml:space="preserve">
+    <value>Mrglrlgl mglrgl</value>
+  </data>
+  <data name="Rating Count" xml:space="preserve">
+    <value>Mrglrglrgl Murp</value>
+  </data>
+  <data name="Record Score" xml:space="preserve">
+    <value>Mrglr mrgl rgrl</value>
+  </data>
+  <data name="Recorded Date" xml:space="preserve">
+    <value>Mrglrlglrl Mrgl</value>
+  </data>
+  <data name="Recorded On" xml:space="preserve">
+    <value>Grlgmrgl {0}</value>
+    <comment>I.E Recorded on 12/6/2023 (I don't support date localization yet but will eventually)</comment>
+  </data>
+  <data name="Remaining Charts" xml:space="preserve">
+    <value>{0} (SSS+) - (AA) Murp Mrglrgl</value>
+    <comment>I.E 6 (SSA+) - 10 (AA) Charts Remaining</comment>
+  </data>
+  <data name="Remaining Charts For You" xml:space="preserve">
+    <value>{0} Mrglrgl mrgl Mrrrgl</value>
+    <comment>I.E 8 Charts Estimated for You</comment>
+  </data>
+  <data name="Remove from Favorites" xml:space="preserve">
+    <value>Grlgmrmrglmrgl</value>
+  </data>
+  <data name="Remove from ToDo" xml:space="preserve">
+    <value>Mrrrglglglmrgl Mrgl</value>
+  </data>
+  <data name="Report Video" xml:space="preserve">
+    <value>Mrglmrgl grglgmrgl</value>
+  </data>
+  <data name="Report Video Tooltip" xml:space="preserve">
+    <value>Rorglmrgl mrgl, mrglrglr, mrglrlgl mrglrorgl</value>
+  </data>
+  <data name="Restart" xml:space="preserve">
+    <value>Mrglrlgrlgl</value>
+  </data>
+  <data name="Save Scores" xml:space="preserve">
+    <value>Mrglrl Mrglrlgl</value>
+  </data>
+  <data name="Saved Charts" xml:space="preserve">
+    <value>Mrglrgl Mrglrl</value>
+  </data>
+  <data name="Score" xml:space="preserve">
+    <value>Mrglrgl</value>
+  </data>
+  <data name="Score Formula Shoutout" xml:space="preserve">
+    <value>Mrglrlgrlgl MR_WEQ Mrglrlglrl mglmrgl rorglmrgl !</value>
+  </data>
+  <data name="Score Loss" xml:space="preserve">
+    <value>{0} Mrglrlgl mrgl</value>
+    <comment>I.E: Goods Score Loss</comment>
+  </data>
+  <data name="Score Loss Note" xml:space="preserve">
+    <value>Mrgl : Mrglrglrlggl 1-4 mrgl mrglrgl</value>
+  </data>
+  <data name="Score Range Shoutout" xml:space="preserve">
+    <value>Mrglrglglg daryen mrglrglgl mrrrrrgl mrrrrgl</value>
+  </data>
+  <data name="Score State" xml:space="preserve">
+    <value>Mrglrlglgl mrglgl</value>
+    <comment>Score States = Passed, Unpassed, Unscored</comment>
+  </data>
+  <data name="Scores Parsed" xml:space="preserve">
+    <value>Mrglrl Mrglrlglrl</value>
+  </data>
+  <data name="Search Youtube" xml:space="preserve">
+    <value>Rorgl Mrglrlglrlgl</value>
+  </data>
+  <data name="Show Only ToDo Charts" xml:space="preserve">
+    <value>Mrglrlgl mrgrlglr mrg</value>
+  </data>
+  <data name="Show Score Distribution" xml:space="preserve">
+    <value>Mrglrlrlgl rorgl</value>
+  </data>
+  <data name="Singles" xml:space="preserve">
+    <value>Mrglrlgl</value>
+  </data>
+  <data name="Song Duration" xml:space="preserve">
+    <value>Mrgl Mrglrlgl</value>
+  </data>
+  <data name="Song Image" xml:space="preserve">
+    <value>Mrgl Rorglgmrgrlgl</value>
+  </data>
+  <data name="Song Name" xml:space="preserve">
+    <value>Mrgl Mrg</value>
+  </data>
+  <data name="Song Type" xml:space="preserve">
+    <value>Mrgl Mrglrlgl</value>
+    <comment>Song Types = Arcade, Full Song, etc.</comment>
+  </data>
+  <data name="Stage Break" xml:space="preserve">
+    <value>Mrglrlrl Rorglmrg</value>
+  </data>
+  <data name="Standard Deviation" xml:space="preserve">
+    <value>Mrrrrrgl</value>
+    <comment>I.E of chart votes</comment>
+  </data>
+  <data name="Star Rating" xml:space="preserve">
+    <value>{0} - Morp</value>
+  </data>
+  <data name="Starting Page" xml:space="preserve">
+    <value>Mrglrglrlgl mrgl</value>
+  </data>
+  <data name="Tier Lists" xml:space="preserve">
+    <value>Mrglrlgl Mrrrrgl</value>
+  </data>
+  <data name="Title Progress" xml:space="preserve">
+    <value>Mrglrgll Mrgl</value>
+  </data>
+  <data name="Titles" xml:space="preserve">
+    <value>Mrgl</value>
+  </data>
+  <data name="To Do" xml:space="preserve">
+    <value>Mrglrlgl Mrgl</value>
+  </data>
+  <data name="Toggle ToDo" xml:space="preserve">
+    <value>Mrglrlglg Mrgllgrlgl</value>
+  </data>
+  <data name="Tools" xml:space="preserve">
+    <value>Rorgl</value>
+  </data>
+  <data name="Total Count" xml:space="preserve">
+    <value>Mrglrorgl</value>
+  </data>
+  <data name="Tournament Builder" xml:space="preserve">
+    <value>Mrglrlgl Mrlrllglgl</value>
+  </data>
+  <data name="Tournaments" xml:space="preserve">
+    <value>Mrllrlrllgl</value>
+  </data>
+  <data name="Unpassed ToDos" xml:space="preserve">
+    <value>Mrlggllgl Mrglrgl mrglrlgl mrgl rmrrrglrmgrlgm</value>
+    <comment>I.E You have 19 level 24 charts marked To Do you haven't passed</comment>
+  </data>
+  <data name="Update Grade" xml:space="preserve">
+    <value>Mrglrgl Mrrrrgl</value>
+  </data>
+  <data name="Upload Scores" xml:space="preserve">
+    <value>Mrglrgl Mrrrlrlgrlgl</value>
+  </data>
+  <data name="Upload XX Scores" xml:space="preserve">
+    <value>Mrglrlgrlgl M. Mrglrlgl</value>
+  </data>
+  <data name="Used Primarily for debugging" xml:space="preserve">
+    <value>Mrglrorgorgmlrgl</value>
+  </data>
+  <data name="Username" xml:space="preserve">
+    <value>Grrmrrgl</value>
+  </data>
+  <data name="Very Easy" xml:space="preserve">
+    <value>Mrgl Mrrrrrgl</value>
+  </data>
+  <data name="Very Hard" xml:space="preserve">
+    <value>Mrgl Grrrrrrrrmgrl</value>
+  </data>
+  <data name="Video" xml:space="preserve">
+    <value>Grrrgl</value>
+  </data>
+  <data name="Vote Count" xml:space="preserve">
+    <value>{0} Grg</value>
+  </data>
+  <data name="Your Difficulty Rating" xml:space="preserve">
+    <value>Mrglrglgl</value>
+  </data>
+</root>
