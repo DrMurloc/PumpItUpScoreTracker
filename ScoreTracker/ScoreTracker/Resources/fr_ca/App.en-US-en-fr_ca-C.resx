@@ -1,0 +1,565 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="1+ Level Easier" xml:space="preserve">
+    <value>Niveau 1 et plus facile</value>
+  </data>
+  <data name="1+ Level Harder" xml:space="preserve">
+    <value>Niveau 1 et plus dur</value>
+  </data>
+  <data name="About" xml:space="preserve">
+    <value>À propos</value>
+  </data>
+  <data name="Account" xml:space="preserve">
+    <value>Compte</value>
+  </data>
+  <data name="Account Creation Line 1" xml:space="preserve">
+    <value>Si vous n'avez pas de compte avec Score Tracker, un compte sera créé lorsque vous sélectionnerez l'un des fournisseurs de connexion.</value>
+  </data>
+  <data name="Account Creation Line 2" xml:space="preserve">
+    <value>Les seules informations stockées sur votre compte par le fournisseur de connexion que vous sélectionnez sont l'identifiant externe (généralement un nombre aléatoire ou une combinaison de lettres) et le nom d'utilisateur. Vous pouvez modifier le nom d'utilisateur à tout moment après la création du compte.</value>
+  </data>
+  <data name="Account Creation Line 3" xml:space="preserve">
+    <value>Aucun mot de passe n'est stocké dans Score Tracker, nous ne voulons pas qu'ils soient, vous ne voulez pas que nous les ayons, tout le monde est plus heureux de cette façon.</value>
+  </data>
+  <data name="Account Creation?" xml:space="preserve">
+    <value>Création de compte ?</value>
+    <comment>Button that pops up explination of account creation process</comment>
+  </data>
+  <data name="Actions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Add to Favorites" xml:space="preserve">
+    <value>Ajouter aux Favoris</value>
+  </data>
+  <data name="Add to ToDo" xml:space="preserve">
+    <value>Ajouter à la liste de choses à faire</value>
+  </data>
+  <data name="Adjusted Difficulty" xml:space="preserve">
+    <value>Difficulté ajustée</value>
+    <comment>I.E After Player votes</comment>
+  </data>
+  <data name="Average" xml:space="preserve">
+    <value>Moyenne</value>
+  </data>
+  <data name="Average for CoOp Chart" xml:space="preserve">
+    <value>Moyenne du graphique : (votes)</value>
+    <comment>Talking about CoOp rating: I.E Average for Chart: 14 (2 votes)</comment>
+  </data>
+  <data name="Average for CoOp Player" xml:space="preserve">
+    <value>Moyenne pour le joueur : (votes)</value>
+    <comment>Talking about CoOps, I.E Average for Player 3: 14 (2 votes)</comment>
+  </data>
+  <data name="Average Rating" xml:space="preserve">
+    <value>Note moyenne</value>
+  </data>
+  <data name="Broken" xml:space="preserve">
+    <value>Cassée</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Annuler</value>
+  </data>
+  <data name="Chart List Share Description" xml:space="preserve">
+    <value>Utilisez ce lien pour partager votre liste de cartes avec d'autres joueurs.</value>
+  </data>
+  <data name="Chart Randomizer" xml:space="preserve">
+    <value>Randomiseur de graphiques</value>
+  </data>
+  <data name="Chart Type" xml:space="preserve">
+    <value>Type de graphique</value>
+    <comment>Chart Types = single, double, co op</comment>
+  </data>
+  <data name="Charts" xml:space="preserve">
+    <value>Graphiques</value>
+  </data>
+  <data name="Charts List" xml:space="preserve">
+    <value>Liste des graphiques</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Fermer</value>
+  </data>
+  <data name="Completed" xml:space="preserve">
+    <value>Terminé</value>
+  </data>
+  <data name="CoOp" xml:space="preserve">
+    <value>CoOP</value>
+  </data>
+  <data name="CoOp Aggregation" xml:space="preserve">
+    <value>Agrégation CoOP</value>
+  </data>
+  <data name="Copy Script" xml:space="preserve">
+    <value>Copier le script</value>
+  </data>
+  <data name="Copy to Clipboard" xml:space="preserve">
+    <value>Copier dans le presse-papiers</value>
+  </data>
+  <data name="Different Player Difficulties" xml:space="preserve">
+    <value>Difficultés différentes pour les joueurs</value>
+    <comment>Specifies if a co op chart has different difficulties per player</comment>
+  </data>
+  <data name="Difficulty Level" xml:space="preserve">
+    <value>Niveau de difficulté</value>
+  </data>
+  <data name="Disputed Charts" xml:space="preserve">
+    <value>Graphiques contestés</value>
+  </data>
+  <data name="Disputed Charts Disclaimer" xml:space="preserve">
+    <value>Graphiques avec 4 votes ou plus, dont la cote ajustée est de 0,5 et plus de 0,4 écart-type</value>
+  </data>
+  <data name="Doubles" xml:space="preserve">
+    <value>Doubles</value>
+  </data>
+  <data name="Download Failures" xml:space="preserve">
+    <value>Échec du téléchargement</value>
+  </data>
+  <data name="Download Scores" xml:space="preserve">
+    <value>Télécharger les partitions</value>
+  </data>
+  <data name="Easiest Player" xml:space="preserve">
+    <value>Joueur le plus facile</value>
+  </data>
+  <data name="Easy" xml:space="preserve">
+    <value>Facile</value>
+  </data>
+  <data name="Ending Page" xml:space="preserve">
+    <value>Page de fin</value>
+  </data>
+  <data name="Favorites" xml:space="preserve">
+    <value>Favoris</value>
+  </data>
+  <data name="Find Players" xml:space="preserve">
+    <value>Trouver des joueurs</value>
+  </data>
+  <data name="Full Privacy Policy" xml:space="preserve">
+    <value>Politique de confidentialité complète</value>
+  </data>
+  <data name="Hard" xml:space="preserve">
+    <value>Difficile</value>
+  </data>
+  <data name="Hardest Player" xml:space="preserve">
+    <value>Joueur le plus dur</value>
+  </data>
+  <data name="Hide Completed Charts" xml:space="preserve">
+    <value>Masquer les graphiques terminés</value>
+  </data>
+  <data name="Import Phoenix Scores" xml:space="preserve">
+    <value>Importer les scores Phénix</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Langue</value>
+  </data>
+  <data name="Last Updated" xml:space="preserve">
+    <value>Dernière mise à jour</value>
+  </data>
+  <data name="Leaderboard" xml:space="preserve">
+    <value>Leaderboard</value>
+  </data>
+  <data name="Letter Grade" xml:space="preserve">
+    <value>Grade de la lettre</value>
+  </data>
+  <data name="Log In With" xml:space="preserve">
+    <value>Se connecter avec {0}</value>
+    <comment>I.E Log In With Discord</comment>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Se connecter</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>Déconnexion</value>
+  </data>
+  <data name="Make Not Public Disclaimer" xml:space="preserve">
+    <value>En rendant votre compte privé, vos scores et vos progrès ne seront plus visibles à l'extérieur, même pour toute personne qui vous suit déjà.</value>
+  </data>
+  <data name="Make Private" xml:space="preserve">
+    <value>Rendre privé</value>
+  </data>
+  <data name="Make Public" xml:space="preserve">
+    <value>Rendre public</value>
+  </data>
+  <data name="Make Public Disclaimer 1" xml:space="preserve">
+    <value>Le fait de rendre votre compte public rendra vos scores et vos progrès visibles à l'extérieur. D'autres pourront rechercher votre compte par nom ou pièce d'identité.</value>
+  </data>
+  <data name="Make Public Disclaimer 2" xml:space="preserve">
+    <value>Si votre compte était auparavant public et que vous l'avez rendu privé, le rendre public à nouveau permettra à toute personne qui vous suit de voir à nouveau vos progrès.</value>
+  </data>
+  <data name="Medium" xml:space="preserve">
+    <value>Moyenne</value>
+  </data>
+  <data name="Mix" xml:space="preserve">
+    <value>Mélanger</value>
+  </data>
+  <data name="My Difficulty Adjustments" xml:space="preserve">
+    <value>Mes ajustements de difficulté</value>
+    <comment>I.E chart difficulty vote</comment>
+  </data>
+  <data name="My Score" xml:space="preserve">
+    <value>Ma note</value>
+  </data>
+  <data name="New Discord" xml:space="preserve">
+    <value>Nouvelle discorde</value>
+  </data>
+  <data name="New Discord Disclaimer" xml:space="preserve">
+    <value>J'ai créé une discorde pour les mises à jour et les commentaires ! N'hésitez pas à adhérer à :</value>
+  </data>
+  <data name="Next Letter" xml:space="preserve">
+    <value>Lettre suivante</value>
+  </data>
+  <data name="Not Graded Count" xml:space="preserve">
+    <value>Non classé</value>
+  </data>
+  <data name="Not Passed Count" xml:space="preserve">
+    <value>Non adopté</value>
+  </data>
+  <data name="Official Leaderboard Search" xml:space="preserve">
+    <value>Recherche officielle dans le classement</value>
+  </data>
+  <data name="Official Scores" xml:space="preserve">
+    <value>Scores officiels</value>
+  </data>
+  <data name="Open Video" xml:space="preserve">
+    <value>Ouvrir la vidéo</value>
+  </data>
+  <data name="Parse Failures" xml:space="preserve">
+    <value>Échec de l'parse</value>
+  </data>
+  <data name="Passed Count" xml:space="preserve">
+    <value>Adoptée</value>
+  </data>
+  <data name="Phoenix Import Confirming" xml:space="preserve">
+    <value>Continuer commencera à enregistrer les scores téléchargés par rapport à vos enregistrements existants. Vous ne pourrez pas l'indéfaire. Vous serez en mesure d'arrêter le processus de sauvegarde, mais il n'aura pas pour effet d'inverser les téléchargements.</value>
+  </data>
+  <data name="Phoenix Import Info 1" xml:space="preserve">
+    <value>Utilisez le bouton Copier le script ci-dessous</value>
+  </data>
+  <data name="Phoenix Import Info 2" xml:space="preserve">
+    <value>Utilisez ce script dans les outils de développement lorsque vous êtes connecté sur https://piugame.com pour télécharger un fichier CSV de vos partitions. (Assurez-vous que vous n'êtes pas sur phoenix.piugame.com)</value>
+  </data>
+  <data name="Phoenix Import Info 3" xml:space="preserve">
+    <value>Vous pouvez ensuite télécharger ce fichier CSV ici pour que vos scores apparaissent.</value>
+  </data>
+  <data name="Phoenix Import Info 4" xml:space="preserve">
+    <value>Remarque : Cet outil est assez piraté et peut nécessiter un certain débogage de votre côté pour fonctionner. Assurez-vous de désactiver les bloqueurs de publicités.</value>
+  </data>
+  <data name="Phoenix Import Saving" xml:space="preserve">
+    <value>Si vous quittez cette page ou annulez, le téléchargement s'arrêtera, mais vous ne perdrez aucune note qui a déjà été enregistrée à partir de votre téléchargement.</value>
+  </data>
+  <data name="Phoenix Import Saving Failures" xml:space="preserve">
+    <value>Vous aviez quelques graphiques qui n'ont pas pu être téléchargés. Vous pouvez télécharger un fichier CSV des échecs pour effectuer des ajustements et réessayer.</value>
+  </data>
+  <data name="Phoenix Import Saving Progress" xml:space="preserve">
+    <value>{0}/Téléversé. {2} Reste. {3} Échec de l'enregistrement</value>
+    <comment>I.E 4/192 Uploaded. 3:29 Remaining. 2 Failed to record</comment>
+  </data>
+  <data name="Phoenix Import Saving Success" xml:space="preserve">
+    <value>Tous les graphiques que vous avez téléchargés ont été mis à jour avec succès !</value>
+  </data>
+  <data name="Phoenix Import Uploading" xml:space="preserve">
+    <value>La feuille de calcul est en cours de téléchargement et de traitement...</value>
+  </data>
+  <data name="Phoenix Score Calculator" xml:space="preserve">
+    <value>Calculateur de score Phénix</value>
+  </data>
+  <data name="Plate" xml:space="preserve">
+    <value>Assiette</value>
+    <comment>I.E MG, PG, UG</comment>
+  </data>
+  <data name="Players" xml:space="preserve">
+    <value>Joueurs</value>
+  </data>
+  <data name="Preference" xml:space="preserve">
+    <value>Préférence</value>
+  </data>
+  <data name="Progress" xml:space="preserve">
+    <value>Progrès</value>
+  </data>
+  <data name="Progress Charts" xml:space="preserve">
+    <value>Graphiques d'avancement</value>
+  </data>
+  <data name="Public" xml:space="preserve">
+    <value>Public</value>
+    <comment>(on/off, if account is set to public)</comment>
+  </data>
+  <data name="Rated Difficulty Level" xml:space="preserve">
+    <value>Niveau de difficulté évalué</value>
+  </data>
+  <data name="Rating Count" xml:space="preserve">
+    <value>Nombre de cotes</value>
+  </data>
+  <data name="Record Score" xml:space="preserve">
+    <value>Enregistrer le score</value>
+  </data>
+  <data name="Recorded Date" xml:space="preserve">
+    <value>Date d'enregistrement</value>
+  </data>
+  <data name="Recorded On" xml:space="preserve">
+    <value>Enregistré le {0}</value>
+    <comment>I.E Recorded on 12/6/2023 (I don't support date localization yet but will eventually)</comment>
+  </data>
+  <data name="Remaining Charts" xml:space="preserve">
+    <value>{0} (SSS+) - (AA) Graphiques restants :</value>
+    <comment>I.E 6 (SSA+) - 10 (AA) Charts Remaining</comment>
+  </data>
+  <data name="Remaining Charts For You" xml:space="preserve">
+    <value>{0} Graphiques estimés pour vous</value>
+    <comment>I.E 8 Charts Estimated for You</comment>
+  </data>
+  <data name="Remove from Favorites" xml:space="preserve">
+    <value>Supprimer des favoris</value>
+  </data>
+  <data name="Remove from ToDo" xml:space="preserve">
+    <value>Supprimer de la liste des choses à faire</value>
+  </data>
+  <data name="Report Video" xml:space="preserve">
+    <value>Vidéo de rapport</value>
+  </data>
+  <data name="Report Video Tooltip" xml:space="preserve">
+    <value>Signaler une vidéo de mauvaise qualité, cassée ou incorrecte</value>
+  </data>
+  <data name="Restart" xml:space="preserve">
+    <value>Redémarrer</value>
+  </data>
+  <data name="Save Scores" xml:space="preserve">
+    <value>Sauvegarder les scores</value>
+  </data>
+  <data name="Saved Charts" xml:space="preserve">
+    <value>Graphiques sauvegardés</value>
+  </data>
+  <data name="Score" xml:space="preserve">
+    <value>Score</value>
+  </data>
+  <data name="Score Formula Shoutout" xml:space="preserve">
+    <value>Bravo à MR_WEQ pour la rétro-ingénierie de cette formule de score !</value>
+  </data>
+  <data name="Score Loss" xml:space="preserve">
+    <value>{0} Perte de score</value>
+    <comment>I.E: Goods Score Loss</comment>
+  </data>
+  <data name="Score Loss Note" xml:space="preserve">
+    <value>Remarque : La perte de score peut être compensée de 1 à 4 points en raison de l'arrondissement</value>
+  </data>
+  <data name="Score Range Shoutout" xml:space="preserve">
+    <value>Bravo à daryen d'avoir recueilli des données et de finaliser les fourchettes de notes pour les notes des lettres !</value>
+  </data>
+  <data name="Score State" xml:space="preserve">
+    <value>État de la note</value>
+    <comment>Score States = Passed, Unpassed, Unscored</comment>
+  </data>
+  <data name="Scores Parsed" xml:space="preserve">
+    <value>Scores analysés</value>
+  </data>
+  <data name="Search Youtube" xml:space="preserve">
+    <value>Chercher sur Youtube</value>
+  </data>
+  <data name="Show Only ToDo Charts" xml:space="preserve">
+    <value>Afficher uniquement les graphiques des choses à faire</value>
+  </data>
+  <data name="Show Score Distribution" xml:space="preserve">
+    <value>Afficher la distribution des scores</value>
+  </data>
+  <data name="Singles" xml:space="preserve">
+    <value>Célibataires</value>
+  </data>
+  <data name="Song Duration" xml:space="preserve">
+    <value>Durée de la chanson</value>
+  </data>
+  <data name="Song Image" xml:space="preserve">
+    <value>Image de la chanson</value>
+  </data>
+  <data name="Song Name" xml:space="preserve">
+    <value>Nom de la chanson</value>
+  </data>
+  <data name="Song Type" xml:space="preserve">
+    <value>Type de chanson</value>
+    <comment>Song Types = Arcade, Full Song, etc.</comment>
+  </data>
+  <data name="Stage Break" xml:space="preserve">
+    <value>Pause d'étape</value>
+  </data>
+  <data name="Standard Deviation" xml:space="preserve">
+    <value>Écart type</value>
+    <comment>I.E of chart votes</comment>
+  </data>
+  <data name="Star Rating" xml:space="preserve">
+    <value>{0} - Étoiles</value>
+  </data>
+  <data name="Starting Page" xml:space="preserve">
+    <value>Page de démarrage</value>
+  </data>
+  <data name="Tier Lists" xml:space="preserve">
+    <value>Listes des niveaux</value>
+  </data>
+  <data name="Title Progress" xml:space="preserve">
+    <value>Titre Progression</value>
+  </data>
+  <data name="Titles" xml:space="preserve">
+    <value>Titres</value>
+  </data>
+  <data name="To Do" xml:space="preserve">
+    <value>À faire</value>
+  </data>
+  <data name="Toggle ToDo" xml:space="preserve">
+    <value>Toggle ToDo</value>
+  </data>
+  <data name="Tools" xml:space="preserve">
+    <value>Outils</value>
+  </data>
+  <data name="Total Count" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Tournament Builder" xml:space="preserve">
+    <value>Constructeur de tournois</value>
+  </data>
+  <data name="Tournaments" xml:space="preserve">
+    <value>Tournois</value>
+  </data>
+  <data name="Unpassed ToDos" xml:space="preserve">
+    <value>Vous avez des diagrammes de niveaux marqués À faire que vous n'avez pas réussi.</value>
+    <comment>I.E You have 19 level 24 charts marked To Do you haven't passed</comment>
+  </data>
+  <data name="Update Grade" xml:space="preserve">
+    <value>Mettre à jour la note</value>
+  </data>
+  <data name="Upload Scores" xml:space="preserve">
+    <value>Télécharger les scores</value>
+  </data>
+  <data name="Upload XX Scores" xml:space="preserve">
+    <value>Télécharger XX scores</value>
+  </data>
+  <data name="Used Primarily for debugging" xml:space="preserve">
+    <value>Utilisé principalement pour le débogage</value>
+  </data>
+  <data name="Username" xml:space="preserve">
+    <value>Nom d'utilisateur</value>
+  </data>
+  <data name="Very Easy" xml:space="preserve">
+    <value>Très facile</value>
+  </data>
+  <data name="Very Hard" xml:space="preserve">
+    <value>Très difficile</value>
+  </data>
+  <data name="Video" xml:space="preserve">
+    <value>Vidéo</value>
+  </data>
+  <data name="Vote Count" xml:space="preserve">
+    <value>{0} votes</value>
+  </data>
+  <data name="Your Difficulty Rating" xml:space="preserve">
+    <value>Votre cote de difficulté</value>
+  </data>
+</root>
