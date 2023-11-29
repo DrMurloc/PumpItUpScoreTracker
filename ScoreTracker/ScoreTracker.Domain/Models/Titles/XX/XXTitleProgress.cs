@@ -9,7 +9,7 @@ public sealed class XXTitleProgress : TitleProgress
 
     public XXTitle XXTitle { get; }
 
-    public override double CompletionCount { get; protected set; }
+    public override int CompletionCount { get; protected set; }
 
     public void ApplyAttempt(BestXXChartAttempt attempt)
     {
