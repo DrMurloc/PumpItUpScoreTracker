@@ -18,7 +18,7 @@ public sealed class TitleProgressDto
     {
         return new TitleProgressDto
         {
-            CompletionCount = (int)progress.CompletionCount,
+            CompletionCount = progress.CompletionCount,
             RequiredCount = progress.Title.CompletionRequired,
             TitleCategory = progress.Title.Category,
             TitleDescription = progress.Title.Description,
