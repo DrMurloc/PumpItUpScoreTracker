@@ -1,5 +1,6 @@
 ﻿using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.ValueTypes;
+using System;
 
 namespace ScoreTracker.Domain.Models.Titles.Phoenix;
 
@@ -18,6 +19,6 @@ public sealed class PhoenixDifficultyTitle : PhoenixTitle
     public override int CompletionProgress(Chart chart, RecordedPhoenixScore attempt)
     {
         if (chart.Level != Level || attempt.IsBroken || attempt.Score == null) return 0;
-        return (int)(chart.Level.BaseRating * attempt.Score.Value.LetterGrade.GetModifier());
+        return (int)Math.Round(chart.Level.BaseRating * attempt.Score.Value.LetterGrade.GetModifier());
     }
 }
