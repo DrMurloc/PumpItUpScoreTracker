@@ -1,0 +1,177 @@
+﻿@namespace ScoreTracker.Web.Components
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Web.Enums
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@inject ICurrentUserAccessor CurrentUser;
+@inject IMediator Mediator;
+<MudExpansionPanels>
+    <MudExpansionPanel Text="Chart Types">
+        <MudGrid>
+            @foreach (var chartType in Settings.ChartTypeWeights.Keys)
+            {
+                <MudItem xs="6">
+                    @if (_useWeights)
+                    {
+                        <MudNumericField T="int" Min="0" Max="99" Label="@chartType.ToString()" @bind-Value="Settings.ChartTypeWeights[chartType]"></MudNumericField>
+                    }
+                    else
+                    {
+                        <MudSwitch T="bool" Label="@chartType.ToString()" Color="Color.Primary" Checked="Settings.ChartTypeWeights[chartType]>0" CheckedChanged="@(v=>Settings.ChartTypeWeights[chartType]=v?1:0)"></MudSwitch>
+                    }
+                </MudItem>
+            }
+        </MudGrid>
+    </MudExpansionPanel>
+    @if (_showSinglesLevels)
+    {
+        <MudExpansionPanel Text="@LevelLabel">
+            <MudGrid>
+                @foreach (var level in Settings.LevelWeights.Keys.OrderBy(k => k))
+                {
+                    <MudItem xs="6" sm="4">
+                        @if (_useWeights)
+                        {
+                            <MudNumericField T="int" Min="0" Max="99" Label="@LevelString(level)" @bind-Value="Settings.LevelWeights[level]"></MudNumericField>
+                        }
+                        else
+                        {
+                            <MudSwitch T="bool" Label="@LevelString(level)" Color="Color.Primary" Checked="Settings.LevelWeights[level] > 0" CheckedChanged="@(v => Settings.LevelWeights[level] =v? 1 : 0)"></MudSwitch>
+                        }
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudExpansionPanel>
+    }
+    @if (_showDoublesLevels)
+    {
+        <MudExpansionPanel Text="Doubles Levels">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudSwitch T="bool" Color="Color.Primary" Label="Separate Singles/Doubles Levels" @bind-Checked="_separateDoubleLevels"></MudSwitch>
+                </MudItem>
+                @foreach (var level in Settings.DoubleLevelWeights.Keys.OrderBy(k => k))
+                {
+                    <MudItem xs="6" sm="4">
+                        @if (_useWeights)
+                        {
+                            <MudNumericField T="int" Min="0" Max="99" Label="@LevelString(level)" @bind-Value="Settings.DoubleLevelWeights[level]"></MudNumericField>
+                        }
+                        else
+                        {
+                            <MudSwitch T="bool" Label="@LevelString(level)" Color="Color.Primary" Checked="Settings.DoubleLevelWeights[level] > 0" CheckedChanged="@(v => Settings.DoubleLevelWeights[level]= v ? 1 : 0)"></MudSwitch>
+                        }
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudExpansionPanel>
+    }
+    @if (Settings.ChartTypeWeights.ContainsKey(ChartType.CoOp) && Settings.ChartTypeWeights[ChartType.CoOp] > 0)
+    {
+        <MudExpansionPanel Text="CoOp Player Count">
+            <MudGrid>
+                @foreach (var level in Settings.PlayerCountWeights.Keys.OrderBy(k => k))
+                {
+                    <MudItem xs="6" sm="4">
+                        @if (_useWeights)
+                        {
+                            <MudNumericField T="int" Min="0" Max="99" Label="@PlayerString(level)" @bind-Value="Settings.PlayerCountWeights[level]"></MudNumericField>
+                        }
+                        else
+                        {
+                            <MudSwitch T="bool" Label="@PlayerString(level)" Color="Color.Primary" Checked="Settings.PlayerCountWeights[level] > 0" CheckedChanged="@(v => Settings.PlayerCountWeights[level]= v? 1 : 0)"></MudSwitch>
+                        }
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudExpansionPanel>
+    }
+
+    <MudExpansionPanel Text="Song Types">
+        <MudGrid>
+            @foreach (var songType in Settings.SongTypeWeights.Keys)
+            {
+                <MudItem xs="6">
+                    @if (_useWeights)
+                    {
+                        <MudNumericField T="int" Min="0" Max="99" Label="@songType.ToString()" @bind-Value="Settings.SongTypeWeights[songType]"></MudNumericField>
+                    }
+                    else
+                    {
+                        <MudSwitch T="bool" Label="@songType.ToString()" Color="Color.Primary" Checked="Settings.SongTypeWeights[songType] > 0" CheckedChanged="@(v => Settings.SongTypeWeights[songType]=v? 1 : 0)"></MudSwitch>
+                    }
+                </MudItem>
+            }
+        </MudGrid>
+    </MudExpansionPanel>
+
+    <MudExpansionPanel Text="Additional Settings">
+        <MudGrid>
+            <MudItem xs="4">
+                <MudNumericField T="int" Min="1" Max="30" Label="Chart Count" @bind-Value="Settings.Count"></MudNumericField>
+            </MudItem>
+            <MudItem xs="4">
+                <MudSwitch Color="Color.Primary" Label="Allow Repeat Charts" @bind-Checked="Settings.AllowRepeats"></MudSwitch>
+            </MudItem>
+            <MudItem xs="4">
+                <MudSwitch T="bool" Color="Color.Primary" Label="Use Weights" @bind-Checked="_useWeights"></MudSwitch>
+            </MudItem>
+        </MudGrid>
+    </MudExpansionPanel>
+    @if (_includedCharts.Any())
+    {
+        <MudExpansionPanel Text="Included Charts">
+            <MudTable Items="_includedCharts">
+                <RowTemplate>
+                    <MudTd>
+                        <MudTooltip Text="@context.Song.Name">
+                            <MudImage Src="@context.Song.ImagePath.ToString()" Height="35" Alt="@context.Song.Name" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
+                        </MudTooltip>
+                    </MudTd>
+                    <MudTd>
+                        <MudText>@context.Song.Name</MudText>
+                    </MudTd>
+                    <MudTd>
+                        <MudImage Src="@context.DifficultyBubblePath" Height="35" Alt="@context.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager></MudTablePager>
+                </PagerContent>
+            </MudTable>
+        </MudExpansionPanel>
+    }
+</MudExpansionPanels>
+@code {
+
+    [Parameter]
+    public RandomSettings Settings { get; set; } = new RandomSettings();
+    private bool _useWeights = false;
+    private bool _showSinglesLevels => Settings.ChartTypeWeights[ChartType.Single]>0;
+    private bool _showDoublesLevels => Settings.ChartTypeWeights[ChartType.Double]>0;
+    private bool _separateDoubleLevels = false;
+    private string LevelLabel => _separateDoubleLevels ? "Singles Levels" : "Levels";
+    private string LevelString(int level) => $"Level {level}";
+    private string PlayerString(int players) => $"{players} Players";
+
+
+
+    private IEnumerable<Chart> _includedCharts = Array.Empty<Chart>();
+
+    private bool _showChartList = false;
+    private async Task ShowIncludedCharts()
+    {
+        _includedCharts = await Mediator.Send(new GetIncludedRandomChartsQuery(Settings));
+        _showChartList = true;
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        _useWeights = Settings.HasWeightedSetting;
+        _separateDoubleLevels = Settings.ChartTypeWeights[ChartType.Single] != Settings.ChartTypeWeights[ChartType.Double];
+
+    }
+}

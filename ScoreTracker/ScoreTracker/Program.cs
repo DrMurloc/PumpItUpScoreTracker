@@ -1,12 +1,16 @@
 using BlazorApplicationInsights;
+using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Localization;
 using Microsoft.OpenApi.Models;
 using MudBlazor.Services;
 using OfficeOpenXml;
+using ScoreTracker.Application.Handlers;
 using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.Services;
+using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Accessors;
 using ScoreTracker.Web.Configuration;
@@ -14,6 +18,7 @@ using ScoreTracker.Web.HostedServices;
 using ScoreTracker.Web.Security;
 using ScoreTracker.Web.Services;
 using ScoreTracker.Web.Services.Contracts;
+using ScoreTracker.Web.Shared;
 using ScoreTracker.Web.Swagger;
 using Swashbuckle.AspNetCore.Filters;
 
@@ -96,7 +101,8 @@ builder.Services.AddBlazorApplicationInsights()
     .AddHttpContextAccessor()
     .AddHttpClient()
     .AddHostedService<BotHostedService>()
-    .AddCore()
+    .AddMediatR(typeof(UpdateXXBestAttemptHandler), typeof(MainLayout))
+    .AddTransient<IUserAccessService, UserAccessService>()
     .AddInfrastructure(builder.Configuration.GetSection("AzureBlob").Get<AzureBlobConfiguration>(),
         builder.Configuration.GetSection("SQL").Get<SqlConfiguration>(),
         builder.Configuration.GetSection("Sendgrid").Get<SendGridConfiguration>())

@@ -4,10 +4,10 @@
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Web.Services.Contracts
-@using System.Globalization
+@using ScoreTracker.Application.Events
 @inherits LayoutComponentBase
 @inject ICurrentUserAccessor CurrentUser
-
+@implements INotificationHandler<MatchUpdatedEvent>
 <PageTitle>PIU Scores</PageTitle>
 
 <MudThemeProvider Theme="Theme" />
@@ -111,7 +111,7 @@
 {
     private bool _isOpen = false;
     private bool _showDiscordDialog = false;
-        private const string DiscordPopupKey = "MainLayout__DiscordPopupShown";
+    private const string DiscordPopupKey = "MainLayout__DiscordPopupShown";
     private MixEnum _currentMix = MixEnum.Phoenix;
 
     private async Task SetMix(MixEnum mix)
@@ -157,4 +157,11 @@
                 DrawerText = "#EDF1F5"
             }
         };
+
+    public static event EventHandler<MatchUpdatedEvent>? MatchUpdated;
+    public Task Handle(MatchUpdatedEvent notification, CancellationToken cancellationToken)
+    {
+        MatchUpdated?.Invoke(this, notification);
+        return Task.CompletedTask;
+    }
 }

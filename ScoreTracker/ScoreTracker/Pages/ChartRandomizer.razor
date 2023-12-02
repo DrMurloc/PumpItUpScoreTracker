@@ -2,162 +2,25 @@
 @using MediatR
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models;
 @using ScoreTracker.Domain.SecondaryPorts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using System.Text.Json
 @using ScoreTracker.Application.Commands
+@using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Web.Components
 <PageTitle>Chart Randomizer</PageTitle>
 
 @if (!CurrentUser.IsLoggedIn)
 {
     <MudText Color="Color.Error" Typo="Typo.body1">You are not logged in, your configuration and results will be lost if you refresh.</MudText>
 }
-<MudExpansionPanels>
-    <MudExpansionPanel Text="Chart Types">
-        <MudGrid>
-            @foreach (var chartType in _chartTypeWeights.Keys)
-            {
-                <MudItem xs="6">
-                    @if (_useWeights)
-                    {
-                        <MudNumericField T="int" Min="0" Max="99" Label="@chartType.ToString()" Value="_chartTypeWeights[chartType]" ValueChanged="@(v => SetChartTypeWeight(chartType, v))"></MudNumericField>
-                    }
-                    else
-                    {
-                        <MudSwitch T="bool" Label="@chartType.ToString()" Color="Color.Primary" Checked="_chartTypeWeights[chartType]>0" CheckedChanged="@(v=>SetChartTypeWeight(chartType,v?1:0))"></MudSwitch>
-                    }
-                </MudItem>
-            }
-        </MudGrid>
-    </MudExpansionPanel>
-    @if (ShowSinglesLevels)
-    {
-        <MudExpansionPanel Text="@LevelLabel">
-            <MudGrid>
-                <MudItem xs="12">
-                    <MudSwitch T="bool" Color="Color.Primary" Label="Separate Singles/Doubles Levels" Checked="_separateDoubleLevels" CheckedChanged="SetUseSeparateDoubleLevels"></MudSwitch>
-                </MudItem>
-                @foreach (var level in _levelWeights.Keys.OrderBy(k => k))
-                {
-                    <MudItem xs="6" sm="4">
-                        @if (_useWeights)
-                        {
-                            <MudNumericField T="int" Min="0" Max="99" Label="@LevelString(level)" Value="_levelWeights[level]" ValueChanged="@(v => SetLevelWeight(level, v))"></MudNumericField>
-                        }
-                        else
-                        {
-                            <MudSwitch T="bool" Label="@LevelString(level)" Color="Color.Primary" Checked="_levelWeights[level] > 0" CheckedChanged="@(v => SetLevelWeight(level, v ? 1 : 0))"></MudSwitch>
-                        }
-                    </MudItem>
-                }
-            </MudGrid>
-            </MudExpansionPanel>
-    }
-    @if (ShowDoublesLevels)
-    {
-        <MudExpansionPanel Text="Doubles Levels">
-            <MudGrid>
-                <MudItem xs="12">
-                    <MudSwitch T="bool" Color="Color.Primary" Label="Separate Singles/Doubles Levels" Checked="_separateDoubleLevels" CheckedChanged="SetUseSeparateDoubleLevels"></MudSwitch>
-                </MudItem>
-                @foreach (var level in _doubleLevelWeights.Keys.OrderBy(k => k))
-                {
-                    <MudItem xs="6" sm="4">
-                        @if (_useWeights)
-                        {
-                            <MudNumericField T="int" Min="0" Max="99" Label="@LevelString(level)" Value="_doubleLevelWeights[level]" ValueChanged="@(v => SetDoubleLevelWeight(level, v))"></MudNumericField>
-                        }
-                        else
-                        {
-                            <MudSwitch T="bool" Label="@LevelString(level)" Color="Color.Primary" Checked="_doubleLevelWeights[level] > 0" CheckedChanged="@(v => SetDoubleLevelWeight(level, v ? 1 : 0))"></MudSwitch>
-                        }
-                    </MudItem>
-                }
-            </MudGrid>
-        </MudExpansionPanel>
-    }
-    @if (_chartTypeWeights.ContainsKey(ChartType.CoOp) && _chartTypeWeights[ChartType.CoOp] > 0)
-    {
-        <MudExpansionPanel Text="CoOp Player Count">
-            <MudGrid>
-                @foreach (var level in _playerCountWeights.Keys.OrderBy(k => k))
-                {
-                    <MudItem xs="6" sm="4">
-                        @if (_useWeights)
-                        {
-                            <MudNumericField T="int" Min="0" Max="99" Label="@PlayerString(level)" Value="_playerCountWeights[level]" ValueChanged="@(v => SetPlayerCountWeight(level, v))"></MudNumericField>
-                        }
-                        else
-                        {
-                            <MudSwitch T="bool" Label="@PlayerString(level)" Color="Color.Primary" Checked="_playerCountWeights[level] > 0" CheckedChanged="@(v => SetPlayerCountWeight(level, v ? 1 : 0))"></MudSwitch>
-                        }
-                    </MudItem>
-                }
-            </MudGrid>
-        </MudExpansionPanel>
-    }
-
-    <MudExpansionPanel Text="Song Types">
-        <MudGrid>
-            @foreach (var songType in _songTypeWeights.Keys)
-            {
-                <MudItem xs="6">
-                    @if (_useWeights)
-                    {
-                        <MudNumericField T="int" Min="0" Max="99" Label="@songType.ToString()" Value="_songTypeWeights[songType]" ValueChanged="@(v => SetSongTypeWeight(songType, v))"></MudNumericField>
-                    }
-                    else
-                    {
-                        <MudSwitch T="bool" Label="@songType.ToString()" Color="Color.Primary" Checked="_songTypeWeights[songType] > 0" CheckedChanged="@(v => SetSongTypeWeight(songType, v ? 1 : 0))"></MudSwitch>
-                    }
-                </MudItem>
-            }
-        </MudGrid>
-    </MudExpansionPanel>
-    <MudExpansionPanel Text="Charts">
-        <MudGrid>
-            <MudItem xs="12">
-                <MudText Typo="Typo.body1">Specific Chart Weights will be reset when category weights in above sections are changed, fill this section out last.</MudText>
-            </MudItem>
-            <MudItem xs="12">
-                <MudTextField T="string" Value="_filteredSongName" ValueChanged="FilterCharts" Label="Song Name Search (Required)" Immediate="true"></MudTextField>
-            </MudItem>
-            @foreach (var chart in _filteredCharts)
-            {
-                <MudItem xs="6" sm="4" md="3">
-                    @if (_useWeights)
-                    {
-                        <MudNumericField T="int" Min="0" Max="99" Label="@ChartString(chart)" Value="_chartWeights[chart.Id]" ValueChanged="@(v => SetChartWeights(chart.Id, v))"></MudNumericField>
-                    }
-                    else
-                    {
-                        <MudSwitch T="bool" Label="@ChartString(chart)" Color="Color.Primary" Checked="_chartWeights[chart.Id] > 0" CheckedChanged="@(v => SetChartWeights(chart.Id, v ? 1 : 0))"></MudSwitch>
-                    }
-                </MudItem>
-            }
-        </MudGrid>
-    </MudExpansionPanel>
-    <MudExpansionPanel Text="Additional Settings">
-        <MudGrid>
-            <MudItem xs="4">
-                <MudNumericField T="int" Min="1" Max="30" Label="Chart Count" @bind-Value="_count"></MudNumericField>
-            </MudItem>
-            <MudItem xs="4">
-                <MudSwitch Color="Color.Primary" Label="Allow Repeat Charts" @bind-Checked="_allowRepeats"></MudSwitch>
-            </MudItem>
-            <MudItem xs="4">
-                <MudSwitch T="bool" Color="Color.Primary" Label="Use Weights" Checked="_useWeights" CheckedChanged="SetUseWeights"></MudSwitch>
-            </MudItem>
-        </MudGrid>
-    </MudExpansionPanel>
-</MudExpansionPanels>
+<RandomizerSettingsConfiguration Settings="_settings" ></RandomizerSettingsConfiguration>
 <br/>
 <MudGrid>
     <MudItem md="4" sm="6" xs="12">
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RandomizeCharts">Randomize Charts</MudButton>
-    </MudItem>
-    <MudItem md="4" sm="6" xs="12">
-        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="()=>_showChartList=true">View @IncludedCharts.Count() Charts</MudButton>
     </MudItem>
 </MudGrid>
 <br/>
@@ -195,7 +58,7 @@
                     <MudSpacer></MudSpacer>
                     
                     <MudTooltip Text="@ChartString(chart)">
-                        <MudImage Src="@BubblePath(chart)" Height="35" Alt="@chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                        <MudImage Src="@chart.DifficultyBubblePath" Height="35" Alt="@chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
                     </MudTooltip>
                 </MudCardActions>
             </MudCard>
@@ -224,32 +87,8 @@
         </MudTooltip>
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">Close</MudButton>
     </DialogActions>
-</MudDialog><MudDialog @bind-IsVisible="_showChartList">
-    <DialogContent>
-        <MudTable Items="IncludedCharts">
-            <RowTemplate>
-                <MudTd>
-                    <MudTooltip Text="@context.Song.Name">
-                        <MudImage Src="@context.Song.ImagePath.ToString()" Height="35" Alt="@context.Song.Name" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
-                    </MudTooltip>
-                </MudTd>
-                <MudTd>
-                    <MudText>@context.Song.Name</MudText>
-                </MudTd>
-                <MudTd>
-                    <MudImage Src="@BubblePath(context)" Height="35" Alt="@context.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-                </MudTd>
-            </RowTemplate>
-            <PagerContent>
-                <MudTablePager></MudTablePager>
-            </PagerContent>
-        </MudTable>
-    </DialogContent>
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showChartList=false">Close</MudButton>
-    </DialogActions>
 </MudDialog>
+
 @inject IMediator Mediator
 @inject ISnackbar Snackbar;
 @inject ICurrentUserAccessor CurrentUser;
@@ -259,47 +98,23 @@
 
     private string CardStyle(int chartOrder) => _protectedCharts.Contains(chartOrder) ? $@"border-color:{Colors.Green.Darken1}" :
         _vetoedCharts.Contains(chartOrder) ? $@"border-color:{Colors.Red.Darken1}" : "";
-    private Random _random = new Random(DateTimeOffset.Now.Year+DateTimeOffset.Now.Month+DateTimeOffset.Now.Day+DateTimeOffset.Now.Hour+DateTimeOffset.Now.Minute+DateTimeOffset.Now.Second+DateTimeOffset.Now.Millisecond);
-    private IDictionary<Guid, int> _chartWeights = new Dictionary<Guid, int>();
-    private IDictionary<int, int> _levelWeights = new Dictionary<int, int>();
-    private IDictionary<int, int> _doubleLevelWeights = new Dictionary<int, int>();
-    private IDictionary<ChartType, int> _chartTypeWeights = new Dictionary<ChartType, int>();
-    private IDictionary<SongType, int> _songTypeWeights = new Dictionary<SongType, int>();
-    private IDictionary<int, int> _playerCountWeights = new Dictionary<int, int>();
-    private bool _useWeights = false;
-    private bool _allowRepeats = false;
+    private readonly RandomSettings _settings = new RandomSettings();
+
     private int _count = 3;
-    private bool _separateDoubleLevels = false;
     private bool _showVideoDialog = false;
-    private bool _showChartList = false;
     private string _currentVideoDescription = string.Empty;
     private string _currentVideo = string.Empty;
-    private string _filteredSongName = string.Empty;
-    private string LevelLabel => _separateDoubleLevels ? "Singles Levels" : "Levels";
-    private Chart[] _charts = Array.Empty<Chart>();
-    private IDictionary<Guid, Chart> _chartDict = new Dictionary<Guid, Chart>();
-    private IEnumerable<Chart> IncludedCharts => _charts.Where(c => _chartWeights[c.Id] > 0).OrderBy(c=>c.Song.Name.ToString()).ThenBy(c=>(int)c.Level);
-    private Chart[] _filteredCharts = Array.Empty<Chart>();
     private Chart[] _pulledCharts = Array.Empty<Chart>();
     private List<int> _protectedCharts = new ();
     private List<int> _vetoedCharts = new();
     private IDictionary<Guid, string> _videos = new Dictionary<Guid, string>();
-
-    private bool ShowDoublesLevels => _separateDoubleLevels && ((_chartTypeWeights.TryGetValue(ChartType.Double, out var d) && d > 0) ||
-                                                                (_chartTypeWeights.TryGetValue(ChartType.DoublePerformance, out var dp) && dp > 0));
 
     private async Task NotifyBadVideo()
     {
         await Notifications.NotifyAdmin($"The video for{_currentVideoDescription} was reported", CancellationToken.None);
         Snackbar.Add("Notification was sent", Severity.Success);
     }
-    private bool ShowSinglesLevels => (!_separateDoubleLevels && (
-        (_chartTypeWeights.TryGetValue(ChartType.Single, out var d2) && d2 > 0) ||
-         (_chartTypeWeights.TryGetValue(ChartType.SinglePerformance, out var dp2) && dp2 > 0) ||
-        (_chartTypeWeights.TryGetValue(ChartType.Double, out var d3) && d3 > 0) ||
-        (_chartTypeWeights.TryGetValue(ChartType.DoublePerformance, out var dp3) && dp3 > 0))
-        ) || (_chartTypeWeights.TryGetValue(ChartType.Single, out var d) && d > 0) ||
-               (_chartTypeWeights.TryGetValue(ChartType.SinglePerformance, out var dp) && dp > 0);
+
     private async Task ProtectChart(int order)
     {
         _protectedCharts.Add(order);
@@ -382,176 +197,34 @@
             var savedResults = JsonSerializer.Serialize(new SavedConfiguration()
             {
                 Count=_count,
-                UseWeights = _useWeights,
-                AllowRepeats = _allowRepeats,
-                ChartTypeWeights = _chartTypeWeights,
-                LevelWeights = _levelWeights,
-                PlayerCountWeights = _playerCountWeights,
-                DoubleWeights = _doubleLevelWeights,
-                SongTypeWeights = _songTypeWeights,
-                SeparateDoublesLevels = _separateDoubleLevels,
-                ChartWeights = _chartWeights.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value)
+                AllowRepeats = _settings.AllowRepeats,
+                    ChartTypeWeights = _settings.ChartTypeWeights,
+                LevelWeights = _settings.LevelWeights,
+                    PlayerCountWeights = _settings.PlayerCountWeights,
+                DoubleWeights = _settings.DoubleLevelWeights,
+                SongTypeWeights = _settings.SongTypeWeights
             });
             
             await Mediator.Send(new SaveUserUiSettingCommand(LastConfigKey, savedResults));
         }
     }
 
-    private void SetUseSeparateDoubleLevels(bool useSeparate)
-    {
-        _separateDoubleLevels = useSeparate;
-        foreach (var key in _levelWeights.Keys)
-        {
-            _doubleLevelWeights[key] = _levelWeights[key];
-        }
-        ApplyWeights();
-    }
-    private void SetUseWeights(bool useWeights)
-    {
-        _useWeights = useWeights;
-        if (useWeights) return;
-
-        foreach (var kv in _levelWeights)
-        {
-            if (kv.Value > 1)
-            {
-                _levelWeights[kv.Key] = 1;
-            }
-        }
-        foreach (var kv in _chartTypeWeights)
-        {
-            if (kv.Value > 1)
-            {
-                _chartTypeWeights[kv.Key] = 1;
-            }
-        }
-        foreach (var kv in _songTypeWeights)
-        {
-            if (kv.Value > 1)
-            {
-                _songTypeWeights[kv.Key] = 1;
-            }
-        }
-        ApplyWeights();
-    }
     private async Task RandomizeCharts()
     {
         await SaveLastConfig();
-        Guid NextRandomGuid(IEnumerable<KeyValuePair<Guid, int>> weights)
-        {
-            var cur = 0;
-            var distribution = new Dictionary<int, Guid>();
-            foreach (var weight in weights)
-            {
-                for (var i = 0; i < weight.Value; i++)
-                {
-                    distribution[cur] = weight.Key;
-                    cur++;
-                }
-            }
-            var result = _random.Next(cur);
-            return distribution[result];
-        }
 
-        
-        var includedCharts = _chartWeights.Where(kv => kv.Value > 0).ToArray();
-        if (!_allowRepeats && includedCharts.Length < _count)
+        try
         {
-            Snackbar.Add("Included Chart Count is lower than Chart Pull Count");
+            _pulledCharts = (await Mediator.Send(new GetRandomChartsQuery(_settings))).ToArray();
+            _protectedCharts = new();
+            _vetoedCharts = new();
+        }
+        catch (RandomizerException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
             return;
         }
-        var results = new List<Chart>();
-        for (var i = 0; i < _count; i++)
-        {
-            var nextGuid = NextRandomGuid(includedCharts);
-            if (!_allowRepeats)
-            {
-                includedCharts = includedCharts.Where(kv => kv.Key != nextGuid).ToArray();
-            }
-            results.Add(_chartDict[nextGuid]);
-        }
-        _pulledCharts = results.ToArray();
-        _protectedCharts = new();
-        _vetoedCharts = new();
         await SaveLastResults();
-    }
-    private void FilterCharts(string songName)
-    {
-        _filteredSongName = songName;
-        if (songName.Equals("n", StringComparison.OrdinalIgnoreCase) || songName.Equals("d", StringComparison.OrdinalIgnoreCase))
-        {
-            _filteredCharts = _charts.Where(c => c.Song.Name == songName).ToArray();
-            return;
-        }
-        if (songName.Length < 3)
-        {
-            _filteredCharts= Array.Empty<Chart>();
-            return;
-        }
-        _filteredCharts= _charts.Where(c => c.Song.Name.ToString().Contains(songName, StringComparison.OrdinalIgnoreCase)).OrderBy(c=>c.Song.Name.ToString()).ThenBy(c=>c.Type).ThenBy(c=>c.Level).ToArray();
-    }
-    private void SetChartWeights(Guid chartId, int weight)
-    {
-        _chartWeights[chartId] = weight;
-    }
-    private void SetLevelWeight(int level, int weight)
-    {
-        _levelWeights[level] = weight;
-        if (!_separateDoubleLevels)
-        {
-            _doubleLevelWeights[level] = weight;
-        }
-        ApplyWeights();
-    }
-
-    private void SetPlayerCountWeight(int count, int weight)
-    {
-        _playerCountWeights[count] = weight;
-        ApplyWeights();
-    }
-    private void SetDoubleLevelWeight(int level, int weight)
-    {
-        _doubleLevelWeights[level] = weight;
-        ApplyWeights();
-    }
-    private void SetChartTypeWeight(ChartType type, int weight)
-    {
-        _chartTypeWeights[type] = weight;
-        ApplyWeights();
-    }
-
-    private void SetSongTypeWeight(SongType type, int weight)
-    {
-        _songTypeWeights[type] = weight;
-        ApplyWeights();
-    }
-    private void ApplyWeights()
-    {
-        foreach (var chart in _charts)
-        {
-            var levelWeight = chart.Type switch
-            {
-                ChartType.Single or ChartType.SinglePerformance => _levelWeights[chart.Level],
-                ChartType.Double or ChartType.DoublePerformance => _doubleLevelWeights[chart.Level],
-                _ => _playerCountWeights[chart.PlayerCount]
-                };
-            
-            if (levelWeight == 0 || _chartTypeWeights[chart.Type] == 0 || _songTypeWeights[chart.Song.Type] == 0)
-            {
-                _chartWeights[chart.Id] = 0;
-            }
-            else
-            {
-                var max = 1;
-                if (levelWeight > max)
-                    max = levelWeight;
-                if (_chartTypeWeights[chart.Type] > max)
-                    max = _chartTypeWeights[chart.Type];
-                if (_songTypeWeights[chart.Song.Type] > max)
-                    max = _songTypeWeights[chart.Song.Type];
-                _chartWeights[chart.Id] = max;
-            }
-        }
     }
 
         const string LastResultsKey = $"ChartRandomizer__LastResults";
@@ -567,17 +240,10 @@
             }
         }
     }
+
     protected override async Task OnInitializedAsync()
     {
-        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToArray();
-        _levelWeights = _charts.Select(c => c.Level).Distinct().Select(d => (int)d).ToDictionary(l=>l,l=>0);
-        _doubleLevelWeights = _charts.Select(c => c.Level).Distinct().Select(d => (int)d).ToDictionary(l => l, l => 0);
-        _playerCountWeights = _charts.Where(c => c.Type == ChartType.CoOp).Select(c => c.PlayerCount).Distinct().ToDictionary(l => l, l => 1);
-        _chartTypeWeights = _charts.Select(c => c.Type).Distinct().ToDictionary(c => c, c => 1);
-        _songTypeWeights = _charts.Select(c => c.Song.Type).Distinct().ToDictionary(t => t, t => 1);
-        _chartDict = _charts.ToDictionary(c => c.Id);
-        
-        _chartWeights = _charts.ToDictionary(c => c.Id, c => 0);
+
         _videos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl.ToString());
         if (CurrentUser.IsLoggedIn)
         {
@@ -587,7 +253,9 @@
                 try
                 {
                     var lastResults = JsonSerializer.Deserialize<SavedResults>(uiSetting)?? throw new ArgumentNullException($"Couldn't deserialize Saved  Results settings for Chart Randomizer");
-                    _pulledCharts = lastResults.ChartList.Select(id => _chartDict[id]).ToArray();
+
+                    var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, ChartIds: lastResults.ChartList))).ToDictionary(c => c.Id);
+                    _pulledCharts = lastResults.ChartList.Select(id => charts[id]).ToArray();
                     _protectedCharts = lastResults.ProtectedCharts.ToList();
                     _vetoedCharts = lastResults.VetoedCharts.ToList();
                 }
@@ -601,32 +269,18 @@
                 try
                 {
                     var lastConfig = JsonSerializer.Deserialize<SavedConfiguration>(setting) ?? throw new ArgumentNullException($"Couldn't deserialize configuration for Chart Randomizer");
-                    MergeDictTo(_levelWeights, lastConfig.LevelWeights);
-                    _levelWeights = lastConfig.LevelWeights;
-                    MergeDictTo(_doubleLevelWeights,lastConfig.DoubleWeights);
-                    _doubleLevelWeights = lastConfig.DoubleWeights;
-                    MergeDictTo(_playerCountWeights, lastConfig.PlayerCountWeights);
-                    _playerCountWeights = lastConfig.PlayerCountWeights;
-                    MergeDictTo(_chartTypeWeights, lastConfig.ChartTypeWeights);
-                    _chartTypeWeights = lastConfig.ChartTypeWeights;
-                    MergeDictTo(_songTypeWeights, lastConfig.SongTypeWeights);
-                    _songTypeWeights = lastConfig.SongTypeWeights;
-                    _useWeights = lastConfig.UseWeights;
-                    _separateDoubleLevels = lastConfig.SeparateDoublesLevels;
-                    _allowRepeats = lastConfig.AllowRepeats;
+                    MergeDictTo(_settings.LevelWeights, lastConfig.LevelWeights);
+                    _settings.LevelWeights = lastConfig.LevelWeights;
+                    MergeDictTo(_settings.DoubleLevelWeights,lastConfig.DoubleWeights);
+                    _settings.DoubleLevelWeights = lastConfig.DoubleWeights;
+                    MergeDictTo(_settings.PlayerCountWeights, lastConfig.PlayerCountWeights);
+                    _settings.PlayerCountWeights = lastConfig.PlayerCountWeights;
+                    MergeDictTo(_settings.ChartTypeWeights, lastConfig.ChartTypeWeights);
+                    _settings.ChartTypeWeights = lastConfig.ChartTypeWeights;
+                    MergeDictTo(_settings.SongTypeWeights, lastConfig.SongTypeWeights);
+                    _settings.SongTypeWeights = lastConfig.SongTypeWeights;
+                    _settings.AllowRepeats = lastConfig.AllowRepeats;
                     _count = lastConfig.Count;
-                    foreach (var kv in _chartWeights)
-                    {
-                        if (lastConfig.ChartWeights.ContainsKey(kv.Key))
-                        {
-                            _chartWeights[kv.Key] = lastConfig.ChartWeights[kv.Key];
-                            
-                        }
-                        else
-                        {
-                            _chartWeights[kv.Key] = 0;
-                        }
-                    }
                 }
                 catch (Exception e)
                 {
@@ -636,17 +290,12 @@
         }
 
     }
+    private string ChartString(Chart chart) => $"{chart.Song.Name} {chart.DifficultyString}";
     private string ChartSearch(Chart chart)
     {
         var searchString = "Pump It Up " + chart.Song.Name + " " + chart.DifficultyString;
         return $"https://www.youtube.com/results?search_query={searchString.Replace("%", "Percent ").Replace(" ", "+")}";
     }
-    private string LevelString(int level) => $"Level {level}";
-    private string PlayerString(int players) => $"{players} Players";
-    private string ChartString(Chart chart) => $"{chart.Song.Name} {chart.DifficultyString}";
-    private string BubblePath(Chart chart) =>
-        $"https://piuimages.arroweclip.se/difficulty/{chart.DifficultyString.ToLower()}.png";
-
 
     private sealed class SavedResults
     {
@@ -661,11 +310,8 @@
         public IDictionary<int, int> DoubleWeights { get; set; } = new Dictionary<int, int>();
         public IDictionary<ChartType, int> ChartTypeWeights { get; set; } = new Dictionary<ChartType, int>();
         public IDictionary<SongType, int> SongTypeWeights { get; set; } = new Dictionary<SongType, int>();
-        public IDictionary<Guid, int> ChartWeights { get; set; } = new Dictionary<Guid, int>();
         public IDictionary<int, int> PlayerCountWeights { get; set; } = new Dictionary<int, int>();
-        public bool UseWeights { get; set; }
         public int Count { get; set; }
         public bool AllowRepeats { get; set; }
-        public bool SeparateDoublesLevels { get; set; }
     }
 }

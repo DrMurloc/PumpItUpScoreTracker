@@ -1,0 +1,440 @@
+﻿@namespace ScoreTracker.Web.Components
+@using MediatR
+@using MudBlazor.Extensions
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Events
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Domain.Views
+@using ScoreTracker.Web.Shared
+@if (_match != null)
+{
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">@_match.MatchName (@_match.State)</MudText>
+        </MudItem>
+
+        @switch (_match.State)
+        {
+            case MatchState.NotStarted:
+                @for (var i = 0; i < _match.Players.Length; i++)
+                {
+                    var player = _match.Players[i];
+                    var playerIndex = i;
+                    if (IsLoggedInAsAdmin)
+                    {
+                        @if (HasScores)
+                        {
+                            <MudItem xs="12">
+                                <MudText Color="Color.Warning">Changing players will erase ALL scores/points for this match</MudText>
+                            </MudItem>
+                        }
+                        <MudItem xs="12">
+                            
+                            <MudAutocomplete T="string"
+                                             Value="@player"
+                                             ResetValueOnEmptyText="true"
+                                             CoerceText="true"
+                                             Label=@($"Player {playerIndex}")
+                                             SearchFunc="@(s=>Task.FromResult(Seeding.Keys.Where(k=>k.Contains(s,StringComparison.OrdinalIgnoreCase)).OrderBy(k=>k.Equals(s,StringComparison.OrdinalIgnoreCase)?0:1).AsEnumerable()))"
+                                             ValueChanged="v => UpdatePlayer(playerIndex, v)">
+
+                            </MudAutocomplete>
+                        </MudItem>
+                        
+                    }
+                    else
+                    {
+                        <MudItem xs="12">
+                            
+                            <MudText>@player</MudText>
+                        </MudItem>
+                    }
+                }
+                @if (IsLoggedInAsAdmin)
+                {
+                    <MudItem xs="12">
+                        <MudButton Disabled="!ReadyToDraw" Color="Color.Primary" OnClick="DrawCharts">Draw Charts</MudButton>
+                        </MudItem>
+                }
+                break;
+            case MatchState.CardDraw:
+                <MudItem xs="12">Drew using: @_match.RandomSettings</MudItem>
+                @foreach (var chartId in _match.ActiveCharts)
+                {
+                    var chart = _charts[chartId];
+
+                    <MudItem xs="6" sm="4" md="3" lg="2" xl="1">
+                        <MudCard Class="border-solid border-2" Style="@CardStyle(chart.Id)">
+                            <MudCardMedia Height="300" Image="@chart.Song.ImagePath.ToString()" />
+                            <MudCardActions>
+
+                                <MudTooltip Text=@($"{chart.Song.Name} {chart.DifficultyString}")>
+                                    <MudImage Src="@chart.DifficultyBubblePath" Height="35" Alt="@chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                                </MudTooltip>
+                                <MudSpacer></MudSpacer>
+
+                                @if (!_match.ProtectedCharts.Contains(chart.Id) && !_match.VetoedCharts.Contains(chart.Id))
+                                {
+                                    <MudTooltip Text="Protect">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Shield" OnClick="()=>ProtectChart(chartId)" Color="Color.Success"></MudIconButton>
+                                    </MudTooltip>
+                                    <MudTooltip Text="Veto">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="()=>VetoChart(chartId)" Color="Color.Error"></MudIconButton>
+                                    </MudTooltip>
+                                }
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
+
+                @foreach (var instruction in Order())
+                {
+                    <MudItem xs="12">
+                        <MudText>@instruction</MudText>
+                    </MudItem>
+                }
+                <MudItem xs="12">
+                    @if (_match.ActiveCharts.Any(c => _match.VetoedCharts.Contains(c)))
+                    {
+                        
+                        <MudButton OnClick="ClearVetoes" Variant="Variant.Filled" Color="Color.Primary">Clear Vetoes</MudButton>
+                    }
+                    else
+                    {
+                        <MudButton OnClick="FinishCardDraw" Variant="Variant.Filled" Color="Color.Primary">Complete Card Draw</MudButton>
+                    }
+                </MudItem>
+                break;
+            case MatchState.Ready:
+                @foreach (var player in _match.Players)
+                {
+                    var player1 = player;
+                    <MudItem xs="12">
+                        <MudText>@player1</MudText>
+                    </MudItem>
+                }
+                @if (IsLoggedInAsAdmin)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="StartMatch">Start Match</MudButton>
+                }
+                break;
+            case MatchState.InProgress:
+                <MudItem xs="12">
+                    <MudTable T="Name" Items="_match.Players">
+                        <HeaderContent>
+                            <MudTh>Name</MudTh>
+                            @foreach (var chartId in _match.ActiveCharts)
+                            {
+                                var id = chartId;
+                                <MudTh>@_charts[id].Song.Name @_charts[id].DifficultyString</MudTh>
+                            }
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>
+                                @context
+                            </MudTd>
+
+                            @for(var i=0;i<_match.ActiveCharts.Length;i++)
+                            {
+                                var chartPlace = i;
+                                <MudTh>
+                                    <MudNumericField T="int" Min="(int)PhoenixScore.Min" Max="(int)PhoenixScore.Max" Value="(int)_match.Scores[context][chartPlace]" ValueChanged="v=>SetScore(context,chartPlace,v)" HideSpinButtons="true"></MudNumericField>
+                                </MudTh>
+                            }
+                        </RowTemplate>
+                    </MudTable>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudButton Disabled="_match.Scores.SelectMany(s=>s.Value).Any(v=>v==0)" Variant="Variant.Filled" OnClick="FinishMatch">Finish Match</MudButton>
+                </MudItem>
+                break;
+
+            case MatchState.Completed:
+                <MudItem xs="12">
+                    
+                    <MudTable T="Name" Items="_match.FinalPlaces">
+                        <HeaderContent>
+                            <MudTh>Name</MudTh>
+                            @foreach (var chartId in _match.ActiveCharts)
+                            {
+                                var id = chartId;
+                                <MudTh>@_charts[id].Song.Name @_charts[id].DifficultyString</MudTh>
+                            }
+                            <MudTh>Total</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>
+                                @context
+                            </MudTd>
+
+                            @for(var i=0;i<_match.ActiveCharts.Length;i++)
+                            {
+                                var chartPlace = i;
+                                <MudTh>@_match.Scores[context][chartPlace] (@_match.Points[context][chartPlace])</MudTh>
+                            }
+                            <MudTh>
+                                @_match.Points[context].Sum()
+                            </MudTh>
+                        </RowTemplate>
+                    </MudTable>
+                </MudItem>
+                break;
+        }
+    </MudGrid>
+}
+
+
+@inject IMediator Mediator;
+@inject ICurrentUserAccessor CurrentUser;
+
+
+@code {
+
+    private static readonly ISet<Guid> BracketAdmins = new HashSet<Guid>(new[]
+    {
+        new Guid("BA40C0BA-5D1D-4A61-A29D-295C0E99874C"),
+        new Guid("3694A57C-F862-448B-B148-459AFAF5AEDB"),
+        new Guid("5BDC1EE2-3C83-49DA-B74E-57EEFB21B9C3"),
+        new Guid("EB17CEDB-E655-424C-8588-B9A68738CAC1"),
+        new Guid("9F0A1A33-6FD6-4698-9673-F995B2FF235B"),
+    });
+    private bool _isSaving = true;
+    private User? _currentUser;
+    private bool IsLoggedInAsAdmin =>_currentUser!=null &&(_currentUser.IsAdmin || BracketAdmins.Contains(_currentUser.Id));
+    [Parameter]
+    public Name? MatchName { get; set; }
+
+    private string CardStyle(Guid chartId) => _match?.ProtectedCharts.Contains(chartId)??false ? $@"border-color:{Colors.Green.Darken1}" :
+        _match?.VetoedCharts.Contains(chartId) ?? false ? $@"border-color:{Colors.Red.Darken1}" : "";
+
+    private IEnumerable<string> Order()
+    {
+        if (_match == null)
+        {
+            yield break;
+        }
+        if (_match.Players.Length == 2)
+        {
+            var orderedPlayers = _match.Players.OrderBy(p => Seeding[p]).ToArray();
+            yield return $"Seed Priority: {string.Join(" -> ", orderedPlayers)}";
+            yield return $"Veto Order and Cab + Pad Side pick priority follow Seed Priority";
+        }
+        else
+        {
+            var highestSeed = _match.Players.MinBy(p => Seeding[p]);
+            var lowestSeed = _match.Players.MaxBy(p => Seeding[p]);
+            yield return $"{highestSeed} picks: Pad Side, Veto/Protect order, Doubles order (if applicable)";
+            yield return $"{lowestSeed} picks from remaining two options";
+            yield return $"{highestSeed} gets last remaining option, if applicable.";
+            yield return "Standard Match: Protect -> Protect -> Veto -> Veto -> Veto -> Veto";
+            yield return "Pros Semi/Losers/Grand Finals: Protect x2 -> Veto x4 -> Protect x2 -> Veto x4";
+
+        }
+
+    }
+
+    private bool HasScores => _match?.Scores.SelectMany(s => s.Value).Any(s => s > 0) ?? false;
+    private async Task SetScore(Name player, int chartIndex, int newScore)
+    {
+        if (_match == null)
+        {
+            return;
+        }
+        var newScores = _match.Scores.ToDictionary(kv => kv.Key, kv => kv.Value.ToArray());
+        newScores[player][chartIndex] = newScore;
+        await Mediator.Send(new UpdateMatchCommand(_match with { Scores = newScores}));
+    }
+    private async Task ProtectChart(Guid chartId)
+    {
+        if (_match == null)
+        {
+            return;
+        }
+        await Mediator.Send(new UpdateMatchCommand(_match with { ProtectedCharts = _match.ProtectedCharts.Append(chartId).ToArray()}));
+    }
+
+    private async Task VetoChart(Guid chartId)
+    {
+
+        if (_match == null)
+        {
+            return;
+        }
+        await Mediator.Send(new UpdateMatchCommand(_match with { VetoedCharts = _match.VetoedCharts.Append(chartId).ToArray() }));
+    }
+
+    private async Task FinishMatch()
+    {
+        if (_match == null)
+        {
+            return;
+        }
+        await Mediator.Send(new ResolveMatchCommand(_match.MatchName));
+    }
+    private async Task ClearVetoes()
+    {
+        if (_match == null)
+        {
+            return;
+        }
+        await Mediator.Send(new UpdateMatchCommand(_match with { ActiveCharts = _match.ActiveCharts.Where(id=>!_match.VetoedCharts.Contains(id)).ToArray() }));
+    }
+
+    private async Task FinishCardDraw()
+    {
+        if (_match == null)
+        {
+            return;
+        }
+        await Mediator.Send(new UpdateMatchCommand(_match with {State=MatchState.Ready,
+            Scores = _match.Players.ToDictionary(p => p.ToString(), p => _match.ActiveCharts.Select(c => PhoenixScore.From(0)).ToArray()),
+                Points = _match.Players.ToDictionary(p => p.ToString(), p => _match.ActiveCharts.Select(c => 0).ToArray())
+            }));
+    }
+    private static readonly IEnumerable<string> PlayerOrders = new string[]
+    {
+        "Ulsi",
+        "Frac",
+        "Houseplant",
+        "Nyroom",
+        "DefaultK",
+        "EMCAT",
+        "Smallboy",
+        "Slowpoke",
+        "ancient_grainz",
+        "PacRob",
+        "Crafty The Fox",
+        "NESSQUICK",
+        "Songbird",
+        "StrawHatGabe",
+        "Tink",
+        "Shinobee",
+        "ligma",
+        "Surikato",
+        "SEBAA",
+        "Waffle",
+        "litenang",
+        "Bedrock",
+        "jonathan",
+        "DarkBeam",
+        "Ddmpiu",
+        "HSPuppets",
+        "ABENHAIM",
+        "s0 lost",
+        "Lulu_uwu",
+        "sixxofsixx",
+        "Chives",
+        "Valex",
+        "Flashy flash",
+        "Ermagerd",
+        "Tieny",
+        "Blankman",
+        "ZIGGURATH8",
+        "Jaekim",
+        "esi",
+        "Yimmythe42",
+        "PureWasian",
+        "Redviper",
+        "imDrake",
+        "comboscoring",
+        "JellySlosh",
+        "GODDISH",
+        "AwesomoBird",
+        "Jboy",
+        "jqtran",
+        "ParanoiaBoi",
+        "HDS",
+        "mattmiller"
+    };
+
+    private async Task Rollback(MatchState newState)
+    {
+        
+        if (_match == null)
+        {
+            return;
+        }
+        await Mediator.Send(new MatchUpdatedEvent(_match with { State=newState}));
+    }
+    private async Task DrawCharts()
+    {
+        if (_match == null)
+        {
+            return;
+        }
+        await Mediator.Send(new DrawChartsCommand(_match.MatchName));
+    }
+    private static readonly IDictionary<string, int> Seeding = PlayerOrders.Reverse().Select((p, i) => (p,i)).ToDictionary(kv => kv.p, kv => kv.i + 1);
+
+    private MatchView? _match;
+    private bool ReadyToDraw => _match?.Players.All(p => Seeding.ContainsKey(p)) ?? false;
+    private async Task UpdatePlayer(int index, string playerName)
+    {
+        if (_match == null || !Name.TryParse(playerName, out var name))
+        {
+            return;
+        }
+        var newArray = _match.Players.ToArray();
+        newArray[index] = name;
+
+        await Mediator.Send(new UpdateMatchCommand(_match with { Players = newArray,
+            FinalPlaces = newArray,
+                Scores = newArray.ToDictionary(n => n.ToString(), n => _match.ActiveCharts.Select(c => PhoenixScore.From(0)).ToArray()),
+                Points = newArray.ToDictionary(n => n.ToString(), n => _match.ActiveCharts.Select(c => 0).ToArray()),
+            }));
+    }
+
+    private async Task StartMatch()
+    {
+        if (_match == null)
+        {
+            return;
+        }
+        await Mediator.Send(new UpdateMatchCommand(_match with {State = MatchState.InProgress}));
+    }
+    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+
+    private void MatchUpdated(MatchUpdatedEvent e)
+    {
+        if (e.NewState.MatchName == MatchName)
+        {
+            _match = e.NewState;
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadMatch(Name matchName)
+    {
+        if (_match?.MatchName == matchName)
+            return;
+        _match = await Mediator.Send(new GetMatchQuery(matchName));
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+        MainLayout.MatchUpdated += (o,e)=> MatchUpdated(e);
+        if (MatchName != null)
+        {
+            await LoadMatch(MatchName.Value);
+        }
+        _currentUser = CurrentUser.IsLoggedIn ? CurrentUser.User : null;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (MatchName == null)
+        {
+            _match = null;
+        }
+        else
+        {
+            await LoadMatch(MatchName.Value);
+        }
+
+    }
+
+}

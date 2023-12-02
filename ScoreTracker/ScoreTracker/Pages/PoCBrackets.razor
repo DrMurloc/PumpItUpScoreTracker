@@ -1,260 +1,182 @@
-﻿@page "/BITE/BracketPoC"
+﻿@page "/Eclipse/BracketPoC"
 @using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.Views
+@using ScoreTracker.Web.Components
+@using MediatR
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Events
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Web.Shared
 
 <PageTitle>About</PageTitle>
+@if (IsLoggedInAsAdmin)
+{
+    <MudGrid>
+        <MudItem xs="6" sm="4" md="3">
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenAddRandomDialog">Add Randomizer Settings</MudButton>
+        </MudItem>
+        <MudItem xs="6" sm="4" md="3">
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenAddMatchDialog">Add Match</MudButton>
+        </MudItem>
+    </MudGrid>
+    
 
-<MudPaper>
+    <MudDialog @bind-IsVisible="_showAddRandomDialog">
+        <DialogContent>
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField T="string" @bind-Value="_currentRandomName" Label="Settings Name"></MudTextField>
+                </MudItem>
+            </MudGrid>
+            <RandomizerSettingsConfiguration Settings="_currentSettings"></RandomizerSettingsConfiguration>
+        </DialogContent>
+        <DialogActions>
+            <MudSpacer></MudSpacer>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveRandomSettings">Save</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showAddRandomDialog = false">@L["Close"]</MudButton>
+        </DialogActions>
 
-    <MudTabs>
-        @for(var poolIndex = 0; poolIndex<_pools.Length;poolIndex++)
+    </MudDialog>
+
+    <MudDialog @bind-IsVisible="_showAddMatchDialog">
+        <DialogContent>
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudNumericField T="int" @bind-Value="_playerCount" Label="Player Count"></MudNumericField>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" @bind-Value="_matchName" Label="Match Name"></MudTextField>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudSelect @bind-Value="_randomSettings" Label="Random Settings">
+                        @foreach (var key in _chartPullSettings.Keys.OrderBy(k=>k))
+                        {
+                            <MudSelectItem Value="@key">@key</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudSpacer></MudSpacer>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateMatch">Save</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showAddMatchDialog = false">@L["Close"]</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+<MudTable T="MatchView" Items="_matches.Values">
+    <HeaderContent>
+        <MudTh>Match Name</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>View</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.MatchName</MudTd>
+        <MudTd>@context.State</MudTd>
+        <MudTd><MudButton OnClick="()=>ViewMatch(context.MatchName)" StartIcon="@Icons.Material.Filled.ViewDay" Color="Color.Primary" Variant="Variant.Outlined">View</MudButton></MudTd>
+    </RowTemplate>
+</MudTable>
+<MudDialog @bind-IsVisible="_showMatchDialog">
+    <DialogContent>
+        @if (_currentMatch != null)
         {
-            var pool = _pools[poolIndex];
-            <MudTabPanel Text="@TabName(poolIndex+1)">
-                @for(var podIndex =0; podIndex<pool.Pods.Length;podIndex++)
-                {
-                    var curPodIndex = podIndex;
-                    var pod = pool.Pods[podIndex];
-                        <MudSimpleTable>
-                            <thead>
-                            <tr>
-                                <th>
-                                    Pod @curPodIndex
-                                </th>
-                                <th>
-                                    Chart 1 Score
-                                </th>
-                                <th>
-                                    Chart 2 Score
-                                </th>
-                                <th>
-                                    Chart 3 score
-                                </th>
-                                <th>
-                                    Chart 4 score
-                                </th>
-                                <th>
-                                    Pod Score
-                                </th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            @for(var playerIndex=0; playerIndex<pod.Players.Length;playerIndex++)
-                            {
-                                var player = pod.Players[playerIndex];
-                                <tr>
-                                    <td>@(player.PlayerName?.ToString()??"")</td>
-                                    @for (var chartIndex = 0; chartIndex < player.Scores.Length; chartIndex++)
-                                    {
-                                        <td>
-
-                                            @{
-                                                var index = playerIndex;
-                                                var index1 = chartIndex;
-                                            }
-                                            <MudNumericField HideSpinButtons="true" Disabled="!pod.IsReady" T="int" Value="player.Scores[chartIndex]" Label="@ScoreLabel(player.MoneyScore[chartIndex])" ValueChanged="@(s=>pod.SetScore(index,index1,s))" Min="0" Max="20000000"></MudNumericField>
-                                        </td>
-                                    }
-                                    <td>
-                                        @player.MoneyScore.Sum()
-                                    </td>
-                                </tr>
-                            }
-                            </tbody>
-                        </MudSimpleTable>
-                        
-                }
-            </MudTabPanel>
+            <MatchOverview MatchName="_currentMatch.Value"></MatchOverview>
         }
-    </MudTabs>
-</MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showMatchDialog = false">@L["Close"]</MudButton>
 
+    </DialogActions>
+</MudDialog>
+
+
+@inject ICurrentUserAccessor CurrentUser;
+@inject IMediator Mediator;
+@inject ISnackbar Snackbar;
 @code
 {
-    private string TabName(int index) => $"Wave {index}";
-    private string ScoreLabel(int score) => score == 0 ? "" : score.ToString()+" Points";
-    private Pool[] _pools = Array.Empty<Pool>();
-    protected override Task OnInitializedAsync()
+    private IDictionary<string, RandomSettings> _chartPullSettings = new Dictionary<string, RandomSettings>(StringComparer.OrdinalIgnoreCase);
+    private RandomSettings _currentSettings = new();
+    private string _currentRandomName = string.Empty;
+    private bool _showAddRandomDialog = false;
+    private bool _showAddMatchDialog = false;
+    private bool _showMatchDialog = false;
+    private User? _user;
+    private int _playerCount = 2;
+    private string _randomSettings = string.Empty;
+    private string _matchName = string.Empty;
+    private bool IsLoggedInAsAdmin => _user?.IsAdmin ?? false;
+    private Name? _currentMatch;
+    private IDictionary<string, MatchView> _matches = new Dictionary<string, MatchView>();
+    public void OpenAddRandomDialog()
     {
-        var nameChunks = Names.Split(@"
-").Where(s => !string.IsNullOrWhiteSpace(s)).Select(Name.From).Chunk(8).ToArray();
-
-        var nextPool = new Pool(nameChunks.First());
-        var pools = new List<Pool> { nextPool };
-
-        foreach (var pool in nameChunks.Skip(3))
-        {
-            var currentPool = new Pool(pool, nextPool);
-            pools.Add(currentPool);
-            nextPool = currentPool;
-        }
-        var firstPool = new Pool(nameChunks[1].Concat(nameChunks[2]), nextPool);
-        pools.Add(firstPool);
-        pools.Reverse();
-        _pools = pools.ToArray();
-        return Task.CompletedTask;
-
+        _currentSettings = new();
+        _showAddRandomDialog = true;
+        _currentRandomName = string.Empty;
+    }
+    public void OpenAddMatchDialog()
+    {
+        _playerCount = 2;
+        _randomSettings = string.Empty;
+        _matchName = string.Empty;
+        _showAddMatchDialog = true;
     }
 
-    private sealed class Pool
+    private void ViewMatch(Name matchName)
     {
-        public Pool(IEnumerable<Name> names, Pool? nextPool = null)
-        {
-            var namesArray = names.ToArray();
-            switch (namesArray.Length)
-            {
-                case 16:
-                    Pods = namesArray.Chunk(4).Select((c, index) => new Pod(c[0], c[1], c[2], c[3], nextPool?.Pods[index])).ToArray();
-                    break;
-                case 8:
-                    Pods = namesArray.Chunk(2).Select((c, index) => new Pod(c[0], c[1], null, null, nextPool?.Pods[index])).ToArray();
-                    break;
-                default:
-                    throw new Exception("Invalid player count");
-            }
-
-        }
-        public Pod[] Pods { get; }
+        _currentMatch = matchName;
+        _showMatchDialog = true;
     }
-    private sealed class Pod
+    private async Task CreateMatch()
     {
-        public Pod(Name player1, Name player2, Name? player3 = null, Name? player4 = null, Pod ? nextPod = null)
-        {
-            _nextPod = nextPod;
-            Players = new[]
-            {
-                new PlayerMatchResult(player1),
-                new PlayerMatchResult(player2),
-                new PlayerMatchResult(player3),
-                new PlayerMatchResult(player4)
-            };
-        }
-
-        public bool IsReady => Players.All(p => p.PlayerName != null);
-        private void SetPreviousWinners(Name winner1, Name winner2)
-        {
-            Players[2].AssignPlayer(winner1);
-            Players[3].AssignPlayer(winner2);
-        }
-        private readonly Pod? _nextPod = null;
-        public PlayerMatchResult[] Players { get; }
-
-        public void SetScore(int playerIndex, int chartIndex, XXScore score)
-        {
-            if (Players.Any(p => p.PlayerName == null))
-            {
-                throw new Exception("Can't assign scores to a match that doesn't have all players yet");
-            }
-            Players[playerIndex].Scores[chartIndex] = score;
-            if (Players.Any(p => p.Scores[chartIndex] == 0))
-                return;
-
-
-            var scoreGroups = Players.GroupBy(s => s.Scores[chartIndex]).OrderByDescending(g => (int)g.Key!).ToArray();
-            var points = 4;
-            var count = 0;
-            for (var i = 0; i < Players.Length;i++)
-            {
-                if (scoreGroups.Length <= i)
-                {
-                    break;
-                }
-                foreach (var player in scoreGroups[i])
-                {
-                    player.MoneyScore[chartIndex] = points;
-                    count++;
-                }
-                points -= count;
-                count = 0;
-            }
-            if (!Players.All(p => p.MoneyScore.All(s => s > 0)))
-                return;
-
-            var ranking = Players.OrderByDescending(p => p.MoneyScore.Sum()).ThenByDescending(p => p.Scores.Sum(s => (int)s!)).ToArray();
-
-            _nextPod?.SetPreviousWinners(ranking[0].PlayerName!.Value,ranking[1].PlayerName!.Value);
-        }
-
+        var players = Enumerable.Range(0, _playerCount).Select(c => Name.From($"Unknown {c}")).ToArray();
+        await Mediator.Send(new UpdateMatchCommand(new MatchView(_matchName, _randomSettings, MatchState.NotStarted,
+            players, Array.Empty<Guid>(),
+            Array.Empty<Guid>(),
+            Array.Empty<Guid>(),
+            players.ToDictionary(p => p.ToString(), p => Array.Empty<PhoenixScore>()),
+            players.ToDictionary(p => p.ToString(), p => Array.Empty<int>()),
+            players
+            )));
+        _showAddMatchDialog = false;
     }
 
-    private sealed class PlayerMatchResult
+    private void MatchUpdated(MatchUpdatedEvent e)
     {
-        public PlayerMatchResult(Name? playerName)
-        {
-            PlayerName = playerName;
-        }
-
-        public void AssignPlayer(Name? playerName)
-        {
-            PlayerName = playerName;
-        }
-        public Name? PlayerName { get; private set; }
-        public int[] MoneyScore { get; } = { 0, 0, 0, 0 };
-        public XXScore[] Scores { get; }= { 0, 0, 0, 0 };
+        _matches[e.NewState.MatchName] = e.NewState;
+        InvokeAsync(StateHasChanged);
     }
 
-    private string Names = @"
-__QED__
-_GEM
-_UWU_
-AZTRYLMYX
-Azurian
-Bedrock
-Blankman
-BRTOMAMI
-chezmix
-Crafty
-Dancingmaractus
-Daniel Van Eden
-DanTheWaffleLord
-DarkBeam
-DDMBIU
-DefaultK
-DJPandaga
-DrMurloc
-eion
-Elixir
-Ellison
-EMCAT
-esibun
-Feathers
-fungpapi
-FUNKTION_04
-GucciTng
-Hamaon
-HSPuppets
-INVOKER
-Iraiah
-JellySlosh
-Jessip
-Jet Fox
-KDWAVOUR
-Koral
-Kwaurter
-layZdog
-lilblake
-Loy
-manEmajor15
-Mashle
-MISCHIEF
-NickTrioxin
-NOBARBEN
-Nyroom
-OtakuBot
-Paranoia Boi
-Pikarichu
-PrimoVictorian
-S0lost
-Scottisgod
-Shinobee
-ShinySP
-silentblackcat
-sixxofsixx
-Sneezle
-SnowStorm
-StrawHatGabe
-thomas_grover
-Whiskey3line
-WINDFORCE
-Yimmythe42
-YUMADORY";
+    public async Task SaveRandomSettings()
+    {
+        if (!Name.TryParse(_currentRandomName, out var name))
+        {
+            return;
+        }
+        try
+        {
+            await Mediator.Send(new GetRandomChartsQuery(_currentSettings));
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add(e.Message, Severity.Error);
+            return;
+        }
+        await Mediator.Send(new SaveRandomSettingsCommand(name, _currentSettings));
+        _chartPullSettings[name] = _currentSettings;
+        _showAddRandomDialog = false;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        _user = CurrentUser.IsLoggedIn ? CurrentUser.User : null;
+        _matches = (await Mediator.Send(new GetAllMatchesQuery())).ToDictionary(m => m.MatchName.ToString());
+        _chartPullSettings = (await Mediator.Send(new GetAllRandomSettingsQuery())).ToDictionary(s => (string) s.name, s => s.settings);
+        MainLayout.MatchUpdated += (o, e) => MatchUpdated(e);
+    }
+
+
 }

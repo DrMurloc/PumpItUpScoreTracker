@@ -1,14 +1,14 @@
-﻿using CsvHelper;
+﻿using System.Collections.Immutable;
+using System.ComponentModel;
+using System.Globalization;
+using System.Reflection;
+using CsvHelper;
 using Microsoft.AspNetCore.Components.Forms;
 using OfficeOpenXml;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.ValueTypes;
 using ScoreTracker.Web.Dtos;
-using System.Collections.Immutable;
-using System.ComponentModel;
-using System.Globalization;
-using System.Reflection;
 
 namespace ScoreTracker.Web.Services;
 
@@ -16,7 +16,7 @@ public sealed class XXScoreFile
 {
     public const int MaxByteCount = 10000000;
 
-    public static readonly IDictionary<Name, Name> NameMappings = new Dictionary<Name, Name>
+    public static readonly IDictionary<string, Name> NameMappings = new Dictionary<string, Name>
     {
         { "8 6", "86" },
         { "%X", "%X (Percent X)" },
