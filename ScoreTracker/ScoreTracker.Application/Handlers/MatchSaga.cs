@@ -62,11 +62,13 @@ namespace ScoreTracker.Application.Handlers
 
             for (var chartIndex = 0; chartIndex < match.ActiveCharts.Length; chartIndex++)
             {
-                var order = match.Players.OrderByDescending(p => (int)match.Scores[p][chartIndex]).ToArray();
-                for (var place = 0; place < order.Length; place++)
+                var pointIndex = 0;
+                foreach (var scoreGroup in match.Players.GroupBy(p => (int)match.Scores[p][chartIndex])
+                             .OrderByDescending(g => g.Key))
                 {
-                    var player = order[place];
-                    match.Points[player][chartIndex] = scoring[place];
+                    foreach (var player in scoreGroup) match.Points[player][chartIndex] = scoring[pointIndex];
+
+                    pointIndex += scoreGroup.Count();
                 }
             }
 
@@ -77,9 +79,10 @@ namespace ScoreTracker.Application.Handlers
             foreach (var tieBreakerResult in tie.OrderByDescending(name => match.Scores[name].Sum(s => s)))
                 match.FinalPlaces[currentPosition++] = tieBreakerResult;
 
-            await _matchRepository.SaveMatch(match with { State = MatchState.Completed }, cancellationToken);
+            var newMatchState = match with { State = MatchState.Completed };
+            await _matchRepository.SaveMatch(newMatchState, cancellationToken);
 
-            await _mediator.Publish(new MatchUpdatedEvent(match), cancellationToken);
+            await _mediator.Publish(new MatchUpdatedEvent(newMatchState), cancellationToken);
             return Unit.Value;
         }
 

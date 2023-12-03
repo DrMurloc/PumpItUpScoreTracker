@@ -3,7 +3,8 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Views;
 
-public sealed record MatchView(Name MatchName, Name RandomSettings, MatchState State, Name[] Players,
+public sealed record MatchView(Name MatchName, int MatchOrder, int ChartCount, Name RandomSettings, MatchState State,
+    Name[] Players,
     Guid[] ActiveCharts,
     Guid[] VetoedCharts, Guid[] ProtectedCharts, IDictionary<string, PhoenixScore[]> Scores,
     IDictionary<string, int[]> Points, Name[] FinalPlaces)

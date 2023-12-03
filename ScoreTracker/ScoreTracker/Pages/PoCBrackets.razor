@@ -10,6 +10,7 @@
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Web.Shared
+@using System.Text.RegularExpressions
 
 <PageTitle>About</PageTitle>
 @if (IsLoggedInAsAdmin)
@@ -51,6 +52,9 @@
                     <MudTextField T="string" @bind-Value="_matchName" Label="Match Name"></MudTextField>
                 </MudItem>
                 <MudItem xs="12">
+                    <MudNumericField T="int" @bind-Value="_chartCount" Label="Chart Count"></MudNumericField>
+                </MudItem>
+                <MudItem xs="12">
                     <MudSelect @bind-Value="_randomSettings" Label="Random Settings">
                         @foreach (var key in _chartPullSettings.Keys.OrderBy(k=>k))
                         {
@@ -66,19 +70,30 @@
             <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showAddMatchDialog = false">@L["Close"]</MudButton>
         </DialogActions>
     </MudDialog>
+
 }
-<MudTable T="MatchView" Items="_matches.Values">
-    <HeaderContent>
-        <MudTh>Match Name</MudTh>
-        <MudTh>Status</MudTh>
-        <MudTh>View</MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd>@context.MatchName</MudTd>
-        <MudTd>@context.State</MudTd>
-        <MudTd><MudButton OnClick="()=>ViewMatch(context.MatchName)" StartIcon="@Icons.Material.Filled.ViewDay" Color="Color.Primary" Variant="Variant.Outlined">View</MudButton></MudTd>
-    </RowTemplate>
-</MudTable>
+
+@foreach (var parameters in MatchSections())
+{
+    @if (parameters.matches.Any())
+    {
+        <MudTable T="MatchView" Items="parameters.matches">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">@parameters.header</MudText>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Match Name</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>View</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.MatchName</MudTd>
+                <MudTd>@context.State</MudTd>
+                <MudTd><MudButton OnClick="() => ViewMatch(context.MatchName)" StartIcon="@Icons.Material.Filled.ViewDay" Color="Color.Primary" Variant="Variant.Outlined">View</MudButton></MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+}
 <MudDialog @bind-IsVisible="_showMatchDialog">
     <DialogContent>
         @if (_currentMatch != null)
@@ -107,10 +122,23 @@
     private bool _showMatchDialog = false;
     private User? _user;
     private int _playerCount = 2;
+    private int _chartCount = 3;
     private string _randomSettings = string.Empty;
     private string _matchName = string.Empty;
     private bool IsLoggedInAsAdmin => _user?.IsAdmin ?? false;
     private Name? _currentMatch;
+    private IEnumerable<MatchView> ActiveMatches => _matches.Values.Where(m => m.State is > MatchState.NotStarted and < MatchState.Completed)
+        .OrderByDescending(m => m.State).ThenBy(m=>m.MatchOrder);
+
+    private IEnumerable<MatchView> UpcomingMatches => _matches.Values.Where(m => m.State is MatchState.NotStarted).OrderBy(m=>m.MatchOrder);
+    private IEnumerable<MatchView> CompletedMatches => _matches.Values.Where(m => m.State is MatchState.Completed).OrderBy(m=>m.MatchOrder);
+
+    private IEnumerable<(string header, IEnumerable<MatchView> matches)> MatchSections()
+    {
+        yield return ("Active Matches",ActiveMatches);
+        yield return ("Upcoming Matches",UpcomingMatches);
+        yield return ("Completed Matches",CompletedMatches);
+    }
     private IDictionary<string, MatchView> _matches = new Dictionary<string, MatchView>();
     public void OpenAddRandomDialog()
     {
@@ -131,10 +159,15 @@
         _currentMatch = matchName;
         _showMatchDialog = true;
     }
+
+    
     private async Task CreateMatch()
     {
         var players = Enumerable.Range(0, _playerCount).Select(c => Name.From($"Unknown {c}")).ToArray();
-        await Mediator.Send(new UpdateMatchCommand(new MatchView(_matchName, _randomSettings, MatchState.NotStarted,
+        await Mediator.Send(new UpdateMatchCommand(new MatchView(_matchName,
+            _matches.Any()?_matches.TryGetValue(_matchName, out var existingMatch)?existingMatch.MatchOrder:_matches.Max(m=>m.Value.MatchOrder)+1:0,
+            _chartCount,
+            _randomSettings, MatchState.NotStarted,
             players, Array.Empty<Guid>(),
             Array.Empty<Guid>(),
             Array.Empty<Guid>(),
