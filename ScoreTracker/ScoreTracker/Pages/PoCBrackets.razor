@@ -94,6 +94,56 @@
         </MudTable>
     }
 }
+@if (IsLoggedInAsAdmin)
+{
+    <MudButton OnClick="FindInvalidMatches" Color="Color.Primary" Variant="Variant.Filled">Check Matches</MudButton>
+    @if (_linksChecked && !_tooManyLinks.Any() && !_notEnoughLinks.Any())
+    {
+        <MudText>You did it!</MudText>
+    }
+    
+    @if (_tooManyLinks.Any())
+    {
+        <MudText>Too many: 
+            @foreach (var match in _tooManyLinks)
+            {
+                <MudLink OnClick="()=>ViewMatch(match)">@match</MudLink>
+            }
+
+        </MudText>
+    }
+    @if (_notEnoughLinks.Any())
+    {
+        <MudText>
+            Not enough:
+            @foreach (var match in _notEnoughLinks)
+            {
+                <MudLink OnClick="()=>ViewMatch(match)">@match</MudLink>
+            }
+        </MudText>
+    }
+
+    <MudTable T="MatchLink" Items="_matchLinks">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Links</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="()=>_showMatchLinkDialog=true">Create</MudButton>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>From Match</MudTh>
+            <MudTh>To Match</MudTh>
+            <MudTh>Type</MudTh>
+            <MudTh>Players</MudTh>
+            <MudTh>Delete</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.FromMatch</MudTd>
+            <MudTd>@context.ToMatch</MudTd>
+            <MudTd>@(context.IsWinners?"Winners":"Losers")</MudTd>
+            <MudTd>@context.PlayerCount</MudTd>
+            <MudTd><MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Primary" OnClick="()=>DeleteLink(context)"></MudIconButton></MudTd>
+        </RowTemplate>
+    </MudTable>
+}
 <MudDialog @bind-IsVisible="_showMatchDialog">
     <DialogContent>
         @if (_currentMatch != null)
@@ -107,7 +157,44 @@
 
     </DialogActions>
 </MudDialog>
+<MudDialog @bind-IsVisible="_showMatchLinkDialog">
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12">
+                <MudAutocomplete T="string"
+                                 @bind-Value="@_fromMatch"
+                                 ResetValueOnEmptyText="true"
+                                 CoerceText="true"
+                                 Label=@($"From Match")
+                                 SearchFunc="@(s => Task.FromResult(_matches.Keys.Where(k=>k.ToString().Contains(s,StringComparison.OrdinalIgnoreCase)).OrderBy(k => k.Equals(s, StringComparison.OrdinalIgnoreCase) ? 0 : 1).AsEnumerable()))">
 
+                </MudAutocomplete>
+
+            </MudItem>
+            <MudItem xs="12">
+                <MudAutocomplete T="string"
+                                 @bind-Value="@_toMatch"
+                                 ResetValueOnEmptyText="true"
+                                 CoerceText="true"
+                                 Label=@($"To Match")
+                                 SearchFunc="@(s => Task.FromResult(_matches.Keys.Where(k=>k.ToString().Contains(s,StringComparison.OrdinalIgnoreCase)).OrderBy(k => k.Equals(s, StringComparison.OrdinalIgnoreCase) ? 0 : 1).AsEnumerable()))">
+
+                </MudAutocomplete>
+
+            </MudItem>
+            <MudItem xs="12">
+                <MudCheckBox T="bool" @bind-Checked="_winners" Label="Winners"></MudCheckBox>
+            </MudItem>
+            <MudItem xs="12">
+                <MudNumericField @bind-Value="_linkPlayers" Min="1" Max="100" Label="Players" HideSpinButtons="true"></MudNumericField>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>        <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateLink">Save</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showMatchLinkDialog = false">@L["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
 
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
@@ -120,10 +207,15 @@
     private bool _showAddRandomDialog = false;
     private bool _showAddMatchDialog = false;
     private bool _showMatchDialog = false;
+    private bool _showMatchLinkDialog = false;
     private User? _user;
     private int _playerCount = 2;
     private int _chartCount = 3;
     private string _randomSettings = string.Empty;
+    private string _fromMatch = string.Empty;
+    private string _toMatch = string.Empty;
+    private int _linkPlayers = 1;
+    private bool _winners = true;
     private string _matchName = string.Empty;
     private bool IsLoggedInAsAdmin => _user?.IsAdmin ?? false;
     private Name? _currentMatch;
@@ -140,6 +232,56 @@
         yield return ("Completed Matches",CompletedMatches);
     }
     private IDictionary<string, MatchView> _matches = new Dictionary<string, MatchView>();
+    private ICollection<MatchLink> _matchLinks = new List<MatchLink>();
+    private readonly ICollection<Name> _tooManyLinks = new List<Name>();
+    private readonly ICollection<Name> _notEnoughLinks = new List<Name>();
+    private bool _linksChecked = false;
+
+    private async Task CreateLink()
+    {
+        var link = new MatchLink(_fromMatch, _toMatch, _winners, _linkPlayers);
+        if (link.FromMatch == link.ToMatch)
+        {
+            return;
+        }
+        await Mediator.Send(new CreateMatchLinkCommand(link));
+        foreach (var existingLink in _matchLinks.Where(ml => ml.FromMatch == link.FromMatch && ml.ToMatch == link.ToMatch))
+        {
+            _matchLinks.Remove(existingLink);
+        }
+        _matchLinks.Add(link);
+        _showMatchLinkDialog = false;
+    }
+
+    private async Task DeleteLink(MatchLink link)
+    {
+        await Mediator.Send(new DeleteMatchLinkCommand(link.FromMatch, link.ToMatch));
+        _matchLinks.Remove(link);
+    }
+    private void FindInvalidMatches()
+    {
+
+        _tooManyLinks.Clear();
+        _notEnoughLinks.Clear();
+        var linkDict = _matchLinks
+            .Where(l=>_matches[l.FromMatch].State is not MatchState.Completed)
+            .GroupBy(l => l.ToMatch.ToString()).ToDictionary(g => g.Key, g => g.ToArray());
+
+        foreach (var match in _matches.Values)
+        {
+            var progressingCount = linkDict.TryGetValue(match.MatchName, out var value)?value.Sum(l => l.PlayerCount):0;
+            var existingCount = match.Players.Count(p => !p.ToString().StartsWith("Unknown "));
+            if (progressingCount + existingCount < match.Players.Length)
+            {
+                _notEnoughLinks.Add(match.MatchName);
+            }
+            if (progressingCount + existingCount > match.Players.Length)
+            {
+                _tooManyLinks.Add(match.MatchName);
+            }
+        }
+        _linksChecked = true;
+    }
     public void OpenAddRandomDialog()
     {
         _currentSettings = new();
@@ -208,6 +350,8 @@
         _user = CurrentUser.IsLoggedIn ? CurrentUser.User : null;
         _matches = (await Mediator.Send(new GetAllMatchesQuery())).ToDictionary(m => m.MatchName.ToString());
         _chartPullSettings = (await Mediator.Send(new GetAllRandomSettingsQuery())).ToDictionary(s => (string) s.name, s => s.settings);
+        _matchLinks = (await Mediator.Send(new GetMatchLinksQuery())).ToList();
+
         MainLayout.MatchUpdated += (o, e) => MatchUpdated(e);
     }
 

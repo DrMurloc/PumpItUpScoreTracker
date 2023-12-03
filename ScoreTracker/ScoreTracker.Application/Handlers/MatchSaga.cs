@@ -16,15 +16,22 @@ namespace ScoreTracker.Application.Handlers
         IRequestHandler<ResolveMatchCommand>,
         IRequestHandler<GetAllMatchesQuery, IEnumerable<MatchView>>,
         IRequestHandler<SaveRandomSettingsCommand>,
-        IRequestHandler<GetAllRandomSettingsQuery, IEnumerable<(Name name, RandomSettings settings)>>
+        IRequestHandler<GetAllRandomSettingsQuery, IEnumerable<(Name name, RandomSettings settings)>>,
+        IRequestHandler<GetMatchLinksQuery, IEnumerable<MatchLink>>,
+        IRequestHandler<GetMatchLinksFromMatchQuery, IEnumerable<MatchLink>>,
+        IRequestHandler<CreateMatchLinkCommand>,
+        IRequestHandler<DeleteMatchLinkCommand>
+
     {
         private readonly IMatchRepository _matchRepository;
         private readonly IMediator _mediator;
+        private readonly IAdminNotificationClient _admins;
 
-        public MatchSaga(IMediator mediator, IMatchRepository matchRepository)
+        public MatchSaga(IMediator mediator, IMatchRepository matchRepository, IAdminNotificationClient admins)
         {
             _matchRepository = matchRepository;
             _mediator = mediator;
+            _admins = admins;
         }
 
         public async Task<MatchView> Handle(GetMatchQuery request, CancellationToken cancellationToken)
@@ -83,6 +90,35 @@ namespace ScoreTracker.Application.Handlers
             await _matchRepository.SaveMatch(newMatchState, cancellationToken);
 
             await _mediator.Publish(new MatchUpdatedEvent(newMatchState), cancellationToken);
+            var links = await _matchRepository.GetMatchLinksByFromMatchName(match.MatchName, cancellationToken);
+            foreach (var link in links)
+            {
+                var nextMatch = await _matchRepository.GetMatch(link.ToMatch, cancellationToken);
+                var progressers = link.IsWinners
+                    ? newMatchState.FinalPlaces.Take(link.PlayerCount)
+                    : newMatchState.FinalPlaces.Reverse().Take(link.PlayerCount);
+                foreach (var player in progressers)
+                {
+                    if (nextMatch.Players.Contains(player)) continue;
+                    var nextIndex = nextMatch.Players.Select((p, i) => (p, i))
+                        .Where(p => p.p.ToString().StartsWith("Unknown ", StringComparison.OrdinalIgnoreCase))
+                        .Select(p => (int?)p.i)
+                        .FirstOrDefault();
+                    if (nextIndex == null)
+                    {
+                        await _admins.NotifyAdmin(
+                            $"Player {player} Couldn't progress from {newMatchState.MatchName} to {nextMatch.MatchName}",
+                            cancellationToken);
+                        continue;
+                    }
+
+                    nextMatch.Players[nextIndex.Value] = player;
+                }
+
+                await _matchRepository.SaveMatch(nextMatch, cancellationToken);
+                await _mediator.Publish(new MatchUpdatedEvent(nextMatch), cancellationToken);
+            }
+
             return Unit.Value;
         }
 
@@ -102,6 +138,30 @@ namespace ScoreTracker.Application.Handlers
             CancellationToken cancellationToken)
         {
             return await _matchRepository.GetAllRandomSettings(cancellationToken);
+        }
+
+        public async Task<IEnumerable<MatchLink>> Handle(GetMatchLinksQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await _matchRepository.GetAllMatchLinks(cancellationToken);
+        }
+
+        public async Task<IEnumerable<MatchLink>> Handle(GetMatchLinksFromMatchQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await _matchRepository.GetMatchLinksByFromMatchName(request.FromMatchName, cancellationToken);
+        }
+
+        public async Task<Unit> Handle(CreateMatchLinkCommand request, CancellationToken cancellationToken)
+        {
+            await _matchRepository.SaveMatchLink(request.MatchLink, cancellationToken);
+            return Unit.Value;
+        }
+
+        public async Task<Unit> Handle(DeleteMatchLinkCommand request, CancellationToken cancellationToken)
+        {
+            await _matchRepository.DeleteMatchLink(request.FromName, request.ToName, cancellationToken);
+            return Unit.Value;
         }
     }
 }

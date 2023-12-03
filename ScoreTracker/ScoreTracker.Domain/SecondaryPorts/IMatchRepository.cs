@@ -14,4 +14,9 @@ public interface IMatchRepository
 
     Task<IEnumerable<(Name name, RandomSettings settings)>> GetAllRandomSettings(
         CancellationToken cancellationToken);
+
+    Task<IEnumerable<MatchLink>> GetMatchLinksByFromMatchName(Name fromMatchName, CancellationToken cancellationToken);
+    Task SaveMatchLink(MatchLink matchLink, CancellationToken cancellationToken);
+    Task DeleteMatchLink(Name fromName, Name toName, CancellationToken cancellationToken);
+    Task<IEnumerable<MatchLink>> GetAllMatchLinks(CancellationToken cancellationToken);
 }
