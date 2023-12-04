@@ -173,7 +173,7 @@
                     </MudTable>
                 </MudItem>
                 <MudItem xs="12">
-                    <MudButton Disabled="_match.Scores.SelectMany(s=>s.Value).Any(v=>v==0)" Variant="Variant.Filled" OnClick="FinishMatch">Finish Match</MudButton>
+                    <MudButton Disabled="!IsFinished(_match)" Variant="Variant.Filled" OnClick="FinishMatch">Finish Match</MudButton>
                 </MudItem>
                 break;
 
@@ -234,6 +234,19 @@
     private User? _currentUser;
     private bool IsLoggedInAsAdmin =>_currentUser!=null &&(_currentUser.IsAdmin || BracketAdmins.Contains(_currentUser.Id));
 
+    private bool IsFinished(MatchView match)
+    {
+        if (match.Players.Length == 2)
+        {
+            return (from player in match.Players
+                let otherPlayer = match.Players.Single(p => p != player)
+                where match.Scores[player]
+                    .Select((s, i) => (s,i))
+                    .Count(k => k.s > match.Scores[otherPlayer][k.i]) > match.ChartCount / 2 select player)
+                .Any();
+        }
+        return match.Scores.SelectMany(s => s.Value).All(v => v != 0);
+    }
     private bool FinishedVetoes()
     {
         if (_match == null)

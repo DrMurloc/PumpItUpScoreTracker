@@ -55,6 +55,13 @@
                     <MudNumericField T="int" @bind-Value="_chartCount" Label="Chart Count"></MudNumericField>
                 </MudItem>
                 <MudItem xs="12">
+                    <MudSelect T="string" @bind-Value="_phaseName" Label="Phase">
+                        <MudSelectItem T="string" Value=@("Mids")>Mids</MudSelectItem>
+                        <MudSelectItem T="string" Value=@("Uppers")>Uppers</MudSelectItem>
+                        <MudSelectItem T="string" Value=@("Pros")>Pros</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
                     <MudSelect @bind-Value="_randomSettings" Label="Random Settings">
                         @foreach (var key in _chartPullSettings.Keys.OrderBy(k=>k))
                         {
@@ -84,14 +91,20 @@
             <HeaderContent>
                 <MudTh>Match Name</MudTh>
                 <MudTh>Status</MudTh>
+                <MudTh>Phase</MudTh>
+                <MudTh>Players</MudTh>
                 <MudTh>View</MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd>@context.MatchName</MudTd>
                 <MudTd>@context.State</MudTd>
+                <MudTh>@context.PhaseName</MudTh>
+                <MudTh>@(string.Join(", ",context.Players.Select(p=>p.ToString().StartsWith("Unknown ")?"TBD":p.ToString())))</MudTh>
                 <MudTd><MudButton OnClick="() => ViewMatch(context.MatchName)" StartIcon="@Icons.Material.Filled.ViewDay" Color="Color.Primary" Variant="Variant.Outlined">View</MudButton></MudTd>
             </RowTemplate>
         </MudTable>
+        <br/>
+        <br/>
     }
 }
 @if (IsLoggedInAsAdmin)
@@ -222,19 +235,24 @@
     private IEnumerable<MatchView> ActiveMatches => _matches.Values.Where(m => m.State is > MatchState.NotStarted and < MatchState.Completed)
         .OrderByDescending(m => m.State).ThenBy(m=>m.MatchOrder);
 
+    private string _currentPhase = string.Empty;
+
     private IEnumerable<MatchView> UpcomingMatches => _matches.Values.Where(m => m.State is MatchState.NotStarted).OrderBy(m=>m.MatchOrder);
     private IEnumerable<MatchView> CompletedMatches => _matches.Values.Where(m => m.State is MatchState.Completed).OrderBy(m=>m.MatchOrder);
+    private IEnumerable<MatchView> ReadyToCardDrawMatches => UpcomingMatches.Where(m => m.PhaseName==_currentPhase && m.State is MatchState.NotStarted && !m.Players.Any(p => p.ToString().StartsWith("Unknown "))).OrderBy(m => m.MatchOrder);
 
     private IEnumerable<(string header, IEnumerable<MatchView> matches)> MatchSections()
     {
         yield return ("Active Matches",ActiveMatches);
-        yield return ("Upcoming Matches",UpcomingMatches);
+        yield return ("Ready To Card Draw",ReadyToCardDrawMatches);
+        yield return ("Future Matches",UpcomingMatches);
         yield return ("Completed Matches",CompletedMatches);
     }
     private IDictionary<string, MatchView> _matches = new Dictionary<string, MatchView>();
     private ICollection<MatchLink> _matchLinks = new List<MatchLink>();
     private readonly ICollection<Name> _tooManyLinks = new List<Name>();
     private readonly ICollection<Name> _notEnoughLinks = new List<Name>();
+    private string _phaseName = "Mids";
     private bool _linksChecked = false;
 
     private async Task CreateLink()
@@ -302,11 +320,12 @@
         _showMatchDialog = true;
     }
 
-    
+
     private async Task CreateMatch()
     {
         var players = Enumerable.Range(0, _playerCount).Select(c => Name.From($"Unknown {c}")).ToArray();
         await Mediator.Send(new UpdateMatchCommand(new MatchView(_matchName,
+            _phaseName,
             _matches.Any()?_matches.TryGetValue(_matchName, out var existingMatch)?existingMatch.MatchOrder:_matches.Max(m=>m.Value.MatchOrder)+1:0,
             _chartCount,
             _randomSettings, MatchState.NotStarted,
@@ -323,7 +342,23 @@
     private void MatchUpdated(MatchUpdatedEvent e)
     {
         _matches[e.NewState.MatchName] = e.NewState;
+        UpdateCurrentPhase();
         InvokeAsync(StateHasChanged);
+    }
+
+    private void UpdateCurrentPhase()
+    {
+        var remainingPhases = _matches.Values.Where(m => m.State is not MatchState.Completed)
+            .Select(m => m.PhaseName.ToString()).Distinct().ToHashSet(StringComparer.OrdinalIgnoreCase);
+        _currentPhase = "Pros";
+        if (remainingPhases.Contains("Uppers"))
+        {
+            _currentPhase = "Uppers";
+        }
+        if (remainingPhases.Contains("Mids"))
+        {
+            _currentPhase = "Mids";
+        }
     }
 
     public async Task SaveRandomSettings()
@@ -351,9 +386,8 @@
         _matches = (await Mediator.Send(new GetAllMatchesQuery())).ToDictionary(m => m.MatchName.ToString());
         _chartPullSettings = (await Mediator.Send(new GetAllRandomSettingsQuery())).ToDictionary(s => (string) s.name, s => s.settings);
         _matchLinks = (await Mediator.Send(new GetMatchLinksQuery())).ToList();
-
+        UpdateCurrentPhase();
         MainLayout.MatchUpdated += (o, e) => MatchUpdated(e);
     }
-
 
 }

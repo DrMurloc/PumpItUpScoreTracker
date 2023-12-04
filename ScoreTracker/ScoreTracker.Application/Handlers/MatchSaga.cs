@@ -73,7 +73,8 @@ namespace ScoreTracker.Application.Handlers
                 foreach (var scoreGroup in match.Players.GroupBy(p => (int)match.Scores[p][chartIndex])
                              .OrderByDescending(g => g.Key))
                 {
-                    foreach (var player in scoreGroup) match.Points[player][chartIndex] = scoring[pointIndex];
+                    var points = scoreGroup.Key == 0 ? 0 : scoring[pointIndex];
+                    foreach (var player in scoreGroup) match.Points[player][chartIndex] = points;
 
                     pointIndex += scoreGroup.Count();
                 }
