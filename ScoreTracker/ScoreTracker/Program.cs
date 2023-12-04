@@ -1,3 +1,4 @@
+using System.Text.Json;
 using BlazorApplicationInsights;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
@@ -11,6 +12,7 @@ using ScoreTracker.Data.Configuration;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
+using ScoreTracker.Domain.ValueTypes;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Accessors;
 using ScoreTracker.Web.Configuration;
@@ -23,7 +25,11 @@ using ScoreTracker.Web.Swagger;
 using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.Configure<JsonSerializerOptions>(o =>
+{
+    o.Converters.Add(Name.Converter);
+    o.Converters.Add(PhoenixScore.Converter);
+});
 
 ExcelPackage.LicenseContext = new LicenseContext();
 // Add services to the container.

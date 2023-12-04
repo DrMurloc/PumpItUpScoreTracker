@@ -43,6 +43,9 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<ChartPreferenceRatingEntity> ChartPreferenceRating { get; set; }
     public DbSet<UserApiTokenEntity> UserApiToken { get; set; }
     public DbSet<TierListEntryEntity> TierListEntry { get; set; }
+    public DbSet<MatchEntity> Match { get; set; }
+    public DbSet<RandomSettingsEntity> RandomSettings { get; set; }
+    public DbSet<MatchLinkEntity> MatchLink { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -93,6 +93,10 @@
                 <MudTh>Status</MudTh>
                 <MudTh>Phase</MudTh>
                 <MudTh>Players</MudTh>
+                @if (parameters.showWinner)
+                {
+                    <MudTh>Winner</MudTh>
+                }
                 <MudTh>View</MudTh>
             </HeaderContent>
             <RowTemplate>
@@ -100,6 +104,11 @@
                 <MudTd>@context.State</MudTd>
                 <MudTh>@context.PhaseName</MudTh>
                 <MudTh>@(string.Join(", ",context.Players.Select(p=>p.ToString().StartsWith("Unknown ")?"TBD":p.ToString())))</MudTh>
+                
+                @if (parameters.showWinner)
+                {
+                    <MudTh>@context.FinalPlaces[0]</MudTh>
+                }
                 <MudTd><MudButton OnClick="() => ViewMatch(context.MatchName)" StartIcon="@Icons.Material.Filled.ViewDay" Color="Color.Primary" Variant="Variant.Outlined">View</MudButton></MudTd>
             </RowTemplate>
         </MudTable>
@@ -241,12 +250,12 @@
     private IEnumerable<MatchView> CompletedMatches => _matches.Values.Where(m => m.State is MatchState.Completed).OrderBy(m=>m.MatchOrder);
     private IEnumerable<MatchView> ReadyToCardDrawMatches => UpcomingMatches.Where(m => m.PhaseName==_currentPhase && m.State is MatchState.NotStarted && !m.Players.Any(p => p.ToString().StartsWith("Unknown "))).OrderBy(m => m.MatchOrder);
 
-    private IEnumerable<(string header, IEnumerable<MatchView> matches)> MatchSections()
+    private IEnumerable<(string header, bool showWinner, IEnumerable<MatchView> matches)> MatchSections()
     {
-        yield return ("Active Matches",ActiveMatches);
-        yield return ("Ready To Card Draw",ReadyToCardDrawMatches);
-        yield return ("Future Matches",UpcomingMatches);
-        yield return ("Completed Matches",CompletedMatches);
+        yield return ("Active Matches",false,ActiveMatches);
+        yield return ("Ready To Card Draw",false,ReadyToCardDrawMatches);
+        yield return ("Future Matches",false,UpcomingMatches);
+        yield return ("Completed Matches",true,CompletedMatches);
     }
     private IDictionary<string, MatchView> _matches = new Dictionary<string, MatchView>();
     private ICollection<MatchLink> _matchLinks = new List<MatchLink>();

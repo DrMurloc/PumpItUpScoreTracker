@@ -1,4 +1,6 @@
-﻿using ScoreTracker.Domain.Enums;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Exceptions;
 
 namespace ScoreTracker.Domain.ValueTypes;
@@ -132,5 +134,20 @@ public readonly struct PhoenixScore
         if (score > Max._score) throw new InvalidScoreException("Level cannot be greater than 28");
 
         return new PhoenixScore(score);
+    }
+
+    public static JsonConverter Converter = new PhoenixScoreConverter();
+
+    private class PhoenixScoreConverter : JsonConverter<PhoenixScore>
+    {
+        public override PhoenixScore Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            return From(reader.GetInt32());
+        }
+
+        public override void Write(Utf8JsonWriter writer, PhoenixScore value, JsonSerializerOptions options)
+        {
+            writer.WriteNumberValue(value._score);
+        }
     }
 }
