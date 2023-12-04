@@ -20,18 +20,26 @@ namespace ScoreTracker.Application.Handlers
         IRequestHandler<GetMatchLinksQuery, IEnumerable<MatchLink>>,
         IRequestHandler<GetMatchLinksFromMatchQuery, IEnumerable<MatchLink>>,
         IRequestHandler<CreateMatchLinkCommand>,
-        IRequestHandler<DeleteMatchLinkCommand>
+        IRequestHandler<DeleteMatchLinkCommand>,
+        IRequestHandler<FinishCardDrawCommand>,
+        IRequestHandler<PingMatchCommand>,
+        IRequestHandler<GetMatchPlayersQuery, IEnumerable<MatchPlayer>>
 
     {
         private readonly IMatchRepository _matchRepository;
         private readonly IMediator _mediator;
         private readonly IAdminNotificationClient _admins;
+        private readonly IChartRepository _charts;
+        private readonly IBotClient _bot;
 
-        public MatchSaga(IMediator mediator, IMatchRepository matchRepository, IAdminNotificationClient admins)
+        public MatchSaga(IMediator mediator, IMatchRepository matchRepository, IAdminNotificationClient admins,
+            IChartRepository charts, IBotClient bot)
         {
             _matchRepository = matchRepository;
             _mediator = mediator;
+            _charts = charts;
             _admins = admins;
+            _bot = bot;
         }
 
         public async Task<MatchView> Handle(GetMatchQuery request, CancellationToken cancellationToken)
@@ -91,6 +99,18 @@ namespace ScoreTracker.Application.Handlers
             await _matchRepository.SaveMatch(newMatchState, cancellationToken);
 
             await _mediator.Publish(new MatchUpdatedEvent(newMatchState), cancellationToken);
+
+            try
+            {
+                await _bot.PublishQualifiersMessage($@"# {newMatchState.MatchName} Completed! #
+- {string.Join("\r\n- ", newMatchState.FinalPlaces.Select(p => $"{p} ({newMatchState.Points[p].Sum()})"))}",
+                    cancellationToken);
+            }
+            catch (Exception)
+            {
+                //Ignored
+            }
+
             var links = await _matchRepository.GetMatchLinksByFromMatchName(match.MatchName, cancellationToken);
             foreach (var link in links)
             {
@@ -98,6 +118,7 @@ namespace ScoreTracker.Application.Handlers
                 var progressers = link.IsWinners
                     ? newMatchState.FinalPlaces.Take(link.PlayerCount)
                     : newMatchState.FinalPlaces.Reverse().Take(link.PlayerCount);
+
                 foreach (var player in progressers)
                 {
                     if (nextMatch.Players.Contains(player)) continue;
@@ -163,6 +184,64 @@ namespace ScoreTracker.Application.Handlers
         {
             await _matchRepository.DeleteMatchLink(request.FromName, request.ToName, cancellationToken);
             return Unit.Value;
+        }
+
+        public async Task<Unit> Handle(FinishCardDrawCommand request, CancellationToken cancellationToken)
+        {
+            var match = await _matchRepository.GetMatch(request.MatchName, cancellationToken);
+            var updatedMatch = match with
+            {
+                State = MatchState.Ready,
+                Scores = match.Players.ToDictionary(p => p.ToString(),
+                    p => match.ActiveCharts.Select(c => PhoenixScore.From(0)).ToArray()),
+                Points = match.Players.ToDictionary(p => p.ToString(), p => match.ActiveCharts.Select(c => 0).ToArray())
+            };
+            await _matchRepository.SaveMatch(updatedMatch, cancellationToken);
+            await _mediator.Publish(new MatchUpdatedEvent(updatedMatch), cancellationToken);
+
+            var charts = await _charts.GetCharts(MixEnum.Phoenix, chartIds: updatedMatch.ActiveCharts,
+                cancellationToken: cancellationToken);
+            var vetoes = await _charts.GetCharts(MixEnum.Phoenix, chartIds: updatedMatch.VetoedCharts,
+                cancellationToken: cancellationToken);
+            try
+            {
+                await _bot.PublishQualifiersMessage($@"# {updatedMatch.MatchName} Card Draw Complete! #
+({string.Join(", ", updatedMatch.Players)})
+- {string.Join("\r\n- ", charts.Select(c => c.Song.Name + " " + c.DifficultyString))}
+- {string.Join("\r\n- ", vetoes.Select(v => "~~" + v.Song.Name + " " + v.DifficultyString + "~~"))}",
+                    cancellationToken);
+            }
+            catch (Exception)
+            {
+                //Ignored
+            }
+
+            return Unit.Value;
+        }
+
+        public async Task<Unit> Handle(PingMatchCommand request, CancellationToken cancellationToken)
+        {
+            var match = await _matchRepository.GetMatch(request.MatchName, cancellationToken);
+
+            var message = $"The PIU TOs are requesting the players for {match.MatchName}";
+
+            var playerDiscords = (await _matchRepository.GetMatchPlayers(cancellationToken))
+                .ToDictionary(p => p.Name.ToString(), p => p.DiscordId, StringComparer.OrdinalIgnoreCase);
+            if (match.State == MatchState.NotStarted && match.Players.All(p => !p.ToString().StartsWith("Unknown ")))
+                message = $"Card draw is ready for {match.MatchName}";
+
+            await _bot.PublishQualifiersMessage(
+                $@"{message}
+{string.Join(", ", match.Players.Where(p => !p.ToString().StartsWith("Unknown ")).Select(p => $"<@{playerDiscords[p]}> ({p})"))}, please report to PIU TOs",
+                cancellationToken);
+
+            return Unit.Value;
+        }
+
+        public async Task<IEnumerable<MatchPlayer>> Handle(GetMatchPlayersQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await _matchRepository.GetMatchPlayers(cancellationToken);
         }
     }
 }

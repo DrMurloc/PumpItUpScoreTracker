@@ -12,7 +12,7 @@
 @using ScoreTracker.Web.Shared
 @using System.Text.RegularExpressions
 
-<PageTitle>About</PageTitle>
+<PageTitle>Eclipse 2023 Brackets</PageTitle>
 @if (IsLoggedInAsAdmin)
 {
     <MudGrid>
@@ -79,7 +79,30 @@
     </MudDialog>
 
 }
+<br/>
+<br/>
+<MudGrid>
+    <MudItem xs="12">
+        <MudAutocomplete T="string"
+                         Value="@_searchedPlayer"
+                         ValueChanged="SearchForPlayer"
+                         ResetValueOnEmptyText="true"
+                         CoerceText="true"
+                         Label=@($"Search For My Next Match")
+                         AdornmentIcon="@Icons.Material.Filled.Search"
+                         SearchFunc="@(s => Task.FromResult(Players.Where(o=>!string.IsNullOrWhiteSpace(s)&&o.Contains(s,StringComparison.OrdinalIgnoreCase)).OrderBy(k => k.Equals(s, StringComparison.OrdinalIgnoreCase) ? 0 : 1).AsEnumerable()))">
 
+        </MudAutocomplete>
+        </MudItem>
+    @if (_nextMatch != null)
+    {
+        <MudItem xs="12"><MudText>Your next Match is @_nextMatch.MatchName</MudText></MudItem>
+        <MudItem xs="12"><MudText>There are @_matchesLeft Matches until Then</MudText></MudItem>
+        <MudItem xs="12"><MudText>This is expected to be @_expectedTime.ToString("dddd h:mm tt") (this is a very rough estimate)</MudText></MudItem>
+    }
+</MudGrid>
+<br />
+<br />
 @foreach (var parameters in MatchSections())
 {
     @if (parameters.matches.Any())
@@ -174,9 +197,12 @@
         }
     </DialogContent>
     <DialogActions>
+        @if (IsBracketAdmin && _currentMatch!=null)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.AddAlert" OnClick="()=>PingMatch(_currentMatch.Value)">Ping Match</MudButton>
+        }
         <MudSpacer></MudSpacer>
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showMatchDialog = false">@L["Close"]</MudButton>
-
     </DialogActions>
 </MudDialog>
 <MudDialog @bind-IsVisible="_showMatchLinkDialog">
@@ -233,6 +259,10 @@
     private User? _user;
     private int _playerCount = 2;
     private int _chartCount = 3;
+
+    private MatchView? _nextMatch;
+    private string _searchedPlayer;
+
     private string _randomSettings = string.Empty;
     private string _fromMatch = string.Empty;
     private string _toMatch = string.Empty;
@@ -240,11 +270,17 @@
     private bool _winners = true;
     private string _matchName = string.Empty;
     private bool IsLoggedInAsAdmin => _user?.IsAdmin ?? false;
+    private bool IsBracketAdmin => _user!=null && (_user.IsAdmin || MatchOverview.BracketAdmins.Contains(_user.Id));
     private Name? _currentMatch;
     private IEnumerable<MatchView> ActiveMatches => _matches.Values.Where(m => m.State is > MatchState.NotStarted and < MatchState.Completed)
         .OrderByDescending(m => m.State).ThenBy(m=>m.MatchOrder);
 
     private string _currentPhase = string.Empty;
+
+    private async Task PingMatch(Name matchName)
+    {
+        await Mediator.Send(new PingMatchCommand(matchName));
+    }
 
     private IEnumerable<MatchView> UpcomingMatches => _matches.Values.Where(m => m.State is MatchState.NotStarted).OrderBy(m=>m.MatchOrder);
     private IEnumerable<MatchView> CompletedMatches => _matches.Values.Where(m => m.State is MatchState.Completed).OrderBy(m=>m.MatchOrder);
@@ -263,7 +299,42 @@
     private readonly ICollection<Name> _notEnoughLinks = new List<Name>();
     private string _phaseName = "Mids";
     private bool _linksChecked = false;
+    private TimeSpan _expectedTimeToMatch = TimeSpan.Zero;
+    private DateTime _expectedTime = DateTime.Now;
+    private int _matchesLeft = 0;
+    private void SearchForPlayer(string player)
+    {
+        _searchedPlayer = player;
+        _nextMatch = UpcomingMatches.FirstOrDefault(m => m.Players.Contains(player));
+        var fridayStart = new DateTime(2023, 12, 8, 16, 0, 0);
+        var saturdayStart = new DateTime(2023, 12, 9, 10, 30, 0);
+        var fridayCutoff = new DateTime(2023, 12, 8, 21, 30, 0);
+        if (_nextMatch == null) return;
+        
+        _matchesLeft = _nextMatch.MatchOrder-UpcomingMatches.Min(m => m.MatchOrder);
+        var playerCount = UpcomingMatches.Where(m => m.MatchOrder < _nextMatch.MatchOrder).Sum(m => m.Players.Length);
+        var cabUseCount = playerCount / 2;
+        var cabWaveCount = cabUseCount / 4;
+        _expectedTimeToMatch = cabWaveCount * TimeSpan.FromMinutes(30);
 
+        var now = DateTime.Now > fridayStart ? DateTime.Now : fridayStart;
+        
+        _expectedTime = now + _expectedTimeToMatch;
+        if (_expectedTime <= fridayCutoff) return;
+
+        if (now > fridayCutoff && now < saturdayStart)
+        {
+            _expectedTime = saturdayStart + _expectedTimeToMatch;
+        }
+        else if(now<fridayCutoff)
+        {
+            _expectedTime = saturdayStart + _expectedTimeToMatch - (fridayCutoff - now);
+        } else if (now > saturdayStart)
+        {
+            _expectedTime = now + _expectedTimeToMatch;
+        }
+        
+    }
     private async Task CreateLink()
     {
         var link = new MatchLink(_fromMatch, _toMatch, _winners, _linkPlayers);
@@ -327,6 +398,7 @@
         _showMatchDialog = true;
     }
 
+    private string[] Players = Array.Empty<string>();
 
     private async Task CreateMatch()
     {
@@ -393,8 +465,10 @@
         _matches = (await Mediator.Send(new GetAllMatchesQuery())).ToDictionary(m => m.MatchName.ToString());
         _chartPullSettings = (await Mediator.Send(new GetAllRandomSettingsQuery())).ToDictionary(s => (string) s.name, s => s.settings);
         _matchLinks = (await Mediator.Send(new GetMatchLinksQuery())).ToList();
+        Players = (await Mediator.Send(new GetMatchPlayersQuery())).Select(m => m.Name.ToString()).ToArray();
         UpdateCurrentPhase();
         MainLayout.MatchUpdated += (o, e) => MatchUpdated(e);
+
     }
 
 }

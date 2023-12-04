@@ -146,5 +146,70 @@ namespace ScoreTracker.Data.Repositories
                 .Select(ml => new MatchLink(ml.FromMatch, ml.ToMatch, ml.IsWinners, ml.PlayerCount))
                 .ToArrayAsync(cancellationToken);
         }
+
+        public Task<IEnumerable<MatchPlayer>> GetMatchPlayers(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(PlayerOrders);
+        }
+
+        public static readonly IEnumerable<MatchPlayer> PlayerOrders = new MatchPlayer[]
+        {
+            new("QED", 56, 477504512207093841),
+            new("Snowstorm", 55, 477504512207093841),
+            new("Tommy Doesn't Miss", 54, 477504512207093841),
+            new("Sneezle", 53, 477504512207093841),
+            new("Kwuarter", 52, 477504512207093841),
+            new("PrimoVictorian", 51, 477504512207093841),
+            new("Ulsi", 50, 477504512207093841),
+            new("Frac", 49, 477504512207093841),
+            new("Houseplant", 48, 477504512207093841),
+            new("Nyroom", 47, 477504512207093841),
+            new("DefaultK", 46, 477504512207093841),
+            new("EMCAT", 45, 477504512207093841),
+            new("Smallboy", 44, 477504512207093841),
+            new("Slowpoke", 43, 477504512207093841),
+            new("ancient_grainz", 42, 477504512207093841),
+            new("PacRob", 41, 477504512207093841),
+            new("Crafty The Fox", 40, 477504512207093841),
+            new("NESSQUICK", 39, 477504512207093841),
+            new("Songbird", 38, 477504512207093841),
+            new("StrawHatGabe", 37, 477504512207093841),
+            new("Tink", 36, 477504512207093841),
+            new("Shinobee", 35, 477504512207093841),
+            new("ligma", 34, 477504512207093841),
+            new("Surikato", 33, 477504512207093841),
+            new("SEBAA", 32, 477504512207093841),
+            new("Waffle", 31, 477504512207093841),
+            new("litenang", 30, 477504512207093841),
+            new("Bedrock", 29, 477504512207093841),
+            new("jonathan", 28, 477504512207093841),
+            new("HSPuppets", 27, 477504512207093841),
+            new("ABENHAIM", 26, 477504512207093841),
+            new("s0 lost", 25, 477504512207093841),
+            new("Lulu_uwu", 24, 477504512207093841),
+            new("sixxofsixx", 23, 477504512207093841),
+            new("Chives", 22, 477504512207093841),
+            new("Valex", 21, 477504512207093841),
+            new("Flashy flash", 20, 477504512207093841),
+            new("Ermagerd", 19, 477504512207093841),
+            new("Tieny", 18, 477504512207093841),
+            new("Blankman", 17, 477504512207093841),
+            new("ZIGGURATH8", 16, 477504512207093841),
+            new("Jaekim", 15, 477504512207093841),
+            new("esi", 14, 477504512207093841),
+            new("Yimmythe42", 13, 477504512207093841),
+            new("PureWasian", 12, 477504512207093841),
+            new("Redviper", 11, 477504512207093841),
+            new("imDrake", 10, 477504512207093841),
+            new("comboscoring", 9, 477504512207093841),
+            new("JellySlosh", 8, 477504512207093841),
+            new("GODDISH", 7, 477504512207093841),
+            new("AwesomoBird", 6, 477504512207093841),
+            new("Jboy", 5, 477504512207093841),
+            new("jqtran", 4, 477504512207093841),
+            new("ParanoiaBoi", 3, 477504512207093841),
+            new("HDS", 2, 477504512207093841),
+            new("mattmiller", 1, 477504512207093841)
+        };
     }
 }

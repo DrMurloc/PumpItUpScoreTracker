@@ -9,7 +9,7 @@ namespace ScoreTracker.Data.Clients;
 
 public sealed class DiscordBotClient : IBotClient
 {
-    private static readonly ulong[] ChannelIds = { 1091410476186992640, 865799555253927972 };
+    private static readonly ulong[] ChannelIds = { 1181340784751026186 };
     private readonly DiscordConfiguration _configuration;
     private readonly ILogger _logger;
     private DiscordSocketClient? _client;

@@ -19,4 +19,5 @@ public interface IMatchRepository
     Task SaveMatchLink(MatchLink matchLink, CancellationToken cancellationToken);
     Task DeleteMatchLink(Name fromName, Name toName, CancellationToken cancellationToken);
     Task<IEnumerable<MatchLink>> GetAllMatchLinks(CancellationToken cancellationToken);
+    Task<IEnumerable<MatchPlayer>> GetMatchPlayers(CancellationToken cancellationToken);
 }

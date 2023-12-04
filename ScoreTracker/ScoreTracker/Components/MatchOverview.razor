@@ -221,14 +221,16 @@
 
 @code {
 
-    private static readonly ISet<Guid> BracketAdmins = new HashSet<Guid>(new[]
+    public static readonly ISet<Guid> BracketAdmins = new HashSet<Guid>(new[]
     {
         new Guid("BA40C0BA-5D1D-4A61-A29D-295C0E99874C"),
         new Guid("3694A57C-F862-448B-B148-459AFAF5AEDB"),
         new Guid("5BDC1EE2-3C83-49DA-B74E-57EEFB21B9C3"),
         new Guid("EB17CEDB-E655-424C-8588-B9A68738CAC1"),
         new Guid("9F0A1A33-6FD6-4698-9673-F995B2FF235B"),
-        new Guid("8B8A10B1-9661-461C-A33A-14FF15D911E0")
+        new Guid("8B8A10B1-9661-461C-A33A-14FF15D911E0"),
+        new Guid("89397EF3-3617-4B4D-8837-ADAAAAA155D7"),
+        new Guid("F2874084-1147-49E0-B333-79529EBECECF")
     });
     private bool _isSaving = true;
     private User? _currentUser;
@@ -347,70 +349,10 @@
         {
             return;
         }
-        await Mediator.Send(new UpdateMatchCommand(_match with {State=MatchState.Ready,
-            Scores = _match.Players.ToDictionary(p => p.ToString(), p => _match.ActiveCharts.Select(c => PhoenixScore.From(0)).ToArray()),
-                Points = _match.Players.ToDictionary(p => p.ToString(), p => _match.ActiveCharts.Select(c => 0).ToArray())
-            }));
+        await Mediator.Send(new FinishCardDrawCommand(_match.MatchName));
     }
-    private static readonly IEnumerable<string> PlayerOrders = new string[]
-    {
-        "QED",
-        "Snowstorm",
-        "Tommy Doesn't Miss",
-        "Sneezle",
-        "Kwuarter",
-        "PrimoVictorian",
-        "Ulsi",
-        "Frac",
-        "Houseplant",
-        "Nyroom",
-        "DefaultK",
-        "EMCAT",
-        "Smallboy",
-        "Slowpoke",
-        "ancient_grainz",
-        "PacRob",
-        "Crafty The Fox",
-        "NESSQUICK",
-        "Songbird",
-        "StrawHatGabe",
-        "Tink",
-        "Shinobee",
-        "ligma",
-        "Surikato",
-        "SEBAA",
-        "Waffle",
-        "litenang",
-        "Bedrock",
-        "jonathan",
-        "HSPuppets",
-        "ABENHAIM",
-        "s0 lost",
-        "Lulu_uwu",
-        "sixxofsixx",
-        "Chives",
-        "Valex",
-        "Flashy flash",
-        "Ermagerd",
-        "Tieny",
-        "Blankman",
-        "ZIGGURATH8",
-        "Jaekim",
-        "esi",
-        "Yimmythe42",
-        "PureWasian",
-        "Redviper",
-        "imDrake",
-        "comboscoring",
-        "JellySlosh",
-        "GODDISH",
-        "AwesomoBird",
-        "Jboy",
-        "jqtran",
-        "ParanoiaBoi",
-        "HDS",
-        "mattmiller"
-    };
+
+    public IEnumerable<string> PlayerOrders = Array.Empty<string>();
 
     private async Task Rollback(MatchState newState)
     {
@@ -429,7 +371,8 @@
         }
         await Mediator.Send(new DrawChartsCommand(_match.MatchName));
     }
-    private static readonly IDictionary<string, int> Seeding = PlayerOrders.Reverse().Select((p, i) => (p,i)).ToDictionary(kv => kv.p, kv => kv.i + 1);
+
+    private IDictionary<string, int> Seeding = new Dictionary<string, int>();
 
     private MatchView? _match;
     private bool ReadyToDraw => _match?.Players.All(p => Seeding.ContainsKey(p)) ?? false;
@@ -482,6 +425,8 @@
         {
             await LoadMatch(MatchName.Value);
         }
+        Seeding = (await Mediator.Send(new GetMatchPlayersQuery())).ToDictionary(p => p.Name.ToString(), p => p.Seed, StringComparer.OrdinalIgnoreCase);
+
         _currentUser = CurrentUser.IsLoggedIn ? CurrentUser.User : null;
     }
 
