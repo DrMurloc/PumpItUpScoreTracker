@@ -37,8 +37,9 @@
                             <MudAutocomplete T="string"
                                              Value="@player"
                                              ResetValueOnEmptyText="true"
+                                             Disabled="_isSaving"
                                              CoerceText="true"
-                                             Label=@($"Player {playerIndex}")
+                                             Label=@($"Player {playerIndex+1}")
                                              SearchFunc="@(s=>Task.FromResult(Seeding.Keys.Where(k=>k.Contains(s,StringComparison.OrdinalIgnoreCase)).OrderBy(k=>k.Equals(s,StringComparison.OrdinalIgnoreCase)?0:1).AsEnumerable()))"
                                              ValueChanged="v => UpdatePlayer(playerIndex, v)">
 
@@ -57,7 +58,7 @@
                 @if (IsLoggedInAsAdmin)
                 {
                     <MudItem xs="12">
-                        <MudButton Disabled="!ReadyToDraw" Color="Color.Primary" OnClick="DrawCharts">Draw Charts</MudButton>
+                        <MudButton Disabled="!ReadyToDraw || _isSaving" Color="Color.Primary" OnClick="DrawCharts">Draw Charts</MudButton>
                         </MudItem>
                 }
                 break;
@@ -82,13 +83,13 @@
                                     @if (_match.Players.Length == 2)
                                     {
                                         <MudTooltip Text="Protect">
-                                            <MudIconButton Icon="@Icons.Material.Filled.Shield" OnClick="() => ProtectChart(chartId)" Color="Color.Success"></MudIconButton>
+                                            <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Shield" OnClick="() => ProtectChart(chartId)" Color="Color.Success"></MudIconButton>
                                         </MudTooltip>
                                     }
                                     @if (!FinishedVetoes())
                                     {
                                         <MudTooltip Text="Veto">
-                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="() => VetoChart(chartId)" Color="Color.Error"></MudIconButton>
+                                            <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Delete" OnClick="() => VetoChart(chartId)" Color="Color.Error"></MudIconButton>
                                         </MudTooltip>
                                     }
                                 }
@@ -106,12 +107,12 @@
                 <MudItem xs="12">
                     @if (_match.ActiveCharts.Any(c => _match.VetoedCharts.Contains(c)))
                     {
-                        
-                        <MudButton OnClick="ClearVetoes" Variant="Variant.Filled" Color="Color.Primary">Clear Vetoes</MudButton>
+
+                        <MudButton OnClick="ClearVetoes" Disabled="_isSaving" Variant="Variant.Filled" Color="Color.Primary">Clear Vetoes</MudButton>
                     }
                     else
                     {
-                        <MudButton OnClick="FinishCardDraw" Disabled="!FinishedVetoes()" Variant="Variant.Filled" Color="Color.Primary">Complete Card Draw</MudButton>
+                        <MudButton OnClick="FinishCardDraw" Disabled="!FinishedVetoes() || _isSaving" Variant="Variant.Filled" Color="Color.Primary">Complete Card Draw</MudButton>
                     }
                 </MudItem>
                 break;
@@ -143,7 +144,7 @@
                 
                 @if (IsLoggedInAsAdmin)
                 {
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="StartMatch">Start Match</MudButton>
+                    <MudButton Variant="Variant.Filled" Disabled="_isSaving" Color="Color.Primary" OnClick="StartMatch">Start Match</MudButton>
                 }
                 break;
             case MatchState.InProgress:
@@ -166,14 +167,14 @@
                             {
                                 var chartPlace = i;
                                 <MudTh>
-                                    <MudNumericField T="int" Min="(int)PhoenixScore.Min" Max="(int)PhoenixScore.Max" Value="(int)_match.Scores[context][chartPlace]" ValueChanged="v=>SetScore(context,chartPlace,v)" HideSpinButtons="true"></MudNumericField>
+                                    <MudNumericField Disabled="_isSaving" T="int" Min="(int)PhoenixScore.Min" Max="(int)PhoenixScore.Max" Value="(int)_match.Scores[context][chartPlace]" ValueChanged="v=>SetScore(context,chartPlace,v)" HideSpinButtons="true"></MudNumericField>
                                 </MudTh>
                             }
                         </RowTemplate>
                     </MudTable>
                 </MudItem>
                 <MudItem xs="12">
-                    <MudButton Disabled="!IsFinished(_match)" Variant="Variant.Filled" OnClick="FinishMatch">Finish Match</MudButton>
+                    <MudButton Disabled="!IsFinished(_match) || _isSaving" Variant="Variant.Filled" OnClick="FinishMatch">Finish Match</MudButton>
                 </MudItem>
                 break;
 
@@ -232,7 +233,7 @@
         new Guid("89397EF3-3617-4B4D-8837-ADAAAAA155D7"),
         new Guid("F2874084-1147-49E0-B333-79529EBECECF")
     });
-    private bool _isSaving = true;
+    private bool _isSaving = false;
     private User? _currentUser;
     private bool IsLoggedInAsAdmin =>_currentUser!=null &&(_currentUser.IsAdmin || BracketAdmins.Contains(_currentUser.Id));
 
@@ -303,9 +304,11 @@
         {
             return;
         }
+        _isSaving = true;
         var newScores = _match.Scores.ToDictionary(kv => kv.Key, kv => kv.Value.ToArray());
         newScores[player][chartIndex] = newScore;
         await Mediator.Send(new UpdateMatchCommand(_match with { Scores = newScores}));
+        _isSaving = false;
     }
     private async Task ProtectChart(Guid chartId)
     {
@@ -313,7 +316,10 @@
         {
             return;
         }
+        _isSaving = true;
         await Mediator.Send(new UpdateMatchCommand(_match with { ProtectedCharts = _match.ProtectedCharts.Append(chartId).ToArray()}));
+
+        _isSaving = false; 
     }
 
     private async Task VetoChart(Guid chartId)
@@ -323,7 +329,10 @@
         {
             return;
         }
+        _isSaving = true;
         await Mediator.Send(new UpdateMatchCommand(_match with { VetoedCharts = _match.VetoedCharts.Append(chartId).ToArray() }));
+
+        _isSaving = false;
     }
 
     private async Task FinishMatch()
@@ -332,7 +341,9 @@
         {
             return;
         }
+        _isSaving = true;
         await Mediator.Send(new ResolveMatchCommand(_match.MatchName));
+        _isSaving = false;
     }
     private async Task ClearVetoes()
     {
@@ -340,7 +351,10 @@
         {
             return;
         }
+        _isSaving = true;
         await Mediator.Send(new UpdateMatchCommand(_match with { ActiveCharts = _match.ActiveCharts.Where(id=>!_match.VetoedCharts.Contains(id)).ToArray() }));
+
+        _isSaving = false;
     }
 
     private async Task FinishCardDraw()
@@ -349,7 +363,9 @@
         {
             return;
         }
+        _isSaving = true;
         await Mediator.Send(new FinishCardDrawCommand(_match.MatchName));
+        _isSaving = false;
     }
 
     public IEnumerable<string> PlayerOrders = Array.Empty<string>();
@@ -361,7 +377,9 @@
         {
             return;
         }
-        await Mediator.Send(new MatchUpdatedEvent(_match with { State=newState}));
+        _isSaving = true;
+        await Mediator.Send(new MatchUpdatedEvent(_match with { State = newState }));
+        _isSaving = false;
     }
     private async Task DrawCharts()
     {
@@ -369,7 +387,9 @@
         {
             return;
         }
+        _isSaving = true; 
         await Mediator.Send(new DrawChartsCommand(_match.MatchName));
+        _isSaving = false;
     }
 
     private IDictionary<string, int> Seeding = new Dictionary<string, int>();
@@ -382,6 +402,8 @@
         {
             return;
         }
+
+        _isSaving = true;
         var newArray = _match.Players.ToArray();
         newArray[index] = name;
 
@@ -390,6 +412,8 @@
                 Scores = newArray.ToDictionary(n => n.ToString(), n => _match.ActiveCharts.Select(c => PhoenixScore.From(0)).ToArray()),
                 Points = newArray.ToDictionary(n => n.ToString(), n => _match.ActiveCharts.Select(c => 0).ToArray()),
             }));
+
+        _isSaving = false;
     }
 
     private async Task StartMatch()
@@ -398,7 +422,10 @@
         {
             return;
         }
-        await Mediator.Send(new UpdateMatchCommand(_match with {State = MatchState.InProgress}));
+
+        _isSaving = true;
+        await Mediator.Send(new UpdateMatchCommand(_match with { State = MatchState.InProgress }));
+        _isSaving = false;
     }
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
 
@@ -415,6 +442,7 @@
     {
         if (_match?.MatchName == matchName)
             return;
+
         _match = await Mediator.Send(new GetMatchQuery(matchName));
     }
     protected override async Task OnInitializedAsync()
