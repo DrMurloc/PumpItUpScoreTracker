@@ -229,7 +229,8 @@ namespace ScoreTracker.Application.Handlers
                 .ToDictionary(p => p.Name.ToString(), p => p.DiscordId, StringComparer.OrdinalIgnoreCase);
             if (match.State == MatchState.NotStarted && match.Players.All(p => !p.ToString().StartsWith("Unknown ")))
                 message = $"Card draw is ready for {match.MatchName}";
-
+            if (match.State == MatchState.Ready)
+                message = $"{match.MatchName} is ready to play!";
             await _bot.PublishQualifiersMessage(
                 $@"{message}
 {string.Join(", ", match.Players.Where(p => !p.ToString().StartsWith("Unknown ")).Select(p => $"<@{playerDiscords[p]}> ({p})"))}, please report to PIU TOs",

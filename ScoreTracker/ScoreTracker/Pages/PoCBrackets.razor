@@ -90,7 +90,7 @@
                          CoerceText="true"
                          Label=@($"Search For My Next Match")
                          AdornmentIcon="@Icons.Material.Filled.Search"
-                         SearchFunc="@(s => Task.FromResult(Players.Where(o=>!string.IsNullOrWhiteSpace(s)&&o.Contains(s,StringComparison.OrdinalIgnoreCase)).OrderBy(k => k.Equals(s, StringComparison.OrdinalIgnoreCase) ? 0 : 1).AsEnumerable()))">
+                         SearchFunc="@(s => Task.FromResult(Players.Keys.Where(o=>!string.IsNullOrWhiteSpace(s)&&o.Contains(s,StringComparison.OrdinalIgnoreCase)).OrderBy(k => k.Equals(s, StringComparison.OrdinalIgnoreCase) ? 0 : 1).AsEnumerable()))">
 
         </MudAutocomplete>
         </MudItem>
@@ -120,17 +120,38 @@
                 {
                     <MudTh>Winner</MudTh>
                 }
+                @if (IsBracketAdmin)
+                {
+                    <MudTh>Player Notes</MudTh>
+                }
                 <MudTh>View</MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd>@context.MatchName</MudTd>
                 <MudTd>@context.State</MudTd>
                 <MudTh>@context.PhaseName</MudTh>
-                <MudTh>@(string.Join(", ",context.Players.Select(p=>p.ToString().StartsWith("Unknown ")?"TBD":p.ToString())))</MudTh>
+                <MudTh>
+                    @if (IsBracketAdmin && context.Players.Any(p => Players.ContainsKey(p) && Players[p].PotentialConflict))
+                    {
+                        <MudTooltip Text=@($"Potential Conflicts: {string.Join(", ",context.Players.Where(p=>Players.ContainsKey(p)&&Players[p].PotentialConflict))}")>
+                            <MudIcon Color="Color.Warning" Icon="@Icons.Material.Filled.Warning"></MudIcon>
+                        </MudTooltip>
+                    }
+                    @(string.Join(", ", context.Players.Select(p => p.ToString().StartsWith("Unknown ") ? "TBD" : p.ToString())))
+                </MudTh>
                 
                 @if (parameters.showWinner)
                 {
                     <MudTh>@context.FinalPlaces[0]</MudTh>
+                }
+                @if (IsBracketAdmin)
+                {
+                    <MudTh>
+                        @if (context.Players.Any(p => Players.ContainsKey(p) && !string.IsNullOrWhiteSpace(Players[p].Notes)))
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Notes" OnClick="()=>ShowNotes(context)"></MudIconButton>
+                        }
+                    </MudTh>
                 }
                 <MudTd><MudButton OnClick="() => ViewMatch(context.MatchName)" StartIcon="@Icons.Material.Filled.ViewDay" Color="Color.Primary" Variant="Variant.Outlined">View</MudButton></MudTd>
             </RowTemplate>
@@ -302,6 +323,25 @@
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showMatchDialog = false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
+<MudDialog @bind-IsVisible="_showNotesPopup">
+    <DialogContent>
+        @if (_notesMatch != null)
+        {
+            <MudGrid>
+                @foreach (var player in _notesMatch.Players.Where(p => Players.ContainsKey(p) && !string.IsNullOrWhiteSpace(Players[p].Notes)))
+                {
+                    <MudItem xs="12">
+                        <MudText>@player - @Players[player].Notes</MudText>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showNotesPopup = false">@L["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
 <MudDialog @bind-IsVisible="_showMatchLinkDialog">
     <DialogContent>
         <MudGrid>
@@ -359,6 +399,9 @@
     private Guid _showingChart = Guid.Empty;
     private Name? _showingPlayer;
     private MatchView? _nextMatch;
+    private MatchView? _notesMatch;
+    private bool _showNotesPopup;
+
     private string _searchedPlayer;
 
     private string _randomSettings = string.Empty;
@@ -400,6 +443,11 @@
     private TimeSpan _expectedTimeToMatch = TimeSpan.Zero;
     private DateTime _expectedTime = DateTime.Now;
     private int _matchesLeft = 0;
+    public void ShowNotes(MatchView match)
+    {
+        _notesMatch = match;
+        _showNotesPopup = true;
+    }
     private void SearchForPlayer(string player)
     {
         _searchedPlayer = player;
@@ -496,7 +544,7 @@
         _showMatchDialog = true;
     }
 
-    private string[] Players = Array.Empty<string>();
+    private IDictionary<string, MatchPlayer> Players = new Dictionary<string, MatchPlayer>();
 
     private async Task CreateMatch()
     {
@@ -564,7 +612,7 @@
         _matches = (await Mediator.Send(new GetAllMatchesQuery())).ToDictionary(m => m.MatchName.ToString());
         _chartPullSettings = (await Mediator.Send(new GetAllRandomSettingsQuery())).ToDictionary(s => (string) s.name, s => s.settings);
         _matchLinks = (await Mediator.Send(new GetMatchLinksQuery())).ToList();
-        Players = (await Mediator.Send(new GetMatchPlayersQuery())).Select(m => m.Name.ToString()).ToArray();
+        Players = (await Mediator.Send(new GetMatchPlayersQuery())).ToDictionary(m => m.Name.ToString(),StringComparer.OrdinalIgnoreCase);
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
         UpdateCurrentPhase();
         RecalculateStates();

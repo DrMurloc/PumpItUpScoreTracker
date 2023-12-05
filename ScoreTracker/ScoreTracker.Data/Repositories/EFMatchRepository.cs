@@ -152,64 +152,124 @@ namespace ScoreTracker.Data.Repositories
             return Task.FromResult(PlayerOrders);
         }
 
+        public static readonly IEnumerable<MatchPlayer> RealPlayerOrders = new MatchPlayer[]
+        {
+            new("QED", 56, 221807174853066753),
+            new("Snowstorm", 55, 453727464959770657, "Potential Conflict with DDR and SMX", true),
+            new("Tommy Doesn't Miss", 54, 309858089740271617, "Potential Conflict with DDR, SMX, and ITG", true),
+            new("Sneezle", 53, 337580556214599700, "Potential Conflict with DDR and SMX", true),
+            new("Kwuarter", 52, 516285239518167060),
+            new("PrimoVictorian", 51, 104708794755366912),
+            new("Ulsi", 50, 128982706145984520), //
+            new("Frac", 49, 189917099714412545),
+            new("Houseplant", 48, 698584589223985202),
+            new("Nyroom", 47, 457690467232907265),
+            new("DefaultK", 46, 684175993107120215),
+            new("EMCAT", 45, 218159187652247552),
+            new("Smallboy", 44, 338157160112586752, "AKA Nagasaki"),
+            new("Slowpoke", 43, 361362903691034625), //
+            new("ancient_grainz", 42, 291371859105284096, "AKA Thomas Grover, Potential Conflicts with ITG", true),
+            new("PacRob", 41, 477504512207093841, "Potential Conflict with SMX and DDR", true), //? 
+            new("Crafty The Fox", 40, 384007242837524481),
+            new("NESSQUICK", 39, 385296090422837248),
+            new("Songbird", 38, 309540048674750466),
+            new("StrawHatGabe", 37, 245641474409103361),
+            new("Tink", 36, 477504512207093841), //?
+            new("Shinobee", 35, 478794055711457282, "Potential Conflict with DDR, SMX, and ITG", true),
+            new("ligma", 34, 189142827391778816, "AKA Ivan"),
+            new("Surikato", 33, 477504512207093841), //?
+            new("SEBAA", 32, 603768563890913282),
+            new("Waffle", 31, 146003802527367169),
+            new("litenang", 30, 83038699318677504, "Potential Conflict with SMX and ITG", true),
+            new("Bedrock", 29, 109982291832389632),
+            new("jonathan", 28, 193816242782470154),
+            new("HSPuppets", 27, 95558504353374208),
+            new("ABENHAIM", 26, 741750282001842276, "AKA IOnlyPlayForTitles"), //-IonlyPlayForTitles
+            new("s0 lost", 25, 150066133003665408),
+            new("Lulu_uwu", 24, 807880209721982996),
+            new("sixxofsixx", 23, 277996088693096450),
+            new("Chives", 22, 257353930688692224),
+            new("Valex", 21, 72451105463738368),
+            new("Flashy flash", 20, 889357618810855445, "AKA Another, no not THAT Another, another Another"),
+            new("Ermagerd", 19, 557002938690699278),
+            new("Tieny", 18, 478388650510647317), //
+            new("Blankman", 17, 208851134805180417),
+            new("ZIGGURATH8", 16, 689667017070215215),
+            new("Jaekim", 15, 133906426681622528, "AKA Beans on Start.gg"),
+            new("esi", 14, 81897683911966720),
+            new("Yimmythe42", 13, 534030186677534731),
+            new("PureWasian", 12, 325047531576754186, "AKA Tusa"),
+            new("Redviper", 11, 184466247767818241),
+            new("imDrake", 10, 491462877308256269),
+            new("comboscoring", 9, 584861861711970349, "AKA LayZDog"),
+            new("JellySlosh", 8, 478958379428085760),
+            new("GODDISH", 7, 125806983591755776),
+            new("AwesomoBird", 6, 335769888692109316, "Bird is the Word"),
+            new("Jboy", 5, 638507320850251777, "AKA KittyCatastrophe in Discord"),
+            new("jqtran", 4, 160123260393095169, "AKA IMSORRY, Potential Conflicts with DDR", true),
+            new("ParanoiaBoi", 3, 666481245261135884, "Potential Conflicts with ITG, SMX, DDR, DRS", true),
+            new("HDS", 2, 931745583629238303, "AKA Edison"),
+            new("mattmiller", 1, 131264515248488449, "Egg")
+        };
+
         public static readonly IEnumerable<MatchPlayer> PlayerOrders = new MatchPlayer[]
         {
             new("QED", 56, 477504512207093841),
-            new("Snowstorm", 55, 477504512207093841),
-            new("Tommy Doesn't Miss", 54, 477504512207093841),
-            new("Sneezle", 53, 477504512207093841),
+            new("Snowstorm", 55, 477504512207093841, "Potential Conflict with DDR and SMX", true),
+            new("Tommy Doesn't Miss", 54, 477504512207093841, "Potential Conflict with DDR, SMX, and ITG", true),
+            new("Sneezle", 53, 477504512207093841, "Potential Conflict with DDR and SMX", true),
             new("Kwuarter", 52, 477504512207093841),
             new("PrimoVictorian", 51, 477504512207093841),
-            new("Ulsi", 50, 477504512207093841),
+            new("Ulsi", 50, 477504512207093841), //
             new("Frac", 49, 477504512207093841),
             new("Houseplant", 48, 477504512207093841),
             new("Nyroom", 47, 477504512207093841),
             new("DefaultK", 46, 477504512207093841),
             new("EMCAT", 45, 477504512207093841),
-            new("Smallboy", 44, 477504512207093841),
-            new("Slowpoke", 43, 477504512207093841),
-            new("ancient_grainz", 42, 477504512207093841),
-            new("PacRob", 41, 477504512207093841),
+            new("Smallboy", 44, 477504512207093841, "AKA Nagasaki"),
+            new("Slowpoke", 43, 477504512207093841), //
+            new("ancient_grainz", 42, 477504512207093841, "AKA Thomas Grover, Potential Conflicts with ITG", true),
+            new("PacRob", 41, 477504512207093841, "Potential Conflict with SMX and DDR", true), //? 
             new("Crafty The Fox", 40, 477504512207093841),
             new("NESSQUICK", 39, 477504512207093841),
             new("Songbird", 38, 477504512207093841),
             new("StrawHatGabe", 37, 477504512207093841),
-            new("Tink", 36, 477504512207093841),
-            new("Shinobee", 35, 477504512207093841),
-            new("ligma", 34, 477504512207093841),
-            new("Surikato", 33, 477504512207093841),
+            new("Tink", 36, 477504512207093841), //?
+            new("Shinobee", 35, 477504512207093841, "Potential Conflict with DDR, SMX, and ITG", true),
+            new("ligma", 34, 477504512207093841, "AKA Ivan"),
+            new("Surikato", 33, 477504512207093841), //?
             new("SEBAA", 32, 477504512207093841),
             new("Waffle", 31, 477504512207093841),
-            new("litenang", 30, 477504512207093841),
+            new("litenang", 30, 477504512207093841, "Potential Conflict with SMX and ITG", true),
             new("Bedrock", 29, 477504512207093841),
             new("jonathan", 28, 477504512207093841),
             new("HSPuppets", 27, 477504512207093841),
-            new("ABENHAIM", 26, 477504512207093841),
+            new("ABENHAIM", 26, 477504512207093841, "AKA IOnlyPlayForTitles"), //-IonlyPlayForTitles
             new("s0 lost", 25, 477504512207093841),
             new("Lulu_uwu", 24, 477504512207093841),
             new("sixxofsixx", 23, 477504512207093841),
             new("Chives", 22, 477504512207093841),
             new("Valex", 21, 477504512207093841),
-            new("Flashy flash", 20, 477504512207093841),
+            new("Flashy flash", 20, 477504512207093841, "AKA Another, no not THAT Another, another Another"),
             new("Ermagerd", 19, 477504512207093841),
-            new("Tieny", 18, 477504512207093841),
+            new("Tieny", 18, 477504512207093841), //
             new("Blankman", 17, 477504512207093841),
             new("ZIGGURATH8", 16, 477504512207093841),
-            new("Jaekim", 15, 477504512207093841),
+            new("Jaekim", 15, 477504512207093841, "AKA Beans on Start.gg"),
             new("esi", 14, 477504512207093841),
             new("Yimmythe42", 13, 477504512207093841),
-            new("PureWasian", 12, 477504512207093841),
+            new("PureWasian", 12, 477504512207093841, "AKA Tusa"),
             new("Redviper", 11, 477504512207093841),
             new("imDrake", 10, 477504512207093841),
-            new("comboscoring", 9, 477504512207093841),
+            new("comboscoring", 9, 477504512207093841, "AKA LayZDog"),
             new("JellySlosh", 8, 477504512207093841),
             new("GODDISH", 7, 477504512207093841),
-            new("AwesomoBird", 6, 477504512207093841),
-            new("Jboy", 5, 477504512207093841),
-            new("jqtran", 4, 477504512207093841),
-            new("ParanoiaBoi", 3, 477504512207093841),
-            new("HDS", 2, 477504512207093841),
-            new("mattmiller", 1, 477504512207093841)
+            new("AwesomoBird", 6, 477504512207093841, "Bird is the Word"),
+            new("Jboy", 5, 477504512207093841, "AKA KittyCatastrophe in Discord"),
+            new("jqtran", 4, 477504512207093841, "AKA IMSORRY, Potential Conflicts with DDR", true),
+            new("ParanoiaBoi", 3, 477504512207093841, "Potential Conflicts with ITG, SMX, DDR, DRS", true),
+            new("HDS", 2, 477504512207093841, "AKA Edison"),
+            new("mattmiller", 1, 477504512207093841, "Egg")
         };
     }
 }

@@ -2,7 +2,8 @@
 
 namespace ScoreTracker.Domain.Views
 {
-    public sealed record MatchPlayer(Name Name, int Seed, long DiscordId)
+    public sealed record MatchPlayer(Name Name, int Seed, long DiscordId, string Notes = "",
+        bool PotentialConflict = false)
     {
     }
 }
