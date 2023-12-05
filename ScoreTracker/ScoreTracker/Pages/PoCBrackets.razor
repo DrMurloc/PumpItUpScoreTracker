@@ -134,6 +134,9 @@
                 }
                 <MudTd><MudButton OnClick="() => ViewMatch(context.MatchName)" StartIcon="@Icons.Material.Filled.ViewDay" Color="Color.Primary" Variant="Variant.Outlined">View</MudButton></MudTd>
             </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
         </MudTable>
         <br/>
         <br/>
@@ -187,8 +190,102 @@
             <MudTd>@context.PlayerCount</MudTd>
             <MudTd><MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Primary" OnClick="()=>DeleteLink(context)"></MudIconButton></MudTd>
         </RowTemplate>
+        
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
     </MudTable>
 }
+<br/>
+<MudTable T="ChartStats" Items="_chartStats">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Chart Stats</MudText>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel T="ChartStats" SortBy="e=>_charts[e.ChartId].Song.Name.ToString()">Song</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="ChartStats" SortBy="e=>(int)_charts[e.ChartId].Level">Difficulty</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="ChartStats" SortBy="e=>e.MatchCount"></MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="ChartStats" SortBy="e=>e.VetoCount">Vetos</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="ChartStats" SortBy="e=>e.ProtectCount">Protects</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="ChartStats" SortBy="e=>e.TotalPlayCount">Total Plays</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="ChartStats" SortBy="e=>(int)e.AverageScore">Average Score</MudTableSortLabel></MudTh>
+        <MudTh>View Leaderboard</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            <MudImage Src="@_charts[context.ChartId].Song.ImagePath.ToString()" Height="35" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
+        </MudTd>
+        <MudTd>
+            
+            <MudImage Src="@_charts[context.ChartId].DifficultyBubblePath" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+        </MudTd>
+        <MudTd>@context.MatchCount</MudTd>
+        <MudTd>@context.VetoCount</MudTd>
+        <MudTd>@context.ProtectCount</MudTd>
+        <MudTd>@context.TotalPlayCount</MudTd>
+        <MudTd>@context.AverageScore (@context.AverageScore.LetterGrade.GetName())</MudTd>
+        <MudTd><MudIconButton Icon="@Icons.Material.Filled.ViewList" Color="Color.Primary" OnClick="@(()=>_showingChart=_showingChart==context.ChartId?Guid.Empty:context.ChartId)"></MudIconButton></MudTd>
+    </RowTemplate>
+    <ChildRowContent>
+        <MudTr>
+            <td colspan="8">
+                @if (_showingChart==context.ChartId)
+                {
+                    foreach (var kv in _chartLeaderboards[context.ChartId].OrderByDescending(kv=>(int)kv.Value))
+                    {
+                        <MudText>@kv.Key - @kv.Value (@kv.Value.LetterGrade.GetName())</MudText><br/>
+                    }                    
+                }
+            </td>
+        </MudTr>
+    </ChildRowContent>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+<br/>
+<br/>
+<MudTable T="PlayerStats" Items="_playerStats">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Player Stats</MudText>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel T="PlayerStats" SortBy="e=>e.Player.ToString()">Name</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="PlayerStats" SortBy="e=>e.MatchCount">Matches</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="PlayerStats" SortBy="e=>e.ChartsPlayed">Charts</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="PlayerStats" SortBy="e=>(int)e.AverageScore">Average Score</MudTableSortLabel></MudTh>
+        <MudTh>View Charts</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Player</MudTd>
+        <MudTd>@context.MatchCount</MudTd>
+        <MudTd>@context.ChartsPlayed</MudTd>
+        <MudTd>@context.AverageScore (@context.AverageScore.LetterGrade.GetName())</MudTd>
+        <MudTd>
+            @if (_playerScores.ContainsKey(context.Player))
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.ViewList" Color="Color.Primary" OnClick="@(() => _showingPlayer = _showingPlayer == context.Player ? null :(Name?) context.Player)"></MudIconButton>
+            }
+            
+        </MudTd>
+    </RowTemplate>
+    <ChildRowContent>
+        <MudTr>
+            <td colspan="5">
+                @if (_showingPlayer == context.Player)
+                {
+                    foreach (var chart in _playerScores[_showingPlayer])
+                    {
+                        <MudText>@_charts[chart.ChartId].Song.Name @_charts[chart.ChartId].DifficultyString - @chart.Score (@chart.Score.LetterGrade.GetName())</MudText>
+                    }
+                }
+            </td>
+        </MudTr>
+    </ChildRowContent>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
 <MudDialog @bind-IsVisible="_showMatchDialog">
     <DialogContent>
         @if (_currentMatch != null)
@@ -259,7 +356,8 @@
     private User? _user;
     private int _playerCount = 2;
     private int _chartCount = 3;
-
+    private Guid _showingChart = Guid.Empty;
+    private Name? _showingPlayer;
     private MatchView? _nextMatch;
     private string _searchedPlayer;
 
@@ -310,7 +408,7 @@
         var saturdayStart = new DateTime(2023, 12, 9, 10, 30, 0);
         var fridayCutoff = new DateTime(2023, 12, 8, 21, 30, 0);
         if (_nextMatch == null) return;
-        
+
         _matchesLeft = _nextMatch.MatchOrder-UpcomingMatches.Min(m => m.MatchOrder);
         var playerCount = UpcomingMatches.Where(m => m.MatchOrder < _nextMatch.MatchOrder).Sum(m => m.Players.Length);
         var cabUseCount = playerCount / 2;
@@ -318,7 +416,7 @@
         _expectedTimeToMatch = cabWaveCount * TimeSpan.FromMinutes(30);
 
         var now = DateTime.Now > fridayStart ? DateTime.Now : fridayStart;
-        
+
         _expectedTime = now + _expectedTimeToMatch;
         if (_expectedTime <= fridayCutoff) return;
 
@@ -333,7 +431,7 @@
         {
             _expectedTime = now + _expectedTimeToMatch;
         }
-        
+
     }
     private async Task CreateLink()
     {
@@ -422,6 +520,7 @@
     {
         _matches[e.NewState.MatchName] = e.NewState;
         UpdateCurrentPhase();
+        RecalculateStates();
         InvokeAsync(StateHasChanged);
     }
 
@@ -466,9 +565,108 @@
         _chartPullSettings = (await Mediator.Send(new GetAllRandomSettingsQuery())).ToDictionary(s => (string) s.name, s => s.settings);
         _matchLinks = (await Mediator.Send(new GetMatchLinksQuery())).ToList();
         Players = (await Mediator.Send(new GetMatchPlayersQuery())).Select(m => m.Name.ToString()).ToArray();
+        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
         UpdateCurrentPhase();
+        RecalculateStates();
         MainLayout.MatchUpdated += (o, e) => MatchUpdated(e);
 
     }
 
+    private IEnumerable<ChartStats> _chartStats = Array.Empty<ChartStats>();
+    private IEnumerable<PlayerStats> _playerStats = Array.Empty<PlayerStats>();
+    private IDictionary<string, ICollection<PlayerChartScore>> _playerScores = new Dictionary<string, ICollection<PlayerChartScore>>();
+    private IDictionary<Guid, IDictionary<string, PhoenixScore>> _chartLeaderboards = new Dictionary<Guid, IDictionary<string, PhoenixScore>>();
+    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private sealed record ChartStats(Guid ChartId, int MatchCount, int VetoCount, int ProtectCount, int TotalPlayCount, PhoenixScore AverageScore)
+    {
+
+    }
+
+    private sealed record PlayerStats(Name Player, int MatchCount, int ChartsPlayed, PhoenixScore AverageScore)
+    {
+
+    }
+
+    private sealed record PlayerChartScore(Guid ChartId, PhoenixScore Score)
+    {
+
+    }
+    private void RecalculateStates()
+    {
+        var chartCounts = new Dictionary<Guid, int>();
+        var chartVetoCounts = new Dictionary<Guid, int>();
+        var chartProtectCounts = new Dictionary<Guid, int>();
+        var chartPlayerCounts = new Dictionary<Guid, int>();
+        var chartScoreTotal = new Dictionary<Guid, long>();
+        var playerMatches = new Dictionary<string, int>();
+        var playerChartCount = new Dictionary<string, int>();
+        var playerScoreTotal = new Dictionary<string, long>();
+        var playerScores = new Dictionary<string, ICollection<PlayerChartScore>>(StringComparer.OrdinalIgnoreCase);
+        var chartLeaderboards = new Dictionary<Guid, IDictionary<string, PhoenixScore>>();
+
+        foreach (var match in CompletedMatches)
+        {
+            foreach (var chartId in match.ActiveCharts.Concat(match.ProtectedCharts).Concat(match.VetoedCharts).Distinct())
+            {
+                    
+                chartCounts.TryAdd(chartId, 0);
+                chartPlayerCounts.TryAdd(chartId, 0);
+                chartScoreTotal.TryAdd(chartId, 0);
+
+                chartVetoCounts.TryAdd(chartId, 0);
+                chartProtectCounts.TryAdd(chartId, 0);
+                chartProtectCounts.TryAdd(chartId, 0);
+                chartProtectCounts.TryAdd(chartId, 0);
+                chartCounts.TryAdd(chartId, 0);
+                chartVetoCounts.TryAdd(chartId, 0);
+                chartLeaderboards.TryAdd(chartId, new Dictionary<string, PhoenixScore>(StringComparer.OrdinalIgnoreCase));
+            }
+            for (var i = 0; i < match.ActiveCharts.Length; i++)
+            {
+                var chartId = match.ActiveCharts[i];
+
+                chartCounts[chartId]++;
+                if (match.Scores.All(s => s.Value[i] == 0)) continue;
+                chartPlayerCounts[chartId] += match.Scores.Count(s => s.Value[i]!=0);
+                chartScoreTotal[chartId] += match.Scores.Sum(kv => kv.Value[i]);
+                foreach (var player in match.Players)
+                {
+                    if (match.Scores[player][i] == 0)
+                    {
+                        continue;
+                    }
+                    playerScores.TryAdd(player, new List<PlayerChartScore>());
+                    playerScores[player].Add(new PlayerChartScore(chartId, match.Scores[player][i]));
+                    if (!chartLeaderboards[chartId].ContainsKey(player) || match.Scores[player][i] > chartLeaderboards[chartId][player])
+                    {
+                        chartLeaderboards[chartId][player] = match.Scores[player][i];
+                    }
+                }
+            
+            }
+            foreach (var chartId in match.ProtectedCharts)
+            {
+                chartProtectCounts[chartId]++;
+            }
+            foreach (var chartId in match.VetoedCharts)
+            {
+                chartCounts[chartId]++;
+                chartVetoCounts[chartId]++;
+            }
+            foreach (var player in match.Players)
+            {
+                
+                playerMatches.TryAdd(player, 0);
+                playerMatches[player]++;
+                playerChartCount.TryAdd(player, 0);
+                playerChartCount[player] += match.Scores[player].Count(s => s >0);
+                playerScoreTotal.TryAdd(player, 0);
+                playerScoreTotal[player] += match.Scores[player].Sum(s => (int)s);
+            }
+        }
+        _playerScores = playerScores;
+        _playerStats = playerMatches.Keys.Select(player => new PlayerStats(player, playerMatches[player], playerChartCount[player],playerChartCount[player]>0? PhoenixScore.From((int)(playerScoreTotal[player] / playerChartCount[player])):0)).ToArray();
+        _chartLeaderboards = chartLeaderboards;
+        _chartStats= chartCounts.Keys.Select(chartId => new ChartStats(chartId, chartCounts[chartId], chartVetoCounts[chartId], chartProtectCounts[chartId], chartPlayerCounts[chartId], chartPlayerCounts[chartId] > 0 ? PhoenixScore.From((int)(chartScoreTotal[chartId] / chartPlayerCounts[chartId])) : 0)).ToArray();
+    }
 }
