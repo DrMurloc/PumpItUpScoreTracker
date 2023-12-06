@@ -1,4 +1,4 @@
-﻿@page "/Eclipse/BracketPoC"
+﻿@page "/Eclipse/Tournament"
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.SecondaryPorts
@@ -307,6 +307,8 @@
         <MudTablePager />
     </PagerContent>
 </MudTable>
+<br/>
+<MudButton OnClick=@(()=>NavManager.NavigateTo("/Eclipse/Qualifiers")) Variant="Variant.Filled">View Qualifiers</MudButton>
 <MudDialog @bind-IsVisible="_showMatchDialog">
     <DialogContent>
         @if (_currentMatch != null)
@@ -384,6 +386,7 @@
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
 @inject ISnackbar Snackbar;
+@inject NavigationManager NavManager;
 @code
 {
     private IDictionary<string, RandomSettings> _chartPullSettings = new Dictionary<string, RandomSettings>(StringComparer.OrdinalIgnoreCase);
