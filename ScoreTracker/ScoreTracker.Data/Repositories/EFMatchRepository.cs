@@ -149,7 +149,7 @@ namespace ScoreTracker.Data.Repositories
 
         public Task<IEnumerable<MatchPlayer>> GetMatchPlayers(CancellationToken cancellationToken)
         {
-            return Task.FromResult(PlayerOrders);
+            return Task.FromResult(RealPlayerOrders);
         }
 
         public static readonly IEnumerable<MatchPlayer> RealPlayerOrders = new MatchPlayer[]
@@ -169,15 +169,15 @@ namespace ScoreTracker.Data.Repositories
             new("Smallboy", 44, 338157160112586752, "AKA Nagasaki"),
             new("Slowpoke", 43, 361362903691034625), //
             new("ancient_grainz", 42, 291371859105284096, "AKA Thomas Grover, Potential Conflicts with ITG", true),
-            new("PacRob", 41, 477504512207093841, "Potential Conflict with SMX and DDR", true), //? 
+            new("PacRob", 41, 1182082330223976508, "Potential Conflict with SMX and DDR", true), //? 
             new("Crafty The Fox", 40, 384007242837524481),
             new("NESSQUICK", 39, 385296090422837248),
             new("Songbird", 38, 309540048674750466),
             new("StrawHatGabe", 37, 245641474409103361),
-            new("Tink", 36, 477504512207093841), //?
+            new("Tink", 36, 180787589601689600, "AKA Jasper/WhatWouldJasperDo"), //?
             new("Shinobee", 35, 478794055711457282, "Potential Conflict with DDR, SMX, and ITG", true),
             new("ligma", 34, 189142827391778816, "AKA Ivan"),
-            new("Surikato", 33, 477504512207093841), //?
+            new("Surikato", 33, 1013220832778133625), //?
             new("SEBAA", 32, 603768563890913282),
             new("Waffle", 31, 146003802527367169),
             new("litenang", 30, 83038699318677504, "Potential Conflict with SMX and ITG", true),

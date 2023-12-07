@@ -273,7 +273,7 @@
         if (_match.Players.Length > 2)
         {
             var orderedPlayers = _match.Players.OrderBy(p => Seeding[p]).ToArray();
-            var currentPlayer = orderedPlayers[_match.VetoedCharts.Length % orderedPlayers.Length];
+            var currentPlayer = orderedPlayers[^(_match.VetoedCharts.Length % orderedPlayers.Length+1)];
             if (!FinishedVetoes())
             {
                 yield return $"{currentPlayer} to Veto";
