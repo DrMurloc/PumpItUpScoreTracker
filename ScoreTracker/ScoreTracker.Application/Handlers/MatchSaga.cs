@@ -23,7 +23,8 @@ namespace ScoreTracker.Application.Handlers
         IRequestHandler<DeleteMatchLinkCommand>,
         IRequestHandler<FinishCardDrawCommand>,
         IRequestHandler<PingMatchCommand>,
-        IRequestHandler<GetMatchPlayersQuery, IEnumerable<MatchPlayer>>
+        IRequestHandler<GetMatchPlayersQuery, IEnumerable<MatchPlayer>>,
+        IRequestHandler<FinalizeMatchCommand>
 
     {
         private readonly IMatchRepository _matchRepository;
@@ -95,51 +96,11 @@ namespace ScoreTracker.Application.Handlers
             foreach (var tieBreakerResult in tie.OrderByDescending(name => match.Scores[name].Sum(s => s)))
                 match.FinalPlaces[currentPosition++] = tieBreakerResult;
 
-            var newMatchState = match with { State = MatchState.Completed };
+            var newMatchState = match with { State = MatchState.Finalizing };
             await _matchRepository.SaveMatch(newMatchState, cancellationToken);
 
             await _mediator.Publish(new MatchUpdatedEvent(newMatchState), cancellationToken);
 
-            try
-            {
-                await _bot.PublishQualifiersMessage($@"# {newMatchState.MatchName} Completed! #
-- {string.Join("\r\n- ", newMatchState.FinalPlaces.Select(p => $"{p} ({newMatchState.Points[p].Sum()})"))}",
-                    cancellationToken);
-            }
-            catch (Exception)
-            {
-                //Ignored
-            }
-
-            var links = await _matchRepository.GetMatchLinksByFromMatchName(match.MatchName, cancellationToken);
-            foreach (var link in links)
-            {
-                var nextMatch = await _matchRepository.GetMatch(link.ToMatch, cancellationToken);
-                var progressers = link.IsWinners
-                    ? newMatchState.FinalPlaces.Take(link.PlayerCount)
-                    : newMatchState.FinalPlaces.Reverse().Take(link.PlayerCount);
-
-                foreach (var player in progressers)
-                {
-                    if (nextMatch.Players.Contains(player)) continue;
-                    var nextIndex = nextMatch.Players.Select((p, i) => (p, i))
-                        .Where(p => p.p.ToString().StartsWith("Unknown ", StringComparison.OrdinalIgnoreCase))
-                        .Select(p => (int?)p.i)
-                        .FirstOrDefault();
-                    if (nextIndex == null)
-                    {
-                        await _admins.NotifyAdmin(
-                            $"Player {player} Couldn't progress from {newMatchState.MatchName} to {nextMatch.MatchName}",
-                            cancellationToken);
-                        continue;
-                    }
-
-                    nextMatch.Players[nextIndex.Value] = player;
-                }
-
-                await _matchRepository.SaveMatch(nextMatch, cancellationToken);
-                await _mediator.Publish(new MatchUpdatedEvent(nextMatch), cancellationToken);
-            }
 
             return Unit.Value;
         }
@@ -243,6 +204,59 @@ namespace ScoreTracker.Application.Handlers
             CancellationToken cancellationToken)
         {
             return await _matchRepository.GetMatchPlayers(cancellationToken);
+        }
+
+        public async Task<Unit> Handle(FinalizeMatchCommand request, CancellationToken cancellationToken)
+        {
+            var match = await _matchRepository.GetMatch(request.MatchName, cancellationToken);
+
+            var links = await _matchRepository.GetMatchLinksByFromMatchName(match.MatchName, cancellationToken);
+            foreach (var link in links)
+            {
+                var nextMatch = await _matchRepository.GetMatch(link.ToMatch, cancellationToken);
+                var progressers = link.IsWinners
+                    ? match.FinalPlaces.Take(link.PlayerCount)
+                    : match.FinalPlaces.Reverse().Take(link.PlayerCount);
+
+                foreach (var player in progressers)
+                {
+                    if (nextMatch.Players.Contains(player)) continue;
+                    var nextIndex = nextMatch.Players.Select((p, i) => (p, i))
+                        .Where(p => p.p.ToString().StartsWith("Unknown ", StringComparison.OrdinalIgnoreCase))
+                        .Select(p => (int?)p.i)
+                        .FirstOrDefault();
+                    if (nextIndex == null)
+                    {
+                        await _admins.NotifyAdmin(
+                            $"Player {player} Couldn't progress from {match.MatchName} to {nextMatch.MatchName}",
+                            cancellationToken);
+                        continue;
+                    }
+
+                    nextMatch.Players[nextIndex.Value] = player;
+                }
+
+                await _matchRepository.SaveMatch(nextMatch, cancellationToken);
+                await _mediator.Publish(new MatchUpdatedEvent(nextMatch), cancellationToken);
+            }
+
+            var newMatchState = match with { State = MatchState.Completed };
+            await _matchRepository.SaveMatch(newMatchState, cancellationToken);
+            await _mediator.Publish(new MatchUpdatedEvent(newMatchState), cancellationToken);
+
+
+            try
+            {
+                await _bot.PublishQualifiersMessage($@"# {newMatchState.MatchName} Completed! #
+- {string.Join("\r\n- ", newMatchState.FinalPlaces.Select(p => $"{p} ({newMatchState.Points[p].Sum()})"))}",
+                    cancellationToken);
+            }
+            catch (Exception)
+            {
+                //Ignored
+            }
+
+            return Unit.Value;
         }
     }
 }

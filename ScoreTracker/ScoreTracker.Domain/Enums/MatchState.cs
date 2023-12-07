@@ -6,6 +6,7 @@
         CardDraw,
         Ready,
         InProgress,
+        Finalizing,
         Completed
     }
 }

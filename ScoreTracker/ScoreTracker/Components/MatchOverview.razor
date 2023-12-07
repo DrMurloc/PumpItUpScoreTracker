@@ -174,10 +174,65 @@
                     </MudTable>
                 </MudItem>
                 <MudItem xs="12">
-                    <MudButton Disabled="!IsFinished(_match) || _isSaving" Variant="Variant.Filled" OnClick="FinishMatch">Finish Match</MudButton>
+                    <MudButton Disabled="!IsFinished(_match) || _isSaving" Variant="Variant.Filled" OnClick="CalculateScores">Calculate Points</MudButton>
                 </MudItem>
                 break;
+                case MatchState.Finalizing:
 
+                    <MudItem xs="12">
+                        <MudTable T="Name" Items="_match.FinalPlaces">
+                        <HeaderContent>
+                            @if (IsLoggedInAsAdmin)
+                            {
+                                <MudTh>Move Up</MudTh>
+                                <MudTh>Move Down</MudTh>
+                            }
+                                <MudTh>Name</MudTh>
+                                @foreach (var chartId in _match.ActiveCharts)
+                                {
+                                    var id = chartId;
+                                    <MudTh>@_charts[id].Song.Name @_charts[id].DifficultyString</MudTh>
+                                }
+                                <MudTh>Total</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                @if (IsLoggedInAsAdmin)
+                                {
+                                    <MudTd>
+                                        @if (_match.FinalPlaces.Select((n, i) => (n, i)).Where(kv => kv.n == context).Select(kv => kv.i).Single() != 0)
+                                        {
+                                            
+                                            <MudIconButton Icon="@Icons.Material.Filled.MoveUp" OnClick="() => MovePlayerUp(context)"></MudIconButton>
+                                        }
+                                    </MudTd>
+                                    <MudTd>
+
+                                        @if (_match.FinalPlaces.Select((n, i) => (n, i)).Where(kv => kv.n == context).Select(kv => kv.i).Single() != _match.FinalPlaces.Length - 1)
+                                        {
+                                            
+                                            <MudIconButton Icon="@Icons.Material.Filled.MoveDown" OnClick="()=>MovePlayerDown(context)"></MudIconButton>
+                                        }
+                                    </MudTd>
+                                }
+                                <MudTd>
+                                    @context
+                                </MudTd>
+
+                                @for(var i=0;i<_match.ActiveCharts.Length;i++)
+                                {
+                                    var chartPlace = i;
+                                    <MudTd>@_match.Scores[context][chartPlace] (@_match.Points[context][chartPlace])</MudTd>
+                                }
+                                <MudTd>
+                                    @_match.Points[context].Sum()
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudButton Disabled="!IsFinished(_match) || _isSaving" Variant="Variant.Filled" OnClick="FinishMatch">Finish Match</MudButton>
+                    </MudItem>
+                    break;
             case MatchState.Completed:
                 <MudItem xs="12">
                     
@@ -236,7 +291,7 @@
     private bool _isSaving = false;
     private User? _currentUser;
     private bool IsLoggedInAsAdmin =>_currentUser!=null &&(_currentUser.IsAdmin || BracketAdmins.Contains(_currentUser.Id));
-
+    
     private bool IsFinished(MatchView match)
     {
         if (match.Players.Length == 2)
@@ -258,6 +313,7 @@
         }
         return _match.ActiveCharts.Count(id => !_match.VetoedCharts.Contains(id))<=_match.ChartCount;
     }
+
     [Parameter]
     public Name? MatchName { get; set; }
 
@@ -335,7 +391,48 @@
         _isSaving = false;
     }
 
+    private async Task MovePlayerDown(Name playerName)
+    {
+        if (_match == null)
+        {
+            return;
+        }
+        var index = _match.FinalPlaces.Select((n, i) => (n,i)).Where(kv => kv.n == playerName).Select(kv=>kv.i).Single();
+        var newOrder = _match.FinalPlaces.ToArray();
+        newOrder[index] = _match.FinalPlaces[index +1];
+        newOrder[index +1] = playerName;
+        _isSaving = true;
+        await Mediator.Send(new UpdateMatchCommand(_match with { FinalPlaces = newOrder }));
+        _isSaving = false;
+
+    }
+    private async Task MovePlayerUp(Name playerName)
+    {
+        if (_match == null)
+        {
+            return;
+        }
+        var index = _match.FinalPlaces.Select((n, i) => (n, i)).Where(kv => kv.n == playerName).Select(kv=>kv.i).Single();
+
+        var newOrder = _match.FinalPlaces.ToArray();
+        newOrder[index]= _match.FinalPlaces[index - 1];
+        newOrder[index - 1] = playerName;
+        _isSaving = true;
+        await Mediator.Send(new UpdateMatchCommand(_match with {FinalPlaces = newOrder}));
+        _isSaving = false;
+
+    }
     private async Task FinishMatch()
+    {
+        if (_match == null)
+        {
+            return;
+        }
+        _isSaving = true;
+        await Mediator.Send(new FinalizeMatchCommand(_match.MatchName));
+        _isSaving = false;
+    }
+    private async Task CalculateScores()
     {
         if (_match == null)
         {
