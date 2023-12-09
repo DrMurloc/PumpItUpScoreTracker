@@ -98,7 +98,7 @@
     {
         <MudItem xs="12"><MudText>Your next Match is @_nextMatch.MatchName</MudText></MudItem>
         <MudItem xs="12"><MudText>There are @_matchesLeft Matches until Then</MudText></MudItem>
-        <MudItem xs="12"><MudText>This is expected to be @_expectedTime.ToString("dddd h:mm tt") (this is a very rough estimate)</MudText></MudItem>
+        <MudItem xs="12"><MudText>This is expected to be @_expectedTime.ToString("dddd h:mm") (this is a very rough estimate)</MudText></MudItem>
     }
 </MudGrid>
 <br />
@@ -454,34 +454,23 @@
     private void SearchForPlayer(string player)
     {
         _searchedPlayer = player;
+        if (string.IsNullOrWhiteSpace(player))
+        {
+            _nextMatch = null;
+            return;            
+        }
         _nextMatch = UpcomingMatches.FirstOrDefault(m => m.Players.Contains(player));
-        var fridayStart = new DateTime(2023, 12, 8, 16, 0, 0);
-        var saturdayStart = new DateTime(2023, 12, 9, 10, 30, 0);
-        var fridayCutoff = new DateTime(2023, 12, 8, 21, 30, 0);
         if (_nextMatch == null) return;
 
         _matchesLeft = _nextMatch.MatchOrder-UpcomingMatches.Min(m => m.MatchOrder);
         var playerCount = UpcomingMatches.Where(m => m.MatchOrder < _nextMatch.MatchOrder).Sum(m => m.Players.Length);
         var cabUseCount = playerCount / 2;
         var cabWaveCount = cabUseCount / 4;
-        _expectedTimeToMatch = cabWaveCount * TimeSpan.FromMinutes(30);
+        _expectedTimeToMatch = cabWaveCount * TimeSpan.FromMinutes(25);
 
-        var now = DateTime.Now > fridayStart ? DateTime.Now : fridayStart;
+        var now =  DateTime.Now;
 
-        _expectedTime = now + _expectedTimeToMatch;
-        if (_expectedTime <= fridayCutoff) return;
-
-        if (now > fridayCutoff && now < saturdayStart)
-        {
-            _expectedTime = saturdayStart + _expectedTimeToMatch;
-        }
-        else if(now<fridayCutoff)
-        {
-            _expectedTime = saturdayStart + _expectedTimeToMatch - (fridayCutoff - now);
-        } else if (now > saturdayStart)
-        {
             _expectedTime = now + _expectedTimeToMatch;
-        }
 
     }
     private async Task CreateLink()
