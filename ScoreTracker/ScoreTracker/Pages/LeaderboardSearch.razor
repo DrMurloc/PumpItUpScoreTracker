@@ -30,6 +30,7 @@
                 <MudTableSortLabel T="UserOfficialLeaderboard" SortBy="e=>(int)_chartMap[e.LeaderboardName].Level">Difficulty</MudTableSortLabel>
             </MudTh>
             <MudTh><MudTableSortLabel T="UserOfficialLeaderboard" SortBy="e=>e.Place">Place</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="UserOfficialLeaderboard" SortBy="e=>e.Score">Score/Rating</MudTableSortLabel></MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>
@@ -45,6 +46,9 @@
             </MudTd>
             <MudTd>
                 @context.Place
+            </MudTd>
+            <MudTd>
+                @context.Score
             </MudTd>
         </RowTemplate>
     </MudTable>
@@ -67,7 +71,7 @@
 @inject IChartRepository Charts;
 @code {
     private string _selectedUsername = string.Empty;
-    private static readonly DateTimeOffset _lastUpdated = new DateTimeOffset(2023, 11, 24, 11, 12, 0, TimeSpan.FromHours(-5));
+    private static readonly DateTimeOffset _lastUpdated = new DateTimeOffset(2023, 12, 16, 11, 44, 0, TimeSpan.FromHours(-5));
     private string[] _usernames = Array.Empty<string>();
     private UserOfficialLeaderboard[] _chartResults = Array.Empty<UserOfficialLeaderboard>();
     private UserOfficialLeaderboard[] _nonChartResults = Array.Empty<UserOfficialLeaderboard>();

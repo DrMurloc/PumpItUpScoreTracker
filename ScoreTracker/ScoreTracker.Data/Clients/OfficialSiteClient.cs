@@ -68,7 +68,8 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
             var place = 1;
             foreach (var entry in entries.Entries.OrderByDescending(e => e.Rating))
             {
-                result.Add(new UserOfficialLeaderboard(entry.ProfileName, place, "Rating", leaderboard.Name));
+                result.Add(new UserOfficialLeaderboard(entry.ProfileName, place, "Rating", leaderboard.Name,
+                    entry.Rating));
                 place++;
             }
         }

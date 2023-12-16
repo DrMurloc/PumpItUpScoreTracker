@@ -26,7 +26,16 @@ namespace ScoreTracker.Application.Handlers
             foreach (var leaderboard in leaderboardEntries.GroupBy(l => l.LeaderboardName))
             {
                 await _leaderboards.ClearLeaderboard("Rating", leaderboard.Key, cancellationToken);
-                foreach (var entry in leaderboard) await _leaderboards.WriteEntry(entry, cancellationToken);
+                var place = 1;
+                foreach (var scoreGroup in leaderboard.GroupBy(l => l.Score).OrderByDescending(kv => kv.Key))
+                {
+                    var currentPlace = place;
+                    foreach (var entry in scoreGroup)
+                    {
+                        await _leaderboards.WriteEntry(entry with { Place = currentPlace }, cancellationToken);
+                        place++;
+                    }
+                }
             }
 
             var scores = (await _officialSite.GetAllOfficialChartScores(CancellationToken.None)).ToArray();
@@ -44,12 +53,17 @@ namespace ScoreTracker.Application.Handlers
                 var leaderboardName = group.First().Chart.Song.Name + " " + group.First().Chart.DifficultyString;
                 await _leaderboards.ClearLeaderboard("Chart", leaderboardName, cancellationToken);
                 var place = 1;
-                foreach (var entry in group.OrderByDescending(e => (int)e.Score))
+                foreach (var scoreGroup in group.GroupBy(e => (int)e.Score).OrderByDescending(g => g.Key))
                 {
-                    await _leaderboards.WriteEntry(
-                        new UserOfficialLeaderboard(entry.Username, place, "Chart", leaderboardName),
-                        cancellationToken);
-                    place++;
+                    var currentPlace = place;
+                    foreach (var entry in scoreGroup)
+                    {
+                        await _leaderboards.WriteEntry(
+                            new UserOfficialLeaderboard(entry.Username, currentPlace, "Chart", leaderboardName,
+                                entry.Score),
+                            cancellationToken);
+                        place++;
+                    }
                 }
             }
         }

@@ -13,4 +13,6 @@ public interface IOfficialLeaderboardRepository
 
     Task<IEnumerable<UserOfficialLeaderboard>> GetOfficialLeaderboardStatuses(string username,
         CancellationToken cancellationToken);
+
+    Task FixRankingOrders(CancellationToken cancellationToken);
 }

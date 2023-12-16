@@ -11,5 +11,6 @@ namespace ScoreTracker.Data.Persistence.Entities
         public string Username { get; set; }
         public string LeaderboardType { get; set; }
         public string LeaderboardName { get; set; }
+        public int Score { get; set; }
     }
 }

@@ -10,7 +10,6 @@
 
 <PageTitle>Admin</PageTitle>
 
-<MudButton Variant="Variant.Filled" OnClick="RebuildOfficialLeaderboard" Color="Color.Error">Test</MudButton>
 <MudCard>
     <MudButton Disabled="_isReCalculating" OnClick="ReCalculateScores" Color="Color.Primary" Variant="Variant.Filled">ReCalculate Ratings</MudButton>
 
@@ -119,6 +118,7 @@
 </MudCard>
 @inject ICurrentUserAccessor CurrentUser;
 @inject IChartRepository _charts;
+@inject IOfficialLeaderboardRepository OfficialLeaderboards;
 @inject IMediator Mediator;
 @inject IUiSettingsAccessor UiSettings;
 @inject ISnackbar Snackbar;
@@ -139,7 +139,8 @@
 
     private async Task RebuildOfficialLeaderboard()
     {
-        await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
+        await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);
+    //await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
     }
     private async Task SelectChart(Chart chart)
     {
