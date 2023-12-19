@@ -34,12 +34,6 @@
 
                 <MudCard Class="@CardClass(chart.Id)" Style="@CardStyle(chart.Id)">
                     <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()" />
-                    @if (CurrentUser.IsLoggedIn && Type == TierListType.Preference)
-                    {
-                        <MudCardContent>
-                            <MudRating Disabled="_isSaving" SelectedValue="PlayerRatings.TryGetValue(chart.Id,out var value)?value:0" SelectedValueChanged="rating=>UpdateRating(chart.Id,rating)" Color=@(PlayerRatings.ContainsKey(chart.Id)?Color.Default:Color.Primary)></MudRating>
-                        </MudCardContent>
-                    }
                     @if (Type == TierListType.MyScores)
                     {
                         <MudCardContent>

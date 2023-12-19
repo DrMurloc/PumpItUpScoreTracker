@@ -76,4 +76,54 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
 
         return result;
     }
+
+    private static readonly IDictionary<string, string> ManualMappings =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "Kasou Shinja仮装信者", "Kasou Shinja" },
+            { "Re：End of a Dream", "Re:End of a Dream" },
+            { "CROSS RAY (feat. 月下Lia)", "Cross Ray" },
+            { "ヨロピク ピクヨロ！", "Yoropiku Pikuyoro !" },
+            { "甘い誘惑デインジャラス", "Amai Yuuwaku Dangerous" },
+            { "甘い誘惑デインジャラス\nAmai Yuuwaku Dangerous", "Amai Yuuwaku Dangerous" },
+            { "ヨロピク ピクヨロ！\nYoropiku Pikuyoro !", "Yoropiku Pikuyoro !" }
+        };
+
+    public async Task<IEnumerable<ChartPopularityLeaderboardEntry>> GetOfficialChartLeaderboardEntries(
+        CancellationToken cancellationToken)
+    {
+        var missingCharts = new List<PiuGameGetChartPopularityLeaderboardResult.Entry>();
+        var page = 0;
+        var apiResults = new List<PiuGameGetChartPopularityLeaderboardResult.Entry>();
+        while (true)
+        {
+            _logger.LogInformation($"Pulling page {page}");
+            var nextResult = await _piuGame.GetChartPopularityLeaderboard(page, cancellationToken);
+            apiResults.AddRange(nextResult.Entries);
+            if (nextResult.Entries.Length < 50) break;
+
+            page += 50;
+        }
+
+        var result = new List<ChartPopularityLeaderboardEntry>();
+        foreach (var apiResult in apiResults)
+        {
+            var song = apiResult.SongName;
+            if (ManualMappings.TryGetValue(song, out var mapping)) song = mapping;
+
+            var charts = (await _charts.GetChartsForSong(MixEnum.Phoenix, song, cancellationToken)).ToArray();
+            var chart = charts
+                .FirstOrDefault(c => c.Level == apiResult.ChartLevel && c.Type == apiResult.ChartType);
+
+            if (chart == null)
+            {
+                missingCharts.Add(apiResult);
+                continue;
+            }
+
+            result.Add(new ChartPopularityLeaderboardEntry(chart, apiResult.Place));
+        }
+
+        return result;
+    }
 }

@@ -8,5 +8,8 @@ namespace ScoreTracker.Data.Apis.Contracts
         Task<PiuGameGetSongLeaderboardResult> GetSongLeaderboard(string songId, CancellationToken cancellationToken);
         Task<PiuGameGetLeaderboardListResult> GetLeaderboards(CancellationToken cancellationToken);
         Task<PiuGameGetLeaderboardResult> GetLeaderboard(string leaderboardId, CancellationToken cancellationToken);
+
+        Task<PiuGameGetChartPopularityLeaderboardResult> GetChartPopularityLeaderboard(int page,
+            CancellationToken cancellationToken);
     }
 }

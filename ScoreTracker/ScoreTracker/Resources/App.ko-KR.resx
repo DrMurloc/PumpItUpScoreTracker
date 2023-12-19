@@ -363,6 +363,9 @@
   <data name="Players" xml:space="preserve">
     <value>유저</value>
   </data>
+  <data name="Popularity" xml:space="preserve">
+    <value>인기</value>
+  </data>
   <data name="Progress" xml:space="preserve">
     <value>진행상황</value>
   </data>

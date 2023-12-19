@@ -9,4 +9,7 @@ public interface IOfficialSiteClient
         CancellationToken cancellationToken);
 
     Task<IEnumerable<UserOfficialLeaderboard>> GetLeaderboardEntries(CancellationToken cancellationToken);
+
+    Task<IEnumerable<ChartPopularityLeaderboardEntry>> GetOfficialChartLeaderboardEntries(
+        CancellationToken cancellationToken);
 }

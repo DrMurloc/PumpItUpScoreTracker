@@ -6,13 +6,14 @@ using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Application.Handlers
 {
-    public sealed class ProcessOfficialLeaderboardsHandler : IRequestHandler<ProcessOfficialLeaderboardsCommand>
+    public sealed class OfficialLeaderboardSaga : IRequestHandler<ProcessOfficialLeaderboardsCommand>,
+        IRequestHandler<ProcessChartPopularityCommand>
     {
         private readonly IOfficialSiteClient _officialSite;
         private readonly ITierListRepository _tierLists;
         private readonly IOfficialLeaderboardRepository _leaderboards;
 
-        public ProcessOfficialLeaderboardsHandler(IOfficialSiteClient officialSite, ITierListRepository tierLists,
+        public OfficialLeaderboardSaga(IOfficialSiteClient officialSite, ITierListRepository tierLists,
             IOfficialLeaderboardRepository leaderboards)
         {
             _officialSite = officialSite;
@@ -76,7 +77,7 @@ namespace ScoreTracker.Application.Handlers
                 .ToDictionary(g => g.Key, g => (int)g.Average(e => e.Score));
             var charts = entryArray.Select(e => e.Chart).GroupBy(c => c.Id).Select(g => g.First());
             var levelGroup = charts.GroupBy(s => (s.Type, s.Level));
-            var result = new List<SongTierListEntry>();
+
             foreach (var group in levelGroup)
             {
                 var scores = group.Select(g => averages[g.Id]).ToArray();
@@ -112,12 +113,10 @@ namespace ScoreTracker.Application.Handlers
                         category = TierListCategory.Overrated;
 
 
-                    result.Add(new SongTierListEntry("Official Scores", song.Id, category,
-                        orders[song.Id]));
+                    await _tierLists.SaveEntry(new SongTierListEntry("Official Scores", song.Id, category,
+                        orders[song.Id]), cancellationToken);
                 }
             }
-
-            foreach (var r in result) await _tierLists.SaveEntry(r, cancellationToken);
         }
 
         public static double StdDev(IEnumerable<int> values,
@@ -136,6 +135,48 @@ namespace ScoreTracker.Application.Handlers
             if (as_sample)
                 return Math.Sqrt(sum_of_squares / (values.Count() - 1));
             return Math.Sqrt(sum_of_squares / values.Count());
+        }
+
+        public async Task<Unit> Handle(ProcessChartPopularityCommand request, CancellationToken cancellationToken)
+        {
+            var entries = await _officialSite.GetOfficialChartLeaderboardEntries(cancellationToken);
+            foreach (var levelTypeGroup in entries.GroupBy(e => (e.Chart.Level, e.Chart.Type)))
+            {
+                var charts = levelTypeGroup.ToArray();
+                var average = charts.Average(c => c.Place);
+                var standardDev = StdDev(charts.Select(c => c.Place), true);
+                var mediumMin = average - standardDev / 2;
+                var easyMin = average + standardDev / 2;
+                var veryEasyMin = average + standardDev;
+                var oneLevelOverrated = average + standardDev * 1.5;
+                var hardMin = average - standardDev;
+                var veryHardMin = average - standardDev * 1.5;
+                foreach (var (chart, score) in levelTypeGroup)
+                {
+                    var category = TierListCategory.Unrecorded;
+                    if (score == -1)
+                        category = TierListCategory.Unrecorded;
+                    else if (score < veryHardMin)
+                        category = TierListCategory.Overrated;
+                    else if (score < hardMin)
+                        category = TierListCategory.VeryEasy;
+                    else if (score < mediumMin)
+                        category = TierListCategory.Easy;
+                    else if (score < easyMin)
+                        category = TierListCategory.Medium;
+                    else if (score < veryEasyMin)
+                        category = TierListCategory.Hard;
+                    else if (score < oneLevelOverrated)
+                        category = TierListCategory.VeryHard;
+                    else
+                        category = TierListCategory.Underrated;
+
+                    await _tierLists.SaveEntry(new SongTierListEntry("Popularity", chart.Id, category, score),
+                        cancellationToken);
+                }
+            }
+
+            return Unit.Value;
         }
     }
 }

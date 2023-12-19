@@ -366,6 +366,9 @@
   <data name="Players" xml:space="preserve">
     <value>Jogadores</value>
   </data>
+  <data name="Popularity" xml:space="preserve">
+    <value>Popularidade</value>
+  </data>
   <data name="Preference" xml:space="preserve">
     <value>Preferência</value>
   </data>

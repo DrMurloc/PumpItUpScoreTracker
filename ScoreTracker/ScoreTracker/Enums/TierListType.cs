@@ -3,7 +3,7 @@
     public enum TierListType
     {
         Difficulty,
-        Preference,
+        Popularity,
         Scores,
         MyScores,
         OfficialScores
