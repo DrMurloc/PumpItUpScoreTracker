@@ -27,7 +27,7 @@
     </MudToolBar>
     <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" @ref="_tabs">
         <MudTabPanel Text="Difficulty Progress">
-            <MudTable T="DifficultyEntry" Items="_difficultyEntries">
+            <MudTable T="DifficultyEntry" Items="_difficultyEntries" Breakpoint="Breakpoint.None">
                 <HeaderContent>
                     <MudTh>Level</MudTh>
                     <MudTh>Passes</MudTh>
@@ -297,6 +297,36 @@
             var plate2 = plates.Any()?(PhoenixPlate?)Math.Ceiling(avgPlate):null;
             entries.Add(new DifficultyEntry(level.ToString(), passed, remaining, (int)totalRating, (int)ratingRemainnig, minScore, avgScore, maxScore, plate1, plate2));
         }
+        var coOpPassed = coOpCharts.Where(c => !(chartScores.TryGetValue(c.Id, out var score) ? score!.IsBroken : true)).Count();
+        var coOpRemaining = coOpCharts.Where(c => (chartScores.TryGetValue(c.Id, out var score) ? score!.IsBroken : true)).Count();
+        var coOpTotalRating = coOpCharts.Sum(c => chartScores.TryGetValue(c.Id, out var score) ? (score!.Score?.LetterGrade.GetModifier() ?? 0) * 2000 : 0);
+        var coOpRatingRemainnig = coOpCharts.Count() * (PhoenixLetterGrade.SSSPlus.GetModifier() * 2000) - coOpTotalRating;
+        var coOpScores = coOpCharts.Where(c => chartScores.TryGetValue(c.Id, out var score) && score.Score != null).Select(c => (int)chartScores[c.Id].Score!)
+        .ToArray();
+        var coOpMinScore = coOpScores.Any() ? (int?)coOpScores.Min() : null;
+        var coOpMaxScore = coOpScores.Any() ? (int?)coOpScores.Max() : null;
+        var coOpAvgScore = coOpScores.Any() ? (int?)coOpScores.Average() : null;
+        var coOpPlates = coOpCharts.Where(c => chartScores.TryGetValue(c.Id, out var score) && score.Plate != null).Select(c => (int)chartScores[c.Id].Plate!)
+        .ToArray();
+        var coOpAvgPlate = coOpPlates.Any() ? coOpPlates.Average(p => (int)p) : 0;
+        var coOpPlate1 = coOpPlates.Any() ? (PhoenixPlate?)Math.Floor(coOpAvgPlate) : null;
+        var coOpPlate2 = coOpPlates.Any() ? (PhoenixPlate?)Math.Ceiling(coOpAvgPlate) : null;
+        entries.Add(new DifficultyEntry("CoOp", coOpPassed, coOpRemaining, (int)coOpTotalRating, (int)coOpRatingRemainnig, coOpMinScore, coOpAvgScore, coOpMaxScore, coOpPlate1, coOpPlate2));
+
+        var totalPassed = entries.Sum(e=>e.Passed);
+        var totalRemaining = entries.Sum(e=>e.Remaining);
+        var totalRanking = entries.Sum(e=>e.TotalRating);
+        var totalRemainingRanking = entries.Sum(e => e.RatingRemaining);
+        var totalMinScore = entries.Any(e => e.MinScore != null) ? entries.Min(e => (int?)e.MinScore) : null;
+        var totalAvgScore = _scores.Any(s => s.Score != null) ?(int?) _scores.Where(s=>s.Score!=null).Average(s => s.Score) : null;
+        var totalMaxScore = entries.Any(e=>e.MaxScore!=null)? entries.Max(e=>(int?)e.MaxScore):null;
+        var totalPlates = _scores.Where(s=>s.Plate!=null).Select(s=>s.Plate!.Value).ToArray();
+        var totalAvgPlate = totalPlates.Any() ? totalPlates.Average(p => (int)p) : 0;
+        var totalPlate1 = totalPlates.Any() ? (PhoenixPlate?)Math.Floor(totalAvgPlate) : null;
+        var totalPlate2 = totalPlates.Any()?(PhoenixPlate?)Math.Ceiling(totalAvgPlate):null;
+        entries.Add(new DifficultyEntry("Total", totalPassed, totalRemaining, (int)totalRanking, (int)totalRemainingRanking, totalMinScore, totalAvgScore, totalMaxScore, totalPlate1, totalPlate2));
+
+        
         _difficultyEntries = entries;
         await Filter();
     }
