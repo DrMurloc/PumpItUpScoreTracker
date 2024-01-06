@@ -32,7 +32,61 @@
 
     </MudToolBar>
     <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" @ref="_tabs">
+        <MudTabPanel Text="Difficulty Progress">
+            <MudTable T="DifficultyEntry" Items="_difficultyEntries">
+                <HeaderContent>
+                    <MudTh>Level</MudTh>
+                    <MudTh>Passes</MudTh>
+                    <MudTh>Rating</MudTh>
+                    <MudTh>Min Score</MudTh>
+                    <MudTh>Avg Score</MudTh>
+                    <MudTh>Max Score</MudTh>
+                    <MudTh>Avg Plate</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Level</MudTd>
+                    <MudTd>
+                        <MudProgressLinear Color="@(context.Remaining==0 ? Color.Success : Color.Primary)" Value="100.0 * (context.Passed / (double)(context.Passed+context.Remaining))">
+                            <MudText Typo="Typo.subtitle1">
+                                @context.Passed / @(context.Passed+context.Remaining)
+                            </MudText>
+                        </MudProgressLinear>
+                    </MudTd>
+                    <MudTd>
+                        <MudProgressLinear Color="@(context.RatingRemaining==0 ? Color.Success : Color.Primary)" Value="100.0 * (context.TotalRating / (double)(context.TotalRating+context.RatingRemaining))">
+                        </MudProgressLinear>
+                    </MudTd>
+                    <MudTd>
+                        @if(context.MinScore!=null){
+                            <MudText>@context.MinScore (@context.MinScore.Value.LetterGrade.GetName()))</MudText>
+                        }
+                    </MudTd>
+                    <MudTd>
+                        @if(context.AverageScore!=null){
+                            <MudText>@context.AverageScore (@context.AverageScore.Value.LetterGrade.GetName())</MudText>
+                        }
+                    </MudTd>
+                    <MudTd>
+                        @if (context.MaxScore != null)
+                        {
+                            <MudText>@context.MaxScore (@context.MaxScore.Value.LetterGrade.GetName()))</MudText>
+                        }
+                    </MudTd>
+                    <MudTd>
+                        @if (context.AvgPlate1 != null)
+                        {
+                            @context.AvgPlate1.Value.GetShorthand()
+                        }
+                        @if(context.AvgPlate2!=null && context.AvgPlate2 != context.AvgPlate1)
+                        {
+                            @($" - {context.AvgPlate2.Value.GetShorthand()}")
+                        }
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
 
+
+        </MudTabPanel>
         <MudTabPanel Text="Score Distribution Lines">
             <ApexChart TItem="BoxPlotData"
                        Title="Score Distribution"
@@ -143,7 +197,7 @@
             {
                 Max=1000000
             }}.ToList(),
-            
+
         };
 
     [Parameter]
@@ -168,7 +222,7 @@
         await Javascript.InvokeVoidAsync("navigator.clipboard.writeText", ShareUrl);
         Snackbar.Add("Copied to clipboard!", Severity.Success);
     }
-    
+
     private string ShareUrl => CurrentUser.IsLoggedIn ? $"{NavManager.BaseUri}{CurrentUser.User.Id}/Phoenix/Progress" : string.Empty;
 
     private IEnumerable<RecordedPhoenixScore> _filteredScores = Array.Empty<RecordedPhoenixScore>();
@@ -201,8 +255,9 @@
 
         }
         StateHasChanged();
-        
+
     }
+    private IEnumerable<DifficultyEntry> _difficultyEntries = Array.Empty<DifficultyEntry>();
     protected override async Task OnInitializedAsync()
     {
         if (RequestedUserId == null)
@@ -219,8 +274,32 @@
             NavManager.NavigateTo("/Progress");
         }
         _scores = await Mediator.Send(new GetPhoenixRecordsQuery(RequestedUserId.Value));
-        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
-        
+        var chartScores = _scores.ToDictionary(s => s.ChartId);
+        var charts = await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix));
+        var coOpCharts = charts.Where(c => c.Type == ChartType.CoOp).ToArray();
+        var levelCharts = charts.Where(c => c.Type != ChartType.CoOp).GroupBy(c => c.Level).ToDictionary(g => g.Key, g => g.ToArray());
+
+        _charts = charts.ToDictionary(c => c.Id);
+        var entries = new List<DifficultyEntry>();
+        foreach(var level in DifficultyLevel.All)
+        {
+            var passed = levelCharts[level].Where(c=>!(chartScores.TryGetValue(c.Id,out var score)?score!.IsBroken:true)).Count();
+            var remaining = levelCharts[level].Where(c => (chartScores.TryGetValue(c.Id, out var score) ? score!.IsBroken : true)).Count();
+            var totalRating = levelCharts[level].Sum(c => chartScores.TryGetValue(c.Id, out var score) ? (score!.Score?.LetterGrade.GetModifier() ?? 0) * level.BaseRating : 0);
+            var ratingRemainnig = levelCharts[level].Count() * (PhoenixLetterGrade.SSSPlus.GetModifier() * level.BaseRating) - totalRating;
+            var scores = levelCharts[level].Where(c => chartScores.TryGetValue(c.Id, out var score) && score.Score != null).Select(c => (int)chartScores[c.Id].Score!)
+            .ToArray();
+            var minScore = scores.Any() ? (int?) scores.Min() : null;
+            var maxScore = scores.Any() ? (int?)scores.Max():null;
+            var avgScore = scores.Any() ? (int?)scores.Average() : null;
+            var plates = levelCharts[level].Where(c => chartScores.TryGetValue(c.Id, out var score) && score.Plate != null).Select(c => (int)chartScores[c.Id].Plate!)
+            .ToArray();
+            var avgPlate = plates.Any()? plates.Average(p => (int)p):0;
+            var plate1 = plates.Any()? (PhoenixPlate?)Math.Floor(avgPlate):null;
+            var plate2 = plates.Any()?(PhoenixPlate?)Math.Ceiling(avgPlate):null;
+            entries.Add(new DifficultyEntry(level.ToString(), passed, remaining, (int)totalRating, (int)ratingRemainnig, minScore, avgScore, maxScore, plate1, plate2));
+        }
+        _difficultyEntries = entries;
         await Filter();
     }
 
@@ -238,5 +317,9 @@
                 return new BoxPlotData(group.Key, sorted[0], sorted[^1], median, q1, q3,average);
             }):
                 Array.Empty<BoxPlotData>();
+    }
+    private sealed record DifficultyEntry(string Level, int Passed, int Remaining, int TotalRating, int RatingRemaining, PhoenixScore? MinScore, PhoenixScore? AverageScore, PhoenixScore? MaxScore, PhoenixPlate? AvgPlate1, PhoenixPlate? AvgPlate2)
+    {
+        
     }
 }
