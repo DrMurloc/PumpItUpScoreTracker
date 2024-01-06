@@ -14,12 +14,6 @@
         <MudText Typo="Typo.h6">Progress</MudText>
         <MudSpacer></MudSpacer>
 
-        <MudSelect T="ChartType?" Label="Chart Type" Value="_selectedChartType" ValueChanged="SetSelectedChartType" FullWidth="false" Style="padding-left: 30px;">
-            <MudSelectItem T="ChartType?" Value="null">All</MudSelectItem>
-            <MudSelectItem T="ChartType?" Value="ChartType.Single">Singles</MudSelectItem>
-            <MudSelectItem T="ChartType?" Value="ChartType.Double">Doubles</MudSelectItem>
-            <MudSelectItem T="ChartType?" Value="ChartType.CoOp">CoOp</MudSelectItem>
-        </MudSelect>
         <MudNumericField T="int" HideSpinButtons="true" Label="Level Min" Min="DifficultyLevel.Min" Max="DifficultyLevel.Max" Value="_minLevel" ValueChanged="l => SetLevels(l, _maxLevel)"></MudNumericField>
         <MudNumericField T="int" HideSpinButtons="true" Label="Level Max" Min="DifficultyLevel.Min" Max="DifficultyLevel.Max" Value="_maxLevel" ValueChanged="l => SetLevels(_minLevel, l)"></MudNumericField>
         @if (CurrentUser.IsLoggedIn && CurrentUser.User.IsPublic && CurrentUser.User.Id == RequestedUserId)
@@ -53,12 +47,16 @@
                         </MudProgressLinear>
                     </MudTd>
                     <MudTd>
-                        <MudProgressLinear Color="@(context.RatingRemaining==0 ? Color.Success : Color.Primary)" Value="100.0 * (context.TotalRating / (double)(context.TotalRating+context.RatingRemaining))">
-                        </MudProgressLinear>
+                        @if (context.RatingRemaining + context.TotalRating > 0)
+                        {
+
+                            <MudProgressLinear Color="@(context.RatingRemaining==0 ? Color.Success : Color.Primary)" Value="100.0 * (context.TotalRating / (double)(context.TotalRating+context.RatingRemaining))">
+                            </MudProgressLinear>
+                        }
                     </MudTd>
                     <MudTd>
                         @if(context.MinScore!=null){
-                            <MudText>@context.MinScore (@context.MinScore.Value.LetterGrade.GetName()))</MudText>
+                            <MudText>@context.MinScore (@context.MinScore.Value.LetterGrade.GetName())</MudText>
                         }
                     </MudTd>
                     <MudTd>
@@ -69,7 +67,7 @@
                     <MudTd>
                         @if (context.MaxScore != null)
                         {
-                            <MudText>@context.MaxScore (@context.MaxScore.Value.LetterGrade.GetName()))</MudText>
+                            <MudText>@context.MaxScore (@context.MaxScore.Value.LetterGrade.GetName())</MudText>
                         }
                     </MudTd>
                     <MudTd>
@@ -216,7 +214,7 @@
         _selectedChartType = chartType;
         await Filter();
     }
-    private ChartType? _selectedChartType = ChartType.Single;
+    private ChartType? _selectedChartType = null;
     private async Task CopyShareLink()
     {
         await Javascript.InvokeVoidAsync("navigator.clipboard.writeText", ShareUrl);
