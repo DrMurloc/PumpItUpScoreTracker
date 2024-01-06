@@ -9,13 +9,10 @@
 @page "/{RequestedUserId:guid}/Phoenix/Progress"
 @page "/Phoenix/Progress"
 <MudPaper>
-    <MudText><i>Disclaimer: The progress page for Phoenix is still being developed, there are known bugs and improvements to be addressed.</i></MudText>
     <MudToolBar>
         <MudText Typo="Typo.h6">Progress</MudText>
         <MudSpacer></MudSpacer>
 
-        <MudNumericField T="int" HideSpinButtons="true" Label="Level Min" Min="DifficultyLevel.Min" Max="DifficultyLevel.Max" Value="_minLevel" ValueChanged="l => SetLevels(l, _maxLevel)"></MudNumericField>
-        <MudNumericField T="int" HideSpinButtons="true" Label="Level Max" Min="DifficultyLevel.Min" Max="DifficultyLevel.Max" Value="_maxLevel" ValueChanged="l => SetLevels(_minLevel, l)"></MudNumericField>
         @if (CurrentUser.IsLoggedIn && CurrentUser.User.IsPublic && CurrentUser.User.Id == RequestedUserId)
         {
             <MudTooltip Text="Share Your Progress Page" Inline="true">
@@ -84,6 +81,25 @@
             </MudTable>
 
 
+        </MudTabPanel>
+        <MudTabPanel Text="Passes By Level">
+            <ApexChart TItem="LevelPass"
+                       Title="Passes By Level">
+                <ApexPointSeries TItem="LevelPass"
+                                 Items="_passBars"
+                                 SeriesType="SeriesType.Bar"
+                                 Name="Passes"
+                                 XValue="@(e => e.Level)"
+                                 YAggregate="@(e => e.Sum(z=>z.Passed))"
+                                 OrderBy="e=>e.Y" />
+                <ApexPointSeries TItem="LevelPass"
+                                 Items="_passBars"
+                                 SeriesType="SeriesType.Bar"
+                                 Name="Remaining"
+                                 XValue="@(e => e.Level)"
+                                 YAggregate="@(e => e.Sum(z=>z.Remaining))"
+                                 OrderBy="e=>e.Y" />
+            </ApexChart>
         </MudTabPanel>
         <MudTabPanel Text="Score Distribution Lines">
             <ApexChart TItem="BoxPlotData"
@@ -169,6 +185,16 @@
     </MudDialog>
 </MudPaper>
 <style>
+    .apexcharts-legend-text {
+        color:#ffffff !important
+    }
+
+    .apexcharts-tooltip-text-y-value {
+        color: #000000 !important;
+    }
+    .apexcharts-tooltip-text-y-label {
+        color:#000000 !important;
+    }
     .apexcharts-text tspan {
         fill:#FFFFFF
     }
@@ -256,6 +282,7 @@
 
     }
     private IEnumerable<DifficultyEntry> _difficultyEntries = Array.Empty<DifficultyEntry>();
+    private IEnumerable<LevelPass> _passBars = Array.Empty<LevelPass>();
     protected override async Task OnInitializedAsync()
     {
         if (RequestedUserId == null)
@@ -326,7 +353,8 @@
         var totalPlate2 = totalPlates.Any()?(PhoenixPlate?)Math.Ceiling(totalAvgPlate):null;
         entries.Add(new DifficultyEntry("Total", totalPassed, totalRemaining, (int)totalRanking, (int)totalRemainingRanking, totalMinScore, totalAvgScore, totalMaxScore, totalPlate1, totalPlate2));
 
-        
+        _passBars = DifficultyLevel.All.Select(l => new LevelPass(l, _scores.Where(s => !s.IsBroken && _charts[s.ChartId].Level == l).Count(), _charts.Values.Where(c => c.Level == l).Count()))
+        .ToArray();
         _difficultyEntries = entries;
         await Filter();
     }
@@ -348,6 +376,10 @@
     }
     private sealed record DifficultyEntry(string Level, int Passed, int Remaining, int TotalRating, int RatingRemaining, PhoenixScore? MinScore, PhoenixScore? AverageScore, PhoenixScore? MaxScore, PhoenixPlate? AvgPlate1, PhoenixPlate? AvgPlate2)
     {
-        
+
+    }
+    private sealed record LevelPass(int Level, int Passed, int Total)
+    {
+        public int Remaining => Total - Passed;
     }
 }
