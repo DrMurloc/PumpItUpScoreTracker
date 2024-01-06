@@ -1,0 +1,102 @@
+﻿@page "/RatingCalculator"
+@using MediatR;
+@using ScoreTracker.Application.Queries;
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Dtos
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.ValueTypes
+
+<PageTitle>@L["Rating Calculator"]</PageTitle>
+
+<MudTable T="TableEntry" Dense="true" Breakpoint="Breakpoint.None" Items="Entries">
+    <HeaderContent>
+        <MudTh>@L["Difficulty"]
+        </MudTh>
+        @foreach(var letter in Enum.GetValues<PhoenixLetterGrade>())
+        {
+            <MudTh>@letter.GetName()</MudTh>
+        }
+        <MudTh>@L["Chart Count"]</MudTh>
+        <MudTh>@L["Max Rating"]</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Level</MudTd>
+        @foreach(var letter in Enum.GetValues<PhoenixLetterGrade>())
+        {
+            <MudTd Style=@GetStyle(context.Ratings[letter])>
+
+                <MudLink Color="Color.Default" OnClick="()=>CurrentRating=context.Ratings[letter]">@context.Ratings[letter]</MudLink>
+            </MudTd>
+        }
+        <MudTd>@context.ChartCount</MudTd>
+        <MudTd>@context.MaxRating</MudTd>
+    </RowTemplate>
+</MudTable>
+@inject IMediator Mediator;
+@code
+{
+    private IEnumerable<TableEntry> Entries = Array.Empty<TableEntry>();
+    private int Min = 0;
+    private int Median = 1;
+    private int Max = 2;
+    private int CurrentRating = 0;
+    private int RatingDiff => (int)( CurrentRating * .10);
+
+    private string GetStyle(int rating)
+    {
+        int red = 0;
+        int green = 0;
+        int blue = 0;
+        if (rating >= CurrentRating - RatingDiff && rating <= CurrentRating + RatingDiff)
+        {
+            return $"background-color:rgba(255, 255, 0, 0.8);color:rgb(0,0,0);";
+        }
+        if (rating >= Median)
+        {
+            var percent = (rating - Median) / (double)(Max - Median);
+            blue = 255 - (int)(percent * 255);
+            green = (int)(percent * 255);
+        } else
+        {
+            var percent = (rating - Min) / (double)(Median - Min);
+            red = 255 - (int)(percent * 255);
+            blue = (int)(percent * 255);
+        }
+
+        return $"background-color:rgba({red}, {green}, {blue}, 0.8)";
+
+    }
+    protected async override Task OnInitializedAsync()
+    {
+        var charts = await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix));
+        var coOps = charts.Where(c => c.Type == Domain.Enums.ChartType.CoOp).Count();
+        var levels = charts.Where(c => c.Type != Domain.Enums.ChartType.CoOp).GroupBy(c => c.Level)
+        .ToDictionary(g => g.Key, g => g.Count());
+        Entries = DifficultyLevel.All.Where(l => l.BaseRating != 0).OrderBy(l => l).Select(l => new TableEntry
+            {
+                Level = l.ToString(),
+                Ratings = Enum.GetValues<PhoenixLetterGrade>().ToDictionary(g => g, g => (int)(g.GetModifier() * l.BaseRating)),
+                ChartCount = levels[l]
+            })
+            .Append(new TableEntry
+                {
+                    Level = "CoOp",
+                    ChartCount = coOps,
+                    Ratings = Enum.GetValues<PhoenixLetterGrade>().ToDictionary(g => g, g => (int)(g.GetModifier() * 2000))
+                }).ToArray();
+        var ratings = Entries.SelectMany(e => e.Ratings.Values).OrderBy(r => r).ToArray();
+        Min = Entries.Min(e => e.Ratings[PhoenixLetterGrade.F]);
+        Max = Entries.Max(e => e.Ratings[PhoenixLetterGrade.SSSPlus]);
+        Median = ratings[ratings.Length / 2];
+    }
+    private sealed class TableEntry
+    {
+        public string Level = "";
+        public IDictionary<PhoenixLetterGrade, int> Ratings = new Dictionary<PhoenixLetterGrade, int>
+        {
+            {PhoenixLetterGrade.SSSPlus,1 }
+        };
+        public int ChartCount { get; set; }
+        public int MaxRating => ChartCount * Ratings[PhoenixLetterGrade.SSSPlus];
+    }
+}

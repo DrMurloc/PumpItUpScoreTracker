@@ -6,12 +6,12 @@ namespace ScoreTracker.Domain.Enums;
 
 public enum PhoenixLetterGrade
 {
-    [ScoreRange(0, 449999)] [Modifier(0)] F,
+    [ScoreRange(0, 449999)] [Modifier(.4)] F,
 
-    [ScoreRange(450000, 549999)] [Modifier(0)]
+    [ScoreRange(450000, 549999)] [Modifier(.5)]
     D,
 
-    [ScoreRange(550000, 649999)] [Modifier(0)]
+    [ScoreRange(550000, 649999)] [Modifier(.6)]
     C,
 
     [ScoreRange(650000, 749999)] [Modifier(.7)]
