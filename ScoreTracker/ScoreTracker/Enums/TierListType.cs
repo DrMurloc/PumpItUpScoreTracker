@@ -6,6 +6,7 @@
         Popularity,
         Scores,
         MyScores,
-        OfficialScores
+        OfficialScores,
+        CompareToOfficial
     }
 }

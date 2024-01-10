@@ -37,6 +37,7 @@
             @if (_currentMix == MixEnum.Phoenix && CurrentUser.IsLoggedIn)
             {
                 <MudSelectItem T="TierListType" Value="TierListType.MyScores">@L["My Score"]</MudSelectItem>
+                <MudSelectItem T="TierListType" Value="TierListType.CompareToOfficial">My Scores vs Official</MudSelectItem>
             }
         </MudSelect>
     </MudItem>
@@ -91,25 +92,40 @@
 </MudHidden>
 <MudDrawer @bind-Open="_showSettings" Variant="@DrawerVariant.Temporary" Anchor="Anchor.Right" Id="SettingsDrawer">
  
-        <MudGrid>
-            @if (CurrentUser.IsLoggedIn && _currentTierList != TierListType.MyScores)
-            {
-                <MudItem xs="12">
-                    <MudSwitch T="bool" Label=@L["Hide Completed Charts"] Checked="_hideCompleted" CheckedChanged="v => ToggleVisibility(v, _showOnlyTodos)" Color="Color.Primary"></MudSwitch>
-                </MudItem>
-                <MudItem xs="12">
-                    <MudSwitch T="bool" Label=@L["Show Only ToDo Charts"] Checked="_showOnlyTodos" CheckedChanged="v => ToggleVisibility(_hideCompleted, v)" Color="Color.Primary"></MudSwitch>
-                </MudItem>
-            }
+    <MudGrid>
+        @if (CurrentUser.IsLoggedIn && _currentTierList != TierListType.MyScores)
+        {
             <MudItem xs="12">
-                <MudAutocomplete T="string" Label=@L["Song Name"] AdornmentIcon="@Icons.Material.Filled.Search" Value="_songFilter" ValueChanged="ToggleSongSearch" SearchFunc="FilterSongName" CoerceText="false" CoerceValue="true"></MudAutocomplete>
+                <MudSwitch T="bool" Label=@L["Hide Completed Charts"] Checked="_hideCompleted" CheckedChanged="v => ToggleVisibility(v, _showOnlyTodos)" Color="Color.Primary"></MudSwitch>
             </MudItem>
             <MudItem xs="12">
-                <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>_showSettings=false">@L["Close"]</MudButton>
-                </MudItem>
-        </MudGrid>
+                <MudSwitch T="bool" Label=@L["Show Only ToDo Charts"] Checked="_showOnlyTodos" CheckedChanged="v => ToggleVisibility(_hideCompleted, v)" Color="Color.Primary"></MudSwitch>
+            </MudItem>
+        }
+        <MudItem xs="12">
+            <MudAutocomplete T="string" Label=@L["Song Name"] AdornmentIcon="@Icons.Material.Filled.Search" Value="_songFilter" ValueChanged="ToggleSongSearch" SearchFunc="FilterSongName" CoerceText="false" CoerceValue="true"></MudAutocomplete>
+        </MudItem>
+        <MudItem xs="12">
+            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>_showSettings=false">@L["Close"]</MudButton>
+        </MudItem>
+    </MudGrid>
 </MudDrawer>
-@if (_currentTierList is TierListType.Difficulty or TierListType.MyScores or TierListType.Scores or TierListType.OfficialScores)
+@if (_currentTierList == TierListType.CompareToOfficial)
+{
+
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_megaStrongCharts" Name="Mega Strong" OutlineColor="@Colors.Purple.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_veryStrongCharts" Name="Very Strong" OutlineColor="@Colors.Purple.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_strongCharts" Name="Strong" OutlineColor="@Colors.Blue.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_averageCharts" Name="Average" OutlineColor="@Colors.Cyan.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_weakCharts" Name="Weak" OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_veryWeakCharts" Name="Very Weak" OutlineColor="@Colors.Yellow.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_megaWeakCharts" Name="Mega Weak" OutlineColor="@Colors.Yellow.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_notRatedCharts" Name=@L.GetString("Not Rated") OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+
+}
+else if (_currentTierList is TierListType.Difficulty or TierListType.MyScores or TierListType.Scores or TierListType.OfficialScores)
 {
     @if (ChartTypeFilter == nameof(ChartType.CoOp) && _currentTierList==TierListType.Difficulty)
     {
@@ -258,13 +274,13 @@ else
     private ICollection<Chart> _veryHardCharts = Array.Empty<Chart>();
     private ICollection<Chart> _underratedCharts = Array.Empty<Chart>();
     private ICollection<Chart> _notRatedCharts = Array.Empty<Chart>();
-    private ICollection<Chart> _fiveStar = Array.Empty<Chart>();
-    private ICollection<Chart> _fourStar = Array.Empty<Chart>();
-    private ICollection<Chart> _threeStar = Array.Empty<Chart>();
-    private ICollection<Chart> _twoStar = Array.Empty<Chart>();
-    private ICollection<Chart> _oneStar = Array.Empty<Chart>();
-    private ICollection<Chart> _zeroStar = Array.Empty<Chart>();
-    private ICollection<Chart> _noPreference = Array.Empty<Chart>();
+    private ICollection<Chart> _megaStrongCharts = Array.Empty<Chart>();
+    private ICollection<Chart> _veryStrongCharts = Array.Empty<Chart>();
+    private ICollection<Chart> _strongCharts = Array.Empty<Chart>();
+    private ICollection<Chart> _averageCharts = Array.Empty<Chart>();
+    private ICollection<Chart> _weakCharts = Array.Empty<Chart>();
+    private ICollection<Chart> _veryWeakCharts = Array.Empty<Chart>();
+    private ICollection<Chart> _megaWeakCharts = Array.Empty<Chart>();
     private IDictionary<Guid, int> _userRatings = new Dictionary<Guid, int>();
     private int? _averageRating = null;
     private IDictionary<DifficultyLevel, IEnumerable<Chart>> _coOpLevels = new Dictionary<DifficultyLevel, IEnumerable<Chart>>();
@@ -451,6 +467,13 @@ else
         _veryHardCharts = new List<Chart>();
         _underratedCharts = new List<Chart>();
         _notRatedCharts = new List<Chart>();
+        _megaWeakCharts = new List<Chart>();
+        _veryWeakCharts = new List<Chart>();
+        _weakCharts = new List<Chart>();
+        _averageCharts = new List<Chart>();
+        _strongCharts = new List<Chart>();
+        _veryStrongCharts = new List<Chart>();
+        _megaStrongCharts = new List<Chart>();
         var filtered = _difficultyAndTypeFilteredCharts.Values.AsEnumerable();
         if (_hideCompleted)
         {
@@ -466,6 +489,96 @@ else
         }
         switch (_currentTierList)
         {
+
+            case TierListType.CompareToOfficial:
+
+                var filteredCompareScoreArray = filtered.Where(c => _phoenixScores.ContainsKey(c.Id) && _phoenixScores[c.Id].Score != null)
+                    .OrderBy(c => _phoenixScores.ContainsKey(c.Id) ? (int)(_phoenixScores[c.Id]?.Score ?? 0) : 0).ToArray();
+                if (!filteredCompareScoreArray.Any())
+                {
+                    foreach (var chart in filtered)
+                    {
+                        _notRatedCharts.Add(chart);
+                    }
+                    return;
+                }
+                var standardDeviationCompare = StdDev(filteredCompareScoreArray.Select(s => (int)(_phoenixScores[s.Id].Score ?? 0)), true);
+                var averageCompare = filteredCompareScoreArray.Average(s => (int)(_phoenixScores[s.Id]?.Score ?? 0));
+                var mediumMinCompare = averageCompare - standardDeviationCompare / 2;
+                var easyMinCompare = averageCompare + standardDeviationCompare / 2;
+                var veryEasyMinCompare = averageCompare + standardDeviationCompare;
+                var oneLevelOverratedCompare = averageCompare + standardDeviationCompare * 1.5;
+                var hardMinCompare = averageCompare - standardDeviationCompare;
+                var veryHardMinCompare = averageCompare - standardDeviationCompare * 1.5;
+                var chartIdsCompare = filteredCompareScoreArray.Select(c => c.Id).ToHashSet();
+                foreach (var chart in filteredCompareScoreArray)
+                {
+                    if (!_officialScoreTierListEntries.TryGetValue(chart.Id, out var officialEntry))
+                    {
+                        _notRatedCharts.Add(chart);
+                        continue;
+                    }
+                    var score = (int)(_phoenixScores[chart.Id]?.Score ?? 0);
+                    var myCategory = TierListCategory.Overrated;
+                    if (score < veryHardMinCompare)
+                    {
+                        myCategory = TierListCategory.Underrated;
+                    }
+                    else if (score < hardMinCompare)
+                    {
+                        myCategory = TierListCategory.VeryHard;
+                    }
+                    else if (score < mediumMinCompare)
+                    {
+                        myCategory = TierListCategory.Hard;
+                    }
+                    else if (score < easyMinCompare)
+                    {
+                        myCategory = TierListCategory.Medium;
+                    }
+                    else if (score < veryEasyMinCompare)
+                    {
+                        myCategory = TierListCategory.Easy;
+                    }
+                    else if (score < oneLevelOverratedCompare)
+                    {
+                        myCategory = TierListCategory.VeryEasy;
+                    }
+                    else
+                    {
+                        myCategory = TierListCategory.Overrated;
+                    }
+                    var diff = officialEntry.Category - myCategory;
+                    switch (diff)
+                    {
+                        case > 2:
+                            _megaStrongCharts.Add(chart);
+                            break;
+                        case > 1:
+                            _veryStrongCharts.Add(chart);
+                            break;
+                        case > 0:
+                            _strongCharts.Add(chart);
+                            break;
+                        case > -1:
+                            _averageCharts.Add(chart);
+                            break;
+                        case > -2:
+                            _weakCharts.Add(chart);
+                            break;
+                        case > -3:
+                            _veryWeakCharts.Add(chart);
+                            break;
+                        default:
+                            _megaWeakCharts.Add(chart);
+                            break;
+                    }
+                }
+                foreach (var chart in filtered.Where(c => !chartIdsCompare.Contains(c.Id)))
+                {
+                    _notRatedCharts.Add(chart);
+                }
+                break;
             case TierListType.OfficialScores:
 
                 foreach (var chart in filtered.OrderByDescending(c=>_officialScoreTierListEntries.TryGetValue(c.Id, out var entry)?entry.Order:0))
