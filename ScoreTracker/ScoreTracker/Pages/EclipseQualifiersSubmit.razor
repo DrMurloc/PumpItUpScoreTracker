@@ -230,7 +230,7 @@
 
     <DialogActions>
         <MudSpacer></MudSpacer>
-        <MudTooltip Text="Report Low Quality, Broken, or Incorrect Video">
+        <MudTooltip Text=@L["Report Video Tooltip"]>
             <MudButton OnClick="NotifyBadVideo" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report">Report Video</MudButton>
         </MudTooltip>
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">Close</MudButton>

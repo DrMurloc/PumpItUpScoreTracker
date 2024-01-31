@@ -432,7 +432,7 @@
     <value>Report Video</value>
   </data>
   <data name="Report Video Tooltip" xml:space="preserve">
-    <value>Report Low Quality, Broken, or Incorrect Video</value>
+    <value>Report Broken, or Incorrect Video</value>
   </data>
   <data name="Restart" xml:space="preserve">
     <value>Restart</value>
