@@ -283,7 +283,7 @@ var csvString=""data:text/csv;charset=utf-8,"";
         foundScores.each(function(){{
             var songName = $('.song_name',this)[0].children[0].innerText.replaceAll('""','""""').replaceAll('#','Num');
             var chartType = $($('.stepBall_img_wrap .imG img',this)[0]).attr(""src"").substring(40,41);
-            var difficultyLevel = $('.stepBall_img_wrap .imG img',this).map((index,i)=> $(i).attr(""src"").substring(46,47)).get().join("""");
+            var difficultyLevel = $('.stepBall_img_wrap .imG img',this).map((index,i)=> $(i).attr(""src"").substring(46,47)).get().join("""").replaceAll(""."","""");
             var scoreList = $("".etc_con>ul"",this)[0];
             var letter = $(scoreList.children[1].children[0].children[0].children[0]).attr('src').substring(32).replace("".png"","""").replace(""_p"",""+"");
             var score = $(scoreList.children[0].children[0].children[0].children[0])[0].innerText.replaceAll("","","""");

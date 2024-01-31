@@ -29,7 +29,10 @@ public static class RegistrationExtensions
             o.ToEmail = twilioConfig.ToEmail;
             o.ApiKey = twilioConfig.ApiKey;
         });
-        builder.AddHttpClient<IPiuGameApi, PiuGameApi>();
+        builder.AddHttpClient<IPiuGameApi, PiuGameApi>(c =>
+        {
+            c.DefaultRequestHeaders.Add("Origin", "https://piugame.com");
+        });
         builder.Configure<SqlConfiguration>(o => { o.ConnectionString = configuration.ConnectionString; });
         builder.Configure<AzureBlobConfiguration>(o => { o.ConnectionString = blobConfig.ConnectionString; });
 

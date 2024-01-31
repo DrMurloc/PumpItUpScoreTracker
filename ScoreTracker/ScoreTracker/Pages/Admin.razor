@@ -142,9 +142,9 @@ Do It
 
     private async Task RebuildOfficialLeaderboard()
     {
-        await Mediator.Send(new ProcessChartPopularityCommand());
+        //await Mediator.Send(new ProcessChartPopularityCommand());
     //await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);
-    //await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
+    await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
     }
     private async Task SelectChart(Chart chart)
     {

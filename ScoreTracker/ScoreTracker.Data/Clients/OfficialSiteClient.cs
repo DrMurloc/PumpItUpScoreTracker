@@ -124,6 +124,10 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
             result.Add(new ChartPopularityLeaderboardEntry(chart, apiResult.Place));
         }
 
+        var existing = result.Select(r => r.Chart.Id).Distinct().ToHashSet();
+        var chartIds =
+            (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
+        var doesntExist = chartIds.Values.Where(c => !existing.Contains(c.Id)).ToArray();
         return result;
     }
 }
