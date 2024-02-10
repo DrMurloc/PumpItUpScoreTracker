@@ -1,9 +1,13 @@
 ﻿@page "/PlayerRankings"
 @using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.SecondaryPorts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.Services.Contracts
 @using ScoreTracker.Domain.ValueTypes
+@using MediatR
+@using ScoreTracker.Application.Queries
 <PageTitle>Official Leaderboard Search</PageTitle>
 <MudText>Users ranked based on their top 50 best charts on the Official Leaderboards. You must be in the top 100 of a 20+ chart to show up on this list.</MudText>
 <br/>
@@ -32,7 +36,7 @@
     </MudItem>
 </MudGrid>
 
-<MudTable T="TableEntry" Items="Records">
+<MudTable T="TableEntry" Items="Records" Breakpoint="Breakpoint.None">
     <HeaderContent>
         <MudTh>
             <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Place)">Place</MudTableSortLabel>
@@ -76,10 +80,12 @@
             @context.Place
         </MudTd>
         <MudTd>
-            @context.Record.Username
+                @context.Record.Username
         </MudTd>
         <MudTd>
-            @context.Record.TotalRating
+            <MudButton Variant="Variant.Text" OnClick="()=>ShowUserData(context.Record.Username)" StartIcon="@Icons.Material.Filled.Visibility">
+                @context.Record.TotalRating
+            </MudButton>
         </MudTd>
         @if (_currentType == "All")
         {
@@ -107,17 +113,50 @@
             @context.Record.AverageDifficulty
         </MudTd>
         <MudTd>
-            @context.Record.AverageScore (@context.Record.AverageScore.LetterGrade)
+            @context.Record.AverageScore (@context.Record.AverageScore.LetterGrade.GetName())
         </MudTd>
     </RowTemplate>
+    <ChildRowContent>
+        @if (!string.IsNullOrWhiteSpace(_showingUsername)&&_showingUsername == context.Record.Username)
+        {
+            <td colspan="@Colspan">
+                <MudGrid>
+                    @foreach (var entry in _scores)
+                    {
+
+                        <MudItem xs="4" sm="3" md="2">
+                            <MudCard>
+                                <MudCardMedia Height="150" Image="@entry.Chart.Song.ImagePath.ToString()"/>
+                                <MudCardContent>
+                                    <MudTooltip Text=@($"{entry.Chart.Song.Name} {entry.Chart.DifficultyString}")>
+                                        
+                                        <MudImage Src="@entry.Chart.DifficultyBubblePath" Height="35" Alt="@entry.Chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+
+                                    </MudTooltip>
+                                    <MudTooltip Text=@($"{entry.Rating} Rating")>
+                                        <MudText>
+                                        @entry.Score (@entry.Score.LetterGrade.GetName())
+                                        </MudText>
+                                    </MudTooltip>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </td>
+        }
+    </ChildRowContent>
     <PagerContent>
         <MudTablePager></MudTablePager>
     </PagerContent>
     </MudTable>
 
 @inject IOfficialLeaderboardRepository Leaderboards;
+@inject IWorldRankingService WorldRankings;
+@inject IMediator Mediator;
 @inject IChartRepository Charts;
 @code {
+    private int Colspan => _currentType == "All" ? 7 : 6;
     private string _selectedUsername = string.Empty;
     private string[] _usernames = Array.Empty<string>();
     private IEnumerable<TableEntry> Records => _records[_currentType].Where(r => string.IsNullOrWhiteSpace(_selectedUsername) || r.Record.Username == (Name)_selectedUsername);
@@ -127,6 +166,26 @@
     };
 
     private string _currentType = "All";
+    private string _showingUsername = string.Empty;
+    private ScoreEntry[] _scores = Array.Empty<ScoreEntry>();
+    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private async Task ShowUserData(string username)
+    {
+        if (_showingUsername == username)
+        {
+            _showingUsername = string.Empty;
+            return;
+        }
+        var scoringConfig = new ScoringConfiguration
+            {
+                ContinuousLetterGradeScale = true
+            };
+        _scores = (await WorldRankings.GetTop50(username, _currentType, CancellationToken.None))
+            .Select(r => new ScoreEntry(_charts[r.ChartId], r.Score!.Value, scoringConfig.GetScore(_charts[r.ChartId].Level, r.Score!.Value)))
+            .ToArray();
+        _showingUsername = username;
+
+    }
     protected override async Task OnInitializedAsync()
     {
         var records = (await Leaderboards.GetAllWorldRankings(CancellationToken.None)).ToArray();
@@ -134,9 +193,12 @@
         _records = records.GroupBy(l => l.Type)
             .ToDictionary(l => l.Key, g => g.OrderByDescending(e => e.TotalRating).Select((e, i) => new TableEntry(i + 1, e)).ToArray());
 
+        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
 
     }
 
     private sealed record TableEntry(int Place, WorldRankingRecord Record);
+
+    private sealed record ScoreEntry(Chart Chart, PhoenixScore Score, int Rating);
 
 }
