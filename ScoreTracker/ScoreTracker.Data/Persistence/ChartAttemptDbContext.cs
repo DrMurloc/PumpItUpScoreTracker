@@ -46,6 +46,7 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<MatchEntity> Match { get; set; }
     public DbSet<RandomSettingsEntity> RandomSettings { get; set; }
     public DbSet<MatchLinkEntity> MatchLink { get; set; }
+    public DbSet<UserWorldRanking> UserWorldRanking { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

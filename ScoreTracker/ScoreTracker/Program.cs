@@ -109,6 +109,7 @@ builder.Services.AddBlazorApplicationInsights()
     .AddHostedService<BotHostedService>()
     .AddMediatR(typeof(UpdateXXBestAttemptHandler), typeof(MainLayout))
     .AddTransient<IUserAccessService, UserAccessService>()
+    .AddTransient<IWorldRankingService, WorldRankingService>()
     .AddInfrastructure(builder.Configuration.GetSection("AzureBlob").Get<AzureBlobConfiguration>(),
         builder.Configuration.GetSection("SQL").Get<SqlConfiguration>(),
         builder.Configuration.GetSection("Sendgrid").Get<SendGridConfiguration>())

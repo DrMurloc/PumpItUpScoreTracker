@@ -1,0 +1,142 @@
+﻿@page "/PlayerRankings"
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.SecondaryPorts
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.ValueTypes
+<PageTitle>Official Leaderboard Search</PageTitle>
+<MudText>Users ranked based on their top 50 best charts on the Official Leaderboards. You must be in the top 100 of a 20+ chart to show up on this list.</MudText>
+<br/>
+<MudText>Note this uses a slightly different rating calculation, it provides partial points between letter grades (I.E halfway between an AA and a AA+ will give 1.025x instead of 1x rating)</MudText>
+<br />
+<MudText>@L["Last Updated"] - @LeaderboardSearch._lastUpdated.ToLocalTime().ToString()</MudText>
+<br />
+<MudGrid>
+    <MudItem xs="4">
+        <MudSelect T="string" @bind-Value="_currentType" Label="Chart Type">
+            @foreach (var key in _records.Keys)
+            {
+                <MudSelectItem T="string" Value="key">@key</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="8">
+
+        <MudAutocomplete T="string" AdornmentIcon="@Icons.Material.Filled.Search"
+                         ResetValueOnEmptyText="true"
+                         CoerceText="true"
+                         Clearable="true"
+                         Label=@L["Username"]
+                                                                                                       @bind-Value="_selectedUsername"
+                         SearchFunc="s => Task.FromResult(_usernames.Where(u => u?.Contains(s, StringComparison.OrdinalIgnoreCase)??true))"></MudAutocomplete>
+    </MudItem>
+</MudGrid>
+
+<MudTable T="TableEntry" Items="Records">
+    <HeaderContent>
+        <MudTh>
+            <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Place)">Place</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Record.Username)">Username</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Record.TotalRating)">Total Rating</MudTableSortLabel>
+        </MudTh>
+        @if (_currentType == "All")
+        {
+            <MudTh>
+                <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Record.SinglesCount)">Singles Charts</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Record.SinglesCount)">Doubles Charts</MudTableSortLabel>
+            </MudTh>
+        }
+        @if (_currentType == "Singles")
+        {
+            <MudTh>
+                <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Record.SinglesCount)">Charts</MudTableSortLabel>
+            </MudTh>
+        }
+        @if (_currentType == "Doubles")
+        {
+            <MudTh>
+                <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Record.SinglesCount)">Charts</MudTableSortLabel>
+            </MudTh>
+        }
+        <MudTh>
+            <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Record.AverageDifficulty)">Average Difficulty</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Record.AverageScore)">Average Score</MudTableSortLabel>
+        </MudTh>
+        </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            @context.Place
+        </MudTd>
+        <MudTd>
+            @context.Record.Username
+        </MudTd>
+        <MudTd>
+            @context.Record.TotalRating
+        </MudTd>
+        @if (_currentType == "All")
+        {
+            
+            <MudTd>
+                @context.Record.SinglesCount
+            </MudTd>
+            <MudTd>
+                @context.Record.DoublesCount
+            </MudTd>
+        }
+        @if (_currentType == "Singles")
+        {
+            <MudTd>
+                @context.Record.SinglesCount
+            </MudTd>
+        }
+        @if (_currentType == "Singles")
+        {
+            <MudTd>
+                @context.Record.DoublesCount
+            </MudTd>
+        }
+        <MudTd>
+            @context.Record.AverageDifficulty
+        </MudTd>
+        <MudTd>
+            @context.Record.AverageScore (@context.Record.AverageScore.LetterGrade)
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager></MudTablePager>
+    </PagerContent>
+    </MudTable>
+
+@inject IOfficialLeaderboardRepository Leaderboards;
+@inject IChartRepository Charts;
+@code {
+    private string _selectedUsername = string.Empty;
+    private string[] _usernames = Array.Empty<string>();
+    private IEnumerable<TableEntry> Records => _records[_currentType].Where(r => string.IsNullOrWhiteSpace(_selectedUsername) || r.Record.Username == (Name)_selectedUsername);
+    private IDictionary<string, TableEntry[]> _records = new Dictionary<string, TableEntry[]>()
+    {
+        { "All", Array.Empty<TableEntry>() }
+    };
+
+    private string _currentType = "All";
+    protected override async Task OnInitializedAsync()
+    {
+        var records = (await Leaderboards.GetAllWorldRankings(CancellationToken.None)).ToArray();
+        _usernames = records.Select(r => r.Username.ToString()).Distinct().ToArray();
+        _records = records.GroupBy(l => l.Type)
+            .ToDictionary(l => l.Key, g => g.OrderByDescending(e => e.TotalRating).Select((e, i) => new TableEntry(i + 1, e)).ToArray());
+
+
+    }
+
+    private sealed record TableEntry(int Place, WorldRankingRecord Record);
+
+}

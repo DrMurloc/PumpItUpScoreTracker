@@ -506,7 +506,7 @@
 
     private async Task NotifyBadVideo()
     {
-        await Notifications.NotifyAdmin($"The video for{_currentVideoDescription} was reported by {(CurrentUser.IsLoggedIn?CurrentUser.User.Name:"Unknown")}", CancellationToken.None);
+        await Notifications.NotifyAdmin($"The video for{_currentVideoDescription} was reported by {(CurrentUser.IsLoggedIn ? CurrentUser.User.Name : "Unknown")}", CancellationToken.None);
         Snackbar.Add("Notification was sent",Severity.Success);
     }
 

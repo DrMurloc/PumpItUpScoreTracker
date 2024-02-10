@@ -1,0 +1,181 @@
+﻿@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Services.Contracts
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@page "/GameStats"
+<MudPaper>
+    <MudToolBar>
+        <MudText Typo="Typo.h6">Game Stats</MudText>
+    </MudToolBar>
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+        <MudTabPanel Text="Total Popularity Singles vs Doubles">
+            <ApexChart TItem="BoxPlotData"
+                       Title="Total Singles vs Doubles"
+                       @ref="_sdChart"
+                       Options="_scoreBoxesOptions">
+
+                <ApexPointSeries TItem="BoxPlotData"
+                                 Color="#FFFFFF"
+                                 Items="_popularityData.Where(e=>e.Type==ChartType.SinglePerformance)"
+                                 Name="Total"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(e => e.Level)"
+                                 YValue="@(e => e.Total)"
+                                 OrderBy="e => e.X" />
+                <ApexPointSeries TItem="BoxPlotData"
+                                 Color="#EA3F24"
+                                 Items="_popularityData.Where(e=>e.Type==ChartType.Single)"
+                                 Name="Singles"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(e => e.Level)"
+                                 YValue="@(e => e.Total)"
+                                 OrderBy="e => e.X"/>
+                <ApexPointSeries TItem="BoxPlotData"
+                                 Color="#76FA4F"
+                                 Items="_popularityData.Where(e=>e.Type==ChartType.Double)"
+                                 Name="Doubles"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(e => e.Level)"
+                                 YValue="@(e => e.Total)"
+                                 OrderBy="e => e.X" />
+                <ApexPointSeries TItem="BoxPlotData"
+                                 Color="#FFFF5B"
+                                 Items="_popularityData.Where(e=>e.Type==ChartType.CoOp)"
+                                 Name="CoOp"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(e => e.Level)"
+                                 YValue="@(e => e.Total)"
+                                 OrderBy="e => e.X" />
+
+            </ApexChart>
+
+        </MudTabPanel>
+        <MudTabPanel Text="Chart Count By Level">
+            <ApexChart TItem="BoxPlotData"
+                       Title="Total Singles vs Doubles"
+            @ref="_chartChart"
+                       Options="_chartBoxesOptions">
+
+                <ApexPointSeries TItem="BoxPlotData"
+                                 Color="#FFFFFF"
+                                 Items="_chartCounts.Where(e=>e.Type==ChartType.SinglePerformance)"
+                                 Name="Total"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(e => e.Level)"
+                                 YValue="@(e => e.Total)"
+                                 OrderBy="e => e.X" />
+                <ApexPointSeries TItem="BoxPlotData"
+                                 Color="#EA3F24"
+                                 Items="_chartCounts.Where(e=>e.Type==ChartType.Single)"
+                                 Name="Singles"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(e => e.Level)"
+                                 YValue="@(e => e.Total)"
+                                 OrderBy="e => e.X" />
+                <ApexPointSeries TItem="BoxPlotData"
+                                 Color="#76FA4F"
+                                 Items="_chartCounts.Where(e=>e.Type==ChartType.Double)"
+                                 Name="Doubles"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(e => e.Level)"
+                                 YValue="@(e => e.Total)"
+                                 OrderBy="e => e.X" />
+                <ApexPointSeries TItem="BoxPlotData"
+                                 Color="#FFFF5B"
+                                 Items="_chartCounts.Where(e=>e.Type==ChartType.CoOp)"
+                                 Name="CoOp"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(e => e.Level)"
+                                 YValue="@(e => e.Total)"
+                                 OrderBy="e => e.X" />
+
+            </ApexChart>
+        </MudTabPanel>
+    </MudTabs>
+
+
+</MudPaper>
+<style>
+    .apexcharts-legend-text {
+        color:#ffffff !important
+    }
+
+    .apexcharts-tooltip-text-y-value {
+        color: #000000 !important;
+    }
+    .apexcharts-tooltip-text-y-label {
+        color:#000000 !important;
+    }
+    .apexcharts-text tspan {
+        fill:#FFFFFF
+    }
+</style>
+@inject IMediator Mediator
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser;
+@inject IJSRuntime Javascript;
+@inject ISnackbar Snackbar;
+@inject IUiSettingsAccessor UiSettings;
+@code {
+    private ApexChart<BoxPlotData>? _sdChart;
+    private ApexChart<BoxPlotData>? _chartChart;
+    private readonly ApexChartOptions<BoxPlotData> _scoreBoxesOptions = new ApexChartOptions<BoxPlotData>()
+        {
+            Stroke = new Stroke { Curve = Curve.Smooth },
+
+            Yaxis = new[]{new YAxis()
+            {
+                Max=600000
+            }}.ToList(),
+
+        };
+    private readonly ApexChartOptions<BoxPlotData> _chartBoxesOptions = new ApexChartOptions<BoxPlotData>()
+    {
+        Stroke = new Stroke { Curve = Curve.Smooth },
+
+    };
+    private ChartType? _selectedChartType = null;
+    private BoxPlotData[] _popularityData = Array.Empty<BoxPlotData>();
+    private BoxPlotData[] _chartCounts = Array.Empty<BoxPlotData>();
+    protected override async Task OnInitializedAsync()
+    {
+        var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix)))
+            .ToDictionary(c => c.Id);
+        var tierListEntries = (await Mediator.Send(new GetTierListQuery("Popularity"))).ToArray();
+        var maxOrder = tierListEntries.Max(e => e.Order);
+        var tierList = (await Mediator.Send(new GetTierListQuery("Popularity"))).ToArray();
+
+        _popularityData = tierList
+            .GroupBy(e => (charts[e.ChartId].Type,charts[e.ChartId].Level))
+            .Select(g => new BoxPlotData(g.Key.Type, g.Key.Level, g.Sum(e => maxOrder - e.Order + 1)))
+            .Concat(tierList.Where(e=>charts[e.ChartId].Type!=ChartType.CoOp).GroupBy(e => charts[e.ChartId].Level)
+                .Select(g => new BoxPlotData(ChartType.SinglePerformance, g.Key, g.Sum(e => maxOrder - e.Order + 1))))
+            .ToArray();
+        _chartCounts = charts.Values.GroupBy(c => (c.Type,c.Level))
+            .Select(g => new BoxPlotData(g.Key.Type, g.Key.Level, g.Count()))
+            .Concat(charts.Values.Where(c => c.Type != ChartType.CoOp).GroupBy(c => c.Level)
+                .Select(g => new BoxPlotData(ChartType.SinglePerformance, g.Key, g.Count())))
+            .ToArray();
+        if (_sdChart != null)
+        {
+            
+            await _sdChart.UpdateSeriesAsync(true);
+            await _sdChart.UpdateOptionsAsync(true,true,true);
+        }
+        if (_chartChart != null)
+        {
+
+            await _chartChart.UpdateSeriesAsync(true);
+            await _chartChart.UpdateOptionsAsync(true, true, true);
+        }
+    }
+
+    private sealed record BoxPlotData(ChartType Type, int Level, int Total)
+    {
+    }
+}

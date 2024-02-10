@@ -1,10 +1,5 @@
 ﻿using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.ValueTypes;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ScoreTracker.Domain.Models
 {
@@ -47,6 +42,24 @@ namespace ScoreTracker.Domain.Models
             return result;
         }
 
+        public int GetScore(DifficultyLevel level, PhoenixScore score)
+        {
+            var letterGrade = score.LetterGrade;
+
+            var letterGradeModifier = LetterGradeModifiers[letterGrade];
+            if (ContinuousLetterGradeScale && letterGrade != PhoenixLetterGrade.SSSPlus)
+            {
+                var nextGrade = letterGrade + 1;
+                var threshold = letterGrade.GetMinimumScore();
+                var nextThreshold = nextGrade.GetMinimumScore();
+                var modifier = LetterGradeModifiers[letterGrade];
+                var nextModifier = LetterGradeModifiers[nextGrade];
+                letterGradeModifier =
+                    modifier + (nextModifier - modifier) * (score - threshold) / (nextThreshold - threshold);
+            }
+
+            return (int)(level.BaseRating * letterGradeModifier);
+        }
 
         public int GetScore(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)
         {

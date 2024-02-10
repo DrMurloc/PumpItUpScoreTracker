@@ -4,6 +4,7 @@
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Services.Contracts
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
@@ -127,6 +128,7 @@ Do It
 @inject ISnackbar Snackbar;
 @inject NavigationManager NavManager;
 @inject ITierListRepository TierLists;
+@inject IWorldRankingService WorldRanking;
 @code
 {
     private MudAutocomplete<string> _autocomplete;
@@ -144,7 +146,9 @@ Do It
     {
         //await Mediator.Send(new ProcessChartPopularityCommand());
     //await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);
-    await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
+    //await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
+        await WorldRanking.CalculateWorldRankings(CancellationToken.None);
+
     }
     private async Task SelectChart(Chart chart)
     {

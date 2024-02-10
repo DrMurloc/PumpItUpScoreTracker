@@ -9,10 +9,19 @@ public interface IOfficialLeaderboardRepository
     Task WriteEntry(UserOfficialLeaderboard entry,
         CancellationToken cancellationToken);
 
-    Task<IEnumerable<string>> GetOfficialLeaderboardUsernames(CancellationToken cancellationToken);
+    Task<IEnumerable<string>> GetOfficialLeaderboardUsernames(string? leaderboardType,
+        CancellationToken cancellationToken);
+
+    Task<IEnumerable<string>> GetOfficialLeaderboardUsernames(CancellationToken cancellationToken)
+    {
+        return GetOfficialLeaderboardUsernames(null, cancellationToken);
+    }
 
     Task<IEnumerable<UserOfficialLeaderboard>> GetOfficialLeaderboardStatuses(string username,
         CancellationToken cancellationToken);
 
+    Task<IEnumerable<WorldRankingRecord>> GetAllWorldRankings(CancellationToken cancellationToken);
+    Task DeleteWorldRankings(CancellationToken cancellationToken);
+    Task SaveWorldRanking(WorldRankingRecord record, CancellationToken cancellationToken);
     Task FixRankingOrders(CancellationToken cancellationToken);
 }

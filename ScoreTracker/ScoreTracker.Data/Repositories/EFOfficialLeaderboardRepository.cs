@@ -42,9 +42,12 @@ namespace ScoreTracker.Data.Repositories
             }, cancellationToken);
         }
 
-        public async Task<IEnumerable<string>> GetOfficialLeaderboardUsernames(CancellationToken cancellationToken)
+        public async Task<IEnumerable<string>> GetOfficialLeaderboardUsernames(string? leaderboardType,
+            CancellationToken cancellationToken)
         {
-            return await _dbContext.UserOfficialLeaderboard.Select(e => e.Username).Distinct()
+            var result = _dbContext.UserOfficialLeaderboard.AsQueryable();
+            if (leaderboardType != null) result = result.Where(e => e.LeaderboardType == leaderboardType);
+            return await result.Select(e => e.Username).Distinct()
                 .ToArrayAsync(cancellationToken);
         }
 
@@ -55,6 +58,36 @@ namespace ScoreTracker.Data.Repositories
                 .Select(e =>
                     new UserOfficialLeaderboard(e.Username, e.Place, e.LeaderboardType, e.LeaderboardName, e.Score))
                 .ToArrayAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<WorldRankingRecord>> GetAllWorldRankings(CancellationToken cancellationToken)
+        {
+            return await _dbContext.UserWorldRanking
+                .Select(u => new WorldRankingRecord(u.UserName, u.Type, u.AverageLevel, u.AverageScore, u.SinglesCount,
+                    u.DoublesCount, u.TotalRating)).ToArrayAsync(cancellationToken);
+        }
+
+        public async Task DeleteWorldRankings(CancellationToken cancellationToken)
+        {
+            _dbContext.UserWorldRanking.RemoveRange(_dbContext.UserWorldRanking);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task SaveWorldRanking(WorldRankingRecord record, CancellationToken cancellationToken)
+        {
+            await _dbContext.UserWorldRanking.AddAsync(new UserWorldRanking
+            {
+                Id = Guid.NewGuid(),
+                Type = record.Type,
+                AverageLevel = record.AverageDifficulty,
+                AverageScore = record.AverageScore,
+                SinglesCount = record.SinglesCount,
+                DoublesCount = record.DoublesCount,
+                TotalRating = record.TotalRating,
+                UserName = record.Username
+            }, cancellationToken);
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
         public async Task FixRankingOrders(CancellationToken cancellationToken)
