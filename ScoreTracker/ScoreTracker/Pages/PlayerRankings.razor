@@ -17,7 +17,7 @@
 <br />
 <MudGrid>
     <MudItem xs="4">
-        <MudSelect T="string" @bind-Value="_currentType" Label="Chart Type">
+        <MudSelect T="string" Value="_currentType" ValueChanged="SetType" Label="Chart Type">
             @foreach (var key in _records.Keys)
             {
                 <MudSelectItem T="string" Value="key">@key</MudSelectItem>
@@ -35,7 +35,7 @@
                          SearchFunc="s => Task.FromResult(_usernames.Where(u => u?.Contains(s, StringComparison.OrdinalIgnoreCase)??true))"></MudAutocomplete>
     </MudItem>
 </MudGrid>
-
+<br/>
 <MudTable T="TableEntry" Items="Records" Breakpoint="Breakpoint.None">
     <HeaderContent>
         <MudTh>
@@ -169,6 +169,17 @@
     private string _showingUsername = string.Empty;
     private ScoreEntry[] _scores = Array.Empty<ScoreEntry>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+
+    private async Task SetType(string type)
+    {
+        _currentType = type;
+        if (!string.IsNullOrWhiteSpace(_showingUsername))
+        {
+            var username = _showingUsername;
+            _showingUsername = string.Empty;
+            await ShowUserData(username);
+        }
+    }
     private async Task ShowUserData(string username)
     {
         if (_showingUsername == username)
