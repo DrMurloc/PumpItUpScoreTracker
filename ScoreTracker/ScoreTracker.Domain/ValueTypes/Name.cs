@@ -23,6 +23,13 @@ public readonly struct Name
         return From(nameString);
     }
 
+    public static implicit operator Name?(string? nameString)
+    {
+        if (nameString == null) return null;
+
+        return From(nameString);
+    }
+
     public static implicit operator string(Name value)
     {
         return value._name;

@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.Data.Persistence.Entities;
 
@@ -15,5 +15,6 @@ public sealed class ChartEntity
     [Required] public int Level { get; set; }
 
     [Required] public string Type { get; set; } = string.Empty;
+    [MaxLength(128)] public string? StepArtist { get; set; }
     public ChartDifficultyRatingEntity? DifficultyRating { get; set; }
 }

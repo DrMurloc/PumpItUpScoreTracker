@@ -4,6 +4,7 @@ using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
 
@@ -118,23 +119,94 @@ public sealed class EFChartRepository : IChartRepository
         await _database.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task SetSongDuration(Name songName, TimeSpan duration, CancellationToken cancellationToken = default)
+    public async Task UpdateSong(Name songName, Bpm bpm, CancellationToken cancellationToken = default)
     {
         var nameString = songName.ToString();
         var song = await _database.Song.SingleAsync(s => s.Name == nameString, cancellationToken);
-        song.Duration = duration;
+        song.MinBpm = bpm.Min;
+        song.MaxBpm = bpm.Max;
         await _database.SaveChangesAsync(cancellationToken);
-        _cache.Remove(VideoCacheKey);
+        ClearCache();
+    }
+
+    public async Task UpdateChart(Guid chartId, Name stepArtist, ISet<Name> skills,
+        CancellationToken cancellationToken = default)
+    {
+        var chart = await _database.Chart.SingleAsync(c => c.Id == chartId, cancellationToken);
+        chart.StepArtist = stepArtist;
+        _database.ChartSkill.RemoveRange(_database.ChartSkill.Where(c => c.ChartId == chartId));
+
+        var skillNames = skills.Select(s => s.ToString()).ToArray();
+        var skillIds = await _database.Skill.Where(s => skillNames.Contains(s.Name)).Select(s => s.Id)
+            .ToArrayAsync(cancellationToken);
+        await _database.ChartSkill.AddRangeAsync(skillIds.Select(s => new ChartSkillEntity
+        {
+            ChartId = chartId,
+            SkillId = s,
+            Id = Guid.NewGuid()
+        }), cancellationToken);
+
+        await _database.SaveChangesAsync(cancellationToken);
+
+        ClearCache();
+    }
+
+    private const string SkillCacheKey = $"{nameof(EFChartRepository)}_{nameof(GetSkills)}";
+
+    public async Task<IEnumerable<SkillRecord>> GetSkills(CancellationToken cancellationToken = default)
+    {
+        return await _cache.GetOrCreateAsync(SkillCacheKey, async o =>
+        {
+            o.AbsoluteExpiration = DateTimeOffset.Now
+                                   + TimeSpan.FromHours(1);
+            return await _database.Skill.Select(s => new SkillRecord(s.Name, s.Description, s.Color, s.Category))
+                .ToArrayAsync(cancellationToken);
+        });
+    }
+
+    private const string ChartSkillsCacheKey = $"{nameof(EFChartRepository)}_{nameof(GetChartSkills)}";
+
+    private sealed record ChartSkillJoin(Guid ChartId, string SkillName);
+
+    public async Task<IEnumerable<ChartSkillsRecord>> GetChartSkills(CancellationToken cancellationToken = default)
+    {
+        return await _cache.GetOrCreateAsync(ChartSkillsCacheKey, async o =>
+        {
+            o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(1);
+            return (await (from cs in _database.ChartSkill
+                        join s in _database.Skill on cs.SkillId equals s.Id
+                        select new ChartSkillJoin(cs.ChartId, s.Name))
+                    .ToArrayAsync(cancellationToken))
+                .GroupBy(c => c.ChartId).Select(g =>
+                    new ChartSkillsRecord(g.Key, g.Select(e => (Name)e.SkillName).Distinct().ToArray()));
+        });
+    }
+
+    public async Task CreateSkill(SkillRecord skill, CancellationToken cancellationToken = default)
+    {
+        await _database.Skill.AddAsync(new SkillEntity
+        {
+            Category = skill.Category,
+            Color = skill.Color,
+            Description = skill.Description,
+            Id = Guid.NewGuid(),
+            Name = skill.Name
+        }, cancellationToken);
+
+        await _database.SaveChangesAsync(cancellationToken);
+        ClearCache();
     }
 
     public void ClearCache()
     {
         foreach (var mixId in MixGuids.Values)
         {
-            var key = $"{nameof(EFChartRepository)}_{nameof(GetAllCharts)}_Mix:{mixId}";
+            var key = ChartCacheKey(mixId);
             _cache.Remove(key);
         }
 
+        _cache.Remove(ChartSkillsCacheKey);
+        _cache.Remove(SkillCacheKey);
         _cache.Remove($"{nameof(EFChartRepository)}_{nameof(GetChartVideoInformation)}");
     }
 
@@ -170,30 +242,6 @@ public sealed class EFChartRepository : IChartRepository
         return newChart.Id;
     }
 
-    public async Task UpgradeSong(Name songName, CancellationToken cancellationToken = default)
-    {
-        var phoenixId = MixGuids[MixEnum.Phoenix];
-        var xxId = MixGuids[MixEnum.XX];
-        var songString = songName.ToString();
-        var xxEntry = await (from s in _database.Song
-                join c in _database.Chart on s.Id equals c.SongId
-                join cm in _database.ChartMix on c.Id equals cm.ChartId
-                where s.Name == songString && cm.MixId == xxId
-                select cm)
-            .ToArrayAsync(cancellationToken);
-
-        var phoenixEntries = xxEntry.Select(e => new ChartMixEntity
-        {
-            ChartId = e.ChartId,
-            Id = Guid.NewGuid(),
-            Level = e.Level,
-            MixId = phoenixId
-        }).ToArray();
-        await _database.ChartMix.AddRangeAsync(phoenixEntries, cancellationToken);
-        await _database.SaveChangesAsync(cancellationToken);
-        _cache.Remove($"{nameof(EFChartRepository)}_{nameof(GetAllCharts)}_Mix:{phoenixId}");
-    }
-
     public async Task<IEnumerable<Chart>> GetCharts(MixEnum mix, DifficultyLevel? level = null,
         ChartType? type = null,
         IEnumerable<Guid>? chartIds = null,
@@ -222,10 +270,14 @@ public sealed class EFChartRepository : IChartRepository
         return result;
     }
 
+    private static string ChartCacheKey(Guid mixId)
+    {
+        return $"{nameof(EFChartRepository)}_{nameof(GetAllCharts)}_Mix:{mixId}";
+    }
+
     private async Task<IDictionary<Guid, Chart>> GetAllCharts(Guid mixId, CancellationToken cancellationToken)
     {
-        var key = $"{nameof(EFChartRepository)}_{nameof(GetAllCharts)}_Mix:{mixId}";
-        return await _cache.GetOrCreateAsync<IDictionary<Guid, Chart>>(key, async entry =>
+        return await _cache.GetOrCreateAsync<IDictionary<Guid, Chart>>(ChartCacheKey(mixId), async entry =>
         {
             entry.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromDays(14);
             return await (from cm in _database.ChartMix
@@ -233,9 +285,10 @@ public sealed class EFChartRepository : IChartRepository
                     join s in _database.Song on c.SongId equals s.Id
                     where cm.MixId == mixId
                     select new Chart(c.Id,
-                        new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration),
+                        new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration, s.Artist,
+                            Bpm.From(s.MinBpm, s.MaxBpm)),
                         Enum.Parse<ChartType>(c.Type),
-                        cm.Level))
+                        cm.Level, c.StepArtist))
                 .ToDictionaryAsync(c => c.Id, c => c, cancellationToken);
         });
     }

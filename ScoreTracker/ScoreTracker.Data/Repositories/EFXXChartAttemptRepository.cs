@@ -4,6 +4,7 @@ using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Data.Repositories;
 
@@ -86,8 +87,10 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                     { _.UserId, _.ChartId } into gi
                 from ba in gi.DefaultIfEmpty()
                 select new BestXXChartAttempt(
-                    new Chart(c.Id, new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration),
-                        Enum.Parse<ChartType>(c.Type), c.Level),
+                    new Chart(c.Id,
+                        new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration, s.Artist,
+                            Bpm.From(s.MinBpm, s.MaxBpm)),
+                        Enum.Parse<ChartType>(c.Type), c.Level, c.StepArtist),
                     ba == null
                         ? null
                         : new XXChartAttempt(Enum.Parse<XXLetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score,
@@ -106,8 +109,10 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                     { _.UserId, _.ChartId } into gi
                 from ba in gi.DefaultIfEmpty()
                 select new BestXXChartAttempt(
-                    new Chart(c.Id, new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration),
-                        Enum.Parse<ChartType>(c.Type), c.Level),
+                    new Chart(c.Id,
+                        new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration, s.Artist,
+                            Bpm.From(s.MinBpm, s.MaxBpm)),
+                        Enum.Parse<ChartType>(c.Type), c.Level, c.StepArtist),
                     ba == null
                         ? null
                         : new XXChartAttempt(Enum.Parse<XXLetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score,

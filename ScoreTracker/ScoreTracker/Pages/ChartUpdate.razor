@@ -1,0 +1,158 @@
+﻿@page "/ChartUpdate"
+@using MediatR
+@using MudBlazor.Utilities
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.Services.Contracts
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Web.Services.Contracts
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+
+<PageTitle>Chart Update</PageTitle>
+@if (_currentChart != null)
+{
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">@_currentChart.Song.Name @_currentChart.DifficultyString (@_toProcess.Count(), @_toProcess.Where(c=>c.Level>=10).Count() Remaining)</MudText>
+        </MudItem>
+        <MudItem xs="6">
+            <MudNumericField T="decimal" Label="Min BPM" ValueChanged="SetMin" Value="_minBpm"></MudNumericField>
+        </MudItem>
+        <MudItem xs="6">
+            <MudNumericField T="decimal" Label="Max BPM" @bind-Value="_maxBpm"></MudNumericField>
+        </MudItem>
+        <MudItem xs="12">
+            <MudAutocomplete T="string"
+                             Label="Step Artist"
+                             CoerceValue="true"
+                             SearchFunc="s=>Task.FromResult(_existingStepArtists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
+        </MudItem>
+        <MudItem xs="12">
+            <MudSelect T="string" @bind-SelectedValues="_skillNames" Label="Skills">
+                @foreach (var skill in _skills)
+                {
+                    <MudSelectItem Value="@skill.Name">@skill.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isSaving" OnClick="UpdateChart">Save Chart</MudButton>
+        </MudItem>
+        <MudItem xs="12">
+            
+            <iframe class="video"
+                    id="chartVideoFrame"
+                    src="@(_chartVideos[_currentChart.Id].ToString() + "?autoplay=1")"
+                    allow="autoplay; encrypted-media"
+                    allowfullscreen></iframe>
+        </MudItem>
+        
+        
+        <MudItem xs="6">
+            <MudTextField T="string" Label="Skill Name" @bind-Value="_skillName"></MudTextField>
+        </MudItem>
+        <MudItem xs="6">
+            <MudAutocomplete T="string"
+                             Label="Category"
+                             CoerceText="true"
+                             SearchFunc="s=>Task.FromResult(_skills.Select(s=>s.Category).Distinct().Where(c=>c.Contains(s,StringComparison.OrdinalIgnoreCase)).ToArray().AsEnumerable())"></MudAutocomplete>
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField Lines="3" T="string" Label="Description" @bind-Value="_description"></MudTextField>
+        </MudItem>
+        <MudItem xs="12">
+            <MudColorPicker @bind-Value="_color"></MudColorPicker>
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isSaving" OnClick="CreateSkill">Save Skill</MudButton>
+        </MudItem>
+    </MudGrid>
+
+}
+@inject ICurrentUserAccessor CurrentUser;
+@inject IChartRepository _charts;
+@inject IOfficialLeaderboardRepository OfficialLeaderboards;
+@inject IMediator Mediator;
+@inject IUiSettingsAccessor UiSettings;
+@inject ISnackbar Snackbar;
+@inject NavigationManager NavManager;
+@inject ITierListRepository TierLists;
+@inject IWorldRankingService WorldRanking;
+@code
+{
+    private List<Chart> _toProcess = new List<Chart>();
+    private Chart? _currentChart = null;
+    private List<SkillRecord> _skills = new List<SkillRecord>();
+    private IDictionary<Guid, Uri> _chartVideos = new Dictionary<Guid, Uri>();
+    private IEnumerable<string> _skillNames = new HashSet<string>();
+    private string _stepArtist = string.Empty;
+
+    private string _skillName = string.Empty;
+    private string _skillCategory = string.Empty;
+    private string _description = string.Empty;
+    private MudColor _color = "#ffffff";
+    private decimal _minBpm = 180;
+    private decimal _maxBpm = 180;
+    private bool _isSaving = false;
+    private void SetCategory(string value)
+    {
+        _skillCategory = value;
+        _color = _skills.FirstOrDefault(s => s.Category == value)?.Color ?? "#ffffff";
+    }
+    private void SetMin(decimal newMin)
+    {
+        _minBpm = newMin;
+        _maxBpm = newMin;
+    }
+    private void NextChart()
+    {
+        _currentChart = _toProcess.FirstOrDefault();
+    }
+
+    private async Task UpdateChart()
+    {
+        if (_currentChart == null)
+        {
+            return;
+        }
+        _isSaving = true;
+        await _charts.UpdateChart(_currentChart.Id, _stepArtist, _skillNames.Select(Name.From).ToHashSet());
+        await _charts.UpdateSong(_currentChart.Song.Name, Bpm.From(_minBpm, _maxBpm));
+        Snackbar.Add("Updated Chart");
+        _toProcess.Remove(_currentChart);
+        NextChart();
+        _isSaving = false;
+    }
+    private async Task CreateSkill()
+    {
+        _isSaving = true;
+        var skill = new SkillRecord(_skillName, _description, _color.ToString(), _skillCategory);
+        await _charts.CreateSkill(skill);
+        _skills.Add(skill);
+        Snackbar.Add("Created Skill", Severity.Success);
+        _isSaving = false;
+    }
+    private ISet<string> _existingStepArtists = new HashSet<string>();
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.User.IsAdmin)
+        {
+            NavManager.NavigateTo("/");
+        }
+        _chartVideos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl);
+        _skills = (await _charts.GetSkills()).ToList();
+        
+        var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToArray();
+        _existingStepArtists = charts.Select(c => c.StepArtist).Where(a => a != null).Select(c => c.Value.ToString()).Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToHashSet();
+        _toProcess = charts
+            .Where(c => c.StepArtist == null)
+            .OrderByDescending(c => c.Level)
+            .ToList();
+        NextChart();
+    }
+}

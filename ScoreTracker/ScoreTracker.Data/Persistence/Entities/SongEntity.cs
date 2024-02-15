@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.Data.Persistence.Entities;
 
@@ -13,4 +13,7 @@ public sealed class SongEntity
     [Required] [MaxLength(8)] public string Type { get; set; } = "Arcade";
 
     public TimeSpan Duration { get; set; } = TimeSpan.FromMinutes(0);
+    public decimal? MinBpm { get; set; }
+    public decimal? MaxBpm { get; set; }
+    [MaxLength(128)] public string? Artist { get; set; }
 }

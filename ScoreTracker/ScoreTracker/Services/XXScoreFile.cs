@@ -469,9 +469,10 @@ public sealed class XXScoreFile
 
 
             result.Add(new BestXXChartAttempt(
-                new Chart(Guid.Empty, new Song(name, SongType.Arcade, new Uri("/", UriKind.Relative), TimeSpan.Zero),
+                new Chart(Guid.Empty,
+                    new Song(name, SongType.Arcade, new Uri("/", UriKind.Relative), TimeSpan.Zero, null, null),
                     currentType,
-                    level), attempt));
+                    level, null), attempt));
         }
 
         return (result, errors);
@@ -523,8 +524,9 @@ public sealed class XXScoreFile
                 var (chartType, level) = DifficultyLevel.ParseShortHand(record.Difficulty);
                 var attempt = new BestXXChartAttempt(
                     new Chart(Guid.Empty,
-                        new Song(name, SongType.Arcade, new Uri("/", UriKind.Relative), TimeSpan.Zero), chartType,
-                        level),
+                        new Song(name, SongType.Arcade, new Uri("/", UriKind.Relative), TimeSpan.Zero, null, null),
+                        chartType,
+                        level, null),
                     string.IsNullOrWhiteSpace(record.LetterGrade)
                         ? null
                         : new XXChartAttempt(Enum.Parse<XXLetterGrade>(record.LetterGrade, true), isBroken, score,
