@@ -17,6 +17,7 @@ public class BestAttemptDto
     public bool IsBroken { get; set; }
     public string ChartType { get; set; } = string.Empty;
     public string SongType { get; set; } = string.Empty;
+    public string SongArtist { get; set; } = string.Empty;
     public string ImagePath { get; set; } = string.Empty;
     public string DifficultyShorthand { get; set; } = string.Empty;
     public int? Score { get; set; }

@@ -285,7 +285,8 @@ public sealed class EFChartRepository : IChartRepository
                     join s in _database.Song on c.SongId equals s.Id
                     where cm.MixId == mixId
                     select new Chart(c.Id,
-                        new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration, s.Artist,
+                        new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration,
+                            s.Artist ?? "Unknown",
                             Bpm.From(s.MinBpm, s.MaxBpm)),
                         Enum.Parse<ChartType>(c.Type),
                         cm.Level, c.StepArtist))

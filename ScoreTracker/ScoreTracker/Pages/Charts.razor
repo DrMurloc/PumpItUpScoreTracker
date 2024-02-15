@@ -37,6 +37,18 @@
             </MudSelect>
         </MudItem>
     }
+    @if (FilterStatus(FilterEnum.SongArtist))
+    {
+        <MudItem xs="6" sm="4">
+            <MudAutocomplete T="string?" AdornmentIcon="@Icons.Material.Filled.MusicNote" Label=@L["Song Artist"] Value="SongArtistFilter" ValueChanged="SongArtistFilterChanged" Clearable="true"
+                             CoerceValue="true"
+                             CoerceText="false"
+                             Immediate="true"
+                             DebounceInterval="100"
+                             SearchFunc="s=>Task.FromResult(_songArtists.Where(a=>string.IsNullOrWhiteSpace(s)||a.Contains(s,StringComparison.OrdinalIgnoreCase)))"
+                             ></MudAutocomplete>
+        </MudItem>
+    }
     @if (FilterStatus(FilterEnum.ChartType))
     {
         <MudItem xs="6" sm="4">
@@ -128,6 +140,7 @@
                 <MudMenuItem Icon="@(FilterStatus(FilterEnum.ChartType)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.ChartType))">@L["Chart Type"]</MudMenuItem>
                 <MudMenuItem Icon="@(FilterStatus(FilterEnum.SongType)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.SongType))">@L["Song Type"]</MudMenuItem>
                 <MudMenuItem Icon="@(FilterStatus(FilterEnum.SongName)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.SongName))">@L["Song Name"]</MudMenuItem>
+                <MudMenuItem Icon="@(FilterStatus(FilterEnum.SongArtist)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.SongArtist))">@L["Song Artist"]</MudMenuItem>
                 @if (CurrentUser.IsLoggedIn)
                 {
                     <MudMenuItem Icon="@(FilterStatus(FilterEnum.ScoreState)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.ScoreState))">@L["Score State"]</MudMenuItem>
@@ -140,6 +153,7 @@
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Difficulty)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Difficulty))">@L["Difficulty Level"]</MudMenuItem>
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongImage)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongImage))">@L["Song Image"]</MudMenuItem>
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongName)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongName))">@L["Song Name"]</MudMenuItem>
+                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongArtist)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongArtist))">@L["Song Artist"]</MudMenuItem>
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongDuration)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongDuration))">@L["Song Duration"]</MudMenuItem>
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.AdjustedRating)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.AdjustedRating))">@L["Adjusted Difficulty"]</MudMenuItem>
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.RatingCount)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.RatingCount))">@L["Rating Count"]</MudMenuItem>
@@ -183,6 +197,10 @@
         @if (ColumnStatus(ColumnEnum.SongName))
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.SongName">@L["Song Name"]</MudTableSortLabel></MudTh>
+        }
+        @if (ColumnStatus(ColumnEnum.SongArtist))
+        {
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.SongArtist">@L["Song Artist"]</MudTableSortLabel></MudTh>
         }
         @if (ColumnStatus(ColumnEnum.SongDuration))
         {
@@ -265,6 +283,12 @@
             
             <MudTd>
                 <MudText>@context.SongName</MudText>
+            </MudTd>
+        }
+        @if (ColumnStatus(ColumnEnum.SongArtist))
+        {
+            <MudTd>
+                <MudText>@context.SongArtist</MudText>
             </MudTd>
         }
         @if (ColumnStatus(ColumnEnum.SongDuration))
@@ -521,14 +545,25 @@
                 _showChartOverview = true;
                 }
     private Guid? _requestedUserId;
+    private IEnumerable<string> _songArtists = Array.Empty<string>();
     private bool CanEdit => CurrentUser.IsLoggedIn && CurrentUser.User.Id == RequestedUserId;
     private string ShareUrl => CurrentUser.IsLoggedIn ? $"{NavManager.BaseUri}{CurrentUser.User.Id}/Charts" : string.Empty;
     private BestAttemptDto[] _charts = Array.Empty<BestAttemptDto>();
     private IDictionary<Guid, ChartDifficultyRatingRecord> _adjustedDifficulties = new Dictionary<Guid, ChartDifficultyRatingRecord>();
     
     private bool _isLoading = true;
+    
+    [Parameter] [SupplyParameterFromQuery(Name=nameof(FilterEnum.SongArtist))] public string? SongArtistFilter { get; set; }
 
+    private void SongArtistFilterChanged(string? songArtistFilter)
+    {
+        SongArtistFilter = songArtistFilter;
+
+        NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(nameof(FilterEnum.SongArtist), songArtistFilter));
+    }
     [Parameter] [SupplyParameterFromQuery(Name = nameof(FilterEnum.Difficulty))] public int? DifficultyFilter { get; set; }
+
+
 
     private void DifficultyFilterChanged(int? difficulty)
     {
@@ -631,6 +666,10 @@
         {
             result = result && chart.SongType == SongTypeFilter;
         }
+        if (!string.IsNullOrWhiteSpace(SongArtistFilter))
+        {
+            result = result && chart.SongArtist.Contains(SongArtistFilter, StringComparison.OrdinalIgnoreCase);
+        }
         if (_scoreStateFilter != null)
         {
             result = _scoreStateFilter.Value switch
@@ -698,7 +737,7 @@
         _isLoading = true;
 
         var charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToArray();
-
+        _songArtists = charts.Select(c => c.Song.Artist.ToString()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         if (_currentMix == MixEnum.XX)
         {
             var bestAttempts = userId == null ? new Dictionary<Guid, XXChartAttempt>() :
@@ -717,6 +756,7 @@
                 SongDuration = c.Song.Duration,
                 Level = c.Level,
                 ChartType = c.Type.ToString(),
+                SongArtist = c.Song.Artist,
                 SongType = c.Song.Type.ToString(),
                 ImagePath = c.Song.ImagePath.ToString(),
                 DifficultyShorthand = DifficultyLevel.ToShorthand(c.Type, c.Level),
@@ -740,7 +780,8 @@
                 Level = c.Level,
                     ChartType = c.Type.ToString(),
                     SongDuration = c.Song.Duration,
-                SongType=c.Song.Type.ToString(),
+                    SongType = c.Song.Type.ToString(),
+                    SongArtist = c.Song.Artist,
                 ImagePath = c.Song.ImagePath.ToString(),
                 DifficultyShorthand = DifficultyLevel.ToShorthand(c.Type, c.Level),
                 Score = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].Score : null,
@@ -749,7 +790,7 @@
                 RecordedOn = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].RecordedDate : null
             }).ToArray();
         }
-
+        
         var ratings = await Mediator.Send(new GetChartRatingsQuery(_currentMix));
         _adjustedDifficulties = ratings.ToDictionary(r => r.ChartId);
         foreach (var chart in _charts)
@@ -962,6 +1003,7 @@
         ChartType,
         SongName,
         SongType,
+        SongArtist,
         ScoreState,
         SavedCharts
     }
@@ -971,6 +1013,7 @@
         MyRating,
         SongImage,
         SongName,
+        SongArtist,
         SongDuration,
         Grade,
         Broken,
