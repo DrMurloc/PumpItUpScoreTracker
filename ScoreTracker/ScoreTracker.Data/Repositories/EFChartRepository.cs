@@ -129,11 +129,18 @@ public sealed class EFChartRepository : IChartRepository
         ClearCache();
     }
 
-    public async Task UpdateChart(Guid chartId, Name stepArtist, ISet<Name> skills,
+    public async Task UpdateChart(Guid chartId, Name stepArtist, int noteCount, ISet<Name> skills,
         CancellationToken cancellationToken = default)
     {
         var chart = await _database.Chart.SingleAsync(c => c.Id == chartId, cancellationToken);
         chart.StepArtist = stepArtist;
+
+        var chartMix =
+            await _database.ChartMix.SingleAsync(c => c.ChartId == chartId && c.MixId == MixGuids[MixEnum.Phoenix],
+                cancellationToken);
+        chartMix.NoteCount = noteCount;
+
+
         _database.ChartSkill.RemoveRange(_database.ChartSkill.Where(c => c.ChartId == chartId));
 
         var skillNames = skills.Select(s => s.ToString()).ToArray();
@@ -289,7 +296,7 @@ public sealed class EFChartRepository : IChartRepository
                             s.Artist ?? "Unknown",
                             Bpm.From(s.MinBpm, s.MaxBpm)),
                         Enum.Parse<ChartType>(c.Type),
-                        cm.Level, c.StepArtist))
+                        cm.Level, c.StepArtist, cm.NoteCount))
                 .ToDictionaryAsync(c => c.Id, c => c, cancellationToken);
         });
     }

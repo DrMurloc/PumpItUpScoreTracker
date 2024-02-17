@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.Data.Persistence.Entities;
 
@@ -15,4 +15,5 @@ public sealed class ChartMixEntity
     [Required] public Guid MixId { get; set; }
 
     [Required] public int Level { get; set; }
+    public int? NoteCount { get; set; }
 }

@@ -18,25 +18,39 @@
         <MudItem xs="12">
             <MudText Typo="Typo.h4">@_currentChart.Song.Name @_currentChart.DifficultyString (@_toProcess.Count(), @_toProcess.Where(c=>c.Level>=10).Count() Remaining)</MudText>
         </MudItem>
-        <MudItem xs="6">
+        <MudItem xs="4">
             <MudNumericField T="decimal" Label="Min BPM" ValueChanged="SetMin" Value="_minBpm"></MudNumericField>
         </MudItem>
-        <MudItem xs="6">
+        <MudItem xs="4">
             <MudNumericField T="decimal" Label="Max BPM" @bind-Value="_maxBpm"></MudNumericField>
+        </MudItem>
+        <MudItem xs="4">
+            <MudNumericField T="int" Label="Note Count" @bind-Value="_noteCount" Min="1" Max="10000" HideSpinButtons="true"></MudNumericField>
         </MudItem>
         <MudItem xs="12">
             <MudAutocomplete T="string"
                              Label="Step Artist"
+                             @bind-Value="_stepArtist"
                              CoerceValue="true"
                              SearchFunc="s=>Task.FromResult(_existingStepArtists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
         </MudItem>
-        <MudItem xs="12">
-            <MudSelect T="string" @bind-SelectedValues="_skillNames" Label="Skills">
-                @foreach (var skill in _skills)
-                {
-                    <MudSelectItem Value="@skill.Name">@skill.Name</MudSelectItem>
-                }
-            </MudSelect>
+        <MudItem xs="12" sm="4">
+            <MudText>Not Included</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="8">
+            @foreach (var skill in _skills.Where(s => !_skillNames.Contains(s.Name)).OrderBy(s => s.Name))
+            {
+                <MudChip Style=@($"background-color:{skill.Color}") OnClick="()=>_skillNames.Add(skill.Name)">@skill.Name</MudChip>
+            }
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudText>Included</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="8">
+            @foreach (var skill in _skills.Where(s => _skillNames.Contains(s.Name)).OrderBy(s => s.Name))
+            {
+                <MudChip Style=@($"background-color:{skill.Color}") OnClick="()=>_skillNames.Remove(skill.Name)">@skill.Name</MudChip>
+            }
         </MudItem>
         <MudItem xs="12">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isSaving" OnClick="UpdateChart">Save Chart</MudButton>
@@ -58,13 +72,15 @@
             <MudAutocomplete T="string"
                              Label="Category"
                              CoerceText="true"
-                             SearchFunc="s=>Task.FromResult(_skills.Select(s=>s.Category).Distinct().Where(c=>c.Contains(s,StringComparison.OrdinalIgnoreCase)).ToArray().AsEnumerable())"></MudAutocomplete>
+                             Value="_skillCategory"
+                             ValueChanged="SetCategory"
+                             SearchFunc="s=>Task.FromResult(_skills.Select(s=>s.Category).Distinct().Where(c=>string.IsNullOrWhiteSpace(s)||c.Contains(s,StringComparison.OrdinalIgnoreCase)).ToArray().AsEnumerable())"></MudAutocomplete>
         </MudItem>
         <MudItem xs="12">
             <MudTextField Lines="3" T="string" Label="Description" @bind-Value="_description"></MudTextField>
         </MudItem>
         <MudItem xs="12">
-            <MudColorPicker @bind-Value="_color"></MudColorPicker>
+            <MudColorPicker DisableToolbar="false" @bind-Value="_color"></MudColorPicker>
         </MudItem>
 
         <MudItem xs="12">
@@ -88,7 +104,7 @@
     private Chart? _currentChart = null;
     private List<SkillRecord> _skills = new List<SkillRecord>();
     private IDictionary<Guid, Uri> _chartVideos = new Dictionary<Guid, Uri>();
-    private IEnumerable<string> _skillNames = new HashSet<string>();
+    private ISet<string> _skillNames = new HashSet<string>();
     private string _stepArtist = string.Empty;
 
     private string _skillName = string.Empty;
@@ -96,6 +112,7 @@
     private string _description = string.Empty;
     private MudColor _color = "#ffffff";
     private decimal _minBpm = 180;
+    private int _noteCount = 0;
     private decimal _maxBpm = 180;
     private bool _isSaving = false;
     private void SetCategory(string value)
@@ -120,7 +137,7 @@
             return;
         }
         _isSaving = true;
-        await _charts.UpdateChart(_currentChart.Id, _stepArtist, _skillNames.Select(Name.From).ToHashSet());
+        await _charts.UpdateChart(_currentChart.Id, _stepArtist, _noteCount, _skillNames.Select(Name.From).ToHashSet());
         await _charts.UpdateSong(_currentChart.Song.Name, Bpm.From(_minBpm, _maxBpm));
         Snackbar.Add("Updated Chart");
         _toProcess.Remove(_currentChart);

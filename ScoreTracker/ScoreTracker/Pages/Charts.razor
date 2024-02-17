@@ -40,7 +40,7 @@
     @if (FilterStatus(FilterEnum.SongArtist))
     {
         <MudItem xs="6" sm="4">
-            <MudAutocomplete T="string?" AdornmentIcon="@Icons.Material.Filled.MusicNote" Label=@L["Song Artist"] Value="SongArtistFilter" ValueChanged="SongArtistFilterChanged" Clearable="true"
+            <MudAutocomplete T="string" AdornmentIcon="@Icons.Material.Filled.MusicNote" Label=@L["Song Artist"] Value="SongArtistFilter" ValueChanged="SongArtistFilterChanged" Clearable="true"
                              CoerceValue="true"
                              CoerceText="false"
                              Immediate="true"

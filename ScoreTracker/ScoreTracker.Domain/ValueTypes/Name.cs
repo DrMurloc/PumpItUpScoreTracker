@@ -4,7 +4,7 @@ using ScoreTracker.Domain.Exceptions;
 
 namespace ScoreTracker.Domain.ValueTypes;
 
-public readonly struct Name
+public readonly struct Name : IComparable<Name>
 {
     private readonly string _name;
 
@@ -103,5 +103,10 @@ public readonly struct Name
         {
             writer.WriteStringValue(value._name);
         }
+    }
+
+    public int CompareTo(Name other)
+    {
+        return string.Compare(_name, other._name, StringComparison.OrdinalIgnoreCase);
     }
 }
