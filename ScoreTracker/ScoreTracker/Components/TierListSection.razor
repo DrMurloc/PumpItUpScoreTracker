@@ -35,19 +35,16 @@
 
                 <MudCard Class="@CardClass(chart.Id)" Style="@CardStyle(chart.Id)">
                     <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()" />
+                @if (Type == TierListType.MyScores)
+                {
                     <MudCardContent>
-                        @foreach (var skill in ChartSkills.TryGetValue(chart.Id, out var skills) ? skills.Where(s=>Skills.ContainsKey(s)).Select(s=>Skills[s]) : Array.Empty<SkillRecord>())
-                        {
-                            <MudChip Style=@($"background-color:{skill.Color}")>@skill.Name</MudChip>
-                        }
-                        @if (Type == TierListType.MyScores)
-                        {
+
                             @if (Scores.TryGetValue(chart.Id, out var score) && score.Score != null)
                             {
                                 <MudText>@score.Score (@score.Score.Value.LetterGrade.GetName(), @(score.Plate?.GetShorthand() ?? "??"))</MudText>
                             }
-                        }
                     </MudCardContent>
+                }
                     @if (Type != TierListType.MyScores)
                     {
                         
