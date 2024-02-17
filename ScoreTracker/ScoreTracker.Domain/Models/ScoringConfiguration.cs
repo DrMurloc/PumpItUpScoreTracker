@@ -1,10 +1,16 @@
-﻿using ScoreTracker.Domain.Enums;
+﻿using System.ComponentModel;
+using System.Data;
+using System.Reflection;
+using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Models
 {
     public sealed class ScoringConfiguration
     {
+        private readonly DataTable _dataTable = new();
+
         public IDictionary<DifficultyLevel, int> LevelRatings { get; set; } =
             DifficultyLevel.All.ToDictionary(l => l, l => l.BaseRating);
 
@@ -27,62 +33,156 @@ namespace ScoreTracker.Domain.Models
         public IDictionary<PhoenixPlate, double> PlateModifiers { get; set; } = Enum.GetValues<PhoenixPlate>()
             .ToDictionary(p => p, p => 1.0);
 
+        public double PgLetterGradeModifier { get; set; } = PhoenixLetterGrade.SSSPlus.GetModifier();
+        public int MinimumScore { get; set; } = 0;
+        public IDictionary<Guid, double> ChartModifiers { get; set; } = new Dictionary<Guid, double>();
         public double StageBreakModifier { get; set; } = 1.0;
+        public string CustomAlgorithm { get; set; } = string.Empty;
+        public CalculationType Formula { get; set; } = CalculationType.Default;
         public bool AdjustToTime { get; set; } = true;
         public bool ContinuousLetterGradeScale { get; set; } = false;
         private static readonly TimeSpan BaseAverageTime = TimeSpan.FromMinutes(2);
 
         public double GetScorelessScore(Chart chart)
         {
-            var result = (double)LevelRatings[chart.Level]
-                         * ChartTypeModifiers[chart.Type]
-                         * SongTypeModifiers[chart.Song.Type];
-            if (AdjustToTime) result *= chart.Song.Duration / BaseAverageTime;
+            return GetScorelessScore(chart.Id, chart.Level, chart.Type, chart.Song.Type, chart.Song.Duration);
+        }
+
+        private double GetScorelessScore(Guid chartId, DifficultyLevel level, ChartType chartType, SongType songType,
+            TimeSpan duration)
+        {
+            var result = LevelRatings[level]
+                         * ChartTypeModifiers[chartType]
+                         * SongTypeModifiers[songType];
+            if (ChartModifiers.TryGetValue(chartId, out var cMod)) result *= cMod;
+            if (AdjustToTime) result *= duration / BaseAverageTime;
 
             return result;
         }
 
         public int GetScore(DifficultyLevel level, PhoenixScore score)
         {
-            var letterGrade = score.LetterGrade;
+            return GetScore(Guid.Empty, level, ChartType.Single, SongType.Arcade, BaseAverageTime, false, score,
+                PhoenixPlate.SuperbGame);
+        }
 
+        private int GetScore(Guid chartId, DifficultyLevel level, ChartType chartType, SongType songType,
+            TimeSpan duration, bool isBroken, PhoenixScore score, PhoenixPlate plate)
+        {
+            if (score < MinimumScore) return 0;
+            var letterGrade = score.LetterGrade;
             var letterGradeModifier = LetterGradeModifiers[letterGrade];
-            if (ContinuousLetterGradeScale && letterGrade != PhoenixLetterGrade.SSSPlus)
+            if (ContinuousLetterGradeScale && score != 1000000)
             {
-                var nextGrade = letterGrade + 1;
+                double nextModifier;
+                PhoenixScore nextThreshold;
+                if (letterGrade != PhoenixLetterGrade.SSSPlus)
+                {
+                    var nextGrade = letterGrade + 1;
+                    nextModifier = LetterGradeModifiers[nextGrade];
+                    nextThreshold = nextGrade.GetMinimumScore();
+                }
+                else
+                {
+                    nextModifier = PgLetterGradeModifier;
+                    nextThreshold = 1000000;
+                }
+
                 var threshold = letterGrade.GetMinimumScore();
-                var nextThreshold = nextGrade.GetMinimumScore();
                 var modifier = LetterGradeModifiers[letterGrade];
-                var nextModifier = LetterGradeModifiers[nextGrade];
                 letterGradeModifier =
                     modifier + (nextModifier - modifier) * (score - threshold) / (nextThreshold - threshold);
             }
+            else if (score == 1000000)
+            {
+                letterGradeModifier = PgLetterGradeModifier;
+            }
 
-            return (int)(level.BaseRating * letterGradeModifier);
+            switch (Formula)
+            {
+                case CalculationType.Default:
+                {
+                    var result = GetScorelessScore(chartId, level, chartType, songType, duration);
+                    result *=
+                        letterGradeModifier
+                        * PlateModifiers[plate];
+                    if (ChartModifiers.TryGetValue(chartId, out var chartModifier)) result *= chartModifier;
+                    if (isBroken) result *= StageBreakModifier;
+
+                    return (int)result;
+                }
+                case CalculationType.Avalanche:
+                {
+                    var result = GetScorelessScore(chartId, level, chartType, songType, duration);
+                    result *= PlateModifiers[plate];
+                    var scoreModifier = letterGradeModifier;
+                    if (isBroken) scoreModifier -= StageBreakModifier;
+                    return (int)(result * scoreModifier);
+                }
+                case CalculationType.Custom:
+                default:
+                {
+                    var levelModifier = LevelRatings[level];
+                    var chartTypeModifier = ChartTypeModifiers[chartType];
+                    var songTypeModifier = SongTypeModifiers[songType];
+                    var timeModifier = duration / BaseAverageTime;
+                    var scoreModifier = letterGradeModifier;
+                    var plateModifier = PlateModifiers[plate];
+                    var chartModifier = ChartModifiers.TryGetValue(chartId, out var chartModResult)
+                        ? chartModResult
+                        : 1.0;
+                    var brokenModifier = isBroken ? StageBreakModifier : 1.0;
+                    var formula = CustomAlgorithm.Replace("LVL", levelModifier.ToString())
+                        .Replace("CTYP", chartTypeModifier.ToString())
+                        .Replace("STYP", songTypeModifier.ToString())
+                        .Replace("TIME", timeModifier.ToString())
+                        .Replace("SCOR", score.ToString())
+                        .Replace("PLAT", plateModifier.ToString())
+                        .Replace("CHRT", chartModifier.ToString())
+                        .Replace("LTTR", scoreModifier.ToString())
+                        .Replace("BRKN", brokenModifier.ToString());
+                    var result = _dataTable.Compute(formula, "");
+                    switch (result)
+                    {
+                        case int intResult:
+                            return intResult;
+                        case double doubleResult:
+                            return (int)doubleResult;
+                        case decimal decimalResult:
+                            return (int)decimalResult;
+                        default:
+                            return (int)result;
+                    }
+
+                    break;
+                }
+            }
         }
 
         public int GetScore(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)
         {
-            var result = GetScorelessScore(chart);
-            var letterGrade = score.LetterGrade;
-            var letterGradeModifier = LetterGradeModifiers[letterGrade];
-            if (ContinuousLetterGradeScale && letterGrade != PhoenixLetterGrade.SSSPlus)
-            {
-                var nextGrade = letterGrade + 1;
-                var threshold = letterGrade.GetMinimumScore();
-                var nextThreshold = nextGrade.GetMinimumScore();
-                var modifier = LetterGradeModifiers[letterGrade];
-                var nextModifier = LetterGradeModifiers[nextGrade];
-                letterGradeModifier =
-                    modifier + (nextModifier - modifier) * (score - threshold) / (nextThreshold - threshold);
-            }
-
-            result *=
-                letterGradeModifier
-                * PlateModifiers[plate];
-            if (isBroken) result *= StageBreakModifier;
-
-            return (int)result;
+            return GetScore(chart.Id, chart.Level, chart.Type, chart.Song.Type, chart.Song.Duration, isBroken, score,
+                plate);
         }
+
+        public enum CalculationType
+        {
+            [Description("All Modifiers Multiplied")]
+            Default,
+
+            [Description("All Modifiers Multiplied * (LetterModifier - BrokenModifier)")]
+            Avalanche,
+            Custom
+        }
+    }
+}
+
+public static class ScoringConfigHelpers
+{
+    public static string GetDescription(this ScoringConfiguration.CalculationType enumValue)
+    {
+        return typeof(ScoringConfiguration.CalculationType).GetField(enumValue.ToString())
+            ?.GetCustomAttribute<DescriptionAttribute>()
+            ?.Description ?? string.Empty;
     }
 }

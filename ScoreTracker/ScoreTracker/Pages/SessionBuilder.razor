@@ -9,8 +9,10 @@
 @using MediatR
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Domain.Records
-@using Twilio.TwiML.Voice
 @using Task = System.Threading.Tasks.Task
+@using System.ComponentModel
+@using System.Text.Json
+@using System.Text.Json.Serialization
 
 <PageTitle>Tournament Builder</PageTitle>
 
@@ -28,7 +30,17 @@
 </MudGrid>
 <br/>
 <br/>
+<MudRadioGroup T="ScoringConfiguration.CalculationType" @bind-SelectedOption="@Configuration.Scoring.Formula">
+    @foreach (var option in Enum.GetValues<ScoringConfiguration.CalculationType>().Where(v => v != ScoringConfiguration.CalculationType.Custom || CurrentUser.IsLoggedInAsAdmin))
+    {
+        <MudRadio T="ScoringConfiguration.CalculationType" Option="@option" Color="Color.Primary">@option</MudRadio>
+    }
+</MudRadioGroup>
+<br/>
+<MudText>@Configuration.Scoring.Formula.GetDescription()</MudText>
+<br/>
 <MudExpansionPanels>
+
     <MudExpansionPanel Text="Levels">
         <MudGrid>
             @foreach (var level in DifficultyLevel.All)
@@ -49,7 +61,7 @@
             }
         </MudGrid>
     </MudExpansionPanel>
-    
+
     <MudExpansionPanel Text="Song Types">
         <MudGrid>
             <MudItem xs="12">
@@ -62,8 +74,7 @@
                 </MudItem>
             }
         </MudGrid>
-    </MudExpansionPanel>
-
+        </MudExpansionPanel>
     <MudExpansionPanel Text="Letter Grades">
         <MudGrid>
             <MudItem xs="12">
@@ -75,6 +86,12 @@
                     <MudNumericField T="double" Min="0" Max="100" Label="@letterGrade.GetName()" @bind-Value="Configuration.Scoring.LetterGradeModifiers[letterGrade]"></MudNumericField>
                 </MudItem>
             }
+            <MudItem xs="12">
+                <MudNumericField T="double" Min="0" Max="100" Label="Perfect Score Modifier (Acts as a letter grade beyond SSS+)" @bind-Value="Configuration.Scoring.PgLetterGradeModifier" Clearable="true" HideSpinButtons="true"></MudNumericField>
+            </MudItem>
+            <MudItem xs="12">
+                <MudNumericField T="int" Min="0" Max="1000000" Label="Minimum Score" @bind-Value="Configuration.Scoring.MinimumScore" HideSpinButtons="true"></MudNumericField>
+            </MudItem>
         </MudGrid>
     </MudExpansionPanel>
     <MudExpansionPanel Text="Plates">
@@ -87,6 +104,29 @@
             }
         </MudGrid>
     </MudExpansionPanel>
+    @if (CurrentUser.IsLoggedInAsAdmin)
+    {
+        
+        <MudExpansionPanel Text="Charts">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField Lines="3" Label="Input Json" @bind-Value="ChartJson"></MudTextField>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudText>I.E: { "Kugutsu S25":1.25, "Leather D26":2.3 }</MudText>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudButton OnClick="SetCharts" Color="Color.Primary" Variant="Variant.Filled">Set Charts</MudButton>
+                </MudItem>
+                <MudItem xs="12">
+                    @foreach (var error in NotParsed)
+                    {
+                        <MudText>@error</MudText><br/>
+                    }
+                </MudItem>
+            </MudGrid>
+        </MudExpansionPanel>
+    }
     <MudExpansionPanel Text="Extra Settings">
         <MudGrid>
             <MudItem xs="6">
@@ -96,7 +136,23 @@
                 <MudNumericField T="double" Min="0" Max="100" Label="Stage Break Modifier" @bind-Value="Configuration.Scoring.StageBreakModifier"></MudNumericField>
             </MudItem>
             <MudItem xs="6">
-                <MudNumericField T="int" Label="Session Duration (Minutes)" Value="(int)Configuration.MaxTime.TotalMinutes" ValueChanged="m=>Configuration.MaxTime=TimeSpan.FromMinutes(m)"></MudNumericField>
+                <MudNumericField T="int" Label="Session Duration (Minutes)" Value="(int)Configuration.MaxTime.TotalMinutes" ValueChanged="m => Configuration.MaxTime = TimeSpan.FromMinutes(m)"></MudNumericField>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Custom Scoring Formula" @bind-Value="Configuration.Scoring.CustomAlgorithm" Clearable="true"></MudTextField>
+            </MudItem>
+            <MudItem xs="12">
+                <MudText>
+                    CTYP - Chart Type<br/>
+                    STYP - Song Type<br/>
+                    TIME - Time Modifier<br/>
+                    SCOR - Score (I.E 983213)<br/>
+                    PLAT - Plate Modifier<br/>
+                    CHRT - Chart Modifier<br/>
+                    LTTR - Letter Grade Modifier<br/>
+                    BRKN - Broken Score Modifier (1 if not broken)<br/>
+                    I.E, Score modified by time modifier and broken modifier is SCOR*BRKN*TIME
+                </MudText>
             </MudItem>
         </MudGrid>
     </MudExpansionPanel>
@@ -108,7 +164,7 @@
                     <MudDateRangePicker Label="Tournament Dates (EST)" @bind-DateRange="_dateRange" Clearable="true" Color="Color.Primary"/>
                 </MudItem>
                 <MudItem xs="12">
-                    <MudTextField T="string" Value="Configuration.Name" ValueChanged="s=>Configuration.Name=s" Label="Tournament Name"></MudTextField>
+                    <MudTextField T="string" Value="Configuration.Name" ValueChanged="s => Configuration.Name = s" Label="Tournament Name"></MudTextField>
                 </MudItem>
                 <MudItem xs="12">
                     <MudButton Color="Color.Primary" OnClick="SaveTourney" Variant="Variant.Filled">Save</MudButton>
@@ -221,8 +277,34 @@
     private Guid _currentUser = Guid.Empty;
     private Guid? _currentTourney = null;
     private int _restSeconds = 30;
+    private string ChartJson { get; set; }
+    private ICollection<string> NotParsed = new List<string>();
     private TournamentSession? _currentSession;
 
+    private void SetCharts()
+    {
+        NotParsed = new List<string>();
+        Configuration.Scoring.ChartModifiers = new Dictionary<Guid, double>();
+        var results = JsonSerializer.Deserialize<IDictionary<string, double>>(ChartJson);
+        if (results == null)
+        {
+            NotParsed.Add("Couldn't parse JSON");
+            return;
+        }
+        foreach (var kv in results)
+        {
+            var difficultyString = kv.Key.Split(" ")[^1];
+            var songName = string.Join(" ", kv.Key.Split(" ").Reverse().Skip(1).Reverse());
+            var (chartType, level) = DifficultyLevel.ParseShortHand(difficultyString);
+            var chart = _charts.Values.FirstOrDefault(c => c.Song.Name == songName && c.Type == chartType && c.Level == level);
+            if (chart == null)
+            {
+                NotParsed.Add(kv.Key);
+                continue;
+            }
+            Configuration.Scoring.ChartModifiers[chart.Id] = kv.Value;
+        }
+    }
     private async Task BuildSession()
     {
         _currentSession = await Mediator.Send(new AutoBuildSessionQuery(Configuration, _currentUser, TimeSpan.FromSeconds(_restSeconds)));

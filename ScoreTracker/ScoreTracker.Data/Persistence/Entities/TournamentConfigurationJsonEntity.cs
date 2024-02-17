@@ -18,6 +18,11 @@ namespace ScoreTracker.Data.Persistence.Entities
         public IDictionary<string, double> LetterGradeModifiers { get; set; } = new Dictionary<string, double>();
 
         public IDictionary<string, double> PlateModifiers { get; set; } = new Dictionary<string, double>();
+        public IDictionary<Guid, double> ChartModifiers { get; set; } = new Dictionary<Guid, double>();
+        public int CalculationType { get; set; } = (int)ScoringConfiguration.CalculationType.Default;
+        public double? PgModifier { get; set; }
+        public int MinimumScore { get; set; }
+        public string CustomFormula { get; set; } = string.Empty;
 
         public double StageBreakModifier { get; set; }
         public bool AdjustToTime { get; set; }
@@ -33,6 +38,11 @@ namespace ScoreTracker.Data.Persistence.Entities
                 Name = config.Name,
                 StartDate = config.StartDate,
                 EndDate = config.EndDate,
+                PgModifier = config.Scoring.PgLetterGradeModifier,
+                MinimumScore = config.Scoring.MinimumScore,
+                CustomFormula = config.Scoring.CustomAlgorithm,
+                CalculationType = (int)config.Scoring.Formula,
+                ChartModifiers = config.Scoring.ChartModifiers,
                 ContinuousLetterGradeScale = config.Scoring.ContinuousLetterGradeScale,
                 StageBreakModifier = config.Scoring.StageBreakModifier,
                 AdjustToTime = config.Scoring.AdjustToTime,
@@ -51,10 +61,15 @@ namespace ScoreTracker.Data.Persistence.Entities
 
         public TournamentConfiguration To()
         {
-            return new TournamentConfiguration(Id, Name, new ScoringConfiguration()
+            return new TournamentConfiguration(Id, Name, new ScoringConfiguration
             {
                 StageBreakModifier = StageBreakModifier,
                 AdjustToTime = AdjustToTime,
+                CustomAlgorithm = CustomFormula,
+                MinimumScore = MinimumScore,
+                ChartModifiers = ChartModifiers,
+                Formula = (ScoringConfiguration.CalculationType)CalculationType,
+                PgLetterGradeModifier = PgModifier ?? LetterGradeModifiers[PhoenixLetterGrade.SSSPlus.ToString()],
                 ContinuousLetterGradeScale = ContinuousLetterGradeScale,
                 LevelRatings = LevelRatings.ToDictionary(kv => (DifficultyLevel)kv.Key, kv => kv.Value),
                 SongTypeModifiers = SongTypeModifiers.ToDictionary(kv => Enum.Parse<SongType>(kv.Key), kv => kv.Value),
