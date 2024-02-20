@@ -5,10 +5,12 @@
 @using CsvHelper
 @using System.Globalization
 @using ScoreTracker.Application.Commands
+@using ScoreTracker.Domain.Events
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
-
+@using ScoreTracker.Web.Shared
+@implements IDisposable
 <PageTitle>@L["Import Phoenix Scores"]</PageTitle>
 
 <MudCard >
@@ -36,6 +38,24 @@
                     <MudItem xs="12" sm="6">
                         <MudNumericField T="int?" Min="1" Label=@L["Ending Page"] @bind-Value="_endPage" Clearable="true"></MudNumericField>
                     </MudItem>
+                </MudGrid>
+                break;
+            case Step.UsePassword:
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="PIUGame.com Username" @bind-Value="_username"></MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField InputType="InputType.Password" Label="PIUGame.com Password" @bind-Value="_password"></MudTextField>
+                    </MudItem>
+                    @if (_isImporting)
+                    {
+                        <MudItem xs="12">
+                            <MudText>Importing... (Can take a few minutes)</MudText>
+                            <br/>
+                            <MudText>@_passwordImportStatus</MudText>
+                        </MudItem>
+                    }
                 </MudGrid>
                 break;
             case Step.Uploading:
@@ -120,6 +140,14 @@
                        Color="@Color.Primary"
                        StartIcon="@Icons.Material.Filled.FileDownload">@L["Download Failures"]</MudButton>
         }
+        @if (_currentStep == Step.UsePassword)
+        {
+            <MudButton Variant="@Variant.Filled"
+                       Disabled="_isImporting"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.ImportExport"
+                       OnClick="ImportScores">Import</MudButton>
+        }
         @if (_currentStep == Step.Finished)
         {
             <MudButton OnClick="@(_=>_currentStep=Step.Information)"
@@ -137,6 +165,7 @@
 @inject ISnackbar Snackbar;
 @inject IPhoenixScoreFileExtractor Extractor;
 @inject IJSRuntime JSRuntime;
+@inject ILogger<UploadPhoenixScores> Logger;
 @code
 {
     private enum Step
@@ -145,6 +174,7 @@
         Uploading,
         Confirming,
         Saving,
+        UsePassword,
         Finished
     }
 
@@ -152,12 +182,31 @@
     {
 
     }
-    
+
     private bool _isScoreTableShowing = false;
     private Step _currentStep = Step.Information;
     private int _maxSaving = 0;
     private int _currentSaved = 0;
     private int _startPage = 1;
+    private string _username = "";
+    private string _password = "";
+
+    [Parameter] [SupplyParameterFromQuery(Name="UsernamePassword")] public bool UseUsernamePassword { get; set; } = false;
+    private async Task ImportScores()
+    {
+        _isImporting = true;
+        try
+        {
+            await Mediator.Send(new ImportOfficialPlayerScoresCommand(_username, _password));
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, $"There was an error while importing scores");
+            Snackbar.Add("There was an error while trying to import your scores. Double check your username/password and try again.",Severity.Error);
+        }
+        _isImporting = false;
+    }
+    private bool _isImporting = false;
     private int? _endPage = null;
     private TimeSpan _remainingTime = TimeSpan.MinValue;
 
@@ -165,24 +214,37 @@
     private List<RecordedPhoenixScore> _spreadSheetScores = new List<RecordedPhoenixScore>();
 
     private CancellationTokenSource _currentCancellation = new CancellationTokenSource();
+    private string _passwordImportStatus = string.Empty;
     protected override Task OnInitializedAsync()
     {
+        if (UseUsernamePassword)
+        {
+            _currentStep = Step.UsePassword;
+            MainLayout.ImportStatusUpdated += StatusUpdate;
+        }
         if (CurrentUser.IsLoggedIn) return Task.CompletedTask;
 
         NavManager.NavigateTo("/Login");
         return Task.CompletedTask;
     }
 
+    private void StatusUpdate(object? origin, ImportStatusUpdated e)
+    {
+        if (e.UserId != CurrentUser.User.Id) return;
+
+        _passwordImportStatus = e.Status;
+        InvokeAsync(StateHasChanged);
+    }
     private void Cancel()
     {
         _currentStep = Step.Information;
         _currentCancellation?.Cancel();
     }
 
-    
+
     private async Task DownloadFailures()
     {
-        
+
         var stream = new MemoryStream();
         await using var writer = new StreamWriter(stream);
         await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
@@ -271,12 +333,12 @@
     }
 
     private string _pageLimitString() => _endPage == null ? "" : $"pageIndex>{_endPage}||";
-        private string _piuGameScript() => $@"
+    private string _piuGameScript() => $@"
 var csvString=""data:text/csv;charset=utf-8,"";
     csvString+=""Song,Difficulty,Score,LetterGrade,Plate\r\n"";
     var pageIndex={_startPage};
     while(true) {{
-    
+
         var nextPageString = await $.get(""https://piugame.com/my_page/my_best_score.php?&&page=""+pageIndex)
         var page=$(nextPageString);
         var foundScores=$(""ul.my_best_scoreList>li>div.in"",page);
@@ -299,4 +361,9 @@ var csvString=""data:text/csv;charset=utf-8,"";
     console.log(csvString);
     var encodedUri = encodeURI(csvString);
     window.open(encodedUri);";
+
+    public void Dispose()
+    {
+        MainLayout.ImportStatusUpdated -= StatusUpdate;
+    }
 }

@@ -1,7 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using MediatR;
+using Microsoft.Extensions.Logging;
 using ScoreTracker.Data.Apis.Contracts;
 using ScoreTracker.Data.Apis.Dtos;
 using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
@@ -12,12 +14,18 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     private readonly IPiuGameApi _piuGame;
     private readonly IChartRepository _charts;
     private readonly ILogger _logger;
+    private readonly IMediator _mediator;
+    private readonly ICurrentUserAccessor _currentUser;
 
-    public OfficialSiteClient(IPiuGameApi piuGame, IChartRepository charts, ILogger<OfficialSiteClient> logger)
+    public OfficialSiteClient(IPiuGameApi piuGame, IChartRepository charts, ILogger<OfficialSiteClient> logger,
+        IMediator mediator,
+        ICurrentUserAccessor currentUser)
     {
         _piuGame = piuGame;
         _charts = charts;
         _logger = logger;
+        _mediator = mediator;
+        _currentUser = currentUser;
     }
 
     public async Task<IEnumerable<OfficialChartLeaderboardEntry>> GetAllOfficialChartScores(
@@ -75,6 +83,52 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         }
 
         return result;
+    }
+
+    public async Task<int> GetScorePageCount(string username, string password, CancellationToken cancellationToken)
+    {
+        var sessionId = await _piuGame.GetSessionId(username, password, cancellationToken);
+        var response = await _piuGame.GetBestScores(sessionId, 0, cancellationToken);
+        return response.MaxPage;
+    }
+
+    public async Task<IEnumerable<OfficialRecordedScore>> GetRecordedScores(string username, string password,
+        int? maxPages, CancellationToken cancellationToken)
+    {
+        var currentPage = 1;
+        await _mediator.Publish(new ImportStatusUpdated(_currentUser.User.Id, "Logging In"), cancellationToken);
+        var sessionId = await _piuGame.GetSessionId(username, password, cancellationToken);
+        var responses = new List<PiuGameGetBestScoresResult.ScoreDto>();
+        maxPages ??= (await _piuGame.GetBestScores(sessionId, 1, cancellationToken)).MaxPage;
+        while (currentPage <= maxPages.Value)
+        {
+            await _mediator.Publish(
+                new ImportStatusUpdated(_currentUser.User.Id, $"Reading page {currentPage} of {maxPages}"),
+                cancellationToken);
+            var nextPage = await _piuGame.GetBestScores(sessionId, currentPage, cancellationToken);
+            responses.AddRange(nextPage.Scores);
+            if (nextPage.Scores.Length < 6)
+                break;
+            currentPage++;
+            _logger.LogInformation($"Page {currentPage}");
+        }
+
+        var results = new List<OfficialRecordedScore>();
+        foreach (var response in responses)
+        {
+            var chartType = response.ChartType;
+
+            var song = response.SongName;
+            if (ManualMappings.TryGetValue(song, out var mapping)) song = mapping;
+
+            var chart = (await _charts.GetChartsForSong(MixEnum.Phoenix, song, cancellationToken))
+                .FirstOrDefault(c => c.Type == chartType && c.Level == response.Level);
+            if (chart == null) continue;
+
+            results.Add(new OfficialRecordedScore(chart, response.Score, response.Plate));
+        }
+
+        return results;
     }
 
     private static readonly IDictionary<string, string> ManualMappings =

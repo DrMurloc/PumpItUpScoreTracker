@@ -1,24 +1,33 @@
 ﻿using MediatR;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Application.Handlers
 {
     public sealed class OfficialLeaderboardSaga : IRequestHandler<ProcessOfficialLeaderboardsCommand>,
-        IRequestHandler<ProcessChartPopularityCommand>
+        IRequestHandler<ProcessChartPopularityCommand>,
+        IRequestHandler<ImportOfficialPlayerScoresCommand>
     {
         private readonly IOfficialSiteClient _officialSite;
         private readonly ITierListRepository _tierLists;
         private readonly IOfficialLeaderboardRepository _leaderboards;
+        private readonly ICurrentUserAccessor _currentUser;
+        private readonly IUserRepository _user;
+        private readonly IMediator _mediator;
 
         public OfficialLeaderboardSaga(IOfficialSiteClient officialSite, ITierListRepository tierLists,
-            IOfficialLeaderboardRepository leaderboards)
+            IOfficialLeaderboardRepository leaderboards, ICurrentUserAccessor currentUser, IUserRepository user,
+            IMediator mediator)
         {
             _officialSite = officialSite;
             _tierLists = tierLists;
             _leaderboards = leaderboards;
+            _currentUser = currentUser;
+            _user = user;
+            _mediator = mediator;
         }
 
         public async Task<Unit> Handle(ProcessOfficialLeaderboardsCommand request, CancellationToken cancellationToken)
@@ -175,6 +184,41 @@ namespace ScoreTracker.Application.Handlers
                         cancellationToken);
                 }
             }
+
+            return Unit.Value;
+        }
+
+        public async Task<Unit> Handle(ImportOfficialPlayerScoresCommand request, CancellationToken cancellationToken)
+        {
+            var userId = _currentUser.User.Id;
+            var maxPages = await _officialSite.GetScorePageCount(request.Username, request.Password, cancellationToken);
+            var limit = (await _user.GetUserUiSettings(userId, cancellationToken)).TryGetValue("PreviousPageCount",
+                out var result)
+                ? int.TryParse(result, out var previous) ? (int?)maxPages - previous + 1 : null
+                : null;
+
+            var scores =
+                (await _officialSite.GetRecordedScores(request.Username, request.Password, limit, cancellationToken))
+                .ToArray();
+            var count = 0;
+
+            foreach (var score in scores)
+            {
+                await _mediator.Send(
+                    new UpdatePhoenixBestAttemptCommand(score.Chart.Id, false, score.Score, score.Plate),
+                    cancellationToken);
+                count++;
+                if (count % 10 == 0)
+                    await _mediator.Publish(
+                        new ImportStatusUpdated(_currentUser.User.Id,
+                            $"Saving chart result {count} of {scores.Length}"),
+                        cancellationToken);
+            }
+
+
+            var settings = await _user.GetUserUiSettings(userId, cancellationToken);
+            settings["PreviousPageCount"] = maxPages.ToString();
+            await _user.SaveUserUiSettings(userId, settings, cancellationToken);
 
             return Unit.Value;
         }

@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Web;
 using HtmlAgilityPack;
@@ -285,13 +285,39 @@ public sealed class PiuGameApi : IPiuGameApi
             }
     }
 
-    private async Task<string> GetWithRetries(string url, CancellationToken cancellationToken = default)
+    private async Task<HttpResponseMessage> PostForMessageWithRetries(string url, IDictionary<string, string> form,
+        CancellationToken cancellationToken = default, HttpClient? client = null)
     {
         var retry = 0;
         while (true)
             try
             {
-                return await _client.GetStringAsync(url, cancellationToken);
+                var response =
+                    await (client ?? _client).PostAsync(url, new FormUrlEncodedContent(form), cancellationToken);
+
+                //response.EnsureSuccessStatusCode();
+                return response;
+                break;
+            }
+            catch
+            {
+                if (retry == 3) throw;
+
+                retry++;
+                await Task.Delay(1000, cancellationToken);
+            }
+    }
+
+    private async Task<string> GetWithRetries(string url, CancellationToken cancellationToken = default,
+        HttpClient? client = null)
+    {
+        var retry = 0;
+        while (true)
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                var response = await (client ?? _client).SendAsync(request, cancellationToken);
+                return await response.Content.ReadAsStringAsync(cancellationToken);
                 break;
             }
             catch
@@ -316,1418 +342,123 @@ public sealed class PiuGameApi : IPiuGameApi
             : ChartType.SinglePerformance;
     }
 
-    /*
-     *
-     *      <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <div class="img_wrap">
-          <span class="medal_wrap"><i class="img"><img src="/l_img/silvermedal.png" /></i></span>
-        </div>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">2</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/ed7e43efd28eba896f90b94ff1ebc06f.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">After LIKE</p>
-      <p class="t2">IVE</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_0.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_6.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <div class="img_wrap">
-          <span class="medal_wrap"><i class="img"><img src="/l_img/bronzemedal.png" /></i></span>
-        </div>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">154</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/e0cf19dbb807e5d3f2efa3db5ca163a0.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">ELEVEN</p>
-      <p class="t2">IVE</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_0.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_6.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">4</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">21</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/14cd5d7a3df1f12b82bccec2faea2705.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Neo Catharsis</p>
-      <p class="t2">TAG underground overlay</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_2.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_0.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">5</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">2</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/7b6237f4583cab1dd1a1b1f85264eaa5.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Nxde</p>
-      <p class="t2">(G)I-DLE</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_0.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_6.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">6</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">95</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/e0cf19dbb807e5d3f2efa3db5ca163a0.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">ELEVEN</p>
-      <p class="t2">IVE</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_2.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">7</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">37</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/e0cf19dbb807e5d3f2efa3db5ca163a0.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">ELEVEN</p>
-      <p class="t2">IVE</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_5.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">8</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">27</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/14cd5d7a3df1f12b82bccec2faea2705.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Neo Catharsis</p>
-      <p class="t2">TAG underground overlay</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_2.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_2.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">9</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">12</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/e0cf19dbb807e5d3f2efa3db5ca163a0.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">ELEVEN</p>
-      <p class="t2">IVE</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_7.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">10</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-down-min"></i><i class="num">1</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/7e1af52be6d8b4e147d2a0ebbf54ef98.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Euphorianic</p>
-      <p class="t2">SHK</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_6.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">11</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">16</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/dde154d8a721c5d510b71c788d0b8673.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Viyella's Nightmare</p>
-      <p class="t2">Laur</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_6.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">12</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-down-min"></i><i class="num">4</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/3f60d49fc1d14e5cfa51e8c90eec847b.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Pneumonoultramicroscopicsilicovolcanoconiosis ft. Kagamine Len/GUMI</p>
-      <p class="t2">DASU</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_6.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">13</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">20</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/14cd5d7a3df1f12b82bccec2faea2705.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Neo Catharsis</p>
-      <p class="t2">TAG underground overlay</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_7.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">14</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">8</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/dde154d8a721c5d510b71c788d0b8673.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Viyella's Nightmare</p>
-      <p class="t2">Laur</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_9.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">15</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">16</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/d24baf611d258d15c997afc26b6380fe.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Barber's Madness</p>
-      <p class="t2">Klass E</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_8.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">16</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">10</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/e0cf19dbb807e5d3f2efa3db5ca163a0.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">ELEVEN</p>
-      <p class="t2">IVE</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/d_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/d_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/d_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/d_num_8.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">17</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-down-min"></i><i class="num">1</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/ed7e43efd28eba896f90b94ff1ebc06f.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">After LIKE</p>
-      <p class="t2">IVE</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_3.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">18</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">18</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/d24baf611d258d15c997afc26b6380fe.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Barber's Madness</p>
-      <p class="t2">Klass E</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_2.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_2.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">19</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-down-min"></i><i class="num">4</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/3f60d49fc1d14e5cfa51e8c90eec847b.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Pneumonoultramicroscopicsilicovolcanoconiosis ft. Kagamine Len/GUMI</p>
-      <p class="t2">DASU</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_9.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">20</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-down-min"></i><i class="num">2</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/ed7e43efd28eba896f90b94ff1ebc06f.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">After LIKE</p>
-      <p class="t2">IVE</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_5.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">21</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-down-min"></i><i class="num">1</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/7b6237f4583cab1dd1a1b1f85264eaa5.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Nxde</p>
-      <p class="t2">(G)I-DLE</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">22</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">2</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/5c0a9e5e699863547ef7fa8d6485fc4a.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Teddy Bear</p>
-      <p class="t2">STAYC</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_0.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_9.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">23</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">19</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/d24baf611d258d15c997afc26b6380fe.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Barber's Madness</p>
-      <p class="t2">Klass E</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_6.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">24</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">32</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/268d0e5526dc475ccf8ca90a60fcae68.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Aragami</p>
-      <p class="t2">xi</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_2.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_2.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">25</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">5</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/584749a3cecd3f4b5714df28cd502d14.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Etude Op 10-4</p>
-      <p class="t2">MAX</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_2.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_2.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">26</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">8</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/ed7e43efd28eba896f90b94ff1ebc06f.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">After LIKE</p>
-      <p class="t2">IVE</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_8.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">27</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">31</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/dde154d8a721c5d510b71c788d0b8673.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Viyella's Nightmare</p>
-      <p class="t2">Laur</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_2.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_3.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">28</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">134</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/dde154d8a721c5d510b71c788d0b8673.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Viyella's Nightmare</p>
-      <p class="t2">Laur</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">29</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">58</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/e0cf19dbb807e5d3f2efa3db5ca163a0.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">ELEVEN</p>
-      <p class="t2">IVE</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/d_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/d_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/d_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/d_num_6.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">30</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">21</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/14cd5d7a3df1f12b82bccec2faea2705.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Neo Catharsis</p>
-      <p class="t2">TAG underground overlay</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/d_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/d_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/d_num_2.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/d_num_1.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">31</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">16</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/ed7e43efd28eba896f90b94ff1ebc06f.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">After LIKE</p>
-      <p class="t2">IVE</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_0.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_4.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">32</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">9</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/7e1af52be6d8b4e147d2a0ebbf54ef98.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Euphorianic</p>
-      <p class="t2">SHK</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_0.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_8.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">33</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-down-min"></i><i class="num">1</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/584749a3cecd3f4b5714df28cd502d14.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Etude Op 10-4</p>
-      <p class="t2">MAX</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_6.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">34</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">3</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/7e1af52be6d8b4e147d2a0ebbf54ef98.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Euphorianic</p>
-      <p class="t2">SHK</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">35</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">36</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/14cd5d7a3df1f12b82bccec2faea2705.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Neo Catharsis</p>
-      <p class="t2">TAG underground overlay</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_2.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_5.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">36</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">19</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/eb5af940defb17449259e75e16926870.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">BOCA</p>
-      <p class="t2">Dreamcatcher</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_0.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_9.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">37</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-down-min"></i><i class="num">35</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/6175376a00ff0d561bab24934e04b782.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Halloween Party ~Multiverse~</p>
-      <p class="t2">SHK</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_6.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">38</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-down-min"></i><i class="num">35</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/6175376a00ff0d561bab24934e04b782.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Halloween Party ~Multiverse~</p>
-      <p class="t2">SHK</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_8.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">39</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">4</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/5c0a9e5e699863547ef7fa8d6485fc4a.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Teddy Bear</p>
-      <p class="t2">STAYC</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_0.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_6.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">40</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">10</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/5c0a9e5e699863547ef7fa8d6485fc4a.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Teddy Bear</p>
-      <p class="t2">STAYC</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_4.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">41</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">21</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/268d0e5526dc475ccf8ca90a60fcae68.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Aragami</p>
-      <p class="t2">xi</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_9.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">42</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">21</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/7e1af52be6d8b4e147d2a0ebbf54ef98.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Euphorianic</p>
-      <p class="t2">SHK</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/d_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/d_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/d_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/d_num_8.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">43</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">5</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/8eb8a3021756670ce067a3ef7cfb9f2a.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">MURDOCH</p>
-      <p class="t2">WONDERTRAVELER Project</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_8.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">44</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">30</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/268d0e5526dc475ccf8ca90a60fcae68.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Aragami</p>
-      <p class="t2">xi</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_7.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">45</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">45</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/950bba94b66e30b4a33c794c204b2ac8.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">GOOD NIGHT</p>
-      <p class="t2">Dreamcatcher</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_0.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_9.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">46</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">19</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/d24baf611d258d15c997afc26b6380fe.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Barber's Madness</p>
-      <p class="t2">Klass E</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/d_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/d_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/d_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/d_num_9.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">47</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-down-min"></i><i class="num">1</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/ab914c8ca7030b776ec3cd3ad7dad3e9.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">VECTOR</p>
-      <p class="t2">Zekk</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_8.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">48</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">21</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/a7b3d3aadddc0fce1160f509054f1686.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Beethoven Virus</p>
-      <p class="t2">BanYa</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_0.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_7.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">49</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">77</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/d24baf611d258d15c997afc26b6380fe.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Barber's Madness</p>
-      <p class="t2">Klass E</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/d_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/d_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/d_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/d_num_6.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">50</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">11</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/3f60d49fc1d14e5cfa51e8c90eec847b.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Pneumonoultramicroscopicsilicovolcanoconiosis ft. Kagamine Len/GUMI</p>
-      <p class="t2">DASU</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/d_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/d_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/d_num_2.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/d_num_2.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-  <li>
-<div class="in flex vc wrap">
-  <div class="in_layOut flex vc wrap">
-    <div class="num">
-                  <i class="tt">51</i>
-              </div>
-    <div class="num_ranking"><div class="tt flex vc"><i class="xi xi-caret-up-min"></i><i class="num">2</i></div></div>
-  </div>
-  <div class="name flex vc wrap">
-    <div class="profile_img"><div class="resize"><div class="re bgfix" style="background-image:url('https://piugame.com/data/song_img/305329152cdd89f6229dec2a3074c18b.png?v=20231121134107')"></div></div></div>
-    <div class="profile_name">
-      <p class="t1">Versailles</p>
-      <p class="t2">HyuN &amp; MIIM</p>
-    </div>
-  </div>
-  <div class="level_wrap">
-    <div class="stepBall_img_wrap">
-      <div class="stepBall_in flex vc col hc wrap bgfix cont" style="background-image:url('https://piugame.com/l_img/stepball/full/s_bg.png')">
-        <div class="tw"><img src="https://piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
-        <div class="numw flex vc hc">
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
-          <div class="imG"><img src="https://piugame.com/l_img/stepball/full/s_num_6.png" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-  </li>
-<script>
-  $('.more-btn').show();
-$('.loading-btn').hide();
-</script>
+    public async Task<HttpClient> GetSessionId(string username, string password, CancellationToken cancellationToken)
+    {
+        var webRequestHandler = new HttpClientHandler();
+        var client = new HttpClient(webRequestHandler);
+        client.DefaultRequestHeaders.Add("origin", "https://piugame.com");
 
+        await client.GetAsync("https://piugame.com", cancellationToken);
 
+        var response = await PostForMessageWithRetries("https://piugame.com/bbs/login_check.php",
+            new Dictionary<string, string>
+            {
+                { "url", "/" },
+                { "mb_id", username },
+                { "mb_password", password }
+            }, cancellationToken, client);
+        //return "";
+        var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
+        return client;
+    }
 
-     */
+    public async Task<PiuGameGetBestScoresResult> GetBestScores(HttpClient client, int page,
+        CancellationToken cancellationToken)
+    {
+        var response = await GetWithRetries($"https://piugame.com/my_page/my_best_score.php?&&page={page}",
+            cancellationToken, client);
+
+        var document = new HtmlDocument();
+        document.LoadHtml(response);
+        var lastI = document.DocumentNode.SelectNodes(".//i[contains(@class,'last')]")?.First();
+        var maxPageStrings = lastI?.ParentNode
+            .GetAttributeValue("onclick", "")
+            .Split("=") ?? Array.Empty<string>();
+        var maxPage =
+            maxPageStrings.Length > 0 ? int.Parse(maxPageStrings[^1].TrimEnd('\'') ?? "") : page;
+
+        var foundScores =
+            document.DocumentNode.SelectNodes(
+                ".//ul[contains(@class,'my_best_scoreList')]/li/div[contains(@class,'in')]");
+        var result = new PiuGameGetBestScoresResult
+        {
+            MaxPage = maxPage
+        };
+        if (foundScores == null) return result;
+        var scores = new List<PiuGameGetBestScoresResult.ScoreDto>();
+        foreach (var scoreCard in foundScores)
+        {
+            var songName = scoreCard.SelectNodes(".//div[contains(@class,'song_name')]").First().ChildNodes.First()
+                .InnerText;
+            var typeString = scoreCard
+                .SelectNodes(".//div[contains(@class,'stepBall_img_wrap')]//div[contains(@class,'tw')]//img")
+                .First().GetAttributeValue("src", "");
+            if (typeString.Contains("u_text", StringComparison.OrdinalIgnoreCase))
+                //UCS
+                continue;
+            var chartType = GetChartTypeFromUrl(typeString);
+
+            var difficulty = string.Join("",
+                scoreCard.SelectNodes(".//div[contains(@class,'stepBall_img_wrap')]//div[contains(@class,'imG')]//img")
+                    .Select(n => n.GetAttributeValue("src", "")
+                        .Substring(46, 1))).TrimStart('.');
+
+            var scoreList = scoreCard.SelectNodes(".//div[contains(@class,'etc_con')]//ul").First();
+
+            var letter = scoreList.ChildNodes[3].ChildNodes[1].ChildNodes[1].ChildNodes[0]
+                .GetAttributeValue("src", "").Substring(32).Replace(".png", "").Replace("_p", "+");
+            var score = scoreList.ChildNodes[1].ChildNodes[1].ChildNodes[1].ChildNodes[0].InnerText.Trim()
+                .Replace(",", "");
+            var plate = scoreList.ChildNodes[5].ChildNodes[1].ChildNodes[1].ChildNodes[0]
+                .GetAttributeValue("src", "").Substring(32, 2);
+            try
+            {
+                scores.Add(new PiuGameGetBestScoresResult.ScoreDto
+                {
+                    ChartType = chartType,
+                    Level = int.Parse(difficulty),
+                    Plate = PhoenixPlateHelperMethods.ParseShorthand(plate),
+                    Score = int.Parse(score),
+                    SongName = songName
+                });
+            }
+            catch (Exception e)
+            {
+            }
+        }
+
+        result.Scores = scores.ToArray();
+        return result;
+
+        /*
+    var csvString="data:text/csv;charset=utf-8,";
+        csvString+="Song,Difficulty,Score,LetterGrade,Plate\r\n";
+        var pageIndex=1;
+        while(true) {
+
+            var nextPageString = await $.get("https://piugame.com/my_page/my_best_score.php?&&page="+pageIndex)
+            var page=$(nextPageString);
+            var foundScores=$("ul.my_best_scoreList>li>div.in",page);
+            foundScores.each(function(){
+                var songName = $('.song_name',this)[0].children[0].innerText.replaceAll('"','""').replaceAll('#','Num');
+                var chartType = $($('.stepBall_img_wrap .imG img',this)[0]).attr("src").substring(40,41);
+                var difficultyLevel = $('.stepBall_img_wrap .imG img',this).map((index,i)=> $(i).attr("src").substring(46,47)).get().join("");
+
+                var scoreList = $(".etc_con>ul",this)[0];
+                var letter = $(scoreList.children[1].children[0].children[0].children[0]).attr('src').substring(32).replace(".png","").replace("_p","+");
+                var score = $(scoreList.children[0].children[0].children[0].children[0])[0].innerText.replaceAll(",","");
+                var plate = $(scoreList.children[2].children[0].children[0].children[0]).attr("src").substring(32,34);
+                csvString+='"'+songName+'",'+chartType+difficultyLevel+","+score+","+letter+","+plate+"\r\n";
+            });
+            pageIndex++;
+            console.log("Page "+pageIndex);
+            if($(".xi.last",page).length==0){
+                break;
+            }
+        }
+        console.log(csvString);
+        var encodedUri = encodeURI(csvString);
+        window.open(encodedUri);
+         */
+    }
 }

@@ -45,6 +45,9 @@ public static class PhoenixPlateHelperMethods
     private static readonly IDictionary<string, PhoenixPlate> Parser =
         Enum.GetValues<PhoenixPlate>().ToDictionary(e => e.GetName());
 
+    private static readonly IDictionary<string, PhoenixPlate> ShorthandParser = Enum.GetValues<PhoenixPlate>()
+        .ToDictionary(e => e.GetShorthand(), StringComparer.OrdinalIgnoreCase);
+
     public static string GetShorthand(this PhoenixPlate enumValue)
     {
         return typeof(PhoenixPlate).GetField(enumValue.ToString())?.GetCustomAttribute<PlateShorthandAttribute>()
@@ -59,6 +62,11 @@ public static class PhoenixPlateHelperMethods
 
     public static PhoenixPlate? TryParse(string? value)
     {
-        return value == null ? null : Parser.ContainsKey(value) ? Parser[value] : null;
+        return value == null ? null : Parser.TryGetValue(value, out var value1) ? value1 : null;
+    }
+
+    public static PhoenixPlate ParseShorthand(string value)
+    {
+        return ShorthandParser[value];
     }
 }

@@ -5,9 +5,11 @@
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Application.Events
+@using ScoreTracker.Domain.Events
 @inherits LayoutComponentBase
 @inject ICurrentUserAccessor CurrentUser
 @implements INotificationHandler<MatchUpdatedEvent>
+@implements INotificationHandler<ImportStatusUpdated>
 <PageTitle>PIU Scores</PageTitle>
 
 <MudThemeProvider Theme="Theme" />
@@ -162,10 +164,17 @@
             }
         };
 
+    public static event EventHandler<ImportStatusUpdated>? ImportStatusUpdated;
     public static event EventHandler<MatchUpdatedEvent>? MatchUpdated;
     public Task Handle(MatchUpdatedEvent notification, CancellationToken cancellationToken)
     {
         MatchUpdated?.Invoke(this, notification);
+        return Task.CompletedTask;
+    }
+
+    public Task Handle(ImportStatusUpdated notification, CancellationToken cancellationToken)
+    {
+        ImportStatusUpdated?.Invoke(this, notification);
         return Task.CompletedTask;
     }
 }

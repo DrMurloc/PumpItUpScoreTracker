@@ -11,5 +11,10 @@ namespace ScoreTracker.Data.Apis.Contracts
 
         Task<PiuGameGetChartPopularityLeaderboardResult> GetChartPopularityLeaderboard(int page,
             CancellationToken cancellationToken);
+
+        Task<HttpClient> GetSessionId(string username, string password, CancellationToken cancellationToken);
+
+        Task<PiuGameGetBestScoresResult>
+            GetBestScores(HttpClient client, int page, CancellationToken cancellationToken);
     }
 }
