@@ -42,11 +42,23 @@
                 break;
             case Step.UsePassword:
                 <MudGrid>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField Label="PIUGame.com Username" @bind-Value="_username"></MudTextField>
+                    <MudItem xs="12">
+                        <MudText>This will have PIUScores log into your account and import scores for you.</MudText>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudText>I do not store a record of your username or password, you will have to type them in every time you use this.</MudText>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudText>To minimize calls to https://piugame.com I will only import new or improved scores. Every user only gets one full import using Username/Password. Use the dev-tools importer if you wish to re-import older scores.</MudText>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudText>Once started, don't leave this page or else your scores will not finish saving.</MudText>
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudTextField InputType="InputType.Password" Label="PIUGame.com Password" @bind-Value="_password"></MudTextField>
+                        <MudTextField Label="PIUGame.com Username" Disabled="_isImporting" @bind-Value="_username"></MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField InputType="InputType.Password" Disabled="_isImporting" Label="PIUGame.com Password" @bind-Value="_password"></MudTextField>
                     </MudItem>
                     @if (_isImporting)
                     {
@@ -195,12 +207,15 @@
     private async Task ImportScores()
     {
         _isImporting = true;
+        _passwordImportStatus = "Starting Import...";
         try
         {
             await Mediator.Send(new ImportOfficialPlayerScoresCommand(_username, _password));
+            _passwordImportStatus = "Import Completed!";
         }
         catch (Exception e)
         {
+            _passwordImportStatus = "Import Experienced an Error";
             Logger.LogError(e, $"There was an error while importing scores");
             Snackbar.Add("There was an error while trying to import your scores. Double check your username/password and try again.",Severity.Error);
         }

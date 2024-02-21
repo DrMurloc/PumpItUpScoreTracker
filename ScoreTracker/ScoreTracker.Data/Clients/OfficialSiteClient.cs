@@ -16,16 +16,19 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     private readonly ILogger _logger;
     private readonly IMediator _mediator;
     private readonly ICurrentUserAccessor _currentUser;
+    private readonly IPhoenixRecordRepository _phoenixRecords;
 
     public OfficialSiteClient(IPiuGameApi piuGame, IChartRepository charts, ILogger<OfficialSiteClient> logger,
         IMediator mediator,
-        ICurrentUserAccessor currentUser)
+        ICurrentUserAccessor currentUser,
+        IPhoenixRecordRepository phoenixRecords)
     {
         _piuGame = piuGame;
         _charts = charts;
         _logger = logger;
         _mediator = mediator;
         _currentUser = currentUser;
+        _phoenixRecords = phoenixRecords;
     }
 
     public async Task<IEnumerable<OfficialChartLeaderboardEntry>> GetAllOfficialChartScores(
@@ -103,14 +106,39 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         while (currentPage <= maxPages.Value)
         {
             await _mediator.Publish(
-                new ImportStatusUpdated(_currentUser.User.Id, $"Reading page {currentPage} of {maxPages}"),
+                new ImportStatusUpdated(_currentUser.User.Id, $"Reading page {currentPage} of {maxPages} (New Passes)"),
                 cancellationToken);
             var nextPage = await _piuGame.GetBestScores(sessionId, currentPage, cancellationToken);
             responses.AddRange(nextPage.Scores);
-            if (nextPage.Scores.Length < 6)
-                break;
             currentPage++;
             _logger.LogInformation($"Page {currentPage}");
+        }
+
+        var hasUpscore = false;
+        var bestScores =
+            (await _phoenixRecords.GetRecordedScores(_currentUser.User.Id, cancellationToken)).ToDictionary(r =>
+                r.ChartId);
+        while (hasUpscore)
+        {
+            hasUpscore = false;
+            var nextPage = await _piuGame.GetBestScores(sessionId, currentPage, cancellationToken);
+            await _mediator.Publish(
+                new ImportStatusUpdated(_currentUser.User.Id, $"Reading page {currentPage} (Up-scores)"),
+                cancellationToken);
+
+            foreach (var score in nextPage.Scores)
+            {
+                var song = score.SongName;
+                if (ManualMappings.TryGetValue(song, out var mapping)) song = mapping;
+
+                var chart = (await _charts.GetChartsForSong(MixEnum.Phoenix, song, cancellationToken))
+                    .FirstOrDefault(c => c.Type == score.ChartType && c.Level == score.Level);
+                if (chart == null) continue;
+                if (score.Score <= (bestScores[chart.Id].Score ?? 0)) continue;
+
+                responses.Add(score);
+                hasUpscore = true;
+            }
         }
 
         var results = new List<OfficialRecordedScore>();
