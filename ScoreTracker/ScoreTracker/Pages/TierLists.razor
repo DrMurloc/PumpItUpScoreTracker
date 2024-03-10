@@ -66,7 +66,8 @@
             <MudNumericField T="int" AdornmentIcon="@Icons.Material.Filled.Bolt" HideSpinButtons="true" Clearable="false" Min="1" Max="28" Label=@L["Difficulty Level"] Value="DifficultyFilter" ValueChanged="@(d=>UpdateSelection(d,ChartTypeFilter,_coOpSortType))"></MudNumericField>
         </MudItem>
     }
-    <MudItem xs="12" sm="12">
+    <MudItem xs="12"></MudItem>
+    <MudItem xs="12" lg="4">
         <MudRadioGroup T="string" SelectedOption="@ChartTypeFilter" SelectedOptionChanged="@(c => UpdateSelection(DifficultyFilter, c, _coOpSortType))">
             <MudRadio Option="@ChartType.Single.ToString()" Color="Color.Primary">@L.GetString("Singles")</MudRadio>
             <MudRadio Option="@ChartType.Double.ToString()" Color="Color.Primary">@L.GetString("Doubles")</MudRadio>
@@ -74,18 +75,26 @@
         </MudRadioGroup>
     </MudItem>
     <MudHidden Breakpoint="Breakpoint.SmAndDown">
-        @if (CurrentUser.IsLoggedIn && _currentTierList!= TierListType.MyScores)
+        @foreach(var type in Enum.GetValues<SongType>())
         {
-            <MudItem sm="4"> 
-                <MudSwitch T="bool" Label=@L["Hide Completed Charts"] Checked="_hideCompleted" CheckedChanged="v=>ToggleVisibility(v,_showOnlyTodos)" Color="Color.Primary"></MudSwitch>
+            <MudItem sm="3" lg="2">
+                <MudCheckBox T="bool" Label="@type.ToString()" Checked="_filteredTypes.Contains(type)" CheckedChanged="v=>ToggleFilter(v,type)"></MudCheckBox>
+            </MudItem>
+        }
+        @if (CurrentUser.IsLoggedIn && _currentTierList != TierListType.MyScores)
+        {
+            <MudItem sm="4">
+                <MudSwitch T="bool" Label=@L["Hide Completed Charts"] Checked="_hideCompleted" CheckedChanged="v => ToggleVisibility(v, _showOnlyTodos)" Color="Color.Primary"></MudSwitch>
             </MudItem>
             <MudItem sm="4">
-                <MudSwitch T="bool" Label=@L["Show Only ToDo Charts"] Checked="_showOnlyTodos" CheckedChanged="v=>ToggleVisibility(_hideCompleted,v)" Color="Color.Primary"></MudSwitch>
+                <MudSwitch T="bool" Label=@L["Show Only ToDo Charts"] Checked="_showOnlyTodos" CheckedChanged="v => ToggleVisibility(_hideCompleted, v)" Color="Color.Primary"></MudSwitch>
             </MudItem>
+            <MudItem sm="4"></MudItem>
         }
         <MudItem sm="4">
             <MudAutocomplete T="string" Label=@L["Song Name"] AdornmentIcon="@Icons.Material.Filled.Search" Value="_songFilter" ValueChanged="ToggleSongSearch" SearchFunc="FilterSongName" CoerceText="false" CoerceValue="true"></MudAutocomplete>
         </MudItem>
+
     </MudHidden>
 </MudGrid>
 <MudHidden Breakpoint="Breakpoint.MdAndUp">
@@ -94,6 +103,12 @@
 <MudDrawer @bind-Open="_showSettings" Variant="@DrawerVariant.Temporary" Anchor="Anchor.Right" Id="SettingsDrawer">
  
     <MudGrid>
+        @foreach (var type in Enum.GetValues<SongType>())
+        {
+            <MudItem sm="6">
+                <MudCheckBox T="bool" Label="@type.ToString()" Checked="_filteredTypes.Contains(type)" CheckedChanged="v=>ToggleFilter(v,type)"></MudCheckBox>
+            </MudItem>
+        }
         @if (CurrentUser.IsLoggedIn && _currentTierList != TierListType.MyScores)
         {
             <MudItem xs="12">
@@ -103,6 +118,7 @@
                 <MudSwitch T="bool" Label=@L["Show Only ToDo Charts"] Checked="_showOnlyTodos" CheckedChanged="v => ToggleVisibility(_hideCompleted, v)" Color="Color.Primary"></MudSwitch>
             </MudItem>
         }
+
         <MudItem xs="12">
             <MudAutocomplete T="string" Label=@L["Song Name"] AdornmentIcon="@Icons.Material.Filled.Search" Value="_songFilter" ValueChanged="ToggleSongSearch" SearchFunc="FilterSongName" CoerceText="false" CoerceValue="true"></MudAutocomplete>
         </MudItem>
@@ -282,6 +298,7 @@ else
     private ICollection<Chart> _weakCharts = Array.Empty<Chart>();
     private ICollection<Chart> _veryWeakCharts = Array.Empty<Chart>();
     private ICollection<Chart> _megaWeakCharts = Array.Empty<Chart>();
+    private ISet<SongType> _filteredTypes = Enum.GetValues<SongType>().ToHashSet();
     private IDictionary<Guid, IEnumerable<Name>> _chartSkills = new Dictionary<Guid, IEnumerable<Name>>();
     private IDictionary<Name, SkillRecord> _skills = new Dictionary<Name, SkillRecord>();
     private IDictionary<Guid, int> _userRatings = new Dictionary<Guid, int>();
@@ -342,6 +359,19 @@ else
     private bool _hideCompleted = false;
     private bool _showOnlyTodos = false;
 
+    private void ToggleFilter(bool value, SongType type)
+    {
+        switch (value)
+        {
+            case true:
+                _filteredTypes.Add(type);
+                break;
+            case false when _filteredTypes.Contains(type):
+                _filteredTypes.Remove(type);
+                break;
+        }
+        RefilterCharts();
+    }
     private void ToggleSongSearch(string search)
     {
         _songFilter = search;
@@ -479,7 +509,7 @@ else
         _strongCharts = new List<Chart>();
         _veryStrongCharts = new List<Chart>();
         _megaStrongCharts = new List<Chart>();
-        var filtered = _difficultyAndTypeFilteredCharts.Values.AsEnumerable();
+        var filtered = _difficultyAndTypeFilteredCharts.Values.Where(c=>_filteredTypes.Contains(c.Song.Type));
         if (_hideCompleted)
         {
             filtered = filtered.Where(c => !_passes.Contains(c.Id));

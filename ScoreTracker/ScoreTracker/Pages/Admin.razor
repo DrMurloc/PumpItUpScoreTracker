@@ -144,10 +144,10 @@ Do It
 
     private async Task RebuildOfficialLeaderboard()
     {
-        //await Mediator.Send(new ProcessChartPopularityCommand());
-    //await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);
-    //await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
-        //await WorldRanking.CalculateWorldRankings(CancellationToken.None);
+        await Mediator.Send(new ProcessChartPopularityCommand());
+        //await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);
+        await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
+        await WorldRanking.CalculateWorldRankings(CancellationToken.None);
 
     }
     private async Task SelectChart(Chart chart)
