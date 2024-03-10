@@ -37,7 +37,20 @@ public static class PhoenixTitleList
         new PhoenixDifficultyTitle("Expert Lv. 8", 26, 26000),
         new PhoenixDifficultyTitle("Expert Lv. 9", 27, 3500),
         new PhoenixDifficultyTitle("Expert Lv. 10", 27, 7000),
-        new PhoenixDifficultyTitle("The Master", 28, 1900)
+        new PhoenixDifficultyTitle("The Master", 28, 1900),
+        new PhoenixCoOpTitle("[CO-OP] Lv.1", 30000),
+        new PhoenixCoOpTitle("[CO-OP] Lv.2", 60000),
+        new PhoenixCoOpTitle("[CO-OP] Lv.3", 90000),
+        new PhoenixCoOpTitle("[CO-OP] Lv.4", 120000),
+        new PhoenixCoOpTitle("[CO-OP] Lv.5", 150000),
+        new PhoenixCoOpTitle("[CO-OP] Lv.6", 180000),
+        new PhoenixCoOpTitle("[CO-OP] Lv.7", 210000),
+        new PhoenixCoOpTitle("[CO-OP] Lv.8", 240000),
+        new PhoenixCoOpTitle("[CO-OP] Lv.9", 270000),
+        new PhoenixCoOpTitle("[CO-OP] Lv.10", 300000),
+        new PhoenixCoOpTitle("[CO-OP] ADVANCED", 330000),
+        new PhoenixCoOpTitle("[CO-OP] EXPERT", 360000),
+        new PhoenixCoOpTitle("[CO-OP] MASTER", 390000)
     };
 
     public static IEnumerable<PhoenixTitleProgress> BuildProgress(IDictionary<Guid, Chart> charts,

@@ -415,7 +415,7 @@
     <comment>I.E Recorded on 12/6/2023 (I don't support date localization yet but will eventually)</comment>
   </data>
   <data name="Remaining Charts" xml:space="preserve">
-    <value>{0} (SSS+) - {1} (AA) Charts Remaining:</value>
+    <value>{0} (SSS+) - {1} (AA) Charts Remaining</value>
     <comment>I.E 6 (SSA+) - 10 (AA) Charts Remaining</comment>
   </data>
   <data name="Remaining Charts For You" xml:space="preserve">

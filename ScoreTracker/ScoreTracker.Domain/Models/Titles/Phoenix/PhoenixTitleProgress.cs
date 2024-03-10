@@ -17,14 +17,19 @@ public sealed class PhoenixTitleProgress : TitleProgress
     {
         get
         {
-            if (PhoenixTitle is not PhoenixDifficultyTitle difficultyTitle) return string.Empty;
+            var rating = PhoenixTitle switch
+            {
+                PhoenixDifficultyTitle difficultyTitle => difficultyTitle.Level.BaseRating,
+                PhoenixCoOpTitle => 2000,
+                _ => 0
+            };
+            if (rating == 0) return string.Empty;
 
             if (Title.CompletionRequired <= CompletionCount) return string.Empty;
-
             var min = Math.Ceiling((Title.CompletionRequired - CompletionCount) /
-                                   (PhoenixLetterGrade.SSSPlus.GetModifier() * difficultyTitle.Level.BaseRating));
+                                   (PhoenixLetterGrade.SSSPlus.GetModifier() * rating));
             var max = Math.Ceiling((Title.CompletionRequired - CompletionCount) /
-                                   (PhoenixLetterGrade.AA.GetModifier() * difficultyTitle.Level.BaseRating));
+                                   (PhoenixLetterGrade.AA.GetModifier() * rating));
             return $"{min}-{max} Passes, assuming AA or higher";
         }
     }

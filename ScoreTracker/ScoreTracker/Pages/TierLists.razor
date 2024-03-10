@@ -182,7 +182,7 @@ else
     
 }
 
-@if (CurrentUser.IsLoggedIn && _currentMix == MixEnum.Phoenix && ChartTypeFilter != ChartType.CoOp.ToString() &&_currentTierList!=TierListType.MyScores && _titleProgress.Any(t => t.Title is PhoenixDifficultyTitle pdt && pdt.Level == DifficultyFilter))
+@if (CurrentUser.IsLoggedIn && _currentMix == MixEnum.Phoenix && _currentTierList != TierListType.MyScores && _titleProgress.Any(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == DifficultyFilter) || (ChartTypeFilter == ChartType.CoOp.ToString() && t.Title is PhoenixCoOpTitle)))
 {
     <MudGrid>
         <MudItem xs="12">
@@ -190,10 +190,16 @@ else
                 @L.GetString("Title Progress")
             </MudText>
         </MudItem>
-        @foreach (var progress in _titleProgress.Where(t => t.Title is PhoenixDifficultyTitle pdt && pdt.Level == DifficultyFilter))
+        @foreach (var progress in _titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == DifficultyFilter) || (ChartTypeFilter==ChartType.CoOp.ToString() && t.Title is PhoenixCoOpTitle) ))
         {
-            var difficultyLevel = progress.Title as PhoenixDifficultyTitle;
-            if (difficultyLevel == null)
+            var rating = progress.Title switch
+            {
+                PhoenixDifficultyTitle difficultyTitle => difficultyTitle.Level.BaseRating,
+                PhoenixCoOpTitle => 2000,
+                _ => 0
+
+                };
+            @if (rating == 0)
             {
                 continue;
             }
@@ -220,11 +226,12 @@ else
             {
 
                 <MudItem xs="12">
-                    @L["Remaining Charts",((int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / (difficultyLevel.Level.BaseRating * PhoenixLetterGrade.SSSPlus.GetModifier()))),
-                        ((int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / (difficultyLevel.Level.BaseRating * PhoenixLetterGrade.AA.GetModifier())))];
+                    @L["Remaining Charts",((int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / (rating * PhoenixLetterGrade.SSSPlus.GetModifier()))),
+        ((int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / (rating * PhoenixLetterGrade.AA.GetModifier())))]
+                    <br/>
                     @if (_averageRating != null)
                     {
-                        @L["Remaining Charts For You",(int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / ((double)_averageRating.Value))];
+                        @L["Remaining Charts For You",(int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / ((double)_averageRating.Value))]
                     }
                 </MudItem>
             }
@@ -444,7 +451,6 @@ else
         }
         _chartSkills = (await Mediator.Send(new GetChartSkillsQuery())).ToDictionary(c => c.ChartId, c => c.Skills);
         _skills = (await Mediator.Send(new GetSkillsQuery())).ToDictionary(s => s.Name);
-        _titleProgress = (await Mediator.Send(new GetTitleProgressQuery(_currentMix))).ToArray();
         _todos = CurrentUser.IsLoggedIn ? (await Mediator.Send(new GetSavedChartsQuery())).Where(t=>t.ListType==ChartListType.ToDo).Select(t=>t.ChartId).ToHashSet() : new HashSet<Guid>() ;
         var isDifficultyValid = DifficultyFilter >= DifficultyLevel.Min && DifficultyFilter <= DifficultyLevel.Max;
         var isChartTypeValid = !string.IsNullOrWhiteSpace(ChartTypeFilter) && (ChartTypeFilter.Equals(ChartType.CoOp.ToString())||ChartTypeFilter.Equals(ChartType.Single.ToString()) || ChartTypeFilter.Equals(ChartType.Double.ToString()));
@@ -959,19 +965,14 @@ else
             ChartTypeFilter = chartType;
         }
         var type = Enum.Parse<ChartType>(chartType);
+        var charts = (await Mediator.Send(new GetChartsQuery(_currentMix, difficulty))).ToDictionary(c=>c.Id);
         if (type is ChartType.Single or ChartType.Double)
         {
-            var charts = (await Mediator.Send(new GetChartsQuery(_currentMix, difficulty))).ToDictionary(c=>c.Id);
             var ratings = (await Mediator.Send(new GetChartRatingsQuery(_currentMix, difficulty))).ToArray();
             if(_currentMix == MixEnum.Phoenix){
-                var matchingScores = _phoenixScores.Values.Where(a => a is { IsBroken: false,Score: { } } && charts.ContainsKey(a.ChartId)).ToDictionary(s=>s.ChartId);
                 var passingScores = _phoenixScores.Values.Where(a => !a.IsBroken && charts.ContainsKey(a.ChartId)).ToDictionary(s => s.ChartId);
                 _toPassCharts = _todos.Where(t => charts.ContainsKey(t) && !passingScores.ContainsKey(t)).Select(t=>charts[t]).ToList();
-                var baseRating = DifficultyLevel.From(difficulty).BaseRating;
-                _averageRating = matchingScores.Any() ? (int)matchingScores.Values.Average(s => s.Score!.Value.LetterGrade.GetModifier() * baseRating) : null;
-            } else
-            {
-                _averageRating = null;
+
             }
             if (type == ChartType.Single)
             {
@@ -993,8 +994,18 @@ else
             
             _difficultyAndTypeFilteredCharts = (await Mediator.Send(new GetChartsQuery(_currentMix, null, ChartType.CoOp))).Where(c => c.PlayerCount == DifficultyFilter).ToDictionary(c=>c.Id);
             _coOpRatings = (await Mediator.Send(new GetCoOpRatingsQuery())).ToDictionary(c => c.ChartId);
-            _averageRating = null;
 
+
+        }
+        if (_currentMix == MixEnum.Phoenix)
+        {
+            var matchingScores = _phoenixScores.Values.Where(a => a is { IsBroken: false,Score: { } } && charts.ContainsKey(a.ChartId)).ToDictionary(s=>s.ChartId);
+            var baseRating = type==ChartType.CoOp?2000:DifficultyLevel.From(difficulty).BaseRating;
+            _averageRating = matchingScores.Any() ? (int)matchingScores.Values.Average(s => s.Score!.Value.LetterGrade.GetModifier() * baseRating) : null;
+        }
+        else
+        {
+            _averageRating = 0;
         }
         _allPhoenixScores = (await PhoenixRecords.GetAllPlayerScores(type, difficulty)).GroupBy(r => r.userId)
             .ToDictionary(g => g.Key, g => g.Select(i=>i.record).ToArray().AsEnumerable());
