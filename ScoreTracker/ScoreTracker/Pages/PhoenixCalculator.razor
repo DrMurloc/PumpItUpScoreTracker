@@ -8,21 +8,22 @@
 <MudImage Src="https://piuimages.arroweclip.se/PhoenixBanner.png" Style="width:95%; max-width:800px;"></MudImage>
 <MudGrid>
     <MudItem xs="12" sm="6">
-        <MudTextField T="int" MaxLength="5" InputType="InputType.Number" Label="Perfects" Value="_perfects" ValueChanged="n=>SetScore(n,_greats,_goods,_bads,_misses,_maxCombo)" Immediate="true" DebounceInterval="200"></MudTextField>
+        <MudTextField T="int" InputMode="InputMode.numeric" MaxLength="5" InputType="InputType.Number" Label="Perfects" Value="_perfects" ValueChanged="n=>SetScore(n,_greats,_goods,_bads,_misses,_maxCombo)" Immediate="true" DebounceInterval="200"></MudTextField>
     </MudItem>
     <MudItem xs="12" sm="6">
-        <MudTextField T="int" MaxLength="5" InputType="InputType.Number" Label="Greats" Value="_greats" ValueChanged="n=>SetScore(_perfects,n,_goods,_bads,_misses,_maxCombo)" Immediate="true" DebounceInterval="200"></MudTextField>
+        <MudTextField T="int" InputMode="InputMode.numeric" MaxLength="5" InputType="InputType.Number" Label="Greats" Value="_greats" ValueChanged="n=>SetScore(_perfects,n,_goods,_bads,_misses,_maxCombo)" Immediate="true" DebounceInterval="200"></MudTextField>
     </MudItem>
     <MudItem xs="12" sm="6">
-        <MudTextField T="int" MaxLength="5" InputType="InputType.Number" Label="Goods" Value="_goods" ValueChanged="n=>SetScore(_perfects,_greats,n,_bads,_misses,_maxCombo)" Immediate="true" DebounceInterval="200"></MudTextField>
+        <MudTextField T="int" InputMode="InputMode.numeric" MaxLength="5" InputType="InputType.Number" Label="Goods" Value="_goods" ValueChanged="n=>SetScore(_perfects,_greats,n,_bads,_misses,_maxCombo)" Immediate="true" DebounceInterval="200"></MudTextField>
     </MudItem>
     <MudItem xs="12" sm="6">
-        <MudTextField T="int" MaxLength="5" InputType="InputType.Number" Label="Bads" Value="_bads" ValueChanged="n=>SetScore(_perfects,_greats,_goods,n,_misses,_maxCombo)" Immediate="true" DebounceInterval="200"></MudTextField>
+        <MudTextField T="int" InputMode="InputMode.numeric" MaxLength="5" InputType="InputType.Number" Label="Bads" Value="_bads" ValueChanged="n=>SetScore(_perfects,_greats,_goods,n,_misses,_maxCombo)" Immediate="true" DebounceInterval="200"></MudTextField>
     </MudItem>
     <MudItem xs="12" sm="6">
-        <MudTextField T="int" MaxLength="5" InputType="InputType.Number" Label="Misses" Value="_misses" ValueChanged="n=>SetScore(_perfects,_greats,_goods,_bads,n,_maxCombo)" Immediate="true" DebounceInterval="200"></MudTextField></MudItem>
+        <MudTextField T="int" InputMode="InputMode.numeric" MaxLength="5" InputType="InputType.Number" Label="Misses" Value="_misses" ValueChanged="n=>SetScore(_perfects,_greats,_goods,_bads,n,_maxCombo)" Immediate="true" DebounceInterval="200"></MudTextField>
+    </MudItem>
     <MudItem xs="12" sm="6">
-        <MudTextField T="int" MaxLength="5" InputType="InputType.Number" Label="Max Combo" Value="_maxCombo" ValueChanged="n=>SetScore(_perfects,_greats,_goods,_bads,_misses,n)" Immediate="true" DebounceInterval="200"></MudTextField>
+        <MudTextField T="int" InputMode="InputMode.numeric" MaxLength="5" InputType="InputType.Number" Label="Max Combo" Value="_maxCombo" ValueChanged="n=>SetScore(_perfects,_greats,_goods,_bads,_misses,n)" Immediate="true" DebounceInterval="200"></MudTextField>
     </MudItem>
     <MudItem xs="12">
         <MudText>
