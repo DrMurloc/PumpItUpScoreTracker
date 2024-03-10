@@ -4,7 +4,10 @@
 @using MediatR
 @using CsvHelper
 @using System.Globalization
+@using Microsoft.OpenApi.Extensions
 @using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Events
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services
@@ -65,7 +68,51 @@
                         <MudItem xs="12">
                             <MudText>Importing... (Can take a few minutes)</MudText>
                             <br/>
-                            <MudText>@_passwordImportStatus</MudText>
+                            @if (!_scores.Any())
+                            {
+                                <MudText>@_passwordImportStatus</MudText>
+                            }
+                        </MudItem>
+                    }
+                    @if (_scores.Any())
+                    {
+                        <MudItem xs="12">
+                            <MudTable T="RecordedPhoenixScore" Items="_scores">
+                                <ToolBarContent>
+                                    <MudText>@_passwordImportStatus</MudText>
+                                </ToolBarContent>
+                                <HeaderContent>
+                                    <MudTh>Song</MudTh>
+                                    <MudTh>Difficulty</MudTh>
+                                    <MudTh>Score</MudTh>
+                                    <MudTh>Plate</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd>
+                                        <MudTooltip Text="@_charts[context.ChartId].Song.Name">
+
+                                            <MudImage Src="@_charts[context.ChartId].Song.ImagePath.ToString()" Height="35" Alt="@_charts[context.ChartId].Song.Name" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
+                                        </MudTooltip>
+                                    </MudTd>
+                                    <MudTd>
+                                        <MudTooltip Text="@_charts[context.ChartId].DifficultyString">
+
+                                            <MudImage Src="@_charts[context.ChartId].DifficultyBubblePath" Height="35" Alt="@_charts[context.ChartId].DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                                        </MudTooltip>
+
+                                    </MudTd>
+                                    <MudTd>
+                                        @(context.Score?.ToGradeString()??"")
+
+                                    </MudTd>
+                                    <MudTd>
+                                        @(context.Plate?.GetName()??"")
+                                    </MudTd>
+                                </RowTemplate>
+                                <PagerContent>
+                                    <MudTablePager></MudTablePager>
+                                </PagerContent>
+                            </MudTable>
                         </MudItem>
                     }
                 </MudGrid>
@@ -127,8 +174,14 @@
             <MudButton Variant="Variant.Outlined"
                        Color="@Color.Primary"
                        StartIcon="@Icons.Material.Filled.ContentCopy"
-                   OnClick="CopyPIUGameScript">
+                       OnClick="CopyPIUGameScript">
                 @L["Copy Script"]
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Password"
+                       OnClick="()=>_currentStep=Step.UsePassword">
+                @L["Use Password"]
             </MudButton>
             <MudButton HtmlTag="label"
                        Variant="@Variant.Filled"
@@ -203,9 +256,9 @@
     private string _username = "";
     private string _password = "";
 
-    [Parameter] [SupplyParameterFromQuery(Name="UsernamePassword")] public bool UseUsernamePassword { get; set; } = false;
     private async Task ImportScores()
     {
+        _scores.Clear();
         _isImporting = true;
         _passwordImportStatus = "Starting Import...";
         try
@@ -224,29 +277,29 @@
     private bool _isImporting = false;
     private int? _endPage = null;
     private TimeSpan _remainingTime = TimeSpan.MinValue;
-
+    private IDictionary<Guid,Chart> _charts = new Dictionary<Guid, Chart>();
+    private readonly ICollection<RecordedPhoenixScore>_scores = new List<RecordedPhoenixScore>();
     private List<SpreadsheetScoreErrorDto> _failedUploads = new List<SpreadsheetScoreErrorDto>();
     private List<RecordedPhoenixScore> _spreadSheetScores = new List<RecordedPhoenixScore>();
 
     private CancellationTokenSource _currentCancellation = new CancellationTokenSource();
     private string _passwordImportStatus = string.Empty;
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        if (UseUsernamePassword)
-        {
-            _currentStep = Step.UsePassword;
-            MainLayout.ImportStatusUpdated += StatusUpdate;
-        }
-        if (CurrentUser.IsLoggedIn) return Task.CompletedTask;
-
+        MainLayout.ImportStatusUpdated += StatusUpdate;
+        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+        if (CurrentUser.IsLoggedIn) return;
         NavManager.NavigateTo("/Login");
-        return Task.CompletedTask;
     }
 
     private void StatusUpdate(object? origin, ImportStatusUpdated e)
     {
         if (e.UserId != CurrentUser.User.Id) return;
 
+        foreach (var score in e.Scores)
+        {
+            _scores.Add(score);
+        }
         _passwordImportStatus = e.Status;
         InvokeAsync(StateHasChanged);
     }

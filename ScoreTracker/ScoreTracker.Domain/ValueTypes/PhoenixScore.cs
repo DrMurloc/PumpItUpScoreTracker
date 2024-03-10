@@ -127,6 +127,11 @@ public readonly struct PhoenixScore
         return _score.GetHashCode();
     }
 
+    public string ToGradeString()
+    {
+        return $"{_score} ({LetterGrade.GetName()})";
+    }
+
     public static PhoenixScore From(int score)
     {
         if (score < Min._score) throw new InvalidScoreException("Level must be greater than 0");

@@ -4,6 +4,7 @@ using ScoreTracker.Data.Apis.Contracts;
 using ScoreTracker.Data.Apis.Dtos;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
@@ -99,14 +100,17 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         int? maxPages, CancellationToken cancellationToken)
     {
         var currentPage = 1;
-        await _mediator.Publish(new ImportStatusUpdated(_currentUser.User.Id, "Logging In"), cancellationToken);
+        await _mediator.Publish(
+            new ImportStatusUpdated(_currentUser.User.Id, "Logging In",
+                Array.Empty<RecordedPhoenixScore>()), cancellationToken);
         var sessionId = await _piuGame.GetSessionId(username, password, cancellationToken);
         var responses = new List<PiuGameGetBestScoresResult.ScoreDto>();
         maxPages ??= (await _piuGame.GetBestScores(sessionId, 1, cancellationToken)).MaxPage;
         while (currentPage <= maxPages.Value)
         {
             await _mediator.Publish(
-                new ImportStatusUpdated(_currentUser.User.Id, $"Reading page {currentPage} of {maxPages} (New Passes)"),
+                new ImportStatusUpdated(_currentUser.User.Id, $"Reading page {currentPage} of {maxPages} (New Passes)",
+                    Array.Empty<RecordedPhoenixScore>()),
                 cancellationToken);
             var nextPage = await _piuGame.GetBestScores(sessionId, currentPage, cancellationToken);
             responses.AddRange(nextPage.Scores);
@@ -123,7 +127,8 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
             hasUpscore = false;
             var nextPage = await _piuGame.GetBestScores(sessionId, currentPage, cancellationToken);
             await _mediator.Publish(
-                new ImportStatusUpdated(_currentUser.User.Id, $"Reading page {currentPage} (Up-scores)"),
+                new ImportStatusUpdated(_currentUser.User.Id, $"Reading page {currentPage} (Up-scores)",
+                    Array.Empty<RecordedPhoenixScore>()),
                 cancellationToken);
 
             foreach (var score in nextPage.Scores)

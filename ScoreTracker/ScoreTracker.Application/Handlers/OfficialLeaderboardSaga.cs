@@ -2,6 +2,7 @@
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
@@ -211,7 +212,12 @@ namespace ScoreTracker.Application.Handlers
                 if (count % 10 == 0)
                     await _mediator.Publish(
                         new ImportStatusUpdated(_currentUser.User.Id,
-                            $"Saving chart result {count} of {scores.Length}"),
+                            $"Saving chart result {count} of {scores.Length}",
+                            new[]
+                            {
+                                new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, false,
+                                    DateTimeOffset.Now)
+                            }),
                         cancellationToken);
             }
 
