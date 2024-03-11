@@ -388,8 +388,9 @@ public sealed class PiuGameApi : IPiuGameApi
         var scores = new List<PiuGameGetBestScoresResult.ScoreDto>();
         foreach (var scoreCard in foundScores)
         {
-            var songName = scoreCard.SelectNodes(".//div[contains(@class,'song_name')]").First().ChildNodes.First()
-                .InnerText;
+            var songName = HttpUtility.HtmlDecode(scoreCard.SelectNodes(".//div[contains(@class,'song_name')]").First()
+                .ChildNodes.First()
+                .InnerText);
             var typeString = scoreCard
                 .SelectNodes(".//div[contains(@class,'stepBall_img_wrap')]//div[contains(@class,'tw')]//img")
                 .First().GetAttributeValue("src", "");
@@ -405,8 +406,6 @@ public sealed class PiuGameApi : IPiuGameApi
 
             var scoreList = scoreCard.SelectNodes(".//div[contains(@class,'etc_con')]//ul").First();
 
-            var letter = scoreList.ChildNodes[3].ChildNodes[1].ChildNodes[1].ChildNodes[0]
-                .GetAttributeValue("src", "").Substring(32).Replace(".png", "").Replace("_p", "+");
             var score = scoreList.ChildNodes[1].ChildNodes[1].ChildNodes[1].ChildNodes[0].InnerText.Trim()
                 .Replace(",", "");
             var plate = scoreList.ChildNodes[5].ChildNodes[1].ChildNodes[1].ChildNodes[0]

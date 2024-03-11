@@ -11,7 +11,7 @@ public sealed record ScoreScreen(StepCount Perfects, StepCount Greats, StepCount
 
     public PhoenixScore CalculatePhoenixScore => !IsValid
         ? 0
-        : (int)((.995 * (1.0 * Perfects + .6 * Greats + .2 * Goods + .1 * Bads) + .005 * MaxCombo) /
+        : (int)Math.Ceiling((.995 * (1.0 * Perfects + .6 * Greats + .2 * Goods + .1 * Bads) + .005 * MaxCombo) /
             (Perfects + Greats + Goods + Bads + Misses) * 1000000.0);
 
     public int GreatLoss => (int)(.995 * .4 * Greats / TotalCount * 1000000.0);

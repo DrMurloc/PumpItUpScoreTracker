@@ -202,25 +202,32 @@ namespace ScoreTracker.Application.Handlers
                 (await _officialSite.GetRecordedScores(request.Username, request.Password, limit, cancellationToken))
                 .ToArray();
             var count = 0;
-
+            var batch = new List<RecordedPhoenixScore>();
             foreach (var score in scores)
             {
                 await _mediator.Send(
                     new UpdatePhoenixBestAttemptCommand(score.Chart.Id, false, score.Score, score.Plate),
                     cancellationToken);
                 count++;
-                if (count % 10 == 0)
-                    await _mediator.Publish(
-                        new ImportStatusUpdated(_currentUser.User.Id,
-                            $"Saving chart result {count} of {scores.Length}",
-                            new[]
-                            {
-                                new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, false,
-                                    DateTimeOffset.Now)
-                            }),
-                        cancellationToken);
+                batch.Add(new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, false,
+                    DateTimeOffset.Now));
+
+                if (count % 10 != 0) continue;
+
+                await _mediator.Publish(
+                    new ImportStatusUpdated(_currentUser.User.Id,
+                        $"Saving chart result {count} of {scores.Length}",
+                        batch.ToArray()),
+                    cancellationToken);
+                batch.Clear();
             }
 
+            await _mediator.Publish(
+                new ImportStatusUpdated(_currentUser.User.Id,
+                    "Charts finished saving",
+                    batch.ToArray()),
+                cancellationToken);
+            batch.Clear();
 
             var settings = await _user.GetUserUiSettings(userId, cancellationToken);
             settings["PreviousPageCount"] = maxPages.ToString();
