@@ -6,7 +6,7 @@ using ScoreTracker.Domain.ValueTypes;
 namespace ScoreTracker.Application.Commands
 {
     public sealed record UpdatePreferenceRatingCommand
-        (MixEnum Mix, Guid ChartId, Rating Rating) : IRequest<ChartPreferenceRatingRecord>
+        (MixEnum Mix, Guid ChartId, PreferenceRating Rating) : IRequest<ChartPreferenceRatingRecord>
     {
     }
 }

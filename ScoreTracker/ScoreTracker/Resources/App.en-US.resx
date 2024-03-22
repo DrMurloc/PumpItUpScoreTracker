@@ -392,7 +392,7 @@
     <value>Progress</value>
   </data>
   <data name="Progress Charts" xml:space="preserve">
-    <value>Progress Charts</value>
+    <value>Player Stats</value>
   </data>
   <data name="Public" xml:space="preserve">
     <value>Public</value>
@@ -543,6 +543,18 @@
   </data>
   <data name="Upload XX Scores" xml:space="preserve">
     <value>Upload XX Scores</value>
+  </data>
+  <data name="Use Password 1" xml:space="preserve">
+    <value>This will have PIUScores log into your account and import scores for you.</value>
+  </data>
+  <data name="Use Password 2" xml:space="preserve">
+    <value>I do not store a record of your username or password, you will have to type them in every time you use this.</value>
+  </data>
+  <data name="Use Password 3" xml:space="preserve">
+    <value>To minimize calls to https://piugame.com I will only import new or improved scores. Every user only gets one full import using Username/Password. Use the dev-tools importer if you wish to re-import older scores.</value>
+  </data>
+  <data name="Use Password 4" xml:space="preserve">
+    <value>Once started, don't leave this page or else your scores will not finish saving.</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Used primarily for debugging</value>

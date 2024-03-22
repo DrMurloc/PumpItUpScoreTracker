@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using MassTransit;
+using MediatR;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
@@ -18,10 +19,12 @@ namespace ScoreTracker.Application.Handlers
         private readonly ICurrentUserAccessor _currentUser;
         private readonly IUserRepository _user;
         private readonly IMediator _mediator;
+        private readonly IBus _bus;
 
         public OfficialLeaderboardSaga(IOfficialSiteClient officialSite, ITierListRepository tierLists,
             IOfficialLeaderboardRepository leaderboards, ICurrentUserAccessor currentUser, IUserRepository user,
-            IMediator mediator)
+            IMediator mediator,
+            IBus bus)
         {
             _officialSite = officialSite;
             _tierLists = tierLists;
@@ -29,6 +32,7 @@ namespace ScoreTracker.Application.Handlers
             _currentUser = currentUser;
             _user = user;
             _mediator = mediator;
+            _bus = bus;
         }
 
         public async Task<Unit> Handle(ProcessOfficialLeaderboardsCommand request, CancellationToken cancellationToken)
@@ -206,7 +210,7 @@ namespace ScoreTracker.Application.Handlers
             foreach (var score in scores)
             {
                 await _mediator.Send(
-                    new UpdatePhoenixBestAttemptCommand(score.Chart.Id, false, score.Score, score.Plate),
+                    new UpdatePhoenixBestAttemptCommand(score.Chart.Id, false, score.Score, score.Plate, true),
                     cancellationToken);
                 count++;
                 batch.Add(new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, false,
@@ -214,6 +218,7 @@ namespace ScoreTracker.Application.Handlers
 
                 if (count % 10 != 0) continue;
 
+                await _bus.Publish(new PlayerScoreUpdatedEvent(_currentUser.User.Id), cancellationToken);
                 await _mediator.Publish(
                     new ImportStatusUpdated(_currentUser.User.Id,
                         $"Saving chart result {count} of {scores.Length}",

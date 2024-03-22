@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ScoreTracker.Application\ScoreTracker.Application.csproj" />
     <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
   </ItemGroup>
 

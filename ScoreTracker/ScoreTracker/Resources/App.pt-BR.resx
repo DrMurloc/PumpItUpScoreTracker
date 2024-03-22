@@ -519,6 +519,18 @@
   <data name="Upload XX Scores" xml:space="preserve">
     <value>Upload de pontuações da XX</value>
   </data>
+  <data name="Use Password 1" xml:space="preserve">
+    <value>Isso fará com que o PIUScores faça login na sua conta e importe seus scores.</value>
+  </data>
+  <data name="Use Password 2" xml:space="preserve">
+    <value>Não armazenamos um registro do seu nome de usuário ou senha, você terá que digitá-los sempre que usar essa opção.</value>
+  </data>
+  <data name="Use Password 3" xml:space="preserve">
+    <value>Para minimizar as chamadas para https://piugame.com/, somente importaremos scores novos ou melhorados. Cada usuário receberá importação completa usando nome de usuário/senha apenas uma vez. Use o importador dev-tools se quiser re-importar pontuações mais antigas.</value>
+  </data>
+  <data name="Use Password 4" xml:space="preserve">
+    <value>Uma vez iniciado, não saia desta página, caso contrário suas pontuações não serão salvas.</value>
+  </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Usado principalmente para depuração</value>
   </data>

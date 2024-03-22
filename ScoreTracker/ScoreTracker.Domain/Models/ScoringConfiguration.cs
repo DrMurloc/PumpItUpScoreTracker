@@ -51,13 +51,20 @@ namespace ScoreTracker.Domain.Models
         private double GetScorelessScore(Guid chartId, DifficultyLevel level, ChartType chartType, SongType songType,
             TimeSpan duration)
         {
-            var result = LevelRatings[level]
+            var rating = chartType == ChartType.CoOp ? 2000 : LevelRatings[level];
+            var result = rating
                          * ChartTypeModifiers[chartType]
                          * SongTypeModifiers[songType];
             if (ChartModifiers.TryGetValue(chartId, out var cMod)) result *= cMod;
             if (AdjustToTime) result *= duration / BaseAverageTime;
 
             return result;
+        }
+
+        public Rating GetScore(ChartType type, DifficultyLevel level, PhoenixScore score)
+        {
+            return GetScore(Guid.Empty, level, type, SongType.Arcade, BaseAverageTime, false, score,
+                PhoenixPlate.SuperbGame);
         }
 
         public int GetScore(DifficultyLevel level, PhoenixScore score)

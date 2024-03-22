@@ -49,6 +49,7 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<UserWorldRanking> UserWorldRanking { get; set; }
     public DbSet<ChartSkillEntity> ChartSkill { get; set; }
     public DbSet<SkillEntity> Skill { get; set; }
+    public DbSet<PlayerStatsEntity> PlayerStats { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -1,9 +1,11 @@
 ﻿@using MediatR
 @using ScoreTracker.Application.Queries
+@using ScoreTracker.Data.Migrations
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @page "/{RequestedUserId:guid}/Phoenix/Progress"
@@ -23,6 +25,31 @@
 
     </MudToolBar>
     <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" @ref="_tabs">
+        <MudTabPanel Text="PIU Scores Rating">
+            <MudGrid>
+                <MudItem xs="12">
+                    Note: This is PIU Scores rating and NOT Phoenix Rating, they are similar but have some differences:<br/><br/>
+                    Partial score increases are given between letter grades (I.E 912500 score gives you a 1.075x multiplier)<br/><br/>
+                    PG acts as a letter grade beyond SSS+ and gives a 1.6x multiplier<br/><br/>
+                    Difficulty levels below 10 give 10 X Difficulty rating.
+                </MudItem>
+                <MudItem xs="12">
+                    <b>Total Rating: </b>@_stats.TotalRating
+                </MudItem>
+                <MudItem xs="12">
+                    <b>Top 50 Rating: </b>@_stats.SkillRating
+                </MudItem>
+                <MudItem xs="12">
+                    <b>Top 50 Singles Rating: </b>@_stats.SinglesRating
+                </MudItem>
+                <MudItem xs="12">
+                    <b>Top 50 Doubles Rating: </b>@_stats.DoublesRating
+                </MudItem>
+                <MudItem xs="12">
+                    <b>CoOp Rating: </b>@_stats.CoOpRating
+                </MudItem>
+            </MudGrid>
+        </MudTabPanel>
         <MudTabPanel Text="Difficulty Progress">
             <MudTable T="DifficultyEntry" Items="_difficultyEntries" Breakpoint="Breakpoint.None">
                 <HeaderContent>
@@ -37,9 +64,9 @@
                 <RowTemplate>
                     <MudTd>@context.Level</MudTd>
                     <MudTd>
-                        <MudProgressLinear Color="@(context.Remaining==0 ? Color.Success : Color.Primary)" Value="100.0 * (context.Passed / (double)(context.Passed+context.Remaining))">
+                        <MudProgressLinear Color="@(context.Remaining == 0 ? Color.Success : Color.Primary)" Value="100.0 * (context.Passed / (double)(context.Passed + context.Remaining))">
                             <MudText Typo="Typo.subtitle1">
-                                @context.Passed / @(context.Passed+context.Remaining)
+                                @context.Passed / @(context.Passed + context.Remaining)
                             </MudText>
                         </MudProgressLinear>
                     </MudTd>
@@ -47,17 +74,19 @@
                         @if (context.RatingRemaining + context.TotalRating > 0)
                         {
 
-                            <MudProgressLinear Color="@(context.RatingRemaining==0 ? Color.Success : Color.Primary)" Value="100.0 * (context.TotalRating / (double)(context.TotalRating+context.RatingRemaining))">
+                            <MudProgressLinear Color="@(context.RatingRemaining == 0 ? Color.Success : Color.Primary)" Value="100.0 * (context.TotalRating / (double)(context.TotalRating + context.RatingRemaining))">
                             </MudProgressLinear>
                         }
                     </MudTd>
                     <MudTd>
-                        @if(context.MinScore!=null){
+                        @if (context.MinScore != null)
+                        {
                             <MudText>@context.MinScore (@context.MinScore.Value.LetterGrade.GetName())</MudText>
                         }
                     </MudTd>
                     <MudTd>
-                        @if(context.AverageScore!=null){
+                        @if (context.AverageScore != null)
+                        {
                             <MudText>@context.AverageScore (@context.AverageScore.Value.LetterGrade.GetName())</MudText>
                         }
                     </MudTd>
@@ -72,7 +101,7 @@
                         {
                             @context.AvgPlate1.Value.GetShorthand()
                         }
-                        @if(context.AvgPlate2!=null && context.AvgPlate2 != context.AvgPlate1)
+                        @if (context.AvgPlate2 != null && context.AvgPlate2 != context.AvgPlate1)
                         {
                             @($" - {context.AvgPlate2.Value.GetShorthand()}")
                         }
@@ -90,15 +119,15 @@
                                  SeriesType="SeriesType.Bar"
                                  Name="Passes"
                                  XValue="@(e => e.Level)"
-                                 YAggregate="@(e => e.Sum(z=>z.Passed))"
-                                 OrderBy="e=>e.Y" />
+                                 YAggregate="@(e => e.Sum(z => z.Passed))"
+                                 OrderBy="e => e.Y"/>
                 <ApexPointSeries TItem="LevelPass"
                                  Items="_passBars"
                                  SeriesType="SeriesType.Bar"
                                  Name="Remaining"
                                  XValue="@(e => e.Level)"
-                                 YAggregate="@(e => e.Sum(z=>z.Remaining))"
-                                 OrderBy="e=>e.Y" />
+                                 YAggregate="@(e => e.Sum(z => z.Remaining))"
+                                 OrderBy="e => e.Y"/>
             </ApexChart>
         </MudTabPanel>
         <MudTabPanel Text="Score Distribution Lines">
@@ -111,37 +140,37 @@
                                  Name="Min"
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
-                                 YValue="@(e=>e.Min)"
+                                 YValue="@(e => e.Min)"
                                  OrderBy="e => e.X"/>
                 <ApexPointSeries TItem="BoxPlotData"
                                  Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
                                  Name="Q1"
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
-                                 YValue="@(e=>e.Q1)"
+                                 YValue="@(e => e.Q1)"
                                  OrderBy="e => e.X"/>
                 <ApexPointSeries TItem="BoxPlotData"
                                  Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
                                  Name="Median"
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
-                                 YValue="@(e=>e.Median)"
-                                 OrderBy="e => e.X" />
+                                 YValue="@(e => e.Median)"
+                                 OrderBy="e => e.X"/>
                 <ApexPointSeries TItem="BoxPlotData"
                                  Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
                                  Name="Q3"
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
-                                 YValue="@(e=>e.Q3)"
-                                 OrderBy="e => e.X" />
+                                 YValue="@(e => e.Q3)"
+                                 OrderBy="e => e.X"/>
 
                 <ApexPointSeries TItem="BoxPlotData"
                                  Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
                                  Name="Max"
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
-                                 YValue="@(e=>e.Max)"
-                                 OrderBy="e => e.X" />
+                                 YValue="@(e => e.Max)"
+                                 OrderBy="e => e.X"/>
             </ApexChart>
         </MudTabPanel>
         <MudTabPanel Text="Singles vs Doubles">
@@ -151,20 +180,20 @@
                        Options="_scoreBoxesOptions">
                 <ApexPointSeries TItem="BoxPlotData"
                                  Color="#EA3F24"
-                                 Items="BoxPlotData.From(_scores.Where(s => s.Score != null && _charts[s.ChartId].Type==ChartType.Single).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
+                                 Items="BoxPlotData.From(_scores.Where(s => s.Score != null && _charts[s.ChartId].Type == ChartType.Single).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
                                  Name="Singles"
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
-                                 YValue="@(e=>e.Average)"
-                                 OrderBy="e => e.X" />
+                                 YValue="@(e => e.Average)"
+                                 OrderBy="e => e.X"/>
                 <ApexPointSeries TItem="BoxPlotData"
                                  Color="#76FA4F"
-                                 Items="BoxPlotData.From(_scores.Where(s => s.Score != null && _charts[s.ChartId].Type==ChartType.Double).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
+                                 Items="BoxPlotData.From(_scores.Where(s => s.Score != null && _charts[s.ChartId].Type == ChartType.Double).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
                                  Name="Doubles"
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
-                                 YValue="@(e=>e.Average)"
-                                 OrderBy="e => e.X" />
+                                 YValue="@(e => e.Average)"
+                                 OrderBy="e => e.X"/>
 
             </ApexChart>
         </MudTabPanel>
@@ -254,7 +283,7 @@
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private DifficultyLevel _minLevel = DifficultyLevel.Min;
     private DifficultyLevel _maxLevel = DifficultyLevel.Max;
-
+    private PlayerStatsRecord _stats = new(0, 0, 0, 0, 0);
     private async Task Filter()
     {
         var results = _scores;
@@ -303,6 +332,8 @@
         var charts = await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix));
         var coOpCharts = charts.Where(c => c.Type == ChartType.CoOp).ToArray();
         var levelCharts = charts.Where(c => c.Type != ChartType.CoOp).GroupBy(c => c.Level).ToDictionary(g => g.Key, g => g.ToArray());
+
+        _stats = await Mediator.Send(new GetPlayerStatsQuery(RequestedUserId.Value));
 
         _charts = charts.ToDictionary(c => c.Id);
         var entries = new List<DifficultyEntry>();

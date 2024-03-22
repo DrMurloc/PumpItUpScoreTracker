@@ -1,5 +1,6 @@
 using System.Text.Json;
 using BlazorApplicationInsights;
+using MassTransit;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Localization;
@@ -9,10 +10,12 @@ using OfficeOpenXml;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Configuration;
+using ScoreTracker.Data.Repositories;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.PersonalProgress;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Accessors;
 using ScoreTracker.Web.Configuration;
@@ -42,6 +45,11 @@ var discordConfig = builder.Configuration.GetSection("Discord").Get<DiscordConfi
 var googleConfig = builder.Configuration.GetSection("Google").Get<GoogleConfiguration>();
 var facebookConfig = builder.Configuration.GetSection("Facebook").Get<FacebookConfiguration>();
 builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSection("Discord"));
+builder.Services.AddMassTransit(o =>
+{
+    o.AddConsumers(typeof(PlayerRatingSaga).Assembly);
+    o.UsingInMemory((context, cfg) => { cfg.ConfigureEndpoints(context); });
+});
 builder.Services.AddAuthentication("DefaultAuthentication")
     .AddCookie("DefaultAuthentication", o =>
     {
@@ -107,7 +115,7 @@ builder.Services.AddBlazorApplicationInsights()
     .AddHttpContextAccessor()
     .AddHttpClient()
     .AddHostedService<BotHostedService>()
-    .AddMediatR(typeof(UpdateXXBestAttemptHandler), typeof(MainLayout))
+    .AddMediatR(typeof(UpdateXXBestAttemptHandler), typeof(MainLayout), typeof(EFPlayerStatsRepository))
     .AddTransient<IUserAccessService, UserAccessService>()
     .AddTransient<IWorldRankingService, WorldRankingService>()
     .AddInfrastructure(builder.Configuration.GetSection("AzureBlob").Get<AzureBlobConfiguration>(),

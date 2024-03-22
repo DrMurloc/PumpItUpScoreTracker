@@ -1,8 +1,7 @@
 ﻿using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Domain.Records
+namespace ScoreTracker.Domain.Records;
+
+public sealed record ChartPreferenceRatingRecord(Guid ChartId, PreferenceRating Rating, int Count)
 {
-    public sealed record ChartPreferenceRatingRecord(Guid ChartId, Rating Rating, int Count)
-    {
-    }
 }

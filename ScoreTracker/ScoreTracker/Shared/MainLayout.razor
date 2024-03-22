@@ -6,10 +6,12 @@
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Application.Events
 @using ScoreTracker.Domain.Events
+@using MassTransit
 @inherits LayoutComponentBase
 @inject ICurrentUserAccessor CurrentUser
 @implements INotificationHandler<MatchUpdatedEvent>
 @implements INotificationHandler<ImportStatusUpdated>
+@implements INotificationHandler<PlayerStatsUpdatedEvent>
 <PageTitle>PIU Scores</PageTitle>
 
 <MudThemeProvider Theme="Theme" />
@@ -19,7 +21,7 @@
 <MudLayout>
     <MudAppBar Color="Color.Primary" Fixed="false">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="() => _isOpen = !_isOpen"/>
-        <MudText Typo="Typo.h6">PIU Scores</MudText>
+        <MudText Typo="Typo.h6">@(_userId == null ? "PIU Scores" : $"{UserName} ({Rating})")</MudText>
         <MudSpacer></MudSpacer>
         @if (CurrentUser.IsLoggedIn)
         {
@@ -116,6 +118,7 @@
 @code
 {
     private bool _isOpen = false;
+    private Guid? _userId = null;
     private bool _showDiscordDialog = false;
     private const string DiscordPopupKey = "MainLayout__DiscordPopupShown";
     private MixEnum _currentMix = MixEnum.Phoenix;
@@ -127,6 +130,7 @@
     }
     protected override async Task OnInitializedAsync()
     {
+        _userId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null;
         if (CurrentUser.IsLoggedIn)
         {
             var settings = await Mediator.Send(new GetUserUiSettingsQuery());
@@ -135,6 +139,8 @@
                 _showDiscordDialog = true;
                 await Mediator.Send(new SaveUserUiSettingCommand(DiscordPopupKey, "true"));
             }
+            UserName = CurrentUser.User.Name;
+            Rating = (await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id))).SkillRating;
         }
         _currentMix = await UiSettings.GetSelectedMix();
     }
@@ -171,10 +177,23 @@
         MatchUpdated?.Invoke(this, notification);
         return Task.CompletedTask;
     }
+    private string UserName { get; set; }
+    public int Rating { get; set; }
 
     public Task Handle(ImportStatusUpdated notification, CancellationToken cancellationToken)
     {
         ImportStatusUpdated?.Invoke(this, notification);
+        return Task.CompletedTask;
+    }
+
+    public Task Handle(PlayerStatsUpdatedEvent notification, CancellationToken cancellationToken)
+    {
+        if (_userId != notification.UserId)
+        {
+            return Task.CompletedTask;
+        }
+        Rating = notification.NewStats.SkillRating;
+        InvokeAsync(StateHasChanged);
         return Task.CompletedTask;
     }
 }
