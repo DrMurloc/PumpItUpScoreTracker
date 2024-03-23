@@ -13,6 +13,7 @@
 @using ScoreTracker.PersonalProgress.Queries
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using System.Web
+@using ScoreTracker.Web.Models
 <PageTitle>Communities</PageTitle>
 
 
@@ -47,25 +48,29 @@
             <MudTooltip Text="@context.UserId.ToString()">@context.PlayerName</MudTooltip>
         </MudTd>
         <MudTd>
-            @context.TotalRating
+            <MudText Style=@($"color:{_colorSelector.TotalScale.GetColor(context.TotalRating)}")>@context.TotalRating</MudText>
+            
         </MudTd>
         <MudTd>
-            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ViewList" OnClick="() => ShowUserData(context.UserId, null)">
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ViewList" OnClick="() => ShowUserData(context.UserId, null)" Style=@($"color:{_colorSelector.SkillScale.GetColor(context.SkillRating)}")>
                 @context.SkillRating
             </MudButton>
         </MudTd>
         <MudTd>
-            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ViewList" OnClick="() => ShowUserData(context.UserId, ChartType.Single)">
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ViewList" OnClick="() => ShowUserData(context.UserId, ChartType.Single)" Style=@($"color:{_colorSelector.SinglesScale.GetColor(context.SinglesRating)}")>
                 @context.SinglesRating
             </MudButton>
         </MudTd>
         <MudTd>
-            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ViewList" OnClick="() => ShowUserData(context.UserId, ChartType.Double)">
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ViewList" OnClick="() => ShowUserData(context.UserId, ChartType.Double)" Style=@($"color:{_colorSelector.DoublesScale.GetColor(context.DoublesRating)}")>
                 @context.DoublesRating
             </MudButton>
         </MudTd>
         <MudTd>
-            @context.CoOpRating
+            <MudText Style=@($"color:{_colorSelector.CoOpScale.GetColor(context.CoOpRating)}")>
+                
+                @context.CoOpRating
+            </MudText>
         </MudTd>
     </RowTemplate>
     <ChildRowContent>
@@ -102,6 +107,16 @@
         <MudTablePager></MudTablePager>
     </PagerContent>
 </MudTable>
+
+<br/>
+<MudText Style="color:#0000FF">Top Player</MudText>
+<br />
+<MudText Style="color:#00FF00">Top 33%</MudText>
+<br />
+<MudText Style="color:#FF0000">Top 66%</MudText>
+<br />
+<MudText Style="color:#FFFFFF">Bottom 33%</MudText>
+<br />
 @inject IMediator Mediator;
 @inject ICurrentUserAccessor CurrentUser;
 @inject NavigationManager NavManager;
@@ -128,6 +143,7 @@
     private IEnumerable<CommunityLeaderboardRecord> _leaderboard = Array.Empty<CommunityLeaderboardRecord>();
     private IEnumerable<ScoreEntry> _scores = Array.Empty<ScoreEntry>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private RatingColorSelector _colorSelector = new RatingColorSelector(Array.Empty<CommunityLeaderboardRecord>());
     [Parameter]
     [SupplyParameterFromQuery]public string CommunityName { get; set; }
     protected override async Task OnInitializedAsync()
@@ -151,7 +167,7 @@
             }
         }
         _leaderboard = (await Mediator.Send(new GetCommunityLeaderboardQuery(communityName))).ToArray();
-
+        _colorSelector = new RatingColorSelector(_leaderboard);
 
     }
 
