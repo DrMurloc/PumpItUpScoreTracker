@@ -80,7 +80,7 @@ namespace ScoreTracker.PersonalProgress
                 .ToArray();
 
             var newStats = new PlayerStatsRecord(scores.Sum(s => s.Rating),
-                recorded.Where(r => !r.IsBroken).Max(r => charts[r.ChartId].Level),
+                recorded.Any(r => !r.IsBroken) ? recorded.Where(r => !r.IsBroken).Max(r => charts[r.ChartId].Level) : 1,
                 recorded.Count(r => !r.IsBroken),
                 coOps.Sum(s => s.Rating),
                 (int)AverageOrDefault(coOps.Select(s => (int)s.Score), 0),
