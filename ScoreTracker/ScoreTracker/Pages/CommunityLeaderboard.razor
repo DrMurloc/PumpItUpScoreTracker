@@ -1,0 +1,158 @@
+﻿@page "/Community/{CommunityName}/Leaderboard"
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.Records
+@using MediatR
+@using Microsoft.EntityFrameworkCore.Metadata.Internal
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.PersonalProgress
+@using ScoreTracker.PersonalProgress.Queries
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using System.Web
+<PageTitle>Communities</PageTitle>
+
+
+<MudTable T="CommunityLeaderboardRecord" Items="_leaderboard" Breakpoint="Breakpoint.None">
+    <ToolBarContent>
+        <MudText Typo="Typo.h4">@HttpUtility.UrlDecode(CommunityName)</MudText>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>
+            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => e.PlayerName)">Name</MudTableSortLabel>
+        </MudTh>
+
+        <MudTh>
+            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => e.TotalRating)">Total Rating</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => e.SkillRating)">Top 50</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => e.SinglesRating)">Top 50 Singles</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => e.DoublesRating)">Top 50 Doubles</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => e.CoOpRating)">CoOp Rating</MudTableSortLabel>
+        </MudTh>
+
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            <MudTooltip Text="@context.UserId.ToString()">@context.PlayerName</MudTooltip>
+        </MudTd>
+        <MudTd>
+            @context.TotalRating
+        </MudTd>
+        <MudTd>
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ViewList" OnClick="() => ShowUserData(context.UserId, null)">
+                @context.SkillRating
+            </MudButton>
+        </MudTd>
+        <MudTd>
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ViewList" OnClick="() => ShowUserData(context.UserId, ChartType.Single)">
+                @context.SinglesRating
+            </MudButton>
+        </MudTd>
+        <MudTd>
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ViewList" OnClick="() => ShowUserData(context.UserId, ChartType.Double)">
+                @context.DoublesRating
+            </MudButton>
+        </MudTd>
+        <MudTd>
+            @context.CoOpRating
+        </MudTd>
+    </RowTemplate>
+    <ChildRowContent>
+        @if (_showingUserId == context.UserId)
+        {
+            <td colspan="6">
+                <MudGrid>
+                    @foreach (var entry in _scores)
+                    {
+
+                        <MudItem xs="4" sm="3" md="2">
+                            <MudCard>
+                                <MudCardMedia Height="150" Image="@entry.Chart.Song.ImagePath.ToString()"/>
+                                <MudCardContent>
+                                    <MudTooltip Text=@($"{entry.Chart.Song.Name} {entry.Chart.DifficultyString}")>
+
+                                        <MudImage Src="@entry.Chart.DifficultyBubblePath" Height="35" Alt="@entry.Chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+
+                                    </MudTooltip>
+                                    <MudTooltip Text=@($"{entry.Rating} Rating")>
+                                        <MudText>
+                                            @entry.Score (@entry.Score.LetterGrade.GetName())
+                                        </MudText>
+                                    </MudTooltip>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </td>
+        }
+    </ChildRowContent>
+    <PagerContent>
+        <MudTablePager></MudTablePager>
+    </PagerContent>
+</MudTable>
+@inject IMediator Mediator;
+@inject ICurrentUserAccessor CurrentUser;
+@inject NavigationManager NavManager;
+@code {
+    private Guid _showingUserId = Guid.Empty;
+    private ChartType? _chartType = null;
+    private async Task ShowUserData(Guid userId, ChartType? chartType)
+    {
+        if (_showingUserId == userId && _chartType==chartType)
+        {
+            _showingUserId = Guid.Empty;
+            _chartType = null;
+            return;
+        }
+        var scoringConfig = PlayerRatingSaga.Scoring;
+
+        _scores = (await Mediator.Send(new GetTop50ForPlayerQuery(userId, chartType)))
+            .Select(s => new ScoreEntry(_charts[s.ChartId], s.Score ?? 0, scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false)))
+            .ToArray();
+        _showingUserId = userId;
+        _chartType = chartType;
+
+    }
+    private IEnumerable<CommunityLeaderboardRecord> _leaderboard = Array.Empty<CommunityLeaderboardRecord>();
+    private IEnumerable<ScoreEntry> _scores = Array.Empty<ScoreEntry>();
+    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    [Parameter] public string CommunityName { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        var communityName = HttpUtility.UrlDecode(CommunityName);
+        var community = await Mediator.Send(new GetCommunityQuery(communityName));
+        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+        if (community.PrivacyType == CommunityPrivacyType.Private)
+        {
+            if (!CurrentUser.IsLoggedIn)
+            {
+                NavManager.NavigateTo("/Communities");
+                return;
+            }
+            var myCommunities = await Mediator.Send(new GetMyCommunitiesQuery());
+            if (myCommunities.All(c => c.CommunityName != communityName))
+            {
+
+                NavManager.NavigateTo("/Communities");
+                return;
+            }
+        }
+        _leaderboard = (await Mediator.Send(new GetCommunityLeaderboardQuery(communityName))).ToArray();
+
+
+    }
+
+    private sealed record ScoreEntry(Chart Chart, PhoenixScore Score, int Rating);
+}

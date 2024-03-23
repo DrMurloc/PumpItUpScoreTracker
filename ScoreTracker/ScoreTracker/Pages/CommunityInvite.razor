@@ -1,0 +1,38 @@
+﻿@page "/Communities/Invite/{InviteCode:guid}"
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.Records
+@using MediatR
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.ValueTypes
+<PageTitle>Community Invite</PageTitle>
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject NavigationManager NavManager;
+@code {
+
+    [Parameter]public Guid InviteCode { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+
+            NavManager.NavigateTo($"/Login");
+            return;
+        }
+        if (InviteCode == default)
+        {
+
+            NavManager.NavigateTo($"/Communities");
+            return;
+        }
+        await Mediator.Send(new JoinCommunityByInviteCodeCommand(InviteCode));
+
+        NavManager.NavigateTo($"/Communities");
+
+    }
+}

@@ -6,10 +6,12 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.PersonalProgress.Queries;
 
 namespace ScoreTracker.PersonalProgress
 {
-    public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>
+    public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
+        IRequestHandler<GetTop50ForPlayerQuery, IEnumerable<RecordedPhoenixScore>>
     {
         private readonly IPhoenixRecordRepository _scores;
         private readonly IChartRepository _charts;
@@ -27,7 +29,7 @@ namespace ScoreTracker.PersonalProgress
             _mediator = mediator;
         }
 
-        private static readonly ScoringConfiguration Scoring = CreateScoring();
+        public static readonly ScoringConfiguration Scoring = CreateScoring();
 
         private static ScoringConfiguration CreateScoring()
         {
@@ -89,6 +91,22 @@ namespace ScoreTracker.PersonalProgress
 
         private sealed record ChartRating(Guid ChartId, ChartType Type, Rating Rating)
         {
+        }
+
+        public async Task<IEnumerable<RecordedPhoenixScore>> Handle(GetTop50ForPlayerQuery request,
+            CancellationToken cancellationToken)
+        {
+            var charts =
+                (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
+                .ToDictionary(c => c.Id);
+
+            return (await _scores.GetRecordedScores(request.UserId, cancellationToken))
+                .Where(s => charts[s.ChartId].Type != ChartType.CoOp)
+                .Where(s => s.Score != null && (request.ChartType == null ||
+                                                charts[s.ChartId].Type == request.ChartType))
+                .OrderByDescending(s =>
+                    Scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level, s.Score!.Value))
+                .Take(50).ToArray();
         }
     }
 }

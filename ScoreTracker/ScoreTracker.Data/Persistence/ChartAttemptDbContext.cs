@@ -50,6 +50,10 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<ChartSkillEntity> ChartSkill { get; set; }
     public DbSet<SkillEntity> Skill { get; set; }
     public DbSet<PlayerStatsEntity> PlayerStats { get; set; }
+    public DbSet<CommunityEntity> Community { get; set; }
+    public DbSet<CommunityChannelEntity> CommunityChannel { get; set; }
+    public DbSet<CommunityInviteCodeEntity> CommunityInviteCode { get; set; }
+    public DbSet<CommunityMembershipEntity> CommunityMembership { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -115,7 +115,8 @@ builder.Services.AddBlazorApplicationInsights()
     .AddHttpContextAccessor()
     .AddHttpClient()
     .AddHostedService<BotHostedService>()
-    .AddMediatR(typeof(UpdateXXBestAttemptHandler), typeof(MainLayout), typeof(EFPlayerStatsRepository))
+    .AddMediatR(typeof(UpdateXXBestAttemptHandler), typeof(MainLayout), typeof(EFPlayerStatsRepository),
+        typeof(PlayerRatingSaga))
     .AddTransient<IUserAccessService, UserAccessService>()
     .AddTransient<IWorldRankingService, WorldRankingService>()
     .AddInfrastructure(builder.Configuration.GetSection("AzureBlob").Get<AzureBlobConfiguration>(),

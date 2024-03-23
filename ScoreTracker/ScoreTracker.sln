@@ -21,7 +21,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScoreTracker.Data", "ScoreT
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScoreTracker.CompositionRoot", "ScoreTracker.CompositionRoot\ScoreTracker.CompositionRoot.csproj", "{4D0EC8CE-32D1-496C-A451-DB78108F2E40}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.PersonalProgress", "ScoreTracker.PersonalProgress\ScoreTracker.PersonalProgress.csproj", "{528D6187-7392-443C-AACB-992A81B0ED16}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScoreTracker.PersonalProgress", "ScoreTracker.PersonalProgress\ScoreTracker.PersonalProgress.csproj", "{528D6187-7392-443C-AACB-992A81B0ED16}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
