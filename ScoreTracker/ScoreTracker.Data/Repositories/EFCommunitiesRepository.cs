@@ -163,8 +163,10 @@ namespace ScoreTracker.Data.Repositories
                     join cm in _dbContext.CommunityMembership on c.Id equals cm.CommunityId
                     join ps in _dbContext.PlayerStats on cm.UserId equals ps.UserId
                     join u in _dbContext.User on ps.UserId equals u.Id
-                    select new CommunityLeaderboardRecord(u.Name, u.Id, ps.TotalRating, ps.CoOpRating, ps.SkillRating,
-                        ps.SinglesRating, ps.DoublesRating))
+                    select new CommunityLeaderboardRecord(u.Name, u.Id, ps.TotalRating, ps.HighestLevel, ps.ClearCount,
+                        ps.CoOpRating, ps.AverageCoOpScore, ps.SkillRating, ps.AverageSkillScore, ps.AverageSkillLevel,
+                        ps.SinglesRating, ps.AverageSinglesScore, ps.AverageSinglesLevel, ps.DoublesRating,
+                        ps.AverageDoublesScore, ps.AverageDoublesLevel))
                 .ToArrayAsync(cancellationToken);
         }
 

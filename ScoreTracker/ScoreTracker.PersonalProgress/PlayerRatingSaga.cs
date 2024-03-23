@@ -54,12 +54,13 @@ namespace ScoreTracker.PersonalProgress
         public async Task Consume(ConsumeContext<PlayerScoreUpdatedEvent> context)
         {
             var charts = (await _charts.GetCharts(MixEnum.Phoenix)).ToDictionary(c => c.Id);
-
-            var scores = (await _scores.GetRecordedScores(context.Message.UserId, context.CancellationToken))
+            var recorded =
+                (await _scores.GetRecordedScores(context.Message.UserId, context.CancellationToken)).ToArray();
+            var scores = recorded
                 .Where(s => s.Score != null)
                 .Select(s => new ChartRating(s.ChartId, charts[s.ChartId].Type,
                     Scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level,
-                        s.Score!.Value)))
+                        s.Score!.Value), s.Score!.Value))
                 .ToArray();
 
             var top50 = scores
@@ -78,8 +79,21 @@ namespace ScoreTracker.PersonalProgress
             var coOps = scores.Where(s => s.Type == ChartType.CoOp)
                 .ToArray();
 
-            var newStats = new PlayerStatsRecord(scores.Sum(s => s.Rating), coOps.Sum(s => s.Rating),
-                top50.Sum(s => s.Rating), top50Singles.Sum(s => s.Rating), top50Doubles.Sum(s => s.Rating));
+            var newStats = new PlayerStatsRecord(scores.Sum(s => s.Rating),
+                recorded.Where(r => !r.IsBroken).Max(r => charts[r.ChartId].Level),
+                recorded.Count(r => !r.IsBroken),
+                coOps.Sum(s => s.Rating),
+                (int)AverageOrDefault(coOps.Select(s => (int)s.Score), 0),
+                top50.Sum(s => s.Rating),
+                (int)AverageOrDefault(top50.Select(s => (int)s.Score), 0),
+                AverageOrDefault(top50.Select(s => (int)charts[s.ChartId].Level), 1),
+                top50Singles.Sum(s => s.Rating),
+                (int)AverageOrDefault(top50Singles.Select(s => (int)s.Score), 0),
+                AverageOrDefault(top50Singles.Select(s => (int)charts[s.ChartId].Level), 1),
+                top50Doubles.Sum(s => s.Rating),
+                (int)AverageOrDefault(top50Doubles.Select(s => (int)s.Score), 0),
+                AverageOrDefault(top50Doubles.Select(s => (int)charts[s.ChartId].Level), 1)
+            );
 
             await _stats.SaveStats(context.Message.UserId, newStats, context.CancellationToken);
 
@@ -89,7 +103,13 @@ namespace ScoreTracker.PersonalProgress
                 context.CancellationToken);
         }
 
-        private sealed record ChartRating(Guid ChartId, ChartType Type, Rating Rating)
+        private double AverageOrDefault(IEnumerable<int> values, double def)
+        {
+            var enumerable = values as int[] ?? values.ToArray();
+            return enumerable.Any() ? enumerable.Average() : def;
+        }
+
+        private sealed record ChartRating(Guid ChartId, ChartType Type, Rating Rating, PhoenixScore Score)
         {
         }
 

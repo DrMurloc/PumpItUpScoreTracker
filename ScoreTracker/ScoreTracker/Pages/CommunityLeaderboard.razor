@@ -16,67 +16,95 @@
 @using ScoreTracker.Web.Models
 <PageTitle>Communities</PageTitle>
 
-
-<MudTable T="CommunityLeaderboardRecord" Items="_leaderboard" Breakpoint="Breakpoint.None">
+<MudSelect T="LeaderboardType" Value="_currentType" ValueChanged="SetType" Label="Leaderboard Type">
+    @foreach (var item in Enum.GetValues<LeaderboardType>())
+    {
+        <MudSelectItem T="LeaderboardType" Value="item">@item</MudSelectItem>
+    }
+</MudSelect>
+<br/>
+<MudTable T="LeaderboardEntry" Items="_entries" Breakpoint="Breakpoint.None">
     <ToolBarContent>
         <MudText Typo="Typo.h4">@HttpUtility.UrlDecode(CommunityName)</MudText>
     </ToolBarContent>
     <HeaderContent>
         <MudTh>
-            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => e.PlayerName.ToString())">Name</MudTableSortLabel>
+            <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => e.PlayerName.ToString())">Name</MudTableSortLabel>
         </MudTh>
 
         <MudTh>
-            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => (int)e.TotalRating)">Total Rating</MudTableSortLabel>
+            <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => e.Rating)">Rating</MudTableSortLabel>
         </MudTh>
-        <MudTh>
-            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => (int) e.SkillRating)">Top 50</MudTableSortLabel>
-        </MudTh>
-        <MudTh>
-            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => (int)e.SinglesRating)">Top 50 Singles</MudTableSortLabel>
-        </MudTh>
-        <MudTh>
-            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => (int)e.DoublesRating)">Top 50 Doubles</MudTableSortLabel>
-        </MudTh>
-        <MudTh>
-            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e =>(int) e.CoOpRating)">CoOp Rating</MudTableSortLabel>
-        </MudTh>
-
+        @if (_currentType != LeaderboardType.Total)
+        {
+            @if (_currentType != LeaderboardType.CoOp)
+            {
+                <MudTh>
+                    <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => (int)e.AverageLevel)">Average Level</MudTableSortLabel>
+                </MudTh>
+            }
+            <MudTh>
+                <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => (int)e.Score)">Average Score</MudTableSortLabel>
+            </MudTh>
+        }
+        @if (_currentType == LeaderboardType.Total)
+        {
+            
+            <MudTh>
+                <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => (int)e.HighestLevel)">Highest Level</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e =>(int) e.ClearCount)">Clear Count</MudTableSortLabel>
+            </MudTh>
+        }
+        @if (_currentType != LeaderboardType.Total && _currentType != LeaderboardType.CoOp)
+        {
+            <MudTh>
+                View Charts
+            </MudTh>
+        }
     </HeaderContent>
     <RowTemplate>
         <MudTd>
             <MudTooltip Text="@context.UserId.ToString()">@context.PlayerName</MudTooltip>
         </MudTd>
         <MudTd>
-            <MudText Style=@($"color:{_colorSelector.TotalScale.GetColor(context.TotalRating)}")>@context.TotalRating</MudText>
+            <MudText Style=@($"color:{context.Color}")>@context.Rating</MudText>
             
         </MudTd>
-        <MudTd>
-            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ViewList" OnClick="() => ShowUserData(context.UserId, null)" Style=@($"color:{_colorSelector.SkillScale.GetColor(context.SkillRating)}")>
-                @context.SkillRating
-            </MudButton>
-        </MudTd>
-        <MudTd>
-            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ViewList" OnClick="() => ShowUserData(context.UserId, ChartType.Single)" Style=@($"color:{_colorSelector.SinglesScale.GetColor(context.SinglesRating)}")>
-                @context.SinglesRating
-            </MudButton>
-        </MudTd>
-        <MudTd>
-            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ViewList" OnClick="() => ShowUserData(context.UserId, ChartType.Double)" Style=@($"color:{_colorSelector.DoublesScale.GetColor(context.DoublesRating)}")>
-                @context.DoublesRating
-            </MudButton>
-        </MudTd>
-        <MudTd>
-            <MudText Style=@($"color:{_colorSelector.CoOpScale.GetColor(context.CoOpRating)}")>
-                
-                @context.CoOpRating
-            </MudText>
-        </MudTd>
+        @if (_currentType != LeaderboardType.Total)
+        {
+            @if (_currentType != LeaderboardType.CoOp)
+            {
+                <MudTd>
+                    @context.AverageLevel
+                </MudTd>
+            }
+            <MudTd>
+                @context.Score (@context.Score.LetterGrade.GetName())
+            </MudTd>
+        }
+        @if (_currentType == LeaderboardType.Total)
+        {
+
+            <MudTd>
+                @context.HighestLevel
+            </MudTd>
+            <MudTh>
+                @context.ClearCount
+            </MudTh>
+        }
+        @if (_currentType != LeaderboardType.Total && _currentType != LeaderboardType.CoOp)
+        {
+            <MudTd>
+                <MudButton StartIcon="@Icons.Material.Filled.ViewList" Variant="Variant.Text" OnClick="()=>ShowUserData(context.UserId, _currentType ==LeaderboardType.Singles?ChartType.Single:_currentType==LeaderboardType.Doubles?ChartType.Double:null)">View Charts</MudButton>
+            </MudTd>
+        }
     </RowTemplate>
     <ChildRowContent>
         @if (_showingUserId == context.UserId)
         {
-            <td colspan="6">
+            <td colspan="@Colspan">
                 <MudGrid>
                     @foreach (var entry in _scores)
                     {
@@ -123,6 +151,7 @@
 @code {
     private Guid _showingUserId = Guid.Empty;
     private ChartType? _chartType = null;
+    private int Colspan => _currentType == LeaderboardType.CoOp ? 3 : _currentType == LeaderboardType.Total ? 4 : 5;
     private async Task ShowUserData(Guid userId, ChartType? chartType)
     {
         if (_showingUserId == userId && _chartType==chartType)
@@ -168,8 +197,48 @@
         }
         _leaderboard = (await Mediator.Send(new GetCommunityLeaderboardQuery(communityName))).ToArray();
         _colorSelector = new RatingColorSelector(_leaderboard);
-
+        SetType(LeaderboardType.Combined);
     }
 
+    private IEnumerable<LeaderboardEntry> _entries = Array.Empty<LeaderboardEntry>();
+    private LeaderboardType _currentType = LeaderboardType.Combined;
+    private void SetType(LeaderboardType type)
+    {
+        switch (type)
+        {
+            case LeaderboardType.Total:
+                _entries = _leaderboard.Select(l => new LeaderboardEntry(l.PlayerName, l.UserId, l.TotalRating, 0, 0, _colorSelector.TotalScale.GetColor(l.TotalRating),l.HighestLevel,l.ClearCount));
+                break;
+                
+            case LeaderboardType.Combined:
+                _entries = _leaderboard.Select(l => new LeaderboardEntry(l.PlayerName, l.UserId, l.SkillRating, l.SkillScore, l.SkillLevel, _colorSelector.SkillScale.GetColor(l.SkillRating), l.HighestLevel, l.ClearCount));
+                break;
+            case LeaderboardType.Singles:
+                _entries = _leaderboard.Select(l => new LeaderboardEntry(l.PlayerName, l.UserId, l.SinglesRating, l.SinglesScore, l.SinglesLevel, _colorSelector.SinglesScale.GetColor(l.SinglesRating), l.HighestLevel, l.ClearCount));
+                break;
+                    
+            case LeaderboardType.Doubles:
+                _entries = _leaderboard.Select(l => new LeaderboardEntry(l.PlayerName, l.UserId, l.DoublesRating, l.DoublesScore, l.DoublesLevel, _colorSelector.DoublesScale.GetColor(l.DoublesRating), l.HighestLevel, l.ClearCount));
+                break;
+            case LeaderboardType.CoOp:
+                _entries = _leaderboard.Select(l => new LeaderboardEntry(l.PlayerName, l.UserId, l.CoOpRating, l.CoOpScore, 0, _colorSelector.CoOpScale.GetColor(l.CoOpRating), l.HighestLevel, l.ClearCount));
+                break;
+
+        }
+        _currentType = type;
+    }
     private sealed record ScoreEntry(Chart Chart, PhoenixScore Score, int Rating);
+
+    private sealed record LeaderboardEntry(Name PlayerName, Guid UserId, int Rating, PhoenixScore Score, double AverageLevel, string Color, int HighestLevel, int ClearCount)
+    {
+
+    }
+    private enum LeaderboardType
+    {
+        Total,
+        Combined,
+        Singles,
+        Doubles,
+        CoOp
+    }
 }

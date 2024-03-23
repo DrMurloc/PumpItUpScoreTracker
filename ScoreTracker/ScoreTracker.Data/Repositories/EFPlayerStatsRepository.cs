@@ -30,7 +30,16 @@ namespace ScoreTracker.Data.Repositories
                     SinglesRating = newStats.SinglesRating,
                     DoublesRating = newStats.DoublesRating,
                     SkillRating = newStats.SkillRating,
-                    TotalRating = newStats.TotalRating
+                    TotalRating = newStats.TotalRating,
+                    AverageCoOpScore = newStats.CoOpScore,
+                    AverageDoublesLevel = newStats.DoublesLevel,
+                    AverageDoublesScore = newStats.DoublesScore,
+                    AverageSinglesLevel = newStats.SinglesLevel,
+                    AverageSinglesScore = newStats.SinglesScore,
+                    AverageSkillLevel = newStats.SkillLevel,
+                    AverageSkillScore = newStats.SkillScore,
+                    HighestLevel = newStats.HighestLevel,
+                    ClearCount = newStats.ClearCount
                 }, cancellationToken);
             }
             else
@@ -40,6 +49,15 @@ namespace ScoreTracker.Data.Repositories
                 entity.DoublesRating = newStats.DoublesRating;
                 entity.SkillRating = newStats.SkillRating;
                 entity.TotalRating = newStats.TotalRating;
+                entity.AverageCoOpScore = newStats.CoOpScore;
+                entity.AverageDoublesLevel = newStats.DoublesLevel;
+                entity.AverageDoublesScore = newStats.DoublesScore;
+                entity.AverageSinglesLevel = newStats.SinglesLevel;
+                entity.AverageSinglesScore = newStats.SinglesScore;
+                entity.AverageSkillLevel = newStats.SkillLevel;
+                entity.AverageSkillScore = newStats.SkillScore;
+                entity.HighestLevel = newStats.HighestLevel;
+                entity.ClearCount = newStats.ClearCount;
             }
 
             await _database.SaveChangesAsync(cancellationToken);
@@ -49,10 +67,13 @@ namespace ScoreTracker.Data.Repositories
         {
             var entity =
                 await _database.PlayerStats.FirstOrDefaultAsync(p => p.UserId == request.UserId, cancellationToken);
-            if (entity == null) return new PlayerStatsRecord(0, 0, 0, 0, 0);
+            if (entity == null) return new PlayerStatsRecord(0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
-            return new PlayerStatsRecord(entity.TotalRating, entity.CoOpRating, entity.SkillRating,
-                entity.SinglesRating, entity.DoublesRating);
+            return new PlayerStatsRecord(entity.TotalRating, entity.HighestLevel, entity.ClearCount, entity.CoOpRating,
+                entity.AverageCoOpScore, entity.SkillRating, entity.AverageSkillScore, entity.AverageSkillLevel,
+                entity.SinglesRating,
+                entity.AverageSinglesScore, entity.AverageSinglesLevel, entity.DoublesRating,
+                entity.AverageDoublesScore, entity.AverageDoublesLevel);
         }
     }
 }
