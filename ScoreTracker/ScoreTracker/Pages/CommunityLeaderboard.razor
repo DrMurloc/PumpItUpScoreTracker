@@ -1,4 +1,4 @@
-﻿@page "/Community/{CommunityName}/Leaderboard"
+﻿@page "/Community/Leaderboard"
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.Records
@@ -22,23 +22,23 @@
     </ToolBarContent>
     <HeaderContent>
         <MudTh>
-            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => e.PlayerName)">Name</MudTableSortLabel>
+            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => e.PlayerName.ToString())">Name</MudTableSortLabel>
         </MudTh>
 
         <MudTh>
-            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => e.TotalRating)">Total Rating</MudTableSortLabel>
+            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => (int)e.TotalRating)">Total Rating</MudTableSortLabel>
         </MudTh>
         <MudTh>
-            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => e.SkillRating)">Top 50</MudTableSortLabel>
+            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => (int) e.SkillRating)">Top 50</MudTableSortLabel>
         </MudTh>
         <MudTh>
-            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => e.SinglesRating)">Top 50 Singles</MudTableSortLabel>
+            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => (int)e.SinglesRating)">Top 50 Singles</MudTableSortLabel>
         </MudTh>
         <MudTh>
-            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => e.DoublesRating)">Top 50 Doubles</MudTableSortLabel>
+            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => (int)e.DoublesRating)">Top 50 Doubles</MudTableSortLabel>
         </MudTh>
         <MudTh>
-            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e => e.CoOpRating)">CoOp Rating</MudTableSortLabel>
+            <MudTableSortLabel T="CommunityLeaderboardRecord" SortBy="@(e =>(int) e.CoOpRating)">CoOp Rating</MudTableSortLabel>
         </MudTh>
 
     </HeaderContent>
@@ -128,7 +128,8 @@
     private IEnumerable<CommunityLeaderboardRecord> _leaderboard = Array.Empty<CommunityLeaderboardRecord>();
     private IEnumerable<ScoreEntry> _scores = Array.Empty<ScoreEntry>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
-    [Parameter] public string CommunityName { get; set; }
+    [Parameter]
+    [SupplyParameterFromQuery]public string CommunityName { get; set; }
     protected override async Task OnInitializedAsync()
     {
         var communityName = HttpUtility.UrlDecode(CommunityName);

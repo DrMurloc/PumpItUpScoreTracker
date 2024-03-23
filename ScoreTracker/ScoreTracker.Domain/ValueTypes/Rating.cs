@@ -135,7 +135,7 @@ namespace ScoreTracker.Domain.ValueTypes
 
         public int CompareTo(Rating other)
         {
-            return _score.CompareTo(other._score);
+            return _score - other._score;
         }
     }
 }
