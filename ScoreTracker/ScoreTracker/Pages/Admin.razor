@@ -1,13 +1,17 @@
 ﻿@page "/Admin"
 @using MediatR
+@using Microsoft.EntityFrameworkCore
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
+@using ScoreTracker.Data.Persistence
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Services.Contracts
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using MassTransit
+@using ScoreTracker.Domain.Events
 
 <PageTitle>Admin</PageTitle>
 
@@ -129,6 +133,8 @@ Do It
 @inject NavigationManager NavManager;
 @inject ITierListRepository TierLists;
 @inject IWorldRankingService WorldRanking;
+@inject ChartAttemptDbContext Database;
+@inject IBus Bus;
 @code
 {
     private MudAutocomplete<string> _autocomplete;
@@ -144,10 +150,15 @@ Do It
 
     private async Task RebuildOfficialLeaderboard()
     {
-        await Mediator.Send(new ProcessChartPopularityCommand());
+        var userIds = await Database.User.Select(u => u.Id).ToArrayAsync();
+        foreach (var userId in userIds)
+        {
+            await Bus.Publish(new PlayerScoreUpdatedEvent(userId));
+        }
+    /*await Mediator.Send(new ProcessChartPopularityCommand());
         //await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);
         await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
-        await WorldRanking.CalculateWorldRankings(CancellationToken.None);
+        await WorldRanking.CalculateWorldRankings(CancellationToken.None);*/
 
     }
     private async Task SelectChart(Chart chart)
