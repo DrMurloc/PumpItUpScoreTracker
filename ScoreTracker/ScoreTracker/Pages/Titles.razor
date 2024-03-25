@@ -23,12 +23,24 @@
                 <CellTemplate>
                     @if (context.Item.IsTrackable)
                     {
-                        <MudProgressLinear Color="@(context.Item.CompletionCount >= context.Item.RequiredCount ? Color.Success : Color.Primary)" Value="100.0 * (context.Item.CompletionCount / (double)context.Item.RequiredCount)">
+                        <MudProgressLinear Color="@(context.Item.CompletionCount >= context.Item.RequiredCount ? Color.Success : Color.Primary)"  Min="@(context.Item.TitleCategory=="Skill"?PhoenixLetterGrade.AA.GetMinimumScore():0)" Max="context.Item.RequiredCount" Value="context.Item.CompletionCount">
                             @if (context.Item.CompletionCount < context.Item.RequiredCount)
                             {
-                                <MudText Typo="Typo.subtitle1">
-                                    @context.Item.CompletionCount / @context.Item.RequiredCount
-                                </MudText>
+                                @if (context.Item.TitleCategory == "Skill")
+                                {
+                                    @if (context.Item.CompletionCount > 0)
+                                    {
+                                        <MudText Typo="Typo.subtitle1">
+                                            @(PhoenixScore.From(context.Item.CompletionCount).LetterGrade.GetName())
+                                        </MudText>
+                                    }
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.subtitle1">
+                                        @context.Item.CompletionCount / @context.Item.RequiredCount
+                                    </MudText>
+                                }
                             }
                         </MudProgressLinear>
                     }
