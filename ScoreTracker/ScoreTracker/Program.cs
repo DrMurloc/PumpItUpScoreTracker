@@ -114,6 +114,7 @@ builder.Services.AddBlazorApplicationInsights()
     .AddTransient<IUiSettingsAccessor, UiSettingsAccessor>()
     .AddHttpContextAccessor()
     .AddHttpClient()
+    .AddHostedService<RecurringJobHostedService>()
     .AddHostedService<BotHostedService>()
     .AddMediatR(typeof(UpdateXXBestAttemptHandler), typeof(MainLayout), typeof(EFPlayerStatsRepository),
         typeof(PlayerRatingSaga))
