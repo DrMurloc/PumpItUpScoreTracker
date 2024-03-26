@@ -114,6 +114,10 @@
     }
     protected override async Task OnInitializedAsync()
     {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Login");
+        }
         var recommendations = (await Mediator.Send(new GetRecommendedChartsQuery())).ToArray();
         var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix)))
             .ToDictionary(c => c.Id);

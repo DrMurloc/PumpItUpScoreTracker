@@ -23,16 +23,33 @@ namespace ScoreTracker.Application.Handlers
         public async Task<IEnumerable<ChartRecommendation>> Handle(GetRecommendedChartsQuery request,
             CancellationToken cancellationToken)
         {
-            return await GetPushLevels(cancellationToken);
+            var titles = (await _mediator.Send(new GetTitleProgressQuery(MixEnum.Phoenix), cancellationToken))
+                .ToArray();
+
+            return (await GetPushLevels(cancellationToken, titles))
+                .Concat(await GetSkillTitleCharts(cancellationToken, titles)).ToArray();
         }
 
         private sealed record OrderedTitle(TitleProgress t, int i)
         {
         }
 
-        private async Task<IEnumerable<ChartRecommendation>> GetPushLevels(CancellationToken cancellationToken)
+        private async Task<IEnumerable<ChartRecommendation>> GetSkillTitleCharts(CancellationToken cancellationToken,
+            TitleProgress[] allTitles)
         {
-            var titles = (await _mediator.Send(new GetTitleProgressQuery(MixEnum.Phoenix), cancellationToken))
+            var charts = (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), cancellationToken)).ToArray();
+            return allTitles.Where(t =>
+                    t.Title is PhoenixSkillTitle && t.CompletionCount >= PhoenixLetterGrade.S.GetMinimumScore() &&
+                    t.CompletionCount < t.Title.CompletionRequired)
+                .Select(t => new ChartRecommendation("Skill Title Charts",
+                    charts.First(c => (t.Title as PhoenixSkillTitle)!.MatchesChart(c)).Id,
+                    "Charts you are close to achieving a Skill title (SSS) on"));
+        }
+
+        private async Task<IEnumerable<ChartRecommendation>> GetPushLevels(CancellationToken cancellationToken,
+            TitleProgress[] allTitles)
+        {
+            var titles = allTitles
                 .Where(title => title.Title is PhoenixDifficultyTitle)
                 .OrderBy(title => (title.Title as PhoenixDifficultyTitle)!.Level)
                 .ToArray();
