@@ -29,7 +29,7 @@
             <MudTableSortLabel T="Guid" SortBy="@(e => _charts[e].Song.Name)">Song</MudTableSortLabel>
         </MudTh>
         <MudTh>
-            <MudTableSortLabel T="Guid" SortBy="@(e => _approachabilityRank[e])">Approachability Rank</MudTableSortLabel>
+            <MudTableSortLabel T="Guid" SortBy="@(e => _approachabilityRank[e])">Rank</MudTableSortLabel>
         </MudTh>
         <MudTh>
             <MudTableSortLabel T="Guid" SortBy="@(e => _difficulty.TryGetValue(e,out var order)?order.Order:null)">Pass Difficulty</MudTableSortLabel>
@@ -55,16 +55,28 @@
             @_approachabilityRank[context]
         </MudTd>
         <MudTd>
-            @(_difficulty.TryGetValue(context, out var category) ? category.Category : "")
+            <MudText Style=@($"color:{Color(_difficulty.TryGetValue(context, out var categoryColor) ? categoryColor.Category : TierListCategory.Medium)}")>
+                @(_difficulty.TryGetValue(context, out var category) ? category.Category : "")
+            </MudText>
+            
         </MudTd>
         <MudTd>
-            @(_officialScores.TryGetValue(context, out var category) ? category.Category : "")
+            <MudText Style=@($"color:{Color(_officialScores.TryGetValue(context, out var categoryColor) ? categoryColor.Category : TierListCategory.Medium)}")>
+                @(_officialScores.TryGetValue(context, out var category) ? category.Category : "")
+            </MudText>
+            
         </MudTd>
         <MudTd>
-            @(_scores.TryGetValue(context, out var category) ? category.Category : "")
+            <MudText Style=@($"color:{Color(_scores.TryGetValue(context, out var categoryColor) ? categoryColor.Category : TierListCategory.Medium)}")>
+                @(_scores.TryGetValue(context, out var category) ? category.Category : "")
+            </MudText>
+            
         </MudTd>
         <MudTd>
-            @(_popularity.TryGetValue(context,out var category)?PopularityString(category.Category):"")
+            <MudText Style=@($"color:{Color(_popularity.TryGetValue(context, out var categoryColor) ? categoryColor.Category : TierListCategory.Medium)}")>
+                @(_popularity.TryGetValue(context,out var category)?PopularityString(category.Category):"")
+            </MudText>
+
         </MudTd>
     </RowTemplate>
 </MudTable>
@@ -86,6 +98,16 @@
     private DifficultyLevel _level = 18;
     private IDictionary<Guid,Chart> _charts = new Dictionary<Guid, Chart>();
 
+    private string Color(TierListCategory category) => category switch
+    {
+        TierListCategory.Overrated=>"#00FFFF",
+        TierListCategory.VeryEasy=>"#00FFBB",
+        TierListCategory.Easy=>"#00FF55",
+        TierListCategory.Medium=>"#00FF00",
+        TierListCategory.Hard=>"#55BB00",
+        TierListCategory.VeryHard=>"#BB5500",
+        TierListCategory.Underrated=>"#FF0000"
+    };
     private string PopularityString(TierListCategory category) => category switch {
         TierListCategory.Overrated=>"Ultra Popular",
         TierListCategory.VeryEasy=>"Very Popular",
