@@ -137,23 +137,32 @@ namespace ScoreTracker.Application.Handlers
 
         private async Task<IEnumerable<Guid>> GetApproachableCharts(CancellationToken cancellationToken)
         {
+            var chartLevels =
+                (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), cancellationToken)).ToDictionary(c => c.Id,
+                    c => c.Level);
+
             var popularity = await _mediator.Send(new GetTierListQuery("Popularity"), cancellationToken);
             var difficulty = await _mediator.Send(new GetTierListQuery("Difficulty"), cancellationToken);
-            var score = await _mediator.Send(new GetTierListQuery("Official Scores"), cancellationToken);
-            return popularity.Concat(difficulty).Concat(score).GroupBy(s => s.ChartId).OrderByDescending(g => g.Sum(s =>
-                (s.TierListName == "Popularity" ? .5 : 1.0) *
-                s.Category switch
+            var officialScore =
+                (await _mediator.Send(new GetTierListQuery("Official Scores"), cancellationToken)).Where(r =>
+                    chartLevels[r.ChartId] >= 20);
+            var score = (await _mediator.Send(new GetTierListQuery("Scores"), cancellationToken))
+                .Where(r => chartLevels[r.ChartId] < 20);
+            return popularity.Concat(difficulty).Concat(score).Concat(officialScore).GroupBy(s => s.ChartId)
+                .OrderByDescending(g => g.Sum(s =>
+                    (s.TierListName == "Popularity" ? .5 : 1.0) *
+                    s.Category switch
 
-                {
-                    TierListCategory.Overrated => 7.0,
-                    TierListCategory.Easy => 6.0,
-                    TierListCategory.VeryEasy => 5.0,
-                    TierListCategory.Medium => 4.0,
-                    TierListCategory.Hard => 3.0,
-                    TierListCategory.VeryHard => 2.0,
-                    TierListCategory.Underrated => 1.0,
-                    _ => 0
-                })).Select(g => g.Key).ToArray();
+                    {
+                        TierListCategory.Overrated => 7.0,
+                        TierListCategory.Easy => 6.0,
+                        TierListCategory.VeryEasy => 5.0,
+                        TierListCategory.Medium => 4.0,
+                        TierListCategory.Hard => 3.0,
+                        TierListCategory.VeryHard => 2.0,
+                        TierListCategory.Underrated => 1.0,
+                        _ => 0
+                    })).Select(g => g.Key).ToArray();
         }
     }
 }
