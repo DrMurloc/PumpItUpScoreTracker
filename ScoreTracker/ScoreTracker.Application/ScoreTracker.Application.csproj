@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
+    <ProjectReference Include="..\ScoreTracker.PersonalProgress\ScoreTracker.PersonalProgress.csproj" />
   </ItemGroup>
 
 </Project>

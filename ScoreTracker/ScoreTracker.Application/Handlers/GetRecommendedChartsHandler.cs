@@ -5,6 +5,7 @@ using ScoreTracker.Domain.Models.Titles;
 using ScoreTracker.Domain.Models.Titles.Phoenix;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.PersonalProgress.Queries;
 
 namespace ScoreTracker.Application.Handlers
 {
@@ -27,11 +28,26 @@ namespace ScoreTracker.Application.Handlers
                 .ToArray();
 
             return (await GetPushLevels(cancellationToken, titles))
-                .Concat(await GetSkillTitleCharts(cancellationToken, titles)).ToArray();
+                .Concat(await GetSkillTitleCharts(cancellationToken, titles))
+                .Concat(await GetRandomFromTop50Charts(cancellationToken)).ToArray();
         }
 
         private sealed record OrderedTitle(TitleProgress t, int i)
         {
+        }
+
+        private async Task<IEnumerable<ChartRecommendation>> GetRandomFromTop50Charts(
+            CancellationToken cancellationToken)
+        {
+            var random = new Random();
+            var charts =
+                await _mediator.Send(new GetTop50ForPlayerQuery(_currentUser.User.Id, null), cancellationToken);
+            return charts
+                .Where(c => c.Score != null && c.Score < 1000000)
+                .OrderBy(c => random.Next())
+                .Take(5)
+                .Select(c => new ChartRecommendation("Improve Your Top 50", c.ChartId,
+                    "These are randomly pulled from your best 50 charts based on rating. Push that score!"));
         }
 
         private async Task<IEnumerable<ChartRecommendation>> GetSkillTitleCharts(CancellationToken cancellationToken,
@@ -52,6 +68,7 @@ namespace ScoreTracker.Application.Handlers
             var titles = allTitles
                 .Where(title => title.Title is PhoenixDifficultyTitle)
                 .OrderBy(title => (title.Title as PhoenixDifficultyTitle)!.Level)
+                .ThenBy(title => title.Title.Name)
                 .ToArray();
 
             var firstAchieved = titles.Count() - (titles.Reverse().Select((t, i) => new OrderedTitle(t, i))
