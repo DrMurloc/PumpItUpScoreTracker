@@ -47,7 +47,7 @@ var facebookConfig = builder.Configuration.GetSection("Facebook").Get<FacebookCo
 builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSection("Discord"));
 builder.Services.AddMassTransit(o =>
 {
-    o.AddConsumers(typeof(PlayerRatingSaga).Assembly);
+    o.AddConsumers(typeof(PlayerRatingSaga).Assembly, typeof(TierListSaga).Assembly);
     o.UsingInMemory((context, cfg) => { cfg.ConfigureEndpoints(context); });
 });
 builder.Services.AddAuthentication("DefaultAuthentication")

@@ -1,6 +1,8 @@
-﻿using MediatR;
+﻿using MassTransit;
+using MediatR;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
@@ -11,12 +13,15 @@ public sealed class
 {
     private readonly IChartRepository _charts;
     private readonly IChartDifficultyRatingRepository _difficultyRatings;
+    private readonly IBus _bus;
 
     public ReCalculateChartRatingHandler(IChartDifficultyRatingRepository difficultyRatings,
-        IChartRepository charts)
+        IChartRepository charts,
+        IBus bus)
     {
         _difficultyRatings = difficultyRatings;
         _charts = charts;
+        _bus = bus;
     }
 
     public async Task<ChartDifficultyRatingRecord> Handle(ReCalculateChartRatingCommand request,
@@ -43,6 +48,7 @@ public sealed class
             standardDeviation,
             cancellationToken);
 
+        await _bus.Publish(new ChartDifficultyUpdatedEvent(chart.Type, chart.Level), cancellationToken);
         return new ChartDifficultyRatingRecord(request.ChartId, baseDifficulty, ratings.Length, standardDeviation);
     }
 }

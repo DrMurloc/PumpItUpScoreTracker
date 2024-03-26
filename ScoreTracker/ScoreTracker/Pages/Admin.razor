@@ -133,7 +133,6 @@ Do It
 @inject NavigationManager NavManager;
 @inject ITierListRepository TierLists;
 @inject IWorldRankingService WorldRanking;
-@inject ChartAttemptDbContext Database;
 @inject IBus Bus;
 @code
 {
@@ -150,10 +149,10 @@ Do It
 
     private async Task RebuildOfficialLeaderboard()
     {
-        var userIds = await Database.User.Select(u => u.Id).ToArrayAsync();
-        foreach (var userId in userIds)
+        for (var i = 1; i <= 28; i++)
         {
-            await Bus.Publish(new PlayerScoreUpdatedEvent(userId));
+            await Bus.Publish(new ChartDifficultyUpdatedEvent(ChartType.Single, i));
+            await Bus.Publish(new ChartDifficultyUpdatedEvent(ChartType.Double, i));
         }
     /*await Mediator.Send(new ProcessChartPopularityCommand());
         //await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);

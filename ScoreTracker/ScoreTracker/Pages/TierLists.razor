@@ -439,6 +439,7 @@ else
     {
         _currentMix = await UiSettings.GetSelectedMix();
         _officialScoreTierListEntries = (await Mediator.Send(new GetTierListQuery("Official Scores"))).ToDictionary(s=>s.ChartId);
+        _difficultyTierListEntries = (await Mediator.Send(new GetTierListQuery("Difficulty"))).ToDictionary(s => s.ChartId);
         _popularityTierListEntries = (await Mediator.Send(new GetTierListQuery("Popularity"))).ToDictionary(s => s.ChartId);
         _currentTierList = Enum.TryParse<TierListType>(await UiSettings.GetSetting(TierListTypeKey), out var value) ? value : TierListType.Difficulty;
         if (_currentTierList == TierListType.MyScores && (_currentMix == MixEnum.XX || !CurrentUser.IsLoggedIn))
@@ -497,6 +498,7 @@ else
     private IDictionary<Guid, IEnumerable<RecordedPhoenixScore>> _allPhoenixScores = new Dictionary<Guid, IEnumerable<RecordedPhoenixScore>>();
     private IDictionary<Guid, SongTierListEntry> _officialScoreTierListEntries = new Dictionary<Guid, SongTierListEntry>();
     private IDictionary<Guid, SongTierListEntry> _popularityTierListEntries = new Dictionary<Guid, SongTierListEntry>();
+    private IDictionary<Guid, SongTierListEntry> _difficultyTierListEntries = new Dictionary<Guid, SongTierListEntry>();
     private void RefilterCharts()
     {
 
@@ -663,40 +665,40 @@ else
                 var type = Enum.Parse<ChartType>(ChartTypeFilter);
                 if (type is ChartType.Single or ChartType.Double)
                 {
-                    foreach (var chart in filtered.OrderByDescending(c => _ratings.ContainsKey(c.Id) ? _ratings[c.Id].Difficulty : c.Level + .5))
+                    foreach (var chart in filtered.OrderByDescending(c=>_difficultyTierListEntries.TryGetValue(c.Id, out var entry)?entry.Order:0))
                     {
-                        if (!_ratings.ContainsKey(chart.Id))
+                            if (!_difficultyTierListEntries.TryGetValue(chart.Id, out var score))
                         {
                             _notRatedCharts.Add(chart);
                             continue;
                         }
-                        var rating = _ratings[chart.Id];
-                        var diff = rating.Difficulty - chart.Level - .5;
-                        switch (diff)
+                        switch (score.Category)
                         {
-                            case <= -.75:
+                            case TierListCategory.Overrated:
                                 _overratedCharts.Add(chart);
                                 break;
-                            case <= -.375:
+                            case TierListCategory.VeryEasy:
                                 _veryEasyCharts.Add(chart);
                                 break;
-                            case <= -.125:
+                            case TierListCategory.Easy:
                                 _easyCharts.Add(chart);
                                 break;
-                            case < .125:
+                            case TierListCategory.Medium:
                                 _mediumCharts.Add(chart);
                                 break;
-                            case < .375:
+                            case TierListCategory.Hard:
                                 _hardCharts.Add(chart);
                                 break;
-                            case < .75:
+                            case TierListCategory.VeryHard:
                                 _veryHardCharts.Add(chart);
                                 break;
-                            default:
+                            case TierListCategory.Underrated:
                                 _underratedCharts.Add(chart);
                                 break;
+                            default:
+                                _notRatedCharts.Add(chart);
+                                break;
                         }
-
                     }
                 }
                 else
