@@ -149,15 +149,10 @@ Do It
 
     private async Task RebuildOfficialLeaderboard()
     {
-        for (var i = 1; i <= 28; i++)
-        {
-            await Bus.Publish(new ChartDifficultyUpdatedEvent(ChartType.Single, i));
-            await Bus.Publish(new ChartDifficultyUpdatedEvent(ChartType.Double, i));
-        }
-    /*await Mediator.Send(new ProcessChartPopularityCommand());
+        await Mediator.Send(new ProcessChartPopularityCommand());
         //await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);
         await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
-        await WorldRanking.CalculateWorldRankings(CancellationToken.None);*/
+        await WorldRanking.CalculateWorldRankings(CancellationToken.None);
 
     }
     private async Task SelectChart(Chart chart)
