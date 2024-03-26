@@ -72,9 +72,9 @@ namespace ScoreTracker.Application.Handlers
                 .ToArray();
 
             var firstAchieved = titles.Count() - (titles.Reverse().Select((t, i) => new OrderedTitle(t, i))
-                .FirstOrDefault(t => t.t.CompletionCount >= t.t.Title.CompletionRequired)?.i ?? titles.Count() + 1);
+                .FirstOrDefault(t => t.t.CompletionCount >= t.t.Title.CompletionRequired)?.i ?? titles.Count());
 
-            var pushLevel = titles[firstAchieved + 1];
+            var pushLevel = titles[firstAchieved];
 
             var charts = (
                 await _mediator.Send(
