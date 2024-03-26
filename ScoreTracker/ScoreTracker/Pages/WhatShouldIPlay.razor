@@ -1,0 +1,128 @@
+﻿@page "/WhatShouldIPlay"
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Models.Titles;
+@using ScoreTracker.Domain.Models.Titles.Phoenix;
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services.Contracts
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using System.Drawing
+@using System.Net
+@using Twilio.TwiML.Messaging
+
+<PageTitle>What Should I Play</PageTitle>
+
+@foreach (var key in _descriptions.Keys)
+{
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">
+                @key
+                <MudTooltip Text="@_descriptions[key]">
+                    <MudIcon Color="Color.Info" Size="Size.Small" Icon="@Icons.Material.Filled.QuestionMark" ></MudIcon>
+                </MudTooltip>
+
+            </MudText>
+        </MudItem>
+        @foreach (var chart in _charts[key])
+        {
+            <MudItem xs="6" sm="3" md="2">
+
+                <MudCard>
+                    <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()" />
+
+                    <MudCardActions>
+                        
+                        <MudImage Src="@chart.DifficultyBubblePath" Height="35" Alt="@chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                        <MudSpacer></MudSpacer>
+                        @if (_videos.ContainsKey(chart.Id))
+                        {
+                            <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(_videos[chart.Id],chart))"></MudIconButton>
+
+                        }
+                        else
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
+
+                        }
+
+                    </MudCardActions>
+
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+<MudDialog @bind-IsVisible="_showVideoDialog">
+    <DialogContent>
+        <iframe class="video"
+                id="chartVideoFrame"
+                src="@(_currentVideo + "?autoplay=1")"
+                allow="autoplay; encrypted-media"
+                allowfullscreen></iframe>
+    </DialogContent>
+
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudTooltip Text=@L["Report Video Tooltip"]>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report" OnClick="NotifyBadVideo">@L["Report Video"]</MudButton>
+        </MudTooltip>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">@L["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser;
+@inject NavigationManager NavManager;
+@inject IUiSettingsAccessor UiSettings;
+
+@inject IAdminNotificationClient Notifications;
+@inject ISnackbar Snackbar;
+@inject IPhoenixRecordRepository PhoenixRecords;
+
+@code {
+    private bool _showVideoDialog;
+    private string _currentVideoDescription;
+    private string _currentVideo = string.Empty;
+    private string ChartSearch(Chart chart)
+    {
+        var searchString = "Pump It Up " + chart.Song.Name + " " + chart.DifficultyString;
+        return $"https://www.youtube.com/results?search_query={searchString.Replace("%", "Percent ").Replace(" ", "+")}";
+    }
+    private IDictionary<Name, string> _descriptions = new Dictionary<Name, string>();
+    private IDictionary<Name, IEnumerable<Chart>> _charts = new Dictionary<Name, IEnumerable<Chart>>();
+    private IDictionary<Guid, string> _videos = new Dictionary<Guid, string>();
+    private void ShowVideo(string url, Chart chart)
+    {
+        _showVideoDialog = true;
+        _currentVideo = url;
+        _currentVideoDescription = $"{chart.Song.Name} - {chart.DifficultyString}";
+        StateHasChanged();
+    }
+    private async Task NotifyBadVideo()
+    {
+        await Notifications.NotifyAdmin($"The video for{_currentVideoDescription} was reported by {(CurrentUser.IsLoggedIn ? CurrentUser.User.Name : "Unknown")}", CancellationToken.None);
+        Snackbar.Add("Notification was sent", Severity.Success);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        var recommendations = (await Mediator.Send(new GetRecommendedChartsQuery())).ToArray();
+        var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix)))
+            .ToDictionary(c => c.Id);
+
+        var video = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(c => c.ChartId,c=>c.VideoUrl.ToString());
+        _charts = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => g.Select(r => charts[r.ChartId]).ToArray().AsEnumerable());
+        _descriptions = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => g.First().Explanation);
+
+
+
+    }
+}
