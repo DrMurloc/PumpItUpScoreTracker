@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Models.Titles;
 using ScoreTracker.Domain.Models.Titles.Phoenix;
 using ScoreTracker.Domain.Records;
@@ -26,14 +27,52 @@ namespace ScoreTracker.Application.Handlers
         {
             var titles = (await _mediator.Send(new GetTitleProgressQuery(MixEnum.Phoenix), cancellationToken))
                 .ToArray();
+            var scores = (await _mediator.Send(new GetPhoenixRecordsQuery(_currentUser.User.Id), cancellationToken))
+                .ToArray();
 
-            return (await GetPushLevels(cancellationToken, titles))
+            return (await GetPushLevels(cancellationToken, titles, scores))
                 .Concat(await GetSkillTitleCharts(cancellationToken, titles))
-                .Concat(await GetRandomFromTop50Charts(cancellationToken)).ToArray();
+                .Concat(await GetRandomFromTop50Charts(cancellationToken))
+                .Concat(await GetWeakCharts(cancellationToken, titles, scores)).ToArray();
         }
 
         private sealed record OrderedTitle(TitleProgress t, int i)
         {
+        }
+
+        private async Task<IEnumerable<ChartRecommendation>> GetWeakCharts(CancellationToken cancellationToken,
+            TitleProgress[] allTitles, RecordedPhoenixScore[] scores)
+        {
+            var charts = (
+                await _mediator.Send(
+                    new GetChartsQuery(MixEnum.Phoenix),
+                    cancellationToken)).ToDictionary(c => c.Id);
+            if (scores.Length <= 12)
+                return scores.Select(s => new ChartRecommendation("Skill Up", s.ChartId,
+                    "Charts that are relatively weaker for you compared to other players"));
+
+            var random = new Random();
+            var toFind = scores.Where(s => s.Score != null && s.Score < 1000000).OrderBy(s => random.NextInt64(10000))
+                .Select(s => charts[s.ChartId].Level)
+                .Distinct()
+                .Take(3).ToArray();
+            var result = new List<ChartRecommendation>();
+            foreach (var level in toFind)
+            {
+                var mySinglesRating = await _mediator.Send(new GetMyRelativeTierListQuery(ChartType.Single, level),
+                    cancellationToken);
+                var myDoublesRating = await _mediator.Send(new GetMyRelativeTierListQuery(ChartType.Double, level),
+                    cancellationToken);
+                result.AddRange(mySinglesRating.OrderByDescending(r => r.Order).Take(2).Select(r =>
+                    new ChartRecommendation("Skill Up", r.ChartId,
+                        "Charts that are relatively weaker for you compared to other players")));
+
+                result.AddRange(myDoublesRating.OrderByDescending(r => r.Order).Take(2).Select(r =>
+                    new ChartRecommendation("Skill Up", r.ChartId,
+                        "Charts that are relatively weaker for you compared to other players")));
+            }
+
+            return result;
         }
 
         private async Task<IEnumerable<ChartRecommendation>> GetRandomFromTop50Charts(
@@ -63,7 +102,7 @@ namespace ScoreTracker.Application.Handlers
         }
 
         private async Task<IEnumerable<ChartRecommendation>> GetPushLevels(CancellationToken cancellationToken,
-            TitleProgress[] allTitles)
+            TitleProgress[] allTitles, RecordedPhoenixScore[] scores)
         {
             var titles = allTitles
                 .Where(title => title.Title is PhoenixDifficultyTitle)
@@ -80,7 +119,7 @@ namespace ScoreTracker.Application.Handlers
                 await _mediator.Send(
                     new GetChartsQuery(MixEnum.Phoenix, (pushLevel.Title as PhoenixDifficultyTitle)!.Level),
                     cancellationToken)).ToDictionary(c => c.Id);
-            var myScores = (await _mediator.Send(new GetPhoenixRecordsQuery(_currentUser.User.Id), cancellationToken))
+            var myScores = scores
                 .ToDictionary(s => s.ChartId);
             var chartOrder = (await GetApproachableCharts(cancellationToken)).Where(id => charts.ContainsKey(id))
                 .ToArray();

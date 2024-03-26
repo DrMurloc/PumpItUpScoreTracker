@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Enums;
@@ -16,10 +12,18 @@ namespace ScoreTracker.Data.Repositories
     public sealed class EFTierListRepository : ITierListRepository
     {
         private readonly ChartAttemptDbContext _dbContext;
+        private readonly IMemoryCache _cache;
 
-        public EFTierListRepository(IDbContextFactory<ChartAttemptDbContext> factory)
+        public EFTierListRepository(IDbContextFactory<ChartAttemptDbContext> factory,
+            IMemoryCache cache)
         {
             _dbContext = factory.CreateDbContext();
+            _cache = cache;
+        }
+
+        private static string TierListKey(Name tierListName)
+        {
+            return $"{nameof(EFTierListRepository)}_TierList_{tierListName}";
         }
 
         public async Task SaveEntry(SongTierListEntry entry, CancellationToken cancellationToken)
@@ -45,16 +49,21 @@ namespace ScoreTracker.Data.Repositories
             }
 
             await _dbContext.SaveChangesAsync(cancellationToken);
+            _cache.Remove(TierListKey(entry.TierListName));
         }
 
         public async Task<IEnumerable<SongTierListEntry>> GetAllEntries(Name tierListName,
             CancellationToken cancellationToken)
         {
-            var nameString = tierListName.ToString();
-            return (await _dbContext.TierListEntry.ToArrayAsync(cancellationToken))
-                .Where(e => e.TierListName == nameString).Select(e =>
-                    new SongTierListEntry(e.TierListName,
-                        e.ChartId, Enum.Parse<TierListCategory>(e.Category), e.Order));
+            return await _cache.GetOrCreateAsync(TierListKey(tierListName), async o =>
+            {
+                o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromDays(1);
+                var nameString = tierListName.ToString();
+                return (await _dbContext.TierListEntry.ToArrayAsync(cancellationToken))
+                    .Where(e => e.TierListName == nameString).Select(e =>
+                        new SongTierListEntry(e.TierListName,
+                            e.ChartId, Enum.Parse<TierListCategory>(e.Category), e.Order));
+            });
         }
     }
 }

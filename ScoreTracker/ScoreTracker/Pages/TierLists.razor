@@ -556,9 +556,10 @@ else
                 var hardMinCompare = averageCompare - standardDeviationCompare;
                 var veryHardMinCompare = averageCompare - standardDeviationCompare * 1.5;
                 var chartIdsCompare = filteredCompareScoreArray.Select(c => c.Id).ToHashSet();
+                var compareTo = DifficultyFilter >= 20 ? _officialScoreTierListEntries : _scoreTierListEntries;
                 foreach (var chart in filteredCompareScoreArray)
                 {
-                    if (!_officialScoreTierListEntries.TryGetValue(chart.Id, out var officialEntry))
+                    if (!compareTo.TryGetValue(chart.Id, out var officialEntry))
                     {
                         _notRatedCharts.Add(chart);
                         continue;

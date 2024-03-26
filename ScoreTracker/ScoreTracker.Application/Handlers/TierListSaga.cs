@@ -1,4 +1,5 @@
 ﻿using MassTransit;
+using MediatR;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Records;
@@ -7,20 +8,24 @@ using ScoreTracker.Domain.SecondaryPorts;
 namespace ScoreTracker.Application.Handlers;
 
 public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
-    IConsumer<ProcessScoresTiersListCommand>
+    IConsumer<ProcessScoresTiersListCommand>,
+    IRequestHandler<GetMyRelativeTierListQuery, IEnumerable<SongTierListEntry>>
 {
     private readonly IChartDifficultyRatingRepository _chartRatings;
     private readonly IChartRepository _chartRepository;
     private readonly ITierListRepository _tierLists;
     private readonly IPhoenixRecordRepository _scores;
+    private readonly ICurrentUserAccessor _currentUser;
 
     public TierListSaga(IChartDifficultyRatingRepository chartRatings, IChartRepository chartRepository,
-        ITierListRepository tierLists, IPhoenixRecordRepository scores)
+        ITierListRepository tierLists, IPhoenixRecordRepository scores,
+        ICurrentUserAccessor currentUser)
     {
         _chartRatings = chartRatings;
         _chartRepository = chartRepository;
         _tierLists = tierLists;
         _scores = scores;
+        _currentUser = currentUser;
     }
 
 
@@ -203,5 +208,89 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         if (as_sample)
             return Math.Sqrt(sum_of_squares / (values.Count() - 1));
         return Math.Sqrt(sum_of_squares / values.Count());
+    }
+
+    public async Task<IEnumerable<SongTierListEntry>> Handle(GetMyRelativeTierListQuery request,
+        CancellationToken cancellationToken)
+    {
+        var filtered = await _chartRepository.GetCharts(MixEnum.Phoenix, request.Level, request.ChartType,
+            cancellationToken: cancellationToken);
+        var phoenixScores =
+            (await _scores.GetRecordedScores(_currentUser.User.Id, cancellationToken)).ToDictionary(s => s.ChartId);
+
+
+        var filteredCompareScoreArray = filtered
+            .Where(c => phoenixScores.ContainsKey(c.Id) && phoenixScores[c.Id].Score != null)
+            .OrderBy(c => phoenixScores.ContainsKey(c.Id) ? (int)(phoenixScores[c.Id]?.Score ?? 0) : 0).ToArray();
+        if (!filteredCompareScoreArray.Any()) return Array.Empty<SongTierListEntry>();
+
+        var officialScoreTierListEntries =
+            (await _tierLists.GetAllEntries(request.Level >= 20 ? "Official Scores" : "Scores", cancellationToken))
+            .ToDictionary(e => e.ChartId);
+        var standardDeviationCompare =
+            StdDev(filteredCompareScoreArray.Select(s => (int)(phoenixScores[s.Id].Score ?? 0)), true);
+        var averageCompare = filteredCompareScoreArray.Average(s => phoenixScores[s.Id]?.Score ?? 0);
+        var mediumMinCompare = averageCompare - standardDeviationCompare / 2;
+        var easyMinCompare = averageCompare + standardDeviationCompare / 2;
+        var veryEasyMinCompare = averageCompare + standardDeviationCompare;
+        var oneLevelOverratedCompare = averageCompare + standardDeviationCompare * 1.5;
+        var hardMinCompare = averageCompare - standardDeviationCompare;
+        var veryHardMinCompare = averageCompare - standardDeviationCompare * 1.5;
+        var chartIdsCompare = filteredCompareScoreArray.Select(c => c.Id).ToHashSet();
+        var result = new List<SongTierListEntry>();
+        foreach (var chart in filteredCompareScoreArray)
+        {
+            if (!officialScoreTierListEntries.TryGetValue(chart.Id, out var officialEntry)) continue;
+            var score = (int)(phoenixScores[chart.Id]?.Score ?? 0);
+            var myCategory = TierListCategory.Overrated;
+            if (score < veryHardMinCompare)
+                myCategory = TierListCategory.Underrated;
+            else if (score < hardMinCompare)
+                myCategory = TierListCategory.VeryHard;
+            else if (score < mediumMinCompare)
+                myCategory = TierListCategory.Hard;
+            else if (score < easyMinCompare)
+                myCategory = TierListCategory.Medium;
+            else if (score < veryEasyMinCompare)
+                myCategory = TierListCategory.Easy;
+            else if (score < oneLevelOverratedCompare)
+                myCategory = TierListCategory.VeryEasy;
+            else
+                myCategory = TierListCategory.Overrated;
+            var diff = officialEntry.Category - myCategory;
+            switch (diff)
+            {
+                case > 2:
+                    result.Add(new SongTierListEntry("My Relative Scores", chart.Id, TierListCategory.Overrated,
+                        diff * -100));
+                    break;
+                case > 1:
+                    result.Add(new SongTierListEntry("My Relative Scores", chart.Id, TierListCategory.VeryEasy,
+                        diff * -100));
+                    break;
+                case > 0:
+                    result.Add(
+                        new SongTierListEntry("My Relative Scores", chart.Id, TierListCategory.Easy, diff * -100));
+                    break;
+                case > -1:
+                    result.Add(new SongTierListEntry("My Relative Scores", chart.Id, TierListCategory.Medium,
+                        diff * -100));
+                    break;
+                case > -2:
+                    result.Add(
+                        new SongTierListEntry("My Relative Scores", chart.Id, TierListCategory.Hard, diff * -100));
+                    break;
+                case > -3:
+                    result.Add(new SongTierListEntry("My Relative Scores", chart.Id, TierListCategory.VeryHard,
+                        diff * -100));
+                    break;
+                default:
+                    result.Add(new SongTierListEntry("My Relative Scores", chart.Id, TierListCategory.Underrated,
+                        diff * -100));
+                    break;
+            }
+        }
+
+        return result;
     }
 }
