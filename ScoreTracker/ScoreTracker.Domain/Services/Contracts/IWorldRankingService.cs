@@ -9,5 +9,7 @@ namespace ScoreTracker.Domain.Services.Contracts
 
         Task<IEnumerable<RecordedPhoenixScore>> GetTop50(Name username, string type,
             CancellationToken cancellationToken);
+
+        Task<IEnumerable<RecordedPhoenixScore>> GetAll(Name username, CancellationToken cancellationToken);
     }
 }

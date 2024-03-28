@@ -77,6 +77,25 @@ namespace ScoreTracker.Domain.Services
             }
         }
 
+        public async Task<IEnumerable<RecordedPhoenixScore>> GetAll(Name username, CancellationToken cancellationToken)
+        {
+            var result = new List<RecordedPhoenixScore>();
+            foreach (var record in (await _leaderboards.GetOfficialLeaderboardStatuses(username, cancellationToken))
+                     .Where(l => l.OfficialLeaderboardType == "Chart" && !l.LeaderboardName.Contains("CoOp"))
+                     .Select(l => (l.Score, DifficultyLevel.ParseShortHand(l.LeaderboardName.Split(" ")[^1]),
+                         l.LeaderboardName)))
+            {
+                var songName = string.Join(" ", record.LeaderboardName.Split(" ").Reverse().Skip(1).Reverse());
+                var charts = await _charts.GetChartsForSong(MixEnum.Phoenix, songName, cancellationToken);
+                var chart = charts
+                    .FirstOrDefault(c => c.Type == record.Item2.chartType && c.Level == record.Item2.level);
+                if (chart != null)
+                    result.Add(new RecordedPhoenixScore(chart.Id, record.Score, null, false, DateTimeOffset.Now));
+            }
+
+            return result;
+        }
+
         public async Task<IEnumerable<RecordedPhoenixScore>> GetTop50(Name username, string type,
             CancellationToken cancellationToken)
         {

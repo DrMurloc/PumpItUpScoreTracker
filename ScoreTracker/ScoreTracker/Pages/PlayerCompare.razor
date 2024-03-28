@@ -1,0 +1,160 @@
+﻿@page "/OfficialLeaderboards/PlayerCompare"
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.Services.Contracts
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Application.Queries
+@using MediatR
+<PageTitle>Official Leaderboard Player Compare</PageTitle>
+<MudText>@L["Last Updated"] - @LeaderboardSearch._lastUpdated.ToLocalTime().ToString()</MudText>
+<MudAutocomplete T="string" AdornmentIcon="@Icons.Material.Filled.Search"
+                 ResetValueOnEmptyText="true"
+                 CoerceText="true"
+                 Label=@L["Username"]
+                 Value="_selectedUsername"
+                 SearchFunc="s=>Task.FromResult(_usernames.Where(u=>u.Contains(s,StringComparison.OrdinalIgnoreCase)))"
+                 ValueChanged="SelectUser"></MudAutocomplete>
+<br />
+@if (_players.Any())
+{
+    <MudText>@_totalCharts total Charts with scores</MudText>
+}
+@if (_players.Count() > 1)
+{
+    <MudText>@_contestedCharts contested Charts (two or more players with scores)</MudText>
+}
+<br/>
+@foreach (var player in _players.Keys)
+{
+    <MudButton Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.Delete" OnClick="() => ClearUser(player)">@player</MudButton>
+    @if (_players.Count() > 1)
+    {
+        @if (_contestedCharts > 0)
+        {
+            <MudText>@_winners.Values.Count(w => w.Equals(player, StringComparison.OrdinalIgnoreCase)) Wins (@((100.0 * _winners.Values.Count(w => w.Equals(player, StringComparison.OrdinalIgnoreCase)) / (double)_contestedCharts).ToString("0.00"))%)</MudText>
+            @if (_winLevelAverage[player] > 0)
+            {
+                <MudText>Averages Difficulty Level @_winLevelAverage[player].ToString("0.00") on wins</MudText>
+            }
+        }
+        <MudText>@_leaderboardCharts.Count(c => _players[player].ContainsKey(c.Id) && !_players.Where(kv => !kv.Key.Equals(player)).Any(kv => kv.Value.ContainsKey(c.Id))) charts scored that no other selected player has scored</MudText>
+
+    }
+    <br/>
+}
+@if (_winners.Any(w => w.Value == "Tie") && _contestedCharts > 0)
+{
+    <MudText>@_winners.Count(w=>w.Value=="Tie") Ties (@((100.0*_winners.Count(w=>w.Value=="Tie")/(double)_contestedCharts).ToString("0.00"))%)</MudText>
+    <br/>
+}
+@if (_players.Values.Any(p=>p.Any()))
+{
+    <MudTextField @bind-Value="_searchText" Label="Song Filter" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true"></MudTextField>
+    <br/>
+    <MudTable T="Chart" Items="FilteredCharts">
+        <HeaderContent>
+            <MudTh><MudTableSortLabel T="Chart" SortBy="c=>c.Song.Name.ToString()">Song</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="Chart" SortBy="c=>(int)c.Level">Chart</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="Chart" SortBy="c=>_winners[c.Id]">Winner</MudTableSortLabel></MudTh>
+            @foreach (var key in _players.Keys)
+            {
+                <MudTh>
+                    <MudTableSortLabel T="Chart" SortBy="c=>_players[key].TryGetValue(c.Id,out var score)?(int)score:0">@key</MudTableSortLabel>
+                </MudTh>
+            }
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudTooltip Text="@context.Song.Name">
+                    
+                    <MudImage Src="@context.Song.ImagePath.ToString()" Height="35" Alt="@context.Song.Name" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
+                </MudTooltip>
+            </MudTd>
+            <MudTd>
+                <MudImage Src="@context.DifficultyBubblePath" Height="35" Alt="@context.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+            </MudTd>
+            <MudTd>
+                @_winners[context.Id]
+            </MudTd>
+            @foreach (var key in _players.Keys)
+            {
+                <MudTd>
+                    @(_players[key].TryGetValue(context.Id, out var score)?$"{score} ({score.LetterGrade.GetName()})":"")
+                </MudTd>
+            }
+        </RowTemplate>
+        
+        <PagerContent>
+            <MudTablePager></MudTablePager>
+        </PagerContent>
+    </MudTable>
+} else if (_players.Values.Any())
+{
+    <MudText>No Selected Players Have Leaderboard Scores</MudText>
+}
+else
+{
+    <MudText>Please select players to compare them</MudText>
+}
+@inject IOfficialLeaderboardRepository Leaderboards;
+@inject IMediator Mediator;
+@inject IWorldRankingService WorldRankings;
+@code {
+    private readonly IDictionary<string, IDictionary<Guid, PhoenixScore>> _players = new Dictionary<string, IDictionary<Guid, PhoenixScore>>(StringComparer.OrdinalIgnoreCase);
+    private  IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private IEnumerable<Chart> _leaderboardCharts = Array.Empty<Chart>();
+
+    private IEnumerable<Chart> FilteredCharts => _leaderboardCharts.Where(c => string.IsNullOrWhiteSpace(_searchText) || c.Song.Name.ToString().Contains(_searchText, StringComparison.OrdinalIgnoreCase))
+        .OrderBy(s => string.IsNullOrWhiteSpace(_searchText) || s.Song.Name == _searchText ? 0 : 1);
+    private IEnumerable<string> _usernames = Array.Empty<string>();
+    private bool _isloading = false;
+    private string _selectedUsername = string.Empty;
+    private string _searchText = string.Empty;
+    private void ClearUser(string username)
+    {
+        _players.Remove(username);
+    }
+
+    private int _contestedCharts = 0;
+    private int _totalCharts = 0;
+    private IDictionary<Guid, string> _winners = new Dictionary<Guid, string>();
+    private IDictionary<string, double> _winLevelAverage = new Dictionary<string, double>();
+    private async Task SelectUser(string username)
+    {
+        if (!_usernames.Contains(username, StringComparer.OrdinalIgnoreCase))
+        {
+            return;
+        }   
+        _isloading = true;
+
+        _players[username] = (await WorldRankings.GetAll(username, CancellationToken.None))
+            .Where(r => r.Score != null)
+            .ToDictionary(r => r.ChartId, r => r.Score!.Value);
+
+
+        _leaderboardCharts = _charts.Where(c => _players.Values.Any(p => p.ContainsKey(c.Key))).Select(c => c.Value).ToArray();
+
+        _winners = _leaderboardCharts.ToDictionary(c => c.Id, c =>
+            _players.Count(kv => kv.Value.ContainsKey(c.Id)) < 2 ? ""
+                : _players.GroupBy(p=>p.Value.TryGetValue(c.Id,out var score)?(int)score:0).OrderByDescending(g=>g.Key).First().Count()>1 ? "Tie"
+                    : _players.MaxBy(kv => kv.Value.TryGetValue(c.Id, out var score) ? (int)score : 0).Key);
+
+        _winLevelAverage = _players.Keys.ToDictionary(player => player, player => _winners.Any(kv => kv.Value.Equals(player, StringComparison.OrdinalIgnoreCase)) ? _winners.Where(kv => kv.Value.Equals(player, StringComparison.OrdinalIgnoreCase))
+            .Average(kv => _charts[kv.Key].Level) : 0);
+
+        _totalCharts = _leaderboardCharts.Count();
+        _contestedCharts = _leaderboardCharts.Count(c => !string.IsNullOrWhiteSpace(_winners[c.Id]));
+        _isloading = false;
+
+
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        _usernames = (await Leaderboards.GetOfficialLeaderboardUsernames(CancellationToken.None)).ToArray();
+        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+
+    }
+}

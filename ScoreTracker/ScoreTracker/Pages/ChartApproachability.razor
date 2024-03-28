@@ -49,7 +49,7 @@
             <MudTooltip Text="@_charts[context].Song.Name">
                 
                 <MudImage Src="@_charts[context].Song.ImagePath.ToString()" Height="35" Alt="@_charts[context].Song.Name" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
-                </MudTooltip>
+            </MudTooltip>
         </MudTd>
         <MudTd>
             @_approachabilityRank[context]
@@ -79,6 +79,10 @@
 
         </MudTd>
     </RowTemplate>
+
+    <PagerContent>
+        <MudTablePager></MudTablePager>
+    </PagerContent>
 </MudTable>
 @inject IMediator Mediator
 @inject NavigationManager NavManager
