@@ -116,12 +116,30 @@ else
     private void ClearUser(string username)
     {
         _players.Remove(username);
+        Recalculate();
     }
 
     private int _contestedCharts = 0;
     private int _totalCharts = 0;
     private IDictionary<Guid, string> _winners = new Dictionary<Guid, string>();
     private IDictionary<string, double> _winLevelAverage = new Dictionary<string, double>();
+
+    private void Recalculate()
+    {
+
+        _leaderboardCharts = _charts.Where(c => _players.Values.Any(p => p.ContainsKey(c.Key))).Select(c => c.Value).ToArray();
+
+        _winners = _leaderboardCharts.ToDictionary(c => c.Id, c =>
+            _players.Count(kv => kv.Value.ContainsKey(c.Id)) < 2 ? ""
+                : _players.GroupBy(p => p.Value.TryGetValue(c.Id, out var score) ? (int)score : 0).OrderByDescending(g => g.Key).First().Count() > 1 ? "Tie"
+                    : _players.MaxBy(kv => kv.Value.TryGetValue(c.Id, out var score) ? (int)score : 0).Key);
+
+        _winLevelAverage = _players.Keys.ToDictionary(player => player, player => _winners.Any(kv => kv.Value.Equals(player, StringComparison.OrdinalIgnoreCase)) ? _winners.Where(kv => kv.Value.Equals(player, StringComparison.OrdinalIgnoreCase))
+            .Average(kv => _charts[kv.Key].Level) : 0);
+
+        _totalCharts = _leaderboardCharts.Count();
+        _contestedCharts = _leaderboardCharts.Count(c => !string.IsNullOrWhiteSpace(_winners[c.Id]));
+    }
     private async Task SelectUser(string username)
     {
         if (!_usernames.Contains(username, StringComparer.OrdinalIgnoreCase))
@@ -134,19 +152,7 @@ else
             .Where(r => r.Score != null)
             .ToDictionary(r => r.ChartId, r => r.Score!.Value);
 
-
-        _leaderboardCharts = _charts.Where(c => _players.Values.Any(p => p.ContainsKey(c.Key))).Select(c => c.Value).ToArray();
-
-        _winners = _leaderboardCharts.ToDictionary(c => c.Id, c =>
-            _players.Count(kv => kv.Value.ContainsKey(c.Id)) < 2 ? ""
-                : _players.GroupBy(p=>p.Value.TryGetValue(c.Id,out var score)?(int)score:0).OrderByDescending(g=>g.Key).First().Count()>1 ? "Tie"
-                    : _players.MaxBy(kv => kv.Value.TryGetValue(c.Id, out var score) ? (int)score : 0).Key);
-
-        _winLevelAverage = _players.Keys.ToDictionary(player => player, player => _winners.Any(kv => kv.Value.Equals(player, StringComparison.OrdinalIgnoreCase)) ? _winners.Where(kv => kv.Value.Equals(player, StringComparison.OrdinalIgnoreCase))
-            .Average(kv => _charts[kv.Key].Level) : 0);
-
-        _totalCharts = _leaderboardCharts.Count();
-        _contestedCharts = _leaderboardCharts.Count(c => !string.IsNullOrWhiteSpace(_winners[c.Id]));
+        Recalculate();
         _isloading = false;
 
 
