@@ -43,19 +43,27 @@ namespace ScoreTracker.Application.Handlers
         private async Task<IEnumerable<ChartRecommendation>> GetWeakCharts(CancellationToken cancellationToken,
             TitleProgress[] allTitles, RecordedPhoenixScore[] scores)
         {
-            var charts = (
-                await _mediator.Send(
-                    new GetChartsQuery(MixEnum.Phoenix),
-                    cancellationToken)).ToDictionary(c => c.Id);
             if (scores.Length <= 12)
-                return scores.Select(s => new ChartRecommendation("Skill Up", s.ChartId,
-                    "Charts that are relatively weaker for you compared to other players"));
+                return scores.Where(s => s.Score != null && s.Score < 1000000).Select(s =>
+                    new ChartRecommendation("Skill Up", s.ChartId,
+                        "Charts that are relatively weaker for you compared to other players"));
 
+
+            var titles = allTitles
+                .Where(title => title.Title is PhoenixDifficultyTitle)
+                .OrderBy(title => (title.Title as PhoenixDifficultyTitle)!.Level)
+                .ThenBy(title => title.Title.Name)
+                .ToArray();
+
+            var firstAchieved = titles.Count() - (titles.Reverse().Select((t, i) => new OrderedTitle(t, i))
+                .FirstOrDefault(t => t.t.CompletionCount >= t.t.Title.CompletionRequired)?.i ?? titles.Count());
+
+            var pushLevel = titles[firstAchieved];
+            var titleLevel = (pushLevel.Title as PhoenixDifficultyTitle)!.Level;
+            var toFind = new[]
+                { titleLevel - 2, titleLevel - 3, titleLevel - 4, titleLevel - 5 };
             var random = new Random();
-            var toFind = scores.Where(s => s.Score != null && s.Score < 1000000).OrderBy(s => random.NextInt64(10000))
-                .Select(s => charts[s.ChartId].Level)
-                .Distinct()
-                .Take(3).ToArray();
+
             var result = new List<ChartRecommendation>();
             foreach (var level in toFind)
             {
@@ -63,13 +71,18 @@ namespace ScoreTracker.Application.Handlers
                     cancellationToken);
                 var myDoublesRating = await _mediator.Send(new GetMyRelativeTierListQuery(ChartType.Double, level),
                     cancellationToken);
-                result.AddRange(mySinglesRating.OrderByDescending(r => r.Order).Take(2).Select(r =>
-                    new ChartRecommendation("Skill Up", r.ChartId,
-                        "Charts that are relatively weaker for you compared to other players")));
+                result.AddRange(mySinglesRating.OrderByDescending(r => r.Order)
+                    .Take(5)
+                    .OrderBy(_ => random.NextInt64(10000))
+                    .Take(2).Select(r =>
+                        new ChartRecommendation("Skill Up", r.ChartId,
+                            "Charts that are relatively weaker for you compared to other players")));
 
-                result.AddRange(myDoublesRating.OrderByDescending(r => r.Order).Take(2).Select(r =>
-                    new ChartRecommendation("Skill Up", r.ChartId,
-                        "Charts that are relatively weaker for you compared to other players")));
+                result.AddRange(myDoublesRating.OrderByDescending(r => r.Order)
+                    .Take(5)
+                    .OrderBy(_ => random.NextInt64(10000)).Take(2).Select(r =>
+                        new ChartRecommendation("Skill Up", r.ChartId,
+                            "Charts that are relatively weaker for you compared to other players")));
             }
 
             return result;
