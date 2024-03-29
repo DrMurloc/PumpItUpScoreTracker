@@ -31,7 +31,9 @@ namespace ScoreTracker.Application.Handlers
                 .ToArray();
 
             return (await GetPushLevels(cancellationToken, titles, scores))
+                .Concat(await GetPassFills(cancellationToken, titles, scores))
                 .Concat(await GetSkillTitleCharts(cancellationToken, titles))
+                .Concat(await GetPGPushes(cancellationToken, scores))
                 .Concat(await GetRandomFromTop50Charts(cancellationToken))
                 .Concat(await GetWeakCharts(cancellationToken, titles, scores)).ToArray();
         }
@@ -72,14 +74,14 @@ namespace ScoreTracker.Application.Handlers
                 var myDoublesRating = await _mediator.Send(new GetMyRelativeTierListQuery(ChartType.Double, level),
                     cancellationToken);
                 result.AddRange(mySinglesRating.OrderByDescending(r => r.Order)
-                    .Take(5)
+                    .Take(6)
                     .OrderBy(_ => random.NextInt64(10000))
                     .Take(2).Select(r =>
                         new ChartRecommendation("Skill Up", r.ChartId,
                             "Charts that are relatively weaker for you compared to other players")));
 
                 result.AddRange(myDoublesRating.OrderByDescending(r => r.Order)
-                    .Take(5)
+                    .Take(6)
                     .OrderBy(_ => random.NextInt64(10000)).Take(2).Select(r =>
                         new ChartRecommendation("Skill Up", r.ChartId,
                             "Charts that are relatively weaker for you compared to other players")));
@@ -97,7 +99,7 @@ namespace ScoreTracker.Application.Handlers
             return charts
                 .Where(c => c.Score != null && c.Score < 1000000)
                 .OrderBy(c => random.Next())
-                .Take(5)
+                .Take(6)
                 .Select(c => new ChartRecommendation("Improve Your Top 50", c.ChartId,
                     "These are randomly pulled from your best 50 charts based on rating. Push that score!"));
         }
@@ -114,6 +116,53 @@ namespace ScoreTracker.Application.Handlers
                     "Charts you are close to achieving a Skill title (SSS) on"));
         }
 
+        private async Task<IEnumerable<ChartRecommendation>> GetPGPushes(CancellationToken cancellationToken,
+            RecordedPhoenixScore[] scores)
+        {
+            var charts =
+                (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), cancellationToken)).ToDictionary(c => c.Id);
+            return scores.Where(s =>
+                    s.Score != null && s.Score != 1000000 && s.Score.Value.LetterGrade == PhoenixLetterGrade.SSSPlus)
+                .OrderByDescending(s => charts[s.ChartId].Level)
+                .ThenBy(s => 1000000 - s.Score)
+                .Take(6)
+                .Select(s =>
+                    new ChartRecommendation("Push PGs", s.ChartId, "These are your closest charts to a PG score wise"));
+        }
+
+        private async Task<IEnumerable<ChartRecommendation>> GetPassFills(CancellationToken cancellationToken,
+            TitleProgress[] allTitles, RecordedPhoenixScore[] scores)
+        {
+            var titles = allTitles
+                .Where(title => title.Title is PhoenixDifficultyTitle)
+                .OrderBy(title => (title.Title as PhoenixDifficultyTitle)!.Level)
+                .ThenBy(title => title.Title.Name)
+                .ToArray();
+
+            var firstAchieved = titles.Count() - (titles.Reverse().Select((t, i) => new OrderedTitle(t, i))
+                .FirstOrDefault(t => t.t.CompletionCount >= t.t.Title.CompletionRequired)?.i ?? titles.Count());
+
+            var pushLevel = (titles[firstAchieved].Title as PhoenixDifficultyTitle)!.Level;
+
+            var charts = (
+                    await _mediator.Send(
+                        new GetChartsQuery(MixEnum.Phoenix),
+                        cancellationToken))
+                .Where(c => c.Level >= pushLevel - 4 && c.Level <= pushLevel - 1).ToDictionary(c => c.Id);
+
+            var myScores = scores
+                .ToDictionary(s => s.ChartId);
+            var random = new Random();
+            var chartOrder = (await GetApproachableCharts(cancellationToken)).Where(id => charts.ContainsKey(id)
+                    && (!myScores.TryGetValue(id, out var score) || score.IsBroken))
+                .GroupBy(c => charts[c].Level)
+                .SelectMany(g => g.GroupBy(id => charts[id].Type)
+                    .SelectMany(t => t.Take(6).OrderBy(_ => random.Next(1000)).Take(2)));
+
+            return chartOrder.Select(id =>
+                new ChartRecommendation("Fill Scores", id, "Easier Charts From Lower Levels You Can Fill"));
+        }
+
         private async Task<IEnumerable<ChartRecommendation>> GetPushLevels(CancellationToken cancellationToken,
             TitleProgress[] allTitles, RecordedPhoenixScore[] scores)
         {
@@ -127,7 +176,6 @@ namespace ScoreTracker.Application.Handlers
                 .FirstOrDefault(t => t.t.CompletionCount >= t.t.Title.CompletionRequired)?.i ?? titles.Count());
 
             var pushLevel = titles[firstAchieved];
-
             var charts = (
                 await _mediator.Send(
                     new GetChartsQuery(MixEnum.Phoenix, (pushLevel.Title as PhoenixDifficultyTitle)!.Level),
@@ -138,10 +186,10 @@ namespace ScoreTracker.Application.Handlers
                 .ToArray();
             var nextSingles = chartOrder.Where(c => !myScores.TryGetValue(c, out var score) || score.IsBroken)
                 .Where(c => charts.ContainsKey(c) && charts[c].Type == ChartType.Single)
-                .Take(5);
+                .Take(6);
             var nextDoubles = chartOrder.Where(c => !myScores.TryGetValue(c, out var score) || score.IsBroken)
                 .Where(c => charts.ContainsKey(c) && charts[c].Type == ChartType.Double)
-                .Take(5);
+                .Take(6);
             return nextSingles.Select(s => new ChartRecommendation($"{pushLevel.Title.Name} Singles", s,
                     "Recommended Singles charts for achieving your next title"))
                 .Concat(nextDoubles.Select(s => new ChartRecommendation($"{pushLevel.Title.Name} Doubles", s,

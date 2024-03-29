@@ -1,4 +1,5 @@
 ﻿@page "/WhatShouldIPlay"
+@page "/"
 @using MediatR
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
@@ -9,6 +10,7 @@
 
 <PageTitle>What Should I Play</PageTitle>
 
+<MudText Typo="Typo.h3">What Should I Play?</MudText>
 @foreach (var key in _descriptions.Keys)
 {
     <MudGrid>
