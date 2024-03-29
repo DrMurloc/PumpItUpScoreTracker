@@ -164,6 +164,25 @@
         }
     </MudCardContent>
     <MudCardActions>
+        @if (_currentStep == Step.UsePassword)
+        {
+            
+            <MudButton Variant="Variant.Outlined"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Code"
+                       OnClick="()=>_currentStep=Step.Information">
+                @L["Use Script"]
+            </MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Outlined"
+                       Color="@Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Password"
+                       OnClick="() => _currentStep = Step.UsePassword">
+                @L["Use Password"]
+            </MudButton>
+        }
         <MudSpacer></MudSpacer>
         @if (_currentStep is Step.Uploading or Step.Confirming or Step.Saving)
         {
@@ -179,12 +198,6 @@
                        StartIcon="@Icons.Material.Filled.ContentCopy"
                        OnClick="CopyPIUGameScript">
                 @L["Copy Script"]
-            </MudButton>
-            <MudButton Variant="Variant.Outlined"
-                       Color="@Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Password"
-                       OnClick="()=>_currentStep=Step.UsePassword">
-                @L["Use Password"]
             </MudButton>
             <MudButton HtmlTag="label"
                        Variant="@Variant.Filled"
@@ -218,7 +231,7 @@
         }
         @if (_currentStep == Step.Finished)
         {
-            <MudButton OnClick="@(_=>_currentStep=Step.Information)"
+            <MudButton OnClick="@(_ => _currentStep = Step.Information)"
                        Variant="@Variant.Text"
                        Color="@Color.Primary"
                        StartIcon="@Icons.Material.Filled.RestartAlt">@L["Restart"]</MudButton>
@@ -252,7 +265,7 @@
     }
 
     private bool _isScoreTableShowing = false;
-    private Step _currentStep = Step.Information;
+    private Step _currentStep = Step.UsePassword;
     private int _maxSaving = 0;
     private int _currentSaved = 0;
     private int _startPage = 1;
