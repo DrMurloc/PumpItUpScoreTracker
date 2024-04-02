@@ -1,8 +1,10 @@
 ﻿using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Data.Repositories;
@@ -10,10 +12,13 @@ namespace ScoreTracker.Data.Repositories;
 public sealed class EFUserRepository : IUserRepository
 {
     private readonly ChartAttemptDbContext _database;
+    private readonly IMemoryCache _cache;
 
-    public EFUserRepository(IDbContextFactory<ChartAttemptDbContext> factory)
+    public EFUserRepository(IDbContextFactory<ChartAttemptDbContext> factory,
+        IMemoryCache cache)
     {
         _database = factory.CreateDbContext();
+        _cache = cache;
     }
 
     public async Task SaveUser(User user, CancellationToken cancellationToken = default)
@@ -35,6 +40,42 @@ public sealed class EFUserRepository : IUserRepository
         }
 
         await _database.SaveChangesAsync(cancellationToken);
+    }
+
+    private string FeedbackCache(Guid userId)
+    {
+        return $"{nameof(EFUserRepository)}_Feedback_{userId}";
+    }
+
+    public async Task SaveFeedback(Guid userId, SuggestionFeedbackRecord feedback,
+        CancellationToken cancellationToken = default)
+    {
+        await _database.SuggestionFeedback.AddAsync(new SuggestionFeedbackEntity
+        {
+            Id = Guid.NewGuid(),
+            ChartId = feedback.ChartId,
+            FeedbackCategory = feedback.FeedbackCategory,
+            IsPositive = feedback.IsPositive,
+            Notes = feedback.Notes,
+            ShouldHide = feedback.ShouldHide,
+            SuggestionCategory = feedback.SuggestionCategory,
+            UserId = userId
+        }, cancellationToken);
+        await _database.SaveChangesAsync(cancellationToken);
+        _cache.Remove(FeedbackCache(userId));
+    }
+
+    public async Task<IEnumerable<SuggestionFeedbackRecord>> GetFeedback(Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _cache.GetOrCreateAsync(FeedbackCache(userId), async cache =>
+        {
+            cache.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(1);
+            return await _database.SuggestionFeedback.Where(f => f.UserId == userId)
+                .Select(e => new SuggestionFeedbackRecord(e.SuggestionCategory, e.FeedbackCategory, e.Notes,
+                    e.ShouldHide, e.IsPositive, e.ChartId))
+                .ToArrayAsync(cancellationToken);
+        });
     }
 
     public async Task CreateExternalLogin(Guid userId, string loginProviderName, string externalId,

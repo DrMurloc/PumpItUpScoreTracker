@@ -1,11 +1,14 @@
 ﻿@page "/WhatShouldIPlay"
 @page "/"
 @using MediatR
+@using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Contracts
 
 <PageTitle>What Should I Play</PageTitle>
@@ -41,6 +44,8 @@
                         
                         <MudImage Src="@chart.DifficultyBubblePath" Height="35" Alt="@chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
                         <MudSpacer></MudSpacer>
+                        
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => Edit(chart.Id,key))"></MudIconButton>
                         @if (_videos.ContainsKey(chart.Id))
                         {
                             <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(_videos[chart.Id],chart))"></MudIconButton>
@@ -76,8 +81,51 @@
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
+<MudDialog @bind-IsVisible="_showScoreDialog">
+    <DialogContent>
+        
+        @if (_selectedChart != null)
+        {
+            <EditChartGrid ShowChartName="true" ChartId="_selectedChart.Value" CurrentMix="MixEnum.Phoenix"></EditChartGrid>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton StartIcon="@Icons.Material.Filled.ThumbUp" Color="Color.Secondary" Variant="Variant.Filled" Disabled="_isSaving" OnClick="SubmitPositiveFeedback">Good Suggestion</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.ThumbDown" Color="Color.Secondary" Variant="Variant.Filled" Disabled="_isSaving" OnClick="()=>_showRateDialog=true">Bad Suggestion</MudButton>
+        <MudSpacer>
 
+        </MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showScoreDialog = false">@L["Close"]</MudButton>
 
+    </DialogActions>
+</MudDialog>
+<MudDialog @bind-IsVisible="_showRateDialog">
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12">
+                <MudSelect T="string" @bind-Value="_feedbackCategory" Label="Reason">
+                    <MudSelectItem Value=@("Doesn't Match My Personal Skills")>Doesn't Match My Personal Skills</MudSelectItem>
+                    <MudSelectItem Value=@("I Don't Like The Chart")>I Don't Like The Chart</MudSelectItem>
+                    <MudSelectItem Value=@("Not Relevant to Category")>Not Relevant to Category</MudSelectItem>
+                    <MudSelectItem Value=@("I Just Want to Hide The Chart")>I Just Want to Hide The Chart</MudSelectItem>
+                    <MudSelectItem Value=@("The Category Isn't Interesting to Me")>The Category Isn't Interesting to Me'</MudSelectItem>
+                    <MudSelectItem Value=@("Other")>Other</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_notes" Lines="3" MaxLength="250" Counter=@(250-_notes.Length) Label="Additional Comments"></MudTextField>
+            </MudItem>
+            <MudItem xs="12">
+                <MudCheckBox T="bool" @bind-Checked="_shouldHide" Label="Hide Chart for this Category"></MudCheckBox>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showScoreDialog = false">@L["Close"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitFeedback" Disabled="_isSaving">@L["Submit"]</MudButton>
+    </DialogActions>
+</MudDialog>
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
 @inject NavigationManager NavManager;
@@ -89,8 +137,54 @@
 
 @code {
     private bool _showVideoDialog;
+    private bool _showScoreDialog;
+    private bool _showRateDialog;
     private string _currentVideoDescription;
     private string _currentVideo = string.Empty;
+    private Guid? _selectedChart = null;
+    private string _category = string.Empty;
+    private string _feedbackCategory = string.Empty;
+    private string _notes = string.Empty;
+    private bool _shouldHide = false;
+    private bool _isSaving = false;
+
+    private async Task SubmitPositiveFeedback()
+    {
+        if (_selectedChart == null)
+        {
+            return;
+        }
+        _isSaving = true;
+        await Mediator.Send(new SubmitFeedbackCommand(new SuggestionFeedbackRecord(_category, "Positive", "", false, true, _selectedChart.Value)));
+
+        Snackbar.Add("Feedback Submitted, Thank You!", Severity.Success);
+        _isSaving = false;
+    }
+    private async Task SubmitFeedback()
+    {
+        if (_selectedChart == null)
+        {
+            return;
+        }
+        _isSaving = true;
+        await Mediator.Send(new SubmitFeedbackCommand(new SuggestionFeedbackRecord(_category, _feedbackCategory, _notes, _shouldHide, false, _selectedChart.Value)));
+        if (_shouldHide)
+        {
+            _charts[_category] = _charts[_category].Where(c => c.Id != _selectedChart).ToArray();
+        }
+        _showRateDialog = false;
+        Snackbar.Add("Feedback Submitted, Thank You!", Severity.Success);
+        _isSaving = false;
+    }
+    private void Edit(Guid chartId, string category)
+    {
+        _selectedChart = chartId;
+        _showScoreDialog = true;
+        _category = category;
+        _shouldHide = false;
+        _notes = string.Empty;
+        _feedbackCategory = "Doesn't Match My Personal Skills";
+    }
     private string ChartSearch(Chart chart)
     {
         var searchString = "Pump It Up " + chart.Song.Name + " " + chart.DifficultyString;

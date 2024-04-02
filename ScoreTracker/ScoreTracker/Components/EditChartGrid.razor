@@ -188,7 +188,6 @@
 
     [Parameter]
     public Action<Chart, XXChartAttempt?> NewAttemptRecorded { get; set; } = (c, b) => { };
-    
     private async Task BrokenChanged(bool newState)
     {
         _isBroken = newState;

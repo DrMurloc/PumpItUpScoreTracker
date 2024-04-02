@@ -54,6 +54,7 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<CommunityChannelEntity> CommunityChannel { get; set; }
     public DbSet<CommunityInviteCodeEntity> CommunityInviteCode { get; set; }
     public DbSet<CommunityMembershipEntity> CommunityMembership { get; set; }
+    public DbSet<SuggestionFeedbackEntity> SuggestionFeedback { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
