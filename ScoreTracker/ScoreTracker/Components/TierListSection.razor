@@ -107,11 +107,6 @@
     [Parameter]
     public TierListType Type { get; set; } = TierListType.Difficulty;
 
-    [Parameter]
-    public IDictionary<Guid, IEnumerable<Name>> ChartSkills { get; set; } = new Dictionary<Guid, IEnumerable<Name>>();
-
-    [Parameter]
-    public IDictionary<Name, SkillRecord> Skills { get; set; } = new Dictionary<Name, SkillRecord>();
 
     [Parameter]
     public string Disclaimer { get; set; } = string.Empty;

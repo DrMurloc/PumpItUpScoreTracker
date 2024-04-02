@@ -10,6 +10,7 @@
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using System.Text.RegularExpressions
 
 <PageTitle>Chart Update</PageTitle>
 @if (_currentChart != null)
@@ -34,24 +35,24 @@
                              CoerceValue="true"
                              SearchFunc="s=>Task.FromResult(_existingStepArtists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
         </MudItem>
-        <MudItem xs="12" sm="4">
-            <MudText>Not Included</MudText>
+        <MudItem xs="12">
+            <MudTextField T="string" Label="Video" Value="_video" ValueChanged="SetVideo"></MudTextField>
         </MudItem>
-        <MudItem xs="12" sm="8">
-            @foreach (var skill in _skills.Where(s => !_skillNames.Contains(s.Name)).OrderBy(s => s.Name))
+        <MudItem xs="12">
+            @foreach (var skill in Enum.GetValues<Skill>())
             {
-                <MudChip Style=@($"background-color:{skill.Color}") OnClick="()=>_skillNames.Add(skill.Name)">@skill.Name</MudChip>
+                <MudChip Style=@($"color:{skill.GetColor()}") OnClick="()=>_skills.Add(skill)">@skill.GetName()</MudChip>
             }
         </MudItem>
-        <MudItem xs="12" sm="4">
-            <MudText>Included</MudText>
-        </MudItem>
-        <MudItem xs="12" sm="8">
-            @foreach (var skill in _skills.Where(s => _skillNames.Contains(s.Name)).OrderBy(s => s.Name))
-            {
-                <MudChip Style=@($"background-color:{skill.Color}") OnClick="()=>_skillNames.Remove(skill.Name)">@skill.Name</MudChip>
-            }
-        </MudItem>
+        @foreach (var skill in _skills)
+        {
+            <MudItem xs="6">
+                <MudChip Style=@($"color:{skill.GetColor()}") OnClick="()=>_skills.Remove(skill)">@skill.GetName()</MudChip>
+            </MudItem>
+            <MudItem xs="6">
+                <MudCheckBox T="bool" Checked="_highlightedSkills.Contains(skill)" CheckedChanged="v=>ToggleHighlight(skill,v)" Label="Highlighted"></MudCheckBox>
+            </MudItem>
+        }
         <MudItem xs="12">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isSaving" OnClick="UpdateChart">Save Chart</MudButton>
         </MudItem>
@@ -63,71 +64,68 @@
                     allow="autoplay; encrypted-media"
                     allowfullscreen></iframe>
         </MudItem>
-        
-        
-        <MudItem xs="6">
-            <MudTextField T="string" Label="Skill Name" @bind-Value="_skillName"></MudTextField>
-        </MudItem>
-        <MudItem xs="6">
-            <MudAutocomplete T="string"
-                             Label="Category"
-                             CoerceText="true"
-                             Value="_skillCategory"
-                             ValueChanged="SetCategory"
-                             SearchFunc="s=>Task.FromResult(_skills.Select(s=>s.Category).Distinct().Where(c=>string.IsNullOrWhiteSpace(s)||c.Contains(s,StringComparison.OrdinalIgnoreCase)).ToArray().AsEnumerable())"></MudAutocomplete>
-        </MudItem>
-        <MudItem xs="12">
-            <MudTextField Lines="3" T="string" Label="Description" @bind-Value="_description"></MudTextField>
-        </MudItem>
-        <MudItem xs="12">
-            <MudColorPicker DisableToolbar="false" @bind-Value="_color"></MudColorPicker>
-        </MudItem>
 
-        <MudItem xs="12">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isSaving" OnClick="CreateSkill">Save Skill</MudButton>
-        </MudItem>
+
     </MudGrid>
 
 }
 @inject ICurrentUserAccessor CurrentUser;
 @inject IChartRepository _charts;
-@inject IOfficialLeaderboardRepository OfficialLeaderboards;
 @inject IMediator Mediator;
-@inject IUiSettingsAccessor UiSettings;
 @inject ISnackbar Snackbar;
 @inject NavigationManager NavManager;
-@inject ITierListRepository TierLists;
-@inject IWorldRankingService WorldRanking;
 @code
 {
     private List<Chart> _toProcess = new List<Chart>();
     private Chart? _currentChart = null;
-    private List<SkillRecord> _skills = new List<SkillRecord>();
     private IDictionary<Guid, Uri> _chartVideos = new Dictionary<Guid, Uri>();
-    private ISet<string> _skillNames = new HashSet<string>();
     private string _stepArtist = string.Empty;
 
-    private string _skillName = string.Empty;
-    private string _skillCategory = string.Empty;
-    private string _description = string.Empty;
-    private MudColor _color = "#ffffff";
+
+    private void ToggleHighlight(Skill skill, bool newValue)
+    {
+        if (newValue)
+            _highlightedSkills.Add(skill);
+        else
+            _highlightedSkills.Remove(skill);
+
+    }
+    private string _video = string.Empty;
+    private static readonly Regex VideoRegex = new Regex(@"https\:\/\/www\.youtube\.com\/watch\?v\=(.*)", RegexOptions.Compiled);
+    private ISet<Skill> _skills = Array.Empty<Skill>().ToHashSet();
+    private ISet<Skill> _highlightedSkills = Array.Empty<Skill>().ToHashSet();
     private decimal _minBpm = 180;
     private int _noteCount = 0;
     private decimal _maxBpm = 180;
     private bool _isSaving = false;
-    private void SetCategory(string value)
-    {
-        _skillCategory = value;
-        _color = _skills.FirstOrDefault(s => s.Category == value)?.Color ?? "#ffffff";
-    }
+
     private void SetMin(decimal newMin)
     {
         _minBpm = newMin;
         _maxBpm = newMin;
     }
+
+    private void SetVideo(string video)
+    {
+        var match = VideoRegex.Match(video);
+        if (match.Success)
+        {
+            var hash = match.Groups[1].Value;
+            video = $"https://www.youtube.com/embed/{hash}";
+        }
+        _video = video;
+    }
     private void NextChart()
     {
         _currentChart = _toProcess.FirstOrDefault();
+        if (_currentChart == null) return;
+
+        _video = _chartVideos.TryGetValue(_currentChart.Id, out var video) ? video.ToString() : "";
+        _minBpm = 180;
+        _maxBpm = 180;
+        _stepArtist = "";
+        _noteCount = 0; _skills = Array.Empty<Skill>().ToHashSet();
+        _highlightedSkills = Array.Empty<Skill>().ToHashSet();
     }
 
     private async Task UpdateChart()
@@ -137,20 +135,12 @@
             return;
         }
         _isSaving = true;
-        await _charts.UpdateChart(_currentChart.Id, _stepArtist, _noteCount, _skillNames.Select(Name.From).ToHashSet());
+        await _charts.UpdateChart(_currentChart.Id, _stepArtist, _noteCount);
         await _charts.UpdateSong(_currentChart.Song.Name, Bpm.From(_minBpm, _maxBpm));
+        await Mediator.Send(new UpdateChartSkillCommand(new ChartSkillsRecord(_currentChart.Id, _skills, _highlightedSkills)));
         Snackbar.Add("Updated Chart");
         _toProcess.Remove(_currentChart);
         NextChart();
-        _isSaving = false;
-    }
-    private async Task CreateSkill()
-    {
-        _isSaving = true;
-        var skill = new SkillRecord(_skillName, _description, _color.ToString(), _skillCategory);
-        await _charts.CreateSkill(skill);
-        _skills.Add(skill);
-        Snackbar.Add("Created Skill", Severity.Success);
         _isSaving = false;
     }
     private ISet<string> _existingStepArtists = new HashSet<string>();
@@ -161,9 +151,10 @@
             NavManager.NavigateTo("/");
         }
         _chartVideos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl);
-        _skills = (await _charts.GetSkills()).ToList();
         
-        var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToArray();
+        var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix)))
+            .Where(c=>c.Level==20)
+            .ToArray();
         _existingStepArtists = charts.Select(c => c.StepArtist).Where(a => a != null).Select(c => c.Value.ToString()).Distinct(StringComparer.OrdinalIgnoreCase)
             .ToHashSet();
         _toProcess = charts

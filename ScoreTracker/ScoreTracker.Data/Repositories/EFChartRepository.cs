@@ -129,7 +129,7 @@ public sealed class EFChartRepository : IChartRepository
         ClearCache();
     }
 
-    public async Task UpdateChart(Guid chartId, Name stepArtist, int noteCount, ISet<Name> skills,
+    public async Task UpdateChart(Guid chartId, Name stepArtist, int noteCount,
         CancellationToken cancellationToken = default)
     {
         var chart = await _database.Chart.SingleAsync(c => c.Id == chartId, cancellationToken);
@@ -140,36 +140,11 @@ public sealed class EFChartRepository : IChartRepository
                 cancellationToken);
         chartMix.NoteCount = noteCount;
 
-
-        _database.ChartSkill.RemoveRange(_database.ChartSkill.Where(c => c.ChartId == chartId));
-
-        var skillNames = skills.Select(s => s.ToString()).ToArray();
-        var skillIds = await _database.Skill.Where(s => skillNames.Contains(s.Name)).Select(s => s.Id)
-            .ToArrayAsync(cancellationToken);
-        await _database.ChartSkill.AddRangeAsync(skillIds.Select(s => new ChartSkillEntity
-        {
-            ChartId = chartId,
-            SkillId = s,
-            Id = Guid.NewGuid()
-        }), cancellationToken);
-
         await _database.SaveChangesAsync(cancellationToken);
 
         ClearCache();
     }
 
-    private const string SkillCacheKey = $"{nameof(EFChartRepository)}_{nameof(GetSkills)}";
-
-    public async Task<IEnumerable<SkillRecord>> GetSkills(CancellationToken cancellationToken = default)
-    {
-        return await _cache.GetOrCreateAsync(SkillCacheKey, async o =>
-        {
-            o.AbsoluteExpiration = DateTimeOffset.Now
-                                   + TimeSpan.FromHours(1);
-            return await _database.Skill.Select(s => new SkillRecord(s.Name, s.Description, s.Color, s.Category))
-                .ToArrayAsync(cancellationToken);
-        });
-    }
 
     private const string ChartSkillsCacheKey = $"{nameof(EFChartRepository)}_{nameof(GetChartSkills)}";
 
@@ -180,29 +155,45 @@ public sealed class EFChartRepository : IChartRepository
         return await _cache.GetOrCreateAsync(ChartSkillsCacheKey, async o =>
         {
             o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(1);
-            return (await (from cs in _database.ChartSkill
-                        join s in _database.Skill on cs.SkillId equals s.Id
-                        select new ChartSkillJoin(cs.ChartId, s.Name))
-                    .ToArrayAsync(cancellationToken))
-                .GroupBy(c => c.ChartId).Select(g =>
-                    new ChartSkillsRecord(g.Key, g.Select(e => (Name)e.SkillName).Distinct().ToArray()));
+
+            return (await _database.ChartSkill.ToArrayAsync(cancellationToken))
+                .GroupBy(c => c.ChartId)
+                .Select(g => new ChartSkillsRecord(g.Key, g.Select(s => Enum.Parse<Skill>(s.SkillName)),
+                    g.Where(s => s.IsHighlighted).Select(s => Enum.Parse<Skill>(s.SkillName))))
+                .ToArray();
         });
     }
 
-    public async Task CreateSkill(SkillRecord skill, CancellationToken cancellationToken = default)
+    public async Task SaveChartSkills(ChartSkillsRecord record, CancellationToken cancellationToken = default)
     {
-        await _database.Skill.AddAsync(new SkillEntity
-        {
-            Category = skill.Category,
-            Color = skill.Color,
-            Description = skill.Description,
-            Id = Guid.NewGuid(),
-            Name = skill.Name
-        }, cancellationToken);
+        var skills = await _database.ChartSkill.Where(cs => cs.ChartId == record.ChartId)
+            .ToArrayAsync(cancellationToken);
 
+        var newEntities = record.ContainsSkills.Select(s => new ChartSkillEntity
+        {
+            ChartId = record.ChartId,
+            Id = Guid.NewGuid(),
+            IsHighlighted = false,
+            SkillName = s.ToString()
+        }).Concat(record.HighlightsSkill.Select(s => new ChartSkillEntity
+        {
+            ChartId = record.ChartId,
+            Id = Guid.NewGuid(),
+            IsHighlighted = true,
+            SkillName = s.ToString()
+        })).ToArray();
+
+        var toCreate = newEntities.Where(e =>
+            !skills.Any(s => s.SkillName == e.SkillName && s.IsHighlighted == e.IsHighlighted));
+
+        var toDelete = skills.Where(e =>
+            !newEntities.Any(s => s.SkillName == e.SkillName && s.IsHighlighted == e.IsHighlighted));
+        await _database.ChartSkill.AddRangeAsync(toCreate, cancellationToken);
+        _database.ChartSkill.RemoveRange(toDelete);
         await _database.SaveChangesAsync(cancellationToken);
-        ClearCache();
+        _cache.Remove(ChartSkillsCacheKey);
     }
+
 
     public void ClearCache()
     {
@@ -213,7 +204,6 @@ public sealed class EFChartRepository : IChartRepository
         }
 
         _cache.Remove(ChartSkillsCacheKey);
-        _cache.Remove(SkillCacheKey);
         _cache.Remove($"{nameof(EFChartRepository)}_{nameof(GetChartVideoInformation)}");
     }
 

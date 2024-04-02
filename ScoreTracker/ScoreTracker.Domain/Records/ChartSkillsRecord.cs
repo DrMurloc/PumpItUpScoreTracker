@@ -1,8 +1,9 @@
-﻿using ScoreTracker.Domain.ValueTypes;
+﻿using ScoreTracker.Domain.Enums;
 
 namespace ScoreTracker.Domain.Records
 {
-    public sealed record ChartSkillsRecord(Guid ChartId, IEnumerable<Name> Skills)
+    public sealed record ChartSkillsRecord(Guid ChartId, IEnumerable<Skill> ContainsSkills,
+        IEnumerable<Skill> HighlightsSkill)
     {
     }
 }

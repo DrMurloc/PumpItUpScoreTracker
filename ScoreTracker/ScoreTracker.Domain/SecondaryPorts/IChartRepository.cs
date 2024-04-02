@@ -33,11 +33,10 @@ public interface IChartRepository
     Task SetChartVideo(Guid id, Uri videoUrl, Name channelName, CancellationToken cancellationToken = default);
     Task UpdateSong(Name songName, Bpm bpm, CancellationToken cancellationToken = default);
 
-    Task UpdateChart(Guid chartId, Name stepArtist, int noteCount, ISet<Name> skills,
+    Task UpdateChart(Guid chartId, Name stepArtist, int noteCount,
         CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<SkillRecord>> GetSkills(CancellationToken cancellationToken = default);
     Task<IEnumerable<ChartSkillsRecord>> GetChartSkills(CancellationToken cancellationToken = default);
-    Task CreateSkill(SkillRecord skill, CancellationToken cancellationToken = default);
+    Task SaveChartSkills(ChartSkillsRecord record, CancellationToken cancellationToken = default);
     void ClearCache();
 }
