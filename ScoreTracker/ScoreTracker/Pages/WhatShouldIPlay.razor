@@ -5,6 +5,8 @@
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Models.Titles
+@using ScoreTracker.Domain.Models.Titles.Phoenix
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Domain.SecondaryPorts
@@ -15,6 +17,31 @@
 
 <MudText Typo="Typo.h3">What Should I Play?</MudText>
 <br/>
+@if (_progress != null)
+{
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">@_progress.Title.Name</MudText>
+        </MudItem>
+        <MudItem xs="12">
+            <MudProgressLinear Color="Color.Primary" Value="100.0 * (_progress.CompletionCount / (double)_progress.Title.CompletionRequired)">
+                <MudText Typo="Typo.subtitle1">
+                    @((int)_progress.CompletionCount) / @_progress.Title.CompletionRequired
+                </MudText>
+            </MudProgressLinear>
+        </MudItem>
+
+        <MudItem xs="12">
+            @L["Remaining Charts",((int)Math.Ceiling((_progress.Title.CompletionRequired - _progress.CompletionCount) / (_rating * PhoenixLetterGrade.SSSPlus.GetModifier()))),
+        ((int)Math.Ceiling((_progress.Title.CompletionRequired - _progress.CompletionCount) / (_rating * PhoenixLetterGrade.AA.GetModifier())))]
+            <br/>
+            @if (_averageRating >0)
+            {
+                @L["Remaining Charts For You",(int)Math.Ceiling((_progress.Title.CompletionRequired - _progress.CompletionCount) / ((double)_averageRating))]
+            }
+        </MudItem>
+    </MudGrid>
+}
 @foreach (var key in _descriptions.Keys)
 {
     <MudGrid>
@@ -147,7 +174,9 @@
     private string _notes = string.Empty;
     private bool _shouldHide = false;
     private bool _isSaving = false;
-
+    private TitleProgress? _progress;
+    private int _rating = 0;
+    private int _averageRating = 0;
     private async Task SubmitPositiveFeedback()
     {
         if (_selectedChart == null)
@@ -212,11 +241,20 @@
         {
             NavManager.NavigateTo("/Login");
         }
+        var titles = await Mediator.Send(new GetTitleProgressQuery(MixEnum.Phoenix));
+        _progress = titles.GetPushingTitle();
+        var pushingLevel = (_progress.Title as PhoenixDifficultyTitle)!.Level;
+        _rating = pushingLevel.BaseRating;
         var recommendations = (await Mediator.Send(new GetRecommendedChartsQuery())).ToArray();
         var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix)))
             .ToDictionary(c => c.Id);
         _scores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id)))
             .ToDictionary(r => r.ChartId);
+        var matchingScores = charts.Values.Where(c => c.Level == pushingLevel &&_scores.ContainsKey(c.Id) && _scores[c.Id].Score != null)
+            .Select(c => _scores[c.Id])
+            .ToArray();
+        
+        _averageRating = matchingScores.Any() ? (int)matchingScores.Average(s => s.Score!.Value.LetterGrade.GetModifier() * _rating) : 0;
         _videos=(await Mediator.Send(new GetChartVideosQuery())).ToDictionary(c => c.ChartId,c=>c.VideoUrl.ToString());
         _charts = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => g.Select(r => charts[r.ChartId]).ToArray().AsEnumerable());
         _descriptions = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => g.First().Explanation);

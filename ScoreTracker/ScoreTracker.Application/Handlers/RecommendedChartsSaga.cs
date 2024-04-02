@@ -60,16 +60,7 @@ namespace ScoreTracker.Application.Handlers
             var skipped = ignoredChartIds.TryGetValue("Skill Up", out var charts) ? charts : new HashSet<Guid>();
 
 
-            var titles = allTitles
-                .Where(title => title.Title is PhoenixDifficultyTitle)
-                .OrderBy(title => (title.Title as PhoenixDifficultyTitle)!.Level)
-                .ThenBy(title => title.Title.Name)
-                .ToArray();
-
-            var firstAchieved = titles.Count() - (titles.Reverse().Select((t, i) => new OrderedTitle(t, i))
-                .FirstOrDefault(t => t.t.CompletionCount >= t.t.Title.CompletionRequired)?.i ?? titles.Count());
-
-            var pushLevel = titles[firstAchieved];
+            var pushLevel = allTitles.GetPushingTitle();
             var titleLevel = (pushLevel.Title as PhoenixDifficultyTitle)!.Level;
             var toFind = new[]
                 { titleLevel - 2, titleLevel - 3, titleLevel - 4, titleLevel - 5 };
@@ -155,16 +146,8 @@ namespace ScoreTracker.Application.Handlers
             TitleProgress[] allTitles, RecordedPhoenixScore[] scores)
         {
             var skipped = ignoredChartIds.TryGetValue("Fill Scores", out var c) ? c : new HashSet<Guid>();
-            var titles = allTitles
-                .Where(title => title.Title is PhoenixDifficultyTitle)
-                .OrderBy(title => (title.Title as PhoenixDifficultyTitle)!.Level)
-                .ThenBy(title => title.Title.Name)
-                .ToArray();
 
-            var firstAchieved = titles.Count() - (titles.Reverse().Select((t, i) => new OrderedTitle(t, i))
-                .FirstOrDefault(t => t.t.CompletionCount >= t.t.Title.CompletionRequired)?.i ?? titles.Count());
-
-            var pushLevel = (titles[firstAchieved].Title as PhoenixDifficultyTitle)!.Level;
+            var pushLevel = (allTitles.GetPushingTitle().Title as PhoenixDifficultyTitle)!.Level;
 
             var charts = (
                     await _mediator.Send(

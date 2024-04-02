@@ -36,6 +36,8 @@
         <MudNavMenu>
             @if (CurrentUser.IsLoggedIn)
             {
+                <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home">@L["Home"]</MudNavLink>
+                <MudDivider DividerType="DividerType.Middle"></MudDivider>
                 <MudNavLink Href="/Account" Icon="@Icons.Material.Filled.AccountCircle">@L["Account"]</MudNavLink>
                 <MudDivider DividerType="DividerType.Middle"></MudDivider>
                 <MudNavLink Href="/Record" Icon="@Icons.Material.Filled.Description">@L["Record Score"]</MudNavLink>
