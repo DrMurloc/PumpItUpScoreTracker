@@ -1,7 +1,9 @@
-﻿using MediatR;
+﻿using MassTransit;
+using MediatR;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
@@ -18,18 +20,27 @@ namespace ScoreTracker.Application.Handlers
         IRequestHandler<GetPublicCommunitiesQuery, IEnumerable<CommunityOverviewRecord>>,
         IRequestHandler<GetCommunityQuery, Community>,
         IRequestHandler<JoinCommunityByInviteCodeCommand>,
-        IRequestHandler<AddDiscordChannelToCommunityCommand>
+        IRequestHandler<AddDiscordChannelToCommunityCommand>,
+        IConsumer<PlayerRatingsImprovedEvent>,
+        IConsumer<PlayerScoreUpdatedEvent>
 
     {
         private readonly ICurrentUserAccessor _currentUser;
         private readonly ICommunityRepository _communities;
+        private readonly IUserRepository _users;
         private readonly IBotClient _bot;
+        private readonly IChartRepository _charts;
+        private readonly IPhoenixRecordRepository _scores;
 
-        public CommunitySaga(ICurrentUserAccessor currentUser, ICommunityRepository communities, IBotClient bot)
+        public CommunitySaga(ICurrentUserAccessor currentUser, ICommunityRepository communities, IBotClient bot,
+            IUserRepository users, IChartRepository charts, IPhoenixRecordRepository scores)
         {
             _currentUser = currentUser;
             _communities = communities;
             _bot = bot;
+            _users = users;
+            _charts = charts;
+            _scores = scores;
         }
 
         public async Task<Unit> Handle(CreateCommunityCommand request, CancellationToken cancellationToken)
@@ -186,6 +197,67 @@ namespace ScoreTracker.Application.Handlers
                 $"This channel was updated to receive notifications for the {community.Name} community in PIU Scores!",
                 request.ChannelId, cancellationToken);
             return Unit.Value;
+        }
+
+        private async Task SendToCommunityDiscords(Guid userId, string message, CancellationToken cancellationToken)
+        {
+            var communities =
+                await _communities.GetCommunities(userId, cancellationToken);
+            foreach (var communityName in communities.Select(c => c.CommunityName))
+            {
+                var community = await _communities.GetCommunityByName(communityName, cancellationToken);
+                if (community == null) continue;
+
+                var channelIds = community.Channels.Where(s => s.SendNewScores).Select(c => c.ChannelId);
+                await _bot.SendMessages(new[] { message }, channelIds, cancellationToken);
+            }
+        }
+
+        public async Task Consume(ConsumeContext<PlayerRatingsImprovedEvent> context)
+        {
+            var user = await _users.GetUser(context.Message.UserId, context.CancellationToken);
+            if (user == null) return;
+
+            var message = $"{user.Name}'s top 50 rating has improved!";
+            if (context.Message.NewTop50 > context.Message.OldTop50)
+                message += $@"
+- Top 50 improved from {context.Message.OldTop50} to {context.Message.NewTop50} (+{context.Message.NewTop50 - context.Message.OldTop50})";
+
+            if (context.Message.NewSinglesTop50 > context.Message.OldSinglesTop50)
+                message += $@"
+- Top 50 Singles improved from {context.Message.OldSinglesTop50} to {context.Message.NewSinglesTop50} (+{context.Message.NewSinglesTop50 - context.Message.OldSinglesTop50})";
+
+            if (context.Message.NewDoublesTop50 > context.Message.OldDoublesTop50)
+                message += $@"
+- Top 50 Doubles improved from {context.Message.OldDoublesTop50} to {context.Message.NewDoublesTop50} (+{context.Message.NewDoublesTop50 - context.Message.OldDoublesTop50})";
+
+            await SendToCommunityDiscords(context.Message.UserId, message, context.CancellationToken);
+        }
+
+        public async Task Consume(ConsumeContext<PlayerScoreUpdatedEvent> context)
+        {
+            var user = await _users.GetUser(context.Message.UserId, context.CancellationToken);
+            if (user == null) return;
+            var charts = (await _charts.GetCharts(MixEnum.Phoenix, chartIds: context.Message.ChartIds,
+                cancellationToken: context.CancellationToken)).ToArray();
+            var message = $"{user.Name} recorded scores for:";
+            var scores =
+                (await _scores.GetRecordedScores(context.Message.UserId, context.CancellationToken))
+                .Where(s => s.Score != null)
+                .ToDictionary(s =>
+                    s.ChartId);
+            var scoredCharts = charts.Where(c => scores.TryGetValue(c.Id, out var score) && score.Score != null)
+                .ToArray();
+            var count = scoredCharts.Count();
+            if (count == 0) return;
+
+            foreach (var chart in scoredCharts.OrderByDescending(c => c.Level).Take(5))
+                message += $@"
+- {chart.Song.Name} {chart.DifficultyString}: {scores[chart.Id].Score} ({scores[chart.Id].Score!.Value.LetterGrade.GetName()}) {scores[chart.Id].Plate?.GetShorthand()}";
+            if (count > 5)
+                message += $@"
+And {count - 5} others!";
+            await SendToCommunityDiscords(user.Id, message, context.CancellationToken);
         }
     }
 }

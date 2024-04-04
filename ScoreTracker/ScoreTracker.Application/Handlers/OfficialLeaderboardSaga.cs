@@ -218,7 +218,6 @@ namespace ScoreTracker.Application.Handlers
 
                 if (count % 10 != 0) continue;
 
-                await _bus.Publish(new PlayerScoreUpdatedEvent(_currentUser.User.Id), cancellationToken);
                 await _mediator.Publish(
                     new ImportStatusUpdated(_currentUser.User.Id,
                         $"Saving chart result {count} of {scores.Length}",
@@ -227,6 +226,9 @@ namespace ScoreTracker.Application.Handlers
                 batch.Clear();
             }
 
+            await _bus.Publish(
+                new PlayerScoreUpdatedEvent(_currentUser.User.Id, scores.Select(s => s.Chart.Id).ToArray()),
+                cancellationToken);
             await _mediator.Publish(
                 new ImportStatusUpdated(_currentUser.User.Id,
                     "Charts finished saving",

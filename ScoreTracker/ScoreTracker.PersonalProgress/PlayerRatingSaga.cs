@@ -53,6 +53,8 @@ namespace ScoreTracker.PersonalProgress
 
         public async Task Consume(ConsumeContext<PlayerScoreUpdatedEvent> context)
         {
+            var oldStats = await _stats.GetStats(context.Message.UserId, context.CancellationToken);
+
             var charts = (await _charts.GetCharts(MixEnum.Phoenix)).ToDictionary(c => c.Id);
             var recorded =
                 (await _scores.GetRecordedScores(context.Message.UserId, context.CancellationToken)).ToArray();
@@ -96,7 +98,11 @@ namespace ScoreTracker.PersonalProgress
             );
 
             await _stats.SaveStats(context.Message.UserId, newStats, context.CancellationToken);
-
+            if (newStats.SkillRating > oldStats.SkillRating || newStats.SinglesRating > oldStats.SinglesRating ||
+                newStats.DoublesRating > oldStats.DoublesRating)
+                await _bus.Publish(new PlayerRatingsImprovedEvent(context.Message.UserId, oldStats.SkillRating,
+                    oldStats.SinglesRating, oldStats.DoublesRating, newStats.SkillRating, newStats.SinglesRating,
+                    newStats.DoublesRating));
             await _bus.Publish(new PlayerStatsUpdatedEvent(context.Message.UserId, newStats),
                 context.CancellationToken);
             await _mediator.Publish(new PlayerStatsUpdatedEvent(context.Message.UserId, newStats),

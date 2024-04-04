@@ -63,10 +63,10 @@ namespace ScoreTracker.Data.Repositories
             await _database.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<PlayerStatsRecord> Handle(GetPlayerStatsQuery request, CancellationToken cancellationToken)
+        public async Task<PlayerStatsRecord> GetStats(Guid userId, CancellationToken cancellationToken)
         {
             var entity =
-                await _database.PlayerStats.FirstOrDefaultAsync(p => p.UserId == request.UserId, cancellationToken);
+                await _database.PlayerStats.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
             if (entity == null) return new PlayerStatsRecord(0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
             return new PlayerStatsRecord(entity.TotalRating, entity.HighestLevel, entity.ClearCount, entity.CoOpRating,
@@ -74,6 +74,11 @@ namespace ScoreTracker.Data.Repositories
                 entity.SinglesRating,
                 entity.AverageSinglesScore, entity.AverageSinglesLevel, entity.DoublesRating,
                 entity.AverageDoublesScore, entity.AverageDoublesLevel);
+        }
+
+        public async Task<PlayerStatsRecord> Handle(GetPlayerStatsQuery request, CancellationToken cancellationToken)
+        {
+            return await GetStats(request.UserId, cancellationToken);
         }
     }
 }

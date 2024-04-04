@@ -31,7 +31,9 @@ public sealed class UpdatePhoenixRecordHandler : IRequestHandler<UpdatePhoenixBe
         await _records.UpdateBestAttempt(_user.User.Id,
             new RecordedPhoenixScore(request.ChartId, request.Score, request.Plate, request.IsBroken,
                 _dateTimeOffset.Now), cancellationToken);
-        if (!request.SkipEvent) await _bus.Publish(new PlayerScoreUpdatedEvent(_user.User.Id), cancellationToken);
+        if (!request.SkipEvent)
+            await _bus.Publish(new PlayerScoreUpdatedEvent(_user.User.Id, new[] { request.ChartId }),
+                cancellationToken);
 
         return Unit.Value;
     }
