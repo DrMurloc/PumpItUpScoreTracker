@@ -9,7 +9,7 @@ public sealed class CommunityChannelEntity
     [Key] public Guid Id { get; set; }
     public Guid CommunityId { get; set; }
 
-    public uint ChannelId { get; set; }
+    public ulong ChannelId { get; set; }
     public bool SendNewScores { get; set; }
     public bool SendTitles { get; set; }
     public bool SendNewMembers { get; set; }

@@ -17,7 +17,8 @@ namespace ScoreTracker.Application.Handlers
         IRequestHandler<GetMyCommunitiesQuery, IEnumerable<CommunityOverviewRecord>>,
         IRequestHandler<GetPublicCommunitiesQuery, IEnumerable<CommunityOverviewRecord>>,
         IRequestHandler<GetCommunityQuery, Community>,
-        IRequestHandler<JoinCommunityByInviteCodeCommand>
+        IRequestHandler<JoinCommunityByInviteCodeCommand>,
+        IRequestHandler<AddDiscordChannelToCommunityCommand>
 
     {
         private readonly ICurrentUserAccessor _currentUser;
@@ -144,6 +145,40 @@ namespace ScoreTracker.Application.Handlers
             var community = await _communities.GetCommunityByInviteCode(request.InviteCode, cancellationToken);
             if (community == null) throw new CommunityNotFoundException();
             await Handle(new JoinCommunityCommand(community.Value, request.InviteCode), cancellationToken);
+            return Unit.Value;
+        }
+
+        private async Task<Community> LoadCommunity(Name? communityName, Guid? inviteCode,
+            CancellationToken cancellationToken)
+        {
+            if (inviteCode != null)
+                communityName = await _communities.GetCommunityByInviteCode(inviteCode.Value, cancellationToken) ??
+                                throw new CommunityNotFoundException();
+
+            if (communityName == null)
+                throw new InvalidOperationException("Community Name must be provided if invite code is not used");
+
+            var community = await _communities.GetCommunityByName(communityName.Value, cancellationToken) ??
+                            throw new CommunityNotFoundException();
+            if (community.RequiresCode && (inviteCode == null || !community.InviteCodes.ContainsKey(inviteCode.Value) ||
+                                           community.InviteCodes[inviteCode.Value] <
+                                           new DateOnly(DateTimeOffset.Now.Year, DateTimeOffset.Now.Month,
+                                               DateTimeOffset.Now.Day)))
+                throw new CommunityNotFoundException();
+
+            return community;
+        }
+
+        public async Task<Unit> Handle(AddDiscordChannelToCommunityCommand request, CancellationToken cancellationToken)
+        {
+            var community = await LoadCommunity(request.CommunityName, request.InviteCode, cancellationToken);
+
+            foreach (var existingChannel in community.Channels.Where(c => c.ChannelId == request.ChannelId))
+                community.Channels.Remove(existingChannel);
+
+            community.Channels.Add(new Community.ChannelConfiguration(request.ChannelId, request.SendScores,
+                request.SendTitles, request.SendNewMembers));
+            await _communities.SaveCommunity(community, cancellationToken);
             return Unit.Value;
         }
     }

@@ -11,6 +11,7 @@ namespace ScoreTracker.Domain.Models
         public ICollection<ChannelConfiguration> Channels { get; }
         public CommunityPrivacyType PrivacyType { get; }
         public IDictionary<Guid, DateOnly?> InviteCodes { get; }
+        public bool RequiresCode => PrivacyType is CommunityPrivacyType.Private or CommunityPrivacyType.PublicWithCode;
 
         public Community(Name name, Guid ownerId, CommunityPrivacyType privacyType) : this(name, ownerId, privacyType,
             Array.Empty<Guid>(),
@@ -30,7 +31,7 @@ namespace ScoreTracker.Domain.Models
             PrivacyType = privacyType;
         }
 
-        public sealed record ChannelConfiguration(uint ChannelId, bool SendNewScores, bool SendTitles,
+        public sealed record ChannelConfiguration(ulong ChannelId, bool SendNewScores, bool SendTitles,
             bool SendNewMembers)
         {
         }
