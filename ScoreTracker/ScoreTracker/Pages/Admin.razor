@@ -149,11 +149,12 @@ Do It
 
     private async Task RebuildOfficialLeaderboard()
     {
-        await Bus.Publish(new ProcessScoresTiersListCommand());
+        //await Bus.Publish(new ProcessScoresTiersListCommand());
     /*await Mediator.Send(new ProcessChartPopularityCommand());
         //await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);
         await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
         await WorldRanking.CalculateWorldRankings(CancellationToken.None);*/
+        await Mediator.Send(new AddDiscordChannelToCommunityCommand("World", null, 1164337603034759278, true, true, true));
 
     }
     private async Task SelectChart(Chart chart)

@@ -23,11 +23,13 @@ namespace ScoreTracker.Application.Handlers
     {
         private readonly ICurrentUserAccessor _currentUser;
         private readonly ICommunityRepository _communities;
+        private readonly IBotClient _bot;
 
-        public CommunitySaga(ICurrentUserAccessor currentUser, ICommunityRepository communities)
+        public CommunitySaga(ICurrentUserAccessor currentUser, ICommunityRepository communities, IBotClient bot)
         {
             _currentUser = currentUser;
             _communities = communities;
+            _bot = bot;
         }
 
         public async Task<Unit> Handle(CreateCommunityCommand request, CancellationToken cancellationToken)
@@ -179,6 +181,10 @@ namespace ScoreTracker.Application.Handlers
             community.Channels.Add(new Community.ChannelConfiguration(request.ChannelId, request.SendScores,
                 request.SendTitles, request.SendNewMembers));
             await _communities.SaveCommunity(community, cancellationToken);
+
+            await _bot.SendMessage(
+                $"This channel was updated to receive notifications for the {community.Name} community in PIU Scores!",
+                request.ChannelId, cancellationToken);
             return Unit.Value;
         }
     }

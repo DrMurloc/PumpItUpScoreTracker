@@ -77,7 +77,7 @@ public sealed class DiscordBotClient : IBotClient
         }
     }
 
-    public async Task SendMessage(ulong userId, string message, CancellationToken cancellationToken = default)
+    public async Task SendMessageToUser(ulong userId, string message, CancellationToken cancellationToken = default)
     {
         var user = await GetUser(userId);
 
@@ -109,7 +109,7 @@ public sealed class DiscordBotClient : IBotClient
         };
     }
 
-    public async Task SendFile(ulong userId, Stream fileStream, string fileName, string? message = null,
+    public async Task SendFileToUser(ulong userId, Stream fileStream, string fileName, string? message = null,
         CancellationToken cancellationToken = default)
     {
         var user = await GetUser(userId);
