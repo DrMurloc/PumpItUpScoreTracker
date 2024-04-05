@@ -197,6 +197,23 @@ namespace ScoreTracker.Application.Handlers
         public async Task<Unit> Handle(ImportOfficialPlayerScoresCommand request, CancellationToken cancellationToken)
         {
             var userId = _currentUser.User.Id;
+
+            var accountData = await _officialSite.GetAccountData(request.Username, request.Password, cancellationToken);
+            if (accountData.AccountName == "INVALID")
+            {
+                await _mediator.Publish(new ImportStatusUpdated(_currentUser.User.Id,
+                    "Invalid Login Information", Array.Empty<RecordedPhoenixScore>()), cancellationToken);
+                return Unit.Value;
+            }
+
+            await _mediator.Send(new SaveUserUiSettingCommand("ProfileImage", accountData.AvatarUrl.ToString()),
+                cancellationToken);
+            await _mediator.Send(new SaveUserUiSettingCommand("GameTag", accountData.AccountName), cancellationToken);
+            var user = await _user.GetUser(userId, cancellationToken);
+            await _user.SaveUser(
+                new User(userId, user.Name, user.IsPublic, accountData.AccountName, accountData.AvatarUrl),
+                cancellationToken);
+
             var maxPages = await _officialSite.GetScorePageCount(request.Username, request.Password, cancellationToken);
             var limit = (await _user.GetUserUiSettings(userId, cancellationToken)).TryGetValue("PreviousPageCount",
                 out var result)

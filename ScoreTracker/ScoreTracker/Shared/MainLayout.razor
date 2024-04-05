@@ -21,11 +21,12 @@
 <MudLayout>
     <MudAppBar Color="Color.Primary" Fixed="false">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="() => _isOpen = !_isOpen"/>
-        <MudText Typo="Typo.h6">@(_userId == null ? "PIU Scores" : $"{UserName} ({Rating})")</MudText>
+        <MudText Typo="Typo.h6">@(_userId == null ? "PIU Scores" : $"{UserName}")</MudText>
         <MudSpacer></MudSpacer>
         @if (CurrentUser.IsLoggedIn)
         {
-            <MudIconButton Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" Edge="Edge.Start" Href="/Account"></MudIconButton>
+            <MudButton Variant="Variant.Filled" Style=@($"background:url('{_profileImage}'); height:50px; background-size:contain;") Href="/Account">
+            </MudButton>
         }
         else
         {
@@ -126,7 +127,8 @@
     private bool _showDiscordDialog = false;
     private const string DiscordPopupKey = "MainLayout__DiscordPopupShown";
     private MixEnum _currentMix = MixEnum.Phoenix;
-
+    private string _profileImage = string.Empty;
+    private string _gamerTag = string.Empty;
     private async Task SetMix(MixEnum mix)
     {
         await UiSettings.SetSelectedMix(mix);
@@ -143,7 +145,14 @@
                 _showDiscordDialog = true;
                 await Mediator.Send(new SaveUserUiSettingCommand(DiscordPopupKey, "true"));
             }
+            _profileImage = settings.TryGetValue("ProfileImage", out var image) ? image :
+                "https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png";
+            _gamerTag = settings.TryGetValue("GameTag", out var tag) ? tag : "";
             UserName = CurrentUser.User.Name;
+            if (!string.IsNullOrWhiteSpace(_gamerTag))
+        {
+                UserName += $" ({_gamerTag})";
+            }
             Rating = (await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id))).SkillRating;
         }
         _currentMix = await UiSettings.GetSelectedMix();

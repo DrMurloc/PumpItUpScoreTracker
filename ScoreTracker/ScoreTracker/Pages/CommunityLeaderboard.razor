@@ -33,6 +33,7 @@
 
             <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => e.place)">Place</MudTableSortLabel>
         </MudTh>
+        <MudTh><MudTableSortLabel T="LeaderboardEntry" SortBy="@(e=>e.ProfileImage)">Avatar</MudTableSortLabel></MudTh>
         <MudTh>
             <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => e.PlayerName.ToString())">Name</MudTableSortLabel>
         </MudTh>
@@ -72,6 +73,9 @@
     <RowTemplate>
         <MudTd>
             @context.place
+        </MudTd>
+        <MudTd>
+            <MudImage Src="@context.ProfileImage.ToString()" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
         </MudTd>
         <MudTd>
             <MudTooltip Text="@context.UserId.ToString()">@context.PlayerName</MudTooltip>
@@ -215,21 +219,21 @@
         switch (type)
         {
             case LeaderboardType.Total:
-                _entries = _leaderboard.OrderByDescending(l=>l.TotalRating).Select((l,i) => new LeaderboardEntry(i+1,l.PlayerName, l.UserId, l.TotalRating, 0, 0, _colorSelector.TotalScale.GetColor(l.TotalRating),l.HighestLevel,l.ClearCount));
+                _entries = _leaderboard.OrderByDescending(l=>l.TotalRating).Select((l,i) => new LeaderboardEntry(i+1, l.ProfileImage,l.PlayerName, l.UserId, l.TotalRating, 0, 0, _colorSelector.TotalScale.GetColor(l.TotalRating),l.HighestLevel,l.ClearCount));
                 break;
                 
             case LeaderboardType.Combined:
-                _entries = _leaderboard.OrderByDescending(l => l.SkillRating).Select((l, i) => new LeaderboardEntry(i + 1,l.PlayerName, l.UserId, l.SkillRating, l.SkillScore, l.SkillLevel, _colorSelector.SkillScale.GetColor(l.SkillRating), l.HighestLevel, l.ClearCount));
+                _entries = _leaderboard.OrderByDescending(l => l.SkillRating).Select((l, i) => new LeaderboardEntry(i + 1, l.ProfileImage, l.PlayerName, l.UserId, l.SkillRating, l.SkillScore, l.SkillLevel, _colorSelector.SkillScale.GetColor(l.SkillRating), l.HighestLevel, l.ClearCount));
                 break;
             case LeaderboardType.Singles:
-                _entries = _leaderboard.OrderByDescending(l => l.SinglesRating).Select((l, i) => new LeaderboardEntry(i + 1, l.PlayerName, l.UserId, l.SinglesRating, l.SinglesScore, l.SinglesLevel, _colorSelector.SinglesScale.GetColor(l.SinglesRating), l.HighestLevel, l.ClearCount));
+                _entries = _leaderboard.OrderByDescending(l => l.SinglesRating).Select((l, i) => new LeaderboardEntry(i + 1, l.ProfileImage, l.PlayerName, l.UserId, l.SinglesRating, l.SinglesScore, l.SinglesLevel, _colorSelector.SinglesScale.GetColor(l.SinglesRating), l.HighestLevel, l.ClearCount));
                 break;
                     
             case LeaderboardType.Doubles:
-                _entries = _leaderboard.OrderByDescending(l => l.DoublesRating).Select((l, i) => new LeaderboardEntry(i + 1, l.PlayerName, l.UserId, l.DoublesRating, l.DoublesScore, l.DoublesLevel, _colorSelector.DoublesScale.GetColor(l.DoublesRating), l.HighestLevel, l.ClearCount));
+                _entries = _leaderboard.OrderByDescending(l => l.DoublesRating).Select((l, i) => new LeaderboardEntry(i + 1, l.ProfileImage, l.PlayerName, l.UserId, l.DoublesRating, l.DoublesScore, l.DoublesLevel, _colorSelector.DoublesScale.GetColor(l.DoublesRating), l.HighestLevel, l.ClearCount));
                 break;
             case LeaderboardType.CoOp:
-                _entries = _leaderboard.OrderByDescending(l => l.CoOpRating).Select((l, i) => new LeaderboardEntry(i + 1, l.PlayerName, l.UserId, l.CoOpRating, l.CoOpScore, 0, _colorSelector.CoOpScale.GetColor(l.CoOpRating), l.HighestLevel, l.ClearCount));
+                _entries = _leaderboard.OrderByDescending(l => l.CoOpRating).Select((l, i) => new LeaderboardEntry(i + 1, l.ProfileImage, l.PlayerName, l.UserId, l.CoOpRating, l.CoOpScore, 0, _colorSelector.CoOpScale.GetColor(l.CoOpRating), l.HighestLevel, l.ClearCount));
                 break;
 
         }
@@ -237,7 +241,7 @@
     }
     private sealed record ScoreEntry(Chart Chart, PhoenixScore Score, int Rating);
 
-    private sealed record LeaderboardEntry(int place,Name PlayerName, Guid UserId, int Rating, PhoenixScore Score, double AverageLevel, string Color, int HighestLevel, int ClearCount)
+    private sealed record LeaderboardEntry(int place,Uri ProfileImage, Name PlayerName, Guid UserId, int Rating, PhoenixScore Score, double AverageLevel, string Color, int HighestLevel, int ClearCount)
     {
 
     }

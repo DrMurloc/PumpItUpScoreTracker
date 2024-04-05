@@ -16,5 +16,8 @@ namespace ScoreTracker.Data.Apis.Contracts
 
         Task<PiuGameGetBestScoresResult>
             GetBestScores(HttpClient client, int page, CancellationToken cancellationToken);
+
+        Task<PiuGameGetAccountDataResult> GetAccountData(HttpClient client,
+            CancellationToken cancellationToken);
     }
 }

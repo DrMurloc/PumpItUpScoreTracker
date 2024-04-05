@@ -39,12 +39,14 @@ public static class UserExtensions
 {
     public static ClaimsPrincipal GetClaimsPrincipal(this User user)
     {
-        return new(new ClaimsIdentity(new[]
+        return new ClaimsPrincipal(new ClaimsIdentity(new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Name),
             new Claim(ClaimTypes.Role, "User"),
-            new Claim(ScoreTrackerClaimTypes.IsPublic, user.IsPublic.ToString())
+            new Claim(ScoreTrackerClaimTypes.IsPublic, user.IsPublic.ToString()),
+            new Claim(ScoreTrackerClaimTypes.ProfileImage, user.ProfileImage.ToString()),
+            new Claim(ScoreTrackerClaimTypes.GameTag, user.GameTag.ToString())
         }, "External"));
     }
 
@@ -53,6 +55,12 @@ public static class UserExtensions
         return new User(
             Guid.Parse(claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString()),
             claimsPrincipal.FindFirst(ClaimTypes.Name)?.Value ?? "Unauthenticated",
-            bool.Parse(claimsPrincipal.FindFirstValue(ScoreTrackerClaimTypes.IsPublic) ?? ""));
+            bool.Parse(claimsPrincipal.FindFirstValue(ScoreTrackerClaimTypes.IsPublic) ?? ""),
+            claimsPrincipal.FindFirstValue(ScoreTrackerClaimTypes.GameTag),
+            Uri.TryCreate(claimsPrincipal.FindFirstValue(ScoreTrackerClaimTypes.ProfileImage) ?? "", UriKind.Absolute,
+                out var imagePath)
+                ? imagePath
+                : new Uri("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png",
+                    UriKind.Absolute));
     }
 }

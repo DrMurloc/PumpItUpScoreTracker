@@ -16,7 +16,8 @@ public sealed class CreateUserHandler : IRequestHandler<CreateUserCommand, User>
 
     public async Task<User> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
-        var user = new User(Guid.NewGuid(), request.Name, false);
+        var user = new User(Guid.NewGuid(), request.Name, false, null,
+            new Uri("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png", UriKind.Absolute));
         await _user.SaveUser(user, cancellationToken);
         return user;
     }

@@ -95,6 +95,9 @@ public sealed class ChartAttemptDbContext : DbContext
             .HasOne<UserEntity>()
             .WithMany()
             .HasForeignKey(ba => ba.UserId);
+        builder.Entity<UserEntity>()
+            .Property(u => u.ProfileImage)
+            .HasDefaultValue("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png");
 
         builder.Entity<BestAttemptEntity>().ToTable("BestAttempt")
             .HasOne<ChartEntity>()

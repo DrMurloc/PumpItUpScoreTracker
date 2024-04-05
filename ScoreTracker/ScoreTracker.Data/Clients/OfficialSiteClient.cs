@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using System.Text.RegularExpressions;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Data.Apis.Contracts;
 using ScoreTracker.Data.Apis.Dtos;
@@ -7,6 +8,7 @@ using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Data.Clients;
 
@@ -18,11 +20,12 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     private readonly IMediator _mediator;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IPhoenixRecordRepository _phoenixRecords;
+    private readonly IFileUploadClient _fileUpload;
 
     public OfficialSiteClient(IPiuGameApi piuGame, IChartRepository charts, ILogger<OfficialSiteClient> logger,
         IMediator mediator,
         ICurrentUserAccessor currentUser,
-        IPhoenixRecordRepository phoenixRecords)
+        IPhoenixRecordRepository phoenixRecords, IFileUploadClient fileUpload)
     {
         _piuGame = piuGame;
         _charts = charts;
@@ -30,6 +33,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         _mediator = mediator;
         _currentUser = currentUser;
         _phoenixRecords = phoenixRecords;
+        _fileUpload = fileUpload;
     }
 
     public async Task<IEnumerable<OfficialChartLeaderboardEntry>> GetAllOfficialChartScores(
@@ -162,6 +166,33 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         }
 
         return results;
+    }
+
+    private readonly Regex ImageRegex = new(@"https\:\/\/piugame\.com\/data\/avatar_img\/([A-Za-z0-9]+.png)\?v\=",
+        RegexOptions.Compiled);
+
+    public async Task<PiuGameAccountDataImport> GetAccountData(string username, string password,
+        CancellationToken cancellationToken)
+    {
+        var client = await _piuGame.GetSessionId(username, password, cancellationToken);
+        var importedData = await _piuGame.GetAccountData(client, cancellationToken);
+        var file = ImageRegex.Match(importedData.ImageUrl.ToString()).Groups[1].Value;
+        var path = $"/avatars/{file}";
+        if (!await _fileUpload.DoesFileExist(path, out var imagePath, cancellationToken))
+            imagePath = await _fileUpload.CopyFromSource(importedData.ImageUrl, path, cancellationToken);
+
+        var titles = importedData.TitleEntries.Where(t => t.Have).Select(t =>
+            t.Name + (t.Name.ToString().Contains("GAMER") || t.Name == "LOVERS"
+                ? t.ColClass switch
+                {
+                    "col1" => " (Platinum)",
+                    "col2" => " (Gold)",
+                    "col3" => " (Silver)",
+                    "col4" => " (Bronze)",
+                    _ => ""
+                }
+                : "")).Select(Name.From).ToArray();
+        return new PiuGameAccountDataImport(imagePath, importedData.AccountName, titles);
     }
 
     private static readonly IDictionary<string, string> ManualMappings =

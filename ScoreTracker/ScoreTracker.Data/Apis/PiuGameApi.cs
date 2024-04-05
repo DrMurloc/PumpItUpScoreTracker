@@ -460,4 +460,49 @@ public sealed class PiuGameApi : IPiuGameApi
         window.open(encodedUri);
          */
     }
+
+    private static readonly Regex ImageRegex =
+        new(
+            @"url\(\'(https\:\/\/piugame\.com\/data\/avatar_img\/[A-Za-z0-9]+\.[A-Za-z]+\?v\=[0-9]+)\'\)",
+            RegexOptions.Compiled);
+
+    public async Task<PiuGameGetAccountDataResult> GetAccountData(HttpClient client,
+        CancellationToken cancellationToken)
+    {
+        var response = await GetWithRetries("https://piugame.com/my_page/title.php",
+            cancellationToken, client);
+
+
+        var document = new HtmlDocument();
+        document.LoadHtml(response);
+        var lis = document.DocumentNode.SelectNodes(".//ul[contains(@class,'data_titleList2')]/li");
+        if (lis == null)
+            return new PiuGameGetAccountDataResult
+            {
+                AccountName = "INVALID",
+                ImageUrl = new Uri("/notset", UriKind.Relative)
+            };
+
+        var titles = (from li in document.DocumentNode.SelectNodes(".//ul[contains(@class,'data_titleList2')]/li")
+            let has = li.GetAttributeValue("class", "") == "have"
+            let col = li.SelectSingleNode(".//p").GetAttributeValue("class", "")
+                .Split(" ")
+                .FirstOrDefault(c => c.StartsWith("col")) ?? ""
+            let name = li.GetAttributeValue("data-name", "")
+            select new PiuGameGetAccountDataResult.TitleEntry { ColClass = col, Have = has, Name = name }).ToArray();
+
+        var accountName = document.DocumentNode
+            .SelectSingleNode(".//div[contains(@class,'name_w')]/p[contains(@class,'t2')]")?.InnerText ?? "INVALID";
+        var imageString = document
+                              .DocumentNode.SelectSingleNode(".//div[contains(@class,'profile_img')]/div/div")
+                              .GetAttributeValue("style", "")
+                          ?? "";
+        var imagePath = ImageRegex.Match(imageString).Groups[1].Value;
+        return new PiuGameGetAccountDataResult
+        {
+            AccountName = accountName,
+            ImageUrl = new Uri(imagePath, UriKind.Absolute),
+            TitleEntries = titles
+        };
+    }
 }

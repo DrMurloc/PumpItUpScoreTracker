@@ -30,13 +30,17 @@ public sealed class EFUserRepository : IUserRepository
             {
                 Name = user.Name,
                 Id = user.Id,
-                IsPublic = user.IsPublic
+                IsPublic = user.IsPublic,
+                GameTag = user.GameTag,
+                ProfileImage = user.ProfileImage.ToString()
             }, cancellationToken);
         }
         else
         {
             existingUser.Name = user.Name;
             existingUser.IsPublic = user.IsPublic;
+            existingUser.GameTag = user.GameTag;
+            existingUser.ProfileImage = user.ProfileImage.ToString();
         }
 
         await _database.SaveChangesAsync(cancellationToken);
@@ -96,14 +100,15 @@ public sealed class EFUserRepository : IUserRepository
     {
         return await _database.User.Where(u => u.Name.Contains(searchText))
             .OrderBy(u => u.Name)
-            .Select(u => new User(u.Id, u.Name, u.IsPublic))
+            .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage)))
             .ToArrayAsync(cancellationToken);
     }
 
 
     public async Task<User?> GetUser(Guid userId, CancellationToken cancellationToken = default)
     {
-        return await _database.User.Where(u => u.Id == userId).Select(u => new User(u.Id, u.Name, u.IsPublic))
+        return await _database.User.Where(u => u.Id == userId)
+            .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage)))
             .SingleOrDefaultAsync(cancellationToken);
     }
 
@@ -111,10 +116,11 @@ public sealed class EFUserRepository : IUserRepository
         CancellationToken cancellationToken = default)
     {
         return await (from e in _database.ExternalLogin
-            join u in _database.User on e.UserId equals u.Id
-            where e.LoginProvider == loginProviderName
-                  && e.ExternalId == externalId
-            select new User(u.Id, u.Name, u.IsPublic)).SingleOrDefaultAsync(cancellationToken);
+                join u in _database.User on e.UserId equals u.Id
+                where e.LoginProvider == loginProviderName
+                      && e.ExternalId == externalId
+                select new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage)))
+            .SingleOrDefaultAsync(cancellationToken);
     }
 
     public async Task<IDictionary<string, string>> GetUserUiSettings(Guid userId,
