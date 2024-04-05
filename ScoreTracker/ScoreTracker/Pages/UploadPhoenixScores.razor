@@ -4,6 +4,7 @@
 @using MediatR
 @using CsvHelper
 @using System.Globalization
+@using MassTransit
 @using Microsoft.OpenApi.Extensions
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
@@ -247,6 +248,7 @@
 @inject IPhoenixScoreFileExtractor Extractor;
 @inject IJSRuntime JSRuntime;
 @inject ILogger<UploadPhoenixScores> Logger;
+@inject IBus Bus;
 @code
 {
     private enum Step
@@ -350,10 +352,14 @@
         _currentStep = Step.Saving;
         _currentCancellation = new CancellationTokenSource();
         var cancellationToken = _currentCancellation.Token;
-        _maxSaving = _spreadSheetScores.Count;
         _currentSaved = 0;
         var startTime = DateTimeOffset.Now;
-        foreach (var best in _spreadSheetScores)
+        var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id), cancellationToken)).ToDictionary(s => s.ChartId);
+        var toSaveScores = _spreadSheetScores
+            .Where(s => !myScores.ContainsKey(s.ChartId) || s.Score != myScores[s.ChartId].Score || s.Plate != myScores[s.ChartId].Plate || myScores[s.ChartId].IsBroken).ToArray();
+
+        _maxSaving = toSaveScores.Length;
+        foreach (var best in toSaveScores)
         {
 
             if (_currentCancellation.IsCancellationRequested)
@@ -366,13 +372,14 @@
             _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxSaving - (double)_currentSaved) / (double)_currentSaved);
             try
             {
-                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(best.ChartId,false,best.Score,best.Plate), cancellationToken);
+                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(best.ChartId,false,best.Score,best.Plate,true), cancellationToken);
             }
             catch (OperationCanceledException)
             {
                 return;
             }
         }
+        await Bus.Publish(new PlayerScoreUpdatedEvent(CurrentUser.User.Id, toSaveScores.Select(s => s.ChartId).Distinct().ToArray()), cancellationToken);
         _currentStep = Step.Finished;
     }
     private async Task UploadFile(InputFileChangeEventArgs e)

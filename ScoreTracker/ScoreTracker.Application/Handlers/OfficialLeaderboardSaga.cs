@@ -1,6 +1,7 @@
 ﻿using MassTransit;
 using MediatR;
 using ScoreTracker.Application.Commands;
+using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
@@ -207,7 +208,14 @@ namespace ScoreTracker.Application.Handlers
                 .ToArray();
             var count = 0;
             var batch = new List<RecordedPhoenixScore>();
-            foreach (var score in scores)
+            var existingScores =
+                (await _mediator.Send(new GetPhoenixRecordsQuery(userId), cancellationToken)).ToDictionary(s =>
+                    s.ChartId);
+            var toSave = scores.Where(s =>
+                    !existingScores.TryGetValue(s.Chart.Id, out var sc) || sc.IsBroken || sc.Plate != s.Plate ||
+                    sc.Score != s.Score)
+                .ToArray();
+            foreach (var score in toSave)
             {
                 await _mediator.Send(
                     new UpdatePhoenixBestAttemptCommand(score.Chart.Id, false, score.Score, score.Plate, true),
@@ -227,7 +235,7 @@ namespace ScoreTracker.Application.Handlers
             }
 
             await _bus.Publish(
-                new PlayerScoreUpdatedEvent(_currentUser.User.Id, scores.Select(s => s.Chart.Id).ToArray()),
+                new PlayerScoreUpdatedEvent(_currentUser.User.Id, toSave.Select(s => s.Chart.Id).ToArray()),
                 cancellationToken);
             await _mediator.Publish(
                 new ImportStatusUpdated(_currentUser.User.Id,

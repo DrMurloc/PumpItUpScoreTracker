@@ -236,9 +236,10 @@ namespace ScoreTracker.Application.Handlers
 
         public async Task Consume(ConsumeContext<PlayerScoreUpdatedEvent> context)
         {
+            var chartIds = context.Message.ChartIds.Distinct().ToArray();
             var user = await _users.GetUser(context.Message.UserId, context.CancellationToken);
             if (user == null) return;
-            var charts = (await _charts.GetCharts(MixEnum.Phoenix, chartIds: context.Message.ChartIds,
+            var charts = (await _charts.GetCharts(MixEnum.Phoenix, chartIds: chartIds,
                 cancellationToken: context.CancellationToken)).ToArray();
             var message = $"{user.Name} recorded scores for:";
             var scores =
