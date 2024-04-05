@@ -13,6 +13,8 @@ public abstract class PhoenixTitle : Title
     {
     }
 
+    public virtual bool PopulatesFromDatabase => true;
+
     public virtual double CompletionProgress(Chart chart, RecordedPhoenixScore attempt)
     {
         return 0;

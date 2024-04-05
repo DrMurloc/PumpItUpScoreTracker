@@ -219,23 +219,28 @@ public sealed class DiscordBotClient : IBotClient
 
         if (_client == null) throw new Exception("Client was never started");
         foreach (var channelId in channelIds)
-        {
-            if (await _client.GetChannelAsync(channelId) is not IMessageChannel channel)
+            try
             {
-                _logger.LogWarning($"Channel {channelId} was not found");
-                continue;
-            }
+                if (await _client.GetChannelAsync(channelId) is not IMessageChannel channel)
+                {
+                    _logger.LogWarning($"Channel {channelId} was not found");
+                    continue;
+                }
 
-            foreach (var message in messageArray)
-                try
-                {
-                    var userMessage = await channel.SendMessageAsync(messageRetrieval(message));
-                    if (process != null) process(message, userMessage);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning($"Could not send message to channel {channelId}. Message :{message}", ex);
-                }
-        }
+                foreach (var message in messageArray)
+                    try
+                    {
+                        var userMessage = await channel.SendMessageAsync(messageRetrieval(message));
+                        if (process != null) process(message, userMessage);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning($"Could not send message to channel {channelId}. Message :{message}", ex);
+                    }
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning($"Could not send messages to channel {channelId}.", e);
+            }
     }
 }

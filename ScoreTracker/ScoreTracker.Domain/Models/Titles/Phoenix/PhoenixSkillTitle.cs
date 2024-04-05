@@ -20,6 +20,8 @@ public sealed class PhoenixSkillTitle : PhoenixTitle
         _level = level;
     }
 
+    public override bool PopulatesFromDatabase => false;
+
     public bool MatchesChart(Chart chart)
     {
         return chart.Song.Name == _songName && _chartType == chart.Type && _level == chart.Level;

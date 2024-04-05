@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Models.Titles.Phoenix;
 
@@ -224,12 +225,18 @@ public static class PhoenixTitleList
     };
 
     public static IEnumerable<PhoenixTitleProgress> BuildProgress(IDictionary<Guid, Chart> charts,
-        IEnumerable<RecordedPhoenixScore> attempts)
+        IEnumerable<RecordedPhoenixScore> attempts,
+        ISet<Name> completedTitles)
     {
         var progress = Titles.Select(t => new PhoenixTitleProgress(t)).ToImmutableArray();
         foreach (var attempt in attempts)
         foreach (var title in progress)
+        {
             title.ApplyAttempt(charts[attempt.ChartId], attempt);
+            if (completedTitles.Contains(title.Title.Name))
+                //
+                title.Complete();
+        }
 
         return progress;
     }

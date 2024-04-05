@@ -1,5 +1,5 @@
-﻿using ScoreTracker.Domain.Enums;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
+using ScoreTracker.Domain.Enums;
 
 namespace ScoreTracker.Domain.Models.Titles.XX;
 

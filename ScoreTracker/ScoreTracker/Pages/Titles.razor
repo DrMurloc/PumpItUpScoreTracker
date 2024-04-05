@@ -2,6 +2,7 @@
 @using MediatR
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models.Titles.Phoenix
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Web.Dtos
@@ -43,6 +44,9 @@
                                 }
                             }
                         </MudProgressLinear>
+                    } else
+                    {
+                        <MudProgressLinear Min="0" Max="100" Value=@(context.Item.IsCompleted?100:0) Color=@(context.Item.IsCompleted?Color.Success:Color.Primary)></MudProgressLinear>
                     }
 
                 </CellTemplate>

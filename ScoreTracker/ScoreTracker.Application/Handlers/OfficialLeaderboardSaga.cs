@@ -214,6 +214,9 @@ namespace ScoreTracker.Application.Handlers
                 new User(userId, user.Name, user.IsPublic, accountData.AccountName, accountData.AvatarUrl),
                 cancellationToken);
 
+            await _bus.Publish(new TitlesDetectedEvent(user.Id, accountData.Titles.Select(t => t.ToString())),
+                cancellationToken);
+
             var maxPages = await _officialSite.GetScorePageCount(request.Username, request.Password, cancellationToken);
             var limit = (await _user.GetUserUiSettings(userId, cancellationToken)).TryGetValue("PreviousPageCount",
                 out var result)

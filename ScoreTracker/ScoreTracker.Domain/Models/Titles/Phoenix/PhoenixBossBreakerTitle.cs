@@ -20,6 +20,8 @@ namespace ScoreTracker.Domain.Models.Titles.Phoenix
             _level = level;
         }
 
+        public override bool PopulatesFromDatabase => false;
+
         public override double CompletionProgress(Chart chart, RecordedPhoenixScore attempt)
         {
             if (chart.Song.Name == _songName && _chartType == chart.Type && _level == chart.Level &&

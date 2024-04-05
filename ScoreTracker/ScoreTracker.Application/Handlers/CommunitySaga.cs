@@ -22,7 +22,8 @@ namespace ScoreTracker.Application.Handlers
         IRequestHandler<JoinCommunityByInviteCodeCommand>,
         IRequestHandler<AddDiscordChannelToCommunityCommand>,
         IConsumer<PlayerRatingsImprovedEvent>,
-        IConsumer<PlayerScoreUpdatedEvent>
+        IConsumer<PlayerScoreUpdatedEvent>,
+        IConsumer<NewTitlesAcquiredEvent>
 
     {
         private readonly ICurrentUserAccessor _currentUser;
@@ -218,7 +219,7 @@ namespace ScoreTracker.Application.Handlers
             var user = await _users.GetUser(context.Message.UserId, context.CancellationToken);
             if (user == null) return;
 
-            var message = $"{user.Name}'s top 50 rating has improved!";
+            var message = $"**{user.Name}**'s top 50 rating has improved!";
             if (context.Message.NewTop50 > context.Message.OldTop50)
                 message += $@"
 - Top 50 improved from {context.Message.OldTop50} to {context.Message.NewTop50} (+{context.Message.NewTop50 - context.Message.OldTop50})";
@@ -241,7 +242,7 @@ namespace ScoreTracker.Application.Handlers
             if (user == null) return;
             var charts = (await _charts.GetCharts(MixEnum.Phoenix, chartIds: chartIds,
                 cancellationToken: context.CancellationToken)).ToArray();
-            var message = $"{user.Name} recorded scores for:";
+            var message = $"**{user.Name}** recorded scores for:";
             var scores =
                 (await _scores.GetRecordedScores(context.Message.UserId, context.CancellationToken))
                 .Where(s => s.Score != null)
@@ -258,6 +259,17 @@ namespace ScoreTracker.Application.Handlers
             if (count > 5)
                 message += $@"
 And {count - 5} others!";
+            await SendToCommunityDiscords(user.Id, message, context.CancellationToken);
+        }
+
+        public async Task Consume(ConsumeContext<NewTitlesAcquiredEvent> context)
+        {
+            var user = await _users.GetUser(context.Message.UserId, context.CancellationToken);
+            var message = $"**{user.Name}** completed the Titles:";
+            foreach (var title in context.Message.Titles.OrderBy(t => t))
+                message += $@"
+- {title}";
+
             await SendToCommunityDiscords(user.Id, message, context.CancellationToken);
         }
     }
