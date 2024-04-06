@@ -1,0 +1,156 @@
+﻿@page "/ChartSkills"
+@using MediatR
+@using Microsoft.EntityFrameworkCore
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Data.Persistence
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Services.Contracts
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Web.Services.Contracts
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using MassTransit
+@using ScoreTracker.Domain.Events
+
+<PageTitle>Chart Skills</PageTitle>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudText Typo="Typo.h5">Recommended New Passes</MudText>
+    </MudItem>
+    @foreach (var chart in _suggestedPasses)
+    {
+        
+        <MudItem xs="6" sm="3" md="2">
+
+            <MudCard>
+                <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()" />
+                <MudCardContent>
+                    @if (_scores[chart.Id] > 0)
+                    {
+                        <MudText>@_scores[chart.Id]</MudText>
+                    }
+                </MudCardContent>
+                <MudCardActions>
+                        
+                    <MudImage Src="@chart.DifficultyBubblePath" Height="35" Alt="@chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                    <MudSpacer>
+                    </MudSpacer>
+                    <MudText>@($"{_passScore[chart.Id]:0.00}")</MudText>
+                </MudCardActions>
+
+            </MudCard>
+        </MudItem>
+    }
+    @foreach (var skill in _orderedSkills.Where(s => MaxScore[s] > 0))
+    {
+        <MudItem xs="12">
+            <MudProgressLinear Color="Colors[skill]" Min="0" Max="MaxScore[skill]" Value="MyScore[skill]">@skill.GetName()</MudProgressLinear>
+        </MudItem>
+    }
+    <MudItem xs="12">
+
+        <MudText Typo="Typo.h5">Missing Scores</MudText>
+    </MudItem>
+    @foreach (var skill in Enum.GetValues<Skill>().Where(s => MaxScore[s] == 0))
+    {
+        <MudItem xs="12">
+            <MudText Typo="Typo.body1">@skill.GetName()</MudText>
+        </MudItem>
+    }
+</MudGrid>
+
+
+@inject ICurrentUserAccessor CurrentUser;
+@inject IMediator Mediator;
+@inject NavigationManager NavManager;
+@code
+{
+    private IDictionary<Skill, List<Chart>> SkillCharts = Enum.GetValues<Skill>().ToDictionary(s => s, s => new List<Chart>());
+    private IDictionary<Skill, List<Chart>> HighlightedCharts = Enum.GetValues<Skill>().ToDictionary(s => s, s => new List<Chart>());
+    private IDictionary<Skill, int> MaxScore = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
+    private IDictionary<Skill, int> MissingScores = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
+    private IDictionary<Skill, int> MyScore = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
+    private IEnumerable<Skill> _orderedSkills = Array.Empty<Skill>();
+    private IDictionary<Skill, double> _skillWeights = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0.0);
+    private IDictionary<Skill, Color> Colors = Enum.GetValues<Skill>().ToDictionary(s => s, s => Color.Primary);
+    private IEnumerable<Chart> _suggestedPasses = Array.Empty<Chart>();
+    private IDictionary<Guid, double> _passScore = new Dictionary<Guid, double>();
+    private IDictionary<Guid, PhoenixScore> _scores = new Dictionary<Guid, PhoenixScore>();
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Login");
+        }
+        var skills = (await Mediator.Send(new GetChartSkillsQuery())).ToArray();
+        var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, 20))).ToDictionary(c => c.Id);
+        var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id)))
+            .ToDictionary(g=>g.ChartId);
+
+        _scores = charts.ToDictionary(c => c.Key, c => myScores.TryGetValue(c.Key, out var s) ? s.Score ?? PhoenixScore.Min : PhoenixScore.Min);
+        foreach(var skillChart in skills)
+        {
+            if (!myScores.TryGetValue(skillChart.ChartId, out var score))
+            {
+                foreach(var skill in skillChart.ContainsSkills.Concat(skillChart.HighlightsSkill).Distinct())
+                {
+                    MissingScores[skill]++;
+                }
+                continue;
+            }
+            foreach (var skill in skillChart.ContainsSkills)
+            {
+                SkillCharts[skill].Add(charts[skillChart.ChartId]);
+                MaxScore[skill] += 1000000;
+                MyScore[skill] +=score.Score!.Value;
+            }
+            foreach (var skill in skillChart.HighlightsSkill)
+            {
+                HighlightedCharts[skill].Add(charts[skillChart.ChartId]);
+                MaxScore[skill] += 5000000;
+                MyScore[skill] += 5*(int)score.Score!.Value;
+            }
+        }
+
+        _orderedSkills = Enum.GetValues<Skill>().Where(s=>MaxScore[s]>0).OrderBy(s => MyScore[s] / (double)MaxScore[s]).ToArray();
+        var average = _orderedSkills.Average(s => MyScore[s] / (double)MaxScore[s]);
+        var standardDiv = StdDev(_orderedSkills.Select(s => MyScore[s] / (double)MaxScore[s]), true);
+        _skillWeights = _orderedSkills.ToDictionary(s => s, s => ((MyScore[s] / (double)MaxScore[s]) - average) / standardDiv);
+        foreach (var skill in Enum.GetValues<Skill>().Where(s => !_skillWeights.ContainsKey(s)))
+        {
+            _skillWeights[skill] = 0;
+        }
+        _passScore = skills.ToDictionary(sc => sc.ChartId, sc => sc.ContainsSkills.Sum(s => _skillWeights[s]) + sc.HighlightsSkill.Sum(s => 5 * _skillWeights[s])/(sc.ContainsSkills.Count()+5.0*sc.HighlightsSkill.Count()));
+
+        _suggestedPasses = _passScore
+            //.Where(kv=>!myScores.ContainsKey(kv.Key)||myScores[kv.Key].IsBroken)
+            .OrderByDescending(kv => kv.Value).Select(c => charts[c.Key]);
+
+        Colors = Enum.GetValues<Skill>().ToDictionary(s => s, s =>MaxScore[s]==0?Color.Error: (MyScore[s] / (double)MaxScore[s])>average ? Color.Success : Color.Warning);
+    }
+
+    public static double StdDev(IEnumerable<double> values,
+        bool as_sample)
+    {
+        // Get the mean.
+        double mean = values.Sum() / values.Count();
+
+        // Get the sum of the squares of the differences
+        // between the values and the mean.
+        var squares_query =
+            from double value in values
+            select (value - mean) * (value - mean);
+        double sum_of_squares = squares_query.Sum();
+
+        if (as_sample)
+        {
+            return Math.Sqrt(sum_of_squares / (values.Count() - 1));
+        }
+        else
+        {
+            return Math.Sqrt(sum_of_squares / values.Count());
+        }
+    }
+}
