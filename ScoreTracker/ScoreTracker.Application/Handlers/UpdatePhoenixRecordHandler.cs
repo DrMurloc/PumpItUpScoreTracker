@@ -26,7 +26,7 @@ public sealed class UpdatePhoenixRecordHandler : IRequestHandler<UpdatePhoenixBe
         _bus = bus;
     }
 
-    public async Task<Unit> Handle(UpdatePhoenixBestAttemptCommand request, CancellationToken cancellationToken)
+    public async Task Handle(UpdatePhoenixBestAttemptCommand request, CancellationToken cancellationToken)
     {
         await _records.UpdateBestAttempt(_user.User.Id,
             new RecordedPhoenixScore(request.ChartId, request.Score, request.Plate, request.IsBroken,
@@ -34,7 +34,5 @@ public sealed class UpdatePhoenixRecordHandler : IRequestHandler<UpdatePhoenixBe
         if (!request.SkipEvent)
             await _bus.Publish(new PlayerScoreUpdatedEvent(_user.User.Id, new[] { request.ChartId }),
                 cancellationToken);
-
-        return Unit.Value;
     }
 }

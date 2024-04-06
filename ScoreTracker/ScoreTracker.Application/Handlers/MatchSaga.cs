@@ -43,19 +43,17 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
         _bot = bot;
     }
 
-    public async Task<Unit> Handle(CreateMatchLinkCommand request, CancellationToken cancellationToken)
+    public async Task Handle(CreateMatchLinkCommand request, CancellationToken cancellationToken)
     {
         await _matchRepository.SaveMatchLink(request.MatchLink, cancellationToken);
-        return Unit.Value;
     }
 
-    public async Task<Unit> Handle(DeleteMatchLinkCommand request, CancellationToken cancellationToken)
+    public async Task Handle(DeleteMatchLinkCommand request, CancellationToken cancellationToken)
     {
         await _matchRepository.DeleteMatchLink(request.FromName, request.ToName, cancellationToken);
-        return Unit.Value;
     }
 
-    public async Task<Unit> Handle(DrawChartsCommand request, CancellationToken cancellationToken)
+    public async Task Handle(DrawChartsCommand request, CancellationToken cancellationToken)
     {
         var match = await _matchRepository.GetMatch(request.MatchName, cancellationToken);
         var settings = await _matchRepository.GetRandomSettings(match.RandomSettings, cancellationToken);
@@ -66,10 +64,9 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
         };
         await _matchRepository.SaveMatch(newMatch, cancellationToken);
         await _mediator.Publish(new MatchUpdatedEvent(newMatch), cancellationToken);
-        return Unit.Value;
     }
 
-    public async Task<Unit> Handle(FinalizeMatchCommand request, CancellationToken cancellationToken)
+    public async Task Handle(FinalizeMatchCommand request, CancellationToken cancellationToken)
     {
         var match = await _matchRepository.GetMatch(request.MatchName, cancellationToken);
 
@@ -118,11 +115,9 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
         {
             //Ignored
         }
-
-        return Unit.Value;
     }
 
-    public async Task<Unit> Handle(FinishCardDrawCommand request, CancellationToken cancellationToken)
+    public async Task Handle(FinishCardDrawCommand request, CancellationToken cancellationToken)
     {
         var match = await _matchRepository.GetMatch(request.MatchName, cancellationToken);
         var updatedMatch = match with
@@ -151,8 +146,6 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
         {
             //Ignored
         }
-
-        return Unit.Value;
     }
 
     public async Task<IEnumerable<MatchView>> Handle(GetAllMatchesQuery request,
@@ -190,7 +183,7 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
         return await _matchRepository.GetMatch(request.MatchName, cancellationToken);
     }
 
-    public async Task<Unit> Handle(PingMatchCommand request, CancellationToken cancellationToken)
+    public async Task Handle(PingMatchCommand request, CancellationToken cancellationToken)
     {
         var match = await _matchRepository.GetMatch(request.MatchName, cancellationToken);
 
@@ -206,11 +199,9 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
             $@"{message}
 {string.Join(", ", match.Players.Where(p => !p.ToString().StartsWith("Unknown ")).Select(p => $"<@{playerDiscords[p]}> ({p})"))}, please report to PIU TOs",
             cancellationToken);
-
-        return Unit.Value;
     }
 
-    public async Task<Unit> Handle(ResolveMatchCommand request, CancellationToken cancellationToken)
+    public async Task Handle(ResolveMatchCommand request, CancellationToken cancellationToken)
     {
         var match = await _matchRepository.GetMatch(request.MatchName, cancellationToken);
         var scoring = match.Players.Length == 2
@@ -241,21 +232,16 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
         await _matchRepository.SaveMatch(newMatchState, cancellationToken);
 
         await _mediator.Publish(new MatchUpdatedEvent(newMatchState), cancellationToken);
-
-
-        return Unit.Value;
     }
 
-    public async Task<Unit> Handle(SaveRandomSettingsCommand request, CancellationToken cancellationToken)
+    public async Task Handle(SaveRandomSettingsCommand request, CancellationToken cancellationToken)
     {
         await _matchRepository.SaveRandomSettings(request.SettingsName, request.Settings, cancellationToken);
-        return Unit.Value;
     }
 
-    public async Task<Unit> Handle(UpdateMatchCommand request, CancellationToken cancellationToken)
+    public async Task Handle(UpdateMatchCommand request, CancellationToken cancellationToken)
     {
         await _matchRepository.SaveMatch(request.NewView, cancellationToken);
         await _mediator.Publish(new MatchUpdatedEvent(request.NewView), cancellationToken);
-        return Unit.Value;
     }
 }

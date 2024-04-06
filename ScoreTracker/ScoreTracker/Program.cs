@@ -1,7 +1,6 @@
 using System.Text.Json;
 using BlazorApplicationInsights;
 using MassTransit;
-using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Localization;
 using Microsoft.OpenApi.Models;
@@ -116,8 +115,13 @@ builder.Services.AddBlazorApplicationInsights()
     .AddHttpClient()
     .AddHostedService<RecurringJobHostedService>()
     .AddHostedService<BotHostedService>()
-    .AddMediatR(typeof(UpdateXXBestAttemptHandler), typeof(MainLayout), typeof(EFPlayerStatsRepository),
-        typeof(PlayerRatingSaga))
+    .AddMediatR(o =>
+    {
+        o.RegisterServicesFromAssemblies(
+            typeof(UpdateXXBestAttemptHandler).Assembly
+            , typeof(MainLayout).Assembly, typeof(EFPlayerStatsRepository).Assembly,
+            typeof(PlayerRatingSaga).Assembly);
+    })
     .AddTransient<IUserAccessService, UserAccessService>()
     .AddTransient<IWorldRankingService, WorldRankingService>()
     .AddInfrastructure(builder.Configuration.GetSection("AzureBlob").Get<AzureBlobConfiguration>(),

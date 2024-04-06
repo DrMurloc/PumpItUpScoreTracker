@@ -15,10 +15,10 @@ public sealed class SaveChartToListHandler : IRequestHandler<SaveChartToListComm
         _chartLists = chartLists;
     }
 
-    public async Task<Unit> Handle(SaveChartToListCommand request, CancellationToken cancellationToken)
+    public async Task Handle(SaveChartToListCommand request, CancellationToken cancellationToken)
     {
         await _chartLists.SaveChart(_currentUser.User.Id, request.ListType, request.ChartId, cancellationToken);
 
-        return Unit.Value;
+        
     }
 }

@@ -17,7 +17,7 @@ public sealed class UpdateUserHandler : IRequestHandler<UpdateUserCommand>
         _currentUser = currentUser;
     }
 
-    public async Task<Unit> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
+    public async Task Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
         var user = _currentUser.User;
         var existing = await _users.GetUser(user.Id, cancellationToken);
@@ -26,6 +26,5 @@ public sealed class UpdateUserHandler : IRequestHandler<UpdateUserCommand>
             existing?.ProfileImage ??
             new Uri("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png", UriKind.Absolute));
         await _users.SaveUser(newUser, cancellationToken);
-        return Unit.Value;
     }
 }

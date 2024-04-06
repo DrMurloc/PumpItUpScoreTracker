@@ -13,7 +13,7 @@ public sealed class CreateExternalLoginHandler : IRequestHandler<CreateExternalL
         _user = user;
     }
 
-    public async Task<Unit> Handle(CreateExternalLoginCommand request, CancellationToken cancellationToken)
+    public async Task Handle(CreateExternalLoginCommand request, CancellationToken cancellationToken)
     {
         var existingUser =
             await _user.GetUserByExternalLogin(request.LoginProviderName, request.ExternalId, cancellationToken);
@@ -23,7 +23,5 @@ public sealed class CreateExternalLoginHandler : IRequestHandler<CreateExternalL
 
         await _user.CreateExternalLogin(request.UserId, request.LoginProviderName, request.ExternalId,
             cancellationToken);
-
-        return Unit.Value;
     }
 }

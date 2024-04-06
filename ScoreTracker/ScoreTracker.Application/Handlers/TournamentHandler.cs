@@ -18,10 +18,9 @@ namespace ScoreTracker.Application.Handlers
             _tournaments = tournaments;
         }
 
-        public async Task<Unit> Handle(SaveTournamentCommand request, CancellationToken cancellationToken)
+        public async Task Handle(SaveTournamentCommand request, CancellationToken cancellationToken)
         {
             await _tournaments.CreateOrSaveTournament(request.Tournament, cancellationToken);
-            return Unit.Value;
         }
 
         public async Task<IEnumerable<TournamentRecord>> Handle(GetAllTournamentsQuery request,

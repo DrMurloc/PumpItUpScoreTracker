@@ -15,10 +15,10 @@ public sealed class RemoveChartFromListHandler : IRequestHandler<RemoveChartFrom
         _chartLists = chartLists;
     }
 
-    public async Task<Unit> Handle(RemoveChartFromListCommand request, CancellationToken cancellationToken)
+    public async Task Handle(RemoveChartFromListCommand request, CancellationToken cancellationToken)
     {
         await _chartLists.RemoveChart(_currentUser.User.Id, request.ListType, request.ChartId, cancellationToken);
 
-        return Unit.Value;
+        
     }
 }

@@ -44,7 +44,7 @@ namespace ScoreTracker.Application.Handlers
             _scores = scores;
         }
 
-        public async Task<Unit> Handle(CreateCommunityCommand request, CancellationToken cancellationToken)
+        public async Task Handle(CreateCommunityCommand request, CancellationToken cancellationToken)
         {
             var userId = _currentUser.User.Id;
             var community = await _communities.GetCommunityByName(request.CommunityName, cancellationToken);
@@ -53,8 +53,6 @@ namespace ScoreTracker.Application.Handlers
             community.MemberIds.Add(userId);
             await _communities.SaveCommunity(community,
                 cancellationToken);
-
-            return Unit.Value;
         }
 
         private async Task<Community> GetCommunity(Name name, CancellationToken cancellationToken)
@@ -63,49 +61,47 @@ namespace ScoreTracker.Application.Handlers
             return community ?? throw new CommunityNotFoundException();
         }
 
-        public async Task<Unit> Handle(JoinCommunityCommand request, CancellationToken cancellationToken)
+        public async Task Handle(JoinCommunityCommand request, CancellationToken cancellationToken)
         {
             var userId = _currentUser.User.Id;
             var community = await GetCommunity(request.CommunityName, cancellationToken);
 
-            if (community.MemberIds.Contains(userId)) return Unit.Value;
+            if (community.MemberIds.Contains(userId))
 
-            switch (community.PrivacyType)
-            {
-                case CommunityPrivacyType.Public:
-                    community.MemberIds.Add(userId);
-                    break;
-                case CommunityPrivacyType.Private:
-                case CommunityPrivacyType.PublicWithCode:
-                    var code = request.InviteCode ??
-                               throw new DeniedFromCommunityException("This community requires an invite code");
-                    if (!community.InviteCodes.ContainsKey(code))
-                        throw new DeniedFromCommunityException(
-                            "This is not a valid community code for this community.");
+                switch (community.PrivacyType)
+                {
+                    case CommunityPrivacyType.Public:
+                        community.MemberIds.Add(userId);
+                        break;
+                    case CommunityPrivacyType.Private:
+                    case CommunityPrivacyType.PublicWithCode:
+                        var code = request.InviteCode ??
+                                   throw new DeniedFromCommunityException("This community requires an invite code");
+                        if (!community.InviteCodes.ContainsKey(code))
+                            throw new DeniedFromCommunityException(
+                                "This is not a valid community code for this community.");
 
-                    if (community.InviteCodes.TryGetValue(code, out var expirationDate) && expirationDate <
-                        new DateOnly(DateTimeOffset.Now.Year, DateTimeOffset.Now.Month, DateTimeOffset.Now.Day))
-                        throw new DeniedFromCommunityException("This invite code is expired");
+                        if (community.InviteCodes.TryGetValue(code, out var expirationDate) && expirationDate <
+                            new DateOnly(DateTimeOffset.Now.Year, DateTimeOffset.Now.Month, DateTimeOffset.Now.Day))
+                            throw new DeniedFromCommunityException("This invite code is expired");
 
-                    community.MemberIds.Add(userId);
-                    break;
-                default:
-                    throw new DeniedFromCommunityException("Community privacy type could not be determined");
-            }
+                        community.MemberIds.Add(userId);
+                        break;
+                    default:
+                        throw new DeniedFromCommunityException("Community privacy type could not be determined");
+                }
 
             await _communities.SaveCommunity(community, cancellationToken);
-            return Unit.Value;
         }
 
-        public async Task<Unit> Handle(LeaveCommunityCommand request, CancellationToken cancellationToken)
+        public async Task Handle(LeaveCommunityCommand request, CancellationToken cancellationToken)
         {
             var userId = _currentUser.User.Id;
             var community = await GetCommunity(request.CommunityName, cancellationToken);
-            if (!community.MemberIds.Contains(userId)) return Unit.Value;
+            if (!community.MemberIds.Contains(userId))
 
-            community.MemberIds.Remove(userId);
+                community.MemberIds.Remove(userId);
             await _communities.SaveCommunity(community, cancellationToken);
-            return Unit.Value;
         }
 
         public async Task<IEnumerable<CommunityLeaderboardRecord>> Handle(GetCommunityLeaderboardQuery request,
@@ -154,12 +150,11 @@ namespace ScoreTracker.Application.Handlers
             return community;
         }
 
-        public async Task<Unit> Handle(JoinCommunityByInviteCodeCommand request, CancellationToken cancellationToken)
+        public async Task Handle(JoinCommunityByInviteCodeCommand request, CancellationToken cancellationToken)
         {
             var community = await _communities.GetCommunityByInviteCode(request.InviteCode, cancellationToken);
             if (community == null) throw new CommunityNotFoundException();
             await Handle(new JoinCommunityCommand(community.Value, request.InviteCode), cancellationToken);
-            return Unit.Value;
         }
 
         private async Task<Community> LoadCommunity(Name? communityName, Guid? inviteCode,
@@ -183,7 +178,7 @@ namespace ScoreTracker.Application.Handlers
             return community;
         }
 
-        public async Task<Unit> Handle(AddDiscordChannelToCommunityCommand request, CancellationToken cancellationToken)
+        public async Task Handle(AddDiscordChannelToCommunityCommand request, CancellationToken cancellationToken)
         {
             var community = await LoadCommunity(request.CommunityName, request.InviteCode, cancellationToken);
 
@@ -197,7 +192,6 @@ namespace ScoreTracker.Application.Handlers
             await _bot.SendMessage(
                 $"This channel was updated to receive notifications for the {community.Name} community in PIU Scores!",
                 request.ChannelId, cancellationToken);
-            return Unit.Value;
         }
 
         private async Task SendToCommunityDiscords(Guid userId, string message, CancellationToken cancellationToken)

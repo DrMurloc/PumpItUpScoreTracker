@@ -15,11 +15,11 @@ public sealed class SaveUserUiSettingHandler : IRequestHandler<SaveUserUiSetting
         _currentUser = currentUser;
     }
 
-    public async Task<Unit> Handle(SaveUserUiSettingCommand request, CancellationToken cancellationToken)
+    public async Task Handle(SaveUserUiSettingCommand request, CancellationToken cancellationToken)
     {
         var settings = await _users.GetUserUiSettings(_currentUser.User.Id, cancellationToken);
         settings[request.SettingName] = request.NewValue;
         await _users.SaveUserUiSettings(_currentUser.User.Id, settings, cancellationToken);
-        return Unit.Value;
+        
     }
 }

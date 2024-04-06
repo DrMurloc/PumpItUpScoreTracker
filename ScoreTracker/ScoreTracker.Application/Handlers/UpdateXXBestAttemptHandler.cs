@@ -25,7 +25,7 @@ public sealed class UpdateXXBestAttemptHandler : IRequestHandler<UpdateXXBestAtt
         _dateTimeOffset = dateTimeOffset;
     }
 
-    public async Task<Unit> Handle(UpdateXXBestAttemptCommand request, CancellationToken cancellationToken)
+    public async Task Handle(UpdateXXBestAttemptCommand request, CancellationToken cancellationToken)
     {
         var chart = await _charts.GetChart(MixEnum.XX, request.chartId, cancellationToken);
         if (request.LetterGrade != null)
@@ -35,6 +35,6 @@ public sealed class UpdateXXBestAttemptHandler : IRequestHandler<UpdateXXBestAtt
         else
             await _attempts.RemoveBestAttempt(_user.User.Id, chart, cancellationToken);
 
-        return Unit.Value;
+        
     }
 }

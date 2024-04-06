@@ -22,9 +22,8 @@ public sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumerabl
         return await _charts.GetChartSkills(cancellationToken);
     }
 
-    public async Task<Unit> Handle(UpdateChartSkillCommand request, CancellationToken cancellationToken)
+    public async Task Handle(UpdateChartSkillCommand request, CancellationToken cancellationToken)
     {
         await _charts.SaveChartSkills(request.Skills, cancellationToken);
-        return Unit.Value;
     }
 }

@@ -36,7 +36,7 @@ namespace ScoreTracker.Application.Handlers
             _bus = bus;
         }
 
-        public async Task<Unit> Handle(ProcessOfficialLeaderboardsCommand request, CancellationToken cancellationToken)
+        public async Task Handle(ProcessOfficialLeaderboardsCommand request, CancellationToken cancellationToken)
         {
             var leaderboardEntries = (await _officialSite.GetLeaderboardEntries(cancellationToken)).ToArray();
             foreach (var leaderboard in leaderboardEntries.GroupBy(l => l.LeaderboardName))
@@ -58,7 +58,6 @@ namespace ScoreTracker.Application.Handlers
 
             await PopulateTierLists(scores, cancellationToken);
             await SaveUserLeaderboards(scores, cancellationToken);
-            return Unit.Value;
         }
 
         private async Task SaveUserLeaderboards(IEnumerable<OfficialChartLeaderboardEntry> entries,
@@ -152,7 +151,7 @@ namespace ScoreTracker.Application.Handlers
             return Math.Sqrt(sum_of_squares / values.Count());
         }
 
-        public async Task<Unit> Handle(ProcessChartPopularityCommand request, CancellationToken cancellationToken)
+        public async Task Handle(ProcessChartPopularityCommand request, CancellationToken cancellationToken)
         {
             var entries = await _officialSite.GetOfficialChartLeaderboardEntries(cancellationToken);
             foreach (var levelTypeGroup in entries.GroupBy(e => (e.Chart.Level, e.Chart.Type)))
@@ -190,21 +189,16 @@ namespace ScoreTracker.Application.Handlers
                         cancellationToken);
                 }
             }
-
-            return Unit.Value;
         }
 
-        public async Task<Unit> Handle(ImportOfficialPlayerScoresCommand request, CancellationToken cancellationToken)
+        public async Task Handle(ImportOfficialPlayerScoresCommand request, CancellationToken cancellationToken)
         {
             var userId = _currentUser.User.Id;
 
             var accountData = await _officialSite.GetAccountData(request.Username, request.Password, cancellationToken);
             if (accountData.AccountName == "INVALID")
-            {
                 await _mediator.Publish(new ImportStatusUpdated(_currentUser.User.Id,
                     "Invalid Login Information", Array.Empty<RecordedPhoenixScore>()), cancellationToken);
-                return Unit.Value;
-            }
 
             await _mediator.Send(new SaveUserUiSettingCommand("ProfileImage", accountData.AvatarUrl.ToString()),
                 cancellationToken);
@@ -267,8 +261,6 @@ namespace ScoreTracker.Application.Handlers
             var settings = await _user.GetUserUiSettings(userId, cancellationToken);
             settings["PreviousPageCount"] = maxPages.ToString();
             await _user.SaveUserUiSettings(userId, settings, cancellationToken);
-
-            return Unit.Value;
         }
     }
 }

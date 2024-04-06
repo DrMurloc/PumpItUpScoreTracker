@@ -15,7 +15,7 @@ namespace ScoreTracker.Application.Handlers
             _qualifiers = qualifiers;
         }
 
-        public async Task<Unit> Handle(SaveQualifiersCommand request, CancellationToken cancellationToken)
+        public async Task Handle(SaveQualifiersCommand request, CancellationToken cancellationToken)
         {
             var previousLeaderboard =
                 await _qualifiers.GetAllUserQualifiers(request.Qualifiers.Configuration, cancellationToken);
@@ -36,28 +36,29 @@ namespace ScoreTracker.Application.Handlers
                 await _botClient.PublishQualifiersMessage(
                     $"A new challenger approaches! Welcome {user} to the qualifier leaderboard!", cancellationToken);
 
-                if (newPlace > 22 || orderedNewLeaderboard.Length < 23) return Unit.Value;
-
-                var place23 = orderedNewLeaderboard[22].q;
-                await _botClient.PublishQualifiersMessage($"{place23.UserName} has been knocked out of Pros!",
-                    cancellationToken);
+                if (newPlace > 22 || orderedNewLeaderboard.Length < 23)
+                {
+                    var place23 = orderedNewLeaderboard[22].q;
+                    await _botClient.PublishQualifiersMessage($"{place23.UserName} has been knocked out of Pros!",
+                        cancellationToken);
+                }
             }
             else
             {
                 var oldPlace = orderedOldLeaderboard.First(kv => kv.q.UserName == user).Item2;
-                if (oldPlace == newPlace) return Unit.Value;
+                if (oldPlace == newPlace)
 
-                await _botClient.PublishQualifiersMessage($"{user} has progressed to {newPlace} on the leaderboard!",
-                    cancellationToken);
+                    await _botClient.PublishQualifiersMessage(
+                        $"{user} has progressed to {newPlace} on the leaderboard!",
+                        cancellationToken);
 
-                if (newPlace > 22 || oldPlace <= 22 || orderedNewLeaderboard.Length < 23) return Unit.Value;
-
-                var place23 = orderedNewLeaderboard[22].q;
-                await _botClient.PublishQualifiersMessage($"{place23.UserName} has been knocked out of Pros!",
-                    cancellationToken);
+                if (newPlace > 22 || oldPlace <= 22 || orderedNewLeaderboard.Length < 23)
+                {
+                    var place23 = orderedNewLeaderboard[22].q;
+                    await _botClient.PublishQualifiersMessage($"{place23.UserName} has been knocked out of Pros!",
+                        cancellationToken);
+                }
             }
-
-            return Unit.Value;
         }
     }
 }

@@ -242,10 +242,9 @@ namespace ScoreTracker.Application.Handlers
                     })).Select(g => g.Key).ToArray();
         }
 
-        public async Task<Unit> Handle(SubmitFeedbackCommand request, CancellationToken cancellationToken)
+        public async Task Handle(SubmitFeedbackCommand request, CancellationToken cancellationToken)
         {
             await _users.SaveFeedback(_currentUser.User.Id, request.Feedback, cancellationToken);
-            return Unit.Value;
         }
     }
 }
