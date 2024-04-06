@@ -179,7 +179,32 @@ public enum Skill
     EvenlyDistributed,
 
     [Name("What?")] [Description("Chart contains uniquely crazy patterns or gimmicks")] [SkillCategory]
-    What
+    What,
+
+    [Name("Anchor Runs")]
+    [Description("Runs where one foot remains on the same arrow for long segments")]
+    [SkillCategory(SkillCategory.Tech)]
+    AnchorRuns,
+
+    [Name("Cross-overs")]
+    [Description("Turning patterns that move your foot in 180 degree-ish patterns across your other foot")]
+    [SkillCategory(SkillCategory.Twist)]
+    CrossOvers,
+
+    [Name("Mid-Sized Runs")]
+    [Description("Many runs that last a few measures but not terribly long")]
+    [SkillCategory(SkillCategory.Stamina)]
+    MediumRuns,
+
+    [Name("High Movement Runs")]
+    [Description("Doubles Runs that move you around a lot or have your legs extend far out often")]
+    [SkillCategory(SkillCategory.Stamina)]
+    HighMovement,
+
+    [Name("Double Steps")]
+    [Description("Patterns that force you to double step, typically with one foot on a hold")]
+    [SkillCategory(SkillCategory.Tech)]
+    DoubleSteps
 }
 
 public sealed class NameAttribute : Attribute
@@ -210,7 +235,7 @@ public static class SkillHelpers
             ?.Categories ?? Array.Empty<SkillCategory>());
 
     private static readonly IDictionary<Skill, string> Colors =
-        Categories.ToDictionary(kv => kv.Key, kv => kv.Value.First().GetColor());
+        Categories.ToDictionary(kv => kv.Key, kv => kv.Value.Cast<SkillCategory?>().FirstOrDefault()?.GetColor()??"#333333");
 
     private static readonly IDictionary<Skill, string> Names = Enum.GetValues<Skill>()
         .ToDictionary(c => c, c => typeof(Skill).GetField(c.ToString())
@@ -219,7 +244,7 @@ public static class SkillHelpers
 
     public static string GetColor(this Skill skill)
     {
-        return Colors[skill];
+        return Colors?[skill]??"";
     }
 
     public static string GetName(this Skill skill)

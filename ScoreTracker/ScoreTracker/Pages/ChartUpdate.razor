@@ -25,9 +25,6 @@
         <MudItem xs="4">
             <MudNumericField T="decimal" Label="Max BPM" @bind-Value="_maxBpm"></MudNumericField>
         </MudItem>
-        <MudItem xs="4">
-            <MudNumericField T="int" Label="Note Count" @bind-Value="_noteCount" Min="1" Max="10000" HideSpinButtons="true"></MudNumericField>
-        </MudItem>
         <MudItem xs="12">
             <MudAutocomplete T="string"
                              Label="Step Artist"
@@ -36,23 +33,27 @@
                              SearchFunc="s=>Task.FromResult(_existingStepArtists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
         </MudItem>
         <MudItem xs="12">
-            <MudTextField T="string" Label="Video" Value="_video" ValueChanged="SetVideo"></MudTextField>
+            <MudTextField T="string" Immediate="true" Label=@("Video "+_video) Value="_video" ValueChanged="SetVideo"></MudTextField>
         </MudItem>
         <MudItem xs="12">
-            @foreach (var skill in Enum.GetValues<Skill>())
+            @foreach (var skill in Enum.GetValues<Skill>().Where(s=>!_skills.Contains(s)).OrderBy(s=>s.GetColor()))
             {
-                <MudChip Style=@($"color:{skill.GetColor()}") OnClick="()=>_skills.Add(skill)">@skill.GetName()</MudChip>
+                <MudChip Style=@($"background-color:{skill.GetColor()}") OnClick="()=>_skills.Add(skill)">@skill.GetName()</MudChip>
             }
         </MudItem>
-        @foreach (var skill in _skills)
+        @foreach (var skill in _skills.OrderBy(s=>s.GetColor()))
         {
             <MudItem xs="6">
-                <MudChip Style=@($"color:{skill.GetColor()}") OnClick="()=>_skills.Remove(skill)">@skill.GetName()</MudChip>
+                <MudChip Style=@($"background-color:{skill.GetColor()}") OnClick="()=>_skills.Remove(skill)">@skill.GetName()</MudChip>
             </MudItem>
             <MudItem xs="6">
                 <MudCheckBox T="bool" Checked="_highlightedSkills.Contains(skill)" CheckedChanged="v=>ToggleHighlight(skill,v)" Label="Highlighted"></MudCheckBox>
             </MudItem>
         }
+
+        <MudItem xs="4">
+            <MudNumericField T="int" Label="Note Count" @bind-Value="_noteCount" Min="1" Max="10000" HideSpinButtons="true"></MudNumericField>
+        </MudItem>
         <MudItem xs="12">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isSaving" OnClick="UpdateChart">Save Chart</MudButton>
         </MudItem>
@@ -90,8 +91,9 @@
             _highlightedSkills.Remove(skill);
 
     }
-    private string _video = string.Empty;
+    private string _video = string.Empty;//https://youtu.be/euJl6KlomBU?si=K3W2w8n9YMagpqq0
     private static readonly Regex VideoRegex = new Regex(@"https\:\/\/www\.youtube\.com\/watch\?v\=(.*)", RegexOptions.Compiled);
+    private static readonly Regex VideoRegex2 = new Regex(@"https\:\/\/youtu\.be\/([^?]+)", RegexOptions.Compiled);
     private ISet<Skill> _skills = Array.Empty<Skill>().ToHashSet();
     private ISet<Skill> _highlightedSkills = Array.Empty<Skill>().ToHashSet();
     private decimal _minBpm = 180;
@@ -111,9 +113,24 @@
         if (match.Success)
         {
             var hash = match.Groups[1].Value;
-            video = $"https://www.youtube.com/embed/{hash}";
+            _video = $"https://www.youtube.com/embed/{hash}";
+            StateHasChanged();
+            Snackbar.Add(_video, Severity.Error);
+            return;
+        }
+        match = VideoRegex2.Match(video);
+        if(match.Success)
+        {
+            
+            var hash = match.Groups[1].Value;
+            _video = $"https://www.youtube.com/embed/{hash}";
+            StateHasChanged();
+        Snackbar.Add(_video, Severity.Error);
+            return;
         }
         _video = video;
+        Snackbar.Add(_video, Severity.Error);
+        StateHasChanged();
     }
     private void NextChart()
     {

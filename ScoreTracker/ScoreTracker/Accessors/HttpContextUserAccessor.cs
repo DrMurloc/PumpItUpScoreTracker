@@ -46,7 +46,7 @@ public static class UserExtensions
             new Claim(ClaimTypes.Role, "User"),
             new Claim(ScoreTrackerClaimTypes.IsPublic, user.IsPublic.ToString()),
             new Claim(ScoreTrackerClaimTypes.ProfileImage, user.ProfileImage.ToString()),
-            new Claim(ScoreTrackerClaimTypes.GameTag, user.GameTag.ToString())
+            new Claim(ScoreTrackerClaimTypes.GameTag, user.GameTag?.ToString() ?? "")
         }, "External"));
     }
 
@@ -56,7 +56,9 @@ public static class UserExtensions
             Guid.Parse(claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString()),
             claimsPrincipal.FindFirst(ClaimTypes.Name)?.Value ?? "Unauthenticated",
             bool.Parse(claimsPrincipal.FindFirstValue(ScoreTrackerClaimTypes.IsPublic) ?? ""),
-            claimsPrincipal.FindFirstValue(ScoreTrackerClaimTypes.GameTag),
+            string.IsNullOrWhiteSpace(claimsPrincipal.FindFirstValue(ScoreTrackerClaimTypes.GameTag))
+                ? null
+                : claimsPrincipal.FindFirstValue(ScoreTrackerClaimTypes.GameTag),
             Uri.TryCreate(claimsPrincipal.FindFirstValue(ScoreTrackerClaimTypes.ProfileImage) ?? "", UriKind.Absolute,
                 out var imagePath)
                 ? imagePath
