@@ -46,7 +46,7 @@
     @foreach (var skill in _orderedSkills.Where(s => MaxScore[s] > 0))
     {
         <MudItem xs="12">
-            <MudProgressLinear Color="Colors[skill]" Min="0" Max="MaxScore[skill]" Value="MyScore[skill]">@skill.GetName()</MudProgressLinear>
+            <MudProgressLinear Color="Colors[skill]" Min="MinScore[skill]" Max="MaxScore[skill]" Value="MyScore[skill]">@skill.GetName()</MudProgressLinear>
         </MudItem>
     }
     <MudItem xs="12">
@@ -69,6 +69,7 @@
 {
     private IDictionary<Skill, List<Chart>> SkillCharts = Enum.GetValues<Skill>().ToDictionary(s => s, s => new List<Chart>());
     private IDictionary<Skill, List<Chart>> HighlightedCharts = Enum.GetValues<Skill>().ToDictionary(s => s, s => new List<Chart>());
+    private IDictionary<Skill, int> MinScore = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
     private IDictionary<Skill, int> MaxScore = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
     private IDictionary<Skill, int> MissingScores = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
     private IDictionary<Skill, int> MyScore = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
@@ -103,6 +104,7 @@
             foreach (var skill in skillChart.ContainsSkills)
             {
                 SkillCharts[skill].Add(charts[skillChart.ChartId]);
+                MinScore[skill] += PhoenixLetterGrade.AA.GetMinimumScore();
                 MaxScore[skill] += 1000000;
                 MyScore[skill] +=score.Score!.Value;
             }
@@ -110,6 +112,7 @@
             {
                 HighlightedCharts[skill].Add(charts[skillChart.ChartId]);
                 MaxScore[skill] += 5000000;
+                MinScore[skill] += 5* PhoenixLetterGrade.AA.GetMinimumScore();
                 MyScore[skill] += 5*(int)score.Score!.Value;
             }
         }
