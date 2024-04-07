@@ -81,6 +81,8 @@
     private IDictionary<Guid, PhoenixScore> _scores = new Dictionary<Guid, PhoenixScore>();
     protected override async Task OnInitializedAsync()
     {
+
+
         if (!CurrentUser.IsLoggedIn)
         {
             NavManager.NavigateTo("/Login");

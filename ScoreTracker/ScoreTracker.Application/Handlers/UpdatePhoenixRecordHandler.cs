@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using System.Collections.Concurrent;
+using MassTransit;
 using MediatR;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Domain.Events;
@@ -7,32 +8,63 @@ using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Application.Handlers;
 
-public sealed class UpdatePhoenixRecordHandler : IRequestHandler<UpdatePhoenixBestAttemptCommand>
-{
-    private readonly IDateTimeOffsetAccessor _dateTimeOffset;
-    private readonly IPhoenixRecordRepository _records;
-    private readonly ICurrentUserAccessor _user;
-    private readonly IBus _bus;
-
-    public UpdatePhoenixRecordHandler(
-        IPhoenixRecordRepository records,
+public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
         ICurrentUserAccessor user,
         IDateTimeOffsetAccessor dateTimeOffset,
-        IBus bus)
-    {
-        _records = records;
-        _user = user;
-        _dateTimeOffset = dateTimeOffset;
-        _bus = bus;
-    }
-
+        IBus bus,
+        IMessageScheduler scheduler)
+    : IRequestHandler<UpdatePhoenixBestAttemptCommand>,
+        IConsumer<UpdatePhoenixRecordHandler.TryFireScoreMessage>
+{
     public async Task Handle(UpdatePhoenixBestAttemptCommand request, CancellationToken cancellationToken)
     {
-        await _records.UpdateBestAttempt(_user.User.Id,
+        await records.UpdateBestAttempt(user.User.Id,
             new RecordedPhoenixScore(request.ChartId, request.Score, request.Plate, request.IsBroken,
-                _dateTimeOffset.Now), cancellationToken);
+                dateTimeOffset.Now), cancellationToken);
         if (!request.SkipEvent)
-            await _bus.Publish(new PlayerScoreUpdatedEvent(_user.User.Id, new[] { request.ChartId }),
+        {
+            //Batches up score posts to reduce noise
+            var fireAt = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+            if (_changedCharts.TryGetValue(user.User.Id, out var chartSet))
+            {
+                if (!chartSet.Contains(request.ChartId))
+                    chartSet.Add(request.ChartId);
+
+                _fireAt[user.User.Id] = fireAt;
+                return;
+            }
+
+            _changedCharts[user.User.Id] = new HashSet<Guid>(new[] { request.ChartId });
+
+            _fireAt[user.User.Id] = fireAt;
+            await scheduler.SchedulePublish(fireAt + TimeSpan.FromSeconds(5),
+                new TryFireScoreMessage(user.User.Id),
                 cancellationToken);
+        }
+    }
+
+    public sealed record ScheduleScoreMessage(Guid UserId, Guid[] ChartIds);
+
+    public sealed record TryFireScoreMessage(Guid UserId);
+
+    private static readonly ConcurrentDictionary<Guid, ISet<Guid>> _changedCharts = new();
+
+    private static readonly ConcurrentDictionary<Guid, DateTime> _fireAt = new();
+
+    public async Task Consume(ConsumeContext<TryFireScoreMessage> context)
+    {
+        if (DateTime.UtcNow < _fireAt[context.Message.UserId])
+        {
+            await scheduler.SchedulePublish(_fireAt[context.Message.UserId] + TimeSpan.FromSeconds(5),
+                new TryFireScoreMessage(context.Message.UserId),
+                context.CancellationToken);
+            return;
+        }
+
+        await bus.Publish(
+            new PlayerScoreUpdatedEvent(context.Message.UserId, _changedCharts[context.Message.UserId].ToArray()),
+            context.CancellationToken);
+        _fireAt.TryRemove(context.Message.UserId, out _);
+        _changedCharts.TryRemove(context.Message.UserId, out _);
     }
 }

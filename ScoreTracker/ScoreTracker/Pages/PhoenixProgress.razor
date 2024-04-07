@@ -384,7 +384,7 @@
         var totalPlate2 = totalPlates.Any()?(PhoenixPlate?)Math.Ceiling(totalAvgPlate):null;
         entries.Add(new DifficultyEntry("Total", totalPassed, totalRemaining, (int)totalRanking, (int)totalRemainingRanking, totalMinScore, totalAvgScore, totalMaxScore, totalPlate1, totalPlate2));
 
-        _passBars = DifficultyLevel.All.Select(l => new LevelPass(l, _scores.Where(s => !s.IsBroken && _charts[s.ChartId].Level == l).Count(), _charts.Values.Where(c => c.Level == l).Count()))
+        _passBars = DifficultyLevel.All.Select(l => new LevelPass(l, _scores.Count(s => !s.IsBroken && _charts[s.ChartId].Level == l && _charts[s.ChartId].Type!=ChartType.CoOp), _charts.Values.Count(c => c.Level == l && c.Type!=ChartType.CoOp)))
         .ToArray();
         _difficultyEntries = entries;
         await Filter();

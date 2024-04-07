@@ -47,7 +47,16 @@ builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSectio
 builder.Services.AddMassTransit(o =>
 {
     o.AddConsumers(typeof(PlayerRatingSaga).Assembly, typeof(TierListSaga).Assembly);
-    o.UsingInMemory((context, cfg) => { cfg.ConfigureEndpoints(context); });
+    var schedulerEndpoint = new Uri("queue:scheduler");
+
+    o.AddDelayedMessageScheduler();
+
+    o.UsingInMemory((context, cfg) =>
+    {
+        cfg.ConfigureEndpoints(context);
+
+        cfg.UseDelayedMessageScheduler();
+    });
 });
 builder.Services.AddAuthentication("DefaultAuthentication")
     .AddCookie("DefaultAuthentication", o =>

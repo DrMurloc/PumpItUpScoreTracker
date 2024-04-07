@@ -242,6 +242,16 @@ public static class SkillHelpers
             ?.GetCustomAttribute<NameAttribute>()
             ?.Name ?? "");
 
+    private static readonly IDictionary<Skill, string> Descriptions = Enum.GetValues<Skill>()
+        .ToDictionary(c => c, c => typeof(Skill).GetField(c.ToString())
+            ?.GetCustomAttribute<DescriptionAttribute>()
+            ?.Description ?? "");
+
+    public static string GetDescription(this Skill skill)
+    {
+        return Descriptions[skill];
+    }
+
     public static string GetColor(this Skill skill)
     {
         return Colors?[skill]??"";
