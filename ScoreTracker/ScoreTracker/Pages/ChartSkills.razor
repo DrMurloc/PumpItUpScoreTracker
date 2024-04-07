@@ -17,15 +17,21 @@
 
 <MudGrid>
     <MudItem xs="12">
+        <MudSelect T="ChartType" Value="_chartType" ValueChanged="SetType" Label="Chart Type">
+            <MudSelectItem T="ChartType" Value="ChartType.Single">Singles</MudSelectItem>
+            <MudSelectItem T="ChartType" Value="ChartType.Double">Doubles</MudSelectItem>
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12">
         <MudText Typo="Typo.h5">Recommended New Passes</MudText>
     </MudItem>
     @foreach (var chart in _suggestedPasses)
     {
-        
+
         <MudItem xs="6" sm="3" md="2">
 
             <MudCard>
-                <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()" />
+                <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()"/>
                 <MudCardContent>
                     @if (_scores[chart.Id] > 0)
                     {
@@ -33,7 +39,7 @@
                     }
                 </MudCardContent>
                 <MudCardActions>
-                        
+
                     <MudImage Src="@chart.DifficultyBubblePath" Height="35" Alt="@chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
                     <MudSpacer>
                     </MudSpacer>
@@ -79,25 +85,38 @@
     private IEnumerable<Chart> _suggestedPasses = Array.Empty<Chart>();
     private IDictionary<Guid, double> _passScore = new Dictionary<Guid, double>();
     private IDictionary<Guid, PhoenixScore> _scores = new Dictionary<Guid, PhoenixScore>();
-    protected override async Task OnInitializedAsync()
+    private ChartType _chartType = ChartType.Single;
+
+    private async Task SetType(ChartType newType)
     {
+        _chartType = newType;
+
+        SkillCharts = Enum.GetValues<Skill>().ToDictionary(s => s, s => new List<Chart>());
+        HighlightedCharts = Enum.GetValues<Skill>().ToDictionary(s => s, s => new List<Chart>());
+        MinScore = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
+        MaxScore = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
+        MissingScores = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
+        MyScore = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
+        _orderedSkills = Array.Empty<Skill>();
+        _skillWeights = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0.0);
+        Colors = Enum.GetValues<Skill>().ToDictionary(s => s, s => Color.Primary);
+        _suggestedPasses = Array.Empty<Chart>();
+        _passScore = new Dictionary<Guid, double>();
+        _scores = new Dictionary<Guid, PhoenixScore>();
 
 
-        if (!CurrentUser.IsLoggedIn)
-        {
-            NavManager.NavigateTo("/Login");
-        }
-        var skills = (await Mediator.Send(new GetChartSkillsQuery())).ToArray();
-        var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, 20))).ToDictionary(c => c.Id);
+        var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, 20, newType))).ToDictionary(c => c.Id);
+        var skills = (await Mediator.Send(new GetChartSkillsQuery())).Where(c => charts.ContainsKey(c.ChartId)).ToArray();
         var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id)))
-            .ToDictionary(g=>g.ChartId);
+            .Where(s=>charts.ContainsKey(s.ChartId))
+            .ToDictionary(g => g.ChartId);
 
         _scores = charts.ToDictionary(c => c.Key, c => myScores.TryGetValue(c.Key, out var s) ? s.Score ?? PhoenixScore.Min : PhoenixScore.Min);
-        foreach(var skillChart in skills)
+        foreach (var skillChart in skills)
         {
             if (!myScores.TryGetValue(skillChart.ChartId, out var score))
             {
-                foreach(var skill in skillChart.ContainsSkills.Concat(skillChart.HighlightsSkill).Distinct())
+                foreach (var skill in skillChart.ContainsSkills.Concat(skillChart.HighlightsSkill).Distinct())
                 {
                     MissingScores[skill]++;
                 }
@@ -108,18 +127,18 @@
                 SkillCharts[skill].Add(charts[skillChart.ChartId]);
                 MinScore[skill] += PhoenixLetterGrade.AA.GetMinimumScore();
                 MaxScore[skill] += 1000000;
-                MyScore[skill] +=score.Score!.Value;
+                MyScore[skill] += score.Score!.Value;
             }
             foreach (var skill in skillChart.HighlightsSkill)
             {
                 HighlightedCharts[skill].Add(charts[skillChart.ChartId]);
                 MaxScore[skill] += 5000000;
-                MinScore[skill] += 5* PhoenixLetterGrade.AA.GetMinimumScore();
-                MyScore[skill] += 5*(int)score.Score!.Value;
+                MinScore[skill] += 5 * PhoenixLetterGrade.AA.GetMinimumScore();
+                MyScore[skill] += 5 * (int)score.Score!.Value;
             }
         }
 
-        _orderedSkills = Enum.GetValues<Skill>().Where(s=>MaxScore[s]>0).OrderBy(s => MyScore[s] / (double)MaxScore[s]).ToArray();
+        _orderedSkills = Enum.GetValues<Skill>().Where(s => MaxScore[s] > 0).OrderBy(s => MyScore[s] / (double)MaxScore[s]).ToArray();
         var average = _orderedSkills.Average(s => MyScore[s] / (double)MaxScore[s]);
         var standardDiv = StdDev(_orderedSkills.Select(s => MyScore[s] / (double)MaxScore[s]), true);
         _skillWeights = _orderedSkills.ToDictionary(s => s, s => ((MyScore[s] / (double)MaxScore[s]) - average) / standardDiv);
@@ -127,13 +146,22 @@
         {
             _skillWeights[skill] = 0;
         }
-        _passScore = skills.ToDictionary(sc => sc.ChartId, sc => sc.ContainsSkills.Sum(s => _skillWeights[s]) + sc.HighlightsSkill.Sum(s => 5 * _skillWeights[s])/(sc.ContainsSkills.Count()+5.0*sc.HighlightsSkill.Count()));
+        _passScore = skills.ToDictionary(sc => sc.ChartId, sc => sc.ContainsSkills.Sum(s => _skillWeights[s]) + sc.HighlightsSkill.Sum(s => 5 * _skillWeights[s]) / (sc.ContainsSkills.Count() + 5.0 * sc.HighlightsSkill.Count()));
 
         _suggestedPasses = _passScore
-            //.Where(kv=>!myScores.ContainsKey(kv.Key)||myScores[kv.Key].IsBroken)
+            .Where(kv=>!myScores.ContainsKey(kv.Key)||myScores[kv.Key].IsBroken)
             .OrderByDescending(kv => kv.Value).Select(c => charts[c.Key]);
 
-        Colors = Enum.GetValues<Skill>().ToDictionary(s => s, s =>MaxScore[s]==0?Color.Error: (MyScore[s] / (double)MaxScore[s])>average ? Color.Success : Color.Warning);
+        Colors = Enum.GetValues<Skill>().ToDictionary(s => s, s => MaxScore[s] == 0 ? Color.Error : (MyScore[s] / (double)MaxScore[s]) > average ? Color.Success : Color.Warning);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Login");
+        }
+        await SetType(ChartType.Single);
     }
 
     public static double StdDev(IEnumerable<double> values,
