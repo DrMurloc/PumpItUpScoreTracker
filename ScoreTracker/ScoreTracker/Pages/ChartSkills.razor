@@ -12,6 +12,7 @@
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using MassTransit
 @using ScoreTracker.Domain.Events
+@using ScoreTracker.Domain.Records
 
 <PageTitle>Chart Skills</PageTitle>
 
@@ -23,47 +24,58 @@
         </MudSelect>
     </MudItem>
     <MudItem xs="12">
+        <MudNumericField T="int" Value="_highlightedModifier" ValueChanged="SetHighlighted" Label="HighlightedModifier"></MudNumericField>
+    </MudItem>
+    <MudItem xs="12">
         <MudText Typo="Typo.h5">Recommended New Passes</MudText>
     </MudItem>
-    @foreach (var chart in _suggestedPasses)
+    
+    @if (!_isLoading)
     {
+        
+        @foreach (var group in _finalEntries.GroupBy(e => e.Category).OrderBy(g => g.Key))
+        {
+            <MudItem xs="12">
+                <MudText Typo="Typo.h6">@group.Key.ToString()</MudText>
+            </MudItem>
+            foreach (var chart in group.OrderByDescending(e => e.Order).Select(c=>_charts[c.ChartId]))
+            {
+            
+                <MudItem xs="6" sm="3" md="2">
 
-        <MudItem xs="6" sm="3" md="2">
+                    <MudCard Class="@CardClass(chart.Id)" Style="@CardStyle(chart.Id)">
+                        <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()"/>
+                        <MudCardActions>
 
-            <MudCard>
-                <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()"/>
-                <MudCardContent>
-                    @if (_scores[chart.Id] > 0)
-                    {
-                        <MudText>@_scores[chart.Id]</MudText>
-                    }
-                </MudCardContent>
-                <MudCardActions>
+                            <MudImage Src="@chart.DifficultyBubblePath" Height="35" Alt="@chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                            <MudSpacer>
+                            </MudSpacer>
+                            @if (_scores[chart.Id] > 0)
+                            {
+                                <MudText>@_scores[chart.Id]</MudText>
+                            }
+                        </MudCardActions>
 
-                    <MudImage Src="@chart.DifficultyBubblePath" Height="35" Alt="@chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-                    <MudSpacer>
-                    </MudSpacer>
-                    <MudText>@($"{_passScore[chart.Id]:0.00}")</MudText>
-                </MudCardActions>
-
-            </MudCard>
-        </MudItem>
-    }
-    @foreach (var skill in _orderedSkills.Where(s => MaxScore[s] > 0))
-    {
+                    </MudCard>
+                </MudItem>
+            }
+        }
+        @foreach (var skill in _orderedSkills.Where(s => MaxScore[s] > 0))
+        {
+            <MudItem xs="12">
+                <MudProgressLinear Color="Colors[skill]" Min="MinScore[skill]" Max="MaxScore[skill]" Value="MyScore[skill]">@skill.GetName()</MudProgressLinear>
+            </MudItem>
+        }
         <MudItem xs="12">
-            <MudProgressLinear Color="Colors[skill]" Min="MinScore[skill]" Max="MaxScore[skill]" Value="MyScore[skill]">@skill.GetName()</MudProgressLinear>
-        </MudItem>
-    }
-    <MudItem xs="12">
 
-        <MudText Typo="Typo.h5">Missing Scores</MudText>
-    </MudItem>
-    @foreach (var skill in Enum.GetValues<Skill>().Where(s => MaxScore[s] == 0))
-    {
-        <MudItem xs="12">
-            <MudText Typo="Typo.body1">@skill.GetName()</MudText>
+            <MudText Typo="Typo.h5">Missing Scores</MudText>
         </MudItem>
+        @foreach (var skill in Enum.GetValues<Skill>().Where(s => MaxScore[s] == 0))
+        {
+            <MudItem xs="12">
+                <MudText Typo="Typo.body1">@skill.GetName()</MudText>
+            </MudItem>
+        }
     }
 </MudGrid>
 
@@ -85,11 +97,24 @@
     private IEnumerable<Chart> _suggestedPasses = Array.Empty<Chart>();
     private IDictionary<Guid, double> _passScore = new Dictionary<Guid, double>();
     private IDictionary<Guid, PhoenixScore> _scores = new Dictionary<Guid, PhoenixScore>();
+    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private ChartType _chartType = ChartType.Single;
+    private bool _isLoading = false;
+    private int _highlightedModifier = 10;
 
-    private async Task SetType(ChartType newType)
+    private string CardClass(Guid chartId) =>
+        _scores.TryGetValue(chartId,out  var score) && score>0? "border-solid border-2" : "border-dashed border-2";
+
+    private string CardStyle(Guid chartId) =>
+        _scores.TryGetValue(chartId, out var score) && score > 0 ? $@"border-color:{MudBlazor.Colors.Green.Darken1}" : "";
+    private async Task SetHighlighted(int newModifier)
     {
-        _chartType = newType;
+        _highlightedModifier = newModifier;
+        await Recalculate();
+    }
+
+    private async Task<IEnumerable<SongTierListEntry>> BuildSkillTierList()
+    {
 
         SkillCharts = Enum.GetValues<Skill>().ToDictionary(s => s, s => new List<Chart>());
         HighlightedCharts = Enum.GetValues<Skill>().ToDictionary(s => s, s => new List<Chart>());
@@ -105,10 +130,10 @@
         _scores = new Dictionary<Guid, PhoenixScore>();
 
 
-        var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, 20, newType))).ToDictionary(c => c.Id);
+        var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, 20, _chartType))).ToDictionary(c => c.Id);
         var skills = (await Mediator.Send(new GetChartSkillsQuery())).Where(c => charts.ContainsKey(c.ChartId)).ToArray();
         var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id)))
-            .Where(s=>charts.ContainsKey(s.ChartId))
+            .Where(s => charts.ContainsKey(s.ChartId))
             .ToDictionary(g => g.ChartId);
 
         _scores = charts.ToDictionary(c => c.Key, c => myScores.TryGetValue(c.Key, out var s) ? s.Score ?? PhoenixScore.Min : PhoenixScore.Min);
@@ -132,9 +157,9 @@
             foreach (var skill in skillChart.HighlightsSkill)
             {
                 HighlightedCharts[skill].Add(charts[skillChart.ChartId]);
-                MaxScore[skill] += 5000000;
-                MinScore[skill] += 5 * PhoenixLetterGrade.AA.GetMinimumScore();
-                MyScore[skill] += 5 * (int)score.Score!.Value;
+                MaxScore[skill] += _highlightedModifier * 1000000;
+                MinScore[skill] += _highlightedModifier * PhoenixLetterGrade.AA.GetMinimumScore();
+                MyScore[skill] += _highlightedModifier * (int)score.Score!.Value;
             }
         }
 
@@ -146,13 +171,42 @@
         {
             _skillWeights[skill] = 0;
         }
-        _passScore = skills.ToDictionary(sc => sc.ChartId, sc => sc.ContainsSkills.Sum(s => _skillWeights[s]) + sc.HighlightsSkill.Sum(s => 5 * _skillWeights[s]) / (sc.ContainsSkills.Count() + 5.0 * sc.HighlightsSkill.Count()));
+        _passScore = skills.ToDictionary(sc => sc.ChartId, sc => sc.ContainsSkills.Sum(s => _skillWeights[s]) + sc.HighlightsSkill.Sum(s => _highlightedModifier * _skillWeights[s]) / (sc.ContainsSkills.Count() + (double)_highlightedModifier * sc.HighlightsSkill.Count()));
 
         _suggestedPasses = _passScore
-            .Where(kv=>!myScores.ContainsKey(kv.Key)||myScores[kv.Key].IsBroken)
+            .Where(kv => !myScores.ContainsKey(kv.Key) || myScores[kv.Key].IsBroken)
             .OrderByDescending(kv => kv.Value).Select(c => charts[c.Key]);
 
         Colors = Enum.GetValues<Skill>().ToDictionary(s => s, s => MaxScore[s] == 0 ? Color.Error : (MyScore[s] / (double)MaxScore[s]) > average ? Color.Success : Color.Warning);
+        var standardDeviationCompare =
+            StdDev(_passScore.Select(s => s.Value), true);
+        var averageCompare = _passScore.Average(s => s.Value);
+        var mediumMinCompare = averageCompare - standardDeviationCompare / 2;
+        var easyMinCompare = averageCompare + standardDeviationCompare / 2;
+        var veryEasyMinCompare = averageCompare + standardDeviationCompare;
+        var oneLevelOverratedCompare = averageCompare + standardDeviationCompare * 1.5;
+        var hardMinCompare = averageCompare - standardDeviationCompare;
+        var veryHardMinCompare = averageCompare - standardDeviationCompare * 1.5;
+        return _passScore.Select(s => new SongTierListEntry("Skill", s.Key, s.Value > oneLevelOverratedCompare ? TierListCategory.Overrated
+            : s.Value > veryEasyMinCompare ? TierListCategory.VeryEasy :
+                s.Value > easyMinCompare ? TierListCategory.Easy :
+                    s.Value > mediumMinCompare ? TierListCategory.Medium :
+                        s.Value > hardMinCompare ? TierListCategory.Hard :
+                            s.Value > veryHardMinCompare ? TierListCategory.VeryHard :
+                                TierListCategory.Underrated, -1 * (int)s.Value * 100)).ToArray();
+    }
+
+    private IEnumerable<SongTierListEntry> _finalEntries = Array.Empty<SongTierListEntry>();
+    private async Task Recalculate()
+    {
+        _isLoading = true;
+        _finalEntries = await BuildSkillTierList();
+        _isLoading = false;
+    }
+    private async Task SetType(ChartType newType)
+    {
+        _chartType = newType;
+        await Recalculate();
     }
     protected override async Task OnInitializedAsync()
     {
@@ -161,6 +215,8 @@
         {
             NavManager.NavigateTo("/Login");
         }
+        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).
+        ToDictionary(c => c.Id);
         await SetType(ChartType.Single);
     }
 
