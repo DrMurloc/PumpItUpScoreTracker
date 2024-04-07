@@ -160,20 +160,6 @@ public enum Skill
     [SkillCategory(SkillCategory.Gimmick)]
     BPMChanges,
 
-    [Name("Front Loaded")]
-    [Description("Chart is significantly harder in beginning than the rest of the chart")]
-    [SkillCategory]
-    FrontLoaded,
-
-    [Name("Back Loaded")]
-    [Description("Chart is significantly harder at the end than the rest of the chart (even more than usual)")]
-    [SkillCategory]
-    BackLoaded,
-
-    [Name("Evenly Distributed")]
-    [Description("Chart is roughly the same difficulty front start to finish")]
-    [SkillCategory]
-    EvenlyDistributed,
 
     [Name("What?")] [Description("Chart contains uniquely crazy patterns or gimmicks")] [SkillCategory]
     What,
