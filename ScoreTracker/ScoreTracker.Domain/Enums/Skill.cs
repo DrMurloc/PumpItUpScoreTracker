@@ -202,9 +202,14 @@ public enum Skill
     Shuffles,
 
     [Name("Yog Walks")]
-    [Description("Doubles runs that move you from side to side in a steady continuous stream")]
+    [Description("Doubles runs that move you from side to side in a steady (not rapid) continuous stream")]
     [SkillCategory(SkillCategory.Tech)]
-    YogWalks
+    YogWalks,
+
+    [Name("Crab Walks")]
+    [Description("Doubles runs that move sideways while maintaining a wide stance")]
+    [SkillCategory(SkillCategory.Tech)]
+    CrabWalks
 }
 
 public sealed class NameAttribute : Attribute
