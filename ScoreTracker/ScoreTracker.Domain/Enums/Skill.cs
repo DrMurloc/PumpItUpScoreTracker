@@ -137,9 +137,6 @@ public enum Skill
     [SkillCategory(SkillCategory.Tech)]
     JumpJacks,
 
-    [Name("Hold Tech")] [Description("Patterns that utilize holds in tricky ways")] [SkillCategory(SkillCategory.Tech)]
-    HoldTech,
-
     [Name("Spins")] [Description("Patterns that make you turn a full 360")] [SkillCategory(SkillCategory.Tech)]
     Spins,
 
@@ -204,7 +201,19 @@ public enum Skill
     [Name("Double Steps")]
     [Description("Patterns that force you to double step, typically with one foot on a hold")]
     [SkillCategory(SkillCategory.Tech)]
-    DoubleSteps
+    DoubleSteps,
+
+    [Name("Anchor Holds")]
+    [Description(
+        "Patterns that have you hold with a heal or toe while hitting arrows with the other side of your foot")]
+    [SkillCategory(SkillCategory.Tech)]
+    AnchorHolds,
+
+    [Name("Shuffles")]
+    [Description(
+        "Patterns that make you slide your foot along a hold without letting go to change which arrows you are hitting")]
+    [SkillCategory(SkillCategory.Tech)]
+    Shuffles
 }
 
 public sealed class NameAttribute : Attribute
