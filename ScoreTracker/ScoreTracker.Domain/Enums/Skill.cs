@@ -199,7 +199,12 @@ public enum Skill
     [Description(
         "Patterns that make you slide your foot along a hold without letting go to change which arrows you are hitting")]
     [SkillCategory(SkillCategory.Tech)]
-    Shuffles
+    Shuffles,
+
+    [Name("Yog Walks")]
+    [Description("Doubles runs that move you from side to side in a steady continuous stream")]
+    [SkillCategory(SkillCategory.Tech)]
+    YogWalks
 }
 
 public sealed class NameAttribute : Attribute
