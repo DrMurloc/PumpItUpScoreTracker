@@ -24,7 +24,7 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
         if (!request.SkipEvent)
         {
             //Batches up score posts to reduce noise
-            var fireAt = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+            var fireAt = DateTime.UtcNow + TimeSpan.FromMinutes(2);
             if (_changedCharts.TryGetValue(user.User.Id, out var chartSet))
             {
                 if (!chartSet.Contains(request.ChartId))
