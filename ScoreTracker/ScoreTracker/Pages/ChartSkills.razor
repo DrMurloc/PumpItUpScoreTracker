@@ -44,7 +44,8 @@
         @foreach (var group in _finalEntries.Where(e=>_showPassed|| !_scores.TryGetValue(e.ChartId,out var score) || score==0).GroupBy(e => e.Category).OrderBy(g => g.Key))
         {
             <MudItem xs="12">
-                <MudText Typo="Typo.h6">@group.Key.ToString()</MudText>
+                <MudText Typo="Typo.h6">@group.Key.ToString()</MudText><br/>
+                <MudText Typo="Typo.subtitle1">@_messages[group.Key]</MudText>
             </MudItem>
             foreach (var chart in group.OrderBy(e => e.Order).Select(c=>_charts[c.ChartId]))
             {
@@ -60,7 +61,7 @@
                             </MudSpacer>
                             @if (_scores[chart.Id] > 0)
                             {
-                                <MudText>@_scores[chart.Id]</MudText>
+                                <MudText>@_scores[chart.Id] (@_scores[chart.Id].LetterGrade.GetName())</MudText>
                             }
                         </MudCardActions>
 
@@ -152,7 +153,7 @@
     private bool _isLoading = false;
     private int _highlightedModifier = 10;
     private bool _showPassed = true;
-    
+
     private string CategoryColor(TierListCategory category) => category switch
     {
         TierListCategory.Overrated=>"#00FFFF",
@@ -162,7 +163,7 @@
         TierListCategory.Hard=>"#55BB00",
         TierListCategory.VeryHard=>"#BB5500",
         TierListCategory.Underrated=>"#FF0000"
-        };
+    };
     private string CardClass(Guid chartId) =>
         _scores.TryGetValue(chartId,out  var score) && score>0? "border-solid border-2" : "border-dashed border-2";
 
@@ -230,7 +231,7 @@
         }
 
         _orderedSkills = Enum.GetValues<Skill>().Where(s => MaxScore[s] > 0).OrderBy(s => MyScore[s] / (double)MaxScore[s]).ToArray();
-        
+
         var average = _orderedSkills.Any()? _orderedSkills.Average(s => MyScore[s] / (double)MaxScore[s]):0;
         var standardDiv = StdDev(_orderedSkills.Select(s => MyScore[s] / (double)MaxScore[s]), true);
         _skillWeights = _orderedSkills.ToDictionary(s => s, s => ((MyScore[s] / (double)MaxScore[s]) - average) / standardDiv);
@@ -264,7 +265,7 @@
     }
 
     private IEnumerable<SongTierListEntry> _finalEntries = Array.Empty<SongTierListEntry>();
-
+    private IDictionary<TierListCategory, string> _messages = Enum.GetValues<TierListCategory>().ToDictionary(c => c, c => "");
     private IDictionary<string, double> _modifiers = new Dictionary<string, double>()
     {
         { "Official Scores", 1 },
@@ -317,6 +318,20 @@
 
         }
         _finalEntries = result;
+        _messages = Enum.GetValues<TierListCategory>().ToDictionary(c => c, c => "");
+        foreach (var group in _finalEntries.GroupBy(t => t.Category))
+        {
+            if (!group.Any())
+            {
+                _messages[group.Key] = "0% Cleared";
+                continue;
+            }
+            var clearRate = group.Count(e => _scores[e.ChartId] > 0) / (double)group.Count();
+            var minScore =(PhoenixScore)group.Where(e => _scores[e.ChartId] > 0).Min(e =>(int) _scores[e.ChartId]);
+            var avgScore = (PhoenixScore)(int)group.Where(e => _scores[e.ChartId] > 0).Average(e => _scores[e.ChartId]);
+            var maxScore = (PhoenixScore) group.Where(e => _scores[e.ChartId]>0).Max(e => (int)_scores[e.ChartId]);
+            _messages[group.Key] = $"{clearRate * 100.0:0.00}% Cleared, {minScore} ({minScore.LetterGrade.GetName()}) - {maxScore} ({maxScore.LetterGrade.GetName()}), {avgScore} ({avgScore.LetterGrade.GetName()}) Average";
+        }
         _isLoading = false;
     }
     private async Task SetType(ChartType newType)
