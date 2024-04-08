@@ -205,7 +205,7 @@
         _scores = charts.ToDictionary(c => c.Key, c => myScores.TryGetValue(c.Key, out var s) ? s.Score ?? PhoenixScore.Min : PhoenixScore.Min);
         foreach (var skillChart in skills)
         {
-            if (!myScores.TryGetValue(skillChart.ChartId, out var score))
+            if (!myScores.TryGetValue(skillChart.ChartId, out var score)||score.Score==null)
             {
                 foreach (var skill in skillChart.ContainsSkills.Concat(skillChart.HighlightsSkill).Distinct())
                 {
@@ -230,7 +230,8 @@
         }
 
         _orderedSkills = Enum.GetValues<Skill>().Where(s => MaxScore[s] > 0).OrderBy(s => MyScore[s] / (double)MaxScore[s]).ToArray();
-        var average = _orderedSkills.Average(s => MyScore[s] / (double)MaxScore[s]);
+        
+        var average = _orderedSkills.Any()? _orderedSkills.Average(s => MyScore[s] / (double)MaxScore[s]):0;
         var standardDiv = StdDev(_orderedSkills.Select(s => MyScore[s] / (double)MaxScore[s]), true);
         _skillWeights = _orderedSkills.ToDictionary(s => s, s => ((MyScore[s] / (double)MaxScore[s]) - average) / standardDiv);
         foreach (var skill in Enum.GetValues<Skill>().Where(s => !_skillWeights.ContainsKey(s)))
