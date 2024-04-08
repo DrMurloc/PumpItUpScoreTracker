@@ -23,22 +23,30 @@
             <MudSelectItem T="ChartType" Value="ChartType.Double">Doubles</MudSelectItem>
         </MudSelect>
     </MudItem>
-    <MudItem xs="12">
+    <MudItem xs="4">
         <MudNumericField T="int" Value="_highlightedModifier" ValueChanged="SetHighlighted" Label="HighlightedModifier"></MudNumericField>
     </MudItem>
+    @foreach (var modifier in _modifiers)
+    {
+        <MudItem xs="4">
+            <MudNumericField T="double" Value="modifier.Value" ValueChanged="v=>SetCategory(modifier.Key,v)" Label="@modifier.Key"></MudNumericField>
+        </MudItem>
+    }
     <MudItem xs="12">
         <MudText Typo="Typo.h5">Recommended New Passes</MudText>
     </MudItem>
-    
+    <MudItem xs="12">
+        <MudCheckBox T="bool" @bind-Checked="_showPassed" Label="Show Passed Charts"></MudCheckBox>
+    </MudItem>
     @if (!_isLoading)
     {
         
-        @foreach (var group in _finalEntries.GroupBy(e => e.Category).OrderBy(g => g.Key))
+        @foreach (var group in _finalEntries.Where(e=>_showPassed|| !_scores.TryGetValue(e.ChartId,out var score) || score==0).GroupBy(e => e.Category).OrderBy(g => g.Key))
         {
             <MudItem xs="12">
                 <MudText Typo="Typo.h6">@group.Key.ToString()</MudText>
             </MudItem>
-            foreach (var chart in group.OrderByDescending(e => e.Order).Select(c=>_charts[c.ChartId]))
+            foreach (var chart in group.OrderBy(e => e.Order).Select(c=>_charts[c.ChartId]))
             {
             
                 <MudItem xs="6" sm="3" md="2">
@@ -60,6 +68,10 @@
                 </MudItem>
             }
         }
+
+        <MudItem xs="12">
+            <MudText Typo="Typo.h5">My Skills</MudText>
+        </MudItem>
         @foreach (var skill in _orderedSkills.Where(s => MaxScore[s] > 0))
         {
             <MudItem xs="12">
@@ -67,15 +79,53 @@
             </MudItem>
         }
         <MudItem xs="12">
-
-            <MudText Typo="Typo.h5">Missing Scores</MudText>
+            <MudTable T="SongTierListEntry" Items=@(_finalEntries)>
+                <HeaderContent>
+                    <MudTh>
+                        <MudTableSortLabel T="SongTierListEntry" SortBy="e => _charts[e.ChartId].Song.Name">Song</MudTableSortLabel>
+                    </MudTh>
+                    <MudTh>Chart</MudTh>
+                    <MudTh>
+                        <MudTableSortLabel T="SongTierListEntry" SortBy="e => e.Order">Final Ranking</MudTableSortLabel>
+                    </MudTh>
+                    @foreach (var key in _categoryLists.Keys.OrderBy(k=>k))
+                    {
+                        <MudTh>
+                            <MudTableSortLabel T="SongTierListEntry" SortBy="e=>_categoryLists[key][e.ChartId].Order">@key</MudTableSortLabel>
+                        </MudTh>
+                    }
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>
+                        <MudImage Src="@_charts[context.ChartId].Song.ImagePath.ToString()" Height="35" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
+                    </MudTd>
+                    <MudTd>
+                        <MudImage Src="@_charts[context.ChartId].DifficultyBubblePath.ToString()" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                    </MudTd>
+                    <MudTd>
+                        <MudTooltip Text="@context.Order.ToString()">
+                            <MudText Style=@($"color:{CategoryColor(context.Category)}")>
+                                @context.Category.ToString() (@((@context.Order/100.0).ToString("0.00")))
+                            </MudText>
+                        </MudTooltip>
+                    </MudTd>
+                    @foreach (var list in _categoryLists.OrderBy(k => k.Key))
+                    {
+                        <MudTd>
+                        <MudTooltip Text="@list.Value[context.ChartId].Order.ToString()">
+                            <MudText Style=@($"color:{CategoryColor(list.Value[context.ChartId].Category)}")>
+                                @list.Value[context.ChartId].Category (@((_modifiers[list.Key]*GetScore(list.Value[context.ChartId].Category)).ToString("0.00")))
+                            </MudText>
+                        </MudTooltip>
+                        </MudTd>
+                    }
+                </RowTemplate>
+                
+                <PagerContent>
+                    <MudTablePager></MudTablePager>
+                </PagerContent>
+            </MudTable>
         </MudItem>
-        @foreach (var skill in Enum.GetValues<Skill>().Where(s => MaxScore[s] == 0))
-        {
-            <MudItem xs="12">
-                <MudText Typo="Typo.body1">@skill.GetName()</MudText>
-            </MudItem>
-        }
     }
 </MudGrid>
 
@@ -101,7 +151,18 @@
     private ChartType _chartType = ChartType.Single;
     private bool _isLoading = false;
     private int _highlightedModifier = 10;
-
+    private bool _showPassed = true;
+    
+    private string CategoryColor(TierListCategory category) => category switch
+    {
+        TierListCategory.Overrated=>"#00FFFF",
+        TierListCategory.VeryEasy=>"#00FFBB",
+        TierListCategory.Easy=>"#00FF55",
+        TierListCategory.Medium=>"#00FF00",
+        TierListCategory.Hard=>"#55BB00",
+        TierListCategory.VeryHard=>"#BB5500",
+        TierListCategory.Underrated=>"#FF0000"
+        };
     private string CardClass(Guid chartId) =>
         _scores.TryGetValue(chartId,out  var score) && score>0? "border-solid border-2" : "border-dashed border-2";
 
@@ -113,6 +174,11 @@
         await Recalculate();
     }
 
+    private async Task SetCategory(string category, double modifier)
+    {
+        _modifiers[category] = modifier;
+        await Recalculate();
+    }
     private async Task<IEnumerable<SongTierListEntry>> BuildSkillTierList()
     {
 
@@ -197,10 +263,59 @@
     }
 
     private IEnumerable<SongTierListEntry> _finalEntries = Array.Empty<SongTierListEntry>();
+
+    private IDictionary<string, double> _modifiers = new Dictionary<string, double>()
+    {
+        { "Official Scores", 1 },
+        { "Scores", 1 },
+        { "Skill", 2 },
+        { "Popularity", .5 },
+        { "Stage Break", 1 }
+    };
+
+    private IDictionary<string, IDictionary<Guid, SongTierListEntry>> _categoryLists = new Dictionary<string, IDictionary<Guid, SongTierListEntry>>();
+    private int GetScore(TierListCategory category) => (int)category - 3;
     private async Task Recalculate()
     {
         _isLoading = true;
-        _finalEntries = await BuildSkillTierList();
+        var officialScores = (await Mediator.Send(new GetTierListQuery("Official Scores"))).ToDictionary(s => s.ChartId);
+        var scores = (await Mediator.Send(new GetTierListQuery("Scores"))).ToDictionary(s => s.ChartId); 
+        var popularity = (await Mediator.Send(new GetTierListQuery("Popularity"))).ToDictionary(s => s.ChartId);
+        var difficulty = (await Mediator.Send(new GetTierListQuery("Difficulty"))).ToDictionary(s => s.ChartId);
+        var result = new List<SongTierListEntry>();
+        var baseEntries = (await BuildSkillTierList()).ToArray();
+        _categoryLists = new Dictionary<string, IDictionary<Guid, SongTierListEntry>>()
+        {
+            { "Skill", baseEntries.ToDictionary(e => e.ChartId) },
+            { "Official Scores", officialScores },
+            { "Scores", scores },
+            { "Popularity", popularity },
+            { "Stage Break", difficulty }
+        };
+        foreach (var baseEntry in baseEntries)
+        {
+            var count = _modifiers["Skill"];
+            var currentTotal = _modifiers["Skill"]*(double) GetScore(baseEntry.Category);
+            foreach (var listItem in new[] { (officialScores,"Official Scores"), (scores,"Scores"), (popularity,"Popularity"), (difficulty,"Stage Break") })
+            {
+                if (listItem.Item1[baseEntry.ChartId].Category == TierListCategory.Unrecorded)
+                {
+                    continue;
+                }
+                count += _modifiers[listItem.Item2];
+                currentTotal += _modifiers[listItem.Item2]*(double)GetScore(listItem.Item1[baseEntry.ChartId].Category);
+            }
+            var final = currentTotal / (double)count;
+            result.Add(new SongTierListEntry("Final",baseEntry.ChartId,final<-2.5?TierListCategory.Overrated:
+                final<-1.5?TierListCategory.VeryEasy:
+                final<-.5?TierListCategory.Easy:
+                final<=.5?TierListCategory.Medium:
+                final<=1.5?TierListCategory.Hard:
+                final<=2.5?TierListCategory.VeryHard:
+                TierListCategory.Underrated,(int)(final*100.0)));
+
+        }
+        _finalEntries = result;
         _isLoading = false;
     }
     private async Task SetType(ChartType newType)
