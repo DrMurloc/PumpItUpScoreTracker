@@ -44,7 +44,7 @@
         @foreach (var group in _finalEntries.Where(e=>_showPassed|| !_scores.TryGetValue(e.ChartId,out var score) || score==0).GroupBy(e => e.Category).OrderBy(g => g.Key))
         {
             <MudItem xs="12">
-                <MudText Typo="Typo.h6">@group.Key.ToString()</MudText><br/>
+                <MudText Typo="Typo.h6">@group.Key.ToString()</MudText>
                 <MudText Typo="Typo.subtitle1">@_messages[group.Key]</MudText>
             </MudItem>
             foreach (var chart in group.OrderBy(e => e.Order).Select(c=>_charts[c.ChartId]))
