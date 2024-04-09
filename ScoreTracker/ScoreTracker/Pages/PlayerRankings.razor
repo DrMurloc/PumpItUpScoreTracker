@@ -173,7 +173,7 @@
                 <MudText Typo="Typo.h5">@GetTierListName(category)</MudText>
                 <MudText Typo="Typo.subtitle1">@_descriptions[category]</MudText>
             </MudItem>
-            @foreach (var url in _avatarTierList[category])
+            @foreach (var url in _avatarTierList[category].Reverse())
             {
                 <MudItem xs="3" sm="2" md="1">
                     <MudTooltip Text=@($"{_counts[url]} Uses")>
