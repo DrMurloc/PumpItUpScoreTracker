@@ -108,11 +108,13 @@ public sealed class PiuGameApi : IPiuGameApi
                 var scoreNode = li.SelectSingleNode(".//div[contains(@class,'score')]//i[contains(@class,'tt')]");
                 var profileName = string.Join("", li.SelectNodes(".//div[contains(@class,'profile_name')]")
                     .Select(n => n.InnerText));
-
+                var avatarNode =
+                    li.SelectSingleNode(".//div[contains(@class,'profile_img')]//div[contains(@class,'bgfix')]");
                 results.Add(new PiuGameGetSongLeaderboardResult.EntryResultDto
                 {
                     Score = int.Parse(scoreNode.InnerText, NumberStyles.AllowThousands),
-                    ProfileName = profileName
+                    ProfileName = profileName,
+                    AvatarUrl = new Uri(ImageRegex.Match(avatarNode.GetAttributeValue("style", "")).Groups[1].Value)
                 });
             }
 

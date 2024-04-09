@@ -21,9 +21,6 @@ public sealed class
     public async Task<IEnumerable<RecordedPhoenixScore>> Handle(GetPhoenixRecordsQuery request,
         CancellationToken cancellationToken)
     {
-        if (!await _userAccess.HasAccessTo(request.UserId, cancellationToken))
-            return Array.Empty<RecordedPhoenixScore>();
-
         return await _records.GetRecordedScores(request.UserId, cancellationToken);
     }
 }

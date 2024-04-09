@@ -55,7 +55,8 @@ namespace ScoreTracker.Application.Handlers
             }
 
             var scores = (await _officialSite.GetAllOfficialChartScores(CancellationToken.None)).ToArray();
-
+            foreach (var group in scores.GroupBy(u => u.Username))
+                await _leaderboards.SaveAvatar(group.Key, group.First().AvatarUrl, cancellationToken);
             await PopulateTierLists(scores, cancellationToken);
             await SaveUserLeaderboards(scores, cancellationToken);
         }

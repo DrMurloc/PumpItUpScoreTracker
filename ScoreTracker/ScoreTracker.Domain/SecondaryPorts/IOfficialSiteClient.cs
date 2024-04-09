@@ -14,9 +14,12 @@ public interface IOfficialSiteClient
     Task<IEnumerable<OfficialRecordedScore>> GetRecordedScores(string username, string password, int? maxPages,
         CancellationToken cancellationToken);
 
+
     Task<PiuGameAccountDataImport>
         GetAccountData(string username, string password, CancellationToken cancellationToken);
 
     Task<IEnumerable<ChartPopularityLeaderboardEntry>> GetOfficialChartLeaderboardEntries(
         CancellationToken cancellationToken);
+
+    Task FixAvatars();
 }

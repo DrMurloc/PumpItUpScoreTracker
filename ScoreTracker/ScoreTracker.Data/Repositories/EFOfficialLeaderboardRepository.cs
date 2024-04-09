@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
@@ -11,12 +12,15 @@ namespace ScoreTracker.Data.Repositories
     {
         private readonly ChartAttemptDbContext _dbContext;
         private readonly ILogger _logger;
+        private readonly IMemoryCache _cache;
 
         public EFOfficialLeaderboardRepository(IDbContextFactory<ChartAttemptDbContext> factory,
-            ILogger<EFOfficialLeaderboardRepository> logger)
+            ILogger<EFOfficialLeaderboardRepository> logger,
+            IMemoryCache cache)
         {
             _dbContext = factory.CreateDbContext();
             _logger = logger;
+            _cache = cache;
         }
 
 
@@ -114,6 +118,57 @@ namespace ScoreTracker.Data.Repositories
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
             }
+        }
+
+        public async Task<IEnumerable<(string Username, Uri AvatarPath)>> GetUserAvatars(
+            CancellationToken cancellationToken)
+        {
+            return (await GetAvatars(cancellationToken)).Select(kv => (kv.Key, kv.Value)).ToArray();
+        }
+
+        public async Task UpdateAllAvatarPaths(Uri oldPath, Uri newPath, CancellationToken cancellationToken)
+        {
+            var oldPathString = oldPath.ToString();
+            var entities = await _dbContext.OfficialUserAvatar.Where(a => a.AvatarUrl == oldPathString)
+                .ToArrayAsync(cancellationToken);
+            foreach (var entity in entities) entity.AvatarUrl = newPath.ToString();
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            _cache.Remove(AvatarCacheKey);
+        }
+
+        private const string AvatarCacheKey = $"{nameof(EFOfficialLeaderboardRepository)}__Avatars";
+
+        private async Task<IDictionary<string, Uri>> GetAvatars(CancellationToken cancellationToken)
+        {
+            return await _cache.GetOrCreateAsync(AvatarCacheKey, async o =>
+            {
+                o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(1);
+                return (await _dbContext.OfficialUserAvatar.ToArrayAsync(cancellationToken))
+                    .ToDictionary(u => u.UserName, u => new Uri(u.AvatarUrl, UriKind.Absolute),
+                        StringComparer.OrdinalIgnoreCase);
+            });
+        }
+
+        public async Task SaveAvatar(string username, Uri avatarPath, CancellationToken cancellationToken)
+        {
+            var dict = await GetAvatars(cancellationToken);
+            if (dict.TryGetValue(username, out var existing) && existing == avatarPath) return;
+
+            var entity = await
+                _dbContext.OfficialUserAvatar.FirstOrDefaultAsync(u => u.UserName == username, cancellationToken);
+            if (entity == null)
+                await _dbContext.OfficialUserAvatar.AddAsync(new OfficialUserAvatarEntity
+                {
+                    Id = Guid.NewGuid(),
+                    AvatarUrl = avatarPath.ToString(),
+                    UserName = username
+                }, cancellationToken);
+            else
+                entity.AvatarUrl = avatarPath.ToString();
+            dict[username] = avatarPath;
+            _cache.Set(AvatarCacheKey, dict, DateTimeOffset.Now + TimeSpan.FromHours(1));
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
     }
 }

@@ -26,12 +26,18 @@ namespace ScoreTracker.Data.Clients
             return new Uri($"https://piuimages.arroweclip.se/{path}");
         }
 
+        private static readonly ISet<string> _existingPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         public Task<bool> DoesFileExist(string path, out Uri fullPath,
             CancellationToken cancellationToken = default)
         {
-            var blobClient = _blob.GetBlobClient(path);
+            path = path.TrimStart('/');
             fullPath = new Uri($"https://piuimages.arroweclip.se/{path}");
-            return Task.FromResult(blobClient.ExistsAsync(cancellationToken).Result.Value);
+            if (_existingPaths.Contains(path)) return Task.FromResult(true);
+            var blobClient = _blob.GetBlobClient(path);
+            var result = blobClient.ExistsAsync(cancellationToken).Result.Value;
+            if (result) _existingPaths.Add(path);
+            return Task.FromResult(result);
         }
 
 

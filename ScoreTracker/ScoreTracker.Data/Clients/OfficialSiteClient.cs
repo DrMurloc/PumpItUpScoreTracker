@@ -21,11 +21,13 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IPhoenixRecordRepository _phoenixRecords;
     private readonly IFileUploadClient _fileUpload;
+    private readonly IOfficialLeaderboardRepository _leaderboards;
 
     public OfficialSiteClient(IPiuGameApi piuGame, IChartRepository charts, ILogger<OfficialSiteClient> logger,
         IMediator mediator,
         ICurrentUserAccessor currentUser,
-        IPhoenixRecordRepository phoenixRecords, IFileUploadClient fileUpload)
+        IPhoenixRecordRepository phoenixRecords, IFileUploadClient fileUpload,
+        IOfficialLeaderboardRepository leaderboards)
     {
         _piuGame = piuGame;
         _charts = charts;
@@ -34,6 +36,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         _currentUser = currentUser;
         _phoenixRecords = phoenixRecords;
         _fileUpload = fileUpload;
+        _leaderboards = leaderboards;
     }
 
     public async Task<IEnumerable<OfficialChartLeaderboardEntry>> GetAllOfficialChartScores(
@@ -67,8 +70,9 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
 
             _logger.LogInformation($"Song {current++} out of {max}");
             var scores = await _piuGame.GetSongLeaderboard(song.Id, cancellationToken);
-            result.AddRange(scores.Results.Select(score =>
-                new OfficialChartLeaderboardEntry(score.ProfileName, chart, score.Score)));
+            foreach (var score in scores.Results)
+                result.Add(new OfficialChartLeaderboardEntry(score.ProfileName, chart, score.Score,
+                    await ConvertPiuGameAvatarToPiuScoresAvatar(score.AvatarUrl, cancellationToken)));
         }
 
         return result;
@@ -98,6 +102,16 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         var sessionId = await _piuGame.GetSessionId(username, password, cancellationToken);
         var response = await _piuGame.GetBestScores(sessionId, 0, cancellationToken);
         return response.MaxPage;
+    }
+
+    private async Task<Uri> ConvertPiuGameAvatarToPiuScoresAvatar(Uri avatar, CancellationToken cancellationToken)
+    {
+        var file = ImageRegex.Match(avatar.ToString()).Groups[1].Value;
+        var path = $"/avatars/{file}";
+        if (!await _fileUpload.DoesFileExist(path, out var imagePath, cancellationToken))
+            imagePath = await _fileUpload.CopyFromSource(avatar, path, cancellationToken);
+
+        return imagePath;
     }
 
     public async Task<IEnumerable<OfficialRecordedScore>> GetRecordedScores(string username, string password,
@@ -176,11 +190,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     {
         var client = await _piuGame.GetSessionId(username, password, cancellationToken);
         var importedData = await _piuGame.GetAccountData(client, cancellationToken);
-        var file = ImageRegex.Match(importedData.ImageUrl.ToString()).Groups[1].Value;
-        var path = $"/avatars/{file}";
-        if (!await _fileUpload.DoesFileExist(path, out var imagePath, cancellationToken))
-            imagePath = await _fileUpload.CopyFromSource(importedData.ImageUrl, path, cancellationToken);
-
+        var imagePath = await ConvertPiuGameAvatarToPiuScoresAvatar(importedData.ImageUrl, cancellationToken);
         var titles = importedData.TitleEntries.Where(t => t.Have).Select(t =>
             t.Name + (t.Name.ToString().Contains("GAMER") || t.Name == "LOVERS"
                 ? t.ColClass switch
@@ -247,5 +257,16 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
             (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
         var doesntExist = chartIds.Values.Where(c => !existing.Contains(c.Id)).ToArray();
         return result;
+    }
+
+    public async Task FixAvatars()
+    {
+        var avatars = await _leaderboards.GetUserAvatars(CancellationToken.None);
+        var groups = avatars.GroupBy(a => a.AvatarPath);
+        foreach (var group in groups)
+        {
+            var newPath = await ConvertPiuGameAvatarToPiuScoresAvatar(group.Key, CancellationToken.None);
+            await _leaderboards.UpdateAllAvatarPaths(group.Key, newPath, CancellationToken.None);
+        }
     }
 }

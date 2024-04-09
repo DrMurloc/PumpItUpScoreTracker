@@ -24,4 +24,7 @@ public interface IOfficialLeaderboardRepository
     Task DeleteWorldRankings(CancellationToken cancellationToken);
     Task SaveWorldRanking(WorldRankingRecord record, CancellationToken cancellationToken);
     Task FixRankingOrders(CancellationToken cancellationToken);
+    Task<IEnumerable<(string Username, Uri AvatarPath)>> GetUserAvatars(CancellationToken cancellationToken);
+    Task UpdateAllAvatarPaths(Uri oldPath, Uri newPath, CancellationToken cancellationToken);
+    Task SaveAvatar(string username, Uri avatarPath, CancellationToken cancellationToken);
 }

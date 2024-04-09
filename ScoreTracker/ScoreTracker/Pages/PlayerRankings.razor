@@ -150,7 +150,37 @@
         <MudTablePager></MudTablePager>
     </PagerContent>
     </MudTable>
-
+    
+<MudGrid>
+    <MudItem xs="12">
+        <MudText Typo="Typo.h4">Avatar Leaderboard</MudText>
+    </MudItem>
+    <MudItem xs="12">
+        <MudText Typo="Typo.h5">Default Avatar</MudText>
+        <MudText Typo="Typo.subtitle1">@_defaultCount Uses</MudText>
+    </MudItem>
+    <MudItem xs="3" sm="2" md="1">
+        <MudTooltip Text="@($"{_counts[DefaultPath]} Uses")">
+            <MudImage Src="@DefaultPath.ToString()" Height="65" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+        </MudTooltip>
+    </MudItem>
+    @foreach (var category in Enum.GetValues<TierListCategory>().Where(e=>_avatarTierList.ContainsKey(e)))
+    {
+        <MudItem xs="12">
+            <MudText Typo="Typo.h5">@GetTierListName(category)</MudText>
+            <MudText Typo="Typo.subtitle1">@_descriptions[category]</MudText>
+        </MudItem>
+        @foreach (var url in _avatarTierList[category])
+        {
+            <MudItem xs="3" sm="2" md="1">
+                <MudTooltip Text=@($"{_counts[url]} Uses")>
+                    
+                    <MudImage Src="@url.ToString()" Height="65" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                </MudTooltip>
+            </MudItem>
+        }
+    }
+</MudGrid>
 @inject IOfficialLeaderboardRepository Leaderboards;
 @inject IWorldRankingService WorldRankings;
 @inject IMediator Mediator;
@@ -197,6 +227,23 @@
         _showingUsername = username;
 
     }
+
+    private string GetTierListName(TierListCategory category) => category switch {
+        TierListCategory.Overrated=>"Ultra Popular",
+        TierListCategory.VeryEasy=>"Very Popular",
+        TierListCategory.Easy=>"Popular",
+        TierListCategory.Medium=>"Mid",
+        TierListCategory.Hard=>"Unpopular",
+        TierListCategory.VeryHard=>"Very Unpopular",
+        TierListCategory.Underrated=>"Ultra Unpopular"
+
+        };
+
+    private static readonly Uri DefaultPath = new Uri("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png", UriKind.Absolute);
+    private IDictionary<TierListCategory, string> _descriptions = Enum.GetValues<TierListCategory>().ToDictionary(e => e, e => "");
+    private IDictionary<TierListCategory, IEnumerable<Uri>> _avatarTierList = new Dictionary<TierListCategory, IEnumerable<Uri>>();
+    private int _defaultCount = 0;
+    private IDictionary<Uri, int> _counts = new Dictionary<Uri, int>();
     protected override async Task OnInitializedAsync()
     {
         var records = (await Leaderboards.GetAllWorldRankings(CancellationToken.None)).ToArray();
@@ -206,10 +253,62 @@
 
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
 
+        var avatars = await Leaderboards.GetUserAvatars(CancellationToken.None);
+        _counts = avatars
+            .GroupBy(a => a.AvatarPath).ToDictionary(g => g.Key, g => g.Count());
+        
+        var standardDeviationCompare =
+            StdDev(_counts
+                .Where(a=>a.Key!=DefaultPath).Select(s => (double) s.Value), true);
+        var averageCompare = _counts.Where(a => a.Key != DefaultPath).Average(s => s.Value);
+        var mediumMinCompare = averageCompare - standardDeviationCompare / 2;
+        var easyMinCompare = averageCompare + standardDeviationCompare / 2;
+        var veryEasyMinCompare = averageCompare + standardDeviationCompare;
+        var oneLevelOverratedCompare = averageCompare + standardDeviationCompare * 1.5;
+        var hardMinCompare = averageCompare - standardDeviationCompare;
+        var veryHardMinCompare = averageCompare - standardDeviationCompare * 1.5;
+        _avatarTierList = _counts.Where(kv => kv.Key != DefaultPath).Select(s => (s.Key, s.Value, s.Value > oneLevelOverratedCompare ? TierListCategory.Overrated
+            : s.Value > veryEasyMinCompare ? TierListCategory.VeryEasy :
+                s.Value > easyMinCompare ? TierListCategory.Easy :
+                    s.Value > mediumMinCompare ? TierListCategory.Medium :
+                        s.Value > hardMinCompare ? TierListCategory.Hard :
+                            s.Value > veryHardMinCompare ? TierListCategory.VeryHard :
+                                TierListCategory.Underrated, -1 * (int)s.Value * 100))
+            .GroupBy(i => i.Item3)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(i => i.Item4).Select(i => i.Key).ToArray().AsEnumerable());
+        _defaultCount = _counts[DefaultPath];
+        foreach (var category in _avatarTierList.Keys)
+        {
+            var min = _avatarTierList[category].Min(c => _counts[c]);
+            var max = _avatarTierList[category].Max(c => _counts[c]);
+            _descriptions[category] = $"{min} - {max} Uses";
+        }
     }
 
     private sealed record TableEntry(int Place, WorldRankingRecord Record);
 
     private sealed record ScoreEntry(Chart Chart, PhoenixScore Score, int Rating);
+    
+    public static double StdDev(IEnumerable<double> values,
+        bool as_sample)
+    {
+    // Get the mean.
+        double mean = values.Sum() / values.Count();
 
+    // Get the sum of the squares of the differences
+    // between the values and the mean.
+        var squares_query =
+            from double value in values
+            select (value - mean) * (value - mean);
+        double sum_of_squares = squares_query.Sum();
+
+        if (as_sample)
+        {
+            return Math.Sqrt(sum_of_squares / (values.Count() - 1));
+        }
+        else
+        {
+            return Math.Sqrt(sum_of_squares / values.Count());
+        }
+    }
 }
