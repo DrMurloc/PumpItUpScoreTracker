@@ -42,6 +42,9 @@
             <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Place)">Place</MudTableSortLabel>
         </MudTh>
         <MudTh>
+            Avatar
+        </MudTh>
+        <MudTh>
             <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Record.Username)">Username</MudTableSortLabel>
         </MudTh>
         <MudTh>
@@ -78,6 +81,10 @@
     <RowTemplate>
         <MudTd>
             @context.Place
+        </MudTd>
+        <MudTd>
+            
+            <MudImage Src="@_userAvatars[context.Record.Username].ToString()" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
         </MudTd>
         <MudTd>
                 @context.Record.Username
@@ -203,7 +210,7 @@
     private string _showingUsername = string.Empty;
     private ScoreEntry[] _scores = Array.Empty<ScoreEntry>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
-
+    private IDictionary<string, Uri> _userAvatars = new Dictionary<string, Uri>();
     private async Task SetType(string type)
     {
         _currentType = type;
@@ -250,13 +257,15 @@
     private IDictionary<Uri, int> _counts = new Dictionary<Uri, int>();
     protected override async Task OnInitializedAsync()
     {
+        _userAvatars = (await Leaderboards.GetUserAvatars(CancellationToken.None)).ToDictionary(au => au.Username, au => au.AvatarPath, StringComparer.OrdinalIgnoreCase);
+
         var records = (await Leaderboards.GetAllWorldRankings(CancellationToken.None)).ToArray();
         _usernames = records.Select(r => r.Username.ToString()).Distinct().ToArray();
         _records = records.GroupBy(l => l.Type)
             .ToDictionary(l => l.Key, g => g.OrderByDescending(e => e.TotalRating).Select((e, i) => new TableEntry(i + 1, e)).ToArray());
 
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
-
+        _userAvatars = (await Leaderboards.GetUserAvatars(CancellationToken.None)).ToDictionary(au => au.Username, au => au.AvatarPath, StringComparer.OrdinalIgnoreCase);
         var avatars = await Leaderboards.GetUserAvatars(CancellationToken.None);
         _counts = avatars
             .GroupBy(a => a.AvatarPath).ToDictionary(g => g.Key, g => g.Count());
