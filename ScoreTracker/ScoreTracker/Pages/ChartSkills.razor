@@ -1,4 +1,4 @@
-﻿@page "/ChartSkills"
+@page "/ChartSkills"
 @using MediatR
 @using Microsoft.EntityFrameworkCore
 @using ScoreTracker.Application.Commands
@@ -321,7 +321,7 @@
         _messages = Enum.GetValues<TierListCategory>().ToDictionary(c => c, c => "");
         foreach (var group in _finalEntries.GroupBy(t => t.Category))
         {
-            if (!group.Any())
+            if (!group.Where(e=>_scores[e.ChartId]>0).Any())
             {
                 _messages[group.Key] = "0% Cleared";
                 continue;
