@@ -150,37 +150,41 @@
         <MudTablePager></MudTablePager>
     </PagerContent>
     </MudTable>
+
+@if (_counts.Any())
+{
     
-<MudGrid>
-    <MudItem xs="12">
-        <MudText Typo="Typo.h4">Avatar Leaderboard</MudText>
-    </MudItem>
-    <MudItem xs="12">
-        <MudText Typo="Typo.h5">Default Avatar</MudText>
-        <MudText Typo="Typo.subtitle1">@_defaultCount Uses</MudText>
-    </MudItem>
-    <MudItem xs="3" sm="2" md="1">
-        <MudTooltip Text="@($"{_counts[DefaultPath]} Uses")">
-            <MudImage Src="@DefaultPath.ToString()" Height="65" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-        </MudTooltip>
-    </MudItem>
-    @foreach (var category in Enum.GetValues<TierListCategory>().Where(e=>_avatarTierList.ContainsKey(e)))
-    {
+    <MudGrid>
         <MudItem xs="12">
-            <MudText Typo="Typo.h5">@GetTierListName(category)</MudText>
-            <MudText Typo="Typo.subtitle1">@_descriptions[category]</MudText>
+            <MudText Typo="Typo.h4">Avatar Leaderboard</MudText>
         </MudItem>
-        @foreach (var url in _avatarTierList[category])
+        <MudItem xs="12">
+            <MudText Typo="Typo.h5">Default Avatar</MudText>
+            <MudText Typo="Typo.subtitle1">@_defaultCount Uses</MudText>
+        </MudItem>
+        <MudItem xs="3" sm="2" md="1">
+            <MudTooltip Text="@($"{_counts[DefaultPath]} Uses")">
+                <MudImage Src="@DefaultPath.ToString()" Height="65" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+            </MudTooltip>
+        </MudItem>
+        @foreach (var category in Enum.GetValues<TierListCategory>().Where(e=>_avatarTierList.ContainsKey(e)))
         {
-            <MudItem xs="3" sm="2" md="1">
-                <MudTooltip Text=@($"{_counts[url]} Uses")>
-                    
-                    <MudImage Src="@url.ToString()" Height="65" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-                </MudTooltip>
+            <MudItem xs="12">
+                <MudText Typo="Typo.h5">@GetTierListName(category)</MudText>
+                <MudText Typo="Typo.subtitle1">@_descriptions[category]</MudText>
             </MudItem>
+            @foreach (var url in _avatarTierList[category])
+            {
+                <MudItem xs="3" sm="2" md="1">
+                    <MudTooltip Text=@($"{_counts[url]} Uses")>
+                    
+                        <MudImage Src="@url.ToString()" Height="65" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                    </MudTooltip>
+                </MudItem>
+            }
         }
-    }
-</MudGrid>
+    </MudGrid>
+}
 @inject IOfficialLeaderboardRepository Leaderboards;
 @inject IWorldRankingService WorldRankings;
 @inject IMediator Mediator;
