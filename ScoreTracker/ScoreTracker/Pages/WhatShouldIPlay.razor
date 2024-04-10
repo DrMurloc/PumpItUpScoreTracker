@@ -240,6 +240,7 @@
         if (!CurrentUser.IsLoggedIn)
         {
             NavManager.NavigateTo("/Login");
+            return;
         }
         var titles = await Mediator.Send(new GetTitleProgressQuery(MixEnum.Phoenix));
         _progress = titles.GetPushingTitle();
