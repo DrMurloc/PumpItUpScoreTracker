@@ -63,23 +63,24 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
     public async Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(Guid userId,
         CancellationToken cancellationToken = default)
     {
-        var result = await _database.PhoenixBestAttempt.Where(pba => pba.UserId == userId)
-            .Select(pba => new RecordedPhoenixScore(pba.ChartId, pba.Score,
-                PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, pba.RecordedDate))
-            .ToArrayAsync(cancellationToken);
+        return await _cache.GetOrCreateAsync(ScoreCache(userId), async o =>
+        {
+            o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(1);
+            var result = (await _database.PhoenixBestAttempt.Where(pba => pba.UserId == userId)
+                .Select(pba => new RecordedPhoenixScore(pba.ChartId, pba.Score,
+                    PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, pba.RecordedDate))
+                .ToArrayAsync(cancellationToken)).AsEnumerable();
 
-        return result;
+            return result;
+        });
     }
 
     public async Task<RecordedPhoenixScore?> GetRecordedScore(Guid userId, Guid chartId,
         CancellationToken cancellationToken = default)
     {
-        return await _cache.GetOrCreateAsync(ScoreCache(userId), async o =>
-        {
-            o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(1);
-            var result =
-                await _database.PhoenixBestAttempt.FirstOrDefaultAsync(
-                    pba => pba.UserId == userId && pba.ChartId == chartId, cancellationToken);
+        var result =
+            await _database.PhoenixBestAttempt.FirstOrDefaultAsync(
+                pba => pba.UserId == userId && pba.ChartId == chartId, cancellationToken);
 
             if (result == null) return null;
 
@@ -87,7 +88,6 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
                 PhoenixPlateHelperMethods.TryParse(result.Plate),
                 result.IsBroken,
                 result.RecordedDate);
-        });
     }
 
     public async Task<IEnumerable<UserPhoenixScore>> GetRecordedUserScores(Guid chartId,

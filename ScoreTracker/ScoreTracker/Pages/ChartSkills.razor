@@ -31,11 +31,15 @@
     <MudItem xs="4">
         <MudNumericField T="int" Value="_highlightedModifier" ValueChanged="SetHighlighted" Label="HighlightedModifier"></MudNumericField>
     </MudItem>
-    @foreach (var modifier in _modifiers)
+    @if (CurrentUser.IsLoggedInAsAdmin)
     {
-        <MudItem xs="4">
-            <MudNumericField T="double" Value="modifier.Value" ValueChanged="v=>SetCategory(modifier.Key,v)" Label="@modifier.Key"></MudNumericField>
-        </MudItem>
+        
+        @foreach (var modifier in _modifiers)
+        {
+            <MudItem xs="4">
+                <MudNumericField T="double" Value="modifier.Value" ValueChanged="v=>SetCategory(modifier.Key,v)" Label="@modifier.Key"></MudNumericField>
+            </MudItem>
+        }
     }
     <MudItem xs="12">
         <MudText Typo="Typo.h5">Recommended New Passes</MudText>
@@ -123,7 +127,7 @@
                                 
                                 <MudTooltip Text="@list.Value[context.ChartId].Order.ToString()">
                                     <MudText Style=@($"color:{CategoryColor(list.Value[context.ChartId].Category)}")>
-                                        @list.Value[context.ChartId].Category (@((_modifiers[list.Key] * GetScore(list.Value[context.ChartId].Category)).ToString("0.00")))
+                                        @list.Value[context.ChartId].Category
                                     </MudText>
                                 </MudTooltip>
                             }
