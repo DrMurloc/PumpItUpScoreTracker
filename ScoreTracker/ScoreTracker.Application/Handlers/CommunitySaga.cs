@@ -183,7 +183,7 @@ namespace ScoreTracker.Application.Handlers
         {
             var community = await LoadCommunity(request.CommunityName, request.InviteCode, cancellationToken);
 
-            foreach (var existingChannel in community.Channels.Where(c => c.ChannelId == request.ChannelId))
+            foreach (var existingChannel in community.Channels.Where(c => c.ChannelId == request.ChannelId).ToArray())
                 community.Channels.Remove(existingChannel);
 
             community.Channels.Add(new Community.ChannelConfiguration(request.ChannelId, request.SendScores,
@@ -232,28 +232,61 @@ namespace ScoreTracker.Application.Handlers
 
         public async Task Consume(ConsumeContext<PlayerScoreUpdatedEvent> context)
         {
-            var chartIds = context.Message.ChartIds.Distinct().ToArray();
+            var newChartIds = context.Message.NewChartIds.Distinct().ToArray();
+            var upscoreChartScores = context.Message.UpscoredChartIds;
             var user = await _users.GetUser(context.Message.UserId, context.CancellationToken);
             if (user == null) return;
-            var charts = (await _charts.GetCharts(MixEnum.Phoenix, chartIds: chartIds,
-                cancellationToken: context.CancellationToken)).ToArray();
-            var message = $"**{user.Name}** recorded scores for:";
             var scores =
                 (await _scores.GetRecordedScores(context.Message.UserId, context.CancellationToken))
                 .Where(s => s.Score != null)
                 .ToDictionary(s =>
                     s.ChartId);
-            var scoredCharts = charts.Where(c => scores.TryGetValue(c.Id, out var score) && score.Score != null)
-                .ToArray();
-            var count = scoredCharts.Count();
-            if (count == 0) return;
+            var charts = (await _charts.GetCharts(MixEnum.Phoenix,
+                chartIds: newChartIds.Concat(upscoreChartScores.Keys).Distinct(),
+                cancellationToken: context.CancellationToken)).ToDictionary(c => c.Id);
 
-            foreach (var chart in scoredCharts.OrderByDescending(c => c.Level).Take(5))
-                message += $@"
-- {chart.Song.Name} {chart.DifficultyString}: {scores[chart.Id].Score} ({scores[chart.Id].Score!.Value.LetterGrade.GetName()}) {scores[chart.Id].Plate?.GetShorthand()}";
-            if (count > 5)
-                message += $@"
+
+            var newCharts = newChartIds.Where(c => scores.TryGetValue(c, out var score) && score.Score != null)
+                .Select(id => charts[id])
+                .ToArray();
+
+            var count = newCharts.Count();
+            var message = "";
+            if (count > 0)
+            {
+                message = $"**{user.Name}** passed:";
+                foreach (var chart in newCharts.OrderByDescending(c => c.Level)
+                             .ThenByDescending(c => scores[c.Id].Score).Take(5))
+                    message += $@"
+- {chart.Song.Name} {chart.DifficultyString}: {(int)scores[chart.Id].Score!.Value:N0} ({scores[chart.Id].Score!.Value.LetterGrade.GetName()}) {scores[chart.Id].Plate?.GetShorthand()}";
+                if (count > 5)
+                    message += $@"
 And {count - 5} others!";
+            }
+
+            var upscoreCharts = upscoreChartScores
+                .Where(kv => scores.TryGetValue(kv.Key, out var score) && score.Score != null)
+                .Select(kv => (charts[kv.Key], kv.Value)).ToArray();
+            count = upscoreCharts.Count();
+            if (count > 0)
+            {
+                message = $"**{user.Name}** upscored:";
+                foreach (var item in upscoreCharts.OrderByDescending(c => c.Item1.Level)
+                             .ThenByDescending(c => upscoreChartScores[c.Item1.Id] - scores[c.Item1.Id].Score!.Value))
+                {
+                    message += $@"
+- {item.Item1.Song.Name} {item.Item1.DifficultyString}: {(int)scores[item.Item1.Id].Score!.Value:N0} ({(scores[item.Item1.Id].Score!.Value - item.Value < 0 ? '-' : '+')}{scores[item.Item1.Id].Score!.Value - item.Value:N0} ";
+                    var oldLetter = PhoenixScore.From(item.Value).LetterGrade;
+                    if (oldLetter != scores[item.Item1.Id].Score!.Value.LetterGrade)
+                        message +=
+                            $"{oldLetter.GetName()} > ";
+
+                    message +=
+                        $"{scores[item.Item1.Id].Score!.Value.LetterGrade.GetName()}) {scores[item.Item1.Id].Plate?.GetShorthand()}";
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(message)) return;
             await SendToCommunityDiscords(user.Id, message, context.CancellationToken);
         }
 
@@ -273,7 +306,7 @@ And {count - 5} others!";
             var community = await _communities.GetCommunityByName(request.CommunityName, cancellationToken) ??
                             throw new CommunityNotFoundException();
 
-            foreach (var existingChannel in community.Channels.Where(c => c.ChannelId == request.ChannelId))
+            foreach (var existingChannel in community.Channels.Where(c => c.ChannelId == request.ChannelId).ToArray())
                 community.Channels.Remove(existingChannel);
 
             await _communities.SaveCommunity(community, cancellationToken);

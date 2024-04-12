@@ -233,7 +233,7 @@ namespace ScoreTracker.Application.Handlers
             foreach (var score in toSave)
             {
                 await _mediator.Send(
-                    new UpdatePhoenixBestAttemptCommand(score.Chart.Id, false, score.Score, score.Plate, true),
+                    new UpdatePhoenixBestAttemptCommand(score.Chart.Id, false, score.Score, score.Plate),
                     cancellationToken);
                 count++;
                 batch.Add(new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, false,
@@ -249,9 +249,6 @@ namespace ScoreTracker.Application.Handlers
                 batch.Clear();
             }
 
-            await _bus.Publish(
-                new PlayerScoreUpdatedEvent(_currentUser.User.Id, toSave.Select(s => s.Chart.Id).ToArray()),
-                cancellationToken);
             await _mediator.Publish(
                 new ImportStatusUpdated(_currentUser.User.Id,
                     "Charts finished saving",

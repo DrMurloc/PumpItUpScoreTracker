@@ -57,37 +57,36 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
         }
 
         await _database.SaveChangesAsync(cancellationToken);
-        _cache.Remove(ScoreCache(userId));
+        var cache = await GetCachedScores(userId, cancellationToken);
+        cache[score.ChartId] = score;
+        _cache.Set(ScoreCache(userId), cache);
     }
 
-    public async Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(Guid userId,
-        CancellationToken cancellationToken = default)
+    private async Task<IDictionary<Guid, RecordedPhoenixScore>> GetCachedScores(Guid userId,
+        CancellationToken cancellationToken)
     {
         return await _cache.GetOrCreateAsync(ScoreCache(userId), async o =>
         {
-            o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(1);
+            o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(10);
             var result = (await _database.PhoenixBestAttempt.Where(pba => pba.UserId == userId)
                 .Select(pba => new RecordedPhoenixScore(pba.ChartId, pba.Score,
                     PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, pba.RecordedDate))
-                .ToArrayAsync(cancellationToken)).AsEnumerable();
+                .ToArrayAsync(cancellationToken)).ToDictionary(r => r.ChartId);
 
             return result;
         });
     }
 
+    public async Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return (await GetCachedScores(userId, cancellationToken)).Values;
+    }
+
     public async Task<RecordedPhoenixScore?> GetRecordedScore(Guid userId, Guid chartId,
         CancellationToken cancellationToken = default)
     {
-        var result =
-            await _database.PhoenixBestAttempt.FirstOrDefaultAsync(
-                pba => pba.UserId == userId && pba.ChartId == chartId, cancellationToken);
-
-            if (result == null) return null;
-
-            return new RecordedPhoenixScore(result.ChartId, result.Score,
-                PhoenixPlateHelperMethods.TryParse(result.Plate),
-                result.IsBroken,
-                result.RecordedDate);
+        return (await GetCachedScores(userId, cancellationToken)).TryGetValue(chartId, out var r) ? r : null;
     }
 
     public async Task<IEnumerable<UserPhoenixScore>> GetRecordedUserScores(Guid chartId,

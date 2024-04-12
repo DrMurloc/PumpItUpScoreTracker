@@ -372,14 +372,13 @@
             _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxSaving - (double)_currentSaved) / (double)_currentSaved);
             try
             {
-                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(best.ChartId,false,best.Score,best.Plate,true), cancellationToken);
+                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(best.ChartId,false,best.Score,best.Plate), cancellationToken);
             }
             catch (OperationCanceledException)
             {
                 return;
             }
         }
-        await Bus.Publish(new PlayerScoreUpdatedEvent(CurrentUser.User.Id, toSaveScores.Select(s => s.ChartId).Distinct().ToArray()), cancellationToken);
         _currentStep = Step.Finished;
     }
     private async Task UploadFile(InputFileChangeEventArgs e)

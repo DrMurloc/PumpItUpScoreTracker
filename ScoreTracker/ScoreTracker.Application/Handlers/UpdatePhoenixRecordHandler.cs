@@ -5,6 +5,7 @@ using ScoreTracker.Application.Commands;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Handlers;
 
@@ -18,25 +19,44 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
 {
     public async Task Handle(UpdatePhoenixBestAttemptCommand request, CancellationToken cancellationToken)
     {
+        var existing = await records.GetRecordedScore(user.User.Id, request.ChartId, cancellationToken);
+
         await records.UpdateBestAttempt(user.User.Id,
             new RecordedPhoenixScore(request.ChartId, request.Score, request.Plate, request.IsBroken,
                 dateTimeOffset.Now), cancellationToken);
-        if (!request.SkipEvent)
+        //Batches up score posts to reduce noise
+        var fireAt = DateTime.UtcNow + TimeSpan.FromSeconds(5);
+        if ((existing?.IsBroken ?? true) && !request.IsBroken)
         {
-            //Batches up score posts to reduce noise
-            var fireAt = DateTime.UtcNow + TimeSpan.FromMinutes(2);
-            if (_changedCharts.TryGetValue(user.User.Id, out var chartSet))
+            _fireAt[user.User.Id] = fireAt;
+            if (_newCharts.TryGetValue(user.User.Id, out var chartSet))
             {
                 if (!chartSet.Contains(request.ChartId))
                     chartSet.Add(request.ChartId);
 
-                _fireAt[user.User.Id] = fireAt;
                 return;
             }
 
-            _changedCharts[user.User.Id] = new HashSet<Guid>(new[] { request.ChartId });
+            _newCharts[user.User.Id] = new HashSet<Guid>(new[] { request.ChartId });
 
+
+            await scheduler.SchedulePublish(fireAt + TimeSpan.FromSeconds(5),
+                new TryFireScoreMessage(user.User.Id),
+                cancellationToken);
+        }
+        else if (existing?.Score != null && request.Score != null && existing.Score < request.Score)
+        {
             _fireAt[user.User.Id] = fireAt;
+            if (_upscoreCharts.TryGetValue(user.User.Id, out var upscoreSet))
+            {
+                if (!upscoreSet.ContainsKey(request.ChartId))
+                    upscoreSet[request.ChartId] = existing.Score.Value;
+                return;
+            }
+
+            _upscoreCharts[user.User.Id] = new ConcurrentDictionary<Guid, PhoenixScore>();
+            _upscoreCharts[user.User.Id][request.ChartId] = existing.Score.Value;
+
             await scheduler.SchedulePublish(fireAt + TimeSpan.FromSeconds(5),
                 new TryFireScoreMessage(user.User.Id),
                 cancellationToken);
@@ -47,7 +67,8 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
 
     public sealed record TryFireScoreMessage(Guid UserId);
 
-    private static readonly ConcurrentDictionary<Guid, ISet<Guid>> _changedCharts = new();
+    private static readonly ConcurrentDictionary<Guid, IDictionary<Guid, PhoenixScore>> _upscoreCharts = new();
+    private static readonly ConcurrentDictionary<Guid, ISet<Guid>> _newCharts = new();
 
     private static readonly ConcurrentDictionary<Guid, DateTime> _fireAt = new();
 
@@ -61,10 +82,20 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
             return;
         }
 
+        //895238
+        var newChartIds = _newCharts.TryGetValue(context.Message.UserId, out var newChart)
+            ? newChart
+            : Array.Empty<Guid>().ToHashSet();
+
+        var upscoredChartIds = _upscoreCharts.TryGetValue(context.Message.UserId, out var chart)
+            ? chart.Where(kv => !newChartIds.Contains(kv.Key))
+                .ToDictionary(kv => kv.Key, kv => (int)kv.Value)
+            : new Dictionary<Guid, int>();
         await bus.Publish(
-            new PlayerScoreUpdatedEvent(context.Message.UserId, _changedCharts[context.Message.UserId].ToArray()),
+            new PlayerScoreUpdatedEvent(context.Message.UserId, newChartIds.ToArray(), upscoredChartIds),
             context.CancellationToken);
         _fireAt.TryRemove(context.Message.UserId, out _);
-        _changedCharts.TryRemove(context.Message.UserId, out _);
+        _upscoreCharts.TryRemove(context.Message.UserId, out _);
+        _newCharts.TryRemove(context.Message.UserId, out _);
     }
 }
