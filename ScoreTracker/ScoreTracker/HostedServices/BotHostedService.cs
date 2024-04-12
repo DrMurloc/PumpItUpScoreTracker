@@ -1,6 +1,8 @@
 ﻿using MediatR;
 using ScoreTracker.Application.Commands;
+using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Exceptions;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Web.HostedServices
@@ -24,61 +26,149 @@ namespace ScoreTracker.Web.HostedServices
         {
             await _botClient.Start(cancellationToken);
 
-            await _botClient.RegisterSlashCommand("register-community-channel",
-                "Registers this channel to provide notifications for a community", "Registering Channel...",
-                async (channelId, userId, options) =>
-                {
-                    try
-                    {
-                        using var scope = _serviceCollection.CreateScope();
 
-                        var token = new CancellationToken();
+            _botClient.WhenReady(async () =>
+            {
+                await _botClient.RegisterSlashCommand("calculate-score",
+                    "Calculates a Phoenix Score based on score screen", "Calculating Score...",
+                    async (channelId, userId, options) =>
+                    {
+                        var perfects = int.TryParse(options["perfects"], out var p) ? p : 0;
+                        var greats = int.TryParse(options["greats"], out var g) ? g : 0;
+                        var goods = int.TryParse(options["goods"], out var go) ? go : 0;
+                        var bads = int.TryParse(options["bads"], out var b) ? b : 0;
+                        var misses = int.TryParse(options["misses"], out var m) ? m : 0;
+                        var combo = int.TryParse(options["combo"], out var c) ? c : 0;
+                        var screen = new ScoreScreen(perfects, greats, goods, bads, misses, combo);
+                        var loss = (double)(1000000 - screen.CalculatePhoenixScore);
+
+                        if (!screen.IsValid)
+                            await _botClient.SendMessage("This scoring configuration is invalid", channelId,
+                                CancellationToken.None);
+                        else
+                            await _botClient.SendMessage(
+                                $@"
+{perfects:N0} Perfects, {greats:N0} Greats, {goods:N0} Goods, {bads:N0} Bads, {misses:N0} Misses, {combo:N0} Max Combo
+**{(int)screen.CalculatePhoenixScore:N0} ({screen.LetterGrade.GetName()})**
+{screen.NextLetterGrade()}
+- {screen.GreatLoss:N0} Lost to Greats ({100.0 * screen.GreatLoss / loss:N2}%)
+- {screen.GoodLoss:N0} Lost to Goods ({100.0 * screen.GoodLoss / loss:N2}%)
+- {screen.BadLoss:N0} Lost to Bads ({100.0 * screen.BadLoss / loss:N2}%)
+- {screen.MissLoss:N0} Lost to Misses ({100.0 * screen.MissLoss / loss:N2}%)
+- {screen.ComboLoss:N0} Lost to Combo ({100.0 * screen.ComboLoss / loss:N2}%)", channelId, CancellationToken.None);
+                    },
+                    new[]
+                    {
+                        ("perfects", "Perfect Count"), ("greats", "Great Count"), ("goods", "Good Count"),
+                        ("bads", "Bad Count"), ("misses", "Miss Count"), ("combo", "Max Combo")
+                    });
+                await _botClient.RegisterSlashCommand("deregister-community-channel",
+                    "De-Registers this channel to stop providing notifications for a community",
+                    "De-Registering Channel...",
+                    async (channelId, userId, options) =>
+                    {
                         try
                         {
-                            await scope.ServiceProvider.GetRequiredService<IMediator>()
-                                .Send(new AddDiscordChannelToCommunityCommand(
-                                        options.TryGetValue("community-name", out var name) ? name : null,
-                                        options.TryGetValue("invite-code", out var inviteCodeString)
-                                            ? Guid.TryParse(inviteCodeString, out var inviteCode) ? inviteCode : null
-                                            : null,
-                                        channelId,
-                                        options.TryGetValue("new-scores-notifications", out var sendScoresString) &&
-                                        bool.TryParse(sendScoresString, out var sendScores) && sendScores,
-                                        options.TryGetValue("new-member-notifications", out var sendNewMembersString) &&
-                                        bool.TryParse(sendNewMembersString, out var sendNewMembers) && sendNewMembers,
-                                        options.TryGetValue("new-titles-notification", out var sendNewTitlesString) &&
-                                        bool.TryParse(sendNewTitlesString, out var sendNewTitles) && sendNewTitles),
-                                    token);
+                            using var scope = _serviceCollection.CreateScope();
+
+                            var token = new CancellationToken();
+                            try
+                            {
+                                await scope.ServiceProvider.GetRequiredService<IMediator>()
+                                    .Send(new RemoveDiscordChannelFromCommunityCommand(options["community-name"],
+                                            channelId),
+                                        token);
+                            }
+                            catch (CommunityNotFoundException)
+                            {
+                                await _botClient.SendMessages(
+                                    new[] { "Community was not found or invite code is incorrect" },
+                                    new[] { channelId },
+                                    cancellationToken);
+                            }
+                            catch (InvalidOperationException e)
+                            {
+                                await _botClient.SendMessages(new[] { e.Message }, new[] { channelId },
+                                    cancellationToken);
+                            }
                         }
-                        catch (CommunityNotFoundException)
+                        catch (Exception e)
                         {
-                            await _botClient.SendMessages(
-                                new[] { "Community was not found or invite code is incorrect" }, new[] { channelId },
+                            _logger.LogError(
+                                $"There was an error while removing a channel for community: {e.Message} {e.StackTrace}",
+                                e);
+
+                            await _botClient.SendMessages(new[] { "An unknown error occurred" }, new[] { channelId },
                                 cancellationToken);
                         }
-                        catch (InvalidOperationException e)
-                        {
-                            await _botClient.SendMessages(new[] { e.Message }, new[] { channelId }, cancellationToken);
-                        }
-                    }
-                    catch (Exception e)
+                    }, new[]
                     {
-                        _logger.LogError(
-                            $"There was an error while adding a channel for community: {e.Message} {e.StackTrace}", e);
+                        ("community-name", "The name of the community")
+                    });
+                await _botClient.RegisterSlashCommand("register-community-channel",
+                    "Registers this channel to provide notifications for a community", "Registering Channel...",
+                    async (channelId, userId, options) =>
+                    {
+                        try
+                        {
+                            using var scope = _serviceCollection.CreateScope();
 
-                        await _botClient.SendMessages(new[] { "An unknown error occurred" }, new[] { channelId },
-                            cancellationToken);
-                    }
-                }, new[]
-                {
-                    ("community-name", "The name of the community (optional with invite code)"),
-                    ("invite-code", "An active invite code for the community (not required for public communities)"),
-                    ("new-scores-notifications", "Set to True if you want notifications about new scores"),
-                    ("new-member-notifications",
-                        "Set to True if you want notifications about new members joining the community"),
-                    ("new-titles-notifications", "Set to True if you want notifications about new titles achieved")
-                });
-            _botClient.WhenReady(() => Task.CompletedTask);
+                            var token = new CancellationToken();
+                            try
+                            {
+                                await scope.ServiceProvider.GetRequiredService<IMediator>()
+                                    .Send(new AddDiscordChannelToCommunityCommand(
+                                            options.TryGetValue("community-name", out var name) ? name : null,
+                                            options.TryGetValue("invite-code", out var inviteCodeString)
+                                                ? Guid.TryParse(inviteCodeString, out var inviteCode)
+                                                    ? inviteCode
+                                                    : null
+                                                : null,
+                                            channelId,
+                                            options.TryGetValue("new-scores-notifications", out var sendScoresString) &&
+                                            bool.TryParse(sendScoresString, out var sendScores) && sendScores,
+                                            options.TryGetValue("new-member-notifications",
+                                                out var sendNewMembersString) &&
+                                            bool.TryParse(sendNewMembersString, out var sendNewMembers) &&
+                                            sendNewMembers,
+                                            options.TryGetValue("new-titles-notification",
+                                                out var sendNewTitlesString) &&
+                                            bool.TryParse(sendNewTitlesString, out var sendNewTitles) && sendNewTitles),
+                                        token);
+                            }
+                            catch (CommunityNotFoundException)
+                            {
+                                await _botClient.SendMessages(
+                                    new[] { "Community was not found or invite code is incorrect" },
+                                    new[] { channelId },
+                                    cancellationToken);
+                            }
+                            catch (InvalidOperationException e)
+                            {
+                                await _botClient.SendMessages(new[] { e.Message }, new[] { channelId },
+                                    cancellationToken);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            _logger.LogError(
+                                $"There was an error while adding a channel for community: {e.Message} {e.StackTrace}",
+                                e);
+
+                            await _botClient.SendMessages(new[] { "An unknown error occurred" }, new[] { channelId },
+                                cancellationToken);
+                        }
+                    }, new[]
+                    {
+                        ("community-name", "The name of the community (optional with invite code)"),
+                        ("invite-code",
+                            "An active invite code for the community (not required for public communities)"),
+                        ("new-scores-notifications", "Set to True if you want notifications about new scores"),
+                        ("new-member-notifications",
+                            "Set to True if you want notifications about new members joining the community"),
+                        ("new-titles-notifications", "Set to True if you want notifications about new titles achieved")
+                    });
+            });
             _logger.LogInformation("Started bot client");
         }
 

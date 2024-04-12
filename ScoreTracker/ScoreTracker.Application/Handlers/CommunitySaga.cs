@@ -21,6 +21,7 @@ namespace ScoreTracker.Application.Handlers
         IRequestHandler<GetCommunityQuery, Community>,
         IRequestHandler<JoinCommunityByInviteCodeCommand>,
         IRequestHandler<AddDiscordChannelToCommunityCommand>,
+        IRequestHandler<RemoveDiscordChannelFromCommunityCommand>,
         IConsumer<PlayerRatingsImprovedEvent>,
         IConsumer<PlayerScoreUpdatedEvent>,
         IConsumer<NewTitlesAcquiredEvent>
@@ -265,6 +266,21 @@ And {count - 5} others!";
 - {title}";
 
             await SendToCommunityDiscords(user.Id, message, context.CancellationToken);
+        }
+
+        public async Task Handle(RemoveDiscordChannelFromCommunityCommand request, CancellationToken cancellationToken)
+        {
+            var community = await _communities.GetCommunityByName(request.CommunityName, cancellationToken) ??
+                            throw new CommunityNotFoundException();
+
+            foreach (var existingChannel in community.Channels.Where(c => c.ChannelId == request.ChannelId))
+                community.Channels.Remove(existingChannel);
+
+            await _communities.SaveCommunity(community, cancellationToken);
+
+            await _bot.SendMessage(
+                $"This channel was **removed** to receive notifications for the {community.Name} community in PIU Scores",
+                request.ChannelId, cancellationToken);
         }
     }
 }
