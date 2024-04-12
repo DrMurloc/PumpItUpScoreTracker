@@ -67,9 +67,8 @@ namespace ScoreTracker.Application.Handlers
             var userId = _currentUser.User.Id;
             var community = await GetCommunity(request.CommunityName, cancellationToken);
 
-            if (community.MemberIds.Contains(userId))
-
-                switch (community.PrivacyType)
+            if (community.MemberIds.Contains(userId)) return;
+            switch (community.PrivacyType)
                 {
                     case CommunityPrivacyType.Public:
                         community.MemberIds.Add(userId);
