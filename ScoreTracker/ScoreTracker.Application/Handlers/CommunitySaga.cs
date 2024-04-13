@@ -254,7 +254,7 @@ namespace ScoreTracker.Application.Handlers
             var message = "";
             if (count > 0)
             {
-                message = $"**{user.Name}** passed:";
+                message += $"**{user.Name}** passed:";
                 foreach (var chart in newCharts.OrderByDescending(c => c.Level)
                              .ThenByDescending(c => scores[c.Id].Score).Take(5))
                     message += $@"
@@ -270,7 +270,10 @@ And {count - 5} others!";
             count = upscoreCharts.Count();
             if (count > 0)
             {
-                message = $"**{user.Name}** upscored:";
+                if (!string.IsNullOrWhiteSpace(message))
+                    message += @"
+";
+                message += $"**{user.Name}** upscored:";
                 foreach (var item in upscoreCharts.OrderByDescending(c => c.Item1.Level)
                              .ThenByDescending(c => upscoreChartScores[c.Item1.Id] - scores[c.Item1.Id].Score!.Value))
                 {

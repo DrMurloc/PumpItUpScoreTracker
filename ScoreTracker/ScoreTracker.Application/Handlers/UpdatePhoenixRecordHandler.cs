@@ -24,43 +24,27 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
         await records.UpdateBestAttempt(user.User.Id,
             new RecordedPhoenixScore(request.ChartId, request.Score, request.Plate, request.IsBroken,
                 dateTimeOffset.Now), cancellationToken);
+        var isNewScore = (existing?.IsBroken ?? true) && !request.IsBroken;
+        var isUpscore = existing?.Score != null && request.Score != null && existing.Score < request.Score;
+        if (!isNewScore && !isUpscore) return;
+        //995010
         //Batches up score posts to reduce noise
         var fireAt = DateTime.UtcNow + TimeSpan.FromMinutes(2);
-        if ((existing?.IsBroken ?? true) && !request.IsBroken)
+        if (!_fireAt.ContainsKey(user.User.Id))
         {
-            _fireAt[user.User.Id] = fireAt;
-            if (_newCharts.TryGetValue(user.User.Id, out var chartSet))
-            {
-                if (!chartSet.Contains(request.ChartId))
-                    chartSet.Add(request.ChartId);
-
-                return;
-            }
-
-            _newCharts[user.User.Id] = new HashSet<Guid>(new[] { request.ChartId });
-
-
-            await scheduler.SchedulePublish(fireAt + TimeSpan.FromSeconds(5),
-                new TryFireScoreMessage(user.User.Id),
-                cancellationToken);
-        }
-        else if (existing?.Score != null && request.Score != null && existing.Score < request.Score)
-        {
-            _fireAt[user.User.Id] = fireAt;
-            if (_upscoreCharts.TryGetValue(user.User.Id, out var upscoreSet))
-            {
-                if (!upscoreSet.ContainsKey(request.ChartId))
-                    upscoreSet[request.ChartId] = existing.Score.Value;
-                return;
-            }
-
+            _newCharts[user.User.Id] = new HashSet<Guid>();
             _upscoreCharts[user.User.Id] = new ConcurrentDictionary<Guid, PhoenixScore>();
-            _upscoreCharts[user.User.Id][request.ChartId] = existing.Score.Value;
-
             await scheduler.SchedulePublish(fireAt + TimeSpan.FromSeconds(5),
                 new TryFireScoreMessage(user.User.Id),
                 cancellationToken);
         }
+
+        _fireAt[user.User.Id] = fireAt;
+
+        if (isNewScore) _newCharts[user.User.Id].Add(request.ChartId);
+
+        if (isUpscore && !_newCharts[user.User.Id].Contains(request.ChartId))
+            _upscoreCharts[user.User.Id][request.ChartId] = existing!.Score!.Value;
     }
 
     public sealed record ScheduleScoreMessage(Guid UserId, Guid[] ChartIds);
@@ -82,17 +66,17 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
             return;
         }
 
-        //895238
         var newChartIds = _newCharts.TryGetValue(context.Message.UserId, out var newChart)
-            ? newChart
-            : Array.Empty<Guid>().ToHashSet();
+            ? newChart.ToArray()
+            : Array.Empty<Guid>();
 
         var upscoredChartIds = _upscoreCharts.TryGetValue(context.Message.UserId, out var chart)
-            ? chart.Where(kv => !newChartIds.Contains(kv.Key))
+            ? chart
                 .ToDictionary(kv => kv.Key, kv => (int)kv.Value)
             : new Dictionary<Guid, int>();
+
         await bus.Publish(
-            new PlayerScoreUpdatedEvent(context.Message.UserId, newChartIds.ToArray(), upscoredChartIds),
+            new PlayerScoreUpdatedEvent(context.Message.UserId, newChartIds, upscoredChartIds),
             context.CancellationToken);
         _fireAt.TryRemove(context.Message.UserId, out _);
         _upscoreCharts.TryRemove(context.Message.UserId, out _);
