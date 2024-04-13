@@ -25,7 +25,7 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
             new RecordedPhoenixScore(request.ChartId, request.Score, request.Plate, request.IsBroken,
                 dateTimeOffset.Now), cancellationToken);
         //Batches up score posts to reduce noise
-        var fireAt = DateTime.UtcNow + TimeSpan.FromSeconds(5);
+        var fireAt = DateTime.UtcNow + TimeSpan.FromMinutes(2);
         if ((existing?.IsBroken ?? true) && !request.IsBroken)
         {
             _fireAt[user.User.Id] = fireAt;
