@@ -24,7 +24,7 @@ namespace ScoreTracker.Application.Handlers
             var newLeaderboard =
                 await _qualifiers.GetAllUserQualifiers(request.TournamentId, request.Qualifiers.Configuration,
                     cancellationToken);
-
+            var config = await _qualifiers.GetQualifiersConfiguration(request.TournamentId, cancellationToken);
             var user = request.Qualifiers.UserName;
             var orderedOldLeaderboard = previousLeaderboard.OrderByDescending(q => q.CalculateScore())
                 .Select((q, i) => (q, i + 1)).ToArray();
@@ -35,31 +35,34 @@ namespace ScoreTracker.Application.Handlers
             var newPlace = orderedNewLeaderboard.First(kv => kv.q.UserName == user).Item2;
             if (orderedOldLeaderboard.All(o => o.q.UserName != user))
             {
-                await _botClient.PublishQualifiersMessage(
-                    $"A new challenger approaches! Welcome {user} to the qualifier leaderboard!", cancellationToken);
-
+                await _botClient.SendMessage(
+                    $"A new challenger approaches! Welcome {user} to the qualifier leaderboard!",
+                    config.NotificationChannel, cancellationToken);
+                /*
                 if (newPlace > 22 || orderedNewLeaderboard.Length < 23)
                 {
                     var place23 = orderedNewLeaderboard[22].q;
-                    await _botClient.PublishQualifiersMessage($"{place23.UserName} has been knocked out of Pros!",
+                    await _botClient.SendMessage($"{place23.UserName} has been knocked out of Pros!",
+                        config.NotificationChannel,
                         cancellationToken);
-                }
+                }*/
             }
             else
             {
                 var oldPlace = orderedOldLeaderboard.First(kv => kv.q.UserName == user).Item2;
                 if (oldPlace == newPlace)
 
-                    await _botClient.PublishQualifiersMessage(
-                        $"{user} has progressed to {newPlace} on the leaderboard!",
+                    await _botClient.SendMessage(
+                        $"{user} has progressed to {newPlace} on the leaderboard!", config.NotificationChannel,
                         cancellationToken);
-
+                /*
                 if (newPlace > 22 || oldPlace <= 22 || orderedNewLeaderboard.Length < 23)
                 {
                     var place23 = orderedNewLeaderboard[22].q;
-                    await _botClient.PublishQualifiersMessage($"{place23.UserName} has been knocked out of Pros!",
+                    await _botClient.SendMessage($"{place23.UserName} has been knocked out of Pros!",
+                        config.NotificationChannel,
                         cancellationToken);
-                }
+                }*/
             }
         }
     }

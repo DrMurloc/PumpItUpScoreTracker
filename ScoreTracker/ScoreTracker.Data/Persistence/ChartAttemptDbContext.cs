@@ -194,5 +194,9 @@ public sealed class ChartAttemptDbContext : DbContext
         builder.Entity<TournamentEntity>()
             .Property(e => e.Location)
             .HasDefaultValue("Remote");
+
+        builder.Entity<QualifiersConfigurationEntity>()
+            .Property(e => e.ChartPlayCount)
+            .HasDefaultValue(3);
     }
 }

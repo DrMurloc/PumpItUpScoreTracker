@@ -24,8 +24,11 @@
     <HeaderContent>
         <MudTh>Place</MudTh>
         <MudTh>UserName</MudTh>
-        <MudTh>Best Song</MudTh>
-        <MudTh>Second Best</MudTh>
+        @for (var i = 0; i < _configuration.PlayCount; i++)
+        {
+            var place = i+1;
+            <MudTh>#@place Song</MudTh>
+        }
         <MudTh>Score</MudTh>
         <MudTh>Division</MudTh>
         <MudTh>Photos</MudTh>
@@ -37,27 +40,23 @@
     <RowTemplate>
         <MudTd>@context.Place</MudTd>
         <MudTd>@context.UserName</MudTd>
-        <MudTd>
-            @if (context.First != null)
-            {
-                <MudTooltip Text="@(context.First.Song.Name+' '+context.First.DifficultyString)">
-                    <MudImage Src="@context.First.Song.ImagePath.ToString()" Height="35" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
-                    <br>
-                    @(context.FirstScore?.ToString()??"") @(context.FirstScore?.LetterGrade.GetName()??"")
-                </MudTooltip>
-            }
-        </MudTd>
-        <MudTd>
-            @if (context.Second != null)
-            {
-                <MudTooltip Text="@(context.Second.Song.Name+' '+context.Second.DifficultyString)">
-                    <MudImage Src="@context.Second.Song.ImagePath.ToString()" Height="35" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
-                    <br>
-                    @(context.SecondScore?.ToString() ?? "") @(context.SecondScore?.LetterGrade.GetName() ?? "")
-                </MudTooltip>
-            }
-        </MudTd>
-        <MudTd>@context.Score</MudTd>
+        @for (var i = 0; i <_configuration.PlayCount;i++)
+        {
+            var entryIndex = i;
+            var entry = context.Scores.Skip(entryIndex).Take(1).ToArray();
+            <MudTd>
+                @if (entry.Any())
+                {
+
+                    <MudTooltip Text="@(entry.Single().Item1.Song.Name+' '+entry.Single().Item1.DifficultyString)">
+                        <MudImage Src="@entry.Single().Item1.Song.ImagePath.ToString()" Height="35" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
+                        <br>
+                        @(entry.Single().Item2.ToString() ?? "") @(entry.Single().Item2.LetterGrade.GetName() ?? "")
+                    </MudTooltip>
+                }
+            </MudTd>
+        }
+        <MudTd>@context.Score.ToString("0.00")</MudTd>
         <MudTd>@context.Division</MudTd>
         <MudTd>
             @if (context.IsApproved || CurrentUser.IsLoggedInAsAdmin)
@@ -140,6 +139,7 @@
     private Entry? _selectedEntry = null;
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private Name _tournamentName = "...";
+    private QualifiersConfiguration _configuration = new(Array.Empty<Chart>(),new Dictionary<Guid, int>(),"Phoenix",1,2);
     [Parameter]
     [SupplyParameterFromQuery(Name="TournamentId")]
     public Guid TournamentId { get; set; }
@@ -161,6 +161,7 @@
             NavManager.NavigateTo("/");
             return;
         }
+        _configuration = await Qualifiers.GetQualifiersConfiguration(TournamentId);
         var tournament = (await Mediator.Send(new GetAllTournamentsQuery()))
             .FirstOrDefault(t => t.Id == TournamentId);
         _tournamentName = tournament.Name;
@@ -171,13 +172,13 @@
             _charts[chart.Id] = chart;
         }
         _leaderboard = (await Qualifiers.GetAllUserQualifiers(TournamentId,config)).OrderByDescending(q => q.CalculateScore()).Select((q, index) => new Entry(index + 1, q.UserName,
-            q.BestCharts().First, q.BestCharts().FirstScore,q.BestCharts().Second,q.BestCharts().SecondScore,
+            q.BestCharts(),
             index<22?"Pros":index<22+48?"Mids":"Lowers",q.IsApproved,
             q.CalculateScore(), q.Submissions.Select(s => s.Value.PhotoUrl).ToArray(),q));
 
     }
 
-    private sealed record Entry(int Place, string UserName, Chart? First, PhoenixScore? FirstScore, Chart? Second, PhoenixScore? SecondScore, string Division, bool IsApproved, int Score, IEnumerable<Uri> Photos, UserQualifiers Record)
+    private sealed record Entry(int Place, string UserName, IEnumerable<(Chart,PhoenixScore)> Scores, string Division, bool IsApproved, double Score, IEnumerable<Uri> Photos, UserQualifiers Record)
     {
 
     }

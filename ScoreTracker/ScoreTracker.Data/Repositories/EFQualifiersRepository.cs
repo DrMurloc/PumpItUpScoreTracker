@@ -120,13 +120,14 @@ namespace ScoreTracker.Data.Repositories
             {
                 var charts = await _charts.GetCharts(MixEnum.Phoenix, chartIds: ChartIds,
                     cancellationToken: cancellationToken);
-                return new QualifiersConfiguration(charts, Modifiers, "Phoenix");
+                return new QualifiersConfiguration(charts, Modifiers, "Phoenix", 1164337603034759278, 2);
             }
 
             var chartIds = config.Charts.Split(",").Select(c => new Guid(c));
             var charts2 = await _charts.GetCharts(MixEnum.Phoenix, chartIds: chartIds,
                 cancellationToken: cancellationToken);
-            return new QualifiersConfiguration(charts2, Modifiers, config.ScoringType);
+            return new QualifiersConfiguration(charts2, Modifiers, config.ScoringType, config.NotificationChannel,
+                config.ChartPlayCount);
         }
     }
 }

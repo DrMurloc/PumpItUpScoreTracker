@@ -70,21 +70,15 @@
             @if (_nextPlace != null)
             {
                 <MudItem xs="12">
-                    <MudText>Next Place is ahead by @(_nextPlace.CalculateScore()-_currentQualifiers.CalculateScore())</MudText>
+                    <MudText>Next Place is ahead by @($"{_nextPlace.CalculateScore()-_currentQualifiers.CalculateScore():0.00}")</MudText>
                 </MudItem>
             }
         }
-        @if (FirstChart != null)
-        {
-            <MudItem xs="12">
-                <MudText>Best Score: @FirstChart.Song.Name @FirstChart.DifficultyString - @_currentQualifiers.Submissions[FirstChart.Id].Score (@_currentQualifiers.Submissions[FirstChart.Id].Score.LetterGrade.GetName()), @_currentQualifiers.Rating(FirstChart.Id) Points</MudText>
-            </MudItem>
-        }
-        @if (SecondChart != null)
+        @foreach (var entry in MyBest)
         {
 
             <MudItem xs="12">
-                <MudText>Best Score: @SecondChart.Song.Name @SecondChart.DifficultyString - @_currentQualifiers.Submissions[SecondChart.Id].Score (@_currentQualifiers.Submissions[SecondChart.Id].Score.LetterGrade.GetName()), @_currentQualifiers.Rating(SecondChart.Id) Points</MudText>
+                <MudText>Best Score: @entry.Item1.Song.Name @entry.Item1.DifficultyString - @_currentQualifiers.Submissions[entry.Item1.Id].Score (@_currentQualifiers.Submissions[entry.Item1.Id].Score.LetterGrade.GetName()), @_currentQualifiers.Rating(entry.Item1.Id) Points</MudText>
             </MudItem>
         }
         <MudItem xs="12">
@@ -105,7 +99,7 @@
             <MudNumericField T="int" Label=@L["Difficulty Level"] Value="_level" ValueChanged="l=>_level=l" Min="@DifficultyLevel.Min" Max="@DifficultyLevel.Max" HideSpinButtons="true" Clearable="false"></MudNumericField>
         </MudItem>
         <MudItem xs="6" sm="4" md="3">
-            <MudText>Rating: @_currentQualifiers.Rating(_level,_testScore)</MudText>
+            <MudText>Rating: @_currentQualifiers.Rating(_level,_testScore).ToString("0.00")</MudText>
         </MudItem>
     </MudGrid>
 }
@@ -134,12 +128,6 @@
                     <MudItem xs="12">
                         <MudNumericField T="int" Min="0" Max="1000000" Label="Score" Value="_score" ValueChanged="i=>_score=i"></MudNumericField>
                     </MudItem>
-                    @if (_score.LetterGrade < PhoenixLetterGrade.AA)
-                    {
-                        <MudItem xs="12">
-                            <MudText Color="Color.Warning">A grade of AA or higher is required.</MudText>
-                        </MudItem>
-                    }
                 }
                 else
                 {
@@ -173,12 +161,6 @@
                             <MudText>Phoenix Score (with note count adjustments): @(new ScoreScreen(_perfects + _configuration.NoteCountAdjustments[_submittingChart.Id], _greats, _goods, _bads, _misses, _maxCombo + _configuration.NoteCountAdjustments[_submittingChart.Id]).CalculatePhoenixScore)</MudText>
                         }
                     </MudItem>
-                    @if (Screen is { IsValid: true,CalculatePhoenixScore.LetterGrade: < PhoenixLetterGrade.AA })
-                    {
-                        <MudItem xs="12">
-                            <MudText Color="Color.Warning">A grade of AA or higher is required.</MudText>
-                        </MudItem>
-                    }
                 }
                 @if (_photoUrl != null && !_isUploading)
                 {
@@ -248,14 +230,13 @@
 {
 
     private static readonly DateTimeOffset CutoffTime = new DateTimeOffset(2023, 11, 27, 2, 59, 59, TimeSpan.FromHours(-5));
-    private QualifiersConfiguration _configuration = new QualifiersConfiguration(Array.Empty<Chart>(), new Dictionary<Guid, int>(),"Phoenix");
+    private QualifiersConfiguration _configuration = new QualifiersConfiguration(Array.Empty<Chart>(), new Dictionary<Guid, int>(),"Phoenix",1,2);
     private UserQualifiers? _currentQualifiers;
     private Chart? _submittingChart;
-    private Chart? FirstChart => _currentQualifiers?.BestCharts().First;
-    private Chart? SecondChart => _currentQualifiers?.BestCharts().Second;
+    private IEnumerable<(Chart,PhoenixScore)> MyBest => _currentQualifiers.BestCharts();
     private IDictionary<Guid, string> _chartvideos = new Dictionary<Guid, string>();
-    private string CardClass(Guid chartId) => FirstChart?.Id == chartId || SecondChart?.Id == chartId ? "border-solid border-2" : _currentQualifiers?.Submissions.ContainsKey(chartId)??false ? "border-dashed border-2" : string.Empty;
-    private string CardStyle(Guid chartId) => FirstChart?.Id == chartId || SecondChart?.Id == chartId ? $@"border-color:{Colors.Green.Darken1}" : _currentQualifiers?.Submissions.ContainsKey(chartId) ?? false ?$"border-color:{Colors.Grey.Darken1}": string.Empty;
+    private string CardClass(Guid chartId) => MyBest.Any(b=>b.Item1.Id==chartId) ? "border-solid border-2" : _currentQualifiers?.Submissions.ContainsKey(chartId)??false ? "border-dashed border-2" : string.Empty;
+    private string CardStyle(Guid chartId) => MyBest.Any(b => b.Item1.Id == chartId) ? $@"border-color:{Colors.Green.Darken1}" : _currentQualifiers?.Submissions.ContainsKey(chartId) ?? false ? $"border-color:{Colors.Grey.Darken1}" : string.Empty;
     private bool _showSubmit = false;
     private string _username = string.Empty;
     private bool _showVideoDialog;
@@ -305,7 +286,7 @@
             if (qualifiers == null)
             {
                 _isNew = true;
-                _currentQualifiers = new UserQualifiers(_configuration)
+                _currentQualifiers = new UserQualifiers(_configuration,false,"Not Set",new Dictionary<Guid, UserQualifiers.Submission>())
                 {
                     UserName = nameString
                 };
@@ -314,6 +295,7 @@
             {
                 _currentQualifiers = qualifiers;
                 _username = _currentQualifiers.UserName;
+                _isNew = false;
             }
         }
         else
@@ -324,7 +306,7 @@
         }
     }
 
-    private bool Validated => _photoUrl != null && ((_addingMix == MixEnum.Phoenix && _score.LetterGrade >= PhoenixLetterGrade.AA) || (_addingMix == MixEnum.XX && Screen is { IsValid: true,CalculatePhoenixScore.LetterGrade: >= PhoenixLetterGrade.AA }));
+    private bool Validated => _photoUrl != null && ((_addingMix == MixEnum.Phoenix) || (_addingMix == MixEnum.XX && Screen is { IsValid: true }));
     private void OpenSubmit(Chart chart)
     {
         _submittingChart = chart;

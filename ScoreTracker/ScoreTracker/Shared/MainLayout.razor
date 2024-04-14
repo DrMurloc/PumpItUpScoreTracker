@@ -7,6 +7,7 @@
 @using ScoreTracker.Application.Events
 @using ScoreTracker.Domain.Events
 @using MassTransit
+@using ScoreTracker.Domain.Records
 @inherits LayoutComponentBase
 @inject ICurrentUserAccessor CurrentUser
 @implements INotificationHandler<MatchUpdatedEvent>
@@ -82,8 +83,20 @@
                 <MudNavLink Href="/Tournaments" Icon="@Icons.Material.Filled.Leaderboard">@L["Tournaments"]</MudNavLink>
                 <MudDivider DividerType="DividerType.Middle"></MudDivider>
                 <MudNavLink Href="/TournamentBuilder" Icon="@Icons.Material.Filled.Calculate">@L["Tournament Builder"]</MudNavLink>
-                <MudDivider></MudDivider>
-                <MudNavLink Href="/BITE/Qualifiers" Icon="@Icons.Material.Filled.Event">BITE 2024</MudNavLink>
+                @foreach (var tourney in _highlightedEvents)
+                {
+                    
+                    <MudDivider></MudDivider>
+                    @if (tourney.LinkOverride != null)
+                    {
+                        <MudNavLink Href="@tourney.LinkOverride.ToString()" Target="_blank" Icon="@Icons.Material.Filled.Event">@tourney.Name</MudNavLink>
+                    }
+                    else
+                    {
+                        
+                        <MudNavLink Href="/BITE/Qualifiers" Icon="@Icons.Material.Filled.Event">@tourney.Name</MudNavLink>
+                    }
+                }
             </MudNavGroup>
             <MudDivider DividerType="DividerType.Middle"></MudDivider>
             <MudNavLink Href="/Communities" Icon="@Icons.Material.Filled.Group">@L["Communities"]</MudNavLink>
@@ -129,6 +142,7 @@
     private MixEnum _currentMix = MixEnum.Phoenix;
     private string _profileImage = string.Empty;
     private string _gamerTag = string.Empty;
+    private IEnumerable<TournamentRecord> _highlightedEvents = Array.Empty<TournamentRecord>();
     private async Task SetMix(MixEnum mix)
     {
         await UiSettings.SetSelectedMix(mix);
@@ -137,6 +151,8 @@
     protected override async Task OnInitializedAsync()
     {
         _userId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null;
+        _highlightedEvents = (await Mediator.Send(new GetAllTournamentsQuery()))
+            .Where(e => e.IsHighlighted);
         if (CurrentUser.IsLoggedIn)
         {
             var settings = await Mediator.Send(new GetUserUiSettingsQuery());

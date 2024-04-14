@@ -2,7 +2,6 @@
 {
     public interface IBotClient : IDisposable
     {
-        Task PublishQualifiersMessage(string message, CancellationToken cancellationToken);
         public Task Start(CancellationToken cancellationToken = default);
         public Task Stop(CancellationToken cancellationToken = default);
 

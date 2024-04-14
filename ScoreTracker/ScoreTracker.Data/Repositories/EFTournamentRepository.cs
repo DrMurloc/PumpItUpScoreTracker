@@ -42,7 +42,7 @@ namespace ScoreTracker.Data.Repositories
                         t.Name,
                         counts.TryGetValue(t.Id, out var count) ? count : 0,
                         Enum.Parse<TournamentType>(t.Type),
-                        t.Location,
+                        t.Location, t.IsHighlighted,
                         Uri.TryCreate(t.LinkOverride, UriKind.Absolute, out var url) ? (Uri?)url : null,
                         t.StartDate,
                         t.EndDate)).ToArray();

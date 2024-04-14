@@ -256,7 +256,7 @@ namespace ScoreTracker.Application.Handlers
             {
                 message += $"**{user.Name}** passed:";
                 foreach (var chart in newCharts.OrderByDescending(c => c.Level)
-                             .ThenByDescending(c => scores[c.Id].Score).Take(5))
+                             .ThenByDescending(c => (int)(scores[c.Id].Score ?? 0)).Take(5))
                     message += $@"
 - {chart.Song.Name} {chart.DifficultyString}: {(int)scores[chart.Id].Score!.Value:N0} ({scores[chart.Id].Score!.Value.LetterGrade.GetName()}) {scores[chart.Id].Plate?.GetShorthand()}";
                 if (count > 5)

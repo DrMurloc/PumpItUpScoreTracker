@@ -54,7 +54,7 @@
     <br/>
     <br/>
     <MudText Typo="Typo.h4">Upcoming Tournaments</MudText>
-    <MudDataGrid T="TournamentRecord" Items="_active">
+    <MudDataGrid T="TournamentRecord" Items="_upcoming">
         <Columns>
             <PropertyColumn T="TournamentRecord" TProperty="string" Property="x => x.Name" Title="Tournament" Sortable="false"></PropertyColumn>
             <TemplateColumn T="TournamentRecord" Title="Start Date" Sortable="true" SortBy="x => x.StartDate ?? DateTimeOffset.MinValue">
@@ -98,7 +98,7 @@
     <br/>
     <br/>
     <MudText Typo="Typo.h4">Previous Tournaments</MudText>
-    <MudDataGrid T="TournamentRecord" Items="_active">
+    <MudDataGrid T="TournamentRecord" Items="_previous">
         <Columns>
             <PropertyColumn T="TournamentRecord" TProperty="string" Property="x => x.Name" Title="Tournament" Sortable="false"></PropertyColumn>
             <TemplateColumn T="TournamentRecord" Title="Start Date" Sortable="true" SortBy="x => x.StartDate ?? DateTimeOffset.MinValue">
@@ -233,7 +233,8 @@
     private TournamentRecord[] _active = Array.Empty<TournamentRecord>();
     protected override async Task OnInitializedAsync()
     {
-        var tournaments = (await Mediator.Send(new GetAllTournamentsQuery())).ToArray();
+        var tournaments = (await Mediator.Send(new GetAllTournamentsQuery()))
+            .Where(t=>t.Name!="BITE 2024").ToArray();
         _upcoming = tournaments.Where(t => t.StartDate != null && t.StartDate > DateTimeOffset.Now).ToArray();
         _previous = tournaments.Where(t => t.EndDate != null && t.EndDate < DateTimeOffset.Now).ToArray();
         _active = tournaments.Where(t => (t.StartDate == null || t.StartDate <= DateTimeOffset.Now) && (t.EndDate == null || t.EndDate >= DateTimeOffset.Now)).ToArray();

@@ -107,8 +107,9 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
 
         try
         {
-            await _bot.PublishQualifiersMessage($@"# {newMatchState.MatchName} Completed! #
+            await _bot.SendMessage($@"# {newMatchState.MatchName} Completed! #
 - {string.Join("\r\n- ", newMatchState.FinalPlaces.Select(p => $"{p} ({newMatchState.Points[p].Sum()})"))}",
+                1164337603034759278,
                 cancellationToken);
         }
         catch (Exception)
@@ -136,10 +137,11 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
             cancellationToken: cancellationToken);
         try
         {
-            await _bot.PublishQualifiersMessage($@"# {updatedMatch.MatchName} Card Draw Complete! #
+            await _bot.SendMessage($@"# {updatedMatch.MatchName} Card Draw Complete! #
 ({string.Join(", ", updatedMatch.Players)})
 - {string.Join("\r\n- ", charts.Select(c => c.Song.Name + " " + c.DifficultyString))}
 - {string.Join("\r\n- ", vetoes.Select(v => "~~" + v.Song.Name + " " + v.DifficultyString + "~~"))}",
+                1164337603034759278,
                 cancellationToken);
         }
         catch (Exception)
@@ -195,9 +197,10 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
             message = $"Card draw is ready for {match.MatchName}";
         if (match.State == MatchState.Ready)
             message = $"{match.MatchName} is ready to play!";
-        await _bot.PublishQualifiersMessage(
+        await _bot.SendMessage(
             $@"{message}
 {string.Join(", ", match.Players.Where(p => !p.ToString().StartsWith("Unknown ")).Select(p => $"<@{playerDiscords[p]}> ({p})"))}, please report to PIU TOs",
+            1164337603034759278,
             cancellationToken);
     }
 

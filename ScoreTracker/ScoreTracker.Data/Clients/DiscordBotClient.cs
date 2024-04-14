@@ -9,7 +9,7 @@ namespace ScoreTracker.Data.Clients;
 
 public sealed class DiscordBotClient : IBotClient
 {
-    private static readonly ulong[] ChannelIds = { 1181340784751026186 };
+    private static readonly ulong[] ChannelIds = { 1009932033365127168 };
     private readonly DiscordConfiguration _configuration;
     private readonly ILogger _logger;
     private DiscordSocketClient? _client;
@@ -49,11 +49,6 @@ public sealed class DiscordBotClient : IBotClient
     {
         if (_client == null) throw new Exception("Client was not started");
         _client.Ready += execution;
-    }
-
-    public async Task PublishQualifiersMessage(string message, CancellationToken cancellationToken)
-    {
-        await SendMessage(ChannelIds, message);
     }
 
     public void Dispose()

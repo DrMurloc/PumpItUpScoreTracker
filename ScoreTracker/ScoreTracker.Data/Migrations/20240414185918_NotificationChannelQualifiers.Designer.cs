@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ScoreTracker.Data.Persistence;
 
@@ -11,9 +12,11 @@ using ScoreTracker.Data.Persistence;
 namespace ScoreTracker.Data.Migrations
 {
     [DbContext(typeof(ChartAttemptDbContext))]
-    partial class ChartAttemptDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240414185918_NotificationChannelQualifiers")]
+    partial class NotificationChannelQualifiers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -553,11 +556,6 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<Guid>("TournamentId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("ChartPlayCount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(3);
 
                     b.Property<string>("Charts")
                         .IsRequired()

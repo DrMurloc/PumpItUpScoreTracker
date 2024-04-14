@@ -12,35 +12,11 @@ namespace ScoreTracker.Domain.Models
 
         public IDictionary<Guid, Submission> Submissions { get; }
 
-        public (Chart? First, Chart? Second, PhoenixScore? FirstScore, PhoenixScore? SecondScore) BestCharts()
+        public IEnumerable<(Chart, PhoenixScore)> BestCharts()
         {
-            Chart? first = null;
-            Chart? second = null;
-            var best = 0;
-            var secondBest = 0;
-            var bestScore = 0;
-            var secondBestScore = 0;
-            foreach (var chart in Configuration.Charts)
-            {
-                var rating = Rating(chart.Id);
-                if (rating > best)
-                {
-                    secondBest = best;
-                    secondBestScore = bestScore;
-                    second = first;
-                    best = rating;
-                    first = chart;
-                    bestScore = Submissions[chart.Id].Score;
-                }
-                else if (rating > secondBest)
-                {
-                    secondBest = rating;
-                    second = chart;
-                    secondBestScore = Submissions[chart.Id].Score;
-                }
-            }
-
-            return (first, second, bestScore == 0 ? null : bestScore, secondBestScore == 0 ? null : secondBestScore);
+            return Configuration.Charts.Where(c => Submissions.ContainsKey(c.Id)).OrderByDescending(c => Rating(c.Id))
+                .Select(c => (c, Submissions[c.Id].Score))
+                .Take(Configuration.PlayCount).ToArray();
         }
 
         private readonly ScoringConfiguration _scoreConfig = new()
@@ -48,13 +24,13 @@ namespace ScoreTracker.Domain.Models
             ContinuousLetterGradeScale = true
         };
 
-        public int Rating(DifficultyLevel level, PhoenixScore score)
+        public double Rating(DifficultyLevel level, PhoenixScore score)
         {
-            if (Configuration.ScoringType == "Fungpapi") return level + (score - 965000) / 17500;
+            if (Configuration.ScoringType == "Fungpapi") return level + (score - 965000.0) / 17500.0;
             return _scoreConfig.GetScore(level, score);
         }
 
-        public int Rating(Guid chartId)
+        public double Rating(Guid chartId)
         {
             if (!Submissions.ContainsKey(chartId))
             {
@@ -65,30 +41,9 @@ namespace ScoreTracker.Domain.Models
             return Rating(difficulty, Submissions[chartId].Score);
         }
 
-        public int CalculateScore()
+        public double CalculateScore()
         {
-            var best = 0;
-            var secondBest = 0;
-            foreach (var chart in Configuration.Charts)
-            {
-                var rating = Rating(chart.Id);
-                if (rating > best)
-                {
-                    secondBest = best;
-                    best = rating;
-                }
-                else if (rating > secondBest)
-                {
-                    secondBest = rating;
-                }
-            }
-
-            return best + secondBest;
-        }
-
-        public UserQualifiers(QualifiersConfiguration config) : this(config, false, "Not Set",
-            new Dictionary<Guid, Submission>())
-        {
+            return BestCharts().Sum(c => Rating(c.Item1.Id));
         }
 
         public void Approve()
