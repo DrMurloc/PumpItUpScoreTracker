@@ -18,10 +18,12 @@ namespace ScoreTracker.Application.Handlers
         public async Task Handle(SaveQualifiersCommand request, CancellationToken cancellationToken)
         {
             var previousLeaderboard =
-                await _qualifiers.GetAllUserQualifiers(request.Qualifiers.Configuration, cancellationToken);
-            await _qualifiers.SaveQualifiers(request.Qualifiers, cancellationToken);
+                await _qualifiers.GetAllUserQualifiers(request.TournamentId, request.Qualifiers.Configuration,
+                    cancellationToken);
+            await _qualifiers.SaveQualifiers(request.TournamentId, request.Qualifiers, cancellationToken);
             var newLeaderboard =
-                await _qualifiers.GetAllUserQualifiers(request.Qualifiers.Configuration, cancellationToken);
+                await _qualifiers.GetAllUserQualifiers(request.TournamentId, request.Qualifiers.Configuration,
+                    cancellationToken);
 
             var user = request.Qualifiers.UserName;
             var orderedOldLeaderboard = previousLeaderboard.OrderByDescending(q => q.CalculateScore())

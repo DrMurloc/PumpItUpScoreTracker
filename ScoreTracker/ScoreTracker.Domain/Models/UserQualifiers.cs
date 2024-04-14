@@ -1,5 +1,4 @@
-﻿using ScoreTracker.Domain.Enums;
-using ScoreTracker.Domain.Records;
+﻿using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Models
@@ -44,20 +43,15 @@ namespace ScoreTracker.Domain.Models
             return (first, second, bestScore == 0 ? null : bestScore, secondBestScore == 0 ? null : secondBestScore);
         }
 
+        private readonly ScoringConfiguration _scoreConfig = new()
+        {
+            ContinuousLetterGradeScale = true
+        };
+
         public int Rating(DifficultyLevel level, PhoenixScore score)
         {
-            if (score.LetterGrade < PhoenixLetterGrade.AA) return 0;
-            var grade = score.LetterGrade;
-            if (grade == PhoenixLetterGrade.SSSPlus) return (int)(level.BaseRating * grade.GetModifier());
-
-            var nextGrade = grade + 1;
-            var currentModifier = grade.GetModifier();
-            var nextModifier = nextGrade.GetModifier();
-            var actualModifier = currentModifier + (nextModifier - currentModifier) *
-                (score - grade.GetMinimumScore()) /
-                ((double)nextGrade.GetMinimumScore() - grade.GetMinimumScore());
-
-            return (int)(level.BaseRating * actualModifier);
+            if (Configuration.ScoringType == "Fungpapi") return level + (score - 965000) / 17500;
+            return _scoreConfig.GetScore(level, score);
         }
 
         public int Rating(Guid chartId)

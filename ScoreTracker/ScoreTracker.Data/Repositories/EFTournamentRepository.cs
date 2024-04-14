@@ -38,7 +38,13 @@ namespace ScoreTracker.Data.Repositories
                     .ToDictionary(g => g.Key, g => g.Count());
 
                 return (await _database.Tournament.ToArrayAsync(cancellationToken)).Select(t =>
-                    new TournamentRecord(t.Id, t.Name, counts.TryGetValue(t.Id, out var count) ? count : 0, t.StartDate,
+                    new TournamentRecord(t.Id,
+                        t.Name,
+                        counts.TryGetValue(t.Id, out var count) ? count : 0,
+                        Enum.Parse<TournamentType>(t.Type),
+                        t.Location,
+                        Uri.TryCreate(t.LinkOverride, UriKind.Absolute, out var url) ? (Uri?)url : null,
+                        t.StartDate,
                         t.EndDate)).ToArray();
             });
         }

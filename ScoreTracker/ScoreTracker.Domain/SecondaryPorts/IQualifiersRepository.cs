@@ -5,15 +5,16 @@ namespace ScoreTracker.Domain.SecondaryPorts
 {
     public interface IQualifiersRepository
     {
-        Task<UserQualifiers?> GetQualifiers(Name userName, QualifiersConfiguration config,
+        Task<UserQualifiers?> GetQualifiers(Guid tournamentId, Name userName, QualifiersConfiguration config,
             CancellationToken cancellationToken = default);
 
-        Task SaveQualifiers(UserQualifiers qualifiers, CancellationToken cancellationToken = default);
-
-        Task<IEnumerable<UserQualifiers>> GetAllUserQualifiers(QualifiersConfiguration config,
+        Task SaveQualifiers(Guid tournamentId, UserQualifiers qualifiers,
             CancellationToken cancellationToken = default);
 
-        Task<QualifiersConfiguration> GetQualifiersConfiguration(
+        Task<IEnumerable<UserQualifiers>> GetAllUserQualifiers(Guid tournamentId, QualifiersConfiguration config,
+            CancellationToken cancellationToken = default);
+
+        Task<QualifiersConfiguration> GetQualifiersConfiguration(Guid tournamentId,
             CancellationToken cancellationToken = default);
     }
 }

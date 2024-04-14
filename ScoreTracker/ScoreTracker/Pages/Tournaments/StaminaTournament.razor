@@ -1,4 +1,4 @@
-﻿@page "/Tournament/{TournamentId:guid}"
+﻿@page "/Tournament/Stamina/{TournamentId:guid}"
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.Models
@@ -206,7 +206,7 @@
     private bool _showExtraData = false;
     private TournamentSession? _photoSession;
     private TournamentSession? _showingSession = null;
-    private string UserSessionlink(Guid userId) => $"/Tournament/{TournamentId}/Record?UserId={userId}";
+    private string UserSessionlink(Guid userId) => $"/Tournament/Stamina/{TournamentId}/Record?UserId={userId}";
     private Guid? _showingChartBoard = null;
 
     private void ToggleBoard(Guid chartId)

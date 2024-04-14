@@ -1,4 +1,4 @@
-﻿@page "/Eclipse/Qualifiers/Submit"
+﻿@page "/Tournament/{TournamentId:guid}/Qualifiers/Submit"
 @using ScoreTracker.Domain.SecondaryPorts
 @using MediatR
 @using ScoreTracker.Application.Commands
@@ -8,14 +8,14 @@
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.ValueTypes
 
-<PageTitle>Submit Eclipse Qualifiers Session</PageTitle>
+<PageTitle>Submit @_tournamentName Qualifiers Session</PageTitle>
 
 <MudGrid>
     <MudItem xs="12" sm="8">
-        <MudText Typo="Typo.h3">Eclipse Qualifier Submission</MudText>
+        <MudText Typo="Typo.h3">@_tournamentName Qualifier Submission</MudText>
     </MudItem>
     <MudItem xs="12" sm="4">
-        <MudButton Href="/Eclipse/Qualifiers" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Leaderboard">To Leaderboard</MudButton>
+        <MudButton Href=@($"/Tournament/{TournamentId}/Qualifiers") Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Leaderboard">To Leaderboard</MudButton>
     </MudItem>
     <MudItem xs="12">
         <MudAutocomplete T="string" MaxLength="32" CoerceText="false" CoerceValue="true" Immediate="true" DebounceInterval="200" Label="Username" Value="_username" ValueChanged="SetUsername" SearchFunc="@(t=>Task.FromResult(_usernames.Where(u=>u.Contains(t,StringComparison.OrdinalIgnoreCase)).Append(t).Distinct()))" />
@@ -241,14 +241,14 @@
 @inject ICurrentUserAccessor CurrentUser
 @inject ISnackbar Snackbar
 @inject IFileUploadClient FileUpload
-@inject ILogger<EclipseQualifiers> Logger
+@inject ILogger<MatchTournamentQualifiersSubmit> Logger
 @inject IAdminNotificationClient Notifications;
 @inject NavigationManager NavManager;
 @code
 {
 
     private static readonly DateTimeOffset CutoffTime = new DateTimeOffset(2023, 11, 27, 2, 59, 59, TimeSpan.FromHours(-5));
-    private QualifiersConfiguration _configuration = new QualifiersConfiguration(Array.Empty<Chart>(), new Dictionary<Guid, int>());
+    private QualifiersConfiguration _configuration = new QualifiersConfiguration(Array.Empty<Chart>(), new Dictionary<Guid, int>(),"Phoenix");
     private UserQualifiers? _currentQualifiers;
     private Chart? _submittingChart;
     private Chart? FirstChart => _currentQualifiers?.BestCharts().First;
@@ -279,7 +279,11 @@
     private PhoenixScore _score = 0;
     private string _currentVideo;
     private string _currentVideoDescription;
+    private Name _tournamentName = "...";
     private Uri? _photoUrl;
+    [Parameter]
+    [SupplyParameterFromQuery(Name="TournamentId")]
+    public Guid TournamentId { get; set; }
     private IEnumerable<string> _usernames = Array.Empty<string>();
 
     public string DifficultyBubblePath(string difficultyShorthand) =>
@@ -297,7 +301,7 @@
         if (Name.TryParse(nameString, out var name))
         {
             _username = nameString;
-            var qualifiers = await Qualifiers.GetQualifiers(name,_configuration);
+            var qualifiers = await Qualifiers.GetQualifiers(TournamentId,name,_configuration);
             if (qualifiers == null)
             {
                 _isNew = true;
@@ -378,7 +382,7 @@
             return;
         }
         _isSaving = true;
-        await Mediator.Send(new SaveQualifiersCommand(_currentQualifiers));
+        await Mediator.Send(new SaveQualifiersCommand(TournamentId,_currentQualifiers));
         await RefreshLeaderboard();
         _isSaving = false;
         _isNew = false;
@@ -390,7 +394,7 @@
     private async Task RefreshLeaderboard()
     {
 
-        var allQuals = (await Qualifiers.GetAllUserQualifiers(_configuration)).OrderByDescending(q => q.CalculateScore()).ToArray();
+        var allQuals = (await Qualifiers.GetAllUserQualifiers(TournamentId,_configuration)).OrderByDescending(q => q.CalculateScore()).ToArray();
         _usernames = allQuals.Select(u => u.UserName).Distinct().Select(s => s.ToString()).ToArray();
         if (_currentQualifiers == null)
         {
@@ -416,7 +420,7 @@
         _isUploading = true;
         try
         {
-            var path = $"qualifiers/eclipse2023/{_username}/{Guid.NewGuid()}.{file.Name.Split('.')[^1]}";
+            var path = $"qualifiers/{TournamentId}/{_username}/{Guid.NewGuid()}.{file.Name.Split('.')[^1]}";
             _photoUrl= await FileUpload.UploadFile(path, file.OpenReadStream(MaxFileSize));
 
         }
@@ -430,12 +434,20 @@
     }
     protected override async Task OnInitializedAsync()
     {
-        if (!CurrentUser.IsLoggedInAsAdmin && DateTimeOffset.Now > CutoffTime)
+        if (TournamentId == default)
         {
-            NavManager.NavigateTo("/Eclipse/Qualifiers");
+            NavManager.NavigateTo("/Tournaments");
             return;
         }
-        _configuration = await Qualifiers.GetQualifiersConfiguration();
+        if (!CurrentUser.IsLoggedInAsAdmin && DateTimeOffset.Now > CutoffTime)
+        {
+            NavManager.NavigateTo($"/Tournament/{TournamentId}/Qualifiers");
+            return;
+        }
+        var tournament = (await Mediator.Send(new GetAllTournamentsQuery()))
+            .FirstOrDefault(t => t.Id == TournamentId);
+        _tournamentName = tournament.Name;
+        _configuration = await Qualifiers.GetQualifiersConfiguration(TournamentId);
 
         _chartvideos = (await Mediator.Send(new GetChartVideosQuery(_configuration.Charts.Select(c=>c.Id)))).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl.ToString());
         await RefreshLeaderboard();

@@ -35,12 +35,14 @@ namespace ScoreTracker.Data.Repositories
             _charts = charts;
         }
 
-        public async Task<UserQualifiers?> GetQualifiers(Name userName, QualifiersConfiguration config,
+        public async Task<UserQualifiers?> GetQualifiers(Guid tournamentId, Name userName,
+            QualifiersConfiguration config,
             CancellationToken cancellationToken = default)
         {
             var nameString = userName.ToString();
             var entity =
-                await _database.UserQualifier.FirstOrDefaultAsync(u => u.Name == nameString, cancellationToken);
+                await _database.UserQualifier.FirstOrDefaultAsync(
+                    u => u.TournamentId == tournamentId && u.Name == nameString, cancellationToken);
             return entity == null ? null : From(entity, config);
         }
 
@@ -56,11 +58,13 @@ namespace ScoreTracker.Data.Repositories
                 }));
         }
 
-        public async Task SaveQualifiers(UserQualifiers qualifiers, CancellationToken cancellationToken = default)
+        public async Task SaveQualifiers(Guid tournamentId, UserQualifiers qualifiers,
+            CancellationToken cancellationToken = default)
         {
             var nameString = qualifiers.UserName.ToString();
             var entity =
-                await _database.UserQualifier.FirstOrDefaultAsync(u => u.Name == nameString, cancellationToken);
+                await _database.UserQualifier.FirstOrDefaultAsync(
+                    u => u.TournamentId == tournamentId && u.Name == nameString, cancellationToken);
             var entryJson = JsonSerializer.Serialize(qualifiers.Submissions.Select(kv => new QualifierSubmissionDto
             {
                 ChartId = kv.Value.ChartId,
@@ -71,10 +75,11 @@ namespace ScoreTracker.Data.Repositories
             {
                 await _database.AddAsync(new UserQualifierEntity
                 {
+                    TournamentId = tournamentId,
                     Id = Guid.NewGuid(),
                     Entries = entryJson,
                     IsApproved = qualifiers.IsApproved,
-                    Name = nameString,
+                    Name = nameString
                 }, cancellationToken);
             }
             else
@@ -85,6 +90,7 @@ namespace ScoreTracker.Data.Repositories
 
             await _database.UserQualifierHistory.AddAsync(new UserQualifierHistoryEntity
             {
+                TournamentId = tournamentId,
                 Id = Guid.NewGuid(),
                 Entries = entryJson,
                 IsApproved = qualifiers.IsApproved,
@@ -95,19 +101,32 @@ namespace ScoreTracker.Data.Repositories
             await _database.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<UserQualifiers>> GetAllUserQualifiers(QualifiersConfiguration config,
+        public async Task<IEnumerable<UserQualifiers>> GetAllUserQualifiers(Guid tournamentId,
+            QualifiersConfiguration config,
             CancellationToken cancellationToken = default)
         {
-            var entities = await _database.UserQualifier.ToArrayAsync(cancellationToken);
+            var entities = await _database.UserQualifier.Where(e => e.TournamentId == tournamentId)
+                .ToArrayAsync(cancellationToken);
             return entities.Select(e => From(e, config)).ToArray();
         }
 
-        public async Task<QualifiersConfiguration> GetQualifiersConfiguration(
+        public async Task<QualifiersConfiguration> GetQualifiersConfiguration(Guid tournamentId,
             CancellationToken cancellationToken = default)
         {
-            var charts = await _charts.GetCharts(MixEnum.Phoenix, chartIds: ChartIds,
+            var config =
+                await _database.QualifiersConfiguration.FirstOrDefaultAsync(e => e.TournamentId == tournamentId,
+                    cancellationToken);
+            if (config == null)
+            {
+                var charts = await _charts.GetCharts(MixEnum.Phoenix, chartIds: ChartIds,
+                    cancellationToken: cancellationToken);
+                return new QualifiersConfiguration(charts, Modifiers, "Phoenix");
+            }
+
+            var chartIds = config.Charts.Split(",").Select(c => new Guid(c));
+            var charts2 = await _charts.GetCharts(MixEnum.Phoenix, chartIds: chartIds,
                 cancellationToken: cancellationToken);
-            return new QualifiersConfiguration(charts, Modifiers);
+            return new QualifiersConfiguration(charts2, Modifiers, config.ScoringType);
         }
     }
 }

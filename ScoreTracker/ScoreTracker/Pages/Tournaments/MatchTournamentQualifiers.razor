@@ -1,19 +1,21 @@
-﻿@page "/Eclipse/Qualifiers"
+﻿@page "/Tournament/{TournamentId:guid}/Qualifiers"
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Domain.Enums
+@using MediatR
+@using ScoreTracker.Application.Queries
 
-<PageTitle>Submit Eclipse Qualifiers Session</PageTitle>
+<PageTitle>Submit @_tournamentName Qualifiers Session</PageTitle>
 
 <MudGrid>
     <MudItem xs="12" sm="8">
-        <MudText Typo="Typo.h3">Eclipse Qualifiers Leaderboard</MudText>
+        <MudText Typo="Typo.h3">@_tournamentName Qualifiers Leaderboard</MudText>
     </MudItem>
     @if (CurrentUser.IsLoggedInAsAdmin || DateTimeOffset.Now < CutoffTime)
     {
         <MudItem xs="12" sm="4">
-            <MudButton Href="/Eclipse/Qualifiers/Submit" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">Submission Page</MudButton>
+            <MudButton Href=@($"/Tournament/{TournamentId}/Qualifiers/Submit") Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">Submission Page</MudButton>
         </MudItem>
     }
 
@@ -108,6 +110,7 @@
 </MudTable>
 <br/>
 <br/>
+
 <MudGrid>
     <MudItem xs="12">
         <MudText Typo="Typo.h4">Event Links</MudText>
@@ -128,13 +131,18 @@
 @inject ICurrentUserAccessor CurrentUser
 @inject IQualifiersRepository Qualifiers
 @inject ISnackbar Snackbar
+@inject NavigationManager NavManager;
+@inject IMediator Mediator;
 @code
 {
     private static readonly DateTimeOffset CutoffTime = new DateTimeOffset(2023, 11, 27, 2, 59, 59, TimeSpan.FromHours(-5));
     private IEnumerable<Entry> _leaderboard;
     private Entry? _selectedEntry = null;
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
-
+    private Name _tournamentName = "...";
+    [Parameter]
+    [SupplyParameterFromQuery(Name="TournamentId")]
+    public Guid TournamentId { get; set; }
     private void SelectEntry(Entry entry)
     {
         _selectedEntry = _selectedEntry?.UserName == entry.UserName ? null : entry;
@@ -143,17 +151,26 @@
     private async Task Approve(UserQualifiers qual)
     {
         qual.Approve();
-        await Qualifiers.SaveQualifiers(qual);
+        await Qualifiers.SaveQualifiers(TournamentId, qual);
         Snackbar.Add("Approved!", Severity.Success);
     }
     protected override async Task OnInitializedAsync()
     {
-        var config = await Qualifiers.GetQualifiersConfiguration();
+        if (TournamentId == default)
+        {
+            NavManager.NavigateTo("/");
+            return;
+        }
+        var tournament = (await Mediator.Send(new GetAllTournamentsQuery()))
+            .FirstOrDefault(t => t.Id == TournamentId);
+        _tournamentName = tournament.Name;
+
+        var config = await Qualifiers.GetQualifiersConfiguration(TournamentId);
         foreach (var chart in config.Charts)
         {
             _charts[chart.Id] = chart;
         }
-        _leaderboard = (await Qualifiers.GetAllUserQualifiers(config)).OrderByDescending(q => q.CalculateScore()).Select((q, index) => new Entry(index + 1, q.UserName,
+        _leaderboard = (await Qualifiers.GetAllUserQualifiers(TournamentId,config)).OrderByDescending(q => q.CalculateScore()).Select((q, index) => new Entry(index + 1, q.UserName,
             q.BestCharts().First, q.BestCharts().FirstScore,q.BestCharts().Second,q.BestCharts().SecondScore,
             index<22?"Pros":index<22+48?"Mids":"Lowers",q.IsApproved,
             q.CalculateScore(), q.Submissions.Select(s => s.Value.PhotoUrl).ToArray(),q));

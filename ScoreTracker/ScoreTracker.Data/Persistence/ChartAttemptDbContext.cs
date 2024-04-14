@@ -56,6 +56,7 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<SuggestionFeedbackEntity> SuggestionFeedback { get; set; }
     public DbSet<UserTitleEntity> UserTitle { get; set; }
     public DbSet<OfficialUserAvatarEntity> OfficialUserAvatar { get; set; }
+    public DbSet<QualifiersConfigurationEntity> QualifiersConfiguration { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -181,5 +182,17 @@ public sealed class ChartAttemptDbContext : DbContext
         builder.Entity<UserTournamentSessionEntity>()
             .Property(u => u.VerificationType)
             .HasDefaultValue(SubmissionVerificationType.Unverified.ToString());
+
+        builder.Entity<UserQualifierEntity>()
+            .Property(e => e.TournamentId)
+            .HasDefaultValue(new Guid("fa27b7fb-6ef4-481b-8eee-56fdcf58433c"));
+
+        builder.Entity<TournamentEntity>()
+            .Property(e => e.Type)
+            .HasDefaultValue(nameof(TournamentType.Stamina));
+
+        builder.Entity<TournamentEntity>()
+            .Property(e => e.Location)
+            .HasDefaultValue("Remote");
     }
 }
