@@ -422,11 +422,6 @@
 
     private async Task Save()
     {
-        if (!CurrentUser.IsLoggedInAsAdmin && DateTimeOffset.Now > CutoffTime)
-        {
-            Snackbar.Add("Submission period has ended, submit your qualifiers directly to DrMurloc!", Severity.Error);
-            return;
-        }
         if (_currentQualifiers == null)
         {
             return;
