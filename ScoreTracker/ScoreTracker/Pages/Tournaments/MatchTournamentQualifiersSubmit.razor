@@ -240,7 +240,6 @@
 @code
 {
 
-    private static readonly DateTimeOffset CutoffTime = new DateTimeOffset(2023, 11, 27, 2, 59, 59, TimeSpan.FromHours(-5));
     private QualifiersConfiguration _configuration = new QualifiersConfiguration(Array.Empty<Chart>(), new Dictionary<Guid, int>(),"Phoenix",1,2);
     private UserQualifiers? _currentQualifiers;
     private Chart? _submittingChart;
@@ -489,11 +488,6 @@
         if (TournamentId == default)
         {
             NavManager.NavigateTo("/Tournaments");
-            return;
-        }
-        if (!CurrentUser.IsLoggedInAsAdmin && DateTimeOffset.Now > CutoffTime)
-        {
-            NavManager.NavigateTo($"/Tournament/{TournamentId}/Qualifiers");
             return;
         }
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
