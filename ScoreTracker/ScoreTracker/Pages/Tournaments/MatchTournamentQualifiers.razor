@@ -29,7 +29,7 @@
             var place = i+1;
             <MudTh>#@place Song</MudTh>
         }
-        <MudTh>Score</MudTh>
+        <MudTh>Rating</MudTh>
         <MudTh>Division</MudTh>
         <MudTh>Photos</MudTh>
         @if (CurrentUser.IsLoggedInAsAdmin)
@@ -50,9 +50,11 @@
 
                     <MudTooltip Text="@(entry.Single().Item1.Song.Name+' '+entry.Single().Item1.DifficultyString)">
                         <MudImage Src="@entry.Single().Item1.Song.ImagePath.ToString()" Height="35" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
-                        <br>
-                        @(entry.Single().Item2.ToString() ?? "") @(entry.Single().Item2.LetterGrade.GetName() ?? "")
                     </MudTooltip>
+                    <br/>
+                    <MudText>
+                        @entry.Single().Item2.LetterGrade.GetName() @entry.Single().Item3.ToString("0.00")
+                    </MudText>
                 }
             </MudTd>
         }
@@ -97,7 +99,7 @@
                             @foreach (var entry in _selectedEntry.Record.Submissions.Values)
                             {
                                 <MudItem xs="6" sm="4" md="3">
-                                    @_charts[entry.ChartId].Song.Name @_charts[entry.ChartId].DifficultyString: @entry.Score
+                                    @_charts[entry.ChartId].Song.Name @_charts[entry.ChartId].DifficultyString: @entry.Score (@entry.Score.LetterGrade.GetName())
                                 </MudItem>
                             }
                         </MudGrid>
@@ -178,7 +180,7 @@
 
     }
 
-    private sealed record Entry(int Place, string UserName, IEnumerable<(Chart,PhoenixScore)> Scores, string Division, bool IsApproved, double Score, IEnumerable<Uri> Photos, UserQualifiers Record)
+    private sealed record Entry(int Place, string UserName, IEnumerable<(Chart,PhoenixScore, double)> Scores, string Division, bool IsApproved, double Score, IEnumerable<Uri> Photos, UserQualifiers Record)
     {
 
     }

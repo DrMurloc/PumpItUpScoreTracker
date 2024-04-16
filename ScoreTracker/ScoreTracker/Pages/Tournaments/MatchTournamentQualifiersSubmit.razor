@@ -39,6 +39,12 @@
             <MudItem xs="6" sm="3" md="2">
                 <MudCard Class="@CardClass(chart.Id)" Style="@CardStyle(chart.Id)">
                     <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()" />
+                    @if (_currentQualifiers.Submissions.ContainsKey(chart.Id))
+                    {
+                        <MudCardContent>
+                            @_currentQualifiers.Submissions[chart.Id].Score (@_currentQualifiers.Submissions[chart.Id].Score.LetterGrade.GetName(), @_currentQualifiers.Rating(chart.Id).ToString("0.00"))
+                        </MudCardContent>
+                    }
                     <MudCardActions>
                         <MudImage Src="@DifficultyBubblePath(chart.DifficultyString)" Height="40" ></MudImage>
                         <MudSpacer></MudSpacer>
@@ -55,8 +61,13 @@
                 </MudCard>
             </MudItem>
         }
+        @if (_suggestedCharts.Any(s=>!_currentQualifiers.Submissions.ContainsKey(s)))
+        {
+            <MudItem xs="12">
+                <MudIcon Style=@($"color:{Colors.LightBlue.Darken1}") Icon="@Icons.Material.Filled.MoreVert"></MudIcon> - Suggested Chart
+            </MudItem>
+        }
     }
-
 </MudGrid>
 
 @if (_currentQualifiers != null)
@@ -114,7 +125,7 @@
                 @if (_currentQualifiers!=null && _currentQualifiers.Submissions.TryGetValue(_submittingChart.Id, out var submission))
                 {
                     <MudItem xs="12">
-                        Current Score: @submission.Score (@_currentQualifiers.Rating(_submittingChart.Id) Points)
+                        Current Score: @submission.Score (@_currentQualifiers.Rating(_submittingChart.Id).ToString("0.00") Points)
                     </MudItem>
                 }
                 <MudItem xs="12">
@@ -233,10 +244,15 @@
     private QualifiersConfiguration _configuration = new QualifiersConfiguration(Array.Empty<Chart>(), new Dictionary<Guid, int>(),"Phoenix",1,2);
     private UserQualifiers? _currentQualifiers;
     private Chart? _submittingChart;
-    private IEnumerable<(Chart,PhoenixScore)> MyBest => _currentQualifiers.BestCharts();
+    private IEnumerable<(Chart Chart,PhoenixScore Score,double Rating)> MyBest => _currentQualifiers.BestCharts();
+    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private IDictionary<Guid, string> _chartvideos = new Dictionary<Guid, string>();
-    private string CardClass(Guid chartId) => MyBest.Any(b=>b.Item1.Id==chartId) ? "border-solid border-2" : _currentQualifiers?.Submissions.ContainsKey(chartId)??false ? "border-dashed border-2" : string.Empty;
-    private string CardStyle(Guid chartId) => MyBest.Any(b => b.Item1.Id == chartId) ? $@"border-color:{Colors.Green.Darken1}" : _currentQualifiers?.Submissions.ContainsKey(chartId) ?? false ? $"border-color:{Colors.Grey.Darken1}" : string.Empty;
+    private string CardClass(Guid chartId) => MyBest.Any(b=>b.Item1.Id==chartId) ? "border-solid border-2" : 
+        _suggestedCharts.Contains(chartId)||
+        (_currentQualifiers?.Submissions.ContainsKey(chartId)??false) ? "border-dashed border-2" : string.Empty;
+    private string CardStyle(Guid chartId) => MyBest.Any(b => b.Item1.Id == chartId) ? $@"border-color:{Colors.Green.Darken1}" :
+        _suggestedCharts.Contains(chartId)?$"border-color:{Colors.LightBlue.Darken1}":
+        _currentQualifiers?.Submissions.ContainsKey(chartId) ?? false ? $"border-color:{Colors.Grey.Darken1}" : string.Empty;
     private bool _showSubmit = false;
     private string _username = string.Empty;
     private bool _showVideoDialog;
@@ -262,6 +278,7 @@
     private string _currentVideoDescription;
     private Name _tournamentName = "...";
     private Uri? _photoUrl;
+    private ISet<Guid> _suggestedCharts = new HashSet<Guid>();
     [Parameter]
     [SupplyParameterFromQuery(Name="TournamentId")]
     public Guid TournamentId { get; set; }
@@ -276,6 +293,17 @@
     {
         await Notifications.NotifyAdmin($"The video for{_currentVideoDescription} was reported by {(CurrentUser.IsLoggedIn ? CurrentUser.User.Name : "Unknown")}", CancellationToken.None);
         Snackbar.Add("Notification was sent",Severity.Success);
+    }
+
+    public Guid? GetNextLevel(Guid chartId)
+    {
+        var charts= _configuration.Charts.OrderBy(c => (int)c.Level).ThenBy(c => c.Type).ToArray();
+        var index = charts.Select((c, i) => (c,i)).Where(kv => kv.c.Id == chartId).Select(kv => kv.i).FirstOrDefault(-1);
+        if (index == -1)
+        {
+            return null;
+        }
+        return charts[index + 1].Id;
     }
     private async Task SetUsername(string nameString)
     {
@@ -297,6 +325,7 @@
                 _username = _currentQualifiers.UserName;
                 _isNew = false;
             }
+            await EvaluateRecommended();
         }
         else
         {
@@ -336,6 +365,46 @@
         _photoUrl = null;
     }
 
+    private async Task EvaluateRecommended()
+    {
+        _suggestedCharts.Clear();
+        if (_currentQualifiers == null)
+        {
+            return;
+        }
+        foreach (var chart in _currentQualifiers.Submissions.Where(kv => kv.Value.Score >= PhoenixLetterGrade.SSS.GetMinimumScore()))
+        {
+            var nextChart = GetNextLevel(chart.Key);
+            if (nextChart == null || _suggestedCharts.Contains(nextChart.Value))
+            {
+                continue;
+            }
+            _suggestedCharts.Add(nextChart.Value);
+        }
+        if (!CurrentUser.IsLoggedIn)
+        {
+            return;
+        }
+        var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id))).ToDictionary(s=>s.ChartId);
+        var levelAverages = myScores.Values.Where(s => s.Score != null).GroupBy(s => (_charts[s.ChartId].Level,_charts[s.ChartId].Type))
+            .Where(g=>g.Count()>=10)
+            .ToDictionary(g => g.Key,
+                g => (int) g.Average(s => s.Score!.Value));
+
+        var foundScores = _configuration.Charts.ToDictionary(c => c.Id, c => myScores.TryGetValue(c.Id, out var score) ? (int)score.Score!.Value :
+            levelAverages.TryGetValue((c.Level,c.Type), out var avg) ? avg : 0);
+
+        foreach (var chart in _configuration.Charts.Where(s=>foundScores[s.Id]>PhoenixLetterGrade.AA.GetMinimumScore()).OrderByDescending(s =>
+            _currentQualifiers.Rating(s.Level,foundScores[s.Id])).Take(3))
+        {
+            if (!_suggestedCharts.Contains(chart.Id))
+            {
+                _suggestedCharts.Add(chart.Id);
+            }
+        }
+
+
+    }
     private async Task AddScore()
     {
         if (_submittingChart == null || _currentQualifiers==null || _photoUrl==null)
@@ -366,6 +435,7 @@
         _isSaving = true;
         await Mediator.Send(new SaveQualifiersCommand(TournamentId,_currentQualifiers));
         await RefreshLeaderboard();
+        await EvaluateRecommended();
         _isSaving = false;
         _isNew = false;
         Snackbar.Add($"Qualifier saved! Pending Approval!", Severity.Success);
@@ -426,6 +496,7 @@
             NavManager.NavigateTo($"/Tournament/{TournamentId}/Qualifiers");
             return;
         }
+        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
         var tournament = (await Mediator.Send(new GetAllTournamentsQuery()))
             .FirstOrDefault(t => t.Id == TournamentId);
         _tournamentName = tournament.Name;
@@ -437,6 +508,7 @@
         {
             await SetUsername(CurrentUser.User.Name);
         }
+        await EvaluateRecommended();
 
     }
 }
