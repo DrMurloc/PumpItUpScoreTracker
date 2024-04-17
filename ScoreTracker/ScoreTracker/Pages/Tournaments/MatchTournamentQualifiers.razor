@@ -12,12 +12,10 @@
     <MudItem xs="12" sm="8">
         <MudText Typo="Typo.h3">@_tournamentName Qualifiers Leaderboard</MudText>
     </MudItem>
-    @if (CurrentUser.IsLoggedInAsAdmin || DateTimeOffset.Now < CutoffTime)
-    {
-        <MudItem xs="12" sm="4">
-            <MudButton Href=@($"/Tournament/{TournamentId}/Qualifiers/Submit") Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">Submission Page</MudButton>
-        </MudItem>
-    }
+    <MudItem xs="12" sm="4">
+        <MudButton Href=@($"/Tournament/{TournamentId}/Qualifiers/Submit") Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">Submission Page</MudButton>
+    </MudItem>
+    
 
 </MudGrid>
 <MudTable T="Entry" Items="_leaderboard" FixedHeader="true" Striped="true" Breakpoint="Breakpoint.None">
@@ -136,7 +134,7 @@
 @inject IMediator Mediator;
 @code
 {
-    private static readonly DateTimeOffset CutoffTime = new DateTimeOffset(2023, 11, 27, 2, 59, 59, TimeSpan.FromHours(-5));
+
     private IEnumerable<Entry> _leaderboard;
     private Entry? _selectedEntry = null;
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
