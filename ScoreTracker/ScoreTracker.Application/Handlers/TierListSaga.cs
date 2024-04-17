@@ -4,6 +4,7 @@ using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Handlers;
 
@@ -97,98 +98,13 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
                     cancellationToken: context.CancellationToken);
 
                 var allPhoenixScores = (await _scores.GetAllPlayerScores(chartType, level, context.CancellationToken))
-                    .GroupBy(r => r.userId).ToDictionary(g => g.Key, g => g.Select(r => r.record).ToArray());
+                    .Where(s => s.record.Score != null)
+                    .GroupBy(r => r.userId).ToDictionary(g => g.Key.ToString(),
+                        g => (IDictionary<Guid, PhoenixScore>)g.ToDictionary(p => p.userId,
+                            p => p.record.Score!.Value));
 
-                var validCharts = allPhoenixScores.Values.SelectMany(g => g.Where(r => r.Score != null))
-                    .Select(r => r.ChartId).Distinct().ToHashSet();
-
-                var filteredScoreArray = filtered.Where(c => validCharts.Contains(c.Id)).ToArray();
-                if (!filteredScoreArray.Any()) continue;
-                var chartCount = filteredScoreArray.ToDictionary(c => c.Id, c => 0);
-                var chartTotal = filteredScoreArray.ToDictionary(c => c.Id, c => 0);
-
-                foreach (var scores in allPhoenixScores.Values)
-                {
-                    var scoresDict = scores.ToDictionary(s => s.ChartId);
-                    var scoreInts = scoresDict.Values.Where(s => s.Score != null).Select(s => (int)s.Score!.Value)
-                        .ToArray();
-                    if (scoreInts.Length < 5 || (level > 23 && scoreInts.Length < 3)) continue;
-                    var standardDeviation = StdDev(scoreInts, true);
-                    var average = scoreInts.Average();
-                    var mediumMin = average - standardDeviation / 2;
-                    var easyMin = average + standardDeviation / 2;
-                    var veryEasyMin = average + standardDeviation;
-                    var oneLevelOverrated = average + standardDeviation * 1.5;
-                    var hardMin = average - standardDeviation;
-                    var veryHardMin = average - standardDeviation * 1.5;
-                    foreach (var chart in filteredScoreArray.Where(c => scoresDict.ContainsKey(c.Id)))
-                    {
-                        var score = (int)(scoresDict[chart.Id]?.Score ?? 0);
-                        chartCount[chart.Id]++;
-                        if (score < veryHardMin)
-                            chartTotal[chart.Id] += 3;
-                        else if (score < hardMin)
-                            chartTotal[chart.Id] += 2;
-                        else if (score < mediumMin)
-                            chartTotal[chart.Id] += 1;
-                        else if (score < easyMin)
-                            chartTotal[chart.Id] += 0;
-                        else if (score < veryEasyMin)
-                            chartTotal[chart.Id] += -1;
-                        else if (score < oneLevelOverrated)
-                            chartTotal[chart.Id] += -2;
-                        else
-                            chartTotal[chart.Id] += -3;
-                    }
-                }
-
-                var averages =
-                    chartTotal.ToDictionary(kv => kv.Key, kv => chartTotal[kv.Key] / (double)chartCount[kv.Key]);
-                var order = 0;
-                foreach (var chart in filteredScoreArray.OrderBy(c => averages[c.Id]))
-                {
-                    var average = averages[chart.Id];
-                    switch (average)
-                    {
-                        case < -2.5:
-                            await _tierLists.SaveEntry(
-                                new SongTierListEntry("Scores", chart.Id, TierListCategory.Overrated, order),
-                                context.CancellationToken);
-                            break;
-                        case < -1.5:
-                            await _tierLists.SaveEntry(
-                                new SongTierListEntry("Scores", chart.Id, TierListCategory.VeryEasy, order),
-                                context.CancellationToken);
-                            break;
-                        case < -.5:
-                            await _tierLists.SaveEntry(
-                                new SongTierListEntry("Scores", chart.Id, TierListCategory.Easy, order),
-                                context.CancellationToken);
-                            break;
-                        case <= .5:
-                            await _tierLists.SaveEntry(
-                                new SongTierListEntry("Scores", chart.Id, TierListCategory.Medium, order),
-                                context.CancellationToken);
-                            break;
-                        case <= 1.5:
-                            await _tierLists.SaveEntry(
-                                new SongTierListEntry("Scores", chart.Id, TierListCategory.Hard, order),
-                                context.CancellationToken);
-                            break;
-                        case <= 2.5:
-                            await _tierLists.SaveEntry(
-                                new SongTierListEntry("Scores", chart.Id, TierListCategory.VeryHard, order),
-                                context.CancellationToken);
-                            break;
-                        default:
-                            await _tierLists.SaveEntry(
-                                new SongTierListEntry("Scores", chart.Id, TierListCategory.Underrated, order),
-                                context.CancellationToken);
-                            break;
-                    }
-
-                    order++;
-                }
+                var results = ProcessIntoTierList(allPhoenixScores, level, "Scores");
+                foreach (var result in results) await _tierLists.SaveEntry(result, context.CancellationToken);
             }
     }
 
@@ -208,6 +124,93 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         if (as_sample)
             return Math.Sqrt(sum_of_squares / (values.Count() - 1));
         return Math.Sqrt(sum_of_squares / values.Count());
+    }
+
+    public static IEnumerable<SongTierListEntry> ProcessIntoTierList(
+        IDictionary<string, IDictionary<Guid, PhoenixScore>> userScores, DifficultyLevel level, string listName)
+    {
+        var includedChartIds = userScores.Values.SelectMany(kv => kv.Select(kv2 => kv2.Key)).Distinct().ToArray();
+        var chartCount = includedChartIds.ToDictionary(c => c, c => 0);
+        var chartTotal = includedChartIds.ToDictionary(c => c, c => 0);
+
+        foreach (var scores in userScores.Values)
+        {
+            var scoresDict = scores.ToDictionary(s => s.Key, s => s.Value);
+            var scoreInts = scoresDict.Values.Select(s => (int)s)
+                .ToArray();
+            if (scoreInts.Length < 5 || (level > 23 && scoreInts.Length < 3)) continue;
+            var standardDeviation = StdDev(scoreInts, true);
+            var average = scoreInts.Average();
+            var mediumMin = average - standardDeviation / 2;
+            var easyMin = average + standardDeviation / 2;
+            var veryEasyMin = average + standardDeviation;
+            var oneLevelOverrated = average + standardDeviation * 1.5;
+            var hardMin = average - standardDeviation;
+            var veryHardMin = average - standardDeviation * 1.5;
+            foreach (var chart in includedChartIds.Where(c => scoresDict.ContainsKey(c)))
+            {
+                var score = (int)scoresDict[chart];
+                chartCount[chart]++;
+                if (score < veryHardMin)
+                    chartTotal[chart] += 3;
+                else if (score < hardMin)
+                    chartTotal[chart] += 2;
+                else if (score < mediumMin)
+                    chartTotal[chart] += 1;
+                else if (score < easyMin)
+                    chartTotal[chart] += 0;
+                else if (score < veryEasyMin)
+                    chartTotal[chart] += -1;
+                else if (score < oneLevelOverrated)
+                    chartTotal[chart] += -2;
+                else
+                    chartTotal[chart] += -3;
+            }
+        }
+
+        var averages =
+            chartTotal.ToDictionary(kv => kv.Key, kv => chartTotal[kv.Key] / (double)chartCount[kv.Key]);
+        var order = 0;
+        var result = new List<SongTierListEntry>();
+        foreach (var chart in includedChartIds.OrderBy(c => averages[c]))
+        {
+            var average = averages[chart];
+            switch (average)
+            {
+                case < -2.5:
+                    result.Add(
+                        new SongTierListEntry(listName, chart, TierListCategory.Overrated, order));
+                    break;
+                case < -1.5:
+                    result.Add(
+                        new SongTierListEntry(listName, chart, TierListCategory.VeryEasy, order));
+                    break;
+                case < -.5:
+                    result.Add(
+                        new SongTierListEntry(listName, chart, TierListCategory.Easy, order));
+                    break;
+                case <= .5:
+                    result.Add(
+                        new SongTierListEntry(listName, chart, TierListCategory.Medium, order));
+                    break;
+                case <= 1.5:
+                    result.Add(
+                        new SongTierListEntry(listName, chart, TierListCategory.Hard, order));
+                    break;
+                case <= 2.5:
+                    result.Add(
+                        new SongTierListEntry(listName, chart, TierListCategory.VeryHard, order));
+                    break;
+                default:
+                    result.Add(
+                        new SongTierListEntry(listName, chart, TierListCategory.Underrated, order));
+                    break;
+            }
+
+            order++;
+        }
+
+        return result;
     }
 
     public async Task<IEnumerable<SongTierListEntry>> Handle(GetMyRelativeTierListQuery request,

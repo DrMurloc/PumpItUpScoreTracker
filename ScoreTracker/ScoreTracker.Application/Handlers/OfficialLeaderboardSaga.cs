@@ -7,6 +7,7 @@ using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Handlers
 {
@@ -87,50 +88,16 @@ namespace ScoreTracker.Application.Handlers
         private async Task PopulateTierLists(IEnumerable<OfficialChartLeaderboardEntry> entries,
             CancellationToken cancellationToken)
         {
-            var entryArray = entries.ToArray();
-            var averages = entryArray.GroupBy(c => c.Chart.Id)
-                .ToDictionary(g => g.Key, g => (int)g.Average(e => e.Score));
-            var charts = entryArray.Select(e => e.Chart).GroupBy(c => c.Id).Select(g => g.First());
-            var levelGroup = charts.GroupBy(s => (s.Type, s.Level));
+            var chartLevelGroups = entries.GroupBy(e => (e.Chart.Type, e.Chart.Level))
+                .ToDictionary(g => g.Key,
+                    g => g.GroupBy(e => e.Username)
+                        .ToDictionary(gu => gu.Key,
+                            gu => (IDictionary<Guid, PhoenixScore>)gu.ToDictionary(u => u.Chart.Id, u => u.Score)));
 
-            foreach (var group in levelGroup)
+            foreach (var group in chartLevelGroups)
             {
-                var scores = group.Select(g => averages[g.Id]).ToArray();
-                var orders = group.OrderByDescending(s => averages[s.Id]).Select((s, i) => (s, i))
-                    .ToDictionary(kv => kv.s.Id, kv => kv.i);
-                var average = (int)scores.Average();
-                var standardDev = StdDev(scores, true);
-                var mediumMin = average - standardDev / 2;
-                var easyMin = average + standardDev / 2;
-                var veryEasyMin = average + standardDev;
-                var oneLevelOverrated = average + standardDev * 1.5;
-                var hardMin = average - standardDev;
-                var veryHardMin = average - standardDev * 1.5;
-                foreach (var song in group)
-                {
-                    var score = averages[song.Id];
-                    var category = TierListCategory.Unrecorded;
-                    if (score == -1)
-                        category = TierListCategory.Unrecorded;
-                    else if (score < veryHardMin)
-                        category = TierListCategory.Underrated;
-                    else if (score < hardMin)
-                        category = TierListCategory.VeryHard;
-                    else if (score < mediumMin)
-                        category = TierListCategory.Hard;
-                    else if (score < easyMin)
-                        category = TierListCategory.Medium;
-                    else if (score < veryEasyMin)
-                        category = TierListCategory.Easy;
-                    else if (score < oneLevelOverrated)
-                        category = TierListCategory.VeryEasy;
-                    else
-                        category = TierListCategory.Overrated;
-
-
-                    await _tierLists.SaveEntry(new SongTierListEntry("Official Scores", song.Id, category,
-                        orders[song.Id]), cancellationToken);
-                }
+                var tierListEntries = TierListSaga.ProcessIntoTierList(group.Value, group.Key.Level, "Official Scores");
+                foreach (var entry in tierListEntries) await _tierLists.SaveEntry(entry, cancellationToken);
             }
         }
 

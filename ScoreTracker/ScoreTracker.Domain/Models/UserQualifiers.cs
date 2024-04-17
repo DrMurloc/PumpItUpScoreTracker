@@ -49,7 +49,11 @@ public sealed class UserQualifiers
 
     public double CalculateScore()
     {
-        return BestCharts().Sum(c => Rating(c.Item1.Id));
+        var bestCharts = BestCharts().ToArray();
+        return
+            Configuration.ScoringType == "Fungpapi"
+                ? bestCharts.Any() ? bestCharts.Average(c => c.Rating) : 0.0
+                : BestCharts().Sum(c => c.Rating);
     }
 
     public void Approve()

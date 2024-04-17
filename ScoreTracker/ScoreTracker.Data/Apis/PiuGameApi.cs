@@ -65,6 +65,7 @@ public sealed class PiuGameApi : IPiuGameApi
                 level += parsedLevel;
             }
 
+            songName = HttpUtility.HtmlDecode(songName);
             if (songName.Contains("End of a Dream"))
                 songName = "Re:End of a Dream";
             else if (songName.Contains("CROSS RAY"))
