@@ -233,8 +233,7 @@
     private TournamentRecord[] _active = Array.Empty<TournamentRecord>();
     protected override async Task OnInitializedAsync()
     {
-        var tournaments = (await Mediator.Send(new GetAllTournamentsQuery()))
-            .Where(t=>t.Name!="BITE 2024").ToArray();
+        var tournaments = (await Mediator.Send(new GetAllTournamentsQuery())).ToArray();
         _upcoming = tournaments.Where(t => t.StartDate != null && t.StartDate > DateTimeOffset.Now).ToArray();
         _previous = tournaments.Where(t => t.EndDate != null && t.EndDate < DateTimeOffset.Now).ToArray();
         _active = tournaments.Where(t => (t.StartDate == null || t.StartDate <= DateTimeOffset.Now) && (t.EndDate == null || t.EndDate >= DateTimeOffset.Now)).ToArray();
