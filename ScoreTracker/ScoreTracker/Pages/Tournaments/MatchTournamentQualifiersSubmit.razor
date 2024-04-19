@@ -89,7 +89,7 @@
         {
 
             <MudItem xs="12">
-                <MudText>Best Score: @entry.Item1.Song.Name @entry.Item1.DifficultyString - @_currentQualifiers.Submissions[entry.Item1.Id].Score (@_currentQualifiers.Submissions[entry.Item1.Id].Score.LetterGrade.GetName()), @_currentQualifiers.Rating(entry.Item1.Id) Points</MudText>
+                <MudText>Best Score: @entry.Item1.Song.Name @entry.Item1.DifficultyString - @_currentQualifiers.Submissions[entry.Item1.Id].Score (@_currentQualifiers.Submissions[entry.Item1.Id].Score.LetterGrade.GetName()), @_currentQualifiers.Rating(entry.Item1.Id).ToString("0.00") Points</MudText>
             </MudItem>
         }
         <MudItem xs="12">
