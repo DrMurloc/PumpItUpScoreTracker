@@ -50,7 +50,7 @@ namespace ScoreTracker.Application.Handlers
             else
             {
                 var oldPlace = orderedOldLeaderboard.First(kv => kv.q.UserName == user).Item2;
-                if (oldPlace == newPlace)
+                if (oldPlace != newPlace)
 
                     await _botClient.SendMessage(
                         $"{user} has progressed to {newPlace} on the leaderboard!", config.NotificationChannel,
