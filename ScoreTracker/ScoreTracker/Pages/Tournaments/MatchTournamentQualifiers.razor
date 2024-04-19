@@ -28,7 +28,6 @@
             <MudTh>#@place Song</MudTh>
         }
         <MudTh>Rating</MudTh>
-        <MudTh>Division</MudTh>
         <MudTh>Photos</MudTh>
         @if (CurrentUser.IsLoggedInAsAdmin)
         {
@@ -57,7 +56,6 @@
             </MudTd>
         }
         <MudTd>@context.Score.ToString("0.00")</MudTd>
-        <MudTd>@context.Division</MudTd>
         <MudTd>
             @if (context.IsApproved || CurrentUser.IsLoggedInAsAdmin)
             {
@@ -172,13 +170,12 @@
             _charts[chart.Id] = chart;
         }
         _leaderboard = (await Qualifiers.GetAllUserQualifiers(TournamentId,config)).OrderByDescending(q => q.CalculateScore()).Select((q, index) => new Entry(index + 1, q.UserName,
-            q.BestCharts(),
-            index<22?"Pros":index<22+48?"Mids":"Lowers",q.IsApproved,
+            q.BestCharts(),q.IsApproved,
             q.CalculateScore(), q.Submissions.Select(s => s.Value.PhotoUrl).ToArray(),q));
 
     }
 
-    private sealed record Entry(int Place, string UserName, IEnumerable<(Chart,PhoenixScore, double)> Scores, string Division, bool IsApproved, double Score, IEnumerable<Uri> Photos, UserQualifiers Record)
+    private sealed record Entry(int Place, string UserName, IEnumerable<(Chart,PhoenixScore, double)> Scores, bool IsApproved, double Score, IEnumerable<Uri> Photos, UserQualifiers Record)
     {
 
     }
