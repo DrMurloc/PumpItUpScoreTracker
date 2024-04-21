@@ -147,6 +147,7 @@
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
 @inject NavigationManager NavManager;
+@inject ITierListRepository TierLists;
 @code
 {
     private IDictionary<Skill, List<Chart>> SkillCharts = Enum.GetValues<Skill>().ToDictionary(s => s, s => new List<Chart>());
@@ -290,11 +291,78 @@
         { "Scores", 1 },
         { "Skill", 2 },
         { "Popularity", .5 },
-        { "Stage Break", 1 }
+        { "Stage Break", .5 },
+        { "Pass Count",2}
     };
 
     private IDictionary<string, IDictionary<Guid, SongTierListEntry>> _categoryLists = new Dictionary<string, IDictionary<Guid, SongTierListEntry>>();
     private int GetScore(TierListCategory category) => (int)category - 3;
+
+    private async Task<IEnumerable<SongTierListEntry>> BuildTitleTierList()
+    {
+        var userWeights = new Dictionary<int, IEnumerable<Guid>>()
+        {
+            { 4, await TierLists.GetUsersOnLevel(_level - 2, CancellationToken.None) },
+            { 3, await TierLists.GetUsersOnLevel(_level - 1, CancellationToken.None) },
+            { 2, await TierLists.GetUsersOnLevel(_level, CancellationToken.None) },
+            { 1, await TierLists.GetUsersOnLevel(_level + 1, CancellationToken.None) }
+        };
+        var chartSums = _charts.ToDictionary(c => c.Key, c => 0);
+        foreach (var weightValue in userWeights)
+        {
+            foreach (var userId in weightValue.Value)
+            {
+                var scores = await Mediator.Send(new GetPhoenixRecordsQuery(userId));
+                foreach (var score in scores.Where(s => chartSums.ContainsKey(s.ChartId)))
+                {
+                    chartSums[score.ChartId] += weightValue.Key;
+                }
+            }
+        }
+
+        var standardDeviationCompare =
+            StdDev(chartSums.Select(s => (double)s.Value), true);
+        var averageCompare = chartSums.Values.Average();
+        var mediumMinCompare = averageCompare - standardDeviationCompare / 2;
+        var easyMinCompare = averageCompare + standardDeviationCompare / 2;
+        var veryEasyMinCompare = averageCompare + standardDeviationCompare;
+        var oneLevelOverratedCompare = averageCompare + standardDeviationCompare * 1.5;
+        var hardMinCompare = averageCompare - standardDeviationCompare;
+        var veryHardMinCompare = averageCompare - standardDeviationCompare * 1.5;
+        var result = new List<SongTierListEntry>();
+        foreach (var chartId in chartSums.Keys)
+        {
+            var score = chartSums[chartId];
+            if (score < veryHardMinCompare)
+            {
+                result.Add(new SongTierListEntry("Title", chartId, TierListCategory.Underrated, score));
+            } else if (score < hardMinCompare)
+            {
+                result.Add(new SongTierListEntry("Title", chartId, TierListCategory.VeryHard, score));
+            }
+            else if (score < mediumMinCompare)
+            {
+                result.Add(new SongTierListEntry("Title", chartId, TierListCategory.Hard, score));
+            }
+            else if (score < easyMinCompare)
+            {
+                result.Add(new SongTierListEntry("Title", chartId, TierListCategory.Medium, score));
+            }
+            else if (score < veryEasyMinCompare)
+            {
+                result.Add(new SongTierListEntry("Title", chartId, TierListCategory.Easy, score));
+            }
+            else if (score < oneLevelOverratedCompare)
+            {
+                result.Add(new SongTierListEntry("Title", chartId, TierListCategory.VeryEasy, score));
+            }
+            else
+            {
+                result.Add(new SongTierListEntry("Title", chartId, TierListCategory.Overrated, score));
+            }
+        }
+        return result;
+    } 
     private async Task Recalculate()
     {
         _isLoading = true;
@@ -306,19 +374,21 @@
         var difficulty = (await Mediator.Send(new GetTierListQuery("Difficulty"))).ToDictionary(s => s.ChartId);
         var result = new List<SongTierListEntry>();
         var baseEntries = (await BuildSkillTierList()).ToDictionary(e=>e.ChartId);
+        var title = (await BuildTitleTierList()).ToDictionary(s => s.ChartId);
         _categoryLists = new Dictionary<string, IDictionary<Guid, SongTierListEntry>>()
         {
             { "Skill", baseEntries },
             { "Official Scores", officialScores },
             { "Scores", scores },
             { "Popularity", popularity },
-            { "Stage Break", difficulty }
+            { "Stage Break", difficulty },
+            {"Pass Count",title}
         };
         foreach (var chartId in _charts.Keys)
         {
             var count = 0.0;
             var currentTotal = 0.0;
-            foreach (var listItem in new[] { (officialScores,"Official Scores"), (scores,"Scores"), (popularity,"Popularity"), (difficulty,"Stage Break"), (baseEntries,"Skill") })
+            foreach (var listItem in new[] { (officialScores, "Official Scores"), (scores, "Scores"), (popularity, "Popularity"), (difficulty, "Stage Break"), (baseEntries, "Skill"), (title, "Pass Count") })
             {
                 if (!listItem.Item1.ContainsKey(chartId)||listItem.Item1[chartId].Category == TierListCategory.Unrecorded)
                 {

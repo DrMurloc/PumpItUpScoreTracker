@@ -52,6 +52,12 @@ namespace ScoreTracker.Data.Repositories
             _cache.Remove(TierListKey(entry.TierListName));
         }
 
+        public async Task<IEnumerable<Guid>> GetUsersOnLevel(DifficultyLevel level, CancellationToken cancellationToken)
+        {
+            return await _dbContext.UserHighestTitle.Where(e => e.Level == (int)level).Select(e => e.UserId)
+                .ToArrayAsync(cancellationToken);
+        }
+
         public async Task<IEnumerable<SongTierListEntry>> GetAllEntries(Name tierListName,
             CancellationToken cancellationToken)
         {
