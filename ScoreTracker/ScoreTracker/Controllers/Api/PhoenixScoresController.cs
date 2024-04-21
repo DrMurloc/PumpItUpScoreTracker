@@ -74,10 +74,12 @@ public sealed class PhoenixScoresController : Controller
                     Level = charts[r.ChartId].Level,
                     Id = r.ChartId,
                     Type = charts[r.ChartId].Type.GetDisplayName(),
+                    Shorthand = charts[r.ChartId].DifficultyString,
                     Song = new SongDto
                     {
                         Name = charts[r.ChartId].Song.Name,
-                        Type = charts[r.ChartId].Song.Type.GetDisplayName()
+                        Type = charts[r.ChartId].Song.Type.GetDisplayName(),
+                        ImagePath = charts[r.ChartId].Song.ImagePath.ToString()
                     }
                 }
             }).ToArray()

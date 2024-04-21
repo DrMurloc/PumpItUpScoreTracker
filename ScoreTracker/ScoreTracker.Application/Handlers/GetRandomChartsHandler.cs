@@ -1,7 +1,6 @@
 ﻿using MediatR;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
-using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 
@@ -78,7 +77,7 @@ namespace ScoreTracker.Application.Handlers
                 .ToDictionary(c => c.Id);
             var includedCharts = GetIncludedCharts(charts, request.Settings).ToArray();
             if (includedCharts.Length < request.Settings.Count && !request.Settings.AllowRepeats)
-                throw new RandomizerException("Included charts were fewer than the requried count");
+                return includedCharts.Select(c => charts[c.Key]);
 
             var results = new List<Chart>();
             for (var i = 0; i < request.Settings.Count; i++)
