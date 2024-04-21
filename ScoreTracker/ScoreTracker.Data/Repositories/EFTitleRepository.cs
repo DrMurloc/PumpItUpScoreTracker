@@ -35,6 +35,30 @@ namespace ScoreTracker.Data.Repositories
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
+        public async Task SetHighestDifficultyTitle(Guid userId, Name title, DifficultyLevel level,
+            CancellationToken cancellationToken)
+        {
+            var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var entity =
+                await database.UserHighestTitle.FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
+            if (entity == null)
+            {
+                await database.UserHighestTitle.AddAsync(new UserHighestTitleEntity
+                {
+                    UserId = userId,
+                    Level = level,
+                    TitleName = title
+                }, cancellationToken);
+            }
+            else
+            {
+                entity.TitleName = title;
+                entity.Level = level;
+            }
+
+            await database.SaveChangesAsync(cancellationToken);
+        }
+
         public async Task<IEnumerable<Name>> GetCompletedTitles(Guid userId, CancellationToken cancellationToken)
         {
             var _dbContext = await _factory.CreateDbContextAsync(cancellationToken);

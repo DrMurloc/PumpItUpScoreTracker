@@ -108,7 +108,13 @@ public sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumerab
         await _titles.SaveTitles(userId, allCompleted, cancellationToken);
 
         var newCompleted = allCompleted.Where(c => !existingTitles.Contains(c)).ToArray();
-
+        var highest = allCompleted.Select(t => PhoenixTitleList.GetTitleByName(t))
+            .Where(t => t is PhoenixDifficultyTitle).Cast<PhoenixDifficultyTitle>()
+            .OrderByDescending(d => (int)d.Level)
+            .ThenByDescending(d => d.RequiredRating)
+            .FirstOrDefault();
+        if (highest != null)
+            await _titles.SetHighestDifficultyTitle(userId, highest.Name, highest.Level, cancellationToken);
         if (newCompleted.Any())
             await _bus.Publish(
                 new NewTitlesAcquiredEvent(userId, newCompleted.Select(t => t.ToString())),

@@ -209,7 +209,6 @@ public static class PhoenixTitleList
         new PhoenixSkillTitle("TWIST", 3, "U Got Me Rocking", ChartType.Single, 17),
         new PhoenixSkillTitle("TWIST", 2, "Street show down", ChartType.Single, 16),
         new PhoenixSkillTitle("TWIST", 1, "Scorpion King", ChartType.Single, 15),
-        new PhoenixBasicTitle("THE MASTER", "1900 points or higher on LVL 28 (AA+) + Expert 10", "Difficulty"),
         new PhoenixBasicTitle("A huge fan of SPHAM", "500+ plays on SPHAM charts", "Step Artist"),
         new PhoenixBasicTitle("SPHAM FOLLOWER", "100+ plays on SPHAM charts", "Step Artist"),
         new PhoenixBasicTitle("A huge fan of CONRAD", "500+ plays on CONRAD charts", "Step Artist"),
@@ -224,6 +223,13 @@ public static class PhoenixTitleList
         new PhoenixBasicTitle("EXC FOLLOWER", "100+ plays on EXC charts", "Step Artist")
     };
 
+    private static readonly IDictionary<Name, PhoenixTitle> TitleLookup = Titles.ToDictionary(n => n.Name);
+
+    public static PhoenixTitle GetTitleByName(Name name)
+    {
+        return TitleLookup[name];
+    }
+
     public static IEnumerable<PhoenixTitleProgress> BuildProgress(IDictionary<Guid, Chart> charts,
         IEnumerable<RecordedPhoenixScore> attempts,
         ISet<Name> completedTitles)
@@ -234,7 +240,6 @@ public static class PhoenixTitleList
         {
             title.ApplyAttempt(charts[attempt.ChartId], attempt);
             if (completedTitles.Contains(title.Title.Name))
-                //
                 title.Complete();
         }
 
