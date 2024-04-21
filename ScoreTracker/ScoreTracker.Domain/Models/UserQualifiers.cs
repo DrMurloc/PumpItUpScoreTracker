@@ -52,7 +52,7 @@ public sealed class UserQualifiers
         var bestCharts = BestCharts().ToArray();
         return
             Configuration.ScoringType == "Fungpapi"
-                ? bestCharts.Any() ? bestCharts.Average(c => c.Rating) : 0.0
+                ? bestCharts.Any() ? bestCharts.Sum(c => c.Rating)/(double)Configuration.PlayCount : 0.0
                 : BestCharts().Sum(c => c.Rating);
     }
 
