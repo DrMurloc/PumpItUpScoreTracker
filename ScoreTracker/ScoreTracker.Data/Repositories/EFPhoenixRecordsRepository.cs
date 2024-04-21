@@ -14,6 +14,7 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
 {
     private readonly ChartAttemptDbContext _database;
     private readonly IMemoryCache _cache;
+    private readonly IDbContextFactory<ChartAttemptDbContext> _dbFactory;
 
     private static string ScoreCache(Guid userId)
     {
@@ -21,10 +22,12 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
     }
 
     public EFPhoenixRecordsRepository(IDbContextFactory<ChartAttemptDbContext> factory,
-        IMemoryCache cache)
+        IMemoryCache cache,
+        IDbContextFactory<ChartAttemptDbContext> dbFactory)
     {
         _database = factory.CreateDbContext();
         _cache = cache;
+        _dbFactory = dbFactory;
     }
 
     public async Task UpdateBestAttempt(Guid userId, RecordedPhoenixScore score,
@@ -122,9 +125,10 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
         var mixId = MixGuids[MixEnum.Phoenix];
         var intLevel = (int)difficulty;
         var chartTypeString = chartType.ToString();
-        return (await (from cm in _database.ChartMix
-                join c in _database.Chart on cm.ChartId equals c.Id
-                join pba in _database.PhoenixBestAttempt on c.Id equals pba.ChartId
+        var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+        return (await (from cm in database.ChartMix
+                join c in database.Chart on cm.ChartId equals c.Id
+                join pba in database.PhoenixBestAttempt on c.Id equals pba.ChartId
                 where cm.MixId == mixId && cm.Level == intLevel && c.Type == chartTypeString
                 select pba).ToArrayAsync(cancellationToken))
             .Select(pb => (pb.UserId,
