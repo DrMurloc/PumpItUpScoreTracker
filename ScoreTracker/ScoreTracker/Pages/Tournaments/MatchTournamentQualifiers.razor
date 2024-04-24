@@ -10,25 +10,25 @@
 
 <MudGrid>
     <MudItem xs="12" sm="8">
-        <MudText Typo="Typo.h3">@_tournamentName Qualifiers Leaderboard</MudText>
+        <MudText Typo="Typo.h3">@L["Qualifiers Leaderboard",_tournamentName]</MudText>
     </MudItem>
     <MudItem xs="12" sm="4">
-        <MudButton Href=@($"/Tournament/{TournamentId}/Qualifiers/Submit") Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">Submission Page</MudButton>
+        <MudButton Href=@($"/Tournament/{TournamentId}/Qualifiers/Submit") Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">@L["Submission Page"]</MudButton>
     </MudItem>
     
 
 </MudGrid>
 <MudTable T="Entry" Items="_leaderboard" FixedHeader="true" Striped="true" Breakpoint="Breakpoint.None">
     <HeaderContent>
-        <MudTh>Place</MudTh>
-        <MudTh>UserName</MudTh>
+        <MudTh>@L["Place"]</MudTh>
+        <MudTh>@L["Username"]</MudTh>
         @for (var i = 0; i < _configuration.PlayCount; i++)
         {
             var place = i+1;
-            <MudTh>#@place Song</MudTh>
+            <MudTh>#@place @L["Song"]</MudTh>
         }
-        <MudTh>Rating</MudTh>
-        <MudTh>Photos</MudTh>
+        <MudTh>@L["Rating"]</MudTh>
+        <MudTh>@L["Photos"]</MudTh>
         @if (CurrentUser.IsLoggedInAsAdmin)
         {
             <MudTh>Approve</MudTh>
@@ -63,7 +63,7 @@
             }
             else
             {
-                <MudText>Pending</MudText>
+                <MudText>@L["Pending"]</MudText>
             }
         </MudTd>
         @if (CurrentUser.IsLoggedInAsAdmin)
@@ -110,16 +110,16 @@
 
 <MudGrid>
     <MudItem xs="12">
-        <MudText Typo="Typo.h4">Event Links</MudText>
+        <MudText Typo="Typo.h4">@L["Event Links"]</MudText>
     </MudItem>
     <MudItem xs="6" sm="4" md="3">
-        <MudButton StartIcon="@Icons.Material.Filled.Rule" Href="https://docs.google.com/document/d/1J_JgWwhgddoiaUlghGCGtd7wWXmAQ4c90AflUQucNaI/" Color="Color.Primary" Variant="Variant.Text" Target="_blank">Rules</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Rule" Href="https://docs.google.com/document/d/1J_JgWwhgddoiaUlghGCGtd7wWXmAQ4c90AflUQucNaI/" Color="Color.Primary" Variant="Variant.Text" Target="_blank">@L["Rules"]</MudButton>
     </MudItem>
     <MudItem xs="6" sm="4" md="3">
-        <MudButton StartIcon="@Icons.Material.Filled.Event" Href="https://www.start.gg/tournament/beast-in-the-east-7/details" Color="Color.Primary" Variant="Variant.Text" Target="_blank">Event</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Event" Href="https://www.start.gg/tournament/beast-in-the-east-7/details" Color="Color.Primary" Variant="Variant.Text" Target="_blank">@L["Event"]</MudButton>
     </MudItem>
     <MudItem xs="6" sm="4" md="3">
-        <MudButton StartIcon="@Icons.Material.Filled.Public" Href="https://bitegaming.org/" Color="Color.Primary" Variant="Variant.Text" Target="_blank">Website</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Public" Href="https://bitegaming.org/" Color="Color.Primary" Variant="Variant.Text" Target="_blank">@L["Website"]</MudButton>
     </MudItem>
     <MudItem xs="6" sm="4" md="3">
         <MudButton StartIcon="@Icons.Custom.Brands.Discord" Href="https://discord.gg/jNQRsrkWFA" Color="Color.Primary" Variant="Variant.Text" Target="_blank">Discord</MudButton>

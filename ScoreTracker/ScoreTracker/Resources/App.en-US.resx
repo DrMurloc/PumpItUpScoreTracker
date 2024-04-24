@@ -580,4 +580,96 @@
   <data name="Your Difficulty Rating" xml:space="preserve">
     <value>Your Difficulty Rating</value>
   </data>
+  <data name="Photos" xml:space="preserve">
+    <value>Photos</value>
+    <comment>Photos</comment>
+  </data>
+  <data name="Qualifiers Leaderboard" xml:space="preserve">
+    <value>{0} Qualifiers Leaderboard</value>
+    <comment>Qualifiers Leaderboard</comment>
+  </data>
+  <data name="Place" xml:space="preserve">
+    <value>Place</value>
+  </data>
+  <data name="Rating" xml:space="preserve">
+    <value>Rating</value>
+    <comment>Rating</comment>
+  </data>
+  <data name="Pending" xml:space="preserve">
+    <value>Pending</value>
+    <comment>Pending</comment>
+  </data>
+  <data name="Event Links" xml:space="preserve">
+    <value>Event Links</value>
+    <comment>Event Links</comment>
+  </data>
+  <data name="Rules" xml:space="preserve">
+    <value>Rules</value>
+    <comment>Rules</comment>
+  </data>
+  <data name="Event" xml:space="preserve">
+    <value>Event</value>
+    <comment>Event</comment>
+  </data>
+  <data name="Website" xml:space="preserve">
+    <value>Website</value>
+    <comment>Website</comment>
+  </data>
+  <data name="Chart Count" xml:space="preserve">
+    <value>Chart Count</value>
+  </data>
+  <data name="Home" xml:space="preserve">
+    <value>Home</value>
+  </data>
+  <data name="Leaderboard Player Compare" xml:space="preserve">
+    <value>Leaderboard Player Compare</value>
+  </data>
+  <data name="Max Rating" xml:space="preserve">
+    <value>Max Rating</value>
+  </data>
+  <data name="Next Place Count" xml:space="preserve">
+    <value>Next Place is ahead by {0}</value>
+  </data>
+  <data name="Qualifier Submit Phrase 1" xml:space="preserve">
+    <value>You do not need to be logged in to use this tool. Type a username to begin submitting.</value>
+  </data>
+  <data name="Qualifier Submit Phrase 2" xml:space="preserve">
+    <value>This is your first submission! Please make sure your Username is identifiable either through discord or Start.GG.</value>
+  </data>
+  <data name="Qualifiers Submission" xml:space="preserve">
+    <value>{0} Qualifiers Submission</value>
+  </data>
+  <data name="Rating Calculator" xml:space="preserve">
+    <value>Rating Calculator</value>
+  </data>
+  <data name="Song" xml:space="preserve">
+    <value>Song</value>
+  </data>
+  <data name="Song Artist" xml:space="preserve">
+    <value>Song Artist</value>
+  </data>
+  <data name="Submission Page" xml:space="preserve">
+    <value>Submission Page</value>
+  </data>
+  <data name="Submit" xml:space="preserve">
+    <value>Submit</value>
+  </data>
+  <data name="Suggested Chart" xml:space="preserve">
+    <value>Suggested Chart</value>
+  </data>
+  <data name="To Leaderboard" xml:space="preserve">
+    <value>To Leaderboard</value>
+  </data>
+  <data name="Upload Image" xml:space="preserve">
+    <value>Upload Image</value>
+  </data>
+  <data name="Use Script" xml:space="preserve">
+    <value>Use  Script</value>
+  </data>
+  <data name="World Rankings" xml:space="preserve">
+    <value>World Rankings</value>
+  </data>
+  <data name="You are X place!" xml:space="preserve">
+    <value>You are {0} Place!</value>
+  </data>
 </root>

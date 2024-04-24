@@ -12,24 +12,24 @@
 
 <MudGrid>
     <MudItem xs="12" sm="8">
-        <MudText Typo="Typo.h3">@_tournamentName Qualifier Submission</MudText>
+        <MudText Typo="Typo.h3">@L["Qualifiers Submission",_tournamentName]</MudText>
     </MudItem>
     <MudItem xs="12" sm="4">
-        <MudButton Href=@($"/Tournament/{TournamentId}/Qualifiers") Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Leaderboard">To Leaderboard</MudButton>
+        <MudButton Href=@($"/Tournament/{TournamentId}/Qualifiers") Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Leaderboard">@L["To Leaderboard"]</MudButton>
     </MudItem>
     <MudItem xs="12">
-        <MudAutocomplete T="string" MaxLength="32" CoerceText="false" CoerceValue="true" Immediate="true" DebounceInterval="200" Label="Username" Value="_username" ValueChanged="SetUsername" SearchFunc="@(t=>Task.FromResult(_usernames.Where(u=>u.Contains(t,StringComparison.OrdinalIgnoreCase)).Append(t).Distinct()))" />
+        <MudAutocomplete T="string" MaxLength="32" CoerceText="false" CoerceValue="true" Immediate="true" DebounceInterval="200" Label=@L["Username"] Value="_username" ValueChanged="SetUsername" SearchFunc="@(t=>Task.FromResult(_usernames.Where(u=>u.Contains(t,StringComparison.OrdinalIgnoreCase)).Append(t).Distinct()))" />
     </MudItem>
     @if (_currentQualifiers==null)
     {
         <MudItem xs="12">
-            <MudText Color="Color.Info">You do not need to be logged in to use this tool. Type a username to begin submitting.</MudText>
+            <MudText Color="Color.Info">@L["Qualifier Submit Phrase 1"]</MudText>
         </MudItem>
     }
     @if (_isNew)
     {
         <MudItem xs="12">
-            <MudText Color="Color.Info">This is your first submission! Please make sure your Username is identifiable either through discord or Start.GG.</MudText>
+            <MudText Color="Color.Info">@L["Qualifier Submit Phrase 2"]</MudText>
         </MudItem>
     }
     @if (_currentQualifiers != null)
@@ -64,7 +64,7 @@
         @if (_suggestedCharts.Any(s=>!_currentQualifiers.Submissions.ContainsKey(s)))
         {
             <MudItem xs="12">
-                <MudIcon Style=@($"color:{Colors.LightBlue.Darken1}") Icon="@Icons.Material.Filled.MoreVert"></MudIcon> - Suggested Chart
+                <MudIcon Style=@($"color:{Colors.LightBlue.Darken1}") Icon="@Icons.Material.Filled.MoreVert"></MudIcon> - @L["Suggested Chart"]
             </MudItem>
         }
     }
@@ -76,24 +76,24 @@
         @if (_currentPlace != null)
         {
             <MudItem xs="12">
-                <MudText>You are @_currentPlace Place!</MudText>
+                <MudText>@L["You are X place!",_currentPlace]</MudText>
             </MudItem>
             @if (_nextPlace != null)
             {
                 <MudItem xs="12">
-                    <MudText>Next Place is ahead by @($"{_nextPlace.CalculateScore()-_currentQualifiers.CalculateScore():0.00}")</MudText>
+                    <MudText>@L["Next Place Count",$"{_nextPlace.CalculateScore()-_currentQualifiers.CalculateScore():0.00}"]</MudText>
                 </MudItem>
             }
         }
-        @foreach (var entry in MyBest)
+        @foreach (var entry in _currentQualifiers.Submissions.OrderByDescending(s=>_currentQualifiers.Rating(s.Key)))
         {
 
             <MudItem xs="12">
-                <MudText>Best Score: @entry.Item1.Song.Name @entry.Item1.DifficultyString - @_currentQualifiers.Submissions[entry.Item1.Id].Score (@_currentQualifiers.Submissions[entry.Item1.Id].Score.LetterGrade.GetName()), @_currentQualifiers.Rating(entry.Item1.Id).ToString("0.00") Points</MudText>
+                <MudText>@_charts[entry.Key].Song.Name @_charts[entry.Key].DifficultyString - @entry.Value.Score (@entry.Value.Score.LetterGrade.GetName()), @_currentQualifiers.Rating(entry.Key).ToString("0.00") @L["Rating"]</MudText>
             </MudItem>
         }
         <MudItem xs="12">
-            <MudText Typo="Typo.h4">Rating Calculator</MudText>
+            <MudText Typo="Typo.h4">@L["Rating Calculator"]</MudText>
         </MudItem>
         <MudItem xs="6" sm="4" md="3">
             <MudNumericField T="int" Label=@L["Score"] Value="_testScore" ValueChanged="s=>_testScore=s" Min="0" Max="1000000" HideSpinButtons="true" Clearable="false"></MudNumericField>
@@ -110,7 +110,7 @@
             <MudNumericField T="int" Label=@L["Difficulty Level"] Value="_level" ValueChanged="l=>_level=l" Min="@DifficultyLevel.Min" Max="@DifficultyLevel.Max" HideSpinButtons="true" Clearable="false"></MudNumericField>
         </MudItem>
         <MudItem xs="6" sm="4" md="3">
-            <MudText>Rating: @_currentQualifiers.Rating(_level,_testScore).ToString("0.00")</MudText>
+            <MudText>@L["Rating"]: @_currentQualifiers.Rating(_level,_testScore).ToString("0.00")</MudText>
         </MudItem>
     </MudGrid>
 }
@@ -125,7 +125,7 @@
                 @if (_currentQualifiers!=null && _currentQualifiers.Submissions.TryGetValue(_submittingChart.Id, out var submission))
                 {
                     <MudItem xs="12">
-                        Current Score: @submission.Score (@_currentQualifiers.Rating(_submittingChart.Id).ToString("0.00") Points)
+                        @L["Score"]: @submission.Score (@_currentQualifiers.Rating(_submittingChart.Id).ToString("0.00") @L["Rating"])
                     </MudItem>
                 }
                 <MudItem xs="12">
@@ -137,7 +137,7 @@
                 @if (_addingMix == MixEnum.Phoenix)
                 {
                     <MudItem xs="12">
-                        <MudNumericField T="int" Min="0" Max="1000000" Label="Score" Value="_score" ValueChanged="i=>_score=i"></MudNumericField>
+                        <MudNumericField T="int" Min="0" Max="1000000" Label=@L["Score"] Value="_score" ValueChanged="i=>_score=i"></MudNumericField>
                     </MudItem>
                 }
                 else
@@ -169,7 +169,7 @@
                     <MudItem xs="12">
                         @if (Screen.IsValid)
                         {
-                            <MudText>Phoenix Score (with note count adjustments): @(new ScoreScreen(_perfects + _configuration.NoteCountAdjustments[_submittingChart.Id], _greats, _goods, _bads, _misses, _maxCombo + _configuration.NoteCountAdjustments[_submittingChart.Id]).CalculatePhoenixScore)</MudText>
+                            <MudText>@L["Score"]: @(new ScoreScreen(_perfects + _configuration.NoteCountAdjustments[_submittingChart.Id], _greats, _goods, _bads, _misses, _maxCombo + _configuration.NoteCountAdjustments[_submittingChart.Id]).CalculatePhoenixScore)</MudText>
                         }
                     </MudItem>
                 }
@@ -197,7 +197,7 @@
                                        Color="Color.Primary"
                                        StartIcon="@Icons.Material.Filled.CloudUpload"
                                        for="@context">
-                                Upload Image
+                                @L["Upload Image"]
                             </MudButton>
                         </ButtonTemplate>
                     </MudFileUpload>
@@ -207,9 +207,9 @@
     </DialogContent>
     <DialogActions>
         <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="AddScore" Disabled="_isSaving || !Validated">Add</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="AddScore" Disabled="_isSaving || !Validated">@L["Submit"]</MudButton>
 
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showSubmit = false">Close</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showSubmit = false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
 <MudDialog @bind-IsVisible="_showVideoDialog">
@@ -224,9 +224,9 @@
     <DialogActions>
         <MudSpacer></MudSpacer>
         <MudTooltip Text=@L["Report Video Tooltip"]>
-            <MudButton OnClick="NotifyBadVideo" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report">Report Video</MudButton>
+            <MudButton OnClick="NotifyBadVideo" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report">@L["Report Video"]</MudButton>
         </MudTooltip>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">Close</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
 @inject IMediator Mediator
@@ -380,28 +380,30 @@
             }
             _suggestedCharts.Add(nextChart.Value);
         }
-        if (!CurrentUser.IsLoggedIn)
+        if (CurrentUser.IsLoggedIn)
         {
-            return;
-        }
-        var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id))).ToDictionary(s=>s.ChartId);
-        var levelAverages = myScores.Values.Where(s => s.Score != null).GroupBy(s => (_charts[s.ChartId].Level,_charts[s.ChartId].Type))
-            .Where(g=>g.Count()>=10)
-            .ToDictionary(g => g.Key,
-                g => (int) g.Average(s => s.Score!.Value));
+            var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id))).ToDictionary(s=>s.ChartId);
+            var levelAverages = myScores.Values.Where(s => s.Score != null).GroupBy(s => (_charts[s.ChartId].Level,_charts[s.ChartId].Type))
+                .Where(g=>g.Count()>=10)
+                .ToDictionary(g => g.Key,
+                    g => (int) g.Average(s => s.Score!.Value));
 
-        var foundScores = _configuration.Charts.ToDictionary(c => c.Id, c => myScores.TryGetValue(c.Id, out var score) ? (int)score.Score!.Value :
-            levelAverages.TryGetValue((c.Level,c.Type), out var avg) ? avg : 0);
+            var foundScores = _configuration.Charts.ToDictionary(c => c.Id, c => myScores.TryGetValue(c.Id, out var score) ? (int)score.Score!.Value :
+                levelAverages.TryGetValue((c.Level,c.Type), out var avg) ? avg : 0);
 
-        foreach (var chart in _configuration.Charts.Where(s=>foundScores[s.Id]>PhoenixLetterGrade.AA.GetMinimumScore()).OrderByDescending(s =>
-            _currentQualifiers.Rating(s.Level,foundScores[s.Id])).Take(3))
-        {
-            if (!_suggestedCharts.Contains(chart.Id))
+            foreach (var chart in _configuration.Charts.Where(s=>foundScores[s.Id]>PhoenixLetterGrade.AA.GetMinimumScore()).OrderByDescending(s =>
+                _currentQualifiers.Rating(s.Level,foundScores[s.Id])).Take(3))
             {
-                _suggestedCharts.Add(chart.Id);
+                if (!_suggestedCharts.Contains(chart.Id))
+                {
+                    _suggestedCharts.Add(chart.Id);
+                }
             }
         }
-
+        foreach (var submission in _currentQualifiers.Submissions.Where(s => _suggestedCharts.Contains(s.Key)))
+        {
+            _suggestedCharts.Remove(submission.Key);
+        }
 
     }
     private async Task AddScore()
