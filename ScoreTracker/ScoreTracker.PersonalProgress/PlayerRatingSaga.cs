@@ -11,7 +11,8 @@ using ScoreTracker.PersonalProgress.Queries;
 namespace ScoreTracker.PersonalProgress
 {
     public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
-        IRequestHandler<GetTop50ForPlayerQuery, IEnumerable<RecordedPhoenixScore>>
+        IRequestHandler<GetTop50ForPlayerQuery, IEnumerable<RecordedPhoenixScore>>,
+        IConsumer<UserCreatedEvent>
     {
         private readonly IPhoenixRecordRepository _scores;
         private readonly IChartRepository _charts;
@@ -133,6 +134,12 @@ namespace ScoreTracker.PersonalProgress
                 .OrderByDescending(s =>
                     Scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level, s.Score!.Value))
                 .Take(50).ToArray();
+        }
+
+        public async Task Consume(ConsumeContext<UserCreatedEvent> context)
+        {
+            await _stats.SaveStats(context.Message.UserId,
+                new PlayerStatsRecord(0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1), context.CancellationToken);
         }
     }
 }

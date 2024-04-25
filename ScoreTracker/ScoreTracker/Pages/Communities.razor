@@ -39,24 +39,31 @@
             }
             else
             {
-                @if (_myCommunities.Contains(context.CommunityName))
+                @if (_myCommunities.Contains(context.CommunityName) && context.CommunityName!="World")
                 {
-                    <MudText>Joined!</MudText>
-                } else if (context.PrivacyType == CommunityPrivacyType.Public)
+                    <MudButton Disabled="_isSaving" OnClick="()=>Leave(context.CommunityName)" Color="Color.Warning" Variant="Variant.Filled">Leave</MudButton>
+                } else if (_myCommunities.Contains(context.CommunityName) && context.CommunityName == "World")
+                {
+                    <MudButton Disabled="_isSaving" Href="/Account" Target="_blank" Color="Color.Warning" Variant="Variant.Filled">Go Private</MudButton>
+                } else if (context.PrivacyType == CommunityPrivacyType.Public && context.CommunityName!="World")
                 {
                     <MudButton Disabled="_isSaving" OnClick="()=>Join(context.CommunityName)" Color="Color.Primary" Variant="Variant.Filled">Join</MudButton>
-                } else if (context.PrivacyType == CommunityPrivacyType.PublicWithCode)
+                } else if (context.PrivacyType == CommunityPrivacyType.Public && context.CommunityName == "World")
+                {
+                    <MudButton Disabled="_isSaving" Href="/Account" Target="_blank" Color="Color.Primary" Variant="Variant.Filled">Go Public</MudButton>
+                }
+                else if (context.PrivacyType == CommunityPrivacyType.PublicWithCode)
                 {
                     <MudText>Requires Invite</MudText>
                 } else if (context.PrivacyType == CommunityPrivacyType.Private)
                 {
-                    <Mudtext>Private</Mudtext>
+                    <MudText>Private</MudText>
                 }
             }
 
         </MudTd>
         <MudTd>
-            @if (_myCommunities.Contains(context.CommunityName) && context.CommunityName!="World")
+            @if (_myCommunities.Contains(context.CommunityName) && context.PrivacyType!=CommunityPrivacyType.Public)
             {
                 <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="()=>OpenCommunity(context.CommunityName)" StartIcon="@Icons.Material.Filled.Link">Invite</MudButton>
             }
@@ -180,6 +187,21 @@
         }
         _isSaving = false;
         
+    }
+
+    private async Task Leave(Name communityName)
+    {
+        _isSaving = true;
+        try
+        {
+            await Mediator.Send(new LeaveCommunityCommand(communityName));
+            _myCommunities.Remove(communityName);
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add("There was an error while leaving the community", Severity.Error);
+        }
+        _isSaving = false;
     }
 
     private Community? _community = null;

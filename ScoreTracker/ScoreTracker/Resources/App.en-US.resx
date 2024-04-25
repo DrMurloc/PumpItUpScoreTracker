@@ -287,7 +287,7 @@
     <value>Logout</value>
   </data>
   <data name="Make Not Public Disclaimer" xml:space="preserve">
-    <value>Making your account private will make your scores and progress no longer be externally visible, even for anyone already following you.</value>
+    <value>Making your account private will make your scores and progress no longer be externally visible, even for anyone already following you. You will be removed from the World community.</value>
   </data>
   <data name="Make Private" xml:space="preserve">
     <value>Make Private</value>
@@ -296,7 +296,7 @@
     <value>Make Public</value>
   </data>
   <data name="Make Public Disclaimer 1" xml:space="preserve">
-    <value>Making your account public will make your scores and progress externally visible. Others will be able to search for your account by name or ID.</value>
+    <value>Making your account public will make your scores and progress externally visible. You will be added to the World community as well.</value>
   </data>
   <data name="Make Public Disclaimer 2" xml:space="preserve">
     <value>If your account was previously public and you made it private, making it public again will make anyone following you able to see your progress again.</value>

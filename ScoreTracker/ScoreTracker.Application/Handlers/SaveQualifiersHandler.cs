@@ -47,7 +47,7 @@ namespace ScoreTracker.Application.Handlers
                         cancellationToken);
                 }*/
             }
-            else
+            else if (request.Qualifiers.Submissions.Count >= request.Qualifiers.Configuration.PlayCount)
             {
                 var oldPlace = orderedOldLeaderboard.First(kv => kv.q.UserName == user).Item2;
                 if (oldPlace != newPlace)
