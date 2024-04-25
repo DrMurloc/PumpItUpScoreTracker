@@ -672,4 +672,7 @@
   <data name="You are X place!" xml:space="preserve">
     <value>You are {0} Place!</value>
   </data>
+  <data name="Play Num" xml:space="preserve">
+    <value>Play at least {0}</value>
+  </data>
 </root>

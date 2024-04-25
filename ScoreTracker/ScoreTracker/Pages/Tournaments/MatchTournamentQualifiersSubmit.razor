@@ -34,6 +34,16 @@
     }
     @if (_currentQualifiers != null)
     {
+        @if (_currentQualifiers.Submissions.Count < _currentQualifiers.Configuration.PlayCount)
+        {
+
+            <MudItem xs="12">
+                <MudText Typo="Typo.h4">
+
+                    @L["Play Num", _currentQualifiers.Configuration.PlayCount]
+                </MudText>
+            </MudItem>
+        }
         @foreach (var chart in _configuration.Charts.OrderBy(c => c.Level))
         {
             <MudItem xs="6" sm="3" md="2">
