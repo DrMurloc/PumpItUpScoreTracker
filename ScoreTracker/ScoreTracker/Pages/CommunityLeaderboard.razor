@@ -66,12 +66,6 @@
                 <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => (int)e.ClearCount)">Clear Count</MudTableSortLabel>
             </MudTh>
         }
-        @if (_currentType != LeaderboardType.Total && _currentType != LeaderboardType.CoOp)
-        {
-            <MudTh>
-                View Charts
-            </MudTh>
-        }
     </HeaderContent>
     <RowTemplate>
         <MudTd>
@@ -84,7 +78,19 @@
             <MudTooltip Text="@context.UserId.ToString()">@context.PlayerName</MudTooltip>
         </MudTd>
         <MudTd>
-            <MudText Style=@($"color:{context.Color}")>@context.Rating</MudText>
+            @if (_currentType != LeaderboardType.Total && _currentType != LeaderboardType.CoOp)
+            {
+                <MudButton Variant="Variant.Text" Style=@($"color:{context.Color}") StartIcon="@Icons.Material.Filled.Visibility" OnClick="()=>ShowUserData(context.UserId, _currentType == LeaderboardType.Singles ? ChartType.Single : _currentType == LeaderboardType.Doubles ? ChartType.Double : null)">
+                    @context.Rating
+                </MudButton>
+            }
+            else
+            {
+                
+                <MudText Style=@($"color:{context.Color}")>
+                    @context.Rating
+                </MudText>
+            }
 
         </MudTd>
         @if (_currentType != LeaderboardType.Total)
@@ -95,8 +101,11 @@
                     @context.AverageLevel.ToString("0.000")
                 </MudTd>
                 <MudTd>
-                    @context.CompetitiveLevel.ToString("0.000")
-                </MudTd>
+                    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Visibility" OnClick="()=>ShowUserCompetitiveData(context.UserId, _currentType == LeaderboardType.Singles ? ChartType.Single : _currentType == LeaderboardType.Doubles ? ChartType.Double : null)">
+                    
+                        @context.CompetitiveLevel.ToString("0.000")
+                    </MudButton>
+                    </MudTd>
             }
             <MudTd>
                 @context.Score (@context.Score.LetterGrade.GetName())
@@ -111,12 +120,6 @@
             <MudTh>
                 @context.ClearCount
             </MudTh>
-        }
-        @if (_currentType != LeaderboardType.Total && _currentType != LeaderboardType.CoOp)
-        {
-            <MudTd>
-                <MudButton StartIcon="@Icons.Material.Filled.ViewList" Variant="Variant.Text" OnClick="() => ShowUserData(context.UserId, _currentType == LeaderboardType.Singles ? ChartType.Single : _currentType == LeaderboardType.Doubles ? ChartType.Double : null)">View Charts</MudButton>
-            </MudTd>
         }
     </RowTemplate>
     <ChildRowContent>
@@ -136,7 +139,7 @@
                                         <MudImage Src="@entry.Chart.DifficultyBubblePath" Height="35" Alt="@entry.Chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
 
                                     </MudTooltip>
-                                    <MudTooltip Text=@($"{entry.Rating} Rating")>
+                                    <MudTooltip Text=@($"{entry.CompetitiveLevel:0.000}, {entry.Rating} Rating")>
                                         <MudText>
                                             @entry.Score (@entry.Score.LetterGrade.GetName())
                                         </MudText>
@@ -170,6 +173,23 @@
     private Guid _showingUserId = Guid.Empty;
     private ChartType? _chartType = null;
     private int Colspan => _currentType == LeaderboardType.CoOp ? 4 : _currentType == LeaderboardType.Total ? 5 : 6;
+    private async Task ShowUserCompetitiveData(Guid userId, ChartType? chartType)
+    {
+        if (_showingUserId == userId && _chartType == chartType)
+        {
+            _showingUserId = Guid.Empty;
+            _chartType = null;
+            return;
+        }
+        var scoringConfig = PlayerRatingSaga.Scoring;
+
+        _scores = (await Mediator.Send(new GetTop50CompetitiveQuery(userId, chartType)))
+            .Select(s => new ScoreEntry(_charts[s.ChartId], s.Score ?? 0, scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false), ScoringConfiguration.CalculateFungScore(_charts[s.ChartId].Level, s.Score ?? 0)))
+            .ToArray();
+        _showingUserId = userId;
+        _chartType = chartType;
+
+    }
     private async Task ShowUserData(Guid userId, ChartType? chartType)
     {
         if (_showingUserId == userId && _chartType==chartType)
@@ -181,7 +201,7 @@
         var scoringConfig = PlayerRatingSaga.Scoring;
 
         _scores = (await Mediator.Send(new GetTop50ForPlayerQuery(userId, chartType)))
-            .Select(s => new ScoreEntry(_charts[s.ChartId], s.Score ?? 0, scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false)))
+            .Select(s => new ScoreEntry(_charts[s.ChartId], s.Score ?? 0, scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false),ScoringConfiguration.CalculateFungScore(_charts[s.ChartId].Level,s.Score??0)))
             .ToArray();
         _showingUserId = userId;
         _chartType = chartType;
@@ -245,7 +265,7 @@
         }
         _currentType = type;
     }
-    private sealed record ScoreEntry(Chart Chart, PhoenixScore Score, int Rating);
+    private sealed record ScoreEntry(Chart Chart, PhoenixScore Score, int Rating, double CompetitiveLevel);
 
     private sealed record LeaderboardEntry(int place,Uri ProfileImage, Name PlayerName, Guid UserId, int Rating, PhoenixScore Score, double AverageLevel, double CompetitiveLevel, string Color, int HighestLevel, int ClearCount)
     {

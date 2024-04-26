@@ -12,6 +12,7 @@ namespace ScoreTracker.PersonalProgress;
 
 public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
     IRequestHandler<GetTop50ForPlayerQuery, IEnumerable<RecordedPhoenixScore>>,
+    IRequestHandler<GetTop50CompetitiveQuery, IEnumerable<RecordedPhoenixScore>>,
     IRequestHandler<PlayerRatingSaga.RecalculateStats>,
     IConsumer<UserCreatedEvent>
 {
@@ -69,6 +70,10 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
     {
     }
 
+    private sealed record ChartCompetitive(Guid ChartId, ChartType Type, double CompetitiveLevel, PhoenixScore Score)
+    {
+    }
+
     public async Task<IEnumerable<RecordedPhoenixScore>> Handle(GetTop50ForPlayerQuery request,
         CancellationToken cancellationToken)
     {
@@ -108,6 +113,10 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
                 Scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level,
                     s.Score!.Value), s.Score!.Value))
             .ToArray();
+        var competitiveScores = recorded.Where(s => s.Score != null)
+            .Select(s => new ChartCompetitive(s.ChartId, charts[s.ChartId].Type,
+                ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score!.Value),
+                s.Score!.Value)).ToArray();
 
         var top50 = scores
             .Where(s => s.Type != ChartType.CoOp)
@@ -125,11 +134,14 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
         var coOps = scores.Where(s => s.Type == ChartType.CoOp)
             .ToArray();
         var competitive =
-            top50.Sum(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score)) / 50.0;
+            competitiveScores.OrderByDescending(e => e.CompetitiveLevel).Take(50).Sum(s => s.CompetitiveLevel) / 50.0;
         var competitiveSingles =
-            top50Singles.Sum(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score)) / 50.0;
+            competitiveScores.Where(s => s.Type == ChartType.Single)
+                .OrderByDescending(s => s.CompetitiveLevel)
+                .Take(50).Sum(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score)) / 50.0;
         var competitiveDoubles =
-            top50Doubles.Sum(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score)) / 50.0;
+            competitiveScores.Where(s => s.Type == ChartType.Double).OrderByDescending(s => s.CompetitiveLevel)
+                .Take(50).Sum(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score)) / 50.0;
 
         var newStats = new PlayerStatsRecord(scores.Sum(s => s.Rating),
             recorded.Any(r => !r.IsBroken) ? recorded.Where(r => !r.IsBroken).Max(r => charts[r.ChartId].Level) : 1,
@@ -162,5 +174,21 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
             cancellationToken);
         await _mediator.Publish(new PlayerStatsUpdatedEvent(request.UserId, newStats),
             cancellationToken);
+    }
+
+    public async Task<IEnumerable<RecordedPhoenixScore>> Handle(GetTop50CompetitiveQuery request,
+        CancellationToken cancellationToken)
+    {
+        var charts =
+            (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
+            .ToDictionary(c => c.Id);
+
+        return (await _scores.GetRecordedScores(request.UserId, cancellationToken))
+            .Where(s => charts[s.ChartId].Type != ChartType.CoOp)
+            .Where(s => s.Score != null && (request.ChartType == null ||
+                                            charts[s.ChartId].Type == request.ChartType))
+            .OrderByDescending(s =>
+                ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score!.Value))
+            .Take(50).ToArray();
     }
 }
