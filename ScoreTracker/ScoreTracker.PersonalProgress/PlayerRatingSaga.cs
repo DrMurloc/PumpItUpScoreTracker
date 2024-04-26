@@ -135,14 +135,17 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
         var coOps = scores.Where(s => s.Type == ChartType.CoOp)
             .ToArray();
         var competitive =
-            competitiveScores.OrderByDescending(e => e.CompetitiveLevel).Take(100).Sum(s => s.CompetitiveLevel) / 100.0;
+            AvgOr0(competitiveScores.OrderByDescending(e => e.CompetitiveLevel).Take(100)
+                .Select(s => s.CompetitiveLevel).ToArray());
         var competitiveSingles =
-            competitiveScores.Where(s => s.Type == ChartType.Single)
+            AvgOr0(competitiveScores.Where(s => s.Type == ChartType.Single)
                 .OrderByDescending(s => s.CompetitiveLevel)
-                .Take(100).Sum(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score)) / 100.0;
+                .Take(100).Select(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score))
+                .ToArray());
         var competitiveDoubles =
-            competitiveScores.Where(s => s.Type == ChartType.Double).OrderByDescending(s => s.CompetitiveLevel)
-                .Take(100).Sum(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score)) / 100.0;
+            AvgOr0(competitiveScores.Where(s => s.Type == ChartType.Double).OrderByDescending(s => s.CompetitiveLevel)
+                .Take(100).Select(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score))
+                .ToArray());
 
         var newStats = new PlayerStatsRecord(scores.Sum(s => s.Rating),
             recorded.Any(r => !r.IsBroken) ? recorded.Where(r => !r.IsBroken).Max(r => charts[r.ChartId].Level) : 1,
@@ -192,5 +195,10 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
                 ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score!.Value,
                     charts[s.ChartId].Type))
             .Take(100).ToArray();
+    }
+
+    private static double AvgOr0(double[] charts)
+    {
+        return charts.Any() ? charts.Average() : 0;
     }
 }
