@@ -217,15 +217,14 @@ namespace ScoreTracker.Application.Handlers
             var message = $"**{user.Name}**'s top 50 rating has improved!";
             if (context.Message.NewTop50 > context.Message.OldTop50)
                 message += $@"
-- Top 50 improved from {context.Message.OldTop50} to {context.Message.NewTop50} (+{context.Message.NewTop50 - context.Message.OldTop50})";
-
+- Top 50 improved to {context.Message.NewTop50}, {context.Message.NewCompetitive} (+{context.Message.NewTop50 - context.Message.OldTop50}, +{context.Message.NewCompetitive - context.Message.OldCompetitive:0.00000})";
             if (context.Message.NewSinglesTop50 > context.Message.OldSinglesTop50)
                 message += $@"
-- Top 50 Singles improved from {context.Message.OldSinglesTop50} to {context.Message.NewSinglesTop50} (+{context.Message.NewSinglesTop50 - context.Message.OldSinglesTop50})";
+- Top 50 Singles to {context.Message.NewSinglesTop50}, {context.Message.NewSinglesCompetitive} (+{context.Message.NewSinglesTop50 - context.Message.OldSinglesTop50}, +{context.Message.NewSinglesCompetitive - context.Message.OldSinglesCompetitive:0.00000})";
 
             if (context.Message.NewDoublesTop50 > context.Message.OldDoublesTop50)
                 message += $@"
-- Top 50 Doubles improved from {context.Message.OldDoublesTop50} to {context.Message.NewDoublesTop50} (+{context.Message.NewDoublesTop50 - context.Message.OldDoublesTop50})";
+- Top 50 Doubles improved to {context.Message.NewDoublesTop50}, {context.Message.NewDoublesCompetitive} (+{context.Message.NewDoublesTop50 - context.Message.OldDoublesTop50}, {context.Message.NewDoublesCompetitive - context.Message.OldDoublesCompetitive:0.00000})";
 
             await SendToCommunityDiscords(context.Message.UserId, message, context.CancellationToken);
         }

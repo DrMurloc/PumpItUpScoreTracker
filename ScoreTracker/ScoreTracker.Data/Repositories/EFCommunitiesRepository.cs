@@ -167,7 +167,8 @@ namespace ScoreTracker.Data.Repositories
                         ps.TotalRating, ps.HighestLevel, ps.ClearCount,
                         ps.CoOpRating, ps.AverageCoOpScore, ps.SkillRating, ps.AverageSkillScore, ps.AverageSkillLevel,
                         ps.SinglesRating, ps.AverageSinglesScore, ps.AverageSinglesLevel, ps.DoublesRating,
-                        ps.AverageDoublesScore, ps.AverageDoublesLevel))
+                        ps.AverageDoublesScore, ps.AverageDoublesLevel, ps.CompetitiveLevel, ps.SinglesCompetitiveLevel,
+                        ps.DoublesCompetitiveLevel))
                 .ToArrayAsync(cancellationToken);
         }
 

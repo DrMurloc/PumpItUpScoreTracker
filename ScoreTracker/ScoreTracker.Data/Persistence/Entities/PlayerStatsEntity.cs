@@ -19,5 +19,8 @@ namespace ScoreTracker.Data.Persistence.Entities
         public int AverageDoublesScore { get; set; }
         public int CoOpRating { get; set; }
         public int AverageCoOpScore { get; set; }
+        public double CompetitiveLevel { get; set; }
+        public double SinglesCompetitiveLevel { get; set; }
+        public double DoublesCompetitiveLevel { get; set; }
     }
 }

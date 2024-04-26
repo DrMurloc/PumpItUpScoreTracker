@@ -6,7 +6,8 @@ namespace ScoreTracker.Domain.Records
         Rating CoOpRating,
         PhoenixScore CoOpScore, Rating SkillRating, PhoenixScore SkillScore, double SkillLevel,
         Rating SinglesRating, PhoenixScore SinglesScore, double SinglesLevel, Rating DoublesRating,
-        PhoenixScore DoublesScore, double DoublesLevel)
+        PhoenixScore DoublesScore, double DoublesLevel, double CompetitiveLevel, double SinglesCompetitiveLevel,
+        double DoublesCompetitiveLevel)
     {
     }
 }

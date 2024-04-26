@@ -39,7 +39,10 @@ namespace ScoreTracker.Data.Repositories
                     AverageSkillLevel = newStats.SkillLevel,
                     AverageSkillScore = newStats.SkillScore,
                     HighestLevel = newStats.HighestLevel,
-                    ClearCount = newStats.ClearCount
+                    ClearCount = newStats.ClearCount,
+                    CompetitiveLevel = newStats.CompetitiveLevel,
+                    SinglesCompetitiveLevel = newStats.SinglesCompetitiveLevel,
+                    DoublesCompetitiveLevel = newStats.DoublesCompetitiveLevel
                 }, cancellationToken);
             }
             else
@@ -58,6 +61,9 @@ namespace ScoreTracker.Data.Repositories
                 entity.AverageSkillScore = newStats.SkillScore;
                 entity.HighestLevel = newStats.HighestLevel;
                 entity.ClearCount = newStats.ClearCount;
+                entity.CompetitiveLevel = newStats.CompetitiveLevel;
+                entity.SinglesCompetitiveLevel = newStats.SinglesCompetitiveLevel;
+                entity.DoublesCompetitiveLevel = newStats.DoublesCompetitiveLevel;
             }
 
             await _database.SaveChangesAsync(cancellationToken);
@@ -67,13 +73,14 @@ namespace ScoreTracker.Data.Repositories
         {
             var entity =
                 await _database.PlayerStats.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
-            if (entity == null) return new PlayerStatsRecord(0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+            if (entity == null) return new PlayerStatsRecord(0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1);
 
             return new PlayerStatsRecord(entity.TotalRating, entity.HighestLevel, entity.ClearCount, entity.CoOpRating,
                 entity.AverageCoOpScore, entity.SkillRating, entity.AverageSkillScore, entity.AverageSkillLevel,
                 entity.SinglesRating,
                 entity.AverageSinglesScore, entity.AverageSinglesLevel, entity.DoublesRating,
-                entity.AverageDoublesScore, entity.AverageDoublesLevel);
+                entity.AverageDoublesScore, entity.AverageDoublesLevel, entity.CompetitiveLevel,
+                entity.SinglesCompetitiveLevel, entity.DoublesCompetitiveLevel);
         }
 
         public async Task<PlayerStatsRecord> Handle(GetPlayerStatsQuery request, CancellationToken cancellationToken)

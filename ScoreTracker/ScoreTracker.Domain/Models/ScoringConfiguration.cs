@@ -181,6 +181,11 @@ namespace ScoreTracker.Domain.Models
             Avalanche,
             Custom
         }
+
+        public static double CalculateFungScore(DifficultyLevel level, PhoenixScore score)
+        {
+            return level + (score - 965000.0) / 17500.0;
+        }
     }
 }
 
