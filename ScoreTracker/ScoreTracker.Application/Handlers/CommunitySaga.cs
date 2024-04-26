@@ -230,17 +230,17 @@ namespace ScoreTracker.Application.Handlers
                 context.Message.NewCompetitive.ToString("0.00000") !=
                 context.Message.OldCompetitive.ToString("0.00000"))
                 message += $@"
-- Competitive Level improved to {context.Message.NewCompetitive} (+{context.Message.NewCompetitive - context.Message.OldCompetitive:0.00000})";
+- Competitive Level improved to {context.Message.NewCompetitive:0.00000} (+{context.Message.NewCompetitive - context.Message.OldCompetitive:0.00000})";
             if (context.Message.NewSinglesCompetitive > context.Message.OldSinglesCompetitive &&
                 context.Message.NewSinglesCompetitive.ToString("0.00000") !=
                 context.Message.OldSinglesCompetitive.ToString("0.00000"))
                 message += $@"
-- Singles Competitive Level improved to {context.Message.NewSinglesCompetitive} (+{context.Message.NewSinglesCompetitive - context.Message.OldSinglesCompetitive:0.00000})";
+- Singles Competitive Level improved to {context.Message.NewSinglesCompetitive:0.00000} (+{context.Message.NewSinglesCompetitive - context.Message.OldSinglesCompetitive:0.00000})";
             if (context.Message.NewDoublesCompetitive > context.Message.OldDoublesCompetitive &&
                 context.Message.NewDoublesCompetitive.ToString("0.00000") !=
                 context.Message.OldDoublesCompetitive.ToString("0.00000"))
                 message += $@"
-- Doubles Competitive Level improved to {context.Message.NewDoublesCompetitive} (+{context.Message.NewDoublesCompetitive - context.Message.OldDoublesCompetitive:0.00000})";
+- Doubles Competitive Level improved to {context.Message.NewDoublesCompetitive:0.00000} (+{context.Message.NewDoublesCompetitive - context.Message.OldDoublesCompetitive:0.00000})";
             await SendToCommunityDiscords(context.Message.UserId, message, context.CancellationToken);
         }
 

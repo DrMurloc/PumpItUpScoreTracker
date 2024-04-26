@@ -115,7 +115,8 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
             .ToArray();
         var competitiveScores = recorded.Where(s => s.Score != null)
             .Select(s => new ChartCompetitive(s.ChartId, charts[s.ChartId].Type,
-                ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score!.Value),
+                ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score!.Value,
+                    charts[s.ChartId].Type),
                 s.Score!.Value)).ToArray();
 
         var top50 = scores
@@ -134,14 +135,14 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
         var coOps = scores.Where(s => s.Type == ChartType.CoOp)
             .ToArray();
         var competitive =
-            competitiveScores.OrderByDescending(e => e.CompetitiveLevel).Take(50).Sum(s => s.CompetitiveLevel) / 50.0;
+            competitiveScores.OrderByDescending(e => e.CompetitiveLevel).Take(100).Sum(s => s.CompetitiveLevel) / 100.0;
         var competitiveSingles =
             competitiveScores.Where(s => s.Type == ChartType.Single)
                 .OrderByDescending(s => s.CompetitiveLevel)
-                .Take(50).Sum(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score)) / 50.0;
+                .Take(100).Sum(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score)) / 100.0;
         var competitiveDoubles =
             competitiveScores.Where(s => s.Type == ChartType.Double).OrderByDescending(s => s.CompetitiveLevel)
-                .Take(50).Sum(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score)) / 50.0;
+                .Take(100).Sum(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score)) / 100.0;
 
         var newStats = new PlayerStatsRecord(scores.Sum(s => s.Rating),
             recorded.Any(r => !r.IsBroken) ? recorded.Where(r => !r.IsBroken).Max(r => charts[r.ChartId].Level) : 1,
@@ -188,7 +189,8 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
             .Where(s => s.Score != null && (request.ChartType == null ||
                                             charts[s.ChartId].Type == request.ChartType))
             .OrderByDescending(s =>
-                ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score!.Value))
-            .Take(50).ToArray();
+                ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score!.Value,
+                    charts[s.ChartId].Type))
+            .Take(100).ToArray();
     }
 }

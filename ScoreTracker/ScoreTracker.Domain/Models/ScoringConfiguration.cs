@@ -182,9 +182,11 @@ namespace ScoreTracker.Domain.Models
             Custom
         }
 
-        public static double CalculateFungScore(DifficultyLevel level, PhoenixScore score)
+        public static double CalculateFungScore(DifficultyLevel level, PhoenixScore score, ChartType? type = null)
         {
-            return level + (score - 965000.0) / 17500.0;
+            var adjust = (score - 965000.0) / 17500.0;
+            if (type == ChartType.Single && level > 19) adjust *= Math.Pow(1.04, level - 19);
+            return level + adjust;
         }
     }
 }

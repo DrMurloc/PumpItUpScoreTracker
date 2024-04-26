@@ -136,13 +136,13 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
             _logger.LogInformation($"Page {currentPage}");
         }
 
-        var hasUpscore = false;
+        var pagesWithNoUpscore = 0;
         var bestScores =
             (await _phoenixRecords.GetRecordedScores(_currentUser.User.Id, cancellationToken)).ToDictionary(r =>
                 r.ChartId);
-        while (hasUpscore)
+        while (pagesWithNoUpscore <= 3)
         {
-            hasUpscore = false;
+            pagesWithNoUpscore++;
             var nextPage = await _piuGame.GetBestScores(sessionId, currentPage, cancellationToken);
             await _mediator.Publish(
                 new ImportStatusUpdated(_currentUser.User.Id, $"Reading page {currentPage} (Up-scores)",
@@ -160,7 +160,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
                 if (score.Score <= (bestScores[chart.Id].Score ?? 0)) continue;
 
                 responses.Add(score);
-                hasUpscore = true;
+                pagesWithNoUpscore = 0;
             }
         }
 
