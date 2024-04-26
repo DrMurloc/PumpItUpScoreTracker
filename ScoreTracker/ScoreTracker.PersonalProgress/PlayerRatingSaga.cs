@@ -31,7 +31,7 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
         _mediator = mediator;
     }
 
-    public static readonly ScoringConfiguration Scoring = CreateScoring();
+    public static ScoringConfiguration Scoring => CreateScoring();
 
     private static ScoringConfiguration CreateScoring()
     {
@@ -39,6 +39,7 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
         {
             ContinuousLetterGradeScale = true
         };
+        result.AdjustToTime = false;
         result.PgLetterGradeModifier = 1.6;
         result.LevelRatings[1] = 10;
         result.LevelRatings[2] = 20;
