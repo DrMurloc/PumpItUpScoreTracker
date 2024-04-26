@@ -7,6 +7,7 @@ using ScoreTracker.Domain.Models.Titles;
 using ScoreTracker.Domain.Models.Titles.Phoenix;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.ValueTypes;
 using ScoreTracker.PersonalProgress.Queries;
 
 namespace ScoreTracker.Application.Handlers
@@ -18,17 +19,24 @@ namespace ScoreTracker.Application.Handlers
         private readonly IMediator _mediator;
         private readonly ICurrentUserAccessor _currentUser;
         private readonly IUserRepository _users;
+        private readonly IPlayerStatsRepository _stats;
 
-        public RecommendedChartsSaga(IMediator mediator, ICurrentUserAccessor currentUser, IUserRepository users)
+        public RecommendedChartsSaga(IMediator mediator, ICurrentUserAccessor currentUser, IUserRepository users,
+            IPlayerStatsRepository stats)
         {
             _mediator = mediator;
             _currentUser = currentUser;
             _users = users;
+            _stats = stats;
         }
 
         public async Task<IEnumerable<ChartRecommendation>> Handle(GetRecommendedChartsQuery request,
             CancellationToken cancellationToken)
         {
+            var competitiveLevel =
+                DifficultyLevel.From((int)Math.Round((await _stats.GetStats(_currentUser.User.Id, cancellationToken))
+                    .CompetitiveLevel));
+            if (competitiveLevel < 2) competitiveLevel = 10;
             var titles = (await _mediator.Send(new GetTitleProgressQuery(MixEnum.Phoenix), cancellationToken))
                 .ToArray();
             var scores = (await _mediator.Send(new GetPhoenixRecordsQuery(_currentUser.User.Id), cancellationToken))
@@ -38,11 +46,11 @@ namespace ScoreTracker.Application.Handlers
                 .GroupBy(u => u.SuggestionCategory.ToString()).ToDictionary(g => g.Key,
                     g => (ISet<Guid>)g.Select(i => i.ChartId).Distinct().ToHashSet());
             return (await GetPushLevels(feedback, cancellationToken, titles, scores))
-                .Concat(await GetPassFills(feedback, cancellationToken, titles, scores))
+                .Concat(await GetPassFills(feedback, cancellationToken, competitiveLevel, scores))
                 .Concat(await GetSkillTitleCharts(feedback, cancellationToken, titles))
                 .Concat(await GetPGPushes(feedback, cancellationToken, scores))
                 .Concat(await GetRandomFromTop50Charts(feedback, cancellationToken))
-                .Concat(await GetWeakCharts(cancellationToken, titles, scores, feedback)).ToArray();
+                .Concat(await GetWeakCharts(cancellationToken, competitiveLevel, scores, feedback)).ToArray();
         }
 
         private sealed record OrderedTitle(TitleProgress t, int i)
@@ -50,7 +58,8 @@ namespace ScoreTracker.Application.Handlers
         }
 
         private async Task<IEnumerable<ChartRecommendation>> GetWeakCharts(CancellationToken cancellationToken,
-            TitleProgress[] allTitles, RecordedPhoenixScore[] scores, IDictionary<string, ISet<Guid>> ignoredChartIds)
+            DifficultyLevel competitiveLevel, RecordedPhoenixScore[] scores,
+            IDictionary<string, ISet<Guid>> ignoredChartIds)
         {
             if (scores.Length <= 12)
                 return scores.Where(s => s.Score != null && s.Score < 1000000).Select(s =>
@@ -60,10 +69,8 @@ namespace ScoreTracker.Application.Handlers
             var skipped = ignoredChartIds.TryGetValue("Skill Up", out var charts) ? charts : new HashSet<Guid>();
 
 
-            var pushLevel = allTitles.GetPushingTitle();
-            var titleLevel = (pushLevel.Title as PhoenixDifficultyTitle)!.Level;
-            var toFind = new[]
-                { titleLevel - 2, titleLevel - 3, titleLevel - 4, titleLevel - 5 };
+            var titleLevel = competitiveLevel;
+            int[] toFind = { titleLevel, titleLevel - 1, titleLevel - 2, titleLevel - 3 };
             var random = new Random();
 
             var result = new List<ChartRecommendation>();
@@ -96,17 +103,17 @@ namespace ScoreTracker.Application.Handlers
             IDictionary<string, ISet<Guid>> ignoredChartIds,
             CancellationToken cancellationToken)
         {
-            var skipped = ignoredChartIds.TryGetValue("Improve Your Top 50", out var r) ? r : new HashSet<Guid>();
+            var skipped = ignoredChartIds.TryGetValue("Improve Your Top 100", out var r) ? r : new HashSet<Guid>();
             var random = new Random();
             var charts =
-                await _mediator.Send(new GetTop50ForPlayerQuery(_currentUser.User.Id, null), cancellationToken);
+                await _mediator.Send(new GetTop50CompetitiveQuery(_currentUser.User.Id, null), cancellationToken);
             return charts
                 .Where(c => c.Score != null && c.Score < 1000000)
                 .Where(c => !skipped.Contains(c.ChartId))
                 .OrderBy(c => random.Next())
                 .Take(6)
                 .Select(c => new ChartRecommendation("Improve Your Top 50", c.ChartId,
-                    "These are randomly pulled from your best 50 charts based on rating. Push that score!"));
+                    "These are randomly pulled from your best 100 charts based on competitive score. Push that score!"));
         }
 
         private async Task<IEnumerable<ChartRecommendation>> GetSkillTitleCharts(
@@ -143,17 +150,17 @@ namespace ScoreTracker.Application.Handlers
 
         private async Task<IEnumerable<ChartRecommendation>> GetPassFills(
             IDictionary<string, ISet<Guid>> ignoredChartIds, CancellationToken cancellationToken,
-            TitleProgress[] allTitles, RecordedPhoenixScore[] scores)
+            DifficultyLevel competitiveLevel, RecordedPhoenixScore[] scores)
         {
             var skipped = ignoredChartIds.TryGetValue("Fill Scores", out var c) ? c : new HashSet<Guid>();
 
-            var pushLevel = (allTitles.GetPushingTitle().Title as PhoenixDifficultyTitle)!.Level;
+            var pushLevel = competitiveLevel;
 
             var charts = (
                     await _mediator.Send(
                         new GetChartsQuery(MixEnum.Phoenix),
                         cancellationToken))
-                .Where(c => c.Level >= pushLevel - 4 && c.Level <= pushLevel - 1).ToDictionary(c => c.Id);
+                .Where(c => c.Level >= pushLevel - 3 && c.Level <= pushLevel).ToDictionary(c => c.Id);
 
             var myScores = scores
                 .ToDictionary(s => s.ChartId);
