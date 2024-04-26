@@ -13,6 +13,7 @@
 @using MassTransit
 @using ScoreTracker.Application.Handlers
 @using ScoreTracker.Domain.Events
+@using ScoreTracker.Domain.Records
 @using ScoreTracker.PersonalProgress
 
 <PageTitle>Admin</PageTitle>
@@ -126,6 +127,7 @@ Do It
         </MudGrid>
     </MudCardContent>
 </MudCard>
+
 @inject ICurrentUserAccessor CurrentUser;
 @inject IChartRepository _charts;
 @inject IOfficialLeaderboardRepository OfficialLeaderboards;
@@ -140,7 +142,7 @@ Do It
 @inject ChartAttemptDbContext Database;
 @code
 {
-    private MudAutocomplete<string> _autocomplete;
+    private MudAutocomplete<string> _autocomplete;   
     private Chart? _selectedChart;
     private string _songSearchString = string.Empty;
     private Chart[] Charts = Array.Empty<Chart>();
@@ -260,12 +262,15 @@ Do It
         }
         _isReCalculating = false;
     }
+
+    private IList<PlayerStatsRecord> _stats = new List<PlayerStatsRecord>();
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUser.User.IsAdmin)
         {
             NavManager.NavigateTo("/");
         }
+
         SongNames = (await Mediator.Send(new GetChartsQuery(await UiSettings.GetSelectedMix()))).Select(c => c.Song.Name.ToString()).Distinct().ToArray();
     }
 
