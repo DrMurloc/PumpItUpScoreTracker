@@ -157,7 +157,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
                 var chart = (await _charts.GetChartsForSong(MixEnum.Phoenix, song, cancellationToken))
                     .FirstOrDefault(c => c.Type == score.ChartType && c.Level == score.Level);
                 if (chart == null) continue;
-                if (score.Score <= (bestScores[chart.Id].Score ?? 0)) continue;
+                if (bestScores.ContainsKey(chart.Id) && score.Score <= (bestScores[chart.Id].Score ?? 0)) continue;
 
                 responses.Add(score);
                 pagesWithNoUpscore = 0;
