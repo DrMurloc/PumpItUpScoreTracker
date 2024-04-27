@@ -5,7 +5,7 @@ using ScoreTracker.Domain.Exceptions;
 
 namespace ScoreTracker.Domain.ValueTypes;
 
-public readonly struct PhoenixScore
+public readonly struct PhoenixScore : IComparable<PhoenixScore>, IComparable<int>, IComparable
 {
     private readonly int _score;
 
@@ -25,6 +25,15 @@ public readonly struct PhoenixScore
     public override string ToString()
     {
         return _score.ToString();
+    }
+
+    public int CompareTo(object? obj)
+    {
+        if (obj is PhoenixScore score) return CompareTo(score);
+
+        if (obj is int intScore) return CompareTo(intScore);
+
+        return 0;
     }
 
     public static implicit operator PhoenixScore(int scoreInt)
@@ -55,6 +64,16 @@ public readonly struct PhoenixScore
     public static bool operator <(PhoenixScore v1, PhoenixScore v2)
     {
         return v2 > v1;
+    }
+
+    public int CompareTo(PhoenixScore other)
+    {
+        return _score.CompareTo(other._score);
+    }
+
+    public int CompareTo(int other)
+    {
+        return _score.CompareTo(other);
     }
 
     public override bool Equals(object? obj)

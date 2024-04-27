@@ -4,7 +4,8 @@ using ScoreTracker.Domain.Exceptions;
 
 namespace ScoreTracker.Domain.ValueTypes;
 
-public readonly struct DifficultyLevel : IComparable<DifficultyLevel>
+public readonly struct DifficultyLevel : IComparable<DifficultyLevel>,
+    IComparable<int>, IComparable
 {
     private readonly int _level;
 
@@ -19,6 +20,15 @@ public readonly struct DifficultyLevel : IComparable<DifficultyLevel>
     public override string ToString()
     {
         return _level.ToString();
+    }
+
+    public int CompareTo(object? obj)
+    {
+        if (obj is DifficultyLevel level) return CompareTo(level);
+
+        if (obj is int lvl) return CompareTo(lvl);
+
+        return 0;
     }
 
     public static implicit operator DifficultyLevel(int levelInt)
@@ -39,6 +49,11 @@ public readonly struct DifficultyLevel : IComparable<DifficultyLevel>
     public static bool operator !=(DifficultyLevel v1, DifficultyLevel v2)
     {
         return !v1.Equals(v2);
+    }
+
+    public int CompareTo(int other)
+    {
+        return _level.CompareTo(other);
     }
 
     public override bool Equals(object? obj)
