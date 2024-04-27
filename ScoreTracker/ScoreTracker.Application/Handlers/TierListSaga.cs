@@ -17,16 +17,18 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     private readonly ITierListRepository _tierLists;
     private readonly IPhoenixRecordRepository _scores;
     private readonly ICurrentUserAccessor _currentUser;
+    private readonly IPlayerStatsRepository _playerStats;
 
     public TierListSaga(IChartDifficultyRatingRepository chartRatings, IChartRepository chartRepository,
         ITierListRepository tierLists, IPhoenixRecordRepository scores,
-        ICurrentUserAccessor currentUser)
+        ICurrentUserAccessor currentUser, IPlayerStatsRepository playerStats)
     {
         _chartRatings = chartRatings;
         _chartRepository = chartRepository;
         _tierLists = tierLists;
         _scores = scores;
         _currentUser = currentUser;
+        _playerStats = playerStats;
     }
 
 
@@ -94,16 +96,25 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         for (var level = 1; level <= 28; level++)
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
             {
-                var filtered = await _chartRepository.GetCharts(MixEnum.Phoenix, level, chartType,
-                    cancellationToken: context.CancellationToken);
-
                 var allPhoenixScores = (await _scores.GetAllPlayerScores(chartType, level, context.CancellationToken))
                     .Where(s => s.record.Score != null)
-                    .GroupBy(r => r.userId).ToDictionary(g => g.Key.ToString(),
-                        g => (IDictionary<Guid, PhoenixScore>)g.ToDictionary(p => p.userId,
+                    .GroupBy(r => r.userId).ToDictionary(g => g.Key,
+                        g => (IDictionary<Guid, PhoenixScore>)g.ToDictionary(p => p.record.ChartId,
                             p => p.record.Score!.Value));
+                var userIds = allPhoenixScores.Keys;
+                var stats = new Dictionary<Guid, double>();
+                foreach (var userId in userIds)
+                {
+                    var record = await _playerStats.GetStats(userId, context.CancellationToken);
+                    stats[userId] = level + .5 - (chartType is ChartType.Single
+                        ? record.SinglesCompetitiveLevel
+                        : record.DoublesCompetitiveLevel);
+                }
 
-                var results = ProcessIntoTierList(allPhoenixScores, level, "Scores");
+                var weights = stats.ToDictionary(kv => kv.Key.ToString(), kv => Math.Pow(.5, Math.Abs(kv.Value)));
+                var results =
+                    ProcessIntoTierList(allPhoenixScores.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value), level,
+                        "Scores", weights);
                 foreach (var result in results) await _tierLists.SaveEntry(result, context.CancellationToken);
             }
     }
@@ -127,14 +138,19 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     }
 
     public static IEnumerable<SongTierListEntry> ProcessIntoTierList(
-        IDictionary<string, IDictionary<Guid, PhoenixScore>> userScores, DifficultyLevel level, string listName)
+        IDictionary<string, IDictionary<Guid, PhoenixScore>> userScores, DifficultyLevel level, string listName,
+        IDictionary<string, double>? weights = null)
     {
-        var includedChartIds = userScores.Values.SelectMany(kv => kv.Select(kv2 => kv2.Key)).Distinct().ToArray();
-        var chartCount = includedChartIds.ToDictionary(c => c, c => 0);
-        var chartTotal = includedChartIds.ToDictionary(c => c, c => 0);
+        weights ??= userScores.ToDictionary(g => g.Key, g => 1.0);
 
-        foreach (var scores in userScores.Values)
+        var includedChartIds = userScores.Values.SelectMany(kv => kv.Select(kv2 => kv2.Key)).Distinct().ToArray();
+        var chartCount = includedChartIds.ToDictionary(c => c, c => 0.0);
+        var chartTotal = includedChartIds.ToDictionary(c => c, c => 0.0);
+
+        foreach (var group in userScores)
         {
+            var groupName = group.Key;
+            var scores = group.Value;
             var scoresDict = scores.ToDictionary(s => s.Key, s => s.Value);
             var scoreInts = scoresDict.Values.Select(s => (int)s)
                 .ToArray();
@@ -150,21 +166,21 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
             foreach (var chart in includedChartIds.Where(c => scoresDict.ContainsKey(c)))
             {
                 var score = (int)scoresDict[chart];
-                chartCount[chart]++;
+                chartCount[chart] += weights[groupName];
                 if (score < veryHardMin)
-                    chartTotal[chart] += 3;
+                    chartTotal[chart] += 3 * weights[groupName];
                 else if (score < hardMin)
-                    chartTotal[chart] += 2;
+                    chartTotal[chart] += 2 * weights[groupName];
                 else if (score < mediumMin)
-                    chartTotal[chart] += 1;
+                    chartTotal[chart] += 1 * weights[groupName];
                 else if (score < easyMin)
                     chartTotal[chart] += 0;
                 else if (score < veryEasyMin)
-                    chartTotal[chart] += -1;
+                    chartTotal[chart] += -1 * weights[groupName];
                 else if (score < oneLevelOverrated)
-                    chartTotal[chart] += -2;
+                    chartTotal[chart] += -2 * weights[groupName];
                 else
-                    chartTotal[chart] += -3;
+                    chartTotal[chart] += -3 * weights[groupName];
             }
         }
 
@@ -239,7 +255,6 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         var oneLevelOverratedCompare = averageCompare + standardDeviationCompare * 1.5;
         var hardMinCompare = averageCompare - standardDeviationCompare;
         var veryHardMinCompare = averageCompare - standardDeviationCompare * 1.5;
-        var chartIdsCompare = filteredCompareScoreArray.Select(c => c.Id).ToHashSet();
         var result = new List<SongTierListEntry>();
         foreach (var chart in filteredCompareScoreArray)
         {

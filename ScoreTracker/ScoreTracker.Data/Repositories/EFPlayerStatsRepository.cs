@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
@@ -12,10 +13,17 @@ namespace ScoreTracker.Data.Repositories
         IRequestHandler<GetPlayerStatsQuery, PlayerStatsRecord>
     {
         private readonly ChartAttemptDbContext _database;
+        private readonly IMemoryCache _cache;
 
-        public EFPlayerStatsRepository(IDbContextFactory<ChartAttemptDbContext> factory)
+        public EFPlayerStatsRepository(IDbContextFactory<ChartAttemptDbContext> factory, IMemoryCache cache)
         {
+            _cache = cache;
             _database = factory.CreateDbContext();
+        }
+
+        private string CacheKey(Guid userId)
+        {
+            return $"{nameof(EFPlayerStatsRepository)}_PlayerStats_{userId}";
         }
 
         public async Task SaveStats(Guid userId, PlayerStatsRecord newStats, CancellationToken cancellationToken)
@@ -67,20 +75,27 @@ namespace ScoreTracker.Data.Repositories
             }
 
             await _database.SaveChangesAsync(cancellationToken);
+            _cache.Remove(CacheKey(userId));
         }
 
         public async Task<PlayerStatsRecord> GetStats(Guid userId, CancellationToken cancellationToken)
         {
-            var entity =
-                await _database.PlayerStats.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
-            if (entity == null) return new PlayerStatsRecord(0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1);
+            return await _cache.GetOrCreateAsync(CacheKey(userId), async o =>
+            {
+                o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(5);
 
-            return new PlayerStatsRecord(entity.TotalRating, entity.HighestLevel, entity.ClearCount, entity.CoOpRating,
-                entity.AverageCoOpScore, entity.SkillRating, entity.AverageSkillScore, entity.AverageSkillLevel,
-                entity.SinglesRating,
-                entity.AverageSinglesScore, entity.AverageSinglesLevel, entity.DoublesRating,
-                entity.AverageDoublesScore, entity.AverageDoublesLevel, entity.CompetitiveLevel,
-                entity.SinglesCompetitiveLevel, entity.DoublesCompetitiveLevel);
+                var entity =
+                    await _database.PlayerStats.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+                if (entity == null) return new PlayerStatsRecord(0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1);
+
+                return new PlayerStatsRecord(entity.TotalRating, entity.HighestLevel, entity.ClearCount,
+                    entity.CoOpRating,
+                    entity.AverageCoOpScore, entity.SkillRating, entity.AverageSkillScore, entity.AverageSkillLevel,
+                    entity.SinglesRating,
+                    entity.AverageSinglesScore, entity.AverageSinglesLevel, entity.DoublesRating,
+                    entity.AverageDoublesScore, entity.AverageDoublesLevel, entity.CompetitiveLevel,
+                    entity.SinglesCompetitiveLevel, entity.DoublesCompetitiveLevel);
+            });
         }
 
         public async Task<PlayerStatsRecord> Handle(GetPlayerStatsQuery request, CancellationToken cancellationToken)
