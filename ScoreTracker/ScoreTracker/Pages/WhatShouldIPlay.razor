@@ -10,6 +10,7 @@
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PersonalProgress.Queries
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Contracts
 
@@ -87,6 +88,22 @@
                     </MudCardActions>
 
                 </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+@if (_competetiveScores.Any())
+{
+
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">Competitive Ranges</MudText>
+        </MudItem>
+        @foreach (var group in _competetiveScores.OrderBy(g => (int)g.Key))
+        {
+            <MudItem xs="12">
+                <MudText Typo="Typo.body1">@L["Difficulty Level"] @group.Key: @GetCompetitiveString(group.Key)</MudText>
             </MudItem>
         }
     </MudGrid>
@@ -177,6 +194,23 @@
     private TitleProgress? _progress;
     private int _rating = 0;
     private int _averageRating = 0;
+
+    private string GetCompetitiveString(DifficultyLevel level)
+    {
+        var range = _competetiveScores[level].ToArray();
+        var minLetter = range.Min(e => e.LetterGrade);
+        var maxLetter = range.Max(e => e.LetterGrade);
+        var averageLetter = PhoenixScore.From((int)range.Average(s => (int)s)).LetterGrade;
+        var result = minLetter.GetName();
+        if (maxLetter != minLetter)
+        {
+            result += " > " + maxLetter.GetName() + ", " + averageLetter.GetName() + " " + L["Average"];
+        }
+        result += $" ({100.0 * range.Length / (double)_competetiveCount:0.00}%)";
+        return result;
+    }
+    private IDictionary<DifficultyLevel, IEnumerable<PhoenixScore>> _competetiveScores = new Dictionary<DifficultyLevel, IEnumerable<PhoenixScore>>();
+    private int _competetiveCount = 1;
     private async Task SubmitPositiveFeedback()
     {
         if (_selectedChart == null)
@@ -254,13 +288,15 @@
         var matchingScores = charts.Values.Where(c => c.Level == pushingLevel &&_scores.ContainsKey(c.Id) && _scores[c.Id].Score != null)
             .Select(c => _scores[c.Id])
             .ToArray();
-        
         _averageRating = matchingScores.Any() ? (int)matchingScores.Average(s => s.Score!.Value.LetterGrade.GetModifier() * _rating) : 0;
         _videos=(await Mediator.Send(new GetChartVideosQuery())).ToDictionary(c => c.ChartId,c=>c.VideoUrl.ToString());
         _charts = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => g.Select(r => charts[r.ChartId]).ToArray().AsEnumerable());
         _descriptions = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => g.First().Explanation);
 
-
+        _competetiveScores = (await Mediator.Send(new GetTop50CompetitiveQuery(CurrentUser.User.Id, null)))
+            .Where(r=>r.Score!=null)
+            .GroupBy(c => charts[c.ChartId].Level).ToDictionary(c => c.Key, c => c.Select(e => e.Score!.Value));
+        _competetiveCount = _competetiveScores.SelectMany(s => s.Value).Count();
 
     }
 }
