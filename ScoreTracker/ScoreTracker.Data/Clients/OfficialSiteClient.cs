@@ -162,6 +162,8 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
                 responses.Add(score);
                 pagesWithNoUpscore = 0;
             }
+
+            currentPage++;
         }
 
         var results = new List<OfficialRecordedScore>();
