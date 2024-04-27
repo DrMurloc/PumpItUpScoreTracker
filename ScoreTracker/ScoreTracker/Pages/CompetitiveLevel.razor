@@ -1,0 +1,215 @@
+﻿@page "/CompetitiveLevel"
+@using MediatR
+@using Microsoft.VisualBasic.CompilerServices
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Handlers
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Models.Titles
+@using ScoreTracker.Domain.Models.Titles.Phoenix
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PersonalProgress.Queries
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Contracts
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+
+<PageTitle>Competitive Level</PageTitle>
+
+<MudText Typo="Typo.h3">Competitive Level</MudText>
+<br/>
+<MudSelect T="ChartType" Label=@L["Chart Type"] Value="_currentType" ValueChanged="SetType">
+    <MudSelectItem T="ChartType" Value="ChartType.CoOp">All</MudSelectItem>
+    <MudSelectItem T="ChartType" Value="ChartType.Single">Singles</MudSelectItem>
+    <MudSelectItem T="ChartType" Value="ChartType.Double">Doubles</MudSelectItem>
+</MudSelect>
+<MudGrid>
+    @if (_stats != null)
+    {
+        <MudItem xs="12">
+            <MudText Typo="Typo.body1">Competitive Level: @($"{(_currentType == ChartType.CoOp ? _stats.CompetitiveLevel : _currentType == ChartType.Single ? _stats.SinglesCompetitiveLevel : _stats.DoublesCompetitiveLevel):0.00000}")</MudText>
+        </MudItem>
+    }
+    @if (_competetiveScores.Any())
+    {
+        @foreach (var group in _competetiveScores.OrderBy(g => (int)g.Key))
+        {
+            <MudItem xs="12">
+                <MudText Typo="Typo.body1">@L["Difficulty Level"] @group.Key: @GetCompetitiveString(group.Key)</MudText>
+            </MudItem>
+        }
+    }
+    <MudItem xs="12" sm="4" md="3">
+        <MudNumericField T="int" HideSpinButtons="true" Label="Min Level" @bind-Value="_minLevel" Min="1" Max=@_maxLevel></MudNumericField>
+    </MudItem>
+    <MudItem xs="12" sm="4" md="3">
+        <MudNumericField T="int" HideSpinButtons="true" Label="Max Level" @bind-Value="_maxLevel" Min="@_minLevel" Max="28"></MudNumericField>
+    </MudItem>
+    <MudItem xs="12" sm="4" md="3">
+        <MudCheckBox T="bool" @bind-Checked="_showScoreless" Label="Show Scoreless"></MudCheckBox>
+    </MudItem>
+</MudGrid>
+<br/>
+<MudTable T="Chart" Items="FilteredCharts" Breakpoint="Breakpoint.None" Dense="true">
+    <HeaderContent>
+        <MudTh>
+            <MudTableSortLabel T="Chart" SortBy="e => e.Song.Name">Song</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="Chart" SortBy="e=>e.Level">Chart</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="Chart" SortBy="e => _scores.TryGetValue(e.Id,out var score)?score:0">Score</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="Chart" SortBy="e=>_scores.TryGetValue(e.Id,out var score)?ScoringConfiguration.CalculateFungScore(e.Level,score,e.Type):0">Competitive Level</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="Chart" SortBy="e=>_myDifficulty.TryGetValue(e.Id, out var z)?z:0">My Relative Difficulty</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="Chart" SortBy="e=>_scoreDifficulty.TryGetValue(e.Id, out var z)?z:0">Scoring Difficulty</MudTableSortLabel>
+        </MudTh>
+
+        <MudTh>
+            <MudTableSortLabel T="Chart" SortBy="e=>_officialScoreDifficulty.TryGetValue(e.Id, out var z)?z:0">PIUGame Leaderboard Difficulty</MudTableSortLabel>
+        </MudTh>
+
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            <MudTooltip Text="@context.Song.Name">
+                
+                <MudImage Src="@context.Song.ImagePath.ToString()" Height="35" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
+            </MudTooltip>
+        </MudTd>
+        <MudTd>
+            <MudImage Src="@context.DifficultyBubblePath.ToString()" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+        </MudTd>
+        <MudTd>
+            @(_scores.TryGetValue(context.Id,out var score)?$"{score} ({score.LetterGrade.GetName()})":"")
+        </MudTd>
+        <MudTd>
+            @(_scores.TryGetValue(context.Id,out var score)?ScoringConfiguration.CalculateFungScore(context.Level,score,context.Type).ToString("0.00000"):"")
+        </MudTd>
+        <MudTd>
+            @if (_myDifficulty.ContainsKey(context.Id))
+            {
+                <MudText Style=@($"color:{CategoryColor(_myDifficulty[context.Id])}")>
+                    @_myDifficulty[context.Id]
+                </MudText>
+            }
+        </MudTd>
+
+        <MudTd>
+            @if (_scoreDifficulty.ContainsKey(context.Id))
+            {
+                <MudText Style=@($"color:{CategoryColor(_scoreDifficulty[context.Id])}")>
+                    @_scoreDifficulty[context.Id]
+                </MudText>
+            }
+        </MudTd>
+        <MudTd>
+            @if (_officialScoreDifficulty.ContainsKey(context.Id))
+            {
+                <MudText Style=@($"color:{CategoryColor(_officialScoreDifficulty[context.Id])}")>
+                    @_officialScoreDifficulty[context.Id]
+                </MudText>
+            }
+        </MudTd>
+    </RowTemplate>
+                
+    <PagerContent>
+        <MudTablePager></MudTablePager>
+    </PagerContent>
+</MudTable>
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser;
+@inject NavigationManager NavManager;
+
+@code {
+
+
+    private string GetCompetitiveString(DifficultyLevel level)
+    {
+        var range = _competetiveScores[level].ToArray();
+        var minLetter = range.Min(e => e.LetterGrade);
+        var maxLetter = range.Max(e => e.LetterGrade);
+        var averageLetter = PhoenixScore.From((int)range.Average(s => (int)s)).LetterGrade;
+        var result = minLetter.GetName();
+        if (maxLetter != minLetter)
+        {
+            result += " > " + maxLetter.GetName() + ", " + averageLetter.GetName() + " " + L["Average"];
+        }
+        result += $" ({100.0 * range.Length / (double)_competetiveCount:0.00}%)";
+        return result;
+    }
+    
+    private string CategoryColor(TierListCategory category) => category switch
+    {
+        TierListCategory.Overrated=>"#00FFFF",
+        TierListCategory.VeryEasy=>"#00FFBB",
+        TierListCategory.Easy=>"#00FF55",
+        TierListCategory.Medium=>"#00FF00",
+        TierListCategory.Hard=>"#55BB00",
+        TierListCategory.VeryHard=>"#BB5500",
+        TierListCategory.Underrated=>"#FF0000"
+        };
+    private IDictionary<Guid, PhoenixScore> _scores = new Dictionary<Guid, PhoenixScore>();
+    private IDictionary<DifficultyLevel, IEnumerable<PhoenixScore>> _competetiveScores = new Dictionary<DifficultyLevel, IEnumerable<PhoenixScore>>();
+    private IDictionary<Guid, TierListCategory> _scoreDifficulty = new Dictionary<Guid, TierListCategory>();
+    private IDictionary<Guid, TierListCategory> _officialScoreDifficulty = new Dictionary<Guid, TierListCategory>();
+    private IDictionary<Guid, TierListCategory> _myDifficulty = new Dictionary<Guid, TierListCategory>();
+    private IEnumerable<Chart> FilteredCharts => _charts.Where(c => c.Level >= _minLevel && c.Level <= _maxLevel && (_showScoreless || _scores.ContainsKey(c.Id)));
+    private Chart[] _charts = Array.Empty<Chart>();
+    private ChartType _currentType = ChartType.CoOp;
+    private int _competetiveCount = 1;
+    private PlayerStatsRecord? _stats = null;
+    private int _minLevel = 1;
+    private int _maxLevel = 28;
+    private bool _showScoreless = true;
+    private async Task SetType(ChartType type)
+    {
+        _currentType = type;
+        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, Type: type is ChartType.CoOp ? null : type))).ToArray();
+        var charts = (_charts)
+            .ToDictionary(c => c.Id);
+            
+        foreach (var level in DifficultyLevel.All)
+        {
+            var newList = (await Mediator.Send(new GetMyRelativeTierListQuery(ChartType.Single, level)))
+                .Concat(await Mediator.Send(new GetMyRelativeTierListQuery(ChartType.Double,level)));
+            
+            foreach (var item in newList)
+            {
+                _myDifficulty[item.ChartId] = item.Category;
+            }
+        }
+        _competetiveScores = (await Mediator.Send(new GetTop50CompetitiveQuery(CurrentUser.User.Id, type is ChartType.CoOp?null:type)))
+            .Where(r => r.Score != null)
+            .GroupBy(c => charts[c.ChartId].Level).ToDictionary(c => c.Key, c => c.Select(e => e.Score!.Value));
+        _competetiveCount = _competetiveScores.SelectMany(s => s.Value).Count();
+        if (_competetiveScores.Any())
+        {
+            _minLevel = _competetiveScores.Min(kv => kv.Key);
+            _maxLevel = _competetiveScores.Max(kv => kv.Key);
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Login");
+            return;
+        }
+        _stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
+        _scores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id)))
+            .Where(r=>r.Score!=null)
+            .ToDictionary(r => r.ChartId,r=>r.Score!.Value);
+        _scoreDifficulty = (await Mediator.Send(new GetTierListQuery("Scores"))).ToDictionary(e => e.ChartId, e => e.Category);
+        _officialScoreDifficulty = (await Mediator.Send(new GetTierListQuery("Official Scores"))).ToDictionary(e => e.ChartId, e => e.Category);
+        await SetType(ChartType.CoOp);
+    }
+}

@@ -43,14 +43,33 @@
         </MudItem>
     </MudGrid>
 }
+@if (_stats != null)
+{
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">Stats</MudText>
+        </MudItem>
+        <MudItem xs="12">
+            <b>@L["Rating"]</b>: @_stats.SkillRating
+        </MudItem>
+        <MudItem xs="12">
+            <b>Competitive Level</b>: @_stats.CompetitiveLevel.ToString("0.00") <MudIconButton Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Primary" Target="_blank" Href="/CompetitiveLevel" Size="Size.Small"></MudIconButton>
+        </MudItem>
+        <MudItem xs="12">
+            <b>Singles Level</b>: @_stats.SinglesCompetitiveLevel.ToString("0.00")
+        </MudItem>
+        <MudItem xs="12">
+            <b>Doubles Level</b>: @_stats.DoublesCompetitiveLevel.ToString("0.00")
+        </MudItem>
+    </MudGrid>
+}
 @foreach (var key in _descriptions.Keys)
 {
     <MudGrid>
         <MudItem xs="12">
             <MudText Typo="Typo.h4">
-                @key
                 <MudTooltip Text="@_descriptions[key]">
-                    <MudIcon Color="Color.Info" Size="Size.Small" Icon="@Icons.Material.Filled.QuestionMark" ></MudIcon>
+                @key
                 </MudTooltip>
 
             </MudText>
@@ -88,22 +107,6 @@
                     </MudCardActions>
 
                 </MudCard>
-            </MudItem>
-        }
-    </MudGrid>
-}
-
-@if (_competetiveScores.Any())
-{
-
-    <MudGrid>
-        <MudItem xs="12">
-            <MudText Typo="Typo.h4">Competitive Ranges</MudText>
-        </MudItem>
-        @foreach (var group in _competetiveScores.OrderBy(g => (int)g.Key))
-        {
-            <MudItem xs="12">
-                <MudText Typo="Typo.body1">@L["Difficulty Level"] @group.Key: @GetCompetitiveString(group.Key)</MudText>
             </MudItem>
         }
     </MudGrid>
@@ -190,27 +193,12 @@
     private string _feedbackCategory = string.Empty;
     private string _notes = string.Empty;
     private bool _shouldHide = false;
+    private PlayerStatsRecord? _stats;
     private bool _isSaving = false;
     private TitleProgress? _progress;
     private int _rating = 0;
     private int _averageRating = 0;
 
-    private string GetCompetitiveString(DifficultyLevel level)
-    {
-        var range = _competetiveScores[level].ToArray();
-        var minLetter = range.Min(e => e.LetterGrade);
-        var maxLetter = range.Max(e => e.LetterGrade);
-        var averageLetter = PhoenixScore.From((int)range.Average(s => (int)s)).LetterGrade;
-        var result = minLetter.GetName();
-        if (maxLetter != minLetter)
-        {
-            result += " > " + maxLetter.GetName() + ", " + averageLetter.GetName() + " " + L["Average"];
-        }
-        result += $" ({100.0 * range.Length / (double)_competetiveCount:0.00}%)";
-        return result;
-    }
-    private IDictionary<DifficultyLevel, IEnumerable<PhoenixScore>> _competetiveScores = new Dictionary<DifficultyLevel, IEnumerable<PhoenixScore>>();
-    private int _competetiveCount = 1;
     private async Task SubmitPositiveFeedback()
     {
         if (_selectedChart == null)
@@ -292,11 +280,7 @@
         _videos=(await Mediator.Send(new GetChartVideosQuery())).ToDictionary(c => c.ChartId,c=>c.VideoUrl.ToString());
         _charts = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => g.Select(r => charts[r.ChartId]).ToArray().AsEnumerable());
         _descriptions = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => g.First().Explanation);
-
-        _competetiveScores = (await Mediator.Send(new GetTop50CompetitiveQuery(CurrentUser.User.Id, null)))
-            .Where(r=>r.Score!=null)
-            .GroupBy(c => charts[c.ChartId].Level).ToDictionary(c => c.Key, c => c.Select(e => e.Score!.Value));
-        _competetiveCount = _competetiveScores.SelectMany(s => s.Value).Count();
+        _stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
 
     }
 }

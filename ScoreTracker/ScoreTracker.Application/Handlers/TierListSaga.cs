@@ -244,7 +244,7 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         if (!filteredCompareScoreArray.Any()) return Array.Empty<SongTierListEntry>();
 
         var officialScoreTierListEntries =
-            (await _tierLists.GetAllEntries(request.Level >= 20 ? "Official Scores" : "Scores", cancellationToken))
+            (await _tierLists.GetAllEntries(request.Level >= 24 ? "Official Scores" : "Scores", cancellationToken))
             .ToDictionary(e => e.ChartId);
         var standardDeviationCompare =
             StdDev(filteredCompareScoreArray.Select(s => (int)(phoenixScores[s.Id].Score ?? 0)), true);
