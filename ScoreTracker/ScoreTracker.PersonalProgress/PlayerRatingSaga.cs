@@ -113,7 +113,7 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
         var coOps = scores.Where(s => s.Type == ChartType.CoOp)
             .ToArray();
         var competitive =
-            AvgOr0(competitiveScores.OrderByDescending(e => e.CompetitiveLevel).Take(200)
+            AvgOr0(competitiveScores.OrderByDescending(e => e.CompetitiveLevel).Take(100)
                 .Select(s => s.CompetitiveLevel).ToArray());
         var competitiveSingles =
             AvgOr0(competitiveScores.Where(s => s.Type == ChartType.Single)
