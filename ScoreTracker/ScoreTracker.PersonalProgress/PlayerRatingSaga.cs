@@ -32,28 +32,6 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
         _mediator = mediator;
     }
 
-    public static ScoringConfiguration Scoring => CreateScoring();
-
-    private static ScoringConfiguration CreateScoring()
-    {
-        var result = new ScoringConfiguration
-        {
-            ContinuousLetterGradeScale = true
-        };
-        result.AdjustToTime = false;
-        result.PgLetterGradeModifier = 1.6;
-        result.LevelRatings[1] = 10;
-        result.LevelRatings[2] = 20;
-        result.LevelRatings[3] = 30;
-        result.LevelRatings[4] = 40;
-        result.LevelRatings[5] = 50;
-        result.LevelRatings[6] = 60;
-        result.LevelRatings[7] = 70;
-        result.LevelRatings[8] = 80;
-        result.LevelRatings[9] = 90;
-        result.ChartTypeModifiers[ChartType.CoOp] = 1.0;
-        return result;
-    }
 
     public async Task Consume(ConsumeContext<PlayerScoreUpdatedEvent> context)
     {
@@ -80,13 +58,13 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
         var charts =
             (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
             .ToDictionary(c => c.Id);
-
+        var scoring = ScoringConfiguration.PiuScoresRating;
         return (await _scores.GetRecordedScores(request.UserId, cancellationToken))
             .Where(s => charts[s.ChartId].Type != ChartType.CoOp)
             .Where(s => s.Score != null && (request.ChartType == null ||
                                             charts[s.ChartId].Type == request.ChartType))
             .OrderByDescending(s =>
-                Scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level, s.Score!.Value))
+                scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level, s.Score!.Value))
             .Take(50).ToArray();
     }
 
@@ -103,14 +81,14 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
     public async Task Handle(RecalculateStats request, CancellationToken cancellationToken)
     {
         var oldStats = await _stats.GetStats(request.UserId, cancellationToken);
-
+        var scoring = ScoringConfiguration.PiuScoresRating;
         var charts = (await _charts.GetCharts(MixEnum.Phoenix)).ToDictionary(c => c.Id);
         var recorded =
             (await _scores.GetRecordedScores(request.UserId, cancellationToken)).ToArray();
         var scores = recorded
             .Where(s => s.Score != null)
             .Select(s => new ChartRating(s.ChartId, charts[s.ChartId].Type,
-                Scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level,
+                scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level,
                     s.Score!.Value), s.Score!.Value))
             .ToArray();
         var competitiveScores = recorded.Where(s => s.Score != null)
@@ -135,16 +113,16 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
         var coOps = scores.Where(s => s.Type == ChartType.CoOp)
             .ToArray();
         var competitive =
-            AvgOr0(competitiveScores.OrderByDescending(e => e.CompetitiveLevel).Take(100)
+            AvgOr0(competitiveScores.OrderByDescending(e => e.CompetitiveLevel).Take(200)
                 .Select(s => s.CompetitiveLevel).ToArray());
         var competitiveSingles =
             AvgOr0(competitiveScores.Where(s => s.Type == ChartType.Single)
                 .OrderByDescending(s => s.CompetitiveLevel)
-                .Take(100).Select(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score))
+                .Take(50).Select(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score))
                 .ToArray());
         var competitiveDoubles =
             AvgOr0(competitiveScores.Where(s => s.Type == ChartType.Double).OrderByDescending(s => s.CompetitiveLevel)
-                .Take(100).Select(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score))
+                .Take(50).Select(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score))
                 .ToArray());
 
         var newStats = new PlayerStatsRecord(scores.Sum(s => s.Rating),

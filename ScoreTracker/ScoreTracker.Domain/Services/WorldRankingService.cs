@@ -24,10 +24,8 @@ namespace ScoreTracker.Domain.Services
 
         public async Task CalculateWorldRankings(CancellationToken cancellationToken)
         {
-            var scoringConfig = new ScoringConfiguration
-            {
-                ContinuousLetterGradeScale = true
-            };
+            var scoringConfig = ScoringConfiguration.PiuScoresRating;
+
             var entries = (await _leaderboards.GetOfficialLeaderboardUsernames("Chart", cancellationToken)).ToArray();
             await _leaderboards.DeleteWorldRankings(cancellationToken);
             var max = entries.Count();
@@ -99,10 +97,7 @@ namespace ScoreTracker.Domain.Services
         public async Task<IEnumerable<RecordedPhoenixScore>> GetTop50(Name username, string type,
             CancellationToken cancellationToken)
         {
-            var scoringConfig = new ScoringConfiguration
-            {
-                ContinuousLetterGradeScale = true
-            };
+            var scoringConfig = ScoringConfiguration.PiuScoresRating;
             var result = new List<RecordedPhoenixScore>();
             foreach (var record in (await _leaderboards.GetOfficialLeaderboardStatuses(username, cancellationToken))
                      .Where(l => l.OfficialLeaderboardType == "Chart" && !l.LeaderboardName.Contains("CoOp"))

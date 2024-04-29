@@ -188,6 +188,29 @@ namespace ScoreTracker.Domain.Models
             if (type == ChartType.Single && level >= 20) result *= Math.Pow(1.008, level - 19);
             return result;
         }
+
+        public static ScoringConfiguration PiuScoresRating => CreateScoring();
+
+        private static ScoringConfiguration CreateScoring()
+        {
+            var result = new ScoringConfiguration
+            {
+                ContinuousLetterGradeScale = true
+            };
+            result.AdjustToTime = false;
+            result.PgLetterGradeModifier = 1.6;
+            result.LevelRatings[1] = 10;
+            result.LevelRatings[2] = 20;
+            result.LevelRatings[3] = 30;
+            result.LevelRatings[4] = 40;
+            result.LevelRatings[5] = 50;
+            result.LevelRatings[6] = 60;
+            result.LevelRatings[7] = 70;
+            result.LevelRatings[8] = 80;
+            result.LevelRatings[9] = 90;
+            result.ChartTypeModifiers[ChartType.CoOp] = 1.0;
+            return result;
+        }
     }
 }
 

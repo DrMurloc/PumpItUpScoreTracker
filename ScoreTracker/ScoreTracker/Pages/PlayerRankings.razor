@@ -228,10 +228,7 @@
             _showingUsername = string.Empty;
             return;
         }
-        var scoringConfig = new ScoringConfiguration
-            {
-                ContinuousLetterGradeScale = true
-            };
+        var scoringConfig = ScoringConfiguration.PiuScoresRating;
         _scores = (await WorldRankings.GetTop50(username, _currentType, CancellationToken.None))
             .Select(r => new ScoreEntry(_charts[r.ChartId], r.Score!.Value, scoringConfig.GetScore(_charts[r.ChartId].Level, r.Score!.Value)))
             .ToArray();
