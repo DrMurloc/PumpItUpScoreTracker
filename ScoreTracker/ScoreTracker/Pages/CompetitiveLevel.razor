@@ -41,14 +41,17 @@
             </MudItem>
         }
     }
-    <MudItem xs="12" sm="4" md="3">
+    <MudItem xs="12" sm="6" md="3">
         <MudNumericField T="int" HideSpinButtons="true" Label="Min Level" @bind-Value="_minLevel" Min="1" Max=@_maxLevel></MudNumericField>
     </MudItem>
-    <MudItem xs="12" sm="4" md="3">
+    <MudItem xs="12" sm="6" md="3">
         <MudNumericField T="int" HideSpinButtons="true" Label="Max Level" @bind-Value="_maxLevel" Min="@_minLevel" Max="28"></MudNumericField>
     </MudItem>
-    <MudItem xs="12" sm="4" md="3">
+    <MudItem xs="12" sm="6" md="3">
         <MudCheckBox T="bool" @bind-Checked="_showScoreless" Label="Show Scoreless"></MudCheckBox>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudCheckBox T="bool" @bind-Checked="_showTopOnly" Label="Show Top Only"></MudCheckBox>
     </MudItem>
 </MudGrid>
 <br/>
@@ -162,14 +165,16 @@
     private IDictionary<Guid, TierListCategory> _scoreDifficulty = new Dictionary<Guid, TierListCategory>();
     private IDictionary<Guid, TierListCategory> _officialScoreDifficulty = new Dictionary<Guid, TierListCategory>();
     private IDictionary<Guid, TierListCategory> _myDifficulty = new Dictionary<Guid, TierListCategory>();
-    private IEnumerable<Chart> FilteredCharts => _charts.Where(c => c.Level >= _minLevel && c.Level <= _maxLevel && (_showScoreless || _scores.ContainsKey(c.Id)));
+    private IEnumerable<Chart> FilteredCharts => _charts.Where(c =>(!_showTopOnly ||_topCharts.Contains(c.Id)) && c.Level >= _minLevel && c.Level <= _maxLevel && (_showScoreless || _scores.ContainsKey(c.Id)));
     private Chart[] _charts = Array.Empty<Chart>();
     private ChartType _currentType = ChartType.CoOp;
+    private bool _showTopOnly = false;
     private int _competetiveCount = 1;
     private PlayerStatsRecord? _stats = null;
     private int _minLevel = 1;
     private int _maxLevel = 28;
     private bool _showScoreless = true;
+    private ISet<Guid> _topCharts = new HashSet<Guid>();
     private async Task SetType(ChartType type)
     {
         _currentType = type;
@@ -187,7 +192,10 @@
                 _myDifficulty[item.ChartId] = item.Category;
             }
         }
-        _competetiveScores = (await Mediator.Send(new GetTop50CompetitiveQuery(CurrentUser.User.Id, type is ChartType.CoOp?null:type)))
+        var top = (await Mediator.Send(new GetTop50CompetitiveQuery(CurrentUser.User.Id, type is ChartType.CoOp ? null : type))).ToArray();
+        _topCharts = top.Select(c => c.ChartId).Distinct().ToHashSet();
+
+        _competetiveScores = top
             .Where(r => r.Score != null)
             .GroupBy(c => charts[c.ChartId].Level).ToDictionary(c => c.Key, c => c.Select(e => e.Score!.Value));
         _competetiveCount = _competetiveScores.SelectMany(s => s.Value).Count();
