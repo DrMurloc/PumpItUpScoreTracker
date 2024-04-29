@@ -110,7 +110,7 @@
                 @context.Record.DoublesCount
             </MudTd>
             <MudTd>
-                @context.Record.CompetitiveLevel
+                @context.Record.CompetitiveLevel.ToString("0.000")
             </MudTd>
         }
         @if (_currentType == "Singles")
@@ -119,7 +119,7 @@
                 @context.Record.SinglesCount
             </MudTd>
             <MudTd>
-                @context.Record.SinglesCompetitiveLevel
+                @context.Record.SinglesCompetitiveLevel.ToString("0.000")
             </MudTd>
         }
         @if (_currentType == "Doubles")
@@ -128,7 +128,7 @@
                 @context.Record.DoublesCount
             </MudTd>
             <MudTd>
-                @context.Record.DoublesCompetitiveLevel
+                @context.Record.DoublesCompetitiveLevel.ToString("0.000")
             </MudTd>
         }
         <MudTd>
