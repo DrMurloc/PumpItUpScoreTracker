@@ -68,7 +68,8 @@ namespace ScoreTracker.Data.Repositories
         {
             return await _dbContext.UserWorldRanking
                 .Select(u => new WorldRankingRecord(u.UserName, u.Type, u.AverageLevel, u.AverageScore, u.SinglesCount,
-                    u.DoublesCount, u.TotalRating)).ToArrayAsync(cancellationToken);
+                    u.DoublesCount, u.TotalRating, u.CompetitiveLevel, u.SinglesCompetitive, u.DoublesCompetitive))
+                .ToArrayAsync(cancellationToken);
         }
 
         public async Task DeleteWorldRankings(CancellationToken cancellationToken)
@@ -88,7 +89,10 @@ namespace ScoreTracker.Data.Repositories
                 SinglesCount = record.SinglesCount,
                 DoublesCount = record.DoublesCount,
                 TotalRating = record.TotalRating,
-                UserName = record.Username
+                UserName = record.Username,
+                CompetitiveLevel = record.CompetitiveLevel,
+                SinglesCompetitive = record.SinglesCompetitiveLevel,
+                DoublesCompetitive = record.DoublesCompetitiveLevel
             }, cancellationToken);
 
             await _dbContext.SaveChangesAsync(cancellationToken);

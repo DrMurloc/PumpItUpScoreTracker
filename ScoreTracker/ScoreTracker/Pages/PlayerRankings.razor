@@ -58,11 +58,17 @@
             <MudTh>
                 <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Record.SinglesCount)">Doubles Charts</MudTableSortLabel>
             </MudTh>
+            <MudTh>
+                <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Record.CompetitiveLevel)">Competitive Level</MudTableSortLabel>
+            </MudTh>
         }
         @if (_currentType == "Singles")
         {
             <MudTh>
                 <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Record.SinglesCount)">Charts</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Record.SinglesCompetitiveLevel)">Competitive Level</MudTableSortLabel>
             </MudTh>
         }
         @if (_currentType == "Doubles")
@@ -70,10 +76,10 @@
             <MudTh>
                 <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Record.SinglesCount)">Charts</MudTableSortLabel>
             </MudTh>
+            <MudTh>
+                <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Record.DoublesCompetitiveLevel)">Competitive Level</MudTableSortLabel>
+            </MudTh>
         }
-        <MudTh>
-            <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Record.AverageDifficulty)">Average Difficulty</MudTableSortLabel>
-        </MudTh>
         <MudTh>
             <MudTableSortLabel T="TableEntry" SortBy="@(e=>e.Record.AverageScore)">Average Score</MudTableSortLabel>
         </MudTh>
@@ -103,11 +109,17 @@
             <MudTd>
                 @context.Record.DoublesCount
             </MudTd>
+            <MudTd>
+                @context.Record.CompetitiveLevel
+            </MudTd>
         }
         @if (_currentType == "Singles")
         {
             <MudTd>
                 @context.Record.SinglesCount
+            </MudTd>
+            <MudTd>
+                @context.Record.SinglesCompetitiveLevel
             </MudTd>
         }
         @if (_currentType == "Doubles")
@@ -115,10 +127,10 @@
             <MudTd>
                 @context.Record.DoublesCount
             </MudTd>
+            <MudTd>
+                @context.Record.DoublesCompetitiveLevel
+            </MudTd>
         }
-        <MudTd>
-            @context.Record.AverageDifficulty
-        </MudTd>
         <MudTd>
             @context.Record.AverageScore (@context.Record.AverageScore.LetterGrade.GetName())
         </MudTd>

@@ -14,5 +14,8 @@ namespace ScoreTracker.Data.Persistence.Entities
         public int SinglesCount { get; set; }
         public int DoublesCount { get; set; }
         public int TotalRating { get; set; }
+        public double CompetitiveLevel { get; set; }
+        public double SinglesCompetitive { get; set; }
+        public double DoublesCompetitive { get; set; }
     }
 }

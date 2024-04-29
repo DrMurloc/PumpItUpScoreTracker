@@ -35,9 +35,11 @@ namespace ScoreTracker.Domain.Services
                 _logger.LogInformation($"User {current++}/{max}");
                 foreach (var type in new[] { "Singles", "Doubles", "All" })
                 {
-                    var records = (await _leaderboards.GetOfficialLeaderboardStatuses(username, cancellationToken))
+                    var statuses = (await _leaderboards.GetOfficialLeaderboardStatuses(username, cancellationToken))
                         .Where(l => l.OfficialLeaderboardType == "Chart" && !l.LeaderboardName.Contains("CoOp"))
                         .Select(l => (l.Score, DifficultyLevel.ParseShortHand(l.LeaderboardName.Split(" ")[^1])))
+                        .ToArray();
+                    var records = statuses
                         .Where(l => type == "All" || (type == "Singles" && l.Item2.chartType == ChartType.Single) ||
                                     (type == "Doubles" && l.Item2.chartType == ChartType.Double))
                         .OrderByDescending(l => scoringConfig.GetScore(l.Item2.level, l.Score))
@@ -67,12 +69,31 @@ namespace ScoreTracker.Domain.Services
                     }
 
                     var totalCount = singlesCount + doublesCount;
+                    var compOrdered = statuses.OrderByDescending(u =>
+                        ScoringConfiguration.CalculateFungScore(u.Item2.level, u.Score, u.Item2.chartType)).ToArray();
+                    var competitive =
+                        AvgOr0(compOrdered
+                            .Take(100).Select(u =>
+                                ScoringConfiguration.CalculateFungScore(u.Item2.level, u.Score, u.Item2.chartType))
+                            .ToArray());
+                    var singles = AvgOr0(compOrdered.Where(u => u.Item2.chartType == ChartType.Single).Take(50)
+                        .Select(u => ScoringConfiguration.CalculateFungScore(u.Item2.level, u.Score, u.Item2.chartType))
+                        .ToArray());
+                    var doubles = AvgOr0(compOrdered.Where(u => u.Item2.chartType == ChartType.Double).Take(50)
+                        .Select(u => ScoringConfiguration.CalculateFungScore(u.Item2.level, u.Score, u.Item2.chartType))
+                        .ToArray());
+
                     await _leaderboards.SaveWorldRanking(new WorldRankingRecord(username, type,
                         totalDifficulty / (double)totalCount, (int)(totalScore / (double)totalCount), singlesCount,
                         doublesCount,
-                        totalRating), cancellationToken);
+                        totalRating, competitive, singles, doubles), cancellationToken);
                 }
             }
+        }
+
+        private static double AvgOr0(double[] charts)
+        {
+            return charts.Any() ? charts.Average() : 0;
         }
 
         public async Task<IEnumerable<RecordedPhoenixScore>> GetAll(Name username, CancellationToken cancellationToken)
