@@ -72,16 +72,18 @@ namespace ScoreTracker.Domain.Services
                     var compOrdered = statuses.OrderByDescending(u =>
                         ScoringConfiguration.CalculateFungScore(u.Item2.level, u.Score, u.Item2.chartType)).ToArray();
                     var competitive =
-                        AvgOr0(compOrdered
-                            .Take(100).Select(u =>
-                                ScoringConfiguration.CalculateFungScore(u.Item2.level, u.Score, u.Item2.chartType))
-                            .ToArray());
-                    var singles = AvgOr0(compOrdered.Where(u => u.Item2.chartType == ChartType.Single).Take(50)
-                        .Select(u => ScoringConfiguration.CalculateFungScore(u.Item2.level, u.Score, u.Item2.chartType))
-                        .ToArray());
-                    var doubles = AvgOr0(compOrdered.Where(u => u.Item2.chartType == ChartType.Double).Take(50)
-                        .Select(u => ScoringConfiguration.CalculateFungScore(u.Item2.level, u.Score, u.Item2.chartType))
-                        .ToArray());
+                        compOrdered
+                            .Take(100).Sum(u =>
+                                ScoringConfiguration.CalculateFungScore(u.Item2.level, u.Score, u.Item2.chartType)) /
+                        100.0;
+                    var singles = compOrdered.Where(u => u.Item2.chartType == ChartType.Single).Take(50)
+                                      .Sum(u => ScoringConfiguration.CalculateFungScore(u.Item2.level, u.Score,
+                                          u.Item2.chartType)) /
+                                  50.0;
+                    var doubles = compOrdered.Where(u => u.Item2.chartType == ChartType.Double).Take(50)
+                                      .Sum(u => ScoringConfiguration.CalculateFungScore(u.Item2.level, u.Score,
+                                          u.Item2.chartType))
+                                  / 50.0;
 
                     await _leaderboards.SaveWorldRanking(new WorldRankingRecord(username, type,
                         totalDifficulty / (double)totalCount, (int)(totalScore / (double)totalCount), singlesCount,
