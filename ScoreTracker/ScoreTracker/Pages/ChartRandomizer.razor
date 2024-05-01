@@ -57,9 +57,7 @@
                     }
                     <MudSpacer></MudSpacer>
                     
-                    <MudTooltip Text="@ChartString(chart)">
-                        <MudImage Src="@chart.DifficultyBubblePath" Height="35" Alt="@chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-                    </MudTooltip>
+                    <DifficultyBubble Chart="chart"></DifficultyBubble>
                 </MudCardActions>
             </MudCard>
         </MudItem>

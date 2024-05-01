@@ -91,7 +91,7 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                         new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration,
                             s.Artist ?? "Unknown",
                             Bpm.From(s.MinBpm, s.MaxBpm)),
-                        Enum.Parse<ChartType>(c.Type), c.Level, c.StepArtist, null),
+                        Enum.Parse<ChartType>(c.Type), c.Level, MixEnum.XX, c.StepArtist, null),
                     ba == null
                         ? null
                         : new XXChartAttempt(Enum.Parse<XXLetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score,
@@ -114,7 +114,7 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                         new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration,
                             s.Artist ?? "Unknown",
                             Bpm.From(s.MinBpm, s.MaxBpm)),
-                        Enum.Parse<ChartType>(c.Type), c.Level, c.StepArtist, null),
+                        Enum.Parse<ChartType>(c.Type), c.Level, MixEnum.XX, c.StepArtist, null),
                     ba == null
                         ? null
                         : new XXChartAttempt(Enum.Parse<XXLetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score,

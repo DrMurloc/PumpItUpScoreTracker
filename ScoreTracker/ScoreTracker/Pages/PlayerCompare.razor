@@ -39,6 +39,8 @@
             {
                 <MudText>Averages Difficulty Level @_winLevelAverage[player].ToString("0.00") on wins</MudText>
             }
+            <MudText>@_typeWins[player][ChartType.Single] Singles</MudText>
+            <MudText>@_typeWins[player][ChartType.Double] Doubles</MudText>
         }
         <MudText>@_leaderboardCharts.Count(c => _players[player].ContainsKey(c.Id) && !_players.Where(kv => !kv.Key.Equals(player)).Any(kv => kv.Value.ContainsKey(c.Id))) charts scored that no other selected player has scored</MudText>
 
@@ -74,7 +76,7 @@
                 </MudTooltip>
             </MudTd>
             <MudTd>
-                <MudImage Src="@context.DifficultyBubblePath" Height="35" Alt="@context.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                <DifficultyBubble Chart="context"></DifficultyBubble>
             </MudTd>
             <MudTd>
                 @_winners[context.Id]
@@ -123,7 +125,7 @@ else
     private int _totalCharts = 0;
     private IDictionary<Guid, string> _winners = new Dictionary<Guid, string>();
     private IDictionary<string, double> _winLevelAverage = new Dictionary<string, double>();
-
+    private IDictionary<string, IDictionary<ChartType, int>> _typeWins = new Dictionary<string, IDictionary<ChartType, int>>();
     private void Recalculate()
     {
 
@@ -136,6 +138,9 @@ else
 
         _winLevelAverage = _players.Keys.ToDictionary(player => player, player => _winners.Any(kv => kv.Value.Equals(player, StringComparison.OrdinalIgnoreCase)) ? _winners.Where(kv => kv.Value.Equals(player, StringComparison.OrdinalIgnoreCase))
             .Average(kv => _charts[kv.Key].Level) : 0);
+
+
+        _typeWins = _players.ToDictionary(kv => kv.Key, kv => (IDictionary<ChartType,int>) _winners.Where(w => w.Value == kv.Key).GroupBy(w => _charts[w.Key].Type).ToDictionary(g => g.Key, g => g.Count()));
 
         _totalCharts = _leaderboardCharts.Count();
         _contestedCharts = _leaderboardCharts.Count(c => !string.IsNullOrWhiteSpace(_winners[c.Id]));

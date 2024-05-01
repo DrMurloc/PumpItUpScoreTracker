@@ -72,10 +72,8 @@
                         <MudCard Class="border-solid border-2" Style="@CardStyle(chart.Id)">
                             <MudCardMedia Height="300" Image="@chart.Song.ImagePath.ToString()" />
                             <MudCardActions>
-
-                                <MudTooltip Text=@($"{chart.Song.Name} {chart.DifficultyString}")>
-                                    <MudImage Src="@chart.DifficultyBubblePath" Height="35" Alt="@chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-                                </MudTooltip>
+                                
+                                <DifficultyBubble Chart="chart"></DifficultyBubble>
                                 <MudSpacer></MudSpacer>
 
                                 @if (!_match.ProtectedCharts.Contains(chart.Id) && !_match.VetoedCharts.Contains(chart.Id))
@@ -143,9 +141,7 @@
                         <MudCard Class="border-solid border-2" Style="@CardStyle(chart.Id)">
                             <MudCardMedia Height="300" Image="@chart.Song.ImagePath.ToString()" />
                             <MudCardActions>
-                                <MudTooltip Text=@($"{chart.Song.Name} {chart.DifficultyString}")>
-                                    <MudImage Src="@chart.DifficultyBubblePath" Height="35" Alt="@chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-                                </MudTooltip>
+                                <DifficultyBubble Chart="chart"></DifficultyBubble>
                             </MudCardActions>
                         </MudCard>
                     </MudItem>

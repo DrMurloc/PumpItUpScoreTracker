@@ -472,7 +472,7 @@ public sealed class XXScoreFile
                 new Chart(Guid.Empty,
                     new Song(name, SongType.Arcade, new Uri("/", UriKind.Relative), TimeSpan.Zero, "Unknown", null),
                     currentType,
-                    level, null, null), attempt));
+                    level, MixEnum.XX, null, null), attempt));
         }
 
         return (result, errors);
@@ -526,7 +526,7 @@ public sealed class XXScoreFile
                     new Chart(Guid.Empty,
                         new Song(name, SongType.Arcade, new Uri("/", UriKind.Relative), TimeSpan.Zero, "Unknown", null),
                         chartType,
-                        level, null, null),
+                        level, MixEnum.XX, null, null),
                     string.IsNullOrWhiteSpace(record.LetterGrade)
                         ? null
                         : new XXChartAttempt(Enum.Parse<XXLetterGrade>(record.LetterGrade, true), isBroken, score,

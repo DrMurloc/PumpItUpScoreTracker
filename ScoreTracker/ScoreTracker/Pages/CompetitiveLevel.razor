@@ -89,7 +89,7 @@
             </MudTooltip>
         </MudTd>
         <MudTd>
-            <MudImage Src="@context.DifficultyBubblePath.ToString()" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+            <DifficultyBubble Chart="context"></DifficultyBubble>
         </MudTd>
         <MudTd>
             @(_scores.TryGetValue(context.Id,out var score)?$"{score} ({score.LetterGrade.GetName()})":"")

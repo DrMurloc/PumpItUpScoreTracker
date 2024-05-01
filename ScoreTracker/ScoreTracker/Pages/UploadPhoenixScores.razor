@@ -10,6 +10,7 @@
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Events
+@using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
@@ -99,10 +100,7 @@
                                         </MudTooltip>
                                     </MudTd>
                                     <MudTd>
-                                        <MudTooltip Text="@_charts[context.ChartId].DifficultyString">
-
-                                            <MudImage Src="@_charts[context.ChartId].DifficultyBubblePath" Height="35" Alt="@_charts[context.ChartId].DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-                                        </MudTooltip>
+                                        <DifficultyBubble Chart="_charts[context.ChartId]"></DifficultyBubble>
 
                                     </MudTd>
                                     <MudTd>

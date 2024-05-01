@@ -9,6 +9,7 @@
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Services.Contracts
 @using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using MassTransit
@@ -64,8 +65,7 @@
                     <MudCard Class="@CardClass(chart.Id)" Style="@CardStyle(chart.Id)">
                         <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()"/>
                         <MudCardActions>
-
-                            <MudImage Src="@chart.DifficultyBubblePath" Height="35" Alt="@chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                            <DifficultyBubble Chart="chart"></DifficultyBubble>
                             <MudSpacer>
                             </MudSpacer>
                             @if (_scores[chart.Id] > 0)
@@ -110,7 +110,7 @@
                         <MudImage Src="@_charts[context.ChartId].Song.ImagePath.ToString()" Height="35" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
                     </MudTd>
                     <MudTd>
-                        <MudImage Src="@_charts[context.ChartId].DifficultyBubblePath.ToString()" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                        <DifficultyBubble Chart="_charts[context.ChartId]"></DifficultyBubble>
                     </MudTd>
                     <MudTd>
                         <MudTooltip Text="@context.Order.ToString()">

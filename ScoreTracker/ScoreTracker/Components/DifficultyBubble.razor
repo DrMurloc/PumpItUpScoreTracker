@@ -1,0 +1,23 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@namespace ScoreTracker.Web.Components
+@if (Chart != null)
+{                                
+    <MudTooltip Text=@($"{Chart.Song.Name} {Chart.DifficultyString} - {Chart.StepArtist??"Unknown"}")>
+        <MudImage Src="@DifficultyBubblePath" Height="35" Alt="@Chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+        </MudTooltip>
+}
+@inject IUiSettingsAccessor UiSettings
+@code {
+
+    [Parameter]
+    [Required]
+    public Chart? Chart { get; set; }
+
+    public string DifficultyBubblePath => Chart?.Mix == MixEnum.XX ?
+        $"https://piuimages.arroweclip.se/difficulty/{Chart.DifficultyString.ToLower()}.png" : $"https://piuimages.arroweclip.se/difficulty/{Chart?.Mix}/{Chart?.DifficultyString.ToLower()}.png";
+
+}

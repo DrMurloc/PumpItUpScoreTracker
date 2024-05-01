@@ -41,8 +41,7 @@ public sealed class EFChartRepository : IChartRepository
 
     public async Task<Chart> GetChart(MixEnum mix, Guid chartId, CancellationToken cancellationToken = default)
     {
-        var mixId = MixGuids[mix];
-        var charts = await GetAllCharts(mixId, cancellationToken);
+        var charts = await GetAllCharts(mix, cancellationToken);
         return charts[chartId];
     }
 
@@ -50,16 +49,14 @@ public sealed class EFChartRepository : IChartRepository
     public async Task<IEnumerable<Chart>> GetChartsForSong(MixEnum mix, Name songName,
         CancellationToken cancellationToken = default)
     {
-        var mixId = MixGuids[mix];
-        var charts = await GetAllCharts(mixId, cancellationToken);
+        var charts = await GetAllCharts(mix, cancellationToken);
         return charts.Values.Where(c => c.Song.Name == songName);
     }
 
 
     public async Task<IEnumerable<Chart>> GetCoOpCharts(MixEnum mix, CancellationToken cancellationToken = default)
     {
-        var mixId = MixGuids[mix];
-        var charts = await GetAllCharts(mixId, cancellationToken);
+        var charts = await GetAllCharts(mix, cancellationToken);
         return charts.Values.Where(c => c.Type == ChartType.CoOp);
     }
 
@@ -245,7 +242,7 @@ public sealed class EFChartRepository : IChartRepository
         CancellationToken cancellationToken = default)
     {
         var result =
-            (await GetAllCharts(MixGuids[mix], cancellationToken)).Values.AsEnumerable();
+            (await GetAllCharts(mix, cancellationToken)).Values.AsEnumerable();
         if (chartIds != null)
         {
             var chartIdsArray = chartIds.ToArray();
@@ -272,8 +269,9 @@ public sealed class EFChartRepository : IChartRepository
         return $"{nameof(EFChartRepository)}_{nameof(GetAllCharts)}_Mix:{mixId}";
     }
 
-    private async Task<IDictionary<Guid, Chart>> GetAllCharts(Guid mixId, CancellationToken cancellationToken)
+    private async Task<IDictionary<Guid, Chart>> GetAllCharts(MixEnum mix, CancellationToken cancellationToken)
     {
+        var mixId = MixGuids[mix];
         return await _cache.GetOrCreateAsync<IDictionary<Guid, Chart>>(ChartCacheKey(mixId), async entry =>
         {
             entry.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromDays(14);
@@ -286,7 +284,7 @@ public sealed class EFChartRepository : IChartRepository
                             s.Artist ?? "Unknown",
                             Bpm.From(s.MinBpm, s.MaxBpm)),
                         Enum.Parse<ChartType>(c.Type),
-                        cm.Level, c.StepArtist, cm.NoteCount))
+                        cm.Level, mix, c.StepArtist, cm.NoteCount))
                 .ToDictionaryAsync(c => c.Id, c => c, cancellationToken);
         });
     }

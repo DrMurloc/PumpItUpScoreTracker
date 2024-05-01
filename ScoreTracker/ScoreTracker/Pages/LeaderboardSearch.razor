@@ -3,6 +3,7 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Components
 <PageTitle>Official Leaderboard Search</PageTitle>
 <MudText>@L["Last Updated"] - @_lastUpdated.ToLocalTime().ToString()</MudText>
 <MudAutocomplete T="string" AdornmentIcon="@Icons.Material.Filled.Search"
@@ -42,7 +43,7 @@
                 @_chartMap[context.LeaderboardName].Song.Name
             </MudTd>
             <MudTd>
-                <MudImage Src="@_chartMap[context.LeaderboardName].DifficultyBubblePath" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                <DifficultyBubble Chart="_chartMap[context.LeaderboardName]"></DifficultyBubble>
             </MudTd>
             <MudTd>
                 @context.Place

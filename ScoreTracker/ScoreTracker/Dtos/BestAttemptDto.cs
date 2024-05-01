@@ -4,8 +4,9 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Web.Dtos;
 
-public class BestAttemptDto
+public class BestAttemptDto(Chart _chart)
 {
+    public Chart Chart => _chart;
     public Guid ChartId { get; set; }
     public string Category { get; set; }
     public int Level { get; set; }
@@ -24,12 +25,9 @@ public class BestAttemptDto
     public DateTimeOffset? RecordedOn { get; set; }
     public string VideoUrl { get; set; }
 
-    public string DifficultyBubblePath =>
-        $"https://piuimages.arroweclip.se/difficulty/{DifficultyShorthand.ToLower()}.png";
-
     public static BestAttemptDto From(BestXXChartAttempt attempt)
     {
-        return new BestAttemptDto
+        return new BestAttemptDto(attempt.Chart)
         {
             ChartId = attempt.Chart.Id,
             SongType = attempt.Chart.Song.Type.ToString(),

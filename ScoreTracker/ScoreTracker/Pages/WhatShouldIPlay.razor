@@ -88,8 +88,7 @@
                         </MudCardContent>
                     }
                     <MudCardActions>
-                        
-                        <MudImage Src="@chart.DifficultyBubblePath" Height="35" Alt="@chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                        <DifficultyBubble Chart="chart"></DifficultyBubble>
                         <MudSpacer></MudSpacer>
                         
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => Edit(chart.Id,key))"></MudIconButton>

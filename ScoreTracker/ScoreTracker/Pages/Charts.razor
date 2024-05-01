@@ -266,8 +266,7 @@
         {
             
             <MudTd>
-                <MudImage Src="@context.DifficultyBubblePath" Height="35" Alt="@context.DifficultyShorthand" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-         
+                <DifficultyBubble Chart="context.Chart"></DifficultyBubble>
             </MudTd>
         }
         @if (ColumnStatus(ColumnEnum.SongImage))
@@ -744,7 +743,7 @@
                 (await Mediator.Send(new GetXXBestChartAttemptsQuery(userId.Value))).Where(b=>b.BestAttempt!=null)
                     .ToDictionary(b => b.Chart.Id,b=>(XXChartAttempt)b.BestAttempt!);
             
-            _charts = charts.Select(c => new BestAttemptDto
+            _charts = charts.Select(c => new BestAttemptDto(c)
             {
                 ChartId = c.Id,
                 Category = c.Type == Domain.Enums.ChartType.CoOp
@@ -769,7 +768,7 @@
             var records = userId == null ? Array.Empty<RecordedPhoenixScore>() : await Mediator.Send(new GetPhoenixRecordsQuery(userId.Value));
             var bestAttempts = records.ToDictionary(b => b.ChartId);
             
-            _charts = charts.Select(c => new BestAttemptDto
+            _charts = charts.Select(c => new BestAttemptDto(c)
             {
                 ChartId = c.Id,
                 Category = c.Type == Domain.Enums.ChartType.CoOp

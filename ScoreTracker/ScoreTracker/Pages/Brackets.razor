@@ -237,8 +237,7 @@
             <MudImage Src="@_charts[context.ChartId].Song.ImagePath.ToString()" Height="35" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
         </MudTd>
         <MudTd>
-            
-            <MudImage Src="@_charts[context.ChartId].DifficultyBubblePath" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+            <DifficultyBubble Chart="_charts[context.ChartId]"></DifficultyBubble>
         </MudTd>
         <MudTd>@context.MatchCount</MudTd>
         <MudTd>@context.VetoCount</MudTd>

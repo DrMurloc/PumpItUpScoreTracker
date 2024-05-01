@@ -4,6 +4,7 @@
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Web.Components
 <PageTitle>Tournament</PageTitle>
 @if (_isLoaded)
 {
@@ -147,7 +148,7 @@
 
             </MudTd>
             <MudTd>
-                <MudImage Src="@context.Chart.DifficultyBubblePath" Height="35" Alt="@context.Chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                <DifficultyBubble Chart="context.Chart"></DifficultyBubble>
 
             </MudTd>
             <MudTd><MudButton StartIcon="@Icons.Material.Filled.ViewList" Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>ToggleBoard(context.Chart.Id)">@context.PlayCount Plays</MudButton></MudTd>

@@ -13,6 +13,7 @@
 @using ScoreTracker.PersonalProgress.Queries
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using System.Web
+@using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Models
 <PageTitle>Communities</PageTitle>
 
@@ -134,11 +135,7 @@
                             <MudCard>
                                 <MudCardMedia Height="150" Image="@entry.Chart.Song.ImagePath.ToString()"/>
                                 <MudCardContent>
-                                    <MudTooltip Text=@($"{entry.Chart.Song.Name} {entry.Chart.DifficultyString}")>
-
-                                        <MudImage Src="@entry.Chart.DifficultyBubblePath" Height="35" Alt="@entry.Chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-
-                                    </MudTooltip>
+                                    <DifficultyBubble Chart="entry.Chart"></DifficultyBubble>
                                     <MudTooltip Text=@($"{entry.CompetitiveLevel:0.000}, {entry.Rating} Rating")>
                                         <MudText>
                                             @entry.Score (@entry.Score.LetterGrade.GetName())
