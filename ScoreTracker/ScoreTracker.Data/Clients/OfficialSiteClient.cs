@@ -122,8 +122,10 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
             new ImportStatusUpdated(_currentUser.User.Id, "Logging In",
                 Array.Empty<RecordedPhoenixScore>()), cancellationToken);
         var sessionId = await _piuGame.GetSessionId(username, password, cancellationToken);
+
+        var finalPage = (await _piuGame.GetBestScores(sessionId, 1, cancellationToken)).MaxPage;
         var responses = new List<PiuGameGetBestScoresResult.ScoreDto>();
-        maxPages ??= (await _piuGame.GetBestScores(sessionId, 1, cancellationToken)).MaxPage;
+        maxPages ??= finalPage;
         while (currentPage <= maxPages.Value)
         {
             await _mediator.Publish(
@@ -140,7 +142,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         var bestScores =
             (await _phoenixRecords.GetRecordedScores(_currentUser.User.Id, cancellationToken)).ToDictionary(r =>
                 r.ChartId);
-        while (pagesWithNoUpscore <= 3)
+        while (pagesWithNoUpscore <= 3 && currentPage <= finalPage)
         {
             pagesWithNoUpscore++;
             var nextPage = await _piuGame.GetBestScores(sessionId, currentPage, cancellationToken);
