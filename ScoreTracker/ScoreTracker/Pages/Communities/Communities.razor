@@ -9,6 +9,7 @@
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.ValueTypes
 @using System.Web
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
 <PageTitle>Communities</PageTitle>
 <MudTable T="CommunityOverviewRecord" Items="_communities">
     <HeaderContent>
@@ -213,11 +214,14 @@
         _showManageDialog = true;
         _isSaving = false;
     }
+
+    
     private async Task CopyCode(Guid code)
     {
         await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", $"https://piuscores.arroweclip.se/Communities/Invite/{code}");
         Snackbar.Add("Copied to clipboard!", Severity.Success);
     }
+
     protected override async Task OnInitializedAsync()
     {
         _currentUser = CurrentUser.IsLoggedIn ? CurrentUser.User : null;
@@ -228,7 +232,6 @@
             _myCommunities = myCommunities.Select(c => c.CommunityName).ToHashSet();
             _communities = _communities.Concat(myCommunities.Where(c => c.PrivacyType == CommunityPrivacyType.Private)).ToArray();
         }
-
-
+        
     }
 }

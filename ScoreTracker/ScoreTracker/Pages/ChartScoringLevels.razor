@@ -1,0 +1,152 @@
+﻿@page "/Experiments/ChartScoring"
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Dtos
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.SecondaryPorts
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ScoreTracker.Application.Queries
+@using MediatR
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.ValueTypes
+
+<PageTitle>ChartScoring</PageTitle>
+
+@foreach (var kv in _calculatedLevels.OrderBy(l => l.Value))
+{
+    <br/>@($"{_charts[kv.Key].Song.Name}|{_charts[kv.Key].Level}|{kv.Value:0.00}")
+}
+
+@inject IPlayerStatsRepository PlayerStats;
+@inject IMediator Mediator;
+@inject IPhoenixRecordRepository Scores;
+@code
+{
+
+    private int _level = 19;
+    private int _levelDiff = 1;
+    private ChartType _chartType = ChartType.Single;
+    private bool _isLoading = false;
+    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private IDictionary<Guid, double> _calculatedLevels = new Dictionary<Guid, double>();
+    private async Task SetLevel(int level, int levelDiff, ChartType chartType)
+    {
+        var max = level + levelDiff;
+        var min = level - levelDiff;
+        if (min < 1)
+        {
+            min = 1;
+        }
+        if (max > 26 && chartType == ChartType.Single)
+        {
+            max = 26;
+        }
+        if (max > 27 && chartType == ChartType.Double)
+        {
+            max = 27;
+        }
+        _level = level;
+        _chartType = chartType;
+        _isLoading = true;
+        var phoenixScores = new List<(Guid UserId,RecordedPhoenixScore Record)>();
+        for (var l = min; l <= max; l++)
+        {
+            phoenixScores.AddRange((await Scores.GetAllPlayerScores(chartType,l)).Where(s=>s.record.Score!=null));
+        }
+        var userIds = phoenixScores.Select(u => u.UserId).Distinct().ToArray();
+        var playerWeights = new Dictionary<Guid, double>();
+        foreach (var userId in userIds)
+        {
+            var stats = await PlayerStats.GetStats(userId, CancellationToken.None);
+            var competitiveLevel = chartType == ChartType.Single ? stats.SinglesCompetitiveLevel : stats.DoublesCompetitiveLevel;
+            playerWeights[userId] = Math.Pow(.5, Math.Abs(level+.5-competitiveLevel));
+        }
+        var chartScores = new Dictionary<Guid, double>();
+        foreach(var scoreGroup  in phoenixScores.GroupBy(s => s.Record.ChartId))
+        {
+            var total = 0.0;
+            var weight = 0.0;
+            foreach (var record in scoreGroup)
+            {
+                total += ((int)record.Record.Score!.Value) * playerWeights[record.UserId];
+                weight += playerWeights[record.UserId];
+            }
+            chartScores[scoreGroup.Key] = total / weight;
+        }
+        var levelAverages = chartScores.GroupBy(kv => _charts[kv.Key].Level)
+            .ToDictionary(group => group.Key, group => group.Average(g => g.Value));
+
+        var lowStandardDev = StdDev(chartScores.Where(c => _charts[c.Key].Level == min).Select(kv => kv.Value), false);
+
+        var highStandardDev = StdDev(chartScores.Where(c => _charts[c.Key].Level == max).Select(kv => kv.Value), false);
+        
+        //var average = chartScores.Values.Average();
+        //var standardDev = StdDev(chartScores.Values,false);
+        foreach (var kv in chartScores.Where(c=>_charts[c.Key].Level==level))
+        {
+            if (kv.Value > levelAverages[min])
+            {
+                if (lowStandardDev == 0)
+                {
+                    _calculatedLevels[kv.Key] = min + .5;
+                    continue;
+                }
+                _calculatedLevels[kv.Key] = min+.5-(kv.Value-levelAverages[min])/(4.0*lowStandardDev);
+                continue;
+            }
+            if (kv.Value <= levelAverages[max])
+            {
+                if (highStandardDev == 0)
+                {
+                    _calculatedLevels[kv.Key] = max + .5;
+                    continue;
+                }
+                _calculatedLevels[kv.Key] = max + .5 + (levelAverages[max] - kv.Value) / (4.0 * highStandardDev);
+                continue;
+            }
+            for (var l = min; l < max; l++)
+            {
+                if (kv.Value <= levelAverages[l] && kv.Value > levelAverages[l+1])
+                {
+                    _calculatedLevels[kv.Key] = l + .5 + (kv.Value - levelAverages[l]) / (levelAverages[l + 1] - levelAverages[l]);
+                    continue;
+                }
+            }
+            //var levelAdjust =(2.0/(.5+levelDiff)) *(average - kv.Value) / (standardDev);
+            //_calculatedLevels[kv.Key] = (level + .5) + levelAdjust;
+        }
+        StateHasChanged();
+        _isLoading = false;
+
+    }
+    
+    public static double StdDev(IEnumerable<double> values,
+        bool as_sample)
+    {
+    // Get the mean.
+        double mean = values.Sum() / values.Count();
+
+    // Get the sum of the squares of the differences
+    // between the values and the mean.
+        var squares_query =
+            from double value in values
+            select (value - mean) * (value - mean);
+        var sum_of_squares = squares_query.Sum();
+
+        if (as_sample)
+            return Math.Sqrt(sum_of_squares / (values.Count() - 1));
+        return Math.Sqrt(sum_of_squares / values.Count());
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isLoading = true;
+        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix)))
+            .ToDictionary(c => c.Id);
+        for (var level = 10; level <= 27; level++)
+        {
+            
+            await SetLevel(level, 3, ChartType.Double);
+        }
+        _isLoading = false;
+    }
+}
