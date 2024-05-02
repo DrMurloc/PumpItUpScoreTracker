@@ -182,6 +182,14 @@
 <br />
 @if (_playerScores.Any())
 {
+    <MudGrid>
+        <MudItem xs="6" md="4">
+            <MudNumericField T="int" Value="_minLevel" ValueChanged="l=>SetLevel(l,_maxLevel)" Min="1" Max="_maxLevel" Label=@L["Minimum Level"] HideSpinButtons="true"></MudNumericField>
+        </MudItem>
+        <MudItem xs="6" md="4">
+            <MudNumericField T="int" Value="_maxLevel" ValueChanged="l=>SetLevel(_minLevel,l)" Min="_minLevel" Max="DifficultyLevel.Max" Label=@L["Maximum Level"] HideSpinButtons="true"></MudNumericField>
+        </MudItem>
+    </MudGrid>
     @foreach (var player in _playerScores.Keys)
     {
         <MudButton Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.Delete" OnClick="() => SelectUser(player)">@_userNames[player]</MudButton>
@@ -287,7 +295,8 @@
     private IDictionary<Guid, Guid?> _winners = new Dictionary<Guid, Guid?>();
     private IDictionary<Guid, double> _winLevelAverage = new Dictionary<Guid, double>();
     private IDictionary<Guid, IDictionary<ChartType, int>> _typeWins = new Dictionary<Guid, IDictionary<ChartType, int>>();
-    
+    private int _minLevel = 1;
+    private int _maxLevel = 28;
     private void Recalculate()
     {
 
@@ -303,9 +312,34 @@
 
 
         _typeWins = _playerScores.ToDictionary(kv => kv.Key, kv => (IDictionary<ChartType, int>)_winners.Where(w => w.Value == kv.Key).GroupBy(w => _charts[w.Key].Type).ToDictionary(g => g.Key, g => g.Count()));
-
+        foreach (var userId in _typeWins.Keys)
+        {
+            if (!_typeWins[userId].ContainsKey(ChartType.Single))
+            {
+                _typeWins[userId][ChartType.Single] = 0;
+            }
+            if (!_typeWins[userId].ContainsKey(ChartType.Double))
+            {
+                _typeWins[userId][ChartType.Double] = 0;
+            }
+        }
         _totalCharts = _leaderboardCharts.Count();
-        _contestedCharts = _leaderboardCharts.Count(c => _winners[c.Id] == null);
+        _contestedCharts = _leaderboardCharts.Count(c => _winners[c.Id] != null);
+    }
+
+    private async Task SetLevel(int minLevel, int maxLevel)
+    {
+        _minLevel = minLevel;
+        _maxLevel = maxLevel;
+        _isLoading = true;
+        foreach (var userId in _playerScores.Keys)
+        {
+            _playerScores[userId] = (await Mediator.Send(new GetPhoenixRecordsQuery(userId))).Where(r => r.Score != null && _charts[r.ChartId].Level >= _minLevel && _charts[r.ChartId].Level <= _maxLevel)
+                .ToDictionary(r => r.ChartId, r => r.Score!.Value);
+
+        }
+        _isLoading = false;
+        Recalculate();
     }
     private async Task SelectUser(Guid userId)
     {
@@ -316,7 +350,9 @@
         else
         {
             _isLoading = true;
-            _playerScores[userId] = (await Mediator.Send(new GetPhoenixRecordsQuery(userId))).Where(s => s.Score != null).ToDictionary(r => r.ChartId, r => r.Score!.Value);
+            _playerScores[userId] = (await Mediator.Send(new GetPhoenixRecordsQuery(userId))).Where(r => r.Score != null && _charts[r.ChartId].Level >= _minLevel && _charts[r.ChartId].Level <= _maxLevel)
+                .ToDictionary(r => r.ChartId, r => r.Score!.Value);
+
             _isLoading = true;
 
         }
