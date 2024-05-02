@@ -210,6 +210,59 @@
         }
         <br />
     }
+    <br/>
+    <MudGrid>
+        <MudItem xs="12" md="6">
+            <MudTextField @bind-Value="_searchText" Label="Song Filter" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true"></MudTextField>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudSelect T="Guid?" Label="Winner" @bind-Value="_filteredWinner" Clearable="true">
+                @foreach (var key in _playerScores.Keys)
+                {
+                    <MudSelectItem T="Guid?" Value="key">@_userNames[key]</MudSelectItem>
+                }
+            </MudSelect>
+
+        </MudItem>
+    </MudGrid>
+    <br/>
+    <MudTable T="Chart" Items="FilteredCharts">
+        <HeaderContent>
+            <MudTh><MudTableSortLabel T="Chart" SortBy="c=>c.Song.Name.ToString()">Song</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="Chart" SortBy="c=>(int)c.Level">Chart</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="Chart" SortBy="c=>_winners[c.Id]">Winner</MudTableSortLabel></MudTh>
+            @foreach (var key in _playerScores.Keys)
+            {
+                <MudTh>
+                    <MudTableSortLabel T="Chart" SortBy="c=>_playerScores[key].TryGetValue(c.Id,out var score)?(int)score:0">@_userNames[key]</MudTableSortLabel>
+                </MudTh>
+            }
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudTooltip Text="@context.Song.Name">
+                    
+                    <MudImage Src="@context.Song.ImagePath.ToString()" Height="35" Alt="@context.Song.Name" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
+                </MudTooltip>
+            </MudTd>
+            <MudTd>
+                <DifficultyBubble Chart="context"></DifficultyBubble>
+            </MudTd>
+            <MudTd>
+                @(_winners[context.Id]==null?"Tie":_userNames[_winners[context.Id]!.Value])
+            </MudTd>
+            @foreach (var key in _playerScores.Keys)
+            {
+                <MudTd>
+                    @(_playerScores[key].TryGetValue(context.Id, out var score) ? $"{score} ({score.LetterGrade.GetName()})" : "")
+                </MudTd>
+            }
+        </RowTemplate>
+        
+        <PagerContent>
+            <MudTablePager></MudTablePager>
+        </PagerContent>
+    </MudTable>
 }
 
 @inject IMediator Mediator;
@@ -219,6 +272,11 @@
     private Guid _showingUserId = Guid.Empty;
     private ChartType? _chartType = null;
     private int Colspan => _currentType == LeaderboardType.CoOp ? 4 : _currentType == LeaderboardType.Total ? 5 : 6;
+    private string _searchText;
+    private Guid? _filteredWinner = null;
+    private IEnumerable<Chart> FilteredCharts => _leaderboardCharts.Where(c => string.IsNullOrWhiteSpace(_searchText) || c.Song.Name.ToString().Contains(_searchText, StringComparison.OrdinalIgnoreCase))
+        .Where(c=>_filteredWinner==null || _winners[c.Id]==_filteredWinner)
+        .OrderBy(s => string.IsNullOrWhiteSpace(_searchText) || s.Song.Name == _searchText ? 0 : 1);
     private async Task ShowUserCompetitiveData(Guid userId, ChartType? chartType)
     {
         if (_showingUserId == userId && _chartType == chartType)

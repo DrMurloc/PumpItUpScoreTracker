@@ -8,6 +8,7 @@
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Application.Queries
 @using MediatR
+@using ScoreTracker.Web.Components
 <PageTitle>Official Leaderboard Player Compare</PageTitle>
 <MudText>@L["Last Updated"] - @LeaderboardSearch._lastUpdated.ToLocalTime().ToString()</MudText>
 <MudAutocomplete T="string" AdornmentIcon="@Icons.Material.Filled.Search"
@@ -54,7 +55,20 @@
 }
 @if (_players.Values.Any(p=>p.Any()))
 {
-    <MudTextField @bind-Value="_searchText" Label="Song Filter" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true"></MudTextField>
+    <MudGrid>
+        <MudItem xs="6" md="4">
+            
+            <MudTextField @bind-Value="_searchText" Label="Song Filter" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true"></MudTextField>
+        </MudItem>
+        <MudItem xs="6" md="4">
+            <MudSelect T="string?" Clearable="true" Label="Winner" @bind-Value="_winnerFilter">
+                @foreach (var key in _players.Keys)
+                {
+                    <MudSelectItem T="string?" Value="@key">@key</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+    </MudGrid>
     <br/>
     <MudTable T="Chart" Items="FilteredCharts">
         <HeaderContent>
@@ -108,8 +122,9 @@ else
     private readonly IDictionary<string, IDictionary<Guid, PhoenixScore>> _players = new Dictionary<string, IDictionary<Guid, PhoenixScore>>(StringComparer.OrdinalIgnoreCase);
     private  IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private IEnumerable<Chart> _leaderboardCharts = Array.Empty<Chart>();
-
+    private string? _winnerFilter = null;
     private IEnumerable<Chart> FilteredCharts => _leaderboardCharts.Where(c => string.IsNullOrWhiteSpace(_searchText) || c.Song.Name.ToString().Contains(_searchText, StringComparison.OrdinalIgnoreCase))
+        .Where(c=>_winnerFilter==null || _winners[c.Id].Equals(_winnerFilter,StringComparison.OrdinalIgnoreCase))
         .OrderBy(s => string.IsNullOrWhiteSpace(_searchText) || s.Song.Name == _searchText ? 0 : 1);
     private IEnumerable<string> _usernames = Array.Empty<string>();
     private bool _isloading = false;
