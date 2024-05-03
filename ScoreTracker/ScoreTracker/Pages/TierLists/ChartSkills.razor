@@ -591,7 +591,22 @@
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).
         ToDictionary(c => c.Id);
         _chartVideos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl.ToString());
-        await SetType(ChartType.Single);
+        _chartType = ChartType.Double;
+        _level = 18;
+        if (CurrentUser.IsLoggedIn)
+        {
+            var stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
+            if (stats.DoublesCompetitiveLevel > 1)
+            {
+                _level = (int)Math.Round(stats.DoublesCompetitiveLevel);
+            }
+            if (stats.SinglesCompetitiveLevel > 1 && stats.SinglesCompetitiveLevel > stats.DoublesCompetitiveLevel)
+            {
+                _chartType = ChartType.Single;
+                _level = (int)Math.Round(stats.SinglesCompetitiveLevel);
+            }
+        }
+        await Recalculate();
     }
 
     public static double StdDev(IEnumerable<double> values,
