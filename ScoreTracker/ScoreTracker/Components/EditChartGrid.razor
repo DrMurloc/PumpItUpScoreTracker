@@ -95,23 +95,7 @@
                 <MudText>@L["Recorded On",_recordedOn.Value.ToString("MMM dd, yyyy")]</MudText>
             </MudItem>
         }
-        @if (_selectedChart.Type != ChartType.CoOp)
-        {
-            <MudItem xs="8">
-                <MudSelect Disabled="_isSaving" Label=@L["Your Difficulty Rating"] T="int?" Value="_selectedAdjustment" ValueChanged="UpdateDifficultyRating">
-                    @foreach (var rating in Enum.GetValues<DifficultyAdjustment>())
-                    {
-                        <MudSelectItem T="int?" Value="@rating.GetScale()">@rating.GetDescription()</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="4">
-                <MudTooltip Text="@CountString">
-                    <MudText>@L["Average Rating"]: @($"{@_currentRatedDifficulty:N2}")</MudText>
-                </MudTooltip>
-            </MudItem>
-        }
-        else if(_myCoOpRatings.Any())
+        if(_selectedChart.Type==ChartType.CoOp && _myCoOpRatings.Any())
         {
             <MudItem xs="8"></MudItem>
             @if (_rateCoOpSeparately)

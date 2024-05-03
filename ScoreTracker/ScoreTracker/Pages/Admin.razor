@@ -157,15 +157,16 @@ Do It
     {
        // await OfficialClient.FixAvatars();
         //await Bus.Publish(new ProcessScoresTiersListCommand());
+        await Bus.Publish(new ProcessPassTierListCommand());
     //await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);
 
 
-       // await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
+    // await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
     //await Mediator.Send(new ProcessChartPopularityCommand());
-    await WorldRanking.CalculateWorldRankings(CancellationToken.None);
-        
-    
-        /*var userIds = await Database.User.Select(u => u.Id).ToArrayAsync();
+    //await WorldRanking.CalculateWorldRankings(CancellationToken.None);
+
+
+    /*var userIds = await Database.User.Select(u => u.Id).ToArrayAsync();
         foreach (var userId in userIds)
         {
             await Mediator.Send(new PlayerRatingSaga.RecalculateStats(userId));

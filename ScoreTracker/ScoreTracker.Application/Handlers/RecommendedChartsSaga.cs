@@ -226,13 +226,10 @@ namespace ScoreTracker.Application.Handlers
                     c => c.Level);
 
             var popularity = await _mediator.Send(new GetTierListQuery("Popularity"), cancellationToken);
-            var difficulty = await _mediator.Send(new GetTierListQuery("Difficulty"), cancellationToken);
-            var officialScore =
-                (await _mediator.Send(new GetTierListQuery("Official Scores"), cancellationToken)).Where(r =>
-                    chartLevels[r.ChartId] >= 20);
+            var difficulty = await _mediator.Send(new GetTierListQuery("Pass Count"), cancellationToken);
             var score = (await _mediator.Send(new GetTierListQuery("Scores"), cancellationToken))
                 .Where(r => chartLevels[r.ChartId] < 20);
-            return popularity.Concat(difficulty).Concat(score).Concat(officialScore).GroupBy(s => s.ChartId)
+            return popularity.Concat(difficulty).Concat(score).GroupBy(s => s.ChartId)
                 .OrderByDescending(g => g.Sum(s =>
                     (s.TierListName == "Popularity" ? .5 : 1.0) *
                     s.Category switch
