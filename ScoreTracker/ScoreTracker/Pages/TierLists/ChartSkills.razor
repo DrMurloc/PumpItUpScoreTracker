@@ -58,10 +58,12 @@
         <MudItem xs="12" sm="4" md="3">
             <MudCheckBox T="bool" @bind-Checked="_showPassed" Label="Show Passed Charts"></MudCheckBox>
         </MudItem>
+        <MudItem xs="12" sm="4" md="3">
+            <MudCheckBox T="bool" @bind-Checked="_textView" Label="Text View"></MudCheckBox>
+        </MudItem>
     }
     @if (_finalEntries.Any() && _finalEntries.All(e=>_charts.ContainsKey(e.ChartId)))
     {
-
         @foreach (var group in _finalEntries.Where(e => _showPassed || !_scores.TryGetValue(e.ChartId, out var score) || score == 0).GroupBy(e => e.Category).OrderBy(g => g.Key))
         {
             <MudItem xs="12">
@@ -71,40 +73,52 @@
                     <MudText Typo="Typo.subtitle1">@_messages[group.Key]</MudText>
                 }
             </MudItem>
+            
+
             foreach (var chart in group.OrderBy(e => e.Order).Select(c => _charts[c.ChartId]))
             {
+                
+                @if (_textView)
+                {
+                    <MudItem xs="12" Style="padding-top:0px;padding-bottom:0px;">
+                        
+                        <MudText Color=@(_scores.ContainsKey(chart.Id) && _scores[chart.Id]>0 ? Color.Success : Color.Default)>
+                            @($"{chart.Song.Name} {chart.DifficultyString}") @(_scores.ContainsKey(chart.Id)&&_scores[chart.Id]>0?$"- {_scores[chart.Id].ToGradeString()}":"")
+                        </MudText>
+                    </MudItem>
+                }
+                else
+                {
+                    <MudItem xs="6" sm="3" md="2">
 
-                <MudItem xs="6" sm="3" md="2">
+                        <MudCard Class="@CardClass(chart.Id)" Style="@CardStyle(chart.Id)">
+                            <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()"/>
+                            @if ((_scores.TryGetValue(chart.Id, out var s) ? s : 0) > 0)
+                            {
+                                <MudCardContent>
+                                    <MudText>@_scores[chart.Id] (@_scores[chart.Id].LetterGrade.GetName())</MudText>
 
-                    <MudCard Class="@CardClass(chart.Id)" Style="@CardStyle(chart.Id)">
-                        <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()"/>
-                        @if ((_scores.TryGetValue(chart.Id, out var s) ? s : 0) > 0)
-                        {
-                            <MudCardContent>
-                                <MudText>@_scores[chart.Id] (@_scores[chart.Id].LetterGrade.GetName())</MudText>
+                                </MudCardContent>
+                            }
+                            <MudCardActions>
+                                <DifficultyBubble Chart="chart"></DifficultyBubble>
+                                <MudSpacer>
+                                </MudSpacer>
+                                @if (_chartVideos.ContainsKey(chart.Id))
+                                {
+                                    <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(chart))"></MudIconButton>
 
-                            </MudCardContent>
-                        }
-                        <MudCardActions>
-                            <DifficultyBubble Chart="chart"></DifficultyBubble>
-                            <MudSpacer>
-                            </MudSpacer>
-                        @if (_chartVideos.ContainsKey(chart.Id))
-                        {
-                            <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(chart))"></MudIconButton>
-
-                        }
-                        else
-                        {
-                            <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
-                        }
-                        </MudCardActions>
-
-                    </MudCard>
-                </MudItem>
+                                }
+                                else
+                                {
+                                    <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
+                                }
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
             }
         }
-
         @if (CurrentUser.IsLoggedIn && _orderedSkills.Any())
         {
             
@@ -214,6 +228,7 @@
     private IDictionary<Guid, PhoenixScore> _scores = new Dictionary<Guid, PhoenixScore>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private ChartType _chartType = ChartType.Single;
+    private bool _textView = false;
     private bool _isLoading = false;
     private int _highlightedModifier = 10;
     private bool _showPassed = true;
