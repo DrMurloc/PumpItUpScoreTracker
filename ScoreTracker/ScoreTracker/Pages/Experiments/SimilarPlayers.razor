@@ -22,12 +22,17 @@
         <MudNumericField T="int" Value="_level" ValueChanged="l=>SetFilters(_type,l)" HideSpinButtons="true" Label="Level"></MudNumericField>
     </MudItem>
 </MudGrid>
-<MudText Typo="Typo.h4">Chart Ratings</MudText>
-@foreach (var kv in _chartWeights.OrderByDescending(k => k.Value))
+<MudText Typo="Typo.h4">Calculated Tier List</MudText>
+@foreach (var category in Enum.GetValues<TierListCategory>().Where(c=>_tierList.ContainsKey(c)))
 {
-    <MudText Color=@(_myTierList.ContainsKey(kv.Key) && _myTierList[kv.Key].Category != TierListCategory.Unrecorded ? Color.Success : Color.Default)>
-        @($"{_charts[kv.Key].Song.Name} {_charts[kv.Key].DifficultyString} - {kv.Value}")
-    </MudText>
+    <br/>
+    <MudText Typo="Typo.h5">@category</MudText>
+    @foreach (var chart in _tierList[category])
+    {
+        <MudText Color=@(_myTierList.ContainsKey(chart.Id) && _myTierList[chart.Id].Category != TierListCategory.Unrecorded ? Color.Success : Color.Default)>
+            @($"{chart.Song.Name} {chart.DifficultyString} - {_chartWeights[chart.Id]}")
+        </MudText>
+    }
 }
 <br/><br/>
 <MudText Typo="Typo.h4">Similar Players</MudText>
@@ -48,7 +53,7 @@
     private IDictionary<Guid, SongTierListEntry> _myTierList = new Dictionary<Guid, SongTierListEntry>();
     private int _level = 18;
     private ChartType _type = ChartType.Double;
-
+    private IDictionary<TierListCategory, Chart[]> _tierList = new Dictionary<TierListCategory, Chart[]>();
     private async Task SetFilters(ChartType type, int level)
     {
         _level = level;
@@ -88,6 +93,48 @@
                 }
                 _chartWeights[entry.ChartId] += (TierListCategory.Unrecorded - entry.Category) * _userTotals[kv.Key];
             }
+        _tierList = ProcessIntoTierList("Similar Players", _chartWeights).GroupBy(c => c.Category)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(l => l.Order)
+                .Select(c => _charts[c.ChartId]).ToArray());
+
+    }
+
+    private IEnumerable<SongTierListEntry> ProcessIntoTierList(string tierListName, IDictionary<Guid, int> chartWeights)
+    {
+        var standardDeviationCompare =
+            TierListSaga.StdDev(chartWeights.Select(s => s.Value), false);
+        var averageCompare = chartWeights.Average(kv => kv.Value);
+        var mediumMinCompare = averageCompare - standardDeviationCompare / 2;
+        var easyMinCompare = averageCompare + standardDeviationCompare / 2;
+        var veryEasyMinCompare = averageCompare + standardDeviationCompare;
+        var oneLevelOverratedCompare = averageCompare + standardDeviationCompare * 1.5;
+        var hardMinCompare = averageCompare - standardDeviationCompare;
+        var veryHardMinCompare = averageCompare - standardDeviationCompare * 1.5;
+        var result = new List<SongTierListEntry>();
+        var order = 0;
+        foreach (var chart in chartWeights.OrderBy(kv => kv.Value))
+        {
+            var score = chart.Value;
+            var myCategory = TierListCategory.Overrated;
+            if (score == 0)
+                myCategory = TierListCategory.Unrecorded;
+            else if (score < veryHardMinCompare)
+                myCategory = TierListCategory.Underrated;
+            else if (score < hardMinCompare)
+                myCategory = TierListCategory.VeryHard;
+            else if (score < mediumMinCompare)
+                myCategory = TierListCategory.Hard;
+            else if (score < easyMinCompare)
+                myCategory = TierListCategory.Medium;
+            else if (score < veryEasyMinCompare)
+                myCategory = TierListCategory.Easy;
+            else if (score < oneLevelOverratedCompare)
+                myCategory = TierListCategory.VeryEasy;
+            else
+                myCategory = TierListCategory.Overrated;
+            result.Add(new SongTierListEntry(tierListName, chart.Key, myCategory, order++));
+        }
+        return result;
     }
     protected override async Task OnInitializedAsync()
     {
