@@ -96,14 +96,29 @@
                             @if ((_scores.TryGetValue(chart.Id, out var s) ? s : 0) > 0)
                             {
                                 <MudCardContent>
+                                    
                                     <MudText>@_scores[chart.Id] (@_scores[chart.Id].LetterGrade.GetName())</MudText>
-
+                                    
                                 </MudCardContent>
                             }
                             <MudCardActions>
                                 <DifficultyBubble Chart="chart"></DifficultyBubble>
                                 <MudSpacer>
                                 </MudSpacer>
+                                
+                                @if (_popularCharts.Contains(chart.Id))
+                                {
+                                    <MudTooltip Text="This chart is extra popular and may have skewed data">
+                                        <MudIcon Color="Color.Warning" Icon=@Icons.Material.Filled.TrendingUp></MudIcon>
+                                    </MudTooltip>
+                                }
+                                @if(_unPopularCharts.Contains(chart.Id))
+                                {
+                                        
+                                    <MudTooltip Text="This chart is extra unpopular and may have skewed data">
+                                        <MudIcon Color="Color.Warning" Icon=@Icons.Material.Filled.TrendingDown></MudIcon>
+                                    </MudTooltip>
+                                }
                                 @if (_chartVideos.ContainsKey(chart.Id))
                                 {
                                     <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(chart))"></MudIconButton>
@@ -227,6 +242,8 @@
     private IDictionary<Guid, double> _passScore = new Dictionary<Guid, double>();
     private IDictionary<Guid, PhoenixScore> _scores = new Dictionary<Guid, PhoenixScore>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private ISet<Guid> _unPopularCharts = new HashSet<Guid>();
+    private ISet<Guid> _popularCharts = new HashSet<Guid>();
     private ChartType _chartType = ChartType.Single;
     private bool _textView = false;
     private bool _isLoading = false;
@@ -338,6 +355,7 @@
         _currentVideoDescription = $"{chart.Song.Name} - {chart.DifficultyString}";
         StateHasChanged();
     }
+
     private async Task<IEnumerable<SongTierListEntry>> BuildSkillTierList()
     {
 
@@ -517,6 +535,8 @@
         var officialScores = (await Mediator.Send(new GetTierListQuery("Official Scores"))).ToDictionary(s => s.ChartId);
         var scores = (await Mediator.Send(new GetTierListQuery("Scores"))).ToDictionary(s => s.ChartId); 
         var popularity = (await Mediator.Send(new GetTierListQuery("Popularity"))).ToDictionary(s => s.ChartId);
+        _popularCharts = popularity.Where(kv => kv.Value.Category == TierListCategory.Overrated).Select(kv => kv.Key).ToHashSet();
+        _unPopularCharts = popularity.Where(kv => kv.Value.Category == TierListCategory.Underrated).Select(kv => kv.Key).ToHashSet();
         var result = new List<SongTierListEntry>();
         var baseEntries =
             CurrentUser.IsLoggedIn ?
