@@ -135,7 +135,8 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         var filtered = await _chartRepository.GetCharts(MixEnum.Phoenix, request.Level, request.ChartType,
             cancellationToken: cancellationToken);
         var phoenixScores =
-            (await _scores.GetRecordedScores(_currentUser.User.Id, cancellationToken)).ToDictionary(s => s.ChartId);
+            (await _scores.GetRecordedScores(request.UserId ?? _currentUser.User.Id, cancellationToken)).ToDictionary(
+                s => s.ChartId);
 
 
         var filteredCompareScoreArray = filtered

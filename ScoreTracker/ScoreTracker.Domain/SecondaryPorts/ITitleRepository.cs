@@ -10,5 +10,6 @@ namespace ScoreTracker.Domain.SecondaryPorts
             CancellationToken cancellationToken);
 
         Task<IEnumerable<Name>> GetCompletedTitles(Guid userId, CancellationToken cancellationToken);
+        Task<DifficultyLevel> GetCurrentTitleLevel(Guid userId, CancellationToken cancellationToken);
     }
 }

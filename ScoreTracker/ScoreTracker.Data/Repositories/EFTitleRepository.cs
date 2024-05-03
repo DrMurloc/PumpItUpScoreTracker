@@ -65,5 +65,11 @@ namespace ScoreTracker.Data.Repositories
             return (await _dbContext.UserTitle.Where(u => u.UserId == userId).Select(u => u.Title)
                 .ToArrayAsync(cancellationToken)).Select(Name.From).ToArray();
         }
+
+        public async Task<DifficultyLevel> GetCurrentTitleLevel(Guid userId, CancellationToken cancellationToken)
+        {
+            return (await (await _factory.CreateDbContextAsync(cancellationToken)).UserHighestTitle
+                .Where(u => u.UserId == userId).FirstOrDefaultAsync(cancellationToken))?.Level ?? 10;
+        }
     }
 }

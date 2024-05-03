@@ -6,7 +6,7 @@ using ScoreTracker.Domain.ValueTypes;
 namespace ScoreTracker.Application.Handlers
 {
     public sealed record GetMyRelativeTierListQuery
-        (ChartType ChartType, DifficultyLevel Level) : IRequest<IEnumerable<SongTierListEntry>>
+        (ChartType ChartType, DifficultyLevel Level, Guid? UserId = null) : IRequest<IEnumerable<SongTierListEntry>>
     {
     }
 }

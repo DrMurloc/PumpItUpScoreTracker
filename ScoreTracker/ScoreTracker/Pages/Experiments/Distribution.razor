@@ -1,6 +1,7 @@
 ﻿@page "/Distribution"
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Web.Dtos
+@using ScoreTracker.Web.Pages.Tools
 
 <PageTitle>Upload Scores</PageTitle>
 <MudButton Disabled="true" Variant="Variant.Filled" Color="MudBlazor.Color.Primary" OnClick="_=>IterateThroughScores(400)">Start</MudButton>
@@ -10,7 +11,6 @@
 
 
 @inject ISnackbar Snackbar;
-@inject ILogger<PhoenixCalculator> Logger;
 @code
 {
     private string _text = "";

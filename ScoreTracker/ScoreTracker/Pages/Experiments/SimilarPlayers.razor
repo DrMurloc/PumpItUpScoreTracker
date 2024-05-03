@@ -1,0 +1,101 @@
+﻿@page "/Experiments/SimilarPlayers"
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Dtos
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.SecondaryPorts
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ScoreTracker.Application.Queries
+@using MediatR
+@using ScoreTracker.Application.Handlers
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.ValueTypes
+
+<PageTitle>User Matches</PageTitle>
+<MudGrid>
+    <MudItem xs="12" sm="6">
+        <MudSelect T="ChartType" Label="Chart Type" Value="_type" ValueChanged="t=>SetFilters(t,_level)">
+            <MudSelectItem T="ChartType" Value="ChartType.Double">Doubles</MudSelectItem>
+            <MudSelectItem T="ChartType" Value="ChartType.Single">Singles</MudSelectItem>
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudNumericField T="int" Value="_level" ValueChanged="l=>SetFilters(_type,l)" HideSpinButtons="true" Label="Level"></MudNumericField>
+    </MudItem>
+</MudGrid>
+<MudText Typo="Typo.h4">Chart Ratings</MudText>
+@foreach (var kv in _chartWeights.OrderByDescending(k => k.Value))
+{
+    <MudText Color=@(_myTierList.ContainsKey(kv.Key) && _myTierList[kv.Key].Category != TierListCategory.Unrecorded ? Color.Success : Color.Default)>
+        @($"{_charts[kv.Key].Song.Name} {_charts[kv.Key].DifficultyString} - {kv.Value}")
+    </MudText>
+}
+<br/><br/>
+<MudText Typo="Typo.h4">Similar Players</MudText>
+@foreach (var kv in _userTotals.OrderByDescending(k=>k.Value))
+{
+    @($"{kv.Key} - {kv.Value}")<br/>
+}
+@inject IMediator Mediator;
+@inject ICurrentUserAccessor CurrentUser;
+@inject NavigationManager NavManager;
+@inject ITitleRepository Titles;
+@inject ITierListRepository TierLists;
+@code
+{
+    private IDictionary<Guid, int> _userTotals = new Dictionary<Guid, int>();
+    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private IDictionary<Guid, int> _chartWeights = new Dictionary<Guid, int>();
+    private IDictionary<Guid, SongTierListEntry> _myTierList = new Dictionary<Guid, SongTierListEntry>();
+    private int _level = 18;
+    private ChartType _type = ChartType.Double;
+
+    private async Task SetFilters(ChartType type, int level)
+    {
+        _level = level;
+        _type = type;
+        await Recalculate();
+    }
+    private async Task Recalculate()
+    {
+
+        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+
+        var myLevel = await Titles.GetCurrentTitleLevel(CurrentUser.User.Id, CancellationToken.None);
+
+        var userIds = (await TierLists.GetUsersOnLevel(myLevel - 1, CancellationToken.None))
+            .Concat(await TierLists.GetUsersOnLevel(myLevel, CancellationToken.None))
+            .Concat(await TierLists.GetUsersOnLevel(myLevel + 1, CancellationToken.None))
+            .Where(u => u != CurrentUser.User.Id);
+        var userTiersLists = new Dictionary<Guid, IEnumerable<SongTierListEntry>>();
+        _myTierList = (await Mediator.Send(new GetMyRelativeTierListQuery(_type, _level)))
+            .ToDictionary(r => r.ChartId);
+        foreach (var userId in userIds)
+        {
+            userTiersLists[userId] = await Mediator.Send(new GetMyRelativeTierListQuery(_type, _level, userId));
+        }
+        _userTotals = userTiersLists.ToDictionary(kv => kv.Key, kv => kv.Value.Sum(e => _myTierList.ContainsKey(e.ChartId) && _myTierList[e.ChartId].Category != TierListCategory.Unrecorded && e.Category != TierListCategory.Unrecorded ?
+            (int)TierListCategory.Unrecorded - (int)Math.Abs(e.Category - _myTierList[e.ChartId].Category)
+            : 0));
+
+        _chartWeights = new Dictionary<Guid, int>();
+
+        foreach (var kv in userTiersLists)
+            foreach (var entry in kv.Value.Where(e => e.Category != TierListCategory.Unrecorded))
+            {
+                if (!_chartWeights.ContainsKey(entry.ChartId))
+                {
+                    _chartWeights[entry.ChartId] = 0;
+                }
+                _chartWeights[entry.ChartId] += (TierListCategory.Unrecorded - entry.Category) * _userTotals[kv.Key];
+            }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Login");
+            return;
+        }
+        await Recalculate();
+    }
+}

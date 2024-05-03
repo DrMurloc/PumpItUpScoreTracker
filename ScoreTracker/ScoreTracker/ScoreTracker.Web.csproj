@@ -37,7 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="Pages\LeaderboardSearch.razor">
+    <Content Update="Pages\OfficialLeaderboards\LeaderboardSearch.razor">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </Content>
   </ItemGroup>
