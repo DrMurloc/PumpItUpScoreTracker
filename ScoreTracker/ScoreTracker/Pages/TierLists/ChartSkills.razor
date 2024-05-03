@@ -1,6 +1,7 @@
 ﻿@page "/ChartSkills"
 @page "/PersonalizedTierList"
 @using MediatR
+@using ScoreTracker.Application.Handlers
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.Enums
@@ -38,8 +39,10 @@
                 <MudNumericField T="double" Value="modifier.Value" ValueChanged="v => SetCategory(modifier.Key, v)" Label="@modifier.Key"></MudNumericField>
             </MudItem>
         }
+        
+        <MudItem xs="12"></MudItem>
     }
-    <MudItem xs="12" sm="6" md="4">
+    <MudItem xs="12" sm="4" md="3">
 
         <MudRadioGroup T="string" Value="_tierListType" ValueChanged="SetTierListType">
             <MudRadio Value="@("Pass")" Color="Color.Primary">Pass</MudRadio>
@@ -49,11 +52,14 @@
     </MudItem>
     @if (CurrentUser.IsLoggedIn)
     {
-        <MudItem xs="12" sm="6" md="4">
+        <MudItem xs="12" sm="4" md="3">
+            <MudCheckBox T="bool" Value="_usePersonalizedData" ValueChanged="u=>SetUsePersonalized(u)" Label="Personalized"></MudCheckBox>
+        </MudItem>
+        <MudItem xs="12" sm="4" md="3">
             <MudCheckBox T="bool" @bind-Checked="_showPassed" Label="Show Passed Charts"></MudCheckBox>
         </MudItem>
     }
-    @if (!_isLoading)
+    @if (_finalEntries.Any() && _finalEntries.All(e=>_charts.ContainsKey(e.ChartId)))
     {
 
         @foreach (var group in _finalEntries.Where(e => _showPassed || !_scores.TryGetValue(e.ChartId, out var score) || score == 0).GroupBy(e => e.Category).OrderBy(g => g.Key))
@@ -114,7 +120,7 @@
         }
     }
 </MudGrid>
-@if (!_isLoading)
+@if (_finalEntries.Any() && _finalEntries.All(e => _charts.ContainsKey(e.ChartId)))
 {
     
     <MudTable T="SongTierListEntry" Items=@(_finalEntries)>
@@ -189,6 +195,7 @@
 @inject IMediator Mediator;
 @inject NavigationManager NavManager;
 @inject ITierListRepository TierLists;
+@inject ITitleRepository Titles;
 @inject IAdminNotificationClient Notifications;
 @inject ISnackbar Snackbar;
 @code
@@ -202,7 +209,7 @@
     private IEnumerable<Skill> _orderedSkills = Array.Empty<Skill>();
     private IDictionary<Skill, double> _skillWeights = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0.0);
     private IDictionary<Skill, Color> Colors = Enum.GetValues<Skill>().ToDictionary(s => s, s => Color.Primary);
-    private IEnumerable<Chart> _suggestedPasses = Array.Empty<Chart>();
+
     private IDictionary<Guid, double> _passScore = new Dictionary<Guid, double>();
     private IDictionary<Guid, PhoenixScore> _scores = new Dictionary<Guid, PhoenixScore>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
@@ -212,11 +219,18 @@
     private bool _showPassed = true;
     private int _level = 20;
     private string _tierListType = "Pass";
+    private bool _usePersonalizedData = true;
 
     private string ChartSearch(Chart chart)
     {
         var searchString = "Pump It Up " + chart.Song.Name + " " + chart.DifficultyString;
         return $"https://www.youtube.com/results?search_query={searchString.Replace("%", "Percent ").Replace(" ", "+")}";
+    }
+
+    private async Task SetUsePersonalized(bool newUse)
+    {
+        _usePersonalizedData = newUse;
+        await SetTierListType(_tierListType);
     }
     private async Task SetTierListType(string type)
     {
@@ -228,6 +242,7 @@
                 { "Official Scores", 0 },
                 { "Scores", .5 },
                 { "Skill", 2 },
+                {"Similar Players", 2},
                 { "Popularity", .5 },
                 { "Pass Count",2}
             };
@@ -239,6 +254,7 @@
                 { "Official Scores", .5 },
                 { "Scores", 2 },
                 { "Skill", 2 },
+                {"Similar Players",1.5},
                 { "Popularity", .5 },
                 { "Pass Count",.5}
             };
@@ -252,8 +268,14 @@
                 { "Scores", .5 },
                 { "Skill", 0 },
                 { "Popularity", 2 },
-                { "Pass Count",.5}
+                { "Pass Count",.5},
+                {"Similar Players",.5}
             };
+        }
+        if (!_usePersonalizedData)
+        {
+            _modifiers["Skill"] = 0;
+            _modifiers["Similar Players"] = 0;
         }
         await Recalculate();
     }
@@ -313,7 +335,6 @@
         _orderedSkills = Array.Empty<Skill>();
         _skillWeights = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0.0);
         Colors = Enum.GetValues<Skill>().ToDictionary(s => s, s => Color.Primary);
-        _suggestedPasses = Array.Empty<Chart>();
         _passScore = new Dictionary<Guid, double>();
         _scores = new Dictionary<Guid, PhoenixScore>();
 
@@ -362,10 +383,6 @@
         }
         _passScore = skills.ToDictionary(sc => sc.ChartId, sc => sc.ContainsSkills.Sum(s => _skillWeights[s]) + sc.HighlightsSkill.Sum(s => _highlightedModifier * _skillWeights[s]) / (sc.ContainsSkills.Count() + (double)_highlightedModifier * sc.HighlightsSkill.Count()));
 
-        _suggestedPasses = _passScore
-            .Where(kv => !myScores.ContainsKey(kv.Key) || myScores[kv.Key].IsBroken)
-            .OrderByDescending(kv => kv.Value).Select(c => _charts[c.Key]);
-
         Colors = Enum.GetValues<Skill>().ToDictionary(s => s, s => MaxScore[s] == 0 ? Color.Error : (MyScore[s] / (double)MaxScore[s]) > average ? Color.Success : Color.Warning);
         var standardDeviationCompare =
             StdDev(_passScore.Select(s => s.Value), true);
@@ -397,37 +414,54 @@
         { "Scores", 1 },
         { "Skill", 2 },
         { "Popularity", .5 },
-        { "Pass Count",2}
+        { "Pass Count",2},
+        {"Similar Players",1}
     };
 
     private IDictionary<string, IDictionary<Guid, SongTierListEntry>> _categoryLists = new Dictionary<string, IDictionary<Guid, SongTierListEntry>>();
     private int GetScore(TierListCategory category) => (int)category - 3;
 
-    private async Task<IEnumerable<SongTierListEntry>> BuildTitleTierList()
+    private async Task<IEnumerable<SongTierListEntry>> GetSimilarPlayers(ChartType type, int level)
     {
-        var userWeights = new Dictionary<int, IEnumerable<Guid>>()
-        {
-            { 4, await TierLists.GetUsersOnLevel(_level - 2, CancellationToken.None) },
-            { 3, await TierLists.GetUsersOnLevel(_level - 1, CancellationToken.None) },
-            { 2, await TierLists.GetUsersOnLevel(_level, CancellationToken.None) },
-            { 1, await TierLists.GetUsersOnLevel(_level + 1, CancellationToken.None) }
-        };
-        var chartSums = _charts.ToDictionary(c => c.Key, c => 0);
-        foreach (var weightValue in userWeights)
-        {
-            foreach (var userId in weightValue.Value)
-            {
-                var scores = await Mediator.Send(new GetPhoenixRecordsQuery(userId));
-                foreach (var score in scores.Where(s => chartSums.ContainsKey(s.ChartId)))
-                {
-                    chartSums[score.ChartId] += weightValue.Key;
-                }
-            }
-        }
 
+        var myLevel = await Titles.GetCurrentTitleLevel(CurrentUser.User.Id, CancellationToken.None);
+
+        var userIds = (await TierLists.GetUsersOnLevel(myLevel - 1, CancellationToken.None))
+            .Concat(await TierLists.GetUsersOnLevel(myLevel, CancellationToken.None))
+            .Concat(await TierLists.GetUsersOnLevel(myLevel + 1, CancellationToken.None))
+            .Where(u => u != CurrentUser.User.Id);
+        var userTiersLists = new Dictionary<Guid, IEnumerable<SongTierListEntry>>();
+        var myTierList = (await Mediator.Send(new GetMyRelativeTierListQuery(type, level)))
+            .ToDictionary(r => r.ChartId);
+        foreach (var userId in userIds)
+        {
+            userTiersLists[userId] = await Mediator.Send(new GetMyRelativeTierListQuery(type, level, userId));
+        }
+        var userTotals = userTiersLists.ToDictionary(kv => kv.Key, kv => kv.Value.Sum(e => myTierList.ContainsKey(e.ChartId) && myTierList[e.ChartId].Category != TierListCategory.Unrecorded && e.Category != TierListCategory.Unrecorded ?
+            (int)TierListCategory.Unrecorded - (int)Math.Abs(e.Category - myTierList[e.ChartId].Category)
+            : 0));
+
+        var chartWeights = new Dictionary<Guid, int>();
+
+        foreach (var kv in userTiersLists)
+            foreach (var entry in kv.Value.Where(e => e.Category != TierListCategory.Unrecorded))
+            {
+                if (!chartWeights.ContainsKey(entry.ChartId))
+                {
+                    chartWeights[entry.ChartId] = 0;
+                }
+                chartWeights[entry.ChartId] += (TierListCategory.Unrecorded - entry.Category) * userTotals[kv.Key];
+            }
+        return ProcessIntoTierList("Similar Players", chartWeights);
+        
+
+    }
+
+    private IEnumerable<SongTierListEntry> ProcessIntoTierList(string tierListName, IDictionary<Guid, int> chartWeights)
+    {
         var standardDeviationCompare =
-            StdDev(chartSums.Select(s => (double)s.Value), true);
-        var averageCompare = chartSums.Values.Average();
+            TierListSaga.StdDev(chartWeights.Select(s => s.Value), false);
+        var averageCompare = chartWeights.Average(kv => kv.Value);
         var mediumMinCompare = averageCompare - standardDeviationCompare / 2;
         var easyMinCompare = averageCompare + standardDeviationCompare / 2;
         var veryEasyMinCompare = averageCompare + standardDeviationCompare;
@@ -435,39 +469,31 @@
         var hardMinCompare = averageCompare - standardDeviationCompare;
         var veryHardMinCompare = averageCompare - standardDeviationCompare * 1.5;
         var result = new List<SongTierListEntry>();
-        foreach (var chartId in chartSums.Keys)
+        var order = 0;
+        foreach (var chart in chartWeights.OrderBy(kv => kv.Value))
         {
-            var score = chartSums[chartId];
-            if (score < veryHardMinCompare)
-            {
-                result.Add(new SongTierListEntry("Title", chartId, TierListCategory.Underrated, score));
-            } else if (score < hardMinCompare)
-            {
-                result.Add(new SongTierListEntry("Title", chartId, TierListCategory.VeryHard, score));
-            }
+            var score = chart.Value;
+            var myCategory = TierListCategory.Overrated;
+            if (score == 0)
+                myCategory = TierListCategory.Unrecorded;
+            else if (score < veryHardMinCompare)
+                myCategory = TierListCategory.Underrated;
+            else if (score < hardMinCompare)
+                myCategory = TierListCategory.VeryHard;
             else if (score < mediumMinCompare)
-            {
-                result.Add(new SongTierListEntry("Title", chartId, TierListCategory.Hard, score));
-            }
+                myCategory = TierListCategory.Hard;
             else if (score < easyMinCompare)
-            {
-                result.Add(new SongTierListEntry("Title", chartId, TierListCategory.Medium, score));
-            }
+                myCategory = TierListCategory.Medium;
             else if (score < veryEasyMinCompare)
-            {
-                result.Add(new SongTierListEntry("Title", chartId, TierListCategory.Easy, score));
-            }
+                myCategory = TierListCategory.Easy;
             else if (score < oneLevelOverratedCompare)
-            {
-                result.Add(new SongTierListEntry("Title", chartId, TierListCategory.VeryEasy, score));
-            }
+                myCategory = TierListCategory.VeryEasy;
             else
-            {
-                result.Add(new SongTierListEntry("Title", chartId, TierListCategory.Overrated, score));
-            }
+                myCategory = TierListCategory.Overrated;
+            result.Add(new SongTierListEntry(tierListName, chart.Key, myCategory, order++));
         }
         return result;
-    } 
+    }
     private async Task Recalculate()
     {
         _isLoading = true;
@@ -482,20 +508,23 @@
                 (await BuildSkillTierList()).ToDictionary(e => e.ChartId)
                 : scores.ToDictionary(kv => kv.Key, kv => new SongTierListEntry("Skill", kv.Key, TierListCategory.Unrecorded, 0));
         var title = (await Mediator.Send(new GetTierListQuery("Pass Count"))).ToDictionary(s => s.ChartId);
+        var similarPlayers = CurrentUser.IsLoggedIn ? (await GetSimilarPlayers(_chartType, _level))
+            .ToDictionary(e => e.ChartId) : _charts.ToDictionary(kv => kv.Key, kv => new SongTierListEntry("Similar Players", kv.Key, TierListCategory.Unrecorded, 0));
         _categoryLists = new Dictionary<string, IDictionary<Guid, SongTierListEntry>>()
         {
             { "Skill", baseEntries },
             { "Official Scores", officialScores },
             { "Scores", scores },
             { "Popularity", popularity },
-            {"Pass Count",title}
+            {"Pass Count",title},
+            {"Similar Players",similarPlayers}
         };
 
         foreach (var chartId in _charts.Keys)
         {
             var count = 0.0;
             var currentTotal = 0.0;
-            foreach (var listItem in new[] { (officialScores, "Official Scores"), (scores, "Scores"), (popularity, "Popularity"), (baseEntries, "Skill"), (title, "Pass Count") })
+            foreach (var listItem in new[] { (officialScores, "Official Scores"), (scores, "Scores"), (popularity, "Popularity"), (baseEntries, "Skill"), (title, "Pass Count"),(similarPlayers,"Similar Players") })
             {
                 if (!listItem.Item1.ContainsKey(chartId)||listItem.Item1[chartId].Category == TierListCategory.Unrecorded)
                 {
