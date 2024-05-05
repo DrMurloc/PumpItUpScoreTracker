@@ -74,6 +74,7 @@
         var userTiersLists = new Dictionary<Guid, IEnumerable<SongTierListEntry>>();
         _myTierList = (await Mediator.Send(new GetMyRelativeTierListQuery(_type, _level)))
             .ToDictionary(r => r.ChartId);
+        _chartWeights = new Dictionary<Guid, int>();
         foreach (var userId in userIds)
         {
             userTiersLists[userId] = await Mediator.Send(new GetMyRelativeTierListQuery(_type, _level, userId));
@@ -82,7 +83,6 @@
             (int)TierListCategory.Unrecorded - (int)Math.Abs(e.Category - _myTierList[e.ChartId].Category)
             : 0));
 
-        _chartWeights = new Dictionary<Guid, int>();
 
         foreach (var kv in userTiersLists)
             foreach (var entry in kv.Value.Where(e => e.Category != TierListCategory.Unrecorded))

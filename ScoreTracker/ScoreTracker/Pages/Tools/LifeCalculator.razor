@@ -1,0 +1,277 @@
+﻿@page "/LifeCalculator"
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Dtos
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.ValueTypes
+
+<PageTitle>Life Calculator</PageTitle>
+<MudText Color="Color.Warning">Disclaimer: This data was data-mined in NX2 and Prime, it is unconfirmed how accurate it is today.</MudText>
+
+<MudText Typo="Typo.h4">Lifebar stats</MudText>
+<br/>
+<ApexChart TItem="DataPoint"
+           Title="Life Bar by Level">
+    <ApexPointSeries TItem="DataPoint"
+                     Items="_startingLifePoints"
+                     SeriesType="SeriesType.Bar"
+                     Name="Starting Life"
+                     XValue="@(e => e.X)"
+                     YValue="@(e=>e.Y)"></ApexPointSeries>
+    <ApexPointSeries TItem="DataPoint"
+                     Items="_visibleLife"
+                     SeriesType="SeriesType.Bar"
+                     Name="Visible Life"
+                     XValue="@(e => e.X)"
+                     YValue="@(e=>e.Y)"></ApexPointSeries>
+    <ApexPointSeries TItem="DataPoint"
+                     Items="_maxLife"
+                     SeriesType="SeriesType.Bar"
+                     Name="Max Life"
+                     XValue="@(e => e.X)"
+                     YValue="@(e=>e.Y)"></ApexPointSeries>
+</ApexChart>
+<br/>
+<MudGrid>
+    <MudItem xs="12" sm="6" md="4">
+        <MudNumericField T="int" Value="_level" Label="Level" Min="1" Max="28" ValueChanged="l=>CalculateComboToDeath(_lifeThreshold,l)"></MudNumericField>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="4">
+        <MudNumericField T="int" Value="_lifeThreshold" Label="Life Threshold" Min="0" Max="3000" ValueChanged="l=>CalculateComboToDeath(l,_level)"></MudNumericField>
+    </MudItem>
+</MudGrid>
+<br/>
+<ApexChart TItem="DataPoint"
+           @ref="_comboBreakGraph"
+           Title="Note Count from Full Life to Death/Threshold based on Combo between Breaks">
+    <ApexPointSeries TItem="DataPoint"
+                     Items="_notesToDeadPerfect"
+                     Name="Perfect Combo, Miss Break"
+                     SeriesType="SeriesType.Line"
+                     XValue="@(e => e.X)"
+                     YValue="@(e => e.Y)"
+                     OrderBy="e => e.X"/>
+    <ApexPointSeries TItem="DataPoint"
+                     Items="_notesToDeadGreat"
+                     Name="Great Combo, Miss Break"
+                     SeriesType="SeriesType.Line"
+                     XValue="@(e => e.X)"
+                     YValue="@(e => e.Y)"
+                     OrderBy="e => e.X"/>
+    <ApexPointSeries TItem="DataPoint"
+                     Items="_notesToDeadBadPerfect"
+                     Name="Perfect Combo, Bad Break"
+                     SeriesType="SeriesType.Line"
+                     XValue="@(e => e.X)"
+                     YValue="@(e => e.Y)"
+                     OrderBy="e => e.X"/>
+    <ApexPointSeries TItem="DataPoint"
+                     Items="_notesToDeadBadGreat"
+                     Name="Great Combo, Bad Break"
+                     SeriesType="SeriesType.Line"
+                     XValue="@(e => e.X)"
+                     YValue="@(e => e.Y)"
+                     OrderBy="e => e.X"/>
+</ApexChart>
+
+<br/>
+<ApexChart TItem="DataPoint"
+           Title="Notes to Full Life From Start of Song (50%)">
+    <ApexPointSeries TItem="DataPoint"
+                     Items="_perfectsToMax"
+                     Name="Perfects"
+                     SeriesType="SeriesType.Line"
+                     XValue="@(e => e.X)"
+                     YValue="@(e => e.Y)"
+                     OrderBy="e => e.X" />
+    <ApexPointSeries TItem="DataPoint"
+                     Items="_greatsToMax"
+                     Name="Greats"
+                     SeriesType="SeriesType.Line"
+                     XValue="@(e => e.X)"
+                     YValue="@(e => e.Y)"
+                     OrderBy="e => e.X" />
+</ApexChart>
+<br/>
+<MudText Typo="Typo.h4">Lifebar Description</MudText>
+<MudText>Starting life is 500, visible  Life (Rainbow life bar) is 1000.</MudText>
+<MudText>Lifebar overflows exponentially by level, up to about a 2350 overflow at level 28.</MudText>
+<br/>
+<MudText Typo="Typo.h4">Life loss description</MudText>
+<MudText>By default, bads lose 50 health, misses lose 250 health (at ~100% health).</MudText>
+<MudText>Misses lose LESS health the further beneath 1000 health you are at (at 0 life you would lose 20 health for a miss)</MudText>
+<br />
+<MudText Typo="Typo.h4">Life gain description</MudText>
+<MudText>By default at high combo, perfects gain 9.6 life, greats gain 8 life, goods gain 0 life.</MudText>
+<MudText>This is modified by a multiplier that is almost entirely reset on a miss, and decreased drastically on a bad.</MudText>
+<MudText>Each perfect or great you get increases the multiplier by a minor amount.</MudText>
+<MudText>Effectively, this means that your life gain is heavily affected by combo, reaching maximum gain at ~40-50 combo.</MudText>
+<br />
+<MudText Typo="Typo.h4">Bads vs Misses Observations</MudText>
+<MudText>To recover from Bads you require 17-21 combo per Bad. Bads typically let you live for 3x as long as misses.</MudText>
+<MudText>To remain alive you need to maintain 17-21 combo per Miss.</MudText>
+<MudText>To remain at 50% visible life, you need 37-46 combo per Miss.</MudText>
+<MudText>To remain at Rainbow Life, you 46-55 combo per Miss.</MudText>
+<MudText>Bads at low health let you live for roughly 3x as long as misses, this gap increases the higher the life threshold you want to keep, up to misses punishing 6x as much when maintaining 100% visual life.</MudText>
+<MudText><b>TLDR: Misses matter less at low life, but are always significantly more punishing than Bads.</b></MudText>
+<br/>
+<MudText Typo="Typo.h4">Recovery Observations</MudText>
+<MudText>Misses or back-to-back Bads early in a run put you in a terribly position for maintaining life, as they reset your life gain multiplier and require you to combo ~40-50 to regain it. Start runs strong for increased success rates.</MudText>
+<MudText>When at 12% or lower visual life, a miss gives less life loss than a bad, but inhibits your recovery severely. This only really matters for notes at the end of a song or before guaranteed 100+ combo sections.</MudText>
+<br/>
+<MudText Typo="Typo.h4">TLDR</MudText>
+<MudText>Misses severely hurt your lifebar.</MudText>
+<MudText>Bads mostly hurt your recovery.</MudText>
+<MudText>Try to maintain 17-21 combo per bad.</MudText>
+<MudText>Try to maintain 40-50 combo per miss.</MudText>
+<MudText>"Lifebars are weird." - Zelllooo</MudText>
+<br/>
+<MudText Typo="Typo.h4">Source</MudText>
+<MudLink Href="https://github.com/Team-Infinitesimal/Infinitesimal/blob/lts/Modules/PIU/Gameplay.Life.lua" Target="_blank">Team Infinitesimal, data-mine from NX2 + Prime</MudLink>
+@inject ISnackbar Snackbar;
+@inject ILogger<PhoenixCalculator> Logger;
+@code
+{
+
+    private ApexChart<DataPoint>? _comboBreakGraph;
+    //Life measures
+    private IList<DataPoint> _startingLifePoints = new List<DataPoint>();
+    private IList<DataPoint> _visibleLife = new List<DataPoint>();
+    private IList<DataPoint> _maxLife = new List<DataPoint>();
+
+    //Notes To Dead
+    private IList<DataPoint> _notesToDeadPerfect = new List<DataPoint>();
+    private IList<DataPoint> _notesToDeadGreat = new List<DataPoint>();
+    private IList<DataPoint> _notesToDeadBadPerfect = new List<DataPoint>();
+    private IList<DataPoint> _notesToDeadBadGreat = new List<DataPoint>();
+    //Notes To Max
+    private IList<DataPoint> _perfectsToMax = new List<DataPoint>();
+    private IList<DataPoint> _greatsToMax = new List<DataPoint>();
+
+    private int _lifeThreshold = 0;
+    private int _level = 23;
+    private async Task CalculateComboToDeath(int newThreshold, int level)
+    {
+        _lifeThreshold = newThreshold;
+        var comboMax = 0;
+        _level = level;
+        _notesToDeadBadPerfect.Clear();
+        _notesToDeadGreat.Clear();
+        _notesToDeadPerfect.Clear();
+        _notesToDeadBadGreat.Clear();
+        while (true)
+        {
+            var next = CalculateLifeToDead(Judgment.Perfect, Judgment.Miss, comboMax,_lifeThreshold,_level);
+            if (next == -1)
+            {
+                break;
+            }
+            _notesToDeadPerfect.Add(new DataPoint(comboMax,next));
+            comboMax++;
+        }
+        comboMax = 0;
+        while (true)
+        {
+            var next = CalculateLifeToDead(Judgment.Great, Judgment.Miss, comboMax, _lifeThreshold, _level);
+            if (next == -1)
+            {
+                break;
+            }
+            _notesToDeadGreat.Add(new DataPoint(comboMax, next));
+            comboMax++;
+        }
+        comboMax = 0;
+        while (true)
+        {
+            var next = CalculateLifeToDead(Judgment.Perfect, Judgment.Bad, comboMax, _lifeThreshold, _level);
+            if (next == -1)
+            {
+                break;
+            }
+            _notesToDeadBadPerfect.Add(new DataPoint(comboMax, next));
+            comboMax++;
+        }
+        comboMax = 0;
+        while (true)
+        {
+            var next = CalculateLifeToDead(Judgment.Great, Judgment.Bad, comboMax, _lifeThreshold, _level);
+            if (next == -1)
+            {
+                break;
+            }
+            _notesToDeadBadGreat.Add(new DataPoint(comboMax, next));
+            comboMax++;
+        }
+        if (_comboBreakGraph != null)
+        {
+            await _comboBreakGraph.UpdateSeriesAsync(true);
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        foreach (var level in DifficultyLevel.All)
+        {
+            var sim = new LifebarSimulator(level);
+            _startingLifePoints.Add(new DataPoint(level, sim.CurrentLife));
+            _visibleLife.Add(new DataPoint(level, 1000));
+            _maxLife.Add(new DataPoint(level, sim.MaxLife));
+            _perfectsToMax.Add(new DataPoint(level,CalculateNotesToMax(Judgment.Perfect,level)));
+            _greatsToMax.Add(new DataPoint(level, CalculateNotesToMax(Judgment.Great, level)));
+
+        }
+        await CalculateComboToDeath(0,23);
+    }
+    private int CalculateNotesToMax(Judgment judgement, int level)
+    {
+        var sim = new LifebarSimulator(level);
+        var noteCount = 0;
+        while (sim.CurrentLife < sim.MaxLife)
+        {
+            sim.ApplyJudgment(judgement);
+            noteCount++;
+        }
+        return noteCount;
+    }
+    private int CalculateLifeToDead(Judgment judgment, Judgment breakJudgment, int combo, int threshold, int level)
+    {
+        var sim = new LifebarSimulator(level, true);
+
+        sim.ApplyJudgment(breakJudgment);
+        var last = sim.CurrentLife;
+        var lastRepeat = 0;
+        var noteCount = 0;
+        while (true)
+        {
+            for (var i = 0; i < combo; i++)
+            {
+                noteCount++;
+                sim.ApplyJudgment(judgment);
+                if (sim.CurrentLife == sim.MaxLife)
+                {
+                    return -1;
+                }
+            }
+            sim.ApplyJudgment(breakJudgment);
+            if (sim.CurrentLife == last)
+            {
+                lastRepeat++;
+                if (lastRepeat == 10)
+                {
+                    return -1;
+                }
+            }
+            else
+            {
+                last = sim.CurrentLife;
+                lastRepeat = 0;
+            }
+
+            noteCount++;
+            if (sim.CurrentLife <= threshold)
+            {
+                return noteCount;
+            }
+        }
+    }
+    private sealed record DataPoint(int X, int Y);
+}

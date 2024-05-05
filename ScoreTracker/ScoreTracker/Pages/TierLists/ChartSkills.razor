@@ -106,13 +106,13 @@
                                 <MudSpacer>
                                 </MudSpacer>
                                 
-                                @if (_popularCharts.Contains(chart.Id))
+                                @if (_popularCharts.Contains(chart.Id) && _tierListType!="Fun")
                                 {
                                     <MudTooltip Text="This chart is extra popular and may have skewed data">
                                         <MudIcon Color="Color.Warning" Icon=@Icons.Material.Filled.TrendingUp></MudIcon>
                                     </MudTooltip>
                                 }
-                                @if(_unPopularCharts.Contains(chart.Id))
+                                @if(_unPopularCharts.Contains(chart.Id) && _tierListType!="Fun")
                                 {
                                         
                                     <MudTooltip Text="This chart is extra unpopular and may have skewed data">
