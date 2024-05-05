@@ -63,7 +63,7 @@
             <MudCheckBox T="bool" Value="_usePersonalizedData" ValueChanged="u=>SetUsePersonalized(u)" Label="Personalized"></MudCheckBox>
         </MudItem>
         <MudItem xs="12" sm="4" md="3">
-            <MudCheckBox T="bool" @bind-Checked="_showPassed" Label="Show Passed Charts"></MudCheckBox>
+            <MudCheckBox T="bool" Value="_showPassed" ValueChanged="u=>SetShowPassed(u)" Label="Show Passed Charts"></MudCheckBox>
         </MudItem>
         <MudItem xs="12" sm="4" md="3">
             <MudCheckBox T="bool" @bind-Checked="_textView" Label="Text View"></MudCheckBox>
@@ -259,7 +259,11 @@
     private int _level = 20;
     private string _tierListType = "Pass";
     private bool _usePersonalizedData = true;
-
+    private async Task SetShowPassed(bool newShow)
+    {
+        _showPassed = newShow;
+        await Recalculate();
+    }
     private IEnumerable<IGrouping<string, SongTierListEntry>>
     _finalGroupings = Array.Empty<IGrouping<string, SongTierListEntry>>();
     private string ChartSearch(Chart chart)
