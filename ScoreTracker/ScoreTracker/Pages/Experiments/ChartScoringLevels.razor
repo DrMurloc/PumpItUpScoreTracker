@@ -19,6 +19,7 @@
 @inject IPlayerStatsRepository PlayerStats;
 @inject IMediator Mediator;
 @inject IPhoenixRecordRepository Scores;
+@inject IChartRepository Charts;
 @code
 {
 
@@ -145,7 +146,7 @@
         for (var level = 10; level <= 27; level++)
         {
             
-            await SetLevel(level, 3, ChartType.Double);
+            await SetLevel(level, 3, ChartType.Single);
         }
         _isLoading = false;
     }

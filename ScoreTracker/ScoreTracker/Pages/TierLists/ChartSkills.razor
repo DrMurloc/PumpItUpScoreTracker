@@ -50,6 +50,13 @@
             <MudRadio Value="@("Fun")" Color="Color.Primary">Fun</MudRadio>
         </MudRadioGroup>
     </MudItem>
+    @if (_tierListType == "Score")
+    {
+        <MudItem xs="12" sm="4" md="3">
+            
+            <MudCheckBox T="bool" Value="!_groupByTierList" ValueChanged="ToggleGrouping" Label="Group By Scoring Difficulty"></MudCheckBox>
+        </MudItem>
+    }
     @if (CurrentUser.IsLoggedIn)
     {
         <MudItem xs="12" sm="4" md="3">
@@ -64,7 +71,7 @@
     }
     @if (_finalEntries.Any() && _finalEntries.All(e=>_charts.ContainsKey(e.ChartId)))
     {
-        @foreach (var group in _finalEntries.Where(e => _showPassed || !_scores.TryGetValue(e.ChartId, out var score) || score == 0).GroupBy(e => e.Category).OrderBy(g => g.Key))
+        @foreach (var group in _finalGroupings)
         {
             <MudItem xs="12">
                 <MudText Typo="Typo.h6">@group.Key.ToString()</MudText>
@@ -253,6 +260,8 @@
     private string _tierListType = "Pass";
     private bool _usePersonalizedData = true;
 
+    private IEnumerable<IGrouping<string, SongTierListEntry>>
+    _finalGroupings = Array.Empty<IGrouping<string, SongTierListEntry>>();
     private string ChartSearch(Chart chart)
     {
         var searchString = "Pump It Up " + chart.Song.Name + " " + chart.DifficultyString;
@@ -278,6 +287,7 @@
                 { "Popularity", .5 },
                 { "Pass Count",2}
             };
+            _groupByTierList = true;
         }
         if (_tierListType == "Score")
         {
@@ -293,7 +303,7 @@
         }
         if (_tierListType == "Fun")
         {
-
+            _groupByTierList = true;
             _modifiers = new Dictionary<string, double>()
             {
                 { "Official Scores", 0 },
@@ -309,6 +319,12 @@
             _modifiers["Skill"] = 0;
             _modifiers["Similar Players"] = 0;
         }
+        await Recalculate();
+    }
+
+    private async Task ToggleGrouping(bool groupByLevel)
+    {
+        _groupByTierList = !groupByLevel;
         await Recalculate();
     }
     private string CategoryColor(TierListCategory category) => category switch
@@ -345,6 +361,7 @@
     }
 
     private string _currentVideoDescription = string.Empty;
+    private bool _groupByTierList = true;
     private bool _showVideoDialog = false;
     private string _currentVideo = string.Empty;
     private IDictionary<Guid, string> _chartVideos = new Dictionary<Guid, string>();
@@ -440,7 +457,7 @@
     }
 
     private IEnumerable<SongTierListEntry> _finalEntries = Array.Empty<SongTierListEntry>();
-    private IDictionary<TierListCategory, string> _messages = Enum.GetValues<TierListCategory>().ToDictionary(c => c, c => "");
+    private IDictionary<string, string> _messages = Enum.GetValues<TierListCategory>().ToDictionary(c => c.ToString(), c => "");
     private IDictionary<string, double> _modifiers = new Dictionary<string, double>()
     {
         { "Official Scores", 0 },
@@ -579,8 +596,19 @@
 
         }
         _finalEntries = result;
-        _messages = Enum.GetValues<TierListCategory>().ToDictionary(c => c, c => "");
-        foreach (var group in _finalEntries.GroupBy(t => t.Category))
+        var filtered = _finalEntries.Where(e => _showPassed || !_scores.TryGetValue(e.ChartId, out var score) || score == 0);
+        if (_groupByTierList)
+        {
+            _finalGroupings = filtered.GroupBy(e => e.Category.ToString()).OrderBy(g => Enum.Parse<TierListCategory>(g.Key))
+                .ToArray();
+        }
+        else
+        {
+            _finalGroupings = filtered.GroupBy(e => _charts[e.ChartId].ScoringLevel?.ToString("0.0") ?? _charts[e.ChartId].Level.ToString())
+                .OrderBy(g => g.Key).ToArray();
+        }
+        _messages = _finalGroupings.ToDictionary(kv => kv.Key, kv => "");
+        foreach (var group in _finalGroupings)
         {
             if (!group.Any(e => (_scores.TryGetValue(e.ChartId,out var s)?s:0)>0))
             {

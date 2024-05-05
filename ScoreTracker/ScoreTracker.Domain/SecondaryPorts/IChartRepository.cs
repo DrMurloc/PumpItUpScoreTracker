@@ -18,6 +18,9 @@ public interface IChartRepository
     Task<IEnumerable<Chart>> GetChartsForSong(MixEnum mix, Name songName,
         CancellationToken cancellationToken = default);
 
+    Task UpdateScoreLevel(MixEnum mix, Guid chartId, double scoringLevel,
+        CancellationToken cancellationToken = default);
+
     Task<IEnumerable<Chart>> GetCoOpCharts(MixEnum mix, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<ChartVideoInformation>> GetChartVideoInformation(IEnumerable<Guid>? chartIds = default,
