@@ -63,7 +63,7 @@
             <MudCheckBox T="bool" Value="_usePersonalizedData" ValueChanged="u=>SetUsePersonalized(u)" Label="Personalized"></MudCheckBox>
         </MudItem>
         <MudItem xs="12" sm="4" md="3">
-            <MudCheckBox T="bool" Value="_showPassed" ValueChanged="u=>SetShowPassed(u)" Label="Show Passed Charts"></MudCheckBox>
+            <MudCheckBox T="bool" @bind-Checked="_showPassed" Label="Show Passed Charts"></MudCheckBox>
         </MudItem>
         <MudItem xs="12" sm="4" md="3">
             <MudCheckBox T="bool" @bind-Checked="_textView" Label="Text View"></MudCheckBox>
@@ -71,7 +71,7 @@
     }
     @if (_finalEntries.Any() && _finalEntries.All(e=>_charts.ContainsKey(e.ChartId)))
     {
-        @foreach (var group in _finalGroupings)
+        @foreach (var group in _finalGroupings.Where(g=>g.Any(c=>_showPassed ||_scores[c.ChartId]==0)))
         {
             <MudItem xs="12">
                 <MudText Typo="Typo.h6">@group.Key.ToString()</MudText>
@@ -82,7 +82,7 @@
             </MudItem>
             
 
-            foreach (var chart in group.OrderBy(e => e.Order).Select(c => _charts[c.ChartId]))
+            foreach (var chart in group.Where(c=>_showPassed || _scores[c.ChartId]==0).OrderBy(e => e.Order).Select(c => _charts[c.ChartId]))
             {
                 
                 @if (_textView)
@@ -259,11 +259,6 @@
     private int _level = 20;
     private string _tierListType = "Pass";
     private bool _usePersonalizedData = true;
-    private async Task SetShowPassed(bool newShow)
-    {
-        _showPassed = newShow;
-        await Recalculate();
-    }
     private IEnumerable<IGrouping<string, SongTierListEntry>>
     _finalGroupings = Array.Empty<IGrouping<string, SongTierListEntry>>();
     private string ChartSearch(Chart chart)
@@ -600,15 +595,14 @@
 
         }
         _finalEntries = result;
-        var filtered = _finalEntries.Where(e => _showPassed || !_scores.TryGetValue(e.ChartId, out var score) || score == 0);
         if (_groupByTierList)
         {
-            _finalGroupings = filtered.GroupBy(e => e.Category.ToString()).OrderBy(g => Enum.Parse<TierListCategory>(g.Key))
+            _finalGroupings = _finalEntries.GroupBy(e => e.Category.ToString()).OrderBy(g => Enum.Parse<TierListCategory>(g.Key))
                 .ToArray();
         }
         else
         {
-            _finalGroupings = filtered.GroupBy(e => _charts[e.ChartId].ScoringLevel?.ToString("0.0") ?? _charts[e.ChartId].Level.ToString())
+            _finalGroupings = _finalEntries.GroupBy(e => _charts[e.ChartId].ScoringLevel?.ToString("0.0") ?? _charts[e.ChartId].Level.ToString())
                 .OrderBy(g => g.Key).ToArray();
         }
         _messages = _finalGroupings.ToDictionary(kv => kv.Key, kv => "");
