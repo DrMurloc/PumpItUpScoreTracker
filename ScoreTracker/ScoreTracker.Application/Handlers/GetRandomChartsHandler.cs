@@ -3,6 +3,7 @@ using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Handlers
 {
@@ -42,10 +43,13 @@ namespace ScoreTracker.Application.Handlers
             var calculatedWeights = new Dictionary<Guid, int>();
             foreach (var chart in charts.Values)
             {
+                var level = settings.UseScoringLevels
+                    ? (int)Math.Floor(chart.ScoringLevel ?? chart.Level)
+                    : (int)chart.Level;
                 var levelWeight = chart.Type switch
                 {
-                    ChartType.Single or ChartType.SinglePerformance => settings.LevelWeights[chart.Level],
-                    ChartType.Double or ChartType.DoublePerformance => settings.DoubleLevelWeights[chart.Level],
+                    ChartType.Single or ChartType.SinglePerformance => settings.LevelWeights[level],
+                    ChartType.Double or ChartType.DoublePerformance => settings.DoubleLevelWeights[level],
                     _ => settings.PlayerCountWeights[chart.PlayerCount]
                 };
 
@@ -72,6 +76,57 @@ namespace ScoreTracker.Application.Handlers
 
         public async Task<IEnumerable<Chart>> Handle(GetRandomChartsQuery request, CancellationToken cancellationToken)
         {
+            var results = new List<Chart>();
+
+            foreach (var typeMinimum in request.Settings.ChartTypeMinimums.Where(kv => kv.Value != null))
+            {
+                var newSettings = request.Settings with
+                {
+                    ChartTypeMinimums = new Dictionary<ChartType, int?>(),
+                    Count = typeMinimum.Value!.Value,
+                    ChartTypeWeights = Enum.GetValues<ChartType>()
+                        .ToDictionary(t => t, t => t == typeMinimum.Key ? 1 : 0)
+                };
+                var result = await Handle(new GetRandomChartsQuery(newSettings), cancellationToken);
+                results.AddRange(result);
+            }
+
+            foreach (var levelMinimum in request.Settings.LevelMinimums.Where(kv => kv.Value != null))
+            {
+                var newSettings = request.Settings with
+                {
+                    LevelMinimums = new Dictionary<int, int?>(),
+                    Count = levelMinimum.Value!.Value,
+                    LevelWeights = DifficultyLevel.All.ToDictionary(t => (int)t, t => t == levelMinimum.Key ? 1 : 0),
+
+                    DoubleLevelWeights =
+                    DifficultyLevel.All.ToDictionary(t => (int)t, t => t == levelMinimum.Key ? 1 : 0)
+                };
+                var result = await Handle(new GetRandomChartsQuery(newSettings), cancellationToken);
+                results.AddRange(result);
+            }
+
+            foreach (var clMinimum in request.Settings.ChartTypeLevelMinimums.Where(kv => kv.Value != null))
+            {
+                var (chartType, level) = DifficultyLevel.ParseShortHand(clMinimum.Key);
+                var newSettings = request.Settings with
+                {
+                    ChartTypeLevelMinimums = new Dictionary<string, int?>(),
+                    Count = clMinimum.Value!.Value,
+
+                    ChartTypeWeights = Enum.GetValues<ChartType>()
+                        .ToDictionary(t => t, t => t == chartType ? 1 : 0)
+                };
+                if (chartType == ChartType.Single)
+                    newSettings.LevelWeights = DifficultyLevel.All.ToDictionary(t => (int)t, t => t == level ? 1 : 0);
+
+                if (chartType == ChartType.Double)
+                    newSettings.DoubleLevelWeights =
+                        DifficultyLevel.All.ToDictionary(t => (int)t, t => t == level ? 1 : 0);
+                var result = await Handle(new GetRandomChartsQuery(newSettings), cancellationToken);
+                results.AddRange(result);
+            }
+
             var charts =
                 (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
                 .ToDictionary(c => c.Id);
@@ -79,8 +134,9 @@ namespace ScoreTracker.Application.Handlers
             if (includedCharts.Length < request.Settings.Count && !request.Settings.AllowRepeats)
                 return includedCharts.Select(c => charts[c.Key]);
 
-            var results = new List<Chart>();
-            for (var i = 0; i < request.Settings.Count; i++)
+            var remaining = request.Settings.Count - results.Count;
+
+            for (var i = 0; i < remaining; i++)
             {
                 var nextGuid = NextRandomGuid(includedCharts);
                 if (!request.Settings.AllowRepeats)
@@ -88,7 +144,7 @@ namespace ScoreTracker.Application.Handlers
                 results.Add(charts[nextGuid]);
             }
 
-            return results;
+            return results.OrderBy(r => _random.NextDouble());
         }
 
         public async Task<IEnumerable<Chart>> Handle(GetIncludedRandomChartsQuery request,

@@ -200,7 +200,11 @@
                 LevelWeights = _settings.LevelWeights,
                     PlayerCountWeights = _settings.PlayerCountWeights,
                 DoubleWeights = _settings.DoubleLevelWeights,
-                SongTypeWeights = _settings.SongTypeWeights
+                SongTypeWeights = _settings.SongTypeWeights,
+                UseScoring = _settings.UseScoringLevels,
+                ChartTypeLevelMinimums = _settings.ChartTypeLevelMinimums,
+                ChartTypeMinimums = _settings.ChartTypeMinimums,
+                LevelMinimums = _settings.LevelMinimums
             });
             
             await Mediator.Send(new SaveUserUiSettingCommand(LastConfigKey, savedResults));
@@ -228,6 +232,16 @@
         const string LastResultsKey = $"ChartRandomizer__LastResults";
         const string LastConfigKey = $"ChartRandomizer__LastConfig";
 
+    private void MergeDictTo<T>(IDictionary<T, int?> from, IDictionary<T, int?> to)
+    {
+        foreach (var kv in from)
+        {
+            if (!to.ContainsKey(kv.Key))
+            {
+                to[kv.Key] = kv.Value;
+            }
+        }
+    }
     private void MergeDictTo<T>(IDictionary<T, int> from, IDictionary<T, int> to)
     {
         foreach (var kv in from)
@@ -277,6 +291,14 @@
                     _settings.ChartTypeWeights = lastConfig.ChartTypeWeights;
                     MergeDictTo(_settings.SongTypeWeights, lastConfig.SongTypeWeights);
                     _settings.SongTypeWeights = lastConfig.SongTypeWeights;
+                    MergeDictTo(_settings.LevelMinimums, lastConfig.LevelMinimums);
+                    _settings.LevelMinimums = lastConfig.LevelMinimums;
+                    MergeDictTo(_settings.ChartTypeMinimums, lastConfig.ChartTypeMinimums);
+                    _settings.ChartTypeMinimums = lastConfig.ChartTypeMinimums;
+                    MergeDictTo(_settings.ChartTypeLevelMinimums, lastConfig.ChartTypeLevelMinimums);
+                    _settings.ChartTypeLevelMinimums = lastConfig.ChartTypeLevelMinimums;
+
+                    _settings.UseScoringLevels = lastConfig.UseScoring;
                     _settings.AllowRepeats = lastConfig.AllowRepeats;
                     _count = lastConfig.Count;
                 }
@@ -309,6 +331,10 @@
         public IDictionary<ChartType, int> ChartTypeWeights { get; set; } = new Dictionary<ChartType, int>();
         public IDictionary<SongType, int> SongTypeWeights { get; set; } = new Dictionary<SongType, int>();
         public IDictionary<int, int> PlayerCountWeights { get; set; } = new Dictionary<int, int>();
+        public IDictionary<ChartType, int?> ChartTypeMinimums { get; set; } = new Dictionary<ChartType, int?>();
+        public IDictionary<int, int?> LevelMinimums { get; set; } = new Dictionary<int, int?>();
+        public IDictionary<string, int?> ChartTypeLevelMinimums { get; set; } = new Dictionary<string, int?>();
+        public  bool UseScoring { get; set; }
         public int Count { get; set; }
         public bool AllowRepeats { get; set; }
     }

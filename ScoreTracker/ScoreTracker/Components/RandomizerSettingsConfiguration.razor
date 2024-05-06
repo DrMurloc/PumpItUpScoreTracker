@@ -27,49 +27,42 @@
             }
         </MudGrid>
     </MudExpansionPanel>
-    @if (_showSinglesLevels)
-    {
-        <MudExpansionPanel Text="@LevelLabel">
-            <MudGrid>
-                @foreach (var level in Settings.LevelWeights.Keys.OrderBy(k => k))
-                {
-                    <MudItem xs="6" sm="4">
-                        @if (_useWeights)
-                        {
-                            <MudNumericField T="int" Min="0" Max="99" Label="@LevelString(level)" @bind-Value="Settings.LevelWeights[level]"></MudNumericField>
-                        }
-                        else
-                        {
-                            <MudSwitch T="bool" Label="@LevelString(level)" Color="Color.Primary" Checked="Settings.LevelWeights[level] > 0" CheckedChanged="@(v => Settings.LevelWeights[level] =v? 1 : 0)"></MudSwitch>
-                        }
-                    </MudItem>
-                }
-            </MudGrid>
-        </MudExpansionPanel>
-    }
-    @if (_showDoublesLevels)
-    {
-        <MudExpansionPanel Text="Doubles Levels">
-            <MudGrid>
-                <MudItem xs="12">
-                    <MudSwitch T="bool" Color="Color.Primary" Label="Separate Singles/Doubles Levels" @bind-Checked="_separateDoubleLevels"></MudSwitch>
+
+    <MudExpansionPanel Text="Singles Levels">
+        <MudGrid>
+            @foreach (var level in Settings.LevelWeights.Keys.OrderBy(k => k))
+            {
+                <MudItem xs="6" sm="4">
+                    @if (_useWeights)
+                    {
+                        <MudNumericField T="int" Min="0" Max="99" Label="@LevelString(level)" @bind-Value="Settings.LevelWeights[level]"></MudNumericField>
+                    }
+                    else
+                    {
+                        <MudSwitch T="bool" Label="@LevelString(level)" Color="Color.Primary" Checked="Settings.LevelWeights[level] > 0" CheckedChanged="@(v => Settings.LevelWeights[level] =v? 1 : 0)"></MudSwitch>
+                    }
                 </MudItem>
-                @foreach (var level in Settings.DoubleLevelWeights.Keys.OrderBy(k => k))
-                {
-                    <MudItem xs="6" sm="4">
-                        @if (_useWeights)
-                        {
-                            <MudNumericField T="int" Min="0" Max="99" Label="@LevelString(level)" @bind-Value="Settings.DoubleLevelWeights[level]"></MudNumericField>
-                        }
-                        else
-                        {
-                            <MudSwitch T="bool" Label="@LevelString(level)" Color="Color.Primary" Checked="Settings.DoubleLevelWeights[level] > 0" CheckedChanged="@(v => Settings.DoubleLevelWeights[level]= v ? 1 : 0)"></MudSwitch>
-                        }
-                    </MudItem>
-                }
-            </MudGrid>
-        </MudExpansionPanel>
-    }
+            }
+        </MudGrid>
+    </MudExpansionPanel>
+    <MudExpansionPanel Text="Doubles Levels">
+        <MudGrid>
+            @foreach (var level in Settings.DoubleLevelWeights.Keys.OrderBy(k => k))
+            {
+                <MudItem xs="6" sm="4">
+                    @if (_useWeights)
+                    {
+                        <MudNumericField T="int" Min="0" Max="99" Label="@LevelString(level)" @bind-Value="Settings.DoubleLevelWeights[level]"></MudNumericField>
+                    }
+                    else
+                    {
+                        <MudSwitch T="bool" Label="@LevelString(level)" Color="Color.Primary" Checked="Settings.DoubleLevelWeights[level] > 0" CheckedChanged="@(v => Settings.DoubleLevelWeights[level]= v ? 1 : 0)"></MudSwitch>
+                    }
+                </MudItem>
+            }
+        </MudGrid>
+    </MudExpansionPanel>
+    
     @if (Settings.ChartTypeWeights.ContainsKey(ChartType.CoOp) && Settings.ChartTypeWeights[ChartType.CoOp] > 0)
     {
         <MudExpansionPanel Text="CoOp Player Count">
@@ -108,7 +101,45 @@
             }
         </MudGrid>
     </MudExpansionPanel>
+    <MudExpansionPanel Text="Minimum Count">
+        <MudGrid>
+            <MudItem xs="12">
+                <MudRadioGroup @bind-Value="@_minimumType">
+                    <MudRadio Value="@("Chart Type")" Color="Color.Primary">@L["Chart Type"]</MudRadio>
+                    <MudRadio Value="@("Difficulty")" Color="Color.Primary">@L["Difficulty Level"]</MudRadio>
+                    <MudRadio Value="@("Chart Type Difficulty")" Color="Color.Primary">@L["Chart Type"] + @L["Difficulty Level"]</MudRadio>
+                </MudRadioGroup>
+            </MudItem>
+            @if (_minimumType == "Chart Type")
+            {
+                @foreach (var kv in Settings.ChartTypeMinimums.Where(k=>Settings.ChartTypeWeights[k.Key]>0))
+                {
+                    <MudItem xs="4">
+                        <MudNumericField T="int?" Min="0" Max="@Settings.Count" Value="Settings.ChartTypeMinimums[kv.Key]" ValueChanged="s=>SetChartTypeMinimum(kv.Key,s)" Label="@kv.Key.ToString()" Clearable="true" HideSpinButtons="true"></MudNumericField>
 
+                    </MudItem>
+                }
+            } else if (_minimumType == "Difficulty")
+            {
+                @foreach (var kv in Settings.LevelMinimums.Where(k=>Settings.LevelWeights[k.Key]>0))
+                {
+
+                    <MudItem xs="4">
+                        <MudNumericField T="int?" Min="0" Max="@Settings.Count" Value="Settings.LevelMinimums[kv.Key]" ValueChanged="s=>SetLevelMinimum(kv.Key,s)" Label="@kv.Key.ToString()" Clearable="true" HideSpinButtons="true"></MudNumericField>
+                    </MudItem>
+                }
+            } else if (_minimumType == "Chart Type Difficulty")
+            {
+                @foreach (var kv in Settings.ChartTypeLevelMinimums.Where(k=>Settings.ChartTypeWeights[DifficultyLevel.ParseShortHand(k.Key).chartType]>0 && Settings.LevelWeights[DifficultyLevel.ParseShortHand(k.Key).level]>0).OrderBy(kv=>kv.Key))
+                {
+                    <MudItem xs="4" sm="3">
+                        <MudNumericField T="int?" Min="0" Max="@Settings.Count" Value="Settings.ChartTypeLevelMinimums[kv.Key]" ValueChanged="s=>SetChartTypeLevelMinimum(kv.Key,s)" Label="@kv.Key" Clearable="true" HideSpinButtons="true"></MudNumericField>
+
+                    </MudItem>
+                }
+            }
+        </MudGrid>
+    </MudExpansionPanel>
     <MudExpansionPanel Text="Additional Settings">
         <MudGrid>
             <MudItem xs="4">
@@ -119,6 +150,10 @@
             </MudItem>
             <MudItem xs="4">
                 <MudSwitch T="bool" Color="Color.Primary" Label="Use Weights" @bind-Checked="_useWeights"></MudSwitch>
+            </MudItem>
+            
+            <MudItem xs="4">
+                <MudSwitch T="bool" Color="Color.Primary" Label="Use Scoring Level" @bind-Checked="Settings.UseScoringLevels"></MudSwitch>
             </MudItem>
         </MudGrid>
     </MudExpansionPanel>
@@ -155,6 +190,29 @@
     private bool _showDoublesLevels => Settings.ChartTypeWeights[ChartType.Double]>0;
     private bool _separateDoubleLevels = false;
     private string LevelLabel => _separateDoubleLevels ? "Singles Levels" : "Levels";
+    private string _minimumType = "Chart Type";
+
+    private void SetChartTypeMinimum(ChartType type, int? minimum)
+    {
+        Settings.ClearLevelMinimums();
+        Settings.ClearChartTypeLevelMinimums();
+        Settings.ChartTypeMinimums[type] = minimum;
+    }
+
+    private void SetLevelMinimum(DifficultyLevel level, int? minimum)
+    {
+        Settings.ClearChartTypeMinimums();
+
+        Settings.ClearChartTypeLevelMinimums();
+        Settings.LevelMinimums[level] = minimum;
+    }
+
+    private void SetChartTypeLevelMinimum(string shortHand, int? minimum)
+    {
+        Settings.ClearChartTypeMinimums();
+        Settings.ClearLevelMinimums();
+        Settings.ChartTypeLevelMinimums[shortHand] = minimum;
+    }
     private string LevelString(int level) => $"Level {level}";
     private string PlayerString(int players) => $"{players} Players";
 

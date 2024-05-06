@@ -160,7 +160,7 @@
             
             await SetLevel(level, 3, ChartType.Single);
         }
-        for (var level = 10; level <= 27; level++)
+        /*for (var level = 10; level <= 27; level++)
         {
 
             await SetLevel(level, 3, ChartType.Double);
@@ -168,7 +168,7 @@
         foreach (var result in _calculatedLevels)
         {
             await Charts.UpdateScoreLevel(MixEnum.Phoenix, result.Key, result.Value);
-        }
+        }*/
         _isLoading = false;
     }
 }
