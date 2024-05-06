@@ -54,22 +54,34 @@
             phoenixScores.AddRange((await Scores.GetAllPlayerScores(chartType,l)).Where(s=>s.record.Score!=null));
         }
         var userIds = phoenixScores.Select(u => u.UserId).Distinct().ToArray();
-        var playerWeights = new Dictionary<Guid, double>();
+        var playerWeights = new Dictionary<Guid, IDictionary<DifficultyLevel, double>>();
         foreach (var userId in userIds)
         {
             var stats = await PlayerStats.GetStats(userId, CancellationToken.None);
             var competitiveLevel = chartType == ChartType.Single ? stats.SinglesCompetitiveLevel : stats.DoublesCompetitiveLevel;
-            playerWeights[userId] = Math.Pow(.5, Math.Abs(level+.5-competitiveLevel));
+            if (!playerWeights.ContainsKey(userId))
+            {
+                playerWeights[userId] = new Dictionary<DifficultyLevel, double>();
+            }
+            for (var l = min; l <= max; l++)
+            {
+                playerWeights[userId][l] = Math.Pow(.5, Math.Abs(l+.5-competitiveLevel));
+            }
         }
         var chartScores = new Dictionary<Guid, double>();
         foreach(var scoreGroup  in phoenixScores.GroupBy(s => s.Record.ChartId))
         {
+            var avg = scoreGroup.Average(g => (double)(int)g.Record.Score!.Value);
+            var stdDev = StdDev(scoreGroup.Select(g => (double)(int)g.Record.Score!.Value), false);
+            var minScore = (PhoenixScore)(int) avg - stdDev * 1.5;
+            var maxScore =(PhoenixScore)(int) avg + stdDev * 1.5;
+            var refinedGroup = scoreGroup.Where(s => s.Record.Score >= minScore && s.Record.Score <= maxScore);
             var total = 0.0;
             var weight = 0.0;
-            foreach (var record in scoreGroup)
+            foreach (var record in refinedGroup)
             {
-                total += ((int)record.Record.Score!.Value) * playerWeights[record.UserId];
-                weight += playerWeights[record.UserId];
+                total += ((int)record.Record.Score!.Value) * playerWeights[record.UserId][_charts[record.Record.ChartId].Level];
+                weight += playerWeights[record.UserId][_charts[record.Record.ChartId].Level];
             }
             chartScores[scoreGroup.Key] = total / weight;
         }
@@ -147,6 +159,15 @@
         {
             
             await SetLevel(level, 3, ChartType.Single);
+        }
+        for (var level = 10; level <= 27; level++)
+        {
+
+            await SetLevel(level, 3, ChartType.Double);
+        }
+        foreach (var result in _calculatedLevels)
+        {
+            await Charts.UpdateScoreLevel(MixEnum.Phoenix, result.Key, result.Value);
         }
         _isLoading = false;
     }
