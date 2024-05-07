@@ -65,13 +65,19 @@
             }
             for (var l = min; l <= max; l++)
             {
-                playerWeights[userId][l] = Math.Pow(.5, Math.Abs(l+.5-competitiveLevel));
+                playerWeights[userId][l] = Math.Pow(.5, Math.Abs(level+.5-competitiveLevel));
             }
         }
         var chartScores = new Dictionary<Guid, double>();
         foreach(var scoreGroup  in phoenixScores.GroupBy(s => s.Record.ChartId))
         {
+            if (_charts[scoreGroup.Key].Level<23 && scoreGroup.All(s => playerWeights[s.UserId][_charts[scoreGroup.Key].Level] < .5))
+            {
+                chartScores[scoreGroup.Key] = 0;
+                continue;
+            }
             var avg = scoreGroup.Average(g => (double)(int)g.Record.Score!.Value);
+            
             var stdDev = StdDev(scoreGroup.Select(g => (double)(int)g.Record.Score!.Value), false);
             var minScore = (PhoenixScore)(int) avg - stdDev * 1.5;
             var maxScore =(PhoenixScore)(int) avg + stdDev * 1.5;
@@ -85,17 +91,43 @@
             }
             chartScores[scoreGroup.Key] = total / weight;
         }
-        var levelAverages = chartScores.GroupBy(kv => _charts[kv.Key].Level)
-            .ToDictionary(group => group.Key, group => group.Average(g => g.Value));
+        var levelAverages = chartScores.Where(kv=>kv.Value>.01).GroupBy(kv => _charts[kv.Key].Level)
+            .ToDictionary(group => group.Key, group =>
+              group.Key==level?group.Average(g=>g.Value):
+                group.Key<level?group.Average(g=>g.Value)+.5*StdDev(group.Select(g=>(double)(int)g.Value),false):
+                  group.Average(g=>g.Value)-.5*StdDev(group.Select(g=>(double)(int)g.Value),false));
 
-        var lowStandardDev = StdDev(chartScores.Where(c => _charts[c.Key].Level == min).Select(kv => kv.Value), false);
-
-        var highStandardDev = StdDev(chartScores.Where(c => _charts[c.Key].Level == max).Select(kv => kv.Value), false);
-        
         //var average = chartScores.Values.Average();
         //var standardDev = StdDev(chartScores.Values,false);
+        if (!levelAverages.Any())
+        {
+            foreach (var  kv in chartScores.Where(c => _charts[c.Key].Level == level))
+            {
+                _calculatedLevels[kv.Key] = 0;
+            }
+            
+            StateHasChanged();
+            _isLoading = false;
+            return;
+        }
+        min = levelAverages.Min(la => la.Key);
+        max = levelAverages.Max(la => la.Key);
+        
+        var lowStandardDev = StdDev(chartScores.Where(kv => kv.Value > .01).Where(c => _charts[c.Key].Level == min).Select(kv => kv.Value), false);
+
+        var highStandardDev = StdDev(chartScores.Where(kv => kv.Value > .01).Where(c => _charts[c.Key].Level == max).Select(kv => kv.Value), false);
+
         foreach (var kv in chartScores.Where(c=>_charts[c.Key].Level==level))
         {
+            if (_charts[kv.Key].Song.Name == "Vanish" && _charts[kv.Key].Level == 10)
+            {
+                //
+            }
+            if (kv.Value == 0)
+            {
+                _calculatedLevels[kv.Key] = 0;
+                continue;
+            }
             if (kv.Value > levelAverages[min])
             {
                 if (lowStandardDev == 0)
@@ -103,7 +135,7 @@
                     _calculatedLevels[kv.Key] = min + .5;
                     continue;
                 }
-                _calculatedLevels[kv.Key] = min+.5-(kv.Value-levelAverages[min])/(4.0*lowStandardDev);
+                _calculatedLevels[kv.Key] = min+.5-(kv.Value-levelAverages[min])/(8.0*lowStandardDev);
                 continue;
             }
             if (kv.Value <= levelAverages[max])
@@ -113,7 +145,7 @@
                     _calculatedLevels[kv.Key] = max + .5;
                     continue;
                 }
-                _calculatedLevels[kv.Key] = max + .5 + (levelAverages[max] - kv.Value) / (4.0 * highStandardDev);
+                _calculatedLevels[kv.Key] = max + .5 + (levelAverages[max] - kv.Value) / (8.0 * highStandardDev);
                 continue;
             }
             for (var l = min; l < max; l++)

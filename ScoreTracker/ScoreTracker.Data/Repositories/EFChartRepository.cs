@@ -61,7 +61,7 @@ public sealed class EFChartRepository : IChartRepository
             .FirstOrDefaultAsync(cancellationToken);
         if (chartMix != null)
         {
-            chartMix.ScoringLevel = scoringLevel;
+            chartMix.ScoringLevel = scoringLevel == 0 ? null : scoringLevel;
             await _database.SaveChangesAsync(cancellationToken);
         }
     }

@@ -602,7 +602,7 @@
         }
         else
         {
-            _finalGroupings = _finalEntries.GroupBy(e => _charts[e.ChartId].ScoringLevel?.ToString("0.0") ?? _charts[e.ChartId].Level.ToString())
+            _finalGroupings = _finalEntries.GroupBy(e => _charts[e.ChartId].ScoringLevel?.ToString("0.0") ?? "Not Enough Data")
                 .OrderBy(g => g.Key).ToArray();
         }
         _messages = _finalGroupings.ToDictionary(kv => kv.Key, kv => "");

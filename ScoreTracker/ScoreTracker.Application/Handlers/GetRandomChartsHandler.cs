@@ -43,8 +43,14 @@ namespace ScoreTracker.Application.Handlers
             var calculatedWeights = new Dictionary<Guid, int>();
             foreach (var chart in charts.Values)
             {
+                if (settings.UseScoringLevels && chart.ScoringLevel == null)
+                {
+                    calculatedWeights[chart.Id] = 0;
+                    continue;
+                }
+
                 var level = settings.UseScoringLevels
-                    ? (int)Math.Floor(chart.ScoringLevel ?? chart.Level)
+                    ? (int)Math.Floor(chart.ScoringLevel!.Value)
                     : (int)chart.Level;
                 var levelWeight = chart.Type switch
                 {
