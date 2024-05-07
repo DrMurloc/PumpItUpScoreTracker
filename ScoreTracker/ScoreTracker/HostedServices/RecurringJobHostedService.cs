@@ -9,7 +9,7 @@ namespace ScoreTracker.Web.HostedServices
         private readonly IBus _bus;
         private readonly ILogger _logger;
 
-        public RecurringJobHostedService(IBus bus, ILogger logger)
+        public RecurringJobHostedService(IBus bus, ILogger<RecurringJobHostedService> logger)
         {
             _bus = bus;
             _logger = logger;
