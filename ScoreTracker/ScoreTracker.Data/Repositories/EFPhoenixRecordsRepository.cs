@@ -135,4 +135,27 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
                 new RecordedPhoenixScore(pb.ChartId, pb.Score, PhoenixPlateHelperMethods.TryParse(pb.Plate),
                     pb.IsBroken, pb.RecordedDate)));
     }
+
+    public async Task<IEnumerable<ChartScoreAggregate>> GetMeaningfulScoresCount(ChartType chartType,
+        DifficultyLevel difficulty,
+        CancellationToken cancellationToken = default)
+    {
+        var mixId = MixGuids[MixEnum.Phoenix];
+        var intLevel = (int)difficulty;
+        var chartTypeString = chartType.ToString();
+        var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+        return (await (from cm in database.ChartMix
+                join c in database.Chart on cm.ChartId equals c.Id
+                join pr in database.PhoenixBestAttempt on cm.ChartId equals pr.ChartId
+                join ps in database.PlayerStats on pr.UserId equals ps.UserId
+                where cm.MixId == mixId && cm.Level == intLevel && c.Type == chartTypeString
+                      && ((chartTypeString == "Single" && ps.SinglesCompetitiveLevel >= cm.Level - .5 &&
+                           ps.SinglesCompetitiveLevel <= cm.Level + .5) || (chartTypeString == "Double" &&
+                                                                            ps.DoublesCompetitiveLevel >=
+                                                                            cm.Level - .5 &&
+                                                                            ps.DoublesCompetitiveLevel <=
+                                                                            cm.Level + .5))
+                select pr).ToArrayAsync(cancellationToken))
+            .GroupBy(c => c.ChartId).Select(g => new ChartScoreAggregate(g.Key, g.Count()));
+    }
 }
