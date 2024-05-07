@@ -7,10 +7,12 @@ namespace ScoreTracker.Web.HostedServices
     public sealed class RecurringJobHostedService : IHostedService
     {
         private readonly IBus _bus;
+        private readonly ILogger _logger;
 
-        public RecurringJobHostedService(IBus bus)
+        public RecurringJobHostedService(IBus bus, ILogger logger)
         {
             _bus = bus;
+            _logger = logger;
         }
 
         private Timer? _timer;
@@ -24,7 +26,32 @@ namespace ScoreTracker.Web.HostedServices
 
         private async Task RunJobs()
         {
-            await _bus.Publish(new ProcessScoresTiersListCommand());
+            try
+            {
+                await _bus.Publish(new ProcessScoresTiersListCommand());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "Scores Tier List Calculation Failed");
+            }
+
+            try
+            {
+                await _bus.Publish(new UpdateBountiesEvent());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "Bounties Update Failed");
+            }
+
+            try
+            {
+                await _bus.Publish(new CalculateScoringDifficultyEvent());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "Scoring Difficulty Calculation Failed");
+            }
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

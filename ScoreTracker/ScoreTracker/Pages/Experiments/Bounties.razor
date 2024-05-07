@@ -1,0 +1,64 @@
+﻿@page "/Bounties"
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Web.Dtos
+@using ScoreTracker.Web.Pages.Tools
+@using ScoreTracker.Domain.Models
+@using MediatR
+
+<PageTitle>Bounties</PageTitle>
+<MudTable T="(int place,BountyLeaderboard record)" Items="_leaderboard" Breakpoint="Breakpoint.None">
+    <ToolBarContent>
+        <MudText Typo="Typo.h4">Bounty Leaderboard</MudText>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>
+            <MudTableSortLabel T="(int place,BountyLeaderboard record)" SortBy="@(e => e.place)">Place</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            Avatar
+        </MudTh>
+        <MudTh>Player</MudTh>
+        <MudTh><MudTableSortLabel T="(int place,BountyLeaderboard record)" SortBy="@(e=>e.record.MonthlyTotal)">Monthly Total</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="(int place,BountyLeaderboard record)" SortBy="@(e=>e.record.Total)">Total</MudTableSortLabel></MudTh>
+        
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            @context.place
+        </MudTd>
+        <MudTd>
+            <MudImage Src="@_users[context.record.UserId].ProfileImage.ToString()" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+        </MudTd>
+        <MudTd>
+            @_users[context.record.UserId].Name
+        </MudTd>
+        <MudTd>
+            @context.record.MonthlyTotal
+        </MudTd>
+        <MudTd>
+            @context.record.Total
+        </MudTd>
+    </RowTemplate>
+    
+    <PagerContent>
+        <MudTablePager></MudTablePager>
+    </PagerContent>
+</MudTable>
+
+@inject IChartBountyRepository Bounty;
+@inject IUserRepository Users;
+@code
+{
+    private IEnumerable<(int place,BountyLeaderboard record)> _leaderboard = Array.Empty<(int,BountyLeaderboard)>();
+    private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
+    protected override async Task OnInitializedAsync()
+    {
+        _leaderboard = (await Bounty.GetBountyLeaderboard(CancellationToken.None))
+            .OrderByDescending(l => l.MonthlyTotal).Select((r, i) => (i + 1,r)).ToArray();
+        foreach (var l in _leaderboard)
+        {
+            _users[l.record.UserId] = await Users.GetUser(l.record.UserId) ?? throw new Exception("What");
+        }
+    }
+}

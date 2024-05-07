@@ -21,15 +21,17 @@ namespace ScoreTracker.Application.Handlers
         private readonly IUserRepository _users;
         private readonly IPlayerStatsRepository _stats;
         private readonly IPhoenixRecordRepository _scores;
+        private readonly IChartBountyRepository _bounties;
 
         public RecommendedChartsSaga(IMediator mediator, ICurrentUserAccessor currentUser, IUserRepository users,
-            IPlayerStatsRepository stats, IPhoenixRecordRepository scores)
+            IPlayerStatsRepository stats, IPhoenixRecordRepository scores, IChartBountyRepository bounties)
         {
             _mediator = mediator;
             _currentUser = currentUser;
             _users = users;
             _stats = stats;
             _scores = scores;
+            _bounties = bounties;
         }
 
         public async Task<IEnumerable<ChartRecommendation>> Handle(GetRecommendedChartsQuery request,
@@ -183,61 +185,14 @@ namespace ScoreTracker.Application.Handlers
             IDictionary<string, ISet<Guid>> ignoredChartIds, CancellationToken cancellationToken,
             RecordedPhoenixScore[] scores)
         {
-            var stats = await _stats.GetStats(_currentUser.User.Id, cancellationToken);
-            var singlesLevel = (int)Math.Floor(stats.SinglesCompetitiveLevel);
-            var otherSingles = (int)Math.Round(stats.SinglesCompetitiveLevel);
-            if (otherSingles == singlesLevel) otherSingles--;
-            var doublesLevel = (int)Math.Floor(stats.DoublesCompetitiveLevel);
-            var otherDoubles = (int)Math.Round(stats.DoublesCompetitiveLevel);
-            if (otherDoubles == doublesLevel) otherDoubles--;
-            var results = new List<ChartRecommendation>();
             var ignoredCharts = ignoredChartIds.TryGetValue("Bounties", out var set) ? set : new HashSet<Guid>();
             var existingScores = scores.Where(s => s.Score != null).Select(s => s.ChartId).Distinct().ToHashSet();
-            if (singlesLevel > 0 && otherSingles > 0)
-            {
-                var charts = (await
-                        _mediator.Send(
-                            new GetChartsQuery(MixEnum.Phoenix, singlesLevel,
-                                ChartType.Single),
-                            cancellationToken))
-                    .Concat(await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix, otherSingles,
-                        ChartType.Single), cancellationToken));
-
-                var aggregates = (
-                        await _scores.GetMeaningfulScoresCount(ChartType.Single, singlesLevel, cancellationToken))
-                    .Concat(await _scores.GetMeaningfulScoresCount(ChartType.Single, otherSingles, cancellationToken))
-                    .ToDictionary(a => a.ChartId, a => a.Count);
-                foreach (var chart in charts
-                             .Where(c => !existingScores.Contains(c.Id) && !ignoredCharts.Contains(c.Id))
-                             .OrderBy(c => aggregates.TryGetValue(c.Id, out var count) ? count : 0)
-                             .Take(5))
-                    results.Add(new ChartRecommendation("Bounties", chart.Id,
-                        "Charts in your competitive level that have low-to-no data on scores"));
-            }
-
-            if (doublesLevel > 0 && otherDoubles > 0)
-            {
-                var charts = (await
-                        _mediator.Send(
-                            new GetChartsQuery(MixEnum.Phoenix, doublesLevel,
-                                ChartType.Double),
-                            cancellationToken))
-                    .Concat(await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix, otherDoubles,
-                        ChartType.Double), cancellationToken));
-
-                var aggregates = (
-                        await _scores.GetMeaningfulScoresCount(ChartType.Double, doublesLevel, cancellationToken))
-                    .Concat(await _scores.GetMeaningfulScoresCount(ChartType.Double, otherDoubles, cancellationToken))
-                    .ToDictionary(a => a.ChartId, a => a.Count);
-                foreach (var chart in charts
-                             .Where(c => !existingScores.Contains(c.Id) && !ignoredCharts.Contains(c.Id))
-                             .OrderBy(c => aggregates.TryGetValue(c.Id, out var count) ? count : 0)
-                             .Take(5))
-                    results.Add(new ChartRecommendation("Bounties", chart.Id,
-                        "Charts in your competitive level that have low-to-no data on scores"));
-            }
-
-            return results;
+            return (await _mediator.Send(new GetChartBountiesQuery(), cancellationToken)).Where(b =>
+                    !ignoredCharts.Contains(b.ChartId) && !existingScores.Contains(b.ChartId))
+                .OrderByDescending(b => b.Worth)
+                .Take(5)
+                .Select(b => new ChartRecommendation("Bounties", b.ChartId,
+                    "Charts that have low data present on the site", $"{b.Worth} Points"));
         }
 
         private async Task<IEnumerable<ChartRecommendation>> GetPushLevels(

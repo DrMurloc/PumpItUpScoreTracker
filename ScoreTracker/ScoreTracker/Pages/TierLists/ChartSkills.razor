@@ -501,48 +501,11 @@
                 }
                 chartWeights[entry.ChartId] += (TierListCategory.Unrecorded - entry.Category) * userTotals[kv.Key];
             }
-        return ProcessIntoTierList("Similar Players", chartWeights);
+        return TierListSaga.ProcessIntoTierList("Similar Players", chartWeights);
         
 
     }
 
-    private IEnumerable<SongTierListEntry> ProcessIntoTierList(string tierListName, IDictionary<Guid, int> chartWeights)
-    {
-        var standardDeviationCompare =
-            TierListSaga.StdDev(chartWeights.Select(s => s.Value), false);
-        var averageCompare = chartWeights.Average(kv => kv.Value);
-        var mediumMinCompare = averageCompare - standardDeviationCompare / 2;
-        var easyMinCompare = averageCompare + standardDeviationCompare / 2;
-        var veryEasyMinCompare = averageCompare + standardDeviationCompare;
-        var oneLevelOverratedCompare = averageCompare + standardDeviationCompare * 1.5;
-        var hardMinCompare = averageCompare - standardDeviationCompare;
-        var veryHardMinCompare = averageCompare - standardDeviationCompare * 1.5;
-        var result = new List<SongTierListEntry>();
-        var order = 0;
-        foreach (var chart in chartWeights.OrderBy(kv => kv.Value))
-        {
-            var score = chart.Value;
-            var myCategory = TierListCategory.Overrated;
-            if (score == 0)
-                myCategory = TierListCategory.Unrecorded;
-            else if (score < veryHardMinCompare)
-                myCategory = TierListCategory.Underrated;
-            else if (score < hardMinCompare)
-                myCategory = TierListCategory.VeryHard;
-            else if (score < mediumMinCompare)
-                myCategory = TierListCategory.Hard;
-            else if (score < easyMinCompare)
-                myCategory = TierListCategory.Medium;
-            else if (score < veryEasyMinCompare)
-                myCategory = TierListCategory.Easy;
-            else if (score < oneLevelOverratedCompare)
-                myCategory = TierListCategory.VeryEasy;
-            else
-                myCategory = TierListCategory.Overrated;
-            result.Add(new SongTierListEntry(tierListName, chart.Key, myCategory, order++));
-        }
-        return result;
-    }
     private async Task Recalculate()
     {
         _isLoading = true;
