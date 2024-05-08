@@ -10,7 +10,6 @@
         <MudImage Src="@DifficultyBubblePath" Height="35" Alt="@Chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
         </MudTooltip>
 }
-@inject IUiSettingsAccessor UiSettings
 @code {
     private string ScoringLevelString => Chart?.ScoringLevel == null ? "" : $", {Chart.ScoringLevel:0.0} Scoring Level";
     [Parameter]

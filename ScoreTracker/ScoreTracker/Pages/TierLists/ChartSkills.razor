@@ -103,9 +103,7 @@
                             @if ((_scores.TryGetValue(chart.Id, out var s) ? s : 0) > 0)
                             {
                                 <MudCardContent>
-                                    
-                                    <MudText>@_scores[chart.Id] (@_scores[chart.Id].LetterGrade.GetName())</MudText>
-                                    
+                                    <ScoreBreakdown Score="_scores[chart.Id]" IsBroken="_isBroken[chart.Id]" ShowScore="true" Plate="_plate[chart.Id]"></ScoreBreakdown>
                                 </MudCardContent>
                             }
                             <MudCardActions>
@@ -248,6 +246,8 @@
 
     private IDictionary<Guid, double> _passScore = new Dictionary<Guid, double>();
     private IDictionary<Guid, PhoenixScore> _scores = new Dictionary<Guid, PhoenixScore>();
+    private IDictionary<Guid, bool> _isBroken = new Dictionary<Guid, bool>();
+    private IDictionary<Guid, PhoenixPlate?> _plate = new Dictionary<Guid, PhoenixPlate?>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private ISet<Guid> _unPopularCharts = new HashSet<Guid>();
     private ISet<Guid> _popularCharts = new HashSet<Guid>();
@@ -386,7 +386,7 @@
         Colors = Enum.GetValues<Skill>().ToDictionary(s => s, s => Color.Primary);
         _passScore = new Dictionary<Guid, double>();
         _scores = new Dictionary<Guid, PhoenixScore>();
-
+        _isBroken = new Dictionary<Guid, bool>();
 
         var skills = (await Mediator.Send(new GetChartSkillsQuery())).Where(c => _charts.ContainsKey(c.ChartId)).ToArray();
 
@@ -395,6 +395,8 @@
             .ToDictionary(g => g.ChartId);
 
         _scores = _charts.ToDictionary(c => c.Key, c => myScores.TryGetValue(c.Key, out var s) ? s.Score ?? PhoenixScore.Min : PhoenixScore.Min);
+        _isBroken = _charts.ToDictionary(c => c.Key, c => !myScores.TryGetValue(c.Key, out var b) || b.IsBroken);
+        _plate = _charts.ToDictionary(c => c.Key, c => myScores.TryGetValue(c.Key, out var s) ? s.Plate : null);
         foreach (var skillChart in skills)
         {
             if (!myScores.TryGetValue(skillChart.ChartId, out var score)||score.Score==null)

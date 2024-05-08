@@ -1,0 +1,50 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.ValueTypes
+@using Align = MudBlazor.Align
+@namespace ScoreTracker.Web.Components
+<MudTooltip Text=@(ShowScore?"":ScoreString)>
+        
+    @if (Score != null)
+    {
+            <MudImage Src="@LetterGradeImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+
+    }
+    @if (Plate != null)
+    {
+        
+            <MudImage Src="@PlateImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+
+    }
+
+    @if (ShowScore && Score!=null)
+    {
+        <MudText Align="Align.Center">
+            @ScoreString
+        </MudText>
+    }
+    
+</MudTooltip>
+@code {
+    [Parameter]
+    public PhoenixScore? Score { get; set; }
+
+    [Parameter]
+    public bool IsBroken { get; set; } = false;
+
+    [Parameter]
+    public int Height { get; set; } = 20;
+
+    [Parameter] public PhoenixPlate? Plate { get; set; }
+
+    [Parameter]
+    public bool ShowScore { get; set; } = false;
+
+    private string ScoreString => Score == null ? "" : ((int)Score).ToString("N0");
+    private string BrokenPiece => IsBroken ? "_broken" : "";
+    private string LetterGradeImage => 
+        $"https://piuimages.arroweclip.se/letters/{Score?.LetterGrade.ToString().ToLower()}{BrokenPiece}.png";
+
+    private string PlateImage => $"https://piuimages.arroweclip.se/plates/{Plate?.GetShorthand().ToLower()}.png";
+
+}

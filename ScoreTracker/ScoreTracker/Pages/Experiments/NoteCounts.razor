@@ -1,0 +1,137 @@
+﻿@page "/NoteCounts"
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Web.Dtos
+@using ScoreTracker.Web.Pages.Tools
+@using ScoreTracker.Domain.Models
+@using MediatR
+@using ScoreTracker.Application.Handlers
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+
+<PageTitle>Note Counts</PageTitle>
+@if (!_isLoading)
+{
+    <MudSelect T="ChartType" Label="Chart Type" @bind-Value="_currentChartType">
+        <MudSelectItem Value="ChartType.Single">Singles</MudSelectItem>
+        <MudSelectItem Value="ChartType.Double">Doubles</MudSelectItem>
+        <MudSelectItem Value="ChartType.CoOp">CoOp</MudSelectItem>
+    </MudSelect>
+    @foreach (var type in new[] { ChartType.Single, ChartType.Double, ChartType.CoOp }.Where(t=>t==_currentChartType))
+    {
+        
+        <ApexChart TItem="DataPoint"
+                   Title="Total Singles vs Doubles">
+
+            <ApexPointSeries TItem="DataPoint"
+                             Items="_mins[type]"
+                             Name="Minimums"
+                             SeriesType="SeriesType.Line"
+                             XValue="@(e => e.X)"
+                             YValue="@(e => e.Y)"
+                             OrderBy="e => e.X" />
+            <ApexPointSeries TItem="DataPoint"
+                             Items="_standardMin[type]"
+                             Name="Standard Low"
+                             SeriesType="SeriesType.Line"
+                             XValue="@(e => e.X)"
+                             YValue="@(e => e.Y)"
+                             OrderBy="e => e.X" />
+            <ApexPointSeries TItem="DataPoint"
+                             Items="_averages[type]"
+                             Name="Average"
+                             SeriesType="SeriesType.Line"
+                             XValue="@(e => e.X)"
+                             YValue="@(e => e.Y)"
+                             OrderBy="e => e.X" />
+            <ApexPointSeries TItem="DataPoint"
+                             Items="_standardMax[type]"
+                             Name="Standard High"
+                             SeriesType="SeriesType.Line"
+                             XValue="@(e => e.X)"
+                             YValue="@(e => e.Y)"
+                             OrderBy="e => e.X" />
+            <ApexPointSeries TItem="DataPoint"
+                             Items="_maxes[type]"
+                             Name="Maximums"
+                             SeriesType="SeriesType.Line"
+                             XValue="@(e => e.X)"
+                             YValue="@(e => e.Y)"
+                             OrderBy="e => e.X" />
+
+        </ApexChart>
+        <ApexChart TItem="DataPoint"
+                               Title="Total Singles vs Doubles">
+
+                        <ApexPointSeries TItem="DataPoint"
+                                         Items="_missingCount[type]"
+                                         Name="Missing"
+                                         SeriesType="SeriesType.Line"
+                                         XValue="@(e => e.X)"
+                                         YValue="@(e => e.Y)"
+                                         OrderBy="e => e.X" />
+                        <ApexPointSeries TItem="DataPoint"
+                                         Items="_existingCount[type]"
+                                         Name="Existing"
+                                         SeriesType="SeriesType.Line"
+                                         XValue="@(e => e.X)"
+                                         YValue="@(e => e.Y)"
+                                         OrderBy="e => e.X" />
+
+                    </ApexChart>
+    }
+}
+@inject IMediator Mediator;
+@code
+{
+    private IEnumerable<(int place,BountyLeaderboard record)> _leaderboard = Array.Empty<(int,BountyLeaderboard)>();
+    private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
+    private IDictionary<ChartType, IList<DataPoint>> _averages = new Dictionary<ChartType, IList<DataPoint>>();
+    private IDictionary<ChartType, IList<DataPoint>> _standardMax = new Dictionary<ChartType, IList<DataPoint>>();
+    private IDictionary<ChartType, IList<DataPoint>> _standardMin = new Dictionary<ChartType, IList<DataPoint>>();
+    private IDictionary<ChartType, IList<DataPoint>> _mins = new Dictionary<ChartType, IList<DataPoint>>();
+    private IDictionary<ChartType, IList<DataPoint>> _maxes = new Dictionary<ChartType, IList<DataPoint>>();
+    private IDictionary<ChartType, IList<DataPoint>> _existingCount = new Dictionary<ChartType, IList<DataPoint>>();
+    private IDictionary<ChartType, IList<DataPoint>> _missingCount = new Dictionary<ChartType, IList<DataPoint>>();
+    private bool _isLoading = true;
+    private ChartType _currentChartType = ChartType.Single;
+    protected override async Task OnInitializedAsync()
+    {
+        _isLoading = true;
+        var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).GroupBy(c => c.Type);
+        foreach (var typeGroup in charts.ToArray())
+        {
+            _averages[typeGroup.Key] = new List<DataPoint>();
+            _standardMax[typeGroup.Key] = new List<DataPoint>();
+            _standardMin[typeGroup.Key] = new List<DataPoint>();
+            _mins[typeGroup.Key] = new List<DataPoint>();
+            _maxes[typeGroup.Key] = new List<DataPoint>();
+            _existingCount[typeGroup.Key] = new List<DataPoint>();
+            _missingCount[typeGroup.Key] = new List<DataPoint>();
+            foreach (var levelGroup in typeGroup.GroupBy(c => c.Level).ToArray())
+            {
+                _existingCount[typeGroup.Key].Add(new DataPoint(levelGroup.Key, levelGroup.Count(c => c.NoteCount != null)));
+                _missingCount[typeGroup.Key].Add(new DataPoint(levelGroup.Key, levelGroup.Count(c => c.NoteCount == null)));
+                if (levelGroup.All(c => c.NoteCount == null)) continue;
+                
+                var noteCounts = levelGroup.Where(c => c.NoteCount != null).Select(c => c.NoteCount!.Value).ToArray();
+                var average = noteCounts.Average();
+                var standardDeviation = TierListSaga.StdDev(noteCounts, false);
+                _averages[typeGroup.Key].Add(new DataPoint(levelGroup.Key,(int)average));
+                _standardMin[typeGroup.Key].Add(new DataPoint(levelGroup.Key,(int)(average-standardDeviation)));
+                _standardMax[typeGroup.Key].Add(new DataPoint(levelGroup.Key,(int)(average+standardDeviation)));
+                _mins[typeGroup.Key].Add(new DataPoint(levelGroup.Key, noteCounts.Min()));
+                _maxes[typeGroup.Key].Add(new DataPoint(levelGroup.Key, noteCounts.Max()));
+            
+            }
+        }
+        _isLoading = false;
+
+    }
+
+    private sealed record DataPoint(int X, int Y)
+    {
+
+    }
+}

@@ -84,7 +84,7 @@
                     {
                         
                         <MudCardContent>
-                            <MudText>@score.Score (@score.Score?.LetterGrade.GetName()) @(score.Plate?.GetShorthand())</MudText>
+                            <ScoreBreakdown Score="score.Score" IsBroken="score.IsBroken" Plate="score.Plate" ShowScore="true"></ScoreBreakdown>
                         </MudCardContent>
                     }
                     <MudCardActions>

@@ -112,7 +112,7 @@
                     </MudTd>
             }
             <MudTd>
-                @context.Score (@context.Score.LetterGrade.GetName())
+                <ScoreBreakdown Score="context.Score"></ScoreBreakdown>
             </MudTd>
         }
         @if (_currentType == LeaderboardType.Total)
@@ -153,11 +153,8 @@
                                 <MudCardMedia Height="150" Image="@entry.Chart.Song.ImagePath.ToString()"/>
                                 <MudCardContent>
                                     <DifficultyBubble Chart="entry.Chart"></DifficultyBubble>
-                                    <MudTooltip Text=@($"{entry.CompetitiveLevel:0.000}, {entry.Rating} Rating")>
-                                        <MudText>
-                                            @entry.Score (@entry.Score.LetterGrade.GetName())
-                                        </MudText>
-                                    </MudTooltip>
+                                    <ScoreBreakdown Score="entry.Score" Plate="entry.Plate" IsBroken="entry.IsBroken" ShowScore="true" Height="17"></ScoreBreakdown>
+
                                 </MudCardContent>
                             </MudCard>
                         </MudItem>
@@ -288,7 +285,7 @@
         var scoringConfig = ScoringConfiguration.PiuScoresRating;
 
         _scores = (await Mediator.Send(new GetTop50CompetitiveQuery(userId, chartType)))
-            .Select(s => new ScoreEntry(_charts[s.ChartId], s.Score ?? 0, scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false), ScoringConfiguration.CalculateFungScore(_charts[s.ChartId].Level, s.Score ?? 0,_charts[s.ChartId].Type)))
+            .Select(s => new ScoreEntry(_charts[s.ChartId], s.Score ?? 0, s.Plate, s.IsBroken,scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false), ScoringConfiguration.CalculateFungScore(_charts[s.ChartId].Level, s.Score ?? 0, _charts[s.ChartId].Type)))
             .ToArray();
         _showingUserId = userId;
         _chartType = chartType;
@@ -305,7 +302,7 @@
         var scoringConfig = ScoringConfiguration.PiuScoresRating;
 
         _scores = (await Mediator.Send(new GetTop50ForPlayerQuery(userId, chartType)))
-            .Select(s => new ScoreEntry(_charts[s.ChartId], s.Score ?? 0, scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false),ScoringConfiguration.CalculateFungScore(_charts[s.ChartId].Level,s.Score??0)))
+            .Select(s => new ScoreEntry(_charts[s.ChartId], s.Score ?? 0, s.Plate, s.IsBroken,scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false),ScoringConfiguration.CalculateFungScore(_charts[s.ChartId].Level,s.Score??0)))
             .ToArray();
         _showingUserId = userId;
         _chartType = chartType;
@@ -446,7 +443,7 @@
         }
         _currentType = type;
     }
-    private sealed record ScoreEntry(Chart Chart, PhoenixScore Score, int Rating, double CompetitiveLevel);
+    private sealed record ScoreEntry(Chart Chart, PhoenixScore Score, PhoenixPlate? Plate, bool IsBroken, int Rating, double CompetitiveLevel);
 
     private sealed record LeaderboardEntry(int place,Uri ProfileImage, Name PlayerName, bool IsPublic, Guid UserId, int Rating, PhoenixScore Score, double AverageLevel, double CompetitiveLevel, string Color, int HighestLevel, int ClearCount)
     {
