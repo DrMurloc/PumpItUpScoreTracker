@@ -115,6 +115,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     }
 
     public async Task<IEnumerable<OfficialRecordedScore>> GetRecordedScores(string username, string password,
+        bool includeBroken,
         int? maxPages, CancellationToken cancellationToken)
     {
         var currentPage = 1;
@@ -168,7 +169,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
             currentPage++;
         }
 
-        var results = new List<OfficialRecordedScore>();
+        var results = new Dictionary<Guid, OfficialRecordedScore>();
         foreach (var response in responses)
         {
             var chartType = response.ChartType;
@@ -180,10 +181,39 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
                 .FirstOrDefault(c => c.Type == chartType && c.Level == response.Level);
             if (chart == null) continue;
 
-            results.Add(new OfficialRecordedScore(chart, response.Score, response.Plate));
+            results[chart.Id] = new OfficialRecordedScore(chart, response.Score, response.Plate);
         }
 
-        return results;
+        var recent = (await _piuGame.GetRecentScores(sessionId, cancellationToken)).ToArray();
+        foreach (var songGroup in recent.GroupBy(s => s.SongName))
+        {
+            var songName = songGroup.Key;
+            if (ManualMappings.TryGetValue(songName, out var mapping)) songName = mapping;
+            var chartDict =
+                (await _charts.GetChartsForSong(MixEnum.Phoenix, songName, cancellationToken)).ToArray();
+            foreach (var chartGroup in songGroup.GroupBy(g => (g.Level, g.ChartType)))
+            {
+                var chart = chartDict.FirstOrDefault(c =>
+                    c.Level == chartGroup.Key.Level && c.Type == chartGroup.Key.ChartType);
+                if (chart == null) continue;
+
+                if (chart.NoteCount == null)
+                    await _charts.UpdateNoteCount(chart.Id, chartGroup.First().NoteCount, cancellationToken);
+                if (chart.Song.Name.ToString().Contains("end of", StringComparison.OrdinalIgnoreCase))
+                {
+                    //
+                }
+
+                if (!includeBroken || results.ContainsKey(chart.Id)) continue;
+
+                var bestScore = chartGroup.Max(s => s.Score);
+                var bestPlate = chartGroup.Max(s => s.Plate);
+                var isBroken = chartGroup.All(s => s.IsBroken);
+                results[chart.Id] = new OfficialRecordedScore(chart, bestScore, bestPlate, isBroken);
+            }
+        }
+
+        return results.Values;
     }
 
     private readonly Regex ImageRegex = new(@"https\:\/\/piugame\.com\/data\/avatar_img\/([A-Za-z0-9]+.png)\?v\=",

@@ -4,7 +4,8 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Records
 {
-    public sealed record OfficialRecordedScore(Chart Chart, PhoenixScore Score, PhoenixPlate Plate)
+    public sealed record OfficialRecordedScore(Chart Chart, PhoenixScore Score, PhoenixPlate Plate,
+        bool IsBroken = false)
     {
     }
 }

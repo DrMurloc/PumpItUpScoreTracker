@@ -2,10 +2,12 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Web;
 using HtmlAgilityPack;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic.FileIO;
 using ScoreTracker.Data.Apis.Contracts;
 using ScoreTracker.Data.Apis.Dtos;
 using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.Records;
 
 namespace ScoreTracker.Data.Apis;
 
@@ -21,10 +23,12 @@ public sealed class PiuGameApi : IPiuGameApi
         IdRegex = new(@"over_ranking_view\.php\?no=([a-zA-Z0-9]+)", RegexOptions.Compiled);
 
     private readonly HttpClient _client;
+    private readonly ILogger _logger;
 
-    public PiuGameApi(HttpClient client)
+    public PiuGameApi(HttpClient client, ILogger<PiuGameApi> logger)
     {
         _client = client;
+        _logger = logger;
     }
 
     public async Task<PiuGameGetSongsResult> Get20AboveSongs(int page, CancellationToken cancellationToken)
@@ -265,6 +269,86 @@ public sealed class PiuGameApi : IPiuGameApi
         {
             Entries = results.ToArray()
         };
+    }
+
+    public async Task<IEnumerable<PiuGameGetRecentScoresResult>> GetRecentScores(HttpClient client,
+        CancellationToken cancellationToken)
+    {
+        var response = await GetWithRetries("https://piugame.com/my_page/recently_played.php",
+            cancellationToken, client);
+
+        var document = new HtmlDocument();
+        document.LoadHtml(response);
+        var cards = document.DocumentNode.SelectNodes(
+            ".//ul[contains(@class,'recently_playeList')]/li");
+        if (cards == null) return Array.Empty<PiuGameGetRecentScoresResult>();
+        var results = new List<PiuGameGetRecentScoresResult>();
+        foreach (var card in cards)
+            try
+            {
+                if (card.SelectNodes(".//div[contains(@class,'li_in')]/i[contains(@class,'tx')]")
+                        ?.Any(n => n.InnerText == "STAGE BREAK") ?? false)
+                    continue;
+                var isBroken = card.SelectNodes(".//div[contains(@class,'li_in')]/img")
+                    ?.Any(n => n.GetAttributeValue("src", "").Contains("/plate/")) ?? true;
+
+                var scoreString = card
+                    .SelectSingleNode(".//div[contains(@class,'li_in')]/i[contains(@class,'tx')]")
+                    ?.InnerText;
+                var score = int.Parse(card
+                                          .SelectSingleNode(".//div[contains(@class,'li_in')]/i[contains(@class,'tx')]")
+                                          ?.InnerText ??
+                                      "",
+                    NumberStyles.AllowThousands);
+                var songName =
+                    HttpUtility.HtmlDecode(card.SelectSingleNode(".//div[contains(@class,'song_name')]/p").InnerText);
+                var chartTypeUrl = card
+                    .SelectNodes(@".//div[contains(@class,'stepBall_img_wrap')]//div[contains(@class,'tw')]//img")
+                    .FirstOrDefault()?.GetAttributeValue("src", "Unknown");
+
+                var chartType = GetChartTypeFromUrl(chartTypeUrl);
+                var difficultyLevelUrls = card
+                    .SelectNodes(@".//div[contains(@class,'stepBall_img_wrap')]//div[contains(@class,'numw')]//img")
+                    .Select(i => i.GetAttributeValue("src", "Unknown")).ToArray();
+                var level = 0;
+                foreach (var url in difficultyLevelUrls)
+                {
+                    level *= 10;
+                    var match = LevelRegex.Match(url);
+                    if (!match.Success || !int.TryParse(match.Groups[1].Value, out var parsedLevel)) continue;
+
+                    level += parsedLevel;
+                }
+
+                var perfects = int.Parse(card.SelectSingleNode(".//td[contains(@data-th,'PERFECT')]/div").InnerText,
+                    NumberStyles.AllowThousands);
+                var greats = int.Parse(card.SelectSingleNode(".//td[contains(@data-th,'GREAT')]/div").InnerText,
+                    NumberStyles.AllowThousands);
+                var goods = int.Parse(card.SelectSingleNode(".//td[contains(@data-th,'GOOD')]/div").InnerText,
+                    NumberStyles.AllowThousands);
+                var bads = int.Parse(card.SelectSingleNode(".//td[contains(@data-th,'BAD')]/div").InnerText,
+                    NumberStyles.AllowThousands);
+                var misses = int.Parse(card.SelectSingleNode(".//td[contains(@data-th,'MISS')]/div").InnerText,
+                    NumberStyles.AllowThousands);
+                var scoreScreen = new ScoreScreen(perfects, greats, goods, bads, misses, 0);
+                var plate = scoreScreen.PlateText;
+                results.Add(new PiuGameGetRecentScoresResult
+                {
+                    ChartType = chartType,
+                    Level = level,
+                    NoteCount = perfects + greats + goods + bads + misses,
+                    Plate = plate,
+                    SongName = songName,
+                    IsBroken = isBroken,
+                    Score = score
+                });
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error parsing recent scores");
+            }
+
+        return results;
     }
 
     private async Task<string> PostWithRetries(string url, IDictionary<string, string> form,

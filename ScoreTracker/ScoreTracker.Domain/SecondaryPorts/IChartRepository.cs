@@ -39,6 +39,7 @@ public interface IChartRepository
     Task UpdateChart(Guid chartId, Name stepArtist, int noteCount,
         CancellationToken cancellationToken = default);
 
+    Task UpdateNoteCount(Guid chartId, int noteCount, CancellationToken cancellationToken = default);
     Task<IEnumerable<ChartSkillsRecord>> GetChartSkills(CancellationToken cancellationToken = default);
     Task SaveChartSkills(ChartSkillsRecord record, CancellationToken cancellationToken = default);
     void ClearCache();

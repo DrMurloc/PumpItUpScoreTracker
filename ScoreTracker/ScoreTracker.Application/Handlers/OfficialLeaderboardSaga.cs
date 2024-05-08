@@ -186,7 +186,8 @@ namespace ScoreTracker.Application.Handlers
                 : null;
 
             var scores =
-                (await _officialSite.GetRecordedScores(request.Username, request.Password, limit, cancellationToken))
+                (await _officialSite.GetRecordedScores(request.Username, request.Password, request.IncludeBroken, limit,
+                    cancellationToken))
                 .ToArray();
             var count = 0;
             var batch = new List<RecordedPhoenixScore>();
@@ -194,8 +195,9 @@ namespace ScoreTracker.Application.Handlers
                 (await _mediator.Send(new GetPhoenixRecordsQuery(userId), cancellationToken)).ToDictionary(s =>
                     s.ChartId);
             var toSave = scores.Where(s =>
-                    !existingScores.TryGetValue(s.Chart.Id, out var sc) || sc.IsBroken || sc.Plate != s.Plate ||
-                    sc.Score != s.Score)
+                    !existingScores.TryGetValue(s.Chart.Id, out var sc) || (sc.IsBroken && !s.IsBroken) ||
+                    (sc.IsBroken == s.IsBroken && (sc.Plate < s.Plate ||
+                                                   sc.Score < s.Score)))
                 .ToArray();
             foreach (var score in toSave)
             {

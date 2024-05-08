@@ -155,6 +155,20 @@ public sealed class EFChartRepository : IChartRepository
         ClearCache();
     }
 
+    public async Task UpdateNoteCount(Guid chartId, int noteCount, CancellationToken cancellationToken = default)
+    {
+        var mixId = MixGuids[MixEnum.Phoenix];
+        var entity =
+            await _database.ChartMix.FirstOrDefaultAsync(c => c.ChartId == chartId && c.MixId == mixId,
+                cancellationToken);
+        if (entity == null) return;
+        entity.NoteCount = noteCount;
+        await _database.SaveChangesAsync(cancellationToken);
+        var cache = await GetAllCharts(MixEnum.Phoenix, cancellationToken);
+        cache[chartId] = new Chart(chartId, cache[chartId].Song, cache[chartId].Type, cache[chartId].Level,
+            cache[chartId].Mix, cache[chartId].StepArtist, cache[chartId].ScoringLevel, cache[chartId].NoteCount);
+    }
+
 
     private const string ChartSkillsCacheKey = $"{nameof(EFChartRepository)}_{nameof(GetChartSkills)}";
 

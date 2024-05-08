@@ -62,11 +62,17 @@
                     <MudItem xs="12">
                         <MudText>@L["Use Password 4"]</MudText>
                     </MudItem>
-                    <MudItem xs="12" sm="6">
+                    <MudItem xs="12" sm="4">
                         <MudTextField Label="PIUGame.com Username" Disabled="_isImporting" @bind-Value="_username"></MudTextField>
                     </MudItem>
-                    <MudItem xs="12" sm="6">
+                    <MudItem xs="12" sm="4">
                         <MudTextField InputType="InputType.Password" Disabled="_isImporting" Label="PIUGame.com Password" @bind-Value="_password"></MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudTooltip Text="Will pull in broken scores from your recent plays, passing scores overwrite broken scores">
+                            
+                            <MudCheckBox T="bool" Label=@L["Include Broken Scores"] @bind-Value="_includeBroken"></MudCheckBox>
+                        </MudTooltip>
                     </MudItem>
                     @if (_isImporting)
                     {
@@ -271,7 +277,7 @@
     private int _startPage = 1;
     private string _username = "";
     private string _password = "";
-
+    private bool _includeBroken = false;
     private async Task ImportScores()
     {
         _scores.Clear();
@@ -279,7 +285,7 @@
         _passwordImportStatus = "Starting Import...";
         try
         {
-            await Mediator.Send(new ImportOfficialPlayerScoresCommand(_username, _password));
+            await Mediator.Send(new ImportOfficialPlayerScoresCommand(_username, _password,_includeBroken));
             _passwordImportStatus = "Import Completed!";
         }
         catch (Exception e)

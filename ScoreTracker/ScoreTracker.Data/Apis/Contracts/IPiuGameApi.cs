@@ -12,6 +12,9 @@ namespace ScoreTracker.Data.Apis.Contracts
         Task<PiuGameGetChartPopularityLeaderboardResult> GetChartPopularityLeaderboard(int page,
             CancellationToken cancellationToken);
 
+        Task<IEnumerable<PiuGameGetRecentScoresResult>> GetRecentScores(HttpClient client,
+            CancellationToken cancellationToken);
+
         Task<HttpClient> GetSessionId(string username, string password, CancellationToken cancellationToken);
 
         Task<PiuGameGetBestScoresResult>
