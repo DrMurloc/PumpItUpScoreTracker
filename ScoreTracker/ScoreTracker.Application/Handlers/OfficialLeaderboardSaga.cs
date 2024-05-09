@@ -202,10 +202,10 @@ namespace ScoreTracker.Application.Handlers
             foreach (var score in toSave)
             {
                 await _mediator.Send(
-                    new UpdatePhoenixBestAttemptCommand(score.Chart.Id, false, score.Score, score.Plate),
+                    new UpdatePhoenixBestAttemptCommand(score.Chart.Id, score.IsBroken, score.Score, score.Plate),
                     cancellationToken);
                 count++;
-                batch.Add(new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, false,
+                batch.Add(new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, score.IsBroken,
                     DateTimeOffset.Now));
 
                 if (count % 10 != 0) continue;

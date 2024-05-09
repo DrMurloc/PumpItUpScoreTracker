@@ -292,9 +292,6 @@ public sealed class PiuGameApi : IPiuGameApi
                 var isBroken = !(card.SelectNodes(".//div[contains(@class,'li_in')]/img")
                     ?.Any(n => n.GetAttributeValue("src", "").Contains("/plate/")) ?? false);
 
-                var scoreString = card
-                    .SelectSingleNode(".//div[contains(@class,'li_in')]/i[contains(@class,'tx')]")
-                    ?.InnerText;
                 var score = int.Parse(card
                                           .SelectSingleNode(".//div[contains(@class,'li_in')]/i[contains(@class,'tx')]")
                                           ?.InnerText ??
