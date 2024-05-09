@@ -13,47 +13,46 @@
 <PageTitle>Note Counts</PageTitle>
 @if (!_isLoading)
 {
-    <MudSelect T="ChartType" Label="Chart Type" @bind-Value="_currentChartType">
-        <MudSelectItem Value="ChartType.Single">Singles</MudSelectItem>
-        <MudSelectItem Value="ChartType.Double">Doubles</MudSelectItem>
-        <MudSelectItem Value="ChartType.CoOp">CoOp</MudSelectItem>
+    <MudSelect T="ChartType" Value="_currentChartType" ValueChanged="SetType" Label="Chart Type">
+        <MudSelectItem T="ChartType" Value="ChartType.Single">@ChartType.Single</MudSelectItem>
+        <MudSelectItem T="ChartType" Value="ChartType.Double">@ChartType.Double</MudSelectItem>
+        <MudSelectItem T="ChartType" Value="ChartType.CoOp">@ChartType.CoOp</MudSelectItem>
     </MudSelect>
-    @foreach (var type in new[] { ChartType.Single, ChartType.Double, ChartType.CoOp }.Where(t=>t==_currentChartType))
-    {
-        
-        <ApexChart TItem="DataPoint"
-                   Title="Total Singles vs Doubles">
+    <ApexChart TItem="DataPoint"
+               @ref="_graph1"
+                   Title=@($"{_currentChartType} Note counts")
+                   Options="_scoreBoxesOptions">
 
             <ApexPointSeries TItem="DataPoint"
-                             Items="_mins[type]"
+                         Items="_mins[_currentChartType]"
                              Name="Minimums"
                              SeriesType="SeriesType.Line"
                              XValue="@(e => e.X)"
                              YValue="@(e => e.Y)"
                              OrderBy="e => e.X" />
             <ApexPointSeries TItem="DataPoint"
-                             Items="_standardMin[type]"
+                         Items="_standardMin[_currentChartType]"
                              Name="Standard Low"
                              SeriesType="SeriesType.Line"
                              XValue="@(e => e.X)"
                              YValue="@(e => e.Y)"
                              OrderBy="e => e.X" />
             <ApexPointSeries TItem="DataPoint"
-                             Items="_averages[type]"
+                         Items="_averages[_currentChartType]"
                              Name="Average"
                              SeriesType="SeriesType.Line"
                              XValue="@(e => e.X)"
                              YValue="@(e => e.Y)"
                              OrderBy="e => e.X" />
             <ApexPointSeries TItem="DataPoint"
-                             Items="_standardMax[type]"
+                         Items="_standardMax[_currentChartType]"
                              Name="Standard High"
                              SeriesType="SeriesType.Line"
                              XValue="@(e => e.X)"
                              YValue="@(e => e.Y)"
                              OrderBy="e => e.X" />
             <ApexPointSeries TItem="DataPoint"
-                             Items="_maxes[type]"
+                         Items="_maxes[_currentChartType]"
                              Name="Maximums"
                              SeriesType="SeriesType.Line"
                              XValue="@(e => e.X)"
@@ -62,17 +61,18 @@
 
         </ApexChart>
         <ApexChart TItem="DataPoint"
-                               Title="Total Singles vs Doubles">
+                   @ref="_graph2"
+               Title=@($"{_currentChartType} Progress")>
 
                         <ApexPointSeries TItem="DataPoint"
-                                         Items="_missingCount[type]"
+                         Items="_missingCount[_currentChartType]"
                                          Name="Missing"
                                          SeriesType="SeriesType.Line"
                                          XValue="@(e => e.X)"
                                          YValue="@(e => e.Y)"
                                          OrderBy="e => e.X" />
                         <ApexPointSeries TItem="DataPoint"
-                                         Items="_existingCount[type]"
+                         Items="_existingCount[_currentChartType]"
                                          Name="Existing"
                                          SeriesType="SeriesType.Line"
                                          XValue="@(e => e.X)"
@@ -80,13 +80,11 @@
                                          OrderBy="e => e.X" />
 
                     </ApexChart>
-    }
+    
 }
 @inject IMediator Mediator;
 @code
 {
-    private IEnumerable<(int place,BountyLeaderboard record)> _leaderboard = Array.Empty<(int,BountyLeaderboard)>();
-    private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
     private IDictionary<ChartType, IList<DataPoint>> _averages = new Dictionary<ChartType, IList<DataPoint>>();
     private IDictionary<ChartType, IList<DataPoint>> _standardMax = new Dictionary<ChartType, IList<DataPoint>>();
     private IDictionary<ChartType, IList<DataPoint>> _standardMin = new Dictionary<ChartType, IList<DataPoint>>();
@@ -96,6 +94,23 @@
     private IDictionary<ChartType, IList<DataPoint>> _missingCount = new Dictionary<ChartType, IList<DataPoint>>();
     private bool _isLoading = true;
     private ChartType _currentChartType = ChartType.Single;
+    private ApexChart<DataPoint>? _graph1;
+    private ApexChart<DataPoint>? _graph2;
+    private async Task SetType(ChartType chartType)
+    {
+        _currentChartType = chartType;
+        await _graph1!.UpdateSeriesAsync(true);
+        await _graph2!.UpdateSeriesAsync(true);
+    }
+    private readonly ApexChartOptions<DataPoint> _scoreBoxesOptions = new ApexChartOptions<DataPoint>()
+    {
+        Stroke = new Stroke { Curve = Curve.Smooth },
+        Yaxis = new[]{new YAxis()
+        {
+            Min=0
+        }}.ToList(),
+
+    };
     protected override async Task OnInitializedAsync()
     {
         _isLoading = true;

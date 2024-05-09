@@ -289,8 +289,8 @@ public sealed class PiuGameApi : IPiuGameApi
                 if (card.SelectNodes(".//div[contains(@class,'li_in')]/i[contains(@class,'tx')]")
                         ?.Any(n => n.InnerText == "STAGE BREAK") ?? false)
                     continue;
-                var isBroken = card.SelectNodes(".//div[contains(@class,'li_in')]/img")
-                    ?.Any(n => n.GetAttributeValue("src", "").Contains("/plate/")) ?? true;
+                var isBroken = !(card.SelectNodes(".//div[contains(@class,'li_in')]/img")
+                    ?.Any(n => n.GetAttributeValue("src", "").Contains("/plate/")) ?? false);
 
                 var scoreString = card
                     .SelectSingleNode(".//div[contains(@class,'li_in')]/i[contains(@class,'tx')]")
