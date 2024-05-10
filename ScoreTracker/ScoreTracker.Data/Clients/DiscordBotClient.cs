@@ -241,6 +241,69 @@ public sealed class DiscordBotClient : IBotClient
         { PhoenixPlate.PerfectGame, "<:piu_pg:1238540780017025185>" }
     };
 
+    private readonly IDictionary<string, string> _difficultyShortHandEmojis =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "s1", "<:s1:1238568406257635402>" },
+            { "s2", "<:s2:1238568405158858752>" },
+            { "s3", "<:s3:1238568404085113024>" },
+            { "s4", "<:s4:1238568403099451422>" },
+            { "s5", "<:s5:1238568402197676133>" },
+            { "s6", "<:s6:1238568401081733262>" },
+            { "s7", "<:s7:1238568342466465832>" },
+            { "s8", "<:s8:1238568303841247273>" },
+            { "s9", "<:s9:1238568341531131935>" },
+            { "s10", "<:s10:1238568301257293914>" },
+            { "s11", "<:s11:1238568300280156320>" },
+            { "s12", "<:s12:1238568299265134592>" },
+            { "s13", "<:s13:1238568298317090897>" },
+            { "s14", "<:s14:1238568297138622465>" },
+            { "s15", "<:s15:1238568295439925371>" },
+            { "s16", "<:s16:1238568296379580529>" },
+            { "s17", "<:s17:1238568166498504824>" },
+            { "s18", "<:s18:1238568213437223072>" },
+            { "s19", "<:s19:1238568163327606814>" },
+            { "s20", "<:s20:1238568155702497280>" },
+            { "s21", "<:s21:1238568162375766167>" },
+            { "s22", "<:s22:1238568161373327440>" },
+            { "s23", "<:s23:1238568160060244079>" },
+            { "s24", "<:s24:1238568159322050570>" },
+            { "s25", "<:s25:1238568158449766531>" },
+            { "s26", "<:s26:1238568156855926924>" },
+            { "d1", "<:d1:1238582930926997724>" }, //
+            { "d2", "<:d2:1238582928985034904>" }, //
+            { "d3", "<:d3:1238582926292160614>" }, //
+            { "d4", "<:d4:1238582925575065641>" }, //
+            { "d5", "<:d5:1238569292165943296>" },
+            { "d6", "<:d6:1238569328798863441>" },
+            { "d7", "<:d7:1238569288617558017>" },
+            { "d8", "<:d8:1238569287476711535>" },
+            { "d9", "<:d9:1238569286331666553>" },
+            { "d10", "<:d10:1238569285312315514>" },
+            { "d11", "<:d11:1238569284356280360>" },
+            { "d12", "<:d12:1238569283471151154>" },
+            { "d13", "<:d13:1238569282363854919>" },
+            { "d14", "<:d14:1238569281260617750>" },
+            { "d15", "<:d15:1238568738165620828>" },
+            { "d16", "<:d16:1238568698135056434>" },
+            { "d17", "<:d17:1238582924551393371>" }, //
+            { "d18", "<:d18:1238568695618474115>" },
+            { "d19", "<:d19:1238568694154526732>" },
+            { "d20", "<:d20:1238568693580042250>" },
+            { "d21", "<:d21:1238568692099321917>" },
+            { "d22", "<:d22:1238568691545673758>" },
+            { "d23", "<:d23:1238568690711007292>" },
+            { "d24", "<:d24:1238568689888919664>" },
+            { "d25", "<:d25:1238568411915882497>" },
+            { "d26", "<:d26:1238568456031436871>" },
+            { "d27", "<:d27:1238568407813591051>" },
+            { "d28", "<:d28:1238568407075655810>" },
+            { "coop2", "<:coop2:1238582935804842094>" }, //
+            { "coop3", "<:coop3:1238582934185709621>" }, //
+            { "coop4", "<:coop4:1238582932969361478>" }, //
+            { "coop5", "<:coop5:1238582931858001991>" } //
+        };
+
     private async Task SendMessages(IEnumerable<string> messageEntities, IEnumerable<ulong> channelIds,
         Func<string, string> messageRetrieval,
         Action<string, IUserMessage>? process = default)
@@ -249,13 +312,20 @@ public sealed class DiscordBotClient : IBotClient
         foreach (var message in messageEntities)
         {
             var replacedMessage = _letterGradeEmojis.Aggregate(message,
-                (current, letterKv) => current.Replace($"#LETTERGRADE|{letterKv.Key}#", letterKv.Value));
+                (current, letterKv) => current.Replace($"#LETTERGRADE|{letterKv.Key}#", letterKv.Value,
+                    StringComparison.OrdinalIgnoreCase));
 
             replacedMessage = _plateEmojis.Aggregate(replacedMessage,
-                (current, plateKv) => current.Replace($"#PLATE|{plateKv.Key}#", plateKv.Value));
+                (current, plateKv) => current.Replace($"#PLATE|{plateKv.Key}#", plateKv.Value,
+                    StringComparison.OrdinalIgnoreCase));
+
+            replacedMessage = _difficultyShortHandEmojis.Aggregate(replacedMessage,
+                (current, difficultyKv) => current.Replace($"#DIFFICULTY|{difficultyKv.Key}#", difficultyKv.Value,
+                    StringComparison.OrdinalIgnoreCase));
 
             replacedMessage = replacedMessage.Replace("#LETTERGRADE|#", "");
             replacedMessage = replacedMessage.Replace("#PLATE|#", "");
+            replacedMessage = replacedMessage.Replace("#DIFFICULTY|#", "");
             replacedMessages.Add(replacedMessage);
         }
 

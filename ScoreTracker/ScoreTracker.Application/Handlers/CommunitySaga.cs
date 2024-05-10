@@ -272,10 +272,10 @@ namespace ScoreTracker.Application.Handlers
                 foreach (var chart in newCharts.OrderByDescending(c => c.Level)
                              .ThenByDescending(c => (int)(scores[c.Id].Score ?? 0)).Take(5))
                     message += $@"
-- {chart.Song.Name} {chart.DifficultyString}: {(int)scores[chart.Id].Score!.Value:N0} #LETTERGRADE|{scores[chart.Id].Score!.Value.LetterGrade}##PLATE|{scores[chart.Id].Plate}#";
-                if (count > 5)
+#DIFFICULTY|{chart.DifficultyString}# {chart.Song.Name}: {(int)scores[chart.Id].Score!.Value:N0} #LETTERGRADE|{scores[chart.Id].Score!.Value.LetterGrade}##PLATE|{scores[chart.Id].Plate}#";
+                if (count > 10)
                     message += $@"
-And {count - 5} others!";
+And {count - 10} others!";
             }
 
             var upscoreCharts = upscoreChartScores
@@ -292,14 +292,15 @@ And {count - 5} others!";
                              .ThenByDescending(c => upscoreChartScores[c.Item1.Id] - scores[c.Item1.Id].Score!.Value))
                 {
                     message += $@"
-- {item.Item1.Song.Name} {item.Item1.DifficultyString}: {(int)scores[item.Item1.Id].Score!.Value:N0} ({(scores[item.Item1.Id].Score!.Value - item.Value < 0 ? '-' : '+')}{scores[item.Item1.Id].Score!.Value - item.Value:N0} ";
+#DIFFICULTY|{item.Item1.DifficultyString}# {item.Item1.Song.Name}: {(int)scores[item.Item1.Id].Score!.Value:N0}
+  {(scores[item.Item1.Id].Score!.Value - item.Value < 0 ? '-' : '+')}{scores[item.Item1.Id].Score!.Value - item.Value:N0} ";
                     var oldLetter = PhoenixScore.From(item.Value).LetterGrade;
                     if (oldLetter != scores[item.Item1.Id].Score!.Value.LetterGrade)
                         message +=
                             $"#LETTERGRADE|{oldLetter}# > ";
 
                     message +=
-                        $"#LETTERGRADE|{scores[item.Item1.Id].Score!.Value.LetterGrade}##PLATE|{scores[item.Item1.Id].Plate}#)";
+                        $"#LETTERGRADE|{scores[item.Item1.Id].Score!.Value.LetterGrade}##PLATE|{scores[item.Item1.Id].Plate}#";
                 }
             }
 
