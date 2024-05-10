@@ -28,11 +28,8 @@ public sealed class PhoenixScoresController : Controller
 
     [HttpPost]
     public async Task<IActionResult> RecordScore([FromBody] RecordPhoenixScoreDto body,
-        [FromQuery(Name = "OverwriteHigherScores")]
-        [Default(false)]
-        [Description(
-            "When toggled on, will keep your highest score, plate, and will not overwrite a passed chart with broken. Note: This may make your game stats not line up with official game stats.")]
-        bool overwriteHigherScores = false)
+        [FromQuery(Name = "KeepBestStats")] [Default(false)]
+        bool keepBestStats = false)
     {
         if (!Name.TryParse(body.SongName, out var songName)) return BadRequest("Song name is invalid");
 
@@ -49,7 +46,7 @@ public sealed class PhoenixScoresController : Controller
         if (chart == null) return NotFound("Chart not found");
 
         await _mediator.Send(new UpdatePhoenixBestAttemptCommand(chart.Id, body.IsBroken, body.Score,
-            body.Plate == null ? null : Enum.Parse<PhoenixPlate>(body.Plate), overwriteHigherScores));
+            body.Plate == null ? null : Enum.Parse<PhoenixPlate>(body.Plate), keepBestStats));
         return Ok();
     }
 
