@@ -16,7 +16,6 @@
             <MudImage Src="@PlateImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
 
     }
-
     @if (ShowScore && Score!=null)
     {
         <MudText Align="Align.Center">
@@ -39,6 +38,7 @@
 
     [Parameter]
     public bool ShowScore { get; set; } = false;
+
 
     private string ScoreString => Score == null ? "" : ((int)Score).ToString("N0");
     private string BrokenPiece => IsBroken ? "_broken" : "";

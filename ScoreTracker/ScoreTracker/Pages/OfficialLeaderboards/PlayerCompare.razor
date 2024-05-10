@@ -98,7 +98,10 @@
             @foreach (var key in _players.Keys)
             {
                 <MudTd>
-                    @(_players[key].TryGetValue(context.Id, out var score)?$"{score} ({score.LetterGrade.GetName()})":"")
+                    @if (_players[key].TryGetValue(context.Id, out var score))
+                    {
+                        <ScoreBreakdown Score="score"></ScoreBreakdown>
+                    }
                 </MudTd>
             }
         </RowTemplate>

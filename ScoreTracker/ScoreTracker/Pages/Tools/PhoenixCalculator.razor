@@ -1,5 +1,6 @@
 ﻿@page "/PhoenixCalculator"
 @using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Domain.Enums
 
@@ -26,15 +27,8 @@
         <MudTextField T="int" InputMode="InputMode.numeric" MaxLength="5" InputType="InputType.Number" Label="Max Combo" Value="_maxCombo" ValueChanged="n=>SetScore(_perfects,_greats,_goods,_bads,_misses,n)" Immediate="true" DebounceInterval="200"></MudTextField>
     </MudItem>
     <MudItem xs="12">
-        <MudText>
-            <b>@L["Score"]:</b> @Score.CalculatePhoenixScore
-        </MudText>
-        <MudText>
-            <b>@L["Letter Grade"]:</b> @Score.LetterGrade.GetName()
-        </MudText>
-        <MudText>
-            <b>@L["Plate"]:</b> @Score.PlateText
-        </MudText>
+        <ScoreBreakdown Score="@Score.CalculatePhoenixScore" Plate="Score.PlateText" ShowScore="true"></ScoreBreakdown>
+
 
         @if (Score.IsValid)
         {
@@ -42,17 +36,17 @@
                 <b>@L["Next Letter"]:</b> @Score.NextLetterGrade()
             </MudText>
 
-            <MudText><b>@L["Score Loss","Greats"]:</b> @Score.GreatLoss</MudText>
+            <MudText><b>@L["Score Loss", "Greats"]:</b> @Score.GreatLoss</MudText>
 
-            <MudText><b>@L["Score Loss","Goods"]:</b> @Score.GoodLoss</MudText>
+            <MudText><b>@L["Score Loss", "Goods"]:</b> @Score.GoodLoss</MudText>
 
-            <MudText><b>@L["Score Loss","Bads"]:</b> @Score.BadLoss</MudText>
+            <MudText><b>@L["Score Loss", "Bads"]:</b> @Score.BadLoss</MudText>
 
-            <MudText><b>@L["Score Loss","Misses"]:</b> @Score.MissLoss</MudText>
+            <MudText><b>@L["Score Loss", "Misses"]:</b> @Score.MissLoss</MudText>
 
-            <MudText><b>@L["Score Loss","Combo"]:</b> @Score.ComboLoss</MudText>
+            <MudText><b>@L["Score Loss", "Combo"]:</b> @Score.ComboLoss</MudText>
             <MudText>(@L["Score Loss Note"])</MudText>
-            
+
         }
     </MudItem>
 

@@ -5,6 +5,7 @@
 @using ScoreTracker.Domain.Enums
 @using MediatR
 @using ScoreTracker.Application.Queries
+@using ScoreTracker.Web.Components
 
 <PageTitle>Submit @_tournamentName Qualifiers Session</PageTitle>
 
@@ -18,7 +19,7 @@
     
 
 </MudGrid>
-<MudTable T="Entry" Items="_leaderboard" FixedHeader="true" Striped="true" Breakpoint="Breakpoint.None">
+<MudTable T="Entry" Items="_leaderboard" FixedHeader="true" Striped="true" Breakpoint="Breakpoint.None" Dense="true">
     <HeaderContent>
         <MudTh>@L["Place"]</MudTh>
         <MudTh>@L["Username"]</MudTh>
@@ -41,17 +42,23 @@
         {
             var entryIndex = i;
             var entry = context.Scores.Skip(entryIndex).Take(1).ToArray();
-            <MudTd>
+            <MudTd Style="text-align:center">
                 @if (entry.Any())
                 {
+                    <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                        <MudTooltip Text="@(entry.Single().Item1.Song.Name+' '+entry.Single().Item1.DifficultyString)">
+                            <MudImage Src="@entry.Single().Item1.Song.ImagePath.ToString()" Height="35" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
+                        </MudTooltip>
+                        <ScoreBreakdown Score="@entry.Single().Item2" Height="35"></ScoreBreakdown>
+                    </MudHidden>
+                    <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                        <MudTooltip Text="@(entry.Single().Item1.Song.Name+' '+entry.Single().Item1.DifficultyString)">
+                            <MudImage Src="@entry.Single().Item1.Song.ImagePath.ToString()" Height="15" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
+                        </MudTooltip>
+                        <ScoreBreakdown Score="@entry.Single().Item2" Height="15"></ScoreBreakdown>
+                    </MudHidden>
+                    @(entry.Single().Item3.ToString("0.00"))
 
-                    <MudTooltip Text="@(entry.Single().Item1.Song.Name+' '+entry.Single().Item1.DifficultyString)">
-                        <MudImage Src="@entry.Single().Item1.Song.ImagePath.ToString()" Height="35" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
-                    </MudTooltip>
-                    <br/>
-                    <MudText>
-                        @entry.Single().Item2.LetterGrade.GetName() @entry.Single().Item3.ToString("0.00")
-                    </MudText>
                 }
             </MudTd>
         }
