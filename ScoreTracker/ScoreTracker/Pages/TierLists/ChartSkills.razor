@@ -59,9 +59,13 @@
     }
     @if (CurrentUser.IsLoggedIn)
     {
-        <MudItem xs="12" sm="4" md="3">
-            <MudCheckBox T="bool" Value="_usePersonalizedData" ValueChanged="u=>SetUsePersonalized(u)" Label="Personalized"></MudCheckBox>
-        </MudItem>
+        @if (_tierListType != "Score" || _groupByTierList)
+        {
+            
+            <MudItem xs="12" sm="4" md="3">
+                <MudCheckBox T="bool" Value="_usePersonalizedData" ValueChanged="u=>SetUsePersonalized(u)" Label="Personalized"></MudCheckBox>
+            </MudItem>
+        }
         <MudItem xs="12" sm="4" md="3">
             <MudCheckBox T="bool" @bind-Checked="_showPassed" Label="Show Passed Charts"></MudCheckBox>
         </MudItem>
@@ -69,9 +73,63 @@
             <MudCheckBox T="bool" @bind-Checked="_textView" Label="Text View"></MudCheckBox>
         </MudItem>
     }
+    <MudExpansionPanels>
+        <MudExpansionPanel Text=@L["Additional Filters"]>
+            <MudGrid>
+                @foreach (var type in Enum.GetValues<SongType>())
+                {
+                    <MudItem sm="6" md="3">
+                        <MudCheckBox T="bool" Label="@type.ToString()" Value="_filteredTypes.Contains(type)" ValueChanged="v=>ToggleSongType(type,v)"></MudCheckBox>
+                    </MudItem>
+                }
+                <MudItem xs="12" md="4">
+                    <MudAutocomplete T="string" Label=@L["Song Name"] AdornmentIcon="@Icons.Material.Filled.Search" @bind-Value="_songFilter" SearchFunc="FilterSongName" CoerceText="false" CoerceValue="true"></MudAutocomplete>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudSelect T="string" @bind-SelectedValues="_stepArtists" Label=@L["Step Artist"] HelperText="Not All Step Artists Labeled Yet" MultiSelection="true" Clearable="true">
+                        @foreach (var artist in _availableStepArtists)
+                        {
+                            <MudSelectItem T="string" Value="@artist">@artist</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudSelect T="string" @bind-SelectedValues="_songArtists" Label=@L["Song Artist"] MultiSelection="true" Clearable="true">
+                        @foreach (var artist in _availableSongArtists)
+                        {
+                            <MudSelectItem T="string" Value="@artist">@artist</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                @if (_lowestBpm != _highestBpm)
+                {
+
+                    <MudItem xs="6">
+                        <MudNumericField T="decimal?" Clearable="true" @bind-Value="_bpmMin" Label=@L["Min BPM"] Min="_lowestBpm" Max="_highestBpm" HelperText="Not All BPMS Labeled Yet" HideSpinButtons="true"></MudNumericField>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="decimal?" Clearable="true" @bind-Value="_bpmMax" Label=@L["Max BPM"] Min="_lowestBpm" Max="_highestBpm" HelperText="Not All BPMS Labeled Yet" HideSpinButtons="true"></MudNumericField>
+                    </MudItem>
+                }
+                @if (_lowestNoteCount != _highestNoteCount)
+                {
+
+                    <MudItem xs="6">
+                        <MudNumericField T="int?" Clearable="true" @bind-Value="_noteCountMin" Label=@L["Min Note Count"] Min="_lowestNoteCount" Max="_highestNoteCount" HelperText="Not All Note Counts Labeled Yet" HideSpinButtons="true"></MudNumericField>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="int?" Clearable="true" @bind-Value="_noteCountMax" Label=@L["Max Note Count"] Min="_lowestNoteCount" Max="_highestNoteCount" HelperText="Not All Note Counts Labeled Yet" HideSpinButtons="true"></MudNumericField>
+                    </MudItem>
+                }
+                <MudItem xs="12">
+                    <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>_showSettings=false">@L["Close"]</MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
     @if (_finalEntries.Any() && _finalEntries.All(e=>_charts.ContainsKey(e.ChartId)))
     {
-        @foreach (var group in _finalGroupings.Where(g=>g.Any(c=>_showPassed ||_scores[c.ChartId]==0)))
+        @foreach (var group in _finalGroupings.Where(g=>g.Any(ShouldChartShow)))
         {
             <MudItem xs="12">
                 <MudText Typo="Typo.h6">@group.Key.ToString()</MudText>
@@ -82,7 +140,7 @@
             </MudItem>
             
 
-            foreach (var chart in group.Where(c=>_showPassed || _scores[c.ChartId]==0).OrderBy(e => e.Order).Select(c => _charts[c.ChartId]))
+            foreach (var chart in group.Where(ShouldChartShow).OrderBy(e => e.Order).Select(c => _charts[c.ChartId]))
             {
                 
                 @if (_textView)
@@ -156,7 +214,7 @@
 </MudGrid>
 @if (_finalEntries.Any() && _finalEntries.All(e => _charts.ContainsKey(e.ChartId)))
 {
-    
+    <br/><br/>
     <MudTable T="SongTierListEntry" Items=@(_finalEntries)>
         <HeaderContent>
             <MudTh>
@@ -225,6 +283,7 @@
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
+
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
 @inject NavigationManager NavManager;
@@ -251,13 +310,86 @@
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private ISet<Guid> _unPopularCharts = new HashSet<Guid>();
     private ISet<Guid> _popularCharts = new HashSet<Guid>();
+    private ISet<SongType> _filteredTypes = new HashSet<SongType>();
+    private IEnumerable<string> _stepArtists = new HashSet<string>();
+    private IEnumerable<string> _songArtists = new HashSet<string>();
+
+    private Name[] _availableStepArtists = Array.Empty<Name>();
+    private Name[] _availableSongArtists = Array.Empty<Name>();
+    private int _lowestNoteCount = 0;
+    private int _highestNoteCount = 0;
+    private decimal _lowestBpm = 0;
+    private decimal _highestBpm = 0;
     private ChartType _chartType = ChartType.Single;
     private bool _textView = false;
     private bool _isLoading = false;
+    private decimal? _bpmMin;
+    private decimal? _bpmMax;
+    private int? _noteCountMin;
+    private int? _noteCountMax;
+
+    private Task<IEnumerable<string>> FilterSongName(string search) => Task.FromResult(_finalEntries.Select(c => _charts[c.ChartId].Song.Name.ToString()).Distinct().Where(
+        n => string.IsNullOrWhiteSpace(search)|| n.Contains(search, StringComparison.OrdinalIgnoreCase)).OrderBy(n => n == search ? 0 : 1).AsEnumerable());
+
+    private void ToggleSongType(SongType s, bool v)
+    {
+        if (v)
+        {
+            _filteredTypes.Add(s);
+        }
+        else
+        {
+            _filteredTypes.Remove(s);
+        }
+    }
+
+    private bool ShouldChartShow(SongTierListEntry entry)
+    {
+        if (!_showPassed && _scores[entry.ChartId] > 0)
+        {
+            return false;
+        }
+        var chart = _charts[entry.ChartId];
+        if (_filteredTypes.Any() && !_filteredTypes.Contains(chart.Song.Type))
+        {
+            return false;
+        }
+        if (!string.IsNullOrWhiteSpace(_songFilter) && !chart.Song.Name.ToString().Contains(_songFilter, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+        if (_bpmMax != null && (chart.Song.Bpm == null || chart.Song.Bpm.Value.Max > _bpmMax))
+        {
+            return false;
+        }
+        if (_bpmMin != null && (chart.Song.Bpm == null || chart.Song.Bpm.Value.Min < _bpmMin))
+        {
+            return false;
+        }
+        if (_stepArtists.Any() && !_stepArtists.Contains(chart.StepArtist?.ToString() ?? "Unknown",StringComparer.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+        if (_songArtists.Any() && !_songArtists.Contains(chart.Song.Artist.ToString(), StringComparer.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+        if (_noteCountMin != null && (chart.NoteCount != null || _noteCountMin >= chart.NoteCount))
+        {
+            return false;
+        }
+        if (_noteCountMax != null && (chart.NoteCount != null || _noteCountMax <= chart.NoteCount))
+        {
+            return false;
+        }
+        return true;
+    }
     private int _highlightedModifier = 10;
     private bool _showPassed = true;
+    private bool _showSettings = false;
     private int _level = 20;
     private string _tierListType = "Pass";
+    private string _songFilter;
     private bool _usePersonalizedData = true;
     private IEnumerable<IGrouping<string, SongTierListEntry>>
     _finalGroupings = Array.Empty<IGrouping<string, SongTierListEntry>>();
@@ -584,6 +716,20 @@
             var maxScore = (PhoenixScore) group.Where(e => _scores[e.ChartId]>0).Max(e => (int)_scores[e.ChartId]);
             _messages[group.Key] = $"{clearRate * 100.0:0.00}% Cleared, {minScore} ({minScore.LetterGrade.GetName()}) - {maxScore} ({maxScore.LetterGrade.GetName()}), {avgScore} ({avgScore.LetterGrade.GetName()}) Average";
         }
+        var charts = _finalEntries.Select(e => _charts[e.ChartId]).ToArray();
+        _lowestBpm = charts.Any(c => c.Song.Bpm != null) ? charts.Where(c => c.Song.Bpm != null).Min(c => c.Song.Bpm!.Value.Min) : 0;
+        _bpmMin = null;
+        _highestBpm = charts.Any(c => c.Song.Bpm != null) ? charts.Where(c => c.Song.Bpm != null).Max(c => c.Song.Bpm!.Value.Max) : 0;
+        _bpmMax = null;
+        _lowestNoteCount = charts.Any(c => c.NoteCount != null) ? charts.Where(c => c.NoteCount != null).Min(c => c.NoteCount!.Value) : 0;
+        _noteCountMin = null;
+        _highestNoteCount = charts.Any(c => c.NoteCount != null) ? charts.Where(c => c.NoteCount != null).Max(c => c.NoteCount!.Value) : 0;
+        _noteCountMax = null;
+        _availableStepArtists = charts.Select(c => c.StepArtist ?? "Unknown").Distinct().OrderBy(s=>s).ToArray();
+        _availableSongArtists = charts.Select(c => c.Song.Artist).Distinct().OrderBy(s=>s).ToArray();
+        _stepArtists = new HashSet<string>();
+        _songArtists = new HashSet<string>();
+        
         _isLoading = false;
     }
     private async Task SetType(ChartType newType)
@@ -617,7 +763,7 @@
                 _level = (int)Math.Round(stats.SinglesCompetitiveLevel);
             }
         }
-        await Recalculate();
+        await SetTierListType("Pass");
     }
 
     public static double StdDev(IEnumerable<double> values,
