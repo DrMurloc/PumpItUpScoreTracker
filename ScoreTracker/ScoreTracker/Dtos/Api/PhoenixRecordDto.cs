@@ -7,6 +7,6 @@
         public int? Score { get; set; }
         public bool IsBroken { get; set; }
         public DateTimeOffset RecordedDate { get; set; }
-        public ChartDto Chart { get; set; } = new();
+        public ChartDto Chart { get; set; }
     }
 }

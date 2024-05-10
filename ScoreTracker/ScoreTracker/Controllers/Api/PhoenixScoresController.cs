@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.OpenApi.Extensions;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
@@ -69,19 +68,7 @@ public sealed class PhoenixScoresController : Controller
                 Plate = r.Plate?.GetName(),
                 RecordedDate = r.RecordedDate,
                 Score = r.Score,
-                Chart = new ChartDto
-                {
-                    Level = charts[r.ChartId].Level,
-                    Id = r.ChartId,
-                    Type = charts[r.ChartId].Type.GetDisplayName(),
-                    Shorthand = charts[r.ChartId].DifficultyString,
-                    Song = new SongDto
-                    {
-                        Name = charts[r.ChartId].Song.Name,
-                        Type = charts[r.ChartId].Song.Type.GetDisplayName(),
-                        ImagePath = charts[r.ChartId].Song.ImagePath.ToString()
-                    }
-                }
+                Chart = new ChartDto(charts[r.ChartId])
             }).ToArray()
         });
     }

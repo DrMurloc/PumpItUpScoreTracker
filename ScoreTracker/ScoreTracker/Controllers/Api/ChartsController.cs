@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.OpenApi.Extensions;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Exceptions;
@@ -84,19 +83,7 @@ public sealed class ChartsController : Controller
         {
             var charts = await _mediator.Send(new GetRandomChartsQuery(settings));
 
-            return Json(charts.Select(c => new ChartDto
-            {
-                Id = c.Id,
-                Level = c.Level,
-                Type = c.Type.GetDisplayName(),
-                Shorthand = c.DifficultyString,
-                Song = new SongDto
-                {
-                    Name = c.Song.Name,
-                    Type = c.Song.Type.GetDisplayName(),
-                    ImagePath = c.Song.ImagePath.ToString()
-                }
-            }).ToArray());
+            return Json(charts.Select(c => new ChartDto(c)).ToArray());
         }
         catch (RandomizerException e)
         {
@@ -141,19 +128,7 @@ public sealed class ChartsController : Controller
             Count = charts.Length,
             Page = page,
             TotalResults = allCharts.Length,
-            Results = charts.Select(c => new ChartDto
-            {
-                Id = c.Id,
-                Level = c.Level,
-                Type = c.Type.GetDisplayName(),
-                Shorthand = c.DifficultyString,
-                Song = new SongDto
-                {
-                    Name = c.Song.Name,
-                    Type = c.Song.Type.GetDisplayName(),
-                    ImagePath = c.Song.ImagePath.ToString()
-                }
-            }).ToArray()
+            Results = charts.Select(c => new ChartDto(c)).ToArray()
         });
     }
 }
