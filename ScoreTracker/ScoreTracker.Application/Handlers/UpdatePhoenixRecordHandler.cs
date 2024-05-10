@@ -20,9 +20,20 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
     public async Task Handle(UpdatePhoenixBestAttemptCommand request, CancellationToken cancellationToken)
     {
         var existing = await records.GetRecordedScore(user.User.Id, request.ChartId, cancellationToken);
+        var score = request.Score;
+        var plate = request.Plate;
+        var isBroken = request.IsBroken;
+        if (request.KeepBestStats && existing?.Score != null && request.Score < existing?.Score)
+            score = existing.Score;
+
+        if (request.KeepBestStats && existing?.Plate != null && request.Plate < existing?.Plate)
+            plate = existing.Plate;
+
+        if (request.KeepBestStats && !(existing?.IsBroken ?? true) && request.IsBroken)
+            isBroken = false;
 
         await records.UpdateBestAttempt(user.User.Id,
-            new RecordedPhoenixScore(request.ChartId, request.Score, request.Plate, request.IsBroken,
+            new RecordedPhoenixScore(request.ChartId, score, plate, isBroken,
                 dateTimeOffset.Now), cancellationToken);
         var isNewScore = (existing?.IsBroken ?? true) && !request.IsBroken;
         var isUpscore = existing?.Score != null && request.Score != null && existing.Score < request.Score;
