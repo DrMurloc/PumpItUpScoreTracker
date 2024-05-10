@@ -272,7 +272,7 @@ namespace ScoreTracker.Application.Handlers
                 foreach (var chart in newCharts.OrderByDescending(c => c.Level)
                              .ThenByDescending(c => (int)(scores[c.Id].Score ?? 0)).Take(5))
                     message += $@"
-- {chart.Song.Name} {chart.DifficultyString}: {(int)scores[chart.Id].Score!.Value:N0} ({scores[chart.Id].Score!.Value.LetterGrade.GetName()}) {scores[chart.Id].Plate?.GetShorthand()}";
+- {chart.Song.Name} {chart.DifficultyString}: {(int)scores[chart.Id].Score!.Value:N0} #LETTERGRADE|{scores[chart.Id].Score!.Value.LetterGrade}##PLATE|{scores[chart.Id].Plate}#";
                 if (count > 5)
                     message += $@"
 And {count - 5} others!";
@@ -296,10 +296,10 @@ And {count - 5} others!";
                     var oldLetter = PhoenixScore.From(item.Value).LetterGrade;
                     if (oldLetter != scores[item.Item1.Id].Score!.Value.LetterGrade)
                         message +=
-                            $"{oldLetter.GetName()} > ";
+                            $"#LETTERGRADE|{oldLetter}# > ";
 
                     message +=
-                        $"{scores[item.Item1.Id].Score!.Value.LetterGrade.GetName()}) {scores[item.Item1.Id].Plate?.GetShorthand()}";
+                        $"#LETTERGRADE|{scores[item.Item1.Id].Score!.Value.LetterGrade}##PLATE|{scores[item.Item1.Id].Plate}#)";
                 }
             }
 

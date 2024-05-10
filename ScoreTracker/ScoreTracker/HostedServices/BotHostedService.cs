@@ -1,6 +1,5 @@
 ﻿using MediatR;
 using ScoreTracker.Application.Commands;
-using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -49,7 +48,7 @@ namespace ScoreTracker.Web.HostedServices
                             await _botClient.SendMessage(
                                 $@"
 {perfects:N0} Perfects, {greats:N0} Greats, {goods:N0} Goods, {bads:N0} Bads, {misses:N0} Misses, {combo:N0} Max Combo
-**{(int)screen.CalculatePhoenixScore:N0} ({screen.LetterGrade.GetName()})**
+**{(int)screen.CalculatePhoenixScore:N0} (#LETTERGRADE|{screen.LetterGrade}##PLATE|{screen.PlateText}#)**
 {screen.NextLetterGrade()}
 - {screen.GreatLoss:N0} Lost to Greats ({100.0 * screen.GreatLoss / loss:N2}%)
 - {screen.GoodLoss:N0} Lost to Goods ({100.0 * screen.GoodLoss / loss:N2}%)

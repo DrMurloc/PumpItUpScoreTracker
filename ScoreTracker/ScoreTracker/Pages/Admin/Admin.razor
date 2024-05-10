@@ -140,6 +140,7 @@ Do It
 @inject IBus Bus;
 @inject IOfficialSiteClient OfficialClient;
 @inject ChartAttemptDbContext Database;
+@inject IBotClient Bot;
 @code
 {
     private MudAutocomplete<string> _autocomplete;   
@@ -155,10 +156,14 @@ Do It
 
     private async Task RebuildOfficialLeaderboard()
     {
-       // await OfficialClient.FixAvatars();
-        //await Bus.Publish(new ProcessScoresTiersListCommand());
-       // await Bus.Publish(new ProcessPassTierListCommand());
-        await Bus.Publish(new UpdateBountiesEvent());
+        /*var message = string.Join(" ", Enum.GetValues<PhoenixLetterGrade>().Select(l => $"#LETTERGRADE|{l}#").Append("#LETTERGRADE|#"));
+        message += "\n";
+        message += string.Join(" ", Enum.GetValues<PhoenixPlate>().Select(l => $"#PLATE|{l}#").Append("#PLATE|#"));
+        await Bot.SendMessage(message, 1164337603034759278, CancellationToken.None);*/
+    // await OfficialClient.FixAvatars();
+    //await Bus.Publish(new ProcessScoresTiersListCommand());
+    // await Bus.Publish(new ProcessPassTierListCommand());
+    //await Bus.Publish(new UpdateBountiesEvent());
     //await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);
 
 
