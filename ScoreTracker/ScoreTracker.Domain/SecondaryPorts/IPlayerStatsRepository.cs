@@ -6,4 +6,5 @@ public interface IPlayerStatsRepository
 {
     Task SaveStats(Guid userId, PlayerStatsRecord newStats, CancellationToken cancellationToken);
     Task<PlayerStatsRecord> GetStats(Guid userId, CancellationToken cancellationToken);
+    Task<IEnumerable<PlayerStatsRecord>> GetStats(IEnumerable<Guid> userIds, CancellationToken cancellationToken);
 }

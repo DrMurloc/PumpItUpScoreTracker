@@ -86,9 +86,10 @@ namespace ScoreTracker.Data.Repositories
 
                 var entity =
                     await _database.PlayerStats.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
-                if (entity == null) return new PlayerStatsRecord(0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1);
+                if (entity == null)
+                    return new PlayerStatsRecord(userId, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1);
 
-                return new PlayerStatsRecord(entity.TotalRating, entity.HighestLevel, entity.ClearCount,
+                return new PlayerStatsRecord(entity.UserId, entity.TotalRating, entity.HighestLevel, entity.ClearCount,
                     entity.CoOpRating,
                     entity.AverageCoOpScore, entity.SkillRating, entity.AverageSkillScore, entity.AverageSkillLevel,
                     entity.SinglesRating,
@@ -96,6 +97,19 @@ namespace ScoreTracker.Data.Repositories
                     entity.AverageDoublesScore, entity.AverageDoublesLevel, entity.CompetitiveLevel,
                     entity.SinglesCompetitiveLevel, entity.DoublesCompetitiveLevel);
             });
+        }
+
+        public async Task<IEnumerable<PlayerStatsRecord>> GetStats(IEnumerable<Guid> userIds,
+            CancellationToken cancellationToken)
+        {
+            return await _database.PlayerStats.Where(s => userIds.Contains(s.UserId)).Select(entity =>
+                new PlayerStatsRecord(entity.UserId, entity.TotalRating, entity.HighestLevel, entity.ClearCount,
+                    entity.CoOpRating,
+                    entity.AverageCoOpScore, entity.SkillRating, entity.AverageSkillScore, entity.AverageSkillLevel,
+                    entity.SinglesRating,
+                    entity.AverageSinglesScore, entity.AverageSinglesLevel, entity.DoublesRating,
+                    entity.AverageDoublesScore, entity.AverageDoublesLevel, entity.CompetitiveLevel,
+                    entity.SinglesCompetitiveLevel, entity.DoublesCompetitiveLevel)).ToArrayAsync(cancellationToken);
         }
 
         public async Task<PlayerStatsRecord> Handle(GetPlayerStatsQuery request, CancellationToken cancellationToken)

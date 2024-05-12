@@ -112,6 +112,14 @@ public sealed class EFUserRepository : IUserRepository
             .SingleOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<IEnumerable<User>> GetUsers(IEnumerable<Guid> userIds,
+        CancellationToken cancellationToken = default)
+    {
+        return await _database.User.Where(u => userIds.Contains(u.Id))
+            .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage))
+            ).ToArrayAsync(cancellationToken);
+    }
+
     public async Task<User?> GetUserByExternalLogin(string loginProviderName, string externalId,
         CancellationToken cancellationToken = default)
     {

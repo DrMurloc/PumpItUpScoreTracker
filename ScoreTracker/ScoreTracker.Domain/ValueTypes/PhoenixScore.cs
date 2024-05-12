@@ -24,7 +24,7 @@ public readonly struct PhoenixScore : IComparable<PhoenixScore>, IComparable<int
 
     public override string ToString()
     {
-        return _score.ToString();
+        return _score.ToString("N0");
     }
 
     public int CompareTo(object? obj)

@@ -1,5 +1,6 @@
 ﻿@page "/Experiments/ChartScoring"
 @using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.SecondaryPorts
@@ -10,27 +11,116 @@
 @using ScoreTracker.Domain.ValueTypes
 
 <PageTitle>ChartScoring</PageTitle>
-
-@foreach (var kv in _calculatedLevels.OrderBy(l => l.Value))
+@if (_isLoading)
 {
-    <br/>@($"{_charts[kv.Key].Song.Name}|{_charts[kv.Key].Level}|{kv.Value:0.00}")
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary"></MudProgressLinear>
 }
+<MudAutocomplete Disabled="_isLoading" T="string" Value="_selected" ValueChanged="SetChart" CoerceValue="false" CoerceText="true" Label="Chart" SearchFunc="SearchSongs">
+    <ItemTemplate>
+        <DifficultyBubble Chart="_chartNames[context]" Small="true"></DifficultyBubble> @_chartNames[context].Song.Name
+    </ItemTemplate>
+</MudAutocomplete>
+@if (_selectedChart != null && !_isLoading)
+{
+    <br/>
+    <MudText Typo="Typo.h4">Player Weights</MudText>
+    <MudText Typo="Typo.subtitle1">All players with scores within the target folder are assigned weights based on how close their competitive level is to the folder.</MudText>
+    <MudText Typo="Typo.subtitle1">Highlighted players have a recorded score on the chart in question.</MudText>
+    @foreach (var playerWeight in _playerWeights.OrderByDescending(kv=>kv.Value))
+    {
+    <MudText Typo="Typo.body2" Color="_playerScores.ContainsKey(playerWeight.Key)?Color.Success:Color.Default">
+        @($"{(!_users[playerWeight.Key].IsPublic?"Anonymous":_users[playerWeight.Key].Name)} - {playerWeight.Value:0.000} (Competitively {_playerLevels[playerWeight.Key]:0.00}{(_playerScores.TryGetValue(playerWeight.Key, out var score)?", "+score:"")})")
+    </MudText>
+    }
+    <br/>
+    <MudText Typo="Typo.h4">Folder Averages</MudText>
+    <MudText Typo="Typo.subtitle1">The target folder and the three surrounding are provided weighted average scores utilizing the player weights above.</MudText>
+    <ApexChart TItem="DataPoint"
+               Title=@($"Weighted Average Scores By Folder")
+                                            @ref="_levelAverageGraph">
+
+        <ApexPointSeries TItem="DataPoint"
+                         Items="_levelAverageData"
+                         SeriesType="SeriesType.Line"
+                         XValue="@(e => e.X)"
+                         YValue="@(e => (decimal) e.Y)"
+                         OrderBy="e => e.X" />
+
+    </ApexChart>
+    <br/>
+    <MudText Typo="Typo.h4">Chart Average</MudText>
+    <MudText Typo="Typo.subtitle1">The chart in question has its weighted average score projected onto the score distributions</MudText>
+    <MudText Typo="Typo.body2">@_selectedChart.Song.Name @_selectedChart.DifficultyString - @_chartAverage.ToString("N0")</MudText>
+    @if (_calculatedLevels.ContainsKey(_selectedChart.Id))
+    {
+        
+        @if (_lowLevel == 0)
+        {
+
+            <MudText Typo="Typo.body2">The weighted average for this chart is better than the average for a @_highLevel.</MudText>
+            <MudText Typo="Typo.body2">In this case, the chart is determined to be below by @_percentBetween.ToString("0.00") utilizing standard deviations in the @_highLevel folder.</MudText>
+        } else if (_highLevel == 0)
+        {
+            <MudText Typo="Typo.body2">The weighted average for this chart is worst than the average for a @_lowLevel.</MudText>
+            <MudText Typo="Typo.body2">In this case, the chart is determined to be above by @_percentBetween.ToString("0.00") utilizing standard deviations in the @_lowLevel folder.</MudText>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2">Determined to be @_percentBetween.ToString("0.000") between @(_lowLevel+.5) and @(_highLevel+.5)</MudText>
+        }
+        <MudText>Final Result: @_calculatedLevels[_selectedChart.Id].ToString("0.000")</MudText>
+    }
+    else
+    {
+        <MudText Typo="Typo.body2">At this point, it's identified that this chart has no players with a weight of .5 or higher (within 1 level). The chart is marked as not having a scoring level as any estimation would be based on missing data.</MudText>
+    }
+}
+<br/><br/>
 
 @inject IPlayerStatsRepository PlayerStats;
 @inject IMediator Mediator;
 @inject IPhoenixRecordRepository Scores;
+@inject IUserRepository Users;
 @inject IChartRepository Charts;
 @code
 {
-
+    private ApexChart<DataPoint>? _levelAverageGraph;
     private int _level = 19;
     private int _levelDiff = 1;
     private ChartType _chartType = ChartType.Single;
+    private string _selected = string.Empty;
+    private Chart? _selectedChart;
+    private Task<IEnumerable<string>> SearchSongs(string v) => Task.FromResult(_chartNames.Where(c => string.IsNullOrWhiteSpace(v)|| c.Key.Contains(v, StringComparison.OrdinalIgnoreCase)).OrderBy(c => string.IsNullOrWhiteSpace(v)?c.Value.Song.Name.ToString(): c.Value.Song.Name == v ? "a"+c.Value.Song.Name : "b"+c.Value.Song.Name).ThenBy(c=>c.Value.Type).ThenBy(c=>c.Value.Level).Select(kv=>kv.Key));
+    private async Task SetChart(string selected)
+    {
+        if (string.IsNullOrWhiteSpace(selected))
+        {
+            return;
+        }
+        _selected = selected;
+        _selectedChart = _chartNames[selected];
+        await SetLevel(_selectedChart.Level, 3, _selectedChart.Type);
+    }
     private bool _isLoading = false;
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private IDictionary<string, Chart> _chartNames = new Dictionary<string, Chart>(StringComparer.OrdinalIgnoreCase);
+
     private IDictionary<Guid, double> _calculatedLevels = new Dictionary<Guid, double>();
+    private IDictionary<Guid, double> _playerLevels = new Dictionary<Guid, double>();
+    private IDictionary<Guid, double> _playerWeights = new Dictionary<Guid, double>();
+    private IDictionary<Guid, PhoenixScore> _playerScores = new Dictionary<Guid, PhoenixScore>();
+    private IDictionary<int, double> _levelAverages = new Dictionary<int, double>();
+    private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
+    private IEnumerable<DataPoint> _levelAverageData => _levelAverages.Select(kv => new DataPoint(kv.Key, kv.Value));
+    private double _percentBetween = 0.0;
+    private int _lowLevel = 0;
+    private int _highLevel = 0;
+    private double _chartAverage = 0.0;
     private async Task SetLevel(int level, int levelDiff, ChartType chartType)
     {
+        _calculatedLevels.Clear();
+        _playerWeights.Clear();
+        _levelAverages.Clear();
         var max = level + levelDiff;
         var min = level - levelDiff;
         if (min < 1)
@@ -48,30 +138,28 @@
         _level = level;
         _chartType = chartType;
         _isLoading = true;
+        StateHasChanged();
         var phoenixScores = new List<(Guid UserId,RecordedPhoenixScore Record)>();
         for (var l = min; l <= max; l++)
         {
             phoenixScores.AddRange((await Scores.GetAllPlayerScores(chartType,l)).Where(s=>s.record.Score!=null));
         }
+        _playerScores = phoenixScores.Where(pr => pr.Record.ChartId == _selectedChart!.Id).ToDictionary(pr => pr.UserId, pr => pr.Record.Score!.Value);
+
         var userIds = phoenixScores.Select(u => u.UserId).Distinct().ToArray();
-        var playerWeights = new Dictionary<Guid, IDictionary<DifficultyLevel, double>>();
-        foreach (var userId in userIds)
+        _users = (await Users.GetUsers(userIds)).ToDictionary(u => u.Id);
+        var allPlayerStats = await PlayerStats.GetStats(userIds, CancellationToken.None);
+        foreach (var stats in allPlayerStats)
         {
-            var stats = await PlayerStats.GetStats(userId, CancellationToken.None);
             var competitiveLevel = chartType == ChartType.Single ? stats.SinglesCompetitiveLevel : stats.DoublesCompetitiveLevel;
-            if (!playerWeights.ContainsKey(userId))
-            {
-                playerWeights[userId] = new Dictionary<DifficultyLevel, double>();
-            }
-            for (var l = min; l <= max; l++)
-            {
-                playerWeights[userId][l] = Math.Pow(.5, Math.Abs(level+.5-competitiveLevel));
-            }
+            _playerLevels[stats.UserId] = competitiveLevel;
+            _playerWeights[stats.UserId] = Math.Pow(.5, Math.Abs(level + .5 - competitiveLevel));
+            
         }
         var chartScores = new Dictionary<Guid, double>();
         foreach(var scoreGroup  in phoenixScores.GroupBy(s => s.Record.ChartId))
         {
-            if (_charts[scoreGroup.Key].Level<23 && scoreGroup.All(s => playerWeights[s.UserId][_charts[scoreGroup.Key].Level] < .5))
+            if (_charts[scoreGroup.Key].Level < 23 && scoreGroup.All(s => _playerWeights[s.UserId] < .5))
             {
                 chartScores[scoreGroup.Key] = 0;
                 continue;
@@ -86,20 +174,21 @@
             var weight = 0.0;
             foreach (var record in refinedGroup)
             {
-                total += ((int)record.Record.Score!.Value) * playerWeights[record.UserId][_charts[record.Record.ChartId].Level];
-                weight += playerWeights[record.UserId][_charts[record.Record.ChartId].Level];
+                total += ((int)record.Record.Score!.Value) * _playerWeights[record.UserId];
+                weight += _playerWeights[record.UserId];
             }
             chartScores[scoreGroup.Key] = total / weight;
         }
-        var levelAverages = chartScores.Where(kv=>kv.Value>.01).GroupBy(kv => _charts[kv.Key].Level)
-            .ToDictionary(group => group.Key, group =>
+        _chartAverage = chartScores[_selectedChart.Id];
+        _levelAverages = chartScores.Where(kv => kv.Value > .01).GroupBy(kv => _charts[kv.Key].Level)
+            .ToDictionary(group => (int)group.Key, group =>
               group.Key==level?group.Average(g=>g.Value):
                 group.Key<level?group.Average(g=>g.Value)+.5*StdDev(group.Select(g=>(double)(int)g.Value),false):
                   group.Average(g=>g.Value)-.5*StdDev(group.Select(g=>(double)(int)g.Value),false));
 
         //var average = chartScores.Values.Average();
         //var standardDev = StdDev(chartScores.Values,false);
-        if (!levelAverages.Any())
+        if (!_levelAverages.Any())
         {
             foreach (var  kv in chartScores.Where(c => _charts[c.Key].Level == level))
             {
@@ -110,56 +199,71 @@
             _isLoading = false;
             return;
         }
-        min = levelAverages.Min(la => la.Key);
-        max = levelAverages.Max(la => la.Key);
+        min = _levelAverages.Min(la => la.Key);
+        max = _levelAverages.Max(la => la.Key);
         
         var lowStandardDev = StdDev(chartScores.Where(kv => kv.Value > .01).Where(c => _charts[c.Key].Level == min).Select(kv => kv.Value), false);
 
         var highStandardDev = StdDev(chartScores.Where(kv => kv.Value > .01).Where(c => _charts[c.Key].Level == max).Select(kv => kv.Value), false);
+        var chartId = _selectedChart!.Id;
+        var chartScore = chartScores[chartId];
 
-        foreach (var kv in chartScores.Where(c=>_charts[c.Key].Level==level))
+        if (chartScore != 0)
         {
-            if (_charts[kv.Key].Song.Name == "Vanish" && _charts[kv.Key].Level == 10)
+            if (chartScore > _levelAverages[min])
             {
-                //
-            }
-            if (kv.Value == 0)
-            {
-                _calculatedLevels[kv.Key] = 0;
-                continue;
-            }
-            if (kv.Value > levelAverages[min])
-            {
+                _lowLevel = 0;
+                _highLevel = min;
                 if (lowStandardDev == 0)
                 {
-                    _calculatedLevels[kv.Key] = min + .5;
-                    continue;
+                    _percentBetween = 0.0;
+                    _calculatedLevels[chartId] = min + .5;
                 }
-                _calculatedLevels[kv.Key] = min+.5-(kv.Value-levelAverages[min])/(8.0*lowStandardDev);
-                continue;
+                else
+                {
+                    _percentBetween = (chartScore - _levelAverages[min]) / (8.0 * lowStandardDev);
+                    _calculatedLevels[chartId] = min + .5 - (chartScore - _levelAverages[min]) / (8.0 * lowStandardDev);
+                }
             }
-            if (kv.Value <= levelAverages[max])
-            {
+             else if (chartScore <= _levelAverages[max])
+             {
+                 _lowLevel = max;
+                 _highLevel = 0;
                 if (highStandardDev == 0)
                 {
-                    _calculatedLevels[kv.Key] = max + .5;
-                    continue;
+                    _percentBetween = 0.0;
+                    _calculatedLevels[chartId] = max + .5;
                 }
-                _calculatedLevels[kv.Key] = max + .5 + (levelAverages[max] - kv.Value) / (8.0 * highStandardDev);
-                continue;
-            }
-            for (var l = min; l < max; l++)
-            {
-                if (kv.Value <= levelAverages[l] && kv.Value > levelAverages[l+1])
+                else
                 {
-                    _calculatedLevels[kv.Key] = l + .5 + (kv.Value - levelAverages[l]) / (levelAverages[l + 1] - levelAverages[l]);
-                    continue;
+                    _percentBetween = (_levelAverages[max] - chartScore) / (8.0 * highStandardDev);
+                    _calculatedLevels[chartId] = max + .5 + (_levelAverages[max] - chartScore) / (8.0 * highStandardDev);
                 }
             }
-            //var levelAdjust =(2.0/(.5+levelDiff)) *(average - kv.Value) / (standardDev);
-            //_calculatedLevels[kv.Key] = (level + .5) + levelAdjust;
+             else
+             {
+                 
+                 for (var l = min; l < max; l++)
+                 {
+                     if (chartScore <= _levelAverages[l] && chartScore > _levelAverages[l + 1])
+                     {
+                         _lowLevel = l;
+                         _highLevel = l + 1;
+                         _percentBetween = (chartScore - _levelAverages[l]) / (_levelAverages[l + 1] - _levelAverages[l]);
+                         _calculatedLevels[chartId] = l + .5 + (chartScore - _levelAverages[l]) / (_levelAverages[l + 1] - _levelAverages[l]);
+                         break;
+                     }
+                 }
+             }
         }
+        //var levelAdjust =(2.0/(.5+levelDiff)) *(average - kv.Value) / (standardDev);
+        //_calculatedLevels[kv.Key] = (level + .5) + levelAdjust;
+    
         StateHasChanged();
+        if (_levelAverageGraph != null)
+        {
+            await _levelAverageGraph.UpdateSeriesAsync(true);
+        }
         _isLoading = false;
 
     }
@@ -182,16 +286,14 @@
         return Math.Sqrt(sum_of_squares / values.Count());
     }
 
+    private sealed record DataPoint(int X, double Y);
     protected override async Task OnInitializedAsync()
     {
-        _isLoading = true;
+
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix)))
             .ToDictionary(c => c.Id);
-        for (var level = 10; level <= 27; level++)
-        {
-            
-            await SetLevel(level, 3, ChartType.Single);
-        }
+        _chartNames = _charts.Values.ToDictionary(c => c.Song.Name + " " + c.DifficultyString);
+
         /*for (var level = 10; level <= 27; level++)
         {
 
@@ -201,6 +303,5 @@
         {
             await Charts.UpdateScoreLevel(MixEnum.Phoenix, result.Key, result.Value);
         }*/
-        _isLoading = false;
     }
 }

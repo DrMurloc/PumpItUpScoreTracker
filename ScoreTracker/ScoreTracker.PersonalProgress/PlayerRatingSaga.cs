@@ -71,7 +71,8 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
     public async Task Consume(ConsumeContext<UserCreatedEvent> context)
     {
         await _stats.SaveStats(context.Message.UserId,
-            new PlayerStatsRecord(0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1), context.CancellationToken);
+            new PlayerStatsRecord(context.Message.UserId, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1),
+            context.CancellationToken);
     }
 
     public sealed record RecalculateStats(Guid UserId) : IRequest
@@ -125,7 +126,7 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
                 .Take(50).Select(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score))
                 .ToArray());
 
-        var newStats = new PlayerStatsRecord(scores.Sum(s => s.Rating),
+        var newStats = new PlayerStatsRecord(request.UserId, scores.Sum(s => s.Rating),
             recorded.Any(r => !r.IsBroken) ? recorded.Where(r => !r.IsBroken).Max(r => charts[r.ChartId].Level) : 1,
             recorded.Count(r => !r.IsBroken),
             coOps.Sum(s => s.Rating),

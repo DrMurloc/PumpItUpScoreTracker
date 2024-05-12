@@ -8,6 +8,7 @@
 @using ScoreTracker.Application.Handlers
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
+@using ScoreTracker.Web.Components
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 
 <PageTitle>Note Counts</PageTitle>
@@ -92,6 +93,7 @@
     private IDictionary<ChartType, IList<DataPoint>> _maxes = new Dictionary<ChartType, IList<DataPoint>>();
     private IDictionary<ChartType, IList<DataPoint>> _existingCount = new Dictionary<ChartType, IList<DataPoint>>();
     private IDictionary<ChartType, IList<DataPoint>> _missingCount = new Dictionary<ChartType, IList<DataPoint>>();
+
     private bool _isLoading = true;
     private ChartType _currentChartType = ChartType.Single;
     private ApexChart<DataPoint>? _graph1;

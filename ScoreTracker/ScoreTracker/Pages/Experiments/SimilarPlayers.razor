@@ -1,5 +1,6 @@
 ﻿@page "/Experiments/SimilarPlayers"
 @using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.SecondaryPorts
@@ -38,7 +39,63 @@
 <MudText Typo="Typo.h4">Similar Players</MudText>
 @foreach (var kv in _userTotals.OrderByDescending(k=>k.Value))
 {
-    @($"{kv.Key} - {kv.Value}")<br/>
+    @if (_users[kv.Key].IsPublic)
+    {
+        <MudCheckBox T="bool" Value="_comparingUsers.Contains(kv.Key)" ValueChanged="v=>ToggleUser(kv.Key,v)" Label=@($"{_users[kv.Key].Name} - {kv.Value}")></MudCheckBox>
+    }
+    else
+    {
+        <MudText>@($"Private User - {kv.Value}")</MudText>
+    }
+}
+@if (_users.ContainsKey(CurrentUser.User.Id) && _userTiersLists.ContainsKey(CurrentUser.User.Id))
+{
+
+    <MudTable T="Chart" Items="_tierList.Values.SelectMany(c=>c)" Dense="true">
+        <HeaderContent>
+            <MudTh>Song</MudTh>
+            <MudTh>Difficulty</MudTh>
+            <MudTh>Final Result</MudTh>
+            @foreach (var userId in new[] { CurrentUser.User.Id }.Concat(_comparingUsers))
+            {
+                <MudTh>@_users[userId].Name</MudTh>
+            }
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudTooltip Text="@(context.Song.Name+' '+context.DifficultyString)">
+                    <MudImage Src="@context.Song.ImagePath.ToString()" Height="35" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
+                </MudTooltip>
+            </MudTd>
+            <MudTd>
+                <DifficultyBubble Chart="context"></DifficultyBubble>
+            </MudTd>
+            <MudTd>
+                @if (_chartLookup.TryGetValue(context.Id, out var entry))
+                {
+
+                    <MudText Style=@($"color:{CategoryColor(entry)}")>
+                        @entry.ToString()
+                    </MudText>
+                }
+            </MudTd>
+            @foreach (var userId in new[] { CurrentUser.User.Id }.Concat(_comparingUsers))
+            {
+                <MudTd>
+                    @if (_userTiersLists[userId].TryGetValue(context.Id, out var entry))
+                    {
+
+                        <MudText Style=@($"color:{CategoryColor(entry.Category)}")>
+                            @entry.Category.ToString()
+                        </MudText>
+                    }
+                </MudTd>
+            }
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager></MudTablePager>
+        </PagerContent>
+    </MudTable>
 }
 @inject IMediator Mediator;
 @inject ICurrentUserAccessor CurrentUser;
@@ -48,12 +105,39 @@
 @code
 {
     private IDictionary<Guid, int> _userTotals = new Dictionary<Guid, int>();
+    private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private IDictionary<Guid, int> _chartWeights = new Dictionary<Guid, int>();
     private IDictionary<Guid, SongTierListEntry> _myTierList = new Dictionary<Guid, SongTierListEntry>();
+    private IDictionary<Guid, IDictionary<Guid, SongTierListEntry>> _userTiersLists = new Dictionary<Guid, IDictionary<Guid, SongTierListEntry>>();
+
+    private void ToggleUser(Guid userId, bool value)
+    {
+        if (value)
+        {
+            _comparingUsers.Add(userId);
+        }
+        else
+        {
+            _comparingUsers.Remove(userId);
+        }
+    }
+    private string CategoryColor(TierListCategory category) => category switch
+    {
+        TierListCategory.Overrated=>"#00FFFF",
+        TierListCategory.VeryEasy=>"#00FFBB",
+        TierListCategory.Easy=>"#00FF55",
+        TierListCategory.Medium=>"#00FF00",
+        TierListCategory.Hard=>"#55BB00",
+        TierListCategory.VeryHard=>"#BB5500",
+        TierListCategory.Underrated=>"#FF0000",
+        TierListCategory.Unrecorded=>"#888888"
+        };
+    private ISet<Guid> _comparingUsers = new HashSet<Guid>();
     private int _level = 18;
     private ChartType _type = ChartType.Double;
     private IDictionary<TierListCategory, Chart[]> _tierList = new Dictionary<TierListCategory, Chart[]>();
+    private IDictionary<Guid, TierListCategory> _chartLookup = new Dictionary<Guid, TierListCategory>();
     private async Task SetFilters(ChartType type, int level)
     {
         _level = level;
@@ -74,10 +158,14 @@
         var userTiersLists = new Dictionary<Guid, IEnumerable<SongTierListEntry>>();
         _myTierList = (await Mediator.Send(new GetMyRelativeTierListQuery(_type, _level)))
             .ToDictionary(r => r.ChartId);
+        _userTiersLists[CurrentUser.User.Id] = _myTierList;
         _chartWeights = new Dictionary<Guid, int>();
         foreach (var userId in userIds)
         {
             userTiersLists[userId] = await Mediator.Send(new GetMyRelativeTierListQuery(_type, _level, userId));
+            _userTiersLists[userId] = userTiersLists[userId].ToDictionary(g => g.ChartId);
+            var user = await Mediator.Send(new GetUserByIdQuery(userId));
+            _users[userId] = user??throw new Exception("Couldn't find user");
         }
         _userTotals = userTiersLists.ToDictionary(kv => kv.Key, kv => kv.Value.Sum(e => _myTierList.ContainsKey(e.ChartId) && _myTierList[e.ChartId].Category != TierListCategory.Unrecorded && e.Category != TierListCategory.Unrecorded ?
             (int)TierListCategory.Unrecorded - (int)Math.Abs(e.Category - _myTierList[e.ChartId].Category)
@@ -96,6 +184,8 @@
         _tierList = ProcessIntoTierList("Similar Players", _chartWeights).GroupBy(c => c.Category)
             .ToDictionary(g => g.Key, g => g.OrderByDescending(l => l.Order)
                 .Select(c => _charts[c.ChartId]).ToArray());
+
+        _chartLookup = _tierList.SelectMany(kv => kv.Value.Select(id => (kv.Key,id))).ToDictionary(kv => kv.id.Id, kv => kv.Key);
 
     }
 
@@ -143,6 +233,7 @@
             NavManager.NavigateTo("/Login");
             return;
         }
+        _users[CurrentUser.User.Id] = CurrentUser.User;
         await Recalculate();
     }
 }

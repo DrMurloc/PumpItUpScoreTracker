@@ -7,7 +7,7 @@
 @if (Chart != null)
 {                                
     <MudTooltip Text=@($"{Chart.Song.Name} {Chart.DifficultyString} - {Chart.StepArtist??"Unknown"}{ScoringLevelString}")>
-        <MudImage Src="@DifficultyBubblePath" Height="35" Alt="@Chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+        <MudImage Src="@DifficultyBubblePath" Height=@(Small?22:35) Alt="@Chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
         </MudTooltip>
 }
 @code {
@@ -15,6 +15,8 @@
     [Parameter]
     [Required]
     public Chart? Chart { get; set; }
+    [Parameter]
+    public bool Small { get; set; } = false;
 
     public string DifficultyBubblePath => Chart?.Mix == MixEnum.XX ?
         $"https://piuimages.arroweclip.se/difficulty/{Chart.DifficultyString.ToLower()}.png" : $"https://piuimages.arroweclip.se/difficulty/{Chart?.Mix}/{Chart?.DifficultyString.ToLower()}.png";

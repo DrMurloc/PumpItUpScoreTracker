@@ -159,11 +159,16 @@ Do It
         /*var message = string.Join(" ", Enum.GetValues<PhoenixLetterGrade>().Select(l => $"#LETTERGRADE|{l}#").Append("#LETTERGRADE|#"));
         message += "\n";
         message += string.Join(" ", Enum.GetValues<PhoenixPlate>().Select(l => $"#PLATE|{l}#").Append("#PLATE|#"));
+        var message = string.Join(" ", DifficultyLevel.All.Select(l => $"#DIFFICULTY|{ChartType.Double.GetShortHand()}{l}#")
+            .Concat(Enumerable.Range(1, 26).Select(l => $"#DIFFICULTY|{ChartType.Single.GetShortHand()}{l}#"))
+            .Concat(Enumerable.Range(2, 4).Select(l => $"#DIFFICULTY|{ChartType.CoOp.GetShortHand()}{l}#")));
         await Bot.SendMessage(message, 1164337603034759278, CancellationToken.None);*/
+
     // await OfficialClient.FixAvatars();
     //await Bus.Publish(new ProcessScoresTiersListCommand());
-    // await Bus.Publish(new ProcessPassTierListCommand());
+     //await Bus.Publish(new ProcessPassTierListCommand());
     //await Bus.Publish(new UpdateBountiesEvent());
+        //await Bus.Publish(new CalculateScoringDifficultyEvent());
     //await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);
 
 
