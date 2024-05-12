@@ -3,7 +3,7 @@
 @using ScoreTracker.Domain.ValueTypes
 @using Align = MudBlazor.Align
 @namespace ScoreTracker.Web.Components
-<MudTooltip Text=@(ShowScore?"":ScoreString)>
+<MudTooltip Text=@(ShowScore && string.IsNullOrWhiteSpace(Text)?"":ScoreString)>
         
     @if (Score != null)
     {
@@ -16,10 +16,16 @@
             <MudImage Src="@PlateImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
 
     }
-    @if (ShowScore && Score!=null)
+    @if (ShowScore && Score!=null && string.IsNullOrWhiteSpace(Text))
     {
         <MudText Align="Align.Center">
             @ScoreString
+        </MudText>
+    }
+    @if (!string.IsNullOrWhiteSpace(Text))
+    {
+        <MudText Align="Align.Center">
+            @Text
         </MudText>
     }
     
@@ -39,7 +45,8 @@
     [Parameter]
     public bool ShowScore { get; set; } = false;
 
-
+    [Parameter]
+    public string Text { get; set; } = string.Empty;
     private string ScoreString => Score == null ? "" : ((int)Score).ToString("N0");
     private string BrokenPiece => IsBroken ? "_broken" : "";
     private string LetterGradeImage => 

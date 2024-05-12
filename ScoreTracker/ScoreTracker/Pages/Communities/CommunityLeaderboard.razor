@@ -153,7 +153,7 @@
                                 <MudCardMedia Height="150" Image="@entry.Chart.Song.ImagePath.ToString()"/>
                                 <MudCardContent>
                                     <DifficultyBubble Chart="entry.Chart"></DifficultyBubble>
-                                    <ScoreBreakdown Score="entry.Score" Plate="entry.Plate" IsBroken="entry.IsBroken" ShowScore="true" Height="17"></ScoreBreakdown>
+                                    <ScoreBreakdown Score="entry.Score" Plate="entry.Plate" IsBroken="entry.IsBroken" Text=@(_showingType=="Rating"?entry.Rating.ToString("N0"):entry.CompetitiveLevel.ToString("0.00")) Height="17"></ScoreBreakdown>
 
                                 </MudCardContent>
                             </MudCard>
@@ -268,6 +268,7 @@
 @code {
     private Guid _showingUserId = Guid.Empty;
     private ChartType? _chartType = null;
+    private string _showingType = "CompetitiveLevel";
     private int Colspan => _currentType == LeaderboardType.CoOp ? 4 : _currentType == LeaderboardType.Total ? 5 : 6;
     private string _searchText;
     private Guid? _filteredWinner = null;
@@ -276,6 +277,7 @@
         .OrderBy(s => string.IsNullOrWhiteSpace(_searchText) || s.Song.Name == _searchText ? 0 : 1);
     private async Task ShowUserCompetitiveData(Guid userId, ChartType? chartType)
     {
+        _showingType = "CompetitiveLevel";
         if (_showingUserId == userId && _chartType == chartType)
         {
             _showingUserId = Guid.Empty;
@@ -293,6 +295,7 @@
     }
     private async Task ShowUserData(Guid userId, ChartType? chartType)
     {
+        _showingType = "Rating";
         if (_showingUserId == userId && _chartType==chartType)
         {
             _showingUserId = Guid.Empty;
