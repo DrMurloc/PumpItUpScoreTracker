@@ -258,9 +258,10 @@
             _levelAverages[cs.Key] = cs.SelectMany(kv => kv)
                 .GroupBy(cv => cv.Key)
                 .ToDictionary(cv => cv.Key, group =>
-                cs.Key == group.Key ? group.Average(g => g.Value) :
-                    cs.Key < group.Key ? group.Average(g => g.Value) + .5 * StdDev(group.Select(g => (double)(int)g.Value), false) :
-                        group.Average(g => g.Value) - .5 * StdDev(group.Select(g => (double)(int)g.Value), false));
+                !group.Any(g=>g.Value>0)?0:
+                cs.Key == group.Key ? group.Where(g => g.Value > 0).Average(g => g.Value) :
+                    cs.Key < group.Key ? group.Where(g => g.Value > 0).Average(g => g.Value) + .5 * StdDev(group.Where(g => g.Value > 0).Select(g => (double)(int)g.Value), false) :
+                        group.Where(g => g.Value > 0).Average(g => g.Value) - .5 * StdDev(group.Where(g => g.Value > 0).Select(g => (double)(int)g.Value), false));
         }
         //var average = chartScores.Values.Average();
         //var standardDev = StdDev(chartScores.Values,false);
