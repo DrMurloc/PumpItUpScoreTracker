@@ -131,7 +131,7 @@ namespace ScoreTracker.Application.Handlers
                     t.Title is PhoenixSkillTitle && t.CompletionCount >= PhoenixLetterGrade.S.GetMinimumScore() &&
                     t.CompletionCount < t.Title.CompletionRequired)
                 .Select(t => new ChartRecommendation("Skill Title Charts",
-                    charts.First(c => (t.Title as PhoenixSkillTitle)!.MatchesChart(c)).Id,
+                    charts.First(c => (t.Title as PhoenixSkillTitle)!.AppliesToChart(c)).Id,
                     "Charts you are close to achieving a Skill title (SSS) on"))
                 .Where(s => !skipped.Contains(s.ChartId));
         }

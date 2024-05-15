@@ -230,6 +230,11 @@ public static class PhoenixTitleList
         return TitleLookup[name];
     }
 
+    public static IEnumerable<PhoenixTitle> BuildList()
+    {
+        return Titles.ToArray();
+    }
+
     public static IEnumerable<PhoenixTitleProgress> BuildProgress(IDictionary<Guid, Chart> charts,
         IEnumerable<RecordedPhoenixScore> attempts,
         ISet<Name> completedTitles)

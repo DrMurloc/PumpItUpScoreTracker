@@ -6,6 +6,9 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Models.Titles
+@using ScoreTracker.Domain.Models.Titles.Interface
+@using ScoreTracker.Domain.Models.Titles.Phoenix
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Web.Components
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
@@ -168,7 +171,12 @@
                                 <DifficultyBubble Chart="chart"></DifficultyBubble>
                                 <MudSpacer>
                                 </MudSpacer>
-                                
+                                @if (_charTitles.TryGetValue(chart.Id, out var title))
+                                {
+                                    <MudTooltip Text=@($"{string.Join(',', title.Select(n => n.ToString()))}")>
+                                        <MudIcon Color="Color.Warning" Icon="@Icons.Material.Filled.Star"></MudIcon>
+                                    </MudTooltip>
+                                }
                                 @if (_popularCharts.Contains(chart.Id) && _tierListType!="Fun")
                                 {
                                     <MudTooltip Text="This chart is extra popular and may have skewed data">
@@ -313,7 +321,8 @@
     private ISet<SongType> _filteredTypes = new HashSet<SongType>();
     private IEnumerable<string> _stepArtists = new HashSet<string>();
     private IEnumerable<string> _songArtists = new HashSet<string>();
-
+    private IDictionary<Guid, IEnumerable<Name>> _charTitles = new Dictionary<Guid, IEnumerable<Name>>();
+    private IEnumerable<PhoenixTitle> _titles = Array.Empty<PhoenixTitle>();
     private Name[] _availableStepArtists = Array.Empty<Name>();
     private Name[] _availableSongArtists = Array.Empty<Name>();
     private int _lowestNoteCount = 0;
@@ -645,6 +654,9 @@
         _isLoading = true;
 
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, _level, _chartType))).ToDictionary(c => c.Id);
+        var titles = _titles.Where(t => t is ISpecificChartTitle).ToArray();
+        _charTitles = _charts.Values.SelectMany(c => titles.Select(t => (c,t,((ISpecificChartTitle)t).AppliesToChart(c))))
+            .Where(v => v.Item3).GroupBy(v=>v.c.Id).ToDictionary(g =>g.Key,g=> g.Select(v => v.t.Name).ToArray().AsEnumerable());
         var officialScores = (await Mediator.Send(new GetTierListQuery("Official Scores"))).ToDictionary(s => s.ChartId);
         var scores = (await Mediator.Send(new GetTierListQuery("Scores"))).ToDictionary(s => s.ChartId); 
         var popularity = (await Mediator.Send(new GetTierListQuery("Popularity"))).ToDictionary(s => s.ChartId);
@@ -746,7 +758,8 @@
     protected override async Task OnInitializedAsync()
     {
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).
-        ToDictionary(c => c.Id);
+          ToDictionary(c => c.Id);
+        _titles = PhoenixTitleList.BuildList();
         _chartVideos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl.ToString());
         _chartType = ChartType.Double;
         _level = 18;

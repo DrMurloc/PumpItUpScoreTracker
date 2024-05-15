@@ -9,6 +9,7 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.PersonalProgress.Queries;
 
 namespace ScoreTracker.Application.Handlers
 {
@@ -33,9 +34,10 @@ namespace ScoreTracker.Application.Handlers
         private readonly IBotClient _bot;
         private readonly IChartRepository _charts;
         private readonly IPhoenixRecordRepository _scores;
+        private readonly IMediator _mediator;
 
         public CommunitySaga(ICurrentUserAccessor currentUser, ICommunityRepository communities, IBotClient bot,
-            IUserRepository users, IChartRepository charts, IPhoenixRecordRepository scores)
+            IUserRepository users, IChartRepository charts, IPhoenixRecordRepository scores, IMediator mediator)
         {
             _currentUser = currentUser;
             _communities = communities;
@@ -43,6 +45,7 @@ namespace ScoreTracker.Application.Handlers
             _users = users;
             _charts = charts;
             _scores = scores;
+            _mediator = mediator;
         }
 
         public async Task Handle(CreateCommunityCommand request, CancellationToken cancellationToken)
@@ -227,20 +230,20 @@ namespace ScoreTracker.Application.Handlers
 
 
             if (context.Message.NewCompetitive > context.Message.OldCompetitive &&
-                context.Message.NewCompetitive.ToString("0.00000") !=
-                context.Message.OldCompetitive.ToString("0.00000"))
+                context.Message.NewCompetitive.ToString("0.000") !=
+                context.Message.OldCompetitive.ToString("0.000"))
                 message += $@"
-- Competitive Level improved to {context.Message.NewCompetitive:0.00000} (+{context.Message.NewCompetitive - context.Message.OldCompetitive:0.00000})";
+- Competitive Level improved to {context.Message.NewCompetitive:0.00000} (+{context.Message.NewCompetitive - context.Message.OldCompetitive:0.000})";
             if (context.Message.NewSinglesCompetitive > context.Message.OldSinglesCompetitive &&
-                context.Message.NewSinglesCompetitive.ToString("0.00000") !=
-                context.Message.OldSinglesCompetitive.ToString("0.00000"))
+                context.Message.NewSinglesCompetitive.ToString("0.000") !=
+                context.Message.OldSinglesCompetitive.ToString("0.000"))
                 message += $@"
-- Singles Competitive Level improved to {context.Message.NewSinglesCompetitive:0.00000} (+{context.Message.NewSinglesCompetitive - context.Message.OldSinglesCompetitive:0.00000})";
+- Singles Competitive Level improved to {context.Message.NewSinglesCompetitive:0.000} (+{context.Message.NewSinglesCompetitive - context.Message.OldSinglesCompetitive:0.000})";
             if (context.Message.NewDoublesCompetitive > context.Message.OldDoublesCompetitive &&
-                context.Message.NewDoublesCompetitive.ToString("0.00000") !=
-                context.Message.OldDoublesCompetitive.ToString("0.00000"))
+                context.Message.NewDoublesCompetitive.ToString("0.000") !=
+                context.Message.OldDoublesCompetitive.ToString("0.000"))
                 message += $@"
-- Doubles Competitive Level improved to {context.Message.NewDoublesCompetitive:0.00000} (+{context.Message.NewDoublesCompetitive - context.Message.OldDoublesCompetitive:0.00000})";
+- Doubles Competitive Level improved to {context.Message.NewDoublesCompetitive:0.000} (+{context.Message.NewDoublesCompetitive - context.Message.OldDoublesCompetitive:0.000})";
             await SendToCommunityDiscords(context.Message.UserId, message, context.CancellationToken);
         }
 
@@ -266,13 +269,22 @@ namespace ScoreTracker.Application.Handlers
 
             var count = newCharts.Count();
             var message = "";
+
+            var top50 = (await _mediator.Send(new GetTop50CompetitiveQuery(context.Message.UserId, ChartType.Single)))
+                .Concat(await _mediator.Send(new GetTop50CompetitiveQuery(context.Message.UserId, ChartType.Double)))
+                .Select(c => c.ChartId).Distinct().ToHashSet();
+
             if (count > 0)
             {
                 message += $"**{user.Name}** passed:";
                 foreach (var chart in newCharts.OrderByDescending(c => c.Level)
                              .ThenByDescending(c => (int)(scores[c.Id].Score ?? 0)).Take(5))
+                {
+                    var crown = top50.Contains(chart.Id) ? " :crown:" : "";
                     message += $@"
-#DIFFICULTY|{chart.DifficultyString}# {chart.Song.Name}: {(int)scores[chart.Id].Score!.Value:N0} #LETTERGRADE|{scores[chart.Id].Score!.Value.LetterGrade}##PLATE|{scores[chart.Id].Plate}#";
+#DIFFICULTY|{chart.DifficultyString}#{crown} {chart.Song.Name}: {(int)scores[chart.Id].Score!.Value:N0} #LETTERGRADE|{scores[chart.Id].Score!.Value.LetterGrade}##PLATE|{scores[chart.Id].Plate}#";
+                }
+
                 if (count > 10)
                     message += $@"
 And {count - 10} others!";
@@ -286,13 +298,15 @@ And {count - 10} others!";
             {
                 if (!string.IsNullOrWhiteSpace(message))
                     message += @"
+
 ";
                 message += $"**{user.Name}** upscored:";
                 foreach (var item in upscoreCharts.OrderByDescending(c => c.Item1.Level)
                              .ThenByDescending(c => upscoreChartScores[c.Item1.Id] - scores[c.Item1.Id].Score!.Value))
                 {
+                    var crown = top50.Contains(item.Item1.Id) ? " :crown:" : "";
                     message += $@"
-#DIFFICULTY|{item.Item1.DifficultyString}# {item.Item1.Song.Name}: {(int)scores[item.Item1.Id].Score!.Value:N0}
+#DIFFICULTY|{item.Item1.DifficultyString}#{crown} {item.Item1.Song.Name}: {(int)scores[item.Item1.Id].Score!.Value:N0}
   {(scores[item.Item1.Id].Score!.Value - item.Value < 0 ? '-' : '+')}{scores[item.Item1.Id].Score!.Value - item.Value:N0} ";
                     var oldLetter = PhoenixScore.From(item.Value).LetterGrade;
                     if (oldLetter != scores[item.Item1.Id].Score!.Value.LetterGrade)

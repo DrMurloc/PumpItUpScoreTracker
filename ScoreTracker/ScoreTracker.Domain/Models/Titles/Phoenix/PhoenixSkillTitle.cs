@@ -1,9 +1,10 @@
 ﻿using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.Models.Titles.Interface;
 using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Models.Titles.Phoenix;
 
-public sealed class PhoenixSkillTitle : PhoenixTitle
+public sealed class PhoenixSkillTitle : PhoenixTitle, ISpecificChartTitle
 {
     private readonly Name _songName;
     private readonly ChartType _chartType;
@@ -22,16 +23,17 @@ public sealed class PhoenixSkillTitle : PhoenixTitle
 
     public override bool PopulatesFromDatabase => false;
 
-    public bool MatchesChart(Chart chart)
-    {
-        return chart.Song.Name == _songName && _chartType == chart.Type && _level == chart.Level;
-    }
 
     public override double CompletionProgress(Chart chart, RecordedPhoenixScore attempt)
     {
-        if (chart.Song.Name == _songName && _chartType == chart.Type && _level == chart.Level &&
+        if (AppliesToChart(chart) &&
             attempt.Score != null) return attempt.Score.Value;
 
         return 0;
+    }
+
+    public bool AppliesToChart(Chart chart)
+    {
+        return chart.Song.Name == _songName && _chartType == chart.Type && _level == chart.Level;
     }
 }

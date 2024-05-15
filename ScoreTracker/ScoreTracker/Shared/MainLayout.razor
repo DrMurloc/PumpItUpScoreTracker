@@ -97,8 +97,8 @@
                     }
                     else
                     {
-                        
-                        <MudNavLink Href="/BITE/Qualifiers" Icon="@Icons.Material.Filled.Event">@tourney.Name</MudNavLink>
+
+                        <MudNavLink Href=@($"/Tournament/{tourney.Id}/Qualifiers") Icon="@Icons.Material.Filled.Event">@tourney.Name</MudNavLink>
                     }
                 }
             </MudNavGroup>
