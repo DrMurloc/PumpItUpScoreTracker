@@ -57,14 +57,16 @@ namespace ScoreTracker.Application.Handlers
             var doublesLevel = (int)Math.Floor(stats.DoublesCompetitiveLevel);
             var otherDoubles = (int)Math.Round(stats.DoublesCompetitiveLevel);
             if (otherDoubles == doublesLevel) otherDoubles--;
+            var list = new List<ChartBounty>();
+            if (DifficultyLevel.IsValid(singlesLevel))
+                list.AddRange(await bounties.GetChartBounties(ChartType.Single, singlesLevel, cancellationToken));
 
-            return
-                (await bounties.GetChartBounties(ChartType.Single, singlesLevel, cancellationToken))
-                .Concat(await bounties.GetChartBounties(ChartType.Single, otherSingles, cancellationToken))
-                .Concat(await bounties.GetChartBounties(ChartType.Double, doublesLevel, cancellationToken))
-                .Concat(await bounties.GetChartBounties(ChartType.Double, otherDoubles, cancellationToken))
-                .Select(b => new ChartBounty(b.ChartId, b.Worth))
-                .ToArray();
+            if (DifficultyLevel.IsValid(otherSingles))
+                list.AddRange(await bounties.GetChartBounties(ChartType.Single, otherSingles, cancellationToken));
+
+            if (DifficultyLevel.IsValid(doublesLevel))
+                list.AddRange(await bounties.GetChartBounties(ChartType.Double, doublesLevel, cancellationToken));
+            return list;
         }
 
         public async Task<IEnumerable<ChartBounty>> Handle(GetChartBountiesQuery request,

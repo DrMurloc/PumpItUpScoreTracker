@@ -37,10 +37,10 @@ namespace ScoreTracker.Application.Handlers
         public async Task<IEnumerable<ChartRecommendation>> Handle(GetRecommendedChartsQuery request,
             CancellationToken cancellationToken)
         {
-            var competitiveLevel =
-                DifficultyLevel.From((int)Math.Round((await _stats.GetStats(_currentUser.User.Id, cancellationToken))
-                    .CompetitiveLevel));
-            if (competitiveLevel < 2) competitiveLevel = 10;
+            var competitiveLevel = (int)Math.Round((await _stats.GetStats(_currentUser.User.Id, cancellationToken))
+                .CompetitiveLevel);
+            if (!DifficultyLevel.IsValid(competitiveLevel) || competitiveLevel < 10) competitiveLevel = 10;
+
             var titles = (await _mediator.Send(new GetTitleProgressQuery(MixEnum.Phoenix), cancellationToken))
                 .ToArray();
             var scores = (await _mediator.Send(new GetPhoenixRecordsQuery(_currentUser.User.Id), cancellationToken))
