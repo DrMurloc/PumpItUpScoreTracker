@@ -3,7 +3,7 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Commands
 {
-    public sealed record FinalizeMatchCommand(Name MatchName) : IRequest
+    public sealed record FinalizeMatchCommand(Guid TournamentId, Name MatchName) : IRequest
     {
     }
 }

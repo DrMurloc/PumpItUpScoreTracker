@@ -4,7 +4,7 @@ using ScoreTracker.Domain.Views;
 
 namespace ScoreTracker.Application.Queries
 {
-    public sealed record GetMatchQuery(Name MatchName) : IRequest<MatchView>
+    public sealed record GetMatchQuery(Guid TournamentId, Name MatchName) : IRequest<MatchView>
     {
     }
 }

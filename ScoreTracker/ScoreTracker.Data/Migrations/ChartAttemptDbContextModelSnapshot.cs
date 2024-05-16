@@ -401,9 +401,14 @@ namespace ScoreTracker.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<Guid>("TournamentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValue(new Guid("fa27b7fb-6ef4-481b-8eee-56fdcf58433c"));
+
                     b.HasKey("Id");
 
-                    b.HasIndex("Name");
+                    b.HasIndex("TournamentId", "Name");
 
                     b.ToTable("Match", "scores");
                 });
@@ -428,11 +433,14 @@ namespace ScoreTracker.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<Guid>("TournamentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValue(new Guid("fa27b7fb-6ef4-481b-8eee-56fdcf58433c"));
+
                     b.HasKey("Id");
 
-                    b.HasIndex("FromMatch");
-
-                    b.HasIndex("ToMatch");
+                    b.HasIndex("TournamentId", "FromMatch", "ToMatch");
 
                     b.ToTable("MatchLink", "scores");
                 });
@@ -635,9 +643,14 @@ namespace ScoreTracker.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<Guid>("TournamentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValue(new Guid("fa27b7fb-6ef4-481b-8eee-56fdcf58433c"));
+
                     b.HasKey("Id");
 
-                    b.HasIndex("Name");
+                    b.HasIndex("TournamentId", "Name");
 
                     b.ToTable("RandomSettings", "scores");
                 });

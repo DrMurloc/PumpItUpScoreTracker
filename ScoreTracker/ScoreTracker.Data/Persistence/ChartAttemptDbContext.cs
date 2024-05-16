@@ -190,6 +190,15 @@ public sealed class ChartAttemptDbContext : DbContext
             .Property(e => e.TournamentId)
             .HasDefaultValue(new Guid("fa27b7fb-6ef4-481b-8eee-56fdcf58433c"));
 
+        builder.Entity<MatchEntity>()
+            .Property(e => e.TournamentId)
+            .HasDefaultValue(new Guid("fa27b7fb-6ef4-481b-8eee-56fdcf58433c"));
+        builder.Entity<MatchLinkEntity>()
+            .Property(e => e.TournamentId)
+            .HasDefaultValue(new Guid("fa27b7fb-6ef4-481b-8eee-56fdcf58433c"));
+        builder.Entity<RandomSettingsEntity>()
+            .Property(e => e.TournamentId)
+            .HasDefaultValue(new Guid("fa27b7fb-6ef4-481b-8eee-56fdcf58433c"));
         builder.Entity<TournamentEntity>()
             .Property(e => e.Type)
             .HasDefaultValue(nameof(TournamentType.Stamina));

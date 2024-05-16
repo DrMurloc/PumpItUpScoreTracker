@@ -4,7 +4,8 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Queries
 {
-    public sealed record GetAllRandomSettingsQuery : IRequest<IEnumerable<(Name name, RandomSettings settings)>>
+    public sealed record GetAllRandomSettingsQuery
+        (Guid TournamentId) : IRequest<IEnumerable<(Name name, RandomSettings settings)>>
     {
     }
 }

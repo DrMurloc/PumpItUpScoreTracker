@@ -22,29 +22,33 @@ namespace ScoreTracker.Data.Repositories
             _jsonOptions = jsonOptions.Value;
         }
 
-        public async Task<MatchView> GetMatch(Name matchName, CancellationToken cancellationToken)
+        public async Task<MatchView> GetMatch(Guid tournamentId, Name matchName, CancellationToken cancellationToken)
         {
             var nameString = matchName.ToString();
-            var entity = await _dbContext.Match.Where(m => m.Name == nameString).FirstAsync(cancellationToken);
+            var entity = await _dbContext.Match.Where(m => m.TournamentId == tournamentId && m.Name == nameString)
+                .FirstAsync(cancellationToken);
             return JsonSerializer.Deserialize<MatchView>(entity.Json, _jsonOptions) ??
                    throw new JsonException($"Couldn't parse json for match {matchName} {entity.Id}");
         }
 
-        public async Task<IEnumerable<MatchView>> GetAllMatches(CancellationToken cancellationToken)
+        public async Task<IEnumerable<MatchView>> GetAllMatches(Guid tournamentId, CancellationToken cancellationToken)
         {
-            var entities = await _dbContext.Match.ToArrayAsync(cancellationToken);
+            var entities = await _dbContext.Match.Where(m => m.TournamentId == tournamentId)
+                .ToArrayAsync(cancellationToken);
             return entities.Select(e =>
                 JsonSerializer.Deserialize<MatchView>(e.Json, _jsonOptions) ??
                 throw new JsonException($"Couldn't parse json for match {e.Name} {e.Id}"));
         }
 
-        public async Task SaveMatch(MatchView matchView, CancellationToken cancellationToken)
+        public async Task SaveMatch(Guid tournamentId, MatchView matchView, CancellationToken cancellationToken)
         {
             var nameString = matchView.MatchName.ToString();
-            var entity = await _dbContext.Match.Where(m => m.Name == nameString).FirstOrDefaultAsync(cancellationToken);
+            var entity = await _dbContext.Match.Where(m => m.TournamentId == tournamentId && m.Name == nameString)
+                .FirstOrDefaultAsync(cancellationToken);
             if (entity == null)
                 await _dbContext.Match.AddAsync(new MatchEntity
                 {
+                    TournamentId = tournamentId,
                     Id = Guid.NewGuid(),
                     Name = nameString,
                     Json = JsonSerializer.Serialize(matchView, _jsonOptions)
@@ -55,15 +59,17 @@ namespace ScoreTracker.Data.Repositories
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task SaveRandomSettings(Name settingsName, RandomSettings settings,
+        public async Task SaveRandomSettings(Guid tournamentId, Name settingsName, RandomSettings settings,
             CancellationToken cancellationToken)
         {
             var nameString = settingsName.ToString();
-            var entity = await _dbContext.RandomSettings.Where(m => m.Name == nameString)
+            var entity = await _dbContext.RandomSettings
+                .Where(m => m.TournamentId == tournamentId && m.Name == nameString)
                 .FirstOrDefaultAsync(cancellationToken);
             if (entity == null)
                 await _dbContext.RandomSettings.AddAsync(new RandomSettingsEntity
                 {
+                    TournamentId = tournamentId,
                     Id = Guid.NewGuid(),
                     Name = nameString,
                     Json = JsonSerializer.Serialize(settings, _jsonOptions)
@@ -74,43 +80,47 @@ namespace ScoreTracker.Data.Repositories
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<RandomSettings> GetRandomSettings(Name settingsName, CancellationToken cancellationToken)
+        public async Task<RandomSettings> GetRandomSettings(Guid tournamentId, Name settingsName,
+            CancellationToken cancellationToken)
         {
             var nameString = settingsName.ToString();
-            var entity = await _dbContext.RandomSettings.Where(r => r.Name == nameString).FirstAsync(cancellationToken);
+            var entity = await _dbContext.RandomSettings
+                .Where(r => r.TournamentId == tournamentId && r.Name == nameString).FirstAsync(cancellationToken);
             return JsonSerializer.Deserialize<RandomSettings>(entity.Json, _jsonOptions) ??
                    throw new JsonException($"Couldn't deserialize random settings {entity.Name} {entity.Id}");
         }
 
-        public async Task<IEnumerable<(Name name, RandomSettings settings)>> GetAllRandomSettings(
+        public async Task<IEnumerable<(Name name, RandomSettings settings)>> GetAllRandomSettings(Guid tournamentId,
             CancellationToken cancellationToken)
         {
             var entities = await _dbContext.RandomSettings.ToArrayAsync(cancellationToken);
-            return entities.Select(e => (Name.From(e.Name),
+            return entities.Where(t => t.TournamentId == tournamentId).Select(e => (Name.From(e.Name),
                     JsonSerializer.Deserialize<RandomSettings>(e.Json, _jsonOptions) ??
                     throw new JsonException($"Error deserializing random settings {e.Name} {e.Id}")))
                 .ToArray();
         }
 
-        public async Task<IEnumerable<MatchLink>> GetMatchLinksByFromMatchName(Name fromMatchName,
+        public async Task<IEnumerable<MatchLink>> GetMatchLinksByFromMatchName(Guid tournamentId, Name fromMatchName,
             CancellationToken cancellationToken)
         {
             var nameString = fromMatchName.ToString();
-            return await _dbContext.MatchLink.Where(m => m.FromMatch == nameString)
+            return await _dbContext.MatchLink.Where(m => m.TournamentId == tournamentId && m.FromMatch == nameString)
                 .Select(e => new MatchLink(e.FromMatch, e.ToMatch, e.IsWinners, e.PlayerCount))
                 .ToArrayAsync(cancellationToken);
         }
 
-        public async Task SaveMatchLink(MatchLink matchLink, CancellationToken cancellationToken)
+        public async Task SaveMatchLink(Guid tournamentId, MatchLink matchLink, CancellationToken cancellationToken)
         {
             var fromString = matchLink.FromMatch.ToString();
             var toString = matchLink.ToMatch.ToString();
-            var entity = await _dbContext.MatchLink.Where(m => m.FromMatch == fromString && m.ToMatch == toString)
+            var entity = await _dbContext.MatchLink.Where(m =>
+                    m.TournamentId == tournamentId && m.FromMatch == fromString && m.ToMatch == toString)
                 .FirstOrDefaultAsync(cancellationToken);
             if (entity == null)
             {
                 await _dbContext.MatchLink.AddAsync(new MatchLinkEntity
                 {
+                    TournamentId = tournamentId,
                     Id = Guid.NewGuid(),
                     FromMatch = fromString,
                     ToMatch = toString,
@@ -127,11 +137,13 @@ namespace ScoreTracker.Data.Repositories
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task DeleteMatchLink(Name fromName, Name toName, CancellationToken cancellationToken)
+        public async Task DeleteMatchLink(Guid tournamentId, Name fromName, Name toName,
+            CancellationToken cancellationToken)
         {
             var fromString = fromName.ToString();
             var toString = toName.ToString();
-            var entity = await _dbContext.MatchLink.Where(m => m.FromMatch == fromString && m.ToMatch == toString)
+            var entity = await _dbContext.MatchLink.Where(m =>
+                    m.TournamentId == tournamentId && m.FromMatch == fromString && m.ToMatch == toString)
                 .FirstOrDefaultAsync(cancellationToken);
             if (entity != null)
             {
@@ -140,18 +152,35 @@ namespace ScoreTracker.Data.Repositories
             }
         }
 
-        public async Task<IEnumerable<MatchLink>> GetAllMatchLinks(CancellationToken cancellationToken)
+        public async Task<IEnumerable<MatchLink>> GetAllMatchLinks(Guid tournamentId,
+            CancellationToken cancellationToken)
         {
             return await _dbContext.MatchLink
+                .Where(t => t.TournamentId == tournamentId)
                 .Select(ml => new MatchLink(ml.FromMatch, ml.ToMatch, ml.IsWinners, ml.PlayerCount))
                 .ToArrayAsync(cancellationToken);
         }
 
-        public Task<IEnumerable<MatchPlayer>> GetMatchPlayers(CancellationToken cancellationToken)
+        public Task<IEnumerable<MatchPlayer>> GetMatchPlayers(Guid tournamentId, CancellationToken cancellationToken)
         {
             return Task.FromResult(RealPlayerOrders);
         }
 
+        public static readonly IEnumerable<MatchPlayer> RealPlayerOrders = new MatchPlayer[]
+        {
+            new("Selo", 11, 345497062927892480),
+            new("Grainz", 10, 291371859105284096),
+            new("Sneezle", 9, 337580556214599700),
+            new("Litenang", 8, 83038699318677504),
+            new("Elixir", 7, 771203806054187019),
+            new("Esi", 6, 81897683911966720),
+            new("DrMurloc", 5, 477504512207093841),
+            new("S0 Lost", 4, 150066133003665408),
+            new("Tieny", 3, 478388650510647317),
+            new("Yimmy", 2, 534030186677534731),
+            new("Goddish", 1, 125806983591755776)
+        };
+        /*Eclipse
         public static readonly IEnumerable<MatchPlayer> RealPlayerOrders = new MatchPlayer[]
         {
             new("QED", 56, 221807174853066753),
@@ -169,7 +198,7 @@ namespace ScoreTracker.Data.Repositories
             new("Smallboy", 44, 338157160112586752, "AKA Nagasaki"),
             new("Slowpoke", 43, 361362903691034625), //
             new("ancient_grainz", 42, 291371859105284096, "AKA Thomas Grover, Potential Conflicts with ITG", true),
-            new("PacRob", 41, 1182082330223976508, "Potential Conflict with SMX and DDR", true), //? 
+            new("PacRob", 41, 1182082330223976508, "Potential Conflict with SMX and DDR", true), //?
             new("Crafty The Fox", 40, 384007242837524481),
             new("NESSQUICK", 39, 385296090422837248),
             new("Songbird", 38, 309540048674750466),
@@ -229,7 +258,7 @@ namespace ScoreTracker.Data.Repositories
             new("Smallboy", 44, 477504512207093841, "AKA Nagasaki"),
             new("Slowpoke", 43, 477504512207093841), //
             new("ancient_grainz", 42, 477504512207093841, "AKA Thomas Grover, Potential Conflicts with ITG", true),
-            new("PacRob", 41, 477504512207093841, "Potential Conflict with SMX and DDR", true), //? 
+            new("PacRob", 41, 477504512207093841, "Potential Conflict with SMX and DDR", true), //?
             new("Crafty The Fox", 40, 477504512207093841),
             new("NESSQUICK", 39, 477504512207093841),
             new("Songbird", 38, 477504512207093841),
@@ -271,5 +300,6 @@ namespace ScoreTracker.Data.Repositories
             new("HDS", 2, 477504512207093841, "AKA Edison"),
             new("mattmiller", 1, 477504512207093841, "Egg")
         };
+        */
     }
 }

@@ -3,6 +3,6 @@ using ScoreTracker.Domain.Views;
 
 namespace ScoreTracker.Application.Queries;
 
-public sealed record GetAllMatchesQuery : IRequest<IEnumerable<MatchView>>
+public sealed record GetAllMatchesQuery(Guid TournamentId) : IRequest<IEnumerable<MatchView>>
 {
 }

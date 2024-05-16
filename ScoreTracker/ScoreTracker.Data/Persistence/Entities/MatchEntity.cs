@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.Data.Persistence.Entities
 {
-    [Index(nameof(Name))]
+    [Index(nameof(TournamentId), nameof(Name))]
     public sealed class MatchEntity
     {
         [Key] public Guid Id { get; set; }
@@ -11,5 +11,6 @@ namespace ScoreTracker.Data.Persistence.Entities
         [Required] public string Name { get; set; } = string.Empty;
 
         [Required] public string Json { get; set; } = string.Empty;
+        [Required] public Guid TournamentId { get; set; }
     }
 }

@@ -294,7 +294,8 @@
         new Guid("9F0A1A33-6FD6-4698-9673-F995B2FF235B"),
         new Guid("8B8A10B1-9661-461C-A33A-14FF15D911E0"),
         new Guid("89397EF3-3617-4B4D-8837-ADAAAAA155D7"),
-        new Guid("F2874084-1147-49E0-B333-79529EBECECF")
+        new Guid("F2874084-1147-49E0-B333-79529EBECECF"),
+        new Guid("4AE72A57-37E0-460C-869B-786E5D571DF4")
     });
     private bool _isSaving = false;
     private User? _currentUser;
@@ -324,6 +325,8 @@
 
     [Parameter]
     public Name? MatchName { get; set; }
+    [Parameter]
+    public Guid? TournamentId { get; set; }
 
     private string CardStyle(Guid chartId) => _match?.ProtectedCharts.Contains(chartId)??false ? $@"border-color:{Colors.Green.Darken1}" :
         _match?.VetoedCharts.Contains(chartId) ?? false ? $@"border-color:{Colors.Red.Darken1}" : "";
@@ -363,45 +366,45 @@
 
     private async Task CancelVeto(Guid chartId)
     {
-        if (_match == null)
+        if (_match == null || TournamentId==null)
         {
             return;
         }
         _isSaving = true;
-        await Mediator.Send(new UpdateMatchCommand(_match with {VetoedCharts = _match.VetoedCharts.Where(id=>id!=chartId).ToArray()}));
+        await Mediator.Send(new UpdateMatchCommand(TournamentId.Value,_match with {VetoedCharts = _match.VetoedCharts.Where(id=>id!=chartId).ToArray()}));
         _isSaving = false;
     }
     private async Task CancelProtect(Guid chartId)
     {
-        if (_match == null)
+        if (_match == null || TournamentId == null)
         {
             return;
         }
         _isSaving = true;
-        await Mediator.Send(new UpdateMatchCommand(_match with { ProtectedCharts = _match.ProtectedCharts.Where(id=>id!=chartId).ToArray() }));
+        await Mediator.Send(new UpdateMatchCommand(TournamentId.Value,_match with { ProtectedCharts = _match.ProtectedCharts.Where(id=>id!=chartId).ToArray() }));
         _isSaving = false;
     }
     private bool HasScores => _match?.Scores.SelectMany(s => s.Value).Any(s => s > 0) ?? false;
     private async Task SetScore(Name player, int chartIndex, int newScore)
     {
-        if (_match == null)
+        if (_match == null || TournamentId == null)
         {
             return;
         }
         _isSaving = true;
         var newScores = _match.Scores.ToDictionary(kv => kv.Key, kv => kv.Value.ToArray());
         newScores[player][chartIndex] = newScore;
-        await Mediator.Send(new UpdateMatchCommand(_match with { Scores = newScores}));
+        await Mediator.Send(new UpdateMatchCommand(TournamentId.Value,_match with { Scores = newScores}));
         _isSaving = false;
     }
     private async Task ProtectChart(Guid chartId)
     {
-        if (_match == null)
+        if (_match == null || TournamentId == null)
         {
             return;
         }
         _isSaving = true;
-        await Mediator.Send(new UpdateMatchCommand(_match with { ProtectedCharts = _match.ProtectedCharts.Append(chartId).ToArray()}));
+        await Mediator.Send(new UpdateMatchCommand(TournamentId.Value,_match with { ProtectedCharts = _match.ProtectedCharts.Append(chartId).ToArray()}));
 
         _isSaving = false; 
     }
@@ -409,19 +412,19 @@
     private async Task VetoChart(Guid chartId)
     {
 
-        if (_match == null)
+        if (_match == null || TournamentId == null)
         {
             return;
         }
         _isSaving = true;
-        await Mediator.Send(new UpdateMatchCommand(_match with { VetoedCharts = _match.VetoedCharts.Append(chartId).ToArray() }));
+        await Mediator.Send(new UpdateMatchCommand(TournamentId.Value,_match with { VetoedCharts = _match.VetoedCharts.Append(chartId).ToArray() }));
 
         _isSaving = false;
     }
 
     private async Task MovePlayerDown(Name playerName)
     {
-        if (_match == null)
+        if (_match == null || TournamentId == null)
         {
             return;
         }
@@ -430,13 +433,13 @@
         newOrder[index] = _match.FinalPlaces[index +1];
         newOrder[index +1] = playerName;
         _isSaving = true;
-        await Mediator.Send(new UpdateMatchCommand(_match with { FinalPlaces = newOrder }));
+        await Mediator.Send(new UpdateMatchCommand(TournamentId.Value,_match with { FinalPlaces = newOrder }));
         _isSaving = false;
 
     }
     private async Task MovePlayerUp(Name playerName)
     {
-        if (_match == null)
+        if (_match == null || TournamentId == null)
         {
             return;
         }
@@ -446,50 +449,50 @@
         newOrder[index]= _match.FinalPlaces[index - 1];
         newOrder[index - 1] = playerName;
         _isSaving = true;
-        await Mediator.Send(new UpdateMatchCommand(_match with {FinalPlaces = newOrder}));
+        await Mediator.Send(new UpdateMatchCommand(TournamentId.Value,_match with {FinalPlaces = newOrder}));
         _isSaving = false;
 
     }
     private async Task FinishMatch()
     {
-        if (_match == null)
+        if (_match == null || TournamentId == null)
         {
             return;
         }
         _isSaving = true;
-        await Mediator.Send(new FinalizeMatchCommand(_match.MatchName));
+        await Mediator.Send(new FinalizeMatchCommand(TournamentId.Value, _match.MatchName));
         _isSaving = false;
     }
     private async Task CalculateScores()
     {
-        if (_match == null)
+        if (_match == null || TournamentId == null)
         {
             return;
         }
         _isSaving = true;
-        await Mediator.Send(new ResolveMatchCommand(_match.MatchName));
+        await Mediator.Send(new ResolveMatchCommand(TournamentId.Value,_match.MatchName));
         _isSaving = false;
     }
     private async Task ClearVetoes()
     {
-        if (_match == null)
+        if (_match == null || TournamentId == null)
         {
             return;
         }
         _isSaving = true;
-        await Mediator.Send(new UpdateMatchCommand(_match with { ActiveCharts = _match.ActiveCharts.Where(id=>!_match.VetoedCharts.Contains(id)).ToArray() }));
+        await Mediator.Send(new UpdateMatchCommand(TournamentId.Value,_match with { ActiveCharts = _match.ActiveCharts.Where(id=>!_match.VetoedCharts.Contains(id)).ToArray() }));
 
         _isSaving = false;
     }
 
     private async Task FinishCardDraw()
     {
-        if (_match == null)
+        if (_match == null || TournamentId == null)
         {
             return;
         }
         _isSaving = true;
-        await Mediator.Send(new FinishCardDrawCommand(_match.MatchName));
+        await Mediator.Send(new FinishCardDrawCommand(TournamentId.Value,_match.MatchName));
         _isSaving = false;
     }
 
@@ -498,22 +501,22 @@
     private async Task Rollback(MatchState newState)
     {
         
-        if (_match == null)
+        if (_match == null || TournamentId == null)
         {
             return;
         }
         _isSaving = true;
-        await Mediator.Send(new MatchUpdatedEvent(_match with { State = newState }));
+        await Mediator.Send(new MatchUpdatedEvent(TournamentId.Value,_match with { State = newState }));
         _isSaving = false;
     }
     private async Task DrawCharts()
     {
-        if (_match == null)
+        if (_match == null || TournamentId == null)
         {
             return;
         }
         _isSaving = true; 
-        await Mediator.Send(new DrawChartsCommand(_match.MatchName));
+        await Mediator.Send(new DrawChartsCommand(TournamentId.Value,_match.MatchName));
         _isSaving = false;
     }
 
@@ -523,7 +526,7 @@
     private bool ReadyToDraw => _match?.Players.All(p => Seeding.ContainsKey(p)) ?? false;
     private async Task UpdatePlayer(int index, string playerName)
     {
-        if (_match == null || !Name.TryParse(playerName, out var name))
+        if (_match == null || !Name.TryParse(playerName, out var name) || TournamentId == null)
         {
             return;
         }
@@ -532,7 +535,7 @@
         var newArray = _match.Players.ToArray();
         newArray[index] = name;
 
-        await Mediator.Send(new UpdateMatchCommand(_match with { Players = newArray,
+        await Mediator.Send(new UpdateMatchCommand(TournamentId.Value,_match with { Players = newArray,
             FinalPlaces = newArray,
                 Scores = newArray.ToDictionary(n => n.ToString(), n => _match.ActiveCharts.Select(c => PhoenixScore.From(0)).ToArray()),
                 Points = newArray.ToDictionary(n => n.ToString(), n => _match.ActiveCharts.Select(c => 0).ToArray()),
@@ -543,13 +546,13 @@
 
     private async Task StartMatch()
     {
-        if (_match == null)
+        if (_match == null || TournamentId == null)
         {
             return;
         }
 
         _isSaving = true;
-        await Mediator.Send(new UpdateMatchCommand(_match with { State = MatchState.InProgress }));
+        await Mediator.Send(new UpdateMatchCommand(TournamentId.Value,_match with { State = MatchState.InProgress }));
         _isSaving = false;
     }
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
@@ -565,20 +568,20 @@
 
     private async Task LoadMatch(Name matchName)
     {
-        if (_match?.MatchName == matchName)
+        if (_match?.MatchName == matchName || TournamentId == null)
             return;
 
-        _match = await Mediator.Send(new GetMatchQuery(matchName));
+        _match = await Mediator.Send(new GetMatchQuery(TournamentId.Value,matchName));
     }
     protected override async Task OnInitializedAsync()
     {
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
         MainLayout.MatchUpdated += (o,e)=> MatchUpdated(e);
-        if (MatchName != null)
+        if (MatchName != null || TournamentId == null)
         {
             await LoadMatch(MatchName.Value);
         }
-        Seeding = (await Mediator.Send(new GetMatchPlayersQuery())).ToDictionary(p => p.Name.ToString(), p => p.Seed, StringComparer.OrdinalIgnoreCase);
+        Seeding = (await Mediator.Send(new GetMatchPlayersQuery(TournamentId.Value))).ToDictionary(p => p.Name.ToString(), p => p.Seed, StringComparer.OrdinalIgnoreCase);
 
         _currentUser = CurrentUser.IsLoggedIn ? CurrentUser.User : null;
     }

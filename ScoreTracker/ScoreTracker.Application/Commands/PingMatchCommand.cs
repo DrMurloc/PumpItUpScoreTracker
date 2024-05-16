@@ -3,7 +3,7 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Commands
 {
-    public sealed record PingMatchCommand(Name MatchName) : IRequest
+    public sealed record PingMatchCommand(Guid TournamentId, Name MatchName) : IRequest
     {
     }
 }

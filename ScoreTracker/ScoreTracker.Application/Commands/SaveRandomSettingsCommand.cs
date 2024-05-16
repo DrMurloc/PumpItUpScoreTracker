@@ -4,7 +4,8 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Commands
 {
-    public sealed record SaveRandomSettingsCommand(Name SettingsName, RandomSettings Settings) : IRequest
+    public sealed record SaveRandomSettingsCommand
+        (Guid TournamentId, Name SettingsName, RandomSettings Settings) : IRequest
     {
     }
 }
