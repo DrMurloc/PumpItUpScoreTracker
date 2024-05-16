@@ -198,7 +198,12 @@ namespace ScoreTracker.Application.Handlers
                 request.ChannelId, cancellationToken);
         }
 
-        private async Task SendToCommunityDiscords(Guid userId, string message, CancellationToken cancellationToken)
+        private async Task SendToCommunityDiscords(Guid userId, string messages, CancellationToken cancellationToken)
+        {
+            SendToCommunityDiscords(userId, new[] { messages }, cancellationToken);
+        }
+
+        private async Task SendToCommunityDiscords(Guid userId, string[] messages, CancellationToken cancellationToken)
         {
             var communities =
                 await _communities.GetCommunities(userId, cancellationToken);
@@ -208,7 +213,8 @@ namespace ScoreTracker.Application.Handlers
                 if (community == null) continue;
 
                 var channelIds = community.Channels.Where(s => s.SendNewScores).Select(c => c.ChannelId);
-                await _bot.SendMessages(new[] { message }, channelIds, cancellationToken);
+                foreach (var message in messages)
+                    await _bot.SendMessages(new[] { message }, channelIds, cancellationToken);
             }
         }
 
@@ -268,6 +274,7 @@ namespace ScoreTracker.Application.Handlers
                 .ToArray();
 
             var count = newCharts.Count();
+            var messages = new List<string>();
             var message = "";
 
             var top50 = (await _mediator.Send(new GetTop50CompetitiveQuery(context.Message.UserId, ChartType.Single)))
@@ -278,32 +285,40 @@ namespace ScoreTracker.Application.Handlers
             {
                 message += $"**{user.Name}** passed:";
                 foreach (var chart in newCharts.OrderByDescending(c => c.Level)
-                             .ThenByDescending(c => (int)(scores[c.Id].Score ?? 0)).Take(5))
+                             .ThenByDescending(c => (int)(scores[c.Id].Score ?? 0)).Take(20))
                 {
                     var crown = top50.Contains(chart.Id) ? " :crown:" : "";
                     message += $@"
 #DIFFICULTY|{chart.DifficultyString}#{crown} {chart.Song.Name}: {(int)scores[chart.Id].Score!.Value:N0} #LETTERGRADE|{scores[chart.Id].Score!.Value.LetterGrade}##PLATE|{scores[chart.Id].Plate}#";
                 }
 
-                if (count > 10)
+                if (count > 20)
                     message += $@"
-And {count - 10} others!";
+And {count - 20} others!";
             }
 
+            if (!string.IsNullOrWhiteSpace(message)) messages.Add(message);
+
+            message = "";
             var upscoreCharts = upscoreChartScores
                 .Where(kv => scores.TryGetValue(kv.Key, out var score) && score.Score != null)
                 .Select(kv => (charts[kv.Key], kv.Value)).ToArray();
             count = upscoreCharts.Count();
             if (count > 0)
             {
-                if (!string.IsNullOrWhiteSpace(message))
-                    message += @"
-
-";
                 message += $"**{user.Name}** upscored:";
+                var current = 0;
                 foreach (var item in upscoreCharts.OrderByDescending(c => c.Item1.Level)
                              .ThenByDescending(c => upscoreChartScores[c.Item1.Id] - scores[c.Item1.Id].Score!.Value))
                 {
+                    current++;
+                    if (current == 10)
+                    {
+                        messages.Add(message);
+                        current = 1;
+                        message = "";
+                    }
+
                     var crown = top50.Contains(item.Item1.Id) ? " :crown:" : "";
                     message += $@"
 #DIFFICULTY|{item.Item1.DifficultyString}#{crown} {item.Item1.Song.Name}: {(int)scores[item.Item1.Id].Score!.Value:N0}
@@ -318,8 +333,9 @@ And {count - 10} others!";
                 }
             }
 
-            if (string.IsNullOrWhiteSpace(message)) return;
-            await SendToCommunityDiscords(user.Id, message, context.CancellationToken);
+            if (!string.IsNullOrWhiteSpace(message)) messages.Add(message);
+            if (!messages.Any()) return;
+            await SendToCommunityDiscords(user.Id, messages.ToArray(), context.CancellationToken);
         }
 
         public async Task Consume(ConsumeContext<NewTitlesAcquiredEvent> context)
