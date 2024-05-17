@@ -161,9 +161,11 @@ namespace ScoreTracker.Data.Repositories
                 .ToArrayAsync(cancellationToken);
         }
 
+        private static readonly Guid EclipseId = new("FA27B7FB-6EF4-481B-8EEE-56FDCF58433C");
+
         public Task<IEnumerable<MatchPlayer>> GetMatchPlayers(Guid tournamentId, CancellationToken cancellationToken)
         {
-            return Task.FromResult(RealPlayerOrders);
+            return tournamentId == EclipseId ? Task.FromResult(EclipsePlayerOrder) : Task.FromResult(RealPlayerOrders);
         }
 
         public static readonly IEnumerable<MatchPlayer> RealPlayerOrders = new MatchPlayer[]
@@ -180,8 +182,8 @@ namespace ScoreTracker.Data.Repositories
             new("Yimmy", 2, 534030186677534731),
             new("Goddish", 1, 125806983591755776)
         };
-        /*Eclipse
-        public static readonly IEnumerable<MatchPlayer> RealPlayerOrders = new MatchPlayer[]
+
+        public static readonly IEnumerable<MatchPlayer> EclipsePlayerOrder = new MatchPlayer[]
         {
             new("QED", 56, 221807174853066753),
             new("Snowstorm", 55, 453727464959770657, "Potential Conflict with DDR and SMX", true),
@@ -239,6 +241,10 @@ namespace ScoreTracker.Data.Repositories
             new("ParanoiaBoi", 3, 666481245261135884, "Potential Conflicts with ITG, SMX, DDR, DRS", true),
             new("HDS", 2, 931745583629238303, "AKA Edison"),
             new("mattmiller", 1, 131264515248488449, "Egg")
+        };
+        /*Eclipse
+        public static readonly IEnumerable<MatchPlayer> RealPlayerOrders = new MatchPlayer[]
+        {
         };
 
         public static readonly IEnumerable<MatchPlayer> PlayerOrders = new MatchPlayer[]

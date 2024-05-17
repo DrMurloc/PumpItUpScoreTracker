@@ -285,16 +285,16 @@ namespace ScoreTracker.Application.Handlers
             {
                 message += $"**{user.Name}** passed:";
                 foreach (var chart in newCharts.OrderByDescending(c => c.Level)
-                             .ThenByDescending(c => (int)(scores[c.Id].Score ?? 0)).Take(20))
+                             .ThenByDescending(c => (int)(scores[c.Id].Score ?? 0)).Take(10))
                 {
                     var crown = top50.Contains(chart.Id) ? " :crown:" : "";
                     message += $@"
 #DIFFICULTY|{chart.DifficultyString}#{crown} {chart.Song.Name}: {(int)scores[chart.Id].Score!.Value:N0} #LETTERGRADE|{scores[chart.Id].Score!.Value.LetterGrade}##PLATE|{scores[chart.Id].Plate}#";
                 }
 
-                if (count > 20)
+                if (count > 10)
                     message += $@"
-And {count - 20} others!";
+And {count - 10} others!";
             }
 
             if (!string.IsNullOrWhiteSpace(message)) messages.Add(message);

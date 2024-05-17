@@ -214,6 +214,7 @@
     private bool _showRules = false;
     private bool _isLoading = false;
     private TournamentConfiguration _currentConfig = new TournamentConfiguration(new ScoringConfiguration());
+    private DateTimeOffset Now = DateTimeOffset.Now;
     private void GoToSubmit(Guid tournamentId, TournamentType type)
     {
         switch (type)
@@ -223,7 +224,16 @@
                 NavManager.NavigateTo($"/Tournament/Stamina/{tournamentId}");
                 break;
                 case TournamentType.Match:
-                    NavManager.NavigateTo($"/Tournament/{tournamentId}/Qualifiers");
+                    if (_tournaments[tournamentId].StartDate != null && _tournaments[tournamentId].StartDate <= Now)
+                    {
+                        
+                        NavManager.NavigateTo($"/Tournament/{tournamentId}/Brackets");
+                    }
+                    else
+                    {
+                        
+                        NavManager.NavigateTo($"/Tournament/{tournamentId}/Qualifiers");
+                    }
                     break;
         }
     }
@@ -231,9 +241,11 @@
     private TournamentRecord[] _upcoming = Array.Empty<TournamentRecord>();
     private TournamentRecord[] _previous = Array.Empty<TournamentRecord>();
     private TournamentRecord[] _active = Array.Empty<TournamentRecord>();
+    private IDictionary<Guid, TournamentRecord> _tournaments = new Dictionary<Guid, TournamentRecord>();
     protected override async Task OnInitializedAsync()
     {
         var tournaments = (await Mediator.Send(new GetAllTournamentsQuery())).ToArray();
+        _tournaments = tournaments.ToDictionary(t => t.Id);
         _upcoming = tournaments.Where(t => t.StartDate != null && t.StartDate > DateTimeOffset.Now).ToArray();
         _previous = tournaments.Where(t => t.EndDate != null && t.EndDate < DateTimeOffset.Now).ToArray();
         _active = tournaments.Where(t => (t.StartDate == null || t.StartDate <= DateTimeOffset.Now) && (t.EndDate == null || t.EndDate >= DateTimeOffset.Now)).ToArray();
