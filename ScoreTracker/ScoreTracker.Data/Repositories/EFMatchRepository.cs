@@ -170,7 +170,8 @@ namespace ScoreTracker.Data.Repositories
 
         public static readonly IEnumerable<MatchPlayer> RealPlayerOrders = new MatchPlayer[]
         {
-            new("Selo", 11, 345497062927892480),
+            new("Selo", 12, 345497062927892480),
+            new("PacBeast", 11, 225044556708708371),
             new("Grainz", 10, 291371859105284096),
             new("Sneezle", 9, 337580556214599700),
             new("Litenang", 8, 83038699318677504),
