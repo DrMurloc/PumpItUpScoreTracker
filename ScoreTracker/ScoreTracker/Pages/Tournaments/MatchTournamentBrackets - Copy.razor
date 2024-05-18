@@ -1,0 +1,16 @@
+﻿@page "/Tournament/LevelUp"
+
+<PageTitle>Level Up</PageTitle>
+
+@inject NavigationManager NavManager;
+@code
+{
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+    protected override async Task OnInitializedAsync()
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+    {
+        NavManager.NavigateTo("/Tournament/2253354d-10e1-497a-93b5-e6fc8ffa0cd6/Brackets");
+
+
+    }
+}
