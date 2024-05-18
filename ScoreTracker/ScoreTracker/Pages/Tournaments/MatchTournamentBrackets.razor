@@ -93,7 +93,12 @@
                          SearchFunc="@(s => Task.FromResult(Players.Keys.Where(o=>!string.IsNullOrWhiteSpace(s)&&o.Contains(s,StringComparison.OrdinalIgnoreCase)).OrderBy(k => k.Equals(s, StringComparison.OrdinalIgnoreCase) ? 0 : 1).AsEnumerable()))">
 
         </MudAutocomplete>
-        </MudItem>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTooltip Text="Automatically pulls up matches as they change">
+            <MudCheckBox T="bool" @bind-Value="_spectatorMode" Label="Spectator Mode"></MudCheckBox>
+        </MudTooltip>
+    </MudItem>
     @if (_nextMatch != null)
     {
         <MudItem xs="12"><MudText>Your next Match is @_nextMatch.MatchName</MudText></MudItem>
@@ -433,7 +438,7 @@
     private MatchView? _nextMatch;
     private MatchView? _notesMatch;
     private bool _showNotesPopup;
-
+    private bool _spectatorMode = false;
     private string _searchedPlayer;
 
     private string _randomSettings = string.Empty;
@@ -596,6 +601,10 @@
         _matches[e.NewState.MatchName] = e.NewState;
         UpdateCurrentPhase();
         RecalculateStates();
+        if (e.TournamentId == TournamentId && _spectatorMode)
+        {
+            ViewMatch(e.NewState.MatchName);
+        }
         InvokeAsync(StateHasChanged);
     }
 

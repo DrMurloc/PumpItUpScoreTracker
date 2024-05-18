@@ -161,7 +161,7 @@ namespace ScoreTracker.Data.Repositories
                 .ToArrayAsync(cancellationToken);
         }
 
-        private static readonly Guid EclipseId = new("FA27B7FB-6EF4-481B-8EEE-56FDCF58433C");
+        private static readonly Guid EclipseId = Guid.Parse("FA27B7FB-6EF4-481B-8EEE-56FDCF58433C");
 
         public Task<IEnumerable<MatchPlayer>> GetMatchPlayers(Guid tournamentId, CancellationToken cancellationToken)
         {
