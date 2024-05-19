@@ -9,15 +9,18 @@ public sealed class RecurringJobHostedService : IHostedService,
 {
     private readonly IBus _bus;
     private readonly IServiceProvider _serviceProvider;
+    private readonly IConfiguration _configuration;
 
     public sealed class RescheduleMessages
     {
     }
 
-    public RecurringJobHostedService(IBus bus, IServiceProvider serviceProvider)
+    public RecurringJobHostedService(IBus bus, IServiceProvider serviceProvider,
+        IConfiguration configuration)
     {
         _bus = bus;
         _serviceProvider = serviceProvider;
+        _configuration = configuration;
     }
 
     private Timer? _timer;
@@ -36,10 +39,11 @@ public sealed class RecurringJobHostedService : IHostedService,
 
     public async Task Consume(ConsumeContext<RescheduleMessages> context)
     {
+        if (_configuration["PreventRecurringJobs"] == "true") return;
         await using var scope = _serviceProvider.CreateAsyncScope();
-        var scheduler = scope.ServiceProvider.GetService<IMessageScheduler>();
+        var scheduler = scope.ServiceProvider.GetRequiredService<IMessageScheduler>();
         var nextDate = DateTime.Now;
-        if (nextDate.Hour > 4) nextDate += TimeSpan.FromDays(1);
+        if (nextDate.Hour > 2) nextDate += TimeSpan.FromDays(1);
 
         await scheduler.SchedulePublish(new DateTime(nextDate.Year, nextDate.Month, nextDate.Day, 2, 0, 0),
             new ProcessScoresTiersListCommand(), context.CancellationToken);

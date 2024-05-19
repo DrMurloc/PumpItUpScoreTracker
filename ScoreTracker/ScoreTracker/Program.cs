@@ -46,7 +46,8 @@ var facebookConfig = builder.Configuration.GetSection("Facebook").Get<FacebookCo
 builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSection("Discord"));
 builder.Services.AddMassTransit(o =>
 {
-    o.AddConsumers(typeof(PlayerRatingSaga).Assembly, typeof(TierListSaga).Assembly);
+    o.AddConsumers(typeof(PlayerRatingSaga).Assembly, typeof(TierListSaga).Assembly,
+        typeof(RecurringJobHostedService).Assembly);
     var schedulerEndpoint = new Uri("queue:scheduler");
 
     o.AddDelayedMessageScheduler();
