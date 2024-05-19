@@ -25,4 +25,7 @@ public interface IPhoenixRecordRepository
 
     Task<IEnumerable<ChartScoreAggregate>> GetMeaningfulScoresCount(ChartType chartType, DifficultyLevel difficulty,
         CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<UserPhoenixScore>> GetPhoenixScores(IEnumerable<Guid> userIds, Guid chartId,
+        CancellationToken cancellationToken = default);
 }

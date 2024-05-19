@@ -1,0 +1,21 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@namespace ScoreTracker.Web.Components
+@if (Song != null)
+{                                
+    <MudTooltip Text=@($"{Song.Name} - {Song.Artist}")>
+        <MudImage Src=@Song.ImagePath.ToString() Height=@(Small?22:35) Alt=@($"{Song.Name} - {Song.Artist}") ObjectFit="ObjectFit.ScaleDown"></MudImage>
+        </MudTooltip>
+}
+@code {
+    [Parameter]
+    [Required]
+    public Song? Song { get; set; }
+    [Parameter]
+    public bool Small { get; set; } = false;
+
+}

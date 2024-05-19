@@ -1,0 +1,39 @@
+﻿@namespace ScoreTracker.Web.Components
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.SecondaryPorts
+@inject IMediator Mediator;
+<MudAutocomplete Dense="true" Disabled="Disabled" T="string" Value="_selected" ValueChanged="SetChart" MaxItems="15" CoerceValue="false" CoerceText="true" Label="Chart" SearchFunc="SearchSongs">
+    <ItemTemplate>
+        <SongImage Song="_chartNames[context].Song" Small="true"></SongImage>
+        <DifficultyBubble Chart="_chartNames[context]" Small="true"></DifficultyBubble> @_chartNames[context].Song.Name
+    </ItemTemplate>
+</MudAutocomplete>
+@code {
+
+    [Parameter]
+    public bool Disabled { get; set; } = false;
+
+    [Parameter]
+    public Func<Chart, Task> ChartIdSelected { get; set; } = c => Task.CompletedTask;
+
+    private string _selected = string.Empty;
+    private Task<IEnumerable<string>> SearchSongs(string v) => Task.FromResult(_chartNames.Where(c => string.IsNullOrWhiteSpace(v)|| c.Key.Contains(v, StringComparison.OrdinalIgnoreCase)).OrderBy(c => string.IsNullOrWhiteSpace(v)?c.Value.Song.Name.ToString(): c.Value.Song.Name == v ? "a"+c.Value.Song.Name : "b"+c.Value.Song.Name).ThenBy(c=>c.Value.Type).ThenBy(c=>c.Value.Level).Select(kv=>kv.Key));
+    private async Task SetChart(string selected)
+    {
+        if (string.IsNullOrWhiteSpace(selected))
+        {
+            return;
+        }
+        _selected = selected;
+        await ChartIdSelected(_chartNames[selected]);
+    }
+
+    private IDictionary<string, Chart> _chartNames = new Dictionary<string, Chart>(StringComparer.OrdinalIgnoreCase);
+    protected override async Task OnInitializedAsync()
+    {
+        var charts = await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix));
+        _chartNames = charts.ToDictionary(c => c.Song.Name + " " + c.DifficultyString);
+    }
+}

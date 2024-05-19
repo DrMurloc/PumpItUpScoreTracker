@@ -23,6 +23,7 @@ namespace ScoreTracker.Application.Handlers
         IRequestHandler<JoinCommunityByInviteCodeCommand>,
         IRequestHandler<AddDiscordChannelToCommunityCommand>,
         IRequestHandler<RemoveDiscordChannelFromCommunityCommand>,
+        IRequestHandler<GetPhoenixRecordsForCommunityQuery, IEnumerable<UserPhoenixScore>>,
         IConsumer<PlayerRatingsImprovedEvent>,
         IConsumer<PlayerScoreUpdatedEvent>,
         IConsumer<NewTitlesAcquiredEvent>
@@ -362,6 +363,13 @@ And {count - 10} others!";
             await _bot.SendMessage(
                 $"This channel was **removed** to receive notifications for the {community.Name} community in PIU Scores",
                 request.ChannelId, cancellationToken);
+        }
+
+        public async Task<IEnumerable<UserPhoenixScore>> Handle(GetPhoenixRecordsForCommunityQuery request,
+            CancellationToken cancellationToken)
+        {
+            var community = await GetCommunity(request.CommuityName, cancellationToken);
+            return await _scores.GetPhoenixScores(community.MemberIds, request.ChartId, cancellationToken);
         }
     }
 }

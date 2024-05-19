@@ -98,7 +98,9 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
         return await (from pba in _database.PhoenixBestAttempt
                 join u in _database.User on pba.UserId equals u.Id
                 where pba.ChartId == chartId && pba.Score != null
-                select new UserPhoenixScore(pba.ChartId, u.IsPublic ? u.Name : "Anonymous", pba.Score!.Value))
+                select new UserPhoenixScore(pba.UserId, pba.ChartId, u.IsPublic ? u.Name : "Anonymous",
+                    pba.Score!.Value,
+                    PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken))
             .ToArrayAsync(cancellationToken);
     }
 
@@ -157,5 +159,18 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
                                                                             cm.Level + .5))
                 select pr).ToArrayAsync(cancellationToken))
             .GroupBy(c => c.ChartId).Select(g => new ChartScoreAggregate(g.Key, g.Count()));
+    }
+
+    public async Task<IEnumerable<UserPhoenixScore>> GetPhoenixScores(IEnumerable<Guid> userIds, Guid chartId,
+        CancellationToken cancellationToken = default)
+    {
+        var userIdArray = userIds.Distinct().ToArray();
+        return await (from pba in _database.PhoenixBestAttempt
+                join u in _database.User on pba.UserId equals u.Id
+                where pba.ChartId == chartId && pba.Score != null && userIdArray.Contains(pba.UserId)
+                select new UserPhoenixScore(pba.UserId, pba.ChartId, u.IsPublic ? u.Name : "Anonymous",
+                    pba.Score!.Value,
+                    PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken))
+            .ToArrayAsync(cancellationToken);
     }
 }
