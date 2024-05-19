@@ -399,8 +399,8 @@
             }
         }
         _leaderboard = (await Mediator.Send(new GetCommunityLeaderboardQuery(communityName))).ToArray();
-        _nameAvatars = _leaderboard.ToDictionary(l => l.UserId, l => l.ProfileImage.ToString());
-        _userNames = _leaderboard.Where(l=>l.IsPublic).ToDictionary(l => l.UserId, l => l.PlayerName);
+        _nameAvatars = _leaderboard.Where(l=>l.IsPublic).ToDictionary(l => l.UserId, l => l.ProfileImage.ToString());
+        _userNames = _leaderboard.ToDictionary(l => l.UserId, l => l.PlayerName);
         _colorSelector = new RatingColorSelector(_leaderboard);
         SetType(LeaderboardType.Combined);
     }
