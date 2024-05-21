@@ -57,12 +57,12 @@
                         </MudTooltip>
                         <ScoreBreakdown Score="@entry.Single().Item2" Height="15"></ScoreBreakdown>
                     </MudHidden>
-                    @(entry.Single().Item3.ToString("0.00"))
+                    @(entry.Single().Item3.ToString("0.##"))
 
                 }
             </MudTd>
         }
-        <MudTd>@context.Score.ToString("0.000")</MudTd>
+        <MudTd>@context.Score.ToString("0.###")</MudTd>
         <MudTd>
             @if (context.IsApproved || CurrentUser.IsLoggedInAsAdmin)
             {
@@ -115,23 +115,26 @@
 <br/>
 <br/>
 
-<MudGrid>
-    <MudItem xs="12">
-        <MudText Typo="Typo.h4">@L["Event Links"]</MudText>
-    </MudItem>
-    <MudItem xs="6" sm="4" md="3">
-        <MudButton StartIcon="@Icons.Material.Filled.Rule" Href="https://docs.google.com/document/d/1J_JgWwhgddoiaUlghGCGtd7wWXmAQ4c90AflUQucNaI/" Color="Color.Primary" Variant="Variant.Text" Target="_blank">@L["Rules"]</MudButton>
-    </MudItem>
-    <MudItem xs="6" sm="4" md="3">
-        <MudButton StartIcon="@Icons.Material.Filled.Event" Href="https://www.start.gg/tournament/beast-in-the-east-7/details" Color="Color.Primary" Variant="Variant.Text" Target="_blank">@L["Event"]</MudButton>
-    </MudItem>
-    <MudItem xs="6" sm="4" md="3">
-        <MudButton StartIcon="@Icons.Material.Filled.Public" Href="https://bitegaming.org/" Color="Color.Primary" Variant="Variant.Text" Target="_blank">@L["Website"]</MudButton>
-    </MudItem>
-    <MudItem xs="6" sm="4" md="3">
-        <MudButton StartIcon="@Icons.Custom.Brands.Discord" Href="https://discord.gg/jNQRsrkWFA" Color="Color.Primary" Variant="Variant.Text" Target="_blank">Discord</MudButton>
-    </MudItem>
-</MudGrid>
+@if (_tournamentName == "BITE 7")
+{
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">@L["Event Links"]</MudText>
+        </MudItem>
+        <MudItem xs="6" sm="4" md="3">
+            <MudButton StartIcon="@Icons.Material.Filled.Rule" Href="https://docs.google.com/document/d/1J_JgWwhgddoiaUlghGCGtd7wWXmAQ4c90AflUQucNaI/" Color="Color.Primary" Variant="Variant.Text" Target="_blank">@L["Rules"]</MudButton>
+        </MudItem>
+        <MudItem xs="6" sm="4" md="3">
+            <MudButton StartIcon="@Icons.Material.Filled.Event" Href="https://www.start.gg/tournament/beast-in-the-east-7/details" Color="Color.Primary" Variant="Variant.Text" Target="_blank">@L["Event"]</MudButton>
+        </MudItem>
+        <MudItem xs="6" sm="4" md="3">
+            <MudButton StartIcon="@Icons.Material.Filled.Public" Href="https://bitegaming.org/" Color="Color.Primary" Variant="Variant.Text" Target="_blank">@L["Website"]</MudButton>
+        </MudItem>
+        <MudItem xs="6" sm="4" md="3">
+            <MudButton StartIcon="@Icons.Custom.Brands.Discord" Href="https://discord.gg/jNQRsrkWFA" Color="Color.Primary" Variant="Variant.Text" Target="_blank">Discord</MudButton>
+        </MudItem>
+    </MudGrid>
+}
 @inject ICurrentUserAccessor CurrentUser
 @inject IQualifiersRepository Qualifiers
 @inject ISnackbar Snackbar

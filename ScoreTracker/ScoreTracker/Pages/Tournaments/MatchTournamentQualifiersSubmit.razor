@@ -52,7 +52,7 @@
                     @if (_currentQualifiers.Submissions.ContainsKey(chart.Id))
                     {
                         <MudCardContent>
-                            @_currentQualifiers.Submissions[chart.Id].Score (@_currentQualifiers.Submissions[chart.Id].Score.LetterGrade.GetName(), @_currentQualifiers.Rating(chart.Id).ToString("0.00"))
+                            @_currentQualifiers.Submissions[chart.Id].Score (@_currentQualifiers.Submissions[chart.Id].Score.LetterGrade.GetName(), @_currentQualifiers.Rating(chart.Id).ToString("0.##"))
                         </MudCardContent>
                     }
                     <MudCardActions>

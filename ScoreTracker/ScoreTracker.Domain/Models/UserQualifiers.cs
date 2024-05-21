@@ -1,4 +1,5 @@
-﻿using ScoreTracker.Domain.Records;
+﻿using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Models;
@@ -9,6 +10,21 @@ public sealed class UserQualifiers
     {
         ContinuousLetterGradeScale = true
     };
+
+    private static ScoringConfiguration BuildStorm()
+    {
+        var result = new ScoringConfiguration
+        {
+            ContinuousLetterGradeScale = true
+        };
+        result.LetterGradeModifiers[PhoenixLetterGrade.B] = .6;
+        result.LetterGradeModifiers[PhoenixLetterGrade.C] = .4;
+        result.LetterGradeModifiers[PhoenixLetterGrade.D] = .2;
+        result.LetterGradeModifiers[PhoenixLetterGrade.F] = 0;
+        return result;
+    }
+
+    private static readonly ScoringConfiguration _stormScoreConfig = BuildStorm();
 
     public UserQualifiers(QualifiersConfiguration config, bool isApproved, Name userName,
         IDictionary<Guid, Submission> submissions)
@@ -36,6 +52,7 @@ public sealed class UserQualifiers
     public double Rating(DifficultyLevel level, PhoenixScore score)
     {
         if (Configuration.ScoringType == "Fungpapi") return level + (score - 965000.0) / 17500.0;
+        if (Configuration.ScoringType == "Storm") return _stormScoreConfig.GetScore(level, score);
         return _scoreConfig.GetScore(level, score);
     }
 
