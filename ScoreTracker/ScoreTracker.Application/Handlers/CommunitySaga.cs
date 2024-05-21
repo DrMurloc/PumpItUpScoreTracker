@@ -296,9 +296,21 @@ namespace ScoreTracker.Application.Handlers
                 if (count > 10)
                     message += $@"
 And {count - 10} others!";
+                messages.Add(message);
+                message = "";
+                foreach (var (type, level) in newCharts.GroupBy(c => (c.Type, c.Level)).Select(c => c.Key)
+                             .OrderByDescending(g => g.Level).ThenBy(g => g.Type))
+                {
+                    var totalCount = (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix, level, type))).Count();
+                    var currentCount = await _scores.GetClearCount(context.Message.UserId, type, level,
+                        context.CancellationToken);
+                    message += $@"
+#DIFFICULTY|{type.GetShortHand()}{level}# {totalCount}/{currentCount}";
+                }
+
+                messages.Add(message);
             }
 
-            if (!string.IsNullOrWhiteSpace(message)) messages.Add(message);
 
             message = "";
             var upscoreCharts = upscoreChartScores

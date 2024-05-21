@@ -28,4 +28,7 @@ public interface IPhoenixRecordRepository
 
     Task<IEnumerable<UserPhoenixScore>> GetPhoenixScores(IEnumerable<Guid> userIds, Guid chartId,
         CancellationToken cancellationToken = default);
+
+    Task<int> GetClearCount(Guid userId, ChartType chartType, DifficultyLevel level,
+        CancellationToken cancellationToken = default);
 }

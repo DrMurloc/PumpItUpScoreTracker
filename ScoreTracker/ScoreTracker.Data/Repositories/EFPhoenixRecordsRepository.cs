@@ -15,6 +15,7 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
     private readonly ChartAttemptDbContext _database;
     private readonly IMemoryCache _cache;
     private readonly IDbContextFactory<ChartAttemptDbContext> _dbFactory;
+    private readonly IChartRepository _charts;
 
     private static string ScoreCache(Guid userId)
     {
@@ -23,11 +24,13 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
 
     public EFPhoenixRecordsRepository(IDbContextFactory<ChartAttemptDbContext> factory,
         IMemoryCache cache,
-        IDbContextFactory<ChartAttemptDbContext> dbFactory)
+        IDbContextFactory<ChartAttemptDbContext> dbFactory,
+        IChartRepository charts)
     {
         _database = factory.CreateDbContext();
         _cache = cache;
         _dbFactory = dbFactory;
+        _charts = charts;
     }
 
     public async Task UpdateBestAttempt(Guid userId, RecordedPhoenixScore score,
@@ -172,5 +175,13 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
                     pba.Score!.Value,
                     PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken))
             .ToArrayAsync(cancellationToken);
+    }
+
+    public async Task<int> GetClearCount(Guid userId, ChartType chartType, DifficultyLevel level,
+        CancellationToken cancellationToken = default)
+    {
+        var chartIds = (await _charts.GetCharts(MixEnum.Phoenix, level, chartType, null, cancellationToken))
+            .Select(c => c.Id).Distinct().ToHashSet();
+        return (await GetCachedScores(userId, cancellationToken)).Count(c => chartIds.Contains(c.Key));
     }
 }
