@@ -7,6 +7,7 @@
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Web.Components
 
 <PageTitle>Submit @_tournamentName Qualifiers Session</PageTitle>
 
@@ -56,17 +57,17 @@
                         </MudCardContent>
                     }
                     <MudCardActions>
-                        <MudImage Src="@DifficultyBubblePath(chart.DifficultyString)" Height="40" ></MudImage>
+                        <DifficultyBubble Chart="chart"></DifficultyBubble>
                         <MudSpacer></MudSpacer>
                         <MudTooltip Text="Open Video">
-                            <MudIconButton Icon="@Icons.Custom.Brands.YouTube" Variant="Variant.Outlined" Color="Color.Primary" OnClick="()=>OpenVideo(chart)"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Custom.Brands.YouTube" Variant="Variant.Outlined" Color="Color.Primary" OnClick="() => OpenVideo(chart)"></MudIconButton>
                         </MudTooltip>
-                        
+
                         <MudSpacer></MudSpacer>
                         <MudTooltip Text="Submit">
                             <MudIconButton Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Outlined" Color="Color.Primary" OnClick="() => OpenSubmit(chart)"></MudIconButton>
                         </MudTooltip>
-                        
+
                     </MudCardActions>
                 </MudCard>
             </MudItem>
@@ -402,7 +403,7 @@
                 levelAverages.TryGetValue((c.Level,c.Type), out var avg) ? avg : 0);
 
             foreach (var chart in _configuration.Charts.Where(s=>foundScores[s.Id]>PhoenixLetterGrade.AA.GetMinimumScore()).OrderByDescending(s =>
-                _currentQualifiers.Rating(s.Level,foundScores[s.Id])).Take(3))
+                _currentQualifiers.Rating(s.Level,foundScores[s.Id])).Take(_configuration.PlayCount))
             {
                 if (!_suggestedCharts.Contains(chart.Id))
                 {
