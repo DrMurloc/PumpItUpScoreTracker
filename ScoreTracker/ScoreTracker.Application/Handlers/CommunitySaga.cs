@@ -305,7 +305,7 @@ And {count - 10} others!";
                     var currentCount = await _scores.GetClearCount(context.Message.UserId, type, level,
                         context.CancellationToken);
                     message += $@"
-#DIFFICULTY|{type.GetShortHand()}{level}# {totalCount}/{currentCount}";
+#DIFFICULTY|{type.GetShortHand()}{level}# {currentCount}/{totalCount} ({100.0 * currentCount / totalCount:0.0}%)";
                 }
 
                 messages.Add(message);
