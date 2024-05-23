@@ -265,14 +265,17 @@
         if (_scoreGraph != null)
         {
             await _scoreGraph.UpdateSeriesAsync(true);
+            await _scoreGraph.UpdateOptionsAsync(true, true, true);
         }
         @if (_plateGraph != null)
         {
             await _plateGraph.UpdateSeriesAsync(true);
+            await _plateGraph.UpdateOptionsAsync(true, true, true);
         }
         @if (_passGraph != null)
         {
             await _passGraph.UpdateSeriesAsync(true);
+            await _passGraph.UpdateOptionsAsync(true, true, true);
         }
         _video = (await Mediator.Send(new GetChartVideosQuery(new[] { _selectedChart.Id }))).FirstOrDefault()?.VideoUrl.ToString() ?? "";
         _artist = _selectedChart.StepArtist?.ToString() ?? "";
