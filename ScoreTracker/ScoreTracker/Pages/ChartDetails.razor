@@ -16,7 +16,11 @@
 
 
 <MudText Typo="Typo.h3">Chart Details</MudText>
-<ChartSelector ChartIdSelected="SelectChart" Mix="_currentMix"></ChartSelector>
+@if (_nameAvatars.Any())
+{
+    
+    <ChartSelector ChartIdSelected="SelectChart" Mix="_currentMix"></ChartSelector>
+}
 @if (!_isLoading && _selectedChart != null)
 {
     <br/><br/>
