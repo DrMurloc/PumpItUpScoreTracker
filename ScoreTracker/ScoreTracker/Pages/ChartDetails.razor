@@ -51,7 +51,7 @@
                 <ApexPointSeries TItem="StringDataPoint"
                                  Items="_plateBreakdowns.Select(kv=>new StringDataPoint(kv.Key.GetShorthand(),kv.Value))"
                                  SeriesType="SeriesType.Bar"
-                                 Name="Passes"
+                                 Name="Plates"
                                  XValue="@(e => e.X)"
                                  YValue="@(e => e.Y)"
                                  OrderBy="e => (int)PhoenixPlateHelperMethods.ParseShorthand((string)e.X)"/>
@@ -82,6 +82,17 @@
                                  XValue="@(e => e.X)"
                                  YValue="@(e => e.Y)"
                                  OrderBy="e => e.X" />
+                @if (CurrentUser.IsLoggedIn && _myScore != null)
+                {
+                    
+                    <ApexPointSeries TItem="DataPoint"
+                                     Items="new[]{ new DataPoint(_myLevel,_myScore.Value),new DataPoint(_myLevel+1,_myScore.Value)}"
+                                     Name="My Score"
+                                     SeriesType="SeriesType.Line"
+                                     XValue="@(e => e.X)"
+                                     YValue="@(e => e.Y)"
+                                     OrderBy="e => e.X" />
+                }
             </ApexChart>
             <br/>
             <ApexChart TItem="DataPoint"
@@ -233,6 +244,8 @@
     private IDictionary<int,PhoenixScore> _scoreMaximums = new Dictionary<int,PhoenixScore>();
     private IDictionary<int, PhoenixScore> _scoreAverages = new Dictionary<int, PhoenixScore>();
     private IDictionary<int, int> _passCounts = new Dictionary<int, int>();
+    private PhoenixScore? _myScore = null;
+    private int _myLevel = 1;
     private IEnumerable<UserPhoenixScore> _worldScores = Array.Empty<UserPhoenixScore>();
     private IDictionary<Guid, string> _nameAvatars = new Dictionary<Guid, string>();
 
@@ -251,7 +264,7 @@
         }
         var playerScores = scores.ToDictionary(p => p.UserId);
         var stats = await PlayerStats.GetStats(scores.Select(s=>s.UserId).Distinct().ToArray(),CancellationToken.None);
-        var playerGroupings = stats.GroupBy(s => (int)Math.Floor(_selectedChart.Type == ChartType.Double ? s.DoublesCompetitiveLevel :
+        var playerGroupings = stats.GroupBy(s => (int)Math.Round(_selectedChart.Type == ChartType.Double ? s.DoublesCompetitiveLevel :
             _selectedChart.Type == ChartType.Single ? s.SinglesCompetitiveLevel : s.CompetitiveLevel)).ToArray();
         _scoreMinimums = playerGroupings.ToDictionary(g => g.Key, g => (PhoenixScore)(int)g.Min(s => playerScores[s.UserId].Score));;
         _scoreMaximums = playerGroupings.ToDictionary(g => g.Key, g => (PhoenixScore)(int)g.Max(s => playerScores[s.UserId].Score));;
@@ -262,17 +275,24 @@
         _isLoading = false;
         NavManager.NavigateTo("/Chart/" + _selectedChart.Id.ToString());
         ChartId = _selectedChart.Id;
+
+        if (CurrentUser.IsLoggedIn)
+        {
+            _myScore = (await Mediator.Send(new GetPhoenixRecordQuery(_selectedChart.Id)))?.Score;
+            var myStats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
+            _myLevel = (int)Math.Floor(_selectedChart.Type == ChartType.Single ? myStats.SinglesCompetitiveLevel : _selectedChart.Type == ChartType.Double ? myStats.DoublesCompetitiveLevel : myStats.CompetitiveLevel);
+        }
         if (_scoreGraph != null)
         {
             await _scoreGraph.UpdateSeriesAsync(true);
             await _scoreGraph.UpdateOptionsAsync(true, true, true);
         }
-        @if (_plateGraph != null)
+        if (_plateGraph != null)
         {
             await _plateGraph.UpdateSeriesAsync(true);
             await _plateGraph.UpdateOptionsAsync(true, true, true);
         }
-        @if (_passGraph != null)
+        if (_passGraph != null)
         {
             await _passGraph.UpdateSeriesAsync(true);
             await _passGraph.UpdateOptionsAsync(true, true, true);
