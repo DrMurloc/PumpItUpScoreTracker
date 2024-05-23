@@ -36,7 +36,7 @@ public interface IChartRepository
     Task SetChartVideo(Guid id, Uri videoUrl, Name channelName, CancellationToken cancellationToken = default);
     Task UpdateSong(Name songName, Bpm bpm, CancellationToken cancellationToken = default);
 
-    Task UpdateChart(Guid chartId, Name stepArtist, int noteCount,
+    Task UpdateChart(Guid chartId, Name stepArtist,
         CancellationToken cancellationToken = default);
 
     Task UpdateNoteCount(Guid chartId, int noteCount, CancellationToken cancellationToken = default);

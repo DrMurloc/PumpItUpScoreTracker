@@ -152,7 +152,8 @@
             return;
         }
         _isSaving = true;
-        await _charts.UpdateChart(_currentChart.Id, _stepArtist, _noteCount);
+        await _charts.UpdateChart(_currentChart.Id, _stepArtist);
+        await _charts.UpdateNoteCount(_currentChart.Id, _noteCount);
         await _charts.UpdateSong(_currentChart.Song.Name, Bpm.From(_minBpm, _maxBpm));
         await _charts.SetChartVideo(_currentChart.Id, new Uri(_video), "NOT KNOWN");
         await Mediator.Send(new UpdateChartSkillCommand(new ChartSkillsRecord(_currentChart.Id, _skills, _highlightedSkills)));

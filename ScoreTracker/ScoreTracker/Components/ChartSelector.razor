@@ -16,6 +16,9 @@
     public bool Disabled { get; set; } = false;
 
     [Parameter]
+    public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    [Parameter]
     public Func<Chart, Task> ChartIdSelected { get; set; } = c => Task.CompletedTask;
 
     private string _selected = string.Empty;
@@ -33,7 +36,7 @@
     private IDictionary<string, Chart> _chartNames = new Dictionary<string, Chart>(StringComparer.OrdinalIgnoreCase);
     protected override async Task OnInitializedAsync()
     {
-        var charts = await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix));
+        var charts = await Mediator.Send(new GetChartsQuery(Mix));
         _chartNames = charts.ToDictionary(c => c.Song.Name + " " + c.DifficultyString);
     }
 }

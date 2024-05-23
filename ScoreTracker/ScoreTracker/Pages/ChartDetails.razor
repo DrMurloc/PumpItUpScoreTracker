@@ -1,0 +1,319 @@
+﻿@page "/Record"
+@page "/Chart"
+@page "/Chart/{ChartId:guid}"
+@using MediatR
+@using Microsoft.AspNetCore.Mvc
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Web.Components;
+@using ScoreTracker.Web.Services.Contracts
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using System.Text.RegularExpressions
+<PageTitle>Record Attempt</PageTitle>
+
+
+<MudText Typo="Typo.h3">Chart Details</MudText>
+<ChartSelector ChartIdSelected="SelectChart" Mix="_currentMix"></ChartSelector>
+@if (!_isLoading && _selectedChart != null)
+{
+    <br/><br/>
+    <MudText Typo="Typo.h4">@_selectedChart.Song.Name @_selectedChart.DifficultyString</MudText>
+    @if (_selectedChart.StepArtist != null && _selectedChart.StepArtist != "Unknown")
+    {
+        <MudText>Step Artist: @_selectedChart.StepArtist</MudText>
+    }
+    @if (_selectedChart.NoteCount > 0)
+    {
+        <MudText>Note Count: @_selectedChart.NoteCount</MudText>
+    }
+    @if (CurrentUser.IsLoggedIn)
+    {
+        <br/>
+        <MudText Typo="Typo.h5">Your Score</MudText>
+        <EditChartGrid ChartId="_selectedChart.Id" CurrentMix="_currentMix"></EditChartGrid>
+    }
+    @if (_currentMix == MixEnum.Phoenix)
+    {
+        <MudText Typo="Typo.h5">Player Scores Breakdown</MudText>
+        @if (_plateBreakdowns.Any(kv => kv.Value > 0))
+        {
+            <br/>
+            <ApexChart TItem="StringDataPoint"
+                       @ref=_plateGraph
+                       Title="Plate Breakdown">
+                <ApexPointSeries TItem="StringDataPoint"
+                                 Items="_plateBreakdowns.Select(kv=>new StringDataPoint(kv.Key.GetShorthand(),kv.Value))"
+                                 SeriesType="SeriesType.Bar"
+                                 Name="Passes"
+                                 XValue="@(e => e.X)"
+                                 YValue="@(e => e.Y)"
+                                 OrderBy="e => (int)PhoenixPlateHelperMethods.ParseShorthand((string)e.X)"/>
+            </ApexChart>
+            <br/>
+            <ApexChart TItem="DataPoint"
+                       Title="Scores by Competitive Level"
+                       @ref=_scoreGraph
+                       Options="_scoreBoxesOptions">
+                <ApexPointSeries TItem="DataPoint"
+                                 Items="_scoreMinimums.Select(kv=>new DataPoint(kv.Key,kv.Value))"
+                                 Name="Min"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(e => e.X)"
+                                 YValue="@(e => e.Y)"
+                                 OrderBy="e => e.X" />
+                <ApexPointSeries TItem="DataPoint"
+                                 Items="_scoreMaximums.Select(kv=>new DataPoint(kv.Key,kv.Value))"
+                                 Name="Max"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(e => e.X)"
+                                 YValue="@(e => e.Y)"
+                                 OrderBy="e => e.X" />
+                <ApexPointSeries TItem="DataPoint"
+                                 Items="_scoreAverages.Select(kv=>new DataPoint(kv.Key,kv.Value))"
+                                 Name="Average"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(e => e.X)"
+                                 YValue="@(e => e.Y)"
+                                 OrderBy="e => e.X" />
+            </ApexChart>
+            <br/>
+            <ApexChart TItem="DataPoint"
+                       Title="Passes by Competitive Level"
+                       @ref=_passGraph>
+                <ApexPointSeries TItem="DataPoint"
+                                 Items="_passCounts.Select(kv=>new DataPoint(kv.Key,kv.Value))"
+                                 Name="Passes"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(e => e.X)"
+                                 YValue="@(e => e.Y)"
+                                 OrderBy="e => e.X" />
+            </ApexChart>
+        }
+        
+        @if (_worldScores.Any())
+        {
+            <br/>
+            <MudText Typo="Typo.h5">Chart Leaderboard</MudText>
+            <MudTable T="(int,UserPhoenixScore)" Items="_worldScores.OrderByDescending(s => s.Score).Select((s, i) => (i + 1,s))" Breakpoint="Breakpoint.None" Dense="true">
+                <HeaderContent>
+                    <MudTh>Place</MudTh>
+                    <MudTh>Avatar</MudTh>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Score</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Item1</MudTd>
+                    <MudTd>
+                        @if (_nameAvatars.TryGetValue(context.Item2.UserId, out var avatarUrl))
+                        {
+                        
+                            <MudImage Src="@avatarUrl" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                        }
+                    </MudTd>
+                    <MudTd>@context.Item2.UserName</MudTd>
+                    <MudTd><ScoreBreakdown Score="context.Item2.Score" Plate="context.Item2.Plate" IsBroken="context.Item2.IsBroken" ShowScore="true"></ScoreBreakdown></MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+
+    }
+
+    @if (CurrentUser.IsLoggedInAsAdmin)
+    {
+        <br/><br/>
+        <MudGrid>
+            <MudItem xs="4">
+                <MudNumericField T="decimal" Label="Min BPM" ValueChanged="SetMin" Value="_minBpm"></MudNumericField>
+            </MudItem>
+            <MudItem xs="4">
+                <MudNumericField T="decimal" Label="Max BPM" @bind-Value="_maxBpm"></MudNumericField>
+            </MudItem>
+            <MudItem xs="12">
+                <MudAutocomplete T="string"
+                                 Label="Step Artist"
+                                 @bind-Value="_artist"
+                                 CoerceValue="true"
+                                 SearchFunc="s=>Task.FromResult(_artists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Immediate="true" Label=@("Video "+_video) Value="_video" ValueChanged="SetVideo"></MudTextField>
+            </MudItem>
+            <MudItem xs="12">
+                <MudButton Color="Color.Warning" OnClick="UpdateChart">Save</MudButton>
+            </MudItem>
+        </MudGrid>
+    }
+}
+<MudDialog @bind-IsVisible="_showChartOverview">
+    <DialogContent>
+        @if (_selectedChart != null && _currentMix == MixEnum.Phoenix)
+        {
+            <ChartOverview ChartId="_selectedChart.Id"></ChartOverview>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showChartOverview = false">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@inject IMediator Mediator
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser;
+@inject IUiSettingsAccessor UiSettings;
+@inject IPlayerStatsRepository PlayerStats;
+@inject ISnackbar Snackbar;
+@inject IChartRepository Charts;
+@code {
+    private MixEnum _currentMix = MixEnum.Phoenix;
+    private bool _showChartOverview = false;
+    private string _video = string.Empty;
+    private string _artist = string.Empty;
+    private MudAutocomplete<string> _autocomplete;
+
+    private decimal _minBpm;
+    private decimal _maxBpm;
+    private ApexChart<DataPoint>? _scoreGraph;
+    private ApexChart<StringDataPoint>? _plateGraph;
+    private ApexChart<DataPoint>? _passGraph;
+    private IEnumerable<string> _artists = Array.Empty<string>();
+    private readonly ApexChartOptions<DataPoint> _scoreBoxesOptions = new ApexChartOptions<DataPoint>()
+    {
+        Stroke = new Stroke { Curve = Curve.Smooth },
+        Yaxis = new[]{new YAxis()
+        {
+            Max=1000000
+        }}.ToList(),
+
+    };
+    private void SetMin(decimal newMin)
+    {
+        _minBpm = newMin;
+        _maxBpm = newMin;
+    }
+
+    private static readonly Regex VideoRegex = new Regex(@"https\:\/\/www\.youtube\.com\/watch\?v\=(.*)", RegexOptions.Compiled);
+    private static readonly Regex VideoRegex2 = new Regex(@"https\:\/\/youtu\.be\/([^?]+)", RegexOptions.Compiled);
+    private void SetVideo(string video)
+    {
+        var match = VideoRegex.Match(video);
+        if (match.Success)
+        {
+            var hash = match.Groups[1].Value;
+            _video = $"https://www.youtube.com/embed/{hash}";
+            StateHasChanged();
+            Snackbar.Add(_video, Severity.Error);
+            return;
+        }
+        match = VideoRegex2.Match(video);
+        if(match.Success)
+        {
+            
+            var hash = match.Groups[1].Value;
+            _video = $"https://www.youtube.com/embed/{hash}";
+            StateHasChanged();
+            Snackbar.Add(_video, Severity.Error);
+            return;
+        }
+        _video = video;
+        Snackbar.Add(_video, Severity.Error);
+        StateHasChanged();
+    }
+    private Chart? _selectedChart = null;
+    private bool _isLoading = false;
+    private IDictionary<PhoenixPlate, int> _plateBreakdowns = new Dictionary<PhoenixPlate, int>();
+    private IDictionary<int, PhoenixScore> _scoreMinimums = new Dictionary<int, PhoenixScore>();
+    private IDictionary<int,PhoenixScore> _scoreMaximums = new Dictionary<int,PhoenixScore>();
+    private IDictionary<int, PhoenixScore> _scoreAverages = new Dictionary<int, PhoenixScore>();
+    private IDictionary<int, int> _passCounts = new Dictionary<int, int>();
+    private IEnumerable<UserPhoenixScore> _worldScores = Array.Empty<UserPhoenixScore>();
+    private IDictionary<Guid, string> _nameAvatars = new Dictionary<Guid, string>();
+
+    private sealed record DataPoint(int X, int Y);
+
+    private sealed record StringDataPoint(string X, int Y);
+    private async Task SelectChart(Chart chart)
+    {
+        _isLoading = true;
+        _selectedChart = chart;
+        var scores = (await Mediator.Send(new GetPhoenixScoresForChartQuery(chart.Id))).ToArray();
+        _plateBreakdowns = scores.Where(s => s.Plate != null).GroupBy(s => s.Plate!.Value).ToDictionary(g => g.Key, g => g.Count());
+        foreach (var plate in Enum.GetValues<PhoenixPlate>().Where(p => !_plateBreakdowns.ContainsKey(p)))
+        {
+            _plateBreakdowns[plate] = 0;
+        }
+        var playerScores = scores.ToDictionary(p => p.UserId);
+        var stats = await PlayerStats.GetStats(scores.Select(s=>s.UserId).Distinct().ToArray(),CancellationToken.None);
+        var playerGroupings = stats.GroupBy(s => (int)Math.Floor(_selectedChart.Type == ChartType.Double ? s.DoublesCompetitiveLevel :
+            _selectedChart.Type == ChartType.Single ? s.SinglesCompetitiveLevel : s.CompetitiveLevel)).ToArray();
+        _scoreMinimums = playerGroupings.ToDictionary(g => g.Key, g => (PhoenixScore)(int)g.Min(s => playerScores[s.UserId].Score));;
+        _scoreMaximums = playerGroupings.ToDictionary(g => g.Key, g => (PhoenixScore)(int)g.Max(s => playerScores[s.UserId].Score));;
+
+        _scoreAverages = playerGroupings.ToDictionary(g => g.Key, g => (PhoenixScore)(int)g.Average(s => playerScores[s.UserId].Score));
+        _worldScores = (await Mediator.Send(new GetPhoenixRecordsForCommunityQuery("World", chart.Id))).ToArray();
+        _passCounts = playerGroupings.ToDictionary(g => g.Key, g => g.Count(s => !playerScores[s.UserId].IsBroken));
+        _isLoading = false;
+        NavManager.NavigateTo("/Chart/" + _selectedChart.Id.ToString());
+        ChartId = _selectedChart.Id;
+        if (_scoreGraph != null)
+        {
+            await _scoreGraph.UpdateSeriesAsync(true);
+        }
+        @if (_plateGraph != null)
+        {
+            await _plateGraph.UpdateSeriesAsync(true);
+        }
+        @if (_passGraph != null)
+        {
+            await _passGraph.UpdateSeriesAsync(true);
+        }
+        _video = (await Mediator.Send(new GetChartVideosQuery(new[] { _selectedChart.Id }))).FirstOrDefault()?.VideoUrl.ToString() ?? "";
+        _artist = _selectedChart.StepArtist?.ToString() ?? "";
+        _minBpm = _selectedChart.Song.Bpm?.Min??0;
+        _maxBpm = _selectedChart.Song.Bpm?.Max??0;
+        StateHasChanged();
+    }
+
+    private bool _isSaving = false;
+    private async Task UpdateChart()
+    {
+        if (_selectedChart == null)
+        {
+            return;
+        }
+        _isSaving = true;
+        await Charts.UpdateChart(_selectedChart.Id, _artist);
+        await Charts.UpdateSong(_selectedChart.Song.Name, Bpm.From(_minBpm, _maxBpm));
+        await Charts.SetChartVideo(_selectedChart.Id, new Uri(_video), "NOT KNOWN");
+        Snackbar.Add("Updated Chart");
+        _isSaving = false;
+    }
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "TournamentId")]
+    public Guid? ChartId { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        _currentMix = await UiSettings.GetSelectedMix();
+
+        _nameAvatars = (await Mediator.Send(new GetCommunityLeaderboardQuery("World"))).ToDictionary(u => u.UserId, u => u.ProfileImage.ToString());
+        if (ChartId != null)
+        {
+            var chart = (await Mediator.Send(new GetChartsQuery(_currentMix, null, null, new[] { ChartId.Value }))).FirstOrDefault();
+            if (chart != null)
+            {
+
+                await SelectChart(chart);
+            }
+        }
+        if (CurrentUser.IsLoggedInAsAdmin)
+        {
+            _artists = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).Where(c => c.StepArtist != null).Select(c => c.StepArtist!.Value.ToString()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        }
+    }
+
+    
+
+}

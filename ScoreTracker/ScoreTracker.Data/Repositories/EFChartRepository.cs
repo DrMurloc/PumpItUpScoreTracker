@@ -139,16 +139,12 @@ public sealed class EFChartRepository : IChartRepository
         ClearCache();
     }
 
-    public async Task UpdateChart(Guid chartId, Name stepArtist, int noteCount,
+    public async Task UpdateChart(Guid chartId, Name stepArtist,
         CancellationToken cancellationToken = default)
     {
         var chart = await _database.Chart.SingleAsync(c => c.Id == chartId, cancellationToken);
         chart.StepArtist = stepArtist;
 
-        var chartMix =
-            await _database.ChartMix.SingleAsync(c => c.ChartId == chartId && c.MixId == MixGuids[MixEnum.Phoenix],
-                cancellationToken);
-        chartMix.NoteCount = noteCount;
 
         await _database.SaveChangesAsync(cancellationToken);
 
