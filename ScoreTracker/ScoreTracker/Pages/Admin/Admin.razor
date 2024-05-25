@@ -97,10 +97,23 @@ Do It
             <MudItem xs="3">
                 <MudNumericField T="int" Min="0" Max="60" Label="Seconds" @bind-Value="_seconds"></MudNumericField>
             </MudItem>
-            <MudItem xs="6"></MudItem>
+            <MudItem xs="6">
+                <MudAutocomplete T="string"
+                                 Label="Song Artist"
+                                 @bind-Value="_songArtist"
+                                 CoerceValue="true"
+                                 SearchFunc="s=>Task.FromResult(_songArtists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
+            </MudItem>
+
+            <MudItem xs="6">
+                <MudNumericField T="decimal" Label="Min BPM" ValueChanged="SetMin" Value="_minBpm"></MudNumericField>
+            </MudItem>
+            <MudItem xs="6">
+                <MudNumericField T="decimal" Label="Max BPM" @bind-Value="_maxBpm"></MudNumericField>
+            </MudItem>
             @foreach (var chart in _newCharts)
             {
-                <MudItem xs="3">
+                <MudItem xs="2">
                     <MudSelect T="ChartType" @bind-Value="chart.Type" Label="Chart Type">
                         @foreach (var type in Enum.GetValues<ChartType>())
                         {
@@ -108,18 +121,25 @@ Do It
                         }
                     </MudSelect>
                 </MudItem>
-                <MudItem xs="3">
+                <MudItem xs="2">
                     <MudNumericField T="int" Min="(int)DifficultyLevel.Min" Max="(int)DifficultyLevel.Max" @bind-Value="chart.Level" Label="Level/Players"></MudNumericField>
                 </MudItem>
                 <MudItem xs="3">
                     <MudTextField T="string" @bind-Value="chart.YoutubeHash" Label="Youtube Hash"></MudTextField>
                 </MudItem>
-                <MudItem xs="3">
+                <MudItem xs="2">
                     <MudTextField T="string" @bind-Value="chart.ChannelName" Label="Channel Name"></MudTextField>
+                </MudItem>
+                <MudItem xs="3">
+                    <MudAutocomplete T="string"
+                                     Label="Step Artist"
+                                     @bind-Value="chart.StepArtist"
+                                     CoerceValue="true"
+                                     SearchFunc="s=>Task.FromResult(_stepArtists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
                 </MudItem>
             }
             <MudItem xs="12">
-                <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="()=>_newCharts.Add(new NewChart())"></MudIconButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="AddChart"></MudIconButton>
             </MudItem>
             <MudItem xs="12">
                 <MudButton StartIcon="@Icons.Material.Filled.Save" Disabled="_isSaving||!IsValid" OnClick="CreateSong">Create</MudButton>
@@ -154,6 +174,17 @@ Do It
         Task.FromResult(SongNames.Where(n => n.ToLower().Contains(song?.ToLower() ?? ""))
             .OrderBy(n => n.Equals(song, StringComparison.OrdinalIgnoreCase) ? 0 : 1).ToArray().AsEnumerable());
 
+    private void AddChart()
+    {
+        var newChart = new NewChart();
+        if (_newCharts.Any())
+        {
+            var lastChart = _newCharts.Last();
+            newChart.StepArtist = lastChart.StepArtist;
+            newChart.Type = lastChart.Type;
+        }
+        _newCharts.Add(newChart);
+    }
     private async Task RebuildOfficialLeaderboard()
     {
         /*var message = string.Join(" ", Enum.GetValues<PhoenixLetterGrade>().Select(l => $"#LETTERGRADE|{l}#").Append("#LETTERGRADE|#"));
@@ -185,6 +216,15 @@ Do It
         Snackbar.Add("Done", Severity.Success);*/
 
     }
+
+    private decimal _minBpm = 0;
+    private decimal _maxBpm = 0;
+    private void SetMin(decimal newMin)
+    {
+        _minBpm = newMin;
+        _maxBpm = newMin;
+    }
+
     private async Task SelectChart(Chart chart)
     {
         var video = await Mediator.Send(new GetChartVideosQuery(new[] { chart.Id }));
@@ -229,6 +269,7 @@ Do It
     private readonly ICollection<NewChart> _newCharts = new List<NewChart>();
     private string _songName = string.Empty;
     private string _imageUrl = string.Empty;
+    private string _songArtist = string.Empty;
     private int _minutes = 2;
     private int _seconds = 0;
     private SongType _songType = SongType.Arcade;
@@ -238,10 +279,10 @@ Do It
     private async Task CreateSong()
     {
         _isSaving = true;
-        var songId = await _charts.CreateSong(_songName, new Uri($"https://piuimages.arroweclip.se/songs/{_imageUrl}"), _songType,TimeSpan.FromMinutes(_minutes).Add(TimeSpan.FromSeconds(_seconds)));
+        var songId = await _charts.CreateSong(_songName, new Uri($"https://piuimages.arroweclip.se/songs/{_imageUrl}"), _songType,TimeSpan.FromMinutes(_minutes).Add(TimeSpan.FromSeconds(_seconds)),_songArtist,Bpm.From(_minBpm,_maxBpm));
         foreach (var chart in _newCharts)
         {
-            await _charts.CreateChart(MixEnum.Phoenix, songId, chart.Type, chart.Level, chart.ChannelName,new Uri($"https://www.youtube.com/embed/{chart.YoutubeHash}"));
+            await _charts.CreateChart(MixEnum.Phoenix, songId, chart.Type, chart.Level, chart.ChannelName,new Uri($"https://www.youtube.com/embed/{chart.YoutubeHash}"),chart.StepArtist);
 
         }
         _charts.ClearCache();
@@ -276,13 +317,17 @@ Do It
     }
 
     private IList<PlayerStatsRecord> _stats = new List<PlayerStatsRecord>();
+    private IEnumerable<string> _songArtists = Array.Empty<string>();
+    private IEnumerable<string> _stepArtists = Array.Empty<string>();
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUser.User.IsAdmin)
         {
             NavManager.NavigateTo("/");
         }
-
+        var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToArray();
+        _songArtists = charts.Select(c => c.Song.Artist).Distinct().Select(s => s.ToString()).ToArray();
+        _stepArtists = charts.Where(c => c.StepArtist != null).Select(c => c.StepArtist!.Value).Distinct().Select(s=>s.ToString()).ToArray();
         SongNames = (await Mediator.Send(new GetChartsQuery(await UiSettings.GetSelectedMix()))).Select(c => c.Song.Name.ToString()).Distinct().ToArray();
     }
 
@@ -292,6 +337,7 @@ Do It
         public int Level { get; set; } = 14;
         public string ChannelName { get; set; } = "펌프잇업공식PUMP IT UP Official";
         public string YoutubeHash { get; set; } = string.Empty;
+        public string StepArtist { get; set; } = string.Empty;
 
     }
 }

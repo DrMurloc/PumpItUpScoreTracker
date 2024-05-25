@@ -90,7 +90,8 @@ public sealed class EFChartRepository : IChartRepository
         return chartIds != null ? chartIds.Select(id => chartVideos[id]) : chartVideos.Values;
     }
 
-    public async Task<Guid> CreateSong(Name name, Uri imageUrl, SongType type, TimeSpan duration,
+    public async Task<Guid> CreateSong(Name name, Uri imageUrl, SongType type, TimeSpan duration, Name songArtist,
+        Bpm bpm,
         CancellationToken cancellationToken = default)
     {
         var newSong = new SongEntity
@@ -99,7 +100,10 @@ public sealed class EFChartRepository : IChartRepository
             ImagePath = imageUrl.ToString(),
             Name = name,
             Type = type.ToString(),
-            Duration = duration
+            Duration = duration,
+            Artist = songArtist,
+            MinBpm = bpm.Min,
+            MaxBpm = bpm.Max
         };
         await _database.Song.AddAsync(newSong, cancellationToken);
         await _database.SaveChangesAsync(cancellationToken);
@@ -228,7 +232,7 @@ public sealed class EFChartRepository : IChartRepository
     }
 
     public async Task<Guid> CreateChart(MixEnum mix, Guid songId, ChartType type, DifficultyLevel level,
-        Name channelName, Uri videoUrl,
+        Name channelName, Uri videoUrl, Name stepArtist,
         CancellationToken cancellationToken = default)
     {
         var newChart = new ChartEntity
@@ -237,7 +241,8 @@ public sealed class EFChartRepository : IChartRepository
             Id = Guid.NewGuid(),
             Level = level,
             SongId = songId,
-            Type = type.ToString()
+            Type = type.ToString(),
+            StepArtist = stepArtist
         };
         var newChartMix = new ChartMixEntity
         {
