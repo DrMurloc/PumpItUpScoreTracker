@@ -1,0 +1,40 @@
+﻿@page "/StepArtists"
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Dtos
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.ValueTypes
+@using MediatR
+@using ScoreTracker.Application.Queries
+
+<PageTitle>Step Artists</PageTitle>
+<MudText Color="Color.Warning">Disclaimer: This list is being refined, some charts are missing step artists and some may have incorrect artists.</MudText>
+<MudExpansionPanels>
+    @foreach (var artistGroup in _artistCharts.OrderByDescending(kv=>kv.Value.Count()))
+    {
+        <MudExpansionPanel Text=@($"{artistGroup.Key} - {artistGroup.Value.Count()}")>
+            @foreach (var songGroup in artistGroup.Value.GroupBy(c => c.Song.Name).OrderByDescending(g=>g.Count()))
+            {
+                <SongImage Song="songGroup.First().Song"></SongImage>
+                @foreach (var chart in songGroup.OrderByDescending(c=>c.Level).ThenBy(c=>c.Type))
+                {
+                    <DifficultyBubble Chart="chart"></DifficultyBubble>
+                }
+                <br/>
+            }
+        </MudExpansionPanel>
+    }
+</MudExpansionPanels>
+@inject IMediator Mediator;
+@code
+{
+    private IDictionary<Name, IEnumerable<Chart>> _artistCharts = new Dictionary<Name, IEnumerable<Chart>>();
+    protected override async Task OnInitializedAsync()
+    {
+        _artistCharts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix)))
+            .Where(c => c.StepArtist != null && c.StepArtist != "Unknown")
+            .GroupBy(c => c.StepArtist!.Value)
+            .ToDictionary(g => g.Key, g => g.ToArray().AsEnumerable());
+    }
+}
