@@ -36,3 +36,24 @@
         width:854px;
     }
 }
+
+.chart-card {
+    .mud-card-header{
+        height:100px;
+        background-size: 100% 100%;
+        align-items:start;
+        padding-left:5px;
+        padding-top:5px;
+    }
+    .mud-card-content {
+        padding-top:7px;
+        padding-bottom:0px;
+        padding-left:5px;
+        padding-right:5px;
+        text-align:center;
+    }
+    .mud-card-actions {
+        padding-top:0px;
+        padding-bottom:0px;
+    }
+}

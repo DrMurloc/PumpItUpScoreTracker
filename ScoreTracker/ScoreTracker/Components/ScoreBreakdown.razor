@@ -18,13 +18,13 @@
     }
     @if (ShowScore && Score!=null && string.IsNullOrWhiteSpace(Text))
     {
-        <MudText Align="Align.Center">
+        <MudText Align="Align.Center" Style=@(OneLine?"display:inline;padding-left:5px;vertical-align:top;":"vertical-align:top;")>
             @ScoreString
         </MudText>
     }
     @if (!string.IsNullOrWhiteSpace(Text))
     {
-        <MudText Align="Align.Center">
+        <MudText Align="Align.Center" Style=@(OneLine?"display:inline;padding-left:5px;vertical-align:top;":"vertical-align:top;")>
             @Text
         </MudText>
     }
@@ -47,6 +47,10 @@
 
     [Parameter]
     public string Text { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool OneLine { get; set; } = false;
+
     private string ScoreString => Score == null ? "" : ((int)Score).ToString("N0");
     private string BrokenPiece => IsBroken ? "_broken" : "";
     private string LetterGradeImage => 

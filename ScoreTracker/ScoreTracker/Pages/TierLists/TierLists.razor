@@ -1,4 +1,4 @@
-﻿@page "/TierLists"
+﻿@page "/TierLists/Old"
 @using MediatR
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
@@ -24,9 +24,6 @@
 @inject IUiSettingsAccessor UiSettings;
 
 <MudGrid>
-    <MudItem xs="12">
-        <MudLink Href="/PersonalizedTierList">Try the NEW tier lists (Beta)!</MudLink>
-    </MudItem>
     <MudItem xs="12" sm="4">
         <MudSelect T="TierListType" Label=@L["Tier Lists"] Value="_currentTierList" ValueChanged="SetTierList" AdornmentIcon="@Icons.Material.Filled.Topic">
             <MudSelectItem T="TierListType" Value="TierListType.Difficulty">Stage Break</MudSelectItem>
@@ -290,6 +287,8 @@ else
 @inject IPhoenixRecordRepository PhoenixRecords;
 
 @code {
+
+
     private MixEnum _currentMix = MixEnum.Phoenix;
     private ICollection<Chart> _overratedCharts = Array.Empty<Chart>();
     private ICollection<Chart> _veryEasyCharts = Array.Empty<Chart>();

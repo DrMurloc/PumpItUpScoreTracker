@@ -675,4 +675,16 @@
   <data name="Play Num" xml:space="preserve">
     <value>Play at least {0}</value>
   </data>
+  <data name="Group By Scoring Difficulty" xml:space="preserve">
+	  <value>Group By Scoring Difficulty</value>
+	  <comment>Group By Scoring Difficulty</comment>
+  </data>
+  <data name="Personalized" xml:space="preserve">
+	  <value>Personalized</value>
+	  <comment>Personalized</comment>
+  </data>
+  <data name="Text View" xml:space="preserve">
+	  <value>Text View</value>
+	  <comment>Text View</comment>
+  </data>
 </root>

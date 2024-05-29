@@ -642,4 +642,10 @@
   <data name="Play Num" xml:space="preserve">
     <value>최소 {0}만큼 더 플레이해주세요</value>
   </data>
+  <data name="Use Password 1" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Use Password 3" xml:space="preserve">
+    <value />
+  </data>
 </root>
