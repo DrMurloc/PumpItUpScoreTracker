@@ -30,7 +30,7 @@
         }
         <MudTh>@L["Rating"]</MudTh>
         <MudTh>@L["Photos"]</MudTh>
-        @if (CurrentUser.IsLoggedInAsAdmin)
+        @if (IsTournamentAdmin)
         {
             <MudTh>Approve</MudTh>
         }
@@ -46,9 +46,7 @@
                 @if (entry.Any())
                 {
                     <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                        <MudTooltip Text="@(entry.Single().Item1.Song.Name+' '+entry.Single().Item1.DifficultyString)">
-                            <MudImage Src="@entry.Single().Item1.Song.ImagePath.ToString()" Height="35" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
-                        </MudTooltip>
+                        <SongImage Song="entry.Single().Item1.Song"></SongImage>
                         <ScoreBreakdown Score="@entry.Single().Item2" Height="35"></ScoreBreakdown>
                     </MudHidden>
                     <MudHidden Breakpoint="Breakpoint.MdAndUp">
@@ -64,7 +62,7 @@
         }
         <MudTd>@context.Score.ToString("0.###")</MudTd>
         <MudTd>
-            @if (context.IsApproved || CurrentUser.IsLoggedInAsAdmin)
+            @if (context.IsApproved || IsTournamentAdmin)
             {
                 <MudIconButton Icon="@Icons.Material.Filled.PhotoAlbum" Color="Color.Primary" OnClick="() => SelectEntry(context)"></MudIconButton>
             }
@@ -73,7 +71,7 @@
                 <MudText>@L["Pending"]</MudText>
             }
         </MudTd>
-        @if (CurrentUser.IsLoggedInAsAdmin)
+        @if (IsTournamentAdmin)
         {
             <MudTd>
                 @if (!context.IsApproved)
@@ -96,7 +94,7 @@
                             </MudItem>
                         }
                     </MudGrid>
-                    @if (CurrentUser.IsLoggedInAsAdmin)
+                    @if (IsTournamentAdmin)
                     {
                         <MudGrid>
                             @foreach (var entry in _selectedEntry.Record.Submissions.Values)
@@ -142,7 +140,9 @@
 @inject IMediator Mediator;
 @code
 {
-
+    private static readonly Guid _biteAdmin = new Guid("21232D7F-EAF8-4533-A4E6-68A336045E8B");
+    private static readonly Guid _biteId = new Guid("53029D1C-9652-4B4E-8152-9B3DECB97C37");
+    private bool IsTournamentAdmin => CurrentUser.IsLoggedInAsAdmin || (CurrentUser.IsLoggedIn && CurrentUser.User.Id == _biteAdmin && TournamentId == _biteId);
     private IEnumerable<Entry> _leaderboard;
     private Entry? _selectedEntry = null;
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
