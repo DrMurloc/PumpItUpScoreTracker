@@ -34,7 +34,7 @@
         </MudSelect>
     </MudItem>
     <MudItem xs="12" sm="6">
-        <MudNumericField T="int" Value="_level" Min=@(_chartType==ChartType.CoOp?2:1) Max=@(_chartType==ChartType.CoOp?5:28) ValueChanged="SetLevel" Label=@L["Difficulty Level"] HideSpinButtons="true">
+        <MudNumericField T="int" Value="_level" Min=@(_chartType==ChartType.CoOp?2:1) Max=@(_chartType==ChartType.CoOp?5:28) ValueChanged="SetLevel" Label=@(_chartType==ChartType.CoOp?L["Player Count"]:L["Difficulty Level"]) HideSpinButtons="true">
         </MudNumericField>
     </MudItem>
 
@@ -868,7 +868,11 @@
         _songArtists = new HashSet<string>();
 
         var baseRating = DifficultyLevel.From(_level).BaseRating;
-        _averageRating = _scores.Any() ? (int)_scores.Where(kv=>!_isBroken[kv.Key] && kv.Value>0).Average(s => s.Value.LetterGrade.GetModifier() * baseRating) : baseRating;
+        if (_chartType == ChartType.CoOp)
+        {
+            baseRating = 2000;
+        }
+        _averageRating = _scores.Any(kv => !_isBroken[kv.Key] && kv.Value > 0) ? (int)_scores.Where(kv => !_isBroken[kv.Key] && kv.Value > 0).Average(s => s.Value.LetterGrade.GetModifier() * baseRating) : baseRating;
         _isLoading = false;
     }
     private async Task SetType(ChartType newType)

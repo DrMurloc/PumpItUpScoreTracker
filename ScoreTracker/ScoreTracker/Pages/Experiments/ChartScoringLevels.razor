@@ -32,83 +32,109 @@
         </MudItem>
     }
 </MudGrid>
+<br/>
 @if (_selectedChart != null && !_isLoading)
 {
-    <br/>
-    <MudText Typo="Typo.h4">Player Weights</MudText>
-    <MudText Typo="Typo.subtitle1">All players with scores within the target folder are assigned weights based on how close their competitive level is to @_playerLevel.</MudText>
-    <MudText Typo="Typo.subtitle1">Highlighted players have a recorded score on the chart in question.</MudText>
-    @foreach (var playerWeight in _playerWeights.OrderByDescending(kv => kv.Value[_playerLevel]))
+
+    @if (_selectedChart.Type != ChartType.CoOp)
     {
-    <MudText Typo="Typo.body2" Color="_playerScores.ContainsKey(playerWeight.Key)?Color.Success:Color.Default">
-            @($"{(!_users[playerWeight.Key].IsPublic ? "Anonymous" : _users[playerWeight.Key].Name)} - {playerWeight.Value[_playerLevel]:0.000} (Competitively {_playerLevels[playerWeight.Key]:0.00}{(_playerScores.TryGetValue(playerWeight.Key, out var score) ? ", " + score : "")})")
-    </MudText>
-    }
-    <br/>
-    <MudText Typo="Typo.h4">Folder Averages</MudText>
-    <MudText Typo="Typo.subtitle1">The target folder and the three surrounding are provided weighted average scores utilizing the player weights above.</MudText>
-    <MudText Typo="Typo.subtitle1">These averages are shifted away from the level in question by .5 of a standard deviation within their respective folder to make sure level changes are better represented by the bulk of a surrounding folder.</MudText>
-    <ApexChart TItem="DataPoint"
-               Title=@($"Weighted Average Scores By Folder")
-                                            @ref="_levelAverageGraph">
-
-        <ApexPointSeries TItem="DataPoint"
-                         Items="_levelAverageData"
-                         SeriesType="SeriesType.Line"
-                         XValue="@(e => e.X)"
-                         YValue="@(e => (decimal) e.Y)"
-                         OrderBy="e => e.X" />
-
-    </ApexChart>
-    <br/>
-    <MudText Typo="Typo.h4">Chart Average</MudText>
-    <MudText Typo="Typo.subtitle1">The chart in question has its weighted average score projected onto the score distributions</MudText>
-    <MudText Typo="Typo.body2">@_selectedChart.Song.Name @_selectedChart.DifficultyString - @_chartAverages[_playerLevel].ToString("N0")</MudText>
-    @if (_calculatedLevels.TryGetValue(_selectedChart.Id, out var level))
-    {
-        @if (_lowLevel[_playerLevel] == 0 && _highLevel[_playerLevel] == 0)
+        <MudText Typo="Typo.h4">Player Weights</MudText>
+        <MudText Typo="Typo.subtitle1">All players with scores within the target folder are assigned weights based on how close their competitive level is to @_playerLevel.</MudText>
+        <MudText Typo="Typo.subtitle1">Highlighted players have a recorded score on the chart in question.</MudText>
+        @foreach (var playerWeight in _playerWeights.OrderByDescending(kv => kv.Value[_playerLevel]))
         {
-            <MudText Typo="Typo.body2">There was not enough data for the targeted player level to evaluate a final difficulty. </MudText>
+            <MudText Typo="Typo.body2" Color="_playerScores.ContainsKey(playerWeight.Key)?Color.Success:Color.Default">
+                @($"{(!_users[playerWeight.Key].IsPublic ? "Anonymous" : _users[playerWeight.Key].Name)} - {playerWeight.Value[_playerLevel]:0.000} (Competitively {_playerLevels[playerWeight.Key]:0.00}{(_playerScores.TryGetValue(playerWeight.Key, out var score) ? ", " + score : "")})")
+            </MudText>
         }
-        else if (_lowLevel[_playerLevel] == 0)
-        {
+        <br/>
+        <MudText Typo="Typo.h4">Folder Averages</MudText>
+        <MudText Typo="Typo.subtitle1">The target folder and the three surrounding are provided weighted average scores utilizing the player weights above.</MudText>
+        <MudText Typo="Typo.subtitle1">These averages are shifted away from the level in question by .5 of a standard deviation within their respective folder to make sure level changes are better represented by the bulk of a surrounding folder.</MudText>
+        <ApexChart TItem="DataPoint"
+                   Title=@($"Weighted Average Scores By Folder")
+                                                @ref="_levelAverageGraph">
 
-            <MudText Typo="Typo.body2">The weighted average for this chart is better than the average for a @_highLevel[_playerLevel].</MudText>
-            <MudText Typo="Typo.body2">In this case, the chart is determined to be below by @_percentBetween[_playerLevel].ToString("0.00") utilizing standard deviations in the @_highLevel[_playerLevel] folder.</MudText>
-        }
-        else if (_highLevel[_playerLevel] == 0)
+            <ApexPointSeries TItem="DataPoint"
+                             Items="_levelAverageData"
+                             SeriesType="SeriesType.Line"
+                             XValue="@(e => e.X)"
+                             YValue="@(e => (decimal) e.Y)"
+                             OrderBy="e => e.X" />
+
+        </ApexChart>
+        <br/>
+        <MudText Typo="Typo.h4">Chart Average</MudText>
+        <MudText Typo="Typo.subtitle1">The chart in question has its weighted average score projected onto the score distributions</MudText>
+        <MudText Typo="Typo.body2">@_selectedChart.Song.Name @_selectedChart.DifficultyString - @_chartAverages[_playerLevel].ToString("N0")</MudText>
+        @if (_calculatedLevels.TryGetValue(_selectedChart.Id, out var level))
         {
-            <MudText Typo="Typo.body2">The weighted average for this chart is worst than the average for a @_lowLevel[_playerLevel].</MudText>
-            <MudText Typo="Typo.body2">In this case, the chart is determined to be above by @_percentBetween[_playerLevel].ToString("0.00") utilizing standard deviations in the @_lowLevel[_playerLevel] folder.</MudText>
+            @if (_lowLevel[_playerLevel] == 0 && _highLevel[_playerLevel] == 0)
+            {
+                <MudText Typo="Typo.body2">There was not enough data for the targeted player level to evaluate a final difficulty. </MudText>
+            }
+            else if (_lowLevel[_playerLevel] == 0)
+            {
+
+                <MudText Typo="Typo.body2">The weighted average for this chart is better than the average for a @_highLevel[_playerLevel].</MudText>
+                <MudText Typo="Typo.body2">In this case, the chart is determined to be below by @_percentBetween[_playerLevel].ToString("0.00") utilizing standard deviations in the @_highLevel[_playerLevel] folder.</MudText>
+            }
+            else if (_highLevel[_playerLevel] == 0)
+            {
+                <MudText Typo="Typo.body2">The weighted average for this chart is worst than the average for a @_lowLevel[_playerLevel].</MudText>
+                <MudText Typo="Typo.body2">In this case, the chart is determined to be above by @_percentBetween[_playerLevel].ToString("0.00") utilizing standard deviations in the @_lowLevel[_playerLevel] folder.</MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2">Determined to be @_percentBetween[_playerLevel].ToString("0.000") between @(_lowLevel[_playerLevel] + .5) and @(_highLevel[_playerLevel] + .5)</MudText>
+            }
+            <MudText>Final Result: @level[_playerLevel].ToString("0.000")</MudText>
         }
         else
         {
-            <MudText Typo="Typo.body2">Determined to be @_percentBetween[_playerLevel].ToString("0.000") between @(_lowLevel[_playerLevel] + .5) and @(_highLevel[_playerLevel] + .5)</MudText>
+            <MudText Typo="Typo.body2">At this point, it's identified that this chart has no players with a weight of .5 or higher (within 1 level). The chart is marked as not having a scoring level as any estimation would be based on missing data.</MudText>
         }
-        <MudText>Final Result: @level[_playerLevel].ToString("0.000")</MudText>
+        <br/>
+        <MudText Typo="Typo.h4">Difficulty By Player Level</MudText>
+        <MudText Typo="Typo.subtitle1">The listed scoring difficulty is calculated for players competitively playing in the officially listed folder for a chart.</MudText>
+        <MudText Typo="Typo.subtitle1">The outcome of this algorithm has drastically different results for players at different levels though</MudText>
+        <MudText Typo="Typo.subtitle1">This is intended. There are charts that are relatively easier to score to others in the folder for players just pushing into the folder, but are harder for higher level players to perfect.</MudText>
+        <ApexChart TItem="DataPoint"
+                   Options="_scoreBoxesOptions"
+                   Title=@($"Scoring Level by Player Competitive Level")
+                                                                                            @ref="_playerLevelLevels">
+
+            <ApexPointSeries TItem="DataPoint"
+                             Items="_difficultyByPlayerLevel"
+                             SeriesType="SeriesType.Line"
+                             XValue="@(e => e.X)"
+                             YValue="@(e => (decimal) e.Y)"
+                             OrderBy="e => e.X" />
+
+            </ApexChart>
     }
     else
     {
-        <MudText Typo="Typo.body2">At this point, it's identified that this chart has no players with a weight of .5 or higher (within 1 level). The chart is marked as not having a scoring level as any estimation would be based on missing data.</MudText>
+        <MudText Typo="Typo.h4">Player Levels</MudText>
+        <MudText Typo="Typo.subtitle1">For CoOps, scoring level is simply the lowest level player who's been able to pass the chart.</MudText>
+        <MudText Typo="Typo.subtitle1">This isn't perfect, but until I have more data other algorithms haven't been successful at projecting CoOps onto difficulty levels</MudText>
+        @foreach (var playerWeight in _playerWeights.OrderByDescending(kv => kv.Value[_playerLevel]))
+        {
+            <MudText Typo="Typo.body2" Color="_playerScores.ContainsKey(playerWeight.Key)?Color.Success:Color.Default">
+                @($"{(!_users[playerWeight.Key].IsPublic ? "Anonymous" : _users[playerWeight.Key].Name)} (Competitively {_playerLevels[playerWeight.Key]:0.00}{(_playerScores.TryGetValue(playerWeight.Key, out var score) ? ", " + score : "")})")
+            </MudText>
+        }        
+        <br/>
+        @if (!_playerWeights.Any(w => _playerScores.ContainsKey(w.Key)))
+        {
+            <MudText Typo="Typo.subtitle1">No one has passed this CoOp yet so no level is assigned.</MudText>
+        }
+        else
+        {
+            
+            <MudText Typo="Typo.subtitle1">This gives this chart a scoring level of: @_playerWeights.Where(w=>_playerScores.ContainsKey(w.Key)).Min(w=>_playerLevels[w.Key]).ToString("0.00")</MudText>
+        }
     }
-    <br/>
-    <MudText Typo="Typo.h4">Difficulty By Player Level</MudText>
-    <MudText Typo="Typo.subtitle1">The listed scoring difficulty is calculated for players competitively playing in the officially listed folder for a chart.</MudText>
-    <MudText Typo="Typo.subtitle1">The outcome of this algorithm has drastically different results for players at different levels though</MudText>
-    <MudText Typo="Typo.subtitle1">This is intended. There are charts that are relatively easier to score to others in the folder for players just pushing into the folder, but are harder for higher level players to perfect.</MudText>
-    <ApexChart TItem="DataPoint"
-               Options="_scoreBoxesOptions"
-               Title=@($"Scoring Level by Player Competitive Level")
-                                                                                        @ref="_playerLevelLevels">
-
-        <ApexPointSeries TItem="DataPoint"
-                         Items="_difficultyByPlayerLevel"
-                         SeriesType="SeriesType.Line"
-                         XValue="@(e => e.X)"
-                         YValue="@(e => (decimal) e.Y)"
-                         OrderBy="e => e.X" />
-
-    </ApexChart>
 }
 <br/><br/>
 

@@ -95,43 +95,7 @@
                 <MudText>@L["Recorded On",_recordedOn.Value.ToString("MMM dd, yyyy")]</MudText>
             </MudItem>
         }
-        if(_selectedChart.Type==ChartType.CoOp && _myCoOpRatings.Any())
-        {
-            <MudItem xs="8"></MudItem>
-            @if (_rateCoOpSeparately)
-            {
-                
-                @foreach (var player in _myCoOpRatings.Keys.OrderBy(k=>k))
-                {
-                    <MudItem sm="4" xs="12">
-                        <MudNumericField T="int?" Disabled="_isSaving" Clearable="true" Min="DifficultyLevel.Min" Max="DifficultyLevel.Max" Label="@PlayerLabel(player)" Value="_myCoOpRatings[player]" ValueChanged="(v=>SetCoOpDifficulty(player,v))"></MudNumericField>
-                    </MudItem>
-                    <MudItem sm="8" xs="12">
-                        @if (_coOpRating != null)
-                        {
-                            
-                            <MudText>@L["Average for CoOp Player",@player,_coOpRating.Ratings[player],_coOpRating.VoteCount]
-                            </MudText>
-                        }
-                    </MudItem>
-                }
-            }
-            else
-            {
-                <MudItem sm="4" xs="12">
-                    <MudNumericField T="int?" Disabled="_isSaving" Clearable="true" Min="DifficultyLevel.Min" Max="DifficultyLevel.Max" Label=@L["Rated Difficulty Level"] Value="_myCoOpRatings[1]" ValueChanged="SetAllCoOpDifficulty"></MudNumericField>
-                </MudItem>
-                <MudItem sm="8" xs="12">
-                    @if (_coOpRating != null)
-                    {
-                        <MudText>@L["Average for CoOp Chart",_coOpRating.Average,_coOpRating.VoteCount]</MudText>
-                    }
-                </MudItem>
-            }
-            <MudItem xs="12">
-                <MudSwitch T="bool" Disabled="_isSaving" Color="Color.Primary" Label=@L["Different Player Difficulties"] @bind-Checked="_rateCoOpSeparately"></MudSwitch>
-            </MudItem>
-        }
+        
     }
 </MudGrid>
 @code {
@@ -150,17 +114,6 @@
     private ISet<Guid> _todoCharts;
     private DateTimeOffset? _recordedOn;
     private bool _rateCoOpSeparately = false;
-    private static string PlayerLabel(int player) => $"Player {player} ({PlayerColors[player]})";
-    private static readonly IDictionary<int, string> PlayerColors = new Dictionary<int, string>()
-    {
-        { 1, "Red" },
-        { 2, "Blue" },
-        { 3, "Yellow" },
-        { 4, "Green" },
-        { 5, "Purple" }
-    };
-    private IDictionary<int, int?> _myCoOpRatings = new Dictionary<int, int?>();
-    private CoOpRating? _coOpRating = null;
     [Parameter]
     [Required]
     public MixEnum CurrentMix { get; set; }
@@ -199,32 +152,7 @@
         await SaveBest();
     }
 
-    private async Task SetCoOpDifficulty(int player, DifficultyLevel? level)
-    {
-        _myCoOpRatings[player] = level;
-        await SaveCoOpRating();
-    }
-    private async Task SetAllCoOpDifficulty(int? level)
-    {
-        foreach (var player in _myCoOpRatings.Keys)
-        {
-            _myCoOpRatings[player] = level;
-        }
-        await SaveCoOpRating();
-    }
 
-    private async Task SaveCoOpRating()
-    {
-        if (_myCoOpRatings.Values.Any(v => v == null))
-        {
-            _coOpRating=await Mediator.Send(new RateCoOpDifficultyCommand(CurrentMix, _selectedChart!.Id, null));
-        }
-        else
-        {
-            _coOpRating = await Mediator.Send(new RateCoOpDifficultyCommand(CurrentMix, _selectedChart!.Id, _myCoOpRatings.ToDictionary(r => r.Key, r => (DifficultyLevel)r.Value!.Value)));
-        }
-        Snackbar.Add($"CoOp Rating Updated!",Severity.Success);
-    }
     private async Task SaveBest()
     {
         
@@ -372,53 +300,7 @@
                 _recordedOn = bestRecord.BestAttempt.RecordedOn;
             }
         }
-        if (_selectedChart.Type == ChartType.CoOp)
-        {
-            try
-            {
-                var myRating = await Mediator.Send(new GetMyCoOpRatingQuery(chartId));
-                _myCoOpRatings = myRating?.ToDictionary(l => l.Key, l => (int?)l.Value)
-                                 ?? Enumerable.Range(1, _selectedChart.PlayerCount).ToDictionary(l => l, l => (int?)null);
-                _coOpRating = await Mediator.Send(new GetCoOpRatingQuery(chartId));
-                _rateCoOpSeparately = _myCoOpRatings.GroupBy(m => m.Value).Count() > 1;
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
-        }
-        else
-        {
-            var rating = await Mediator.Send(new GetChartRatingQuery(CurrentMix,chartId));
-            if (rating == null)
-            {
-                _selectedAdjustment = null;
-                _currentRatedCount = 0;
-                _currentRatedDifficulty = _selectedChart.Level + .5;
-            }
-            else
-            {
-                _selectedAdjustment = rating.MyRating?.GetScale();
-                _currentRatedCount = rating.RatingCount;
-                _currentRatedDifficulty = rating.Difficulty;
-            }
-        }
         StateHasChanged();
     }
-    private async Task UpdateDifficultyRating(int? newValue)
-    {
-        if (newValue == null || _selectedChart == null)
-        {
-            return;
-        }
-        _isSaving = true;
-        _selectedAdjustment = newValue;
-        await Mediator.Send(new RateChartDifficultyCommand(CurrentMix,_selectedChart.Id, DifficultyAdjustmentHelpers.From(newValue.Value)));
 
-        var newRating = await Mediator.Send(new GetChartRatingQuery(CurrentMix,_selectedChart.Id));
-        _currentRatedCount = newRating.RatingCount;
-        _currentRatedDifficulty = newRating.Difficulty;
-        Snackbar.Add("Suggested Difficulty Rating Submitted", Severity.Success);
-        _isSaving = false;
-    }
 }

@@ -100,7 +100,8 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
             await ProcessPassTierList(level, ChartType.Double, context.CancellationToken);
         }
 
-        foreach (var playerCount in Enumerable.Range(2, 5)) await ProcessCoOpPassTierList(2, context.CancellationToken);
+        foreach (var playerCount in Enumerable.Range(2, 5))
+            await ProcessCoOpPassTierList(playerCount, context.CancellationToken);
     }
 
     public async Task Consume(ConsumeContext<ProcessScoresTiersListCommand> context)
