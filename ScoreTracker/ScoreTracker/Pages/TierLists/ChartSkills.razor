@@ -30,10 +30,11 @@
         <MudSelect T="ChartType" Value="_chartType" ValueChanged="SetType" Label=@L["Chart Type"]>
             <MudSelectItem T="ChartType" Value="ChartType.Single">Singles</MudSelectItem>
             <MudSelectItem T="ChartType" Value="ChartType.Double">Doubles</MudSelectItem>
+            <MudSelectItem T="ChartType" Value="ChartType.CoOp">CoOp</MudSelectItem>
         </MudSelect>
     </MudItem>
     <MudItem xs="12" sm="6">
-        <MudNumericField T="int" Value="_level" ValueChanged="SetLevel" Label=@L["Difficulty Level"] HideSpinButtons="true">
+        <MudNumericField T="int" Value="_level" Min=@(_chartType==ChartType.CoOp?2:1) Max=@(_chartType==ChartType.CoOp?5:28) ValueChanged="SetLevel" Label=@L["Difficulty Level"] HideSpinButtons="true">
         </MudNumericField>
     </MudItem>
 
@@ -55,7 +56,7 @@
     }
     @if (CurrentUser.IsLoggedIn)
     {
-        @if (_tierListType!="Popularity" && (_tierListType != "Score" || _groupByTierList))
+        @if (_chartType!=ChartType.CoOp && _tierListType!="Popularity" && (_tierListType != "Score" || _groupByTierList))
         {
             
             <MudItem xs="12" sm="4" md="3">
@@ -150,7 +151,7 @@
     @if (CurrentUser.IsLoggedIn)
     {
 
-        @foreach (var progress in _titleProgress.Where(t => !t.IsComplete && (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == DifficultyFilter) || (ChartTypeFilter == ChartType.CoOp.ToString() && t.Title is PhoenixCoOpTitle)))
+        @foreach (var progress in _titleProgress.Where(t => !t.IsComplete && ((t.Title is PhoenixDifficultyTitle pdt && pdt.Level == DifficultyFilter) || (ChartTypeFilter == ChartType.CoOp.ToString() && t.Title is PhoenixCoOpTitle))))
         {
             var rating = progress.Title switch
             {
@@ -836,7 +837,7 @@
         else
         {
             _finalGroupings = _finalEntries.GroupBy(e => _charts[e.ChartId].ScoringLevel?.ToString("0.0") ?? "Not Enough Data")
-                .OrderBy(g => g.Key).ToArray();
+                .OrderBy(g => double.TryParse(g.Key,out var d)?d:10000).ToArray();
         }
         _messages = _finalGroupings.ToDictionary(kv => kv.Key, kv => "");
         foreach (var group in _finalGroupings)
@@ -873,6 +874,16 @@
     private async Task SetType(ChartType newType)
     {
         _chartType = newType;
+        if (_chartType == ChartType.CoOp && _level < 2 || _level > 4)
+        {
+            _level = 2;
+        }
+        if (_chartType == ChartType.CoOp && _usePersonalizedData)
+        {
+            _usePersonalizedData = false;
+            _modifiers["Skill"] = 0;
+            _modifiers["Similar Players"] = 0;
+        }
         SetQueryString();
         await Recalculate();
     }

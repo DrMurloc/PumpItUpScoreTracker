@@ -40,7 +40,8 @@ namespace ScoreTracker.Application.Handlers
                 var phoenixScores = new List<(Guid UserId, RecordedPhoenixScore Record)>();
                 for (var l = min; l <= max; l++)
                     phoenixScores.AddRange(
-                        (await _scores.GetAllPlayerScores(chartType, l)).Where(s => s.record.Score != null));
+                        (await _scores.GetAllPlayerScores(chartType, l, context.CancellationToken)).Where(s =>
+                            s.record.Score != null));
                 var userIds = phoenixScores.Select(u => u.UserId).Distinct().ToArray();
                 var playerWeights = new Dictionary<Guid, IDictionary<DifficultyLevel, double>>();
                 foreach (var userId in userIds)

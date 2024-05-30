@@ -99,6 +99,8 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
             await ProcessPassTierList(level, ChartType.Single, context.CancellationToken);
             await ProcessPassTierList(level, ChartType.Double, context.CancellationToken);
         }
+
+        foreach (var playerCount in Enumerable.Range(2, 5)) await ProcessCoOpPassTierList(2, context.CancellationToken);
     }
 
     public async Task Consume(ConsumeContext<ProcessScoresTiersListCommand> context)
@@ -214,7 +216,7 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     }
 
     public static IEnumerable<SongTierListEntry> ProcessIntoTierList(string tierListName,
-        IDictionary<Guid, int> chartWeights)
+        IDictionary<Guid, double> chartWeights)
     {
         if (!chartWeights.Any()) return Array.Empty<SongTierListEntry>();
         var standardDeviationCompare =
@@ -254,7 +256,13 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         return result;
     }
 
-    public static double StdDev(IEnumerable<int> values,
+    public static IEnumerable<SongTierListEntry> ProcessIntoTierList(string tierListName,
+        IDictionary<Guid, int> chartWeights)
+    {
+        return ProcessIntoTierList(tierListName, chartWeights.ToDictionary(kv => kv.Key, kv => (double)kv.Value));
+    }
+
+    public static double StdDev(IEnumerable<double> values,
         bool as_sample)
     {
         // Get the mean.
@@ -263,13 +271,19 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         // Get the sum of the squares of the differences
         // between the values and the mean.
         var squares_query =
-            from int value in values
+            from double value in values
             select (value - mean) * (value - mean);
         var sum_of_squares = squares_query.Sum();
 
         if (as_sample)
             return Math.Sqrt(sum_of_squares / (values.Count() - 1));
         return Math.Sqrt(sum_of_squares / values.Count());
+    }
+
+    public static double StdDev(IEnumerable<int> values,
+        bool as_sample)
+    {
+        return StdDev(values.Select(i => (double)i), as_sample);
     }
 
     public static IEnumerable<SongTierListEntry> ProcessIntoTierList(
@@ -362,6 +376,27 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         }
 
         return result;
+    }
+
+    private async Task ProcessCoOpPassTierList(int playerCount, CancellationToken cancellationToken)
+    {
+        var scores = (await _scores.GetAllPlayerScores(ChartType.CoOp, playerCount, cancellationToken))
+            .Where(s => s.record is { Score: not null, IsBroken: false }).ToArray();
+        var playerLevels =
+            (await _playerStats.GetStats(scores.Select(s => s.userId).Distinct().ToArray(), cancellationToken))
+            .ToDictionary(u => u.UserId, u => u.DoublesCompetitiveLevel);
+        var playerWeights = playerLevels.ToDictionary(u => u.Key, u => Math.Log(28.0 - u.Value));
+
+        var chartTotals = scores.GroupBy(s => s.record.ChartId)
+            .ToDictionary(g => g.Key, g => g.Sum(r => playerWeights[r.userId]));
+        var entries = ProcessIntoTierList("Pass Count", chartTotals);
+
+        var chartMinimums = scores.GroupBy(s => s.record.ChartId)
+            .ToDictionary(g => g.Key, g => g.Min(r => playerLevels[r.userId]));
+
+        foreach (var r in entries) await _tierLists.SaveEntry(r, cancellationToken);
+        foreach (var kv in chartMinimums)
+            await _chartRepository.UpdateScoreLevel(MixEnum.Phoenix, kv.Key, kv.Value, cancellationToken);
     }
 
     private async Task ProcessPassTierList(DifficultyLevel level, ChartType chartType,
