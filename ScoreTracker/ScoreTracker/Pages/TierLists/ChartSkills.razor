@@ -867,7 +867,7 @@
         _songArtists = new HashSet<string>();
 
         var baseRating = DifficultyLevel.From(_level).BaseRating;
-        _averageRating = _scores.Any() ? (int)_scores.Values.Average(s => s.LetterGrade.GetModifier() * baseRating) : baseRating;
+        _averageRating = _scores.Any() ? (int)_scores.Where(kv=>!_isBroken[kv.Key] && kv.Value>0).Average(s => s.Value.LetterGrade.GetModifier() * baseRating) : baseRating;
         _isLoading = false;
     }
     private async Task SetType(ChartType newType)
