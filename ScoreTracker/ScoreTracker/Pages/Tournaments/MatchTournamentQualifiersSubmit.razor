@@ -309,10 +309,11 @@
     {
         var charts= _configuration.Charts.OrderBy(c => (int)c.Level).ThenBy(c => c.Type).ToArray();
         var index = charts.Select((c, i) => (c,i)).Where(kv => kv.c.Id == chartId).Select(kv => kv.i).FirstOrDefault(-1);
-        if (index == -1)
+        if (index == -1 || index==charts.Length-1)
         {
             return null;
         }
+        
         return charts[index + 1].Id;
     }
     private async Task SetUsername(string nameString)
@@ -336,6 +337,7 @@
                 _isNew = false;
             }
             await EvaluateRecommended();
+            await RefreshLeaderboard();
         }
         else
         {
@@ -375,6 +377,10 @@
         _photoUrl = null;
     }
 
+    protected override async Task OnParametersSetAsync()
+    {
+        await OnInitializedAsync();
+    }
     private async Task EvaluateRecommended()
     {
         _suggestedCharts.Clear();
