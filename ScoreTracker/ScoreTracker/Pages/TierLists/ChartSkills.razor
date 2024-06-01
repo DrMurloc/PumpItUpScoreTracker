@@ -878,7 +878,7 @@
     private async Task SetType(ChartType newType)
     {
         _chartType = newType;
-        if (_chartType == ChartType.CoOp && _level < 2 || _level > 4)
+        if (_chartType == ChartType.CoOp && _level is < 2 or > 4)
         {
             _level = 2;
         }
