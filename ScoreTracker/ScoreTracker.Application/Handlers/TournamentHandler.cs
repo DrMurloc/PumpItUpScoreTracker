@@ -32,7 +32,10 @@ namespace ScoreTracker.Application.Handlers
         public async Task<TournamentConfiguration> Handle(GetTournamentQuery request,
             CancellationToken cancellationToken)
         {
-            return await _tournaments.GetTournament(request.TournamentId, cancellationToken);
+            var result = await _tournaments.GetTournament(request.TournamentId, cancellationToken);
+            result.Scoring.ChartLevelSnapshot =
+                await _tournaments.GetScoringLevelSnapshot(request.TournamentId, cancellationToken);
+            return result;
         }
     }
 }

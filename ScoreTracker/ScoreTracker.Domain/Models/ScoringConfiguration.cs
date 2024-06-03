@@ -11,6 +11,8 @@ namespace ScoreTracker.Domain.Models
     {
         private readonly DataTable _dataTable = new();
 
+        public IDictionary<Guid, double>? ChartLevelSnapshot { get; set; }
+
         public IDictionary<DifficultyLevel, int> LevelRatings { get; set; } =
             DifficultyLevel.All.ToDictionary(l => l, l => l.BaseRating);
 
@@ -48,10 +50,24 @@ namespace ScoreTracker.Domain.Models
             return GetScorelessScore(chart.Id, chart.Level, chart.Type, chart.Song.Type, chart.Song.Duration);
         }
 
+        private double GetBaseRating(Guid chartId, ChartType chartType, DifficultyLevel level)
+        {
+            double rating = chartType == ChartType.CoOp ? 2000 : LevelRatings[level];
+            if (chartType == ChartType.CoOp || ChartLevelSnapshot == null ||
+                !ChartLevelSnapshot.TryGetValue(chartId, out var levelOverride) || level >= 28) return rating;
+
+            var min = DifficultyLevel.From((int)Math.Floor(levelOverride));
+            var max = DifficultyLevel.From((int)Math.Ceiling(levelOverride));
+            rating = LevelRatings[min] +
+                     (LevelRatings[max] - LevelRatings[min] * (levelOverride - (int)min));
+
+            return rating;
+        }
+
         private double GetScorelessScore(Guid chartId, DifficultyLevel level, ChartType chartType, SongType songType,
             TimeSpan duration)
         {
-            var rating = chartType == ChartType.CoOp ? 2000 : LevelRatings[level];
+            var rating = GetBaseRating(chartId, chartType, level);
             var result = rating
                          * ChartTypeModifiers[chartType]
                          * SongTypeModifiers[songType];

@@ -792,6 +792,28 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("TierListEntry", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.TournamentChartLevelEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("Level")
+                        .HasColumnType("float");
+
+                    b.Property<Guid>("TournamentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TournamentId");
+
+                    b.ToTable("TournamentChartLevel", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.TournamentEntity", b =>
                 {
                     b.Property<Guid>("Id")

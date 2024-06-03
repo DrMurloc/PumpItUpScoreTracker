@@ -51,6 +51,7 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<PlayerStatsEntity> PlayerStats { get; set; }
     public DbSet<BountyLeaaderboardEntity> BountyLeaderboard { get; set; }
     public DbSet<CommunityEntity> Community { get; set; }
+    public DbSet<TournamentChartLevelEntity> TournamentChartLevel { get; set; }
     public DbSet<CommunityChannelEntity> CommunityChannel { get; set; }
     public DbSet<ChartBountyEntity> ChartBounty { get; set; }
     public DbSet<CommunityInviteCodeEntity> CommunityInviteCode { get; set; }

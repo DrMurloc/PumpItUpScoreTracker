@@ -9,6 +9,7 @@
 @using MediatR
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Components
 @using Task = System.Threading.Tasks.Task
 @using System.ComponentModel
 @using System.Text.Json
@@ -194,14 +195,17 @@
     <Columns>
         <TemplateColumn T="ChartSessionEffectiveness" Title="Difficulty" Sortable="true" SortBy="x=>x.Level">
             <CellTemplate>
-                <MudImage Src="@context.Item.DifficultyBubblePath" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                <DifficultyBubble Chart="context.Item.Chart"></DifficultyBubble>
             </CellTemplate>
         </TemplateColumn>
-        <TemplateColumn T="ChartSessionEffectiveness" Title="Song" Sortable="true" SortBy="x=>x.SongName">
+        <TemplateColumn T="ChartSessionEffectiveness" Title="Song" Sortable="true" SortBy="x=>x.Chart.Song.Name">
             <CellTemplate>
-                <MudTooltip Text="@context.Item.SongName">
-                    <MudImage Src="@context.Item.SongImage" Height="35" Alt="@context.Item.SongName" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
-                </MudTooltip>
+                <SongImage Song="context.Item.Chart.Song"></SongImage>
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn T="ChartSessionEffectiveness" Title="Your Score" Sortable="true" SortBy="x => x.Score??0">
+            <CellTemplate>
+                <ScoreBreakdown Score="context.Item.Score" OneLine="true"></ScoreBreakdown>
             </CellTemplate>
         </TemplateColumn>
         <PropertyColumn Property="x => x.Seconds" Title="Seconds" Sortable="true" />
@@ -329,11 +333,9 @@
         _currentTourney = tourneyId;
     }
     private IEnumerable<ChartSessionEffectiveness> Scores => _charts.Values.Where(c=>!_hideUnRecordedCharts||_records.ContainsKey(c.Id))
-        .Select(c => new ChartSessionEffectiveness
+        .Select(c => new ChartSessionEffectiveness(c)
     {
-        SongName = c.Song.Name,
-        SongImage = c.Song.ImagePath.ToString(),
-        DifficultyBubblePath = $"https://piuimages.arroweclip.se/difficulty/{c.DifficultyString.ToLower()}.png",
+        Score = _records.TryGetValue(c.Id,out var score)?score.Score:null,
         Seconds = (int)c.Song.Duration.TotalSeconds,
         PointsWithoutScore = (int)Configuration.Scoring.GetScorelessScore(c),
                 Points = _records.ContainsKey(c.Id) ? Configuration.Scoring.GetScore(c, _records[c.Id].Score!.Value, _records[c.Id].Plate!.Value, _records[c.Id].IsBroken) : 0,
@@ -363,15 +365,13 @@
 
 
         
-    private sealed class ChartSessionEffectiveness
+    private sealed record ChartSessionEffectiveness(Chart Chart)
     {
-        public string SongImage { get; set; } = string.Empty;
-        public string SongName { get; set; } = string.Empty;
-        public string DifficultyBubblePath { get; set; } = string.Empty;
         public int Level { get; set; }
         public int Seconds { get; set; }
         public int PointsWithoutScore { get; set; }
         public int Points { get; set; }
+        public PhoenixScore? Score { get; set; }
         public double PointsPerSecond => (double)Points / (double)Seconds;
         public double PointsPerSecondPReScore => (double)PointsWithoutScore / (double)Seconds;
     }

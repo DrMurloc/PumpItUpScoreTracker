@@ -230,6 +230,26 @@ namespace ScoreTracker.Data.Repositories
             return results;
         }
 
+        private string SnapshotCacheKey(Guid tournamentId)
+        {
+            return $"{nameof(EFTournamentRepository)}__{tournamentId}__LevelSnapshot";
+        }
+
+        public async Task<IDictionary<Guid, double>?> GetScoringLevelSnapshot(Guid tournamentId,
+            CancellationToken cancellationToken)
+        {
+            return await _memoryCache.GetOrCreateAsync(SnapshotCacheKey(tournamentId), async o =>
+            {
+                o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(1);
+                var result = await _database.TournamentChartLevel.Where(e => e.TournamentId == tournamentId)
+                    .ToArrayAsync(cancellationToken);
+                if (!result.Any()) return (IDictionary<Guid, double>?)null;
+
+                return result.ToDictionary(e => e.ChartId, e => e.Level);
+            });
+        }
+
+
         private sealed record UserEntryDto(Guid UserId, string Name, int Score, TimeSpan RestTime, int ChartsPlayed,
             double AverageDifficulty, string VerificationType, bool NeedsApproval, string? VideoUrl)
         {
