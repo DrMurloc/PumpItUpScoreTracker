@@ -59,7 +59,7 @@ namespace ScoreTracker.Domain.Models
             var min = DifficultyLevel.From((int)Math.Floor(levelOverride));
             var max = DifficultyLevel.From((int)Math.Ceiling(levelOverride));
             rating = LevelRatings[min] +
-                     (LevelRatings[max] - LevelRatings[min] * (levelOverride - (int)min));
+                     (LevelRatings[max] - LevelRatings[min]) * (levelOverride - .5 - (int)min);
 
             return rating;
         }
