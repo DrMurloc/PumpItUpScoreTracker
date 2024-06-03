@@ -69,6 +69,17 @@ namespace ScoreTracker.Application.Handlers
         {
             DifficultyLevel[] toFind = { competitiveLevel, competitiveLevel - 1, competitiveLevel - 2 };
 
+            var tierLists = new Dictionary<Guid, TierListCategory>();
+            foreach (var level in toFind)
+            {
+                var mySinglesRating = await _mediator.Send(new GetMyRelativeTierListQuery(ChartType.Single, level),
+                    cancellationToken);
+                var myDoublesRating = await _mediator.Send(new GetMyRelativeTierListQuery(ChartType.Double, level),
+                    cancellationToken);
+                foreach (var rating in mySinglesRating) tierLists[rating.ChartId] = rating.Category;
+                foreach (var rating in myDoublesRating) tierLists[rating.ChartId] = rating.Category;
+            }
+
             var chartIds = (
                     await _mediator.Send(
                         new GetChartsQuery(MixEnum.Phoenix),
@@ -79,15 +90,18 @@ namespace ScoreTracker.Application.Handlers
             var cutoff = DateTimeOffset.Now - TimeSpan.FromDays(30);
             var random = new Random();
             var now = DateTimeOffset.Now;
+
             var skipped = ignoredChartIds.TryGetValue("Revisit Old Scores", out var r) ? r : new HashSet<Guid>();
-            return scores.Where(r =>
-                    chartIds.Contains(r.ChartId) && !skipped.Contains(r.ChartId) && r.RecordedDate <= cutoff)
+            return scores.Where(r => tierLists.ContainsKey(r.ChartId) &&
+                                     tierLists[r.ChartId] is TierListCategory.Underrated or TierListCategory.VeryHard &&
+                                     chartIds.Contains(r.ChartId) && !skipped.Contains(r.ChartId) &&
+                                     r.RecordedDate <= cutoff)
                 .OrderBy(r => r.RecordedDate)
                 .Take(30)
                 .OrderBy(r => random.Next(100))
                 .Take(6)
                 .Select(r => new ChartRecommendation("Revisit Old Scores", r.ChartId,
-                    "Your oldest scores that could use updating",
+                    "Your oldest scores that appear to be needing an update",
                     (now - r.RecordedDate).TotalDays.ToString("0") + " Days Old"));
         }
 
