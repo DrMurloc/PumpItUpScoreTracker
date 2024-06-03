@@ -52,6 +52,7 @@ namespace ScoreTracker.Application.Handlers
             return (await GetPushLevels(feedback, cancellationToken, titles, scores))
                 .Concat(await GetPassFills(feedback, cancellationToken, competitiveLevel, scores))
                 .Concat(await GetSkillTitleCharts(feedback, cancellationToken, titles))
+                .Concat(await GetOldScores(cancellationToken, competitiveLevel, scores, feedback))
                 .Concat(await GetPGPushes(feedback, cancellationToken, scores))
                 .Concat(await GetRandomFromTop50Charts(feedback, cancellationToken))
                 .Concat(await GetWeakCharts(cancellationToken, competitiveLevel, scores, feedback))
@@ -60,6 +61,34 @@ namespace ScoreTracker.Application.Handlers
 
         private sealed record OrderedTitle(TitleProgress t, int i)
         {
+        }
+
+        private async Task<IEnumerable<ChartRecommendation>> GetOldScores(CancellationToken cancellationToken,
+            DifficultyLevel competitiveLevel, RecordedPhoenixScore[] scores,
+            IDictionary<string, ISet<Guid>> ignoredChartIds)
+        {
+            DifficultyLevel[] toFind = { competitiveLevel, competitiveLevel - 1, competitiveLevel - 2 };
+
+            var chartIds = (
+                    await _mediator.Send(
+                        new GetChartsQuery(MixEnum.Phoenix),
+                        cancellationToken))
+                .Where(c => c.Level >= competitiveLevel - 2 && c.Level <= competitiveLevel).Select(c => c.Id).Distinct()
+                .ToHashSet();
+
+            var cutoff = DateTimeOffset.Now - TimeSpan.FromDays(30);
+            var random = new Random();
+            var now = DateTimeOffset.Now;
+            var skipped = ignoredChartIds.TryGetValue("Revisit Old Scores", out var r) ? r : new HashSet<Guid>();
+            return scores.Where(r =>
+                    chartIds.Contains(r.ChartId) && !skipped.Contains(r.ChartId) && r.RecordedDate <= cutoff)
+                .OrderBy(r => r.RecordedDate)
+                .Take(30)
+                .OrderBy(r => random.Next(100))
+                .Take(6)
+                .Select(r => new ChartRecommendation("Revisit Old Scores", r.ChartId,
+                    "Your oldest scores that could use updating",
+                    (now - r.RecordedDate).TotalDays.ToString("0") + " Days Old"));
         }
 
         private async Task<IEnumerable<ChartRecommendation>> GetWeakCharts(CancellationToken cancellationToken,
@@ -75,7 +104,7 @@ namespace ScoreTracker.Application.Handlers
 
 
             var titleLevel = competitiveLevel;
-            int[] toFind = { titleLevel, titleLevel - 1, titleLevel - 2, titleLevel - 3 };
+            int[] toFind = { titleLevel, titleLevel - 1, titleLevel - 2 };
             var random = new Random();
 
             var result = new List<ChartRecommendation>();
@@ -89,14 +118,14 @@ namespace ScoreTracker.Application.Handlers
                     .Where(s => !skipped.Contains(s.ChartId))
                     .Take(6)
                     .OrderBy(_ => random.NextInt64(10000))
-                    .Take(2).Select(r =>
+                    .Take(1).Select(r =>
                         new ChartRecommendation("Skill Up", r.ChartId,
                             "Charts that are relatively weaker for you compared to other players")));
 
                 result.AddRange(myDoublesRating.OrderByDescending(r => r.Order)
                     .Where(s => !skipped.Contains(s.ChartId))
                     .Take(6)
-                    .OrderBy(_ => random.NextInt64(10000)).Take(2).Select(r =>
+                    .OrderBy(_ => random.NextInt64(10000)).Take(1).Select(r =>
                         new ChartRecommendation("Skill Up", r.ChartId,
                             "Charts that are relatively weaker for you compared to other players")));
             }

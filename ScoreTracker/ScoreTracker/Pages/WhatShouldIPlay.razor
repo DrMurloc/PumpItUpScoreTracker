@@ -13,6 +13,7 @@
 @using ScoreTracker.PersonalProgress.Queries
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Shared
 
 <PageTitle>What Should I Play</PageTitle>
 
@@ -77,24 +78,35 @@
         @foreach (var chart in _charts[key])
         {
             <MudItem xs="6" sm="3" md="2">
+                <MudCard Class="chart-card">
+                    <MudCardHeader Style=@($"background-image:url(\"{chart.Song.ImagePath}\");")>
 
-                <MudCard>
-                    <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()" />
-                    @if (_scores.TryGetValue(chart.Id, out var score) && score.Score!=null)
+                        <DifficultyBubble Chart="chart"></DifficultyBubble>
+                    </MudCardHeader>
+                    @if (_scores.TryGetValue(chart.Id, out var score) && score.Score != null)
                     {
-                        
                         <MudCardContent>
-                            <ScoreBreakdown Score="score.Score" IsBroken="score.IsBroken" Plate="score.Plate" ShowScore="true"></ScoreBreakdown>
+                            <ScoreBreakdown Score="score.Score" IsBroken="score.IsBroken" OneLine="true" ShowScore="true" Plate="score.Plate"></ScoreBreakdown>
+                            @if (!string.IsNullOrWhiteSpace(_details[key][chart.Id]))
+                            {
+                                <MudText>@_details[key][chart.Id]</MudText>
+                            }
                         </MudCardContent>
                     }
+
                     <MudCardActions>
-                        <DifficultyBubble Chart="chart"></DifficultyBubble>
+                        @if (_topCharts.Contains(chart.Id))
+                        {
+                            <MudTooltip Text=@($"Top 50 {chart.Type}s")>
+                                <MudIcon Icon="@PiuScoresIcons.Crown" Style="color:#00ffff"></MudIcon>
+                            </MudTooltip>
+                        }
                         <MudSpacer></MudSpacer>
-                        
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => Edit(chart.Id,key))"></MudIconButton>
+
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => Edit(chart.Id, key))"></MudIconButton>
                         @if (_videos.ContainsKey(chart.Id))
                         {
-                            <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(_videos[chart.Id],chart))"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(_videos[chart.Id], chart))"></MudIconButton>
 
                         }
                         else
@@ -198,6 +210,7 @@
     private int _rating = 0;
     private int _averageRating = 0;
 
+    private ISet<Guid> _topCharts = new HashSet<Guid>();
     private async Task SubmitPositiveFeedback()
     {
         if (_selectedChart == null)
@@ -244,6 +257,7 @@
     private IDictionary<Name, IEnumerable<Chart>> _charts = new Dictionary<Name, IEnumerable<Chart>>();
     private IDictionary<Guid, RecordedPhoenixScore> _scores = new Dictionary<Guid, RecordedPhoenixScore>();
     private IDictionary<Guid, string> _videos = new Dictionary<Guid, string>();
+    private IDictionary<Name, IDictionary<Guid, string>> _details = new Dictionary<Name, IDictionary<Guid, string>>();
     private void ShowVideo(string url, Chart chart)
     {
         _showVideoDialog = true;
@@ -256,6 +270,7 @@
         await Notifications.NotifyAdmin($"The video for{_currentVideoDescription} was reported by {(CurrentUser.IsLoggedIn ? CurrentUser.User.Name : "Unknown")}", CancellationToken.None);
         Snackbar.Add("Notification was sent", Severity.Success);
     }
+
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn)
@@ -263,6 +278,9 @@
             NavManager.NavigateTo("/Login");
             return;
         }
+        _topCharts = (await Mediator.Send(new GetTop50CompetitiveQuery(CurrentUser.User.Id, Domain.Enums.ChartType.Double)))
+            .Concat(await Mediator.Send(new GetTop50CompetitiveQuery(CurrentUser.User.Id, Domain.Enums.ChartType.Single)))
+            .Select(c => c.ChartId).Distinct().ToHashSet();
         var titles = await Mediator.Send(new GetTitleProgressQuery(MixEnum.Phoenix));
         _progress = titles.GetPushingTitle();
         var pushingLevel = (_progress.Title as PhoenixDifficultyTitle)!.Level;
@@ -279,6 +297,8 @@
         _videos=(await Mediator.Send(new GetChartVideosQuery())).ToDictionary(c => c.ChartId,c=>c.VideoUrl.ToString());
         _charts = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => g.Select(r => charts[r.ChartId]).ToArray().AsEnumerable());
         _descriptions = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => g.First().Explanation);
+        _details = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => (IDictionary<Guid,string>)g.ToDictionary(c => c.ChartId, c => c.ChartDetails));
+
         _stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
 
     }

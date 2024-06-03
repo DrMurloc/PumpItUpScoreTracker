@@ -15,6 +15,8 @@
 @using ScoreTracker.Web.Components
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using ScoreTracker.Domain.Records
+@using ScoreTracker.PersonalProgress.Queries
+@using ScoreTracker.Web.Shared
 
 <PageTitle>Personalized Tier List</PageTitle>
 
@@ -228,7 +230,7 @@
 
                         <MudCard Class="@CardClass(chart.Id)" Style="@CardStyle(chart.Id)">
                             <MudCardHeader Style=@($"background-image:url(\"{chart.Song.ImagePath}\");")>
-
+                                
                                 <DifficultyBubble Chart="chart"></DifficultyBubble>
                             </MudCardHeader>
                             @if ((_scores.TryGetValue(chart.Id, out var s) ? s : 0) > 0)
@@ -238,6 +240,12 @@
                                 </MudCardContent>
                             }
                             <MudCardActions>
+                                @if (_topCharts.Contains(chart.Id))
+                                {
+                                    <MudTooltip Text=@($"Top 50 {chart.Type}s")>
+                                        <MudIcon Icon="@PiuScoresIcons.Crown" Style="color:#00ffff"></MudIcon>
+                                    </MudTooltip>
+                                }
                                 <MudSpacer>
                                 </MudSpacer>
                                 @if (_charTitles.TryGetValue(chart.Id, out var title))
@@ -774,6 +782,7 @@
 
     }
 
+    private ISet<Guid> _topCharts = new HashSet<Guid>();
     private async Task Recalculate()
     {
         _isLoading = true;
@@ -915,6 +924,10 @@
         };
         if (CurrentUser.IsLoggedIn)
         {
+
+            _topCharts = (await Mediator.Send(new GetTop50CompetitiveQuery(CurrentUser.User.Id, ChartType.Double)))
+                .Concat(await Mediator.Send(new GetTop50CompetitiveQuery(CurrentUser.User.Id, ChartType.Single)))
+                .Select(c => c.ChartId).Distinct().ToHashSet();
             var stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
             if (stats.DoublesCompetitiveLevel > 1)
             {
