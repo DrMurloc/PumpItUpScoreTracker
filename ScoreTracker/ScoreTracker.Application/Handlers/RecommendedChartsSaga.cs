@@ -55,7 +55,6 @@ namespace ScoreTracker.Application.Handlers
                 .Concat(await GetOldScores(cancellationToken, competitiveLevel, scores, feedback))
                 .Concat(await GetPGPushes(feedback, cancellationToken, scores))
                 .Concat(await GetRandomFromTop50Charts(feedback, cancellationToken))
-                .Concat(await GetWeakCharts(cancellationToken, competitiveLevel, scores, feedback))
                 .Concat(await GetBounties(feedback, cancellationToken, scores)).ToArray();
         }
 
@@ -105,47 +104,6 @@ namespace ScoreTracker.Application.Handlers
                     (now - r.RecordedDate).TotalDays.ToString("0") + " Days Old"));
         }
 
-        private async Task<IEnumerable<ChartRecommendation>> GetWeakCharts(CancellationToken cancellationToken,
-            DifficultyLevel competitiveLevel, RecordedPhoenixScore[] scores,
-            IDictionary<string, ISet<Guid>> ignoredChartIds)
-        {
-            if (scores.Length <= 12)
-                return scores.Where(s => s.Score != null && s.Score < 1000000).Select(s =>
-                    new ChartRecommendation("Skill Up", s.ChartId,
-                        "Charts that are relatively weaker for you compared to other players"));
-
-            var skipped = ignoredChartIds.TryGetValue("Skill Up", out var charts) ? charts : new HashSet<Guid>();
-
-
-            var titleLevel = competitiveLevel;
-            int[] toFind = { titleLevel, titleLevel - 1, titleLevel - 2 };
-            var random = new Random();
-
-            var result = new List<ChartRecommendation>();
-            foreach (var level in toFind)
-            {
-                var mySinglesRating = await _mediator.Send(new GetMyRelativeTierListQuery(ChartType.Single, level),
-                    cancellationToken);
-                var myDoublesRating = await _mediator.Send(new GetMyRelativeTierListQuery(ChartType.Double, level),
-                    cancellationToken);
-                result.AddRange(mySinglesRating.OrderByDescending(r => r.Order)
-                    .Where(s => !skipped.Contains(s.ChartId))
-                    .Take(6)
-                    .OrderBy(_ => random.NextInt64(10000))
-                    .Take(1).Select(r =>
-                        new ChartRecommendation("Skill Up", r.ChartId,
-                            "Charts that are relatively weaker for you compared to other players")));
-
-                result.AddRange(myDoublesRating.OrderByDescending(r => r.Order)
-                    .Where(s => !skipped.Contains(s.ChartId))
-                    .Take(6)
-                    .OrderBy(_ => random.NextInt64(10000)).Take(1).Select(r =>
-                        new ChartRecommendation("Skill Up", r.ChartId,
-                            "Charts that are relatively weaker for you compared to other players")));
-            }
-
-            return result;
-        }
 
         private async Task<IEnumerable<ChartRecommendation>> GetRandomFromTop50Charts(
             IDictionary<string, ISet<Guid>> ignoredChartIds,
