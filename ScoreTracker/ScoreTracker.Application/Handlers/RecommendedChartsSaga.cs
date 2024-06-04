@@ -151,15 +151,19 @@ namespace ScoreTracker.Application.Handlers
             IDictionary<string, ISet<Guid>> ignoredChartIds,
             CancellationToken cancellationToken)
         {
-            var skipped = ignoredChartIds.TryGetValue("Improve Your Top 100", out var r) ? r : new HashSet<Guid>();
+            var skipped = ignoredChartIds.TryGetValue("Improve Your Top 50", out var r) ? r : new HashSet<Guid>();
             var random = new Random();
-            var charts =
-                await _mediator.Send(new GetTop50CompetitiveQuery(_currentUser.User.Id, null), cancellationToken);
-            return charts
-                .Where(c => c.Score != null && c.Score < 1000000)
+            var singles = (await _mediator.Send(new GetTop50CompetitiveQuery(_currentUser.User.Id, ChartType.Single),
+                    cancellationToken)).Where(c => c.Score != null && c.Score < 1000000)
                 .Where(c => !skipped.Contains(c.ChartId))
                 .OrderBy(c => random.Next())
-                .Take(6)
+                .Take(3);
+            var doubles = (await _mediator.Send(new GetTop50CompetitiveQuery(_currentUser.User.Id, ChartType.Double),
+                    cancellationToken)).Where(c => c.Score != null && c.Score < 1000000)
+                .Where(c => !skipped.Contains(c.ChartId))
+                .OrderBy(c => random.Next())
+                .Take(3);
+            return singles.Concat(doubles)
                 .Select(c => new ChartRecommendation("Improve Your Top 50", c.ChartId,
                     "These are randomly pulled from your best 100 charts based on competitive score. Push that score!"));
         }
