@@ -540,6 +540,42 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("PhotoVerification", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.PlayerHistoryEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CoOpRating")
+                        .HasColumnType("int");
+
+                    b.Property<double>("CompetitiveLevel")
+                        .HasColumnType("float");
+
+                    b.Property<DateTimeOffset>("Date")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<double>("DoublesLevel")
+                        .HasColumnType("float");
+
+                    b.Property<int>("PassCount")
+                        .HasColumnType("int");
+
+                    b.Property<double>("SinglesLevel")
+                        .HasColumnType("float");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PlayerHistory", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.PlayerStatsEntity", b =>
                 {
                     b.Property<Guid>("UserId")

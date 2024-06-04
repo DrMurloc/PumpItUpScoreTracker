@@ -83,7 +83,8 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
     {
         var oldStats = await _stats.GetStats(request.UserId, cancellationToken);
         var scoring = ScoringConfiguration.PiuScoresRating;
-        var charts = (await _charts.GetCharts(MixEnum.Phoenix)).ToDictionary(c => c.Id);
+        var charts =
+            (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
         var recorded =
             (await _scores.GetRecordedScores(request.UserId, cancellationToken)).ToArray();
         var scores = recorded
@@ -149,10 +150,12 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
         if (newStats.SkillRating > oldStats.SkillRating || newStats.SinglesRating > oldStats.SinglesRating ||
             newStats.DoublesRating > oldStats.DoublesRating)
             await _bus.Publish(new PlayerRatingsImprovedEvent(request.UserId, oldStats.SkillRating,
-                oldStats.SinglesRating, oldStats.DoublesRating, newStats.SkillRating, newStats.SinglesRating,
-                newStats.DoublesRating, oldStats.CompetitiveLevel, newStats.CompetitiveLevel,
-                oldStats.SinglesCompetitiveLevel, newStats.SinglesCompetitiveLevel, oldStats.DoublesCompetitiveLevel,
-                newStats.DoublesCompetitiveLevel));
+                    oldStats.SinglesRating, oldStats.DoublesRating, newStats.SkillRating, newStats.SinglesRating,
+                    newStats.DoublesRating, oldStats.CompetitiveLevel, newStats.CompetitiveLevel,
+                    oldStats.SinglesCompetitiveLevel, newStats.SinglesCompetitiveLevel,
+                    oldStats.DoublesCompetitiveLevel,
+                    newStats.DoublesCompetitiveLevel, coOps.Sum(s => s.Rating), recorded.Count(r => !r.IsBroken)),
+                cancellationToken);
         await _bus.Publish(new PlayerStatsUpdatedEvent(request.UserId, newStats),
             cancellationToken);
         await _mediator.Publish(new PlayerStatsUpdatedEvent(request.UserId, newStats),
