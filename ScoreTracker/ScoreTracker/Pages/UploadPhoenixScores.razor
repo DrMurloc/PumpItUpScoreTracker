@@ -4,6 +4,7 @@
 @using MediatR
 @using CsvHelper
 @using System.Globalization
+@using System.Security.Authentication
 @using MassTransit
 @using Microsoft.OpenApi.Extensions
 @using ScoreTracker.Application.Commands
@@ -285,14 +286,20 @@
         _passwordImportStatus = "Starting Import...";
         try
         {
-            await Mediator.Send(new ImportOfficialPlayerScoresCommand(_username, _password,_includeBroken));
+            await Mediator.Send(new ImportOfficialPlayerScoresCommand(_username, _password, _includeBroken));
             _passwordImportStatus = "Import Completed!";
+        }
+        catch (InvalidCredentialException)
+        {
+
+            _passwordImportStatus = "Invalid Username/Password";
+            Snackbar.Add("Your password appears to be incorrect, could not log into https://piugame.com", Severity.Error);
         }
         catch (Exception e)
         {
             _passwordImportStatus = "Import Experienced an Error";
             Logger.LogError(e, $"There was an error while importing scores");
-            Snackbar.Add("There was an error while trying to import your scores. Double check your username/password and try again.",Severity.Error);
+            Snackbar.Add("There was an error while trying to import your scores. Try again later. If this persists notify DrMurloc",Severity.Error);
         }
         _isImporting = false;
     }

@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Security.Authentication;
+using System.Text.RegularExpressions;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Data.Apis.Contracts;
@@ -224,6 +225,8 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     {
         var client = await _piuGame.GetSessionId(username, password, cancellationToken);
         var importedData = await _piuGame.GetAccountData(client, cancellationToken);
+        if (importedData.AccountName == "INVALID")
+            throw new InvalidCredentialException("Could not log in user to PIUgame");
         var imagePath = await ConvertPiuGameAvatarToPiuScoresAvatar(importedData.ImageUrl, cancellationToken);
         var titles = importedData.TitleEntries.Where(t => t.Have).Select(t =>
             t.Name + (t.Name.ToString().Contains("GAMER") || t.Name == "LOVERS"
