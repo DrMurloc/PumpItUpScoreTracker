@@ -113,8 +113,9 @@ namespace ScoreTracker.Application.Handlers
             CancellationToken cancellationToken)
         {
             var community = await GetCommunity(request.Community, cancellationToken);
-            if (community.PrivacyType == CommunityPrivacyType.Private &&
-                !community.MemberIds.Contains(_currentUser.User.Id))
+            if (community.PrivacyType == CommunityPrivacyType.Private && !(_currentUser.IsLoggedIn &&
+                                                                           community.MemberIds.Contains(_currentUser
+                                                                               .User.Id)))
                 throw new DeniedFromCommunityException("This community is private and you must be a member to view it");
 
             return await _communities.GetLeaderboard(request.Community, cancellationToken);
@@ -136,7 +137,10 @@ namespace ScoreTracker.Application.Handlers
         public async Task<IEnumerable<CommunityOverviewRecord>> Handle(GetMyCommunitiesQuery request,
             CancellationToken cancellationToken)
         {
-            return await _communities.GetCommunities(_currentUser.User.Id, cancellationToken);
+            if (_currentUser.IsLoggedIn)
+                return await _communities.GetCommunities(_currentUser.User.Id, cancellationToken);
+
+            return await _communities.GetPublicCommunities(cancellationToken);
         }
 
         public async Task<IEnumerable<CommunityOverviewRecord>> Handle(GetPublicCommunitiesQuery request,
