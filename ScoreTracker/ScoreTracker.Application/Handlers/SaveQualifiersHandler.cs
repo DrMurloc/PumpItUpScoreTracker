@@ -36,7 +36,7 @@ namespace ScoreTracker.Application.Handlers
             if (orderedOldLeaderboard.All(o => o.q.UserName != user))
             {
                 await _botClient.SendMessage(
-                    $"A new challenger approaches! Welcome {user} to the qualifier leaderboard!",
+                    $"A new challenger approaches! Welcome {user} to the [Qualifier Leaderboard](https://piuscores.arroweclip.se/Tournament/{request.TournamentId}/Qualifiers)!",
                     config.NotificationChannel, cancellationToken);
                 /*
                 if (newPlace > 22 || orderedNewLeaderboard.Length < 23)
@@ -53,7 +53,8 @@ namespace ScoreTracker.Application.Handlers
                 if (oldPlace != newPlace)
 
                     await _botClient.SendMessage(
-                        $"{user} has progressed to {newPlace} on the leaderboard!", config.NotificationChannel,
+                        $"{user} has progressed to {newPlace} on the [Leaderboard](https://piuscores.arroweclip.se/Tournament/{request.TournamentId}/Qualifiers)!",
+                        config.NotificationChannel,
                         cancellationToken);
                 /*
                 if (newPlace > 22 || oldPlace <= 22 || orderedNewLeaderboard.Length < 23)
