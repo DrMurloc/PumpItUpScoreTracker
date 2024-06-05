@@ -38,15 +38,20 @@ namespace ScoreTracker.Web.HostedServices
                         var bads = int.TryParse(options["bads"], out var b) ? b : 0;
                         var misses = int.TryParse(options["misses"], out var m) ? m : 0;
                         var combo = int.TryParse(options["combo"], out var c) ? c : 0;
-                        var screen = new ScoreScreen(perfects, greats, goods, bads, misses, combo);
+                        double? calories = null;
+                        if (options.TryGetValue("calories", out var calorieString) &&
+                            double.TryParse(calorieString, out var cResult)) calories = cResult;
+                        var screen = new ScoreScreen(perfects, greats, goods, bads, misses, combo, calories);
                         var loss = (double)(1000000 - screen.CalculatePhoenixScore);
 
                         if (!screen.IsValid)
+                        {
                             await _botClient.SendMessage("This scoring configuration is invalid", channelId,
                                 CancellationToken.None);
+                        }
                         else
-                            await _botClient.SendMessage(
-                                $@"
+                        {
+                            var message = $@"
 {perfects:N0} Perfects, {greats:N0} Greats, {goods:N0} Goods, {bads:N0} Bads, {misses:N0} Misses, {combo:N0} Max Combo
 **{(int)screen.CalculatePhoenixScore:N0} (#LETTERGRADE|{screen.LetterGrade}##PLATE|{screen.PlateText}#)**
 {screen.NextLetterGrade()}
@@ -54,12 +59,20 @@ namespace ScoreTracker.Web.HostedServices
 - {screen.GoodLoss:N0} Lost to Goods ({100.0 * screen.GoodLoss / loss:N2}%)
 - {screen.BadLoss:N0} Lost to Bads ({100.0 * screen.BadLoss / loss:N2}%)
 - {screen.MissLoss:N0} Lost to Misses ({100.0 * screen.MissLoss / loss:N2}%)
-- {screen.ComboLoss:N0} Lost to Combo ({100.0 * screen.ComboLoss / loss:N2}%)", channelId, CancellationToken.None);
+- {screen.ComboLoss:N0} Lost to Combo ({100.0 * screen.ComboLoss / loss:N2}%)";
+                            if (screen.EstimatedSteps != null)
+                                message += $@"
+- {screen.EstimatedSteps:N0} Estimated Arrow Presses";
+                            await _botClient.SendMessage(message
+                                , channelId, CancellationToken.None);
+                        }
                     },
                     new[]
                     {
-                        ("perfects", "Perfect Count"), ("greats", "Great Count"), ("goods", "Good Count"),
-                        ("bads", "Bad Count"), ("misses", "Miss Count"), ("combo", "Max Combo")
+                        ("perfects", "Perfect Count", true), ("greats", "Great Count", true),
+                        ("goods", "Good Count", true),
+                        ("bads", "Bad Count", true), ("misses", "Miss Count", true), ("combo", "Max Combo", true),
+                        ("calories", "KCalories", false)
                     });
                 await _botClient.RegisterSlashCommand("deregister-community-channel",
                     "De-Registers this channel to stop providing notifications for a community",
@@ -102,7 +115,7 @@ namespace ScoreTracker.Web.HostedServices
                         }
                     }, new[]
                     {
-                        ("community-name", "The name of the community")
+                        ("community-name", "The name of the community", true)
                     });
                 await _botClient.RegisterSlashCommand("register-community-channel",
                     "Registers this channel to provide notifications for a community", "Registering Channel...",
@@ -159,13 +172,14 @@ namespace ScoreTracker.Web.HostedServices
                         }
                     }, new[]
                     {
-                        ("community-name", "The name of the community (optional with invite code)"),
+                        ("community-name", "The name of the community (optional with invite code)", false),
                         ("invite-code",
-                            "An active invite code for the community (not required for public communities)"),
-                        ("new-scores-notifications", "Set to True if you want notifications about new scores"),
+                            "An active invite code for the community (not required for public communities)", false),
+                        ("new-scores-notifications", "Set to True if you want notifications about new scores", true),
                         ("new-member-notifications",
-                            "Set to True if you want notifications about new members joining the community"),
-                        ("new-titles-notifications", "Set to True if you want notifications about new titles achieved")
+                            "Set to True if you want notifications about new members joining the community", true),
+                        ("new-titles-notifications", "Set to True if you want notifications about new titles achieved",
+                            true)
                     });
             });
             _logger.LogInformation("Started bot client");
