@@ -48,7 +48,6 @@ builder.Services.AddMassTransit(o =>
 {
     o.AddConsumers(typeof(PlayerRatingSaga).Assembly, typeof(TierListSaga).Assembly,
         typeof(RecurringJobHostedService).Assembly);
-    var schedulerEndpoint = new Uri("queue:scheduler");
 
     o.AddDelayedMessageScheduler();
 

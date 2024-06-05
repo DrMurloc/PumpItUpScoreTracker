@@ -4,7 +4,7 @@ using ScoreTracker.Domain.ValueTypes;
 namespace ScoreTracker.Domain.Records;
 
 public sealed record ScoreScreen(StepCount Perfects, StepCount Greats, StepCount Goods, StepCount Bads,
-    StepCount Misses, StepCount MaxCombo)
+    StepCount Misses, StepCount MaxCombo, double? Calories = null)
 {
     private static readonly Random Random = new(1949);
     public int TotalCount => Perfects + Greats + Goods + Bads + Misses;
@@ -19,6 +19,30 @@ public sealed record ScoreScreen(StepCount Perfects, StepCount Greats, StepCount
     public int BadLoss => (int)(.995 * .9 * Bads / TotalCount * 1000000.0);
     public int MissLoss => (int)(.995 * Misses / TotalCount * 1000000.0);
     public int ComboLoss => (int)(.005 * (TotalCount - MaxCombo) / TotalCount * 1000000.0);
+
+    private static readonly IDictionary<int, int> EstimatedNoteCountThresholds =
+        new Dictionary<int, int>
+        {
+            { 57, 1 },
+            { 123, 2 },
+            { 174, 3 },
+            { 236, 4 },
+            { 309, 5 },
+            { 372, 6 },
+            { 468, 7 },
+            { 524, 8 },
+            { 555, 9 },
+            { 572, 10 },
+            { 597, 11 },
+            { 700, 12 }
+        };
+
+    private double CaloriesPerStep => TotalCount > 700
+        ? .0621
+        : .035 + .0023 * EstimatedNoteCountThresholds.OrderBy(kv => kv.Key).First(kv => kv.Key >= TotalCount)
+            .Value;
+
+    public double? EstimatedSteps => Calories == null ? null : Calories / CaloriesPerStep;
 
     public PhoenixPlate PlateText
     {

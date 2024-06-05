@@ -122,7 +122,7 @@ public sealed class DiscordBotClient : IBotClient
 
     public async Task RegisterSlashCommand(string name, string description, string response,
         Func<ulong, ulong, IDictionary<string, string>, Task> execution,
-        IEnumerable<(string name, string description)> options)
+        IEnumerable<(string name, string description, bool isRequired)> options)
     {
         await RegisterSlashCommand(name, description, response, builder =>
         {
@@ -132,7 +132,7 @@ public sealed class DiscordBotClient : IBotClient
                     .WithName(option.name)
                     .WithDescription(option.description)
                     .WithType(ApplicationCommandOptionType.String)
-                    .WithRequired(true);
+                    .WithRequired(option.isRequired);
                 builder.AddOption(optionBuilder);
             }
         }, async command =>
