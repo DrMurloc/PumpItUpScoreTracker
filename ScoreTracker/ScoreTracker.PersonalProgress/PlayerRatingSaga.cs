@@ -148,7 +148,8 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
 
         await _stats.SaveStats(request.UserId, newStats, cancellationToken);
         if (newStats.SkillRating > oldStats.SkillRating || newStats.SinglesRating > oldStats.SinglesRating ||
-            newStats.DoublesRating > oldStats.DoublesRating)
+            newStats.DoublesRating > oldStats.DoublesRating || newStats.ClearCount > oldStats.ClearCount ||
+            newStats.CoOpRating > oldStats.CoOpRating)
             await _bus.Publish(new PlayerRatingsImprovedEvent(request.UserId, oldStats.SkillRating,
                     oldStats.SinglesRating, oldStats.DoublesRating, newStats.SkillRating, newStats.SinglesRating,
                     newStats.DoublesRating, oldStats.CompetitiveLevel, newStats.CompetitiveLevel,

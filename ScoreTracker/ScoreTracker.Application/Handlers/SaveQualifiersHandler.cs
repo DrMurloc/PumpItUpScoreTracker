@@ -51,11 +51,18 @@ namespace ScoreTracker.Application.Handlers
             {
                 var oldPlace = orderedOldLeaderboard.First(kv => kv.q.UserName == user).Item2;
                 if (oldPlace != newPlace)
+                {
+                    var message =
+                        $"{user} has progressed to {newPlace} on the [Leaderboard](https://piuscores.arroweclip.se/Tournament/{request.TournamentId}/Qualifiers)!";
+                    foreach (var best in request.Qualifiers.BestCharts())
+                        message += $@"
+- {best.Chart.Song.Name} #DIFFICULTY|{best.Chart.DifficultyString}# - {best.Score} #LETTERGRADE|{best.Score.LetterGrade}# ({best.Rating} rating)";
 
                     await _botClient.SendMessage(
-                        $"{user} has progressed to {newPlace} on the [Leaderboard](https://piuscores.arroweclip.se/Tournament/{request.TournamentId}/Qualifiers)!",
+                        message,
                         config.NotificationChannel,
                         cancellationToken);
+                }
                 /*
                 if (newPlace > 22 || oldPlace <= 22 || orderedNewLeaderboard.Length < 23)
                 {
