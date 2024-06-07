@@ -44,6 +44,15 @@
                                 }
                             }
                         </MudProgressLinear>
+                        @if (context.Item.HasParagonLevel && context.Item.ParagonLevel!=PhoenixLetterGrade.SSSPlus)
+                        {
+                            <br/>
+                            <MudProgressLinear Color="Color.Primary" Min="0" Max="context.Item.NextParagonRequirement" Value="context.Item.NextParagonProgress">
+                                @context.Item.NextParagonProgress/@context.Item.NextParagonRequirement @(context.Item.ParagonLevel==null?L["Passes"]:(context.Item.ParagonLevel.Value+1).GetName())
+                            </MudProgressLinear>
+                            <MudText>Paragon Level: @(context.Item.ParagonLevel == null ? "None" : context.Item.ParagonLevel!.Value.GetName())</MudText>
+
+                        }
                     } else
                     {
                         <MudProgressLinear Min="0" Max="100" Value=@(context.Item.IsCompleted?100:0) Color=@(context.Item.IsCompleted?Color.Success:Color.Primary)></MudProgressLinear>
@@ -64,7 +73,6 @@
                         <br/>
                         <MudText>@(_difficultyCounts[context.Item.DifficultyLevel.Value]-_completedCounts[context.Item.DifficultyLevel.Value]) Remaining Charts In Folder</MudText>
                     }
-
                 </CellTemplate>
             </TemplateColumn>
         } else if (_titleProgress.Any(p => !string.IsNullOrWhiteSpace(p.AdditionalNote)))

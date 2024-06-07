@@ -1,4 +1,5 @@
-﻿using ScoreTracker.Domain.Models.Titles;
+﻿using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.Models.Titles;
 using ScoreTracker.Domain.Models.Titles.Phoenix;
 
 namespace ScoreTracker.Web.Dtos;
@@ -14,10 +15,14 @@ public sealed class TitleProgressDto
     public int RequiredCount { get; set; }
     public string AdditionalNote { get; set; } = string.Empty;
     public int? DifficultyLevel { get; set; }
+    public bool HasParagonLevel { get; set; }
+    public PhoenixLetterGrade? ParagonLevel { get; set; }
+    public int NextParagonProgress { get; set; }
+    public int NextParagonRequirement { get; set; }
 
     public static TitleProgressDto From(TitleProgress progress)
     {
-        return new TitleProgressDto
+        var result = new TitleProgressDto
         {
             CompletionCount = (int)progress.CompletionCount,
             RequiredCount = progress.Title.CompletionRequired,
@@ -28,5 +33,14 @@ public sealed class TitleProgressDto
             IsCompleted = progress.IsComplete,
             DifficultyLevel = progress.Title is PhoenixDifficultyTitle pdt ? pdt.Level : null
         };
+        if (progress is PhoenixTitleProgress phoenixProgress)
+        {
+            result.HasParagonLevel = phoenixProgress.RequiredAaCount > 0;
+            result.ParagonLevel = phoenixProgress.ParagonLevel;
+            result.NextParagonProgress = phoenixProgress.NextParagonProgress;
+            result.NextParagonRequirement = phoenixProgress.RequiredAaCount;
+        }
+
+        return result;
     }
 }
