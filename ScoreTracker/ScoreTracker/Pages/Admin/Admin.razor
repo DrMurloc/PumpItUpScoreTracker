@@ -212,7 +212,7 @@ Do It
     /*var userIds = await Database.User.Select(u => u.Id).ToArrayAsync();
         foreach (var userId in userIds)
         {
-            await Mediator.Send(new PlayerRatingSaga.RecalculateStats(userId));
+            await Mediator.Send(new TitleSaga.ProcessTitles(userId));
         }
         Snackbar.Add("Done", Severity.Success);*/
 

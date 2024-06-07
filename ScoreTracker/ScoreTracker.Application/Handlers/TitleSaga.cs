@@ -15,7 +15,8 @@ namespace ScoreTracker.Application.Handlers;
 
 public sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumerable<TitleProgress>>,
     IConsumer<TitlesDetectedEvent>,
-    IConsumer<PlayerScoreUpdatedEvent>
+    IConsumer<PlayerScoreUpdatedEvent>,
+    IRequestHandler<TitleSaga.ProcessTitles>
 {
     private readonly IXXChartAttemptRepository _chartAttempts;
     private readonly IChartRepository _charts;
@@ -23,6 +24,8 @@ public sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumerab
     private readonly IPhoenixRecordRepository _phoenixScores;
     private readonly ITitleRepository _titles;
     private readonly IBus _bus;
+
+    public sealed record ProcessTitles(Guid UserId) : IRequest;
 
     public TitleSaga(ICurrentUserAccessor currentUser,
         IXXChartAttemptRepository chartAttempts,
@@ -139,5 +142,10 @@ public sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumerab
     public async Task Consume(ConsumeContext<PlayerScoreUpdatedEvent> context)
     {
         await ProcessCharts(context.Message.UserId, Array.Empty<Name>(), context.CancellationToken);
+    }
+
+    public async Task Handle(ProcessTitles request, CancellationToken cancellationToken)
+    {
+        await ProcessCharts(request.UserId, Array.Empty<Name>(), cancellationToken);
     }
 }
