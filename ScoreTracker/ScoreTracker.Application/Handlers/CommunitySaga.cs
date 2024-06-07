@@ -228,7 +228,7 @@ namespace ScoreTracker.Application.Handlers
             var user = await _users.GetUser(context.Message.UserId, context.CancellationToken);
             if (user == null) return;
 
-            var message = $"**{user.Name}**'s top 50 rating has improved!";
+            var message = string.Empty;
             if (context.Message.NewTop50 > context.Message.OldTop50)
                 message += $@"
 - Top 50 improved to {context.Message.NewTop50} (+{context.Message.NewTop50 - context.Message.OldTop50})";
@@ -255,7 +255,9 @@ namespace ScoreTracker.Application.Handlers
                 context.Message.OldDoublesCompetitive.ToString("0.000"))
                 message += $@"
 - Doubles Competitive Level improved to {context.Message.NewDoublesCompetitive:0.000} (+{context.Message.NewDoublesCompetitive - context.Message.OldDoublesCompetitive:0.000})";
-            await SendToCommunityDiscords(context.Message.UserId, message, context.CancellationToken);
+            if (!string.IsNullOrWhiteSpace(message))
+                await SendToCommunityDiscords(context.Message.UserId,
+                    $"**{user.Name}**'s top 50 rating has improved!" + message, context.CancellationToken);
         }
 
         public async Task Consume(ConsumeContext<PlayerScoreUpdatedEvent> context)
@@ -359,9 +361,9 @@ And {count - 10} others!";
         {
             var user = await _users.GetUser(context.Message.UserId, context.CancellationToken);
             var message = string.Empty;
+            var count = 0;
             if (context.Message.NewTitles.Any())
             {
-                var count = 0;
                 message = $"**{user.Name}** completed the Titles:";
                 foreach (var title in context.Message.NewTitles.OrderBy(t => t))
                 {
@@ -376,15 +378,11 @@ And {count - 10} others!";
                     message = "";
                     count = 0;
                 }
-
-                await SendToCommunityDiscords(user.Id, message,
-                    context.CancellationToken);
             }
 
             if (context.Message.ParagonUpgrades.Any())
             {
-                message = $"**{user.Name}** Advanced their Paragon Title Levels:";
-                var count = 0;
+                message += $"**{user.Name}** Advanced their Paragon Title Levels:";
                 foreach (var upgradedTitle in context.Message.ParagonUpgrades.OrderBy(t => t.Key))
                 {
                     var emoji = upgradedTitle.Value == "PG"
@@ -400,10 +398,11 @@ And {count - 10} others!";
                     message = "";
                     count = 0;
                 }
+            }
 
+            if (!string.IsNullOrWhiteSpace(message))
                 await SendToCommunityDiscords(user.Id,
                     message, context.CancellationToken);
-            }
         }
 
         public async Task Handle(RemoveDiscordChannelFromCommunityCommand request, CancellationToken cancellationToken)
