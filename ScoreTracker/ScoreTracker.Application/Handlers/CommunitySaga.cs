@@ -359,25 +359,49 @@ And {count - 10} others!";
         {
             var user = await _users.GetUser(context.Message.UserId, context.CancellationToken);
             var message = string.Empty;
-            foreach (var title in context.Message.NewTitles.OrderBy(t => t))
-                message += $@"
-- {title}";
-            if (!string.IsNullOrWhiteSpace(message))
-                await SendToCommunityDiscords(user.Id, $"**{user.Name}** completed the Titles:" + message,
-                    context.CancellationToken);
-            message = string.Empty;
-            foreach (var upgradedTitle in context.Message.ParagonUpgrades.OrderBy(t => t))
+            if (context.Message.NewTitles.Any())
             {
-                var emoji = upgradedTitle.Value == "PG"
-                    ? "#PLATE|PerfectGame#"
-                    : "#LETTERGRADE|" + upgradedTitle.Value + "#";
-                message += $@"
-- {upgradedTitle} {emoji}";
+                var count = 0;
+                message = $"**{user.Name}** completed the Titles:";
+                foreach (var title in context.Message.NewTitles.OrderBy(t => t))
+                {
+                    message += $@"
+- {title}";
+
+                    count++;
+                    if (count != 10) continue;
+
+                    await SendToCommunityDiscords(user.Id, message,
+                        context.CancellationToken);
+                    message = "";
+                    count = 0;
+                }
+
+                await SendToCommunityDiscords(user.Id, message,
+                    context.CancellationToken);
             }
 
-            if (!string.IsNullOrWhiteSpace(message))
+            if (context.Message.ParagonUpgrades.Any())
+            {
+                message = $"**{user.Name}** Advanced their Paragon Title Levels:";
+                var count = 0;
+                foreach (var upgradedTitle in context.Message.ParagonUpgrades.OrderBy(t => t))
+                {
+                    var emoji = upgradedTitle.Value == "PG"
+                        ? "#PLATE|PerfectGame#"
+                        : "#LETTERGRADE|" + upgradedTitle.Value + "#";
+                    message += $@"
+- {upgradedTitle} {emoji}";
+                    count++;
+                    if (count != 10) continue;
+
+                    await SendToCommunityDiscords(user.Id,
+                        message, context.CancellationToken);
+                }
+
                 await SendToCommunityDiscords(user.Id,
-                    $"**{user.Name}** Advanced their Paragon Title Levels:" + message, context.CancellationToken);
+                    message, context.CancellationToken);
+            }
         }
 
         public async Task Handle(RemoveDiscordChannelFromCommunityCommand request, CancellationToken cancellationToken)
