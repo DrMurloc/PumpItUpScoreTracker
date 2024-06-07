@@ -16,7 +16,7 @@ public sealed class TitleProgressDto
     public string AdditionalNote { get; set; } = string.Empty;
     public int? DifficultyLevel { get; set; }
     public bool HasParagonLevel { get; set; }
-    public PhoenixLetterGrade? ParagonLevel { get; set; }
+    public ParagonLevel ParagonLevel { get; set; } = ParagonLevel.None;
     public int NextParagonProgress { get; set; }
     public int NextParagonRequirement { get; set; }
 

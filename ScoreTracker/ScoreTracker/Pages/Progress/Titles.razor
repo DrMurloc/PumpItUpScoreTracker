@@ -44,14 +44,21 @@
                                 }
                             }
                         </MudProgressLinear>
-                        @if (context.Item.HasParagonLevel && context.Item.ParagonLevel!=PhoenixLetterGrade.SSSPlus)
+                        @if (context.Item.HasParagonLevel && context.Item.ParagonLevel!=ParagonLevel.PG)
                         {
                             <br/>
                             <MudProgressLinear Color="Color.Primary" Min="0" Max="context.Item.NextParagonRequirement" Value="context.Item.NextParagonProgress">
-                                @context.Item.NextParagonProgress/@context.Item.NextParagonRequirement @(context.Item.ParagonLevel==null?L["Passes"]:(context.Item.ParagonLevel.Value+1).GetName())
+                                @context.Item.NextParagonProgress/@context.Item.NextParagonRequirement @(context.Item.ParagonLevel==ParagonLevel.None?L["Passes"]:(context.Item.ParagonLevel+1).GetName())
                             </MudProgressLinear>
-                            <MudText>Paragon Level: @(context.Item.ParagonLevel == null ? "None" : context.Item.ParagonLevel!.Value.GetName())</MudText>
+                            <MudText>Paragon Level: @(context.Item.ParagonLevel.GetName())</MudText>
 
+                        } else if (context.Item.HasParagonLevel && context.Item.ParagonLevel == ParagonLevel.PG)
+                        {
+                            <br/>
+                            <MudProgressLinear Color="Color.Success" Min="0" Max="1" Value="1">
+                                @context.Item.NextParagonRequirement/@context.Item.NextParagonRequirement PG
+                            </MudProgressLinear>
+                            <MudText>Paragon Level: @(context.Item.ParagonLevel.GetName())</MudText>
                         }
                     } else
                     {

@@ -37,15 +37,16 @@ public sealed class PhoenixTitleProgress : TitleProgress
         }
     }
 
-    private readonly IDictionary<PhoenixLetterGrade, int> _paragonProgress = Enum.GetValues<PhoenixLetterGrade>()
+    private readonly IDictionary<ParagonLevel, int> _paragonProgress = Enum.GetValues<ParagonLevel>()
         .ToDictionary(l => l, l => 0);
 
-    public PhoenixLetterGrade? ParagonLevel => _paragonProgress.Where(kv => kv.Value >= RequiredAaCount)
-        .OrderByDescending(kv => kv.Key).Select(kv => (PhoenixLetterGrade?)kv.Key).FirstOrDefault();
+    public ParagonLevel ParagonLevel => _paragonProgress.Where(kv => kv.Value >= RequiredAaCount)
+        .OrderByDescending(kv => kv.Key).Select(kv => (ParagonLevel?)kv.Key).FirstOrDefault() ?? ParagonLevel.None;
 
-    public int NextParagonProgress => ParagonLevel == null ? _paragonProgress[PhoenixLetterGrade.F]
-        : ParagonLevel == PhoenixLetterGrade.SSSPlus ? -1
-        : _paragonProgress[ParagonLevel!.Value + 1];
+    public int NextParagonProgress => ParagonLevel == ParagonLevel.None ? _paragonProgress[ParagonLevel.F]
+        : ParagonLevel == ParagonLevel.PG ? -1
+        : _paragonProgress[ParagonLevel + 1];
+
 
     public void ApplyAttempt(Chart chart, RecordedPhoenixScore attempt)
     {
@@ -53,6 +54,6 @@ public sealed class PhoenixTitleProgress : TitleProgress
         CompletionCount += progress;
         if (RequiredAaCount <= 0 || !(progress > 0) || attempt.Score == null) return;
 
-        for (var i = PhoenixLetterGrade.F; i <= attempt.Score!.Value.LetterGrade; i++) _paragonProgress[i]++;
+        for (var i = ParagonLevel.F; i <= attempt.Score!.Value.GetParagonLevel(); i++) _paragonProgress[i]++;
     }
 }
