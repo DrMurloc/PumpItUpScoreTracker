@@ -38,27 +38,23 @@
     <RowTemplate>
         <MudTd>@context.Place</MudTd>
         <MudTd>@context.UserName</MudTd>
-        @for (var i = 0; i <_configuration.PlayCount;i++)
-        {
-            var entryIndex = i;
-            var entry = context.Scores.Skip(entryIndex).Take(1).ToArray();
-            <MudTd Style="text-align:center">
-                @if (entry.Any())
-                {
-                    <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                        <SongImage Song="entry.Single().Item1.Song"></SongImage>
-                        <ScoreBreakdown Score="@entry.Single().Item2" Height="35"></ScoreBreakdown>
-                    </MudHidden>
-                    <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                        <MudTooltip Text="@(entry.Single().Item1.Song.Name+' '+entry.Single().Item1.DifficultyString)">
-                            <MudImage Src="@entry.Single().Item1.Song.ImagePath.ToString()" Height="15" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
-                        </MudTooltip>
-                        <ScoreBreakdown Score="@entry.Single().Item2" Height="15"></ScoreBreakdown>
-                    </MudHidden>
-                    @(entry.Single().Item3.ToString("0.##"))
 
-                }
+        @foreach(var entry in context.Scores)
+        {
+            <MudTd Style="text-align:center">
+                <MudTooltip Text="@(entry.Item1.Song.Name+' '+entry.Item1.DifficultyString)">
+                    <MudImage Src="@entry.Item1.Song.ImagePath.ToString()" Height="20" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
+                </MudTooltip>
+                <ScoreBreakdown Score="@entry.Item2" Height="20"></ScoreBreakdown>
+
+                @(entry.Item3.ToString("0.##"))
+
+            
             </MudTd>
+        }
+        @for (var i = context.Scores.Length; i <_configuration.PlayCount;i++)
+        {
+            <MudTd></MudTd>
         }
         <MudTd>@context.Score.ToString("0.###")</MudTd>
         <MudTd>
@@ -180,7 +176,7 @@
             _charts[chart.Id] = chart;
         }
         _leaderboard = (await Qualifiers.GetAllUserQualifiers(TournamentId,config)).OrderByDescending(q => q.CalculateScore()).Select((q, index) => new Entry(index + 1, q.UserName,
-            q.BestCharts(),q.IsApproved,
+            q.BestCharts().ToArray(),q.IsApproved,
             q.CalculateScore(), q.Submissions.Select(s => s.Value.PhotoUrl).ToArray(),q));
 
     }
@@ -188,7 +184,7 @@
     {
         await OnInitializedAsync();
     }
-    private sealed record Entry(int Place, string UserName, IEnumerable<(Chart,PhoenixScore, double)> Scores, bool IsApproved, double Score, IEnumerable<Uri> Photos, UserQualifiers Record)
+    private sealed record Entry(int Place, string UserName, (Chart,PhoenixScore, double)[] Scores, bool IsApproved, double Score, IEnumerable<Uri> Photos, UserQualifiers Record)
     {
 
     }
