@@ -45,6 +45,8 @@ namespace ScoreTracker.Application.Handlers
 
             var totalAdd = context.Message.NewChartIds.Where(c => bountyWeights.ContainsKey(c))
                 .Sum(c => bountyWeights[c]);
+            totalAdd += context.Message.UpscoredChartIds.Where(c => bountyWeights.ContainsKey(c.Key))
+                .Sum(c => bountyWeights[c.Key]);
             await bounties.RedeemBounty(context.Message.UserId, totalAdd, context.CancellationToken);
         }
 
@@ -57,6 +59,7 @@ namespace ScoreTracker.Application.Handlers
             var doublesLevel = (int)Math.Floor(stats.DoublesCompetitiveLevel);
             var otherDoubles = (int)Math.Round(stats.DoublesCompetitiveLevel);
             if (otherDoubles == doublesLevel) otherDoubles--;
+
             var list = new List<ChartBounty>();
             if (DifficultyLevel.IsValid(singlesLevel))
                 list.AddRange(await bounties.GetChartBounties(ChartType.Single, singlesLevel, cancellationToken));
@@ -66,6 +69,23 @@ namespace ScoreTracker.Application.Handlers
 
             if (DifficultyLevel.IsValid(doublesLevel))
                 list.AddRange(await bounties.GetChartBounties(ChartType.Double, doublesLevel, cancellationToken));
+            if (DifficultyLevel.IsValid(otherDoubles))
+                list.AddRange(await bounties.GetChartBounties(ChartType.Double, otherDoubles, cancellationToken));
+
+
+            var passes = (await scores.GetRecordedScores(userId, cancellationToken)).Where(s => !s.IsBroken)
+                .Select(s => s.ChartId)
+                .Distinct().ToHashSet();
+            list = list.Where(l => !passes.Contains(l.ChartId)).ToList();
+            var noteLessCharts =
+                (await charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
+                .Where(c => c.NoteCount == null && ((c.Type == ChartType.Single && c.Level < singlesLevel) ||
+                                                    (c.Type == ChartType.Double && c.Level < doublesLevel) ||
+                                                    c.Type == ChartType.CoOp))
+                .OrderByDescending(c => c.Level)
+                .Select(c => new ChartBounty(c.Id, 9));
+            list.AddRange(noteLessCharts);
+
             return list;
         }
 

@@ -218,12 +218,14 @@ namespace ScoreTracker.Application.Handlers
             IDictionary<string, ISet<Guid>> ignoredChartIds, CancellationToken cancellationToken,
             RecordedPhoenixScore[] scores, ChartType? chartType, IDictionary<Guid, Chart> charts)
         {
+            var random = new Random();
             var ignoredCharts = ignoredChartIds.TryGetValue("Bounties", out var set) ? set : new HashSet<Guid>();
             var existingScores = scores.Where(s => s.Score != null).Select(s => s.ChartId).Distinct().ToHashSet();
             return (await _mediator.Send(new GetChartBountiesQuery(), cancellationToken)).Where(b =>
-                    !ignoredCharts.Contains(b.ChartId) && !existingScores.Contains(b.ChartId) &&
-                    (chartType == null || charts[b.ChartId].Type == chartType))
+                    chartType == null || charts[b.ChartId].Type == chartType)
                 .OrderByDescending(b => b.Worth)
+                .Take(20)
+                .OrderBy(r => random.Next())
                 .Take(5)
                 .Select(b => new ChartRecommendation("Bounties", b.ChartId,
                     "Charts that have low data present on the site", $"{b.Worth} Points"));
@@ -252,16 +254,13 @@ namespace ScoreTracker.Application.Handlers
             var chartOrder = (await GetApproachableCharts(cancellationToken, chartDict))
                 .Where(id => charts.ContainsKey(id))
                 .ToArray();
-            var skippedSingles = ignoredChartIds.TryGetValue($"{pushLevel.Title.Name} Singles", out var cs)
+            var skippedCharts = ignoredChartIds.TryGetValue($"{pushLevel.Title.Name}", out var cs)
                 ? cs
-                : new HashSet<Guid>();
-            var skippedDoubles = ignoredChartIds.TryGetValue($"{pushLevel.Title.Name} Doubles", out var cd)
-                ? cd
                 : new HashSet<Guid>();
             var result = new List<Guid>();
             var random = new Random();
             var reduction = chartOrder.Where(c => !myScores.TryGetValue(c, out var score) || score.IsBroken)
-                .Where(c => !skippedSingles.Contains(c) && charts.ContainsKey(c))
+                .Where(c => !skippedCharts.Contains(c) && charts.ContainsKey(c))
                 .ToArray();
             var missingSingles = 3 - reduction.Where(c => charts[c].Type == ChartType.Single).Take(3).Count();
             var missingDoubles = 3 - reduction.Where(c => charts[c].Type == ChartType.Double).Take(3).Count();
