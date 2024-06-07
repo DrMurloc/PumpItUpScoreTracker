@@ -10,5 +10,6 @@ namespace ScoreTracker.Data.Persistence.Entities
         [Key] public Guid Id { get; set; }
         public Guid UserId { get; set; }
         [Required] public string Title { get; set; }
+        [MaxLength(16)] public string ParagonLevel { get; set; }
     }
 }

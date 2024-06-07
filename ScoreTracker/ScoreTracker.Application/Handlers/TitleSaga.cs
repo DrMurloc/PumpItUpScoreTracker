@@ -7,6 +7,7 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Models.Titles;
 using ScoreTracker.Domain.Models.Titles.Phoenix;
 using ScoreTracker.Domain.Models.Titles.XX;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
 
@@ -62,7 +63,8 @@ public sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumerab
         if (_currentUser.IsLoggedIn)
         {
             var userId = _currentUser.User.Id;
-            completedTitles = (await _titles.GetCompletedTitles(userId, cancellationToken)).ToHashSet();
+            completedTitles = (await _titles.GetCompletedTitles(userId, cancellationToken)).Select(t => t.Title)
+                .ToHashSet();
             scores = await _phoenixScores.GetRecordedScores(userId, cancellationToken);
         }
         else
@@ -80,7 +82,7 @@ public sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumerab
     private async Task<IEnumerable<TitleProgress>> GetPhoenixProgress(Guid userId, CancellationToken cancellationToken)
     {
         var scores = await _phoenixScores.GetRecordedScores(userId, cancellationToken);
-        var completed = (await _titles.GetCompletedTitles(userId, cancellationToken)).ToHashSet();
+        var completed = (await _titles.GetCompletedTitles(userId, cancellationToken)).Select(t => t.Title).ToHashSet();
         var charts = (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
             .ToDictionary(c => c.Id);
 
@@ -93,31 +95,44 @@ public sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumerab
             context.CancellationToken);
     }
 
+    private ParagonLevel GetLevel(TitleProgress tp)
+    {
+        return tp is PhoenixTitleProgress pt ? pt.ParagonLevel : ParagonLevel.None;
+    }
+
     private async Task ProcessCharts(Guid userId, IEnumerable<Name> newCharts, CancellationToken cancellationToken)
     {
         var existingTitles = (await _titles.GetCompletedTitles(userId, cancellationToken))
-            .ToHashSet();
+            .ToDictionary(t => t.Title);
         var titleProgress = (await GetPhoenixProgress(userId, cancellationToken)).ToArray();
         var newTitlesHash = newCharts.Distinct().ToHashSet();
         foreach (var title in titleProgress)
             if (newTitlesHash.Contains(title.Title.Name))
                 title.Complete();
 
-        var allCompleted = titleProgress.Where(t => t.IsComplete).Select(t => t.Title.Name).ToArray();
+        var allCompleted = titleProgress.Where(t => t.IsComplete)
+            .Select(t => new TitleAchievedRecord(t.Title.Name, GetLevel(t))).ToArray();
 
         await _titles.SaveTitles(userId, allCompleted, cancellationToken);
 
-        var newCompleted = allCompleted.Where(c => !existingTitles.Contains(c)).ToArray();
-        var highest = allCompleted.Select(t => PhoenixTitleList.GetTitleByName(t))
+        var highest = allCompleted.Select(t => PhoenixTitleList.GetTitleByName(t.Title))
             .Where(t => t is PhoenixDifficultyTitle).Cast<PhoenixDifficultyTitle>()
             .OrderByDescending(d => (int)d.Level)
             .ThenByDescending(d => d.RequiredRating)
             .FirstOrDefault();
         if (highest != null)
             await _titles.SetHighestDifficultyTitle(userId, highest.Name, highest.Level, cancellationToken);
-        if (newCompleted.Any())
+
+
+        var newCompleted = allCompleted.Where(c => !existingTitles.ContainsKey(c.Title))
+            .Select(c => c.Title.ToString()).ToArray();
+        var upgraded = allCompleted.Where(c =>
+            existingTitles.ContainsKey(c.Title) && existingTitles[c.Title].ParagonLevel != c.ParagonLevel).ToArray();
+
+        if (newCompleted.Any() || upgraded.Any())
             await _bus.Publish(
-                new NewTitlesAcquiredEvent(userId, newCompleted.Select(t => t.ToString())),
+                new NewTitlesAcquiredEvent(userId, newCompleted,
+                    upgraded.ToDictionary(t => t.Title.ToString(), t => t.ParagonLevel.ToString())),
                 cancellationToken);
     }
 

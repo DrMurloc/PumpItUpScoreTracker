@@ -152,6 +152,8 @@ public sealed class ChartAttemptDbContext : DbContext
             .Property(s => s.Type)
             .HasDefaultValue("Arcade");
 
+        builder.Entity<UserTitleEntity>().Property(e => e.ParagonLevel)
+            .HasDefaultValue(ParagonLevel.None.ToString());
         builder.Entity<SongEntity>().Property(s => s.Duration)
             .HasDefaultValue(TimeSpan.FromMinutes(0))
             .HasConversion<long>();
