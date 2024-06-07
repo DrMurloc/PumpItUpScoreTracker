@@ -205,7 +205,7 @@ namespace ScoreTracker.Application.Handlers
 
         private async Task SendToCommunityDiscords(Guid userId, string messages, CancellationToken cancellationToken)
         {
-            SendToCommunityDiscords(userId, new[] { messages }, cancellationToken);
+            await SendToCommunityDiscords(userId, new[] { messages }, cancellationToken);
         }
 
         private async Task SendToCommunityDiscords(Guid userId, string[] messages, CancellationToken cancellationToken)
@@ -385,7 +385,7 @@ And {count - 10} others!";
             {
                 message = $"**{user.Name}** Advanced their Paragon Title Levels:";
                 var count = 0;
-                foreach (var upgradedTitle in context.Message.ParagonUpgrades.OrderBy(t => t))
+                foreach (var upgradedTitle in context.Message.ParagonUpgrades.OrderBy(t => t.Key))
                 {
                     var emoji = upgradedTitle.Value == "PG"
                         ? "#PLATE|PerfectGame#"

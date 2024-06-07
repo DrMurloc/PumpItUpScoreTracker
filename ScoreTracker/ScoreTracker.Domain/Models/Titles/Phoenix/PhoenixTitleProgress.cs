@@ -7,7 +7,8 @@ public sealed class PhoenixTitleProgress : TitleProgress
     public PhoenixTitleProgress(PhoenixTitle title) : base(title)
     {
         PhoenixTitle = title;
-        if (title is PhoenixDifficultyTitle dt) RequiredAaCount = dt.RequiredRating / dt.Level.BaseRating;
+        if (title is PhoenixDifficultyTitle dt)
+            RequiredAaCount = (int)Math.Ceiling((double)dt.RequiredRating / dt.Level.BaseRating);
     }
 
     public PhoenixTitle PhoenixTitle { get; }
@@ -40,8 +41,10 @@ public sealed class PhoenixTitleProgress : TitleProgress
     private readonly IDictionary<ParagonLevel, int> _paragonProgress = Enum.GetValues<ParagonLevel>()
         .ToDictionary(l => l, l => 0);
 
-    public ParagonLevel ParagonLevel => _paragonProgress.Where(kv => kv.Value >= RequiredAaCount)
-        .OrderByDescending(kv => kv.Key).Select(kv => (ParagonLevel?)kv.Key).FirstOrDefault() ?? ParagonLevel.None;
+    public ParagonLevel ParagonLevel => RequiredAaCount == 0
+        ? ParagonLevel.None
+        : _paragonProgress.Where(kv => kv.Value >= RequiredAaCount)
+            .OrderByDescending(kv => kv.Key).Select(kv => (ParagonLevel?)kv.Key).FirstOrDefault() ?? ParagonLevel.None;
 
     public int NextParagonProgress => ParagonLevel == ParagonLevel.None ? _paragonProgress[ParagonLevel.F]
         : ParagonLevel == ParagonLevel.PG ? -1

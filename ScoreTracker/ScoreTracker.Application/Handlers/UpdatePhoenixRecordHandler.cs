@@ -71,7 +71,7 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
     {
         if (DateTime.UtcNow < _fireAt[context.Message.UserId])
         {
-            await scheduler.SchedulePublish(_fireAt[context.Message.UserId] + TimeSpan.FromSeconds(5),
+            await scheduler.SchedulePublish(_fireAt[context.Message.UserId] + TimeSpan.FromMinutes(2),
                 new TryFireScoreMessage(context.Message.UserId),
                 context.CancellationToken);
             return;
