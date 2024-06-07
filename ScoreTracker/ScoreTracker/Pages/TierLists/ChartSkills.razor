@@ -16,6 +16,7 @@
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.PersonalProgress.Queries
+@using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Shared
 
 <PageTitle>Personalized Tier List</PageTitle>
@@ -29,20 +30,20 @@
         <MudLink Href="/TierLists/Old">Go to Old Tier Lists Page</MudLink>
     </MudItem>
     <MudItem xs="12" sm="6">
-        <MudSelect T="ChartType" Value="_chartType" ValueChanged="SetType" Label=@L["Chart Type"]>
+        <MudSelect T="ChartType" Value="_chartType" ValueChanged="SetType" Label=@L["Chart Type"] Disabled="_isLoading">
             <MudSelectItem T="ChartType" Value="ChartType.Single">Singles</MudSelectItem>
             <MudSelectItem T="ChartType" Value="ChartType.Double">Doubles</MudSelectItem>
             <MudSelectItem T="ChartType" Value="ChartType.CoOp">CoOp</MudSelectItem>
         </MudSelect>
     </MudItem>
     <MudItem xs="12" sm="6">
-        <MudNumericField T="int" Value="_level" Min=@(_chartType==ChartType.CoOp?2:1) Max=@(_chartType==ChartType.CoOp?5:28) ValueChanged="SetLevel" Label=@(_chartType==ChartType.CoOp?L["Player Count"]:L["Difficulty Level"]) HideSpinButtons="true">
+        <MudNumericField T="int" Value="_level" Disabled="_isLoading" Min=@(_chartType==ChartType.CoOp?2:1) Max=@(_chartType==ChartType.CoOp?5:28) ValueChanged="SetLevel" Label=@(_chartType==ChartType.CoOp?L["Player Count"]:L["Difficulty Level"]) HideSpinButtons="true">
         </MudNumericField>
     </MudItem>
 
     <MudItem xs="12">
 
-        <MudRadioGroup T="string" Value="_tierListType" ValueChanged="SetTierListType">
+        <MudRadioGroup T="string" Disabled="_isLoading" Value="_tierListType" ValueChanged="SetTierListType">
             @foreach (var type in _tierListTypes)
             {
                 <MudRadio Value=@type.Key Color="Color.Primary">@type.Value</MudRadio>
@@ -52,8 +53,8 @@
     @if (_tierListType == "Score")
     {
         <MudItem xs="12" sm="4" md="3">
-            
-            <MudCheckBox T="bool" Value="!_groupByTierList" ValueChanged="ToggleGrouping" Label=@L["Group By Scoring Difficulty"]></MudCheckBox>
+
+            <MudCheckBox T="bool" Value="!_groupByTierList" Disabled="_isLoading" ValueChanged="ToggleGrouping" Label=@L["Group By Scoring Difficulty"]></MudCheckBox>
         </MudItem>
     }
     @if (CurrentUser.IsLoggedIn)
@@ -62,15 +63,15 @@
         {
             
             <MudItem xs="12" sm="4" md="3">
-                <MudCheckBox T="bool" Value="_usePersonalizedData" ValueChanged="u=>SetUsePersonalized(u)" Label=@L["Personalized"]></MudCheckBox>
+                <MudCheckBox T="bool" Value="_usePersonalizedData" Disabled="_isLoading" ValueChanged="u=>SetUsePersonalized(u)" Label=@L["Personalized"]></MudCheckBox>
             </MudItem>
         }
         <MudItem xs="12" sm="4" md="3">
-            <MudCheckBox T="bool" @bind-Checked="_hidePassed" Label=@L["Hide Completed Charts"]></MudCheckBox>
+            <MudCheckBox T="bool" @bind-Checked="_hidePassed" Disabled="_isLoading" Label=@L["Hide Completed Charts"]></MudCheckBox>
         </MudItem>
         
         <MudItem xs="12" sm="4" md="3">
-            <MudCheckBox T="bool" @bind-Checked="_showTodo" Label=@L["Show Only ToDo Charts"]></MudCheckBox>
+            <MudCheckBox T="bool" @bind-Checked="_showTodo" Disabled="_isLoading" Label=@L["Show Only ToDo Charts"]></MudCheckBox>
         </MudItem>
     }
     <MudItem xs="12">
@@ -80,12 +81,12 @@
                 <MudExpansionPanel Text="Admin Tools">
                     <MudGrid>
                         <MudItem xs="4">
-                            <MudNumericField T="int" Value="_highlightedModifier" ValueChanged="SetHighlighted" Label="HighlightedModifier"></MudNumericField>
+                            <MudNumericField T="int" Value="_highlightedModifier" Disabled="_isLoading" ValueChanged="SetHighlighted" Label="HighlightedModifier"></MudNumericField>
                         </MudItem>
                         @foreach (var modifier in _modifiers)
                         {
                             <MudItem xs="4">
-                                <MudNumericField T="double" Value="modifier.Value" ValueChanged="v => SetCategory(modifier.Key, v)" Label="@modifier.Key"></MudNumericField>
+                                <MudNumericField T="double" Value="modifier.Value" Disabled="_isLoading" ValueChanged="v => SetCategory(modifier.Key, v)" Label="@modifier.Key"></MudNumericField>
                             </MudItem>
                         }
                     </MudGrid>
@@ -96,19 +97,19 @@
                 <MudGrid>
                     
                     <MudItem xs="12">
-                        <MudCheckBox T="bool" @bind-Checked="_textView" Label=@L["Text View"]></MudCheckBox>
+                        <MudCheckBox T="bool" @bind-Checked="_textView" Disabled="_isLoading" Label=@L["Text View"]></MudCheckBox>
                     </MudItem>
                     @foreach (var type in Enum.GetValues<SongType>())
                     {
                         <MudItem sm="6" md="3">
-                            <MudCheckBox T="bool" Label="@type.ToString()" Value="_filteredTypes.Contains(type)" ValueChanged="v => ToggleSongType(type, v)"></MudCheckBox>
+                            <MudCheckBox T="bool" Label="@type.ToString()" Disabled="_isLoading" Value="_filteredTypes.Contains(type)" ValueChanged="v => ToggleSongType(type, v)"></MudCheckBox>
                         </MudItem>
                     }
                     <MudItem xs="12" md="4">
-                        <MudAutocomplete T="string" Label=@L["Song Name"] AdornmentIcon="@Icons.Material.Filled.Search" @bind-Value="_songFilter" SearchFunc="FilterSongName" CoerceText="false" CoerceValue="true"></MudAutocomplete>
+                        <MudAutocomplete T="string" Label=@L["Song Name"] Disabled="_isLoading" AdornmentIcon="@Icons.Material.Filled.Search" @bind-Value="_songFilter" SearchFunc="FilterSongName" CoerceText="false" CoerceValue="true"></MudAutocomplete>
                     </MudItem>
                     <MudItem xs="12" md="4">
-                        <MudSelect T="string" @bind-SelectedValues="_stepArtists" Label=@L["Step Artist"] HelperText="Not All Step Artists Labeled Yet" MultiSelection="true" Clearable="true">
+                        <MudSelect T="string" @bind-SelectedValues="_stepArtists" Disabled="_isLoading" Label=@L["Step Artist"] HelperText="Not All Step Artists Labeled Yet" MultiSelection="true" Clearable="true">
                             @foreach (var artist in _availableStepArtists)
                             {
                                 <MudSelectItem T="string" Value="@artist">@artist</MudSelectItem>
@@ -116,7 +117,7 @@
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" md="4">
-                        <MudSelect T="string" @bind-SelectedValues="_songArtists" Label=@L["Song Artist"] MultiSelection="true" Clearable="true">
+                        <MudSelect T="string" @bind-SelectedValues="_songArtists" Disabled="_isLoading" Label=@L["Song Artist"] MultiSelection="true" Clearable="true">
                             @foreach (var artist in _availableSongArtists)
                             {
                                 <MudSelectItem T="string" Value="@artist">@artist</MudSelectItem>
@@ -127,10 +128,10 @@
                     {
 
                         <MudItem xs="6">
-                            <MudNumericField T="decimal?" Clearable="true" @bind-Value="_bpmMin" Label=@L["Min BPM"] Min="_lowestBpm" Max="_highestBpm" HelperText="Not All BPMS Labeled Yet" HideSpinButtons="true"></MudNumericField>
+                            <MudNumericField T="decimal?" Clearable="true" @bind-Value="_bpmMin" Disabled="_isLoading" Label=@L["Min BPM"] Min="_lowestBpm" Max="_highestBpm" HelperText="Not All BPMS Labeled Yet" HideSpinButtons="true"></MudNumericField>
                         </MudItem>
                         <MudItem xs="6">
-                            <MudNumericField T="decimal?" Clearable="true" @bind-Value="_bpmMax" Label=@L["Max BPM"] Min="_lowestBpm" Max="_highestBpm" HelperText="Not All BPMS Labeled Yet" HideSpinButtons="true"></MudNumericField>
+                            <MudNumericField T="decimal?" Clearable="true" @bind-Value="_bpmMax" Disabled="_isLoading" Label=@L["Max BPM"] Min="_lowestBpm" Max="_highestBpm" HelperText="Not All BPMS Labeled Yet" HideSpinButtons="true"></MudNumericField>
                         </MudItem>
                     }
                     @if (_lowestNoteCount != _highestNoteCount)
@@ -143,9 +144,12 @@
                             <MudNumericField T="int?" Clearable="true" @bind-Value="_noteCountMax" Label=@L["Max Note Count"] Min="_lowestNoteCount" Max="_highestNoteCount" HelperText="Not All Note Counts Labeled Yet" HideSpinButtons="true"></MudNumericField>
                         </MudItem>
                     }
-                    <MudItem xs="12">
-                        <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="() => _showSettings = false">@L["Close"]</MudButton>
-                    </MudItem>
+                    @if (CurrentUser.IsLoggedIn)
+                    {
+                        <MudItem xs="6">
+                            <MudSwitch T="bool" Value="_showAge" ValueChanged="c=>SetShowAge(c)" Disabled="_isLoading" Label=@L["Show Age"] Color="Color.Primary"></MudSwitch>
+                        </MudItem>
+                    }
                 </MudGrid>
             </MudExpansionPanel>
         </MudExpansionPanels>
@@ -237,6 +241,10 @@
                             {
                                 <MudCardContent>
                                     <ScoreBreakdown Score="_scores[chart.Id]" IsBroken="_isBroken[chart.Id]" OneLine="true" ShowScore="true" Plate="_plate[chart.Id]"></ScoreBreakdown>
+                                    @if (_showAge)
+                                    {
+                                        <MudText>@(_ages[chart.Id].ToString("0")) @L["Days Old"]</MudText>
+                                    }
                                 </MudCardContent>
                             }
                             <MudCardActions>
@@ -381,6 +389,7 @@
 @inject NavigationManager NavManager;
 @inject ITierListRepository TierLists;
 @inject ITitleRepository Titles;
+@inject IUiSettingsAccessor UiSettings;
 @inject IAdminNotificationClient Notifications;
 @inject ISnackbar Snackbar;
 @code
@@ -397,7 +406,7 @@
     [Parameter]
     [SupplyParameterFromQuery(Name = "TierListType")]
     public string? TierListType { get; set; } = string.Empty;
-
+    private DateTimeOffset _now = DateTimeOffset.Now;
     private IDictionary<Skill, List<Chart>> SkillCharts = Enum.GetValues<Skill>().ToDictionary(s => s, s => new List<Chart>());
     private IDictionary<Skill, List<Chart>> HighlightedCharts = Enum.GetValues<Skill>().ToDictionary(s => s, s => new List<Chart>());
     private IDictionary<Skill, int> MinScore = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
@@ -412,6 +421,7 @@
     private IDictionary<Guid, PhoenixScore> _scores = new Dictionary<Guid, PhoenixScore>();
     private IDictionary<Guid, bool> _isBroken = new Dictionary<Guid, bool>();
     private IDictionary<Guid, PhoenixPlate?> _plate = new Dictionary<Guid, PhoenixPlate?>();
+    private IDictionary<Guid, int> _ages = new Dictionary<Guid, int>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private ISet<Guid> _unPopularCharts = new HashSet<Guid>();
     private ISet<Guid> _popularCharts = new HashSet<Guid>();
@@ -431,6 +441,7 @@
     private bool _textView = false;
     private bool _isLoading = false;
     private bool _showTodo = false;
+    private bool _showAge = false;
     private decimal? _bpmMin;
     private decimal? _bpmMax;
     private int? _noteCountMin;
@@ -503,6 +514,11 @@
     private int _level = 20;
     private string _tierListType = "Pass";
     private string _songFilter;
+    private async Task SetShowAge(bool newSetting)
+    {
+        _showAge = newSetting;
+        await UiSettings.SetSetting("TierLists__ShowAge", newSetting.ToString());
+    }
     private bool _usePersonalizedData = true;
     private IEnumerable<IGrouping<string, SongTierListEntry>>
     _finalGroupings = Array.Empty<IGrouping<string, SongTierListEntry>>();
@@ -671,6 +687,7 @@
         _scores = _charts.ToDictionary(c => c.Key, c => myScores.TryGetValue(c.Key, out var s) ? s.Score ?? PhoenixScore.Min : PhoenixScore.Min);
         _isBroken = _charts.ToDictionary(c => c.Key, c => !myScores.TryGetValue(c.Key, out var b) || b.IsBroken);
         _plate = _charts.ToDictionary(c => c.Key, c => myScores.TryGetValue(c.Key, out var s) ? s.Plate : null);
+        _ages = _charts.ToDictionary(c => c.Key, c => myScores.TryGetValue(c.Key, out var s) ? (int)(_now - s.RecordedDate).TotalDays : 0);
         foreach (var skillChart in skills)
         {
             if (!myScores.TryGetValue(skillChart.ChartId, out var score)||score.Score==null)
@@ -922,6 +939,7 @@
             { "Score", L["Score"] },
             { "Popularity", L["Popularity"] }
         };
+        _showAge = bool.TryParse(await UiSettings.GetSetting("TierLists__ShowAge"), out var res) && res;
         if (CurrentUser.IsLoggedIn)
         {
 
