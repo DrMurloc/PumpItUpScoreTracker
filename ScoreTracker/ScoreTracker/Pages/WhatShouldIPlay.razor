@@ -14,6 +14,7 @@
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Shared
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
 
 <PageTitle>What Should I Play</PageTitle>
 
@@ -44,26 +45,26 @@
         </MudItem>
     </MudGrid>
 }
-@if (_stats != null)
-{
-    <MudGrid>
-        <MudItem xs="12">
-            <MudText Typo="Typo.h4">Stats</MudText>
+<MudGrid>
+    <MudItem xs="8" sm="3">
+        <MudSelect T="ChartType?" Label=@L["Chart Type"] Value="_chartType" ValueChanged="SetChartType" Disabled="_isLoading">
+            <MudSelectItem T="ChartType?" Value="null">All</MudSelectItem>
+            <MudSelectItem T="ChartType?" Value="ChartType.Single">Singles</MudSelectItem>
+            <MudSelectItem T="ChartType?" Value="ChartType.Double">Doubles</MudSelectItem>
+        </MudSelect>
+    </MudItem>
+
+    <MudItem xs="2" sm="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" Color="Color.Primary" OnClick="RefreshRecommendations" Disabled="_isLoading"></MudIconButton>
+    </MudItem>
+    @if (_isLoading)
+    {
+        
+        <MudItem xs="2" sm="1">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary"></MudProgressCircular>
         </MudItem>
-        <MudItem xs="12">
-            <b>@L["Rating"]</b>: @_stats.SkillRating
-        </MudItem>
-        <MudItem xs="12">
-            <b>Competitive Level</b>: @_stats.CompetitiveLevel.ToString("0.00") <MudIconButton Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Primary" Target="_blank" Href="/CompetitiveLevel" Size="Size.Small"></MudIconButton>
-        </MudItem>
-        <MudItem xs="12">
-            <b>Singles Level</b>: @_stats.SinglesCompetitiveLevel.ToString("0.00")
-        </MudItem>
-        <MudItem xs="12">
-            <b>Doubles Level</b>: @_stats.DoublesCompetitiveLevel.ToString("0.00")
-        </MudItem>
-    </MudGrid>
-}
+    }
+</MudGrid>
 @foreach (var key in _descriptions.Keys)
 {
     <MudGrid>
@@ -120,6 +121,27 @@
                 </MudCard>
             </MudItem>
         }
+    </MudGrid>
+}
+
+@if (_stats != null)
+{
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">Stats</MudText>
+        </MudItem>
+        <MudItem xs="12">
+            <b>@L["Rating"]</b>: @_stats.SkillRating
+        </MudItem>
+        <MudItem xs="12">
+            <b>Competitive Level</b>: @_stats.CompetitiveLevel.ToString("0.00") <MudIconButton Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Primary" Target="_blank" Href="/CompetitiveLevel" Size="Size.Small"></MudIconButton>
+        </MudItem>
+        <MudItem xs="12">
+            <b>Singles Level</b>: @_stats.SinglesCompetitiveLevel.ToString("0.00")
+        </MudItem>
+        <MudItem xs="12">
+            <b>Doubles Level</b>: @_stats.DoublesCompetitiveLevel.ToString("0.00")
+        </MudItem>
     </MudGrid>
 }
 <MudDialog @bind-IsVisible="_showVideoDialog">
@@ -271,6 +293,34 @@
         Snackbar.Add("Notification was sent", Severity.Success);
     }
 
+    private ChartType? _chartType = null;
+    private int _levelOffset = 0;
+    private bool _isLoading = false;
+    private IDictionary<Guid, Chart> _chartDict;
+
+    private async Task SetLevelOffset(int levelOffset)
+    {
+        _levelOffset = levelOffset;
+        await UiSettings.SetSetting("WhatShouldIPlay__LevelOffset", levelOffset.ToString());
+        await RefreshRecommendations();
+    }
+
+    private async Task SetChartType(ChartType? chartType)
+    {
+        _chartType = chartType;
+        await UiSettings.SetSetting("WhatShouldIPlay__ChartType", chartType?.ToString()??"");
+        await RefreshRecommendations();
+    }
+    private async Task RefreshRecommendations()
+    {
+        _isLoading = true;
+        var recommendations = (await Mediator.Send(new GetRecommendedChartsQuery(_chartType, _levelOffset))).ToArray();
+        _charts = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => g.Select(r => _chartDict[r.ChartId]).ToArray().AsEnumerable());
+        _descriptions = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => g.First().Explanation);
+        _details = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => (IDictionary<Guid, string>)g.ToDictionary(c => c.ChartId, c => c.ChartDetails));
+        StateHasChanged();
+        _isLoading = false;
+    }
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn)
@@ -278,6 +328,11 @@
             NavManager.NavigateTo("/Login");
             return;
         }
+        _isLoading = true;
+        _levelOffset = int.TryParse(await UiSettings.GetSetting("WhatShouldIPlay__LevelOffset") ?? "0", out var level) ? level : 0;
+        _chartType = Enum.TryParse<ChartType>(await UiSettings.GetSetting("WhatShouldIPlay__ChartType") ?? "", out var type) ? type : null;
+        _chartDict = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix)))
+            .ToDictionary(c => c.Id);
         _topCharts = (await Mediator.Send(new GetTop50CompetitiveQuery(CurrentUser.User.Id, Domain.Enums.ChartType.Double)))
             .Concat(await Mediator.Send(new GetTop50CompetitiveQuery(CurrentUser.User.Id, Domain.Enums.ChartType.Single)))
             .Select(c => c.ChartId).Distinct().ToHashSet();
@@ -285,21 +340,16 @@
         _progress = titles.GetPushingTitle();
         var pushingLevel = (_progress.Title as PhoenixDifficultyTitle)!.Level;
         _rating = pushingLevel.BaseRating;
-        var recommendations = (await Mediator.Send(new GetRecommendedChartsQuery())).ToArray();
-        var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix)))
-            .ToDictionary(c => c.Id);
         _scores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id)))
             .ToDictionary(r => r.ChartId);
-        var matchingScores = charts.Values.Where(c => c.Level == pushingLevel &&_scores.ContainsKey(c.Id) && _scores[c.Id].Score != null)
+        var matchingScores = _chartDict.Values.Where(c => c.Level == pushingLevel && _scores.ContainsKey(c.Id) && _scores[c.Id].Score != null)
             .Select(c => _scores[c.Id])
             .ToArray();
         _averageRating = matchingScores.Any() ? (int)matchingScores.Average(s => s.Score!.Value.LetterGrade.GetModifier() * _rating) : 0;
         _videos=(await Mediator.Send(new GetChartVideosQuery())).ToDictionary(c => c.ChartId,c=>c.VideoUrl.ToString());
-        _charts = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => g.Select(r => charts[r.ChartId]).ToArray().AsEnumerable());
-        _descriptions = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => g.First().Explanation);
-        _details = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => (IDictionary<Guid,string>)g.ToDictionary(c => c.ChartId, c => c.ChartDetails));
 
         _stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
 
+        await RefreshRecommendations();
     }
 }

@@ -49,42 +49,63 @@ namespace ScoreTracker.Application.Handlers
                 .Where(f => f.ShouldHide)
                 .GroupBy(u => u.SuggestionCategory.ToString()).ToDictionary(g => g.Key,
                     g => (ISet<Guid>)g.Select(i => i.ChartId).Distinct().ToHashSet());
-            return (await GetPushLevels(feedback, cancellationToken, titles, scores))
-                .Concat(await GetPassFills(feedback, cancellationToken, competitiveLevel, scores))
-                .Concat(await GetSkillTitleCharts(feedback, cancellationToken, titles))
-                .Concat(await GetOldScores(cancellationToken, competitiveLevel, scores, feedback))
-                .Concat(await GetPGPushes(feedback, cancellationToken, scores))
-                .Concat(await GetRandomFromTop50Charts(feedback, cancellationToken))
-                .Concat(await GetBounties(feedback, cancellationToken, scores)).ToArray();
+            var charts =
+                (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), cancellationToken)).ToDictionary(c => c.Id);
+            return (await GetPushLevels(feedback, cancellationToken, titles, scores, request.ChartType, charts))
+                .Concat(await GetPassFills(feedback, cancellationToken, competitiveLevel, scores, request.ChartType,
+                    request.LevelOffset, charts))
+                .Concat(await GetSkillTitleCharts(feedback, cancellationToken, titles, request.ChartType, charts))
+                .Concat(await GetOldScores(cancellationToken, competitiveLevel, scores, feedback, request.ChartType,
+                    request.LevelOffset, charts))
+                .Concat(await GetPGPushes(feedback, cancellationToken, scores, request.ChartType, charts))
+                .Concat(await GetRandomFromTop50Charts(feedback, request.ChartType, cancellationToken))
+                .Concat(await GetBounties(feedback, cancellationToken, scores, request.ChartType, charts)).ToArray();
         }
 
         private sealed record OrderedTitle(TitleProgress t, int i)
         {
         }
 
+        private ISet<DifficultyLevel> BuildRange(int min, int max, int offset)
+        {
+            var result = new List<DifficultyLevel>();
+            for (var i = min; i < max; i++)
+                if (DifficultyLevel.IsValid(i + offset))
+                    result.Add(i + offset);
+
+            return result.ToHashSet();
+        }
+
         private async Task<IEnumerable<ChartRecommendation>> GetOldScores(CancellationToken cancellationToken,
             DifficultyLevel competitiveLevel, RecordedPhoenixScore[] scores,
-            IDictionary<string, ISet<Guid>> ignoredChartIds)
+            IDictionary<string, ISet<Guid>> ignoredChartIds, ChartType? chartType, int levelOffset,
+            IDictionary<Guid, Chart> charts)
         {
-            DifficultyLevel[] toFind = { competitiveLevel, competitiveLevel - 1, competitiveLevel - 2 };
+            var toFind = BuildRange(competitiveLevel - 2, competitiveLevel, levelOffset);
 
             var tierLists = new Dictionary<Guid, TierListCategory>();
             foreach (var level in toFind)
             {
-                var mySinglesRating = await _mediator.Send(new GetMyRelativeTierListQuery(ChartType.Single, level),
-                    cancellationToken);
-                var myDoublesRating = await _mediator.Send(new GetMyRelativeTierListQuery(ChartType.Double, level),
-                    cancellationToken);
-                foreach (var rating in mySinglesRating) tierLists[rating.ChartId] = rating.Category;
-                foreach (var rating in myDoublesRating) tierLists[rating.ChartId] = rating.Category;
+                if (chartType is null or ChartType.Single)
+                {
+                    var mySinglesRating = await _mediator.Send(new GetMyRelativeTierListQuery(ChartType.Single, level),
+                        cancellationToken);
+                    foreach (var rating in mySinglesRating) tierLists[rating.ChartId] = rating.Category;
+                }
+
+                if (chartType is null or ChartType.Double)
+                {
+                    var myDoublesRating = await _mediator.Send(new GetMyRelativeTierListQuery(ChartType.Double, level),
+                        cancellationToken);
+                    foreach (var rating in myDoublesRating) tierLists[rating.ChartId] = rating.Category;
+                }
             }
 
-            var chartIds = (
-                    await _mediator.Send(
-                        new GetChartsQuery(MixEnum.Phoenix),
-                        cancellationToken))
-                .Where(c => c.Level >= competitiveLevel - 2 && c.Level <= competitiveLevel).Select(c => c.Id).Distinct()
-                .ToHashSet();
+            var chartIds =
+                charts.Values
+                    .Where(c => c.Level >= competitiveLevel - 2 && c.Level <= competitiveLevel).Select(c => c.Id)
+                    .Distinct()
+                    .ToHashSet();
 
             var cutoff = DateTimeOffset.Now - TimeSpan.FromDays(30);
             var random = new Random();
@@ -106,50 +127,56 @@ namespace ScoreTracker.Application.Handlers
 
 
         private async Task<IEnumerable<ChartRecommendation>> GetRandomFromTop50Charts(
-            IDictionary<string, ISet<Guid>> ignoredChartIds,
+            IDictionary<string, ISet<Guid>> ignoredChartIds, ChartType? chartType,
             CancellationToken cancellationToken)
         {
             var skipped = ignoredChartIds.TryGetValue("Improve Your Top 50", out var r) ? r : new HashSet<Guid>();
             var random = new Random();
-            var singles = (await _mediator.Send(new GetTop50CompetitiveQuery(_currentUser.User.Id, ChartType.Single),
-                    cancellationToken)).Where(c => c.Score != null && c.Score < 1000000)
-                .Where(c => !skipped.Contains(c.ChartId))
-                .OrderBy(c => random.Next())
-                .Take(3);
-            var doubles = (await _mediator.Send(new GetTop50CompetitiveQuery(_currentUser.User.Id, ChartType.Double),
-                    cancellationToken)).Where(c => c.Score != null && c.Score < 1000000)
-                .Where(c => !skipped.Contains(c.ChartId))
-                .OrderBy(c => random.Next())
-                .Take(3);
-            return singles.Concat(doubles)
+            var result = Array.Empty<RecordedPhoenixScore>().AsEnumerable();
+
+            if (chartType is null or ChartType.Single)
+                result = result.Concat((await _mediator.Send(
+                        new GetTop50CompetitiveQuery(_currentUser.User.Id, ChartType.Single),
+                        cancellationToken)).Where(c => c.Score != null && c.Score < 1000000)
+                    .Where(c => !skipped.Contains(c.ChartId))
+                    .OrderBy(c => random.Next())
+                    .Take(chartType == ChartType.Single ? 6 : 3));
+
+            if (chartType is null or ChartType.Double)
+                result = result.Concat((await _mediator.Send(
+                        new GetTop50CompetitiveQuery(_currentUser.User.Id, ChartType.Double),
+                        cancellationToken)).Where(c => c.Score != null && c.Score < 1000000)
+                    .Where(c => !skipped.Contains(c.ChartId))
+                    .OrderBy(c => random.Next())
+                    .Take(chartType == ChartType.Double ? 6 : 3));
+            return result
                 .Select(c => new ChartRecommendation("Improve Your Top 50", c.ChartId,
                     "These are randomly pulled from your best 100 charts based on competitive score. Push that score!"));
         }
 
         private async Task<IEnumerable<ChartRecommendation>> GetSkillTitleCharts(
             IDictionary<string, ISet<Guid>> ignoredChartIds, CancellationToken cancellationToken,
-            TitleProgress[] allTitles)
+            TitleProgress[] allTitles, ChartType? chartType, IDictionary<Guid, Chart> charts)
         {
             var skipped = ignoredChartIds.TryGetValue("Skill Title Charts", out var c) ? c : new HashSet<Guid>();
-            var charts = (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), cancellationToken)).ToArray();
             return allTitles.Where(t =>
                     t.Title is PhoenixSkillTitle && t.CompletionCount >= PhoenixLetterGrade.S.GetMinimumScore() &&
                     t.CompletionCount < t.Title.CompletionRequired)
                 .Select(t => new ChartRecommendation("Skill Title Charts",
-                    charts.First(c => (t.Title as PhoenixSkillTitle)!.AppliesToChart(c)).Id,
+                    charts.Values.First(c => (t.Title as PhoenixSkillTitle)!.AppliesToChart(c)).Id,
                     "Charts you are close to achieving a Skill title (SSS) on"))
-                .Where(s => !skipped.Contains(s.ChartId));
+                .Where(s => !skipped.Contains(s.ChartId) && (chartType == null || charts[s.ChartId].Type == chartType));
         }
 
         private async Task<IEnumerable<ChartRecommendation>> GetPGPushes(
             IDictionary<string, ISet<Guid>> ignoredChartIds, CancellationToken cancellationToken,
-            RecordedPhoenixScore[] scores)
+            RecordedPhoenixScore[] scores, ChartType? chartType, IDictionary<Guid, Chart> charts)
         {
             var skipped = ignoredChartIds.TryGetValue("Push PGs", out var c) ? c : new HashSet<Guid>();
-            var charts =
-                (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), cancellationToken)).ToDictionary(c => c.Id);
+
             return scores.Where(s =>
-                    s.Score != null && s.Score != 1000000 && s.Score.Value.LetterGrade == PhoenixLetterGrade.SSSPlus)
+                    s.Score != null && s.Score != 1000000 && s.Score.Value.LetterGrade == PhoenixLetterGrade.SSSPlus &&
+                    (chartType == null || charts[s.ChartId].Type == chartType))
                 .Where(s => !skipped.Contains(s.ChartId))
                 .OrderByDescending(s => charts[s.ChartId].Level)
                 .ThenBy(s => 1000000 - s.Score)
@@ -160,27 +187,28 @@ namespace ScoreTracker.Application.Handlers
 
         private async Task<IEnumerable<ChartRecommendation>> GetPassFills(
             IDictionary<string, ISet<Guid>> ignoredChartIds, CancellationToken cancellationToken,
-            DifficultyLevel competitiveLevel, RecordedPhoenixScore[] scores)
+            DifficultyLevel competitiveLevel, RecordedPhoenixScore[] scores, ChartType? chartType, int levelOffset,
+            IDictionary<Guid, Chart> charts)
         {
             var skipped = ignoredChartIds.TryGetValue("Fill Scores", out var c) ? c : new HashSet<Guid>();
 
-            var pushLevel = competitiveLevel;
+            var includedLevels = BuildRange(competitiveLevel - 3, competitiveLevel, levelOffset);
 
-            var charts = (
-                    await _mediator.Send(
-                        new GetChartsQuery(MixEnum.Phoenix),
-                        cancellationToken))
-                .Where(c => c.Level >= pushLevel - 3 && c.Level <= pushLevel).ToDictionary(c => c.Id);
+            var chartsResults = charts.Values
+                .Where(c => includedLevels.Contains(c.Level) && (chartType == null || c.Type == chartType))
+                .ToDictionary(c => c.Id);
 
             var myScores = scores
                 .ToDictionary(s => s.ChartId);
             var random = new Random();
-            var chartOrder = (await GetApproachableCharts(cancellationToken)).Where(id => charts.ContainsKey(id)
+            var chartOrder = (await GetApproachableCharts(cancellationToken, charts)).Where(id =>
+                    chartsResults.ContainsKey(id)
                     && (!myScores.TryGetValue(id, out var score) || score.IsBroken))
                 .GroupBy(c => charts[c].Level)
                 .SelectMany(g => g.GroupBy(id => charts[id].Type)
                     .SelectMany(t =>
-                        t.Take(6).OrderBy(_ => random.Next(1000)).Where(id => !skipped.Contains(id)).Take(2)));
+                        t.Take(chartType == null ? 6 : 12).OrderBy(_ => random.Next(1000))
+                            .Where(id => !skipped.Contains(id)).Take(chartType == null ? 2 : 4)));
 
             return chartOrder.Select(id =>
                 new ChartRecommendation("Fill Scores", id, "Easier Charts From Lower Levels You Can Fill"));
@@ -188,12 +216,13 @@ namespace ScoreTracker.Application.Handlers
 
         private async Task<IEnumerable<ChartRecommendation>> GetBounties(
             IDictionary<string, ISet<Guid>> ignoredChartIds, CancellationToken cancellationToken,
-            RecordedPhoenixScore[] scores)
+            RecordedPhoenixScore[] scores, ChartType? chartType, IDictionary<Guid, Chart> charts)
         {
             var ignoredCharts = ignoredChartIds.TryGetValue("Bounties", out var set) ? set : new HashSet<Guid>();
             var existingScores = scores.Where(s => s.Score != null).Select(s => s.ChartId).Distinct().ToHashSet();
             return (await _mediator.Send(new GetChartBountiesQuery(), cancellationToken)).Where(b =>
-                    !ignoredCharts.Contains(b.ChartId) && !existingScores.Contains(b.ChartId))
+                    !ignoredCharts.Contains(b.ChartId) && !existingScores.Contains(b.ChartId) &&
+                    (chartType == null || charts[b.ChartId].Type == chartType))
                 .OrderByDescending(b => b.Worth)
                 .Take(5)
                 .Select(b => new ChartRecommendation("Bounties", b.ChartId,
@@ -202,7 +231,8 @@ namespace ScoreTracker.Application.Handlers
 
         private async Task<IEnumerable<ChartRecommendation>> GetPushLevels(
             IDictionary<string, ISet<Guid>> ignoredChartIds, CancellationToken cancellationToken,
-            TitleProgress[] allTitles, RecordedPhoenixScore[] scores)
+            TitleProgress[] allTitles, RecordedPhoenixScore[] scores, ChartType? chartType,
+            IDictionary<Guid, Chart> chartDict)
         {
             var titles = allTitles
                 .Where(title => title.Title is PhoenixDifficultyTitle)
@@ -214,13 +244,13 @@ namespace ScoreTracker.Application.Handlers
                 .FirstOrDefault(t => t.t.CompletionCount >= t.t.Title.CompletionRequired)?.i ?? titles.Count());
 
             var pushLevel = titles[firstAchieved];
-            var charts = (
-                await _mediator.Send(
-                    new GetChartsQuery(MixEnum.Phoenix, (pushLevel.Title as PhoenixDifficultyTitle)!.Level),
-                    cancellationToken)).ToDictionary(c => c.Id);
+            var charts =
+                chartDict.Values.Where(c => c.Level == (pushLevel.Title as PhoenixDifficultyTitle)!.Level)
+                    .ToDictionary(c => c.Id);
             var myScores = scores
                 .ToDictionary(s => s.ChartId);
-            var chartOrder = (await GetApproachableCharts(cancellationToken)).Where(id => charts.ContainsKey(id))
+            var chartOrder = (await GetApproachableCharts(cancellationToken, chartDict))
+                .Where(id => charts.ContainsKey(id))
                 .ToArray();
             var skippedSingles = ignoredChartIds.TryGetValue($"{pushLevel.Title.Name} Singles", out var cs)
                 ? cs
@@ -228,31 +258,37 @@ namespace ScoreTracker.Application.Handlers
             var skippedDoubles = ignoredChartIds.TryGetValue($"{pushLevel.Title.Name} Doubles", out var cd)
                 ? cd
                 : new HashSet<Guid>();
-            var nextSingles = chartOrder.Where(c => !myScores.TryGetValue(c, out var score) || score.IsBroken)
-                .Where(c => !skippedSingles.Contains(c))
-                .Where(c => charts.ContainsKey(c) && charts[c].Type == ChartType.Single)
-                .Take(6);
-            var nextDoubles = chartOrder.Where(c => !myScores.TryGetValue(c, out var score) || score.IsBroken)
-                .Where(c => !skippedDoubles.Contains(c))
-                .Where(c => charts.ContainsKey(c) && charts[c].Type == ChartType.Double)
-                .Take(6);
+            var result = new List<Guid>();
+            var random = new Random();
+            var reduction = chartOrder.Where(c => !myScores.TryGetValue(c, out var score) || score.IsBroken)
+                .Where(c => !skippedSingles.Contains(c) && charts.ContainsKey(c))
+                .ToArray();
+            var missingSingles = 3 - reduction.Where(c => charts[c].Type == ChartType.Single).Take(3).Count();
+            var missingDoubles = 3 - reduction.Where(c => charts[c].Type == ChartType.Double).Take(3).Count();
+            if (chartType is null or ChartType.Single)
+                result.AddRange(reduction
+                    .Where(c => charts[c].Type == ChartType.Single)
+                    .Take(chartType == ChartType.Single ? 12 : 6)
+                    .OrderBy(_ => random.Next())
+                    .Take(chartType == ChartType.Single ? 6 : 3 + missingDoubles));
 
-            return nextSingles.Select(s => new ChartRecommendation($"{pushLevel.Title.Name} Singles", s,
-                    "Recommended Singles charts for achieving your next title"))
-                .Concat(nextDoubles.Select(s => new ChartRecommendation($"{pushLevel.Title.Name} Doubles", s,
-                    "Recommended Doubles charts for achieving your next title")));
+            if (chartType is null or ChartType.Double)
+                result.AddRange(reduction
+                    .Where(c => charts[c].Type == ChartType.Double)
+                    .Take(chartType == ChartType.Double ? 12 : 6)
+                    .OrderBy(_ => random.Next())
+                    .Take(chartType == ChartType.Double ? 6 : 3 + missingSingles));
+            return result.Select(s => new ChartRecommendation($"{pushLevel.Title.Name}", s,
+                "Recommended Charts for achieving your next title"));
         }
 
-        private async Task<IEnumerable<Guid>> GetApproachableCharts(CancellationToken cancellationToken)
+        private async Task<IEnumerable<Guid>> GetApproachableCharts(CancellationToken cancellationToken,
+            IDictionary<Guid, Chart> charts)
         {
-            var chartLevels =
-                (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), cancellationToken)).ToDictionary(c => c.Id,
-                    c => c.Level);
-
             var popularity = await _mediator.Send(new GetTierListQuery("Popularity"), cancellationToken);
             var difficulty = await _mediator.Send(new GetTierListQuery("Pass Count"), cancellationToken);
             var score = (await _mediator.Send(new GetTierListQuery("Scores"), cancellationToken))
-                .Where(r => chartLevels[r.ChartId] < 20);
+                .Where(r => charts[r.ChartId].Level < 20);
             return popularity.Concat(difficulty).Concat(score).GroupBy(s => s.ChartId)
                 .OrderByDescending(g => g.Sum(s =>
                     (s.TierListName == "Popularity" ? .5 : 1.0) *
