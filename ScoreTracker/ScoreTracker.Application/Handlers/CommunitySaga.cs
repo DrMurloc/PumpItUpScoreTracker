@@ -397,6 +397,8 @@ And {count - 10} others!";
 
                     await SendToCommunityDiscords(user.Id,
                         message, context.CancellationToken);
+                    message = "";
+                    count = 0;
                 }
 
                 await SendToCommunityDiscords(user.Id,
