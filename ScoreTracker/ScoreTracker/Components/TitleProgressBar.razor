@@ -1,0 +1,79 @@
+﻿@namespace ScoreTracker.Web.Components
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models.Titles
+@using ScoreTracker.Domain.Models.Titles.Phoenix
+@using ScoreTracker.Domain.SecondaryPorts
+@inject IMediator Mediator;
+@foreach (var progress in Titles.Where(t => !t.IsComplete))
+{
+    var rating = progress.Title switch
+    {
+        PhoenixDifficultyTitle difficultyTitle => difficultyTitle.Level.BaseRating,
+        PhoenixCoOpTitle => 2000,
+        _ => 0
+
+    };
+    @if (rating == 0)
+    {
+        continue;
+    }
+    <MudItem xs="12" sm="4" md="3">
+        <MudText Typo="Typo.h5">@progress.Title.Name</MudText>
+    </MudItem>
+    <MudItem xs="12" sm="8" md="9">
+        <MudProgressLinear Color="@(progress.CompletionCount >= progress.Title.CompletionRequired ? Color.Success : Color.Primary)" Value="100.0 * (progress.CompletionCount / (double)progress.Title.CompletionRequired)">
+            @if (progress.CompletionCount < progress.Title.CompletionRequired)
+            {
+                <MudText Typo="Typo.subtitle1">
+                    @progress.CompletionCount / @progress.Title.CompletionRequired
+                </MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.subtitle1">
+                    @L.GetString("Completed")
+                </MudText>
+            }
+        </MudProgressLinear>
+        <MudText Typo="Typo.subtitle1">
+            @(L["Remaining Charts", ((int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / (rating * PhoenixLetterGrade.SSSPlus.GetModifier()))), ((int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / (rating * PhoenixLetterGrade.AA.GetModifier())))] + ", ")
+            @if (AverageRating > 0.0)
+            {
+                @L["Remaining Charts For You", (int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / ((double)AverageRating))]
+            }
+        </MudText>
+    </MudItem>
+}
+@foreach (var progress in Titles.Where(t => t.IsComplete && t is PhoenixTitleProgress {RequiredAaCount: > 0 }).Cast<PhoenixTitleProgress>())
+{
+    <MudItem xs="12" sm="4" md="3">
+        <MudText Typo="Typo.h5">@progress.Title.Name - <ParagonLevelImage Level="progress.ParagonLevel==ParagonLevel.PG?ParagonLevel.PG:(progress.ParagonLevel+1)"></ParagonLevelImage></MudText>
+    </MudItem>
+    <MudItem xs="12" sm="8" md="9">
+        <MudProgressLinear Color="@(progress.NextParagonProgress >= progress.Title.CompletionRequired ? Color.Success : Color.Primary)" Value="100.0 * (progress.NextParagonProgress / (double)progress.RequiredAaCount)">
+            @if (progress.NextParagonProgress < progress.RequiredAaCount)
+            {
+                <MudText Typo="Typo.subtitle1">
+                    @progress.NextParagonProgress / @progress.RequiredAaCount
+                </MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.subtitle1">
+                    @L.GetString("Completed")
+                </MudText>
+            }
+        </MudProgressLinear>
+    </MudItem>
+}
+@code {
+
+    [Parameter]
+    public IEnumerable<TitleProgress> Titles { get; set; } = Array.Empty<TitleProgress>();
+
+    [Parameter]
+    public double AverageRating { get; set; } = 0.0;
+
+}

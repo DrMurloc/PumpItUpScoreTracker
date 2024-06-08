@@ -389,7 +389,7 @@ And {count - 10} others!";
                         ? "#PLATE|PerfectGame#"
                         : "#LETTERGRADE|" + upgradedTitle.Value + "#";
                     message += $@"
-- {upgradedTitle} {emoji}";
+- {upgradedTitle.Key} {emoji}";
                     count++;
                     if (count != 10) continue;
 

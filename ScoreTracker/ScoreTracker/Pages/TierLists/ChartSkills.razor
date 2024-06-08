@@ -156,44 +156,7 @@
     </MudItem>
     @if (CurrentUser.IsLoggedIn)
     {
-
-        @foreach (var progress in _titleProgress.Where(t => !t.IsComplete && ((t.Title is PhoenixDifficultyTitle pdt && pdt.Level == DifficultyFilter) || (ChartTypeFilter == ChartType.CoOp.ToString() && t.Title is PhoenixCoOpTitle))))
-        {
-            var rating = progress.Title switch
-            {
-                PhoenixDifficultyTitle difficultyTitle => difficultyTitle.Level.BaseRating,
-                PhoenixCoOpTitle => 2000,
-                _ => 0
-
-            };
-            @if (rating == 0)
-            {
-                continue;
-            }
-            <MudItem xs="12" sm="4" md="3">
-                <MudText Typo="Typo.h5">@progress.Title.Name</MudText>
-            </MudItem>
-            <MudItem xs="12" sm="8" md="9">
-                <MudProgressLinear Color="@(progress.CompletionCount >= progress.Title.CompletionRequired ? Color.Success : Color.Primary)" Value="100.0 * (progress.CompletionCount / (double)progress.Title.CompletionRequired)">
-                    @if (progress.CompletionCount < progress.Title.CompletionRequired)
-                    {
-                        <MudText Typo="Typo.subtitle1">
-                            @progress.CompletionCount / @progress.Title.CompletionRequired
-                        </MudText>
-                    }
-                    else
-                    {
-                        <MudText Typo="Typo.subtitle1">
-                            @L.GetString("Completed")
-                        </MudText>
-                    }
-                </MudProgressLinear>
-                <MudText Typo="Typo.subtitle1">
-                    @(L["Remaining Charts", ((int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / (rating * PhoenixLetterGrade.SSSPlus.GetModifier()))), ((int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / (rating * PhoenixLetterGrade.AA.GetModifier())))]+", ")
-                    @L["Remaining Charts For You", (int)Math.Ceiling((progress.Title.CompletionRequired - progress.CompletionCount) / ((double)_averageRating))]
-                </MudText>
-            </MudItem>
-        }
+        <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == DifficultyFilter) || (ChartTypeFilter == ChartType.CoOp.ToString() && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
         @if (_unpassedTodos.Any())
         {
             <MudItem xs="12">
@@ -773,10 +736,12 @@
     {
 
         var myLevel = await Titles.GetCurrentTitleLevel(CurrentUser.User.Id, CancellationToken.None);
-
-        var userIds = (await TierLists.GetUsersOnLevel(myLevel - 1, CancellationToken.None))
-            .Concat(await TierLists.GetUsersOnLevel(myLevel, CancellationToken.None))
-            .Concat(await TierLists.GetUsersOnLevel(myLevel + 1, CancellationToken.None))
+        var lowLevel = await TierLists.GetUsersOnLevel(myLevel - 1, CancellationToken.None);
+        var onMyLevel = await TierLists.GetUsersOnLevel(myLevel - 1, CancellationToken.None);
+        var highLevel = await TierLists.GetUsersOnLevel(myLevel - +1, CancellationToken.None);
+        var userIds = (lowLevel)
+            .Concat(onMyLevel)
+            .Concat(highLevel)
             .Where(u => u != CurrentUser.User.Id);
         var userTiersLists = new Dictionary<Guid, IEnumerable<SongTierListEntry>>();
         var myTierList = (await Mediator.Send(new GetMyRelativeTierListQuery(type, level)))

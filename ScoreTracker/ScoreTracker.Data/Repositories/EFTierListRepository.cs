@@ -13,12 +13,14 @@ namespace ScoreTracker.Data.Repositories
     {
         private readonly ChartAttemptDbContext _dbContext;
         private readonly IMemoryCache _cache;
+        private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
         public EFTierListRepository(IDbContextFactory<ChartAttemptDbContext> factory,
             IMemoryCache cache)
         {
             _dbContext = factory.CreateDbContext();
             _cache = cache;
+            _factory = factory;
         }
 
         private static string TierListKey(Name tierListName)
@@ -54,7 +56,8 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task<IEnumerable<Guid>> GetUsersOnLevel(DifficultyLevel level, CancellationToken cancellationToken)
         {
-            return await _dbContext.UserHighestTitle.Where(e => e.Level == (int)level).Select(e => e.UserId)
+            var database = await _factory.CreateDbContextAsync(cancellationToken);
+            return await database.UserHighestTitle.Where(e => e.Level == (int)level).Select(e => e.UserId)
                 .ToArrayAsync(cancellationToken);
         }
 

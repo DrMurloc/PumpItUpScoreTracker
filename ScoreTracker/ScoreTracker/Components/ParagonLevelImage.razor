@@ -1,0 +1,27 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.ValueTypes
+@using Align = MudBlazor.Align
+@namespace ScoreTracker.Web.Components
+
+@if (Level != ParagonLevel.None)
+{
+    
+    <MudImage Src="@LetterGradeImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+}
+else
+{
+    <MudText>None</MudText>
+}
+@code {
+
+    [Parameter]
+    public ParagonLevel Level { get; set; }
+
+    [Parameter]
+    public int Height { get; set; } = 25;
+    private string LetterGradeImage => Level == ParagonLevel.PG ? $"https://piuimages.arroweclip.se/plates/PG.png":
+        $"https://piuimages.arroweclip.se/letters/{Level.ToString().ToLower()}.png";
+
+
+}
