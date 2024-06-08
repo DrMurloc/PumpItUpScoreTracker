@@ -97,7 +97,7 @@
                 <MudGrid>
                     
                     <MudItem xs="12">
-                        <MudCheckBox T="bool" @bind-Checked="_textView" Disabled="_isLoading" Label=@L["Text View"]></MudCheckBox>
+                        <MudCheckBox T="bool" Checked="_textView" CheckedChanged="SetTextView" Disabled="_isLoading" Label=@L["Text View"]></MudCheckBox>
                     </MudItem>
                     @foreach (var type in Enum.GetValues<SongType>())
                     {
@@ -425,6 +425,12 @@
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private ISet<Guid> _unPopularCharts = new HashSet<Guid>();
     private ISet<Guid> _popularCharts = new HashSet<Guid>();
+
+    private async Task SetTextView(bool newSetting)
+    {
+        await UiSettings.SetSetting("TierLists__TextView", newSetting.ToString());
+        _textView = newSetting;
+    }
     private ISet<SongType> _filteredTypes = new HashSet<SongType>();
     private IEnumerable<string> _stepArtists = new HashSet<string>();
     private IEnumerable<string> _songArtists = new HashSet<string>();
@@ -803,7 +809,11 @@
     private async Task Recalculate()
     {
         _isLoading = true;
-
+        await UiSettings.SetSetting("TierLists__Level", _level.ToString());
+        await UiSettings.SetSetting("TierLists__ChartType", _chartType.ToString());
+        await UiSettings.SetSetting("TierLists__ListType", _tierListType);
+        await UiSettings.SetSetting("TierLists__UsePersonalized", _usePersonalizedData.ToString());
+        await UiSettings.SetSetting("TierLists__GroupByTierList", _groupByTierList.ToString());
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, _level, _chartType))).ToDictionary(c => c.Id);
         var titles = _titles.Where(t => t is ISpecificChartTitle).ToArray();
         _charTitles = _charts.Values.SelectMany(c => titles.Select(t => (c,t,((ISpecificChartTitle)t).AppliesToChart(c))))
@@ -939,7 +949,7 @@
             { "Score", L["Score"] },
             { "Popularity", L["Popularity"] }
         };
-        _showAge = bool.TryParse(await UiSettings.GetSetting("TierLists__ShowAge"), out var res) && res;
+
         if (CurrentUser.IsLoggedIn)
         {
 
@@ -959,6 +969,13 @@
             }
             _todos = (await Mediator.Send(new GetSavedChartsQuery())).Where(c => c.ListType == ChartListType.ToDo).Select(c => c.ChartId).Distinct().ToHashSet();
         }
+        _showAge = bool.TryParse(await UiSettings.GetSetting("TierLists__ShowAge"), out var res) && res;
+        _level = int.TryParse(await UiSettings.GetSetting("TierLists__Level"), out var l) ? l : 18;
+        _chartType = Enum.TryParse<ChartType>(await UiSettings.GetSetting("TierLists__ChartType"), out var cType) ? cType : ChartType.Double;
+        _tierListType = await UiSettings.GetSetting("TierLists__ListType") ?? "Pass";
+        _usePersonalizedData = (await UiSettings.GetSetting("TierLists__UsePersonalized") ?? true.ToString()) == true.ToString();
+        _groupByTierList = (await UiSettings.GetSetting("TierLists__GroupByTierList") ?? true.ToString()) == true.ToString();
+        _textView = (await UiSettings.GetSetting("TierLists__TextView") ?? false.ToString()) == true.ToString();
         if (DifficultyFilter is >= 1 and <= 28)
         {
             _level = DifficultyFilter.Value;
@@ -974,7 +991,7 @@
         }
         else
         {
-            await SetTierListType("Pass");
+            await SetTierListType(_tierListType);
         }
     }
 
