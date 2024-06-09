@@ -166,6 +166,13 @@
             </MudItem>
         }
     }
+
+    @if (_isLoading)
+    {
+        <MudItem xs="12">
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true"></MudProgressLinear>
+        </MudItem>
+    }
     @if (_finalEntries.Any() && _finalEntries.All(e=>_charts.ContainsKey(e.ChartId)))
     {
         @foreach (var group in _finalGroupings.Where(g=>g.Any(ShouldChartShow)))

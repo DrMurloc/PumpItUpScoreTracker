@@ -382,6 +382,9 @@ And {count - 10} others!";
 
             if (context.Message.ParagonUpgrades.Any())
             {
+                if (!string.IsNullOrWhiteSpace(message))
+                    message += @"
+";
                 message += $"**{user.Name}** Advanced their Paragon Title Levels:";
                 foreach (var upgradedTitle in context.Message.ParagonUpgrades.OrderBy(t => t.Key))
                 {

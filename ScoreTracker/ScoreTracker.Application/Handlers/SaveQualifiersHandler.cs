@@ -56,7 +56,7 @@ namespace ScoreTracker.Application.Handlers
                         $"{user} has progressed to {newPlace} on the [Leaderboard](https://piuscores.arroweclip.se/Tournament/{request.TournamentId}/Qualifiers)!";
                     foreach (var best in request.Qualifiers.BestCharts())
                         message += $@"
-- {best.Chart.Song.Name} #DIFFICULTY|{best.Chart.DifficultyString}# - {best.Score} #LETTERGRADE|{best.Score.LetterGrade}# ({best.Rating} rating)";
+- {best.Chart.Song.Name} #DIFFICULTY|{best.Chart.DifficultyString}# - {best.Score} #LETTERGRADE|{best.Score.LetterGrade}# ({best.Rating:0.##} rating)";
 
                     await _botClient.SendMessage(
                         message,

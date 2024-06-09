@@ -46,14 +46,13 @@
     </MudGrid>
 }
 <MudGrid>
-    <MudItem xs="8" sm="3">
+    <MudItem xs="4" sm="3">
         <MudSelect T="ChartType?" Label=@L["Chart Type"] Value="_chartType" ValueChanged="SetChartType" Disabled="_isLoading">
             <MudSelectItem T="ChartType?" Value="null">All</MudSelectItem>
             <MudSelectItem T="ChartType?" Value="ChartType.Single">Singles</MudSelectItem>
             <MudSelectItem T="ChartType?" Value="ChartType.Double">Doubles</MudSelectItem>
         </MudSelect>
     </MudItem>
-
     <MudItem xs="2" sm="1">
         <MudIconButton Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" Color="Color.Primary" OnClick="RefreshRecommendations" Disabled="_isLoading"></MudIconButton>
     </MudItem>
