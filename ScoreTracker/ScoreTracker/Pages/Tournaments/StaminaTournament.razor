@@ -29,7 +29,6 @@
             {
                 <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.AverageDifficulty">Average Difficulty</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>(int)e.AverageScore">Average Score</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.AveragePlate">Average Plate</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.PassRate">Pass Rate</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.TotalRestTime">Rest Time</MudTableSortLabel></MudTh>
             }
@@ -48,8 +47,9 @@
             @if (_showExtraData)
             {
                 <MudTd>@TwoDecimalPlaces(context.AverageDifficulty)</MudTd>
-                <MudTd>@context.AverageScore (@context.AverageScore.LetterGrade.GetName())</MudTd>
-                <MudTd>@context.AveragePlate.GetShorthand()</MudTd>
+                <MudTd>
+                    <ScoreBreakdown Score="@context.AverageScore" Plate="@context.AveragePlate"></ScoreBreakdown>
+                </MudTd>
                 <MudTd>@TwoDecimalPlaces((double)context.PassRate*100.0)</MudTd>
                 <MudTd>@RestTime(context.TotalRestTime)</MudTd>
             }
@@ -107,21 +107,18 @@
                             {
 
                                 <MudItem xs="6" sm="3" md="2">
-                                    <MudCard>
-                                        <MudCardMedia Height="100" Image="@entry.Chart.Song.ImagePath.ToString()"/>
+                                    
+                                    
+                                    <MudCard Class="chart-card">
+
+                                        <MudCardHeader Style=@($"background-image:url(\"{entry.Chart.Song.ImagePath}\");")>
+                                            <DifficultyBubble Chart="entry.Chart"></DifficultyBubble>
+                                        </MudCardHeader>
                                         <MudCardContent>
-                                            <MudText>@entry.Chart.DifficultyString</MudText>
-                                            <MudText>@entry.Score</MudText>
-                                            <MudText>@entry.Score.LetterGrade.GetName() @entry.Plate.GetShorthand()</MudText>
-                                            @if (entry.IsBroken)
-                                            {
-                                                <MudText>Broken</MudText>
-                                            }
+                                            <ScoreBreakdown Text=@(entry.SessionScore.ToString("N0")+", "+TwoDecimalPlaces(entry.SessionScore / (double)entry.Chart.Song.Duration.TotalSeconds) +" PPS") Score="entry.Score" Plate="entry.Plate"></ScoreBreakdown>
                                             <MudText>
-                                                @entry.SessionScore Points
-                                            </MudText>
-                                            <MudText>
-                                                @(TwoDecimalPlaces(entry.SessionScore / (double)entry.Chart.Song.Duration.TotalSeconds)) PPS
+
+                                                
                                             </MudText>
                                         </MudCardContent>
                                     </MudCard>
