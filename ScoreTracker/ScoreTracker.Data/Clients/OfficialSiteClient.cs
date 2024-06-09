@@ -217,6 +217,39 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         return results.Values;
     }
 
+    public async Task<(IEnumerable<OfficialRecordedScore> results, IEnumerable<string> nonMapped)> GetRecentScores(
+        string username, string password, CancellationToken cancellationToken)
+    {
+        var session = await _piuGame.GetSessionId(username, password, cancellationToken);
+        var account = await _piuGame.GetAccountData(session, cancellationToken);
+        if (account.AccountName == "INVALID") throw new InvalidCredentialException("Invalid username or password");
+        var results = (await _piuGame.GetRecentScores(session, cancellationToken)).Reverse().ToArray();
+        var result = new List<OfficialRecordedScore>();
+        var nonMapped = new List<string>();
+        var songCharts =
+            (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken)).GroupBy(c => c.Song.Name)
+            .ToDictionary(g => g.Key, g => g.ToArray());
+
+        foreach (var record in results)
+        {
+            var songName = record.SongName;
+            if (ManualMappings.TryGetValue(songName, out var mapping)) songName = mapping;
+            var charts =
+                songCharts.TryGetValue(songName, out var r) ? r : Array.Empty<Chart>();
+
+            var chart = charts.FirstOrDefault(c => c.Type == record.ChartType && c.Level == record.Level);
+            if (chart == null)
+            {
+                nonMapped.Add(record.SongName + " " + record.ChartType.GetShortHand() + record.Level);
+                continue;
+            }
+
+            result.Add(new OfficialRecordedScore(chart, record.Score, record.Plate, record.IsBroken));
+        }
+
+        return (result, nonMapped);
+    }
+
     private readonly Regex ImageRegex = new(@"https\:\/\/piugame\.com\/data\/avatar_img\/([A-Za-z0-9]+.png)\?v\=",
         RegexOptions.Compiled);
 

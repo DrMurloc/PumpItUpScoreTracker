@@ -5,7 +5,10 @@
 @using ScoreTracker.Data.Persistence.Entities
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.ValueTypes
+@using System.Security.Authentication
+@using ScoreTracker.Web.Components
 
 <PageTitle>Submit Tournament Session</PageTitle>
 @if (CurrentUser.IsLoggedIn && CurrentUser.User.IsAdmin && _session!=null)
@@ -21,18 +24,21 @@
         @foreach (var entry in _session.Entries)
         {
             <MudItem xs="6" sm="3" md="2">
-                <MudCard>
-                    <MudCardMedia Height="100" Image="@entry.Chart.Song.ImagePath.ToString()" />
+                <MudCard Class="chart-card">
+
+                    <MudCardHeader Style=@($"background-image:url(\"{entry.Chart.Song.ImagePath}\");")>
+                        <DifficultyBubble Chart="entry.Chart"></DifficultyBubble>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <ScoreBreakdown Text="@entry.SessionScore.ToString("N0")" Score="entry.Score" Plate="entry.Plate"></ScoreBreakdown>
+                    </MudCardContent>
                     <MudCardActions>
-                        <MudText>
-                            @entry.SessionScore
-                        </MudText>
                         <MudTooltip Text="Remove">
-                            <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Delete" OnClick="@(()=>_session.Remove(entry))"></MudIconButton>
+                            <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => _session.Remove(entry))"></MudIconButton>
                         </MudTooltip>
                         <MudSpacer></MudSpacer>
                         <MudTooltip Text="Edit">
-                            <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Edit" OnClick="(()=>EditEntry(entry))"></MudIconButton>
+                            <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Edit" OnClick="(() => EditEntry(entry))"></MudIconButton>
                         </MudTooltip>
                     </MudCardActions>
                 </MudCard>
@@ -40,6 +46,24 @@
         }
         <MudItem xs="6" sm="3" md="2">
             <MudButton Disabled="_isSaving" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Variant="Variant.Outlined" OnClick="ShowAddDialog">Add Chart</MudButton>
+        </MudItem>
+        <MudItem xs="12">
+        </MudItem>
+        <MudItem xs="12" sm="5" md="3">
+            <MudTextField T="string" @bind-Value="_username" InputType="InputType.Email" Label=@L["Username"] Disabled="_isImporting"></MudTextField>
+        </MudItem>
+        <MudItem xs="12" sm="5" md="3">
+            <MudTextField T="string" @bind-Value="_password" InputType="InputType.Password" Label=@L["Password"] Disabled="_isImporting"></MudTextField>
+        </MudItem>
+        <MudItem xs="12" sm="2">
+            @if (_isImporting)
+            {
+                <MudProgressCircular Indeterminate="true" Color="Color.Primary"></MudProgressCircular>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ImportSession">@L["Import"]</MudButton>
+            }
         </MudItem>
     </MudGrid>
     <MudGrid>
@@ -184,7 +208,7 @@
                     </MudItem>
                     <MudItem sm="4" xs="12">
                         <MudNumericField T="int" Label="Score" Value="(int)_editScore" ValueChanged="v=>_editScore=v
-=v" Min="0" Max="1000000" Variant="Variant.Text" Clearable="false" HideSpinButtons="true"></MudNumericField>
+    =v" Min="0" Max="1000000" Variant="Variant.Text" Clearable="false" HideSpinButtons="true"></MudNumericField>
                     </MudItem>
                     <MudItem sm="4" xs="12">
 
@@ -208,6 +232,51 @@
             <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showEditDialog=false">Close</MudButton>
         </DialogActions>
     </MudDialog>
+    <MudDialog @bind-IsVisible="_showImportDialog">
+        <DialogContent>
+            <MudGrid>
+                @if (_notMapped.Any())
+                {
+                    <MudItem xs="12">
+                        <MudText Color="Color.Warning">
+                            The following charts could not be automatically mapped from your import and will need to be manually added:
+                        </MudText>
+                    </MudItem>
+                    @foreach (var misMatch in _notMapped)
+                    {
+                        <MudItem xs="12">
+                            @misMatch
+                        </MudItem>
+                    }
+                }
+                <MudItem xs="12">
+                    <MudText Color="Color.Info">
+                        Please check your FIRST and LAST chart in the session:
+                    </MudText>
+                </MudItem>
+                
+                @for (var i = 0; i < _importedScores.Length; i++)
+                {
+                    var loc = i;
+                    var score = _importedScores[loc];
+                    <MudItem xs="2">
+                        <MudCheckBox @bind-Value="_checked[loc]" Disabled="!_checked[loc] && _checked.Count(c=>c)>=2"></MudCheckBox>
+                    </MudItem>
+                    <MudItem xs="5">
+                        @score.Chart.Song.Name @score.Chart.Type.GetShortHand()@score.Chart.Level
+                    </MudItem>
+                    <MudItem xs="5">
+                        @score.Score @score.Plate.GetShorthand()
+                    </MudItem>
+                }
+            </MudGrid>
+        </DialogContent>
+        <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="_checked.Count(c=>c)<2" OnClick="AddImports">@L["Add Scores"]</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showImportDialog=false">@L["Close"]</MudButton>
+        </DialogActions>
+    </MudDialog>
 }
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
@@ -217,6 +286,7 @@
 @inject ISnackbar Snackbar;
 @inject ILogger<RecordTournamentSession> Logger;
 @inject IAdminNotificationClient Notifications;
+@inject IOfficialSiteClient OfficialSite;
 @code
 {
     private string _validation = "Unverified";
@@ -234,6 +304,7 @@
     private IEnumerable<Chart> _allCharts = Array.Empty<Chart>();
     private Chart? _selectedChart;
     private string _songSearchString = string.Empty;
+    private bool _showImportDialog = false;
     private Chart[] Charts = Array.Empty<Chart>();
     private IEnumerable<Chart> ValidCharts => _allCharts.Where(c => _session?.CanAdd(c) ?? false);
     private IEnumerable<string> SongNames => ValidCharts.Select(c => c.Song.Name.ToString()).Distinct(StringComparer.OrdinalIgnoreCase);
@@ -246,9 +317,49 @@
         private const long MaxFileSize = 20000000;
     private TournamentSession.Entry? _editingEntry;
     private bool _showEditDialog = false;
+    private OfficialRecordedScore[] _importedScores = Array.Empty<OfficialRecordedScore>();
+    private IEnumerable<string> _notMapped = Array.Empty<string>();
+    private bool[] _checked = Array.Empty<bool>();
     private bool _editBroken = false;
     private PhoenixScore _editScore = 0;
     private PhoenixPlate _editPlate = PhoenixPlate.MarvelousGame;
+    private bool _isImporting = false;
+    private string _username = string.Empty;
+    private string _password = string.Empty;
+
+    private void AddImports()
+    {
+        var start = _checked.Select((c, i) => (c,i)).First(c => c.c).i;
+        var end = _checked.Select((c, i) => (c,i)).Last(c => c.c).i;
+        for (var i = start; i <= end; i++)
+        {
+            var record = _importedScores[i];
+            _session?.Add(record.Chart, record.Score, record.Plate, record.IsBroken);
+        }
+        _showImportDialog = false;
+        Snackbar.Add("Session Imported Successfully!");
+    }
+    private async Task ImportSession()
+    {
+        _isImporting = true;
+        try
+        {
+            var results = await OfficialSite.GetRecentScores(_username, _password, CancellationToken.None);
+            _importedScores = results.results.Where(s=>_configuration.Scoring.GetScore(s.Chart,s.Score,s.Plate,s.IsBroken)>0).ToArray();
+            _notMapped = results.nonMapped.ToArray();
+            _checked = _importedScores.Select(r => false).ToArray();
+            _showImportDialog = true;
+        }
+        catch (InvalidCredentialException)
+        {
+            Snackbar.Add("It appears your username are password are incorrect, check them and try again", Severity.Error);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("There was an unknown error when trying to import your scores. If this persists notify DrMurloc.", Severity.Error);
+        }
+        _isImporting = false;
+    }
     private void UpdateEntry()
     {
         if (_editingEntry == null || _session==null)

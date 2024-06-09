@@ -16,6 +16,10 @@ public interface IOfficialSiteClient
         CancellationToken cancellationToken);
 
 
+    Task<(IEnumerable<OfficialRecordedScore> results, IEnumerable<string> nonMapped)> GetRecentScores(string username,
+        string password,
+        CancellationToken cancellationToken);
+
     Task<PiuGameAccountDataImport>
         GetAccountData(string username, string password, CancellationToken cancellationToken);
 
