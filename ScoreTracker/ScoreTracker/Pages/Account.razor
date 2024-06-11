@@ -9,6 +9,7 @@
 @using System.Globalization
 @using System.Web
 @using Microsoft.AspNetCore.Localization
+@using ScoreTracker.Domain.Enums
 @using ScoreTracker.Web.Services.Contracts
 
 <PageTitle>@L["Account"]</PageTitle>
@@ -191,21 +192,40 @@
 
     private async Task DownloadScores()
     {
-        var scores = await Mediator.Send(new GetXXBestChartAttemptsQuery(CurrentUser.User.Id));
-        var scoreDtos = scores.OrderBy(s=>s.Chart.Level).ThenBy(s=>s.Chart.Type).Select(s => new XXSpreadsheetScoreDto
+        var result = Array.Empty<object>();
+        if (await UiSettings.GetSelectedMix() == MixEnum.XX)
         {
-            Difficulty = s.Chart.DifficultyString,
-            IsBroken = s.BestAttempt?.IsBroken.ToString() ?? "",
-            LetterGrade = s.BestAttempt?.LetterGrade.ToString() ?? "",
-            Score = s.BestAttempt?.Score?.ToString() ?? "",
-            Song = s.Chart.Song.Name
+            var scores = await Mediator.Send(new GetXXBestChartAttemptsQuery(CurrentUser.User.Id));
+            result = scores.OrderBy(s => s.Chart.Level).ThenBy(s => s.Chart.Type).Select(s => new XXSpreadsheetScoreDto
+            {
+                Difficulty = s.Chart.DifficultyString,
+                IsBroken = s.BestAttempt?.IsBroken.ToString() ?? "",
+                LetterGrade = s.BestAttempt?.LetterGrade.ToString() ?? "",
+                Score = s.BestAttempt?.Score?.ToString() ?? "",
+                Song = s.Chart.Song.Name
 
-        }).ToArray();
+            }).ToArray();
+        }
+        else
+        {
+            var scores = await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id));
+            var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+            result = scores.OrderBy(s => charts[s.ChartId].Level).ThenBy(s => charts[s.ChartId].Type)
+                .Select(s => new
+                {
+                    Difficulty = charts[s.ChartId].DifficultyString,
+                    Song = charts[s.ChartId].Song.Name.ToString(),
+                    IsBroken=s.IsBroken.ToString(),
+                    LetterGrade=s.Score?.LetterGrade.GetName(),
+                    Score=s.Score?.ToString(),
+                }).ToArray();
+        }
+        
 
         var stream = new MemoryStream();
         await using var writer = new StreamWriter(stream);
         await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-        await csv.WriteRecordsAsync(scoreDtos);
+        await csv.WriteRecordsAsync(result);
         await writer.FlushAsync();
         await csv.FlushAsync();
         const string fileName = "scores.csv";
