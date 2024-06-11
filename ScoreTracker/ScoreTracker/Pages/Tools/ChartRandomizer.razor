@@ -6,6 +6,8 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using System.Text.Json
+@using MassTransit.Configuration
+@using Microsoft.Extensions.Options
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Domain.Exceptions
 @using ScoreTracker.Domain.ValueTypes
@@ -15,6 +17,36 @@
 @if (!CurrentUser.IsLoggedIn)
 {
     <MudText Color="Color.Error" Typo="Typo.body1">You are not logged in, your configuration and results will be lost if you refresh.</MudText>
+}
+@if (CurrentUser.IsLoggedIn)
+{
+    <MudGrid>
+        @if (_savedSettings.Any())
+        {
+            
+            <MudItem xs="12">
+                <MudSelect T="string" Value="_currentSettings" ValueChanged="SelectSettings" Label=@L["Saved Settings"] Clearable="true">
+                    @foreach (var kv in _savedSettings.OrderBy(kv=>kv.Key))
+                    {
+                        <MudSelectItem T="string" Value="kv.Key">@kv.Key</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        }
+        <MudItem xs="12" sm="8">
+            <MudTextField T="string" @bind-Value="_newSettingsName" Label=@L["Settings Name"]></MudTextField>
+        </MudItem>
+        <MudItem xs="6" sm="2">
+            <MudButton Color="Color.Primary" Disabled="_isSaving || string.IsNullOrWhiteSpace(_newSettingsName)" OnClick="SaveSettings" StartIcon="@Icons.Material.Filled.Save">@L["Save"]</MudButton>
+        </MudItem>
+        <MudItem xs="6" sm="2">
+            @if (_savedSettings.ContainsKey(_newSettingsName))
+            {
+                <MudButton Color="Color.Warning" Disabled="_isSaving" OnClick="DeleteSettings" StartIcon="@Icons.Material.Filled.DeleteForever">@L["Delete"]</MudButton>
+            }
+        </MudItem>
+    </MudGrid>
+    <br/>
 }
 <RandomizerSettingsConfiguration Settings="_settings" ></RandomizerSettingsConfiguration>
 <br/>
@@ -92,21 +124,24 @@
 @inject ICurrentUserAccessor CurrentUser;
 @inject ILogger<ChartRandomizer> Logger;
 @inject IAdminNotificationClient Notifications;
+@inject IOptions<JsonSerializerOptions> JsonOptions;
 @code {
 
     private string CardStyle(int chartOrder) => _protectedCharts.Contains(chartOrder) ? $@"border-color:{Colors.Green.Darken1}" :
         _vetoedCharts.Contains(chartOrder) ? $@"border-color:{Colors.Red.Darken1}" : "";
-    private readonly RandomSettings _settings = new RandomSettings();
+    private RandomSettings _settings = new RandomSettings();
 
     private int _count = 3;
     private bool _showVideoDialog = false;
     private string _currentVideoDescription = string.Empty;
     private string _currentVideo = string.Empty;
+    private string _newSettingsName = string.Empty;
+    private string _currentSettings = string.Empty;
     private Chart[] _pulledCharts = Array.Empty<Chart>();
     private List<int> _protectedCharts = new ();
     private List<int> _vetoedCharts = new();
     private IDictionary<Guid, string> _videos = new Dictionary<Guid, string>();
-
+    private IDictionary<string, RandomSettings> _savedSettings = new Dictionary<string, RandomSettings>(StringComparer.OrdinalIgnoreCase);
     private async Task NotifyBadVideo()
     {
         await Notifications.NotifyAdmin($"The video for{_currentVideoDescription} was reported by {(CurrentUser.IsLoggedIn?CurrentUser.User.Name:"Unknown")}", CancellationToken.None);
@@ -211,6 +246,37 @@
         }
     }
 
+    private void SelectSettings(string newSettings)
+    {
+        _currentSettings = newSettings;
+        _newSettingsName = newSettings;
+        if (string.IsNullOrWhiteSpace(newSettings))
+        {
+            _settings = new RandomSettings();
+            return;
+        }
+        _settings = JsonSerializer.Deserialize<RandomSettings>(JsonSerializer.Serialize(_savedSettings[newSettings], JsonOptions.Value), JsonOptions.Value) ?? new RandomSettings();
+    }
+
+    private bool _isSaving = false;
+    private async Task SaveSettings()
+    {
+        _isSaving = true;
+        await Mediator.Send(new SaveUserRandomSettingsCommand(_newSettingsName, _settings));
+        _savedSettings[_newSettingsName] = JsonSerializer.Deserialize<RandomSettings>(JsonSerializer.Serialize(_settings, JsonOptions.Value), JsonOptions.Value) ?? new RandomSettings();
+        _isSaving = false;
+    }
+
+    private async Task DeleteSettings()
+    {
+        _isSaving = true;
+        await Mediator.Send(new DeleteRandomSettingsCommand(_newSettingsName));
+        _savedSettings.Remove(_newSettingsName);
+        _newSettingsName = string.Empty;
+        _currentSettings = string.Empty;
+        _settings = new RandomSettings();
+        _isSaving = false;
+    }
     private async Task RandomizeCharts()
     {
         await SaveLastConfig();
@@ -259,6 +325,7 @@
         _videos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl.ToString());
         if (CurrentUser.IsLoggedIn)
         {
+            _savedSettings = (await Mediator.Send(new GetRandomSettingsQuery())).ToDictionary(r => r.SettingsName.ToString(), r => r.Settings);
             var uiSettings = await Mediator.Send(new GetUserUiSettingsQuery());
             if (uiSettings.TryGetValue(LastResultsKey, out var uiSetting))
             {

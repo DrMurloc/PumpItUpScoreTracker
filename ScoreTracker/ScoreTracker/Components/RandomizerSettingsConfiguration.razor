@@ -10,23 +10,6 @@
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
 <MudExpansionPanels>
-    <MudExpansionPanel Text="Chart Types">
-        <MudGrid>
-            @foreach (var chartType in Settings.ChartTypeWeights.Keys)
-            {
-                <MudItem xs="6">
-                    @if (_useWeights)
-                    {
-                        <MudNumericField T="int" Min="0" Max="99" Label="@chartType.ToString()" @bind-Value="Settings.ChartTypeWeights[chartType]"></MudNumericField>
-                    }
-                    else
-                    {
-                        <MudSwitch T="bool" Label="@chartType.ToString()" Color="Color.Primary" Checked="Settings.ChartTypeWeights[chartType]>0" CheckedChanged="@(v=>Settings.ChartTypeWeights[chartType]=v?1:0)"></MudSwitch>
-                    }
-                </MudItem>
-            }
-        </MudGrid>
-    </MudExpansionPanel>
 
     <MudExpansionPanel Text="Singles Levels">
         <MudGrid>
@@ -62,27 +45,25 @@
             }
         </MudGrid>
     </MudExpansionPanel>
-    
-    @if (Settings.ChartTypeWeights.ContainsKey(ChartType.CoOp) && Settings.ChartTypeWeights[ChartType.CoOp] > 0)
-    {
-        <MudExpansionPanel Text="CoOp Player Count">
-            <MudGrid>
-                @foreach (var level in Settings.PlayerCountWeights.Keys.OrderBy(k => k))
-                {
-                    <MudItem xs="6" sm="4">
-                        @if (_useWeights)
-                        {
-                            <MudNumericField T="int" Min="0" Max="99" Label="@PlayerString(level)" @bind-Value="Settings.PlayerCountWeights[level]"></MudNumericField>
-                        }
-                        else
-                        {
-                            <MudSwitch T="bool" Label="@PlayerString(level)" Color="Color.Primary" Checked="Settings.PlayerCountWeights[level] > 0" CheckedChanged="@(v => Settings.PlayerCountWeights[level]= v? 1 : 0)"></MudSwitch>
-                        }
-                    </MudItem>
-                }
-            </MudGrid>
-        </MudExpansionPanel>
-    }
+
+    <MudExpansionPanel Text="CoOp Player Count">
+        <MudGrid>
+            @foreach (var level in Settings.PlayerCountWeights.Keys.OrderBy(k => k))
+            {
+                <MudItem xs="6" sm="4">
+                    @if (_useWeights)
+                    {
+                        <MudNumericField T="int" Min="0" Max="99" Label="@PlayerString(level)" @bind-Value="Settings.PlayerCountWeights[level]"></MudNumericField>
+                    }
+                    else
+                    {
+                        <MudSwitch T="bool" Label="@PlayerString(level)" Color="Color.Primary" Checked="Settings.PlayerCountWeights[level] > 0" CheckedChanged="@(v => Settings.PlayerCountWeights[level]= v? 1 : 0)"></MudSwitch>
+                    }
+                </MudItem>
+            }
+        </MudGrid>
+    </MudExpansionPanel>
+
 
     <MudExpansionPanel Text="Song Types">
         <MudGrid>

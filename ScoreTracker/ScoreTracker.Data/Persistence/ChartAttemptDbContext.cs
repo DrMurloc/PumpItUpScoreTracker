@@ -62,6 +62,7 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<OfficialUserAvatarEntity> OfficialUserAvatar { get; set; }
     public DbSet<QualifiersConfigurationEntity> QualifiersConfiguration { get; set; }
     public DbSet<UserHighestTitleEntity> UserHighestTitle { get; set; }
+    public DbSet<UserRandomSettingsEntity> UserRandomSettings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
