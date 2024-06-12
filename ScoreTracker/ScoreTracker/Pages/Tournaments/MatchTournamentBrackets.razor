@@ -665,7 +665,7 @@
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
         _songImages = _charts.Values.GroupBy(c => c.Song.Name.ToString()).ToDictionary(g => g.Key, g => g.Select(c => c.Song.ImagePath.ToString()).First(),StringComparer.OrdinalIgnoreCase);
         _userRoles = await Mediator.Send(new GetTournamentRolesQuery(TournamentId));
-        _myRole = CurrentUser.IsLoggedInAsAdmin ? TournamentRole.HeadTournamentOrganizer : _userRoles.FirstOrDefault(e => e.UserId == _user?.Id)?.Role;
+        _myRole = !CurrentUser.IsLoggedIn ? null : CurrentUser.IsLoggedInAsAdmin ? TournamentRole.HeadTournamentOrganizer : _userRoles.FirstOrDefault(e => e.UserId == _user?.Id)?.Role;
 
         UpdateCurrentPhase();
         RecalculateStates();

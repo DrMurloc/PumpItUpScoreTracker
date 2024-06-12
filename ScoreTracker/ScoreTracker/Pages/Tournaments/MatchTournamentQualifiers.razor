@@ -191,7 +191,8 @@
             q.CalculateScore(), q.Submissions.Select(s => s.Value.PhotoUrl).ToArray(),q));
 
         var userRoles = await Mediator.Send(new GetTournamentRolesQuery(TournamentId));
-        _myRole = CurrentUser.IsLoggedInAsAdmin ? TournamentRole.HeadTournamentOrganizer : userRoles.FirstOrDefault(e => e.UserId == CurrentUser.User?.Id)?.Role;
+        _myRole= !CurrentUser.IsLoggedIn?null:
+            CurrentUser.IsLoggedInAsAdmin ? TournamentRole.HeadTournamentOrganizer : userRoles.FirstOrDefault(e => e.UserId == CurrentUser.User?.Id)?.Role;
 
 
     }
