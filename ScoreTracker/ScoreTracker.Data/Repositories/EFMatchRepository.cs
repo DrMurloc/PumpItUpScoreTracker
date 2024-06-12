@@ -161,11 +161,52 @@ namespace ScoreTracker.Data.Repositories
                 .ToArrayAsync(cancellationToken);
         }
 
-        private static readonly Guid EclipseId = Guid.Parse("FA27B7FB-6EF4-481B-8EEE-56FDCF58433C");
-
-        public Task<IEnumerable<MatchPlayer>> GetMatchPlayers(Guid tournamentId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<MatchPlayer>> GetMatchPlayers(Guid tournamentId,
+            CancellationToken cancellationToken)
         {
-            return tournamentId == EclipseId ? Task.FromResult(EclipsePlayerOrder) : Task.FromResult(RealPlayerOrders);
+            return await _dbContext.TournamentPlayer.Where(t => t.TournamentId == tournamentId).Select(t =>
+                    new MatchPlayer(t.PlayerName, t.Seed, t.DiscordId, t.Notes, t.PotentialConflict))
+                .ToArrayAsync(cancellationToken);
+        }
+
+        public async Task SaveMatchPlayer(Guid tournamentId, MatchPlayer player, CancellationToken cancellationToken)
+        {
+            var nameString = player.Name.ToString();
+            var entity = await _dbContext.TournamentPlayer.FirstOrDefaultAsync(
+                t => t.TournamentId == tournamentId && t.PlayerName == nameString, cancellationToken);
+            if (entity == null)
+            {
+                await _dbContext.TournamentPlayer.AddAsync(new TournamentPlayerEntity
+                {
+                    DiscordId = player.DiscordId,
+                    Notes = player.Notes,
+                    PlayerName = player.Name,
+                    PotentialConflict = player.PotentialConflict,
+                    Seed = player.Seed,
+                    TournamentId = tournamentId
+                }, cancellationToken);
+            }
+            else
+            {
+                entity.DiscordId = player.DiscordId;
+                entity.Notes = player.Notes;
+                entity.PlayerName = player.Name;
+                entity.PotentialConflict = player.PotentialConflict;
+                entity.Seed = player.Seed;
+                entity.TournamentId = tournamentId;
+            }
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task DeleteMatchPlayer(Guid tournamentId, Name playerName, CancellationToken cancellationToken)
+        {
+            var nameString = playerName.ToString();
+            var entities = await _dbContext.TournamentPlayer
+                .Where(t => t.TournamentId == tournamentId && t.PlayerName == nameString)
+                .ToArrayAsync(cancellationToken);
+            _dbContext.TournamentPlayer.RemoveRange(entities);
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
         public static readonly IEnumerable<MatchPlayer> RealPlayerOrders = new MatchPlayer[]

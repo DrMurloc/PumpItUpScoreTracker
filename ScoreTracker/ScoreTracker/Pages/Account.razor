@@ -18,8 +18,11 @@
     <MudCardHeader>@L["Account"]</MudCardHeader>
     <MudCardContent>
         <MudGrid>
-            <MudItem xs="12">
+            <MudItem xs="10">
                 <MudTextField Label="Id" Disabled="true" Value="@_id" HelperText=@L["Used Primarily for debugging"]></MudTextField>
+            </MudItem>
+            <MudItem xs="2">
+                <MudIconButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="CopyUserId" Icon="@Icons.Material.Filled.ContentCopy"></MudIconButton>
             </MudItem>
             <MudItem xs="12" sm="6">
                 <MudTextField T="string" Disabled="_isUpdatingUser" Label=@L["Username"] MaxLength="100" Value="@_name" ValueChanged="UpdateName"></MudTextField>
@@ -131,6 +134,11 @@
         return;
     }
 
+    private async Task CopyUserId()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _id);
+        Snackbar.Add("Copied to Clipboard!", Severity.Success);
+    }
     private async Task CopyToken()
     {
         await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _apiToken!.Value);

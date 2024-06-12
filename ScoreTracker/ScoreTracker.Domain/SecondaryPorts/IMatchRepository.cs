@@ -25,4 +25,6 @@ public interface IMatchRepository
     Task DeleteMatchLink(Guid tournamentId, Name fromName, Name toName, CancellationToken cancellationToken);
     Task<IEnumerable<MatchLink>> GetAllMatchLinks(Guid tournamentId, CancellationToken cancellationToken);
     Task<IEnumerable<MatchPlayer>> GetMatchPlayers(Guid tournamentId, CancellationToken cancellationToken);
+    Task SaveMatchPlayer(Guid tournamentId, MatchPlayer player, CancellationToken cancellationToken);
+    Task DeleteMatchPlayer(Guid tournamentId, Name playerName, CancellationToken cancellationToken);
 }

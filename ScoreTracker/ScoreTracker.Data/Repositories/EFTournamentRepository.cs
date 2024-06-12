@@ -1,6 +1,8 @@
 ﻿using System.Text.Json;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using ScoreTracker.Application.Queries;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Enums;
@@ -10,7 +12,8 @@ using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Data.Repositories
 {
-    public sealed class EFTournamentRepository : ITournamentRepository
+    public sealed class EFTournamentRepository : ITournamentRepository,
+        IRequestHandler<GetTournamentRolesQuery, IEnumerable<UserTournamentRole>>
     {
         private readonly IMemoryCache _memoryCache;
         private readonly ChartAttemptDbContext _database;
@@ -249,10 +252,55 @@ namespace ScoreTracker.Data.Repositories
             });
         }
 
+        public async Task SetRole(Guid tournamentId, Guid userId, TournamentRole role,
+            CancellationToken cancellationToken)
+        {
+            var entity =
+                await _database.TournamentRole.FirstOrDefaultAsync(
+                    e => e.TournamentId == tournamentId && e.UserId == userId, cancellationToken);
+            if (entity == null)
+                await _database.TournamentRole.AddAsync(new TournamentRoleEntity
+                {
+                    Role = role.ToString(),
+                    TournamentId = tournamentId,
+                    UserId = userId
+                }, cancellationToken);
+            else
+                entity.Role = role.ToString();
+            await _database.SaveChangesAsync(cancellationToken);
+            _memoryCache.Remove(TourneyRolesCacheKey(tournamentId));
+        }
+
+        public async Task RevokeRole(Guid tournamentId, Guid userId, CancellationToken cancellationToken)
+        {
+            var removingEntities = await
+                _database.TournamentRole.Where(e => e.TournamentId == tournamentId && e.UserId == userId)
+                    .ToArrayAsync(cancellationToken);
+            _database.TournamentRole.RemoveRange(removingEntities);
+            await _database.SaveChangesAsync(cancellationToken);
+            _memoryCache.Remove(TourneyRolesCacheKey(tournamentId));
+        }
+
 
         private sealed record UserEntryDto(Guid UserId, string Name, int Score, TimeSpan RestTime, int ChartsPlayed,
             double AverageDifficulty, string VerificationType, bool NeedsApproval, string? VideoUrl)
         {
+        }
+
+        private static string TourneyRolesCacheKey(Guid tournamentId)
+        {
+            return $@"{nameof(EFTournamentRepository)}_TourneyRoles_{tournamentId}";
+        }
+
+        public async Task<IEnumerable<UserTournamentRole>> Handle(GetTournamentRolesQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await _memoryCache.GetOrCreateAsync(TourneyRolesCacheKey(request.TournamentId), async o =>
+            {
+                o.AbsoluteExpiration = DateTime.Now + TimeSpan.FromHours(1);
+                return _database.TournamentRole.Where(t => t.TournamentId == request.TournamentId)
+                    .Select(t => new UserTournamentRole(t.TournamentId, t.UserId, Enum.Parse<TournamentRole>(t.Role)));
+            });
         }
     }
 }

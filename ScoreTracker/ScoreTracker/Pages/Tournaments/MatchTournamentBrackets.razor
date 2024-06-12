@@ -11,9 +11,10 @@
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Web.Shared
 @using System.Text.RegularExpressions
+@using ScoreTracker.Domain.Records
 
 <PageTitle>@TournamentName Brackets</PageTitle>
-@if (IsLoggedInAsAdmin)
+@if (_myRole==TournamentRole.HeadTournamentOrganizer)
 {
     <MudGrid>
         <MudItem xs="6" sm="4" md="3">
@@ -125,7 +126,7 @@
                 {
                     <MudTh>Winner</MudTh>
                 }
-                @if (IsBracketAdmin)
+                @if (_myRole!=null)
                 {
                     <MudTh>Player Notes</MudTh>
                 }
@@ -136,7 +137,7 @@
                 <MudTd>@context.State</MudTd>
                 <MudTh>@context.PhaseName</MudTh>
                 <MudTh>
-                    @if (IsBracketAdmin && context.Players.Any(p => Players.ContainsKey(p) && Players[p].PotentialConflict))
+                    @if (_myRole != null && context.Players.Any(p => Players.ContainsKey(p) && Players[p].PotentialConflict))
                     {
                         <MudTooltip Text=@($"Potential Conflicts: {string.Join(", ",context.Players.Where(p=>Players.ContainsKey(p)&&Players[p].PotentialConflict))}")>
                             <MudIcon Color="Color.Warning" Icon="@Icons.Material.Filled.Warning"></MudIcon>
@@ -149,7 +150,7 @@
                 {
                     <MudTh>@context.FinalPlaces[0]</MudTh>
                 }
-                @if (IsBracketAdmin)
+                @if (_myRole != null)
                 {
                     <MudTh>
                         @if (context.Players.Any(p => Players.ContainsKey(p) && !string.IsNullOrWhiteSpace(Players[p].Notes)))
@@ -168,7 +169,7 @@
         <br/>
     }
 }
-@if (IsLoggedInAsAdmin)
+@if (_myRole == TournamentRole.HeadTournamentOrganizer)
 {
     <MudButton OnClick="FindInvalidMatches" Color="Color.Primary" Variant="Variant.Filled">Check Matches</MudButton>
     @if (_linksChecked && !_tooManyLinks.Any() && !_notEnoughLinks.Any())
@@ -339,15 +340,23 @@
 </MudTable>
 <br/>
 <MudButton OnClick=@(()=>NavManager.NavigateTo($"/Tournament/{TournamentId}/Qualifiers")) Variant="Variant.Filled">View Qualifiers</MudButton>
+<br/>
+@if (_myRole == TournamentRole.HeadTournamentOrganizer)
+{
+    
+    <MudButton OnClick=@(()=>NavManager.NavigateTo($"/Tournament/{TournamentId}/Admin")) Variant="Variant.Filled">Admin Page</MudButton>
+}
+<br/>
+
 <MudDialog @bind-IsVisible="_showMatchDialog">
     <DialogContent>
         @if (_currentMatch != null)
         {
-            <MatchOverview MatchName="_currentMatch.Value" TournamentId="TournamentId"></MatchOverview>
+            <MatchOverview MatchName="_currentMatch.Value" TournamentId="TournamentId" MyRole="_myRole"></MatchOverview>
         }
     </DialogContent>
     <DialogActions>
-        @if (IsBracketAdmin && _currentMatch!=null)
+        @if (_myRole != null && _currentMatch != null)
         {
             <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.AddAlert" OnClick="()=>PingMatch(_currentMatch.Value)">Ping Match</MudButton>
         }
@@ -437,6 +446,8 @@
     private Name? _showingPlayer;
     private MatchView? _nextMatch;
     private MatchView? _notesMatch;
+    private TournamentRole? _myRole;
+    private IEnumerable<UserTournamentRole> _userRoles = Array.Empty<UserTournamentRole>();
     private bool _showNotesPopup;
     private bool _spectatorMode = false;
     private string _searchedPlayer;
@@ -447,8 +458,7 @@
     private int _linkPlayers = 1;
     private bool _winners = true;
     private string _matchName = string.Empty;
-    private bool IsLoggedInAsAdmin => _user?.IsAdmin ?? false;
-    private bool IsBracketAdmin => _user!=null && (_user.IsAdmin || MatchOverview.BracketAdmins.Contains(_user.Id));
+
     private Name? _currentMatch;
     private IEnumerable<MatchView> ActiveMatches => _matches.Values.Where(m => m.State is > MatchState.NotStarted and < MatchState.Completed)
         .OrderByDescending(m => m.State).ThenBy(m=>m.MatchOrder);
@@ -642,6 +652,7 @@
         _chartPullSettings[name] = _currentSettings;
         _showAddRandomDialog = false;
     }
+
     protected override async Task OnInitializedAsync()
     {
         TournamentName = (await Mediator.Send(new GetAllTournamentsQuery()))
@@ -653,6 +664,9 @@
         Players = (await Mediator.Send(new GetMatchPlayersQuery(TournamentId))).ToDictionary(m => m.Name.ToString(), StringComparer.OrdinalIgnoreCase);
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
         _songImages = _charts.Values.GroupBy(c => c.Song.Name.ToString()).ToDictionary(g => g.Key, g => g.Select(c => c.Song.ImagePath.ToString()).First(),StringComparer.OrdinalIgnoreCase);
+        _userRoles = await Mediator.Send(new GetTournamentRolesQuery(TournamentId));
+        _myRole = CurrentUser.IsLoggedInAsAdmin ? TournamentRole.HeadTournamentOrganizer : _userRoles.FirstOrDefault(e => e.UserId == _user?.Id)?.Role;
+
         UpdateCurrentPhase();
         RecalculateStates();
         MainLayout.MatchUpdated += (o, e) => MatchUpdated(e);

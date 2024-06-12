@@ -1,4 +1,5 @@
-﻿using ScoreTracker.Domain.Models;
+﻿using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 
 namespace ScoreTracker.Domain.SecondaryPorts;
@@ -16,4 +17,7 @@ public interface ITournamentRepository
 
     Task<IDictionary<Guid, double>?> GetScoringLevelSnapshot(Guid tournamentId,
         CancellationToken cancellationToken);
+
+    Task SetRole(Guid tournamentId, Guid userId, TournamentRole role, CancellationToken cancellationToken);
+    Task RevokeRole(Guid tournamentId, Guid userId, CancellationToken cancellationToken);
 }

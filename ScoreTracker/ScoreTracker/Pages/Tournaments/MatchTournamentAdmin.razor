@@ -1,0 +1,207 @@
+﻿@page "/Tournament/{TournamentId:guid}/Admin"
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.Views
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+<PageTitle>@TournamentName Brackets</PageTitle>
+<MudGrid>
+    <MudItem xs="12">
+        <MudText Typo="Typo.h4">Players</MudText>
+    </MudItem>
+    <MudItem xs="12">
+        <MudButton Color="Color.Primary" OnClick="SyncQualifiers" Variant="Variant.Filled" Disabled="_isLoading">Sync Qualifier Leaderboard</MudButton>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTable T="MatchPlayer" Items="_players.Values">
+            <HeaderContent>
+                <MudTh><MudTableSortLabel T="MatchPlayer" SortBy="c=>c.Name">Player Name</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel T="MatchPlayer" SortBy="c=>c.Seed">Seed</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel T="MatchPlayer" SortBy="c=>c.DiscordId??0">Discord Id</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel T="MatchPlayer" SortBy="c=>c.Notes">Notes</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel T="MatchPlayer" SortBy="c=>c.PotentialConflict">Potential Conflict</MudTableSortLabel></MudTh>
+                <MudTh>Delete</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Name</MudTd>
+                <MudTd><MudNumericField T="int" Disabled="_isLoading" InputMode="InputMode.numeric" HideSpinButtons="true" Label="Seed" Value="context.Seed" ValueChanged="n=>SetPlayer(context with {Seed=n})"></MudNumericField></MudTd>
+                <MudTd><MudNumericField T="ulong?" Disabled="_isLoading" InputMode="InputMode.numeric" HideSpinButtons="true" Label="Discord Id" Value="context.DiscordId" ValueChanged="n=>SetPlayer(context with {DiscordId = n})" Clearable="true"></MudNumericField></MudTd>
+                <MudTd><MudTextField T="string" Disabled="_isLoading" Label="Notes" Value="context.Notes" ValueChanged="n=>SetPlayer(context with {Notes=n})"></MudTextField></MudTd>
+                <MudTd><MudCheckBox T="bool" Disabled="_isLoading" Value="context.PotentialConflict" ValueChanged="n=>SetPlayer(context with {PotentialConflict=n})"></MudCheckBox></MudTd>
+                <MudTd><MudIconButton Disabled="_isLoading" Color="Color.Warning" Icon="@Icons.Material.Filled.Delete" OnClick="()=>DeletePlayer(context.Name)"></MudIconButton></MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager></MudTablePager>
+            </PagerContent>
+        </MudTable>
+    </MudItem>
+    <MudItem xs="12">
+    </MudItem>
+    <MudItem xs="12">
+        <MudText Typo="Typo.h4">Permissions</MudText>
+    </MudItem>
+    <MudItem xs="12">
+        <MudAutocomplete Dense="true" Disabled="_isLoading" T="string" Value="_selectedUser" ValueChanged="SelectPlayer" MaxItems="15" CoerceValue="true" CoerceText="false" Label="Players (Paste UserId from Account Page if not Public)" SearchFunc="s=>Task.FromResult(_userSearchOptions.Where(o=>string.IsNullOrWhiteSpace(s)||o.Contains(s,StringComparison.OrdinalIgnoreCase)))">
+        </MudAutocomplete>
+    </MudItem>
+    @if (_selectedUserId != null)
+    {
+        <MudItem xs="12" sm="4">@_publicUsers[_selectedUserId.Value]</MudItem>
+        <MudItem xs="12" sm="4">
+
+            <MudSelect T="TournamentRole" Disabled="_isLoading" @bind-Value="_newRole" Label="Tournament Role">
+                @foreach (var role in Enum.GetValues<TournamentRole>())
+                {
+                    <MudSelectItem T="TournamentRole" Value="@role">@role.GetName()</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudButton Color="Color.Primary" Disabled="_isLoading" OnClick="()=>SetRole(_selectedUserId.Value,_newRole)">Add</MudButton>
+        </MudItem>
+    }
+    @foreach (var role in _tournamentRoles)
+    {
+        <MudItem xs="5">
+            @_publicUsers[role.Key]
+        </MudItem>
+        <MudItem xs="5">
+            <MudSelect T="TournamentRole" Disabled="_isLoading" Value="role.Value" ValueChanged="r=>SetRole(role.Key,r)" Label="Tournament Role">
+                @foreach (var r in Enum.GetValues<TournamentRole>())
+                {
+                    <MudSelectItem T="TournamentRole" Value="@r">@r.GetName()</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="2">
+            <MudIconButton Disabled="_isLoading" Icon="@Icons.Material.Filled.Delete" Color="Color.Warning" OnClick="r=>RemoveRole(role.Key)"></MudIconButton>
+        </MudItem>
+    }
+
+</MudGrid>
+@inject ICurrentUserAccessor CurrentUser;
+@inject IMediator Mediator;
+@inject ISnackbar Snackbar;
+@inject ITournamentRepository Tournaments;
+@inject IQualifiersRepository Qualifiers
+@inject NavigationManager NavManager;
+@inject IMatchRepository Matches;
+@code
+{
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "TournamentId")]
+    public Guid TournamentId { get; set; }
+    private TournamentRole? _myRole;
+    private Name TournamentName { get; set; } = "...";
+    private IDictionary<Name, MatchPlayer> _players = new Dictionary<Name, MatchPlayer>();
+    private IDictionary<Guid, TournamentRole> _tournamentRoles = new Dictionary<Guid, TournamentRole>();
+    private string _selectedUser;
+    private IDictionary<Guid,Name> _publicUsers = new Dictionary<Guid, Name>();
+    private IEnumerable<string> _userSearchOptions = Array.Empty<string>();
+    private bool _isLoading = false;
+    private TournamentRole _newRole = TournamentRole.Assistant;
+    private Guid? _selectedUserId;
+    private async Task SelectPlayer(string selected)
+    {
+        _selectedUser = selected;
+        _selectedUserId = null;
+        if (!Guid.TryParse(selected.Split(" ").Last(), out var userId))
+        {
+            return;
+        }
+        if (!_publicUsers.ContainsKey(userId))
+        {
+            _isLoading = true;
+            
+            var user = await Mediator.Send(new GetUserByIdQuery(userId));
+            _isLoading = false;
+            if (user == null)
+            {
+                Snackbar.Add("This user does not exist. Double check the User Id", Severity.Error);
+                return;
+            }
+            _publicUsers[user.Id] = user.Name;
+            _selectedUser = $"{user.Name} - {user.Id}";
+        }
+        _selectedUserId = userId;
+    }
+
+    private async Task RemoveRole(Guid userId)
+    {
+        _isLoading = true;
+        _tournamentRoles.Remove(userId);
+        await Tournaments.RevokeRole(TournamentId, userId, CancellationToken.None);
+        _isLoading = false;
+    }
+    private async Task SetPlayer(MatchPlayer player)
+    {
+        _isLoading = true;
+        _players[player.Name] = player;
+        await Matches.SaveMatchPlayer(TournamentId, player,CancellationToken.None);
+        _isLoading = false;
+    }
+
+    private async Task SetRole(Guid userId, TournamentRole role)
+    {
+        _isLoading = true;
+        await Tournaments.SetRole(TournamentId, userId, role, CancellationToken.None);
+        _tournamentRoles[userId] = role;
+        _isLoading = false;
+    }
+    private async Task DeletePlayer(Name name)
+    {
+        _isLoading = true;
+        _players.Remove(name);
+        await Matches.DeleteMatchPlayer(TournamentId, name,CancellationToken.None);
+        _isLoading = false;
+    }
+    private async Task SyncQualifiers()
+    {
+        _isLoading = true;
+        var config = await Qualifiers.GetQualifiersConfiguration(TournamentId);
+        var qualifierLeaderboard = await Qualifiers.GetAllUserQualifiers(TournamentId, config);
+        foreach (var (player,index) in qualifierLeaderboard.OrderByDescending(e => e.CalculateScore()).Select((p, i) => (p,i)))
+        {
+            if (!_players.ContainsKey(player.UserName))
+            {
+                _players[player.UserName] = new MatchPlayer(player.UserName, index + 1, null, "", false);
+            }
+            else
+            {
+                _players[player.UserName] = _players[player.UserName] with {Seed = index};
+            }
+            await Matches.SaveMatchPlayer(TournamentId, _players[player.UserName], CancellationToken.None);
+        }
+        _isLoading = false;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Tournaments");
+            return;
+        }
+        TournamentName = (await Mediator.Send(new GetAllTournamentsQuery()))
+            .First(t => t.Id == TournamentId).Name;
+        
+        _myRole = CurrentUser.IsLoggedInAsAdmin ? TournamentRole.HeadTournamentOrganizer : _tournamentRoles.TryGetValue(CurrentUser.User.Id, out var role) ? role : null;
+
+        if (_myRole != TournamentRole.HeadTournamentOrganizer)
+        {
+
+            NavManager.NavigateTo("/Tournaments");
+            return;
+        }
+        _publicUsers = (await Mediator.Send(new GetCommunityLeaderboardQuery("World"))).ToDictionary(l => l.UserId, l => l.PlayerName);
+        _tournamentRoles = (await Mediator.Send(new GetTournamentRolesQuery(TournamentId))).ToDictionary(t => t.UserId,t=>t.Role);
+
+        foreach (var user in _tournamentRoles.Where(r => !_publicUsers.ContainsKey(r.Key)))
+        {
+            _publicUsers[user.Key] = (await Mediator.Send(new GetUserByIdQuery(user.Key)))?.Name ?? throw new Exception("I'm not how you ended up here? Only if a user was deleted");
+        }
+        _players = (await Mediator.Send(new GetMatchPlayersQuery(TournamentId))).ToDictionary(p => p.Name);
+        _userSearchOptions = _publicUsers.Select(kv => $"{kv.Value} - {kv.Key}").ToArray();
+    }
+
+}

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Data.Persistence.Entities;
@@ -63,6 +63,8 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<QualifiersConfigurationEntity> QualifiersConfiguration { get; set; }
     public DbSet<UserHighestTitleEntity> UserHighestTitle { get; set; }
     public DbSet<UserRandomSettingsEntity> UserRandomSettings { get; set; }
+    public DbSet<TournamentRoleEntity> TournamentRole { get; set; }
+    public DbSet<TournamentPlayerEntity> TournamentPlayer { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

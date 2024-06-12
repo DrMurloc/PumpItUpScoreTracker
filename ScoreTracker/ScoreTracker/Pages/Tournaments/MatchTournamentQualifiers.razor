@@ -30,7 +30,7 @@
         }
         <MudTh>@L["Rating"]</MudTh>
         <MudTh>@L["Photos"]</MudTh>
-        @if (IsTournamentAdmin)
+        @if (_myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer)
         {
             <MudTh>Approve</MudTh>
         }
@@ -58,7 +58,7 @@
         }
         <MudTd>@context.Score.ToString("0.###")</MudTd>
         <MudTd>
-            @if (context.IsApproved || IsTournamentAdmin)
+            @if (context.IsApproved || _myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer)
             {
                 <MudIconButton Icon="@Icons.Material.Filled.PhotoAlbum" Color="Color.Primary" OnClick="() => SelectEntry(context)"></MudIconButton>
             }
@@ -67,7 +67,7 @@
                 <MudText>@L["Pending"]</MudText>
             }
         </MudTd>
-        @if (IsTournamentAdmin)
+        @if (_myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer)
         {
             <MudTd>
                 @if (!context.IsApproved)
@@ -90,7 +90,7 @@
                             </MudItem>
                         }
                     </MudGrid>
-                    @if (IsTournamentAdmin)
+                    @if (_myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer)
                     {
                         <MudGrid>
                             @foreach (var entry in _selectedEntry.Record.Submissions.Values)
@@ -129,6 +129,17 @@
         </MudItem>
     </MudGrid>
 }
+@if (_myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer)
+{
+    <br />
+    <MudButton Href=@($"/Tournament/{TournamentId}/Brackets") Color="Color.Primary" Variant="Variant.Outlined">Bracket Manager</MudButton>
+
+}
+@if (_myRole is TournamentRole.HeadTournamentOrganizer)
+{
+    <br />
+    <MudButton Href=@($"/Tournament/{TournamentId}/Admin") Color="Color.Primary" Variant="Variant.Outlined">Admin</MudButton>
+}
 @inject ICurrentUserAccessor CurrentUser
 @inject IQualifiersRepository Qualifiers
 @inject ISnackbar Snackbar
@@ -136,9 +147,7 @@
 @inject IMediator Mediator;
 @code
 {
-    private static readonly Guid _biteAdmin = new Guid("21232D7F-EAF8-4533-A4E6-68A336045E8B");
-    private static readonly Guid _biteId = new Guid("53029D1C-9652-4B4E-8152-9B3DECB97C37");
-    private bool IsTournamentAdmin => CurrentUser.IsLoggedInAsAdmin || (CurrentUser.IsLoggedIn && CurrentUser.User.Id == _biteAdmin && TournamentId == _biteId);
+
     private IEnumerable<Entry> _leaderboard;
     private Entry? _selectedEntry = null;
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
@@ -158,6 +167,8 @@
         await Qualifiers.SaveQualifiers(TournamentId, qual);
         Snackbar.Add("Approved!", Severity.Success);
     }
+
+    private TournamentRole? _myRole;
     protected override async Task OnInitializedAsync()
     {
         if (TournamentId == default)
@@ -178,6 +189,10 @@
         _leaderboard = (await Qualifiers.GetAllUserQualifiers(TournamentId,config)).OrderByDescending(q => q.CalculateScore()).Select((q, index) => new Entry(index + 1, q.UserName,
             q.BestCharts().ToArray(),q.IsApproved,
             q.CalculateScore(), q.Submissions.Select(s => s.Value.PhotoUrl).ToArray(),q));
+
+        var userRoles = await Mediator.Send(new GetTournamentRolesQuery(TournamentId));
+        _myRole = CurrentUser.IsLoggedInAsAdmin ? TournamentRole.HeadTournamentOrganizer : userRoles.FirstOrDefault(e => e.UserId == CurrentUser.User?.Id)?.Role;
+
 
     }
     protected override async Task OnParametersSetAsync()

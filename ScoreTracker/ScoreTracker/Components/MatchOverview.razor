@@ -24,7 +24,7 @@
                 {
                     var player = _match.Players[i];
                     var playerIndex = i;
-                    if (IsLoggedInAsAdmin)
+                    if (MyRole!=null)
                     {
                         @if (HasScores)
                         {
@@ -55,7 +55,7 @@
                         </MudItem>
                     }
                 }
-                @if (IsLoggedInAsAdmin)
+                @if (MyRole != null)
                 {
                     <MudItem xs="12">
                         <MudButton Disabled="!ReadyToDraw || _isSaving" Color="Color.Primary" OnClick="DrawCharts">Draw Charts</MudButton>
@@ -149,8 +149,8 @@
                 <MudItem xs="12">
                     <MudText>Vetoed: @(string.Join(", ",_match.VetoedCharts.Select(chartId=>_charts[chartId].Song.Name+" "+_charts[chartId].DifficultyString)))</MudText>
                 </MudItem>
-                
-                @if (IsLoggedInAsAdmin)
+
+                @if (MyRole != null)
                 {
                     <MudButton Variant="Variant.Filled" Disabled="_isSaving" Color="Color.Primary" OnClick="StartMatch">Start Match</MudButton>
                 }
@@ -190,7 +190,7 @@
                     <MudItem xs="12">
                         <MudTable T="Name" Items="_match.FinalPlaces">
                         <HeaderContent>
-                            @if (IsLoggedInAsAdmin)
+                            @if (MyRole != null)
                             {
                                 <MudTh>Move Up</MudTh>
                                 <MudTh>Move Down</MudTh>
@@ -204,7 +204,7 @@
                                 <MudTh>Total</MudTh>
                             </HeaderContent>
                             <RowTemplate>
-                                @if (IsLoggedInAsAdmin)
+                            @if (MyRole != null)
                                 {
                                     <MudTd>
                                         @if (_match.FinalPlaces.Select((n, i) => (n, i)).Where(kv => kv.n == context).Select(kv => kv.i).Single() != 0)
@@ -285,21 +285,8 @@
 
 @code {
 
-    public static readonly ISet<Guid> BracketAdmins = new HashSet<Guid>(new[]
-    {
-        new Guid("BA40C0BA-5D1D-4A61-A29D-295C0E99874C"),
-        new Guid("3694A57C-F862-448B-B148-459AFAF5AEDB"),
-        new Guid("5BDC1EE2-3C83-49DA-B74E-57EEFB21B9C3"),
-        new Guid("EB17CEDB-E655-424C-8588-B9A68738CAC1"),
-        new Guid("9F0A1A33-6FD6-4698-9673-F995B2FF235B"),
-        new Guid("8B8A10B1-9661-461C-A33A-14FF15D911E0"),
-        new Guid("89397EF3-3617-4B4D-8837-ADAAAAA155D7"),
-        new Guid("F2874084-1147-49E0-B333-79529EBECECF"),
-        new Guid("4AE72A57-37E0-460C-869B-786E5D571DF4")
-    });
     private bool _isSaving = false;
     private User? _currentUser;
-    private bool IsLoggedInAsAdmin =>_currentUser!=null &&(_currentUser.IsAdmin || BracketAdmins.Contains(_currentUser.Id));
     
     private bool IsFinished(MatchView match)
     {
@@ -322,7 +309,8 @@
         }
         return _match.ActiveCharts.Count(id => !_match.VetoedCharts.Contains(id))<=_match.ChartCount;
     }
-
+    [Parameter]
+    public TournamentRole? MyRole { get; set; }
     [Parameter]
     public Name? MatchName { get; set; }
     [Parameter]
