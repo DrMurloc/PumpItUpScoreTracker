@@ -13,6 +13,12 @@
     <MudItem xs="12">
         <MudButton Color="Color.Primary" OnClick="SyncQualifiers" Variant="Variant.Filled" Disabled="_isLoading">Sync Qualifier Leaderboard</MudButton>
     </MudItem>
+    <MudItem xs="10">
+        <MudTextField @bind-Value="_newPlayerName" Label="New Player Name"></MudTextField>
+    </MudItem>
+    <MudItem xs="2">
+        <MudButton Color="Color.Primary" Disabled="_isLoading || string.IsNullOrWhiteSpace(_newPlayerName) || _players.ContainsKey(_newPlayerName)" Variant="Variant.Filled" OnClick="AddPlayer">Add Player</MudButton>
+        </MudItem>
     <MudItem xs="12">
         <MudTable T="MatchPlayer" Items="_players.Values">
             <HeaderContent>
@@ -102,6 +108,18 @@
     private bool _isLoading = false;
     private TournamentRole _newRole = TournamentRole.Assistant;
     private Guid? _selectedUserId;
+    private string _newPlayerName = string.Empty;
+
+    private async Task AddPlayer()
+    {
+        _isLoading = true;
+        var player = new MatchPlayer(_newPlayerName, -1, null, "", false);
+        await Matches.SaveMatchPlayer(TournamentId, player, CancellationToken.None);
+        _players[_newPlayerName] = player;
+        _newPlayerName = string.Empty;
+        Snackbar.Add("Player added", Severity.Success);
+        _isLoading = false;
+    }
     private async Task SelectPlayer(string selected)
     {
         _selectedUser = selected;
@@ -173,6 +191,7 @@
             }
             await Matches.SaveMatchPlayer(TournamentId, _players[player.UserName], CancellationToken.None);
         }
+        Snackbar.Add("Players synced", Severity.Success);
         _isLoading = false;
     }
     protected override async Task OnInitializedAsync()
@@ -185,8 +204,6 @@
         TournamentName = (await Mediator.Send(new GetAllTournamentsQuery()))
             .First(t => t.Id == TournamentId).Name;
         
-        _myRole = CurrentUser.IsLoggedInAsAdmin ? TournamentRole.HeadTournamentOrganizer : _tournamentRoles.TryGetValue(CurrentUser.User.Id, out var role) ? role : null;
-
         if (_myRole != TournamentRole.HeadTournamentOrganizer)
         {
 
@@ -195,6 +212,8 @@
         }
         _publicUsers = (await Mediator.Send(new GetCommunityLeaderboardQuery("World"))).ToDictionary(l => l.UserId, l => l.PlayerName);
         _tournamentRoles = (await Mediator.Send(new GetTournamentRolesQuery(TournamentId))).ToDictionary(t => t.UserId,t=>t.Role);
+
+        _myRole = CurrentUser.IsLoggedInAsAdmin ? TournamentRole.HeadTournamentOrganizer : _tournamentRoles.TryGetValue(CurrentUser.User.Id, out var role) ? role : null;
 
         foreach (var user in _tournamentRoles.Where(r => !_publicUsers.ContainsKey(r.Key)))
         {
