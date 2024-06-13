@@ -63,7 +63,7 @@
                     </MudSelect>
                 </MudItem>
                 <MudItem xs="12">
-                    <MudSelect @bind-Value="_randomSettings" Label="Random Settings">
+                    <MudSelect @bind-Value="_randomSettings" Label="Random Settings" Required="true">
                         @foreach (var key in _chartPullSettings.Keys.OrderBy(k=>k))
                         {
                             <MudSelectItem Value="@key">@key</MudSelectItem>
@@ -74,7 +74,7 @@
         </DialogContent>
         <DialogActions>
             <MudSpacer></MudSpacer>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateMatch">Save</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateMatch" Disabled="_playerCount<=1 || _chartCount<=1 || string.IsNullOrWhiteSpace(_randomSettings) || string.IsNullOrWhiteSpace(_matchName)">Save</MudButton>
             <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showAddMatchDialog = false">@L["Close"]</MudButton>
         </DialogActions>
     </MudDialog>
