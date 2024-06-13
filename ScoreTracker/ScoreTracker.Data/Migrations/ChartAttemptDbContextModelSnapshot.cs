@@ -762,6 +762,36 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("Song", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.SongNameLanguageEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CultureCode")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
+                    b.Property<string>("EnglishSongName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("SongName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CultureCode");
+
+                    b.ToTable("SongNameLanguage", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.SuggestionFeedbackEntity", b =>
                 {
                     b.Property<Guid>("Id")

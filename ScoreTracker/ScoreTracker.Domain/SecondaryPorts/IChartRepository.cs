@@ -42,5 +42,15 @@ public interface IChartRepository
     Task UpdateNoteCount(Guid chartId, int noteCount, CancellationToken cancellationToken = default);
     Task<IEnumerable<ChartSkillsRecord>> GetChartSkills(CancellationToken cancellationToken = default);
     Task SaveChartSkills(ChartSkillsRecord record, CancellationToken cancellationToken = default);
+
+    Task SetSongCultureName(Name englishSongName, Name cultureCode, Name songName,
+        CancellationToken cancellationToken = default);
+
+    Task<IDictionary<Name, Name>> GetEnglishLookup(Name cultureCode,
+        CancellationToken cancellationToken);
+
+    Task<IDictionary<Name, Name>> GetSongNames(Name cultureCode,
+        CancellationToken cancellationToken);
+
     void ClearCache();
 }

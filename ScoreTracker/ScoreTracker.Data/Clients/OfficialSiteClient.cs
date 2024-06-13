@@ -155,8 +155,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
 
             foreach (var score in nextPage.Scores)
             {
-                var song = score.SongName;
-                if (ManualMappings.TryGetValue(song, out var mapping)) song = mapping;
+                var song = await GetMappedName(score.SongName, cancellationToken);
 
                 var chart = (await _charts.GetChartsForSong(MixEnum.Phoenix, song, cancellationToken))
                     .FirstOrDefault(c => c.Type == score.ChartType && c.Level == score.Level);
@@ -175,8 +174,8 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         {
             var chartType = response.ChartType;
 
-            var song = response.SongName;
-            if (ManualMappings.TryGetValue(song, out var mapping)) song = mapping;
+
+            var song = await GetMappedName(response.SongName, cancellationToken);
 
             var chart = (await _charts.GetChartsForSong(MixEnum.Phoenix, song, cancellationToken))
                 .FirstOrDefault(c => c.Type == chartType && c.Level == response.Level);
@@ -188,8 +187,8 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         var recent = (await _piuGame.GetRecentScores(sessionId, cancellationToken)).ToArray();
         foreach (var songGroup in recent.GroupBy(s => s.SongName))
         {
-            var songName = songGroup.Key;
-            if (ManualMappings.TryGetValue(songName, out var mapping)) songName = mapping;
+            var songName = await GetMappedName(songGroup.Key, cancellationToken);
+
             var chartDict =
                 (await _charts.GetChartsForSong(MixEnum.Phoenix, songName, cancellationToken)).ToArray();
             foreach (var chartGroup in songGroup.GroupBy(g => (g.Level, g.ChartType)))
@@ -232,8 +231,8 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
 
         foreach (var record in results)
         {
-            var songName = record.SongName;
-            if (ManualMappings.TryGetValue(songName, out var mapping)) songName = mapping;
+            var songName = await GetMappedName(record.SongName, cancellationToken);
+
             var charts =
                 songCharts.TryGetValue(songName, out var r) ? r : Array.Empty<Chart>();
 
@@ -275,6 +274,16 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         return new PiuGameAccountDataImport(imagePath, importedData.AccountName, titles);
     }
 
+    private async Task<string> GetMappedName(string songName, CancellationToken cancellationToken)
+    {
+        var cultureMapping = await _charts.GetEnglishLookup("ko-KR", cancellationToken);
+        if (ManualMappings.TryGetValue(songName, out var mapping)) songName = mapping;
+
+        if (cultureMapping.TryGetValue(songName, out var value)) songName = value;
+
+        return songName;
+    }
+
     private static readonly IDictionary<string, string> ManualMappings =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -306,8 +315,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         var result = new List<ChartPopularityLeaderboardEntry>();
         foreach (var apiResult in apiResults)
         {
-            var song = apiResult.SongName;
-            if (ManualMappings.TryGetValue(song, out var mapping)) song = mapping;
+            var song = await GetMappedName(apiResult.SongName, cancellationToken);
 
             var charts = (await _charts.GetChartsForSong(MixEnum.Phoenix, song, cancellationToken)).ToArray();
             var chart = charts

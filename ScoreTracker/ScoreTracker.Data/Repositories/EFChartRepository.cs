@@ -218,6 +218,48 @@ public sealed class EFChartRepository : IChartRepository
         _cache.Remove(ChartSkillsCacheKey);
     }
 
+    public async Task SetSongCultureName(Name englishSongName, Name cultureCode, Name songName,
+        CancellationToken cancellationToken = default)
+    {
+        var englishString = englishSongName.ToString();
+        var cultureString = cultureCode.ToString();
+        var entity = await _database.SongNameLanguage.FirstOrDefaultAsync(
+            n => n.CultureCode == cultureString && n.EnglishSongName == englishString, cancellationToken);
+        if (entity == null)
+            await _database.SongNameLanguage.AddAsync(new SongNameLanguageEntity
+            {
+                CultureCode = cultureCode,
+                EnglishSongName = englishSongName,
+                SongName = songName
+            }, cancellationToken);
+        else
+            entity.SongName = songName;
+        await _database.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IDictionary<Name, Name>> GetEnglishLookup(Name cultureCode, CancellationToken cancellationToken)
+    {
+        return await _cache.GetOrCreateAsync($"{nameof(EFChartRepository)}__SongNames__{cultureCode}__Reverse",
+            async o =>
+            {
+                o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(24);
+                return (await GetSongNames(cultureCode, cancellationToken)).ToDictionary(kv => kv.Value, kv => kv.Key);
+            });
+    }
+
+    public async Task<IDictionary<Name, Name>> GetSongNames(Name cultureCode,
+        CancellationToken cancellationToken)
+    {
+        return await _cache.GetOrCreateAsync($"{nameof(EFChartRepository)}__SongNames__{cultureCode}", async o =>
+        {
+            o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(24);
+            var cultureString = cultureCode.ToString();
+            return (await _database.SongNameLanguage.Where(s => s.CultureCode == cultureString)
+                    .ToArrayAsync(cancellationToken)).Select(e => (Name.From(e.EnglishSongName), Name.From(e.SongName)))
+                .ToDictionary(e => e.Item1, e => e.Item2);
+        });
+    }
+
 
     public void ClearCache()
     {

@@ -65,6 +65,7 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<UserRandomSettingsEntity> UserRandomSettings { get; set; }
     public DbSet<TournamentRoleEntity> TournamentRole { get; set; }
     public DbSet<TournamentPlayerEntity> TournamentPlayer { get; set; }
+    public DbSet<SongNameLanguageEntity> SongNameLanguage { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
