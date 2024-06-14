@@ -203,7 +203,9 @@
         }
         TournamentName = (await Mediator.Send(new GetAllTournamentsQuery()))
             .First(t => t.Id == TournamentId).Name;
-        
+
+        _myRole = CurrentUser.IsLoggedInAsAdmin ? TournamentRole.HeadTournamentOrganizer : _tournamentRoles.TryGetValue(CurrentUser.User.Id, out var role) ? role : null;
+
         if (_myRole != TournamentRole.HeadTournamentOrganizer)
         {
 
@@ -212,8 +214,6 @@
         }
         _publicUsers = (await Mediator.Send(new GetCommunityLeaderboardQuery("World"))).ToDictionary(l => l.UserId, l => l.PlayerName);
         _tournamentRoles = (await Mediator.Send(new GetTournamentRolesQuery(TournamentId))).ToDictionary(t => t.UserId,t=>t.Role);
-
-        _myRole = CurrentUser.IsLoggedInAsAdmin ? TournamentRole.HeadTournamentOrganizer : _tournamentRoles.TryGetValue(CurrentUser.User.Id, out var role) ? role : null;
 
         foreach (var user in _tournamentRoles.Where(r => !_publicUsers.ContainsKey(r.Key)))
         {
