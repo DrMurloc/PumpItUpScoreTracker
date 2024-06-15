@@ -67,7 +67,7 @@
             <MudButton Color="Color.Primary" Disabled="_isLoading" OnClick="()=>SetRole(_selectedUserId.Value,_newRole)">Add</MudButton>
         </MudItem>
     }
-    @foreach (var role in _tournamentRoles)
+    @foreach (var role in _tournamentRoles.Where(r=>_publicUsers.ContainsKey(r.Key)))
     {
         <MudItem xs="5">
             @_publicUsers[role.Key]
@@ -203,6 +203,7 @@
         }
         TournamentName = (await Mediator.Send(new GetAllTournamentsQuery()))
             .First(t => t.Id == TournamentId).Name;
+        _tournamentRoles = (await Mediator.Send(new GetTournamentRolesQuery(TournamentId))).ToDictionary(t => t.UserId,t=>t.Role);
 
         _myRole = CurrentUser.IsLoggedInAsAdmin ? TournamentRole.HeadTournamentOrganizer : _tournamentRoles.TryGetValue(CurrentUser.User.Id, out var role) ? role : null;
 
@@ -213,8 +214,7 @@
             return;
         }
         _publicUsers = (await Mediator.Send(new GetCommunityLeaderboardQuery("World"))).ToDictionary(l => l.UserId, l => l.PlayerName);
-        _tournamentRoles = (await Mediator.Send(new GetTournamentRolesQuery(TournamentId))).ToDictionary(t => t.UserId,t=>t.Role);
-
+        
         foreach (var user in _tournamentRoles.Where(r => !_publicUsers.ContainsKey(r.Key)))
         {
             _publicUsers[user.Key] = (await Mediator.Send(new GetUserByIdQuery(user.Key)))?.Name ?? throw new Exception("I'm not how you ended up here? Only if a user was deleted");
