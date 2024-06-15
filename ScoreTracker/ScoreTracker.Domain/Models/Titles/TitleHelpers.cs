@@ -13,7 +13,7 @@ namespace ScoreTracker.Domain.Models.Titles
             var titles = allTitles
                 .Where(title => title.Title is PhoenixDifficultyTitle)
                 .OrderBy(title => (title.Title as PhoenixDifficultyTitle)!.Level)
-                .ThenBy(title => title.Title.Name)
+                .ThenBy(title => title.Title.CompletionRequired)
                 .ToArray();
 
             var firstAchieved = titles.Count() - (titles.Reverse().Select((t, i) => new OrderedTitle(t, i))
