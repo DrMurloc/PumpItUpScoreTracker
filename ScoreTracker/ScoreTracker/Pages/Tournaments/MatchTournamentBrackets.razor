@@ -23,6 +23,9 @@
         <MudItem xs="6" sm="4" md="3">
             <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenAddMatchDialog">Add Match</MudButton>
         </MudItem>
+        <MudItem xs="12" sm="4" md="3">
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenBulkAddMatchDialog">Bulk Create Matches</MudButton>
+        </MudItem>
     </MudGrid>
     
 
@@ -56,11 +59,8 @@
                     <MudNumericField T="int" @bind-Value="_chartCount" Label="Chart Count"></MudNumericField>
                 </MudItem>
                 <MudItem xs="12">
-                    <MudSelect T="string" @bind-Value="_phaseName" Label="Phase">
-                        <MudSelectItem T="string" Value=@("Mids")>Mids</MudSelectItem>
-                        <MudSelectItem T="string" Value=@("Uppers")>Uppers</MudSelectItem>
-                        <MudSelectItem T="string" Value=@("Pros")>Pros</MudSelectItem>
-                    </MudSelect>
+                    <MudAutocomplete T="string" @bind-Value="_phaseName" Label="Phase" CoerceText="false" CoerceValue="true" SearchFunc="s=>Task.FromResult(_matches.Select(m=>m.Value.PhaseName).Distinct().Where(n=>n.ToString().Contains(s,StringComparison.OrdinalIgnoreCase)).Select(s=>s.ToString()))"></MudAutocomplete>
+                    
                 </MudItem>
                 <MudItem xs="12">
                     <MudSelect @bind-Value="_randomSettings" Label="Random Settings" Required="true">
@@ -78,7 +78,51 @@
             <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showAddMatchDialog = false">@L["Close"]</MudButton>
         </DialogActions>
     </MudDialog>
+    <MudDialog @bind-IsVisible="_showBulkCreate">
+        <DialogContent>
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudAutocomplete Disabled="_bulkCreating" T="string" @bind-Value="_phaseName" Label="Phase" CoerceText="false" CoerceValue="true" SearchFunc="s=>Task.FromResult(_matches.Select(m=>m.Value.PhaseName).Distinct().Where(n=>n.ToString().Contains(s,StringComparison.OrdinalIgnoreCase)).Select(s=>s.ToString()))"></MudAutocomplete>
 
+                </MudItem>
+                <MudItem xs="12">
+                    <MudNumericField T="int" Disabled="_bulkCreating" @bind-Value="_playersPerMatch" Min="1" Max="100" Label="Players Per Match"></MudNumericField>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudNumericField T="int" Disabled="_bulkCreating" @bind-Value="_matchesPerRound" Min="1" Max="10" Label="Matches Per Round"></MudNumericField>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudNumericField T="int" Disabled="_bulkCreating" @bind-Value="_chartCount" Min="1" Max="10" Label="Charts Per Match"></MudNumericField>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudNumericField T="int" Disabled="_bulkCreating" @bind-Value="_winnersProgressCount" Min="1" Max="_playersPerMatch-1" Label="Progressing Winner Count"></MudNumericField>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudCheckBox T="bool" Disabled="_bulkCreating" @bind-Value="_isDoubleElimination" Label="Double Elimination"></MudCheckBox>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudNumericField T="int" Disabled="_bulkCreating" Value="_rounds" ValueChanged="SetRoundCount" Min="1" Max="30" Label="Rounds"></MudNumericField>
+                </MudItem>
+                @for (var i = 0; i < _rounds; i++)
+                {
+                    var roundIndex = i;
+                    <MudItem xs="12">
+                        <MudSelect T="Name" Disabled="_bulkCreating" @bind-Value="_roundSettings[roundIndex]" Label=@($"Round {roundIndex + 1} Card Draw")>
+                            @foreach (var setting in _chartPullSettings.Keys)
+                            {
+                                <MudSelectItem T="Name" Value="@setting">@setting</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                }
+            </MudGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudSpacer></MudSpacer>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="BulkCreate" Disabled=@(_bulkCreating || _roundSettings.Any(r=>r=="Not Set"))>@L["Create"]</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showBulkCreate = false">@L["Close"]</MudButton>
+        </DialogActions>
+    </MudDialog>
 }
 <br/>
 <br/>
@@ -485,17 +529,128 @@
     private ICollection<MatchLink> _matchLinks = new List<MatchLink>();
     private readonly ICollection<Name> _tooManyLinks = new List<Name>();
     private readonly ICollection<Name> _notEnoughLinks = new List<Name>();
-    private string _phaseName = "Mids";
+    private string _phaseName = "";
     private bool _linksChecked = false;
     private TimeSpan _expectedTimeToMatch = TimeSpan.Zero;
     private DateTime _expectedTime = DateTime.Now;
     private int _matchesLeft = 0;
     private Name TournamentName { get; set; } = "...";
+    private bool _showBulkCreate = false;
+    private int _playersPerMatch = 4;
+    private int _matchesPerRound = 2;
+    private int _rounds = 1;
+    private int _winnersProgressCount = 1;
+    private bool _isDoubleElimination=false;
+    private Name[] _roundSettings = new Name[]{"Not Set"};
+    private bool _bulkCreating = false;
+    private async Task BulkCreate()
+    {
+        _bulkCreating = true;
+        var winnersLabel = _isDoubleElimination ? " Winners" : "";
+        var losersLabel = _isDoubleElimination ? " Losers" : "";
+        var nextOrder = _matches.Any()?_matches.Max(m => m.Value.MatchOrder) + 1 : 0;
+        for (var currentRound = 0; currentRound < _rounds; currentRound++)
+        {
+            var settings = _roundSettings[currentRound];
+            for (var currentMatch = 0; currentMatch < _matchesPerRound; currentMatch++)
+            {
+                var matchName = $"{_phaseName}{winnersLabel} Round {currentRound + 1} Match {currentMatch + 1}";
+                var players = Enumerable.Range(0, _playersPerMatch).Select(c => Name.From($"Unknown {c}")).ToArray();
+                await Mediator.Send(new UpdateMatchCommand(TournamentId, new MatchView(matchName,
+                    _phaseName,
+                    nextOrder++,
+                    _chartCount,
+                    settings,
+                    MatchState.NotStarted,
+                    players, Array.Empty<Guid>(),
+                    Array.Empty<Guid>(),
+                    Array.Empty<Guid>(),
+                    players.ToDictionary(p => p.ToString(), p => Array.Empty<PhoenixScore>()),
+                    players.ToDictionary(p => p.ToString(), p => Array.Empty<int>()),
+                    players
+                    )));
+                if (currentRound > 0)
+                {
+                    var previousMatch = $"{_phaseName}{winnersLabel} Round {currentRound} Match {currentMatch + 1}";
+                    
+                    var link = new MatchLink(previousMatch, matchName, true, _winnersProgressCount);
+                    await Mediator.Send(new CreateMatchLinkCommand(TournamentId, link));
+                    foreach (var existingLink in _matchLinks.Where(ml => ml.FromMatch == link.FromMatch && ml.ToMatch == link.ToMatch))
+                    {
+                        _matchLinks.Remove(existingLink);
+                    }
+                    _matchLinks.Add(link);
+                }
+                if (!_isDoubleElimination) continue;
+                
+                var losersMatchName=$"{_phaseName}{losersLabel} Round {currentRound + 1} Match {currentMatch + 1}";
+                var lPlayers = Enumerable.Range(0, currentRound==0?_playersPerMatch-1:_playersPerMatch).Select(c => Name.From($"Unknown {c}")).ToArray();
+                await Mediator.Send(new UpdateMatchCommand(TournamentId, new MatchView(losersMatchName,
+                    _phaseName,
+                    nextOrder++,
+                    _chartCount,
+                    settings,
+                    MatchState.NotStarted,
+                    lPlayers, Array.Empty<Guid>(),
+                    Array.Empty<Guid>(),
+                    Array.Empty<Guid>(),
+                    lPlayers.ToDictionary(p => p.ToString(), p => Array.Empty<PhoenixScore>()),
+                    lPlayers.ToDictionary(p => p.ToString(), p => Array.Empty<int>()),
+                    lPlayers
+                    )));
+                if (currentRound > 0)
+                {
+                    var previousMatch = $"{_phaseName}{losersLabel} Round {currentRound} Match {currentMatch + 1}";
+                
+                    var link = new MatchLink(previousMatch, losersMatchName, true, _winnersProgressCount);
+                    await Mediator.Send(new CreateMatchLinkCommand(TournamentId, link));
+                    foreach (var existingLink in _matchLinks.Where(ml => ml.FromMatch == link.FromMatch && ml.ToMatch == link.ToMatch))
+                    {
+                        _matchLinks.Remove(existingLink);
+                    }
+                    _matchLinks.Add(link);
+                }
 
+                var winnersToLosers = new MatchLink(matchName, losersMatchName, false, _playersPerMatch - _winnersProgressCount);
+                await Mediator.Send(new CreateMatchLinkCommand(TournamentId, winnersToLosers));
+                foreach (var existingLink in _matchLinks.Where(ml => ml.FromMatch == winnersToLosers.FromMatch && ml.ToMatch == winnersToLosers.ToMatch))
+                {
+                    _matchLinks.Remove(existingLink);
+                }
+                _matchLinks.Add(winnersToLosers);
+            
+            }
+        }
+        _bulkCreating = true;
+        Snackbar.Add("Matches Created!", Severity.Success);
+        _showBulkCreate = false;
+    }
+    private void SetRoundCount(int rounds)
+    {
+        if (rounds < _rounds)
+        {
+            _roundSettings = _roundSettings.Take(rounds).ToArray();
+        }
+        if (rounds > _rounds)
+        {
+            _roundSettings=_roundSettings.Concat(Enumerable.Repeat((Name)"Not Set", rounds - _rounds)).ToArray();
+        }
+        _rounds = rounds;
+    }
     public void ShowNotes(MatchView match)
     {
         _notesMatch = match;
         _showNotesPopup = true;
+    }
+
+    private void OpenBulkAddMatchDialog()
+    {
+        _showBulkCreate = true;
+        _phaseName = string.Empty;
+        SetRoundCount(1);
+        _isDoubleElimination = false;
+        _playersPerMatch = 4;
+        _chartCount = 3;
     }
     private void SearchForPlayer(string player)
     {
