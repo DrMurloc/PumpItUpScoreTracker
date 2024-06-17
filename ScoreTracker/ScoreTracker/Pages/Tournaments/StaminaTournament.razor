@@ -124,6 +124,35 @@
                                     </MudCard>
                                 </MudItem>
                             }
+                            @if (_timeline.Any())
+                            {
+                                <MudItem xs="12">
+                                    <ApexChart TItem="TimelinePoint"
+                                               @ref=_timelineChart
+                                               Title="Estimated Point Gain Timeline"
+                                               XAxisType="XAxisType.Numeric"
+                                               Options="_scoreBoxesOptions">
+                                        <ApexPointSeries TItem="TimelinePoint"
+                                                         Color="#00FFFF"
+                                                         Items="_timeline"
+                                                         Name="Points Per Second"
+                                                         SeriesType="SeriesType.Line"
+                                                         XValue="@(e => e.MinutesIn)"
+                                                         YValue="@(e => (decimal)e.PointsPerSecond)"
+                                                         OrderBy="e => e.X"/>
+                                        <ApexPointSeries TItem="TimelinePoint"
+                                                         Color="#FFFFFF"
+                                                         Items="new []{new TimelinePoint(0,_averagePps),new TimelinePoint(_timeline.Last().MinutesIn,_averagePps)}"
+                                                         Name="Average"
+                                                         SeriesType="SeriesType.Line"
+                                                         XValue="@(e => e.MinutesIn)"
+                                                         YValue="@(e => (decimal)e.PointsPerSecond)"
+                                                         OrderBy="e => e.X" />
+
+                                    </ApexChart>  
+                                </MudItem>
+                            }
+                            
                         </MudGrid>
                     }
                 </td>
@@ -199,6 +228,7 @@
 @inject NavigationManager NavManager;
 @code
 {
+    private ApexChart<TimelinePoint>? _timelineChart;
     private IEnumerable<LeaderboardRecord> _leaderboard = Array.Empty<LeaderboardRecord>();
     private string RestTime(TimeSpan time) => time.ToString(@"h\:mm\:ss");
     private string TwoDecimalPlaces(double value) => $"{value:F2}";
@@ -212,6 +242,19 @@
     private string UserSessionlink(Guid userId) => $"/Tournament/Stamina/{TournamentId}/Record?UserId={userId}";
     private Guid? _showingChartBoard = null;
 
+    private readonly ApexChartOptions<TimelinePoint> _scoreBoxesOptions = new ApexChartOptions<TimelinePoint>()
+        {
+            Stroke = new Stroke { Curve = Curve.Smooth },
+            Yaxis = new[]
+            {
+            new YAxis()
+            {
+                DecimalsInFloat = 2,
+                Min=0
+            }
+        }.ToList()
+
+        };
     private void ToggleBoard(Guid chartId)
     {
         if (_showingChartBoard == chartId)
@@ -232,12 +275,17 @@
         public string[] Scores { get; set; }
         public PhoenixScore AverageScore { get; set; }
     }
+
+    private IEnumerable<TimelinePoint> _timeline = Array.Empty<TimelinePoint>();
+    private double _averagePps = 0.0;
+    private sealed record TimelinePoint(int MinutesIn, double PointsPerSecond);
     private async Task ShowPhotos(Guid userId)
     {
         _isLoadingUser = true;
         _photoSession = await TournamentRepository.GetSession(TournamentId, userId, CancellationToken.None);
         _showPhotoDialog = true;
         _isLoadingUser = false;
+        
     }
     private async Task ShowUserCharts(Guid showingUser)
     {
@@ -248,6 +296,22 @@
         }
         _isLoadingUser = true;
         _showingSession = await TournamentRepository.GetSession(TournamentId, showingUser, CancellationToken.None);
+        var restTime = (_configuration.MaxTime - _showingSession.TotalPlayTime + _showingSession.Entries.Last().Chart.Song.Duration) / (_showingSession.Entries.Count() - 1);
+        var currentTime = 0;
+        var timeline = new List<TimelinePoint>();
+        foreach (var entry in _showingSession.Entries)
+        {
+            timeline.Add(new TimelinePoint((int)(currentTime / 60), entry.SessionScore / (double)entry.Chart.Song.Duration.TotalSeconds));
+            currentTime += (int)entry.Chart.Song.Duration.TotalSeconds + (int)restTime.TotalSeconds;
+        }
+        _averagePps = timeline.Average(t => t.PointsPerSecond);
+        _timeline = timeline;
+        if (_timelineChart != null)
+        {
+            await _timelineChart.UpdateSeriesAsync(true);
+            await _timelineChart.UpdateOptionsAsync(true, true, true);
+
+        }
         _isLoadingUser = false;
     }
     [Parameter] public Guid TournamentId { get; set; }
