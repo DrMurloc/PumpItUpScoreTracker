@@ -93,7 +93,8 @@
             </MudItem>
             @if (_minimumType == "Chart Type")
             {
-                @foreach (var kv in Settings.ChartTypeMinimums.Where(k=>Settings.ChartTypeWeights[k.Key]>0))
+                @foreach (var kv in Settings.ChartTypeMinimums.Where(kv=>(kv.Key==ChartType.Single?Settings.LevelWeights:
+                    kv.Key==ChartType.Double?Settings.DoubleLevelWeights:Settings.PlayerCountWeights).Any(g=>g.Value>0)))
                 {
                     <MudItem xs="4">
                         <MudNumericField T="int?" Min="0" Max="@Settings.Count" Value="Settings.ChartTypeMinimums[kv.Key]" ValueChanged="s=>SetChartTypeMinimum(kv.Key,s)" Label="@kv.Key.ToString()" Clearable="true" HideSpinButtons="true"></MudNumericField>
@@ -102,7 +103,7 @@
                 }
             } else if (_minimumType == "Difficulty")
             {
-                @foreach (var kv in Settings.LevelMinimums.Where(k=>Settings.LevelWeights[k.Key]>0))
+                @foreach (var kv in Settings.LevelMinimums.Where(k=>Settings.LevelWeights[k.Key]>0 || Settings.DoubleLevelWeights[k.Key]>0))
                 {
 
                     <MudItem xs="4">
@@ -111,10 +112,12 @@
                 }
             } else if (_minimumType == "Chart Type Difficulty")
             {
-                @foreach (var kv in Settings.ChartTypeLevelMinimums.Where(k=>Settings.ChartTypeWeights[DifficultyLevel.ParseShortHand(k.Key).chartType]>0 && Settings.LevelWeights[DifficultyLevel.ParseShortHand(k.Key).level]>0).OrderBy(kv=>kv.Key))
+                @foreach (var kv in Settings.LevelWeights.Where(kv=>kv.Value>0).Select(kv=>$"S{kv.Key}")
+                    .Concat(Settings.DoubleLevelWeights.Where(kv=>kv.Value>0).Select(kv=>$"D{kv.Key}"))
+                    .Concat(Settings.PlayerCountWeights.Where(kv=>kv.Value>0).Select(kv=>$"CoOp{kv.Key}")))
                 {
                     <MudItem xs="4" sm="3">
-                        <MudNumericField T="int?" Min="0" Max="@Settings.Count" Value="Settings.ChartTypeLevelMinimums[kv.Key]" ValueChanged="s=>SetChartTypeLevelMinimum(kv.Key,s)" Label="@kv.Key" Clearable="true" HideSpinButtons="true"></MudNumericField>
+                        <MudNumericField T="int?" Min="0" Max="@Settings.Count" Value="Settings.ChartTypeLevelMinimums[kv]" ValueChanged="s=>SetChartTypeLevelMinimum(kv,s)" Label="@kv" Clearable="true" HideSpinButtons="true"></MudNumericField>
 
                     </MudItem>
                 }
@@ -167,10 +170,7 @@
     [Parameter]
     public RandomSettings Settings { get; set; } = new RandomSettings();
     private bool _useWeights = false;
-    private bool _showSinglesLevels => Settings.ChartTypeWeights[ChartType.Single]>0;
-    private bool _showDoublesLevels => Settings.ChartTypeWeights[ChartType.Double]>0;
-    private bool _separateDoubleLevels = false;
-    private string LevelLabel => _separateDoubleLevels ? "Singles Levels" : "Levels";
+
     private string _minimumType = "Chart Type";
 
     private void SetChartTypeMinimum(ChartType type, int? minimum)
@@ -210,7 +210,6 @@
     protected override async Task OnParametersSetAsync()
     {
         _useWeights = Settings.HasWeightedSetting;
-        _separateDoubleLevels = Settings.ChartTypeWeights[ChartType.Single] != Settings.ChartTypeWeights[ChartType.Double];
 
     }
 }

@@ -21,30 +21,44 @@
 @if (CurrentUser.IsLoggedIn)
 {
     <MudGrid>
+        @if (_tournamentsWithSettings.Any())
+        {
+            <MudItem xs="12">
+                <MudSelect T="Guid?" Value="_selectedTournamentId" ValueChanged="LoadTournamentSettings" Label="Tournament" Clearable="true">
+                    @foreach(var tournament in _tournamentsWithSettings)
+                    {
+                        <MudSelectItem T="Guid?" Value="tournament.Key">@tournament.Value</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        }
         @if (_savedSettings.Any())
         {
-            
+
             <MudItem xs="12">
                 <MudSelect T="string" Value="_currentSettings" ValueChanged="SelectSettings" Label=@L["Saved Settings"] Clearable="true">
-                    @foreach (var kv in _savedSettings.OrderBy(kv=>kv.Key))
+                    @foreach (var kv in _savedSettings.OrderBy(kv => kv.Key))
                     {
                         <MudSelectItem T="string" Value="kv.Key">@kv.Key</MudSelectItem>
                     }
                 </MudSelect>
             </MudItem>
         }
-        <MudItem xs="12" sm="8">
-            <MudTextField T="string" @bind-Value="_newSettingsName" Label=@L["Settings Name"]></MudTextField>
-        </MudItem>
-        <MudItem xs="6" sm="2">
-            <MudButton Color="Color.Primary" Disabled="_isSaving || string.IsNullOrWhiteSpace(_newSettingsName)" OnClick="SaveSettings" StartIcon="@Icons.Material.Filled.Save">@L["Save"]</MudButton>
-        </MudItem>
-        <MudItem xs="6" sm="2">
-            @if (_savedSettings.ContainsKey(_newSettingsName))
-            {
-                <MudButton Color="Color.Warning" Disabled="_isSaving" OnClick="DeleteSettings" StartIcon="@Icons.Material.Filled.DeleteForever">@L["Delete"]</MudButton>
-            }
-        </MudItem>
+        @if (_selectedTournamentId == null)
+        {
+            <MudItem xs="12" sm="8">
+                <MudTextField T="string" @bind-Value="_newSettingsName" Label=@L["Settings Name"]></MudTextField>
+            </MudItem>
+            <MudItem xs="6" sm="2">
+                <MudButton Color="Color.Primary" Disabled="_isSaving || string.IsNullOrWhiteSpace(_newSettingsName)" OnClick="SaveSettings" StartIcon="@Icons.Material.Filled.Save">@L["Save"]</MudButton>
+            </MudItem>
+            <MudItem xs="6" sm="2">
+                @if (_savedSettings.ContainsKey(_newSettingsName))
+                {
+                    <MudButton Color="Color.Warning" Disabled="_isSaving" OnClick="DeleteSettings" StartIcon="@Icons.Material.Filled.DeleteForever">@L["Delete"]</MudButton>
+                }
+            </MudItem>
+        }
     </MudGrid>
     <br/>
 }
@@ -125,6 +139,7 @@
 @inject ILogger<ChartRandomizer> Logger;
 @inject IAdminNotificationClient Notifications;
 @inject IOptions<JsonSerializerOptions> JsonOptions;
+@inject IMatchRepository Matches;
 @code {
 
     private string CardStyle(int chartOrder) => _protectedCharts.Contains(chartOrder) ? $@"border-color:{Colors.Green.Darken1}" :
@@ -138,10 +153,25 @@
     private string _newSettingsName = string.Empty;
     private string _currentSettings = string.Empty;
     private Chart[] _pulledCharts = Array.Empty<Chart>();
+    private Guid? _selectedTournamentId = null;
     private List<int> _protectedCharts = new ();
     private List<int> _vetoedCharts = new();
     private IDictionary<Guid, string> _videos = new Dictionary<Guid, string>();
     private IDictionary<string, RandomSettings> _savedSettings = new Dictionary<string, RandomSettings>(StringComparer.OrdinalIgnoreCase);
+
+    private async Task LoadTournamentSettings(Guid? tournamentId)
+    {
+        _selectedTournamentId = tournamentId;
+        _currentSettings = string.Empty;
+        if (tournamentId == null)
+        {
+            _savedSettings = (await Mediator.Send(new GetRandomSettingsQuery())).ToDictionary(r => r.SettingsName.ToString(), r => r.Settings);
+            return;
+        }
+        _savedSettings = (await Matches.GetAllRandomSettings(tournamentId.Value, CancellationToken.None)).ToDictionary(s => s.name.ToString(), s => s.settings, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private IDictionary<Guid, Name> _tournamentsWithSettings = new Dictionary<Guid, Name>();
     private async Task NotifyBadVideo()
     {
         await Notifications.NotifyAdmin($"The video for{_currentVideoDescription} was reported by {(CurrentUser.IsLoggedIn?CurrentUser.User.Name:"Unknown")}", CancellationToken.None);
@@ -231,7 +261,6 @@
             {
                 Count=_count,
                 AllowRepeats = _settings.AllowRepeats,
-                    ChartTypeWeights = _settings.ChartTypeWeights,
                 LevelWeights = _settings.LevelWeights,
                     PlayerCountWeights = _settings.PlayerCountWeights,
                 DoubleWeights = _settings.DoubleLevelWeights,
@@ -354,8 +383,6 @@
                     _settings.DoubleLevelWeights = lastConfig.DoubleWeights;
                     MergeDictTo(_settings.PlayerCountWeights, lastConfig.PlayerCountWeights);
                     _settings.PlayerCountWeights = lastConfig.PlayerCountWeights;
-                    MergeDictTo(_settings.ChartTypeWeights, lastConfig.ChartTypeWeights);
-                    _settings.ChartTypeWeights = lastConfig.ChartTypeWeights;
                     MergeDictTo(_settings.SongTypeWeights, lastConfig.SongTypeWeights);
                     _settings.SongTypeWeights = lastConfig.SongTypeWeights;
                     MergeDictTo(_settings.LevelMinimums, lastConfig.LevelMinimums);
@@ -372,6 +399,32 @@
                 catch (Exception e)
                 {
                     Logger.LogWarning(e, $"There was an issue deserializing Last Configs");
+                }
+            }
+        }
+        var now = DateTimeOffset.Now-TimeSpan.FromDays(1);
+        if (CurrentUser.IsLoggedIn)
+        {
+            
+            _tournamentsWithSettings = (await Mediator.Send(new GetAllTournamentsQuery())).Where(t => t.Type == TournamentType.Match && t.EndDate >= now)
+                .ToDictionary(t => t.Id, t => t.Name);
+            foreach (var tournamentId in _tournamentsWithSettings.Keys.ToArray())
+            {
+                var settings = await Matches.GetAllRandomSettings(tournamentId, CancellationToken.None);
+                if (!settings.Any())
+                {
+                    _tournamentsWithSettings.Remove(tournamentId);
+                    continue;
+                }
+                if (CurrentUser.IsLoggedInAsAdmin)
+                {
+                    continue;
+                }
+                var roles = await Mediator.Send(new GetTournamentRolesQuery(tournamentId));
+                if (roles.All(r => r.UserId != CurrentUser.User.Id))
+                {
+                    _tournamentsWithSettings.Remove(tournamentId);
+                    
                 }
             }
         }

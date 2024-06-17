@@ -68,7 +68,7 @@ namespace ScoreTracker.Application.Handlers
                     _ => settings.PlayerCountWeights[chart.PlayerCount]
                 };
 
-                if (levelWeight == 0 || settings.ChartTypeWeights[chart.Type] == 0 ||
+                if (levelWeight == 0 ||
                     settings.SongTypeWeights[chart.Song.Type] == 0)
                 {
                     calculatedWeights[chart.Id] = 0;
@@ -78,8 +78,7 @@ namespace ScoreTracker.Application.Handlers
                     var max = 1;
                     if (levelWeight > max)
                         max = levelWeight;
-                    if (settings.ChartTypeWeights[chart.Type] > max)
-                        max = settings.ChartTypeWeights[chart.Type];
+
                     if (settings.SongTypeWeights[chart.Song.Type] > max)
                         max = settings.SongTypeWeights[chart.Song.Type];
                     calculatedWeights[chart.Id] = max;
@@ -98,9 +97,7 @@ namespace ScoreTracker.Application.Handlers
                 var newSettings = request.Settings with
                 {
                     ChartTypeMinimums = new Dictionary<ChartType, int?>(),
-                    Count = typeMinimum.Value!.Value,
-                    ChartTypeWeights = Enum.GetValues<ChartType>()
-                        .ToDictionary(t => t, t => t == typeMinimum.Key ? 1 : 0)
+                    Count = typeMinimum.Value!.Value
                 };
                 var result = await Handle(new GetRandomChartsQuery(newSettings), cancellationToken);
                 results.AddRange(result);
@@ -127,10 +124,7 @@ namespace ScoreTracker.Application.Handlers
                 var newSettings = request.Settings with
                 {
                     ChartTypeLevelMinimums = new Dictionary<string, int?>(),
-                    Count = clMinimum.Value!.Value,
-
-                    ChartTypeWeights = Enum.GetValues<ChartType>()
-                        .ToDictionary(t => t, t => t == chartType ? 1 : 0)
+                    Count = clMinimum.Value!.Value
                 };
                 if (chartType == ChartType.Single)
                     newSettings.LevelWeights = DifficultyLevel.All.ToDictionary(t => (int)t, t => t == level ? 1 : 0);

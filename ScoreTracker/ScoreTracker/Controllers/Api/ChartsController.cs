@@ -37,17 +37,11 @@ public sealed class ChartsController : Controller
     {
         var settings = new RandomSettings();
 
-        if (chartTypeString != null)
-        {
-            if (chartTypeString.Any(s => !Enum.TryParse<ChartType>(s, out var _)))
-                return BadRequest($"Invalid Chart Type. Options are: {string.Join(',', Enum.GetValues<ChartType>())}");
+        var chartTypes = chartTypeString == null
+            ? new[] { ChartType.Single, ChartType.Double }
+            : chartTypeString.Where(s => Enum.TryParse<ChartType>(s, out var _))
+                .Select(Enum.Parse<ChartType>).ToArray();
 
-            foreach (var type in chartTypeString.Select(Enum.Parse<ChartType>)) settings.ChartTypeWeights[type] = 1;
-        }
-        else
-        {
-            foreach (var type in Enum.GetValues<ChartType>()) settings.ChartTypeWeights[type] = 1;
-        }
 
         if (songTypeString != null)
         {
@@ -77,7 +71,13 @@ public sealed class ChartsController : Controller
             return BadRequest("Minimum Difficulty must be less than Maximum Difficulty");
 
         for (var lvl = minInt ?? DifficultyLevel.Min; lvl <= (maxInt ?? DifficultyLevel.Max); lvl++)
-            settings.LevelWeights[lvl] = 1;
+        {
+            if (chartTypes.Contains(ChartType.Single)) settings.LevelWeights[lvl] = 1;
+
+            if (chartTypes.Contains(ChartType.Double)) settings.DoubleLevelWeights[lvl] = 1;
+
+            if (chartTypes.Contains(ChartType.CoOp) && lvl <= 5) settings.PlayerCountWeights[lvl] = 1;
+        }
 
         try
         {

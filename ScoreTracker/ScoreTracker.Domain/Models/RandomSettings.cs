@@ -10,9 +10,6 @@ namespace ScoreTracker.Domain.Models
         public IDictionary<int, int> DoubleLevelWeights { get; set; } =
             DifficultyLevel.All.ToDictionary(l => (int)l, l => 0);
 
-        public IDictionary<ChartType, int> ChartTypeWeights { get; set; } =
-            Enum.GetValues<ChartType>().ToDictionary(t => t, t => 0);
-
         public IDictionary<SongType, int> SongTypeWeights { get; set; } =
             Enum.GetValues<SongType>().ToDictionary(t => t, t => 0);
 
@@ -31,7 +28,7 @@ namespace ScoreTracker.Domain.Models
         public void ClearChartTypeLevelMinimums()
         {
             ChartTypeLevelMinimums = DifficultyLevel.All
-                .SelectMany(l => new[] { $"S{l}", $"D{l}" })
+                .SelectMany(l => new[] { $"S{l}", $"D{l}", $"CoOp{l}" })
                 .ToDictionary(k => k, k => (int?)null);
         }
 
@@ -54,13 +51,12 @@ namespace ScoreTracker.Domain.Models
             DifficultyLevel.All.ToDictionary(l => (int)l, l => (int?)null);
 
         public IDictionary<string, int?> ChartTypeLevelMinimums { get; set; } = DifficultyLevel.All
-            .SelectMany(l => new[] { $"S{l}", $"D{l}" })
+            .SelectMany(l => new[] { $"S{l}", $"D{l}", $"CoOp{l}" })
             .ToDictionary(k => k, k => (int?)null);
 
         public bool HasWeightedSetting => LevelWeights.Any(kv => kv.Value > 1)
                                           || DoubleLevelWeights.Any(kv =>
-                                              kv.Value > 1) ||
-                                          ChartTypeWeights.Any(kv => kv.Value > 1)
+                                              kv.Value > 1)
                                           || PlayerCountWeights.Any(kvp =>
                                               kvp.Value > 1)
                                           ||
