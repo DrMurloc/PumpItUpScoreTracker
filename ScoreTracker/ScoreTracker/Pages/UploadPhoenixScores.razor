@@ -312,17 +312,19 @@
 
     private CancellationTokenSource _currentCancellation = new CancellationTokenSource();
     private string _passwordImportStatus = string.Empty;
+    private Guid _userId;
     protected override async Task OnInitializedAsync()
     {
         MainLayout.ImportStatusUpdated += StatusUpdate;
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
         if (CurrentUser.IsLoggedIn) return;
+        _userId = CurrentUser.User.Id;
         NavManager.NavigateTo("/Login");
     }
 
     private void StatusUpdate(object? origin, ImportStatusUpdated e)
     {
-        if (e.UserId != CurrentUser.User.Id) return;
+        if (e.UserId != _userId) return;
 
         foreach (var score in e.Scores)
         {
