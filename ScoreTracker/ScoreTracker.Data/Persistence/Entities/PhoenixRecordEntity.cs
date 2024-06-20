@@ -1,7 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.Data.Persistence.Entities;
 
+[Index(nameof(UserId), nameof(ChartId), IsUnique = true)]
+[Index(nameof(ChartId))]
 public sealed class PhoenixRecordEntity
 {
     [Key] public Guid Id { get; set; }

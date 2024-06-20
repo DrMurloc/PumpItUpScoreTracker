@@ -514,7 +514,8 @@ namespace ScoreTracker.Data.Migrations
 
                     b.HasIndex("ChartId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "ChartId")
+                        .IsUnique();
 
                     b.ToTable("PhoenixRecord", "scores");
                 });
