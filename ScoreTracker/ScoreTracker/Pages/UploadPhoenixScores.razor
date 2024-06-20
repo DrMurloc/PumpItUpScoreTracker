@@ -317,8 +317,8 @@
     {
         MainLayout.ImportStatusUpdated += StatusUpdate;
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
-        if (CurrentUser.IsLoggedIn) return;
         _userId = CurrentUser.User.Id;
+        if (CurrentUser.IsLoggedIn) return;
         NavManager.NavigateTo("/Login");
     }
 
@@ -366,7 +366,7 @@
         var cancellationToken = _currentCancellation.Token;
         _currentSaved = 0;
         var startTime = DateTimeOffset.Now;
-        var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id), cancellationToken)).ToDictionary(s => s.ChartId);
+        var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(_userId), cancellationToken)).ToDictionary(s => s.ChartId);
         var toSaveScores = _spreadSheetScores
             .Where(s => !myScores.ContainsKey(s.ChartId) || s.Score != myScores[s.ChartId].Score || s.Plate != myScores[s.ChartId].Plate || myScores[s.ChartId].IsBroken).ToArray();
 
