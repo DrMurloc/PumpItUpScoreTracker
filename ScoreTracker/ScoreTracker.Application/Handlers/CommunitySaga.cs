@@ -231,13 +231,13 @@ namespace ScoreTracker.Application.Handlers
             var message = string.Empty;
             if (context.Message.NewTop50 > context.Message.OldTop50)
                 message += $@"
-- Top 50 improved to {context.Message.NewTop50} (+{context.Message.NewTop50 - context.Message.OldTop50})";
+- PUMBILITY improved to {context.Message.NewTop50} (+{context.Message.NewTop50 - context.Message.OldTop50})";
             if (context.Message.NewSinglesTop50 > context.Message.OldSinglesTop50)
                 message += $@"
-- Top 50 Singles to {context.Message.NewSinglesTop50} (+{context.Message.NewSinglesTop50 - context.Message.OldSinglesTop50})";
+- PUMBILITY Singles to {context.Message.NewSinglesTop50} (+{context.Message.NewSinglesTop50 - context.Message.OldSinglesTop50})";
             if (context.Message.NewDoublesTop50 > context.Message.OldDoublesTop50)
                 message += $@"
-- Top 50 Doubles improved to {context.Message.NewDoublesTop50} (+{context.Message.NewDoublesTop50 - context.Message.OldDoublesTop50})";
+- PUMBILITY Doubles improved to {context.Message.NewDoublesTop50} (+{context.Message.NewDoublesTop50 - context.Message.OldDoublesTop50})";
 
 
             if (context.Message.NewCompetitive > context.Message.OldCompetitive &&
