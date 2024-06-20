@@ -87,7 +87,9 @@ public sealed class EFChartRepository : IChartRepository
                     .ToDictionaryAsync(c => c.ChartId, cancellationToken);
             });
 
-        return chartIds != null ? chartIds.Select(id => chartVideos[id]) : chartVideos.Values;
+        return chartIds != null
+            ? chartIds.Where(id => chartVideos.ContainsKey(id)).Select(id => chartVideos[id])
+            : chartVideos.Values;
     }
 
     public async Task<Guid> CreateSong(Name name, Uri imageUrl, SongType type, TimeSpan duration, Name songArtist,
