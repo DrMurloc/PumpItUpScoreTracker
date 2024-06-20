@@ -140,7 +140,7 @@ builder.Services.AddBlazorApplicationInsights()
     .AddControllers();
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services.AddScoped<IStringLocalizer<App>, StringLocalizer<App>>();
-
+builder.Services.AddScoped<ChartVideoDisplayer>();
 builder.Services.AddCookiePolicy(opts =>
 {
     opts.CheckConsentNeeded = ctx => false;

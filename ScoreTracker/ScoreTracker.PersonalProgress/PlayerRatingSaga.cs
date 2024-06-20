@@ -58,14 +58,14 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
         var charts =
             (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
             .ToDictionary(c => c.Id);
-        var scoring = ScoringConfiguration.PiuScoresRating;
+        var scoring = ScoringConfiguration.PumbilityScoring;
         return (await _scores.GetRecordedScores(request.UserId, cancellationToken))
             .Where(s => charts[s.ChartId].Type != ChartType.CoOp)
             .Where(s => s.Score != null && (request.ChartType == null ||
                                             charts[s.ChartId].Type == request.ChartType))
             .OrderByDescending(s =>
                 scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level, s.Score!.Value))
-            .Take(50).ToArray();
+            .Take(request.Count).ToArray();
     }
 
     public async Task Consume(ConsumeContext<UserCreatedEvent> context)
@@ -82,7 +82,7 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
     public async Task Handle(RecalculateStats request, CancellationToken cancellationToken)
     {
         var oldStats = await _stats.GetStats(request.UserId, cancellationToken);
-        var scoring = ScoringConfiguration.PiuScoresRating;
+        var scoring = ScoringConfiguration.PumbilityScoring;
         var charts =
             (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
         var recorded =

@@ -25,31 +25,6 @@
 
     </MudToolBar>
     <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" @ref="_tabs">
-        <MudTabPanel Text="PIU Scores Rating">
-            <MudGrid>
-                <MudItem xs="12">
-                    Note: This is PIU Scores rating and NOT Phoenix Rating, they are similar but have some differences:<br/><br/>
-                    Partial score increases are given between letter grades (I.E 912500 score gives you a 1.075x multiplier)<br/><br/>
-                    PG acts as a letter grade beyond SSS+ and gives a 1.6x multiplier<br/><br/>
-                    Difficulty levels below 10 give 10 X Difficulty rating.
-                </MudItem>
-                <MudItem xs="12">
-                    <b>Total Rating: </b>@_stats.TotalRating
-                </MudItem>
-                <MudItem xs="12">
-                    <b>Top 50 Rating: </b>@_stats.SkillRating
-                </MudItem>
-                <MudItem xs="12">
-                    <b>Top 50 Singles Rating: </b>@_stats.SinglesRating
-                </MudItem>
-                <MudItem xs="12">
-                    <b>Top 50 Doubles Rating: </b>@_stats.DoublesRating
-                </MudItem>
-                <MudItem xs="12">
-                    <b>CoOp Rating: </b>@_stats.CoOpRating
-                </MudItem>
-            </MudGrid>
-        </MudTabPanel>
         <MudTabPanel Text="Difficulty Progress">
             <MudTable T="DifficultyEntry" Items="_difficultyEntries" Breakpoint="Breakpoint.None">
                 <HeaderContent>

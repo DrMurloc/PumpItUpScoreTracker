@@ -205,7 +205,12 @@ namespace ScoreTracker.Domain.Models
             return result;
         }
 
-        public static ScoringConfiguration PiuScoresRating => CreateScoring();
+        public static ScoringConfiguration PumbilityScoring => new()
+        {
+            AdjustToTime = false
+        };
+
+        public static ScoringConfiguration PiuScoresRatingz => CreateScoring();
 
         private static ScoringConfiguration CreateScoring()
         {

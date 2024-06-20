@@ -5,7 +5,7 @@ using ScoreTracker.Domain.Models;
 namespace ScoreTracker.PersonalProgress.Queries
 {
     public sealed record GetTop50ForPlayerQuery
-        (Guid UserId, ChartType? ChartType) : IRequest<IEnumerable<RecordedPhoenixScore>>
+        (Guid UserId, ChartType? ChartType, int Count = 50) : IRequest<IEnumerable<RecordedPhoenixScore>>
     {
     }
 }

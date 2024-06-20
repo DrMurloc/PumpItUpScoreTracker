@@ -19,9 +19,9 @@
 
 <MudSelect T="LeaderboardType" Value="_currentType" ValueChanged="SetType" Label="Leaderboard Type">
     <MudSelectItem T="LeaderboardType" Value="LeaderboardType.Total">Total Rating</MudSelectItem>
-    <MudSelectItem T="LeaderboardType" Value="LeaderboardType.Combined">Top 50 Charts</MudSelectItem>
-    <MudSelectItem T="LeaderboardType" Value="LeaderboardType.Singles">Top 50 Singles</MudSelectItem>
-    <MudSelectItem T="LeaderboardType" Value="LeaderboardType.Doubles">Top 50 Doubles</MudSelectItem>
+    <MudSelectItem T="LeaderboardType" Value="LeaderboardType.Combined">PUMBILITY</MudSelectItem>
+    <MudSelectItem T="LeaderboardType" Value="LeaderboardType.Singles">Singles PUMBILITY</MudSelectItem>
+    <MudSelectItem T="LeaderboardType" Value="LeaderboardType.Doubles">Doubles PUMBILITY</MudSelectItem>
     <MudSelectItem T="LeaderboardType" Value="LeaderboardType.CoOp">Total CoOp Rating</MudSelectItem>
 </MudSelect>
 <br/>
@@ -40,7 +40,7 @@
         </MudTh>
 
         <MudTh>
-            <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => e.Rating)">Rating</MudTableSortLabel>
+            <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => e.Rating)">PUMBILITY</MudTableSortLabel>
         </MudTh>
         @if (_currentType != LeaderboardType.Total)
         {
@@ -332,7 +332,7 @@
             _chartType = null;
             return;
         }
-        var scoringConfig = ScoringConfiguration.PiuScoresRating;
+        var scoringConfig = ScoringConfiguration.PumbilityScoring;
 
         _scores = (await Mediator.Send(new GetTop50CompetitiveQuery(userId, chartType)))
             .Select(s => new ScoreEntry(_charts[s.ChartId], s.Score ?? 0, s.Plate, s.IsBroken,scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false), ScoringConfiguration.CalculateFungScore(_charts[s.ChartId].Level, s.Score ?? 0, _charts[s.ChartId].Type)))
@@ -362,7 +362,7 @@
             _chartType = null;
             return;
         }
-        var scoringConfig = ScoringConfiguration.PiuScoresRating;
+        var scoringConfig = ScoringConfiguration.PumbilityScoring;
 
         _scores = (await Mediator.Send(new GetTop50ForPlayerQuery(userId, chartType)))
             .Select(s => new ScoreEntry(_charts[s.ChartId], s.Score ?? 0, s.Plate, s.IsBroken,scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false),ScoringConfiguration.CalculateFungScore(_charts[s.ChartId].Level,s.Score??0)))

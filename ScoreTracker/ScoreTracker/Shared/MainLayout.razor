@@ -3,6 +3,7 @@
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
+@using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Application.Events
 @using ScoreTracker.Domain.Events
@@ -18,7 +19,7 @@
 <MudThemeProvider Theme="Theme" />
 <MudDialogProvider/>
 <MudSnackbarProvider/>
-
+<ChartVideoDisplay></ChartVideoDisplay>
 <MudLayout>
     <MudAppBar Color="Color.Primary" Fixed="false">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="() => _isOpen = !_isOpen"/>
@@ -63,6 +64,10 @@
                 {
                     <MudNavLink Href=@(_currentMix==MixEnum.Phoenix?"/Phoenix/Progress":"/Progress") Icon="@Icons.Material.Filled.BarChart">@L["Progress Charts"]</MudNavLink>
                     <MudDivider DividerType="DividerType.Middle"></MudDivider>
+                    @if (_currentMix == MixEnum.Phoenix)
+                    {
+                        <MudNavLink Href="/Pumbility" Icon="@Icons.Material.Filled.Star">PUMBILITY</MudNavLink>
+                    }
                 }
             </MudNavGroup>
             <MudDivider DividerType="DividerType.Middle"></MudDivider>

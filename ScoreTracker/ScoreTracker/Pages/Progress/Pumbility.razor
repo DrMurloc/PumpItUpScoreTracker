@@ -1,0 +1,107 @@
+﻿@using MediatR
+@using ScoreTracker.Application.Handlers
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Data.Migrations
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.PersonalProgress.Queries
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@page "/Pumbility"
+
+<MudText Typo="Typo.h6">PUMBILITY</MudText>
+
+<MudGrid>
+
+    @foreach (var group in _tierList.OrderBy(kv => GetTierListOrder(kv.Key)))
+    {
+        <MudItem xs="12">
+            <MudText Typo="Typo.h6">@GetTierListName(group.Key)</MudText>
+        </MudItem>
+
+
+        foreach (var chart in group.Value.Select(c => _charts[c]))
+        {
+
+            <MudItem xs="6" sm="3" md="2">
+
+                <MudCard Class="chart-card">
+                    <MudCardHeader Style=@($"background-image:url(\"{chart.Song.ImagePath}\");")>
+
+                        <DifficultyBubble Chart="chart"></DifficultyBubble>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <ScoreBreakdown Score="_scores[chart.Id].Score!.Value" IsBroken="_scores[chart.Id].IsBroken" Plate="_scores[chart.Id].Plate" Text=@(_ratings[chart.Id].ToString("N0")+" - "+(DateTimeOffset.Now-_scores[chart.Id].RecordedDate).TotalDays.ToString("N0")+" "+@L["Days Old"])></ScoreBreakdown>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudSpacer></MudSpacer>
+                        <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => VideoDisplayer.ShowVideo(chart.Id))"></MudIconButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        
+        }
+    }
+
+</MudGrid>
+
+
+@inject IMediator Mediator
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser;
+@inject ChartVideoDisplayer VideoDisplayer;
+@code {
+
+    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private IDictionary<Guid, RecordedPhoenixScore> _scores = new Dictionary<Guid, RecordedPhoenixScore>();
+    private IDictionary<Guid, int> _ratings = new Dictionary<Guid, int>();
+    private IDictionary<TierListCategory, IEnumerable<Guid>> _tierList = new Dictionary<TierListCategory, IEnumerable<Guid>>();
+
+    private int GetTierListOrder(TierListCategory category) => category switch{
+        TierListCategory.Overrated => 1,
+        TierListCategory.VeryEasy => 2,
+        TierListCategory.Easy => 3,
+        TierListCategory.Medium => 4,
+        TierListCategory.Hard => 5,
+        TierListCategory.VeryHard => 6,
+        TierListCategory.Underrated => 7,
+        TierListCategory.Unrecorded => 8
+        };
+    private string GetTierListName(TierListCategory category) => category switch {
+        TierListCategory.Overrated=>"Extremely High Rating",
+        TierListCategory.VeryEasy=>"Very High Rating",
+        TierListCategory.Easy=>"High Rating",
+        TierListCategory.Medium=>"Standard Rating",
+        TierListCategory.Hard=>"Low Rating",
+        TierListCategory.VeryHard=>"Very Low Rating",
+        TierListCategory.Underrated=>"Extremely High Rating",
+        TierListCategory.Unrecorded => "Runners Up (51-100)",_ => throw new ArgumentOutOfRangeException(nameof(category), category, null)};
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/");
+            return;
+        }
+        var scoring = ScoringConfiguration.PumbilityScoring;
+        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+        _scores = (await Mediator.Send(new GetTop50ForPlayerQuery(CurrentUser.User.Id, null, 100))).ToDictionary(s => s.ChartId);
+        _ratings = _scores.ToDictionary(kv => kv.Key, kv => scoring.GetScore(_charts[kv.Key], kv.Value.Score!.Value, kv.Value.Plate ?? PhoenixPlate.RoughGame, kv.Value.IsBroken));
+        var top50 = _scores.Values.OrderByDescending(s => _ratings[s.ChartId]).Take(50);
+
+        _tierList = TierListSaga.ProcessIntoTierList("PUMBILITY", top50.ToDictionary(s => s.ChartId, s => _ratings[s.ChartId])).GroupBy(t => t.Category)
+
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(e => e.Order).Select(e => e.ChartId).ToArray().AsEnumerable());
+
+        _tierList[TierListCategory.Unrecorded] = _scores.Values.OrderByDescending(s => _ratings[s.ChartId]).Skip(50).Select(s => s.ChartId).ToArray();
+
+
+
+    }
+
+}
