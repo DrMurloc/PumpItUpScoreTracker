@@ -186,7 +186,8 @@ namespace ScoreTracker.Application.Handlers
                 : null;
 
             var scores =
-                (await _officialSite.GetRecordedScores(request.Username, request.Password, request.IncludeBroken, limit,
+                (await _officialSite.GetRecordedScores(_currentUser.User.Id, request.Username, request.Password,
+                    request.IncludeBroken, limit,
                     cancellationToken))
                 .ToArray();
             var count = 0;

@@ -1,0 +1,157 @@
+﻿@page "/WeeklyCharts"
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.ValueTypes
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using MediatR
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Components
+@using Task = System.Threading.Tasks.Task
+@using System.ComponentModel
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using MassTransit
+@using ScoreTracker.Application.Handlers
+@using ScoreTracker.Domain.Events
+@using ScoreTracker.Web.Services
+
+<PageTitle>Weekly Charts</PageTitle>
+
+<MudText>Charts will not be repeated until all charts in the folder are exhausted.</MudText>
+<MudText>You can submit for any chart, but a seperate leaderboard is maintained for players within competitive range of a chart and those much higher or lower level.</MudText>
+<MudText>You can only submit via importing your scores using username/password. It will pull them from your Recently played (last 50 charts played) page.</MudText>
+<MudSwitch Color="Color.Primary" Label="Show Only Competitive Charts For Me" @bind-Value="_showOnlyCompetitive"></MudSwitch>
+
+<MudGrid>
+    @foreach (var entry in ShowingCharts.OrderByDescending(s=>_charts[s.ChartId].Level).ThenBy(s=>_charts[s.ChartId].Type))
+    {
+        var chart = _charts[entry.ChartId];
+        <MudItem xs="6" sm="4" md="3" lg="2" xl="1">
+            
+            <MudCard Class="chart-card">
+                <MudCardHeader Style=@($"background-image:url(\"{chart.Song.ImagePath}\");")>
+                                
+                    <DifficultyBubble Chart="chart"></DifficultyBubble>
+                </MudCardHeader>
+                <MudCardActions>
+                    <MudSpacer></MudSpacer>
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility" OnClick="()=>ShowLeaderboard(chart.Id)"></MudIconButton>
+                    <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => VideoDisplayer.ShowVideo(chart.Id))"></MudIconButton>
+
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+        
+    }
+</MudGrid>
+@if (_showingChartId!=null)
+{
+
+<MudDialog @bind-IsVisible="_showLeaderboard">
+    <DialogContent>
+        <SongImage Song="_charts[_showingChartId.Value].Song"></SongImage>
+        <DifficultyBubble Chart="_charts[_showingChartId.Value]"></DifficultyBubble>
+        @if (_entries.Any())
+        {
+
+
+            <MudTable T="(int,WeeklyTournamentEntry)" Items="_entries.OrderByDescending(s => s.Item1)" Breakpoint="Breakpoint.None" Dense="true">
+                <HeaderContent>
+                    <MudTh>Place</MudTh>
+                    <MudTh>Avatar</MudTh>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Score</MudTh>
+                    <MudTh>In Competitive Range</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Item1</MudTd>
+                    <MudTd>
+
+                        <MudImage Src="@_users[context.Item2.UserId].ProfileImage.ToString()" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+
+                    </MudTd>
+                    <MudTd>@_users[context.Item2.UserId]</MudTd>
+                    <MudTd><ScoreBreakdown Score="context.Item2.Score" Plate="context.Item2.Plate" IsBroken="context.Item2.IsBroken" ShowScore="true"></ScoreBreakdown></MudTd>
+                    <MudTd>
+                        @if (context.Item2.WasWithinRange)
+                        {
+                            <MudIcon Color="Color.Success" Icon="@Icons.Material.Filled.Check"></MudIcon>
+                        }
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+        else
+        {
+            <MudText>No submissions have been received for this chart yet.</MudText>
+        }
+    </DialogContent>
+
+        <DialogActions>
+            <MudSpacer></MudSpacer>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showLeaderboard = false">Close</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+
+@if (_isAdmin)
+{
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+    <MudButton OnClick="Start" Color="Color.Warning" Variant="Variant.Filled">Process Weekly Charts</MudButton>
+}
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser;
+@inject IWeeklyTournamentRepository WeeklyTournaments;
+@inject IUserRepository Users;
+@inject NavigationManager NavManager;
+@inject ChartVideoDisplayer VideoDisplayer;
+@inject IBus Bus;
+@code
+{
+    private bool _isAdmin = false;
+    private bool _showOnlyCompetitive = true;
+    private IEnumerable<WeeklyTournamentChart> ShowingCharts => _showOnlyCompetitive ? _competitiveCharts : _allCharts;
+    private IEnumerable<WeeklyTournamentChart> _competitiveCharts = Array.Empty<WeeklyTournamentChart>();
+    private IEnumerable<WeeklyTournamentChart> _allCharts = Array.Empty<WeeklyTournamentChart>();
+    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private bool _showLeaderboard;
+    private Guid? _showingChartId;
+    private IEnumerable<(int,WeeklyTournamentEntry)> _entries = Array.Empty<(int,WeeklyTournamentEntry)>();
+    private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
+
+    private async Task Start()
+    {
+        await Bus.Publish(new UpdateWeeklyChartsEvent());
+    }
+    private async Task ShowLeaderboard(Guid chartId)
+    {
+        _showingChartId = chartId;
+        _entries = WeeklyTournamentSaga.ProcessIntoPlaces(await WeeklyTournaments.GetEntries(chartId, CancellationToken.None)).ToArray();
+        _users = (await Users.GetUsers(_entries.Select(e => e.Item2.UserId), CancellationToken.None))
+            .ToDictionary(u => u.Id);
+        _showLeaderboard = true;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Login");
+            return;
+        }
+        _isAdmin = CurrentUser.IsLoggedInAsAdmin;
+        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+        _allCharts = await WeeklyTournaments.GetWeeklyCharts(CancellationToken.None);
+        var stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
+        _competitiveCharts = _allCharts.Where(c => _charts[c.ChartId].Type == ChartType.CoOp
+                                                   || (_charts[c.ChartId].Type == ChartType.Single && stats.SinglesCompetitiveLevel > (double)(int)_charts[c.ChartId].Level - 1.01 && stats.SinglesCompetitiveLevel < (double)(int)_charts[c.ChartId].Level + 1.0)
+                                                   || (_charts[c.ChartId].Type == ChartType.Double && stats.DoublesCompetitiveLevel > (double)(int)_charts[c.ChartId].Level - 1.01 && stats.DoublesCompetitiveLevel < (double)(int)_charts[c.ChartId].Level + 1.0))
+            .ToArray();
+
+    }
+}

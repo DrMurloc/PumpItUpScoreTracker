@@ -11,7 +11,8 @@ public interface IOfficialSiteClient
     Task<IEnumerable<UserOfficialLeaderboard>> GetLeaderboardEntries(CancellationToken cancellationToken);
     Task<int> GetScorePageCount(string username, string password, CancellationToken cancellationToken);
 
-    Task<IEnumerable<OfficialRecordedScore>> GetRecordedScores(string username, string password, bool includeBroken,
+    Task<IEnumerable<OfficialRecordedScore>> GetRecordedScores(Guid userId, string username, string password,
+        bool includeBroken,
         int? maxPages,
         CancellationToken cancellationToken);
 

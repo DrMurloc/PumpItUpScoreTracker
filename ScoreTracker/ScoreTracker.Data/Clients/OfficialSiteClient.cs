@@ -2,6 +2,7 @@
 using System.Text.RegularExpressions;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using ScoreTracker.Application.Commands;
 using ScoreTracker.Data.Apis.Contracts;
 using ScoreTracker.Data.Apis.Dtos;
 using ScoreTracker.Domain.Enums;
@@ -23,12 +24,14 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     private readonly IPhoenixRecordRepository _phoenixRecords;
     private readonly IFileUploadClient _fileUpload;
     private readonly IOfficialLeaderboardRepository _leaderboards;
+    private readonly IWeeklyTournamentRepository _weeklyTournies;
 
     public OfficialSiteClient(IPiuGameApi piuGame, IChartRepository charts, ILogger<OfficialSiteClient> logger,
         IMediator mediator,
         ICurrentUserAccessor currentUser,
         IPhoenixRecordRepository phoenixRecords, IFileUploadClient fileUpload,
-        IOfficialLeaderboardRepository leaderboards)
+        IOfficialLeaderboardRepository leaderboards,
+        IWeeklyTournamentRepository weeklyTournies)
     {
         _piuGame = piuGame;
         _charts = charts;
@@ -38,6 +41,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         _phoenixRecords = phoenixRecords;
         _fileUpload = fileUpload;
         _leaderboards = leaderboards;
+        _weeklyTournies = weeklyTournies;
     }
 
     public async Task<IEnumerable<OfficialChartLeaderboardEntry>> GetAllOfficialChartScores(
@@ -115,7 +119,8 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         return imagePath;
     }
 
-    public async Task<IEnumerable<OfficialRecordedScore>> GetRecordedScores(string username, string password,
+    public async Task<IEnumerable<OfficialRecordedScore>> GetRecordedScores(Guid userId, string username,
+        string password,
         bool includeBroken,
         int? maxPages, CancellationToken cancellationToken)
     {
@@ -185,6 +190,8 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         }
 
         var recent = (await _piuGame.GetRecentScores(sessionId, cancellationToken)).ToArray();
+        var weeklyCharts = (await _weeklyTournies.GetWeeklyCharts(cancellationToken)).Select(e => e.ChartId).Distinct()
+            .ToHashSet();
         foreach (var songGroup in recent.GroupBy(s => s.SongName))
         {
             var songName = await GetMappedName(songGroup.Key, cancellationToken);
@@ -199,16 +206,25 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
 
                 if (chart.NoteCount == null)
                     await _charts.UpdateNoteCount(chart.Id, chartGroup.First().NoteCount, cancellationToken);
-                if (chart.Song.Name.ToString().Contains("end of", StringComparison.OrdinalIgnoreCase))
-                {
-                    //
-                }
-
-                if (!includeBroken || results.ContainsKey(chart.Id)) continue;
 
                 var bestScore = chartGroup.Max(s => s.Score);
                 var bestPlate = chartGroup.Max(s => s.Plate);
                 var isBroken = chartGroup.All(s => s.IsBroken);
+                if (weeklyCharts.Contains(chart.Id))
+                    try
+                    {
+                        await _mediator.Send(new RegisterWeeklyChartScore(
+                                new WeeklyTournamentEntry(userId, chart.Id, bestScore, bestPlate, isBroken, false)),
+                            cancellationToken);
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError(e,
+                            $"There was an error when registering leaderboard scores for {userId} on {chart.Song.Name} {chart.DifficultyString}");
+                    }
+
+                if (!includeBroken || results.ContainsKey(chart.Id)) continue;
+
                 results[chart.Id] = new OfficialRecordedScore(chart, bestScore, bestPlate, isBroken);
             }
         }
