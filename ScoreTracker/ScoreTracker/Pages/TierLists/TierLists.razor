@@ -15,6 +15,7 @@
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using System.Drawing
 @using System.Net
+@using ScoreTracker.Web.Services
 <PageTitle>@L["Tier Lists"]</PageTitle>
 
 
@@ -22,7 +23,7 @@
 @inject ICurrentUserAccessor CurrentUser;
 @inject NavigationManager NavManager;
 @inject IUiSettingsAccessor UiSettings;
-
+@inject ChartVideoDisplayer VvideoDisplayer;
 <MudGrid>
     <MudItem xs="12" sm="4">
         <MudSelect T="TierListType" Label=@L["Tier Lists"] Value="_currentTierList" ValueChanged="SetTierList" AdornmentIcon="@Icons.Material.Filled.Topic">
@@ -128,16 +129,16 @@
 @if (_currentTierList == TierListType.CompareToOfficial)
 {
 
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_megaStrongCharts" Name="Mega Strong" OutlineColor="@Colors.Purple.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_megaStrongCharts" Name="Mega Strong" OutlineColor="@Colors.Purple.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
 
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_veryStrongCharts" Name="Very Strong" OutlineColor="@Colors.Purple.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_veryStrongCharts" Name="Very Strong" OutlineColor="@Colors.Purple.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo"OnEdit="EditChart"></TierListSection>
 
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_strongCharts" Name="Strong" OutlineColor="@Colors.Blue.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_averageCharts" Name="Average" OutlineColor="@Colors.Cyan.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_weakCharts" Name="Weak" OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_veryWeakCharts" Name="Very Weak" OutlineColor="@Colors.Yellow.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_megaWeakCharts" Name="Mega Weak" OutlineColor="@Colors.Yellow.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_notRatedCharts" Name=@L.GetString("Not Rated") OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_strongCharts" Name="Strong" OutlineColor="@Colors.Blue.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo"  OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_averageCharts" Name="Average" OutlineColor="@Colors.Cyan.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_weakCharts" Name="Weak" OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo"  OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_veryWeakCharts" Name="Very Weak" OutlineColor="@Colors.Yellow.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo"  OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_megaWeakCharts" Name="Mega Weak" OutlineColor="@Colors.Yellow.Darken1" Passes="_passes"  ToDos="_todos" ToggleToDo="ToggleTodo"  OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_notRatedCharts" Name=@L.GetString("Not Rated") OutlineColor="@Colors.Grey.Darken1" Passes="_passes"  ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
 
 }
 else if (_currentTierList is TierListType.Difficulty or TierListType.MyScores or TierListType.Scores or TierListType.OfficialScores)
@@ -146,37 +147,37 @@ else if (_currentTierList is TierListType.Difficulty or TierListType.MyScores or
     {
         @foreach (var group in _coOpLevels.OrderByDescending(g => g.Key))
         {
-            <TierListSection Type="TierListType.Difficulty" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="group.Value" Name="@group.Key.ToString()" OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+            <TierListSection Type="TierListType.Difficulty" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="group.Value" Name="@group.Key.ToString()" OutlineColor="@Colors.Grey.Darken1" Passes="_passes" OnEdit="EditChart"></TierListSection>
         }
-        <TierListSection Type="TierListType.Difficulty" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_unratedCoOps" Name="Unrated" OutlineCOlor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+        <TierListSection Type="TierListType.Difficulty" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_unratedCoOps" Name="Unrated" OutlineCOlor="@Colors.Grey.Darken1" Passes="_passes" OnEdit="EditChart"></TierListSection>
     }
     else
     {
 
-        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_underratedCharts" Name=@L.GetString("1+ Level Harder") OutlineColor="@Colors.Red.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_veryHardCharts" Name=@L.GetString("Very Hard") OutlineColor="@Colors.Orange.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_hardCharts" Name=@L.GetString("Hard") OutlineColor="@Colors.Yellow.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_mediumCharts" Name=@L.GetString("Medium") OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_easyCharts" Name=@L.GetString("Easy") OutlineColor="@Colors.Cyan.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_veryEasyCharts" Name=@L.GetString("Very Easy") OutlineColor="@Colors.Blue.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_overratedCharts" Name=@L.GetString("1+ Level Easier") OutlineColor="@Colors.Purple.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_notRatedCharts" Name=@L.GetString("Not Rated") OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_underratedCharts" Name=@L.GetString("1+ Level Harder") OutlineColor="@Colors.Red.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
+        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_veryHardCharts" Name=@L.GetString("Very Hard") OutlineColor="@Colors.Orange.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
+        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_hardCharts" Name=@L.GetString("Hard") OutlineColor="@Colors.Yellow.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
+        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_mediumCharts" Name=@L.GetString("Medium") OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
+        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_easyCharts" Name=@L.GetString("Easy") OutlineColor="@Colors.Cyan.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
+        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_veryEasyCharts" Name=@L.GetString("Very Easy") OutlineColor="@Colors.Blue.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
+        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_overratedCharts" Name=@L.GetString("1+ Level Easier") OutlineColor="@Colors.Purple.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
+        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_notRatedCharts" Name=@L.GetString("Not Rated") OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
 
     }
 }
 else
 {
 
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_overratedCharts" Name="SSS" OutlineColor="@Colors.Purple.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_overratedCharts" Name="SSS" OutlineColor="@Colors.Purple.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
 
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_veryEasyCharts" Name="SS" OutlineColor="@Colors.Blue.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_easyCharts" Name="S" OutlineColor="@Colors.Cyan.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_mediumCharts" Name="A"OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_hardCharts" Name="B" OutlineColor="@Colors.Yellow.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_veryHardCharts" Name="C" OutlineColor="@Colors.Orange.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_veryEasyCharts" Name="SS" OutlineColor="@Colors.Blue.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_easyCharts" Name="S" OutlineColor="@Colors.Cyan.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_mediumCharts" Name="A"OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_hardCharts" Name="B" OutlineColor="@Colors.Yellow.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_veryHardCharts" Name="C" OutlineColor="@Colors.Orange.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
 
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_underratedCharts" Name="D" OutlineColor="@Colors.Red.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_notRatedCharts" Name=@L.GetString("Not Rated") OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ShowVideo="ShowVideo" ToDos="_todos" ToggleToDo="ToggleTodo" Videos="_videos" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_underratedCharts" Name="D" OutlineColor="@Colors.Red.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_notRatedCharts" Name=@L.GetString("Not Rated") OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
     
 }
 
@@ -260,23 +261,6 @@ else
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showEditDialog = false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
-<MudDialog @bind-IsVisible="_showVideoDialog">
-    <DialogContent>
-        <iframe class="video"
-                id="chartVideoFrame"
-                src="@(_currentVideo + "?autoplay=1")"
-                allow="autoplay; encrypted-media"
-                allowfullscreen></iframe>
-    </DialogContent>
-
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudTooltip Text=@L["Report Video Tooltip"]>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report" OnClick="NotifyBadVideo">@L["Report Video"]</MudButton>
-        </MudTooltip>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">@L["Close"]</MudButton>
-    </DialogActions>
-</MudDialog>
 <style>
     #SettingsDrawer .mud-drawer-content {
         padding: 15px;
@@ -310,13 +294,9 @@ else
     private int? _averageRating = null;
     private IDictionary<DifficultyLevel, IEnumerable<Chart>> _coOpLevels = new Dictionary<DifficultyLevel, IEnumerable<Chart>>();
     private ICollection<Chart> _unratedCoOps = Array.Empty<Chart>();
-    private IDictionary<Guid, string> _videos = new Dictionary<Guid, string>();
-    private bool _showVideoDialog = false;
     private bool _showEditDialog = false;
     private bool _showSettings = false;
     private string _songFilter = string.Empty;
-    private string _currentVideo = "";
-    private string _currentVideoDescription = string.Empty;
 
     private async Task UpdateRating(Guid chartId, int rating)
     {
@@ -351,11 +331,6 @@ else
             }
         }
         StateHasChanged();
-    }
-    private async Task NotifyBadVideo()
-    {
-        await Notifications.NotifyAdmin($"The video for{_currentVideoDescription} was reported by {(CurrentUser.IsLoggedIn ? CurrentUser.User.Name : "Unknown")}", CancellationToken.None);
-        Snackbar.Add("Notification was sent", Severity.Success);
     }
     private CoOpSortType _coOpSortType = CoOpSortType.Average;
     private ISet<Guid> _passes = new HashSet<Guid>();
@@ -423,13 +398,6 @@ else
         _showEditDialog = true;
         StateHasChanged();
     }
-    private void ShowVideo(string url, Chart chart)
-    {
-        _showVideoDialog = true;
-        _currentVideo = url;
-        _currentVideoDescription = $"{chart.Song.Name} - {chart.DifficultyString}";
-        StateHasChanged();
-    }
     private IDictionary<Guid,RecordedPhoenixScore> _phoenixScores = new Dictionary<Guid, RecordedPhoenixScore>();
 
     private const string TierListTypeKey = "TierLists__CurrentList";
@@ -463,8 +431,6 @@ else
             }));
         }
 
-
-        _videos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl.ToString());
 
         _titleProgress = (await Mediator.Send(new GetTitleProgressQuery(_currentMix))).ToArray();
 

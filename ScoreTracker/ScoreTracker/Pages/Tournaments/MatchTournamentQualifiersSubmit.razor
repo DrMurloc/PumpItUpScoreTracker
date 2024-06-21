@@ -8,6 +8,7 @@
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
 
 <PageTitle>Submit @_tournamentName Qualifiers Session</PageTitle>
 
@@ -60,7 +61,7 @@
                         <DifficultyBubble Chart="chart"></DifficultyBubble>
                         <MudSpacer></MudSpacer>
                         <MudTooltip Text="Open Video">
-                            <MudIconButton Icon="@Icons.Custom.Brands.YouTube" Variant="Variant.Outlined" Color="Color.Primary" OnClick="() => OpenVideo(chart)"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Custom.Brands.YouTube" Variant="Variant.Outlined" Color="Color.Primary" OnClick="() => VideoDisplayer.ShowVideo(chart.Id)"></MudIconButton>
                         </MudTooltip>
 
                         <MudSpacer></MudSpacer>
@@ -223,23 +224,7 @@
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showSubmit = false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
-<MudDialog @bind-IsVisible="_showVideoDialog">
-    <DialogContent>
-        <iframe class="video"
-                id="chartVideoFrame"
-                src="@(_currentVideo + "?autoplay=1")"
-                allow="autoplay; encrypted-media"
-                allowfullscreen></iframe>
-    </DialogContent>
 
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudTooltip Text=@L["Report Video Tooltip"]>
-            <MudButton OnClick="NotifyBadVideo" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report">@L["Report Video"]</MudButton>
-        </MudTooltip>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">@L["Close"]</MudButton>
-    </DialogActions>
-</MudDialog>
 @inject IMediator Mediator
 @inject IQualifiersRepository Qualifiers
 @inject ICurrentUserAccessor CurrentUser
@@ -248,6 +233,7 @@
 @inject ILogger<MatchTournamentQualifiersSubmit> Logger
 @inject IAdminNotificationClient Notifications;
 @inject NavigationManager NavManager;
+@inject ChartVideoDisplayer VideoDisplayer;
 @code
 {
 
@@ -256,7 +242,6 @@
     private Chart? _submittingChart;
     private IEnumerable<(Chart Chart,PhoenixScore Score,double Rating)> MyBest => _currentQualifiers.BestCharts();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
-    private IDictionary<Guid, string> _chartvideos = new Dictionary<Guid, string>();
     private string CardClass(Guid chartId) => MyBest.Any(b=>b.Item1.Id==chartId) ? "border-solid border-2" : 
         _suggestedCharts.Contains(chartId)||
         (_currentQualifiers?.Submissions.ContainsKey(chartId)??false) ? "border-dashed border-2" : string.Empty;
@@ -265,7 +250,6 @@
         _currentQualifiers?.Submissions.ContainsKey(chartId) ?? false ? $"border-color:{Colors.Grey.Darken1}" : string.Empty;
     private bool _showSubmit = false;
     private string _username = string.Empty;
-    private bool _showVideoDialog;
     private bool _isSaving = false;
     private DifficultyLevel _level = 20;
     private bool _isNew = false;
@@ -284,8 +268,6 @@
     private StepCount _maxCombo = 0;
     private ScoreScreen Screen => new ScoreScreen(_perfects, _greats, _goods, _bads, _misses, _maxCombo);
     private PhoenixScore _score = 0;
-    private string _currentVideo;
-    private string _currentVideoDescription;
     private Name _tournamentName = "...";
     private Uri? _photoUrl;
     private ISet<Guid> _suggestedCharts = new HashSet<Guid>();
@@ -299,11 +281,6 @@
 
     private bool _isUploading = false;
     private const long MaxFileSize = 20000000;
-    private async Task NotifyBadVideo()
-    {
-        await Notifications.NotifyAdmin($"The video for{_currentVideoDescription} was reported by {(CurrentUser.IsLoggedIn ? CurrentUser.User.Name : "Unknown")}", CancellationToken.None);
-        Snackbar.Add("Notification was sent",Severity.Success);
-    }
 
     public Guid? GetNextLevel(Guid chartId)
     {
@@ -359,12 +336,6 @@
         }
     }
 
-    private void OpenVideo(Chart chart)
-    {
-        _currentVideo = _chartvideos[chart.Id];
-        _currentVideoDescription = chart.Song.Name + " " + chart.DifficultyString;
-        _showVideoDialog = true;
-    }
     private void Clear()
     {
         _perfects = 0;
@@ -510,7 +481,6 @@
         _tournamentName = tournament.Name;
         _configuration = await Qualifiers.GetQualifiersConfiguration(TournamentId);
 
-        _chartvideos = (await Mediator.Send(new GetChartVideosQuery(_configuration.Charts.Select(c=>c.Id)))).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl.ToString());
         await RefreshLeaderboard();
         if (CurrentUser.IsLoggedIn)
         {

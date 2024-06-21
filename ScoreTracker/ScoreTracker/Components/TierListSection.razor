@@ -6,8 +6,10 @@
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
+@inject ChartVideoDisplayer VideoDisplayer
 @if (Charts.Any())
 {
 
@@ -50,16 +52,9 @@
                         
                         <MudCardActions>
 
-                            @if (Videos.ContainsKey(chart.Id))
-                            {
-                                <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(Videos[chart.Id],chart))"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => VideoDisplayer.ShowVideo(chart.Id))"></MudIconButton>
                              
-                            }
-                            else
-                            {
-                                <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
-                           
-                            }
+                            
                             <MudSpacer></MudSpacer>
                             @if (CurrentUser.IsLoggedIn)
                             {
@@ -118,11 +113,6 @@
 
     [Parameter]
     public ISet<Guid> Passes { get; set; } = new HashSet<Guid>();
-    [Parameter]
-    public IDictionary<Guid, string> Videos { get; set; } = new Dictionary<Guid, string>();
-
-    [Parameter]
-    public Action<string, Chart> ShowVideo { get; set; } = (s,c) => { };
 
     [Parameter]
     public Action<Guid> OnEdit { get; set; } = g => { };

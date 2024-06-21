@@ -13,6 +13,7 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.PersonalProgress.Queries
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Shared
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
@@ -105,16 +106,9 @@
                         <MudSpacer></MudSpacer>
 
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => Edit(chart.Id, key))"></MudIconButton>
-                        @if (_videos.ContainsKey(chart.Id))
-                        {
-                            <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(_videos[chart.Id], chart))"></MudIconButton>
 
-                        }
-                        else
-                        {
-                            <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
+                        <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => VideoDisplayer.ShowVideo(chart.Id))"></MudIconButton>
 
-                        }
 
                     </MudCardActions>
 
@@ -177,23 +171,6 @@
 
     </ApexChart>    
 }
-<MudDialog @bind-IsVisible="_showVideoDialog">
-    <DialogContent>
-        <iframe class="video"
-                id="chartVideoFrame"
-                src="@(_currentVideo + "?autoplay=1")"
-                allow="autoplay; encrypted-media"
-                allowfullscreen></iframe>
-    </DialogContent>
-
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudTooltip Text=@L["Report Video Tooltip"]>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report" OnClick="NotifyBadVideo">@L["Report Video"]</MudButton>
-        </MudTooltip>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">@L["Close"]</MudButton>
-    </DialogActions>
-</MudDialog>
 <MudDialog @bind-IsVisible="_showScoreDialog">
     <DialogContent>
         
@@ -247,7 +224,7 @@
 @inject IAdminNotificationClient Notifications;
 @inject ISnackbar Snackbar;
 @inject IPhoenixRecordRepository PhoenixRecords;
-
+@inject ChartVideoDisplayer VideoDisplayer;
 @code {
 
     private readonly ApexChartOptions<PlayerRatingRecord> _scoreBoxesOptions = new ApexChartOptions<PlayerRatingRecord>()
@@ -262,11 +239,8 @@
         }.ToList()
 
     };
-    private bool _showVideoDialog;
     private bool _showScoreDialog;
     private bool _showRateDialog;
-    private string _currentVideoDescription;
-    private string _currentVideo = string.Empty;
     private Guid? _selectedChart = null;
     private string _category = string.Empty;
     private string _feedbackCategory = string.Empty;
@@ -324,20 +298,7 @@
     private IDictionary<Name, string> _descriptions = new Dictionary<Name, string>();
     private IDictionary<Name, IEnumerable<Chart>> _charts = new Dictionary<Name, IEnumerable<Chart>>();
     private IDictionary<Guid, RecordedPhoenixScore> _scores = new Dictionary<Guid, RecordedPhoenixScore>();
-    private IDictionary<Guid, string> _videos = new Dictionary<Guid, string>();
     private IDictionary<Name, IDictionary<Guid, string>> _details = new Dictionary<Name, IDictionary<Guid, string>>();
-    private void ShowVideo(string url, Chart chart)
-    {
-        _showVideoDialog = true;
-        _currentVideo = url;
-        _currentVideoDescription = $"{chart.Song.Name} - {chart.DifficultyString}";
-        StateHasChanged();
-    }
-    private async Task NotifyBadVideo()
-    {
-        await Notifications.NotifyAdmin($"The video for{_currentVideoDescription} was reported by {(CurrentUser.IsLoggedIn ? CurrentUser.User.Name : "Unknown")}", CancellationToken.None);
-        Snackbar.Add("Notification was sent", Severity.Success);
-    }
 
     private ChartType? _chartType = null;
     private int _levelOffset = 0;
@@ -392,8 +353,7 @@
             .Select(c => _scores[c.Id])
             .ToArray();
         _averageRating = matchingScores.Any() ? (int)matchingScores.Average(s => s.Score!.Value.LetterGrade.GetModifier() * _rating) : 0;
-        _videos=(await Mediator.Send(new GetChartVideosQuery())).ToDictionary(c => c.ChartId,c=>c.VideoUrl.ToString());
-
+        
         _stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
         _playerHistory = await Mediator.Send(new GetPlayerHistoryQuery(CurrentUser.User.Id));
         await RefreshRecommendations();

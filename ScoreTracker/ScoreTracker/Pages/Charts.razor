@@ -12,6 +12,8 @@
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType;
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
+@inject ChartVideoDisplayer VideoDisplayer
 <PageTitle>@L["Charts"]</PageTitle>
 
 <MudGrid>
@@ -274,16 +276,8 @@
         @if (ColumnStatus(ColumnEnum.Video))
         {
             <MudTd>
-                @if (!string.IsNullOrWhiteSpace(context.VideoUrl))
-                {
-                        <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="()=>ShowVideo(context)"></MudIconButton>
+                <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="()=>VideoDisplayer.ShowVideo(context.ChartId)"></MudIconButton>
                   
-                }
-                else
-                {
-                    <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(context)" Target="_blank"></MudIconButton>
-               
-                }
             </MudTd>
         }
         @if (_currentMix==MixEnum.Phoenix && ColumnStatus(ColumnEnum.Overview))
@@ -408,24 +402,6 @@
         <MudTablePager></MudTablePager>
     </PagerContent>
 </MudTable>
-<MudDialog @bind-IsVisible="_showVideoDialog">
-    <DialogContent>
-        <iframe
-            class="video"
-            id="chartVideoFrame"
-            src="@(_currentVideo + "?autoplay=1")"
-            allow="autoplay; encrypted-media"
-            allowfullscreen></iframe>
-    </DialogContent>
-
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudTooltip Text=@L["Report Video Tooltip"]>
-            <MudButton OnClick="NotifyBadVideo" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report">@L["Report Video"]</MudButton>
-        </MudTooltip>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">@L["Close"]</MudButton>
-    </DialogActions>
-</MudDialog>
 <MudDialog @bind-IsVisible="_showShareDialog">
     <DialogContent>
         <MudText>@L["Chart List Share Description"]</MudText>
@@ -459,18 +435,9 @@
 @inject IAdminNotificationClient Notifications;
 @code {
     private bool _showShareDialog;
-    private string _currentVideo = "";
-    private bool _showVideoDialog;
     private bool _showChartOverview = false;
     private Guid? _overViewChart = null;
     private MixEnum _currentMix = MixEnum.Phoenix;
-    private string _currentVideoDescription = string.Empty;
-
-    private async Task NotifyBadVideo()
-    {
-        await Notifications.NotifyAdmin($"The video for{_currentVideoDescription} was reported by {(CurrentUser.IsLoggedIn ? CurrentUser.User.Name : "Unknown")}", CancellationToken.None);
-        Snackbar.Add("Notification was sent",Severity.Success);
-    }
 
     [Parameter]
     public Guid? RequestedUserId { get => _requestedUserId;
@@ -657,12 +624,6 @@
     {
         var searchString = "Pump It Up "+dto.SongName+" "+dto.DifficultyShorthand;
         return $"https://www.youtube.com/results?search_query={searchString.Replace("%","Percent ").Replace(" ", "+")}";
-    }
-    private void ShowVideo(BestAttemptDto dto)
-    {
-        _currentVideo = dto.VideoUrl;
-        _currentVideoDescription = dto.SongName + " " + dto.DifficultyShorthand;
-        _showVideoDialog = true;
     }
     private async Task CopyShareLink()
     {

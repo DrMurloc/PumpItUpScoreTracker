@@ -12,6 +12,7 @@
 @using ScoreTracker.Domain.Exceptions
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
 <PageTitle>Chart Randomizer</PageTitle>
 
 @if (!CurrentUser.IsLoggedIn)
@@ -80,18 +81,9 @@
                 <MudCardMedia Height="300" Image="@chart.Song.ImagePath.ToString()" />
                 <MudCardActions>
 
-                    @if (_videos.ContainsKey(chart.Id))
-                    {
-                        <MudTooltip Text="Open Embeded Video">
-                            <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(chart))"></MudIconButton>
-                        </MudTooltip>
-                    }
-                    else
-                    {
-                        <MudTooltip Text="Open Youtube Search for Chart">
-                            <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
-                        </MudTooltip>
-                    }
+                    <MudTooltip Text="Open Embeded Video">
+                        <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => VideoDisplayer.ShowVideo(chart.Id))"></MudIconButton>
+                    </MudTooltip>
                     @if (!_protectedCharts.Contains(index) && !_vetoedCharts.Contains(index))
                     {
                         <MudTooltip Text="Protect">
@@ -115,23 +107,7 @@
         </MudItem>
     }
 </MudGrid>
-<MudDialog @bind-IsVisible="_showVideoDialog">
-    <DialogContent>
-        <iframe class="video"
-                id="chartVideoFrame"
-                src="@(_currentVideo + "?autoplay=1")"
-                allow="autoplay; encrypted-media"
-                allowfullscreen></iframe>
-    </DialogContent>
 
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudTooltip Text=@L["Report Video Tooltip"]>
-            <MudButton OnClick="NotifyBadVideo" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report">Report Video</MudButton>
-        </MudTooltip>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">Close</MudButton>
-    </DialogActions>
-</MudDialog>
 
 @inject IMediator Mediator
 @inject ISnackbar Snackbar;
@@ -140,6 +116,7 @@
 @inject IAdminNotificationClient Notifications;
 @inject IOptions<JsonSerializerOptions> JsonOptions;
 @inject IMatchRepository Matches;
+@inject ChartVideoDisplayer VideoDisplayer;
 @code {
 
     private string CardStyle(int chartOrder) => _protectedCharts.Contains(chartOrder) ? $@"border-color:{Colors.Green.Darken1}" :
@@ -147,16 +124,12 @@
     private RandomSettings _settings = new RandomSettings();
 
     private int _count = 3;
-    private bool _showVideoDialog = false;
-    private string _currentVideoDescription = string.Empty;
-    private string _currentVideo = string.Empty;
     private string _newSettingsName = string.Empty;
     private string _currentSettings = string.Empty;
     private Chart[] _pulledCharts = Array.Empty<Chart>();
     private Guid? _selectedTournamentId = null;
     private List<int> _protectedCharts = new ();
     private List<int> _vetoedCharts = new();
-    private IDictionary<Guid, string> _videos = new Dictionary<Guid, string>();
     private IDictionary<string, RandomSettings> _savedSettings = new Dictionary<string, RandomSettings>(StringComparer.OrdinalIgnoreCase);
 
     private async Task LoadTournamentSettings(Guid? tournamentId)
@@ -172,11 +145,7 @@
     }
 
     private IDictionary<Guid, Name> _tournamentsWithSettings = new Dictionary<Guid, Name>();
-    private async Task NotifyBadVideo()
-    {
-        await Notifications.NotifyAdmin($"The video for{_currentVideoDescription} was reported by {(CurrentUser.IsLoggedIn?CurrentUser.User.Name:"Unknown")}", CancellationToken.None);
-        Snackbar.Add("Notification was sent", Severity.Success);
-    }
+
 
     private async Task ProtectChart(int order)
     {
@@ -231,12 +200,7 @@
         _pulledCharts = newCharts.ToArray();
         await SaveLastResults();
     }
-    private void ShowVideo(Chart chart)
-    {
-        _currentVideo = _videos[chart.Id];
-        _currentVideoDescription = $"{chart.Song.Name} {chart.DifficultyString}";
-        _showVideoDialog = true;
-    }
+
 
     private async Task SaveLastResults()
     {
@@ -350,8 +314,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-
-        _videos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl.ToString());
         if (CurrentUser.IsLoggedIn)
         {
             _savedSettings = (await Mediator.Send(new GetRandomSettingsQuery())).ToDictionary(r => r.SettingsName.ToString(), r => r.Settings);

@@ -16,9 +16,10 @@
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.PersonalProgress.Queries
+@using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Shared
-
+@inject ChartVideoDisplayer VideoDisplayer
 <PageTitle>Personalized Tier List</PageTitle>
 
 <MudGrid>
@@ -251,14 +252,8 @@
 
                                 }
 
-                                @if (_chartVideos.ContainsKey(chart.Id))
-                                {
-                                    <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowVideo(chart))"></MudIconButton>
-                                }
-                                else
-                                {
-                                    <MudIconButton Icon="@Icons.Material.Filled.Search" Href="@ChartSearch(chart)" Target="_blank"></MudIconButton>
-                                }
+                                <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => VideoDisplayer.ShowVideo(chart.Id))"></MudIconButton>
+                               
                             </MudCardActions>
                         </MudCard>
                     </MudItem>
@@ -336,23 +331,6 @@
         </PagerContent>
     </MudTable>
 }
-<MudDialog @bind-IsVisible="_showVideoDialog">
-    <DialogContent>
-        <iframe class="video"
-                id="chartVideoFrame"
-                src="@(_currentVideo + "?autoplay=1")"
-                allow="autoplay; encrypted-media"
-                allowfullscreen></iframe>
-    </DialogContent>
-
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudTooltip Text=@L["Report Video Tooltip"]>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Report" OnClick="NotifyBadVideo">@L["Report Video"]</MudButton>
-        </MudTooltip>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showVideoDialog=false">@L["Close"]</MudButton>
-    </DialogActions>
-</MudDialog>
 
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
@@ -619,24 +597,8 @@
         _modifiers[category] = modifier;
         await Recalculate();
     }
-    private async Task NotifyBadVideo()
-    {
-        await Notifications.NotifyAdmin($"The video for{_currentVideoDescription} was reported by {(CurrentUser.IsLoggedIn ? CurrentUser.User.Name : "Unknown")}", CancellationToken.None);
-        Snackbar.Add("Notification was sent", Severity.Success);
-    }
 
-    private string _currentVideoDescription = string.Empty;
     private bool _groupByTierList = true;
-    private bool _showVideoDialog = false;
-    private string _currentVideo = string.Empty;
-    private IDictionary<Guid, string> _chartVideos = new Dictionary<Guid, string>();
-    private void ShowVideo(Chart chart)
-    {
-        _showVideoDialog = true;
-        _currentVideo = _chartVideos[chart.Id];
-        _currentVideoDescription = $"{chart.Song.Name} - {chart.DifficultyString}";
-        StateHasChanged();
-    }
 
     private async Task<IEnumerable<SongTierListEntry>> BuildSkillTierList()
     {
@@ -912,7 +874,6 @@
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).
           ToDictionary(c => c.Id);
         _titles = PhoenixTitleList.BuildList();
-        _chartVideos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId, cv => cv.VideoUrl.ToString());
         _chartType = ChartType.Double;
         _level = 18;
         _tierListTypes=new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
