@@ -94,8 +94,7 @@ namespace ScoreTracker.Application.Handlers
             var competitiveLevel = chart.Type == ChartType.Single ? stats.SinglesCompetitiveLevel :
                 chart.Type == ChartType.Double ? stats.DoublesCompetitiveLevel : stats.CompetitiveLevel;
             var isInRange =
-                chart.Type == ChartType.CoOp || ((int)competitiveLevel >= chart.Level - 1.0 &&
-                                                 competitiveLevel <= (int)chart.Level + 1.0);
+                chart.Type == ChartType.CoOp || Math.Abs(competitiveLevel - (int)chart.Level) <= 1.0;
 
             var existingEntry =
                 (await weeklyTournies.GetEntries(request.Entry.ChartId, cancellationToken)).FirstOrDefault(u =>
