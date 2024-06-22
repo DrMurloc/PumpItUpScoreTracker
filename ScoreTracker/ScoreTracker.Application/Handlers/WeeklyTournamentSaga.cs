@@ -117,7 +117,7 @@ namespace ScoreTracker.Application.Handlers
             }
             else
             {
-                await weeklyTournies.SaveEntry(request.Entry, cancellationToken);
+                await weeklyTournies.SaveEntry(request.Entry with { WasWithinRange = isInRange }, cancellationToken);
             }
         }
     }
