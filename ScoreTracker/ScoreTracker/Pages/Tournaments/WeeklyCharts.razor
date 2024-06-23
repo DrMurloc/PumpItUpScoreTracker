@@ -1,18 +1,13 @@
 ﻿@page "/WeeklyCharts"
 @using ScoreTracker.Domain.Models
-@using ScoreTracker.Domain.ValueTypes
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.SecondaryPorts
 @using MediatR
-@using ScoreTracker.Application.Commands
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Web.Components
 @using Task = System.Threading.Tasks.Task
-@using System.ComponentModel
-@using System.Text.Json
-@using System.Text.Json.Serialization
 @using MassTransit
 @using ScoreTracker.Application.Handlers
 @using ScoreTracker.Domain.Events
@@ -68,7 +63,7 @@
         {
 
 
-            <MudTable T="(int,WeeklyTournamentEntry)" Items="_entries.OrderByDescending(s => s.Item1)" Breakpoint="Breakpoint.None" Dense="true">
+            <MudTable T="(int,WeeklyTournamentEntry)" Items="_entries.OrderBy(s => s.Item1)" Breakpoint="Breakpoint.None" Dense="true">
                 <HeaderContent>
                     <MudTh>Place</MudTh>
                     <MudTh>Avatar</MudTh>

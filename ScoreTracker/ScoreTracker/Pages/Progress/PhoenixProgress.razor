@@ -288,7 +288,7 @@
         {
             NavManager.NavigateTo("/Progress");
         }
-        _scores = await Mediator.Send(new GetPhoenixRecordsQuery(RequestedUserId.Value));
+        _scores = (await Mediator.Send(new GetPhoenixRecordsQuery(RequestedUserId.Value))).ToArray();
         var chartScores = _scores.ToDictionary(s => s.ChartId);
         var charts = await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix));
         var coOpCharts = charts.Where(c => c.Type == ChartType.CoOp).ToArray();

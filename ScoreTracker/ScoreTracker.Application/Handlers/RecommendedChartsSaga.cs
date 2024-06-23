@@ -22,9 +22,11 @@ namespace ScoreTracker.Application.Handlers
         private readonly IPlayerStatsRepository _stats;
         private readonly IPhoenixRecordRepository _scores;
         private readonly IChartBountyRepository _bounties;
+        private readonly IWeeklyTournamentRepository _weeklyTournament;
 
         public RecommendedChartsSaga(IMediator mediator, ICurrentUserAccessor currentUser, IUserRepository users,
-            IPlayerStatsRepository stats, IPhoenixRecordRepository scores, IChartBountyRepository bounties)
+            IPlayerStatsRepository stats, IPhoenixRecordRepository scores, IChartBountyRepository bounties,
+            IWeeklyTournamentRepository weeklyTournament)
         {
             _mediator = mediator;
             _currentUser = currentUser;
@@ -32,12 +34,14 @@ namespace ScoreTracker.Application.Handlers
             _stats = stats;
             _scores = scores;
             _bounties = bounties;
+            _weeklyTournament = weeklyTournament;
         }
 
         public async Task<IEnumerable<ChartRecommendation>> Handle(GetRecommendedChartsQuery request,
             CancellationToken cancellationToken)
         {
-            var competitiveLevel = (int)Math.Round((await _stats.GetStats(_currentUser.User.Id, cancellationToken))
+            var playerStats = await _stats.GetStats(_currentUser.User.Id, cancellationToken);
+            var competitiveLevel = (int)Math.Round(playerStats
                 .CompetitiveLevel);
             if (!DifficultyLevel.IsValid(competitiveLevel) || competitiveLevel < 10) competitiveLevel = 10;
 
@@ -52,6 +56,8 @@ namespace ScoreTracker.Application.Handlers
             var charts =
                 (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), cancellationToken)).ToDictionary(c => c.Id);
             return (await GetPushLevels(feedback, cancellationToken, titles, scores, request.ChartType, charts))
+                .Concat(await GetWeeklyCharts(cancellationToken, playerStats.SinglesCompetitiveLevel,
+                    playerStats.DoublesCompetitiveLevel, request.LevelOffset, feedback, request.ChartType, charts))
                 .Concat(await GetPassFills(feedback, cancellationToken, competitiveLevel, scores, request.ChartType,
                     request.LevelOffset, charts))
                 .Concat(await GetSkillTitleCharts(feedback, cancellationToken, titles, request.ChartType, charts))
@@ -74,6 +80,33 @@ namespace ScoreTracker.Application.Handlers
                     result.Add(i + offset);
 
             return result.ToHashSet();
+        }
+
+        private async Task<IEnumerable<ChartRecommendation>> GetWeeklyCharts(CancellationToken cancellationToken,
+            double singlesCompetitive, double doublesCompetitive, int levelOffset,
+            IDictionary<string, ISet<Guid>> ignoredChartIds,
+            ChartType? chartType, IDictionary<Guid, Chart> charts)
+        {
+            var skipped = ignoredChartIds.TryGetValue("Weekly Charts", out var r) ? r : new HashSet<Guid>();
+            var allCharts = await _weeklyTournament.GetWeeklyCharts(cancellationToken);
+            var weeklyCharts = allCharts
+                .Where(c => !skipped.Contains(c.ChartId))
+                .Where(c => charts[c.ChartId].Type == ChartType.CoOp
+                            || (charts[c.ChartId].Type == ChartType.Single &&
+                                Math.Abs(singlesCompetitive -
+                                         (charts[c.ChartId].Level - levelOffset)) <= 1.0)
+                            || (charts[c.ChartId].Type == ChartType.Double &&
+                                Math.Abs(doublesCompetitive -
+                                         (charts[c.ChartId].Level - levelOffset)) <= 1.0))
+                .Select(w => w.ChartId)
+                .Distinct().ToArray();
+            if (chartType != null)
+                weeklyCharts = weeklyCharts.Where(w => charts[w].Type == chartType).Distinct().ToArray();
+
+            return weeklyCharts.OrderByDescending(c => charts[c].Level)
+                .Select(c =>
+                    new ChartRecommendation("Weekly Charts", c,
+                        "Randomized Rotating Weekly Charts With Leaderboards!"));
         }
 
         private async Task<IEnumerable<ChartRecommendation>> GetOldScores(CancellationToken cancellationToken,

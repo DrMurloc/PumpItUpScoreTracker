@@ -66,50 +66,21 @@
         </MudItem>
     }
 </MudGrid>
-@if (_weeklyCharts.Any())
-{
-    
-    <MudGrid>
-        <MudItem xs="12">
-            <MudText Typo="Typo.h4">
-                Weekly Charts
-            </MudText>
-            <MudLink Typo="Typo.subtitle1" Href="/WeeklyCharts">See Leaderboards</MudLink>
-            
-        </MudItem>
-        @foreach (var chart in _weeklyCharts.OrderByDescending(w => _chartDict[w].Level).Select(c=>_chartDict[c]))
-        {
 
-            <MudItem xs="6" sm="3" md="2">
-                <MudCard Class="chart-card">
-                    <MudCardHeader Style=@($"background-image:url(\"{chart.Song.ImagePath}\");")>
-                        <DifficultyBubble Chart="chart"></DifficultyBubble>
-                    </MudCardHeader>
-                    @if (_myEntries.TryGetValue(chart.Id, out var entry))
-                    {
-                        <MudCardContent>
-                            <ScoreBreakdown Score="entry.Score" Plate="entry.Plate" IsBroken="entry.IsBroken" OneLine="true"></ScoreBreakdown>
-                        </MudCardContent>
-                    }
-                    <MudCardActions>
-                        <MudSpacer></MudSpacer>
-                        <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => VideoDisplayer.ShowVideo(chart.Id))"></MudIconButton>
-                    </MudCardActions>
-                </MudCard>
-            </MudItem>
-        }
-    </MudGrid>
-}
 @foreach (var key in _descriptions.Keys)
 {
     <MudGrid>
         <MudItem xs="12">
             <MudText Typo="Typo.h4">
                 <MudTooltip Text="@_descriptions[key]">
-                @key
+                    @key
                 </MudTooltip>
 
             </MudText>
+            @if (key == "Weekly Charts")
+            {
+                <MudLink Typo="Typo.subtitle1" Href="/WeeklyCharts">See Leaderboards</MudLink>
+            }
         </MudItem>
         @foreach (var chart in _charts[key])
         {
@@ -119,7 +90,7 @@
 
                         <DifficultyBubble Chart="chart"></DifficultyBubble>
                     </MudCardHeader>
-                    @if (_scores.TryGetValue(chart.Id, out var score) && score.Score != null)
+                    @if (key!= "WeeklyCharts" && _scores.TryGetValue(chart.Id, out var score) && score.Score != null)
                     {
                         <MudCardContent>
                             <ScoreBreakdown Score="score.Score" IsBroken="score.IsBroken" OneLine="true" ShowScore="true" Plate="score.Plate"></ScoreBreakdown>
@@ -127,6 +98,12 @@
                             {
                                 <MudText>@_details[key][chart.Id]</MudText>
                             }
+                        </MudCardContent>
+                    }
+                    else if (key == "Weekly Charts" && _myEntries.TryGetValue(chart.Id, out var entry))
+                    {
+                        <MudCardContent>
+                            <ScoreBreakdown Score="entry.Score" Plate="entry.Plate" IsBroken="entry.IsBroken" OneLine="true"></ScoreBreakdown>
                         </MudCardContent>
                     }
 
@@ -364,7 +341,6 @@
         _isLoading = false;
     }
 
-    private IEnumerable<Guid> _weeklyCharts = Array.Empty<Guid>();
     private IDictionary<Guid, WeeklyTournamentEntry> _myEntries = new Dictionary<Guid, WeeklyTournamentEntry>();
     protected override async Task OnInitializedAsync()
     {
@@ -394,14 +370,6 @@
         
         _stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
         _playerHistory = await Mediator.Send(new GetPlayerHistoryQuery(CurrentUser.User.Id));
-
-        var allCharts = await WeeklyTournaments.GetWeeklyCharts(CancellationToken.None);
-        var stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
-        _weeklyCharts = allCharts.Where(c => _chartDict[c.ChartId].Type == ChartType.CoOp
-                                                   || (_chartDict[c.ChartId].Type == ChartType.Single && Math.Abs(stats.SinglesCompetitiveLevel - (int)_chartDict[c.ChartId].Level) <= 1.0)
-                                                   || (_chartDict[c.ChartId].Type == ChartType.Double && Math.Abs(stats.DoublesCompetitiveLevel - (int)_chartDict[c.ChartId].Level) <= 1.0))
-            .Select(w=>w.ChartId)
-            .Distinct().ToArray();
 
         _myEntries = (await WeeklyTournaments.GetEntries(null, CancellationToken.None))
             .Where(e => e.UserId == CurrentUser.User.Id)

@@ -40,7 +40,7 @@
         </MudTh>
 
         <MudTh>
-            <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => e.Rating)">PUMBILITY</MudTableSortLabel>
+            <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => e.Rating)">@(_currentType is LeaderboardType.CoOp or LeaderboardType.Total?"Total Rating":"PUMBILITY")</MudTableSortLabel>
         </MudTh>
         @if (_currentType != LeaderboardType.Total)
         {

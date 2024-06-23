@@ -1,5 +1,6 @@
 ﻿using MassTransit;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
@@ -9,9 +10,11 @@ using ScoreTracker.Domain.SecondaryPorts;
 namespace ScoreTracker.Application.Handlers
 {
     public sealed class WeeklyTournamentSaga
-        (IChartRepository charts, IWeeklyTournamentRepository weeklyTournies, IPlayerStatsRepository playerStats) :
-            IConsumer<UpdateWeeklyChartsEvent>,
-            IRequestHandler<RegisterWeeklyChartScore>
+    (IChartRepository charts, IWeeklyTournamentRepository weeklyTournies, IPlayerStatsRepository playerStats,
+        IBotClient bot,
+        ILogger<WeeklyTournamentSaga> logger, IUserRepository users) :
+        IConsumer<UpdateWeeklyChartsEvent>,
+        IRequestHandler<RegisterWeeklyChartScore>
     {
         public async Task Consume(ConsumeContext<UpdateWeeklyChartsEvent> context)
         {
@@ -46,25 +49,44 @@ namespace ScoreTracker.Application.Handlers
                 .ToHashSet();
             var random = new Random();
             var newCharts = new HashSet<Guid>();
-            for (var level = 1; level <= 28; level++)
-                foreach (var chartType in new[] { ChartType.Single, ChartType.Double, ChartType.CoOp })
-                {
-                    var chartsInRange = (await charts.GetCharts(MixEnum.Phoenix, level, chartType,
-                        cancellationToken: context.CancellationToken)).ToArray();
-                    if (!chartsInRange.Any()) continue;
-                    var validCharts = chartsInRange.Where(r => !alreadyPlayed.Contains(r.Id)).ToArray();
-                    if (validCharts.Any())
-                    {
-                        validCharts = chartsInRange;
-                        await weeklyTournies.ClearAlreadyPlayedCharts(chartsInRange.Select(c => c.Id),
-                            context.CancellationToken);
-                    }
+            var chartDict = (await charts.GetCharts(MixEnum.Phoenix, cancellationToken: context.CancellationToken))
+                .ToDictionary(c => c.Id);
+            var buckets = chartDict.Values
+                .Where(c => c.Type == ChartType.CoOp || c.Level >= 10)
+                .GroupBy(c => (c.Level, c.Type))
+                .ToDictionary(g => g.Key, g => g.Select(c => c.Id).Distinct().ToHashSet());
+            //Combine CoOp 4-5 into CoOp 3
+            for (var players = 4; players <= 5; players++)
+            {
+                foreach (var chartId in buckets[(players, ChartType.CoOp)]) buckets[(3, ChartType.CoOp)].Add(chartId);
 
-                    var nextChart = validCharts.OrderBy(r => random.Next(1000)).First();
-                    newCharts.Add(nextChart.Id);
-                    await weeklyTournies.RegisterWeeklyChart(new WeeklyTournamentChart(nextChart.Id, nextExpiration),
+                buckets.Remove((players, ChartType.CoOp));
+            }
+
+            //Move Paradoxx into S25s
+            foreach (var chart in buckets[(26, ChartType.Single)]) buckets[(25, ChartType.Single)].Add(chart);
+
+            buckets.Remove((26, ChartType.Single));
+
+
+            foreach (var bucket in buckets)
+            {
+                var chartsInRange = bucket.Value.Select(c => chartDict[c]).ToArray();
+
+                if (!chartsInRange.Any()) continue;
+                var validCharts = chartsInRange.Where(r => !alreadyPlayed.Contains(r.Id)).ToArray();
+                if (validCharts.Any())
+                {
+                    validCharts = chartsInRange;
+                    await weeklyTournies.ClearAlreadyPlayedCharts(chartsInRange.Select(c => c.Id),
                         context.CancellationToken);
                 }
+
+                var nextChart = validCharts.OrderBy(r => random.Next(1000)).First();
+                newCharts.Add(nextChart.Id);
+                await weeklyTournies.RegisterWeeklyChart(new WeeklyTournamentChart(nextChart.Id, nextExpiration),
+                    context.CancellationToken);
+            }
 
             await weeklyTournies.WriteAlreadyPlayedCharts(newCharts, context.CancellationToken);
         }
@@ -95,10 +117,14 @@ namespace ScoreTracker.Application.Handlers
                 chart.Type == ChartType.Double ? stats.DoublesCompetitiveLevel : stats.CompetitiveLevel;
             var isInRange =
                 chart.Type == ChartType.CoOp || Math.Abs(competitiveLevel - (int)chart.Level) <= 1.0;
-
+            var existingEntries = (await weeklyTournies.GetEntries(request.Entry.ChartId, cancellationToken)).ToArray();
             var existingEntry =
-                (await weeklyTournies.GetEntries(request.Entry.ChartId, cancellationToken)).FirstOrDefault(u =>
+                existingEntries.FirstOrDefault(u =>
                     u.UserId == request.Entry.UserId);
+            var existingPlace = ProcessIntoPlaces(existingEntries.Where(e => e.WasWithinRange || !isInRange))
+                .Where(u => u.Item2.UserId == request.Entry.UserId)
+                .Select(u => (int?)u.Item1).FirstOrDefault();
+
             if (existingEntry != null)
             {
                 if (request.Entry.Score > existingEntry.Score)
@@ -117,7 +143,25 @@ namespace ScoreTracker.Application.Handlers
             }
             else
             {
-                await weeklyTournies.SaveEntry(request.Entry with { WasWithinRange = isInRange }, cancellationToken);
+                existingEntry = request.Entry with { WasWithinRange = isInRange };
+                await weeklyTournies.SaveEntry(existingEntry, cancellationToken);
+            }
+
+            var newPlace = ProcessIntoPlaces(existingEntries.Where(u => u.UserId != request.Entry.UserId)
+                .Append(existingEntry)).First(e => e.Item2.UserId == request.Entry.UserId).Item1;
+            if (existingPlace == null || existingPlace != newPlace)
+            {
+                var user = await users.GetUser(request.Entry.UserId, cancellationToken);
+                try
+                {
+                    await bot.SendMessage(
+                        $"{user.Name} Progressed to {newPlace} on {chart.Song.Name} #DIFFICULTY|{chart.Level}# - {existingEntry.Score} #LETTERGRADE|{existingEntry.Score.LetterGrade}# #PLATE|{existingEntry.Plate}#",
+                        1254418262406725773, cancellationToken);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Couldn't post weekly charts update to discord");
+                }
             }
         }
     }
