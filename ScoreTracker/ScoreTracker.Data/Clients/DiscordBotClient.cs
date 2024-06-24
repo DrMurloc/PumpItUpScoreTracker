@@ -338,7 +338,7 @@ public sealed class DiscordBotClient : IBotClient
                     StringComparison.OrdinalIgnoreCase));
 
             replacedMessage = _brokenLetterGradeEmojis.Aggregate(replacedMessage,
-                (current, letterKv) => current.Replace($"#LETTERGRADE|{letterKv}|True#", letterKv.Value,
+                (current, letterKv) => current.Replace($"#LETTERGRADE|{letterKv.Key}|True#", letterKv.Value,
                     StringComparison.OrdinalIgnoreCase));
 
             replacedMessage = _plateEmojis.Aggregate(replacedMessage,
