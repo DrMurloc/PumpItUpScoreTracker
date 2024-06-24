@@ -90,7 +90,7 @@
 
                         <DifficultyBubble Chart="chart"></DifficultyBubble>
                     </MudCardHeader>
-                    @if (key!= "WeeklyCharts" && _scores.TryGetValue(chart.Id, out var score) && score.Score != null)
+                    @if (key!= "Weekly Charts" && _scores.TryGetValue(chart.Id, out var score) && score.Score != null)
                     {
                         <MudCardContent>
                             <ScoreBreakdown Score="score.Score" IsBroken="score.IsBroken" OneLine="true" ShowScore="true" Plate="score.Plate"></ScoreBreakdown>
@@ -115,9 +115,11 @@
                             </MudTooltip>
                         }
                         <MudSpacer></MudSpacer>
+                        @if (key != "Weekly Charts")
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => Edit(chart.Id, key))"></MudIconButton>
 
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => Edit(chart.Id, key))"></MudIconButton>
-
+                        }
                         <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => VideoDisplayer.ShowVideo(chart.Id))"></MudIconButton>
 
 
