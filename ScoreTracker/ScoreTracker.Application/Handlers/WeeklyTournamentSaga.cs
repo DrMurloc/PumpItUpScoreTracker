@@ -155,7 +155,7 @@ namespace ScoreTracker.Application.Handlers
                 try
                 {
                     await bot.SendMessage(
-                        $"{user.Name} Progressed to {newPlace} on {chart.Song.Name} #DIFFICULTY|{chart.Level}# - {existingEntry.Score} #LETTERGRADE|{existingEntry.Score.LetterGrade}# #PLATE|{existingEntry.Plate}#",
+                        $"{user.Name} Progressed to {newPlace} on {chart.Song.Name} #DIFFICULTY|{chart.DifficultyString}# - {existingEntry.Score} #LETTERGRADE|{existingEntry.Score.LetterGrade}|{existingEntry.IsBroken}# #PLATE|{existingEntry.Plate}#",
                         1254418262406725773, cancellationToken);
                 }
                 catch (Exception e)

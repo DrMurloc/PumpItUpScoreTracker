@@ -227,6 +227,27 @@ public sealed class DiscordBotClient : IBotClient
         { PhoenixLetterGrade.SSSPlus, "<:piu_sssplus:1238541135681552435>" }
     };
 
+    private readonly IDictionary<PhoenixLetterGrade, string> _brokenLetterGradeEmojis =
+        new Dictionary<PhoenixLetterGrade, string>
+        {
+            { PhoenixLetterGrade.F, "<:piu_f_broken:1238540776993198203>" },
+            { PhoenixLetterGrade.D, "<:piu_d_broken:1238540672706019420>" },
+            { PhoenixLetterGrade.C, "<:piu_c_broken:1238540631534469293>" },
+            { PhoenixLetterGrade.B, "<:piu_b_broken:1238540629471006855>" },
+            { PhoenixLetterGrade.A, "<:piu_a_broken:1238540429956354159>" },
+            { PhoenixLetterGrade.APlus, "<:piu_aplus_broken:1238540627830898758>" },
+            { PhoenixLetterGrade.AA, "<:piu_aa_broken:1238540432699559936>" },
+            { PhoenixLetterGrade.AAPlus, "<:piu_aaplus_broken:1238540440232394813>" },
+            { PhoenixLetterGrade.AAA, "<:piu_aaa_broken:1238540434402447420>" },
+            { PhoenixLetterGrade.AAAPlus, "<:piu_aaaplus_broken:1238540437665611837>" },
+            { PhoenixLetterGrade.S, "<:piu_s_broken:1238540966109904906>" },
+            { PhoenixLetterGrade.SPlus, "<:piu_splus_broken:1238540843334242408>" },
+            { PhoenixLetterGrade.SS, "<:piu_ss_broken:1238541131130732564>" },
+            { PhoenixLetterGrade.SSPlus, "<:piu_ssplus_broken:1238541132976230402>" },
+            { PhoenixLetterGrade.SSS, "<:piu_sss_broken:1238541134758674583>" },
+            { PhoenixLetterGrade.SSSPlus, "<:piu_sssplus_broken:1238541136545714196>" }
+        };
+
     private readonly IDictionary<PhoenixPlate, string> _plateEmojis = new Dictionary<PhoenixPlate, string>
     {
         {
@@ -313,6 +334,11 @@ public sealed class DiscordBotClient : IBotClient
         {
             var replacedMessage = _letterGradeEmojis.Aggregate(message,
                 (current, letterKv) => current.Replace($"#LETTERGRADE|{letterKv.Key}#", letterKv.Value,
+                    StringComparison.OrdinalIgnoreCase).Replace("#LETTERGRADE|{letterKv.Key}|false#", letterKv.Value,
+                    StringComparison.OrdinalIgnoreCase));
+
+            replacedMessage = _brokenLetterGradeEmojis.Aggregate(message,
+                (current, letterKv) => current.Replace($"#LETTERGRADE|{letterKv}|true#", letterKv.Value,
                     StringComparison.OrdinalIgnoreCase));
 
             replacedMessage = _plateEmojis.Aggregate(replacedMessage,

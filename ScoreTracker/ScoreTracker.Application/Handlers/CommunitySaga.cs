@@ -296,7 +296,7 @@ namespace ScoreTracker.Application.Handlers
                 {
                     var crown = top50.Contains(chart.Id) ? " :crown:" : "";
                     message += $@"
-#DIFFICULTY|{chart.DifficultyString}#{crown} {chart.Song.Name}: {(int)scores[chart.Id].Score!.Value:N0} #LETTERGRADE|{scores[chart.Id].Score!.Value.LetterGrade}##PLATE|{scores[chart.Id].Plate}#";
+#DIFFICULTY|{chart.DifficultyString}#{crown} {chart.Song.Name}: {(int)scores[chart.Id].Score!.Value:N0} #LETTERGRADE|{scores[chart.Id].Score!.Value.LetterGrade}|{scores[chart.Id].IsBroken}##PLATE|{scores[chart.Id].Plate}#";
                 }
 
                 if (count > 10)
@@ -345,10 +345,10 @@ And {count - 10} others!";
                     var oldLetter = PhoenixScore.From(item.Value).LetterGrade;
                     if (oldLetter != scores[item.Item1.Id].Score!.Value.LetterGrade)
                         message +=
-                            $"#LETTERGRADE|{oldLetter}# > ";
+                            $"#LETTERGRADE|{oldLetter}|{scores[item.Item1.Id].IsBroken}# > ";
 
                     message +=
-                        $"#LETTERGRADE|{scores[item.Item1.Id].Score!.Value.LetterGrade}##PLATE|{scores[item.Item1.Id].Plate}#";
+                        $"#LETTERGRADE|{scores[item.Item1.Id].Score!.Value.LetterGrade}|{scores[item.Item1.Id].IsBroken}##PLATE|{scores[item.Item1.Id].Plate}#";
                 }
             }
 
