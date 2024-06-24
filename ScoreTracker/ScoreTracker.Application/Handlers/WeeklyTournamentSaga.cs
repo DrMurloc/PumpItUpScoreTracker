@@ -138,7 +138,7 @@ namespace ScoreTracker.Application.Handlers
 
                 if (!request.Entry.WasWithinRange && isInRange)
                     existingEntry = existingEntry with { WasWithinRange = true };
-
+                existingEntry = existingEntry with { PhotoUrl = request.Entry.PhotoUrl };
                 await weeklyTournies.SaveEntry(existingEntry, cancellationToken);
             }
             else

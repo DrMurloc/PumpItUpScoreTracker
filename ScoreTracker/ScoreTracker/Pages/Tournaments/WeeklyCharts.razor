@@ -9,13 +9,14 @@
 @using ScoreTracker.Web.Components
 @using Task = System.Threading.Tasks.Task
 @using MassTransit
+@using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Handlers
 @using ScoreTracker.Domain.Events
+@using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Web.Services
 
 <PageTitle>Weekly Charts</PageTitle>
 
-<MudText>You can only submit via importing your scores using username/password. It will pull them from your Recently played (last 50 charts played) page.</MudText>
 <MudText>Charts will not be repeated until all charts in the folder are exhausted.</MudText>
 <MudText>You can submit for any chart, but a separate leaderboard is maintained for players within competitive range of a chart and those much higher or lower level.</MudText>
 <MudSwitch T="bool" Color="Color.Primary" Label="Show Only Competitive Charts For Me" Value="_showOnlyCompetitive" ValueChanged="v=>SetShowOnlyCompetitive(v)"></MudSwitch>
@@ -31,12 +32,20 @@
                                 
                     <DifficultyBubble Chart="chart"></DifficultyBubble>
                 </MudCardHeader>
-                @if (_myScores.TryGetValue(entry.ChartId, out var score) && _myPlaces.TryGetValue(entry.ChartId, out var place))
-                {
-                    <MudCardContent>
-                        <ScoreBreakdown Score="score.Score" Plate="score.Plate" Text=@($"{place} Place")></ScoreBreakdown>
-                    </MudCardContent>
-                }
+                <MudCardContent>
+                    @if (_topPlaces.TryGetValue(entry.ChartId, out var top))
+                    {
+                        @foreach (var topEntry in top)
+                        {
+                            <ScoreBreakdown Score="topEntry.Item2.Score" Plate="topEntry.Item2.Plate" Text=@($"{topEntry.Item1}. {_users[topEntry.Item2.UserId].Name}")></ScoreBreakdown>
+                        }
+                        
+                        @if (!top.Any(t=>t.Item2.UserId==_userId)&&_myScores.TryGetValue(entry.ChartId, out var score) && _myPlaces.TryGetValue(entry.ChartId, out var place))
+                        {
+                            <ScoreBreakdown Score="score.Score" Plate="score.Plate" Text=@($"{place}. {_userName}")></ScoreBreakdown>
+                        }
+                    }
+                </MudCardContent>
                 <MudCardActions>
                     <MudSpacer></MudSpacer>
                     @if (_counts.TryGetValue(entry.ChartId,out var count) && count>0)
@@ -44,6 +53,7 @@
                         
                         <MudIconButton Icon="@Icons.Material.Filled.Visibility" OnClick="()=>ShowLeaderboard(chart.Id)"></MudIconButton>
                     }
+                    <MudIconButton Icon="@Icons.Material.Filled.UploadFile" OnClick=@(()=>OpenSubmitDialog(entry.ChartId))></MudIconButton>
                     <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => VideoDisplayer.ShowVideo(chart.Id))"></MudIconButton>
 
                 </MudCardActions>
@@ -51,7 +61,67 @@
         </MudItem>
         
     }
+
 </MudGrid>
+@if (_submittingChartId != null)
+{
+    <MudDialog @bind-IsVisible="_showSubmitDialog">
+        <DialogContent>
+            <MudGrid>
+                <MudItem xs="12">
+                    <SongImage Song="_charts[_submittingChartId.Value].Song"></SongImage>
+                    <DifficultyBubble Chart="_charts[_submittingChartId.Value]"></DifficultyBubble>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.subtitle1" Color="Color.Warning">Importing with Username/Password auto-submits from your recent scores, you do not need to use this manual submission.</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="5">
+                    <MudNumericField T="int" Min="0" Max="1000000" Label=@L["Score"] @bind-Value="_score"></MudNumericField>
+                </MudItem>
+                <MudItem xs="12" sm="3">
+                    <MudSelect T="PhoenixPlate" Label=@L["Plate"] @bind-Value="_plate">
+                        @foreach (var plate in Enum.GetValues<PhoenixPlate>())
+                        {
+                            <MudSelectItem T="PhoenixPlate" Value="plate">@plate.GetName()</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudCheckBox Label=@L["Broken"] @bind-Value="_isBroken"></MudCheckBox>
+                </MudItem>
+                <MudItem xs="6" sm="3">
+                    <MudFileUpload T="IBrowserFile" Disabled="_isUploading" Accept=".png, .gif, .jpg, .jpeg," MaximumFileCount="1" FilesChanged="UploadFiles">
+                        <ButtonTemplate>
+                            <MudButton HtmlTag="label"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.CloudUpload"
+                                       for="@context">
+                                @L["Upload Image"]
+                            </MudButton>
+                        </ButtonTemplate>
+                    </MudFileUpload>
+                </MudItem>
+                <MudItem xs="6" sm="9">
+                    @if (_isUploading)
+                    {
+                        <MudImage></MudImage>
+                        <MudProgressCircular Indeterminate="true" Color="Color.Primary"></MudProgressCircular>
+                    }
+                    @if (_uploadedPhoto != null)
+                    {
+                        <MudImage Src=@_uploadedPhoto.ToString() Height=50 ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                    }
+                </MudItem>
+            </MudGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudSpacer></MudSpacer>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="Submit" Disabled="_score<=0 || _uploadedPhoto==null || _isSaving">Submit</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showSubmitDialog = false">Close</MudButton>
+</DialogActions>
+    </MudDialog>
+}
 @if (_showingChartId!=null)
 {
 
@@ -115,35 +185,94 @@
 @inject NavigationManager NavManager;
 @inject ChartVideoDisplayer VideoDisplayer;
 @inject IBus Bus;
+@inject ISnackbar Snackbar;
+@inject IFileUploadClient FileUpload;
+@inject ILogger<WeeklyCharts> Logger;
 @code
 {
     private bool _isAdmin = false;
     private bool _showOnlyCompetitive = true;
+    private int _score;
     private IEnumerable<WeeklyTournamentChart> ShowingCharts => _showOnlyCompetitive ? _competitiveCharts : _allCharts;
     private IEnumerable<WeeklyTournamentChart> _competitiveCharts = Array.Empty<WeeklyTournamentChart>();
     private IEnumerable<WeeklyTournamentChart> _allCharts = Array.Empty<WeeklyTournamentChart>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private bool _showLeaderboard;
     private Guid? _showingChartId;
+    private Guid? _submittingChartId;
+    private Uri? _uploadedPhoto;
+    private PhoenixPlate _plate = PhoenixPlate.RoughGame;
+    private bool _isBroken = false;
+    private bool _isUploading = false;
+    private bool _showSubmitDialog = false;
+    private bool _isSaving = false;
+    private void OpenSubmitDialog(Guid chartId)
+    {
+        _submittingChartId = chartId;
+        _showSubmitDialog = true;
+    }
+    private Name _userName = "Unknown";
+    private Guid _userId = Guid.Empty;
     private IEnumerable<(int,WeeklyTournamentEntry)> _entries = Array.Empty<(int,WeeklyTournamentEntry)>();
     private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
     private IDictionary<Guid, IEnumerable<WeeklyTournamentEntry>> _allEntries = new Dictionary<Guid, IEnumerable<WeeklyTournamentEntry>>();
     private IDictionary<Guid, WeeklyTournamentEntry> _myScores = new Dictionary<Guid, WeeklyTournamentEntry>();
     private IDictionary<Guid, int> _myPlaces = new Dictionary<Guid, int>();
+    private IDictionary<Guid, IEnumerable<(int, WeeklyTournamentEntry)>> _topPlaces = new Dictionary<Guid, IEnumerable<(int, WeeklyTournamentEntry)>>();
     private IDictionary<Guid, int> _counts = new Dictionary<Guid, int>();
     private async Task Start()
     {
         await Bus.Publish(new UpdateWeeklyChartsEvent());
     }
-    private async Task ShowLeaderboard(Guid chartId)
+
+    private async Task Submit()
+    {
+        if (_submittingChartId == null || _uploadedPhoto == null)
+        {
+            return;
+        }
+        _isSaving = true;
+        await Mediator.Send(new RegisterWeeklyChartScore(new WeeklyTournamentEntry(_userId, _submittingChartId.Value, _score, _plate, _isBroken, false, _uploadedPhoto)));
+        _submittingChartId = null;
+        Snackbar.Add("Submitted!",Severity.Success);
+        _isSaving = false;
+        await ReprocessLeaderboards();
+        
+    }
+    private void ShowLeaderboard(Guid chartId)
     {
         _showingChartId = chartId;
         _entries = WeeklyTournamentSaga.ProcessIntoPlaces(_allEntries[chartId]).ToArray();
-        _users = (await Users.GetUsers(_entries.Select(e => e.Item2.UserId), CancellationToken.None))
-            .ToDictionary(u => u.Id);
         _showLeaderboard = true;
     }
+        private const long MaxFileSize = 10000000;
+    private async Task UploadFiles(IBrowserFile file)
+    {
+        if (_submittingChartId == null)
+        {
+            return;
+        }
+        if (file.Size > MaxFileSize)
+        {
+            Snackbar.Add($"Your file was more than 20MB, please reduce your file size and try again.", Severity.Error);
+            return;
+        }
 
+        _isUploading = true;
+        try
+        {
+            var path = $"weeklyCharts/User{_userId}/Chart{_submittingChartId}/{Guid.NewGuid()}.{file.Name.Split('.')[^1]}";
+            _uploadedPhoto= await FileUpload.UploadFile(path, file.OpenReadStream(MaxFileSize));
+
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add($"There was an error while uploading your image, please try again. If the problem persists contact DrMurloc", Severity.Error);
+            Logger.LogError(e, $"There was an error while uploading a photo: {e.Message} - {file.Name} {file.Size}");
+        }
+        _isUploading = false;
+
+    }
     private void SetShowOnlyCompetitive(bool newValue)
     {
         _showOnlyCompetitive = newValue;
@@ -153,6 +282,20 @@
         {
             _myPlaces[entry.Key] = WeeklyTournamentSaga.ProcessIntoPlaces(_allEntries[entry.Key]).Where(e => e.Item2.UserId == CurrentUser.User.Id).Select(e => e.Item1).First();
         }
+        _topPlaces = _allEntries.ToDictionary(kv => kv.Key, kv => WeeklyTournamentSaga.ProcessIntoPlaces(kv.Value.Where(v => v.WasWithinRange || !_showOnlyCompetitive))
+            .OrderBy(g => g.Item1).Take(3).ToArray().AsEnumerable());
+    }
+
+    private async Task ReprocessLeaderboards()
+    {
+        _allEntries = (await WeeklyTournaments.GetEntries(null, CancellationToken.None)).GroupBy(e => e.ChartId).ToDictionary(e => e.Key, e => e.ToArray().AsEnumerable());
+        _myScores = _allEntries.Select(kv => kv.Value.FirstOrDefault(v => v.UserId == CurrentUser.User.Id))
+            .Where(v => v != null)
+            .ToDictionary(e => e!.ChartId, e => e!);
+        _users = (await Users.GetUsers(_allEntries.Values.SelectMany(g => g.Select(e => e.UserId)).Distinct().ToArray(), CancellationToken.None))
+            .ToDictionary(u => u.Id);
+        
+        SetShowOnlyCompetitive(_showOnlyCompetitive);
     }
     protected override async Task OnInitializedAsync()
     {
@@ -161,6 +304,8 @@
             NavManager.NavigateTo("/Login");
             return;
         }
+        _userId = CurrentUser.User.Id;
+        _userName = CurrentUser.User.Name;
         _isAdmin = CurrentUser.IsLoggedInAsAdmin;
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
         _allCharts = await WeeklyTournaments.GetWeeklyCharts(CancellationToken.None);
@@ -170,11 +315,8 @@
                                                    || (_charts[c.ChartId].Type == ChartType.Double && Math.Abs(stats.DoublesCompetitiveLevel - (int)_charts[c.ChartId].Level) <= 1.0))
             .ToArray();
 
-        _allEntries = (await WeeklyTournaments.GetEntries(null, CancellationToken.None)).GroupBy(e => e.ChartId).ToDictionary(e => e.Key, e => e.ToArray().AsEnumerable());
-        _myScores = _allEntries.Select(kv => kv.Value.FirstOrDefault(v => v.UserId == CurrentUser.User.Id))
-            .Where(v => v != null)
-            .ToDictionary(e => e!.ChartId, e => e!);
-        SetShowOnlyCompetitive(true);
+        await ReprocessLeaderboards();
 
     }
+
 }

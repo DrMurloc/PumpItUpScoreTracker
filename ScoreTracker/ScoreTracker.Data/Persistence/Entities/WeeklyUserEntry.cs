@@ -17,5 +17,6 @@ namespace ScoreTracker.Data.Persistence.Entities
         public string Plate { get; set; } = string.Empty;
         public bool IsBroken { get; set; }
         public bool WasWithinRange { get; set; }
+        [MaxLength(256)] public string? Photo { get; set; }
     }
 }

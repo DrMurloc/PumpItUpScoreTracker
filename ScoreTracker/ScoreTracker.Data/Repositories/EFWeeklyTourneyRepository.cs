@@ -91,7 +91,8 @@ namespace ScoreTracker.Data.Repositories
             if (chartId != null) query = query.Where(w => w.ChartId == chartId);
 
             return (await query.ToArrayAsync(cancellationToken)).Select(q => new WeeklyTournamentEntry(q.UserId,
-                q.ChartId, q.Score, Enum.Parse<PhoenixPlate>(q.Plate), q.IsBroken, q.WasWithinRange));
+                q.ChartId, q.Score, Enum.Parse<PhoenixPlate>(q.Plate), q.IsBroken, q.WasWithinRange,
+                q.Photo == null ? null : new Uri(q.Photo, UriKind.Absolute)));
         }
 
         public async Task SaveEntry(WeeklyTournamentEntry entry, CancellationToken cancellationToken)
@@ -108,6 +109,7 @@ namespace ScoreTracker.Data.Repositories
                     Plate = entry.Plate.ToString(),
                     Score = entry.Score,
                     UserId = entry.UserId,
+                    Photo = entry.PhotoUrl?.ToString(),
                     WasWithinRange = entry.WasWithinRange
                 }, cancellationToken);
             }
@@ -117,6 +119,7 @@ namespace ScoreTracker.Data.Repositories
                 entity.Score = entry.Score;
                 entity.WasWithinRange = entry.WasWithinRange;
                 entity.IsBroken = entry.IsBroken;
+                entity.Photo = entry.PhotoUrl?.ToString();
             }
 
             await database.SaveChangesAsync(cancellationToken);

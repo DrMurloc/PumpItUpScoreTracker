@@ -1425,6 +1425,10 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<bool>("IsBroken")
                         .HasColumnType("bit");
 
+                    b.Property<string>("Photo")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
                     b.Property<string>("Plate")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");

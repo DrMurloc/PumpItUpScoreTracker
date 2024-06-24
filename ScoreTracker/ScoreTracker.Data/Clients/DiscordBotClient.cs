@@ -334,11 +334,11 @@ public sealed class DiscordBotClient : IBotClient
         {
             var replacedMessage = _letterGradeEmojis.Aggregate(message,
                 (current, letterKv) => current.Replace($"#LETTERGRADE|{letterKv.Key}#", letterKv.Value,
-                    StringComparison.OrdinalIgnoreCase).Replace("#LETTERGRADE|{letterKv.Key}|false#", letterKv.Value,
+                    StringComparison.OrdinalIgnoreCase).Replace($"#LETTERGRADE|{letterKv.Key}|False#", letterKv.Value,
                     StringComparison.OrdinalIgnoreCase));
 
-            replacedMessage = _brokenLetterGradeEmojis.Aggregate(message,
-                (current, letterKv) => current.Replace($"#LETTERGRADE|{letterKv}|true#", letterKv.Value,
+            replacedMessage = _brokenLetterGradeEmojis.Aggregate(replacedMessage,
+                (current, letterKv) => current.Replace($"#LETTERGRADE|{letterKv}|True#", letterKv.Value,
                     StringComparison.OrdinalIgnoreCase));
 
             replacedMessage = _plateEmojis.Aggregate(replacedMessage,
