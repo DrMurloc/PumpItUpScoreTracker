@@ -96,9 +96,21 @@ namespace ScoreTracker.Application.Handlers
             {
                 var newSettings = request.Settings with
                 {
-                    ChartTypeMinimums = new Dictionary<ChartType, int?>(),
                     Count = typeMinimum.Value!.Value
                 };
+
+                newSettings.ClearLevelWeights();
+                if (typeMinimum.Key == ChartType.Single)
+                    newSettings.LevelWeights = request.Settings.LevelWeights.ToDictionary();
+
+                if (typeMinimum.Key == ChartType.Double)
+                    newSettings.DoubleLevelWeights = request.Settings.DoubleLevelWeights.ToDictionary();
+
+                if (typeMinimum.Key == ChartType.CoOp)
+                    newSettings.PlayerCountWeights = request.Settings.PlayerCountWeights.ToDictionary();
+                newSettings.ClearChartTypeLevelMinimums();
+                newSettings.ClearLevelMinimums();
+                newSettings.ClearChartTypeMinimums();
                 var result = await Handle(new GetRandomChartsQuery(newSettings), cancellationToken);
                 results.AddRange(result);
             }
@@ -107,13 +119,18 @@ namespace ScoreTracker.Application.Handlers
             {
                 var newSettings = request.Settings with
                 {
-                    LevelMinimums = new Dictionary<int, int?>(),
                     Count = levelMinimum.Value!.Value,
-                    LevelWeights = DifficultyLevel.All.ToDictionary(t => (int)t, t => t == levelMinimum.Key ? 1 : 0),
-
-                    DoubleLevelWeights =
-                    DifficultyLevel.All.ToDictionary(t => (int)t, t => t == levelMinimum.Key ? 1 : 0)
+                    LevelWeights = request.Settings.LevelWeights.ToDictionary(kv => kv.Key,
+                        kv => kv.Value > 0 && kv.Key == levelMinimum.Key ? 1 : 0),
+                    DoubleLevelWeights = request.Settings.DoubleLevelWeights.ToDictionary(kv => kv.Key,
+                        kv => kv.Value > 0 && kv.Key == levelMinimum.Key ? 1 : 0),
+                    PlayerCountWeights = request.Settings.PlayerCountWeights.ToDictionary(kv => kv.Key,
+                        kv => kv.Value > 0 && kv.Key == levelMinimum.Key ? 1 : 0)
                 };
+
+                newSettings.ClearChartTypeLevelMinimums();
+                newSettings.ClearLevelMinimums();
+                newSettings.ClearChartTypeMinimums();
                 var result = await Handle(new GetRandomChartsQuery(newSettings), cancellationToken);
                 results.AddRange(result);
             }
@@ -123,15 +140,23 @@ namespace ScoreTracker.Application.Handlers
                 var (chartType, level) = DifficultyLevel.ParseShortHand(clMinimum.Key);
                 var newSettings = request.Settings with
                 {
-                    ChartTypeLevelMinimums = new Dictionary<string, int?>(),
                     Count = clMinimum.Value!.Value
                 };
+                newSettings.ClearLevelWeights();
+                newSettings.ClearChartTypeLevelMinimums();
+                newSettings.ClearLevelMinimums();
+                newSettings.ClearChartTypeMinimums();
                 if (chartType == ChartType.Single)
                     newSettings.LevelWeights = DifficultyLevel.All.ToDictionary(t => (int)t, t => t == level ? 1 : 0);
+
 
                 if (chartType == ChartType.Double)
                     newSettings.DoubleLevelWeights =
                         DifficultyLevel.All.ToDictionary(t => (int)t, t => t == level ? 1 : 0);
+
+                if (chartType == ChartType.CoOp)
+                    newSettings.PlayerCountWeights =
+                        newSettings.PlayerCountWeights.ToDictionary(kv => kv.Key, kv => kv.Key == level ? 1 : 0);
                 var result = await Handle(new GetRandomChartsQuery(newSettings), cancellationToken);
                 results.AddRange(result);
             }

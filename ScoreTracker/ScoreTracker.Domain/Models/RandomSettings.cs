@@ -13,6 +13,14 @@ namespace ScoreTracker.Domain.Models
         public IDictionary<SongType, int> SongTypeWeights { get; set; } =
             Enum.GetValues<SongType>().ToDictionary(t => t, t => 0);
 
+        public void ClearLevelWeights()
+        {
+            LevelWeights = LevelWeights.ToDictionary(kv => kv.Key, kv => 0);
+
+            DoubleLevelWeights = DoubleLevelWeights.ToDictionary(kv => kv.Key, kv => 0);
+            PlayerCountWeights = PlayerCountWeights.ToDictionary(kv => kv.Key, kv => 0);
+        }
+
         public void ClearChartTypeMinimums()
         {
             ChartTypeMinimums =
