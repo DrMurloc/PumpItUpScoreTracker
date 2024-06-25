@@ -18,7 +18,7 @@
 <PageTitle>Weekly Charts</PageTitle>
 
 <MudText>Charts will not be repeated until all charts in the folder are exhausted.</MudText>
-<MudText>You can submit for any chart, but a separate leaderboard is maintained for players within competitive range of a chart and those much higher or lower level.</MudText>
+<MudText>You can submit for any chart, but a separate leaderboard is maintained for players that aren't significantly (2 levels) above a chart's difficulty.</MudText>
 <MudSwitch T="bool" Color="Color.Primary" Label="Show Only Competitive Charts For Me" Value="_showOnlyCompetitive" ValueChanged="v=>SetShowOnlyCompetitive(v)"></MudSwitch>
 
 <MudGrid>
@@ -38,6 +38,7 @@
                         @foreach (var topEntry in top)
                         {
                             <ScoreBreakdown Score="topEntry.Item2.Score" Plate="topEntry.Item2.Plate" Text=@($"{topEntry.Item1}. {_users[topEntry.Item2.UserId].Name}")></ScoreBreakdown>
+                            <br/>
                         }
                         
                         @if (!top.Any(t=>t.Item2.UserId==_userId)&&_myScores.TryGetValue(entry.ChartId, out var score) && _myPlaces.TryGetValue(entry.ChartId, out var place))
@@ -311,8 +312,8 @@
         _allCharts = await WeeklyTournaments.GetWeeklyCharts(CancellationToken.None);
         var stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
         _competitiveCharts = _allCharts.Where(c => _charts[c.ChartId].Type == ChartType.CoOp
-                                                   || (_charts[c.ChartId].Type == ChartType.Single && Math.Abs(stats.SinglesCompetitiveLevel - (int)_charts[c.ChartId].Level) <= 1.0)
-                                                   || (_charts[c.ChartId].Type == ChartType.Double && Math.Abs(stats.DoublesCompetitiveLevel - (int)_charts[c.ChartId].Level) <= 1.0))
+                                                   || (_charts[c.ChartId].Type == ChartType.Single && stats.SinglesCompetitiveLevel - 2.0<_charts[c.ChartId].Level)
+                                                   || (_charts[c.ChartId].Type == ChartType.Double && stats.DoublesCompetitiveLevel - 2.0 < _charts[c.ChartId].Level))
             .ToArray();
 
         await ReprocessLeaderboards();
