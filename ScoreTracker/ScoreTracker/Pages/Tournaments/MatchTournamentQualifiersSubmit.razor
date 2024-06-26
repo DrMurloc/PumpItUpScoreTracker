@@ -85,18 +85,7 @@
 @if (_currentQualifiers != null)
 {
     <MudGrid>
-        @if (_currentPlace != null)
-        {
-            <MudItem xs="12">
-                <MudText>@L["You are X place!",_currentPlace]</MudText>
-            </MudItem>
-            @if (_nextPlace != null)
-            {
-                <MudItem xs="12">
-                    <MudText>@L["Next Place Count",$"{_nextPlace.CalculateScore()-_currentQualifiers.CalculateScore():0.00}"]</MudText>
-                </MudItem>
-            }
-        }
+
         @foreach (var entry in _currentQualifiers.Submissions.OrderByDescending(s=>_currentQualifiers.Rating(s.Key)))
         {
 
