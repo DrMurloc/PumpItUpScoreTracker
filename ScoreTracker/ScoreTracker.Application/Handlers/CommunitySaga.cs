@@ -26,7 +26,8 @@ namespace ScoreTracker.Application.Handlers
         IRequestHandler<GetPhoenixRecordsForCommunityQuery, IEnumerable<UserPhoenixScore>>,
         IConsumer<PlayerRatingsImprovedEvent>,
         IConsumer<PlayerScoreUpdatedEvent>,
-        IConsumer<NewTitlesAcquiredEvent>
+        IConsumer<NewTitlesAcquiredEvent>,
+        IConsumer<UserWeeklyChartsProgressedEvent>
 
     {
         private readonly ICurrentUserAccessor _currentUser;
@@ -428,6 +429,18 @@ And {count - 10} others!";
         {
             var community = await GetCommunity(request.CommuityName, cancellationToken);
             return await _scores.GetPhoenixScores(community.MemberIds, request.ChartId, cancellationToken);
+        }
+
+        public async Task Consume(ConsumeContext<UserWeeklyChartsProgressedEvent> context)
+        {
+            var user = await _users.GetUser(context.Message.UserId, context.CancellationToken) ??
+                       throw new Exception("User not found");
+            var chart = await _charts.GetChart(MixEnum.Phoenix, context.Message.ChartId) ??
+                        throw new ChartNotFoundException();
+
+            await SendToCommunityDiscords(context.Message.UserId,
+                $"{user.Name} progressed to {context.Message.Place} on {chart.Song} {chart.Song.Name} #DIFFICULTY|{chart.DifficultyString}# - {context.Message.Score} #LETTERGRADE|{context.Message.Score.LetterGrade}|{context.Message.IsBroken}# #PLATE|{context.Message.Plate}#",
+                context.CancellationToken);
         }
     }
 }

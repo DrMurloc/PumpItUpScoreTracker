@@ -38,13 +38,13 @@
                     {
                         @foreach (var topEntry in top)
                         {
-                            <ScoreBreakdown Score="topEntry.Item2.Score" Plate="topEntry.Item2.Plate" Text=@($"{topEntry.Item1}. {_users[topEntry.Item2.UserId].Name}")></ScoreBreakdown>
+                            <ScoreBreakdown Score="topEntry.Item2.Score" Plate="topEntry.Item2.Plate" IsBroken="topEntry.Item2.IsBroken" Text=@($"{topEntry.Item1}. {_users[topEntry.Item2.UserId].Name}")></ScoreBreakdown>
                             <br/>
                         }
                         
                         @if (!top.Any(t=>t.Item2.UserId==_userId)&&_myScores.TryGetValue(entry.ChartId, out var score) && _myPlaces.TryGetValue(entry.ChartId, out var place))
                         {
-                            <ScoreBreakdown Score="score.Score" Plate="score.Plate" Text=@($"{place}. {_userName}")></ScoreBreakdown>
+                            <ScoreBreakdown Score="score.Score" Plate="score.Plate" IsBroken="score.IsBroken" Text=@($"{place}. {_userName}")></ScoreBreakdown>
                         }
                     }
                 </MudCardContent>

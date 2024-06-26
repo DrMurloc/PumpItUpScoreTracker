@@ -13,7 +13,7 @@ namespace ScoreTracker.Application.Handlers
     public sealed class WeeklyTournamentSaga
     (IChartRepository charts, IWeeklyTournamentRepository weeklyTournies, IPlayerStatsRepository playerStats,
         IBotClient bot,
-        ILogger<WeeklyTournamentSaga> logger, IUserRepository users) :
+        ILogger<WeeklyTournamentSaga> logger, IUserRepository users, IBus bus) :
         IConsumer<UpdateWeeklyChartsEvent>,
         IRequestHandler<RegisterWeeklyChartScore>
     {
@@ -161,6 +161,8 @@ namespace ScoreTracker.Application.Handlers
                     await bot.SendMessage(
                         $"{user.Name} Progressed to {newPlace} on {chart.Song.Name} #DIFFICULTY|{chart.DifficultyString}# - {existingEntry.Score} #LETTERGRADE|{existingEntry.Score.LetterGrade}|{existingEntry.IsBroken}# #PLATE|{existingEntry.Plate}#",
                         1254418262406725773, cancellationToken);
+                    await bus.Publish(new UserWeeklyChartsProgressedEvent(user.Id, chart.Id, existingEntry.Score,
+                        existingEntry.Plate, existingEntry.IsBroken, newPlace), cancellationToken);
                 }
                 catch (Exception e)
                 {
