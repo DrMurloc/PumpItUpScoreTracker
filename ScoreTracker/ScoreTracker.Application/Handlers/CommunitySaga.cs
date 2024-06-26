@@ -439,7 +439,7 @@ And {count - 10} others!";
                         throw new ChartNotFoundException();
 
             await SendToCommunityDiscords(context.Message.UserId,
-                $"{user.Name} progressed to {context.Message.Place} on {chart.Song.Name} {chart.Song.Name} #DIFFICULTY|{chart.DifficultyString}# - {context.Message.Score:N0} #LETTERGRADE|{PhoenixScore.From(context.Message.Score).LetterGrade)}|{context.Message.IsBroken}# #PLATE|{context.Message.Plate}#",
+                $"{user.Name} progressed to {context.Message.Place} on {chart.Song.Name} {chart.Song.Name} #DIFFICULTY|{chart.DifficultyString}# - {context.Message.Score:N0} #LETTERGRADE|{PhoenixScore.From(context.Message.Score).LetterGrade}|{context.Message.IsBroken}# #PLATE|{context.Message.Plate}#",
                 context.CancellationToken);
         }
     }
