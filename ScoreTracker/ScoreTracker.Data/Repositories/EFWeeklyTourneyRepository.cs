@@ -47,7 +47,7 @@ namespace ScoreTracker.Data.Repositories
                 Place = h.Place,
                 Score = h.Score,
                 UserId = h.UserId,
-                WasWithinRange = h.WasWithinRange
+                CompetitiveLevel = h.CompetitiveLevel
             }), cancellationToken);
             await database.SaveChangesAsync(cancellationToken);
         }
@@ -91,8 +91,8 @@ namespace ScoreTracker.Data.Repositories
             if (chartId != null) query = query.Where(w => w.ChartId == chartId);
 
             return (await query.ToArrayAsync(cancellationToken)).Select(q => new WeeklyTournamentEntry(q.UserId,
-                q.ChartId, q.Score, Enum.Parse<PhoenixPlate>(q.Plate), q.IsBroken, q.WasWithinRange,
-                q.Photo == null ? null : new Uri(q.Photo, UriKind.Absolute)));
+                q.ChartId, q.Score, Enum.Parse<PhoenixPlate>(q.Plate), q.IsBroken,
+                q.Photo == null ? null : new Uri(q.Photo, UriKind.Absolute), q.CompetitiveLevel));
         }
 
         public async Task SaveEntry(WeeklyTournamentEntry entry, CancellationToken cancellationToken)
@@ -110,14 +110,14 @@ namespace ScoreTracker.Data.Repositories
                     Score = entry.Score,
                     UserId = entry.UserId,
                     Photo = entry.PhotoUrl?.ToString(),
-                    WasWithinRange = entry.WasWithinRange
+                    CompetitiveLevel = entry.CompetitiveLevel
                 }, cancellationToken);
             }
             else
             {
                 entity.Plate = entry.Plate.ToString();
                 entity.Score = entry.Score;
-                entity.WasWithinRange = entry.WasWithinRange;
+                entity.CompetitiveLevel = entry.CompetitiveLevel;
                 entity.IsBroken = entry.IsBroken;
                 entity.Photo = entry.PhotoUrl?.ToString();
             }

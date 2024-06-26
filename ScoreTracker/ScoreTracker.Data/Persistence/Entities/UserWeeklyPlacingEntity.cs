@@ -16,6 +16,7 @@ namespace ScoreTracker.Data.Persistence.Entities
         public int Place { get; set; }
         public DateTimeOffset ObtainedDate { get; set; }
         public bool WasWithinRange { get; set; }
+        public double CompetitiveLevel { get; set; }
         public int Score { get; set; }
         [MaxLength(32)] public string Plate { get; set; }
         public bool IsBroken { get; set; }

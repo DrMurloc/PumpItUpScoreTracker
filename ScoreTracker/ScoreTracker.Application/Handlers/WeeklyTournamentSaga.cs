@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
@@ -30,17 +31,11 @@ namespace ScoreTracker.Application.Handlers
             var scores = await weeklyTournies.GetEntries(null, context.CancellationToken);
             foreach (var chartGroup in scores.GroupBy(s => s.ChartId))
             {
-                var inRangeLeaderboard = ProcessIntoPlaces(chartGroup.Where(c => c.WasWithinRange)).ToArray();
+                var inRangeLeaderboard = ProcessIntoPlaces(chartGroup).ToArray();
                 await weeklyTournies.WriteHistories(
                     inRangeLeaderboard.Select(e => new UserTourneyHistory(e.Item2.UserId, e.Item2.ChartId, now, e.Item1,
-                        true,
+                        e.Item2.CompetitiveLevel,
                         e.Item2.Score, e.Item2.Plate, e.Item2.IsBroken)), context.CancellationToken);
-                var existing = inRangeLeaderboard.Select(e => e.Item2.UserId).Distinct().ToHashSet();
-                var totalLeaderboard = ProcessIntoPlaces(chartGroup);
-                await weeklyTournies.WriteHistories(
-                    totalLeaderboard.Where(e => !existing.Contains(e.Item2.UserId)).Select(e =>
-                        new UserTourneyHistory(e.Item2.UserId, e.Item2.ChartId, now, e.Item1, false,
-                            e.Item2.Score, e.Item2.Plate, e.Item2.IsBroken)), context.CancellationToken);
             }
 
             await weeklyTournies.ClearTheBoard(context.CancellationToken);
@@ -102,6 +97,17 @@ namespace ScoreTracker.Application.Handlers
             }
         }
 
+        public static IEnumerable<Chart> GetSuggestedCharts(IEnumerable<Chart> chart, double doublesCompetitive,
+            double singlesCompetitive)
+        {
+            var baseDoubles = (int)Math.Floor(doublesCompetitive);
+            var baseSingles = (int)Math.Floor(singlesCompetitive);
+            return chart.Where(c => c.Type == ChartType.CoOp ||
+                                    ((c.Type == ChartType.Double ? baseDoubles :
+                                         c.Type == ChartType.Single ? baseSingles : baseDoubles) >= c.Level - 1 &&
+                                     (c.Type == ChartType.Double ? baseDoubles :
+                                         c.Type == ChartType.Single ? baseSingles : baseDoubles) <= c.Level + 2));
+        }
         public async Task Handle(RegisterWeeklyChartScore request, CancellationToken cancellationToken)
         {
             var weeklyCharts = (await weeklyTournies.GetWeeklyCharts(cancellationToken)).Select(c => c.ChartId)
@@ -115,13 +121,12 @@ namespace ScoreTracker.Application.Handlers
             var stats = await playerStats.GetStats(request.Entry.UserId, cancellationToken);
             var competitiveLevel = chart.Type == ChartType.Single ? stats.SinglesCompetitiveLevel :
                 chart.Type == ChartType.Double ? stats.DoublesCompetitiveLevel : stats.CompetitiveLevel;
-            var isInRange =
-                chart.Type == ChartType.CoOp || competitiveLevel -2.0<=(double)(int)chart.Level;
+            
             var existingEntries = (await weeklyTournies.GetEntries(request.Entry.ChartId, cancellationToken)).ToArray();
             var existingEntry =
                 existingEntries.FirstOrDefault(u =>
                     u.UserId == request.Entry.UserId);
-            var existingPlace = ProcessIntoPlaces(existingEntries.Where(e => e.WasWithinRange || !isInRange))
+            var existingPlace = ProcessIntoPlaces(existingEntries)
                 .Where(u => u.Item2.UserId == request.Entry.UserId)
                 .Select(u => (int?)u.Item1).FirstOrDefault();
 
@@ -136,14 +141,13 @@ namespace ScoreTracker.Application.Handlers
                 if (!request.Entry.IsBroken && existingEntry.IsBroken)
                     existingEntry = existingEntry with { IsBroken = false };
 
-                if (!request.Entry.WasWithinRange && isInRange)
-                    existingEntry = existingEntry with { WasWithinRange = true };
+                existingEntry = existingEntry with { CompetitiveLevel = competitiveLevel };
                 existingEntry = existingEntry with { PhotoUrl = request.Entry.PhotoUrl };
                 await weeklyTournies.SaveEntry(existingEntry, cancellationToken);
             }
             else
             {
-                existingEntry = request.Entry with { WasWithinRange = isInRange };
+                existingEntry = request.Entry with { CompetitiveLevel = competitiveLevel };
                 await weeklyTournies.SaveEntry(existingEntry, cancellationToken);
             }
 

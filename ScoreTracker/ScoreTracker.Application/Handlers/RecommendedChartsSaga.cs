@@ -89,23 +89,15 @@ namespace ScoreTracker.Application.Handlers
         {
             var skipped = ignoredChartIds.TryGetValue("Weekly Charts", out var r) ? r : new HashSet<Guid>();
             var allCharts = await _weeklyTournament.GetWeeklyCharts(cancellationToken);
-            var weeklyCharts = allCharts
-                .Where(c => !skipped.Contains(c.ChartId))
-                .Where(c => charts[c.ChartId].Type == ChartType.CoOp
-                            || (charts[c.ChartId].Type == ChartType.Single &&
-                                Math.Abs(singlesCompetitive -
-                                         (charts[c.ChartId].Level - levelOffset)) <= 1.0)
-                            || (charts[c.ChartId].Type == ChartType.Double &&
-                                Math.Abs(doublesCompetitive -
-                                         (charts[c.ChartId].Level - levelOffset)) <= 1.0))
-                .Select(w => w.ChartId)
-                .Distinct().ToArray();
+            var weeklyCharts = WeeklyTournamentSaga.GetSuggestedCharts(allCharts
+                    .Where(c => !skipped.Contains(c.ChartId)).Select(c => charts[c.ChartId]), doublesCompetitive,
+                singlesCompetitive).ToArray();
             if (chartType != null)
-                weeklyCharts = weeklyCharts.Where(w => charts[w].Type == chartType).Distinct().ToArray();
+                weeklyCharts = weeklyCharts.Where(w => w.Type == chartType).Distinct().ToArray();
 
-            return weeklyCharts.OrderByDescending(c => charts[c].Level)
+            return weeklyCharts.OrderByDescending(c => c.Level)
                 .Select(c =>
-                    new ChartRecommendation("Weekly Charts", c,
+                    new ChartRecommendation("Weekly Charts", c.Id,
                         "Randomized Rotating Weekly Charts With Leaderboards!"));
         }
 

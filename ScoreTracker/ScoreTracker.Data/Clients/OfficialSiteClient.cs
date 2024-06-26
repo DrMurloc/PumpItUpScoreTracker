@@ -214,8 +214,8 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
                     try
                     {
                         await _mediator.Send(new RegisterWeeklyChartScore(
-                                new WeeklyTournamentEntry(userId, chart.Id, bestScore, bestPlate, isBroken, false,
-                                    null)),
+                                new WeeklyTournamentEntry(userId, chart.Id, bestScore, bestPlate, isBroken,
+                                    null, 10.0)),
                             cancellationToken);
                     }
                     catch (Exception e)

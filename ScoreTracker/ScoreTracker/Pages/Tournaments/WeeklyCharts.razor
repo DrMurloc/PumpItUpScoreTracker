@@ -19,7 +19,7 @@
 
 <MudText>Charts will not be repeated until all charts in the folder are exhausted.</MudText>
 <MudText>You can submit for any chart, but a separate leaderboard is maintained for players that aren't significantly (2 levels) above a chart's difficulty.</MudText>
-<MudSwitch T="bool" Color="Color.Primary" Label="Show Only Competitive Charts For Me" Value="_showOnlyCompetitive" ValueChanged="v=>SetShowOnlyCompetitive(v)"></MudSwitch>
+<MudSwitch T="bool" Color="Color.Primary" Label="Show Only Suggested Charts" Value="_showOnlyCompetitive" ValueChanged="v=>SetShowOnlyCompetitive(v)"></MudSwitch>
 
 <MudGrid>
     @foreach (var entry in ShowingCharts.OrderByDescending(s=>_charts[s.ChartId].Level).ThenBy(s=>_charts[s.ChartId].Type))
@@ -140,7 +140,7 @@
                     <MudTh>Avatar</MudTh>
                     <MudTh>Name</MudTh>
                     <MudTh>Score</MudTh>
-                    <MudTh>In Competitive Range</MudTh>
+                    <MudTh>Player Level</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd>@context.Item1</MudTd>
@@ -150,10 +150,7 @@
                     <MudTd>@_users[context.Item2.UserId].Name</MudTd>
                     <MudTd><ScoreBreakdown Score="context.Item2.Score" Plate="context.Item2.Plate" IsBroken="context.Item2.IsBroken" ShowScore="true"></ScoreBreakdown></MudTd>
                     <MudTd>
-                        @if (context.Item2.WasWithinRange)
-                        {
-                            <MudIcon Color="Color.Success" Icon="@Icons.Material.Filled.Check"></MudIcon>
-                        }
+                        @context.Item2.CompetitiveLevel.ToString("N2")
                     </MudTd>
                 </RowTemplate>
             </MudTable>
@@ -233,7 +230,7 @@
             return;
         }
         _isSaving = true;
-        await Mediator.Send(new RegisterWeeklyChartScore(new WeeklyTournamentEntry(_userId, _submittingChartId.Value, _score, _plate, _isBroken, false, _uploadedPhoto)));
+        await Mediator.Send(new RegisterWeeklyChartScore(new WeeklyTournamentEntry(_userId, _submittingChartId.Value, _score, _plate, _isBroken, _uploadedPhoto,10.0)));
         _submittingChartId = null;
         Snackbar.Add("Submitted!",Severity.Success);
         _isSaving = false;
@@ -274,22 +271,26 @@
         _isUploading = false;
 
     }
+
+    private double _doublesCompetitive = 10.0;
+    private double _singlesCompetitive = 10.0;
     private void SetShowOnlyCompetitive(bool newValue)
     {
         _showOnlyCompetitive = newValue;
         _myPlaces.Clear();
-        _counts = _allEntries.ToDictionary(kv => kv.Key, kv => kv.Value.Count(e => e.WasWithinRange || !_showOnlyCompetitive));
-        foreach (var entry in _myScores.Where(kv => kv.Value.WasWithinRange || !_showOnlyCompetitive))
+        _counts = _allEntries.ToDictionary(kv => kv.Key, kv => kv.Value.Count());
+        foreach (var entry in _myScores)
         {
             _myPlaces[entry.Key] = WeeklyTournamentSaga.ProcessIntoPlaces(_allEntries[entry.Key]).Where(e => e.Item2.UserId == CurrentUser.User.Id).Select(e => e.Item1).First();
         }
-        _topPlaces = _allEntries.ToDictionary(kv => kv.Key, kv => WeeklyTournamentSaga.ProcessIntoPlaces(kv.Value.Where(v => v.WasWithinRange || !_showOnlyCompetitive))
+        _topPlaces = _allEntries.ToDictionary(kv => kv.Key, kv => WeeklyTournamentSaga.ProcessIntoPlaces(kv.Value)
             .OrderBy(g => g.Item1).Take(3).ToArray().AsEnumerable());
     }
 
     private async Task ReprocessLeaderboards()
     {
         _allEntries = (await WeeklyTournaments.GetEntries(null, CancellationToken.None)).GroupBy(e => e.ChartId).ToDictionary(e => e.Key, e => e.ToArray().AsEnumerable());
+        
         _myScores = _allEntries.Select(kv => kv.Value.FirstOrDefault(v => v.UserId == CurrentUser.User.Id))
             .Where(v => v != null)
             .ToDictionary(e => e!.ChartId, e => e!);
@@ -309,12 +310,11 @@
         _userName = CurrentUser.User.Name;
         _isAdmin = CurrentUser.IsLoggedInAsAdmin;
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
-        _allCharts = await WeeklyTournaments.GetWeeklyCharts(CancellationToken.None);
+        _allCharts = (await WeeklyTournaments.GetWeeklyCharts(CancellationToken.None)).ToArray();
+        var entryDict = _allCharts.ToDictionary(c => c.ChartId);
         var stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
-        _competitiveCharts = _allCharts.Where(c => _charts[c.ChartId].Type == ChartType.CoOp
-                                                   || (_charts[c.ChartId].Type == ChartType.Single && stats.SinglesCompetitiveLevel - 2.0<_charts[c.ChartId].Level)
-                                                   || (_charts[c.ChartId].Type == ChartType.Double && stats.DoublesCompetitiveLevel - 2.0 < _charts[c.ChartId].Level))
-            .ToArray();
+        _competitiveCharts = WeeklyTournamentSaga.GetSuggestedCharts(_allCharts.Select(c => _charts[c.ChartId]), stats.DoublesCompetitiveLevel, stats.SinglesCompetitiveLevel)
+            .Select(c => entryDict[c.Id]).ToArray();
 
         await ReprocessLeaderboards();
 

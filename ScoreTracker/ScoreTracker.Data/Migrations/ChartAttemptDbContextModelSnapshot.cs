@@ -1317,6 +1317,9 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<Guid>("ChartId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<double>("CompetitiveLevel")
+                        .HasColumnType("float");
+
                     b.Property<bool>("IsBroken")
                         .HasColumnType("bit");
 
@@ -1421,6 +1424,9 @@ namespace ScoreTracker.Data.Migrations
 
                     b.Property<Guid>("ChartId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("CompetitiveLevel")
+                        .HasColumnType("float");
 
                     b.Property<bool>("IsBroken")
                         .HasColumnType("bit");
