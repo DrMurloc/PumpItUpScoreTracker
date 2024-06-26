@@ -17,7 +17,10 @@
 
 <PageTitle>Weekly Charts</PageTitle>
 
-<MudSwitch T="bool" Color="Color.Primary" Label="Show Only Suggested Charts" Value="_showOnlyCompetitive" ValueChanged="v=>SetShowOnlyCompetitive(v)"></MudSwitch>
+@if (_isLoggedIn)
+{
+    <MudSwitch T="bool" Color="Color.Primary" Label="Show Only Suggested Charts" Value="_showOnlyCompetitive" ValueChanged="v=>SetShowOnlyCompetitive(v)"></MudSwitch>
+}
 
 <MudGrid>
     @foreach (var entry in ShowingCharts.OrderByDescending(s=>_charts[s.ChartId].Level).ThenBy(s=>_charts[s.ChartId].Type))
@@ -52,7 +55,10 @@
                         
                         <MudIconButton Icon="@Icons.Material.Filled.Visibility" OnClick="()=>ShowLeaderboard(chart.Id)"></MudIconButton>
                     }
-                    <MudIconButton Icon="@Icons.Material.Filled.UploadFile" OnClick=@(()=>OpenSubmitDialog(entry.ChartId))></MudIconButton>
+                    @if (_isLoggedIn)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.UploadFile" OnClick=@(()=>OpenSubmitDialog(entry.ChartId))></MudIconButton>
+                    }
                     <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => VideoDisplayer.ShowVideo(chart.Id))"></MudIconButton>
 
                 </MudCardActions>
@@ -277,9 +283,13 @@
         _showOnlyCompetitive = newValue;
         _myPlaces.Clear();
         _counts = _allEntries.ToDictionary(kv => kv.Key, kv => kv.Value.Count());
-        foreach (var entry in _myScores)
+        @if (_isLoggedIn)
         {
-            _myPlaces[entry.Key] = WeeklyTournamentSaga.ProcessIntoPlaces(_allEntries[entry.Key]).Where(e => e.Item2.UserId == CurrentUser.User.Id).Select(e => e.Item1).First();
+            
+            foreach (var entry in _myScores)
+            {
+                _myPlaces[entry.Key] = WeeklyTournamentSaga.ProcessIntoPlaces(_allEntries[entry.Key]).Where(e => e.Item2.UserId == _userId).Select(e => e.Item1).First();
+            }
         }
         _topPlaces = _allEntries.ToDictionary(kv => kv.Key, kv => WeeklyTournamentSaga.ProcessIntoPlaces(kv.Value)
             .OrderBy(g => g.Item1).Take(3).ToArray().AsEnumerable());
@@ -288,31 +298,43 @@
     private async Task ReprocessLeaderboards()
     {
         _allEntries = (await WeeklyTournaments.GetEntries(null, CancellationToken.None)).GroupBy(e => e.ChartId).ToDictionary(e => e.Key, e => e.ToArray().AsEnumerable());
-        
-        _myScores = _allEntries.Select(kv => kv.Value.FirstOrDefault(v => v.UserId == CurrentUser.User.Id))
-            .Where(v => v != null)
-            .ToDictionary(e => e!.ChartId, e => e!);
+
+        if (_isLoggedIn)
+        {
+            _myScores = _allEntries.Select(kv => kv.Value.FirstOrDefault(v => v.UserId == _userId))
+                .Where(v => v != null)
+                .ToDictionary(e => e!.ChartId, e => e!);
+        }
+
         _users = (await Users.GetUsers(_allEntries.Values.SelectMany(g => g.Select(e => e.UserId)).Distinct().ToArray(), CancellationToken.None))
             .ToDictionary(u => u.Id);
         
         SetShowOnlyCompetitive(_showOnlyCompetitive);
     }
+
+    private bool _isLoggedIn = false;
     protected override async Task OnInitializedAsync()
     {
-        if (!CurrentUser.IsLoggedIn)
-        {
-            NavManager.NavigateTo("/Login");
-            return;
-        }
-        _userId = CurrentUser.User.Id;
-        _userName = CurrentUser.User.Name;
+        _isLoggedIn = CurrentUser.IsLoggedIn;
         _isAdmin = CurrentUser.IsLoggedInAsAdmin;
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
         _allCharts = (await WeeklyTournaments.GetWeeklyCharts(CancellationToken.None)).ToArray();
-        var entryDict = _allCharts.ToDictionary(c => c.ChartId);
-        var stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
-        _competitiveCharts = WeeklyTournamentSaga.GetSuggestedCharts(_allCharts.Select(c => _charts[c.ChartId]), stats.DoublesCompetitiveLevel, stats.SinglesCompetitiveLevel)
-            .Select(c => entryDict[c.Id]).ToArray();
+        if(_isLoggedIn)
+        {
+            
+            _userId = CurrentUser.User.Id;
+            _userName = CurrentUser.User.Name; var entryDict = _allCharts.ToDictionary(c => c.ChartId);
+            var stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
+            _competitiveCharts = WeeklyTournamentSaga.GetSuggestedCharts(_allCharts.Select(c => _charts[c.ChartId]), stats.DoublesCompetitiveLevel, stats.SinglesCompetitiveLevel)
+                .Select(c => entryDict[c.Id]).ToArray();
+            _showOnlyCompetitive = true;
+        }
+        else
+        {
+            _competitiveCharts = _allCharts;
+            _showOnlyCompetitive = false;
+        }
+       
 
         await ReprocessLeaderboards();
 
