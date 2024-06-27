@@ -49,14 +49,14 @@
 @foreach (var progress in Titles.Where(t => t.IsComplete && t is PhoenixTitleProgress {RequiredAaCount: > 0 }).Cast<PhoenixTitleProgress>())
 {
     <MudItem xs="12" sm="4" md="3">
-        <MudText Typo="Typo.h5">@progress.Title.Name - <ParagonLevelImage Level="progress.ParagonLevel==ParagonLevel.PG?ParagonLevel.PG:(progress.ParagonLevel+1)"></ParagonLevelImage></MudText>
+        <MudText Typo="Typo.h5">@progress.Title.Name - <ParagonLevelImage Level="progress.ParagonLevel"></ParagonLevelImage></MudText>
     </MudItem>
     <MudItem xs="12" sm="8" md="9">
         <MudProgressLinear Color="@(progress.NextParagonProgress >= progress.Title.CompletionRequired ? Color.Success : Color.Primary)" Value="100.0 * (progress.NextParagonProgress / (double)progress.RequiredAaCount)">
             @if (progress.NextParagonProgress < progress.RequiredAaCount)
             {
                 <MudText Typo="Typo.subtitle1">
-                    @progress.NextParagonProgress / @progress.RequiredAaCount
+                    @progress.NextParagonProgress / @progress.RequiredAaCount to @((progress.ParagonLevel+1).GetName())
                 </MudText>
             }
             else

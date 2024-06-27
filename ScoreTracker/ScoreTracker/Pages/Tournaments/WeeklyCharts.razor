@@ -17,7 +17,7 @@
 
 <PageTitle>Weekly Charts</PageTitle>
 
-@if (_isLoggedIn)
+@if (_isLoggedIn && _showCompetitiveToggle)
 {
     <MudSwitch T="bool" Color="Color.Primary" Label="Show Only Suggested Charts" Value="_showOnlyCompetitive" ValueChanged="v=>SetShowOnlyCompetitive(v)"></MudSwitch>
 }
@@ -313,6 +313,7 @@
     }
 
     private bool _isLoggedIn = false;
+    private bool _showCompetitiveToggle;
     protected override async Task OnInitializedAsync()
     {
         _isLoggedIn = CurrentUser.IsLoggedIn;
@@ -327,7 +328,9 @@
             var stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
             _competitiveCharts = WeeklyTournamentSaga.GetSuggestedCharts(_allCharts.Select(c => _charts[c.ChartId]), stats.DoublesCompetitiveLevel, stats.SinglesCompetitiveLevel)
                 .Select(c => entryDict[c.Id]).ToArray();
-            _showOnlyCompetitive = true;
+            
+            _showOnlyCompetitive = stats is { DoublesCompetitiveLevel: >= 10,SinglesCompetitiveLevel: >= 10 };
+            _showCompetitiveToggle = _showOnlyCompetitive;
         }
         else
         {
