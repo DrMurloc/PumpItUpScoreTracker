@@ -13,5 +13,9 @@ namespace ScoreTracker.Domain.SecondaryPorts
         Task<IEnumerable<WeeklyTournamentChart>> GetWeeklyCharts(CancellationToken cancellationToken);
         Task<IEnumerable<WeeklyTournamentEntry>> GetEntries(Guid? chartId, CancellationToken cancellationToken);
         Task SaveEntry(WeeklyTournamentEntry entry, CancellationToken cancellationToken);
+        Task<IEnumerable<DateTimeOffset>> GetPastDates(CancellationToken cancellationToken);
+
+        Task<IEnumerable<WeeklyTournamentEntry>> GetPastEntries(DateTimeOffset date,
+            CancellationToken cancellationToken);
     }
 }

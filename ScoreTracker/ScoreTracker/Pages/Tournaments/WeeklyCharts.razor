@@ -14,23 +14,38 @@
 @using ScoreTracker.Domain.Events
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Web.Services
+@using System.Data.Common
 
 <PageTitle>Weekly Charts</PageTitle>
 
-@if (_isLoggedIn && _showCompetitiveToggle)
-{
-    <MudSwitch T="bool" Color="Color.Primary" Label="Show Only Suggested Charts" Value="_showOnlyCompetitive" ValueChanged="v=>SetShowOnlyCompetitive(v)"></MudSwitch>
-}
 
 <MudGrid>
-    @foreach (var entry in ShowingCharts.OrderByDescending(s=>_charts[s.ChartId].Level).ThenBy(s=>_charts[s.ChartId].Type))
+    <MudItem xs="6">
+        <MudSelect T="DateTimeOffset?" Value="_selectedWeek" ValueChanged="SetSelectedDate" Label=@L["Selected Week"] Clearable="true">
+            <MudSelectItem T="DateTimeOffset?" Value="null">Current</MudSelectItem>
+            @foreach (var date in _pastDates.OrderByDescending(d => d))
+            {
+                
+                <MudSelectItem T="DateTimeOffset?" Value="date">@date.AddDays(-1).ToString("d")</MudSelectItem>
+            }
+        </MudSelect>
+    
+        </MudItem>
+    <MudItem xs="6">
+        @if (_isLoggedIn && _showCompetitiveToggle && _selectedWeek==null)
+        {
+            <MudSwitch T="bool" Color="Color.Primary" Label="Show Only Suggested Charts" Value="_showOnlyCompetitive" ValueChanged="v => SetShowOnlyCompetitive(v)"></MudSwitch>
+        }
+
+    </MudItem>
+    @foreach (var entry in ShowingCharts.OrderByDescending(s => _charts[s.ChartId].Level).ThenBy(s => _charts[s.ChartId].Type))
     {
         var chart = _charts[entry.ChartId];
         <MudItem xs="6" sm="4" md="3" lg="2">
-            
+
             <MudCard Class="chart-card">
                 <MudCardHeader Style=@($"background-image:url(\"{chart.Song.ImagePath}\");")>
-                                
+
                     <DifficultyBubble Chart="chart"></DifficultyBubble>
                 </MudCardHeader>
                 <MudCardContent>
@@ -41,8 +56,8 @@
                             <ScoreBreakdown Score="topEntry.Item2.Score" Plate="topEntry.Item2.Plate" IsBroken="topEntry.Item2.IsBroken" Text=@($"{topEntry.Item1}. {_users[topEntry.Item2.UserId].Name}")></ScoreBreakdown>
                             <br/>
                         }
-                        
-                        @if (!top.Any(t=>t.Item2.UserId==_userId)&&_myScores.TryGetValue(entry.ChartId, out var score) && _myPlaces.TryGetValue(entry.ChartId, out var place))
+
+                        @if (!top.Any(t => t.Item2.UserId == _userId) && _myScores.TryGetValue(entry.ChartId, out var score) && _myPlaces.TryGetValue(entry.ChartId, out var place))
                         {
                             <ScoreBreakdown Score="score.Score" Plate="score.Plate" IsBroken="score.IsBroken" Text=@($"{place}. {_userName}")></ScoreBreakdown>
                         }
@@ -50,24 +65,81 @@
                 </MudCardContent>
                 <MudCardActions>
                     <MudSpacer></MudSpacer>
-                    @if (_counts.TryGetValue(entry.ChartId,out var count) && count>0)
+                    @if (_counts.TryGetValue(entry.ChartId, out var count) && count > 0)
                     {
-                        
-                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" OnClick="()=>ShowLeaderboard(chart.Id)"></MudIconButton>
+
+                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" OnClick="() => ShowLeaderboard(chart.Id)"></MudIconButton>
                     }
-                    @if (_isLoggedIn)
+                    @if (_isLoggedIn && _selectedWeek==null)
                     {
-                        <MudIconButton Icon="@Icons.Material.Filled.UploadFile" OnClick=@(()=>OpenSubmitDialog(entry.ChartId))></MudIconButton>
+                        <MudIconButton Icon="@Icons.Material.Filled.UploadFile" OnClick=@(() => OpenSubmitDialog(entry.ChartId))></MudIconButton>
                     }
                     <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => VideoDisplayer.ShowVideo(chart.Id))"></MudIconButton>
 
                 </MudCardActions>
             </MudCard>
         </MudItem>
-        
+
     }
 
 </MudGrid>
+<br/>
+<MudText Typo="Typo.h5">Overall Leaderboard</MudText>
+<br/>
+<MudTable T="Guid" Items="_userTotalPlace.OrderBy(kv=>kv.Value).Select(kv=>kv.Key)" FixedHeader="true" Striped="true" Breakpoint="Breakpoint.None" Dense="true">
+    <HeaderContent>
+        <MudTh>@L["Place"]</MudTh>
+        <MudTh>@L["Avatar"]</MudTh>
+        <MudTh>@L["Username"]</MudTh>
+        @for (var i = 0; i < 4; i++)
+        {
+            var place = i + 1;
+            <MudTh>#@place @L["Song"]</MudTh>
+        }
+        <MudTh>PUMBILITY+</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@_userTotalPlace[context]</MudTd>
+        <MudTd>
+            <MudImage Src="@_users[context].ProfileImage.ToString()" Height="20" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+        </MudTd>
+        <MudTd>@_users[context].Name</MudTd>
+
+        @foreach (var entry in _userTopFourCharts[context])
+        {
+            var chart = _charts[entry.ChartId];
+            <MudTd Style="text-align:center">
+                <div style="display:inline">
+                    <MudTooltip Text="@(chart.Song.Name + ' ' + chart.DifficultyString)">
+                        <MudImage Src="@chart.Song.ImagePath.ToString()" Height="20" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
+                        <br/>
+                    </MudTooltip>
+                    <DifficultyBubble Height="20" Chart="chart"></DifficultyBubble>
+                </div>
+                <ScoreBreakdown Score="entry.Score" IsBroken="entry.IsBroken" Plate="entry.Plate" Height="20" Text="@(entry.Score.ToString()+" - "+_scoring.GetScore(chart, entry.Score, entry.Plate, entry.IsBroken).ToString("N0"))" ShowTextAsTooltip="true"></ScoreBreakdown>
+
+            </MudTd>
+        }
+        @for (var i = _userTopFourCharts[context].Count(); i < 4; i++)
+        {
+            <MudTd></MudTd>
+        }
+        <MudTd>@_userTopFourTotal[context].ToString("N0")</MudTd>
+    </RowTemplate>
+</MudTable>
+<br/>
+<MudText Typo="Typo.h6">PUMBILITY+:</MudText>
+<br/>
+@foreach (var kv in _scoring.LetterGradeModifiers.OrderBy(kv=>kv.Key))
+{
+    <MudText Typo="Typo.body1">
+
+        <MudImage Src=@($"https://piuimages.arroweclip.se/letters/{kv.Key.ToString().ToLower()}.png") Height="25" ObjectFit="ObjectFit.ScaleDown"></MudImage> - @(kv.Value.ToString("0.00")+"x")
+    </MudText>
+    }
+<MudText Typo="Typo.body1">
+    <MudImage Src=@($"https://piuimages.arroweclip.se/plates/{PhoenixPlate.PerfectGame.GetShorthand().ToLower()}.png") Height="25" ObjectFit="ObjectFit.ScaleDown"></MudImage> - @(_scoring.PgLetterGradeModifier.ToString("0.00")+"x")
+</MudText>
 @if (_submittingChartId != null)
 {
     <MudDialog @bind-IsVisible="_showSubmitDialog">
@@ -207,6 +279,7 @@
     private bool _isBroken = false;
     private bool _isUploading = false;
     private bool _showSubmitDialog = false;
+    private static readonly ScoringConfiguration _scoring = ScoringConfiguration.PiuScoresRatingz;
     private bool _isSaving = false;
     private void OpenSubmitDialog(Guid chartId)
     {
@@ -222,6 +295,10 @@
     private IDictionary<Guid, int> _myPlaces = new Dictionary<Guid, int>();
     private IDictionary<Guid, IEnumerable<(int, WeeklyTournamentEntry)>> _topPlaces = new Dictionary<Guid, IEnumerable<(int, WeeklyTournamentEntry)>>();
     private IDictionary<Guid, int> _counts = new Dictionary<Guid, int>();
+    private IDictionary<Guid, int> _userTopFourTotal = new Dictionary<Guid, int>();
+    private IDictionary<Guid, int> _userTotalPlace = new Dictionary<Guid, int>();
+    private IDictionary<Guid, IEnumerable<WeeklyTournamentEntry>> _userTopFourCharts = new Dictionary<Guid, IEnumerable<WeeklyTournamentEntry>>();
+    private IEnumerable<DateTimeOffset> _pastDates = Array.Empty<DateTimeOffset>();
     private async Task Start()
     {
         await Bus.Publish(new UpdateWeeklyChartsEvent());
@@ -278,6 +355,7 @@
 
     private double _doublesCompetitive = 10.0;
     private double _singlesCompetitive = 10.0;
+    private DateTimeOffset? _selectedWeek = null;
     private void SetShowOnlyCompetitive(bool newValue)
     {
         _showOnlyCompetitive = newValue;
@@ -295,10 +373,48 @@
             .OrderBy(g => g.Item1).Take(3).ToArray().AsEnumerable());
     }
 
+    private async Task SetSelectedDate(DateTimeOffset? date)
+    {
+        _selectedWeek = date;
+        await ReprocessLeaderboards();
+    }
     private async Task ReprocessLeaderboards()
     {
-        _allEntries = (await WeeklyTournaments.GetEntries(null, CancellationToken.None)).GroupBy(e => e.ChartId).ToDictionary(e => e.Key, e => e.ToArray().AsEnumerable());
+        if (_selectedWeek == null)
+        {
+            _allCharts = (await WeeklyTournaments.GetWeeklyCharts(CancellationToken.None)).ToArray();
+            if (_isLoggedIn)
+            {
+                var entryDict = _allCharts.ToDictionary(c => c.ChartId);
+                _competitiveCharts = WeeklyTournamentSaga.GetSuggestedCharts(_allCharts.Select(c => _charts[c.ChartId]), _doublesCompetitive, _singlesCompetitive)
+                    .Select(c => entryDict[c.Id]).ToArray();
+            }
+            else
+            {
+                _competitiveCharts = _allCharts;
+            }
 
+            _allEntries = (await WeeklyTournaments.GetEntries(null, CancellationToken.None)).GroupBy(e => e.ChartId).ToDictionary(e => e.Key, e => e.ToArray().AsEnumerable());
+
+        }
+        else
+        {
+            _allEntries = (await WeeklyTournaments.GetPastEntries(_selectedWeek.Value, CancellationToken.None)).GroupBy(e => e.ChartId).ToDictionary(e => e.Key, e => e.ToArray().AsEnumerable());
+
+            _allCharts = _allEntries.Values.SelectMany(_ => _).Select(c => c.ChartId).Distinct()
+                .Select(id => new WeeklyTournamentChart(id, _selectedWeek.Value));
+            _competitiveCharts = _allCharts;
+        }
+        var userGroups = _allEntries.Values.SelectMany(_ => _).GroupBy(c => c.UserId)
+            .ToDictionary(g => g.Key, g => g.ToArray());
+        _userTopFourCharts = userGroups.ToDictionary(kv => kv.Key, kv =>
+            kv.Value.OrderByDescending(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken))
+                .Take(4)
+                .ToArray().AsEnumerable());
+        _userTopFourTotal = _userTopFourCharts.ToDictionary(kv => kv.Key,
+            kv => kv.Value.Sum(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken)));
+        _userTotalPlace = _userTopFourTotal.OrderByDescending(kv => kv.Value).Select((kv, i) => (kv,i))
+            .ToDictionary(c => c.kv.Key, c => c.i + 1);
         if (_isLoggedIn)
         {
             _myScores = _allEntries.Select(kv => kv.Value.FirstOrDefault(v => v.UserId == _userId))
@@ -318,16 +434,16 @@
     {
         _isLoggedIn = CurrentUser.IsLoggedIn;
         _isAdmin = CurrentUser.IsLoggedInAsAdmin;
+        
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
-        _allCharts = (await WeeklyTournaments.GetWeeklyCharts(CancellationToken.None)).ToArray();
         if(_isLoggedIn)
         {
             
             _userId = CurrentUser.User.Id;
-            _userName = CurrentUser.User.Name; var entryDict = _allCharts.ToDictionary(c => c.ChartId);
+            _userName = CurrentUser.User.Name;
             var stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
-            _competitiveCharts = WeeklyTournamentSaga.GetSuggestedCharts(_allCharts.Select(c => _charts[c.ChartId]), stats.DoublesCompetitiveLevel, stats.SinglesCompetitiveLevel)
-                .Select(c => entryDict[c.Id]).ToArray();
+            _singlesCompetitive = stats.SinglesCompetitiveLevel;
+            _doublesCompetitive = stats.DoublesCompetitiveLevel;
             
             _showOnlyCompetitive = stats is { DoublesCompetitiveLevel: >= 10,SinglesCompetitiveLevel: >= 10 };
             _showCompetitiveToggle = _showOnlyCompetitive;
@@ -337,6 +453,7 @@
             _competitiveCharts = _allCharts;
             _showOnlyCompetitive = false;
         }
+        _pastDates = await WeeklyTournaments.GetPastDates(CancellationToken.None);
        
 
         await ReprocessLeaderboards();

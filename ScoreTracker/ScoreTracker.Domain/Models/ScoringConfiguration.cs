@@ -218,6 +218,15 @@ namespace ScoreTracker.Domain.Models
             {
                 ContinuousLetterGradeScale = true
             };
+            result.LetterGradeModifiers[PhoenixLetterGrade.AAA] = 1.0;
+            result.LetterGradeModifiers[PhoenixLetterGrade.AAPlus] = .9;
+            result.LetterGradeModifiers[PhoenixLetterGrade.AA] = .75;
+            result.LetterGradeModifiers[PhoenixLetterGrade.APlus] = .50;
+            result.LetterGradeModifiers[PhoenixLetterGrade.A] = 0;
+            result.LetterGradeModifiers[PhoenixLetterGrade.B] = 0;
+            result.LetterGradeModifiers[PhoenixLetterGrade.C] = 0;
+            result.LetterGradeModifiers[PhoenixLetterGrade.D] = 0;
+            result.LetterGradeModifiers[PhoenixLetterGrade.F] = 0;
             result.AdjustToTime = false;
             result.PgLetterGradeModifier = 1.6;
             result.LevelRatings[1] = 10;
@@ -229,7 +238,6 @@ namespace ScoreTracker.Domain.Models
             result.LevelRatings[7] = 70;
             result.LevelRatings[8] = 80;
             result.LevelRatings[9] = 90;
-            result.ChartTypeModifiers[ChartType.CoOp] = 1.0;
             return result;
         }
     }

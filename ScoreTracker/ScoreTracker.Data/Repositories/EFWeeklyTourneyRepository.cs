@@ -124,5 +124,20 @@ namespace ScoreTracker.Data.Repositories
 
             await database.SaveChangesAsync(cancellationToken);
         }
+
+        public async Task<IEnumerable<DateTimeOffset>> GetPastDates(CancellationToken cancellationToken)
+        {
+            return await database.UserWeeklyPlacing.Select(u => u.ObtainedDate).Distinct()
+                .ToArrayAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<WeeklyTournamentEntry>> GetPastEntries(DateTimeOffset date,
+            CancellationToken cancellationToken)
+        {
+            return (await database.UserWeeklyPlacing
+                .Where(e => e.ObtainedDate == date).ToArrayAsync(cancellationToken)).Select(u =>
+                new WeeklyTournamentEntry(u.UserId, u.ChartId, u.Score, Enum.Parse<PhoenixPlate>(u.Plate), u.IsBroken,
+                    null, u.CompetitiveLevel));
+        }
     }
 }
