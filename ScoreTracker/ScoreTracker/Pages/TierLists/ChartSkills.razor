@@ -68,11 +68,11 @@
             </MudItem>
         }
         <MudItem xs="12" sm="4" md="3">
-            <MudCheckBox T="bool" @bind-Checked="_hidePassed" Disabled="_isLoading" Label=@L["Hide Completed Charts"]></MudCheckBox>
+            <MudCheckBox T="bool" @bind-Value="_hidePassed" Disabled="_isLoading" Label=@L["Hide Completed Charts"]></MudCheckBox>
         </MudItem>
         
         <MudItem xs="12" sm="4" md="3">
-            <MudCheckBox T="bool" @bind-Checked="_showTodo" Disabled="_isLoading" Label=@L["Show Only ToDo Charts"]></MudCheckBox>
+            <MudCheckBox T="bool" @bind-Value="_showTodo" Disabled="_isLoading" Label=@L["Show Only ToDo Charts"]></MudCheckBox>
         </MudItem>
     }
     <MudItem xs="12">
@@ -98,7 +98,7 @@
                 <MudGrid>
                     
                     <MudItem xs="12">
-                        <MudCheckBox T="bool" Checked="_textView" CheckedChanged="SetTextView" Disabled="_isLoading" Label=@L["Text View"]></MudCheckBox>
+                        <MudCheckBox T="bool" Value="_textView" ValueChanged="SetTextView" Disabled="_isLoading" Label=@L["Text View"]></MudCheckBox>
                     </MudItem>
                     @foreach (var type in Enum.GetValues<SongType>())
                     {
@@ -107,7 +107,7 @@
                         </MudItem>
                     }
                     <MudItem xs="12" md="4">
-                        <MudAutocomplete T="string" Label=@L["Song Name"] Disabled="_isLoading" AdornmentIcon="@Icons.Material.Filled.Search" @bind-Value="_songFilter" SearchFunc="FilterSongName" CoerceText="false" CoerceValue="true"></MudAutocomplete>
+                        <MudAutocomplete T="string" Label=@L["Song Name"] Disabled="_isLoading" AdornmentIcon="@Icons.Material.Filled.Search" @bind-Value="_songFilter" SearchFunc="(s,c)=>FilterSongName(s)" CoerceText="false" CoerceValue="true"></MudAutocomplete>
                     </MudItem>
                     <MudItem xs="12" md="4">
                         <MudSelect T="string" @bind-SelectedValues="_stepArtists" Disabled="_isLoading" Label=@L["Step Artist"] HelperText="Not All Step Artists Labeled Yet" MultiSelection="true" Clearable="true">

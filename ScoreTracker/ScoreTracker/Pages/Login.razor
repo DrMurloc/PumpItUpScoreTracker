@@ -13,13 +13,13 @@
             <MudCardContent>
                 <MudContainer Fixed="true">
                     <MudTooltip Text=@L["Log In With","Discord"]>
-                        <MudButton Href="/Login/Discord" StartIcon="@Icons.Custom.Brands.Discord" Variant="Variant.Filled" Style="@($"color:{Colors.Grey.Lighten5};background:{Colors.Indigo.Default};")">Discord</MudButton>
+                        <MudButton Href="/Login/Discord" StartIcon="@Icons.Custom.Brands.Discord" Variant="Variant.Filled" Style="@($"color:{Colors.Gray.Lighten5};background:{Colors.Indigo.Default};")">Discord</MudButton>
                     </MudTooltip>
                     <MudTooltip Text=@L["Log In With","Google"]>
-                        <MudButton Href="/Login/Google" StartIcon="@Icons.Custom.Brands.Google" Variant="Variant.Filled" Style="@($"color:{Colors.Grey.Lighten5};background:{Colors.Orange.Darken3};")">Google</MudButton>
+                        <MudButton Href="/Login/Google" StartIcon="@Icons.Custom.Brands.Google" Variant="Variant.Filled" Style="@($"color:{Colors.Gray.Lighten5};background:{Colors.Orange.Darken3};")">Google</MudButton>
                     </MudTooltip>
                     <MudTooltip Text=@L["Log In With","Facebook"]>
-                        <MudButton Href="/Login/Facebook" StartIcon="@Icons.Custom.Brands.Facebook" Variant="Variant.Filled" Style="@($"color:{Colors.Grey.Lighten5};background:{Colors.Blue.Darken1};")">Facebook</MudButton>
+                        <MudButton Href="/Login/Facebook" StartIcon="@Icons.Custom.Brands.Facebook" Variant="Variant.Filled" Style="@($"color:{Colors.Gray.Lighten5};background:{Colors.Blue.Darken1};")">Facebook</MudButton>
                     </MudTooltip>
                     </MudContainer>
             </MudCardContent>
@@ -32,7 +32,7 @@
 
 </MudPaper>
 
-<MudDialog @bind-IsVisible="_isDialogVisible">
+<MudDialog @bind-Visible="_isDialogVisible">
     <TitleContent>
         @L["Account Creation?"]
     </TitleContent>

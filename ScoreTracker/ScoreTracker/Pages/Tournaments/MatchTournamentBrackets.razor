@@ -29,7 +29,7 @@
     </MudGrid>
     
 
-    <MudDialog @bind-IsVisible="_showAddRandomDialog">
+    <MudDialog @bind-Visible="_showAddRandomDialog">
         <DialogContent>
             <MudGrid>
                 <MudItem xs="12">
@@ -46,7 +46,7 @@
 
     </MudDialog>
 
-    <MudDialog @bind-IsVisible="_showAddMatchDialog">
+    <MudDialog @bind-Visible="_showAddMatchDialog">
         <DialogContent>
             <MudGrid>
                 <MudItem xs="12">
@@ -59,7 +59,7 @@
                     <MudNumericField T="int" @bind-Value="_chartCount" Label="Chart Count"></MudNumericField>
                 </MudItem>
                 <MudItem xs="12">
-                    <MudAutocomplete T="string" @bind-Value="_phaseName" Label="Phase" CoerceText="false" CoerceValue="true" SearchFunc="s=>Task.FromResult(_matches.Select(m=>m.Value.PhaseName).Distinct().Where(n=>n.ToString().Contains(s,StringComparison.OrdinalIgnoreCase)).Select(s=>s.ToString()))"></MudAutocomplete>
+                    <MudAutocomplete T="string" @bind-Value="_phaseName" Label="Phase" CoerceText="false" CoerceValue="true" SearchFunc="(s,c)=>Task.FromResult(_matches.Select(m=>m.Value.PhaseName).Distinct().Where(n=>n.ToString().Contains(s,StringComparison.OrdinalIgnoreCase)).Select(s=>s.ToString()))"></MudAutocomplete>
                     
                 </MudItem>
                 <MudItem xs="12">
@@ -78,11 +78,11 @@
             <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showAddMatchDialog = false">@L["Close"]</MudButton>
         </DialogActions>
     </MudDialog>
-    <MudDialog @bind-IsVisible="_showBulkCreate">
+    <MudDialog @bind-Visible="_showBulkCreate">
         <DialogContent>
             <MudGrid>
                 <MudItem xs="12">
-                    <MudAutocomplete Disabled="_bulkCreating" T="string" @bind-Value="_phaseName" Label="Phase" CoerceText="false" CoerceValue="true" SearchFunc="s=>Task.FromResult(_matches.Select(m=>m.Value.PhaseName).Distinct().Where(n=>n.ToString().Contains(s,StringComparison.OrdinalIgnoreCase)).Select(s=>s.ToString()))"></MudAutocomplete>
+                    <MudAutocomplete Disabled="_bulkCreating" T="string" @bind-Value="_phaseName" Label="Phase" CoerceText="false" CoerceValue="true" SearchFunc="(s,c)=>Task.FromResult(_matches.Select(m=>m.Value.PhaseName).Distinct().Where(n=>n.ToString().Contains(s,StringComparison.OrdinalIgnoreCase)).Select(s=>s.ToString()))"></MudAutocomplete>
 
                 </MudItem>
                 <MudItem xs="12">
@@ -135,7 +135,7 @@
                          CoerceText="true"
                          Label=@($"Search For My Next Match")
                          AdornmentIcon="@Icons.Material.Filled.Search"
-                         SearchFunc="@(s => Task.FromResult(Players.Keys.Where(o=>!string.IsNullOrWhiteSpace(s)&&o.Contains(s,StringComparison.OrdinalIgnoreCase)).OrderBy(k => k.Equals(s, StringComparison.OrdinalIgnoreCase) ? 0 : 1).AsEnumerable()))">
+                         SearchFunc="@((s,c) => Task.FromResult(Players.Keys.Where(o=>!string.IsNullOrWhiteSpace(s)&&o.Contains(s,StringComparison.OrdinalIgnoreCase)).OrderBy(k => k.Equals(s, StringComparison.OrdinalIgnoreCase) ? 0 : 1).AsEnumerable()))">
 
         </MudAutocomplete>
     </MudItem>
@@ -392,7 +392,7 @@
 }
 <br/>
 
-<MudDialog @bind-IsVisible="_showMatchDialog">
+<MudDialog @bind-Visible="_showMatchDialog">
     <DialogContent>
         @if (_currentMatch != null)
         {
@@ -408,7 +408,7 @@
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showMatchDialog = false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
-<MudDialog @bind-IsVisible="_showNotesPopup">
+<MudDialog @bind-Visible="_showNotesPopup">
     <DialogContent>
         @if (_notesMatch != null)
         {
@@ -427,7 +427,7 @@
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showNotesPopup = false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
-<MudDialog @bind-IsVisible="_showMatchLinkDialog">
+<MudDialog @bind-Visible="_showMatchLinkDialog">
     <DialogContent>
         <MudGrid>
             <MudItem xs="12">
@@ -436,7 +436,7 @@
                                  ResetValueOnEmptyText="true"
                                  CoerceText="true"
                                  Label=@($"From Match")
-                                 SearchFunc="@(s => Task.FromResult(_matches.Keys.Where(k=>k.ToString().Contains(s,StringComparison.OrdinalIgnoreCase)).OrderBy(k => k.Equals(s, StringComparison.OrdinalIgnoreCase) ? 0 : 1).AsEnumerable()))">
+                                 SearchFunc="@((s,c) => Task.FromResult(_matches.Keys.Where(k=>k.ToString().Contains(s,StringComparison.OrdinalIgnoreCase)).OrderBy(k => k.Equals(s, StringComparison.OrdinalIgnoreCase) ? 0 : 1).AsEnumerable()))">
 
                 </MudAutocomplete>
 
@@ -447,13 +447,13 @@
                                  ResetValueOnEmptyText="true"
                                  CoerceText="true"
                                  Label=@($"To Match")
-                                 SearchFunc="@(s => Task.FromResult(_matches.Keys.Where(k=>k.ToString().Contains(s,StringComparison.OrdinalIgnoreCase)).OrderBy(k => k.Equals(s, StringComparison.OrdinalIgnoreCase) ? 0 : 1).AsEnumerable()))">
+                                 SearchFunc="@((s,c) => Task.FromResult(_matches.Keys.Where(k=>k.ToString().Contains(s,StringComparison.OrdinalIgnoreCase)).OrderBy(k => k.Equals(s, StringComparison.OrdinalIgnoreCase) ? 0 : 1).AsEnumerable()))">
 
                 </MudAutocomplete>
 
             </MudItem>
             <MudItem xs="12">
-                <MudCheckBox T="bool" @bind-Checked="_winners" Label="Winners"></MudCheckBox>
+                <MudCheckBox T="bool" @bind-Value="_winners" Label="Winners"></MudCheckBox>
             </MudItem>
             <MudItem xs="12">
                 <MudNumericField @bind-Value="_linkPlayers" Min="1" Max="100" Label="Players" HideSpinButtons="true"></MudNumericField>

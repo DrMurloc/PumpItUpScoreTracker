@@ -22,7 +22,7 @@
                     }
                     else
                     {
-                        <MudSwitch T="bool" Label="@LevelString(level)" Color="Color.Primary" Checked="Settings.LevelWeights[level] > 0" CheckedChanged="@(v => Settings.LevelWeights[level] =v? 1 : 0)"></MudSwitch>
+                        <MudSwitch T="bool" Label="@LevelString(level)" Color="Color.Primary" Value="Settings.LevelWeights[level] > 0" ValueChanged="@(v => Settings.LevelWeights[level] =v? 1 : 0)"></MudSwitch>
                     }
                 </MudItem>
             }
@@ -39,7 +39,7 @@
                     }
                     else
                     {
-                        <MudSwitch T="bool" Label="@LevelString(level)" Color="Color.Primary" Checked="Settings.DoubleLevelWeights[level] > 0" CheckedChanged="@(v => Settings.DoubleLevelWeights[level]= v ? 1 : 0)"></MudSwitch>
+                        <MudSwitch T="bool" Label="@LevelString(level)" Color="Color.Primary" Value="Settings.DoubleLevelWeights[level] > 0" ValueChanged="@(v => Settings.DoubleLevelWeights[level]= v ? 1 : 0)"></MudSwitch>
                     }
                 </MudItem>
             }
@@ -57,7 +57,7 @@
                     }
                     else
                     {
-                        <MudSwitch T="bool" Label="@PlayerString(level)" Color="Color.Primary" Checked="Settings.PlayerCountWeights[level] > 0" CheckedChanged="@(v => Settings.PlayerCountWeights[level]= v? 1 : 0)"></MudSwitch>
+                        <MudSwitch T="bool" Label="@PlayerString(level)" Color="Color.Primary" Value="Settings.PlayerCountWeights[level] > 0" ValueChanged="@(v => Settings.PlayerCountWeights[level]= v? 1 : 0)"></MudSwitch>
                     }
                 </MudItem>
             }
@@ -76,7 +76,7 @@
                     }
                     else
                     {
-                        <MudSwitch T="bool" Label="@songType.ToString()" Color="Color.Primary" Checked="Settings.SongTypeWeights[songType] > 0" CheckedChanged="@(v => Settings.SongTypeWeights[songType]=v? 1 : 0)"></MudSwitch>
+                        <MudSwitch T="bool" Label="@songType.ToString()" Color="Color.Primary" Value="Settings.SongTypeWeights[songType] > 0" ValueChanged="@(v => Settings.SongTypeWeights[songType]=v? 1 : 0)"></MudSwitch>
                     }
                 </MudItem>
             }
@@ -130,14 +130,14 @@
                 <MudNumericField T="int" Min="1" Max="30" Label="Chart Count" @bind-Value="Settings.Count"></MudNumericField>
             </MudItem>
             <MudItem xs="4">
-                <MudSwitch Color="Color.Primary" Label="Allow Repeat Charts" @bind-Checked="Settings.AllowRepeats"></MudSwitch>
+                <MudSwitch Color="Color.Primary" Label="Allow Repeat Charts" @bind-Value="Settings.AllowRepeats"></MudSwitch>
             </MudItem>
             <MudItem xs="4">
-                <MudSwitch T="bool" Color="Color.Primary" Label="Use Weights" @bind-Checked="_useWeights"></MudSwitch>
+                <MudSwitch T="bool" Color="Color.Primary" Label="Use Weights" @bind-Value="_useWeights"></MudSwitch>
             </MudItem>
             
             <MudItem xs="4">
-                <MudSwitch T="bool" Color="Color.Primary" Label="Use Scoring Level" @bind-Checked="Settings.UseScoringLevels"></MudSwitch>
+                <MudSwitch T="bool" Color="Color.Primary" Label="Use Scoring Level" @bind-Value="Settings.UseScoringLevels"></MudSwitch>
             </MudItem>
         </MudGrid>
     </MudExpansionPanel>

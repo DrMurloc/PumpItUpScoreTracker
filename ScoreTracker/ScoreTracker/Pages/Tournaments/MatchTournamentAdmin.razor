@@ -48,7 +48,7 @@
         <MudText Typo="Typo.h4">Permissions</MudText>
     </MudItem>
     <MudItem xs="12">
-        <MudAutocomplete Dense="true" Disabled="_isLoading" T="string" Value="_selectedUser" ValueChanged="SelectPlayer" MaxItems="15" CoerceValue="true" CoerceText="false" Label="Players (Paste UserId from Account Page if not Public)" SearchFunc="s=>Task.FromResult(_userSearchOptions.Where(o=>string.IsNullOrWhiteSpace(s)||o.Contains(s,StringComparison.OrdinalIgnoreCase)))">
+        <MudAutocomplete Dense="true" Disabled="_isLoading" T="string" Value="_selectedUser" ValueChanged="SelectPlayer" MaxItems="15" CoerceValue="true" CoerceText="false" Label="Players (Paste UserId from Account Page if not Public)" SearchFunc="(s,c)=>Task.FromResult(_userSearchOptions.Where(o=>string.IsNullOrWhiteSpace(s)||o.Contains(s,StringComparison.OrdinalIgnoreCase)))">
         </MudAutocomplete>
     </MudItem>
     @if (_selectedUserId != null)

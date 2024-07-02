@@ -142,7 +142,7 @@
 </MudText>
 @if (_submittingChartId != null)
 {
-    <MudDialog @bind-IsVisible="_showSubmitDialog">
+    <MudDialog @bind-Visible="_showSubmitDialog">
         <DialogContent>
             <MudGrid>
                 <MudItem xs="12">
@@ -168,15 +168,15 @@
                 </MudItem>
                 <MudItem xs="6" sm="3">
                     <MudFileUpload T="IBrowserFile" Disabled="_isUploading" Accept=".png, .gif, .jpg, .jpeg," MaximumFileCount="1" FilesChanged="UploadFiles">
-                        <ButtonTemplate>
+                        
+                        <ActivatorContent>
                             <MudButton HtmlTag="label"
                                        Variant="Variant.Filled"
                                        Color="Color.Primary"
-                                       StartIcon="@Icons.Material.Filled.CloudUpload"
-                                       for="@context">
+                                       StartIcon="@Icons.Material.Filled.CloudUpload">
                                 @L["Upload Image"]
                             </MudButton>
-                        </ButtonTemplate>
+                        </ActivatorContent>
                     </MudFileUpload>
                 </MudItem>
                 <MudItem xs="6" sm="9">
@@ -202,7 +202,7 @@
 @if (_showingChartId!=null)
 {
 
-<MudDialog @bind-IsVisible="_showLeaderboard">
+<MudDialog @bind-Visible="_showLeaderboard">
     <DialogContent>
         <SongImage Song="_charts[_showingChartId.Value].Song"></SongImage>
         <DifficultyBubble Chart="_charts[_showingChartId.Value]"></DifficultyBubble>

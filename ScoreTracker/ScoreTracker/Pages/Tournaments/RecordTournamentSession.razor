@@ -130,15 +130,14 @@
             }
             <MudItem xs="6" sm="3" md="2">
                 <MudFileUpload T="IReadOnlyList<IBrowserFile>" Disabled="_isUploadingPhoto" Accept=".png, .gif, .jpg, .jpeg," FilesChanged="UploadFiles">
-                    <ButtonTemplate>
+                    <ActivatorContent>
                         <MudButton HtmlTag="label"
                                    Variant="Variant.Filled"
                                    Color="Color.Primary"
-                                   StartIcon="@Icons.Material.Filled.CloudUpload"
-                                   for="@context">
+                                   StartIcon="@Icons.Material.Filled.CloudUpload">
                             Upload Images
                         </MudButton>
-                    </ButtonTemplate>
+                    </ActivatorContent>
                 </MudFileUpload>
             </MudItem>
         }
@@ -149,7 +148,7 @@
             <MudText>Clicking save will make your score public on the leaderboard, even if your profile is set to private. Once approved all Photos and Videos will be public as well.</MudText>
         </MudItem>
     </MudGrid>
-    <MudDialog @bind-IsVisible="_showAddDialog">
+    <MudDialog @bind-Visible="_showAddDialog">
         <DialogContent>
             <MudGrid>
                 <MudItem xs="12">
@@ -160,7 +159,7 @@
                                      ResetValueOnEmptyText="true"
                                      CoerceText="true"
                                      Label="Song"
-                                     SearchFunc="Search"
+                                     SearchFunc="(s,c)=>Search(s)"
                                      ValueChanged="@SelectSong" MaxItems="100">
 
                     </MudAutocomplete>
@@ -187,7 +186,7 @@
                 </MudItem>
                 
                 <MudItem sm="4" xs="12">
-                    <MudCheckBox T="bool" @bind-Checked="@_isBroken" Label="Broken"></MudCheckBox>
+                    <MudCheckBox T="bool" @bind-Value="@_isBroken" Label="Broken"></MudCheckBox>
                 </MudItem>
             </MudGrid>
         </DialogContent>
@@ -198,7 +197,7 @@
         </DialogActions>
     </MudDialog>
 
-    <MudDialog @bind-IsVisible="_showEditDialog">
+    <MudDialog @bind-Visible="_showEditDialog">
         <DialogContent>
             @if (_editingEntry != null)
             {
@@ -221,7 +220,7 @@
                     </MudItem>
 
                     <MudItem sm="4" xs="12">
-                        <MudCheckBox T="bool" @bind-Checked="@_editBroken" Label="Broken"></MudCheckBox>
+                        <MudCheckBox T="bool" @bind-Value="@_editBroken" Label="Broken"></MudCheckBox>
                     </MudItem>
                 </MudGrid>
             }
@@ -232,7 +231,7 @@
             <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showEditDialog=false">Close</MudButton>
         </DialogActions>
     </MudDialog>
-    <MudDialog @bind-IsVisible="_showImportDialog">
+    <MudDialog @bind-Visible="_showImportDialog">
         <DialogContent>
             <MudGrid>
                 @if (_notMapped.Any())
@@ -429,9 +428,9 @@
     private async Task SelectSong(string songName)
     {
         songName = songName ?? string.Empty;
-        if (_autocomplete.IsOpen)
+        if (_autocomplete.Open)
         {
-            await _autocomplete.ToggleMenu();
+            await _autocomplete.ToggleMenuAsync();
         }
         Charts = ValidCharts.Where(c => c.Song.Name.ToString() == songName).OrderBy(c => c.Type).ThenBy(c => (int)c.Level).ToArray();
         _songSearchString = songName;

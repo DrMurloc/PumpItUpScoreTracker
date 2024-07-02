@@ -12,7 +12,7 @@
 @inject IUiSettingsAccessor UiSettings;
 @inject ICurrentUserAccessor CurrentUser
 @implements IDisposable
-<MudDialog @bind-IsVisible="_showVideoDialog">
+<MudDialog @bind-Visible="_showVideoDialog">
     <DialogContent>
         <iframe class="video"
                 id="chartVideoFrame"

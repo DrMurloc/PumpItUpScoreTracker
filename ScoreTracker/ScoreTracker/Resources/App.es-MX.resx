@@ -123,6 +123,18 @@
   <data name="1+ Level Harder" xml:space="preserve">
     <value>1+ Nivel más difícil</value>
   </data>
+  <data name="101 person tournament." xml:space="preserve">
+    <value>Torneo de 101 personas.</value>
+  </data>
+  <data name="8-10 estimated charts played per player." xml:space="preserve">
+    <value>8-10 canciones estimadas jugadas por jugador.</value>
+  </data>
+  <data name="9+ PIU Cabinets Running Phoenix." xml:space="preserve">
+    <value>9+ PIU Cabinets Running Phoenix.</value>
+  </data>
+  <data name="99 matches tailored to each player's level." xml:space="preserve">
+    <value>99 matches adaptados al nivel de cada jugador.</value>
+  </data>
   <data name="About" xml:space="preserve">
     <value>Acerca de</value>
   </data>
@@ -173,6 +185,9 @@
   </data>
   <data name="CoOp" xml:space="preserve">
     <value>CoOp</value>
+  </data>
+  <data name="CoOp and No Bar Old School Tournaments." xml:space="preserve">
+    <value>Torneos CoOp y No Bar Old School.</value>
   </data>
   <data name="Difficulty Level" xml:space="preserve">
     <value>Nivel de dificultad</value>
@@ -312,6 +327,9 @@
   <data name="Song Type" xml:space="preserve">
     <value>Tipo de canción</value>
   </data>
+  <data name="The most Pump it Up that has ever been at one event." xml:space="preserve">
+    <value>La mayor cantidad de Pump it Up que ha habido en un solo evento.</value>
+  </data>
   <data name="Title Progress" xml:space="preserve">
     <value>Progreso de títulos</value>
   </data>
@@ -375,7 +393,14 @@
   <data name="Vote Count" xml:space="preserve">
     <value>Conteo de votos</value>
   </data>
+  <data name="Why don't you just get up and dance, man?" xml:space="preserve">
+    <value>¿Por qué no te levantas y bailas, weon?</value>
+  </data>
   <data name="Your Difficulty Rating" xml:space="preserve">
     <value>Tu clasificación de dificultad</value>
+  </data>
+  <data name="Open" xml:space="preserve">
+    <value>Abrir</value>
+    <comment>Open</comment>
   </data>
 </root>

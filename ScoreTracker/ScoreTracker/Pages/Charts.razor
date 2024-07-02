@@ -47,7 +47,7 @@
                              CoerceText="false"
                              Immediate="true"
                              DebounceInterval="100"
-                             SearchFunc="s=>Task.FromResult(_songArtists.Where(a=>string.IsNullOrWhiteSpace(s)||a.Contains(s,StringComparison.OrdinalIgnoreCase)))"
+                             SearchFunc="(s,c)=>Task.FromResult(_songArtists.Where(a=>string.IsNullOrWhiteSpace(s)||a.Contains(s,StringComparison.OrdinalIgnoreCase)))"
                              ></MudAutocomplete>
         </MudItem>
     }
@@ -106,7 +106,7 @@
                              Label=@L["Song Name"]
                              Clearable="true"
                              Adornment="Adornment.End"
-                             SearchFunc="@SearchSongs"
+                             SearchFunc="(s,c)=>SearchSongs(s)"
                              Immediate="true"
                              Variant="Variant.Text"
                              CoerceText="true"
@@ -119,11 +119,11 @@
 @if (RequestedUserId != null)
 {
     <br />
-    <MudChip Variant="Variant.Outlined" Size="Size.Small" Color="Color.Info">@L["Total Count"]: @FileredCharts.Count()</MudChip>
-    <MudChip Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.Ungraded))">@L["Not Graded Count"]: @NotGradedCount</MudChip>
-    <MudChip Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.NotPassed))">@L["Not Passed Count"]: @NotPassedCount</MudChip>
-    <MudChip Variant="Variant.Outlined" Size="Size.Small" Color="Color.Warning" OnClick="@(()=>SetScoreStateFilter(ScoreState.Broken))">@L["Broken"] @BrokenCount</MudChip>
-    <MudChip Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.Passed))">@L["Passed Count"]: @PassedCount</MudChip>
+    <MudChip  T="string" Variant="Variant.Outlined" Size="Size.Small" Color="Color.Info">@L["Total Count"]: @FileredCharts.Count()</MudChip>
+    <MudChip  T="string" Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.Ungraded))">@L["Not Graded Count"]: @NotGradedCount</MudChip>
+    <MudChip  T="string" Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.NotPassed))">@L["Not Passed Count"]: @NotPassedCount</MudChip>
+    <MudChip  T="string" Variant="Variant.Outlined" Size="Size.Small" Color="Color.Warning" OnClick="@(()=>SetScoreStateFilter(ScoreState.Broken))">@L["Broken"] @BrokenCount</MudChip>
+    <MudChip  T="string" Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.Passed))">@L["Passed Count"]: @PassedCount</MudChip>
     <br/>
 }
 <MudTable T="BestAttemptDto" Items="@_charts" Filter="FilterChart"  Loading="@_isLoading" Breakpoint="Breakpoint.None">
@@ -295,7 +295,7 @@
             <MudTd>
                 @if (CanEdit)
                 {
-                    <MudCheckBox T="bool" Checked="context.IsBroken" CheckedChanged="@(newValue => SetBroken(context, newValue))" Margin="@Margin.Dense"></MudCheckBox>
+                    <MudCheckBox T="bool" Value="context.IsBroken" ValueChanged="@(newValue => SetBroken(context, newValue))" Margin="@Margin.Dense"></MudCheckBox>
                 }
                 else
                 {
@@ -402,7 +402,7 @@
         <MudTablePager></MudTablePager>
     </PagerContent>
 </MudTable>
-<MudDialog @bind-IsVisible="_showShareDialog">
+<MudDialog @bind-Visible="_showShareDialog">
     <DialogContent>
         <MudText>@L["Chart List Share Description"]</MudText>
         <br/>
@@ -414,7 +414,7 @@
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showShareDialog=false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
-<MudDialog @bind-IsVisible="_showChartOverview">
+<MudDialog @bind-Visible="_showChartOverview">
     <DialogContent>
         @if (_overViewChart != null && _currentMix == MixEnum.Phoenix)
         {

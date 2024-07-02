@@ -73,7 +73,7 @@
 </MudTable>
 <br/>
 <MudButton OnClick="()=>_showCreateDialog=true" Variant="Variant.Outlined">Create Community</MudButton>
-<MudDialog @bind-IsVisible="_showCreateDialog">
+<MudDialog @bind-Visible="_showCreateDialog">
     <DialogContent>
         <MudGrid>
             <MudItem xs="12">
@@ -81,9 +81,9 @@
             </MudItem>
             <MudItem xs="12">
                 <MudRadioGroup T="CommunityPrivacyType" @bind-SelectedOption="_privacyType">
-                    <MudRadio Option="@CommunityPrivacyType.Public" Color="Color.Primary">Public</MudRadio>
-                    <MudRadio Option="@CommunityPrivacyType.PublicWithCode" Color="Color.Primary">Invite Required</MudRadio>
-                    <MudRadio Option="@CommunityPrivacyType.Private" Color="Color.Primary">Private</MudRadio>
+                    <MudRadio Value="@CommunityPrivacyType.Public" Color="Color.Primary">Public</MudRadio>
+                    <MudRadio Value="@CommunityPrivacyType.PublicWithCode" Color="Color.Primary">Invite Required</MudRadio>
+                    <MudRadio Value="@CommunityPrivacyType.Private" Color="Color.Primary">Private</MudRadio>
                 </MudRadioGroup>
             </MudItem>
         </MudGrid>
@@ -96,7 +96,7 @@
     </DialogActions>
 </MudDialog>
 
-<MudDialog @bind-IsVisible="_showManageDialog">
+<MudDialog @bind-Visible="_showManageDialog">
     <DialogContent>
         @if (_community != null)
         {

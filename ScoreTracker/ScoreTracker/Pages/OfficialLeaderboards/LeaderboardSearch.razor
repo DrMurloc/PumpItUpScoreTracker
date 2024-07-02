@@ -11,7 +11,7 @@
                  CoerceText="true"
                  Label=@L["Username"]
                  Value="_selectedUsername"
-                 SearchFunc="s=>Task.FromResult(_usernames.Where(u=>u.Contains(s,StringComparison.OrdinalIgnoreCase)))"
+                 SearchFunc="(s,c)=>Task.FromResult(_usernames.Where(u=>u.Contains(s,StringComparison.OrdinalIgnoreCase)))"
                  ValueChanged="SelectUser"></MudAutocomplete>
                  
 @if (_chartResults.Any())

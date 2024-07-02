@@ -34,7 +34,7 @@
                          Clearable="true"
                          Label=@L["Username"]
                                                                                                        @bind-Value="_selectedUsername"
-                         SearchFunc="s => Task.FromResult(_usernames.Where(u => u?.Contains(s, StringComparison.OrdinalIgnoreCase)??true))"></MudAutocomplete>
+                         SearchFunc="(s,c) => Task.FromResult(_usernames.Where(u => u?.Contains(s, StringComparison.OrdinalIgnoreCase)??true))"></MudAutocomplete>
     </MudItem>
 </MudGrid>
 <br/>

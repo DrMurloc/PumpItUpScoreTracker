@@ -48,10 +48,10 @@
         <MudNumericField T="int" HideSpinButtons="true" Label="Max Level" @bind-Value="_maxLevel" Min="@_minLevel" Max="28"></MudNumericField>
     </MudItem>
     <MudItem xs="12" sm="6" md="3">
-        <MudCheckBox T="bool" @bind-Checked="_showScoreless" Label="Show Scoreless"></MudCheckBox>
+        <MudCheckBox T="bool" @bind-Value="_showScoreless" Label="Show Scoreless"></MudCheckBox>
     </MudItem>
     <MudItem xs="12" sm="6" md="3">
-        <MudCheckBox T="bool" @bind-Checked="_showTopOnly" Label="Show Top Only"></MudCheckBox>
+        <MudCheckBox T="bool" @bind-Value="_showTopOnly" Label="Show Top Only"></MudCheckBox>
     </MudItem>
 </MudGrid>
 <br/>

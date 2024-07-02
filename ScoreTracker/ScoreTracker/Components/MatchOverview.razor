@@ -40,7 +40,7 @@
                                              Disabled="_isSaving"
                                              CoerceText="true"
                                              Label=@($"Player {playerIndex+1}")
-                                             SearchFunc="@(s=>Task.FromResult(Seeding.Keys.Where(k=>k.Contains(s,StringComparison.OrdinalIgnoreCase)).OrderBy(k=>k.Equals(s,StringComparison.OrdinalIgnoreCase)?0:1).AsEnumerable()))"
+                                             SearchFunc="@((s,c)=>Task.FromResult(Seeding.Keys.Where(k=>k.Contains(s,StringComparison.OrdinalIgnoreCase)).OrderBy(k=>k.Equals(s,StringComparison.OrdinalIgnoreCase)?0:1).AsEnumerable()))"
                                              ValueChanged="v => UpdatePlayer(playerIndex, v)">
 
                             </MudAutocomplete>

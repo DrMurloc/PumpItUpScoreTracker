@@ -34,7 +34,7 @@
 <MudRadioGroup T="ScoringConfiguration.CalculationType" @bind-SelectedOption="@Configuration.Scoring.Formula">
     @foreach (var option in Enum.GetValues<ScoringConfiguration.CalculationType>().Where(v => v != ScoringConfiguration.CalculationType.Custom || CurrentUser.IsLoggedInAsAdmin))
     {
-        <MudRadio T="ScoringConfiguration.CalculationType" Option="@option" Color="Color.Primary">@option</MudRadio>
+        <MudRadio T="ScoringConfiguration.CalculationType" Value="@option" Color="Color.Primary">@option</MudRadio>
     }
 </MudRadioGroup>
 <br/>
@@ -66,7 +66,7 @@
     <MudExpansionPanel Text="Song Types">
         <MudGrid>
             <MudItem xs="12">
-                <MudSwitch T="bool" Color="Color.Primary" Label="Adjust Scores to Song Duration (uses 2 minutes as average chart duration)" @bind-Checked="Configuration.Scoring.AdjustToTime"></MudSwitch>
+                <MudSwitch T="bool" Color="Color.Primary" Label="Adjust Scores to Song Duration (uses 2 minutes as average chart duration)" @bind-Value="Configuration.Scoring.AdjustToTime"></MudSwitch>
             </MudItem>
             @foreach (var songType in Enum.GetValues<SongType>())
             {
@@ -79,7 +79,7 @@
     <MudExpansionPanel Text="Letter Grades">
         <MudGrid>
             <MudItem xs="12">
-                <MudSwitch T="bool" Label="Continous Modifier Scale (modifier increments between letter grades)" Color="Color.Primary" @bind-Checked="Configuration.Scoring.ContinuousLetterGradeScale"></MudSwitch>
+                <MudSwitch T="bool" Label="Continous Modifier Scale (modifier increments between letter grades)" Color="Color.Primary" @bind-Value="Configuration.Scoring.ContinuousLetterGradeScale"></MudSwitch>
             </MudItem>
             @foreach (var letterGrade in Enum.GetValues<PhoenixLetterGrade>())
             {
@@ -131,7 +131,7 @@
     <MudExpansionPanel Text="Extra Settings">
         <MudGrid>
             <MudItem xs="6">
-                <MudSwitch T="bool" Label="Allow Repeats" @bind-Checked="Configuration.AllowRepeats" Color="Color.Primary"></MudSwitch>
+                <MudSwitch T="bool" Label="Allow Repeats" @bind-Value="Configuration.AllowRepeats" Color="Color.Primary"></MudSwitch>
             </MudItem>
             <MudItem xs="6">
                 <MudNumericField T="double" Min="0" Max="100" Label="Stage Break Modifier" @bind-Value="Configuration.Scoring.StageBreakModifier"></MudNumericField>
@@ -181,9 +181,9 @@
 <MudButton Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Filled" Color="Color.Primary">Import Your Phoenix Scores</MudButton>
 
 <br/>
-<MudSwitch Label="Hide Record-less Charts" @bind-Checked="_hideUnRecordedCharts" Color="Color.Primary"></MudSwitch>
+<MudSwitch Label="Hide Record-less Charts" @bind-Value="_hideUnRecordedCharts" Color="Color.Primary"></MudSwitch>
 <br/>
-<MudSwitch Label="Hide Zero Scoring Charts" @bind-Checked="_hideZeroScoredCharts" Color="Color.Primary"></MudSwitch>
+<MudSwitch Label="Hide Zero Scoring Charts" @bind-Value="_hideZeroScoredCharts" Color="Color.Primary"></MudSwitch>
 <br/>
 @if (CurrentUser.IsLoggedInAsAdmin)
 {

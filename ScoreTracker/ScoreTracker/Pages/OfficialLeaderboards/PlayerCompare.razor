@@ -16,7 +16,7 @@
                  CoerceText="true"
                  Label=@L["Username"]
                  Value="_selectedUsername"
-                 SearchFunc="s=>Task.FromResult(_usernames.Where(u=>u.Contains(s,StringComparison.OrdinalIgnoreCase)))"
+                 SearchFunc="(s,c)=>Task.FromResult(_usernames.Where(u=>u.Contains(s,StringComparison.OrdinalIgnoreCase)))"
                  ValueChanged="SelectUser"></MudAutocomplete>
 <br />
 @if (_players.Any())
@@ -61,10 +61,10 @@
             <MudTextField @bind-Value="_searchText" Label="Song Filter" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true"></MudTextField>
         </MudItem>
         <MudItem xs="6" md="4">
-            <MudSelect T="string?" Clearable="true" Label="Winner" @bind-Value="_winnerFilter">
+            <MudSelect T="string" Clearable="true" Label="Winner" @bind-Value="_winnerFilter">
                 @foreach (var key in _players.Keys)
                 {
-                    <MudSelectItem T="string?" Value="@key">@key</MudSelectItem>
+                    <MudSelectItem T="string" Value="@key">@key</MudSelectItem>
                 }
             </MudSelect>
         </MudItem>

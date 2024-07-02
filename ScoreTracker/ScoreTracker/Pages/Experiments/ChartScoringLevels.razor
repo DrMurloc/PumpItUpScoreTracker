@@ -19,7 +19,7 @@
 <MudGrid>
     <MudItem xs="12" sm="6">
         
-        <MudAutocomplete Disabled="_isLoading" T="string" Value="_selected" ValueChanged="SetChart" CoerceValue="false" CoerceText="true" Label="Chart" SearchFunc="SearchSongs">
+        <MudAutocomplete Disabled="_isLoading" T="string" Value="_selected" ValueChanged="SetChart" CoerceValue="false" CoerceText="true" Label="Chart" SearchFunc="(s,c)=>SearchSongs(s)">
             <ItemTemplate>
                 <DifficultyBubble Chart="_chartNames[context]" Small="true"></DifficultyBubble> @_chartNames[context].Song.Name
             </ItemTemplate>

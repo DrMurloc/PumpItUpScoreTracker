@@ -16,7 +16,7 @@
         <MudButton Href=@($"/Tournament/Stamina/{TournamentId}/Record") Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit">Record Session</MudButton>
     }
     <br/>
-    <MudSwitch Label="Show Extra Info" @bind-Checked="_showExtraData" Color="Color.Primary"></MudSwitch>
+    <MudSwitch Label="Show Extra Info" @bind-Value="_showExtraData" Color="Color.Primary"></MudSwitch>
     <br/>
     <MudTable T="LeaderboardRecord" Items="_leaderboard" FixedHeader="true" Striped="true">
         <HeaderContent>
@@ -204,7 +204,7 @@
         </ChildRowContent>
     </MudTable>
 }
-<MudDialog @bind-IsVisible="_showPhotoDialog">
+<MudDialog @bind-Visible="_showPhotoDialog">
     <DialogContent>
         @if (_photoSession != null)
         {

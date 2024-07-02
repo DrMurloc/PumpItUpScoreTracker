@@ -151,7 +151,7 @@
                                  Label="Step Artist"
                                  @bind-Value="_artist"
                                  CoerceValue="true"
-                                 SearchFunc="s=>Task.FromResult(_artists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
+                                 SearchFunc="(s,c)=>Task.FromResult(_artists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
             </MudItem>
             <MudItem xs="12">
                 <MudTextField T="string" Immediate="true" Label=@("Video "+_video) Value="_video" ValueChanged="SetVideo"></MudTextField>
@@ -162,7 +162,7 @@
         </MudGrid>
     }
 }
-<MudDialog @bind-IsVisible="_showChartOverview">
+<MudDialog @bind-Visible="_showChartOverview">
     <DialogContent>
         @if (_selectedChart != null && _currentMix == MixEnum.Phoenix)
         {

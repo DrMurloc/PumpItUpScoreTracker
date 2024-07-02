@@ -184,7 +184,7 @@
 
     </ApexChart>    
 }
-<MudDialog @bind-IsVisible="_showScoreDialog">
+<MudDialog @bind-Visible="_showScoreDialog">
     <DialogContent>
         
         @if (_selectedChart != null)
@@ -202,7 +202,7 @@
 
     </DialogActions>
 </MudDialog>
-<MudDialog @bind-IsVisible="_showRateDialog">
+<MudDialog @bind-Visible="_showRateDialog">
     <DialogContent>
         <MudGrid>
             <MudItem xs="12">
@@ -219,7 +219,7 @@
                 <MudTextField @bind-Value="_notes" Lines="3" MaxLength="250" Counter=@(250-_notes.Length) Label="Additional Comments"></MudTextField>
             </MudItem>
             <MudItem xs="12">
-                <MudCheckBox T="bool" @bind-Checked="_shouldHide" Label="Hide Chart for this Category"></MudCheckBox>
+                <MudCheckBox T="bool" @bind-Value="_shouldHide" Label="Hide Chart for this Category"></MudCheckBox>
             </MudItem>
         </MudGrid>
     </DialogContent>

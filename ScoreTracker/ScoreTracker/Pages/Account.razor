@@ -37,7 +37,7 @@
                 </MudSelect>
             </MudItem>
             <MudItem xs="12">
-                <MudSwitch T="bool" Disabled="_isUpdatingUser" Label=@L["Public"] Checked="_isPublic" CheckedChanged="() => _showPublicConfirmDialog = true" Color="Color.Success"></MudSwitch>
+                <MudSwitch T="bool" Disabled="_isUpdatingUser" Label=@L["Public"] Value="_isPublic" ValueChanged="() => _showPublicConfirmDialog = true" Color="Color.Success"></MudSwitch>
             </MudItem>
             <MudItem xs="12">
                 <MudTextField Label="API Token" Disabled="true" Value="@(_apiToken?.ToString()??string.Empty)" HelperText=@($"Authorization Header: Basic {Base64Encode(":"+_apiToken)}")></MudTextField>
@@ -66,7 +66,7 @@
     </MudCardActions>
 </MudCard>
 
-<MudDialog @bind-IsVisible="_showPublicConfirmDialog">
+<MudDialog @bind-Visible="_showPublicConfirmDialog">
     <DialogContent>
         @if (_isPublic)
         {

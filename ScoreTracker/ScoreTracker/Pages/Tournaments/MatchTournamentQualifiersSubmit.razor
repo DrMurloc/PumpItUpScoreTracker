@@ -20,7 +20,7 @@
         <MudButton Href=@($"/Tournament/{TournamentId}/Qualifiers") Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Leaderboard">@L["To Leaderboard"]</MudButton>
     </MudItem>
     <MudItem xs="12">
-        <MudAutocomplete T="string" MaxLength="32" CoerceText="false" CoerceValue="true" Immediate="true" DebounceInterval="200" Label=@L["Username"] Value="_username" ValueChanged="SetUsername" SearchFunc="@(t=>Task.FromResult(_usernames.Where(u=>u.Contains(t,StringComparison.OrdinalIgnoreCase)).Append(t).Distinct()))" />
+        <MudAutocomplete T="string" MaxLength="32" CoerceText="false" CoerceValue="true" Immediate="true" DebounceInterval="200" Label=@L["Username"] Value="_username" ValueChanged="SetUsername" SearchFunc="@((t,c)=>Task.FromResult(_usernames.Where(u=>u.Contains(t,StringComparison.OrdinalIgnoreCase)).Append(t).Distinct()))" />
     </MudItem>
     @if (_currentQualifiers==null)
     {
@@ -115,7 +115,7 @@
         </MudItem>
     </MudGrid>
 }
-<MudDialog @bind-IsVisible="_showSubmit">
+<MudDialog @bind-Visible="_showSubmit">
     <DialogContent>
         @if (_submittingChart != null)
         {
@@ -131,8 +131,8 @@
                 }
                 <MudItem xs="12">
                     <MudRadioGroup T="MixEnum" @bind-SelectedOption="_addingMix">
-                        <MudRadio Option="@MixEnum.Phoenix" Color="Color.Primary">Phoenix</MudRadio>
-                        <MudRadio Option="@MixEnum.XX" Color="Color.Primary">XX</MudRadio>
+                        <MudRadio Value="@MixEnum.Phoenix" Color="Color.Primary">Phoenix</MudRadio>
+                        <MudRadio Value="@MixEnum.XX" Color="Color.Primary">XX</MudRadio>
                     </MudRadioGroup>
                 </MudItem>
                 @if (_addingMix == MixEnum.Phoenix)
@@ -192,15 +192,14 @@
                 }
                 <MudItem xs="6" sm="3" md="2">
                     <MudFileUpload T="IBrowserFile" Disabled="_isUploading" Accept=".png, .gif, .jpg, .jpeg," MaximumFileCount="1" FilesChanged="UploadFiles">
-                        <ButtonTemplate>
+                        <ActivatorContent>
                             <MudButton HtmlTag="label"
                                        Variant="Variant.Filled"
                                        Color="Color.Primary"
-                                       StartIcon="@Icons.Material.Filled.CloudUpload"
-                                       for="@context">
+                                       StartIcon="@Icons.Material.Filled.CloudUpload">
                                 @L["Upload Image"]
                             </MudButton>
-                        </ButtonTemplate>
+                        </ActivatorContent>
                     </MudFileUpload>
                 </MudItem>   
             </MudGrid>
@@ -236,7 +235,7 @@
         (_currentQualifiers?.Submissions.ContainsKey(chartId)??false) ? "border-dashed border-2" : string.Empty;
     private string CardStyle(Guid chartId) => MyBest.Any(b => b.Item1.Id == chartId) ? $@"border-color:{Colors.Green.Darken1}" :
         _suggestedCharts.Contains(chartId)?$"border-color:{Colors.LightBlue.Darken1}":
-        _currentQualifiers?.Submissions.ContainsKey(chartId) ?? false ? $"border-color:{Colors.Grey.Darken1}" : string.Empty;
+        _currentQualifiers?.Submissions.ContainsKey(chartId) ?? false ? $"border-color:{Colors.Gray.Darken1}" : string.Empty;
     private bool _showSubmit = false;
     private string _username = string.Empty;
     private bool _isSaving = false;

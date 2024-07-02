@@ -31,7 +31,7 @@
                          ResetValueOnEmptyText="true"
                          CoerceText="true"
                          Label="Song"
-                         SearchFunc="@SearchSongs"
+                         SearchFunc="(s,c)=>SearchSongs(s)"
                          ValueChanged="@SelectSongName">
 
         </MudAutocomplete>

@@ -676,15 +676,40 @@
     <value>Play at least {0}</value>
   </data>
   <data name="Group By Scoring Difficulty" xml:space="preserve">
-	  <value>Group By Scoring Difficulty</value>
-	  <comment>Group By Scoring Difficulty</comment>
+    <value>Group By Scoring Difficulty</value>
+    <comment>Group By Scoring Difficulty</comment>
   </data>
   <data name="Personalized" xml:space="preserve">
-	  <value>Personalized</value>
-	  <comment>Personalized</comment>
+    <value>Personalized</value>
+    <comment>Personalized</comment>
   </data>
   <data name="Text View" xml:space="preserve">
-	  <value>Text View</value>
-	  <comment>Text View</comment>
+    <value>Text View</value>
+    <comment>Text View</comment>
+  </data>
+  <data name="101 person tournament." xml:space="preserve">
+    <value>101 person tournament.</value>
+  </data>
+  <data name="8-10 estimated charts played per player." xml:space="preserve">
+    <value>8-10 estimated charts played per player.</value>
+  </data>
+  <data name="9+ PIU Cabinets Running Phoenix." xml:space="preserve">
+    <value>9+ PIU Cabinets Running Phoenix.</value>
+  </data>
+  <data name="99 matches tailored to each player's level." xml:space="preserve">
+    <value>99 matches tailored to each player's level.</value>
+  </data>
+  <data name="CoOp and No Bar Old School Tournaments." xml:space="preserve">
+    <value>CoOp and No Bar Old School Tournaments.</value>
+  </data>
+  <data name="The most Pump it Up that has ever been at one event." xml:space="preserve">
+    <value>The most Pump it Up that has ever been at one event.</value>
+  </data>
+  <data name="Why don't you just get up and dance, man?" xml:space="preserve">
+    <value>Why don't you just get up and dance, man?</value>
+  </data>
+  <data name="Open" xml:space="preserve">
+	  <value>Open</value>
+	  <comment>Open</comment>
   </data>
 </root>

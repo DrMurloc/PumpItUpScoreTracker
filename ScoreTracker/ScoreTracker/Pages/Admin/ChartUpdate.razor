@@ -30,7 +30,7 @@
                              Label="Step Artist"
                              @bind-Value="_stepArtist"
                              CoerceValue="true"
-                             SearchFunc="s=>Task.FromResult(_existingStepArtists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
+                             SearchFunc="(s,c)=>Task.FromResult(_existingStepArtists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
         </MudItem>
         <MudItem xs="12">
             <MudTextField T="string" Immediate="true" Label=@("Video "+_video) Value="_video" ValueChanged="SetVideo"></MudTextField>
@@ -38,16 +38,16 @@
         <MudItem xs="12">
             @foreach (var skill in Enum.GetValues<Skill>().Where(s=>!_skills.Contains(s)).OrderBy(s=>s.GetColor()))
             {
-                <MudChip Style=@($"background-color:{skill.GetColor()}") OnClick="()=>_skills.Add(skill)">@skill.GetName()</MudChip>
+                <MudChip  T="string" Style=@($"background-color:{skill.GetColor()}") OnClick="()=>_skills.Add(skill)">@skill.GetName()</MudChip>
             }
         </MudItem>
         @foreach (var skill in _skills.OrderBy(s=>s.GetColor()))
         {
             <MudItem xs="6">
-                <MudChip Style=@($"background-color:{skill.GetColor()}") OnClick="()=>_skills.Remove(skill)">@skill.GetName()</MudChip>
+                <MudChip  T="string" Style=@($"background-color:{skill.GetColor()}") OnClick="()=>_skills.Remove(skill)">@skill.GetName()</MudChip>
             </MudItem>
             <MudItem xs="6">
-                <MudCheckBox T="bool" Checked="_highlightedSkills.Contains(skill)" CheckedChanged="v=>ToggleHighlight(skill,v)" Label="Highlighted"></MudCheckBox>
+                <MudCheckBox T="bool" Value="_highlightedSkills.Contains(skill)" ValueChanged="v=>ToggleHighlight(skill,v)" Label="Highlighted"></MudCheckBox>
             </MudItem>
         }
 

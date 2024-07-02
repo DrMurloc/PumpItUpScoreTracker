@@ -67,31 +67,31 @@
     }
     <MudItem xs="12"></MudItem>
     <MudItem xs="12" lg="4">
-        <MudRadioGroup T="string" SelectedOption="@ChartTypeFilter" SelectedOptionChanged="@(c => UpdateSelection(DifficultyFilter, c, _coOpSortType))">
-            <MudRadio Option="@ChartType.Single.ToString()" Color="Color.Primary">@L.GetString("Singles")</MudRadio>
-            <MudRadio Option="@ChartType.Double.ToString()" Color="Color.Primary">@L.GetString("Doubles")</MudRadio>
-            <MudRadio Option="@ChartType.CoOp.ToString()" Color="Color.Primary">@L.GetString("CoOp")</MudRadio>
+        <MudRadioGroup T="string" Value="@ChartTypeFilter" ValueChanged="@(c => UpdateSelection(DifficultyFilter, c, _coOpSortType))">
+            <MudRadio Value="@ChartType.Single.ToString()" Color="Color.Primary">@L.GetString("Singles")</MudRadio>
+            <MudRadio Value="@ChartType.Double.ToString()" Color="Color.Primary">@L.GetString("Doubles")</MudRadio>
+            <MudRadio Value="@ChartType.CoOp.ToString()" Color="Color.Primary">@L.GetString("CoOp")</MudRadio>
         </MudRadioGroup>
     </MudItem>
     <MudHidden Breakpoint="Breakpoint.SmAndDown">
         @foreach (var type in Enum.GetValues<SongType>())
         {
             <MudItem sm="3" lg="2">
-                <MudCheckBox T="bool" Label="@type.ToString()" Checked="_filteredTypes.Contains(type)" CheckedChanged="v => ToggleFilter(v, type)"></MudCheckBox>
+                <MudCheckBox T="bool" Label="@type.ToString()" Value="_filteredTypes.Contains(type)" ValueChanged="v => ToggleFilter(v, type)"></MudCheckBox>
             </MudItem>
         }
         @if (CurrentUser.IsLoggedIn && _currentTierList != TierListType.MyScores)
         {
             <MudItem sm="4">
-                <MudSwitch T="bool" Label=@L["Hide Completed Charts"] Checked="_hideCompleted" CheckedChanged="v => ToggleVisibility(v, _showOnlyTodos)" Color="Color.Primary"></MudSwitch>
+                <MudSwitch T="bool" Label=@L["Hide Completed Charts"] Value="_hideCompleted" ValueChanged="v => ToggleVisibility(v, _showOnlyTodos)" Color="Color.Primary"></MudSwitch>
             </MudItem>
             <MudItem sm="4">
-                <MudSwitch T="bool" Label=@L["Show Only ToDo Charts"] Checked="_showOnlyTodos" CheckedChanged="v => ToggleVisibility(_hideCompleted, v)" Color="Color.Primary"></MudSwitch>
+                <MudSwitch T="bool" Label=@L["Show Only ToDo Charts"] Value="_showOnlyTodos" ValueChanged="v => ToggleVisibility(_hideCompleted, v)" Color="Color.Primary"></MudSwitch>
             </MudItem>
             <MudItem sm="4"></MudItem>
         }
         <MudItem sm="4">
-            <MudAutocomplete T="string" Label=@L["Song Name"] AdornmentIcon="@Icons.Material.Filled.Search" Value="_songFilter" ValueChanged="ToggleSongSearch" SearchFunc="FilterSongName" CoerceText="false" CoerceValue="true"></MudAutocomplete>
+            <MudAutocomplete T="string" Label=@L["Song Name"] AdornmentIcon="@Icons.Material.Filled.Search" Value="_songFilter" ValueChanged="ToggleSongSearch" SearchFunc="(s,c)=>FilterSongName(s)" CoerceText="false" CoerceValue="true"></MudAutocomplete>
         </MudItem>
 
     </MudHidden>
@@ -105,21 +105,21 @@
         @foreach (var type in Enum.GetValues<SongType>())
         {
             <MudItem sm="6">
-                <MudCheckBox T="bool" Label="@type.ToString()" Checked="_filteredTypes.Contains(type)" CheckedChanged="v=>ToggleFilter(v,type)"></MudCheckBox>
+                <MudCheckBox T="bool" Label="@type.ToString()" Value="_filteredTypes.Contains(type)" ValueChanged="v=>ToggleFilter(v,type)"></MudCheckBox>
             </MudItem>
         }
         @if (CurrentUser.IsLoggedIn && _currentTierList != TierListType.MyScores)
         {
             <MudItem xs="12">
-                <MudSwitch T="bool" Label=@L["Hide Completed Charts"] Checked="_hideCompleted" CheckedChanged="v => ToggleVisibility(v, _showOnlyTodos)" Color="Color.Primary"></MudSwitch>
+                <MudSwitch T="bool" Label=@L["Hide Completed Charts"] Value="_hideCompleted" ValueChanged="v => ToggleVisibility(v, _showOnlyTodos)" Color="Color.Primary"></MudSwitch>
             </MudItem>
             <MudItem xs="12">
-                <MudSwitch T="bool" Label=@L["Show Only ToDo Charts"] Checked="_showOnlyTodos" CheckedChanged="v => ToggleVisibility(_hideCompleted, v)" Color="Color.Primary"></MudSwitch>
+                <MudSwitch T="bool" Label=@L["Show Only ToDo Charts"] Value="_showOnlyTodos" ValueChanged="v => ToggleVisibility(_hideCompleted, v)" Color="Color.Primary"></MudSwitch>
             </MudItem>
         }
 
         <MudItem xs="12">
-            <MudAutocomplete T="string" Label=@L["Song Name"] AdornmentIcon="@Icons.Material.Filled.Search" Value="_songFilter" ValueChanged="ToggleSongSearch" SearchFunc="FilterSongName" CoerceText="false" CoerceValue="true"></MudAutocomplete>
+            <MudAutocomplete T="string" Label=@L["Song Name"] AdornmentIcon="@Icons.Material.Filled.Search" Value="_songFilter" ValueChanged="ToggleSongSearch" SearchFunc="(s,c)=>FilterSongName(s)" CoerceText="false" CoerceValue="true"></MudAutocomplete>
         </MudItem>
         <MudItem xs="12">
             <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>_showSettings=false">@L["Close"]</MudButton>
@@ -135,10 +135,10 @@
 
     <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_strongCharts" Name="Strong" OutlineColor="@Colors.Blue.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo"  OnEdit="EditChart"></TierListSection>
     <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_averageCharts" Name="Average" OutlineColor="@Colors.Cyan.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_weakCharts" Name="Weak" OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo"  OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_weakCharts" Name="Weak" OutlineColor="@Colors.Gray.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
     <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_veryWeakCharts" Name="Very Weak" OutlineColor="@Colors.Yellow.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo"  OnEdit="EditChart"></TierListSection>
     <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_megaWeakCharts" Name="Mega Weak" OutlineColor="@Colors.Yellow.Darken1" Passes="_passes"  ToDos="_todos" ToggleToDo="ToggleTodo"  OnEdit="EditChart"></TierListSection>
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_notRatedCharts" Name=@L.GetString("Not Rated") OutlineColor="@Colors.Grey.Darken1" Passes="_passes"  ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_notRatedCharts" Name=@L.GetString("Not Rated") OutlineColor="@Colors.Gray.Darken1" Passes="_passes"  ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
 
 }
 else if (_currentTierList is TierListType.Difficulty or TierListType.MyScores or TierListType.Scores or TierListType.OfficialScores)
@@ -147,9 +147,9 @@ else if (_currentTierList is TierListType.Difficulty or TierListType.MyScores or
     {
         @foreach (var group in _coOpLevels.OrderByDescending(g => g.Key))
         {
-            <TierListSection Type="TierListType.Difficulty" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="group.Value" Name="@group.Key.ToString()" OutlineColor="@Colors.Grey.Darken1" Passes="_passes" OnEdit="EditChart"></TierListSection>
+            <TierListSection Type="TierListType.Difficulty" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="group.Value" Name="@group.Key.ToString()" OutlineColor="@Colors.Gray.Darken1" Passes="_passes" OnEdit="EditChart"></TierListSection>
         }
-        <TierListSection Type="TierListType.Difficulty" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_unratedCoOps" Name="Unrated" OutlineCOlor="@Colors.Grey.Darken1" Passes="_passes" OnEdit="EditChart"></TierListSection>
+        <TierListSection Type="TierListType.Difficulty" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_unratedCoOps" Name="Unrated" OutlineCOlor="@Colors.Gray.Darken1" Passes="_passes" OnEdit="EditChart"></TierListSection>
     }
     else
     {
@@ -157,11 +157,11 @@ else if (_currentTierList is TierListType.Difficulty or TierListType.MyScores or
         <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_underratedCharts" Name=@L.GetString("1+ Level Harder") OutlineColor="@Colors.Red.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
         <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_veryHardCharts" Name=@L.GetString("Very Hard") OutlineColor="@Colors.Orange.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
         <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_hardCharts" Name=@L.GetString("Hard") OutlineColor="@Colors.Yellow.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
-        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_mediumCharts" Name=@L.GetString("Medium") OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
+        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_mediumCharts" Name=@L.GetString("Medium") OutlineColor="@Colors.Gray.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
         <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_easyCharts" Name=@L.GetString("Easy") OutlineColor="@Colors.Cyan.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
         <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_veryEasyCharts" Name=@L.GetString("Very Easy") OutlineColor="@Colors.Blue.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
         <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings"  Charts="_overratedCharts" Name=@L.GetString("1+ Level Easier") OutlineColor="@Colors.Purple.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
-        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_notRatedCharts" Name=@L.GetString("Not Rated") OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
+        <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_notRatedCharts" Name=@L.GetString("Not Rated") OutlineColor="@Colors.Gray.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
 
     }
 }
@@ -172,12 +172,12 @@ else
 
     <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_veryEasyCharts" Name="SS" OutlineColor="@Colors.Blue.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
     <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_easyCharts" Name="S" OutlineColor="@Colors.Cyan.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_mediumCharts" Name="A"OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_mediumCharts" Name="A" OutlineColor="@Colors.Gray.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
     <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_hardCharts" Name="B" OutlineColor="@Colors.Yellow.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
     <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_veryHardCharts" Name="C" OutlineColor="@Colors.Orange.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
 
     <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_underratedCharts" Name="D" OutlineColor="@Colors.Red.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
-    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_notRatedCharts" Name=@L.GetString("Not Rated") OutlineColor="@Colors.Grey.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
+    <TierListSection Type="@_currentTierList" Scores="_phoenixScores" ToggleRating="UpdateRating" PlayerRatings="_userRatings" Charts="_notRatedCharts" Name=@L.GetString("Not Rated") OutlineColor="@Colors.Gray.Darken1" Passes="_passes" ToDos="_todos" ToggleToDo="ToggleTodo" OnEdit="EditChart"></TierListSection>
     
 }
 
@@ -249,7 +249,7 @@ else
     </MudGrid>
 }
 
-<MudDialog @bind-IsVisible="_showEditDialog">
+<MudDialog @bind-Visible="_showEditDialog">
     <DialogContent>
         @if (_selectedChartId != Guid.Empty)
         {

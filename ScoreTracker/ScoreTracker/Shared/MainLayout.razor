@@ -17,8 +17,9 @@
 <PageTitle>PIU Scores</PageTitle>
 
 <MudThemeProvider Theme="Theme" />
-<MudDialogProvider/>
-<MudSnackbarProvider/>
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
 <ChartVideoDisplay></ChartVideoDisplay>
 <MudLayout>
     <MudAppBar Color="Color.Primary" Fixed="false">
@@ -124,23 +125,38 @@
                 }
             </MudNavGroup>
         </MudNavMenu>
+        
+        <MudSpacer></MudSpacer>
+        <MudNavMenu>
+            <MudNavLink Href="https://discord.gg/MEYvr3bFte" Target="_blank" Icon="@Icons.Custom.Brands.Discord">Discord</MudNavLink>
+        </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
         <MudContainer>
             @Body
             
-            <MudDialog @bind-IsVisible="_showDiscordDialog">
+            <MudDialog @bind-Visible="_showBite">
                 <DialogContent>
-                    <MudText Typo="Typo.h4">@L["New Discord"]</MudText>
-                    @L["New Discord Disclaimer"]<br/><MudButton Href="https://discord.gg/MEYvr3bFte" Target="_blank" StartIcon="@Icons.Custom.Brands.Discord" Variant="Variant.Filled" Color="Color.Primary">PiuScores Discord</MudButton>
+                    <MudImage Src="https://piuimages.arroweclip.se/BiteBanner.jpg" Height="100" ObjectFit="ObjectFit.ScaleDown" Style="display:block;margin-left:auto;margin-right:auto;"></MudImage>
+                    <MudText Typo="Typo.subtitle1" Style="text-align:center;">
+                        @L["9+ PIU Cabinets Running Phoenix."]
+                        <br/>@L["101 person tournament."]
+                        <br/>@L["99 matches tailored to each player's level."]
+                        <br/>@L["8-10 estimated charts played per player."]
+                        <br/>@L["CoOp and No Bar Old School Tournaments."]
+                        <br/>@L["The most Pump it Up that has ever been at one event."]
+                        <br/>@L["Why don't you just get up and dance, man?"]
+                    </MudText>
                 </DialogContent>
                 <DialogActions>
                     <MudSpacer></MudSpacer>
+                    <MudButton Href="https://bitegaming.org/?source=piuscores" Target="_blank" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Link" Variant="Variant.Outlined">@L["Open"]</MudButton>
                     <MudButton Variant="Variant.Text"
-                               OnClick="()=>_showDiscordDialog=false"
+                               OnClick="()=>_showBite=false"
                                Color="Color.Primary">@L["Close"]</MudButton>
                 </DialogActions>
             </MudDialog>
+
         </MudContainer>
     </MudMainContent>
 </MudLayout>
@@ -151,8 +167,8 @@
 {
     private bool _isOpen = false;
     private Guid? _userId = null;
-    private bool _showDiscordDialog = false;
-    private const string DiscordPopupKey = "MainLayout__DiscordPopupShown";
+    private bool _showBite = false;
+    private const string BitePopupKey = "MainLayout__BitePopupShown";
     private MixEnum _currentMix = MixEnum.Phoenix;
     private string _profileImage = string.Empty;
     private string _gamerTag = string.Empty;
@@ -167,14 +183,15 @@
         _userId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null;
         _highlightedEvents = (await Mediator.Send(new GetAllTournamentsQuery()))
             .Where(e => e.IsHighlighted);
+        var hasShown = await UiSettings.GetSetting(BitePopupKey);
+        if (string.IsNullOrWhiteSpace(hasShown))
+        {
+            _showBite = true;
+            await UiSettings.SetSetting(BitePopupKey,"true");
+        }
         if (CurrentUser.IsLoggedIn)
         {
             var settings = await Mediator.Send(new GetUserUiSettingsQuery());
-            if (!settings.ContainsKey(DiscordPopupKey))
-            {
-                _showDiscordDialog = true;
-                await Mediator.Send(new SaveUserUiSettingCommand(DiscordPopupKey, "true"));
-            }
             _profileImage = settings.TryGetValue("ProfileImage", out var image) ? image :
                 "https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png";
             _gamerTag = settings.TryGetValue("GameTag", out var tag) ? tag : "";
@@ -190,7 +207,29 @@
 
     private static readonly MudTheme Theme = new()
         {
-            Palette = new()
+            
+            PaletteLight = new()
+            {
+    //77BCDC
+    //466E8d
+                Primary = "#80B3D4",
+                Secondary = "#8FBCD8",
+                Error = "#C72020",
+                Success = "#6EDE7F",
+                Warning = "#FFC433",
+                TextPrimary = "#EDF1F5",
+                TextSecondary = "#EDF1F5",
+                ActionDefault = "#EDF1F5",
+                ActionDisabled = "#d3d3d3",
+                Background = "#18191A",
+                BackgroundGray = "#3A3B3C",
+                Surface = "#242526",
+                TextDisabled = "#d3d3d3",
+                DrawerBackground = "#283E5C",
+                DrawerIcon = "#EDF1F5",
+                DrawerText = "#EDF1F5"
+            },
+            PaletteDark = new()
             {
                 //77BCDC
                 //466E8d
@@ -204,7 +243,7 @@
                 ActionDefault = "#EDF1F5",
                 ActionDisabled = "#d3d3d3",
                 Background = "#18191A",
-                BackgroundGrey = "#3A3B3C",
+                BackgroundGray = "#3A3B3C",
                 Surface = "#242526",
                 TextDisabled = "#d3d3d3",
                 DrawerBackground = "#283E5C",

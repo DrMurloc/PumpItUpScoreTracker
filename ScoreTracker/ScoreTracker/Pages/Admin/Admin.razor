@@ -41,7 +41,7 @@ Do It
                              ResetValueOnEmptyText="true"
                              CoerceText="true"
                              Label="Song"
-                             SearchFunc="Search"
+                             SearchFunc="(s,c)=>Search(s)"
                              ValueChanged="@SelectSong" MaxItems="100">
 
             </MudAutocomplete>
@@ -102,7 +102,7 @@ Do It
                                  Label="Song Artist"
                                  @bind-Value="_songArtist"
                                  CoerceValue="true"
-                                 SearchFunc="s=>Task.FromResult(_songArtists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
+                                 SearchFunc="(s,c)=>Task.FromResult(_songArtists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
             </MudItem>
 
             <MudItem xs="6">
@@ -135,7 +135,7 @@ Do It
                                      Label="Step Artist"
                                      @bind-Value="chart.StepArtist"
                                      CoerceValue="true"
-                                     SearchFunc="s=>Task.FromResult(_stepArtists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
+                                     SearchFunc="(s,c)=>Task.FromResult(_stepArtists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
                 </MudItem>
             }
             <MudItem xs="12">
@@ -205,16 +205,16 @@ Do It
 
 
     // await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
-   // await Mediator.Send(new ProcessChartPopularityCommand());
+    //await Mediator.Send(new ProcessChartPopularityCommand());
     //await WorldRanking.CalculateWorldRankings(CancellationToken.None);
 
 
-    var userIds = await Database.User.Select(u => u.Id).ToArrayAsync();
+    /*var userIds = await Database.User.Select(u => u.Id).ToArrayAsync();
         foreach (var userId in userIds)
         {
             await Mediator.Send(new PlayerRatingSaga.RecalculateStats(userId));
         }
-        Snackbar.Add("Done", Severity.Success);
+        Snackbar.Add("Done", Severity.Success);*/
 
     }
 
@@ -249,9 +249,9 @@ Do It
     private async Task SelectSong(string songName)
     {
         songName = songName ?? string.Empty;
-        if (_autocomplete.IsOpen)
+        if (_autocomplete.Open)
         {
-            await _autocomplete.ToggleMenu();
+            await _autocomplete.ToggleMenuAsync();
         }
         _songSearchString = songName;
         _selectedChart = null;

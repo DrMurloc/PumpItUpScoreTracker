@@ -4,7 +4,7 @@
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.SecondaryPorts
 @inject IMediator Mediator;
-<MudAutocomplete Dense="true" Disabled="Disabled" T="string" Value="_selected" ValueChanged="SetChart" MaxItems="15" CoerceValue="false" CoerceText="true" Label="Chart" SearchFunc="SearchSongs">
+<MudAutocomplete Dense="true" Disabled="Disabled" T="string" Value="_selected" ValueChanged="SetChart" MaxItems="15" CoerceValue="false" CoerceText="true" Label="Chart" SearchFunc="(s,c)=>SearchSongs(s)">
     <ItemTemplate>
         <SongImage Song="_chartNames[context].Song" Small="true"></SongImage>
         <DifficultyBubble Chart="_chartNames[context]" Small="true"></DifficultyBubble> @_chartNames[context].Song.Name
