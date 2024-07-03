@@ -4,6 +4,7 @@ using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
 
@@ -128,6 +129,108 @@ namespace ScoreTracker.Data.Repositories
                 cancellationToken: cancellationToken);
             return new QualifiersConfiguration(charts2, Modifiers, config.ScoringType, config.NotificationChannel,
                 config.ChartPlayCount);
+        }
+
+        public async Task SaveTeam(Guid tournamentId, CoOpTeam team, CancellationToken cancellationToken = default)
+        {
+            var playerNames = new[] { team.Player2.Tag.ToString(), team.Player1.Tag.ToString() };
+            var individualPlayers =
+                await _database.CoOpPlayers.Where(p => playerNames.Contains(p.PlayerName)).ToArrayAsync(
+                    cancellationToken);
+            _database.CoOpPlayers.RemoveRange(individualPlayers);
+            await _database.CoOpPlayers.AddRangeAsync(new[]
+            {
+                new CoOpPlayerEntity
+                {
+                    PlayerName = team.Player1.Tag,
+                    CoOpTitle = team.Player1.HighestCoOpTitle,
+                    DifficultyTitle = team.Player1.HighestStandardTitle,
+                    IsInTeam = true,
+                    TournamentId = tournamentId
+                },
+                new CoOpPlayerEntity
+                {
+                    PlayerName = team.Player2.Tag,
+                    CoOpTitle = team.Player2.HighestCoOpTitle,
+                    DifficultyTitle = team.Player2.HighestStandardTitle,
+                    IsInTeam = true,
+                    TournamentId = tournamentId
+                }
+            }, cancellationToken);
+            var teamName = team.TeamName.ToString();
+            var existingTeam =
+                await _database.CoOpTeam.FirstOrDefaultAsync(
+                    t => t.TournamentId == tournamentId && t.TeamName == teamName, cancellationToken);
+            if (existingTeam == null)
+            {
+                await _database.CoOpTeam.AddAsync(new CoOpTeamEntity
+                {
+                    Player1Name = team.Player1.Tag,
+                    Player2Name = team.Player2.Tag,
+                    Seed = team.Seed,
+                    TeamName = team.TeamName,
+                    TournamentId = tournamentId
+                }, cancellationToken);
+            }
+            else
+            {
+                existingTeam.Seed = team.Seed;
+                existingTeam.Player1Name = team.Player1.Tag;
+                existingTeam.Player2Name = team.Player2.Tag;
+            }
+
+            await _database.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task SaveIndividualPlayer(Guid tournamentId, CoOpPlayer player,
+            CancellationToken cancellationToken = default)
+        {
+            var playerName = player.Tag.ToString();
+            var entity =
+                await _database.CoOpPlayers.FirstOrDefaultAsync(
+                    p => p.TournamentId == tournamentId && p.PlayerName == playerName, cancellationToken);
+            if (entity == null)
+            {
+                await _database.CoOpPlayers.AddAsync(new CoOpPlayerEntity
+                {
+                    TournamentId = tournamentId,
+                    CoOpTitle = player.HighestCoOpTitle,
+                    DifficultyTitle = player.HighestStandardTitle,
+                    IsInTeam = false,
+                    PlayerName = playerName
+                }, cancellationToken);
+            }
+            else
+            {
+                entity.IsInTeam = false;
+                entity.CoOpTitle = player.HighestCoOpTitle;
+                entity.DifficultyTitle = player.HighestStandardTitle;
+            }
+
+            await _database.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<CoOpPlayer>> GetIndividualCoopPlayers(Guid tournamentId,
+            CancellationToken cancellationToken = default)
+        {
+            return (await _database.CoOpPlayers.Where(c => !c.IsInTeam)
+                    .ToArrayAsync(cancellationToken))
+                .Select(e => new CoOpPlayer(e.PlayerName, e.CoOpTitle, e.DifficultyTitle))
+                .ToArray();
+        }
+
+        public async Task<IEnumerable<CoOpTeam>> GetCoOpTeams(Guid tournamentId,
+            CancellationToken cancellationToken = default)
+        {
+            return await (from t in _database.CoOpTeam
+                    join p1 in _database.CoOpPlayers on new { t.TournamentId, Name = t.Player1Name } equals new
+                        { p1.TournamentId, Name = p1.PlayerName }
+                    join p2 in _database.CoOpPlayers on new { t.TournamentId, Name = t.Player2Name } equals new
+                        { p2.TournamentId, Name = p2.PlayerName }
+                    where t.TournamentId == tournamentId
+                    select new CoOpTeam(t.TeamName, new CoOpPlayer(p1.PlayerName, p1.CoOpTitle, p1.DifficultyTitle),
+                        new CoOpPlayer(p2.PlayerName, p2.CoOpTitle, p2.DifficultyTitle), t.Seed)
+                ).ToArrayAsync(cancellationToken);
         }
     }
 }

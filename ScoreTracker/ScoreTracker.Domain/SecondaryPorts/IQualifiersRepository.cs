@@ -1,4 +1,5 @@
 ﻿using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.SecondaryPorts
@@ -16,5 +17,13 @@ namespace ScoreTracker.Domain.SecondaryPorts
 
         Task<QualifiersConfiguration> GetQualifiersConfiguration(Guid tournamentId,
             CancellationToken cancellationToken = default);
+
+        Task SaveTeam(Guid tournamentId, CoOpTeam team, CancellationToken cancellationToken = default);
+        Task SaveIndividualPlayer(Guid tournamentId, CoOpPlayer player, CancellationToken cancellationToken = default);
+
+        Task<IEnumerable<CoOpPlayer>> GetIndividualCoopPlayers(Guid tournamentId,
+            CancellationToken cancellationToken = default);
+
+        Task<IEnumerable<CoOpTeam>> GetCoOpTeams(Guid tournamentId, CancellationToken cancellationToken = default);
     }
 }

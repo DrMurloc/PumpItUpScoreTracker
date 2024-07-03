@@ -3,6 +3,7 @@
     public enum TournamentType
     {
         Stamina,
-        Match
+        Match,
+        CoOp
     }
 }

@@ -235,6 +235,18 @@
                         NavManager.NavigateTo($"/Tournament/{tournamentId}/Qualifiers");
                     }
                     break;
+            case TournamentType.CoOp:
+                if (_tournaments[tournamentId].StartDate != null && _tournaments[tournamentId].StartDate <= Now)
+                {
+                        
+                    NavManager.NavigateTo($"/Tournament/{tournamentId}/Brackets");
+                }
+                else
+                {
+                        
+                    NavManager.NavigateTo($"/Tournament/{tournamentId}/CoOp/Matchmaker");
+                }
+                break;
         }
     }
 

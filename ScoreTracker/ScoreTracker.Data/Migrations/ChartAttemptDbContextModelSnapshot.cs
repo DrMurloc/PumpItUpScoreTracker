@@ -255,6 +255,35 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("ChartVideo", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.CoOpPlayerEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CoOpTitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DifficultyTitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsInTeam")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PlayerName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("TournamentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CoOpPlayers", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.CoOpRatingEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -275,6 +304,39 @@ namespace ScoreTracker.Data.Migrations
                     b.HasIndex("ChartId");
 
                     b.ToTable("CoOpRating", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.CoOpTeamEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Player1Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Player2Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Seed")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TeamName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("TournamentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TournamentId");
+
+                    b.ToTable("CoOpTeam", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.CommunityChannelEntity", b =>

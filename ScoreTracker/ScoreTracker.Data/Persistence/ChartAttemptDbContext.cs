@@ -70,6 +70,8 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<WeeklyUserEntry> WeeklyUserEntry { get; set; }
     public DbSet<UserWeeklyPlacingEntity> UserWeeklyPlacing { get; set; }
     public DbSet<PastTourneyChartsEntity> PastTourneyCharts { get; set; }
+    public DbSet<CoOpTeamEntity> CoOpTeam { get; set; }
+    public DbSet<CoOpPlayerEntity> CoOpPlayers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

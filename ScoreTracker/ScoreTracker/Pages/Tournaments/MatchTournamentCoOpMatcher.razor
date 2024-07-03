@@ -1,0 +1,260 @@
+﻿@page "/Tournament/{TournamentId:guid}/CoOp/Matchmaker"
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Domain.Enums
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Models.Titles.Phoenix
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Components
+
+<PageTitle>@_tournamentName CoOp Matchmaker</PageTitle>
+
+<MudText Typo="Typo.h4">@_tournamentName Matchmaker</MudText>
+
+
+@if (_teams.Any())
+{
+    <br/><br/>
+    <MudText Typo="Typo.h5">Teams:</MudText>
+    <MudTable T="CoOpTeam" Items="_teams.OrderByDescending(t => t.Seed)">
+        <HeaderContent>
+            <MudTh>Seed</MudTh>
+            <MudTh>Team Name</MudTh>
+            <MudTh>Player 1</MudTh>
+            <MudTh>Player 2</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Seed</MudTd>
+            <MudTd>@context.TeamName</MudTd>
+            <MudTd>@context.Player1.Tag</MudTd>
+            <MudTd>@context.Player2.Tag</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@if (_individualPlayers.Any())
+{
+    <br />
+    <br />
+    <MudText Typo="Typo.h5">Players without teams</MudText>
+    @foreach (var individualPlayer in _individualPlayers.OrderBy(p => p.Tag))
+    {
+        <MudText Typo="Typo.subtitle1">@individualPlayer.Tag</MudText>
+    }
+}
+
+
+<br/><br/>
+<MudText Typo="Typo.h5">Register</MudText>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudRadioGroup T="string" @bind-Value="_registrationType">
+            <MudRadio T="string" Value=@("Individual")>@L["Individual"]</MudRadio>
+            <MudRadio T="string" Value=@("Team")>@L["Team"]</MudRadio>
+        </MudRadioGroup>
+    </MudItem>
+    @if (_registrationType == "Team")
+    {
+        <MudItem xs="12">
+            <MudTextField MaxLength="20" Label="Team Name" @bind-Value="_teamName"></MudTextField>
+        </MudItem>
+        <MudItem xs="6">
+            <MudAutocomplete T="string" Value="_player1Name"
+                             ValueChanged="SetPlayer1Name"
+                             CoerceValue="true"
+                             CoerceText="false"
+                             Label="P1 Name"
+                             SearchFunc="(s,c)=>Task.FromResult(_individualPlayers.Select(p=>p.Tag.ToString()).Where(p=>p.Contains(s,StringComparison.OrdinalIgnoreCase)))"></MudAutocomplete>
+        </MudItem>
+        <MudItem xs="6">
+            <MudAutocomplete T="string" Value="_player2Name"
+                             ValueChanged="SetPlayer2Name"
+                             CoerceValue="true"
+                             CoerceText="false"
+                             Label="P2 Name"
+                             SearchFunc="(s,c)=>Task.FromResult(_individualPlayers.Select(p=>p.Tag.ToString()).Where(p=>p.Contains(s,StringComparison.OrdinalIgnoreCase)))"></MudAutocomplete>
+        </MudItem>
+        <MudItem xs="6">
+            <MudSelect T="string" @bind-Value="_player1CoOpTitle" Label="P1 CoOp Title" Clearable="true">
+                @foreach (var title in _coOpTitles)
+                {
+                    <MudSelectItem T="string" Value="@title">@title</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="6">
+            <MudSelect T="string" @bind-Value="_player2CoOpTitle" Label="P2 CoOp Title" Clearable="true">
+                @foreach (var title in _coOpTitles)
+                {
+                    <MudSelectItem T="string" Value="@title">@title</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="6">
+            <MudSelect T="string" Label="P1 Difficulty Title" @bind-Value="_player1DifficultyTitle" Clearable="true">
+                @foreach (var title in _difficultyTitles)
+                {
+                    <MudSelectItem T="string" Value="@title">@title</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="6">
+            <MudSelect T="string" Label="P2 Difficulty Title" @bind-Value="_player2DifficultyTitle" Clearable="true">
+                @foreach (var title in _difficultyTitles)
+                {
+                    <MudSelectItem T="string" Value="@title">@title</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12">
+            <MudText Typo="Typo.subtitle1">Only DrMurloc can see your titles for seeding and matchmaking purposes.</MudText>
+        </MudItem>
+        <MudItem xs="12">
+            <MudButton Color="Color.Primary" Disabled="_isSaving || string.IsNullOrWhiteSpace(_teamName)|| string.IsNullOrWhiteSpace(_player1Name) || string.IsNullOrWhiteSpace(_player2Name) || PlayerNamesMatchATeam" OnClick="SubmitTeam">Register</MudButton>
+        </MudItem>
+    }
+    else
+    {
+        <MudItem xs="12">
+            <MudTextField MaxLength="20" Label="Player Tag" @bind-Value="_playerName"></MudTextField>
+        </MudItem>
+        <MudItem xs="12">
+            <MudSelect T="string" @bind-Value="_playerCoOpTitle" Label="CoOp Title" Clearable="true">
+                <MudSelectItem T="string" Value=@("")>None</MudSelectItem>
+                @foreach (var title in _coOpTitles)
+                {
+                    <MudSelectItem T="string" Value="@title">@title</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12">
+            <MudSelect T="string" Label="Difficulty Title" @bind-Value="_playerDifficultyTitle" Clearable="true">
+                <MudSelectItem T="string" Value=@("")>None</MudSelectItem>
+                @foreach (var title in _difficultyTitles)
+                {
+                    <MudSelectItem T="string" Value="@title">@title</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12">
+            <MudText Typo="Typo.subtitle1">Only DrMurloc can see your titles for seeding and matchmaking purposes.</MudText>
+        </MudItem>
+        <MudItem xs="12">
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="_isSaving || string.IsNullOrWhiteSpace(_playerName) || _existingNames.Contains(_playerName)" OnClick="SubmitIndividual">@L["Submit"]</MudButton>
+        </MudItem>
+    }
+</MudGrid>
+
+@inject ICurrentUserAccessor CurrentUser
+@inject IQualifiersRepository Qualifiers
+@inject ISnackbar Snackbar
+@inject NavigationManager NavManager;
+@inject IMediator Mediator;
+@code
+{
+    private IList<CoOpTeam> _teams = new List<CoOpTeam>();
+    private IList<CoOpPlayer> _individualPlayers = new List<CoOpPlayer>();
+    private Name _tournamentName;
+    private string _registrationType = "Individual";
+    private string _teamName = string.Empty;
+
+    private string _player1Name = string.Empty;
+    private string _player1CoOpTitle = string.Empty;
+    private string _player1DifficultyTitle = string.Empty;
+    private bool PlayerNamesMatchATeam => new[] { _player1Name, _player2Name }.Any(n => _teams.Any(e => e.Player1.Tag == n || e.Player2.Tag == n));
+    private string _player2Name = string.Empty;
+    private string _player2CoOpTitle = string.Empty;
+    private string _player2DifficultyTitle = string.Empty;
+
+    private string _playerName = string.Empty;
+    private string _playerCoOpTitle = string.Empty;
+    private string _playerDifficultyTitle = string.Empty;
+    private bool _isSaving = false;
+    private IEnumerable<string> _difficultyTitles = Array.Empty<string>();
+    private ISet<string> _existingNames = new HashSet<string>();
+    private IEnumerable<string> _coOpTitles = Array.Empty<string>();
+
+    private void SetPlayer1Name(string name)
+    {
+        _player1Name = name;
+        var foundPlayer = _individualPlayers.FirstOrDefault(p => p.Tag == name);
+        _player1CoOpTitle = foundPlayer?.HighestCoOpTitle.ToString() ?? "";
+        _player1DifficultyTitle = foundPlayer?.HighestStandardTitle.ToString() ?? "";
+    }
+
+    private void SetPlayer2Name(string name)
+    {
+        _player2Name = name;
+        var foundPlayer = _individualPlayers.FirstOrDefault(p => p.Tag == name);
+        _player2CoOpTitle = foundPlayer?.HighestCoOpTitle.ToString() ?? "";
+        _player2DifficultyTitle = foundPlayer?.HighestStandardTitle.ToString() ?? "";
+    }
+    private async Task SubmitIndividual()
+    {
+        _isSaving = true;
+        var player = new CoOpPlayer(_playerName, string.IsNullOrWhiteSpace(_playerCoOpTitle) ? null : (Name?)_playerCoOpTitle,
+            string.IsNullOrWhiteSpace(_playerDifficultyTitle) ? null : (Name?)_playerDifficultyTitle);
+        await Qualifiers.SaveIndividualPlayer(TournamentId, player);
+        _existingNames.Add(_playerName);
+        _individualPlayers.Add(player);
+        Snackbar.Add("Registered as Individual!", Severity.Success);
+        _isSaving = false;
+    }
+
+    private async Task SubmitTeam()
+    {
+        _isSaving = true;
+        var player1 = new CoOpPlayer(_player1Name, string.IsNullOrWhiteSpace(_player1CoOpTitle) ? null : (Name?)_player1CoOpTitle,
+            string.IsNullOrWhiteSpace(_player1DifficultyTitle) ? null : (Name?)_player1DifficultyTitle);
+        var player2 = new CoOpPlayer(_player2Name, string.IsNullOrWhiteSpace(_player2CoOpTitle) ? null : (Name?)_player2CoOpTitle,
+            string.IsNullOrWhiteSpace(_player2DifficultyTitle) ? null : (Name?)_player2DifficultyTitle);
+        var team = new CoOpTeam(_teamName, player1, player2,null);
+        await Qualifiers.SaveTeam(TournamentId, team);
+        var foundPlayers = _individualPlayers.Where(p => p.Tag == player1.Tag || p.Tag == player2.Tag);
+        foreach (var player in foundPlayers)
+        {
+            _individualPlayers.Remove(player);
+        }
+        _teams.Add(team);
+        _isSaving = false;
+    }
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "TournamentId")]
+    public Guid TournamentId { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        _teams = (await Qualifiers.GetCoOpTeams(TournamentId)).ToList();
+        _individualPlayers = (await Qualifiers.GetIndividualCoopPlayers(TournamentId)).ToList();
+        var tournament = (await Mediator.Send(new GetAllTournamentsQuery()))
+            .FirstOrDefault(t => t.Id == TournamentId);
+        _tournamentName = tournament.Name;
+        _existingNames = _individualPlayers.Select(i => i.Tag).Concat(_teams.SelectMany(t => new[] { t.Player1.Tag, t.Player2.Tag }))
+            .Distinct().Select(t=>t.ToString()).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var titles = (await Mediator.Send(new GetTitleProgressQuery(MixEnum.Phoenix))).ToArray();
+        var coOpTitles = titles.Where(t => t.Title is PhoenixCoOpTitle)
+            .OrderBy(t=>((PhoenixCoOpTitle)t.Title).RequiredRating).ToArray();
+        var difficultyTitles = titles.Where(t => t.Title is PhoenixDifficultyTitle)
+            .OrderBy(t=>((PhoenixDifficultyTitle)t.Title).Level)
+            .ThenBy(t=>((PhoenixDifficultyTitle)t.Title).RequiredRating)
+            .ToArray();
+        if (CurrentUser.IsLoggedIn)
+        {
+            _playerName = _player1Name = CurrentUser.User.Name;
+            var achievedCoOps = coOpTitles.Where(c => c.IsComplete).ToArray();
+            if (achievedCoOps.Any())
+            {
+                _player1CoOpTitle = _playerCoOpTitle = achievedCoOps.Last().Title.Name;
+            }
+            var achievedDifficulties = difficultyTitles.Where(c => c.IsComplete).ToArray();
+            if (achievedDifficulties.Any())
+            {
+                _player1DifficultyTitle = _playerDifficultyTitle = achievedDifficulties.Last().Title.Name;
+            }
+        }
+        _coOpTitles = coOpTitles.Select(t => t.Title.Name.ToString()).ToArray();
+        _difficultyTitles = difficultyTitles.Select(t => t.Title.Name.ToString()).ToArray();
+    }
+}
