@@ -80,7 +80,7 @@
                 <MudTextField @bind-Value="_name" MaxLength="50" Label="Community Name"></MudTextField>
             </MudItem>
             <MudItem xs="12">
-                <MudRadioGroup T="CommunityPrivacyType" @bind-SelectedOption="_privacyType">
+                <MudRadioGroup T="CommunityPrivacyType" @bind-Value="_privacyType">
                     <MudRadio Value="@CommunityPrivacyType.Public" Color="Color.Primary">Public</MudRadio>
                     <MudRadio Value="@CommunityPrivacyType.PublicWithCode" Color="Color.Primary">Invite Required</MudRadio>
                     <MudRadio Value="@CommunityPrivacyType.Private" Color="Color.Primary">Private</MudRadio>

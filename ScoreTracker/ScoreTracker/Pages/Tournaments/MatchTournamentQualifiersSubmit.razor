@@ -130,7 +130,7 @@
                     </MudItem>
                 }
                 <MudItem xs="12">
-                    <MudRadioGroup T="MixEnum" @bind-SelectedOption="_addingMix">
+                    <MudRadioGroup T="MixEnum" @bind-Value="_addingMix">
                         <MudRadio Value="@MixEnum.Phoenix" Color="Color.Primary">Phoenix</MudRadio>
                         <MudRadio Value="@MixEnum.XX" Color="Color.Primary">XX</MudRadio>
                     </MudRadioGroup>
@@ -429,9 +429,9 @@
         _nextPlace = _currentPlace is null or 1 ? null : ordered.Where(q => q.index == _currentPlace - 1).Select(q => q.q).FirstOrDefault();
 
     }
-    private async Task UploadFiles(IBrowserFile file)
+    private async Task UploadFiles(IBrowserFile? file)
     {
-        if (_submittingChart == null)
+        if (file==null || _submittingChart == null)
         {
             return;
         }

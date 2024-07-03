@@ -31,7 +31,7 @@
 </MudGrid>
 <br/>
 <br/>
-<MudRadioGroup T="ScoringConfiguration.CalculationType" @bind-SelectedOption="@Configuration.Scoring.Formula">
+<MudRadioGroup T="ScoringConfiguration.CalculationType" @bind-Value="@Configuration.Scoring.Formula">
     @foreach (var option in Enum.GetValues<ScoringConfiguration.CalculationType>().Where(v => v != ScoringConfiguration.CalculationType.Custom || CurrentUser.IsLoggedInAsAdmin))
     {
         <MudRadio T="ScoringConfiguration.CalculationType" Value="@option" Color="Color.Primary">@option</MudRadio>
