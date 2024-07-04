@@ -164,6 +164,10 @@
             <HeaderContent>
                 <MudTh>Match Name</MudTh>
                 <MudTh>Status</MudTh>
+                @if (parameters.showMachine)
+                {
+                    <MudTh>Machine</MudTh>
+                }
                 <MudTh>Phase</MudTh>
                 <MudTh>Players</MudTh>
                 @if (parameters.showWinner)
@@ -179,6 +183,10 @@
             <RowTemplate>
                 <MudTd>@context.MatchName</MudTd>
                 <MudTd>@context.State</MudTd>
+                @if (parameters.showMachine)
+                {
+                    <MudTd>@context.Machine</MudTd>
+                }
                 <MudTh>@context.PhaseName</MudTh>
                 <MudTh>
                     @if (_myRole != null && context.Players.Any(p => Players.ContainsKey(p) && Players[p].PotentialConflict))
@@ -504,8 +512,18 @@
     private string _matchName = string.Empty;
 
     private Name? _currentMatch;
-    private IEnumerable<MatchView> ActiveMatches => _matches.Values.Where(m => m.State is > MatchState.NotStarted and < MatchState.Completed)
-        .OrderByDescending(m => m.State).ThenBy(m=>m.MatchOrder);
+
+    private IEnumerable<MatchView> InProgressMatches => _matches.Values.Where(m => m.State is MatchState.InProgress or MatchState.Finalizing)
+        .OrderByDescending(m => m.State).ThenBy(m => m.MatchOrder);
+
+    private IEnumerable<MatchView> WarmingUpMatches => _matches.Values.Where(m => m.State == MatchState.Ready && !string.IsNullOrWhiteSpace(m.Machine))
+        .OrderByDescending(m => m.MatchOrder);
+
+    private IEnumerable<MatchView> StandbyMatches => _matches.Values.Where(m => m.State == MatchState.Ready && string.IsNullOrWhiteSpace(m.Machine))
+        .OrderByDescending(m => m.MatchOrder);
+
+    private IEnumerable<MatchView> CardDrawing => _matches.Values.Where(m => m.State == MatchState.CardDraw)
+        .OrderByDescending(m => m.MatchOrder);
 
     private string _currentPhase = string.Empty;
 
@@ -518,12 +536,15 @@
     private IEnumerable<MatchView> CompletedMatches => _matches.Values.Where(m => m.State is MatchState.Completed).OrderBy(m=>m.MatchOrder);
     private IEnumerable<MatchView> ReadyToCardDrawMatches => UpcomingMatches.Where(m => m.PhaseName==_currentPhase && m.State is MatchState.NotStarted && !m.Players.Any(p => p.ToString().StartsWith("Unknown "))).OrderBy(m => m.MatchOrder);
     private IDictionary<string, string> _songImages = new Dictionary<string, string>();
-    private IEnumerable<(string header, bool showWinner, IEnumerable<MatchView> matches)> MatchSections()
+    private IEnumerable<(string header, bool showWinner,bool showMachine, IEnumerable<MatchView> matches)> MatchSections()
     {
-        yield return ("Active Matches",false,ActiveMatches);
-        yield return ("Ready To Card Draw",false,ReadyToCardDrawMatches);
-        yield return ("Future Matches",false,UpcomingMatches);
-        yield return ("Completed Matches",true,CompletedMatches);
+        yield return ("In Progress Matches", false, true, InProgressMatches);
+        yield return ("Warming Up",false,true,WarmingUpMatches);
+        yield return ("Standby/Ready",false,false,StandbyMatches);
+        yield return ("Card Draw",false,false,CardDrawing);
+        yield return ("Ready To Card Draw",false,false,ReadyToCardDrawMatches);
+        yield return ("Future Matches",false,false,UpcomingMatches);
+        yield return ("Completed Matches",true,false,CompletedMatches);
     }
     private IDictionary<string, MatchView> _matches = new Dictionary<string, MatchView>();
     private ICollection<MatchLink> _matchLinks = new List<MatchLink>();
@@ -775,17 +796,12 @@
 
     private void UpdateCurrentPhase()
     {
-        var remainingPhases = _matches.Values.Where(m => m.State is not MatchState.Completed)
-            .Select(m => m.PhaseName.ToString()).Distinct().ToHashSet(StringComparer.OrdinalIgnoreCase);
-        _currentPhase = "Pros";
-        if (remainingPhases.Contains("Uppers"))
-        {
-            _currentPhase = "Uppers";
-        }
-        if (remainingPhases.Contains("Mids"))
-        {
-            _currentPhase = "Mids";
-        }
+
+        _currentPhase = _matches.GroupBy(m => m.Value.PhaseName, m => m.Value).
+            OrderBy(g => g.Min(m => m.MatchOrder))
+            .Where(g => g.Any(m => m.State < MatchState.Finalizing))
+            .Select(g=>g.Key.ToString())
+            .FirstOrDefault() ?? "None";
     }
 
     public async Task SaveRandomSettings()

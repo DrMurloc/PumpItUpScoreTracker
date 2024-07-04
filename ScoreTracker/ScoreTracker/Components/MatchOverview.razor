@@ -6,6 +6,7 @@
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Domain.Views
@@ -74,38 +75,41 @@
 
                                 <DifficultyBubble Chart="chart"></DifficultyBubble>
                             </MudCardHeader>
-                            <MudCardActions>
-                                
-                                <MudSpacer></MudSpacer>
+                            @if (MyRole != null)
+                            {
+                                <MudCardActions>
 
-                                @if (!_match.ProtectedCharts.Contains(chart.Id) && !_match.VetoedCharts.Contains(chart.Id))
-                                {
-                                    @if (!FinishedVetoes())
+                                    <MudSpacer></MudSpacer>
+
+                                    @if (!_match.ProtectedCharts.Contains(chart.Id) && !_match.VetoedCharts.Contains(chart.Id))
                                     {
-                                        @if (_match.Players.Length == 2)
+                                        @if (!FinishedVetoes())
                                         {
-                                            <MudTooltip Text="Protect">
-                                                <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Shield" OnClick="() => ProtectChart(chartId)" Color="Color.Success"></MudIconButton>
+                                            @if (_match.Players.Length == 2)
+                                            {
+                                                <MudTooltip Text="Protect">
+                                                    <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Shield" OnClick="() => ProtectChart(chartId)" Color="Color.Success"></MudIconButton>
+                                                </MudTooltip>
+                                            }
+                                            <MudTooltip Text="Veto">
+                                                <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Delete" OnClick="() => VetoChart(chartId)" Color="Color.Error"></MudIconButton>
                                             </MudTooltip>
                                         }
-                                        <MudTooltip Text="Veto">
-                                            <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Delete" OnClick="() => VetoChart(chartId)" Color="Color.Error"></MudIconButton>
+                                    }
+                                    @if (_match.ProtectedCharts.Contains(chart.Id))
+                                    {
+                                        <MudTooltip Text="Cancel">
+                                            <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Cancel" OnClick="()=>CancelProtect(chartId)" Color="Color.Warning"></MudIconButton>
                                         </MudTooltip>
                                     }
-                                }
-                                @if (_match.ProtectedCharts.Contains(chart.Id))
-                                {
-                                    <MudTooltip Text="Cancel">
-                                        <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Cancel" OnClick="()=>CancelProtect(chartId)" Color="Color.Warning"></MudIconButton>
-                                    </MudTooltip>
-                                }
-                                @if (_match.VetoedCharts.Contains(chart.Id))
-                                {
-                                    <MudTooltip Text="Cancel">
-                                        <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Cancel" OnClick="()=>CancelVeto(chartId)" Color="Color.Warning"></MudIconButton>
-                                    </MudTooltip>
-                                }
-                            </MudCardActions>
+                                    @if (_match.VetoedCharts.Contains(chart.Id))
+                                    {
+                                        <MudTooltip Text="Cancel">
+                                            <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Cancel" OnClick="()=>CancelVeto(chartId)" Color="Color.Warning"></MudIconButton>
+                                        </MudTooltip>
+                                    }
+                                </MudCardActions>
+                            }
                         </MudCard>
                     </MudItem>
                 }
@@ -116,17 +120,20 @@
                         <MudText>@instruction</MudText>
                     </MudItem>
                 }
-                <MudItem xs="12">
-                    @if (_match.ActiveCharts.Any(c => _match.VetoedCharts.Contains(c)))
-                    {
+                @if (MyRole != null)
+                {
+                    <MudItem xs="12">
+                        @if (_match.ActiveCharts.Any(c => _match.VetoedCharts.Contains(c)))
+                        {
 
-                        <MudButton OnClick="ClearVetoes" Disabled="_isSaving" Variant="Variant.Filled" Color="Color.Primary">Clear Vetoes</MudButton>
-                    }
-                    else
-                    {
-                        <MudButton OnClick="FinishCardDraw" Disabled="!FinishedVetoes() || _isSaving" Variant="Variant.Filled" Color="Color.Primary">Complete Card Draw</MudButton>
-                    }
-                </MudItem>
+                            <MudButton OnClick="ClearVetoes" Disabled="_isSaving" Variant="Variant.Filled" Color="Color.Primary">Clear Vetoes</MudButton>
+                        }
+                        else
+                        {
+                            <MudButton OnClick="FinishCardDraw" Disabled="!FinishedVetoes() || _isSaving" Variant="Variant.Filled" Color="Color.Primary">Complete Card Draw</MudButton>
+                        }
+                    </MudItem>
+                }
                 break;
             case MatchState.Ready:
                 @foreach (var player in _match.Players)
@@ -154,7 +161,21 @@
 
                 @if (MyRole != null)
                 {
-                    <MudButton Variant="Variant.Filled" Disabled="_isSaving" Color="Color.Primary" OnClick="StartMatch">Start Match</MudButton>
+                    <MudItem xs="12">
+                        <MudButton Variant="Variant.Filled" Disabled="_isSaving" Color="Color.Primary" OnClick="StartMatch">Start Match</MudButton>
+                    </MudItem>
+                    @if (_machines.Any())
+                    {
+                        
+                        <MudItem xs="12">
+                            <MudSelect T="string" Value="_match.Machine" ValueChanged="SetMachine" Label="Machine">
+                                @foreach(var machine in _machines.Values.OrderBy(m=>m.IsWarmup).ThenBy(m=>m.Priority))
+                                {
+                                    <MudSelectItem T="string" Value="machine.MachineName">@($"{machine.MachineName} {(_machines.TryGetValue(machine.MachineName,out var m) &&m.IsWarmup?"(Warmup)":"")}")</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                    }
                 }
                 break;
             case MatchState.InProgress:
@@ -177,15 +198,35 @@
                             {
                                 var chartPlace = i;
                                 <MudTh>
-                                    <MudNumericField Disabled="_isSaving" T="int" Min="(int)PhoenixScore.Min" Max="(int)PhoenixScore.Max" Value="(int)_match.Scores[context][chartPlace]" ValueChanged="v=>SetScore(context,chartPlace,v)" HideSpinButtons="true"></MudNumericField>
+                                    @if (MyRole == null)
+                                    {
+                                        <MudText>@_match.Scores[context][chartPlace]</MudText>
+                                    }
+                                    else
+                                    {
+                                        <MudNumericField Disabled="_isSaving || MyRole == null" T="int" Min="(int)PhoenixScore.Min" Max="(int)PhoenixScore.Max" Value="(int)_match.Scores[context][chartPlace]" ValueChanged="v => SetScore(context, chartPlace, v)" HideSpinButtons="true"></MudNumericField>
+
+                                    }
                                 </MudTh>
                             }
                         </RowTemplate>
                     </MudTable>
                 </MudItem>
-                <MudItem xs="12">
-                    <MudButton Disabled="!IsFinished(_match) || _isSaving" Variant="Variant.Filled" OnClick="CalculateScores">Calculate Points</MudButton>
-                </MudItem>
+                @if (_machines.Any())
+                {
+                        
+                    <MudItem xs="12">
+                        <MudSelect T="string" Value="_match.Machine" ValueChanged="SetMachine" Label="Machine">
+                            @foreach(var machine in _machines.Values.OrderBy(m=>m.IsWarmup).ThenBy(m=>m.Priority))
+                            {
+                                <MudSelectItem T="string" Value="machine.MachineName">@($"{machine.MachineName} {(_machines.TryGetValue(machine.MachineName,out var m) &&m.IsWarmup?"(Warmup)":"")}")</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudButton Disabled="!IsFinished(_match) || _isSaving" Variant="Variant.Filled" OnClick="CalculateScores">Calculate Points</MudButton>
+                    </MudItem>
+                }
                 break;
                 case MatchState.Finalizing:
 
@@ -283,7 +324,7 @@
 
 @inject IMediator Mediator;
 @inject ICurrentUserAccessor CurrentUser;
-
+@inject IMatchRepository Matches;
 
 @code {
 
@@ -443,6 +484,15 @@
         _isSaving = false;
 
     }
+
+    private async Task SetMachine(string machineName)
+    {
+        if (!_machines.ContainsKey(machineName) || _match==null || TournamentId==null)
+        {
+            return;
+        }
+        await Mediator.Send(new UpdateMatchCommand(TournamentId.Value, _match with {Machine = machineName}));
+    }
     private async Task FinishMatch()
     {
         if (_match == null || TournamentId == null)
@@ -556,6 +606,7 @@
         InvokeAsync(StateHasChanged);
     }
 
+    private IDictionary<Name, MatchMachineRecord> _machines = new Dictionary<Name, MatchMachineRecord>();
     private async Task LoadMatch(Name matchName)
     {
         if (_match?.MatchName == matchName || TournamentId == null)
@@ -572,7 +623,7 @@
             await LoadMatch(MatchName.Value);
         }
         Seeding = (await Mediator.Send(new GetMatchPlayersQuery(TournamentId.Value))).ToDictionary(p => p.Name.ToString(), p => p.Seed, StringComparer.OrdinalIgnoreCase);
-
+        _machines = (await Matches.GetMachines(TournamentId.Value, CancellationToken.None)).ToDictionary(m => m.MachineName);
         _currentUser = CurrentUser.IsLoggedIn ? CurrentUser.User : null;
     }
 

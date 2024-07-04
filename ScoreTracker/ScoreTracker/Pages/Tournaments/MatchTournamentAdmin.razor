@@ -20,7 +20,7 @@
     </MudItem>
     <MudItem xs="2">
         <MudButton Color="Color.Primary" Disabled="_isLoading || string.IsNullOrWhiteSpace(_newPlayerName) || _players.ContainsKey(_newPlayerName)" Variant="Variant.Filled" OnClick="AddPlayer">Add Player</MudButton>
-        </MudItem>
+    </MudItem>
     <MudItem xs="12">
         <MudTable T="MatchPlayer" Items="_players.Values">
             <HeaderContent>
@@ -128,6 +128,9 @@
         <MudButton StartIcon="@Icons.Material.Filled.Add" Disabled="_isLoading || string.IsNullOrWhiteSpace(_machineName)" OnClick="AddMachine">Add</MudButton>
     </MudItem>
 </MudGrid>
+<br/>
+<br/>
+<br/>
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
 @inject ISnackbar Snackbar;

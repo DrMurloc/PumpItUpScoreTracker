@@ -243,7 +243,11 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
         foreach (var tieBreakerResult in tie.OrderByDescending(name => match.Scores[name].Sum(s => s)))
             match.FinalPlaces[currentPosition++] = tieBreakerResult;
 
-        var newMatchState = match with { State = MatchState.Finalizing };
+        var newMatchState = match with
+        {
+            State = MatchState.Finalizing,
+            Machine = ""
+        };
         await _matchRepository.SaveMatch(request.TournamentId, newMatchState, cancellationToken);
 
         await _mediator.Publish(new MatchUpdatedEvent(request.TournamentId, newMatchState), cancellationToken);
