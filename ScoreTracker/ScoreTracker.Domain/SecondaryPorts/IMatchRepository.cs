@@ -1,4 +1,5 @@
 ﻿using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.ValueTypes;
 using ScoreTracker.Domain.Views;
 
@@ -27,4 +28,7 @@ public interface IMatchRepository
     Task<IEnumerable<MatchPlayer>> GetMatchPlayers(Guid tournamentId, CancellationToken cancellationToken);
     Task SaveMatchPlayer(Guid tournamentId, MatchPlayer player, CancellationToken cancellationToken);
     Task DeleteMatchPlayer(Guid tournamentId, Name playerName, CancellationToken cancellationToken);
+    Task<IEnumerable<MatchMachineRecord>> GetMachines(Guid tournamentId, CancellationToken cancellationToken);
+    Task SaveMachine(Guid tournamentId, MatchMachineRecord machine, CancellationToken cancellationToken);
+    Task DeleteMachine(Guid tournamentId, Name machineName, CancellationToken cancellationToken);
 }

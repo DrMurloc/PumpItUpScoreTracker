@@ -1000,6 +1000,35 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("Tournament", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.TournamentMachineEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsWarmup")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MachineName")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("TournamentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TournamentId");
+
+                    b.ToTable("TournamentMachine", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.TournamentPlayerEntity", b =>
                 {
                     b.Property<int>("Id")

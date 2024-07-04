@@ -8,6 +8,6 @@ public sealed record MatchView(Name MatchName, Name PhaseName, int MatchOrder, i
     Name[] Players,
     Guid[] ActiveCharts,
     Guid[] VetoedCharts, Guid[] ProtectedCharts, IDictionary<string, PhoenixScore[]> Scores,
-    IDictionary<string, int[]> Points, Name[] FinalPlaces)
+    IDictionary<string, int[]> Points, Name[] FinalPlaces, string Machine = "")
 {
 }

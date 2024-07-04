@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
 using ScoreTracker.Domain.Views;
@@ -209,81 +210,51 @@ namespace ScoreTracker.Data.Repositories
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        public static readonly IEnumerable<MatchPlayer> RealPlayerOrders = new MatchPlayer[]
+        public async Task<IEnumerable<MatchMachineRecord>> GetMachines(Guid tournamentId,
+            CancellationToken cancellationToken)
         {
-            new("Selo", 12, 345497062927892480),
-            new("PacBeast", 11, 225044556708708371),
-            new("Grainz", 10, 291371859105284096),
-            new("Sneezle", 9, 337580556214599700),
-            new("Litenang", 8, 83038699318677504),
-            new("Elixir", 7, 771203806054187019),
-            new("Esi", 6, 81897683911966720),
-            new("DrMurloc", 5, 477504512207093841),
-            new("S0 Lost", 4, 150066133003665408),
-            new("Tieny", 3, 478388650510647317),
-            new("Yimmy", 2, 534030186677534731),
-            new("Goddish", 1, 125806983591755776)
-        };
+            return await _dbContext.TournamentMachine.Where(t => t.TournamentId == tournamentId)
+                .Select(t => new MatchMachineRecord(t.MachineName, t.Priority, t.IsWarmup))
+                .ToArrayAsync(cancellationToken);
+        }
 
-        public static readonly IEnumerable<MatchPlayer> EclipsePlayerOrder = new MatchPlayer[]
+        public async Task SaveMachine(Guid tournamentId, MatchMachineRecord machine,
+            CancellationToken cancellationToken)
         {
-            new("QED", 56, 221807174853066753),
-            new("Snowstorm", 55, 453727464959770657, "Potential Conflict with DDR and SMX", true),
-            new("Tommy Doesn't Miss", 54, 309858089740271617, "Potential Conflict with DDR, SMX, and ITG", true),
-            new("Sneezle", 53, 337580556214599700, "Potential Conflict with DDR and SMX", true),
-            new("Kwuarter", 52, 516285239518167060),
-            new("PrimoVictorian", 51, 104708794755366912),
-            new("Ulsi", 50, 128982706145984520), //
-            new("Frac", 49, 189917099714412545),
-            new("Houseplant", 48, 698584589223985202),
-            new("Nyroom", 47, 457690467232907265),
-            new("DefaultK", 46, 684175993107120215),
-            new("EMCAT", 45, 218159187652247552),
-            new("Smallboy", 44, 338157160112586752, "AKA Nagasaki"),
-            new("Slowpoke", 43, 361362903691034625), //
-            new("ancient_grainz", 42, 291371859105284096, "AKA Thomas Grover, Potential Conflicts with ITG", true),
-            new("PacRob", 41, 1182082330223976508, "Potential Conflict with SMX and DDR", true), //?
-            new("Crafty The Fox", 40, 384007242837524481),
-            new("NESSQUICK", 39, 385296090422837248),
-            new("Songbird", 38, 309540048674750466),
-            new("StrawHatGabe", 37, 245641474409103361),
-            new("Tink", 36, 180787589601689600, "AKA Jasper/WhatWouldJasperDo"), //?
-            new("Shinobee", 35, 478794055711457282, "Potential Conflict with DDR, SMX, and ITG", true),
-            new("ligma", 34, 189142827391778816, "AKA Ivan"),
-            new("Surikato", 33, 1013220832778133625), //?
-            new("SEBAA", 32, 603768563890913282),
-            new("Waffle", 31, 146003802527367169),
-            new("litenang", 30, 83038699318677504, "Potential Conflict with SMX and ITG", true),
-            new("Bedrock", 29, 109982291832389632),
-            new("jonathan", 28, 193816242782470154),
-            new("HSPuppets", 27, 95558504353374208),
-            new("ABENHAIM", 26, 741750282001842276, "AKA IOnlyPlayForTitles"), //-IonlyPlayForTitles
-            new("s0 lost", 25, 150066133003665408),
-            new("Lulu_uwu", 24, 807880209721982996),
-            new("sixxofsixx", 23, 277996088693096450),
-            new("Chives", 22, 257353930688692224),
-            new("Valex", 21, 72451105463738368),
-            new("Flashy flash", 20, 889357618810855445, "AKA Another, no not THAT Another, another Another"),
-            new("Ermagerd", 19, 557002938690699278),
-            new("Tieny", 18, 478388650510647317), //
-            new("Blankman", 17, 208851134805180417),
-            new("ZIGGURATH8", 16, 689667017070215215),
-            new("Jaekim", 15, 133906426681622528, "AKA Beans on Start.gg"),
-            new("esi", 14, 81897683911966720),
-            new("Yimmythe42", 13, 534030186677534731),
-            new("PureWasian", 12, 325047531576754186, "AKA Tusa"),
-            new("Redviper", 11, 184466247767818241),
-            new("imDrake", 10, 491462877308256269),
-            new("comboscoring", 9, 584861861711970349, "AKA LayZDog"),
-            new("JellySlosh", 8, 478958379428085760),
-            new("GODDISH", 7, 125806983591755776),
-            new("AwesomoBird", 6, 335769888692109316, "Bird is the Word"),
-            new("Jboy", 5, 638507320850251777, "AKA KittyCatastrophe in Discord"),
-            new("jqtran", 4, 160123260393095169, "AKA IMSORRY, Potential Conflicts with DDR", true),
-            new("ParanoiaBoi", 3, 666481245261135884, "Potential Conflicts with ITG, SMX, DDR, DRS", true),
-            new("HDS", 2, 931745583629238303, "AKA Edison"),
-            new("mattmiller", 1, 131264515248488449, "Egg")
-        };
+            var machineName = machine.MachineName.ToString();
+            var entity = await _dbContext.TournamentMachine.FirstOrDefaultAsync(t => t.TournamentId == tournamentId
+                && t.MachineName == machineName, cancellationToken);
+            if (entity == null)
+            {
+                await _dbContext.TournamentMachine.AddAsync(new TournamentMachineEntity
+                {
+                    IsWarmup = machine.IsWarmup,
+                    Priority = machine.Priority,
+                    MachineName = machineName,
+                    TournamentId = tournamentId
+                }, cancellationToken);
+            }
+            else
+            {
+                entity.Priority = machine.Priority;
+                entity.IsWarmup = machine.IsWarmup;
+            }
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task DeleteMachine(Guid tournamentId, Name machineName, CancellationToken cancellationToken)
+        {
+            var machineNameString = machineName.ToString();
+            var entity = await _dbContext.TournamentMachine.FirstOrDefaultAsync(t => t.TournamentId == tournamentId
+                && t.MachineName == machineNameString, cancellationToken);
+            if (entity != null)
+            {
+                _dbContext.TournamentMachine.Remove(entity);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+        }
+
         /*Eclipse
         public static readonly IEnumerable<MatchPlayer> RealPlayerOrders = new MatchPlayer[]
         {

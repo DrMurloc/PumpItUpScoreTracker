@@ -5,6 +5,8 @@
 @using MediatR
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Records
+@using System.Text.RegularExpressions
 <PageTitle>@TournamentName Brackets</PageTitle>
 <MudGrid>
     <MudItem xs="12">
@@ -84,7 +86,47 @@
             <MudIconButton Disabled="_isLoading" Icon="@Icons.Material.Filled.Delete" Color="Color.Warning" OnClick="r=>RemoveRole(role.Key)"></MudIconButton>
         </MudItem>
     }
-
+    <MudItem xs="12">
+        <br/>
+        <MudText Typo="Typo.h4">Machines</MudText>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTable T="MatchMachineRecord" Items="_machines.OrderBy(m => m.IsWarmup).ThenBy(m => m.Priority)" Breakpoint="Breakpoint.None">
+            <HeaderContent>
+                <MudTh>Machine Name</MudTh>
+                <MudTh>Is Warmup</MudTh>
+                <MudTh>Priority</MudTh>
+                <MudTh>Delete</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.MachineName</MudTd>
+                <MudTd>
+                    @if (context.IsWarmup)
+                    {
+                        <MudIcon Color="Color.Success" Icon="@Icons.Material.Filled.Check"></MudIcon>
+                    }
+                </MudTd>
+                <MudTd>
+                    @context.Priority
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Color="Color.Warning" Disabled="_isLoading" Icon="@Icons.Material.Filled.Delete" OnClick="()=>RemoveMachine(context.MachineName)"></MudIconButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudItem>
+    <MudItem xs="12" sm="4">
+        <MudTextField T="string" @bind-Value="_machineName" Label="Machine Name" MaxLength="32"></MudTextField>
+    </MudItem>
+    <MudItem xs="12" sm="3">
+        <MudCheckBox T="bool" @bind-Value="_isWarmup" Label="Is Warmup"></MudCheckBox>
+    </MudItem>
+    <MudItem xs="12" sm="3">
+        <MudNumericField T="int" @bind-Value="_priority" Label="Priority"></MudNumericField>
+    </MudItem>
+    <MudItem xs="12" sm="2">
+        <MudButton StartIcon="@Icons.Material.Filled.Add" Disabled="_isLoading || string.IsNullOrWhiteSpace(_machineName)" OnClick="AddMachine">Add</MudButton>
+    </MudItem>
 </MudGrid>
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
@@ -110,6 +152,38 @@
     private Guid? _selectedUserId;
     private string _newPlayerName = string.Empty;
 
+    private string _machineName = string.Empty;
+    private bool _isWarmup = false;
+    private int _priority = 1;
+    private IList<MatchMachineRecord> _machines = new List<MatchMachineRecord>();
+
+    private async Task RemoveMachine(Name machineName)
+    {
+
+        var existing = _machines.FirstOrDefault(m => m.MachineName == machineName);
+        if (existing == null)
+        {
+            return;
+        }
+
+        _isLoading = true;
+        await Matches.DeleteMachine(TournamentId, machineName, CancellationToken.None);
+        _machines.Remove(existing);
+        _isLoading = false;
+    }
+    private async Task AddMachine()
+    {
+        _isLoading = true;
+        var machine = new MatchMachineRecord(_machineName, _priority, _isWarmup);
+        await Matches.SaveMachine(TournamentId, machine, CancellationToken.None);
+        var existing = _machines.FirstOrDefault(m => m.MachineName == machine.MachineName);
+        if (existing != null)
+        {
+            _machines.Remove(existing);
+        }
+        _machines.Add(machine);
+        _isLoading = false;
+    }
     private async Task AddPlayer()
     {
         _isLoading = true;
@@ -174,6 +248,7 @@
         await Matches.DeleteMatchPlayer(TournamentId, name,CancellationToken.None);
         _isLoading = false;
     }
+
     private async Task SyncQualifiers()
     {
         _isLoading = true;
@@ -214,7 +289,7 @@
             return;
         }
         _publicUsers = (await Mediator.Send(new GetCommunityLeaderboardQuery("World"))).ToDictionary(l => l.UserId, l => l.PlayerName);
-        
+        _machines = (await Matches.GetMachines(TournamentId, CancellationToken.None)).ToList();
         foreach (var user in _tournamentRoles.Where(r => !_publicUsers.ContainsKey(r.Key)))
         {
             _publicUsers[user.Key] = (await Mediator.Send(new GetUserByIdQuery(user.Key)))?.Name ?? throw new Exception("I'm not how you ended up here? Only if a user was deleted");
