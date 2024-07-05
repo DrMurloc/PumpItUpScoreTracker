@@ -50,8 +50,14 @@
         <DialogContent>
             <MudGrid>
                 <MudItem xs="12">
-                    <MudNumericField T="int" @bind-Value="_playerCount" Label="Player Count"></MudNumericField>
+                    <MudNumericField T="int" Value="_playerCount" ValueChanged="SetPlayerCount" Label="Player Count"></MudNumericField>
                 </MudItem>
+                @if (_playerCount > 2)
+                {
+                    <MudItem xs="12">
+                        <MudTextField T="string" Label="Points by place (1st place 1st)" @bind-Value="_pointsByPlace"></MudTextField>
+                    </MudItem>
+                }
                 <MudItem xs="12">
                     <MudTextField T="string" @bind-Value="_matchName" Label="Match Name"></MudTextField>
                 </MudItem>
@@ -74,7 +80,7 @@
         </DialogContent>
         <DialogActions>
             <MudSpacer></MudSpacer>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateMatch" Disabled="_playerCount<=1 || _chartCount<=1 || string.IsNullOrWhiteSpace(_randomSettings) || string.IsNullOrWhiteSpace(_matchName)">Save</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateMatch" Disabled="!IsPointsByPlaceValid ||_playerCount<=1 || _chartCount<=1 || string.IsNullOrWhiteSpace(_randomSettings) || string.IsNullOrWhiteSpace(_matchName)">Save</MudButton>
             <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showAddMatchDialog = false">@L["Close"]</MudButton>
         </DialogActions>
     </MudDialog>
@@ -88,6 +94,12 @@
                 <MudItem xs="12">
                     <MudNumericField T="int" Disabled="_bulkCreating" @bind-Value="_playersPerMatch" Min="1" Max="100" Label="Players Per Match"></MudNumericField>
                 </MudItem>
+                @if (_playerCount > 2)
+                {
+                    <MudItem xs="12">
+                        <MudTextField T="string" Label="Points by place (1st place 1st)" @bind-Value="_pointsByPlace"></MudTextField>
+                    </MudItem>
+                }
                 <MudItem xs="12">
                     <MudNumericField T="int" Disabled="_bulkCreating" @bind-Value="_matchesPerRound" Min="1" Max="10" Label="Matches Per Round"></MudNumericField>
                 </MudItem>
@@ -119,7 +131,7 @@
         </DialogContent>
         <DialogActions>
             <MudSpacer></MudSpacer>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="BulkCreate" Disabled=@(_bulkCreating || _roundSettings.Any(r=>r=="Not Set"))>@L["Create"]</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="BulkCreate" Disabled=@(!IsPointsByPlaceValid ||_bulkCreating || _roundSettings.Any(r=>r=="Not Set"))>@L["Create"]</MudButton>
             <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showBulkCreate = false">@L["Close"]</MudButton>
         </DialogActions>
     </MudDialog>
@@ -503,7 +515,7 @@
     private bool _showNotesPopup;
     private bool _spectatorMode = false;
     private string _searchedPlayer;
-
+    private string _pointsByPlace = "";
     private string _randomSettings = string.Empty;
     private string _fromMatch = string.Empty;
     private string _toMatch = string.Empty;
@@ -564,12 +576,23 @@
     private bool _isDoubleElimination=false;
     private Name[] _roundSettings = new Name[]{"Not Set"};
     private bool _bulkCreating = false;
+
+    private void SetPlayerCount(int playerCount)
+    {
+        _playerCount = playerCount;
+        _pointsByPlace = playerCount <= 2 ? "" : string.Join(",", Enumerable.Range(1, playerCount).Reverse());
+    }
     private async Task BulkCreate()
     {
         _bulkCreating = true;
         var winnersLabel = _isDoubleElimination ? " Winners" : "";
         var losersLabel = _isDoubleElimination ? " Losers" : "";
         var nextOrder = _matches.Any()?_matches.Max(m => m.Value.MatchOrder) + 1 : 0;
+        
+        var places =
+            string.IsNullOrWhiteSpace(_pointsByPlace)?null
+                :_pointsByPlace.Split(",").Select(s => s.Trim())
+                    .Select(int.Parse).ToArray();
         for (var currentRound = 0; currentRound < _rounds; currentRound++)
         {
             var settings = _roundSettings[currentRound];
@@ -588,7 +611,7 @@
                     Array.Empty<Guid>(),
                     players.ToDictionary(p => p.ToString(), p => Array.Empty<PhoenixScore>()),
                     players.ToDictionary(p => p.ToString(), p => Array.Empty<int>()),
-                    players
+                    players, "", places
                     )));
                 if (currentRound > 0)
                 {
@@ -617,7 +640,7 @@
                     Array.Empty<Guid>(),
                     lPlayers.ToDictionary(p => p.ToString(), p => Array.Empty<PhoenixScore>()),
                     lPlayers.ToDictionary(p => p.ToString(), p => Array.Empty<int>()),
-                    lPlayers
+                    lPlayers, "", places
                     )));
                 if (currentRound > 0)
                 {
@@ -760,9 +783,15 @@
 
     private IDictionary<string, MatchPlayer> Players = new Dictionary<string, MatchPlayer>();
 
+    private bool IsPointsByPlaceValid => string.IsNullOrWhiteSpace(_pointsByPlace) || (_pointsByPlace.Split(",").Select(s => s.Trim()).All(s => int.TryParse(s, out var _))
+    && _pointsByPlace.Split(",").Count()==_playerCount);
     private async Task CreateMatch()
     {
         var players = Enumerable.Range(0, _playerCount).Select(c => Name.From($"Unknown {c}")).ToArray();
+        var places =
+            string.IsNullOrWhiteSpace(_pointsByPlace)?null
+            :_pointsByPlace.Split(",").Select(s => s.Trim())
+            .Select(int.Parse).ToArray();
         await Mediator.Send(new UpdateMatchCommand(TournamentId, new MatchView(_matchName,
             _phaseName,
             _matches.Any()?_matches.TryGetValue(_matchName, out var existingMatch)?existingMatch.MatchOrder:_matches.Max(m=>m.Value.MatchOrder)+1:0,
@@ -773,7 +802,7 @@
             Array.Empty<Guid>(),
             players.ToDictionary(p => p.ToString(), p => Array.Empty<PhoenixScore>()),
             players.ToDictionary(p => p.ToString(), p => Array.Empty<int>()),
-            players
+            players,"",places
             )));
         _showAddMatchDialog = false;
     }

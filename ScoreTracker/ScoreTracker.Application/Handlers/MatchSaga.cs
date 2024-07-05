@@ -221,7 +221,8 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
         var match = await _matchRepository.GetMatch(request.TournamentId, request.MatchName, cancellationToken);
         var scoring = match.Players.Length == 2
             ? new[] { 1, 0 }
-            : match.Players.Select((p, i) => i + 1).OrderByDescending(i => i).ToArray();
+            : match.PointsPerPlace ??
+              match.Players.Select((p, i) => i + 1).OrderByDescending(i => i).ToArray();
 
         for (var chartIndex = 0; chartIndex < match.ActiveCharts.Length; chartIndex++)
         {
