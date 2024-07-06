@@ -70,6 +70,10 @@ public readonly struct Name : IComparable<Name>
         }
     }
 
+    public bool Contains(string value)
+    {
+        return _name.Contains(value, StringComparison.OrdinalIgnoreCase);
+    }
 
     private bool equals(Name otherParam)
     {

@@ -12,6 +12,8 @@
 @using ScoreTracker.Web.Shared
 @using System.Text.RegularExpressions
 @using ScoreTracker.Domain.Records
+@using Syncfusion.Blazor.Diagram
+@using Syncfusion.Blazor.Diagram.Overview
 
 <PageTitle>@TournamentName Brackets</PageTitle>
 @if (_myRole==TournamentRole.HeadTournamentOrganizer)
@@ -288,6 +290,23 @@
     </MudTable>
 }
 <br/>
+@if (_matches.Any() && _matchLinks.Any())
+{
+    
+    <div class="col-lg-12 control-section">
+        <SfDiagramComponent @ref="@Diagram" ID="diagram" NodeCreating="OnNodeCreating" SelectionChanged="SelectionChanged" ConnectorCreating="OnConnectorCreating" Created="OnCreated" Height="590px" Nodes="@NodeCollection" Connectors="@ConnectorCollection">
+            <SnapSettings Constraints=SnapConstraints.None>
+            </SnapSettings>
+
+        </SfDiagramComponent>
+    </div>
+    <div class="col-lg-4" style="width:50%; padding:0px;right:30px;bottom:50px;border: #eeeeee;border-style: solid;box-shadow: 0px 2px 2px rgba(0,0,0,0.3); background:#f7f7f7;position:relative;display:block;">
+        <div style="top:30px">
+            <SfDiagramOverviewComponent Height="150px" SourceID="diagram"></SfDiagramOverviewComponent>
+        </div>
+    </div>
+}
+<br/>
 <MudTable T="ChartStats" Items="_chartStats">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Chart Stats</MudText>
@@ -485,7 +504,19 @@
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showMatchLinkDialog = false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
+<style>
+    #rotateThumb {
+        display:none;
+    }
+    #pivotLine {
+        display:none;
+    }
+    .e-diagram-resize-handle {
+        display:none;
+    }
 
+
+</style>
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
 @inject ISnackbar Snackbar;
@@ -523,6 +554,47 @@
     private bool _winners = true;
     private string _matchName = string.Empty;
 
+    private static readonly BasicShape _matchShape = new BasicShape()
+    {
+        Type = NodeShapes.Basic,
+        Shape = NodeBasicShapes.Rectangle
+    };
+    public SfDiagramComponent Diagram;
+    private void OnCreated()
+    {
+        FitOptions mobileoptions = new FitOptions() { Mode = FitMode.Both, Region = DiagramRegion.Content };
+        Diagram.FitToPage(mobileoptions);
+    }
+
+    private PointPort rightPort = new PointPort { ID = "rightPort", Offset = new DiagramPoint { X = 1, Y = .5 }, Visibility = PortVisibility.Connect };
+    private PointPort leftPort = new PointPort { ID = "leftPort", Offset = new DiagramPoint { X = 0, Y = 0.5 }, Visibility = PortVisibility.Connect };
+    private void OnNodeCreating(IDiagramObject obj)
+    {
+        Node node = obj as Node;
+        node.Shape.Type = Syncfusion.Blazor.Diagram.NodeShapes.Basic;
+        (node.Shape as BasicShape).Shape = NodeBasicShapes.Rectangle;
+        node.Style = new ShapeStyle()
+            {
+                Fill = node.ID.Contains("Loser")?"#C72020":"#6EDE7F",
+                StrokeColor = "#024249",
+            };
+        node.Constraints = NodeConstraints.Default&~NodeConstraints.Drag &~NodeConstraints.Delete &~NodeConstraints.Resize;
+        node.Annotations[0].Style.Color = "White";
+        node.Annotations[0].Margin = new DiagramThickness() { Left = 0, Right = 0 };
+        node.Ports = new DiagramObjectCollection<PointPort>(new[] { leftPort,rightPort });
+    }
+    // Defines default values for Connector object
+    private void OnConnectorCreating(IDiagramObject obj)
+    {
+        var con = obj as Connector;
+
+        con.Constraints = ConnectorConstraints.None;
+        con.TargetDecorator = new DecoratorSettings() { Shape = DecoratorShape.Arrow, Style = new ShapeStyle() { Fill = "#024249", StrokeColor = "#024249" } };
+        con.Style = new ShapeStyle() { StrokeColor = "#6d6d6d", StrokeWidth = 2 };
+        con.Type = ConnectorSegmentType.Bezier;
+    }
+    private DiagramObjectCollection<Connector> ConnectorCollection = new DiagramObjectCollection<Connector>();
+    private DiagramObjectCollection<Node> NodeCollection = new DiagramObjectCollection<Node>(); 
     private Name? _currentMatch;
 
     private IEnumerable<MatchView> InProgressMatches => _matches.Values.Where(m => m.State is MatchState.InProgress or MatchState.Finalizing)
@@ -543,7 +615,23 @@
     {
         await Mediator.Send(new PingMatchCommand(TournamentId,matchName));
     }
+    private async Task SelectionChanged(SelectionChangedEventArgs arg)
+    {
+        if (arg.NewValue.Count() > 1)
+        {
+            return;
+        }
+        var node = arg.NewValue[0] as Node;
+        if (node == null && !_matches.ContainsKey(node.ID))
+        {
+            return;
+        }
 
+        ViewMatch(node.ID);
+        
+    }
+
+    private bool isMobileDevice = false;
     private IEnumerable<MatchView> UpcomingMatches => _matches.Values.Where(m => m.State is MatchState.NotStarted).OrderBy(m=>m.MatchOrder);
     private IEnumerable<MatchView> CompletedMatches => _matches.Values.Where(m => m.State is MatchState.Completed).OrderBy(m=>m.MatchOrder);
     private IEnumerable<MatchView> ReadyToCardDrawMatches => UpcomingMatches.Where(m => m.PhaseName==_currentPhase && m.State is MatchState.NotStarted && !m.Players.Any(p => p.ToString().StartsWith("Unknown "))).OrderBy(m => m.MatchOrder);
@@ -588,7 +676,7 @@
         var winnersLabel = _isDoubleElimination ? " Winners" : "";
         var losersLabel = _isDoubleElimination ? " Losers" : "";
         var nextOrder = _matches.Any()?_matches.Max(m => m.Value.MatchOrder) + 1 : 0;
-        
+
         var places =
             string.IsNullOrWhiteSpace(_pointsByPlace)?null
                 :_pointsByPlace.Split(",").Select(s => s.Trim())
@@ -616,7 +704,7 @@
                 if (currentRound > 0)
                 {
                     var previousMatch = $"{_phaseName}{winnersLabel} Round {currentRound} Match {currentMatch + 1}";
-                    
+
                     var link = new MatchLink(previousMatch, matchName, true, _winnersProgressCount);
                     await Mediator.Send(new CreateMatchLinkCommand(TournamentId, link));
                     foreach (var existingLink in _matchLinks.Where(ml => ml.FromMatch == link.FromMatch && ml.ToMatch == link.ToMatch))
@@ -626,7 +714,7 @@
                     _matchLinks.Add(link);
                 }
                 if (!_isDoubleElimination) continue;
-                
+
                 var losersMatchName=$"{_phaseName}{losersLabel} Round {currentRound + 1} Match {currentMatch + 1}";
                 var lPlayers = Enumerable.Range(0, currentRound==0?_playersPerMatch-1:_playersPerMatch).Select(c => Name.From($"Unknown {c}")).ToArray();
                 await Mediator.Send(new UpdateMatchCommand(TournamentId, new MatchView(losersMatchName,
@@ -645,7 +733,7 @@
                 if (currentRound > 0)
                 {
                     var previousMatch = $"{_phaseName}{losersLabel} Round {currentRound} Match {currentMatch + 1}";
-                
+
                     var link = new MatchLink(previousMatch, losersMatchName, true, _winnersProgressCount);
                     await Mediator.Send(new CreateMatchLinkCommand(TournamentId, link));
                     foreach (var existingLink in _matchLinks.Where(ml => ml.FromMatch == link.FromMatch && ml.ToMatch == link.ToMatch))
@@ -662,7 +750,7 @@
                     _matchLinks.Remove(existingLink);
                 }
                 _matchLinks.Add(winnersToLosers);
-            
+
             }
         }
         _bulkCreating = true;
@@ -715,7 +803,7 @@
 
         var now =  DateTime.Now;
 
-            _expectedTime = now + _expectedTimeToMatch;
+        _expectedTime = now + _expectedTimeToMatch;
 
     }
     private async Task CreateLink()
@@ -853,6 +941,8 @@
         _showAddRandomDialog = false;
     }
 
+        private const int MatchHeight = 80;
+    private static readonly Regex _matchRegex = new Regex(@"(((Round|Wave) [^ ]+)|((Quarter|Semi)(-|)Final))", RegexOptions.Compiled);
     protected override async Task OnInitializedAsync()
     {
         TournamentName = (await Mediator.Send(new GetAllTournamentsQuery()))
@@ -867,6 +957,74 @@
         _userRoles = await Mediator.Send(new GetTournamentRolesQuery(TournamentId));
         _myRole = !CurrentUser.IsLoggedIn ? null : CurrentUser.IsLoggedInAsAdmin ? TournamentRole.HeadTournamentOrganizer : _userRoles.FirstOrDefault(e => e.UserId == _user?.Id)?.Role;
 
+
+        ConnectorCollection=new DiagramObjectCollection<Connector>();
+
+        NodeCollection= new DiagramObjectCollection<Node>();
+        var x = 50;
+        var rounds = _matches.Values.GroupBy(m => m.PhaseName).OrderBy(g => g.Min(m => m.MatchOrder))
+            .SelectMany(phase => phase.GroupBy(m => _matchRegex.Match(m.MatchName).Value).OrderBy(g => g.Min(m => m.MatchOrder)))
+            .ToArray();
+
+        var largestWinners = rounds.Max(g => g.Count(m => m.MatchName.Contains("Winner")));
+
+        foreach (var round in rounds)
+        {
+            var winnersY = 50;
+            var losersY = (largestWinners + 1) * (MatchHeight+10) + 50;
+            foreach (var match in round.OrderBy(m => m.MatchOrder))
+            {
+
+                var content =string.Join("\n",match.Players);
+                await NodeCollection.AddAsync(new Node()
+            {
+                ID = match.MatchName,
+                Shape = _matchShape,
+                Annotations = new DiagramObjectCollection<ShapeAnnotation>()
+                {
+                    new ShapeAnnotation
+                    {
+                        Content = content
+                    }
+                },
+                OffsetX = x,
+                OffsetY = match.MatchName.Contains("Loser")?losersY:winnersY,
+                        Height = MatchHeight,
+                Width = 200
+            });
+                if (match.MatchName.Contains("Loser"))
+                {
+                    losersY += MatchHeight+10;
+                }
+                else
+                {
+                    winnersY += MatchHeight+10;
+                }
+            }
+            x += 250;
+        }
+        foreach (var matchLink in _matchLinks.Where(m=>!(m.FromMatch.Contains("Winner") && m.ToMatch.Contains("Loser"))))
+        {
+            var connector = new Connector()
+            {
+                ID = matchLink.FromMatch.ToString() + " -> " + matchLink.ToMatch.ToString(),
+                SourceID = matchLink.FromMatch,
+                TargetID = matchLink.ToMatch,
+                SourcePortID ="rightPort",
+                TargetDecorator = new DecoratorSettings() { Shape = DecoratorShape.Arrow, Style = new ShapeStyle() { Fill = "#024249", StrokeColor = "#024249" } },
+                Style = new ShapeStyle() { StrokeColor = "#6d6d6d", StrokeWidth = 2 },
+
+            };
+
+            var group1 = _matchRegex.Match(matchLink.FromMatch).Value;
+            var group2 = _matchRegex.Match(matchLink.ToMatch).Value;
+            if (group1 == group2)
+            {
+                connector.SourcePortID = "leftPort";
+                connector.TargetPortID = "leftPort";
+            }
+            await ConnectorCollection.AddAsync(connector);
+        }
         UpdateCurrentPhase();
         RecalculateStates();
         MainLayout.MatchUpdated += (o, e) => MatchUpdated(e);

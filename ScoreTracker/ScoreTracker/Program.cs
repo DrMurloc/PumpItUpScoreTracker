@@ -25,6 +25,8 @@ using ScoreTracker.Web.Services.Contracts;
 using ScoreTracker.Web.Shared;
 using ScoreTracker.Web.Swagger;
 using Swashbuckle.AspNetCore.Filters;
+using Syncfusion.Blazor;
+using Syncfusion.Licensing;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<JsonSerializerOptions>(o =>
@@ -43,6 +45,7 @@ builder.Services.AddServerSideBlazor(options =>
 var discordConfig = builder.Configuration.GetSection("Discord").Get<DiscordConfiguration>();
 var googleConfig = builder.Configuration.GetSection("Google").Get<GoogleConfiguration>();
 var facebookConfig = builder.Configuration.GetSection("Facebook").Get<FacebookConfiguration>();
+builder.Services.AddSyncfusionBlazor();
 builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSection("Discord"));
 builder.Services.AddMassTransit(o =>
 {
@@ -147,8 +150,10 @@ builder.Services.AddCookiePolicy(opts =>
     opts.OnAppendCookie = ctx => { ctx.CookieOptions.Expires = DateTimeOffset.UtcNow.AddDays(30); };
 });
 
-
+var syncfusionLicense = builder.Configuration["SyncfusionLicense"];
+if (syncfusionLicense != null) SyncfusionLicenseProvider.RegisterLicense(syncfusionLicense);
 var app = builder.Build();
+
 app.UseRequestLocalization(new RequestLocalizationOptions()
     .AddSupportedCultures("en-US", "pt-BR", "ko-KR", "en-ZW", "es-MX")
     .AddSupportedUICultures("en-US", "pt-BR", "ko-KR", "en-ZW", "es-MX")
