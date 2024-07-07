@@ -180,7 +180,7 @@
                 break;
             case MatchState.InProgress:
                 <MudItem xs="12">
-                    <MudTable T="Name" Items="_match.Players">
+                    <MudTable T="Name" Items="_match.Players" Breakpoint="Breakpoint.None" Dense="true">
                         <HeaderContent>
                             <MudTh>Name</MudTh>
                             @foreach (var chartId in _match.ActiveCharts)
@@ -231,7 +231,7 @@
                 case MatchState.Finalizing:
 
                     <MudItem xs="12">
-                        <MudTable T="Name" Items="_match.FinalPlaces">
+                    <MudTable T="Name" Items="_match.FinalPlaces" Breakpoint="Breakpoint.None" Dense="true">
                         <HeaderContent>
                             @if (MyRole != null)
                             {
@@ -286,8 +286,8 @@
                     break;
             case MatchState.Completed:
                 <MudItem xs="12">
-                    
-                    <MudTable T="Name" Items="_match.FinalPlaces">
+
+                    <MudTable T="Name" Items="_match.FinalPlaces" Breakpoint="Breakpoint.None" Dense="true">
                         <HeaderContent>
                             <MudTh>Name</MudTh>
                             @foreach (var chartId in _match.ActiveCharts)
