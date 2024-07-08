@@ -29,6 +29,7 @@
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.5.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.5.0" />
     <PackageReference Include="Syncfusion.Blazor.Diagram" Version="26.1.40" />
+    <PackageReference Include="Syncfusion.Blazor.Kanban" Version="26.1.40" />
     <PackageReference Include="Syncfusion.Blazor.Navigations" Version="26.1.40" />
     <PackageReference Include="Syncfusion.Blazor.Themes" Version="26.1.40" />
     <PackageReference Include="Tesseract" Version="5.2.0" />

@@ -12,11 +12,32 @@
 @using ScoreTracker.Web.Shared
 @using System.Text.RegularExpressions
 @using ScoreTracker.Domain.Records
+@using Syncfusion.Blazor.Buttons
 @using Syncfusion.Blazor.Diagram
 @using Syncfusion.Blazor.Diagram.Overview
+@using SelectionChangedEventArgs = Syncfusion.Blazor.Diagram.SelectionChangedEventArgs
+@using Syncfusion.Blazor.Kanban
 
 <PageTitle>@TournamentName Brackets</PageTitle>
-@if (_myRole==TournamentRole.HeadTournamentOrganizer)
+
+<br/>
+<MudGrid>
+    <MudItem xs="6">
+        <MudTooltip Text="Automatically pulls up matches as they change">
+            <MudCheckBox T="bool" @bind-Value="_spectatorMode" Label="Spectator Mode"></MudCheckBox>
+        </MudTooltip>
+    </MudItem>
+    @if (_myRole ==TournamentRole.HeadTournamentOrganizer)
+    {
+        <MudItem xs="6">
+            <MudCheckBox T="bool" @bind-Value="_showAdminTools" Label="Show Admin Tools"></MudCheckBox>
+        </MudItem>        
+    }
+</MudGrid>
+<br />
+<br />
+
+@if (_myRole == TournamentRole.HeadTournamentOrganizer && _showAdminTools)
 {
     <MudGrid>
         <MudItem xs="6" sm="4" md="3">
@@ -29,7 +50,7 @@
             <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenBulkAddMatchDialog">Bulk Create Matches</MudButton>
         </MudItem>
     </MudGrid>
-    
+
 
     <MudDialog @bind-Visible="_showAddRandomDialog">
         <DialogContent>
@@ -71,11 +92,11 @@
                 </MudItem>
                 <MudItem xs="12">
                     <MudAutocomplete T="string" @bind-Value="_phaseName" Label="Phase" CoerceText="false" CoerceValue="true" SearchFunc="(s,c)=>Task.FromResult(_matches.Select(m=>m.Value.PhaseName).Distinct().Where(n=>n.ToString().Contains(s,StringComparison.OrdinalIgnoreCase)).Select(s=>s.ToString()))"></MudAutocomplete>
-                    
+
                 </MudItem>
                 <MudItem xs="12">
                     <MudSelect @bind-Value="_randomSettings" Label="Random Settings" Required="true">
-                        @foreach (var key in _chartPullSettings.Keys.OrderBy(k=>k))
+                        @foreach (var key in _chartPullSettings.Keys.OrderBy(k => k))
                         {
                             <MudSelectItem Value="@key">@key</MudSelectItem>
                         }
@@ -140,88 +161,7 @@
             <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showBulkCreate = false">@L["Close"]</MudButton>
         </DialogActions>
     </MudDialog>
-}
-<br/>
-<br/>
-<MudGrid>
-    <MudItem xs="12">
-        <MudTooltip Text="Automatically pulls up matches as they change">
-            <MudCheckBox T="bool" @bind-Value="_spectatorMode" Label="Spectator Mode"></MudCheckBox>
-        </MudTooltip>
-    </MudItem>
-</MudGrid>
 <br />
-<br />
-@foreach (var parameters in MatchSections())
-{
-    @if (parameters.matches.Any())
-    {
-        <MudTable T="MatchView" Items="parameters.matches">
-            <ToolBarContent>
-                <MudText Typo="Typo.h6">@parameters.header</MudText>
-            </ToolBarContent>
-            <HeaderContent>
-                <MudTh>Match Name</MudTh>
-                <MudTh>Status</MudTh>
-                @if (parameters.showMachine)
-                {
-                    <MudTh>Machine</MudTh>
-                }
-                <MudTh>Phase</MudTh>
-                <MudTh>Players</MudTh>
-                @if (parameters.showWinner)
-                {
-                    <MudTh>Winner</MudTh>
-                }
-                @if (_myRole!=null)
-                {
-                    <MudTh>Player Notes</MudTh>
-                }
-                <MudTh>View</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd>@context.MatchName</MudTd>
-                <MudTd>@context.State</MudTd>
-                @if (parameters.showMachine)
-                {
-                    <MudTd>@context.Machine</MudTd>
-                }
-                <MudTh>@context.PhaseName</MudTh>
-                <MudTh>
-                    @if (_myRole != null && context.Players.Any(p => _players.ContainsKey(p) && _players[p].PotentialConflict))
-                    {
-                        <MudTooltip Text=@($"Potential Conflicts: {string.Join(", ",context.Players.Where(p=>_players.ContainsKey(p)&&_players[p].PotentialConflict))}")>
-                            <MudIcon Color="Color.Warning" Icon="@Icons.Material.Filled.Warning"></MudIcon>
-                        </MudTooltip>
-                    }
-                    @(string.Join(", ", context.Players.Select(p => p.ToString().StartsWith("Unknown ") ? "TBD" : p.ToString())))
-                </MudTh>
-                
-                @if (parameters.showWinner)
-                {
-                    <MudTh>@context.FinalPlaces[0]</MudTh>
-                }
-                @if (_myRole != null)
-                {
-                    <MudTh>
-                        @if (context.Players.Any(p => _players.ContainsKey(p) && !string.IsNullOrWhiteSpace(_players[p].Notes)))
-                        {
-                            <MudIconButton Icon="@Icons.Material.Filled.Notes" OnClick="()=>ShowNotes(context)"></MudIconButton>
-                        }
-                    </MudTh>
-                }
-                <MudTd><MudButton OnClick="() => ViewMatch(context.MatchName)" StartIcon="@Icons.Material.Filled.ViewDay" Color="Color.Primary" Variant="Variant.Outlined">View</MudButton></MudTd>
-            </RowTemplate>
-            <PagerContent>
-                <MudTablePager />
-            </PagerContent>
-        </MudTable>
-        <br/>
-        <br/>
-    }
-}
-@if (_myRole == TournamentRole.HeadTournamentOrganizer)
-{
     <MudButton OnClick="FindInvalidMatches" Color="Color.Primary" Variant="Variant.Filled">Check Matches</MudButton>
     @if (_linksChecked && !_tooManyLinks.Any() && !_notEnoughLinks.Any())
     {
@@ -274,33 +214,66 @@
         </PagerContent>
     </MudTable>
 }
-<br/>
-@if (_matches.Any() && _matchLinks.Any())
+
+@if (_myRole==null)
 {
-    <MudAutocomplete T="string"
-                     Value="@_searchedPlayer"
-                     ValueChanged="SearchForPlayer"
-                     ResetValueOnEmptyText="true"
-                     CoerceText="true"
-                     Label=@($"Player Search")
-                     AdornmentIcon="@Icons.Material.Filled.Search"
-                     SearchFunc="@((s,c) => Task.FromResult(_players.Keys.Where(o=>string.IsNullOrWhiteSpace(s)||o.Contains(s,StringComparison.OrdinalIgnoreCase)).OrderBy(k => k.Equals(s, StringComparison.OrdinalIgnoreCase) ? 0 : 1).AsEnumerable()))">
+    <SfKanban TValue="MatchCard" CssClass="kanban-overview" KeyField="Status" DataSource="MatchCards" EnableTooltip="true" AllowDragAndDrop="false">
+        <KanbanColumns>
+            <KanbanColumn HeaderText="Not Started" KeyField="@(new List<string>() { MatchState.NotStarted.ToString() })" AllowToggle="true">
 
-    </MudAutocomplete>
-    <br/>
-    <div class="col-lg-12 control-section">
-        <SfDiagramComponent @ref="@Diagram" ID="diagram" InteractionController="DiagramInteractions.SingleSelect" NodeCreating="OnNodeCreating" SelectionChanged="SelectionChanged" ConnectorCreating="OnConnectorCreating" Created="OnCreated" Height="590px" Nodes="@NodeCollection" Connectors="@ConnectorCollection">
-            <SnapSettings Constraints=SnapConstraints.None>
-            </SnapSettings>
+            </KanbanColumn>
+            <KanbanColumn HeaderText="Ready to Draw" KeyField="@(new List<string>() {"Ready to Draw"})" AllowToggle="true"></KanbanColumn>
+        
+            <KanbanColumn HeaderText="Card Draw" KeyField="@(new List<string>() {MatchState.CardDraw.ToString()})" AllowToggle="true"></KanbanColumn>
+            <KanbanColumn HeaderText="Warming Up" KeyField="@(new List<string>() {MatchState.Ready.ToString()})" AllowToggle="true"></KanbanColumn>
+            <KanbanColumn HeaderText="Playing" KeyField="@(new List<string>() {MatchState.InProgress.ToString(),MatchState.Finalizing.ToString()})" AllowToggle="true"></KanbanColumn>
+            <KanbanColumn HeaderText="Complete" KeyField="@(new List<string>() {MatchState.Completed.ToString()})" AllowToggle="true"></KanbanColumn>
+        </KanbanColumns>
+        <KanbanCardSettings HeaderField="MatchName">
+            <Template>
+                <MudPaper Style="padding:10px;">
+                    @{ var match = context as MatchCard; }
+                    @foreach (var player in match.Players)
+                    {
+                        
+                        <MudText>@player</MudText>
+                    }
+                    <MudButton Color="Color.Primary" OnClick="() => ViewMatch(match.MatchName)">Open</MudButton>
+                </MudPaper>
+            </Template>
+    </KanbanCardSettings>
 
-        </SfDiagramComponent>
-    </div>
-    <div class="col-lg-4" style="width:50%; padding:0px;right:30px;bottom:50px;border: #eeeeee;border-style: solid;box-shadow: 0px 2px 2px rgba(0,0,0,0.3); background:#f7f7f7;position:relative;display:block;">
-        <div style="top:30px">
-            <SfDiagramOverviewComponent Height="150px" SourceID="diagram"></SfDiagramOverviewComponent>
-        </div>
-    </div>
+        <KanbanEvents TValue="MatchCard" DialogOpen="@OnKanbanDialogOpen"></KanbanEvents>
+</SfKanban>
 }
+<br/>
+
+<MudAutocomplete T="string"
+                 Value="@_searchedPlayer"
+                 ValueChanged="SearchForPlayer"
+                 ResetValueOnEmptyText="true"
+                 CoerceText="true"
+                 Label=@($"Player Search")
+                 AdornmentIcon="@Icons.Material.Filled.Search"
+                 SearchFunc="@((s,c) => Task.FromResult(_players.Keys.Where(o=>string.IsNullOrWhiteSpace(s)||o.Contains(s,StringComparison.OrdinalIgnoreCase)).OrderBy(k => k.Equals(s, StringComparison.OrdinalIgnoreCase) ? 0 : 1).AsEnumerable()))">
+
+</MudAutocomplete>
+<br/>
+<div class="control-section">
+
+<SfDiagramComponent @ref="@Diagram" ID="diagram" InteractionController="DiagramInteractions.SingleSelect" NodeCreating="OnNodeCreating" SelectionChanged="SelectionChanged" ConnectorCreating="OnConnectorCreating" Created="OnCreated" Height="590px" Nodes="@NodeCollection" Connectors="@ConnectorCollection">
+    <SnapSettings Constraints=SnapConstraints.None>
+    </SnapSettings>
+
+</SfDiagramComponent>
+
+</div>
+<div class="col-lg-4" style="width:50%; padding:0px;right:30px;bottom:50px;border: #eeeeee;border-style: solid;box-shadow: 0px 2px 2px rgba(0,0,0,0.3); background:#f7f7f7;position:relative;display:block;">
+    <div style="top:30px">
+        <SfDiagramOverviewComponent Height="150px" SourceID="diagram"></SfDiagramOverviewComponent>
+    </div>
+</div>
+
 <br/>
 <MudTable T="ChartStats" Items="_chartStats">
     <ToolBarContent>
@@ -591,6 +564,15 @@
         con.Type = ConnectorSegmentType.Bezier;
     }
 
+    private void OnKanbanDialogOpen(DialogOpenEventArgs<MatchCard> args)
+    {
+        args.Cancel = true;
+        if (args?.Data?.MatchName == null)
+        {
+            return;
+        }
+        ViewMatch(args.Data.MatchName);
+    }
     private DiagramObjectCollection<Connector> ConnectorCollection = new DiagramObjectCollection<Connector>();
     private DiagramObjectCollection<Node> NodeCollection = new DiagramObjectCollection<Node>();
     private Name? _currentMatch;
@@ -647,6 +629,7 @@
         yield return ("Completed Matches",true,false,CompletedMatches);
     }
 
+    private bool _showAdminTools = false;
     private IDictionary<string, MatchView> _matches = new Dictionary<string, MatchView>();
     private ICollection<MatchLink> _matchLinks = new List<MatchLink>();
     private readonly ICollection<Name> _tooManyLinks = new List<Name>();
@@ -662,6 +645,14 @@
     private bool _isDoubleElimination = false;
     private Name[] _roundSettings = new Name[] { "Not Set" };
     private bool _bulkCreating = false;
+
+    private sealed record MatchCard(string MatchName, string Status, string[] Players);
+
+    private IEnumerable<MatchCard> MatchCards => _matches.Values
+        .OrderBy(m=>m.MatchOrder).Select(m => new MatchCard(
+        m.MatchName,
+        m.State == MatchState.NotStarted && m.Players.All(p => !p.ToString().StartsWith("Unknown ")) ? "Ready to Draw" : m.State.ToString(),
+        m.Players.Select(n=>n.ToString()).ToArray()));
 
     private void SetPlayerCount(int playerCount)
     {
@@ -1010,7 +1001,6 @@
             foreach (var match in round.OrderBy(m => m.MatchOrder))
             {
 
-                var content =string.Join("\n",match.Players);
                 var node = new Node()
                 {
                     ID = match.MatchName,
@@ -1040,7 +1030,7 @@
                 ID = matchLink.FromMatch.ToString() + " -> " + matchLink.ToMatch.ToString(),
                 SourceID = matchLink.FromMatch,
                 TargetID = matchLink.ToMatch,
-                SourcePortID ="rightPort",
+                SourcePortID =rightPort.ID,
                 TargetDecorator = new DecoratorSettings() { Shape = DecoratorShape.Arrow, Style = new ShapeStyle() { Fill = "#024249", StrokeColor = "#024249" } },
                 Style = new ShapeStyle() { StrokeColor = "#6d6d6d", StrokeWidth = 2 },
 
@@ -1048,15 +1038,15 @@
 
             if (_matches[matchLink.FromMatch].Round == _matches[matchLink.ToMatch].Round)
             {
-                connector.SourcePortID = "leftPort";
-                connector.TargetPortID = "leftPort";
+                connector.SourcePortID = leftPort.ID;
+                connector.TargetPortID = leftPort.ID;
             }
             await ConnectorCollection.AddAsync(connector);
         }
         UpdateCurrentPhase();
         RecalculateStates();
         MainLayout.MatchUpdated += (o, e) => MatchUpdated(e);
-
+        StateHasChanged();
     }
 
     private IEnumerable<ChartStats> _chartStats = Array.Empty<ChartStats>();

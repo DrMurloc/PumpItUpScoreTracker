@@ -84,7 +84,7 @@
 
 </MudGrid>
 <br/>
-<MudText Typo="Typo.h5">Overall Leaderboard</MudText>
+<MudText Typo="Typo.h5">Weekly Total Leaderboard</MudText>
 <br/>
 <MudTable T="Guid" Items="_userTotalPlace.OrderBy(kv=>kv.Value).Select(kv=>kv.Key)" FixedHeader="true" Striped="true" Breakpoint="Breakpoint.None" Dense="true">
     <HeaderContent>
@@ -116,7 +116,7 @@
                     </MudTooltip>
                     <DifficultyBubble Height="20" Chart="chart"></DifficultyBubble>
                 </div>
-                <ScoreBreakdown Score="entry.Score" IsBroken="entry.IsBroken" Plate="entry.Plate" Height="20" Text="@(entry.Score.ToString()+" - "+_scoring.GetScore(chart, entry.Score, entry.Plate, entry.IsBroken).ToString("N0"))" ShowTextAsTooltip="true"></ScoreBreakdown>
+                <ScoreBreakdown Score="entry.Score" IsBroken="entry.IsBroken" Height="20" Text="@(entry.Score.ToString()+" - "+_scoring.GetScore(chart, entry.Score, entry.Plate, entry.IsBroken).ToString("N0"))" ShowTextAsTooltip="true"></ScoreBreakdown>
 
             </MudTd>
         }
@@ -126,6 +126,80 @@
         }
         <MudTd>@_userTopFourTotal[context].ToString("N0")</MudTd>
     </RowTemplate>
+</MudTable>
+<br/>
+<MudText Typo="Typo.h5">Road to BITE (Monthly Leaderboard July 8th - August 4th)</MudText>
+<br/>
+<MudTable T="Guid" Items="_monthlyPlaces.OrderBy(kv => kv.Value).Select(kv=>kv.Key)" FixedHeader="true" Striped="true" Breakpoint="Breakpoint.None" Dense="true">
+    <HeaderContent>
+        <MudTh>@L["Place"]</MudTh>
+        <MudTh>@L["Avatar"]</MudTh>
+        <MudTh>@L["Username"]</MudTh>
+        @for (var i = 0; i < 4; i++)
+        {
+            var place = i + 1;
+            <MudTh>#@place @L["Song"]</MudTh>
+        }
+        <MudTh>@L["Total Count"]</MudTh>
+        <MudTh>PUMBILITY+</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@_monthlyPlaces[context]</MudTd>
+        <MudTd>
+            <MudImage Src="@_users[context].ProfileImage.ToString()" Height="20" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+        </MudTd>
+        <MudTd>@_users[context].Name</MudTd>
+
+        @foreach (var entry in _monthlyTop4[context])
+        {
+            var chart = _charts[entry.ChartId];
+            <MudTd Style="text-align:center">
+                <div style="display:inline">
+                    <MudTooltip Text="@(chart.Song.Name + ' ' + chart.DifficultyString)">
+                        <MudImage Src="@chart.Song.ImagePath.ToString()" Height="20" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
+                        <br />
+                    </MudTooltip>
+                    <DifficultyBubble Height="20" Chart="chart"></DifficultyBubble>
+                </div>
+                <ScoreBreakdown Score="entry.Score" IsBroken="entry.IsBroken" Height="20" Text="@(entry.Score.ToString()+" - "+_scoring.GetScore(chart, entry.Score, entry.Plate, entry.IsBroken).ToString("N0"))" ShowTextAsTooltip="true"></ScoreBreakdown>
+
+            </MudTd>
+        }
+        @for (var i = _monthlyTop4[context].Count(); i < 4; i++)
+        {
+            <MudTd></MudTd>
+        }
+        <MudTd>
+            <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.Visibility" OnClick="()=>ShowUserData(context)" Variant="Variant.Outlined">@_monthlyBestCharts[context].Count</MudButton>
+        </MudTd>
+        <MudTd>@_monthlyTotals[context].ToString("N0")</MudTd>
+    </RowTemplate>
+    <ChildRowContent>
+        @if (_showingUserId == context)
+        {
+            <td colspan="9" >
+                <MudGrid Style="padding:7px">
+                    @foreach (var entry in _monthlyBestCharts[context].OrderByDescending(s=>_scoring.GetScore(_charts[s.ChartId],s.Score,s.Plate,s.IsBroken)))
+                    {
+                        var chart = _charts[entry.ChartId];
+                        <MudItem xs="4" sm="3" md="2">
+                            <MudCard Class="chart-card">
+                                <MudCardHeader Style=@($"background-image:url(\"{chart.Song.ImagePath}\");")>
+
+                                    <DifficultyBubble Chart="chart"></DifficultyBubble>
+                                </MudCardHeader>
+                                
+                                <MudCardContent>
+                                    <ScoreBreakdown Score="entry.Score" IsBroken="entry.IsBroken" OneLine="true" Text=@(_scoring.GetScore(_charts[entry.ChartId], entry.Score, entry.Plate, entry.IsBroken).ToString("N0")) Plate="entry.Plate"></ScoreBreakdown>
+                                </MudCardContent>
+                            
+                            </MudCard>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </td>
+        }
+    </ChildRowContent>
 </MudTable>
 <br/>
 <MudText Typo="Typo.h6">PUMBILITY+:</MudText>
@@ -280,6 +354,7 @@
     private bool _showSubmitDialog = false;
     private static readonly ScoringConfiguration _scoring = ScoringConfiguration.PiuScoresRatingz;
     private bool _isSaving = false;
+    private Guid? _showingUserId = null;
     private void OpenSubmitDialog(Guid chartId)
     {
         _submittingChartId = chartId;
@@ -317,6 +392,21 @@
         await ReprocessLeaderboards();
         
     }
+
+    private void ShowUserData(Guid userId)
+    {
+        
+        if (_showingUserId == userId)
+        {
+            _showingUserId = null;
+
+        }
+        else
+        {
+            _showingUserId = userId;
+        }
+    }
+
     private void ShowLeaderboard(Guid chartId)
     {
         _showingChartId = chartId;
@@ -420,15 +510,23 @@
                 .Where(v => v != null)
                 .ToDictionary(e => e!.ChartId, e => e!);
         }
-
-        _users = (await Users.GetUsers(_allEntries.Values.SelectMany(g => g.Select(e => e.UserId)).Distinct().ToArray(), CancellationToken.None))
-            .ToDictionary(u => u.Id);
+        var users = await Users.GetUsers(_allEntries.Values.SelectMany(g => g.Select(e => e.UserId)).Distinct().ToArray(), CancellationToken.None);
+        foreach (var user in users)
+        {
+            _users[user.Id] = user;
+        }
         
         SetShowOnlyCompetitive(_showOnlyCompetitive);
     }
 
     private bool _isLoggedIn = false;
     private bool _showCompetitiveToggle;
+
+    private IDictionary<Guid, int> _monthlyTotals = new Dictionary<Guid, int>();
+    private IDictionary<Guid, List<WeeklyTournamentEntry>> _monthlyBestCharts = new Dictionary<Guid, List<WeeklyTournamentEntry>>();
+    private IDictionary<Guid, WeeklyTournamentEntry[]> _monthlyTop4 = new Dictionary<Guid, WeeklyTournamentEntry[]>();
+    private IDictionary<Guid, int> _monthlyPlaces = new Dictionary<Guid, int>();
+
     protected override async Task OnInitializedAsync()
     {
         _isLoggedIn = CurrentUser.IsLoggedIn;
@@ -453,8 +551,43 @@
             _showOnlyCompetitive = false;
         }
         _pastDates = await WeeklyTournaments.GetPastDates(CancellationToken.None);
-       
+        var biteStart = new DateTimeOffset(2024, 7, 9, 0, 0, 0, TimeSpan.Zero);
+        foreach (var date in _pastDates.Where(d => d > biteStart))
+        {
+            var scores = await WeeklyTournaments.GetPastEntries(date, CancellationToken.None);
+            var users = await Users.GetUsers(scores.Select(s => s.UserId).Distinct().ToArray());
+            foreach (var user in users)
+            {
+                _users[user.Id] = user;
+            }
+            foreach (var userGroup in scores.GroupBy(s => s.UserId))
+            {
+                if (!_monthlyBestCharts.ContainsKey(userGroup.Key))
+                {
+                    _monthlyBestCharts[userGroup.Key] = new List<WeeklyTournamentEntry>();
+                }
+                _monthlyBestCharts[userGroup.Key].AddRange(userGroup.OrderByDescending(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken))
+                    .Take(4));
 
+            }
+        }
+        var currentWeek = await WeeklyTournaments.GetEntries(null, CancellationToken.None);
+        foreach (var userGroup in currentWeek.GroupBy(s => s.UserId))
+        {
+            if (!_monthlyBestCharts.ContainsKey(userGroup.Key))
+            {
+                _monthlyBestCharts[userGroup.Key] = new List<WeeklyTournamentEntry>();
+            }
+            _monthlyBestCharts[userGroup.Key].AddRange(userGroup.OrderByDescending(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken))
+                .Take(4));
+
+        }
+        _monthlyTotals = _monthlyBestCharts.ToDictionary(kv => kv.Key, kv => kv.Value.Sum(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken)));
+        _monthlyTop4 = _monthlyBestCharts.ToDictionary(kv => kv.Key, kv => kv.Value.OrderByDescending(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken))
+            .Take(4).ToArray());
+
+        _monthlyPlaces = _monthlyTotals.OrderByDescending(kv => kv.Value).Select((kv, i) => (kv,i))
+            .ToDictionary(c => c.kv.Key, c => c.i + 1);
         await ReprocessLeaderboards();
 
     }
