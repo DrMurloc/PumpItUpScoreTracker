@@ -96,6 +96,7 @@
             var place = i + 1;
             <MudTh>#@place @L["Song"]</MudTh>
         }
+        <MudTh>@L["Total Count"]</MudTh>
         <MudTh>PUMBILITY+</MudTh>
     </HeaderContent>
     <RowTemplate>
@@ -124,8 +125,38 @@
         {
             <MudTd></MudTd>
         }
+        <MudTd>
+            <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.Visibility" OnClick=@(()=>ShowUserData(context,"Weekly")) Variant="Variant.Outlined">@_userCharts[context].Count()</MudButton>
+        </MudTd>
         <MudTd>@_userTopFourTotal[context].ToString("N0")</MudTd>
     </RowTemplate>
+
+    <ChildRowContent>
+        @if (_showingUserId == context && _showingSection == "Weekly")
+        {
+            <td colspan="9">
+                <MudGrid Style="padding:7px">
+                    @foreach (var entry in _userCharts[context].OrderByDescending(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken)))
+                    {
+                        var chart = _charts[entry.ChartId];
+                        <MudItem sm="3" md="2">
+                            <MudCard Class="chart-card">
+                                <MudCardHeader Style=@($"background-image:url(\"{chart.Song.ImagePath}\");")>
+
+                                    <DifficultyBubble Chart="chart"></DifficultyBubble>
+                                </MudCardHeader>
+
+                                <MudCardContent>
+                                    <ScoreBreakdown Score="entry.Score" IsBroken="entry.IsBroken" OneLine="true" Text=@(_scoring.GetScore(_charts[entry.ChartId], entry.Score, entry.Plate, entry.IsBroken).ToString("N0")) Plate="entry.Plate"></ScoreBreakdown>
+                                </MudCardContent>
+
+                            </MudCard>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </td>
+        }
+    </ChildRowContent>
 </MudTable>
 <br/>
 <MudText Typo="Typo.h5">Road to BITE (Monthly Leaderboard July 8th - August 4th)</MudText>
@@ -170,19 +201,19 @@
             <MudTd></MudTd>
         }
         <MudTd>
-            <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.Visibility" OnClick="()=>ShowUserData(context)" Variant="Variant.Outlined">@_monthlyBestCharts[context].Count</MudButton>
+            <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.Visibility" OnClick=@(()=>ShowUserData(context,"Monthly")) Variant="Variant.Outlined">@_monthlyBestCharts[context].Count</MudButton>
         </MudTd>
         <MudTd>@_monthlyTotals[context].ToString("N0")</MudTd>
     </RowTemplate>
     <ChildRowContent>
-        @if (_showingUserId == context)
+        @if (_showingUserId == context && _showingSection=="Monthly")
         {
             <td colspan="9" >
                 <MudGrid Style="padding:7px">
                     @foreach (var entry in _monthlyBestCharts[context].OrderByDescending(s=>_scoring.GetScore(_charts[s.ChartId],s.Score,s.Plate,s.IsBroken)))
                     {
                         var chart = _charts[entry.ChartId];
-                        <MudItem xs="4" sm="3" md="2">
+                        <MudItem sm="3" md="2">
                             <MudCard Class="chart-card">
                                 <MudCardHeader Style=@($"background-image:url(\"{chart.Song.ImagePath}\");")>
 
@@ -355,6 +386,7 @@
     private static readonly ScoringConfiguration _scoring = ScoringConfiguration.PiuScoresRatingz;
     private bool _isSaving = false;
     private Guid? _showingUserId = null;
+    private string _showingSection = "Monthly";
     private void OpenSubmitDialog(Guid chartId)
     {
         _submittingChartId = chartId;
@@ -370,6 +402,7 @@
     private IDictionary<Guid, IEnumerable<(int, WeeklyTournamentEntry)>> _topPlaces = new Dictionary<Guid, IEnumerable<(int, WeeklyTournamentEntry)>>();
     private IDictionary<Guid, int> _counts = new Dictionary<Guid, int>();
     private IDictionary<Guid, int> _userTopFourTotal = new Dictionary<Guid, int>();
+    private IDictionary<Guid, WeeklyTournamentEntry[]> _userCharts = new Dictionary<Guid, WeeklyTournamentEntry[]>();
     private IDictionary<Guid, int> _userTotalPlace = new Dictionary<Guid, int>();
     private IDictionary<Guid, IEnumerable<WeeklyTournamentEntry>> _userTopFourCharts = new Dictionary<Guid, IEnumerable<WeeklyTournamentEntry>>();
     private IEnumerable<DateTimeOffset> _pastDates = Array.Empty<DateTimeOffset>();
@@ -393,9 +426,9 @@
         
     }
 
-    private void ShowUserData(Guid userId)
+    private void ShowUserData(Guid userId, string section)
     {
-        
+        _showingSection = section;
         if (_showingUserId == userId)
         {
             _showingUserId = null;
@@ -494,9 +527,10 @@
                 .Select(id => new WeeklyTournamentChart(id, _selectedWeek.Value));
             _competitiveCharts = _allCharts;
         }
-        var userGroups = _allEntries.Values.SelectMany(_ => _).GroupBy(c => c.UserId)
+        _userCharts = _allEntries.Values.SelectMany(_ => _).GroupBy(c => c.UserId)
             .ToDictionary(g => g.Key, g => g.ToArray());
-        _userTopFourCharts = userGroups.ToDictionary(kv => kv.Key, kv =>
+
+        _userTopFourCharts = _userCharts.ToDictionary(kv => kv.Key, kv =>
             kv.Value.OrderByDescending(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken))
                 .Take(4)
                 .ToArray().AsEnumerable());
