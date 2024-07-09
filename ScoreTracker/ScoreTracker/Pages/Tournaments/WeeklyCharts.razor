@@ -86,6 +86,13 @@
 <br/>
 <MudText Typo="Typo.h5">Weekly Total Leaderboard</MudText>
 <br/>
+<MudSelect T="ChartType?" Value="_chartType" ValueChanged="SetChartType" Disabled="_isLoading" Label="Leaderboard Type">
+    <MudSelectItem T="ChartType?" Value="null">Combined</MudSelectItem>
+    <MudSelectItem T="ChartType?" Value="ChartType.Single">Singles</MudSelectItem>
+    <MudSelectItem T="ChartType?" Value="ChartType.Double">Doubles</MudSelectItem>
+    <MudSelectItem T="ChartType?" Value="ChartType.CoOp">Co-Op</MudSelectItem>
+</MudSelect>
+<br/>
 <MudTable T="Guid" Items="_userTotalPlace.OrderBy(kv=>kv.Value).Select(kv=>kv.Key)" FixedHeader="true" Striped="true" Breakpoint="Breakpoint.None" Dense="true">
     <HeaderContent>
         <MudTh>@L["Place"]</MudTh>
@@ -160,6 +167,13 @@
 </MudTable>
 <br/>
 <MudText Typo="Typo.h5">Road to BITE (Monthly Leaderboard July 8th - August 4th)</MudText>
+<br />
+<MudSelect T="ChartType?" Value="_chartType" ValueChanged="SetChartType" Disabled="_isLoading" Label="Leaderboard Type">
+    <MudSelectItem T="ChartType?" Value="null">Combined</MudSelectItem>
+    <MudSelectItem T="ChartType?" Value="ChartType.Single">Singles</MudSelectItem>
+    <MudSelectItem T="ChartType?" Value="ChartType.Double">Doubles</MudSelectItem>
+    <MudSelectItem T="ChartType?" Value="ChartType.CoOp">Co-Op</MudSelectItem>
+</MudSelect>
 <br/>
 <MudTable T="Guid" Items="_monthlyPlaces.OrderBy(kv => kv.Value).Select(kv=>kv.Key)" FixedHeader="true" Striped="true" Breakpoint="Breakpoint.None" Dense="true">
     <HeaderContent>
@@ -375,6 +389,7 @@
     private IEnumerable<WeeklyTournamentChart> _competitiveCharts = Array.Empty<WeeklyTournamentChart>();
     private IEnumerable<WeeklyTournamentChart> _allCharts = Array.Empty<WeeklyTournamentChart>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private ChartType? _chartType;
     private bool _showLeaderboard;
     private Guid? _showingChartId;
     private Guid? _submittingChartId;
@@ -406,6 +421,7 @@
     private IDictionary<Guid, int> _userTotalPlace = new Dictionary<Guid, int>();
     private IDictionary<Guid, IEnumerable<WeeklyTournamentEntry>> _userTopFourCharts = new Dictionary<Guid, IEnumerable<WeeklyTournamentEntry>>();
     private IEnumerable<DateTimeOffset> _pastDates = Array.Empty<DateTimeOffset>();
+    private bool _isLoading = false;
     private async Task Start()
     {
         await Bus.Publish(new UpdateWeeklyChartsEvent());
@@ -500,6 +516,39 @@
         _selectedWeek = date;
         await ReprocessLeaderboards();
     }
+
+    private bool IsValid(Guid chartId)
+    {
+        var chart = _charts[chartId];
+        return (_chartType == null && chart.Type != ChartType.CoOp)
+               || _chartType == chart.Type;
+
+    }
+
+    private void RecalculateWeekly()
+    {
+
+        _userCharts = _allEntries
+            .Where(kv => IsValid(kv.Key))
+            .SelectMany(kv => kv.Value)
+            .GroupBy(c => c.UserId)
+            .ToDictionary(g => g.Key, g => g.ToArray());
+
+        _userTopFourCharts = _userCharts.ToDictionary(kv => kv.Key, kv =>
+            kv.Value.OrderByDescending(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken))
+                .Take(4)
+                .ToArray().AsEnumerable());
+        _userTopFourTotal = _userTopFourCharts.ToDictionary(kv => kv.Key,
+            kv => kv.Value.Sum(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken)));
+        _userTotalPlace = _userTopFourTotal.OrderByDescending(kv => kv.Value).Select((kv, i) => (kv, i))
+            .ToDictionary(c => c.kv.Key, c => c.i + 1);
+        if (_isLoggedIn)
+        {
+            _myScores = _allEntries.Select(kv => kv.Value.FirstOrDefault(v => v.UserId == _userId))
+                .Where(v => v != null)
+                .ToDictionary(e => e!.ChartId, e => e!);
+        }
+    }
     private async Task ReprocessLeaderboards()
     {
         if (_selectedWeek == null)
@@ -527,23 +576,7 @@
                 .Select(id => new WeeklyTournamentChart(id, _selectedWeek.Value));
             _competitiveCharts = _allCharts;
         }
-        _userCharts = _allEntries.Values.SelectMany(_ => _).GroupBy(c => c.UserId)
-            .ToDictionary(g => g.Key, g => g.ToArray());
-
-        _userTopFourCharts = _userCharts.ToDictionary(kv => kv.Key, kv =>
-            kv.Value.OrderByDescending(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken))
-                .Take(4)
-                .ToArray().AsEnumerable());
-        _userTopFourTotal = _userTopFourCharts.ToDictionary(kv => kv.Key,
-            kv => kv.Value.Sum(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken)));
-        _userTotalPlace = _userTopFourTotal.OrderByDescending(kv => kv.Value).Select((kv, i) => (kv,i))
-            .ToDictionary(c => c.kv.Key, c => c.i + 1);
-        if (_isLoggedIn)
-        {
-            _myScores = _allEntries.Select(kv => kv.Value.FirstOrDefault(v => v.UserId == _userId))
-                .Where(v => v != null)
-                .ToDictionary(e => e!.ChartId, e => e!);
-        }
+        RecalculateWeekly();
         var users = await Users.GetUsers(_allEntries.Values.SelectMany(g => g.Select(e => e.UserId)).Distinct().ToArray(), CancellationToken.None);
         foreach (var user in users)
         {
@@ -560,7 +593,63 @@
     private IDictionary<Guid, List<WeeklyTournamentEntry>> _monthlyBestCharts = new Dictionary<Guid, List<WeeklyTournamentEntry>>();
     private IDictionary<Guid, WeeklyTournamentEntry[]> _monthlyTop4 = new Dictionary<Guid, WeeklyTournamentEntry[]>();
     private IDictionary<Guid, int> _monthlyPlaces = new Dictionary<Guid, int>();
+    
+    private async Task SetChartType(ChartType? chartType)
+    {
+        _chartType = chartType;
+        _isLoading = true;
+        await RecalculateMonthlyLeaderboard();
+        RecalculateWeekly();
+        _isLoading = false;
+    }
+    private async Task RecalculateMonthlyLeaderboard()
+    {
+        var biteStart = new DateTimeOffset(2024, 7, 9, 0, 0, 0, TimeSpan.Zero);
+        _monthlyBestCharts.Clear();
+        _monthlyTotals.Clear();
+        _monthlyTop4.Clear();
+        _monthlyPlaces.Clear();
 
+        foreach (var date in _pastDates.Where(d => d > biteStart))
+        {
+            var scores = (await WeeklyTournaments.GetPastEntries(date, CancellationToken.None))
+                .Where(e=>IsValid(e.ChartId)).ToArray();
+
+            var users = await Users.GetUsers(scores.Where(s=>!_users.ContainsKey(s.UserId)).Select(s => s.UserId).Distinct().ToArray());
+            foreach (var user in users)
+            {
+                _users[user.Id] = user;
+            }
+            foreach (var userGroup in scores.GroupBy(s => s.UserId))
+            {
+                if (!_monthlyBestCharts.ContainsKey(userGroup.Key))
+                {
+                    _monthlyBestCharts[userGroup.Key] = new List<WeeklyTournamentEntry>();
+                }
+                _monthlyBestCharts[userGroup.Key].AddRange(userGroup.OrderByDescending(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken))
+                    .Take(4));
+
+            }
+        }
+        var currentWeek = (await WeeklyTournaments.GetEntries(null, CancellationToken.None))
+            .Where(e=>IsValid(e.ChartId));
+        foreach (var userGroup in currentWeek.GroupBy(s => s.UserId))
+        {
+            if (!_monthlyBestCharts.ContainsKey(userGroup.Key))
+            {
+                _monthlyBestCharts[userGroup.Key] = new List<WeeklyTournamentEntry>();
+            }
+            _monthlyBestCharts[userGroup.Key].AddRange(userGroup.OrderByDescending(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken))
+                .Take(4));
+
+        }
+        _monthlyTotals = _monthlyBestCharts.ToDictionary(kv => kv.Key, kv => kv.Value.Sum(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken)));
+        _monthlyTop4 = _monthlyBestCharts.ToDictionary(kv => kv.Key, kv => kv.Value.OrderByDescending(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken))
+            .Take(4).ToArray());
+
+        _monthlyPlaces = _monthlyTotals.OrderByDescending(kv => kv.Value).Select((kv, i) => (kv, i))
+            .ToDictionary(c => c.kv.Key, c => c.i + 1);
+    }
     protected override async Task OnInitializedAsync()
     {
         _isLoggedIn = CurrentUser.IsLoggedIn;
@@ -584,44 +673,8 @@
             _competitiveCharts = _allCharts;
             _showOnlyCompetitive = false;
         }
-        _pastDates = await WeeklyTournaments.GetPastDates(CancellationToken.None);
-        var biteStart = new DateTimeOffset(2024, 7, 9, 0, 0, 0, TimeSpan.Zero);
-        foreach (var date in _pastDates.Where(d => d > biteStart))
-        {
-            var scores = await WeeklyTournaments.GetPastEntries(date, CancellationToken.None);
-            var users = await Users.GetUsers(scores.Select(s => s.UserId).Distinct().ToArray());
-            foreach (var user in users)
-            {
-                _users[user.Id] = user;
-            }
-            foreach (var userGroup in scores.GroupBy(s => s.UserId))
-            {
-                if (!_monthlyBestCharts.ContainsKey(userGroup.Key))
-                {
-                    _monthlyBestCharts[userGroup.Key] = new List<WeeklyTournamentEntry>();
-                }
-                _monthlyBestCharts[userGroup.Key].AddRange(userGroup.OrderByDescending(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken))
-                    .Take(4));
-
-            }
-        }
-        var currentWeek = await WeeklyTournaments.GetEntries(null, CancellationToken.None);
-        foreach (var userGroup in currentWeek.GroupBy(s => s.UserId))
-        {
-            if (!_monthlyBestCharts.ContainsKey(userGroup.Key))
-            {
-                _monthlyBestCharts[userGroup.Key] = new List<WeeklyTournamentEntry>();
-            }
-            _monthlyBestCharts[userGroup.Key].AddRange(userGroup.OrderByDescending(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken))
-                .Take(4));
-
-        }
-        _monthlyTotals = _monthlyBestCharts.ToDictionary(kv => kv.Key, kv => kv.Value.Sum(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken)));
-        _monthlyTop4 = _monthlyBestCharts.ToDictionary(kv => kv.Key, kv => kv.Value.OrderByDescending(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken))
-            .Take(4).ToArray());
-
-        _monthlyPlaces = _monthlyTotals.OrderByDescending(kv => kv.Value).Select((kv, i) => (kv,i))
-            .ToDictionary(c => c.kv.Key, c => c.i + 1);
+        _pastDates = (await WeeklyTournaments.GetPastDates(CancellationToken.None)).ToArray();
+        await RecalculateMonthlyLeaderboard();
         await ReprocessLeaderboards();
 
     }

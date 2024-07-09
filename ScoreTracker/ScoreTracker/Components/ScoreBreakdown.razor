@@ -7,13 +7,12 @@
         
     @if (Score != null)
     {
-            <MudImage Src="@LetterGradeImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+        <MudImage Src="@LetterGradeImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
 
     }
     @if (Plate != null)
     {
-        
-            <MudImage Src="@PlateImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+        <MudImage Src="@PlateImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
 
     }
     @if (ShowScore && Score!=null && string.IsNullOrWhiteSpace(Text))

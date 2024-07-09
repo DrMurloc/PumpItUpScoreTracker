@@ -227,6 +227,7 @@ namespace ScoreTracker.Domain.Models
             result.LetterGradeModifiers[PhoenixLetterGrade.C] = 0;
             result.LetterGradeModifiers[PhoenixLetterGrade.D] = 0;
             result.LetterGradeModifiers[PhoenixLetterGrade.F] = 0;
+            result.ChartTypeModifiers[ChartType.CoOp] = 1.0;
             result.AdjustToTime = false;
             result.PgLetterGradeModifier = 1.6;
             result.LevelRatings[1] = 10;
