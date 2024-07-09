@@ -191,7 +191,7 @@
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd>
-                                @context
+                                @context (@(_match.Points[context].Sum()) Points)
                             </MudTd>
 
                             @for(var i=0;i<_match.ActiveCharts.Length;i++)
@@ -200,11 +200,11 @@
                                 <MudTh>
                                     @if (MyRole == null)
                                     {
-                                        <MudText>@_match.Scores[context][chartPlace]</MudText>
+                                        <MudText>@_match.Scores[context][chartPlace] (@_match.Points[context][chartPlace])</MudText>
                                     }
                                     else
                                     {
-                                        <MudNumericField Disabled="_isSaving || MyRole == null" T="int" Min="(int)PhoenixScore.Min" Max="(int)PhoenixScore.Max" Value="(int)_match.Scores[context][chartPlace]" ValueChanged="v => SetScore(context, chartPlace, v)" HideSpinButtons="true"></MudNumericField>
+                                        <MudNumericField Disabled="_isSaving || MyRole == null" T="int" Min="(int)PhoenixScore.Min" Max="(int)PhoenixScore.Max" Value="(int)_match.Scores[context][chartPlace]" ValueChanged="v => SetScore(context, chartPlace, v)" Label=@(_match.Points[context][chartPlace]+" Points") HideSpinButtons="true"></MudNumericField>
 
                                     }
                                 </MudTh>
@@ -224,7 +224,7 @@
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12">
-                        <MudButton Disabled="!IsFinished(_match) || _isSaving" Variant="Variant.Filled" OnClick="CalculateScores">Calculate Points</MudButton>
+                        <MudButton Disabled="!IsFinished(_match) || _isSaving" Variant="Variant.Filled" OnClick="CalculateScores">Finalize Scores</MudButton>
                     </MudItem>
                 }
                 break;
@@ -425,7 +425,9 @@
         _isSaving = true;
         var newScores = _match.Scores.ToDictionary(kv => kv.Key, kv => kv.Value.ToArray());
         newScores[player][chartIndex] = newScore;
-        await Mediator.Send(new UpdateMatchCommand(TournamentId.Value,_match with { Scores = newScores}));
+        var match = _match with {Scores=newScores};
+        match = match.CalculatePoints();
+        await Mediator.Send(new UpdateMatchCommand(TournamentId.Value,match));
         _isSaving = false;
     }
     private async Task ProtectChart(Guid chartId)

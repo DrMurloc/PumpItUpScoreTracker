@@ -215,7 +215,7 @@
     </MudTable>
 }
 
-@if (_myRole==null)
+@if (_myRole!=null)
 {
     <SfKanban TValue="MatchCard" CssClass="kanban-overview" KeyField="Status" DataSource="MatchCards" EnableTooltip="true" AllowDragAndDrop="false">
         <KanbanColumns>
