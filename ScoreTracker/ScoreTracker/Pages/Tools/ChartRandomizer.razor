@@ -72,7 +72,7 @@
 </MudGrid>
 <br/>
 <MudGrid>
-    @foreach (var (chart,i) in _pulledCharts.Select((chart,i)=>(chart,i)).OrderBy(c=>!_vetoedCharts.Contains(c.i)?0:1).ThenBy(c=>c.i))
+    @foreach (var (chart,i) in _pulledCharts.Select((chart,i)=>(chart,i)).OrderBy(c=>_vetoedCharts.Contains(c.i)?0:1).ThenBy(c=>c.i))
     {
         var index = i;
         <MudItem xs="6" sm="4" md="3" lg="2" xl="1">

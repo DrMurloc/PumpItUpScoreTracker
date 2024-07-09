@@ -65,7 +65,7 @@
                 break;
             case MatchState.CardDraw:
                 <MudItem xs="12">Drew using: @_match.RandomSettings</MudItem>
-                @foreach (var chartId in _match.ActiveCharts.OrderBy(c=>!_match.VetoedCharts.Contains(c)))
+                @foreach (var chartId in _match.ActiveCharts.OrderBy(c=>_match.VetoedCharts.Contains(c)))
                 {
                     var chart = _charts[chartId];
 
