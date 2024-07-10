@@ -968,6 +968,72 @@
 
         private const int MatchHeight = 80;
 
+    private async Task RedrawTournament()
+    {
+        ConnectorCollection = new DiagramObjectCollection<Connector>();
+
+        NodeCollection = new DiagramObjectCollection<Node>();
+        if (!_matches.Any())
+        {
+            return;
+        }
+        var x = 50;
+        var rounds = _matches.Values.GroupBy(m => m.PhaseName).OrderBy(g => g.Min(m => m.MatchOrder))
+            .SelectMany(phase => phase.GroupBy(m => m.Round).OrderBy(g => g.Key))
+            .ToArray();
+
+        var largestWinners = rounds.Max(g => g.Count(m => m.MatchName.Contains("Winner")));
+
+        foreach (var round in rounds)
+        {
+            var winnersY = 50;
+            var losersY = (largestWinners + 1) * (MatchHeight + 10) + 50;
+            foreach (var match in round.OrderBy(m => m.MatchOrder))
+            {
+
+                var node = new Node()
+                    {
+                        ID = match.MatchName,
+                        Shape = _matchShape,
+                        OffsetX = x,
+                        OffsetY = match.MatchName.Contains("Loser") ? losersY : winnersY,
+                        Height = MatchHeight,
+                        Width = 200
+                    };
+                ProjectMatchOntoNode(match, node);
+                await NodeCollection.AddAsync(node);
+                if (match.MatchName.Contains("Loser"))
+                {
+                    losersY += MatchHeight + 10;
+                }
+                else
+                {
+                    winnersY += MatchHeight + 10;
+                }
+            }
+            x += 250;
+        }
+        foreach (var matchLink in _matchLinks.Where(m => !(m.FromMatch.Contains("Winner") && m.ToMatch.Contains("Loser"))))
+        {
+            var connector = new Connector()
+                {
+                    ID = matchLink.FromMatch.ToString() + " -> " + matchLink.ToMatch.ToString(),
+                    SourceID = matchLink.FromMatch,
+                    TargetID = matchLink.ToMatch,
+                    SourcePortID = rightPort.ID,
+                    TargetDecorator = new DecoratorSettings() { Shape = DecoratorShape.Arrow, Style = new ShapeStyle() { Fill = "#024249", StrokeColor = "#024249" } },
+                    Style = new ShapeStyle() { StrokeColor = "#6d6d6d", StrokeWidth = 2 },
+
+                };
+
+            if (_matches[matchLink.FromMatch].Round == _matches[matchLink.ToMatch].Round)
+            {
+                connector.SourcePortID = leftPort.ID;
+                connector.TargetPortID = leftPort.ID;
+            }
+            await ConnectorCollection.AddAsync(connector);
+        }
+    }
     protected override async Task OnInitializedAsync()
     {
 
@@ -982,67 +1048,9 @@
         _songImages = _charts.Values.GroupBy(c => c.Song.Name.ToString()).ToDictionary(g => g.Key, g => g.Select(c => c.Song.ImagePath.ToString()).First(),StringComparer.OrdinalIgnoreCase);
         _userRoles = await Mediator.Send(new GetTournamentRolesQuery(TournamentId));
         _myRole = !CurrentUser.IsLoggedIn ? null : CurrentUser.IsLoggedInAsAdmin ? TournamentRole.HeadTournamentOrganizer : _userRoles.FirstOrDefault(e => e.UserId == _user?.Id)?.Role;
+        await RedrawTournament();
 
-
-        ConnectorCollection=new DiagramObjectCollection<Connector>();
-
-        NodeCollection= new DiagramObjectCollection<Node>();
-        var x = 50;
-        var rounds = _matches.Values.GroupBy(m => m.PhaseName).OrderBy(g => g.Min(m => m.MatchOrder))
-            .SelectMany(phase => phase.GroupBy(m => m.Round).OrderBy(g => g.Key))
-            .ToArray();
-
-        var largestWinners = rounds.Max(g => g.Count(m => m.MatchName.Contains("Winner")));
-
-        foreach (var round in rounds)
-        {
-            var winnersY = 50;
-            var losersY = (largestWinners + 1) * (MatchHeight+10) + 50;
-            foreach (var match in round.OrderBy(m => m.MatchOrder))
-            {
-
-                var node = new Node()
-                {
-                    ID = match.MatchName,
-                    Shape = _matchShape,
-                    OffsetX = x,
-                    OffsetY = match.MatchName.Contains("Loser") ? losersY : winnersY,
-                    Height = MatchHeight,
-                    Width = 200
-                };
-                ProjectMatchOntoNode(match, node);
-                await NodeCollection.AddAsync(node);
-                if (match.MatchName.Contains("Loser"))
-                {
-                    losersY += MatchHeight+10;
-                }
-                else
-                {
-                    winnersY += MatchHeight+10;
-                }
-            }
-            x += 250;
-        }
-        foreach (var matchLink in _matchLinks.Where(m=>!(m.FromMatch.Contains("Winner") && m.ToMatch.Contains("Loser"))))
-        {
-            var connector = new Connector()
-            {
-                ID = matchLink.FromMatch.ToString() + " -> " + matchLink.ToMatch.ToString(),
-                SourceID = matchLink.FromMatch,
-                TargetID = matchLink.ToMatch,
-                SourcePortID =rightPort.ID,
-                TargetDecorator = new DecoratorSettings() { Shape = DecoratorShape.Arrow, Style = new ShapeStyle() { Fill = "#024249", StrokeColor = "#024249" } },
-                Style = new ShapeStyle() { StrokeColor = "#6d6d6d", StrokeWidth = 2 },
-
-            };
-
-            if (_matches[matchLink.FromMatch].Round == _matches[matchLink.ToMatch].Round)
-            {
-                connector.SourcePortID = leftPort.ID;
-                connector.TargetPortID = leftPort.ID;
-            }
-            await ConnectorCollection.AddAsync(connector);
-        }
+        
         UpdateCurrentPhase();
         RecalculateStates();
         MainLayout.MatchUpdated += (o, e) => MatchUpdated(e);
