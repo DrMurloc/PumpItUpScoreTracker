@@ -209,6 +209,7 @@
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
 @inject NavigationManager NavManager;
+@inject IQualifiersRepository Qualifiers;
 @code
 {
     private bool _showRules = false;
@@ -224,7 +225,7 @@
                 NavManager.NavigateTo($"/Tournament/Stamina/{tournamentId}");
                 break;
                 case TournamentType.Match:
-                    if (_tournaments[tournamentId].StartDate != null && _tournaments[tournamentId].StartDate <= Now)
+                    if ((_tournaments[tournamentId].StartDate != null && _tournaments[tournamentId].StartDate <= Now)||!(_hasQualifiers.TryGetValue(tournamentId,out var hasQuals)&& hasQuals))
                     {
                         
                         NavManager.NavigateTo($"/Tournament/{tournamentId}/Brackets");
@@ -236,7 +237,7 @@
                     }
                     break;
             case TournamentType.CoOp:
-                if (_tournaments[tournamentId].StartDate != null && _tournaments[tournamentId].StartDate <= Now)
+                if ((_tournaments[tournamentId].StartDate != null && _tournaments[tournamentId].StartDate <= Now)||!(_hasQualifiers.TryGetValue(tournamentId,out var hasCQuals)&& hasCQuals))
                 {
                         
                     NavManager.NavigateTo($"/Tournament/{tournamentId}/Brackets");
@@ -254,10 +255,30 @@
     private TournamentRecord[] _previous = Array.Empty<TournamentRecord>();
     private TournamentRecord[] _active = Array.Empty<TournamentRecord>();
     private IDictionary<Guid, TournamentRecord> _tournaments = new Dictionary<Guid, TournamentRecord>();
+    private IDictionary<Guid, bool> _hasQualifiers = new Dictionary<Guid, bool>();
     protected override async Task OnInitializedAsync()
     {
         var tournaments = (await Mediator.Send(new GetAllTournamentsQuery())).ToArray();
         _tournaments = tournaments.ToDictionary(t => t.Id);
+        var now = DateTimeOffset.Now;
+        foreach (var tournament in _tournaments.Values)
+        {
+            if (tournament.Type == TournamentType.Stamina || tournament.StartDate<now)
+            {
+                _hasQualifiers[tournament.Id] = false;
+                continue;
+            }
+            try
+            {
+
+                var qualSettings = await Qualifiers.GetQualifiersConfiguration(tournament.Id);
+                _hasQualifiers[tournament.Id] = qualSettings.PlayCount > 0;
+            }
+            catch (Exception e)
+            {
+                _hasQualifiers[tournament.Id] = false;
+            }
+        }
         _upcoming = tournaments.Where(t => t.StartDate != null && t.StartDate > DateTimeOffset.Now).ToArray();
         _previous = tournaments.Where(t => t.EndDate != null && t.EndDate < DateTimeOffset.Now).ToArray();
         _active = tournaments.Where(t => (t.StartDate == null || t.StartDate <= DateTimeOffset.Now) && (t.EndDate == null || t.EndDate >= DateTimeOffset.Now)).ToArray();

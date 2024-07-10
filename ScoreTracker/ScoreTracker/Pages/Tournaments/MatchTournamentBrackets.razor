@@ -994,25 +994,29 @@
             var losersY = (largestWinners + 1) * (MatchHeight + 10) + 50;
             foreach (var match in round.OrderBy(m => m.MatchOrder))
             {
-
+                var height = MatchHeight;
+                if (match.Players.Count() > 4)
+                {
+                    height = MatchHeight + (match.Players.Count() - 4) * 15;
+                }
                 var node = new Node()
                     {
                         ID = match.MatchName,
                         Shape = _matchShape,
                         OffsetX = x,
                         OffsetY = match.MatchName.Contains("Loser") ? losersY : winnersY,
-                        Height = MatchHeight,
+                        Height = height,
                         Width = 200
                     };
                 ProjectMatchOntoNode(match, node);
                 await NodeCollection.AddAsync(node);
                 if (match.MatchName.Contains("Loser"))
                 {
-                    losersY += MatchHeight + 10;
+                    losersY += height + 10;
                 }
                 else
                 {
-                    winnersY += MatchHeight + 10;
+                    winnersY += height + 10;
                 }
             }
             x += 250;
@@ -1030,7 +1034,7 @@
 
                 };
 
-            if (_matches[matchLink.FromMatch].Round == _matches[matchLink.ToMatch].Round)
+            if (_matches[matchLink.FromMatch].PhaseName==_matches[matchLink.ToMatch].PhaseName && _matches[matchLink.FromMatch].Round == _matches[matchLink.ToMatch].Round)
             {
                 connector.SourcePortID = leftPort.ID;
                 connector.TargetPortID = leftPort.ID;
