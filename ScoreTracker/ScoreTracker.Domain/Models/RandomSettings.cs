@@ -48,6 +48,7 @@ namespace ScoreTracker.Domain.Models
             { 5, 0 }
         };
 
+        public ResultsOrdering Ordering { get; set; } = ResultsOrdering.Randomized;
         public bool AllowRepeats { get; set; } = false;
         public int Count { get; set; } = 3;
         public bool UseScoringLevels { get; set; } = false;
@@ -70,5 +71,12 @@ namespace ScoreTracker.Domain.Models
                                           ||
                                           SongTypeWeights.Any(kvp =>
                                               kvp.Value > 1);
+
+        public enum ResultsOrdering
+        {
+            Randomized,
+            IncreasingLevel,
+            DecreasingLevel
+        }
     }
 }

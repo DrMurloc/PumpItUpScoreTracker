@@ -139,6 +139,14 @@
             <MudItem xs="4">
                 <MudSwitch T="bool" Color="Color.Primary" Label="Use Scoring Level" @bind-Value="Settings.UseScoringLevels"></MudSwitch>
             </MudItem>
+            <MudItem xs="4">
+                <MudSelect T="RandomSettings.ResultsOrdering" @bind-Value="Settings.Ordering" Label="Results Order">
+                    @foreach (var option in Enum.GetValues<RandomSettings.ResultsOrdering>())
+                    {
+                        <MudSelectItem T="RandomSettings.ResultsOrdering" Value="option">@option</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
         </MudGrid>
     </MudExpansionPanel>
     @if (_includedCharts.Any())

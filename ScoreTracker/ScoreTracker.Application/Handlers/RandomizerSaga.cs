@@ -178,7 +178,16 @@ namespace ScoreTracker.Application.Handlers
                 results.Add(charts[nextGuid]);
             }
 
-            return results.OrderBy(r => _random.NextDouble());
+            switch (request.Settings.Ordering)
+            {
+                case RandomSettings.ResultsOrdering.DecreasingLevel:
+                    return results.OrderByDescending(r => r.Level).ToArray();
+                case RandomSettings.ResultsOrdering.IncreasingLevel:
+                    return results.OrderBy(r => r.Level).ToArray();
+                default:
+                case RandomSettings.ResultsOrdering.Randomized:
+                    return results.OrderBy(r => _random.NextDouble()).ToArray();
+            }
         }
 
         public async Task<IEnumerable<Chart>> Handle(GetIncludedRandomChartsQuery request,
