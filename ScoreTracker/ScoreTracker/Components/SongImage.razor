@@ -7,8 +7,8 @@
 @namespace ScoreTracker.Web.Components
 @if (Song != null)
 {                                
-    <MudTooltip Text=@($"{Song.Name} - {Song.Artist}")>
-        <MudImage Src=@Song.ImagePath.ToString() Height=@(Small?22:35) Alt=@($"{Song.Name} - {Song.Artist}") ObjectFit="ObjectFit.ScaleDown"></MudImage>
+    <MudTooltip Text=@($"{Song.Name} - {Song.Artist}") ShowOnFocus="true">
+        <MudImage tabindex="0" Src=@Song.ImagePath.ToString() Height=@(Small?22:35) Alt=@($"{Song.Name} - {Song.Artist}") ObjectFit="ObjectFit.ScaleDown"></MudImage>
         </MudTooltip>
 }
 @code {

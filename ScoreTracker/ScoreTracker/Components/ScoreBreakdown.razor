@@ -3,27 +3,27 @@
 @using ScoreTracker.Domain.ValueTypes
 @using Align = MudBlazor.Align
 @namespace ScoreTracker.Web.Components
-<MudTooltip Text=@(ShowTextAsTooltip?Text:ShowScore && string.IsNullOrWhiteSpace(Text)?"":ScoreString)>
+<MudTooltip Text=@(ShowTextAsTooltip?Text:ShowScore && string.IsNullOrWhiteSpace(Text)?"":ScoreString) ShowOnFocus="true">
         
     @if (Score != null)
     {
-        <MudImage Src="@LetterGradeImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+        <MudImage tabindex="0" Src="@LetterGradeImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
 
     }
     @if (Plate != null)
     {
-        <MudImage Src="@PlateImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+        <MudImage tabindex="0" Src="@PlateImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
 
     }
     @if (ShowScore && Score!=null && string.IsNullOrWhiteSpace(Text))
     {
-        <MudText Align="Align.Center" Style=@(OneLine?"display:inline;padding-left:5px;vertical-align:top;":"vertical-align:top;")>
+        <MudText tabindex="0" Align="Align.Center" Style=@(OneLine?"display:inline;padding-left:5px;vertical-align:top;":"vertical-align:top;")>
             @ScoreString
         </MudText>
     }
     @if (!string.IsNullOrWhiteSpace(Text) && !ShowTextAsTooltip)
     {
-        <MudText Align="Align.Center" Style=@(OneLine?"display:inline;padding-left:5px;vertical-align:top;":"vertical-align:top;")>
+        <MudText tabindex="0" Align="Align.Center" Style=@(OneLine?"display:inline;padding-left:5px;vertical-align:top;":"vertical-align:top;")>
             @Text
         </MudText>
     }
