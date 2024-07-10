@@ -258,21 +258,25 @@
                  SearchFunc="@((s,c) => Task.FromResult(_players.Keys.Where(o=>string.IsNullOrWhiteSpace(s)||o.Contains(s,StringComparison.OrdinalIgnoreCase)).OrderBy(k => k.Equals(s, StringComparison.OrdinalIgnoreCase) ? 0 : 1).AsEnumerable()))">
 
 </MudAutocomplete>
-<br/>
-<div class="control-section">
+@if (_matches.Any())
+{
+    
+    <br/>
+    <div class="control-section">
 
-<SfDiagramComponent @ref="@Diagram" ID="diagram" InteractionController="DiagramInteractions.SingleSelect" NodeCreating="OnNodeCreating" SelectionChanged="SelectionChanged" ConnectorCreating="OnConnectorCreating" Created="OnCreated" Height="590px" Nodes="@NodeCollection" Connectors="@ConnectorCollection">
-    <SnapSettings Constraints=SnapConstraints.None>
-    </SnapSettings>
+        <SfDiagramComponent @ref="@Diagram" ID="diagram" InteractionController="DiagramInteractions.SingleSelect" NodeCreating="OnNodeCreating" SelectionChanged="SelectionChanged" ConnectorCreating="OnConnectorCreating" Created="OnCreated" Height="590px" Nodes="@NodeCollection" Connectors="@ConnectorCollection">
+            <SnapSettings Constraints=SnapConstraints.None>
+            </SnapSettings>
 
-</SfDiagramComponent>
+        </SfDiagramComponent>
 
-</div>
-<div class="col-lg-4" style="width:50%; padding:0px;right:30px;bottom:50px;border: #eeeeee;border-style: solid;box-shadow: 0px 2px 2px rgba(0,0,0,0.3); background:#f7f7f7;position:relative;display:block;">
-    <div style="top:30px">
-        <SfDiagramOverviewComponent Height="150px" SourceID="diagram"></SfDiagramOverviewComponent>
     </div>
-</div>
+    <div class="col-lg-4" style="width:50%; padding:0px;right:30px;bottom:50px;border: #eeeeee;border-style: solid;box-shadow: 0px 2px 2px rgba(0,0,0,0.3); background:#f7f7f7;position:relative;display:block;">
+        <div style="top:30px">
+            <SfDiagramOverviewComponent Height="150px" SourceID="diagram"></SfDiagramOverviewComponent>
+        </div>
+    </div>
+}
 
 <br/>
 <MudTable T="ChartStats" Items="_chartStats">
@@ -1048,12 +1052,13 @@
         _songImages = _charts.Values.GroupBy(c => c.Song.Name.ToString()).ToDictionary(g => g.Key, g => g.Select(c => c.Song.ImagePath.ToString()).First(),StringComparer.OrdinalIgnoreCase);
         _userRoles = await Mediator.Send(new GetTournamentRolesQuery(TournamentId));
         _myRole = !CurrentUser.IsLoggedIn ? null : CurrentUser.IsLoggedInAsAdmin ? TournamentRole.HeadTournamentOrganizer : _userRoles.FirstOrDefault(e => e.UserId == _user?.Id)?.Role;
-        await RedrawTournament();
+
 
         
         UpdateCurrentPhase();
         RecalculateStates();
         MainLayout.MatchUpdated += (o, e) => MatchUpdated(e);
+        await RedrawTournament();
         StateHasChanged();
     }
 
