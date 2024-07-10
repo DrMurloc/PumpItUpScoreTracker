@@ -433,11 +433,7 @@
             return;
         }
         _isSaving = true;
-        var newScores = _match.Scores.ToDictionary(kv => kv.Key, kv => kv.Value.ToArray());
-        newScores[player][chartIndex] = newScore;
-        var match = _match with {Scores=newScores};
-        match = match.CalculatePoints();
-        await Mediator.Send(new UpdateMatchCommand(TournamentId.Value,match));
+        await Mediator.Send(new UpdateMatchScoresCommand(TournamentId.Value, _match.MatchName, player, chartIndex, newScore));
         _isSaving = false;
     }
     private async Task ProtectChart(Guid chartId)

@@ -24,7 +24,8 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
     IRequestHandler<FinishCardDrawCommand>,
     IRequestHandler<PingMatchCommand>,
     IRequestHandler<GetMatchPlayersQuery, IEnumerable<MatchPlayer>>,
-    IRequestHandler<FinalizeMatchCommand>
+    IRequestHandler<FinalizeMatchCommand>,
+    IRequestHandler<UpdateMatchScoresCommand>
 
 {
     private readonly IAdminNotificationClient _admins;
@@ -235,5 +236,41 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
     {
         await _matchRepository.SaveMatch(request.TournamentId, request.NewView, cancellationToken);
         await _mediator.Publish(new MatchUpdatedEvent(request.TournamentId, request.NewView), cancellationToken);
+    }
+
+    public async Task Handle(UpdateMatchScoresCommand request, CancellationToken cancellationToken)
+    {
+        var oldMatch = await _matchRepository.GetMatch(request.TournamentId, request.MatchName, cancellationToken);
+        var songWasComplete = oldMatch.Scores.Values.All(s => s[request.ChartIndex] > 0);
+        var newScores = oldMatch.Scores.ToDictionary(kv => kv.Key, kv => kv.Value.ToArray());
+        newScores[request.Player][request.ChartIndex] = request.NewScore;
+        var match = oldMatch with { Scores = newScores };
+        match = match.CalculatePoints();
+
+        await _matchRepository.SaveMatch(request.TournamentId, match, cancellationToken);
+        await _mediator.Publish(new MatchUpdatedEvent(request.TournamentId, match), cancellationToken);
+        if (songWasComplete) return;
+
+        var songIsComplete = match.Scores.Values.All(s => s[request.ChartIndex] > 0);
+
+        if (!songIsComplete) return;
+        var chart = await _charts.GetChart(MixEnum.Phoenix, match.ActiveCharts[request.ChartIndex],
+            cancellationToken);
+
+        var config = await _qualifiers.GetQualifiersConfiguration(request.TournamentId, cancellationToken);
+        var message = $@"**{match.MatchName}**
+{chart.Song.Name} #DIFFICULTY|{chart.DifficultyString}# Completed:";
+        foreach (var player in match.Players.OrderByDescending(p => match.Scores[p][request.ChartIndex]))
+        {
+            var score = match.Scores[player][request.ChartIndex];
+            message +=
+                @$"
+- {player} - {score} #LETTERGRADE|{score.LetterGrade}#  ({match.Points[player][request.ChartIndex]} Points)";
+        }
+
+        await _bot.SendMessage(
+            message,
+            config.NotificationChannel,
+            cancellationToken);
     }
 }
