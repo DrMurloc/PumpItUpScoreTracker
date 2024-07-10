@@ -81,6 +81,14 @@
                     <DifficultyBubble Chart="chart"></DifficultyBubble>
                 </MudCardHeader>
                 <MudCardActions>
+                    @if (_protectedCharts.Contains(index))
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Shield" Color="Color.Success"></MudIcon>
+                    }
+                    @if (_vetoedCharts.Contains(index))
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Delete" Color="Color.Error"></MudIcon>
+                    }
                     <MudSpacer></MudSpacer>
                     <MudTooltip Text="Open Embeded Video">
                         <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => VideoDisplayer.ShowVideo(chart.Id))"></MudIconButton>
@@ -88,22 +96,22 @@
                     @if (!_protectedCharts.Contains(index) && !_vetoedCharts.Contains(index))
                     {
                         <MudTooltip Text="Protect">
-                            <MudIconButton Icon="@Icons.Material.Filled.Shield" OnClick="@(()=>ProtectChart(index))" Color="Color.Success"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Shield" OnClick="@(() => ProtectChart(index))" Color="Color.Success"></MudIconButton>
                         </MudTooltip>
                         <MudTooltip Text="Veto">
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(()=>VetoChart(index))" Color="Color.Error"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => VetoChart(index))" Color="Color.Error"></MudIconButton>
                         </MudTooltip>
                     }
                     @if (_protectedCharts.Contains(index))
                     {
                         <MudTooltip Text="Cancel">
-                            <MudIconButton Icon="@Icons.Material.Filled.Cancel" OnClick="()=>CancelProtect(index)" Color="Color.Warning"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Undo" OnClick="() => CancelProtect(index)" Color="Color.Warning"></MudIconButton>
                         </MudTooltip>
                     }
                     @if (_vetoedCharts.Contains(index))
                     {
                         <MudTooltip Text="Cancel">
-                            <MudIconButton Icon="@Icons.Material.Filled.Cancel" OnClick="()=>CancelVeto(index)" Color="Color.Warning"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Undo" OnClick="() => CancelVeto(index)" Color="Color.Warning"></MudIconButton>
                         </MudTooltip>
                     }
                 </MudCardActions>

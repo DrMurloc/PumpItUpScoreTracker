@@ -11,6 +11,7 @@
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Domain.Views
 @using ScoreTracker.Web.Shared
+@using Syncfusion.Blazor.Data
 @if (_match != null)
 {
     <MudGrid>
@@ -65,12 +66,12 @@
                 break;
             case MatchState.CardDraw:
                 <MudItem xs="12">Drew using: @_match.RandomSettings</MudItem>
-                @foreach (var chartId in _match.ActiveCharts.OrderBy(c=>_match.VetoedCharts.Contains(c)))
+                @foreach (var chartId in _match.ActiveCharts.OrderBy(c=>_match.ProtectedCharts.Contains(c)?_match.ProtectedCharts.IndexOf(c):_match.ProtectedCharts.Count()+1).ThenBy(c=>_match.VetoedCharts.Contains(c)))
                 {
                     var chart = _charts[chartId];
 
                     <MudItem xs="6" sm="4" md="3" lg="2" xl="1">
-                        <MudCard Class="chart-card" Style="@CardStyle(chart.Id)">
+                        <MudCard Class="@CardClass(chart.Id)" Style="@CardStyle(chart.Id)">
                             <MudCardHeader Style=@($"background-image:url(\"{chart.Song.ImagePath}\");")>
 
                                 <DifficultyBubble Chart="chart"></DifficultyBubble>
@@ -78,7 +79,15 @@
                             @if (MyRole != null)
                             {
                                 <MudCardActions>
-
+                                    
+                                    @if (_match.ProtectedCharts.Contains(chart.Id))
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.Shield" Color="Color.Success"></MudIcon>
+                                    }
+                                    @if (_match.VetoedCharts.Contains(chart.Id))
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.Delete" Color="Color.Error"></MudIcon>
+                                    }
                                     <MudSpacer></MudSpacer>
 
                                     @if (!_match.ProtectedCharts.Contains(chart.Id) && !_match.VetoedCharts.Contains(chart.Id))
@@ -99,13 +108,13 @@
                                     @if (_match.ProtectedCharts.Contains(chart.Id))
                                     {
                                         <MudTooltip Text="Cancel">
-                                            <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Cancel" OnClick="()=>CancelProtect(chartId)" Color="Color.Warning"></MudIconButton>
+                                            <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Undo" OnClick="()=>CancelProtect(chartId)" Color="Color.Warning"></MudIconButton>
                                         </MudTooltip>
                                     }
                                     @if (_match.VetoedCharts.Contains(chart.Id))
                                     {
                                         <MudTooltip Text="Cancel">
-                                            <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Cancel" OnClick="()=>CancelVeto(chartId)" Color="Color.Warning"></MudIconButton>
+                                            <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Undo" OnClick="()=>CancelVeto(chartId)" Color="Color.Warning"></MudIconButton>
                                         </MudTooltip>
                                     }
                                 </MudCardActions>
@@ -359,6 +368,7 @@
     [Parameter]
     public Guid? TournamentId { get; set; }
 
+    private string CardClass(Guid chartId) => (_match?.VetoedCharts.Contains(chartId) ?? false) || (_match?.ProtectedCharts.Contains(chartId) ?? false) ? "border-solid border-2 chart-card" : "chart-card";
     private string CardStyle(Guid chartId) => _match?.ProtectedCharts.Contains(chartId)??false ? $@"border-color:{Colors.Green.Darken1}" :
         _match?.VetoedCharts.Contains(chartId) ?? false ? $@"border-color:{Colors.Red.Darken1}" : "";
 
@@ -594,7 +604,11 @@
         }
 
         _isSaving = true;
-        await Mediator.Send(new UpdateMatchCommand(TournamentId.Value,_match with { State = MatchState.InProgress }));
+        await Mediator.Send(new UpdateMatchCommand(TournamentId.Value, _match with {
+            State = MatchState.InProgress,
+            ActiveCharts = _match.ActiveCharts.OrderBy(c => _match.ProtectedCharts.Contains(c) ? _match.ProtectedCharts.IndexOf(c) : _match.ProtectedCharts.Length + 1)
+                .ThenBy(c=>_match.ActiveCharts.IndexOf(c)).ToArray()
+            }));
         _isSaving = false;
     }
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
