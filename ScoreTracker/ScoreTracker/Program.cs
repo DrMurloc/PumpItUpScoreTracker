@@ -46,6 +46,7 @@ var discordConfig = builder.Configuration.GetSection("Discord").Get<DiscordConfi
 var googleConfig = builder.Configuration.GetSection("Google").Get<GoogleConfiguration>();
 var facebookConfig = builder.Configuration.GetSection("Facebook").Get<FacebookConfiguration>();
 builder.Services.AddSyncfusionBlazor();
+builder.Services.AddCors();
 builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSection("Discord"));
 builder.Services.AddMassTransit(o =>
 {
@@ -167,12 +168,12 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 app.UseSwagger();
 app.UseSwaggerUI(c => { });
 app.UseRouting();
 
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 

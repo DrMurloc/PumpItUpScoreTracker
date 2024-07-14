@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using MediatR;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
@@ -11,6 +12,7 @@ namespace ScoreTracker.Web.Controllers.Api
 {
     [ApiToken]
     [Route("api/tierlist")]
+    [DisableCors]
     public class TierListsController : Controller
     {
         private readonly IMediator _mediator;

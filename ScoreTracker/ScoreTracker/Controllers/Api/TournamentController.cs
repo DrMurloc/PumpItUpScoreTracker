@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
@@ -10,6 +11,7 @@ namespace ScoreTracker.Web.Controllers.Api
 {
     [ApiToken]
     [Route("api/tournaments")]
+    [DisableCors]
     public class TournamentController : Controller
     {
         [HttpGet]
@@ -33,6 +35,9 @@ namespace ScoreTracker.Web.Controllers.Api
             var statuses = state.Where(s => Enum.TryParse<MatchState>(s, out _))
                 .Select(Enum.Parse<MatchState>).Distinct().ToHashSet();
             var matches = await mediator.Send(new GetAllMatchesQuery(tournamentId), HttpContext.RequestAborted);
+
+            var matchLinks = (await mediator.Send(new GetMatchLinksQuery(tournamentId))).GroupBy(m => m.FromMatch)
+                .ToDictionary(kv => kv.Key, kv => kv.ToArray());
             if (statuses.Any()) matches = matches.Where(m => statuses.Contains(m.State));
 
             if (names.Any()) matches = matches.Where(m => names.Contains(m.MatchName));
@@ -47,6 +52,12 @@ namespace ScoreTracker.Web.Controllers.Api
                     .ToArray(),
                 FinalPlaces = m.FinalPlaces.Select(p => p.ToString()).ToArray(),
                 Name = m.MatchName,
+                Winners =
+                    m.State != MatchState.Completed ? Array.Empty<string>() :
+                    matchLinks.TryGetValue(m.MatchName, out var links) ? links.Where(l => l.IsWinners)
+                        .SelectMany(l => Enumerable.Range(0, l.PlayerCount).Select(i => m.FinalPlaces[i]))
+                        .Distinct().Select(p => p.ToString()).ToArray() :
+                    m.FinalPlaces.Length > 0 ? new[] { m.FinalPlaces[0].ToString() } : Array.Empty<string>(),
                 Phase = m.PhaseName,
                 Players = m.Players.Select(p => p.ToString()).ToArray(),
                 Scores = m.Scores.ToDictionary(kv => kv.Key,

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using MediatR;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
@@ -14,6 +15,7 @@ namespace ScoreTracker.Web.Controllers.Api;
 
 [ApiToken]
 [Route("api/charts")]
+[DisableCors]
 public sealed class ChartsController : Controller
 {
     private readonly ICurrentUserAccessor _currentUser;

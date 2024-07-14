@@ -36,13 +36,22 @@ public sealed class EFMatchRepository : IMatchRepository
                throw new JsonException($"Couldn't parse json for match {matchName} {entity.Id}");
     }
 
+    private string TournamentKey(Guid tournamentId)
+    {
+        return $"{nameof(EFMatchRepository)}__Tournament__{tournamentId}__Matches";
+    }
+
     public async Task<IEnumerable<MatchView>> GetAllMatches(Guid tournamentId, CancellationToken cancellationToken)
     {
-        var entities = await _dbContext.Match.Where(m => m.TournamentId == tournamentId)
-            .ToArrayAsync(cancellationToken);
-        return entities.Select(e =>
-            JsonSerializer.Deserialize<MatchView>(e.Json, _jsonOptions) ??
-            throw new JsonException($"Couldn't parse json for match {e.Name} {e.Id}"));
+        return await _cache.GetOrCreateAsync(TournamentKey(tournamentId), async o =>
+        {
+            o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
+            var entities = await _dbContext.Match.Where(m => m.TournamentId == tournamentId)
+                .ToArrayAsync(cancellationToken);
+            return entities.Select(e =>
+                JsonSerializer.Deserialize<MatchView>(e.Json, _jsonOptions) ??
+                throw new JsonException($"Couldn't parse json for match {e.Name} {e.Id}"));
+        });
     }
 
     public async Task SaveMatch(Guid tournamentId, MatchView matchView, CancellationToken cancellationToken)
@@ -62,6 +71,7 @@ public sealed class EFMatchRepository : IMatchRepository
             entity.Json = JsonSerializer.Serialize(matchView, _jsonOptions);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+        _cache.Remove(TournamentKey(tournamentId));
     }
 
     public async Task SaveRandomSettings(Guid tournamentId, Name settingsName, RandomSettings settings,
@@ -140,6 +150,7 @@ public sealed class EFMatchRepository : IMatchRepository
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+        _cache.Remove(MatchLinkKey(tournamentId));
     }
 
     public async Task DeleteMatchLink(Guid tournamentId, Name fromName, Name toName,
@@ -155,15 +166,26 @@ public sealed class EFMatchRepository : IMatchRepository
             _dbContext.MatchLink.Remove(entity);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
+
+        _cache.Remove(MatchLinkKey(tournamentId));
+    }
+
+    private string MatchLinkKey(Guid tournamentId)
+    {
+        return $"{nameof(EFMatchRepository)}__Tournament__{tournamentId}__MatchLinks";
     }
 
     public async Task<IEnumerable<MatchLink>> GetAllMatchLinks(Guid tournamentId,
         CancellationToken cancellationToken)
     {
-        return await _dbContext.MatchLink
-            .Where(t => t.TournamentId == tournamentId)
-            .Select(ml => new MatchLink(ml.FromMatch, ml.ToMatch, ml.IsWinners, ml.PlayerCount))
-            .ToArrayAsync(cancellationToken);
+        return await _cache.GetOrCreateAsync(MatchLinkKey(tournamentId), async o =>
+        {
+            o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
+            return await _dbContext.MatchLink
+                .Where(t => t.TournamentId == tournamentId)
+                .Select(ml => new MatchLink(ml.FromMatch, ml.ToMatch, ml.IsWinners, ml.PlayerCount))
+                .ToArrayAsync(cancellationToken);
+        });
     }
 
     public async Task<IEnumerable<MatchPlayer>> GetMatchPlayers(Guid tournamentId,

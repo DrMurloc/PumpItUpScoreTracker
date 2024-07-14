@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using CsvHelper.Configuration.Attributes;
 using MediatR;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
@@ -14,6 +15,7 @@ namespace ScoreTracker.Web.Controllers.Api;
 
 [ApiToken]
 [Route("api/phoenixScores")]
+[DisableCors]
 public sealed class PhoenixScoresController : Controller
 {
     private readonly ICurrentUserAccessor _currentUser;
