@@ -15,7 +15,7 @@ namespace ScoreTracker.Web.Controllers.Api;
 
 [ApiToken]
 [Route("api/phoenixScores")]
-[DisableCors]
+[EnableCors("API")]
 public sealed class PhoenixScoresController : Controller
 {
     private readonly ICurrentUserAccessor _currentUser;

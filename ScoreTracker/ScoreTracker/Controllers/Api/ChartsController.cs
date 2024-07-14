@@ -15,7 +15,7 @@ namespace ScoreTracker.Web.Controllers.Api;
 
 [ApiToken]
 [Route("api/charts")]
-[DisableCors]
+[EnableCors("API")]
 public sealed class ChartsController : Controller
 {
     private readonly ICurrentUserAccessor _currentUser;

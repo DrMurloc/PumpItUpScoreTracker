@@ -46,7 +46,15 @@ var discordConfig = builder.Configuration.GetSection("Discord").Get<DiscordConfi
 var googleConfig = builder.Configuration.GetSection("Google").Get<GoogleConfiguration>();
 var facebookConfig = builder.Configuration.GetSection("Facebook").Get<FacebookConfiguration>();
 builder.Services.AddSyncfusionBlazor();
-builder.Services.AddCors();
+builder.Services.AddCors(o =>
+{
+    o.AddPolicy("API", p =>
+    {
+        p.AllowAnyOrigin();
+        p.AllowAnyHeader();
+        p.AllowAnyMethod();
+    });
+});
 builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSection("Discord"));
 builder.Services.AddMassTransit(o =>
 {

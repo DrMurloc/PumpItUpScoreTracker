@@ -12,7 +12,7 @@ namespace ScoreTracker.Web.Controllers.Api
 {
     [ApiToken]
     [Route("api/tierlist")]
-    [DisableCors]
+    [EnableCors("API")]
     public class TierListsController : Controller
     {
         private readonly IMediator _mediator;

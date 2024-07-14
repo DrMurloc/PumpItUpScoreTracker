@@ -11,7 +11,7 @@ namespace ScoreTracker.Web.Controllers.Api
 {
     [ApiToken]
     [Route("api/tournaments")]
-    [DisableCors]
+    [EnableCors("API")]
     public class TournamentController : Controller
     {
         [HttpGet]
