@@ -71,7 +71,7 @@ namespace ScoreTracker.Application.Handlers
 
                 if (!chartsInRange.Any()) continue;
                 var validCharts = chartsInRange.Where(r => !alreadyPlayed.Contains(r.Id)).ToArray();
-                if (validCharts.Any())
+                if (!validCharts.Any())
                 {
                     validCharts = chartsInRange;
                     await weeklyTournies.ClearAlreadyPlayedCharts(chartsInRange.Select(c => c.Id),
