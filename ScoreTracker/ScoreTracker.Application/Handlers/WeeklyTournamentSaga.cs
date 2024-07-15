@@ -60,9 +60,10 @@ namespace ScoreTracker.Application.Handlers
 
             //Move Paradoxx into S25s
             foreach (var chart in buckets[(26, ChartType.Single)]) buckets[(25, ChartType.Single)].Add(chart);
-
+            //Move 1949 and Paradoxx into D27s
+            foreach (var chart in buckets[(28, ChartType.Double)]) buckets[(27, ChartType.Double)].Add(chart);
             buckets.Remove((26, ChartType.Single));
-
+            buckets.Remove((28, ChartType.Double));
 
             foreach (var bucket in buckets)
             {

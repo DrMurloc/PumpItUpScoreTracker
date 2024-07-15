@@ -56,5 +56,8 @@ public sealed class RecurringJobHostedService : IHostedService,
 
         await scheduler.SchedulePublish(new DateTime(nextDate.Year, nextDate.Month, nextDate.Day, 3, 30, 0),
             new RescheduleMessages(), context.CancellationToken);
+
+        await scheduler.SchedulePublish(new DateTime(nextDate.Year, nextDate.Month, nextDate.Day, 4, 0, 0),
+            new UpdateWeeklyChartsEvent());
     }
 }
