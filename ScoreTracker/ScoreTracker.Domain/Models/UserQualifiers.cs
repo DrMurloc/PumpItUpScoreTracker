@@ -93,8 +93,6 @@ public sealed class UserQualifiers
 
     public bool AddPhoenixScore(Guid chartId, PhoenixScore score, Uri uri)
     {
-        if (Submissions.ContainsKey(chartId) && Submissions[chartId].Score > score) return false;
-
         Submissions[chartId] = new Submission
         {
             ChartId = chartId,
