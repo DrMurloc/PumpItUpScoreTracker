@@ -25,6 +25,7 @@ namespace ScoreTracker.Application.Handlers
             //Write User Place Histories
             var now = DateTimeOffset.Now;
             var daysUntilMonday = ((int)DayOfWeek.Monday - (int)now.DayOfWeek + 7) % 7;
+            if (daysUntilMonday == 0) daysUntilMonday = 7;
             var nextMonday = now.AddDays(daysUntilMonday);
             var nextExpiration = new DateTimeOffset(nextMonday.Year, nextMonday.Month, nextMonday.Day, 3, 0, 0, 0, 0,
                 nextMonday.Offset);
