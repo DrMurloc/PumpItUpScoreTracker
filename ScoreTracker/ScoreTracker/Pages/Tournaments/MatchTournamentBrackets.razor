@@ -133,7 +133,7 @@
                     <MudCheckBox T="bool" Disabled="_bulkCreating" @bind-Value="_isDoubleElimination" Label="Double Elimination"></MudCheckBox>
                 </MudItem>
                 <MudItem xs="12">
-                    <MudNumericField T="int" @bind-Value="_lowestSeed" Label="Lowest Seed In Bracket"></MudNumericField>
+                    <MudNumericField T="int" @bind-Value="_lowestSeed" Label="Lowest Seed In Bracket (Seed 5 is lower than Seed 1)"></MudNumericField>
                 </MudItem>
                 @if (_bulkCreateType == "Pools")
                 {
@@ -725,18 +725,18 @@
             string.IsNullOrWhiteSpace(_pointsByPlace) ? null
                 : _pointsByPlace.Split(",").Select(s => s.Trim())
                     .Select(int.Parse).ToArray();
-        var seed = _lowestSeed;
+                var seedsPerMatch = _playersPerMatch - _winnersProgressCount;
+        var seed= _lowestSeed;
         for (var currentRound = 0; currentRound < _rounds; currentRound++)
         {
             var settings = _roundSettings[currentRound];
             for (var currentMatch = 0; currentMatch < _matchesPerRound; currentMatch++)
             {
                 var matchName = $"{_phaseName}{winnersLabel} Round {currentRound + 1} Match {currentMatch + 1}";
-                var seedsPerMatch = _playersPerMatch - _winnersProgressCount;
                 var players = Enumerable.Range(0, _playersPerMatch).Select(c =>
                     c>seedsPerMatch?
                     Name.From($"Unknown {c}")
-                    :Name.From($"Seed {seed++}")).ToArray();
+                    :Name.From($"Seed {seed--}")).ToArray();
                 await Mediator.Send(new UpdateMatchCommand(TournamentId, new MatchView(matchName,
                     _phaseName,
                     nextOrder++,
@@ -1311,7 +1311,8 @@
             }
         }
         var seededPlayers = new HashSet<int>();
-        
+
+        var seedOffset = _lowestSeed - _playerCount;
         foreach (var round in rounds.OrderBy(r=>r.Key))
         {
             foreach (var match in round.Value.Where(m=>m.match.Player1Seed<=players && m.match.Player2Seed<=players))
@@ -1321,12 +1322,12 @@
                 if (!seededPlayers.Contains(match.match.Player1Seed))
                 {
                     seededPlayers.Add(match.match.Player1Seed);
-                    player1Name = $"Seed {_lowestSeed +match.match.Player1Seed - 1}";
+                    player1Name = $"Seed {seedOffset+match.match.Player1Seed}";
                 }
                 if (!seededPlayers.Contains(match.match.Player2Seed))
                 {
                     seededPlayers.Add(match.match.Player2Seed);
-                    player1Name = $"Seed {_lowestSeed + match.match.Player2Seed - 1}";
+                    player1Name = $"Seed {seedOffset+match.match.Player2Seed}";
                 }
                 matches.Add(new MatchView($"{_phaseName} Round {round.Key} Winners Match {match.current}",
                      _phaseName, totalOrder, _chartCount, _roundSettings[round.Key-1],
