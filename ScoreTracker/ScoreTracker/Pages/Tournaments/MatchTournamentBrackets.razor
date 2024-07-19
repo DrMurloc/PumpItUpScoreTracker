@@ -46,8 +46,11 @@
         <MudItem xs="6" sm="4" md="3">
             <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenAddMatchDialog">Add Match</MudButton>
         </MudItem>
-        <MudItem xs="12" sm="4" md="3">
+        <MudItem xs="6" sm="4" md="3">
             <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenBulkAddMatchDialog">Bulk Create Matches</MudButton>
+        </MudItem>
+        <MudItem xs="6" sm="4" md="3">
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="PopulateSeeds">Populate Seeds</MudButton>
         </MudItem>
     </MudGrid>
 
@@ -129,6 +132,9 @@
                 <MudItem xs="12">
                     <MudCheckBox T="bool" Disabled="_bulkCreating" @bind-Value="_isDoubleElimination" Label="Double Elimination"></MudCheckBox>
                 </MudItem>
+                <MudItem xs="12">
+                    <MudNumericField T="int" @bind-Value="_lowestSeed" Label="Lowest Seed In Bracket"></MudNumericField>
+                </MudItem>
                 @if (_bulkCreateType == "Pools")
                 {
                     <MudItem xs="12">
@@ -186,7 +192,7 @@
     
     @if (_tooManyLinks.Any())
     {
-        <MudText>Too many: 
+        <MudText Color="Color.Error">Matches with Too Many Links: 
             @foreach (var match in _tooManyLinks)
             {
                 <MudLink OnClick="()=>ViewMatch(match)">@match</MudLink>
@@ -196,15 +202,18 @@
     }
     @if (_notEnoughLinks.Any())
     {
-        <MudText>
-            Not enough:
+        <MudText Color="Color.Error">
+            Matches With Not Enough Links:
             @foreach (var match in _notEnoughLinks)
             {
                 <MudLink OnClick="()=>ViewMatch(match)">@match</MudLink>
             }
         </MudText>
     }
-
+    @foreach (var problem in _otherProblems)
+    {
+        <MudText Color="Color.Error">@problem</MudText>
+    }
     <MudTable T="MatchLink" Items="_matchLinks">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Links</MudText>
@@ -545,6 +554,7 @@
     private int _linkPlayers = 1;
     private bool _winners = true;
     private string _matchName = string.Empty;
+    private int _lowestSeed = 1;
 
     private void SetBulkCreateType(string type)
     {
@@ -669,6 +679,7 @@
     private ICollection<MatchLink> _matchLinks = new List<MatchLink>();
     private readonly ICollection<Name> _tooManyLinks = new List<Name>();
     private readonly ICollection<Name> _notEnoughLinks = new List<Name>();
+    private readonly ICollection<string> _otherProblems = new List<string>();
     private string _phaseName = "";
     private bool _linksChecked = false;
     private Name TournamentName { get; set; } = "...";
@@ -714,13 +725,18 @@
             string.IsNullOrWhiteSpace(_pointsByPlace) ? null
                 : _pointsByPlace.Split(",").Select(s => s.Trim())
                     .Select(int.Parse).ToArray();
+        var seed = _lowestSeed;
         for (var currentRound = 0; currentRound < _rounds; currentRound++)
         {
             var settings = _roundSettings[currentRound];
             for (var currentMatch = 0; currentMatch < _matchesPerRound; currentMatch++)
             {
                 var matchName = $"{_phaseName}{winnersLabel} Round {currentRound + 1} Match {currentMatch + 1}";
-                var players = Enumerable.Range(0, _playersPerMatch).Select(c => Name.From($"Unknown {c}")).ToArray();
+                var seedsPerMatch = _playersPerMatch - _winnersProgressCount;
+                var players = Enumerable.Range(0, _playersPerMatch).Select(c =>
+                    c>seedsPerMatch?
+                    Name.From($"Unknown {c}")
+                    :Name.From($"Seed {seed++}")).ToArray();
                 await Mediator.Send(new UpdateMatchCommand(TournamentId, new MatchView(matchName,
                     _phaseName,
                     nextOrder++,
@@ -881,6 +897,7 @@
 
         _tooManyLinks.Clear();
         _notEnoughLinks.Clear();
+        _otherProblems.Clear();
         var linkDict = _matchLinks
             .Where(l=>_matches[l.FromMatch].State is not MatchState.Completed)
             .GroupBy(l => l.ToMatch.ToString()).ToDictionary(g => g.Key, g => g.ToArray());
@@ -896,6 +913,36 @@
             if (progressingCount + existingCount > match.Players.Length)
             {
                 _tooManyLinks.Add(match.MatchName);
+            }
+        }
+        var seedGroups = _matches.Values.SelectMany(m => m.Players.Where(p=>p.ToString().StartsWith("Seed ")).Select(p => (p, m)))
+            .GroupBy(kv => kv.p).ToDictionary(g => g.Key, g => g.ToArray());
+        foreach (var seedGroup in seedGroups
+            .Where(g => g.Value.Count() > 1))
+        {
+            _otherProblems.Add(string.Join(", ", seedGroup.Value.Select(m => m.m.MatchName.ToString()) + " both have " + seedGroup.Key));
+        }
+        foreach (var player in _players.Values)
+        {
+            if (!seedGroups.ContainsKey("Seed " + player.Seed))
+            {
+                _otherProblems.Add($"{player.Name} Currently is missing a target Seed position ({player.Seed})");
+            }
+        }
+        var playerSeeds = _players.Values.GroupBy(p => p.Seed).ToDictionary(g=>g.Key,g=>g.ToArray());
+        foreach (var kv in playerSeeds)
+        {
+            if (kv.Value.Count() > 1)
+            {
+                _otherProblems.Add($"Seed {kv.Key} has more than 1 player: " + string.Join(", ", kv.Value.Select(p => p.Name.ToString())));
+            }
+            foreach (var seedName in seedGroups.Keys)
+            {
+                var seed = int.Parse(seedName.ToString().Split(" ").Last());
+                if (!playerSeeds.ContainsKey(seed))
+                {
+                    _otherProblems.Add("There is no player with seed "+seed);
+                }
             }
         }
         _linksChecked = true;
@@ -1119,6 +1166,36 @@
             return result.ToArray();
         }
     }
+
+    private async Task PopulateSeeds()
+    {
+        FindInvalidMatches();
+        if (_otherProblems.Any())
+        {
+            Snackbar.Add("Please resolve identified seeding problems before populating seeds", Severity.Error);
+            return;
+        }
+        var seeds = _players.Values.ToDictionary(p => p.Seed);
+        foreach (var match in _matches.Values)
+        {
+            var needsSaved = false;
+            for (var i = 0; i < match.Players.Length; i++)
+            {
+                if (!match.Players[i].ToString().StartsWith("Seed "))
+                {
+                    continue;
+                }
+                var number = int.Parse(match.Players[i].ToString().Split(" ").Last());
+                match.Players[i] = seeds[number].Name;
+                needsSaved = true;
+            }
+            if (needsSaved)
+            {
+                await Mediator.Send(new UpdateMatchCommand(TournamentId, match));
+            }
+        }
+        Snackbar.Add("Seeded Players Placed", Severity.Success);
+    }
     private async Task BulkCreateHeadToHead()
     {
         var players = _h2hPlayerCount;
@@ -1233,13 +1310,27 @@
                     $"{_phaseName} Round {match.NextMatch.Round} Losers Match {match.NextMatch.Id}", true, 1));
             }
         }
+        var seededPlayers = new HashSet<int>();
+        
         foreach (var round in rounds.OrderBy(r=>r.Key))
         {
             foreach (var match in round.Value.Where(m=>m.match.Player1Seed<=players && m.match.Player2Seed<=players))
             {
+                var player1Name = "Unknown 1";
+                var player2Name = "Unknown 2";
+                if (!seededPlayers.Contains(match.match.Player1Seed))
+                {
+                    seededPlayers.Add(match.match.Player1Seed);
+                    player1Name = $"Seed {_lowestSeed +match.match.Player1Seed - 1}";
+                }
+                if (!seededPlayers.Contains(match.match.Player2Seed))
+                {
+                    seededPlayers.Add(match.match.Player2Seed);
+                    player1Name = $"Seed {_lowestSeed + match.match.Player2Seed - 1}";
+                }
                 matches.Add(new MatchView($"{_phaseName} Round {round.Key} Winners Match {match.current}",
                      _phaseName, totalOrder, _chartCount, _roundSettings[round.Key-1],
-                    MatchState.NotStarted, new Name[] { $"Unknown 1", $"Unknown 2" }, Array.Empty<Guid>(),
+                    MatchState.NotStarted, new Name[] { player1Name, player2Name }, Array.Empty<Guid>(),
                     Array.Empty<Guid>(),
                     Array.Empty<Guid>(),
                     new Dictionary<string, PhoenixScore[]>(),
