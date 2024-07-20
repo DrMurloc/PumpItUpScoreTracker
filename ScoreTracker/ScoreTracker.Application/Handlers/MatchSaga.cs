@@ -67,7 +67,9 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
         {
             ProtectedCharts = Array.Empty<Guid>(),
             VetoedCharts = Array.Empty<Guid>(),
-            ActiveCharts = charts.Select(c => c.Id).ToArray(), State = MatchState.CardDraw
+            ActiveCharts = charts.Select(c => c.Id).ToArray(), State = MatchState.CardDraw,
+
+            LastUpdated = match.State == MatchState.CardDraw ? DateTimeOffset.Now : match.LastUpdated
         };
         await _matchRepository.SaveMatch(request.TournamentId, newMatch, cancellationToken);
         await _mediator.Publish(new MatchUpdatedEvent(request.TournamentId, newMatch), cancellationToken);
@@ -108,7 +110,11 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
             await _mediator.Publish(new MatchUpdatedEvent(request.TournamentId, nextMatch), cancellationToken);
         }
 
-        var newMatchState = match with { State = MatchState.Completed };
+        var newMatchState = match with
+        {
+            State = MatchState.Completed,
+            LastUpdated = match.State == MatchState.Completed ? DateTimeOffset.Now : match.LastUpdated
+        };
         await _matchRepository.SaveMatch(request.TournamentId, newMatchState, cancellationToken);
         await _mediator.Publish(new MatchUpdatedEvent(request.TournamentId, newMatchState), cancellationToken);
 
@@ -134,6 +140,7 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
         var updatedMatch = match with
         {
             State = MatchState.Ready,
+            LastUpdated = match.State == MatchState.Ready ? DateTimeOffset.Now : match.LastUpdated,
             Scores = match.Players.ToDictionary(p => p.ToString(),
                 p => match.ActiveCharts.Select(c => PhoenixScore.From(0)).ToArray()),
             Points = match.Players.ToDictionary(p => p.ToString(), p => match.ActiveCharts.Select(c => 0).ToArray())

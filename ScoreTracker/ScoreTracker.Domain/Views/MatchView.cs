@@ -9,7 +9,7 @@ public sealed record MatchView(Name MatchName, Name PhaseName, int MatchOrder, i
     Guid[] ActiveCharts,
     Guid[] VetoedCharts, Guid[] ProtectedCharts, IDictionary<string, PhoenixScore[]> Scores,
     IDictionary<string, int[]> Points, Name[] FinalPlaces, int Round = 1, string Machine = "",
-    int[]? PointsPerPlace = null)
+    int[]? PointsPerPlace = null, DateTimeOffset? LastUpdated = null)
 {
     public MatchView CalculatePoints()
     {

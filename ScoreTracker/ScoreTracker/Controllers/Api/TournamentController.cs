@@ -64,6 +64,7 @@ namespace ScoreTracker.Web.Controllers.Api
                     kv => (IDictionary<string, int?>)kv.Value.Select((s, i) => (s, i)).ToDictionary(
                         t => charts[m.ActiveCharts[t.i]].Song.Name + " " + charts[m.ActiveCharts[t.i]].DifficultyString,
                         t => t.s == 0 ? null : (int?)t.s)),
+                LastStateChange = m.LastUpdated,
                 Points = m.Points.ToDictionary(kv => kv.Key,
                     kv => (IDictionary<string, int>)kv.Value.Select((s, i) => (s, i)).ToDictionary(
                         t => charts[m.ActiveCharts[t.i]].Song.Name + " " + charts[m.ActiveCharts[t.i]].DifficultyString,

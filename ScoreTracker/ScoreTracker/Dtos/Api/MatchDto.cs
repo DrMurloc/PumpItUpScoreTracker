@@ -9,6 +9,7 @@
         public string[] Charts { get; set; } = Array.Empty<string>();
         public string[] VetoedCharts { get; set; } = Array.Empty<string>();
         public string[] Winners { get; set; } = Array.Empty<string>();
+        public DateTimeOffset? LastStateChange = null;
 
         public IDictionary<string, IDictionary<string, int?>> Scores { get; set; } =
             new Dictionary<string, IDictionary<string, int?>>();
