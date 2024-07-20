@@ -65,6 +65,8 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
         var charts = await _mediator.Send(new GetRandomChartsQuery(settings), cancellationToken);
         var newMatch = match with
         {
+            ProtectedCharts = Array.Empty<Guid>(),
+            VetoedCharts = Array.Empty<Guid>(),
             ActiveCharts = charts.Select(c => c.Id).ToArray(), State = MatchState.CardDraw
         };
         await _matchRepository.SaveMatch(request.TournamentId, newMatch, cancellationToken);

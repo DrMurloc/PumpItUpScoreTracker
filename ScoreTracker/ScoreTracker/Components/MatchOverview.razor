@@ -134,6 +134,10 @@
                 @if (MyRole != null)
                 {
                     <MudItem xs="12">
+                        @if (!_match.ProtectedCharts.Any() && !_match.VetoedCharts.Any())
+                        {
+                            <MudButton OnClick="DrawCharts" Disabled=_isSaving Variant="Variant.Filled" Color="Color.Warning">Redraw Charts</MudButton>
+                        }
                         @if (_match.ActiveCharts.Any(c => _match.VetoedCharts.Contains(c)))
                         {
 
