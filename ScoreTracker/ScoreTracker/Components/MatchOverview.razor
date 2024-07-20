@@ -609,7 +609,7 @@
         _isSaving = true;
         await Mediator.Send(new UpdateMatchCommand(TournamentId.Value, _match with {
                 State = MatchState.InProgress,
-                LastUpdated = _match.State == MatchState.InProgress ? DateTimeOffset.Now : _match.LastUpdated
+                LastUpdated = _match.State == MatchState.InProgress ? DateTimeOffset.Now : _match.LastUpdated,
             ActiveCharts = _match.ActiveCharts.OrderBy(c => _match.ProtectedCharts.Contains(c) ? _match.ProtectedCharts.IndexOf(c) : _match.ProtectedCharts.Length + 1)
                 .ThenBy(c=>_match.ActiveCharts.IndexOf(c)).ToArray()
             }));
