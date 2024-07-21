@@ -152,28 +152,28 @@
                 @if (_addingMix == MixEnum.Phoenix)
                 {
                     <MudItem xs="12">
-                        <MudNumericField T="int" Min="0" Max="1000000" Label=@L["Score"] Value="_score" ValueChanged="i=>_score=i"></MudNumericField>
+                        <MudNumericField T="int" Min="0" Max="1000000" Label=@L["Score"] Value="_score" Disabled="_photoUrl==PlaceholderPhoto" ValueChanged="i=>_score=i"></MudNumericField>
                     </MudItem>
                 }
                 else
                 {
                     <MudItem xs="6">
-                        <MudNumericField T="int" Min="0" Max="2000" Label="Perfects" Value="_perfects" ValueChanged="i=>_perfects=i"></MudNumericField>
+                        <MudNumericField T="int" Min="0" Max="2000" Label="Perfects" Value="_perfects" Disabled="_photoUrl==PlaceholderPhoto" ValueChanged="i=>_perfects=i"></MudNumericField>
                     </MudItem>
                     <MudItem xs="6">
-                        <MudNumericField T="int" Min="0" Max="2000" Label="Greats" Value="_greats" ValueChanged="i=>_greats=i"></MudNumericField>
+                        <MudNumericField T="int" Min="0" Max="2000" Label="Greats" Value="_greats" Disabled="_photoUrl==PlaceholderPhoto" ValueChanged="i=>_greats=i"></MudNumericField>
                     </MudItem>
                     <MudItem xs="6">
-                        <MudNumericField T="int" Min="0" Max="2000" Label="Goods" Value="_goods" ValueChanged="i=>_goods=i"></MudNumericField>
+                        <MudNumericField T="int" Min="0" Max="2000" Label="Goods" Value="_goods" Disabled="_photoUrl==PlaceholderPhoto" ValueChanged="i=>_goods=i"></MudNumericField>
                     </MudItem>
                     <MudItem xs="6">
-                        <MudNumericField T="int" Min="0" Max="2000" Label="Bads" Value="_bads" ValueChanged="i=>_bads=i"></MudNumericField>
+                        <MudNumericField T="int" Min="0" Max="2000" Label="Bads" Value="_bads" Disabled="_photoUrl==PlaceholderPhoto" ValueChanged="i=>_bads=i"></MudNumericField>
                     </MudItem>
                     <MudItem xs="6">
-                        <MudNumericField T="int" Min="0" Max="2000" Label="Misses" Value="_misses" ValueChanged="i=>_misses=i"></MudNumericField>
+                        <MudNumericField T="int" Min="0" Max="2000" Label="Misses" Value="_misses" Disabled="_photoUrl==PlaceholderPhoto" ValueChanged="i=>_misses=i"></MudNumericField>
                     </MudItem>
                     <MudItem xs="6">
-                        <MudNumericField T="int" Min="0" Max="2000" Label="Max Combo" Value="_maxCombo" ValueChanged="i=>_maxCombo=i"></MudNumericField>
+                        <MudNumericField T="int" Min="0" Max="2000" Label="Max Combo" Value="_maxCombo" Disabled="_photoUrl==PlaceholderPhoto" ValueChanged="i=>_maxCombo=i"></MudNumericField>
                     </MudItem>
                     @if (_configuration.NoteCountAdjustments[_submittingChart.Id] != 0)
                     {
@@ -257,7 +257,7 @@
     private DifficultyLevel _level = 20;
     private bool _isNew = false;
     private PhoenixScore _testScore = 950000;
-
+    private static readonly Uri PlaceholderPhoto = new Uri("https://piuimages.arroweclip.se/songs/placeholder.png", UriKind.Absolute);
     private void SetLetterGrade(PhoenixLetterGrade grade)
     {
         _testScore = grade.GetMinimumScore();
@@ -328,7 +328,7 @@
         }
     }
 
-    private bool Validated => _photoUrl != null && ((_addingMix == MixEnum.Phoenix) || (_addingMix == MixEnum.XX && Screen is { IsValid: true }));
+    private bool Validated => _photoUrl != null && _score>0&& ((_addingMix == MixEnum.Phoenix) || (_addingMix == MixEnum.XX && Screen is { IsValid: true }));
     private void OpenSubmit(Chart chart)
     {
         _submittingChart = chart;
@@ -337,6 +337,7 @@
         if (_currentQualifiers!=null && _currentQualifiers.Submissions.TryGetValue(chart.Id, out var submission))
         {
             _photoUrl = submission.PhotoUrl;
+            _score = submission.Score;
         }
     }
 
@@ -445,7 +446,7 @@
                     continue;
                 }
                 _importResults.Add($"{score.Chart.Song.Name} {score.Chart.DifficultyString} found with {score.Score}!");
-                _currentQualifiers.AddPhoenixScore(score.Chart.Id, score.Score, new Uri("https://piuimages.arroweclip.se/songs/placeholder.png", UriKind.Absolute));
+                _currentQualifiers.AddPhoenixScore(score.Chart.Id, score.Score, PlaceholderPhoto);
                 newResults = true;
             }
             if (newResults)
