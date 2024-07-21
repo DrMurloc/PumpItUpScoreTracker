@@ -9,6 +9,7 @@
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
+@using System.Security.Authentication
 
 <PageTitle>Submit @_tournamentName Qualifiers Session</PageTitle>
 
@@ -79,18 +80,30 @@
                 <MudIcon Style=@($"color:{Colors.LightBlue.Darken1}") Icon="@Icons.Material.Filled.MoreVert"></MudIcon> - @L["Suggested Chart"]
             </MudItem>
         }
-    }
-</MudGrid>
-
-@if (_currentQualifiers != null)
-{
-    <MudGrid>
-
-        @foreach (var entry in _currentQualifiers.Submissions.OrderByDescending(s=>_currentQualifiers.Rating(s.Key)))
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">@L["Import Phoenix Scores"]</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="5" md="3">
+            <MudTextField @bind-Value="_piugameUsername" InputType="InputType.Email" Label=@L["Username"] Disabled="_isImporting"></MudTextField>
+        </MudItem>
+        <MudItem xs="12" sm="5" md="3">
+            <MudTextField @bind-Value="_piugamePassword" InputType="InputType.Password" Label=@L["Password"] Disabled="_isImporting"></MudTextField>
+        </MudItem>
+        <MudItem xs="12" sm="2">
+            @if (_isImporting)
+            {
+                <MudProgressCircular Indeterminate="true" Color="Color.Primary"></MudProgressCircular>
+            }
+            else
+            {
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ImportSession" Disabled="_isImporting||string.IsNullOrWhiteSpace(_piugamePassword) ||string.IsNullOrWhiteSpace(_piugameUsername)">@L["Import"]</MudButton>
+                        
+            }
+        </MudItem>
+        @foreach (var result in _importResults)
         {
-
             <MudItem xs="12">
-                <MudText>@_charts[entry.Key].Song.Name @_charts[entry.Key].DifficultyString - @entry.Value.Score (@entry.Value.Score.LetterGrade.GetName()), @_currentQualifiers.Rating(entry.Key).ToString("0.00") @L["Rating"]</MudText>
+                <MudText>@result</MudText>
             </MudItem>
         }
         <MudItem xs="12">
@@ -111,10 +124,11 @@
             <MudNumericField T="int" Label=@L["Difficulty Level"] Value="_level" ValueChanged="l=>_level=l" Min="@DifficultyLevel.Min" Max="@DifficultyLevel.Max" HideSpinButtons="true" Clearable="false"></MudNumericField>
         </MudItem>
         <MudItem xs="6" sm="4" md="3">
-            <MudText>@L["Rating"]: @_currentQualifiers.Rating(_level,_testScore).ToString("0.00")</MudText>
+            <MudText>@L["Rating"]: @_currentQualifiers.Rating(_level, _testScore).ToString("0.00")</MudText>
         </MudItem>
-    </MudGrid>
-}
+    }
+</MudGrid>
+
 <MudDialog @bind-Visible="_showSubmit">
     <DialogContent>
         @if (_submittingChart != null)
@@ -221,6 +235,8 @@
 @inject IAdminNotificationClient Notifications;
 @inject NavigationManager NavManager;
 @inject ChartVideoDisplayer VideoDisplayer;
+@inject IOfficialSiteClient OfficialSite;
+@inject IAdminNotificationClient AdminNotification;
 @code
 {
 
@@ -257,6 +273,7 @@
     private PhoenixScore _score = 0;
     private Name _tournamentName = "...";
     private Uri? _photoUrl;
+    private List<string> _importResults = new List<string>();
     private ISet<Guid> _suggestedCharts = new HashSet<Guid>();
     [Parameter]
     [SupplyParameterFromQuery(Name="TournamentId")]
@@ -277,7 +294,7 @@
         {
             return null;
         }
-        
+
         return charts[index + 1].Id;
     }
     private async Task SetUsername(string nameString)
@@ -397,6 +414,55 @@
         await Save();
     }
 
+    private bool _isImporting = false;
+    private string _piugameUsername = string.Empty;
+    private string _piugamePassword = string.Empty;
+    private async Task ImportSession()
+    {
+        if (_currentQualifiers == null)
+        {
+            return;
+        }
+        _isImporting = true;
+        _importResults.Clear();
+        try
+        {
+            var accountInfo = await OfficialSite.GetAccountData(_piugameUsername, _piugamePassword, CancellationToken.None);
+            await AdminNotification.NotifyAdmin($"{_username} Imported using {accountInfo.AccountName}", CancellationToken.None);
+            var newResults = false;
+            var results = await OfficialSite.GetRecentScores(_piugameUsername, _piugamePassword, CancellationToken.None);
+            var relevant = results.results.Where(r => _configuration.Charts.Any(c => c.Id == r.Chart.Id)).GroupBy(r => r.Chart.Id)
+                .Select(g => g.OrderByDescending(s => s.Score).First()).ToArray();
+            if (!relevant.Any())
+            {
+                _importResults.Add("There were no Qualifier Charts found in your recent scores");
+            }
+            foreach (var score in relevant)
+            {
+                if (_currentQualifiers.Submissions.TryGetValue(score.Chart.Id, out var existing) && existing.Score >= score.Score)
+                {
+                    _importResults.Add($"{score.Chart.Song.Name} {score.Chart.DifficultyString} had a lower score ({score.Score}) than your current qualifier ({existing.Score})");
+                    continue;
+                }
+                _importResults.Add($"{score.Chart.Song.Name} {score.Chart.DifficultyString} found with {score.Score}!");
+                _currentQualifiers.AddPhoenixScore(score.Chart.Id, score.Score, new Uri("https://piuimages.arroweclip.se/songs/placeholder.png", UriKind.Absolute));
+                newResults = true;
+            }
+            if (newResults)
+            {
+                await Save();
+            }
+        }
+        catch (InvalidCredentialException)
+        {
+            Snackbar.Add("It appears your username are password are incorrect, check them and try again", Severity.Error);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("There was an unknown error when trying to import your scores. If this persists notify DrMurloc.", Severity.Error);
+        }
+        _isImporting = false;
+    }
     private async Task Save()
     {
         if (_currentQualifiers == null)
