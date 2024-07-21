@@ -69,7 +69,7 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
             VetoedCharts = Array.Empty<Guid>(),
             ActiveCharts = charts.Select(c => c.Id).ToArray(), State = MatchState.CardDraw,
 
-            LastUpdated = match.State == MatchState.CardDraw ? DateTimeOffset.Now : match.LastUpdated
+            LastUpdated = match.State == MatchState.CardDraw ? match.LastUpdated : DateTimeOffset.Now
         };
         await _matchRepository.SaveMatch(request.TournamentId, newMatch, cancellationToken);
         await _mediator.Publish(new MatchUpdatedEvent(request.TournamentId, newMatch), cancellationToken);
@@ -113,7 +113,7 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
         var newMatchState = match with
         {
             State = MatchState.Completed,
-            LastUpdated = match.State == MatchState.Completed ? DateTimeOffset.Now : match.LastUpdated
+            LastUpdated = match.State == MatchState.Completed ? match.LastUpdated : DateTimeOffset.Now
         };
         await _matchRepository.SaveMatch(request.TournamentId, newMatchState, cancellationToken);
         await _mediator.Publish(new MatchUpdatedEvent(request.TournamentId, newMatchState), cancellationToken);
@@ -140,7 +140,7 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
         var updatedMatch = match with
         {
             State = MatchState.Ready,
-            LastUpdated = match.State == MatchState.Ready ? DateTimeOffset.Now : match.LastUpdated,
+            LastUpdated = match.State == MatchState.Ready ? match.LastUpdated : DateTimeOffset.Now,
             Scores = match.Players.ToDictionary(p => p.ToString(),
                 p => match.ActiveCharts.Select(c => PhoenixScore.From(0)).ToArray()),
             Points = match.Players.ToDictionary(p => p.ToString(), p => match.ActiveCharts.Select(c => 0).ToArray())
@@ -229,7 +229,11 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
     public async Task Handle(ResolveMatchCommand request, CancellationToken cancellationToken)
     {
         var match = await _matchRepository.GetMatch(request.TournamentId, request.MatchName, cancellationToken);
-        var newMatchState = match.CalculatePoints();
+        var newMatchState = match.CalculatePoints() with
+        {
+            State = MatchState.Finalizing,
+            LastUpdated = match.State == MatchState.Finalizing ? match.LastUpdated : DateTimeOffset.Now
+        };
         await _matchRepository.SaveMatch(request.TournamentId, newMatchState, cancellationToken);
 
         await _mediator.Publish(new MatchUpdatedEvent(request.TournamentId, newMatchState), cancellationToken);

@@ -418,6 +418,15 @@
         <MudTablePager />
     </PagerContent>
 </MudTable>
+
+@if (_showAdminTools)
+{
+    <br/>
+    @foreach (var kv in _playerPlaces.OrderBy(kv => kv.Value))
+    {
+        <MudText>@kv.Key - @kv.Value</MudText>
+    }
+}
 <br/>
 <MudButton OnClick=@(()=>NavManager.NavigateTo($"/Tournament/{TournamentId}/Qualifiers")) Variant="Variant.Filled">View Qualifiers</MudButton>
 <br/>
@@ -725,7 +734,7 @@
             string.IsNullOrWhiteSpace(_pointsByPlace) ? null
                 : _pointsByPlace.Split(",").Select(s => s.Trim())
                     .Select(int.Parse).ToArray();
-                var seedsPerMatch = _playersPerMatch - _winnersProgressCount;
+        var seedsPerMatch = _playersPerMatch - _winnersProgressCount;
         var seed= _lowestSeed;
         for (var currentRound = 0; currentRound < _rounds; currentRound++)
         {
@@ -963,6 +972,49 @@
     {
         _currentMatch = matchName;
         _showMatchDialog = true;
+    }
+
+    private IDictionary<Name, int> _playerPlaces = new Dictionary<Name, int>();
+    private void CalculateLeaderboard()
+    {
+        var place = _matches.Values.SelectMany(m => m.Players).Distinct().Count();
+        var phases = _matches.Values.GroupBy(m => m.PhaseName).OrderBy(g => g.Min(m => m.MatchOrder));
+        var matchLinks = _matchLinks.GroupBy(l => l.FromMatch).ToDictionary(g => g.Key, g => g.ToArray());
+        foreach (var phase in phases)
+            foreach (var round in phase.GroupBy(m => m.Round).OrderBy(g => g.Key))
+            {
+                var nonProgressing = new Dictionary<Name, int>();
+                var matches = round.ToArray();
+                if (matches.Any(m => m.MatchName.Contains("Loser")))
+                {
+                    matches = matches.Where(m => m.MatchName.Contains("Loser")).ToArray();
+                }
+                foreach (var match in matches)
+                {
+                    var links = matchLinks.TryGetValue(match.MatchName, out var l) ? l : Array.Empty<MatchLink>();
+                    var players = match.FinalPlaces.Where((n, i) => !links.Any(l => (l.IsWinners && i<=l.PlayerCount -1) || (!l.IsWinners && i>= match.FinalPlaces.Count() - l.PlayerCount)))
+                        .Distinct().ToArray();
+                    foreach (var player in players)
+                    {
+                        nonProgressing.TryAdd(player, 0);
+                        nonProgressing[player] += match.Points[player].Sum();
+                    }
+                }
+                foreach (var pointGroup in nonProgressing.GroupBy(kv => kv.Value).OrderBy(g=>g.Key))
+                {
+                    var total = 0;
+                    foreach (var player in pointGroup.Where(p=>!_playerPlaces.ContainsKey(p.Key)))
+                    {
+                        if (player.Key == "HDS")
+                        {
+                            //
+                        }
+                        _playerPlaces[player.Key] = place;
+                        total++;
+                    }
+                    place -= total;
+                }
+            }
     }
 
     private IDictionary<string, MatchPlayer> _players = new Dictionary<string, MatchPlayer>();
@@ -1583,6 +1635,17 @@
         UpdateCurrentPhase();
         RecalculateStates();
         MainLayout.MatchUpdated += (o, e) => MatchUpdated(e);
+        if (_myRole == TournamentRole.HeadTournamentOrganizer)
+        {
+            try
+            {
+                CalculateLeaderboard();
+            }
+            catch (Exception)
+            {
+                //Nothing
+            }
+        }
         await RedrawTournament();
         StateHasChanged();
     }
