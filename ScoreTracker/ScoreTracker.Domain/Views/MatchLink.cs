@@ -2,7 +2,7 @@
 
 namespace ScoreTracker.Domain.Views
 {
-    public sealed record MatchLink(Name FromMatch, Name ToMatch, bool IsWinners, int PlayerCount)
+    public sealed record MatchLink(Guid Id, Name FromMatch, Name ToMatch, bool IsWinners, int PlayerCount, int Skip)
     {
     }
 }

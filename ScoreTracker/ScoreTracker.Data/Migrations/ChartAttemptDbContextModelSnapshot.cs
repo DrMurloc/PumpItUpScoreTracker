@@ -491,6 +491,9 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<int>("PlayerCount")
                         .HasColumnType("int");
 
+                    b.Property<int>("Skip")
+                        .HasColumnType("int");
+
                     b.Property<string>("ToMatch")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");

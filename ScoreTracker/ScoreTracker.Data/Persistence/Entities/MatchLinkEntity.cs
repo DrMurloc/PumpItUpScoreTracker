@@ -13,5 +13,6 @@ namespace ScoreTracker.Data.Persistence.Entities
         public string ToMatch { get; set; } = string.Empty;
         public int PlayerCount { get; set; }
         public bool IsWinners { get; set; }
+        public int Skip { get; set; }
     }
 }

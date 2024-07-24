@@ -53,7 +53,7 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
 
     public async Task Handle(DeleteMatchLinkCommand request, CancellationToken cancellationToken)
     {
-        await _matchRepository.DeleteMatchLink(request.TournamentId, request.FromName, request.ToName,
+        await _matchRepository.DeleteMatchLink(request.LinkId,
             cancellationToken);
     }
 
@@ -85,8 +85,8 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
         {
             var nextMatch = await _matchRepository.GetMatch(request.TournamentId, link.ToMatch, cancellationToken);
             var progressers = link.IsWinners
-                ? match.FinalPlaces.Take(link.PlayerCount)
-                : match.FinalPlaces.Reverse().Take(link.PlayerCount);
+                ? match.FinalPlaces.Skip(link.Skip).Take(link.PlayerCount)
+                : match.FinalPlaces.Reverse().Skip(link.Skip).Take(link.PlayerCount);
 
             foreach (var player in progressers)
             {

@@ -23,7 +23,7 @@ public interface IMatchRepository
         CancellationToken cancellationToken);
 
     Task SaveMatchLink(Guid tournamentId, MatchLink matchLink, CancellationToken cancellationToken);
-    Task DeleteMatchLink(Guid tournamentId, Name fromName, Name toName, CancellationToken cancellationToken);
+    Task DeleteMatchLink(Guid linkId, CancellationToken cancellationToken);
     Task<IEnumerable<MatchLink>> GetAllMatchLinks(Guid tournamentId, CancellationToken cancellationToken);
     Task<IEnumerable<MatchPlayer>> GetMatchPlayers(Guid tournamentId, CancellationToken cancellationToken);
     Task SaveMatchPlayer(Guid tournamentId, MatchPlayer player, CancellationToken cancellationToken);

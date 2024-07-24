@@ -120,7 +120,7 @@ public sealed class EFMatchRepository : IMatchRepository
     {
         var nameString = fromMatchName.ToString();
         return await _dbContext.MatchLink.Where(m => m.TournamentId == tournamentId && m.FromMatch == nameString)
-            .Select(e => new MatchLink(e.FromMatch, e.ToMatch, e.IsWinners, e.PlayerCount))
+            .Select(e => new MatchLink(e.Id, e.FromMatch, e.ToMatch, e.IsWinners, e.PlayerCount, e.Skip))
             .ToArrayAsync(cancellationToken);
     }
 
@@ -128,8 +128,7 @@ public sealed class EFMatchRepository : IMatchRepository
     {
         var fromString = matchLink.FromMatch.ToString();
         var toString = matchLink.ToMatch.ToString();
-        var entity = await _dbContext.MatchLink.Where(m =>
-                m.TournamentId == tournamentId && m.FromMatch == fromString && m.ToMatch == toString)
+        var entity = await _dbContext.MatchLink.Where(m => m.Id == matchLink.Id)
             .FirstOrDefaultAsync(cancellationToken);
         if (entity == null)
         {
@@ -139,6 +138,7 @@ public sealed class EFMatchRepository : IMatchRepository
                 Id = Guid.NewGuid(),
                 FromMatch = fromString,
                 ToMatch = toString,
+                Skip = matchLink.Skip,
                 IsWinners = matchLink.IsWinners,
                 PlayerCount = matchLink.PlayerCount
             }, cancellationToken);
@@ -147,27 +147,28 @@ public sealed class EFMatchRepository : IMatchRepository
         {
             entity.IsWinners = matchLink.IsWinners;
             entity.PlayerCount = matchLink.PlayerCount;
+            entity.Skip = matchLink.Skip;
+            entity.FromMatch = matchLink.FromMatch;
+            entity.ToMatch = matchLink.ToMatch;
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         _cache.Remove(MatchLinkKey(tournamentId));
     }
 
-    public async Task DeleteMatchLink(Guid tournamentId, Name fromName, Name toName,
+    public async Task DeleteMatchLink(Guid linkId,
         CancellationToken cancellationToken)
     {
-        var fromString = fromName.ToString();
-        var toString = toName.ToString();
         var entity = await _dbContext.MatchLink.Where(m =>
-                m.TournamentId == tournamentId && m.FromMatch == fromString && m.ToMatch == toString)
+                m.Id == linkId)
             .FirstOrDefaultAsync(cancellationToken);
         if (entity != null)
         {
             _dbContext.MatchLink.Remove(entity);
             await _dbContext.SaveChangesAsync(cancellationToken);
-        }
 
-        _cache.Remove(MatchLinkKey(tournamentId));
+            _cache.Remove(MatchLinkKey(entity.TournamentId));
+        }
     }
 
     private string MatchLinkKey(Guid tournamentId)
@@ -183,7 +184,7 @@ public sealed class EFMatchRepository : IMatchRepository
             o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
             return await _dbContext.MatchLink
                 .Where(t => t.TournamentId == tournamentId)
-                .Select(ml => new MatchLink(ml.FromMatch, ml.ToMatch, ml.IsWinners, ml.PlayerCount))
+                .Select(ml => new MatchLink(ml.Id, ml.FromMatch, ml.ToMatch, ml.IsWinners, ml.PlayerCount, ml.Skip))
                 .ToArrayAsync(cancellationToken);
         });
     }
