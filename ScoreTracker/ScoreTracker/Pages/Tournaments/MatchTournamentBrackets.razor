@@ -76,9 +76,9 @@
         <DialogContent>
             <MudGrid>
                 <MudItem xs="12">
-                    <MudNumericField T="int" Value="_playerCount" ValueChanged="SetPlayerCount" Label="Players Count"></MudNumericField>
+                    <MudNumericField T="int" Value="_playersPerMatch" ValueChanged="SetPlayersPerMatch" Label="Players Count"></MudNumericField>
                 </MudItem>
-                @if (_playerCount > 2)
+                @if (_playersPerMatch > 2)
                 {
                     <MudItem xs="12">
                         <MudTextField T="string" Label="Points by place (1st place 1st)" @bind-Value="_pointsByPlace"></MudTextField>
@@ -109,7 +109,7 @@
         </DialogContent>
         <DialogActions>
             <MudSpacer></MudSpacer>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateMatch" Disabled="!IsPointsByPlaceValid ||_playerCount<=1 || _chartCount<=1 || string.IsNullOrWhiteSpace(_randomSettings) || string.IsNullOrWhiteSpace(_matchName)">Save</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateMatch" Disabled="!IsPointsByPlaceValid ||_playersPerMatch<=1 || _chartCount<=1 || string.IsNullOrWhiteSpace(_randomSettings) || string.IsNullOrWhiteSpace(_matchName)">Save</MudButton>
             <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showAddMatchDialog = false">@L["Close"]</MudButton>
         </DialogActions>
     </MudDialog>
@@ -138,12 +138,12 @@
                 @if (_bulkCreateType == "Pools")
                 {
                     <MudItem xs="12">
-                        <MudNumericField T="int" Disabled="_bulkCreating" @bind-Value="_playersPerMatch" Min="1" Max="100" Label="Players Per Match"></MudNumericField>
+                        <MudNumericField T="int" Disabled="_bulkCreating" Value="_playersPerMatch" ValueChanged="SetPlayersPerMatch" Min="1" Max="100" Label="Players Per Match"></MudNumericField>
                     </MudItem>
-                    @if (_playerCount > 2)
+                    @if (_playersPerMatch > 2)
                     {
                         <MudItem xs="12">
-                            <MudTextField T="string" Label="Points by place (1st place 1st)" @bind-Value="_pointsByPlace"></MudTextField>
+                            <MudTextField T="string" Label="Points by place (1st place 1st, use all 0s for net score)" @bind-Value="_pointsByPlace"></MudTextField>
                         </MudItem>
                     }
                     <MudItem xs="12">
@@ -548,7 +548,6 @@
     private bool _showMatchDialog = false;
     private bool _showMatchLinkDialog = false;
     private User? _user;
-    private int _playerCount = 2;
     private int _chartCount = 3;
     private Guid _showingChart = Guid.Empty;
     private Name? _showingPlayer;
@@ -713,11 +712,12 @@
         m.State == MatchState.NotStarted && m.Players.All(p => !p.ToString().StartsWith("Unknown ")) ? "Ready to Draw" : m.State.ToString(),
         m.Players.Select(n=>n.ToString()).ToArray()));
 
-    private void SetPlayerCount(int playerCount)
+    private void SetPlayersPerMatch(int playerCount)
     {
-        _playerCount = playerCount;
+        _playersPerMatch = playerCount;
         _pointsByPlace = playerCount <= 2 ? "" : string.Join(",", Enumerable.Range(1, playerCount).Reverse());
     }
+
 
     private async Task BulkCreate()
     {
@@ -739,30 +739,47 @@
                 : _pointsByPlace.Split(",").Select(s => s.Trim())
                     .Select(int.Parse).ToArray();
         var seedsPerMatch = _playersPerMatch - _winnersProgressCount;
-        var seed= _lowestSeed;
+        var baseSeed= _lowestSeed;
         for (var currentRound = 0; currentRound < _rounds; currentRound++)
         {
+
+            baseSeed -= (currentRound == 0 ? _playersPerMatch : seedsPerMatch) * _matchesPerRound;
             var settings = _roundSettings[currentRound];
             for (var currentMatch = 0; currentMatch < _matchesPerRound; currentMatch++)
             {
                 var matchName = $"{_phaseName}{winnersLabel} Round {currentRound + 1} Match {currentMatch + 1}";
                 var unknown = 1;
-                var players = Enumerable.Range(1, _playersPerMatch).Select(c =>
-                    c>seedsPerMatch?
-                    Name.From($"Unknown {unknown++}")
-                    :Name.From($"Seed {seed--}")).ToArray();
+                var currentDirection = 1;
+                var currentMultiplier = 0;
+                var players = new List<Name>();
+                foreach (var player in Enumerable.Range(1, _playersPerMatch))
+                {
+                    if (currentRound != 0 && player > seedsPerMatch)
+                    {
+                        players.Add($"Unknown {unknown++}");
+                        continue;
+                    }
+                    var seed = baseSeed + _matchesPerRound * currentMultiplier + (currentMatch) * currentDirection + (currentDirection == 1 ? 1 : 0);
+                    players.Add($"Seed {seed}");
+                    if (currentDirection == 1)
+                    {
+                        currentMultiplier+=2;
+                    }
+                    currentDirection *= -1;
+                }
+
                 await Mediator.Send(new UpdateMatchCommand(TournamentId, new MatchView(matchName,
                     _phaseName,
                     nextOrder++,
                     _chartCount,
                     settings,
                     MatchState.NotStarted,
-                    players, Array.Empty<Guid>(),
+                    players.ToArray(), Array.Empty<Guid>(),
                     Array.Empty<Guid>(),
                     Array.Empty<Guid>(),
                     players.ToDictionary(p => p.ToString(), p => Array.Empty<PhoenixScore>()),
                     players.ToDictionary(p => p.ToString(), p => Array.Empty<int>()),
-                    players, currentRound + 1, "", places
+                    players.ToArray(), currentRound + 1, "", places
                     )));
                 if (currentRound > 0)
                 {
@@ -1022,10 +1039,10 @@
     private IDictionary<string, MatchPlayer> _players = new Dictionary<string, MatchPlayer>();
     private int _round = 1;
     private bool IsPointsByPlaceValid => string.IsNullOrWhiteSpace(_pointsByPlace) || (_pointsByPlace.Split(",").Select(s => s.Trim()).All(s => int.TryParse(s, out var _))
-    && _pointsByPlace.Split(",").Count()==_playerCount);
+    && _pointsByPlace.Split(",").Count()==_playersPerMatch);
     private async Task CreateMatch()
     {
-        var players = Enumerable.Range(0, _playerCount).Select(c => Name.From($"Unknown {c}")).ToArray();
+        var players = Enumerable.Range(0, _playersPerMatch).Select(c => Name.From($"Unknown {c}")).ToArray();
         var places =
             string.IsNullOrWhiteSpace(_pointsByPlace)?null
             :_pointsByPlace.Split(",").Select(s => s.Trim())
@@ -1366,7 +1383,7 @@
         }
         var seededPlayers = new HashSet<int>();
 
-        var seedOffset = _lowestSeed - _playerCount;
+        var seedOffset = _lowestSeed - _playersPerMatch;
         foreach (var round in rounds.OrderBy(r=>r.Key))
         {
             foreach (var match in round.Value.Where(m=>m.match.Player1Seed<=players && m.match.Player2Seed<=players))
