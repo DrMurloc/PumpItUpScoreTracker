@@ -40,6 +40,11 @@ namespace ScoreTracker.Domain.Models
                 .ToDictionary(k => k, k => (int?)null);
         }
 
+        public void ClearCustomMinimums()
+        {
+            CustomMinimums = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        }
+
         public IDictionary<int, int> PlayerCountWeights { get; set; } = new Dictionary<int, int>
         {
             { 2, 0 },
@@ -63,14 +68,18 @@ namespace ScoreTracker.Domain.Models
             .SelectMany(l => new[] { $"S{l}", $"D{l}", $"CoOp{l}" })
             .ToDictionary(k => k, k => (int?)null);
 
-        public bool HasWeightedSetting => LevelWeights.Any(kv => kv.Value > 1)
+        public IDictionary<string, int> CustomMinimums { get; set; } =
+            new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        public bool HasWeightedSetting => LevelWeights.Any(kv => kv.Value > 0)
                                           || DoubleLevelWeights.Any(kv =>
-                                              kv.Value > 1)
+                                              kv.Value > 0)
                                           || PlayerCountWeights.Any(kvp =>
-                                              kvp.Value > 1)
+                                              kvp.Value > 0)
                                           ||
                                           SongTypeWeights.Any(kvp =>
-                                              kvp.Value > 1);
+                                              kvp.Value > 0)
+                                          || CustomMinimums.Any(kvp => kvp.Value > 0);
 
         public enum ResultsOrdering
         {

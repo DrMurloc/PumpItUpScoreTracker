@@ -111,6 +111,7 @@ namespace ScoreTracker.Application.Handlers
                 newSettings.ClearChartTypeLevelMinimums();
                 newSettings.ClearLevelMinimums();
                 newSettings.ClearChartTypeMinimums();
+                newSettings.ClearCustomMinimums();
                 var result = await Handle(new GetRandomChartsQuery(newSettings), cancellationToken);
                 results.AddRange(result);
             }
@@ -131,6 +132,7 @@ namespace ScoreTracker.Application.Handlers
                 newSettings.ClearChartTypeLevelMinimums();
                 newSettings.ClearLevelMinimums();
                 newSettings.ClearChartTypeMinimums();
+                newSettings.ClearCustomMinimums();
                 var result = await Handle(new GetRandomChartsQuery(newSettings), cancellationToken);
                 results.AddRange(result);
             }
@@ -144,8 +146,8 @@ namespace ScoreTracker.Application.Handlers
                 };
                 newSettings.ClearLevelWeights();
                 newSettings.ClearChartTypeLevelMinimums();
-                newSettings.ClearLevelMinimums();
                 newSettings.ClearChartTypeMinimums();
+                newSettings.ClearCustomMinimums();
                 if (chartType == ChartType.Single)
                     newSettings.LevelWeights = DifficultyLevel.All.ToDictionary(t => (int)t, t => t == level ? 1 : 0);
 
@@ -159,6 +161,30 @@ namespace ScoreTracker.Application.Handlers
                         newSettings.PlayerCountWeights.ToDictionary(kv => kv.Key, kv => kv.Key == level ? 1 : 0);
                 var result = await Handle(new GetRandomChartsQuery(newSettings), cancellationToken);
                 results.AddRange(result);
+            }
+
+            foreach (var customMinimum in request.Settings.CustomMinimums.Where(kv => kv.Value > 0))
+            {
+                if (!LevelBucket.TryParse(customMinimum.Key, out var bucket)) continue;
+                var newSettings = request.Settings with
+                {
+                    Count = customMinimum.Value
+                };
+                newSettings.ClearLevelWeights();
+                newSettings.ClearChartTypeLevelMinimums();
+                newSettings.ClearChartTypeMinimums();
+                newSettings.ClearCustomMinimums();
+                foreach (var (chartType, level) in bucket.GetDifficulties())
+                {
+                    if (chartType == ChartType.Single)
+                        newSettings.LevelWeights[level] = customMinimum.Value;
+                    if (chartType == ChartType.Double)
+                        newSettings.DoubleLevelWeights[level] = customMinimum.Value;
+                    if (chartType == ChartType.CoOp)
+                        newSettings.PlayerCountWeights[level] = customMinimum.Value;
+                    var result = await Handle(new GetRandomChartsQuery(newSettings), cancellationToken);
+                    results.AddRange(result);
+                }
             }
 
             var charts =
