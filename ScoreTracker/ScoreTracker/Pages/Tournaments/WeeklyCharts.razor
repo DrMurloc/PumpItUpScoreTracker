@@ -167,6 +167,7 @@
 </MudTable>
 <br/>
 <MudText Typo="Typo.h5">Road to BITE (Monthly Leaderboard July 8th - August 4th)</MudText>
+<MudText Typo="Typo.subtitle1">Week @_currentWeekInMonth</MudText>
 <br />
 <MudSelect T="ChartType?" Value="_chartType" ValueChanged="SetChartType" Disabled="_isLoading" Label="Leaderboard Type">
     <MudSelectItem T="ChartType?" Value="null">Combined</MudSelectItem>
@@ -602,6 +603,8 @@
         RecalculateWeekly();
         _isLoading = false;
     }
+
+    private int _currentWeekInMonth = 1;
     private async Task RecalculateMonthlyLeaderboard()
     {
         var biteStart = new DateTimeOffset(2024, 7, 9, 0, 0, 0, TimeSpan.Zero);
@@ -609,40 +612,29 @@
         _monthlyTotals.Clear();
         _monthlyTop4.Clear();
         _monthlyPlaces.Clear();
+        var monthlyDates = _pastDates.Where(d => d > biteStart).ToArray();
+        _currentWeekInMonth = monthlyDates.Count()+1;
+        var entries = new List<WeeklyTournamentEntry>();
 
-        foreach (var date in _pastDates.Where(d => d > biteStart))
+        foreach (var date in monthlyDates)
         {
-            var scores = (await WeeklyTournaments.GetPastEntries(date, CancellationToken.None))
-                .Where(e=>IsValid(e.ChartId)).ToArray();
-
-            var users = await Users.GetUsers(scores.Where(s=>!_users.ContainsKey(s.UserId)).Select(s => s.UserId).Distinct().ToArray());
-            foreach (var user in users)
-            {
-                _users[user.Id] = user;
-            }
-            foreach (var userGroup in scores.GroupBy(s => s.UserId))
-            {
-                if (!_monthlyBestCharts.ContainsKey(userGroup.Key))
-                {
-                    _monthlyBestCharts[userGroup.Key] = new List<WeeklyTournamentEntry>();
-                }
-                _monthlyBestCharts[userGroup.Key].AddRange(userGroup.OrderByDescending(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken))
-                    .Take(4));
-
-            }
-        }
-        var currentWeek = (await WeeklyTournaments.GetEntries(null, CancellationToken.None))
-            .Where(e=>IsValid(e.ChartId));
-        foreach (var userGroup in currentWeek.GroupBy(s => s.UserId))
-        {
-            if (!_monthlyBestCharts.ContainsKey(userGroup.Key))
-            {
-                _monthlyBestCharts[userGroup.Key] = new List<WeeklyTournamentEntry>();
-            }
-            _monthlyBestCharts[userGroup.Key].AddRange(userGroup.OrderByDescending(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken))
-                .Take(4));
+            entries.AddRange((await WeeklyTournaments.GetPastEntries(date, CancellationToken.None)).Where(e=>IsValid(e.ChartId)));
 
         }
+        entries.AddRange((await WeeklyTournaments.GetEntries(null, CancellationToken.None)).Where(e=>IsValid(e.ChartId)));
+        
+        foreach (var user in await Users.GetUsers(entries.Select(e => e.UserId).Distinct().ToArray()))
+        {
+            _users[user.Id] = user;
+        }
+        
+        foreach (var userGroup in entries.GroupBy(s => s.UserId))
+        {
+            _monthlyBestCharts[userGroup.Key] = userGroup.OrderByDescending(s=> _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken))
+                .Take(4*_currentWeekInMonth).ToList();
+
+        }
+
         _monthlyTotals = _monthlyBestCharts.ToDictionary(kv => kv.Key, kv => kv.Value.Sum(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken)));
         _monthlyTop4 = _monthlyBestCharts.ToDictionary(kv => kv.Key, kv => kv.Value.OrderByDescending(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken))
             .Take(4).ToArray());
