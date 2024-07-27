@@ -733,6 +733,9 @@ namespace ScoreTracker.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTimeOffset?>("CutoffTime")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<decimal>("NotificationChannel")
                         .HasColumnType("decimal(20,0)");
 

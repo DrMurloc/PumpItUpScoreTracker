@@ -9,5 +9,6 @@ namespace ScoreTracker.Data.Persistence.Entities
         public string Charts { get; set; }
         public ulong NotificationChannel { get; set; }
         public int ChartPlayCount { get; set; }
+        public DateTimeOffset? CutoffTime { get; set; }
     }
 }

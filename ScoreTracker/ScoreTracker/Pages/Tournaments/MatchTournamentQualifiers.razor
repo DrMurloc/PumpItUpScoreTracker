@@ -13,11 +13,12 @@
     <MudItem xs="12" sm="8">
         <MudText Typo="Typo.h3">@L["Qualifiers Leaderboard",_tournamentName]</MudText>
     </MudItem>
-    <MudItem xs="12" sm="4">
-        <MudButton Href=@($"/Tournament/{TournamentId}/Qualifiers/Submit") Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">@L["Submission Page"]</MudButton>
-    </MudItem>
-    
-
+    @if (!IsExpired)
+    {
+        <MudItem xs="12" sm="4">
+            <MudButton Href=@($"/Tournament/{TournamentId}/Qualifiers/Submit") Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">@L["Submission Page"]</MudButton>
+        </MudItem>
+    }
 </MudGrid>
 <MudTable T="Entry" Items="_leaderboard" FixedHeader="true" Striped="true" Breakpoint="Breakpoint.None" Dense="true">
     <HeaderContent>
@@ -152,7 +153,10 @@
     private Entry? _selectedEntry = null;
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private Name _tournamentName = "...";
-    private QualifiersConfiguration _configuration = new(Array.Empty<Chart>(),new Dictionary<Guid, int>(),"Phoenix",1,2);
+    private TimeSpan? RemainingTime => _configuration?.CutoffTime == null ? null : _configuration.CutoffTime - DateTimeOffset.Now;
+    private bool IsExpired => _configuration ?.CutoffTime != null && _configuration.CutoffTime < DateTimeOffset.Now;
+
+    private QualifiersConfiguration _configuration = new(Array.Empty<Chart>(),new Dictionary<Guid, int>(),"Phoenix",1,2,null);
     [Parameter]
     [SupplyParameterFromQuery(Name="TournamentId")]
     public Guid TournamentId { get; set; }

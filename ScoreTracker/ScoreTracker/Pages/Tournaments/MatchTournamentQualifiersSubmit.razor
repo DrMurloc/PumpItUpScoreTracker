@@ -35,6 +35,14 @@
             <MudText Color="Color.Info">@L["Qualifier Submit Phrase 2"]</MudText>
         </MudItem>
     }
+    @if (RemainingTime != null)
+    {
+        <MudItem xs="12">
+            <MudText Color="RemainingTime.Value.TotalDays > 14 ? Color.Info : RemainingTime.Value.TotalDays > 7 ? Color.Warning : Color.Error">
+                @RemainingTime.Value.Days days, @RemainingTime.Value.Hours hours, @RemainingTime.Value.Minutes minutes until cutoff.
+            </MudText>
+        </MudItem>
+    }
     @if (_currentQualifiers != null)
     {
         @if (_currentQualifiers.Submissions.Count < _currentQualifiers.Configuration.PlayCount)
@@ -66,9 +74,12 @@
                         </MudTooltip>
 
                         <MudSpacer></MudSpacer>
-                        <MudTooltip Text="Submit">
-                            <MudIconButton Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Outlined" Color="Color.Primary" OnClick="() => OpenSubmit(chart)"></MudIconButton>
-                        </MudTooltip>
+                        @if (!IsExpired)
+                        {
+                            <MudTooltip Text="Submit">
+                                <MudIconButton Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Outlined" Color="Color.Primary" OnClick="() => OpenSubmit(chart)"></MudIconButton>
+                            </MudTooltip>
+                        }
 
                     </MudCardActions>
                 </MudCard>
@@ -80,26 +91,29 @@
                 <MudIcon Style=@($"color:{Colors.LightBlue.Darken1}") Icon="@Icons.Material.Filled.MoreVert"></MudIcon> - @L["Suggested Chart"]
             </MudItem>
         }
-        <MudItem xs="12">
-            <MudText Typo="Typo.h4">@L["Import Phoenix Scores"]</MudText>
-        </MudItem>
-        <MudItem xs="12" sm="5" md="3">
-            <MudTextField @bind-Value="_piugameUsername" InputType="InputType.Email" Label=@L["Username"] Disabled="_isImporting"></MudTextField>
-        </MudItem>
-        <MudItem xs="12" sm="5" md="3">
-            <MudTextField @bind-Value="_piugamePassword" InputType="InputType.Password" Label=@L["Password"] Disabled="_isImporting"></MudTextField>
-        </MudItem>
-        <MudItem xs="12" sm="2">
-            @if (_isImporting)
-            {
-                <MudProgressCircular Indeterminate="true" Color="Color.Primary"></MudProgressCircular>
-            }
-            else
-            {
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ImportSession" Disabled="_isImporting||string.IsNullOrWhiteSpace(_piugamePassword) ||string.IsNullOrWhiteSpace(_piugameUsername)">@L["Import"]</MudButton>
+        @if (!IsExpired)
+        {
+            <MudItem xs="12">
+                <MudText Typo="Typo.h4">@L["Import Phoenix Scores"]</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="5" md="3">
+                <MudTextField @bind-Value="_piugameUsername" InputType="InputType.Email" Label=@L["Username"] Disabled="_isImporting"></MudTextField>
+            </MudItem>
+            <MudItem xs="12" sm="5" md="3">
+                <MudTextField @bind-Value="_piugamePassword" InputType="InputType.Password" Label=@L["Password"] Disabled="_isImporting"></MudTextField>
+            </MudItem>
+            <MudItem xs="12" sm="2">
+                @if (_isImporting)
+                {
+                    <MudProgressCircular Indeterminate="true" Color="Color.Primary"></MudProgressCircular>
+                }
+                else
+                {
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ImportSession" Disabled="_isImporting||string.IsNullOrWhiteSpace(_piugamePassword) ||string.IsNullOrWhiteSpace(_piugameUsername)">@L["Import"]</MudButton>
                         
-            }
-        </MudItem>
+                }
+            </MudItem>
+        }
         @foreach (var result in _importResults)
         {
             <MudItem xs="12">
@@ -240,7 +254,7 @@
 @code
 {
 
-    private QualifiersConfiguration _configuration = new QualifiersConfiguration(Array.Empty<Chart>(), new Dictionary<Guid, int>(),"Phoenix",1,2);
+    private QualifiersConfiguration _configuration = new QualifiersConfiguration(Array.Empty<Chart>(), new Dictionary<Guid, int>(),"Phoenix",1,2,null);
     private UserQualifiers? _currentQualifiers;
     private Chart? _submittingChart;
     private IEnumerable<(Chart Chart,PhoenixScore Score,double Rating)> MyBest => _currentQualifiers.BestCharts();
@@ -253,6 +267,8 @@
         _currentQualifiers?.Submissions.ContainsKey(chartId) ?? false ? $"border-color:{Colors.Gray.Darken1}" : string.Empty;
     private bool _showSubmit = false;
     private string _username = string.Empty;
+    private TimeSpan? RemainingTime => _currentQualifiers?.Configuration.CutoffTime == null ? null : _currentQualifiers.Configuration.CutoffTime - DateTimeOffset.Now;
+    private bool IsExpired => _currentQualifiers?.Configuration.CutoffTime != null && _currentQualifiers.Configuration.CutoffTime < DateTimeOffset.Now;
     private bool _isSaving = false;
     private DifficultyLevel _level = 20;
     private bool _isNew = false;
@@ -328,7 +344,7 @@
         }
     }
 
-    private bool Validated => _photoUrl != null && _score>0&& ((_addingMix == MixEnum.Phoenix) || (_addingMix == MixEnum.XX && Screen is { IsValid: true }));
+    private bool Validated => _photoUrl != null && (_addingMix==MixEnum.Phoenix&&_score>0)&& ((_addingMix == MixEnum.Phoenix) || (_addingMix == MixEnum.XX && Screen is { IsValid: true }));
     private void OpenSubmit(Chart chart)
     {
         _submittingChart = chart;
@@ -401,6 +417,11 @@
     }
     private async Task AddScore()
     {
+        if (IsExpired)
+        {
+            Snackbar.Add("You have missed the cutoff date for these qualifiers", Severity.Error);
+            return;
+        }
         if (_submittingChart == null || _currentQualifiers==null || _photoUrl==null)
         {
             return;
@@ -420,6 +441,11 @@
     private string _piugamePassword = string.Empty;
     private async Task ImportSession()
     {
+        if (IsExpired)
+        {
+            Snackbar.Add("You have missed the cutoff date for these qualifiers", Severity.Error);
+            return;
+        }
         if (_currentQualifiers == null)
         {
             return;

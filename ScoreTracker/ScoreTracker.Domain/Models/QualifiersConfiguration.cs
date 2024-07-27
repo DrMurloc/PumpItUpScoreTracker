@@ -5,7 +5,8 @@ namespace ScoreTracker.Domain.Models;
 public sealed class QualifiersConfiguration
 {
     public QualifiersConfiguration(IEnumerable<Chart> charts,
-        IDictionary<Guid, int> adjustments, Name scoringType, ulong notificationChannel, int playCount)
+        IDictionary<Guid, int> adjustments, Name scoringType, ulong notificationChannel, int playCount,
+        DateTimeOffset? cutoffTime)
     {
         Charts = charts.ToArray();
         ScoringType = scoringType;
@@ -15,6 +16,7 @@ public sealed class QualifiersConfiguration
                 NoteCountAdjustments[chart.Id] = 0;
         NotificationChannel = notificationChannel;
         PlayCount = playCount;
+        CutoffTime = cutoffTime;
     }
 
     public ulong NotificationChannel { get; }
@@ -22,4 +24,5 @@ public sealed class QualifiersConfiguration
     public IDictionary<Guid, int> NoteCountAdjustments { get; }
     public Name ScoringType { get; }
     public int PlayCount { get; }
+    public DateTimeOffset? CutoffTime { get; }
 }
