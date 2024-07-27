@@ -98,7 +98,7 @@
                     kv.Key==ChartType.Double?Settings.DoubleLevelWeights:Settings.PlayerCountWeights).Any(g=>g.Value>0)))
                 {
                     <MudItem xs="4">
-                        <MudNumericField T="int?" Min="0" Max="@Settings.Count" Value="Settings.ChartTypeMinimums[kv.Key]" ValueChanged="s=>SetChartTypeMinimum(kv.Key,s)" Label="@kv.Key.ToString()" Clearable="true" HideSpinButtons="true"></MudNumericField>
+                        <MudNumericField T="int?" Min="0" Value="Settings.ChartTypeMinimums[kv.Key]" ValueChanged="s=>SetChartTypeMinimum(kv.Key,s)" Label="@kv.Key.ToString()" Clearable="true" HideSpinButtons="true"></MudNumericField>
 
                     </MudItem>
                 }
@@ -108,7 +108,7 @@
                 {
 
                     <MudItem xs="4">
-                        <MudNumericField T="int?" Min="0" Max="@Settings.Count" Value="Settings.LevelMinimums[kv.Key]" ValueChanged="s=>SetLevelMinimum(kv.Key,s)" Label="@kv.Key.ToString()" Clearable="true" HideSpinButtons="true"></MudNumericField>
+                        <MudNumericField T="int?" Min="0" Value="Settings.LevelMinimums[kv.Key]" ValueChanged="s=>SetLevelMinimum(kv.Key,s)" Label="@kv.Key.ToString()" Clearable="true" HideSpinButtons="true"></MudNumericField>
                     </MudItem>
                 }
             } else if (_minimumType == "Chart Type Difficulty")
@@ -118,7 +118,7 @@
                     .Concat(Settings.PlayerCountWeights.Where(kv=>kv.Value>0).Select(kv=>$"CoOp{kv.Key}")))
                 {
                     <MudItem xs="4" sm="3">
-                        <MudNumericField T="int?" Min="0" Max="@Settings.Count" Value="Settings.ChartTypeLevelMinimums[kv]" ValueChanged="s=>SetChartTypeLevelMinimum(kv,s)" Label="@kv" Clearable="true" HideSpinButtons="true"></MudNumericField>
+                        <MudNumericField T="int?" Min="0" Value="Settings.ChartTypeLevelMinimums[kv]" ValueChanged="s=>SetChartTypeLevelMinimum(kv,s)" Label="@kv" Clearable="true" HideSpinButtons="true"></MudNumericField>
 
                     </MudItem>
                 }
@@ -159,7 +159,7 @@
                     </MudChipSet>
                 </MudItem>
                 <MudItem xs="4" sm="2">
-                    <MudNumericField T="int" Min="1" Max="@Settings.Count" @bind-Value="_bucketSize" Label=@L["Bucket Size"] Clearable="false" HideSpinButtons="true"></MudNumericField>
+                    <MudNumericField T="int" Min="1" @bind-Value="_bucketSize" Label=@L["Bucket Size"] Clearable="false" HideSpinButtons="true"></MudNumericField>
 
                 </MudItem>
 
@@ -173,7 +173,13 @@
         <MudGrid>
             <MudItem xs="4">
                 <MudNumericField T="int" Min="1" Max="30" Label="Chart Count" @bind-Value="Settings.Count"></MudNumericField>
+                @if (Settings.CustomMinimums.Any(kv => kv.Value > 0) || Settings.ChartTypeLevelMinimums.Any(kv => kv.Value > 0) || Settings.LevelMinimums.Any(kv => kv.Value > 0) || Settings.ChartTypeMinimums.Any(kv => kv.Value > 0))
+                {
+                    <br/>                    
+                    <MudText Color="Color.Warning">@(Settings.CustomMinimums.Sum(kv=>kv.Value)+Settings.ChartTypeLevelMinimums.Sum(kv=>kv.Value)+Settings.LevelMinimums.Sum(kv=>kv.Value)+Settings.ChartTypeMinimums.Sum(kv=>kv.Value)) Charts From Minimums</MudText>
+                }
             </MudItem>
+            
             <MudItem xs="4">
                 <MudSwitch Color="Color.Primary" Label="Allow Repeat Charts" @bind-Value="Settings.AllowRepeats"></MudSwitch>
             </MudItem>
