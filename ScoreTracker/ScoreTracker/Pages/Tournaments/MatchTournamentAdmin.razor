@@ -265,7 +265,7 @@
             }
             else
             {
-                _players[player.UserName] = _players[player.UserName] with {Seed = index};
+                _players[player.UserName] = _players[player.UserName] with {Seed = index+1};
             }
             await Matches.SaveMatchPlayer(TournamentId, _players[player.UserName], CancellationToken.None);
         }
