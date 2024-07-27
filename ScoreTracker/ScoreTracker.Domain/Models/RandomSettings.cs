@@ -71,15 +71,14 @@ namespace ScoreTracker.Domain.Models
         public IDictionary<string, int> CustomMinimums { get; set; } =
             new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
-        public bool HasWeightedSetting => LevelWeights.Any(kv => kv.Value > 0)
+        public bool HasWeightedSetting => LevelWeights.Any(kv => kv.Value > 1)
                                           || DoubleLevelWeights.Any(kv =>
-                                              kv.Value > 0)
+                                              kv.Value > 1)
                                           || PlayerCountWeights.Any(kvp =>
-                                              kvp.Value > 0)
+                                              kvp.Value > 1)
                                           ||
                                           SongTypeWeights.Any(kvp =>
-                                              kvp.Value > 0)
-                                          || CustomMinimums.Any(kvp => kvp.Value > 0);
+                                              kvp.Value > 1);
 
         public enum ResultsOrdering
         {

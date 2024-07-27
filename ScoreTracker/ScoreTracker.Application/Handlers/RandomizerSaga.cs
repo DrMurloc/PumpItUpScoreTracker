@@ -182,9 +182,10 @@ namespace ScoreTracker.Application.Handlers
                         newSettings.DoubleLevelWeights[level] = customMinimum.Value;
                     if (chartType == ChartType.CoOp)
                         newSettings.PlayerCountWeights[level] = customMinimum.Value;
-                    var result = await Handle(new GetRandomChartsQuery(newSettings), cancellationToken);
-                    results.AddRange(result);
                 }
+
+                var result = await Handle(new GetRandomChartsQuery(newSettings), cancellationToken);
+                results.AddRange(result);
             }
 
             var charts =

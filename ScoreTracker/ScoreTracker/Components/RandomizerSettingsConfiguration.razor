@@ -89,6 +89,7 @@
                     <MudRadio Value="@("Chart Type")" Color="Color.Primary">@L["Chart Type"]</MudRadio>
                     <MudRadio Value="@("Difficulty")" Color="Color.Primary">@L["Difficulty Level"]</MudRadio>
                     <MudRadio Value="@("Chart Type Difficulty")" Color="Color.Primary">@L["Chart Type"] + @L["Difficulty Level"]</MudRadio>
+                    <MudRadio Value="@("Buckets")" Color="Color.Primary">@L["Buckets"]</MudRadio>
                 </MudRadioGroup>
             </MudItem>
             @if (_minimumType == "Chart Type")
@@ -121,6 +122,50 @@
 
                     </MudItem>
                 }
+            } else if (_minimumType == "Buckets")
+            {
+                @foreach (var kv in Settings.CustomMinimums)
+                {
+                    <MudItem xs="8">
+                        @foreach (var level in LevelBucket.From(kv.Key).GetDifficulties())
+                        {
+                            <MudChip Color=@(level.Item1 == ChartType.Single ? Color.Error : level.Item1 == ChartType.Double ? Color.Success : Color.Warning)
+                                     Value=@($"{level.Item1.ToString()[0]}{level.Item2}")>
+                            </MudChip>
+                        }
+                         </MudItem>
+                    <MudItem xs="2">
+                        @($"x{kv.Value}")
+                    </MudItem>
+                    <MudItem xs="2">
+                        <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="() => Settings.CustomMinimums.Remove(kv.Key)"></MudIconButton>
+
+                    </MudItem>
+                }
+                <MudItem xs="12" sm="8">
+                    <MudChipSet @bind-SelectedValues="_newCustomBuckets" CheckMark="true" SelectedColor="Color.Info" SelectionMode="SelectionMode.MultiSelection">
+                        @foreach (var single in Settings.LevelWeights.Where(w=>w.Value>0))
+                        {
+                            <MudChip Color="Color.Error" Value=@($"S{single.Key}")></MudChip>
+                        }
+                        @foreach (var d in Settings.DoubleLevelWeights.Where(w => w.Value > 0))
+                        {
+                            <MudChip Color="Color.Success" Value=@($"D{d.Key}")></MudChip>
+                        }
+                        @foreach (var d in Settings.PlayerCountWeights.Where(w => w.Value > 0))
+                        {
+                            <MudChip Color="Color.Warning" Value=@($"C{d.Key}")></MudChip>
+                        }
+                    </MudChipSet>
+                </MudItem>
+                <MudItem xs="4" sm="2">
+                    <MudNumericField T="int" Min="1" Max="@Settings.Count" @bind-Value="_bucketSize" Label=@L["Bucket Size"] Clearable="false" HideSpinButtons="true"></MudNumericField>
+
+                </MudItem>
+
+                <MudItem xs="12" sm="2">
+                    <MudButton StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="AddBucket">@L["Add"]</MudButton>
+                </MudItem>
             }
         </MudGrid>
     </MudExpansionPanel>
@@ -180,11 +225,22 @@
     private bool _useWeights = false;
 
     private string _minimumType = "Chart Type";
+    private int _bucketSize = 1;
 
+    private void AddBucket()
+    {
+        Settings.ClearChartTypeMinimums();
+        Settings.ClearLevelMinimums();
+        Settings.ClearChartTypeLevelMinimums();
+        Settings.CustomMinimums[string.Join(",", _newCustomBuckets)] = _bucketSize;
+        _bucketSize = 1;
+        _newCustomBuckets = new List<string>();
+    }
     private void SetChartTypeMinimum(ChartType type, int? minimum)
     {
         Settings.ClearLevelMinimums();
         Settings.ClearChartTypeLevelMinimums();
+        Settings.ClearCustomMinimums();
         Settings.ChartTypeMinimums[type] = minimum;
     }
 
@@ -193,6 +249,7 @@
         Settings.ClearChartTypeMinimums();
 
         Settings.ClearChartTypeLevelMinimums();
+        Settings.ClearCustomMinimums();
         Settings.LevelMinimums[level] = minimum;
     }
 
@@ -200,11 +257,12 @@
     {
         Settings.ClearChartTypeMinimums();
         Settings.ClearLevelMinimums();
+        Settings.ClearCustomMinimums();
         Settings.ChartTypeLevelMinimums[shortHand] = minimum;
     }
     private string LevelString(int level) => $"Level {level}";
     private string PlayerString(int players) => $"{players} Players";
-
+    private IReadOnlyCollection<string> _newCustomBuckets = new List<string>();
 
 
     private IEnumerable<Chart> _includedCharts = Array.Empty<Chart>();
