@@ -1,4 +1,5 @@
-﻿using Azure.Storage.Blobs;
+﻿using System.Web;
+using Azure.Storage.Blobs;
 using Microsoft.Extensions.Options;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -19,7 +20,7 @@ namespace ScoreTracker.Data.Clients
 
         public async Task<Uri> UploadFile(string path, Stream fileStream, CancellationToken cancellationToken = default)
         {
-            path = path.TrimStart('/');
+            path = HttpUtility.UrlEncode(path.TrimStart('/'));
 
             var blobClient = _blob.GetBlobClient(path);
             await blobClient.UploadAsync(fileStream, cancellationToken);
@@ -31,7 +32,7 @@ namespace ScoreTracker.Data.Clients
         public Task<bool> DoesFileExist(string path, out Uri fullPath,
             CancellationToken cancellationToken = default)
         {
-            path = path.TrimStart('/');
+            path = HttpUtility.UrlEncode(path.TrimStart('/'));
             fullPath = new Uri($"https://piuimages.arroweclip.se/{path}");
             if (_existingPaths.Contains(path)) return Task.FromResult(true);
             var blobClient = _blob.GetBlobClient(path);
@@ -44,7 +45,7 @@ namespace ScoreTracker.Data.Clients
         public async Task<Uri> CopyFromSource(Uri oldPath, string newPath,
             CancellationToken cancellationToken = default)
         {
-            newPath = newPath.TrimStart('/');
+            newPath = HttpUtility.UrlEncode(newPath.TrimStart('/'));
 
             var blobClient = _blob.GetBlobClient(newPath);
 
