@@ -78,11 +78,16 @@
         {
             <MudTd></MudTd>
         }
-        <MudTd>@context.Score.ToString("0.###")</MudTd>
+        <MudTd>
+            @if (context.Scores.Any())
+            {
+                @context.Score.ToString("0.###")
+            }
+        </MudTd>
         <MudTd>
             @if (context.IsApproved || _myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer)
             {
-                <MudIconButton Icon="@Icons.Material.Filled.PhotoAlbum" Color="Color.Primary" OnClick="() => SelectEntry(context)"></MudIconButton>
+                <MudIconButton Icon="@Icons.Material.Filled.PhotoAlbum" Color="Color.Primary" OnClick="() => SelectEntry(context)" Disabled="!context.Photos.Any()"></MudIconButton>
             }
             else
             {
