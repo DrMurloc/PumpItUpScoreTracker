@@ -25,9 +25,16 @@
     <HeaderContent>
         @if (IsExpired && _leaderboard.Any(l => l.FinalSeed != null && l.FinalSeed != l.Place))
         {
-            <MudTd>@L["Final Seed"]</MudTd>
+            <MudTh>@L["Final Seed"]</MudTh>
+            <MudTh>@L["Qualifier Position"]</MudTh>
         }
-        <MudTh>@L["Place"]</MudTh>
+        else
+        {
+
+            <MudTh>
+                @L["Place"]
+            </MudTh>
+        }
         <MudTh>@L["Username"]</MudTh>
         @for (var i = 0; i < _configuration.PlayCount; i++)
         {
