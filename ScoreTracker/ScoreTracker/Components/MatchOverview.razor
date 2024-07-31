@@ -22,6 +22,31 @@
         @switch (_match.State)
         {
             case MatchState.NotStarted:
+            
+                <MudItem xs="12">
+                    @if (MyRole == TournamentRole.HeadTournamentOrganizer)
+                    {
+                        <MudSelect T="string" Label="Card Draw Settings" Value="_match.RandomSettings" ValueChanged="SetSettings" Disabled="_isSaving">
+                            @foreach (var setting in SettingOptions)
+                            {
+                                <MudSelectItem T="string" Value="@setting">@setting</MudSelectItem>
+                            }
+                        </MudSelect>
+                    }
+                    else
+                    {
+                        <MudText>Card Draw: @_match.RandomSettings</MudText>
+                    }
+                </MudItem>
+                @if (MyRole == TournamentRole.HeadTournamentOrganizer)
+                {
+                    <MudItem xs="12">
+                        <MudNumericField T="int" HideSpinButtons="true" Value="_match.Round" ValueChanged="SetRound" Disabled="_isSaving" Label="Round"></MudNumericField>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudNumericField T="int" HideSpinButtons="true" Value="_match.ChartCount" ValueChanged="SetChartCount" Disabled="_isSaving" Label="Chart Count"></MudNumericField>
+                    </MudItem>
+                }
                 @for (var i = 0; i < _match.Players.Length; i++)
                 {
                     var player = _match.Players[i];
@@ -373,7 +398,41 @@
     public Name? MatchName { get; set; }
     [Parameter]
     public Guid? TournamentId { get; set; }
+    [Parameter]
+    public IEnumerable<string> SettingOptions { get; set; }
 
+    private async Task SetChartCount(int newCount)
+    {
+
+        if (TournamentId == null || _match == null)
+        {
+            return;
+        }
+        _isSaving = true;
+        await Mediator.Send(new UpdateMatchCommand(TournamentId.Value, _match with { ChartCount = newCount }));
+        _isSaving = false;
+    }
+    private async Task SetRound(int newRound)
+    {
+
+        if (TournamentId == null || _match == null)
+        {
+            return;
+        }
+        _isSaving = true;
+        await Mediator.Send(new UpdateMatchCommand(TournamentId.Value, _match with { Round = newRound }));
+        _isSaving = false;
+    }
+    private async Task SetSettings(string newSettings)
+    {
+        if (TournamentId == null || _match == null)
+        {
+            return;
+        }
+        _isSaving = true;
+        await Mediator.Send(new UpdateMatchCommand(TournamentId.Value, _match with { RandomSettings = newSettings}));
+        _isSaving = false;
+    }
     private string CardClass(Guid chartId) => (_match?.VetoedCharts.Contains(chartId) ?? false) || (_match?.ProtectedCharts.Contains(chartId) ?? false) ? "border-solid border-2 chart-card" : "chart-card";
     private string CardStyle(Guid chartId) => _match?.ProtectedCharts.Contains(chartId)??false ? $@"border-color:{Colors.Green.Darken1}" :
         _match?.VetoedCharts.Contains(chartId) ?? false ? $@"border-color:{Colors.Red.Darken1}" : "";

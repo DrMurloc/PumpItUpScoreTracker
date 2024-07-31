@@ -135,7 +135,7 @@ public sealed class EFMatchRepository : IMatchRepository
             await _dbContext.MatchLink.AddAsync(new MatchLinkEntity
             {
                 TournamentId = tournamentId,
-                Id = Guid.NewGuid(),
+                Id = matchLink.Id,
                 FromMatch = fromString,
                 ToMatch = toString,
                 Skip = matchLink.Skip,

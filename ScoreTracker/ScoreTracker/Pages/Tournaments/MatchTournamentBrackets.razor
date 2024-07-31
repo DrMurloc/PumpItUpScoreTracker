@@ -285,8 +285,12 @@
 </MudAutocomplete>
 @if (!_bulkCreating && NodeCollection.Any())
 {
-    <MudButton OnClick="RedrawTournament">Refresh</MudButton>
-    <br/>
+    <MudSelect T="string" Label="Phase" Value="_showingPhase" ValueChanged="RedrawTournament">
+        @foreach (var phase in _matches.Select(m => m.Value.PhaseName).Distinct())
+        {
+            <MudSelectItem T="string" Value="@phase">@phase</MudSelectItem>
+        }
+    </MudSelect>
     <div class="control-section">
 
         <SfDiagramComponent @ref="@Diagram" ID="diagram" InteractionController="DiagramInteractions.SingleSelect" NodeCreating="OnNodeCreating" SelectionChanged="SelectionChanged" ConnectorCreating="OnConnectorCreating" Created="OnCreated" Height="590px" Nodes="@NodeCollection" Connectors="@ConnectorCollection">
@@ -441,7 +445,7 @@
     <DialogContent>
         @if (_currentMatch != null)
         {
-            <MatchOverview MatchName="_currentMatch.Value" TournamentId="TournamentId" MyRole="_myRole"></MatchOverview>
+            <MatchOverview MatchName="_currentMatch.Value" TournamentId="TournamentId" MyRole="_myRole" SettingOptions="_chartPullSettings.Keys"></MatchOverview>
         }
     </DialogContent>
     <DialogActions>
@@ -1134,19 +1138,25 @@
     }
 
     private const int MatchHeight = 80;
-
-    private void RedrawTournament()
+    private string _showingPhase = "";
+    private void RedrawTournament(string phaseName)
     {
-        ConnectorCollection = new DiagramObjectCollection<Connector>();
+        ConnectorCollection.Clear();
 
-        NodeCollection = new DiagramObjectCollection<Node>();
-        if (!_matches.Any())
+        NodeCollection.Clear();
+        _showingPhase = phaseName;
+        if (string.IsNullOrWhiteSpace(phaseName))
+        {
+            return;
+        }
+        var matches = _matches.Where(m => m.Value.PhaseName == phaseName).ToDictionary(m => m.Key, m => m.Value);
+        if (!matches.Any())
         {
             return;
         }
         var x = 50;
-        var rounds = _matches.Values.GroupBy(m => m.PhaseName).OrderBy(g => g.Min(m => m.MatchOrder))
-            .SelectMany(phase => phase.GroupBy(m => m.Round).OrderBy(g => g.Key))
+        var rounds = matches.Values.GroupBy(m => m.PhaseName).OrderBy(g => g.Min(m => m.MatchOrder))
+            .SelectMany(phase => phase.GroupBy(m => m.Round).OrderBy(g => g.Key).ToArray())
             .ToArray();
 
         var largestWinners = rounds.Max(g => g.Count(m => m.MatchName.Contains("Winner")));
@@ -1184,7 +1194,9 @@
             }
             x += 250;
         }
-        foreach (var matchLink in _matchLinks.Where(m => !(m.FromMatch.Contains("Winner") && m.ToMatch.Contains("Loser"))))
+        foreach (var matchLink in _matchLinks
+            .Where(ml=>matches.ContainsKey(ml.FromMatch) && matches.ContainsKey(ml.ToMatch))
+            .Where(m => !(m.FromMatch.Contains("Winner") && m.ToMatch.Contains("Loser"))))
         {
             var connector = new Connector()
                 {
@@ -1288,6 +1300,21 @@
         var max = names.Max(e=>e.round);
         var rounds = rootNode.GetMatchNames().GroupBy(n => n.round)
             .ToDictionary(g => max-g.Key+1, g => g.ToArray());
+
+        foreach (var round in rounds)
+        {
+            if (round.Value.Count() == 1)
+            {
+                round.Value.Single().match.Id = $"{_phaseName} Winners Finals";
+                continue;
+            }        
+            var matchNumber = 1;
+            foreach (var match in round.Value)
+            {
+                match.match.Id = $"{_phaseName} Round {round.Key} Winners Match {matchNumber}";
+                matchNumber++;
+            }
+        }
         var matches = new List<MatchView>();
         var matchLinks = new List<MatchLink>();
         var totalOrder = _matches.Any() ? _matches.Values.Max(m => m.Round) : 1;
@@ -1300,6 +1327,7 @@
                 if (round.Key == 1)
                 {
                     var firstRound = new List<MatchNode>();
+                    var matchNum = 1;
                     foreach (var winnersPair in round.Value.Select((place, index) => (place, index))
                         .GroupBy(g => (int)Math.Floor(g.index / 2.0))
                         .OrderBy(g => g.Key))
@@ -1307,6 +1335,7 @@
                         var match1 = winnersPair.First().place.match;
                         var match2 = winnersPair.Last().place.match;
                         var nextMatch = new MatchNode();
+                        nextMatch.Id = $"{_phaseName} Round {round.Key - 1} Losers Match {matchNum++}";
                         nextMatch.Left = match1;
                         nextMatch.Right = match2;
                         match1.LosersProgression = nextMatch;
@@ -1321,9 +1350,12 @@
                 if (lastRound.Count > round.Value.Length)
                 {
                     var midRound = new List<MatchNode>();
+
+                    var matchNum = 1;
                     for (var i = 0; i < lastRound.Count / 2; i++)
                     {
                         var nextMatch = new MatchNode();
+                        nextMatch.Id =  $"{_phaseName} Round {round.Key - 1}.5 Losers Match {matchNum++}";
                         nextMatch.Left = lastRound[i * 2];
                         nextMatch.Right = lastRound[i * 2 + 1];
                         lastRound[i * 2].NextMatch = nextMatch;
@@ -1338,6 +1370,7 @@
                 var ordered = round.Value.Select((m, i) => (m.match, i))
                     .OrderByDescending(k => k.i * ordering).Select(m => m.match).ToArray();
                 ordering *= -1;
+                var halfRoundMatchNum = 1;
                 for (var i = 0; i < ordered.Length; i++)
                 {
                     var winnersMatch = ordered[i];
@@ -1347,6 +1380,8 @@
                             Left = winnersMatch,
                             Right = lastRound[i]
                         };
+
+                    nextMatch.Id =ordered.Length==1? $"{_phaseName} Losers Finals" :$"{_phaseName} Round {round.Key} Losers Match {halfRoundMatchNum++}";
                     nextMatch.Round = round.Key;
                     winnersMatch.LosersProgression = nextMatch;
                     lastRound[i].NextMatch = nextMatch;
@@ -1366,7 +1401,7 @@
         foreach (var match in losers.SelectMany(l => l)
             .Where(m=>m.Player1Seed<=players && m.Player2Seed<=players))
         {
-            matches.Add(new MatchView($"{_phaseName} Round {match.Round} Losers Match {match.Id}",
+            matches.Add(new MatchView(match.Id,
                 _phaseName, totalOrder,_chartCount,_roundSettings[match.Round-1],
                 MatchState.NotStarted,new Name[]{ $"Unknown 1",$"Unknown 2"},Array.Empty<Guid>(),
                 Array.Empty<Guid>(),
@@ -1377,13 +1412,13 @@
                 match.Round, "", null));
             if (match.NextMatch!=null)
             {
-                matchLinks.Add(new MatchLink(Guid.NewGuid(), $"{_phaseName} Round {match.Round} Losers Match {match.Id}",
-                    $"{_phaseName} Round {match.NextMatch.Round} Losers Match {match.NextMatch.Id}", true, 1,0));
+                matchLinks.Add(new MatchLink(Guid.NewGuid(), match.Id,
+                    match.NextMatch.Id, true, 1,0));
             }
         }
         var seededPlayers = new HashSet<int>();
 
-        var seedOffset = _lowestSeed - _playersPerMatch;
+        var seedOffset = _lowestSeed;
         foreach (var round in rounds.OrderBy(r=>r.Key))
         {
             foreach (var match in round.Value.Where(m=>m.match.Player1Seed<=players && m.match.Player2Seed<=players))
@@ -1400,7 +1435,7 @@
                     seededPlayers.Add(match.match.Player2Seed);
                     player1Name = $"Seed {seedOffset+match.match.Player2Seed}";
                 }
-                matches.Add(new MatchView($"{_phaseName} Round {round.Key} Winners Match {match.current}",
+                matches.Add(new MatchView(match.match.Id,
                      _phaseName, totalOrder, _chartCount, _roundSettings[round.Key-1],
                     MatchState.NotStarted, new Name[] { player1Name, player2Name }, Array.Empty<Guid>(),
                     Array.Empty<Guid>(),
@@ -1409,11 +1444,11 @@
                     new Dictionary<string, int[]>(),
                     Array.Empty<Name>(),
                     round.Key, "", null));
-                if (match.next!=null)
+                if (match.match.NextMatch!=null)
                 {
 
-                    matchLinks.Add(new MatchLink(Guid.NewGuid(), $"{_phaseName} Round {round.Key} Winners Match {match.current}",
-                        $"{_phaseName} Round {round.Key + 1} Winners Match {match.next}", true, 1,0));
+                    matchLinks.Add(new MatchLink(Guid.NewGuid(), match.match.Id,
+                        match.match.NextMatch.Id, true, 1,0));
                 }
                 if (match.match.LosersProgression != null)
                 {
@@ -1422,8 +1457,8 @@
                         match.match.LosersProgression?.NextMatch;
                     if (firstLosersMatch != null)
                     {
-                        matchLinks.Add(new MatchLink(Guid.NewGuid(), $"{_phaseName} Round {round.Key} Winners Match {match.current}",
-                            $"{_phaseName} Round {round.Key + 1} Losers Match {firstLosersMatch.Id}", false, 1,0));
+                        matchLinks.Add(new MatchLink(Guid.NewGuid(), match.match.Id,
+                            firstLosersMatch.Id, false, 1,0));
                     }
                 }
                 totalOrder++;
@@ -1435,7 +1470,7 @@
             var finalRound = matches.Max(m => m.Round) + 1;
             var lastWinners = matches.Where(m=>m.MatchName.Contains("Winner")).OrderByDescending(m => m.Round).ThenByDescending(m => m.MatchOrder).First();
             var lastLosers = matches.Where(m => m.MatchName.Contains("Loser")).OrderByDescending(m => m.Round).ThenByDescending(m => m.MatchOrder).First();
-            matches.Add(new MatchView($"{_phaseName} Finals",
+            matches.Add(new MatchView($"{_phaseName} Grand Finals",
                 _phaseName,totalOrder,
                 _chartCount, _roundSettings[finalRound-1],
                 MatchState.NotStarted, new Name[] { "Unknown 1", "Unknown 2" },
@@ -1446,8 +1481,8 @@
                 new Dictionary<string, int[]>(),
                 Array.Empty<Name>(),
                 finalRound, "", null));
-            matchLinks.Add(new MatchLink(Guid.NewGuid(),lastWinners.MatchName, $"{_phaseName} Finals", true, 1,0));
-            matchLinks.Add(new MatchLink(Guid.NewGuid(), lastLosers.MatchName, $"{_phaseName} Finals", true, 1, 0));
+            matchLinks.Add(new MatchLink(Guid.NewGuid(),lastWinners.MatchName, $"{_phaseName} Grand Finals", true, 1,0));
+            matchLinks.Add(new MatchLink(Guid.NewGuid(), lastLosers.MatchName, $"{_phaseName} Grand Finals", true, 1, 0));
         }
         foreach (var match in matches)
         {
@@ -1466,8 +1501,7 @@
         public MatchNode? Right { get; set; }
         public MatchNode? NextMatch { get; set; }
         public MatchNode? LosersProgression { get; set; }
-        public Guid Id { get; } = Guid.NewGuid();
-        private Guid? Next { get; set; }
+        public string Id { get; set; } = string.Empty;
         public int Player1Seed { get; set; } = -1;
         public int Player2Seed { get; set; } = -1;
         public int Round { get; set; } = -1;
@@ -1480,9 +1514,8 @@
         public MatchNode(MatchNode next)
         {
             NextMatch = next;
-            Next = next.Id;
         }
-        private IEnumerable<(int round, Guid current, Guid? next, MatchNode match)> GetMatchNames(int depth)
+        private IEnumerable<(int round, MatchNode match)> GetMatchNames(int depth)
         {
 
             if (Left != null)
@@ -1492,7 +1525,7 @@
                     yield return name;
                 }
             }
-            yield return (depth,Id,Next,this);
+            yield return (depth,this);
             if (Right != null)
             {
                 foreach (var name in Right.GetMatchNames(depth+1))
@@ -1501,7 +1534,7 @@
                 }
             }
         }
-        public IEnumerable<(int round, Guid current, Guid? next, MatchNode match)> GetMatchNames()
+        public IEnumerable<(int round, MatchNode match)> GetMatchNames()
         {
             return GetMatchNames(1);
         }
@@ -1666,7 +1699,7 @@
                 //Nothing
             }
         }
-        RedrawTournament();
+        RedrawTournament(_currentPhase);
         StateHasChanged();
     }
 
