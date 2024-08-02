@@ -246,6 +246,12 @@
                                         <MudIcon Color="Color.Warning" Icon=@Icons.Material.Filled.TrendingDown></MudIcon>
                                     </MudTooltip>
                                 }
+                                @if (_variance.TryGetValue(chart.Id, out var varianceLevel) && varianceLevel != "Normal")
+                                {
+                                    <MudTooltip Text=@($"{varianceLevel} Score Variance")>
+                                        <MudIcon Icon=@Icons.Material.Filled.GraphicEq Style=@($"color:{(varianceLevel=="Very High"?MudBlazor.Colors.Red.Darken1:varianceLevel=="High"?MudBlazor.Colors.Orange.Darken1:varianceLevel=="Low"?MudBlazor.Colors.Green.Darken1:MudBlazor.Colors.Blue.Darken1)}")></MudIcon>
+                                    </MudTooltip>
+                                }
                                 @if (CurrentUser.IsLoggedInAsAdmin)
                                 {
                                     <MudIconButton Icon="@Icons.Material.Outlined.ListAlt" OnClick="() => ToggleToDo(chart.Id)" Color="_todos.Contains(chart.Id) ? Color.Primary : Color.Default"></MudIconButton>
@@ -340,6 +346,8 @@
 @inject IUiSettingsAccessor UiSettings;
 @inject IAdminNotificationClient Notifications;
 @inject ISnackbar Snackbar;
+@inject IPhoenixRecordRepository Records;
+@inject IPlayerStatsRepository PlayerStats;
 @code
 {
 
@@ -405,6 +413,36 @@
     private Task<IEnumerable<string>> FilterSongName(string search) => Task.FromResult(_finalEntries.Select(c => _charts[c.ChartId].Song.Name.ToString()).Distinct().Where(
         n => string.IsNullOrWhiteSpace(search)|| n.Contains(search, StringComparison.OrdinalIgnoreCase)).OrderBy(n => n == search ? 0 : 1).AsEnumerable());
 
+    private IDictionary<Guid, string> _variance = new Dictionary<Guid, string>();
+    private async Task CalculateVariance(ChartType chartType, DifficultyLevel level)
+    {
+        var scores = (await Records.GetAllPlayerScores(chartType, level)).ToArray();
+        var players = (await PlayerStats.GetStats(scores.Select(s => s.userId).Distinct().ToArray(), CancellationToken.None))
+            .Where(p => Math.Abs((_chartType == ChartType.Single ? p.SinglesCompetitiveLevel : p.DoublesCompetitiveLevel) - level) < 2.0).ToDictionary(p => p.UserId);
+
+        var chartGroups = scores.GroupBy(r => r.record.ChartId).ToDictionary(g => g.Key, g => g.Where(k => players.ContainsKey(k.userId) && k.record is { Score: not null, IsBroken: false }).Select(k => k.record!.Score).ToArray());
+
+
+        var chartStandards = chartGroups.Where(kv => kv.Value.Count() > 5)
+            .Select(kv => (_charts[kv.Key], TierListSaga.StdDev(kv.Value.Select(s => (int)s!.Value), true)))
+            .ToArray();
+
+        if (!chartStandards.Any())
+        {
+            return;
+        }
+        var average = chartStandards.Average(c => c.Item2);
+        var standardDev = TierListSaga.StdDev(chartStandards.Select(c => c.Item2), true);
+        var results = chartStandards
+            .Select(kv => (kv.Item1, (kv.Item2-average)/standardDev))
+            .ToArray();
+
+        _variance = results.ToDictionary(r => r.Item1.Id, r => r.Item2 <= -2.0 ? "Very Low" :
+            r.Item2 <= -1.0 ? "Low" :
+                r.Item2 >= 2.0 ? "Very High" :
+                    r.Item2 >= 1.0 ? "High" : "Normal");
+
+    }
     private void ToggleSongType(SongType s, bool v)
     {
         if (v)
@@ -843,6 +881,7 @@
             baseRating = 2000;
         }
         _averageRating = _scores.Any(kv => !_isBroken[kv.Key] && kv.Value > 0) ? (int)_scores.Where(kv => !_isBroken[kv.Key] && kv.Value > 0).Average(s => s.Value.LetterGrade.GetModifier() * baseRating) : baseRating;
+        await CalculateVariance(_chartType, _level);
         _isLoading = false;
     }
     private async Task SetType(ChartType newType)
