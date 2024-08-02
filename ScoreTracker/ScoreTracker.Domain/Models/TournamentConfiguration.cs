@@ -1,5 +1,4 @@
-﻿using ScoreTracker.Domain.Enums;
-using ScoreTracker.Domain.ValueTypes;
+﻿using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Models
 {
@@ -11,7 +10,7 @@ namespace ScoreTracker.Domain.Models
         public TimeSpan MaxTime { get; set; } = TimeSpan.FromMinutes(105);
         public bool AllowRepeats { get; set; } = false;
         public bool IsStarted => StartDate == null || StartDate <= DateTimeOffset.Now;
-        public bool IsEnded => EndDate == null || EndDate <= DateTimeOffset.Now;
+        public bool IsEnded => EndDate == null || DateTimeOffset.Now <= EndDate;
         public bool IsActive => IsStarted && !IsEnded;
 
         public TournamentConfiguration(ScoringConfiguration scoringConfiguration) : this(Guid.NewGuid(), "Unnamed",
