@@ -26,7 +26,7 @@
             @foreach (var date in _pastDates.OrderByDescending(d => d))
             {
                 
-                <MudSelectItem T="DateTimeOffset?" Value="date">@date.AddDays(-1).ToString("d")</MudSelectItem>
+                <MudSelectItem T="DateTimeOffset?" Value="date">@date.AddDays(-7).ToString("d")</MudSelectItem>
             }
         </MudSelect>
     
@@ -166,8 +166,16 @@
     </ChildRowContent>
 </MudTable>
 <br/>
-<MudText Typo="Typo.h5">Road to BITE (Monthly Leaderboard July 8th - August 4th)</MudText>
-<MudText Typo="Typo.subtitle1">Week @_currentWeekInMonth</MudText>
+<MudText Typo="Typo.h5">@(_isPastBite?"Monthly Leaderboard":"Road to BITE (Monthly Leaderboard July 8th - August 4th)")</MudText>
+@if (_selectedWeek == null)
+{
+    
+    <MudText Typo="Typo.subtitle1">Week @_currentWeekInMonth</MudText>
+}
+else
+{
+    <MudText Typo="Typo.subtitle1">@((_monthlyWeeks.Min() - TimeSpan.FromDays(7)).ToString("d")) - @((_monthlyWeeks.Max()-TimeSpan.FromDays(7)).ToString("d"))</MudText>
+}
 <br />
 <MudSelect T="ChartType?" Value="_chartType" ValueChanged="SetChartType" Disabled="_isLoading" Label="Leaderboard Type">
     <MudSelectItem T="ChartType?" Value="null">Combined</MudSelectItem>
@@ -516,6 +524,7 @@
     {
         _selectedWeek = date;
         await ReprocessLeaderboards();
+        await RecalculateMonthlyLeaderboard();
     }
 
     private bool IsValid(Guid chartId)
@@ -605,14 +614,23 @@
     }
 
     private int _currentWeekInMonth = 1;
+    private DateTimeOffset[] _monthlyWeeks = Array.Empty<DateTimeOffset>();
     private async Task RecalculateMonthlyLeaderboard()
     {
         var biteStart = new DateTimeOffset(2024, 7, 9, 0, 0, 0, TimeSpan.Zero);
+        var biteEnd = new DateTimeOffset(2024, 8, 5, 0, 0, 0, TimeSpan.Zero);
+        var weekStart = _selectedWeek == null ? null : _selectedWeek - TimeSpan.FromDays(7);
+        _isPastBite = weekStart == null ? DateTimeOffset.Now >= biteEnd : weekStart < biteStart || weekStart >= biteEnd;
         _monthlyBestCharts.Clear();
         _monthlyTotals.Clear();
         _monthlyTop4.Clear();
         _monthlyPlaces.Clear();
-        var monthlyDates = _pastDates.Where(d => d > biteStart).ToArray();
+
+
+        var monthlyDates = _pastDates.Where(d => _isPastBite ?
+            (d - TimeSpan.FromDays(7)).Year == (weekStart ?? DateTimeOffset.Now).Year && (d - TimeSpan.FromDays(7)).Month == (weekStart ?? DateTimeOffset.Now).Month
+            : d > biteStart).ToArray();
+        _monthlyWeeks = monthlyDates;
         _currentWeekInMonth = monthlyDates.Count()+1;
         var entries = new List<WeeklyTournamentEntry>();
 
@@ -621,8 +639,12 @@
             entries.AddRange((await WeeklyTournaments.GetPastEntries(date, CancellationToken.None)).Where(e=>IsValid(e.ChartId)));
 
         }
-        entries.AddRange((await WeeklyTournaments.GetEntries(null, CancellationToken.None)).Where(e=>IsValid(e.ChartId)));
-        
+
+        if (!_isPastBite || weekStart == null || (weekStart.Value.Month == DateTimeOffset.Now.Month && weekStart.Value.Year == DateTimeOffset.Now.Year))
+        {
+            entries.AddRange((await WeeklyTournaments.GetEntries(null, CancellationToken.None)).Where(e=>IsValid(e.ChartId)));
+
+        }
         foreach (var user in await Users.GetUsers(entries.Select(e => e.UserId).Distinct().ToArray()))
         {
             _users[user.Id] = user;
@@ -642,6 +664,8 @@
         _monthlyPlaces = _monthlyTotals.OrderByDescending(kv => kv.Value).Select((kv, i) => (kv, i))
             .ToDictionary(c => c.kv.Key, c => c.i + 1);
     }
+
+    private bool _isPastBite = false;
     protected override async Task OnInitializedAsync()
     {
         _isLoggedIn = CurrentUser.IsLoggedIn;
