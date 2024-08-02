@@ -850,12 +850,12 @@
         _messages = _finalGroupings.ToDictionary(kv => kv.Key, kv => "");
         foreach (var group in _finalGroupings)
         {
-            if (!group.Any(e => (_scores.TryGetValue(e.ChartId,out var s)?s:0)>0))
+            if (!group.Any(e => (_isBroken.TryGetValue(e.ChartId,out var s) && !s)))
             {
                 _messages[group.Key] = "0% Cleared";
                 continue;
             }
-            var clearRate = group.Count(e => _scores[e.ChartId] > 0) / (double)group.Count();
+            var clearRate = group.Count(e => _isBroken.TryGetValue(e.ChartId, out var s) && !s) / (double)group.Count();
             var minScore =(PhoenixScore)group.Where(e => _scores[e.ChartId] > 0).Min(e =>(int) _scores[e.ChartId]);
             var avgScore = (PhoenixScore)(int)group.Where(e => _scores[e.ChartId] > 0).Average(e => _scores[e.ChartId]);
             var maxScore = (PhoenixScore) group.Where(e => _scores[e.ChartId]>0).Max(e => (int)_scores[e.ChartId]);
