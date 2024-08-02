@@ -50,7 +50,17 @@
             <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenBulkAddMatchDialog">Bulk Create Matches</MudButton>
         </MudItem>
         <MudItem xs="6" sm="4" md="3">
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="PopulateSeeds">Populate Seeds</MudButton>
+            @if (_showSkipSeedCheck)
+            {
+                
+                <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="()=>PopulateSeeds(true)">Confirm Seed Population</MudButton>
+            
+            }
+            else
+            {
+                
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="() => PopulateSeeds(false)">Populate Seeds</MudButton>
+            }
         </MudItem>
     </MudGrid>
 
@@ -1068,10 +1078,11 @@
 
     private void ProjectMatchOntoNode(MatchView match, Node node)
     {
+        var players=string.Join("\n", match.Players.Select(p=>p.Contains("Unknown ")?"TBD":p.ToString()));
         if (node.Annotations.Any())
         {
 
-            node.Annotations[0].Content =string.Join("\n", match.Players);
+            node.Annotations[0].Content = players;
         }
         else
         {
@@ -1079,7 +1090,7 @@
             {
                 new ShapeAnnotation
                 {
-                    Content = string.Join("\n", match.Players)
+                    Content = players
                 }
             };
         }
@@ -1141,9 +1152,8 @@
     private string _showingPhase = "";
     private void RedrawTournament(string phaseName)
     {
-        ConnectorCollection.Clear();
-
-        NodeCollection.Clear();
+        var connectors = new DiagramObjectCollection<Connector>();
+        var nodes = new DiagramObjectCollection<Node>();
         _showingPhase = phaseName;
         if (string.IsNullOrWhiteSpace(phaseName))
         {
@@ -1182,7 +1192,7 @@
                         Width = 200
                     };
                 ProjectMatchOntoNode(match, node);
-                NodeCollection.Add(node);
+                nodes.Add(node);
                 if (match.MatchName.Contains("Loser"))
                 {
                     losersY += height + 10;
@@ -1214,8 +1224,11 @@
             {
                 connector.SourcePortID = leftPort.ID;
             }
-            ConnectorCollection.Add(connector);
+            connectors.Add(connector);
         }
+        ConnectorCollection = connectors;
+        NodeCollection = nodes;
+        StateHasChanged();
     }
     private static int NearestPowerOf2(int n)
     {
@@ -1250,15 +1263,18 @@
         }
     }
 
-    private async Task PopulateSeeds()
+    private bool _showSkipSeedCheck = false;
+    private async Task PopulateSeeds(bool skipCheck)
     {
         FindInvalidMatches();
-        if (_otherProblems.Any())
+        if (!skipCheck && _otherProblems.Any())
         {
+            _showSkipSeedCheck = true;
             Snackbar.Add("Please resolve identified seeding problems before populating seeds", Severity.Error);
             return;
         }
-        var seeds = _players.Values.ToDictionary(p => p.Seed);
+        _showSkipSeedCheck = false;
+        var seeds = _players.Values.GroupBy(p=>p.Seed).ToDictionary(g=>g.Key,g=>g.First());
         foreach (var match in _matches.Values)
         {
             var needsSaved = false;
