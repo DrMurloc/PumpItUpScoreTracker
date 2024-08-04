@@ -254,7 +254,7 @@
 {
     <SfKanban TValue="MatchCard" CssClass="kanban-overview" KeyField="Status" DataSource="MatchCards" EnableTooltip="true" AllowDragAndDrop="false">
         <KanbanColumns>
-            <KanbanColumn HeaderText="Not Started" KeyField="@(new List<string>() { MatchState.NotStarted.ToString() })" AllowToggle="true">
+            <KanbanColumn HeaderText="Not Started" KeyField="@(new List<string>() { MatchState.NotStarted.ToString() })" AllowToggle="true" IsExpanded="false" >
 
             </KanbanColumn>
             <KanbanColumn HeaderText="Ready to Draw" KeyField="@(new List<string>() {"Ready to Draw"})" AllowToggle="true"></KanbanColumn>
@@ -686,19 +686,8 @@
     private bool isMobileDevice = false;
     private IEnumerable<MatchView> UpcomingMatches => _matches.Values.Where(m => m.State is MatchState.NotStarted).OrderBy(m => m.MatchOrder);
     private IEnumerable<MatchView> CompletedMatches => _matches.Values.Where(m => m.State is MatchState.Completed).OrderBy(m => m.MatchOrder);
-    private IEnumerable<MatchView> ReadyToCardDrawMatches => UpcomingMatches.Where(m => m.PhaseName == _currentPhase && m.State is MatchState.NotStarted && !m.Players.Any(p => p.ToString().StartsWith("Unknown "))).OrderBy(m => m.MatchOrder);
+    private IEnumerable<MatchView> ReadyToCardDrawMatches => UpcomingMatches.Where(m => m.PhaseName == _currentPhase && !m.Players.Any(p => p.ToString().StartsWith("Unknown "))).OrderBy(m => m.MatchOrder);
     private IDictionary<string, string> _songImages = new Dictionary<string, string>();
-
-    private IEnumerable<(string header, bool showWinner,bool showMachine, IEnumerable<MatchView> matches)> MatchSections()
-    {
-        yield return ("In Progress Matches", false, true, InProgressMatches);
-        yield return ("Warming Up",false,true,WarmingUpMatches);
-        yield return ("Standby/Ready",false,false,StandbyMatches);
-        yield return ("Card Draw",false,false,CardDrawing);
-        yield return ("Ready To Card Draw",false,false,ReadyToCardDrawMatches);
-        yield return ("Future Matches",false,false,UpcomingMatches);
-        yield return ("Completed Matches",true,false,CompletedMatches);
-    }
 
     private bool _showAdminTools = false;
     private IDictionary<string, MatchView> _matches = new Dictionary<string, MatchView>();
@@ -722,9 +711,9 @@
 
     private IEnumerable<MatchCard> MatchCards => _matches.Values
         .OrderBy(m=>m.MatchOrder).Select(m => new MatchCard(
-        m.MatchName,
+        m.MatchName, m.PhaseName.ToString()==_currentPhase&&
         m.State == MatchState.NotStarted && m.Players.All(p => !p.ToString().StartsWith("Unknown ")) ? "Ready to Draw" : m.State.ToString(),
-        m.Players.Select(n=>n.ToString()).ToArray()));
+        m.Players.Select(n=>n.ToString()).Prepend("__________________").Prepend(m.MatchName.ToString()).ToArray()));
 
     private void SetPlayersPerMatch(int playerCount)
     {

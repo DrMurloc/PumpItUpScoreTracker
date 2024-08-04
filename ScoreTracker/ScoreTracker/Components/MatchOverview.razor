@@ -443,15 +443,16 @@
         {
             yield break;
         }
+        var orderedPlayers = _match.Players.OrderBy(p => Seeding[p]).ToArray();
+        yield return $"Seed Priority: {string.Join(" > ", orderedPlayers)}";
+        /*
         if (_match.Players.Length > 2)
         {
-            var orderedPlayers = _match.Players.OrderBy(p => Seeding[p]).ToArray();
             var currentPlayer = orderedPlayers[^(_match.VetoedCharts.Length % orderedPlayers.Length+1)];
             if (!FinishedVetoes())
             {
                 yield return $"{currentPlayer} to Veto";
             }
-            yield return $"Seed Priority: {string.Join(" -> ", orderedPlayers)}";
             yield return $"Veto Order and Cab + Pad Side pick priority follow Seed Priority";
             yield return $"Everyone gets one Arcade Singles warmup chart for their first set";
         }
@@ -466,7 +467,7 @@
             yield return "Pros Semi/Losers/Grand Finals: Protect x2 -> Veto x4 -> Protect x2 -> Veto x4";
             yield return $"Everyone gets one Arcade Singles warmup chart for their first set";
 
-        }
+        }*/
 
     }
 
