@@ -610,10 +610,9 @@
 
     private PointPort rightPort = new PointPort { ID = "rightPort", Offset = new DiagramPoint { X = 1, Y = .5 }, Visibility = PortVisibility.Connect };
     private PointPort leftPort = new PointPort { ID = "leftPort", Offset = new DiagramPoint { X = 0, Y = 0.5 }, Visibility = PortVisibility.Connect };
-
     private void OnNodeCreating(IDiagramObject obj)
     {
-        Node node = obj as Node;
+        var node = obj as Node;
         node.Shape.Type = Syncfusion.Blazor.Diagram.NodeShapes.Basic;
         (node.Shape as BasicShape).Shape = NodeBasicShapes.Rectangle;
         node.Style.StrokeColor = "#024249";
@@ -1141,9 +1140,13 @@
     private string _showingPhase = "";
     private void RedrawTournament(string phaseName)
     {
-        var connectors = new DiagramObjectCollection<Connector>();
-        var nodes = new DiagramObjectCollection<Node>();
+        if (_showingPhase != phaseName)
+        {
+            NodeCollection.Clear();
+            ConnectorCollection.Clear();
+        }
         _showingPhase = phaseName;
+        
         if (string.IsNullOrWhiteSpace(phaseName))
         {
             return;
@@ -1181,7 +1184,12 @@
                         Width = 200
                     };
                 ProjectMatchOntoNode(match, node);
-                nodes.Add(node);
+                var existingNode = NodeCollection.FirstOrDefault(n => n.ID == node.ID);
+                if (existingNode != null)
+                {
+                    NodeCollection.Remove(existingNode);
+                }
+                NodeCollection.Add(node);
                 if (match.MatchName.Contains("Loser"))
                 {
                     losersY += height + 10;
@@ -1213,11 +1221,14 @@
             {
                 connector.SourcePortID = leftPort.ID;
             }
-            connectors.Add(connector);
+            var existing = ConnectorCollection.FirstOrDefault(c => c.ID == connector.ID);
+            if (existing != null)
+            {
+                ConnectorCollection.Remove(existing);
+            }
+            ConnectorCollection.Add(connector);
         }
-        ConnectorCollection = connectors;
-        NodeCollection = nodes;
-        StateHasChanged();
+
     }
     private static int NearestPowerOf2(int n)
     {

@@ -172,7 +172,7 @@
     
     <MudText Typo="Typo.subtitle1">Week @_currentWeekInMonth</MudText>
 }
-else
+else if(_monthlyWeeks.Any())
 {
     <MudText Typo="Typo.subtitle1">@((_monthlyWeeks.Min() - TimeSpan.FromDays(7)).ToString("d")) - @((_monthlyWeeks.Max()-TimeSpan.FromDays(7)).ToString("d"))</MudText>
 }

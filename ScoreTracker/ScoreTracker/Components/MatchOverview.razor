@@ -119,14 +119,14 @@
 
                                     @if (!_match.ProtectedCharts.Contains(chart.Id) && !_match.VetoedCharts.Contains(chart.Id))
                                     {
+                                        @if (_match.Players.Length == 2)
+                                        {
+                                            <MudTooltip Text="Protect">
+                                                <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Shield" OnClick="() => ProtectChart(chartId)" Color="Color.Success"></MudIconButton>
+                                            </MudTooltip>
+                                        }
                                         @if (!FinishedVetoes())
                                         {
-                                            @if (_match.Players.Length == 2)
-                                            {
-                                                <MudTooltip Text="Protect">
-                                                    <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Shield" OnClick="() => ProtectChart(chartId)" Color="Color.Success"></MudIconButton>
-                                                </MudTooltip>
-                                            }
                                             <MudTooltip Text="Veto">
                                                 <MudIconButton Disabled="_isSaving" Icon="@Icons.Material.Filled.Delete" OnClick="() => VetoChart(chartId)" Color="Color.Error"></MudIconButton>
                                             </MudTooltip>
