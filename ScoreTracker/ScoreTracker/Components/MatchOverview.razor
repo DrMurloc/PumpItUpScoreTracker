@@ -263,10 +263,10 @@
                             }
                         </MudSelect>
                     </MudItem>
-                    <MudItem xs="12">
-                        <MudButton Disabled="!IsFinished(_match) || _isSaving" Variant="Variant.Filled" OnClick="CalculateScores">Finalize Scores</MudButton>
-                    </MudItem>
                 }
+                <MudItem xs="12">
+                    <MudButton Disabled="!IsFinished(_match) || _isSaving" Variant="Variant.Filled" OnClick="CalculateScores">Finalize Scores</MudButton>
+                </MudItem>
                 break;
                 case MatchState.Finalizing:
 
