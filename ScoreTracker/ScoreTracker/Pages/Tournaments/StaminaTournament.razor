@@ -30,6 +30,7 @@
                 <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.AverageDifficulty">Average Difficulty</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>(int)e.AverageScore">Average Score</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.PassRate">Pass Rate</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.AveragePps">Average PPS</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.TotalRestTime">Rest Time</MudTableSortLabel></MudTh>
             }
             <MudTh>Verification</MudTh>
@@ -51,6 +52,7 @@
                     <ScoreBreakdown Score="@context.AverageScore" Plate="@context.AveragePlate"></ScoreBreakdown>
                 </MudTd>
                 <MudTd>@TwoDecimalPlaces((double)context.PassRate*100.0)</MudTd>
+                <MudTd>@context.AveragePps.ToString("N2")</MudTd>
                 <MudTd>@RestTime(context.TotalRestTime)</MudTd>
             }
             <MudTd>
