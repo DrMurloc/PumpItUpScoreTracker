@@ -249,6 +249,8 @@
         </PagerContent>
     </MudTable>
 }
+@if (_matches.Any())
+{
 
     <SfKanban TValue="MatchCard" CssClass="kanban-overview" KeyField="Status" DataSource="MatchCards" EnableTooltip="true" AllowDragAndDrop="false">
         <KanbanColumns>
@@ -278,10 +280,12 @@
                     }
                 </MudPaper>
             </Template>
-    </KanbanCardSettings>
+        </KanbanCardSettings>
 
         <KanbanEvents TValue="MatchCard" DialogOpen="@OnKanbanDialogOpen"></KanbanEvents>
-</SfKanban>
+    </SfKanban>
+    
+}
 <br/>
 @if (!_showDiagram)
 {
