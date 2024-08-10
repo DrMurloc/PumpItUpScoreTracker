@@ -35,6 +35,8 @@ public sealed record MatchView(Name MatchName, Name PhaseName, int MatchOrder, i
 
         var currentPosition = 0;
 
+        if (match.FinalPlaces.Length < match.Players.Length)
+            match = match with { FinalPlaces = match.Players.ToArray() };
         foreach (var tie in match.Players.GroupBy(p => match.Points[p].Sum())
                      .OrderByDescending(g => g.Key))
         foreach (var tieBreakerResult in tie.OrderByDescending(name => match.Scores[name].Sum(s => s)))
