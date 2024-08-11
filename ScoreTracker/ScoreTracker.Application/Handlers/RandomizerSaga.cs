@@ -50,7 +50,8 @@ namespace ScoreTracker.Application.Handlers
             RandomSettings settings)
         {
             var calculatedWeights = new Dictionary<Guid, int>();
-            foreach (var chart in charts.Values)
+            foreach (var chart in
+                     charts.Values.Where(c => !settings.ChartIds.Any() || settings.ChartIds.Contains(c.Id)))
             {
                 if (settings.UseScoringLevels && chart.ScoringLevel == null)
                 {

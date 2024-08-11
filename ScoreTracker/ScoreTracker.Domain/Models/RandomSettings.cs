@@ -53,6 +53,7 @@ namespace ScoreTracker.Domain.Models
             { 5, 0 }
         };
 
+        public ISet<Guid> ChartIds { get; set; } = new HashSet<Guid>();
         public ResultsOrdering Ordering { get; set; } = ResultsOrdering.Randomized;
         public bool AllowRepeats { get; set; } = false;
         public int Count { get; set; } = 3;
