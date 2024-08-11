@@ -161,6 +161,10 @@
             </MudItem>
         </MudGrid>
     }
+    @if (CurrentUser.IsLoggedInAsAdmin)
+    {
+        <MudText>@_selectedChart.Id</MudText>
+    }
 }
 <MudDialog @bind-Visible="_showChartOverview">
     <DialogContent>
