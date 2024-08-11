@@ -8,6 +8,7 @@
 @using ScoreTracker.Domain.Models.Titles.Phoenix
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Web.Components
+@using Syncfusion.Blazor.Data
 
 <PageTitle>@_tournamentName CoOp Matchmaker</PageTitle>
 
@@ -18,7 +19,7 @@
 {
     <br/><br/>
     <MudText Typo="Typo.h5">Teams:</MudText>
-    <MudTable T="CoOpTeam" Items="_teams.OrderByDescending(t => t.Seed)">
+    <MudTable T="CoOpTeam" Items="_teams.OrderByDescending(t => _teamSeeds[t.TeamName])">
         <HeaderContent>
             <MudTh>Seed</MudTh>
             <MudTh>Team Name</MudTh>
@@ -26,7 +27,7 @@
             <MudTh>Player 2</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd>@context.Seed</MudTd>
+            <MudTd>@_teamSeeds[context.TeamName]</MudTd>
             <MudTd>@context.TeamName</MudTd>
             <MudTd>@context.Player1.Tag</MudTd>
             <MudTd>@context.Player2.Tag</MudTd>
@@ -39,9 +40,9 @@
     <br />
     <br />
     <MudText Typo="Typo.h5">Players without teams</MudText>
-    @foreach (var individualPlayer in _individualPlayers.OrderBy(p => p.Tag))
+    @foreach (var individualPlayer in _individualPlayers.OrderByDescending(p => _personSeeds[p.Tag]))
     {
-        <MudText Typo="Typo.subtitle1">@individualPlayer.Tag</MudText>
+        <MudText Typo="Typo.subtitle1">@individualPlayer.Tag - @_personSeeds[individualPlayer.Tag]</MudText>
     }
 }
 
@@ -175,7 +176,7 @@
     private bool _isSaving = false;
     private IEnumerable<string> _difficultyTitles = Array.Empty<string>();
     private ISet<string> _existingNames = new HashSet<string>();
-    private IEnumerable<string> _coOpTitles = Array.Empty<string>();
+    private string[] _coOpTitles = Array.Empty<string>();
 
     private void SetPlayer1Name(string name)
     {
@@ -221,12 +222,16 @@
         _teams.Add(team);
         _isSaving = false;
     }
+
+    private IDictionary<string, int> _teamSeeds = new Dictionary<string, int>();
+    private IDictionary<string, int> _personSeeds = new Dictionary<string, int>();
     [Parameter]
     [SupplyParameterFromQuery(Name = "TournamentId")]
     public Guid TournamentId { get; set; }
     protected override async Task OnInitializedAsync()
     {
         _teams = (await Qualifiers.GetCoOpTeams(TournamentId)).ToList();
+
         _individualPlayers = (await Qualifiers.GetIndividualCoopPlayers(TournamentId)).ToList();
         var tournament = (await Mediator.Send(new GetAllTournamentsQuery()))
             .FirstOrDefault(t => t.Id == TournamentId);
@@ -256,5 +261,21 @@
         }
         _coOpTitles = coOpTitles.Select(t => t.Title.Name.ToString()).ToArray();
         _difficultyTitles = difficultyTitles.Select(t => t.Title.Name.ToString()).ToArray();
+        _teamSeeds = _teams.ToDictionary(t => t.TeamName.ToString(), t => GetSeed(t.Player2) + GetSeed(t.Player1));
+        _personSeeds = _individualPlayers.ToDictionary(p => p.Tag.ToString(), p => GetSeed(p));
+    }
+
+    private int GetSeed(CoOpPlayer player)
+    {
+        var title = player.HighestStandardTitle == null ? 0 :
+            player.HighestStandardTitle.Value.Contains("Master") ? 8 :
+                player.HighestStandardTitle.Value.Contains("Expert") ? 6 :
+                    player.HighestStandardTitle.Value.Contains("Advanced") ? 4 :
+                        player.HighestStandardTitle.Value.Contains("Intermediate") ? 2 : 0;
+        var coOp = player.HighestCoOpTitle==null?0:
+        _coOpTitles.Contains(player.HighestCoOpTitle.ToString())?
+            Array.IndexOf(_coOpTitles,player.HighestCoOpTitle.ToString())+1:
+        0;
+        return title + coOp;
     }
 }
