@@ -8,6 +8,7 @@ using ScoreTracker.Data.Apis.Contracts;
 using ScoreTracker.Data.Apis.Dtos;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Data.Apis;
 
@@ -24,11 +25,13 @@ public sealed class PiuGameApi : IPiuGameApi
 
     private readonly HttpClient _client;
     private readonly ILogger _logger;
+    private readonly ICurrentUserAccessor _currentUser;
 
-    public PiuGameApi(HttpClient client, ILogger<PiuGameApi> logger)
+    public PiuGameApi(HttpClient client, ILogger<PiuGameApi> logger, ICurrentUserAccessor currentUser)
     {
         _client = client;
         _logger = logger;
+        _currentUser = currentUser;
     }
 
     public async Task<PiuGameGetSongsResult> Get20AboveSongs(int page, CancellationToken cancellationToken)
@@ -256,10 +259,11 @@ public sealed class PiuGameApi : IPiuGameApi
                 .FirstOrDefault()?.GetAttributeValue("src", "Unknown");
             if (chartTypeUrl == null) continue;
             var chartType = GetChartTypeFromUrl(chartTypeUrl);
+            if (chartType == null) continue;
             results.Add(new PiuGameGetChartPopularityLeaderboardResult.Entry
             {
                 ChartLevel = level,
-                ChartType = chartType,
+                ChartType = chartType!.Value,
                 Place = place,
                 SongName = HttpUtility.HtmlDecode(scoreP.InnerText)
             });
@@ -304,6 +308,7 @@ public sealed class PiuGameApi : IPiuGameApi
                     .FirstOrDefault()?.GetAttributeValue("src", "Unknown");
 
                 var chartType = GetChartTypeFromUrl(chartTypeUrl);
+                if (chartType == null) continue;
                 var difficultyLevelUrls = card
                     .SelectNodes(@".//div[contains(@class,'stepBall_img_wrap')]//div[contains(@class,'numw')]//img")
                     .Select(i => i.GetAttributeValue("src", "Unknown")).ToArray();
@@ -331,7 +336,7 @@ public sealed class PiuGameApi : IPiuGameApi
                 var plate = scoreScreen.PlateText;
                 results.Add(new PiuGameGetRecentScoresResult
                 {
-                    ChartType = chartType,
+                    ChartType = chartType!.Value,
                     Level = level,
                     NoteCount = perfects + greats + goods + bads + misses,
                     Plate = plate,
@@ -342,7 +347,10 @@ public sealed class PiuGameApi : IPiuGameApi
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error parsing recent scores");
+                _logger.LogError(e,
+                    _currentUser.IsLoggedIn
+                        ? $"Error parsing recent score for {_currentUser.User.Id} {_currentUser.User.Name} - {_currentUser.User.GameTag}"
+                        : "Error parsing recent scores");
             }
 
         return results;
@@ -413,7 +421,7 @@ public sealed class PiuGameApi : IPiuGameApi
             }
     }
 
-    private ChartType GetChartTypeFromUrl(string chartTypeUrl)
+    private ChartType? GetChartTypeFromUrl(string chartTypeUrl)
     {
         var typeMatch = TypeRegex.Match(chartTypeUrl);
         return typeMatch.Success
@@ -421,7 +429,8 @@ public sealed class PiuGameApi : IPiuGameApi
             {
                 "c" => ChartType.CoOp,
                 "s" => ChartType.Single,
-                "d" => ChartType.Double
+                "d" => ChartType.Double,
+                _ => null
             }
             : ChartType.SinglePerformance;
     }
@@ -498,7 +507,7 @@ public sealed class PiuGameApi : IPiuGameApi
             {
                 scores.Add(new PiuGameGetBestScoresResult.ScoreDto
                 {
-                    ChartType = chartType,
+                    ChartType = chartType!.Value,
                     Level = int.Parse(difficulty),
                     Plate = PhoenixPlateHelperMethods.ParseShorthand(plate),
                     Score = int.Parse(score),
@@ -507,6 +516,7 @@ public sealed class PiuGameApi : IPiuGameApi
             }
             catch (Exception e)
             {
+                _logger.LogError(e, "Error parsing best score");
             }
         }
 

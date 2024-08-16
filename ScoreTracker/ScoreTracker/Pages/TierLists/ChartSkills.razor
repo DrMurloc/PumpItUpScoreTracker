@@ -850,15 +850,20 @@
         _messages = _finalGroupings.ToDictionary(kv => kv.Key, kv => "");
         foreach (var group in _finalGroupings)
         {
-            if (!group.Any(e => (_isBroken.TryGetValue(e.ChartId,out var s) && !s)))
+            var clearRate = 0.0;
+            if (group.Any(e => (_isBroken.TryGetValue(e.ChartId,out var s) && !s)))
             {
-                _messages[group.Key] = "0% Cleared";
+                clearRate = group.Count(e => _isBroken.TryGetValue(e.ChartId, out var s) && !s) / (double)group.Count();
+            }
+            var scoredCharts = group.Where(e => _scores[e.ChartId] > 0).ToArray();
+            if (!scoredCharts.Any())
+            {
+                _messages[group.Key] = $"{clearRate * 100.0:0.00}% Cleared";
                 continue;
             }
-            var clearRate = group.Count(e => _isBroken.TryGetValue(e.ChartId, out var s) && !s) / (double)group.Count();
-            var minScore =(PhoenixScore)group.Where(e => _scores[e.ChartId] > 0).Min(e =>(int) _scores[e.ChartId]);
-            var avgScore = (PhoenixScore)(int)group.Where(e => _scores[e.ChartId] > 0).Average(e => _scores[e.ChartId]);
-            var maxScore = (PhoenixScore) group.Where(e => _scores[e.ChartId]>0).Max(e => (int)_scores[e.ChartId]);
+            var minScore = (PhoenixScore)scoredCharts.Min(e => (int)_scores[e.ChartId]);
+            var avgScore = (PhoenixScore)(int)scoredCharts.Average(e => _scores[e.ChartId]);
+            var maxScore = (PhoenixScore)scoredCharts.Max(e => (int)_scores[e.ChartId]);
             _messages[group.Key] = $"{clearRate * 100.0:0.00}% Cleared, {minScore} ({minScore.LetterGrade.GetName()}) - {maxScore} ({maxScore.LetterGrade.GetName()}), {avgScore} ({avgScore.LetterGrade.GetName()}) Average";
         }
         var charts = _finalEntries.Select(e => _charts[e.ChartId]).ToArray();
