@@ -47,7 +47,44 @@
         
         }
     }
+    <MudItem xs="12">
+        <MudText Typo="Typo.h6">Projected PUMBILITY Gains:</MudText>
+    </MudItem>
+    @foreach (var gain in _projectedGains.OrderByDescending(kv => kv.Value).Take(20))
+    {
+        var chart = _charts[gain.Key];
+        <MudItem xs="6" sm="3" md="2">
 
+            <MudCard Class="chart-card">
+                <MudCardHeader Style=@($"background-image:url(\"{chart.Song.ImagePath}\");")>
+
+                    <DifficultyBubble Chart="chart"></DifficultyBubble>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudText>Expected Grade</MudText>
+                    @if (_allScores.TryGetValue(chart.Id, out var record) &&record.Score != null)
+                    {
+                        <MudText>
+                            @((DateTimeOffset.Now - record.RecordedDate).TotalDays.ToString("N0") + " " + @L["Days Old"])
+                        </MudText>
+                        <MudTooltip Text="@record.Score!.Value.ToString()">
+                            <LetterGradeIcon Grade="record.Score!.Value.LetterGrade" IsBroken="record.IsBroken"></LetterGradeIcon>
+                        </MudTooltip>
+                        <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"></MudIcon>
+                        
+                    }
+                    <MudTooltip Text="@_expectedScore[chart.Id].ToString()">
+                        <LetterGradeIcon Grade="_expectedScore[chart.Id].LetterGrade"></LetterGradeIcon>
+                    </MudTooltip>
+                    <MudText>+@_projectedGains[chart.Id].ToString("N0") PUMBILITY</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudSpacer></MudSpacer>
+                    <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => VideoDisplayer.ShowVideo(chart.Id))"></MudIconButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    }
 </MudGrid>
 
 
@@ -55,6 +92,8 @@
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
 @inject ChartVideoDisplayer VideoDisplayer;
+@inject IPlayerStatsRepository PlayerStats;
+@inject IPhoenixRecordRepository PhoenixRecords;
 @code {
 
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
@@ -79,8 +118,89 @@
         TierListCategory.Medium=>"Standard Rating",
         TierListCategory.Hard=>"Low Rating",
         TierListCategory.VeryHard=>"Very Low Rating",
-        TierListCategory.Underrated=>"Extremely High Rating",
+        TierListCategory.Underrated=>"Extremely Low Rating",
         TierListCategory.Unrecorded => "Runners Up (51-100)",_ => throw new ArgumentOutOfRangeException(nameof(category), category, null)};
+
+    private IDictionary<Guid, PhoenixScore> _expectedScore = new Dictionary<Guid, PhoenixScore>();
+    private IDictionary<Guid, int> _projectedGains = new Dictionary<Guid, int>();
+    private async Task ProjectScores()
+    {
+        _expectedScore = new Dictionary<Guid, PhoenixScore>();
+        var levelRange = _tierList.Where(kv => kv.Key != TierListCategory.Unrecorded).SelectMany(t => t.Value).Select(t => _charts[t].Level)
+            .Distinct().ToArray();
+        var lowestLevel = levelRange.Min();
+        var highestLevel = levelRange.Max();
+
+        var stats = await PlayerStats.GetStats(CurrentUser.User.Id, CancellationToken.None);
+        
+        var singlesLevel = stats.SinglesCompetitiveLevel <= 10 ? 10.0 : stats.SinglesCompetitiveLevel;
+        var doublesLevel = stats.DoublesCompetitiveLevel <= 10 ? 10.0 : stats.DoublesCompetitiveLevel;
+
+        var singlesPlayers = (await PlayerStats.GetPlayersByCompetitiveRange(ChartType.Single, singlesLevel, .5, CancellationToken.None)).ToArray();
+        var doublesPlayers = (await PlayerStats.GetPlayersByCompetitiveRange(ChartType.Double, doublesLevel, .5, CancellationToken.None)).ToArray();
+        foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
+        {
+            var playerScores = (await PhoenixRecords.GetRecordedScores(chartType == ChartType.Single ? singlesPlayers : doublesPlayers, chartType, lowestLevel, highestLevel, CancellationToken.None))
+                .Where(s => s is { IsBroken: false,Score: not null })
+                .GroupBy(r => _charts[r.ChartId].Level)
+                .ToDictionary(g => g.Key, g => g.ToArray());
+
+            foreach (var levelGroup in playerScores)
+            {
+                var chartAverages = levelGroup.Value
+                    .GroupBy(s=>s.ChartId)
+                    .ToDictionary(g=>g.Key,g=>g.Average(c=>(int)c.Score!.Value));
+                var myScores = _scores.Where(kv => kv.Value.Score != null && chartAverages.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value.Score!.Value);
+
+                if (myScores.Count() < 5)
+                {
+                    continue;
+                }
+                var chartAvg = chartAverages.Values.Average();
+                var chartStd = TierListSaga.StdDev(chartAverages.Values, false);
+
+                var myAvg = myScores.Average(kv => (int)kv.Value);
+                var myStd = TierListSaga.StdDev(myScores.Values.Select(s => (int)s), false);
+
+                foreach (var chartAverage in chartAverages)
+                {
+                    var estimated = myAvg + myStd * ((chartAverage.Value - chartAvg)/chartStd);
+                    if (estimated < 700000)
+                    {
+                        continue;
+                    }
+                    _expectedScore[chartAverage.Key] = estimated > 1000000 ? 1000000 : (PhoenixScore)(int)estimated;
+                }
+
+
+
+            }
+        }
+
+        var scoring = ScoringConfiguration.PumbilityScoring;
+        var lowestScore = _ratings.OrderByDescending(kv => kv.Value).Take(50).Min(kv => kv.Value);
+        foreach (var kv in _expectedScore)
+        {
+            var expectedPumbility = scoring.GetScore(_charts[kv.Key], kv.Value, PhoenixPlate.ExtremeGame, false);
+            var expectedGains = expectedPumbility - lowestScore;
+            if (expectedGains <= 0)
+            {
+                continue;
+            }
+            if (_ratings.TryGetValue(kv.Key, out var rating))
+            {
+                expectedGains = expectedPumbility - rating;
+                if (expectedGains <= 0)
+                {
+                    continue;
+                }
+            }
+            _projectedGains[kv.Key] = expectedGains;
+        }
+
+    }
+
+    private IDictionary<Guid, RecordedPhoenixScore> _allScores = new Dictionary<Guid, RecordedPhoenixScore>();
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn)
@@ -90,6 +210,7 @@
         }
         var scoring = ScoringConfiguration.PumbilityScoring;
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+        _allScores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id))).Where(r=>r.Score!=null).ToDictionary(s => s.ChartId);
         _scores = (await Mediator.Send(new GetTop50ForPlayerQuery(CurrentUser.User.Id, null, 100))).ToDictionary(s => s.ChartId);
         _ratings = _scores.ToDictionary(kv => kv.Key, kv => scoring.GetScore(_charts[kv.Key], kv.Value.Score!.Value, kv.Value.Plate ?? PhoenixPlate.RoughGame, kv.Value.IsBroken));
         var top50 = _scores.Values.OrderByDescending(s => _ratings[s.ChartId]).Take(50);
@@ -101,7 +222,7 @@
         _tierList[TierListCategory.Unrecorded] = _scores.Values.OrderByDescending(s => _ratings[s.ChartId]).Skip(50).Select(s => s.ChartId).ToArray();
 
 
-
+        await ProjectScores();
     }
 
 }

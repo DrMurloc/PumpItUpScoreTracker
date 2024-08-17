@@ -4,6 +4,7 @@ using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
+using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
@@ -110,6 +111,23 @@ namespace ScoreTracker.Data.Repositories
                     entity.AverageSinglesScore, entity.AverageSinglesLevel, entity.DoublesRating,
                     entity.AverageDoublesScore, entity.AverageDoublesLevel, entity.CompetitiveLevel,
                     entity.SinglesCompetitiveLevel, entity.DoublesCompetitiveLevel)).ToArrayAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<Guid>> GetPlayersByCompetitiveRange(ChartType? chartType, double competitiveLevel,
+            double range,
+            CancellationToken cancellationToken)
+        {
+            var query = _database.PlayerStats.AsQueryable();
+            var min = competitiveLevel - range;
+            var max = competitiveLevel + range;
+            if (chartType == null)
+                query = query.Where(p => p.CompetitiveLevel >= min && p.CompetitiveLevel <= max);
+            else if (chartType == ChartType.Single)
+                query = query.Where(p => p.DoublesCompetitiveLevel >= min && p.DoublesCompetitiveLevel <= max);
+            else if (chartType == ChartType.Double)
+                query = query.Where(p => p.SinglesCompetitiveLevel >= min && p.SinglesCompetitiveLevel <= max);
+
+            return await query.Select(p => p.UserId).Distinct().ToArrayAsync(cancellationToken);
         }
 
         public async Task<PlayerStatsRecord> Handle(GetPlayerStatsQuery request, CancellationToken cancellationToken)

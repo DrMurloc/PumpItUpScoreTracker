@@ -1,0 +1,28 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.ValueTypes
+@using Align = MudBlazor.Align
+@namespace ScoreTracker.Web.Components
+
+@if (Grade != null)
+{
+    <MudImage tabindex="0" Src="@LetterGradeImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+
+}
+@code {
+    [Parameter]
+    public PhoenixLetterGrade? Grade { get; set; }
+
+    [Parameter]
+    public int Height { get; set; } = 20;
+    [Parameter]
+    public bool IsBroken { get; set; } = false;
+
+    private string LetterGradeImage => 
+        $"https://piuimages.arroweclip.se/letters/{Grade?.ToString().ToLower()}{BrokenPiece}.png";
+
+
+    private string BrokenPiece => IsBroken ? "_broken" : "";
+
+
+}

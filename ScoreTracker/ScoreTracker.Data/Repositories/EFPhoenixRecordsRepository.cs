@@ -89,6 +89,25 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
         return (await GetCachedScores(userId, cancellationToken)).Values;
     }
 
+    public async Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(IEnumerable<Guid> userId,
+        ChartType chartType, DifficultyLevel minimumLevel, DifficultyLevel maximumLevel,
+        CancellationToken cancellationToken)
+    {
+        var mixId = MixGuids[MixEnum.Phoenix];
+        var intMin = (int)minimumLevel;
+        var intMax = (int)maximumLevel;
+        var chartTypeString = chartType.ToString();
+        var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+        return (await (from cm in database.ChartMix
+                join c in database.Chart on cm.ChartId equals c.Id
+                join pba in database.PhoenixBestAttempt on c.Id equals pba.ChartId
+                where cm.MixId == mixId && cm.Level >= intMin && cm.Level <= intMax && c.Type == chartTypeString
+                select pba).ToArrayAsync(cancellationToken))
+            .Select(pb =>
+                new RecordedPhoenixScore(pb.ChartId, pb.Score, PhoenixPlateHelperMethods.TryParse(pb.Plate),
+                    pb.IsBroken, pb.RecordedDate));
+    }
+
     public async Task<RecordedPhoenixScore?> GetRecordedScore(Guid userId, Guid chartId,
         CancellationToken cancellationToken = default)
     {
