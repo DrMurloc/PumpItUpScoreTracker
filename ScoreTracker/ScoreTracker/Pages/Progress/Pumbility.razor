@@ -49,7 +49,25 @@
     }
     <MudItem xs="12">
         <MudText Typo="Typo.h6">Projected PUMBILITY Gains (BETA):</MudText>
+        <MudText Typo="Typo.subtitle1">Requires 20% of folder cleared for score projections.</MudText>
     </MudItem>
+    @if (!_projectedGains.Any())
+    {
+        <MudItem xs="12">
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary">Computing</MudProgressLinear>
+        </MudItem>
+        <br/>
+        <br/>
+    }
+    @foreach (var kv in _insufficientData.OrderBy(kv=>kv.Key.Item2).ThenBy(kv=>kv.Key.Item1))
+    {
+        <MudItem xs="12">
+            <MudImage tabindex="0" Src=@($"https://piuimages.arroweclip.se/difficulty/Phoenix/{kv.Key.Item1.GetShortHand().ToLower()}{kv.Key.Item2}.png") Height="20" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+            <LetterGradeIcon Grade="PhoenixLetterGrade.AA"></LetterGradeIcon>
+            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"></MudIcon>
+            +@kv.Value.ToString("N0") PUMBILITY
+        </MudItem>
+    }
     @foreach (var gain in _projectedGains.OrderByDescending(kv => kv.Value))
     {
         var chart = _charts[gain.Key];
@@ -123,6 +141,7 @@
 
     private IDictionary<Guid, PhoenixScore> _expectedScore = new Dictionary<Guid, PhoenixScore>();
     private IDictionary<Guid, int> _projectedGains = new Dictionary<Guid, int>();
+    private IDictionary<(ChartType,DifficultyLevel), int> _insufficientData = new Dictionary<(ChartType, DifficultyLevel), int>();
     private async Task ProjectScores()
     {
         _expectedScore = new Dictionary<Guid, PhoenixScore>();
@@ -136,8 +155,10 @@
         var singlesLevel = stats.SinglesCompetitiveLevel <= 10 ? 10.0 : stats.SinglesCompetitiveLevel;
         var doublesLevel = stats.DoublesCompetitiveLevel <= 10 ? 10.0 : stats.DoublesCompetitiveLevel;
 
+        var lowestScore = _ratings.OrderByDescending(kv => kv.Value).Take(50).Min(kv => kv.Value);
         var singlesPlayers = (await PlayerStats.GetPlayersByCompetitiveRange(ChartType.Single, singlesLevel, .5, CancellationToken.None)).ToArray();
         var doublesPlayers = (await PlayerStats.GetPlayersByCompetitiveRange(ChartType.Double, doublesLevel, .5, CancellationToken.None)).ToArray();
+        var scoring = ScoringConfiguration.PumbilityScoring;
         foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
         {
             var playerScores = (await PhoenixRecords.GetRecordedScores(chartType == ChartType.Single ? singlesPlayers : doublesPlayers, chartType, lowestLevel, highestLevel, CancellationToken.None))
@@ -150,10 +171,15 @@
                 var chartAverages = levelGroup.Value
                     .GroupBy(s=>s.ChartId)
                     .ToDictionary(g=>g.Key,g=>g.Average(c=>(int)c.Score!.Value));
-                var myScores = _scores.Where(kv => kv.Value.Score != null && chartAverages.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value.Score!.Value);
+                var myScores = _allScores.Where(kv => kv.Value.Score != null && chartAverages.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value.Score!.Value);
 
-                if (myScores.Count() < 5)
+                if (myScores.Count()<(int)Math.Floor(.2*chartAverages.Count()))
                 {
+                    var diff = scoring.GetScore(chartType, levelGroup.Key, PhoenixLetterGrade.AA.GetMinimumScore()) - lowestScore;
+                    if (myScores.Any() && diff>0)
+                    {
+                        _insufficientData[(chartType,levelGroup.Key)] = diff;
+                    }
                     continue;
                 }
                 var chartAvg = chartAverages.Values.Average();
@@ -164,12 +190,15 @@
 
                 foreach (var chartAverage in chartAverages)
                 {
-                    var estimated = myAvg + myStd * ((chartAverage.Value - chartAvg)/chartStd);
+                    var ratio = chartStd == 0 ? 1.0 : myStd / chartStd;
+                    var estimated = myAvg + ratio*(chartAverage.Value - chartAvg);
                     if (estimated < 700000)
                     {
                         continue;
                     }
+
                     _expectedScore[chartAverage.Key] = estimated > 1000000 ? 1000000 : (PhoenixScore)(int)estimated;
+                    
                 }
 
 
@@ -177,8 +206,6 @@
             }
         }
 
-        var scoring = ScoringConfiguration.PumbilityScoring;
-        var lowestScore = _ratings.OrderByDescending(kv => kv.Value).Take(50).Min(kv => kv.Value);
         foreach (var kv in _expectedScore)
         {
             var expectedPumbility = scoring.GetScore(_charts[kv.Key], kv.Value, PhoenixPlate.ExtremeGame, false);
