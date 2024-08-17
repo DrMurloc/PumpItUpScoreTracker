@@ -48,9 +48,9 @@
         }
     }
     <MudItem xs="12">
-        <MudText Typo="Typo.h6">Projected PUMBILITY Gains:</MudText>
+        <MudText Typo="Typo.h6">Projected PUMBILITY Gains (BETA):</MudText>
     </MudItem>
-    @foreach (var gain in _projectedGains.OrderByDescending(kv => kv.Value).Take(20))
+    @foreach (var gain in _projectedGains.OrderByDescending(kv => kv.Value))
     {
         var chart = _charts[gain.Key];
         <MudItem xs="6" sm="3" md="2">
