@@ -92,7 +92,8 @@ public sealed class EFChartRepository : IChartRepository
             : chartVideos.Values;
     }
 
-    public async Task<Guid> CreateSong(Name name, Uri imageUrl, SongType type, TimeSpan duration, Name songArtist,
+    public async Task<Guid> CreateSong(Name name, Name koreanName, Uri imageUrl, SongType type, TimeSpan duration,
+        Name songArtist,
         Bpm bpm,
         CancellationToken cancellationToken = default)
     {
@@ -109,7 +110,12 @@ public sealed class EFChartRepository : IChartRepository
         };
         await _database.Song.AddAsync(newSong, cancellationToken);
         await _database.SaveChangesAsync(cancellationToken);
-
+        await _database.SongNameLanguage.AddAsync(new SongNameLanguageEntity
+        {
+            CultureCode = "ko-KR",
+            EnglishSongName = name.ToString(),
+            SongName = koreanName.ToString()
+        }, cancellationToken);
         return newSong.Id;
     }
 

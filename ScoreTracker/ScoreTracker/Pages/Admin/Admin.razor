@@ -77,13 +77,16 @@ Do It
     <MudCardHeader>Create Song</MudCardHeader>
     <MudCardContent>
         <MudGrid>
-            <MudItem xs="4">
+            <MudItem xs="3">
                 <MudTextField T="string" @bind-Value="_songName" Label="Song Name"></MudTextField>
             </MudItem>
-            <MudItem xs="4">
+            <MudItem xs="3">
+                <MudTextField T="string" @bind-Value="_koreanName" Label="Korean Name"></MudTextField>
+            </MudItem>
+            <MudItem xs="3">
                 <MudTextField T="string" @bind-Value="_imageUrl" Label="Image Name"></MudTextField>
             </MudItem>
-            <MudItem xs="4">
+            <MudItem xs="3">
                 <MudSelect T="SongType" @bind-Value="_songType" Label="Song Type">
                     @foreach (var type in Enum.GetValues<SongType>())
                     {
@@ -170,6 +173,7 @@ Do It
     private IEnumerable<string> SongNames = Array.Empty<string>();
     private string _videoUrl = string.Empty;
     private string _videoChannel = string.Empty;
+    private string _koreanName = string.Empty;
     private Task<IEnumerable<string>> Search(string song) =>
         Task.FromResult(SongNames.Where(n => n.ToLower().Contains(song?.ToLower() ?? ""))
             .OrderBy(n => n.Equals(song, StringComparison.OrdinalIgnoreCase) ? 0 : 1).ToArray().AsEnumerable());
@@ -280,7 +284,7 @@ Do It
     private async Task CreateSong()
     {
         _isSaving = true;
-        var songId = await _charts.CreateSong(_songName, new Uri($"https://piuimages.arroweclip.se/songs/{_imageUrl}"), _songType,TimeSpan.FromMinutes(_minutes).Add(TimeSpan.FromSeconds(_seconds)),_songArtist,Bpm.From(_minBpm,_maxBpm));
+        var songId = await _charts.CreateSong(_songName,_koreanName, new Uri($"https://piuimages.arroweclip.se/songs/{_imageUrl}"), _songType,TimeSpan.FromMinutes(_minutes).Add(TimeSpan.FromSeconds(_seconds)),_songArtist,Bpm.From(_minBpm,_maxBpm));
         foreach (var chart in _newCharts)
         {
             await _charts.CreateChart(MixEnum.Phoenix, songId, chart.Type, chart.Level, chart.ChannelName,new Uri($"https://www.youtube.com/embed/{chart.YoutubeHash}"),chart.StepArtist);
@@ -288,6 +292,7 @@ Do It
         }
         _charts.ClearCache();
         _songName = string.Empty;
+        _koreanName = string.Empty;
         _imageUrl = string.Empty;
         _songType = SongType.Arcade;
         _newCharts.Clear();

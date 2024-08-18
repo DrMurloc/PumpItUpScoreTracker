@@ -52,8 +52,8 @@
         <MudText Typo="Typo.h5">@progress.Title.Name - <ParagonLevelImage Level="progress.ParagonLevel"></ParagonLevelImage></MudText>
     </MudItem>
     <MudItem xs="12" sm="8" md="9">
-        <MudProgressLinear Color="@(progress.NextParagonProgress >= progress.Title.CompletionRequired ? Color.Success : Color.Primary)" Value="100.0 * (progress.NextParagonProgress / (double)progress.RequiredAaCount)">
-            @if (progress.NextParagonProgress < progress.RequiredAaCount)
+        <MudProgressLinear Color="@(progress.ParagonLevel==ParagonLevel.PG ? Color.Success : Color.Primary)" Value="progress.ParagonLevel==ParagonLevel.PG?100:100.0 * (progress.NextParagonProgress / (double)progress.RequiredAaCount)">
+            @if (progress.ParagonLevel!=ParagonLevel.PG)
             {
                 <MudText Typo="Typo.subtitle1">
                     @progress.NextParagonProgress / @progress.RequiredAaCount to @((progress.ParagonLevel+1).GetName())
