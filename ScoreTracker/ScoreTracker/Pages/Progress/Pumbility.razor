@@ -48,16 +48,49 @@
         }
     }
     <MudItem xs="12">
+        <MudText Typo="Typo.h6">PUMBILITY Gain Calculator</MudText>
+    </MudItem>
+    <MudItem xs="4" sm="3">
+        <MudNumericField T="int" Min="1" Max="28" Value="_newPassLevel" ValueChanged="s=>CalculateNewScore(s,_newPassLetterGrade,_oldPassLetterGrade)" Label=@L["Difficulty Level"]></MudNumericField>
+    </MudItem>
+    <MudItem xs="4" sm="3">
+        <MudSelect T="PhoenixLetterGrade?" Clearable="true" Label=@L["Old Letter Grade"] Value="_oldPassLetterGrade" ValueChanged="s => CalculateNewScore(_newPassLevel,_newPassLetterGrade, s)">
+            @foreach (var letterGrade in Enum.GetValues<PhoenixLetterGrade>())
+            {
+                <MudSelectItem T="PhoenixLetterGrade?" Value="letterGrade">
+                    <LetterGradeIcon Grade="letterGrade"></LetterGradeIcon>
+                </MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="4" sm="3">
+        <MudSelect T="PhoenixLetterGrade" Label=@L["New Letter Grade"] Value="_newPassLetterGrade" ValueChanged="s => CalculateNewScore(_newPassLevel, s,_oldPassLetterGrade)">
+            @foreach (var letterGrade in Enum.GetValues<PhoenixLetterGrade>())
+            {
+                <MudSelectItem T="PhoenixLetterGrade" Value="letterGrade">
+                    <LetterGradeIcon Grade="letterGrade"></LetterGradeIcon>
+                </MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12" sm="3">+@_projectedNewPassRating PUMBILITY</MudItem>
+    <MudItem xs="12">
         <MudText Typo="Typo.h6">Projected PUMBILITY Gains (BETA):</MudText>
         <MudText Typo="Typo.subtitle1">Requires 20% of folder cleared for score projections.</MudText>
     </MudItem>
-    @if (!_projectedGains.Any())
+    @if (!_projectedGains.Any() && !_finishedProjecting)
     {
         <MudItem xs="12">
             <MudProgressLinear Indeterminate="true" Color="Color.Primary">Computing</MudProgressLinear>
         </MudItem>
         <br/>
         <br/>
+    }
+    @if (_finishedProjecting && !_projectedGains.Any())
+    {
+        <MudItem xs="12">
+            <MudText>You are seeing this because you are just too good for your level range. All of your scores are projected to be your best potential PUMBILITY.</MudText>
+        </MudItem>
     }
     @foreach (var kv in _insufficientData.OrderBy(kv=>kv.Key.Item2).ThenBy(kv=>kv.Key.Item1))
     {
@@ -68,7 +101,7 @@
             +@kv.Value.ToString("N0") PUMBILITY
         </MudItem>
     }
-    @foreach (var gain in _projectedGains.OrderByDescending(kv => kv.Value))
+    @foreach (var gain in _projectedGains.OrderByDescending(kv=>_allScores.TryGetValue(kv.Key,out var existing)&&existing is { Score: not null,IsBroken: false }).ThenByDescending(kv => kv.Value).ThenBy(kv=>_chartDifficulty.TryGetValue(kv.Key,out var diff)?diff:TierListCategory.Unrecorded))
     {
         var chart = _charts[gain.Key];
         <MudItem xs="6" sm="3" md="2">
@@ -79,7 +112,6 @@
                     <DifficultyBubble Chart="chart"></DifficultyBubble>
                 </MudCardHeader>
                 <MudCardContent>
-                    <MudText>Expected Grade</MudText>
                     @if (_allScores.TryGetValue(chart.Id, out var record) &&record.Score != null)
                     {
                         <MudText>
@@ -94,6 +126,10 @@
                     <MudTooltip Text="@_expectedScore[chart.Id].ToString()">
                         <LetterGradeIcon Grade="_expectedScore[chart.Id].LetterGrade"></LetterGradeIcon>
                     </MudTooltip>
+                    @if (_chartDifficulty.TryGetValue(chart.Id, out var difficulty)&&(!_allScores.TryGetValue(chart.Id, out var record2) || record2.IsBroken || record2.Score == null))
+                    {
+                        <MudText Style=@($"color:{TierListColor(difficulty)}")>@difficulty</MudText>
+                    }
                     <MudText>+@_projectedGains[chart.Id].ToString("N0") PUMBILITY</MudText>
                 </MudCardContent>
                 <MudCardActions>
@@ -118,7 +154,18 @@
     private IDictionary<Guid, RecordedPhoenixScore> _scores = new Dictionary<Guid, RecordedPhoenixScore>();
     private IDictionary<Guid, int> _ratings = new Dictionary<Guid, int>();
     private IDictionary<TierListCategory, IEnumerable<Guid>> _tierList = new Dictionary<TierListCategory, IEnumerable<Guid>>();
+    private IDictionary<Guid, TierListCategory> _chartDifficulty = new Dictionary<Guid, TierListCategory>();
 
+    private string TierListColor(TierListCategory category) => category switch{
+        TierListCategory.Overrated=>Colors.Cyan.Darken1,
+        TierListCategory.VeryEasy=>Colors.Green.Darken1,
+        TierListCategory.Easy=>Colors.LightGreen.Darken1,
+        TierListCategory.Medium=>Colors.Yellow.Darken1,
+        TierListCategory.Hard=>Colors.Orange.Darken1,
+        TierListCategory.VeryHard=>Colors.Red.Darken1,
+        TierListCategory.Underrated=>Colors.Purple.Darken1,
+        TierListCategory.Unrecorded=>Colors.Gray.Darken1,
+        };
     private int GetTierListOrder(TierListCategory category) => category switch{
         TierListCategory.Overrated => 1,
         TierListCategory.VeryEasy => 2,
@@ -142,6 +189,33 @@
     private IDictionary<Guid, PhoenixScore> _expectedScore = new Dictionary<Guid, PhoenixScore>();
     private IDictionary<Guid, int> _projectedGains = new Dictionary<Guid, int>();
     private IDictionary<(ChartType,DifficultyLevel), int> _insufficientData = new Dictionary<(ChartType, DifficultyLevel), int>();
+    private DifficultyLevel _newPassLevel = 18;
+    private PhoenixLetterGrade _newPassLetterGrade = PhoenixLetterGrade.AA;
+    private PhoenixLetterGrade? _oldPassLetterGrade = null;
+    private int _projectedNewPassRating = 0;
+    private void CalculateNewScore(DifficultyLevel newLevel, PhoenixLetterGrade newLetterGrade, PhoenixLetterGrade? oldLetter)
+    {
+        _newPassLevel = newLevel;
+        _newPassLetterGrade = newLetterGrade;
+        _oldPassLetterGrade = oldLetter;
+        var lowestScore = _ratings.OrderByDescending(kv => kv.Value).Take(50).Last().Value;
+        var oldRating = lowestScore;
+        if (_oldPassLetterGrade != null)
+        {
+            oldRating = ScoringConfiguration.PumbilityScoring.GetScore(_newPassLevel, _oldPassLetterGrade.Value.GetMinimumScore());
+            if (oldRating < lowestScore)
+            {
+                oldRating = lowestScore;
+            }
+        }
+        var rating = ScoringConfiguration.PumbilityScoring.GetScore(_newPassLevel, newLetterGrade.GetMinimumScore());
+        _projectedNewPassRating = rating - oldRating;
+        if (_projectedNewPassRating <= 0)
+        {
+            _projectedNewPassRating = 0;
+        }
+    }
+    private bool _finishedProjecting = false;
     private async Task ProjectScores()
     {
         _expectedScore = new Dictionary<Guid, PhoenixScore>();
@@ -156,9 +230,11 @@
         var doublesLevel = stats.DoublesCompetitiveLevel <= 10 ? 10.0 : stats.DoublesCompetitiveLevel;
 
         var lowestScore = _ratings.OrderByDescending(kv => kv.Value).Take(50).Min(kv => kv.Value);
-        var singlesPlayers = (await PlayerStats.GetPlayersByCompetitiveRange(ChartType.Single, singlesLevel, .5, CancellationToken.None)).ToArray();
-        var doublesPlayers = (await PlayerStats.GetPlayersByCompetitiveRange(ChartType.Double, doublesLevel, .5, CancellationToken.None)).ToArray();
+        var singlesPlayers = (await PlayerStats.GetPlayersByCompetitiveRange(ChartType.Single, singlesLevel, 1, CancellationToken.None)).ToArray();
+        var doublesPlayers = (await PlayerStats.GetPlayersByCompetitiveRange(ChartType.Double, doublesLevel, 1, CancellationToken.None)).ToArray();
         var scoring = ScoringConfiguration.PumbilityScoring;
+
+        _chartDifficulty = (await Mediator.Send(new GetTierListQuery("Pass Count"))).ToDictionary(s => s.ChartId, e => e.Category);
         foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
         {
             var playerScores = (await PhoenixRecords.GetRecordedScores(chartType == ChartType.Single ? singlesPlayers : doublesPlayers, chartType, lowestLevel, highestLevel, CancellationToken.None))
@@ -166,11 +242,23 @@
                 .GroupBy(r => _charts[r.ChartId].Level)
                 .ToDictionary(g => g.Key, g => g.ToArray());
 
+            
             foreach (var levelGroup in playerScores)
             {
-                var chartAverages = levelGroup.Value
-                    .GroupBy(s=>s.ChartId)
-                    .ToDictionary(g=>g.Key,g=>g.Average(c=>(int)c.Score!.Value));
+                var chartGroup = levelGroup.Value.GroupBy(s => s.ChartId).ToDictionary(g => g.Key, g => g.Select(c=>c.Score!.Value).OrderBy(c => c).ToArray());
+
+                var percentile =
+                    chartGroup.Any(c => _allScores.TryGetValue(c.Key, out var score) && score is { IsBroken: false, Score: not null })?
+                    
+                    chartGroup.Where(c => _allScores.TryGetValue(c.Key, out var score) && score is { IsBroken: false, Score: not null })
+                    .Average(c => Array.IndexOf(c.Value, _allScores[c.Key].Score!.Value)/(double)c.Value.Count()):.5;
+                    
+
+                var chartAverages = chartGroup
+                    .Where(kv=>kv.Value.Count()>3)
+                    .ToDictionary(g=>g.Key,g=>g.Value.Average(c=>(int)c));
+                
+                
                 var myScores = _allScores.Where(kv => kv.Value.Score != null && chartAverages.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value.Score!.Value);
 
                 if (myScores.Count()<(int)Math.Floor(.2*chartAverages.Count()))
@@ -182,23 +270,13 @@
                     }
                     continue;
                 }
-                var chartAvg = chartAverages.Values.Average();
-                var chartStd = TierListSaga.StdDev(chartAverages.Values, false);
-
-                var myAvg = myScores.Average(kv => (int)kv.Value);
-                var myStd = TierListSaga.StdDev(myScores.Values.Select(s => (int)s), false);
-
+                
                 foreach (var chartAverage in chartAverages)
                 {
-                    var ratio = chartStd == 0 ? 1.0 : myStd / chartStd;
-                    var estimated = myAvg + ratio*(chartAverage.Value - chartAvg);
-                    if (estimated < 700000)
-                    {
-                        continue;
-                    }
 
-                    _expectedScore[chartAverage.Key] = estimated > 1000000 ? 1000000 : (PhoenixScore)(int)estimated;
-                    
+                    var estimated = chartGroup[chartAverage.Key][(int)(percentile * chartGroup[chartAverage.Key].Count())];
+                    _expectedScore[chartAverage.Key] = estimated;
+
                 }
 
 
@@ -224,7 +302,7 @@
             }
             _projectedGains[kv.Key] = expectedGains;
         }
-
+        _finishedProjecting = true;
     }
 
     private IDictionary<Guid, RecordedPhoenixScore> _allScores = new Dictionary<Guid, RecordedPhoenixScore>();
@@ -246,10 +324,9 @@
 
             .ToDictionary(g => g.Key, g => g.OrderByDescending(e => e.Order).Select(e => e.ChartId).ToArray().AsEnumerable());
 
-        _tierList[TierListCategory.Unrecorded] = _scores.Values.OrderByDescending(s => _ratings[s.ChartId]).Skip(50).Select(s => s.ChartId).ToArray();
-
 
         await ProjectScores();
+        
     }
 
 }
