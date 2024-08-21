@@ -13,6 +13,7 @@
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using System.Text.RegularExpressions
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.Web.Services
 <PageTitle>Record Attempt</PageTitle>
 
 
@@ -34,6 +35,10 @@
     {
         <MudText>Note Count: @_selectedChart.NoteCount</MudText>
     }
+    <br/>
+    <MudButton Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Custom.Brands.YouTube" OnClick="()=>VideoDisplayer.ShowVideo(_selectedChart.Id)">@L["Open Video"]</MudButton>
+    <br />
+    <br/>
     @if (CurrentUser.IsLoggedIn)
     {
         <br/>
@@ -187,6 +192,7 @@
 @inject ICurrentUserAccessor CurrentUser;
 @inject IUiSettingsAccessor UiSettings;
 @inject IPlayerStatsRepository PlayerStats;
+@inject ChartVideoDisplayer VideoDisplayer;
 @inject ISnackbar Snackbar;
 @inject IUserRepository Users;
 @inject IChartRepository Charts;
@@ -351,6 +357,18 @@
         }
     }
 
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ChartId != null)
+        {
+            var chart = (await Mediator.Send(new GetChartsQuery(_currentMix, null, null, new[] { ChartId.Value }))).FirstOrDefault();
+            if (chart != null)
+            {
+
+                await SelectChart(chart);
+            }
+        }
+    }
     
 
 }
