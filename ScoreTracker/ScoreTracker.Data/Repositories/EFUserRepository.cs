@@ -6,6 +6,7 @@ using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Data.Repositories;
 
@@ -13,11 +14,13 @@ public sealed class EFUserRepository : IUserRepository
 {
     private readonly ChartAttemptDbContext _database;
     private readonly IMemoryCache _cache;
+    private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
     public EFUserRepository(IDbContextFactory<ChartAttemptDbContext> factory,
         IMemoryCache cache)
     {
         _database = factory.CreateDbContext();
+        _factory = factory;
         _cache = cache;
     }
 
@@ -32,7 +35,8 @@ public sealed class EFUserRepository : IUserRepository
                 Id = user.Id,
                 IsPublic = user.IsPublic,
                 GameTag = user.GameTag,
-                ProfileImage = user.ProfileImage.ToString()
+                ProfileImage = user.ProfileImage.ToString(),
+                CountryName = user.Country
             }, cancellationToken);
         }
         else
@@ -40,6 +44,7 @@ public sealed class EFUserRepository : IUserRepository
             existingUser.Name = user.Name;
             existingUser.IsPublic = user.IsPublic;
             existingUser.GameTag = user.GameTag;
+            existingUser.CountryName = user.Country;
             existingUser.ProfileImage = user.ProfileImage.ToString();
         }
 
@@ -210,6 +215,19 @@ public sealed class EFUserRepository : IUserRepository
         }, cancellationToken);
 
         await _database.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<Uri> GetCountryImage(Name countryName, CancellationToken cancellationToken = default)
+    {
+        return await _cache.GetOrCreateAsync($"{nameof(EFUserRepository)}__Country__{countryName}__Image", async o =>
+        {
+            o.AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(1);
+            var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var nameString = countryName.ToString();
+            return new Uri(
+                (await database.Country.Where(d => d.Name == nameString).FirstAsync(cancellationToken)).ImagePath,
+                UriKind.Absolute);
+        });
     }
 
     public async Task<IEnumerable<CountryRecord>> GetCountries(CancellationToken cancellationToken = default)

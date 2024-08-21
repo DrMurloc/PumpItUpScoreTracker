@@ -202,7 +202,9 @@ else if(_monthlyWeeks.Any())
         <MudTd>
             <MudImage Src="@_users[context].ProfileImage.ToString()" Height="20" ObjectFit="ObjectFit.ScaleDown"></MudImage>
         </MudTd>
-        <MudTd>@_users[context].Name</MudTd>
+        <MudTd>
+            <UserLabel User="_users[context]"></UserLabel>
+        </MudTd>
 
         @foreach (var entry in _monthlyTop4[context])
         {

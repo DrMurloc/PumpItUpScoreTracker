@@ -45,12 +45,12 @@ namespace ScoreTracker.Data.Clients
         public async Task<Uri> CopyFromSource(Uri oldPath, string newPath,
             CancellationToken cancellationToken = default)
         {
-            newPath = HttpUtility.UrlEncode(newPath.TrimStart('/'));
+            newPath = newPath.TrimStart('/');
 
             var blobClient = _blob.GetBlobClient(newPath);
 
             var stream = await _client.GetStreamAsync(oldPath, cancellationToken);
-            await blobClient.UploadAsync(stream, cancellationToken);
+            await blobClient.UploadAsync(stream, true, cancellationToken);
             return new Uri($"https://piuimages.arroweclip.se/{newPath}");
         }
     }

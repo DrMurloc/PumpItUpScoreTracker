@@ -1,5 +1,6 @@
 ﻿using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.SecondaryPorts;
 
@@ -31,5 +32,6 @@ public interface IUserRepository
     Task SetUserApiToken(Guid userId, Guid apiToken, CancellationToken cancellationToken = default);
 
     Task CreateCountry(CountryRecord country, CancellationToken cancellationToken = default);
+    Task<Uri> GetCountryImage(Name countryName, CancellationToken cancellationToken = default);
     Task<IEnumerable<CountryRecord>> GetCountries(CancellationToken cancellationToken = default);
 }

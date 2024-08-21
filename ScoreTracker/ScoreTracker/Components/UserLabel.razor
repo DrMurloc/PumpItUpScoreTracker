@@ -1,0 +1,40 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.ValueTypes
+@using Align = MudBlazor.Align
+@namespace ScoreTracker.Web.Components
+
+@if (User != null)
+{
+    @if (!string.IsNullOrWhiteSpace(_countryImage))
+    {
+        <MudTooltip Text="@User.Country!.Value">
+            <MudImage Height="15" ObjectFit="ObjectFit.ScaleDown" Src="@_countryImage"></MudImage>
+        </MudTooltip>
+    }
+    <MudTooltip Text="@Tooltip">
+        @User.Name
+    </MudTooltip>
+}
+@inject IUserRepository Users
+@code {
+    [Parameter]
+    [Required]
+    public User? User { get; set; }
+
+    private string _countryImage = string.Empty;
+
+    private string Tooltip => User == null ? "" :
+        User.GameTag == null ? "" :
+            User.Name=="CLEARALL18SORQUIT" ? "Wouldn't You Like To Know" : User.GameTag.Value;
+    protected override async Task OnInitializedAsync()
+    {
+        if (User?.Country != null)
+        {
+            _countryImage = (await Users.GetCountryImage(User.Country.Value)).ToString();
+        }
+    }
+
+}

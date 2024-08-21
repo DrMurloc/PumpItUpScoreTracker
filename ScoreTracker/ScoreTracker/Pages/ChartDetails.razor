@@ -12,6 +12,7 @@
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using System.Text.RegularExpressions
+@using ScoreTracker.Domain.Models
 <PageTitle>Record Attempt</PageTitle>
 
 
@@ -128,7 +129,9 @@
                             <MudImage Src="@avatarUrl" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
                         }
                     </MudTd>
-                    <MudTd>@context.Item2.UserName</MudTd>
+                    <MudTd>
+                        <UserLabel User="_users[context.Item2.UserId]"></UserLabel>
+                    </MudTd>
                     <MudTd><ScoreBreakdown Score="context.Item2.Score" Plate="context.Item2.Plate" IsBroken="context.Item2.IsBroken" ShowScore="true"></ScoreBreakdown></MudTd>
                 </RowTemplate>
             </MudTable>
@@ -185,6 +188,7 @@
 @inject IUiSettingsAccessor UiSettings;
 @inject IPlayerStatsRepository PlayerStats;
 @inject ISnackbar Snackbar;
+@inject IUserRepository Users;
 @inject IChartRepository Charts;
 @code {
     private MixEnum _currentMix = MixEnum.Phoenix;
@@ -248,6 +252,7 @@
     private IDictionary<int,PhoenixScore> _scoreMaximums = new Dictionary<int,PhoenixScore>();
     private IDictionary<int, PhoenixScore> _scoreAverages = new Dictionary<int, PhoenixScore>();
     private IDictionary<int, int> _passCounts = new Dictionary<int, int>();
+    private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
     private PhoenixScore? _myScore = null;
     private int _myLevel = 1;
     private IEnumerable<UserPhoenixScore> _worldScores = Array.Empty<UserPhoenixScore>();
@@ -330,6 +335,7 @@
         _currentMix = await UiSettings.GetSelectedMix();
 
         _nameAvatars = (await Mediator.Send(new GetCommunityLeaderboardQuery("World"))).ToDictionary(u => u.UserId, u => u.ProfileImage.ToString());
+        _users = (await Users.GetUsers(_nameAvatars.Keys)).ToDictionary(u => u.Id, u => u);
         if (ChartId != null)
         {
             var chart = (await Mediator.Send(new GetChartsQuery(_currentMix, null, null, new[] { ChartId.Value }))).FirstOrDefault();

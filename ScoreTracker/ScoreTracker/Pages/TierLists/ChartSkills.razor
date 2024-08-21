@@ -620,10 +620,10 @@
         StateHasChanged();
     }
     private string CardClass(Guid chartId) =>
-        _scores.TryGetValue(chartId, out var score) && score > 0 ? "chart-card border-solid border-2" : "chart-card border-dashed border-2";
+        _isBroken.TryGetValue(chartId,out var broken)&&!broken? "chart-card border-solid border-2" : "chart-card border-dashed border-2";
 
     private string CardStyle(Guid chartId) =>
-        _scores.TryGetValue(chartId, out var score) && score > 0 ? $@"border-color:{MudBlazor.Colors.Green.Darken1}" : "";
+        _isBroken.TryGetValue(chartId, out var broken) && !broken ? $@"border-color:{MudBlazor.Colors.Green.Darken1}" : "";
     private async Task SetHighlighted(int newModifier)
     {
         _highlightedModifier = newModifier;

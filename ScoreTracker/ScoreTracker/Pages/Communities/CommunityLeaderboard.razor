@@ -79,7 +79,7 @@
             <MudImage Src="@context.ProfileImage.ToString()" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
         </MudTd>
         <MudTd>
-            <MudTooltip Text="@context.UserId.ToString()">@context.PlayerName</MudTooltip>
+            <UserLabel User="_users[context.UserId]"></UserLabel>
         </MudTd>
         <MudTd>
             @if (_currentType != LeaderboardType.Total && _currentType != LeaderboardType.CoOp)
@@ -312,6 +312,7 @@
 @inject IMediator Mediator;
 @inject ICurrentUserAccessor CurrentUser;
 @inject NavigationManager NavManager;
+@inject IUserRepository Users;
 @code {
     private Guid _showingUserId = Guid.Empty;
     private ChartType? _chartType = null;
@@ -400,6 +401,9 @@
         }
         _leaderboard = (await Mediator.Send(new GetCommunityLeaderboardQuery(communityName))).ToArray();
         _nameAvatars = _leaderboard.Where(l=>l.IsPublic).ToDictionary(l => l.UserId, l => l.ProfileImage.ToString());
+        _users = (await Users.GetUsers(_leaderboard.Select(l => l.UserId).Distinct()))
+            .ToDictionary(u => u.Id);
+
         _userNames = _leaderboard.ToDictionary(l => l.UserId, l => l.PlayerName);
         _colorSelector = new RatingColorSelector(_leaderboard);
         SetType(LeaderboardType.Combined);
@@ -411,6 +415,7 @@
     private int _contestedCharts = 0;
     private int _totalCharts = 0;
     private IDictionary<Guid, Name> _userNames = new Dictionary<Guid, Name>();
+    private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
     private IDictionary<Guid, Guid?> _winners = new Dictionary<Guid, Guid?>();
     private IDictionary<Guid, double> _winLevelAverage = new Dictionary<Guid, double>();
     private IDictionary<Guid, IDictionary<ChartType, int>> _typeWins = new Dictionary<Guid, IDictionary<ChartType, int>>();
