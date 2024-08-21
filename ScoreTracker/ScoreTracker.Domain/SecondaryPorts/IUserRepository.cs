@@ -29,4 +29,7 @@ public interface IUserRepository
     Task<Guid?> GetUserApiToken(Guid userId, CancellationToken cancellationToken = default);
     Task<User?> GetUserByApiToken(Guid apiToken, CancellationToken cancellationToken = default);
     Task SetUserApiToken(Guid userId, Guid apiToken, CancellationToken cancellationToken = default);
+
+    Task CreateCountry(CountryRecord country, CancellationToken cancellationToken = default);
+    Task<IEnumerable<CountryRecord>> GetCountries(CancellationToken cancellationToken = default);
 }

@@ -100,7 +100,7 @@ public sealed class EFUserRepository : IUserRepository
     {
         return await _database.User.Where(u => u.Name.Contains(searchText))
             .OrderBy(u => u.Name)
-            .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage)))
+            .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName))
             .ToArrayAsync(cancellationToken);
     }
 
@@ -108,7 +108,7 @@ public sealed class EFUserRepository : IUserRepository
     public async Task<User?> GetUser(Guid userId, CancellationToken cancellationToken = default)
     {
         return await _database.User.Where(u => u.Id == userId)
-            .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage)))
+            .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName))
             .SingleOrDefaultAsync(cancellationToken);
     }
 
@@ -116,7 +116,7 @@ public sealed class EFUserRepository : IUserRepository
         CancellationToken cancellationToken = default)
     {
         return await _database.User.Where(u => userIds.Contains(u.Id))
-            .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage))
+            .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName)
             ).ToArrayAsync(cancellationToken);
     }
 
@@ -127,7 +127,7 @@ public sealed class EFUserRepository : IUserRepository
                 join u in _database.User on e.UserId equals u.Id
                 where e.LoginProvider == loginProviderName
                       && e.ExternalId == externalId
-                select new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage)))
+                select new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName))
             .SingleOrDefaultAsync(cancellationToken);
     }
 
@@ -199,5 +199,22 @@ public sealed class EFUserRepository : IUserRepository
         }
 
         await _database.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task CreateCountry(CountryRecord country, CancellationToken cancellationToken = default)
+    {
+        await _database.Country.AddAsync(new CountryEntity
+        {
+            ImagePath = country.ImagePath.ToString(),
+            Name = country.Name
+        }, cancellationToken);
+
+        await _database.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<CountryRecord>> GetCountries(CancellationToken cancellationToken = default)
+    {
+        return await _database.Country.Select(c => new CountryRecord(c.Name, new Uri(c.ImagePath, UriKind.Absolute)))
+            .ToArrayAsync(cancellationToken);
     }
 }

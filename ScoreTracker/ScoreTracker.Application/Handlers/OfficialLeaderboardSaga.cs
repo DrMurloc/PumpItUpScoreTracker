@@ -173,7 +173,8 @@ namespace ScoreTracker.Application.Handlers
             await _mediator.Send(new SaveUserUiSettingCommand("GameTag", accountData.AccountName), cancellationToken);
             var user = await _user.GetUser(userId, cancellationToken);
             await _user.SaveUser(
-                new User(userId, user.Name, user.IsPublic, accountData.AccountName, accountData.AvatarUrl),
+                new User(userId, user.Name, user.IsPublic, accountData.AccountName, accountData.AvatarUrl,
+                    user.Country),
                 cancellationToken);
 
             await _bus.Publish(new TitlesDetectedEvent(user.Id, accountData.Titles.Select(t => t.ToString())),

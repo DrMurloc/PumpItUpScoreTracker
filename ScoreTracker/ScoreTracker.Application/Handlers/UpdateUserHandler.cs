@@ -24,7 +24,8 @@ public sealed class UpdateUserHandler : IRequestHandler<UpdateUserCommand>
 
         var newUser = new User(user.Id, request.newName, request.newIsPublic, existing?.GameTag,
             existing?.ProfileImage ??
-            new Uri("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png", UriKind.Absolute));
+            new Uri("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png", UriKind.Absolute),
+            request.newCountry);
         await _users.SaveUser(newUser, cancellationToken);
     }
 }

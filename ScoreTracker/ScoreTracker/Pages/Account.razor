@@ -10,6 +10,7 @@
 @using System.Web
 @using Microsoft.AspNetCore.Localization
 @using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Records
 @using ScoreTracker.Web.Services.Contracts
 
 <PageTitle>@L["Account"]</PageTitle>
@@ -26,6 +27,17 @@
             </MudItem>
             <MudItem xs="12" sm="6">
                 <MudTextField T="string" Disabled="_isUpdatingUser" Label=@L["Username"] MaxLength="100" Value="@_name" ValueChanged="UpdateName"></MudTextField>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect T="string" Value="_countryName" ValueChanged="UpdateCountry" Label=@L["Country"] Clearable="true">
+                    @foreach (var country in _countries)
+                    {
+                        <MudSelectItem T="string" Value="country.Name">
+                            <MudImage Height="15" ObjectFit="ObjectFit.ScaleDown" Src="@country.ImagePath.ToString()"></MudImage>
+                            @country.Name
+                        </MudSelectItem>
+                    }
+                </MudSelect>
             </MudItem>
             <MudItem xs="12" sm="6">
                 <MudSelect T="string" Disabled="_isUpdatingUser" Label="@L["Language"]" Value="_currentCulture" ValueChanged="UpdateCulture">
@@ -97,6 +109,7 @@
 @inject ISnackbar Snackbar;
 @inject IUiSettingsAccessor UiSettings;
 @inject IJSRuntime JSRuntime;
+@inject IUserRepository Users;
 @code
 {
 
@@ -105,6 +118,8 @@
     private bool _isPublic = false;
     private bool _showPublicConfirmDialog = false;
     private bool _isUpdatingUser = false;
+    private IEnumerable<CountryRecord> _countries = Array.Empty<CountryRecord>();
+    private string _countryName = null;
     private Guid? _apiToken;
     private string _currentCulture = "en-US";
     public static string Base64Encode(string plainText) 
@@ -129,9 +144,10 @@
         _currentCulture = culture??CultureInfo.CurrentUICulture.ToString();
         _id = CurrentUser.User.Id.ToString();
         _name = CurrentUser.User.Name;
+        _countryName = CurrentUser.User.Country;
         _isPublic = CurrentUser.User.IsPublic;
         _apiToken = await Mediator.Send(new GetUserApiTokenQuery());
-        return;
+        _countries = (await Users.GetCountries()).OrderBy(c => c.Name);
     }
 
     private async Task CopyUserId()
@@ -153,16 +169,16 @@
     private async Task UpdateUser()
     {
         _isUpdatingUser = true;
-        await Mediator.Send(new UpdateUserCommand(_name,_isPublic));
-       /*
-          Why does it always come back to javascript...
-          Blazor interacts over WebSockets that close HTTP responses before it processes.
-          This means we can't update a user's signed in information (stored in a cookie) utilizing standard Blazor back end interactions
-          HttpClient interactions all happen via sockets in the back end, so does not contain cookie information for managing user claims.
-          So the conclusion was to do a quick javascript fetch to a Refresh endpoint to log out and log back in a user when their claims
-          are updated.
-          See https://github.com/dotnet/aspnetcore/issues/34095#issuecomment-874012924 for Microsoft's stance on this.
-          See: >:(  for my stance on this.*/
+        await Mediator.Send(new UpdateUserCommand(_name,_isPublic,string.IsNullOrWhiteSpace(_countryName)?null:_countryName));
+           /*
+           Why does it always come back to javascript...
+           Blazor interacts over WebSockets that close HTTP responses before it processes.B
+           This means we can't update a user's signed in information (stored in a cookie) utilizing standard Blazor back end interactions
+           HttpClient interactions all happen via sockets in the back end, so does not contain cookie information for managing user claims.
+           So the conclusion was to do a quick javascript fetch to a Refresh endpoint to log out and log back in a user when their claims
+           are updated.
+           See https://github.com/dotnet/aspnetcore/issues/34095#issuecomment-874012924 for Microsoft's stance on this.
+           See: >:(  for my stance on this.*/
         var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
         await module.InvokeVoidAsync("refreshLogin");
         _isUpdatingUser = false;
@@ -183,6 +199,12 @@
         }
         var message = _isPublic ? "Public" : "Private";
         Snackbar.Add($"Account made {message}", Severity.Success);
+    }
+
+    private async Task UpdateCountry(string newCountry)
+    {
+        _countryName = newCountry;
+        await UpdateUser();
     }
     private async Task UpdateName(string newName)
     {

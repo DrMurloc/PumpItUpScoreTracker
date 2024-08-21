@@ -46,7 +46,8 @@ public static class UserExtensions
             new Claim(ClaimTypes.Role, "User"),
             new Claim(ScoreTrackerClaimTypes.IsPublic, user.IsPublic.ToString()),
             new Claim(ScoreTrackerClaimTypes.ProfileImage, user.ProfileImage.ToString()),
-            new Claim(ScoreTrackerClaimTypes.GameTag, user.GameTag?.ToString() ?? "")
+            new Claim(ScoreTrackerClaimTypes.GameTag, user.GameTag?.ToString() ?? ""),
+            new Claim(ScoreTrackerClaimTypes.Country, user.Country?.ToString() ?? "")
         }, "External"));
     }
 
@@ -63,6 +64,9 @@ public static class UserExtensions
                 out var imagePath)
                 ? imagePath
                 : new Uri("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png",
-                    UriKind.Absolute));
+                    UriKind.Absolute),
+            string.IsNullOrWhiteSpace(claimsPrincipal.FindFirstValue(ScoreTrackerClaimTypes.Country))
+                ? null
+                : claimsPrincipal.FindFirstValue(ScoreTrackerClaimTypes.Country));
     }
 }

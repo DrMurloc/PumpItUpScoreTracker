@@ -10,4 +10,5 @@ public sealed class UserEntity
     [Required] public bool IsPublic { get; set; }
     public string? GameTag { get; set; }
     [Required] public string ProfileImage { get; set; }
+    public string? CountryName { get; set; }
 }
