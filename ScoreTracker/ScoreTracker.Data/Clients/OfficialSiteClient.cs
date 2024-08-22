@@ -293,6 +293,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
 
     private async Task<string> GetMappedName(string songName, CancellationToken cancellationToken)
     {
+        songName = songName.Trim();
         var cultureMapping = await _charts.GetEnglishLookup("ko-KR", cancellationToken);
         if (ManualMappings.TryGetValue(songName, out var mapping)) songName = mapping;
 
