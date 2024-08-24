@@ -855,7 +855,7 @@
             {
                 clearRate = group.Count(e => _isBroken.TryGetValue(e.ChartId, out var s) && !s) / (double)group.Count();
             }
-            var scoredCharts = group.Where(e => _scores[e.ChartId] > 0).ToArray();
+            var scoredCharts = group.Where(e => _scores.TryGetValue(e.ChartId, out var score) && score>0).ToArray();
             if (!scoredCharts.Any())
             {
                 _messages[group.Key] = $"{clearRate * 100.0:0.00}% Cleared";
