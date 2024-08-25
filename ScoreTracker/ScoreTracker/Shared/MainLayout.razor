@@ -137,21 +137,12 @@
             
             <MudDialog @bind-Visible="_showBite">
                 <DialogContent>
-                    <MudImage Src="https://piuimages.arroweclip.se/BiteBanner.jpg" Height="100" ObjectFit="ObjectFit.ScaleDown" Style="display:block;margin-left:auto;margin-right:auto;"></MudImage>
-                    <MudText Typo="Typo.subtitle1" Style="text-align:center;">
-                        @L["9+ PIU Cabinets Running Phoenix."]
-                        <br/>@L["101 person tournament."]
-                        <br/>@L["99 matches tailored to each player's level."]
-                        <br/>@L["8-10 estimated charts played per player."]
-                        <br/>@L["32 Person Women's/NB Tournament"]
-                        <br/>@L["CoOp and No Bar Old School Tournaments."]
-                        <br/>@L["The most Pump it Up that has ever been at one event."]
-                        <br/>@L["Why don't you just get up and dance, man?"]
-                    </MudText>
+                    <MudImage Src="https://piuimages.arroweclip.se/TheBigOne.png" Height="400" ObjectFit="ObjectFit.ScaleDown" Style="display:block;margin-left:auto;margin-right:auto;"></MudImage>
+                    
                 </DialogContent>
                 <DialogActions>
                     <MudSpacer></MudSpacer>
-                    <MudButton Href="https://bitegaming.org/?source=piuscores" Target="_blank" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Link" Variant="Variant.Outlined">@L["Open"]</MudButton>
+                    <MudButton Href="https://bigone.cl/en/index.html" Target="_blank" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Link" Variant="Variant.Outlined">@L["Open"]</MudButton>
                     <MudButton Variant="Variant.Text"
                                OnClick="()=>_showBite=false"
                                Color="Color.Primary">@L["Close"]</MudButton>
@@ -169,7 +160,8 @@
     private bool _isOpen = false;
     private Guid? _userId = null;
     private bool _showBite = false;
-    private const string BitePopupKey = "MainLayout__BitePopupShown";
+    private const string BitePopupKey = "MainLayout__BigOne2024PopupShown";
+    public static readonly DateTimeOffset _cutoff = new DateTimeOffset(2024, 10, 15, 0, 0, 0, TimeSpan.FromHours(-5));
     private MixEnum _currentMix = MixEnum.Phoenix;
     private string _profileImage = string.Empty;
     private string _gamerTag = string.Empty;
@@ -184,8 +176,9 @@
         _userId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null;
         _highlightedEvents = (await Mediator.Send(new GetAllTournamentsQuery()))
             .Where(e => e.IsHighlighted);
+            
         var hasShown = await UiSettings.GetSetting(BitePopupKey);
-        if (string.IsNullOrWhiteSpace(hasShown))
+        if (DateTimeOffset.Now<_cutoff && string.IsNullOrWhiteSpace(hasShown))
         {
             _showBite = true;
             await UiSettings.SetSetting(BitePopupKey,"true");
