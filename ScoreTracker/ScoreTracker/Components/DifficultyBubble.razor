@@ -6,12 +6,20 @@
 @namespace ScoreTracker.Web.Components
 @if (Chart != null)
 {                                
-    <MudTooltip Text=@($"{Chart.Song.Name} {Chart.DifficultyString}\n{Chart.StepArtist??"Unknown"}{ScoringLevelString}") ShowOnFocus="true">
-        <MudImage tabindex="0" Src="@DifficultyBubblePath" Height="Height ?? (Small?22:35)" Alt="@Chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+    <MudTooltip ShowOnFocus="true" Placement="Placement.Right">
+        <ChildContent>
+            <MudImage tabindex="0" Src="@DifficultyBubblePath" Height="Height ?? (Small ? 22 : 35)" Alt="@Chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+
+        </ChildContent>
+        <TooltipContent>
+            <MudText Typo="Typo.caption">@Chart.Song.Name @Chart.DifficultyString</MudText><br/>
+            <MudText Typo="Typo.caption">@Chart.StepArtist</MudText><br/>
+            <MudText Typo="Typo.caption">@ScoringLevelString</MudText>
+        </TooltipContent>
         </MudTooltip>
 }
 @code {
-    private string ScoringLevelString => Chart?.ScoringLevel == null ? "" : $", {Chart.ScoringLevel:0.0} Scoring Level";
+    private string ScoringLevelString => Chart?.ScoringLevel == null ? "" : $"{Chart.ScoringLevel:0.0}";
     [Parameter]
     [Required]
     public Chart? Chart { get; set; }

@@ -60,6 +60,12 @@
                 }
             </MudItem>
         }
+        else
+        {
+            <MudItem xs="6" sm="2">
+                <MudButton Color="Color.Primary" Disabled="_isSaving" OnClick="SaveSettings" StartIcon="@Icons.Material.Filled.Save">@L["Save"]</MudButton>
+            </MudItem>
+        }
     </MudGrid>
     <br/>
 }
@@ -72,7 +78,7 @@
 </MudGrid>
 <br/>
 <MudGrid>
-    @foreach (var (chart,i) in _pulledCharts.Select((chart,i)=>(chart,i)).OrderBy(c=>_vetoedCharts.Contains(c.i)?0:1).ThenBy(c=>c.i))
+    @foreach (var (chart,i) in _pulledCharts.Select((chart,i)=>(chart,i)).OrderBy(c=>!_vetoedCharts.Contains(c.i)?0:1).ThenBy(c=>_protectedCharts.Contains(c.i)?_protectedCharts.Count():_protectedCharts.IndexOf(c.i)).ThenBy(c=>c.i))
     {
         var index = i;
         <MudItem xs="6" sm="4" md="3" lg="2" xl="1">
@@ -285,7 +291,18 @@
     private async Task SaveSettings()
     {
         _isSaving = true;
-        await Mediator.Send(new SaveUserRandomSettingsCommand(_newSettingsName, _settings));
+        if (_selectedTournamentId == null)
+        {
+
+            await Mediator.Send(new SaveUserRandomSettingsCommand(_newSettingsName, _settings));
+
+            Snackbar.Add($"{_newSettingsName} Saved!", Severity.Success);
+        }
+        else
+        {
+            await Mediator.Send(new SaveRandomSettingsCommand(_selectedTournamentId.Value, _currentSettings, _settings));
+            Snackbar.Add($"{_currentSettings} Saved For {_tournamentsWithSettings[_selectedTournamentId.Value]}!", Severity.Success);
+        }
         _savedSettings[_newSettingsName] = JsonSerializer.Deserialize<RandomSettings>(JsonSerializer.Serialize(_settings, JsonOptions.Value), JsonOptions.Value) ?? new RandomSettings();
         _isSaving = false;
     }
