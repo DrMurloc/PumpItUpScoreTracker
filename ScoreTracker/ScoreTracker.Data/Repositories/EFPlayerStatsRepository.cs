@@ -13,13 +13,13 @@ namespace ScoreTracker.Data.Repositories
     public sealed class EFPlayerStatsRepository : IPlayerStatsRepository,
         IRequestHandler<GetPlayerStatsQuery, PlayerStatsRecord>
     {
-        private readonly ChartAttemptDbContext _database;
         private readonly IMemoryCache _cache;
+        private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
         public EFPlayerStatsRepository(IDbContextFactory<ChartAttemptDbContext> factory, IMemoryCache cache)
         {
             _cache = cache;
-            _database = factory.CreateDbContext();
+            _factory = factory;
         }
 
         private string CacheKey(Guid userId)
@@ -29,10 +29,11 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task SaveStats(Guid userId, PlayerStatsRecord newStats, CancellationToken cancellationToken)
         {
-            var entity = await _database.PlayerStats.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+            var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var entity = await database.PlayerStats.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
             if (entity == null)
             {
-                await _database.AddAsync(new PlayerStatsEntity
+                await database.AddAsync(new PlayerStatsEntity
                 {
                     UserId = userId,
                     CoOpRating = newStats.CoOpRating,
@@ -75,7 +76,7 @@ namespace ScoreTracker.Data.Repositories
                 entity.DoublesCompetitiveLevel = newStats.DoublesCompetitiveLevel;
             }
 
-            await _database.SaveChangesAsync(cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
             _cache.Remove(CacheKey(userId));
         }
 
@@ -83,10 +84,11 @@ namespace ScoreTracker.Data.Repositories
         {
             return await _cache.GetOrCreateAsync(CacheKey(userId), async o =>
             {
+                var database = await _factory.CreateDbContextAsync(cancellationToken);
                 o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(5);
 
                 var entity =
-                    await _database.PlayerStats.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+                    await database.PlayerStats.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
                 if (entity == null)
                     return new PlayerStatsRecord(userId, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1);
 
@@ -103,7 +105,8 @@ namespace ScoreTracker.Data.Repositories
         public async Task<IEnumerable<PlayerStatsRecord>> GetStats(IEnumerable<Guid> userIds,
             CancellationToken cancellationToken)
         {
-            return await _database.PlayerStats.Where(s => userIds.Contains(s.UserId)).Select(entity =>
+            var database = await _factory.CreateDbContextAsync(cancellationToken);
+            return await database.PlayerStats.Where(s => userIds.Contains(s.UserId)).Select(entity =>
                 new PlayerStatsRecord(entity.UserId, entity.TotalRating, entity.HighestLevel, entity.ClearCount,
                     entity.CoOpRating,
                     entity.AverageCoOpScore, entity.SkillRating, entity.AverageSkillScore, entity.AverageSkillLevel,
@@ -117,7 +120,8 @@ namespace ScoreTracker.Data.Repositories
             double range,
             CancellationToken cancellationToken)
         {
-            var query = _database.PlayerStats.AsQueryable();
+            var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var query = database.PlayerStats.AsQueryable();
             var min = competitiveLevel - range;
             var max = competitiveLevel + range;
             if (chartType == null)

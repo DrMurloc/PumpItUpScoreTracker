@@ -157,7 +157,10 @@
     </MudItem>
     @if (CurrentUser.IsLoggedIn)
     {
-        <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == DifficultyFilter) || (ChartTypeFilter == ChartType.CoOp.ToString() && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
+
+            <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == DifficultyFilter) || (ChartTypeFilter == ChartType.CoOp.ToString() && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
+
+
         @if (_unpassedTodos.Any())
         {
             <MudItem xs="12">
@@ -166,6 +169,13 @@
                 </MudText>
             </MudItem>
         }
+ 
+        <MudItem xs="12">
+            @foreach (var lamp in _lamps)
+            {
+                <MudProgressLinear Min="0" Max="_charts.Count()" Style="margin-top:8px;" Color="lamp.Progress>=_charts.Count()?Color.Success:Color.Primary" Value="lamp.Progress">@lamp.Name</MudProgressLinear>
+            }
+        </MudItem>
     }
 
     @if (_isLoading)
@@ -409,6 +419,10 @@
     private int? _noteCountMin;
     private int? _noteCountMax;
     private ISet<Guid> _todos = new HashSet<Guid>();
+
+    private sealed record LampProgress(string Name, int Order, int Progress);
+
+    private IEnumerable<LampProgress> _lamps = Array.Empty<LampProgress>();
     private IEnumerable<TitleProgress> _titleProgress = Array.Empty<TitleProgress>();
     private Task<IEnumerable<string>> FilterSongName(string search) => Task.FromResult(_finalEntries.Select(c => _charts[c.ChartId].Song.Name.ToString()).Distinct().Where(
         n => string.IsNullOrWhiteSpace(search)|| n.Contains(search, StringComparison.OrdinalIgnoreCase)).OrderBy(n => n == search ? 0 : 1).AsEnumerable());
@@ -887,6 +901,17 @@
         }
         _averageRating = _scores.Any(kv => !_isBroken[kv.Key] && kv.Value > 0) ? (int)_scores.Where(kv => !_isBroken[kv.Key] && kv.Value > 0).Average(s => s.Value.LetterGrade.GetModifier() * baseRating) : baseRating;
         await CalculateVariance(_chartType, _level);
+
+        var lamps = new List<LampProgress>();
+        lamps.Add(new LampProgress("Pass",0,_charts.Count(kv=>_isBroken.TryGetValue(kv.Key,out var b)&&!b)));
+        var order = 1;
+        for (var grade = PhoenixLetterGrade.AA; grade <= PhoenixLetterGrade.SSSPlus; grade++)
+        {
+            lamps.Add(new LampProgress(grade.GetName(), order++,
+                _charts.Count(kv => _scores.TryGetValue(kv.Key, out var s) && s.LetterGrade >= grade)));
+        }
+        lamps.Add(new LampProgress("PG", order, _charts.Count(kv => _scores.TryGetValue(kv.Key, out var s) && s == PhoenixScore.Max)));
+        _lamps = lamps;
         _isLoading = false;
     }
     private async Task SetType(ChartType newType)
