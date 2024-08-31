@@ -40,7 +40,7 @@
         }
     </MudGrid>
     <br />
-    <MudTable T="LeaderboardEntry" Items="_entries.Where(e=>_showGuests||_users[e.UserId].Country==_community.Name)" Breakpoint="Breakpoint.None">
+    <MudTable T="LeaderboardEntry" Items="_entries.Where(e=>!_community.IsRegional || _showGuests||_users[e.UserId].Country==_community.Name)" Breakpoint="Breakpoint.None">
         <ToolBarContent>
             <MudText Typo="Typo.h4">@HttpUtility.UrlDecode(CommunityName)</MudText>
         </ToolBarContent>
