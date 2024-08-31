@@ -10,5 +10,6 @@ namespace ScoreTracker.Data.Persistence.Entities
         [Required] public string Name { get; set; } = string.Empty;
         [Required] public Guid OwningUserId { get; set; }
         [Required] public string PrivacyType { get; set; } = string.Empty;
+        public bool IsRegional { get; set; }
     }
 }

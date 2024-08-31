@@ -11,17 +11,19 @@ namespace ScoreTracker.Domain.Models
         public ICollection<ChannelConfiguration> Channels { get; }
         public CommunityPrivacyType PrivacyType { get; }
         public IDictionary<Guid, DateOnly?> InviteCodes { get; }
+        public bool IsRegional { get; }
         public bool RequiresCode => PrivacyType is CommunityPrivacyType.Private or CommunityPrivacyType.PublicWithCode;
 
-        public Community(Name name, Guid ownerId, CommunityPrivacyType privacyType) : this(name, ownerId, privacyType,
+        public Community(Name name, Guid ownerId, CommunityPrivacyType privacyType, bool isRegional) : this(name,
+            ownerId, privacyType,
             Array.Empty<Guid>(),
-            Array.Empty<ChannelConfiguration>(), new Dictionary<Guid, DateOnly?>())
+            Array.Empty<ChannelConfiguration>(), new Dictionary<Guid, DateOnly?>(), isRegional)
         {
         }
 
         public Community(Name name, Guid ownerId, CommunityPrivacyType privacyType, IEnumerable<Guid> memberIds,
             IEnumerable<ChannelConfiguration> channels,
-            IDictionary<Guid, DateOnly?> inviteCodes)
+            IDictionary<Guid, DateOnly?> inviteCodes, bool isRegional)
         {
             Name = name;
             OwnerId = ownerId;
@@ -29,6 +31,7 @@ namespace ScoreTracker.Domain.Models
             Channels = channels.ToList();
             InviteCodes = inviteCodes;
             PrivacyType = privacyType;
+            IsRegional = isRegional;
         }
 
         public sealed record ChannelConfiguration(ulong ChannelId, bool SendNewScores, bool SendTitles,

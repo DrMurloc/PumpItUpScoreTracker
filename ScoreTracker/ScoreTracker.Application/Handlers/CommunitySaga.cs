@@ -27,7 +27,8 @@ namespace ScoreTracker.Application.Handlers
         IConsumer<PlayerRatingsImprovedEvent>,
         IConsumer<PlayerScoreUpdatedEvent>,
         IConsumer<NewTitlesAcquiredEvent>,
-        IConsumer<UserWeeklyChartsProgressedEvent>
+        IConsumer<UserWeeklyChartsProgressedEvent>,
+        IConsumer<UserUpdatedEvent>
 
     {
         private readonly ICurrentUserAccessor _currentUser;
@@ -55,7 +56,7 @@ namespace ScoreTracker.Application.Handlers
             var userId = _currentUser.User.Id;
             var community = await _communities.GetCommunityByName(request.CommunityName, cancellationToken);
             if (community != null) throw new CommunityAlreadyExistsException(request.CommunityName);
-            community = new Community(request.CommunityName, userId, request.PrivacyType);
+            community = new Community(request.CommunityName, userId, request.PrivacyType, false);
             community.MemberIds.Add(userId);
             await _communities.SaveCommunity(community,
                 cancellationToken);
@@ -69,7 +70,7 @@ namespace ScoreTracker.Application.Handlers
 
         public async Task Handle(JoinCommunityCommand request, CancellationToken cancellationToken)
         {
-            var userId = _currentUser.User.Id;
+            var userId = request.UserId ?? _currentUser.User.Id;
             var community = await GetCommunity(request.CommunityName, cancellationToken);
 
             if (community.MemberIds.Contains(userId)) return;
@@ -102,7 +103,7 @@ namespace ScoreTracker.Application.Handlers
 
         public async Task Handle(LeaveCommunityCommand request, CancellationToken cancellationToken)
         {
-            var userId = _currentUser.User.Id;
+            var userId = request.UserId ?? _currentUser.User.Id;
             var community = await GetCommunity(request.CommunityName, cancellationToken);
             if (!community.MemberIds.Contains(userId)) return;
 
@@ -441,6 +442,17 @@ And {count - 10} others!";
             await SendToCommunityDiscords(context.Message.UserId,
                 $"{user.Name} progressed to {context.Message.Place} on {chart.Song.Name} #DIFFICULTY|{chart.DifficultyString}# - {context.Message.Score:N0} #LETTERGRADE|{PhoenixScore.From(context.Message.Score).LetterGrade}|{context.Message.IsBroken}# #PLATE|{context.Message.Plate}#",
                 context.CancellationToken);
+        }
+
+        public async Task Consume(ConsumeContext<UserUpdatedEvent> context)
+        {
+            if (context.Message.IsPublic)
+                await _mediator.Send(new JoinCommunityCommand("World", null, context.Message.UserId));
+            else
+                await _mediator.Send(new LeaveCommunityCommand("World", context.Message.UserId));
+
+            if (context.Message.Country != null)
+                await _mediator.Send(new JoinCommunityCommand(context.Message.Country, null, context.Message.UserId));
         }
     }
 }

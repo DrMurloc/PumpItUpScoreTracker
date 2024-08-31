@@ -189,14 +189,7 @@
         _showPublicConfirmDialog = false;
         _isPublic = !_isPublic;
         await UpdateUser();
-        if (_isPublic)
-        {
-            await Mediator.Send(new JoinCommunityCommand("World",null));
-        }
-        else
-        {
-            await Mediator.Send(new LeaveCommunityCommand("World"));
-        }
+
         var message = _isPublic ? "Public" : "Private";
         Snackbar.Add($"Account made {message}", Severity.Success);
     }
@@ -205,6 +198,7 @@
     {
         _countryName = newCountry;
         await UpdateUser();
+        
     }
     private async Task UpdateName(string newName)
     {

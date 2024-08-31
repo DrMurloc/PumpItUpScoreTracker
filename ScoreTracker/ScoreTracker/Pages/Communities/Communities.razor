@@ -11,66 +11,84 @@
 @using System.Web
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 <PageTitle>Communities</PageTitle>
-<MudTable T="CommunityOverviewRecord" Items="_communities">
-    <HeaderContent>
-        <MudTh>Name</MudTh>
-        <MudTh>Members</MudTh>
-        <MudTh>Leaderboard</MudTh>
-        <MudTh>@(_currentUser==null?"Privacy":"Join")</MudTh>
-        <MudTh>Invite</MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd>@context.CommunityName</MudTd>
-        <MudTd>@context.MemberCount</MudTd>
-        <MudTd><MudButton StartIcon="@Icons.Material.Filled.Leaderboard" OnClick="()=>GoToLeaderboard(context.CommunityName)">Leaderboard</MudButton></MudTd>
-        <MudTd>
-            @if (_currentUser == null)
-            {
-                @if (context.PrivacyType == CommunityPrivacyType.PublicWithCode)
+@foreach (var item in new[] { ("Your Communities",true), ("Other Communities",false) })
+{
+    <MudText Typo="Typo.h5">@item.Item1</MudText>
+    <MudTable T="CommunityOverviewRecord" Items="_communities.Where(c=>item.Item2==_myCommunities.Contains(c.CommunityName)).OrderByDescending(c=>c.MemberCount)">
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Members</MudTh>
+            <MudTh>Leaderboard</MudTh>
+            <MudTh>@(_currentUser == null ? "Privacy" : "Join")</MudTh>
+            <MudTh>Invite</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                @if (context.IsRegional)
                 {
-                    <MudText>Requires Invite</MudText>
+                    <MudTooltip Text="@context.CommunityName">
+                        <MudImage Height="15" ObjectFit="ObjectFit.ScaleDown" Src="@_countryImages[context.CommunityName].ToString()"></MudImage>
+                    </MudTooltip>
                 }
-                else if(context.PrivacyType == CommunityPrivacyType.Public)
+                @context.CommunityName
+            </MudTd>
+            <MudTd>@context.MemberCount</MudTd>
+            <MudTd><MudButton StartIcon="@Icons.Material.Filled.Leaderboard" OnClick="()=>GoToLeaderboard(context.CommunityName)">Leaderboard</MudButton></MudTd>
+            <MudTd>
+                @if (_currentUser == null)
                 {
-                    <MudText>Public</MudText>
-                } else
-                {
-                    <MudText>Private</MudText>
+                    @if (context.PrivacyType == CommunityPrivacyType.PublicWithCode)
+                    {
+                        <MudText>Requires Invite</MudText>
+                    }
+                    else if (context.PrivacyType == CommunityPrivacyType.Public)
+                    {
+                        <MudText>Public</MudText>
+                    }
+                    else
+                    {
+                        <MudText>Private</MudText>
+                    }
                 }
-            }
-            else
-            {
-                @if (_myCommunities.Contains(context.CommunityName) && context.CommunityName!="World")
+                else
                 {
-                    <MudButton Disabled="_isSaving" OnClick="()=>Leave(context.CommunityName)" Color="Color.Warning" Variant="Variant.Filled">Leave</MudButton>
-                } else if (_myCommunities.Contains(context.CommunityName) && context.CommunityName == "World")
-                {
-                    <MudButton Disabled="_isSaving" Href="/Account" Target="_blank" Color="Color.Warning" Variant="Variant.Filled">Go Private</MudButton>
-                } else if (context.PrivacyType == CommunityPrivacyType.Public && context.CommunityName!="World")
-                {
-                    <MudButton Disabled="_isSaving" OnClick="()=>Join(context.CommunityName)" Color="Color.Primary" Variant="Variant.Filled">Join</MudButton>
-                } else if (context.PrivacyType == CommunityPrivacyType.Public && context.CommunityName == "World")
-                {
-                    <MudButton Disabled="_isSaving" Href="/Account" Target="_blank" Color="Color.Primary" Variant="Variant.Filled">Go Public</MudButton>
+                    @if (_myCommunities.Contains(context.CommunityName) && context.CommunityName != "World")
+                    {
+                        <MudButton Disabled="_isSaving" OnClick="()=>Leave(context.CommunityName)" Color="Color.Warning" Variant="Variant.Filled">Leave</MudButton>
+                    }
+                    else if (_myCommunities.Contains(context.CommunityName) && context.CommunityName == "World")
+                    {
+                        <MudButton Disabled="_isSaving" Href="/Account" Target="_blank" Color="Color.Warning" Variant="Variant.Filled">Go Private</MudButton>
+                    }
+                    else if (context.PrivacyType == CommunityPrivacyType.Public && context.CommunityName != "World")
+                    {
+                        <MudButton Disabled="_isSaving" OnClick="()=>Join(context.CommunityName)" Color="Color.Primary" Variant="Variant.Filled">Join</MudButton>
+                    }
+                    else if (context.PrivacyType == CommunityPrivacyType.Public && context.CommunityName == "World")
+                    {
+                        <MudButton Disabled="_isSaving" Href="/Account" Target="_blank" Color="Color.Primary" Variant="Variant.Filled">Go Public</MudButton>
+                    }
+                    else if (context.PrivacyType == CommunityPrivacyType.PublicWithCode)
+                    {
+                        <MudText>Requires Invite</MudText>
+                    }
+                    else if (context.PrivacyType == CommunityPrivacyType.Private)
+                    {
+                        <MudText>Private</MudText>
+                    }
                 }
-                else if (context.PrivacyType == CommunityPrivacyType.PublicWithCode)
-                {
-                    <MudText>Requires Invite</MudText>
-                } else if (context.PrivacyType == CommunityPrivacyType.Private)
-                {
-                    <MudText>Private</MudText>
-                }
-            }
 
-        </MudTd>
-        <MudTd>
-            @if (_myCommunities.Contains(context.CommunityName) && context.PrivacyType!=CommunityPrivacyType.Public)
-            {
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="()=>OpenCommunity(context.CommunityName)" StartIcon="@Icons.Material.Filled.Link">Invite</MudButton>
-            }
-        </MudTd>
-    </RowTemplate>
-</MudTable>
+            </MudTd>
+            <MudTd>
+                @if (_myCommunities.Contains(context.CommunityName) && context.PrivacyType != CommunityPrivacyType.Public)
+                {
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="()=>OpenCommunity(context.CommunityName)" StartIcon="@Icons.Material.Filled.Link">Invite</MudButton>
+                }
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+
+}
 <br/>
 <MudButton OnClick="()=>_showCreateDialog=true" Variant="Variant.Outlined">Create Community</MudButton>
 <MudDialog @bind-Visible="_showCreateDialog">
@@ -127,6 +145,7 @@
 @inject ISnackbar Snackbar;
 @inject IJSRuntime JSRuntime;
 @inject NavigationManager NavManager
+@inject IUserRepository Users;
 @code {
 
     private IEnumerable<CommunityOverviewRecord> _communities = Array.Empty<CommunityOverviewRecord>();
@@ -136,6 +155,7 @@
     private bool _isSaving = false;
     private string _name = string.Empty;
     private bool _showManageDialog = false;
+    private IDictionary<Name, Uri> _countryImages = new Dictionary<Name, Uri>();
     private CommunityPrivacyType _privacyType = CommunityPrivacyType.PublicWithCode;
 
     private async Task CreateCommunity()
@@ -149,7 +169,7 @@
         try
         {
             await Mediator.Send(new CreateCommunityCommand(_name, _privacyType));
-            _communities = _communities.Append(new CommunityOverviewRecord(_name, _privacyType, 1)).ToArray();
+            _communities = _communities.Append(new CommunityOverviewRecord(_name, _privacyType, 1,false)).ToArray();
             _myCommunities.Add(_name);
         }
         catch (CommunityAlreadyExistsException)
@@ -226,6 +246,7 @@
     {
         _currentUser = CurrentUser.IsLoggedIn ? CurrentUser.User : null;
         _communities = (await Mediator.Send(new GetPublicCommunitiesQuery())).ToArray();
+        _countryImages = (await Users.GetCountries()).ToDictionary(c => c.Name, c => c.ImagePath);
         if (CurrentUser.IsLoggedIn)
         {
             var myCommunities = (await Mediator.Send(new GetMyCommunitiesQuery())).ToArray();
