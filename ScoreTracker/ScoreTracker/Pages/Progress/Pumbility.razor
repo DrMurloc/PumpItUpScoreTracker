@@ -165,7 +165,7 @@
         TierListCategory.VeryHard=>Colors.Red.Darken1,
         TierListCategory.Underrated=>Colors.Purple.Darken1,
         TierListCategory.Unrecorded=>Colors.Gray.Darken1,
-        };
+    };
     private int GetTierListOrder(TierListCategory category) => category switch{
         TierListCategory.Overrated => 1,
         TierListCategory.VeryEasy => 2,
@@ -175,7 +175,7 @@
         TierListCategory.VeryHard => 6,
         TierListCategory.Underrated => 7,
         TierListCategory.Unrecorded => 8
-        };
+    };
     private string GetTierListName(TierListCategory category) => category switch {
         TierListCategory.Overrated=>"Extremely High Rating",
         TierListCategory.VeryEasy=>"Very High Rating",
@@ -225,7 +225,7 @@
         var highestLevel = levelRange.Max();
 
         var stats = await PlayerStats.GetStats(CurrentUser.User.Id, CancellationToken.None);
-        
+
         var singlesLevel = stats.SinglesCompetitiveLevel <= 10 ? 10.0 : stats.SinglesCompetitiveLevel;
         var doublesLevel = stats.DoublesCompetitiveLevel <= 10 ? 10.0 : stats.DoublesCompetitiveLevel;
 
@@ -242,23 +242,23 @@
                 .GroupBy(r => _charts[r.ChartId].Level)
                 .ToDictionary(g => g.Key, g => g.ToArray());
 
-            
+
             foreach (var levelGroup in playerScores)
             {
-                var chartGroup = levelGroup.Value.GroupBy(s => s.ChartId).ToDictionary(g => g.Key, g => g.Select(c=>c.Score!.Value).OrderBy(c => c).ToArray());
+                var chartGroup = levelGroup.Value.GroupBy(s => s.ChartId).ToDictionary(g => g.Key, g => g.Select(c=>c.Score!.Value).OrderByDescending(c => c).ToArray());
 
                 var percentile =
                     chartGroup.Any(c => _allScores.TryGetValue(c.Key, out var score) && score is { IsBroken: false, Score: not null })?
-                    
+
                     chartGroup.Where(c => _allScores.TryGetValue(c.Key, out var score) && score is { IsBroken: false, Score: not null })
-                    .Average(c => Array.IndexOf(c.Value, _allScores[c.Key].Score!.Value)/(double)c.Value.Count()):.5;
-                    
+                    .Average(c => Array.IndexOf(c.Value, _allScores[c.Key].Score!.Value)/(double)c.Value.Count())*.95:.5;
+
 
                 var chartAverages = chartGroup
                     .Where(kv=>kv.Value.Count()>3)
                     .ToDictionary(g=>g.Key,g=>g.Value.Average(c=>(int)c));
-                
-                
+
+
                 var myScores = _allScores.Where(kv => kv.Value.Score != null && chartAverages.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value.Score!.Value);
 
                 if (myScores.Count()<(int)Math.Floor(.2*chartAverages.Count()))
@@ -270,12 +270,26 @@
                     }
                     continue;
                 }
-                
+
                 foreach (var chartAverage in chartAverages)
                 {
+                    var target = percentile * chartGroup[chartAverage.Key].Count();
+                    var highIndex = Math.Floor(target);
+                    var lowIndex = Math.Ceiling(target);
+                    if (lowIndex > chartGroup[chartAverage.Key].Count()-1)
+                    {
 
-                    var estimated = chartGroup[chartAverage.Key][(int)(percentile * chartGroup[chartAverage.Key].Count())];
-                    _expectedScore[chartAverage.Key] = estimated;
+                        lowIndex = chartGroup[chartAverage.Key].Count()-1;
+                    }
+                    if (highIndex < 0)
+                    {
+                        highIndex = 0;
+                    }
+                    var highScore = chartGroup[chartAverage.Key][(int)highIndex];
+                    var lowScore = chartGroup[chartAverage.Key][(int)lowIndex];
+
+                    var estimated = lowScore+(highScore-lowScore)*(lowIndex-target);
+                    _expectedScore[chartAverage.Key] = (int)estimated;
 
                 }
 
