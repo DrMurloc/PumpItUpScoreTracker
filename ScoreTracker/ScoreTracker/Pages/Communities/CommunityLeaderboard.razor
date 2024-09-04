@@ -223,6 +223,11 @@
         }
         <br />
     }
+    <MudText>@_scoreDiffs.Values.Count(s =>s == -1).ToString("N0") Shared PGs</MudText>
+    @foreach (var scoreDiff in new[] { 1000, 5000, 10000, 20000 })
+    {
+        <MudText>@_scoreDiffs.Count(kv=>kv.Value>-1&&kv.Value>scoreDiff).ToString("N0") matchups within @scoreDiff.ToString("N0") score</MudText>
+    }
     <br/>
     <MudGrid>
         <MudItem xs="12" md="6">
@@ -243,13 +248,16 @@
         <HeaderContent>
             <MudTh><MudTableSortLabel T="Chart" SortBy="c=>c.Song.Name.ToString()">Song</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel T="Chart" SortBy="c=>(int)c.Level">Chart</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel T="Chart" SortBy="c=>_winners[c.Id]">Winner</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="Chart" SortBy=@(c=>_winners[c.Id]==null?_playerScores.All(kv=>kv.Value.ContainsKey(c.Id))?"Tie":"Tiez":_userNames[_winners[c.Id].Value].ToString())>Winner</MudTableSortLabel></MudTh>
             @foreach (var key in _playerScores.Keys)
             {
                 <MudTh>
                     <MudTableSortLabel T="Chart" SortBy="c=>_playerScores[key].TryGetValue(c.Id,out var score)?(int)score:0">@_userNames[key]</MudTableSortLabel>
                 </MudTh>
             }
+            <MudTh>
+                <MudTableSortLabel T="Chart" SortBy="c=>_scoreDiffs[c.Id]??1000000">Score Difference</MudTableSortLabel>
+            </MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>
@@ -262,7 +270,7 @@
                 <DifficultyBubble Chart="context"></DifficultyBubble>
             </MudTd>
             <MudTd>
-                @(_winners[context.Id]==null?"Tie":_userNames[_winners[context.Id]!.Value])
+                @(_winners[context.Id]==null?_playerScores.Any(kv=>!kv.Value.ContainsKey(context.Id))?"":"Tie":_userNames[_winners[context.Id]!.Value])
             </MudTd>
             @foreach (var key in _playerScores.Keys)
             {
@@ -270,6 +278,7 @@
                     @(_playerScores[key].TryGetValue(context.Id, out var score) ? $"{score} ({score.LetterGrade.GetName()})" : "")
                 </MudTd>
             }
+            <MudTd>@(_scoreDiffs[context.Id]==-1?"PG":_scoreDiffs[context.Id]?.ToString("N0"))</MudTd>
         </RowTemplate>
         
         <PagerContent>
@@ -394,6 +403,7 @@
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private RatingColorSelector _colorSelector = new RatingColorSelector(Array.Empty<CommunityLeaderboardRecord>());
     private ISet<Name> _myCommunities = new HashSet<Name>();
+    private IDictionary<Guid, int?> _scoreDiffs = new Dictionary<Guid, int?>();
     [Parameter]
     [SupplyParameterFromQuery]public string CommunityName { get; set; }
     protected override async Task OnInitializedAsync()
@@ -482,8 +492,19 @@
                 .ToDictionary(r => r.ChartId, r => r.Score!.Value);
 
         }
+        CalculateScoreDiffs();
         _isLoading = false;
         Recalculate();
+    }
+
+    private void CalculateScoreDiffs()
+    {
+        _scoreDiffs = _playerScores.Values.SelectMany(g => g)
+            .GroupBy(kv => kv.Key)
+            .ToDictionary(g => g.Key, g => g.Select(kv => kv.Value).ToArray())
+            .ToDictionary(g => g.Key, g => g.Value.Count() >= 2 ?
+                g.Value.All(s=>s==PhoenixScore.Max)?-1:
+                    (int?) (g.Value.Max() - g.Value.Min()) : null);
     }
     private async Task SelectUser(Guid userId)
     {
@@ -496,8 +517,8 @@
             _isLoading = true;
             _playerScores[userId] = (await Mediator.Send(new GetPhoenixRecordsQuery(userId))).Where(r => r.Score != null && _charts[r.ChartId].Level >= _minLevel && _charts[r.ChartId].Level <= _maxLevel)
                 .ToDictionary(r => r.ChartId, r => r.Score!.Value);
-
-            _isLoading = true;
+CalculateScoreDiffs();
+            _isLoading = false;
 
         }
         Recalculate();
