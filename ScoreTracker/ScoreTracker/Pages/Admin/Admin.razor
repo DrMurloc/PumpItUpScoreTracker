@@ -15,6 +15,7 @@
 @using ScoreTracker.Domain.Events
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.PersonalProgress
+@using ScoreTracker.Domain.SecondaryPorts
 
 <PageTitle>Admin</PageTitle>
 
@@ -163,6 +164,7 @@ Do It
 @inject IBus Bus;
 @inject IOfficialSiteClient OfficialClient;
 @inject ChartAttemptDbContext Database;
+@inject IUserRepository Users;
 @inject IBotClient Bot;
 @code
 {
@@ -207,12 +209,14 @@ Do It
     
     //await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);
 
-
-     await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
-    await Mediator.Send(new ProcessChartPopularityCommand());
-    await WorldRanking.CalculateWorldRankings(CancellationToken.None);
-    await Bus.Publish(new ProcessPassTierListCommand());
-
+        //await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
+    //await Mediator.Send(new ProcessChartPopularityCommand());
+    //await WorldRanking.CalculateWorldRankings(CancellationToken.None);
+        //await Bus.Publish(new ProcessPassTierListCommand());
+        foreach (var userId in await Database.User.Select(u=>u.Id).ToArrayAsync())
+        {
+            await Mediator.Send(new PlayerRatingSaga.RecalculateStats(userId));
+        }
 
     /*var userIds = await Database.User.Select(u => u.Id).ToArrayAsync();
         foreach (var userId in userIds)

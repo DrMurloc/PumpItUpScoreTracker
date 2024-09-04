@@ -24,7 +24,7 @@ public sealed class WorldRankingService : IWorldRankingService
 
     public async Task CalculateWorldRankings(CancellationToken cancellationToken)
     {
-        var scoringConfig = ScoringConfiguration.PumbilityScoring;
+        var scoringConfig = ScoringConfiguration.PumbilityScoring(false);
 
         var entries = (await _leaderboards.GetOfficialLeaderboardUsernames("Chart", cancellationToken)).ToArray();
         await _leaderboards.DeleteWorldRankings(cancellationToken);
@@ -120,7 +120,7 @@ public sealed class WorldRankingService : IWorldRankingService
     public async Task<IEnumerable<RecordedPhoenixScore>> GetTop50(Name username, string type,
         CancellationToken cancellationToken)
     {
-        var scoringConfig = ScoringConfiguration.PumbilityScoring;
+        var scoringConfig = ScoringConfiguration.PumbilityScoring(false);
         var result = new List<RecordedPhoenixScore>();
         foreach (var record in (await _leaderboards.GetOfficialLeaderboardStatuses(username, cancellationToken))
                  .Where(l => l.OfficialLeaderboardType == "Chart" && !l.LeaderboardName.Contains("CoOp"))

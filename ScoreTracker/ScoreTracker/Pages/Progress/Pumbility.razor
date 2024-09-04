@@ -202,13 +202,13 @@
         var oldRating = lowestScore;
         if (_oldPassLetterGrade != null)
         {
-            oldRating = ScoringConfiguration.PumbilityScoring.GetScore(_newPassLevel, _oldPassLetterGrade.Value.GetMinimumScore());
+            oldRating = ScoringConfiguration.PumbilityScoring(false).GetScore(_newPassLevel, _oldPassLetterGrade.Value.GetMinimumScore());
             if (oldRating < lowestScore)
             {
                 oldRating = lowestScore;
             }
         }
-        var rating = ScoringConfiguration.PumbilityScoring.GetScore(_newPassLevel, newLetterGrade.GetMinimumScore());
+        var rating = ScoringConfiguration.PumbilityScoring(false).GetScore(_newPassLevel, newLetterGrade.GetMinimumScore());
         _projectedNewPassRating = rating - oldRating;
         if (_projectedNewPassRating <= 0)
         {
@@ -232,7 +232,7 @@
         var lowestScore = _ratings.OrderByDescending(kv => kv.Value).Take(50).Min(kv => kv.Value);
         var singlesPlayers = (await PlayerStats.GetPlayersByCompetitiveRange(ChartType.Single, singlesLevel, 1, CancellationToken.None)).ToArray();
         var doublesPlayers = (await PlayerStats.GetPlayersByCompetitiveRange(ChartType.Double, doublesLevel, 1, CancellationToken.None)).ToArray();
-        var scoring = ScoringConfiguration.PumbilityScoring;
+        var scoring = ScoringConfiguration.PumbilityScoring(false);
 
         _chartDifficulty = (await Mediator.Send(new GetTierListQuery("Pass Count"))).ToDictionary(s => s.ChartId, e => e.Category);
         foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
@@ -313,7 +313,7 @@
             NavManager.NavigateTo("/");
             return;
         }
-        var scoring = ScoringConfiguration.PumbilityScoring;
+        var scoring = ScoringConfiguration.PumbilityScoring(false);
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
         _allScores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id))).Where(r=>r.Score!=null).ToDictionary(s => s.ChartId);
         _scores = (await Mediator.Send(new GetTop50ForPlayerQuery(CurrentUser.User.Id, null, 100))).ToDictionary(s => s.ChartId);

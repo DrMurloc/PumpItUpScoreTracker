@@ -20,11 +20,11 @@ namespace ScoreTracker.Domain.Models
             .GetValues<SongType>()
             .ToDictionary(s => s, s => 1.0);
 
-        public IDictionary<ChartType, double> ChartTypeModifiers { get; set; } = new Dictionary<ChartType, double>()
+        public IDictionary<ChartType, double> ChartTypeModifiers { get; set; } = new Dictionary<ChartType, double>
         {
             { ChartType.Single, 1.0 },
             { ChartType.Double, 1.0 },
-            { ChartType.CoOp, 0.0 },
+            { ChartType.CoOp, 1.0 },
             { ChartType.SinglePerformance, 0.0 },
             { ChartType.DoublePerformance, 0.0 }
         };
@@ -205,10 +205,15 @@ namespace ScoreTracker.Domain.Models
             return result;
         }
 
-        public static ScoringConfiguration PumbilityScoring => new()
+        public static ScoringConfiguration PumbilityScoring(bool includeCoOp)
         {
-            AdjustToTime = false
-        };
+            var config = new ScoringConfiguration
+            {
+                AdjustToTime = false
+            };
+            config.ChartTypeModifiers[ChartType.CoOp] = includeCoOp ? 1 : 0;
+            return config;
+        }
 
         public static ScoringConfiguration PiuScoresRatingz => CreateScoring();
 
