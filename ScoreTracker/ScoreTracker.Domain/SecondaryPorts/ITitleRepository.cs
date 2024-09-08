@@ -13,5 +13,7 @@ namespace ScoreTracker.Domain.SecondaryPorts
 
         Task<IEnumerable<TitleAchievedRecord>> GetCompletedTitles(Guid userId, CancellationToken cancellationToken);
         Task<DifficultyLevel> GetCurrentTitleLevel(Guid userId, CancellationToken cancellationToken);
+        Task<IEnumerable<TitleAggregationRecord>> GetTitleAggregations(CancellationToken cancellationToken);
+        Task<int> CountTitledUsers(CancellationToken cancellationToken);
     }
 }

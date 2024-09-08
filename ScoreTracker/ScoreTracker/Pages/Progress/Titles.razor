@@ -18,6 +18,22 @@
         <PropertyColumn Property="t=>t.TitleCategory" Title="Category" Grouping="true"></PropertyColumn>
         <PropertyColumn Property="t=>t.TitleName" Title="Title" Groupable="false"></PropertyColumn>
         <PropertyColumn Property="t=>t.TitleDescription" Title="Description" Groupable="false"></PropertyColumn>
+        <TemplateColumn Title="Community Completion" Groupable="false" T="TitleProgressDto">
+            <CellTemplate>
+                @if (_titleCounts.TryGetValue(context.Item.TitleName, out var count))
+                {
+                    <MudTooltip Text=@($"{count}/{_userCount} Players")>
+                        
+                        <MudText>@($"{(100.0*count/(double)_userCount):N2}%")</MudText>
+                    </MudTooltip>
+                }
+                else
+                {
+
+                    <MudText>0%</MudText>
+                }
+            </CellTemplate>
+        </TemplateColumn>
         @if (CurrentUser.IsLoggedIn)
         {
             <TemplateColumn T="TitleProgressDto" Field="IsTrackable" Title="Completion" Groupable="false">
@@ -94,6 +110,7 @@
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
 @inject IUiSettingsAccessor UiSettings;
+@inject ITitleRepository TitleRepo;
 @code {
     private MudDataGrid<TitleProgressDto>? _dataGrid;
     private IEnumerable<TitleProgressDto> _titleProgress = Array.Empty<TitleProgressDto>();
@@ -101,7 +118,8 @@
     private IDictionary<int, int> _completedCounts = new Dictionary<int, int>();
     private MixEnum _currentMix;
     private bool _isLoading = true;
-
+    private int _userCount = 1;
+    private IDictionary<Name, int> _titleCounts = new Dictionary<Name, int>();
     private async Task LoadTitles()
     {
 
@@ -128,6 +146,8 @@
             _dataGrid.Items = _titleProgress;
             _dataGrid?.GroupItems();
         }
+        _userCount = await TitleRepo.CountTitledUsers(CancellationToken.None);
+        _titleCounts = (await TitleRepo.GetTitleAggregations(CancellationToken.None)).ToDictionary(t => t.Title, t => t.Count);
     }
 
     protected override async Task OnInitializedAsync()

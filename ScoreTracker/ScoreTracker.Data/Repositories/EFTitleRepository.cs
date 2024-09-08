@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Enums;
@@ -11,11 +12,16 @@ namespace ScoreTracker.Data.Repositories
     public sealed class EFTitleRepository : ITitleRepository
     {
         private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
+        private readonly IMemoryCache _cache;
 
-        public EFTitleRepository(IDbContextFactory<ChartAttemptDbContext> factory)
+        public EFTitleRepository(IDbContextFactory<ChartAttemptDbContext> factory,
+            IMemoryCache cache)
         {
             _factory = factory;
+            _cache = cache;
         }
+
+        private readonly string CacheKey = $"{nameof(EFTitleRepository)}__Titles";
 
         public async Task SaveTitles(Guid userId, IEnumerable<TitleAchievedRecord> acquiredTitles,
             CancellationToken cancellationToken)
@@ -42,6 +48,8 @@ namespace ScoreTracker.Data.Repositories
             _dbContext.UserTitle.RemoveRange(deleteEntities);
             await _dbContext.UserTitle.AddRangeAsync(newEntities, cancellationToken);
             await _dbContext.SaveChangesAsync(cancellationToken);
+            _cache.Remove(CacheKey);
+            _cache.Remove(CacheKey + "__UserCount");
         }
 
         public async Task SetHighestDifficultyTitle(Guid userId, Name title, DifficultyLevel level,
@@ -81,6 +89,31 @@ namespace ScoreTracker.Data.Repositories
         {
             return (await (await _factory.CreateDbContextAsync(cancellationToken)).UserHighestTitle
                 .Where(u => u.UserId == userId).FirstOrDefaultAsync(cancellationToken))?.Level ?? 10;
+        }
+
+        public async Task<IEnumerable<TitleAggregationRecord>> GetTitleAggregations(CancellationToken cancellationToken)
+        {
+            return await _cache.GetOrCreateAsync(CacheKey, async o =>
+            {
+                o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
+                var database = await _factory.CreateDbContextAsync(cancellationToken);
+                return await (from u in database.User
+                    where u.GameTag != null
+                    join ut in database.UserTitle on u.Id equals ut.UserId
+                    group ut by ut.Title
+                    into g
+                    select new TitleAggregationRecord(g.Key, g.Count())).ToArrayAsync(cancellationToken);
+            });
+        }
+
+        public async Task<int> CountTitledUsers(CancellationToken cancellationToken)
+        {
+            return await _cache.GetOrCreateAsync(CacheKey + "__UserCount", async o =>
+            {
+                o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
+                var database = await _factory.CreateDbContextAsync(cancellationToken);
+                return await database.User.Where(u => u.GameTag != null).CountAsync(cancellationToken);
+            });
         }
     }
 }
