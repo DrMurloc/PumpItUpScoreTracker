@@ -217,15 +217,16 @@ public sealed class EFUserRepository : IUserRepository
         await _database.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<Uri> GetCountryImage(Name countryName, CancellationToken cancellationToken = default)
+    public async Task<Uri?> GetCountryImage(Name countryName, CancellationToken cancellationToken = default)
     {
         return await _cache.GetOrCreateAsync($"{nameof(EFUserRepository)}__Country__{countryName}__Image", async o =>
         {
             o.AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(1);
             var database = await _factory.CreateDbContextAsync(cancellationToken);
             var nameString = countryName.ToString();
-            return new Uri(
-                (await database.Country.Where(d => d.Name == nameString).FirstAsync(cancellationToken)).ImagePath,
+            var uri = await database.Country.Where(d => d.Name == nameString).FirstOrDefaultAsync(cancellationToken);
+            if (uri == null) return null;
+            return new Uri(uri.ImagePath,
                 UriKind.Absolute);
         });
     }
