@@ -260,7 +260,7 @@
 
 
                 var myScores = _allScores.Where(kv => kv.Value.Score != null && chartAverages.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value.Score!.Value);
-
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
                 if (myScores.Count()<(int)Math.Floor(.2*chartAverages.Count()))
                 {
                     var diff = scoring.GetScore(chartType, levelGroup.Key, PhoenixLetterGrade.AA.GetMinimumScore()) - lowestScore;

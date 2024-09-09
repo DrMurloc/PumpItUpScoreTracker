@@ -84,97 +84,15 @@
 
 </MudGrid>
 <br/>
-<MudText Typo="Typo.h5">Weekly Total Leaderboard</MudText>
-<br/>
-<MudSelect T="ChartType?" Value="_chartType" ValueChanged="SetChartType" Disabled="_isLoading" Label="Leaderboard Type">
-    <MudSelectItem T="ChartType?" Value="null">Combined</MudSelectItem>
-    <MudSelectItem T="ChartType?" Value="ChartType.Single">Singles</MudSelectItem>
-    <MudSelectItem T="ChartType?" Value="ChartType.Double">Doubles</MudSelectItem>
-    <MudSelectItem T="ChartType?" Value="ChartType.CoOp">Co-Op</MudSelectItem>
-</MudSelect>
-<br/>
-<MudTable T="Guid" Items="_userTotalPlace.OrderBy(kv=>kv.Value).Select(kv=>kv.Key)" FixedHeader="true" Striped="true" Breakpoint="Breakpoint.None" Dense="true">
-    <HeaderContent>
-        <MudTh>@L["Place"]</MudTh>
-        <MudTh>@L["Avatar"]</MudTh>
-        <MudTh>@L["Username"]</MudTh>
-        @for (var i = 0; i < 4; i++)
-        {
-            var place = i + 1;
-            <MudTh>#@place @L["Song"]</MudTh>
-        }
-        <MudTh>@L["Total Count"]</MudTh>
-        <MudTh>PUMBILITY+</MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd>@_userTotalPlace[context]</MudTd>
-        <MudTd>
-            <MudImage Src="@_users[context].ProfileImage.ToString()" Height="20" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-        </MudTd>
-        <MudTd>@_users[context].Name</MudTd>
-
-        @foreach (var entry in _userTopFourCharts[context])
-        {
-            var chart = _charts[entry.ChartId];
-            <MudTd Style="text-align:center">
-                <div style="display:inline">
-                    <MudTooltip Text="@(chart.Song.Name + ' ' + chart.DifficultyString)">
-                        <MudImage Src="@chart.Song.ImagePath.ToString()" Height="20" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
-                        <br/>
-                    </MudTooltip>
-                    <DifficultyBubble Height="20" Chart="chart"></DifficultyBubble>
-                </div>
-                <ScoreBreakdown Score="entry.Score" IsBroken="entry.IsBroken" Height="20" Text="@(entry.Score.ToString()+" - "+_scoring.GetScore(chart, entry.Score, entry.Plate, entry.IsBroken).ToString("N0"))" ShowTextAsTooltip="true"></ScoreBreakdown>
-
-            </MudTd>
-        }
-        @for (var i = _userTopFourCharts[context].Count(); i < 4; i++)
-        {
-            <MudTd></MudTd>
-        }
-        <MudTd>
-            <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.Visibility" OnClick=@(()=>ShowUserData(context,"Weekly")) Variant="Variant.Outlined">@_userCharts[context].Count()</MudButton>
-        </MudTd>
-        <MudTd>@_userTopFourTotal[context].ToString("N0")</MudTd>
-    </RowTemplate>
-
-    <ChildRowContent>
-        @if (_showingUserId == context && _showingSection == "Weekly")
-        {
-            <td colspan="9">
-                <MudGrid Style="padding:7px">
-                    @foreach (var entry in _userCharts[context].OrderByDescending(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken)))
-                    {
-                        var chart = _charts[entry.ChartId];
-                        <MudItem sm="3" md="2">
-                            <MudCard Class="chart-card">
-                                <MudCardHeader Style=@($"background-image:url(\"{chart.Song.ImagePath}\");")>
-
-                                    <DifficultyBubble Chart="chart"></DifficultyBubble>
-                                </MudCardHeader>
-
-                                <MudCardContent>
-                                    <ScoreBreakdown Score="entry.Score" IsBroken="entry.IsBroken" OneLine="true" Text=@(_scoring.GetScore(_charts[entry.ChartId], entry.Score, entry.Plate, entry.IsBroken).ToString("N0")) Plate="entry.Plate"></ScoreBreakdown>
-                                </MudCardContent>
-
-                            </MudCard>
-                        </MudItem>
-                    }
-                </MudGrid>
-            </td>
-        }
-    </ChildRowContent>
-</MudTable>
-<br/>
 <MudText Typo="Typo.h5">@(_isPastBite?"Monthly Leaderboard":"Road to BITE (Monthly Leaderboard July 8th - August 4th)")</MudText>
 @if (_selectedWeek == null)
 {
     
-    <MudText Typo="Typo.subtitle1">Week @_currentWeekInMonth</MudText>
+    <MudText Typo="Typo.subtitle1">Week @_currentWeekInMonth - Top @(_currentWeekInMonth*4) Charts</MudText>
 }
 else if(_monthlyWeeks.Any())
 {
-    <MudText Typo="Typo.subtitle1">@((_monthlyWeeks.Min() - TimeSpan.FromDays(7)).ToString("d")) - @((_monthlyWeeks.Max()-TimeSpan.FromDays(7)).ToString("d"))</MudText>
+    <MudText Typo="Typo.subtitle1">@((_monthlyWeeks.Min() - TimeSpan.FromDays(7)).ToString("d")) - @(((_isCurrentMonth?DateTimeOffset.Now:(_monthlyWeeks.Max()-TimeSpan.FromDays(1))).ToString("d")))</MudText>
 }
 <br />
 <MudSelect T="ChartType?" Value="_chartType" ValueChanged="SetChartType" Disabled="_isLoading" Label="Leaderboard Type">
@@ -413,6 +331,8 @@ else if(_monthlyWeeks.Any())
     private bool _isSaving = false;
     private Guid? _showingUserId = null;
     private string _showingSection = "Monthly";
+
+    private bool _isCurrentMonth = false;
     private void OpenSubmitDialog(Guid chartId)
     {
         _submittingChartId = chartId;
@@ -525,6 +445,7 @@ else if(_monthlyWeeks.Any())
     private async Task SetSelectedDate(DateTimeOffset? date)
     {
         _selectedWeek = date;
+
         await ReprocessLeaderboards();
         await RecalculateMonthlyLeaderboard();
     }
@@ -622,6 +543,10 @@ else if(_monthlyWeeks.Any())
         var biteStart = new DateTimeOffset(2024, 7, 9, 0, 0, 0, TimeSpan.Zero);
         var biteEnd = new DateTimeOffset(2024, 8, 5, 0, 0, 0, TimeSpan.Zero);
         var weekStart = _selectedWeek == null ? null : _selectedWeek - TimeSpan.FromDays(7);
+
+
+        _isCurrentMonth = weekStart == null || (weekStart.Value.Year == DateTimeOffset.Now.Year && weekStart.Value.Month == DateTimeOffset.Now.Month);
+
         _isPastBite = weekStart == null ? DateTimeOffset.Now >= biteEnd : weekStart < biteStart || weekStart >= biteEnd;
         _monthlyBestCharts.Clear();
         _monthlyTotals.Clear();
@@ -634,6 +559,7 @@ else if(_monthlyWeeks.Any())
             : d > biteStart).ToArray();
         _monthlyWeeks = monthlyDates;
         _currentWeekInMonth = monthlyDates.Count()+1;
+
         var entries = new List<WeeklyTournamentEntry>();
 
         foreach (var date in monthlyDates)
