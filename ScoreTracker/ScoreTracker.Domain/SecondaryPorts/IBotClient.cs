@@ -26,7 +26,7 @@
 
         public Task RegisterSlashCommand(string name, string description, string response,
             Func<ulong, ulong, IDictionary<string, string>, Task> execution,
-            IEnumerable<(string name, string description, bool isRequired)> options);
+            IEnumerable<(string name, string description, bool isRequired)> options, bool requireChannelAdmin = false);
 
         public void RegisterReactAdded(Func<string, ulong, ulong, Task> execution);
         public void RegisterReactRemoved(Func<string, ulong, ulong, Task> execution);

@@ -174,13 +174,8 @@ namespace ScoreTracker.Web.HostedServices
                     {
                         ("community-name", "The name of the community (optional with invite code)", false),
                         ("invite-code",
-                            "An active invite code for the community (not required for public communities)", false),
-                        ("new-scores-notifications", "Set to True if you want notifications about new scores", true),
-                        ("new-member-notifications",
-                            "Set to True if you want notifications about new members joining the community", true),
-                        ("new-titles-notifications", "Set to True if you want notifications about new titles achieved",
-                            true)
-                    });
+                            "An active invite code for the community (not required for public communities)", false)
+                    }, true);
             });
             _logger.LogInformation("Started bot client");
         }
