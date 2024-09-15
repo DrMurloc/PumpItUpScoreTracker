@@ -133,7 +133,7 @@
                                      Value=@($"{level.Item1.ToString()[0]}{level.Item2}")>
                             </MudChip>
                         }
-                         </MudItem>
+                    </MudItem>
                     <MudItem xs="2">
                         @($"x{kv.Value}")
                     </MudItem>
@@ -169,6 +169,32 @@
             }
         </MudGrid>
     </MudExpansionPanel>
+    @if (CurrentUser.IsLoggedIn)
+    {
+        
+        <MudExpansionPanel Text="Player Baseed Settings">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudText>Passed</MudText>
+                    <MudRadioGroup T="bool?" @bind-Value="Settings.ClearStatus">
+                        <MudRadio T="bool?" Value="null" Color="Color.Primary">Off</MudRadio>
+                        <MudRadio T="bool?" Value="true" Color="Color.Secondary">Passed</MudRadio>
+                        <MudRadio T="bool?" Value="false">Not Passed</MudRadio>
+                    </MudRadioGroup>
+                </MudItem>
+                @for (var letterGradeIndex = PhoenixLetterGrade.A; letterGradeIndex <= PhoenixLetterGrade.SSSPlus; letterGradeIndex++)
+                {
+                    var letterGrade = letterGradeIndex;
+                    
+                    <MudItem xs="6" sm="4" md="3">
+                        <MudCheckBox T="bool" Label="@letterGrade.GetName()" Value="Settings.LetterGrades.Contains(letterGrade)" ValueChanged="v=>Task.FromResult(v?Settings.LetterGrades.Add(letterGrade):Settings.LetterGrades.Remove(letterGrade))"></MudCheckBox>
+                    
+                    </MudItem>
+                }
+            </MudGrid>
+
+        </MudExpansionPanel>
+    }
     <MudExpansionPanel Text="Additional Settings">
         <MudGrid>
             <MudItem xs="4">

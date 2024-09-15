@@ -268,7 +268,9 @@
                 Buckets = _settings.CustomMinimums,
             ChartTypeLevelMinimums = _settings.ChartTypeLevelMinimums,
                 ChartTypeMinimums = _settings.ChartTypeMinimums,
-                LevelMinimums = _settings.LevelMinimums
+                LevelMinimums = _settings.LevelMinimums,
+                LetterGrades = _settings.LetterGrades,
+                ClearStatus = _settings.ClearStatus
             });
             
             await Mediator.Send(new SaveUserUiSettingCommand(LastConfigKey, savedResults));
@@ -404,6 +406,8 @@
                     _settings.CustomMinimums = lastConfig.Buckets;
                     _settings.UseScoringLevels = lastConfig.UseScoring;
                     _settings.AllowRepeats = lastConfig.AllowRepeats;
+                    _settings.ClearStatus = lastConfig.ClearStatus;
+                    _settings.LetterGrades = lastConfig.LetterGrades;
                     _count = lastConfig.Count;
                 }
                 catch (Exception e)
@@ -467,5 +471,7 @@
         public  bool UseScoring { get; set; }
         public int Count { get; set; }
         public bool AllowRepeats { get; set; }
+        public ISet<PhoenixLetterGrade> LetterGrades { get; set; } = new HashSet<PhoenixLetterGrade>();
+        public bool? ClearStatus { get; set; }
     }
 }

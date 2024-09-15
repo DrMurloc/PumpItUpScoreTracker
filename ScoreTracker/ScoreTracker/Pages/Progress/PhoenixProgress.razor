@@ -247,7 +247,7 @@
     private PlayerStatsRecord _stats = new(Guid.Empty,0, 1, 0, 0, 0,0,0,0,0,0,0,0,0,0,1,1,1);
     private async Task Filter()
     {
-        var results = _scores;
+        var results = _scores.Where(c=>_charts[c.ChartId].Type!=ChartType.CoOp);
         if (_selectedChartType != null)
         {
             results = results.Where(c => _charts[c.ChartId].Type == _selectedChartType);

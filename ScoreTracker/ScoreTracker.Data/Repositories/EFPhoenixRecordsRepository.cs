@@ -201,6 +201,7 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
     {
         var chartIds = (await _charts.GetCharts(MixEnum.Phoenix, level, chartType, null, cancellationToken))
             .Select(c => c.Id).Distinct().ToHashSet();
-        return (await GetCachedScores(userId, cancellationToken)).Count(c => chartIds.Contains(c.Key));
+        return (await GetCachedScores(userId, cancellationToken)).Count(c =>
+            chartIds.Contains(c.Key) && !c.Value.IsBroken);
     }
 }

@@ -55,6 +55,8 @@ namespace ScoreTracker.Domain.Models
 
         public ISet<Guid> ChartIds { get; set; } = new HashSet<Guid>();
         public ResultsOrdering Ordering { get; set; } = ResultsOrdering.Randomized;
+        public bool? ClearStatus { get; set; }
+        public ISet<PhoenixLetterGrade> LetterGrades { get; set; } = new HashSet<PhoenixLetterGrade>();
         public bool AllowRepeats { get; set; } = false;
         public int Count { get; set; } = 3;
         public bool UseScoringLevels { get; set; } = false;

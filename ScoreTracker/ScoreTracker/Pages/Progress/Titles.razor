@@ -2,9 +2,11 @@
 @using MediatR
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Models.Titles.Phoenix
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services.Contracts
 <PageTitle>Titles</PageTitle>
@@ -23,8 +25,9 @@
                 @if (_titleCounts.TryGetValue(context.Item.TitleName, out var count))
                 {
                     <MudTooltip Text=@($"{count}/{_userCount} Players")>
-                        
-                        <MudText>@($"{(100.0*count/(double)_userCount):N2}%")</MudText>
+                        <MudButton StartIcon="@Icons.Material.Filled.Visibility" Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>ShowTitledUsers(context.Item.TitleName)">
+                            @($"{(100.0 * count / (double)_userCount):N2}%")
+                        </MudButton>
                     </MudTooltip>
                 }
                 else
@@ -104,12 +107,35 @@
         {
             <PropertyColumn Property="t=>t.AdditionalNote" Title="Notes" Groupable="false"></PropertyColumn>
         }
-    </Columns>
+    </Columns>        
+    <ChildRowContent>
+        @if (_showingTitle == context.Item.TitleName && _showingTitle!=null)
+        {
+            <td colspan="@(CurrentUser.IsLoggedIn?6:5)">
+                @if (_currentTitleUsers.Count() < _titleCounts[_showingTitle.Value])
+                {
+                    <MudText Typo="Typo.body1">Not Showing @(_titleCounts[_showingTitle.Value]-_currentTitleUsers.Count()) Private Players</MudText>
+                    <br/><br/>
+                }
+                <MudGrid>
+                    @foreach (var user in _currentTitleUsers.OrderBy(u => u.Name))
+                    {
+                        <MudItem xs="12">
+
+                            <MudImage Src="@user.ProfileImage.ToString()" Height="15" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                            <UserLabel User="user"></UserLabel>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </td>
+        }
+    </ChildRowContent>
 </MudDataGrid>
 <br/>
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
 @inject IUiSettingsAccessor UiSettings;
+@inject IUserRepository Users;
 @inject ITitleRepository TitleRepo;
 @code {
     private MudDataGrid<TitleProgressDto>? _dataGrid;
@@ -120,6 +146,20 @@
     private bool _isLoading = true;
     private int _userCount = 1;
     private IDictionary<Name, int> _titleCounts = new Dictionary<Name, int>();
+    private IEnumerable<User> _currentTitleUsers = Array.Empty<User>();
+    private Name? _showingTitle = null;
+    private async Task ShowTitledUsers(Name title)
+    {
+        if (_showingTitle == title)
+        {
+            _showingTitle = null;
+            return;
+        }
+        var userIds = await TitleRepo.GetUsersWithTitle(title, CancellationToken.None);
+        var users = await Users.GetUsers(userIds, CancellationToken.None);
+        _currentTitleUsers = users.Where(u => u.IsPublic).ToArray();
+        _showingTitle = title;
+    }
     private async Task LoadTitles()
     {
 

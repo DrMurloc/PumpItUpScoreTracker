@@ -248,7 +248,7 @@
         <HeaderContent>
             <MudTh><MudTableSortLabel T="Chart" SortBy="c=>c.Song.Name.ToString()">Song</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel T="Chart" SortBy="c=>(int)c.Level">Chart</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel T="Chart" SortBy=@(c=>_winners[c.Id]==null?_playerScores.All(kv=>kv.Value.ContainsKey(c.Id))?"Tie":"Tiez":_userNames[_winners[c.Id].Value].ToString())>Winner</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="Chart" SortBy=@(c=>_winners[c.Id]==null?_playerScores.All(kv=>kv.Value.ContainsKey(c.Id))?"ZZZZZZTie":"ZZZZZZZTInconclusive":_userNames[_winners[c.Id].Value].ToString())>Winner</MudTableSortLabel></MudTh>
             @foreach (var key in _playerScores.Keys)
             {
                 <MudTh>
@@ -270,7 +270,7 @@
                 <DifficultyBubble Chart="context"></DifficultyBubble>
             </MudTd>
             <MudTd>
-                @(_winners[context.Id]==null?_playerScores.Any(kv=>!kv.Value.ContainsKey(context.Id))?"":"Tie":_userNames[_winners[context.Id]!.Value])
+                @(_winners[context.Id] == null ? _playerScores.Any(kv => !kv.Value.ContainsKey(context.Id)) ? "Inconclusive" : "Tie" : _userNames[_winners[context.Id]!.Value])
             </MudTd>
             @foreach (var key in _playerScores.Keys)
             {

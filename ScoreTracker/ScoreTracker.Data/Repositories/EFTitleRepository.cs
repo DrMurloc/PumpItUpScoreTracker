@@ -115,5 +115,13 @@ namespace ScoreTracker.Data.Repositories
                 return await database.User.Where(u => u.GameTag != null).CountAsync(cancellationToken);
             });
         }
+
+        public async Task<IEnumerable<Guid>> GetUsersWithTitle(Name title, CancellationToken cancellationToken)
+        {
+            var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var titleString = title.ToString();
+            return await database.UserTitle.Where(t => t.Title == titleString).Select(u => u.UserId)
+                .ToArrayAsync(cancellationToken);
+        }
     }
 }

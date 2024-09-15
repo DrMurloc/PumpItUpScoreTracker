@@ -21,14 +21,17 @@ namespace ScoreTracker.Application.Handlers
         private IChartRepository _charts;
         private readonly IRandomizerRepository _repo;
         private readonly ICurrentUserAccessor _currentUser;
+        private readonly IPhoenixRecordRepository _phoenixRecords;
 
         public RandomizerSaga(IChartRepository charts,
             IRandomizerRepository repo,
-            ICurrentUserAccessor currentUser)
+            ICurrentUserAccessor currentUser,
+            IPhoenixRecordRepository phoenixRecords)
         {
             _charts = charts;
             _repo = repo;
             _currentUser = currentUser;
+            _phoenixRecords = phoenixRecords;
         }
 
         private Guid NextRandomGuid(IEnumerable<KeyValuePair<Guid, int>> weights)
@@ -47,7 +50,7 @@ namespace ScoreTracker.Application.Handlers
         }
 
         private IEnumerable<KeyValuePair<Guid, int>> GetIncludedCharts(IDictionary<Guid, Chart> charts,
-            RandomSettings settings)
+            RandomSettings settings, IDictionary<Guid, RecordedPhoenixScore> userScores)
         {
             var calculatedWeights = new Dictionary<Guid, int>();
             foreach (var chart in
@@ -58,6 +61,31 @@ namespace ScoreTracker.Application.Handlers
                     calculatedWeights[chart.Id] = 0;
                     continue;
                 }
+
+                if (settings.ClearStatus != null)
+                {
+                    if (settings.ClearStatus.Value &&
+                        (!userScores.TryGetValue(chart.Id, out var score) || score.IsBroken))
+                    {
+                        calculatedWeights[chart.Id] = 0;
+                        continue;
+                    }
+
+                    if (!settings.ClearStatus.Value && userScores.TryGetValue(chart.Id, out var score2) &&
+                        !score2.IsBroken)
+                    {
+                        calculatedWeights[chart.Id] = 0;
+                        continue;
+                    }
+                }
+
+                if (settings.LetterGrades.Any())
+                    if (!userScores.TryGetValue(chart.Id, out var score) || score.Score == null ||
+                        !settings.LetterGrades.Contains(score.Score.Value.LetterGrade))
+                    {
+                        calculatedWeights[chart.Id] = 0;
+                        continue;
+                    }
 
                 var level = settings.UseScoringLevels
                     ? (int)Math.Floor(chart.ScoringLevel!.Value)
@@ -192,7 +220,13 @@ namespace ScoreTracker.Application.Handlers
             var charts =
                 (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
                 .ToDictionary(c => c.Id);
-            var includedCharts = GetIncludedCharts(charts, request.Settings).ToArray();
+            var userScores = new Dictionary<Guid, RecordedPhoenixScore>();
+            if ((_currentUser.IsLoggedIn && request.Settings.LetterGrades.Any()) ||
+                request.Settings.ClearStatus != null)
+                userScores =
+                    (await _phoenixRecords.GetRecordedScores(_currentUser.User.Id, cancellationToken)).ToDictionary(r =>
+                        r.ChartId);
+            var includedCharts = GetIncludedCharts(charts, request.Settings, userScores).ToArray();
             if (includedCharts.Length < request.Settings.Count && !request.Settings.AllowRepeats)
                 return includedCharts.Select(c => charts[c.Key]);
 
@@ -224,7 +258,13 @@ namespace ScoreTracker.Application.Handlers
             var charts =
                 (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
                 .ToDictionary(c => c.Id);
-            var includedCharts = GetIncludedCharts(charts, request.Settings).ToArray();
+            var userScores = new Dictionary<Guid, RecordedPhoenixScore>();
+            if ((_currentUser.IsLoggedIn && request.Settings.LetterGrades.Any()) ||
+                request.Settings.ClearStatus != null)
+                userScores =
+                    (await _phoenixRecords.GetRecordedScores(_currentUser.User.Id, cancellationToken)).ToDictionary(r =>
+                        r.ChartId);
+            var includedCharts = GetIncludedCharts(charts, request.Settings, userScores).ToArray();
             return includedCharts.Select(kv => charts[kv.Key]).ToArray();
         }
 
