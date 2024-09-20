@@ -448,7 +448,7 @@ And {count - 10} others!";
             var community = await _communities.GetCommunityByName(communityName, cancellationToken);
             if (community == null) continue;
 
-            var channelIds = community.Channels.Where(s => s.SendNewScores).Select(c => c.ChannelId);
+            var channelIds = community.Channels.Select(c => c.ChannelId);
             foreach (var message in messages)
                 await _bot.SendMessages(new[] { message }, channelIds, cancellationToken);
         }
