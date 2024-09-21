@@ -212,8 +212,8 @@
                 {
                     <MudItem xs="12" Style="padding-top:0px;padding-bottom:0px;">
                         
-                        <MudText Color=@(_scores.ContainsKey(chart.Id) && _scores[chart.Id]>0 ? Color.Success : _todos.Contains(chart.Id)?Color.Info: Color.Default)>
-                            @($"{chart.Song.Name} {chart.DifficultyString}") @(_scores.ContainsKey(chart.Id)&&_scores[chart.Id]>0?$"- {_scores[chart.Id].ToGradeString()}":"")
+                        <MudText Color=@(_scores.ContainsKey(chart.Id) && _scores[chart.Id].Score>0 ? Color.Success : _todos.Contains(chart.Id)?Color.Info: Color.Default)>
+                            @($"{chart.Song.Name} {chart.DifficultyString}") @(_scores.ContainsKey(chart.Id)&&_scores[chart.Id].Score>0?$"- {_scores[chart.Id].Score!.Value.ToGradeString()}":"")
                         </MudText>
                     </MudItem>
                 }
@@ -226,10 +226,10 @@
                                 
                                 <DifficultyBubble Chart="chart"></DifficultyBubble>
                             </MudCardHeader>
-                            @if ((_scores.TryGetValue(chart.Id, out var s) ? s : 0) > 0)
+                            @if ((_scores.TryGetValue(chart.Id, out var s) ? s.Score : 0) > 0)
                             {
                                 <MudCardContent>
-                                    <ScoreBreakdown Score="_scores[chart.Id]" IsBroken="_isBroken[chart.Id]" OneLine="true" ShowScore="true" Plate="_plate[chart.Id]"></ScoreBreakdown>
+                                    <ScoreBreakdown Score="_scores[chart.Id].Score!.Value" IsBroken="_scores[chart.Id].IsBroken" OneLine="true" ShowScore="true" Plate="_scores[chart.Id].Plate"></ScoreBreakdown>
                                     @if (_showAge)
                                     {
                                         <MudText>@(_ages[chart.Id].ToString("0")) @L["Days Old"]</MudText>
@@ -338,10 +338,7 @@
     private IDictionary<Skill, double> _skillWeights = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0.0);
     private IDictionary<Skill, Color> Colors = Enum.GetValues<Skill>().ToDictionary(s => s, s => Color.Primary);
     private IDictionary<Guid, double> _passScore = new Dictionary<Guid, double>();
-    private IDictionary<Guid, PhoenixScore> _scores = new Dictionary<Guid, PhoenixScore>();
-    private IDictionary<Guid, bool> _isBroken = new Dictionary<Guid, bool>();
-    private IDictionary<Guid, PhoenixPlate?> _plate = new Dictionary<Guid, PhoenixPlate?>();
-    private IDictionary<Guid, int> _ages = new Dictionary<Guid, int>();
+    private IDictionary<Guid, RecordedPhoenixScore> _scores = new Dictionary<Guid, RecordedPhoenixScore>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private ISet<Guid> _unPopularCharts = new HashSet<Guid>();
     private ISet<Guid> _popularCharts = new HashSet<Guid>();
@@ -353,10 +350,11 @@
     }
     private ISet<SongType> _filteredTypes = new HashSet<SongType>();
     private IEnumerable<string> _stepArtists = new HashSet<string>();
+    private IDictionary<Guid, int> _ages = new Dictionary<Guid, int>(); 
     private IEnumerable<string> _songArtists = new HashSet<string>();
     private IDictionary<Guid, IEnumerable<Name>> _charTitles = new Dictionary<Guid, IEnumerable<Name>>();
     private IEnumerable<PhoenixTitle> _titles = Array.Empty<PhoenixTitle>();
-    private IEnumerable<Guid> _unpassedTodos => _finalEntries.Select(e => e.ChartId).Where(chartId => _isBroken.ContainsKey(chartId)&& _isBroken[chartId] && _todos.Contains(chartId));
+    private IEnumerable<Guid> _unpassedTodos => _finalEntries.Select(e => e.ChartId).Where(chartId => _scores.ContainsKey(chartId)&& _scores[chartId].IsBroken && _todos.Contains(chartId));
     private Name[] _availableStepArtists = Array.Empty<Name>();
     private Name[] _availableSongArtists = Array.Empty<Name>();
     private int _lowestNoteCount = 0;
@@ -425,7 +423,7 @@
 
     private bool ShouldChartShow(SongTierListEntry entry)
     {
-        if (_hidePassed && !_isBroken[entry.ChartId])
+        if (_hidePassed && !(_scores.TryGetValue(entry.ChartId, out var s) && !s.IsBroken))
         {
             return false;
         }
@@ -588,10 +586,10 @@
         StateHasChanged();
     }
     private string CardClass(Guid chartId) =>
-        _isBroken.TryGetValue(chartId,out var broken)&&!broken? "chart-card border-solid border-2" : "chart-card border-dashed border-2";
+        _scores.TryGetValue(chartId,out var broken)&&!broken.IsBroken? "chart-card border-solid border-2" : "chart-card border-dashed border-2";
 
     private string CardStyle(Guid chartId) =>
-        _isBroken.TryGetValue(chartId, out var broken) && !broken ? $@"border-color:{MudBlazor.Colors.Green.Darken1}" : "";
+        _scores.TryGetValue(chartId, out var broken) && !broken.IsBroken ? $@"border-color:{MudBlazor.Colors.Green.Darken1}" : "";
     private async Task SetHighlighted(int newModifier)
     {
         _highlightedModifier = newModifier;
@@ -619,8 +617,6 @@
         _skillWeights = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0.0);
         Colors = Enum.GetValues<Skill>().ToDictionary(s => s, s => Color.Primary);
         _passScore = new Dictionary<Guid, double>();
-        _scores = new Dictionary<Guid, PhoenixScore>();
-        _isBroken = new Dictionary<Guid, bool>();
 
         var skills = (await Mediator.Send(new GetChartSkillsQuery())).Where(c => _charts.ContainsKey(c.ChartId)).ToArray();
 
@@ -628,10 +624,6 @@
             .Where(s => _charts.ContainsKey(s.ChartId))
             .ToDictionary(g => g.ChartId);
 
-        _scores = _charts.ToDictionary(c => c.Key, c => myScores.TryGetValue(c.Key, out var s) ? s.Score ?? PhoenixScore.Min : PhoenixScore.Min);
-        _isBroken = _charts.ToDictionary(c => c.Key, c => !myScores.TryGetValue(c.Key, out var b) || b.IsBroken);
-        _plate = _charts.ToDictionary(c => c.Key, c => myScores.TryGetValue(c.Key, out var s) ? s.Plate : null);
-        _ages = _charts.ToDictionary(c => c.Key, c => myScores.TryGetValue(c.Key, out var s) ? (int)(_now - s.RecordedDate).TotalDays : 0);
         foreach (var skillChart in skills)
         {
             if (!myScores.TryGetValue(skillChart.ChartId, out var score)||score.Score==null)
@@ -780,11 +772,11 @@
             var officialScores = (await Mediator.Send(new GetTierListQuery("Official Scores"))).ToDictionary(s => s.ChartId);
             var similarPlayers = new Dictionary<Guid, SongTierListEntry>();
             var scores = (await Mediator.Send(new GetTierListQuery("Scores"))).ToDictionary(s => s.ChartId); 
-            var baseEntries =
-                CurrentUser.IsLoggedIn ?
-                    (await BuildSkillTierList()).ToDictionary(e => e.ChartId)
-                    : scores.ToDictionary(kv => kv.Key, kv => new SongTierListEntry("Skill", kv.Key, TierListCategory.Unrecorded, 0));
-            var title = (await Mediator.Send(new GetTierListQuery("Pass Count"))).ToDictionary(s => s.ChartId);
+        var baseEntries =
+            CurrentUser.IsLoggedIn ?
+                (await BuildSkillTierList()).ToDictionary(e => e.ChartId)
+                : scores.ToDictionary(kv => kv.Key, kv => new SongTierListEntry("Skill", kv.Key, TierListCategory.Unrecorded, 0));
+        var title = (await Mediator.Send(new GetTierListQuery("Pass Count"))).ToDictionary(s => s.ChartId);
             if (CurrentUser.IsLoggedIn && _usePersonalizedData)
             {
                 similarPlayers = CurrentUser.IsLoggedIn ? (await GetSimilarPlayers(_chartType, _level))
@@ -834,19 +826,19 @@
         foreach (var group in _finalGroupings)
         {
             var clearRate = 0.0;
-            if (group.Any(e => (_isBroken.TryGetValue(e.ChartId,out var s) && !s)))
+            if (group.Any(e => (_scores.TryGetValue(e.ChartId,out var s) && !s.IsBroken)))
             {
-                clearRate = group.Count(e => _isBroken.TryGetValue(e.ChartId, out var s) && !s) / (double)group.Count();
+                clearRate = group.Count(e => _scores.TryGetValue(e.ChartId, out var s) && !s.IsBroken) / (double)group.Count();
             }
-            var scoredCharts = group.Where(e => _scores.TryGetValue(e.ChartId, out var score) && score>0).ToArray();
+            var scoredCharts = group.Where(e => _scores.TryGetValue(e.ChartId, out var score) && score.Score>0).ToArray();
             if (!scoredCharts.Any())
             {
                 _messages[group.Key] = $"{clearRate * 100.0:0.00}% Cleared";
                 continue;
             }
-            var minScore = (PhoenixScore)scoredCharts.Min(e => (int)_scores[e.ChartId]);
-            var avgScore = (PhoenixScore)(int)scoredCharts.Average(e => _scores[e.ChartId]);
-            var maxScore = (PhoenixScore)scoredCharts.Max(e => (int)_scores[e.ChartId]);
+            var minScore = (PhoenixScore)scoredCharts.Min(e => (int)_scores[e.ChartId].Score!);
+            var avgScore = (PhoenixScore)(int)scoredCharts.Average(e => _scores[e.ChartId].Score!);
+            var maxScore = (PhoenixScore)scoredCharts.Max(e => (int)_scores[e.ChartId].Score!);
             _messages[group.Key] = $"{clearRate * 100.0:0.00}% Cleared, {minScore} ({minScore.LetterGrade.GetName()}) - {maxScore} ({maxScore.LetterGrade.GetName()}), {avgScore} ({avgScore.LetterGrade.GetName()}) Average";
         }
         var charts = _finalEntries.Select(e => _charts[e.ChartId]).ToArray();
@@ -868,18 +860,18 @@
         {
             baseRating = 2000;
         }
-        _averageRating = _scores.Any(kv => !_isBroken[kv.Key] && kv.Value > 0) ? (int)_scores.Where(kv => !_isBroken[kv.Key] && kv.Value > 0).Average(s => s.Value.LetterGrade.GetModifier() * baseRating) : baseRating;
+        _averageRating = _scores.Any(kv => !_scores[kv.Key].IsBroken && kv.Value.Score > 0) ? (int)_scores.Where(kv => !_scores[kv.Key].IsBroken && kv.Value.Score > 0).Average(s => s.Value.Score!.Value.LetterGrade.GetModifier() * baseRating) : baseRating;
         await CalculateVariance(_chartType, _level);
 
         var lamps = new List<LampProgress>();
-        lamps.Add(new LampProgress("Pass",0,_charts.Count(kv=>_isBroken.TryGetValue(kv.Key,out var b)&&!b)));
+        lamps.Add(new LampProgress("Pass",0,_charts.Count(kv=>_scores.TryGetValue(kv.Key,out var b)&&!b.IsBroken)));
         var order = 1;
         for (var grade = PhoenixLetterGrade.AA; grade <= PhoenixLetterGrade.SSSPlus; grade++)
         {
             lamps.Add(new LampProgress(grade.GetName(), order++,
-                _charts.Count(kv => _scores.TryGetValue(kv.Key, out var s) && s.LetterGrade >= grade)));
+                _charts.Count(kv => _scores.TryGetValue(kv.Key, out var s) && s.Score?.LetterGrade >= grade)));
         }
-        lamps.Add(new LampProgress("PG", order, _charts.Count(kv => _scores.TryGetValue(kv.Key, out var s) && s == PhoenixScore.Max)));
+        lamps.Add(new LampProgress("PG", order, _charts.Count(kv => _scores.TryGetValue(kv.Key, out var s) && s.Score == PhoenixScore.Max)));
         _lamps = lamps;
         _isLoading = false;
     }
@@ -909,6 +901,9 @@
     }
     protected override async Task OnInitializedAsync()
     {
+        _scores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id)))
+            .ToDictionary(c => c.ChartId);
+        _ages = _scores.ToDictionary(c => c.Key, c => (int)(_now - c.Value.RecordedDate).TotalDays); 
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).
           ToDictionary(c => c.Id);
         _titles = PhoenixTitleList.BuildList();
