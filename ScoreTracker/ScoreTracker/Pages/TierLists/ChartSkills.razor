@@ -2,6 +2,7 @@
 @page "/PersonalizedTierList"
 @page "/TierLists"
 @using MediatR
+@using Microsoft.Extensions.Caching.Memory
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Handlers
 @using ScoreTracker.Application.Queries
@@ -30,6 +31,13 @@
     <MudItem xs="12">
         <MudLink Href="/TierLists/Old">Go to Old Tier Lists Page</MudLink>
     </MudItem>
+
+    @if (_isLoading)
+    {
+        <MudItem xs="12">
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true"></MudProgressLinear>
+        </MudItem>
+    }
     <MudItem xs="12" sm="6">
         <MudSelect T="ChartType" Value="_chartType" ValueChanged="SetType" Label=@L["Chart Type"] Disabled="_isLoading">
             <MudSelectItem T="ChartType" Value="ChartType.Single">Singles</MudSelectItem>
@@ -293,60 +301,6 @@
 
 
 </MudGrid>
-@if (CurrentUser.IsLoggedInAsAdmin && _finalEntries.Any() && _finalEntries.All(e => _charts.ContainsKey(e.ChartId)))
-{
-    <br/><br/>
-    <MudTable T="SongTierListEntry" Items=@(_finalEntries)>
-        <HeaderContent>
-            <MudTh>
-                <MudTableSortLabel T="SongTierListEntry" SortBy="e => _charts[e.ChartId].Song.Name">Song</MudTableSortLabel>
-            </MudTh>
-            <MudTh>Chart</MudTh>
-            <MudTh>
-                <MudTableSortLabel T="SongTierListEntry" SortBy="e => e.Order">Final Ranking</MudTableSortLabel>
-            </MudTh>
-            @foreach (var key in _categoryLists.Keys.OrderBy(k => k))
-            {
-                <MudTh>
-                    <MudTableSortLabel T="SongTierListEntry" SortBy="e => _categoryLists[key].TryGetValue(e.ChartId, out var z) ? z.Order : 0">@key</MudTableSortLabel>
-                </MudTh>
-            }
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd>
-                <MudImage Src="@_charts[context.ChartId].Song.ImagePath.ToString()" Height="35" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
-            </MudTd>
-            <MudTd>
-                <DifficultyBubble Chart="_charts[context.ChartId]"></DifficultyBubble>
-            </MudTd>
-            <MudTd>
-                <MudTooltip Text="@context.Order.ToString()">
-                    <MudText Style=@($"color:{CategoryColor(context.Category)}")>
-                        @context.Category.ToString() (@((@context.Order / 100.0).ToString("0.00")))
-                    </MudText>
-                </MudTooltip>
-            </MudTd>
-            @foreach (var list in _categoryLists.OrderBy(k => k.Key))
-            {
-                <MudTd>
-                    @if (list.Value.ContainsKey(context.ChartId))
-                    {
-
-                        <MudTooltip Text="@list.Value[context.ChartId].Order.ToString()">
-                            <MudText Style=@($"color:{CategoryColor(list.Value[context.ChartId].Category)}")>
-                                @list.Value[context.ChartId].Category
-                            </MudText>
-                        </MudTooltip>
-                    }
-                </MudTd>
-            }
-        </RowTemplate>
-
-        <PagerContent>
-            <MudTablePager></MudTablePager>
-        </PagerContent>
-    </MudTable>
-}
 
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
@@ -358,6 +312,7 @@
 @inject ISnackbar Snackbar;
 @inject IPhoenixRecordRepository Records;
 @inject IPlayerStatsRepository PlayerStats;
+@inject IMemoryCache Cache;
 @code
 {
 
@@ -382,7 +337,6 @@
     private IEnumerable<Skill> _orderedSkills = Array.Empty<Skill>();
     private IDictionary<Skill, double> _skillWeights = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0.0);
     private IDictionary<Skill, Color> Colors = Enum.GetValues<Skill>().ToDictionary(s => s, s => Color.Primary);
-
     private IDictionary<Guid, double> _passScore = new Dictionary<Guid, double>();
     private IDictionary<Guid, PhoenixScore> _scores = new Dictionary<Guid, PhoenixScore>();
     private IDictionary<Guid, bool> _isBroken = new Dictionary<Guid, bool>();
@@ -750,7 +704,7 @@
         {"Similar Players",1}
     };
 
-    private IDictionary<string, IDictionary<Guid, SongTierListEntry>> _categoryLists = new Dictionary<string, IDictionary<Guid, SongTierListEntry>>();
+
     private int GetScore(TierListCategory category) => (int)category - 3;
     private int _averageRating = 1;
     private async Task<IEnumerable<SongTierListEntry>> GetSimilarPlayers(ChartType type, int level)
@@ -800,57 +754,71 @@
         await UiSettings.SetSetting("TierLists__ListType", _tierListType);
         await UiSettings.SetSetting("TierLists__UsePersonalized", _usePersonalizedData.ToString());
         await UiSettings.SetSetting("TierLists__GroupByTierList", _groupByTierList.ToString());
+        await UiSettings.SetSetting("TierLists__HideCompleted", _hidePassed.ToString());
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, _level, _chartType))).ToDictionary(c => c.Id);
         var titles = _titles.Where(t => t is ISpecificChartTitle).ToArray();
         _charTitles = _charts.Values.SelectMany(c => titles.Select(t => (c,t,((ISpecificChartTitle)t).AppliesToChart(c))))
             .Where(v => v.Item3).GroupBy(v=>v.c.Id).ToDictionary(g =>g.Key,g=> g.Select(v => v.t.Name).ToArray().AsEnumerable());
-        var officialScores = (await Mediator.Send(new GetTierListQuery("Official Scores"))).ToDictionary(s => s.ChartId);
-        var scores = (await Mediator.Send(new GetTierListQuery("Scores"))).ToDictionary(s => s.ChartId); 
+        
         var popularity = (await Mediator.Send(new GetTierListQuery("Popularity"))).ToDictionary(s => s.ChartId);
         _popularCharts = popularity.Where(kv => kv.Value.Category == TierListCategory.Overrated).Select(kv => kv.Key).ToHashSet();
         _unPopularCharts = popularity.Where(kv => kv.Value.Category == TierListCategory.Underrated).Select(kv => kv.Key).ToHashSet();
-        var result = new List<SongTierListEntry>();
+        
+        
+        var scores = (await Mediator.Send(new GetTierListQuery("Scores"))).ToDictionary(s => s.ChartId); 
         var baseEntries =
             CurrentUser.IsLoggedIn ?
                 (await BuildSkillTierList()).ToDictionary(e => e.ChartId)
                 : scores.ToDictionary(kv => kv.Key, kv => new SongTierListEntry("Skill", kv.Key, TierListCategory.Unrecorded, 0));
         var title = (await Mediator.Send(new GetTierListQuery("Pass Count"))).ToDictionary(s => s.ChartId);
-        var similarPlayers = CurrentUser.IsLoggedIn ? (await GetSimilarPlayers(_chartType, _level))
-            .ToDictionary(e => e.ChartId) : _charts.ToDictionary(kv => kv.Key, kv => new SongTierListEntry("Similar Players", kv.Key, TierListCategory.Unrecorded, 0));
-        _categoryLists = new Dictionary<string, IDictionary<Guid, SongTierListEntry>>()
-        {
-            { "Skill", baseEntries },
-            { "Official Scores", officialScores },
-            { "Scores", scores },
-            { "Popularity", popularity },
-            {"Pass Count",title},
-            {"Similar Players",similarPlayers}
-        };
 
-        foreach (var chartId in _charts.Keys)
+        var cacheKey = $"{nameof(ChartSkills)}__TierList__{_tierListType}__{_chartType}__{_level}";
+        if (_usePersonalizedData && CurrentUser.IsLoggedIn)
         {
-            var count = 0.0;
-            var currentTotal = 0.0;
-            foreach (var listItem in new[] { (officialScores, "Official Scores"), (scores, "Scores"), (popularity, "Popularity"), (baseEntries, "Skill"), (title, "Pass Count"),(similarPlayers,"Similar Players") })
-            {
-                if (!listItem.Item1.ContainsKey(chartId)||listItem.Item1[chartId].Category == TierListCategory.Unrecorded)
-                {
-                    continue;
-                }
-                count += _modifiers[listItem.Item2];
-                currentTotal += _modifiers[listItem.Item2] * (double)GetScore(listItem.Item1[chartId].Category);
-            }
-            var final = currentTotal / (double)count;
-            result.Add(new SongTierListEntry("Final", chartId, final < -2.5 ? TierListCategory.Overrated :
-                final<-1.5?TierListCategory.VeryEasy:
-                final<-.5?TierListCategory.Easy:
-                final<=.5?TierListCategory.Medium:
-                final<=1.5?TierListCategory.Hard:
-                final<=2.5?TierListCategory.VeryHard:
-                TierListCategory.Underrated,(int)(final*100.0)));
-
+            cacheKey += $"__{CurrentUser.User.Id}";
         }
-        _finalEntries = result;
+        _finalEntries = await Cache.GetOrCreateAsync(cacheKey, async o =>
+        {
+            o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6);
+            o.SlidingExpiration = TimeSpan.FromHours(1);
+
+            var officialScores = (await Mediator.Send(new GetTierListQuery("Official Scores"))).ToDictionary(s => s.ChartId);
+            var similarPlayers = new Dictionary<Guid, SongTierListEntry>();
+            if (CurrentUser.IsLoggedIn && _usePersonalizedData)
+            {
+                similarPlayers = CurrentUser.IsLoggedIn ? (await GetSimilarPlayers(_chartType, _level))
+                    .ToDictionary(e => e.ChartId) : _charts.ToDictionary(kv => kv.Key, kv => new SongTierListEntry("Similar Players", kv.Key, TierListCategory.Unrecorded, 0));
+
+            }
+
+            var result = new List<SongTierListEntry>();
+            foreach (var chartId in _charts.Keys)
+            {
+                var count = 0.0;
+                var currentTotal = 0.0;
+                foreach (var listItem in new[] { (officialScores, "Official Scores"), (scores, "Scores"), (popularity, "Popularity"), (baseEntries, "Skill"), (title, "Pass Count"), (similarPlayers,"Similar Players") })
+                {
+                    if (!listItem.Item1.ContainsKey(chartId) || listItem.Item1[chartId].Category == TierListCategory.Unrecorded)
+                    {
+                        continue;
+                    }
+                    count += _modifiers[listItem.Item2];
+                    currentTotal += _modifiers[listItem.Item2] * (double)GetScore(listItem.Item1[chartId].Category);
+                }
+                var final = currentTotal / (double)count;
+                result.Add(new SongTierListEntry("Final", chartId, final < -2.5 ? TierListCategory.Overrated :
+                    final < -1.5 ? TierListCategory.VeryEasy :
+                        final < -.5 ? TierListCategory.Easy :
+                            final <= .5 ? TierListCategory.Medium :
+                                final <= 1.5 ? TierListCategory.Hard :
+                                    final <= 2.5 ? TierListCategory.VeryHard :
+                                        TierListCategory.Underrated, (int)(final * 100.0)));
+
+            }
+            return result;
+        }) ?? throw new Exception("Tier list could not be retrieved from cache");
+
+
         if (_groupByTierList)
         {
             _finalGroupings = _finalEntries.GroupBy(e => e.Category.ToString()).OrderBy(g => Enum.Parse<TierListCategory>(g.Key))
