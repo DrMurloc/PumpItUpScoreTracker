@@ -423,7 +423,7 @@
 
     private bool ShouldChartShow(SongTierListEntry entry)
     {
-        if (_hidePassed && !(_scores.TryGetValue(entry.ChartId, out var s) && !s.IsBroken))
+        if (_hidePassed && !(_scores.TryGetValue(entry.ChartId, out var s) && s.IsBroken))
         {
             return false;
         }
