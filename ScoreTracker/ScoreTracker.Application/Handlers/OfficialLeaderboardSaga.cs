@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using System.Text.RegularExpressions;
+using MassTransit;
 using MediatR;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
@@ -13,7 +14,8 @@ namespace ScoreTracker.Application.Handlers
 {
     public sealed class OfficialLeaderboardSaga : IRequestHandler<ProcessOfficialLeaderboardsCommand>,
         IRequestHandler<ProcessChartPopularityCommand>,
-        IRequestHandler<ImportOfficialPlayerScoresCommand>
+        IRequestHandler<ImportOfficialPlayerScoresCommand>,
+        IRequestHandler<UpdateSongImagesCommand>
     {
         private readonly IOfficialSiteClient _officialSite;
         private readonly ITierListRepository _tierLists;
@@ -22,11 +24,13 @@ namespace ScoreTracker.Application.Handlers
         private readonly IUserRepository _user;
         private readonly IMediator _mediator;
         private readonly IBus _bus;
+        private readonly IFileUploadClient _files;
+        private readonly IChartRepository _charts;
 
         public OfficialLeaderboardSaga(IOfficialSiteClient officialSite, ITierListRepository tierLists,
             IOfficialLeaderboardRepository leaderboards, ICurrentUserAccessor currentUser, IUserRepository user,
             IMediator mediator,
-            IBus bus)
+            IBus bus, IFileUploadClient files, IChartRepository charts)
         {
             _officialSite = officialSite;
             _tierLists = tierLists;
@@ -35,6 +39,8 @@ namespace ScoreTracker.Application.Handlers
             _user = user;
             _mediator = mediator;
             _bus = bus;
+            _files = files;
+            _charts = charts;
         }
 
         public async Task Handle(ProcessOfficialLeaderboardsCommand request, CancellationToken cancellationToken)
@@ -133,7 +139,7 @@ namespace ScoreTracker.Application.Handlers
                 var oneLevelOverrated = average + standardDev * 1.5;
                 var hardMin = average - standardDev;
                 var veryHardMin = average - standardDev * 1.5;
-                foreach (var (chart, score) in levelTypeGroup)
+                foreach (var (chart, score, url) in levelTypeGroup)
                 {
                     var category = TierListCategory.Unrecorded;
                     if (score == -1)
@@ -230,6 +236,26 @@ namespace ScoreTracker.Application.Handlers
             var settings = await _user.GetUserUiSettings(userId, cancellationToken);
             settings["PreviousPageCount"] = maxPages.ToString();
             await _user.SaveUserUiSettings(userId, settings, cancellationToken);
+        }
+
+        private static readonly Regex NonAlphanumeric = new("[^a-zA-Z0-9]", RegexOptions.Compiled);
+
+        public async Task Handle(UpdateSongImagesCommand request, CancellationToken cancellationToken)
+        {
+            var entries = await _officialSite.GetOfficialChartLeaderboardEntries(cancellationToken);
+            foreach (var songGroup in entries.GroupBy(e => e.Chart.Song.Name))
+            {
+                var song = songGroup.First().Chart.Song;
+                var songHasImageAlready = !song.ImagePath.ToString().EndsWith("placeholder.png");
+                if (!request.IncludeSongsAlreadyWithImages &&
+                    songHasImageAlready) continue;
+
+                var newImage = songHasImageAlready
+                    ? "/songs/" + NonAlphanumeric.Replace(song.Name, "")
+                    : song.ImagePath.PathAndQuery;
+                var newPath = await _files.CopyFromSource(songGroup.First().SongImage, newImage, cancellationToken);
+                await _charts.UpdateSongImage(song.Name, newPath, cancellationToken);
+            }
         }
     }
 }

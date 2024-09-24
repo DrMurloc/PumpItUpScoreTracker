@@ -213,10 +213,8 @@ Do It
     //await Mediator.Send(new ProcessChartPopularityCommand());
     //await WorldRanking.CalculateWorldRankings(CancellationToken.None);
         //await Bus.Publish(new ProcessPassTierListCommand());
-        foreach (var userId in await Database.User.Select(u=>u.Id).ToArrayAsync())
-        {
-            await Mediator.Send(new PlayerRatingSaga.RecalculateStats(userId));
-        }
+
+        await Mediator.Send(new UpdateSongImagesCommand(false));
 
     /*var userIds = await Database.User.Select(u => u.Id).ToArrayAsync();
         foreach (var userId in userIds)
@@ -224,6 +222,7 @@ Do It
             await Mediator.Send(new PlayerRatingSaga.RecalculateStats(userId));
         }
         Snackbar.Add("Done", Severity.Success);*/
+       Snackbar.Add("Done", Severity.Success);
 
     }
 

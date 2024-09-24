@@ -1,5 +1,6 @@
 ﻿using System.Security.Authentication;
 using System.Text.RegularExpressions;
+using System.Web;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Application.Commands;
@@ -112,7 +113,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     private async Task<Uri> ConvertPiuGameAvatarToPiuScoresAvatar(Uri avatar, CancellationToken cancellationToken)
     {
         var file = ImageRegex.Match(avatar.ToString()).Groups[1].Value;
-        var path = $"/avatars/{file}";
+        var path = $"/avatars/{HttpUtility.UrlEncode(file)}";
         if (!await _fileUpload.DoesFileExist(path, out var imagePath, cancellationToken))
             imagePath = await _fileUpload.CopyFromSource(avatar, path, cancellationToken);
 
@@ -345,7 +346,8 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
                 continue;
             }
 
-            result.Add(new ChartPopularityLeaderboardEntry(chart, apiResult.Place));
+            result.Add(new ChartPopularityLeaderboardEntry(chart, apiResult.Place,
+                new Uri(apiResult.SongImage, UriKind.Absolute)));
         }
 
         var existing = result.Select(r => r.Chart.Id).Distinct().ToHashSet();

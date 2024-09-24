@@ -13,6 +13,7 @@ namespace ScoreTracker.Data.Apis.Dtos
             public DifficultyLevel ChartLevel { get; set; }
             public ChartType ChartType { get; set; }
             public int Place { get; set; }
+            public string SongImage { get; set; }
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace ScoreTracker.Domain.Records
 {
-    public sealed record ChartPopularityLeaderboardEntry(Chart Chart, int Place)
+    public sealed record ChartPopularityLeaderboardEntry(Chart Chart, int Place, Uri SongImage)
     {
     }
 }

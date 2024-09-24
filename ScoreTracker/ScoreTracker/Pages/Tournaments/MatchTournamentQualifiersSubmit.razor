@@ -10,6 +10,7 @@
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
 @using System.Security.Authentication
+@using System.Web
 
 <PageTitle>Submit @_tournamentName Qualifiers Session</PageTitle>
 
@@ -536,7 +537,7 @@
         _isUploading = true;
         try
         {
-            var path = $"qualifiers/{TournamentId}/{_username}/{Guid.NewGuid()}.{file.Name.Split('.')[^1]}";
+            var path = $"qualifiers/{TournamentId}/{HttpUtility.UrlEncode(_username)}/{Guid.NewGuid()}.{file.Name.Split('.')[^1]}";
             _photoUrl= await FileUpload.UploadFile(path, file.OpenReadStream(MaxFileSize));
 
         }

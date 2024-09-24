@@ -53,5 +53,6 @@ public interface IChartRepository
     Task<IDictionary<Name, Name>> GetSongNames(Name cultureCode,
         CancellationToken cancellationToken);
 
+    Task UpdateSongImage(Name songName, Uri newImage, CancellationToken cancellationToken = default);
     void ClearCache();
 }

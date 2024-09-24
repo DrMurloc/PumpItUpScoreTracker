@@ -268,6 +268,15 @@ public sealed class EFChartRepository : IChartRepository
         });
     }
 
+    public async Task UpdateSongImage(Name songName, Uri newImage, CancellationToken cancellationToken = default)
+    {
+        var nameString = songName.ToString();
+        var song = await _database.Song.SingleAsync(s => s.Name == nameString, cancellationToken);
+        song.ImagePath = newImage.ToString();
+        await _database.SaveChangesAsync(cancellationToken);
+        ClearCache();
+    }
+
 
     public void ClearCache()
     {

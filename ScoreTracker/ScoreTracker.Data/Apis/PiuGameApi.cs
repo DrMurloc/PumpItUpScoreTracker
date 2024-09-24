@@ -122,7 +122,7 @@ public sealed class PiuGameApi : IPiuGameApi
                 {
                     Score = int.Parse(scoreNode.InnerText, NumberStyles.AllowThousands),
                     ProfileName = profileName,
-                    AvatarUrl = new Uri(ImageRegex.Match(avatarNode.GetAttributeValue("style", "")).Groups[1].Value)
+                    AvatarUrl = new Uri(ImageRegex.Match(avatarNode.GetAttributeValue("style", "")).Groups[2].Value)
                 });
             }
 
@@ -237,6 +237,8 @@ public sealed class PiuGameApi : IPiuGameApi
                 place = int.Parse(placeIcon.InnerText);
             }
 
+            var songImage = li.SelectSingleNode(".//div[contains(@class,'bgfix')]");
+
             var scoreP = li.SelectSingleNode(".//div[contains(@class,'profile_name')]/p[contains(@class,'t1')]");
             if (scoreP == null) continue;
 
@@ -260,12 +262,14 @@ public sealed class PiuGameApi : IPiuGameApi
             if (chartTypeUrl == null) continue;
             var chartType = GetChartTypeFromUrl(chartTypeUrl);
             if (chartType == null) continue;
+            var image = ImageRegex.Match(songImage.GetAttributeValue("style", "")).Groups[1].Value;
             results.Add(new PiuGameGetChartPopularityLeaderboardResult.Entry
             {
                 ChartLevel = level,
                 ChartType = chartType!.Value,
                 Place = place,
-                SongName = HttpUtility.HtmlDecode(scoreP.InnerText)
+                SongName = HttpUtility.HtmlDecode(scoreP.InnerText),
+                SongImage = image
             });
         }
 
@@ -557,7 +561,7 @@ public sealed class PiuGameApi : IPiuGameApi
 
     private static readonly Regex ImageRegex =
         new(
-            @"url\(\'(https\:\/\/piugame\.com\/data\/avatar_img\/[A-Za-z0-9]+\.[A-Za-z]+\?v\=[0-9]+)\'\)",
+            @"url\(\'(https\:\/\/piugame\.com\/data\/(avatar|song)_img\/[A-Za-z0-9]+\.[A-Za-z]+\?v\=[0-9]+)\'\)",
             RegexOptions.Compiled);
 
     public async Task<PiuGameGetAccountDataResult> GetAccountData(HttpClient client,
@@ -591,7 +595,7 @@ public sealed class PiuGameApi : IPiuGameApi
                               .DocumentNode.SelectSingleNode(".//div[contains(@class,'profile_img')]/div/div")
                               .GetAttributeValue("style", "")
                           ?? "";
-        var imagePath = ImageRegex.Match(imageString).Groups[1].Value;
+        var imagePath = ImageRegex.Match(imageString).Groups[2].Value;
         return new PiuGameGetAccountDataResult
         {
             AccountName = accountName,
