@@ -270,7 +270,7 @@
                                         <MudIcon Icon=@Icons.Material.Filled.GraphicEq Style=@($"color:{(varianceLevel=="Very High"?MudBlazor.Colors.Red.Darken1:varianceLevel=="High"?MudBlazor.Colors.Orange.Darken1:varianceLevel=="Low"?MudBlazor.Colors.Green.Darken1:MudBlazor.Colors.Blue.Darken1)}")></MudIcon>
                                     </MudTooltip>
                                 }
-                                @if (CurrentUser.IsLoggedInAsAdmin)
+                                @if (CurrentUser.IsLoggedIn)
                                 {
                                     <MudIconButton Icon="@Icons.Material.Outlined.ListAlt" OnClick="() => ToggleToDo(chart.Id)" Color="_todos.Contains(chart.Id) ? Color.Primary : Color.Default"></MudIconButton>
 
