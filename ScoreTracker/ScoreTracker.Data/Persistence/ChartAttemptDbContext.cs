@@ -47,7 +47,6 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<RandomSettingsEntity> RandomSettings { get; set; }
     public DbSet<MatchLinkEntity> MatchLink { get; set; }
     public DbSet<UserWorldRanking> UserWorldRanking { get; set; }
-    public DbSet<ChartSkillEntity> ChartSkill { get; set; }
     public DbSet<PlayerStatsEntity> PlayerStats { get; set; }
     public DbSet<BountyLeaaderboardEntity> BountyLeaderboard { get; set; }
     public DbSet<CommunityEntity> Community { get; set; }
