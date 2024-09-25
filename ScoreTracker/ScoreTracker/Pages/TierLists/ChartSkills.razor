@@ -259,11 +259,9 @@
 
                                         }
                                     }
-
-                                        <br/>
-                                    
                                     @if ((_scores.TryGetValue(chart.Id, out var s) ? s.Score : 0) > 0){
-
+                                        
+                                        <br/>
                                         <ScoreBreakdown Score="_scores[chart.Id].Score!.Value" IsBroken="_scores[chart.Id].IsBroken" OneLine="true" ShowScore="true" Plate="_scores[chart.Id].Plate"></ScoreBreakdown>
                                         @if (_showAge)
                                         {
@@ -1025,9 +1023,13 @@
     };
     protected override async Task OnInitializedAsync()
     {
-        _scores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id)))
-            .ToDictionary(c => c.ChartId);
-        _ages = _scores.ToDictionary(c => c.Key, c => (int)(_now - c.Value.RecordedDate).TotalDays); 
+        if (CurrentUser.IsLoggedIn)
+        {
+            
+            _scores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id)))
+                .ToDictionary(c => c.ChartId);
+            _ages = _scores.ToDictionary(c => c.Key, c => (int)(_now - c.Value.RecordedDate).TotalDays); 
+        }
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).
           ToDictionary(c => c.Id);
         _titles = PhoenixTitleList.BuildList();
