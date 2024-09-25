@@ -595,7 +595,8 @@ public sealed class PiuGameApi : IPiuGameApi
                               .DocumentNode.SelectSingleNode(".//div[contains(@class,'profile_img')]/div/div")
                               .GetAttributeValue("style", "")
                           ?? "";
-        var imagePath = ImageRegex.Match(imageString).Groups[2].Value;
+
+        var imagePath = ImageRegex.Match(imageString).Groups[1].Value;
         return new PiuGameGetAccountDataResult
         {
             AccountName = accountName,
