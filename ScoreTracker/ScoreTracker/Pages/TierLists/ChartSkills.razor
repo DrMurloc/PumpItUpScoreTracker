@@ -50,35 +50,63 @@
         </MudNumericField>
     </MudItem>
 
-    <MudItem xs="12">
 
-        <MudRadioGroup T="string" Disabled="_isLoading" Value="_tierListType" ValueChanged="SetTierListType">
-            @foreach (var type in _tierListTypes)
-            {
-                <MudRadio Value=@type.Key Color="Color.Primary">@type.Value</MudRadio>
-            }
-        </MudRadioGroup>
-    </MudItem>
-    @if (_tierListType == "Score")
-    {
-        <MudItem xs="12" sm="4" md="3">
 
-            <MudCheckBox T="bool" Value="!_groupByTierList" Disabled="_isLoading" ValueChanged="ToggleGrouping" Label=@L["Group By Scoring Difficulty"]></MudCheckBox>
-        </MudItem>
-    }
     @if (CurrentUser.IsLoggedIn)
     {
-        @if (_chartType!=ChartType.CoOp && _tierListType!="Popularity" && (_tierListType != "Score" || _groupByTierList))
+
+            <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == DifficultyFilter) || (ChartTypeFilter == ChartType.CoOp.ToString() && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
+
+
+        @if (_unpassedTodos.Any())
         {
-            
+            <MudItem xs="12">
+                <MudText Typo="Typo.subtitle1">
+                    @L.GetString("Unpassed ToDos", _unpassedTodos.Count(), _level)
+                </MudText>
+            </MudItem>
+        }
+ 
+        <MudItem xs="12">
+            @foreach (var lamp in _lamps)
+            {
+                <MudProgressLinear Min="0" Max="_charts.Count()" Style="margin-top:8px;" Color="lamp.Progress>=_charts.Count()?Color.Success:Color.Primary" Value="lamp.Progress">@lamp.Name</MudProgressLinear>
+            }
+        </MudItem>
+    }
+    <MudItem xs="12" sm="6">
+        <MudSelect T="string" Label=@L["Difficulty Categorization"] Disabled="_isLoading" Value="_tierListType" ValueChanged="SetTierListType">
+            @foreach (var type in _tierListTypes)
+            {
+                if (type.Key == "Chabala" && !_chabalaLinks.ContainsKey((_chartType,_level)))
+                {
+                    continue;
+                }
+                <MudSelectItem Value=@type.Key>@type.Value</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudSelect T="string" Label="Group By" Disabled="_isLoading" Value="_groupBy" ValueChanged="ChangeGrouping">
+            <MudSelectItem T="string" Value=@("Difficulty")>@L["Difficulty Level"]</MudSelectItem>
+            <MudSelectItem T="string" Value=@("Scoring Level")>@L["Scoring Level"]</MudSelectItem>
+            <MudSelectItem T="string" Value=@("Skill")>@L["Skill"]</MudSelectItem>
+        </MudSelect>
+    </MudItem>
+
+    @if (CurrentUser.IsLoggedIn)
+    {
+        @if (_chartType != ChartType.CoOp && _tierListType != "Popularity" && _tierListType !="Chabala")
+        {
+
             <MudItem xs="12" sm="4" md="3">
-                <MudCheckBox T="bool" Value="_usePersonalizedData" Disabled="_isLoading" ValueChanged="u=>SetUsePersonalized(u)" Label=@L["Personalized"]></MudCheckBox>
+                <MudCheckBox T="bool" Value="_usePersonalizedData" Disabled="_isLoading" ValueChanged="u=>SetUsePersonalized(u)" Label=@L["Personalized Difficulty"]></MudCheckBox>
             </MudItem>
         }
         <MudItem xs="12" sm="4" md="3">
             <MudCheckBox T="bool" @bind-Value="_hidePassed" Disabled="_isLoading" Label=@L["Hide Completed Charts"]></MudCheckBox>
         </MudItem>
-        
+
         <MudItem xs="12" sm="4" md="3">
             <MudCheckBox T="bool" @bind-Value="_showTodo" Disabled="_isLoading" Label=@L["Show Only ToDo Charts"]></MudCheckBox>
         </MudItem>
@@ -104,7 +132,7 @@
             }
             <MudExpansionPanel Text=@L["Additional Filters"]>
                 <MudGrid>
-                    
+
                     <MudItem xs="12">
                         <MudCheckBox T="bool" Value="_textView" ValueChanged="SetTextView" Disabled="_isLoading" Label=@L["Text View"]></MudCheckBox>
                     </MudItem>
@@ -163,33 +191,16 @@
             </MudExpansionPanel>
         </MudExpansionPanels>
     </MudItem>
-    @if (CurrentUser.IsLoggedIn)
-    {
-
-            <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == DifficultyFilter) || (ChartTypeFilter == ChartType.CoOp.ToString() && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
-
-
-        @if (_unpassedTodos.Any())
-        {
-            <MudItem xs="12">
-                <MudText Typo="Typo.subtitle1">
-                    @L.GetString("Unpassed ToDos", _unpassedTodos.Count(), _level)
-                </MudText>
-            </MudItem>
-        }
- 
-        <MudItem xs="12">
-            @foreach (var lamp in _lamps)
-            {
-                <MudProgressLinear Min="0" Max="_charts.Count()" Style="margin-top:8px;" Color="lamp.Progress>=_charts.Count()?Color.Success:Color.Primary" Value="lamp.Progress">@lamp.Name</MudProgressLinear>
-            }
-        </MudItem>
-    }
-
     @if (_isLoading)
     {
         <MudItem xs="12">
             <MudProgressLinear Color="Color.Primary" Indeterminate="true"></MudProgressLinear>
+        </MudItem>
+    }
+    @if (_tierListType == "Chabala" && _chabalaLinks.ContainsKey((_chartType,_level)))
+    {
+        <MudItem xs="12">
+            <MudLink Href="@_chabalaLinks[(_chartType,_level)]" Target="_blank">Original Chabala Tier List</MudLink>
         </MudItem>
     }
     @if (_finalEntries.Any() && _finalEntries.All(e=>_charts.ContainsKey(e.ChartId)))
@@ -205,7 +216,7 @@
             </MudItem>
             
 
-            foreach (var chart in group.Where(ShouldChartShow).OrderBy(e => e.Order).Select(c => _charts[c.ChartId]))
+            foreach (var chart in group.Where(ShouldChartShow).Select(c => _charts[c.ChartId]))
             {
                 
                 @if (_textView)
@@ -226,19 +237,27 @@
                                 
                                 <DifficultyBubble Chart="chart"></DifficultyBubble>
                             </MudCardHeader>
-                            @if ((_scores.TryGetValue(chart.Id, out var sz) ? sz.Score : 0) > 0 || chart.Skills.Any())
+                            @if ((_scores.TryGetValue(chart.Id, out var sz) ? sz.Score : 0) > 0 || chart.Skills.Any()||_groupBy!="Difficulty")
                             {
                                 <MudCardContent>
-                                    
-                                    @foreach (var skill in chart.Skills)
+                                    @if (_groupBy != "Difficulty")
                                     {
-                                        <MudChip T="string" Style=@($"background-color:{skill.GetColor()}")>@skill.GetName()</MudChip>
+                                        <MudText>
+                                            <MudText Style=@($"color:{TierListColor(_chartDifficulties[chart.Id])}")>@_chartDifficulties[chart.Id]</MudText>
+                                            </MudText>
+                                    }
+                                    @if (_groupBy != "Skill")
+                                    {
+                                        
+                                        @foreach (var skill in chart.Skills)
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Style=@($"background-color:{skill.GetColor()}")>@skill.GetName()</MudChip>
 
+                                        }
                                     }
-                                    @if (chart.Skills.Any())
-                                    {
+
                                         <br/>
-                                    }
+                                    
                                     @if ((_scores.TryGetValue(chart.Id, out var s) ? s.Score : 0) > 0){
 
                                         <ScoreBreakdown Score="_scores[chart.Id].Score!.Value" IsBroken="_scores[chart.Id].IsBroken" OneLine="true" ShowScore="true" Plate="_scores[chart.Id].Plate"></ScoreBreakdown>
@@ -306,7 +325,7 @@
             @foreach (var skill in _orderedSkills.Where(s => MaxScore[s] > 0))
             {
                 <MudItem xs="12">
-                    <MudProgressLinear Color="Colors[skill]" Min="MinScore[skill]" Max="MaxScore[skill]" Value="MyScore[skill]">@skill.GetName()</MudProgressLinear>
+                    <MudProgressLinear Color="SkillColors[skill]" Min="MinScore[skill]" Max="MaxScore[skill]" Value="MyScore[skill]">@skill.GetName()</MudProgressLinear>
                 </MudItem>
             }
         }
@@ -349,7 +368,7 @@
     private IDictionary<Skill, int> MyScore = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
     private IEnumerable<Skill> _orderedSkills = Array.Empty<Skill>();
     private IDictionary<Skill, double> _skillWeights = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0.0);
-    private IDictionary<Skill, Color> Colors = Enum.GetValues<Skill>().ToDictionary(s => s, s => Color.Primary);
+    private IDictionary<Skill, Color> SkillColors = Enum.GetValues<Skill>().ToDictionary(s => s, s => Color.Primary);
     private IDictionary<Guid, double> _passScore = new Dictionary<Guid, double>();
     private IDictionary<Guid, RecordedPhoenixScore> _scores = new Dictionary<Guid, RecordedPhoenixScore>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
@@ -368,6 +387,7 @@
     private IDictionary<Guid, IEnumerable<Name>> _charTitles = new Dictionary<Guid, IEnumerable<Name>>();
     private IEnumerable<PhoenixTitle> _titles = Array.Empty<PhoenixTitle>();
     private IEnumerable<Guid> _unpassedTodos => _finalEntries.Select(e => e.ChartId).Where(chartId => _scores.ContainsKey(chartId)&& _scores[chartId].IsBroken && _todos.Contains(chartId));
+    private IDictionary<Guid, TierListCategory> _chartDifficulties = new Dictionary<Guid, TierListCategory>();
     private Name[] _availableStepArtists = Array.Empty<Name>();
     private Name[] _availableSongArtists = Array.Empty<Name>();
     private int _lowestNoteCount = 0;
@@ -391,7 +411,16 @@
     private IEnumerable<TitleProgress> _titleProgress = Array.Empty<TitleProgress>();
     private Task<IEnumerable<string>> FilterSongName(string search) => Task.FromResult(_finalEntries.Select(c => _charts[c.ChartId].Song.Name.ToString()).Distinct().Where(
         n => string.IsNullOrWhiteSpace(search)|| n.Contains(search, StringComparison.OrdinalIgnoreCase)).OrderBy(n => n == search ? 0 : 1).AsEnumerable());
-
+    private string TierListColor(TierListCategory category) => category switch{
+        TierListCategory.Overrated=>Colors.Cyan.Darken1,
+        TierListCategory.VeryEasy=>Colors.Green.Darken1,
+        TierListCategory.Easy=>Colors.LightGreen.Darken1,
+        TierListCategory.Medium=>Colors.Yellow.Darken1,
+        TierListCategory.Hard=>Colors.Orange.Darken1,
+        TierListCategory.VeryHard=>Colors.Red.Darken1,
+        TierListCategory.Underrated=>Colors.Purple.Darken1,
+        TierListCategory.Unrecorded=>Colors.Gray.Darken1,
+        };
     private IDictionary<Guid, string> _variance = new Dictionary<Guid, string>();
     private async Task CalculateVariance(ChartType chartType, DifficultyLevel level)
     {
@@ -482,6 +511,7 @@
     private int _highlightedModifier = 10;
     private bool _hidePassed = false;
     private bool _showSettings = false;
+    private string _groupBy = "Tier List";
     private int _level = 20;
     private string _tierListType = "Pass";
     private string _songFilter;
@@ -509,18 +539,32 @@
     {
         _tierListType = type;
         SetQueryString();
-        if (_tierListType == "Pass")
+        if (_tierListType == "Chabala")
         {
             _modifiers = new Dictionary<string, double>()
             {
                 { "Official Scores", 0 },
                 { "Scores", 0 },
                 { "Skill", 0 },
+                {"Similar Players", 0},
+                { "Popularity", 0 },
+                { "Pass Count",0},
+                {"Chabala",1}
+            };
+        }
+        if (_tierListType == "Pass")
+        {
+            _modifiers = new Dictionary<string, double>()
+            {
+                { "Official Scores", 0 },
+                { "Scores", 0 },
+                { "Skill", 2 },
                 {"Similar Players", 2},
                 { "Popularity", 0 },
-                { "Pass Count",2}
+                { "Pass Count",2},
+                {"Chabala",0}
             };
-            _groupByTierList = true;
+
         }
         if (_tierListType == "Score")
         {
@@ -528,15 +572,15 @@
             {
                 { "Official Scores", 1 },
                 { "Scores", 2 },
-                { "Skill", 0 },
+                { "Skill", 2 },
                 {"Similar Players",1},
                 { "Popularity", 0 },
-                { "Pass Count",0}
+                { "Pass Count",0},
+                {"Chabala",0}
             };
         }
         if (_tierListType == "Popularity")
         {
-            _groupByTierList = true;
             _modifiers = new Dictionary<string, double>()
             {
                 { "Official Scores", 0 },
@@ -544,7 +588,8 @@
                 { "Skill", 0 },
                 { "Popularity", 2 },
                 { "Pass Count",0},
-                {"Similar Players",0}
+                {"Similar Players",0},
+                {"Chabala",0}
             };
         }
         if (!_usePersonalizedData)
@@ -555,9 +600,9 @@
         await Recalculate();
     }
 
-    private async Task ToggleGrouping(bool groupByLevel)
+    private async Task ChangeGrouping(string newGrouping)
     {
-        _groupByTierList = !groupByLevel;
+        _groupBy = newGrouping;
         await Recalculate();
     }
 
@@ -615,7 +660,6 @@
         await Recalculate();
     }
 
-    private bool _groupByTierList = true;
 
     private async Task<IEnumerable<SongTierListEntry>> BuildSkillTierList()
     {
@@ -628,7 +672,7 @@
         MyScore = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
         _orderedSkills = Array.Empty<Skill>();
         _skillWeights = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0.0);
-        Colors = Enum.GetValues<Skill>().ToDictionary(s => s, s => Color.Primary);
+        SkillColors = Enum.GetValues<Skill>().ToDictionary(s => s, s => Color.Primary);
         _passScore = new Dictionary<Guid, double>();
 
         var skills = (await Mediator.Send(new GetChartSkillsQuery())).Where(c => _charts.ContainsKey(c.ChartId)).ToArray();
@@ -674,7 +718,7 @@
         }
         _passScore = skills.ToDictionary(sc => sc.ChartId, sc => sc.ContainsSkills.Sum(s => _skillWeights[s]) + sc.HighlightsSkill.Sum(s => _highlightedModifier * _skillWeights[s]) / (sc.ContainsSkills.Count() + (double)_highlightedModifier * sc.HighlightsSkill.Count()));
 
-        Colors = Enum.GetValues<Skill>().ToDictionary(s => s, s => MaxScore[s] == 0 ? Color.Error : (MyScore[s] / (double)MaxScore[s]) > average ? Color.Success : Color.Warning);
+        SkillColors = Enum.GetValues<Skill>().ToDictionary(s => s, s => MaxScore[s] == 0 ? Color.Error : (MyScore[s] / (double)MaxScore[s]) > average ? Color.Success : Color.Warning);
         var standardDeviationCompare =
             StdDev(_passScore.Select(s => s.Value), true);
         if (!_passScore.Any())
@@ -751,6 +795,19 @@
     }
 
     private ISet<Guid> _topCharts = new HashSet<Guid>();
+
+    private IDictionary<TierListCategory, string> _popularityNames = new Dictionary<TierListCategory, string>()
+    {
+        { TierListCategory.Unrecorded, "Unknown" },
+        { TierListCategory.Overrated, "Ultra Popular" },
+        { TierListCategory.VeryEasy, "Very Popular" },
+        { TierListCategory.Easy, "Popular" },
+        { TierListCategory.Medium, "Average" },
+        { TierListCategory.Hard, "Unpopular" },
+        { TierListCategory.VeryHard, "Very Unpopular" },
+        { TierListCategory.Underrated, "Ultra Unpopular" }
+    }; 
+
     private async Task Recalculate()
     {
         _isLoading = true;
@@ -758,7 +815,7 @@
         await UiSettings.SetSetting("TierLists__ChartType", _chartType.ToString());
         await UiSettings.SetSetting("TierLists__ListType", _tierListType);
         await UiSettings.SetSetting("TierLists__UsePersonalized", _usePersonalizedData.ToString());
-        await UiSettings.SetSetting("TierLists__GroupByTierList", _groupByTierList.ToString());
+        await UiSettings.SetSetting("TierLists__GroupBy", _groupBy);
         await UiSettings.SetSetting("TierLists__HideCompleted", _hidePassed.ToString());
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, _level, _chartType))).ToDictionary(c => c.Id);
         var titles = _titles.Where(t => t is ISpecificChartTitle).ToArray();
@@ -783,6 +840,7 @@
             o.SlidingExpiration = TimeSpan.FromHours(1);
 
             var officialScores = (await Mediator.Send(new GetTierListQuery("Official Scores"))).ToDictionary(s => s.ChartId);
+            var chabala = (await Mediator.Send(new GetTierListQuery("Chabala"))).ToDictionary(s => s.ChartId);
             var similarPlayers = new Dictionary<Guid, SongTierListEntry>();
             var scores = (await Mediator.Send(new GetTierListQuery("Scores"))).ToDictionary(s => s.ChartId); 
         var baseEntries =
@@ -802,7 +860,7 @@
             {
                 var count = 0.0;
                 var currentTotal = 0.0;
-                foreach (var listItem in new[] { (officialScores, "Official Scores"), (scores, "Scores"), (popularity, "Popularity"), (baseEntries, "Skill"), (title, "Pass Count"), (similarPlayers,"Similar Players") })
+                foreach (var listItem in new[] { (officialScores, "Official Scores"),(chabala,"Chabala"), (scores, "Scores"), (popularity, "Popularity"), (baseEntries, "Skill"), (title, "Pass Count"), (similarPlayers,"Similar Players") })
                 {
                     if (!listItem.Item1.ContainsKey(chartId) || listItem.Item1[chartId].Category == TierListCategory.Unrecorded)
                     {
@@ -823,16 +881,30 @@
             }
             return result;
         }) ?? throw new Exception("Tier list could not be retrieved from cache");
+        _chartDifficulties = _finalEntries.ToDictionary(e => e.ChartId, e => e.Category);
 
-
-        if (_groupByTierList)
+        if (_groupBy=="Difficulty")
         {
-            _finalGroupings = _finalEntries.GroupBy(e => e.Category.ToString()).OrderBy(g => Enum.Parse<TierListCategory>(g.Key))
+            _finalGroupings = _finalEntries
+                .OrderBy(e=>e.Order)
+                .GroupBy(e =>
+                    _tierListType=="Popularity"?_popularityNames[e.Category]:
+                    e.Category.ToString()).OrderBy(g => g.First().Category)
+                .ToArray();
+        } else if (_groupBy == "Skill")
+        {
+            _finalGroupings = _finalEntries
+                .OrderBy(e=>_chartDifficulties[e.ChartId])
+                .ThenBy(e=>e.Order)
+                .GroupBy(e => _charts[e.ChartId].Skills.Any() ? string.Join(' ', _charts[e.ChartId].Skills.OrderBy(s => s).Select(s => s.GetName())) : "Not Rated")
+                .OrderBy(g => _charts[g.First().ChartId].Skills.Any()?(int) _charts[g.First().ChartId].Skills.Min():999999)
                 .ToArray();
         }
         else
         {
-            _finalGroupings = _finalEntries.GroupBy(e => _charts[e.ChartId].ScoringLevel?.ToString("0.0") ?? "Not Enough Data")
+            _finalGroupings = _finalEntries
+                .OrderBy(e => _chartDifficulties[e.ChartId])
+                .ThenBy(e => e.Order).GroupBy(e => _charts[e.ChartId].ScoringLevel?.ToString("0.0") ?? "Not Enough Data")
                 .OrderBy(g => double.TryParse(g.Key,out var d)?d:10000).ToArray();
         }
         _messages = _finalGroupings.ToDictionary(kv => kv.Key, kv => "");
@@ -908,10 +980,35 @@
     private async Task SetLevel(int level)
     {
         _level = level;
-
+        if (_tierListType == "Chabala" && !_chabalaLinks.ContainsKey((_chartType,level)))
+        {
+            _tierListType = "Difficulty";
+        }
         SetQueryString();
         await Recalculate();
     }
+
+    private IDictionary<(ChartType,DifficultyLevel), string> _chabalaLinks = new Dictionary<(ChartType, DifficultyLevel), string>()
+    {
+        { (ChartType.Single,19), "https://drive.google.com/file/d/1A5D6tlFVU2HMwzNO34TQLOx1ie78XwTx/view?usp=drive_link" },
+        { (ChartType.Single,20), "https://drive.google.com/file/d/1dOxTW1wkdozZMmlOO2yUMy2JggA6Mhej/view?usp=drive_link" },
+        { (ChartType.Single,21), "https://drive.google.com/file/d/1oQh8ZlPhpP0F8Mcn2QV8rjpB7GZEebUU/view?usp=drive_link" },
+        { (ChartType.Single,22), "https://drive.google.com/file/d/1oZm4kS26TTvdeyVnIwpktldOeQ188lFQ/view?usp=drive_link" },
+        { (ChartType.Single,23), "https://drive.google.com/file/d/160VfJaXtXW6OxgD0Y-pN-rnvOWf-of97/view?usp=drive_link" },
+        { (ChartType.Single,24), "https://drive.google.com/file/d/1t21N5FfWfPICeT0GopdCNaXjHqzAILUY/view?usp=drive_link" },
+        { (ChartType.Single,25), "https://drive.google.com/file/d/13rPx7mrdhg37iNSdmQMc07CsRb7kkgBP/view?usp=drive_link" },
+        { (ChartType.Single,26), "https://drive.google.com/file/d/13rPx7mrdhg37iNSdmQMc07CsRb7kkgBP/view?usp=drive_link" },
+        { (ChartType.Double,19), "https://drive.google.com/file/d/1uDXcbC7dCmTDh6r3i72AmW7f1qraJgCu/view?usp=drive_link" },
+        { (ChartType.Double,20), "https://drive.google.com/file/d/1uDXcbC7dCmTDh6r3i72AmW7f1qraJgCu/view?usp=drive_link" },
+        { (ChartType.Double,21), "https://drive.google.com/file/d/1zuguWTvp3NgyyKpTPHwuSTmGtxRmm8rN/view?usp=drive_link" },
+        { (ChartType.Double,22), "https://drive.google.com/file/d/1Mj8JCVx3K6xwz_3D9SDjLQyFuCPiVKcG/view?usp=drive_link" },
+        { (ChartType.Double,23), "https://drive.google.com/file/d/1m00Ng0-5m4FLrMKlTqiKjWbQiC_Gglhk/view?usp=drive_link" },
+        { (ChartType.Double,24), "https://drive.google.com/file/d/1t21N5FfWfPICeT0GopdCNaXjHqzAILUY/view?usp=drive_link" },
+        { (ChartType.Double,25), "https://drive.google.com/file/d/13rPx7mrdhg37iNSdmQMc07CsRb7kkgBP/view?usp=drive_link" },
+        { (ChartType.Double,26), "https://drive.google.com/file/d/1zCQO8gKKvrZiCw9TfjFy7JTtog_U9uve/view?usp=drive_link" },
+        { (ChartType.Double,27), "https://drive.google.com/file/d/1zCQO8gKKvrZiCw9TfjFy7JTtog_U9uve/view?usp=drive_link" },
+        { (ChartType.Double,28), "https://drive.google.com/file/d/1zCQO8gKKvrZiCw9TfjFy7JTtog_U9uve/view?usp=drive_link" },
+    };
     protected override async Task OnInitializedAsync()
     {
         _scores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id)))
@@ -924,9 +1021,10 @@
         _level = 18;
         _tierListTypes=new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            { "Pass", L["Stage Break"] },
-            { "Score", L["Score"] },
-            { "Popularity", L["Popularity"] }
+            { "Pass", L["Pass (Data Backed)"] },
+            { "Score", L["Score (Data Backed)"] },
+            { "Popularity", L["Popularity (PIIU Game Leaderboard)"] },
+            {"Chabala","Chabala"}
         };
 
         if (CurrentUser.IsLoggedIn)
@@ -953,7 +1051,7 @@
         _chartType = Enum.TryParse<ChartType>(await UiSettings.GetSetting("TierLists__ChartType"), out var cType) ? cType : ChartType.Double;
         _tierListType = await UiSettings.GetSetting("TierLists__ListType") ?? "Pass";
         _usePersonalizedData = (await UiSettings.GetSetting("TierLists__UsePersonalized") ?? true.ToString()) == true.ToString();
-        _groupByTierList = (await UiSettings.GetSetting("TierLists__GroupByTierList") ?? true.ToString()) == true.ToString();
+        _groupBy = await UiSettings.GetSetting("TierLists__GroupBy") ?? "Difficulty";
         _textView = (await UiSettings.GetSetting("TierLists__TextView") ?? false.ToString()) == true.ToString();
         if (DifficultyFilter is >= 1 and <= 28)
         {
