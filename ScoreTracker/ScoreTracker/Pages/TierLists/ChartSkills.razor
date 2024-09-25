@@ -90,7 +90,11 @@
         <MudSelect T="string" Label="Group By" Disabled="_isLoading" Value="_groupBy" ValueChanged="ChangeGrouping">
             <MudSelectItem T="string" Value=@("Difficulty")>@L["Difficulty Level"]</MudSelectItem>
             <MudSelectItem T="string" Value=@("Scoring Level")>@L["Scoring Level"]</MudSelectItem>
-            <MudSelectItem T="string" Value=@("Skill")>@L["Skill"]</MudSelectItem>
+            @if (_chabalaLinks.ContainsKey((_chartType,_level)))
+            {
+                
+                <MudSelectItem T="string" Value=@("Skill")>@L["Skill"]</MudSelectItem>
+            }
         </MudSelect>
     </MudItem>
 
@@ -983,6 +987,10 @@
         if (_tierListType == "Chabala" && !_chabalaLinks.ContainsKey((_chartType,level)))
         {
             _tierListType = "Difficulty";
+        }
+        if (_groupBy == "Skill" && !_chabalaLinks.ContainsKey((_chartType,level)))
+        {
+            _groupBy = "Difficulty";
         }
         SetQueryString();
         await Recalculate();
