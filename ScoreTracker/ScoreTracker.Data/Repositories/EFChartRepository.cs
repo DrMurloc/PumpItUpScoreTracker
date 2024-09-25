@@ -172,9 +172,10 @@ public sealed class EFChartRepository : IChartRepository
         if (entity == null) return;
         entity.NoteCount = noteCount;
         await _database.SaveChangesAsync(cancellationToken);
+
         var cache = await GetAllCharts(MixEnum.Phoenix, cancellationToken);
-        cache[chartId] = new Chart(chartId, cache[chartId].Song, cache[chartId].Type, cache[chartId].Level,
-            cache[chartId].Mix, cache[chartId].StepArtist, cache[chartId].ScoringLevel, cache[chartId].NoteCount);
+        var chart = cache[chartId];
+        cache[chartId] = chart with { Id = chartId, NoteCount = noteCount };
     }
 
 
@@ -223,6 +224,10 @@ public sealed class EFChartRepository : IChartRepository
         await _database.ChartSkill.AddRangeAsync(toCreate, cancellationToken);
         _database.ChartSkill.RemoveRange(toDelete);
         await _database.SaveChangesAsync(cancellationToken);
+
+        var cache = await GetAllCharts(MixEnum.Phoenix, cancellationToken);
+        var chart = cache[record.ChartId];
+        cache[record.ChartId] = chart with { Skills = record.ContainsSkills.Distinct().ToHashSet() };
         _cache.Remove(ChartSkillsCacheKey);
     }
 
@@ -362,6 +367,9 @@ public sealed class EFChartRepository : IChartRepository
         return await _cache.GetOrCreateAsync<IDictionary<Guid, Chart>>(ChartCacheKey(mixId), async entry =>
         {
             entry.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromDays(14);
+            var chartSkills = (await _database.ChartSkill.ToArrayAsync(cancellationToken)).GroupBy(cs => cs.ChartId)
+                .ToDictionary(g => g.Key, g => g.Select(s => Enum.Parse<Skill>(s.SkillName)).Distinct().ToHashSet());
+
             return await (from cm in _database.ChartMix
                     join c in _database.Chart on cm.ChartId equals c.Id
                     join s in _database.Song on c.SongId equals s.Id
@@ -371,8 +379,13 @@ public sealed class EFChartRepository : IChartRepository
                             s.Artist ?? "Unknown",
                             Bpm.From(s.MinBpm, s.MaxBpm)),
                         Enum.Parse<ChartType>(c.Type),
-                        cm.Level, mix, c.StepArtist, cm.ScoringLevel, cm.NoteCount))
-                .ToDictionaryAsync(c => c.Id, c => c, cancellationToken);
+                        cm.Level, mix, c.StepArtist, cm.ScoringLevel, cm.NoteCount,
+                        new HashSet<Skill>()))
+                .ToDictionaryAsync(c => c.Id,
+                    c => c with
+                    {
+                        Skills = chartSkills.TryGetValue(c.Id, out var skill) ? skill : new HashSet<Skill>()
+                    }, cancellationToken);
         });
     }
 }

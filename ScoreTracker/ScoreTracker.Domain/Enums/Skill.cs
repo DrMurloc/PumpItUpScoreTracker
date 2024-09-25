@@ -14,7 +14,7 @@ public enum Skill
     [Name("Moderate")] [Description("Moderately paced patterns")] [SkillCategory(SkillCategory.Speed)]
     Moderate,
 
-    [Name("Slow")] [Description("Slow patterns")] [SkillCategory(SkillCategory.Stamina)]
+    [Name("Slow")] [Description("Slow patterns")] [SkillCategory(SkillCategory.Speed)]
     Slow,
 
     [Name("End Run")] [Description("Ends on a large run")] [SkillCategory(SkillCategory.Stamina)]
@@ -28,6 +28,11 @@ public enum Skill
 
     [Name("Technical")] [Description("Has unique, uncommon, or chaotic footwork")] [SkillCategory(SkillCategory.Tech)]
     Technical,
+
+    [Name("Half-Double")]
+    [Description("Almost entirely center 6 doubles patterns")]
+    [SkillCategory(SkillCategory.Twist)]
+    HalfDouble,
 
     [Name("Brackets")] [Description("Bracket heavy patterns")] [SkillCategory(SkillCategory.Bracket)]
     Brackets,

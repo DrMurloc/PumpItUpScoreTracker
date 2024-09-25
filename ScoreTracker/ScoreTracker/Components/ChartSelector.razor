@@ -3,6 +3,10 @@
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.SecondaryPorts
+@using System.Text.RegularExpressions
+@using Microsoft.AspNetCore.Mvc.ModelBinding.Validation
+@using ScoreTracker.Domain.ValueTypes
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
 @inject IMediator Mediator;
 <MudAutocomplete Dense="true" Disabled="Disabled" T="string" Value="_selected" ValueChanged="SetChart" MaxItems="15" CoerceValue="false" CoerceText="true" Label="Chart" SearchFunc="(s,c)=>SearchSongs(s)">
     <ItemTemplate>
@@ -22,7 +26,35 @@
     public Func<Chart, Task> ChartIdSelected { get; set; } = c => Task.CompletedTask;
 
     private string _selected = string.Empty;
-    private Task<IEnumerable<string>> SearchSongs(string v) => Task.FromResult(_chartNames.Where(c => string.IsNullOrWhiteSpace(v)|| c.Key.Contains(v, StringComparison.OrdinalIgnoreCase)).OrderBy(c => string.IsNullOrWhiteSpace(v)?c.Value.Song.Name.ToString(): c.Value.Song.Name == v ? "a"+c.Value.Song.Name : "b"+c.Value.Song.Name).ThenBy(c=>c.Value.Type).ThenBy(c=>c.Value.Level).Select(kv=>kv.Key));
+    private static readonly Regex DifficultyRegex = new Regex(@"\s(S|D|C)[0-9]{1,2}$",RegexOptions.Compiled |RegexOptions.IgnoreCase);
+    private Task<IEnumerable<string>> SearchSongs(string v)
+    {
+        var difficultyMatch = DifficultyRegex.Match(v);
+        ChartType? type = null;
+        DifficultyLevel? level = null;
+        if (difficultyMatch.Success)
+        {
+            try
+            {
+
+                var parse = DifficultyLevel.ParseShortHand(difficultyMatch.Value);
+                type = parse.chartType;
+                level = parse.level;
+                v = v.Replace(difficultyMatch.Value, "");
+            }
+            catch (Exception)
+            {
+                //Likely difficulty couldn't parse, don't worry about this failing
+            }
+        }
+        var result = _chartNames
+            .Where(c=>type==null || level==null || (c.Value.Type==type && c.Value.Level==level))
+            .Where(c => string.IsNullOrWhiteSpace(v) || c.Key.Contains(v, StringComparison.OrdinalIgnoreCase)).OrderBy(c => string.IsNullOrWhiteSpace(v) ? c.Value.Song.Name.ToString() : c.Value.Song.Name == v ? "a" + c.Value.Song.Name : "b" + c.Value.Song.Name).ThenBy(c => c.Value.Type).ThenBy(c => c.Value.Level).Select(kv => kv.Key);
+
+
+        return Task.FromResult(result);
+    }
+
     private async Task SetChart(string selected)
     {
         if (string.IsNullOrWhiteSpace(selected))

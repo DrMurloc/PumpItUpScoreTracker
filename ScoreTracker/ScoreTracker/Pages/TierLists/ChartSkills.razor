@@ -226,13 +226,26 @@
                                 
                                 <DifficultyBubble Chart="chart"></DifficultyBubble>
                             </MudCardHeader>
-                            @if ((_scores.TryGetValue(chart.Id, out var s) ? s.Score : 0) > 0)
+                            @if ((_scores.TryGetValue(chart.Id, out var sz) ? sz.Score : 0) > 0 || chart.Skills.Any())
                             {
                                 <MudCardContent>
-                                    <ScoreBreakdown Score="_scores[chart.Id].Score!.Value" IsBroken="_scores[chart.Id].IsBroken" OneLine="true" ShowScore="true" Plate="_scores[chart.Id].Plate"></ScoreBreakdown>
-                                    @if (_showAge)
+                                    
+                                    @foreach (var skill in chart.Skills)
                                     {
-                                        <MudText>@(_ages[chart.Id].ToString("0")) @L["Days Old"]</MudText>
+                                        <MudChip T="string" Style=@($"background-color:{skill.GetColor()}")>@skill.GetName()</MudChip>
+
+                                    }
+                                    @if (chart.Skills.Any())
+                                    {
+                                        <br/>
+                                    }
+                                    @if ((_scores.TryGetValue(chart.Id, out var s) ? s.Score : 0) > 0){
+
+                                        <ScoreBreakdown Score="_scores[chart.Id].Score!.Value" IsBroken="_scores[chart.Id].IsBroken" OneLine="true" ShowScore="true" Plate="_scores[chart.Id].Plate"></ScoreBreakdown>
+                                        @if (_showAge)
+                                        {
+                                            <MudText>@(_ages[chart.Id].ToString("0")) @L["Days Old"]</MudText>
+                                    }
                                     }
                                 </MudCardContent>
                             }
