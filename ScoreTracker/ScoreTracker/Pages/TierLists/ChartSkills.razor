@@ -838,19 +838,25 @@
         {
             cacheKey += $"__{CurrentUser.User.Id}";
         }
+
+        var skillTierList = new Dictionary<Guid, SongTierListEntry>();
+        if (CurrentUser.IsLoggedIn)
+        {
+            //This also builds the skill breakdowns at bottom of page
+            skillTierList =  (await BuildSkillTierList()).ToDictionary(e => e.ChartId);
+        }
+        
         _finalEntries = await Cache.GetOrCreateAsync(cacheKey, async o =>
         {
             o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6);
             o.SlidingExpiration = TimeSpan.FromHours(1);
-
+            var scores = (await Mediator.Send(new GetTierListQuery("Scores"))).ToDictionary(s => s.ChartId); 
+            var baseEntries =
+                CurrentUser.IsLoggedIn ? skillTierList
+                    : scores.ToDictionary(kv => kv.Key, kv => new SongTierListEntry("Skill", kv.Key, TierListCategory.Unrecorded, 0));
             var officialScores = (await Mediator.Send(new GetTierListQuery("Official Scores"))).ToDictionary(s => s.ChartId);
             var chabala = (await Mediator.Send(new GetTierListQuery("Chabala"))).ToDictionary(s => s.ChartId);
             var similarPlayers = new Dictionary<Guid, SongTierListEntry>();
-            var scores = (await Mediator.Send(new GetTierListQuery("Scores"))).ToDictionary(s => s.ChartId); 
-        var baseEntries =
-            CurrentUser.IsLoggedIn ?
-                (await BuildSkillTierList()).ToDictionary(e => e.ChartId)
-                : scores.ToDictionary(kv => kv.Key, kv => new SongTierListEntry("Skill", kv.Key, TierListCategory.Unrecorded, 0));
         var title = (await Mediator.Send(new GetTierListQuery("Pass Count"))).ToDictionary(s => s.ChartId);
             if (CurrentUser.IsLoggedIn && _usePersonalizedData)
             {
