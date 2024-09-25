@@ -4,6 +4,7 @@ using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
 
@@ -176,6 +177,55 @@ public sealed class EFChartRepository : IChartRepository
             cache[chartId].Mix, cache[chartId].StepArtist, cache[chartId].ScoringLevel, cache[chartId].NoteCount);
     }
 
+
+    private const string ChartSkillsCacheKey = $"{nameof(EFChartRepository)}_{nameof(GetChartSkills)}";
+
+    private sealed record ChartSkillJoin(Guid ChartId, string SkillName);
+
+    public async Task<IEnumerable<ChartSkillsRecord>> GetChartSkills(CancellationToken cancellationToken = default)
+    {
+        return await _cache.GetOrCreateAsync(ChartSkillsCacheKey, async o =>
+        {
+            o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(1);
+
+            return (await _database.ChartSkill.ToArrayAsync(cancellationToken))
+                .GroupBy(c => c.ChartId)
+                .Select(g => new ChartSkillsRecord(g.Key, g.Select(s => Enum.Parse<Skill>(s.SkillName)),
+                    g.Where(s => s.IsHighlighted).Select(s => Enum.Parse<Skill>(s.SkillName))))
+                .ToArray();
+        });
+    }
+
+    public async Task SaveChartSkills(ChartSkillsRecord record, CancellationToken cancellationToken = default)
+    {
+        var skills = await _database.ChartSkill.Where(cs => cs.ChartId == record.ChartId)
+            .ToArrayAsync(cancellationToken);
+
+        var newEntities = record.ContainsSkills.Select(s => new ChartSkillEntity
+        {
+            ChartId = record.ChartId,
+            Id = Guid.NewGuid(),
+            IsHighlighted = false,
+            SkillName = s.ToString()
+        }).Concat(record.HighlightsSkill.Select(s => new ChartSkillEntity
+        {
+            ChartId = record.ChartId,
+            Id = Guid.NewGuid(),
+            IsHighlighted = true,
+            SkillName = s.ToString()
+        })).ToArray();
+
+        var toCreate = newEntities.Where(e =>
+            !skills.Any(s => s.SkillName == e.SkillName && s.IsHighlighted == e.IsHighlighted));
+
+        var toDelete = skills.Where(e =>
+            !newEntities.Any(s => s.SkillName == e.SkillName && s.IsHighlighted == e.IsHighlighted));
+        await _database.ChartSkill.AddRangeAsync(toCreate, cancellationToken);
+        _database.ChartSkill.RemoveRange(toDelete);
+        await _database.SaveChangesAsync(cancellationToken);
+        _cache.Remove(ChartSkillsCacheKey);
+    }
+
     public async Task SetSongCultureName(Name englishSongName, Name cultureCode, Name songName,
         CancellationToken cancellationToken = default)
     {
@@ -236,6 +286,7 @@ public sealed class EFChartRepository : IChartRepository
             _cache.Remove(key);
         }
 
+        _cache.Remove(ChartSkillsCacheKey);
         _cache.Remove($"{nameof(EFChartRepository)}_{nameof(GetChartVideoInformation)}");
     }
 

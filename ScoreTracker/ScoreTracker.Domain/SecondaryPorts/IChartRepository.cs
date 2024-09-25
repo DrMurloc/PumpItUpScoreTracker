@@ -1,5 +1,6 @@
 ﻿using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.SecondaryPorts;
@@ -40,6 +41,8 @@ public interface IChartRepository
         CancellationToken cancellationToken = default);
 
     Task UpdateNoteCount(Guid chartId, int noteCount, CancellationToken cancellationToken = default);
+    Task<IEnumerable<ChartSkillsRecord>> GetChartSkills(CancellationToken cancellationToken = default);
+    Task SaveChartSkills(ChartSkillsRecord record, CancellationToken cancellationToken = default);
 
     Task SetSongCultureName(Name englishSongName, Name cultureCode, Name songName,
         CancellationToken cancellationToken = default);
