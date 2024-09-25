@@ -4,10 +4,11 @@ namespace ScoreTracker.Domain.Enums;
 
 public enum SkillCategory
 {
-    [Color("#D32F2F")] Stamina,
-    [Color("#AB47BC")] Gimmick,
-    [Color("#1976D2")] Twist,
-    [Color("#2E7D32")] Tech
+    [Color("#D32F2F")] Speed,
+    [Color("#F57C00")] Stamina,
+    [Color("#388E3C")] Twist,
+    [Color("#1976D2")] Bracket,
+    [Color("#7B1FA2")] Tech
 }
 
 public sealed class ColorAttribute : Attribute
