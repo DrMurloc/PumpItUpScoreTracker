@@ -51,7 +51,10 @@ public enum Skill
     [Name("Brackets & Runs")]
     [Description("Charts featuring both sustained runs and brackets")]
     [SkillCategory(SkillCategory.Bracket)]
-    BracketsAndRuns
+    BracketsAndRuns,
+
+    [Name("Jacks")] [Description("Jacks")] [SkillCategory(SkillCategory.Tech)]
+    Jacks
 }
 
 public sealed class NameAttribute : Attribute
@@ -76,10 +79,10 @@ public sealed class SkillCategoryAttribute : Attribute
 
 public static class SkillHelpers
 {
-    private static readonly IDictionary<Skill, SkillCategory[]> Categories = Enum.GetValues<Skill>()
-        .ToDictionary(c => c, c => typeof(Skill).GetField(c.ToString())
+    private static readonly IDictionary<Skill, IReadOnlySet<SkillCategory>> Categories = Enum.GetValues<Skill>()
+        .ToDictionary(c => c, c => (IReadOnlySet<SkillCategory>)typeof(Skill).GetField(c.ToString())
             ?.GetCustomAttribute<SkillCategoryAttribute>()
-            ?.Categories ?? Array.Empty<SkillCategory>());
+            ?.Categories.ToHashSet()!);
 
     private static readonly IDictionary<Skill, string> Colors =
         Categories.ToDictionary(kv => kv.Key, kv => kv.Value.Cast<SkillCategory?>().FirstOrDefault()?.GetColor()??"#333333");
@@ -93,6 +96,11 @@ public static class SkillHelpers
         .ToDictionary(c => c, c => typeof(Skill).GetField(c.ToString())
             ?.GetCustomAttribute<DescriptionAttribute>()
             ?.Description ?? "");
+
+    public static bool IsCategory(this Skill skill, SkillCategory category)
+    {
+        return Categories[skill].Contains(category);
+    }
 
     public static string GetDescription(this Skill skill)
     {

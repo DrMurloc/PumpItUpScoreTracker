@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="AspNet.Security.OAuth.Discord" Version="8.0.0" />
-    <PackageReference Include="Blazor-ApexCharts" Version="3.1.0" />
+    <PackageReference Include="Blazor-ApexCharts" Version="3.4.0" />
     <PackageReference Include="BlazorApplicationInsights" Version="3.0.5" />
     <PackageReference Include="CsvHelper" Version="31.0.3" />
     <PackageReference Include="Delegate.SassBuilder" Version="1.4.0" />

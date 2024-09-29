@@ -318,24 +318,111 @@
                 }
             }
         }
-        @if (CurrentUser.IsLoggedIn && _orderedSkills.Any())
-        {
-            
-            <MudItem xs="12">
-                <MudText Typo="Typo.h5">My Skills</MudText>
-            </MudItem>
-            @foreach (var skill in _orderedSkills.Where(s => MaxScore[s] > 0))
-            {
-                <MudItem xs="12">
-                    <MudProgressLinear Color="SkillColors[skill]" Min="MinScore[skill]" Max="MaxScore[skill]" Value="MyScore[skill]">@skill.GetName()</MudProgressLinear>
-                </MudItem>
-            }
-        }
+
     }
+    @if (!_isLoading && _averageSkillScore.Any(kv=>kv.Value>0))
+    {
+        <MudItem xs="12">
+            <MudText Typo="Typo.h5">Skill Scores</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <ApexChart TItem="SkillEntry"
+                       Title="Speed Score Averages"
+                       Options="_avgSpeedChartOptions"
+                       Height="400"
+                       @ref=_skillChart>
+
+                <ApexPointSeries TItem="SkillEntry"
+                                 Items="_averageSkillScore.Keys.Where(s=>s.IsCategory(SkillCategory.Speed) && _averageSkillScore.ContainsKey(s)).Select(s=>new SkillEntry(s,_averageSkillScore[s]))"
+                                 Name="Speed Score Average"
+                                 SeriesType="SeriesType.Radar"
+                                 XValue="@(e => e.Skill.GetName())"
+                                 YValue="@(e=>e.Metric)"
+                                 OrderByDescending="e=>e.Items.First().Skill" />
+
+            </ApexChart>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <ApexChart TItem="SkillEntry"
+                       Title="Skill Score Averages"
+                       Options="_avgScoreChartOptions"
+                       Height="400"
+                       @ref=_speedSkillChart
+            >
+
+                <ApexPointSeries TItem="SkillEntry"
+                                 Items="_averageSkillScore.Keys.Where(s=>!s.IsCategory(SkillCategory.Speed) && _averageSkillScore.ContainsKey(s)).Select(s=>new SkillEntry(s,_averageSkillScore[s]))"
+                                 Name="Skill Score Average"
+                                 SeriesType="SeriesType.Radar"
+                                 XValue="@(e => e.Skill.GetName())"
+                                 YValue="@(e=>e.Metric)"
+                                 OrderByDescending="e=>e.Items.First().Skill" />
+
+            </ApexChart>
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudText Typo="Typo.h5">Skill Passes</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <ApexChart TItem="SkillEntry"
+                       Title="Speed Passes"
+                       Options="_avgSpeedChartPassOptions"
+                       Height="400"
+                       @ref=_skillChart>
+
+                <ApexPointSeries TItem="SkillEntry"
+                                 Items=@_skillPassCount.Where(kv=>kv.Key.IsCategory(SkillCategory.Speed)).Select(s=>new SkillEntry(s.Key,s.Value,"Passed"))
+                                 Name="Passes"
+                                 SeriesType="SeriesType.Radar"
+                                 XValue="@(e => e.Skill.GetName())"
+                                 YValue="@(e=>e.Metric)"
+                                 OrderByDescending="e=>e.Items.First().Skill" />
+                <ApexPointSeries TItem="SkillEntry"
+                                 Items=@_skillMaxCount.Where(kv=>kv.Key.IsCategory(SkillCategory.Speed)).Select(s=>new SkillEntry(s.Key,s.Value,"Passed"))
+                                 Name="Charts in Folder"
+                                 SeriesType="SeriesType.Radar"
+                                 XValue="@(e => e.Skill.GetName())"
+                                 YValue="@(e=>e.Metric)"
+                                 OrderByDescending="e=>e.Items.First().Skill" />
 
 
+            </ApexChart>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <ApexChart TItem="SkillEntry"
+                       Title="Skill Passes"
+                       Options="_avgSkillChartPassOptions"
+                       Height="400"
+                       @ref=_skillChart>
+
+                <ApexPointSeries TItem="SkillEntry"
+                                 Items=@_skillPassCount.Where(kv=>!kv.Key.IsCategory(SkillCategory.Speed)).Select(s=>new SkillEntry(s.Key,s.Value,"Passed"))
+                                 Name="Passes"
+                                 SeriesType="SeriesType.Radar"
+                                 XValue="@(e => e.Skill.GetName())"
+                                 YValue="@(e=>e.Metric)"
+                                 OrderByDescending="e=>e.Items.First().Skill" />
+                <ApexPointSeries TItem="SkillEntry"
+                                 Items=@_skillMaxCount.Where(kv=>!kv.Key.IsCategory(SkillCategory.Speed)).Select(s=>new SkillEntry(s.Key,s.Value,"Passed"))
+                                 Name="Charts in Folder"
+                                 SeriesType="SeriesType.Radar"
+                                 XValue="@(e => e.Skill.GetName())"
+                                 YValue="@(e=>e.Metric)"
+                                 OrderByDescending="e=>e.Items.First().Skill" />
+
+
+            </ApexChart>
+        </MudItem>
+    }
 </MudGrid>
-
+<style>
+.apexcharts-text {
+        fill: #FFA726;
+        font-weight:bold;
+        padding-left:10px;
+}
+</style>
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
 @inject NavigationManager NavManager;
@@ -350,6 +437,117 @@
 @code
 {
 
+    private readonly ApexChartOptions<SkillEntry> _avgSpeedChartPassOptions = new ApexChartOptions<SkillEntry>()
+    {
+        Yaxis = new[]{new YAxis()
+        {
+            Min=0,
+            Labels = new YAxisLabels()
+            {
+                Formatter = @"
+function(val, index) {
+
+  return val.toFixed(0);
+      }"
+            }
+            }}.ToList()
+    };
+    private readonly ApexChartOptions<SkillEntry> _avgSkillChartPassOptions = new ApexChartOptions<SkillEntry>()
+    {
+        Yaxis = new[]{new YAxis()
+        {
+            Min=0,
+            Labels = new YAxisLabels()
+            {
+                Formatter = @"
+function(val, index) {
+
+  return val.toFixed(0);
+      }"
+            }
+        }}.ToList()
+    };
+    private readonly ApexChartOptions<SkillEntry> _avgSpeedChartOptions = new ApexChartOptions<SkillEntry>()
+    {
+        Yaxis = new[]{new YAxis()
+        {
+            Min=900000,
+            Max=1000000,
+            TickAmount = 10,
+            Labels = new YAxisLabels()
+            {
+                Formatter = @"
+function(val, index) {
+
+  if(index==0){
+    return 'PG'
+  }
+  if(index==1){
+    return 'SSS';
+  }
+  if(index==2){
+    return 'SS';
+  }
+  if(index==3){
+    return 'S';
+  }
+  if(index==5){
+    return 'AAA';
+  }
+  if(index==10){
+    return 'AA';
+  }
+
+  return '';
+      }"
+            }
+        }}.ToList(),
+
+    };
+    private readonly ApexChartOptions<SkillEntry> _avgScoreChartOptions = new ApexChartOptions<SkillEntry>()
+    {
+        Yaxis = new[]{new YAxis()
+        {
+            Min=900000,
+            Max=1000000,
+            TickAmount = 10,
+            Labels = new YAxisLabels()
+            {
+                Formatter = @"
+function(val, index) {
+
+  if(index==0){
+    return 'PG'
+  }
+  if(index==1){
+    return 'SSS';
+  }
+  if(index==2){
+    return 'SS';
+  }
+  if(index==3){
+    return 'S';
+  }
+  if(index==5){
+    return 'AAA';
+  }
+  if(index==10){
+    return 'AA';
+  }
+
+  return '';
+      }"
+            }
+        }}.ToList(),
+
+    };
+    
+    private ApexChart<SkillEntry>? _speedSkillChart;
+    
+    private ApexChart<SkillEntry>? _skillChart;
+    private ApexChart<SkillEntry>? _speedSkillPassChart;
+
+    private ApexChart<SkillEntry>? _skillPassChart;
     [Parameter]
     [SupplyParameterFromQuery(Name = "Difficulty")]
     public int? DifficultyFilter { get; set; }
@@ -363,20 +561,17 @@
     public string? TierListType { get; set; } = string.Empty;
     private DateTimeOffset _now = DateTimeOffset.Now;
     private IDictionary<Skill, List<Chart>> SkillCharts = Enum.GetValues<Skill>().ToDictionary(s => s, s => new List<Chart>());
-    private IDictionary<Skill, List<Chart>> HighlightedCharts = Enum.GetValues<Skill>().ToDictionary(s => s, s => new List<Chart>());
-    private IDictionary<Skill, int> MinScore = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
-    private IDictionary<Skill, int> MaxScore = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
-    private IDictionary<Skill, int> MissingScores = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
-    private IDictionary<Skill, int> MyScore = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
-    private IEnumerable<Skill> _orderedSkills = Array.Empty<Skill>();
-    private IDictionary<Skill, double> _skillWeights = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0.0);
-    private IDictionary<Skill, Color> SkillColors = Enum.GetValues<Skill>().ToDictionary(s => s, s => Color.Primary);
-    private IDictionary<Guid, double> _passScore = new Dictionary<Guid, double>();
+
+    private IDictionary<Skill, PhoenixScore> _averageSkillScore = Enum.GetValues<Skill>().ToDictionary(s => s, s => PhoenixScore.Min);
+    private IDictionary<Skill, int> _skillPassCount = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
+    private IDictionary<Skill, int> _skillMaxCount = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
+
     private IDictionary<Guid, RecordedPhoenixScore> _scores = new Dictionary<Guid, RecordedPhoenixScore>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private ISet<Guid> _unPopularCharts = new HashSet<Guid>();
     private ISet<Guid> _popularCharts = new HashSet<Guid>();
 
+    private sealed record SkillEntry(Skill Skill, int Metric, string Category="None");
     private async Task SetTextView(bool newSetting)
     {
         await UiSettings.SetSetting("TierLists__TextView", newSetting.ToString());
@@ -422,7 +617,7 @@
         TierListCategory.VeryHard=>Colors.Red.Darken1,
         TierListCategory.Underrated=>Colors.Purple.Darken1,
         TierListCategory.Unrecorded=>Colors.Gray.Darken1,
-        };
+    };
     private IDictionary<Guid, string> _variance = new Dictionary<Guid, string>();
     private async Task CalculateVariance(ChartType chartType, DifficultyLevel level)
     {
@@ -667,80 +862,51 @@
     {
 
         SkillCharts = Enum.GetValues<Skill>().ToDictionary(s => s, s => new List<Chart>());
-        HighlightedCharts = Enum.GetValues<Skill>().ToDictionary(s => s, s => new List<Chart>());
-        MinScore = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
-        MaxScore = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
-        MissingScores = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
-        MyScore = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
-        _orderedSkills = Array.Empty<Skill>();
-        _skillWeights = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0.0);
-        SkillColors = Enum.GetValues<Skill>().ToDictionary(s => s, s => Color.Primary);
-        _passScore = new Dictionary<Guid, double>();
 
-        var skills = (await Mediator.Send(new GetChartSkillsQuery())).Where(c => _charts.ContainsKey(c.ChartId)).ToArray();
+        SkillCharts = _charts.Values.SelectMany(c => c.Skills.Select(s => (c,s))).GroupBy(g => g.s).ToDictionary(g => g.Key, g => g.Select(kv => kv.c).ToList());
+        _averageSkillScore = SkillCharts.ToDictionary(kv => kv.Key, kv =>
+            kv.Value.Any(c => _scores.TryGetValue(c.Id, out var s) && s is { Score: not null,IsBroken: false }) ?
+                (PhoenixScore)(int)kv.Value.Where(c => _scores.TryGetValue(c.Id, out var s) && s.Score != null && !s.IsBroken)
+                    .Average(c => _scores[c.Id].Score!.Value)
+                : PhoenixScore.Min);
 
-        var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id)))
-            .Where(s => _charts.ContainsKey(s.ChartId))
-            .ToDictionary(g => g.ChartId);
+        _skillMaxCount = SkillCharts.ToDictionary(kv => kv.Key, kv => kv.Value.Count());
+        _skillPassCount = SkillCharts.ToDictionary(kv => kv.Key, kv => kv.Value.Count(c => _scores.TryGetValue(c.Id, out var s) && !s.IsBroken));
 
-        foreach (var skillChart in skills)
+        if (_charts.Count(kv => _scores.TryGetValue(kv.Key, out var s) && s is {Score:not null, IsBroken:false})<10 || 
+            _averageSkillScore.Count(kv=>kv.Value>0)<3)
         {
-            if (!myScores.TryGetValue(skillChart.ChartId, out var score)||score.Score==null)
-            {
-                foreach (var skill in skillChart.ContainsSkills.Concat(skillChart.HighlightsSkill).Distinct())
-                {
-                    MissingScores[skill]++;
-                }
-                continue;
-            }
-            foreach (var skill in skillChart.ContainsSkills)
-            {
-                SkillCharts[skill].Add(_charts[skillChart.ChartId]);
-                MinScore[skill] += PhoenixLetterGrade.AA.GetMinimumScore();
-                MaxScore[skill] += 1000000;
-                MyScore[skill] += score.Score!.Value;
-            }
-            foreach (var skill in skillChart.HighlightsSkill)
-            {
-                HighlightedCharts[skill].Add(_charts[skillChart.ChartId]);
-                MaxScore[skill] += _highlightedModifier * 1000000;
-                MinScore[skill] += _highlightedModifier * PhoenixLetterGrade.AA.GetMinimumScore();
-                MyScore[skill] += _highlightedModifier * (int)score.Score!.Value;
-            }
+            return _charts.Select(kv => new SongTierListEntry("Skill", kv.Key, TierListCategory.Unrecorded, 0));
+            
         }
 
-        _orderedSkills = Enum.GetValues<Skill>().Where(s => MaxScore[s] > 0).OrderBy(s => MyScore[s] / (double)MaxScore[s]).ToArray();
+        var avgEstimates = _charts.Values.Where(c => c.Skills.Any(s => _averageSkillScore[s] > 0)).ToDictionary(c => c.Id, c =>
+            c.Skills.Where(s => _averageSkillScore[s] > 0).Average(s => _averageSkillScore[s]));
 
-        var average = _orderedSkills.Any()? _orderedSkills.Average(s => MyScore[s] / (double)MaxScore[s]):0;
-        var standardDiv = StdDev(_orderedSkills.Select(s => MyScore[s] / (double)MaxScore[s]), true);
-        _skillWeights = _orderedSkills.ToDictionary(s => s, s => ((MyScore[s] / (double)MaxScore[s]) - average) / standardDiv);
-        foreach (var skill in Enum.GetValues<Skill>().Where(s => !_skillWeights.ContainsKey(s)))
+        if (_speedSkillChart != null)
         {
-            _skillWeights[skill] = 0;
+            await _speedSkillChart.UpdateSeriesAsync(true);
         }
-        _passScore = skills.ToDictionary(sc => sc.ChartId, sc => sc.ContainsSkills.Sum(s => _skillWeights[s]) + sc.HighlightsSkill.Sum(s => _highlightedModifier * _skillWeights[s]) / (sc.ContainsSkills.Count() + (double)_highlightedModifier * sc.HighlightsSkill.Count()));
+        if (_skillChart != null)
+        {
+            await _skillChart.UpdateSeriesAsync(true);
+        }
+        _avgSpeedChartPassOptions.Yaxis.First().Max = _skillMaxCount.Where(kv => kv.Key.IsCategory(SkillCategory.Speed)).Max(kv => kv.Value);
+        _avgSkillChartPassOptions.Yaxis.First().Max = _skillMaxCount.Where(kv => !kv.Key.IsCategory(SkillCategory.Speed)).Max(kv => kv.Value);
+        if (_skillPassChart != null)
+        {
+            await _skillPassChart.UpdateSeriesAsync(true);
+            await _skillPassChart.UpdateOptionsAsync(true, true, true);
+        }
+        if (_speedSkillPassChart != null)
+        {
+            await _speedSkillPassChart.UpdateSeriesAsync(true);
+            await _speedSkillPassChart.UpdateOptionsAsync(true,true,true);
+        }
+        return TierListSaga.ProcessIntoTierList("Skill", avgEstimates)
+            .Concat(_charts.Values.Where(c => !c.Skills.Any(s => _averageSkillScore[s] > 0)).Select(s => new SongTierListEntry("Skill", s.Id, TierListCategory.Unrecorded, 9999)))
+            .ToArray();
 
-        SkillColors = Enum.GetValues<Skill>().ToDictionary(s => s, s => MaxScore[s] == 0 ? Color.Error : (MyScore[s] / (double)MaxScore[s]) > average ? Color.Success : Color.Warning);
-        var standardDeviationCompare =
-            StdDev(_passScore.Select(s => s.Value), true);
-        if (!_passScore.Any())
-        {
-            return Array.Empty<SongTierListEntry>();
-        }
-        var averageCompare = _passScore.Average(s => s.Value);
-        var mediumMinCompare = averageCompare - standardDeviationCompare / 2;
-        var easyMinCompare = averageCompare + standardDeviationCompare / 2;
-        var veryEasyMinCompare = averageCompare + standardDeviationCompare;
-        var oneLevelOverratedCompare = averageCompare + standardDeviationCompare * 1.5;
-        var hardMinCompare = averageCompare - standardDeviationCompare;
-        var veryHardMinCompare = averageCompare - standardDeviationCompare * 1.5;
-        return _passScore.Select(s => new SongTierListEntry("Skill", s.Key, s.Value > oneLevelOverratedCompare ? TierListCategory.Overrated
-            : s.Value > veryEasyMinCompare ? TierListCategory.VeryEasy :
-                s.Value > easyMinCompare ? TierListCategory.Easy :
-                    s.Value > mediumMinCompare ? TierListCategory.Medium :
-                        s.Value > hardMinCompare ? TierListCategory.Hard :
-                            s.Value > veryHardMinCompare ? TierListCategory.VeryHard :
-                                TierListCategory.Underrated, -1 * (int)s.Value * 100)).ToArray();
     }
 
     private IEnumerable<SongTierListEntry> _finalEntries = Array.Empty<SongTierListEntry>();
@@ -841,7 +1007,7 @@
         if (CurrentUser.IsLoggedIn)
         {
             //This also builds the skill breakdowns at bottom of page
-            skillTierList =  (await BuildSkillTierList()).ToDictionary(e => e.ChartId);
+            skillTierList =   (await BuildSkillTierList()).ToDictionary(e => e.ChartId);
         }
         
         _finalEntries = await Cache.GetOrCreateAsync(cacheKey, async o =>
