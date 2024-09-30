@@ -20,6 +20,7 @@
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Shared
+@using Syncfusion.Blazor.Data
 @inject ChartVideoDisplayer VideoDisplayer
 <PageTitle>Personalized Tier List</PageTitle>
 
@@ -333,11 +334,11 @@
                        @ref=_skillChart>
 
                 <ApexPointSeries TItem="SkillEntry"
-                                 Items="_averageSkillScore.Keys.Where(s=>s.IsCategory(SkillCategory.Speed) && _averageSkillScore.ContainsKey(s)).Select(s=>new SkillEntry(s,_averageSkillScore[s]))"
+                                 Items="_skillProgress.Keys.Where(s=>s.IsCategory(SkillCategory.Speed) && _averageSkillScore.ContainsKey(s)).Select(s=>new SkillEntry(s,_averageSkillScore[s]))"
                                  Name="Speed Score Average"
                                  SeriesType="SeriesType.Radar"
                                  XValue="@(e => e.Skill.GetName())"
-                                 YValue="@(e=>e.Metric)"
+                                 YValue="@(e=>(decimal)e.Metric)"
                                  OrderByDescending="e=>e.Items.First().Skill" />
 
             </ApexChart>
@@ -351,11 +352,11 @@
             >
 
                 <ApexPointSeries TItem="SkillEntry"
-                                 Items="_averageSkillScore.Keys.Where(s=>!s.IsCategory(SkillCategory.Speed) && _averageSkillScore.ContainsKey(s)).Select(s=>new SkillEntry(s,_averageSkillScore[s]))"
+                                 Items="_skillProgress.Keys.Where(s=>!s.IsCategory(SkillCategory.Speed) && _averageSkillScore.ContainsKey(s)).Select(s=>new SkillEntry(s,_averageSkillScore[s]))"
                                  Name="Skill Score Average"
                                  SeriesType="SeriesType.Radar"
                                  XValue="@(e => e.Skill.GetName())"
-                                 YValue="@(e=>e.Metric)"
+                                 YValue="@(e=>(decimal)e.Metric)"
                                  OrderByDescending="e=>e.Items.First().Skill" />
 
             </ApexChart>
@@ -376,14 +377,14 @@
                                  Name="Passes"
                                  SeriesType="SeriesType.Radar"
                                  XValue="@(e => e.Skill.GetName())"
-                                 YValue="@(e=>e.Metric)"
+                                 YValue="@(e=>(decimal)e.Metric)"
                                  OrderByDescending="e=>e.Items.First().Skill" />
                 <ApexPointSeries TItem="SkillEntry"
                                  Items=@_skillMaxCount.Where(kv=>kv.Key.IsCategory(SkillCategory.Speed)).Select(s=>new SkillEntry(s.Key,s.Value,"Passed"))
                                  Name="Charts in Folder"
                                  SeriesType="SeriesType.Radar"
                                  XValue="@(e => e.Skill.GetName())"
-                                 YValue="@(e=>e.Metric)"
+                                 YValue="@(e=>(decimal)e.Metric)"
                                  OrderByDescending="e=>e.Items.First().Skill" />
 
 
@@ -401,14 +402,14 @@
                                  Name="Passes"
                                  SeriesType="SeriesType.Radar"
                                  XValue="@(e => e.Skill.GetName())"
-                                 YValue="@(e=>e.Metric)"
+                                 YValue="@(e=>(decimal)e.Metric)"
                                  OrderByDescending="e=>e.Items.First().Skill" />
                 <ApexPointSeries TItem="SkillEntry"
                                  Items=@_skillMaxCount.Where(kv=>!kv.Key.IsCategory(SkillCategory.Speed)).Select(s=>new SkillEntry(s.Key,s.Value,"Passed"))
                                  Name="Charts in Folder"
                                  SeriesType="SeriesType.Radar"
                                  XValue="@(e => e.Skill.GetName())"
-                                 YValue="@(e=>e.Metric)"
+                                 YValue="@(e=>(decimal)e.Metric)"
                                  OrderByDescending="e=>e.Items.First().Skill" />
 
 
@@ -473,11 +474,12 @@ function(val, index) {
         {
             Min=900000,
             Max=1000000,
-            TickAmount = 10,
+            TickAmount = 6,
             Labels = new YAxisLabels()
             {
                 Formatter = @"
 function(val, index) {
+
 
   if(index==0){
     return 'PG'
@@ -491,11 +493,14 @@ function(val, index) {
   if(index==3){
     return 'S';
   }
-  if(index==5){
+  if(index==4){
     return 'AAA';
   }
-  if(index==10){
+  if(index==5){
     return 'AA';
+  }
+  if(index==6){
+    return 'A';
   }
 
   return '';
@@ -510,7 +515,7 @@ function(val, index) {
         {
             Min=900000,
             Max=1000000,
-            TickAmount = 10,
+            TickAmount = 6,
             Labels = new YAxisLabels()
             {
                 Formatter = @"
@@ -528,11 +533,14 @@ function(val, index) {
   if(index==3){
     return 'S';
   }
-  if(index==5){
+  if(index==4){
     return 'AAA';
   }
-  if(index==10){
+  if(index==5){
     return 'AA';
+  }
+  if(index==6){
+    return 'A';
   }
 
   return '';
@@ -563,6 +571,7 @@ function(val, index) {
     private IDictionary<Skill, List<Chart>> SkillCharts = Enum.GetValues<Skill>().ToDictionary(s => s, s => new List<Chart>());
 
     private IDictionary<Skill, PhoenixScore> _averageSkillScore = Enum.GetValues<Skill>().ToDictionary(s => s, s => PhoenixScore.Min);
+    private IDictionary<Skill, double> _skillProgress = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0.0);
     private IDictionary<Skill, int> _skillPassCount = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
     private IDictionary<Skill, int> _skillMaxCount = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
 
@@ -571,7 +580,7 @@ function(val, index) {
     private ISet<Guid> _unPopularCharts = new HashSet<Guid>();
     private ISet<Guid> _popularCharts = new HashSet<Guid>();
 
-    private sealed record SkillEntry(Skill Skill, int Metric, string Category="None");
+    private sealed record SkillEntry(Skill Skill, double Metric, string Category="None");
     private async Task SetTextView(bool newSetting)
     {
         await UiSettings.SetSetting("TierLists__TextView", newSetting.ToString());
@@ -857,6 +866,15 @@ function(val, index) {
         await Recalculate();
     }
 
+    private static readonly PhoenixLetterGrade[] _validLetterGrades = new[]
+    {
+        PhoenixLetterGrade.A,
+        PhoenixLetterGrade.AA,
+        PhoenixLetterGrade.AAA,
+        PhoenixLetterGrade.S,
+        PhoenixLetterGrade.SS,
+        PhoenixLetterGrade.SSS
+    };
 
     private async Task<IEnumerable<SongTierListEntry>> BuildSkillTierList()
     {
@@ -879,7 +897,23 @@ function(val, index) {
             return _charts.Select(kv => new SongTierListEntry("Skill", kv.Key, TierListCategory.Unrecorded, 0));
             
         }
-
+        foreach (var kv in _averageSkillScore)
+        {
+            if (kv.Value == PhoenixScore.Max)
+            {
+                _skillProgress[kv.Key] = _validLetterGrades.Length;
+                continue;
+            }
+            if (kv.Value < _validLetterGrades.Min().GetMinimumScore())
+            {
+                _skillProgress[kv.Key] = 0;
+                continue;
+            }
+            var lowGrade = _validLetterGrades.Reverse().First(g => g.GetMinimumScore() <= kv.Value);
+            var lowIndex = _validLetterGrades.IndexOf(lowGrade);
+            var highScore = lowIndex == _validLetterGrades.Length ? PhoenixScore.Max : _validLetterGrades[lowIndex + 1].GetMinimumScore();
+            _skillProgress[kv.Key] = (double)lowIndex + (kv.Value - lowGrade.GetMinimumScore()) / (double)(highScore - lowGrade.GetMinimumScore());
+        }
         var avgEstimates = _charts.Values.Where(c => c.Skills.Any(s => _averageSkillScore[s] > 0)).ToDictionary(c => c.Id, c =>
             c.Skills.Where(s => _averageSkillScore[s] > 0).Average(s => _averageSkillScore[s]));
 
@@ -975,7 +1009,7 @@ function(val, index) {
         { TierListCategory.Hard, "Unpopular" },
         { TierListCategory.VeryHard, "Very Unpopular" },
         { TierListCategory.Underrated, "Ultra Unpopular" }
-    }; 
+    };
 
     private async Task Recalculate()
     {
