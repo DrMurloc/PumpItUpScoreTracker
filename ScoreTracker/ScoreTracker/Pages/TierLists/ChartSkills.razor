@@ -334,7 +334,7 @@
                        @ref=_skillChart>
 
                 <ApexPointSeries TItem="SkillEntry"
-                                 Items="_skillProgress.Keys.Where(s=>s.IsCategory(SkillCategory.Speed) && _averageSkillScore.ContainsKey(s)).Select(s=>new SkillEntry(s,_averageSkillScore[s]))"
+                                 Items="_averageSkillScore.Keys.Where(s=>s.IsCategory(SkillCategory.Speed) && _skillProgress.ContainsKey(s)).Select(s=>new SkillEntry(s,_skillProgress[s]))"
                                  Name="Speed Score Average"
                                  SeriesType="SeriesType.Radar"
                                  XValue="@(e => e.Skill.GetName())"
@@ -352,7 +352,7 @@
             >
 
                 <ApexPointSeries TItem="SkillEntry"
-                                 Items="_skillProgress.Keys.Where(s=>!s.IsCategory(SkillCategory.Speed) && _averageSkillScore.ContainsKey(s)).Select(s=>new SkillEntry(s,_averageSkillScore[s]))"
+                                 Items="_averageSkillScore.Keys.Where(s=>!s.IsCategory(SkillCategory.Speed) && _skillProgress.ContainsKey(s)).Select(s=>new SkillEntry(s,_skillProgress[s]))"
                                  Name="Skill Score Average"
                                  SeriesType="SeriesType.Radar"
                                  XValue="@(e => e.Skill.GetName())"
@@ -472,9 +472,9 @@ function(val, index) {
     {
         Yaxis = new[]{new YAxis()
         {
-            Min=900000,
-            Max=1000000,
-            TickAmount = 6,
+            Min=0,
+            Max=7,
+            TickAmount = 7,
             Labels = new YAxisLabels()
             {
                 Formatter = @"
@@ -513,9 +513,9 @@ function(val, index) {
     {
         Yaxis = new[]{new YAxis()
         {
-            Min=900000,
-            Max=1000000,
-            TickAmount = 6,
+            Min=0,
+            Max=7,
+            TickAmount = 7,
             Labels = new YAxisLabels()
             {
                 Formatter = @"
@@ -891,12 +891,6 @@ function(val, index) {
         _skillMaxCount = SkillCharts.ToDictionary(kv => kv.Key, kv => kv.Value.Count());
         _skillPassCount = SkillCharts.ToDictionary(kv => kv.Key, kv => kv.Value.Count(c => _scores.TryGetValue(c.Id, out var s) && !s.IsBroken));
 
-        if (_charts.Count(kv => _scores.TryGetValue(kv.Key, out var s) && s is {Score:not null, IsBroken:false})<10 || 
-            _averageSkillScore.Count(kv=>kv.Value>0)<3)
-        {
-            return _charts.Select(kv => new SongTierListEntry("Skill", kv.Key, TierListCategory.Unrecorded, 0));
-            
-        }
         foreach (var kv in _averageSkillScore)
         {
             if (kv.Value == PhoenixScore.Max)
@@ -920,10 +914,12 @@ function(val, index) {
         if (_speedSkillChart != null)
         {
             await _speedSkillChart.UpdateSeriesAsync(true);
+            await _speedSkillChart.UpdateOptionsAsync(true, true, true);
         }
         if (_skillChart != null)
         {
             await _skillChart.UpdateSeriesAsync(true);
+            await _skillChart.UpdateOptionsAsync(true, true, true);
         }
         _avgSpeedChartPassOptions.Yaxis.First().Max = _skillMaxCount.Where(kv => kv.Key.IsCategory(SkillCategory.Speed)).Max(kv => kv.Value);
         _avgSkillChartPassOptions.Yaxis.First().Max = _skillMaxCount.Where(kv => !kv.Key.IsCategory(SkillCategory.Speed)).Max(kv => kv.Value);
@@ -936,6 +932,12 @@ function(val, index) {
         {
             await _speedSkillPassChart.UpdateSeriesAsync(true);
             await _speedSkillPassChart.UpdateOptionsAsync(true,true,true);
+        }
+        if (_charts.Count(kv => _scores.TryGetValue(kv.Key, out var s) && s is {Score:not null, IsBroken:false})<10 || 
+            _averageSkillScore.Count(kv=>kv.Value>0)<3)
+        {
+            return _charts.Select(kv => new SongTierListEntry("Skill", kv.Key, TierListCategory.Unrecorded, 0));
+            
         }
         return TierListSaga.ProcessIntoTierList("Skill", avgEstimates)
             .Concat(_charts.Values.Where(c => !c.Skills.Any(s => _averageSkillScore[s] > 0)).Select(s => new SongTierListEntry("Skill", s.Id, TierListCategory.Unrecorded, 9999)))
