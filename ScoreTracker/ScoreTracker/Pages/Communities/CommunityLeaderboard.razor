@@ -35,12 +35,12 @@
         {
             
             <MudItem xs="12" sm="4">
-                <MudSwitch Label=@L["Show Regional Guests"] @bind-Value="_showGuests" Color="Color.Primary"></MudSwitch>
+                <MudSwitch T="bool" Label=@L["Show Regional Guests"] Value="_showGuests" ValueChanged="SetShowGuests" Color="Color.Primary"></MudSwitch>
             </MudItem>
         }
     </MudGrid>
     <br />
-    <MudTable T="LeaderboardEntry" Items="_entries.Where(e=>!_community.IsRegional || _showGuests||_users[e.UserId].Country==_community.Name)" Breakpoint="Breakpoint.None">
+    <MudTable T="LeaderboardEntry" Items="_entries" Breakpoint="Breakpoint.None">
         <ToolBarContent>
             <MudText Typo="Typo.h4">@HttpUtility.UrlDecode(CommunityName)</MudText>
         </ToolBarContent>
@@ -372,13 +372,29 @@
     private bool _hasSelectedChart = false;
     private bool _selectingChart = false;
     private Community? _community;
+    private Chart? _selectedChart;
     private async Task SelectChart(Chart chart)
     {
         _selectingChart = true;
         _hasSelectedChart = true;
+        _selectedChart = chart;
         _communityChartScores = await Mediator.Send(new GetPhoenixRecordsForCommunityQuery(CommunityName, chart.Id));
+        if (!_showGuests)
+        {
+            _communityChartScores = _communityChartScores.Where(c => _users[c.UserId].Country == CommunityName).ToArray();
+        }
         _selectingChart = false;
         StateHasChanged();
+    }
+
+    private async Task SetShowGuests(bool newValue)
+    {
+        _showGuests = newValue;
+        SetType(_currentType);
+        if (_selectedChart != null)
+        {
+            await SelectChart(_selectedChart);
+        }
     }
     private async Task ShowUserData(Guid userId, ChartType? chartType)
     {
@@ -530,24 +546,29 @@ CalculateScoreDiffs();
     private LeaderboardType _currentType = LeaderboardType.Combined;
     private void SetType(LeaderboardType type)
     {
+        if (_community == null)
+        {
+            return;
+        }
+        var entries = _leaderboard.Where(l =>!_community.IsRegional|| _showGuests || _users[l.UserId].Country == CommunityName);
         switch (type)
         {
             case LeaderboardType.Total:
-                _entries = _leaderboard.OrderByDescending(l=>l.TotalRating).Select((l,i) => new LeaderboardEntry(i+1, l.ProfileImage,l.PlayerName,l.IsPublic, l.UserId, l.TotalRating, 0, 0,0, _colorSelector.TotalScale.GetColor(l.TotalRating),l.HighestLevel,l.ClearCount));
+                _entries = entries.OrderByDescending(l=>l.TotalRating).Select((l,i) => new LeaderboardEntry(i+1, l.ProfileImage,l.PlayerName,l.IsPublic, l.UserId, l.TotalRating, 0, 0,0, _colorSelector.TotalScale.GetColor(l.TotalRating),l.HighestLevel,l.ClearCount));
                 break;
                 
             case LeaderboardType.Combined:
-                _entries = _leaderboard.OrderByDescending(l => l.SkillRating).Select((l, i) => new LeaderboardEntry(i + 1, l.ProfileImage, l.PlayerName,l.IsPublic, l.UserId, l.SkillRating, l.SkillScore, l.SkillLevel, l.CompetitiveLevel,_colorSelector.SkillScale.GetColor(l.SkillRating), l.HighestLevel, l.ClearCount));
+                _entries = entries.OrderByDescending(l => l.SkillRating).Select((l, i) => new LeaderboardEntry(i + 1, l.ProfileImage, l.PlayerName,l.IsPublic, l.UserId, l.SkillRating, l.SkillScore, l.SkillLevel, l.CompetitiveLevel,_colorSelector.SkillScale.GetColor(l.SkillRating), l.HighestLevel, l.ClearCount));
                 break;
             case LeaderboardType.Singles:
-                _entries = _leaderboard.OrderByDescending(l => l.SinglesRating).Select((l, i) => new LeaderboardEntry(i + 1, l.ProfileImage, l.PlayerName,l.IsPublic, l.UserId, l.SinglesRating, l.SinglesScore, l.SinglesLevel, l.SinglesCompetitiveLevel, _colorSelector.SinglesScale.GetColor(l.SinglesRating), l.HighestLevel, l.ClearCount));
+                _entries = entries.OrderByDescending(l => l.SinglesRating).Select((l, i) => new LeaderboardEntry(i + 1, l.ProfileImage, l.PlayerName, l.IsPublic, l.UserId, l.SinglesRating, l.SinglesScore, l.SinglesLevel, l.SinglesCompetitiveLevel, _colorSelector.SinglesScale.GetColor(l.SinglesRating), l.HighestLevel, l.ClearCount));
                 break;
                     
             case LeaderboardType.Doubles:
-                _entries = _leaderboard.OrderByDescending(l => l.DoublesRating).Select((l, i) => new LeaderboardEntry(i + 1, l.ProfileImage, l.PlayerName,l.IsPublic, l.UserId, l.DoublesRating, l.DoublesScore, l.DoublesLevel,l.DoublesCompetitiveLevel, _colorSelector.DoublesScale.GetColor(l.DoublesRating), l.HighestLevel, l.ClearCount));
+                _entries = entries.OrderByDescending(l => l.DoublesRating).Select((l, i) => new LeaderboardEntry(i + 1, l.ProfileImage, l.PlayerName,l.IsPublic, l.UserId, l.DoublesRating, l.DoublesScore, l.DoublesLevel,l.DoublesCompetitiveLevel, _colorSelector.DoublesScale.GetColor(l.DoublesRating), l.HighestLevel, l.ClearCount));
                 break;
             case LeaderboardType.CoOp:
-                _entries = _leaderboard.OrderByDescending(l => l.CoOpRating).Select((l, i) => new LeaderboardEntry(i + 1, l.ProfileImage, l.PlayerName,l.IsPublic, l.UserId, l.CoOpRating, l.CoOpScore, 0, 0,_colorSelector.CoOpScale.GetColor(l.CoOpRating), l.HighestLevel, l.ClearCount));
+                _entries = entries.OrderByDescending(l => l.CoOpRating).Select((l, i) => new LeaderboardEntry(i + 1, l.ProfileImage, l.PlayerName, l.IsPublic, l.UserId, l.CoOpRating, l.CoOpScore, 0, 0, _colorSelector.CoOpScale.GetColor(l.CoOpRating), l.HighestLevel, l.ClearCount));
                 break;
 
         }

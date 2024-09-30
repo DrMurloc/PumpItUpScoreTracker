@@ -248,8 +248,21 @@
                                     @if (_groupBy != "Difficulty")
                                     {
                                         <MudText>
-                                            <MudText Style=@($"color:{TierListColor(_chartDifficulties[chart.Id])}")>@_chartDifficulties[chart.Id]</MudText>
-                                            </MudText>
+                                            @if (_tierListType == "Popularity")
+                                            {
+                                                
+                                                <MudText Style=@($"color:{TierListColor(_chartDifficulties[chart.Id])}")>@_popularityNames[_chartDifficulties[chart.Id]]</MudText>
+                                            } else if (_chartDifficulties[chart.Id] == TierListCategory.Unrecorded && _tierListType == "Chabala")
+                                            {
+
+                                                <MudText Style=@($"color:{TierListColor(_chartDifficulties[chart.Id])}")>Subjective</MudText>
+                                            }
+                                            else
+                                            {
+
+                                                <MudText Style=@($"color:{TierListColor(_chartDifficulties[chart.Id])}")>@_chartDifficulties[chart.Id]</MudText>
+                                            }
+                                        </MudText>
                                     }
                                     @if (_groupBy != "Skill")
                                     {
@@ -765,7 +778,7 @@ function(val, index) {
                 { "Official Scores", 0 },
                 { "Scores", 0 },
                 { "Skill", 2 },
-                {"Similar Players", 2},
+                {"Similar Players", 1},
                 { "Popularity", 0 },
                 { "Pass Count",2},
                 {"Chabala",0}
@@ -792,7 +805,7 @@ function(val, index) {
                 { "Official Scores", 0 },
                 { "Scores", 0 },
                 { "Skill", 0 },
-                { "Popularity", 2 },
+                { "Popularity", 1 },
                 { "Pass Count",0},
                 {"Similar Players",0},
                 {"Chabala",0}
@@ -910,8 +923,8 @@ function(val, index) {
             }
             var lowGrade = _validLetterGrades.Reverse().First(g => g.GetMinimumScore() <= kv.Value);
             var lowIndex = _validLetterGrades.IndexOf(lowGrade);
-            var highScore = lowIndex == _validLetterGrades.Length ? PhoenixScore.Max : _validLetterGrades[lowIndex + 1].GetMinimumScore();
-            _skillProgress[kv.Key] = (double)lowIndex + (kv.Value - lowGrade.GetMinimumScore()) / (double)(highScore - lowGrade.GetMinimumScore());
+            var highScore = lowIndex == _validLetterGrades.Length-1 ? PhoenixScore.Max : _validLetterGrades[lowIndex + 1].GetMinimumScore();
+            _skillProgress[kv.Key] = 1.0+ (double)lowIndex + (kv.Value - lowGrade.GetMinimumScore()) / (double)(highScore - lowGrade.GetMinimumScore());
         }
         var avgEstimates = _charts.Values.Where(c => c.Skills.Any(s => _averageSkillScore[s] > 0)).ToDictionary(c => c.Id, c =>
             c.Skills.Where(s => _averageSkillScore[s] > 0).Average(s => _averageSkillScore[s]));
@@ -1085,6 +1098,11 @@ function(val, index) {
                     count += _modifiers[listItem.Item2];
                     currentTotal += _modifiers[listItem.Item2] * (double)GetScore(listItem.Item1[chartId].Category);
                 }
+                if (count < .0001)
+                {
+                    result.Add(new SongTierListEntry("Final", chartId, TierListCategory.Unrecorded, 999999));
+                    continue;
+                }
                 var final = currentTotal / (double)count;
                 result.Add(new SongTierListEntry("Final", chartId, final < -2.5 ? TierListCategory.Overrated :
                     final < -1.5 ? TierListCategory.VeryEasy :
@@ -1105,6 +1123,7 @@ function(val, index) {
                 .OrderBy(e=>e.Order)
                 .GroupBy(e =>
                     _tierListType=="Popularity"?_popularityNames[e.Category]:
+                        _tierListType=="Chabala"&&e.Category==TierListCategory.Unrecorded?"Subjective":
                     e.Category.ToString()).OrderBy(g => g.First().Category)
                 .ToArray();
         } else if (_groupBy == "Skill")

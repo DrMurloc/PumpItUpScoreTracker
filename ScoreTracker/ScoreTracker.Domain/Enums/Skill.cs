@@ -54,7 +54,10 @@ public enum Skill
     BracketsAndRuns,
 
     [Name("Jacks")] [Description("Jacks")] [SkillCategory(SkillCategory.Tech)]
-    Jacks
+    Jacks,
+
+    [Name("Gimmicks")] [Description("Gimmicks")] [SkillCategory(SkillCategory.Tech)]
+    Gimmicks
 }
 
 public sealed class NameAttribute : Attribute
