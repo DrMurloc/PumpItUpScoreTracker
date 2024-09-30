@@ -879,6 +879,11 @@ function(val, index) {
     private async Task<IEnumerable<SongTierListEntry>> BuildSkillTierList()
     {
 
+        @if (!_charts.Any(kv => kv.Value.Skills.Any()))
+        {
+            _averageSkillScore.Clear();
+            return _charts.Select(kv => new SongTierListEntry("Skill", kv.Key, TierListCategory.Unrecorded, 0));
+        }
         SkillCharts = Enum.GetValues<Skill>().ToDictionary(s => s, s => new List<Chart>());
 
         SkillCharts = _charts.Values.SelectMany(c => c.Skills.Select(s => (c,s))).GroupBy(g => g.s).ToDictionary(g => g.Key, g => g.Select(kv => kv.c).ToList());
