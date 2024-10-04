@@ -163,6 +163,7 @@ Do It
 @inject IWorldRankingService WorldRanking;
 @inject IBus Bus;
 @inject IOfficialSiteClient OfficialClient;
+@inject IFileUploadClient Files;
 @inject ChartAttemptDbContext Database;
 @inject IUserRepository Users;
 @inject IBotClient Bot;
@@ -193,6 +194,7 @@ Do It
     }
     private async Task RebuildOfficialLeaderboard()
     {
+
         /*var message = string.Join(" ", Enum.GetValues<PhoenixLetterGrade>().Select(l => $"#LETTERGRADE|{l}#").Append("#LETTERGRADE|#"));
         message += "\n";
         message += string.Join(" ", Enum.GetValues<PhoenixPlate>().Select(l => $"#PLATE|{l}#").Append("#PLATE|#"));
@@ -213,8 +215,15 @@ Do It
     //await Mediator.Send(new ProcessChartPopularityCommand());
     //await WorldRanking.CalculateWorldRankings(CancellationToken.None);
         //await Bus.Publish(new ProcessPassTierListCommand());
+        var songImages = (await Database.Song.Select(s => s.ImagePath).ToArrayAsync()).ToHashSet();
 
-        await Mediator.Send(new UpdateSongImagesCommand(false));
+        var images = await Files.GetFiles("songs/");
+        var toDelete = images.Where(s => !songImages.Contains(s.ToString())).ToArray();
+        foreach (var image in toDelete)
+        {
+            await Files.DeleteFile(image.PathAndQuery);
+        }
+    //await Mediator.Send(new UpdateSongImagesCommand(false));
 
     /*var userIds = await Database.User.Select(u => u.Id).ToArrayAsync();
         foreach (var userId in userIds)

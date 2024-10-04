@@ -72,9 +72,18 @@
 <RandomizerSettingsConfiguration Settings="_settings" ></RandomizerSettingsConfiguration>
 <br/>
 <MudGrid>
-    <MudItem md="4" sm="6" xs="12">
+    <MudItem sm="3" xs="11">
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RandomizeCharts">Randomize Charts</MudButton>
     </MudItem>
+    @if (_pulledCharts.Any())
+    {
+        
+        <MudItem xs="1">
+            <MudTooltip Text="Copy Results To Clipboard">
+                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" OnClick="CopyDrawState" Color="Color.Primary" Variant="Variant.Outlined"></MudIconButton>
+            </MudTooltip>
+        </MudItem>
+    }
 </MudGrid>
 <br/>
 <MudGrid>
@@ -124,12 +133,23 @@
             </MudCard>
         </MudItem>
     }
+    @if (_pulledCharts.Any())
+    {
+        
+        <MudItem xs="6" sm="4" md="3" lg="2" xl="1">
+            <ChartSelector ChartIdSelected="SelectChart"></ChartSelector><br/>
+
+            <MudButton EndIcon="@Icons.Material.Filled.Add" Disabled="_selectedChart==null || _isSaving" OnClick="AddChartToDraw" Color="Color.Primary">Add Chart</MudButton>
+        </MudItem>
+    }
+
     @if (_vetoedCharts.Any())
     {
         <MudItem xs="12">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RemoveVetoedCharts">Remove Vetoed Charts</MudButton>
         </MudItem>
     }
+
 </MudGrid>
 
 
@@ -138,6 +158,8 @@
 @inject ICurrentUserAccessor CurrentUser;
 @inject ILogger<ChartRandomizer> Logger;
 @inject IAdminNotificationClient Notifications;
+
+@inject IJSRuntime JSRuntime;
 @inject IOptions<JsonSerializerOptions> JsonOptions;
 @inject IMatchRepository Matches;
 @inject ChartVideoDisplayer VideoDisplayer;
@@ -170,7 +192,24 @@
     }
 
     private IDictionary<Guid, Name> _tournamentsWithSettings = new Dictionary<Guid, Name>();
+    private Chart? _selectedChart = null;
 
+    private Task SelectChart(Chart chart)
+    {
+        _selectedChart = chart;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task AddChartToDraw()
+    {
+        if (_selectedChart == null)
+        {
+            return;
+        }
+        _pulledCharts = _pulledCharts.Append(_selectedChart).ToArray();
+        await SaveLastResults();
+    }
     private async Task CancelProtect(int order)
     {
         _protectedCharts.Remove(order);
@@ -236,11 +275,32 @@
         await SaveLastResults();
     }
 
+    private async Task CopyDrawState()
+    {
+        var text = "";
+        foreach (var (chart, index) in _pulledCharts.Select((chart, i) => (chart, i)).OrderBy(c => !_vetoedCharts.Contains(c.i) ? 0 : 1).ThenBy(c => _protectedCharts.Contains(c.i) ? _protectedCharts.Count() : _protectedCharts.IndexOf(c.i)).ThenBy(c => c.i))
+        {
+            text += "- ";
+            if (_vetoedCharts.Contains(index))
+            {
+                text += "~~";
+            }
+            text += $"{chart.Song.Name} {chart.DifficultyString}";
+            if (_vetoedCharts.Contains(index))
+            {
+                text += "~~";
+            }
+            text += "\n";
+        }
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        Snackbar.Add("Results Copied to Clipboard!", Severity.Success);
+    }
 
     private async Task SaveLastResults()
     {
         if (CurrentUser.IsLoggedIn)
         {
+            _isSaving = true;
             var savedResults = JsonSerializer.Serialize(new SavedResults
                 {
                     ChartList = _pulledCharts.Select(c => c.Id).ToArray(),
@@ -248,6 +308,7 @@
                     VetoedCharts = _vetoedCharts.ToArray()
                 });
             await Mediator.Send(new SaveUserUiSettingCommand(LastResultsKey, savedResults));
+            _isSaving = false;
         }
 
     }

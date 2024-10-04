@@ -246,14 +246,17 @@ namespace ScoreTracker.Application.Handlers
             foreach (var songGroup in entries.GroupBy(e => e.Chart.Song.Name))
             {
                 var song = songGroup.First().Chart.Song;
-                var songHasImageAlready = !song.ImagePath.ToString().EndsWith("placeholder.png");
+                var songHasImageAlready = song.ImagePath.ToString()
+                    .EndsWith("placeholder.png", StringComparison.OrdinalIgnoreCase);
                 if (!request.IncludeSongsAlreadyWithImages &&
                     songHasImageAlready) continue;
 
+                var piuGamePath = songGroup.First().SongImage;
                 var newImage = songHasImageAlready
-                    ? "/songs/" + NonAlphanumeric.Replace(song.Name, "")
-                    : song.ImagePath.PathAndQuery;
-                var newPath = await _files.CopyFromSource(songGroup.First().SongImage, newImage, cancellationToken);
+                    ? song.ImagePath.PathAndQuery
+                    : "/songs/" + NonAlphanumeric.Replace(song.Name, "") + "." +
+                      piuGamePath.GetLeftPart(UriPartial.Path).Split(".")[^1];
+                var newPath = await _files.CopyFromSource(piuGamePath, newImage, cancellationToken);
                 await _charts.UpdateSongImage(song.Name, newPath, cancellationToken);
             }
         }

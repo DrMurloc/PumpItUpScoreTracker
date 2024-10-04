@@ -1,5 +1,5 @@
-﻿using System.Web;
-using Azure.Storage.Blobs;
+﻿using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Options;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -21,9 +21,9 @@ public sealed class AzureBlobFileUploadClient : IFileUploadClient
 
     public async Task<Uri> UploadFile(string path, Stream fileStream, CancellationToken cancellationToken = default)
     {
-        path = HttpUtility.UrlEncode(path.TrimStart('/'));
-
+        path = path.TrimStart('/');
         var blobClient = _blob.GetBlobClient(path);
+
         await blobClient.UploadAsync(fileStream, cancellationToken);
         return new Uri($"https://piuimages.arroweclip.se/{path}");
     }
@@ -40,6 +40,14 @@ public sealed class AzureBlobFileUploadClient : IFileUploadClient
         return Task.FromResult(result);
     }
 
+    public async Task DeleteFile(string path, CancellationToken cancellationToken = default)
+    {
+        path = path.TrimStart('/');
+        var blobClient = _blob.GetBlobClient(path);
+        await blobClient.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots, null, cancellationToken);
+        _existingPaths.Remove(path);
+    }
+
 
     public async Task<Uri> CopyFromSource(Uri oldPath, string newPath,
         CancellationToken cancellationToken = default)
@@ -51,5 +59,15 @@ public sealed class AzureBlobFileUploadClient : IFileUploadClient
         var stream = await _client.GetStreamAsync(oldPath, cancellationToken);
         await blobClient.UploadAsync(stream, true, cancellationToken);
         return new Uri($"https://piuimages.arroweclip.se/{newPath}");
+    }
+
+    public async Task<IEnumerable<Uri>> GetFiles(string path, CancellationToken cancellationToken = default)
+    {
+        path = path.TrimStart('/');
+
+        return await (from blob in _blob.GetBlobsByHierarchyAsync(prefix: path)
+                where blob.IsBlob
+                select new Uri($"https://piuimages.arroweclip.se/{blob.Blob.Name}"))
+            .ToListAsync(cancellationToken);
     }
 }

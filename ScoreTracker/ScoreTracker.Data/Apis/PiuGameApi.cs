@@ -190,7 +190,7 @@ public sealed class PiuGameApi : IPiuGameApi
     public async Task<PiuGameGetChartPopularityLeaderboardResult> GetChartPopularityLeaderboard(int page,
         CancellationToken cancellationToken)
     {
-        var today = DateTimeOffset.Now;
+        var today = DateTimeOffset.Now - TimeSpan.FromDays(1);
         var response = await PostWithRetries("https://piugame.com/ajax/top_steps.php",
             new Dictionary<string, string>
             {

@@ -214,12 +214,43 @@
         {
             <MudItem xs="12">
                 <MudText Typo="Typo.h6">@group.Key.ToString()</MudText>
-                @if (CurrentUser.IsLoggedIn)
+                @if (_textView)
                 {
-                    <MudText Typo="Typo.subtitle1">@_messages[group.Key]</MudText>
+                    @if (_clearRate.TryGetValue(group.Key, out var cr) && cr>0)
+                    {
+                        
+                        <MudText>@($"{_clearRate[group.Key]*100:N1}")% Cleared, @_minScores[group.Key] (@_minScores[group.Key].LetterGrade.GetName()) - @_maxScores[group.Key] (@_maxScores[group.Key].LetterGrade.GetName()), @_averageScores[group.Key] (@_averageScores[group.Key].LetterGrade.GetName()) Average</MudText>
+                    }
+                    else
+                    {
+                        <MudText>0% Cleared</MudText>
+                    }
                 }
             </MudItem>
-            
+            if (!_textView)
+            {
+                if (_clearRate.TryGetValue(group.Key, out var cr) && cr > 0)
+                {
+                    <MudItem xs="12" sm="6">
+                        <MudProgressLinear Max="1" Min="0" Value="_clearRate[group.Key]" Color="_clearRate[group.Key]>=100.0?Color.Success:Color.Primary">
+                            @($"{_clearRate[group.Key]*100.0:N1}%")
+                        </MudProgressLinear>
+                    </MudItem>
+                    <MudItem xs="0" sm="6"></MudItem>
+                    <MudItem xs="12">
+                        <ScoreBreakdown Score="_minScores[group.Key]"></ScoreBreakdown> -> <ScoreBreakdown Score="_maxScores[group.Key]"></ScoreBreakdown>, <ScoreBreakdown Score="_averageScores[group.Key]"></ScoreBreakdown> Average
+                    </MudItem>
+                }
+                else
+                {
+                    <MudItem xs="12" sm="6">
+                        <MudProgressLinear Max="1" Min="0" Value="_clearRate[group.Key]" Color="Color.Primary">
+                            0%
+                        </MudProgressLinear>
+                    </MudItem>
+                    <MudItem xs="0" sm="6"></MudItem>
+                }
+            }
 
             foreach (var chart in group.Where(ShouldChartShow).Select(c => _charts[c.ChartId]))
             {
@@ -964,7 +995,10 @@ function(val, index) {
     }
 
     private IEnumerable<SongTierListEntry> _finalEntries = Array.Empty<SongTierListEntry>();
-    private IDictionary<string, string> _messages = Enum.GetValues<TierListCategory>().ToDictionary(c => c.ToString(), c => "");
+    private IDictionary<string, double> _clearRate = Enum.GetValues<TierListCategory>().ToDictionary(c => c.ToString(), c => 0.0);
+    private IDictionary<string, PhoenixScore> _minScores = Enum.GetValues<TierListCategory>().ToDictionary(c => c.ToString(), c => PhoenixScore.Min);
+    private IDictionary<string, PhoenixScore> _averageScores = Enum.GetValues<TierListCategory>().ToDictionary(c => c.ToString(), c => PhoenixScore.Min);
+    private IDictionary<string, PhoenixScore> _maxScores = Enum.GetValues<TierListCategory>().ToDictionary(c => c.ToString(), c => PhoenixScore.Min);
     private IDictionary<string, double> _modifiers = new Dictionary<string, double>()
     {
         { "Official Scores", 0 },
@@ -1142,7 +1176,6 @@ function(val, index) {
                 .ThenBy(e => e.Order).GroupBy(e => _charts[e.ChartId].ScoringLevel?.ToString("0.0") ?? "Not Enough Data")
                 .OrderBy(g => double.TryParse(g.Key,out var d)?d:10000).ToArray();
         }
-        _messages = _finalGroupings.ToDictionary(kv => kv.Key, kv => "");
         foreach (var group in _finalGroupings)
         {
             var clearRate = 0.0;
@@ -1153,13 +1186,15 @@ function(val, index) {
             var scoredCharts = group.Where(e => _scores.TryGetValue(e.ChartId, out var score) && score.Score>0).ToArray();
             if (!scoredCharts.Any())
             {
-                _messages[group.Key] = $"{clearRate * 100.0:0.00}% Cleared";
+                _clearRate[group.Key] = 0.0;
+
                 continue;
             }
-            var minScore = (PhoenixScore)scoredCharts.Min(e => (int)_scores[e.ChartId].Score!);
-            var avgScore = (PhoenixScore)(int)scoredCharts.Average(e => _scores[e.ChartId].Score!);
-            var maxScore = (PhoenixScore)scoredCharts.Max(e => (int)_scores[e.ChartId].Score!);
-            _messages[group.Key] = $"{clearRate * 100.0:0.00}% Cleared, {minScore} ({minScore.LetterGrade.GetName()}) - {maxScore} ({maxScore.LetterGrade.GetName()}), {avgScore} ({avgScore.LetterGrade.GetName()}) Average";
+            _clearRate[group.Key] = clearRate;
+            _minScores[group.Key]= (PhoenixScore)scoredCharts.Min(e => (int)_scores[e.ChartId].Score!);
+            _averageScores[group.Key]= (PhoenixScore)(int)scoredCharts.Average(e => _scores[e.ChartId].Score!);
+            _maxScores[group.Key] = (PhoenixScore)scoredCharts.Max(e => (int)_scores[e.ChartId].Score!);
+
         }
         var charts = _finalEntries.Select(e => _charts[e.ChartId]).ToArray();
         _lowestBpm = charts.Any(c => c.Song.Bpm != null) ? charts.Where(c => c.Song.Bpm != null).Min(c => c.Song.Bpm!.Value.Min) : 0;
