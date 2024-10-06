@@ -970,8 +970,18 @@ function(val, index) {
             await _skillChart.UpdateSeriesAsync(true);
             await _skillChart.UpdateOptionsAsync(true, true, true);
         }
-        _avgSpeedChartPassOptions.Yaxis.First().Max = _skillMaxCount.Where(kv => kv.Key.IsCategory(SkillCategory.Speed)).Max(kv => kv.Value);
-        _avgSkillChartPassOptions.Yaxis.First().Max = _skillMaxCount.Where(kv => !kv.Key.IsCategory(SkillCategory.Speed)).Max(kv => kv.Value);
+
+        if (_skillMaxCount.Any(kv => kv.Key.IsCategory(SkillCategory.Speed)))
+        {
+            
+            _avgSpeedChartPassOptions.Yaxis.First().Max = _skillMaxCount.Where(kv => kv.Key.IsCategory(SkillCategory.Speed)).Max(kv => kv.Value);
+
+        }
+        if (_skillMaxCount.Any(kv => !kv.Key.IsCategory(SkillCategory.Speed)))
+        {
+
+            _avgSkillChartPassOptions.Yaxis.First().Max = _skillMaxCount.Where(kv => !kv.Key.IsCategory(SkillCategory.Speed)).Max(kv => kv.Value);
+        }
         if (_skillPassChart != null)
         {
             await _skillPassChart.UpdateSeriesAsync(true);
