@@ -67,18 +67,21 @@
     }
 </MudGrid>
 
-@foreach (var key in _descriptions.Keys)
+<MudGrid>
+@foreach (var key in _descriptions.Keys.Where(v=>!_hiddenSections.Contains(v)))
 {
-    <MudGrid>
         <MudItem xs="12">
-            <MudText Typo="Typo.h4">
+            <MudText Typo="Typo.h4" Style="display:inline">
                 <MudTooltip Text="@_descriptions[key]">
                     @key
                 </MudTooltip>
 
             </MudText>
+            <MudIconButton Icon="@Icons.Material.Filled.HideSource" Style="float:right" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>HideSection(key)"></MudIconButton>
+
             @if (key == "Weekly Charts")
             {
+                            <br />
                 <MudLink Typo="Typo.subtitle1" Href="/WeeklyCharts">See Leaderboards</MudLink>
             }
         </MudItem>
@@ -128,9 +131,14 @@
                 </MudCard>
             </MudItem>
         }
-    </MudGrid>
 }
-
+@foreach (var sectionName in _hiddenSections)
+{
+    <MudItem xs="6" sm="4" md="3">
+        <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>ShowSection(sectionName)">Show @sectionName</MudButton>
+    </MudItem>
+}
+</MudGrid>
 @if (_stats != null)
 {
     <MudGrid>
@@ -267,6 +275,7 @@
     private int _averageRating = 0;
 
     private ISet<Guid> _topCharts = new HashSet<Guid>();
+    private ISet<string> _hiddenSections = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     private async Task SubmitPositiveFeedback()
     {
         if (_selectedChart == null)
@@ -344,6 +353,29 @@
     }
 
     private IDictionary<Guid, WeeklyTournamentEntry> _myEntries = new Dictionary<Guid, WeeklyTournamentEntry>();
+        private const string HiddenSectionKey = "WhatShouldIPlay__HiddenSections";
+
+    private async Task HideSection(string sectionName)
+    {
+        if (_hiddenSections.Contains(sectionName))
+        {
+            return;
+        }
+        _hiddenSections.Add(sectionName);
+        await UiSettings.SetSetting(HiddenSectionKey, string.Join('|', _hiddenSections));
+        Snackbar.Add($"Hid {sectionName}", Severity.Success);
+    }
+
+    private async Task ShowSection(string sectionName)
+    {
+        if (!_hiddenSections.Contains(sectionName))
+        {
+            return;
+        }
+        _hiddenSections.Remove(sectionName);
+        await UiSettings.SetSetting(HiddenSectionKey, string.Join('|', _hiddenSections));
+        Snackbar.Add($"Showing {sectionName}", Severity.Success);
+    } 
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn)
@@ -351,6 +383,7 @@
             NavManager.NavigateTo("/Login");
             return;
         }
+        _hiddenSections = ((await UiSettings.GetSetting(HiddenSectionKey)) ?? "").Split('|').Where(s=>!string.IsNullOrWhiteSpace(s)).ToHashSet(StringComparer.OrdinalIgnoreCase);
         _isLoading = true;
         _levelOffset = int.TryParse(await UiSettings.GetSetting("WhatShouldIPlay__LevelOffset") ?? "0", out var level) ? level : 0;
         _chartType = Enum.TryParse<ChartType>(await UiSettings.GetSetting("WhatShouldIPlay__ChartType") ?? "", out var type) ? type : null;

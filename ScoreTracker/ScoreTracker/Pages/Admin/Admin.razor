@@ -211,18 +211,21 @@ Do It
     
     //await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);
 
-        //await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
-    //await Mediator.Send(new ProcessChartPopularityCommand());
-    //await WorldRanking.CalculateWorldRankings(CancellationToken.None);
-        //await Bus.Publish(new ProcessPassTierListCommand());
-        var songImages = (await Database.Song.Select(s => s.ImagePath).ToArrayAsync()).ToHashSet();
-
+        await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
+    await Mediator.Send(new ProcessChartPopularityCommand());
+    await WorldRanking.CalculateWorldRankings(CancellationToken.None);
+        await Bus.Publish(new ProcessPassTierListCommand());
+        
+        
+        /*var songImages = (await Database.Song.Select(s => s.ImagePath).ToArrayAsync()).ToHashSet();
+         * 
         var images = await Files.GetFiles("songs/");
         var toDelete = images.Where(s => !songImages.Contains(s.ToString())).ToArray();
         foreach (var image in toDelete)
         {
             await Files.DeleteFile(image.PathAndQuery);
-        }
+        }*/
+
     //await Mediator.Send(new UpdateSongImagesCommand(false));
 
     /*var userIds = await Database.User.Select(u => u.Id).ToArrayAsync();

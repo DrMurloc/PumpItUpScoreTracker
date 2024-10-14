@@ -96,6 +96,12 @@
                 
                 <MudSelectItem T="string" Value=@("Skill")>@L["Skill"]</MudSelectItem>
             }
+            @if (CurrentUser.IsLoggedIn)
+            {
+                
+                <MudSelectItem T="string" Value=@("Age")>@L["Age"]</MudSelectItem>
+                <MudSelectItem T="string" Value=@("Score")>@L["Score"]</MudSelectItem>
+            }
         </MudSelect>
     </MudItem>
 
@@ -231,24 +237,32 @@
             {
                 if (_clearRate.TryGetValue(group.Key, out var cr) && cr > 0)
                 {
+                    if (_groupBy != "Age" && _groupBy != "Score")
+                    {
+
                     <MudItem xs="12" sm="6">
                         <MudProgressLinear Max="1" Min="0" Value="_clearRate[group.Key]" Color="_clearRate[group.Key]>=100.0?Color.Success:Color.Primary">
                             @($"{_clearRate[group.Key]*100.0:N1}%")
                         </MudProgressLinear>
-                    </MudItem>
-                    <MudItem xs="0" sm="6"></MudItem>
+                        </MudItem>
+                        <MudItem xs="0" sm="6"></MudItem>
+                    }
                     <MudItem xs="12">
                         <ScoreBreakdown Score="_minScores[group.Key]"></ScoreBreakdown> -> <ScoreBreakdown Score="_maxScores[group.Key]"></ScoreBreakdown>, <ScoreBreakdown Score="_averageScores[group.Key]"></ScoreBreakdown> Average
                     </MudItem>
                 }
                 else
                 {
-                    <MudItem xs="12" sm="6">
-                        <MudProgressLinear Max="1" Min="0" Value="_clearRate[group.Key]" Color="Color.Primary">
-                            0%
-                        </MudProgressLinear>
-                    </MudItem>
-                    <MudItem xs="0" sm="6"></MudItem>
+
+                    if (_groupBy != "Age" && _groupBy != "Score")
+                    {
+                        <MudItem xs="12" sm="6">
+                            <MudProgressLinear Max="1" Min="0" Value="_clearRate[group.Key]" Color="Color.Primary">
+                                0%
+                            </MudProgressLinear>
+                        </MudItem>
+                        <MudItem xs="0" sm="6"></MudItem>
+                    }
                 }
             }
 
@@ -620,6 +634,7 @@ function(val, index) {
     private IDictionary<Skill, int> _skillMaxCount = Enum.GetValues<Skill>().ToDictionary(s => s, s => 0);
 
     private IDictionary<Guid, RecordedPhoenixScore> _scores = new Dictionary<Guid, RecordedPhoenixScore>();
+    private IDictionary<Guid, RecordedPhoenixScore> _folderScores = new Dictionary<Guid, RecordedPhoenixScore>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private ISet<Guid> _unPopularCharts = new HashSet<Guid>();
     private ISet<Guid> _popularCharts = new HashSet<Guid>();
@@ -1062,8 +1077,29 @@ function(val, index) {
     }
 
     private ISet<Guid> _topCharts = new HashSet<Guid>();
-
-    private IDictionary<TierListCategory, string> _popularityNames = new Dictionary<TierListCategory, string>()
+    private static readonly IDictionary<TierListCategory, string> _scoreNames = new Dictionary<TierListCategory, string>()
+    {
+        { TierListCategory.Overrated, "Amazing" },
+        { TierListCategory.VeryEasy, "Very Good" },
+        { TierListCategory.Easy, "Good" },
+        { TierListCategory.Medium, "Average" },
+        { TierListCategory.Hard, "Low" },
+        { TierListCategory.VeryHard, "Very Low" },
+        { TierListCategory.Underrated, "Why Don't You Get Up and Dance, Man?" },
+        { TierListCategory.Unrecorded, "Not Recorded" }
+    };
+    private static readonly IDictionary<TierListCategory, string> _ageNames = new Dictionary<TierListCategory, string>()
+    {
+        { TierListCategory.Overrated, "Ancient" },
+        { TierListCategory.VeryEasy, "Very Old" },
+        { TierListCategory.Easy, "Old" },
+        { TierListCategory.Medium, "Average" },
+        { TierListCategory.Hard, "New" },
+        { TierListCategory.VeryHard, "Very New" },
+        { TierListCategory.Underrated, "Most Recent" },
+        { TierListCategory.Unrecorded, "Not Recorded" }
+    };
+    private static readonly IDictionary<TierListCategory, string> _popularityNames = new Dictionary<TierListCategory, string>()
     {
         { TierListCategory.Unrecorded, "Unknown" },
         { TierListCategory.Overrated, "Ultra Popular" },
@@ -1075,6 +1111,13 @@ function(val, index) {
         { TierListCategory.Underrated, "Ultra Unpopular" }
     };
 
+    private IDictionary<string, IDictionary<TierListCategory, string>> _tierListCategoryNames = new Dictionary<string, IDictionary<TierListCategory, string>>()
+    {
+        { "Popularity", _popularityNames },
+        { "Score", _scoreNames },
+        { "Age", _ageNames }
+
+    };
     private async Task Recalculate()
     {
         _isLoading = true;
@@ -1085,6 +1128,7 @@ function(val, index) {
         await UiSettings.SetSetting("TierLists__GroupBy", _groupBy);
         await UiSettings.SetSetting("TierLists__HideCompleted", _hidePassed.ToString());
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, _level, _chartType))).ToDictionary(c => c.Id);
+        _folderScores = _scores.Where(kv => _charts.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
         var titles = _titles.Where(t => t is ISpecificChartTitle).ToArray();
         _charTitles = _charts.Values.SelectMany(c => titles.Select(t => (c,t,((ISpecificChartTitle)t).AppliesToChart(c))))
             .Where(v => v.Item3).GroupBy(v=>v.c.Id).ToDictionary(g =>g.Key,g=> g.Select(v => v.t.Name).ToArray().AsEnumerable());
@@ -1166,6 +1210,7 @@ function(val, index) {
             _finalGroupings = _finalEntries
                 .OrderBy(e=>e.Order)
                 .GroupBy(e =>
+                    _tierListCategoryNames.TryGetValue(_groupBy,out var names)?names[e.Category]:
                     _tierListType=="Popularity"?_popularityNames[e.Category]:
                         _tierListType=="Chabala"&&e.Category==TierListCategory.Unrecorded?"Subjective":
                     e.Category.ToString()).OrderBy(g => g.First().Category)
@@ -1178,6 +1223,31 @@ function(val, index) {
                 .GroupBy(e => _charts[e.ChartId].Skills.Any() ? string.Join(' ', _charts[e.ChartId].Skills.OrderBy(s => s).Select(s => s.GetName())) : "Not Rated")
                 .OrderBy(g => _charts[g.First().ChartId].Skills.Any()?(int) _charts[g.First().ChartId].Skills.Min():999999)
                 .ToArray();
+        } else if (_groupBy == "Score")
+        {
+            var tierList = TierListSaga.ProcessIntoTierList("Score", _folderScores.Where(kv => kv.Value.Score != null).ToDictionary(kv => kv.Key, kv => (int)kv.Value.Score!.Value))
+                .ToDictionary(kv => kv.ChartId);
+            _finalGroupings = _finalEntries.OrderBy(e => _scores.TryGetValue(e.ChartId, out var s) ? s.Score ?? PhoenixScore.Min : PhoenixScore.Max)
+                .GroupBy(e => _scores.ContainsKey(e.ChartId) ? _scoreNames[tierList[e.ChartId].Category] : _scoreNames[TierListCategory.Unrecorded])
+                .ToArray();
+        }
+        else if (_groupBy == "Age")
+        {
+            if (_folderScores.Values.Select(s => s.RecordedDate).Distinct().Count() < 5)
+            {
+                _finalGroupings = _finalEntries.GroupBy(kv => _ageNames[TierListCategory.Unrecorded])
+                    .ToArray();
+            }
+            else
+            {
+                
+                var now = DateTimeOffset.Now;
+                var tierList = TierListSaga.ProcessIntoTierList("Score", _folderScores.Where(kv => kv.Value.Score != null).ToDictionary(kv => kv.Key, kv => (now - kv.Value.RecordedDate).TotalDays))
+                    .ToDictionary(kv => kv.ChartId);
+                _finalGroupings = _finalEntries.OrderByDescending(e => _scores.TryGetValue(e.ChartId, out var s) ? (now - s.RecordedDate).TotalDays : -1)
+                    .GroupBy(e => _scores.ContainsKey(e.ChartId) ? _ageNames[tierList[e.ChartId].Category] : _ageNames[TierListCategory.Unrecorded])
+                    .ToArray();
+            }
         }
         else
         {
@@ -1225,7 +1295,7 @@ function(val, index) {
         {
             baseRating = 2000;
         }
-        _averageRating = _scores.Any(kv => !_scores[kv.Key].IsBroken && kv.Value.Score > 0) ? (int)_scores.Where(kv => !_scores[kv.Key].IsBroken && kv.Value.Score > 0).Average(s => s.Value.Score!.Value.LetterGrade.GetModifier() * baseRating) : baseRating;
+        _averageRating = _folderScores.Any(kv => !_scores[kv.Key].IsBroken && kv.Value.Score > 0) ? (int)_folderScores.Where(kv => !_scores[kv.Key].IsBroken && kv.Value.Score > 0).Average(s => s.Value.Score!.Value.LetterGrade.GetModifier() * baseRating) : baseRating;
         await CalculateVariance(_chartType, _level);
 
         var lamps = new List<LampProgress>();

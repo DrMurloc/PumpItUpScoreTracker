@@ -280,7 +280,6 @@
         var text = "";
         foreach (var (chart, index) in _pulledCharts.Select((chart, i) => (chart, i)).OrderBy(c => !_vetoedCharts.Contains(c.i) ? 0 : 1).ThenBy(c => _protectedCharts.Contains(c.i) ? _protectedCharts.Count() : _protectedCharts.IndexOf(c.i)).ThenBy(c => c.i))
         {
-            text += "- ";
             if (_vetoedCharts.Contains(index))
             {
                 text += "~~";
