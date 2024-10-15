@@ -66,8 +66,10 @@ namespace ScoreTracker.Application.Handlers
                         var index = playerScores[c.ChartId].Select((s, i) => (s, i))
                             .FirstOrDefault(k => k.s > c.Score, (0, -1)).i;
                         if (index == -1) return 1.0;
-
-                        return (index - 1) / (double)playerScores[c.ChartId].Length;
+                        if (index == 1)
+                            return
+                                0.0; //We want 1st place to show as 100%, including you as better than yourself but last place to show as 0%
+                        return index / (double)playerScores[c.ChartId].Length;
                     });
         }
     }
