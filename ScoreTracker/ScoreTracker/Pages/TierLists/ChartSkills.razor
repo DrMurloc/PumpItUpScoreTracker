@@ -101,6 +101,7 @@
                 
                 <MudSelectItem T="string" Value=@("Age")>@L["Age"]</MudSelectItem>
                 <MudSelectItem T="string" Value=@("Score")>@L["Score"]</MudSelectItem>
+                <MudSelectItem T="string" Value=@("Score Ranking")>@L["Score Ranking (Beta)"]</MudSelectItem>
             }
         </MudSelect>
     </MudItem>
@@ -214,6 +215,13 @@
             <MudLink Href="@_chabalaLinks[(_chartType,_level)]" Target="_blank">Original Chabala Tier List</MudLink>
         </MudItem>
     }
+    @if (_groupBy == "Score Ranking")
+    {
+        <MudItem xs="12">
+            
+            <MudText>Score Ranking: What percent of players of comparable (+/- .5 competitive level) your score is on a chart.</MudText>
+            </MudItem>
+    }
     @if (_finalEntries.Any() && _finalEntries.All(e=>_charts.ContainsKey(e.ChartId)))
     {
         @foreach (var group in _finalGroupings.Where(g=>g.Any(ShouldChartShow)))
@@ -237,7 +245,7 @@
             {
                 if (_clearRate.TryGetValue(group.Key, out var cr) && cr > 0)
                 {
-                    if (_groupBy != "Age" && _groupBy != "Score")
+                    if (_groupBy != "Age" && _groupBy != "Score" &&  _groupBy!="Score Ranking")
                     {
 
                     <MudItem xs="12" sm="6">
@@ -254,7 +262,7 @@
                 else
                 {
 
-                    if (_groupBy != "Age" && _groupBy != "Score")
+                    if (_groupBy != "Age" && _groupBy != "Score" && _groupBy !="Score Ranking")
                     {
                         <MudItem xs="12" sm="6">
                             <MudProgressLinear Max="1" Min="0" Value="_clearRate[group.Key]" Color="Color.Primary">
@@ -322,6 +330,10 @@
                                         
                                         <br/>
                                         <ScoreBreakdown Score="_scores[chart.Id].Score!.Value" IsBroken="_scores[chart.Id].IsBroken" OneLine="true" ShowScore="true" Plate="_scores[chart.Id].Plate"></ScoreBreakdown>
+                                        @if (_groupBy == "Score Ranking" && _scoreRankings.TryGetValue(chart.Id, out var rating))
+                                        {
+                                            <MudText Style=@($"color:{RankingColor(rating)}")>@((rating*100.0).ToString("N1"))%</MudText>
+                                        }
                                         @if (_showAge)
                                         {
                                             <MudText>@(_ages[chart.Id].ToString("0")) @L["Days Old"]</MudText>
@@ -728,6 +740,14 @@ function(val, index) {
         }
     }
 
+    private string RankingColor(double ranking) =>
+        ranking <= .1 ? "#BDBDBD" :
+            ranking <= .25 ? "#FAFAFA" :
+                ranking <= .5 ? "#76FF03" :
+                    ranking <= .75 ? "#1565C0" :
+                        ranking <= .9 ? "#7E57C2" :
+                            ranking <= .99 ? "#EC407A" :
+                                "#FB8C00";
     private bool ShouldChartShow(SongTierListEntry entry)
     {
         if (_hidePassed && _scores.TryGetValue(entry.ChartId, out var s) && !s.IsBroken)
@@ -778,6 +798,7 @@ function(val, index) {
     private bool _showSettings = false;
     private string _groupBy = "Tier List";
     private int _level = 20;
+    private IDictionary<Guid, double> _scoreRankings = new Dictionary<Guid, double>();
     private string _tierListType = "Pass";
     private string _songFilter;
     private async Task SetShowAge(bool newSetting)
@@ -1248,6 +1269,31 @@ function(val, index) {
                     .GroupBy(e => _scores.ContainsKey(e.ChartId) ? _ageNames[tierList[e.ChartId].Category] : _ageNames[TierListCategory.Unrecorded])
                     .ToArray();
             }
+        }
+        else if (_groupBy == "Score Ranking")
+        {
+            _scoreRankings = await Mediator.Send(new GetPlayerScoreQualityQuery(_level, _chartType));
+            _finalGroupings = _finalEntries
+                .OrderBy(e => _scoreRankings.TryGetValue(e.ChartId, out var r) ? r : 99999)
+                .GroupBy(e => _scoreRankings.TryGetValue(e.ChartId, out var r) ?
+                    (r <= 0.01 ?
+                        "Last Place" :
+                        r <= 0.10 ?
+                            "0 -> 10%" :
+                            r <= 0.25 ?
+                                "10% -> 25%" :
+                                r <= .5 ?
+                                    "25% -> 50%" :
+                                    r <= .75 ?
+                                        "50% -> 75%" :
+                                        r <= .9 ?
+                                            "75% -> 90%" :
+                                            r>.99?
+                                                "The Best":
+                                            "90% -> 99.9%"
+                        )
+                    : "Not Recorded")
+                .ToArray();
         }
         else
         {

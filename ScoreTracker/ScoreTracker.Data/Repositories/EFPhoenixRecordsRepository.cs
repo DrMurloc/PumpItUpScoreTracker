@@ -135,6 +135,27 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
             select new ChartScoreAggregate(g.Key, g.Count())).ToArrayAsync(cancellationToken);
     }
 
+    public async Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetPlayerScores(
+        IEnumerable<Guid> userIds, ChartType chartType, DifficultyLevel difficulty,
+        CancellationToken cancellationToken = default)
+    {
+        var userIdArray = userIds.ToArray();
+        var mixId = MixGuids[MixEnum.Phoenix];
+        var intLevel = (int)difficulty;
+        var chartTypeString = chartType.ToString();
+        var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+        return (await (from cm in database.ChartMix
+                join c in database.Chart on cm.ChartId equals c.Id
+                join pba in database.PhoenixBestAttempt on c.Id equals pba.ChartId
+                where
+                    userIdArray.Contains(pba.UserId) &&
+                    cm.MixId == mixId && cm.Level == intLevel && c.Type == chartTypeString
+                select pba).ToArrayAsync(cancellationToken))
+            .Select(pb => (pb.UserId,
+                new RecordedPhoenixScore(pb.ChartId, pb.Score, PhoenixPlateHelperMethods.TryParse(pb.Plate),
+                    pb.IsBroken, pb.RecordedDate)));
+    }
+
     //Will  need to refactor this if I ever support non prod environments
     //Mostly saving some tedious joins for now.
     private static readonly IDictionary<MixEnum, Guid> MixGuids = new Dictionary<MixEnum, Guid>

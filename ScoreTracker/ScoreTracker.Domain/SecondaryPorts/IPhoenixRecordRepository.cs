@@ -25,6 +25,10 @@ public interface IPhoenixRecordRepository
 
     Task<IEnumerable<ChartScoreAggregate>> GetAllChartScoreAggregates(CancellationToken cancellationToken);
 
+    Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetPlayerScores(IEnumerable<Guid> userIds,
+        ChartType chartType,
+        DifficultyLevel difficulty, CancellationToken cancellationToken = default);
+
     Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetAllPlayerScores(ChartType chartType,
         DifficultyLevel difficulty, CancellationToken cancellationToken = default);
 
