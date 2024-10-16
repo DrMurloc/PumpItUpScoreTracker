@@ -11,6 +11,7 @@
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Events
+@using ScoreTracker.Domain.Records
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services
@@ -97,7 +98,6 @@
                                     <MudTh>Song</MudTh>
                                     <MudTh>Difficulty</MudTh>
                                     <MudTh>Score</MudTh>
-                                    <MudTh>Plate</MudTh>
                                 </HeaderContent>
                                 <RowTemplate>
                                     <MudTd>
@@ -111,11 +111,7 @@
 
                                     </MudTd>
                                     <MudTd>
-                                        @(context.Score?.ToGradeString()??"")
-
-                                    </MudTd>
-                                    <MudTd>
-                                        @(context.Plate?.GetName()??"")
+                                        <ScoreBreakdown Score="context.Score" Plate="context.Plate" ShowScore="true" OneLine="true" Ranking="_rankings.TryGetValue(context.ChartId, out var r)?r:null"></ScoreBreakdown>
                                     </MudTd>
                                 </RowTemplate>
                                 <PagerContent>
@@ -331,7 +327,14 @@
             _scores.Add(score);
         }
         _passwordImportStatus = e.Status;
+        InvokeAsync(GetRatings);
         InvokeAsync(StateHasChanged);
+    }
+
+    private IDictionary<Guid, ScoreRankingRecord> _rankings;
+    private async Task GetRatings()
+    {
+        _rankings = await Mediator.Send(new GetChartScoreRankingsQuery(_scores.Select(s => s.ChartId)));
     }
     private void Cancel()
     {

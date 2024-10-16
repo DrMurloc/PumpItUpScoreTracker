@@ -329,11 +329,8 @@
                                     @if ((_scores.TryGetValue(chart.Id, out var s) ? s.Score : 0) > 0){
                                         
                                         <br/>
-                                        <ScoreBreakdown Score="_scores[chart.Id].Score!.Value" IsBroken="_scores[chart.Id].IsBroken" OneLine="true" ShowScore="true" Plate="_scores[chart.Id].Plate"></ScoreBreakdown>
-                                        @if (_groupBy == "Score Ranking" && _scoreRankings.TryGetValue(chart.Id, out var rating))
-                                        {
-                                            <MudText Style=@($"color:{RankingColor(rating)}")>@((rating*100.0).ToString("N1"))%</MudText>
-                                        }
+                                        <ScoreBreakdown Score="_scores[chart.Id].Score!.Value" IsBroken="_scores[chart.Id].IsBroken" OneLine="true" ShowScore="true" Plate="_scores[chart.Id].Plate" Ranking="_scoreRankings.TryGetValue(chart.Id,out var r)?r:null"></ScoreBreakdown>
+
                                         @if (_showAge)
                                         {
                                             <MudText>@(_ages[chart.Id].ToString("0")) @L["Days Old"]</MudText>
@@ -740,14 +737,7 @@ function(val, index) {
         }
     }
 
-    private string RankingColor(double ranking) =>
-        ranking <= .1 ? "#BDBDBD" :
-            ranking <= .25 ? "#FAFAFA" :
-                ranking <= .5 ? "#76FF03" :
-                    ranking <= .75 ? "#1565C0" :
-                        ranking <= .9 ? "#7E57C2" :
-                            ranking <= .99 ? "#EC407A" :
-                                "#FB8C00";
+
     private bool ShouldChartShow(SongTierListEntry entry)
     {
         if (_hidePassed && _scores.TryGetValue(entry.ChartId, out var s) && !s.IsBroken)
@@ -798,7 +788,7 @@ function(val, index) {
     private bool _showSettings = false;
     private string _groupBy = "Tier List";
     private int _level = 20;
-    private IDictionary<Guid, double> _scoreRankings = new Dictionary<Guid, double>();
+    private IDictionary<Guid, ScoreRankingRecord> _scoreRankings = new Dictionary<Guid, ScoreRankingRecord>();
     private string _tierListType = "Pass";
     private string _songFilter;
     private async Task SetShowAge(bool newSetting)
@@ -1142,6 +1132,8 @@ function(val, index) {
     private async Task Recalculate()
     {
         _isLoading = true;
+        
+        _scoreRankings = await Mediator.Send(new GetPlayerScoreQualityQuery(_level, _chartType));
         await UiSettings.SetSetting("TierLists__Level", _level.ToString());
         await UiSettings.SetSetting("TierLists__ChartType", _chartType.ToString());
         await UiSettings.SetSetting("TierLists__ListType", _tierListType);
@@ -1272,23 +1264,22 @@ function(val, index) {
         }
         else if (_groupBy == "Score Ranking")
         {
-            _scoreRankings = await Mediator.Send(new GetPlayerScoreQualityQuery(_level, _chartType));
             _finalGroupings = _finalEntries
-                .OrderBy(e => _scoreRankings.TryGetValue(e.ChartId, out var r) ? r : 99999)
+                .OrderBy(e => _scoreRankings.TryGetValue(e.ChartId, out var r) ? r.Ranking : 99999)
                 .GroupBy(e => _scoreRankings.TryGetValue(e.ChartId, out var r) ?
-                    (r <= 0.01 ?
+                    (r.Ranking <= 0.01 ?
                         "Last Place" :
-                        r <= 0.10 ?
+                        r.Ranking <= 0.10 ?
                             "0 -> 10%" :
-                            r <= 0.25 ?
+                            r.Ranking <= 0.25 ?
                                 "10% -> 25%" :
-                                r <= .5 ?
+                                r.Ranking <= .5 ?
                                     "25% -> 50%" :
-                                    r <= .75 ?
+                                    r.Ranking <= .75 ?
                                         "50% -> 75%" :
-                                        r <= .9 ?
+                                        r.Ranking <= .9 ?
                                             "75% -> 90%" :
-                                            r>.99?
+                                            r.Ranking > .99 ?
                                                 "The Best":
                                             "90% -> 99.9%"
                         )

@@ -135,6 +135,20 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
             select new ChartScoreAggregate(g.Key, g.Count())).ToArrayAsync(cancellationToken);
     }
 
+    public async Task<IEnumerable<UserPhoenixScore>> GetPlayerScores(IEnumerable<Guid> userIds,
+        IEnumerable<Guid> chartIds, CancellationToken cancellationToken = default)
+    {
+        var userIdArray = userIds.Distinct().ToArray();
+        var chartIdArray = chartIds.Distinct().ToArray();
+        return await (from pba in _database.PhoenixBestAttempt
+                join u in _database.User on pba.UserId equals u.Id
+                where chartIdArray.Contains(pba.ChartId) && pba.Score != null && userIdArray.Contains(pba.UserId)
+                select new UserPhoenixScore(pba.UserId, pba.ChartId, u.IsPublic ? u.Name : "Anonymous",
+                    pba.Score!.Value,
+                    PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken))
+            .ToArrayAsync(cancellationToken);
+    }
+
     public async Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetPlayerScores(
         IEnumerable<Guid> userIds, ChartType chartType, DifficultyLevel difficulty,
         CancellationToken cancellationToken = default)
