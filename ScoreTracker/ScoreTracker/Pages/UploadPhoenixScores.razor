@@ -98,6 +98,10 @@
                                     <MudTh>Song</MudTh>
                                     <MudTh>Difficulty</MudTh>
                                     <MudTh>Score</MudTh>
+                                    @if (_rankings.Any())
+                                    {
+                                        <MudTh>Ranking %</MudTh>
+                                    }
                                 </HeaderContent>
                                 <RowTemplate>
                                     <MudTd>
@@ -113,6 +117,15 @@
                                     <MudTd>
                                         <ScoreBreakdown Score="context.Score" Plate="context.Plate" ShowScore="true" OneLine="true" Ranking="_rankings.TryGetValue(context.ChartId, out var r)?r:null"></ScoreBreakdown>
                                     </MudTd>
+                                    @if (_rankings.Any())
+                                    {
+                                        <MudTd>
+                                            @if (_rankings.TryGetValue(context.ChartId, out var ranking))
+                                            {
+                                                <MudText>@((100.0 * ranking.Ranking).ToString("N1")) of @ranking.PlayerCount Similar Players</MudText>
+                                            }
+                                        </MudTd>
+                                    }
                                 </RowTemplate>
                                 <PagerContent>
                                     <MudTablePager></MudTablePager>
@@ -328,13 +341,13 @@
         }
         _passwordImportStatus = e.Status;
         InvokeAsync(GetRatings);
-        InvokeAsync(StateHasChanged);
     }
 
     private IDictionary<Guid, ScoreRankingRecord> _rankings;
     private async Task GetRatings()
     {
         _rankings = await Mediator.Send(new GetChartScoreRankingsQuery(_scores.Select(s => s.ChartId)));
+        StateHasChanged();
     }
     private void Cancel()
     {
