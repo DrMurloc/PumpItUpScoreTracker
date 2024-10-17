@@ -221,6 +221,10 @@
         _expectedScore = new Dictionary<Guid, PhoenixScore>();
         var levelRange = _tierList.Where(kv => kv.Key != TierListCategory.Unrecorded).SelectMany(t => t.Value).Select(t => _charts[t].Level)
             .Distinct().ToArray();
+        if (!levelRange.Any())
+        {
+            return;
+        }
         var lowestLevel = levelRange.Min();
         var highestLevel = levelRange.Max();
 
