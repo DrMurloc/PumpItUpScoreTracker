@@ -1132,8 +1132,11 @@ function(val, index) {
     private async Task Recalculate()
     {
         _isLoading = true;
-        
-        _scoreRankings = await Mediator.Send(new GetPlayerScoreQualityQuery(_level, _chartType));
+        if (CurrentUser.IsLoggedIn)
+        {
+            
+            _scoreRankings = await Mediator.Send(new GetPlayerScoreQualityQuery(_level, _chartType));
+        }
         await UiSettings.SetSetting("TierLists__Level", _level.ToString());
         await UiSettings.SetSetting("TierLists__ChartType", _chartType.ToString());
         await UiSettings.SetSetting("TierLists__ListType", _tierListType);
