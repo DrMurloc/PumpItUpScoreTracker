@@ -92,12 +92,10 @@
                 <MudNavLink Href="/PlayerRankings" Icon="@Icons.Material.Filled.Public">@L["World Rankings"]</MudNavLink>
             </MudNavGroup>
             <MudDivider DividerType="DividerType.Middle"></MudDivider>
-            <MudNavGroup Title=@L["Tournaments"] Icon="@Icons.Material.Filled.Leaderboard" Expanded="false">
+            <MudNavGroup Title=@L["Competition"] Icon="@Icons.Material.Filled.Leaderboard" Expanded="false">
                 <MudNavLink Href="/WeeklyCharts" Icon="@Icons.Material.Filled.ViewWeek">@L["Weekly Charts"]</MudNavLink>
                 <MudDivider DividerType="DividerType.Middle"></MudDivider>
                 <MudNavLink Href="/Tournaments" Icon="@Icons.Material.Filled.Leaderboard">@L["Tournaments"]</MudNavLink>
-                <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                <MudNavLink Href="/TournamentBuilder" Icon="@Icons.Material.Filled.Calculate">@L["Tournament Builder"]</MudNavLink>
                 @foreach (var tourney in _highlightedEvents)
                 {
                     
@@ -111,6 +109,11 @@
 
                         <MudNavLink Href=@($"/Tournament/{tourney.Id}/Qualifiers") Icon="@Icons.Material.Filled.Event">@tourney.Name</MudNavLink>
                     }
+                }
+                @if (CurrentUser.IsLoggedIn)
+                {
+                    <MudDivider></MudDivider>
+                    <MudNavLink Href="ScoreRankings" Icon="@Icons.Material.Filled.Stars">@L["Score Ranking"]</MudNavLink>
                 }
             </MudNavGroup>
             <MudDivider DividerType="DividerType.Middle"></MudDivider>

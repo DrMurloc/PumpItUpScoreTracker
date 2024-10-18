@@ -1,0 +1,259 @@
+﻿@page "/Tournament/{TournamentId:guid}/Qualifiers"
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Domain.Enums
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Web.Components
+
+<PageTitle>Submit @_tournamentName Qualifiers Session</PageTitle>
+
+<MudGrid>
+    <MudItem xs="12" sm="8">
+        <MudText Typo="Typo.h3">@L["Qualifiers Leaderboard",_tournamentName]</MudText>
+    </MudItem>
+    @if (!IsExpired)
+    {
+        <MudItem xs="12" sm="4">
+            <MudButton Href=@($"/Tournament/{TournamentId}/Qualifiers/Submit") Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">@L["Submission Page"]</MudButton>
+        </MudItem>
+    }
+</MudGrid>
+
+<MudTable T="Entry" Items="_leaderboard" FixedHeader="true" Striped="true" Breakpoint="Breakpoint.None" Dense="true">
+    <HeaderContent>
+        @if (IsExpired && _leaderboard.Any(l => l.FinalSeed != null && l.FinalSeed != l.Place))
+        {
+            <MudTh>@L["Final Seed"]</MudTh>
+            <MudTh>@L["Qualifier Position"]</MudTh>
+        }
+        else
+        {
+
+            <MudTh>
+                @L["Place"]
+            </MudTh>
+        }
+        <MudTh>@L["Username"]</MudTh>
+        @for (var i = 0; i < _configuration.PlayCount; i++)
+        {
+            var place = i + 1;
+            <MudTh>#@place @L["Song"]</MudTh>
+        }
+        <MudTh>@L["Rating"]</MudTh>
+        <MudTh>@L["Photos"]</MudTh>
+        @if (_myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer)
+        {
+            <MudTh>Approve</MudTh>
+        }
+    </HeaderContent>
+    <RowTemplate>
+        @if (IsExpired && _leaderboard.Any(l => l.FinalSeed != null && l.FinalSeed != l.Place))
+        {
+            <MudTd>
+                @if (context.FinalSeed != 999)
+                {
+                    @context.FinalSeed
+                }
+
+            </MudTd>
+        }
+        <MudTd>
+            @if (context.Place != 999)
+            {
+                
+                @context.Place
+            }
+        </MudTd>
+        <MudTd>@context.UserName</MudTd>
+
+        @foreach (var entry in context.Scores)
+        {
+            <MudTd Style="text-align:center">
+                <MudTooltip Text="@(entry.Item1.Song.Name + ' ' + entry.Item1.DifficultyString)">
+                    <MudImage Src="@entry.Item1.Song.ImagePath.ToString()" Height="20" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
+                </MudTooltip>
+                <ScoreBreakdown Score="@entry.Item2" Height="20"></ScoreBreakdown>
+
+                @(entry.Item3.ToString("0.##"))
+
+
+            </MudTd>
+        }
+        @for (var i = context.Scores.Length; i < _configuration.PlayCount; i++)
+        {
+            <MudTd></MudTd>
+        }
+        <MudTd>
+            @if (context.Scores.Any())
+            {
+                @context.Score.ToString("0.###")
+            }
+        </MudTd>
+        <MudTd>
+            @if (context.IsApproved || _myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.PhotoAlbum" Color="Color.Primary" OnClick="() => SelectEntry(context)" Disabled="!context.Photos.Any()"></MudIconButton>
+            }
+            else
+            {
+                <MudText>@L["Pending"]</MudText>
+            }
+        </MudTd>
+        @if (_myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer)
+        {
+            <MudTd>
+                @if (!context.IsApproved)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Check" Color="Color.Primary" OnClick="() => Approve(context.Record)"></MudIconButton>
+                }
+            </MudTd>
+        }
+    </RowTemplate>
+    <ChildRowContent>
+        <MudTr>
+            <td colspan="6">
+                @if (_selectedEntry != null && _selectedEntry.UserName==context.UserName)
+                {
+                    <MudGrid>
+                        @foreach (var item in _selectedEntry.Photos)
+                        {
+                            <MudItem xs="6" sm="4" md="3">
+                                <MudImage Src="@item.ToString()" ObjectFit="ObjectFit.Contain" Height="200" Width="200"></MudImage>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                    @if (_myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer)
+                    {
+                        <MudGrid>
+                            @foreach (var entry in _selectedEntry.Record.Submissions.Values)
+                            {
+                                <MudItem xs="6" sm="4" md="3">
+                                    @_charts[entry.ChartId].Song.Name @_charts[entry.ChartId].DifficultyString: @entry.Score (@entry.Score.LetterGrade.GetName())
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    }
+                }
+            </td>
+        </MudTr>
+    </ChildRowContent>
+</MudTable>
+<br/>
+<br/>
+
+@if (_tournamentName == "BITE 7")
+{
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">@L["Event Links"]</MudText>
+        </MudItem>
+        <MudItem xs="6" sm="4" md="3">
+            <MudButton StartIcon="@Icons.Material.Filled.Rule" Href="https://docs.google.com/document/d/1J_JgWwhgddoiaUlghGCGtd7wWXmAQ4c90AflUQucNaI/" Color="Color.Primary" Variant="Variant.Text" Target="_blank">@L["Rules"]</MudButton>
+        </MudItem>
+        <MudItem xs="6" sm="4" md="3">
+            <MudButton StartIcon="@Icons.Material.Filled.Event" Href="https://www.start.gg/tournament/beast-in-the-east-7/details" Color="Color.Primary" Variant="Variant.Text" Target="_blank">@L["Event"]</MudButton>
+        </MudItem>
+        <MudItem xs="6" sm="4" md="3">
+            <MudButton StartIcon="@Icons.Material.Filled.Public" Href="https://bitegaming.org/" Color="Color.Primary" Variant="Variant.Text" Target="_blank">@L["Website"]</MudButton>
+        </MudItem>
+        <MudItem xs="6" sm="4" md="3">
+            <MudButton StartIcon="@Icons.Custom.Brands.Discord" Href="https://discord.gg/jNQRsrkWFA" Color="Color.Primary" Variant="Variant.Text" Target="_blank">Discord</MudButton>
+        </MudItem>
+    </MudGrid>
+}
+@if (_myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer)
+{
+    <br />
+    <MudButton Href=@($"/Tournament/{TournamentId}/Brackets") Color="Color.Primary" Variant="Variant.Outlined">Bracket Manager</MudButton>
+
+}
+@if (_myRole is TournamentRole.HeadTournamentOrganizer)
+{
+    <br />
+    <MudButton Href=@($"/Tournament/{TournamentId}/Admin") Color="Color.Primary" Variant="Variant.Outlined">Admin</MudButton>
+}
+@inject ICurrentUserAccessor CurrentUser
+@inject IQualifiersRepository Qualifiers
+@inject ISnackbar Snackbar
+@inject NavigationManager NavManager;
+@inject IMediator Mediator;
+@code
+{
+
+    private IEnumerable<Entry> _leaderboard = Array.Empty<Entry>();
+    private Entry? _selectedEntry = null;
+    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private Name _tournamentName = "...";
+    private TimeSpan? RemainingTime => _configuration?.CutoffTime == null ? null : _configuration.CutoffTime - DateTimeOffset.Now;
+    private bool IsExpired => _configuration ?.CutoffTime != null && _configuration.CutoffTime < DateTimeOffset.Now;
+
+    private QualifiersConfiguration _configuration = new(Array.Empty<Chart>(),new Dictionary<Guid, int>(),"Phoenix",1,2,null);
+    [Parameter]
+    [SupplyParameterFromQuery(Name="TournamentId")]
+    public Guid TournamentId { get; set; }
+    private void SelectEntry(Entry entry)
+    {
+        _selectedEntry = _selectedEntry?.UserName == entry.UserName ? null : entry;
+    }
+
+    private async Task Approve(UserQualifiers qual)
+    {
+        qual.Approve();
+        await Qualifiers.SaveQualifiers(TournamentId, qual);
+        Snackbar.Add("Approved!", Severity.Success);
+    }
+
+    private TournamentRole? _myRole;
+    protected override async Task OnInitializedAsync()
+    {
+        if (TournamentId == default)
+        {
+            NavManager.NavigateTo("/");
+            return;
+        }
+        _configuration = await Qualifiers.GetQualifiersConfiguration(TournamentId);
+        var tournament = (await Mediator.Send(new GetAllTournamentsQuery()))
+            .FirstOrDefault(t => t.Id == TournamentId);
+        _tournamentName = tournament.Name;
+
+        var config = await Qualifiers.GetQualifiersConfiguration(TournamentId);
+        foreach (var chart in config.Charts)
+        {
+            _charts[chart.Id] = chart;
+        }
+        var players =
+            (await Mediator.Send(new GetMatchPlayersQuery(TournamentId)))
+            .ToDictionary(p => p.Name);
+
+        var leaderboard = (await Qualifiers.GetAllUserQualifiers(TournamentId, config)).OrderByDescending(q => q.CalculateScore()).Select((q, index) => new Entry(index + 1, players.TryGetValue(q.UserName, out var player) ? player.Seed : null, q.UserName,
+            
+            q.BestCharts().ToArray(),q.IsApproved,
+            q.CalculateScore(), q.Submissions.Select(s => s.Value.PhotoUrl).ToArray(),q))
+            .ToList();
+        var leaderboardPlayers = leaderboard.Select(l => l.UserName).Distinct().ToHashSet();
+
+        @if (IsExpired)
+        {
+            var missingPlayers = players.Where(p => !leaderboardPlayers.Contains(p.Key)).Select(kv => kv.Value).ToArray();
+            leaderboard.AddRange(missingPlayers.Select(player => new Entry(999, player.Seed, player.Name, Array.Empty<(Chart,PhoenixScore,double)>(), true, 0.0, Array.Empty<Uri>(), new UserQualifiers(_configuration, true, player.Name, new Dictionary<Guid, UserQualifiers.Submission>()))));
+        }
+        _leaderboard = leaderboard.Any(l => l.FinalSeed != null && l.FinalSeed != l.Place) ?
+            leaderboard.OrderBy(l => l.FinalSeed).ToArray() :
+            leaderboard.OrderBy(l => l.Place).ToArray();
+        var userRoles = await Mediator.Send(new GetTournamentRolesQuery(TournamentId));
+        _myRole= !CurrentUser.IsLoggedIn?null:
+            CurrentUser.IsLoggedInAsAdmin ? TournamentRole.HeadTournamentOrganizer : userRoles.FirstOrDefault(e => e.UserId == CurrentUser.User?.Id)?.Role;
+
+
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        await OnInitializedAsync();
+    }
+    private sealed record Entry(int Place, int? FinalSeed, string UserName, (Chart,PhoenixScore, double)[] Scores, bool IsApproved, double Score, IEnumerable<Uri> Photos, UserQualifiers Record)
+    {
+
+    }
+}

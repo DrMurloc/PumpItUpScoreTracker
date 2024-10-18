@@ -1,0 +1,133 @@
+﻿@page "/ScoreRankings"
+@using ScoreTracker.Domain.SecondaryPorts
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.ValueTypes
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ScoreTracker.Web.Components
+<PageTitle>Score Rankings</PageTitle>
+
+<MudText Typo="Typo.h5">Scoring Rankings</MudText>
+<MudText>Score Rankings (the colored scores) are based on comparisons to similarly skilled players.</MudText>
+<br/>
+<MudText>The higher percent of players in your range that you perform better than, the better the color:</MudText>
+<br/>
+<MudText Style="color:#BDBDBD">0% -> 10%</MudText>
+<MudText Style="color:#FAFAFA">10% -> 25%</MudText>
+<MudText Style="color:#76FF03">25% -> 50%</MudText>
+<MudText Style="color:#1565C0">50% -> 75%</MudText>
+<MudText Style="color:#7E57C2">75% -> 90%</MudText>
+<MudText Style="color:#EC407A">90% -> 99%</MudText>
+<MudText Style="color:#FB8C00">100% (or everyone with a PG)</MudText>
+<br/>
+<MudText Typo="Typo.h6">Similarly skilled players to you for Singles:</MudText>
+<MudTable T="User" Items="_comparableUsersSingles">
+    <HeaderContent>
+        <MudTh>Avatar</MudTh>
+        <MudTh>
+            <MudTableSortLabel T="User" SortBy=@(u=>u.IsPublic?u.Name:"Anonymous")>Player</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="User" SortBy="u=>_competitiveLevelSingles[u.Id]">Level</MudTableSortLabel>
+        </MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            @if (context.IsPublic)
+            {
+                <MudImage Src="@context.ProfileImage.ToString()" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+            }
+        </MudTd>
+        <MudTd>
+            @if (context.IsPublic)
+            {
+                <UserLabel User="context"></UserLabel>
+            }
+            else
+            {
+                <MudText>Anonymous</MudText>
+            }
+        </MudTd>
+        <MudTd>
+            <MudText>@(_competitiveLevelSingles[context.Id].ToString("N2"))</MudText>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+<br/>
+<MudText Typo="Typo.h6">Similarly skilled players to you for Doubles (CoOp charts use doubles competitive level):</MudText>
+<MudTable T="User" Items="_comparableUsersDoubles">
+    <HeaderContent>
+        <MudTh>Avatar</MudTh>
+        <MudTh>
+            <MudTableSortLabel T="User" SortBy=@(u=>u.IsPublic?u.Name:"Anonymous")>Player</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="User" SortBy="u=>_competitiveLevelDoubles[u.Id]">Level</MudTableSortLabel>
+        </MudTh>
+    </HeaderContent>
+    
+    <RowTemplate>
+        <MudTd>
+            @if (context.IsPublic)
+            {
+                <MudImage Src="@context.ProfileImage.ToString()" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+            }
+        </MudTd>
+        <MudTd>
+            @if (context.IsPublic)
+            {
+                <UserLabel User="context"></UserLabel>
+            }
+            else
+            {
+                <MudText>Anonymous</MudText>
+            }
+        </MudTd>
+        <MudTd>
+            <MudText>@(_competitiveLevelDoubles[context.Id].ToString("N2"))</MudText>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser;
+@inject NavigationManager NavManager;
+@inject IUserRepository Users;
+@inject IPlayerStatsRepository Stats;
+@inject IQualifiersRepository Qualifiers;
+@code
+{
+    private ChartType _chartType = ChartType.Single;
+    private bool _isLoading = false;
+    private IEnumerable<User> _comparableUsersSingles = Array.Empty<User>();
+    private IDictionary<Guid, double> _competitiveLevelSingles = new Dictionary<Guid, double>();
+    private IEnumerable<User> _comparableUsersDoubles = Array.Empty<User>();
+    private IDictionary<Guid, double> _competitiveLevelDoubles = new Dictionary<Guid, double>();
+    private async Task SetChartType(ChartType chartType)
+    {
+
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Login");
+            return;
+        }
+        _isLoading = true;
+        var players = (await Mediator.Send(new GetCompetitivePlayersQuery(ChartType.Single))).ToArray();
+        _competitiveLevelSingles = (await Stats.GetStats(players, CancellationToken.None))
+            .ToDictionary(s => s.UserId, s =>  s.SinglesCompetitiveLevel);
+        _comparableUsersSingles = (await Users.GetUsers(players)).ToArray();
+
+        players = (await Mediator.Send(new GetCompetitivePlayersQuery(ChartType.Double))).ToArray();
+        _competitiveLevelDoubles = (await Stats.GetStats(players, CancellationToken.None))
+            .ToDictionary(s => s.UserId, s =>  s.DoublesCompetitiveLevel);
+        _comparableUsersDoubles = (await Users.GetUsers(players)).ToArray();
+
+        _isLoading = false;
+
+    }
+}

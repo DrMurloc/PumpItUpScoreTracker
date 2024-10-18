@@ -127,9 +127,9 @@ namespace ScoreTracker.Data.Repositories
             if (chartType == null)
                 query = query.Where(p => p.CompetitiveLevel >= min && p.CompetitiveLevel <= max);
             else if (chartType == ChartType.Single)
-                query = query.Where(p => p.DoublesCompetitiveLevel >= min && p.DoublesCompetitiveLevel <= max);
-            else if (chartType == ChartType.Double)
                 query = query.Where(p => p.SinglesCompetitiveLevel >= min && p.SinglesCompetitiveLevel <= max);
+            else if (chartType == ChartType.Double)
+                query = query.Where(p => p.DoublesCompetitiveLevel >= min && p.DoublesCompetitiveLevel <= max);
 
             return await query.Select(p => p.UserId).Distinct().ToArrayAsync(cancellationToken);
         }

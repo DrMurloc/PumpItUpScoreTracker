@@ -1,0 +1,386 @@
+﻿@page "/SessionBuilder"
+@page "/TournamentBuilder"
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.ValueTypes
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using MediatR
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Components
+@using Task = System.Threading.Tasks.Task
+@using System.ComponentModel
+@using System.Text.Json
+@using System.Text.Json.Serialization
+
+<PageTitle>Tournament Builder</PageTitle>
+
+<MudText Typo="Typo.h3">Tournament Settings</MudText>
+<MudGrid>
+    <MudItem xs="12">
+        <MudSelect T="Guid?" Label="PreBuilt Tournament Configuration" Value="_currentTourney" ValueChanged="SelectTourney" Clearable>
+            <MudSelectItem T="Guid?" Value="null">Default</MudSelectItem>
+            @foreach (var tourney in _tournaments)
+            {
+                <MudSelectItem T="Guid?" Value="@tourney.Id">@tourney.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+</MudGrid>
+<br/>
+<br/>
+<MudRadioGroup T="ScoringConfiguration.CalculationType" @bind-Value="@Configuration.Scoring.Formula">
+    @foreach (var option in Enum.GetValues<ScoringConfiguration.CalculationType>().Where(v => v != ScoringConfiguration.CalculationType.Custom || CurrentUser.IsLoggedInAsAdmin))
+    {
+        <MudRadio T="ScoringConfiguration.CalculationType" Value="@option" Color="Color.Primary">@option</MudRadio>
+    }
+</MudRadioGroup>
+<br/>
+<MudText>@Configuration.Scoring.Formula.GetDescription()</MudText>
+<br/>
+<MudExpansionPanels>
+
+    <MudExpansionPanel Text="Levels">
+        <MudGrid>
+            @foreach (var level in DifficultyLevel.All)
+            {
+                <MudItem xs="6">
+                    <MudNumericField T="int" Min="0" Max="1000000" Label="@level.ToString()" @bind-Value="Configuration.Scoring.LevelRatings[level]"></MudNumericField>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudExpansionPanel>
+    <MudExpansionPanel Text="Chart Types">
+        <MudGrid>
+            @foreach (var chartType in Enum.GetValues<ChartType>())
+            {
+                <MudItem xs="6">
+                    <MudNumericField T="double" Min="0" Max="100" Label="@chartType.ToString()" @bind-Value="Configuration.Scoring.ChartTypeModifiers[chartType]"></MudNumericField>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudExpansionPanel>
+
+    <MudExpansionPanel Text="Song Types">
+        <MudGrid>
+            <MudItem xs="12">
+                <MudSwitch T="bool" Color="Color.Primary" Label="Adjust Scores to Song Duration (uses 2 minutes as average chart duration)" @bind-Value="Configuration.Scoring.AdjustToTime"></MudSwitch>
+            </MudItem>
+            @foreach (var songType in Enum.GetValues<SongType>())
+            {
+                <MudItem xs="6">
+                    <MudNumericField T="double" Min="0" Max="100" Label="@songType.ToString()" @bind-Value="Configuration.Scoring.SongTypeModifiers[songType]"></MudNumericField>
+                </MudItem>
+            }
+        </MudGrid>
+        </MudExpansionPanel>
+    <MudExpansionPanel Text="Letter Grades">
+        <MudGrid>
+            <MudItem xs="12">
+                <MudSwitch T="bool" Label="Continous Modifier Scale (modifier increments between letter grades)" Color="Color.Primary" @bind-Value="Configuration.Scoring.ContinuousLetterGradeScale"></MudSwitch>
+            </MudItem>
+            @foreach (var letterGrade in Enum.GetValues<PhoenixLetterGrade>())
+            {
+                <MudItem xs="6">
+                    <MudNumericField T="double" Min="0" Max="100" Label="@letterGrade.GetName()" @bind-Value="Configuration.Scoring.LetterGradeModifiers[letterGrade]"></MudNumericField>
+                </MudItem>
+            }
+            <MudItem xs="12">
+                <MudNumericField T="double" Min="0" Max="100" Label="Perfect Score Modifier (Acts as a letter grade beyond SSS+)" @bind-Value="Configuration.Scoring.PgLetterGradeModifier" Clearable="true" HideSpinButtons="true"></MudNumericField>
+            </MudItem>
+            <MudItem xs="12">
+                <MudNumericField T="int" Min="0" Max="1000000" Label="Minimum Score" @bind-Value="Configuration.Scoring.MinimumScore" HideSpinButtons="true"></MudNumericField>
+            </MudItem>
+        </MudGrid>
+    </MudExpansionPanel>
+    <MudExpansionPanel Text="Plates">
+        <MudGrid>
+            @foreach (var plate in Enum.GetValues<PhoenixPlate>())
+            {
+                <MudItem xs="6">
+                    <MudNumericField T="double" Min="0" Max="100" Label="@plate.GetName()" @bind-Value="Configuration.Scoring.PlateModifiers[plate]"></MudNumericField>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudExpansionPanel>
+    @if (CurrentUser.IsLoggedInAsAdmin)
+    {
+        
+        <MudExpansionPanel Text="Charts">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField Lines="3" Label="Input Json" @bind-Value="ChartJson"></MudTextField>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudText>I.E: { "Kugutsu S25":1.25, "Leather D26":2.3 }</MudText>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudButton OnClick="SetCharts" Color="Color.Primary" Variant="Variant.Filled">Set Charts</MudButton>
+                </MudItem>
+                <MudItem xs="12">
+                    @foreach (var error in NotParsed)
+                    {
+                        <MudText>@error</MudText><br/>
+                    }
+                </MudItem>
+            </MudGrid>
+        </MudExpansionPanel>
+    }
+    <MudExpansionPanel Text="Extra Settings">
+        <MudGrid>
+            <MudItem xs="6">
+                <MudSwitch T="bool" Label="Allow Repeats" @bind-Value="Configuration.AllowRepeats" Color="Color.Primary"></MudSwitch>
+            </MudItem>
+            <MudItem xs="6">
+                <MudNumericField T="double" Min="0" Max="100" Label="Stage Break Modifier" @bind-Value="Configuration.Scoring.StageBreakModifier"></MudNumericField>
+            </MudItem>
+            <MudItem xs="6">
+                <MudNumericField T="int" Label="Session Duration (Minutes)" Value="(int)Configuration.MaxTime.TotalMinutes" ValueChanged="m => Configuration.MaxTime = TimeSpan.FromMinutes(m)"></MudNumericField>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Custom Scoring Formula" @bind-Value="Configuration.Scoring.CustomAlgorithm" Clearable="true"></MudTextField>
+            </MudItem>
+            <MudItem xs="12">
+                <MudText>
+                    CTYP - Chart Type<br/>
+                    STYP - Song Type<br/>
+                    TIME - Time Modifier<br/>
+                    SCOR - Score (I.E 983213)<br/>
+                    PLAT - Plate Modifier<br/>
+                    CHRT - Chart Modifier<br/>
+                    LTTR - Letter Grade Modifier<br/>
+                    BRKN - Broken Score Modifier (1 if not broken)<br/>
+                    I.E, Score modified by time modifier and broken modifier is SCOR*BRKN*TIME
+                </MudText>
+            </MudItem>
+        </MudGrid>
+    </MudExpansionPanel>
+    @if (CurrentUser.IsLoggedIn && CurrentUser.User.IsAdmin)
+    {
+        <MudExpansionPanel Text="Admin Settings">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudDateRangePicker Label="Tournament Dates (EST)" @bind-DateRange="_dateRange" Clearable="true" Color="Color.Primary"/>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Value="Configuration.Name" ValueChanged="s => Configuration.Name = s" Label="Tournament Name"></MudTextField>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudButton Color="Color.Primary" OnClick="SaveTourney" Variant="Variant.Filled">Save</MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudExpansionPanel>
+    }
+</MudExpansionPanels>
+<br/>
+
+<MudText Typo="Typo.h3">Test With Player Data</MudText>
+<br/>
+<MudButton Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Filled" Color="Color.Primary">Import Your Phoenix Scores</MudButton>
+
+<br/>
+<MudSwitch Label="Hide Record-less Charts" @bind-Value="_hideUnRecordedCharts" Color="Color.Primary"></MudSwitch>
+<br/>
+<MudSwitch Label="Hide Zero Scoring Charts" @bind-Value="_hideZeroScoredCharts" Color="Color.Primary"></MudSwitch>
+<br/>
+@if (CurrentUser.IsLoggedInAsAdmin)
+{
+
+    <MudSelect T="Guid?" Value="_currentUser" Clearable="true" ValueChanged="SetUser" Label="Player To Test (Must Be Set To Public)">
+        @foreach (var user in _users)
+        {
+            <MudSelectItem T="Guid?" Value="user.Id">@user.Name.ToString() (@user.Id)</MudSelectItem>
+        }
+    </MudSelect>
+}
+<MudDataGrid T="ChartSessionEffectiveness" Items="@Scores">
+    <Columns>
+        <TemplateColumn T="ChartSessionEffectiveness" Title="Difficulty" Sortable="true" SortBy="x=>x.Level">
+            <CellTemplate>
+                <DifficultyBubble Chart="context.Item.Chart"></DifficultyBubble>
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn T="ChartSessionEffectiveness" Title="Song" Sortable="true" SortBy="x=>x.Chart.Song.Name">
+            <CellTemplate>
+                <SongImage Song="context.Item.Chart.Song"></SongImage>
+            </CellTemplate>
+        </TemplateColumn>
+        <PropertyColumn Property="x=>x.EffectiveLevel" Title="Effective Level" Sortable="true"></PropertyColumn>
+        
+        <TemplateColumn T="ChartSessionEffectiveness" Title="Your Score" Sortable="true" SortBy="x => x.Score??0">
+            <CellTemplate>
+                <ScoreBreakdown Score="context.Item.Score" OneLine="true"></ScoreBreakdown>
+            </CellTemplate>
+        </TemplateColumn>
+        <PropertyColumn Property="x => x.Seconds" Title="Seconds" Sortable="true" />
+        <PropertyColumn Property="x => x.PointsWithoutScore" Title="Points Pre-Score" Sortable="true" />
+        <PropertyColumn Property="x => x.PointsPerSecondPReScore" Title="Points Per Second Pre-Score" Sortable="true" />
+        <PropertyColumn Property="x => x.Points" Title="Your Points" Sortable="true"/>
+        <PropertyColumn Property="x => x.PointsPerSecond" Title="Your Points per Second" Sortable="true"/>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="ChartSessionEffectiveness" />
+    </PagerContent>
+</MudDataGrid>
+<br/>
+<br/>
+<MudGrid>
+    <MudItem xs="12">
+        <MudText Typo="Typo.h3">Example Set Builder</MudText>
+    </MudItem>
+    <MudItem xs="6">
+        <MudNumericField Min="10" Max="300" HideSpinButtons="true" @bind-Value="_restSeconds" Label="Seconds of Rest Per Chart"></MudNumericField>
+    </MudItem>
+    <MudItem xs="6">
+        <MudButton Color="Color.Primary" OnClick="BuildSession" Variant="Variant.Filled">Build Session</MudButton>
+    </MudItem>
+    @if (_currentSession != null)
+    {
+        <MudItem xs="4">
+            <MudText>Score: @_currentSession.TotalScore</MudText>
+        </MudItem>
+        <MudItem xs="4">
+            <MudText>Total Charts: @_currentSession.Entries.Count()</MudText>
+        </MudItem>
+        <MudItem xs="4">
+            <MudText>Rest Time Per Chart: @_currentSession.AverageTimeBetweenCharts.ToString(@"m\:ss")</MudText>
+        </MudItem>
+        <MudItem xs="4">
+            <MudText>Song</MudText>
+        </MudItem>
+        <MudItem xs="2">
+            <MudText>Duration</MudText>
+        </MudItem>
+        <MudItem xs="4">
+            <MudText>Chart Score</MudText>
+        </MudItem>
+        <MudItem xs="2">
+            <MudText>Session Score</MudText>
+        </MudItem>
+        @foreach (var entry in _currentSession.Entries)
+        {
+            <MudItem xs="4">
+                <MudText>@entry.Chart.Song.Name @entry.Chart.DifficultyString</MudText>
+            </MudItem>
+            <MudItem xs="2">@entry.Chart.Song.Duration.ToString(@"m\:ss")</MudItem>
+            <MudItem xs="4"> @entry.Score - @entry.Plate.GetName()</MudItem>
+            <MudItem xs="2"> @entry.SessionScore</MudItem>
+        }
+    }
+</MudGrid>
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser;
+
+@code
+{
+    private DateRange _dateRange = new DateRange(null, null);
+    private IEnumerable<TournamentRecord> _tournaments = Array.Empty<TournamentRecord>();
+
+    private bool _hideUnRecordedCharts = false;
+    private bool _hideZeroScoredCharts = true;
+    private TournamentConfiguration Configuration = new TournamentConfiguration(new ScoringConfiguration());
+    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private IDictionary<Guid, RecordedPhoenixScore> _records = new Dictionary<Guid, RecordedPhoenixScore>();
+    private User[] _users = Array.Empty<User>();
+    private Guid _currentUser = Guid.Empty;
+    private Guid? _currentTourney = null;
+    private int _restSeconds = 30;
+    private string ChartJson { get; set; }
+    private ICollection<string> NotParsed = new List<string>();
+    private TournamentSession? _currentSession;
+
+    private void SetCharts()
+    {
+        NotParsed = new List<string>();
+        Configuration.Scoring.ChartModifiers = new Dictionary<Guid, double>();
+        var results = JsonSerializer.Deserialize<IDictionary<string, double>>(ChartJson);
+        if (results == null)
+        {
+            NotParsed.Add("Couldn't parse JSON");
+            return;
+        }
+        foreach (var kv in results)
+        {
+            var difficultyString = kv.Key.Split(" ")[^1];
+            var songName = string.Join(" ", kv.Key.Split(" ").Reverse().Skip(1).Reverse());
+            var (chartType, level) = DifficultyLevel.ParseShortHand(difficultyString);
+            var chart = _charts.Values.FirstOrDefault(c => c.Song.Name == songName && c.Type == chartType && c.Level == level);
+            if (chart == null)
+            {
+                NotParsed.Add(kv.Key);
+                continue;
+            }
+            Configuration.Scoring.ChartModifiers[chart.Id] = kv.Value;
+        }
+    }
+    private async Task BuildSession()
+    {
+        _currentSession = await Mediator.Send(new AutoBuildSessionQuery(Configuration, _currentUser, TimeSpan.FromSeconds(_restSeconds)));
+    }
+
+    private async Task SaveTourney()
+    {
+        Configuration.StartDate = _dateRange.Start == null ? null : new DateTimeOffset(_dateRange.Start.Value, TimeSpan.FromHours(-5));
+        Configuration.EndDate = _dateRange.End == null ? null : new DateTimeOffset(_dateRange.End.Value, TimeSpan.FromHours(-5));
+        await Mediator.Send(new SaveTournamentCommand(Configuration));
+    }
+    private async Task SelectTourney(Guid? tourneyId)
+    {
+        if (tourneyId == null)
+        {
+            Configuration = new TournamentConfiguration(new ScoringConfiguration());
+        }
+        else
+        {
+            Configuration = await Mediator.Send(new GetTournamentQuery(tourneyId.Value));
+        }
+        _currentTourney = tourneyId;
+    }
+    private IEnumerable<ChartSessionEffectiveness> Scores => _charts.Values.Where(c=>!_hideUnRecordedCharts||_records.ContainsKey(c.Id))
+        .Select(c => new ChartSessionEffectiveness(c)
+    {
+        Score = _records.TryGetValue(c.Id,out var score)?score.Score:null,
+        Seconds = (int)c.Song.Duration.TotalSeconds, 
+        EffectiveLevel = (Configuration.Scoring.ChartLevelSnapshot?.TryGetValue(c.Id,out var level)??false)?level:c.Level+.5,
+        PointsWithoutScore = (int)Configuration.Scoring.GetScorelessScore(c),
+                Points = _records.ContainsKey(c.Id) ? Configuration.Scoring.GetScore(c, _records[c.Id].Score!.Value, _records[c.Id].Plate!.Value, _records[c.Id].IsBroken) : 0,
+        Level = c.Level
+    })
+        .Where(c=>!_hideZeroScoredCharts||c.PointsWithoutScore>0);
+
+    private async Task SetUser(Guid? userId)
+    {
+        _currentUser = userId ?? (CurrentUser.IsLoggedIn ? CurrentUser.User.Id : _users.First(u => u.Name == "DrMurloc").Id);
+
+        _records = (await Mediator.Send(new GetPhoenixRecordsQuery(_currentUser)))
+            .Where(r => r is { Score: not null, Plate: not null }).ToDictionary(c=>c.ChartId);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        _users = (await Mediator.Send(new SearchForUsersQuery("", 1, 1000))).Results.OrderBy(u => u.Name.ToString()).ToArray();
+
+        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+
+        await SetUser(CurrentUser.IsLoggedIn ? CurrentUser.User.Id : _users.First(u => u.Name=="DrMurloc").Id);
+
+        _tournaments = await Mediator.Send(new GetAllTournamentsQuery());
+        await SelectTourney(null);
+    }
+
+
+
+        
+    private sealed record ChartSessionEffectiveness(Chart Chart)
+    {
+        public int Level { get; set; }
+        public int Seconds { get; set; }
+        public int PointsWithoutScore { get; set; }
+        public int Points { get; set; }
+        public double EffectiveLevel { get; set; }
+        public PhoenixScore? Score { get; set; }
+        public double PointsPerSecond => (double)Points / (double)Seconds;
+        public double PointsPerSecondPReScore => (double)PointsWithoutScore / (double)Seconds;
+    }
+}

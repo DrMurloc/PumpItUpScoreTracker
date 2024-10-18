@@ -10,7 +10,8 @@ namespace ScoreTracker.Application.Handlers;
 
 public sealed class ScoreQualitySaga :
     IRequestHandler<GetPlayerScoreQualityQuery, IDictionary<Guid, ScoreRankingRecord>>,
-    IRequestHandler<GetChartScoreRankingsQuery, IDictionary<Guid, ScoreRankingRecord>>
+    IRequestHandler<GetChartScoreRankingsQuery, IDictionary<Guid, ScoreRankingRecord>>,
+    IRequestHandler<GetCompetitivePlayersQuery, IEnumerable<Guid>>
 {
     private readonly IMemoryCache _cache;
     private readonly IChartRepository _charts;
@@ -74,9 +75,9 @@ public sealed class ScoreQualitySaga :
         CancellationToken cancellationToken)
     {
         var myStats = await _playerStats.GetStats(_user.User.Id, cancellationToken);
-        var competitiveLevel = chartType == ChartType.Double
-            ? myStats.DoublesCompetitiveLevel
-            : myStats.SinglesCompetitiveLevel;
+        var competitiveLevel = chartType == ChartType.Single
+            ? myStats.SinglesCompetitiveLevel
+            : myStats.DoublesCompetitiveLevel;
 
         return await _playerStats.GetPlayersByCompetitiveRange(chartType, competitiveLevel,
             .5, cancellationToken);
@@ -129,5 +130,10 @@ public sealed class ScoreQualitySaga :
                     return new ScoreRankingRecord(index / (double)playerScores[c.ChartId].Length,
                         playerScores[c.ChartId].Length);
                 });
+    }
+
+    public async Task<IEnumerable<Guid>> Handle(GetCompetitivePlayersQuery request, CancellationToken cancellationToken)
+    {
+        return await GetComparablePlayers(request.ChartType, cancellationToken);
     }
 }
