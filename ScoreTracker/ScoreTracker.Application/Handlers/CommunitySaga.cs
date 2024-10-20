@@ -443,14 +443,17 @@ And {count - 10} others!";
     {
         var communities =
             await _communities.GetCommunities(userId, cancellationToken);
+        var channelIds = new List<ulong>();
         foreach (var communityName in communities.Select(c => c.CommunityName))
         {
             var community = await _communities.GetCommunityByName(communityName, cancellationToken);
             if (community == null) continue;
 
-            var channelIds = community.Channels.Select(c => c.ChannelId);
-            foreach (var message in messages)
-                await _bot.SendMessages(new[] { message }, channelIds, cancellationToken);
+            channelIds.AddRange(community.Channels.Select(c => c.ChannelId));
         }
+
+        channelIds = channelIds.Distinct().ToList();
+        foreach (var message in messages)
+            await _bot.SendMessages(new[] { message }, channelIds, cancellationToken);
     }
 }

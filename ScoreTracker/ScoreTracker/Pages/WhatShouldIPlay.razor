@@ -123,6 +123,8 @@
                             <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => Edit(chart.Id, key))"></MudIconButton>
 
                         }
+                        <MudIconButton Icon="@Icons.Material.Outlined.ListAlt" OnClick="() => ToggleToDo(chart.Id)" Color="_todos.Contains(chart.Id) ? Color.Primary : Color.Default"></MudIconButton>
+
                         <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => VideoDisplayer.ShowVideo(chart.Id))"></MudIconButton>
 
 
@@ -132,12 +134,62 @@
             </MudItem>
         }
 }
-@foreach (var sectionName in _hiddenSections)
+@if (_todos.Any())
 {
+    <MudItem xs="12">
+        
+        <MudTable T="Guid" Items="_todos">
+            <HeaderContent>
+                <MudTh>
+                    <MudTableSortLabel T="Guid" SortBy="g=>_chartDict[g].Song.Name">@L["Song"]</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel T="Guid" SortBy="g => _chartDict[g].Level">
+                        @L["Difficulty Level"]
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel T="Guid" SortBy="g => _scores.TryGetValue(g, out var s) ? 0 : s.Score ?? 0">
+                        @L["Score"]
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>@L["Remove"]</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>
+                    <SongImage Song="_chartDict[context].Song"></SongImage>
+                </MudTd>
+                <MudTd>
+                    <DifficultyBubble Chart="_chartDict[context]"></DifficultyBubble>
+                </MudTd>
+                <MudTd>
+                    @if (_scores.TryGetValue(context, out var score))
+                    {
+                        <ScoreBreakdown Score="score.Score" Plate="score.Plate" Ranking="_rankings.TryGetValue(context,out var r)?r:null" ShowScore="true" OneLine="true"></ScoreBreakdown>
+                    }
+                </MudTd>
+                <MudTd>
+                        <MudIconButton Icon="@Icons.Material.Filled.Remove" Color="Color.Error" OnClick="()=>ToggleToDo(context)"></MudIconButton>
+                </MudTd>
+            </RowTemplate>
+            
+            <PagerContent>
+                <MudTablePager></MudTablePager>
+            </PagerContent>
+        </MudTable>
+    </MudItem>
+}
+else
+{
+
+        <MudItem xs="12"></MudItem>
+}
+    @foreach (var sectionName in _hiddenSections)
+    {
     <MudItem xs="6" sm="4" md="3">
         <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>ShowSection(sectionName)">Show @sectionName</MudButton>
     </MudItem>
-}
+    }
 </MudGrid>
 @if (_stats != null)
 {
@@ -276,6 +328,24 @@
 
     private ISet<Guid> _topCharts = new HashSet<Guid>();
     private ISet<string> _hiddenSections = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+    private ISet<Guid> _todos = new HashSet<Guid>();
+    public async Task ToggleToDo(Guid chartId)
+    {
+        if (!_todos.Contains(chartId))
+        {
+            await Mediator.Send(new SaveChartToListCommand(ChartListType.ToDo, chartId));
+            Snackbar.Add("Added to ToDo List!", Severity.Success);
+            _todos.Add(chartId);
+        }
+        else
+        {
+            await Mediator.Send(new RemoveChartFromListCommand(ChartListType.ToDo, chartId));
+            Snackbar.Add("Removed from ToDo List!", Severity.Success);
+            _todos.Remove(chartId);
+        }
+        StateHasChanged();
+    }
     private async Task SubmitPositiveFeedback()
     {
         if (_selectedChart == null)
@@ -347,10 +417,11 @@
     {
         _isLoading = true;
         var recommendations = (await Mediator.Send(new GetRecommendedChartsQuery(_chartType, _levelOffset))).ToArray();
+
         _charts = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => g.Select(r => _chartDict[r.ChartId]).ToArray().AsEnumerable());
         _descriptions = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => g.First().Explanation);
         _details = recommendations.GroupBy(r => r.Category).ToDictionary(g => g.Key, g => (IDictionary<Guid, string>)g.ToDictionary(c => c.ChartId, c => c.ChartDetails));
-        _rankings = await Mediator.Send(new GetChartScoreRankingsQuery(_charts.Values.SelectMany(c => c.Select(h => h.Id)).Distinct()));
+        _rankings = await Mediator.Send(new GetChartScoreRankingsQuery(_charts.Values.SelectMany(c => c.Select(h => h.Id)).Concat(_todos).Distinct()));
         
         StateHasChanged();
         _isLoading = false;
@@ -387,6 +458,9 @@
             NavManager.NavigateTo("/Login");
             return;
         }
+        _todos = (await Mediator.Send(new GetSavedChartsQuery()))
+            .Where(t => t.ListType == ChartListType.ToDo)
+            .Select(t=>t.ChartId).Distinct().ToHashSet();
         _hiddenSections = ((await UiSettings.GetSetting(HiddenSectionKey)) ?? "").Split('|').Where(s=>!string.IsNullOrWhiteSpace(s)).ToHashSet(StringComparer.OrdinalIgnoreCase);
         _isLoading = true;
         _levelOffset = int.TryParse(await UiSettings.GetSetting("WhatShouldIPlay__LevelOffset") ?? "0", out var level) ? level : 0;

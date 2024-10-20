@@ -23,10 +23,11 @@ namespace ScoreTracker.Application.Handlers
         private readonly IPhoenixRecordRepository _scores;
         private readonly IChartBountyRepository _bounties;
         private readonly IWeeklyTournamentRepository _weeklyTournament;
+        private readonly IChartListRepository _chartList;
 
         public RecommendedChartsSaga(IMediator mediator, ICurrentUserAccessor currentUser, IUserRepository users,
             IPlayerStatsRepository stats, IPhoenixRecordRepository scores, IChartBountyRepository bounties,
-            IWeeklyTournamentRepository weeklyTournament)
+            IWeeklyTournamentRepository weeklyTournament, IChartListRepository chartList)
         {
             _mediator = mediator;
             _currentUser = currentUser;
@@ -35,6 +36,7 @@ namespace ScoreTracker.Application.Handlers
             _scores = scores;
             _bounties = bounties;
             _weeklyTournament = weeklyTournament;
+            _chartList = chartList;
         }
 
         public async Task<IEnumerable<ChartRecommendation>> Handle(GetRecommendedChartsQuery request,
@@ -44,7 +46,6 @@ namespace ScoreTracker.Application.Handlers
             var competitiveLevel = (int)Math.Round(playerStats
                 .CompetitiveLevel);
             if (!DifficultyLevel.IsValid(competitiveLevel) || competitiveLevel < 10) competitiveLevel = 10;
-
             var titles = (await _mediator.Send(new GetTitleProgressQuery(MixEnum.Phoenix), cancellationToken))
                 .ToArray();
             var scores = (await _mediator.Send(new GetPhoenixRecordsQuery(_currentUser.User.Id), cancellationToken))
@@ -55,6 +56,7 @@ namespace ScoreTracker.Application.Handlers
                     g => (ISet<Guid>)g.Select(i => i.ChartId).Distinct().ToHashSet());
             var charts =
                 (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), cancellationToken)).ToDictionary(c => c.Id);
+            var random = new Random();
             return (await GetPushLevels(feedback, cancellationToken, titles, scores, request.ChartType, charts))
                 .Concat(await GetWeeklyCharts(cancellationToken, playerStats.SinglesCompetitiveLevel,
                     playerStats.DoublesCompetitiveLevel, request.LevelOffset, feedback, request.ChartType, charts))
@@ -65,7 +67,8 @@ namespace ScoreTracker.Application.Handlers
                     request.LevelOffset, charts))
                 .Concat(await GetPGPushes(feedback, cancellationToken, scores, request.ChartType, charts))
                 .Concat(await GetRandomFromTop50Charts(feedback, request.ChartType, cancellationToken))
-                .Concat(await GetBounties(feedback, cancellationToken, scores, request.ChartType, charts)).ToArray();
+                .Concat(await GetBounties(feedback, cancellationToken, scores, request.ChartType, charts))
+                .ToArray();
         }
 
         private sealed record OrderedTitle(TitleProgress t, int i)
