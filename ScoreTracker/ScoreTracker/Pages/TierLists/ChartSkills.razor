@@ -74,7 +74,7 @@
                 <MudProgressLinear Min="0" Max="_charts.Count()" Style="margin-top:8px;" Color="lamp.Progress>=_charts.Count()?Color.Success:Color.Primary" Value="lamp.Progress">@lamp.Name</MudProgressLinear>
             }
         </MudItem>
-        @if (_competitivePlayerCount > 0)
+        @if (_competitivePlayerCount > 0 && _finalEntries.Where(e => _scoreRankings.ContainsKey(e.ChartId)).Any())
         {
             var rating = _finalEntries.Where(e => _scoreRankings.ContainsKey(e.ChartId)).Average(e => _scoreRankings[e.ChartId].Ranking);
             <MudItem xs="12">
@@ -256,9 +256,7 @@
                 if (_clearRate.TryGetValue(group.Key, out var cr) && cr > 0)
                 {
                     
-                    var ranking = group.Where(e => _scoreRankings.ContainsKey(e.ChartId)).Average(e => _scoreRankings[e.ChartId].Ranking);
-                    var players = group.Where(e => _scoreRankings.ContainsKey(e.ChartId)).Max(e => _scoreRankings[e.ChartId].PlayerCount);
-                    if (_groupBy != "Age" && _groupBy != "Score" &&  _groupBy!="Score Ranking")
+                     if (_groupBy != "Age" && _groupBy != "Score" &&  _groupBy!="Score Ranking")
                     {
 
                     <MudItem xs="12" sm="6">
@@ -268,9 +266,15 @@
                         </MudItem>
                         <MudItem xs="0" sm="6"></MudItem>
                     }
-                    <MudItem xs="12">
-                        <ScoreBreakdown Score="_averageScores[group.Key]" Ranking="new ScoreRankingRecord(ranking,players)" ShowScore="true" OneLine="true"></ScoreBreakdown> Average
-                    </MudItem>
+                    @if (group.Where(e => _scoreRankings.ContainsKey(e.ChartId)).Any())
+                    {
+                        var ranking = group.Where(e => _scoreRankings.ContainsKey(e.ChartId)).Average(e => _scoreRankings[e.ChartId].Ranking);
+                        var players = group.Where(e => _scoreRankings.ContainsKey(e.ChartId)).Max(e => _scoreRankings[e.ChartId].PlayerCount);
+                   
+                        <MudItem xs="12">
+                            <ScoreBreakdown Score="_averageScores[group.Key]" Ranking="new ScoreRankingRecord(ranking,players)" ShowScore="true" OneLine="true"></ScoreBreakdown> Average
+                        </MudItem>
+                    }
 
                 }
                 else
