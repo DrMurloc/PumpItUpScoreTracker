@@ -74,6 +74,15 @@
                 <MudProgressLinear Min="0" Max="_charts.Count()" Style="margin-top:8px;" Color="lamp.Progress>=_charts.Count()?Color.Success:Color.Primary" Value="lamp.Progress">@lamp.Name</MudProgressLinear>
             }
         </MudItem>
+        @if (_competitivePlayerCount > 0)
+        {
+            var rating = _finalEntries.Where(e => _scoreRankings.ContainsKey(e.ChartId)).Average(e => _scoreRankings[e.ChartId].Ranking);
+            <MudItem xs="12">
+                <MudText>
+                    Averaging better than <div style=@($"display:inline;{RankingColors.ColorStyle(rating)}")>@((100.0*rating).ToString("N2"))%</div> of @_competitivePlayerCount similar players in this folder.
+                </MudText>
+            </MudItem>
+        }
     }
     <MudItem xs="12" sm="6">
         <MudSelect T="string" Label=@L["Difficulty Categorization"] Disabled="_isLoading" Value="_tierListType" ValueChanged="SetTierListType">
@@ -234,6 +243,7 @@
                     {
                         
                         <MudText>@($"{_clearRate[group.Key]*100:N1}")% Cleared, @_minScores[group.Key] (@_minScores[group.Key].LetterGrade.GetName()) - @_maxScores[group.Key] (@_maxScores[group.Key].LetterGrade.GetName()), @_averageScores[group.Key] (@_averageScores[group.Key].LetterGrade.GetName()) Average</MudText>
+
                     }
                     else
                     {
@@ -245,6 +255,9 @@
             {
                 if (_clearRate.TryGetValue(group.Key, out var cr) && cr > 0)
                 {
+                    
+                    var ranking = group.Where(e => _scoreRankings.ContainsKey(e.ChartId)).Average(e => _scoreRankings[e.ChartId].Ranking);
+                    var players = group.Where(e => _scoreRankings.ContainsKey(e.ChartId)).Max(e => _scoreRankings[e.ChartId].PlayerCount);
                     if (_groupBy != "Age" && _groupBy != "Score" &&  _groupBy!="Score Ranking")
                     {
 
@@ -256,8 +269,9 @@
                         <MudItem xs="0" sm="6"></MudItem>
                     }
                     <MudItem xs="12">
-                        <ScoreBreakdown Score="_minScores[group.Key]"></ScoreBreakdown> -> <ScoreBreakdown Score="_maxScores[group.Key]"></ScoreBreakdown>, <ScoreBreakdown Score="_averageScores[group.Key]"></ScoreBreakdown> Average
+                        <ScoreBreakdown Score="_averageScores[group.Key]" Ranking="new ScoreRankingRecord(ranking,players)" ShowScore="true" OneLine="true"></ScoreBreakdown> Average
                     </MudItem>
+
                 }
                 else
                 {
@@ -791,6 +805,7 @@ function(val, index) {
     private IDictionary<Guid, ScoreRankingRecord> _scoreRankings = new Dictionary<Guid, ScoreRankingRecord>();
     private string _tierListType = "Pass";
     private string _songFilter;
+    private int _competitivePlayerCount = 0;
     private async Task SetShowAge(bool newSetting)
     {
         _showAge = newSetting;
@@ -1134,7 +1149,7 @@ function(val, index) {
         _isLoading = true;
         if (CurrentUser.IsLoggedIn)
         {
-            
+            _competitivePlayerCount = (await Mediator.Send(new GetCompetitivePlayersQuery(_chartType))).Count();
             _scoreRankings = await Mediator.Send(new GetPlayerScoreQualityQuery(_level, _chartType));
         }
         await UiSettings.SetSetting("TierLists__Level", _level.ToString());

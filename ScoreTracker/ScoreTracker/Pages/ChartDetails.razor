@@ -123,6 +123,7 @@
                     <MudTh>Place</MudTh>
                     <MudTh>Avatar</MudTh>
                     <MudTh>Name</MudTh>
+                    <MudTh>Level</MudTh>
                     <MudTh>Score</MudTh>
                 </HeaderContent>
                 <RowTemplate>
@@ -136,6 +137,12 @@
                     </MudTd>
                     <MudTd>
                         <UserLabel User="_users[context.Item2.UserId]"></UserLabel>
+                    </MudTd>
+                    <MudTd>
+                        @if (_playerLevels.TryGetValue(context.Item2.UserId, out var s))
+                        {
+                            <MudText>@s.ToString("N2")</MudText>
+                        }
                     </MudTd>
                     <MudTd><ScoreBreakdown Score="context.Item2.Score" Plate="context.Item2.Plate" IsBroken="context.Item2.IsBroken" ShowScore="true"></ScoreBreakdown></MudTd>
                 </RowTemplate>
@@ -263,7 +270,7 @@
     private int _myLevel = 1;
     private IEnumerable<UserPhoenixScore> _worldScores = Array.Empty<UserPhoenixScore>();
     private IDictionary<Guid, string> _nameAvatars = new Dictionary<Guid, string>();
-
+    private IDictionary<Guid, double> _playerLevels = new Dictionary<Guid, double>();
     private sealed record DataPoint(int X, int Y);
 
     private sealed record StringDataPoint(string X, int Y);
@@ -278,7 +285,8 @@
             _plateBreakdowns[plate] = 0;
         }
         var playerScores = scores.ToDictionary(p => p.UserId);
-        var stats = await PlayerStats.GetStats(scores.Select(s=>s.UserId).Distinct().ToArray(),CancellationToken.None);
+        var stats = (await PlayerStats.GetStats(scores.Select(s=>s.UserId).Distinct().ToArray(),CancellationToken.None)).ToArray();
+        _playerLevels = stats.ToDictionary(p => p.UserId, p => chart.Type == ChartType.Single ? p.SinglesCompetitiveLevel : p.DoublesCompetitiveLevel);
         var playerGroupings = stats.GroupBy(s => (int)Math.Round(_selectedChart.Type == ChartType.Double ? s.DoublesCompetitiveLevel :
             _selectedChart.Type == ChartType.Single ? s.SinglesCompetitiveLevel : s.CompetitiveLevel)).ToArray();
         _scoreMinimums = playerGroupings.ToDictionary(g => g.Key, g => (PhoenixScore)(int)g.Min(s => playerScores[s.UserId].Score));;

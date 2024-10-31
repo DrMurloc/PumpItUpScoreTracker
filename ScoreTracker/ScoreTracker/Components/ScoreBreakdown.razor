@@ -2,6 +2,7 @@
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Web.Shared
 @using Align = MudBlazor.Align
 @namespace ScoreTracker.Web.Components
 <MudTooltip Text=@(ShowTextAsTooltip?Text:ShowScore && string.IsNullOrWhiteSpace(Text)?RankingString:ScoreString) ShowOnFocus="true">
@@ -56,14 +57,7 @@
     [Parameter]
     public ScoreRankingRecord? Ranking { get; set; }
 
-    private string RankingColor  => Ranking==null?"":
-        Ranking.Ranking <= .1 ? "color:#BDBDBD;" :
-            Ranking.Ranking <= .25 ? "color:#FAFAFA;" :
-                Ranking.Ranking <= .5 ? "color:#76FF03;" :
-                    Ranking.Ranking <= .75 ? "color:#1565C0;" :
-                        Ranking.Ranking <= .9 ? "color:#7E57C2;" :
-                            Ranking.Ranking <= .99 ? "color:#EC407A;" :
-                                "color:#FB8C00;";
+    private string RankingColor => RankingColors.ColorStyle(Ranking?.Ranking);
 
     private string RankingString =>Ranking==null?"": $"{Ranking.Ranking * 100.0:N1}% of {Ranking.PlayerCount} Comparable Players";
     private string ScoreString => (Score == null ? "" : ((int)Score).ToString("N0"));
