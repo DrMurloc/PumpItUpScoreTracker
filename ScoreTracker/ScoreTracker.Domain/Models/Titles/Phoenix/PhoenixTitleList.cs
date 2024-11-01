@@ -53,6 +53,8 @@ public static class PhoenixTitleList
         new PhoenixCoOpTitle("[CO-OP] ADVANCED", 330000),
         new PhoenixCoOpTitle("[CO-OP] EXPERT", 360000),
         new PhoenixCoOpTitle("[CO-OP] MASTER", 390000),
+        new PhoenixBasicTitle("B1G ONE 2024 SUPPORTER", "\r\nA title given to B1G ONE 2024 Supporters"),
+        new PhoenixBasicTitle("B1G ONE 2024 PLAYER", "A title given to B1G ONE 2024 Players"),
         new PhoenixBasicTitle("PIU STAFF", "A title given to PIU STAFF", "Officially Assigned"),
         new PhoenixBasicTitle("PIU SUPPORTER", "A title given to PIU supporter (an international PR program)",
             "Officially Assigned"),
