@@ -246,7 +246,7 @@ namespace ScoreTracker.Application.Handlers
             foreach (var songGroup in entries.GroupBy(e => e.Chart.Song.Name))
             {
                 var song = songGroup.First().Chart.Song;
-                var songHasImageAlready = song.ImagePath.ToString()
+                var songHasImageAlready = !song.ImagePath.ToString()
                     .EndsWith("placeholder.png", StringComparison.OrdinalIgnoreCase);
                 if (!request.IncludeSongsAlreadyWithImages &&
                     songHasImageAlready) continue;
