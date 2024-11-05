@@ -21,6 +21,9 @@
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Shared
 @using Syncfusion.Blazor.Data
+@using System.Text.Json
+@using System.ComponentModel
+@using Microsoft.OpenApi.Extensions
 @inject ChartVideoDisplayer VideoDisplayer
 <PageTitle>Personalized Tier List</PageTitle>
 
@@ -96,122 +99,196 @@
             }
         </MudSelect>
     </MudItem>
-    <MudItem xs="12" sm="6">
-        <MudSelect T="string" Label="Group By" Disabled="_isLoading" Value="_groupBy" ValueChanged="ChangeGrouping">
-            <MudSelectItem T="string" Value=@("Difficulty")>@L["Difficulty Level"]</MudSelectItem>
-            <MudSelectItem T="string" Value=@("Scoring Level")>@L["Scoring Level"]</MudSelectItem>
-            @if (_chabalaLinks.ContainsKey((_chartType,_level)))
-            {
+<MudItem xs="12" sm="6">
+    <MudSelect T="string" Label="Group By" Disabled="_isLoading" Value="_groupBy" ValueChanged="ChangeGrouping">
+        <MudSelectItem T="string" Value=@("Difficulty")>@L["Difficulty Level"]</MudSelectItem>
+        <MudSelectItem T="string" Value=@("Scoring Level")>@L["Scoring Level"]</MudSelectItem>
+        @if (_chabalaLinks.ContainsKey((_chartType,_level)))
+        {
                 
-                <MudSelectItem T="string" Value=@("Skill")>@L["Skill"]</MudSelectItem>
-            }
+            <MudSelectItem T="string" Value=@("Skill")>@L["Skill"]</MudSelectItem>
+        }
+        @if (CurrentUser.IsLoggedIn)
+        {
+                
+            <MudSelectItem T="string" Value=@("Age")>@L["Age"]</MudSelectItem>
+            <MudSelectItem T="string" Value=@("Score")>@L["Score"]</MudSelectItem>
+            <MudSelectItem T="string" Value=@("Score Ranking")>@L["Score Ranking (Beta)"]</MudSelectItem>
+        }
+    </MudSelect>
+</MudItem>
+
+
+    <MudItem xs="6" sm="3">
+        <MudMenu Label=@L["Settings"] StartIcon="@Icons.Material.Filled.Settings" Variant="Variant.Outlined" Color="Color.Primary">
+            <MudMenuItem OnClick="()=>SetTextView(!_textView)">
+                @if (_textView)
+                {
+                    <MudIcon Color="Color.Success" Icon="@Icons.Material.Filled.Check" Size="Size.Small"></MudIcon>
+                }
+                @L["Text View"]
+            </MudMenuItem>
+            <MudMenuItem OnClick="ToggleShowSkills">
+                @if (_settings.ShowSkills)
+                {
+                    <MudIcon Color="Color.Success" Icon="@Icons.Material.Filled.Check" Size="Size.Small"></MudIcon>
+                }
+                @L["Show Skills"]
+            </MudMenuItem>
+            <MudMenuItem OnClick="ToggleShowDifficulty">
+                @if (_settings.ShowDifficulty)
+                {
+                    <MudIcon Color="Color.Success" Icon="@Icons.Material.Filled.Check" Size="Size.Small"></MudIcon>
+                }
+                @L["Show Difficulty"]
+            </MudMenuItem>
+            <MudMenuItem OnClick="ToggleShowName">
+                @if (_settings.ShowSongName)
+                {
+                    <MudIcon Color="Color.Success" Icon="@Icons.Material.Filled.Check" Size="Size.Small"></MudIcon>
+                }
+                @L["Show Song Name"]
+            </MudMenuItem>
+            <MudMenuItem OnClick="ToggleShowStepArtist">
+                @if (_settings.ShowStepArtist)
+                {
+                    <MudIcon Color="Color.Success" Icon="@Icons.Material.Filled.Check" Size="Size.Small"></MudIcon>
+                }
+                @L["Show Step Artist"]
+            </MudMenuItem>
             @if (CurrentUser.IsLoggedIn)
             {
-                
-                <MudSelectItem T="string" Value=@("Age")>@L["Age"]</MudSelectItem>
-                <MudSelectItem T="string" Value=@("Score")>@L["Score"]</MudSelectItem>
-                <MudSelectItem T="string" Value=@("Score Ranking")>@L["Score Ranking (Beta)"]</MudSelectItem>
+                @if (_chartType != ChartType.CoOp && _tierListType != "Popularity" && _tierListType != "Chabala")
+                {
+                    <MudMenuItem OnClick="() => SetUsePersonalized(!_usePersonalizedData)">
+                        @if (_usePersonalizedData)
+                        {
+                            <MudIcon Color="Color.Success" Icon="@Icons.Material.Filled.Check" Size="Size.Small"></MudIcon>
+                        }
+                        @L["Personalized Difficulty"]
+                    </MudMenuItem>
+                }
+                <MudMenuItem OnClick="() => SetShowAge(!_showAge)">
+                    @if (_showAge)
+                    {
+                        <MudIcon Color="Color.Success" Icon="@Icons.Material.Filled.Check" Size="Size.Small"></MudIcon>
+                    }
+                    @L["Show Age"]
+                </MudMenuItem>
             }
-        </MudSelect>
+        </MudMenu>    
+
     </MudItem>
-
-    @if (CurrentUser.IsLoggedIn)
+    <MudItem xs="6" sm="3">
+        <MudMenu Label=@L["Add Filters"] StartIcon="@Icons.Material.Filled.FilterList" Variant="Variant.Outlined" Color="Color.Primary">
+            @foreach (var filter in Enum.GetValues<Filter>().OrderBy(e => e.ToString()))
+            {
+                <MudMenuItem OnClick="()=>ToggleFilter(filter)">
+                    @if (_settings.ShowingFilters.Contains(filter))
+                    {
+                        <MudIcon Size="Size.Small" Color="Color.Success" Icon="@Icons.Material.Filled.Check"></MudIcon>
+                    }
+                    @_filterNames[filter]
+                </MudMenuItem>
+            }
+        </MudMenu>
+    </MudItem>
+    @if (_settings.ShowingFilters.Contains(Filter.SongName))
     {
-        @if (_chartType != ChartType.CoOp && _tierListType != "Popularity" && _tierListType !="Chabala")
-        {
 
-            <MudItem xs="12" sm="4" md="3">
-                <MudCheckBox T="bool" Value="_usePersonalizedData" Disabled="_isLoading" ValueChanged="u=>SetUsePersonalized(u)" Label=@L["Personalized Difficulty"]></MudCheckBox>
-            </MudItem>
-        }
-        <MudItem xs="12" sm="4" md="3">
-            <MudCheckBox T="bool" @bind-Value="_hidePassed" Disabled="_isLoading" Label=@L["Hide Completed Charts"]></MudCheckBox>
-        </MudItem>
-
-        <MudItem xs="12" sm="4" md="3">
-            <MudCheckBox T="bool" @bind-Value="_showTodo" Disabled="_isLoading" Label=@L["Show Only ToDo Charts"]></MudCheckBox>
+        <MudItem xs="12" sm="3">
+            <MudAutocomplete T="string" Label=@L["Song Name"] Disabled="_isLoading" AdornmentIcon="@Icons.Material.Filled.Search" @bind-Value="_songFilter" SearchFunc="(s,c)=>FilterSongName(s)" CoerceText="false" CoerceValue="true"></MudAutocomplete>
         </MudItem>
     }
-    <MudItem xs="12">
-        <MudExpansionPanels>
-            @if (CurrentUser.IsLoggedInAsAdmin)
-            {
-                <MudExpansionPanel Text="Admin Tools">
-                    <MudGrid>
-                        <MudItem xs="4">
-                            <MudNumericField T="int" Value="_highlightedModifier" Disabled="_isLoading" ValueChanged="SetHighlighted" Label="HighlightedModifier"></MudNumericField>
-                        </MudItem>
-                        @foreach (var modifier in _modifiers)
-                        {
-                            <MudItem xs="4">
-                                <MudNumericField T="double" Value="modifier.Value" Disabled="_isLoading" ValueChanged="v => SetCategory(modifier.Key, v)" Label="@modifier.Key"></MudNumericField>
-                            </MudItem>
-                        }
-                    </MudGrid>
-                </MudExpansionPanel>
+    @if (_settings.ShowingFilters.Contains(Filter.SongType))
+    {
+        <MudItem xs="12" sm="3">
+            <MudSelect T="SongType" Clearable="true" MultiSelection="true" SelectedValues="_settings.SongTypes" SelectedValuesChanged="SetSongTypeFilter" Disabled="_isLoading" Label=@L["Song Type"]>
+                @foreach (var type in Enum.GetValues<SongType>())
+                {
+                    <MudSelectItem T="SongType" Value="type">@type</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+    }
+    @if (_settings.ShowingFilters.Contains(Filter.ToDo))
+    {
 
-            }
-            <MudExpansionPanel Text=@L["Additional Filters"]>
-                <MudGrid>
+        <MudItem xs="12" sm="3">
+            <MudCheckBox T="bool?" Value="_settings.ToDo" ValueChanged="SetTodoFilter" TriState="true" Disabled="_isLoading" Label=@L["To Do"]></MudCheckBox>
+        </MudItem>
+    }
+    @if (_settings.ShowingFilters.Contains(Filter.SongArtist))
+    {
+        <MudItem xs="12" sm="3">
+            <MudSelect T="string" SelectedValues="_settings.SongArtists" SelectedValuesChanged="SetSelectedSongArtists" Disabled="_isLoading" Label=@L["Song Artist"] MultiSelection="true" Clearable="true">
+                @foreach (var artist in _availableSongArtists)
+                {
+                    <MudSelectItem T="string" Value="@artist">@artist</MudSelectItem>
+                }      
+            </MudSelect>
+        </MudItem>
+    }
+    @if (_settings.ShowingFilters.Contains(Filter.StepArtist))
+    {
+        <MudItem xs="12" sm="3">
+            <MudSelect T="string" SelectedValues="_settings.StepArtists" SelectedValuesChanged="SetSelectedStepArtists" Disabled="_isLoading" Label=@L["Step Artist"] HelperText="Not All Step Artists Labeled Yet"  MultiSelection="true" Clearable="true">
+              @foreach (var artist in _availableStepArtists)
+                 {
+                     <MudSelectItem T="string" Value="@artist">@artist</MudSelectItem>
+                 }
+            </MudSelect>
+        </MudItem>
+    }
+    @if (_settings.ShowingFilters.Contains(Filter.BPM) && _lowestBpm != _highestBpm)
+    {
 
-                    <MudItem xs="12">
-                        <MudCheckBox T="bool" Value="_textView" ValueChanged="SetTextView" Disabled="_isLoading" Label=@L["Text View"]></MudCheckBox>
-                    </MudItem>
-                    @foreach (var type in Enum.GetValues<SongType>())
-                    {
-                        <MudItem sm="6" md="3">
-                            <MudCheckBox T="bool" Label="@type.ToString()" Disabled="_isLoading" Value="_filteredTypes.Contains(type)" ValueChanged="v => ToggleSongType(type, v)"></MudCheckBox>
-                        </MudItem>
-                    }
-                    <MudItem xs="12" md="4">
-                        <MudAutocomplete T="string" Label=@L["Song Name"] Disabled="_isLoading" AdornmentIcon="@Icons.Material.Filled.Search" @bind-Value="_songFilter" SearchFunc="(s,c)=>FilterSongName(s)" CoerceText="false" CoerceValue="true"></MudAutocomplete>
-                    </MudItem>
-                    <MudItem xs="12" md="4">
-                        <MudSelect T="string" @bind-SelectedValues="_stepArtists" Disabled="_isLoading" Label=@L["Step Artist"] HelperText="Not All Step Artists Labeled Yet" MultiSelection="true" Clearable="true">
-                            @foreach (var artist in _availableStepArtists)
-                            {
-                                <MudSelectItem T="string" Value="@artist">@artist</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="12" md="4">
-                        <MudSelect T="string" @bind-SelectedValues="_songArtists" Disabled="_isLoading" Label=@L["Song Artist"] MultiSelection="true" Clearable="true">
-                            @foreach (var artist in _availableSongArtists)
-                            {
-                                <MudSelectItem T="string" Value="@artist">@artist</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudItem>
-                    @if (_lowestBpm != _highestBpm)
-                    {
+        <MudItem xs="6" sm="3">
+            <MudNumericField T="decimal?" Clearable="true" Value="_settings.MinBpm" ValueChanged="SetSelectedMinBpm" Disabled="_isLoading" Label=@L["Min BPM"] Min="_lowestBpm" Max="_highestBpm" HelperText="Not All BPMS Labeled Yet" HideSpinButtons="true"></MudNumericField>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudNumericField T="decimal?" Clearable="true" Value="_settings.MaxBpm" ValueChanged="SetSelectedMaxBpm" Disabled="_isLoading" Label=@L["Max BPM"] Min="_lowestBpm" Max="_highestBpm" HelperText="Not All BPMS Labeled Yet" HideSpinButtons="true"></MudNumericField>
+        </MudItem>
+    }
+    @if (_settings.ShowingFilters.Contains(Filter.NoteCount) && _lowestNoteCount != _highestNoteCount)
+    {
 
-                        <MudItem xs="6">
-                            <MudNumericField T="decimal?" Clearable="true" @bind-Value="_bpmMin" Disabled="_isLoading" Label=@L["Min BPM"] Min="_lowestBpm" Max="_highestBpm" HelperText="Not All BPMS Labeled Yet" HideSpinButtons="true"></MudNumericField>
-                        </MudItem>
-                        <MudItem xs="6">
-                            <MudNumericField T="decimal?" Clearable="true" @bind-Value="_bpmMax" Disabled="_isLoading" Label=@L["Max BPM"] Min="_lowestBpm" Max="_highestBpm" HelperText="Not All BPMS Labeled Yet" HideSpinButtons="true"></MudNumericField>
-                        </MudItem>
-                    }
-                    @if (_lowestNoteCount != _highestNoteCount)
-                    {
+        <MudItem xs="6" sm="3">
+            <MudNumericField T="int?" Clearable="true" Value="_settings.MinNoteCount" ValueChanged="SetMinNoteCount" Label=@L["Min Note Count"] Min="_lowestNoteCount" Max="_highestNoteCount" HelperText="Not All Note Counts Labeled Yet" HideSpinButtons="true"></MudNumericField>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudNumericField T="int?" Clearable="true" Value="_settings.MaxNoteCount" ValueChanged="SetMaxNoteCount" Label=@L["Max Note Count"] Min="_lowestNoteCount" Max="_highestNoteCount" HelperText="Not All Note Counts Labeled Yet" HideSpinButtons="true"></MudNumericField>
+        </MudItem>
+    }
+    @if (CurrentUser.IsLoggedIn)
+    {
 
-                        <MudItem xs="6">
-                            <MudNumericField T="int?" Clearable="true" @bind-Value="_noteCountMin" Label=@L["Min Note Count"] Min="_lowestNoteCount" Max="_highestNoteCount" HelperText="Not All Note Counts Labeled Yet" HideSpinButtons="true"></MudNumericField>
-                        </MudItem>
-                        <MudItem xs="6">
-                            <MudNumericField T="int?" Clearable="true" @bind-Value="_noteCountMax" Label=@L["Max Note Count"] Min="_lowestNoteCount" Max="_highestNoteCount" HelperText="Not All Note Counts Labeled Yet" HideSpinButtons="true"></MudNumericField>
-                        </MudItem>
-                    }
-                    @if (CurrentUser.IsLoggedIn)
+        @if (_settings.ShowingFilters.Contains(Filter.Completion))
+        {
+            <MudItem xs="12" sm="3">
+                <MudCheckBox T="bool?" TriState="true" Value="_settings.Completion" ValueChanged="SetCompletionFilter" Disabled="_isLoading" Label=@L["Stage Pass"]></MudCheckBox>
+            </MudItem>
+        }
+        @if (_settings.ShowingFilters.Contains(Filter.LetterGrade))
+        {
+            <MudItem xs="6" sm="3">
+                <MudSelect T="PhoenixLetterGrade?" Label=@L["Min Letter Grade"] Value="_settings.MinLetterGrade" ValueChanged="SetMinLetterGrade" Clearable="true">
+                    @foreach (var letterGrade in Enum.GetValues<PhoenixLetterGrade>().Reverse())
                     {
-                        <MudItem xs="6">
-                            <MudSwitch T="bool" Value="_showAge" ValueChanged="c=>SetShowAge(c)" Disabled="_isLoading" Label=@L["Show Age"] Color="Color.Primary"></MudSwitch>
-                        </MudItem>
+                        <MudSelectItem T="PhoenixLetterGrade?" Value="letterGrade">@letterGrade.GetName()</MudSelectItem>
                     }
-                </MudGrid>
-            </MudExpansionPanel>
-        </MudExpansionPanels>
-    </MudItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudSelect T="PhoenixLetterGrade?" Label=@L["Max Letter Grade"] Value="_settings.MaxLetterGrade" ValueChanged="SetMaxLetterGrade" Clearable="true">
+                    @foreach (var letterGrade in Enum.GetValues<PhoenixLetterGrade>().Reverse())
+                    {
+                        <MudSelectItem T="PhoenixLetterGrade?" Value="letterGrade">@letterGrade.GetName()</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        }
+    }
     @if (_isLoading)
     {
         <MudItem xs="12">
@@ -313,17 +390,26 @@
                                 
                                 <DifficultyBubble Chart="chart"></DifficultyBubble>
                             </MudCardHeader>
-                            @if ((_scores.TryGetValue(chart.Id, out var sz) ? sz.Score : 0) > 0 || chart.Skills.Any()||_groupBy!="Difficulty")
-                            {
-                                <MudCardContent>
-                                    @if (_groupBy != "Difficulty")
+                            <MudCardContent>
+                                @if (_settings.ShowSongName)
+                                {
+                                    <MudText Typo="Typo.subtitle1" Style=@(chart.Song.Name.Contains("Pneum")?"text-overflow: ellipsis; overflow:hidden;white-space:nowrap;":"")>@chart.Song.Name</MudText>
+                                }
+                                @if (_settings.ShowStepArtist)
+                                {
+                                    <MudText Typo="Typo.subtitle1">@chart.StepArtist</MudText>
+                                }
+                                @if ((_scores.TryGetValue(chart.Id, out var sz) ? sz.Score : 0) > 0 || chart.Skills.Any() || _groupBy != "Difficulty")
+                                {
+                                    @if (_groupBy != "Difficulty" && _settings.ShowDifficulty)
                                     {
                                         <MudText>
                                             @if (_tierListType == "Popularity")
                                             {
-                                                
+
                                                 <MudText Style=@($"color:{TierListColor(_chartDifficulties[chart.Id])}")>@_popularityNames[_chartDifficulties[chart.Id]]</MudText>
-                                            } else if (_chartDifficulties[chart.Id] == TierListCategory.Unrecorded && _tierListType == "Chabala")
+                                            }
+                                            else if (_chartDifficulties[chart.Id] == TierListCategory.Unrecorded && _tierListType == "Chabala")
                                             {
 
                                                 <MudText Style=@($"color:{TierListColor(_chartDifficulties[chart.Id])}")>Subjective</MudText>
@@ -335,27 +421,28 @@
                                             }
                                         </MudText>
                                     }
-                                    @if (_groupBy != "Skill")
+                                    @if (_groupBy != "Skill" && _settings.ShowSkills)
                                     {
-                                        
+
                                         @foreach (var skill in chart.Skills)
                                         {
                                             <MudChip T="string" Size="Size.Small" Style=@($"background-color:{skill.GetColor()}")>@skill.GetName()</MudChip>
 
                                         }
                                     }
-                                    @if ((_scores.TryGetValue(chart.Id, out var s) ? s.Score : 0) > 0){
-                                        
+                                    @if ((_scores.TryGetValue(chart.Id, out var s) ? s.Score : 0) > 0)
+                                    {
+
                                         <br/>
-                                        <ScoreBreakdown Score="_scores[chart.Id].Score!.Value" IsBroken="_scores[chart.Id].IsBroken" OneLine="true" ShowScore="true" Plate="_scores[chart.Id].Plate" Ranking="_scoreRankings.TryGetValue(chart.Id,out var r)?r:null"></ScoreBreakdown>
+                                        <ScoreBreakdown Score="_scores[chart.Id].Score!.Value" IsBroken="_scores[chart.Id].IsBroken" OneLine="true" ShowScore="true" Plate="_scores[chart.Id].Plate" Ranking="_scoreRankings.TryGetValue(chart.Id, out var r) ? r : null"></ScoreBreakdown>
 
                                         @if (_showAge)
                                         {
                                             <MudText>@(_ages[chart.Id].ToString("0")) @L["Days Old"]</MudText>
+                                        }
                                     }
-                                    }
-                                </MudCardContent>
-                            }
+                                }
+                            </MudCardContent>
                             <MudCardActions>
                                 @if (_topCharts.Contains(chart.Id))
                                 {
@@ -665,17 +752,97 @@ function(val, index) {
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private ISet<Guid> _unPopularCharts = new HashSet<Guid>();
     private ISet<Guid> _popularCharts = new HashSet<Guid>();
+    private FilterSettings _settings = new FilterSettings();
+        private const string UserSettingsKey = @"ChartSkills__Settings";
+    private async Task ToggleFilter(Filter filter)
+    {
+        if (_settings.ShowingFilters.Contains(filter))
+        {
+            _settings.ShowingFilters.Remove(filter);
+            switch (filter)
+            {
+                case Filter.BPM:
+                    _settings.MinBpm = null;
+                    _settings.MaxBpm = null;
+                    break;
+                case Filter.LetterGrade:
+                    _settings.MinLetterGrade = null;
+                    _settings.MaxLetterGrade = null;
+                    break;
+                case Filter.Completion:
+                    _settings.Completion = null;
+                    break;
+                case Filter.ToDo:
+                    _settings.ToDo = null;
+                    break;
+                case Filter.NoteCount:
+                    _settings.MaxNoteCount = null;
+                    _settings.MinNoteCount = null;
+                    break;
+                case Filter.SongArtist:
+                    _settings.SongArtists.Clear();
+                    break;
+                case Filter.StepArtist:
+                    _settings.StepArtists.Clear();
+                    break;
+                case Filter.SongName:
+                    break;
+                default:
+                    break;
+            }
+        }
+        else
+        {
+            _settings.ShowingFilters.Add(filter);
+        }
+        await SaveSettings();
+    }
 
+    private async Task SaveSettings()
+    {
+        await UiSettings.SetSetting(UserSettingsKey, JsonSerializer.Serialize(_settings));
+    }
+
+    private IDictionary<Filter, string> _filterNames = Enum.GetValues<Filter>().ToDictionary(e => e, e => e.ToString());
+    private enum Filter
+    {
+        SongType,
+        SongName,
+        ToDo,
+        Completion,
+        LetterGrade,
+        BPM,
+        NoteCount,
+        StepArtist,
+        SongArtist,
+    }
+
+    private sealed class FilterSettings
+    {
+        public HashSet<SongType> SongTypes { get; set; } = new HashSet<SongType>();
+        public HashSet<Filter> ShowingFilters { get; set; } = new HashSet<Filter>(new[]{Filter.SongName});
+        public bool? ToDo { get; set; }
+        public bool? Completion { get; set; }
+        public PhoenixLetterGrade? MinLetterGrade { get; set; }
+        public PhoenixLetterGrade? MaxLetterGrade { get; set; }
+        public decimal? MinBpm { get; set; }
+        public decimal? MaxBpm { get; set; }
+        public bool ShowStepArtist { get; set; }
+        public bool ShowSongName { get; set; }
+        public bool ShowSkills { get; set; } = true;
+        public bool ShowDifficulty { get; set; } = true;
+        public int? MinNoteCount { get; set; }
+        public int? MaxNoteCount { get; set; }
+        public HashSet<string> StepArtists { get; set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> SongArtists { get; set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    }
     private sealed record SkillEntry(Skill Skill, double Metric, string Category="None");
     private async Task SetTextView(bool newSetting)
     {
         await UiSettings.SetSetting("TierLists__TextView", newSetting.ToString());
         _textView = newSetting;
     }
-    private ISet<SongType> _filteredTypes = new HashSet<SongType>();
-    private IEnumerable<string> _stepArtists = new HashSet<string>();
     private IDictionary<Guid, int> _ages = new Dictionary<Guid, int>(); 
-    private IEnumerable<string> _songArtists = new HashSet<string>();
     private IDictionary<Guid, IEnumerable<Name>> _charTitles = new Dictionary<Guid, IEnumerable<Name>>();
     private IEnumerable<PhoenixTitle> _titles = Array.Empty<PhoenixTitle>();
     private IEnumerable<Guid> _unpassedTodos => _finalEntries.Select(e => e.ChartId).Where(chartId => _scores.ContainsKey(chartId)&& _scores[chartId].IsBroken && _todos.Contains(chartId));
@@ -689,12 +856,8 @@ function(val, index) {
     private ChartType _chartType = ChartType.Single;
     private bool _textView = false;
     private bool _isLoading = false;
-    private bool _showTodo = false;
     private bool _showAge = false;
-    private decimal? _bpmMin;
-    private decimal? _bpmMax;
-    private int? _noteCountMin;
-    private int? _noteCountMax;
+
     private ISet<Guid> _todos = new HashSet<Guid>();
 
     private sealed record LampProgress(string Name, int Order, int Progress);
@@ -743,31 +906,113 @@ function(val, index) {
                     r.Item2 >= 1.0 ? "High" : "Normal");
 
     }
-    private void ToggleSongType(SongType s, bool v)
+    private async Task SetSongTypeFilter(IEnumerable<SongType> s)
     {
-        if (v)
-        {
-            _filteredTypes.Add(s);
-        }
-        else
-        {
-            _filteredTypes.Remove(s);
-        }
+        _settings.SongTypes = s.Distinct().ToHashSet();
+        await SaveSettings();
     }
 
+    private async Task SetTodoFilter(bool? newValue)
+    {
+        _settings.ToDo = newValue;
+        await SaveSettings();
+    }
 
+    private async Task SetSelectedSongArtists(IEnumerable<string> artists)
+    {
+        _settings.SongArtists = artists.Distinct(StringComparer.OrdinalIgnoreCase).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        await SaveSettings();
+    }
+
+    private async Task SetSelectedStepArtists(IEnumerable<string> artists)
+    {
+        
+        _settings.StepArtists = artists.Distinct(StringComparer.OrdinalIgnoreCase).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        await SaveSettings();
+    }
+
+    private async Task SetSelectedMinBpm(decimal? bpm)
+    {
+        _settings.MinBpm = bpm;
+        await SaveSettings();
+    }
+    private async Task SetSelectedMaxBpm(decimal? bpm)
+    {
+        _settings.MaxBpm = bpm;
+        await SaveSettings();
+    }
+
+    private async Task SetMinNoteCount(int? noteCount)
+    {
+        _settings.MinNoteCount = noteCount;
+        await SaveSettings();
+    }
+    private async Task SetMaxNoteCount(int? noteCount)
+    {
+        _settings.MaxNoteCount = noteCount;
+        await SaveSettings();
+    }
+
+    private async Task SetCompletionFilter(bool? completion)
+    {
+        _settings.Completion = completion;
+        await SaveSettings();
+    }
+
+    private async Task SetMinLetterGrade(PhoenixLetterGrade? grade)
+    {
+        _settings.MinLetterGrade = grade;
+        await SaveSettings();
+    }
+    private async Task SetMaxLetterGrade(PhoenixLetterGrade? grade)
+    {
+        _settings.MaxLetterGrade = grade;
+        await SaveSettings();
+    }
+
+    private async Task ToggleShowSkills()
+    {
+        _settings.ShowSkills = !_settings.ShowSkills;
+        await SaveSettings();
+    }
+
+    private async Task ToggleShowDifficulty()
+    {
+        _settings.ShowDifficulty = !_settings.ShowDifficulty;
+        await SaveSettings();
+    }
+
+    private async Task ToggleShowStepArtist()
+    {
+        _settings.ShowStepArtist = !_settings.ShowStepArtist;
+        await SaveSettings();
+    }
+    private async Task ToggleShowName()
+    {
+        _settings.ShowSongName = !_settings.ShowSongName;
+        await SaveSettings();
+    }
     private bool ShouldChartShow(SongTierListEntry entry)
     {
-        if (_hidePassed && _scores.TryGetValue(entry.ChartId, out var s) && !s.IsBroken)
+        var score = _scores.TryGetValue(entry.ChartId, out var scr) ? scr : null;
+        if (_settings.MinLetterGrade != null &&  (score?.Score== null || score.Score.Value.LetterGrade < _settings.MinLetterGrade))
         {
             return false;
         }
-        if (_showTodo && !_todos.Contains(entry.ChartId))
+        if (_settings.MaxLetterGrade != null && (score?.Score == null || score.Score.Value.LetterGrade > _settings.MaxLetterGrade))
+        {
+            return false;
+        }
+        if (_settings.Completion!=null && _settings.Completion!=(_scores.TryGetValue(entry.ChartId, out var s) && !s.IsBroken))
+        {
+            return false;
+        }
+        if (_settings.ToDo!=null && _settings.ToDo!=_todos.Contains(entry.ChartId))
         {
             return false;
         }
         var chart = _charts[entry.ChartId];
-        if (_filteredTypes.Any() && !_filteredTypes.Contains(chart.Song.Type))
+        if (_settings.SongTypes.Any() && !_settings.SongTypes.Contains(chart.Song.Type))
         {
             return false;
         }
@@ -775,35 +1020,33 @@ function(val, index) {
         {
             return false;
         }
-        if (_bpmMax != null && (chart.Song.Bpm == null || chart.Song.Bpm.Value.Max > _bpmMax))
+        if (_settings.MaxBpm != null && (chart.Song.Bpm == null || chart.Song.Bpm.Value.Max > _settings.MaxBpm))
         {
             return false;
         }
-        if (_bpmMin != null && (chart.Song.Bpm == null || chart.Song.Bpm.Value.Min < _bpmMin))
+        if (_settings.MinBpm != null && (chart.Song.Bpm == null || chart.Song.Bpm.Value.Min < _settings.MinBpm))
         {
             return false;
         }
-        if (_stepArtists.Any() && !_stepArtists.Contains(chart.StepArtist?.ToString() ?? "Unknown",StringComparer.OrdinalIgnoreCase))
+        if (_settings.StepArtists.Any() && !_settings.StepArtists.Contains(chart.StepArtist?.ToString() ?? "Unknown"))
         {
             return false;
         }
-        if (_songArtists.Any() && !_songArtists.Contains(chart.Song.Artist.ToString(), StringComparer.OrdinalIgnoreCase))
+        if (_settings.SongArtists.Any() && !_settings.SongArtists.Contains(chart.Song.Artist.ToString()))
         {
             return false;
         }
-        if (_noteCountMin != null && (chart.NoteCount != null || _noteCountMin >= chart.NoteCount))
+        if (_settings.MinNoteCount != null && (chart.NoteCount != null || _settings.MinNoteCount >= chart.NoteCount))
         {
             return false;
         }
-        if (_noteCountMax != null && (chart.NoteCount != null || _noteCountMax <= chart.NoteCount))
+        if (_settings.MaxNoteCount != null && (chart.NoteCount != null || _settings.MaxNoteCount <= chart.NoteCount))
         {
             return false;
         }
         return true;
     }
     private int _highlightedModifier = 10;
-    private bool _hidePassed = false;
-    private bool _showSettings = false;
     private string _groupBy = "Tier List";
     private int _level = 20;
     private IDictionary<Guid, ScoreRankingRecord> _scoreRankings = new Dictionary<Guid, ScoreRankingRecord>();
@@ -818,11 +1061,7 @@ function(val, index) {
     private bool _usePersonalizedData = true;
     private IEnumerable<IGrouping<string, SongTierListEntry>>
     _finalGroupings = Array.Empty<IGrouping<string, SongTierListEntry>>();
-    private string ChartSearch(Chart chart)
-    {
-        var searchString = "Pump It Up " + chart.Song.Name + " " + chart.DifficultyString;
-        return $"https://www.youtube.com/results?search_query={searchString.Replace("%", "Percent ").Replace(" ", "+")}";
-    }
+
 
     private async Task SetUsePersonalized(bool newUse)
     {
@@ -911,17 +1150,7 @@ function(val, index) {
             {"TierListType",_tierListType}
         }));
     }
-    private string CategoryColor(TierListCategory category) => category switch
-    {
-        TierListCategory.Overrated=>"#00FFFF",
-        TierListCategory.VeryEasy=>"#00FFBB",
-        TierListCategory.Easy=>"#00FF55",
-        TierListCategory.Medium=>"#00FF00",
-        TierListCategory.Hard=>"#55BB00",
-        TierListCategory.VeryHard=>"#BB5500",
-        TierListCategory.Underrated=>"#FF0000",
-        TierListCategory.Unrecorded=>"#888888"
-    };
+
     public async Task ToggleToDo(Guid chartId)
     {
         if (!_todos.Contains(chartId))
@@ -943,17 +1172,7 @@ function(val, index) {
 
     private string CardStyle(Guid chartId) =>
         _scores.TryGetValue(chartId, out var broken) && !broken.IsBroken ? $@"border-color:{MudBlazor.Colors.Green.Darken1}" : "";
-    private async Task SetHighlighted(int newModifier)
-    {
-        _highlightedModifier = newModifier;
-        await Recalculate();
-    }
 
-    private async Task SetCategory(string category, double modifier)
-    {
-        _modifiers[category] = modifier;
-        await Recalculate();
-    }
 
     private static readonly PhoenixLetterGrade[] _validLetterGrades = new[]
     {
@@ -1161,7 +1380,6 @@ function(val, index) {
         await UiSettings.SetSetting("TierLists__ListType", _tierListType);
         await UiSettings.SetSetting("TierLists__UsePersonalized", _usePersonalizedData.ToString());
         await UiSettings.SetSetting("TierLists__GroupBy", _groupBy);
-        await UiSettings.SetSetting("TierLists__HideCompleted", _hidePassed.ToString());
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, _level, _chartType))).ToDictionary(c => c.Id);
         _folderScores = _scores.Where(kv => _charts.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
         var titles = _titles.Where(t => t is ISpecificChartTitle).ToArray();
@@ -1337,17 +1555,16 @@ function(val, index) {
         }
         var charts = _finalEntries.Select(e => _charts[e.ChartId]).ToArray();
         _lowestBpm = charts.Any(c => c.Song.Bpm != null) ? charts.Where(c => c.Song.Bpm != null).Min(c => c.Song.Bpm!.Value.Min) : 0;
-        _bpmMin = null;
+        _settings.MinBpm = null;
         _highestBpm = charts.Any(c => c.Song.Bpm != null) ? charts.Where(c => c.Song.Bpm != null).Max(c => c.Song.Bpm!.Value.Max) : 0;
-        _bpmMax = null;
+        _settings.MaxBpm = null;
         _lowestNoteCount = charts.Any(c => c.NoteCount != null) ? charts.Where(c => c.NoteCount != null).Min(c => c.NoteCount!.Value) : 0;
-        _noteCountMin = null;
+        _settings.MinNoteCount = null;
         _highestNoteCount = charts.Any(c => c.NoteCount != null) ? charts.Where(c => c.NoteCount != null).Max(c => c.NoteCount!.Value) : 0;
-        _noteCountMax = null;
+        _settings.MaxNoteCount = null;
         _availableStepArtists = charts.Select(c => c.StepArtist ?? "Unknown").Distinct().OrderBy(s=>s).ToArray();
         _availableSongArtists = charts.Select(c => c.Song.Artist).Distinct().OrderBy(s=>s).ToArray();
-        _stepArtists = new HashSet<string>();
-        _songArtists = new HashSet<string>();
+
 
         var baseRating = DifficultyLevel.From(_level).BaseRating;
         if (_chartType == ChartType.CoOp)
@@ -1367,6 +1584,7 @@ function(val, index) {
         }
         lamps.Add(new LampProgress("PG", order, _charts.Count(kv => _scores.TryGetValue(kv.Key, out var s) && s.Score == PhoenixScore.Max)));
         _lamps = lamps;
+        await SaveSettings();
         _isLoading = false;
     }
     private async Task SetType(ChartType newType)
@@ -1424,12 +1642,31 @@ function(val, index) {
     };
     protected override async Task OnInitializedAsync()
     {
+        _filterNames= new Dictionary<Filter, string>()
+        {
+            { Filter.SongType, L["Song Type"] },
+            { Filter.SongName, L["Song Name"] },
+            { Filter.ToDo, L["To Do"] },
+            { Filter.Completion, L["Stage Pass"] },
+            { Filter.LetterGrade, L["Letter Grade"] },
+            { Filter.BPM, L["BPM"] },
+            { Filter.NoteCount, L["Note Count"] },
+            {
+                Filter.StepArtist, L["Step Artist"]
+            },
+            { Filter.SongArtist, L["Song Artist"] }
+        };
         if (CurrentUser.IsLoggedIn)
         {
             
             _scores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id)))
                 .ToDictionary(c => c.ChartId);
             _ages = _scores.ToDictionary(c => c.Key, c => (int)(_now - c.Value.RecordedDate).TotalDays); 
+        }
+        var settingsString = await UiSettings.GetSetting(UserSettingsKey);
+        if (!string.IsNullOrWhiteSpace(settingsString))
+        {
+            _settings = JsonSerializer.Deserialize<FilterSettings>(settingsString);
         }
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).
           ToDictionary(c => c.Id);
@@ -1512,4 +1749,5 @@ function(val, index) {
             return Math.Sqrt(sum_of_squares / values.Count());
         }
     }
+
 }
