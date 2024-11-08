@@ -106,5 +106,53 @@ namespace ScoreTracker.Data.Repositories
 
             await database.SaveChangesAsync(cancellationToken);
         }
+
+        public async Task<IEnumerable<ChartTagAggregate>> GetChartTags(CancellationToken cancellationToken)
+        {
+            var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+
+            return (await database.UcsChartTag.ToArrayAsync(cancellationToken)).GroupBy(c => (c.ChartId, c.Tag))
+                .Select(g => new ChartTagAggregate(g.Key.ChartId, g.Key.Tag, g.Count())).ToArray();
+        }
+
+        public async Task DeleteChartTag(Guid chartId, Guid userId, Name tag, CancellationToken cancellationToken)
+        {
+            var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+            var tagString = tag.ToString();
+            var entity = await
+                database.UcsChartTag.FirstOrDefaultAsync(e =>
+                    e.ChartId == chartId && e.UserId == userId && e.Tag == tagString, cancellationToken);
+            if (entity != null)
+            {
+                database.UcsChartTag.Remove(entity);
+                await database.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        public async Task AddChartTag(Guid chartId, Guid userId, Name tag, CancellationToken cancellationToken)
+        {
+            var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+            var tagString = tag.ToString();
+            var entity = await
+                database.UcsChartTag.FirstOrDefaultAsync(e =>
+                    e.ChartId == chartId && e.UserId == userId && e.Tag == tagString, cancellationToken);
+            if (entity == null)
+            {
+                await database.UcsChartTag.AddAsync(new UcsChartTagEntity
+                {
+                    ChartId = chartId,
+                    Tag = tagString,
+                    UserId = userId
+                }, cancellationToken);
+                await database.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        public async Task<IEnumerable<Name>> GetMyTags(Guid chartId, Guid userId, CancellationToken cancellationToken)
+        {
+            var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+            return (await database.UcsChartTag.Where(c => c.ChartId == chartId && c.UserId == userId)
+                .Select(e => e.Tag).ToArrayAsync(cancellationToken)).Select(Name.From).ToArray();
+        }
     }
 }

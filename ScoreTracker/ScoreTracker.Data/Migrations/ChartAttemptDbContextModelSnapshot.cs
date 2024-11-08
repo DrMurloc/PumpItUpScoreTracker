@@ -1205,6 +1205,34 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("UcsChartLeaderboardEntry", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.UcsChartTagEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Tag")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChartId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UcsChartTag", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.UserApiTokenEntity", b =>
                 {
                     b.Property<Guid>("Id")

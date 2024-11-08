@@ -21,6 +21,7 @@
         <MudTh>@L["Song"]</MudTh>
         <MudTh>@L["Difficulty Level"]</MudTh>
         <MudTh>@L["Song Artist"]</MudTh>
+        <MudTh>@L["Tags"]</MudTh>
         <MudTh>@L["Link"]</MudTh>
         <MudTh>@L["Leaderboard"]</MudTh>
         @if (CurrentUser.IsLoggedIn)
@@ -40,6 +41,16 @@
             <MudTooltip Text=@(context.Artist == context.Uploader ? "" : "Uploaded by " + context.Uploader)>
                 @context.Artist
             </MudTooltip>
+        </MudTd>
+        <MudTd>
+            @foreach (var tag in _chartTags.TryGetValue(context.Chart.Id,out var tags)?tags:Array.Empty<ChartTagAggregate>())
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@tag.Tag (@tag.Count)</MudChip>
+            }
+            @if (CurrentUser.IsLoggedIn)
+            {
+                <MudIconButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Add" OnClick="()=>ShowTagDialog(context)"></MudIconButton>
+            }
         </MudTd>
         <MudTd>
             <MudIconButton Target="Blank" Color="Color.Primary" Icon="@Icons.Material.Filled.Link" Href=@($"https://ucs.piugame.com/bbs/board.php?bo_table=ucs_share&wr_id={context.PiuGameId}")></MudIconButton>
@@ -236,6 +247,41 @@
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showAddDialog=false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
+<MudDialog @bind-Visible="_showChartTagDialog">
+    <DialogContent>
+        @if (_showingChart != null)
+        {
+
+            <MudGrid>
+                <MudItem xs="12">
+                    <SongImage Song="_showingChart.Chart.Song"></SongImage>
+                    <DifficultyBubble Chart="_showingChart.Chart"></DifficultyBubble>
+                    <MudTooltip Text=@(_showingChart.Artist == _showingChart.Uploader ? "" : "Uploaded by " + _showingChart.Uploader)>
+                        @_showingChart.Artist
+                    </MudTooltip>
+                </MudItem>
+                <MudItem xs="8">
+                    <MudAutocomplete T="string" MaxLength="32" @bind-Value="_newTag" Label=@L["Tag"] SearchFunc="(s,_)=>Task.FromResult(_existingTags.Where(t=>t.Contains(s)).Select(t=>t.ToString()))" CoerceValue="true" CoerceText="false"></MudAutocomplete>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddTag" Disabled="string.IsNullOrWhiteSpace(_newTag)||_isSaving">@L["Add"]</MudButton>
+                </MudItem>
+                <MudItem xs="12">
+                    @foreach (var tag in _myTags)
+                    {
+                        <MudChip T="string" OnClick="()=>RemoveTag(tag)" Color="Color.Primary" Icon="@Icons.Material.Filled.Delete">@tag</MudChip>
+                    }
+                </MudItem>
+            </MudGrid>
+            }
+
+
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showChartTagDialog=false">@L["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
 @inject IUcsRepository UcsRepository
 @inject IOfficialSiteClient OfficialSite
 @inject ISnackbar Snackbar
@@ -251,6 +297,7 @@
     private string _ucsId = string.Empty;
     private bool _showSubmitDialog = false;
     private bool _isUploading = false;
+    private bool _showChartTagDialog = false;
 
     private string _artist = string.Empty;
     private bool _showLeaderboardDialog = false;
@@ -266,7 +313,50 @@
     private static readonly Regex UcsIdRegex = new Regex(@"wr_id\=([0-9]+)",RegexOptions.Compiled);
     private IDictionary<Guid, double> _levels = new Dictionary<Guid, double>();
     private static readonly Regex _youtubeRegex = new Regex(@"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(?:-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|live\/|v\/)?)([\w\-]+)(\S+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private IDictionary<Guid, ChartTagAggregate[]> _chartTags = new Dictionary<Guid, ChartTagAggregate[]>();
+    private ISet<Name> _existingTags = new HashSet<Name>();
+    private string _newTag = string.Empty;
+    private ISet<Name> _myTags = new HashSet<Name>();
 
+    private async Task ShowTagDialog(UcsChart chart)
+    {
+        _showingChart = chart;
+        _myTags = (await UcsRepository.GetMyTags(chart.Chart.Id, CurrentUser.User.Id, CancellationToken.None)).Distinct().ToHashSet();
+        _showChartTagDialog = true;
+    }
+    private async Task RemoveTag(string tag)
+    {
+
+        _isSaving = true;
+        if (string.IsNullOrWhiteSpace(_newTag) || _showingChart == null)
+        {
+            return;
+        }
+        _myTags.Remove(tag);
+        await UcsRepository.DeleteChartTag(_showingChart.Chart.Id, CurrentUser.User.Id, tag, CancellationToken.None);
+        _chartTags[_showingChart.Chart.Id] = _chartTags[_showingChart.Chart.Id].Select(c => c.Tag == tag ? c with { Count = c.Count - 1 } : c)
+            .Where(c=>c.Count>0).OrderByDescending(c => c.Count).ToArray();
+        _isSaving = false;
+    }
+    private async Task AddTag()
+    {
+        _isSaving = true;
+        if (string.IsNullOrWhiteSpace(_newTag) || _showingChart == null) 
+        {
+            return;
+        }
+        var tag = _existingTags.Contains(_newTag) ? _existingTags.Single(t => t == _newTag) : Name.From(_newTag);
+        await UcsRepository.AddChartTag(_showingChart.Chart.Id, CurrentUser.User.Id, tag, CancellationToken.None);
+        if (!_existingTags.Contains(tag))
+        {
+            _existingTags.Add(tag);
+        }
+        _myTags.Add(tag);
+        var tagAggregates = _chartTags.TryGetValue(_showingChart.Chart.Id, out var ta) ? ta : Array.Empty<ChartTagAggregate>();
+        tagAggregates = tagAggregates.Any(c => c.Tag == tag) ? tagAggregates.Select(c => c.Tag == tag ? c with { Count = c.Count + 1 } : c).OrderByDescending(c => c.Count).ToArray() : tagAggregates.Append(new ChartTagAggregate(_showingChart.Chart.Id, tag, 1)).OrderByDescending(c => c.Count).ToArray();
+        _chartTags[_showingChart.Chart.Id] = tagAggregates;
+        _isSaving = false;
+    }
     private async Task OpenSubmit(UcsChart chart)
     {
         _isSaving = true;
@@ -420,6 +510,9 @@
     protected override async Task OnInitializedAsync()
     {
         _charts = (await UcsRepository.GetUcsCharts(CancellationToken.None)).OrderByDescending(u => u.SubmissionCount).ToArray();
+
+        _chartTags = (await UcsRepository.GetChartTags(CancellationToken.None)).GroupBy(c => c.ChartId).ToDictionary(g => g.Key, g => g.OrderByDescending(c => c.Count).ToArray());
+        _existingTags = _chartTags.SelectMany(c => c.Value.Select(t => t.Tag)).Distinct().ToHashSet();
     }
 
     private sealed record LeaderboardEntry(int Place, UcsLeaderboardEntry Entry);

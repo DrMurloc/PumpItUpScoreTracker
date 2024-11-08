@@ -219,7 +219,7 @@ Do It
     await WorldRanking.CalculateWorldRankings(CancellationToken.None);
         */
 
-        await Bus.Publish(new ProcessPassTierListCommand());
+        //await Bus.Publish(new ProcessPassTierListCommand());
         /*var songImages = (await Database.Song.Select(s => s.ImagePath).ToArrayAsync()).ToHashSet();
          * 
         var images = await Files.GetFiles("songs/");
@@ -229,12 +229,14 @@ Do It
             await Files.DeleteFile(image.PathAndQuery);
         }*/
 
-    /*var userIds = await Database.User.Select(u => u.Id).ToArrayAsync();
+    var userIds = await Database.User.Select(u => u.Id).ToArrayAsync();
         foreach (var userId in userIds)
         {
             await Mediator.Send(new PlayerRatingSaga.RecalculateStats(userId));
         }
-        Snackbar.Add("Done", Severity.Success);*/
+
+
+
        Snackbar.Add("Done", Severity.Success);
 
     }
