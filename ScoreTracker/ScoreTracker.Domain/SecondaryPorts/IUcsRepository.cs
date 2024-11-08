@@ -18,5 +18,6 @@ namespace ScoreTracker.Domain.SecondaryPorts
         Task DeleteChartTag(Guid chartId, Guid userId, Name tag, CancellationToken cancellationToken);
         Task AddChartTag(Guid chartId, Guid userId, Name tag, CancellationToken cancellationToken);
         Task<IEnumerable<Name>> GetMyTags(Guid chartId, Guid userId, CancellationToken cancellationToken);
+        Task<IEnumerable<UserChartTag>> GetAllMyTags(Guid userId, CancellationToken cancellationToken);
     }
 }

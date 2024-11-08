@@ -11,6 +11,7 @@
 @using System.Text.RegularExpressions
 @using System.Web
 @using ScoreTracker.Application.Commands
+@using Swashbuckle.AspNetCore.SwaggerGen
 <PageTitle>UCS Leaderboards</PageTitle>
 
 <MudText Typo="Typo.h5">@L["UCS Leaderboard"]</MudText>
@@ -45,7 +46,7 @@
         <MudTd>
             @foreach (var tag in _chartTags.TryGetValue(context.Chart.Id,out var tags)?tags:Array.Empty<ChartTagAggregate>())
             {
-                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@tag.Tag (@tag.Count)</MudChip>
+                <MudChip T="string" Size="Size.Small" OnClick="()=>ToggleTag(context,tag.Tag)" Color="Color.Primary" Variant="_allMyTags.TryGetValue(context.Chart.Id,out var s)&&s.Contains(tag.Tag)?Variant.Filled:Variant.Outlined">@tag.Tag (@tag.Count)</MudChip>
             }
             @if (CurrentUser.IsLoggedIn)
             {
@@ -317,12 +318,32 @@
     private ISet<Name> _existingTags = new HashSet<Name>();
     private string _newTag = string.Empty;
     private ISet<Name> _myTags = new HashSet<Name>();
-
+    private IDictionary<Guid, ISet<Name>> _allMyTags = new Dictionary<Guid, ISet<Name>>();
     private async Task ShowTagDialog(UcsChart chart)
     {
         _showingChart = chart;
         _myTags = (await UcsRepository.GetMyTags(chart.Chart.Id, CurrentUser.User.Id, CancellationToken.None)).Distinct().ToHashSet();
         _showChartTagDialog = true;
+    }
+
+    private async Task ToggleTag(UcsChart chart, string tag)
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            return;
+        }
+        _showingChart = chart;
+        if (_allMyTags.ContainsKey(chart.Chart.Id) && _allMyTags[chart.Chart.Id].Contains(tag))
+        {
+            await RemoveTag(tag);
+            return;
+        }
+        if (!_allMyTags.ContainsKey(chart.Chart.Id))
+        {
+            _allMyTags[chart.Chart.Id] = new HashSet<Name>();
+        }
+        _newTag = tag;
+        await AddTag();
     }
     private async Task RemoveTag(string tag)
     {
@@ -333,6 +354,7 @@
             return;
         }
         _myTags.Remove(tag);
+        _allMyTags[_showingChart.Chart.Id].Remove(tag);
         await UcsRepository.DeleteChartTag(_showingChart.Chart.Id, CurrentUser.User.Id, tag, CancellationToken.None);
         _chartTags[_showingChart.Chart.Id] = _chartTags[_showingChart.Chart.Id].Select(c => c.Tag == tag ? c with { Count = c.Count - 1 } : c)
             .Where(c=>c.Count>0).OrderByDescending(c => c.Count).ToArray();
@@ -340,6 +362,7 @@
     }
     private async Task AddTag()
     {
+
         _isSaving = true;
         if (string.IsNullOrWhiteSpace(_newTag) || _showingChart == null) 
         {
@@ -352,6 +375,7 @@
             _existingTags.Add(tag);
         }
         _myTags.Add(tag);
+        _allMyTags[_showingChart.Chart.Id].Add(tag);
         var tagAggregates = _chartTags.TryGetValue(_showingChart.Chart.Id, out var ta) ? ta : Array.Empty<ChartTagAggregate>();
         tagAggregates = tagAggregates.Any(c => c.Tag == tag) ? tagAggregates.Select(c => c.Tag == tag ? c with { Count = c.Count + 1 } : c).OrderByDescending(c => c.Count).ToArray() : tagAggregates.Append(new ChartTagAggregate(_showingChart.Chart.Id, tag, 1)).OrderByDescending(c => c.Count).ToArray();
         _chartTags[_showingChart.Chart.Id] = tagAggregates;
@@ -513,6 +537,11 @@
 
         _chartTags = (await UcsRepository.GetChartTags(CancellationToken.None)).GroupBy(c => c.ChartId).ToDictionary(g => g.Key, g => g.OrderByDescending(c => c.Count).ToArray());
         _existingTags = _chartTags.SelectMany(c => c.Value.Select(t => t.Tag)).Distinct().ToHashSet();
+        if (CurrentUser.IsLoggedIn)
+        {
+            _allMyTags = (await UcsRepository.GetAllMyTags(CurrentUser.User.Id, CancellationToken.None)).GroupBy(c=>c.ChartId).ToDictionary(g=>g.Key,g=>(ISet<Name>)g.Select(t=>t.Tag).Distinct().ToHashSet());
+
+        }
     }
 
     private sealed record LeaderboardEntry(int Place, UcsLeaderboardEntry Entry);

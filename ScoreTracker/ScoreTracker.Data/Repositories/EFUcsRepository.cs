@@ -154,5 +154,13 @@ namespace ScoreTracker.Data.Repositories
             return (await database.UcsChartTag.Where(c => c.ChartId == chartId && c.UserId == userId)
                 .Select(e => e.Tag).ToArrayAsync(cancellationToken)).Select(Name.From).ToArray();
         }
+
+        public async Task<IEnumerable<UserChartTag>> GetAllMyTags(Guid userId, CancellationToken cancellationToken)
+        {
+            var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+
+            return (await database.UcsChartTag.Where(c => c.UserId == userId).ToArrayAsync(cancellationToken))
+                .Select(e => new UserChartTag(e.ChartId, e.UserId, e.Tag)).ToArray();
+        }
     }
 }
