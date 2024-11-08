@@ -20,6 +20,12 @@ public sealed class PiuGameApi : IPiuGameApi
     private static readonly Regex TypeRegex =
         new(@"^https\:\/\/piugame\.com\/l_img\/stepball\/full\/([a-zA-Z])_text\.png$", RegexOptions.Compiled);
 
+    private static readonly Regex ShortTypeRegex =
+        new(@"\/stepball\/full\/([a-zA-Z]+)_bg\.png", RegexOptions.Compiled);
+
+    private static readonly Regex ShortLevelRegex =
+        new(@"\/stepball\/full\/[a-zA-Z]+_num_([0-9])\.png", RegexOptions.Compiled);
+
     private static readonly Regex
         IdRegex = new(@"over_ranking_view\.php\?no=([a-zA-Z0-9]+)", RegexOptions.Compiled);
 
@@ -202,7 +208,7 @@ public sealed class PiuGameApi : IPiuGameApi
             new Dictionary<string, string>
             {
                 { "page", page.ToString() },
-                { "date", $"{today.Year}0{today.Month}" },
+                { "date", $"{today.Year}{today.Month}" },
                 { "mode", "full" }
             }, cancellationToken);
         var results = new List<PiuGameGetChartPopularityLeaderboardResult.Entry>();
@@ -441,6 +447,8 @@ public sealed class PiuGameApi : IPiuGameApi
                 "c" => ChartType.CoOp,
                 "s" => ChartType.Single,
                 "d" => ChartType.Double,
+                "sp" => ChartType.SinglePerformance,
+                "dp" => ChartType.DoublePerformance,
                 _ => null
             }
             : ChartType.SinglePerformance;
@@ -609,6 +617,67 @@ public sealed class PiuGameApi : IPiuGameApi
             AccountName = accountName,
             ImageUrl = new Uri(imagePath, UriKind.Absolute),
             TitleEntries = titles
+        };
+    }
+
+    public async Task<PiuGameGetUcsResult?> GetUcs(int ucsId, CancellationToken cancellationToken)
+    {
+        var response = await GetWithRetries($"https://ucs.piugame.com/bbs/board.php?bo_table=ucs_share&wr_id={ucsId}",
+            cancellationToken);
+
+        var document = new HtmlDocument();
+        document.LoadHtml(response);
+        var chartBox = document.DocumentNode.SelectSingleNode(".//div[contains(@class,'box1')]");
+        if (chartBox == null) return null;
+
+        var stepBall = chartBox.SelectSingleNode(".//div[contains(@class,'stepBall_in')]");
+        if (stepBall == null) return null;
+
+        var songName = chartBox
+            .SelectSingleNode(
+                ".//div[contains(@class,'con_in')]/div[contains(@class,'ti_wrap')]/p[contains(@class,'t1')]")
+            ?.InnerText.Trim();
+        if (songName == null) return null;
+
+
+        var typeMatch = ShortTypeRegex.Match(stepBall.GetAttributeValue("style", ""));
+        var chartType = typeMatch.Success
+            ? typeMatch.Groups[1].Value.ToLower() switch
+            {
+                "c" => ChartType.CoOp,
+                "s" => ChartType.Single,
+                "d" => ChartType.Double,
+                "sp" => ChartType.SinglePerformance,
+                "dp" => ChartType.DoublePerformance,
+                _ => ChartType.SinglePerformance
+            }
+            : ChartType.SinglePerformance;
+
+        var difficultyLevelUrls = chartBox
+            .SelectNodes(@".//div[contains(@class,'numw')]//img")
+            .Select(i => i.GetAttributeValue("src", "Unknown")).ToArray();
+        var level = 0;
+        foreach (var url in difficultyLevelUrls)
+        {
+            level *= 10;
+            var match = ShortLevelRegex.Match(url);
+            if (!match.Success || !int.TryParse(match.Groups[1].Value, out var parsedLevel)) continue;
+
+            level += parsedLevel;
+        }
+
+        var uploader = chartBox.SelectSingleNode(".//div[contains(@class,'stepPeople_in')]//i[contains(@class,'tt')]")
+            ?.InnerText.Replace(" ", "").Trim();
+        if (uploader == null) return null;
+
+        var description = chartBox.SelectSingleNode(".//div[contains(@class,'page_con')]")?.InnerText ?? "";
+        return new PiuGameGetUcsResult
+        {
+            ChartType = chartType,
+            Description = description,
+            Level = level,
+            SongName = songName,
+            Uploader = uploader
         };
     }
 }

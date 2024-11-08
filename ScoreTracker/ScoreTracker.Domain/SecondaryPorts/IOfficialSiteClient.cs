@@ -27,5 +27,6 @@ public interface IOfficialSiteClient
     Task<IEnumerable<ChartPopularityLeaderboardEntry>> GetOfficialChartLeaderboardEntries(
         CancellationToken cancellationToken);
 
+    Task<PiuGameUcsEntry?> GetUcs(int id, CancellationToken cancellationToken);
     Task FixAvatars();
 }

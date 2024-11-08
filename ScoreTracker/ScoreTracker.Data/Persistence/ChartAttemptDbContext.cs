@@ -74,6 +74,8 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<CoOpPlayerEntity> CoOpPlayers { get; set; }
     public DbSet<TournamentMachineEntity> TournamentMachine { get; set; }
     public DbSet<CountryEntity> Country { get; set; }
+    public DbSet<UcsChartEntity> UcsChart { get; set; }
+    public DbSet<UcsChartLeaderboardEntryEntity> UcsChartLeaderboardEntry { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

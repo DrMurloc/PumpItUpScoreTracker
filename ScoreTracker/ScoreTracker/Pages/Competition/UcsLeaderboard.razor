@@ -1,0 +1,426 @@
+﻿@page "/UcsLeaderboards"
+@using ScoreTracker.Domain.SecondaryPorts
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.ValueTypes
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ScoreTracker.Web.Components
+@using System.Text.RegularExpressions
+@using System.Web
+@using ScoreTracker.Application.Commands
+<PageTitle>UCS Leaderboards</PageTitle>
+
+<MudText Typo="Typo.h5">@L["UCS Leaderboard"]</MudText>
+<MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenAddDialog" StartIcon="@Icons.Material.Filled.Add">@L["Add UCS"]</MudButton>
+<br/>
+<MudTable T="UcsChart" Items="_charts">
+    <HeaderContent>
+        <MudTh>@L["Song"]</MudTh>
+        <MudTh>@L["Difficulty Level"]</MudTh>
+        <MudTh>@L["Song Artist"]</MudTh>
+        <MudTh>@L["Link"]</MudTh>
+        <MudTh>@L["Leaderboard"]</MudTh>
+        @if (CurrentUser.IsLoggedIn)
+        {
+            
+            <MudTh>@L["Submit"]</MudTh>
+        }
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            <SongImage Song="context.Chart.Song"></SongImage>
+        </MudTd>
+        <MudTd>
+            <DifficultyBubble Chart="context.Chart"></DifficultyBubble>
+        </MudTd>
+        <MudTd>
+            <MudTooltip Text=@(context.Artist == context.Uploader ? "" : "Uploaded by " + context.Uploader)>
+                @context.Artist
+            </MudTooltip>
+        </MudTd>
+        <MudTd>
+            <MudIconButton Target="Blank" Color="Color.Primary" Icon="@Icons.Material.Filled.Link" Href=@($"https://ucs.piugame.com/bbs/board.php?bo_table=ucs_share&wr_id={context.PiuGameId}")></MudIconButton>
+        </MudTd>
+        <MudTd>
+            @if (context.SubmissionCount > 0)
+            {
+                
+                <MudButton StartIcon="@Icons.Material.Filled.Visibility" Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>SelectChart(context)">@context.SubmissionCount</MudButton>                
+            }
+            else
+            {
+                <MudText>0</MudText>
+            }
+        </MudTd>
+        @if (CurrentUser.IsLoggedIn)
+        {
+            
+            <MudTd>
+                <MudIconButton Icon=@Icons.Material.Filled.Upload Color="Color.Primary" Variant="Variant.Filled" OnClick="()=>OpenSubmit(context)"></MudIconButton>
+            </MudTd>
+        }
+    </RowTemplate>
+</MudTable>
+<MudDialog @bind-Visible="_showSubmitDialog">
+    <DialogContent>
+        @if (_showingChart != null)
+        {
+            <MudGrid>
+                
+                <MudItem xs="12">
+                    <SongImage Song="_showingChart.Chart.Song"></SongImage>
+                    <DifficultyBubble Chart="_showingChart.Chart"></DifficultyBubble>
+                    <MudTooltip Text=@(_showingChart.Artist == _showingChart.Uploader ? "" : "Uploaded by " + _showingChart.Uploader)>
+                        @_showingChart.Artist
+                    </MudTooltip>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudNumericField T="int" Disabled="_isSaving" Min="0" Max="PhoenixScore.Max" Value="_score" ValueChanged="i=>_score=i" Label=@L["Score"] HideSpinButtons="true"></MudNumericField>
+                </MudItem>
+                <MudItem xs="12">
+                    
+                    <MudSelect T="PhoenixPlate" Disabled="_isSaving" Label=@L["Plate"] @bind-Value="_plate" >
+                        @foreach (var plate in Enum.GetValues<PhoenixPlate>())
+                        {
+                            <MudSelectItem T="PhoenixPlate" Value="@plate">@plate.GetName()</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudCheckBox Label=@L["Broken"] @bind-Value="_isBroken"></MudCheckBox>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" @bind-Value="_videoPath" Label="Youtube Video (optional)"></MudTextField>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudFileUpload T="IBrowserFile" Disabled="_isUploading" Accept=".png, .gif, .jpg, .jpeg," MaximumFileCount="1" FilesChanged="UploadFiles">
+                        <ActivatorContent>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.CloudUpload">
+                                @(L["Upload Image"] + " (optional)")
+                            </MudButton>
+                        </ActivatorContent>
+                    </MudFileUpload>
+                </MudItem>
+                <MudItem xs="6">
+                @if (_imagePath != null && !_isUploading)
+                {
+
+                    <MudCard>
+                        <MudCardMedia Height="100" Image="@_imagePath.ToString()" />
+                    </MudCard>
+
+                }
+                @if (_isUploading)
+                {
+                    <MudProgressCircular Indeterminate="true" Color="Color.Primary"></MudProgressCircular>
+                }
+                </MudItem>
+            </MudGrid>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Create" Disabled="_isSaving" OnClick="SaveEntry">@L["Confirm"]</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showSubmitDialog=false">@L["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+<MudDialog @bind-Visible="_showLeaderboardDialog">
+    <DialogContent>
+        @if (_showingChart != null)
+        {
+
+            <MudGrid>
+                <MudItem xs="12">
+                    <SongImage Song="_showingChart.Chart.Song"></SongImage>
+                    <DifficultyBubble Chart="_showingChart.Chart"></DifficultyBubble>
+                    <MudTooltip Text=@(_showingChart.Artist == _showingChart.Uploader ? "" : "Uploaded by " + _showingChart.Uploader)>
+                        @_showingChart.Artist
+                    </MudTooltip>
+                </MudItem>
+                @if (!string.IsNullOrWhiteSpace(_showingChart.Description))
+                {
+                    <MudItem xs="12">
+                        <MudText>@_showingChart.Description</MudText>
+                    </MudItem>
+                }
+                
+            </MudGrid>
+            <MudTable T="LeaderboardEntry" Items="_showingEntries">
+                <HeaderContent>
+                    <MudTh>@L["Place"]</MudTh>
+                    <MudTh>@L["Avatar"]</MudTh>
+                    <MudTh>@L["Name"]</MudTh>
+                    <MudTh>@L["Level"]</MudTh>
+                    <MudTh>@L["Score"]</MudTh>
+                    <MudTh>@L["Validation"]</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Place</MudTd>
+                    <MudTd>
+                        <MudImage Src="@_users[context.Entry.UserId].ProfileImage.ToString()" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                        
+                    </MudTd>
+                    <MudTd>
+                        <UserLabel User="_users[context.Entry.UserId]"></UserLabel>
+                    </MudTd>
+                    <MudTd>
+                        @if (_users[context.Entry.UserId].IsPublic && _levels.TryGetValue(context.Entry.UserId, out var s) && s>5.0)
+                        {
+                            <MudText>@s.ToString("N2")</MudText>
+                        }
+                    </MudTd>
+                    <MudTd>
+                        <ScoreBreakdown Score="context.Entry.Score" Plate="context.Entry.Plate" IsBroken="context.Entry.IsBroken" ShowScore="true"></ScoreBreakdown>
+                    </MudTd>
+                    <MudTd>
+                        @if (context.Entry.ImagePath != null)
+                        {
+                            <MudImage ObjectFit="ObjectFit.ScaleDown" Height="35" Src="@context.Entry.ImagePath.ToString()"></MudImage>
+                        }
+                        @if (context.Entry.VideoPath != null)
+                        {
+                            <MudTooltip Text="@context.Entry.VideoPath.ToString()">
+                                <MudIconButton Href=@context.Entry.VideoPath.ToString() Target="_blank" Icon="@Icons.Custom.Brands.YouTube"></MudIconButton>
+                            </MudTooltip>
+                        }
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showLeaderboardDialog=false">@L["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+<MudDialog @bind-Visible="_showAddDialog">
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12">
+                <MudText Typo="Typo.h6">@L["Add UCS"]</MudText>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Value="_ucsId" ValueChanged="SetUcsId" Label="UCS ID or URL"></MudTextField>
+            </MudItem>
+            @if (_piuGameEntry != null)
+            {
+                <MudItem xs="12">
+                    <SongImage Song="_piuGameEntry.Chart.Song"></SongImage>
+                    <DifficultyBubble Chart="_piuGameEntry.Chart"></DifficultyBubble>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label=@L["Uploader"] Value=@(_piuGameEntry.Chart.StepArtist??"Unknown") Disabled="true"></MudTextField>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+
+                    <MudTextField Label=@L["Step Artist"] @bind-Value="_artist" Disabled="_isSaving"></MudTextField>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudText>
+                        @_piuGameEntry.Description
+                    </MudText>
+                </MudItem>
+            }
+        </MudGrid>
+
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Create" Disabled="_isSaving" OnClick="CreateUcs">@L["Confirm"]</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showAddDialog=false">@L["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+@inject IUcsRepository UcsRepository
+@inject IOfficialSiteClient OfficialSite
+@inject ISnackbar Snackbar
+@inject IUserRepository Users
+@inject IPlayerStatsRepository PlayerStats;
+@inject ICurrentUserAccessor CurrentUser;
+@inject ILogger<UcsLeaderboard> Logger;
+@inject IFileUploadClient FileUpload;
+@inject IMediator Mediator;
+@code
+{
+    private bool _showAddDialog = false;
+    private string _ucsId = string.Empty;
+    private bool _showSubmitDialog = false;
+    private bool _isUploading = false;
+
+    private string _artist = string.Empty;
+    private bool _showLeaderboardDialog = false;
+    private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
+    private PiuGameUcsEntry? _piuGameEntry;
+    private UcsChart? _showingChart;
+    private PhoenixScore _score = 0;
+    private PhoenixPlate _plate = PhoenixPlate.MarvelousGame;
+    private bool _isBroken = false;
+    private Uri? _imagePath;
+    private string _videoPath;
+    private bool _isNew = false;
+    private static readonly Regex UcsIdRegex = new Regex(@"wr_id\=([0-9]+)",RegexOptions.Compiled);
+    private IDictionary<Guid, double> _levels = new Dictionary<Guid, double>();
+    private static readonly Regex _youtubeRegex = new Regex(@"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(?:-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|live\/|v\/)?)([\w\-]+)(\S+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    private async Task OpenSubmit(UcsChart chart)
+    {
+        _isSaving = true;
+        var entry = (await UcsRepository.GetChartLeaderboard(chart.Chart.Id, CancellationToken.None))
+            .FirstOrDefault(e => e.UserId == CurrentUser.User.Id);
+        if (entry != null)
+        {
+            _imagePath = entry.ImagePath;
+            _videoPath = entry.VideoPath?.ToString() ?? "";
+            _isBroken = entry.IsBroken;
+            _score = entry.Score;
+            _plate = entry.Plate;
+            _isNew = false;
+        }
+        else
+        {
+            _isNew = true;
+            _score = 0;
+            _plate = PhoenixPlate.MarvelousGame;
+            _videoPath = "";
+            _imagePath = null;
+            _isBroken = false;
+        }
+        _showingChart = chart;
+        _showSubmitDialog = true;
+        _isSaving = false;
+    }
+        private const long MaxFileSize = 20000000;
+    private async Task UploadFiles(IBrowserFile? file)
+    {
+        if (file==null || _showingChart == null)
+        {
+            return;
+        }
+        if (file.Size > MaxFileSize)
+        {
+            Snackbar.Add($"Your file was more than 20MB, please reduce your file size and try again.", Severity.Error);
+            return;
+        }
+
+        _isUploading = true;
+        try
+        {
+            var path = $"ucs/{_showingChart.PiuGameId}/{CurrentUser.User.Id}.{file.Name.Split('.')[^1]}";
+            _imagePath= await FileUpload.UploadFile(path, file.OpenReadStream(MaxFileSize));
+
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add($"There was an error while uploading your image, please try again. If the problem persists contact DrMurloc", Severity.Error);
+            Logger.LogError(e, $"There was an error while uploading a photo: {e.Message} - {file.Name} {file.Size}");
+        }
+        _isUploading = false;
+
+    }
+    private async Task SaveEntry()
+    {
+        if (_showingChart == null)
+        {
+            return;
+        }
+        if (!string.IsNullOrWhiteSpace(_videoPath) && !_youtubeRegex.IsMatch(_videoPath))
+        {
+            Snackbar.Add("Only youtube videos are supported as a video path", Severity.Error);
+            return;
+        }
+        
+        _isSaving = true;
+        await Mediator.Send(new RegisterUcsEntryCommand(_showingChart.Chart.Id, _score, _plate, _isBroken,
+            string.IsNullOrWhiteSpace(_videoPath) ? null : new Uri(_videoPath, UriKind.Absolute), _imagePath));
+        if (_isNew)
+        {
+            _charts = _charts.Select(c => c.Chart.Id == _showingChart.Chart.Id ? c with {SubmissionCount = +1} : c).OrderByDescending(c => c.SubmissionCount).ToArray();
+        }
+        _isSaving = false;
+        _showSubmitDialog = false;
+        await SelectChart(_showingChart);
+    }
+    private void OpenAddDialog()
+    {
+        _ucsId = string.Empty;
+        _piuGameEntry = null;
+        _showAddDialog = true;
+    }
+
+    private async Task SelectChart(UcsChart chart)
+    {
+        _isSaving = true;
+        var chartId = chart.Chart.Id;
+        _showingEntries = (await UcsRepository.GetChartLeaderboard(chartId, CancellationToken.None)).OrderByDescending(s => s.Score).Select((s, i) => new LeaderboardEntry(i + 1, s))
+            .ToArray();
+        _users = (await Users.GetUsers(_showingEntries.Select(e => e.Entry.UserId))).ToDictionary(u => u.Id);
+        _levels = (await PlayerStats.GetStats(_showingEntries.Select(e => e.Entry.UserId), CancellationToken.None)).ToDictionary(p => p.UserId,
+            p => chart.Chart.Type == ChartType.Single || chart.Chart.Type==ChartType.SinglePerformance ? p.SinglesCompetitiveLevel : p.DoublesCompetitiveLevel);
+        _showingChart = chart;
+        _showLeaderboardDialog = true;
+        _isSaving = false;
+    }
+    private bool _isSaving = false;
+    private async Task CreateUcs()
+    {
+        if (_piuGameEntry == null)
+        {
+            return;
+        }
+        _isSaving = true;
+        var chart = new UcsChart(_piuGameEntry.Id, _piuGameEntry.Chart, _piuGameEntry.Chart.StepArtist ?? "Unknown", _artist, _piuGameEntry.Description, 0);
+        await UcsRepository.CreateUcsChart(chart, CancellationToken.None);
+
+        Snackbar.Add("UCS Added!", Severity.Success);
+        _charts = _charts.Append(chart).ToArray();
+        _showAddDialog = false;
+
+        _isSaving = false;
+    }
+    public async Task SetUcsId(string ucsId)
+    {
+        _piuGameEntry = null;
+        _ucsId = ucsId;
+        if (!int.TryParse(ucsId, out var id))
+        {
+            var match = UcsIdRegex.Match(ucsId);
+            if (!match.Success || !int.TryParse(match.Groups[1].Value, out id))
+            {
+                Snackbar.Add("Could not parse UCS Id", Severity.Error);
+                return;
+            }
+        }
+        _ucsId = id.ToString();
+        if (_charts.Any(c => c.PiuGameId == id))
+        {
+            Snackbar.Add("This UCS has already been added", Severity.Error);
+            return;
+        }
+        _piuGameEntry = await OfficialSite.GetUcs(id, CancellationToken.None);
+        if (_piuGameEntry == null)
+        {
+            Snackbar.Add("Could not find a UCS with id " + id.ToString(),Severity.Error);
+        }
+        else
+        {
+            _artist = _piuGameEntry.Chart.StepArtist??"Unknown";
+        }
+
+    }
+    private IEnumerable<UcsChart> _charts = Array.Empty<UcsChart>();
+
+    private IEnumerable<LeaderboardEntry> _showingEntries = Array.Empty<LeaderboardEntry>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _charts = (await UcsRepository.GetUcsCharts(CancellationToken.None)).OrderByDescending(u => u.SubmissionCount).ToArray();
+    }
+
+    private sealed record LeaderboardEntry(int Place, UcsLeaderboardEntry Entry);
+}

@@ -210,13 +210,16 @@ Do It
      //   await Bus.Publish(new CalculateScoringDifficultyEvent());
     
     //await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);
-
-        await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
+    
+       //await Mediator.Send(new UpdateSongImagesCommand(false));
+       
+        //await Mediator.Send(new ProcessChartPopularityCommand());
+      /*  await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
     await Mediator.Send(new ProcessChartPopularityCommand());
     await WorldRanking.CalculateWorldRankings(CancellationToken.None);
+        */
+
         await Bus.Publish(new ProcessPassTierListCommand());
-        
-        
         /*var songImages = (await Database.Song.Select(s => s.ImagePath).ToArrayAsync()).ToHashSet();
          * 
         var images = await Files.GetFiles("songs/");
@@ -225,8 +228,6 @@ Do It
         {
             await Files.DeleteFile(image.PathAndQuery);
         }*/
-
-    //await Mediator.Send(new UpdateSongImagesCommand(false));
 
     /*var userIds = await Database.User.Select(u => u.Id).ToArrayAsync();
         foreach (var userId in userIds)

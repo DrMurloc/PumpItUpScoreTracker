@@ -95,6 +95,8 @@
             <MudNavGroup Title=@L["Competition"] Icon="@Icons.Material.Filled.Leaderboard" Expanded="false">
                 <MudNavLink Href="/WeeklyCharts" Icon="@Icons.Material.Filled.ViewWeek">@L["Weekly Charts"]</MudNavLink>
                 <MudDivider DividerType="DividerType.Middle"></MudDivider>
+                <MudNavLink Href="/UcsLeaderboards" Icon="@Icons.Material.Filled.EditNote">@L["UCS Leaderboards"]</MudNavLink>
+                <MudDivider DividerType="DividerType.Middle"></MudDivider>
                 <MudNavLink Href="/Tournaments" Icon="@Icons.Material.Filled.Leaderboard">@L["Tournaments"]</MudNavLink>
                 @foreach (var tourney in _highlightedEvents)
                 {

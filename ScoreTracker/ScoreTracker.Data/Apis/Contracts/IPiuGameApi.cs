@@ -22,5 +22,7 @@ namespace ScoreTracker.Data.Apis.Contracts
 
         Task<PiuGameGetAccountDataResult> GetAccountData(HttpClient client,
             CancellationToken cancellationToken);
+
+        Task<PiuGameGetUcsResult?> GetUcs(int ucsId, CancellationToken cancellationToken);
     }
 }

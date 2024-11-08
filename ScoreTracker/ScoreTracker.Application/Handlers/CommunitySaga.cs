@@ -28,7 +28,8 @@ public sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, IRe
     IConsumer<PlayerScoreUpdatedEvent>,
     IConsumer<NewTitlesAcquiredEvent>,
     IConsumer<UserWeeklyChartsProgressedEvent>,
-    IConsumer<UserUpdatedEvent>
+    IConsumer<UserUpdatedEvent>,
+    IConsumer<UcsLeaderboardPlacedEvent>
 
 {
     private readonly IBotClient _bot;
@@ -38,9 +39,11 @@ public sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, IRe
     private readonly IMediator _mediator;
     private readonly IPhoenixRecordRepository _scores;
     private readonly IUserRepository _users;
+    private readonly IUcsRepository _ucs;
 
     public CommunitySaga(ICurrentUserAccessor currentUser, ICommunityRepository communities, IBotClient bot,
-        IUserRepository users, IChartRepository charts, IPhoenixRecordRepository scores, IMediator mediator)
+        IUserRepository users, IChartRepository charts, IPhoenixRecordRepository scores, IMediator mediator,
+        IUcsRepository ucs)
     {
         _currentUser = currentUser;
         _communities = communities;
@@ -49,6 +52,7 @@ public sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, IRe
         _charts = charts;
         _scores = scores;
         _mediator = mediator;
+        _ucs = ucs;
     }
 
     public async Task Consume(ConsumeContext<NewTitlesAcquiredEvent> context)
@@ -455,5 +459,19 @@ And {count - 10} others!";
         channelIds = channelIds.Distinct().ToList();
         foreach (var message in messages)
             await _bot.SendMessages(new[] { message }, channelIds, cancellationToken);
+    }
+
+    public async Task Consume(ConsumeContext<UcsLeaderboardPlacedEvent> context)
+    {
+        var user = await _users.GetUser(context.Message.UserId);
+        if (user == null) return;
+        var entry = (await _ucs.GetChartLeaderboard(context.Message.ChartId, context.CancellationToken)).Single(e =>
+            e.UserId == context.Message.UserId);
+
+        var chart = (await _ucs.GetUcsCharts(context.CancellationToken)).Single(u =>
+            u.Chart.Id == context.Message.ChartId);
+        var message =
+            $"{user.Name} scored {entry.Score} #LETTERGRADE|{PhoenixScore.From(entry.Score).LetterGrade}|{entry.IsBroken}# on {chart.Artist}'s {chart.Chart.Song.Name} #DIFFICULTY|{chart.Chart.DifficultyString}# UCS";
+        await SendToCommunityDiscords(context.Message.UserId, message, context.CancellationToken);
     }
 }

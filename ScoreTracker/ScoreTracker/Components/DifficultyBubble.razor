@@ -3,6 +3,7 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
 @namespace ScoreTracker.Web.Components
 @if (Chart != null)
 {                                
@@ -29,7 +30,7 @@
     [Parameter]
     public int? Height { get; set; }
 
-    public string DifficultyBubblePath => Chart?.Mix == MixEnum.XX ?
+    public string DifficultyBubblePath => Chart?.Type==ChartType.DoublePerformance || Chart?.Type==ChartType.SinglePerformance|| Chart?.Mix == MixEnum.XX ?
         $"https://piuimages.arroweclip.se/difficulty/{Chart.DifficultyString.ToLower()}.png" : $"https://piuimages.arroweclip.se/difficulty/{Chart?.Mix}/{Chart?.DifficultyString.ToLower()}.png";
 
 }

@@ -357,6 +357,21 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         return result;
     }
 
+    public async Task<PiuGameUcsEntry?> GetUcs(int id, CancellationToken cancellationToken)
+    {
+        var entry = await _piuGame.GetUcs(id, cancellationToken);
+        if (entry == null) return null;
+
+        var songName = await GetMappedName(entry.SongName, cancellationToken);
+        var song = (await _charts.GetChartsForSong(MixEnum.Phoenix, songName, cancellationToken))
+            .FirstOrDefault()?.Song;
+        if (song == null) return null;
+
+        return new PiuGameUcsEntry(id,
+            new Chart(new Guid(), song, entry.ChartType, entry.Level, MixEnum.Phoenix, entry.Uploader, entry.Level,
+                null, new HashSet<Skill>()), entry.Description);
+    }
+
     public async Task FixAvatars()
     {
         var avatars = await _leaderboards.GetUserAvatars(CancellationToken.None);
