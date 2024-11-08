@@ -407,10 +407,10 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
             await _chartRepository.GetCharts(MixEnum.Phoenix, level, chartType, cancellationToken: cancellationToken);
         var userWeights = new Dictionary<int, IEnumerable<Guid>>
         {
-            { 7, await _tierLists.GetUsersOnLevel(level - 3, cancellationToken) },
-            { 6, await _tierLists.GetUsersOnLevel(level - 2, cancellationToken) },
-            { 5, await _tierLists.GetUsersOnLevel(level - 1, cancellationToken) },
-            { 4, await _tierLists.GetUsersOnLevel(level, cancellationToken) }
+            { 7, await _tierLists.GetUsersOnLevel(level - 3, cancellationToken, true) },
+            { 6, await _tierLists.GetUsersOnLevel(level - 2, cancellationToken, true) },
+            { 5, await _tierLists.GetUsersOnLevel(level - 1, cancellationToken, true) },
+            { 4, await _tierLists.GetUsersOnLevel(level, cancellationToken, true) }
         };
         if (level < 26) userWeights[3] = await _tierLists.GetUsersOnLevel(level + 3, cancellationToken);
         if (level < 27) userWeights[2] = await _tierLists.GetUsersOnLevel(level + 2, cancellationToken);

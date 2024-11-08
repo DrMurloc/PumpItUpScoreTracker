@@ -54,11 +54,21 @@ namespace ScoreTracker.Data.Repositories
             _cache.Remove(TierListKey(entry.TierListName));
         }
 
-        public async Task<IEnumerable<Guid>> GetUsersOnLevel(DifficultyLevel level, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Guid>> GetUsersOnLevel(DifficultyLevel level, CancellationToken cancellationToken,
+            bool requireActive = false)
         {
             var database = await _factory.CreateDbContextAsync(cancellationToken);
-            return await database.UserHighestTitle.Where(e => e.Level == (int)level).Select(e => e.UserId)
-                .ToArrayAsync(cancellationToken);
+            var levelInt = (int)level;
+            if (!requireActive)
+                return await database.UserHighestTitle.Where(e => e.Level == levelInt).Select(e => e.UserId)
+                    .ToArrayAsync(cancellationToken);
+
+            var cutoff = DateTimeOffset.Now - TimeSpan.FromDays(120);
+            return await (from uht in database.UserHighestTitle
+                join pba in database.PhoenixBestAttempt on uht.UserId equals pba.UserId
+                where uht.Level == levelInt
+                      && pba.RecordedDate >= cutoff
+                select uht.UserId).Distinct().ToArrayAsync(cancellationToken);
         }
 
         public async Task<IEnumerable<SongTierListEntry>> GetAllEntries(Name tierListName,
