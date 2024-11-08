@@ -209,7 +209,8 @@ namespace ScoreTracker.Domain.Models
         {
             var config = new ScoringConfiguration
             {
-                AdjustToTime = false
+                AdjustToTime = false,
+                StageBreakModifier = 0.0
             };
             config.ChartTypeModifiers[ChartType.CoOp] = includeCoOp ? 1 : 0;
             return config;
