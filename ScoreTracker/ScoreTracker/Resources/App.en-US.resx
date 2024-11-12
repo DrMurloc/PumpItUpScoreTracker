@@ -158,14 +158,6 @@
   <data name="Average" xml:space="preserve">
     <value>Average</value>
   </data>
-  <data name="Average for CoOp Chart" xml:space="preserve">
-    <value>Average For Chart: {0} ({1} votes)</value>
-    <comment>Talking about CoOp rating: I.E Average for Chart: 14 (2 votes)</comment>
-  </data>
-  <data name="Average for CoOp Player" xml:space="preserve">
-    <value>Average For Player {0}: {1} ({2} votes)</value>
-    <comment>Talking about CoOps, I.E Average for Player 3: 14 (2 votes)</comment>
-  </data>
   <data name="Average Rating" xml:space="preserve">
     <value>Average Rating</value>
   </data>
@@ -711,5 +703,165 @@
   <data name="Open" xml:space="preserve">
 	  <value>Open</value>
 	  <comment>Open</comment>
+  </data>
+  <data name="Country" xml:space="preserve">
+	  <value>Country</value>
+	  <comment>Country</comment>
+  </data>
+  <data name="Avatar" xml:space="preserve">
+	  <value>Avatar</value>
+	  <comment>Avatar</comment>
+  </data>
+  <data name="Name" xml:space="preserve">
+	  <value>Name</value>
+	  <comment>Name</comment>
+  </data>
+  <data name="Level" xml:space="preserve">
+	  <value>Level</value>
+	  <comment>Level</comment>
+  </data>
+  <data name="Validation" xml:space="preserve">
+	  <value>Validation</value>
+	  <comment>Validation</comment>
+  </data>
+  <data name="Add UCS" xml:space="preserve">
+	  <value>Add UCS</value>
+	  <comment>Add UCS</comment>
+  </data>
+  <data name="Uploader" xml:space="preserve">
+	  <value>Uploader</value>
+	  <comment>Uploader</comment>
+  </data>
+  <data name="Step Artist" xml:space="preserve">
+	  <value>Step Artist</value>
+	  <comment>Step Artist</comment>
+  </data>
+  <data name="Tag" xml:space="preserve">
+	  <value>Tag</value>
+	  <comment>Tag</comment>
+  </data>
+  <data name="Add" xml:space="preserve">
+	  <value>Add</value>
+	  <comment>Add</comment>
+  </data>
+  <data name="Tags" xml:space="preserve">
+	  <value>Tags</value>
+	  <comment>Tags</comment>
+  </data>
+  <data name="Link" xml:space="preserve">
+	  <value>Link</value>
+	  <comment>Link</comment>
+  </data>
+  <data name="UCS Leaderboard" xml:space="preserve">
+	  <value>UCS Leaderboard</value>
+	  <comment>UCS Leaderboard</comment>
+  </data>
+  <data name="Stage Pass" xml:space="preserve">
+	  <value>Stage Pass</value>
+	  <comment>Stage Pass</comment>
+  </data>
+  <data name="BPM" xml:space="preserve">
+	  <value>BPM</value>
+	  <comment>BPM</comment>
+  </data>
+  <data name="Note Count" xml:space="preserve">
+	  <value>Note Count</value>
+	  <comment>Note Count</comment>
+  </data>
+  <data name="Pass (Data Backed)" xml:space="preserve">
+	  <value>Pass (Data Backed)</value>
+	  <comment>Pass (Data Backed)</comment>
+  </data>
+  <data name="Score (Data Backed)" xml:space="preserve">
+	  <value>Score (Data Backed)</value>
+	  <comment>Score (Data Backed)</comment>
+  </data>
+  <data name="Popularity (PIIU Game Leaderboard)" xml:space="preserve">
+	  <value>Popularity (PIIU Game Leaderboard)</value>
+	  <comment>Popularity (PIIU Game Leaderboard)</comment>
+  </data>
+  <data name="Player Count" xml:space="preserve">
+	  <value>Player Count</value>
+	  <comment>Player Count</comment>
+  </data>
+  <data name="Difficulty Categorization" xml:space="preserve">
+	  <value>Difficulty Categorization</value>
+	  <comment>Difficulty Categorization</comment>
+  </data>
+  <data name="Scoring Level" xml:space="preserve">
+	  <value>Scoring Level</value>
+	  <comment>Scoring Level</comment>
+  </data>
+  <data name="Skill" xml:space="preserve">
+	  <value>Skill</value>
+	  <comment>Skill</comment>
+  </data>
+  <data name="Age" xml:space="preserve">
+	  <value>Age</value>
+	  <comment>Age</comment>
+  </data>
+  <data name="Score Ranking" xml:space="preserve">
+	  <value>Score Ranking</value>
+	  <comment>Score Ranking</comment>
+  </data>
+  <data name="Settings" xml:space="preserve">
+	  <value>Settings</value>
+	  <comment>Settings</comment>
+  </data>
+  <data name="Show Skills" xml:space="preserve">
+	  <value>Show Skills</value>
+	  <comment>Show Skills</comment>
+  </data>
+  <data name="Show Difficulty" xml:space="preserve">
+	  <value>Show Difficulty</value>
+	  <comment>Show Difficulty</comment>
+  </data>
+  <data name="Show Song Name" xml:space="preserve">
+	  <value>Show Song Name</value>
+	  <comment>Show Song Name</comment>
+  </data>
+  <data name="Show Step Artist" xml:space="preserve">
+	  <value>Show Step Artist</value>
+	  <comment>Show Step Artist</comment>
+  </data>
+  <data name="Personalized Difficulty" xml:space="preserve">
+	  <value>Personalized Difficulty</value>
+	  <comment>Personalized Difficulty</comment>
+  </data>
+  <data name="Show Age" xml:space="preserve">
+	  <value>Show Age</value>
+	  <comment>Show Age</comment>
+  </data>
+  <data name="Add Filters" xml:space="preserve">
+	  <value>Add Filters</value>
+	  <comment>Add Filters</comment>
+  </data>
+  <data name="Filters" xml:space="preserve">
+	  <value>Filters</value>
+	  <comment>Filters</comment>
+  </data>
+  <data name="Min BPM" xml:space="preserve">
+	  <value>Min BPM</value>
+	  <comment>Min BPM</comment>
+  </data>
+  <data name="Max BPM" xml:space="preserve">
+	  <value>Max BPM</value>
+	  <comment>Max BPM</comment>
+  </data>
+  <data name="Min Note Count" xml:space="preserve">
+	  <value>Min Note Count</value>
+	  <comment>Min Note Count</comment>
+  </data>
+  <data name="Max Note Count" xml:space="preserve">
+	  <value>Max Note Count</value>
+	  <comment>Max Note Count</comment>
+  </data>
+  <data name="Min Letter Grade" xml:space="preserve">
+	  <value>Min Letter Grade</value>
+	  <comment>Min Letter Grade</comment>
+  </data>
+  <data name="Max Letter Grade" xml:space="preserve">
+	  <value>Max Letter Grade</value>
+	  <comment>Max Letter Grade</comment>
   </data>
 </root>

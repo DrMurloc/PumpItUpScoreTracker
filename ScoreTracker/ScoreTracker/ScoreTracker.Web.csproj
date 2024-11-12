@@ -46,4 +46,10 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\App.fr-FR.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>

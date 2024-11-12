@@ -1,0 +1,689 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="1+ Level Easier" xml:space="preserve">
+    <value>1+ Niveau Plus Facile</value>
+  </data>
+  <data name="1+ Level Harder" xml:space="preserve">
+    <value>1+ Niveau Plus Difficile</value>
+  </data>
+  <data name="About" xml:space="preserve">
+    <value>À propos</value>
+  </data>
+  <data name="Account" xml:space="preserve">
+    <value>Compte</value>
+  </data>
+  <data name="Account Creation Line 1" xml:space="preserve">
+    <value>Si vous n'avez pas de compte avec Score Tracker, un compte sera créé lorsque vous sélectionnez une des méthodes d'authentification.</value>
+  </data>
+  <data name="Account Creation?" xml:space="preserve">
+    <value>Création de compte?</value>
+    <comment>Button that pops up explination of account creation process</comment>
+  </data>
+  <data name="Add to Favorites" xml:space="preserve">
+    <value>Ajouter aux favoris</value>
+  </data>
+  <data name="Adjusted Difficulty" xml:space="preserve">
+    <value></value>
+    <comment>I.E After Player votes</comment>
+  </data>
+  <data name="Chart Type" xml:space="preserve">
+    <value></value>
+    <comment>Chart Types = single, double, co op</comment>
+  </data>
+  <data name="Different Player Difficulties" xml:space="preserve">
+    <value></value>
+    <comment>Specifies if a co op chart has different difficulties per player</comment>
+  </data>
+  <data name="Log In With" xml:space="preserve">
+    <value>Connexion avec {0}</value>
+    <comment>I.E Log In With Discord</comment>
+  </data>
+  <data name="My Difficulty Adjustments" xml:space="preserve">
+    <value></value>
+    <comment>I.E chart difficulty vote</comment>
+  </data>
+  <data name="Phoenix Import Saving Progress" xml:space="preserve">
+    <value></value>
+    <comment>I.E 4/192 Uploaded. 3:29 Remaining. 2 Failed to record</comment>
+  </data>
+  <data name="Plate" xml:space="preserve">
+    <value>Plaque</value>
+    <comment>I.E MG, PG, UG</comment>
+  </data>
+  <data name="Public" xml:space="preserve">
+    <value>Publique</value>
+    <comment>(on/off, if account is set to public)</comment>
+  </data>
+  <data name="Recorded On" xml:space="preserve">
+    <value></value>
+    <comment>I.E Recorded on 12/6/2023 (I don't support date localization yet but will eventually)</comment>
+  </data>
+  <data name="Remaining Charts" xml:space="preserve">
+    <value></value>
+    <comment>I.E 6 (SSA+) - 10 (AA) Charts Remaining</comment>
+  </data>
+  <data name="Remaining Charts For You" xml:space="preserve">
+    <value></value>
+    <comment>I.E 8 Charts Estimated for You</comment>
+  </data>
+  <data name="Score Loss" xml:space="preserve">
+    <value></value>
+    <comment>I.E: Goods Score Loss</comment>
+  </data>
+  <data name="Score State" xml:space="preserve">
+    <value></value>
+    <comment>Score States = Passed, Unpassed, Unscored</comment>
+  </data>
+  <data name="Song Type" xml:space="preserve">
+    <value>Type de chanson</value>
+    <comment>Song Types = Arcade, Full Song, etc.</comment>
+  </data>
+  <data name="Standard Deviation" xml:space="preserve">
+    <value></value>
+    <comment>I.E of chart votes</comment>
+  </data>
+  <data name="Unpassed ToDos" xml:space="preserve">
+    <value></value>
+    <comment>I.E You have 19 level 24 charts marked To Do you haven't passed</comment>
+  </data>
+  <data name="9+ PIU Cabinets Running Phoenix." xml:space="preserve">
+    <value></value>
+    <comment>9+ PIU Cabinets Running Phoenix.</comment>
+  </data>
+  <data name="101 person tournament." xml:space="preserve">
+    <value></value>
+    <comment>101 person tournament.</comment>
+  </data>
+  <data name="99 matches tailored to each player's level." xml:space="preserve">
+    <value></value>
+    <comment>99 matches tailored to each player's level.</comment>
+  </data>
+  <data name="CoOp and No Bar Old School Tournaments." xml:space="preserve">
+    <value></value>
+    <comment>CoOp and No Bar Old School Tournaments.</comment>
+  </data>
+  <data name="8-10 estimated charts played per player." xml:space="preserve">
+    <value></value>
+    <comment>8-10 estimated charts played per player.</comment>
+  </data>
+  <data name="The most Pump it Up that has ever been at one event." xml:space="preserve">
+    <value></value>
+    <comment>The most Pump it Up that has ever been at one event.</comment>
+  </data>
+  <data name="Why don't you just get up and dance, man?" xml:space="preserve">
+    <value></value>
+    <comment>Why don't you just get up and dance, man?</comment>
+  </data>
+  <data name="Open" xml:space="preserve">
+    <value></value>
+    <comment>Open</comment>
+  </data>
+  <data name="Average Rating" xml:space="preserve">
+    <value>Cote moyenne</value>
+  </data>
+  <data name="Broken" xml:space="preserve">
+    <value>Cassé</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Annuler</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Fermer</value>
+  </data>
+  <data name="Communities" xml:space="preserve">
+    <value>Communautés</value>
+  </data>
+  <data name="Completed" xml:space="preserve">
+    <value>Copier le script</value>
+  </data>
+  <data name="CoOp" xml:space="preserve">
+    <value>Copier dans le presse-papiers</value>
+  </data>
+  <data name="Difficulty Level" xml:space="preserve">
+    <value>Niveau de difficulté</value>
+  </data>
+  <data name="Doubles" xml:space="preserve">
+    <value>Doubles</value>
+  </data>
+  <data name="Download Scores" xml:space="preserve">
+    <value>Télécharger les scores</value>
+  </data>
+  <data name="Easy" xml:space="preserve">
+    <value>Facile</value>
+  </data>
+  <data name="Ending Page" xml:space="preserve">
+    <value>Page de fin</value>
+  </data>
+  <data name="Favorites" xml:space="preserve">
+    <value>Favoris</value>
+  </data>
+  <data name="Find Players" xml:space="preserve">
+    <value>Trouver des joueurs</value>
+  </data>
+  <data name="Hard" xml:space="preserve">
+    <value>Difficile</value>
+  </data>
+  <data name="Import Phoenix Scores" xml:space="preserve">
+    <value>Importer Scores Phoenix</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Langue</value>
+  </data>
+  <data name="Last Updated" xml:space="preserve">
+    <value>Dernière mise à jour</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Connexion</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>Déconnexion</value>
+  </data>
+  <data name="Make Private" xml:space="preserve">
+    <value>Rendre privé</value>
+  </data>
+  <data name="Make Public" xml:space="preserve">
+    <value>Rendre public</value>
+  </data>
+  <data name="Medium" xml:space="preserve">
+    <value>Moyen</value>
+  </data>
+  <data name="My Score" xml:space="preserve">
+    <value>Mon Score</value>
+  </data>
+  <data name="New Discord" xml:space="preserve">
+    <value>Nouveau Discord</value>
+  </data>
+  <data name="Next Letter" xml:space="preserve">
+    <value>Prochaine lettre</value>
+  </data>
+  <data name="Official Leaderboard Search" xml:space="preserve">
+    <value>Recherche sur le classement officiel</value>
+  </data>
+  <data name="Official Scores" xml:space="preserve">
+    <value>Scores Officiels</value>
+  </data>
+  <data name="Open Video" xml:space="preserve">
+    <value>Ouvrir Vidéo</value>
+  </data>
+  <data name="Phoenix Import Info 1" xml:space="preserve">
+    <value>Utilisez le bouton Copier le script ci-dessous</value>
+  </data>
+  <data name="Phoenix Score Calculator" xml:space="preserve">
+    <value>Calculateur de score Phoenix</value>
+  </data>
+  <data name="Players" xml:space="preserve">
+    <value>Joueurs</value>
+  </data>
+  <data name="Popularity" xml:space="preserve">
+    <value>Popularité</value>
+  </data>
+  <data name="Preference" xml:space="preserve">
+    <value>Préférence</value>
+  </data>
+  <data name="Progress" xml:space="preserve">
+    <value>Progression</value>
+  </data>
+  <data name="Progress Charts" xml:space="preserve">
+    <value>Statistiques Joueur</value>
+  </data>
+  <data name="Remove from Favorites" xml:space="preserve">
+    <value>Enlever des favoris</value>
+  </data>
+  <data name="Report Video" xml:space="preserve">
+    <value>Signaler vidéo</value>
+  </data>
+  <data name="Report Video Tooltip" xml:space="preserve">
+    <value>Signaler lien endommagé, ou vidéo incorrecte</value>
+  </data>
+  <data name="Search Youtube" xml:space="preserve">
+    <value>Chercher sur Youtube</value>
+  </data>
+  <data name="Song Duration" xml:space="preserve">
+    <value>Durée de la chanson</value>
+  </data>
+  <data name="Song Image" xml:space="preserve">
+    <value>Image de la chanson</value>
+  </data>
+  <data name="Song Name" xml:space="preserve">
+    <value>Nom de la chanson</value>
+  </data>
+  <data name="Star Rating" xml:space="preserve">
+    <value>{0} - {1} Étoiles</value>
+  </data>
+  <data name="Starting Page" xml:space="preserve">
+    <value>Page de début</value>
+  </data>
+  <data name="Title Progress" xml:space="preserve">
+    <value>Progression des titres</value>
+  </data>
+  <data name="Titles" xml:space="preserve">
+    <value>Titres</value>
+  </data>
+  <data name="To Do" xml:space="preserve">
+    <value>À Faire</value>
+  </data>
+  <data name="Toggle ToDo" xml:space="preserve">
+    <value>Basculer À Faire</value>
+  </data>
+  <data name="Total Count" xml:space="preserve">
+    <value>Outils</value>
+  </data>
+  <data name="Tournament Builder" xml:space="preserve">
+    <value>Créateur de Tournoi</value>
+  </data>
+  <data name="Tournaments" xml:space="preserve">
+    <value>Tournois</value>
+  </data>
+  <data name="Update Grade" xml:space="preserve">
+    <value>Mettre à jour le Grade</value>
+  </data>
+  <data name="Upload Scores" xml:space="preserve">
+    <value>Télécharger scores</value>
+  </data>
+  <data name="Upload XX Scores" xml:space="preserve">
+    <value>Télécharger scores XX</value>
+  </data>
+  <data name="Use Password 1" xml:space="preserve">
+    <value>Ceci permet à PIUScores de se connecter à votre compte et d'importer les scores pour vous.</value>
+  </data>
+  <data name="Use Password 2" xml:space="preserve">
+    <value>Je ne garde aucune trace de votre nom d'utilisateur ou mot de passe, vous devrez les entrer a chaque fois que vous utilisez ceci.</value>
+  </data>
+  <data name="Use Password 3" xml:space="preserve">
+    <value>Pour limiter les requètes vers https://piugame.com, je n'importe que les scores nouveaux ou améliorés. Chaque utilisateur a un import entier avec son nom d'utilisateur et mot de passe. Utilisez l'importateur outils developpeur si vous souhaitez réimporter des scores plus anciens.</value>
+  </data>
+  <data name="Use Password 4" xml:space="preserve">
+    <value>Une fois démarré, ne pas quitter cette page pour ne pas interrompre la sauvegarde des scores.</value>
+  </data>
+  <data name="Used Primarily for debugging" xml:space="preserve">
+    <value>Utilisé principalement pour déboguer</value>
+  </data>
+  <data name="Username" xml:space="preserve">
+    <value>Nom d'utilisateur</value>
+  </data>
+  <data name="Very Easy" xml:space="preserve">
+    <value>Très Facile</value>
+  </data>
+  <data name="Very Hard" xml:space="preserve">
+    <value>Très Difficile</value>
+  </data>
+  <data name="Video" xml:space="preserve">
+    <value>Vidéo</value>
+  </data>
+  <data name="Vote Count" xml:space="preserve">
+    <value>{0} votes</value>
+  </data>
+  <data name="Photos" xml:space="preserve">
+    <value>Photos</value>
+  </data>
+  <data name="Pending" xml:space="preserve">
+    <value>En attente</value>
+  </data>
+  <data name="Event Links" xml:space="preserve">
+    <value>Liens Évènements</value>
+  </data>
+  <data name="Rules" xml:space="preserve">
+    <value>Règles</value>
+  </data>
+  <data name="Event" xml:space="preserve">
+    <value>Évènement</value>
+  </data>
+  <data name="Website" xml:space="preserve">
+    <value>Page web</value>
+  </data>
+  <data name="Home" xml:space="preserve">
+    <value>Accueil</value>
+  </data>
+  <data name="Qualifier Submit Phrase 1" xml:space="preserve">
+    <value>Vous n'avez pas besoin d'être identifié pour utilsier cet outil. Entrez un nom d'utilisateur pour commencer à envoyer</value>
+  </data>
+  <data name="Qualifier Submit Phrase 2" xml:space="preserve">
+    <value>C'est votre premier envoi !  Assurez vous que votre nom d'utilisateur est identifiable depuis Discord ou Start.GG</value>
+  </data>
+  <data name="Qualifiers Submission" xml:space="preserve">
+    <value>{0} envois pour qualifications</value>
+  </data>
+  <data name="Submission Page" xml:space="preserve">
+    <value>Page d'envois</value>
+  </data>
+  <data name="Submit" xml:space="preserve">
+    <value>Envoyer</value>
+  </data>
+  <data name="Use Script" xml:space="preserve">
+    <value>Utiliser le script</value>
+  </data>
+  <data name="World Rankings" xml:space="preserve">
+    <value>Classements mondiaux</value>
+  </data>
+  <data name="You are X place!" xml:space="preserve">
+    <value>Vous êtes à la {0}e Place !</value>
+  </data>
+  <data name="Play Num" xml:space="preserve">
+    <value>Jouer au moins {0}</value>
+  </data>
+  <data name="Country" xml:space="preserve">
+	  <value></value>
+	  <comment>Country</comment>
+  </data>
+  <data name="Make Not Public Disclaimer" xml:space="preserve">
+	  <value>Make Not Public Disclaimer</value>
+	  <comment>Make Not Public Disclaimer</comment>
+  </data>
+  <data name="Make Public Disclaimer 1" xml:space="preserve">
+	  <value>Make Public Disclaimer 1</value>
+	  <comment>Make Public Disclaimer 1</comment>
+  </data>
+  <data name="Make Public Disclaimer 2" xml:space="preserve">
+	  <value>Make Public Disclaimer 2</value>
+	  <comment>Make Public Disclaimer 2</comment>
+  </data>
+  <data name="Place" xml:space="preserve">
+	  <value>Place</value>
+	  <comment>Place</comment>
+  </data>
+  <data name="Avatar" xml:space="preserve">
+	  <value></value>
+	  <comment>Avatar</comment>
+  </data>
+  <data name="Name" xml:space="preserve">
+	  <value></value>
+	  <comment>Name</comment>
+  </data>
+  <data name="Level" xml:space="preserve">
+	  <value></value>
+	  <comment>Level</comment>
+  </data>
+  <data name="Score" xml:space="preserve">
+	  <value>Score</value>
+	  <comment>Score</comment>
+  </data>
+  <data name="Validation" xml:space="preserve">
+	  <value></value>
+	  <comment>Validation</comment>
+  </data>
+  <data name="Add UCS" xml:space="preserve">
+	  <value></value>
+	  <comment>Add UCS</comment>
+  </data>
+  <data name="Uploader" xml:space="preserve">
+	  <value></value>
+	  <comment>Uploader</comment>
+  </data>
+  <data name="Step Artist" xml:space="preserve">
+	  <value></value>
+	  <comment>Step Artist</comment>
+  </data>
+  <data name="Tag" xml:space="preserve">
+	  <value></value>
+	  <comment>Tag</comment>
+  </data>
+  <data name="Add" xml:space="preserve">
+	  <value></value>
+	  <comment>Add</comment>
+  </data>
+  <data name="Upload Image" xml:space="preserve">
+	  <value>Upload Image</value>
+	  <comment>Upload Image</comment>
+  </data>
+  <data name="Song" xml:space="preserve">
+	  <value>Song</value>
+	  <comment>Song</comment>
+  </data>
+  <data name="Tags" xml:space="preserve">
+	  <value></value>
+	  <comment>Tags</comment>
+  </data>
+  <data name="Link" xml:space="preserve">
+	  <value></value>
+	  <comment>Link</comment>
+  </data>
+  <data name="Leaderboard" xml:space="preserve">
+	  <value>Leaderboard</value>
+	  <comment>Leaderboard</comment>
+  </data>
+  <data name="UCS Leaderboard" xml:space="preserve">
+	  <value></value>
+	  <comment>UCS Leaderboard</comment>
+  </data>
+  <data name="Stage Pass" xml:space="preserve">
+	  <value></value>
+	  <comment>Stage Pass</comment>
+  </data>
+  <data name="Letter Grade" xml:space="preserve">
+	  <value>Letter Grade</value>
+	  <comment>Letter Grade</comment>
+  </data>
+  <data name="BPM" xml:space="preserve">
+	  <value></value>
+	  <comment>BPM</comment>
+  </data>
+  <data name="Note Count" xml:space="preserve">
+	  <value></value>
+	  <comment>Note Count</comment>
+  </data>
+  <data name="Song Artist" xml:space="preserve">
+	  <value>Song Artist</value>
+	  <comment>Song Artist</comment>
+  </data>
+  <data name="Pass (Data Backed)" xml:space="preserve">
+	  <value></value>
+	  <comment>Pass (Data Backed)</comment>
+  </data>
+  <data name="Score (Data Backed)" xml:space="preserve">
+	  <value></value>
+	  <comment>Score (Data Backed)</comment>
+  </data>
+  <data name="Popularity (PIIU Game Leaderboard)" xml:space="preserve">
+	  <value></value>
+	  <comment>Popularity (PIIU Game Leaderboard)</comment>
+  </data>
+  <data name="Tier Lists" xml:space="preserve">
+	  <value>Tier Lists</value>
+	  <comment>Tier Lists</comment>
+  </data>
+  <data name="Player Count" xml:space="preserve">
+	  <value></value>
+	  <comment>Player Count</comment>
+  </data>
+  <data name="Difficulty Categorization" xml:space="preserve">
+	  <value></value>
+	  <comment>Difficulty Categorization</comment>
+  </data>
+  <data name="Scoring Level" xml:space="preserve">
+	  <value></value>
+	  <comment>Scoring Level</comment>
+  </data>
+  <data name="Skill" xml:space="preserve">
+	  <value></value>
+	  <comment>Skill</comment>
+  </data>
+  <data name="Age" xml:space="preserve">
+	  <value></value>
+	  <comment>Age</comment>
+  </data>
+  <data name="Score Ranking" xml:space="preserve">
+	  <value></value>
+	  <comment>Score Ranking</comment>
+  </data>
+  <data name="Settings" xml:space="preserve">
+	  <value></value>
+	  <comment>Settings</comment>
+  </data>
+  <data name="Text View" xml:space="preserve">
+	  <value>Text View</value>
+	  <comment>Text View</comment>
+  </data>
+  <data name="Show Skills" xml:space="preserve">
+	  <value></value>
+	  <comment>Show Skills</comment>
+  </data>
+  <data name="Show Difficulty" xml:space="preserve">
+	  <value></value>
+	  <comment>Show Difficulty</comment>
+  </data>
+  <data name="Show Song Name" xml:space="preserve">
+	  <value></value>
+	  <comment>Show Song Name</comment>
+  </data>
+  <data name="Show Step Artist" xml:space="preserve">
+	  <value></value>
+	  <comment>Show Step Artist</comment>
+  </data>
+  <data name="Personalized Difficulty" xml:space="preserve">
+	  <value></value>
+	  <comment>Personalized Difficulty</comment>
+  </data>
+  <data name="Show Age" xml:space="preserve">
+	  <value></value>
+	  <comment>Show Age</comment>
+  </data>
+  <data name="Add Filters" xml:space="preserve">
+	  <value></value>
+	  <comment>Add Filters</comment>
+  </data>
+  <data name="Filters" xml:space="preserve">
+	  <value></value>
+	  <comment>Filters</comment>
+  </data>
+  <data name="Min BPM" xml:space="preserve">
+	  <value></value>
+	  <comment>Min BPM</comment>
+  </data>
+  <data name="Max BPM" xml:space="preserve">
+	  <value></value>
+	  <comment>Max BPM</comment>
+  </data>
+  <data name="Min Note Count" xml:space="preserve">
+	  <value></value>
+	  <comment>Min Note Count</comment>
+  </data>
+  <data name="Max Note Count" xml:space="preserve">
+	  <value></value>
+	  <comment>Max Note Count</comment>
+  </data>
+  <data name="Min Letter Grade" xml:space="preserve">
+	  <value></value>
+	  <comment>Min Letter Grade</comment>
+  </data>
+  <data name="Max Letter Grade" xml:space="preserve">
+	  <value></value>
+	  <comment>Max Letter Grade</comment>
+  </data>
+</root>

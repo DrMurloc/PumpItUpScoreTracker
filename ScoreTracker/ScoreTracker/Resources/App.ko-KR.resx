@@ -130,7 +130,7 @@
     <value>나의 계정</value>
   </data>
   <data name="Account Creation Line 1" xml:space="preserve">
-    <value>Score Tracker와 연동되는 계정이 없다면, 로그인 업체 중 하나를 선택할시 계정이 자동으로 생성됩니다</value>
+    <value>Score Tracker와 연동되는 계정이 없다면, 로그인 업체 중 하나를 선택할시 계정이 자동으로 생성됩니다.</value>
   </data>
   <data name="Account Creation Line 2" xml:space="preserve">
     <value>선택한 로그인 업체에 저장되는 유일한 정보는 외부 ID (무작위 숫자, 글자 조합)와 사용자 이름입니다. 계정 생성후 언제든지 사용자 이름을 변경할수 있습니다.</value>
@@ -139,7 +139,7 @@
     <value>Score Tracker에는 암호가 저장되지 않습니다.</value>
   </data>
   <data name="Account Creation?" xml:space="preserve">
-    <value>회원가입</value>
+    <value>회원가입?</value>
   </data>
   <data name="Actions" xml:space="preserve">
     <value>실행</value>
@@ -155,12 +155,6 @@
   </data>
   <data name="Average" xml:space="preserve">
     <value>중급</value>
-  </data>
-  <data name="Average for CoOp Chart" xml:space="preserve">
-    <value>코옵 채보 난이도 평균</value>
-  </data>
-  <data name="Average for CoOp Player" xml:space="preserve">
-    <value>코옵 유저 난이도 평균</value>
   </data>
   <data name="Average Rating" xml:space="preserve">
     <value>평균 레이팅</value>
@@ -265,7 +259,7 @@
     <value>랭크</value>
   </data>
   <data name="Log In With" xml:space="preserve">
-    <value>-로 로그인</value>
+    <value>로 로그인 {0}</value>
   </data>
   <data name="Login" xml:space="preserve">
     <value>로그인</value>
@@ -660,10 +654,6 @@
 	  <value>99 matches tailored to each player's level.</value>
 	  <comment>99 matches tailored to each player's level.</comment>
   </data>
-  <data name="99 matches tailored to each player's level." xml:space="preserve">
-	  <value>99 matches tailored to each player's level.</value>
-	  <comment>99 matches tailored to each player's level.</comment>
-  </data>
   <data name="CoOp and No Bar Old School Tournaments." xml:space="preserve">
 	  <value>CoOp and No Bar Old School Tournaments.</value>
 	  <comment>CoOp and No Bar Old School Tournaments.</comment>
@@ -676,16 +666,176 @@
 	  <value>The most Pump it Up that has ever been at one event.</value>
 	  <comment>The most Pump it Up that has ever been at one event.</comment>
   </data>
-  <data name="The most Pump it Up that has ever been at one event." xml:space="preserve">
-	  <value>The most Pump it Up that has ever been at one event.</value>
-	  <comment>The most Pump it Up that has ever been at one event.</comment>
-  </data>
   <data name="Why don't you just get up and dance, man?" xml:space="preserve">
 	  <value>Why don't you just get up and dance, man?</value>
 	  <comment>Why don't you just get up and dance, man?</comment>
   </data>
   <data name="Open" xml:space="preserve">
-	  <value>Open</value>
+	  <value></value>
 	  <comment>Open</comment>
+  </data>
+  <data name="Country" xml:space="preserve">
+	  <value></value>
+	  <comment>Country</comment>
+  </data>
+  <data name="Avatar" xml:space="preserve">
+	  <value></value>
+	  <comment>Avatar</comment>
+  </data>
+  <data name="Name" xml:space="preserve">
+	  <value></value>
+	  <comment>Name</comment>
+  </data>
+  <data name="Level" xml:space="preserve">
+	  <value></value>
+	  <comment>Level</comment>
+  </data>
+  <data name="Validation" xml:space="preserve">
+	  <value></value>
+	  <comment>Validation</comment>
+  </data>
+  <data name="Add UCS" xml:space="preserve">
+	  <value></value>
+	  <comment>Add UCS</comment>
+  </data>
+  <data name="Uploader" xml:space="preserve">
+	  <value></value>
+	  <comment>Uploader</comment>
+  </data>
+  <data name="Step Artist" xml:space="preserve">
+	  <value></value>
+	  <comment>Step Artist</comment>
+  </data>
+  <data name="Tag" xml:space="preserve">
+	  <value></value>
+	  <comment>Tag</comment>
+  </data>
+  <data name="Add" xml:space="preserve">
+	  <value></value>
+	  <comment>Add</comment>
+  </data>
+  <data name="Tags" xml:space="preserve">
+	  <value></value>
+	  <comment>Tags</comment>
+  </data>
+  <data name="Link" xml:space="preserve">
+	  <value></value>
+	  <comment>Link</comment>
+  </data>
+  <data name="UCS Leaderboard" xml:space="preserve">
+	  <value></value>
+	  <comment>UCS Leaderboard</comment>
+  </data>
+  <data name="Stage Pass" xml:space="preserve">
+	  <value></value>
+	  <comment>Stage Pass</comment>
+  </data>
+  <data name="BPM" xml:space="preserve">
+	  <value></value>
+	  <comment>BPM</comment>
+  </data>
+  <data name="Note Count" xml:space="preserve">
+	  <value></value>
+	  <comment>Note Count</comment>
+  </data>
+  <data name="Pass (Data Backed)" xml:space="preserve">
+	  <value></value>
+	  <comment>Pass (Data Backed)</comment>
+  </data>
+  <data name="Score (Data Backed)" xml:space="preserve">
+	  <value></value>
+	  <comment>Score (Data Backed)</comment>
+  </data>
+  <data name="Popularity (PIIU Game Leaderboard)" xml:space="preserve">
+	  <value></value>
+	  <comment>Popularity (PIIU Game Leaderboard)</comment>
+  </data>
+  <data name="Player Count" xml:space="preserve">
+	  <value></value>
+	  <comment>Player Count</comment>
+  </data>
+  <data name="Difficulty Categorization" xml:space="preserve">
+	  <value></value>
+	  <comment>Difficulty Categorization</comment>
+  </data>
+  <data name="Scoring Level" xml:space="preserve">
+	  <value></value>
+	  <comment>Scoring Level</comment>
+  </data>
+  <data name="Skill" xml:space="preserve">
+	  <value></value>
+	  <comment>Skill</comment>
+  </data>
+  <data name="Age" xml:space="preserve">
+	  <value></value>
+	  <comment>Age</comment>
+  </data>
+  <data name="Score Ranking" xml:space="preserve">
+	  <value></value>
+	  <comment>Score Ranking</comment>
+  </data>
+  <data name="Settings" xml:space="preserve">
+	  <value></value>
+	  <comment>Settings</comment>
+  </data>
+  <data name="Text View" xml:space="preserve">
+	  <value>Text View</value>
+	  <comment>Text View</comment>
+  </data>
+  <data name="Show Skills" xml:space="preserve">
+	  <value></value>
+	  <comment>Show Skills</comment>
+  </data>
+  <data name="Show Difficulty" xml:space="preserve">
+	  <value></value>
+	  <comment>Show Difficulty</comment>
+  </data>
+  <data name="Show Song Name" xml:space="preserve">
+	  <value></value>
+	  <comment>Show Song Name</comment>
+  </data>
+  <data name="Show Step Artist" xml:space="preserve">
+	  <value></value>
+	  <comment>Show Step Artist</comment>
+  </data>
+  <data name="Personalized Difficulty" xml:space="preserve">
+	  <value></value>
+	  <comment>Personalized Difficulty</comment>
+  </data>
+  <data name="Show Age" xml:space="preserve">
+	  <value></value>
+	  <comment>Show Age</comment>
+  </data>
+  <data name="Add Filters" xml:space="preserve">
+	  <value></value>
+	  <comment>Add Filters</comment>
+  </data>
+  <data name="Filters" xml:space="preserve">
+	  <value></value>
+	  <comment>Filters</comment>
+  </data>
+  <data name="Min BPM" xml:space="preserve">
+	  <value></value>
+	  <comment>Min BPM</comment>
+  </data>
+  <data name="Max BPM" xml:space="preserve">
+	  <value></value>
+	  <comment>Max BPM</comment>
+  </data>
+  <data name="Min Note Count" xml:space="preserve">
+	  <value></value>
+	  <comment>Min Note Count</comment>
+  </data>
+  <data name="Max Note Count" xml:space="preserve">
+	  <value></value>
+	  <comment>Max Note Count</comment>
+  </data>
+  <data name="Min Letter Grade" xml:space="preserve">
+	  <value></value>
+	  <comment>Min Letter Grade</comment>
+  </data>
+  <data name="Max Letter Grade" xml:space="preserve">
+	  <value></value>
+	  <comment>Max Letter Grade</comment>
   </data>
 </root>

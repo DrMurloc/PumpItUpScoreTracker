@@ -45,6 +45,7 @@
                     <MudSelectItem T="string" Value=@("es-MX")>Español</MudSelectItem>
                     <MudSelectItem T="string" Value=@("pt-BR")>Português</MudSelectItem>
                     <MudSelectItem T="string" Value=@("ko-KR")>한국어</MudSelectItem>
+                    <MudSelectItem T="string" Value=@("fr-FR")>Français</MudSelectItem>
                     <MudSelectItem T="string" Value=@("en-ZW")>Murloc</MudSelectItem>
                 </MudSelect>
             </MudItem>
@@ -238,10 +239,12 @@
                 .Select(s => new
                 {
                     Difficulty = charts[s.ChartId].DifficultyString,
+                    RecordedDate = s.RecordedDate.ToString("d"),
                     Song = charts[s.ChartId].Song.Name.ToString(),
                     IsBroken=s.IsBroken.ToString(),
                     LetterGrade=s.Score?.LetterGrade.GetName(),
                     Score=s.Score?.ToString(),
+                    Plate=s.Plate?.GetName()
                 }).ToArray();
         }
         

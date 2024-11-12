@@ -113,7 +113,7 @@
                 
             <MudSelectItem T="string" Value=@("Age")>@L["Age"]</MudSelectItem>
             <MudSelectItem T="string" Value=@("Score")>@L["Score"]</MudSelectItem>
-            <MudSelectItem T="string" Value=@("Score Ranking")>@L["Score Ranking (Beta)"]</MudSelectItem>
+            <MudSelectItem T="string" Value=@("Score Ranking")>@L["Score Ranking"]</MudSelectItem>
         }
     </MudSelect>
 </MudItem>
@@ -180,7 +180,7 @@
 
     </MudItem>
     <MudItem xs="6" sm="3">
-        <MudMenu Label=@L["Add Filters"] StartIcon="@Icons.Material.Filled.FilterList" Variant="Variant.Outlined" Color="Color.Primary">
+        <MudMenu Label=@L["Filters"] StartIcon="@Icons.Material.Filled.FilterList" Variant="Variant.Outlined" Color="Color.Primary">
             @foreach (var filter in Enum.GetValues<Filter>().OrderBy(e => e.ToString()))
             {
                 <MudMenuItem OnClick="()=>ToggleFilter(filter)">

@@ -17,11 +17,11 @@
 <MudText Typo="Typo.h5">@L["UCS Leaderboard"]</MudText>
 <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenAddDialog" StartIcon="@Icons.Material.Filled.Add">@L["Add UCS"]</MudButton>
 <br/>
-<MudTable T="UcsChart" Items="_charts">
+<MudTable T="UcsChart" Items="_charts" Breakpoint="Breakpoint.None">
     <HeaderContent>
         <MudTh>@L["Song"]</MudTh>
         <MudTh>@L["Difficulty Level"]</MudTh>
-        <MudTh>@L["Song Artist"]</MudTh>
+        <MudTh>@L["Step Artist"]</MudTh>
         <MudTh>@L["Tags"]</MudTh>
         <MudTh>@L["Link"]</MudTh>
         <MudTh>@L["Leaderboard"]</MudTh>
@@ -162,7 +162,7 @@
                 }
                 
             </MudGrid>
-            <MudTable T="LeaderboardEntry" Items="_showingEntries">
+            <MudTable T="LeaderboardEntry" Items="_showingEntries" Breakpoint="Breakpoint.None">
                 <HeaderContent>
                     <MudTh>@L["Place"]</MudTh>
                     <MudTh>@L["Avatar"]</MudTh>
@@ -375,6 +375,10 @@
             _existingTags.Add(tag);
         }
         _myTags.Add(tag);
+        if (!_allMyTags.ContainsKey(_showingChart.Chart.Id))
+        {
+            _allMyTags[_showingChart.Chart.Id] = new HashSet<Name>();
+        }
         _allMyTags[_showingChart.Chart.Id].Add(tag);
         var tagAggregates = _chartTags.TryGetValue(_showingChart.Chart.Id, out var ta) ? ta : Array.Empty<ChartTagAggregate>();
         tagAggregates = tagAggregates.Any(c => c.Tag == tag) ? tagAggregates.Select(c => c.Tag == tag ? c with { Count = c.Count + 1 } : c).OrderByDescending(c => c.Count).ToArray() : tagAggregates.Append(new ChartTagAggregate(_showingChart.Chart.Id, tag, 1)).OrderByDescending(c => c.Count).ToArray();
