@@ -44,7 +44,7 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
         return enumerable.Any() ? enumerable.Average() : def;
     }
 
-    private sealed record ChartRating(Guid ChartId, ChartType Type, Rating Rating, PhoenixScore Score)
+    private sealed record ChartRating(Guid ChartId, ChartType Type, Rating Rating, PhoenixScore Score, bool IsBroken)
     {
     }
 
@@ -91,7 +91,7 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
             .Where(s => s.Score != null)
             .Select(s => new ChartRating(s.ChartId, charts[s.ChartId].Type,
                 scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level,
-                    s.Score!.Value), s.Score!.Value))
+                    s.Score!.Value), s.Score!.Value, s.IsBroken))
             .ToArray();
         var competitiveScores = recorded.Where(s => s.Score != null)
             .Select(s => new ChartCompetitive(s.ChartId, charts[s.ChartId].Type,
@@ -100,15 +100,15 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
                 s.Score!.Value)).ToArray();
 
         var top50 = scores
-            .Where(s => s.Type != ChartType.CoOp)
+            .Where(s => !s.IsBroken && s.Type != ChartType.CoOp)
             .OrderByDescending(s => s.Rating)
             .Take(50).ToArray();
 
-        var top50Singles = scores.Where(s => s.Type == ChartType.Single)
+        var top50Singles = scores.Where(s => !s.IsBroken && s.Type == ChartType.Single)
             .OrderByDescending(s => s.Rating)
             .Take(50).ToArray();
 
-        var top50Doubles = scores.Where(s => s.Type == ChartType.Double)
+        var top50Doubles = scores.Where(s => !s.IsBroken && s.Type == ChartType.Double)
             .OrderByDescending(s => s.Rating)
             .Take(50).ToArray();
 
