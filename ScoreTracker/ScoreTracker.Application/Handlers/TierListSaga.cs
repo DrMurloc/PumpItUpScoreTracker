@@ -105,7 +105,6 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
 
         foreach (var playerCount in Enumerable.Range(2, 5))
         {
-
             await ProcessPgTierList(playerCount, ChartType.CoOp, context.CancellationToken);
             await ProcessCoOpPassTierList(playerCount, context.CancellationToken);
         }
@@ -433,7 +432,8 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
 
 
         var result = new List<SongTierListEntry>();
-        result.AddRange(ProcessIntoTierList("PG", pgSums));
+        result.AddRange(ProcessIntoTierList("PG",
+            pgSums.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value)));
         await _tierLists.SaveEntries(result, cancellationToken);
     }
 
