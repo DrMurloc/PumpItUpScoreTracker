@@ -12,6 +12,7 @@ namespace ScoreTracker.Domain.SecondaryPorts
             bool requireActive = false);
 
         Task<IEnumerable<SongTierListEntry>> GetAllEntries(Name tierListName, CancellationToken cancellationToken);
+        Task SaveEntries(IEnumerable<SongTierListEntry> entry, CancellationToken cancellationToken);
     }
 }
  

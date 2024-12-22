@@ -52,6 +52,10 @@
                 <ScoreBreakdown Score="@context.Score" ShowScore="true"></ScoreBreakdown>
             </MudTd>
         </RowTemplate>
+
+        <PagerContent>
+            <MudTablePager></MudTablePager>
+        </PagerContent>
     </MudTable>
 }
 <MudGrid>
@@ -60,19 +64,27 @@
         <MudItem xs="12">
             <MudText Typo="Typo.h4">@group.Key</MudText>
         </MudItem>
-        @foreach (var result in group)
-        {
-            <MudItem xs="12">
-                <MudText>@result.LeaderboardName: @result.Place</MudText>
-            </MudItem>
-        }
+        <MudTable T="UserOfficialLeaderboard" Items="group">
+            <HeaderContent>
+                <MudTh>@L["Leaderboard Name"]</MudTh>
+                <MudTh>@L["Place"]</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.LeaderboardName</MudTd>
+                <MudTd>@context.Place</MudTd>
+            </RowTemplate>
+            
+            <PagerContent>
+                <MudTablePager></MudTablePager>
+            </PagerContent>
+        </MudTable>
     }
 </MudGrid>
 @inject IOfficialLeaderboardRepository Leaderboards;
 @inject IChartRepository Charts;
 @code {
     private string _selectedUsername = string.Empty;
-    public static readonly DateTimeOffset _lastUpdated = new DateTimeOffset(2024, 11, 23, 1, 47, 0, TimeSpan.FromHours(-4));
+    public static readonly DateTimeOffset _lastUpdated = new DateTimeOffset(2024, 12, 22, 1, 47, 0, TimeSpan.FromHours(-4));
     private string[] _usernames = Array.Empty<string>();
     private UserOfficialLeaderboard[] _chartResults = Array.Empty<UserOfficialLeaderboard>();
     private UserOfficialLeaderboard[] _nonChartResults = Array.Empty<UserOfficialLeaderboard>();

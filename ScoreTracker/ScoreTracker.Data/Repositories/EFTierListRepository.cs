@@ -71,6 +71,7 @@ namespace ScoreTracker.Data.Repositories
                 select uht.UserId).Distinct().ToArrayAsync(cancellationToken);
         }
 
+
         public async Task<IEnumerable<SongTierListEntry>> GetAllEntries(Name tierListName,
             CancellationToken cancellationToken)
         {
@@ -83,6 +84,48 @@ namespace ScoreTracker.Data.Repositories
                         new SongTierListEntry(e.TierListName,
                             e.ChartId, Enum.Parse<TierListCategory>(e.Category), e.Order));
             });
+        }
+
+        public async Task SaveEntries(IEnumerable<SongTierListEntry> entries, CancellationToken cancellationToken)
+        {
+            var entryArray = entries.ToArray();
+            var tierLists = entryArray.Select(e => e.TierListName.ToString()).Distinct().ToArray();
+            var chartIds = entryArray.Select(e => e.ChartId).Distinct().ToArray();
+            var entities = (await _dbContext.TierListEntry
+                    .Where(e => tierLists.Contains(e.TierListName) && chartIds.Contains(e.ChartId))
+                    .ToArrayAsync(cancellationToken))
+                .GroupBy(e => e.TierListName)
+                .ToDictionary(g => g.Key, g => g.ToDictionary(e => e.ChartId));
+
+
+            foreach (var entry in entryArray)
+            {
+                var entity = entities.TryGetValue(entry.TierListName, out var list)
+                    ? list.TryGetValue(entry.ChartId, out var r) ? r : null
+                    : null;
+                if (entity == null)
+                {
+                    var type = entry.TierListName.ToString();
+                    await _dbContext.TierListEntry.AddAsync(new TierListEntryEntity
+                    {
+                        Id = Guid.NewGuid(),
+                        Category = entry.Category.ToString(),
+                        ChartId = entry.ChartId,
+                        TierListName = type,
+                        Order = entry.Order
+                    }, cancellationToken);
+                }
+                else
+                {
+                    entity.Category = entry.Category.ToString();
+                    entity.Order = entry.Order;
+                }
+            }
+
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            foreach (var name in tierLists) _cache.Remove(TierListKey(name));
         }
     }
 }

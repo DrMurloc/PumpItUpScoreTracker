@@ -213,13 +213,13 @@ Do It
     
        //await Mediator.Send(new UpdateSongImagesCommand(false));
        
-        //await Mediator.Send(new ProcessChartPopularityCommand());
-      /*  await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
+       /*await Mediator.Send(new ProcessChartPopularityCommand());
+        await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
     await Mediator.Send(new ProcessChartPopularityCommand());
-    await WorldRanking.CalculateWorldRankings(CancellationToken.None);
-        */
+    await WorldRanking.CalculateWorldRankings(CancellationToken.None);*/
+        
 
-        //await Bus.Publish(new ProcessPassTierListCommand());
+        await Bus.Publish(new ProcessPassTierListCommand());
         /*var songImages = (await Database.Song.Select(s => s.ImagePath).ToArrayAsync()).ToHashSet();
          * 
         var images = await Files.GetFiles("songs/");
@@ -229,11 +229,11 @@ Do It
             await Files.DeleteFile(image.PathAndQuery);
         }*/
 
-    var userIds = await Database.User.Select(u => u.Id).ToArrayAsync();
+   /* var userIds = await Database.User.Select(u => u.Id).ToArrayAsync();
         foreach (var userId in userIds)
         {
             await Mediator.Send(new PlayerRatingSaga.RecalculateStats(userId));
-        }
+        }*/
 
 
 
