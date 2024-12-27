@@ -226,6 +226,10 @@ public sealed class ChartAttemptDbContext : DbContext
             .Property(e => e.Location)
             .HasDefaultValue("Remote");
 
+        builder.Entity<ChartEntity>()
+            .Property(e => e.OriginalMixId)
+            .HasDefaultValue(new Guid("1ABB8F5A-BDA3-40F0-9CE7-1C4F9F8F1D3B"));
+
         builder.Entity<QualifiersConfigurationEntity>()
             .Property(e => e.ChartPlayCount)
             .HasDefaultValue(3);

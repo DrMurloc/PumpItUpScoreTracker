@@ -16,5 +16,6 @@ public sealed class ChartEntity
 
     [Required] public string Type { get; set; } = string.Empty;
     [MaxLength(128)] public string? StepArtist { get; set; }
+    [Required] public Guid OriginalMixId { get; set; }
     public ChartDifficultyRatingEntity? DifficultyRating { get; set; }
 }

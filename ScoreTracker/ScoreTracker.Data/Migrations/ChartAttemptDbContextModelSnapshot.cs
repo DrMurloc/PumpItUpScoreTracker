@@ -125,6 +125,11 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<int>("Level")
                         .HasColumnType("int");
 
+                    b.Property<Guid>("OriginalMixId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValue(new Guid("1abb8f5a-bda3-40f0-9ce7-1c4f9f8f1d3b"));
+
                     b.Property<Guid>("SongId")
                         .HasColumnType("uniqueidentifier");
 
