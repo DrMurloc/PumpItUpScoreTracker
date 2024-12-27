@@ -39,6 +39,18 @@
             <MudSelectItem T="ChartType?" Value="ChartType.CoOp">Co-Op</MudSelectItem>
         </MudSelect>
     </MudItem>
+    @if (_myCommunities.Any())
+    {
+        
+        <MudItem xs="12" sm="4">
+            <MudSelect T="Name?" Label=@L["Communities"] Value="_communityName" ValueChanged="SetCommunity" Clearable="true">
+                @foreach (var name in _myCommunities.Select(c=>c.CommunityName))
+                {
+                    <MudSelectItem T="Name?" Value="@name"><CountryImage Country="name"></CountryImage> @name</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+    }
 </MudGrid>
 <MudTable T="UserChartAggregate" Items=_results Breakpoint="Breakpoint.None" Dense="true" Loading="_isLoading">
 
@@ -127,6 +139,12 @@
         _chartType = type;
         await LoadResults();
     }
+
+    private async Task SetCommunity(Name? community)
+    {
+        _communityName = community;
+        await LoadResults();
+    }
     private async Task LoadResults()
     {
         _isLoading = true;
@@ -156,10 +174,16 @@
         _isLoading = false;
 
     }
+
+    private IEnumerable<CommunityOverviewRecord> _myCommunities = Array.Empty<CommunityOverviewRecord>();
     protected override async Task OnInitializedAsync()
     {
 
         await LoadResults();
+        if (CurrentUser.IsLoggedIn)
+        {
+            _myCommunities = (await Mediator.Send(new GetMyCommunitiesQuery())).ToArray();
+        }
     }
 
 }
