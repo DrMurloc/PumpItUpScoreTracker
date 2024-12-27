@@ -44,7 +44,7 @@
         
         <MudItem xs="12" sm="4">
             <MudSelect T="Name?" Label=@L["Communities"] Value="_communityName" ValueChanged="SetCommunity" Clearable="true">
-                @foreach (var name in _myCommunities.Select(c=>c.CommunityName))
+                @foreach (var name in _myCommunities.Where(c=>c.CommunityName!="World").Select(c=>c.CommunityName))
                 {
                     <MudSelectItem T="Name?" Value="@name"><CountryImage Country="name"></CountryImage> @name</MudSelectItem>
                 }
@@ -67,7 +67,7 @@
         </MudTh>
         <MudTh>
 
-            <MudTableSortLabel T="UserChartAggregate" SortBy="@(e=>Completion(e.Total,e.AverageScore))" @bind-SortDirection="_scoringSort">@L["Score Completion"]</MudTableSortLabel>
+            <MudTableSortLabel T="UserChartAggregate" SortBy="@(e=>Completion(e.Total,e.AverageScore))" InitialDirection="SortDirection.Descending">@L["Score Completion"]</MudTableSortLabel>
         </MudTh>
     </HeaderContent>
     <RowTemplate>
@@ -103,7 +103,6 @@
 @inject ILogger<WeeklyCharts> Logger;
 @code
 {
-    private SortDirection _scoringSort = SortDirection.Ascending;
     private IEnumerable<UserChartAggregate> _results = Array.Empty<UserChartAggregate>();
     private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
 
