@@ -45,7 +45,7 @@
     <HeaderContent>
         <MudTh>
 
-            <MudTableSortLabel T="UserChartAggregate" SortBy="@(e => _users[e.UserId].ProfileImage)">@L["Avatar"]</MudTableSortLabel>
+            <MudTableSortLabel T="UserChartAggregate" SortBy="@(e => _users[e.UserId].ProfileImage.ToString())">@L["Avatar"]</MudTableSortLabel>
         </MudTh>
         <MudTh>
             <MudTableSortLabel T="UserChartAggregate" SortBy="@(e => _users[e.UserId].Name)">@L["Name"]</MudTableSortLabel>

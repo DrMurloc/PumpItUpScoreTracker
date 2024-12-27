@@ -49,7 +49,7 @@
 
                 <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => e.place)">Place</MudTableSortLabel>
             </MudTh>
-            <MudTh><MudTableSortLabel T="LeaderboardEntry" SortBy="@(e=>e.ProfileImage)">Avatar</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="LeaderboardEntry" SortBy="@(e=>e.ProfileImage.ToString())">Avatar</MudTableSortLabel></MudTh>
             <MudTh>
                 <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => e.PlayerName.ToString())">Name</MudTableSortLabel>
             </MudTh>
