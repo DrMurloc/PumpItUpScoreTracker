@@ -373,8 +373,9 @@ public sealed class EFChartRepository : IChartRepository
             return await (from cm in _database.ChartMix
                     join c in _database.Chart on cm.ChartId equals c.Id
                     join s in _database.Song on c.SongId equals s.Id
+                    join m in _database.Mix on c.OriginalMixId equals m.Id
                     where cm.MixId == mixId
-                    select new Chart(c.Id,
+                    select new Chart(c.Id, Enum.Parse<MixEnum>(m.Name),
                         new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration,
                             s.Artist ?? "Unknown",
                             Bpm.From(s.MinBpm, s.MaxBpm)),

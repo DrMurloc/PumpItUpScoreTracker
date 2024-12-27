@@ -87,7 +87,7 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                     { _.UserId, _.ChartId } into gi
                 from ba in gi.DefaultIfEmpty()
                 select new BestXXChartAttempt(
-                    new Chart(c.Id,
+                    new Chart(c.Id, ce.Mix,
                         new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration,
                             s.Artist ?? "Unknown",
                             Bpm.From(s.MinBpm, s.MaxBpm)),
@@ -107,11 +107,12 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
         return await (
                 from s in _database.Song
                 join c in _database.Chart on s.Id equals c.SongId
+                join m in _database.Mix on c.OriginalMixId equals m.Id
                 join _ in _database.BestAttempt on new { UserId = userId, ChartId = c.Id } equals new
                     { _.UserId, _.ChartId } into gi
                 from ba in gi.DefaultIfEmpty()
                 select new BestXXChartAttempt(
-                    new Chart(c.Id,
+                    new Chart(c.Id, Enum.Parse<MixEnum>(m.Name),
                         new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration,
                             s.Artist ?? "Unknown",
                             Bpm.From(s.MinBpm, s.MaxBpm)),

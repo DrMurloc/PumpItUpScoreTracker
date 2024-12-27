@@ -1,0 +1,165 @@
+﻿@page "/Completion"
+@using ScoreTracker.Domain.Models
+@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using MediatR
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Components
+@using Task = System.Threading.Tasks.Task
+@using MassTransit
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Handlers
+@using ScoreTracker.Domain.Events
+@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.Web.Services
+@using System.Data.Common
+@using ScoreTracker.Web.Services.Contracts
+
+<PageTitle>Completion</PageTitle>
+<MudGrid>
+    <MudItem xs="12" sm="4">
+        <MudSelect T="MixEnum?" Label=@L["Mix"] Value="_selectedMix" ValueChanged="SelectMix">
+            <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix">@MixEnum.Phoenix.ToString()</MudSelectItem>
+            <MudSelectItem T="MixEnum?" Value="null">@L["All Mixes"]</MudSelectItem>
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="6" sm="4">
+        <MudNumericField T="int?" Label=@L["Min Level"] Value="_minLevel" ValueChanged="SetMinLevel" Clearable="true" Min="DifficultyLevel.Min" Max="_maxLevel??DifficultyLevel.Max"></MudNumericField>
+    </MudItem>
+    <MudItem xs="6" sm="4">
+
+        <MudNumericField T="int?" Label=@L["Max Level"] Value="_maxLevel" ValueChanged="SetMaxLevel" Clearable="true" Min="_minLevel??DifficultyLevel.Max" Max="DifficultyLevel.Max"></MudNumericField>
+    </MudItem>
+    <MudItem xs="12" sm="4">
+        <MudSelect T="ChartType?" Label=@L["Chart Type"] Value="_chartType" ValueChanged="SetChartType" Clearable="true">
+            <MudSelectItem T="ChartType?" Value="ChartType.Single">Singles</MudSelectItem>
+            <MudSelectItem T="ChartType?" Value="ChartType.Double">Doubles</MudSelectItem>
+            <MudSelectItem T="ChartType?" Value="ChartType.CoOp">Co-Op</MudSelectItem>
+        </MudSelect>
+    </MudItem>
+</MudGrid>
+<MudTable T="UserChartAggregate" Items=_results Breakpoint="Breakpoint.None" Dense="true" Loading="_isLoading">
+
+    <HeaderContent>
+        <MudTh>
+
+            <MudTableSortLabel T="UserChartAggregate" SortBy="@(e => _users[e.UserId].ProfileImage)">@L["Avatar"]</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="UserChartAggregate" SortBy="@(e => _users[e.UserId].Name)">@L["Name"]</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="UserChartAggregate" SortBy="@(e=>e.Passed)">@L["Pass Completion"]</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+
+            <MudTableSortLabel T="UserChartAggregate" SortBy="@(e=>Completion(e.Total,e.AverageScore))" @bind-SortDirection="_scoringSort">@L["Score Completion"]</MudTableSortLabel>
+        </MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            <MudImage Src="@_users[context.UserId].ProfileImage.ToString()" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+        </MudTd>
+        <MudTd>
+            <UserLabel User="_users[context.UserId]"></UserLabel>
+        </MudTd>
+        <MudTd>
+            <MudProgressLinear Min="0" Max="_chartCount" Value="context.Passed" Color="Color.Primary">@context.Passed</MudProgressLinear>
+        </MudTd>
+        <MudTd>
+            <MudProgressLinear Min="0" Max="100.0" Value="Completion(context.Total,context.AverageScore)" Color="Color.Primary">@Completion(context.Total, context.AverageScore).ToString("N1")%</MudProgressLinear>
+        </MudTd>
+        <MudTd></MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager></MudTablePager>
+    </PagerContent>
+</MudTable>
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser;
+@inject IWeeklyTournamentRepository WeeklyTournaments;
+@inject IUserRepository Users;
+@inject IUiSettingsAccessor UiSettings;
+@inject NavigationManager NavManager;
+@inject ChartVideoDisplayer VideoDisplayer;
+@inject IBus Bus;
+@inject ISnackbar Snackbar;
+@inject IFileUploadClient FileUpload;
+@inject ILogger<WeeklyCharts> Logger;
+@code
+{
+    private SortDirection _scoringSort = SortDirection.Ascending;
+    private IEnumerable<UserChartAggregate> _results = Array.Empty<UserChartAggregate>();
+    private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
+
+    private MixEnum? _selectedMix = MixEnum.Phoenix;
+    private DifficultyLevel? _minLevel = null;
+    private DifficultyLevel? _maxLevel =null;
+    private ChartType? _chartType = null;
+    private Name? _communityName = null;
+    private bool _isLoading = false;
+    private int _chartCount = 1;
+    private double Completion(int totalCount, PhoenixScore average) => 100.0* (totalCount * (double)average) / (_chartCount * 1000000.0);
+
+    private async Task SelectMix(MixEnum? mix)
+    {
+        _selectedMix = mix;
+        await LoadResults();
+    }
+
+    private async Task SetMinLevel(int? level)
+    {
+        _minLevel = level;
+        await LoadResults();
+    }
+
+    private async Task SetMaxLevel(int? level)
+    {
+        _maxLevel = level;
+        await LoadResults();
+    }
+
+    private async Task SetChartType(ChartType? type)
+    {
+        _chartType = type;
+        await LoadResults();
+    }
+    private async Task LoadResults()
+    {
+        _isLoading = true;
+        var results = (await Mediator.Send(new GetPlayerChartAggregatesQuery(_selectedMix,
+            _communityName,_minLevel,
+            _maxLevel,_chartType))).ToArray();
+        _results = results;
+        _users = (await Users.GetUsers(results.Select(r => r.UserId))).ToDictionary(u => u.Id);
+        var charts = await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix));
+        if (_selectedMix != null)
+        {
+            charts = charts.Where(c => c.OriginalMix == _selectedMix);
+        }
+        if (_minLevel != null)
+        {
+            charts = charts.Where(c => c.Level >= _minLevel);
+        }
+        if (_maxLevel != null)
+        {
+            charts = charts.Where(c => c.Level <= _maxLevel);
+        }
+        if (_chartType != null)
+        {
+            charts = charts.Where(c => c.Type == _chartType);
+        }
+        _chartCount = charts.Count();
+        _isLoading = false;
+
+    }
+    protected override async Task OnInitializedAsync()
+    {
+
+        await LoadResults();
+    }
+
+}

@@ -1,5 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using ScoreTracker.Application.Queries;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Enums;
@@ -10,7 +12,8 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Data.Repositories;
 
-public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
+public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
+    IRequestHandler<GetPlayerChartAggregatesQuery, IEnumerable<UserChartAggregate>>
 {
     private readonly ChartAttemptDbContext _database;
     private readonly IMemoryCache _cache;
@@ -254,5 +257,58 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository
             .Select(c => c.Id).Distinct().ToHashSet();
         return (await GetCachedScores(userId, cancellationToken)).Count(c =>
             chartIds.Contains(c.Key) && !c.Value.IsBroken);
+    }
+
+    public async Task<IEnumerable<UserChartAggregate>> Handle(GetPlayerChartAggregatesQuery request,
+        CancellationToken cancellationToken)
+    {
+        var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+        var playerQuery = from u in database.User select u;
+        if (request.CommunityName != null)
+        {
+            var communityNameString = request.CommunityName.Value.ToString();
+            playerQuery = from u in playerQuery
+                join cm in database.CommunityMembership on u.Id equals cm.UserId
+                join c in database.Community on cm.CommunityId equals c.Id
+                where c.Name == communityNameString
+                select u;
+        }
+        else
+        {
+            playerQuery = playerQuery.Where(p => p.IsPublic);
+        }
+
+        var chartQuery = from c in database.Chart select c;
+        if (request.MaxLevel != null)
+        {
+            var levelInt = request.MaxLevel.Value;
+            chartQuery = chartQuery.Where(c => c.Level <= levelInt);
+        }
+
+        if (request.MinLevel != null)
+        {
+            var levelInt = request.MinLevel.Value;
+            chartQuery = chartQuery.Where(c => c.Level >= levelInt);
+        }
+
+        if (request.ChartType != null)
+        {
+            var typeString = request.ChartType.Value.ToString();
+            chartQuery = chartQuery.Where(c => c.Type == typeString);
+        }
+
+        if (request.ChartMix != null)
+        {
+            var mixId = MixGuids[request.ChartMix.Value];
+            chartQuery = chartQuery.Where(c => c.OriginalMixId == mixId);
+        }
+
+        return await (from p in playerQuery
+            join pr in database.PhoenixBestAttempt on p.Id equals pr.UserId
+            join c in chartQuery on pr.ChartId equals c.Id
+            group pr by pr.UserId
+            into g
+            select new UserChartAggregate(g.Key, g.Count(e => !e.IsBroken), g.Count(),
+                (int)g.Average(e => e.Score ?? 0))).ToArrayAsync(cancellationToken);
     }
 }

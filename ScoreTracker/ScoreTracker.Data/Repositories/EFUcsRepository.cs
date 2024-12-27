@@ -25,14 +25,15 @@ namespace ScoreTracker.Data.Repositories
             var songIds = ucsEntities.Select(u => u.SongId).Distinct().ToArray();
             var songs = (await database.Song.Where(s => songIds.Contains(s.Id)).ToArrayAsync(cancellationToken))
                 .ToDictionary(s => s.Id, s => new Song(s.Name, Enum.Parse<SongType>(s.Type),
-                    new Uri(s.ImagePath, UriKind.Absolute), s.Duration, s.Artist,
+                    new Uri(s.ImagePath, UriKind.Absolute), s.Duration, s.Artist ?? "Unknown",
                     Bpm.From(s.MinBpm, s.MaxBpm)));
             var counts = (await database.UcsChartLeaderboardEntry.ToArrayAsync(cancellationToken))
                 .GroupBy(e => e.ChartId)
                 .ToDictionary(g => g.Key, g => g.Count());
 
             return ucsEntities.Select(e => new UcsChart(e.PiuGameId, new Chart(
-                    e.Id, songs[e.SongId], Enum.Parse<ChartType>(e.ChartType), e.Level, MixEnum.Phoenix, e.Artist,
+                    e.Id, MixEnum.Phoenix, songs[e.SongId], Enum.Parse<ChartType>(e.ChartType), e.Level,
+                    MixEnum.Phoenix, e.Artist,
                     e.Level, null, new HashSet<Skill>()),
                 e.Uploader, e.Artist, e.Description, counts.TryGetValue(e.Id, out var c) ? c : 0));
         }

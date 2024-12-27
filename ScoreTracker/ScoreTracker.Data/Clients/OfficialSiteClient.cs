@@ -368,7 +368,8 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         if (song == null) return null;
 
         return new PiuGameUcsEntry(id,
-            new Chart(new Guid(), song, entry.ChartType, entry.Level, MixEnum.Phoenix, entry.Uploader, entry.Level,
+            new Chart(new Guid(), MixEnum.Phoenix, song, entry.ChartType, entry.Level, MixEnum.Phoenix, entry.Uploader,
+                entry.Level,
                 null, new HashSet<Skill>()), entry.Description);
     }
 

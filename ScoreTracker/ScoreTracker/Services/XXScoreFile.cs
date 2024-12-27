@@ -469,7 +469,7 @@ public sealed class XXScoreFile
 
 
             result.Add(new BestXXChartAttempt(
-                new Chart(Guid.Empty,
+                new Chart(Guid.Empty, MixEnum.XX,
                     new Song(name, SongType.Arcade, new Uri("/", UriKind.Relative), TimeSpan.Zero, "Unknown", null),
                     currentType,
                     level, MixEnum.XX, null, level, null, new HashSet<Skill>()), attempt));
@@ -523,7 +523,7 @@ public sealed class XXScoreFile
                 if (NameMappings.ContainsKey(name)) name = NameMappings[name];
                 var (chartType, level) = DifficultyLevel.ParseShortHand(record.Difficulty);
                 var attempt = new BestXXChartAttempt(
-                    new Chart(Guid.Empty,
+                    new Chart(Guid.Empty, MixEnum.XX,
                         new Song(name, SongType.Arcade, new Uri("/", UriKind.Relative), TimeSpan.Zero, "Unknown", null),
                         chartType,
                         level, MixEnum.XX, null, level, null, new HashSet<Skill>()),

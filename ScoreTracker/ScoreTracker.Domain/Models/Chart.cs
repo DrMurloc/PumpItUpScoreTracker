@@ -3,7 +3,8 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Models;
 
-public sealed record Chart(Guid Id, Song Song, ChartType Type, DifficultyLevel Level, MixEnum Mix, Name? StepArtist,
+public sealed record Chart(Guid Id, MixEnum OriginalMix, Song Song, ChartType Type, DifficultyLevel Level, MixEnum Mix,
+    Name? StepArtist,
     double? ScoringLevel,
     int? NoteCount,
     IReadOnlySet<Skill> Skills)
