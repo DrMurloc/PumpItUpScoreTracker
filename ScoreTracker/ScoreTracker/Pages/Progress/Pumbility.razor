@@ -202,13 +202,13 @@
         var oldRating = lowestScore;
         if (_oldPassLetterGrade != null)
         {
-            oldRating = ScoringConfiguration.PumbilityScoring(false).GetScore(_newPassLevel, _oldPassLetterGrade.Value.GetMinimumScore());
+            oldRating = (int)ScoringConfiguration.PumbilityScoring(false).GetScore(_newPassLevel, _oldPassLetterGrade.Value.GetMinimumScore());
             if (oldRating < lowestScore)
             {
                 oldRating = lowestScore;
             }
         }
-        var rating = ScoringConfiguration.PumbilityScoring(false).GetScore(_newPassLevel, newLetterGrade.GetMinimumScore());
+        var rating = (int)ScoringConfiguration.PumbilityScoring(false).GetScore(_newPassLevel, newLetterGrade.GetMinimumScore());
         _projectedNewPassRating = rating - oldRating;
         if (_projectedNewPassRating <= 0)
         {
@@ -270,7 +270,7 @@
                     var diff = scoring.GetScore(chartType, levelGroup.Key, PhoenixLetterGrade.AA.GetMinimumScore()) - lowestScore;
                     if (myScores.Any() && diff>0)
                     {
-                        _insufficientData[(chartType,levelGroup.Key)] = diff;
+                        _insufficientData[(chartType,levelGroup.Key)] = (int)diff;
                     }
                     continue;
                 }
@@ -318,7 +318,7 @@
                     continue;
                 }
             }
-            _projectedGains[kv.Key] = expectedGains;
+            _projectedGains[kv.Key] = (int)expectedGains;
         }
         _finishedProjecting = true;
     }
@@ -335,7 +335,7 @@
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
         _allScores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id))).Where(r=>r.Score!=null).ToDictionary(s => s.ChartId);
         _scores = (await Mediator.Send(new GetTop50ForPlayerQuery(CurrentUser.User.Id, null, 100))).ToDictionary(s => s.ChartId);
-        _ratings = _scores.ToDictionary(kv => kv.Key, kv => scoring.GetScore(_charts[kv.Key], kv.Value.Score!.Value, kv.Value.Plate ?? PhoenixPlate.RoughGame, kv.Value.IsBroken));
+        _ratings = _scores.ToDictionary(kv => kv.Key, kv => (int)scoring.GetScore(_charts[kv.Key], kv.Value.Score!.Value, kv.Value.Plate ?? PhoenixPlate.RoughGame, kv.Value.IsBroken));
         var top50 = _scores.Values.OrderByDescending(s => _ratings[s.ChartId]).Take(50);
 
         _tierList = TierListSaga.ProcessIntoTierList("PUMBILITY", top50.ToDictionary(s => s.ChartId, s => _ratings[s.ChartId])).GroupBy(t => t.Category)

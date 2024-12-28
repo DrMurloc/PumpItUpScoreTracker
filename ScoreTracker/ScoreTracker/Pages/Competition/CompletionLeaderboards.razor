@@ -20,7 +20,7 @@
 <PageTitle>Completion</PageTitle>
 <MudGrid>
     <MudItem xs="12" sm="4">
-        <MudSelect T="MixEnum?" Label=@L["Mix"] Value="_selectedMix" ValueChanged="SelectMix">
+        <MudSelect T="MixEnum?" Label=@L["Chart Original Mix"] Value="_selectedMix" ValueChanged="SelectMix">
             <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix">@MixEnum.Phoenix.ToString()</MudSelectItem>
             <MudSelectItem T="MixEnum?" Value="null">@L["All Mixes"]</MudSelectItem>
         </MudSelect>
@@ -69,6 +69,12 @@
 
             <MudTableSortLabel T="UserChartAggregate" SortBy="@(e=>Completion(e.Total,e.AverageScore))" InitialDirection="SortDirection.Descending">@L["Score Completion"]</MudTableSortLabel>
         </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="UserChartAggregate" SortBy="@(e=>e.Pumbility)">PUMBILITY</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="UserChartAggregate" SortBy="@(e=>e.PumbilityPlus)">PUMBILITY+</MudTableSortLabel>
+        </MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd>
@@ -83,7 +89,12 @@
         <MudTd>
             <MudProgressLinear Min="0" Max="100.0" Value="Completion(context.Total,context.AverageScore)" Color="Color.Primary">@Completion(context.Total, context.AverageScore).ToString("N1")%</MudProgressLinear>
         </MudTd>
-        <MudTd></MudTd>
+        <MudTd>
+            <MudProgressLinear Min="0" Max="_pumbilityMax" Value="context.Pumbility" Color="Color.Primary">@context.Pumbility</MudProgressLinear>
+        </MudTd>
+        <MudTd>
+            <MudProgressLinear Min="0" Max="_pumbilityPlusMax" Value="context.PumbilityPlus" Color="Color.Primary">@context.PumbilityPlus</MudProgressLinear>
+        </MudTd>
     </RowTemplate>
     <PagerContent>
         <MudTablePager></MudTablePager>
@@ -113,6 +124,8 @@
     private Name? _communityName = null;
     private bool _isLoading = false;
     private int _chartCount = 1;
+    private int _pumbilityMax = 1;
+    private int _pumbilityPlusMax = 1;
     private double Completion(int totalCount, PhoenixScore average) => 100.0* (totalCount * (double)average) / (_chartCount * 1000000.0);
 
     private async Task SelectMix(MixEnum? mix)
@@ -169,7 +182,12 @@
         {
             charts = charts.Where(c => c.Type == _chartType);
         }
-        _chartCount = charts.Count();
+        var chartArray = charts.ToArray();
+        _chartCount = chartArray.Count();
+        var pumbility = ScoringConfiguration.PumbilityScoring(true);
+        var pumbilityPlus = ScoringConfiguration.PumbilityPlus;
+        _pumbilityMax = (int) chartArray.Sum(c => pumbility.GetScore(c, PhoenixScore.Max, PhoenixPlate.PerfectGame, false));
+        _pumbilityPlusMax = (int)chartArray.Sum(c => pumbilityPlus.GetScore(c, PhoenixScore.Max, PhoenixPlate.PerfectGame, false));
         _isLoading = false;
 
     }

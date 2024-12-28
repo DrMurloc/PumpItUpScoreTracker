@@ -630,6 +630,34 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("PhoenixRecord", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.PhoenixRecordStatsEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("Pumbility")
+                        .HasColumnType("float");
+
+                    b.Property<double>("PumbilityPlus")
+                        .HasColumnType("float");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "ChartId")
+                        .IsUnique();
+
+                    b.ToTable("PhoenixRecordStats", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.PhotoVerificationEntity", b =>
                 {
                     b.Property<Guid>("Id")

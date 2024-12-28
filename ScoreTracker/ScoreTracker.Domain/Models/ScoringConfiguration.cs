@@ -77,19 +77,19 @@ namespace ScoreTracker.Domain.Models
             return result;
         }
 
-        public Rating GetScore(ChartType type, DifficultyLevel level, PhoenixScore score)
+        public double GetScore(ChartType type, DifficultyLevel level, PhoenixScore score)
         {
             return GetScore(Guid.Empty, level, type, SongType.Arcade, BaseAverageTime, false, score,
                 PhoenixPlate.SuperbGame);
         }
 
-        public int GetScore(DifficultyLevel level, PhoenixScore score)
+        public double GetScore(DifficultyLevel level, PhoenixScore score)
         {
             return GetScore(Guid.Empty, level, ChartType.Single, SongType.Arcade, BaseAverageTime, false, score,
                 PhoenixPlate.SuperbGame);
         }
 
-        private int GetScore(Guid chartId, DifficultyLevel level, ChartType chartType, SongType songType,
+        private double GetScore(Guid chartId, DifficultyLevel level, ChartType chartType, SongType songType,
             TimeSpan duration, bool isBroken, PhoenixScore score, PhoenixPlate plate)
         {
             if (score < MinimumScore) return 0;
@@ -132,7 +132,7 @@ namespace ScoreTracker.Domain.Models
                     if (ChartModifiers.TryGetValue(chartId, out var chartModifier)) result *= chartModifier;
                     if (isBroken) result *= StageBreakModifier;
 
-                    return (int)result;
+                    return result;
                 }
                 case CalculationType.Avalanche:
                 {
@@ -140,7 +140,7 @@ namespace ScoreTracker.Domain.Models
                     result *= PlateModifiers[plate];
                     var scoreModifier = letterGradeModifier;
                     if (isBroken) scoreModifier -= StageBreakModifier;
-                    return (int)(result * scoreModifier);
+                    return result * scoreModifier;
                 }
                 case CalculationType.Custom:
                 default:
@@ -170,11 +170,11 @@ namespace ScoreTracker.Domain.Models
                         case int intResult:
                             return intResult;
                         case double doubleResult:
-                            return (int)doubleResult;
+                            return doubleResult;
                         case decimal decimalResult:
-                            return (int)decimalResult;
+                            return (double)decimalResult;
                         default:
-                            return (int)result;
+                            return (double)result;
                     }
 
                     break;
@@ -182,7 +182,7 @@ namespace ScoreTracker.Domain.Models
             }
         }
 
-        public int GetScore(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)
+        public double GetScore(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)
         {
             return GetScore(chart.Id, chart.Level, chart.Type, chart.Song.Type, chart.Song.Duration, isBroken, score,
                 plate);
@@ -216,7 +216,7 @@ namespace ScoreTracker.Domain.Models
             return config;
         }
 
-        public static ScoringConfiguration PiuScoresRatingz => CreateScoring();
+        public static ScoringConfiguration PumbilityPlus => CreateScoring();
 
         private static ScoringConfiguration CreateScoring()
         {

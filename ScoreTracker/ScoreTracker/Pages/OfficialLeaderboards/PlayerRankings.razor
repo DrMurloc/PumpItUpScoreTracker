@@ -240,7 +240,7 @@
         }
         var scoringConfig = ScoringConfiguration.PumbilityScoring(false);
         _scores = (await WorldRankings.GetTop50(username, _currentType, CancellationToken.None))
-            .Select(r => new ScoreEntry(_charts[r.ChartId], r.Score!.Value, scoringConfig.GetScore(_charts[r.ChartId].Level, r.Score!.Value)))
+            .Select(r => new ScoreEntry(_charts[r.ChartId], r.Score!.Value, (int)scoringConfig.GetScore(_charts[r.ChartId].Level, r.Score!.Value)))
             .ToArray();
         _showingUsername = username;
 

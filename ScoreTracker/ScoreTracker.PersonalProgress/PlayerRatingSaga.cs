@@ -7,13 +7,15 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
 using ScoreTracker.PersonalProgress.Queries;
+using static ScoreTracker.PersonalProgress.PlayerRatingSaga;
 
 namespace ScoreTracker.PersonalProgress;
 
 public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
     IRequestHandler<GetTop50ForPlayerQuery, IEnumerable<RecordedPhoenixScore>>,
     IRequestHandler<GetTop50CompetitiveQuery, IEnumerable<RecordedPhoenixScore>>,
-    IRequestHandler<PlayerRatingSaga.RecalculateStats>,
+    IRequestHandler<RecalculateStats>,
+    IRequestHandler<RecalculatePumbility>,
     IConsumer<UserCreatedEvent>
 {
     private readonly IPhoenixRecordRepository _scores;
@@ -36,6 +38,10 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
     public async Task Consume(ConsumeContext<PlayerScoreUpdatedEvent> context)
     {
         await Handle(new RecalculateStats(context.Message.UserId), context.CancellationToken);
+        await Handle(
+            new RecalculatePumbility(context.Message.UserId,
+                context.Message.NewChartIds.Concat(context.Message.UpscoredChartIds.Keys).Distinct().ToArray()),
+            context.CancellationToken);
     }
 
     private double AverageOrDefault(IEnumerable<int> values, double def)
@@ -44,7 +50,7 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
         return enumerable.Any() ? enumerable.Average() : def;
     }
 
-    private sealed record ChartRating(Guid ChartId, ChartType Type, Rating Rating, PhoenixScore Score, bool IsBroken)
+    private sealed record ChartRating(Guid ChartId, ChartType Type, double Rating, PhoenixScore Score, bool IsBroken)
     {
     }
 
@@ -73,6 +79,10 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
         await _stats.SaveStats(context.Message.UserId,
             new PlayerStatsRecord(context.Message.UserId, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1),
             context.CancellationToken);
+    }
+
+    public sealed record RecalculatePumbility(Guid UserId, IEnumerable<Guid> chartIds) : IRequest
+    {
     }
 
     public sealed record RecalculateStats(Guid UserId) : IRequest
@@ -127,18 +137,18 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
                 .Take(50).Select(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score))
                 .ToArray());
 
-        var newStats = new PlayerStatsRecord(request.UserId, scores.Sum(s => s.Rating),
+        var newStats = new PlayerStatsRecord(request.UserId, (int)scores.Sum(s => s.Rating),
             recorded.Any(r => !r.IsBroken) ? recorded.Where(r => !r.IsBroken).Max(r => charts[r.ChartId].Level) : 1,
             recorded.Count(r => !r.IsBroken),
-            coOps.Sum(s => s.Rating),
+            (int)coOps.Sum(s => s.Rating),
             (int)AverageOrDefault(coOps.Select(s => (int)s.Score), 0),
-            top50.Sum(s => s.Rating),
+            (int)top50.Sum(s => s.Rating),
             (int)AverageOrDefault(top50.Select(s => (int)s.Score), 0),
             AverageOrDefault(top50.Select(s => (int)charts[s.ChartId].Level), 1),
-            top50Singles.Sum(s => s.Rating),
+            (int)top50Singles.Sum(s => s.Rating),
             (int)AverageOrDefault(top50Singles.Select(s => (int)s.Score), 0),
             AverageOrDefault(top50Singles.Select(s => (int)charts[s.ChartId].Level), 1),
-            top50Doubles.Sum(s => s.Rating),
+            (int)top50Doubles.Sum(s => s.Rating),
             (int)AverageOrDefault(top50Doubles.Select(s => (int)s.Score), 0),
             AverageOrDefault(top50Doubles.Select(s => (int)charts[s.ChartId].Level), 1),
             competitive,
@@ -155,7 +165,7 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
                     newStats.DoublesRating, oldStats.CompetitiveLevel, newStats.CompetitiveLevel,
                     oldStats.SinglesCompetitiveLevel, newStats.SinglesCompetitiveLevel,
                     oldStats.DoublesCompetitiveLevel,
-                    newStats.DoublesCompetitiveLevel, coOps.Sum(s => s.Rating), recorded.Count(r => !r.IsBroken)),
+                    newStats.DoublesCompetitiveLevel, (int)coOps.Sum(s => s.Rating), recorded.Count(r => !r.IsBroken)),
                 cancellationToken);
         await _bus.Publish(new PlayerStatsUpdatedEvent(request.UserId, newStats),
             cancellationToken);
@@ -183,5 +193,24 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
     private static double AvgOr0(double[] charts)
     {
         return charts.Any() ? charts.Average() : 0;
+    }
+
+    public async Task Handle(RecalculatePumbility request, CancellationToken cancellationToken)
+    {
+        var scores = (await _scores.GetPlayerScores(new[] { request.UserId },
+            request.chartIds,
+            cancellationToken)).ToArray();
+        var pumbility = ScoringConfiguration.PumbilityScoring(true);
+        var pumbilityPlus = ScoringConfiguration.PumbilityPlus;
+
+        var charts = (await _charts.GetCharts(MixEnum.Phoenix,
+                chartIds: request.chartIds,
+                cancellationToken: cancellationToken))
+            .ToDictionary(c => c.Id);
+
+        var ratings = scores.Select(s => new PhoenixRecordStats(s.ChartId,
+            pumbility.GetScore(charts[s.ChartId], s.Score, s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken),
+            pumbilityPlus.GetScore(charts[s.ChartId], s.Score, s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken)));
+        await _scores.UpdateScoreStats(request.UserId, ratings, cancellationToken);
     }
 }

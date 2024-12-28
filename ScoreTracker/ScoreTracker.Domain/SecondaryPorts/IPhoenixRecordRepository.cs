@@ -9,6 +9,9 @@ public interface IPhoenixRecordRepository
 {
     Task UpdateBestAttempt(Guid userId, RecordedPhoenixScore score, CancellationToken cancellationToken = default);
 
+    Task UpdateScoreStats(Guid userId, IEnumerable<PhoenixRecordStats> stats,
+        CancellationToken cancellationToken = default);
+
     Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(Guid userId,
         CancellationToken cancellationToken = default);
 

@@ -104,7 +104,7 @@ namespace ScoreTracker.Domain.Models
             Entries[index] = oldEntry with
             {
                 Score = score, Plate = plate, IsBroken = isBroken,
-                SessionScore = _configuration.Scoring.GetScore(oldEntry.Chart, score, plate, isBroken)
+                SessionScore = (int)_configuration.Scoring.GetScore(oldEntry.Chart, score, plate, isBroken)
             };
             NeedsApproval = true;
         }
@@ -125,7 +125,7 @@ namespace ScoreTracker.Domain.Models
             NeedsApproval = true;
             Entries.Add(
                 new Entry(chart, score, plate, isBroken,
-                    _configuration.Scoring.GetScore(chart, score, plate, isBroken)));
+                    (int)_configuration.Scoring.GetScore(chart, score, plate, isBroken)));
         }
 
         public sealed record Entry(Chart Chart, PhoenixScore Score, PhoenixPlate Plate, bool IsBroken,

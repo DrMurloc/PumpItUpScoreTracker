@@ -345,7 +345,7 @@
         Seconds = (int)c.Song.Duration.TotalSeconds, 
         EffectiveLevel = (Configuration.Scoring.ChartLevelSnapshot?.TryGetValue(c.Id,out var level)??false)?level:c.Level+.5,
         PointsWithoutScore = (int)Configuration.Scoring.GetScorelessScore(c),
-                Points = _records.ContainsKey(c.Id) ? Configuration.Scoring.GetScore(c, _records[c.Id].Score!.Value, _records[c.Id].Plate!.Value, _records[c.Id].IsBroken) : 0,
+                Points = _records.ContainsKey(c.Id) ? (int)Configuration.Scoring.GetScore(c, _records[c.Id].Score!.Value, _records[c.Id].Plate!.Value, _records[c.Id].IsBroken) : 0,
         Level = c.Level
     })
         .Where(c=>!_hideZeroScoredCharts||c.PointsWithoutScore>0);

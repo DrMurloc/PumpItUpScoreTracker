@@ -346,7 +346,7 @@ else if(_monthlyWeeks.Any())
     private bool _isBroken = false;
     private bool _isUploading = false;
     private bool _showSubmitDialog = false;
-    private static readonly ScoringConfiguration _scoring = ScoringConfiguration.PiuScoresRatingz;
+    private static readonly ScoringConfiguration _scoring = ScoringConfiguration.PumbilityPlus;
     private bool _isSaving = false;
     private Guid? _showingUserId = null;
     private string _showingSection = "Monthly";
@@ -505,7 +505,7 @@ else if(_monthlyWeeks.Any())
                 .Take(4)
                 .ToArray().AsEnumerable());
         _userTopFourTotal = _userTopFourCharts.ToDictionary(kv => kv.Key,
-            kv => kv.Value.Sum(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken)));
+            kv => kv.Value.Sum(s =>(int) _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken)));
         _userTotalPlace = _userTopFourTotal.OrderByDescending(kv => kv.Value).Select((kv, i) => (kv, i))
             .ToDictionary(c => c.kv.Key, c => c.i + 1);
         if (_isLoggedIn)
@@ -632,7 +632,7 @@ else if(_monthlyWeeks.Any())
 
         }
 
-        _monthlyTotals = _monthlyBestCharts.ToDictionary(kv => kv.Key, kv => kv.Value.Sum(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken)));
+        _monthlyTotals = _monthlyBestCharts.ToDictionary(kv => kv.Key, kv =>(int) kv.Value.Sum(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken)));
         _monthlyTop4 = _monthlyBestCharts.ToDictionary(kv => kv.Key, kv => kv.Value.OrderByDescending(s => _scoring.GetScore(_charts[s.ChartId], s.Score, s.Plate, s.IsBroken))
             .Take(4).ToArray());
 

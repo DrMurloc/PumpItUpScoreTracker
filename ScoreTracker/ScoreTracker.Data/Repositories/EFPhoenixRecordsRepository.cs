@@ -71,6 +71,37 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         _cache.Set(ScoreCache(userId), cache);
     }
 
+    public async Task UpdateScoreStats(Guid userId, IEnumerable<PhoenixRecordStats> stats,
+        CancellationToken cancellationToken = default)
+    {
+        var statArray = stats.ToArray();
+        var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+        var chartIds = statArray.Select(s => s.ChartId).ToArray();
+        var entities = await database.PhoenixRecordStats.Where(s => s.UserId == userId && chartIds.Contains(s.ChartId))
+            .ToDictionaryAsync(e => e.ChartId, cancellationToken);
+        var toCreate = new List<PhoenixRecordStatsEntity>();
+        foreach (var stat in statArray)
+            if (entities.ContainsKey(stat.ChartId))
+            {
+                entities[stat.ChartId].Pumbility = stat.Pumbility;
+                entities[stat.ChartId].PumbilityPlus = stat.PumbilityPlus;
+            }
+            else
+            {
+                toCreate.Add(new PhoenixRecordStatsEntity
+                {
+                    ChartId = stat.ChartId,
+                    UserId = userId,
+                    PumbilityPlus = stat.PumbilityPlus,
+                    Pumbility = stat.Pumbility
+                });
+            }
+
+        await database.PhoenixRecordStats.AddRangeAsync(toCreate, cancellationToken);
+
+        await database.SaveChangesAsync(cancellationToken);
+    }
+
     private async Task<IDictionary<Guid, RecordedPhoenixScore>> GetCachedScores(Guid userId,
         CancellationToken cancellationToken)
     {
@@ -306,9 +337,12 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         return await (from p in playerQuery
             join pr in database.PhoenixBestAttempt on p.Id equals pr.UserId
             join c in chartQuery on pr.ChartId equals c.Id
-            group pr by pr.UserId
+            join prs in database.PhoenixRecordStats on new { pr.ChartId, pr.UserId } equals new
+                { prs.ChartId, prs.UserId }
+            group new { pr, prs } by pr.UserId
             into g
-            select new UserChartAggregate(g.Key, g.Count(e => !e.IsBroken), g.Count(),
-                (int)g.Average(e => e.Score ?? 0))).ToArrayAsync(cancellationToken);
+            select new UserChartAggregate(g.Key, g.Count(e => !e.pr.IsBroken), g.Count(),
+                (int)g.Average(e => e.pr.Score ?? 0),
+                g.Sum(e => e.prs.Pumbility), g.Sum(e => e.prs.PumbilityPlus))).ToArrayAsync(cancellationToken);
     }
 }

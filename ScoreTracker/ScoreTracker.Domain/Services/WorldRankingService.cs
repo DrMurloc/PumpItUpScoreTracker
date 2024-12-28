@@ -63,7 +63,7 @@ public sealed class WorldRankingService : IWorldRankingService
                             break;
                     }
 
-                    totalRating += scoringConfig.GetScore(record.Item2.level, record.Score);
+                    totalRating += (int)scoringConfig.GetScore(record.Item2.level, record.Score);
                     totalDifficulty += record.Item2.level;
                     totalScore += record.Score;
                 }
