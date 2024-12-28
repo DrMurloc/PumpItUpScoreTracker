@@ -90,10 +90,10 @@
             <MudProgressLinear Min="0" Max="100.0" Value="Completion(context.Total,context.AverageScore)" Color="Color.Primary">@Completion(context.Total, context.AverageScore).ToString("N1")%</MudProgressLinear>
         </MudTd>
         <MudTd>
-            <MudProgressLinear Min="0" Max="_pumbilityMax" Value="context.Pumbility" Color="Color.Primary">@context.Pumbility</MudProgressLinear>
+            <MudProgressLinear Min="0" Max="_pumbilityMax" Value="context.Pumbility" Color="Color.Primary">@((100.0*context.Pumbility/_pumbilityMax).ToString("N0"))%</MudProgressLinear>
         </MudTd>
         <MudTd>
-            <MudProgressLinear Min="0" Max="_pumbilityPlusMax" Value="context.PumbilityPlus" Color="Color.Primary">@context.PumbilityPlus</MudProgressLinear>
+            <MudProgressLinear Min="0" Max="_pumbilityPlusMax" Value="context.PumbilityPlus" Color="Color.Primary">@((100.0 * context.PumbilityPlus / _pumbilityPlusMax).ToString("N0"))%</MudProgressLinear>
         </MudTd>
     </RowTemplate>
     <PagerContent>
