@@ -462,15 +462,14 @@ public sealed class PiuGameApi : IPiuGameApi
 
         await client.GetAsync("https://piugame.com", cancellationToken);
 
-        var response = await PostForMessageWithRetries("https://piugame.com/bbs/login_check.php",
+        await PostForMessageWithRetries("https://piugame.com/bbs/login_check.php",
             new Dictionary<string, string>
             {
                 { "url", "/" },
                 { "mb_id", username },
                 { "mb_password", password }
             }, cancellationToken, client);
-        //return "";
-        var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
+        await client.GetAsync("https://am-pass.net/", cancellationToken);
         return client;
     }
 
@@ -679,5 +678,46 @@ public sealed class PiuGameApi : IPiuGameApi
             SongName = songName,
             Uploader = uploader
         };
+    }
+
+    public async Task<IEnumerable<GameCardRecord>> GetCards(HttpClient client, CancellationToken cancellationToken)
+    {
+        var html = await client.GetStringAsync("https://piugame.com/my_page/game_id_information.php",
+            cancellationToken);
+        var document = new HtmlDocument();
+        document.LoadHtml(html);
+        var profileBoxes = document.DocumentNode.SelectNodes(
+            ".//div[contains(@class,'subDoc')]//div[contains(@class,'in_profile')]");
+        if (profileBoxes == null) return Array.Empty<GameCardRecord>();
+
+        if (profileBoxes.Count == 0) return Array.Empty<GameCardRecord>();
+
+        var mainId = document.DocumentNode
+            .SelectSingleNode(
+                ".//div[contains(@class,'subProfile_wrap')]//div[contains(@class,'name_w')]/p[contains(@class,'t2')]")
+            ?.InnerText ?? "";
+        if (string.IsNullOrWhiteSpace(mainId)) return Array.Empty<GameCardRecord>();
+
+        return (from card in profileBoxes
+            let tag = card.SelectSingleNode(".//div[contains(@class,'name_w')]/p[contains(@class,'t2')]")
+                ?.InnerText ?? ""
+            let link = card.SelectSingleNode(".//div[contains(@class,'profile_btn')]/a")
+                ?.GetAttributeValue("href", "") ?? ""
+            where !string.IsNullOrWhiteSpace(tag) && !string.IsNullOrWhiteSpace(link)
+            select new GameCardRecord(tag, link.Split('=')[^1], tag == mainId)).ToList();
+    }
+
+    public async Task SetCard(HttpClient client, string id, CancellationToken cancellationToken)
+    {
+        var result = await PostForMessageWithRetries("https://am-pass.net/logic/card/card_update.php",
+            new Dictionary<string, string>
+            {
+                { "type", "card_update_active" },
+                { "card_no", id },
+                { "card_num", id },
+                { "mode", "view" },
+                { "back_url", "/sub_3/3_1.php?v=" + id }
+            }, cancellationToken, client);
+        result.EnsureSuccessStatusCode();
     }
 }

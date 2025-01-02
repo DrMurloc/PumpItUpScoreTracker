@@ -121,7 +121,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     }
 
     public async Task<IEnumerable<OfficialRecordedScore>> GetRecordedScores(Guid userId, string username,
-        string password,
+        string password, string id,
         bool includeBroken,
         int? maxPages, CancellationToken cancellationToken)
     {
@@ -130,6 +130,17 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
             new ImportStatusUpdated(_currentUser.User.Id, "Logging In",
                 Array.Empty<RecordedPhoenixScore>()), cancellationToken);
         var sessionId = await _piuGame.GetSessionId(username, password, cancellationToken);
+
+        var gameCards = await _piuGame.GetCards(sessionId, cancellationToken);
+        var oldId = id;
+        var activeCard = gameCards.FirstOrDefault(c => c.IsActive);
+        if (activeCard != null && activeCard.Id != id)
+        {
+            oldId = activeCard.Id;
+            await _piuGame.SetCard(sessionId, id, cancellationToken);
+            sessionId = await _piuGame.GetSessionId(username, password, cancellationToken);
+        }
+
 
         var finalPage = (await _piuGame.GetBestScores(sessionId, 1, cancellationToken)).MaxPage;
         var responses = new List<PiuGameGetBestScoresResult.ScoreDto>();
@@ -231,6 +242,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
             }
         }
 
+        if (oldId != id) await _piuGame.SetCard(sessionId, oldId, cancellationToken);
         return results.Values;
     }
 
@@ -290,6 +302,15 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
                 }
                 : "")).Select(Name.From).ToArray();
         return new PiuGameAccountDataImport(imagePath, importedData.AccountName, titles);
+    }
+
+    public async Task<IEnumerable<GameCardRecord>> GetGameCards(string username, string password,
+        CancellationToken cancellationToken)
+    {
+        var session = await _piuGame.GetSessionId(username, password, cancellationToken);
+        var account = await _piuGame.GetAccountData(session, cancellationToken);
+        if (account.AccountName == "INVALID") throw new InvalidCredentialException("Invalid username or password");
+        return await _piuGame.GetCards(session, cancellationToken);
     }
 
     private async Task<string> GetMappedName(string songName, CancellationToken cancellationToken)

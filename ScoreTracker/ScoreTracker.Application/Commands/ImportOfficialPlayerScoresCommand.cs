@@ -3,7 +3,7 @@
 namespace ScoreTracker.Application.Commands
 {
     public sealed record ImportOfficialPlayerScoresCommand
-        (string Username, string Password, bool IncludeBroken) : IRequest
+        (string Username, string Password, string Id, bool IncludeBroken) : IRequest
     {
     }
 }

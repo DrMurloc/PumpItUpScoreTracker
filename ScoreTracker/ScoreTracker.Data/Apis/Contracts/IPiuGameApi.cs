@@ -1,4 +1,5 @@
 ﻿using ScoreTracker.Data.Apis.Dtos;
+using ScoreTracker.Domain.Records;
 
 namespace ScoreTracker.Data.Apis.Contracts
 {
@@ -24,5 +25,7 @@ namespace ScoreTracker.Data.Apis.Contracts
             CancellationToken cancellationToken);
 
         Task<PiuGameGetUcsResult?> GetUcs(int ucsId, CancellationToken cancellationToken);
+        Task<IEnumerable<GameCardRecord>> GetCards(HttpClient client, CancellationToken cancellationToken);
+        Task SetCard(HttpClient client, string id, CancellationToken cancellationToken);
     }
 }

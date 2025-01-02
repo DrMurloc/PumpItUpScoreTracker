@@ -71,6 +71,26 @@
                         <MudTextField InputType="InputType.Password" Disabled="_isImporting" Label="PIUGame.com Password" @bind-Value="_password"></MudTextField>
                     </MudItem>
                     <MudItem xs="12" sm="4">
+                        @if (_cards.Any())
+                        {
+                            <MudSelect T="string" Value="_selectedId" ValueChanged="SelectId" Label=@L["Game Card"]>
+                                @foreach (var gameCard in _cards)
+                                {
+                                    <MudSelectItem T="string" Value="@gameCard.Id">@gameCard.GameTag</MudSelectItem>
+                                }
+                            </MudSelect>
+                        } else if (!string.IsNullOrWhiteSpace(_selectedId))
+                        {
+                            <MudTooltip Text="@_selectedGameTag">
+                                <MudText>
+                                    @L["Game Card"]: @_selectedGameTag
+                                </MudText>
+                            </MudTooltip>
+                            
+                        }
+                    </MudItem>
+
+                    <MudItem xs="12">
                         <MudTooltip Text="Will pull in broken scores from your recent plays, passing scores overwrite broken scores">
                             
                             <MudCheckBox T="bool" Label=@L["Include Broken Scores"] @bind-Value="_includeBroken"></MudCheckBox>
@@ -243,6 +263,14 @@
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.ImportExport"
                        OnClick="ImportScores">Import</MudButton>
+            @if (!_cards.Any() && !string.IsNullOrWhiteSpace(_selectedId))
+            {
+                <MudButton Variant="Variant.Filled"
+                           Disabled="_isImporting"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.ChangeCircle"
+                           OnClick="LoadCards">@L["Change Card"]</MudButton>
+            }
         }
         @if (_currentStep == Step.Finished)
         {
@@ -257,6 +285,7 @@
 
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
+@inject IUiSettingsAccessor UiSettings;
 @inject IMediator Mediator;
 @inject ISnackbar Snackbar;
 @inject IPhoenixScoreFileExtractor Extractor;
@@ -288,14 +317,65 @@
     private string _username = "";
     private string _password = "";
     private bool _includeBroken = false;
-    private async Task ImportScores()
+    private string _selectedGameTag = "";
+    private string _selectedId = "";
+    private IEnumerable<GameCardRecord> _cards = Array.Empty<GameCardRecord>();
+
+    private void SelectId(string id)
     {
-        _scores.Clear();
+        _selectedGameTag = _cards.First(c => c.Id == id).GameTag;
+        _selectedId = id;
+    }
+
+    private async Task LoadCards()
+    {
         _isImporting = true;
-        _passwordImportStatus = "Starting Import...";
+
         try
         {
-            await Mediator.Send(new ImportOfficialPlayerScoresCommand(_username, _password, _includeBroken));
+            _cards = (await Mediator.Send(new GetGameCardsQuery(_username, _password))).ToArray();
+        }
+        catch (InvalidCredentialException)
+        {
+            _passwordImportStatus = "Invalid Username/Password";
+            Snackbar.Add("Your password appears to be incorrect, could not log into https://piugame.com", Severity.Error);
+        }
+        catch (Exception e)
+        {
+            _passwordImportStatus = "Import Experienced an Error";
+            Logger.LogError(e, $"There was an error while importing scores");
+            Snackbar.Add("There was an error while trying to import your scores. Try again later. If this persists notify DrMurloc", Severity.Error);
+        }
+        _isImporting = false;
+    }
+    private async Task ImportScores()
+    {
+        _isImporting = true;
+        try
+        {
+        if (string.IsNullOrWhiteSpace(_selectedId))
+        {
+            
+            _cards = (await Mediator.Send(new GetGameCardsQuery(_username, _password))).ToArray();
+            if (_cards.Count() > 1)
+            {
+                _selectedId = _cards.First(c => c.IsActive).Id;
+                _selectedGameTag = _cards.First(c => c.IsActive).GameTag;
+                Snackbar.Add($"Select a Game ID to Import", Severity.Info);
+                _isImporting = false;
+                return;
+                
+            }
+            _selectedId = _cards.First().Id;
+            _selectedGameTag = _cards.First().GameTag;
+
+        }
+        await UiSettings.SetSetting($"PhoenixScoreUpload__SelectedGameId", _selectedId);
+        await UiSettings.SetSetting($"PhoenixScoreUpload__SelectedGameTag", _selectedGameTag);
+
+        _scores.Clear();
+        _passwordImportStatus = "Starting Import...";
+            await Mediator.Send(new ImportOfficialPlayerScoresCommand(_username, _password, _selectedId,_includeBroken));
             _passwordImportStatus = "Import Completed!";
         }
         catch (InvalidCredentialException)
@@ -326,9 +406,12 @@
     {
         MainLayout.ImportStatusUpdated += StatusUpdate;
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+        if (!CurrentUser.IsLoggedIn) 
+            NavManager.NavigateTo("/Login");
         _userId = CurrentUser.User.Id;
-        if (CurrentUser.IsLoggedIn) return;
-        NavManager.NavigateTo("/Login");
+        _selectedId = await UiSettings.GetSetting("PhoenixScoreUpload__SelectedGameId") ?? "";
+        _selectedGameTag = await UiSettings.GetSetting("PhoenixScoreUpload__SelectedGameTag") ?? "";
+
     }
 
     private void StatusUpdate(object? origin, ImportStatusUpdated e)

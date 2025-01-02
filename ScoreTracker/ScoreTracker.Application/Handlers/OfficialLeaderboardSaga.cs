@@ -15,7 +15,8 @@ namespace ScoreTracker.Application.Handlers
     public sealed class OfficialLeaderboardSaga : IRequestHandler<ProcessOfficialLeaderboardsCommand>,
         IRequestHandler<ProcessChartPopularityCommand>,
         IRequestHandler<ImportOfficialPlayerScoresCommand>,
-        IRequestHandler<UpdateSongImagesCommand>
+        IRequestHandler<UpdateSongImagesCommand>,
+        IRequestHandler<GetGameCardsQuery, IEnumerable<GameCardRecord>>
     {
         private readonly IOfficialSiteClient _officialSite;
         private readonly ITierListRepository _tierLists;
@@ -194,6 +195,7 @@ namespace ScoreTracker.Application.Handlers
 
             var scores =
                 (await _officialSite.GetRecordedScores(_currentUser.User.Id, request.Username, request.Password,
+                    request.Id,
                     request.IncludeBroken, limit,
                     cancellationToken))
                 .ToArray();
@@ -259,6 +261,12 @@ namespace ScoreTracker.Application.Handlers
                 var newPath = await _files.CopyFromSource(piuGamePath, newImage, cancellationToken);
                 await _charts.UpdateSongImage(song.Name, newPath, cancellationToken);
             }
+        }
+
+        public async Task<IEnumerable<GameCardRecord>> Handle(GetGameCardsQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await _officialSite.GetGameCards(request.Username, request.Password, cancellationToken);
         }
     }
 }
