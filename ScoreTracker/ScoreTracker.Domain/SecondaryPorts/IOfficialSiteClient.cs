@@ -12,6 +12,7 @@ public interface IOfficialSiteClient
     Task<int> GetScorePageCount(string username, string password, CancellationToken cancellationToken);
 
     Task<IEnumerable<OfficialRecordedScore>> GetRecordedScores(Guid userId, string username, string password, string id,
+        string expectedGameTag,
         bool includeBroken,
         int? maxPages,
         CancellationToken cancellationToken);

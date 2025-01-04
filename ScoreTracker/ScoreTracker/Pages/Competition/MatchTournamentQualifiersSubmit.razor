@@ -456,6 +456,7 @@
         try
         {
             var accountInfo = await OfficialSite.GetAccountData(_piugameUsername, _piugamePassword, CancellationToken.None);
+
             await AdminNotification.NotifyAdmin($"{_username} Imported using {accountInfo.AccountName}", CancellationToken.None);
             var newResults = false;
             var results = await OfficialSite.GetRecentScores(_piugameUsername, _piugamePassword, CancellationToken.None);

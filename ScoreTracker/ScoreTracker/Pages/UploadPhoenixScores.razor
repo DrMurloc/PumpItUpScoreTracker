@@ -370,12 +370,12 @@
             _selectedGameTag = _cards.First().GameTag;
 
         }
-        await UiSettings.SetSetting($"PhoenixScoreUpload__SelectedGameId", _selectedId);
-        await UiSettings.SetSetting($"PhoenixScoreUpload__SelectedGameTag", _selectedGameTag);
+        await UiSettings.SetSetting($"PhoenixScoreUpload__LastGameId", _selectedId);
+        await UiSettings.SetSetting($"PhoenixScoreUpload__LastGameTag", _selectedGameTag);
 
         _scores.Clear();
         _passwordImportStatus = "Starting Import...";
-            await Mediator.Send(new ImportOfficialPlayerScoresCommand(_username, _password, _selectedId,_includeBroken));
+            await Mediator.Send(new ImportOfficialPlayerScoresCommand(_username, _password, _selectedId, _selectedGameTag,_includeBroken));
             _passwordImportStatus = "Import Completed!";
         }
         catch (InvalidCredentialException)
@@ -409,8 +409,8 @@
         if (!CurrentUser.IsLoggedIn) 
             NavManager.NavigateTo("/Login");
         _userId = CurrentUser.User.Id;
-        _selectedId = await UiSettings.GetSetting("PhoenixScoreUpload__SelectedGameId") ?? "";
-        _selectedGameTag = await UiSettings.GetSetting("PhoenixScoreUpload__SelectedGameTag") ?? "";
+        _selectedId = await UiSettings.GetSetting("PhoenixScoreUpload__LastGameId") ?? "";
+        _selectedGameTag = await UiSettings.GetSetting("PhoenixScoreUpload__LastGameTag") ?? "";
 
     }
 

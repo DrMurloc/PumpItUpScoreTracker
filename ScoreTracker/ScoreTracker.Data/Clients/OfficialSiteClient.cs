@@ -121,7 +121,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     }
 
     public async Task<IEnumerable<OfficialRecordedScore>> GetRecordedScores(Guid userId, string username,
-        string password, string id,
+        string password, string id, string expectedGameTag,
         bool includeBroken,
         int? maxPages, CancellationToken cancellationToken)
     {
@@ -132,15 +132,12 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         var sessionId = await _piuGame.GetSessionId(username, password, cancellationToken);
 
         var gameCards = await _piuGame.GetCards(sessionId, cancellationToken);
-        var oldId = id;
         var activeCard = gameCards.FirstOrDefault(c => c.IsActive);
-        if (activeCard != null && activeCard.Id != id)
-        {
-            oldId = activeCard.Id;
-            await _piuGame.SetCard(sessionId, id, cancellationToken);
-            sessionId = await _piuGame.GetSessionId(username, password, cancellationToken);
-        }
+        if (activeCard != null && activeCard.Id != id) await _piuGame.SetCard(sessionId, id, cancellationToken);
 
+        var accountInfo = await _piuGame.GetAccountData(sessionId, cancellationToken);
+        if (accountInfo.AccountName != expectedGameTag)
+            throw new InvalidOperationException("Expected game tag didn't match, aborting to avoid bad data");
 
         var finalPage = (await _piuGame.GetBestScores(sessionId, 1, cancellationToken)).MaxPage;
         var responses = new List<PiuGameGetBestScoresResult.ScoreDto>();
@@ -242,7 +239,6 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
             }
         }
 
-        if (oldId != id) await _piuGame.SetCard(sessionId, oldId, cancellationToken);
         return results.Values;
     }
 

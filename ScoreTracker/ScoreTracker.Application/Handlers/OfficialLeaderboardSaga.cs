@@ -195,7 +195,7 @@ namespace ScoreTracker.Application.Handlers
 
             var scores =
                 (await _officialSite.GetRecordedScores(_currentUser.User.Id, request.Username, request.Password,
-                    request.Id,
+                    request.Id, request.ExpectedGameTag,
                     request.IncludeBroken, limit,
                     cancellationToken))
                 .ToArray();

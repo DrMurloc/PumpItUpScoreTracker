@@ -687,7 +687,7 @@ public sealed class PiuGameApi : IPiuGameApi
         var document = new HtmlDocument();
         document.LoadHtml(html);
         var profileBoxes = document.DocumentNode.SelectNodes(
-            ".//div[contains(@class,'subDoc')]//div[contains(@class,'in_profile')]");
+            ".//div[contains(@id,'profile_modal')]//div[contains(@class,'in_profile')]");
         if (profileBoxes == null) return Array.Empty<GameCardRecord>();
 
         if (profileBoxes.Count == 0) return Array.Empty<GameCardRecord>();
@@ -701,22 +701,18 @@ public sealed class PiuGameApi : IPiuGameApi
         return (from card in profileBoxes
             let tag = card.SelectSingleNode(".//div[contains(@class,'name_w')]/p[contains(@class,'t2')]")
                 ?.InnerText ?? ""
-            let link = card.SelectSingleNode(".//div[contains(@class,'profile_btn')]/a")
-                ?.GetAttributeValue("href", "") ?? ""
-            where !string.IsNullOrWhiteSpace(tag) && !string.IsNullOrWhiteSpace(link)
-            select new GameCardRecord(tag, link.Split('=')[^1], tag == mainId)).ToList();
+            let id = card.SelectSingleNode(".//input[contains(@name,'sub_profile')]")
+                ?.GetAttributeValue("value", "") ?? ""
+            where !string.IsNullOrWhiteSpace(tag) && !string.IsNullOrWhiteSpace(id)
+            select new GameCardRecord(tag, id, tag == mainId)).ToList();
     }
 
     public async Task SetCard(HttpClient client, string id, CancellationToken cancellationToken)
     {
-        var result = await PostForMessageWithRetries("https://am-pass.net/logic/card/card_update.php",
+        var result = await PostForMessageWithRetries("https://piugame.com/ajax/sub_profile.php",
             new Dictionary<string, string>
             {
-                { "type", "card_update_active" },
-                { "card_no", id },
-                { "card_num", id },
-                { "mode", "view" },
-                { "back_url", "/sub_3/3_1.php?v=" + id }
+                { "no", id }
             }, cancellationToken, client);
         result.EnsureSuccessStatusCode();
     }
