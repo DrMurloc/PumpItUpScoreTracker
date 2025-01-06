@@ -1519,7 +1519,7 @@ function(val, index) {
                 var tierList = TierListSaga.ProcessIntoTierList("Score", _folderScores.Where(kv => kv.Value.Score != null).ToDictionary(kv => kv.Key, kv => (now - kv.Value.RecordedDate).TotalDays))
                     .ToDictionary(kv => kv.ChartId);
                 _finalGroupings = _finalEntries.OrderByDescending(e => _scores.TryGetValue(e.ChartId, out var s) ? (now - s.RecordedDate).TotalDays : -1)
-                    .GroupBy(e => _scores.ContainsKey(e.ChartId) ? _ageNames[tierList[e.ChartId].Category] : _ageNames[TierListCategory.Unrecorded])
+                    .GroupBy(e => _scores.ContainsKey(e.ChartId) ? _ageNames[tierList.TryGetValue(e.ChartId, out var t)?t.Category:TierListCategory.Unrecorded] : _ageNames[TierListCategory.Unrecorded])
                     .ToArray();
             }
         }
