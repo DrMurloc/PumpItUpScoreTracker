@@ -315,7 +315,7 @@ public sealed class PiuGameApi : IPiuGameApi
 
                 var score = int.Parse(card
                                           .SelectSingleNode(".//div[contains(@class,'li_in')]/i[contains(@class,'tx')]")
-                                          ?.InnerText ??
+                                          ?.InnerText.Replace(",", "") ??
                                       "",
                     NumberStyles.AllowThousands);
                 var songName =
