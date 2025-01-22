@@ -60,6 +60,8 @@ namespace ScoreTracker.Domain.Models
         public bool AllowRepeats { get; set; } = false;
         public int Count { get; set; } = 3;
         public bool UseScoringLevels { get; set; } = false;
+        public double? MinCoOpLevel;
+        public double? MaxCoOpLevel;
 
         public IDictionary<ChartType, int?> ChartTypeMinimums { get; set; } =
             new[] { ChartType.Single, ChartType.Double, ChartType.CoOp }.ToDictionary(c => c, c => (int?)null);

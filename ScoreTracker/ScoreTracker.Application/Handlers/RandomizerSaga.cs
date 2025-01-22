@@ -62,6 +62,20 @@ namespace ScoreTracker.Application.Handlers
                     continue;
                 }
 
+                if (settings.MinCoOpLevel != null && chart.Type == ChartType.CoOp &&
+                    (chart.ScoringLevel < settings.MinCoOpLevel || chart.ScoringLevel == null))
+                {
+                    calculatedWeights[chart.Id] = 0;
+                    continue;
+                }
+
+                if (settings.MaxCoOpLevel != null && chart.Type == ChartType.CoOp &&
+                    (chart.ScoringLevel > settings.MaxCoOpLevel || chart.ScoringLevel == null))
+                {
+                    calculatedWeights[chart.Id] = 0;
+                    continue;
+                }
+
                 if (settings.ClearStatus != null)
                 {
                     if (settings.ClearStatus.Value &&

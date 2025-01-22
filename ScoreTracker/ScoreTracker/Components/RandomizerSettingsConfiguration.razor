@@ -61,6 +61,14 @@
                     }
                 </MudItem>
             }
+            <MudItem xs="12"></MudItem>
+            <MudItem xs="6">
+                <MudNumericField T="double?" @bind-Value="Settings.MinCoOpLevel" Label=@L["Min CoOp Scoring Level"] Clearable="true" Min="0" Max="Settings.MaxCoOpLevel??28"></MudNumericField>
+            </MudItem>
+            <MudItem xs="6">
+
+                <MudNumericField T="double?" @bind-Value="Settings.MaxCoOpLevel" Label=@L["Max CoOp Scoring Level"] Clearable="true" Min="Settings.MinCoOpLevel??0" Max="28"></MudNumericField>
+            </MudItem>
         </MudGrid>
     </MudExpansionPanel>
 
