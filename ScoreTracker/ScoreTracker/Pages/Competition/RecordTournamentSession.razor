@@ -19,7 +19,11 @@
 {
     <MudGrid>
         <MudItem xs="12">
-            <MudText Typo="Typo.h4">Build Session - @_session.TotalScore Total Points</MudText>
+            <MudText Typo="Typo.h4">@_configuration?.Name @L["Submit"]</MudText>
+            @if (_session.TotalScore > 0)
+            {
+                <MudText Typo="Typo.subtitle1">@_session.TotalScore Total Points</MudText>
+            }
         </MudItem>
         @foreach (var entry in _session.Entries)
         {

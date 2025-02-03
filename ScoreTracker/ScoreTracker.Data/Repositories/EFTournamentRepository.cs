@@ -18,10 +18,12 @@ namespace ScoreTracker.Data.Repositories
         private readonly IMemoryCache _memoryCache;
         private readonly ChartAttemptDbContext _database;
         private readonly IChartRepository _charts;
+        private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
         public EFTournamentRepository(IMemoryCache memoryCache, IChartRepository charts,
             IDbContextFactory<ChartAttemptDbContext> factory)
         {
+            _factory = factory;
             _database = factory.CreateDbContext();
             _memoryCache = memoryCache;
             _charts = charts;
@@ -48,7 +50,8 @@ namespace ScoreTracker.Data.Repositories
                         t.Location, t.IsHighlighted,
                         Uri.TryCreate(t.LinkOverride, UriKind.Absolute, out var url) ? (Uri?)url : null,
                         t.StartDate,
-                        t.EndDate)).ToArray();
+                        t.EndDate,
+                        t.IsMoM)).ToArray();
             });
         }
 
@@ -75,6 +78,8 @@ namespace ScoreTracker.Data.Repositories
                     Configuration = JsonSerializer.Serialize(TournamentConfigurationJsonEntity.From(tournament)),
                     EndDate = tournament.EndDate,
                     StartDate = tournament.StartDate,
+                    IsHighlighted = tournament.IsHighlighted,
+                    IsMoM = tournament.IsMom,
                     Name = tournament.Name
                 }, cancellationToken);
             }
@@ -82,8 +87,50 @@ namespace ScoreTracker.Data.Repositories
             {
                 entity.Name = tournament.Name;
                 entity.EndDate = tournament.EndDate;
+                entity.IsHighlighted = tournament.IsHighlighted;
                 entity.StartDate = tournament.StartDate;
+                entity.IsMoM = tournament.IsMom;
                 entity.Configuration = JsonSerializer.Serialize(TournamentConfigurationJsonEntity.From(tournament));
+            }
+
+            await _database.SaveChangesAsync(cancellationToken);
+            _memoryCache.Remove(TourneyCacheKey);
+            _memoryCache.Remove(TourneyIdCacheKey(tournament.Id));
+        }
+
+        public async Task CreateOrSaveTournament(TournamentRecord tournament, CancellationToken cancellationToken)
+        {
+            var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var entity = await database.Tournament.Where(t => t.Id == tournament.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (entity == null)
+            {
+                await database.Tournament.AddAsync(new TournamentEntity
+                {
+                    Configuration = "{}",
+                    EndDate = tournament.EndDate,
+                    Id = tournament.Id,
+                    IsHighlighted = tournament.IsHighlighted,
+                    IsMoM = tournament.IsMoM,
+                    LinkOverride = tournament.LinkOverride?.ToString(),
+                    Location = tournament.Location,
+                    Name = tournament.Name,
+                    StartDate = tournament.StartDate,
+                    Type = tournament.Type.ToString()
+                }, cancellationToken);
+            }
+            else
+            {
+                entity.EndDate = tournament.EndDate;
+                entity.Id = tournament.Id;
+                entity.IsHighlighted = tournament.IsHighlighted;
+                entity.IsMoM = tournament.IsMoM;
+                entity.LinkOverride = tournament.LinkOverride?.ToString();
+                entity.Location = tournament.Location;
+                entity.Name = tournament.Name;
+                entity.StartDate = tournament.StartDate;
+                entity.Type = tournament.Type.ToString();
+                entity.IsMoM = tournament.IsMoM;
             }
 
             await _database.SaveChangesAsync(cancellationToken);
@@ -231,6 +278,24 @@ namespace ScoreTracker.Data.Repositories
                 result.Session = await GetSession(tournamentId, result.UserId, cancellationToken);
 
             return results;
+        }
+
+        public async Task CreateScoringLevelSnapshots(Guid tournamentId, IEnumerable<(Guid, double)> snapshots,
+            CancellationToken cancellationToken)
+        {
+            var database = await _factory.CreateDbContextAsync(cancellationToken);
+            database.TournamentChartLevel.RemoveRange(
+                await database.TournamentChartLevel.Where(l => l.TournamentId == tournamentId)
+                    .ToArrayAsync(cancellationToken));
+
+            await database.TournamentChartLevel.AddRangeAsync(snapshots.Select(s => new TournamentChartLevelEntity
+            {
+                Id = Guid.NewGuid(),
+                ChartId = s.Item1,
+                Level = s.Item2,
+                TournamentId = tournamentId
+            }), cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
         }
 
         private string SnapshotCacheKey(Guid tournamentId)

@@ -11,10 +11,17 @@
     
     <MudText Typo="Typo.h3">@_configuration.Name</MudText>
     <br/>
-    @if (_configuration.IsActive)
-    {
-        <MudButton Href=@($"/Tournament/Stamina/{TournamentId}/Record") Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit">Record Session</MudButton>
-    }
+    <MudGrid>
+        <MudItem xs="6" sm="3">
+            @if (_configuration.IsActive)
+            {
+                <MudButton Href=@($"/Tournament/Stamina/{TournamentId}/Record") Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit">Record Session</MudButton>
+            }
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudButton Href=@($"/SessionBuilder?TournamentId={TournamentId}") Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.QuestionAnswer">Test Scores</MudButton>
+        </MudItem>
+    </MudGrid>
     <br/>
     <MudSwitch Label="Show Extra Info" @bind-Value="_showExtraData" Color="Color.Primary"></MudSwitch>
     <br/>

@@ -50,6 +50,6 @@
     <EmbeddedResource Update="Resources\App.fr-FR.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-  </ItemGroup>
 
+  </ItemGroup>
 </Project>

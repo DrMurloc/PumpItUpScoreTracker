@@ -8,7 +8,8 @@ namespace ScoreTracker.Domain.Records
         bool IsHighlighted,
         Uri? LinkOverride,
         DateTimeOffset? StartDate,
-        DateTimeOffset? EndDate)
+        DateTimeOffset? EndDate,
+        bool IsMoM)
     {
     }
 }

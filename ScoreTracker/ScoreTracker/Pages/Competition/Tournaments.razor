@@ -258,7 +258,7 @@
     private IDictionary<Guid, bool> _hasQualifiers = new Dictionary<Guid, bool>();
     protected override async Task OnInitializedAsync()
     {
-        var tournaments = (await Mediator.Send(new GetAllTournamentsQuery())).ToArray();
+        var tournaments = (await Mediator.Send(new GetAllTournamentsQuery())).Where(t=>!t.IsMoM).ToArray();
         _tournaments = tournaments.ToDictionary(t => t.Id);
         var now = DateTimeOffset.Now;
         foreach (var tournament in _tournaments.Values)

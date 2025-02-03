@@ -10,20 +10,25 @@ namespace ScoreTracker.Domain.Models
         public TimeSpan MaxTime { get; set; } = TimeSpan.FromMinutes(105);
         public bool AllowRepeats { get; set; } = false;
         public bool IsStarted => StartDate == null || StartDate <= DateTimeOffset.Now;
-        public bool IsEnded => EndDate == null || DateTimeOffset.Now <= EndDate;
+        public bool IsEnded => EndDate != null && DateTimeOffset.Now > EndDate;
         public bool IsActive => IsStarted && !IsEnded;
+        public bool IsMom { get; }
+        public bool IsHighlighted { get; }
 
         public TournamentConfiguration(ScoringConfiguration scoringConfiguration) : this(Guid.NewGuid(), "Unnamed",
-            scoringConfiguration)
+            scoringConfiguration, false, false)
         {
             Scoring = scoringConfiguration;
         }
 
-        public TournamentConfiguration(Guid id, Name name, ScoringConfiguration scoringConfiguration)
+        public TournamentConfiguration(Guid id, Name name, ScoringConfiguration scoringConfiguration,
+            bool isHighlighted, bool isMom)
         {
             Id = id;
             Name = name;
             Scoring = scoringConfiguration;
+            IsHighlighted = isHighlighted;
+            IsMom = isMom;
         }
 
         public ScoringConfiguration Scoring { get; }

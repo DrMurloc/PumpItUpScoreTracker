@@ -78,7 +78,7 @@ namespace ScoreTracker.Data.Persistence.Entities
                 LetterGradeModifiers =
                     LetterGradeModifiers.ToDictionary(kv => Enum.Parse<PhoenixLetterGrade>(kv.Key), kv => kv.Value),
                 PlateModifiers = PlateModifiers.ToDictionary(kv => Enum.Parse<PhoenixPlate>(kv.Key), kv => kv.Value)
-            })
+            }, false, false)
             {
                 StartDate = StartDate,
                 EndDate = EndDate,

@@ -15,20 +15,23 @@
 @using System.Text.Json
 @using System.Text.Json.Serialization
 
-<PageTitle>Tournament Builder</PageTitle>
+<PageTitle>Stamina Session Builder</PageTitle>
 
 <MudText Typo="Typo.h3">Tournament Settings</MudText>
 <MudGrid>
     <MudItem xs="12">
         <MudSelect T="Guid?" Label="PreBuilt Tournament Configuration" Value="_currentTourney" ValueChanged="SelectTourney" Clearable>
             <MudSelectItem T="Guid?" Value="null">Default</MudSelectItem>
-            @foreach (var tourney in _tournaments)
+            @foreach (var tourney in _tournaments.Where(t=>t.Type==TournamentType.Stamina).OrderByDescending(t=>t.StartDate??t.EndDate??DateTimeOffset.MinValue))
             {
                 <MudSelectItem T="Guid?" Value="@tourney.Id">@tourney.Name</MudSelectItem>
             }
         </MudSelect>
     </MudItem>
 </MudGrid>
+@if (CurrentUser.IsLoggedInAsAdmin)
+{
+
 <br/>
 <br/>
 <MudRadioGroup T="ScoringConfiguration.CalculationType" @bind-Value="@Configuration.Scoring.Formula">
@@ -176,6 +179,7 @@
 </MudExpansionPanels>
 <br/>
 
+}
 <MudText Typo="Typo.h3">Test With Player Data</MudText>
 <br/>
 <MudButton Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Filled" Color="Color.Primary">Import Your Phoenix Scores</MudButton>
@@ -291,6 +295,9 @@
     private ICollection<string> NotParsed = new List<string>();
     private TournamentSession? _currentSession;
 
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "TournamentId")]
+    public Guid? TournamentId { get; set; }
     private void SetCharts()
     {
         NotParsed = new List<string>();
@@ -366,7 +373,7 @@
         await SetUser(CurrentUser.IsLoggedIn ? CurrentUser.User.Id : _users.First(u => u.Name=="DrMurloc").Id);
 
         _tournaments = await Mediator.Send(new GetAllTournamentsQuery());
-        await SelectTourney(null);
+        await SelectTourney(TournamentId);
     }
 
 

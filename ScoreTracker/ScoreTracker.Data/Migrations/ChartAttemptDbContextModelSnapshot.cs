@@ -18,7 +18,7 @@ namespace ScoreTracker.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("scores")
-                .HasAnnotation("ProductVersion", "8.0.3")
+                .HasAnnotation("ProductVersion", "9.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -1036,6 +1036,9 @@ namespace ScoreTracker.Data.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.Property<bool>("IsHighlighted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsMoM")
                         .HasColumnType("bit");
 
                     b.Property<string>("LinkOverride")
