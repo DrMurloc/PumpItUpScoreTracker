@@ -115,7 +115,7 @@
 </MudItem>
 
 
-    <MudItem xs="4" sm="3">
+    <MudItem xs="6" sm="3">
         <MudMenu Label=@L["Settings"] StartIcon="@Icons.Material.Filled.Settings" Variant="Variant.Outlined" Color="Color.Primary">
             <MudMenuItem OnClick="()=>SetTextView(!_textView)">
                 @if (_textView)
@@ -175,7 +175,7 @@
         </MudMenu>    
 
     </MudItem>
-<MudItem xs="4" sm="3">
+<MudItem xs="6" sm="3">
     <MudMenu Label=@L["Filters"] StartIcon="@Icons.Material.Filled.FilterList" Variant="Variant.Outlined" Color="Color.Primary">
         @foreach (var filter in Enum.GetValues<Filter>().OrderBy(e => e.ToString()))
         {
@@ -189,8 +189,8 @@
         }
     </MudMenu>
 </MudItem>
-<MudItem xs="4" sm="3">
-    <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.FileDownload" Disabled="_isBuildingImage">Download as Image</MudButton>
+<MudItem xs="6" sm="3">
+    <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.FileDownload" Disabled="_isBuildingImage">Download</MudButton>
 </MudItem>
     @if (_settings.ShowingFilters.Contains(Filter.SongName))
     {
