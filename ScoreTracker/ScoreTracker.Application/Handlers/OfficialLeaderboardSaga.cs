@@ -6,6 +6,7 @@ using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -191,6 +192,13 @@ namespace ScoreTracker.Application.Handlers
                 try
                 {
                     await _piuTracker.SyncData(accountData.AccountName, accountData.Sid, cancellationToken);
+                }
+                catch (PiuTrackerUsedTooRecentException)
+                {
+                    await _mediator.Publish(
+                        new ImportStatusError(userId,
+                            "PIU Tracker sync failed, you've imported too recently."),
+                        cancellationToken);
                 }
                 catch (Exception e)
                 {

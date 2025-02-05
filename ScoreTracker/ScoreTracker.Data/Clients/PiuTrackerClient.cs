@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using System.Text.Json;
+using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
 
@@ -25,6 +26,9 @@ namespace ScoreTracker.Data.Clients
             _client.Timeout = TimeSpan.FromMinutes(5);
             var result = await _client.PostAsync($"https://piutracker.app:3002/api/sync/{gameId}/{number}", content,
                 cancellationToken);
+            var errorMessage = await result.Content.ReadAsStringAsync(cancellationToken);
+            if (errorMessage == "This user was already updated recently! Try again later.")
+                throw new PiuTrackerUsedTooRecentException();
             result.EnsureSuccessStatusCode();
         }
     }
