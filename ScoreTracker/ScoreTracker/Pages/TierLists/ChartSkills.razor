@@ -23,6 +23,8 @@
 @using Syncfusion.Blazor.Data
 @using System.Text.Json
 @using System.ComponentModel
+@using System.Drawing
+@using Discord
 @using Microsoft.OpenApi.Extensions
 @inject ChartVideoDisplayer VideoDisplayer
 <PageTitle>Personalized Tier List</PageTitle>
@@ -36,12 +38,6 @@
         <MudLink Href="/TierLists/Old">Go to Old Tier Lists Page</MudLink>
     </MudItem>
 
-    @if (_isLoading)
-    {
-        <MudItem xs="12">
-            <MudProgressLinear Color="Color.Primary" Indeterminate="true"></MudProgressLinear>
-        </MudItem>
-    }
     <MudItem xs="12" sm="6">
         <MudSelect T="ChartType" Value="_chartType" ValueChanged="SetType" Label=@L["Chart Type"] Disabled="_isLoading">
             <MudSelectItem T="ChartType" Value="ChartType.Single">Singles</MudSelectItem>
@@ -119,7 +115,7 @@
 </MudItem>
 
 
-    <MudItem xs="6" sm="3">
+    <MudItem xs="4" sm="3">
         <MudMenu Label=@L["Settings"] StartIcon="@Icons.Material.Filled.Settings" Variant="Variant.Outlined" Color="Color.Primary">
             <MudMenuItem OnClick="()=>SetTextView(!_textView)">
                 @if (_textView)
@@ -179,20 +175,23 @@
         </MudMenu>    
 
     </MudItem>
-    <MudItem xs="6" sm="3">
-        <MudMenu Label=@L["Filters"] StartIcon="@Icons.Material.Filled.FilterList" Variant="Variant.Outlined" Color="Color.Primary">
-            @foreach (var filter in Enum.GetValues<Filter>().OrderBy(e => e.ToString()))
-            {
-                <MudMenuItem OnClick="()=>ToggleFilter(filter)">
-                    @if (_settings.ShowingFilters.Contains(filter))
-                    {
-                        <MudIcon Size="Size.Small" Color="Color.Success" Icon="@Icons.Material.Filled.Check"></MudIcon>
-                    }
-                    @_filterNames[filter]
-                </MudMenuItem>
-            }
-        </MudMenu>
-    </MudItem>
+<MudItem xs="4" sm="3">
+    <MudMenu Label=@L["Filters"] StartIcon="@Icons.Material.Filled.FilterList" Variant="Variant.Outlined" Color="Color.Primary">
+        @foreach (var filter in Enum.GetValues<Filter>().OrderBy(e => e.ToString()))
+        {
+            <MudMenuItem OnClick="()=>ToggleFilter(filter)">
+                @if (_settings.ShowingFilters.Contains(filter))
+                {
+                    <MudIcon Size="Size.Small" Color="Color.Success" Icon="@Icons.Material.Filled.Check"></MudIcon>
+                }
+                @_filterNames[filter]
+            </MudMenuItem>
+        }
+    </MudMenu>
+</MudItem>
+<MudItem xs="4" sm="3">
+    <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.FileDownload" Disabled="_isBuildingImage">Download as Image</MudButton>
+</MudItem>
     @if (_settings.ShowingFilters.Contains(Filter.SongName))
     {
 
@@ -289,7 +288,7 @@
             </MudItem>
         }
     }
-    @if (_isLoading)
+    @if (_isLoading || _isBuildingImage)
     {
         <MudItem xs="12">
             <MudProgressLinear Color="Color.Primary" Indeterminate="true"></MudProgressLinear>
@@ -607,6 +606,8 @@
 @inject IPhoenixRecordRepository Records;
 @inject IPlayerStatsRepository PlayerStats;
 @inject IMemoryCache Cache;
+
+@inject IJSRuntime JSRuntime;
 @code
 {
 
@@ -752,6 +753,7 @@ function(val, index) {
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private ISet<Guid> _unPopularCharts = new HashSet<Guid>();
     private ISet<Guid> _popularCharts = new HashSet<Guid>();
+    private bool _isBuildingImage = false;
     private FilterSettings _settings = new FilterSettings();
         private const string UserSettingsKey = @"ChartSkills__Settings";
     private async Task ToggleFilter(Filter filter)
@@ -992,6 +994,119 @@ function(val, index) {
         _settings.ShowSongName = !_settings.ShowSongName;
         await SaveSettings();
     }
+
+    public string DifficultyBubblePath(ChartType chartType, DifficultyLevel level) =>  $"https://piuimages.arroweclip.se/difficulty/Phoenix/{chartType.GetShortHand().ToLower()}{level}.png";
+    private string LetterGradeImage(PhoenixLetterGrade letterGrade, bool isBroken) => 
+        $"https://piuimages.arroweclip.se/letters/{letterGrade.ToString().ToLower()}{(isBroken ? "_broken" : "")}.png";
+
+    private string PlateImage(PhoenixPlate plate) => $"https://piuimages.arroweclip.se/plates/{plate.GetShorthand().ToLower()}.png";
+
+    private async Task DownloadImage()
+    {
+        _isBuildingImage = true;
+        using var client = new HttpClient();
+        const int width = 1000;
+        const int songWidth = 140;
+        const int padding = 15;
+        const int songHeight = 80;
+        const int sectionTextHeight = 45;
+        const int gradeWidth = 30;
+        const int gradeHeight = 22;
+        const int gradePadding = 5;
+        var height = 50 + padding * 2+50+padding;
+        foreach (var group in _finalGroupings.Where(g => g.Any(ShouldChartShow)))
+        {
+            height += sectionTextHeight;
+            var xTest = padding;
+            foreach (var _ in group)
+            {
+                if (xTest > width - 155)
+                {
+
+                    xTest = padding;
+                    height += songHeight + padding;
+                }
+                xTest += songWidth + padding;
+            }
+
+            height += songHeight + padding;
+        }
+        height += padding;
+        using var bmp = new Bitmap(width, height);
+        using var gr = Graphics.FromImage(bmp);
+
+        gr.Clear(System.Drawing.Color.Black);
+        var x = padding;
+        var y = padding;
+
+        var userName = CurrentUser.IsLoggedIn ? " - " +( CurrentUser.User.GameTag ?? CurrentUser.User.Name) : "";
+        //Bubble and Tier List Name
+        var bubble = await LoadImage(client,DifficultyBubblePath(_chartType, _level),50,50);
+        gr.DrawImage(bubble,new Rectangle(x,y,50,50));
+        x += 50+padding;
+        gr.DrawString((_groupBy == "Difficulty" ? _tierListType : _groupBy)+userName, new Font("Tahoma", 36),Brushes.White,x,y);
+        y += 50+padding*2;
+
+        var greenPen = new Pen(System.Drawing.Color.Chartreuse, 3);
+        var bluePen = new Pen(System.Drawing.Color.Blue, 3);
+        //Sections
+        foreach (var group in _finalGroupings.Where(g => g.Any(ShouldChartShow)))
+        {
+            x = padding;
+            gr.DrawString(group.Key,new Font("Tahoma", 24),Brushes.White,x,y);
+            y += sectionTextHeight;
+            foreach (var entry in group)
+            {
+                if (x > width - 155)
+                {
+                    
+                    x = padding;
+                    y += songHeight+padding;
+                }
+                var chart = _charts[entry.ChartId];
+                var songBmp = await LoadImage(client, chart.Song.ImagePath.ToString(), songWidth, songHeight);
+                gr.DrawImage(songBmp, new Rectangle(x, y, songWidth, songHeight));
+                if (_todos.Contains(entry.ChartId))
+                {
+                    gr.DrawRectangle(bluePen, new Rectangle(x,y,songWidth,songHeight));
+                }
+                if (_scores.TryGetValue(chart.Id, out var score))
+                {
+                    if (score.Plate != null)
+                    {
+                        var bitmap = await LoadImage(client, PlateImage(score.Plate.Value), gradeWidth, gradeHeight);
+
+                        gr.DrawImage(bitmap, new Rectangle(x + songWidth - gradeWidth - gradePadding, y + songHeight - gradeHeight - gradePadding, gradeWidth, gradeHeight));
+                    }
+                    if (score.Score != null)
+                    {
+                        var letterGrade = score.Score.Value.LetterGrade;
+                        var bitmap = await LoadImage(client,LetterGradeImage(letterGrade,score.IsBroken),gradeWidth,gradeHeight);
+                        gr.DrawImage(bitmap,new Rectangle(x+songWidth-(gradeWidth+gradePadding)*2,y+songHeight-gradeHeight-gradePadding,gradeWidth,gradeHeight));
+
+                    }
+                    if (!score.IsBroken)
+                    {
+                        gr.DrawRectangle(greenPen, new Rectangle(x, y, songWidth, songHeight));
+                    }
+                }
+                x += songWidth+padding;
+            }
+            y += songHeight+padding;
+        }
+        y += padding;
+        gr.DrawString("Generated on https://piuscores.arroweclip.se",new Font("Tahoma",24),Brushes.White,padding,y);
+        //Download file
+        
+        var stream = new MemoryStream();
+        bmp.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+
+        using var streamRef = new DotNetStreamReference(stream: stream);
+        stream.Seek(0, SeekOrigin.Begin);
+        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
+        await module.InvokeVoidAsync("downloadFileFromStream", $"{ChartTypeFilter??""}{DifficultyFilter?.ToString()??""}_{DateTimeOffset.Now:d}.png", streamRef);
+        _isBuildingImage = false;
+    }
     private bool ShouldChartShow(SongTierListEntry entry)
     {
         var score = _scores.TryGetValue(entry.ChartId, out var scr) ? scr : null;
@@ -1203,6 +1318,22 @@ function(val, index) {
         PhoenixLetterGrade.SSS
     };
 
+    private static IDictionary<string, Bitmap> _cachedImages = new Dictionary<string, Bitmap>(StringComparer.OrdinalIgnoreCase);
+
+    private static async Task<Bitmap> LoadImage(HttpClient client, string location, int newWidth, int newHeight)
+    {
+        if (_cachedImages.TryGetValue(location, out var bitmap))
+        {
+            return bitmap;
+        }
+        var stream = await client.GetStreamAsync(location);
+
+        var bmp = new Bitmap(newWidth, newHeight);
+        var gr = Graphics.FromImage(bmp);
+        gr.DrawImage(new Bitmap(stream), new Rectangle(0, 0, newWidth, newHeight));
+        _cachedImages[location] = bmp;
+        return bmp;
+    }
     private async Task<IEnumerable<SongTierListEntry>> BuildSkillTierList()
     {
 
