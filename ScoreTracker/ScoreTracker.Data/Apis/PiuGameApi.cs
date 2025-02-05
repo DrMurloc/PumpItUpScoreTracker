@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 using System.Text.RegularExpressions;
 using System.Web;
 using HtmlAgilityPack;
@@ -454,23 +455,32 @@ public sealed class PiuGameApi : IPiuGameApi
             : ChartType.SinglePerformance;
     }
 
-    public async Task<HttpClient> GetSessionId(string username, string password, CancellationToken cancellationToken)
+    public async Task<(HttpClient client, string sid)> GetSessionId(string username, string password,
+        CancellationToken cancellationToken)
     {
-        var webRequestHandler = new HttpClientHandler();
+        var cookieContainer = new CookieContainer();
+        var webRequestHandler = new HttpClientHandler
+        {
+            CookieContainer = cookieContainer
+        };
         var client = new HttpClient(webRequestHandler);
         client.DefaultRequestHeaders.Add("origin", "https://piugame.com");
 
         await client.GetAsync("https://piugame.com", cancellationToken);
 
-        await PostForMessageWithRetries("https://piugame.com/bbs/login_check.php",
+        var result = await PostForMessageWithRetries("https://piugame.com/bbs/login_check.php",
             new Dictionary<string, string>
             {
                 { "url", "/" },
                 { "mb_id", username },
                 { "mb_password", password }
             }, cancellationToken, client);
+
+        var sid = cookieContainer
+            .GetCookies(new Uri("https://piugame.com"))
+            .First(v => v.Name.StartsWith("sid", StringComparison.OrdinalIgnoreCase)).Value;
         await client.GetAsync("https://am-pass.net/", cancellationToken);
-        return client;
+        return (client, sid);
     }
 
     public async Task<PiuGameGetBestScoresResult> GetBestScores(HttpClient client, int page,

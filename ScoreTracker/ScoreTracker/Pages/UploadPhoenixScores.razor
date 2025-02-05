@@ -90,11 +90,22 @@
                         }
                     </MudItem>
 
-                    <MudItem xs="12">
+                    <MudItem xs="12" sm="6">
                         <MudTooltip Text="Will pull in broken scores from your recent plays, passing scores overwrite broken scores">
                             
-                            <MudCheckBox T="bool" Label=@L["Include Broken Scores"] @bind-Value="_includeBroken"></MudCheckBox>
+                            <MudCheckBox T="bool" Label=@L["Include Broken Scores"] @bind-Value="_includeBroken" Disabled="_isImporting"></MudCheckBox>
                         </MudTooltip>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudCheckBox T="bool" Label=@L["Also Sync for PIU Tracker"] Disabled="_isImporting" Value="_alsoImportPiuTracker" ValueChanged="d=>SetPiuTrackerImport(d)"></MudCheckBox>
+                        <MudText Typo="Typo.subtitle2">
+                            Another community built score/progress tracking tool:
+                            <MudLink Target="_blank" Href="https://piutracker.app/">https://piutracker.app/</MudLink>
+                        </MudText>
+                        @if (_alsoImportPiuTracker && !_isPublic)
+                        {
+                            <MudText Typo="Typo.subtitle2" Color=Color.Warning>Your account is set to private, but PIU Tracker is 100% public. Continuing will make your scores public on PIU Tracker.</MudText>
+                        }
                     </MudItem>
                     @if (_isImporting)
                     {
@@ -104,6 +115,15 @@
                             @if (!_scores.Any())
                             {
                                 <MudText>@_passwordImportStatus</MudText>
+                            }
+                        </MudItem>
+                    }
+                    @if (_errors.Any())
+                    {
+                        <MudItem xs="12">
+                            @foreach (var error in _errors)
+                            {
+                                <MudText Color="Color.Error">@error</MudText>
                             }
                         </MudItem>
                     }
@@ -314,9 +334,17 @@
     private int _maxSaving = 0;
     private int _currentSaved = 0;
     private int _startPage = 1;
+    private bool _isPublic = false;
     private string _username = "";
     private string _password = "";
     private bool _includeBroken = false;
+    private bool _alsoImportPiuTracker  = false;
+    private const string PiuTrackerKey = "UploadPhoenixScores__ImportPiuTracker";
+    public async Task SetPiuTrackerImport(bool newValue)
+    {
+        _alsoImportPiuTracker = newValue;
+        await UiSettings.SetSetting(PiuTrackerKey, newValue.ToString());
+    }
     private string _selectedGameTag = "";
     private string _selectedId = "";
     private IEnumerable<GameCardRecord> _cards = Array.Empty<GameCardRecord>();
@@ -351,6 +379,7 @@
     private async Task ImportScores()
     {
         _isImporting = true;
+        _errors.Clear();
         try
         {
         if (string.IsNullOrWhiteSpace(_selectedId))
@@ -375,7 +404,7 @@
 
         _scores.Clear();
         _passwordImportStatus = "Starting Import...";
-            await Mediator.Send(new ImportOfficialPlayerScoresCommand(_username, _password, _selectedId, _selectedGameTag,_includeBroken));
+            await Mediator.Send(new ImportOfficialPlayerScoresCommand(_username, _password, _selectedId, _selectedGameTag,_includeBroken,_alsoImportPiuTracker));
             _passwordImportStatus = "Import Completed!";
         }
         catch (InvalidCredentialException)
@@ -398,26 +427,37 @@
     private readonly ICollection<RecordedPhoenixScore>_scores = new List<RecordedPhoenixScore>();
     private List<SpreadsheetScoreErrorDto> _failedUploads = new List<SpreadsheetScoreErrorDto>();
     private List<RecordedPhoenixScore> _spreadSheetScores = new List<RecordedPhoenixScore>();
-
     private CancellationTokenSource _currentCancellation = new CancellationTokenSource();
     private string _passwordImportStatus = string.Empty;
     private Guid _userId;
     protected override async Task OnInitializedAsync()
     {
-        MainLayout.ImportStatusUpdated += StatusUpdate;
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
-        if (!CurrentUser.IsLoggedIn) 
+        if (!CurrentUser.IsLoggedIn)
+        {
             NavManager.NavigateTo("/Login");
+            return;
+        }
+        MainLayout.ImportStatusUpdated += StatusUpdate;
+        MainLayout.ImportStatusError += ImportError;
+        _isPublic = CurrentUser.User.IsPublic;
         _userId = CurrentUser.User.Id;
         _selectedId = await UiSettings.GetSetting("PhoenixScoreUpload__LastGameId") ?? "";
         _selectedGameTag = await UiSettings.GetSetting("PhoenixScoreUpload__LastGameTag") ?? "";
+        _alsoImportPiuTracker = bool.TryParse(await UiSettings.GetSetting(PiuTrackerKey), out var v) && v;
 
     }
 
+    private List<string> _errors = new List<string>();
+    private void ImportError(object? origin, ImportStatusError e)
+    {
+        if (e.UserId != _userId) return;
+        _errors.Add(e.Error);
+        InvokeAsync(StateHasChanged);
+    }
     private void StatusUpdate(object? origin, ImportStatusUpdated e)
     {
         if (e.UserId != _userId) return;
-
         foreach (var score in e.Scores)
         {
             _scores.Add(score);
@@ -566,5 +606,6 @@ var csvString=""data:text/csv;charset=utf-8,"";
     public void Dispose()
     {
         MainLayout.ImportStatusUpdated -= StatusUpdate;
+        MainLayout.ImportStatusError -= ImportError;
     }
 }

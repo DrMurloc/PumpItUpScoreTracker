@@ -1,6 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using MassTransit;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
@@ -27,18 +28,24 @@ namespace ScoreTracker.Application.Handlers
         private readonly IBus _bus;
         private readonly IFileUploadClient _files;
         private readonly IChartRepository _charts;
+        private readonly IPiuTrackerClient _piuTracker;
+        private readonly ILogger _logger;
 
         public OfficialLeaderboardSaga(IOfficialSiteClient officialSite, ITierListRepository tierLists,
             IOfficialLeaderboardRepository leaderboards, ICurrentUserAccessor currentUser, IUserRepository user,
             IMediator mediator,
+            IPiuTrackerClient piuTracker,
+            ILogger<OfficialLeaderboardSaga> logger,
             IBus bus, IFileUploadClient files, IChartRepository charts)
         {
+            _piuTracker = piuTracker;
             _officialSite = officialSite;
             _tierLists = tierLists;
             _leaderboards = leaderboards;
             _currentUser = currentUser;
             _user = user;
             _mediator = mediator;
+            _logger = logger;
             _bus = bus;
             _files = files;
             _charts = charts;
@@ -171,9 +178,29 @@ namespace ScoreTracker.Application.Handlers
             var userId = _currentUser.User.Id;
 
             var accountData = await _officialSite.GetAccountData(request.Username, request.Password, cancellationToken);
+
+
             if (accountData.AccountName == "INVALID")
                 await _mediator.Publish(new ImportStatusUpdated(_currentUser.User.Id,
                     "Invalid Login Information", Array.Empty<RecordedPhoenixScore>()), cancellationToken);
+            if (request.SyncPiuTracker)
+            {
+                await _mediator.Publish(new ImportStatusUpdated(_currentUser.User.Id,
+                    "Syncing PIU Tracker... (Can take a while if it's your first time)",
+                    Array.Empty<RecordedPhoenixScore>()));
+                try
+                {
+                    await _piuTracker.SyncData(accountData.AccountName, accountData.Sid, cancellationToken);
+                }
+                catch (Exception e)
+                {
+                    await _mediator.Publish(
+                        new ImportStatusError(userId,
+                            "PIU Tracker sync failed. Check with DrMurloc or Tusa if this persists"),
+                        cancellationToken);
+                    _logger.LogWarning(e, "PIU Tracker sync failed");
+                }
+            }
 
             await _mediator.Send(new SaveUserUiSettingCommand("ProfileImage", accountData.AvatarUrl.ToString()),
                 cancellationToken);

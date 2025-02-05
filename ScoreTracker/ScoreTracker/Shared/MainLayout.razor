@@ -14,6 +14,7 @@
 @implements INotificationHandler<MatchUpdatedEvent>
 @implements INotificationHandler<ImportStatusUpdated>
 @implements INotificationHandler<PlayerStatsUpdatedEvent>
+@implements INotificationHandler<ImportStatusError>
 <PageTitle>PIU Scores</PageTitle>
 
 <MudThemeProvider Theme="Theme" />
@@ -262,6 +263,7 @@
 
     public static event EventHandler<ImportStatusUpdated>? ImportStatusUpdated;
     public static event EventHandler<MatchUpdatedEvent>? MatchUpdated;
+    public static event EventHandler<ImportStatusError>? ImportStatusError;
     public Task Handle(MatchUpdatedEvent notification, CancellationToken cancellationToken)
     {
         MatchUpdated?.Invoke(this, notification);
@@ -284,6 +286,12 @@
         }
         Rating = notification.NewStats.SkillRating;
         InvokeAsync(StateHasChanged);
+        return Task.CompletedTask;
+    }
+
+    public Task Handle(ImportStatusError notification, CancellationToken cancellationToken)
+    {
+        ImportStatusError?.Invoke(this, notification);
         return Task.CompletedTask;
     }
 }

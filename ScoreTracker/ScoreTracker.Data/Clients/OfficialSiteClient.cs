@@ -105,7 +105,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
 
     public async Task<int> GetScorePageCount(string username, string password, CancellationToken cancellationToken)
     {
-        var sessionId = await _piuGame.GetSessionId(username, password, cancellationToken);
+        var sessionId = (await _piuGame.GetSessionId(username, password, cancellationToken)).client;
         var response = await _piuGame.GetBestScores(sessionId, 0, cancellationToken);
         return response.MaxPage;
     }
@@ -129,7 +129,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         await _mediator.Publish(
             new ImportStatusUpdated(_currentUser.User.Id, "Logging In",
                 Array.Empty<RecordedPhoenixScore>()), cancellationToken);
-        var sessionId = await _piuGame.GetSessionId(username, password, cancellationToken);
+        var sessionId = (await _piuGame.GetSessionId(username, password, cancellationToken)).client;
 
         var gameCards = await _piuGame.GetCards(sessionId, cancellationToken);
         var activeCard = gameCards.FirstOrDefault(c => c.IsActive);
@@ -245,7 +245,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     public async Task<(IEnumerable<OfficialRecordedScore> results, IEnumerable<string> nonMapped)> GetRecentScores(
         string username, string password, CancellationToken cancellationToken)
     {
-        var session = await _piuGame.GetSessionId(username, password, cancellationToken);
+        var session = (await _piuGame.GetSessionId(username, password, cancellationToken)).client;
         var account = await _piuGame.GetAccountData(session, cancellationToken);
         if (account.AccountName == "INVALID") throw new InvalidCredentialException("Invalid username or password");
         var results = (await _piuGame.GetRecentScores(session, cancellationToken)).Reverse().ToArray();
@@ -281,7 +281,8 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     public async Task<PiuGameAccountDataImport> GetAccountData(string username, string password,
         CancellationToken cancellationToken)
     {
-        var client = await _piuGame.GetSessionId(username, password, cancellationToken);
+        var session = await _piuGame.GetSessionId(username, password, cancellationToken);
+        var client = session.client;
         var importedData = await _piuGame.GetAccountData(client, cancellationToken);
         if (importedData.AccountName == "INVALID")
             throw new InvalidCredentialException("Could not log in user to PIUgame");
@@ -297,13 +298,13 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
                     _ => ""
                 }
                 : "")).Select(Name.From).ToArray();
-        return new PiuGameAccountDataImport(imagePath, importedData.AccountName, titles);
+        return new PiuGameAccountDataImport(imagePath, importedData.AccountName, titles, session.sid);
     }
 
     public async Task<IEnumerable<GameCardRecord>> GetGameCards(string username, string password,
         CancellationToken cancellationToken)
     {
-        var session = await _piuGame.GetSessionId(username, password, cancellationToken);
+        var session = (await _piuGame.GetSessionId(username, password, cancellationToken)).client;
         var account = await _piuGame.GetAccountData(session, cancellationToken);
         if (account.AccountName == "INVALID") throw new InvalidCredentialException("Invalid username or password");
         return await _piuGame.GetCards(session, cancellationToken);

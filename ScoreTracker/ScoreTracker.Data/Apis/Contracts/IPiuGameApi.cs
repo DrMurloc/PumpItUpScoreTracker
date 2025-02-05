@@ -16,7 +16,8 @@ namespace ScoreTracker.Data.Apis.Contracts
         Task<IEnumerable<PiuGameGetRecentScoresResult>> GetRecentScores(HttpClient client,
             CancellationToken cancellationToken);
 
-        Task<HttpClient> GetSessionId(string username, string password, CancellationToken cancellationToken);
+        Task<(HttpClient client, string sid)> GetSessionId(string username, string password,
+            CancellationToken cancellationToken);
 
         Task<PiuGameGetBestScoresResult>
             GetBestScores(HttpClient client, int page, CancellationToken cancellationToken);
