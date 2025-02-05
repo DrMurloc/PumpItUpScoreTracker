@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -287,6 +287,12 @@
   </data>
   <data name="Public" xml:space="preserve">
     <value>Pública</value>
+  </data>
+  <data name="Remaining Charts" xml:space="preserve">
+    <value>{0} (SSS+) - {1} (AA) Charts Remaining</value>
+  </data>
+  <data name="Remaining Charts For You" xml:space="preserve">
+    <value>{0} Charts Estimated for You</value>
   </data>
   <data name="Remove from Favorites" xml:space="preserve">
     <value>Borrar de Favoritos</value>
