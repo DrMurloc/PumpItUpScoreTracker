@@ -1049,6 +1049,7 @@ function(val, index) {
 
         var greenPen = new Pen(System.Drawing.Color.Chartreuse, 3);
         var bluePen = new Pen(System.Drawing.Color.Blue, 3);
+        var redPen = new Pen(System.Drawing.Color.Red, 3);
         //Sections
         foreach (var group in _finalGroupings.Where(g => g.Any(ShouldChartShow)))
         {
@@ -1066,9 +1067,14 @@ function(val, index) {
                 var chart = _charts[entry.ChartId];
                 var songBmp = await LoadImage(client, chart.Song.ImagePath.ToString(), songWidth, songHeight);
                 gr.DrawImage(songBmp, new Rectangle(x, y, songWidth, songHeight));
+                
                 if (_todos.Contains(entry.ChartId))
                 {
                     gr.DrawRectangle(bluePen, new Rectangle(x,y,songWidth,songHeight));
+                } else if (CurrentUser.IsLoggedIn)
+                {
+                    
+                    gr.DrawRectangle(redPen, new Rectangle(x,y,songWidth,songHeight));
                 }
                 if (_scores.TryGetValue(chart.Id, out var score))
                 {
