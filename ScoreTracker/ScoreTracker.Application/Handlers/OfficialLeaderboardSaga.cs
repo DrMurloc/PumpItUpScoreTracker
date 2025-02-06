@@ -178,12 +178,17 @@ namespace ScoreTracker.Application.Handlers
         {
             var userId = _currentUser.User.Id;
 
-            var accountData = await _officialSite.GetAccountData(request.Username, request.Password, cancellationToken);
-
+            var accountData =
+                await _officialSite.GetAccountData(request.Username, request.Password, request.Id, cancellationToken);
+            if (accountData.AccountName != request.ExpectedGameTag)
+            {
+            }
 
             if (accountData.AccountName == "INVALID")
                 await _mediator.Publish(new ImportStatusUpdated(_currentUser.User.Id,
                     "Invalid Login Information", Array.Empty<RecordedPhoenixScore>()), cancellationToken);
+
+
             if (request.SyncPiuTracker)
             {
                 await _mediator.Publish(new ImportStatusUpdated(_currentUser.User.Id,
@@ -230,7 +235,7 @@ namespace ScoreTracker.Application.Handlers
 
             var scores =
                 (await _officialSite.GetRecordedScores(_currentUser.User.Id, request.Username, request.Password,
-                    request.Id, request.ExpectedGameTag,
+                    request.Id,
                     request.IncludeBroken, limit,
                     cancellationToken))
                 .ToArray();

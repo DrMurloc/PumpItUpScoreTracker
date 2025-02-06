@@ -121,7 +121,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     }
 
     public async Task<IEnumerable<OfficialRecordedScore>> GetRecordedScores(Guid userId, string username,
-        string password, string id, string expectedGameTag,
+        string password, string id,
         bool includeBroken,
         int? maxPages, CancellationToken cancellationToken)
     {
@@ -136,8 +136,6 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         if (activeCard != null && activeCard.Id != id) await _piuGame.SetCard(sessionId, id, cancellationToken);
 
         var accountInfo = await _piuGame.GetAccountData(sessionId, cancellationToken);
-        if (accountInfo.AccountName != expectedGameTag)
-            throw new InvalidOperationException("Expected game tag didn't match, aborting to avoid bad data");
 
         var finalPage = (await _piuGame.GetBestScores(sessionId, 1, cancellationToken)).MaxPage;
         var responses = new List<PiuGameGetBestScoresResult.ScoreDto>();
@@ -275,14 +273,18 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         return (result, nonMapped);
     }
 
+
     private readonly Regex ImageRegex = new(@"https\:\/\/piugame\.com\/data\/avatar_img\/([A-Za-z0-9]+.png)\?v\=",
         RegexOptions.Compiled);
 
-    public async Task<PiuGameAccountDataImport> GetAccountData(string username, string password,
+    public async Task<PiuGameAccountDataImport> GetAccountData(string username, string password, string? id,
         CancellationToken cancellationToken)
     {
         var session = await _piuGame.GetSessionId(username, password, cancellationToken);
         var client = session.client;
+
+        if (id != null) await _piuGame.SetCard(client, id, cancellationToken);
+
         var importedData = await _piuGame.GetAccountData(client, cancellationToken);
         if (importedData.AccountName == "INVALID")
             throw new InvalidCredentialException("Could not log in user to PIUgame");

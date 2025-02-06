@@ -12,7 +12,6 @@ public interface IOfficialSiteClient
     Task<int> GetScorePageCount(string username, string password, CancellationToken cancellationToken);
 
     Task<IEnumerable<OfficialRecordedScore>> GetRecordedScores(Guid userId, string username, string password, string id,
-        string expectedGameTag,
         bool includeBroken,
         int? maxPages,
         CancellationToken cancellationToken);
@@ -23,7 +22,7 @@ public interface IOfficialSiteClient
         CancellationToken cancellationToken);
 
     Task<PiuGameAccountDataImport>
-        GetAccountData(string username, string password, CancellationToken cancellationToken);
+        GetAccountData(string username, string password, string? id, CancellationToken cancellationToken);
 
     Task<IEnumerable<GameCardRecord>> GetGameCards(string username, string password,
         CancellationToken cancellationToken);

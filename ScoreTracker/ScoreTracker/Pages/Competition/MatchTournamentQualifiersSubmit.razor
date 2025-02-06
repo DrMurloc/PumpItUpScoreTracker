@@ -455,7 +455,7 @@
         _importResults.Clear();
         try
         {
-            var accountInfo = await OfficialSite.GetAccountData(_piugameUsername, _piugamePassword, CancellationToken.None);
+            var accountInfo = await OfficialSite.GetAccountData(_piugameUsername, _piugamePassword,null,CancellationToken.None);
 
             await AdminNotification.NotifyAdmin($"{_username} Imported using {accountInfo.AccountName}", CancellationToken.None);
             var newResults = false;

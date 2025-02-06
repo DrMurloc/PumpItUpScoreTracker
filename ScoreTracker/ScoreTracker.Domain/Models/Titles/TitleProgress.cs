@@ -13,7 +13,7 @@ public abstract class TitleProgress
     private bool _forcedComplete;
 
     public bool IsComplete =>
-        _forcedComplete || (Title.CompletionRequired > 0 && CompletionCount > Title.CompletionRequired);
+        _forcedComplete || (Title.CompletionRequired > 0 && CompletionCount >= Title.CompletionRequired);
 
     public void Complete()
     {

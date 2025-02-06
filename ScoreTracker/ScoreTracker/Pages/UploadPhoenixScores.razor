@@ -279,14 +279,14 @@
         @if (_currentStep == Step.UsePassword)
         {
             <MudButton Variant="@Variant.Filled"
-                       Disabled="_isImporting"
+                       Disabled="_isImporting || string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)"
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.ImportExport"
                        OnClick="ImportScores">Import</MudButton>
             @if (!_cards.Any() && !string.IsNullOrWhiteSpace(_selectedId))
             {
                 <MudButton Variant="Variant.Filled"
-                           Disabled="_isImporting"
+                           Disabled="_isImporting || string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.ChangeCircle"
                            OnClick="LoadCards">@L["Change Card"]</MudButton>

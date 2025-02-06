@@ -7,7 +7,7 @@ namespace ScoreTracker.Domain.Enums;
 public enum ParagonLevel
 {
     None,
-    F,
+    [Description("Paragon")] F,
 
     D,
 
