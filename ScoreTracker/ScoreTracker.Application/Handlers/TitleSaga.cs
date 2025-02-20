@@ -114,7 +114,7 @@ public sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumerab
                 title.Complete();
 
         var allCompleted = titleProgress.Where(t => t.IsComplete)
-            .Select(t => new TitleAchievedRecord(t.Title.Name, GetLevel(t))).ToArray();
+            .Select(t => new TitleAchievedRecord(userId, t.Title.Name, GetLevel(t))).ToArray();
 
         await _titles.SaveTitles(userId, allCompleted, cancellationToken);
 

@@ -4,6 +4,7 @@
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Models.Titles.Phoenix
+@using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.ValueTypes
 @using ScoreTracker.Web.Components
@@ -118,12 +119,19 @@
                     <br/><br/>
                 }
                 <MudGrid>
-                    @foreach (var user in _currentTitleUsers.OrderBy(u => u.Name))
+                    @foreach (var user in _currentTitleUsers.OrderByDescending(u => u.titleAchievedRecord.ParagonLevel).ThenBy(u=>u.user.Name))
                     {
                         <MudItem xs="12">
+                        @if (user.titleAchievedRecord.ParagonLevel != ParagonLevel.None)
+                        {
+                            
+                                <ParagonLevelImage Level="@user.titleAchievedRecord.ParagonLevel"></ParagonLevelImage>
+                        }
 
-                            <MudImage Src="@user.ProfileImage.ToString()" Height="15" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-                            <UserLabel User="user"></UserLabel>
+                        <MudImage Src="@user.user.ProfileImage.ToString()" Height="25" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+
+                        <UserLabel User="user.user"></UserLabel>
+
                         </MudItem>
                     }
                 </MudGrid>
@@ -146,7 +154,7 @@
     private bool _isLoading = true;
     private int _userCount = 1;
     private IDictionary<Name, int> _titleCounts = new Dictionary<Name, int>();
-    private IEnumerable<User> _currentTitleUsers = Array.Empty<User>();
+    private IEnumerable<(User user, TitleAchievedRecord titleAchievedRecord)> _currentTitleUsers = Array.Empty<(User user, TitleAchievedRecord titleAchievedRecord)>();
     private Name? _showingTitle = null;
     private async Task ShowTitledUsers(Name title)
     {
@@ -155,9 +163,10 @@
             _showingTitle = null;
             return;
         }
-        var userIds = await TitleRepo.GetUsersWithTitle(title, CancellationToken.None);
-        var users = await Users.GetUsers(userIds, CancellationToken.None);
-        _currentTitleUsers = users.Where(u => u.IsPublic).ToArray();
+        var titles = (await TitleRepo.GetUsersWithTitle(title, CancellationToken.None)).ToArray();
+        var users = (await Users.GetUsers(titles.Select(t=>t.UserId), CancellationToken.None)).ToDictionary(u=>u.Id);
+        _currentTitleUsers = titles.Where(t=>users[t.UserId].IsPublic)
+            .Select(t=>(users[t.UserId],t)).ToArray();
         _showingTitle = title;
     }
     private async Task LoadTitles()

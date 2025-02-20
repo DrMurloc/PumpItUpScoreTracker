@@ -81,7 +81,7 @@ namespace ScoreTracker.Data.Repositories
         {
             var _dbContext = await _factory.CreateDbContextAsync(cancellationToken);
             return (await _dbContext.UserTitle.Where(u => u.UserId == userId).ToArrayAsync(cancellationToken))
-                .Select(u => new TitleAchievedRecord(u.Title, Enum.Parse<ParagonLevel>(u.ParagonLevel)))
+                .Select(u => new TitleAchievedRecord(u.UserId, u.Title, Enum.Parse<ParagonLevel>(u.ParagonLevel)))
                 .ToArray();
         }
 
@@ -116,11 +116,13 @@ namespace ScoreTracker.Data.Repositories
             });
         }
 
-        public async Task<IEnumerable<Guid>> GetUsersWithTitle(Name title, CancellationToken cancellationToken)
+        public async Task<IEnumerable<TitleAchievedRecord>> GetUsersWithTitle(Name title,
+            CancellationToken cancellationToken)
         {
             var database = await _factory.CreateDbContextAsync(cancellationToken);
             var titleString = title.ToString();
-            return await database.UserTitle.Where(t => t.Title == titleString).Select(u => u.UserId)
+            return await database.UserTitle.Where(t => t.Title == titleString).Select(u =>
+                    new TitleAchievedRecord(u.UserId, title, Enum.Parse<ParagonLevel>(u.ParagonLevel)))
                 .ToArrayAsync(cancellationToken);
         }
     }

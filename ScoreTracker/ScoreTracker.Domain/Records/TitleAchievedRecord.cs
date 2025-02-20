@@ -3,7 +3,7 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Records
 {
-    public sealed record TitleAchievedRecord(Name Title, ParagonLevel ParagonLevel)
+    public sealed record TitleAchievedRecord(Guid UserId, Name Title, ParagonLevel ParagonLevel)
     {
     }
 }
