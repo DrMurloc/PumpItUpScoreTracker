@@ -35,7 +35,8 @@
             @if (_showExtraData)
             {
                 <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.AverageDifficulty">Average Difficulty</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>(int)e.AverageScore">Average Score</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.AverageScore">Average Score</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.TotalBonusScore">Total Chart Bonus</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.PassRate">Pass Rate</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.AveragePps">Average PPS</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.TotalRestTime">Rest Time</MudTableSortLabel></MudTh>
@@ -57,6 +58,9 @@
                 <MudTd>@TwoDecimalPlaces(context.AverageDifficulty)</MudTd>
                 <MudTd>
                     <ScoreBreakdown Score="@context.AverageScore" Plate="@context.AveragePlate"></ScoreBreakdown>
+                </MudTd>
+                <MudTd>
+                    @context.TotalBonusScore
                 </MudTd>
                 <MudTd>@TwoDecimalPlaces((double)context.PassRate*100.0)</MudTd>
                 <MudTd>@context.AveragePps.ToString("N2")</MudTd>
@@ -115,7 +119,7 @@
                             @foreach (var entry in _showingSession.Entries)
                             {
 
-                                <MudItem xs="6" sm="3" md="2">
+                                <MudItem xs="4" sm="3" md="2">
                                     
                                     
                                     <MudCard Class="chart-card">
@@ -124,11 +128,7 @@
                                             <DifficultyBubble Chart="entry.Chart"></DifficultyBubble>
                                         </MudCardHeader>
                                         <MudCardContent>
-                                            <ScoreBreakdown Text=@(entry.SessionScore.ToString("N0")+", "+TwoDecimalPlaces(entry.SessionScore / (double)entry.Chart.Song.Duration.TotalSeconds) +" PPS") Score="entry.Score" Plate="entry.Plate"></ScoreBreakdown>
-                                            <MudText>
-
-                                                
-                                            </MudText>
+                                            <ScoreBreakdown Text=@(entry.SessionScore.ToString("N0")+", "+TwoDecimalPlaces(entry.SessionScore / (double)entry.Chart.Song.Duration.TotalSeconds) +" PPS"+(entry.BonusPoints==0?"":" ("+entry.BonusPoints+" Chart Bonus)")) Score="entry.Score" Plate="entry.Plate"></ScoreBreakdown>
                                         </MudCardContent>
                                     </MudCard>
                                 </MudItem>
@@ -311,7 +311,9 @@
         foreach (var entry in _showingSession.Entries)
         {
             timeline.Add(new TimelinePoint((int)(currentTime / 60), entry.SessionScore / (double)entry.Chart.Song.Duration.TotalSeconds));
-            currentTime += (int)entry.Chart.Song.Duration.TotalSeconds + (int)restTime.TotalSeconds;
+            currentTime += (int)entry.Chart.Song.Duration.TotalSeconds;
+            timeline.Add(new TimelinePoint((int)(currentTime / 60), entry.SessionScore / (double)entry.Chart.Song.Duration.TotalSeconds));
+            currentTime+= (int)restTime.TotalSeconds;
         }
         _averagePps = timeline.Average(t => t.PointsPerSecond);
         _timeline = timeline;

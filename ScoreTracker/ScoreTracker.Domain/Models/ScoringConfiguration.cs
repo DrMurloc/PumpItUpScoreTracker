@@ -45,15 +45,17 @@ namespace ScoreTracker.Domain.Models
         public bool ContinuousLetterGradeScale { get; set; } = false;
         private static readonly TimeSpan BaseAverageTime = TimeSpan.FromMinutes(2);
 
-        public double GetScorelessScore(Chart chart)
+        public double GetScorelessScore(Chart chart, bool includeLevelOverride = true)
         {
-            return GetScorelessScore(chart.Id, chart.Level, chart.Type, chart.Song.Type, chart.Song.Duration);
+            return GetScorelessScore(chart.Id, chart.Level, chart.Type, chart.Song.Type, chart.Song.Duration,
+                includeLevelOverride);
         }
 
-        private double GetBaseRating(Guid chartId, ChartType chartType, DifficultyLevel level)
+        private double GetBaseRating(Guid chartId, ChartType chartType, DifficultyLevel level,
+            bool includeLevelOverride)
         {
             double rating = chartType == ChartType.CoOp ? 2000 : LevelRatings[level];
-            if (chartType == ChartType.CoOp || ChartLevelSnapshot == null ||
+            if (chartType == ChartType.CoOp || ChartLevelSnapshot == null || !includeLevelOverride ||
                 !ChartLevelSnapshot.TryGetValue(chartId, out var levelOverride) || level >= 28) return rating;
 
             var min = DifficultyLevel.From((int)Math.Floor(levelOverride));
@@ -65,9 +67,9 @@ namespace ScoreTracker.Domain.Models
         }
 
         private double GetScorelessScore(Guid chartId, DifficultyLevel level, ChartType chartType, SongType songType,
-            TimeSpan duration)
+            TimeSpan duration, bool includeLevelOverride)
         {
-            var rating = GetBaseRating(chartId, chartType, level);
+            var rating = GetBaseRating(chartId, chartType, level, includeLevelOverride);
             var result = rating
                          * ChartTypeModifiers[chartType]
                          * SongTypeModifiers[songType];
@@ -77,20 +79,21 @@ namespace ScoreTracker.Domain.Models
             return result;
         }
 
-        public double GetScore(ChartType type, DifficultyLevel level, PhoenixScore score)
+        public double GetScore(ChartType type, DifficultyLevel level, PhoenixScore score,
+            bool includeLevelOverride = true)
         {
             return GetScore(Guid.Empty, level, type, SongType.Arcade, BaseAverageTime, false, score,
-                PhoenixPlate.SuperbGame);
+                PhoenixPlate.SuperbGame, includeLevelOverride);
         }
 
-        public double GetScore(DifficultyLevel level, PhoenixScore score)
+        public double GetScore(DifficultyLevel level, PhoenixScore score, bool includeLevelOverride = true)
         {
             return GetScore(Guid.Empty, level, ChartType.Single, SongType.Arcade, BaseAverageTime, false, score,
-                PhoenixPlate.SuperbGame);
+                PhoenixPlate.SuperbGame, includeLevelOverride);
         }
 
         private double GetScore(Guid chartId, DifficultyLevel level, ChartType chartType, SongType songType,
-            TimeSpan duration, bool isBroken, PhoenixScore score, PhoenixPlate plate)
+            TimeSpan duration, bool isBroken, PhoenixScore score, PhoenixPlate plate, bool includeLevelOverride)
         {
             if (score < MinimumScore) return 0;
             var letterGrade = score.LetterGrade;
@@ -125,7 +128,7 @@ namespace ScoreTracker.Domain.Models
             {
                 case CalculationType.Default:
                 {
-                    var result = GetScorelessScore(chartId, level, chartType, songType, duration);
+                    var result = GetScorelessScore(chartId, level, chartType, songType, duration, includeLevelOverride);
                     result *=
                         letterGradeModifier
                         * PlateModifiers[plate];
@@ -136,7 +139,7 @@ namespace ScoreTracker.Domain.Models
                 }
                 case CalculationType.Avalanche:
                 {
-                    var result = GetScorelessScore(chartId, level, chartType, songType, duration);
+                    var result = GetScorelessScore(chartId, level, chartType, songType, duration, includeLevelOverride);
                     result *= PlateModifiers[plate];
                     var scoreModifier = letterGradeModifier;
                     if (isBroken) scoreModifier -= StageBreakModifier;
@@ -182,10 +185,11 @@ namespace ScoreTracker.Domain.Models
             }
         }
 
-        public double GetScore(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)
+        public double GetScore(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken,
+            bool includeLevelOverride = true)
         {
             return GetScore(chart.Id, chart.Level, chart.Type, chart.Song.Type, chart.Song.Duration, isBroken, score,
-                plate);
+                plate, includeLevelOverride);
         }
 
         public enum CalculationType

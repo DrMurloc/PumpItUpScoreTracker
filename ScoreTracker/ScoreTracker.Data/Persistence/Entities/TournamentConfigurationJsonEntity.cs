@@ -59,7 +59,7 @@ namespace ScoreTracker.Data.Persistence.Entities
             };
         }
 
-        public TournamentConfiguration To()
+        public TournamentConfiguration To(IDictionary<Guid, double>? chartLevelSnapshot)
         {
             return new TournamentConfiguration(Id, Name, new ScoringConfiguration
             {
@@ -67,6 +67,7 @@ namespace ScoreTracker.Data.Persistence.Entities
                 AdjustToTime = AdjustToTime,
                 CustomAlgorithm = CustomFormula,
                 MinimumScore = MinimumScore,
+                ChartLevelSnapshot = chartLevelSnapshot,
                 ChartModifiers = ChartModifiers,
                 Formula = (ScoringConfiguration.CalculationType)CalculationType,
                 PgLetterGradeModifier = PgModifier ?? LetterGradeModifiers[PhoenixLetterGrade.SSSPlus.ToString()],

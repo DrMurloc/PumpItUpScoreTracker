@@ -61,7 +61,9 @@ namespace ScoreTracker.Data.Repositories
             {
                 o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(60);
                 var result = await _database.Tournament.Where(t => t.Id == id).SingleAsync(cancellationToken);
-                return JsonSerializer.Deserialize<TournamentConfigurationJsonEntity>(result.Configuration)?.To() ??
+                var snapshots = await GetScoringLevelSnapshot(id, cancellationToken);
+                return JsonSerializer.Deserialize<TournamentConfigurationJsonEntity>(result.Configuration)
+                           ?.To(snapshots) ??
                        throw new Exception($"Tournament {id} was not configured properly");
             });
         }
@@ -164,7 +166,8 @@ namespace ScoreTracker.Data.Repositories
                         IsBroken = e.IsBroken,
                         Plate = e.Plate.ToString(),
                         Score = e.Score,
-                        SessionScore = e.SessionScore
+                        SessionScore = e.SessionScore,
+                        BonusPoints = e.BonusPoints
                     }))
                 }, cancellationToken);
             }
@@ -189,7 +192,8 @@ namespace ScoreTracker.Data.Repositories
                         IsBroken = e.IsBroken,
                         Plate = e.Plate.ToString(),
                         Score = e.Score,
-                        SessionScore = e.SessionScore
+                        SessionScore = e.SessionScore,
+                        BonusPoints = e.BonusPoints
                     }));
                 }
             }
@@ -238,8 +242,11 @@ namespace ScoreTracker.Data.Repositories
                     chartIds: entryEntities.Select(e => e.ChartId).Distinct().ToArray(),
                     cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
                 var entries = entryEntities.Select(e => new TournamentSession.Entry(charts[e.ChartId], e.Score,
-                    Enum.Parse<PhoenixPlate>(e.Plate), e.IsBroken, e.SessionScore));
-                var session = new TournamentSession(userId, tournamentConfig, entries);
+                    Enum.Parse<PhoenixPlate>(e.Plate), e.IsBroken, e.SessionScore, e.BonusPoints ?? 0));
+
+                var session = new TournamentSession(userId, tournamentConfig);
+                foreach (var entry in entries)
+                    session.AddWithoutApproval(entry.Chart, entry.Score, entry.Plate, entry.IsBroken);
                 session.SetVerificationType(Enum.Parse<SubmissionVerificationType>(entity.VerificationType));
                 if (Uri.TryCreate(entity.VideoUrl, UriKind.Absolute, out var videoUrl)) session.VideoUrl = videoUrl;
 

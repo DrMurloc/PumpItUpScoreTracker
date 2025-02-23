@@ -115,21 +115,28 @@ namespace ScoreTracker.Domain.Models
             NeedsApproval = true;
         }
 
-        public void Add(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)
+        public void AddWithoutApproval(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)
         {
             if (!CanAdd(chart))
             {
                 throw new ArgumentException($"{chart.Song.Name} {chart.DifficultyString} is invalid for this session");
             }
 
-            NeedsApproval = true;
+            var basePoints = _configuration.Scoring.GetScore(chart, score, plate, isBroken, false);
+            var withBonus = _configuration.Scoring.GetScore(chart, score, plate, isBroken);
             Entries.Add(
                 new Entry(chart, score, plate, isBroken,
-                    (int)_configuration.Scoring.GetScore(chart, score, plate, isBroken)));
+                    (int)withBonus, (int)(withBonus - basePoints)));
+        }
+
+        public void Add(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)
+        {
+            AddWithoutApproval(chart, score, plate, isBroken);
+            NeedsApproval = true;
         }
 
         public sealed record Entry(Chart Chart, PhoenixScore Score, PhoenixPlate Plate, bool IsBroken,
-            int SessionScore)
+            int SessionScore, int BonusPoints)
         {
         }
     }

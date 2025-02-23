@@ -7,5 +7,6 @@
         public int SessionScore { get; set; }
         public string Plate { get; set; } = string.Empty;
         public bool IsBroken { get; set; }
+        public int? BonusPoints { get; set; }
     }
 }

@@ -33,8 +33,6 @@ namespace ScoreTracker.Application.Handlers
             CancellationToken cancellationToken)
         {
             var result = await _tournaments.GetTournament(request.TournamentId, cancellationToken);
-            result.Scoring.ChartLevelSnapshot =
-                await _tournaments.GetScoringLevelSnapshot(request.TournamentId, cancellationToken);
             return result;
         }
     }

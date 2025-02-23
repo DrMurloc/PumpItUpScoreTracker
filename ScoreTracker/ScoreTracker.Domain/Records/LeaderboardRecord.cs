@@ -5,10 +5,12 @@ using ScoreTracker.Domain.ValueTypes;
 namespace ScoreTracker.Domain.Records
 {
     public sealed record LeaderboardRecord(int Place, Guid UserId, Name UserName, int TotalScore,
-        TimeSpan TotalRestTime, double AverageDifficulty, int ChartsPlayed, SubmissionVerificationType VerificationType,
+        TimeSpan TotalRestTime, double AverageDifficulty, int ChartsPlayed,
+        SubmissionVerificationType VerificationType,
         bool NeedsApproval, Uri? VideoUrl)
     {
         public TournamentSession Session { get; set; }
+        public int TotalBonusScore => Session.Entries.Sum(e => e.BonusPoints);
         public decimal PassRate => Session.Entries.Count(e => !e.IsBroken) / (decimal)Session.Entries.Count;
         public PhoenixScore AverageScore => (int)Session.Entries.Average(e => e.Score);
         public int HighestLevel => Session.Entries.Max(e => (int)e.Chart.Level);
