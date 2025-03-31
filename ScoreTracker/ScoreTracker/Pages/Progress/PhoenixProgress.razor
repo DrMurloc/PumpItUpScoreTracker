@@ -155,7 +155,7 @@
                        Options="_scoreBoxesOptions">
                 <ApexPointSeries TItem="BoxPlotData"
                                  Color="#EA3F24"
-                                 Items="BoxPlotData.From(_scores.Where(s => s.Score != null && _charts[s.ChartId].Type == ChartType.Single).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
+                                 Items="BoxPlotData.From(_scores.Where(s => s is { Score: not null,IsBroken: false } && _charts[s.ChartId].Type == ChartType.Single).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
                                  Name="Singles"
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
@@ -163,7 +163,7 @@
                                  OrderBy="e => e.X"/>
                 <ApexPointSeries TItem="BoxPlotData"
                                  Color="#76FA4F"
-                                 Items="BoxPlotData.From(_scores.Where(s => s.Score != null && _charts[s.ChartId].Type == ChartType.Double).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
+                                 Items="BoxPlotData.From(_scores.Where(s => s is { Score: not null,IsBroken: false } && _charts[s.ChartId].Type == ChartType.Double).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
                                  Name="Doubles"
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
