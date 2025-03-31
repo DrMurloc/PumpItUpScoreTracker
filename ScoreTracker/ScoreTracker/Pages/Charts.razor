@@ -432,6 +432,7 @@
 @inject IUiSettingsAccessor UiSettings;
 @inject ISnackbar Snackbar;
 @inject IJSRuntime Javascript;
+@inject ILogger<Charts> Logger;
 @inject IAdminNotificationClient Notifications;
 @code {
     private bool _showShareDialog;
@@ -831,8 +832,9 @@
 
                 Snackbar.Add(letterGrade == null ? $"Removed score for {chartName}" : $"Recorded {(dto.IsBroken ? "Broken" : "")} {letterGrade} for {chartName}", Severity.Success);
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Logger.LogError(e,$"There was an error while recording a score");
                 Snackbar.Add("There was an error while recording the score", Severity.Error);
             }
         }
@@ -848,8 +850,9 @@
                 var grade = dto.PhoenixLetterGrade?.GetName()+" " ?? "";
                 Snackbar.Add($"Recorded {(dto.IsBroken ? "Broken" : "Passing")} {grade}for {chartName}", Severity.Success);
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Logger.LogError(e,$"There was an error while recording a score");
                 Snackbar.Add("There was an error while recording the score", Severity.Error);
             }
         }

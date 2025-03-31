@@ -20,7 +20,7 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
     public async Task<XXChartAttempt?> GetBestAttempt(Guid userId, Chart chart,
         CancellationToken cancellationToken = default)
     {
-        var chartId = await GetChartId(chart, cancellationToken);
+        var chartId = chart.Id;
         return await (
             from ba in _database.BestAttempt
             where ba.ChartId == chartId && ba.UserId == userId
@@ -30,7 +30,7 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
 
     public async Task RemoveBestAttempt(Guid userId, Chart chart, CancellationToken cancellationToken = default)
     {
-        var chartId = await GetChartId(chart, cancellationToken);
+        var chartId = chart.Id;
 
         var previousBest = await _database.BestAttempt.Where(ba => ba.ChartId == chartId && ba.UserId == userId)
             .SingleOrDefaultAsync(cancellationToken);
@@ -46,7 +46,7 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
     public async Task SetBestAttempt(Guid userId, Chart chart, XXChartAttempt attempt, DateTimeOffset recordedOn,
         CancellationToken cancellationToken = default)
     {
-        var chartId = await GetChartId(chart, cancellationToken);
+        var chartId = chart.Id;
 
         var previousBest = await _database.BestAttempt.Where(ba => ba.ChartId == chartId && ba.UserId == userId)
             .SingleOrDefaultAsync(cancellationToken);
@@ -123,17 +123,5 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                         : new XXChartAttempt(Enum.Parse<XXLetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score,
                             ba.RecordedDate)))
             .ToArrayAsync(cancellationToken);
-    }
-
-    private async Task<Guid> GetChartId(Chart chart, CancellationToken cancellationToken)
-    {
-        var songString = (string)chart.Song.Name;
-        var levelInt = (int)chart.Level;
-        var typeString = chart.Type.ToString();
-
-        return await (from s in _database.Song
-            join c in _database.Chart on s.Id equals c.SongId
-            where s.Name == songString && c.Level == levelInt && c.Type == typeString
-            select c.Id).SingleAsync(cancellationToken);
     }
 }
