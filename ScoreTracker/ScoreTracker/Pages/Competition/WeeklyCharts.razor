@@ -46,16 +46,16 @@
 
     </MudItem>
     <MudItem xs="6" sm="4">
+        <MudButton Variant="Variant.Outlined" OnClick="OpenRemainingCharts" Disabled="_isLoadingRemaining">@L["Show Remaining Charts"]</MudButton>
+    </MudItem>
+    <MudItem xs="6" sm="4">
         @if (_isLoggedIn && _showCompetitiveToggle && _selectedWeek == null)
         {
             <MudSwitch T="bool" Color="Color.Primary" Label="Show Only Suggested Charts" Value="_showOnlyCompetitive" ValueChanged="v => SetShowOnlyCompetitive(v)"></MudSwitch>
         }
 
     </MudItem>
-    @if (!_communities.Any())
-    {
-        <MudItem xs="4"></MudItem>
-    }
+    <MudItem xs="12"></MudItem>
     @foreach (var entry in ShowingCharts.OrderByDescending(s => _charts[s.ChartId].Level).ThenBy(s => _charts[s.ChartId].Type))
     {
         var chart = _charts[entry.ChartId];
@@ -77,6 +77,7 @@
 
                         @if (!top.Any(t => t.Item2.UserId == _userId) && _myScores.TryGetValue(entry.ChartId, out var score) && _myPlaces.TryGetValue(entry.ChartId, out var place))
                         {
+                            <MudDivider DividerType="DividerType.Middle" Style="margin-top:5px;padding-bottom:5px;"/>
                             <ScoreBreakdown Score="score.Score" Plate="score.Plate" IsBroken="score.IsBroken" Text=@($"{place}. {_userName}")></ScoreBreakdown>
                         }
                     }
@@ -86,7 +87,7 @@
                     @if (_counts.TryGetValue(entry.ChartId, out var count) && count > 0)
                     {
 
-                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" OnClick="() => ShowLeaderboard(chart.Id)"></MudIconButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.Visibility" Variant="Variant.Text" OnClick="() => ShowLeaderboard(chart.Id)">@count</MudButton>
                     }
                     @if (_isLoggedIn && _selectedWeek == null)
                     {
@@ -288,7 +289,9 @@ else if(_monthlyWeeks.Any())
                     <MudTd>
                         <MudImage Src="@_users[context.Item2.UserId].ProfileImage.ToString()" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
                     </MudTd>
-                    <MudTd>@_users[context.Item2.UserId].Name</MudTd>
+                    <MudTd>
+                        <UserLabel User="_users[context.Item2.UserId]"></UserLabel>
+                    </MudTd>
                     <MudTd><ScoreBreakdown Score="context.Item2.Score" Plate="context.Item2.Plate" IsBroken="context.Item2.IsBroken" ShowScore="true"></ScoreBreakdown></MudTd>
                     <MudTd>
                         @context.Item2.CompetitiveLevel.ToString("N2")
@@ -308,7 +311,47 @@ else if(_monthlyWeeks.Any())
         </DialogActions>
     </MudDialog>
 }
+<MudDialog @bind-Visible="_showRemaining">
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="6">
+                <MudNumericField Min="10" Max="28" @bind-Value="_filteredLevel" Label=@L["Difficulty Level"]></MudNumericField></MudItem>
+            <MudItem xs="6">
+                <MudSelect T="ChartType" @bind-Value="_filteredChartType" Label=@L["Chart Type"]>
+                    <MudSelectItem T="ChartType" Value="ChartType.Single">Singles</MudSelectItem>
+                    <MudSelectItem T="ChartType" Value="ChartType.Double">Doubles</MudSelectItem>
+                    <MudSelectItem T="ChartType" Value="ChartType.CoOp">CoOp</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+        </MudGrid>
+        <MudTable T="Chart" Items="_remainingCharts.Where(c => (c.Level == _filteredLevel || (c.Type==ChartType.Single && _filteredLevel>=25 && c.Level >=25) ||
+                                      (c.Type==ChartType.Double && _filteredLevel>=27 && c.Level>=27)) && c.Type == _filteredChartType)" Breakpoint="Breakpoint.None">
+            <HeaderContent>
+                <MudTh>
+                    <MudTableSortLabel T="Chart" SortBy="c=>c.Level">@L["Difficulty Level"]</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel T="Chart" SortBy="c => c.Song.Name">@L["Song"]</MudTableSortLabel>
+                </MudTh>
 
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>
+                    <DifficultyBubble Chart="context"></DifficultyBubble>
+                </MudTd>
+                <MudTd>
+                    <SongImage Song="context.Song"></SongImage>
+                    @context.Song.Name
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </DialogContent>
+
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showRemaining = false">Close</MudButton>
+    </DialogActions>
+</MudDialog>
 @if (_isAdmin)
 {
     <br/>
@@ -352,7 +395,25 @@ else if(_monthlyWeeks.Any())
     private string _showingSection = "Monthly";
 
     private bool _isCurrentMonth = false;
+    private int _filteredLevel = 18;
+    private ChartType _filteredChartType = ChartType.Single;
+    private IEnumerable<Chart> _remainingCharts = Array.Empty<Chart>();
 
+    private bool _isLoadingRemaining = false;
+    private bool _showRemaining = false;
+    private async Task OpenRemainingCharts()
+    {
+        if (_remainingCharts.Any())
+        {
+            _showRemaining = true;
+            return;
+        }
+        _isLoadingRemaining = true;
+        var alreadyPlayed = (await WeeklyTournaments.GetAlreadyPlayedCharts(CancellationToken.None)).ToHashSet();
+        _remainingCharts = _charts.Values.Where(c => !alreadyPlayed.Contains(c.Id)).ToArray();
+        _showRemaining = true;
+        _isLoadingRemaining = false;
+    }
     private void OpenSubmitDialog(Guid chartId)
     {
         _submittingChartId = chartId;
