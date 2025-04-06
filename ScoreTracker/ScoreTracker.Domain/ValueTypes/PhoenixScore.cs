@@ -155,7 +155,7 @@ public readonly struct PhoenixScore : IComparable<PhoenixScore>, IComparable<int
     {
         if (score < Min._score) throw new InvalidScoreException("Level must be greater than 0");
 
-        if (score > Max._score) throw new InvalidScoreException("Level cannot be greater than 28");
+        if (score > Max._score) throw new InvalidScoreException("Level cannot be greater than 29");
 
         return new PhoenixScore(score);
     }

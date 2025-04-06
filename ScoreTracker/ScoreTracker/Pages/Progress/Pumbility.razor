@@ -51,7 +51,7 @@
         <MudText Typo="Typo.h6">PUMBILITY Gain Calculator</MudText>
     </MudItem>
     <MudItem xs="4" sm="3">
-        <MudNumericField T="int" Min="1" Max="28" Value="_newPassLevel" ValueChanged="s=>CalculateNewScore(s,_newPassLetterGrade,_oldPassLetterGrade)" Label=@L["Difficulty Level"]></MudNumericField>
+        <MudNumericField T="int" Min="1" Max="DifficultyLevel.Max" Value="_newPassLevel" ValueChanged="s=>CalculateNewScore(s,_newPassLetterGrade,_oldPassLetterGrade)" Label=@L["Difficulty Level"]></MudNumericField>
     </MudItem>
     <MudItem xs="4" sm="3">
         <MudSelect T="PhoenixLetterGrade?" Clearable="true" Label=@L["Old Letter Grade"] Value="_oldPassLetterGrade" ValueChanged="s => CalculateNewScore(_newPassLevel,_newPassLetterGrade, s)">

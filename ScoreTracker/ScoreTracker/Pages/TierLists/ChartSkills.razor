@@ -46,7 +46,7 @@
         </MudSelect>
     </MudItem>
     <MudItem xs="12" sm="6">
-        <MudNumericField T="int" Value="_level" Disabled="_isLoading" Min=@(_chartType==ChartType.CoOp?2:1) Max=@(_chartType==ChartType.CoOp?5:28) ValueChanged="SetLevel" Label=@(_chartType==ChartType.CoOp?L["Player Count"]:L["Difficulty Level"]) HideSpinButtons="true">
+        <MudNumericField T="int" Value="_level" Disabled="_isLoading" Min=@(_chartType==ChartType.CoOp?2:1) Max=@(_chartType==ChartType.CoOp?5:DifficultyLevel.Max) ValueChanged="SetLevel" Label=@(_chartType==ChartType.CoOp?L["Player Count"]:L["Difficulty Level"]) HideSpinButtons="true">
         </MudNumericField>
     </MudItem>
 
@@ -1866,7 +1866,7 @@ function(val, index) {
         _usePersonalizedData = (await UiSettings.GetSetting("TierLists__UsePersonalized") ?? true.ToString()) == true.ToString();
         _groupBy = await UiSettings.GetSetting("TierLists__GroupBy") ?? "Difficulty";
         _textView = (await UiSettings.GetSetting("TierLists__TextView") ?? false.ToString()) == true.ToString();
-        if (DifficultyFilter is >= 1 and <= 28)
+        if (DifficultyFilter is >= 1 and <= 29)
         {
             _level = DifficultyFilter.Value;
         }

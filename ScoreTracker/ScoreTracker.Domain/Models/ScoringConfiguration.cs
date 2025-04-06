@@ -56,7 +56,7 @@ namespace ScoreTracker.Domain.Models
         {
             double rating = chartType == ChartType.CoOp ? 2000 : LevelRatings[level];
             if (chartType == ChartType.CoOp || ChartLevelSnapshot == null || !includeLevelOverride ||
-                !ChartLevelSnapshot.TryGetValue(chartId, out var levelOverride) || level >= 28) return rating;
+                !ChartLevelSnapshot.TryGetValue(chartId, out var levelOverride) || level >= 29) return rating;
 
             var min = DifficultyLevel.From((int)Math.Floor(levelOverride));
             var max = DifficultyLevel.From((int)Math.Ceiling(levelOverride));

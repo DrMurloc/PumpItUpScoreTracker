@@ -315,7 +315,7 @@ else if(_monthlyWeeks.Any())
     <DialogContent>
         <MudGrid>
             <MudItem xs="6">
-                <MudNumericField Min="10" Max="28" @bind-Value="_filteredLevel" Label=@L["Difficulty Level"]></MudNumericField></MudItem>
+                <MudNumericField Min="10" Max="@DifficultyLevel.Max" @bind-Value="_filteredLevel" Label=@L["Difficulty Level"]></MudNumericField></MudItem>
             <MudItem xs="6">
                 <MudSelect T="ChartType" @bind-Value="_filteredChartType" Label=@L["Chart Type"]>
                     <MudSelectItem T="ChartType" Value="ChartType.Single">Singles</MudSelectItem>

@@ -34,7 +34,7 @@
 <br/>
 <MudGrid>
     <MudItem xs="12" sm="6" md="4">
-        <MudNumericField T="int" Value="_level" Label="Level" Min="1" Max="28" ValueChanged="l=>CalculateComboToDeath(_lifeThreshold,l)"></MudNumericField>
+        <MudNumericField T="int" Value="_level" Label="Level" Min="1" Max="DifficultyLevel.Max" ValueChanged="l=>CalculateComboToDeath(_lifeThreshold,l)"></MudNumericField>
     </MudItem>
     <MudItem xs="12" sm="6" md="4">
         <MudNumericField T="int" Value="_lifeThreshold" Label="Life Threshold" Min="0" Max="3000" ValueChanged="l=>CalculateComboToDeath(l,_level)"></MudNumericField>

@@ -28,7 +28,7 @@
     @if (_selectedChart != null && !_isLoading)
     {
         <MudItem xs="12" sm="6">
-            <MudNumericField T="int" HideSpinButtons="true" Min="1" Max="28" Label="Target Player Level" Value="_playerLevel" ValueChanged="SetPlayerLevel"></MudNumericField>
+            <MudNumericField T="int" HideSpinButtons="true" Min="1" Max="DifficultyLevel.Max" Label="Target Player Level" Value="_playerLevel" ValueChanged="SetPlayerLevel"></MudNumericField>
         </MudItem>
     }
 </MudGrid>

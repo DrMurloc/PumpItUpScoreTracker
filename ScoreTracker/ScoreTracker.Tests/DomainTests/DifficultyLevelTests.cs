@@ -13,16 +13,16 @@ public sealed class DifficultyLevelTests
     }
 
     [Fact]
-    public void DifficultyGreaterThan28ThrowsException()
+    public void DifficultyGreaterThan29ThrowsException()
     {
-        Assert.Throws<InvalidDifficultyLevelException>(() => DifficultyLevel.From(29));
+        Assert.Throws<InvalidDifficultyLevelException>(() => DifficultyLevel.From(30));
     }
 
     [Theory]
     [InlineData(1)]
-    [InlineData(28)]
+    [InlineData(29)]
     [InlineData(14)]
-    public void DifficultyBetween1And28IsFine(int level)
+    public void DifficultyBetween1And29IsFine(int level)
     {
         var difficultyLevel = DifficultyLevel.From(level);
         Assert.Equal(level, (int)difficultyLevel);

@@ -89,6 +89,7 @@ namespace ScoreTracker.Application.Handlers
                 scoring.LevelRatings[26] += 750;
                 scoring.LevelRatings[27] += 1050;
                 scoring.LevelRatings[28] += 1400;
+                scoring.LevelRatings[29] += 1800;
                 foreach (var key in scoring.ChartTypeModifiers.Keys)
                 {
                     if (key == chartType) continue;

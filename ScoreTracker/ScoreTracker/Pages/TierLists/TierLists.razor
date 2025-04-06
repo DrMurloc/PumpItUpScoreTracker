@@ -62,7 +62,7 @@
     {
 
         <MudItem xs="12" sm="4">
-            <MudNumericField T="int" AdornmentIcon="@Icons.Material.Filled.Bolt" HideSpinButtons="true" Clearable="false" Min="1" Max="28" Label=@L["Difficulty Level"] Value="DifficultyFilter" ValueChanged="@(d => UpdateSelection(d, ChartTypeFilter, _coOpSortType))"></MudNumericField>
+            <MudNumericField T="int" AdornmentIcon="@Icons.Material.Filled.Bolt" HideSpinButtons="true" Clearable="false" Min="1" Max="DifficultyLevel.Max" Label=@L["Difficulty Level"] Value="DifficultyFilter" ValueChanged="@(d => UpdateSelection(d, ChartTypeFilter, _coOpSortType))"></MudNumericField>
         </MudItem>
     }
     <MudItem xs="12"></MudItem>

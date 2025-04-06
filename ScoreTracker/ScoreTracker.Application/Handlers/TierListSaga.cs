@@ -112,7 +112,7 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
 
     public async Task Consume(ConsumeContext<ProcessScoresTiersListCommand> context)
     {
-        for (var level = 1; level <= 28; level++)
+        for (var level = 1; level <= 29; level++)
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
             {
                 var allPhoenixScores = (await _scores.GetAllPlayerScores(chartType, level, context.CancellationToken))
@@ -450,9 +450,9 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
             { 5, await _tierLists.GetUsersOnLevel(level - 1, cancellationToken, true) },
             { 4, await _tierLists.GetUsersOnLevel(level, cancellationToken, true) }
         };
-        if (level < 26) userWeights[3] = await _tierLists.GetUsersOnLevel(level + 3, cancellationToken);
-        if (level < 27) userWeights[2] = await _tierLists.GetUsersOnLevel(level + 2, cancellationToken);
-        if (level < 28) userWeights[1] = await _tierLists.GetUsersOnLevel(level + 1, cancellationToken);
+        if (level < 27) userWeights[3] = await _tierLists.GetUsersOnLevel(level + 3, cancellationToken);
+        if (level < 28) userWeights[2] = await _tierLists.GetUsersOnLevel(level + 2, cancellationToken);
+        if (level < 29) userWeights[1] = await _tierLists.GetUsersOnLevel(level + 1, cancellationToken);
         var chartSums = charts.ToDictionary(c => c.Id, c => 0);
         foreach (var weightValue in userWeights)
         {

@@ -464,7 +464,7 @@
     private IDictionary<Guid, double> _winLevelAverage = new Dictionary<Guid, double>();
     private IDictionary<Guid, IDictionary<ChartType, int>> _typeWins = new Dictionary<Guid, IDictionary<ChartType, int>>();
     private int _minLevel = 1;
-    private int _maxLevel = 28;
+    private int _maxLevel = DifficultyLevel.Max;
     private bool _showGuests = false;
     private IDictionary<Guid, string> _nameAvatars = new Dictionary<Guid, string>();
     private void Recalculate()

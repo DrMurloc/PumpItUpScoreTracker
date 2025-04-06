@@ -45,7 +45,7 @@
         <MudNumericField T="int" HideSpinButtons="true" Label="Min Level" @bind-Value="_minLevel" Min="1" Max=@_maxLevel></MudNumericField>
     </MudItem>
     <MudItem xs="12" sm="6" md="3">
-        <MudNumericField T="int" HideSpinButtons="true" Label="Max Level" @bind-Value="_maxLevel" Min="@_minLevel" Max="28"></MudNumericField>
+        <MudNumericField T="int" HideSpinButtons="true" Label="Max Level" @bind-Value="_maxLevel" Min="@_minLevel" Max="DifficultyLevel.Max"></MudNumericField>
     </MudItem>
     <MudItem xs="12" sm="6" md="3">
         <MudCheckBox T="bool" @bind-Value="_showScoreless" Label="Show Scoreless"></MudCheckBox>
@@ -172,7 +172,7 @@
     private int _competetiveCount = 1;
     private PlayerStatsRecord? _stats = null;
     private int _minLevel = 1;
-    private int _maxLevel = 28;
+    private int _maxLevel = DifficultyLevel.Max;
     private bool _showScoreless = true;
     private ISet<Guid> _topCharts = new HashSet<Guid>();
     private async Task SetType(ChartType type)

@@ -14,7 +14,7 @@ public readonly struct DifficultyLevel : IComparable<DifficultyLevel>,
         _level = levelInt;
     }
 
-    public static readonly DifficultyLevel Max = new(28);
+    public static readonly DifficultyLevel Max = new(29);
     public static readonly DifficultyLevel Min = new(1);
 
     public override string ToString()
@@ -108,7 +108,7 @@ public readonly struct DifficultyLevel : IComparable<DifficultyLevel>,
     {
         if (level < Min) throw new InvalidDifficultyLevelException("Level must be greater than 0");
 
-        if (level > Max) throw new InvalidDifficultyLevelException("Level cannot be greater than 28");
+        if (level > Max) throw new InvalidDifficultyLevelException("Level cannot be greater than 29");
 
         return new DifficultyLevel(level);
     }
