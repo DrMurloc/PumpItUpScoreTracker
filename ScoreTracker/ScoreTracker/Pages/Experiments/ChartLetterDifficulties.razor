@@ -1,0 +1,203 @@
+﻿@page "/Experiments/LetterDifficulties"
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Dtos
+@using ScoreTracker.Web.Pages.Tools
+@using ScoreTracker.Domain.Models
+@using MediatR
+@using ScoreTracker.Application.Handlers
+@using ScoreTracker.Domain.Enums
+@using ScoreTracker.Domain.ValueTypes
+@using Syncfusion.Blazor.Data
+@using ChartType = ScoreTracker.Domain.Enums.ChartType;
+<PageTitle>LetterDifficulties</PageTitle>
+
+<ChartSelector ChartIdSelected="SetChart"></ChartSelector>
+@if (_isLoading)
+{
+    <MudProgressLinear Indeterminate="true"></MudProgressLinear>
+}
+@if (_chartId!=null && !_isLoading)
+{
+        <DifficultyBubble Chart="_charts[_chartId.Value]"></DifficultyBubble>
+        <MudText>Folder Weighted Distribution</MudText>
+
+    
+    <ApexChart TItem="Range"
+               Title="Letter Difficulty"
+               @ref=_folderChart>
+        <ApexPointSeries TItem="Range"
+                         Items="_ranges"
+                         Name="5%"
+                         Color="#FFFFFF"
+                         SeriesType="SeriesType.Line"
+                         XValue="@(e => e.letter.GetName())"
+                         YValue="@(e => (decimal)e.Min)"
+                         OrderBy="e => ParagonLevelGradeHelperMethods.GetParagonLevel((string)e.X)" />
+        <ApexPointSeries TItem="Range"
+                         Items="_ranges"
+                         Name="Q1"
+                         Color="#FFFFFF"
+                         SeriesType="SeriesType.Line"
+                         XValue="@(e => e.letter.GetName())"
+                         YValue="@(e => (decimal)e.LowerInner)"
+                         OrderBy="e => ParagonLevelGradeHelperMethods.GetParagonLevel((string)e.X)" />
+        <ApexPointSeries TItem="Range"
+                         Items="_ranges"
+                         Name="Median"
+                         Color="#FFFFFF"
+                         SeriesType="SeriesType.Line"
+                         XValue="@(e => e.letter.GetName())"
+                         YValue="@(e => (decimal)e.Median)"
+                         OrderBy="e => ParagonLevelGradeHelperMethods.GetParagonLevel((string)e.X)" />
+        <ApexPointSeries TItem="Range"
+                         Items="_ranges"
+                         Name="Q3"
+                         Color="#FFFFFF"
+                         SeriesType="SeriesType.Line"
+                         XValue="@(e => e.letter.GetName())"
+                         YValue="@(e => (decimal)e.UpperInner)"
+                         OrderBy="e => ParagonLevelGradeHelperMethods.GetParagonLevel((string)e.X)" />
+        <ApexPointSeries TItem="Range"
+                         Items="_ranges"
+                         Name="95%"
+                         Color="#FFFFFF"
+                         SeriesType="SeriesType.Line"
+                         XValue="@(e => e.letter.GetName())"
+                         YValue="@(e => (decimal)e.Max)"
+                         OrderBy="e => ParagonLevelGradeHelperMethods.GetParagonLevel((string)e.X)" />
+
+        <ApexPointSeries TItem="Range"
+                         Items="_ranges"
+                         Name="Selected Chart"
+                         SeriesType="SeriesType.Line"
+                         Color="#00FFFF"
+                         XValue="@(e => e.letter.GetName())"
+                         YValue="@(e => (decimal)_results[_chartId.Value][e.letter])"
+                         OrderBy="e => ParagonLevelGradeHelperMethods.GetParagonLevel((string)e.X)" />
+
+    </ApexChart>
+
+        <SongImage Song="_charts[_chartId.Value].Song"></SongImage>
+        <DifficultyBubble Chart="_charts[_chartId.Value]"></DifficultyBubble>
+        <MudText>Percentile Distribution</MudText>
+    
+    <ApexChart TItem="Range"
+                           Title="Letter Difficulty"
+                           @ref=_percentChart
+               Options="_percentOptions">
+        <ApexPointSeries TItem="Range"
+                         Items="_ranges"
+                         Name="Difficulty By Letter"
+                         SeriesType="SeriesType.Line"
+                         XValue="@(e => e.letter.GetName())"
+                         YValue="@(e => (decimal)_chartPercentiles[e.letter])"
+                         OrderBy="e => ParagonLevelGradeHelperMethods.GetParagonLevel((string)e.X)" />
+
+    </ApexChart>
+
+}
+
+
+@inject IChartRepository ChartRepository;
+@inject IPhoenixRecordRepository Scores;
+@inject IPlayerStatsRepository PlayerStats;
+@code
+{
+    private ApexChart<Range> _folderChart = new ApexChart<Range>();
+    private ApexChart<Range> _percentChart = new ApexChart<Range>();
+    private ApexChartOptions<Range> _percentOptions { get; set; } = new()
+    {
+        Yaxis = new List<YAxis>(new []
+        {
+            new YAxis()
+            {
+                Min=0.0,
+                Max=100.0
+            }
+        }),
+            PlotOptions = new PlotOptions
+            {
+                Line = new PlotOptionsLine
+                {
+                    Colors = new LineColors
+                    {
+                        Threshold = 50,
+                        ColorAboveThreshold = "#00FF00",
+                        ColorBelowThreshold = "#FF0000"
+                    }
+                }
+            }
+    };
+
+    private IEnumerable<(int place,BountyLeaderboard record)> _leaderboard = Array.Empty<(int,BountyLeaderboard)>();
+    private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
+    private IDictionary<Guid, IDictionary<ParagonLevel, double>> _results = new Dictionary<Guid, IDictionary<ParagonLevel, double>>();
+    private IDictionary<ParagonLevel, double[]> _orderedLevelResults = new Dictionary<ParagonLevel, double[]>();
+    private IList<Range> _ranges = new List<Range>();
+    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private IDictionary<ParagonLevel, double> _chartPercentiles = new Dictionary<ParagonLevel, double>();
+    private Guid? _chartId = null;
+    private bool _isLoading = false;
+    
+    private async Task SetChart(Chart chart)
+    {
+        _isLoading = true;
+        StateHasChanged();
+        await SelectLevel(chart.Level, chart.Type);
+        foreach (var levelKv in _results[chart.Id])
+        {
+            _chartPercentiles[levelKv.Key] = 100.0*_orderedLevelResults[levelKv.Key].IndexOf(levelKv.Value) / (double)_orderedLevelResults[levelKv.Key].Length;
+        }
+        _isLoading = false;
+        _chartId = chart.Id;
+        await _folderChart.UpdateSeriesAsync(true);
+        await _percentChart.UpdateSeriesAsync(true);
+        StateHasChanged();
+    }
+    private sealed record Range(ParagonLevel letter,double Min, double LowerInner, double Median, double UpperInner, double Max);
+    private async Task SelectLevel(DifficultyLevel level, ChartType chartType)
+    {
+        var charts =
+            (await ChartRepository.GetCharts(MixEnum.Phoenix, level, chartType, cancellationToken: CancellationToken.None))
+                .ToArray();
+        _charts = charts.ToDictionary(c => c.Id);
+        var scores = (await Scores.GetAllPlayerScores(chartType, level, CancellationToken.None)).ToArray();
+
+        var stats = (await PlayerStats.GetStats(scores.Select(p => p.userId).Distinct(), CancellationToken.None))
+            .ToDictionary(s => s.UserId);
+        _results = charts.ToDictionary(c => c.Id, c => (IDictionary<ParagonLevel, double>)new Dictionary<ParagonLevel, double>());
+        _ranges.Clear();
+        for (var letter = ParagonLevel.AA; letter <= ParagonLevel.PG; letter++)
+        {
+            var threshold = letter.MinThreshold();
+            var relevantScores = scores.Where(s => s.record.Score != null && s.record.Score >= threshold);
+
+
+            var sums = charts.ToDictionary(c => c.Id, c => 0.0);
+            foreach (var record in relevantScores)
+            {
+                var competitiveLevel = chartType == ChartType.Single
+                    ? stats[record.userId].SinglesCompetitiveLevel
+                    : stats[record.userId].DoublesCompetitiveLevel;
+                if (competitiveLevel < 5)
+                    continue;
+                sums[record.record.ChartId] += Math.Pow(1.25, level + .5 - competitiveLevel);
+            }
+            foreach (var kv in sums)
+            {
+                _results[kv.Key][letter] = kv.Value;
+            }
+            var ordered = sums.Select(s => s.Value).OrderBy(s => s).ToArray();
+            _ranges.Add(new Range(letter,ordered.Skip(ordered.Length * 5 / 100).First(),
+                ordered.Skip(ordered.Length / 4).First(),
+                ordered.Skip(ordered.Length / 2).First(),
+                ordered.Skip(ordered.Length * 3 / 4).First(), ordered.Skip(ordered.Length * 95 / 100).First()));
+        }
+        _orderedLevelResults = _results.SelectMany(kv => kv.Value.Select(k => k))
+            .GroupBy(kv => kv.Key).ToDictionary(g => g.Key, g => g.Select(kv => kv.Value)
+                .OrderBy(d => d).ToArray());
+
+    }
+}

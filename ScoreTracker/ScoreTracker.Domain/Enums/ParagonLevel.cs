@@ -50,9 +50,27 @@ public static class ParagonLevelGradeHelperMethods
         .GetValues<PhoenixLetterGrade>()
         .ToDictionary(e => Enum.Parse<ParagonLevel>(e.ToString()), e => e);
 
+    private static readonly IDictionary<string, ParagonLevel> _letterNames = Enum.GetValues<ParagonLevel>()
+        .ToDictionary(e => e.GetName(), e => e, StringComparer.OrdinalIgnoreCase);
+
+    public static ParagonLevel GetParagonLevel(string name)
+    {
+        return _letterNames[name];
+    }
+
     public static ParagonLevel GetParagonLevel(this PhoenixScore score)
     {
         return score == 1000000 ? ParagonLevel.PG : _levelDict[score.LetterGrade];
+    }
+
+    public static PhoenixScore MinThreshold(this ParagonLevel level)
+    {
+        return level == ParagonLevel.PG ? PhoenixScore.Max : level.GetLetterGrade().GetMinimumScore();
+    }
+
+    public static ParagonLevel GetParagonLevel(this PhoenixLetterGrade letterGrade)
+    {
+        return _levelDict[letterGrade];
     }
 
     public static PhoenixLetterGrade GetLetterGrade(this ParagonLevel paragonLevel)

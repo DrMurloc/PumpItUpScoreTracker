@@ -25,6 +25,10 @@
     [Parameter]
     public Func<Chart, Task> ChartIdSelected { get; set; } = c => Task.CompletedTask;
 
+    private IEnumerable<Chart>? _charts = null;
+    [Parameter]
+    public IEnumerable<Chart>? Charts { get; set; } = null;
+
     private string _selected = string.Empty;
     private static readonly Regex DifficultyRegex = new Regex(@"\s(S|D|C)[0-9]{1,2}$",RegexOptions.Compiled |RegexOptions.IgnoreCase);
     private Task<IEnumerable<string>> SearchSongs(string v)
@@ -66,9 +70,30 @@
     }
 
     private IDictionary<string, Chart> _chartNames = new Dictionary<string, Chart>(StringComparer.OrdinalIgnoreCase);
+
+    private async Task UpdateChartList()
+    {
+        if (Charts == null)
+        {
+            
+            var charts = await Mediator.Send(new GetChartsQuery(Mix));
+            _chartNames = charts.ToDictionary(c => c.Song.Name + " " + c.DifficultyString);
+        }
+        else
+        {
+            _chartNames = Charts.ToDictionary(c => c.Song.Name + " " + c.DifficultyString);
+        }
+    }
+    protected override void OnParametersSet()
+    {
+        if (_charts!=Charts)
+        {
+            InvokeAsync(UpdateChartList);
+        }
+    }
     protected override async Task OnInitializedAsync()
     {
-        var charts = await Mediator.Send(new GetChartsQuery(Mix));
-        _chartNames = charts.ToDictionary(c => c.Song.Name + " " + c.DifficultyString);
+        _charts = Charts;
+        await UpdateChartList();
     }
 }
