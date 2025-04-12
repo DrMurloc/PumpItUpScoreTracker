@@ -154,6 +154,36 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("Chart", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.ChartLetterDifficultyEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("LetterGrade")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
+                    b.Property<double>("Percentile")
+                        .HasColumnType("float");
+
+                    b.Property<double>("WeightedSum")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChartId", "LetterGrade")
+                        .IsUnique();
+
+                    b.ToTable("ChartLetterDifficulty", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.ChartMixEntity", b =>
                 {
                     b.Property<Guid>("Id")

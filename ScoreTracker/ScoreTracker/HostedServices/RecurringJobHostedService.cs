@@ -65,5 +65,7 @@ public sealed class RecurringJobHostedService : IHostedService,
 
         await scheduler.SchedulePublish(new DateTime(nextDate.Year, nextDate.Month, nextDate.Day, 4, 30, 0),
             new ProcessPassTierListCommand());
+        await scheduler.SchedulePublish(new DateTime(nextDate.Year, nextDate.Month, nextDate.Day, 5, 00, 0),
+            new CalculateChartLetterDifficultiesEvent());
     }
 }

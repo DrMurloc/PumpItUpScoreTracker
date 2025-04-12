@@ -2,12 +2,14 @@
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Handlers
 {
-    public sealed class ScoringDifficultySaga : IConsumer<CalculateScoringDifficultyEvent>
+    public sealed class ScoringDifficultySaga : IConsumer<CalculateScoringDifficultyEvent>,
+        IConsumer<CalculateChartLetterDifficultiesEvent>
     {
         private const int LevelDiff = 3;
         private readonly IChartRepository _chartRepository;
@@ -21,6 +23,66 @@ namespace ScoreTracker.Application.Handlers
             _chartRepository = chartRepository;
             _scores = scores;
             _playerStats = playerStats;
+        }
+
+        public async Task UpdateChartLetterLevel(ChartType chartType, DifficultyLevel level,
+            CancellationToken cancellationToken = default)
+        {
+            var charts =
+                (await _chartRepository.GetCharts(MixEnum.Phoenix, level, chartType,
+                    cancellationToken: cancellationToken))
+                .ToArray();
+            if (!charts.Any()) return;
+            var scores = (await _scores.GetAllPlayerScores(chartType, level, cancellationToken))
+                .Where(s => s.record is { IsBroken: false, Score: not null }).ToArray();
+            if (!scores.Any()) return;
+            var stats = (await _playerStats.GetStats(scores.Select(p => p.userId).Distinct(), cancellationToken))
+                .ToDictionary(s => s.UserId);
+            var results = charts.ToDictionary(c => c.Id,
+                c => (IDictionary<ParagonLevel, double>)new Dictionary<ParagonLevel, double>());
+
+            for (var letter = ParagonLevel.AA; letter <= ParagonLevel.PG; letter++)
+            {
+                var threshold = letter.MinThreshold();
+                var relevantScores = scores.Where(s => s.record.Score != null && s.record.Score >= threshold);
+
+
+                var sums = charts.ToDictionary(c => c.Id, c => 0.0);
+                foreach (var record in relevantScores)
+                {
+                    var competitiveLevel = chartType == ChartType.Single
+                        ? stats[record.userId].SinglesCompetitiveLevel
+                        : stats[record.userId].DoublesCompetitiveLevel;
+                    if (competitiveLevel < 5)
+                        continue;
+                    sums[record.record.ChartId] += Math.Pow(1.25, level + .5 - competitiveLevel);
+                }
+
+                foreach (var kv in sums) results[kv.Key][letter] = kv.Value;
+            }
+
+            var orderedLevelResults = results.SelectMany(kv => kv.Value.Select(k => k))
+                .GroupBy(kv => kv.Key).ToDictionary(g => g.Key, g => g.Select(kv => kv.Value)
+                    .OrderBy(d => d).ToArray());
+            var updates = new List<ChartLetterGradeDifficulty>();
+            foreach (var chartKv in results)
+            {
+                var weight = chartKv.Value;
+                var percentiles = weight.ToDictionary(levelKv => levelKv.Key, levelKv =>
+                    100.0 * orderedLevelResults[levelKv.Key].Select((d, i) => (d, i))
+                        .First(d => Math.Abs(d.d - levelKv.Value) < .001).i /
+                    orderedLevelResults[levelKv.Key].Length);
+                updates.Add(new ChartLetterGradeDifficulty(chartKv.Key, percentiles, weight));
+            }
+
+            await _chartRepository.UpdateChartLetterDifficulties(updates, cancellationToken);
+        }
+
+        public async Task Consume(ConsumeContext<CalculateChartLetterDifficultiesEvent> context)
+        {
+            foreach (var level in DifficultyLevel.All)
+            foreach (var chartType in new[] { ChartType.Single, ChartType.Double, ChartType.CoOp })
+                await UpdateChartLetterLevel(chartType, level, context.CancellationToken);
         }
 
         public async Task Consume(ConsumeContext<CalculateScoringDifficultyEvent> context)

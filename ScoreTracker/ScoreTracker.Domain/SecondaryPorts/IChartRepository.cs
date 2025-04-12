@@ -47,6 +47,12 @@ public interface IChartRepository
     Task SetSongCultureName(Name englishSongName, Name cultureCode, Name songName,
         CancellationToken cancellationToken = default);
 
+    Task UpdateChartLetterDifficulties(IEnumerable<ChartLetterGradeDifficulty> difficulties,
+        CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<ChartLetterGradeDifficulty>> GetChartLetterGradeDifficulties(IEnumerable<Guid>? chartIds = null,
+        CancellationToken cancellationToken = default);
+
     Task<IDictionary<Name, Name>> GetEnglishLookup(Name cultureCode,
         CancellationToken cancellationToken);
 

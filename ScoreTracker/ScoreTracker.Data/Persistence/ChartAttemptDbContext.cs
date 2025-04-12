@@ -78,6 +78,7 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<UcsChartLeaderboardEntryEntity> UcsChartLeaderboardEntry { get; set; }
     public DbSet<UcsChartTagEntity> UcsChartTag { get; set; }
     public DbSet<PhoenixRecordStatsEntity> PhoenixRecordStats { get; set; }
+    public DbSet<ChartLetterDifficultyEntity> ChartLetterDifficulty { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

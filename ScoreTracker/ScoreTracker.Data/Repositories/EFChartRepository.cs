@@ -22,9 +22,11 @@ public sealed class EFChartRepository : IChartRepository
 
     private readonly IMemoryCache _cache;
     private readonly ChartAttemptDbContext _database;
+    private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
     public EFChartRepository(IMemoryCache cache, IDbContextFactory<ChartAttemptDbContext> factory)
     {
+        _factory = factory;
         _database = factory.CreateDbContext();
         _cache = cache;
     }
@@ -248,6 +250,55 @@ public sealed class EFChartRepository : IChartRepository
         else
             entity.SongName = songName;
         await _database.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpdateChartLetterDifficulties(IEnumerable<ChartLetterGradeDifficulty> difficulties,
+        CancellationToken cancellationToken = default)
+    {
+        var models = difficulties.ToArray();
+        var chartIds = models.Select(c => c.ChartId).Distinct().ToArray();
+        var database = await _factory.CreateDbContextAsync(cancellationToken);
+
+        var entities = (await database.ChartLetterDifficulty.Where(c => chartIds.Contains(c.ChartId))
+                .ToArrayAsync(cancellationToken))
+            .ToDictionary(e => (e.ChartId, Enum.Parse<ParagonLevel>(e.LetterGrade)));
+        var toAdd = new List<ChartLetterDifficultyEntity>();
+        foreach (var model in models)
+        foreach (var letter in model.Percentiles.Keys)
+            if (entities.ContainsKey((model.ChartId, letter)))
+            {
+                entities[(model.ChartId, letter)].Percentile = model.Percentiles[letter];
+                entities[(model.ChartId, letter)].WeightedSum = model.WeightedSum[letter];
+            }
+            else
+            {
+                toAdd.Add(new ChartLetterDifficultyEntity
+                {
+                    ChartId = model.ChartId,
+                    LetterGrade = letter.ToString(),
+                    Percentile = model.Percentiles[letter],
+                    WeightedSum = model.WeightedSum[letter]
+                });
+            }
+
+        await database.AddRangeAsync(toAdd, cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<ChartLetterGradeDifficulty>> GetChartLetterGradeDifficulties(
+        IEnumerable<Guid>? chartIds = null, CancellationToken cancellationToken = default)
+    {
+        var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var charts = database.ChartLetterDifficulty.AsQueryable();
+        if (chartIds != null) charts = charts.Where(c => chartIds.Contains(c.ChartId));
+
+        return (await charts.ToArrayAsync(cancellationToken))
+            .GroupBy(e => e.ChartId)
+            .ToDictionary(e => e.Key, e => e.ToArray())
+            .Select(kv => new ChartLetterGradeDifficulty(kv.Key,
+                kv.Value.ToDictionary(e => Enum.Parse<ParagonLevel>(e.LetterGrade), e => e.Percentile),
+                kv.Value.ToDictionary(e => Enum.Parse<ParagonLevel>(e.LetterGrade), e => e.WeightedSum)))
+            .ToArray();
     }
 
     public async Task<IDictionary<Name, Name>> GetEnglishLookup(Name cultureCode, CancellationToken cancellationToken)

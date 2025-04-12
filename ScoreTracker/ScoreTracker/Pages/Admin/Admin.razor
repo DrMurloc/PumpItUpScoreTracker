@@ -230,7 +230,7 @@
     await WorldRanking.CalculateWorldRankings(CancellationToken.None);*/
         
 
-        await Bus.Publish(new ProcessPassTierListCommand());
+        //await Bus.Publish(new ProcessPassTierListCommand());
         /*var songImages = (await Database.Song.Select(s => s.ImagePath).ToArrayAsync()).ToHashSet();
          * 
         var images = await Files.GetFiles("songs/");
@@ -247,7 +247,7 @@
         }*/
 
 
-
+        await Bus.Publish(new CalculateChartLetterDifficultiesEvent());
        Snackbar.Add("Done", Severity.Success);
 
     }

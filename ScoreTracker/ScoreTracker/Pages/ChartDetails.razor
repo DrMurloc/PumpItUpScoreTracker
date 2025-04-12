@@ -48,6 +48,19 @@
     @if (_currentMix == MixEnum.Phoenix)
     {
         <MudText Typo="Typo.h5">Player Scores Breakdown</MudText>
+        <ApexChart TItem="LevelDistribution"
+                   Title="Difficulty By Letter"
+                   @ref=_percentChart
+                   Options="_percentOptions">
+            <ApexPointSeries TItem="LevelDistribution"
+                             Items="_levelDistribution"
+                             Name="Difficulty By Letter"
+                             SeriesType="SeriesType.Line"
+                             XValue="@(e => e.Level.GetName())"
+                             YValue="@(e => (decimal)e.Percentile)"
+                             OrderBy="e => ParagonLevelGradeHelperMethods.GetParagonLevel((string)e.X)" />
+
+        </ApexChart>
         @if (_plateBreakdowns.Any(kv => kv.Value > 0))
         {
             <br/>
@@ -209,12 +222,40 @@
     private string _video = string.Empty;
     private string _artist = string.Empty;
     private MudAutocomplete<string> _autocomplete;
-
+    private ApexChartOptions<LevelDistribution> _percentOptions { get; set; } = new()
+    {
+        Yaxis = new List<YAxis>(new []
+        {
+            new YAxis()
+            {
+                Min=0.0,
+                Max=100.0,
+                Labels = new YAxisLabels()
+                {
+                    Formatter = @"function (value, index, w) {
+                    return Number(value).toLocaleString();}"
+                }
+            },
+        }),
+        PlotOptions = new PlotOptions
+        {
+            Line = new PlotOptionsLine
+            {
+                Colors = new LineColors
+                {
+                    Threshold = 50,
+                    ColorAboveThreshold = "#00FF00",
+                    ColorBelowThreshold = "#FF0000"
+                }
+            }
+        }
+    };
     private decimal _minBpm;
     private decimal _maxBpm;
     private ApexChart<DataPoint>? _scoreGraph;
     private ApexChart<StringDataPoint>? _plateGraph;
     private ApexChart<DataPoint>? _passGraph;
+    private ApexChart<LevelDistribution> _percentChart = new ApexChart<LevelDistribution>();
     private IEnumerable<string> _artists = Array.Empty<string>();
     private readonly ApexChartOptions<DataPoint> _scoreBoxesOptions = new ApexChartOptions<DataPoint>()
     {
@@ -274,6 +315,9 @@
     private sealed record DataPoint(int X, int Y);
 
     private sealed record StringDataPoint(string X, int Y);
+
+    private IEnumerable<LevelDistribution> _levelDistribution = Array.Empty<LevelDistribution>();
+    private sealed record LevelDistribution(ParagonLevel Level, double Percentile);
     private async Task SelectChart(Chart chart)
     {
         _isLoading = true;
@@ -298,7 +342,7 @@
         _isLoading = false;
         NavManager.NavigateTo("/Chart/" + _selectedChart.Id.ToString());
         ChartId = _selectedChart.Id;
-
+        _levelDistribution = (await Charts.GetChartLetterGradeDifficulties(new[] { chart.Id })).First().Percentiles.Select(kv => new LevelDistribution(kv.Key, kv.Value)).OrderBy(r => r.Level).ToArray();
         if (CurrentUser.IsLoggedIn)
         {
             _myScore = (await Mediator.Send(new GetPhoenixRecordQuery(_selectedChart.Id)))?.Score;
@@ -324,6 +368,7 @@
         _artist = _selectedChart.StepArtist?.ToString() ?? "";
         _minBpm = _selectedChart.Song.Bpm?.Min??0;
         _maxBpm = _selectedChart.Song.Bpm?.Max??0;
+        await _percentChart.UpdateSeriesAsync(true);
         StateHasChanged();
     }
 
