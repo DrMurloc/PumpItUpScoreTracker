@@ -47,7 +47,7 @@
     }
     @if (_currentMix == MixEnum.Phoenix)
     {
-        <MudText Typo="Typo.h5">Player Scores Breakdown</MudText>
+        <MudText Typo="Typo.h5">Chart Difficulty by Letter Grade</MudText>
         <ApexChart TItem="LevelDistribution"
                    Title="Difficulty By Letter"
                    @ref=_percentChart
@@ -64,6 +64,7 @@
         @if (_plateBreakdowns.Any(kv => kv.Value > 0))
         {
             <br/>
+            <MudText Typo="Typo.h5">Plate Distribution</MudText>
             <ApexChart TItem="StringDataPoint"
                        @ref=_plateGraph
                        Title="Plate Breakdown">
@@ -76,6 +77,7 @@
                                  OrderBy="e => (int)PhoenixPlateHelperMethods.ParseShorthand((string)e.X)"/>
             </ApexChart>
             <br/>
+            <MudText Typo="Typo.h5">Score Distribution By Player Level</MudText>
             <ApexChart TItem="DataPoint"
                        Title="Scores by Competitive Level"
                        @ref=_scoreGraph
