@@ -30,6 +30,30 @@
             <MudText Color="Color.Info">@L["Qualifier Submit Phrase 1"]</MudText>
         </MudItem>
     }
+    @if (_currentQualifiers != null)
+    {
+            @if (!_canEdit)
+            {
+                <MudItem xs="12">
+                    <MudText Color="Color.Warning">You must be logged in to the related account to edit this player's submissions</MudText>
+                </MudItem>
+
+            } else if (CurrentUser.IsLoggedIn && !_registeredUserIds.Contains(CurrentUser.User.Id))
+            {
+                <MudItem xs="12">
+
+                    <MudTooltip Text="Makes any entries in your recent scores automatically update qualifiers, must use username/password import.">
+
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RegisterToQualifiers" Disabled="_isSaving">Register to Auto-Submit on Score Import</MudButton>
+                    </MudTooltip>
+                </MudItem>
+            } else if (CurrentUser.IsLoggedIn)
+            {
+                <MudItem xs="12">
+                    <MudText Color="Color.Success">Registered for auto-submissions!</MudText>
+                </MudItem>
+            }
+    }
     @if (_isNew)
     {
         <MudItem xs="12">
@@ -75,7 +99,7 @@
                         </MudTooltip>
 
                         <MudSpacer></MudSpacer>
-                        @if (!IsExpired)
+                        @if (!IsExpired && _canEdit)
                         {
                             <MudTooltip Text="Submit">
                                 <MudIconButton Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Outlined" Color="Color.Primary" OnClick="() => OpenSubmit(chart)"></MudIconButton>
@@ -255,6 +279,7 @@
 @code
 {
 
+    private ISet<Guid> _registeredUserIds = new HashSet<Guid>();
     private QualifiersConfiguration _configuration = new QualifiersConfiguration(Array.Empty<Chart>(), new Dictionary<Guid, int>(),"Phoenix",1,2,null);
     private UserQualifiers? _currentQualifiers;
     private Chart? _submittingChart;
@@ -273,6 +298,7 @@
     private bool _isSaving = false;
     private DifficultyLevel _level = 20;
     private bool _isNew = false;
+    private bool _canEdit = false;
     private PhoenixScore _testScore = 950000;
     private static readonly Uri PlaceholderPhoto = new Uri("https://piuimages.arroweclip.se/songs/placeholder.png", UriKind.Absolute);
     private void SetLetterGrade(PhoenixLetterGrade grade)
@@ -314,6 +340,15 @@
 
         return charts[index + 1].Id;
     }
+    private async Task RegisterToQualifiers()
+    {
+        _isSaving = true;
+
+        await Qualifiers.RegisterUserToTournament(TournamentId, CurrentUser.User.Id);
+        _registeredUserIds.Add(CurrentUser.User.Id);
+        Snackbar.Add("Registered to auto-submit qualifiers!", Severity.Success);
+        _isSaving = false;
+    }
     private async Task SetUsername(string nameString)
     {
         if (Name.TryParse(nameString, out var name))
@@ -323,7 +358,7 @@
             if (qualifiers == null)
             {
                 _isNew = true;
-                _currentQualifiers = new UserQualifiers(_configuration,false,"Not Set",new Dictionary<Guid, UserQualifiers.Submission>())
+                qualifiers=_currentQualifiers = new UserQualifiers(_configuration,false,"Not Set",CurrentUser.IsLoggedIn?null:CurrentUser.User.Id,new Dictionary<Guid, UserQualifiers.Submission>())
                 {
                     UserName = nameString
                 };
@@ -334,6 +369,7 @@
                 _username = _currentQualifiers.UserName;
                 _isNew = false;
             }
+            _canEdit = qualifiers.UserId == null || (CurrentUser.IsLoggedIn && qualifiers.UserId == CurrentUser.User.Id);
             await EvaluateRecommended();
             await RefreshLeaderboard();
         }
@@ -557,6 +593,7 @@
             NavManager.NavigateTo("/Tournaments");
             return;
         }
+        _registeredUserIds = (await Qualifiers.GetRegisteredUsers(TournamentId)).Distinct().ToHashSet();
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
         var tournament = (await Mediator.Send(new GetAllTournamentsQuery()))
             .FirstOrDefault(t => t.Id == TournamentId);

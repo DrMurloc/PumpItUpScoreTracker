@@ -181,7 +181,6 @@
 @inject IMediator Mediator;
 @code
 {
-
     private IEnumerable<Entry> _leaderboard = Array.Empty<Entry>();
     private Entry? _selectedEntry = null;
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
@@ -237,7 +236,7 @@
         @if (IsExpired)
         {
             var missingPlayers = players.Where(p => !leaderboardPlayers.Contains(p.Key)).Select(kv => kv.Value).ToArray();
-            leaderboard.AddRange(missingPlayers.Select(player => new Entry(999, player.Seed, player.Name, Array.Empty<(Chart,PhoenixScore,double)>(), true, 0.0, Array.Empty<Uri>(), new UserQualifiers(_configuration, true, player.Name, new Dictionary<Guid, UserQualifiers.Submission>()))));
+            leaderboard.AddRange(missingPlayers.Select(player => new Entry(999, player.Seed, player.Name, Array.Empty<(Chart,PhoenixScore,double)>(), true, 0.0, Array.Empty<Uri>(), new UserQualifiers(_configuration, true, player.Name, null,new Dictionary<Guid, UserQualifiers.Submission>()))));
         }
         _leaderboard = leaderboard.Any(l => l.FinalSeed != null && l.FinalSeed != l.Place) ?
             leaderboard.OrderBy(l => l.FinalSeed).ToArray() :

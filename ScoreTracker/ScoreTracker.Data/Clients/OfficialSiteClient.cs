@@ -1,6 +1,7 @@
 ﻿using System.Security.Authentication;
 using System.Text.RegularExpressions;
 using System.Web;
+using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Application.Commands;
@@ -21,6 +22,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     private readonly IChartRepository _charts;
     private readonly ILogger _logger;
     private readonly IMediator _mediator;
+    private readonly IBus _bus;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IPhoenixRecordRepository _phoenixRecords;
     private readonly IFileUploadClient _fileUpload;
@@ -32,7 +34,8 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         ICurrentUserAccessor currentUser,
         IPhoenixRecordRepository phoenixRecords, IFileUploadClient fileUpload,
         IOfficialLeaderboardRepository leaderboards,
-        IWeeklyTournamentRepository weeklyTournies)
+        IWeeklyTournamentRepository weeklyTournies,
+        IBus bus)
     {
         _piuGame = piuGame;
         _charts = charts;
@@ -43,6 +46,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         _fileUpload = fileUpload;
         _leaderboards = leaderboards;
         _weeklyTournies = weeklyTournies;
+        _bus = bus;
     }
 
     public async Task<IEnumerable<OfficialChartLeaderboardEntry>> GetAllOfficialChartScores(
@@ -199,6 +203,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         var recent = (await _piuGame.GetRecentScores(sessionId, cancellationToken)).ToArray();
         var weeklyCharts = (await _weeklyTournies.GetWeeklyCharts(cancellationToken)).Select(e => e.ChartId).Distinct()
             .ToHashSet();
+        var entries = new List<RecentScoreImportedEvent.Entry>();
         foreach (var songGroup in recent.GroupBy(s => s.SongName))
         {
             var songName = await GetMappedName(songGroup.Key, cancellationToken);
@@ -217,6 +222,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
                 var bestScore = chartGroup.Max(s => s.Score);
                 var bestPlate = chartGroup.Max(s => s.Plate);
                 var isBroken = chartGroup.All(s => s.IsBroken);
+                entries.Add(new RecentScoreImportedEvent.Entry(chart.Id, bestScore, bestPlate.ToString(), isBroken));
                 if (weeklyCharts.Contains(chart.Id))
                     try
                     {
@@ -237,6 +243,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
             }
         }
 
+        await _bus.Publish(new RecentScoreImportedEvent(userId, entries.ToArray()), cancellationToken);
         return results.Values;
     }
 

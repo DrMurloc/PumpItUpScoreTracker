@@ -13,5 +13,6 @@ namespace ScoreTracker.Data.Persistence
         [Required] public string Entries { get; set; } = string.Empty;
 
         public bool IsApproved { get; set; }
+        public Guid? UserId { get; set; }
     }
 }

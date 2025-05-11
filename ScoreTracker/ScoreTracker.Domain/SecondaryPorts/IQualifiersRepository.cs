@@ -9,6 +9,9 @@ namespace ScoreTracker.Domain.SecondaryPorts
         Task<UserQualifiers?> GetQualifiers(Guid tournamentId, Name userName, QualifiersConfiguration config,
             CancellationToken cancellationToken = default);
 
+        Task<UserQualifiers?> GetQualifiers(Guid tournamentId, Guid userId, QualifiersConfiguration config,
+            CancellationToken cancellationToken = default);
+
         Task SaveQualifiers(Guid tournamentId, UserQualifiers qualifiers,
             CancellationToken cancellationToken = default);
 
@@ -25,5 +28,8 @@ namespace ScoreTracker.Domain.SecondaryPorts
             CancellationToken cancellationToken = default);
 
         Task<IEnumerable<CoOpTeam>> GetCoOpTeams(Guid tournamentId, CancellationToken cancellationToken = default);
+        Task RegisterUserToTournament(Guid tournamentId, Guid userId, CancellationToken cancellationToken = default);
+        Task<IEnumerable<Guid>> GetRegisteredUsers(Guid tournamentId, CancellationToken cancellationToken = default);
+        Task<IEnumerable<Guid>> GetRegisteredTournaments(Guid userId, CancellationToken cancellationToken = default);
     }
 }

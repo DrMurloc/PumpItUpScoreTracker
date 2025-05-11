@@ -14,6 +14,7 @@ namespace ScoreTracker.Data.Repositories
     {
         private readonly ChartAttemptDbContext _database;
         private IChartRepository _charts;
+        private readonly IDbContextFactory<ChartAttemptDbContext> _dbFactory;
 
         private static readonly ISet<Guid> ChartIds = new HashSet<Guid>(new[]
         {
@@ -34,6 +35,7 @@ namespace ScoreTracker.Data.Repositories
         {
             _database = factory.CreateDbContext();
             _charts = charts;
+            _dbFactory = factory;
         }
 
         public async Task<UserQualifiers?> GetQualifiers(Guid tournamentId, Name userName,
@@ -47,16 +49,26 @@ namespace ScoreTracker.Data.Repositories
             return entity == null ? null : From(entity, config);
         }
 
+        public async Task<UserQualifiers?> GetQualifiers(Guid tournamentId, Guid userId, QualifiersConfiguration config,
+            CancellationToken cancellationToken = default)
+        {
+            var entity =
+                await _database.UserQualifier.FirstOrDefaultAsync(
+                    u => u.TournamentId == tournamentId && u.UserId == userId, cancellationToken);
+            return entity == null ? null : From(entity, config);
+        }
+
         private static UserQualifiers From(UserQualifierEntity entity, QualifiersConfiguration config)
         {
             var entries = JsonSerializer.Deserialize<QualifierSubmissionDto[]>(entity.Entries);
-            return new UserQualifiers(config, entity.IsApproved, entity.Name, entries!.ToDictionary(e => e.ChartId, e =>
-                new UserQualifiers.Submission
-                {
-                    ChartId = e.ChartId,
-                    PhotoUrl = new Uri(e.PhotoUrl),
-                    Score = e.Score
-                }));
+            return new UserQualifiers(config, entity.IsApproved, entity.Name, entity.UserId, entries!.ToDictionary(
+                e => e.ChartId, e =>
+                    new UserQualifiers.Submission
+                    {
+                        ChartId = e.ChartId,
+                        PhotoUrl = new Uri(e.PhotoUrl),
+                        Score = e.Score
+                    }));
         }
 
         public async Task SaveQualifiers(Guid tournamentId, UserQualifiers qualifiers,
@@ -231,6 +243,45 @@ namespace ScoreTracker.Data.Repositories
                     select new CoOpTeam(t.TeamName, new CoOpPlayer(p1.PlayerName, p1.CoOpTitle, p1.DifficultyTitle),
                         new CoOpPlayer(p2.PlayerName, p2.CoOpTitle, p2.DifficultyTitle), t.Seed)
                 ).ToArrayAsync(cancellationToken);
+        }
+
+        public async Task RegisterUserToTournament(Guid tournamentId, Guid userId,
+            CancellationToken cancellationToken = default)
+        {
+            var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+
+            var existing =
+                await database.UserTournamentRegistration.FirstOrDefaultAsync(
+                    t => t.TournamentId == tournamentId && t.UserId == userId, cancellationToken);
+
+            if (existing == null)
+            {
+                await database.UserTournamentRegistration.AddAsync(new UserTournamentRegistrationEntity
+                {
+                    TournamentId = tournamentId,
+                    UserId = userId
+                }, cancellationToken);
+                await database.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        public async Task<IEnumerable<Guid>> GetRegisteredUsers(Guid tournamentId,
+            CancellationToken cancellationToken = default)
+        {
+            var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+
+            return await database.UserTournamentRegistration.Where(t => t.TournamentId == tournamentId)
+                .Select(e => e.UserId)
+                .ToArrayAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<Guid>> GetRegisteredTournaments(Guid userId,
+            CancellationToken cancellationToken = default)
+        {
+            var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+
+            return await database.UserTournamentRegistration.Where(t => t.UserId == userId).Select(e => e.TournamentId)
+                .ToArrayAsync(cancellationToken);
         }
     }
 }

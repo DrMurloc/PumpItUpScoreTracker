@@ -4,6 +4,6 @@
     {
         public Guid ChartId { get; set; }
         public int Score { get; set; }
-        public string PhotoUrl { get; set; }
+        public string? PhotoUrl { get; set; }
     }
 }

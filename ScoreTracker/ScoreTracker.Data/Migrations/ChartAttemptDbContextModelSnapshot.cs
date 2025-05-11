@@ -1555,6 +1555,28 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("UserTitle", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.UserTournamentRegistrationEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("TournamentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TournamentId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("UserTournamentRegistration", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.UserTournamentSessionEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1781,6 +1803,9 @@ namespace ScoreTracker.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
                         .HasDefaultValue(new Guid("fa27b7fb-6ef4-481b-8eee-56fdcf58433c"));
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 

@@ -26,7 +26,7 @@ public sealed class UserQualifiers
 
     private static readonly ScoringConfiguration _stormScoreConfig = BuildStorm();
 
-    public UserQualifiers(QualifiersConfiguration config, bool isApproved, Name userName,
+    public UserQualifiers(QualifiersConfiguration config, bool isApproved, Name userName, Guid? userId,
         IDictionary<Guid, Submission> submissions)
     {
         Configuration = config;
@@ -39,6 +39,7 @@ public sealed class UserQualifiers
 
     public bool IsApproved { get; private set; }
     public Name UserName { get; set; }
+    public Guid? UserId { get; set; }
 
     public IDictionary<Guid, Submission> Submissions { get; }
 
@@ -51,7 +52,8 @@ public sealed class UserQualifiers
 
     public double Rating(DifficultyLevel level, PhoenixScore score)
     {
-        if (Configuration.ScoringType == "Fungpapi") return level + (score - 965000.0) / 17500.0;
+        if (Configuration.ScoringType == "Fungpapi" || Configuration.ScoringType=="Competitive Level") return level + (score - 965000.0) / 17500.0;
+        if (Configuration.ScoringType == "Score") return score;
         if (Configuration.ScoringType == "Storm") return _stormScoreConfig.GetScore(level, score);
         return _scoreConfig.GetScore(level, score);
     }
@@ -91,7 +93,7 @@ public sealed class UserQualifiers
         return AddPhoenixScore(chartId, scoreScreen.CalculatePhoenixScore, uri);
     }
 
-    public bool AddPhoenixScore(Guid chartId, PhoenixScore score, Uri uri)
+    public bool AddPhoenixScore(Guid chartId, PhoenixScore score, Uri? uri)
     {
         Submissions[chartId] = new Submission
         {
@@ -107,6 +109,6 @@ public sealed class UserQualifiers
     {
         public Guid ChartId { get; set; }
         public PhoenixScore Score { get; set; }
-        public Uri PhotoUrl { get; set; }
+        public Uri? PhotoUrl { get; set; }
     }
 }
