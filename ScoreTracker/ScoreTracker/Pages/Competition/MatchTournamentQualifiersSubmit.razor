@@ -358,17 +358,17 @@
             if (qualifiers == null)
             {
                 _isNew = true;
-                qualifiers=_currentQualifiers = new UserQualifiers(_configuration,false,"Not Set",CurrentUser.IsLoggedIn?null:CurrentUser.User.Id,new Dictionary<Guid, UserQualifiers.Submission>())
+                qualifiers = new UserQualifiers(_configuration,false,"Not Set",CurrentUser.IsLoggedIn?CurrentUser.User.Id:null,new Dictionary<Guid, UserQualifiers.Submission>())
                 {
                     UserName = nameString
                 };
             }
             else
             {
-                _currentQualifiers = qualifiers;
-                _username = _currentQualifiers.UserName;
                 _isNew = false;
             }
+            _currentQualifiers = qualifiers;
+            _username = _currentQualifiers.UserName;
             _canEdit = qualifiers.UserId == null || (CurrentUser.IsLoggedIn && qualifiers.UserId == CurrentUser.User.Id);
             await EvaluateRecommended();
             await RefreshLeaderboard();

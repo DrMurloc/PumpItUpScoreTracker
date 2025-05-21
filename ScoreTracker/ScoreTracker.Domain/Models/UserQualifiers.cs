@@ -101,7 +101,6 @@ public sealed class UserQualifiers
             PhotoUrl = uri,
             Score = score
         };
-        IsApproved = false;
         return true;
     }
 

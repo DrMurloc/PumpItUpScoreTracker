@@ -205,6 +205,7 @@
     }
 
     private TournamentRole? _myRole;
+    private static readonly Guid Bite8 = new Guid("F7B2AD89-FCE5-4D34-BFB5-0810B440A5E4");
     protected override async Task OnInitializedAsync()
     {
         if (TournamentId == default)
@@ -212,6 +213,10 @@
             NavManager.NavigateTo("/");
             return;
         }
+        var userRoles = await Mediator.Send(new GetTournamentRolesQuery(TournamentId));
+        _myRole= !CurrentUser.IsLoggedIn?null:
+            CurrentUser.IsLoggedInAsAdmin ? TournamentRole.HeadTournamentOrganizer : userRoles.FirstOrDefault(e => e.UserId == CurrentUser.User?.Id)?.Role;
+
         _configuration = await Qualifiers.GetQualifiersConfiguration(TournamentId);
         var tournament = (await Mediator.Send(new GetAllTournamentsQuery()))
             .FirstOrDefault(t => t.Id == TournamentId);
@@ -226,7 +231,8 @@
             (await Mediator.Send(new GetMatchPlayersQuery(TournamentId)))
             .ToDictionary(p => p.Name);
 
-        var leaderboard = (await Qualifiers.GetAllUserQualifiers(TournamentId, config)).OrderByDescending(q => q.CalculateScore()).Select((q, index) => new Entry(index + 1, players.TryGetValue(q.UserName, out var player) ? player.Seed : null, q.UserName,
+        var leaderboard = (await Qualifiers.GetAllUserQualifiers(TournamentId, config))
+            .Where(q => q.IsApproved || TournamentId != Bite8||  _myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer).OrderByDescending(q => q.CalculateScore()).Select((q, index) => new Entry(index + 1, players.TryGetValue(q.UserName, out var player) ? player.Seed : null, q.UserName,
             
             q.BestCharts().ToArray(),q.IsApproved,
             q.CalculateScore(), q.Submissions.Select(s => s.Value.PhotoUrl).ToArray(),q))
@@ -241,9 +247,6 @@
         _leaderboard = leaderboard.Any(l => l.FinalSeed != null && l.FinalSeed != l.Place) ?
             leaderboard.OrderBy(l => l.FinalSeed).ToArray() :
             leaderboard.OrderBy(l => l.Place).ToArray();
-        var userRoles = await Mediator.Send(new GetTournamentRolesQuery(TournamentId));
-        _myRole= !CurrentUser.IsLoggedIn?null:
-            CurrentUser.IsLoggedInAsAdmin ? TournamentRole.HeadTournamentOrganizer : userRoles.FirstOrDefault(e => e.UserId == CurrentUser.User?.Id)?.Role;
 
 
     }
