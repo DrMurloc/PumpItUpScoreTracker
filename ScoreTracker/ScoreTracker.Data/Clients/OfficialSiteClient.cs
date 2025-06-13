@@ -70,6 +70,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         foreach (var song in songs)
         {
             var chartType = Enum.Parse<ChartType>(song.Type);
+            if (!DifficultyLevel.IsValid(song.Difficulty)) continue;
             var chart = (await _charts.GetChartsForSong(MixEnum.Phoenix, song.Name, cancellationToken))
                 .FirstOrDefault(c => c.Type == chartType && c.Level == song.Difficulty);
             if (chart == null)

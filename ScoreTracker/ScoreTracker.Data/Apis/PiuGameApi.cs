@@ -79,6 +79,7 @@ public sealed class PiuGameApi : IPiuGameApi
                 level += parsedLevel;
             }
 
+            if (level == 0) level = 29;
             songName = HttpUtility.HtmlDecode(songName);
             if (songName.Contains("End of a Dream"))
                 songName = "Re:End of a Dream";
@@ -264,12 +265,21 @@ public sealed class PiuGameApi : IPiuGameApi
             {
                 level *= 10;
                 var match = LevelRegex.Match(url);
+
                 if (!match.Success || !int.TryParse(match.Groups[1].Value, out var parsedLevel)) continue;
 
                 level += parsedLevel;
             }
 
-            if (level == 0) continue;
+            var songName = HttpUtility.HtmlDecode(scoreP.InnerText);
+            if (level == 0)
+            {
+                if (songName == "1948")
+                    level = 29;
+                else
+                    continue;
+            }
+
             var chartTypeUrl = li
                 .SelectNodes(@".//div[contains(@class,'stepBall_img_wrap')]//div[contains(@class,'tw')]//img")
                 .FirstOrDefault()?.GetAttributeValue("src", "Unknown");
@@ -335,11 +345,13 @@ public sealed class PiuGameApi : IPiuGameApi
                 {
                     level *= 10;
                     var match = LevelRegex.Match(url);
+
                     if (!match.Success || !int.TryParse(match.Groups[1].Value, out var parsedLevel)) continue;
 
                     level += parsedLevel;
                 }
 
+                if (level == 0) level = 29;
                 var perfects = int.Parse(card.SelectSingleNode(".//td[contains(@data-th,'PERFECT')]/div").InnerText,
                     NumberStyles.AllowThousands);
                 var greats = int.Parse(card.SelectSingleNode(".//td[contains(@data-th,'GREAT')]/div").InnerText,
