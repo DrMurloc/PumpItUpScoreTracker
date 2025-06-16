@@ -8,7 +8,7 @@
 @using ScoreTracker.Domain.ValueTypes
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @inject IMediator Mediator;
-<MudAutocomplete Dense="true" Disabled="Disabled" T="string" Value="_selected" ValueChanged="SetChart" MaxItems="15" CoerceValue="false" CoerceText="true" Label="Chart" SearchFunc="(s,c)=>SearchSongs(s)">
+<MudAutocomplete Dense="true" Disabled="Disabled" T="string" Value="_selected" ValueChanged="SetChart" MaxItems="15" CoerceValue="false" CoerceText="true" Label="@Label" SearchFunc="(s,c)=>SearchSongs(s)">
     <ItemTemplate>
         <SongImage Song="_chartNames[context].Song" Small="true"></SongImage>
         <DifficultyBubble Chart="_chartNames[context]" Small="true"></DifficultyBubble> @_chartNames[context].Song.Name
@@ -24,7 +24,8 @@
 
     [Parameter]
     public Func<Chart, Task> ChartIdSelected { get; set; } = c => Task.CompletedTask;
-
+    [Parameter]
+    public string Label { get; set; } = "Chart";
     private IEnumerable<Chart>? _charts = null;
     [Parameter]
     public IEnumerable<Chart>? Charts { get; set; } = null;

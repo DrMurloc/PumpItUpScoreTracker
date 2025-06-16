@@ -224,10 +224,10 @@
     
        //await Mediator.Send(new UpdateSongImagesCommand(false));
        
-       /*await Mediator.Send(new ProcessChartPopularityCommand());
+       await Mediator.Send(new ProcessChartPopularityCommand());
         await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
     await Mediator.Send(new ProcessChartPopularityCommand());
-    await WorldRanking.CalculateWorldRankings(CancellationToken.None);*/
+    await WorldRanking.CalculateWorldRankings(CancellationToken.None);
         
 
         //await Bus.Publish(new ProcessPassTierListCommand());
@@ -247,7 +247,7 @@
         }*/
 
 
-        await Bus.Publish(new CalculateChartLetterDifficultiesEvent());
+       // await Bus.Publish(new CalculateChartLetterDifficultiesEvent());
        Snackbar.Add("Done", Severity.Success);
 
     }

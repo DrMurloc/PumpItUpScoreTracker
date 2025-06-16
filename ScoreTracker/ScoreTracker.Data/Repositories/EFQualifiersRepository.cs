@@ -66,7 +66,7 @@ namespace ScoreTracker.Data.Repositories
                     new UserQualifiers.Submission
                     {
                         ChartId = e.ChartId,
-                        PhotoUrl = new Uri(e.PhotoUrl),
+                        PhotoUrl = e.PhotoUrl == null ? null : new Uri(e.PhotoUrl),
                         Score = e.Score
                     }));
         }
@@ -81,7 +81,7 @@ namespace ScoreTracker.Data.Repositories
             var entryJson = JsonSerializer.Serialize(qualifiers.Submissions.Select(kv => new QualifierSubmissionDto
             {
                 ChartId = kv.Value.ChartId,
-                PhotoUrl = kv.Value.PhotoUrl.ToString(),
+                PhotoUrl = kv.Value.PhotoUrl?.ToString(),
                 Score = kv.Value.Score
             }));
             if (entity == null)
@@ -133,14 +133,17 @@ namespace ScoreTracker.Data.Repositories
             {
                 var charts = await _charts.GetCharts(MixEnum.Phoenix, chartIds: ChartIds,
                     cancellationToken: cancellationToken);
-                return new QualifiersConfiguration(charts, Modifiers, "Phoenix", 1164337603034759278, 2, null);
+                return new QualifiersConfiguration(charts, Modifiers, "Phoenix", 1164337603034759278, 2, null, false);
             }
 
             var chartIds = config.Charts.Split(",").Select(c => new Guid(c));
-            var charts2 = await _charts.GetCharts(MixEnum.Phoenix, chartIds: chartIds,
-                cancellationToken: cancellationToken);
+            var charts2 =
+                config.AllCharts
+                    ? await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken)
+                    : await _charts.GetCharts(MixEnum.Phoenix, chartIds: chartIds,
+                        cancellationToken: cancellationToken);
             return new QualifiersConfiguration(charts2, Modifiers, config.ScoringType, config.NotificationChannel,
-                config.ChartPlayCount, config.CutoffTime);
+                config.ChartPlayCount, config.CutoffTime, config.AllCharts);
         }
 
         public async Task SaveTeam(Guid tournamentId, CoOpTeam team, CancellationToken cancellationToken = default)

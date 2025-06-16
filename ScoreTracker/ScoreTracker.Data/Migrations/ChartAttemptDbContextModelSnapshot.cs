@@ -813,6 +813,9 @@ namespace ScoreTracker.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("AllCharts")
+                        .HasColumnType("bit");
+
                     b.Property<int>("ChartPlayCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")

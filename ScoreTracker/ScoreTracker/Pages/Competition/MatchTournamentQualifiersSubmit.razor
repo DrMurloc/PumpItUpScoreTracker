@@ -80,15 +80,26 @@
                 </MudText>
             </MudItem>
         }
-        @foreach (var chart in _configuration.Charts.OrderBy(c => c.Level))
+        @if (_configuration.AllCharts)
+        {
+            <MudItem xs="12">
+                <ChartSelector Label="Photo Submission" ChartIdSelected="chart=>OpenSubmit(chart)"></ChartSelector>
+            </MudItem>
+        }
+        @foreach (var chart in _configuration.AllCharts?_currentQualifiers.BestCharts().OrderByDescending(s=>s.Rating).Select(s=>s.Chart): _configuration.Charts.OrderBy(c => c.Level).ThenBy(c=>c.Type))
         {
             <MudItem xs="6" sm="3" md="2">
                 <MudCard Class="@CardClass(chart.Id)" Style="@CardStyle(chart.Id)">
                     <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()" />
-                    @if (_currentQualifiers.Submissions.ContainsKey(chart.Id))
+                    @if (_currentQualifiers.Submissions.TryGetValue(chart.Id, out var submission))
                     {
                         <MudCardContent>
-                            @_currentQualifiers.Submissions[chart.Id].Score (@_currentQualifiers.Submissions[chart.Id].Score.LetterGrade.GetName(), @_currentQualifiers.Rating(chart.Id).ToString("0.##"))
+                            <ScoreBreakdown ShowScore="true" Score="submission.Score" OneLine="true"></ScoreBreakdown>
+                            @if (_configuration.ScoringType != "Score")
+                            {
+                                <br />
+                                <MudText>@_currentQualifiers.Rating(chart.Id).ToString("0.##") Rating</MudText>
+                            }
                         </MudCardContent>
                     }
                     <MudCardActions>
@@ -110,13 +121,13 @@
                 </MudCard>
             </MudItem>
         }
-        @if (_suggestedCharts.Any(s=>!_currentQualifiers.Submissions.ContainsKey(s)))
+        @if (!_configuration.AllCharts && _suggestedCharts.Any(s=>!_currentQualifiers.Submissions.ContainsKey(s)))
         {
             <MudItem xs="12">
                 <MudIcon Style=@($"color:{Colors.LightBlue.Darken1}") Icon="@Icons.Material.Filled.MoreVert"></MudIcon> - @L["Suggested Chart"]
             </MudItem>
         }
-        @if (!IsExpired)
+        @if (!IsExpired && !(CurrentUser.IsLoggedIn && _registeredUserIds.Contains(CurrentUser.User.Id)))
         {
             <MudItem xs="12">
                 <MudText Typo="Typo.h4">@L["Import Phoenix Scores"]</MudText>
@@ -145,26 +156,37 @@
                 <MudText>@result</MudText>
             </MudItem>
         }
-        <MudItem xs="12">
-            <MudText Typo="Typo.h4">@L["Rating Calculator"]</MudText>
-        </MudItem>
-        <MudItem xs="6" sm="4" md="3">
-            <MudNumericField T="int" Label=@L["Score"] Value="_testScore" ValueChanged="s=>_testScore=s" Min="0" Max="1000000" HideSpinButtons="true" Clearable="false"></MudNumericField>
-        </MudItem>
-        <MudItem xs="6" sm="4" md="3">
-            <MudSelect T="PhoenixLetterGrade" Label=@L["Letter Grade"] Value="_testScore.LetterGrade" ValueChanged="SetLetterGrade">
-                @foreach (var grade in Enum.GetValues<PhoenixLetterGrade>())
-                {
-                    <MudSelectItem T="PhoenixLetterGrade" Value="grade">@grade.GetName()</MudSelectItem>
-                }
-            </MudSelect>
-        </MudItem>
-        <MudItem xs="6" sm="4" md="3">
-            <MudNumericField T="int" Label=@L["Difficulty Level"] Value="_level" ValueChanged="l=>_level=l" Min="@DifficultyLevel.Min" Max="@DifficultyLevel.Max" HideSpinButtons="true" Clearable="false"></MudNumericField>
-        </MudItem>
-        <MudItem xs="6" sm="4" md="3">
-            <MudText>@L["Rating"]: @_currentQualifiers.Rating(_level, _testScore).ToString("0.00")</MudText>
-        </MudItem>
+        @if (_configuration.AllCharts && CurrentUser.IsLoggedIn && _suggestedCharts.Any() && _configuration.ScoringType=="PUMBILITY")
+        {
+            <MudItem xs="12">
+                <MudButton Href="/Pumbility" Target="_blank" Color="Color.Primary" Variant="Variant.Outlined">
+                    @L["Check Your Best Pumbility Charts"]
+                </MudButton>
+            </MudItem>
+        }
+        @if (_configuration.ScoringType != "PUMBILITY" && _configuration.ScoringType!="Score")
+        {
+            <MudItem xs="12">
+                <MudText Typo="Typo.h4">@L["Rating Calculator"]</MudText>
+            </MudItem>
+            <MudItem xs="6" sm="4" md="3">
+                <MudNumericField T="int" Label=@L["Score"] Value="_testScore" ValueChanged="s=>_testScore=s" Min="0" Max="1000000" HideSpinButtons="true" Clearable="false"></MudNumericField>
+            </MudItem>
+            <MudItem xs="6" sm="4" md="3">
+                <MudSelect T="PhoenixLetterGrade" Label=@L["Letter Grade"] Value="_testScore.LetterGrade" ValueChanged="SetLetterGrade">
+                    @foreach (var grade in Enum.GetValues<PhoenixLetterGrade>())
+                    {
+                        <MudSelectItem T="PhoenixLetterGrade" Value="grade">@grade.GetName()</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" sm="4" md="3">
+                <MudNumericField T="int" Label=@L["Difficulty Level"] Value="_level" ValueChanged="l=>_level=l" Min="@DifficultyLevel.Min" Max="@DifficultyLevel.Max" HideSpinButtons="true" Clearable="false"></MudNumericField>
+            </MudItem>
+            <MudItem xs="6" sm="4" md="3">
+                <MudText>@L["Rating"]: @_currentQualifiers.Rating(_level, _testScore).ToString("0.00")</MudText>
+            </MudItem>
+        }
     }
 </MudGrid>
 
@@ -280,16 +302,16 @@
 {
 
     private ISet<Guid> _registeredUserIds = new HashSet<Guid>();
-    private QualifiersConfiguration _configuration = new QualifiersConfiguration(Array.Empty<Chart>(), new Dictionary<Guid, int>(),"Phoenix",1,2,null);
+    private QualifiersConfiguration _configuration = new QualifiersConfiguration(Array.Empty<Chart>(), new Dictionary<Guid, int>(),"Phoenix",1,2,null,false);
     private UserQualifiers? _currentQualifiers;
     private Chart? _submittingChart;
     private IEnumerable<(Chart Chart,PhoenixScore Score,double Rating)> MyBest => _currentQualifiers.BestCharts();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private string CardClass(Guid chartId) => MyBest.Any(b=>b.Item1.Id==chartId) ? "border-solid border-2" : 
-        _suggestedCharts.Contains(chartId)||
+        _configuration.AllCharts && _suggestedCharts.Contains(chartId) ||
         (_currentQualifiers?.Submissions.ContainsKey(chartId)??false) ? "border-dashed border-2" : string.Empty;
     private string CardStyle(Guid chartId) => MyBest.Any(b => b.Item1.Id == chartId) ? $@"border-color:{Colors.Green.Darken1}" :
-        _suggestedCharts.Contains(chartId)?$"border-color:{Colors.LightBlue.Darken1}":
+        _configuration.AllCharts&&_suggestedCharts.Contains(chartId)?$"border-color:{Colors.LightBlue.Darken1}":
         _currentQualifiers?.Submissions.ContainsKey(chartId) ?? false ? $"border-color:{Colors.Gray.Darken1}" : string.Empty;
     private bool _showSubmit = false;
     private string _username = string.Empty;
@@ -382,7 +404,7 @@
     }
 
     private bool Validated => _photoUrl != null && (_addingMix==MixEnum.Phoenix&&_score>0)&& ((_addingMix == MixEnum.Phoenix) || (_addingMix == MixEnum.XX && Screen is { IsValid: true }));
-    private void OpenSubmit(Chart chart)
+    private Task OpenSubmit(Chart chart)
     {
         _submittingChart = chart;
         _showSubmit = true;
@@ -392,6 +414,8 @@
             _photoUrl = submission.PhotoUrl;
             _score = submission.Score;
         }
+        StateHasChanged();
+        return Task.CompletedTask;
     }
 
     private void Clear()
@@ -417,14 +441,18 @@
         {
             return;
         }
-        foreach (var chart in _currentQualifiers.Submissions.Where(kv => kv.Value.Score >= PhoenixLetterGrade.SSS.GetMinimumScore()))
+        @if (!_configuration.AllCharts)
         {
-            var nextChart = GetNextLevel(chart.Key);
-            if (nextChart == null || _suggestedCharts.Contains(nextChart.Value))
+            
+            foreach (var chart in _currentQualifiers.Submissions.Where(kv => kv.Value.Score >= PhoenixLetterGrade.SSS.GetMinimumScore()))
             {
-                continue;
+                var nextChart = GetNextLevel(chart.Key);
+                if (nextChart == null || _suggestedCharts.Contains(nextChart.Value))
+                {
+                    continue;
+                }
+                _suggestedCharts.Add(nextChart.Value);
             }
-            _suggestedCharts.Add(nextChart.Value);
         }
         if (CurrentUser.IsLoggedIn)
         {
@@ -434,7 +462,7 @@
                 .ToDictionary(g => g.Key,
                     g => (int) g.Average(s => s.Score!.Value));
 
-            var foundScores = _configuration.Charts.ToDictionary(c => c.Id, c => myScores.TryGetValue(c.Id, out var score) ? (int)score.Score!.Value :
+            var foundScores = _configuration.Charts.ToDictionary(c => c.Id, c => myScores.TryGetValue(c.Id, out var score) ? (score.Score==null?  levelAverages.TryGetValue((c.Level,c.Type), out var avg2) ? avg2 : 0:(int)score.Score!.Value) :
                 levelAverages.TryGetValue((c.Level,c.Type), out var avg) ? avg : 0);
 
             foreach (var chart in _configuration.Charts.Where(s=>foundScores[s.Id]>PhoenixLetterGrade.AA.GetMinimumScore()).OrderByDescending(s =>

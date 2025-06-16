@@ -36,7 +36,7 @@
             </MudTh>
         }
         <MudTh>@L["Username"]</MudTh>
-        @for (var i = 0; i < _configuration.PlayCount; i++)
+        @for (var i = 0; i <(_configuration.PlayCount>4?4: _configuration.PlayCount); i++)
         {
             var place = i + 1;
             <MudTh>#@place @L["Song"]</MudTh>
@@ -68,7 +68,7 @@
         </MudTd>
         <MudTd>@context.UserName</MudTd>
 
-        @foreach (var entry in context.Scores)
+        @foreach (var entry in context.Scores.OrderByDescending(s=>s.Item3).Take(_configuration.PlayCount>4?4:context.Scores.Length))
         {
             <MudTd Style="text-align:center">
                 <MudTooltip Text="@(entry.Item1.Song.Name + ' ' + entry.Item1.DifficultyString)">
@@ -81,7 +81,7 @@
 
             </MudTd>
         }
-        @for (var i = context.Scores.Length; i < _configuration.PlayCount; i++)
+        @for (var i = context.Scores.Length; i < (_configuration.PlayCount>4?4:_configuration.PlayCount); i++)
         {
             <MudTd></MudTd>
         }
@@ -188,7 +188,7 @@
     private TimeSpan? RemainingTime => _configuration?.CutoffTime == null ? null : _configuration.CutoffTime - DateTimeOffset.Now;
     private bool IsExpired => _configuration ?.CutoffTime != null && _configuration.CutoffTime < DateTimeOffset.Now;
 
-    private QualifiersConfiguration _configuration = new(Array.Empty<Chart>(),new Dictionary<Guid, int>(),"Phoenix",1,2,null);
+    private QualifiersConfiguration _configuration = new(Array.Empty<Chart>(),new Dictionary<Guid, int>(),"Phoenix",1,2,null,false);
     [Parameter]
     [SupplyParameterFromQuery(Name="TournamentId")]
     public Guid TournamentId { get; set; }
