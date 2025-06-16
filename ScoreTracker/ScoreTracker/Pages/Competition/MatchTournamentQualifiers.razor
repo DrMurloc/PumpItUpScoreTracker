@@ -94,7 +94,7 @@
         <MudTd>
             @if (context.IsApproved || _myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer)
             {
-                <MudIconButton Icon="@Icons.Material.Filled.PhotoAlbum" Color="Color.Primary" OnClick="() => SelectEntry(context)" Disabled="!context.Photos.Any()"></MudIconButton>
+                <MudIconButton Icon="@Icons.Material.Filled.PhotoAlbum" Color="Color.Primary" OnClick="() => SelectEntry(context)"></MudIconButton>
             }
             else
             {
@@ -113,28 +113,31 @@
     </RowTemplate>
     <ChildRowContent>
         <MudTr>
-            <td colspan="6">
+            <td colspan="100%">
                 @if (_selectedEntry != null && _selectedEntry.UserName==context.UserName)
                 {
                     <MudGrid>
-                        @foreach (var item in _selectedEntry.Photos)
+                        @foreach (var item in _selectedEntry.Scores)
                         {
-                            <MudItem xs="6" sm="4" md="3">
-                                <MudImage Src="@item.ToString()" ObjectFit="ObjectFit.Contain" Height="200" Width="200"></MudImage>
+                            <MudItem xs="6" sm="3" md="2">
+                                <MudCard Class="chart-card border-solid border-2" Style=@($"border-color:{Colors.Green.Darken1}")>
+                                    <MudCardHeader Style=@($"background-image:url(\"{item.Item4}\");")>
+                                
+                                        <DifficultyBubble Chart="@item.Item1"></DifficultyBubble>
+                                    </MudCardHeader>
+                                    <MudCardContent>
+                                        <ScoreBreakdown ShowScore="true" Score="item.Item2" OneLine="true"></ScoreBreakdown>
+                                        @if (_configuration.ScoringType != "Score")
+                                        {
+                                            <br/>
+                                            <MudText>@item.Item3.ToString("0.##") Rating</MudText>
+                                        }
+                                    </MudCardContent>
+                                </MudCard>
                             </MudItem>
                         }
                     </MudGrid>
-                    @if (_myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer)
-                    {
-                        <MudGrid>
-                            @foreach (var entry in _selectedEntry.Record.Submissions.Values)
-                            {
-                                <MudItem xs="6" sm="4" md="3">
-                                    @_charts[entry.ChartId].Song.Name @_charts[entry.ChartId].DifficultyString: @entry.Score (@entry.Score.LetterGrade.GetName())
-                                </MudItem>
-                            }
-                        </MudGrid>
-                    }
+
                 }
             </td>
         </MudTr>
@@ -234,15 +237,15 @@
         var leaderboard = (await Qualifiers.GetAllUserQualifiers(TournamentId, config))
             .Where(q => q.IsApproved || TournamentId != Bite8||  _myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer).OrderByDescending(q => q.CalculateScore()).Select((q, index) => new Entry(index + 1, players.TryGetValue(q.UserName, out var player) ? player.Seed : null, q.UserName,
             
-            q.BestCharts().ToArray(),q.IsApproved,
-            q.CalculateScore(), q.Submissions.Select(s => s.Value.PhotoUrl).ToArray(),q))
+            q.BestCharts().Select(c=>(c.Chart,c.Score,c.Rating,q.Submissions[c.Chart.Id].PhotoUrl??c.Chart.Song.ImagePath)).ToArray(),q.IsApproved,
+            q.CalculateScore(),q))
             .ToList();
         var leaderboardPlayers = leaderboard.Select(l => l.UserName).Distinct().ToHashSet();
 
         @if (IsExpired)
         {
             var missingPlayers = players.Where(p => !leaderboardPlayers.Contains(p.Key)).Select(kv => kv.Value).ToArray();
-            leaderboard.AddRange(missingPlayers.Select(player => new Entry(999, player.Seed, player.Name, Array.Empty<(Chart,PhoenixScore,double)>(), true, 0.0, Array.Empty<Uri>(), new UserQualifiers(_configuration, true, player.Name, null,new Dictionary<Guid, UserQualifiers.Submission>()))));
+            leaderboard.AddRange(missingPlayers.Select(player => new Entry(999, player.Seed, player.Name, Array.Empty<(Chart,PhoenixScore,double,Uri)>(), true, 0.0,new UserQualifiers(_configuration, true, player.Name, null,new Dictionary<Guid, UserQualifiers.Submission>()))));
         }
         _leaderboard = leaderboard.Any(l => l.FinalSeed != null && l.FinalSeed != l.Place) ?
             leaderboard.OrderBy(l => l.FinalSeed).ToArray() :
@@ -254,7 +257,7 @@
     {
         await OnInitializedAsync();
     }
-    private sealed record Entry(int Place, int? FinalSeed, string UserName, (Chart,PhoenixScore, double)[] Scores, bool IsApproved, double Score, IEnumerable<Uri> Photos, UserQualifiers Record)
+    private sealed record Entry(int Place, int? FinalSeed, string UserName, (Chart,PhoenixScore, double, Uri)[] Scores, bool IsApproved, double Score, UserQualifiers Record)
     {
 
     }

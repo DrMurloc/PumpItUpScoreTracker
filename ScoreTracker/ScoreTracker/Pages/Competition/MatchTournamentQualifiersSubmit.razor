@@ -83,27 +83,30 @@
         @if (_configuration.AllCharts)
         {
             <MudItem xs="12">
-                <ChartSelector Label="Photo Submission" ChartIdSelected="chart=>OpenSubmit(chart)"></ChartSelector>
+                <ChartSelector Label="Photo Submission - Select Chart" ChartIdSelected="chart=>OpenSubmit(chart)"></ChartSelector>
             </MudItem>
         }
         @foreach (var chart in _configuration.AllCharts?_currentQualifiers.BestCharts().OrderByDescending(s=>s.Rating).Select(s=>s.Chart): _configuration.Charts.OrderBy(c => c.Level).ThenBy(c=>c.Type))
         {
             <MudItem xs="6" sm="3" md="2">
                 <MudCard Class="@CardClass(chart.Id)" Style="@CardStyle(chart.Id)">
-                    <MudCardMedia Height="100" Image="@chart.Song.ImagePath.ToString()" />
+                    
+                    <MudCardHeader Style=@($"background-image:url(\"{chart.Song.ImagePath}\");")>
+                                
+                        <DifficultyBubble Chart="chart"></DifficultyBubble>
+                    </MudCardHeader>
                     @if (_currentQualifiers.Submissions.TryGetValue(chart.Id, out var submission))
                     {
                         <MudCardContent>
                             <ScoreBreakdown ShowScore="true" Score="submission.Score" OneLine="true"></ScoreBreakdown>
                             @if (_configuration.ScoringType != "Score")
                             {
-                                <br />
+                                <br/>
                                 <MudText>@_currentQualifiers.Rating(chart.Id).ToString("0.##") Rating</MudText>
                             }
                         </MudCardContent>
                     }
                     <MudCardActions>
-                        <DifficultyBubble Chart="chart"></DifficultyBubble>
                         <MudSpacer></MudSpacer>
                         <MudTooltip Text="Open Video">
                             <MudIconButton Icon="@Icons.Custom.Brands.YouTube" Variant="Variant.Outlined" Color="Color.Primary" OnClick="() => VideoDisplayer.ShowVideo(chart.Id)"></MudIconButton>
@@ -213,28 +216,28 @@
                 @if (_addingMix == MixEnum.Phoenix)
                 {
                     <MudItem xs="12">
-                        <MudNumericField T="int" Min="0" Max="1000000" Label=@L["Score"] Value="_score" Disabled="_photoUrl==PlaceholderPhoto" ValueChanged="i=>_score=i"></MudNumericField>
+                        <MudNumericField T="int" Min="0" Max="1000000" Label=@L["Score"] Value="_score" Disabled="_photoUrl==null" ValueChanged="i=>_score=i"></MudNumericField>
                     </MudItem>
                 }
                 else
                 {
                     <MudItem xs="6">
-                        <MudNumericField T="int" Min="0" Max="2000" Label="Perfects" Value="_perfects" Disabled="_photoUrl==PlaceholderPhoto" ValueChanged="i=>_perfects=i"></MudNumericField>
+                        <MudNumericField T="int" Min="0" Max="2000" Label="Perfects" Value="_perfects" Disabled="_photoUrl==null" ValueChanged="i=>_perfects=i"></MudNumericField>
                     </MudItem>
                     <MudItem xs="6">
-                        <MudNumericField T="int" Min="0" Max="2000" Label="Greats" Value="_greats" Disabled="_photoUrl==PlaceholderPhoto" ValueChanged="i=>_greats=i"></MudNumericField>
+                        <MudNumericField T="int" Min="0" Max="2000" Label="Greats" Value="_greats" Disabled="_photoUrl==null" ValueChanged="i=>_greats=i"></MudNumericField>
                     </MudItem>
                     <MudItem xs="6">
-                        <MudNumericField T="int" Min="0" Max="2000" Label="Goods" Value="_goods" Disabled="_photoUrl==PlaceholderPhoto" ValueChanged="i=>_goods=i"></MudNumericField>
+                        <MudNumericField T="int" Min="0" Max="2000" Label="Goods" Value="_goods" Disabled="_photoUrl==null" ValueChanged="i=>_goods=i"></MudNumericField>
                     </MudItem>
                     <MudItem xs="6">
-                        <MudNumericField T="int" Min="0" Max="2000" Label="Bads" Value="_bads" Disabled="_photoUrl==PlaceholderPhoto" ValueChanged="i=>_bads=i"></MudNumericField>
+                        <MudNumericField T="int" Min="0" Max="2000" Label="Bads" Value="_bads" Disabled="_photoUrl==null" ValueChanged="i=>_bads=i"></MudNumericField>
                     </MudItem>
                     <MudItem xs="6">
-                        <MudNumericField T="int" Min="0" Max="2000" Label="Misses" Value="_misses" Disabled="_photoUrl==PlaceholderPhoto" ValueChanged="i=>_misses=i"></MudNumericField>
+                        <MudNumericField T="int" Min="0" Max="2000" Label="Misses" Value="_misses" Disabled="_photoUrl==null" ValueChanged="i=>_misses=i"></MudNumericField>
                     </MudItem>
                     <MudItem xs="6">
-                        <MudNumericField T="int" Min="0" Max="2000" Label="Max Combo" Value="_maxCombo" Disabled="_photoUrl==PlaceholderPhoto" ValueChanged="i=>_maxCombo=i"></MudNumericField>
+                        <MudNumericField T="int" Min="0" Max="2000" Label="Max Combo" Value="_maxCombo" Disabled="_photoUrl==null" ValueChanged="i=>_maxCombo=i"></MudNumericField>
                     </MudItem>
                     @if (_configuration.NoteCountAdjustments[_submittingChart.Id] != 0)
                     {
@@ -263,6 +266,12 @@
                 {
                     <MudItem xs="6" sm="3" md="2">
                         <MudProgressCircular Indeterminate="true" Color="Color.Primary"></MudProgressCircular>
+                    </MudItem>
+                }
+                @if (_photoUrl == null)
+                {
+                    <MudItem xs="12">
+                        <MudText Color="Color.Warning">Current score was pulled from leaderboards, upload a photo if you wish to switch to a manual submission.</MudText>
                     </MudItem>
                 }
                 <MudItem xs="6" sm="3" md="2">
@@ -307,9 +316,9 @@
     private Chart? _submittingChart;
     private IEnumerable<(Chart Chart,PhoenixScore Score,double Rating)> MyBest => _currentQualifiers.BestCharts();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
-    private string CardClass(Guid chartId) => MyBest.Any(b=>b.Item1.Id==chartId) ? "border-solid border-2" : 
+    private string CardClass(Guid chartId) => MyBest.Any(b=>b.Item1.Id==chartId) ? "chart-card border-solid border-2" : 
         _configuration.AllCharts && _suggestedCharts.Contains(chartId) ||
-        (_currentQualifiers?.Submissions.ContainsKey(chartId)??false) ? "border-dashed border-2" : string.Empty;
+        (_currentQualifiers?.Submissions.ContainsKey(chartId) ?? false) ? "chart-card border-dashed border-2" : string.Empty;
     private string CardStyle(Guid chartId) => MyBest.Any(b => b.Item1.Id == chartId) ? $@"border-color:{Colors.Green.Darken1}" :
         _configuration.AllCharts&&_suggestedCharts.Contains(chartId)?$"border-color:{Colors.LightBlue.Darken1}":
         _currentQualifiers?.Submissions.ContainsKey(chartId) ?? false ? $"border-color:{Colors.Gray.Darken1}" : string.Empty;
@@ -322,7 +331,6 @@
     private bool _isNew = false;
     private bool _canEdit = false;
     private PhoenixScore _testScore = 950000;
-    private static readonly Uri PlaceholderPhoto = new Uri("https://piuimages.arroweclip.se/songs/placeholder.png", UriKind.Absolute);
     private void SetLetterGrade(PhoenixLetterGrade grade)
     {
         _testScore = grade.GetMinimumScore();
@@ -538,7 +546,7 @@
                     continue;
                 }
                 _importResults.Add($"{score.Chart.Song.Name} {score.Chart.DifficultyString} found with {score.Score}!");
-                _currentQualifiers.AddPhoenixScore(score.Chart.Id, score.Score, PlaceholderPhoto);
+                _currentQualifiers.AddPhoenixScore(score.Chart.Id, score.Score, null);
                 newResults = true;
             }
             if (newResults)
