@@ -19,6 +19,7 @@ namespace ScoreTracker.Application.Handlers
                 var qualifiers = await qualifiersRepo.GetQualifiersConfiguration(tournament, context.CancellationToken);
                 var userEntry = await qualifiersRepo.GetQualifiers(tournament, context.Message.UserId, qualifiers,
                     context.CancellationToken);
+             
                 if (userEntry == null)
                 {
                     var userInfo = await userRepo.GetUser(context.Message.UserId, context.CancellationToken);
@@ -40,7 +41,7 @@ namespace ScoreTracker.Application.Handlers
                         ? null
                         : r?.Score;
                     var score = charts[matchedChart.Id].Score;
-                    if (existing != null && !(existing < score)) continue;
+                    if (existing >= score) continue;
 
                     userEntry.AddPhoenixScore(matchedChart.Id, score, null);
                     needsSaved = true;

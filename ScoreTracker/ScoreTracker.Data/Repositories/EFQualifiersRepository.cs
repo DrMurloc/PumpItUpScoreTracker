@@ -90,6 +90,7 @@ namespace ScoreTracker.Data.Repositories
                 {
                     TournamentId = tournamentId,
                     Id = Guid.NewGuid(),
+                    UserId = qualifiers.UserId,
                     Entries = entryJson,
                     IsApproved = qualifiers.IsApproved,
                     Name = nameString
@@ -99,6 +100,7 @@ namespace ScoreTracker.Data.Repositories
             {
                 entity.IsApproved = qualifiers.IsApproved;
                 entity.Entries = entryJson;
+                entity.UserId = qualifiers.UserId;
             }
 
             await _database.UserQualifierHistory.AddAsync(new UserQualifierHistoryEntity

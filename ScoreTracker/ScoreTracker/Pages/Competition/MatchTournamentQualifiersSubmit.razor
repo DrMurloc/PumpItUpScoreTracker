@@ -38,7 +38,7 @@
                     <MudText Color="Color.Warning">You must be logged in to the related account to edit this player's submissions</MudText>
                 </MudItem>
 
-            } else if (CurrentUser.IsLoggedIn && !_registeredUserIds.Contains(CurrentUser.User.Id))
+            } else if (CurrentUser.IsLoggedIn && CurrentUser.User.Name==_currentQualifiers.UserName&& !_registeredUserIds.Contains(CurrentUser.User.Id))
             {
                 <MudItem xs="12">
 
@@ -47,10 +47,16 @@
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RegisterToQualifiers" Disabled="_isSaving">Register to Auto-Submit on Score Import</MudButton>
                     </MudTooltip>
                 </MudItem>
-            } else if (CurrentUser.IsLoggedIn)
+        }
+        else if (CurrentUser.IsLoggedIn && CurrentUser.User.Name == _currentQualifiers.UserName)
             {
                 <MudItem xs="12">
                     <MudText Color="Color.Success">Registered for auto-submissions!</MudText>
+                </MudItem>
+            } else if (CurrentUser.IsLoggedIn)
+            {
+                <MudItem xs="12">
+                    <MudText Color="Color.Warning">PIUScores name must match qualifiers entry name to register for auto-submission.</MudText>
                 </MudItem>
             }
     }
@@ -375,6 +381,16 @@
         _isSaving = true;
 
         await Qualifiers.RegisterUserToTournament(TournamentId, CurrentUser.User.Id);
+        if (_currentQualifiers == null)
+        {
+            _currentQualifiers = new UserQualifiers(_configuration, false, CurrentUser.User.Name, CurrentUser.User.Id, new Dictionary<Guid, UserQualifiers.Submission>());
+            
+        }
+        else
+        {
+            _currentQualifiers.UserId = CurrentUser.User.Id;
+        }
+        await Qualifiers.SaveQualifiers(TournamentId, _currentQualifiers);
         _registeredUserIds.Add(CurrentUser.User.Id);
         Snackbar.Add("Registered to auto-submit qualifiers!", Severity.Success);
         _isSaving = false;
