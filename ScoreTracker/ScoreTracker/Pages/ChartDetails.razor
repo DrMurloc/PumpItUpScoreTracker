@@ -14,8 +14,13 @@
 @using System.Text.RegularExpressions
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Web.Services
-<PageTitle>Record Attempt</PageTitle>
-
+<PageTitle>@(_selectedChart==null?"Chart Details":$"{_selectedChart.Song.Name} {_selectedChart.DifficultyString}")</PageTitle>
+<HeadContent>
+    <meta name="description" content=@(_selectedChart==null?"Look up statistics and leaderboards on specific PIU charts!":$"Statistic and Leaderboards for {_selectedChart.Song.Name} {_selectedChart.DifficultyString} by {_selectedChart.Song.Artist}{(_selectedChart.StepArtist==null?"":$", charted by {_selectedChart.StepArtist}")}.")/>
+    <meta property="og:image" content=@(_selectedChart==null?"":_selectedChart.Song.ImagePath.ToString())>
+    <meta property="og:title" content=@(_selectedChart==null?"Chart Details":$"{_selectedChart.Song.Name} {_selectedChart.DifficultyString}")>
+    <meta property="og:description" content=@(_selectedChart==null?"Look up statistics and leaderboards on specific PIU charts!":$"Statistic and Leaderboards for {_selectedChart.Song.Name} {_selectedChart.DifficultyString} by {_selectedChart.Song.Artist}{(_selectedChart.StepArtist==null?"":$", charted by {_selectedChart.StepArtist}")}.")>
+    </HeadContent>
 
 <MudText Typo="Typo.h3">Chart Details</MudText>
 @if (_nameAvatars.Any())
@@ -324,6 +329,7 @@
     {
         _isLoading = true;
         _selectedChart = chart;
+        StateHasChanged();
         var scores = (await Mediator.Send(new GetPhoenixScoresForChartQuery(chart.Id))).ToArray();
         _plateBreakdowns = scores.Where(s => s.Plate != null).GroupBy(s => s.Plate!.Value).ToDictionary(g => g.Key, g => g.Count());
         foreach (var plate in Enum.GetValues<PhoenixPlate>().Where(p => !_plateBreakdowns.ContainsKey(p)))
@@ -391,6 +397,7 @@
     [Parameter]
     [SupplyParameterFromQuery(Name = "TournamentId")]
     public Guid? ChartId { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();

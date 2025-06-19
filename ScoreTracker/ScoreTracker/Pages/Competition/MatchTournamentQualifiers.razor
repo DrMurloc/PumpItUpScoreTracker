@@ -247,8 +247,7 @@
             var missingPlayers = players.Where(p => !leaderboardPlayers.Contains(p.Key)).Select(kv => kv.Value).ToArray();
             leaderboard.AddRange(missingPlayers.Select(player => new Entry(999, player.Seed, player.Name, Array.Empty<(Chart,PhoenixScore,double,Uri)>(), true, 0.0,new UserQualifiers(_configuration, true, player.Name, null,new Dictionary<Guid, UserQualifiers.Submission>()))));
         }
-        _leaderboard = leaderboard.Any(l => l.FinalSeed != null && l.FinalSeed != l.Place) ?
-            leaderboard.OrderBy(l => l.FinalSeed).ToArray() :
+        _leaderboard = 
             leaderboard.OrderBy(l => l.Place).ToArray();
 
 

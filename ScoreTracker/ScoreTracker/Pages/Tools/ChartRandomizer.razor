@@ -14,7 +14,11 @@
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
 <PageTitle>Chart Randomizer</PageTitle>
-
+<HeadContent>
+    <meta name="description" content="Randommize and protect/veto charts for PIU" />
+    <meta property="og:title" content="PIU Chart Randomizer">
+    <meta property="og:description" content="Randommize and protect/veto charts for PIU">
+</HeadContent>
 @if (!CurrentUser.IsLoggedIn)
 {
     <MudText Color="Color.Error" Typo="Typo.body1">You are not logged in, your configuration and results will be lost if you refresh.</MudText>
