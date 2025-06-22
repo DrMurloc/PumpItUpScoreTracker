@@ -33,6 +33,7 @@ public sealed class UserQualifiers
         IsApproved = isApproved;
         UserName = userName;
         Submissions = submissions;
+        UserId = userId;
     }
 
     public QualifiersConfiguration Configuration { get; }

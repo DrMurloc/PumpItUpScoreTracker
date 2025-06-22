@@ -26,10 +26,12 @@ namespace ScoreTracker.Application.Handlers
                     cancellationToken);
             var config = await _qualifiers.GetQualifiersConfiguration(request.TournamentId, cancellationToken);
             var user = request.Qualifiers.UserName;
-            var orderedOldLeaderboard = previousLeaderboard.OrderByDescending(q => q.CalculateScore())
+            var orderedOldLeaderboard = previousLeaderboard.Where(q => q.CalculateScore() > .001)
+                .OrderByDescending(q => q.CalculateScore())
                 .Select((q, i) => (q, i + 1)).ToArray();
 
-            var orderedNewLeaderboard = newLeaderboard.OrderByDescending(q => q.CalculateScore())
+            var orderedNewLeaderboard = newLeaderboard.Where(q => q.CalculateScore() > .001)
+                .OrderByDescending(q => q.CalculateScore())
                 .Select((q, i) => (q, i + 1)).ToArray();
 
             var newPlace = orderedNewLeaderboard.First(kv => kv.q.UserName == user).Item2;

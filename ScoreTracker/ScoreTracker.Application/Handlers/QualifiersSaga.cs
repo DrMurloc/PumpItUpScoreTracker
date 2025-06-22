@@ -1,5 +1,7 @@
 ﻿using MassTransit;
+using MediatR;
 using Microsoft.Extensions.Logging;
+using ScoreTracker.Application.Commands;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -7,7 +9,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 namespace ScoreTracker.Application.Handlers
 {
     public sealed class QualifiersSaga(IQualifiersRepository qualifiersRepo, IUserRepository userRepo,
-        ILogger<QualifiersSaga> logger) : IConsumer<RecentScoreImportedEvent>
+        ILogger<QualifiersSaga> logger, IMediator mediator) : IConsumer<RecentScoreImportedEvent>
     {
         public async Task Consume(ConsumeContext<RecentScoreImportedEvent> context)
         {
@@ -47,7 +49,7 @@ namespace ScoreTracker.Application.Handlers
                     needsSaved = true;
                 }
 
-                if (needsSaved) await qualifiersRepo.SaveQualifiers(tournament, userEntry, context.CancellationToken);
+                if (needsSaved) await mediator.Send(new SaveQualifiersCommand(tournament, userEntry));
             }
         }
     }

@@ -59,6 +59,15 @@
                     <MudText Color="Color.Warning">PIUScores name must match qualifiers entry name to register for auto-submission.</MudText>
                 </MudItem>
             }
+        if (CurrentUser.IsLoggedIn && CurrentUser.User.Id == _currentQualifiers.UserId)
+        {
+            <MudItem xs="8">
+                <MudTextField T="string" MaxLength="100" @bind-Value="_name" Label="New Registry Name"></MudTextField>
+            </MudItem>
+            <MudItem xs="4">
+                <MudButton Disabled="_isSaving || !Name.TryParse(_name, out _)" Variant="Variant.Filled" Color="Color.Secondary" OnClick="ChangeName">Change Registered Name</MudButton>
+            </MudItem>
+        }
     }
     @if (_isNew)
     {
@@ -376,6 +385,31 @@
 
         return charts[index + 1].Id;
     }
+
+    private string _name = string.Empty;
+
+    private async Task ChangeName()
+    {
+        if (_currentQualifiers == null)
+        {
+            return;
+        }
+        if (!Name.TryParse(_name, out var name))
+        {
+            Snackbar.Add("Name is invalid.",Severity.Error);
+            return;
+        }
+        if (_usernames.Any(u => name == u))
+        {
+            Snackbar.Add($"{name} is already a registered name.");
+            return;
+        }
+        _isSaving = true;
+
+        _currentQualifiers.UserName = name;
+        await Qualifiers.SaveQualifiers(TournamentId, _currentQualifiers);
+        _isSaving = false;
+    }
     private async Task RegisterToQualifiers()
     {
         _isSaving = true;
@@ -383,13 +417,14 @@
         await Qualifiers.RegisterUserToTournament(TournamentId, CurrentUser.User.Id);
         if (_currentQualifiers == null)
         {
-            _currentQualifiers = new UserQualifiers(_configuration, false, CurrentUser.User.Name, CurrentUser.User.Id, new Dictionary<Guid, UserQualifiers.Submission>());
-            
+            _currentQualifiers = await Qualifiers.GetQualifiers(TournamentId, CurrentUser.User.Name, _configuration);
+            if (_currentQualifiers == null || (_currentQualifiers.UserId != null && _currentQualifiers.UserId != CurrentUser.User.Id))
+            {
+                _currentQualifiers = new UserQualifiers(_configuration, false, CurrentUser.User.Name, CurrentUser.User.Id, new Dictionary<Guid, UserQualifiers.Submission>());
+
+            }
         }
-        else
-        {
-            _currentQualifiers.UserId = CurrentUser.User.Id;
-        }
+        _currentQualifiers.UserId = CurrentUser.User.Id;
         await Qualifiers.SaveQualifiers(TournamentId, _currentQualifiers);
         _registeredUserIds.Add(CurrentUser.User.Id);
         Snackbar.Add("Registered to auto-submit qualifiers!", Severity.Success);
@@ -655,7 +690,9 @@
         await RefreshLeaderboard();
         if (CurrentUser.IsLoggedIn)
         {
-            await SetUsername(CurrentUser.User.Name);
+            var config = await Qualifiers.GetQualifiers(TournamentId, CurrentUser.User.Id, _configuration);
+            
+            await SetUsername(config?.UserName??CurrentUser.User.Name);
         }
         await EvaluateRecommended();
 
