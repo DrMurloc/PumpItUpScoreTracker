@@ -75,9 +75,12 @@ namespace ScoreTracker.Data.Repositories
             CancellationToken cancellationToken = default)
         {
             var nameString = qualifiers.UserName.ToString();
-            var entity =
-                await _database.UserQualifier.FirstOrDefaultAsync(
-                    u => u.TournamentId == tournamentId && u.Name == nameString, cancellationToken);
+            var userIdEntity = await _database.UserQualifier.FirstOrDefaultAsync(
+                u => u.TournamentId == tournamentId && u.UserId == qualifiers.UserId, cancellationToken);
+
+            var entity = userIdEntity ??
+                         await _database.UserQualifier.FirstOrDefaultAsync(
+                             u => u.TournamentId == tournamentId && u.Name == nameString, cancellationToken);
             var entryJson = JsonSerializer.Serialize(qualifiers.Submissions.Select(kv => new QualifierSubmissionDto
             {
                 ChartId = kv.Value.ChartId,
@@ -101,6 +104,7 @@ namespace ScoreTracker.Data.Repositories
                 entity.IsApproved = qualifiers.IsApproved;
                 entity.Entries = entryJson;
                 entity.UserId = qualifiers.UserId;
+                entity.Name = nameString;
             }
 
             await _database.UserQualifierHistory.AddAsync(new UserQualifierHistoryEntity

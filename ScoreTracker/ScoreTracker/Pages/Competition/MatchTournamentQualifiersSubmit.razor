@@ -48,12 +48,12 @@
                     </MudTooltip>
                 </MudItem>
         }
-        else if (CurrentUser.IsLoggedIn && CurrentUser.User.Name == _currentQualifiers.UserName)
+        else if (CurrentUser.IsLoggedIn && CurrentUser.User.Id == _currentQualifiers.UserId)
             {
                 <MudItem xs="12">
                     <MudText Color="Color.Success">Registered for auto-submissions!</MudText>
                 </MudItem>
-            } else if (CurrentUser.IsLoggedIn)
+            } else if (CurrentUser.IsLoggedIn && CurrentUser.User.Name!= _currentQualifiers.UserName)
             {
                 <MudItem xs="12">
                     <MudText Color="Color.Warning">PIUScores name must match qualifiers entry name to register for auto-submission.</MudText>
@@ -394,6 +394,7 @@
         {
             return;
         }
+        var oldName = _currentQualifiers.UserName;
         if (!Name.TryParse(_name, out var name))
         {
             Snackbar.Add("Name is invalid.",Severity.Error);
@@ -401,13 +402,18 @@
         }
         if (_usernames.Any(u => name == u))
         {
-            Snackbar.Add($"{name} is already a registered name.");
+            Snackbar.Add($"{name} is already a registered name.", Severity.Error);
             return;
         }
         _isSaving = true;
 
         _currentQualifiers.UserName = name;
         await Qualifiers.SaveQualifiers(TournamentId, _currentQualifiers);
+        Snackbar.Add("Registered name updated!", Severity.Success);
+        _usernames = _usernames.Where(u => !u.Equals(oldName, StringComparison.OrdinalIgnoreCase))
+            .Append(name.ToString()).ToArray();
+        _username = name;
+        _name = string.Empty;
         _isSaving = false;
     }
     private async Task RegisterToQualifiers()
