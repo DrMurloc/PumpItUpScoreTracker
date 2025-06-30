@@ -39,9 +39,7 @@ namespace ScoreTracker.Application.Handlers
                 var needsSaved = false;
                 foreach (var matchedChart in qualifiers.Charts.Where(c => charts.ContainsKey(c.Id)))
                 {
-                    var existing = userEntry.Submissions.TryGetValue(matchedChart.Id, out var r)
-                        ? null
-                        : r?.Score;
+                    var existing = userEntry.Submissions.TryGetValue(matchedChart.Id, out var r) ? r?.Score : null;
                     var score = charts[matchedChart.Id].Score;
                     if (existing >= score) continue;
 
