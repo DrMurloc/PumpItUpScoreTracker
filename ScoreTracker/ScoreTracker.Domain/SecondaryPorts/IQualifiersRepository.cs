@@ -15,6 +15,10 @@ namespace ScoreTracker.Domain.SecondaryPorts
         Task SaveQualifiers(Guid tournamentId, UserQualifiers qualifiers,
             CancellationToken cancellationToken = default);
 
+        Task<IEnumerable<string>> GetMissing(Guid tournamentId, CancellationToken cancellationToken);
+        Task Restore(Guid tournamentId, string name, CancellationToken cancellationToken);
+        Task FixLeaderboard(Guid tournamentId, CancellationToken cancellationToken = default);
+
         Task<IEnumerable<UserQualifiers>> GetAllUserQualifiers(Guid tournamentId, QualifiersConfiguration config,
             CancellationToken cancellationToken = default);
 

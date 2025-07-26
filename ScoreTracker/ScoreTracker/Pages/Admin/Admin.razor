@@ -27,6 +27,12 @@
     Do It
 </MudButton>
 <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="ClearCache">Clear Cache</MudButton>
+@foreach (var name in MissingUsers)
+{
+    <br/>
+    <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="()=>Restore(name)">@name</MudButton>
+    <br/>
+}
 <MudCard>
     <MudButton Disabled="_isReCalculating" OnClick="ReCalculateScores" Color="Color.Primary" Variant="Variant.Filled">ReCalculate Ratings</MudButton>
 
@@ -161,6 +167,7 @@
 @inject IChartRepository _charts;
 @inject IOfficialLeaderboardRepository OfficialLeaderboards;
 @inject IMediator Mediator;
+@inject IQualifiersRepository Qualifiers;
 @inject IUiSettingsAccessor UiSettings;
 @inject ISnackbar Snackbar;
 @inject NavigationManager NavManager;
@@ -206,6 +213,7 @@
     private async Task RebuildOfficialLeaderboard()
     {
 
+        await Qualifiers.FixLeaderboard(Bite8);
         /*var message = string.Join(" ", Enum.GetValues<PhoenixLetterGrade>().Select(l => $"#LETTERGRADE|{l}#").Append("#LETTERGRADE|#"));
         message += "\n";
         message += string.Join(" ", Enum.GetValues<PhoenixPlate>().Select(l => $"#PLATE|{l}#").Append("#PLATE|#"));
@@ -223,12 +231,13 @@
     //await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);
     
        //await Mediator.Send(new UpdateSongImagesCommand(false));
-       
+       /*
        await Mediator.Send(new ProcessChartPopularityCommand());
         await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
     await Mediator.Send(new ProcessChartPopularityCommand());
     await WorldRanking.CalculateWorldRankings(CancellationToken.None);
-        
+        */
+
 
         //await Bus.Publish(new ProcessPassTierListCommand());
         /*var songImages = (await Database.Song.Select(s => s.ImagePath).ToArrayAsync()).ToHashSet();
@@ -252,6 +261,15 @@
 
     }
 
+    private Guid Bite8 = new Guid("f7b2ad89-fce5-4d34-bfb5-0810b440a5e4");
+    private IEnumerable<string> MissingUsers = Array.Empty<string>();
+
+    private async Task Restore(string userName)
+    {
+        await Qualifiers.Restore(Bite8, userName,CancellationToken.None);
+        Snackbar.Add("Restored", Severity.Success);
+        MissingUsers = await Qualifiers.GetMissing(Bite8,CancellationToken.None);
+    }
     private decimal _minBpm = 0;
     private decimal _maxBpm = 0;
     private void SetMin(decimal newMin)
@@ -364,6 +382,7 @@
         var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToArray();
         _songArtists = charts.Select(c => c.Song.Artist).Distinct().Select(s => s.ToString()).ToArray();
         _stepArtists = charts.Where(c => c.StepArtist != null).Select(c => c.StepArtist!.Value).Distinct().Select(s=>s.ToString()).ToArray();
+        MissingUsers = await Qualifiers.GetMissing(Bite8, CancellationToken.None);
         SongNames = (await Mediator.Send(new GetChartsQuery(await UiSettings.GetSelectedMix()))).Select(c => c.Song.Name.ToString()).Distinct().ToArray();
     }
 

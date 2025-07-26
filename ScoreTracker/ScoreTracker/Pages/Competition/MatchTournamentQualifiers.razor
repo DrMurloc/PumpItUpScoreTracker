@@ -23,18 +23,11 @@
 
 <MudTable T="Entry" Items="_leaderboard" FixedHeader="true" Striped="true" Breakpoint="Breakpoint.None" Dense="true">
     <HeaderContent>
-        @if (IsExpired && _leaderboard.Any(l => l.FinalSeed != null && l.FinalSeed != l.Place))
-        {
-            <MudTh>@L["Final Seed"]</MudTh>
-            <MudTh>@L["Qualifier Position"]</MudTh>
-        }
-        else
-        {
+
 
             <MudTh>
                 @L["Place"]
             </MudTh>
-        }
         <MudTh>@L["Username"]</MudTh>
         @for (var i = 0; i <(_configuration.PlayCount>4?4: _configuration.PlayCount); i++)
         {
@@ -49,16 +42,7 @@
         }
     </HeaderContent>
     <RowTemplate>
-        @if (IsExpired && _leaderboard.Any(l => l.FinalSeed != null && l.FinalSeed != l.Place))
-        {
-            <MudTd>
-                @if (context.FinalSeed != 999)
-                {
-                    @context.FinalSeed
-                }
 
-            </MudTd>
-        }
         <MudTd>
             @if (context.Place != 999)
             {
@@ -230,23 +214,16 @@
         {
             _charts[chart.Id] = chart;
         }
-        var players =
-            (await Mediator.Send(new GetMatchPlayersQuery(TournamentId)))
-            .ToDictionary(p => p.Name);
-
-        var leaderboard = (await Qualifiers.GetAllUserQualifiers(TournamentId, config))
-            .Where(q => q.IsApproved || TournamentId != Bite8||  _myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer).OrderByDescending(q => q.CalculateScore()).Select((q, index) => new Entry(index + 1, players.TryGetValue(q.UserName, out var player) ? player.Seed : null, q.UserName,
+        var quals = (await Qualifiers.GetAllUserQualifiers(TournamentId, config)).ToArray();
+        var leaderboard = quals
+            .OrderByDescending(q => q.CalculateScore())
+            .Select((q, index) => new Entry(index + 1, q.UserName,
             
             q.BestCharts().Select(c=>(c.Chart,c.Score,c.Rating,q.Submissions[c.Chart.Id].PhotoUrl??c.Chart.Song.ImagePath)).ToArray(),q.IsApproved,
             q.CalculateScore(),q))
             .ToList();
-        var leaderboardPlayers = leaderboard.Select(l => l.UserName).Distinct().ToHashSet();
 
-        @if (IsExpired)
-        {
-            var missingPlayers = players.Where(p => !leaderboardPlayers.Contains(p.Key)).Select(kv => kv.Value).ToArray();
-            leaderboard.AddRange(missingPlayers.Select(player => new Entry(999, player.Seed, player.Name, Array.Empty<(Chart,PhoenixScore,double,Uri)>(), true, 0.0,new UserQualifiers(_configuration, true, player.Name, null,new Dictionary<Guid, UserQualifiers.Submission>()))));
-        }
+
         _leaderboard = 
             leaderboard.OrderBy(l => l.Place).ToArray();
 
@@ -256,7 +233,7 @@
     {
         await OnInitializedAsync();
     }
-    private sealed record Entry(int Place, int? FinalSeed, string UserName, (Chart,PhoenixScore, double, Uri)[] Scores, bool IsApproved, double Score, UserQualifiers Record)
+    private sealed record Entry(int Place, string UserName, (Chart,PhoenixScore, double, Uri)[] Scores, bool IsApproved, double Score, UserQualifiers Record)
     {
 
     }

@@ -75,8 +75,10 @@ namespace ScoreTracker.Data.Repositories
             CancellationToken cancellationToken = default)
         {
             var nameString = qualifiers.UserName.ToString();
-            var userIdEntity = await _database.UserQualifier.FirstOrDefaultAsync(
-                u => u.TournamentId == tournamentId && u.UserId == qualifiers.UserId, cancellationToken);
+            var userIdEntity = qualifiers.UserId == null
+                ? null
+                : await _database.UserQualifier.FirstOrDefaultAsync(
+                    u => u.TournamentId == tournamentId && u.UserId == qualifiers.UserId, cancellationToken);
 
             var entity = userIdEntity ??
                          await _database.UserQualifier.FirstOrDefaultAsync(
@@ -103,7 +105,7 @@ namespace ScoreTracker.Data.Repositories
             {
                 entity.IsApproved = qualifiers.IsApproved;
                 entity.Entries = entryJson;
-                entity.UserId = qualifiers.UserId;
+                if (entity.UserId == null && qualifiers.UserId != null) entity.UserId = qualifiers.UserId;
                 entity.Name = nameString;
             }
 
@@ -118,6 +120,73 @@ namespace ScoreTracker.Data.Repositories
             }, cancellationToken);
 
             await _database.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<string>> GetMissing(Guid tournamentId, CancellationToken cancellationToken)
+        {
+            var history = await _database.UserQualifierHistory.Where(uqh => uqh.TournamentId == tournamentId)
+                .ToArrayAsync(cancellationToken);
+            var existing = (await _database.UserQualifier.Where(uq => uq.TournamentId == tournamentId)
+                    .Select(u => u.Name).Distinct().ToArrayAsync(cancellationToken))
+                .ToHashSet();
+            return history.Select(h => h.Name).Distinct().Where(h => !existing.Contains(h)).ToArray();
+        }
+
+        public async Task Restore(Guid tournamentId, string name, CancellationToken cancellationToken)
+        {
+            var config = await GetQualifiersConfiguration(tournamentId, cancellationToken);
+            var charts = config.Charts.Select(c => c.Id).ToHashSet();
+            var history = await _database.UserQualifierHistory
+                .Where(uqh => uqh.TournamentId == tournamentId && uqh.Name == name)
+                .ToArrayAsync(cancellationToken);
+
+            var user = new UserQualifiers(config, true, name, null, new Dictionary<Guid, UserQualifiers.Submission>());
+            var entries = history.SelectMany(g =>
+                    JsonSerializer.Deserialize<QualifierSubmissionDto[]>(g.Entries) ??
+                    throw new Exception("You done goofed"))
+                .ToArray();
+            var maxes = entries.Where(e => charts.Contains(e.ChartId)).GroupBy(e => e.ChartId)
+                .Select(g => g.MaxBy(e => e.Score));
+
+
+            foreach (var max in maxes)
+
+                user.AddPhoenixScore(max.ChartId, max.Score,
+                    max.PhotoUrl == null ? null : new Uri(max.PhotoUrl, UriKind.RelativeOrAbsolute));
+
+            await SaveQualifiers(tournamentId, user, cancellationToken);
+        }
+
+        public async Task FixLeaderboard(Guid tournamentId, CancellationToken cancellationToken = default)
+        {
+            var config = await GetQualifiersConfiguration(tournamentId, cancellationToken);
+            var charts = config.Charts.Select(c => c.Id).ToHashSet();
+            var history = await _database.UserQualifierHistory.Where(uqh => uqh.TournamentId == tournamentId)
+                .ToArrayAsync(cancellationToken);
+            foreach (var userGroup in history.GroupBy(u => u.Name))
+            {
+                var existing = await GetQualifiers(tournamentId, userGroup.Key, config, cancellationToken);
+                if (existing == null) continue;
+                var entries = userGroup.SelectMany(g =>
+                        JsonSerializer.Deserialize<QualifierSubmissionDto[]>(g.Entries) ??
+                        throw new Exception("You done goofed"))
+                    .ToArray();
+                var maxes = entries.Where(e => charts.Contains(e.ChartId)).GroupBy(e => e.ChartId)
+                    .Select(g => g.MaxBy(e => e.Score));
+
+                var needsSaved = false;
+
+                foreach (var max in maxes)
+                    if (!existing.Submissions.ContainsKey(max.ChartId) ||
+                        existing.Submissions[max.ChartId].Score < max.Score)
+                    {
+                        existing.AddPhoenixScore(max.ChartId, max.Score,
+                            max.PhotoUrl == null ? null : new Uri(max.PhotoUrl, UriKind.RelativeOrAbsolute));
+                        needsSaved = true;
+                    }
+
+                if (needsSaved) await SaveQualifiers(tournamentId, existing, cancellationToken);
+            }
         }
 
         public async Task<IEnumerable<UserQualifiers>> GetAllUserQualifiers(Guid tournamentId,
