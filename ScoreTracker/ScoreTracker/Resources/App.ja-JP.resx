@@ -407,7 +407,7 @@
   </data>
   <data name="Recorded On" xml:space="preserve">
     <value>{0}にき記録した</value>
-    <comment>例：12/6/2023に記録した。日本の日付の局在化は未完成です。🙇/comment>
+    <comment>例：12/6/2023に記録した。日本の日付の局在化は未完成です。🙇</comment>
   </data>
   <data name="Remaining Charts" xml:space="preserve">
     <value>{0} (SSS+) - {1} (AA) 譜面残り</value>
@@ -624,7 +624,7 @@
     <value>次の位の差{0}</value>
   </data>
   <data name="Qualifier Submit Phrase 1" xml:space="preserve">
-    <value>このツルーはログイン必要ありません。登録前、ユーザ名を入力お願いします。/value>
+    <value>このツルーはログイン必要ありません。登録前、ユーザ名を入力お願いします。</value>
   </data>
   <data name="Qualifier Submit Phrase 2" xml:space="preserve">
       <value>初めての登録！ユーザ名はdiscordとかstart.ggで同じく確認してください</value>
