@@ -118,180 +118,180 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="1+ Level Easier" xml:space="preserve">
-    <value>1+ Level Easier</value>
+    <value>１レベル簡単</value>
   </data>
   <data name="1+ Level Harder" xml:space="preserve">
-    <value>1+ Level Harder</value>
+    <value>１レベル難しい</value>
   </data>
   <data name="About" xml:space="preserve">
-    <value>About</value>
+    <value>概要</value>
   </data>
   <data name="Account" xml:space="preserve">
-    <value>Account</value>
+    <value>アカウント</value>
   </data>
   <data name="Account Creation Line 1" xml:space="preserve">
-    <value>If you do not have an account with Score Tracker, one will be created when you select one of the login providers.</value>
+    <value>もし君はここのアカウント作成してない場合、ログインプロバイダーを選んで新しくアカウントが自動で作る。（パスワード不要）</value>
   </data>
   <data name="Account Creation Line 2" xml:space="preserve">
-    <value>The only information stored about your account from the login provider you select is the external ID (typically a random number or combination of letters), and the username. You can change the username at any time after account creation.</value>
+    <value>このサイトは外部アカウントの個人情報でユーザーIDとウーザーだけ読みます。自分のユーザー名いつでも変更できる。</value>
   </data>
   <data name="Account Creation Line 3" xml:space="preserve">
-    <value>No passwords are stored in Score Tracker, we don't want them, you don't want us to have them, everyone is happier this way.</value>
+    <value>このサイトパスワード利用と保存しない。もっと安全から</value>
   </data>
   <data name="Account Creation?" xml:space="preserve">
-    <value>Account Creation?</value>
-    <comment>Button that pops up explination of account creation process</comment>
+      <value>アカウント作成？</value>
+    <comment>バタンポップアップの説明</comment>
   </data>
   <data name="Actions" xml:space="preserve">
-    <value>Actions</value>
+    <value>操作</value>
   </data>
   <data name="Add to Favorites" xml:space="preserve">
-    <value>Add to Favorites</value>
+    <value>お気に入りを追加</value>
   </data>
   <data name="Add to ToDo" xml:space="preserve">
-    <value>Add to To Do List</value>
+    <value>やりたいリストを追加</value>
   </data>
   <data name="Adjusted Difficulty" xml:space="preserve">
-    <value>Adjusted Difficulty</value>
-    <comment>I.E After Player votes</comment>
+    <value>調整難しさ</value>
+    <comment>ユーザーの票を数えたら</comment>
   </data>
   <data name="Average" xml:space="preserve">
-    <value>Average</value>
+    <value>平均</value>
   </data>
   <data name="Average Rating" xml:space="preserve">
-    <value>Average Rating</value>
+    <value>平均評価</value>
   </data>
   <data name="Broken" xml:space="preserve">
-    <value>Broken</value>
+    <value>Break Off</value>
   </data>
   <data name="Cancel" xml:space="preserve">
-    <value>Cancel</value>
+    <value>キャンセル</value>
   </data>
   <data name="Chart List Share Description" xml:space="preserve">
-    <value>Use this link to share your chart list to other players.</value>
+    <value>この譜面リストをシェアー</value>
   </data>
   <data name="Chart Randomizer" xml:space="preserve">
-    <value>Chart Randomizer</value>
+    <value>譜面くじ引き（抽選機）</value>
   </data>
   <data name="Chart Type" xml:space="preserve">
-    <value>Chart Type</value>
-    <comment>Chart Types = single, double, co op</comment>
+    <value>譜面タイプ</value>
+    <comment>種類 = single, double, co op</comment>
   </data>
   <data name="Charts" xml:space="preserve">
-    <value>Charts</value>
+    <value>譜面</value>
   </data>
   <data name="Charts List" xml:space="preserve">
-    <value>Charts List</value>
+    <value>譜面リスト</value>
   </data>
   <data name="Close" xml:space="preserve">
-    <value>Close</value>
+    <value>閉じる</value>
   </data>
   <data name="Communities" xml:space="preserve">
-    <value>Communities</value>
+    <value>地域ランキング</value>
   </data>
   <data name="Completed" xml:space="preserve">
-    <value>Completed</value>
+    <value>完了</value>
   </data>
   <data name="CoOp" xml:space="preserve">
     <value>CoOp</value>
   </data>
   <data name="CoOp Aggregation" xml:space="preserve">
-    <value>CoOp Aggregation</value>
+    <value>CoOp集合</value>
   </data>
   <data name="Copy Script" xml:space="preserve">
-    <value>Copy Script</value>
+    <value>コピー</value>
   </data>
   <data name="Copy to Clipboard" xml:space="preserve">
-    <value>Copy to Clipboard</value>
+    <value>コピー</value>
   </data>
   <data name="Different Player Difficulties" xml:space="preserve">
-    <value>Different Player Difficulties</value>
-    <comment>Specifies if a co op chart has different difficulties per player</comment>
+    <value>難しさ分差</value>
+    <comment>CoOp譜面に各プレーヤーの難しさが違う</comment>
   </data>
   <data name="Difficulty Level" xml:space="preserve">
-    <value>Difficulty Level</value>
+    <value>難しさレベル</value>
   </data>
   <data name="Disputed Charts" xml:space="preserve">
-    <value>Disputed Charts</value>
+    <value>異説あり譜面</value>
   </data>
   <data name="Disputed Charts Disclaimer" xml:space="preserve">
-    <value>Charts with 4 or more votes, within .5 levels of adjusted rating, and more than .4 Standard Deviation</value>
+    <value>譜面の四票以上と調整難しさは０．５以内と標準偏差は０．４以内</value>
   </data>
   <data name="Doubles" xml:space="preserve">
     <value>Doubles</value>
   </data>
   <data name="Download Failures" xml:space="preserve">
-    <value>Download Failures</value>
+    <value>ダウンロード失敗</value>
   </data>
   <data name="Download Scores" xml:space="preserve">
-    <value>Download Scores</value>
+    <value>スコアダウンロード</value>
   </data>
   <data name="Easiest Player" xml:space="preserve">
-    <value>Easiest Player</value>
+    <value>下級プレーヤー</value>
   </data>
   <data name="Easy" xml:space="preserve">
-    <value>Easy</value>
+    <value>簡単</value>
   </data>
   <data name="Ending Page" xml:space="preserve">
-    <value>Ending Page</value>
+    <value>最後のページ</value>
   </data>
   <data name="Favorites" xml:space="preserve">
-    <value>Favorites</value>
+    <value>気に入れ</value>
   </data>
   <data name="Find Players" xml:space="preserve">
-    <value>Find Players</value>
+    <value>プレーヤー捜索</value>
   </data>
   <data name="Full Privacy Policy" xml:space="preserve">
-    <value>Full Privacy Policy</value>
+    <value>個人情報保護方針</value>
   </data>
   <data name="Hard" xml:space="preserve">
-    <value>Hard</value>
+    <value>難しい</value>
   </data>
   <data name="Hardest Player" xml:space="preserve">
-    <value>Hardest Player</value>
+    <value>上級プレーヤー</value>
   </data>
   <data name="Hide Completed Charts" xml:space="preserve">
-    <value>Hide Completed Charts</value>
+    <value>完了譜面隠す</value>
   </data>
   <data name="Import Phoenix Scores" xml:space="preserve">
-    <value>Import Phoenix Scores</value>
+    <value>スコアインポート</value>
   </data>
   <data name="Language" xml:space="preserve">
-    <value>Language</value>
+    <value>言語</value>
   </data>
   <data name="Last Updated" xml:space="preserve">
-    <value>Last Updated</value>
+    <value>最近更新</value>
   </data>
   <data name="Leaderboard" xml:space="preserve">
-    <value>Leaderboard</value>
+    <value>ランキング</value>
   </data>
   <data name="Letter Grade" xml:space="preserve">
-    <value>Letter Grade</value>
+    <value>ランク</value>
   </data>
   <data name="Log In With" xml:space="preserve">
-    <value>Log In With {0}</value>
-    <comment>I.E Log In With Discord</comment>
+    <value>{0}でログインする</value>
+    <comment>例：DISCORDでログインする</comment>
   </data>
   <data name="Login" xml:space="preserve">
-    <value>Login</value>
+    <value>ログイン</value>
   </data>
   <data name="Logout" xml:space="preserve">
-    <value>Logout</value>
+    <value>ログアウト</value>
   </data>
   <data name="Make Not Public Disclaimer" xml:space="preserve">
-    <value>Making your account private will make your scores and progress no longer be externally visible, even for anyone already following you. You will be removed from the World community.</value>
+      <value>非公開にすれば自分のスコアと進化も誰でも見えなくなります（友達も）。世界ランキングから削除されます。</value>
   </data>
   <data name="Make Private" xml:space="preserve">
-    <value>Make Private</value>
+    <value>非公開する</value>
   </data>
   <data name="Make Public" xml:space="preserve">
-    <value>Make Public</value>
+    <value>公開する</value>
   </data>
   <data name="Make Public Disclaimer 1" xml:space="preserve">
-    <value>Making your account public will make your scores and progress externally visible. You will be added to the World community as well.</value>
+    <value>公開すれば自分のスコアと進化が誰度も見えるようになります。世界ランキングを追加されます。</value>
   </data>
   <data name="Make Public Disclaimer 2" xml:space="preserve">
-    <value>If your account was previously public and you made it private, making it public again will make anyone following you able to see your progress again.</value>
+    <value>公開すれば、まえのフォローしてる友達も見えるようになります。</value>
   </data>
   <data name="Medium" xml:space="preserve">
     <value>Medium</value>
