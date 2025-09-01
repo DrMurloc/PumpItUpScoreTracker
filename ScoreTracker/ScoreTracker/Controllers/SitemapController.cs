@@ -9,6 +9,7 @@ namespace ScoreTracker.Web.Controllers
     [Route("")]
     public sealed class SitemapController : Controller
     {
+        [ApiExplorerSettings(IgnoreApi = true)]
         [Route("sitemap.xml")]
         public async Task<IActionResult> GetSitemap([FromServices] IChartRepository _charts)
         {

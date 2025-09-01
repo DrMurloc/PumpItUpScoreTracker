@@ -9,8 +9,9 @@
 @using ScoreTracker.Application.Queries
 @using MediatR
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.HostedServices
 <PageTitle>Official Leaderboard Player Compare</PageTitle>
-<MudText>@L["Last Updated"] - @LeaderboardSearch._lastUpdated.ToLocalTime().ToString()</MudText>
+<MudText>@L["Last Updated"] - @RecurringJobHostedService.LastLeaderboardImport.ToLocalTime().ToString()</MudText>
 <MudAutocomplete T="string" AdornmentIcon="@Icons.Material.Filled.Search"
                  ResetValueOnEmptyText="true"
                  CoerceText="true"
@@ -40,8 +41,16 @@
             {
                 <MudText>Averages Difficulty Level @_winLevelAverage[player].ToString("0.00") on wins</MudText>
             }
-            <MudText>@_typeWins[player][ChartType.Single] Singles</MudText>
-            <MudText>@_typeWins[player][ChartType.Double] Doubles</MudText>
+            @if (_typeWins[player].ContainsKey(ChartType.Single))
+            {
+                
+                <MudText>@_typeWins[player][ChartType.Single] Singles</MudText>
+            }
+            @if (_typeWins[player].ContainsKey(ChartType.Double))
+            {
+                
+                <MudText>@_typeWins[player][ChartType.Double] Doubles</MudText>
+            }
         }
         <MudText>@_leaderboardCharts.Count(c => _players[player].ContainsKey(c.Id) && !_players.Where(kv => !kv.Key.Equals(player)).Any(kv => kv.Value.ContainsKey(c.Id))) charts scored that no other selected player has scored</MudText>
 

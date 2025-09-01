@@ -213,7 +213,7 @@
     private async Task RebuildOfficialLeaderboard()
     {
 
-        await Qualifiers.FixLeaderboard(Bite8);
+        //await Qualifiers.FixLeaderboard(Bite8);
         /*var message = string.Join(" ", Enum.GetValues<PhoenixLetterGrade>().Select(l => $"#LETTERGRADE|{l}#").Append("#LETTERGRADE|#"));
         message += "\n";
         message += string.Join(" ", Enum.GetValues<PhoenixPlate>().Select(l => $"#PLATE|{l}#").Append("#PLATE|#"));
@@ -231,12 +231,8 @@
     //await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);
     
        //await Mediator.Send(new UpdateSongImagesCommand(false));
-       /*
-       await Mediator.Send(new ProcessChartPopularityCommand());
-        await Mediator.Send(new ProcessOfficialLeaderboardsCommand());
-    await Mediator.Send(new ProcessChartPopularityCommand());
-    await WorldRanking.CalculateWorldRankings(CancellationToken.None);
-        */
+
+        await Bus.Publish(new StartLeaderboardImportEvent());
 
 
         //await Bus.Publish(new ProcessPassTierListCommand());

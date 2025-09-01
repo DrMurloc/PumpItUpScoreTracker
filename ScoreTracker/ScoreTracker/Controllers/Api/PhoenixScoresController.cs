@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Security.Authentication;
 using CsvHelper.Configuration.Attributes;
 using MediatR;
 using Microsoft.AspNetCore.Cors;
@@ -26,6 +27,34 @@ public sealed class PhoenixScoresController : Controller
     {
         _currentUser = currentUser;
         _mediator = mediator;
+    }
+
+    [HttpPost("import")]
+    public async Task<IActionResult> ImportScores([FromBody] PhoenixImportRequestDto body)
+    {
+        if (string.IsNullOrWhiteSpace(body.Username)) return BadRequest("Missing Username.");
+
+        if (string.IsNullOrWhiteSpace(body.Password)) return BadRequest("Missing Password.");
+        try
+        {
+            var cards = (await _mediator.Send(new GetGameCardsQuery(body.Username, body.Password))).ToArray();
+            var gameTag = cards.First();
+            if (!string.IsNullOrWhiteSpace(body.GameTag))
+            {
+                var match = cards.FirstOrDefault(c => c.GameTag == body.GameTag);
+                if (match == null) return BadRequest($"GameTag {body.GameTag} couldn't be found for {body.Username}.");
+
+                gameTag = match;
+            }
+
+            await _mediator.Send(new ImportOfficialPlayerScoresCommand(body.Username, body.Password, gameTag.Id,
+                gameTag.GameTag, body.IncludeBroken, body.SyncScoreTracker));
+            return Ok();
+        }
+        catch (InvalidCredentialException)
+        {
+            return BadRequest("Username + Password combination was incorrect.");
+        }
     }
 
     [HttpPost]

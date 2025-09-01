@@ -1,4 +1,5 @@
-﻿using CsvHelper;
+﻿using System.Globalization;
+using CsvHelper;
 using MediatR;
 using Microsoft.AspNetCore.Components.Forms;
 using ScoreTracker.Application.Queries;
@@ -7,7 +8,6 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.ValueTypes;
 using ScoreTracker.Web.Dtos;
 using ScoreTracker.Web.Services.Contracts;
-using System.Globalization;
 
 namespace ScoreTracker.Web.Services;
 
@@ -88,7 +88,7 @@ public sealed class PhoenixScoreFileExtractor : IPhoenixScoreFileExtractor
                 if (chart == null)
                     throw new ScoreFileParseException($"This chart was not found: {name} {chartType} {level}");
 
-                var attempt = new RecordedPhoenixScore(chart.Id, score, plate, false, DateTimeOffset.Now);
+                var attempt = new RecordedPhoenixScore(chart.Id, score, plate, record.IsBroken, DateTimeOffset.Now);
 
                 scores.Add(attempt);
             }

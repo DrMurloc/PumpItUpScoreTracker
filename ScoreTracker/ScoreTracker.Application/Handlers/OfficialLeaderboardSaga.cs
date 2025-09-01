@@ -10,6 +10,7 @@ using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Handlers
@@ -18,12 +19,14 @@ namespace ScoreTracker.Application.Handlers
         IRequestHandler<ProcessChartPopularityCommand>,
         IRequestHandler<ImportOfficialPlayerScoresCommand>,
         IRequestHandler<UpdateSongImagesCommand>,
-        IRequestHandler<GetGameCardsQuery, IEnumerable<GameCardRecord>>
+        IRequestHandler<GetGameCardsQuery, IEnumerable<GameCardRecord>>,
+        IConsumer<StartLeaderboardImportEvent>
     {
         private readonly IOfficialSiteClient _officialSite;
         private readonly ITierListRepository _tierLists;
         private readonly IOfficialLeaderboardRepository _leaderboards;
         private readonly ICurrentUserAccessor _currentUser;
+        private readonly IWorldRankingService _worldRankings;
         private readonly IUserRepository _user;
         private readonly IMediator _mediator;
         private readonly IBus _bus;
@@ -33,6 +36,7 @@ namespace ScoreTracker.Application.Handlers
         private readonly ILogger _logger;
 
         public OfficialLeaderboardSaga(IOfficialSiteClient officialSite, ITierListRepository tierLists,
+            IWorldRankingService worldRankings,
             IOfficialLeaderboardRepository leaderboards, ICurrentUserAccessor currentUser, IUserRepository user,
             IMediator mediator,
             IPiuTrackerClient piuTracker,
@@ -50,6 +54,7 @@ namespace ScoreTracker.Application.Handlers
             _bus = bus;
             _files = files;
             _charts = charts;
+            _worldRankings = worldRankings;
         }
 
         public async Task Handle(ProcessOfficialLeaderboardsCommand request, CancellationToken cancellationToken)
@@ -307,6 +312,13 @@ namespace ScoreTracker.Application.Handlers
             CancellationToken cancellationToken)
         {
             return await _officialSite.GetGameCards(request.Username, request.Password, cancellationToken);
+        }
+
+        public async Task Consume(ConsumeContext<StartLeaderboardImportEvent> context)
+        {
+            await _mediator.Send(new ProcessChartPopularityCommand());
+            await _mediator.Send(new ProcessOfficialLeaderboardsCommand());
+            await _worldRankings.CalculateWorldRankings(CancellationToken.None);
         }
     }
 }

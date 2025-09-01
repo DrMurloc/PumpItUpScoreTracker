@@ -1,4 +1,6 @@
-﻿namespace ScoreTracker.Web.Dtos;
+﻿using CsvHelper.Configuration.Attributes;
+
+namespace ScoreTracker.Web.Dtos;
 
 public class PhoenixSpreadsheetScoreDto
 {
@@ -6,6 +8,8 @@ public class PhoenixSpreadsheetScoreDto
     public string Song { get; set; }
     public string Score { get; set; }
     public string Plate { get; set; }
+
+    [Optional] public bool IsBroken { get; set; } = false;
 
     public SpreadsheetScoreErrorDto ToError(string errorReason)
     {

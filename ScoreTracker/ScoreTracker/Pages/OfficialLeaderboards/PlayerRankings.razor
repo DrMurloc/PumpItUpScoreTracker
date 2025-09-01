@@ -9,13 +9,14 @@
 @using MediatR
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.HostedServices
 @using ScoreTracker.Web.Pages.OfficialLeaderboards
 <PageTitle>Official Leaderboard Search</PageTitle>
 <MudText>Users ranked based on their top 50 best charts on the Official Leaderboards. You must be in the top 100 of a 20+ chart to show up on this list.</MudText>
 <br/>
 <MudText>Note this uses a slightly different rating calculation, it provides partial points between letter grades (I.E halfway between an AA and a AA+ will give 1.025x instead of 1x rating)</MudText>
 <br />
-<MudText>@L["Last Updated"] - @LeaderboardSearch._lastUpdated.ToLocalTime().ToString()</MudText>
+<MudText>@L["Last Updated"] - @RecurringJobHostedService.LastLeaderboardImport.ToLocalTime().ToString()</MudText>
 <br />
 <MudGrid>
     <MudItem xs="4">

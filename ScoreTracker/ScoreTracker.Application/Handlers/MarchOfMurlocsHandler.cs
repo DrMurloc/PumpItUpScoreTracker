@@ -62,7 +62,7 @@ namespace ScoreTracker.Application.Handlers
                 9 => 12,
                 10 => 12,
                 11 => 12,
-                _ => throw new ArgumentOutOfRangeException("Date was invalid somehow?")
+                _ => 3
             };
             var season = newMonth switch
             {
