@@ -12,7 +12,7 @@
 @page "/Phoenix/Progress"
 <MudPaper>
     <MudToolBar>
-        <MudText Typo="Typo.h6">Progress</MudText>
+        <MudText Typo="Typo.h6">@L["Progress"]</MudText>
         <MudSpacer></MudSpacer>
 
         @if (CurrentUser.IsLoggedIn && CurrentUser.User.IsPublic && CurrentUser.User.Id == RequestedUserId)
