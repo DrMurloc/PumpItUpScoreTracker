@@ -158,8 +158,14 @@
   <data name="Average" xml:space="preserve">
     <value>Average</value>
   </data>
+  <data name="Average Plate" xml:space="preserve">
+    <value>Average Plate</value>
+  </data>
   <data name="Average Rating" xml:space="preserve">
     <value>Average Rating</value>
+  </data>
+  <data name="Average Score" xml:space="preserve">
+    <value>Average Score</value>
   </data>
   <data name="Broken" xml:space="preserve">
     <value>Broken</value>
@@ -203,6 +209,9 @@
   </data>
   <data name="Copy to Clipboard" xml:space="preserve">
     <value>Copy to Clipboard</value>
+  </data>
+  <data name="Copied to Clipboard" xml:space="preserve">
+    <value>Copied to Clipboard!</value>
   </data>
   <data name="Different Player Difficulties" xml:space="preserve">
     <value>Different Player Difficulties</value>
@@ -293,8 +302,14 @@
   <data name="Make Public Disclaimer 2" xml:space="preserve">
     <value>If your account was previously public and you made it private, making it public again will make anyone following you able to see your progress again.</value>
   </data>
+  <data name="Max Score" xml:space="preserve">
+    <value>Max Score</value>
+  </data> 
   <data name="Medium" xml:space="preserve">
     <value>Medium</value>
+  </data>
+  <data name="Min Score" xml:space="preserve">
+    <value>Min Score</value>
   </data>
   <data name="Mix" xml:space="preserve">
     <value>Mix</value>
@@ -335,6 +350,9 @@
   </data>
   <data name="Passed Count" xml:space="preserve">
     <value>Passed</value>
+  </data>
+  <data name="Passes By Level" xml:space="preserve">
+    <value>Passes By Level</value>
   </data>
   <data name="Phoenix Import Confirming" xml:space="preserve">
     <value>Continuing will begin to save the uploaded scores over your existing records. You will not be able to undo this. You will be able to stop the saving process, but it will not roll back uploads.</value>
@@ -409,6 +427,10 @@
     <value>Recorded On {0}</value>
     <comment>I.E Recorded on 12/6/2023 (I don't support date localization yet but will eventually)</comment>
   </data>
+  <data name="Remaining" xml:space="preserve">
+    <value>Remaining</value>
+    <comment>this is a label on legend</comment>
+  </data>
   <data name="Remaining Charts" xml:space="preserve">
     <value>{0} (SSS+) - {1} (AA) Charts Remaining</value>
     <comment>I.E 6 (SSA+) - 10 (AA) Charts Remaining</comment>
@@ -441,6 +463,9 @@
   <data name="Score" xml:space="preserve">
     <value>Score</value>
   </data>
+  <data name="Score Distribution" xml:space="preserve">
+    <value>Score Distribution</value>
+  </data>
   <data name="Score Formula Shoutout" xml:space="preserve">
     <value>Shout out to MR_WEQ for reverse engineering this score formula!</value>
   </data>
@@ -463,6 +488,9 @@
   </data>
   <data name="Search Youtube" xml:space="preserve">
     <value>Search Youtube</value>
+  </data>
+  <data name="Share Url" xml:space="preserve">
+    <value>Share Url</value>
   </data>
   <data name="Show Only ToDo Charts" xml:space="preserve">
     <value>Show Only ToDo Charts</value>
@@ -838,11 +866,27 @@
   </data>
   <data name="Filters" xml:space="preserve">
 	  <value>Filters</value>
-	  <comment>Filters</comment>
+	  <comment>Filter by Dropdown</comment>
+  </data>
+  <data name="Median" xml:space="preserve">
+	  <value>Median</value>
+      <comment>'median' label for label of legend in progress figure</comment>
+  </data>
+  <data name="Min" xml:space="preserve">
+	  <value>Min</value>
+      <comment>'minimum' label for label of legend in progress figure</comment>
+  </data>
+  <data name="Singles vs Doubles" xml:space="preserve">
+	  <value>Singles vs Doubles</value>
+      <comment>title for progress plot</comment>
   </data>
   <data name="Min BPM" xml:space="preserve">
 	  <value>Min BPM</value>
 	  <comment>Min BPM</comment>
+  </data>
+  <data name="Max" xml:space="preserve">
+	  <value>Max</value>
+	  <comment>'max' label for legend in quartile progress figure</comment>
   </data>
   <data name="Max BPM" xml:space="preserve">
 	  <value>Max BPM</value>
