@@ -17,7 +17,7 @@
 @using System.Data.Common
 @using ScoreTracker.Web.Services.Contracts
 
-<PageTitle>Weekly Charts</PageTitle>
+<PageTitle>@L["Weekly Charts"]</PageTitle>
 
 
 <MudGrid>
@@ -51,7 +51,7 @@
     <MudItem xs="6" sm="4">
         @if (_isLoggedIn && _showCompetitiveToggle && _selectedWeek == null)
         {
-            <MudSwitch T="bool" Color="Color.Primary" Label="Show Only Suggested Charts" Value="_showOnlyCompetitive" ValueChanged="v => SetShowOnlyCompetitive(v)"></MudSwitch>
+            <MudSwitch T="bool" Color="Color.Primary" Label=@L["Show Only Suggested Charts"] Value="_showOnlyCompetitive" ValueChanged="v => SetShowOnlyCompetitive(v)"></MudSwitch>
         }
 
     </MudItem>
@@ -278,11 +278,11 @@ else if(_monthlyWeeks.Any())
 
             <MudTable T="(int,WeeklyTournamentEntry)" Items="_entries.OrderBy(s => s.Item1)" Breakpoint="Breakpoint.None" Dense="true">
                 <HeaderContent>
-                    <MudTh>Place</MudTh>
-                    <MudTh>Avatar</MudTh>
-                    <MudTh>Name</MudTh>
-                    <MudTh>Score</MudTh>
-                    <MudTh>Player Level</MudTh>
+                    <MudTh>@L["Place"]</MudTh>
+                    <MudTh>@L["Avatar"]</MudTh>
+                    <MudTh>@L["Name"]</MudTh>
+                    <MudTh>@L["Score"]</MudTh>
+                    <MudTh>@L["Level"]</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd>@context.Item1</MudTd>
@@ -318,9 +318,9 @@ else if(_monthlyWeeks.Any())
                 <MudNumericField Min="10" Max="@DifficultyLevel.Max" @bind-Value="_filteredLevel" Label=@L["Difficulty Level"]></MudNumericField></MudItem>
             <MudItem xs="6">
                 <MudSelect T="ChartType" @bind-Value="_filteredChartType" Label=@L["Chart Type"]>
-                    <MudSelectItem T="ChartType" Value="ChartType.Single">Singles</MudSelectItem>
-                    <MudSelectItem T="ChartType" Value="ChartType.Double">Doubles</MudSelectItem>
-                    <MudSelectItem T="ChartType" Value="ChartType.CoOp">CoOp</MudSelectItem>
+                    <MudSelectItem T="ChartType" Value="ChartType.Single">@L["Singles"]</MudSelectItem>
+                    <MudSelectItem T="ChartType" Value="ChartType.Double">@L["Doubles"]</MudSelectItem>
+                    <MudSelectItem T="ChartType" Value="ChartType.CoOp">@L["CoOp"]</MudSelectItem>
                 </MudSelect>
             </MudItem>
         </MudGrid>

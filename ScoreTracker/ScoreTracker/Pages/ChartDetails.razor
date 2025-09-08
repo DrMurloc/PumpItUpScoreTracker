@@ -22,7 +22,7 @@
     <meta property="og:description" content=@(_selectedChart==null?"Look up statistics and leaderboards on specific PIU charts!":$"Statistic and Leaderboards for {_selectedChart.Song.Name} {_selectedChart.DifficultyString} by {_selectedChart.Song.Artist}{(_selectedChart.StepArtist==null?"":$", charted by {_selectedChart.StepArtist}")}.")>
     </HeadContent>
 
-<MudText Typo="Typo.h3">Chart Details</MudText>
+<MudText Typo="Typo.h3">@L["Chart Details"]</MudText>
 @if (_nameAvatars.Any())
 {
     
@@ -34,11 +34,11 @@
     <MudText Typo="Typo.h4">@_selectedChart.Song.Name @_selectedChart.DifficultyString</MudText>
     @if (_selectedChart.StepArtist != null && _selectedChart.StepArtist != "Unknown")
     {
-        <MudText>Step Artist: @_selectedChart.StepArtist</MudText>
+        <MudText>@L["Step Artist"]: @_selectedChart.StepArtist</MudText>
     }
     @if (_selectedChart.NoteCount > 0)
     {
-        <MudText>Note Count: @_selectedChart.NoteCount</MudText>
+        <MudText>@L["Note Count"]: @_selectedChart.NoteCount</MudText>
     }
     <br/>
     <MudButton Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Custom.Brands.YouTube" OnClick="()=>VideoDisplayer.ShowVideo(_selectedChart.Id)">@L["Open Video"]</MudButton>
@@ -47,12 +47,12 @@
     @if (CurrentUser.IsLoggedIn)
     {
         <br/>
-        <MudText Typo="Typo.h5">Your Score</MudText>
+        <MudText Typo="Typo.h5">@L["My Score"]</MudText>
         <EditChartGrid ChartId="_selectedChart.Id" CurrentMix="_currentMix"></EditChartGrid>
     }
     @if (_currentMix == MixEnum.Phoenix)
     {
-        <MudText Typo="Typo.h5">Chart Difficulty by Letter Grade</MudText>
+        <MudText Typo="Typo.h5">@L["Chart Difficulty by Letter Grade"]</MudText>
         <ApexChart TItem="LevelDistribution"
                    Title="Difficulty By Letter"
                    @ref=_percentChart
@@ -69,41 +69,41 @@
         @if (_plateBreakdowns.Any(kv => kv.Value > 0))
         {
             <br/>
-            <MudText Typo="Typo.h5">Plate Distribution</MudText>
+            <MudText Typo="Typo.h5">@L["Plate Distribution"]</MudText>
             <ApexChart TItem="StringDataPoint"
                        @ref=_plateGraph
-                       Title="Plate Breakdown">
+                       Title=@L["Plate Distribution"]>
                 <ApexPointSeries TItem="StringDataPoint"
                                  Items="_plateBreakdowns.Select(kv=>new StringDataPoint(kv.Key.GetShorthand(),kv.Value))"
                                  SeriesType="SeriesType.Bar"
-                                 Name="Plates"
+                                 Name=@L["Plate"]
                                  XValue="@(e => e.X)"
                                  YValue="@(e => e.Y)"
                                  OrderBy="e => (int)PhoenixPlateHelperMethods.ParseShorthand((string)e.X)"/>
             </ApexChart>
             <br/>
-            <MudText Typo="Typo.h5">Score Distribution By Player Level</MudText>
+            <MudText Typo="Typo.h5">@L["Score Distribution By Player Level"]</MudText>
             <ApexChart TItem="DataPoint"
-                       Title="Scores by Competitive Level"
+                       Title=@L["Scores by Competitive Level"]
                        @ref=_scoreGraph
                        Options="_scoreBoxesOptions">
                 <ApexPointSeries TItem="DataPoint"
                                  Items="_scoreMinimums.Select(kv=>new DataPoint(kv.Key,kv.Value))"
-                                 Name="Min"
+                                 Name=@L["Min"]
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.X)"
                                  YValue="@(e => e.Y)"
                                  OrderBy="e => e.X" />
                 <ApexPointSeries TItem="DataPoint"
                                  Items="_scoreMaximums.Select(kv=>new DataPoint(kv.Key,kv.Value))"
-                                 Name="Max"
+                                 Name=@L["Max"]
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.X)"
                                  YValue="@(e => e.Y)"
                                  OrderBy="e => e.X" />
                 <ApexPointSeries TItem="DataPoint"
                                  Items="_scoreAverages.Select(kv=>new DataPoint(kv.Key,kv.Value))"
-                                 Name="Average"
+                                 Name=@L["Average"]
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.X)"
                                  YValue="@(e => e.Y)"
@@ -113,7 +113,7 @@
                     
                     <ApexPointSeries TItem="DataPoint"
                                      Items="new[]{ new DataPoint(_myLevel,_myScore.Value),new DataPoint(_myLevel+1,_myScore.Value)}"
-                                     Name="My Score"
+                                     Name=@L["My Score"]
                                      SeriesType="SeriesType.Line"
                                      XValue="@(e => e.X)"
                                      YValue="@(e => e.Y)"
@@ -137,14 +137,14 @@
         @if (_worldScores.Any())
         {
             <br/>
-            <MudText Typo="Typo.h5">Chart Leaderboard</MudText>
+            <MudText Typo="Typo.h5">@L["Leaderboard"]</MudText>
             <MudTable T="(int,UserPhoenixScore)" Items="_worldScores.OrderByDescending(s => s.Score).Select((s, i) => (i + 1,s))" Breakpoint="Breakpoint.None" Dense="true">
                 <HeaderContent>
-                    <MudTh>Place</MudTh>
-                    <MudTh>Avatar</MudTh>
-                    <MudTh>Name</MudTh>
-                    <MudTh>Level</MudTh>
-                    <MudTh>Score</MudTh>
+                    <MudTh>@L["Place"]</MudTh>
+                    <MudTh>@L["Avatar"]</MudTh>
+                    <MudTh>@L["Name"]</MudTh>
+                    <MudTh>@L["Level"]</MudTh>
+                    <MudTh>@L["Score"]</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd>@context.Item1</MudTd>
