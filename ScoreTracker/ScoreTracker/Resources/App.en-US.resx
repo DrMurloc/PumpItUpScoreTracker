@@ -176,6 +176,9 @@
   <data name="Chart List Share Description" xml:space="preserve">
     <value>Use this link to share your chart list to other players.</value>
   </data>
+  <data name="Chart Difficulty by Letter Grade" xml:space="preserve">
+    <value>Chart Difficulty by Letter Grade</value>
+  </data>
   <data name="Chart Randomizer" xml:space="preserve">
     <value>Chart Randomizer</value>
   </data>
@@ -185,6 +188,10 @@
   </data>
   <data name="Charts" xml:space="preserve">
     <value>Charts</value>
+  </data>
+  <data name="Charts Details" xml:space="preserve">
+    <value>Charts Details</value>
+    <comment>Statistics and leaderboard for a single song</comment>
   </data>
   <data name="Charts List" xml:space="preserve">
     <value>Charts List</value>
@@ -392,6 +399,10 @@
     <value>Plate</value>
     <comment>I.E MG, PG, UG</comment>
   </data>
+  <data name="Plate Distribution" xml:space="preserve">
+    <value>Plate Distribution</value>
+    <comment>The figure plot title</comment>
+  </data>
   <data name="Players" xml:space="preserve">
     <value>Players</value>
   </data>
@@ -465,6 +476,9 @@
   </data>
   <data name="Score Distribution" xml:space="preserve">
     <value>Score Distribution</value>
+  </data>
+  <data name="Score Distribution by Player Level" xml:space="preserve">
+    <value>Score Distribution by Player Level</value>
   </data>
   <data name="Score Formula Shoutout" xml:space="preserve">
     <value>Shout out to MR_WEQ for reverse engineering this score formula!</value>

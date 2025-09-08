@@ -51,7 +51,7 @@
     <MudItem xs="6" sm="4">
         @if (_isLoggedIn && _showCompetitiveToggle && _selectedWeek == null)
         {
-            <MudSwitch T="bool" Color="Color.Primary" Label="Show Only Suggested Charts" Value="_showOnlyCompetitive" ValueChanged="v => SetShowOnlyCompetitive(v)"></MudSwitch>
+            <MudSwitch T="bool" Color="Color.Primary" Label=@L["Show Only Suggested Charts"] Value="_showOnlyCompetitive" ValueChanged="v => SetShowOnlyCompetitive(v)"></MudSwitch>
         }
 
     </MudItem>

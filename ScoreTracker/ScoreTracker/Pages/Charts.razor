@@ -629,7 +629,7 @@
     private async Task CopyShareLink()
     {
         await Javascript.InvokeVoidAsync("navigator.clipboard.writeText", ShareUrl);
-        Snackbar.Add("Copied to clipboard!", Severity.Success);
+        Snackbar.Add(@L["Copied to clipboard!"], Severity.Success);
     }
 
     private async Task LoadCharts(Guid? userId)
