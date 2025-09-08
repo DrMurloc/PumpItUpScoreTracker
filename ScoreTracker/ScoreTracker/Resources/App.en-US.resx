@@ -155,6 +155,10 @@
     <value>Adjusted Difficulty</value>
     <comment>I.E After Player votes</comment>
   </data>
+  <data name="Combined" xml:space="preserve">
+    <value>Combined</value>
+    <comment>Both doubles & singles</comment>
+  </data>
   <data name="Average" xml:space="preserve">
     <value>Average</value>
   </data>
@@ -186,6 +190,9 @@
     <value>Chart Type</value>
     <comment>Chart Types = single, double, co op</comment>
   </data>
+  <data name="Chart" xml:space="preserve">
+    <value>Charts</value>
+  </data>
   <data name="Charts" xml:space="preserve">
     <value>Charts</value>
   </data>
@@ -201,6 +208,10 @@
   </data>
   <data name="Communities" xml:space="preserve">
     <value>Communities</value>
+  </data>
+  <data name="Competitive Level" xml:space="preserve">
+    <value>Competitive Level</value>
+    <comment>^Competitive Level^ is a _metric_ representing chart difficulty</comment>
   </data>
   <data name="Completed" xml:space="preserve">
     <value>Completed</value>
@@ -265,6 +276,9 @@
   </data>
   <data name="Hardest Player" xml:space="preserve">
     <value>Hardest Player</value>
+  </data>
+  <data name="Hide" xml:space="preserve">
+    <value>Hide</value>
   </data>
   <data name="Hide Completed Charts" xml:space="preserve">
     <value>Hide Completed Charts</value>
@@ -506,6 +520,9 @@
   <data name="Share Url" xml:space="preserve">
     <value>Share Url</value>
   </data>
+  <data name="Show" xml:space="preserve">
+    <value>Show</value>
+  </data>
   <data name="Show Only ToDo Charts" xml:space="preserve">
     <value>Show Only ToDo Charts</value>
   </data>
@@ -700,6 +717,18 @@
   <data name="Use Script" xml:space="preserve">
     <value>Use  Script</value>
   </data>
+  <data name="Weekly Charts" xml:space="preserve">
+    <value>Weekly Charts</value>
+  </data>
+  <data name="Welcome" xml:space="preserve">
+    <value>Welcome</value>
+  </data>
+  <data name="Welcome to Score Tracker" xml:space="preserve">
+    <value>Welcome to Score Tracker {0}!</value>
+  </data>
+  <data name="What Should I Play" xml:space="preserve">
+    <value>What Should I Play</value>
+  </data>
   <data name="World Rankings" xml:space="preserve">
     <value>World Rankings</value>
   </data>
@@ -717,16 +746,16 @@
     <value>Personalized</value>
     <comment>Personalized</comment>
   </data>
-  <data name="Text View" xml:space="preserve">
-    <value>Text View</value>
-    <comment>Text View</comment>
-  </data>
+<data name="Text View" xml:space="preserve">
+<value>Text View</value>
+<comment>Text View</comment>
+</data>
   <data name="101 person tournament." xml:space="preserve">
-    <value>101 person tournament.</value>
-  </data>
-  <data name="8-10 estimated charts played per player." xml:space="preserve">
-    <value>8-10 estimated charts played per player.</value>
-  </data>
+        <value>101 person tournament.</value>
+      </data>
+      <data name="8-10 estimated charts played per player." xml:space="preserve">
+        <value>8-10 estimated charts played per player.</value>
+      </data>
   <data name="9+ PIU Cabinets Running Phoenix." xml:space="preserve">
     <value>9+ PIU Cabinets Running Phoenix.</value>
   </data>

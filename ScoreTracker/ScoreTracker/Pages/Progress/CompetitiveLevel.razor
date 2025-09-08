@@ -16,20 +16,20 @@
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 
-<PageTitle>Competitive Level</PageTitle>
+<PageTitle>@L["Competitive Level"]</PageTitle>
 
-<MudText Typo="Typo.h3">Competitive Level</MudText>
+<MudText Typo="Typo.h3">@L["Competitive Level"]</MudText>
 <br/>
 <MudSelect T="ChartType" Label=@L["Chart Type"] Value="_currentType" ValueChanged="SetType">
-    <MudSelectItem T="ChartType" Value="ChartType.CoOp">All</MudSelectItem>
-    <MudSelectItem T="ChartType" Value="ChartType.Single">Singles</MudSelectItem>
-    <MudSelectItem T="ChartType" Value="ChartType.Double">Doubles</MudSelectItem>
+    <MudSelectItem T="ChartType" Value="ChartType.CoOp">@L["Combined"]</MudSelectItem>
+    <MudSelectItem T="ChartType" Value="ChartType.Single">@L["Singles"]</MudSelectItem>
+    <MudSelectItem T="ChartType" Value="ChartType.Double">@L["Doubles"]</MudSelectItem>
 </MudSelect>
 <MudGrid>
     @if (_stats != null)
     {
         <MudItem xs="12">
-            <MudText Typo="Typo.body1">Competitive Level: @($"{(_currentType == ChartType.CoOp ? _stats.CompetitiveLevel : _currentType == ChartType.Single ? _stats.SinglesCompetitiveLevel : _stats.DoublesCompetitiveLevel):0.00000}")</MudText>
+            <MudText Typo="Typo.body1">@L["Competitive Level"]: @($"{(_currentType == ChartType.CoOp ? _stats.CompetitiveLevel : _currentType == ChartType.Single ? _stats.SinglesCompetitiveLevel : _stats.DoublesCompetitiveLevel):0.00000}")</MudText>
         </MudItem>
     }
     @if (_competetiveScores.Any())
@@ -58,16 +58,16 @@
 <MudTable T="Chart" Items="FilteredCharts" Breakpoint="Breakpoint.None" Dense="true">
     <HeaderContent>
         <MudTh>
-            <MudTableSortLabel T="Chart" SortBy="e => e.Song.Name">Song</MudTableSortLabel>
+            <MudTableSortLabel T="Chart" SortBy="e => e.Song.Name">@L["Song"]</MudTableSortLabel>
         </MudTh>
         <MudTh>
-            <MudTableSortLabel T="Chart" SortBy="e=>e.Level">Chart</MudTableSortLabel>
+            <MudTableSortLabel T="Chart" SortBy="e=>e.Level">@L["Chart"]</MudTableSortLabel>
         </MudTh>
         <MudTh>
-            <MudTableSortLabel T="Chart" SortBy="e => _scores.TryGetValue(e.Id,out var score)?score:0">Score</MudTableSortLabel>
+            <MudTableSortLabel T="Chart" SortBy="e => _scores.TryGetValue(e.Id,out var score)?score:0">@L["Score"]</MudTableSortLabel>
         </MudTh>
         <MudTh>
-            <MudTableSortLabel T="Chart" SortBy="e=>_scores.TryGetValue(e.Id,out var score)?ScoringConfiguration.CalculateFungScore(e.Level,score,e.Type):0">Competitive Level</MudTableSortLabel>
+            <MudTableSortLabel T="Chart" SortBy="e=>_scores.TryGetValue(e.Id,out var score)?ScoringConfiguration.CalculateFungScore(e.Level,score,e.Type):0">@L["Competitive Level"]</MudTableSortLabel>
         </MudTh>
         <MudTh>
             <MudTableSortLabel T="Chart" SortBy="e=>_myDifficulty.TryGetValue(e.Id, out var z)?z:0">My Relative Difficulty</MudTableSortLabel>
