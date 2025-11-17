@@ -38,7 +38,8 @@ public sealed class RecurringJobHostedService : IHostedService,
         return Task.CompletedTask;
     }
 
-    public static DateTimeOffset LastLeaderboardImport = DateTimeOffset.Now;
+    public static DateTimeOffset LastLeaderboardImport =
+        new DateTimeOffset(2025, 6, 11, 12, 05, 0, TimeSpan.FromHours(-4));
 
     public async Task Consume(ConsumeContext<RescheduleMessages> context)
     {
@@ -47,20 +48,7 @@ public sealed class RecurringJobHostedService : IHostedService,
         await using var scope = _serviceProvider.CreateAsyncScope();
         var scheduler = scope.ServiceProvider.GetRequiredService<IMessageScheduler>();
         var nextDate = DateTime.Now;
-        var lastMonday = nextDate + TimeSpan.FromDays(nextDate.DayOfWeek switch
-        {
-            DayOfWeek.Sunday => 1,
-            DayOfWeek.Monday => nextDate.Hour < 5 ? 7 : 0,
-            DayOfWeek.Tuesday => 6,
-            DayOfWeek.Wednesday => 5,
-            DayOfWeek.Thursday => 4,
-            DayOfWeek.Friday => 3,
-            DayOfWeek.Saturday => 2
-        } - 7);
-
-        LastLeaderboardImport = new DateTime(lastMonday.Year, lastMonday.Month, lastMonday.Day, 5, 0, 0);
-
-        if (nextDate.Hour > 1) nextDate += TimeSpan.FromDays(1);
+        if (nextDate.Hour > 2) nextDate += TimeSpan.FromDays(1);
 
         await scheduler.SchedulePublish(new DateTime(nextDate.Year, nextDate.Month, nextDate.Day, 2, 0, 0),
             new ProcessScoresTiersListCommand(), context.CancellationToken);
@@ -71,22 +59,16 @@ public sealed class RecurringJobHostedService : IHostedService,
         await scheduler.SchedulePublish(new DateTime(nextDate.Year, nextDate.Month, nextDate.Day, 3, 0, 0),
             new CalculateScoringDifficultyEvent(), context.CancellationToken);
 
-
         await scheduler.SchedulePublish(new DateTime(nextDate.Year, nextDate.Month, nextDate.Day, 3, 30, 0),
+            new RescheduleMessages(), context.CancellationToken);
+
+        await scheduler.SchedulePublish(new DateTime(nextDate.Year, nextDate.Month, nextDate.Day, 4, 0, 0),
             new UpdateWeeklyChartsEvent());
 
 
-        await scheduler.SchedulePublish(new DateTime(nextDate.Year, nextDate.Month, nextDate.Day, 4, 0, 0),
-            new ProcessPassTierListCommand());
         await scheduler.SchedulePublish(new DateTime(nextDate.Year, nextDate.Month, nextDate.Day, 4, 30, 0),
+            new ProcessPassTierListCommand());
+        await scheduler.SchedulePublish(new DateTime(nextDate.Year, nextDate.Month, nextDate.Day, 5, 00, 0),
             new CalculateChartLetterDifficultiesEvent());
-
-        if (nextDate.DayOfWeek == DayOfWeek.Monday)
-            await scheduler.SchedulePublish(new DateTime(nextDate.Year, nextDate.Month, nextDate.Day, 5, 0, 0),
-                new StartLeaderboardImportEvent());
-
-
-        await scheduler.SchedulePublish(new DateTime(nextDate.Year, nextDate.Month, nextDate.Day, 1, 00, 0),
-            new RescheduleMessages(), context.CancellationToken);
     }
 }
