@@ -26,6 +26,7 @@ namespace ScoreTracker.Data.Repositories
             if (entity == null)
                 await database.UserRandomSettings.AddAsync(new UserRandomSettingsEntity
                 {
+                    Name = nameString,
                     UserId = userId,
                     Json = JsonSerializer.Serialize(settings)
                 }, cancellationToken);
