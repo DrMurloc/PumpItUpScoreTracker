@@ -63,11 +63,13 @@ public sealed class AzureBlobFileUploadClient : IFileUploadClient
 
     public async Task<IEnumerable<Uri>> GetFiles(string path, CancellationToken cancellationToken = default)
     {
-        path = path.TrimStart('/');
+        var list = new List<Uri>();
 
-        return await (from blob in _blob.GetBlobsByHierarchyAsync(prefix: path)
-                where blob.IsBlob
-                select new Uri($"https://piuimages.arroweclip.se/{blob.Blob.Name}"))
-            .ToListAsync(cancellationToken);
+        await foreach (var item in _blob.GetBlobsByHierarchyAsync(new GetBlobsByHierarchyOptions { Prefix = path })
+                           .WithCancellation(cancellationToken))
+            if (item.IsBlob)
+                list.Add(new Uri($"https://piuimages.arroweclip.se/{item.Blob.Name}"));
+
+        return list;
     }
 }

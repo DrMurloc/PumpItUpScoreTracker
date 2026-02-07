@@ -1,11 +1,9 @@
-using System.Text.Json;
 using BlazorApplicationInsights;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Localization;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using MudBlazor.Services;
-using OfficeOpenXml;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Configuration;
@@ -27,6 +25,8 @@ using ScoreTracker.Web.Swagger;
 using Swashbuckle.AspNetCore.Filters;
 using Syncfusion.Blazor;
 using Syncfusion.Licensing;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<JsonSerializerOptions>(o =>
@@ -35,7 +35,6 @@ builder.Services.Configure<JsonSerializerOptions>(o =>
     o.Converters.Add(PhoenixScore.Converter);
 });
 
-ExcelPackage.LicenseContext = new LicenseContext();
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor(options =>
@@ -99,7 +98,10 @@ builder.Services.AddSwaggerGen(o =>
 {
     o.ExampleFilters();
     o.UseInlineDefinitionsForEnums();
-    o.AddSecurityDefinition("basic", new OpenApiSecurityScheme
+
+    const string schemeId = "basic";
+
+    o.AddSecurityDefinition(schemeId, new OpenApiSecurityScheme
     {
         Name = "Authorization",
         Type = SecuritySchemeType.Http,
@@ -107,22 +109,16 @@ builder.Services.AddSwaggerGen(o =>
         Scheme = "basic",
         Description = "ApiToken from Account page. Put anything in for username."
     });
-    o.AddSecurityRequirement(new OpenApiSecurityRequirement
+
+    // Swashbuckle v10 / .NET 10 style
+    o.AddSecurityRequirement(document => new OpenApiSecurityRequirement
     {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "basic"
-                }
-            },
-            new string[] { }
-        }
+        [new OpenApiSecuritySchemeReference(schemeId, document)] = new List<string>()
+        // or just [] if you're on C# 12+
     });
     o.SchemaFilter<EnumSchemaFilter>();
 });
+
 builder.Services.AddAuthorization(o =>
     {
         o.AddPolicy(nameof(ApiTokenAttribute), p => p.RequireAssertion(ApiTokenAttribute.AuthPolicy));

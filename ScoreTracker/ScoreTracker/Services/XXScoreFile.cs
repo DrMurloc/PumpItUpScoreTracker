@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Reflection;
 using CsvHelper;
 using Microsoft.AspNetCore.Components.Forms;
-using OfficeOpenXml;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.ValueTypes;
@@ -321,32 +320,8 @@ public sealed class XXScoreFile
         return file.ContentType.ToLower() switch
         {
             "text/csv" => await BuildFromCsv(file, cancellationToken),
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" => await BuildFromExcel(file,
-                cancellationToken),
             _ => throw new ScoreFileParseException($"Invalid file type {file.ContentType}")
         };
-    }
-
-    private static async Task<XXScoreFile> BuildFromExcel(IBrowserFile file,
-        CancellationToken cancellationToken = default)
-    {
-        await using var readStream = file.OpenReadStream(MaxByteCount, cancellationToken);
-
-        using var package = new ExcelPackage();
-        await package.LoadAsync(readStream, cancellationToken);
-        var result = new List<BestXXChartAttempt>();
-        var errors = new List<SpreadsheetScoreErrorDto>();
-        foreach (var workbook in package.Workbook.Worksheets)
-        {
-            if (workbook == null) continue;
-            if (!DifficultyLevel.TryParseShortHand(workbook.Name, out var chartType, out var level)) continue;
-
-            var (newAttempts, newErrors) = ExtractBestAttempts(chartType, level, workbook);
-            result.AddRange(newAttempts);
-            errors.AddRange(errors);
-        }
-
-        return new XXScoreFile(ScoreFileType.LetterGradeExcel, result, errors);
     }
 
     private static bool TryParseCellIntoBool(string text, out bool result)
@@ -363,120 +338,6 @@ public sealed class XXScoreFile
         return true;
     }
 
-    private static (bool, XXLetterGrade?) GetScoreFromRow(ExcelWorksheet worksheet, int rowId)
-    {
-        if (TryParseCellIntoBool(worksheet.Cells[rowId, 2].Text, out var isBroken)
-            && TryParseCellIntoBool(worksheet.Cells[rowId, 3].Text, out var isA)
-            && TryParseCellIntoBool(worksheet.Cells[rowId, 4].Text, out var isS)
-            && TryParseCellIntoBool(worksheet.Cells[rowId, 5].Text, out var isSS)
-            && TryParseCellIntoBool(worksheet.Cells[rowId, 6].Text, out var isSSS))
-        {
-            XXLetterGrade? letterGrade = isSSS ? XXLetterGrade.SSS :
-                isSS ? XXLetterGrade.SS :
-                isS ? XXLetterGrade.S :
-                isA ? XXLetterGrade.A :
-                null;
-
-            if (!isBroken && letterGrade == null) letterGrade = XXLetterGrade.A;
-
-            return (isBroken, letterGrade);
-        }
-
-        var letterField = worksheet.Cells[rowId, 2].Text;
-        if (string.IsNullOrWhiteSpace(letterField)) return (true, null);
-        if (Enum.TryParse<XXLetterGrade>(letterField, out var grade)) return (false, grade);
-
-        throw new Exception("Could not parse letter grade from row");
-    }
-
-    private static (IEnumerable<BestXXChartAttempt>, IEnumerable<SpreadsheetScoreErrorDto>) ExtractBestAttempts(
-        ChartType category, DifficultyLevel level,
-        ExcelWorksheet worksheet)
-    {
-        var currentType = category;
-        var result = new List<BestXXChartAttempt>();
-        var errors = new List<SpreadsheetScoreErrorDto>();
-        var songNameSuffix = "";
-        foreach (var rowId in Enumerable.Range(1, worksheet.Dimension.Rows))
-        {
-            var songNameField = worksheet.Cells[rowId, 1].Text ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(songNameField)) continue;
-
-            if (songNameField.Trim().Equals("Arcade", StringComparison.OrdinalIgnoreCase)
-                || songNameField.Trim().Equals("Full", StringComparison.OrdinalIgnoreCase)
-                || songNameField.Trim().Equals("Full Song", StringComparison.OrdinalIgnoreCase)
-                || songNameField.Trim().Equals("Shortcut", StringComparison.OrdinalIgnoreCase)
-                || songNameField.Trim().Equals("Remix", StringComparison.OrdinalIgnoreCase))
-            {
-                currentType = category == ChartType.Single ? ChartType.Single : ChartType.Double;
-                songNameSuffix = songNameField.Trim().ToLower() switch
-                {
-                    "full song" => " Full Song",
-                    "full" => " Full Song",
-                    "remix" => " Remix",
-                    "shortcut" => " Short Cut",
-                    _ => ""
-                };
-                continue;
-            }
-
-            if (songNameField.Trim().Equals("Performance", StringComparison.OrdinalIgnoreCase)
-                || songNameField.Trim().Equals("Double Performance", StringComparison.OrdinalIgnoreCase)
-                || songNameField.Trim().Equals("Single Performance", StringComparison.OrdinalIgnoreCase))
-            {
-                songNameSuffix = "";
-                currentType = category == ChartType.Single ? ChartType.SinglePerformance : ChartType.DoublePerformance;
-                continue;
-            }
-
-            bool isBroken;
-            XXLetterGrade? letterGrade;
-            try
-            {
-                (isBroken, letterGrade) = GetScoreFromRow(worksheet, rowId);
-            }
-            catch (Exception)
-            {
-                errors.Add(new SpreadsheetScoreErrorDto
-                {
-                    Song = songNameField,
-                    Difficulty = level.ToString(),
-                    LetterGrade = "Unknown",
-                    IsBroken = "Unknown",
-                    Error = "Could not parse score"
-                });
-                continue;
-            }
-
-            if (!Name.TryParse(songNameField, out var name))
-            {
-                errors.Add(new SpreadsheetScoreErrorDto
-                {
-                    Difficulty = level.ToString(),
-                    LetterGrade = letterGrade?.ToString() ?? "",
-                    IsBroken = isBroken.ToString(),
-                    Song = songNameField,
-                    Error = "Could not parse song name"
-                });
-                continue;
-            }
-
-            name += songNameSuffix;
-            if (NameMappings.ContainsKey(name)) name = NameMappings[name];
-            XXChartAttempt? attempt = null;
-            if (letterGrade != null)
-                attempt = new XXChartAttempt(letterGrade.Value, isBroken, null, DateTimeOffset.Now);
-
-
-            result.Add(new BestXXChartAttempt(
-                new Chart(Guid.Empty, MixEnum.XX,
-                    new Song(name, SongType.Arcade, new Uri("/", UriKind.Relative), TimeSpan.Zero, "Unknown", null),
-                    currentType,
-                    level, MixEnum.XX, null, level, null, new HashSet<Skill>()), attempt));
-        }
-
-        return (result, errors);
-    }
 
     private static async Task<XXScoreFile> BuildFromCsv(IBrowserFile file,
         CancellationToken cancellationToken = default)

@@ -43,8 +43,8 @@ public sealed class RecurringJobHostedService : IHostedService,
 
     public async Task Consume(ConsumeContext<RescheduleMessages> context)
     {
-        await _bus.Publish(new MarchOfMurlocsHandler.TryScheduleMoM());
         if (_configuration["PreventRecurringJobs"] == "true") return;
+
         await using var scope = _serviceProvider.CreateAsyncScope();
         var scheduler = scope.ServiceProvider.GetRequiredService<IMessageScheduler>();
         var nextDate = DateTime.Now;

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>6f4693e7-1ca7-4d9c-948c-e1b84341535d</UserSecretsId>
@@ -9,29 +9,29 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AspNet.Security.OAuth.Discord" Version="9.0.0" />
-    <PackageReference Include="Blazor-ApexCharts" Version="5.0.1" />
-    <PackageReference Include="BlazorApplicationInsights" Version="3.1.0" />
-    <PackageReference Include="CsvHelper" Version="33.0.1" />
+    <PackageReference Include="AspNet.Security.OAuth.Discord" Version="10.0.0" />
+    <PackageReference Include="Blazor-ApexCharts" Version="6.1.0" />
+    <PackageReference Include="BlazorApplicationInsights" Version="3.3.0" />
+    <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="Delegate.SassBuilder" Version="1.4.0" />
-    <PackageReference Include="EPPlus" Version="7.5.2" />
     <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="7.3.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="9.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="10.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Localization" Version="9.0.0" />
-    <PackageReference Include="MudBlazor" Version="7.15.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="8.0.2" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="7.2.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="7.2.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="7.2.0" />
-    <PackageReference Include="Syncfusion.Blazor.Diagram" Version="28.1.37" />
-    <PackageReference Include="Syncfusion.Blazor.Kanban" Version="28.1.37" />
-    <PackageReference Include="Syncfusion.Blazor.Navigations" Version="28.1.37" />
-    <PackageReference Include="Syncfusion.Blazor.Themes" Version="28.1.37" />
+    <PackageReference Include="Microsoft.Extensions.Localization" Version="10.0.2" />
+    <PackageReference Include="MudBlazor" Version="8.15.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="10.0.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="10.1.2" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.1.2" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.1.2" />
+    <PackageReference Include="Syncfusion.Blazor.Diagram" Version="32.2.3" />
+    <PackageReference Include="Syncfusion.Blazor.Kanban" Version="32.2.3" />
+    <PackageReference Include="Syncfusion.Blazor.Navigations" Version="32.2.3" />
+    <PackageReference Include="Syncfusion.Blazor.Themes" Version="32.2.3" />
+    <PackageReference Include="System.Drawing.Common" Version="10.0.2" />
     <PackageReference Include="Tesseract" Version="5.2.0" />
   </ItemGroup>
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.OpenApi.Extensions;
+﻿
+using Microsoft.OpenApi;
 using ScoreTracker.Domain.Models;
 
 namespace ScoreTracker.Web.Dtos.Api
