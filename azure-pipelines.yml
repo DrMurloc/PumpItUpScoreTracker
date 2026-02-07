@@ -1,46 +1,34 @@
+# ASP.NET
+# Build and test ASP.NET projects.
+# Add steps that publish symbols, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/apps/aspnet/build-aspnet-4
+
 trigger:
 - main
 
 pool:
-  vmImage: 'windows-latest'   # or pin windows-2022 for stability
+  vmImage: 'windows-latest'
 
 variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
-  webProject: 'src/YourWebApp/YourWebApp.csproj'   # <-- change this
 
 steps:
-- task: UseDotNet@2
-  displayName: "Use .NET SDK 10"
-  inputs:
-    packageType: 'sdk'
-    version: '10.0.x'
+- task: NuGetToolInstaller@1
 
-- script: dotnet --info
-  displayName: "dotnet --info"
-
-- task: DotNetCoreCLI@2
-  displayName: "Restore"
+- task: NuGetCommand@2
   inputs:
-    command: 'restore'
-    projects: '**/*.sln'
+    restoreSolution: '$(solution)'
 
-- task: DotNetCoreCLI@2
-  displayName: "Build"
+- task: VSBuild@1
   inputs:
-    command: 'build'
-    projects: '**/*.sln'
-    arguments: '--configuration $(buildConfiguration) --no-restore'
+    solution: '$(solution)'
+    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
 
-- task: DotNetCoreCLI@2
-  displayName: "Publish (framework-dependent)"
+- task: VSTest@2
   inputs:
-    command: 'publish'
-    publishWebProjects: false
-    projects: '$(webProject)'
-    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/publish --no-build'
-    zipAfterPublish: true
-
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)/publish'
-    ArtifactName: 'drop'
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
