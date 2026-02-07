@@ -30,10 +30,6 @@
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="10.1.2" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.1.2" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.1.2" />
-    <PackageReference Include="Syncfusion.Blazor.Diagram" Version="32.2.3" />
-    <PackageReference Include="Syncfusion.Blazor.Kanban" Version="32.2.3" />
-    <PackageReference Include="Syncfusion.Blazor.Navigations" Version="32.2.3" />
-    <PackageReference Include="Syncfusion.Blazor.Themes" Version="32.2.3" />
     <PackageReference Include="System.Drawing.Common" Version="10.0.2" />
     <PackageReference Include="Tesseract" Version="5.2.0" />
   </ItemGroup>

@@ -23,8 +23,6 @@ using ScoreTracker.Web.Services.Contracts;
 using ScoreTracker.Web.Shared;
 using ScoreTracker.Web.Swagger;
 using Swashbuckle.AspNetCore.Filters;
-using Syncfusion.Blazor;
-using Syncfusion.Licensing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -44,7 +42,7 @@ builder.Services.AddServerSideBlazor(options =>
 var discordConfig = builder.Configuration.GetSection("Discord").Get<DiscordConfiguration>();
 var googleConfig = builder.Configuration.GetSection("Google").Get<GoogleConfiguration>();
 var facebookConfig = builder.Configuration.GetSection("Facebook").Get<FacebookConfiguration>();
-builder.Services.AddSyncfusionBlazor();
+
 builder.Services.AddCors(o =>
 {
     o.AddPolicy("API", p =>
@@ -158,7 +156,6 @@ builder.Services.AddCookiePolicy(opts =>
 });
 
 var syncfusionLicense = builder.Configuration["SyncfusionLicense"];
-if (syncfusionLicense != null) SyncfusionLicenseProvider.RegisterLicense(syncfusionLicense);
 var app = builder.Build();
 
 app.UseRequestLocalization(new RequestLocalizationOptions()
