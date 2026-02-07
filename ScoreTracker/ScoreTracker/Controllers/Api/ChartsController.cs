@@ -28,6 +28,18 @@ public sealed class ChartsController : Controller
         _mediator = mediator;
     }
 
+    /// <summary>
+    /// Returns random charts.
+    /// </summary>
+    /// <param name="buckets">
+    /// Minimum pull count buckets. Examples:
+    /// Single:2 - Pulls a minimum of 2 singles charts
+    /// 22:4 - Pulls a minimum of 4 22s
+    /// S19:8 - Pulls a minimum of 8 S19s
+    /// S12,D13,D14:4 - Pulls a minimum of 4 charts in the folders of "S12, D13, or D14"
+    /// If the total bucket counts exceeds chart count specified, bucket minimums take precedence (I.E: if count=5, but you specify 4 singles and 3 doubles, 7 charts will be pulled)
+    /// Combines with other filtered charts, I.E if chartTypeString is set to "Single", and you specify 22:4, only 4 S22s will be pulled.
+    /// </param>
     [HttpGet("random")]
     public async Task<IActionResult> GetRandom(
         [FromQuery(Name = "Count")] [DefaultValue(50)]
@@ -35,7 +47,8 @@ public sealed class ChartsController : Controller
         [FromQuery(Name = "ChartTypes")] string[]? chartTypeString = null,
         [FromQuery(Name = "SongTypes")] string[]? songTypeString = null,
         [FromQuery(Name = "LevelMin")] int? minInt = null,
-        [FromQuery(Name = "LevelMax")] int? maxInt = null)
+        [FromQuery(Name = "LevelMax")] int? maxInt = null,
+        [FromQuery(Name = "Bucket")] string[]? buckets = null)
     {
         var settings = new RandomSettings();
 
@@ -60,6 +73,33 @@ public sealed class ChartsController : Controller
             return BadRequest("Invalid count, minimum is 1");
 
         settings.Count = count;
+        foreach (var bucket in buckets)
+        {
+            var split = bucket.Split(":");
+            if (!int.TryParse(split[1], out var weight) || weight < 1 || split.Length != 2)
+                return BadRequest(bucket +
+                                  " is an invalid bucket. Examples: 'Single:5', '22:3', 'D23:2', 'S21,S22,D23:4'");
+
+            if (Enum.TryParse<ChartType>(split[0], out var ct))
+            {
+                settings.ChartTypeMinimums[ct] = weight;
+            }
+            else if (DifficultyLevel.TryParse(split[0], out var dl))
+            {
+                settings.LevelMinimums[dl] = weight;
+            }
+            else
+            {
+                var typeLevelSplit = split[0].Split(",");
+                if (typeLevelSplit.Any(subSplit => !DifficultyLevel.TryParseShortHand(subSplit, out _, out _)))
+                    return BadRequest(bucket +
+                                      " is an invalid bucket. Examples: 'Single:5', '22:3', 'D23:2', 'S21,S22,D23:4'");
+                if (typeLevelSplit.Length == 1)
+                    settings.ChartTypeLevelMinimums[typeLevelSplit[0]] = weight;
+                else
+                    settings.CustomMinimums[split[0]] = weight;
+            }
+        }
 
         if (minInt != null && !DifficultyLevel.IsValid(minInt.Value))
             return BadRequest(

@@ -98,7 +98,9 @@ builder.Services.AddSwaggerGen(o =>
 {
     o.ExampleFilters();
     o.UseInlineDefinitionsForEnums();
-
+    var xml = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var path = Path.Combine(AppContext.BaseDirectory, xml);
+    o.IncludeXmlComments(path);
     const string schemeId = "basic";
 
     o.AddSecurityDefinition(schemeId, new OpenApiSecurityScheme
