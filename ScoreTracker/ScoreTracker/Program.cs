@@ -159,8 +159,8 @@ var syncfusionLicense = builder.Configuration["SyncfusionLicense"];
 var app = builder.Build();
 
 app.UseRequestLocalization(new RequestLocalizationOptions()
-    .AddSupportedCultures("en-US", "pt-BR", "ko-KR", "en-ZW", "es-MX", "fr-FR")
-    .AddSupportedUICultures("en-US", "pt-BR", "ko-KR", "en-ZW", "es-MX", "fr-FR")
+    .AddSupportedCultures("en-US", "pt-BR", "ko-KR", "en-ZW", "es-MX", "fr-FR", "ja-JP")
+    .AddSupportedUICultures("en-US", "pt-BR", "ko-KR", "en-ZW", "es-MX", "fr-FR", "ja-JP")
     .SetDefaultCulture("en-US"));
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
