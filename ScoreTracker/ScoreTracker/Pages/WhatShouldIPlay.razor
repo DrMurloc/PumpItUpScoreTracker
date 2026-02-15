@@ -18,9 +18,9 @@
 @using ScoreTracker.Web.Shared
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 
-<PageTitle>What Should I Play</PageTitle>
+<PageTitle>@L["What Should I Play"]</PageTitle>
 
-<MudText Typo="Typo.h3">What Should I Play?</MudText>
+<MudText Typo="Typo.h3">@L["What Should I Play?"]</MudText>
 <br/>
 @if (_progress != null && _chartDict.Any())
 {
@@ -50,9 +50,9 @@
 <MudGrid>
     <MudItem xs="4" sm="3">
         <MudSelect T="ChartType?" Label=@L["Chart Type"] Value="_chartType" ValueChanged="SetChartType" Disabled="_isLoading">
-            <MudSelectItem T="ChartType?" Value="null">All</MudSelectItem>
-            <MudSelectItem T="ChartType?" Value="ChartType.Single">Singles</MudSelectItem>
-            <MudSelectItem T="ChartType?" Value="ChartType.Double">Doubles</MudSelectItem>
+            <MudSelectItem T="ChartType?" Value="null">@L["Combined"]</MudSelectItem>
+            <MudSelectItem T="ChartType?" Value="ChartType.Single">@L["Singles"]</MudSelectItem>
+            <MudSelectItem T="ChartType?" Value="ChartType.Double">@L["Doubles"]</MudSelectItem>
         </MudSelect>
     </MudItem>
     <MudItem xs="2" sm="1">
@@ -187,7 +187,7 @@ else
     @foreach (var sectionName in _hiddenSections)
     {
     <MudItem xs="6" sm="4" md="3">
-        <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>ShowSection(sectionName)">Show @sectionName</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>ShowSection(sectionName)">@L["Show"] @sectionName</MudButton>
     </MudItem>
     }
 </MudGrid>
@@ -214,13 +214,13 @@ else
 @if (_playerHistory.Any())
 {
     <ApexChart TItem="PlayerRatingRecord"
-               Title="Competitive Level"
+               Title=@L["Competitive Level"]
                XAxisType="XAxisType.Datetime"
                Options="_scoreBoxesOptions">
         <ApexPointSeries TItem="PlayerRatingRecord"
                          Color="#EA3F24"
                          Items="_playerHistory"
-                         Name="Singles"
+                         Name=@L["Singles"]
                          SeriesType="SeriesType.Line"
                          XValue="@(e => e.Date)"
                          YValue="@(e => (decimal)e.SinglesLevel)"
@@ -228,7 +228,7 @@ else
         <ApexPointSeries TItem="PlayerRatingRecord"
                          Color="#76FA4F"
                          Items="_playerHistory"
-                         Name="Doubles"
+                         Name=@L["Doubles"]
                          SeriesType="SeriesType.Line"
                          XValue="@(e => e.Date)"
                          YValue="@(e => (decimal)e.DoublesLevel)"
@@ -236,7 +236,7 @@ else
         <ApexPointSeries TItem="PlayerRatingRecord"
                          Color="#00FFFF"
                          Items="_playerHistory"
-                         Name="Combined"
+                         Name=@L["Combined"]
                          SeriesType="SeriesType.Line"
                          XValue="@(e => e.Date)"
                          YValue="@(e => (decimal)e.CompetitiveLevel)"
@@ -279,7 +279,7 @@ else
                 <MudTextField @bind-Value="_notes" Lines="3" MaxLength="250" Counter=@(250-_notes.Length) Label="Additional Comments"></MudTextField>
             </MudItem>
             <MudItem xs="12">
-                <MudCheckBox T="bool" @bind-Value="_shouldHide" Label="Hide Chart for this Category"></MudCheckBox>
+                <MudCheckBox T="bool" @bind-Value="_shouldHide" Label=@L["Hide"]></MudCheckBox>
             </MudItem>
         </MudGrid>
     </DialogContent>

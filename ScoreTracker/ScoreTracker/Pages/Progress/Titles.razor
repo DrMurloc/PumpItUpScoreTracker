@@ -10,12 +10,12 @@
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services.Contracts
-<PageTitle>Titles</PageTitle>
+<PageTitle>@L["Titles"]</PageTitle>
 
 <MudDataGrid @ref="_dataGrid" T="TitleProgressDto" Items="_titleProgress" Hover="true" ReadOnly="true"
              Groupable="true" FixedHeader="true" Height="500" Loading="@_isLoading">
     <ToolBarContent>
-        <MudText Typo="Typo.h6">Titles</MudText>
+        <MudText Typo="Typo.h6">@L["Titles"]</MudText>
     </ToolBarContent>
     <Columns>
         <PropertyColumn Property="t=>t.TitleCategory" Title="Category" Grouping="true"></PropertyColumn>

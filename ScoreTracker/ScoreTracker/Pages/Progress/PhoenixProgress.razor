@@ -12,7 +12,7 @@
 @page "/Phoenix/Progress"
 <MudPaper>
     <MudToolBar>
-        <MudText Typo="Typo.h6">Progress</MudText>
+        <MudText Typo="Typo.h6">@L["Progress"]</MudText>
         <MudSpacer></MudSpacer>
 
         @if (CurrentUser.IsLoggedIn && CurrentUser.User.IsPublic && CurrentUser.User.Id == RequestedUserId)
@@ -28,13 +28,13 @@
         <MudTabPanel Text="Difficulty Progress">
             <MudTable T="DifficultyEntry" Items="_difficultyEntries" Breakpoint="Breakpoint.None">
                 <HeaderContent>
-                    <MudTh>Level</MudTh>
-                    <MudTh>Passes</MudTh>
-                    <MudTh>Rating</MudTh>
-                    <MudTh>Min Score</MudTh>
-                    <MudTh>Avg Score</MudTh>
-                    <MudTh>Max Score</MudTh>
-                    <MudTh>Avg Plate</MudTh>
+                    <MudTh>@L["Level"]</MudTh>
+                    <MudTh>@L["Passed Count"]</MudTh>
+                    <MudTh>@L["Rating"]</MudTh>
+                    <MudTh>@L["Min Score"]</MudTh>
+                    <MudTh>@L["Average Score"]</MudTh>
+                    <MudTh>@L["Max Score"]</MudTh>
+                    <MudTh>@L["Average Plate"]</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd>@context.Level</MudTd>
@@ -86,33 +86,33 @@
 
 
         </MudTabPanel>
-        <MudTabPanel Text="Passes By Level">
+        <MudTabPanel Text=@L["Passes By Level"]>
             <ApexChart TItem="LevelPass"
-                       Title="Passes By Level">
+                       Title=@L["Passes By Level"]>
                 <ApexPointSeries TItem="LevelPass"
                                  Items="_passBars"
                                  SeriesType="SeriesType.Bar"
-                                 Name="Passes"
+                                 Name=@L["Passed Count"]
                                  XValue="@(e => e.Level)"
                                  YAggregate="@(e => e.Sum(z => z.Passed))"
                                  OrderBy="e => e.Y"/>
                 <ApexPointSeries TItem="LevelPass"
                                  Items="_passBars"
                                  SeriesType="SeriesType.Bar"
-                                 Name="Remaining"
+                                 Name=@L["Remaining"]
                                  XValue="@(e => e.Level)"
                                  YAggregate="@(e => e.Sum(z => z.Remaining))"
                                  OrderBy="e => e.Y"/>
             </ApexChart>
         </MudTabPanel>
-        <MudTabPanel Text="Score Distribution Lines">
+        <MudTabPanel Text=@L["Score Distribution"]>
             <ApexChart TItem="BoxPlotData"
-                       Title="Score Distribution"
+                       Title=@L["Score Distribution"]
                        @ref="_scoreDistLines"
                        Options="_scoreBoxesOptions">
                 <ApexPointSeries TItem="BoxPlotData"
                                  Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
-                                 Name="Min"
+                                 Name=@L["Min"]
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
                                  YValue="@(e => e.Min)"
@@ -126,7 +126,7 @@
                                  OrderBy="e => e.X"/>
                 <ApexPointSeries TItem="BoxPlotData"
                                  Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
-                                 Name="Median"
+                                 Name=@L["Median"]
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
                                  YValue="@(e => e.Median)"
@@ -141,22 +141,22 @@
 
                 <ApexPointSeries TItem="BoxPlotData"
                                  Items="BoxPlotData.From(_filteredScores.Where(s => s.Score != null).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
-                                 Name="Max"
+                                 Name=@L["Max"]
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
                                  YValue="@(e => e.Max)"
                                  OrderBy="e => e.X"/>
             </ApexChart>
         </MudTabPanel>
-        <MudTabPanel Text="Singles vs Doubles">
+        <MudTabPanel Text=@L["Singles vs Doubles"]>
             <ApexChart TItem="BoxPlotData"
-                       Title="Singles vs Doubles"
+                       Title=@L["Singles vs Doubles"]
                        @ref="_sdChart"
                        Options="_scoreBoxesOptions">
                 <ApexPointSeries TItem="BoxPlotData"
                                  Color="#EA3F24"
                                  Items="BoxPlotData.From(_scores.Where(s => s is { Score: not null,IsBroken: false } && _charts[s.ChartId].Type == ChartType.Single).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
-                                 Name="Singles"
+                                 Name=@L["Singles"]
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
                                  YValue="@(e => e.Average)"
@@ -164,7 +164,7 @@
                 <ApexPointSeries TItem="BoxPlotData"
                                  Color="#76FA4F"
                                  Items="BoxPlotData.From(_scores.Where(s => s is { Score: not null,IsBroken: false } && _charts[s.ChartId].Type == ChartType.Double).ToArray(), s => _charts[s.ChartId].Level).ToArray()"
-                                 Name="Doubles"
+                                 Name=@L["Doubles"]
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Label)"
                                  YValue="@(e => e.Average)"
@@ -177,14 +177,14 @@
 
     <MudDialog @bind-Visible="_showShareDialog">
         <DialogContent>
-            <MudText>Use this link to share your chart list to other players.</MudText>
+            <MudText>@L["Chart List Share Description"]</MudText>
             <br/>
-            <MudTextField Value="@ShareUrl" Label="Share Url" Variant="Variant.Outlined" Margin="Margin.Dense" ReadOnly="true"/>
+            <MudTextField Value="@ShareUrl" Label=@L["Share Url"] Variant="Variant.Outlined" Margin="Margin.Dense" ReadOnly="true"/>
         </DialogContent>
         <DialogActions>
             <MudSpacer></MudSpacer>
-            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyShareLink">Copy To Clipboard</MudButton>
-            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showShareDialog = false">Close</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyShareLink">@L["Copy To Clipboard"]</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showShareDialog = false">@L["Close"]</MudButton>
         </DialogActions>
     </MudDialog>
 </MudPaper>
@@ -234,7 +234,7 @@
     private async Task CopyShareLink()
     {
         await Javascript.InvokeVoidAsync("navigator.clipboard.writeText", ShareUrl);
-        Snackbar.Add("Copied to clipboard!", Severity.Success);
+        Snackbar.Add(@L["Copied To Clipboard"], Severity.Success);
     }
 
     private string ShareUrl => CurrentUser.IsLoggedIn ? $"{NavManager.BaseUri}{CurrentUser.User.Id}/Phoenix/Progress" : string.Empty;
@@ -330,7 +330,7 @@
         var coOpAvgPlate = coOpPlates.Any() ? coOpPlates.Average(p => (int)p) : 0;
         var coOpPlate1 = coOpPlates.Any() ? (PhoenixPlate?)Math.Floor(coOpAvgPlate) : null;
         var coOpPlate2 = coOpPlates.Any() ? (PhoenixPlate?)Math.Ceiling(coOpAvgPlate) : null;
-        entries.Add(new DifficultyEntry("CoOp", coOpPassed, coOpRemaining, (int)coOpTotalRating, (int)coOpRatingRemainnig, coOpMinScore, coOpAvgScore, coOpMaxScore, coOpPlate1, coOpPlate2));
+        entries.Add(new DifficultyEntry(@L["CoOp"], coOpPassed, coOpRemaining, (int)coOpTotalRating, (int)coOpRatingRemainnig, coOpMinScore, coOpAvgScore, coOpMaxScore, coOpPlate1, coOpPlate2));
 
         var totalPassed = entries.Sum(e=>e.Passed);
         var totalRemaining = entries.Sum(e=>e.Remaining);
@@ -343,7 +343,7 @@
         var totalAvgPlate = totalPlates.Any() ? totalPlates.Average(p => (int)p) : 0;
         var totalPlate1 = totalPlates.Any() ? (PhoenixPlate?)Math.Floor(totalAvgPlate) : null;
         var totalPlate2 = totalPlates.Any()?(PhoenixPlate?)Math.Ceiling(totalAvgPlate):null;
-        entries.Add(new DifficultyEntry("Total", totalPassed, totalRemaining, (int)totalRanking, (int)totalRemainingRanking, totalMinScore, totalAvgScore, totalMaxScore, totalPlate1, totalPlate2));
+        entries.Add(new DifficultyEntry(@L["Total Count"], totalPassed, totalRemaining, (int)totalRanking, (int)totalRemainingRanking, totalMinScore, totalAvgScore, totalMaxScore, totalPlate1, totalPlate2));
 
         _passBars = DifficultyLevel.All.Select(l => new LevelPass(l, _scores.Count(s => !s.IsBroken && _charts[s.ChartId].Level == l && _charts[s.ChartId].Type!=ChartType.CoOp), _charts.Values.Count(c => c.Level == l && c.Type!=ChartType.CoOp)))
         .ToArray();
