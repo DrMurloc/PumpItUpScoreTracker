@@ -73,7 +73,7 @@ public sealed class ChartsController : Controller
             return BadRequest("Invalid count, minimum is 1");
 
         settings.Count = count;
-        foreach (var bucket in buckets)
+        foreach (var bucket in buckets ?? [])
         {
             var split = bucket.Split(":");
             if (!int.TryParse(split[1], out var weight) || weight < 1 || split.Length != 2)
