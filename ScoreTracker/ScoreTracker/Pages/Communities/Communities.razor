@@ -10,7 +10,7 @@
 @using ScoreTracker.Domain.ValueTypes
 @using System.Web
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
-<PageTitle>Communities</PageTitle>
+<PageTitle>@L["Communities"]</PageTitle>
 @foreach (var item in new[] { ("Your Communities",true), ("Other Communities",false) })
 {
     <MudText Typo="Typo.h5">@item.Item1</MudText>
@@ -239,7 +239,7 @@
     private async Task CopyCode(Guid code)
     {
         await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", $"https://piuscores.arroweclip.se/Communities/Invite/{code}");
-        Snackbar.Add("Copied to clipboard!", Severity.Success);
+        Snackbar.Add(@L["Copied to clipboard!"], Severity.Success);
     }
 
     protected override async Task OnInitializedAsync()

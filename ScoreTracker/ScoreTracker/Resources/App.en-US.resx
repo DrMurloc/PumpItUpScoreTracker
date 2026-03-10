@@ -155,11 +155,21 @@
     <value>Adjusted Difficulty</value>
     <comment>I.E After Player votes</comment>
   </data>
+  <data name="Combined" xml:space="preserve">
+    <value>Combined</value>
+    <comment>Both doubles and singles</comment>
+  </data>
   <data name="Average" xml:space="preserve">
     <value>Average</value>
   </data>
+  <data name="Average Plate" xml:space="preserve">
+    <value>Average Plate</value>
+  </data>
   <data name="Average Rating" xml:space="preserve">
     <value>Average Rating</value>
+  </data>
+  <data name="Average Score" xml:space="preserve">
+    <value>Average Score</value>
   </data>
   <data name="Broken" xml:space="preserve">
     <value>Broken</value>
@@ -170,6 +180,9 @@
   <data name="Chart List Share Description" xml:space="preserve">
     <value>Use this link to share your chart list to other players.</value>
   </data>
+  <data name="Chart Difficulty by Letter Grade" xml:space="preserve">
+    <value>Chart Difficulty by Letter Grade</value>
+  </data>
   <data name="Chart Randomizer" xml:space="preserve">
     <value>Chart Randomizer</value>
   </data>
@@ -177,8 +190,15 @@
     <value>Chart Type</value>
     <comment>Chart Types = single, double, co op</comment>
   </data>
+  <data name="Chart" xml:space="preserve">
+    <value>Charts</value>
+  </data>
   <data name="Charts" xml:space="preserve">
     <value>Charts</value>
+  </data>
+  <data name="Charts Details" xml:space="preserve">
+    <value>Charts Details</value>
+    <comment>Statistics and leaderboard for a single song</comment>
   </data>
   <data name="Charts List" xml:space="preserve">
     <value>Charts List</value>
@@ -188,6 +208,10 @@
   </data>
   <data name="Communities" xml:space="preserve">
     <value>Communities</value>
+  </data>
+  <data name="Competitive Level" xml:space="preserve">
+    <value>Competitive Level</value>
+    <comment>^Competitive Level^ is a _metric_ representing chart difficulty</comment>
   </data>
   <data name="Completed" xml:space="preserve">
     <value>Completed</value>
@@ -203,6 +227,9 @@
   </data>
   <data name="Copy to Clipboard" xml:space="preserve">
     <value>Copy to Clipboard</value>
+  </data>
+  <data name="Copied to Clipboard" xml:space="preserve">
+    <value>Copied to Clipboard!</value>
   </data>
   <data name="Different Player Difficulties" xml:space="preserve">
     <value>Different Player Difficulties</value>
@@ -250,6 +277,9 @@
   <data name="Hardest Player" xml:space="preserve">
     <value>Hardest Player</value>
   </data>
+  <data name="Hide" xml:space="preserve">
+    <value>Hide</value>
+  </data>
   <data name="Hide Completed Charts" xml:space="preserve">
     <value>Hide Completed Charts</value>
   </data>
@@ -293,8 +323,14 @@
   <data name="Make Public Disclaimer 2" xml:space="preserve">
     <value>If your account was previously public and you made it private, making it public again will make anyone following you able to see your progress again.</value>
   </data>
+  <data name="Max Score" xml:space="preserve">
+    <value>Max Score</value>
+  </data> 
   <data name="Medium" xml:space="preserve">
     <value>Medium</value>
+  </data>
+  <data name="Min Score" xml:space="preserve">
+    <value>Min Score</value>
   </data>
   <data name="Mix" xml:space="preserve">
     <value>Mix</value>
@@ -336,6 +372,9 @@
   <data name="Passed Count" xml:space="preserve">
     <value>Passed</value>
   </data>
+  <data name="Passes By Level" xml:space="preserve">
+    <value>Passes By Level</value>
+  </data>
   <data name="Phoenix Import Confirming" xml:space="preserve">
     <value>Continuing will begin to save the uploaded scores over your existing records. You will not be able to undo this. You will be able to stop the saving process, but it will not roll back uploads.</value>
   </data>
@@ -374,6 +413,10 @@
     <value>Plate</value>
     <comment>I.E MG, PG, UG</comment>
   </data>
+  <data name="Plate Distribution" xml:space="preserve">
+    <value>Plate Distribution</value>
+    <comment>The figure plot title</comment>
+  </data>
   <data name="Players" xml:space="preserve">
     <value>Players</value>
   </data>
@@ -409,6 +452,10 @@
     <value>Recorded On {0}</value>
     <comment>I.E Recorded on 12/6/2023 (I don't support date localization yet but will eventually)</comment>
   </data>
+  <data name="Remaining" xml:space="preserve">
+    <value>Remaining</value>
+    <comment>this is a label on legend</comment>
+  </data>
   <data name="Remaining Charts" xml:space="preserve">
     <value>{0} (SSS+) - {1} (AA) Charts Remaining</value>
     <comment>I.E 6 (SSA+) - 10 (AA) Charts Remaining</comment>
@@ -441,6 +488,12 @@
   <data name="Score" xml:space="preserve">
     <value>Score</value>
   </data>
+  <data name="Score Distribution" xml:space="preserve">
+    <value>Score Distribution</value>
+  </data>
+  <data name="Score Distribution by Player Level" xml:space="preserve">
+    <value>Score Distribution by Player Level</value>
+  </data>
   <data name="Score Formula Shoutout" xml:space="preserve">
     <value>Shout out to MR_WEQ for reverse engineering this score formula!</value>
   </data>
@@ -463,6 +516,12 @@
   </data>
   <data name="Search Youtube" xml:space="preserve">
     <value>Search Youtube</value>
+  </data>
+  <data name="Share Url" xml:space="preserve">
+    <value>Share Url</value>
+  </data>
+  <data name="Show" xml:space="preserve">
+    <value>Show</value>
   </data>
   <data name="Show Only ToDo Charts" xml:space="preserve">
     <value>Show Only ToDo Charts</value>
@@ -658,6 +717,18 @@
   <data name="Use Script" xml:space="preserve">
     <value>Use  Script</value>
   </data>
+  <data name="Weekly Charts" xml:space="preserve">
+    <value>Weekly Charts</value>
+  </data>
+  <data name="Welcome" xml:space="preserve">
+    <value>Welcome</value>
+  </data>
+  <data name="Welcome to Score Tracker" xml:space="preserve">
+    <value>Welcome to Score Tracker {0}!</value>
+  </data>
+  <data name="What Should I Play" xml:space="preserve">
+    <value>What Should I Play</value>
+  </data>
   <data name="World Rankings" xml:space="preserve">
     <value>World Rankings</value>
   </data>
@@ -675,16 +746,16 @@
     <value>Personalized</value>
     <comment>Personalized</comment>
   </data>
-  <data name="Text View" xml:space="preserve">
-    <value>Text View</value>
-    <comment>Text View</comment>
-  </data>
+<data name="Text View" xml:space="preserve">
+<value>Text View</value>
+<comment>Text View</comment>
+</data>
   <data name="101 person tournament." xml:space="preserve">
-    <value>101 person tournament.</value>
-  </data>
-  <data name="8-10 estimated charts played per player." xml:space="preserve">
-    <value>8-10 estimated charts played per player.</value>
-  </data>
+        <value>101 person tournament.</value>
+      </data>
+      <data name="8-10 estimated charts played per player." xml:space="preserve">
+        <value>8-10 estimated charts played per player.</value>
+      </data>
   <data name="9+ PIU Cabinets Running Phoenix." xml:space="preserve">
     <value>9+ PIU Cabinets Running Phoenix.</value>
   </data>
@@ -838,11 +909,27 @@
   </data>
   <data name="Filters" xml:space="preserve">
 	  <value>Filters</value>
-	  <comment>Filters</comment>
+	  <comment>Filter by Dropdown</comment>
+  </data>
+  <data name="Median" xml:space="preserve">
+	  <value>Median</value>
+      <comment>'median' label for label of legend in progress figure</comment>
+  </data>
+  <data name="Min" xml:space="preserve">
+	  <value>Min</value>
+      <comment>'minimum' label for label of legend in progress figure</comment>
+  </data>
+  <data name="Singles vs Doubles" xml:space="preserve">
+	  <value>Singles vs Doubles</value>
+      <comment>title for progress plot</comment>
   </data>
   <data name="Min BPM" xml:space="preserve">
 	  <value>Min BPM</value>
 	  <comment>Min BPM</comment>
+  </data>
+  <data name="Max" xml:space="preserve">
+	  <value>Max</value>
+	  <comment>'max' label for legend in quartile progress figure</comment>
   </data>
   <data name="Max BPM" xml:space="preserve">
 	  <value>Max BPM</value>
