@@ -22,7 +22,7 @@
         <MudButton Href=@($"/Tournament/{TournamentId}/Qualifiers") Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Leaderboard">@L["To Leaderboard"]</MudButton>
     </MudItem>
     <MudItem xs="12">
-        <MudAutocomplete T="string" MaxLength="32" CoerceText="false" CoerceValue="true" Immediate="true" DebounceInterval="200" Label=@L["Username"] Value="_username" ValueChanged="SetUsername" SearchFunc="@((t,c)=>Task.FromResult(_usernames.Where(u=>u.Contains(t,StringComparison.OrdinalIgnoreCase)).Append(t).Distinct()))" />
+        <MudAutocomplete T="string" MaxLength="32" CoerceText="false" CoerceValue="true" DebounceInterval="500" Label=@L["Username"] Value="_username" ValueChanged="SetUsername" SearchFunc="@((t,c)=>Task.FromResult(_usernames.Where(u=>u.Contains(t,StringComparison.OrdinalIgnoreCase)).Append(t).Distinct()))" />
     </MudItem>
     @if (_currentQualifiers==null)
     {
