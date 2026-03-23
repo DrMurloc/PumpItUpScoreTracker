@@ -332,8 +332,7 @@
     private IEnumerable<(Chart Chart,PhoenixScore Score,double Rating)> MyBest => _currentQualifiers.BestCharts();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private string CardClass(Guid chartId) => MyBest.Any(b=>b.Item1.Id==chartId) ? "chart-card border-solid border-2" : 
-        _configuration.AllCharts && _suggestedCharts.Contains(chartId) ||
-        (_currentQualifiers?.Submissions.ContainsKey(chartId) ?? false) ? "chart-card border-dashed border-2" : string.Empty;
+        "chart-card border-dashed border-2";
     private string CardStyle(Guid chartId) => MyBest.Any(b => b.Item1.Id == chartId) ? $@"border-color:{Colors.Green.Darken1}" :
         _configuration.AllCharts&&_suggestedCharts.Contains(chartId)?$"border-color:{Colors.LightBlue.Darken1}":
         _currentQualifiers?.Submissions.ContainsKey(chartId) ?? false ? $"border-color:{Colors.Gray.Darken1}" : string.Empty;
