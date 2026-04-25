@@ -755,6 +755,28 @@
 	  <value>Max Letter Grade</value>
 	  <comment>Max Letter Grade</comment>
   </data>
+  <data name="Unknown" xml:space="preserve">
+	  <value>Unknown</value>
+  </data>
+  <data name="Player" xml:space="preserve">
+	  <value>Player</value>
+  </data>
+  <data name="Scores" xml:space="preserve">
+	  <value>Scores</value>
+  </data>
+  <data name="No Recorded Scores" xml:space="preserve">
+	  <value>No Recorded Scores</value>
+  </data>
+  <data name="None" xml:space="preserve">
+	  <value>None</value>
+  </data>
+  <data name="X% of Y Comparable Players" xml:space="preserve">
+	  <value>{0}% of {1} Comparable Players</value>
+	  <comment>{0} = percentage like "85.3", {1} = comparable player count</comment>
+  </data>
+  <data name="Wouldn't You Like To Know" xml:space="preserve">
+	  <value>Wouldn't You Like To Know</value>
+	  <comment>Easter-egg tooltip shown for the user "CLEARALL18SORQUIT"</comment>
   <data name="About The Site" xml:space="preserve">
 	  <value>About The Site</value>
   </data>
