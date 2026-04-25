@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ScoreTracker.Data.Apis;
 using ScoreTracker.Data.Apis.Contracts;
 using ScoreTracker.Data.Clients;
@@ -12,6 +13,23 @@ namespace ScoreTracker.CompositionRoot;
 
 public static class RegistrationExtensions
 {
+    public static void ApplyDevelopmentMigrations(this IServiceProvider services)
+    {
+        var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("DevelopmentMigrations");
+        var factory = services.GetRequiredService<IDbContextFactory<ChartAttemptDbContext>>();
+        using var ctx = factory.CreateDbContext();
+        try
+        {
+            ctx.Database.Migrate();
+            logger.LogInformation("Database migrations applied.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to apply database migrations on startup. Confirm Docker SQL Server is running (docker compose up -d) and the SQL:ConnectionString in appsettings.Development.json matches.");
+            throw;
+        }
+    }
+
     public static IServiceCollection AddInfrastructure(this IServiceCollection builder,
         AzureBlobConfiguration blobConfig, SqlConfiguration configuration, SendGridConfiguration twilioConfig)
     {

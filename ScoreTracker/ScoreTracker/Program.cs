@@ -157,8 +157,12 @@ builder.Services.AddCookiePolicy(opts =>
     opts.OnAppendCookie = ctx => { ctx.CookieOptions.Expires = DateTimeOffset.UtcNow.AddDays(30); };
 });
 
-var syncfusionLicense = builder.Configuration["SyncfusionLicense"];
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.Services.ApplyDevelopmentMigrations();
+}
 
 app.UseRequestLocalization(new RequestLocalizationOptions()
     .AddSupportedCultures("en-US", "pt-BR", "ko-KR", "en-ZW", "es-MX", "fr-FR")
