@@ -21,12 +21,12 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using System.Reflection
 
-<PageTitle>Admin</PageTitle>
+<PageTitle>@L["Admin"]</PageTitle>
 
 <MudButton OnClick="RebuildOfficialLeaderboard">
-    Do It
+    @L["Do It"]
 </MudButton>
-<MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="ClearCache">Clear Cache</MudButton>
+<MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="ClearCache">@L["Clear Cache"]</MudButton>
 @foreach (var name in MissingUsers)
 {
     <br/>
@@ -34,7 +34,7 @@
     <br/>
 }
 <MudCard>
-    <MudButton Disabled="_isReCalculating" OnClick="ReCalculateScores" Color="Color.Primary" Variant="Variant.Filled">ReCalculate Ratings</MudButton>
+    <MudButton Disabled="_isReCalculating" OnClick="ReCalculateScores" Color="Color.Primary" Variant="Variant.Filled">@L["ReCalculate Ratings"]</MudButton>
 
     @if (_isReCalculating)
     {
@@ -43,7 +43,7 @@
     }
 </MudCard>
 <MudCard>
-    <MudCardHeader>Update Chart</MudCardHeader>
+    <MudCardHeader>@L["Update Chart"]</MudCardHeader>
     <MudCardContent>
         <MudItem xs="12">
             <MudAutocomplete T="string"
@@ -52,7 +52,7 @@
                              AdornmentIcon="@Icons.Material.Filled.Search"
                              ResetValueOnEmptyText="true"
                              CoerceText="true"
-                             Label="Song"
+                             Label=@L["Song"]
                              SearchFunc="(s,c)=>Search(s)"
                              ValueChanged="@SelectSong" MaxItems="100">
 
@@ -63,7 +63,7 @@
 
 
             <MudItem sm="4" xs="12">
-                <MudSelect T="Chart" Label="Chart" Value="_selectedChart" ValueChanged="SelectChart">
+                <MudSelect T="Chart" Label=@L["Chart"] Value="_selectedChart" ValueChanged="SelectChart">
                     @foreach (var chart in Charts)
                     {
                         <MudSelectItem Value="chart">@chart.DifficultyString</MudSelectItem>
@@ -74,32 +74,32 @@
         @if (_selectedChart != null)
         {
             <MudItem sm="4" xs="12">
-                <MudTextField Label="Video URL" @bind-Value="_videoUrl"></MudTextField>
+                <MudTextField Label=@L["Video URL"] @bind-Value="_videoUrl"></MudTextField>
             </MudItem>
             <MudItem sm="4" xs="12">
-                <MudTextField Label="Channel Name" @bind-Value="_videoChannel"></MudTextField>
+                <MudTextField Label=@L["Channel Name"] @bind-Value="_videoChannel"></MudTextField>
             </MudItem>
             <MudItem sm="4" xs="12">
-                <MudButton Variant="Variant.Filled" Disabled="_isSaving" Color="Color.Primary" OnClick="SaveChart">Save</MudButton>
+                <MudButton Variant="Variant.Filled" Disabled="_isSaving" Color="Color.Primary" OnClick="SaveChart">@L["Save"]</MudButton>
             </MudItem>
         }
         </MudCardContent>
 </MudCard>
 <MudCard>
-    <MudCardHeader>Create Song</MudCardHeader>
+    <MudCardHeader>@L["Create Song"]</MudCardHeader>
     <MudCardContent>
         <MudGrid>
             <MudItem xs="3">
-                <MudTextField T="string" @bind-Value="_songName" Label="Song Name"></MudTextField>
+                <MudTextField T="string" @bind-Value="_songName" Label=@L["Song Name"]></MudTextField>
             </MudItem>
             <MudItem xs="3">
-                <MudTextField T="string" @bind-Value="_koreanName" Label="Korean Name"></MudTextField>
+                <MudTextField T="string" @bind-Value="_koreanName" Label=@L["Korean Name"]></MudTextField>
             </MudItem>
             <MudItem xs="3">
-                <MudTextField T="string" @bind-Value="_imageUrl" Label="Image Name"></MudTextField>
+                <MudTextField T="string" @bind-Value="_imageUrl" Label=@L["Image Name"]></MudTextField>
             </MudItem>
             <MudItem xs="3">
-                <MudSelect T="SongType" @bind-Value="_songType" Label="Song Type">
+                <MudSelect T="SongType" @bind-Value="_songType" Label=@L["Song Type"]>
                     @foreach (var type in Enum.GetValues<SongType>())
                     {
                         <MudSelectItem T="SongType" Value="type">@type.ToString()</MudSelectItem>
@@ -107,29 +107,29 @@
                 </MudSelect>
             </MudItem>
             <MudItem xs="3">
-                <MudNumericField T="int" Min="0" Max="60" Label="Minutes" @bind-Value="_minutes"></MudNumericField>
+                <MudNumericField T="int" Min="0" Max="60" Label=@L["Minutes"] @bind-Value="_minutes"></MudNumericField>
             </MudItem>
             <MudItem xs="3">
-                <MudNumericField T="int" Min="0" Max="60" Label="Seconds" @bind-Value="_seconds"></MudNumericField>
+                <MudNumericField T="int" Min="0" Max="60" Label=@L["Seconds"] @bind-Value="_seconds"></MudNumericField>
             </MudItem>
             <MudItem xs="6">
                 <MudAutocomplete T="string"
-                                 Label="Song Artist"
+                                 Label=@L["Song Artist"]
                                  @bind-Value="_songArtist"
                                  CoerceValue="true"
                                  SearchFunc="(s,c)=>Task.FromResult(_songArtists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
             </MudItem>
 
             <MudItem xs="6">
-                <MudNumericField T="decimal" Label="Min BPM" ValueChanged="SetMin" Value="_minBpm"></MudNumericField>
+                <MudNumericField T="decimal" Label=@L["Min BPM"] ValueChanged="SetMin" Value="_minBpm"></MudNumericField>
             </MudItem>
             <MudItem xs="6">
-                <MudNumericField T="decimal" Label="Max BPM" @bind-Value="_maxBpm"></MudNumericField>
+                <MudNumericField T="decimal" Label=@L["Max BPM"] @bind-Value="_maxBpm"></MudNumericField>
             </MudItem>
             @foreach (var chart in _newCharts)
             {
                 <MudItem xs="2">
-                    <MudSelect T="ChartType" @bind-Value="chart.Type" Label="Chart Type">
+                    <MudSelect T="ChartType" @bind-Value="chart.Type" Label=@L["Chart Type"]>
                         @foreach (var type in Enum.GetValues<ChartType>())
                         {
                             <MudSelectItem T="ChartType" Value="type">@type.ToString()</MudSelectItem>
@@ -137,17 +137,17 @@
                     </MudSelect>
                 </MudItem>
                 <MudItem xs="2">
-                    <MudNumericField T="int" Min="(int)DifficultyLevel.Min" Max="(int)DifficultyLevel.Max" @bind-Value="chart.Level" Label="Level/Players"></MudNumericField>
+                    <MudNumericField T="int" Min="(int)DifficultyLevel.Min" Max="(int)DifficultyLevel.Max" @bind-Value="chart.Level" Label=@L["Level/Players"]></MudNumericField>
                 </MudItem>
                 <MudItem xs="3">
-                    <MudTextField T="string" @bind-Value="chart.YoutubeHash" Label="Youtube Hash"></MudTextField>
+                    <MudTextField T="string" @bind-Value="chart.YoutubeHash" Label=@L["Youtube Hash"]></MudTextField>
                 </MudItem>
                 <MudItem xs="2">
-                    <MudTextField T="string" @bind-Value="chart.ChannelName" Label="Channel Name"></MudTextField>
+                    <MudTextField T="string" @bind-Value="chart.ChannelName" Label=@L["Channel Name"]></MudTextField>
                 </MudItem>
                 <MudItem xs="3">
                     <MudAutocomplete T="string"
-                                     Label="Step Artist"
+                                     Label=@L["Step Artist"]
                                      @bind-Value="chart.StepArtist"
                                      CoerceValue="true"
                                      SearchFunc="(s,c)=>Task.FromResult(_stepArtists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
@@ -157,7 +157,7 @@
                 <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="AddChart"></MudIconButton>
             </MudItem>
             <MudItem xs="12">
-                <MudButton StartIcon="@Icons.Material.Filled.Save" Disabled="_isSaving||!IsValid" OnClick="CreateSong">Create</MudButton>
+                <MudButton StartIcon="@Icons.Material.Filled.Save" Disabled="_isSaving||!IsValid" OnClick="CreateSong">@L["Create"]</MudButton>
             </MudItem>
         </MudGrid>
     </MudCardContent>
@@ -253,7 +253,7 @@
 
 
        // await Bus.Publish(new CalculateChartLetterDifficultiesEvent());
-       Snackbar.Add("Done", Severity.Success);
+       Snackbar.Add(L["Done"].Value, Severity.Success);
 
     }
 
@@ -263,7 +263,7 @@
     private async Task Restore(string userName)
     {
         await Qualifiers.Restore(Bite8, userName,CancellationToken.None);
-        Snackbar.Add("Restored", Severity.Success);
+        Snackbar.Add(L["Restored"].Value, Severity.Success);
         MissingUsers = await Qualifiers.GetMissing(Bite8,CancellationToken.None);
     }
     private decimal _minBpm = 0;
@@ -286,13 +286,13 @@
     {
         if (_selectedChart==null || !Uri.TryCreate(_videoUrl, UriKind.Absolute, out var url) || !Name.TryParse(_videoChannel, out var channel))
         {
-            Snackbar.Add("Video info is not formatted correctly", Severity.Error);
+            Snackbar.Add(L["Video info is not formatted correctly"].Value, Severity.Error);
             return;
         }
         _isSaving = true;
         await _charts.SetChartVideo(_selectedChart.Id, url, channel);
         _isSaving = false;
-        Snackbar.Add("Chart saved", Severity.Success);
+        Snackbar.Add(L["Chart saved"].Value, Severity.Success);
     }
     private async Task SelectSong(string songName)
     {

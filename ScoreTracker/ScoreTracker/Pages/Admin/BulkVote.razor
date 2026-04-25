@@ -7,11 +7,11 @@
 @using ScoreTracker.Domain.ValueTypes
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 
-<PageTitle>Bulk Vote</PageTitle>
+<PageTitle>@L["Bulk Vote"]</PageTitle>
 
 <MudGrid>
     <MudItem xs="6">
-        <MudSelect T="DifficultyLevel" Value="_selectedLevel" ValueChanged="SetLevel" Label="Level">
+        <MudSelect T="DifficultyLevel" Value="_selectedLevel" ValueChanged="SetLevel" Label=@L["Level"]>
             @foreach (var level in DifficultyLevel.All)
             {
                 <MudSelectItem T="DifficultyLevel" Value="level">@level</MudSelectItem>
@@ -19,9 +19,9 @@
         </MudSelect>
     </MudItem>
     <MudItem xs="6">
-        <MudSelect T="ChartType" Label="Chart Type" Value="_chartType" ValueChanged="SetChartType">
-            <MudSelectItem T="ChartType" Value="ChartType.Single">Singles</MudSelectItem>
-            <MudSelectItem T="ChartType" Value="ChartType.Double">Doubles</MudSelectItem>
+        <MudSelect T="ChartType" Label=@L["Chart Type"] Value="_chartType" ValueChanged="SetChartType">
+            <MudSelectItem T="ChartType" Value="ChartType.Single">@L["Singles"]</MudSelectItem>
+            <MudSelectItem T="ChartType" Value="ChartType.Double">@L["Doubles"]</MudSelectItem>
         </MudSelect>
     </MudItem>
     <MudItem xs="12">
@@ -30,7 +30,7 @@
                          AdornmentIcon="@Icons.Material.Filled.Search"
                          ResetValueOnEmptyText="true"
                          CoerceText="true"
-                         Label="Song"
+                         Label=@L["Song"]
                          SearchFunc="(s,c)=>SearchSongs(s)"
                          ValueChanged="@SelectSongName">
 
@@ -49,7 +49,7 @@
         </MudItem>
     }
     <MudItem xs="6">
-        <MudSelect Label="Your Difficulty Rating" T="DifficultyAdjustment" @bind-Value="_selectedAdjustment">
+        <MudSelect Label=@L["Your Difficulty Rating"] T="DifficultyAdjustment" @bind-Value="_selectedAdjustment">
             @foreach (var rating in Enum.GetValues<DifficultyAdjustment>())
             {
                 <MudSelectItem T="DifficultyAdjustment" Value="@rating">@rating.GetDescription()</MudSelectItem>
@@ -57,7 +57,7 @@
         </MudSelect>
     </MudItem>
     <MudItem xs="6">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAdjustment" Disabled="_isSaving">Save</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAdjustment" Disabled="_isSaving">@L["Save"]</MudButton>
     </MudItem>
 </MudGrid>
 @inject ICurrentUserAccessor CurrentUser;
@@ -82,7 +82,7 @@
             await Mediator.Send(new RateChartDifficultyCommand(MixEnum.Phoenix, chart.Id, _selectedAdjustment));
         }
         _isSaving = false;
-        Snackbar.Add("Saved!", Severity.Success);
+        Snackbar.Add(L["Saved!"].Value, Severity.Success);
     }
     private void SetLevel(DifficultyLevel level)
     {
