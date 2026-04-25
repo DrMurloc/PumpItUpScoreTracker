@@ -10,30 +10,17 @@ The immediate goal is getting this codebase into a good state for community cont
 
 | Phase | Theme | Scope |
 |---|---|---|
-| 0 | Repo front door — README, CONTRIBUTING, .github/, .editorconfig, CoC, SECURITY, glossary | S |
 | 1 | Local dev without prod credentials — docker-compose, dev-mode fakes, auto-migrate | M |
-| 2 | CI on fork PRs — GitHub Actions for build + test | S |
-| 3 | Confidence floor for incoming PRs — taxonomy labels, characterization workflow, reference handler tests | S–M |
-| 4 | Community signaling — CHANGELOG, good-first-issue labels | S |
+| 2 | Confidence floor for incoming PRs — taxonomy labels, characterization workflow, reference handler tests | S–M |
+| 3 | Community signaling — CHANGELOG, good-first-issue labels | S |
 
-Phase 0/1/2/4 detail is in [Open-source readiness](#open-source-readiness) below. Phase 3 detail lives in [Test infrastructure](#test-infrastructure) (existing items, reordered for OSS goal). Items deferred until after OSS readiness lands are recapped in [Deferred for OSS goal](#deferred-for-oss-goal).
+Phase 1/3 detail is in [Open-source readiness](#open-source-readiness) below. Phase 2 detail lives in [Test infrastructure](#test-infrastructure) (existing items, reordered for OSS goal). Items deferred until after OSS readiness lands are recapped in [Deferred for OSS goal](#deferred-for-oss-goal).
 
 ---
 
 ## Open-source readiness
 
 New work specific to enabling external contributions. Existing test-infra and architecture-cleanup items live in their original sections below.
-
-### Phase 0 — Repo front door — *S*
-
-Pure docs/config, zero engineering risk. None of these exist today.
-
-- [ ] **README.md** — project description, screenshot or live demo link, "use it" path, "contribute" path. Today it's one line.
-- [ ] **CONTRIBUTING.md** — dev setup, build/test commands, branching model, PR expectations, link to BACKLOG for "areas where help is welcome." Bridges the gap that `CLAUDE.md` / `ARCHITECTURE.md` (policy/structure docs) don't cover for human contributors.
-- [ ] **`.github/` scaffolding** — issue templates (bug, feature), PR template with a checklist tied to layer rules and the `[ExcludeFromCodeCoverage]` convention for new commands/queries/events, `CODEOWNERS`.
-- [ ] **`.editorconfig`** + document `dotnet format` in CONTRIBUTING. First PRs shouldn't fail review on whitespace.
-- [ ] **`CODE_OF_CONDUCT.md`** (Contributor Covenant) and **`SECURITY.md`** (disclosure address). GitHub flags missing CoC; both are expected boilerplate.
-- [ ] **Surface domain glossary** — lift Mix / Phoenix score / Pumbility / UCS / Bounty / Saga from the tail of `ARCHITECTURE.md` into the README or a top-level `DOMAIN.md` so non-PIU-player contributors can orient.
 
 ### Phase 1 — Local dev without prod credentials — *M*
 
@@ -45,18 +32,9 @@ The single biggest practical barrier today. Booting the app currently requires S
 - [ ] **Auto-migrate on Development env only** — see *Automatic migration application* under Architecture cleanups. Manually applying 165 migrations is contributor-hostile.
 - [ ] (Optional) **Seed data script** for chart catalog so the app isn't empty after first boot. Defer if scrape-on-demand works locally.
 
-### Phase 2 — CI on fork PRs — *S*
+### Phase 3 — Community signaling — *S*
 
-ENTERPRISE: *Project CLAUDE.md Requirements*
-
-- [ ] **GitHub Actions workflow**: `dotnet build` + `dotnet test` on PR. No secrets required — the current test suite is unit/component only.
-- [ ] Keep the existing Azure Pipelines as the deploy pipeline.
-
-Adjacent to *CI fast-PR vs. nightly split* below but doesn't depend on it — the GH Actions job can run the whole suite today and be refined once dependency-realism labels exist.
-
-### Phase 4 — Community signaling — *S*
-
-After Phases 0–2 land.
+After Phase 1 lands.
 
 - [ ] **`CHANGELOG.md`** with a light release/version policy. Even an informal "what changed" log helps contributors track impact.
 - [ ] **Curated "good first issue" labels** on real, scoped GitHub Issues. Process work, not a doc deliverable.
@@ -103,7 +81,7 @@ ENTERPRISE: *External API and Messaging Tests*
 - [ ] Tests classify as `component` (the in-memory transport is production-real, but ports are mocked).
 - [ ] Reference: `RecurringJobHostedService` is the publisher; saga classes are the consumers.
 
-### Test taxonomy / dependency-realism labels — *S* — **Phase 3**
+### Test taxonomy / dependency-realism labels — *S* — **Phase 2**
 
 ENTERPRISE: *Dependency Realism Labels*, *Test Taxonomy*
 
@@ -122,15 +100,15 @@ ENTERPRISE: *Property-Based Test*
 - [ ] Cover `PhoenixScore`, `XXScore`, `DifficultyLevel`, `Bpm`, `Name` with invariant tests (round-trip serialization, ordering, validation boundaries).
 - [ ] Use deterministic seeds; report failing seed in output.
 
-### Characterization tests as a workflow — *S* (recurring) — **Phase 3**
+### Characterization tests as a workflow — *S* (recurring) — **Phase 2**
 
-ENTERPRISE: *Characterization Test*, *Refactoring Rules*. Promoted to Phase 3 of OSS readiness — this is how a contributor safely touches legacy code.
+ENTERPRISE: *Characterization Test*, *Refactoring Rules*. Promoted to Phase 2 of OSS readiness — this is how a contributor safely touches legacy code.
 
 - [ ] Pick one upcoming legacy refactor and add characterization tests around the existing behavior first.
 - [ ] Establish naming: `<Type>CharacterizationTests.cs` or a `[Trait("category", "characterization")]` tag.
 - [ ] Document the workflow as a PR-template checkbox: "Did this PR change legacy behavior? If yes, characterization tests added before behavior change?"
 
-### Reference handler tests — *S* — **Phase 3**
+### Reference handler tests — *S* — **Phase 2**
 
 There is exactly one handler test today (`CreateUserHandlerTests`). Contributors copy from existing examples, so a sparse reference set keeps the bar artificially low.
 
@@ -235,6 +213,23 @@ Lower priority — current ID assertions in tests use `Assert.NotEqual(Guid.Empt
 
 ## Process / docs
 
+### Fork-PR CI feedback — *S* (deferred)
+
+Fork PRs don't trigger Azure Pipelines today. Adding pre-merge CI for forks adds no signal until CI runs gates a contributor *can't* easily reproduce locally — `dotnet build` + `dotnet test` on a contributor's machine produces the same answer the pipeline would. Until then, the contract documented in [CONTRIBUTING.md](CONTRIBUTING.md) stands: contributors run tests locally; maintainers verify after merge.
+
+Revisit when at least one CI-only quality gate exists, e.g.:
+- Coverage threshold enforced in CI.
+- Static analysis or security scans wired into the pipeline.
+- Real-dependency integration tests (containerized DB, etc.) — see *Real-dependency database tests*.
+- Mutation-test runs — see *Mutation testing on Domain*.
+
+When that lands:
+- [ ] Add a `pr:` trigger block to `azure-pipelines.yml` (`pr: branches: include: [main]`).
+- [ ] In Azure DevOps → Pipelines → Triggers → Pull request validation, enable *Build pull requests from forks of this repository*.
+- [ ] Audit secret variables in the pipeline; disable any that shouldn't be exposed on fork builds. The current build needs none.
+
+Depends on: at least one CI-only quality gate from the *Test infrastructure* section.
+
 ### CI fast-PR vs. nightly split — *S*
 
 Depends on: dependency-realism labels.
@@ -262,7 +257,7 @@ The Phase 1 `docker-compose.yml` covers this — a separate shell script isn't n
 
 ## Deferred for OSS goal
 
-These items remain valuable but are not on the OSS-readiness critical path. Revisit after Phases 0–4 land. Each retains its detail in the relevant section above.
+These items remain valuable but are not on the OSS-readiness critical path. Revisit after Phases 1–3 land. Each retains its detail in the relevant section above.
 
 **Code-quality test work** (deferred — protects maintainers from provider drift, but doesn't unblock first-time contributors)
 - *External-adapter / consumer tests* (was top-3 #1 by ENTERPRISE-compliance impact).
@@ -272,6 +267,9 @@ These items remain valuable but are not on the OSS-readiness critical path. Revi
 - *Mutation testing on Domain*.
 - *E2E / acceptance tests* (already deferred).
 - *Contract tests* (already deferred — no external consumer of this app's API exists).
+
+**CI infrastructure** (deferred — pre-merge CI on fork PRs only adds value once it runs gates contributors can't reproduce locally)
+- *Fork-PR CI feedback* — wait until coverage / security scans / real-dep integration tests / mutation tests give CI runs non-redundant signal.
 
 **Architecture cleanups** (deferred — internal improvements, no contribution-velocity impact)
 - *Remove `Data → Application` reference*.
