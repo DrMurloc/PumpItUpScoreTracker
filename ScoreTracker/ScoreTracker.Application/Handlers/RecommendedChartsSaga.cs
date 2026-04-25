@@ -24,10 +24,12 @@ namespace ScoreTracker.Application.Handlers
         private readonly IChartBountyRepository _bounties;
         private readonly IWeeklyTournamentRepository _weeklyTournament;
         private readonly IChartListRepository _chartList;
+        private readonly IDateTimeOffsetAccessor _dateTime;
 
         public RecommendedChartsSaga(IMediator mediator, ICurrentUserAccessor currentUser, IUserRepository users,
             IPlayerStatsRepository stats, IPhoenixRecordRepository scores, IChartBountyRepository bounties,
-            IWeeklyTournamentRepository weeklyTournament, IChartListRepository chartList)
+            IWeeklyTournamentRepository weeklyTournament, IChartListRepository chartList,
+            IDateTimeOffsetAccessor dateTime)
         {
             _mediator = mediator;
             _currentUser = currentUser;
@@ -37,6 +39,7 @@ namespace ScoreTracker.Application.Handlers
             _bounties = bounties;
             _weeklyTournament = weeklyTournament;
             _chartList = chartList;
+            _dateTime = dateTime;
         }
 
         public async Task<IEnumerable<ChartRecommendation>> Handle(GetRecommendedChartsQuery request,
@@ -135,9 +138,9 @@ namespace ScoreTracker.Application.Handlers
                     .Distinct()
                     .ToHashSet();
 
-            var cutoff = DateTimeOffset.Now - TimeSpan.FromDays(30);
+            var cutoff = _dateTime.Now - TimeSpan.FromDays(30);
             var random = new Random();
-            var now = DateTimeOffset.Now;
+            var now = _dateTime.Now;
 
             var skipped = ignoredChartIds.TryGetValue("Revisit Old Scores", out var r) ? r : new HashSet<Guid>();
             return scores.Where(r => tierLists.ContainsKey(r.ChartId) &&

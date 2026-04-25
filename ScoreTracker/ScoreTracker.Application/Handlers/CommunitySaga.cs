@@ -40,10 +40,11 @@ public sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, IRe
     private readonly IPhoenixRecordRepository _scores;
     private readonly IUserRepository _users;
     private readonly IUcsRepository _ucs;
+    private readonly IDateTimeOffsetAccessor _dateTime;
 
     public CommunitySaga(ICurrentUserAccessor currentUser, ICommunityRepository communities, IBotClient bot,
         IUserRepository users, IChartRepository charts, IPhoenixRecordRepository scores, IMediator mediator,
-        IUcsRepository ucs)
+        IUcsRepository ucs, IDateTimeOffsetAccessor dateTime)
     {
         _currentUser = currentUser;
         _communities = communities;
@@ -53,6 +54,7 @@ public sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, IRe
         _scores = scores;
         _mediator = mediator;
         _ucs = ucs;
+        _dateTime = dateTime;
     }
 
     public async Task Consume(ConsumeContext<NewTitlesAcquiredEvent> context)
@@ -374,7 +376,7 @@ And {count - 10} others!";
                         "This is not a valid community code for this community.");
 
                 if (community.InviteCodes.TryGetValue(code, out var expirationDate) && expirationDate <
-                    new DateOnly(DateTimeOffset.Now.Year, DateTimeOffset.Now.Month, DateTimeOffset.Now.Day))
+                    new DateOnly(_dateTime.Now.Year, _dateTime.Now.Month, _dateTime.Now.Day))
                     throw new DeniedFromCommunityException("This invite code is expired");
 
                 community.MemberIds.Add(userId);
@@ -431,8 +433,8 @@ And {count - 10} others!";
                         throw new CommunityNotFoundException();
         if (community.RequiresCode && (inviteCode == null || !community.InviteCodes.ContainsKey(inviteCode.Value) ||
                                        community.InviteCodes[inviteCode.Value] <
-                                       new DateOnly(DateTimeOffset.Now.Year, DateTimeOffset.Now.Month,
-                                           DateTimeOffset.Now.Day)))
+                                       new DateOnly(_dateTime.Now.Year, _dateTime.Now.Month,
+                                           _dateTime.Now.Day)))
             throw new CommunityNotFoundException();
 
         return community;

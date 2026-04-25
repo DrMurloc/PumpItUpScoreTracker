@@ -13,13 +13,15 @@ public sealed class WorldRankingService : IWorldRankingService
     private readonly IOfficialLeaderboardRepository _leaderboards;
     private readonly ILogger _logger;
     private readonly IChartRepository _charts;
+    private readonly IDateTimeOffsetAccessor _dateTime;
 
     public WorldRankingService(IOfficialLeaderboardRepository leaderboards, ILogger<WorldRankingService> logger,
-        IChartRepository charts)
+        IChartRepository charts, IDateTimeOffsetAccessor dateTime)
     {
         _leaderboards = leaderboards;
         _logger = logger;
         _charts = charts;
+        _dateTime = dateTime;
     }
 
     public async Task CalculateWorldRankings(CancellationToken cancellationToken)
@@ -111,7 +113,7 @@ public sealed class WorldRankingService : IWorldRankingService
             var chart = charts
                 .FirstOrDefault(c => c.Type == record.Item2.chartType && c.Level == record.Item2.level);
             if (chart != null)
-                result.Add(new RecordedPhoenixScore(chart.Id, record.Score, null, false, DateTimeOffset.Now));
+                result.Add(new RecordedPhoenixScore(chart.Id, record.Score, null, false, _dateTime.Now));
         }
 
         return result;
@@ -136,7 +138,7 @@ public sealed class WorldRankingService : IWorldRankingService
             var chart = charts
                 .FirstOrDefault(c => c.Type == record.Item2.chartType && c.Level == record.Item2.level);
             if (chart != null)
-                result.Add(new RecordedPhoenixScore(chart.Id, record.Score, null, false, DateTimeOffset.Now));
+                result.Add(new RecordedPhoenixScore(chart.Id, record.Score, null, false, _dateTime.Now));
         }
 
         return result;
