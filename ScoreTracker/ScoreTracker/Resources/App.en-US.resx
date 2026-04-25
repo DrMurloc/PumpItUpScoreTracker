@@ -755,6 +755,92 @@
 	  <value>Max Letter Grade</value>
 	  <comment>Max Letter Grade</comment>
   </data>
+  <data name="Admin" xml:space="preserve">
+	  <value>Admin</value>
+  </data>
+  <data name="Do It" xml:space="preserve">
+	  <value>Do It</value>
+	  <comment>Admin trigger button — runs RebuildOfficialLeaderboard.</comment>
+  </data>
+  <data name="Clear Cache" xml:space="preserve">
+	  <value>Clear Cache</value>
+  </data>
+  <data name="ReCalculate Ratings" xml:space="preserve">
+	  <value>ReCalculate Ratings</value>
+  </data>
+  <data name="Update Chart" xml:space="preserve">
+	  <value>Update Chart</value>
+  </data>
+  <data name="Chart" xml:space="preserve">
+	  <value>Chart</value>
+  </data>
+  <data name="Video URL" xml:space="preserve">
+	  <value>Video URL</value>
+  </data>
+  <data name="Channel Name" xml:space="preserve">
+	  <value>Channel Name</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+	  <value>Save</value>
+  </data>
+  <data name="Create Song" xml:space="preserve">
+	  <value>Create Song</value>
+  </data>
+  <data name="Korean Name" xml:space="preserve">
+	  <value>Korean Name</value>
+  </data>
+  <data name="Image Name" xml:space="preserve">
+	  <value>Image Name</value>
+  </data>
+  <data name="Minutes" xml:space="preserve">
+	  <value>Minutes</value>
+  </data>
+  <data name="Seconds" xml:space="preserve">
+	  <value>Seconds</value>
+  </data>
+  <data name="Level/Players" xml:space="preserve">
+	  <value>Level/Players</value>
+	  <comment>Combined level/player-count input on the new-chart admin form.</comment>
+  </data>
+  <data name="Youtube Hash" xml:space="preserve">
+	  <value>Youtube Hash</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+	  <value>Create</value>
+  </data>
+  <data name="Done" xml:space="preserve">
+	  <value>Done</value>
+  </data>
+  <data name="Restored" xml:space="preserve">
+	  <value>Restored</value>
+  </data>
+  <data name="Video info is not formatted correctly" xml:space="preserve">
+	  <value>Video info is not formatted correctly</value>
+  </data>
+  <data name="Chart saved" xml:space="preserve">
+	  <value>Chart saved</value>
+  </data>
+  <data name="Bulk Vote" xml:space="preserve">
+	  <value>Bulk Vote</value>
+  </data>
+  <data name="Your Difficulty Rating" xml:space="preserve">
+	  <value>Your Difficulty Rating</value>
+  </data>
+  <data name="Saved!" xml:space="preserve">
+	  <value>Saved!</value>
+  </data>
+  <data name="Chart Update" xml:space="preserve">
+	  <value>Chart Update</value>
+  </data>
+  <data name="Difficulty" xml:space="preserve">
+	  <value>Difficulty</value>
+  </data>
+  <data name="Save Chart" xml:space="preserve">
+	  <value>Save Chart</value>
+  </data>
+  <data name="Updated X Y" xml:space="preserve">
+	  <value>Updated {0} {1}</value>
+	  <comment>{0} = song name, {1} = difficulty string (e.g. "S17"). Snackbar after a chart save on /ChartUpdate.</comment>
   <data name="Community Invite" xml:space="preserve">
 	  <value>Community Invite</value>
   <data name="Chart Compare" xml:space="preserve">

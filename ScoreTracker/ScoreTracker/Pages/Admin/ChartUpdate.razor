@@ -13,14 +13,14 @@
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using System.Text.RegularExpressions
 
-<PageTitle>Chart Update</PageTitle>
+<PageTitle>@L["Chart Update"]</PageTitle>
 <ChartSelector ChartIdSelected="SelectChart"></ChartSelector>
 @if (_currentChart != null)
 {
     <MudGrid>
 
         <MudItem xs="12">
-            <MudSelect T="TierListCategory" @bind-Value="_category" Label="Difficulty">
+            <MudSelect T="TierListCategory" @bind-Value="_category" Label=@L["Difficulty"]>
                 @foreach (var category in Enum.GetValues<TierListCategory>())
                 {
                     <MudSelectItem T="TierListCategory" Value="category">@category</MudSelectItem>
@@ -41,7 +41,7 @@
         }
 
         <MudItem xs="12">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isSaving" OnClick="UpdateChart">Save Chart</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isSaving" OnClick="UpdateChart">@L["Save Chart"]</MudButton>
         </MudItem>
 
     </MudGrid>
@@ -81,7 +81,7 @@
         _isSaving = true;
         await Mediator.Send(new UpdateChartSkillCommand(new ChartSkillsRecord(_currentChart.Id, _skills, Array.Empty<Skill>())));
         await TierLists.SaveEntry(new SongTierListEntry("Chabala", _currentChart.Id, _category, 1), CancellationToken.None);
-        Snackbar.Add($"Updated {_currentChart.Song.Name} {_currentChart.DifficultyString}");
+        Snackbar.Add(L["Updated X Y", _currentChart.Song.Name, _currentChart.DifficultyString].Value);
         _isSaving = false;
     }
 
