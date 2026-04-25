@@ -123,18 +123,6 @@
   <data name="1+ Level Harder" xml:space="preserve">
     <value>1+ Nivel más difícil</value>
   </data>
-  <data name="101 person tournament." xml:space="preserve">
-    <value>Torneo de 101 personas.</value>
-  </data>
-  <data name="8-10 estimated charts played per player." xml:space="preserve">
-    <value>8-10 canciones estimadas jugadas por jugador.</value>
-  </data>
-  <data name="9+ PIU Cabinets Running Phoenix." xml:space="preserve">
-    <value>9+ PIU Cabinets Running Phoenix.</value>
-  </data>
-  <data name="99 matches tailored to each player's level." xml:space="preserve">
-    <value>99 matches adaptados al nivel de cada jugador.</value>
-  </data>
   <data name="About" xml:space="preserve">
     <value>Acerca de</value>
   </data>
@@ -153,14 +141,8 @@
   <data name="Add to ToDo" xml:space="preserve">
     <value>Agregar a Cosas que hacer</value>
   </data>
-  <data name="Adjusted Difficulty" xml:space="preserve">
-    <value>Dificultad ajustada</value>
-  </data>
   <data name="Average" xml:space="preserve">
     <value>Promedio</value>
-  </data>
-  <data name="Average Rating" xml:space="preserve">
-    <value>Clasificación promedio</value>
   </data>
   <data name="Broken" xml:space="preserve">
     <value>Rota</value>
@@ -186,14 +168,8 @@
   <data name="CoOp" xml:space="preserve">
     <value>CoOp</value>
   </data>
-  <data name="CoOp and No Bar Old School Tournaments." xml:space="preserve">
-    <value>Torneos CoOp y No Bar Old School.</value>
-  </data>
   <data name="Difficulty Level" xml:space="preserve">
     <value>Nivel de dificultad</value>
-  </data>
-  <data name="Disputed Charts" xml:space="preserve">
-    <value>Charts disputados</value>
   </data>
   <data name="Doubles" xml:space="preserve">
     <value>Dobles</value>
@@ -212,9 +188,6 @@
   </data>
   <data name="Favorites" xml:space="preserve">
     <value>Favoritos</value>
-  </data>
-  <data name="Find Players" xml:space="preserve">
-    <value>Buscar jugadores</value>
   </data>
   <data name="Full Privacy Policy" xml:space="preserve">
     <value>Política de privacidad completa</value>
@@ -258,9 +231,6 @@
   <data name="Mix" xml:space="preserve">
     <value>Versión</value>
   </data>
-  <data name="My Difficulty Adjustments" xml:space="preserve">
-    <value>Mis ajustes de dificultad</value>
-  </data>
   <data name="Next Letter" xml:space="preserve">
     <value>Siguiente Letra</value>
   </data>
@@ -293,9 +263,6 @@
   </data>
   <data name="Remaining Charts For You" xml:space="preserve">
     <value>{0} Charts Estimated for You</value>
-  </data>
-  <data name="Remove from Favorites" xml:space="preserve">
-    <value>Borrar de Favoritos</value>
   </data>
   <data name="Remove from ToDo" xml:space="preserve">
     <value>Borrar de la lista de Cosas que hacer</value>
@@ -333,9 +300,6 @@
   <data name="Song Type" xml:space="preserve">
     <value>Tipo de canción</value>
   </data>
-  <data name="The most Pump it Up that has ever been at one event." xml:space="preserve">
-    <value>La mayor cantidad de Pump it Up que ha habido en un solo evento.</value>
-  </data>
   <data name="Title Progress" xml:space="preserve">
     <value>Progreso de títulos</value>
   </data>
@@ -345,23 +309,14 @@
   <data name="To Do" xml:space="preserve">
     <value>Cosas que hacer</value>
   </data>
-  <data name="Toggle ToDo" xml:space="preserve">
-    <value>Alternar Cosas que hacer</value>
-  </data>
   <data name="Tools" xml:space="preserve">
     <value>Herramientas</value>
   </data>
   <data name="Total Count" xml:space="preserve">
     <value>Total</value>
   </data>
-  <data name="Tournament Builder" xml:space="preserve">
-    <value>Creador de Torneos</value>
-  </data>
   <data name="Tournaments" xml:space="preserve">
     <value>Torneos</value>
-  </data>
-  <data name="Update Grade" xml:space="preserve">
-    <value>Actualizar grado</value>
   </data>
   <data name="Upload Scores" xml:space="preserve">
     <value>Subir Puntajes</value>
@@ -398,12 +353,6 @@
   </data>
   <data name="Vote Count" xml:space="preserve">
     <value>{0} Conteo de votos</value>
-  </data>
-  <data name="Why don't you just get up and dance, man?" xml:space="preserve">
-    <value>¿Por qué no te levantas y bailas, weon?</value>
-  </data>
-  <data name="Your Difficulty Rating" xml:space="preserve">
-    <value>Tu clasificación de dificultad</value>
   </data>
   <data name="Language" xml:space="preserve">
     <value>Language</value>

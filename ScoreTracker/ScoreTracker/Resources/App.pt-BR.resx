@@ -150,14 +150,8 @@
   <data name="Add to ToDo" xml:space="preserve">
     <value>Adicionar à lista de tarefas</value>
   </data>
-  <data name="Adjusted Difficulty" xml:space="preserve">
-    <value>Dificuldade ajustada</value>
-  </data>
   <data name="Average" xml:space="preserve">
     <value>Média</value>
-  </data>
-  <data name="Average Rating" xml:space="preserve">
-    <value>Classificação média</value>
   </data>
   <data name="Broken" xml:space="preserve">
     <value>Quebrada</value>
@@ -198,17 +192,8 @@
   <data name="Copy to Clipboard" xml:space="preserve">
     <value>Copiar para a área de transferência</value>
   </data>
-  <data name="Different Player Difficulties" xml:space="preserve">
-    <value>Dificuldades diferentes por jogador</value>
-  </data>
   <data name="Difficulty Level" xml:space="preserve">
     <value>Nível de dificuldade</value>
-  </data>
-  <data name="Disputed Charts" xml:space="preserve">
-    <value>Charts controversos</value>
-  </data>
-  <data name="Disputed Charts Disclaimer" xml:space="preserve">
-    <value>Charts com 4 ou mais votos, a 0,5 níveis da dificuldade ajustada e desvio padrão superior a 0,4</value>
   </data>
   <data name="Doubles" xml:space="preserve">
     <value>Doubles</value>
@@ -230,9 +215,6 @@
   </data>
   <data name="Favorites" xml:space="preserve">
     <value>Favoritos</value>
-  </data>
-  <data name="Find Players" xml:space="preserve">
-    <value>Localizar jogadores</value>
   </data>
   <data name="Full Privacy Policy" xml:space="preserve">
     <value>Política de privacidade completa</value>
@@ -288,17 +270,8 @@
   <data name="Mix" xml:space="preserve">
     <value>Versão</value>
   </data>
-  <data name="My Difficulty Adjustments" xml:space="preserve">
-    <value>Meus ajustes de dificuldade</value>
-  </data>
   <data name="My Score" xml:space="preserve">
     <value>Minhas Pontuações</value>
-  </data>
-  <data name="New Discord" xml:space="preserve">
-    <value>Novo Discord</value>
-  </data>
-  <data name="New Discord Disclaimer" xml:space="preserve">
-    <value>Eu criei um Discord para atualizações e feedback! Sinta-se à vontade para entrar:</value>
   </data>
   <data name="Next Letter" xml:space="preserve">
     <value>Próxima letra</value>
@@ -363,9 +336,6 @@
   <data name="Popularity" xml:space="preserve">
     <value>Popularidade</value>
   </data>
-  <data name="Preference" xml:space="preserve">
-    <value>Preferência</value>
-  </data>
   <data name="Progress" xml:space="preserve">
     <value>Progresso</value>
   </data>
@@ -374,15 +344,6 @@
   </data>
   <data name="Public" xml:space="preserve">
     <value>Público</value>
-  </data>
-  <data name="Rated Difficulty Level" xml:space="preserve">
-    <value>Nível de dificuldade avaliado</value>
-  </data>
-  <data name="Rating Count" xml:space="preserve">
-    <value>Contagem de classificação</value>
-  </data>
-  <data name="Record Score" xml:space="preserve">
-    <value>Registro de pontuação</value>
   </data>
   <data name="Recorded Date" xml:space="preserve">
     <value>Data de registro</value>
@@ -395,9 +356,6 @@
   </data>
   <data name="Remaining Charts For You" xml:space="preserve">
     <value>{0} Charts restantes estimado para você</value>
-  </data>
-  <data name="Remove from Favorites" xml:space="preserve">
-    <value>Remover dos favoritos</value>
   </data>
   <data name="Remove from ToDo" xml:space="preserve">
     <value>Remover da lista de tarefas</value>
@@ -438,9 +396,6 @@
   <data name="Scores Parsed" xml:space="preserve">
     <value>Pontuações processadas</value>
   </data>
-  <data name="Search Youtube" xml:space="preserve">
-    <value>Pesquisar no YouTube</value>
-  </data>
   <data name="Show Only ToDo Charts" xml:space="preserve">
     <value>Mostrar somente charts "Pendentes"</value>
   </data>
@@ -462,15 +417,6 @@
   <data name="Song Type" xml:space="preserve">
     <value>Tipo de música</value>
   </data>
-  <data name="Stage Break" xml:space="preserve">
-    <value>Stage Break</value>
-  </data>
-  <data name="Standard Deviation" xml:space="preserve">
-    <value>Desvio padrão</value>
-  </data>
-  <data name="Star Rating" xml:space="preserve">
-    <value>{0} - {1} Estrelas</value>
-  </data>
   <data name="Starting Page" xml:space="preserve">
     <value>Página inicial</value>
   </data>
@@ -486,26 +432,17 @@
   <data name="To Do" xml:space="preserve">
     <value>Pendentes</value>
   </data>
-  <data name="Toggle ToDo" xml:space="preserve">
-    <value>Ativar/desativar "Pendente"</value>
-  </data>
   <data name="Tools" xml:space="preserve">
     <value>Ferramentas</value>
   </data>
   <data name="Total Count" xml:space="preserve">
     <value>Total</value>
   </data>
-  <data name="Tournament Builder" xml:space="preserve">
-    <value>Criador de campeonatos</value>
-  </data>
   <data name="Tournaments" xml:space="preserve">
     <value>Campeonatos</value>
   </data>
   <data name="Unpassed ToDos" xml:space="preserve">
     <value>Você tem {0} charts de nível {1} marcados como "Pendente" que ainda não passou.</value>
-  </data>
-  <data name="Update Grade" xml:space="preserve">
-    <value>Atualizar nota</value>
   </data>
   <data name="Upload Scores" xml:space="preserve">
     <value>Upload de pontuações</value>
@@ -542,37 +479,6 @@
   </data>
   <data name="Vote Count" xml:space="preserve">
     <value>{0} votos</value>
-  </data>
-  <data name="Your Difficulty Rating" xml:space="preserve">
-    <value>Sua classificação de dificuldade</value>
-  </data>
-  <data name="9+ PIU Cabinets Running Phoenix." xml:space="preserve">
-    <value>9+ PIU Cabinets Running Phoenix.</value>
-    <comment>9+ PIU Cabinets Running Phoenix.</comment>
-  </data>
-  <data name="101 person tournament." xml:space="preserve">
-    <value>101 person tournament.</value>
-    <comment>101 person tournament.</comment>
-  </data>
-  <data name="99 matches tailored to each player's level." xml:space="preserve">
-    <value>99 matches tailored to each player's level.</value>
-    <comment>99 matches tailored to each player's level.</comment>
-  </data>
-  <data name="CoOp and No Bar Old School Tournaments." xml:space="preserve">
-    <value>CoOp and No Bar Old School Tournaments.</value>
-    <comment>CoOp and No Bar Old School Tournaments.</comment>
-  </data>
-  <data name="8-10 estimated charts played per player." xml:space="preserve">
-    <value>8-10 estimated charts played per player.</value>
-    <comment>8-10 estimated charts played per player.</comment>
-  </data>
-  <data name="The most Pump it Up that has ever been at one event." xml:space="preserve">
-    <value>The most Pump it Up that has ever been at one event.</value>
-    <comment>The most Pump it Up that has ever been at one event.</comment>
-  </data>
-  <data name="Why don't you just get up and dance, man?" xml:space="preserve">
-    <value>Why don't you just get up and dance, man?</value>
-    <comment>Why don't you just get up and dance, man?</comment>
   </data>
   <data name="Place" xml:space="preserve">
     <value>Place</value>
