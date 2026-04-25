@@ -13,11 +13,11 @@
         <MudItem xs="12">
             <MudDataGrid T="UserPhoenixScore" Items="_scores">
                 <ToolBarContent>
-                    <MudText Typo="Typo.h6">@(_chart?.Song.Name ?? "Unknown") @(_chart?.DifficultyString ?? "Unknown") Scores</MudText>
+                    <MudText Typo="Typo.h6">@(_chart?.Song.Name ?? L["Unknown"].Value) @(_chart?.DifficultyString ?? L["Unknown"].Value) @L["Scores"]</MudText>
                 </ToolBarContent>
                 <Columns>
-                    <PropertyColumn Property="t => t.UserName" Title="Player" Grouping="true"></PropertyColumn>
-                    <PropertyColumn Property="t => t.Score" Title="Score" Groupable="false"></PropertyColumn>
+                    <PropertyColumn Property="t => t.UserName" Title=@L["Player"] Grouping="true"></PropertyColumn>
+                    <PropertyColumn Property="t => t.Score" Title=@L["Score"] Groupable="false"></PropertyColumn>
                 </Columns>
                 <PagerContent>
                     <MudDataGridPager T="UserPhoenixScore"/>
@@ -28,7 +28,7 @@
     }
     else
     {
-        <MudText>No Recorded Scores</MudText>
+        <MudText>@L["No Recorded Scores"]</MudText>
     }
 </MudGrid>
 @code {
