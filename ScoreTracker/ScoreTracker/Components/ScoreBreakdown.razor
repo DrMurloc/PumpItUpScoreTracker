@@ -59,7 +59,7 @@
 
     private string RankingColor => RankingColors.ColorStyle(Ranking?.Ranking);
 
-    private string RankingString =>Ranking==null?"": $"{Ranking.Ranking * 100.0:N1}% of {Ranking.PlayerCount} Comparable Players";
+    private string RankingString => Ranking == null ? "" : L["X% of Y Comparable Players", (Ranking.Ranking * 100.0).ToString("N1"), Ranking.PlayerCount].Value;
     private string ScoreString => (Score == null ? "" : ((int)Score).ToString("N0"));
     private string BrokenPiece => IsBroken ? "_broken" : "";
     private string LetterGradeImage => 
