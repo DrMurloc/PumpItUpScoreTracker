@@ -145,6 +145,7 @@ builder.Services.AddBlazorApplicationInsights()
         builder.Configuration.GetSection("SQL").Get<SqlConfiguration>(),
         builder.Configuration.GetSection("Sendgrid").Get<SendGridConfiguration>())
     .AddTransient<IDateTimeOffsetAccessor, DateTimeOffsetAccessor>()
+    .AddTransient<IRandomNumberGenerator, RandomNumberGenerator>()
     .AddControllers();
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services.AddScoped<IStringLocalizer<App>, StringLocalizer<App>>();
