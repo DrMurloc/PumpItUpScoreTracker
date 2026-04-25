@@ -1,11 +1,9 @@
-﻿using System.Collections.Concurrent;
 using MassTransit;
 using MediatR;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Handlers;
 
@@ -13,7 +11,8 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
         ICurrentUserAccessor user,
         IDateTimeOffsetAccessor dateTimeOffset,
         IBus bus,
-        IMessageScheduler scheduler)
+        IMessageScheduler scheduler,
+        IPlayerScoreBatchAccumulator batches)
     : IRequestHandler<UpdatePhoenixBestAttemptCommand>,
         IConsumer<UpdatePhoenixRecordHandler.TryFireScoreMessage>
 {
@@ -38,59 +37,40 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
         var isNewScore = (existing?.IsBroken ?? true) && !request.IsBroken;
         var isUpscore = existing?.Score != null && request.Score != null && existing.Score < request.Score;
         if (!isNewScore && !isUpscore) return;
-        //995010
+
         //Batches up score posts to reduce noise
         var fireAt = dateTimeOffset.Now.UtcDateTime + TimeSpan.FromMinutes(2);
-        if (!_fireAt.ContainsKey(user.User.Id))
+        if (batches.RegisterFireAt(user.User.Id, fireAt))
         {
-            _newCharts[user.User.Id] = new HashSet<Guid>();
-            _upscoreCharts[user.User.Id] = new ConcurrentDictionary<Guid, PhoenixScore>();
             await scheduler.SchedulePublish(fireAt + TimeSpan.FromSeconds(5),
                 new TryFireScoreMessage(user.User.Id),
                 cancellationToken);
         }
 
-        _fireAt[user.User.Id] = fireAt;
+        if (isNewScore) batches.RecordNewChart(user.User.Id, request.ChartId);
 
-        if (isNewScore) _newCharts[user.User.Id].Add(request.ChartId);
-
-        if (isUpscore && !_newCharts[user.User.Id].Contains(request.ChartId))
-            _upscoreCharts[user.User.Id][request.ChartId] = existing!.Score!.Value;
+        if (isUpscore)
+            batches.RecordUpscoreIfNotNew(user.User.Id, request.ChartId, existing!.Score!.Value);
     }
 
     public sealed record ScheduleScoreMessage(Guid UserId, Guid[] ChartIds);
 
     public sealed record TryFireScoreMessage(Guid UserId);
 
-    private static readonly ConcurrentDictionary<Guid, IDictionary<Guid, PhoenixScore>> _upscoreCharts = new();
-    private static readonly ConcurrentDictionary<Guid, ISet<Guid>> _newCharts = new();
-
-    private static readonly ConcurrentDictionary<Guid, DateTime> _fireAt = new();
-
     public async Task Consume(ConsumeContext<TryFireScoreMessage> context)
     {
-        if (dateTimeOffset.Now.UtcDateTime < _fireAt[context.Message.UserId])
+        var fireAt = batches.GetFireAt(context.Message.UserId);
+        if (dateTimeOffset.Now.UtcDateTime < fireAt)
         {
-            await scheduler.SchedulePublish(_fireAt[context.Message.UserId] + TimeSpan.FromMinutes(2),
+            await scheduler.SchedulePublish(fireAt + TimeSpan.FromMinutes(2),
                 new TryFireScoreMessage(context.Message.UserId),
                 context.CancellationToken);
             return;
         }
 
-        var newChartIds = _newCharts.TryGetValue(context.Message.UserId, out var newChart)
-            ? newChart.ToArray()
-            : Array.Empty<Guid>();
-
-        var upscoredChartIds = _upscoreCharts.TryGetValue(context.Message.UserId, out var chart)
-            ? chart
-                .ToDictionary(kv => kv.Key, kv => (int)kv.Value)
-            : new Dictionary<Guid, int>();
-
+        var batch = batches.TakeBatch(context.Message.UserId);
         await bus.Publish(
-            new PlayerScoreUpdatedEvent(context.Message.UserId, newChartIds, upscoredChartIds),
+            new PlayerScoreUpdatedEvent(context.Message.UserId, batch.NewChartIds, batch.UpscoredChartIds),
             context.CancellationToken);
-        _fireAt.TryRemove(context.Message.UserId, out _);
-        _upscoreCharts.TryRemove(context.Message.UserId, out _);
-        _newCharts.TryRemove(context.Message.UserId, out _);
     }
 }
