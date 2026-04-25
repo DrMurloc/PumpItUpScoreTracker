@@ -1,14 +1,66 @@
 # Backlog
 
-Items where the codebase doesn't yet satisfy [ENTERPRISE.md](ENTERPRISE.md) and the gap requires real refactor work, not just documentation. Items here are not current rules — `CLAUDE.md` describes what the project *does today*, this file describes what it *should grow into*.
+Items where the codebase isn't yet ready for open-source contributions or doesn't yet satisfy [ENTERPRISE.md](ENTERPRISE.md), and the gap requires real refactor work — not just documentation. Items here are not current rules; `CLAUDE.md` describes what the project *does today*, this file describes what it *should grow into*.
 
-Each item references the ENTERPRISE.md section that motivates it. Scope estimates are rough order of magnitude (S = days, M = a week, L = multiple weeks).
+Scope estimates are rough order of magnitude (S = days, M = a week, L = multiple weeks).
 
-## Top three by impact
+## Current priority: open-source readiness
 
-1. **External-adapter testing.** Six external clients, zero tests today. Highest blast radius if any provider's contract drifts. *(External API and Messaging Tests)*
-2. **Real-dependency database tests.** Production runs SQL Server; migrations, transactions, and provider-specific queries are unverified before deploy. *(Database Testing Rules)*
-3. **Test taxonomy / dependency-realism labels.** No tagging convention exists; the test suite can't be sliced for fast/slow CI runs or for category-specific gates. *(Test Taxonomy, Dependency Realism Labels)*
+The immediate goal is getting this codebase into a good state for community contributions. The phased list below is the contribution-velocity priority. Items in BACKLOG that don't help that goal directly are deferred — they remain valuable for code quality but are off the critical path until OSS readiness lands.
+
+| Phase | Theme | Scope |
+|---|---|---|
+| 0 | Repo front door — README, CONTRIBUTING, .github/, .editorconfig, CoC, SECURITY, glossary | S |
+| 1 | Local dev without prod credentials — docker-compose, dev-mode fakes, auto-migrate | M |
+| 2 | CI on fork PRs — GitHub Actions for build + test | S |
+| 3 | Confidence floor for incoming PRs — taxonomy labels, characterization workflow, reference handler tests | S–M |
+| 4 | Community signaling — CHANGELOG, good-first-issue labels | S |
+
+Phase 0/1/2/4 detail is in [Open-source readiness](#open-source-readiness) below. Phase 3 detail lives in [Test infrastructure](#test-infrastructure) (existing items, reordered for OSS goal). Items deferred until after OSS readiness lands are recapped in [Deferred for OSS goal](#deferred-for-oss-goal).
+
+---
+
+## Open-source readiness
+
+New work specific to enabling external contributions. Existing test-infra and architecture-cleanup items live in their original sections below.
+
+### Phase 0 — Repo front door — *S*
+
+Pure docs/config, zero engineering risk. None of these exist today.
+
+- [ ] **README.md** — project description, screenshot or live demo link, "use it" path, "contribute" path. Today it's one line.
+- [ ] **CONTRIBUTING.md** — dev setup, build/test commands, branching model, PR expectations, link to BACKLOG for "areas where help is welcome." Bridges the gap that `CLAUDE.md` / `ARCHITECTURE.md` (policy/structure docs) don't cover for human contributors.
+- [ ] **`.github/` scaffolding** — issue templates (bug, feature), PR template with a checklist tied to layer rules and the `[ExcludeFromCodeCoverage]` convention for new commands/queries/events, `CODEOWNERS`.
+- [ ] **`.editorconfig`** + document `dotnet format` in CONTRIBUTING. First PRs shouldn't fail review on whitespace.
+- [ ] **`CODE_OF_CONDUCT.md`** (Contributor Covenant) and **`SECURITY.md`** (disclosure address). GitHub flags missing CoC; both are expected boilerplate.
+- [ ] **Surface domain glossary** — lift Mix / Phoenix score / Pumbility / UCS / Bounty / Saga from the tail of `ARCHITECTURE.md` into the README or a top-level `DOMAIN.md` so non-PIU-player contributors can orient.
+
+### Phase 1 — Local dev without prod credentials — *M*
+
+The single biggest practical barrier today. Booting the app currently requires SQL Server + Discord/Google/Facebook OAuth + SendGrid + Azure Blob + Syncfusion license. Subsumes the older *Local-dev bring-up script* item under Process/docs.
+
+- [ ] **`docker-compose.yml`** for SQL Server with a documented connection string and a one-line `docker compose up`.
+- [ ] **`appsettings.Development.example.json`** with placeholders for every secret consumed (SQL, Discord/Google/Facebook OAuth, SendGrid, Azure Blob, Syncfusion). Today nothing documents what config the app needs — `appsettings.json` is empty of real keys.
+- [ ] **"Local mode" / null-object adapters** so the app boots without OAuth, SendGrid, or Azure Blob credentials. Implement behind the existing Domain ports (`IBotClient`, `IFileUploadClient`, the email port, etc.), gated by config.
+- [ ] **Auto-migrate on Development env only** — see *Automatic migration application* under Architecture cleanups. Manually applying 165 migrations is contributor-hostile.
+- [ ] (Optional) **Seed data script** for chart catalog so the app isn't empty after first boot. Defer if scrape-on-demand works locally.
+
+### Phase 2 — CI on fork PRs — *S*
+
+ENTERPRISE: *Project CLAUDE.md Requirements*
+
+- [ ] **GitHub Actions workflow**: `dotnet build` + `dotnet test` on PR. No secrets required — the current test suite is unit/component only.
+- [ ] Keep the existing Azure Pipelines as the deploy pipeline.
+
+Adjacent to *CI fast-PR vs. nightly split* below but doesn't depend on it — the GH Actions job can run the whole suite today and be refined once dependency-realism labels exist.
+
+### Phase 4 — Community signaling — *S*
+
+After Phases 0–2 land.
+
+- [ ] **`CHANGELOG.md`** with a light release/version policy. Even an informal "what changed" log helps contributors track impact.
+- [ ] **Curated "good first issue" labels** on real, scoped GitHub Issues. Process work, not a doc deliverable.
+- [ ] **Link `BACKLOG.md` from CONTRIBUTING** as "areas where help is most welcome." Existing BACKLOG becomes the on-ramp.
 
 ---
 
@@ -51,7 +103,7 @@ ENTERPRISE: *External API and Messaging Tests*
 - [ ] Tests classify as `component` (the in-memory transport is production-real, but ports are mocked).
 - [ ] Reference: `RecurringJobHostedService` is the publisher; saga classes are the consumers.
 
-### Test taxonomy / dependency-realism labels — *S*
+### Test taxonomy / dependency-realism labels — *S* — **Phase 3**
 
 ENTERPRISE: *Dependency Realism Labels*, *Test Taxonomy*
 
@@ -70,13 +122,21 @@ ENTERPRISE: *Property-Based Test*
 - [ ] Cover `PhoenixScore`, `XXScore`, `DifficultyLevel`, `Bpm`, `Name` with invariant tests (round-trip serialization, ordering, validation boundaries).
 - [ ] Use deterministic seeds; report failing seed in output.
 
-### Characterization tests as a workflow — *S* (recurring)
+### Characterization tests as a workflow — *S* (recurring) — **Phase 3**
 
-ENTERPRISE: *Characterization Test*, *Refactoring Rules*
+ENTERPRISE: *Characterization Test*, *Refactoring Rules*. Promoted to Phase 3 of OSS readiness — this is how a contributor safely touches legacy code.
 
 - [ ] Pick one upcoming legacy refactor and add characterization tests around the existing behavior first.
 - [ ] Establish naming: `<Type>CharacterizationTests.cs` or a `[Trait("category", "characterization")]` tag.
 - [ ] Document the workflow as a PR-template checkbox: "Did this PR change legacy behavior? If yes, characterization tests added before behavior change?"
+
+### Reference handler tests — *S* — **Phase 3**
+
+There is exactly one handler test today (`CreateUserHandlerTests`). Contributors copy from existing examples, so a sparse reference set keeps the bar artificially low.
+
+- [ ] Add 5–10 reference handler tests covering high-traffic flows (score upload, user create, leaderboard read, tournament submission).
+- [ ] Follow the canonical pattern documented in `CLAUDE.md` *Component tests* — mock Domain ports, real handler, `Verify` side effects with `It.Is<T>` + `Times.Once`.
+- [ ] Cross-reference these from `CONTRIBUTING.md` as the "copy from these" set.
 
 ### Mutation testing on Domain — *S* (low priority)
 
@@ -191,10 +251,38 @@ Once labels exist, expand `CLAUDE.md` Commands section with concrete filter exam
 - [ ] `dotnet test --filter Category=component` — handler/saga checks.
 - [ ] `dotnet test --filter Category=integration-real` — DB and emulator-backed checks (requires Docker).
 
-### Local-dev bring-up script — *S*
+### Local-dev bring-up script — *S* — **superseded by Phase 1**
+
+The Phase 1 `docker-compose.yml` covers this — a separate shell script isn't needed once compose is in place.
 
 - [ ] `scripts/dev-up.sh` (or PowerShell equivalent) that starts SQL Server in a container with a known connection string.
 - [ ] Document in `CLAUDE.md` *Local external dependencies*.
+
+---
+
+## Deferred for OSS goal
+
+These items remain valuable but are not on the OSS-readiness critical path. Revisit after Phases 0–4 land. Each retains its detail in the relevant section above.
+
+**Code-quality test work** (deferred — protects maintainers from provider drift, but doesn't unblock first-time contributors)
+- *External-adapter / consumer tests* (was top-3 #1 by ENTERPRISE-compliance impact).
+- *Real-dependency database tests* (was top-3 #2; high CI cost — Docker on Linux pool).
+- *MassTransit message-flow tests*.
+- *Property-based tests on value types*.
+- *Mutation testing on Domain*.
+- *E2E / acceptance tests* (already deferred).
+- *Contract tests* (already deferred — no external consumer of this app's API exists).
+
+**Architecture cleanups** (deferred — internal improvements, no contribution-velocity impact)
+- *Remove `Data → Application` reference*.
+- *Move command-shaped messages out of `Domain/Events/`*.
+- *MediatR-in-Domain decision* (already a documented carve-out).
+- *MassTransit version skew*.
+- *`PersonalProgress` vertical-slice cleanup*.
+- *ID generation seam*.
+
+**Phase 1 dependency** (not deferred, just sequenced)
+- *Automatic migration application* — execute as the dev-only auto-migrate path during Phase 1.
 
 ---
 
