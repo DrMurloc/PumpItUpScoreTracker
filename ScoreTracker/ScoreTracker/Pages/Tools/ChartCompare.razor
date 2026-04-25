@@ -4,11 +4,11 @@
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.ValueTypes
 
-<PageTitle>Chart Compare</PageTitle>
+<PageTitle>@L["Chart Compare"]</PageTitle>
 
 <MudPaper>
-    <MudText Typo="Typo.body1">Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings. Note that this information is not final until referenced against actual released mix.</MudText>
-    <MudText Typo="Typo.h4">Added</MudText>
+    <MudText Typo="Typo.body1">@L["Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings."] @L["Note that this information is not final until referenced against actual released mix."]</MudText>
+    <MudText Typo="Typo.h4">@L["Added"]</MudText>
     @foreach (var s in _addedSongs.OrderBy(s => s.ToString()))
     {
         <MudText Typo="Typo.body1" Color="Color.Success">@s</MudText>
@@ -17,12 +17,12 @@
     {
         <MudText Typo="Typo.body1" Color="Color.Success">@c.Song.Name @c.DifficultyString</MudText>
     }
-    <MudText Typo="Typo.h4">Changed Level</MudText>
+    <MudText Typo="Typo.h4">@L["Changed Level"]</MudText>
     @foreach (var c in _updatedCharts)
     {
         <MudText Typo="Typo.body1" Color="Color.Info">@c.Song.Name @_xxCharts[c.Id].DifficultyString -> @c.Level</MudText>
     }
-    <MudText Typo="Typo.h4">Removed</MudText>
+    <MudText Typo="Typo.h4">@L["Removed"]</MudText>
     @foreach (var s in _removedSongs.OrderBy(s => s.ToString()))
     {
         <MudText Typo="Typo.body1" Color="Color.Error">@s</MudText>
