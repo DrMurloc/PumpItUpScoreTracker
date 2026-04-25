@@ -917,6 +917,123 @@
   </data>
   <data name="Team Infinitesimal, data-mine from NX2 + Prime" xml:space="preserve">
 	  <value>Team Infinitesimal, data-mine from NX2 + Prime</value>
+  <data name="Welcome" xml:space="preserve">
+	  <value>Welcome</value>
+  </data>
+  <data name="Welcome to Score Tracker, X!" xml:space="preserve">
+	  <value>Welcome to Score Tracker, {0}!</value>
+	  <comment>{0} = current user's name</comment>
+  </data>
+  <data name="Some players already maintain scores via Spreadsheets." xml:space="preserve">
+	  <value>Some players already maintain scores via Spreadsheets.</value>
+  </data>
+  <data name="In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades." xml:space="preserve">
+	  <value>In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades.</value>
+  </data>
+  <data name="After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed." xml:space="preserve">
+	  <value>After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed.</value>
+  </data>
+  <data name="Spreadsheet is uploading and being processed..." xml:space="preserve">
+	  <value>Spreadsheet is uploading and being processed...</value>
+  </data>
+  <data name="Parsed Scores" xml:space="preserve">
+	  <value>Parsed Scores</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+	  <value>Type</value>
+  </data>
+  <data name="XXLetterGrade" xml:space="preserve">
+	  <value>XXLetterGrade</value>
+	  <comment>Column header on the XX-score upload preview grid; matches the legacy property name.</comment>
+  </data>
+  <data name="IsBroken" xml:space="preserve">
+	  <value>IsBroken</value>
+	  <comment>Column header on the XX-score upload preview grid; matches the legacy property name.</comment>
+  </data>
+  <data name="If you leave this page or cancel, the upload will stop but you will not lose any scores that have already been recorded from your upload." xml:space="preserve">
+	  <value>If you leave this page or cancel, the upload will stop but you will not lose any scores that have already been recorded from your upload.</value>
+  </data>
+  <data name="X/Y Uploaded. Z Remaining. W Failed to record" xml:space="preserve">
+	  <value>{0}/{1} Uploaded. {2} Remaining. {3} Failed to record</value>
+	  <comment>Save progress status. {0}=saved count, {1}=total, {2}=time remaining (m:ss), {3}=failed count</comment>
+  </data>
+  <data name="You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again." xml:space="preserve">
+	  <value>You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again.</value>
+  </data>
+  <data name="All charts you uploaded were successfully updated!" xml:space="preserve">
+	  <value>All charts you uploaded were successfully updated!</value>
+  </data>
+  <data name="You somehow ended up in a state between realities. Refresh the page to try again." xml:space="preserve">
+	  <value>You somehow ended up in a state between realities. Refresh the page to try again.</value>
+  </data>
+  <data name="Supported Formats" xml:space="preserve">
+	  <value>Supported Formats</value>
+  </data>
+  <data name="Hide" xml:space="preserve">
+	  <value>Hide</value>
+  </data>
+  <data name="Show" xml:space="preserve">
+	  <value>Show</value>
+  <data name="Unknown" xml:space="preserve">
+	  <value>Unknown</value>
+  </data>
+  <data name="Player" xml:space="preserve">
+	  <value>Player</value>
+  </data>
+  <data name="Scores" xml:space="preserve">
+	  <value>Scores</value>
+  </data>
+  <data name="Download Example" xml:space="preserve">
+	  <value>Download Example</value>
+  </data>
+  <data name="TRUE/FALSE Template" xml:space="preserve">
+	  <value>TRUE/FALSE Template</value>
+  </data>
+  <data name="Letter Grade Template" xml:space="preserve">
+	  <value>Letter Grade Template</value>
+  </data>
+  <data name="Song Names" xml:space="preserve">
+	  <value>Song Names</value>
+  </data>
+  <data name="Some adjustments to account for typos or difference in naming conventions have been accounted for. Song Names are Case Insensitive. (Note that some of these look the same because they are whitespace adjustments)" xml:space="preserve">
+	  <value>Some adjustments to account for typos or difference in naming conventions have been accounted for. Song Names are Case Insensitive. (Note that some of these look the same because they are whitespace adjustments)</value>
+  </data>
+  <data name="Song Name Mappings" xml:space="preserve">
+	  <value>Song Name Mappings</value>
+  </data>
+  <data name="From" xml:space="preserve">
+	  <value>From</value>
+  </data>
+  <data name="To" xml:space="preserve">
+	  <value>To</value>
+  </data>
+  <data name="Could not find chart" xml:space="preserve">
+	  <value>Could not find chart</value>
+  </data>
+  <data name="Could not find song" xml:space="preserve">
+	  <value>Could not find song</value>
+  </data>
+  <data name="An unknown error occurred" xml:space="preserve">
+	  <value>An unknown error occurred</value>
+  </data>
+  <data name="File cannot be larger than 10 MB" xml:space="preserve">
+	  <value>File cannot be larger than 10 MB</value>
+  </data>
+  <data name="There was an unknown error while parsing the file" xml:space="preserve">
+	  <value>There was an unknown error while parsing the file</value>
+  <data name="No Recorded Scores" xml:space="preserve">
+	  <value>No Recorded Scores</value>
+  </data>
+  <data name="None" xml:space="preserve">
+	  <value>None</value>
+  </data>
+  <data name="X% of Y Comparable Players" xml:space="preserve">
+	  <value>{0}% of {1} Comparable Players</value>
+	  <comment>{0} = percentage like "85.3", {1} = comparable player count</comment>
+  </data>
+  <data name="Wouldn't You Like To Know" xml:space="preserve">
+	  <value>Wouldn't You Like To Know</value>
+	  <comment>Easter-egg tooltip shown for the user "CLEARALL18SORQUIT"</comment>
   <data name="About The Site" xml:space="preserve">
 	  <value>About The Site</value>
   </data>

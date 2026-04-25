@@ -11,25 +11,25 @@
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services
 
-<PageTitle>Upload XX Scores</PageTitle>
+<PageTitle>@L["Upload XX Scores"]</PageTitle>
 
 <MudCard >
-    <MudCardHeader><h2>Upload XX Scores</h2></MudCardHeader>
+    <MudCardHeader><h2>@L["Upload XX Scores"]</h2></MudCardHeader>
     <MudCardContent>
         @switch (_currentStep)
         {
             case Step.Information:
                 <p>
-                    Some players already maintain scores via Spreadsheets.
+                    @L["Some players already maintain scores via Spreadsheets."]
                     <br/><br/>
-                    In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades.
+                    @L["In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades."]
                     <br/><br/>
-                    After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed.
+                    @L["After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed."]
                 </p>
                 break;
             case Step.Uploading:
                 <p>
-                    Spreadsheet is uploading and being processed...
+                    @L["Spreadsheet is uploading and being processed..."]
                 </p>
                 <MudProgressLinear Indeterminate="true" Color="@Color.Primary" Size="@Size.Large"></MudProgressLinear>
                 break;
@@ -39,17 +39,17 @@
                     <MudDataGrid T="BestAttemptDto" Items="_attemptDtos" ReadOnly="true"
                                  Groupable="true" Height="400px" FixedHeader="true" EditMode="@DataGridEditMode.Cell" Breakpoint="Breakpoint.None">
                         <ToolBarContent>
-                            <MudText Typo="Typo.h6">Parsed Scores</MudText>
+                            <MudText Typo="Typo.h6">@L["Parsed Scores"]</MudText>
                         </ToolBarContent>
                         <Columns>
-                            <PropertyColumn Property="t=>t.SongName" Title="Song" IsEditable="false">
+                            <PropertyColumn Property="t=>t.SongName" Title=@L["Song"] IsEditable="false">
                             </PropertyColumn>
-                            <PropertyColumn Property="t=>t.ChartType" Title="Type" IsEditable="false">
+                            <PropertyColumn Property="t=>t.ChartType" Title=@L["Type"] IsEditable="false">
                             </PropertyColumn>
-                            <PropertyColumn Property="t=>t.Level" Title="Level" IsEditable="false">
+                            <PropertyColumn Property="t=>t.Level" Title=@L["Level"] IsEditable="false">
                             </PropertyColumn>
-                            <PropertyColumn Property="t=>t.XXLetterGrade" Title="XXLetterGrade" IsEditable="false"></PropertyColumn>
-                            <PropertyColumn Property="t=>t.IsBroken" Title="IsBroken" IsEditable="false"></PropertyColumn>
+                            <PropertyColumn Property="t=>t.XXLetterGrade" Title=@L["XXLetterGrade"] IsEditable="false"></PropertyColumn>
+                            <PropertyColumn Property="t=>t.IsBroken" Title=@L["IsBroken"] IsEditable="false"></PropertyColumn>
                         </Columns>
                     </MudDataGrid>
                 }
@@ -68,25 +68,25 @@
                 break;
             case Step.Saving:
                 <p>
-                    If you leave this page or cancel, the upload will stop but you will not lose any scores that have already been recorded from your upload.
+                    @L["If you leave this page or cancel, the upload will stop but you will not lose any scores that have already been recorded from your upload."]
                 </p>
                 <br/>
-                <span>@_currentSaved/@_maxSaving Uploaded. @_remainingTime.ToString(@"m\:ss") Remaining. @_failedUploads.Count Failed to record</span>
+                <span>@L["X/Y Uploaded. Z Remaining. W Failed to record", _currentSaved, _maxSaving, _remainingTime.ToString(@"m\:ss"), _failedUploads.Count]</span>
                 <MudProgressLinear Color="@Color.Primary" Size="@Size.Large" Value="@_currentSaved" Min="1" Max="@_maxSaving"/>
                 break;
             case Step.Finished when _failedUploads.Any():
                 <p>
-                    You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again.
+                    @L["You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again."]
                 </p>
                 break;
             case Step.Finished when !_failedUploads.Any():
                 <p>
-                    All charts you uploaded were successfully updated!
+                    @L["All charts you uploaded were successfully updated!"]
                 </p>
                 break;
             default:
                 <p>
-                    You somehow ended up in a state between realities. Refresh the page to try again.
+                    @L["You somehow ended up in a state between realities. Refresh the page to try again."]
                 </p>
                 break;
         }
@@ -98,21 +98,21 @@
             <MudButton Variant="@Variant.Text"
                        Color="@Color.Primary"
                        StartIcon="@Icons.Material.Filled.Cancel"
-                       OnClick="@Cancel">Cancel</MudButton>
+                       OnClick="@Cancel">@L["Cancel"]</MudButton>
         }
         @if (_currentStep == Step.Information)
         {
             <MudButton Variant="@Variant.Text"
                        Color="@Color.Primary"
                        StartIcon="@Icons.Material.Filled.Info"
-                       OnClick="()=>_isExampleDialogShowing=true">Supported Formats</MudButton>
+                       OnClick="()=>_isExampleDialogShowing=true">@L["Supported Formats"]</MudButton>
 
             <MudButton HtmlTag="label"
                        Variant="@Variant.Filled"
                        Color="@Color.Primary"
                        StartIcon="@Icons.Material.Filled.UploadFile"
                        for="uploadInput">
-                Upload Scores
+                @L["Upload Scores"]
             </MudButton>
         }
         @if (_currentStep == Step.Confirming)
@@ -120,25 +120,25 @@
             <MudButton Variant="@Variant.Text"
                        Color="@Color.Primary"
                        StartIcon="@Icons.Material.Filled.ViewList"
-                       OnClick="@(_=>_isScoreTableShowing=!_isScoreTableShowing)">@(_isScoreTableShowing?"Hide":"Show") Scores</MudButton>
+                       OnClick="@(_=>_isScoreTableShowing=!_isScoreTableShowing)">@(_isScoreTableShowing?L["Hide"]:L["Show"]) @L["Scores"]</MudButton>
             <MudButton Variant="@Variant.Filled"
                        Color="@Color.Primary"
                        StartIcon="@Icons.Material.Filled.Save"
-                       OnClick="@SaveScores">Save Scores</MudButton>
+                       OnClick="@SaveScores">@L["Save Scores"]</MudButton>
         }
         @if (_failedUploads.Any() && _currentStep is Step.Confirming or Step.Finished)
         {
             <MudButton OnClick="@DownloadFailures"
                        Variant="@Variant.Outlined"
                        Color="@Color.Primary"
-                       StartIcon="@Icons.Material.Filled.FileDownload">Download Failures</MudButton>
+                       StartIcon="@Icons.Material.Filled.FileDownload">@L["Download Failures"]</MudButton>
         }
         @if (_currentStep == Step.Finished)
         {
             <MudButton OnClick="@(_=>_currentStep=Step.Information)"
                        Variant="@Variant.Text"
                        Color="@Color.Primary"
-                       StartIcon="@Icons.Material.Filled.RestartAlt">Restart</MudButton>
+                       StartIcon="@Icons.Material.Filled.RestartAlt">@L["Restart"]</MudButton>
         }
     </MudCardActions>
 </MudCard>
@@ -146,7 +146,7 @@
 
 <MudDialog @bind-Visible="_isExampleDialogShowing">
     <TitleContent>
-        Supported Formats
+        @L["Supported Formats"]
     </TitleContent>
     <DialogContent>
         <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
@@ -154,7 +154,7 @@
                 <MudText>CSV is the most basic upload format. It's typically the suggested format.</MudText>
                 <MudText><b>Column Designation:</b> First row determines the headers of a column</MudText>
                 <MudText><b>Removing Scores: </b> An empty letter grade will remove then score from your saved scores on the site</MudText>
-                <MudButton OnClick="DownloadCSVExample" Variant="Variant.Outlined" Color="Color.Primary">Download Example</MudButton>
+                <MudButton OnClick="DownloadCSVExample" Variant="Variant.Outlined" Color="Color.Primary">@L["Download Example"]</MudButton>
             </MudTabPanel>
             <MudTabPanel Text="XLSX">
                 <MudText>XLSX is primarily a format for migrating from utilizing spreadsheets as your source of truth. There are a lot of rules, for a quick start check out the templates at the bottom.</MudText>
@@ -164,18 +164,18 @@
                 <MudText><b>Letter Grades:</b> There are two styles of format for letter grade determination: TRUE/FALSE and Letter Grade. (Note that in Letter Grade, all non empty letter grades are considered passing)</MudText>
                 <MudText><b>Song Type:</b> "Remix", "Performance", "Full Song", "Short Cut" in the song name column indicates that the charts beneath are of that type. Suffixes will be added based on song type (I.E "Remix")</MudText>
                 <MudText><b>Removing Scores:</b> Empty Letter grades will remove any score you already have registered on the website</MudText>
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="https://docs.google.com/spreadsheets/d/1ZBkB4x3C0wvgmV20-IcIext-8Z6c5xDpwrDKuv9zra0/edit#gid=953736653" Target="_blank">TRUE/FALSE Template</MudButton>
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="https://docs.google.com/spreadsheets/d/1Uz4OA4T9tYXRgPfN1rgPmpG79Jinzhdj/edit?usp=sharing&ouid=105232544737327102121&rtpof=true&sd=true" Target="_blank">Letter Grade Template</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="https://docs.google.com/spreadsheets/d/1ZBkB4x3C0wvgmV20-IcIext-8Z6c5xDpwrDKuv9zra0/edit#gid=953736653" Target="_blank">@L["TRUE/FALSE Template"]</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="https://docs.google.com/spreadsheets/d/1Uz4OA4T9tYXRgPfN1rgPmpG79Jinzhdj/edit?usp=sharing&ouid=105232544737327102121&rtpof=true&sd=true" Target="_blank">@L["Letter Grade Template"]</MudButton>
             </MudTabPanel>
-            <MudTabPanel Text="Song Names">
-                <MudText>Some adjustments to account for typos or difference in naming conventions have been accounted for. Song Names are Case Insensitive. (Note that some of these look the same because they are whitespace adjustments)</MudText>
+            <MudTabPanel Text=@L["Song Names"]>
+                <MudText>@L["Some adjustments to account for typos or difference in naming conventions have been accounted for. Song Names are Case Insensitive. (Note that some of these look the same because they are whitespace adjustments)"]</MudText>
                 <MudTable T="SongMapping" Items="_mappings" Height="300px" FixedHeader="true" Breakpoint="Breakpoint.None" >
                     <ToolBarContent>
-                        <MudText Typo="Typo.h6">Song Name Mappings</MudText>
+                        <MudText Typo="Typo.h6">@L["Song Name Mappings"]</MudText>
                     </ToolBarContent>
                     <HeaderContent>
-                        <MudTh><MudTableSortLabel T="SongMapping" SortBy="e => e.From">From</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel T="SongMapping" SortBy="e => e.To" InitialDirection="SortDirection.Ascending">To</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel T="SongMapping" SortBy="e => e.From">@L["From"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel T="SongMapping" SortBy="e => e.To" InitialDirection="SortDirection.Ascending">@L["To"]</MudTableSortLabel></MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd>
@@ -191,7 +191,7 @@
     </DialogContent>
     <DialogActions>
         <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => _isExampleDialogShowing = false">Close</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => _isExampleDialogShowing = false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -352,7 +352,7 @@
                     Difficulty = best.Chart.DifficultyString,
                     LetterGrade = best.BestAttempt?.LetterGrade.ToString() ?? "",
                     Song = best.Chart.Song.Name,
-                    Error = "Could not find chart",
+                    Error = L["Could not find chart"].Value,
                     IsBroken = (best.BestAttempt?.IsBroken??true).ToString()
                 });
             }
@@ -363,19 +363,19 @@
                     Difficulty = best.Chart.DifficultyString,
                     LetterGrade = best.BestAttempt?.LetterGrade.ToString()??"",
                     Song=best.Chart.Song.Name,
-                    Error="Could not find song",
+                    Error=L["Could not find song"].Value,
                     IsBroken = (best.BestAttempt?.IsBroken??true).ToString()
                 });
             }
             catch (Exception)
             {
-                
+
                 _failedUploads.Add(new SpreadsheetScoreErrorDto
                 {
                     Difficulty = best.Chart.DifficultyString,
                     LetterGrade = best.BestAttempt?.LetterGrade.ToString() ?? "",
                     Song = best.Chart.Song.Name,
-                    Error = "An unknown error occured",
+                    Error = L["An unknown error occurred"].Value,
                     IsBroken = (best.BestAttempt?.IsBroken??true).ToString()
                 });
             }
@@ -387,7 +387,7 @@
         var file = e.File;
         if (file.Size > XXScoreFile.MaxByteCount)
         {
-            Snackbar.Add("File cannot be larger than 10 MB", Severity.Error);
+            Snackbar.Add(L["File cannot be larger than 10 MB"].Value, Severity.Error);
             return;
         }
         _currentStep = Step.Uploading;
@@ -413,7 +413,7 @@
         }
         catch (Exception)
         {
-            Snackbar.Add("There was an unknown error while parsing the file", Severity.Error);
+            Snackbar.Add(L["There was an unknown error while parsing the file"].Value, Severity.Error);
             _currentStep = Step.Information;
             return;
         }
