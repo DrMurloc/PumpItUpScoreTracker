@@ -1,0 +1,19 @@
+root = true
+
+[*]
+indent_style = space
+end_of_line = crlf
+charset = utf-8-bom
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{cs,csproj,props,targets,sln,xml}]
+indent_size = 4
+
+[*.{json,yml,yaml}]
+indent_size = 2
+
+[*.md]
+indent_size = 2
+# Markdown uses two trailing spaces for hard line breaks; don't strip them.
+trim_trailing_whitespace = false
