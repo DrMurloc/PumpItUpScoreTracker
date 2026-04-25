@@ -13,12 +13,8 @@ namespace ScoreTracker.Application.Handlers
         IRequestHandler<SaveUserRandomSettingsCommand>,
         IRequestHandler<DeleteRandomSettingsCommand>
     {
-        private readonly Random _random = new(DateTimeOffset.Now.Year + DateTimeOffset.Now.Month +
-                                              DateTimeOffset.Now.Day + DateTimeOffset.Now.Hour +
-                                              DateTimeOffset.Now.Minute + DateTimeOffset.Now.Second +
-                                              DateTimeOffset.Now.Millisecond);
-
-        private IChartRepository _charts;
+        private readonly IRandomNumberGenerator _random;
+        private readonly IChartRepository _charts;
         private readonly IRandomizerRepository _repo;
         private readonly ICurrentUserAccessor _currentUser;
         private readonly IPhoenixRecordRepository _phoenixRecords;
@@ -26,12 +22,14 @@ namespace ScoreTracker.Application.Handlers
         public RandomizerSaga(IChartRepository charts,
             IRandomizerRepository repo,
             ICurrentUserAccessor currentUser,
-            IPhoenixRecordRepository phoenixRecords)
+            IPhoenixRecordRepository phoenixRecords,
+            IRandomNumberGenerator random)
         {
             _charts = charts;
             _repo = repo;
             _currentUser = currentUser;
             _phoenixRecords = phoenixRecords;
+            _random = random;
         }
 
         private Guid NextRandomGuid(IEnumerable<KeyValuePair<Guid, int>> weights)
