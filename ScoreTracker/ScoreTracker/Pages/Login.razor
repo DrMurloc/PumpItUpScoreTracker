@@ -1,5 +1,8 @@
 ﻿@page "/Login"
+@using Microsoft.Extensions.Options
+@using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Web.Configuration
 
 <PageTitle>@L["Login"]</PageTitle>
 
@@ -28,6 +31,55 @@
         </MudCard>
     </MudContainer>
 
+    @if (_devAuthEnabled)
+    {
+        <MudContainer Fixed="true" Class="mt-4">
+            <MudCard>
+                <MudCardHeader>
+                    <MudText Typo="Typo.h5" Color="Color.Warning">Dev Login</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudText Typo="Typo.body2" Class="mb-3">
+                        Local-only backdoor for contributors. Disabled in production.
+                    </MudText>
+                    @if (_hasAnyUsers)
+                    {
+                        <form method="post" action="/Login/Dev">
+                            <MudAutocomplete T="User"
+                                             Label="Search for a user"
+                                             SearchFunc="SearchUsers"
+                                             ToStringFunc="UserDisplayName"
+                                             Value="_selectedUser"
+                                             ValueChanged="OnUserSelected"
+                                             DebounceInterval="500"
+                                             ResetValueOnEmptyText="true"
+                                             Variant="Variant.Outlined"
+                                             Margin="Margin.Dense"
+                                             Class="mb-3"/>
+                            <input type="hidden" name="userId" value="@(_selectedUser?.Id.ToString())"/>
+                            <MudButton ButtonType="ButtonType.Submit"
+                                       Disabled="@(_selectedUser == null)"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Warning">
+                                Sign In as Selected
+                            </MudButton>
+                        </form>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="mb-2">No users in the database yet.</MudText>
+                        <form method="post" action="/Login/Dev/Bootstrap">
+                            <MudButton ButtonType="ButtonType.Submit"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Warning">
+                                Create Dev User &amp; Sign In
+                            </MudButton>
+                        </form>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudContainer>
+    }
 </MudPaper>
 
 <MudDialog @bind-Visible="_isDialogVisible">
@@ -52,16 +104,37 @@
 
 @inject ICurrentUserAccessor CurrentUser;
 @inject NavigationManager NavManager
+@inject IOptions<DevAuthConfiguration> DevAuth
+@inject IUserRepository Users
 @code
 {
     private bool _isDialogVisible = false;
-    protected override Task OnInitializedAsync()
+    private bool _devAuthEnabled;
+    private bool _hasAnyUsers;
+    private User? _selectedUser;
+
+    protected override async Task OnInitializedAsync()
     {
         if (CurrentUser.IsLoggedIn)
         {
             NavManager.NavigateTo("/Charts");
-            
+            return;
         }
-        return Task.CompletedTask;
+
+        _devAuthEnabled = DevAuth.Value.Enabled;
+        if (_devAuthEnabled)
+        {
+            _hasAnyUsers = (await Users.SearchForUsersByName("")).Any();
+        }
     }
+
+    private async Task<IEnumerable<User>> SearchUsers(string? query, CancellationToken cancellationToken)
+    {
+        var results = await Users.SearchForUsersByName(query ?? "", cancellationToken);
+        return results.Take(50);
+    }
+
+    private static string UserDisplayName(User? user) => user?.Name.ToString() ?? "";
+
+    private void OnUserSelected(User? user) => _selectedUser = user;
 }

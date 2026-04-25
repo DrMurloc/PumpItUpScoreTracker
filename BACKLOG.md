@@ -28,9 +28,14 @@ The single biggest practical barrier today. Booting the app currently requires S
 
 - [x] **`docker-compose.yml`** for SQL Server + Azurite with documented connection strings and a one-line `docker compose up`.
 - [x] **`appsettings.Development.example.json`** with placeholders for every secret consumed (SQL, Discord/Google/Facebook OAuth, SendGrid, Azure Blob).
-- [ ] **"Local mode" / DevAuth backdoor** so the app boots without OAuth credentials. New `DevAuth` authentication scheme registered when `DevAuth:Enabled = true`, with a Dev Login button on the login page that opens a seed-user picker. Production builds: scheme not registered, button hidden.
-- [x] **Auto-migrate on Development env only** — wired in `Program.cs` via `RegistrationExtensions.ApplyDevelopmentMigrations`. Relies on the no-destructive-migrations rule so a seeded `.bak` at version N can be migrated forward to current.
+- [x] **"Local mode" / DevAuth backdoor** so the app boots without OAuth credentials. `DevAuth` config (`DevAuthConfiguration.Enabled`) gates two `LoginController` endpoints: `POST /Login/Dev` (sign in as picked user) and `POST /Login/Dev/Bootstrap` (create + sign in as a fresh "Dev User" for empty-DB cases). `Login.razor` renders a Dev Login card when enabled. Endpoints return 404 when disabled.
 - [ ] **Anonymized seed `.bak` hosted at a public URL + `scripts/dev-up.{sh,ps1}`** that downloads + restores it. Anonymization extraction process (T-SQL script under `scripts/seed-export.sql`) is owned by the maintainer; hosting is owned by the maintainer; the bring-up script is in the codebase.
+- [ ] **Local-dev "how to run" docs** in `CONTRIBUTING.md` (or `README.md` — pick one home for general bring-up instructions and link from the other). Cover the common flows a contributor needs end-to-end:
+  - [ ] EF migrations: `dotnet ef database update --project ScoreTracker/ScoreTracker.Data --startup-project ScoreTracker/ScoreTracker` (and add-migration counterpart). Replaces the dropped auto-migrate path — contributors run this explicitly after `docker compose up -d`.
+  - [ ] Build: `dotnet build ScoreTracker/ScoreTracker.sln -c Release`.
+  - [ ] Tests: `dotnet test ScoreTracker/ScoreTracker.Tests/ScoreTracker.Tests.csproj`.
+  - [ ] Docker compose lifecycle: `docker compose up -d`, `docker compose down`, `docker compose down -v` (wipe volumes).
+  - [ ] DevAuth flow: enable in `appsettings.Development.json`, use the Dev Login card, what the bootstrap button does.
 
 ### Phase 3 — Community signaling — *S*
 
@@ -182,12 +187,13 @@ Flagged in [ARCHITECTURE.md](ARCHITECTURE.md).
 - [ ] `Web` uses `MassTransit.Extensions.DependencyInjection 7.3.1`; rest uses `MassTransit 8.5.7`. Consolidate on v8 DI extensions.
 - [ ] Verify in-memory transport setup still works after the upgrade.
 
-### Automatic migration application — *S* — **Development done; Production deferred**
+### Automatic migration application — *S*
 
 Flagged in [ARCHITECTURE.md](ARCHITECTURE.md).
 
-- [x] Development env: auto-migrate on startup via `RegistrationExtensions.ApplyDevelopmentMigrations`.
-- [ ] Production policy: explicit migration step in deploys vs. auto-migrate. Currently manual; revisit if deploy friction shows up.
+- [ ] Decide policy: auto-migrate on startup (simpler) vs. require an explicit migration step in deploys (safer). Tried Dev-env auto-migrate during Phase 1 OSS work and rolled it back — startup-time `Database.Migrate()` had issues against the dev SQL Server container. Current state: contributors run `dotnet ef database update` manually (see Phase 1 docs item).
+- [ ] If auto-migrate (revisited): add `db.Database.Migrate()` to `Program.cs` startup with appropriate error handling.
+- [ ] If explicit (status quo): make sure the manual migration command is documented.
 
 ### `PersonalProgress` vertical-slice cleanup — *M*
 

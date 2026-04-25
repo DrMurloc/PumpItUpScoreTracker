@@ -1,4 +1,4 @@
-using BlazorApplicationInsights;
+﻿using BlazorApplicationInsights;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Localization;
@@ -53,6 +53,7 @@ builder.Services.AddCors(o =>
     });
 });
 builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSection("Discord"));
+builder.Services.Configure<DevAuthConfiguration>(builder.Configuration.GetSection("DevAuth"));
 builder.Services.AddMassTransit(o =>
 {
     o.AddConsumers(typeof(PlayerRatingSaga).Assembly, typeof(TierListSaga).Assembly,
@@ -159,10 +160,6 @@ builder.Services.AddCookiePolicy(opts =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.Services.ApplyDevelopmentMigrations();
-}
 
 app.UseRequestLocalization(new RequestLocalizationOptions()
     .AddSupportedCultures("en-US", "pt-BR", "ko-KR", "en-ZW", "es-MX", "fr-FR")
