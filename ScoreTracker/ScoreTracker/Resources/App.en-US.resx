@@ -841,8 +841,10 @@
   <data name="Updated X Y" xml:space="preserve">
 	  <value>Updated {0} {1}</value>
 	  <comment>{0} = song name, {1} = difficulty string (e.g. "S17"). Snackbar after a chart save on /ChartUpdate.</comment>
+  </data>
   <data name="Community Invite" xml:space="preserve">
 	  <value>Community Invite</value>
+  </data>
   <data name="Chart Compare" xml:space="preserve">
 	  <value>Chart Compare</value>
   </data>
@@ -1005,6 +1007,7 @@
   </data>
   <data name="Team Infinitesimal, data-mine from NX2 + Prime" xml:space="preserve">
 	  <value>Team Infinitesimal, data-mine from NX2 + Prime</value>
+  </data>
   <data name="Welcome" xml:space="preserve">
 	  <value>Welcome</value>
   </data>
@@ -1062,6 +1065,7 @@
   </data>
   <data name="Show" xml:space="preserve">
 	  <value>Show</value>
+  </data>
   <data name="Unknown" xml:space="preserve">
 	  <value>Unknown</value>
   </data>
@@ -1109,6 +1113,7 @@
   </data>
   <data name="There was an unknown error while parsing the file" xml:space="preserve">
 	  <value>There was an unknown error while parsing the file</value>
+  </data>
   <data name="No Recorded Scores" xml:space="preserve">
 	  <value>No Recorded Scores</value>
   </data>
@@ -1122,6 +1127,7 @@
   <data name="Wouldn't You Like To Know" xml:space="preserve">
 	  <value>Wouldn't You Like To Know</value>
 	  <comment>Easter-egg tooltip shown for the user "CLEARALL18SORQUIT"</comment>
+  </data>
   <data name="About The Site" xml:space="preserve">
 	  <value>About The Site</value>
   </data>
