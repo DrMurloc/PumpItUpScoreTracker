@@ -3,6 +3,7 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Records;
 
+[ExcludeFromCodeCoverage]
 public sealed record ScoreScreen(StepCount Perfects, StepCount Greats, StepCount Goods, StepCount Bads,
     StepCount Misses, StepCount MaxCombo, double? Calories = null)
 {

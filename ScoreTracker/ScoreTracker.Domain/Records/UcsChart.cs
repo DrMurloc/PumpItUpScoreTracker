@@ -3,6 +3,7 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Records
 {
+    [ExcludeFromCodeCoverage]
     public sealed record UcsChart(int PiuGameId, Chart Chart, Name Uploader, Name Artist, string Description,
         int SubmissionCount)
     {

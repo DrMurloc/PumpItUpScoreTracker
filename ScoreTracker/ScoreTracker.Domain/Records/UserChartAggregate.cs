@@ -2,6 +2,7 @@
 
 namespace ScoreTracker.Domain.Records
 {
+    [ExcludeFromCodeCoverage]
     public sealed record UserChartAggregate(Guid UserId, int Passed, int Total, PhoenixScore AverageScore,
         double Pumbility, double PumbilityPlus)
     {

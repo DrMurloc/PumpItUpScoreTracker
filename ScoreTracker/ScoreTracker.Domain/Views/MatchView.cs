@@ -3,6 +3,7 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Views;
 
+[ExcludeFromCodeCoverage]
 public sealed record MatchView(Name MatchName, Name PhaseName, int MatchOrder, int ChartCount, Name RandomSettings,
     MatchState State,
     Name[] Players,

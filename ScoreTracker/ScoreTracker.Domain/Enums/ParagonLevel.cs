@@ -40,6 +40,7 @@ public enum ParagonLevel
     PG
 }
 
+[ExcludeFromCodeCoverage]
 public static class ParagonLevelGradeHelperMethods
 {
     private static readonly IDictionary<PhoenixLetterGrade, ParagonLevel> _levelDict = Enum

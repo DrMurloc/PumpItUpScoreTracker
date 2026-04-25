@@ -54,6 +54,7 @@ public enum PhoenixLetterGrade
     SSSPlus
 }
 
+[ExcludeFromCodeCoverage]
 internal sealed class ScoreRangeAttribute : Attribute
 {
     public ScoreRangeAttribute(int minimumScore, int maximumScore)
@@ -66,6 +67,7 @@ internal sealed class ScoreRangeAttribute : Attribute
     public PhoenixScore MaximumScore { get; }
 }
 
+[ExcludeFromCodeCoverage]
 internal sealed class ModifierAttribute : Attribute
 {
     public ModifierAttribute(double modifier)
@@ -76,6 +78,7 @@ internal sealed class ModifierAttribute : Attribute
     public double Modifier { get; }
 }
 
+[ExcludeFromCodeCoverage]
 public static class PhoenixLetterGradeHelperMethods
 {
     private static readonly IDictionary<PhoenixLetterGrade, ScoreRangeAttribute> CachedRanges = Enum

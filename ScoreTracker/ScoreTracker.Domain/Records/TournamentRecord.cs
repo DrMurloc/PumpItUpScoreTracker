@@ -3,6 +3,7 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Records
 {
+    [ExcludeFromCodeCoverage]
     public sealed record TournamentRecord(Guid Id, Name Name, int CurrentParticipants, TournamentType Type,
         string Location,
         bool IsHighlighted,

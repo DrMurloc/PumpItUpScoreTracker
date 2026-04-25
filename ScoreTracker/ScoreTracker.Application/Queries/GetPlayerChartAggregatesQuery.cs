@@ -5,6 +5,7 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Queries;
 
+[ExcludeFromCodeCoverage]
 public sealed record GetPlayerChartAggregatesQuery(MixEnum? ChartMix = null, Name? CommunityName = null,
     DifficultyLevel? MinLevel = null, DifficultyLevel? MaxLevel = null,
     ChartType? ChartType = null) : IRequest<IEnumerable<UserChartAggregate>>

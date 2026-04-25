@@ -30,6 +30,7 @@ public enum PhoenixPlate
     PerfectGame
 }
 
+[ExcludeFromCodeCoverage]
 internal sealed class PlateShorthandAttribute : Attribute
 {
     public PlateShorthandAttribute(string shorthand)
@@ -40,6 +41,7 @@ internal sealed class PlateShorthandAttribute : Attribute
     public string Shorthand { get; }
 }
 
+[ExcludeFromCodeCoverage]
 public static class PhoenixPlateHelperMethods
 {
     private static readonly IDictionary<string, PhoenixPlate> Parser =

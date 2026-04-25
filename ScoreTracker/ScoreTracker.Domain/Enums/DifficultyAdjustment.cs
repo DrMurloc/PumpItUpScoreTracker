@@ -32,6 +32,7 @@ public enum DifficultyAdjustment
     VeryUnderrated
 }
 
+[ExcludeFromCodeCoverage]
 public sealed class DifficultyAdjustmentDescriptionAttribute : Attribute
 {
     public DifficultyAdjustmentDescriptionAttribute(int scale, double adjustment, string name)
@@ -46,6 +47,7 @@ public sealed class DifficultyAdjustmentDescriptionAttribute : Attribute
     public string Name { get; }
 }
 
+[ExcludeFromCodeCoverage]
 public static class DifficultyAdjustmentHelpers
 {
     private static readonly IDictionary<int, DifficultyAdjustment> Parser =

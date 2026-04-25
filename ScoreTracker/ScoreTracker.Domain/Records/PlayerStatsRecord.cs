@@ -2,6 +2,7 @@
 
 namespace ScoreTracker.Domain.Records
 {
+    [ExcludeFromCodeCoverage]
     public sealed record PlayerStatsRecord(Guid UserId, Rating TotalRating, DifficultyLevel HighestLevel,
         int ClearCount,
         Rating CoOpRating,
