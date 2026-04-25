@@ -32,3 +32,6 @@ msbuild.wrn
 
 # Visual Studio 2015
 .vs/
+
+# Claude Code local settings and worktrees
+.claude/
