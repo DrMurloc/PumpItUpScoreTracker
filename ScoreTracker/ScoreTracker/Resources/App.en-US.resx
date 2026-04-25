@@ -755,6 +755,168 @@
 	  <value>Max Letter Grade</value>
 	  <comment>Max Letter Grade</comment>
   </data>
+  <data name="Chart Compare" xml:space="preserve">
+	  <value>Chart Compare</value>
+  </data>
+  <data name="Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings." xml:space="preserve">
+	  <value>Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings.</value>
+	  <comment>Double space between "FEFEMZ's" and "recordings" preserved verbatim from source.</comment>
+  </data>
+  <data name="Note that this information is not final until referenced against actual released mix." xml:space="preserve">
+	  <value>Note that this information is not final until referenced against actual released mix.</value>
+  </data>
+  <data name="Added" xml:space="preserve">
+	  <value>Added</value>
+  </data>
+  <data name="Changed Level" xml:space="preserve">
+	  <value>Changed Level</value>
+  </data>
+  <data name="Removed" xml:space="preserve">
+	  <value>Removed</value>
+  </data>
+  <data name="Step Artists" xml:space="preserve">
+	  <value>Step Artists</value>
+  </data>
+  <data name="Disclaimer: This list is being refined, some charts are missing step artists and some may have incorrect artists." xml:space="preserve">
+	  <value>Disclaimer: This list is being refined, some charts are missing step artists and some may have incorrect artists.</value>
+  </data>
+  <data name="PIU Life Calculator" xml:space="preserve">
+	  <value>PIU Life Calculator</value>
+  </data>
+  <data name="Disclaimer: This data was data-mined in NX2 and Prime, it is unconfirmed how accurate it is today." xml:space="preserve">
+	  <value>Disclaimer: This data was data-mined in NX2 and Prime, it is unconfirmed how accurate it is today.</value>
+  </data>
+  <data name="Lifebar stats" xml:space="preserve">
+	  <value>Lifebar stats</value>
+  </data>
+  <data name="Life Bar by Level" xml:space="preserve">
+	  <value>Life Bar by Level</value>
+  </data>
+  <data name="Starting Life" xml:space="preserve">
+	  <value>Starting Life</value>
+  </data>
+  <data name="Visible Life" xml:space="preserve">
+	  <value>Visible Life</value>
+  </data>
+  <data name="Max Life" xml:space="preserve">
+	  <value>Max Life</value>
+  </data>
+  <data name="Life Threshold" xml:space="preserve">
+	  <value>Life Threshold</value>
+  </data>
+  <data name="Note Count from Full Life to Death/Threshold based on Combo between Breaks" xml:space="preserve">
+	  <value>Note Count from Full Life to Death/Threshold based on Combo between Breaks</value>
+  </data>
+  <data name="Perfect Combo, Miss Break" xml:space="preserve">
+	  <value>Perfect Combo, Miss Break</value>
+  </data>
+  <data name="Great Combo, Miss Break" xml:space="preserve">
+	  <value>Great Combo, Miss Break</value>
+  </data>
+  <data name="Perfect Combo, Bad Break" xml:space="preserve">
+	  <value>Perfect Combo, Bad Break</value>
+  </data>
+  <data name="Great Combo, Bad Break" xml:space="preserve">
+	  <value>Great Combo, Bad Break</value>
+  </data>
+  <data name="Notes to Full Life From Start of Song (50%)" xml:space="preserve">
+	  <value>Notes to Full Life From Start of Song (50%)</value>
+  </data>
+  <data name="Perfects" xml:space="preserve">
+	  <value>Perfects</value>
+  </data>
+  <data name="Greats" xml:space="preserve">
+	  <value>Greats</value>
+  </data>
+  <data name="Lifebar Description" xml:space="preserve">
+	  <value>Lifebar Description</value>
+  </data>
+  <data name="Starting life is 500, visible  Life (Rainbow life bar) is 1000." xml:space="preserve">
+	  <value>Starting life is 500, visible  Life (Rainbow life bar) is 1000.</value>
+	  <comment>Double space between "visible" and "Life" preserved verbatim from source.</comment>
+  </data>
+  <data name="Lifebar overflows exponentially by level, up to about a 2350 overflow at level 28." xml:space="preserve">
+	  <value>Lifebar overflows exponentially by level, up to about a 2350 overflow at level 28.</value>
+  </data>
+  <data name="Life loss description" xml:space="preserve">
+	  <value>Life loss description</value>
+  </data>
+  <data name="By default, bads lose 50 health, misses lose 250 health (at ~100% health)." xml:space="preserve">
+	  <value>By default, bads lose 50 health, misses lose 250 health (at ~100% health).</value>
+  </data>
+  <data name="Misses lose LESS health the further beneath 1000 health you are at (at 0 life you would lose 20 health for a miss)" xml:space="preserve">
+	  <value>Misses lose LESS health the further beneath 1000 health you are at (at 0 life you would lose 20 health for a miss)</value>
+  </data>
+  <data name="Life gain description" xml:space="preserve">
+	  <value>Life gain description</value>
+  </data>
+  <data name="By default at high combo, perfects gain 9.6 life, greats gain 8 life, goods gain 0 life." xml:space="preserve">
+	  <value>By default at high combo, perfects gain 9.6 life, greats gain 8 life, goods gain 0 life.</value>
+  </data>
+  <data name="This is modified by a multiplier that is almost entirely reset on a miss, and decreased drastically on a bad." xml:space="preserve">
+	  <value>This is modified by a multiplier that is almost entirely reset on a miss, and decreased drastically on a bad.</value>
+  </data>
+  <data name="Each perfect or great you get increases the multiplier by a minor amount." xml:space="preserve">
+	  <value>Each perfect or great you get increases the multiplier by a minor amount.</value>
+  </data>
+  <data name="Effectively, this means that your life gain is heavily affected by combo, reaching maximum gain at ~40-50 combo." xml:space="preserve">
+	  <value>Effectively, this means that your life gain is heavily affected by combo, reaching maximum gain at ~40-50 combo.</value>
+  </data>
+  <data name="Bads vs Misses Observations" xml:space="preserve">
+	  <value>Bads vs Misses Observations</value>
+  </data>
+  <data name="To recover from Bads you require 17-21 combo per Bad. Bads typically let you live for 3x as long as misses." xml:space="preserve">
+	  <value>To recover from Bads you require 17-21 combo per Bad. Bads typically let you live for 3x as long as misses.</value>
+  </data>
+  <data name="To remain alive you need to maintain 17-21 combo per Miss." xml:space="preserve">
+	  <value>To remain alive you need to maintain 17-21 combo per Miss.</value>
+  </data>
+  <data name="To remain at 50% visible life, you need 37-46 combo per Miss." xml:space="preserve">
+	  <value>To remain at 50% visible life, you need 37-46 combo per Miss.</value>
+  </data>
+  <data name="To remain at Rainbow Life, you 46-55 combo per Miss." xml:space="preserve">
+	  <value>To remain at Rainbow Life, you 46-55 combo per Miss.</value>
+	  <comment>Likely missing "need" between "you" and "46-55" in source; preserved verbatim.</comment>
+  </data>
+  <data name="Bads at low health let you live for roughly 3x as long as misses, this gap increases the higher the life threshold you want to keep, up to misses punishing 6x as much when maintaining 100% visual life." xml:space="preserve">
+	  <value>Bads at low health let you live for roughly 3x as long as misses, this gap increases the higher the life threshold you want to keep, up to misses punishing 6x as much when maintaining 100% visual life.</value>
+  </data>
+  <data name="TLDR: Misses matter less at low life, but are always significantly more punishing than Bads." xml:space="preserve">
+	  <value>TLDR: Misses matter less at low life, but are always significantly more punishing than Bads.</value>
+  </data>
+  <data name="Recovery Observations" xml:space="preserve">
+	  <value>Recovery Observations</value>
+  </data>
+  <data name="Misses or back-to-back Bads early in a run put you in a terribly position for maintaining life, as they reset your life gain multiplier and require you to combo ~40-50 to regain it. Start runs strong for increased success rates." xml:space="preserve">
+	  <value>Misses or back-to-back Bads early in a run put you in a terribly position for maintaining life, as they reset your life gain multiplier and require you to combo ~40-50 to regain it. Start runs strong for increased success rates.</value>
+  </data>
+  <data name="When at 12% or lower visual life, a miss gives less life loss than a bad, but inhibits your recovery severely. This only really matters for notes at the end of a song or before guaranteed 100+ combo sections." xml:space="preserve">
+	  <value>When at 12% or lower visual life, a miss gives less life loss than a bad, but inhibits your recovery severely. This only really matters for notes at the end of a song or before guaranteed 100+ combo sections.</value>
+  </data>
+  <data name="TLDR" xml:space="preserve">
+	  <value>TLDR</value>
+  </data>
+  <data name="Misses severely hurt your lifebar." xml:space="preserve">
+	  <value>Misses severely hurt your lifebar.</value>
+  </data>
+  <data name="Bads mostly hurt your recovery." xml:space="preserve">
+	  <value>Bads mostly hurt your recovery.</value>
+  </data>
+  <data name="Try to maintain 17-21 combo per bad." xml:space="preserve">
+	  <value>Try to maintain 17-21 combo per bad.</value>
+  </data>
+  <data name="Try to maintain 40-50 combo per miss." xml:space="preserve">
+	  <value>Try to maintain 40-50 combo per miss.</value>
+  </data>
+  <data name="Lifebars are weird." xml:space="preserve">
+	  <value>Lifebars are weird.</value>
+	  <comment>Quote attributed to Zelllooo on the Life Calculator page.</comment>
+  </data>
+  <data name="Source" xml:space="preserve">
+	  <value>Source</value>
+  </data>
+  <data name="Team Infinitesimal, data-mine from NX2 + Prime" xml:space="preserve">
+	  <value>Team Infinitesimal, data-mine from NX2 + Prime</value>
   <data name="Welcome" xml:space="preserve">
 	  <value>Welcome</value>
   </data>

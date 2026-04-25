@@ -8,8 +8,8 @@
 @using MediatR
 @using ScoreTracker.Application.Queries
 
-<PageTitle>Step Artists</PageTitle>
-<MudText Color="Color.Warning">Disclaimer: This list is being refined, some charts are missing step artists and some may have incorrect artists.</MudText>
+<PageTitle>@L["Step Artists"]</PageTitle>
+<MudText Color="Color.Warning">@L["Disclaimer: This list is being refined, some charts are missing step artists and some may have incorrect artists."]</MudText>
 <MudExpansionPanels>
     @foreach (var artistGroup in _artistCharts.OrderByDescending(kv=>kv.Value.Count()))
     {
