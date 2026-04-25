@@ -841,5 +841,19 @@
   <data name="Updated X Y" xml:space="preserve">
 	  <value>Updated {0} {1}</value>
 	  <comment>{0} = song name, {1} = difficulty string (e.g. "S17"). Snackbar after a chart save on /ChartUpdate.</comment>
+  <data name="About The Site" xml:space="preserve">
+	  <value>About The Site</value>
+  </data>
+  <data name="Source Code" xml:space="preserve">
+	  <value>Source Code</value>
+  </data>
+  <data name="Privacy Policy" xml:space="preserve">
+	  <value>Privacy Policy</value>
+  </data>
+  <data name="Site constructed and maintained by DrMurloc" xml:space="preserve">
+	  <value>Site constructed and maintained by DrMurloc</value>
+  </data>
+  <data name="Original Concept (excel score tracking) Constructed by KyleTT" xml:space="preserve">
+	  <value>Original Concept (excel score tracking) Constructed by KyleTT</value>
   </data>
 </root>
