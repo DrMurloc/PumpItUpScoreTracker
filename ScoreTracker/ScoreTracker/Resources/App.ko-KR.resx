@@ -150,14 +150,8 @@
   <data name="Add to ToDo" xml:space="preserve">
     <value>목표 목록에 추가</value>
   </data>
-  <data name="Adjusted Difficulty" xml:space="preserve">
-    <value>조정된 난이도</value>
-  </data>
   <data name="Average" xml:space="preserve">
     <value>중급</value>
-  </data>
-  <data name="Average Rating" xml:space="preserve">
-    <value>평균 레이팅</value>
   </data>
   <data name="Broken" xml:space="preserve">
     <value>브레이크 오프</value>
@@ -198,17 +192,8 @@
   <data name="Copy to Clipboard" xml:space="preserve">
     <value>클립보드에 복사</value>
   </data>
-  <data name="Different Player Difficulties" xml:space="preserve">
-    <value>다른 유저 난이도</value>
-  </data>
   <data name="Difficulty Level" xml:space="preserve">
     <value>난이도</value>
-  </data>
-  <data name="Disputed Charts" xml:space="preserve">
-    <value>개인차</value>
-  </data>
-  <data name="Disputed Charts Disclaimer" xml:space="preserve">
-    <value>4개 이상의 투표를 받은 채보, 조정된 평점에서 0.5레벨 이내, 표준 편차가 0.4이상인 채보</value>
   </data>
   <data name="Doubles" xml:space="preserve">
     <value>더블</value>
@@ -230,9 +215,6 @@
   </data>
   <data name="Favorites" xml:space="preserve">
     <value>즐겨찾기</value>
-  </data>
-  <data name="Find Players" xml:space="preserve">
-    <value>유저찾기</value>
   </data>
   <data name="Full Privacy Policy" xml:space="preserve">
     <value>개인정보 방침</value>
@@ -287,15 +269,6 @@
   </data>
   <data name="Mix" xml:space="preserve">
     <value>시리즈</value>
-  </data>
-  <data name="My Difficulty Adjustments" xml:space="preserve">
-    <value>나의 조정된 난이도</value>
-  </data>
-  <data name="New Discord" xml:space="preserve">
-    <value>새 디스코드</value>
-  </data>
-  <data name="New Discord Disclaimer" xml:space="preserve">
-    <value>업데이트와 피드백을 위해 이 디스코드를 만들었습니다! 언제든지 참여해 주세요</value>
   </data>
   <data name="Next Letter" xml:space="preserve">
     <value>다음 랭크</value>
@@ -369,15 +342,6 @@
   <data name="Public" xml:space="preserve">
     <value>공개</value>
   </data>
-  <data name="Rated Difficulty Level" xml:space="preserve">
-    <value>채점된 난이도 레벨</value>
-  </data>
-  <data name="Rating Count" xml:space="preserve">
-    <value>레이팅</value>
-  </data>
-  <data name="Record Score" xml:space="preserve">
-    <value>점수 기록</value>
-  </data>
   <data name="Recorded Date" xml:space="preserve">
     <value>기록된 날짜</value>
   </data>
@@ -389,9 +353,6 @@
   </data>
   <data name="Remaining Charts For You" xml:space="preserve">
     <value>{0}개의 채보가 남았습니다</value>
-  </data>
-  <data name="Remove from Favorites" xml:space="preserve">
-    <value>즐겨찾기에서 빼기</value>
   </data>
   <data name="Remove from ToDo" xml:space="preserve">
     <value>목표 목록에서 빼기</value>
@@ -432,9 +393,6 @@
   <data name="Scores Parsed" xml:space="preserve">
     <value>분석된 점수</value>
   </data>
-  <data name="Search Youtube" xml:space="preserve">
-    <value>YouTube 검색</value>
-  </data>
   <data name="Show Only ToDo Charts" xml:space="preserve">
     <value>목표 채보만 보기</value>
   </data>
@@ -456,9 +414,6 @@
   <data name="Song Type" xml:space="preserve">
     <value>노래 종류</value>
   </data>
-  <data name="Standard Deviation" xml:space="preserve">
-    <value>표준 편차</value>
-  </data>
   <data name="Starting Page" xml:space="preserve">
     <value>홈페이지</value>
   </data>
@@ -474,26 +429,17 @@
   <data name="To Do" xml:space="preserve">
     <value>목표</value>
   </data>
-  <data name="Toggle ToDo" xml:space="preserve">
-    <value>목표 전환</value>
-  </data>
   <data name="Tools" xml:space="preserve">
     <value>도구</value>
   </data>
   <data name="Total Count" xml:space="preserve">
     <value>총</value>
   </data>
-  <data name="Tournament Builder" xml:space="preserve">
-    <value>대회 도우미</value>
-  </data>
   <data name="Tournaments" xml:space="preserve">
     <value>대회 목록</value>
   </data>
   <data name="Unpassed ToDos" xml:space="preserve">
     <value>{0}레벨 {1}채보에 '목표'로 표시된 것 중 아직 브레이크 오프가 있습니다.</value>
-  </data>
-  <data name="Update Grade" xml:space="preserve">
-    <value>랭크 바꾸기</value>
   </data>
   <data name="Upload Scores" xml:space="preserve">
     <value>점수 등록</value>
@@ -519,9 +465,6 @@
   <data name="Vote Count" xml:space="preserve">
     <value>{0} 투표 회수</value>
   </data>
-  <data name="Your Difficulty Rating" xml:space="preserve">
-    <value>난이도 레이팅</value>
-  </data>
   <data name="Communities" xml:space="preserve">
     <value>커뮤니티</value>
   </data>
@@ -533,15 +476,6 @@
   </data>
   <data name="Official Leaderboard Search" xml:space="preserve">
     <value>공식 랭킹 검색</value>
-  </data>
-  <data name="Preference" xml:space="preserve">
-    <value>즐겨찾기</value>
-  </data>
-  <data name="Stage Break" xml:space="preserve">
-    <value>완주실패</value>
-  </data>
-  <data name="Star Rating" xml:space="preserve">
-    <value>{0} - {1} 별</value>
   </data>
   <data name="Use Password 2" xml:space="preserve">
     <value>저는 아이디와 비밀번호를 수집하지 않습니다. 따라서, 사용하실 때마다 매번 입력을 부탁드립니다.</value>
@@ -588,9 +522,6 @@
   <data name="Max Rating" xml:space="preserve">
     <value>최고 레이팅</value>
   </data>
-  <data name="Next Place Count" xml:space="preserve">
-    <value>다음 등수와의 차이는 {0}</value>
-  </data>
   <data name="Qualifier Submit Phrase 1" xml:space="preserve">
     <value>점수를 등록하기위해 아이디만 입력해주세요! 로그인 하지 않고도 이 프로그램을 사용할 수 있습니다.</value>
   </data>
@@ -630,39 +561,8 @@
   <data name="World Rankings" xml:space="preserve">
     <value>세계 랭킹</value>
   </data>
-  <data name="You are X place!" xml:space="preserve">
-    <value>당신은 {0}등입니다!</value>
-  </data>
   <data name="Play Num" xml:space="preserve">
     <value>최소 {0}만큼 더 플레이해주세요</value>
-  </data>
-  <data name="9+ PIU Cabinets Running Phoenix." xml:space="preserve">
-    <value>9+ PIU Cabinets Running Phoenix.</value>
-    <comment>9+ PIU Cabinets Running Phoenix.</comment>
-  </data>
-  <data name="101 person tournament." xml:space="preserve">
-    <value>101 person tournament.</value>
-    <comment>101 person tournament.</comment>
-  </data>
-  <data name="99 matches tailored to each player's level." xml:space="preserve">
-    <value>99 matches tailored to each player's level.</value>
-    <comment>99 matches tailored to each player's level.</comment>
-  </data>
-  <data name="CoOp and No Bar Old School Tournaments." xml:space="preserve">
-    <value>CoOp and No Bar Old School Tournaments.</value>
-    <comment>CoOp and No Bar Old School Tournaments.</comment>
-  </data>
-  <data name="8-10 estimated charts played per player." xml:space="preserve">
-    <value>8-10 estimated charts played per player.</value>
-    <comment>8-10 estimated charts played per player.</comment>
-  </data>
-  <data name="The most Pump it Up that has ever been at one event." xml:space="preserve">
-    <value>The most Pump it Up that has ever been at one event.</value>
-    <comment>The most Pump it Up that has ever been at one event.</comment>
-  </data>
-  <data name="Why don't you just get up and dance, man?" xml:space="preserve">
-    <value>Why don't you just get up and dance, man?</value>
-    <comment>Why don't you just get up and dance, man?</comment>
   </data>
   <data name="Text View" xml:space="preserve">
     <value>Text View</value>
