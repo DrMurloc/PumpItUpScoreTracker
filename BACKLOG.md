@@ -24,13 +24,13 @@ New work specific to enabling external contributions. Existing test-infra and ar
 
 ### Phase 1 — Local dev without prod credentials — *M*
 
-The single biggest practical barrier today. Booting the app currently requires SQL Server + Discord/Google/Facebook OAuth + SendGrid + Azure Blob + Syncfusion license. Subsumes the older *Local-dev bring-up script* item under Process/docs.
+The single biggest practical barrier today. Booting the app currently requires SQL Server + Discord/Google/Facebook OAuth + SendGrid + Azure Blob. Subsumes the older *Local-dev bring-up script* item under Process/docs.
 
-- [ ] **`docker-compose.yml`** for SQL Server with a documented connection string and a one-line `docker compose up`.
-- [ ] **`appsettings.Development.example.json`** with placeholders for every secret consumed (SQL, Discord/Google/Facebook OAuth, SendGrid, Azure Blob, Syncfusion). Today nothing documents what config the app needs — `appsettings.json` is empty of real keys.
-- [ ] **"Local mode" / null-object adapters** so the app boots without OAuth, SendGrid, or Azure Blob credentials. Implement behind the existing Domain ports (`IBotClient`, `IFileUploadClient`, the email port, etc.), gated by config.
-- [ ] **Auto-migrate on Development env only** — see *Automatic migration application* under Architecture cleanups. Manually applying 165 migrations is contributor-hostile.
-- [ ] (Optional) **Seed data script** for chart catalog so the app isn't empty after first boot. Defer if scrape-on-demand works locally.
+- [x] **`docker-compose.yml`** for SQL Server + Azurite with documented connection strings and a one-line `docker compose up`.
+- [x] **`appsettings.Development.example.json`** with placeholders for every secret consumed (SQL, Discord/Google/Facebook OAuth, SendGrid, Azure Blob).
+- [ ] **"Local mode" / DevAuth backdoor** so the app boots without OAuth credentials. New `DevAuth` authentication scheme registered when `DevAuth:Enabled = true`, with a Dev Login button on the login page that opens a seed-user picker. Production builds: scheme not registered, button hidden.
+- [x] **Auto-migrate on Development env only** — wired in `Program.cs` via `RegistrationExtensions.ApplyDevelopmentMigrations`. Relies on the no-destructive-migrations rule so a seeded `.bak` at version N can be migrated forward to current.
+- [ ] **Anonymized seed `.bak` hosted at a public URL + `scripts/dev-up.{sh,ps1}`** that downloads + restores it. Anonymization extraction process (T-SQL script under `scripts/seed-export.sql`) is owned by the maintainer; hosting is owned by the maintainer; the bring-up script is in the codebase.
 
 ### Phase 3 — Community signaling — *S*
 
@@ -182,13 +182,12 @@ Flagged in [ARCHITECTURE.md](ARCHITECTURE.md).
 - [ ] `Web` uses `MassTransit.Extensions.DependencyInjection 7.3.1`; rest uses `MassTransit 8.5.7`. Consolidate on v8 DI extensions.
 - [ ] Verify in-memory transport setup still works after the upgrade.
 
-### Automatic migration application — *S*
+### Automatic migration application — *S* — **Development done; Production deferred**
 
 Flagged in [ARCHITECTURE.md](ARCHITECTURE.md).
 
-- [ ] Decide policy: auto-migrate on startup (simpler) vs. require an explicit migration step in deploys (safer).
-- [ ] If auto-migrate: add `db.Database.Migrate()` to `Program.cs` startup with appropriate error handling.
-- [ ] If explicit: document the deploy-time migration command.
+- [x] Development env: auto-migrate on startup via `RegistrationExtensions.ApplyDevelopmentMigrations`.
+- [ ] Production policy: explicit migration step in deploys vs. auto-migrate. Currently manual; revisit if deploy friction shows up.
 
 ### `PersonalProgress` vertical-slice cleanup — *M*
 
