@@ -755,4 +755,7 @@
 	  <value>Max Letter Grade</value>
 	  <comment>Max Letter Grade</comment>
   </data>
+  <data name="Community Invite" xml:space="preserve">
+	  <value>Community Invite</value>
+  </data>
 </root>
