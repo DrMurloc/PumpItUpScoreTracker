@@ -1,6 +1,6 @@
 # Architecture
 
-> Last verified against commit `46fa1b5` on 2026-04-25. If you change structural patterns, update this file in the same PR.
+> Last verified against commit `92537f0` on 2026-04-25. If you change structural patterns, update this file in the same PR.
 
 ## Overview
 
@@ -161,11 +161,11 @@ Domain    ◄──── Application ◄──── Data ────┐
 
 ## Testing strategy
 
-- **Framework** — xUnit `2.9.3`.
-- **Test doubles** — Currently `FakeItEasy 9.0.1` and `AutoFixture 4.18.1`. **Divergent — see tech debt.**
-- **Layout** — `ScoreTracker.Tests` mirrors `src` only loosely. Today: `DomainTests/` for value-type tests, `AutoFixture/` for AutoFixture customizations, `Helpers/FixtureBuilder.cs`. Test count is small (`NameTests`, `DifficultyLevelTests`).
-- **Coverage focus** — Domain value types only. Application handlers and Infrastructure are not covered by tests in the current state.
+- **Framework** — xUnit `2.9.3` with `Moq 4.20.72` for test doubles.
+- **Layout** — `ScoreTracker.Tests` mirrors `src` by namespace. Today: `DomainTests/` for value-type tests (`NameTests`, `DifficultyLevelTests`), `ApplicationTests/` for handler tests (`CreateUserHandlerTests`).
+- **Coverage focus** — Domain value types and a seed handler test demonstrating the Moq mocking pattern (mock the Domain ports, instantiate the handler, `Verify` the side effects). Wider Application/Infrastructure coverage is still to come.
 - **Project reference** — `Tests` references `Application`, which transitively pulls `Domain` and `PersonalProgress`. It does not reference `Data` or `Web`.
+- **Mocking convention** — Mock the Domain port interfaces (`IUserRepository`, `IBus`, etc.), construct the real handler with `mock.Object` dependencies, and `Verify` calls with `It.Is<T>(...)` predicates. Do not introduce alternative double libraries (`FakeItEasy`, `NSubstitute`, `AutoFixture`) without explicit approval.
 
 ## Conventions and rules
 
@@ -184,7 +184,6 @@ Domain    ◄──── Application ◄──── Data ────┐
 
 - **`ScoreTracker.Data` references `ScoreTracker.Application`.** `ScoreTracker/ScoreTracker.Data/ScoreTracker.Data.csproj` line 24. This points outward through the onion. **To be removed** — Infrastructure should depend only on Domain.
 - **`ScoreTracker.PersonalProgress` is a parallel Application-layer assembly.** Acceptable as an experimental vertical-slice split, but **do not introduce additional vertical-slice projects without explicit approval**. `Application` referencing `PersonalProgress` makes them effectively co-equal.
-- **Test stack uses FakeItEasy + AutoFixture instead of Moq.** Stated intent is xUnit + Moq. New tests should be written with Moq once the migration begins; existing FakeItEasy/AutoFixture usage is to be replaced.
 - **MassTransit version skew.** `Web` uses `MassTransit.Extensions.DependencyInjection 7.3.1`; the rest uses `MassTransit 8.5.7`. Consolidate on the v8 DI extensions.
 - **Domain `Events/` folder mixes events and command-shaped messages** (`ProcessPassTierListCommand`, `ProcessScoresTiersListCommand`). Naming/folder placement could be tightened.
 - **No MediatR pipeline behaviors and no validation pipeline.** Validation lives only in value-type constructors. Adding a behavior pipeline (logging, validation) is a future option, not a current rule.
