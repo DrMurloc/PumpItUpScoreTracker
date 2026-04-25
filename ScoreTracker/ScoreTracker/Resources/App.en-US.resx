@@ -757,5 +757,19 @@
   </data>
   <data name="Community Invite" xml:space="preserve">
 	  <value>Community Invite</value>
+  <data name="About The Site" xml:space="preserve">
+	  <value>About The Site</value>
+  </data>
+  <data name="Source Code" xml:space="preserve">
+	  <value>Source Code</value>
+  </data>
+  <data name="Privacy Policy" xml:space="preserve">
+	  <value>Privacy Policy</value>
+  </data>
+  <data name="Site constructed and maintained by DrMurloc" xml:space="preserve">
+	  <value>Site constructed and maintained by DrMurloc</value>
+  </data>
+  <data name="Original Concept (excel score tracking) Constructed by KyleTT" xml:space="preserve">
+	  <value>Original Concept (excel score tracking) Constructed by KyleTT</value>
   </data>
 </root>
