@@ -2,6 +2,7 @@
 
 namespace ScoreTracker.Domain.Records
 {
+    [ExcludeFromCodeCoverage]
     public sealed record CommunityLeaderboardRecord(Name PlayerName, bool IsPublic, Uri ProfileImage, Guid UserId,
         Rating TotalRating,
         DifficultyLevel HighestLevel, int ClearCount,

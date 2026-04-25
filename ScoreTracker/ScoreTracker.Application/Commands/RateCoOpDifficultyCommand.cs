@@ -5,6 +5,7 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Commands
 {
+    [ExcludeFromCodeCoverage]
     public sealed record RateCoOpDifficultyCommand
         (MixEnum mix, Guid ChartId, IDictionary<int, DifficultyLevel>? Ratings) : IRequest<CoOpRating?>
     {

@@ -2,6 +2,7 @@
 
 namespace ScoreTracker.Domain.Records
 {
+    [ExcludeFromCodeCoverage]
     public sealed record ChartRecommendation(Name Category, Guid ChartId, string Explanation, string ChartDetails = "")
     {
     }

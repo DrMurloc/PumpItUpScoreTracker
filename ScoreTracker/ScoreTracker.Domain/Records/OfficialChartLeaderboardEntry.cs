@@ -3,6 +3,7 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Records
 {
+    [ExcludeFromCodeCoverage]
     public sealed record OfficialChartLeaderboardEntry(string Username, Chart Chart, PhoenixScore Score, Uri AvatarUrl)
     {
     }

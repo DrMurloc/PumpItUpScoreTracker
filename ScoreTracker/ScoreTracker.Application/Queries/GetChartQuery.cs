@@ -5,6 +5,7 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Queries;
 
+[ExcludeFromCodeCoverage]
 public sealed record GetChartQuery(MixEnum Mix, Name SongName, DifficultyLevel Level, ChartType Type) : IRequest<Chart?>
 {
 }

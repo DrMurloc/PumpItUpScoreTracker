@@ -12,6 +12,7 @@ public enum ChartType
     [Description("CoOp")] CoOp
 }
 
+[ExcludeFromCodeCoverage]
 public static class ChartTypeHelperMethods
 {
     public static ChartType ParseChartTypeShortHand(string shortHand)

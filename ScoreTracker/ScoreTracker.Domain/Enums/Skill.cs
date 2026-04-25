@@ -60,6 +60,7 @@ public enum Skill
     Gimmicks
 }
 
+[ExcludeFromCodeCoverage]
 public sealed class NameAttribute : Attribute
 {
     public string Name { get; }
@@ -70,6 +71,7 @@ public sealed class NameAttribute : Attribute
     }
 }
 
+[ExcludeFromCodeCoverage]
 public sealed class SkillCategoryAttribute : Attribute
 {
     public SkillCategory[] Categories { get; }
@@ -80,6 +82,7 @@ public sealed class SkillCategoryAttribute : Attribute
     }
 }
 
+[ExcludeFromCodeCoverage]
 public static class SkillHelpers
 {
     private static readonly IDictionary<Skill, IReadOnlySet<SkillCategory>> Categories = Enum.GetValues<Skill>()

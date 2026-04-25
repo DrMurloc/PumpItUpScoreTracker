@@ -4,6 +4,7 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Queries
 {
+    [ExcludeFromCodeCoverage]
     public sealed record GetPhoenixRecordsForCommunityQuery
         (Name CommuityName, Guid ChartId) : IRequest<IEnumerable<UserPhoenixScore>>
     {

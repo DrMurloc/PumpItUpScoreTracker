@@ -3,6 +3,7 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.Records
 {
+    [ExcludeFromCodeCoverage]
     public sealed record CommunityOverviewRecord(Name CommunityName, CommunityPrivacyType PrivacyType, int MemberCount,
         bool IsRegional)
     {

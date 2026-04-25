@@ -9,6 +9,7 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Queries
 {
+    [ExcludeFromCodeCoverage]
     public sealed record GetTierListQuery(Name TierListName) : IRequest<IEnumerable<SongTierListEntry>>
     {
     }

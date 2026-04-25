@@ -1,6 +1,6 @@
 # Architecture
 
-> Last verified against commit `92537f0` on 2026-04-25. If you change structural patterns, update this file in the same PR.
+> Last verified against commit `9aa78a8` on 2026-04-25. If you change structural patterns, update this file in the same PR.
 
 ## Overview
 
@@ -166,6 +166,8 @@ Domain    ◄──── Application ◄──── Data ────┐
 - **Coverage focus** — Domain value types and a seed handler test demonstrating the Moq mocking pattern (mock the Domain ports, instantiate the handler, `Verify` the side effects). Wider Application/Infrastructure coverage is still to come.
 - **Project reference** — `Tests` references `Application`, which transitively pulls `Domain` and `PersonalProgress`. It does not reference `Data` or `Web`.
 - **Mocking convention** — Mock the Domain port interfaces (`IUserRepository`, `IBus`, etc.), construct the real handler with `mock.Object` dependencies, and `Verify` calls with `It.Is<T>(...)` predicates. Do not introduce alternative double libraries (`FakeItEasy`, `NSubstitute`, `AutoFixture`) without explicit approval.
+- **Test helpers** — Reusable scaffolding lives in `ScoreTracker.Tests/TestHelpers/` (`FakeDateTime.At(...)` returns a configured `Mock<IDateTimeOffsetAccessor>`) and `ScoreTracker.Tests/TestData/` (`UserBuilder`, `ChartBuilder` — fluent builders with sensible defaults). Prefer these over hand-rolled doubles in new tests.
+- **Coverage exclusions** — Pure data shapes (commands, queries, events, records, view projections), exception classes, and enum-helper static classes are marked with `[ExcludeFromCodeCoverage]` so coverage % reflects logic, not DTO surface area. Each project has a `GlobalUsings.cs` that exposes `System.Diagnostics.CodeAnalysis` so the attribute requires no per-file `using`. **When adding a new command/query/event/record/exception, mark it `[ExcludeFromCodeCoverage]`.** Excluded folders: `Application/Commands`, `Application/Queries`, `Application/Events`, `Domain/Records`, `Domain/Events`, `Domain/Views`, `Domain/Exceptions`, `Domain/Enums` (helper classes only — enums themselves can't take the attribute), `PersonalProgress/Queries`. Real logic in `Domain/Models`, `Domain/Services`, `Application/Handlers`, and `Domain/ValueTypes` is *not* excluded — that's where coverage is meaningful.
 
 ## Conventions and rules
 

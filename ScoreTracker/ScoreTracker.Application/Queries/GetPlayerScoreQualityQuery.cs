@@ -5,6 +5,7 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Queries
 {
+    [ExcludeFromCodeCoverage]
     public sealed record GetPlayerScoreQualityQuery
         (DifficultyLevel Level, ChartType ChartType) : IRequest<IDictionary<Guid, ScoreRankingRecord>>
     {

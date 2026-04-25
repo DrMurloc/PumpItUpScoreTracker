@@ -11,6 +11,7 @@ public enum SkillCategory
     [Color("#7B1FA2")] Tech
 }
 
+[ExcludeFromCodeCoverage]
 public sealed class ColorAttribute : Attribute
 {
     public string Color { get; }
@@ -21,6 +22,7 @@ public sealed class ColorAttribute : Attribute
     }
 }
 
+[ExcludeFromCodeCoverage]
 public static class SkillCategoryHelpers
 {
     private static readonly IDictionary<SkillCategory, string> Colors = Enum.GetValues<SkillCategory>()

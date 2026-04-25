@@ -5,6 +5,7 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Commands
 {
+    [ExcludeFromCodeCoverage]
     public sealed record UpdatePreferenceRatingCommand
         (MixEnum Mix, Guid ChartId, PreferenceRating Rating) : IRequest<ChartPreferenceRatingRecord>
     {

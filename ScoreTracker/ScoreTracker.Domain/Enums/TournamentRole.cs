@@ -11,6 +11,7 @@ public enum TournamentRole
     [Description("Assistant")] Assistant
 }
 
+[ExcludeFromCodeCoverage]
 public static class TournamentRoleHelperMethods
 {
     private static readonly IDictionary<TournamentRole, string> Parser =
