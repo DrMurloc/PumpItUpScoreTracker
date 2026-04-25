@@ -5,7 +5,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Application.Handlers;
 
-internal class GetUserByDiscordIdHandler : IRequestHandler<GetUserByExternalLoginQuery, User?>
+public sealed class GetUserByDiscordIdHandler : IRequestHandler<GetUserByExternalLoginQuery, User?>
 {
     private readonly IUserRepository _user;
 
