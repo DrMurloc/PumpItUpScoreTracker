@@ -28,7 +28,7 @@
 
     private string Tooltip => User == null ? "" :
         User.GameTag == null ? "" :
-            User.Name=="CLEARALL18SORQUIT" ? "Wouldn't You Like To Know" : User.GameTag.Value;
+            User.Name=="CLEARALL18SORQUIT" ? L["Wouldn't You Like To Know"].Value : User.GameTag.Value;
     protected override async Task OnInitializedAsync()
     {
         if (User?.Country != null)
