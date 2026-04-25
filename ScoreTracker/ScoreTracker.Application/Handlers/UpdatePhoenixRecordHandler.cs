@@ -40,7 +40,7 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
         if (!isNewScore && !isUpscore) return;
         //995010
         //Batches up score posts to reduce noise
-        var fireAt = DateTime.UtcNow + TimeSpan.FromMinutes(2);
+        var fireAt = dateTimeOffset.Now.UtcDateTime + TimeSpan.FromMinutes(2);
         if (!_fireAt.ContainsKey(user.User.Id))
         {
             _newCharts[user.User.Id] = new HashSet<Guid>();
@@ -69,7 +69,7 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
 
     public async Task Consume(ConsumeContext<TryFireScoreMessage> context)
     {
-        if (DateTime.UtcNow < _fireAt[context.Message.UserId])
+        if (dateTimeOffset.Now.UtcDateTime < _fireAt[context.Message.UserId])
         {
             await scheduler.SchedulePublish(_fireAt[context.Message.UserId] + TimeSpan.FromMinutes(2),
                 new TryFireScoreMessage(context.Message.UserId),

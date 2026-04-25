@@ -12,16 +12,19 @@ namespace ScoreTracker.Application.Handlers
         private IChartRepository _charts;
         private IBus _bus;
         private readonly IMessageScheduler _scheduler;
+        private readonly IDateTimeOffsetAccessor _dateTime;
 
         public MarchOfMurlocsHandler(ITournamentRepository tournaments,
             IChartRepository charts,
             IBus bus,
-            IMessageScheduler scheduler)
+            IMessageScheduler scheduler,
+            IDateTimeOffsetAccessor dateTime)
         {
             _tournaments = tournaments;
             _charts = charts;
             _bus = bus;
             _scheduler = scheduler;
+            _dateTime = dateTime;
         }
 
         public sealed record TryScheduleMoM
@@ -35,7 +38,7 @@ namespace ScoreTracker.Application.Handlers
         public async Task Consume(ConsumeContext<TryScheduleMoM> context)
         {
             var mom = (await _tournaments.GetAllTournaments(context.CancellationToken)).FirstOrDefault(e => e.IsMoM);
-            if (mom?.EndDate == null || mom.EndDate < DateTimeOffset.Now)
+            if (mom?.EndDate == null || mom.EndDate < _dateTime.Now)
                 await _bus.Publish(new CycleMoM());
             else
                 await _scheduler.SchedulePublish((mom.EndDate.Value + TimeSpan.FromMinutes(1)).DateTime, new CycleMoM(),
@@ -45,8 +48,8 @@ namespace ScoreTracker.Application.Handlers
         public async Task Consume(ConsumeContext<CycleMoM> context)
         {
             var moms = (await _tournaments.GetAllTournaments(context.CancellationToken)).Where(e => e.IsMoM).ToArray();
-            var oldEnd = moms.FirstOrDefault()?.EndDate ?? DateTimeOffset.Now - TimeSpan.FromMinutes(1);
-            var year = DateTimeOffset.Now.Year;
+            var oldEnd = moms.FirstOrDefault()?.EndDate ?? _dateTime.Now - TimeSpan.FromMinutes(1);
+            var year = _dateTime.Now.Year;
 
             var newMonth = oldEnd.Month switch
 
@@ -72,8 +75,8 @@ namespace ScoreTracker.Application.Handlers
                 12 => "Fall",
                 _ => throw new ArgumentOutOfRangeException("Date was invalid somehow 2?")
             };
-            var newEndDate = new DateTimeOffset(new DateTime(DateTimeOffset.Now.Year, newMonth,
-                DateTime.DaysInMonth(DateTimeOffset.Now.Year, newMonth),
+            var newEndDate = new DateTimeOffset(new DateTime(_dateTime.Now.Year, newMonth,
+                DateTime.DaysInMonth(_dateTime.Now.Year, newMonth),
                 23, 59, 59), TimeSpan.FromHours(-5));
 
             var charts = (await _charts.GetCharts(MixEnum.Phoenix)).Where(c => c.Type != ChartType.CoOp).ToArray();
@@ -103,7 +106,7 @@ namespace ScoreTracker.Application.Handlers
                 {
                     AllowRepeats = false,
                     EndDate = newEndDate,
-                    StartDate = DateTimeOffset.Now,
+                    StartDate = _dateTime.Now,
                     MaxTime = TimeSpan.FromHours(1) + TimeSpan.FromMinutes(45)
                 };
 

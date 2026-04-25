@@ -10,14 +10,15 @@ using ScoreTracker.Domain.ValueTypes;
 namespace ScoreTracker.Application.Handlers
 {
     public sealed class BountySaga(IPhoenixRecordRepository scores, IChartRepository charts,
-            IChartBountyRepository bounties, IPlayerStatsRepository playerStats, ICurrentUserAccessor currentUser)
+            IChartBountyRepository bounties, IPlayerStatsRepository playerStats, ICurrentUserAccessor currentUser,
+            IDateTimeOffsetAccessor dateTime)
         : IConsumer<UpdateBountiesEvent>,
             IConsumer<PlayerScoreUpdatedEvent>,
             IRequestHandler<GetChartBountiesQuery, IEnumerable<ChartBounty>>
     {
         public async Task Consume(ConsumeContext<UpdateBountiesEvent> context)
         {
-            if (DateTimeOffset.Now.Day == 1) await bounties.ClearMonthlyBoard(context.CancellationToken);
+            if (dateTime.Now.Day == 1) await bounties.ClearMonthlyBoard(context.CancellationToken);
             foreach (var level in DifficultyLevel.All)
             foreach (var type in new[] { ChartType.Single, ChartType.Double })
             {

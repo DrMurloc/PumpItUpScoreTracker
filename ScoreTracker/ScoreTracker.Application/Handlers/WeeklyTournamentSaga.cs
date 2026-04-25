@@ -13,17 +13,18 @@ namespace ScoreTracker.Application.Handlers
     public sealed class WeeklyTournamentSaga
     (IChartRepository charts, IWeeklyTournamentRepository weeklyTournies, IPlayerStatsRepository playerStats,
         IBotClient bot,
-        ILogger<WeeklyTournamentSaga> logger, IUserRepository users, IBus bus) :
+        ILogger<WeeklyTournamentSaga> logger, IUserRepository users, IBus bus,
+        IDateTimeOffsetAccessor dateTime) :
         IConsumer<UpdateWeeklyChartsEvent>,
         IRequestHandler<RegisterWeeklyChartScore>
     {
         public async Task Consume(ConsumeContext<UpdateWeeklyChartsEvent> context)
         {
             var currentWeek = await weeklyTournies.GetWeeklyCharts(context.CancellationToken);
-            if (currentWeek.Any(w => w.ExpirationDate > DateTimeOffset.Now))
+            if (currentWeek.Any(w => w.ExpirationDate > dateTime.Now))
                 return;
             //Write User Place Histories
-            var now = DateTimeOffset.Now;
+            var now = dateTime.Now;
             var daysUntilMonday = ((int)DayOfWeek.Monday - (int)now.DayOfWeek + 7) % 7;
             if (daysUntilMonday == 0) daysUntilMonday = 7;
             var nextMonday = now.AddDays(daysUntilMonday);

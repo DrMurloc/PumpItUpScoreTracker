@@ -34,6 +34,7 @@ namespace ScoreTracker.Application.Handlers
         private readonly IChartRepository _charts;
         private readonly IPiuTrackerClient _piuTracker;
         private readonly ILogger _logger;
+        private readonly IDateTimeOffsetAccessor _dateTime;
 
         public OfficialLeaderboardSaga(IOfficialSiteClient officialSite, ITierListRepository tierLists,
             IWorldRankingService worldRankings,
@@ -41,7 +42,8 @@ namespace ScoreTracker.Application.Handlers
             IMediator mediator,
             IPiuTrackerClient piuTracker,
             ILogger<OfficialLeaderboardSaga> logger,
-            IBus bus, IFileUploadClient files, IChartRepository charts)
+            IBus bus, IFileUploadClient files, IChartRepository charts,
+            IDateTimeOffsetAccessor dateTime)
         {
             _piuTracker = piuTracker;
             _officialSite = officialSite;
@@ -55,6 +57,7 @@ namespace ScoreTracker.Application.Handlers
             _files = files;
             _charts = charts;
             _worldRankings = worldRankings;
+            _dateTime = dateTime;
         }
 
         public async Task Handle(ProcessOfficialLeaderboardsCommand request, CancellationToken cancellationToken)
@@ -261,7 +264,7 @@ namespace ScoreTracker.Application.Handlers
                     cancellationToken);
                 count++;
                 batch.Add(new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, score.IsBroken,
-                    DateTimeOffset.Now));
+                    _dateTime.Now));
 
                 if (count % 10 != 0) continue;
 
