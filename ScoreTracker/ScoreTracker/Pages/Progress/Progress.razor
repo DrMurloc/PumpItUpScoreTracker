@@ -3,7 +3,7 @@
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Services.Contracts
-<PageTitle>Best Attempts</PageTitle>
+<PageTitle>@L["Best Attempts"]</PageTitle>
 @using MediatR
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.ValueTypes
@@ -13,17 +13,17 @@
 
 <MudPaper>
 <MudToolBar>
-    <MudText Typo="Typo.h6">XX Progress</MudText>
+    <MudText Typo="Typo.h6">@L["XX Progress"]</MudText>
     <MudSpacer></MudSpacer>
 
-    <MudSelect T="SelectedChartsEnum" Label="Chart Type" Value="_selectedCharts" ValueChanged="ChangeSelectedCharts" FullWidth="false" Style="padding-left: 30px;">
+    <MudSelect T="SelectedChartsEnum" Label=@L["Chart Type"] Value="_selectedCharts" ValueChanged="ChangeSelectedCharts" FullWidth="false" Style="padding-left: 30px;">
         <MudSelectItem T="SelectedChartsEnum" Value="SelectedChartsEnum.All"></MudSelectItem>
         <MudSelectItem T="SelectedChartsEnum" Value="SelectedChartsEnum.Singles"></MudSelectItem>
         <MudSelectItem T="SelectedChartsEnum" Value="SelectedChartsEnum.Doubles"></MudSelectItem>
     </MudSelect>
     @if (CurrentUser.IsLoggedIn && CurrentUser.User.IsPublic && CurrentUser.User.Id == RequestedUserId)
     {
-        <MudTooltip Text="Share Your Progress Page" Inline="true">
+        <MudTooltip Text=@L["Share Your Progress Page"] Inline="true">
             <MudIconButton Icon="@Icons.Material.Filled.Share" OnClick="() => _showShareDialog = true"></MudIconButton>
         </MudTooltip>
     }
@@ -31,33 +31,33 @@
 
 </MudToolBar>
 <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
-    <MudTabPanel Text="Overview">
+    <MudTabPanel Text=@L["Overview"]>
         <MudDataGrid T="DifficultyOverviewDto" ReadOnly="true" Items="_difficultyOverviews" Height="500px" FixedHeader="true" Striped="true" Loading="@_isLoading">
             <ToolBarContent>
             </ToolBarContent>
             <Columns>
-                <PropertyColumn Property="t=>t.Difficulty" Title="Difficulty">
-                    <FooterTemplate>Total</FooterTemplate>
+                <PropertyColumn Property="t=>t.Difficulty" Title=@L["Difficulty"]>
+                    <FooterTemplate>@L["Total"]</FooterTemplate>
                 </PropertyColumn>
-                <PropertyColumn Property="t=>t.ACount" Title="As" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></PropertyColumn>
-                <PropertyColumn Property="t=>t.SCount" Title="Ss" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></PropertyColumn>
-                <PropertyColumn Property="t=>t.SSCount" Title="SSs" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></PropertyColumn>
-                <PropertyColumn Property="t=>t.SSSCount" Title="SSSs" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></PropertyColumn>
-                <PropertyColumn Property="t=>t.PassedCount" Title="Passed" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></PropertyColumn>
-                <PropertyColumn Property="t=>t.UnpassedCount" Title="Unpassed" AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></PropertyColumn>
+                <PropertyColumn Property="t=>t.ACount" Title=@L["As"] AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></PropertyColumn>
+                <PropertyColumn Property="t=>t.SCount" Title=@L["Ss"] AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></PropertyColumn>
+                <PropertyColumn Property="t=>t.SSCount" Title=@L["SSs"] AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></PropertyColumn>
+                <PropertyColumn Property="t=>t.SSSCount" Title=@L["SSSs"] AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></PropertyColumn>
+                <PropertyColumn Property="t=>t.PassedCount" Title=@L["Passed"] AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></PropertyColumn>
+                <PropertyColumn Property="t=>t.UnpassedCount" Title=@L["Unpassed"] AggregateDefinition="@(new AggregateDefinition<DifficultyOverviewDto> { Type = AggregateType.Sum, DisplayFormat = "{value}" })"></PropertyColumn>
             </Columns>
         </MudDataGrid>
     </MudTabPanel>
-    <MudTabPanel Text="Overall Letters">
+    <MudTabPanel Text=@L["Overall Letters"]>
         <MudChart ChartType="ChartType.Pie" InputData="@_letterCounts.ToArray()" InputLabels="@_letterLabels.ToArray()" Width="40%" />
     </MudTabPanel>
-    <MudTabPanel Text="Overall Passes">
+    <MudTabPanel Text=@L["Overall Passes"]>
         <MudChart ChartType="ChartType.Pie" InputData="@_passCounts.ToArray()" InputLabels="@_passLabels.ToArray()" Width="40%" />
     </MudTabPanel>
-    <MudTabPanel Text="Difficulty Letters">
+    <MudTabPanel Text=@L["Difficulty Letters"]>
         <MudChart ChartType="ChartType.Bar" ChartSeries="@_letterBreakdown" XAxisLabels="@_difficulties" Width="100%" Height="350px"></MudChart>
     </MudTabPanel>
-    <MudTabPanel Text="Difficulty Passes">
+    <MudTabPanel Text=@L["Difficulty Passes"]>
         <MudChart ChartType="ChartType.Bar" ChartSeries="@_passBreakdown" XAxisLabels="@_difficulties" Width="100%" Height="350px"></MudChart>
     </MudTabPanel>
 </MudTabs>
@@ -65,14 +65,14 @@
 
 <MudDialog @bind-Visible="_showShareDialog">
     <DialogContent>
-        <MudText>Use this link to share your chart list to other players.</MudText>
+        <MudText>@L["Chart List Share Description"]</MudText>
         <br />
-        <MudTextField Value="@ShareUrl" Label="Share Url" Variant="Variant.Outlined" Margin="Margin.Dense" ReadOnly="true" />
+        <MudTextField Value="@ShareUrl" Label=@L["Share Url"] Variant="Variant.Outlined" Margin="Margin.Dense" ReadOnly="true" />
     </DialogContent>
     <DialogActions>
         <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyShareLink">Copy To Clipboard</MudButton>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showShareDialog=false">Close</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyShareLink">@L["Copy to Clipboard"]</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showShareDialog=false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
 </MudPaper>
@@ -104,7 +104,7 @@
     private async Task CopyShareLink()
     {
         await Javascript.InvokeVoidAsync("navigator.clipboard.writeText", ShareUrl);
-        Snackbar.Add("Copied to clipboard!", Severity.Success);
+        Snackbar.Add(L["Copied to clipboard!"].Value, Severity.Success);
     }
 
     private async Task ChangeSelectedCharts(SelectedChartsEnum newType)
@@ -231,12 +231,12 @@
 
         if (ungradedSeries.Any(v => v > 0))
         {
-            letterLabels.Add("Ungraded");
+            letterLabels.Add(L["Ungraded"].Value);
             letterCounts.Add(ungradedSeries.Sum());
             _letterBreakdown.Add(
                 new ChartSeries()
                     {
-                        Name = "Ungraded",
+                        Name = L["Ungraded"].Value,
                         Data = ungradedSeries.ToArray()
                     });
         }
@@ -274,19 +274,19 @@
                     Data = lessThanA
                 });
         }
-        passLabels.Add("Unpassed");
+        passLabels.Add(L["Unpassed"].Value);
         passCounts.Add(passSeries[false].Sum());
-        passLabels.Add("Passed");
+        passLabels.Add(L["Passed"].Value);
         passCounts.Add(passSeries[true].Sum());
         _passBreakdown = new List<ChartSeries>()
         {
             new ChartSeries()
             {
-                Name = "Pass", Data = passSeries[true].ToArray()
+                Name = L["Pass"].Value, Data = passSeries[true].ToArray()
             },
             new ChartSeries()
             {
-                Name = "Unpassed", Data = passSeries[false].ToArray()
+                Name = L["Unpassed"].Value, Data = passSeries[false].ToArray()
             }
         };
         _passLabels = passLabels.ToArray();

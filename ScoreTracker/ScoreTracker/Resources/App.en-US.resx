@@ -1341,4 +1341,101 @@
 	  <value>This gives this chart a scoring level of: {0}</value>
 	  <comment>{0} = lowest passing player's competitive level (2 decimals).</comment>
   </data>
+  <data name="Best Attempts" xml:space="preserve">
+	  <value>Best Attempts</value>
+  </data>
+  <data name="XX Progress" xml:space="preserve">
+	  <value>XX Progress</value>
+  </data>
+  <data name="Share Your Progress Page" xml:space="preserve">
+	  <value>Share Your Progress Page</value>
+  </data>
+  <data name="Overview" xml:space="preserve">
+	  <value>Overview</value>
+  </data>
+  <data name="As" xml:space="preserve">
+	  <value>As</value>
+	  <comment>Plural of letter grade A — column header counting A grades.</comment>
+  </data>
+  <data name="Ss" xml:space="preserve">
+	  <value>Ss</value>
+	  <comment>Plural of letter grade S.</comment>
+  </data>
+  <data name="SSs" xml:space="preserve">
+	  <value>SSs</value>
+	  <comment>Plural of letter grade SS.</comment>
+  </data>
+  <data name="SSSs" xml:space="preserve">
+	  <value>SSSs</value>
+	  <comment>Plural of letter grade SSS.</comment>
+  </data>
+  <data name="Passed" xml:space="preserve">
+	  <value>Passed</value>
+  </data>
+  <data name="Unpassed" xml:space="preserve">
+	  <value>Unpassed</value>
+  </data>
+  <data name="Overall Letters" xml:space="preserve">
+	  <value>Overall Letters</value>
+  </data>
+  <data name="Overall Passes" xml:space="preserve">
+	  <value>Overall Passes</value>
+  </data>
+  <data name="Difficulty Letters" xml:space="preserve">
+	  <value>Difficulty Letters</value>
+  </data>
+  <data name="Difficulty Passes" xml:space="preserve">
+	  <value>Difficulty Passes</value>
+  </data>
+  <data name="Share Url" xml:space="preserve">
+	  <value>Share Url</value>
+  </data>
+  <data name="Copied to clipboard!" xml:space="preserve">
+	  <value>Copied to clipboard!</value>
+  </data>
+  <data name="Ungraded" xml:space="preserve">
+	  <value>Ungraded</value>
+  </data>
+  <data name="Pass" xml:space="preserve">
+	  <value>Pass</value>
+  </data>
+  <data name="Difficulty Progress" xml:space="preserve">
+	  <value>Difficulty Progress</value>
+  </data>
+  <data name="Passes" xml:space="preserve">
+	  <value>Passes</value>
+  </data>
+  <data name="Min Score" xml:space="preserve">
+	  <value>Min Score</value>
+  </data>
+  <data name="Avg Score" xml:space="preserve">
+	  <value>Avg Score</value>
+  </data>
+  <data name="Max Score" xml:space="preserve">
+	  <value>Max Score</value>
+  </data>
+  <data name="Avg Plate" xml:space="preserve">
+	  <value>Avg Plate</value>
+  </data>
+  <data name="Passes By Level" xml:space="preserve">
+	  <value>Passes By Level</value>
+  </data>
+  <data name="Remaining" xml:space="preserve">
+	  <value>Remaining</value>
+  </data>
+  <data name="Score Distribution Lines" xml:space="preserve">
+	  <value>Score Distribution Lines</value>
+  </data>
+  <data name="Score Distribution" xml:space="preserve">
+	  <value>Score Distribution</value>
+  </data>
+  <data name="Min" xml:space="preserve">
+	  <value>Min</value>
+  </data>
+  <data name="Max" xml:space="preserve">
+	  <value>Max</value>
+  </data>
+  <data name="Singles vs Doubles" xml:space="preserve">
+	  <value>Singles vs Doubles</value>
+  </data>
 </root>
