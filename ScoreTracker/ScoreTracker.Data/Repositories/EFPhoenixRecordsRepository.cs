@@ -105,7 +105,7 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     {
         return await _cache.GetOrCreateAsync(ScoreCache(userId), async o =>
         {
-            o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(10);
+            o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(60);
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var result = (await database.PhoenixBestAttempt.Where(pba => pba.UserId == userId)
                 .Select(pba => new RecordedPhoenixScore(pba.ChartId, pba.Score,
