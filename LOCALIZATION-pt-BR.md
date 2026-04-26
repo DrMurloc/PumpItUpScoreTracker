@@ -144,6 +144,9 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | Qualifiers | qualifiers | **Untranslated**, lowercase. Brazilian tournament community uses both `qualifiers` and `qualificatórias`; we keep the loanword. E.g. "Qualifiers Leaderboard" → "Classificação dos qualifiers". |
 | Brackets (tournament) | Chaves | **Translated**. Standard pt-BR for tournament brackets. "{0} Brackets" → "{0} Chaves". |
 | Seed (tournament seeding) | Seed | **Untranslated**. Tournament jargon, common loanword. |
+| Stamina | stamina | **Untranslated**. Brazilian PIU community usage. E.g. "Stamina Session Builder" → "Construtor de sessão de stamina". |
+| Plays (PIU attempts) | plays | **Untranslated**, lowercase mid-phrase. "Play Count" → "Contagem de plays"; "{0} Plays" → "{0} plays". Same loanword treatment as `pass`/`run`/`chart`. |
+| Pre-Score (compound prefix) | pré-pontuação | "Points Pre-Score" → "Pontos pré-pontuação". |
 | Judgment terms (Bad / Miss / Perfect / Great / Good) | Bad / Miss / Perfect / Great / Good | **Untranslated**, including plural forms (`Bads`, `Misses`, `Greats`, `Perfects`, `Goods`). Brazilian PIU community uses the English judgment terms. |
 | X Calculator | Calculadora de X | "Phoenix Score Calculator" → "Calculadora de pontuação da Phoenix" (existing); "Rating Calculator" → "Calculadora de rating"; "PIU Life Calculator" → "Calculadora de vida do PIU". |
 | Delete | Excluir | Action verb. Distinct from `Remove from X` → `Remover de X` (existing). |
@@ -180,9 +183,7 @@ Pulled from the 442 missing keys. Each is a term that doesn't yet have an establ
 
 | English | Recommendation | Notes |
 |---|---|---|
-| Admin / Admin Settings | Admin / Configurações de admin | "Admin" untranslated as role name. |
 | Add | Adicionar | |
-| Allow Repeats | Permitir repetições | |
 
 ## Process for future batches
 

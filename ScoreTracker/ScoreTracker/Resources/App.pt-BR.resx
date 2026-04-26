@@ -1626,4 +1626,184 @@
   <data name="X Brackets" xml:space="preserve">
     <value>{0} Chaves</value>
   </data>
+  <data name="Adjust Scores to Song Duration (uses 2 minutes as average chart duration)" xml:space="preserve">
+    <value>Ajustar pontuações pela duração da música (usa 2 minutos como duração média de chart)</value>
+  </data>
+  <data name="Admin Settings" xml:space="preserve">
+    <value>Configurações de admin</value>
+  </data>
+  <data name="Allow Repeats" xml:space="preserve">
+    <value>Permitir repetições</value>
+  </data>
+  <data name="Average Difficulty" xml:space="preserve">
+    <value>Dificuldade média</value>
+  </data>
+  <data name="Average PPS" xml:space="preserve">
+    <value>PPS médio</value>
+  </data>
+  <data name="Average Score" xml:space="preserve">
+    <value>Pontuação média</value>
+  </data>
+  <data name="Best Score" xml:space="preserve">
+    <value>Melhor pontuação</value>
+  </data>
+  <data name="Build Session" xml:space="preserve">
+    <value>Construir sessão</value>
+  </data>
+  <data name="Chart Score" xml:space="preserve">
+    <value>Pontuação do chart</value>
+  </data>
+  <data name="Chart Statistics" xml:space="preserve">
+    <value>Estatísticas do chart</value>
+  </data>
+  <data name="Continous Modifier Scale (modifier increments between letter grades)" xml:space="preserve">
+    <value>Escala de modificador contínuo (incrementos do modificador entre letras de nota)</value>
+  </data>
+  <data name="Couldn't parse JSON" xml:space="preserve">
+    <value>Não foi possível processar o JSON</value>
+  </data>
+  <data name="Custom Scoring Formula" xml:space="preserve">
+    <value>Fórmula de pontuação personalizada</value>
+  </data>
+  <data name="Default" xml:space="preserve">
+    <value>Padrão</value>
+  </data>
+  <data name="Difficulty Range" xml:space="preserve">
+    <value>Intervalo de dificuldade</value>
+  </data>
+  <data name="Duration" xml:space="preserve">
+    <value>Duração</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Editar</value>
+  </data>
+  <data name="Effective Level" xml:space="preserve">
+    <value>Nível efetivo</value>
+  </data>
+  <data name="Estimated Point Gain Timeline" xml:space="preserve">
+    <value>Linha do tempo estimada de ganho de pontos</value>
+  </data>
+  <data name="Example Set Builder" xml:space="preserve">
+    <value>Construtor de conjunto de exemplo</value>
+  </data>
+  <data name="Extra Settings" xml:space="preserve">
+    <value>Configurações extras</value>
+  </data>
+  <data name="Hide Record-less Charts" xml:space="preserve">
+    <value>Ocultar charts sem registro</value>
+  </data>
+  <data name="Hide Zero Scoring Charts" xml:space="preserve">
+    <value>Ocultar charts com pontuação zero</value>
+  </data>
+  <data name="Import Your Phoenix Scores" xml:space="preserve">
+    <value>Importar suas pontuações da Phoenix</value>
+  </data>
+  <data name="In Person" xml:space="preserve">
+    <value>Presencial</value>
+  </data>
+  <data name="Input Json" xml:space="preserve">
+    <value>JSON de entrada</value>
+  </data>
+  <data name="Levels" xml:space="preserve">
+    <value>Níveis</value>
+  </data>
+  <data name="Minimum Score" xml:space="preserve">
+    <value>Pontuação mínima</value>
+  </data>
+  <data name="None" xml:space="preserve">
+    <value>Nenhum</value>
+  </data>
+  <data name="Pass Rate" xml:space="preserve">
+    <value>Taxa de pass</value>
+  </data>
+  <data name="Perfect Score Modifier (Acts as a letter grade beyond SSS+)" xml:space="preserve">
+    <value>Modificador de pontuação perfeita (atua como uma letra de nota além de SSS+)</value>
+  </data>
+  <data name="Play Count" xml:space="preserve">
+    <value>Contagem de plays</value>
+  </data>
+  <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
+    <value>Jogador para teste (deve estar definido como público)</value>
+  </data>
+  <data name="Points Per Second" xml:space="preserve">
+    <value>Pontos por segundo</value>
+  </data>
+  <data name="Points Per Second Pre-Score" xml:space="preserve">
+    <value>Pontos por segundo pré-pontuação</value>
+  </data>
+  <data name="Points Pre-Score" xml:space="preserve">
+    <value>Pontos pré-pontuação</value>
+  </data>
+  <data name="PreBuilt Tournament Configuration" xml:space="preserve">
+    <value>Configuração de campeonato pré-construída</value>
+  </data>
+  <data name="Record Session" xml:space="preserve">
+    <value>Registrar sessão</value>
+  </data>
+  <data name="Rest Time" xml:space="preserve">
+    <value>Tempo de descanso</value>
+  </data>
+  <data name="Rest Time Per Chart: X" xml:space="preserve">
+    <value>Tempo de descanso por chart: {0}</value>
+  </data>
+  <data name="Score: X" xml:space="preserve">
+    <value>Pontuação: {0}</value>
+  </data>
+  <data name="Seconds of Rest Per Chart" xml:space="preserve">
+    <value>Segundos de descanso por chart</value>
+  </data>
+  <data name="Session Duration (Minutes)" xml:space="preserve">
+    <value>Duração da sessão (minutos)</value>
+  </data>
+  <data name="Session Score" xml:space="preserve">
+    <value>Pontuação da sessão</value>
+  </data>
+  <data name="Set Charts" xml:space="preserve">
+    <value>Definir charts</value>
+  </data>
+  <data name="Show Extra Info" xml:space="preserve">
+    <value>Mostrar informações extras</value>
+  </data>
+  <data name="Stage Break Modifier" xml:space="preserve">
+    <value>Modificador de quebra de estágio</value>
+  </data>
+  <data name="Stamina Session Builder" xml:space="preserve">
+    <value>Construtor de sessão de stamina</value>
+  </data>
+  <data name="Test Scores" xml:space="preserve">
+    <value>Pontuações de teste</value>
+  </data>
+  <data name="Test With Player Data" xml:space="preserve">
+    <value>Testar com dados do jogador</value>
+  </data>
+  <data name="Total Chart Bonus" xml:space="preserve">
+    <value>Bônus total de charts</value>
+  </data>
+  <data name="Total Charts: X" xml:space="preserve">
+    <value>Total de charts: {0}</value>
+  </data>
+  <data name="Tournament Dates (EST)" xml:space="preserve">
+    <value>Datas do campeonato (EST)</value>
+  </data>
+  <data name="Tournament Name" xml:space="preserve">
+    <value>Nome do campeonato</value>
+  </data>
+  <data name="Tournament Settings" xml:space="preserve">
+    <value>Configurações do campeonato</value>
+  </data>
+  <data name="Verification" xml:space="preserve">
+    <value>Verificação</value>
+  </data>
+  <data name="X Charts" xml:space="preserve">
+    <value>{0} charts</value>
+  </data>
+  <data name="X Plays" xml:space="preserve">
+    <value>{0} plays</value>
+  </data>
+  <data name="Your Points" xml:space="preserve">
+    <value>Seus pontos</value>
+  </data>
+  <data name="Your Points per Second" xml:space="preserve">
+    <value>Seus pontos por segundo</value>
+  </data>
 </root>
