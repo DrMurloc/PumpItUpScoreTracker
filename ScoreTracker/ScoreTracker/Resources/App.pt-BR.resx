@@ -498,4 +498,91 @@
   <data name="Text View" xml:space="preserve">
     <value>Visualização em texto</value>
   </data>
+  <data name="Age" xml:space="preserve">
+    <value>Idade</value>
+  </data>
+  <data name="BPM" xml:space="preserve">
+    <value>BPM</value>
+  </data>
+  <data name="Days Old" xml:space="preserve">
+    <value>dias de idade</value>
+  </data>
+  <data name="Difficulty Categorization" xml:space="preserve">
+    <value>Categorização de dificuldade</value>
+  </data>
+  <data name="Filters" xml:space="preserve">
+    <value>Filtros</value>
+  </data>
+  <data name="Max BPM" xml:space="preserve">
+    <value>BPM máx.</value>
+  </data>
+  <data name="Max Letter Grade" xml:space="preserve">
+    <value>Letra de nota máx.</value>
+  </data>
+  <data name="Max Note Count" xml:space="preserve">
+    <value>Contagem máx. de notas</value>
+  </data>
+  <data name="Min BPM" xml:space="preserve">
+    <value>BPM mín.</value>
+  </data>
+  <data name="Min Letter Grade" xml:space="preserve">
+    <value>Letra de nota mín.</value>
+  </data>
+  <data name="Min Note Count" xml:space="preserve">
+    <value>Contagem mín. de notas</value>
+  </data>
+  <data name="Note Count" xml:space="preserve">
+    <value>Contagem de notas</value>
+  </data>
+  <data name="PIU Tier List" xml:space="preserve">
+    <value>Faixa oficial PIU</value>
+  </data>
+  <data name="Pass (Data Backed)" xml:space="preserve">
+    <value>Pass (Baseado em dados)</value>
+  </data>
+  <data name="Personalized Difficulty" xml:space="preserve">
+    <value>Dificuldade personalizada</value>
+  </data>
+  <data name="Player Count" xml:space="preserve">
+    <value>Quantidade de jogadores</value>
+  </data>
+  <data name="Popularity (PIU Game Leaderboard)" xml:space="preserve">
+    <value>Popularidade (Classificação do PIU Game)</value>
+  </data>
+  <data name="Score (Data Backed)" xml:space="preserve">
+    <value>Pontuação (Baseada em dados)</value>
+  </data>
+  <data name="Score Ranking" xml:space="preserve">
+    <value>Ranking de pontuação</value>
+  </data>
+  <data name="Scoring Level" xml:space="preserve">
+    <value>Nível de pontuação</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Configurações</value>
+  </data>
+  <data name="Show Age" xml:space="preserve">
+    <value>Mostrar idade</value>
+  </data>
+  <data name="Show Difficulty" xml:space="preserve">
+    <value>Mostrar dificuldade</value>
+  </data>
+  <data name="Show Skills" xml:space="preserve">
+    <value>Mostrar habilidades</value>
+  </data>
+  <data name="Show Song Name" xml:space="preserve">
+    <value>Mostrar nome da música</value>
+  </data>
+  <data name="Show Step Artist" xml:space="preserve">
+    <value>Mostrar autor dos passos</value>
+  </data>
+  <data name="Skill" xml:space="preserve">
+    <value>Habilidade</value>
+  </data>
+  <data name="Stage Pass" xml:space="preserve">
+    <value>Pass do estágio</value>
+  </data>
+  <data name="Step Artist" xml:space="preserve">
+    <value>Autor dos passos</value>
+  </data>
 </root>

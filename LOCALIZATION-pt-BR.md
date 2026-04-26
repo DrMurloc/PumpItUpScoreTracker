@@ -53,6 +53,10 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | Username | Nome de usuário | |
 | Very Easy / Very Hard | Muito fácil / Muito difícil | |
 | Video | Vídeo | |
+| Age | Idade | |
+| Days Old | dias de idade | lowercase — used as suffix to a number ("42 dias de idade"). |
+| Filters | Filtros | |
+| Settings | Configurações | |
 
 ### PIU domain
 
@@ -64,7 +68,7 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | CoOp | CoOp | Untranslated. "CoOp Aggregation" → "Agregação de CoOp". |
 | Singles / Doubles | Singles / Doubles | Untranslated. |
 | Difficulty Level | Nível de dificuldade | |
-| Letter Grade | Letras de nota | |
+| Letter Grade | Letras de nota | Min/Max forms use singular: "Min Letter Grade" → "Letra de nota mín.", "Max Letter Grade" → "Letra de nota máx." |
 | Mix | Versão | "Mix" → "Versão". XX, Phoenix proper names stay untranslated. |
 | Phoenix | Phoenix | Game version proper name. Untranslated. |
 | XX | XX | Game version proper name. Untranslated. |
@@ -87,6 +91,17 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | Tournaments | Campeonatos | |
 | Popularity | Popularidade | |
 | Progress | Progresso | "Progress Charts" → "Gráficos de progresso" (note: here `Charts` means graphs, not PIU charts — translated as `Gráficos`). |
+| BPM | BPM | Untranslated. "Min BPM" → "BPM mín."; "Max BPM" → "BPM máx." |
+| Difficulty Categorization | Categorização de dificuldade | |
+| Note Count | Contagem de notas | Matches the "Contagem de pass" pattern. Min/Max: "Contagem mín./máx. de notas". |
+| Personalized Difficulty | Dificuldade personalizada | |
+| Player Count | Quantidade de jogadores | "Quantidade" reads more naturally than "Contagem" for the CoOp player-number numeric input. |
+| PIU Tier List | Faixa oficial PIU | Page title; the official tier list provided by piugame.com. |
+| Score Ranking | Ranking de pontuação | "Ranking" is a common pt-BR loanword. Distinct from `Leaderboard` → `Classificação`. |
+| Scoring Level | Nível de pontuação | Matches the "Nível de dificuldade" pattern. |
+| Skill | Habilidade | Chart trait/skill (runs, drills, twists, etc.). |
+| Stage Pass | Pass do estágio | Tristate filter on chart-pass status. |
+| Step Artist | Autor dos passos | Chart designer. Some pt-BR community usage leaves it in English; we translate. |
 
 ### Phrasing patterns to copy
 
@@ -94,6 +109,9 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 - **"With pass" / "without pass"**: phrased as `com pass` / `sem pass`. See "Hide Completed Charts" → "Ocultar charts com pass".
 - **App self-reference**: "Rastreador de Pontuações" (the app's name in pt-BR). Used in disclaimers about account creation, password storage, etc.
 - **Disclaimer voice**: existing privacy / make-public / make-private disclaimers use full sentences with `você`, dropped commas, and Portuguese conjunctions (`e`, `ou`, `mas`). Match that register — neither stiff nor slangy.
+- **`Show X` toggles**: render as `Mostrar X` (lowercase X). E.g. "Show Age" → "Mostrar idade", "Show Skills" → "Mostrar habilidades", "Show Step Artist" → "Mostrar autor dos passos".
+- **`Min/Max X` filter labels**: prefer postfixed abbreviation `X mín.` / `X máx.` over prefixed `Mín./Máx. X`. E.g. "Min BPM" → "BPM mín."; "Max Letter Grade" → "Letra de nota máx."
+- **`(Data Backed)` parenthetical**: render as `(Baseado em dados)` / `(Baseada em dados)` — gender-agree with the preceding noun. E.g. "Pass (Data Backed)" → "Pass (Baseado em dados)" (`Pass` masculine); "Score (Data Backed)" → "Pontuação (Baseada em dados)" (`Pontuação` feminine).
 
 ## Open decisions (terms upcoming batches will need)
 
@@ -114,13 +132,11 @@ Pulled from the 442 missing keys. Each is a term that doesn't yet have an establ
 | Game Stats | Estatísticas do jogo | |
 | Difficulty | Dificuldade | Bare noun. |
 | Calculated Tier List | Faixa calculada | Reuse `Faixas de dificuldade` family. |
-| PIU Tier List | Faixa oficial PIU | Adjust to fit the singular/plural form needed per key. |
 
 ### App / generic UI — high frequency
 
 | English | Recommendation | Notes |
 |---|---|---|
-| Settings | Configurações | Standard pt-BR. |
 | Admin / Admin Settings | Admin / Configurações de admin | "Admin" untranslated as role name. |
 | Add | Adicionar | |
 | Add Player | Adicionar jogador | |
@@ -130,7 +146,6 @@ Pulled from the 442 missing keys. Each is a term that doesn't yet have an establ
 | Always | Sempre | |
 | Avg Plate | Plate média | `Plate` stays English (established), modifier translated. |
 | Avg Score | Pontuação média | |
-| BPM | BPM | Untranslated. |
 
 ## Process for future batches
 
