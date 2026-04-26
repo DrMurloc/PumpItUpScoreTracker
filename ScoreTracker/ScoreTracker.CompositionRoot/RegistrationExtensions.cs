@@ -23,7 +23,6 @@ public static class RegistrationExtensions
             builder.AddTransient(interfaceType, implementationType);
 
         builder.AddSingleton<IBotClient, DiscordBotClient>();
-        builder.AddTransient<IDbContextFactory<ChartAttemptDbContext>, ChartDbContextFactory>();
         builder.Configure<SendGridConfiguration>(o =>
         {
             o.FromEmail = twilioConfig.FromEmail;
@@ -37,6 +36,6 @@ public static class RegistrationExtensions
         builder.Configure<SqlConfiguration>(o => { o.ConnectionString = configuration.ConnectionString; });
         builder.Configure<AzureBlobConfiguration>(o => { o.ConnectionString = blobConfig.ConnectionString; });
 
-        return builder.AddDbContext<ChartAttemptDbContext>(o => { o.UseSqlServer(configuration.ConnectionString); });
+        return builder.AddPooledDbContextFactory<ChartAttemptDbContext>(o => { o.UseSqlServer(configuration.ConnectionString); });
     }
 }

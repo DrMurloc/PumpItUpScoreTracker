@@ -1,6 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using ScoreTracker.Data.Configuration;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Enums;
 
@@ -8,14 +6,11 @@ namespace ScoreTracker.Data.Persistence;
 
 public sealed class ChartAttemptDbContext : DbContext
 {
-    private readonly SqlConfiguration _configuration;
-
 #pragma warning disable CS8618
-    public ChartAttemptDbContext(DbContextOptions<ChartAttemptDbContext> options, IOptions<SqlConfiguration> sqlOptions)
+    public ChartAttemptDbContext(DbContextOptions<ChartAttemptDbContext> options)
 #pragma warning restore CS8618
         : base(options)
     {
-        _configuration = sqlOptions.Value;
     }
 
     public DbSet<MixEntity> Mix { get; set; }
