@@ -140,6 +140,10 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | User Matches / Match (vs another player) | Partidas do usuário / Partida | |
 | Plates (plural) | Plates | **Untranslated**, plural form. "Plate Breakdown" → "Detalhamento de plates"; "Plate Distribution" → "Distribuição de plates". |
 | Welcome (greeting) | Bem-vindo | Masculine default for the bare greeting. |
+| Tournament / Campeonato (singular) | Campeonato | "Active Tournaments" → "Campeonatos ativos"; "Previous/Upcoming Tournaments" → "Campeonatos anteriores/próximos". |
+| Qualifiers | qualifiers | **Untranslated**, lowercase. Brazilian tournament community uses both `qualifiers` and `qualificatórias`; we keep the loanword. E.g. "Qualifiers Leaderboard" → "Classificação dos qualifiers". |
+| Brackets (tournament) | Chaves | **Translated**. Standard pt-BR for tournament brackets. "{0} Brackets" → "{0} Chaves". |
+| Seed (tournament seeding) | Seed | **Untranslated**. Tournament jargon, common loanword. |
 | Judgment terms (Bad / Miss / Perfect / Great / Good) | Bad / Miss / Perfect / Great / Good | **Untranslated**, including plural forms (`Bads`, `Misses`, `Greats`, `Perfects`, `Goods`). Brazilian PIU community uses the English judgment terms. |
 | X Calculator | Calculadora de X | "Phoenix Score Calculator" → "Calculadora de pontuação da Phoenix" (existing); "Rating Calculator" → "Calculadora de rating"; "PIU Life Calculator" → "Calculadora de vida do PIU". |
 | Delete | Excluir | Action verb. Distinct from `Remove from X` → `Remover de X` (existing). |
@@ -158,6 +162,8 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 - **Source typos in long-key prose**: when the English key has a clearly-broken sentence (e.g. missing word), translate the *intended* meaning so the pt-BR reads as correct grammar. Don't preserve the typo.
 - **PIU community proper nouns / community jargon** in prose stay English: `run` (a play-through), `Rainbow` (lifebar color phase ≥1000), `data-mine` / `data-mining`, mix names (`NX2`, `Prime`, `XX`, `Phoenix`), and contributor names (`KyleTT`, `FEFEMZ`, `Team Infinitesimal`).
 - **"To perfect" (verb — to achieve a Perfect grade)**: render as `tirar perfect`. E.g. "harder for higher level players to perfect" → "mais difíceis para jogadores de nível mais alto tirarem perfect". The community-jargon `perfectar` exists but is less standard.
+- **`Is X` boolean column headers**: drop the `Is` prefix, render the noun/adjective alone. E.g. "Is Warmup" → "Aquecimento", "IsBroken" → "Quebrada". `É X` reads stilted as a column header.
+- **Inline conjunctions composed via placeholders**: when English source uses tiny separately-keyed words (`are`, `are not`) that get composed into a sentence at runtime, translate each as the grammatical equivalent that fits the host sentence (`são` / `não são`). Verify by reading the host string with each value substituted.
 
 ## Open decisions (terms upcoming batches will need)
 
@@ -169,8 +175,6 @@ Pulled from the 442 missing keys. Each is a term that doesn't yet have an establ
 |---|---|---|
 | Pumbility | **Pumbility** (untranslated) | Proper noun for PIU's composite player rating; community uses the English term. |
 | UCS | **UCS** (untranslated) | Acronym (User-Created Step). Untranslated everywhere. |
-| Tournament (singular) | Campeonato | Plural already established as `Campeonatos`. |
-| Stats | Estatísticas | |
 
 ### App / generic UI — high frequency
 
@@ -178,9 +182,7 @@ Pulled from the 442 missing keys. Each is a term that doesn't yet have an establ
 |---|---|---|
 | Admin / Admin Settings | Admin / Configurações de admin | "Admin" untranslated as role name. |
 | Add | Adicionar | |
-| Add Player | Adicionar jogador | |
 | Allow Repeats | Permitir repetições | |
-| Always | Sempre | |
 
 ## Process for future batches
 

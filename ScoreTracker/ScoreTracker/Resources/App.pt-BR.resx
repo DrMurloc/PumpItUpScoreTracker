@@ -1446,4 +1446,184 @@
   <data name="You somehow ended up in a state between realities. Refresh the page to try again." xml:space="preserve">
     <value>Você de alguma forma acabou em um estado entre realidades. Atualize a página para tentar novamente.</value>
   </data>
+  <data name="Active Tournaments" xml:space="preserve">
+    <value>Campeonatos ativos</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Adicionar</value>
+  </data>
+  <data name="Add Player" xml:space="preserve">
+    <value>Adicionar jogador</value>
+  </data>
+  <data name="Add Scores" xml:space="preserve">
+    <value>Adicionar pontuações</value>
+  </data>
+  <data name="Always" xml:space="preserve">
+    <value>Sempre</value>
+  </data>
+  <data name="are" xml:space="preserve">
+    <value>são</value>
+  </data>
+  <data name="are not" xml:space="preserve">
+    <value>não são</value>
+  </data>
+  <data name="Base Level Scores" xml:space="preserve">
+    <value>Pontuações de nível base</value>
+  </data>
+  <data name="Broken scores get a multiplier of X" xml:space="preserve">
+    <value>Pontuações quebradas recebem um multiplicador de {0}</value>
+  </data>
+  <data name="Chart Types" xml:space="preserve">
+    <value>Tipos de chart</value>
+  </data>
+  <data name="Check Your Best Pumbility Charts" xml:space="preserve">
+    <value>Verifique seus melhores charts de Pumbility</value>
+  </data>
+  <data name="Discord Id" xml:space="preserve">
+    <value>ID do Discord</value>
+  </data>
+  <data name="End Date" xml:space="preserve">
+    <value>Data de término</value>
+  </data>
+  <data name="End Date: X" xml:space="preserve">
+    <value>Data de término: {0}</value>
+  </data>
+  <data name="Event" xml:space="preserve">
+    <value>Evento</value>
+  </data>
+  <data name="Event Links" xml:space="preserve">
+    <value>Links do evento</value>
+  </data>
+  <data name="Import" xml:space="preserve">
+    <value>Importar</value>
+  </data>
+  <data name="Is Warmup" xml:space="preserve">
+    <value>Aquecimento</value>
+  </data>
+  <data name="Letter Grades" xml:space="preserve">
+    <value>Letras de nota</value>
+  </data>
+  <data name="Link" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="Location" xml:space="preserve">
+    <value>Local</value>
+  </data>
+  <data name="Machine Name" xml:space="preserve">
+    <value>Nome da máquina</value>
+  </data>
+  <data name="Machines" xml:space="preserve">
+    <value>Máquinas</value>
+  </data>
+  <data name="Never" xml:space="preserve">
+    <value>Nunca</value>
+  </data>
+  <data name="New Player Name" xml:space="preserve">
+    <value>Nome do novo jogador</value>
+  </data>
+  <data name="Notes" xml:space="preserve">
+    <value>Notas</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Senha</value>
+  </data>
+  <data name="Pending" xml:space="preserve">
+    <value>Pendente</value>
+  </data>
+  <data name="Permissions" xml:space="preserve">
+    <value>Permissões</value>
+  </data>
+  <data name="Photos" xml:space="preserve">
+    <value>Fotos</value>
+  </data>
+  <data name="Play Num" xml:space="preserve">
+    <value>Jogue ao menos {0}</value>
+  </data>
+  <data name="Player Name" xml:space="preserve">
+    <value>Nome do jogador</value>
+  </data>
+  <data name="Player added" xml:space="preserve">
+    <value>Jogador adicionado</value>
+  </data>
+  <data name="Players (Paste UserId from Account Page if not Public)" xml:space="preserve">
+    <value>Jogadores (cole o UserId da página da conta se não for público)</value>
+  </data>
+  <data name="Players have X to play charts. You are allowed to finish the song you are on when your time runs out. Your total score is total combined score of all charts you play." xml:space="preserve">
+    <value>Os jogadores têm {0} para jogar charts. Você pode terminar a música em que está quando o tempo acabar. Sua pontuação total é a soma das pontuações de todos os charts que você jogar.</value>
+  </data>
+  <data name="Players synced" xml:space="preserve">
+    <value>Jogadores sincronizados</value>
+  </data>
+  <data name="Potential Conflict" xml:space="preserve">
+    <value>Conflito potencial</value>
+  </data>
+  <data name="Previous Tournaments" xml:space="preserve">
+    <value>Campeonatos anteriores</value>
+  </data>
+  <data name="Priority" xml:space="preserve">
+    <value>Prioridade</value>
+  </data>
+  <data name="Qualifier Submit Phrase 1" xml:space="preserve">
+    <value>Você não precisa estar logado para usar essa ferramenta. Digite um nome de usuário para começar a enviar.</value>
+  </data>
+  <data name="Qualifier Submit Phrase 2" xml:space="preserve">
+    <value>Este é seu primeiro envio! Certifique-se de que seu nome de usuário seja identificável via Discord ou Start.GG.</value>
+  </data>
+  <data name="Qualifiers Leaderboard" xml:space="preserve">
+    <value>Classificação dos qualifiers</value>
+  </data>
+  <data name="Qualifiers Submission" xml:space="preserve">
+    <value>Envio dos qualifiers</value>
+  </data>
+  <data name="Repeated charts X allowed." xml:space="preserve">
+    <value>Charts repetidos {0} permitidos.</value>
+  </data>
+  <data name="Rules" xml:space="preserve">
+    <value>Regras</value>
+  </data>
+  <data name="Seed" xml:space="preserve">
+    <value>Seed</value>
+  </data>
+  <data name="Song Types" xml:space="preserve">
+    <value>Tipos de música</value>
+  </data>
+  <data name="Songs will have score adjusted based on song length (treating 2 minutes as baseline)" xml:space="preserve">
+    <value>As músicas terão a pontuação ajustada com base na duração da música (considerando 2 minutos como base)</value>
+  </data>
+  <data name="Start Date" xml:space="preserve">
+    <value>Data de início</value>
+  </data>
+  <data name="Start Date: X" xml:space="preserve">
+    <value>Data de início: {0}</value>
+  </data>
+  <data name="Submission Page" xml:space="preserve">
+    <value>Página de envio</value>
+  </data>
+  <data name="Suggested Chart" xml:space="preserve">
+    <value>Chart sugerido</value>
+  </data>
+  <data name="Sync Qualifier Leaderboard" xml:space="preserve">
+    <value>Sincronizar classificação dos qualifiers</value>
+  </data>
+  <data name="This user does not exist. Double check the User Id" xml:space="preserve">
+    <value>Este usuário não existe. Confira o ID do usuário.</value>
+  </data>
+  <data name="To Leaderboard" xml:space="preserve">
+    <value>Ver classificação</value>
+  </data>
+  <data name="Tournament" xml:space="preserve">
+    <value>Campeonato</value>
+  </data>
+  <data name="Tournament Role" xml:space="preserve">
+    <value>Função do campeonato</value>
+  </data>
+  <data name="Upcoming Tournaments" xml:space="preserve">
+    <value>Próximos campeonatos</value>
+  </data>
+  <data name="Website" xml:space="preserve">
+    <value>Site</value>
+  </data>
+  <data name="X Brackets" xml:space="preserve">
+    <value>{0} Chaves</value>
+  </data>
 </root>
