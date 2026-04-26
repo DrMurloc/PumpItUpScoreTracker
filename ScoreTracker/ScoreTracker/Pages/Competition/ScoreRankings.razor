@@ -8,12 +8,12 @@
 @using ScoreTracker.Domain.ValueTypes
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using ScoreTracker.Web.Components
-<PageTitle>Score Rankings</PageTitle>
+<PageTitle>@L["Score Rankings"]</PageTitle>
 
-<MudText Typo="Typo.h5">Scoring Rankings</MudText>
-<MudText>Score Rankings (the colored scores) are based on comparisons to similarly skilled players.</MudText>
+<MudText Typo="Typo.h5">@L["Scoring Rankings"]</MudText>
+<MudText>@L["Score Rankings (the colored scores) are based on comparisons to similarly skilled players."]</MudText>
 <br/>
-<MudText>The higher percent of players in your range that you perform better than, the better the color:</MudText>
+<MudText>@L["The higher percent of players in your range that you perform better than, the better the color:"]</MudText>
 <br/>
 <MudText Style="color:#BDBDBD">0% -> 10%</MudText>
 <MudText Style="color:#FAFAFA">10% -> 25%</MudText>
@@ -21,17 +21,17 @@
 <MudText Style="color:#1565C0">50% -> 75%</MudText>
 <MudText Style="color:#7E57C2">75% -> 90%</MudText>
 <MudText Style="color:#EC407A">90% -> 99%</MudText>
-<MudText Style="color:#FB8C00">100% (or everyone with a PG)</MudText>
+<MudText Style="color:#FB8C00">@L["100% (or everyone with a PG)"]</MudText>
 <br/>
-<MudText Typo="Typo.h6">Similarly skilled players to you for Singles:</MudText>
+<MudText Typo="Typo.h6">@L["Similarly skilled players to you for Singles:"]</MudText>
 <MudTable T="User" Items="_comparableUsersSingles">
     <HeaderContent>
-        <MudTh>Avatar</MudTh>
+        <MudTh>@L["Avatar"]</MudTh>
         <MudTh>
-            <MudTableSortLabel T="User" SortBy=@(u=>u.IsPublic?u.Name:"Anonymous")>Player</MudTableSortLabel>
+            <MudTableSortLabel T="User" SortBy=@(u=>u.IsPublic?u.Name:"Anonymous")>@L["Player"]</MudTableSortLabel>
         </MudTh>
         <MudTh>
-            <MudTableSortLabel T="User" SortBy="u=>_competitiveLevelSingles[u.Id]">Level</MudTableSortLabel>
+            <MudTableSortLabel T="User" SortBy="u=>_competitiveLevelSingles[u.Id]">@L["Level"]</MudTableSortLabel>
         </MudTh>
     </HeaderContent>
     <RowTemplate>
@@ -48,7 +48,7 @@
             }
             else
             {
-                <MudText>Anonymous</MudText>
+                <MudText>@L["Anonymous"]</MudText>
             }
         </MudTd>
         <MudTd>
@@ -57,18 +57,18 @@
     </RowTemplate>
 </MudTable>
 <br/>
-<MudText Typo="Typo.h6">Similarly skilled players to you for Doubles (CoOp charts use doubles competitive level):</MudText>
+<MudText Typo="Typo.h6">@L["Similarly skilled players to you for Doubles (CoOp charts use doubles competitive level):"]</MudText>
 <MudTable T="User" Items="_comparableUsersDoubles">
     <HeaderContent>
-        <MudTh>Avatar</MudTh>
+        <MudTh>@L["Avatar"]</MudTh>
         <MudTh>
-            <MudTableSortLabel T="User" SortBy=@(u=>u.IsPublic?u.Name:"Anonymous")>Player</MudTableSortLabel>
+            <MudTableSortLabel T="User" SortBy=@(u=>u.IsPublic?u.Name:"Anonymous")>@L["Player"]</MudTableSortLabel>
         </MudTh>
         <MudTh>
-            <MudTableSortLabel T="User" SortBy="u=>_competitiveLevelDoubles[u.Id]">Level</MudTableSortLabel>
+            <MudTableSortLabel T="User" SortBy="u=>_competitiveLevelDoubles[u.Id]">@L["Level"]</MudTableSortLabel>
         </MudTh>
     </HeaderContent>
-    
+
     <RowTemplate>
         <MudTd>
             @if (context.IsPublic)
@@ -83,7 +83,7 @@
             }
             else
             {
-                <MudText>Anonymous</MudText>
+                <MudText>@L["Anonymous"]</MudText>
             }
         </MudTd>
         <MudTd>

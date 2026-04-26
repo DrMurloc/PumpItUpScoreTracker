@@ -5,36 +5,36 @@
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
-<PageTitle>Tournaments</PageTitle>
+<PageTitle>@L["Tournaments"]</PageTitle>
 
 @if (_active.Any())
 {
 
-    <MudText Typo="Typo.h4">Active Tournaments</MudText>
+    <MudText Typo="Typo.h4">@L["Active Tournaments"]</MudText>
     <MudDataGrid T="TournamentRecord" Items="_active">
         <Columns>
-            <PropertyColumn T="TournamentRecord" TProperty="string" Property="x => x.Name" Title="Tournament" Sortable="false"></PropertyColumn>
-            <TemplateColumn T="TournamentRecord" Title="Start Date" Sortable="true" SortBy="x => x.StartDate ?? DateTimeOffset.MinValue">
+            <PropertyColumn T="TournamentRecord" TProperty="string" Property="x => x.Name" Title=@L["Tournament"] Sortable="false"></PropertyColumn>
+            <TemplateColumn T="TournamentRecord" Title=@L["Start Date"] Sortable="true" SortBy="x => x.StartDate ?? DateTimeOffset.MinValue">
                 <CellTemplate>
                     <MudText>@(context.Item.StartDate?.ToString("D")??"")</MudText>
                 </CellTemplate>
             </TemplateColumn>
-            <TemplateColumn T="TournamentRecord" Title="End Date" Sortable="true" SortBy="x => x.EndDate ?? DateTimeOffset.MaxValue">
+            <TemplateColumn T="TournamentRecord" Title=@L["End Date"] Sortable="true" SortBy="x => x.EndDate ?? DateTimeOffset.MaxValue">
                 <CellTemplate>
                     <MudText>@(context.Item.EndDate?.ToString("D")??"")</MudText>
                 </CellTemplate>
             </TemplateColumn>
-            <TemplateColumn T="TournamentRecord" Title="Type" Sortable="false">
+            <TemplateColumn T="TournamentRecord" Title=@L["Type"] Sortable="false">
                 <CellTemplate>
                     @context.Item.Type
                 </CellTemplate>
             </TemplateColumn>
-            <TemplateColumn T="TournamentRecord" Title="Location" Sortable="false">
+            <TemplateColumn T="TournamentRecord" Title=@L["Location"] Sortable="false">
                 <CellTemplate>
                     @context.Item.Location
                 </CellTemplate>
             </TemplateColumn>
-            <TemplateColumn T="TournamentRecord" Title="Link" Sortable="false">
+            <TemplateColumn T="TournamentRecord" Title=@L["Link"] Sortable="false">
                 <CellTemplate>
                     @if (context.Item.LinkOverride != null)
                     {
@@ -53,31 +53,31 @@
 {
     <br/>
     <br/>
-    <MudText Typo="Typo.h4">Upcoming Tournaments</MudText>
+    <MudText Typo="Typo.h4">@L["Upcoming Tournaments"]</MudText>
     <MudDataGrid T="TournamentRecord" Items="_upcoming">
         <Columns>
-            <PropertyColumn T="TournamentRecord" TProperty="string" Property="x => x.Name" Title="Tournament" Sortable="false"></PropertyColumn>
-            <TemplateColumn T="TournamentRecord" Title="Start Date" Sortable="true" SortBy="x => x.StartDate ?? DateTimeOffset.MinValue">
+            <PropertyColumn T="TournamentRecord" TProperty="string" Property="x => x.Name" Title=@L["Tournament"] Sortable="false"></PropertyColumn>
+            <TemplateColumn T="TournamentRecord" Title=@L["Start Date"] Sortable="true" SortBy="x => x.StartDate ?? DateTimeOffset.MinValue">
                 <CellTemplate>
                     <MudText>@(context.Item.StartDate?.ToString("D")??"")</MudText>
                 </CellTemplate>
             </TemplateColumn>
-            <TemplateColumn T="TournamentRecord" Title="End Date" Sortable="true" SortBy="x => x.EndDate ?? DateTimeOffset.MaxValue">
+            <TemplateColumn T="TournamentRecord" Title=@L["End Date"] Sortable="true" SortBy="x => x.EndDate ?? DateTimeOffset.MaxValue">
                 <CellTemplate>
                     <MudText>@(context.Item.EndDate?.ToString("D")??"")</MudText>
                 </CellTemplate>
             </TemplateColumn>
-            <TemplateColumn T="TournamentRecord" Title="Type" Sortable="false">
+            <TemplateColumn T="TournamentRecord" Title=@L["Type"] Sortable="false">
                 <CellTemplate>
                     @context.Item.Type
                 </CellTemplate>
             </TemplateColumn>
-            <TemplateColumn T="TournamentRecord" Title="Location" Sortable="false">
+            <TemplateColumn T="TournamentRecord" Title=@L["Location"] Sortable="false">
                 <CellTemplate>
                     @context.Item.Location
                 </CellTemplate>
             </TemplateColumn>
-            <TemplateColumn T="TournamentRecord" Title="Link" Sortable="false">
+            <TemplateColumn T="TournamentRecord" Title=@L["Link"] Sortable="false">
                 <CellTemplate>
                     @if (context.Item.LinkOverride != null)
                     {
@@ -97,31 +97,31 @@
     
     <br/>
     <br/>
-    <MudText Typo="Typo.h4">Previous Tournaments</MudText>
+    <MudText Typo="Typo.h4">@L["Previous Tournaments"]</MudText>
     <MudDataGrid T="TournamentRecord" Items="_previous">
         <Columns>
-            <PropertyColumn T="TournamentRecord" TProperty="string" Property="x => x.Name" Title="Tournament" Sortable="false"></PropertyColumn>
-            <TemplateColumn T="TournamentRecord" Title="Start Date" Sortable="true" SortBy="x => x.StartDate ?? DateTimeOffset.MinValue">
+            <PropertyColumn T="TournamentRecord" TProperty="string" Property="x => x.Name" Title=@L["Tournament"] Sortable="false"></PropertyColumn>
+            <TemplateColumn T="TournamentRecord" Title=@L["Start Date"] Sortable="true" SortBy="x => x.StartDate ?? DateTimeOffset.MinValue">
                 <CellTemplate>
                     <MudText>@(context.Item.StartDate?.ToString("D")??"")</MudText>
                 </CellTemplate>
             </TemplateColumn>
-            <TemplateColumn T="TournamentRecord" Title="End Date" Sortable="true" SortBy="x => x.EndDate ?? DateTimeOffset.MaxValue">
+            <TemplateColumn T="TournamentRecord" Title=@L["End Date"] Sortable="true" SortBy="x => x.EndDate ?? DateTimeOffset.MaxValue">
                 <CellTemplate>
                     <MudText>@(context.Item.EndDate?.ToString("D")??"")</MudText>
                 </CellTemplate>
             </TemplateColumn>
-            <TemplateColumn T="TournamentRecord" Title="Type" Sortable="false">
+            <TemplateColumn T="TournamentRecord" Title=@L["Type"] Sortable="false">
                 <CellTemplate>
                     @context.Item.Type
                 </CellTemplate>
             </TemplateColumn>
-            <TemplateColumn T="TournamentRecord" Title="Location" Sortable="false">
+            <TemplateColumn T="TournamentRecord" Title=@L["Location"] Sortable="false">
                 <CellTemplate>
                     @context.Item.Location
                 </CellTemplate>
             </TemplateColumn>
-            <TemplateColumn T="TournamentRecord" Title="Link" Sortable="false">
+            <TemplateColumn T="TournamentRecord" Title=@L["Link"] Sortable="false">
                 <CellTemplate>
                     @if (context.Item.LinkOverride != null)
                     {
@@ -142,11 +142,11 @@
             <MudItem xs="12">
                 <MudText Typo="Typo.h4">@_currentConfig.Name</MudText>
             </MudItem>
-            <MudItem xs="12">Start Date: @(_currentConfig.StartDate?.ToString(@"D") ?? "Always")</MudItem>
-            <MudItem xs="12">End Date: @(_currentConfig.EndDate?.ToString(@"D") ?? "Never")</MudItem>
-            <MudItem xs="12">Players have @(_currentConfig.MaxTime.ToString(@"h\:mm")) to play charts. You are allowed to finish the song you are on when your time runs out. Your total score is total combined score of all charts you play.</MudItem>
+            <MudItem xs="12">@L["Start Date: X", _currentConfig.StartDate?.ToString(@"D") ?? L["Always"].Value]</MudItem>
+            <MudItem xs="12">@L["End Date: X", _currentConfig.EndDate?.ToString(@"D") ?? L["Never"].Value]</MudItem>
+            <MudItem xs="12">@L["Players have X to play charts. You are allowed to finish the song you are on when your time runs out. Your total score is total combined score of all charts you play.", _currentConfig.MaxTime.ToString(@"h\:mm")]</MudItem>
             <MudItem xs="6" sm="3">
-                <MudMenu Label="Base Level Scores" Variant="Variant.Filled">
+                <MudMenu Label=@L["Base Level Scores"] Variant="Variant.Filled">
                     @foreach (var kv in _currentConfig.Scoring.LevelRatings.OrderBy(l => (int)l.Key).Where(kv => kv.Value > 0))
                     {
                         <MudMenuItem>@kv.Key - @kv.Value</MudMenuItem>
@@ -154,7 +154,7 @@
                 </MudMenu>
             </MudItem>
             <MudItem xs="6" sm="3">
-                <MudMenu Label="Song Types" Variant="Variant.Filled">
+                <MudMenu Label=@L["Song Types"] Variant="Variant.Filled">
                     @foreach (var kv in _currentConfig.Scoring.SongTypeModifiers.Where(kv => kv.Value > 0))
                     {
                         <MudMenuItem>@kv.Key @(Math.Abs(kv.Value - 1) < .001?"":$"- {@kv.Value}X")</MudMenuItem>
@@ -162,7 +162,7 @@
                 </MudMenu>
             </MudItem>
             <MudItem xs="6" sm="3">
-                <MudMenu Label="Chart Types" Variant="Variant.Filled">
+                <MudMenu Label=@L["Chart Types"] Variant="Variant.Filled">
                     @foreach (var kv in _currentConfig.Scoring.ChartTypeModifiers.Where(kv => kv.Value > 0))
                     {
                         <MudMenuItem>@kv.Key @(Math.Abs(kv.Value - 1) < .001?"":$"- {@kv.Value}X")</MudMenuItem>
@@ -170,7 +170,7 @@
                 </MudMenu>
             </MudItem>
             <MudItem xs="6" sm="3">
-                <MudMenu Label="Letter Grades" Variant="Variant.Filled">
+                <MudMenu Label=@L["Letter Grades"] Variant="Variant.Filled">
                     @foreach (var kv in _currentConfig.Scoring.LetterGradeModifiers.OrderBy(kv => kv.Key).Where(kv => kv.Value > 0))
                     {
                         <MudMenuItem>@kv.Key.GetName() @(Math.Abs(kv.Value - 1) < .001?"":$"- {@kv.Value}X")</MudMenuItem>
@@ -178,7 +178,7 @@
                 </MudMenu>
             </MudItem>
             <MudItem xs="6" sm="3">
-                <MudMenu Label="Plates" Variant="Variant.Filled">
+                <MudMenu Label=@L["Plates"] Variant="Variant.Filled">
                     @foreach (var kv in _currentConfig.Scoring.PlateModifiers.OrderBy(kv=>kv.Key).Where(kv => kv.Value > 0))
                     {
                         <MudMenuItem>@kv.Key.GetShorthand() @(Math.Abs(kv.Value - 1) < .001 ? "" : $"- {@kv.Value}X")</MudMenuItem>
@@ -188,21 +188,21 @@
 
             @if (Math.Abs(_currentConfig.Scoring.StageBreakModifier - 1) > .0001)
             {
-                <MudItem xs="12">Broken scores get a multiplier of @_currentConfig.Scoring.StageBreakModifier</MudItem>
+                <MudItem xs="12">@L["Broken scores get a multiplier of X", _currentConfig.Scoring.StageBreakModifier]</MudItem>
             }
             @if (_currentConfig.Scoring.AdjustToTime)
             {
-                <MudItem xs="12">Songs will have score adjusted based on song length (treating 2 minutes as baseline)</MudItem>
+                <MudItem xs="12">@L["Songs will have score adjusted based on song length (treating 2 minutes as baseline)"]</MudItem>
             }
             <MudItem xs="12">
-                Repeated charts @(_currentConfig.AllowRepeats ? "are" : "are not") allowed.
+                @L["Repeated charts X allowed.", _currentConfig.AllowRepeats ? L["are"].Value : L["are not"].Value]
             </MudItem>
 
         </MudGrid>
     </DialogContent>
     <DialogActions>
         <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showRules = false">Close</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showRules = false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
 

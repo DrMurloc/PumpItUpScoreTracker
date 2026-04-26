@@ -1438,4 +1438,333 @@
   <data name="Singles vs Doubles" xml:space="preserve">
 	  <value>Singles vs Doubles</value>
   </data>
+  <data name="Score Rankings" xml:space="preserve">
+	  <value>Score Rankings</value>
+  </data>
+  <data name="Scoring Rankings" xml:space="preserve">
+	  <value>Scoring Rankings</value>
+  </data>
+  <data name="Score Rankings (the colored scores) are based on comparisons to similarly skilled players." xml:space="preserve">
+	  <value>Score Rankings (the colored scores) are based on comparisons to similarly skilled players.</value>
+  </data>
+  <data name="The higher percent of players in your range that you perform better than, the better the color:" xml:space="preserve">
+	  <value>The higher percent of players in your range that you perform better than, the better the color:</value>
+  </data>
+  <data name="100% (or everyone with a PG)" xml:space="preserve">
+	  <value>100% (or everyone with a PG)</value>
+	  <comment>Top color band on /ScoreRankings.</comment>
+  </data>
+  <data name="Similarly skilled players to you for Singles:" xml:space="preserve">
+	  <value>Similarly skilled players to you for Singles:</value>
+  </data>
+  <data name="Similarly skilled players to you for Doubles (CoOp charts use doubles competitive level):" xml:space="preserve">
+	  <value>Similarly skilled players to you for Doubles (CoOp charts use doubles competitive level):</value>
+  </data>
+  <data name="Active Tournaments" xml:space="preserve">
+	  <value>Active Tournaments</value>
+  </data>
+  <data name="Upcoming Tournaments" xml:space="preserve">
+	  <value>Upcoming Tournaments</value>
+  </data>
+  <data name="Previous Tournaments" xml:space="preserve">
+	  <value>Previous Tournaments</value>
+  </data>
+  <data name="Tournament" xml:space="preserve">
+	  <value>Tournament</value>
+  </data>
+  <data name="Start Date" xml:space="preserve">
+	  <value>Start Date</value>
+  </data>
+  <data name="End Date" xml:space="preserve">
+	  <value>End Date</value>
+  </data>
+  <data name="Location" xml:space="preserve">
+	  <value>Location</value>
+  </data>
+  <data name="Always" xml:space="preserve">
+	  <value>Always</value>
+	  <comment>Fallback for tournament StartDate when not set.</comment>
+  </data>
+  <data name="Never" xml:space="preserve">
+	  <value>Never</value>
+	  <comment>Fallback for tournament EndDate when not set.</comment>
+  </data>
+  <data name="Start Date: X" xml:space="preserve">
+	  <value>Start Date: {0}</value>
+	  <comment>{0} = formatted date string or the localized "Always" fallback.</comment>
+  </data>
+  <data name="End Date: X" xml:space="preserve">
+	  <value>End Date: {0}</value>
+	  <comment>{0} = formatted date string or the localized "Never" fallback.</comment>
+  </data>
+  <data name="Players have X to play charts. You are allowed to finish the song you are on when your time runs out. Your total score is total combined score of all charts you play." xml:space="preserve">
+	  <value>Players have {0} to play charts. You are allowed to finish the song you are on when your time runs out. Your total score is total combined score of all charts you play.</value>
+	  <comment>{0} = MaxTime as h:mm.</comment>
+  </data>
+  <data name="Base Level Scores" xml:space="preserve">
+	  <value>Base Level Scores</value>
+  </data>
+  <data name="Broken scores get a multiplier of X" xml:space="preserve">
+	  <value>Broken scores get a multiplier of {0}</value>
+	  <comment>{0} = StageBreakModifier value.</comment>
+  </data>
+  <data name="Songs will have score adjusted based on song length (treating 2 minutes as baseline)" xml:space="preserve">
+	  <value>Songs will have score adjusted based on song length (treating 2 minutes as baseline)</value>
+  </data>
+  <data name="are" xml:space="preserve">
+	  <value>are</value>
+	  <comment>Used in "Repeated charts {are/are not} allowed." sentence on the rules dialog.</comment>
+  </data>
+  <data name="are not" xml:space="preserve">
+	  <value>are not</value>
+	  <comment>Used in "Repeated charts {are/are not} allowed." sentence on the rules dialog.</comment>
+  </data>
+  <data name="Repeated charts X allowed." xml:space="preserve">
+	  <value>Repeated charts {0} allowed.</value>
+	  <comment>{0} = "are" or "are not" (also localized as separate keys).</comment>
+  </data>
+  <data name="X Brackets" xml:space="preserve">
+	  <value>{0} Brackets</value>
+	  <comment>Page title on /Tournament/{id}/Admin. {0} = tournament name.</comment>
+  </data>
+  <data name="Sync Qualifier Leaderboard" xml:space="preserve">
+	  <value>Sync Qualifier Leaderboard</value>
+  </data>
+  <data name="New Player Name" xml:space="preserve">
+	  <value>New Player Name</value>
+  </data>
+  <data name="Add Player" xml:space="preserve">
+	  <value>Add Player</value>
+  </data>
+  <data name="Player Name" xml:space="preserve">
+	  <value>Player Name</value>
+  </data>
+  <data name="Seed" xml:space="preserve">
+	  <value>Seed</value>
+  </data>
+  <data name="Discord Id" xml:space="preserve">
+	  <value>Discord Id</value>
+  </data>
+  <data name="Notes" xml:space="preserve">
+	  <value>Notes</value>
+  </data>
+  <data name="Potential Conflict" xml:space="preserve">
+	  <value>Potential Conflict</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+	  <value>Delete</value>
+  </data>
+  <data name="Permissions" xml:space="preserve">
+	  <value>Permissions</value>
+  </data>
+  <data name="Players (Paste UserId from Account Page if not Public)" xml:space="preserve">
+	  <value>Players (Paste UserId from Account Page if not Public)</value>
+  </data>
+  <data name="Tournament Role" xml:space="preserve">
+	  <value>Tournament Role</value>
+  </data>
+  <data name="Machines" xml:space="preserve">
+	  <value>Machines</value>
+  </data>
+  <data name="Machine Name" xml:space="preserve">
+	  <value>Machine Name</value>
+  </data>
+  <data name="Is Warmup" xml:space="preserve">
+	  <value>Is Warmup</value>
+  </data>
+  <data name="Priority" xml:space="preserve">
+	  <value>Priority</value>
+  </data>
+  <data name="Player added" xml:space="preserve">
+	  <value>Player added</value>
+  </data>
+  <data name="This user does not exist. Double check the User Id" xml:space="preserve">
+	  <value>This user does not exist. Double check the User Id</value>
+  </data>
+  <data name="Players synced" xml:space="preserve">
+	  <value>Players synced</value>
+  </data>
+  <data name="Record Session" xml:space="preserve">
+	  <value>Record Session</value>
+  </data>
+  <data name="Test Scores" xml:space="preserve">
+	  <value>Test Scores</value>
+  </data>
+  <data name="Show Extra Info" xml:space="preserve">
+	  <value>Show Extra Info</value>
+  </data>
+  <data name="Difficulty Range" xml:space="preserve">
+	  <value>Difficulty Range</value>
+  </data>
+  <data name="Average Difficulty" xml:space="preserve">
+	  <value>Average Difficulty</value>
+  </data>
+  <data name="Total Chart Bonus" xml:space="preserve">
+	  <value>Total Chart Bonus</value>
+  </data>
+  <data name="Pass Rate" xml:space="preserve">
+	  <value>Pass Rate</value>
+  </data>
+  <data name="Average PPS" xml:space="preserve">
+	  <value>Average PPS</value>
+  </data>
+  <data name="Rest Time" xml:space="preserve">
+	  <value>Rest Time</value>
+  </data>
+  <data name="Verification" xml:space="preserve">
+	  <value>Verification</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+	  <value>Edit</value>
+  </data>
+  <data name="X Charts" xml:space="preserve">
+	  <value>{0} Charts</value>
+	  <comment>{0} = chart count integer. Button label on /Tournament/Stamina/{id}.</comment>
+  </data>
+  <data name="In Person" xml:space="preserve">
+	  <value>In Person</value>
+  </data>
+  <data name="Estimated Point Gain Timeline" xml:space="preserve">
+	  <value>Estimated Point Gain Timeline</value>
+  </data>
+  <data name="Points Per Second" xml:space="preserve">
+	  <value>Points Per Second</value>
+  </data>
+  <data name="Chart Statistics" xml:space="preserve">
+	  <value>Chart Statistics</value>
+  </data>
+  <data name="Play Count" xml:space="preserve">
+	  <value>Play Count</value>
+  </data>
+  <data name="Best Score" xml:space="preserve">
+	  <value>Best Score</value>
+  </data>
+  <data name="X Plays" xml:space="preserve">
+	  <value>{0} Plays</value>
+	  <comment>{0} = play count integer.</comment>
+  </data>
+  <data name="Stamina Session Builder" xml:space="preserve">
+	  <value>Stamina Session Builder</value>
+  </data>
+  <data name="Tournament Settings" xml:space="preserve">
+	  <value>Tournament Settings</value>
+  </data>
+  <data name="PreBuilt Tournament Configuration" xml:space="preserve">
+	  <value>PreBuilt Tournament Configuration</value>
+  </data>
+  <data name="Default" xml:space="preserve">
+	  <value>Default</value>
+  </data>
+  <data name="Levels" xml:space="preserve">
+	  <value>Levels</value>
+  </data>
+  <data name="Adjust Scores to Song Duration (uses 2 minutes as average chart duration)" xml:space="preserve">
+	  <value>Adjust Scores to Song Duration (uses 2 minutes as average chart duration)</value>
+  </data>
+  <data name="Continous Modifier Scale (modifier increments between letter grades)" xml:space="preserve">
+	  <value>Continous Modifier Scale (modifier increments between letter grades)</value>
+	  <comment>Source spelling preserved verbatim ("Continous" rather than "Continuous").</comment>
+  </data>
+  <data name="Perfect Score Modifier (Acts as a letter grade beyond SSS+)" xml:space="preserve">
+	  <value>Perfect Score Modifier (Acts as a letter grade beyond SSS+)</value>
+  </data>
+  <data name="Minimum Score" xml:space="preserve">
+	  <value>Minimum Score</value>
+  </data>
+  <data name="Input Json" xml:space="preserve">
+	  <value>Input Json</value>
+  </data>
+  <data name="Set Charts" xml:space="preserve">
+	  <value>Set Charts</value>
+  </data>
+  <data name="Extra Settings" xml:space="preserve">
+	  <value>Extra Settings</value>
+  </data>
+  <data name="Allow Repeats" xml:space="preserve">
+	  <value>Allow Repeats</value>
+  </data>
+  <data name="Stage Break Modifier" xml:space="preserve">
+	  <value>Stage Break Modifier</value>
+  </data>
+  <data name="Session Duration (Minutes)" xml:space="preserve">
+	  <value>Session Duration (Minutes)</value>
+  </data>
+  <data name="Custom Scoring Formula" xml:space="preserve">
+	  <value>Custom Scoring Formula</value>
+  </data>
+  <data name="Admin Settings" xml:space="preserve">
+	  <value>Admin Settings</value>
+  </data>
+  <data name="Tournament Dates (EST)" xml:space="preserve">
+	  <value>Tournament Dates (EST)</value>
+  </data>
+  <data name="Tournament Name" xml:space="preserve">
+	  <value>Tournament Name</value>
+  </data>
+  <data name="Test With Player Data" xml:space="preserve">
+	  <value>Test With Player Data</value>
+  </data>
+  <data name="Import Your Phoenix Scores" xml:space="preserve">
+	  <value>Import Your Phoenix Scores</value>
+  </data>
+  <data name="Hide Record-less Charts" xml:space="preserve">
+	  <value>Hide Record-less Charts</value>
+  </data>
+  <data name="Hide Zero Scoring Charts" xml:space="preserve">
+	  <value>Hide Zero Scoring Charts</value>
+  </data>
+  <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
+	  <value>Player To Test (Must Be Set To Public)</value>
+  </data>
+  <data name="Effective Level" xml:space="preserve">
+	  <value>Effective Level</value>
+  </data>
+  <data name="Your Score" xml:space="preserve">
+	  <value>Your Score</value>
+  </data>
+  <data name="Points Pre-Score" xml:space="preserve">
+	  <value>Points Pre-Score</value>
+  </data>
+  <data name="Points Per Second Pre-Score" xml:space="preserve">
+	  <value>Points Per Second Pre-Score</value>
+  </data>
+  <data name="Your Points" xml:space="preserve">
+	  <value>Your Points</value>
+  </data>
+  <data name="Your Points per Second" xml:space="preserve">
+	  <value>Your Points per Second</value>
+  </data>
+  <data name="Example Set Builder" xml:space="preserve">
+	  <value>Example Set Builder</value>
+  </data>
+  <data name="Seconds of Rest Per Chart" xml:space="preserve">
+	  <value>Seconds of Rest Per Chart</value>
+  </data>
+  <data name="Build Session" xml:space="preserve">
+	  <value>Build Session</value>
+  </data>
+  <data name="Score: X" xml:space="preserve">
+	  <value>Score: {0}</value>
+	  <comment>{0} = total session score integer.</comment>
+  </data>
+  <data name="Total Charts: X" xml:space="preserve">
+	  <value>Total Charts: {0}</value>
+	  <comment>{0} = chart count integer.</comment>
+  </data>
+  <data name="Rest Time Per Chart: X" xml:space="preserve">
+	  <value>Rest Time Per Chart: {0}</value>
+	  <comment>{0} = formatted m:ss timespan.</comment>
+  </data>
+  <data name="Duration" xml:space="preserve">
+	  <value>Duration</value>
+  </data>
+  <data name="Chart Score" xml:space="preserve">
+	  <value>Chart Score</value>
+  </data>
+  <data name="Session Score" xml:space="preserve">
+	  <value>Session Score</value>
+  </data>
+  <data name="Couldn't parse JSON" xml:space="preserve">
+	  <value>Couldn't parse JSON</value>
+  </data>
 </root>
