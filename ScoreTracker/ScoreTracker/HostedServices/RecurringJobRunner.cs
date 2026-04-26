@@ -1,0 +1,35 @@
+using MassTransit;
+using ScoreTracker.Domain.Events;
+
+namespace ScoreTracker.Web.HostedServices;
+
+public sealed class RecurringJobRunner
+{
+    private readonly IBus _bus;
+
+    public RecurringJobRunner(IBus bus)
+    {
+        _bus = bus;
+    }
+
+    public Task PublishProcessScoresTiersList() =>
+        _bus.Publish(new ProcessScoresTiersListCommand());
+
+    public Task PublishUpdateBounties() =>
+        _bus.Publish(new UpdateBountiesEvent());
+
+    public Task PublishCalculateScoringDifficulty() =>
+        _bus.Publish(new CalculateScoringDifficultyEvent());
+
+    public Task PublishUpdateWeeklyCharts() =>
+        _bus.Publish(new UpdateWeeklyChartsEvent());
+
+    public Task PublishProcessPassTierList() =>
+        _bus.Publish(new ProcessPassTierListCommand());
+
+    public Task PublishCalculateChartLetterDifficulties() =>
+        _bus.Publish(new CalculateChartLetterDifficultiesEvent());
+
+    public Task PublishStartLeaderboardImport() =>
+        _bus.Publish(new StartLeaderboardImportEvent());
+}

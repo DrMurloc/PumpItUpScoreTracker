@@ -30,4 +30,7 @@ public interface IOfficialLeaderboardRepository
     Task<IEnumerable<(string Username, Uri AvatarPath)>> GetUserAvatars(CancellationToken cancellationToken);
     Task UpdateAllAvatarPaths(Uri oldPath, Uri newPath, CancellationToken cancellationToken);
     Task SaveAvatar(string username, Uri avatarPath, CancellationToken cancellationToken);
+
+    Task<DateTimeOffset?> GetLastImportTimestamp(CancellationToken cancellationToken);
+    Task SetLastImportTimestamp(DateTimeOffset timestamp, CancellationToken cancellationToken);
 }

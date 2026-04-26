@@ -56,7 +56,7 @@ Domain    ◄──── Application ◄──── Data ────┐
   - `ScoreTracker.Domain.Enums.*` — domain enums (`MixEnum`, `ChartType`, `PhoenixLetterGrade`, etc.).
   - `ScoreTracker.Domain.SecondaryPorts.*` — repository and client interfaces (`IChartRepository`, `IUserRepository`, `IBotClient`, `ICurrentUserAccessor`, `IDateTimeOffsetAccessor`, …). All persistence and integration is invoked through these.
   - `ScoreTracker.Domain.Services.*` — domain services with `Contracts` for interfaces (`IUserAccessService`, `IWorldRankingService`).
-  - `ScoreTracker.Domain.Events.*` — message records published over MassTransit and/or scheduled by `RecurringJobHostedService`. Note: the folder also contains command-shaped messages such as `ProcessPassTierListCommand`.
+  - `ScoreTracker.Domain.Events.*` — message records published over MassTransit and/or fired by Hangfire recurring jobs. Note: the folder also contains command-shaped messages such as `ProcessPassTierListCommand`.
   - `ScoreTracker.Domain.Exceptions.*` — domain exceptions (`InvalidNameException`, `ChartNotFoundException`, …).
   - `ScoreTracker.Domain.Views.*` — projection types used by the Match feature.
 - **Dependencies** — `MediatR` and `Microsoft.Extensions.Logging.Abstractions` only. No project references. No EF, no MassTransit (the abstractions live one layer up), no ASP.NET.
@@ -109,16 +109,16 @@ Domain    ◄──── Application ◄──── Data ────┐
 
 - **Responsibility** — Blazor Server UI, MVC API controllers, authentication, hosted background services, and process bootstrap.
 - **Key types / namespaces**
-  - [`Program.cs`](ScoreTracker/ScoreTracker/Program.cs) — single composition root for the process. Configures Razor Pages + Server-Side Blazor, MassTransit (in-memory + delayed scheduler), MediatR (multi-assembly scan), authentication (Discord/Google/Facebook OAuth + cookie + custom `ApiToken` scheme), MudBlazor, Application Insights, Swagger, localization, and calls `AddInfrastructure(...)` from `CompositionRoot`.
+  - [`Program.cs`](ScoreTracker/ScoreTracker/Program.cs) — single composition root for the process. Configures Razor Pages + Server-Side Blazor, MassTransit (in-memory + delayed scheduler), Hangfire (SQL Server storage + dashboard + recurring-job registrations), MediatR (multi-assembly scan), authentication (Discord/Google/Facebook OAuth + cookie + custom `ApiToken` scheme), MudBlazor, Application Insights, Swagger, localization, and calls `AddInfrastructure(...)` from `CompositionRoot`.
   - `ScoreTracker.Web.Pages.*` — Blazor pages, organized by feature folders (`Admin/`, `Communities/`, `Competition/`, `Experiments/`, `OfficialLeaderboards/`, `Progress/`, `TierLists/`, `Tools/`). Pages dispatch via injected `IMediator`.
   - `ScoreTracker.Web.Components.*` — Blazor components reused across pages.
   - `ScoreTracker.Web.Controllers.Api.*` — MVC controllers under `api/*`. Controllers dispatch via `IMediator` and use `[ApiToken]` for auth.
-  - `ScoreTracker.Web.HostedServices.RecurringJobHostedService` — `IHostedService` + `IConsumer<RescheduleMessages>` that uses `IMessageScheduler.SchedulePublish` to plant the next day's recurring messages (`ProcessScoresTiersListCommand`, `UpdateBountiesEvent`, `CalculateScoringDifficultyEvent`, `UpdateWeeklyChartsEvent`, `ProcessPassTierListCommand`, `CalculateChartLetterDifficultiesEvent`) and re-schedules itself at 03:30.
+  - [`ScoreTracker.Web.HostedServices.RecurringJobRunner`](ScoreTracker/ScoreTracker/HostedServices/RecurringJobRunner.cs) — thin `IBus`-only runner whose methods are the entry points Hangfire serializes. One method per recurring job, each a one-line `_bus.Publish(new XEvent())`. Hangfire registrations live in `Program.cs` via `RecurringJob.AddOrUpdate<RecurringJobRunner>(id, r => r.Method(), cron)`. Cron expressions are UTC.
   - `ScoreTracker.Web.HostedServices.BotHostedService` — Discord bot lifecycle.
   - `ScoreTracker.Web.Accessors.*` — `HttpContextUserAccessor : ICurrentUserAccessor`, `DateTimeOffsetAccessor : IDateTimeOffsetAccessor`. Concrete implementations of Domain ports that depend on ASP.NET and so live here.
-  - `ScoreTracker.Web.Security.*` — `ApiTokenAttribute`, `ApiTokenAuthenticationScheme`, `ScoreTrackerClaimTypes`.
+  - `ScoreTracker.Web.Security.*` — `ApiTokenAttribute`, `ApiTokenAuthenticationScheme`, `ScoreTrackerClaimTypes`, [`HangfireDashboardAuthorization`](ScoreTracker/ScoreTracker/Security/HangfireDashboardAuthorization.cs) (`IDashboardAuthorizationFilter` gating `/hangfire` on `User.IsAdmin`).
   - `ScoreTracker.Web.Services.*` — `PhoenixScoreFileExtractor` (Tesseract OCR), `UiSettingsAccessor`, `ChartVideoDisplayer`.
-- **Dependencies** — MudBlazor, Tesseract, MassTransit DI, OAuth providers, Swashbuckle. Project references: `CompositionRoot`, `PersonalProgress`.
+- **Dependencies** — MudBlazor, Tesseract, MassTransit DI, Hangfire (AspNetCore + SqlServer), OAuth providers, Swashbuckle. Project references: `CompositionRoot`, `PersonalProgress`.
 - **Conventions**
   - Razor pages dispatch via `IMediator` injected with `[Inject]`. They do not call repositories or `DbContext` directly.
   - `Controllers/Api/` for HTTP API; route prefix `api/<feature>`; `[ApiToken]` + `[EnableCors("API")]`.
@@ -140,15 +140,15 @@ Domain    ◄──── Application ◄──── Data ────┐
 
 - **Library** — MassTransit `8.5.7` (`MassTransit.Abstractions` in Application, full `MassTransit` in `PersonalProgress`). Web uses `MassTransit.Extensions.DependencyInjection 7.3.1` — a version skew, see tech debt.
 - **Transport** — In-memory (`UsingInMemory`). Configured in [Program.cs:56-69](ScoreTracker/ScoreTracker/Program.cs:56). Delayed message scheduler is enabled via `AddDelayedMessageScheduler` + `UseDelayedMessageScheduler`.
-- **Consumer registration** — `o.AddConsumers(typeof(PlayerRatingSaga).Assembly, typeof(TierListSaga).Assembly, typeof(RecurringJobHostedService).Assembly)` scans `PersonalProgress`, `Application`, and `Web` for `IConsumer<>` implementations.
+- **Consumer registration** — `o.AddConsumers(typeof(PlayerRatingSaga).Assembly, typeof(TierListSaga).Assembly, typeof(RecurringJobRunner).Assembly)` scans `PersonalProgress`, `Application`, and `Web` for `IConsumer<>` implementations.
 - **Events** (records in `ScoreTracker.Domain.Events`)
   - Recurring/scheduled: `UpdateBountiesEvent`, `CalculateScoringDifficultyEvent`, `UpdateWeeklyChartsEvent`, `CalculateChartLetterDifficultiesEvent`, `StartLeaderboardImportEvent`.
   - Score/import flow: `PlayerScoreUpdatedEvent`, `RecentScoreImportedEvent`, `PlayerRatingsImprovedEvent`, `PlayerStatsUpdatedEvent`, `ChartDifficultyUpdatedEvent`, `ImportStatusUpdated`, `ImportStatusError`, `NewTitlesAcquiredEvent`, `TitlesDetectedEvent`, `UcsLeaderboardEntryPlacedEvent`, `UserCreatedEvent`, `UserUpdatedEvent`, `UserWeeklyChartsProgressedEvent`.
   - Command-shaped (despite living in `Events/`): `ProcessPassTierListCommand`, `ProcessScoresTiersListCommand`.
   - Application-internal MediatR notification: `ScoreTracker.Application.Events.MatchUpdatedEvent` (`INotification`).
-- **Publishers** — Razor pages (e.g. `UploadPhoenixScores.razor`, `Admin.razor`), `RecurringJobHostedService`, and many handlers (`CreateUserHandler`, `UpdatePhoenixRecordHandler`, `UpdateUserHandler`, etc.) inject `IBus` and call `Publish`.
+- **Publishers** — Razor pages (e.g. `UploadPhoenixScores.razor`, `Admin.razor`), Hangfire recurring jobs via `RecurringJobRunner`, and many handlers (`CreateUserHandler`, `UpdatePhoenixRecordHandler`, `UpdateUserHandler`, etc.) inject `IBus` and call `Publish`.
 - **Consumers** — The "Saga" classes in `Application/Handlers` and `PersonalProgress/PlayerRatingSaga`.
-- **Operational implication** — Because the transport is in-memory, **scheduled and in-flight messages do not survive a process restart**. `RecurringJobHostedService.StartAsync` re-publishes `RescheduleMessages` on boot to re-plant the daily schedule, but any one-off in-flight work at restart time is lost.
+- **Operational implication** — Because the transport is in-memory, **in-flight bus messages do not survive a process restart**. Recurring schedules *do* survive restarts because they live in the Hangfire SQL Server store, not the bus — Hangfire re-fires according to its `MisfireHandlingMode` (default: schedule the next occurrence). Any ad-hoc `IBus.Publish` work that was mid-flight at restart is still lost.
 
 ## Data access
 
@@ -157,7 +157,8 @@ Domain    ◄──── Application ◄──── Data ────┐
 - **Factory** — [`ChartDbContextFactory`](ScoreTracker/ScoreTracker.Data/Persistence/DbContextFactory.cs) implements `IDbContextFactory<ChartAttemptDbContext>` and is registered transient in `CompositionRoot`. The DbContext itself is registered with `AddDbContext`.
 - **Abstractions** — Repositories (`I*Repository`) are defined in `ScoreTracker.Domain.SecondaryPorts` and implemented as `EF*Repository` in `ScoreTracker.Data.Repositories`. Application code never touches `DbContext` directly (verified — no EF references in `ScoreTracker.Application`).
 - **Registration** — [`RegistrationExtensions.AddInfrastructure`](ScoreTracker/ScoreTracker.CompositionRoot/RegistrationExtensions.cs) reflects over `ScoreTracker.Data` types and binds every `Domain.SecondaryPorts.*` interface they implement as transient. `IBotClient` is registered as a singleton instead. `IPiuGameApi` is registered as a typed `HttpClient`.
-- **Migrations** — `ScoreTracker.Data/Migrations/` (165 files, oldest 2022-04, newest 2025-06). Applied manually (no `db.Database.Migrate()` at startup). Standard EF `dotnet ef migrations add ...` flow.
+- **Migrations** — `ScoreTracker.Data/Migrations/` (oldest 2022-04). Applied manually (no `db.Database.Migrate()` at startup). Standard EF `dotnet ef migrations add ...` flow.
+- **Hangfire schema** — Hangfire owns its own `HangFire` schema in the same SQL Server database. Tables are auto-created on first boot (`PrepareSchemaIfNecessary = true`); no EF migration manages them. Do not add EF entities for Hangfire's tables.
 
 ## Testing strategy
 
@@ -179,7 +180,7 @@ Domain    ◄──── Application ◄──── Data ────┐
 - **Repository naming**: implementation is `EF<Port>` (e.g. `EFUserRepository` implements `IUserRepository`). One implementation per port.
 - **Value types validate at construction** via static `From(...)` factories that throw a domain exception. Do not bypass them.
 - **Configuration POCOs** live in `ScoreTracker.Data.Configuration` (or `ScoreTracker.Web.Configuration` for Web-only options) and are bound in `Program.cs`.
-- **Recurring background work** is scheduled via MassTransit's delayed scheduler from `RecurringJobHostedService`, not via a separate scheduler library.
+- **Recurring background work** is scheduled via Hangfire (`RecurringJob.AddOrUpdate<RecurringJobRunner>(...)` in `Program.cs`) which fans out to MassTransit by publishing the matching `Domain/Events/` record. Cron expressions are UTC. Do not introduce a second scheduler library.
 - **Async work that should not block the originating request** is published over `IBus` with a record from `ScoreTracker.Domain.Events`.
 
 ## Known divergences and tech debt

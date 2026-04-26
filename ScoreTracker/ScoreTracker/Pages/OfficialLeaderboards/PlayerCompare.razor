@@ -9,9 +9,8 @@
 @using ScoreTracker.Application.Queries
 @using MediatR
 @using ScoreTracker.Web.Components
-@using ScoreTracker.Web.HostedServices
 <PageTitle>Official Leaderboard Player Compare</PageTitle>
-<MudText>@L["Last Updated"] - @RecurringJobHostedService.LastLeaderboardImport.ToLocalTime().ToString()</MudText>
+<MudText>@L["Last Updated"] - @(_lastImported?.ToLocalTime().ToString() ?? "—")</MudText>
 <MudAutocomplete T="string" AdornmentIcon="@Icons.Material.Filled.Search"
                  ResetValueOnEmptyText="true"
                  CoerceText="true"
@@ -142,6 +141,7 @@ else
     private bool _isloading = false;
     private string _selectedUsername = string.Empty;
     private string _searchText = string.Empty;
+    private DateTimeOffset? _lastImported;
     private void ClearUser(string username)
     {
         _players.Remove(username);
@@ -191,6 +191,7 @@ else
     }
     protected override async Task OnInitializedAsync()
     {
+        _lastImported = await Mediator.Send(new GetLastLeaderboardImportTimestampQuery());
         _usernames = (await Leaderboards.GetOfficialLeaderboardUsernames(CancellationToken.None)).ToArray();
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
 

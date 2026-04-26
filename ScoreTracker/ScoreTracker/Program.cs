@@ -1,4 +1,6 @@
 ﻿using BlazorApplicationInsights;
+using Hangfire;
+using Hangfire.SqlServer;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Localization;
@@ -53,10 +55,11 @@ builder.Services.AddCors(o =>
     });
 });
 builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSection("Discord"));
+var sqlConfig = builder.Configuration.GetSection("SQL").Get<SqlConfiguration>()!;
 builder.Services.AddMassTransit(o =>
 {
     o.AddConsumers(typeof(PlayerRatingSaga).Assembly, typeof(TierListSaga).Assembly,
-        typeof(RecurringJobHostedService).Assembly);
+        typeof(RecurringJobRunner).Assembly);
 
     o.AddDelayedMessageScheduler();
 
@@ -67,6 +70,18 @@ builder.Services.AddMassTransit(o =>
         cfg.UseDelayedMessageScheduler();
     });
 });
+builder.Services.AddHangfire(cfg => cfg
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseSqlServerStorage(sqlConfig.ConnectionString, new SqlServerStorageOptions
+    {
+        SchemaName = "HangFire",
+        PrepareSchemaIfNecessary = true,
+        QueuePollInterval = TimeSpan.FromSeconds(15)
+    }));
+builder.Services.AddHangfireServer();
+builder.Services.AddTransient<RecurringJobRunner>();
 builder.Services.AddAuthentication("DefaultAuthentication")
     .AddCookie("DefaultAuthentication", o =>
     {
@@ -130,7 +145,6 @@ builder.Services.AddBlazorApplicationInsights()
     .AddTransient<IUiSettingsAccessor, UiSettingsAccessor>()
     .AddHttpContextAccessor()
     .AddHttpClient()
-    .AddHostedService<RecurringJobHostedService>()
     .AddHostedService<BotHostedService>()
     .AddMediatR(o =>
     {
@@ -142,7 +156,7 @@ builder.Services.AddBlazorApplicationInsights()
     .AddTransient<IUserAccessService, UserAccessService>()
     .AddTransient<IWorldRankingService, WorldRankingService>()
     .AddInfrastructure(builder.Configuration.GetSection("AzureBlob").Get<AzureBlobConfiguration>(),
-        builder.Configuration.GetSection("SQL").Get<SqlConfiguration>(),
+        sqlConfig,
         builder.Configuration.GetSection("Sendgrid").Get<SendGridConfiguration>())
     .AddTransient<IDateTimeOffsetAccessor, DateTimeOffsetAccessor>()
     .AddTransient<IRandomNumberGenerator, RandomNumberGenerator>()
@@ -181,6 +195,34 @@ app.UseRouting();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = new[] { new HangfireDashboardAuthorization() }
+});
+
+// Cron expressions are UTC. Original schedule was Eastern Time (EST = UTC-5);
+// times below are the UTC equivalents of the ET wall-clock slots.
+var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<RecurringJobRunner, Task>> Job, string Cron)[]
+{
+    ("process-scores-tier-list",         r => r.PublishProcessScoresTiersList(),          "0 7 * * *"),  // 02:00 ET
+    ("update-bounties",                  r => r.PublishUpdateBounties(),                  "30 7 * * *"), // 02:30 ET
+    ("calculate-scoring-difficulty",     r => r.PublishCalculateScoringDifficulty(),      "0 8 * * *"),  // 03:00 ET
+    ("update-weekly-charts",             r => r.PublishUpdateWeeklyCharts(),              "0 9 * * *"),  // 04:00 ET
+    ("process-pass-tier-list",           r => r.PublishProcessPassTierList(),             "30 9 * * *"), // 04:30 ET
+    ("calculate-chart-letter-difficulties", r => r.PublishCalculateChartLetterDifficulties(), "0 10 * * *"), // 05:00 ET
+    ("start-leaderboard-import",         r => r.PublishStartLeaderboardImport(),          "30 10 * * *") // 05:30 ET
+};
+if (builder.Configuration["PreventRecurringJobs"] == "true")
+{
+    foreach (var (id, _, _) in recurringJobs)
+        RecurringJob.RemoveIfExists(id);
+}
+else
+{
+    foreach (var (id, job, cron) in recurringJobs)
+        RecurringJob.AddOrUpdate(id, job, cron);
+}
 
 app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 

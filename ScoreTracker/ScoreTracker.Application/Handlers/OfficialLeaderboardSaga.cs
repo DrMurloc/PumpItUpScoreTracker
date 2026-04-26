@@ -20,6 +20,7 @@ namespace ScoreTracker.Application.Handlers
         IRequestHandler<ImportOfficialPlayerScoresCommand>,
         IRequestHandler<UpdateSongImagesCommand>,
         IRequestHandler<GetGameCardsQuery, IEnumerable<GameCardRecord>>,
+        IRequestHandler<GetLastLeaderboardImportTimestampQuery, DateTimeOffset?>,
         IConsumer<StartLeaderboardImportEvent>
     {
         private readonly IOfficialSiteClient _officialSite;
@@ -319,11 +320,18 @@ namespace ScoreTracker.Application.Handlers
             return await _officialSite.GetGameCards(request.Username, request.Password, cancellationToken);
         }
 
+        public Task<DateTimeOffset?> Handle(GetLastLeaderboardImportTimestampQuery request,
+            CancellationToken cancellationToken)
+        {
+            return _leaderboards.GetLastImportTimestamp(cancellationToken);
+        }
+
         public async Task Consume(ConsumeContext<StartLeaderboardImportEvent> context)
         {
             await _mediator.Send(new ProcessChartPopularityCommand());
             await _mediator.Send(new ProcessOfficialLeaderboardsCommand());
             await _worldRankings.CalculateWorldRankings(CancellationToken.None);
+            await _leaderboards.SetLastImportTimestamp(_dateTime.Now, context.CancellationToken);
         }
     }
 }

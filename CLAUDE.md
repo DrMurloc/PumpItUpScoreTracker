@@ -47,7 +47,7 @@ Domain  ◄── Application ◄── Data
 | `ScoreTracker.Domain` | `MediatR`, `Microsoft.Extensions.Logging.Abstractions` | Anything else. No EF, no `HttpClient`, no MassTransit, no ASP.NET, no Azure/Discord/SendGrid. |
 | `ScoreTracker.Application` | + `MassTransit.Abstractions`, `Microsoft.Extensions.Caching.Memory` | EF Core, ASP.NET, `HttpClient`, vendor SDKs. Application must never know it's behind a web server. |
 | `ScoreTracker.Data` | + `Microsoft.EntityFrameworkCore.SqlServer`, `Azure.Storage.Blobs`, `Discord.Net`, `HtmlAgilityPack`, `SendGrid` | ASP.NET. |
-| `ScoreTracker.Web` | + `MudBlazor`, OAuth providers, `Swashbuckle`, `Tesseract`, MassTransit DI | EF Core directly (must go through ports). |
+| `ScoreTracker.Web` | + `MudBlazor`, OAuth providers, `Swashbuckle`, `Tesseract`, MassTransit DI, `Hangfire.AspNetCore`, `Hangfire.SqlServer` | EF Core directly (must go through ports). |
 | `ScoreTracker.CompositionRoot` | DI extensions only | Business logic. |
 | `ScoreTracker.Tests` | + `xunit`, `Moq` | Other doubling libraries (see Test conventions). |
 
@@ -58,7 +58,7 @@ Adding a package outside its allowed layer is a violation. Adding a project refe
 - Every business operation is an `IRequest<T>` (or `IRequest`) record in `Application/Commands/` or `Application/Queries/`, paired with an `IRequestHandler<,>` in `Application/Handlers/`. Async work uses `IConsumer<TEvent>` (MassTransit) in the same `Application/Handlers/` folder.
 - **Razor pages, Blazor components, and MVC controllers dispatch exclusively via `IMediator`.** No `DbContext`, repository, or `HttpClient` is injected into Web code. (Exception: `Accessors/` types in Web that *implement* Domain ports.)
 - Background work is published over `IBus.Publish(...)` with a record from `Domain/Events/`. In-process notifications use `IMediator.Publish(INotification)`.
-- Recurring scheduled work goes through `RecurringJobHostedService` + MassTransit's delayed scheduler. Do not introduce a separate scheduler library.
+- **Recurring scheduled work uses Hangfire** with SQL Server storage (auto-created `HangFire` schema, durable across restarts). Each recurring job is a one-line `IBus.Publish(...)` on `RecurringJobRunner` ([RecurringJobRunner.cs](ScoreTracker/ScoreTracker/HostedServices/RecurringJobRunner.cs)); registrations live in [Program.cs](ScoreTracker/ScoreTracker/Program.cs) via `RecurringJob.AddOrUpdate<RecurringJobRunner>(...)`. Cron expressions are UTC. Do not introduce a second scheduler library; do not reintroduce hosted-timer / self-rescheduling-bus patterns. The Hangfire dashboard is mounted at `/hangfire` and gated on `User.IsAdmin` via [HangfireDashboardAuthorization.cs](ScoreTracker/ScoreTracker/Security/HangfireDashboardAuthorization.cs). Adding a new recurring job = add a method to `RecurringJobRunner` + one `RecurringJob.AddOrUpdate` line. The `PreventRecurringJobs` config flag, when `true`, removes the registrations instead of scheduling them.
 
 ### Ports and abstractions
 

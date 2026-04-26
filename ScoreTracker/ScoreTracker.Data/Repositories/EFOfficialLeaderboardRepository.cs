@@ -205,5 +205,27 @@ namespace ScoreTracker.Data.Repositories
             _cache.Set(AvatarCacheKey, dict, DateTimeOffset.Now + TimeSpan.FromHours(1));
             await database.SaveChangesAsync(cancellationToken);
         }
+
+        public async Task<DateTimeOffset?> GetLastImportTimestamp(CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var entity = await database.OfficialLeaderboardImportState
+                .FirstOrDefaultAsync(cancellationToken);
+            return entity?.LastImportedAt;
+        }
+
+        public async Task SetLastImportTimestamp(DateTimeOffset timestamp, CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var entity = await database.OfficialLeaderboardImportState
+                .FirstOrDefaultAsync(cancellationToken);
+            if (entity == null)
+                await database.OfficialLeaderboardImportState.AddAsync(
+                    new OfficialLeaderboardImportStateEntity { Id = 1, LastImportedAt = timestamp },
+                    cancellationToken);
+            else
+                entity.LastImportedAt = timestamp;
+            await database.SaveChangesAsync(cancellationToken);
+        }
     }
 }

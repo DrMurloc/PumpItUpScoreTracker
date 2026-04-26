@@ -4,9 +4,10 @@
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Web.Components
-@using ScoreTracker.Web.HostedServices
+@using ScoreTracker.Application.Queries
+@using MediatR
 <PageTitle>Official Leaderboard Search</PageTitle>
-<MudText>@L["Last Updated"] - @RecurringJobHostedService.LastLeaderboardImport.ToLocalTime().ToString()</MudText>
+<MudText>@L["Last Updated"] - @(_lastImported?.ToLocalTime().ToString() ?? "—")</MudText>
 <MudAutocomplete T="string" AdornmentIcon="@Icons.Material.Filled.Search"
                  ResetValueOnEmptyText="true"
                  CoerceText="true"
@@ -83,12 +84,14 @@
 </MudGrid>
 @inject IOfficialLeaderboardRepository Leaderboards;
 @inject IChartRepository Charts;
+@inject IMediator Mediator;
 @code {
     private string _selectedUsername = string.Empty;
     private string[] _usernames = Array.Empty<string>();
     private UserOfficialLeaderboard[] _chartResults = Array.Empty<UserOfficialLeaderboard>();
     private UserOfficialLeaderboard[] _nonChartResults = Array.Empty<UserOfficialLeaderboard>();
     private IDictionary<string, Chart> _chartMap = new Dictionary<string, Chart>();
+    private DateTimeOffset? _lastImported;
     private async Task SelectUser(string username)
     {
         var results = (await Leaderboards.GetOfficialLeaderboardStatuses(username, CancellationToken.None))
@@ -109,6 +112,7 @@
     }
     protected override async Task OnInitializedAsync()
     {
+        _lastImported = await Mediator.Send(new GetLastLeaderboardImportTimestampQuery());
         _usernames = (await Leaderboards.GetOfficialLeaderboardUsernames(CancellationToken.None)).ToArray();
 
 

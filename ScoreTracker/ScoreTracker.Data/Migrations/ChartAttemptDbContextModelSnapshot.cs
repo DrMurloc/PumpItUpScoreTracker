@@ -18,7 +18,7 @@ namespace ScoreTracker.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("scores")
-                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("ProductVersion", "10.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -585,6 +585,19 @@ namespace ScoreTracker.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Mix", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.OfficialLeaderboardImportStateEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("LastImportedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OfficialLeaderboardImportState", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.OfficialUserAvatarEntity", b =>
