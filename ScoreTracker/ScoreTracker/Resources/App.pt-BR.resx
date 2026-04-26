@@ -1209,4 +1209,199 @@
   <data name="This isn't perfect, but until I have more data other algorithms haven't been successful at projecting CoOps onto difficulty levels" xml:space="preserve">
     <value>Isto não é perfeito, mas até eu ter mais dados, outros algoritmos não tiveram sucesso em projetar CoOps em níveis de dificuldade</value>
   </data>
+  <data name="About The Site" xml:space="preserve">
+    <value>Sobre o site</value>
+  </data>
+  <data name="Added to ToDo List!" xml:space="preserve">
+    <value>Adicionado à lista de tarefas!</value>
+  </data>
+  <data name="Additional Comments" xml:space="preserve">
+    <value>Comentários adicionais</value>
+  </data>
+  <data name="Also Sync for PIU Tracker" xml:space="preserve">
+    <value>Sincronizar também com o PIU Tracker</value>
+  </data>
+  <data name="An unknown error occurred" xml:space="preserve">
+    <value>Ocorreu um erro desconhecido</value>
+  </data>
+  <data name="Bad Suggestion" xml:space="preserve">
+    <value>Sugestão ruim</value>
+  </data>
+  <data name="Change Card" xml:space="preserve">
+    <value>Trocar cartão</value>
+  </data>
+  <data name="Chart Details" xml:space="preserve">
+    <value>Detalhes do chart</value>
+  </data>
+  <data name="Chart Difficulty by Letter Grade" xml:space="preserve">
+    <value>Dificuldade do chart por letra de nota</value>
+  </data>
+  <data name="Chart Leaderboard" xml:space="preserve">
+    <value>Classificação do chart</value>
+  </data>
+  <data name="Combined" xml:space="preserve">
+    <value>Combinado</value>
+  </data>
+  <data name="Could not find chart" xml:space="preserve">
+    <value>Chart não encontrado</value>
+  </data>
+  <data name="Could not find song" xml:space="preserve">
+    <value>Música não encontrada</value>
+  </data>
+  <data name="Country" xml:space="preserve">
+    <value>País</value>
+  </data>
+  <data name="Doesn't Match My Personal Skills" xml:space="preserve">
+    <value>Não combina com minhas habilidades</value>
+  </data>
+  <data name="Doubles Level" xml:space="preserve">
+    <value>Nível Doubles</value>
+  </data>
+  <data name="Download Example" xml:space="preserve">
+    <value>Baixar exemplo</value>
+  </data>
+  <data name="File cannot be larger than 10 MB" xml:space="preserve">
+    <value>O arquivo não pode ser maior que 10 MB</value>
+  </data>
+  <data name="From" xml:space="preserve">
+    <value>De</value>
+  </data>
+  <data name="Game Card" xml:space="preserve">
+    <value>Cartão do jogo</value>
+  </data>
+  <data name="Good Suggestion" xml:space="preserve">
+    <value>Boa sugestão</value>
+  </data>
+  <data name="Hide" xml:space="preserve">
+    <value>Ocultar</value>
+  </data>
+  <data name="Hide Chart for this Category" xml:space="preserve">
+    <value>Ocultar chart desta categoria</value>
+  </data>
+  <data name="I Don't Like The Chart" xml:space="preserve">
+    <value>Não gosto deste chart</value>
+  </data>
+  <data name="I Just Want to Hide The Chart" xml:space="preserve">
+    <value>Só quero ocultar este chart</value>
+  </data>
+  <data name="Include Broken Scores" xml:space="preserve">
+    <value>Incluir pontuações quebradas</value>
+  </data>
+  <data name="IsBroken" xml:space="preserve">
+    <value>Quebrada</value>
+  </data>
+  <data name="Letter Grade Template" xml:space="preserve">
+    <value>Modelo de letra de nota</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Nome</value>
+  </data>
+  <data name="Not Relevant to Category" xml:space="preserve">
+    <value>Não relevante para a categoria</value>
+  </data>
+  <data name="Note Count: X" xml:space="preserve">
+    <value>Contagem de notas: {0}</value>
+  </data>
+  <data name="Other" xml:space="preserve">
+    <value>Outro</value>
+  </data>
+  <data name="Parsed Scores" xml:space="preserve">
+    <value>Pontuações processadas</value>
+  </data>
+  <data name="Passes by Competitive Level" xml:space="preserve">
+    <value>Passes por nível competitivo</value>
+  </data>
+  <data name="Plate Breakdown" xml:space="preserve">
+    <value>Detalhamento de plates</value>
+  </data>
+  <data name="Plate Distribution" xml:space="preserve">
+    <value>Distribuição de plates</value>
+  </data>
+  <data name="Plates" xml:space="preserve">
+    <value>Plates</value>
+  </data>
+  <data name="Privacy Policy" xml:space="preserve">
+    <value>Política de privacidade</value>
+  </data>
+  <data name="Reason" xml:space="preserve">
+    <value>Motivo</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Remover</value>
+  </data>
+  <data name="Removed from ToDo List!" xml:space="preserve">
+    <value>Removido da lista de tarefas!</value>
+  </data>
+  <data name="Score Distribution By Player Level" xml:space="preserve">
+    <value>Distribuição de pontuação por nível do jogador</value>
+  </data>
+  <data name="Scores" xml:space="preserve">
+    <value>Pontuações</value>
+  </data>
+  <data name="Scores by Competitive Level" xml:space="preserve">
+    <value>Pontuações por nível competitivo</value>
+  </data>
+  <data name="See Leaderboards" xml:space="preserve">
+    <value>Ver classificações</value>
+  </data>
+  <data name="Show" xml:space="preserve">
+    <value>Mostrar</value>
+  </data>
+  <data name="Singles Level" xml:space="preserve">
+    <value>Nível Singles</value>
+  </data>
+  <data name="Song Name Mappings" xml:space="preserve">
+    <value>Mapeamentos de nome de música</value>
+  </data>
+  <data name="Song Names" xml:space="preserve">
+    <value>Nomes de músicas</value>
+  </data>
+  <data name="Source Code" xml:space="preserve">
+    <value>Código-fonte</value>
+  </data>
+  <data name="Stats" xml:space="preserve">
+    <value>Estatísticas</value>
+  </data>
+  <data name="Step Artist: X" xml:space="preserve">
+    <value>Autor dos passos: {0}</value>
+  </data>
+  <data name="Supported Formats" xml:space="preserve">
+    <value>Formatos suportados</value>
+  </data>
+  <data name="TRUE/FALSE Template" xml:space="preserve">
+    <value>Modelo TRUE/FALSE</value>
+  </data>
+  <data name="The Category Isn't Interesting to Me'" xml:space="preserve">
+    <value>A categoria não me interessa</value>
+  </data>
+  <data name="To" xml:space="preserve">
+    <value>Para</value>
+  </data>
+  <data name="Top 50 X" xml:space="preserve">
+    <value>Top 50 - {0}</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>Tipo</value>
+  </data>
+  <data name="Use Password" xml:space="preserve">
+    <value>Usar senha</value>
+  </data>
+  <data name="Use Script" xml:space="preserve">
+    <value>Usar script</value>
+  </data>
+  <data name="Welcome" xml:space="preserve">
+    <value>Bem-vindo</value>
+  </data>
+  <data name="What Should I Play" xml:space="preserve">
+    <value>O que devo jogar</value>
+  </data>
+  <data name="What Should I Play?" xml:space="preserve">
+    <value>O que devo jogar?</value>
+  </data>
+  <data name="XXLetterGrade" xml:space="preserve">
+    <value>Letras de nota XX</value>
+  </data>
+  <data name="Your Score" xml:space="preserve">
+    <value>Sua pontuação</value>
+  </data>
 </root>

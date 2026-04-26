@@ -138,6 +138,8 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | Calculated Tier List | Faixa calculada | Reuses the `Faixas de dificuldade` family. |
 | Game Stats | Estatísticas do jogo | |
 | User Matches / Match (vs another player) | Partidas do usuário / Partida | |
+| Plates (plural) | Plates | **Untranslated**, plural form. "Plate Breakdown" → "Detalhamento de plates"; "Plate Distribution" → "Distribuição de plates". |
+| Welcome (greeting) | Bem-vindo | Masculine default for the bare greeting. |
 | Judgment terms (Bad / Miss / Perfect / Great / Good) | Bad / Miss / Perfect / Great / Good | **Untranslated**, including plural forms (`Bads`, `Misses`, `Greats`, `Perfects`, `Goods`). Brazilian PIU community uses the English judgment terms. |
 | X Calculator | Calculadora de X | "Phoenix Score Calculator" → "Calculadora de pontuação da Phoenix" (existing); "Rating Calculator" → "Calculadora de rating"; "PIU Life Calculator" → "Calculadora de vida do PIU". |
 | Delete | Excluir | Action verb. Distinct from `Remove from X` → `Remover de X` (existing). |
