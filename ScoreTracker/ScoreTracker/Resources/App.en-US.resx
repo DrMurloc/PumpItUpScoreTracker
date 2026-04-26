@@ -1987,4 +1987,19 @@
   <data name="Your account is content-locked. Message an admin if you have questions." xml:space="preserve">
 	  <value>Your account is content-locked. Message an admin if you have questions.</value>
   </data>
+  <data name="Delete All Scores" xml:space="preserve">
+	  <value>Delete All Scores</value>
+  </data>
+  <data name="This will delete all of your scores and reset your player stats and title progress" xml:space="preserve">
+	  <value>This will delete all of your scores and reset your player stats and title progress</value>
+  </data>
+  <data name="(Optional) Also delete historical data" xml:space="preserve">
+	  <value>(Optional) Also delete historical data</value>
+  </data>
+  <data name="Confirm" xml:space="preserve">
+	  <value>Confirm</value>
+  </data>
+  <data name="Your scores have been deleted" xml:space="preserve">
+	  <value>Your scores have been deleted</value>
+  </data>
 </root>

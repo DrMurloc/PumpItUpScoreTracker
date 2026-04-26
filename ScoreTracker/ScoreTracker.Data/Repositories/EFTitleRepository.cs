@@ -126,5 +126,20 @@ namespace ScoreTracker.Data.Repositories
                     new TitleAchievedRecord(u.UserId, title, Enum.Parse<ParagonLevel>(u.ParagonLevel)))
                 .ToArrayAsync(cancellationToken);
         }
+
+        public async Task DeleteHighestTitle(Guid userId, CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var entity =
+                await database.UserHighestTitle.FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
+            if (entity != null)
+            {
+                database.UserHighestTitle.Remove(entity);
+                await database.SaveChangesAsync(cancellationToken);
+            }
+
+            _cache.Remove(CacheKey);
+            _cache.Remove(CacheKey + "__UserCount");
+        }
     }
 }

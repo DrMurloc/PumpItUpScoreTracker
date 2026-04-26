@@ -1938,4 +1938,19 @@
   <data name="Your account is content-locked. Message an admin if you have questions." xml:space="preserve">
     <value>Sua conta está com bloqueio de conteúdo. Envie uma mensagem a um administrador em caso de dúvidas.</value>
   </data>
+  <data name="Delete All Scores" xml:space="preserve">
+    <value>Excluir Todas as Pontuações</value>
+  </data>
+  <data name="This will delete all of your scores and reset your player stats and title progress" xml:space="preserve">
+    <value>Isso excluirá todas as suas pontuações e redefinirá suas estatísticas de jogador e progresso de títulos</value>
+  </data>
+  <data name="(Optional) Also delete historical data" xml:space="preserve">
+    <value>(Opcional) Também excluir dados históricos</value>
+  </data>
+  <data name="Confirm" xml:space="preserve">
+    <value>Confirmar</value>
+  </data>
+  <data name="Your scores have been deleted" xml:space="preserve">
+    <value>Suas pontuações foram excluídas</value>
+  </data>
 </root>

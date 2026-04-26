@@ -138,5 +138,18 @@ namespace ScoreTracker.Data.Repositories
         {
             return await GetStats(request.UserId, cancellationToken);
         }
+
+        public async Task DeleteStats(Guid userId, CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var entity = await database.PlayerStats.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+            if (entity != null)
+            {
+                database.PlayerStats.Remove(entity);
+                await database.SaveChangesAsync(cancellationToken);
+            }
+
+            _cache.Remove(CacheKey(userId));
+        }
     }
 }

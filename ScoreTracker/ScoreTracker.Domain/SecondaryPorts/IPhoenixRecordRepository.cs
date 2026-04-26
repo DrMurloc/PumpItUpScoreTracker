@@ -49,4 +49,6 @@ public interface IPhoenixRecordRepository
 
     Task<int> GetClearCount(Guid userId, ChartType chartType, DifficultyLevel level,
         CancellationToken cancellationToken = default);
+
+    Task DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default);
 }

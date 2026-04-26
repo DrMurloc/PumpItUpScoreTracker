@@ -80,7 +80,8 @@
         <MudButton Icon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Primary" OnClick="DownloadScores">@L["Download Scores"]</MudButton>
         <MudButton Href="/UploadXXScores" Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Filled" Color="Color.Primary">@L["Upload XX Scores"]</MudButton>
         <MudButton Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Filled" Color="Color.Primary">@L["Import Phoenix Scores"]</MudButton>
-        
+        <MudButton Icon="@Icons.Material.Filled.DeleteForever" Variant="Variant.Filled" Color="Color.Error" OnClick="OpenWipeDialog">@L["Delete All Scores"]</MudButton>
+
         <MudButton Href="/Logout" Icon="@Icons.Material.Filled.Logout" Variant="Variant.Filled" Color="Color.Primary">@L["Logout"]</MudButton>
     </MudCardActions>
 </MudCard>
@@ -90,7 +91,7 @@
         @if (_isPublic)
         {
             <MudText>@L["Make Not Public Disclaimer"]</MudText>
-            
+
         }
         else
         {
@@ -110,6 +111,31 @@
     </DialogActions>
 </MudDialog>
 
+<MudDialog @bind-Visible="_showWipeScoresDialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L["Delete All Scores"]</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudCheckBox T="bool" @bind-Value="_wipeAcknowledged" Color="Color.Error" Disabled="_isWiping">
+            @L["This will delete all of your scores and reset your player stats and title progress"]
+        </MudCheckBox>
+        <MudCheckBox T="bool" @bind-Value="_wipeIncludeHistory" Color="Color.Error" Disabled="_isWiping">
+            @L["(Optional) Also delete historical data"]
+        </MudCheckBox>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text"
+                   OnClick="CancelWipeDialog"
+                   Disabled="_isWiping"
+                   Color="Color.Primary">@L["Cancel"]</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   OnClick="ConfirmWipeScores"
+                   Disabled="@(!_wipeAcknowledged || _isWiping)"
+                   Color="Color.Error">@L["Confirm"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
@@ -125,6 +151,10 @@
     private bool _isPublic = false;
     private bool _isContentLocked = false;
     private bool _showPublicConfirmDialog = false;
+    private bool _showWipeScoresDialog = false;
+    private bool _wipeAcknowledged = false;
+    private bool _wipeIncludeHistory = false;
+    private bool _isWiping = false;
     private bool _isUpdatingUser = false;
     private IEnumerable<CountryRecord> _countries = Array.Empty<CountryRecord>();
     private string _countryName = null;
@@ -220,6 +250,33 @@
         else
         {
             Snackbar.Add("Invalid Name",Severity.Error);
+        }
+    }
+
+    private void OpenWipeDialog()
+    {
+        _wipeAcknowledged = false;
+        _wipeIncludeHistory = false;
+        _showWipeScoresDialog = true;
+    }
+
+    private void CancelWipeDialog()
+    {
+        _showWipeScoresDialog = false;
+    }
+
+    private async Task ConfirmWipeScores()
+    {
+        _isWiping = true;
+        try
+        {
+            await Mediator.Send(new WipeUserScoresCommand(CurrentUser.User.Id, _wipeIncludeHistory));
+            Snackbar.Add(L["Your scores have been deleted"], Severity.Success);
+            _showWipeScoresDialog = false;
+        }
+        finally
+        {
+            _isWiping = false;
         }
     }
 

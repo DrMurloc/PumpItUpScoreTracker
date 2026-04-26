@@ -14,4 +14,6 @@ public interface IXXChartAttemptRepository
         CancellationToken cancellationToken);
 
     Task<IEnumerable<BestXXChartAttempt>> GetBestAttempts(Guid userId, CancellationToken cancellationToken = default);
+
+    Task DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default);
 }

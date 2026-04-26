@@ -37,5 +37,13 @@ namespace ScoreTracker.Data.Repositories
                 .Select(r => new PlayerRatingRecord(r.UserId, r.Date, r.CompetitiveLevel, r.SinglesLevel,
                     r.DoublesLevel, r.CoOpRating, r.PassCount)).ToArrayAsync(cancellationToken);
         }
+
+        public async Task DeleteHistoryForUser(Guid userId, CancellationToken cancellationToken)
+        {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
+            var entries = await database.PlayerHistory.Where(r => r.UserId == userId).ToArrayAsync(cancellationToken);
+            database.PlayerHistory.RemoveRange(entries);
+            await database.SaveChangesAsync(cancellationToken);
+        }
     }
 }
