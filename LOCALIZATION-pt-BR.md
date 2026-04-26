@@ -40,11 +40,14 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | Language | Linguagem | |
 | Medium | Médio | |
 | Page (start/end) | Página inicial / Página final | |
+| Place (rank/position) | Posição | Used as a leaderboard/ranking column header (more idiomatic than `Lugar` in this context). |
 | Private / Public | Privado / Público | "Make Private" → "Tornar privado" |
 | Restart | Reiniciar | |
 | Save | Salvar | "Save Scores" → "Salvar pontuações" |
-| Submit | (open — see below) | Currently a stub. |
+| Submit | Enviar | Standard pt-BR for form submit. |
+| Text View | Visualização em texto | |
 | Tools | Ferramentas | |
+| Upload Image | Carregar imagem | Aligns with existing `carregado` usage. |
 | Total | Total | |
 | Upload (verb / noun) | Upload / Carregar | Mixed. "Upload Scores" → "Upload de pontuações"; "uploaded" → "carregado". Lean on context. |
 | Username | Nome de usuário | |
@@ -71,7 +74,8 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | Scores (plural / collection) | Pontuações | "Save Scores" → "Salvar pontuações"; "Official Scores" → "Pontuações oficiais"; "My Score" → "Minhas Pontuações" (intentionally plural in this entry). |
 | Phoenix Score Calculator | Calculadora de pontuação da Phoenix | |
 | Score Loss | Perda de pontuação | |
-| Song | Música | "Song Name" → "Nome da música"; "Song Duration" → "Duração da música". (Note: bare-key "Song" is currently a stub — see below.) |
+| Song | Música | "Song Name" → "Nome da música"; "Song Duration" → "Duração da música". |
+| Song Artist | Artista da música | |
 | Song Type | Tipo de música | |
 | Title (in-game title award) | Título | "Title Progress" → "Progresso do título"; "Titles" → "Títulos". |
 | To Do | Pendentes | "Add to ToDo" → "Adicionar à lista de tarefas"; "Show Only ToDo Charts" → `Mostrar somente charts "Pendentes"`. |
@@ -120,12 +124,6 @@ Pulled from the 442 missing keys. Each is a term that doesn't yet have an establ
 | Admin / Admin Settings | Admin / Configurações de admin | "Admin" untranslated as role name. |
 | Add | Adicionar | |
 | Add Player | Adicionar jogador | |
-| Submit | Enviar | Standard pt-BR for form submit. (Currently a stub — see below.) |
-| Upload Image | Carregar imagem | Aligns with existing `carregado` usage. |
-| Song (bare key) | Música | Aligns with existing `Nome da música`. (Currently a stub.) |
-| Song Artist | Artista da música | |
-| Text View | Visualização em texto | |
-| Place (e.g. "1st place") | Lugar | "You are X place!" → "Você está em {0}!". (Currently a stub returning English `Place`.) |
 | All | Todos / Todas | Pick gender per key context. |
 | Allow Repeats | Permitir repetições | |
 | Anonymous | Anônimo | |
@@ -133,19 +131,6 @@ Pulled from the 442 missing keys. Each is a term that doesn't yet have an establ
 | Avg Plate | Plate média | `Plate` stays English (established), modifier translated. |
 | Avg Score | Pontuação média | |
 | BPM | BPM | Untranslated. |
-
-## Stub entries that need translation in the next batch
-
-These six keys are already in `App.pt-BR.resx` but with **English values** — they were added as placeholders (note the matching `<comment>` field on each). They render English at runtime, same as if they were missing, but they don't show up as "missing" in a key-diff. Fix in the next batch:
-
-- `Place` (line 483) — translate per "Place" decision above.
-- `Upload Image` (line 487) — `Carregar imagem`.
-- `Song` (line 491) — `Música`.
-- `Submit` (line 495) — `Enviar`.
-- `Song Artist` (line 499) — `Artista da música`.
-- `Text View` (line 503) — `Visualização em texto`.
-
-(Whether to drop the `<comment>` field when translating is a style preference — fr-FR drops it, ko-KR keeps it. Either is fine; consistency within a batch is what matters.)
 
 ## Process for future batches
 

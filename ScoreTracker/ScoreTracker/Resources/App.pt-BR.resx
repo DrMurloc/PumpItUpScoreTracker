@@ -481,27 +481,21 @@
     <value>{0} votos</value>
   </data>
   <data name="Place" xml:space="preserve">
-    <value>Place</value>
-    <comment>Place</comment>
+    <value>Posição</value>
   </data>
   <data name="Upload Image" xml:space="preserve">
-    <value>Upload Image</value>
-    <comment>Upload Image</comment>
+    <value>Carregar imagem</value>
   </data>
   <data name="Song" xml:space="preserve">
-    <value>Song</value>
-    <comment>Song</comment>
+    <value>Música</value>
   </data>
   <data name="Submit" xml:space="preserve">
-    <value>Submit</value>
-    <comment>Submit</comment>
+    <value>Enviar</value>
   </data>
   <data name="Song Artist" xml:space="preserve">
-    <value>Song Artist</value>
-    <comment>Song Artist</comment>
+    <value>Artista da música</value>
   </data>
   <data name="Text View" xml:space="preserve">
-    <value>Text View</value>
-    <comment>Text View</comment>
+    <value>Visualização em texto</value>
   </data>
 </root>
