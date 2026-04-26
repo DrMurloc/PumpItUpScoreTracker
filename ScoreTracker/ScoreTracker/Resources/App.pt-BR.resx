@@ -1953,4 +1953,28 @@
   <data name="Your scores have been deleted" xml:space="preserve">
     <value>Suas pontuações foram excluídas</value>
   </data>
+  <data name="Competition" xml:space="preserve">
+    <value>Competição</value>
+  </data>
+  <data name="Completion Leaderboards" xml:space="preserve">
+    <value>Classificações de conclusão</value>
+  </data>
+  <data name="Discord" xml:space="preserve">
+    <value>Discord</value>
+  </data>
+  <data name="Lifebar Calculator" xml:space="preserve">
+    <value>Calculadora de barra de vida</value>
+  </data>
+  <data name="Official Leaderboards" xml:space="preserve">
+    <value>Classificações oficiais</value>
+  </data>
+  <data name="PIU Scores" xml:space="preserve">
+    <value>PIU Scores</value>
+  </data>
+  <data name="PUMBILITY" xml:space="preserve">
+    <value>PUMBILITY</value>
+  </data>
+  <data name="UCS Leaderboards" xml:space="preserve">
+    <value>Classificações UCS</value>
+  </data>
 </root>

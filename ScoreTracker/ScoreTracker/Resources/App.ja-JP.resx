@@ -2003,4 +2003,28 @@
   <data name="Your scores have been deleted" xml:space="preserve">
 	  <value>スコアを削除しました</value>
   </data>
+  <data name="Competition" xml:space="preserve">
+    <value>競技</value>
+  </data>
+  <data name="Completion Leaderboards" xml:space="preserve">
+    <value>達成ランキング</value>
+  </data>
+  <data name="Discord" xml:space="preserve">
+    <value>Discord</value>
+  </data>
+  <data name="Lifebar Calculator" xml:space="preserve">
+    <value>ライフバー計算</value>
+  </data>
+  <data name="Official Leaderboards" xml:space="preserve">
+    <value>公開ランキング</value>
+  </data>
+  <data name="PIU Scores" xml:space="preserve">
+    <value>PIU Scores</value>
+  </data>
+  <data name="PUMBILITY" xml:space="preserve">
+    <value>PUMBILITY</value>
+  </data>
+  <data name="UCS Leaderboards" xml:space="preserve">
+    <value>UCSランキング</value>
+  </data>
 </root>

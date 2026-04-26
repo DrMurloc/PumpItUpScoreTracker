@@ -2002,4 +2002,28 @@
   <data name="Your scores have been deleted" xml:space="preserve">
 	  <value>Your scores have been deleted</value>
   </data>
+  <data name="Competition" xml:space="preserve">
+    <value>Competition</value>
+  </data>
+  <data name="Completion Leaderboards" xml:space="preserve">
+    <value>Completion Leaderboards</value>
+  </data>
+  <data name="Discord" xml:space="preserve">
+    <value>Discord</value>
+  </data>
+  <data name="Lifebar Calculator" xml:space="preserve">
+    <value>Lifebar Calculator</value>
+  </data>
+  <data name="Official Leaderboards" xml:space="preserve">
+    <value>Official Leaderboards</value>
+  </data>
+  <data name="PIU Scores" xml:space="preserve">
+    <value>PIU Scores</value>
+  </data>
+  <data name="PUMBILITY" xml:space="preserve">
+    <value>PUMBILITY</value>
+  </data>
+  <data name="UCS Leaderboards" xml:space="preserve">
+    <value>UCS Leaderboards</value>
+  </data>
 </root>

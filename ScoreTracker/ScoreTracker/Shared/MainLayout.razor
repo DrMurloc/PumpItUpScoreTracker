@@ -15,7 +15,7 @@
 @implements INotificationHandler<ImportStatusUpdated>
 @implements INotificationHandler<PlayerStatsUpdatedEvent>
 @implements INotificationHandler<ImportStatusError>
-<PageTitle>PIU Scores</PageTitle>
+<PageTitle>@L["PIU Scores"]</PageTitle>
 
 <MudThemeProvider Theme="Theme" />
 <MudPopoverProvider />
@@ -25,7 +25,7 @@
 <MudLayout>
     <MudAppBar Color="Color.Primary" Fixed="false">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="() => _isOpen = !_isOpen"/>
-        <MudText Typo="Typo.h6">@(_userId == null ? "PIU Scores" : $"{UserName}")</MudText>
+        <MudText Typo="Typo.h6">@(_userId == null ? L["PIU Scores"].Value : $"{UserName}")</MudText>
         <MudSpacer></MudSpacer>
         @if (CurrentUser.IsLoggedIn)
         {
@@ -68,7 +68,7 @@
                     <MudDivider DividerType="DividerType.Middle"></MudDivider>
                     @if (_currentMix == MixEnum.Phoenix)
                     {
-                        <MudNavLink Href="/Pumbility" Icon="@Icons.Material.Filled.Star">PUMBILITY</MudNavLink>
+                        <MudNavLink Href="/Pumbility" Icon="@Icons.Material.Filled.Star">@L["PUMBILITY"]</MudNavLink>
                     }
                 }
             </MudNavGroup>
@@ -143,7 +143,7 @@
         
         <MudSpacer></MudSpacer>
         <MudNavMenu>
-            <MudNavLink Href="https://discord.gg/MEYvr3bFte" Target="_blank" Icon="@Icons.Custom.Brands.Discord">Discord</MudNavLink>
+            <MudNavLink Href="https://discord.gg/MEYvr3bFte" Target="_blank" Icon="@Icons.Custom.Brands.Discord">@L["Discord"]</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
