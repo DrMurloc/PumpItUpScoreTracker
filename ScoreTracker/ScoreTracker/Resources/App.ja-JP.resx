@@ -118,1904 +118,1905 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="1+ Level Easier" xml:space="preserve">
-    <value>1+ Level Easier</value>
+    <value>１レベル簡単</value>
   </data>
   <data name="1+ Level Harder" xml:space="preserve">
-    <value>1+ Level Harder</value>
+    <value>１レベル難しい</value>
   </data>
   <data name="About" xml:space="preserve">
-    <value>About</value>
+    <value>概要</value>
   </data>
   <data name="Account" xml:space="preserve">
-    <value>Account</value>
+    <value>アカウント</value>
   </data>
   <data name="Account Creation Line 1" xml:space="preserve">
-    <value>If you do not have an account with Score Tracker, one will be created when you select one of the login providers.</value>
+    <value>もし君はここのアカウント作成してない場合、ログインプロバイダーを選んで新しくアカウントが自動で作る。（パスワード不要）</value>
   </data>
   <data name="Account Creation Line 2" xml:space="preserve">
-    <value>The only information stored about your account from the login provider you select is the external ID (typically a random number or combination of letters), and the username. You can change the username at any time after account creation.</value>
+    <value>このサイトは外部アカウントの個人情報でユーザーIDとウーザーだけ読みます。自分のユーザー名いつでも変更できる。</value>
   </data>
   <data name="Account Creation Line 3" xml:space="preserve">
-    <value>No passwords are stored in Score Tracker, we don't want them, you don't want us to have them, everyone is happier this way.</value>
+    <value>このサイトパスワード利用と保存しない。もっと安全から</value>
   </data>
   <data name="Account Creation?" xml:space="preserve">
-    <value>Account Creation?</value>
-    <comment>Button that pops up explination of account creation process</comment>
-  </data>
+    <value>アカウント作成？</value>
+    
+  <comment>バタンポップアップの説明</comment></data>
   <data name="Actions" xml:space="preserve">
-    <value>Actions</value>
+    <value>操作</value>
   </data>
   <data name="Add to Favorites" xml:space="preserve">
-    <value>Add to Favorites</value>
+    <value>お気に入りを追加</value>
   </data>
   <data name="Add to ToDo" xml:space="preserve">
-    <value>Add to To Do List</value>
+    <value>やりことリストを追加</value>
   </data>
   <data name="Average" xml:space="preserve">
-    <value>Average</value>
+    <value>平均</value>
   </data>
   <data name="Broken" xml:space="preserve">
-    <value>Broken</value>
+    <value>Break Off</value>
   </data>
   <data name="Cancel" xml:space="preserve">
-    <value>Cancel</value>
+    <value>キャンセル</value>
   </data>
   <data name="Chart List Share Description" xml:space="preserve">
-    <value>Use this link to share your chart list to other players.</value>
+    <value>この譜面リストをシェアー</value>
   </data>
   <data name="Chart Randomizer" xml:space="preserve">
-    <value>Chart Randomizer</value>
+    <value>譜面くじ引き（抽選機）</value>
   </data>
   <data name="Chart Type" xml:space="preserve">
-    <value>Chart Type</value>
-    <comment>Chart Types = single, double, co op</comment>
-  </data>
+    <value>譜面タイプ</value>
+    
+  <comment>種類 = single, double, co op</comment></data>
   <data name="Charts" xml:space="preserve">
-    <value>Charts</value>
+    <value>譜面</value>
   </data>
   <data name="Charts List" xml:space="preserve">
-    <value>Charts List</value>
+    <value>譜面リスト</value>
   </data>
   <data name="Close" xml:space="preserve">
-    <value>Close</value>
+    <value>閉じる</value>
   </data>
   <data name="Communities" xml:space="preserve">
-    <value>Communities</value>
+    <value>地域ランキング</value>
   </data>
   <data name="Completed" xml:space="preserve">
-    <value>Completed</value>
+    <value>完了</value>
   </data>
   <data name="CoOp" xml:space="preserve">
     <value>CoOp</value>
   </data>
   <data name="CoOp Aggregation" xml:space="preserve">
-    <value>CoOp Aggregation</value>
+    <value>CoOp集合</value>
   </data>
   <data name="Copy Script" xml:space="preserve">
-    <value>Copy Script</value>
+    <value>コピー</value>
   </data>
   <data name="Copy to Clipboard" xml:space="preserve">
-    <value>Copy to Clipboard</value>
+    <value>コピー</value>
   </data>
   <data name="Difficulty Level" xml:space="preserve">
-    <value>Difficulty Level</value>
+    <value>難しさレベル</value>
   </data>
   <data name="Doubles" xml:space="preserve">
     <value>Doubles</value>
   </data>
   <data name="Download Failures" xml:space="preserve">
-    <value>Download Failures</value>
+    <value>ダウンロード失敗</value>
   </data>
   <data name="Download Scores" xml:space="preserve">
-    <value>Download Scores</value>
+    <value>スコアダウンロード</value>
   </data>
   <data name="Easiest Player" xml:space="preserve">
-    <value>Easiest Player</value>
+    <value>下級プレーヤー</value>
   </data>
   <data name="Easy" xml:space="preserve">
-    <value>Easy</value>
+    <value>簡単</value>
   </data>
   <data name="Ending Page" xml:space="preserve">
-    <value>Ending Page</value>
+    <value>最後のページ</value>
   </data>
   <data name="Favorites" xml:space="preserve">
-    <value>Favorites</value>
+    <value>気に入れ</value>
   </data>
   <data name="Full Privacy Policy" xml:space="preserve">
-    <value>Full Privacy Policy</value>
+    <value>個人情報保護方針</value>
   </data>
   <data name="Hard" xml:space="preserve">
-    <value>Hard</value>
+    <value>難しい</value>
   </data>
   <data name="Hardest Player" xml:space="preserve">
-    <value>Hardest Player</value>
+    <value>上級プレーヤー</value>
   </data>
   <data name="Hide Completed Charts" xml:space="preserve">
-    <value>Hide Completed Charts</value>
+    <value>完了譜面隠す</value>
   </data>
   <data name="Import Phoenix Scores" xml:space="preserve">
-    <value>Import Phoenix Scores</value>
+    <value>スコアインポート</value>
   </data>
   <data name="Language" xml:space="preserve">
-    <value>Language</value>
+    <value>言語</value>
   </data>
   <data name="Last Updated" xml:space="preserve">
-    <value>Last Updated</value>
+    <value>最近更新</value>
   </data>
   <data name="Leaderboard" xml:space="preserve">
-    <value>Leaderboard</value>
+    <value>ランキング</value>
   </data>
   <data name="Letter Grade" xml:space="preserve">
-    <value>Letter Grade</value>
+    <value>ランク</value>
   </data>
   <data name="Log In With" xml:space="preserve">
-    <value>Log In With {0}</value>
-    <comment>I.E Log In With Discord</comment>
-  </data>
+    <value>{0}でログインする</value>
+    
+  <comment>例：DISCORDでログインする</comment></data>
   <data name="Login" xml:space="preserve">
-    <value>Login</value>
+    <value>ログイン</value>
   </data>
   <data name="Logout" xml:space="preserve">
-    <value>Logout</value>
+    <value>ログアウト</value>
   </data>
   <data name="Make Not Public Disclaimer" xml:space="preserve">
-    <value>Making your account private will make your scores and progress no longer be externally visible, even for anyone already following you. You will be removed from the World community.</value>
+    <value>非公開にすれば自分のスコアと進化も誰でも見えなくなります（友達も）。世界ランキングから削除されます。</value>
   </data>
   <data name="Make Private" xml:space="preserve">
-    <value>Make Private</value>
+    <value>非公開する</value>
   </data>
   <data name="Make Public" xml:space="preserve">
-    <value>Make Public</value>
+    <value>公開する</value>
   </data>
   <data name="Make Public Disclaimer 1" xml:space="preserve">
-    <value>Making your account public will make your scores and progress externally visible. You will be added to the World community as well.</value>
+    <value>公開すれば自分のスコアと進化が誰度も見えるようになります。世界ランキングを追加されます。</value>
   </data>
   <data name="Make Public Disclaimer 2" xml:space="preserve">
-    <value>If your account was previously public and you made it private, making it public again will make anyone following you able to see your progress again.</value>
+    <value>公開すれば、まえのフォローしてる友達も見えるようになります。</value>
   </data>
   <data name="Medium" xml:space="preserve">
-    <value>Medium</value>
+    <value>中</value>
   </data>
   <data name="Mix" xml:space="preserve">
-    <value>Mix</value>
+    <value>ベーション</value>
   </data>
   <data name="My Score" xml:space="preserve">
-    <value>My Score</value>
+    <value>自己スコア</value>
   </data>
   <data name="Next Letter" xml:space="preserve">
-    <value>Next Letter</value>
+    <value>次のランク</value>
   </data>
   <data name="Not Graded Count" xml:space="preserve">
-    <value>Not Graded</value>
+    <value>未ランク数</value>
   </data>
   <data name="Not Passed Count" xml:space="preserve">
-    <value>Not Passed</value>
+    <value>未クリア数</value>
   </data>
   <data name="Official Leaderboard Search" xml:space="preserve">
-    <value>Official Leaderboard Search</value>
+    <value>公開ランキング捜索</value>
   </data>
   <data name="Official Scores" xml:space="preserve">
-    <value>Official Scores</value>
+    <value>公開スコア</value>
   </data>
   <data name="Open Video" xml:space="preserve">
-    <value>Open Video</value>
+    <value>ビデオリンク開く</value>
   </data>
   <data name="Parse Failures" xml:space="preserve">
-    <value>Parse Failures</value>
+    <value>構文解析失敗</value>
   </data>
   <data name="Passed Count" xml:space="preserve">
-    <value>Passed</value>
+    <value>クリア数</value>
   </data>
   <data name="Phoenix Import Confirming" xml:space="preserve">
-    <value>Continuing will begin to save the uploaded scores over your existing records. You will not be able to undo this. You will be able to stop the saving process, but it will not roll back uploads.</value>
+    <value>注意：新しくスコアは古いスコアの上に書きます。元に戻せないようになります。保存の過程が止まれば、変更のロールバック出来ません。</value>
   </data>
   <data name="Phoenix Import Info 1" xml:space="preserve">
-    <value>Use the Copy Script button below</value>
+    <value>下のコピーバトン使ってください</value>
   </data>
   <data name="Phoenix Import Info 2" xml:space="preserve">
-    <value>Use that script in the dev tools while logged in on https://piugame.com to download a CSV of your scores. (Make sure you aren't on phoenix.piugame.com)</value>
+    <value>CHROMEのDEV TOOLSでhttps://piugame.comがログインしてる状態にスクリプトを走ってください。phoenix.piugame.comが使ってない状態が気をつけてください</value>
   </data>
   <data name="Phoenix Import Info 3" xml:space="preserve">
-    <value>You can then upload that CSV here for yoru scores to show up.</value>
+    <value>スクリプトが作ったCSVファイルここでアップロード出来ます。</value>
   </data>
   <data name="Phoenix Import Info 4" xml:space="preserve">
-    <value>Note: This tool is fairly hacky and may require some debugging on your side to make work. Make sure to disable ad blockers.</value>
+    <value>注意：このスクリプトが壊しやすいと気難しいですから、ちょっとデバグ必要あるかも。絶対ADBLOCKが無効してください。</value>
   </data>
   <data name="Phoenix Import Saving" xml:space="preserve">
-    <value>If you leave this page or cancel, the upload will stop but you will not lose any scores that have already been recorded from your upload.</value>
+    <value>このページを離れたら、アップロードしたスコアは失わないです。</value>
   </data>
   <data name="Phoenix Import Saving Failures" xml:space="preserve">
-    <value>You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again.</value>
+    <value>一部のスコアダウンロードが失敗しまいました。失敗なCSVファイルはダウンロードして編集しても一回アップロード可能です。</value>
   </data>
   <data name="Phoenix Import Saving Progress" xml:space="preserve">
-    <value>{0}/{1} Uploaded. {2} Remaining. {3} Failed to record</value>
-    <comment>I.E 4/192 Uploaded. 3:29 Remaining. 2 Failed to record</comment>
-  </data>
+    <value>{0}/{1} 成功. {2} 残り. {3}登録失敗</value>
+    
+  <comment>I.E 4/192 Uploaded. 3:29 Remaining. 2 Failed to record</comment></data>
   <data name="Phoenix Import Saving Success" xml:space="preserve">
-    <value>All charts you uploaded were successfully updated!</value>
+    <value>アップロードしたスコア全部更新出来ました！</value>
   </data>
   <data name="Phoenix Import Uploading" xml:space="preserve">
-    <value>Spreadsheet is uploading and being processed...</value>
+    <value>CSVファイルの処理中</value>
   </data>
   <data name="Phoenix Score Calculator" xml:space="preserve">
-    <value>Phoenix Score Calculator</value>
+    <value>Phoenixスコア計算</value>
   </data>
   <data name="Plate" xml:space="preserve">
-    <value>Plate</value>
-    <comment>I.E MG, PG, UG</comment>
-  </data>
+    <value>プレート</value>
+    
+  <comment>列：MG, PG, UG</comment></data>
   <data name="Players" xml:space="preserve">
-    <value>Players</value>
+    <value>プレーヤー達</value>
   </data>
   <data name="Popularity" xml:space="preserve">
-    <value>Popularity</value>
+    <value>人気</value>
   </data>
   <data name="Progress" xml:space="preserve">
-    <value>Progress</value>
+    <value>進捗</value>
   </data>
   <data name="Progress Charts" xml:space="preserve">
-    <value>Player Stats</value>
+    <value>進捗中の譜面</value>
   </data>
   <data name="Public" xml:space="preserve">
-    <value>Public</value>
-    <comment>(on/off, if account is set to public)</comment>
-  </data>
+    <value>公開</value>
+    
+  <comment>(on/offもしアカウントが公開が設定された)</comment></data>
   <data name="Recorded Date" xml:space="preserve">
-    <value>Recorded Date</value>
+    <value>記録日</value>
   </data>
   <data name="Recorded On" xml:space="preserve">
-    <value>Recorded On {0}</value>
-    <comment>I.E Recorded on 12/6/2023 (I don't support date localization yet but will eventually)</comment>
-  </data>
+    <value>{0}にき記録した</value>
+    
+  <comment>例：12/6/2023に記録した。日本の日付の局在化は未完成です。🙇</comment></data>
   <data name="Remaining Charts" xml:space="preserve">
-    <value>{0} (SSS+) - {1} (AA) Charts Remaining</value>
-    <comment>I.E 6 (SSA+) - 10 (AA) Charts Remaining</comment>
-  </data>
+    <value>{0} (SSS+) - {1} (AA) 譜面残り</value>
+    
+  <comment>例：6 (SSA+) - 10 (AA)譜面残り</comment></data>
   <data name="Remaining Charts For You" xml:space="preserve">
-    <value>{0} Charts Estimated for You</value>
-    <comment>I.E 8 Charts Estimated for You</comment>
-  </data>
+    <value>{0}譜面残り（貴方の見積もり）</value>
+    
+  <comment>例：８譜面残り（推測）</comment></data>
   <data name="Remove from ToDo" xml:space="preserve">
-    <value>Remove from To Do List</value>
+    <value>やりことリストから解除</value>
   </data>
   <data name="Report Video" xml:space="preserve">
-    <value>Report Video</value>
+    <value>ビデオを報告</value>
   </data>
   <data name="Report Video Tooltip" xml:space="preserve">
-    <value>Report Broken, or Incorrect Video</value>
+    <value>間違いとか壊れたビデオを報告</value>
   </data>
   <data name="Restart" xml:space="preserve">
-    <value>Restart</value>
+    <value>再起動</value>
   </data>
   <data name="Save Scores" xml:space="preserve">
-    <value>Save Scores</value>
+    <value>スコア保存</value>
   </data>
   <data name="Saved Charts" xml:space="preserve">
-    <value>Saved Charts</value>
+    <value>保存した譜面</value>
   </data>
   <data name="Score" xml:space="preserve">
-    <value>Score</value>
+    <value>スコア</value>
   </data>
   <data name="Score Formula Shoutout" xml:space="preserve">
-    <value>Shout out to MR_WEQ for reverse engineering this score formula!</value>
+    <value>このスコアの計算均等化を レバースエンジニアリングしてと提供したMR_WEQさんありがとうがします！</value>
   </data>
   <data name="Score Loss" xml:space="preserve">
-    <value>{0} Score Loss</value>
-    <comment>I.E: Goods Score Loss</comment>
-  </data>
+    <value>{0}スコア低下</value>
+    
+  <comment>例：Goodsスコア低下</comment></data>
   <data name="Score Loss Note" xml:space="preserve">
-    <value>Note: Score loss may be off by 1-4 points due to rounding</value>
+    <value>注意：丸めのせいから、スコアの低下が１－４ポイントの差があるかも</value>
   </data>
   <data name="Score Range Shoutout" xml:space="preserve">
-    <value>Shout out to daryen for collecting data and finalizing the score ranges for letter grades!</value>
+    <value>daryenさんはランクのスコア帯を分析してありがとうございます！</value>
   </data>
   <data name="Score State" xml:space="preserve">
-    <value>Score State</value>
-    <comment>Score States = Passed, Unpassed, Unscored</comment>
-  </data>
+    <value>スコア状態</value>
+    
+  <comment>状態の種類= Passed, Unpassed, Unscored</comment></data>
   <data name="Scores Parsed" xml:space="preserve">
-    <value>Scores Parsed</value>
+    <value>スコア分析数</value>
   </data>
   <data name="Show Only ToDo Charts" xml:space="preserve">
-    <value>Show Only ToDo Charts</value>
+    <value>やることリストの譜面どけ示す</value>
   </data>
   <data name="Show Score Distribution" xml:space="preserve">
-    <value>Show Score Distribution</value>
+    <value>スコア分布</value>
   </data>
   <data name="Singles" xml:space="preserve">
     <value>Singles</value>
   </data>
   <data name="Song Duration" xml:space="preserve">
-    <value>Song Duration</value>
+    <value>曲時間</value>
   </data>
   <data name="Song Image" xml:space="preserve">
-    <value>Song Image</value>
+    <value>曲画像</value>
   </data>
   <data name="Song Name" xml:space="preserve">
-    <value>Song Name</value>
+    <value>曲名</value>
   </data>
   <data name="Song Type" xml:space="preserve">
-    <value>Song Type</value>
-    <comment>Song Types = Arcade, Full Song, etc.</comment>
-  </data>
+    <value>曲種類</value>
+    
+  <comment>Song Types = Arcade, Full Song, etc.</comment></data>
   <data name="Starting Page" xml:space="preserve">
-    <value>Starting Page</value>
+    <value>再開のページ</value>
   </data>
   <data name="Tier Lists" xml:space="preserve">
-    <value>Tier Lists</value>
+    <value>ティアリスト</value>
   </data>
   <data name="Title Progress" xml:space="preserve">
-    <value>Title Progress</value>
+    <value>タイトル進捗</value>
   </data>
   <data name="Titles" xml:space="preserve">
-    <value>Titles</value>
+    <value>タイトル</value>
   </data>
   <data name="To Do" xml:space="preserve">
-    <value>To Do</value>
+    <value>やりこと</value>
   </data>
   <data name="Tools" xml:space="preserve">
-    <value>Tools</value>
+    <value>ツルー</value>
   </data>
   <data name="Total Count" xml:space="preserve">
-    <value>Total</value>
+    <value>総計</value>
   </data>
   <data name="Tournaments" xml:space="preserve">
-    <value>Tournaments</value>
+    <value>大会</value>
   </data>
   <data name="Unpassed ToDos" xml:space="preserve">
-    <value>You have {0} level {1} charts marked To Do that you haven't passed.</value>
-    <comment>I.E You have 19 level 24 charts marked To Do you haven't passed</comment>
-  </data>
+    <value>やりことリストの中のレベレ{1}で譜面まだ{0}曲が残してる（クリアしてない）</value>
+    
+  <comment>例：レベレ２４の中でまだ９譜面が残してる</comment></data>
   <data name="Upload Scores" xml:space="preserve">
-    <value>Upload Scores</value>
+    <value>スコア更新</value>
   </data>
   <data name="Upload XX Scores" xml:space="preserve">
-    <value>Upload XX Scores</value>
+    <value>XXスコア更新</value>
   </data>
   <data name="Use Password 1" xml:space="preserve">
-    <value>This will have PIUScores log into your account and import scores for you.</value>
+    <value>このツルーはpiugame.comにログインして、自動でスコアアップロードすます。</value>
   </data>
   <data name="Use Password 2" xml:space="preserve">
-    <value>I do not store a record of your username or password, you will have to type them in every time you use this.</value>
+    <value>注意：ユーザーとパスワードを記録しないから、毎回使う場合はも一回入力必要あります。</value>
   </data>
   <data name="Use Password 3" xml:space="preserve">
-    <value>To minimize calls to https://piugame.com I will only import new or improved scores. Every user only gets one full import using Username/Password. Use the dev-tools importer if you wish to re-import older scores.</value>
+    <value>https://piugame.comのAPI呼び出すのを減らすなめに、新しいとか改良スコアどけインポートする。各ユーザーは完全インポート（ユーザーとパスワード）一回だけのサービスを上げます。古いスコアが
+          も一回インポート場合、dev-toolsのスクリプト使ってください。</value>
   </data>
   <data name="Use Password 4" xml:space="preserve">
-    <value>Once started, don't leave this page or else your scores will not finish saving.</value>
+    <value>インポート始まるとこのページを離さないでください。離したら、新しくスコアが保存しない場合もあります。</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
-    <value>Used primarily for debugging</value>
+    <value>デバッグ用</value>
   </data>
   <data name="Username" xml:space="preserve">
-    <value>Username</value>
+    <value>ユーザ名</value>
   </data>
   <data name="Very Easy" xml:space="preserve">
-    <value>Very Easy</value>
+    <value>とても簡単</value>
   </data>
   <data name="Very Hard" xml:space="preserve">
-    <value>Very Hard</value>
+    <value>とても難しい</value>
   </data>
   <data name="Video" xml:space="preserve">
-    <value>Video</value>
+    <value>ビデオ</value>
   </data>
   <data name="Vote Count" xml:space="preserve">
-    <value>{0} votes</value>
+    <value>{0}票</value>
   </data>
   <data name="Photos" xml:space="preserve">
-    <value>Photos</value>
-    <comment>Photos</comment>
-  </data>
+    <value>写真</value>
+    
+  <comment>写真</comment></data>
   <data name="Qualifiers Leaderboard" xml:space="preserve">
-    <value>{0} Qualifiers Leaderboard</value>
-    <comment>Qualifiers Leaderboard</comment>
-  </data>
+    <value>{0}資格ランキング</value>
+    
+  <comment>資格ランキング</comment></data>
   <data name="Place" xml:space="preserve">
-    <value>Place</value>
+    <value>場所</value>
   </data>
   <data name="Rating" xml:space="preserve">
-    <value>Rating</value>
-    <comment>Rating</comment>
-  </data>
+    <value>評定</value>
+    
+  <comment>レーティング</comment></data>
   <data name="Pending" xml:space="preserve">
-    <value>Pending</value>
-    <comment>Pending</comment>
-  </data>
+    <value>未決定</value>
+    
+  <comment>未決定</comment></data>
   <data name="Event Links" xml:space="preserve">
-    <value>Event Links</value>
-    <comment>Event Links</comment>
-  </data>
+    <value>イベントリンク</value>
+    
+  <comment>イベントリンク</comment></data>
   <data name="Rules" xml:space="preserve">
-    <value>Rules</value>
-    <comment>Rules</comment>
-  </data>
+    <value>規則</value>
+    
+  <comment>ルール</comment></data>
   <data name="Event" xml:space="preserve">
-    <value>Event</value>
-    <comment>Event</comment>
-  </data>
+    <value>イベント</value>
+    
+  <comment>イベント</comment></data>
   <data name="Website" xml:space="preserve">
-    <value>Website</value>
-    <comment>Website</comment>
-  </data>
+    <value>サイト</value>
+    
+  <comment>ウエブサイト</comment></data>
   <data name="Chart Count" xml:space="preserve">
-    <value>Chart Count</value>
+    <value>譜面数</value>
   </data>
   <data name="Home" xml:space="preserve">
-    <value>Home</value>
+    <value>ホームページ</value>
   </data>
   <data name="Leaderboard Player Compare" xml:space="preserve">
-    <value>Leaderboard Player Compare</value>
+    <value>各プレーヤーランキング（比較）</value>
   </data>
   <data name="Max Rating" xml:space="preserve">
-    <value>Max Rating</value>
+    <value>最高評定</value>
   </data>
   <data name="Qualifier Submit Phrase 1" xml:space="preserve">
-    <value>You do not need to be logged in to use this tool. Type a username to begin submitting.</value>
+    <value>このツルーはログイン必要ありません。登録前、ユーザ名を入力お願いします。</value>
   </data>
   <data name="Qualifier Submit Phrase 2" xml:space="preserve">
-    <value>This is your first submission! Please make sure your Username is identifiable either through discord or Start.GG.</value>
+    <value>初めての登録！ユーザ名はdiscordとかstart.ggで同じく確認してください</value>
   </data>
   <data name="Qualifiers Submission" xml:space="preserve">
-    <value>{0} Qualifiers Submission</value>
+    <value>{0}資格の登録</value>
   </data>
   <data name="Rating Calculator" xml:space="preserve">
-    <value>Rating Calculator</value>
+    <value>評定の計算</value>
   </data>
   <data name="Song" xml:space="preserve">
-    <value>Song</value>
+    <value>曲</value>
   </data>
   <data name="Song Artist" xml:space="preserve">
-    <value>Song Artist</value>
+    <value>アーティスト</value>
   </data>
   <data name="Submission Page" xml:space="preserve">
-    <value>Submission Page</value>
+    <value>登録ページ</value>
   </data>
   <data name="Submit" xml:space="preserve">
-    <value>Submit</value>
+    <value>登録</value>
   </data>
   <data name="Suggested Chart" xml:space="preserve">
-    <value>Suggested Chart</value>
+    <value>おすすめ譜面</value>
   </data>
   <data name="To Leaderboard" xml:space="preserve">
-    <value>To Leaderboard</value>
+    <value>ランキングチェック</value>
   </data>
   <data name="Upload Image" xml:space="preserve">
-    <value>Upload Image</value>
+    <value>画像アップロード</value>
   </data>
   <data name="Use Script" xml:space="preserve">
-    <value>Use  Script</value>
+    <value>スクリプト使用</value>
   </data>
   <data name="World Rankings" xml:space="preserve">
-    <value>World Rankings</value>
+    <value>世界ランキング</value>
   </data>
   <data name="Play Num" xml:space="preserve">
-    <value>Play at least {0}</value>
+    <value>せめて{0}曲遊んで</value>
   </data>
   <data name="Text View" xml:space="preserve">
-    <value>Text View</value>
-    <comment>Text View</comment>
-  </data>
+    <value>テキストで表示</value>
+    
+  <comment>文字示す</comment></data>
   <data name="Open" xml:space="preserve">
 	  <value>Open</value>
-	  <comment>Open</comment>
-  </data>
+	  
+  <comment>開く</comment></data>
   <data name="Country" xml:space="preserve">
 	  <value>Country</value>
-	  <comment>Country</comment>
-  </data>
+	  
+  <comment>国</comment></data>
   <data name="Avatar" xml:space="preserve">
-	  <value>Avatar</value>
-	  <comment>Avatar</comment>
-  </data>
+	  <value>アバター</value>
+	  
+  <comment>自分のアイコン</comment></data>
   <data name="Name" xml:space="preserve">
-	  <value>Name</value>
-	  <comment>Name</comment>
-  </data>
+	  <value>名前</value>
+	  
+  <comment>名</comment></data>
   <data name="Level" xml:space="preserve">
-	  <value>Level</value>
-	  <comment>Level</comment>
-  </data>
+	  <value>レベル</value>
+	  
+  <comment>レベル</comment></data>
   <data name="Validation" xml:space="preserve">
-	  <value>Validation</value>
-	  <comment>Validation</comment>
-  </data>
+	  <value>確認</value>
+	  
+  <comment>確認</comment></data>
   <data name="Add UCS" xml:space="preserve">
-	  <value>Add UCS</value>
-	  <comment>Add UCS</comment>
-  </data>
+	  <value>UCS追加</value>
+	  
+  <comment>UCS追加</comment></data>
   <data name="Uploader" xml:space="preserve">
-	  <value>Uploader</value>
-	  <comment>Uploader</comment>
-  </data>
+	  <value>作者</value>
+	  
+  <comment>アップロードの人</comment></data>
   <data name="Step Artist" xml:space="preserve">
-	  <value>Step Artist</value>
-	  <comment>Step Artist</comment>
-  </data>
+	  <value>譜面作者</value>
+	  
+  <comment>Step Artist</comment></data>
   <data name="Tag" xml:space="preserve">
-	  <value>Tag</value>
-	  <comment>Tag</comment>
-  </data>
+	  <value>タグ</value>
+	  
+  <comment>Tag</comment></data>
   <data name="Add" xml:space="preserve">
-	  <value>Add</value>
-	  <comment>Add</comment>
-  </data>
+	  <value>追加</value>
+	  
+  <comment>Add</comment></data>
   <data name="Tags" xml:space="preserve">
-	  <value>Tags</value>
-	  <comment>Tags</comment>
-  </data>
+	  <value>タグ</value>
+	  
+  <comment>Tags</comment></data>
   <data name="Link" xml:space="preserve">
-	  <value>Link</value>
-	  <comment>Link</comment>
-  </data>
+	  <value>リンク</value>
+	  
+  <comment>Link</comment></data>
   <data name="UCS Leaderboard" xml:space="preserve">
-	  <value>UCS Leaderboard</value>
-	  <comment>UCS Leaderboard</comment>
-  </data>
+	  <value>UCSランキング</value>
+	  
+  <comment>UCS Leaderboard</comment></data>
   <data name="Stage Pass" xml:space="preserve">
-	  <value>Stage Pass</value>
-	  <comment>Stage Pass</comment>
-  </data>
+	  <value>Stageクリア</value>
+	  
+  <comment>Stage Pass</comment></data>
   <data name="BPM" xml:space="preserve">
 	  <value>BPM</value>
-	  <comment>BPM</comment>
-  </data>
+	  
+  <comment>BPM</comment></data>
   <data name="Note Count" xml:space="preserve">
-	  <value>Note Count</value>
-	  <comment>Note Count</comment>
-  </data>
+	  <value>ノーツ数</value>
+	  
+  <comment>Note Count</comment></data>
   <data name="Pass (Data Backed)" xml:space="preserve">
-	  <value>Pass (Data Backed)</value>
-	  <comment>Pass (Data Backed)</comment>
-  </data>
+	  <value>クリア(データあり)</value>
+	  
+  <comment>Pass (Data Backed)</comment></data>
   <data name="Score (Data Backed)" xml:space="preserve">
-	  <value>Score (Data Backed)</value>
-	  <comment>Score (Data Backed)</comment>
-  </data>
+	  <value>スコア(データあり)</value>
+	  
+  <comment>Score (Data Backed)</comment></data>
   <data name="Popularity (PIU Game Leaderboard)" xml:space="preserve">
-	  <value>Popularity (PIU Game Leaderboard)</value>
-	  <comment>Popularity (PIU Game Leaderboard)</comment>
+	  <value>人気（PIU Gameランキング）</value>
+	  
   </data>
   <data name="Player Count" xml:space="preserve">
-	  <value>Player Count</value>
-	  <comment>Player Count</comment>
-  </data>
+	  <value>プレーヤー数</value>
+	  
+  <comment>Player Count</comment></data>
   <data name="Difficulty Categorization" xml:space="preserve">
-	  <value>Difficulty Categorization</value>
-	  <comment>Difficulty Categorization</comment>
-  </data>
+	  <value>難度カテゴリー分類</value>
+	  
+  <comment>Difficulty Categorization</comment></data>
   <data name="Scoring Level" xml:space="preserve">
-	  <value>Scoring Level</value>
-	  <comment>Scoring Level</comment>
-  </data>
+	  <value>スコアのレベル</value>
+	  
+  <comment>Scoring Level</comment></data>
   <data name="Skill" xml:space="preserve">
-	  <value>Skill</value>
-	  <comment>Skill</comment>
-  </data>
+	  <value>スキル</value>
+	  
+  <comment>Skill</comment></data>
   <data name="Age" xml:space="preserve">
-	  <value>Age</value>
-	  <comment>Age</comment>
-  </data>
+	  <value>歳</value>
+	  
+  <comment>Age</comment></data>
   <data name="Score Ranking" xml:space="preserve">
-	  <value>Score Ranking</value>
-	  <comment>Score Ranking</comment>
-  </data>
+	  <value>スコアランキング</value>
+	  
+  <comment>Score Ranking</comment></data>
   <data name="Settings" xml:space="preserve">
-	  <value>Settings</value>
-	  <comment>Settings</comment>
-  </data>
+	  <value>設定</value>
+	  
+  <comment>Settings</comment></data>
   <data name="Show Skills" xml:space="preserve">
-	  <value>Show Skills</value>
-	  <comment>Show Skills</comment>
-  </data>
+	  <value>スキル表示</value>
+	  
+  <comment>Show Skills</comment></data>
   <data name="Show Difficulty" xml:space="preserve">
-	  <value>Show Difficulty</value>
-	  <comment>Show Difficulty</comment>
-  </data>
+	  <value>難度表示</value>
+	  
+  <comment>Show Difficulty</comment></data>
   <data name="Show Song Name" xml:space="preserve">
-	  <value>Show Song Name</value>
-	  <comment>Show Song Name</comment>
-  </data>
+	  <value>曲名表示</value>
+	  
+  <comment>Show Song Name</comment></data>
   <data name="Show Step Artist" xml:space="preserve">
-	  <value>Show Step Artist</value>
-	  <comment>Show Step Artist</comment>
-  </data>
+	  <value>譜面作者表示</value>
+	  
+  <comment>Show Step Artist</comment></data>
   <data name="Personalized Difficulty" xml:space="preserve">
-	  <value>Personalized Difficulty</value>
-	  <comment>Personalized Difficulty</comment>
-  </data>
+	  <value>個別化難度</value>
+	  
+  <comment>Personalized Difficulty</comment></data>
   <data name="Show Age" xml:space="preserve">
-	  <value>Show Age</value>
-	  <comment>Show Age</comment>
-  </data>
+	  <value>歳表示</value>
+	  
+  <comment>Show Age</comment></data>
   <data name="Filters" xml:space="preserve">
-	  <value>Filters</value>
-	  <comment>Filters</comment>
-  </data>
+	  <value>フィアルた</value>
+	  
+  <comment>Filters</comment></data>
   <data name="Min BPM" xml:space="preserve">
-	  <value>Min BPM</value>
-	  <comment>Min BPM</comment>
-  </data>
+	  <value>最低BPM</value>
+	  
+  <comment>Min BPM</comment></data>
   <data name="Max BPM" xml:space="preserve">
-	  <value>Max BPM</value>
-	  <comment>Max BPM</comment>
-  </data>
+	  <value>最高BPM</value>
+	  
+  <comment>Max BPM</comment></data>
   <data name="Min Note Count" xml:space="preserve">
-	  <value>Min Note Count</value>
-	  <comment>Min Note Count</comment>
-  </data>
+	  <value>最低ノーツ数</value>
+	  
+  <comment>Min Note Count</comment></data>
   <data name="Max Note Count" xml:space="preserve">
-	  <value>Max Note Count</value>
-	  <comment>Max Note Count</comment>
-  </data>
+	  <value>最高ノーツ数</value>
+	  
+  <comment>Max Note Count</comment></data>
   <data name="Min Letter Grade" xml:space="preserve">
-	  <value>Min Letter Grade</value>
-	  <comment>Min Letter Grade</comment>
-  </data>
+	  <value>最低ランク</value>
+	  
+  <comment>Min Letter Grade</comment></data>
   <data name="Max Letter Grade" xml:space="preserve">
-	  <value>Max Letter Grade</value>
-	  <comment>Max Letter Grade</comment>
-  </data>
+	  <value>最高ランク</value>
+	  
+  <comment>Max Letter Grade</comment></data>
   <data name="Admin" xml:space="preserve">
-	  <value>Admin</value>
+	  <value>管理</value>
   </data>
   <data name="Do It" xml:space="preserve">
-	  <value>Do It</value>
-	  <comment>Admin trigger button — runs RebuildOfficialLeaderboard.</comment>
+	  <value>実行</value>
+	  
   </data>
   <data name="Clear Cache" xml:space="preserve">
-	  <value>Clear Cache</value>
+	  <value>キャッシュ消去</value>
   </data>
   <data name="ReCalculate Ratings" xml:space="preserve">
-	  <value>ReCalculate Ratings</value>
+	  <value>評定再計算</value>
   </data>
   <data name="Update Chart" xml:space="preserve">
-	  <value>Update Chart</value>
+	  <value>譜面更新</value>
   </data>
   <data name="Chart" xml:space="preserve">
-	  <value>Chart</value>
+	  <value>譜面</value>
   </data>
   <data name="Video URL" xml:space="preserve">
-	  <value>Video URL</value>
+	  <value>ビデオURL</value>
   </data>
   <data name="Channel Name" xml:space="preserve">
-	  <value>Channel Name</value>
+	  <value>チャンネル名</value>
   </data>
   <data name="Save" xml:space="preserve">
-	  <value>Save</value>
+	  <value>保存</value>
   </data>
   <data name="Create Song" xml:space="preserve">
-	  <value>Create Song</value>
+	  <value>曲作成</value>
   </data>
   <data name="Korean Name" xml:space="preserve">
-	  <value>Korean Name</value>
+	  <value>韓国語名</value>
   </data>
   <data name="Image Name" xml:space="preserve">
-	  <value>Image Name</value>
+	  <value>画像名</value>
   </data>
   <data name="Minutes" xml:space="preserve">
-	  <value>Minutes</value>
+	  <value>分</value>
   </data>
   <data name="Seconds" xml:space="preserve">
-	  <value>Seconds</value>
+	  <value>秒</value>
   </data>
   <data name="Level/Players" xml:space="preserve">
-	  <value>Level/Players</value>
-	  <comment>Combined level/player-count input on the new-chart admin form.</comment>
+	  <value>レベル/プレーヤー数</value>
+	  
   </data>
   <data name="Youtube Hash" xml:space="preserve">
-	  <value>Youtube Hash</value>
+	  <value>Youtubeハッシュ</value>
   </data>
   <data name="Create" xml:space="preserve">
-	  <value>Create</value>
+	  <value>作成</value>
   </data>
   <data name="Done" xml:space="preserve">
-	  <value>Done</value>
+	  <value>完了</value>
   </data>
   <data name="Restored" xml:space="preserve">
-	  <value>Restored</value>
+	  <value>復元済</value>
   </data>
   <data name="Video info is not formatted correctly" xml:space="preserve">
-	  <value>Video info is not formatted correctly</value>
+	  <value>ビデオ情報の形式が正しくありません</value>
   </data>
   <data name="Chart saved" xml:space="preserve">
-	  <value>Chart saved</value>
+	  <value>譜面保存しました</value>
   </data>
   <data name="Bulk Vote" xml:space="preserve">
-	  <value>Bulk Vote</value>
+	  <value>一括投票</value>
   </data>
   <data name="Your Difficulty Rating" xml:space="preserve">
-	  <value>Your Difficulty Rating</value>
+	  <value>君の難度評定</value>
   </data>
   <data name="Saved!" xml:space="preserve">
-	  <value>Saved!</value>
+	  <value>保存しました！</value>
   </data>
   <data name="Chart Update" xml:space="preserve">
-	  <value>Chart Update</value>
+	  <value>譜面更新</value>
   </data>
   <data name="Difficulty" xml:space="preserve">
-	  <value>Difficulty</value>
+	  <value>難度</value>
   </data>
   <data name="Save Chart" xml:space="preserve">
-	  <value>Save Chart</value>
+	  <value>譜面保存</value>
   </data>
   <data name="Updated X Y" xml:space="preserve">
-	  <value>Updated {0} {1}</value>
-	  <comment>{0} = song name, {1} = difficulty string (e.g. "S17"). Snackbar after a chart save on /ChartUpdate.</comment>
+	  <value>{0} {1}を更新しました</value>
+	  
   </data>
   <data name="Community Invite" xml:space="preserve">
-	  <value>Community Invite</value>
+	  <value>コミュニティ招待</value>
   </data>
   <data name="Chart Compare" xml:space="preserve">
-	  <value>Chart Compare</value>
+	  <value>譜面比較</value>
   </data>
   <data name="Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings." xml:space="preserve">
-	  <value>Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings.</value>
-	  <comment>Double space between "FEFEMZ's" and "recordings" preserved verbatim from source.</comment>
+	  <value>FEFEMZさんの録画からこの情報をまとめてくれたKyleTTさんに感謝します。</value>
+	  
   </data>
   <data name="Note that this information is not final until referenced against actual released mix." xml:space="preserve">
-	  <value>Note that this information is not final until referenced against actual released mix.</value>
+	  <value>注意：実際のリリースミックスと照合するまで、この情報は確定ではありません。</value>
   </data>
   <data name="Added" xml:space="preserve">
-	  <value>Added</value>
+	  <value>追加済み</value>
   </data>
   <data name="Changed Level" xml:space="preserve">
-	  <value>Changed Level</value>
+	  <value>レベル変更</value>
   </data>
   <data name="Removed" xml:space="preserve">
-	  <value>Removed</value>
+	  <value>削除済</value>
   </data>
   <data name="Step Artists" xml:space="preserve">
-	  <value>Step Artists</value>
+	  <value>譜面作者</value>
   </data>
   <data name="Disclaimer: This list is being refined, some charts are missing step artists and some may have incorrect artists." xml:space="preserve">
-	  <value>Disclaimer: This list is being refined, some charts are missing step artists and some may have incorrect artists.</value>
+	  <value>注意：このリストは調整中で、譜面作者が未登録または誤っている場合があります。</value>
   </data>
   <data name="PIU Life Calculator" xml:space="preserve">
-	  <value>PIU Life Calculator</value>
+	  <value>PIU体力計算</value>
   </data>
   <data name="Disclaimer: This data was data-mined in NX2 and Prime, it is unconfirmed how accurate it is today." xml:space="preserve">
-	  <value>Disclaimer: This data was data-mined in NX2 and Prime, it is unconfirmed how accurate it is today.</value>
+	  <value>注意：このデータはNX2とPrimeから抽出したもので、現在の正確性は未確認です。</value>
   </data>
   <data name="Lifebar stats" xml:space="preserve">
-	  <value>Lifebar stats</value>
+	  <value>ライフバー統計</value>
   </data>
   <data name="Life Bar by Level" xml:space="preserve">
-	  <value>Life Bar by Level</value>
+	  <value>レベル別ライフバー</value>
   </data>
   <data name="Starting Life" xml:space="preserve">
-	  <value>Starting Life</value>
+	  <value>開始体力</value>
   </data>
   <data name="Visible Life" xml:space="preserve">
-	  <value>Visible Life</value>
+	  <value>視覚体力</value>
   </data>
   <data name="Max Life" xml:space="preserve">
-	  <value>Max Life</value>
+	  <value>最大体力</value>
   </data>
   <data name="Life Threshold" xml:space="preserve">
-	  <value>Life Threshold</value>
+	  <value>体力閾値</value>
   </data>
   <data name="Note Count from Full Life to Death/Threshold based on Combo between Breaks" xml:space="preserve">
-	  <value>Note Count from Full Life to Death/Threshold based on Combo between Breaks</value>
+	  <value>失敗間のコンボに応じた、満タンから死亡/閾値までのノーツ数</value>
   </data>
   <data name="Perfect Combo, Miss Break" xml:space="preserve">
-	  <value>Perfect Combo, Miss Break</value>
+	  <value>Perfectコンボ、Miss失敗</value>
   </data>
   <data name="Great Combo, Miss Break" xml:space="preserve">
-	  <value>Great Combo, Miss Break</value>
+	  <value>Greatコンボ、Miss失敗</value>
   </data>
   <data name="Perfect Combo, Bad Break" xml:space="preserve">
-	  <value>Perfect Combo, Bad Break</value>
+	  <value>Perfectコンボ、Bad失敗</value>
   </data>
   <data name="Great Combo, Bad Break" xml:space="preserve">
-	  <value>Great Combo, Bad Break</value>
+	  <value>Greatコンボ、Bad失敗</value>
   </data>
   <data name="Notes to Full Life From Start of Song (50%)" xml:space="preserve">
-	  <value>Notes to Full Life From Start of Song (50%)</value>
+	  <value>曲開始から満タンまでのノーツ数（50%）</value>
   </data>
   <data name="Perfects" xml:space="preserve">
-	  <value>Perfects</value>
+	  <value>Perfect数</value>
   </data>
   <data name="Greats" xml:space="preserve">
-	  <value>Greats</value>
+	  <value>Great数</value>
   </data>
   <data name="Lifebar Description" xml:space="preserve">
-	  <value>Lifebar Description</value>
+	  <value>ライフバー説明</value>
   </data>
   <data name="Starting life is 500, visible  Life (Rainbow life bar) is 1000." xml:space="preserve">
-	  <value>Starting life is 500, visible  Life (Rainbow life bar) is 1000.</value>
-	  <comment>Double space between "visible" and "Life" preserved verbatim from source.</comment>
+	  <value>開始体力は500、視覚体力（虹色ライフバー）は1000です。</value>
+	  
   </data>
   <data name="Lifebar overflows exponentially by level, up to about a 2350 overflow at level 28." xml:space="preserve">
-	  <value>Lifebar overflows exponentially by level, up to about a 2350 overflow at level 28.</value>
+	  <value>ライフバーはレベルに応じて指数的にオーバーフローし、レベル28で約2350のオーバーフローに達します。</value>
   </data>
   <data name="Life loss description" xml:space="preserve">
-	  <value>Life loss description</value>
+	  <value>体力減少について</value>
   </data>
   <data name="By default, bads lose 50 health, misses lose 250 health (at ~100% health)." xml:space="preserve">
-	  <value>By default, bads lose 50 health, misses lose 250 health (at ~100% health).</value>
+	  <value>デフォルトでBadは体力-50、Missは-250（体力約100%時）。</value>
   </data>
   <data name="Misses lose LESS health the further beneath 1000 health you are at (at 0 life you would lose 20 health for a miss)" xml:space="preserve">
-	  <value>Misses lose LESS health the further beneath 1000 health you are at (at 0 life you would lose 20 health for a miss)</value>
+	  <value>1000体力より低いほどMissで失う体力は少なくなります（体力0ではMissで20失うのみ）。</value>
   </data>
   <data name="Life gain description" xml:space="preserve">
-	  <value>Life gain description</value>
+	  <value>体力回復について</value>
   </data>
   <data name="By default at high combo, perfects gain 9.6 life, greats gain 8 life, goods gain 0 life." xml:space="preserve">
-	  <value>By default at high combo, perfects gain 9.6 life, greats gain 8 life, goods gain 0 life.</value>
+	  <value>デフォルトで高コンボ時、Perfectは体力+9.6、Greatは+8、Goodは+0。</value>
   </data>
   <data name="This is modified by a multiplier that is almost entirely reset on a miss, and decreased drastically on a bad." xml:space="preserve">
-	  <value>This is modified by a multiplier that is almost entirely reset on a miss, and decreased drastically on a bad.</value>
+	  <value>これは倍率により調整され、Missでほぼ完全にリセットされ、Badで大きく減少します。</value>
   </data>
   <data name="Each perfect or great you get increases the multiplier by a minor amount." xml:space="preserve">
-	  <value>Each perfect or great you get increases the multiplier by a minor amount.</value>
+	  <value>PerfectまたはGreatごとに倍率が少しずつ増加します。</value>
   </data>
   <data name="Effectively, this means that your life gain is heavily affected by combo, reaching maximum gain at ~40-50 combo." xml:space="preserve">
-	  <value>Effectively, this means that your life gain is heavily affected by combo, reaching maximum gain at ~40-50 combo.</value>
+	  <value>つまり、体力回復はコンボ数に大きく影響され、約40〜50コンボで最大値に達します。</value>
   </data>
   <data name="Bads vs Misses Observations" xml:space="preserve">
-	  <value>Bads vs Misses Observations</value>
+	  <value>Bad対Missの観察</value>
   </data>
   <data name="To recover from Bads you require 17-21 combo per Bad. Bads typically let you live for 3x as long as misses." xml:space="preserve">
-	  <value>To recover from Bads you require 17-21 combo per Bad. Bads typically let you live for 3x as long as misses.</value>
+	  <value>Badから回復するにはBadごとに17〜21コンボが必要です。Badは通常、Missの約3倍長く生き残れます。</value>
   </data>
   <data name="To remain alive you need to maintain 17-21 combo per Miss." xml:space="preserve">
-	  <value>To remain alive you need to maintain 17-21 combo per Miss.</value>
+	  <value>生き残るにはMissごとに17〜21コンボの維持が必要です。</value>
   </data>
   <data name="To remain at 50% visible life, you need 37-46 combo per Miss." xml:space="preserve">
-	  <value>To remain at 50% visible life, you need 37-46 combo per Miss.</value>
+	  <value>視覚体力50%を保つには、Missごとに37〜46コンボが必要です。</value>
   </data>
   <data name="To remain at Rainbow Life, you 46-55 combo per Miss." xml:space="preserve">
-	  <value>To remain at Rainbow Life, you 46-55 combo per Miss.</value>
-	  <comment>Likely missing "need" between "you" and "46-55" in source; preserved verbatim.</comment>
+	  <value>虹色ライフを保つには、Missごとに46〜55コンボが必要です。</value>
+	  
   </data>
   <data name="Bads at low health let you live for roughly 3x as long as misses, this gap increases the higher the life threshold you want to keep, up to misses punishing 6x as much when maintaining 100% visual life." xml:space="preserve">
-	  <value>Bads at low health let you live for roughly 3x as long as misses, this gap increases the higher the life threshold you want to keep, up to misses punishing 6x as much when maintaining 100% visual life.</value>
+	  <value>低体力時、Badはミスの約3倍長く生き残れます。維持したい体力の閾値が高くなるほど差は広がり、視覚体力100%を保つ場合はミスがBadの最大6倍のペナルティになります。</value>
   </data>
   <data name="TLDR: Misses matter less at low life, but are always significantly more punishing than Bads." xml:space="preserve">
-	  <value>TLDR: Misses matter less at low life, but are always significantly more punishing than Bads.</value>
+	  <value>要約：Missは低体力時には影響が小さくなりますが、常にBadより大幅にペナルティが大きいです。</value>
   </data>
   <data name="Recovery Observations" xml:space="preserve">
-	  <value>Recovery Observations</value>
+	  <value>回復の観察</value>
   </data>
   <data name="Misses or back-to-back Bads early in a run put you in a terribly position for maintaining life, as they reset your life gain multiplier and require you to combo ~40-50 to regain it. Start runs strong for increased success rates." xml:space="preserve">
-	  <value>Misses or back-to-back Bads early in a run put you in a terribly position for maintaining life, as they reset your life gain multiplier and require you to combo ~40-50 to regain it. Start runs strong for increased success rates.</value>
+	  <value>プレイ序盤のMissや連続Badは、体力回復倍率をリセットし、約40〜50コンボで取り戻す必要があるため、体力維持に致命的です。成功率を上げるには序盤を強く始めましょう。</value>
   </data>
   <data name="When at 12% or lower visual life, a miss gives less life loss than a bad, but inhibits your recovery severely. This only really matters for notes at the end of a song or before guaranteed 100+ combo sections." xml:space="preserve">
-	  <value>When at 12% or lower visual life, a miss gives less life loss than a bad, but inhibits your recovery severely. This only really matters for notes at the end of a song or before guaranteed 100+ combo sections.</value>
+	  <value>視覚体力12%以下になると、MissはBadより体力減少が少なくなりますが、回復を著しく阻害します。これが本当に効くのは曲終盤や確定100+コンボ区間の前のノートだけです。</value>
   </data>
   <data name="TLDR" xml:space="preserve">
-	  <value>TLDR</value>
+	  <value>要約</value>
   </data>
   <data name="Misses severely hurt your lifebar." xml:space="preserve">
-	  <value>Misses severely hurt your lifebar.</value>
+	  <value>Missはライフバーを大きく損ないます。</value>
   </data>
   <data name="Bads mostly hurt your recovery." xml:space="preserve">
-	  <value>Bads mostly hurt your recovery.</value>
+	  <value>Badは主に回復力を損ないます。</value>
   </data>
   <data name="Try to maintain 17-21 combo per bad." xml:space="preserve">
-	  <value>Try to maintain 17-21 combo per bad.</value>
+	  <value>Badごとに17〜21コンボの維持を心がけましょう。</value>
   </data>
   <data name="Try to maintain 40-50 combo per miss." xml:space="preserve">
-	  <value>Try to maintain 40-50 combo per miss.</value>
+	  <value>Missごとに40〜50コンボの維持を心がけましょう。</value>
   </data>
   <data name="Lifebars are weird." xml:space="preserve">
-	  <value>Lifebars are weird.</value>
-	  <comment>Quote attributed to Zelllooo on the Life Calculator page.</comment>
+	  <value>ライフバーは奇妙です。</value>
+	  
   </data>
   <data name="Source" xml:space="preserve">
-	  <value>Source</value>
+	  <value>出典</value>
   </data>
   <data name="Team Infinitesimal, data-mine from NX2 + Prime" xml:space="preserve">
-	  <value>Team Infinitesimal, data-mine from NX2 + Prime</value>
+	  <value>Team Infinitesimal、NX2 + Primeからのデータマイニング</value>
   </data>
   <data name="Welcome" xml:space="preserve">
-	  <value>Welcome</value>
+	  <value>ようこそ</value>
   </data>
   <data name="Welcome to Score Tracker, X!" xml:space="preserve">
-	  <value>Welcome to Score Tracker, {0}!</value>
-	  <comment>{0} = current user's name</comment>
+	  <value>Score Trackerへようこそ、{0}さん！</value>
+	  
   </data>
   <data name="Some players already maintain scores via Spreadsheets." xml:space="preserve">
-	  <value>Some players already maintain scores via Spreadsheets.</value>
+	  <value>一部のプレーヤーは既にスプレッドシートでスコアを管理しています。</value>
   </data>
   <data name="In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades." xml:space="preserve">
-	  <value>In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades.</value>
+	  <value>そのような場合、何千ものランクを手入力するより、スプレッドシートをアップロードする方が早いです。</value>
   </data>
   <data name="After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed." xml:space="preserve">
-	  <value>After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed.</value>
+	  <value>アップロード後、正しくアップロードされなかった行・譜面・試行があれば、失敗した行とその理由のリストをダウンロードできます。</value>
   </data>
   <data name="Spreadsheet is uploading and being processed..." xml:space="preserve">
-	  <value>Spreadsheet is uploading and being processed...</value>
+	  <value>CSVファイルの処理中</value>
   </data>
   <data name="Parsed Scores" xml:space="preserve">
-	  <value>Parsed Scores</value>
+	  <value>解析済スコア</value>
   </data>
   <data name="Type" xml:space="preserve">
-	  <value>Type</value>
+	  <value>種類</value>
   </data>
   <data name="XXLetterGrade" xml:space="preserve">
 	  <value>XXLetterGrade</value>
-	  <comment>Column header on the XX-score upload preview grid; matches the legacy property name.</comment>
+	  
   </data>
   <data name="IsBroken" xml:space="preserve">
 	  <value>IsBroken</value>
-	  <comment>Column header on the XX-score upload preview grid; matches the legacy property name.</comment>
+	  
   </data>
   <data name="If you leave this page or cancel, the upload will stop but you will not lose any scores that have already been recorded from your upload." xml:space="preserve">
-	  <value>If you leave this page or cancel, the upload will stop but you will not lose any scores that have already been recorded from your upload.</value>
+	  <value>このページを離れたら、アップロードしたスコアは失わないです。</value>
   </data>
   <data name="X/Y Uploaded. Z Remaining. W Failed to record" xml:space="preserve">
-	  <value>{0}/{1} Uploaded. {2} Remaining. {3} Failed to record</value>
-	  <comment>Save progress status. {0}=saved count, {1}=total, {2}=time remaining (m:ss), {3}=failed count</comment>
+	  <value>{0}/{1} 成功. {2} 残り. {3}登録失敗</value>
+	  
   </data>
   <data name="You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again." xml:space="preserve">
-	  <value>You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again.</value>
+	  <value>一部のスコアダウンロードが失敗しまいました。失敗なCSVファイルはダウンロードして編集しても一回アップロード可能です。</value>
   </data>
   <data name="All charts you uploaded were successfully updated!" xml:space="preserve">
-	  <value>All charts you uploaded were successfully updated!</value>
+	  <value>アップロードした譜面全部更新出来ました！</value>
   </data>
   <data name="You somehow ended up in a state between realities. Refresh the page to try again." xml:space="preserve">
-	  <value>You somehow ended up in a state between realities. Refresh the page to try again.</value>
+	  <value>なんらかの理由で現実の狭間の状態になりました。ページを再読み込みして再試行してください。</value>
   </data>
   <data name="Supported Formats" xml:space="preserve">
-	  <value>Supported Formats</value>
+	  <value>対応フォーマット</value>
   </data>
   <data name="Hide" xml:space="preserve">
-	  <value>Hide</value>
+	  <value>隠す</value>
   </data>
   <data name="Show" xml:space="preserve">
-	  <value>Show</value>
+	  <value>表示</value>
   </data>
   <data name="Unknown" xml:space="preserve">
-	  <value>Unknown</value>
+	  <value>不明</value>
   </data>
   <data name="Player" xml:space="preserve">
-	  <value>Player</value>
+	  <value>プレーヤー</value>
   </data>
   <data name="Scores" xml:space="preserve">
-	  <value>Scores</value>
+	  <value>スコア</value>
   </data>
   <data name="Download Example" xml:space="preserve">
-	  <value>Download Example</value>
+	  <value>サンプルダウンロード</value>
   </data>
   <data name="TRUE/FALSE Template" xml:space="preserve">
-	  <value>TRUE/FALSE Template</value>
+	  <value>TRUE/FALSEテンプレート</value>
   </data>
   <data name="Letter Grade Template" xml:space="preserve">
-	  <value>Letter Grade Template</value>
+	  <value>ランクテンプレート</value>
   </data>
   <data name="Song Names" xml:space="preserve">
-	  <value>Song Names</value>
+	  <value>曲名</value>
   </data>
   <data name="Some adjustments to account for typos or difference in naming conventions have been accounted for. Song Names are Case Insensitive. (Note that some of these look the same because they are whitespace adjustments)" xml:space="preserve">
-	  <value>Some adjustments to account for typos or difference in naming conventions have been accounted for. Song Names are Case Insensitive. (Note that some of these look the same because they are whitespace adjustments)</value>
+	  <value>タイプミスや命名規則の違いに対する調整が含まれています。曲名は大文字小文字を区別しません。（同じに見えるものもありますが、空白文字の調整です）</value>
   </data>
   <data name="Song Name Mappings" xml:space="preserve">
-	  <value>Song Name Mappings</value>
+	  <value>曲名マッピング</value>
   </data>
   <data name="From" xml:space="preserve">
-	  <value>From</value>
+	  <value>から</value>
   </data>
   <data name="To" xml:space="preserve">
-	  <value>To</value>
+	  <value>まで</value>
   </data>
   <data name="Could not find chart" xml:space="preserve">
-	  <value>Could not find chart</value>
+	  <value>譜面が見つかりません</value>
   </data>
   <data name="Could not find song" xml:space="preserve">
-	  <value>Could not find song</value>
+	  <value>曲が見つかりません</value>
   </data>
   <data name="An unknown error occurred" xml:space="preserve">
-	  <value>An unknown error occurred</value>
+	  <value>不明なエラーが発生しました</value>
   </data>
   <data name="File cannot be larger than 10 MB" xml:space="preserve">
-	  <value>File cannot be larger than 10 MB</value>
+	  <value>ファイルは10MB以下にしてください</value>
   </data>
   <data name="There was an unknown error while parsing the file" xml:space="preserve">
-	  <value>There was an unknown error while parsing the file</value>
+	  <value>ファイル解析中に不明なエラーが発生しました</value>
   </data>
   <data name="No Recorded Scores" xml:space="preserve">
-	  <value>No Recorded Scores</value>
+	  <value>スコア記録なし</value>
   </data>
   <data name="None" xml:space="preserve">
-	  <value>None</value>
+	  <value>なし</value>
   </data>
   <data name="X% of Y Comparable Players" xml:space="preserve">
-	  <value>{0}% of {1} Comparable Players</value>
-	  <comment>{0} = percentage like "85.3", {1} = comparable player count</comment>
+	  <value>比較対象プレーヤー{1}人中{0}%</value>
+	  
   </data>
   <data name="Wouldn't You Like To Know" xml:space="preserve">
-	  <value>Wouldn't You Like To Know</value>
-	  <comment>Easter-egg tooltip shown for the user "CLEARALL18SORQUIT"</comment>
+	  <value>知りたいかい</value>
+	  
   </data>
   <data name="About The Site" xml:space="preserve">
-	  <value>About The Site</value>
+	  <value>このサイトについて</value>
   </data>
   <data name="Source Code" xml:space="preserve">
-	  <value>Source Code</value>
+	  <value>ソースコード</value>
   </data>
   <data name="Privacy Policy" xml:space="preserve">
-	  <value>Privacy Policy</value>
+	  <value>個人情報保護方針</value>
   </data>
   <data name="Site constructed and maintained by DrMurloc" xml:space="preserve">
-	  <value>Site constructed and maintained by DrMurloc</value>
+	  <value>サイト製作・運営：DrMurloc</value>
   </data>
   <data name="Original Concept (excel score tracking) Constructed by KyleTT" xml:space="preserve">
-	  <value>Original Concept (excel score tracking) Constructed by KyleTT</value>
+	  <value>元案（Excelスコア管理）はKyleTTさんが構築</value>
   </data>
   <data name="Bounties" xml:space="preserve">
-	  <value>Bounties</value>
+	  <value>バウンティ</value>
   </data>
   <data name="Bounty Leaderboard" xml:space="preserve">
-	  <value>Bounty Leaderboard</value>
+	  <value>バウンティランキング</value>
   </data>
   <data name="Monthly Total" xml:space="preserve">
-	  <value>Monthly Total</value>
+	  <value>月間合計</value>
   </data>
   <data name="Total" xml:space="preserve">
-	  <value>Total</value>
+	  <value>総計</value>
   </data>
   <data name="Start" xml:space="preserve">
-	  <value>Start</value>
+	  <value>開始</value>
   </data>
   <data name="Game Stats" xml:space="preserve">
-	  <value>Game Stats</value>
+	  <value>ゲーム統計</value>
   </data>
   <data name="Total Popularity Singles vs Doubles" xml:space="preserve">
-	  <value>Total Popularity Singles vs Doubles</value>
+	  <value>総人気 Singles対Doubles</value>
   </data>
   <data name="Total Singles vs Doubles" xml:space="preserve">
-	  <value>Total Singles vs Doubles</value>
+	  <value>総合 Singles対Doubles</value>
   </data>
   <data name="Chart Count By Level" xml:space="preserve">
-	  <value>Chart Count By Level</value>
+	  <value>レベル別譜面数</value>
   </data>
   <data name="Note Counts" xml:space="preserve">
-	  <value>Note Counts</value>
+	  <value>ノーツ数</value>
   </data>
   <data name="X Note counts" xml:space="preserve">
-	  <value>{0} Note counts</value>
-	  <comment>{0} = ChartType (Single/Double/CoOp). Chart title on /NoteCounts.</comment>
+	  <value>{0}ノーツ数</value>
+	  
   </data>
   <data name="X Progress" xml:space="preserve">
-	  <value>{0} Progress</value>
-	  <comment>{0} = ChartType. Chart title on /NoteCounts.</comment>
+	  <value>{0}進捗</value>
+	  
   </data>
   <data name="Minimums" xml:space="preserve">
-	  <value>Minimums</value>
+	  <value>最小値</value>
   </data>
   <data name="Standard Low" xml:space="preserve">
-	  <value>Standard Low</value>
+	  <value>標準低</value>
   </data>
   <data name="Standard High" xml:space="preserve">
-	  <value>Standard High</value>
+	  <value>標準高</value>
   </data>
   <data name="Maximums" xml:space="preserve">
-	  <value>Maximums</value>
+	  <value>最大値</value>
   </data>
   <data name="Missing" xml:space="preserve">
-	  <value>Missing</value>
+	  <value>欠損</value>
   </data>
   <data name="Existing" xml:space="preserve">
-	  <value>Existing</value>
+	  <value>既存</value>
   </data>
   <data name="LetterDifficulties" xml:space="preserve">
 	  <value>LetterDifficulties</value>
-	  <comment>Page title on /Experiments/LetterDifficulties; the source has no space between "Letter" and "Difficulties".</comment>
+	  
   </data>
   <data name="Folder Weighted Distribution" xml:space="preserve">
-	  <value>Folder Weighted Distribution</value>
+	  <value>フォルダ重み付け分布</value>
   </data>
   <data name="Letter Difficulty" xml:space="preserve">
-	  <value>Letter Difficulty</value>
+	  <value>ランク難度</value>
   </data>
   <data name="Median" xml:space="preserve">
-	  <value>Median</value>
+	  <value>中央値</value>
   </data>
   <data name="Selected Chart" xml:space="preserve">
-	  <value>Selected Chart</value>
+	  <value>選択した譜面</value>
   </data>
   <data name="Percentile Distribution" xml:space="preserve">
-	  <value>Percentile Distribution</value>
+	  <value>パーセンタイル分布</value>
   </data>
   <data name="Difficulty By Letter" xml:space="preserve">
-	  <value>Difficulty By Letter</value>
+	  <value>ランク別難度</value>
   </data>
   <data name="User Matches" xml:space="preserve">
-	  <value>User Matches</value>
+	  <value>ユーザー試合</value>
   </data>
   <data name="Calculated Tier List" xml:space="preserve">
-	  <value>Calculated Tier List</value>
+	  <value>計算ティアリスト</value>
   </data>
   <data name="Similar Players" xml:space="preserve">
-	  <value>Similar Players</value>
+	  <value>近いプレーヤー</value>
   </data>
   <data name="Private User - X" xml:space="preserve">
-	  <value>Private User - {0}</value>
-	  <comment>{0} = comparison-score number. Listed for users who have set their profile private.</comment>
+	  <value>非公開ユーザー - {0}</value>
+	  
   </data>
   <data name="Final Result" xml:space="preserve">
-	  <value>Final Result</value>
+	  <value>最終結果</value>
   </data>
   <data name="ChartScoring" xml:space="preserve">
 	  <value>ChartScoring</value>
-	  <comment>Page title on /Experiments/ChartScoring; the source has no space between "Chart" and "Scoring".</comment>
+	  
   </data>
   <data name="Target Player Level" xml:space="preserve">
-	  <value>Target Player Level</value>
+	  <value>対象プレーヤーレベル</value>
   </data>
   <data name="Player Weights" xml:space="preserve">
-	  <value>Player Weights</value>
+	  <value>プレーヤー重み</value>
   </data>
   <data name="All players with scores within the target folder are assigned weights based on how close their competitive level is to X." xml:space="preserve">
-	  <value>All players with scores within the target folder are assigned weights based on how close their competitive level is to {0}.</value>
-	  <comment>{0} = target player level (integer).</comment>
+	  <value>対象フォルダ内のスコアを持つ全プレーヤーは、競技レベルが{0}にどれだけ近いかに基づいて重み付けされます。</value>
+	  
   </data>
   <data name="Highlighted players have a recorded score on the chart in question." xml:space="preserve">
-	  <value>Highlighted players have a recorded score on the chart in question.</value>
+	  <value>ハイライトされたプレーヤーは該当譜面のスコア記録があります。</value>
   </data>
   <data name="Anonymous" xml:space="preserve">
-	  <value>Anonymous</value>
-	  <comment>Display name shown for users who have set their profile private.</comment>
+	  <value>匿名</value>
+	  
   </data>
   <data name="Competitively" xml:space="preserve">
-	  <value>Competitively</value>
-	  <comment>Word used in player-weight rows on /Experiments/ChartScoring (e.g. "(Competitively 12.34)").</comment>
+	  <value>競技的に</value>
+	  
   </data>
   <data name="Folder Averages" xml:space="preserve">
-	  <value>Folder Averages</value>
+	  <value>フォルダ平均</value>
   </data>
   <data name="The target folder and the three surrounding are provided weighted average scores utilizing the player weights above." xml:space="preserve">
-	  <value>The target folder and the three surrounding are provided weighted average scores utilizing the player weights above.</value>
+	  <value>対象フォルダと前後3つのフォルダには、上記のプレーヤー重みを用いた重み付け平均スコアが提供されます。</value>
   </data>
   <data name="These averages are shifted away from the level in question by .5 of a standard deviation within their respective folder to make sure level changes are better represented by the bulk of a surrounding folder." xml:space="preserve">
-	  <value>These averages are shifted away from the level in question by .5 of a standard deviation within their respective folder to make sure level changes are better represented by the bulk of a surrounding folder.</value>
+	  <value>これらの平均は、対象レベルから各フォルダ内の標準偏差0.5分ずらされており、レベル変動が周辺フォルダの大半でよりよく表現されるようになっています。</value>
   </data>
   <data name="Weighted Average Scores By Folder" xml:space="preserve">
-	  <value>Weighted Average Scores By Folder</value>
+	  <value>フォルダ別重み付け平均スコア</value>
   </data>
   <data name="Chart Average" xml:space="preserve">
-	  <value>Chart Average</value>
+	  <value>譜面平均</value>
   </data>
   <data name="The chart in question has its weighted average score projected onto the score distributions" xml:space="preserve">
-	  <value>The chart in question has its weighted average score projected onto the score distributions</value>
+	  <value>該当譜面の重み付け平均スコアがスコア分布に投影されます</value>
   </data>
   <data name="There was not enough data for the targeted player level to evaluate a final difficulty." xml:space="preserve">
-	  <value>There was not enough data for the targeted player level to evaluate a final difficulty.</value>
+	  <value>対象プレーヤーレベルの最終難度を評価するのにデータが不足しています。</value>
   </data>
   <data name="The weighted average for this chart is better than the average for a X." xml:space="preserve">
-	  <value>The weighted average for this chart is better than the average for a {0}.</value>
-	  <comment>{0} = high-level integer.</comment>
+	  <value>この譜面の重み付け平均は、{0}の平均より良いです。</value>
+	  
   </data>
   <data name="In this case, the chart is determined to be below by X utilizing standard deviations in the Y folder." xml:space="preserve">
-	  <value>In this case, the chart is determined to be below by {0} utilizing standard deviations in the {1} folder.</value>
-	  <comment>{0} = percent-between value, {1} = high-level integer.</comment>
+	  <value>この場合、{1}フォルダ内の標準偏差を用いて、譜面は{0}だけ下と判定されます。</value>
+	  
   </data>
   <data name="The weighted average for this chart is worst than the average for a X." xml:space="preserve">
-	  <value>The weighted average for this chart is worst than the average for a {0}.</value>
-	  <comment>Source spelling preserved verbatim ("worst" rather than "worse"). {0} = low-level integer.</comment>
+	  <value>この譜面の重み付け平均は、{0}の平均より悪いです。</value>
+	  
   </data>
   <data name="In this case, the chart is determined to be above by X utilizing standard deviations in the Y folder." xml:space="preserve">
-	  <value>In this case, the chart is determined to be above by {0} utilizing standard deviations in the {1} folder.</value>
-	  <comment>{0} = percent-between value, {1} = low-level integer.</comment>
+	  <value>この場合、{1}フォルダ内の標準偏差を用いて、譜面は{0}だけ上と判定されます。</value>
+	  
   </data>
   <data name="Determined to be X between Y and Z" xml:space="preserve">
-	  <value>Determined to be {0} between {1} and {2}</value>
-	  <comment>{0} = percent-between (3 decimals), {1} = low+0.5, {2} = high+0.5.</comment>
+	  <value>{1}と{2}の間で{0}と判定</value>
+	  
   </data>
   <data name="Final Result: X" xml:space="preserve">
-	  <value>Final Result: {0}</value>
-	  <comment>{0} = computed level (3 decimals).</comment>
+	  <value>最終結果：{0}</value>
+	  
   </data>
   <data name="At this point, it's identified that this chart has no players with a weight of .5 or higher (within 1 level). The chart is marked as not having a scoring level as any estimation would be based on missing data." xml:space="preserve">
-	  <value>At this point, it's identified that this chart has no players with a weight of .5 or higher (within 1 level). The chart is marked as not having a scoring level as any estimation would be based on missing data.</value>
+	  <value>この時点で、この譜面には重み0.5以上（1レベル以内）のプレーヤーがいないと判定されます。データ不足のため、譜面はスコアレベルなしとマークされます。</value>
   </data>
   <data name="Difficulty By Player Level" xml:space="preserve">
-	  <value>Difficulty By Player Level</value>
+	  <value>プレーヤーレベル別難度</value>
   </data>
   <data name="The listed scoring difficulty is calculated for players competitively playing in the officially listed folder for a chart." xml:space="preserve">
-	  <value>The listed scoring difficulty is calculated for players competitively playing in the officially listed folder for a chart.</value>
+	  <value>表示されているスコア難度は、譜面の公式フォルダで競技的にプレイするプレーヤーを基準に計算されています。</value>
   </data>
   <data name="The outcome of this algorithm has drastically different results for players at different levels though" xml:space="preserve">
-	  <value>The outcome of this algorithm has drastically different results for players at different levels though</value>
+	  <value>ただし、このアルゴリズムの結果はプレーヤーのレベルによって大きく異なります</value>
   </data>
   <data name="This is intended. There are charts that are relatively easier to score to others in the folder for players just pushing into the folder, but are harder for higher level players to perfect." xml:space="preserve">
-	  <value>This is intended. There are charts that are relatively easier to score to others in the folder for players just pushing into the folder, but are harder for higher level players to perfect.</value>
+	  <value>これは意図的です。フォルダに入りたてのプレーヤーには相対的にスコアを取りやすい譜面でも、上級プレーヤーには完璧にするのが難しい譜面があります。</value>
   </data>
   <data name="Scoring Level by Player Competitive Level" xml:space="preserve">
-	  <value>Scoring Level by Player Competitive Level</value>
+	  <value>プレーヤー競技レベル別スコアレベル</value>
   </data>
   <data name="Player Levels" xml:space="preserve">
-	  <value>Player Levels</value>
+	  <value>プレーヤーレベル</value>
   </data>
   <data name="For CoOps, scoring level is simply the lowest level player who's been able to pass the chart." xml:space="preserve">
-	  <value>For CoOps, scoring level is simply the lowest level player who's been able to pass the chart.</value>
+	  <value>CoOpの場合、スコアレベルは譜面をクリアできた最も低いレベルのプレーヤーで決まります。</value>
   </data>
   <data name="This isn't perfect, but until I have more data other algorithms haven't been successful at projecting CoOps onto difficulty levels" xml:space="preserve">
-	  <value>This isn't perfect, but until I have more data other algorithms haven't been successful at projecting CoOps onto difficulty levels</value>
+	  <value>完璧ではありませんが、データが揃うまで他のアルゴリズムはCoOpを難度レベルに投影することに成功していません</value>
   </data>
   <data name="No one has passed this CoOp yet so no level is assigned." xml:space="preserve">
-	  <value>No one has passed this CoOp yet so no level is assigned.</value>
+	  <value>このCoOpは誰もクリアしていないので、レベル未割当です。</value>
   </data>
   <data name="This gives this chart a scoring level of: X" xml:space="preserve">
-	  <value>This gives this chart a scoring level of: {0}</value>
-	  <comment>{0} = lowest passing player's competitive level (2 decimals).</comment>
+	  <value>これによりこの譜面のスコアレベルは：{0}</value>
+	  
   </data>
   <data name="Best Attempts" xml:space="preserve">
-	  <value>Best Attempts</value>
+	  <value>最高試行</value>
   </data>
   <data name="XX Progress" xml:space="preserve">
-	  <value>XX Progress</value>
+	  <value>XX進捗</value>
   </data>
   <data name="Share Your Progress Page" xml:space="preserve">
-	  <value>Share Your Progress Page</value>
+	  <value>進捗ページを共有</value>
   </data>
   <data name="Overview" xml:space="preserve">
-	  <value>Overview</value>
+	  <value>概要</value>
   </data>
   <data name="As" xml:space="preserve">
-	  <value>As</value>
-	  <comment>Plural of letter grade A — column header counting A grades.</comment>
+	  <value>A数</value>
+	  
   </data>
   <data name="Ss" xml:space="preserve">
-	  <value>Ss</value>
-	  <comment>Plural of letter grade S.</comment>
+	  <value>S数</value>
+	  
   </data>
   <data name="SSs" xml:space="preserve">
-	  <value>SSs</value>
-	  <comment>Plural of letter grade SS.</comment>
+	  <value>SS数</value>
+	  
   </data>
   <data name="SSSs" xml:space="preserve">
-	  <value>SSSs</value>
-	  <comment>Plural of letter grade SSS.</comment>
+	  <value>SSS数</value>
+	  
   </data>
   <data name="Passed" xml:space="preserve">
-	  <value>Passed</value>
+	  <value>クリア数</value>
   </data>
   <data name="Unpassed" xml:space="preserve">
-	  <value>Unpassed</value>
+	  <value>未クリア</value>
   </data>
   <data name="Overall Letters" xml:space="preserve">
-	  <value>Overall Letters</value>
+	  <value>総合ランク</value>
   </data>
   <data name="Overall Passes" xml:space="preserve">
-	  <value>Overall Passes</value>
+	  <value>総合クリア</value>
   </data>
   <data name="Difficulty Letters" xml:space="preserve">
-	  <value>Difficulty Letters</value>
+	  <value>難度ランク</value>
   </data>
   <data name="Difficulty Passes" xml:space="preserve">
-	  <value>Difficulty Passes</value>
+	  <value>難度別クリア</value>
   </data>
   <data name="Share Url" xml:space="preserve">
-	  <value>Share Url</value>
+	  <value>共有URL</value>
   </data>
   <data name="Copied to clipboard!" xml:space="preserve">
-	  <value>Copied to clipboard!</value>
+	  <value>クリップボードにコピーしました！</value>
   </data>
   <data name="Ungraded" xml:space="preserve">
-	  <value>Ungraded</value>
+	  <value>未ランク</value>
   </data>
   <data name="Pass" xml:space="preserve">
-	  <value>Pass</value>
+	  <value>クリア</value>
   </data>
   <data name="Difficulty Progress" xml:space="preserve">
-	  <value>Difficulty Progress</value>
+	  <value>難度進捗</value>
   </data>
   <data name="Passes" xml:space="preserve">
-	  <value>Passes</value>
+	  <value>クリア</value>
   </data>
   <data name="Min Score" xml:space="preserve">
-	  <value>Min Score</value>
+	  <value>最低スコア</value>
   </data>
   <data name="Avg Score" xml:space="preserve">
-	  <value>Avg Score</value>
+	  <value>平均スコア</value>
   </data>
   <data name="Max Score" xml:space="preserve">
-	  <value>Max Score</value>
+	  <value>最高スコア</value>
   </data>
   <data name="Avg Plate" xml:space="preserve">
-	  <value>Avg Plate</value>
+	  <value>平均プレート</value>
   </data>
   <data name="Passes By Level" xml:space="preserve">
-	  <value>Passes By Level</value>
+	  <value>レベル別クリア</value>
   </data>
   <data name="Remaining" xml:space="preserve">
-	  <value>Remaining</value>
+	  <value>残り</value>
   </data>
   <data name="Score Distribution Lines" xml:space="preserve">
-	  <value>Score Distribution Lines</value>
+	  <value>スコア分布ライン</value>
   </data>
   <data name="Score Distribution" xml:space="preserve">
-	  <value>Score Distribution</value>
+	  <value>スコア分布</value>
   </data>
   <data name="Min" xml:space="preserve">
-	  <value>Min</value>
+	  <value>最小</value>
   </data>
   <data name="Max" xml:space="preserve">
-	  <value>Max</value>
+	  <value>最大</value>
   </data>
   <data name="Singles vs Doubles" xml:space="preserve">
-	  <value>Singles vs Doubles</value>
+	  <value>Singles対Doubles</value>
   </data>
   <data name="Score Rankings" xml:space="preserve">
-	  <value>Score Rankings</value>
+	  <value>スコアランキング</value>
   </data>
   <data name="Scoring Rankings" xml:space="preserve">
-	  <value>Scoring Rankings</value>
+	  <value>スコアランキング</value>
   </data>
   <data name="Score Rankings (the colored scores) are based on comparisons to similarly skilled players." xml:space="preserve">
-	  <value>Score Rankings (the colored scores) are based on comparisons to similarly skilled players.</value>
+	  <value>スコアランキング（色付きスコア）は、同程度の実力のプレーヤーとの比較に基づいています。</value>
   </data>
   <data name="The higher percent of players in your range that you perform better than, the better the color:" xml:space="preserve">
-	  <value>The higher percent of players in your range that you perform better than, the better the color:</value>
+	  <value>自分の範囲内のプレーヤーのうち、より高い割合に勝るほど、色も良くなります：</value>
   </data>
   <data name="100% (or everyone with a PG)" xml:space="preserve">
-	  <value>100% (or everyone with a PG)</value>
-	  <comment>Top color band on /ScoreRankings.</comment>
+	  <value>100%（またはPG獲得者全員）</value>
+	  
   </data>
   <data name="Similarly skilled players to you for Singles:" xml:space="preserve">
-	  <value>Similarly skilled players to you for Singles:</value>
+	  <value>Singlesで自分と近い実力のプレーヤー：</value>
   </data>
   <data name="Similarly skilled players to you for Doubles (CoOp charts use doubles competitive level):" xml:space="preserve">
-	  <value>Similarly skilled players to you for Doubles (CoOp charts use doubles competitive level):</value>
+	  <value>Doublesで自分と近い実力のプレーヤー（CoOp譜面はDoubles競技レベル使用）：</value>
   </data>
   <data name="Active Tournaments" xml:space="preserve">
-	  <value>Active Tournaments</value>
+	  <value>開催中の大会</value>
   </data>
   <data name="Upcoming Tournaments" xml:space="preserve">
-	  <value>Upcoming Tournaments</value>
+	  <value>予定の大会</value>
   </data>
   <data name="Previous Tournaments" xml:space="preserve">
-	  <value>Previous Tournaments</value>
+	  <value>過去の大会</value>
   </data>
   <data name="Tournament" xml:space="preserve">
-	  <value>Tournament</value>
+	  <value>大会</value>
   </data>
   <data name="Start Date" xml:space="preserve">
-	  <value>Start Date</value>
+	  <value>開始日</value>
   </data>
   <data name="End Date" xml:space="preserve">
-	  <value>End Date</value>
+	  <value>終了日</value>
   </data>
   <data name="Location" xml:space="preserve">
-	  <value>Location</value>
+	  <value>場所</value>
   </data>
   <data name="Always" xml:space="preserve">
-	  <value>Always</value>
-	  <comment>Fallback for tournament StartDate when not set.</comment>
+	  <value>常時</value>
+	  
   </data>
   <data name="Never" xml:space="preserve">
-	  <value>Never</value>
-	  <comment>Fallback for tournament EndDate when not set.</comment>
+	  <value>なし</value>
+	  
   </data>
   <data name="Start Date: X" xml:space="preserve">
-	  <value>Start Date: {0}</value>
-	  <comment>{0} = formatted date string or the localized "Always" fallback.</comment>
+	  <value>開始日：{0}</value>
+	  
   </data>
   <data name="End Date: X" xml:space="preserve">
-	  <value>End Date: {0}</value>
-	  <comment>{0} = formatted date string or the localized "Never" fallback.</comment>
+	  <value>終了日：{0}</value>
+	  
   </data>
   <data name="Players have X to play charts. You are allowed to finish the song you are on when your time runs out. Your total score is total combined score of all charts you play." xml:space="preserve">
-	  <value>Players have {0} to play charts. You are allowed to finish the song you are on when your time runs out. Your total score is total combined score of all charts you play.</value>
-	  <comment>{0} = MaxTime as h:mm.</comment>
+	  <value>プレーヤーは{0}間譜面をプレイできます。時間切れの際、現在の曲は最後までプレイ可能です。総合スコアは全プレイ譜面の合計スコアです。</value>
+	  
   </data>
   <data name="Base Level Scores" xml:space="preserve">
-	  <value>Base Level Scores</value>
+	  <value>基本レベルスコア</value>
   </data>
   <data name="Broken scores get a multiplier of X" xml:space="preserve">
-	  <value>Broken scores get a multiplier of {0}</value>
-	  <comment>{0} = StageBreakModifier value.</comment>
+	  <value>失敗スコアに倍率{0}が適用されます</value>
+	  
   </data>
   <data name="Songs will have score adjusted based on song length (treating 2 minutes as baseline)" xml:space="preserve">
-	  <value>Songs will have score adjusted based on song length (treating 2 minutes as baseline)</value>
+	  <value>曲はその長さに応じてスコアが調整されます（2分を基準として扱います）</value>
   </data>
   <data name="are" xml:space="preserve">
-	  <value>are</value>
-	  <comment>Used in "Repeated charts {are/are not} allowed." sentence on the rules dialog.</comment>
+	  <value>する</value>
+	  
   </data>
   <data name="are not" xml:space="preserve">
-	  <value>are not</value>
-	  <comment>Used in "Repeated charts {are/are not} allowed." sentence on the rules dialog.</comment>
+	  <value>しない</value>
+	  
   </data>
   <data name="Repeated charts X allowed." xml:space="preserve">
-	  <value>Repeated charts {0} allowed.</value>
-	  <comment>{0} = "are" or "are not" (also localized as separate keys).</comment>
+	  <value>繰り返し譜面は{0}。</value>
+	  
   </data>
   <data name="X Brackets" xml:space="preserve">
-	  <value>{0} Brackets</value>
-	  <comment>Page title on /Tournament/{id}/Admin. {0} = tournament name.</comment>
+	  <value>{0} ブラケット</value>
+	  
   </data>
   <data name="Sync Qualifier Leaderboard" xml:space="preserve">
-	  <value>Sync Qualifier Leaderboard</value>
+	  <value>資格ランキング同期</value>
   </data>
   <data name="New Player Name" xml:space="preserve">
-	  <value>New Player Name</value>
+	  <value>新プレーヤー名</value>
   </data>
   <data name="Add Player" xml:space="preserve">
-	  <value>Add Player</value>
+	  <value>プレーヤー追加</value>
   </data>
   <data name="Player Name" xml:space="preserve">
-	  <value>Player Name</value>
+	  <value>プレーヤー名</value>
   </data>
   <data name="Seed" xml:space="preserve">
-	  <value>Seed</value>
+	  <value>シード</value>
   </data>
   <data name="Discord Id" xml:space="preserve">
-	  <value>Discord Id</value>
+	  <value>Discord ID</value>
   </data>
   <data name="Notes" xml:space="preserve">
-	  <value>Notes</value>
+	  <value>ノーツ</value>
   </data>
   <data name="Potential Conflict" xml:space="preserve">
-	  <value>Potential Conflict</value>
+	  <value>競合の可能性</value>
   </data>
   <data name="Delete" xml:space="preserve">
-	  <value>Delete</value>
+	  <value>削除</value>
   </data>
   <data name="Permissions" xml:space="preserve">
-	  <value>Permissions</value>
+	  <value>権限</value>
   </data>
   <data name="Players (Paste UserId from Account Page if not Public)" xml:space="preserve">
-	  <value>Players (Paste UserId from Account Page if not Public)</value>
+	  <value>プレーヤー（非公開の場合はアカウントページのユーザーIDを貼付）</value>
   </data>
   <data name="Tournament Role" xml:space="preserve">
-	  <value>Tournament Role</value>
+	  <value>大会役割</value>
   </data>
   <data name="Machines" xml:space="preserve">
-	  <value>Machines</value>
+	  <value>機種</value>
   </data>
   <data name="Machine Name" xml:space="preserve">
-	  <value>Machine Name</value>
+	  <value>機種名</value>
   </data>
   <data name="Is Warmup" xml:space="preserve">
-	  <value>Is Warmup</value>
+	  <value>ウォームアップ</value>
   </data>
   <data name="Priority" xml:space="preserve">
-	  <value>Priority</value>
+	  <value>優先度</value>
   </data>
   <data name="Player added" xml:space="preserve">
-	  <value>Player added</value>
+	  <value>プレーヤー追加しました</value>
   </data>
   <data name="This user does not exist. Double check the User Id" xml:space="preserve">
-	  <value>This user does not exist. Double check the User Id</value>
+	  <value>このユーザーは存在しません。ユーザーIDを再確認してください</value>
   </data>
   <data name="Players synced" xml:space="preserve">
-	  <value>Players synced</value>
+	  <value>プレーヤー同期しました</value>
   </data>
   <data name="Record Session" xml:space="preserve">
-	  <value>Record Session</value>
+	  <value>セッション記録</value>
   </data>
   <data name="Test Scores" xml:space="preserve">
-	  <value>Test Scores</value>
+	  <value>テストスコア</value>
   </data>
   <data name="Show Extra Info" xml:space="preserve">
-	  <value>Show Extra Info</value>
+	  <value>追加情報を表示</value>
   </data>
   <data name="Difficulty Range" xml:space="preserve">
-	  <value>Difficulty Range</value>
+	  <value>難度範囲</value>
   </data>
   <data name="Average Difficulty" xml:space="preserve">
-	  <value>Average Difficulty</value>
+	  <value>平均難度</value>
   </data>
   <data name="Total Chart Bonus" xml:space="preserve">
-	  <value>Total Chart Bonus</value>
+	  <value>総譜面ボーナス</value>
   </data>
   <data name="Pass Rate" xml:space="preserve">
-	  <value>Pass Rate</value>
+	  <value>クリア率</value>
   </data>
   <data name="Average PPS" xml:space="preserve">
-	  <value>Average PPS</value>
+	  <value>平均PPS</value>
   </data>
   <data name="Rest Time" xml:space="preserve">
-	  <value>Rest Time</value>
+	  <value>休憩時間</value>
   </data>
   <data name="Verification" xml:space="preserve">
-	  <value>Verification</value>
+	  <value>確認</value>
   </data>
   <data name="Edit" xml:space="preserve">
-	  <value>Edit</value>
+	  <value>編集</value>
   </data>
   <data name="X Charts" xml:space="preserve">
-	  <value>{0} Charts</value>
-	  <comment>{0} = chart count integer. Button label on /Tournament/Stamina/{id}.</comment>
+	  <value>{0}譜面</value>
+	  
   </data>
   <data name="In Person" xml:space="preserve">
-	  <value>In Person</value>
+	  <value>現地</value>
   </data>
   <data name="Estimated Point Gain Timeline" xml:space="preserve">
-	  <value>Estimated Point Gain Timeline</value>
+	  <value>推定ポイント獲得タイムライン</value>
   </data>
   <data name="Points Per Second" xml:space="preserve">
-	  <value>Points Per Second</value>
+	  <value>秒間ポイント</value>
   </data>
   <data name="Chart Statistics" xml:space="preserve">
-	  <value>Chart Statistics</value>
+	  <value>譜面統計</value>
   </data>
   <data name="Play Count" xml:space="preserve">
-	  <value>Play Count</value>
+	  <value>プレイ数</value>
   </data>
   <data name="Best Score" xml:space="preserve">
-	  <value>Best Score</value>
+	  <value>最高スコア</value>
   </data>
   <data name="X Plays" xml:space="preserve">
-	  <value>{0} Plays</value>
-	  <comment>{0} = play count integer.</comment>
+	  <value>{0}プレイ数</value>
+	  
   </data>
   <data name="Stamina Session Builder" xml:space="preserve">
-	  <value>Stamina Session Builder</value>
+	  <value>スタミナセッション構築</value>
   </data>
   <data name="Tournament Settings" xml:space="preserve">
-	  <value>Tournament Settings</value>
+	  <value>大会設定</value>
   </data>
   <data name="PreBuilt Tournament Configuration" xml:space="preserve">
-	  <value>PreBuilt Tournament Configuration</value>
+	  <value>大会設定プリセット</value>
   </data>
   <data name="Default" xml:space="preserve">
-	  <value>Default</value>
+	  <value>デフォルト</value>
   </data>
   <data name="Levels" xml:space="preserve">
-	  <value>Levels</value>
+	  <value>レベル</value>
   </data>
   <data name="Adjust Scores to Song Duration (uses 2 minutes as average chart duration)" xml:space="preserve">
-	  <value>Adjust Scores to Song Duration (uses 2 minutes as average chart duration)</value>
+	  <value>スコアを曲時間に応じて調整（平均譜面時間を2分として計算）</value>
   </data>
   <data name="Continous Modifier Scale (modifier increments between letter grades)" xml:space="preserve">
-	  <value>Continous Modifier Scale (modifier increments between letter grades)</value>
-	  <comment>Source spelling preserved verbatim ("Continous" rather than "Continuous").</comment>
+	  <value>連続倍率スケール（ランク間で倍率が増加）</value>
+	  
   </data>
   <data name="Perfect Score Modifier (Acts as a letter grade beyond SSS+)" xml:space="preserve">
-	  <value>Perfect Score Modifier (Acts as a letter grade beyond SSS+)</value>
+	  <value>パーフェクトスコア倍率（SSS+を超えるランクとして機能）</value>
   </data>
   <data name="Minimum Score" xml:space="preserve">
-	  <value>Minimum Score</value>
+	  <value>最低スコア</value>
   </data>
   <data name="Input Json" xml:space="preserve">
-	  <value>Input Json</value>
+	  <value>JSON入力</value>
   </data>
   <data name="Set Charts" xml:space="preserve">
-	  <value>Set Charts</value>
+	  <value>セット譜面</value>
   </data>
   <data name="Extra Settings" xml:space="preserve">
-	  <value>Extra Settings</value>
+	  <value>追加設定</value>
   </data>
   <data name="Allow Repeats" xml:space="preserve">
-	  <value>Allow Repeats</value>
+	  <value>繰り返し許可</value>
   </data>
   <data name="Stage Break Modifier" xml:space="preserve">
-	  <value>Stage Break Modifier</value>
+	  <value>Stage失敗倍率</value>
   </data>
   <data name="Session Duration (Minutes)" xml:space="preserve">
-	  <value>Session Duration (Minutes)</value>
+	  <value>セッション時間（分）</value>
   </data>
   <data name="Custom Scoring Formula" xml:space="preserve">
-	  <value>Custom Scoring Formula</value>
+	  <value>カスタムスコア式</value>
   </data>
   <data name="Admin Settings" xml:space="preserve">
-	  <value>Admin Settings</value>
+	  <value>管理設定</value>
   </data>
   <data name="Tournament Dates (EST)" xml:space="preserve">
-	  <value>Tournament Dates (EST)</value>
+	  <value>大会日程（EST）</value>
   </data>
   <data name="Tournament Name" xml:space="preserve">
-	  <value>Tournament Name</value>
+	  <value>大会名</value>
   </data>
   <data name="Test With Player Data" xml:space="preserve">
-	  <value>Test With Player Data</value>
+	  <value>プレーヤーデータでテスト</value>
   </data>
   <data name="Import Your Phoenix Scores" xml:space="preserve">
-	  <value>Import Your Phoenix Scores</value>
+	  <value>Phoenixスコアをインポート</value>
   </data>
   <data name="Hide Record-less Charts" xml:space="preserve">
-	  <value>Hide Record-less Charts</value>
+	  <value>記録なし譜面を隠す</value>
   </data>
   <data name="Hide Zero Scoring Charts" xml:space="preserve">
-	  <value>Hide Zero Scoring Charts</value>
+	  <value>スコアレベル0の譜面を隠す</value>
   </data>
   <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
-	  <value>Player To Test (Must Be Set To Public)</value>
+	  <value>テスト対象プレーヤー（公開設定必須）</value>
   </data>
   <data name="Effective Level" xml:space="preserve">
-	  <value>Effective Level</value>
+	  <value>実効レベル</value>
   </data>
   <data name="Your Score" xml:space="preserve">
-	  <value>Your Score</value>
+	  <value>自己スコア</value>
   </data>
   <data name="Points Pre-Score" xml:space="preserve">
-	  <value>Points Pre-Score</value>
+	  <value>ポイント（スコア前）</value>
   </data>
   <data name="Points Per Second Pre-Score" xml:space="preserve">
-	  <value>Points Per Second Pre-Score</value>
+	  <value>秒間ポイント（スコア前）</value>
   </data>
   <data name="Your Points" xml:space="preserve">
-	  <value>Your Points</value>
+	  <value>自己ポイント</value>
   </data>
   <data name="Your Points per Second" xml:space="preserve">
-	  <value>Your Points per Second</value>
+	  <value>自己秒間ポイント</value>
   </data>
   <data name="Example Set Builder" xml:space="preserve">
-	  <value>Example Set Builder</value>
+	  <value>サンプルセット構築</value>
   </data>
   <data name="Seconds of Rest Per Chart" xml:space="preserve">
-	  <value>Seconds of Rest Per Chart</value>
+	  <value>譜面ごとの休憩秒数</value>
   </data>
   <data name="Build Session" xml:space="preserve">
-	  <value>Build Session</value>
+	  <value>セッション構築</value>
   </data>
   <data name="Score: X" xml:space="preserve">
-	  <value>Score: {0}</value>
-	  <comment>{0} = total session score integer.</comment>
+	  <value>スコア：{0}</value>
+	  
   </data>
   <data name="Total Charts: X" xml:space="preserve">
-	  <value>Total Charts: {0}</value>
-	  <comment>{0} = chart count integer.</comment>
+	  <value>総譜面数：{0}</value>
+	  
   </data>
   <data name="Rest Time Per Chart: X" xml:space="preserve">
-	  <value>Rest Time Per Chart: {0}</value>
-	  <comment>{0} = formatted m:ss timespan.</comment>
+	  <value>譜面ごとの休憩時間：{0}</value>
+	  
   </data>
   <data name="Duration" xml:space="preserve">
-	  <value>Duration</value>
+	  <value>時間</value>
   </data>
   <data name="Chart Score" xml:space="preserve">
-	  <value>Chart Score</value>
+	  <value>譜面スコア</value>
   </data>
   <data name="Session Score" xml:space="preserve">
-	  <value>Session Score</value>
+	  <value>セッションスコア</value>
   </data>
   <data name="Couldn't parse JSON" xml:space="preserve">
-	  <value>Couldn't parse JSON</value>
+	  <value>JSON解析失敗</value>
   </data>
   <data name="PIU Tier List" xml:space="preserve">
-	  <value>PIU Tier List</value>
+	  <value>PIUティアリスト</value>
   </data>
   <data name="Category" xml:space="preserve">
-	  <value>Category</value>
+	  <value>カテゴリー</value>
   </data>
   <data name="Title" xml:space="preserve">
-	  <value>Title</value>
+	  <value>タイトル</value>
   </data>
   <data name="Description" xml:space="preserve">
-	  <value>Description</value>
+	  <value>説明</value>
   </data>
   <data name="Community Completion" xml:space="preserve">
-	  <value>Community Completion</value>
+	  <value>コミュニティ達成</value>
   </data>
   <data name="Completion" xml:space="preserve">
-	  <value>Completion</value>
+	  <value>達成</value>
   </data>
   <data name="Competitive Level" xml:space="preserve">
-	  <value>Competitive Level</value>
+	  <value>競技レベル</value>
   </data>
   <data name="All" xml:space="preserve">
-	  <value>All</value>
+	  <value>全て</value>
   </data>
   <data name="Competitive Level: X" xml:space="preserve">
-	  <value>Competitive Level: {0}</value>
-	  <comment>{0} = competitive level (5 decimals).</comment>
+	  <value>競技レベル：{0}</value>
+	  
   </data>
   <data name="Min Level" xml:space="preserve">
-	  <value>Min Level</value>
+	  <value>最小レベル</value>
   </data>
   <data name="Max Level" xml:space="preserve">
-	  <value>Max Level</value>
+	  <value>最大レベル</value>
   </data>
   <data name="Show Scoreless" xml:space="preserve">
-	  <value>Show Scoreless</value>
+	  <value>スコアなし表示</value>
   </data>
   <data name="Show Top Only" xml:space="preserve">
-	  <value>Show Top Only</value>
+	  <value>上位のみ表示</value>
   </data>
   <data name="My Relative Difficulty" xml:space="preserve">
-	  <value>My Relative Difficulty</value>
+	  <value>自分の相対難度</value>
   </data>
   <data name="Scoring Difficulty" xml:space="preserve">
-	  <value>Scoring Difficulty</value>
+	  <value>スコア難度</value>
   </data>
   <data name="PIUGame Leaderboard Difficulty" xml:space="preserve">
-	  <value>PIUGame Leaderboard Difficulty</value>
+	  <value>PIUGameランキング難度</value>
   </data>
   <data name="Weekly Charts" xml:space="preserve">
-	  <value>Weekly Charts</value>
+	  <value>週間譜面</value>
   </data>
   <data name="Current" xml:space="preserve">
-	  <value>Current</value>
+	  <value>現在</value>
   </data>
   <data name="Show Only Suggested Charts" xml:space="preserve">
-	  <value>Show Only Suggested Charts</value>
+	  <value>おすすめ譜面のみ表示</value>
   </data>
   <data name="Monthly Leaderboard" xml:space="preserve">
-	  <value>Monthly Leaderboard</value>
+	  <value>月間ランキング</value>
   </data>
   <data name="Road to BITE (Monthly Leaderboard July 8th - August 4th)" xml:space="preserve">
-	  <value>Road to BITE (Monthly Leaderboard July 8th - August 4th)</value>
-	  <comment>Date-window heading used pre-BITE; specific to a fixed annual event window.</comment>
+	  <value>Road to BITE（月間ランキング 7月8日〜8月4日）</value>
+	  
   </data>
   <data name="Week X - Top Y Charts" xml:space="preserve">
-	  <value>Week {0} - Top {1} Charts</value>
-	  <comment>{0} = week number, {1} = top-N count (week*4).</comment>
+	  <value>第{0}週 - トップ{1}譜面</value>
+	  
   </data>
   <data name="Leaderboard Type" xml:space="preserve">
-	  <value>Leaderboard Type</value>
+	  <value>ランキング種類</value>
   </data>
   <data name="Combined" xml:space="preserve">
-	  <value>Combined</value>
+	  <value>合算</value>
   </data>
   <data name="Co-Op" xml:space="preserve">
 	  <value>Co-Op</value>
-	  <comment>Used as a select-item label on /WeeklyCharts. Distinct from the existing "CoOp" key (no hyphen) used elsewhere — both spellings appear in source verbatim.</comment>
+	  
   </data>
   <data name="What Should I Play" xml:space="preserve">
-	  <value>What Should I Play</value>
-	  <comment>Page title (no question mark in source).</comment>
+	  <value>何をプレイしようか</value>
+	  
   </data>
   <data name="What Should I Play?" xml:space="preserve">
-	  <value>What Should I Play?</value>
-	  <comment>h3 header on the same page (with question mark in source).</comment>
+	  <value>何をプレイしようか？</value>
+	  
   </data>
   <data name="See Leaderboards" xml:space="preserve">
-	  <value>See Leaderboards</value>
+	  <value>ランキングを見る</value>
   </data>
   <data name="Top 50 X" xml:space="preserve">
-	  <value>Top 50 {0}</value>
-	  <comment>{0} = chart type (e.g. "Singles" / "Doubles"). Tooltip on the crown icon for top-50 charts.</comment>
+	  <value>{0}トップ50</value>
+	  
   </data>
   <data name="Stats" xml:space="preserve">
-	  <value>Stats</value>
+	  <value>統計</value>
   </data>
   <data name="Singles Level" xml:space="preserve">
-	  <value>Singles Level</value>
+	  <value>Singlesレベル</value>
   </data>
   <data name="Doubles Level" xml:space="preserve">
-	  <value>Doubles Level</value>
+	  <value>Doublesレベル</value>
   </data>
   <data name="Good Suggestion" xml:space="preserve">
-	  <value>Good Suggestion</value>
+	  <value>良いおすすめ</value>
   </data>
   <data name="Bad Suggestion" xml:space="preserve">
-	  <value>Bad Suggestion</value>
+	  <value>悪いおすすめ</value>
   </data>
   <data name="Reason" xml:space="preserve">
-	  <value>Reason</value>
+	  <value>理由</value>
   </data>
   <data name="Doesn't Match My Personal Skills" xml:space="preserve">
-	  <value>Doesn't Match My Personal Skills</value>
+	  <value>自分のスキルに合わない</value>
   </data>
   <data name="I Don't Like The Chart" xml:space="preserve">
-	  <value>I Don't Like The Chart</value>
+	  <value>譜面が好きではない</value>
   </data>
   <data name="Not Relevant to Category" xml:space="preserve">
-	  <value>Not Relevant to Category</value>
+	  <value>このカテゴリーに無関係</value>
   </data>
   <data name="I Just Want to Hide The Chart" xml:space="preserve">
-	  <value>I Just Want to Hide The Chart</value>
+	  <value>譜面を隠したいだけ</value>
   </data>
   <data name="The Category Isn't Interesting to Me'" xml:space="preserve">
-	  <value>The Category Isn't Interesting to Me'</value>
-	  <comment>Source has a stray trailing apostrophe — preserved verbatim.</comment>
+	  <value>このカテゴリーに興味がない'</value>
+	  
   </data>
   <data name="Other" xml:space="preserve">
-	  <value>Other</value>
+	  <value>その他</value>
   </data>
   <data name="Additional Comments" xml:space="preserve">
-	  <value>Additional Comments</value>
+	  <value>追加コメント</value>
   </data>
   <data name="Hide Chart for this Category" xml:space="preserve">
-	  <value>Hide Chart for this Category</value>
+	  <value>このカテゴリーで譜面を隠す</value>
   </data>
   <data name="Added to ToDo List!" xml:space="preserve">
-	  <value>Added to ToDo List!</value>
+	  <value>やりことリストに追加しました！</value>
   </data>
   <data name="Removed from ToDo List!" xml:space="preserve">
-	  <value>Removed from ToDo List!</value>
+	  <value>やりことリストから削除しました！</value>
   </data>
   <data name="Chart Details" xml:space="preserve">
-	  <value>Chart Details</value>
+	  <value>譜面詳細</value>
   </data>
   <data name="Step Artist: X" xml:space="preserve">
-	  <value>Step Artist: {0}</value>
-	  <comment>{0} = step artist name (data).</comment>
+	  <value>譜面作者：{0}</value>
+	  
   </data>
   <data name="Note Count: X" xml:space="preserve">
-	  <value>Note Count: {0}</value>
-	  <comment>{0} = note count integer.</comment>
+	  <value>ノーツ数：{0}</value>
+	  
   </data>
   <data name="Chart Difficulty by Letter Grade" xml:space="preserve">
-	  <value>Chart Difficulty by Letter Grade</value>
+	  <value>ランク別譜面難度</value>
   </data>
   <data name="Plate Distribution" xml:space="preserve">
-	  <value>Plate Distribution</value>
+	  <value>プレート分布</value>
   </data>
   <data name="Plate Breakdown" xml:space="preserve">
-	  <value>Plate Breakdown</value>
+	  <value>プレート内訳</value>
   </data>
   <data name="Plates" xml:space="preserve">
-	  <value>Plates</value>
+	  <value>プレート</value>
   </data>
   <data name="Score Distribution By Player Level" xml:space="preserve">
-	  <value>Score Distribution By Player Level</value>
+	  <value>プレーヤーレベル別スコア分布</value>
   </data>
   <data name="Scores by Competitive Level" xml:space="preserve">
-	  <value>Scores by Competitive Level</value>
+	  <value>競技レベル別スコア</value>
   </data>
   <data name="Passes by Competitive Level" xml:space="preserve">
-	  <value>Passes by Competitive Level</value>
+	  <value>競技レベル別クリア</value>
   </data>
   <data name="Chart Leaderboard" xml:space="preserve">
-	  <value>Chart Leaderboard</value>
+	  <value>譜面ランキング</value>
   </data>
   <data name="Content Lock" xml:space="preserve">
-	  <value>Content Lock</value>
+	  <value>コンテンツロック</value>
   </data>
   <data name="Search User (Name or UserId)" xml:space="preserve">
-	  <value>Search User (Name or UserId)</value>
+	  <value>ユーザー検索（名前またはユーザーID）</value>
   </data>
   <data name="Current Username" xml:space="preserve">
-	  <value>Current Username</value>
+	  <value>現在のユーザ名</value>
   </data>
   <data name="Lock Status" xml:space="preserve">
-	  <value>Lock Status</value>
+	  <value>ロック状態</value>
   </data>
   <data name="Locked" xml:space="preserve">
-	  <value>Locked</value>
+	  <value>ロック済</value>
   </data>
   <data name="Unlocked" xml:space="preserve">
-	  <value>Unlocked</value>
+	  <value>ロック解除済</value>
   </data>
   <data name="Lock User" xml:space="preserve">
-	  <value>Lock User</value>
+	  <value>ユーザロック</value>
   </data>
   <data name="Unlock User" xml:space="preserve">
-	  <value>Unlock User</value>
+	  <value>ユーザロック解除</value>
   </data>
   <data name="User locked" xml:space="preserve">
-	  <value>User locked</value>
+	  <value>ユーザーをロックしました</value>
   </data>
   <data name="User unlocked" xml:space="preserve">
-	  <value>User unlocked</value>
+	  <value>ユーザーのロックを解除しました</value>
   </data>
   <data name="Locking will set this user's username to their GameTag." xml:space="preserve">
-	  <value>Locking will set this user's username to their GameTag.</value>
+	  <value>ロックすると、このユーザーのユーザー名がGameTagに設定されます。</value>
   </data>
   <data name="This user has no GameTag. Choose a username to assign before locking." xml:space="preserve">
-	  <value>This user has no GameTag. Choose a username to assign before locking.</value>
+	  <value>このユーザーにはGameTagがありません。ロック前にユーザー名を割り当ててください。</value>
   </data>
   <data name="New Username" xml:space="preserve">
-	  <value>New Username</value>
+	  <value>新ユーザ名</value>
   </data>
   <data name="Your account is content-locked. Message an admin if you have questions." xml:space="preserve">
-	  <value>Your account is content-locked. Message an admin if you have questions.</value>
+	  <value>アカウントはコンテンツロック中です。質問があれば管理者へご連絡ください。</value>
   </data>
   <data name="Delete All Scores" xml:space="preserve">
-	  <value>Delete All Scores</value>
+	  <value>全スコア削除</value>
   </data>
   <data name="This will delete all of your scores and reset your player stats and title progress" xml:space="preserve">
-	  <value>This will delete all of your scores and reset your player stats and title progress</value>
+	  <value>全スコアが削除され、プレーヤー統計とタイトル進捗がリセットされます</value>
   </data>
   <data name="(Optional) Also delete historical data" xml:space="preserve">
-	  <value>(Optional) Also delete historical data</value>
+	  <value>（任意）履歴データも削除する</value>
   </data>
   <data name="Confirm" xml:space="preserve">
-	  <value>Confirm</value>
+	  <value>確認</value>
   </data>
   <data name="Your scores have been deleted" xml:space="preserve">
-	  <value>Your scores have been deleted</value>
+	  <value>スコアを削除しました</value>
   </data>
   <data name="Competition" xml:space="preserve">
-    <value>Competition</value>
+    <value>競技</value>
   </data>
   <data name="Completion Leaderboards" xml:space="preserve">
-    <value>Completion Leaderboards</value>
+    <value>達成ランキング</value>
   </data>
   <data name="Discord" xml:space="preserve">
     <value>Discord</value>
   </data>
   <data name="Lifebar Calculator" xml:space="preserve">
-    <value>Lifebar Calculator</value>
+    <value>ライフバー計算</value>
   </data>
   <data name="Official Leaderboards" xml:space="preserve">
-    <value>Official Leaderboards</value>
+    <value>公開ランキング</value>
   </data>
   <data name="PIU Scores" xml:space="preserve">
     <value>PIU Scores</value>
@@ -2024,6 +2025,6 @@
     <value>PUMBILITY</value>
   </data>
   <data name="UCS Leaderboards" xml:space="preserve">
-    <value>UCS Leaderboards</value>
+    <value>UCSランキング</value>
   </data>
 </root>
