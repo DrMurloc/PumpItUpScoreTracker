@@ -1143,4 +1143,202 @@
   <data name="Original Concept (excel score tracking) Constructed by KyleTT" xml:space="preserve">
 	  <value>Original Concept (excel score tracking) Constructed by KyleTT</value>
   </data>
+  <data name="Bounties" xml:space="preserve">
+	  <value>Bounties</value>
+  </data>
+  <data name="Bounty Leaderboard" xml:space="preserve">
+	  <value>Bounty Leaderboard</value>
+  </data>
+  <data name="Monthly Total" xml:space="preserve">
+	  <value>Monthly Total</value>
+  </data>
+  <data name="Total" xml:space="preserve">
+	  <value>Total</value>
+  </data>
+  <data name="Start" xml:space="preserve">
+	  <value>Start</value>
+  </data>
+  <data name="Game Stats" xml:space="preserve">
+	  <value>Game Stats</value>
+  </data>
+  <data name="Total Popularity Singles vs Doubles" xml:space="preserve">
+	  <value>Total Popularity Singles vs Doubles</value>
+  </data>
+  <data name="Total Singles vs Doubles" xml:space="preserve">
+	  <value>Total Singles vs Doubles</value>
+  </data>
+  <data name="Chart Count By Level" xml:space="preserve">
+	  <value>Chart Count By Level</value>
+  </data>
+  <data name="Note Counts" xml:space="preserve">
+	  <value>Note Counts</value>
+  </data>
+  <data name="X Note counts" xml:space="preserve">
+	  <value>{0} Note counts</value>
+	  <comment>{0} = ChartType (Single/Double/CoOp). Chart title on /NoteCounts.</comment>
+  </data>
+  <data name="X Progress" xml:space="preserve">
+	  <value>{0} Progress</value>
+	  <comment>{0} = ChartType. Chart title on /NoteCounts.</comment>
+  </data>
+  <data name="Minimums" xml:space="preserve">
+	  <value>Minimums</value>
+  </data>
+  <data name="Standard Low" xml:space="preserve">
+	  <value>Standard Low</value>
+  </data>
+  <data name="Standard High" xml:space="preserve">
+	  <value>Standard High</value>
+  </data>
+  <data name="Maximums" xml:space="preserve">
+	  <value>Maximums</value>
+  </data>
+  <data name="Missing" xml:space="preserve">
+	  <value>Missing</value>
+  </data>
+  <data name="Existing" xml:space="preserve">
+	  <value>Existing</value>
+  </data>
+  <data name="LetterDifficulties" xml:space="preserve">
+	  <value>LetterDifficulties</value>
+	  <comment>Page title on /Experiments/LetterDifficulties; the source has no space between "Letter" and "Difficulties".</comment>
+  </data>
+  <data name="Folder Weighted Distribution" xml:space="preserve">
+	  <value>Folder Weighted Distribution</value>
+  </data>
+  <data name="Letter Difficulty" xml:space="preserve">
+	  <value>Letter Difficulty</value>
+  </data>
+  <data name="Median" xml:space="preserve">
+	  <value>Median</value>
+  </data>
+  <data name="Selected Chart" xml:space="preserve">
+	  <value>Selected Chart</value>
+  </data>
+  <data name="Percentile Distribution" xml:space="preserve">
+	  <value>Percentile Distribution</value>
+  </data>
+  <data name="Difficulty By Letter" xml:space="preserve">
+	  <value>Difficulty By Letter</value>
+  </data>
+  <data name="User Matches" xml:space="preserve">
+	  <value>User Matches</value>
+  </data>
+  <data name="Calculated Tier List" xml:space="preserve">
+	  <value>Calculated Tier List</value>
+  </data>
+  <data name="Similar Players" xml:space="preserve">
+	  <value>Similar Players</value>
+  </data>
+  <data name="Private User - X" xml:space="preserve">
+	  <value>Private User - {0}</value>
+	  <comment>{0} = comparison-score number. Listed for users who have set their profile private.</comment>
+  </data>
+  <data name="Final Result" xml:space="preserve">
+	  <value>Final Result</value>
+  </data>
+  <data name="ChartScoring" xml:space="preserve">
+	  <value>ChartScoring</value>
+	  <comment>Page title on /Experiments/ChartScoring; the source has no space between "Chart" and "Scoring".</comment>
+  </data>
+  <data name="Target Player Level" xml:space="preserve">
+	  <value>Target Player Level</value>
+  </data>
+  <data name="Player Weights" xml:space="preserve">
+	  <value>Player Weights</value>
+  </data>
+  <data name="All players with scores within the target folder are assigned weights based on how close their competitive level is to X." xml:space="preserve">
+	  <value>All players with scores within the target folder are assigned weights based on how close their competitive level is to {0}.</value>
+	  <comment>{0} = target player level (integer).</comment>
+  </data>
+  <data name="Highlighted players have a recorded score on the chart in question." xml:space="preserve">
+	  <value>Highlighted players have a recorded score on the chart in question.</value>
+  </data>
+  <data name="Anonymous" xml:space="preserve">
+	  <value>Anonymous</value>
+	  <comment>Display name shown for users who have set their profile private.</comment>
+  </data>
+  <data name="Competitively" xml:space="preserve">
+	  <value>Competitively</value>
+	  <comment>Word used in player-weight rows on /Experiments/ChartScoring (e.g. "(Competitively 12.34)").</comment>
+  </data>
+  <data name="Folder Averages" xml:space="preserve">
+	  <value>Folder Averages</value>
+  </data>
+  <data name="The target folder and the three surrounding are provided weighted average scores utilizing the player weights above." xml:space="preserve">
+	  <value>The target folder and the three surrounding are provided weighted average scores utilizing the player weights above.</value>
+  </data>
+  <data name="These averages are shifted away from the level in question by .5 of a standard deviation within their respective folder to make sure level changes are better represented by the bulk of a surrounding folder." xml:space="preserve">
+	  <value>These averages are shifted away from the level in question by .5 of a standard deviation within their respective folder to make sure level changes are better represented by the bulk of a surrounding folder.</value>
+  </data>
+  <data name="Weighted Average Scores By Folder" xml:space="preserve">
+	  <value>Weighted Average Scores By Folder</value>
+  </data>
+  <data name="Chart Average" xml:space="preserve">
+	  <value>Chart Average</value>
+  </data>
+  <data name="The chart in question has its weighted average score projected onto the score distributions" xml:space="preserve">
+	  <value>The chart in question has its weighted average score projected onto the score distributions</value>
+  </data>
+  <data name="There was not enough data for the targeted player level to evaluate a final difficulty." xml:space="preserve">
+	  <value>There was not enough data for the targeted player level to evaluate a final difficulty.</value>
+  </data>
+  <data name="The weighted average for this chart is better than the average for a X." xml:space="preserve">
+	  <value>The weighted average for this chart is better than the average for a {0}.</value>
+	  <comment>{0} = high-level integer.</comment>
+  </data>
+  <data name="In this case, the chart is determined to be below by X utilizing standard deviations in the Y folder." xml:space="preserve">
+	  <value>In this case, the chart is determined to be below by {0} utilizing standard deviations in the {1} folder.</value>
+	  <comment>{0} = percent-between value, {1} = high-level integer.</comment>
+  </data>
+  <data name="The weighted average for this chart is worst than the average for a X." xml:space="preserve">
+	  <value>The weighted average for this chart is worst than the average for a {0}.</value>
+	  <comment>Source spelling preserved verbatim ("worst" rather than "worse"). {0} = low-level integer.</comment>
+  </data>
+  <data name="In this case, the chart is determined to be above by X utilizing standard deviations in the Y folder." xml:space="preserve">
+	  <value>In this case, the chart is determined to be above by {0} utilizing standard deviations in the {1} folder.</value>
+	  <comment>{0} = percent-between value, {1} = low-level integer.</comment>
+  </data>
+  <data name="Determined to be X between Y and Z" xml:space="preserve">
+	  <value>Determined to be {0} between {1} and {2}</value>
+	  <comment>{0} = percent-between (3 decimals), {1} = low+0.5, {2} = high+0.5.</comment>
+  </data>
+  <data name="Final Result: X" xml:space="preserve">
+	  <value>Final Result: {0}</value>
+	  <comment>{0} = computed level (3 decimals).</comment>
+  </data>
+  <data name="At this point, it's identified that this chart has no players with a weight of .5 or higher (within 1 level). The chart is marked as not having a scoring level as any estimation would be based on missing data." xml:space="preserve">
+	  <value>At this point, it's identified that this chart has no players with a weight of .5 or higher (within 1 level). The chart is marked as not having a scoring level as any estimation would be based on missing data.</value>
+  </data>
+  <data name="Difficulty By Player Level" xml:space="preserve">
+	  <value>Difficulty By Player Level</value>
+  </data>
+  <data name="The listed scoring difficulty is calculated for players competitively playing in the officially listed folder for a chart." xml:space="preserve">
+	  <value>The listed scoring difficulty is calculated for players competitively playing in the officially listed folder for a chart.</value>
+  </data>
+  <data name="The outcome of this algorithm has drastically different results for players at different levels though" xml:space="preserve">
+	  <value>The outcome of this algorithm has drastically different results for players at different levels though</value>
+  </data>
+  <data name="This is intended. There are charts that are relatively easier to score to others in the folder for players just pushing into the folder, but are harder for higher level players to perfect." xml:space="preserve">
+	  <value>This is intended. There are charts that are relatively easier to score to others in the folder for players just pushing into the folder, but are harder for higher level players to perfect.</value>
+  </data>
+  <data name="Scoring Level by Player Competitive Level" xml:space="preserve">
+	  <value>Scoring Level by Player Competitive Level</value>
+  </data>
+  <data name="Player Levels" xml:space="preserve">
+	  <value>Player Levels</value>
+  </data>
+  <data name="For CoOps, scoring level is simply the lowest level player who's been able to pass the chart." xml:space="preserve">
+	  <value>For CoOps, scoring level is simply the lowest level player who's been able to pass the chart.</value>
+  </data>
+  <data name="This isn't perfect, but until I have more data other algorithms haven't been successful at projecting CoOps onto difficulty levels" xml:space="preserve">
+	  <value>This isn't perfect, but until I have more data other algorithms haven't been successful at projecting CoOps onto difficulty levels</value>
+  </data>
+  <data name="No one has passed this CoOp yet so no level is assigned." xml:space="preserve">
+	  <value>No one has passed this CoOp yet so no level is assigned.</value>
+  </data>
+  <data name="This gives this chart a scoring level of: X" xml:space="preserve">
+	  <value>This gives this chart a scoring level of: {0}</value>
+	  <comment>{0} = lowest passing player's competitive level (2 decimals).</comment>
+  </data>
 </root>

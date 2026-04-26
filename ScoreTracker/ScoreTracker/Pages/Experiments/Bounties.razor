@@ -6,21 +6,21 @@
 @using ScoreTracker.Domain.Models
 @using MediatR
 
-<PageTitle>Bounties</PageTitle>
+<PageTitle>@L["Bounties"]</PageTitle>
 <MudTable T="(int place,BountyLeaderboard record)" Items="_leaderboard" Breakpoint="Breakpoint.None">
     <ToolBarContent>
-        <MudText Typo="Typo.h4">Bounty Leaderboard</MudText>
+        <MudText Typo="Typo.h4">@L["Bounty Leaderboard"]</MudText>
     </ToolBarContent>
     <HeaderContent>
         <MudTh>
-            <MudTableSortLabel T="(int place,BountyLeaderboard record)" SortBy="@(e => e.place)">Place</MudTableSortLabel>
+            <MudTableSortLabel T="(int place,BountyLeaderboard record)" SortBy="@(e => e.place)">@L["Place"]</MudTableSortLabel>
         </MudTh>
         <MudTh>
-            Avatar
+            @L["Avatar"]
         </MudTh>
-        <MudTh>Player</MudTh>
-        <MudTh><MudTableSortLabel T="(int place,BountyLeaderboard record)" SortBy="@(e=>e.record.MonthlyTotal)">Monthly Total</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel T="(int place,BountyLeaderboard record)" SortBy="@(e=>e.record.Total)">Total</MudTableSortLabel></MudTh>
+        <MudTh>@L["Player"]</MudTh>
+        <MudTh><MudTableSortLabel T="(int place,BountyLeaderboard record)" SortBy="@(e=>e.record.MonthlyTotal)">@L["Monthly Total"]</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="(int place,BountyLeaderboard record)" SortBy="@(e=>e.record.Total)">@L["Total"]</MudTableSortLabel></MudTh>
         
     </HeaderContent>
     <RowTemplate>

@@ -11,19 +11,19 @@
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.ValueTypes
 
-<PageTitle>User Matches</PageTitle>
+<PageTitle>@L["User Matches"]</PageTitle>
 <MudGrid>
     <MudItem xs="12" sm="6">
-        <MudSelect T="ChartType" Label="Chart Type" Value="_type" ValueChanged="t=>SetFilters(t,_level)">
-            <MudSelectItem T="ChartType" Value="ChartType.Double">Doubles</MudSelectItem>
-            <MudSelectItem T="ChartType" Value="ChartType.Single">Singles</MudSelectItem>
+        <MudSelect T="ChartType" Label=@L["Chart Type"] Value="_type" ValueChanged="t=>SetFilters(t,_level)">
+            <MudSelectItem T="ChartType" Value="ChartType.Double">@L["Doubles"]</MudSelectItem>
+            <MudSelectItem T="ChartType" Value="ChartType.Single">@L["Singles"]</MudSelectItem>
         </MudSelect>
     </MudItem>
     <MudItem xs="12" sm="6">
-        <MudNumericField T="int" Value="_level" ValueChanged="l=>SetFilters(_type,l)" HideSpinButtons="true" Label="Level"></MudNumericField>
+        <MudNumericField T="int" Value="_level" ValueChanged="l=>SetFilters(_type,l)" HideSpinButtons="true" Label=@L["Level"]></MudNumericField>
     </MudItem>
 </MudGrid>
-<MudText Typo="Typo.h4">Calculated Tier List</MudText>
+<MudText Typo="Typo.h4">@L["Calculated Tier List"]</MudText>
 @foreach (var category in Enum.GetValues<TierListCategory>().Where(c=>_tierList.ContainsKey(c)))
 {
     <br/>
@@ -36,7 +36,7 @@
     }
 }
 <br/><br/>
-<MudText Typo="Typo.h4">Similar Players</MudText>
+<MudText Typo="Typo.h4">@L["Similar Players"]</MudText>
 @foreach (var kv in _userTotals.OrderByDescending(k=>k.Value))
 {
     @if (_users[kv.Key].IsPublic)
@@ -45,7 +45,7 @@
     }
     else
     {
-        <MudText>@($"Private User - {kv.Value}")</MudText>
+        <MudText>@L["Private User - X", kv.Value]</MudText>
     }
 }
 @if (_users.ContainsKey(CurrentUser.User.Id) && _userTiersLists.ContainsKey(CurrentUser.User.Id))
@@ -53,9 +53,9 @@
 
     <MudTable T="Chart" Items="_tierList.Values.SelectMany(c=>c)" Dense="true">
         <HeaderContent>
-            <MudTh>Song</MudTh>
-            <MudTh>Difficulty</MudTh>
-            <MudTh>Final Result</MudTh>
+            <MudTh>@L["Song"]</MudTh>
+            <MudTh>@L["Difficulty"]</MudTh>
+            <MudTh>@L["Final Result"]</MudTh>
             @foreach (var userId in new[] { CurrentUser.User.Id }.Concat(_comparingUsers))
             {
                 <MudTh>@_users[userId].Name</MudTh>

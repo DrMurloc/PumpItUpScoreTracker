@@ -10,19 +10,19 @@
 @page "/GameStats"
 <MudPaper>
     <MudToolBar>
-        <MudText Typo="Typo.h6">Game Stats</MudText>
+        <MudText Typo="Typo.h6">@L["Game Stats"]</MudText>
     </MudToolBar>
     <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
-        <MudTabPanel Text="Total Popularity Singles vs Doubles">
+        <MudTabPanel Text=@L["Total Popularity Singles vs Doubles"]>
             <ApexChart TItem="BoxPlotData"
-                       Title="Total Singles vs Doubles"
+                       Title=@L["Total Singles vs Doubles"]
                        @ref="_sdChart"
                        Options="_scoreBoxesOptions">
 
                 <ApexPointSeries TItem="BoxPlotData"
                                  Color="#FFFFFF"
                                  Items="_popularityData.Where(e=>e.Type==ChartType.SinglePerformance)"
-                                 Name="Total"
+                                 Name=@L["Total"]
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Level)"
                                  YValue="@(e => e.Total)"
@@ -30,7 +30,7 @@
                 <ApexPointSeries TItem="BoxPlotData"
                                  Color="#EA3F24"
                                  Items="_popularityData.Where(e=>e.Type==ChartType.Single)"
-                                 Name="Singles"
+                                 Name=@L["Singles"]
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Level)"
                                  YValue="@(e => e.Total)"
@@ -38,7 +38,7 @@
                 <ApexPointSeries TItem="BoxPlotData"
                                  Color="#76FA4F"
                                  Items="_popularityData.Where(e=>e.Type==ChartType.Double)"
-                                 Name="Doubles"
+                                 Name=@L["Doubles"]
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Level)"
                                  YValue="@(e => e.Total)"
@@ -46,7 +46,7 @@
                 <ApexPointSeries TItem="BoxPlotData"
                                  Color="#FFFF5B"
                                  Items="_popularityData.Where(e=>e.Type==ChartType.CoOp)"
-                                 Name="CoOp"
+                                 Name=@L["CoOp"]
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Level)"
                                  YValue="@(e => e.Total)"
@@ -55,16 +55,16 @@
             </ApexChart>
 
         </MudTabPanel>
-        <MudTabPanel Text="Chart Count By Level">
+        <MudTabPanel Text=@L["Chart Count By Level"]>
             <ApexChart TItem="BoxPlotData"
-                       Title="Total Singles vs Doubles"
+                       Title=@L["Total Singles vs Doubles"]
             @ref="_chartChart"
                        Options="_chartBoxesOptions">
 
                 <ApexPointSeries TItem="BoxPlotData"
                                  Color="#FFFFFF"
                                  Items="_chartCounts.Where(e=>e.Type==ChartType.SinglePerformance)"
-                                 Name="Total"
+                                 Name=@L["Total"]
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Level)"
                                  YValue="@(e => e.Total)"
@@ -72,7 +72,7 @@
                 <ApexPointSeries TItem="BoxPlotData"
                                  Color="#EA3F24"
                                  Items="_chartCounts.Where(e=>e.Type==ChartType.Single)"
-                                 Name="Singles"
+                                 Name=@L["Singles"]
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Level)"
                                  YValue="@(e => e.Total)"
@@ -80,7 +80,7 @@
                 <ApexPointSeries TItem="BoxPlotData"
                                  Color="#76FA4F"
                                  Items="_chartCounts.Where(e=>e.Type==ChartType.Double)"
-                                 Name="Doubles"
+                                 Name=@L["Doubles"]
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Level)"
                                  YValue="@(e => e.Total)"
@@ -88,7 +88,7 @@
                 <ApexPointSeries TItem="BoxPlotData"
                                  Color="#FFFF5B"
                                  Items="_chartCounts.Where(e=>e.Type==ChartType.CoOp)"
-                                 Name="CoOp"
+                                 Name=@L["CoOp"]
                                  SeriesType="SeriesType.Line"
                                  XValue="@(e => e.Level)"
                                  YValue="@(e => e.Total)"

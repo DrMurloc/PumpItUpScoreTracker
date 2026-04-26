@@ -3,8 +3,8 @@
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Pages.Tools
 
-<PageTitle>Upload Scores</PageTitle>
-<MudButton Disabled="true" Variant="Variant.Filled" Color="MudBlazor.Color.Primary" OnClick="_=>IterateThroughScores(400)">Start</MudButton>
+<PageTitle>@L["Upload Scores"]</PageTitle>
+<MudButton Disabled="true" Variant="Variant.Filled" Color="MudBlazor.Color.Primary" OnClick="_=>IterateThroughScores(400)">@L["Start"]</MudButton>
 <MudText>
     @_text
 </MudText>
