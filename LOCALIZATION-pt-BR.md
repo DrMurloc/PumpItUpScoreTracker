@@ -155,6 +155,7 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 - **Decimal separator**: pt-BR uses comma — `9,6` not `9.6`. Localize numeric values inside translated prose.
 - **Source typos in long-key prose**: when the English key has a clearly-broken sentence (e.g. missing word), translate the *intended* meaning so the pt-BR reads as correct grammar. Don't preserve the typo.
 - **PIU community proper nouns / community jargon** in prose stay English: `run` (a play-through), `Rainbow` (lifebar color phase ≥1000), `data-mine` / `data-mining`, mix names (`NX2`, `Prime`, `XX`, `Phoenix`), and contributor names (`KyleTT`, `FEFEMZ`, `Team Infinitesimal`).
+- **"To perfect" (verb — to achieve a Perfect grade)**: render as `tirar perfect`. E.g. "harder for higher level players to perfect" → "mais difíceis para jogadores de nível mais alto tirarem perfect". The community-jargon `perfectar` exists but is less standard.
 
 ## Open decisions (terms upcoming batches will need)
 

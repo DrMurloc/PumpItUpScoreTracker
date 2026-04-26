@@ -1155,4 +1155,58 @@
   <data name="X Progress" xml:space="preserve">
     <value>Progresso - {0}</value>
   </data>
+  <data name="All players with scores within the target folder are assigned weights based on how close their competitive level is to X." xml:space="preserve">
+    <value>Todos os jogadores com pontuações dentro do folder-alvo recebem pesos com base em quão próximo o nível competitivo deles está de {0}.</value>
+  </data>
+  <data name="At this point, it's identified that this chart has no players with a weight of .5 or higher (within 1 level). The chart is marked as not having a scoring level as any estimation would be based on missing data." xml:space="preserve">
+    <value>Neste ponto, identifica-se que este chart não tem jogadores com peso de 0,5 ou maior (dentro de 1 nível). O chart é marcado como sem nível de pontuação, pois qualquer estimativa seria baseada em dados ausentes.</value>
+  </data>
+  <data name="For CoOps, scoring level is simply the lowest level player who's been able to pass the chart." xml:space="preserve">
+    <value>Para charts de CoOp, o nível de pontuação é simplesmente o jogador de menor nível que já conseguiu passar o chart.</value>
+  </data>
+  <data name="Highlighted players have a recorded score on the chart in question." xml:space="preserve">
+    <value>Jogadores destacados têm uma pontuação registrada no chart em questão.</value>
+  </data>
+  <data name="In this case, the chart is determined to be above by X utilizing standard deviations in the Y folder." xml:space="preserve">
+    <value>Neste caso, o chart é determinado como acima em {0} utilizando desvios padrão no folder {1}.</value>
+  </data>
+  <data name="In this case, the chart is determined to be below by X utilizing standard deviations in the Y folder." xml:space="preserve">
+    <value>Neste caso, o chart é determinado como abaixo em {0} utilizando desvios padrão no folder {1}.</value>
+  </data>
+  <data name="No one has passed this CoOp yet so no level is assigned." xml:space="preserve">
+    <value>Ninguém passou este CoOp ainda, então nenhum nível é atribuído.</value>
+  </data>
+  <data name="The chart in question has its weighted average score projected onto the score distributions" xml:space="preserve">
+    <value>O chart em questão tem sua pontuação média ponderada projetada nas distribuições de pontuação</value>
+  </data>
+  <data name="The listed scoring difficulty is calculated for players competitively playing in the officially listed folder for a chart." xml:space="preserve">
+    <value>A dificuldade de pontuação listada é calculada para jogadores que jogam competitivamente no folder oficial listado de um chart.</value>
+  </data>
+  <data name="The outcome of this algorithm has drastically different results for players at different levels though" xml:space="preserve">
+    <value>O resultado deste algoritmo, no entanto, gera resultados drasticamente diferentes para jogadores em níveis diferentes</value>
+  </data>
+  <data name="The target folder and the three surrounding are provided weighted average scores utilizing the player weights above." xml:space="preserve">
+    <value>O folder-alvo e os três adjacentes recebem pontuações médias ponderadas utilizando os pesos dos jogadores acima.</value>
+  </data>
+  <data name="The weighted average for this chart is better than the average for a X." xml:space="preserve">
+    <value>A média ponderada deste chart é melhor que a média de um {0}.</value>
+  </data>
+  <data name="The weighted average for this chart is worst than the average for a X." xml:space="preserve">
+    <value>A média ponderada deste chart é pior que a média de um {0}.</value>
+  </data>
+  <data name="There was not enough data for the targeted player level to evaluate a final difficulty." xml:space="preserve">
+    <value>Não havia dados suficientes para o nível de jogador alvo para avaliar uma dificuldade final.</value>
+  </data>
+  <data name="These averages are shifted away from the level in question by .5 of a standard deviation within their respective folder to make sure level changes are better represented by the bulk of a surrounding folder." xml:space="preserve">
+    <value>Essas médias são deslocadas do nível em questão por 0,5 de um desvio padrão dentro de seus respectivos folders para garantir que as mudanças de nível sejam melhor representadas pela maioria de um folder adjacente.</value>
+  </data>
+  <data name="This gives this chart a scoring level of: X" xml:space="preserve">
+    <value>Isso dá a este chart um nível de pontuação de: {0}</value>
+  </data>
+  <data name="This is intended. There are charts that are relatively easier to score to others in the folder for players just pushing into the folder, but are harder for higher level players to perfect." xml:space="preserve">
+    <value>Isso é intencional. Há charts que são relativamente mais fáceis de pontuar comparados a outros do folder para jogadores que estão apenas entrando no folder, mas são mais difíceis para jogadores de nível mais alto tirarem perfect.</value>
+  </data>
+  <data name="This isn't perfect, but until I have more data other algorithms haven't been successful at projecting CoOps onto difficulty levels" xml:space="preserve">
+    <value>Isto não é perfeito, mas até eu ter mais dados, outros algoritmos não tiveram sucesso em projetar CoOps em níveis de dificuldade</value>
+  </data>
 </root>
