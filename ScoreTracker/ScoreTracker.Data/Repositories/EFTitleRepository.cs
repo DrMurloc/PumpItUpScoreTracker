@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
@@ -26,9 +26,9 @@ namespace ScoreTracker.Data.Repositories
         public async Task SaveTitles(Guid userId, IEnumerable<TitleAchievedRecord> acquiredTitles,
             CancellationToken cancellationToken)
         {
-            var _dbContext = await _factory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var existingEntities =
-                await _dbContext.UserTitle.Where(u => u.UserId == userId).ToArrayAsync(cancellationToken);
+                await database.UserTitle.Where(u => u.UserId == userId).ToArrayAsync(cancellationToken);
             var titleSet = acquiredTitles.Distinct().ToDictionary(t => t.Title);
             //Add
             var newEntities = titleSet.Where(t => existingEntities.All(e => e.Title != t.Key))
@@ -45,9 +45,9 @@ namespace ScoreTracker.Data.Repositories
             //Delete
             var deleteEntities = existingEntities.Where(e => !titleSet.ContainsKey(e.Title)).ToArray();
 
-            _dbContext.UserTitle.RemoveRange(deleteEntities);
-            await _dbContext.UserTitle.AddRangeAsync(newEntities, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            database.UserTitle.RemoveRange(deleteEntities);
+            await database.UserTitle.AddRangeAsync(newEntities, cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
             _cache.Remove(CacheKey);
             _cache.Remove(CacheKey + "__UserCount");
         }
@@ -55,7 +55,7 @@ namespace ScoreTracker.Data.Repositories
         public async Task SetHighestDifficultyTitle(Guid userId, Name title, DifficultyLevel level,
             CancellationToken cancellationToken)
         {
-            var database = await _factory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var entity =
                 await database.UserHighestTitle.FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
             if (entity == null)
@@ -79,15 +79,16 @@ namespace ScoreTracker.Data.Repositories
         public async Task<IEnumerable<TitleAchievedRecord>> GetCompletedTitles(Guid userId,
             CancellationToken cancellationToken)
         {
-            var _dbContext = await _factory.CreateDbContextAsync(cancellationToken);
-            return (await _dbContext.UserTitle.Where(u => u.UserId == userId).ToArrayAsync(cancellationToken))
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            return (await database.UserTitle.Where(u => u.UserId == userId).ToArrayAsync(cancellationToken))
                 .Select(u => new TitleAchievedRecord(u.UserId, u.Title, Enum.Parse<ParagonLevel>(u.ParagonLevel)))
                 .ToArray();
         }
 
         public async Task<DifficultyLevel> GetCurrentTitleLevel(Guid userId, CancellationToken cancellationToken)
         {
-            return (await (await _factory.CreateDbContextAsync(cancellationToken)).UserHighestTitle
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            return (await database.UserHighestTitle
                 .Where(u => u.UserId == userId).FirstOrDefaultAsync(cancellationToken))?.Level ?? 10;
         }
 
@@ -96,7 +97,7 @@ namespace ScoreTracker.Data.Repositories
             return await _cache.GetOrCreateAsync(CacheKey, async o =>
             {
                 o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
-                var database = await _factory.CreateDbContextAsync(cancellationToken);
+                await using var database = await _factory.CreateDbContextAsync(cancellationToken);
                 return await (from u in database.User
                     where u.GameTag != null
                     join ut in database.UserTitle on u.Id equals ut.UserId
@@ -111,7 +112,7 @@ namespace ScoreTracker.Data.Repositories
             return await _cache.GetOrCreateAsync(CacheKey + "__UserCount", async o =>
             {
                 o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
-                var database = await _factory.CreateDbContextAsync(cancellationToken);
+                await using var database = await _factory.CreateDbContextAsync(cancellationToken);
                 return await database.User.Where(u => u.GameTag != null).CountAsync(cancellationToken);
             });
         }
@@ -119,7 +120,7 @@ namespace ScoreTracker.Data.Repositories
         public async Task<IEnumerable<TitleAchievedRecord>> GetUsersWithTitle(Name title,
             CancellationToken cancellationToken)
         {
-            var database = await _factory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var titleString = title.ToString();
             return await database.UserTitle.Where(t => t.Title == titleString).Select(u =>
                     new TitleAchievedRecord(u.UserId, title, Enum.Parse<ParagonLevel>(u.ParagonLevel)))

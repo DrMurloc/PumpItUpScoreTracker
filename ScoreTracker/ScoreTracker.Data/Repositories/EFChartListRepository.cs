@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Enums;
@@ -9,30 +9,32 @@ namespace ScoreTracker.Data.Repositories;
 
 public sealed class EFChartListRepository : IChartListRepository
 {
-    private readonly ChartAttemptDbContext _dbContext;
+    private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
     public EFChartListRepository(IDbContextFactory<ChartAttemptDbContext> factory)
     {
-        _dbContext = factory.CreateDbContext();
+        _factory = factory;
     }
 
     public async Task<IEnumerable<SavedChartRecord>> GetSavedChartsByUser(Guid userId,
         CancellationToken cancellationToken)
     {
-        return await _dbContext.SavedChart.Where(sc => sc.UserId == userId)
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.SavedChart.Where(sc => sc.UserId == userId)
             .Select(sc => new SavedChartRecord(Enum.Parse<ChartListType>(sc.ListName), sc.ChartId))
             .ToArrayAsync(cancellationToken);
     }
 
     public async Task SaveChart(Guid userId, ChartListType listType, Guid chartId, CancellationToken cancellationToken)
     {
-        var existingRecord = await _dbContext.SavedChart.FirstOrDefaultAsync(
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var existingRecord = await database.SavedChart.FirstOrDefaultAsync(
             sc => sc.UserId == userId && sc.ChartId == chartId && sc.ListName == listType.ToString(),
             cancellationToken);
 
         if (existingRecord == null)
         {
-            await _dbContext.SavedChart.AddAsync(new SavedChartEntity
+            await database.SavedChart.AddAsync(new SavedChartEntity
             {
                 Id = Guid.NewGuid(),
                 ChartId = chartId,
@@ -40,22 +42,23 @@ public sealed class EFChartListRepository : IChartListRepository
                 UserId = userId
             }, cancellationToken);
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
         }
     }
 
     public async Task RemoveChart(Guid userId, ChartListType listType, Guid chartId,
         CancellationToken cancellationToken)
     {
-        var existingRecord = await _dbContext.SavedChart.FirstOrDefaultAsync(
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var existingRecord = await database.SavedChart.FirstOrDefaultAsync(
             sc => sc.UserId == userId && sc.ChartId == chartId && sc.ListName == listType.ToString(),
             cancellationToken);
 
         if (existingRecord != null)
         {
-            _dbContext.SavedChart.Remove(existingRecord);
+            database.SavedChart.Remove(existingRecord);
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -16,7 +16,6 @@ namespace ScoreTracker.Data.Repositories
         IRequestHandler<GetTournamentRolesQuery, IEnumerable<UserTournamentRole>>
     {
         private readonly IMemoryCache _memoryCache;
-        private readonly ChartAttemptDbContext _database;
         private readonly IChartRepository _charts;
         private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
@@ -24,7 +23,6 @@ namespace ScoreTracker.Data.Repositories
             IDbContextFactory<ChartAttemptDbContext> factory)
         {
             _factory = factory;
-            _database = factory.CreateDbContext();
             _memoryCache = memoryCache;
             _charts = charts;
         }
@@ -38,11 +36,12 @@ namespace ScoreTracker.Data.Repositories
             return await _memoryCache.GetOrCreateAsync(TourneyCacheKey, async o =>
             {
                 o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(60);
-                var counts = (await _database.UserTournamentSession.ToArrayAsync(cancellationToken))
+                await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+                var counts = (await database.UserTournamentSession.ToArrayAsync(cancellationToken))
                     .GroupBy(uts => uts.TournamentId)
                     .ToDictionary(g => g.Key, g => g.Count());
 
-                return (await _database.Tournament.ToArrayAsync(cancellationToken)).Select(t =>
+                return (await database.Tournament.ToArrayAsync(cancellationToken)).Select(t =>
                     new TournamentRecord(t.Id,
                         t.Name,
                         counts.TryGetValue(t.Id, out var count) ? count : 0,
@@ -60,7 +59,8 @@ namespace ScoreTracker.Data.Repositories
             return await _memoryCache.GetOrCreateAsync(TourneyIdCacheKey(id), async o =>
             {
                 o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(60);
-                var result = await _database.Tournament.Where(t => t.Id == id).SingleAsync(cancellationToken);
+                await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+                var result = await database.Tournament.Where(t => t.Id == id).SingleAsync(cancellationToken);
                 var snapshots = await GetScoringLevelSnapshot(id, cancellationToken);
                 return JsonSerializer.Deserialize<TournamentConfigurationJsonEntity>(result.Configuration)
                            ?.To(snapshots) ??
@@ -71,10 +71,11 @@ namespace ScoreTracker.Data.Repositories
         public async Task CreateOrSaveTournament(TournamentConfiguration tournament,
             CancellationToken cancellationToken)
         {
-            var entity = await _database.Tournament.FirstOrDefaultAsync(t => t.Id == tournament.Id, cancellationToken);
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var entity = await database.Tournament.FirstOrDefaultAsync(t => t.Id == tournament.Id, cancellationToken);
             if (entity == null)
             {
-                await _database.Tournament.AddAsync(new TournamentEntity
+                await database.Tournament.AddAsync(new TournamentEntity
                 {
                     Id = tournament.Id,
                     Configuration = JsonSerializer.Serialize(TournamentConfigurationJsonEntity.From(tournament)),
@@ -95,14 +96,14 @@ namespace ScoreTracker.Data.Repositories
                 entity.Configuration = JsonSerializer.Serialize(TournamentConfigurationJsonEntity.From(tournament));
             }
 
-            await _database.SaveChangesAsync(cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
             _memoryCache.Remove(TourneyCacheKey);
             _memoryCache.Remove(TourneyIdCacheKey(tournament.Id));
         }
 
         public async Task CreateOrSaveTournament(TournamentRecord tournament, CancellationToken cancellationToken)
         {
-            var database = await _factory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var entity = await database.Tournament.Where(t => t.Id == tournament.Id)
                 .FirstOrDefaultAsync(cancellationToken);
             if (entity == null)
@@ -135,7 +136,7 @@ namespace ScoreTracker.Data.Repositories
                 entity.IsMoM = tournament.IsMoM;
             }
 
-            await _database.SaveChangesAsync(cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
             _memoryCache.Remove(TourneyCacheKey);
             _memoryCache.Remove(TourneyIdCacheKey(tournament.Id));
         }
@@ -143,12 +144,13 @@ namespace ScoreTracker.Data.Repositories
         public async Task SaveSession(TournamentSession session, CancellationToken cancellationToken)
         {
             _memoryCache.Remove(TourneyCacheKey);
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
 
-            var entity = await _database.UserTournamentSession.FirstOrDefaultAsync(
+            var entity = await database.UserTournamentSession.FirstOrDefaultAsync(
                 uts => uts.TournamentId == session.TournamentId && uts.UserId == session.UsersId, cancellationToken);
             if (entity == null)
             {
-                await _database.UserTournamentSession.AddAsync(new UserTournamentSessionEntity
+                await database.UserTournamentSession.AddAsync(new UserTournamentSessionEntity
                 {
                     Id = Guid.NewGuid(),
                     UserId = session.UsersId,
@@ -175,7 +177,7 @@ namespace ScoreTracker.Data.Repositories
             {
                 if (!session.Entries.Any())
                 {
-                    _database.UserTournamentSession.Remove(entity);
+                    database.UserTournamentSession.Remove(entity);
                 }
                 else
                 {
@@ -198,7 +200,7 @@ namespace ScoreTracker.Data.Repositories
                 }
             }
 
-            var existingPhotos = await _database.PhotoVerification
+            var existingPhotos = await database.PhotoVerification
                 .Where(p => p.TournamentId == session.TournamentId && p.UserId == session.UsersId)
                 .ToArrayAsync(cancellationToken);
 
@@ -213,9 +215,9 @@ namespace ScoreTracker.Data.Repositories
                     TournamentId = session.TournamentId,
                     UserId = session.UsersId
                 });
-            _database.PhotoVerification.RemoveRange(toDelete);
-            await _database.PhotoVerification.AddRangeAsync(toCreate, cancellationToken);
-            await _database.SaveChangesAsync(cancellationToken);
+            database.PhotoVerification.RemoveRange(toDelete);
+            await database.PhotoVerification.AddRangeAsync(toCreate, cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
             _memoryCache.Remove(CacheKey(session.TournamentId, session.UsersId));
         }
 
@@ -231,7 +233,8 @@ namespace ScoreTracker.Data.Repositories
             {
                 o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromDays(1);
 
-                var entity = await _database.UserTournamentSession.FirstOrDefaultAsync(
+                await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+                var entity = await database.UserTournamentSession.FirstOrDefaultAsync(
                     uts => uts.TournamentId == tournamentId && uts.UserId == userId, cancellationToken);
                 var tournamentConfig = await GetTournament(tournamentId, cancellationToken);
                 if (entity == null) return new TournamentSession(userId, tournamentConfig);
@@ -250,7 +253,7 @@ namespace ScoreTracker.Data.Repositories
                 session.SetVerificationType(Enum.Parse<SubmissionVerificationType>(entity.VerificationType));
                 if (Uri.TryCreate(entity.VideoUrl, UriKind.Absolute, out var videoUrl)) session.VideoUrl = videoUrl;
 
-                var photos = await _database.PhotoVerification
+                var photos = await database.PhotoVerification
                     .Where(p => p.TournamentId == tournamentId && p.UserId == userId)
                     .ToArrayAsync(cancellationToken);
                 foreach (var photo in photos.Select(p => p.PhotoUrl))
@@ -269,8 +272,9 @@ namespace ScoreTracker.Data.Repositories
         public async Task<IEnumerable<LeaderboardRecord>> GetLeaderboardRecords(Guid tournamentId,
             CancellationToken cancellationToken)
         {
-            var results = (await (from uts in _database.UserTournamentSession
-                        join u in _database.User on uts.UserId equals u.Id
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var results = (await (from uts in database.UserTournamentSession
+                        join u in database.User on uts.UserId equals u.Id
                         where uts.TournamentId == tournamentId
                         select new UserEntryDto(u.Id, u.Name, uts.SessionScore, uts.RestTime, uts.ChartsPlayed,
                             uts.AverageDifficulty, uts.VerificationType, uts.NeedsApproval, uts.VideoUrl))
@@ -290,7 +294,7 @@ namespace ScoreTracker.Data.Repositories
         public async Task CreateScoringLevelSnapshots(Guid tournamentId, IEnumerable<(Guid, double)> snapshots,
             CancellationToken cancellationToken)
         {
-            var database = await _factory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             database.TournamentChartLevel.RemoveRange(
                 await database.TournamentChartLevel.Where(l => l.TournamentId == tournamentId)
                     .ToArrayAsync(cancellationToken));
@@ -316,7 +320,8 @@ namespace ScoreTracker.Data.Repositories
             return await _memoryCache.GetOrCreateAsync(SnapshotCacheKey(tournamentId), async o =>
             {
                 o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(1);
-                var result = await _database.TournamentChartLevel.Where(e => e.TournamentId == tournamentId)
+                await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+                var result = await database.TournamentChartLevel.Where(e => e.TournamentId == tournamentId)
                     .ToArrayAsync(cancellationToken);
                 if (!result.Any()) return (IDictionary<Guid, double>?)null;
 
@@ -327,11 +332,12 @@ namespace ScoreTracker.Data.Repositories
         public async Task SetRole(Guid tournamentId, Guid userId, TournamentRole role,
             CancellationToken cancellationToken)
         {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var entity =
-                await _database.TournamentRole.FirstOrDefaultAsync(
+                await database.TournamentRole.FirstOrDefaultAsync(
                     e => e.TournamentId == tournamentId && e.UserId == userId, cancellationToken);
             if (entity == null)
-                await _database.TournamentRole.AddAsync(new TournamentRoleEntity
+                await database.TournamentRole.AddAsync(new TournamentRoleEntity
                 {
                     Role = role.ToString(),
                     TournamentId = tournamentId,
@@ -339,17 +345,18 @@ namespace ScoreTracker.Data.Repositories
                 }, cancellationToken);
             else
                 entity.Role = role.ToString();
-            await _database.SaveChangesAsync(cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
             _memoryCache.Remove(TourneyRolesCacheKey(tournamentId));
         }
 
         public async Task RevokeRole(Guid tournamentId, Guid userId, CancellationToken cancellationToken)
         {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var removingEntities = await
-                _database.TournamentRole.Where(e => e.TournamentId == tournamentId && e.UserId == userId)
+                database.TournamentRole.Where(e => e.TournamentId == tournamentId && e.UserId == userId)
                     .ToArrayAsync(cancellationToken);
-            _database.TournamentRole.RemoveRange(removingEntities);
-            await _database.SaveChangesAsync(cancellationToken);
+            database.TournamentRole.RemoveRange(removingEntities);
+            await database.SaveChangesAsync(cancellationToken);
             _memoryCache.Remove(TourneyRolesCacheKey(tournamentId));
         }
 
@@ -370,8 +377,10 @@ namespace ScoreTracker.Data.Repositories
             return await _memoryCache.GetOrCreateAsync(TourneyRolesCacheKey(request.TournamentId), async o =>
             {
                 o.AbsoluteExpiration = DateTime.Now + TimeSpan.FromHours(1);
-                return _database.TournamentRole.Where(t => t.TournamentId == request.TournamentId)
-                    .Select(t => new UserTournamentRole(t.TournamentId, t.UserId, Enum.Parse<TournamentRole>(t.Role)));
+                await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+                return await database.TournamentRole.Where(t => t.TournamentId == request.TournamentId)
+                    .Select(t => new UserTournamentRole(t.TournamentId, t.UserId, Enum.Parse<TournamentRole>(t.Role)))
+                    .ToArrayAsync(cancellationToken);
             });
         }
     }

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Enums;
@@ -18,22 +18,23 @@ public sealed class EFPreferenceRatingRepository : IChartPreferenceRepository
         { MixEnum.Phoenix, Guid.Parse("1ABB8F5A-BDA3-40F0-9CE7-1C4F9F8F1D3B") }
     };
 
-    private readonly ChartAttemptDbContext _database;
+    private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
     public EFPreferenceRatingRepository(IDbContextFactory<ChartAttemptDbContext> factory)
     {
-        _database = factory.CreateDbContext();
+        _factory = factory;
     }
 
     public async Task SaveRating(MixEnum mix, Guid userId, Guid chartId, PreferenceRating rating,
         CancellationToken cancellationToken)
     {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var mixId = MixGuids[mix];
-        var entity = await _database.UserPreferenceRating
+        var entity = await database.UserPreferenceRating
             .Where(e => e.MixId == mixId && e.ChartId == chartId && e.UserId == userId)
             .FirstOrDefaultAsync(cancellationToken);
         if (entity == null)
-            await _database.UserPreferenceRating.AddAsync(new UserPreferenceRatingEntity
+            await database.UserPreferenceRating.AddAsync(new UserPreferenceRatingEntity
             {
                 Id = Guid.NewGuid(),
                 MixId = mixId,
@@ -44,18 +45,19 @@ public sealed class EFPreferenceRatingRepository : IChartPreferenceRepository
         else
             entity.Rating = rating;
 
-        await _database.SaveChangesAsync(cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
     }
 
     public async Task SetAverageRating(MixEnum mix, Guid chartId, PreferenceRating averageRating, int ratingCount,
         CancellationToken cancellationToken)
     {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var mixId = MixGuids[mix];
-        var entity = await _database.ChartPreferenceRating.Where(c => c.MixId == mixId && c.ChartId == chartId)
+        var entity = await database.ChartPreferenceRating.Where(c => c.MixId == mixId && c.ChartId == chartId)
             .FirstOrDefaultAsync(cancellationToken);
         if (entity == null)
         {
-            await _database.ChartPreferenceRating.AddAsync(new ChartPreferenceRatingEntity
+            await database.ChartPreferenceRating.AddAsync(new ChartPreferenceRatingEntity
             {
                 Id = Guid.NewGuid(),
                 MixId = mixId,
@@ -70,14 +72,15 @@ public sealed class EFPreferenceRatingRepository : IChartPreferenceRepository
             entity.Count = ratingCount;
         }
 
-        await _database.SaveChangesAsync(cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<ChartPreferenceRatingRecord>> GetPreferenceRatings(MixEnum mix,
         CancellationToken cancellationToken)
     {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var mixId = MixGuids[mix];
-        return await _database.ChartPreferenceRating.Where(c => c.MixId == mixId).Select(cpr =>
+        return await database.ChartPreferenceRating.Where(c => c.MixId == mixId).Select(cpr =>
                 new ChartPreferenceRatingRecord(cpr.ChartId, cpr.Rating, cpr.Count))
             .ToArrayAsync(cancellationToken);
     }
@@ -85,16 +88,18 @@ public sealed class EFPreferenceRatingRepository : IChartPreferenceRepository
     public async Task<IEnumerable<PreferenceRating>> GetRatingsForChart(MixEnum mix, Guid chartId,
         CancellationToken cancellationToken)
     {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var mixId = MixGuids[mix];
-        return (await _database.UserPreferenceRating.Where(e => e.MixId == mixId && e.ChartId == chartId)
+        return (await database.UserPreferenceRating.Where(e => e.MixId == mixId && e.ChartId == chartId)
             .ToArrayAsync(cancellationToken)).Select(e => PreferenceRating.From(e.Rating)).ToArray();
     }
 
     public async Task<IEnumerable<UserRatingsRecord>> GetUserRatings(MixEnum mix, Guid userId,
         CancellationToken cancellationToken)
     {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var mixId = MixGuids[mix];
-        return (await _database.UserPreferenceRating.Where(e => e.MixId == mixId && e.UserId == userId)
+        return (await database.UserPreferenceRating.Where(e => e.MixId == mixId && e.UserId == userId)
                 .ToArrayAsync(cancellationToken))
             .Select(u => new UserRatingsRecord(u.ChartId, u.Rating))
             .ToArray();

@@ -9,6 +9,9 @@ public interface IOfficialLeaderboardRepository
     Task WriteEntry(UserOfficialLeaderboard entry,
         CancellationToken cancellationToken);
 
+    Task WriteEntries(IEnumerable<UserOfficialLeaderboard> entries,
+        CancellationToken cancellationToken);
+
     Task<IEnumerable<string>> GetOfficialLeaderboardUsernames(string? leaderboardType,
         CancellationToken cancellationToken);
 

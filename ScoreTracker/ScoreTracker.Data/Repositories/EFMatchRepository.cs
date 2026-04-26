@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
@@ -14,7 +14,7 @@ namespace ScoreTracker.Data.Repositories;
 
 public sealed class EFMatchRepository : IMatchRepository
 {
-    private readonly ChartAttemptDbContext _dbContext;
+    private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly IMemoryCache _cache;
 
@@ -22,15 +22,16 @@ public sealed class EFMatchRepository : IMatchRepository
         IOptions<JsonSerializerOptions> jsonOptions,
         IMemoryCache cache)
     {
-        _dbContext = factory.CreateDbContext();
+        _factory = factory;
         _jsonOptions = jsonOptions.Value;
         _cache = cache;
     }
 
     public async Task<MatchView> GetMatch(Guid tournamentId, Name matchName, CancellationToken cancellationToken)
     {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var nameString = matchName.ToString();
-        var entity = await _dbContext.Match.Where(m => m.TournamentId == tournamentId && m.Name == nameString)
+        var entity = await database.Match.Where(m => m.TournamentId == tournamentId && m.Name == nameString)
             .FirstAsync(cancellationToken);
         return JsonSerializer.Deserialize<MatchView>(entity.Json, _jsonOptions) ??
                throw new JsonException($"Couldn't parse json for match {matchName} {entity.Id}");
@@ -46,7 +47,8 @@ public sealed class EFMatchRepository : IMatchRepository
         return await _cache.GetOrCreateAsync(TournamentKey(tournamentId), async o =>
         {
             o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
-            var entities = await _dbContext.Match.Where(m => m.TournamentId == tournamentId)
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var entities = await database.Match.Where(m => m.TournamentId == tournamentId)
                 .ToArrayAsync(cancellationToken);
             return entities.Select(e =>
                 JsonSerializer.Deserialize<MatchView>(e.Json, _jsonOptions) ??
@@ -56,11 +58,12 @@ public sealed class EFMatchRepository : IMatchRepository
 
     public async Task SaveMatch(Guid tournamentId, MatchView matchView, CancellationToken cancellationToken)
     {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var nameString = matchView.MatchName.ToString();
-        var entity = await _dbContext.Match.Where(m => m.TournamentId == tournamentId && m.Name == nameString)
+        var entity = await database.Match.Where(m => m.TournamentId == tournamentId && m.Name == nameString)
             .FirstOrDefaultAsync(cancellationToken);
         if (entity == null)
-            await _dbContext.Match.AddAsync(new MatchEntity
+            await database.Match.AddAsync(new MatchEntity
             {
                 TournamentId = tournamentId,
                 Id = Guid.NewGuid(),
@@ -70,19 +73,20 @@ public sealed class EFMatchRepository : IMatchRepository
         else
             entity.Json = JsonSerializer.Serialize(matchView, _jsonOptions);
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
         _cache.Remove(TournamentKey(tournamentId));
     }
 
     public async Task SaveRandomSettings(Guid tournamentId, Name settingsName, RandomSettings settings,
         CancellationToken cancellationToken)
     {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var nameString = settingsName.ToString();
-        var entity = await _dbContext.RandomSettings
+        var entity = await database.RandomSettings
             .Where(m => m.TournamentId == tournamentId && m.Name == nameString)
             .FirstOrDefaultAsync(cancellationToken);
         if (entity == null)
-            await _dbContext.RandomSettings.AddAsync(new RandomSettingsEntity
+            await database.RandomSettings.AddAsync(new RandomSettingsEntity
             {
                 TournamentId = tournamentId,
                 Id = Guid.NewGuid(),
@@ -92,14 +96,15 @@ public sealed class EFMatchRepository : IMatchRepository
         else
             entity.Json = JsonSerializer.Serialize(settings, _jsonOptions);
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<RandomSettings> GetRandomSettings(Guid tournamentId, Name settingsName,
         CancellationToken cancellationToken)
     {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var nameString = settingsName.ToString();
-        var entity = await _dbContext.RandomSettings
+        var entity = await database.RandomSettings
             .Where(r => r.TournamentId == tournamentId && r.Name == nameString).FirstAsync(cancellationToken);
         return JsonSerializer.Deserialize<RandomSettings>(entity.Json, _jsonOptions) ??
                throw new JsonException($"Couldn't deserialize random settings {entity.Name} {entity.Id}");
@@ -108,7 +113,8 @@ public sealed class EFMatchRepository : IMatchRepository
     public async Task<IEnumerable<(Name name, RandomSettings settings)>> GetAllRandomSettings(Guid tournamentId,
         CancellationToken cancellationToken)
     {
-        var entities = await _dbContext.RandomSettings.ToArrayAsync(cancellationToken);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var entities = await database.RandomSettings.ToArrayAsync(cancellationToken);
         return entities.Where(t => t.TournamentId == tournamentId).Select(e => (Name.From(e.Name),
                 JsonSerializer.Deserialize<RandomSettings>(e.Json, _jsonOptions) ??
                 throw new JsonException($"Error deserializing random settings {e.Name} {e.Id}")))
@@ -118,21 +124,23 @@ public sealed class EFMatchRepository : IMatchRepository
     public async Task<IEnumerable<MatchLink>> GetMatchLinksByFromMatchName(Guid tournamentId, Name fromMatchName,
         CancellationToken cancellationToken)
     {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var nameString = fromMatchName.ToString();
-        return await _dbContext.MatchLink.Where(m => m.TournamentId == tournamentId && m.FromMatch == nameString)
+        return await database.MatchLink.Where(m => m.TournamentId == tournamentId && m.FromMatch == nameString)
             .Select(e => new MatchLink(e.Id, e.FromMatch, e.ToMatch, e.IsWinners, e.PlayerCount, e.Skip))
             .ToArrayAsync(cancellationToken);
     }
 
     public async Task SaveMatchLink(Guid tournamentId, MatchLink matchLink, CancellationToken cancellationToken)
     {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var fromString = matchLink.FromMatch.ToString();
         var toString = matchLink.ToMatch.ToString();
-        var entity = await _dbContext.MatchLink.Where(m => m.Id == matchLink.Id)
+        var entity = await database.MatchLink.Where(m => m.Id == matchLink.Id)
             .FirstOrDefaultAsync(cancellationToken);
         if (entity == null)
         {
-            await _dbContext.MatchLink.AddAsync(new MatchLinkEntity
+            await database.MatchLink.AddAsync(new MatchLinkEntity
             {
                 TournamentId = tournamentId,
                 Id = matchLink.Id,
@@ -152,20 +160,21 @@ public sealed class EFMatchRepository : IMatchRepository
             entity.ToMatch = matchLink.ToMatch;
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
         _cache.Remove(MatchLinkKey(tournamentId));
     }
 
     public async Task DeleteMatchLink(Guid linkId,
         CancellationToken cancellationToken)
     {
-        var entity = await _dbContext.MatchLink.Where(m =>
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var entity = await database.MatchLink.Where(m =>
                 m.Id == linkId)
             .FirstOrDefaultAsync(cancellationToken);
         if (entity != null)
         {
-            _dbContext.MatchLink.Remove(entity);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            database.MatchLink.Remove(entity);
+            await database.SaveChangesAsync(cancellationToken);
 
             _cache.Remove(MatchLinkKey(entity.TournamentId));
         }
@@ -182,7 +191,8 @@ public sealed class EFMatchRepository : IMatchRepository
         return await _cache.GetOrCreateAsync(MatchLinkKey(tournamentId), async o =>
         {
             o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
-            return await _dbContext.MatchLink
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            return await database.MatchLink
                 .Where(t => t.TournamentId == tournamentId)
                 .Select(ml => new MatchLink(ml.Id, ml.FromMatch, ml.ToMatch, ml.IsWinners, ml.PlayerCount, ml.Skip))
                 .ToArrayAsync(cancellationToken);
@@ -192,19 +202,21 @@ public sealed class EFMatchRepository : IMatchRepository
     public async Task<IEnumerable<MatchPlayer>> GetMatchPlayers(Guid tournamentId,
         CancellationToken cancellationToken)
     {
-        return await _dbContext.TournamentPlayer.Where(t => t.TournamentId == tournamentId).Select(t =>
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.TournamentPlayer.Where(t => t.TournamentId == tournamentId).Select(t =>
                 new MatchPlayer(t.PlayerName, t.Seed, t.DiscordId, t.Notes, t.PotentialConflict))
             .ToArrayAsync(cancellationToken);
     }
 
     public async Task SaveMatchPlayer(Guid tournamentId, MatchPlayer player, CancellationToken cancellationToken)
     {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var nameString = player.Name.ToString();
-        var entity = await _dbContext.TournamentPlayer.FirstOrDefaultAsync(
+        var entity = await database.TournamentPlayer.FirstOrDefaultAsync(
             t => t.TournamentId == tournamentId && t.PlayerName == nameString, cancellationToken);
         if (entity == null)
         {
-            await _dbContext.TournamentPlayer.AddAsync(new TournamentPlayerEntity
+            await database.TournamentPlayer.AddAsync(new TournamentPlayerEntity
             {
                 DiscordId = player.DiscordId,
                 Notes = player.Notes,
@@ -224,17 +236,18 @@ public sealed class EFMatchRepository : IMatchRepository
             entity.TournamentId = tournamentId;
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
     }
 
     public async Task DeleteMatchPlayer(Guid tournamentId, Name playerName, CancellationToken cancellationToken)
     {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var nameString = playerName.ToString();
-        var entities = await _dbContext.TournamentPlayer
+        var entities = await database.TournamentPlayer
             .Where(t => t.TournamentId == tournamentId && t.PlayerName == nameString)
             .ToArrayAsync(cancellationToken);
-        _dbContext.TournamentPlayer.RemoveRange(entities);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        database.TournamentPlayer.RemoveRange(entities);
+        await database.SaveChangesAsync(cancellationToken);
     }
 
     private string MachineCacheKey(Guid tournamentId)
@@ -248,7 +261,8 @@ public sealed class EFMatchRepository : IMatchRepository
         return await _cache.GetOrCreateAsync(MachineCacheKey(tournamentId), async o =>
         {
             o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6);
-            return await _dbContext.TournamentMachine.Where(t => t.TournamentId == tournamentId)
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            return await database.TournamentMachine.Where(t => t.TournamentId == tournamentId)
                 .Select(t => new MatchMachineRecord(t.MachineName, t.Priority, t.IsWarmup))
                 .ToArrayAsync(cancellationToken);
         });
@@ -257,12 +271,13 @@ public sealed class EFMatchRepository : IMatchRepository
     public async Task SaveMachine(Guid tournamentId, MatchMachineRecord machine,
         CancellationToken cancellationToken)
     {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var machineName = machine.MachineName.ToString();
-        var entity = await _dbContext.TournamentMachine.FirstOrDefaultAsync(t => t.TournamentId == tournamentId
+        var entity = await database.TournamentMachine.FirstOrDefaultAsync(t => t.TournamentId == tournamentId
             && t.MachineName == machineName, cancellationToken);
         if (entity == null)
         {
-            await _dbContext.TournamentMachine.AddAsync(new TournamentMachineEntity
+            await database.TournamentMachine.AddAsync(new TournamentMachineEntity
             {
                 IsWarmup = machine.IsWarmup,
                 Priority = machine.Priority,
@@ -276,19 +291,20 @@ public sealed class EFMatchRepository : IMatchRepository
             entity.IsWarmup = machine.IsWarmup;
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
         _cache.Remove(MachineCacheKey(tournamentId));
     }
 
     public async Task DeleteMachine(Guid tournamentId, Name machineName, CancellationToken cancellationToken)
     {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var machineNameString = machineName.ToString();
-        var entity = await _dbContext.TournamentMachine.FirstOrDefaultAsync(t => t.TournamentId == tournamentId
+        var entity = await database.TournamentMachine.FirstOrDefaultAsync(t => t.TournamentId == tournamentId
             && t.MachineName == machineNameString, cancellationToken);
         if (entity != null)
         {
-            _dbContext.TournamentMachine.Remove(entity);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            database.TournamentMachine.Remove(entity);
+            await database.SaveChangesAsync(cancellationToken);
 
             _cache.Remove(MachineCacheKey(tournamentId));
         }

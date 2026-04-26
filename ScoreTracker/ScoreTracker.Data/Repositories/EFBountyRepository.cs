@@ -43,7 +43,7 @@ namespace ScoreTracker.Data.Repositories
                 var mixId = MixGuids[MixEnum.Phoenix];
                 var levelInt = (int)level;
                 var chartTypeString = chartType.ToString();
-                var database = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+                await using var database = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
                 return await (from cm in database.ChartMix
                         join c in database.Chart on cm.ChartId equals c.Id
                         join cb in database.ChartBounty on c.Id equals cb.ChartId
@@ -56,7 +56,7 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task SetChartBounty(Guid chartId, int worth, CancellationToken cancellationToken)
         {
-            var database = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             var entity = await database.ChartBounty.FirstOrDefaultAsync(b => b.ChartId == chartId, cancellationToken);
             if (entity == null)
                 await database.ChartBounty.AddAsync(new ChartBountyEntity
@@ -72,7 +72,7 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task ClearMonthlyBoard(CancellationToken cancellationToken)
         {
-            var database = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             var allEntities = await database.BountyLeaderboard.ToArrayAsync(cancellationToken);
             foreach (var entity in allEntities) entity.MonthlyTotal = 0;
             await database.SaveChangesAsync(cancellationToken);
@@ -80,7 +80,7 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task RedeemBounty(Guid userId, int worth, CancellationToken cancellationToken)
         {
-            var database = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             var entity =
                 await database.BountyLeaderboard.FirstOrDefaultAsync(l => l.UserId == userId, cancellationToken);
             if (entity == null)
@@ -103,7 +103,7 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task<BountyLeaderboard> GetBountyLeaderboard(Guid userId, CancellationToken cancellationToken)
         {
-            var database = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             return await database.BountyLeaderboard.Where(l => l.UserId == userId)
                 .Select(l => new BountyLeaderboard(l.UserId, l.MonthlyTotal, l.Total))
                 .FirstOrDefaultAsync(cancellationToken) ?? new BountyLeaderboard(userId, 0, 0);
@@ -111,7 +111,7 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task<IEnumerable<BountyLeaderboard>> GetBountyLeaderboard(CancellationToken cancellationToken)
         {
-            var database = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             return await (from u in database.User
                     join l in database.BountyLeaderboard on u.Id equals l.UserId
                     where u.IsPublic
