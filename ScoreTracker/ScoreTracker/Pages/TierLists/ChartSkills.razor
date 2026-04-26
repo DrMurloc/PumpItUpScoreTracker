@@ -1449,40 +1449,51 @@ function(val, index) {
     private int _averageRating = 1;
     private async Task<IEnumerable<SongTierListEntry>> GetSimilarPlayers(ChartType type, int level)
     {
-
-        var myLevel = await Titles.GetCurrentTitleLevel(CurrentUser.User.Id, CancellationToken.None);
-        var lowLevel = await TierLists.GetUsersOnLevel(myLevel - 1, CancellationToken.None);
-        var onMyLevel = await TierLists.GetUsersOnLevel(myLevel - 1, CancellationToken.None);
-        var highLevel = await TierLists.GetUsersOnLevel(myLevel - +1, CancellationToken.None);
-        var userIds = (lowLevel)
-            .Concat(onMyLevel)
-            .Concat(highLevel)
-            .Where(u => u != CurrentUser.User.Id);
-        var userTiersLists = new Dictionary<Guid, IEnumerable<SongTierListEntry>>();
-        var myTierList = (await Mediator.Send(new GetMyRelativeTierListQuery(type, level)))
-            .ToDictionary(r => r.ChartId);
-        foreach (var userId in userIds)
+        var myUserId = CurrentUser.User.Id;
+        var cacheKey = $"{nameof(ChartSkills)}__SimilarPlayers__{myUserId}__{type}__{level}";
+        return await Cache.GetOrCreateAsync(cacheKey, async o =>
         {
-            userTiersLists[userId] = await Mediator.Send(new GetMyRelativeTierListQuery(type, level, userId));
-        }
-        var userTotals = userTiersLists.ToDictionary(kv => kv.Key, kv => kv.Value.Sum(e => myTierList.ContainsKey(e.ChartId) && myTierList[e.ChartId].Category != TierListCategory.Unrecorded && e.Category != TierListCategory.Unrecorded ?
-            (int)TierListCategory.Unrecorded - (int)Math.Abs(e.Category - myTierList[e.ChartId].Category)
-            : 0));
+            o.SlidingExpiration = TimeSpan.FromHours(1);
 
-        var chartWeights = new Dictionary<Guid, int>();
+            var myLevel = await Titles.GetCurrentTitleLevel(myUserId, CancellationToken.None);
+            var lowLevelTask = TierLists.GetUsersOnLevel(myLevel - 1, CancellationToken.None);
+            var onMyLevelTask = TierLists.GetUsersOnLevel(myLevel, CancellationToken.None);
+            var highLevelTask = TierLists.GetUsersOnLevel(myLevel + 1, CancellationToken.None);
+            await Task.WhenAll(lowLevelTask, onMyLevelTask, highLevelTask);
 
-        foreach (var kv in userTiersLists)
-            foreach (var entry in kv.Value.Where(e => e.Category != TierListCategory.Unrecorded))
-            {
-                if (!chartWeights.ContainsKey(entry.ChartId))
+            var userIds = lowLevelTask.Result
+                .Concat(onMyLevelTask.Result)
+                .Concat(highLevelTask.Result)
+                .Where(u => u != myUserId)
+                .Distinct()
+                .ToArray();
+
+            var myTierListTask = Mediator.Send(new GetMyRelativeTierListQuery(type, level));
+            var userTierListTasks = userIds
+                .Select(uid => (UserId: uid, Task: Mediator.Send(new GetMyRelativeTierListQuery(type, level, uid))))
+                .ToArray();
+            await Task.WhenAll(userTierListTasks.Select(t => (Task)t.Task).Append(myTierListTask));
+
+            var myTierList = myTierListTask.Result.ToDictionary(r => r.ChartId);
+            var userTiersLists = userTierListTasks.ToDictionary(t => t.UserId, t => t.Task.Result);
+
+            var userTotals = userTiersLists.ToDictionary(kv => kv.Key, kv => kv.Value.Sum(e => myTierList.ContainsKey(e.ChartId) && myTierList[e.ChartId].Category != TierListCategory.Unrecorded && e.Category != TierListCategory.Unrecorded ?
+                (int)TierListCategory.Unrecorded - (int)Math.Abs(e.Category - myTierList[e.ChartId].Category)
+                : 0));
+
+            var chartWeights = new Dictionary<Guid, int>();
+
+            foreach (var kv in userTiersLists)
+                foreach (var entry in kv.Value.Where(e => e.Category != TierListCategory.Unrecorded))
                 {
-                    chartWeights[entry.ChartId] = 0;
+                    if (!chartWeights.ContainsKey(entry.ChartId))
+                    {
+                        chartWeights[entry.ChartId] = 0;
+                    }
+                    chartWeights[entry.ChartId] += (TierListCategory.Unrecorded - entry.Category) * userTotals[kv.Key];
                 }
-                chartWeights[entry.ChartId] += (TierListCategory.Unrecorded - entry.Category) * userTotals[kv.Key];
-            }
-        return TierListSaga.ProcessIntoTierList("Similar Players", chartWeights);
-        
-
+            return TierListSaga.ProcessIntoTierList("Similar Players", chartWeights).ToArray().AsEnumerable();
+        });
     }
 
     private ISet<Guid> _topCharts = new HashSet<Guid>();
