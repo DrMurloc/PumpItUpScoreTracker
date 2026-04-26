@@ -130,8 +130,10 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | XX Progress | Progresso XX | No article — sidesteps the gender question for the legacy mix proper-noun. |
 | Admin (role/area) | Admin | **Untranslated**. Role name. |
 | Chart actions | Salvar / Atualizar / Criar chart | "Save Chart" → "Salvar chart"; "Update Chart" → "Atualizar chart"; "Chart saved" → "Chart salvo" (masculine — community treats `chart` as masc.). |
-
-### Phrasing patterns to copy
+| Lifebar (one-word, the UI element) | lifebar | **Untranslated** when referring to the PIU UI element specifically. Bare `Life` translates as `Vida` (e.g. "Max Life" → "Vida máxima", "Life Threshold" → "Limite de vida"). Same split-treatment as `chart` (jargon untranslated) vs related Portuguese words. |
+| Judgment terms (Bad / Miss / Perfect / Great / Good) | Bad / Miss / Perfect / Great / Good | **Untranslated**, including plural forms (`Bads`, `Misses`, `Greats`, `Perfects`, `Goods`). Brazilian PIU community uses the English judgment terms. |
+| X Calculator | Calculadora de X | "Phoenix Score Calculator" → "Calculadora de pontuação da Phoenix" (existing); "Rating Calculator" → "Calculadora de rating"; "PIU Life Calculator" → "Calculadora de vida do PIU". |
+| Delete | Excluir | Action verb. Distinct from `Remove from X` → `Remover de X` (existing). |
 
 - **Possessives**: "Minhas Pontuações", "sua conta", "seu progresso" — possessive precedes noun, agrees in gender/number.
 - **"With pass" / "without pass"**: phrased as `com pass` / `sem pass`. See "Hide Completed Charts" → "Ocultar charts com pass".

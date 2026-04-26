@@ -846,4 +846,106 @@
   <data name="Youtube Hash" xml:space="preserve">
     <value>Hash do YouTube</value>
   </data>
+  <data name="Added" xml:space="preserve">
+    <value>Adicionado</value>
+  </data>
+  <data name="Arrows Pressed" xml:space="preserve">
+    <value>Setas pressionadas</value>
+  </data>
+  <data name="Bads vs Misses Observations" xml:space="preserve">
+    <value>Observações: Bads vs Misses</value>
+  </data>
+  <data name="Changed Level" xml:space="preserve">
+    <value>Nível alterado</value>
+  </data>
+  <data name="Chart Compare" xml:space="preserve">
+    <value>Comparar charts</value>
+  </data>
+  <data name="Chart Count" xml:space="preserve">
+    <value>Contagem de charts</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Excluir</value>
+  </data>
+  <data name="Great Combo, Bad Break" xml:space="preserve">
+    <value>Combo de greats, quebra com bad</value>
+  </data>
+  <data name="Great Combo, Miss Break" xml:space="preserve">
+    <value>Combo de greats, quebra com miss</value>
+  </data>
+  <data name="Greats" xml:space="preserve">
+    <value>Greats</value>
+  </data>
+  <data name="Life Bar by Level" xml:space="preserve">
+    <value>Lifebar por nível</value>
+  </data>
+  <data name="Life Threshold" xml:space="preserve">
+    <value>Limite de vida</value>
+  </data>
+  <data name="Life gain description" xml:space="preserve">
+    <value>Descrição de ganho de vida</value>
+  </data>
+  <data name="Life loss description" xml:space="preserve">
+    <value>Descrição de perda de vida</value>
+  </data>
+  <data name="Lifebar Description" xml:space="preserve">
+    <value>Descrição da lifebar</value>
+  </data>
+  <data name="Lifebar stats" xml:space="preserve">
+    <value>Estatísticas da lifebar</value>
+  </data>
+  <data name="Max Life" xml:space="preserve">
+    <value>Vida máxima</value>
+  </data>
+  <data name="Max Rating" xml:space="preserve">
+    <value>Rating máximo</value>
+  </data>
+  <data name="Note Count from Full Life to Death/Threshold based on Combo between Breaks" xml:space="preserve">
+    <value>Quantidade de notas da vida cheia até a morte/limite, com base no combo entre quebras</value>
+  </data>
+  <data name="Notes to Full Life From Start of Song (50%)" xml:space="preserve">
+    <value>Notas até a vida cheia desde o início da música (50%)</value>
+  </data>
+  <data name="PIU Life Calculator" xml:space="preserve">
+    <value>Calculadora de vida do PIU</value>
+  </data>
+  <data name="Perfect Combo, Bad Break" xml:space="preserve">
+    <value>Combo de perfects, quebra com bad</value>
+  </data>
+  <data name="Perfect Combo, Miss Break" xml:space="preserve">
+    <value>Combo de perfects, quebra com miss</value>
+  </data>
+  <data name="Perfects" xml:space="preserve">
+    <value>Perfects</value>
+  </data>
+  <data name="Rating Calculator" xml:space="preserve">
+    <value>Calculadora de rating</value>
+  </data>
+  <data name="Recovery Observations" xml:space="preserve">
+    <value>Observações de recuperação</value>
+  </data>
+  <data name="Removed" xml:space="preserve">
+    <value>Removido</value>
+  </data>
+  <data name="Saved Settings" xml:space="preserve">
+    <value>Configurações salvas</value>
+  </data>
+  <data name="Settings Name" xml:space="preserve">
+    <value>Nome das configurações</value>
+  </data>
+  <data name="Source" xml:space="preserve">
+    <value>Fonte</value>
+  </data>
+  <data name="Starting Life" xml:space="preserve">
+    <value>Vida inicial</value>
+  </data>
+  <data name="Step Artists" xml:space="preserve">
+    <value>Autores dos passos</value>
+  </data>
+  <data name="TLDR" xml:space="preserve">
+    <value>TLDR</value>
+  </data>
+  <data name="Visible Life" xml:space="preserve">
+    <value>Vida visível</value>
+  </data>
 </root>
