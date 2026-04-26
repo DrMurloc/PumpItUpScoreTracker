@@ -14,7 +14,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class GetUserByIdHandlerTests
 {
     [Fact]
-    public async Task DelegatesToRepository()
+    public async Task ReturnsUserWithMatchingId()
     {
         var userId = Guid.NewGuid();
         var user = new UserBuilder().WithId(userId).Build();

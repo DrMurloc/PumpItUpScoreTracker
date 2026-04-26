@@ -15,7 +15,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class GetPhoenixRecordsHandlerTests
 {
     [Fact]
-    public async Task DelegatesToRepositoryForRequestedUser()
+    public async Task ReturnsRecordedScoresForRequestedUser()
     {
         var userId = Guid.NewGuid();
         var scores = new List<RecordedPhoenixScore>();

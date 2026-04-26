@@ -13,7 +13,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class GetCoOpRatingsHandlerTests
 {
     [Fact]
-    public async Task DelegatesToRepository()
+    public async Task ReturnsAllCoOpRatings()
     {
         var ratingsList = new List<CoOpRating>();
         var ratings = new Mock<IChartDifficultyRatingRepository>();

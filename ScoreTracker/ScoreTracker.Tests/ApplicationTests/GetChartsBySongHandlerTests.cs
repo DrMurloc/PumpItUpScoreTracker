@@ -15,7 +15,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class GetChartsBySongHandlerTests
 {
     [Fact]
-    public async Task DelegatesToRepository()
+    public async Task ReturnsChartsForSong()
     {
         var songName = Name.From("Test Song");
         var expected = new[] { new ChartBuilder().Build() };

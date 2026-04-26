@@ -14,7 +14,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class GetPhoenixScoresForChartHandlerTests
 {
     [Fact]
-    public async Task DelegatesToRepository()
+    public async Task ReturnsRecordedUserScoresForChart()
     {
         var chartId = Guid.NewGuid();
         var scores = new List<UserPhoenixScore>();
