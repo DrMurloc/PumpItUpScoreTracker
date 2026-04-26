@@ -85,7 +85,7 @@ namespace ScoreTracker.Data.Repositories
             return await _cache.GetOrCreateAsync(CacheKey(userId), async o =>
             {
                 await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-                o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(5);
+                o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(30);
 
                 var entity =
                     await database.PlayerStats.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
