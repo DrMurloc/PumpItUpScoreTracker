@@ -125,4 +125,43 @@ public sealed class BpmTests
     {
         Assert.False(Bpm.TryParse(input, out _));
     }
+
+    // ---- Implicit conversions ----
+
+    [Fact]
+    public void ImplicitConversionFromDecimalDelegatesToFrom()
+    {
+        Bpm bpm = 120m;
+        Assert.Equal(120m, bpm.Min);
+        Assert.Equal(120m, bpm.Max);
+    }
+
+    [Fact]
+    public void ImplicitConversionFromNonPositiveDecimalThrows()
+    {
+        Assert.Throws<InvalidBpmException>(() =>
+        {
+            Bpm bpm = 0m;
+        });
+    }
+
+    [Theory]
+    [InlineData("120", 120, 120)]
+    [InlineData("99.5", 99.5, 99.5)]
+    [InlineData("120 ~ 200", 120, 200)]
+    public void ImplicitConversionFromStringDelegatesToTryParse(string input, decimal expectedMin, decimal expectedMax)
+    {
+        Bpm bpm = input;
+        Assert.Equal(expectedMin, bpm.Min);
+        Assert.Equal(expectedMax, bpm.Max);
+    }
+
+    [Fact]
+    public void ImplicitConversionFromMalformedStringThrows()
+    {
+        Assert.Throws<InvalidBpmException>(() =>
+        {
+            Bpm bpm = "not-a-number";
+        });
+    }
 }
