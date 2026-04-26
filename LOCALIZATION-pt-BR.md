@@ -66,6 +66,13 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | Overview | Visão geral | |
 | Remaining | Restante | |
 | Copied to clipboard! | Copiado para a área de transferência! | Matches the existing "Copy to Clipboard" → "Copiar para a área de transferência" verb form. |
+| Communities | Comunidades | |
+| Create | Criar | |
+| Done | Concluído | Same as `Completed`. |
+| Last Updated | Última atualização | |
+| Maximum / Minimum (full word) | Máximo / Mínimo | Used when English source spells it out (e.g. "Maximum Level" → "Nível máximo"). Distinct from abbreviated `Min./Máx.` for `Min/Max` keys. |
+| Minutes / Seconds | Minutos / Segundos | |
+| Saved! | Salvo! | Snackbar success message. Masculine default. |
 
 ### PIU domain
 
@@ -121,6 +128,8 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | Score Distribution | Distribuição de pontuação | "Show Score Distribution" → "Mostrar distribuição de pontuação". |
 | Ungraded | Sem nota | Matches `sem pass` / `sem nota` family. "Not Graded Count" → "Contagem de músicas sem nota". |
 | XX Progress | Progresso XX | No article — sidesteps the gender question for the legacy mix proper-noun. |
+| Admin (role/area) | Admin | **Untranslated**. Role name. |
+| Chart actions | Salvar / Atualizar / Criar chart | "Save Chart" → "Salvar chart"; "Update Chart" → "Atualizar chart"; "Chart saved" → "Chart salvo" (masculine — community treats `chart` as masc.). |
 
 ### Phrasing patterns to copy
 
@@ -133,6 +142,7 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 - **`(Data Backed)` parenthetical**: render as `(Baseado em dados)` / `(Baseada em dados)` — gender-agree with the preceding noun. E.g. "Pass (Data Backed)" → "Pass (Baseado em dados)" (`Pass` masculine); "Score (Data Backed)" → "Pontuação (Baseada em dados)" (`Pontuação` feminine).
 - **`Old X` / `New X` pairs**: render as `X antigo(a)` / `X novo(a)` — gender-agree with the noun. E.g. "Old Letter Grade" → "Letra de nota antiga", "New Letter Grade" → "Letra de nota nova" (`Letra` feminine).
 - **`Show X only` / `top` references**: "Show Top Only" → "Mostrar somente o topo" (literal). "Show Only ToDo Charts" → `Mostrar somente charts "Pendentes"` (established).
+- **Tech loanwords**: `cache`, `hash`, `URL`, `Rating` stay untranslated — universal in pt-BR tech UI. E.g. "Clear Cache" → "Limpar cache"; "Youtube Hash" → "Hash do YouTube".
 
 ## Open decisions (terms upcoming batches will need)
 
@@ -145,7 +155,6 @@ Pulled from the 442 missing keys. Each is a term that doesn't yet have an establ
 | Bounty | **Bounty** (untranslated) | Niche PIU community concept; matches the pattern of leaving `Plate`, `pass`, `chart` untranslated. Confirms with Tier List and Bounty being parallel features. |
 | Pumbility | **Pumbility** (untranslated) | Proper noun for PIU's composite player rating; community uses the English term. |
 | UCS | **UCS** (untranslated) | Acronym (User-Created Step). Untranslated everywhere. |
-| Community / Communities | Comunidade / Comunidades | Direct cognate. |
 | Avatar | Avatar | Untranslated, common loanword in pt-BR UI. |
 | Tournament (singular) | Campeonato | Plural already established as `Campeonatos`. |
 | Match (versus another player) | Partida | Standard pt-BR for game match. (`User Matches` → `Partidas do usuário`, etc.) |
