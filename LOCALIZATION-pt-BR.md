@@ -145,6 +145,9 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 - **`Old X` / `New X` pairs**: render as `X antigo(a)` / `X novo(a)` — gender-agree with the noun. E.g. "Old Letter Grade" → "Letra de nota antiga", "New Letter Grade" → "Letra de nota nova" (`Letra` feminine).
 - **`Show X only` / `top` references**: "Show Top Only" → "Mostrar somente o topo" (literal). "Show Only ToDo Charts" → `Mostrar somente charts "Pendentes"` (established).
 - **Tech loanwords**: `cache`, `hash`, `URL`, `Rating` stay untranslated — universal in pt-BR tech UI. E.g. "Clear Cache" → "Limpar cache"; "Youtube Hash" → "Hash do YouTube".
+- **Decimal separator**: pt-BR uses comma — `9,6` not `9.6`. Localize numeric values inside translated prose.
+- **Source typos in long-key prose**: when the English key has a clearly-broken sentence (e.g. missing word), translate the *intended* meaning so the pt-BR reads as correct grammar. Don't preserve the typo.
+- **PIU community proper nouns / community jargon** in prose stay English: `run` (a play-through), `Rainbow` (lifebar color phase ≥1000), `data-mine` / `data-mining`, mix names (`NX2`, `Prime`, `XX`, `Phoenix`), and contributor names (`KyleTT`, `FEFEMZ`, `Team Infinitesimal`).
 
 ## Open decisions (terms upcoming batches will need)
 

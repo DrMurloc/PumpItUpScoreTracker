@@ -948,4 +948,82 @@
   <data name="Visible Life" xml:space="preserve">
     <value>Vida visível</value>
   </data>
+  <data name="Bads at low health let you live for roughly 3x as long as misses, this gap increases the higher the life threshold you want to keep, up to misses punishing 6x as much when maintaining 100% visual life." xml:space="preserve">
+    <value>Bads em vida baixa fazem você sobreviver cerca de 3x mais que misses; essa diferença aumenta quanto maior for o limite de vida que você quer manter, até misses punirem 6x mais ao manter 100% de vida visual.</value>
+  </data>
+  <data name="Bads mostly hurt your recovery." xml:space="preserve">
+    <value>Bads atrapalham principalmente sua recuperação.</value>
+  </data>
+  <data name="By default at high combo, perfects gain 9.6 life, greats gain 8 life, goods gain 0 life." xml:space="preserve">
+    <value>Por padrão, em combo alto, perfects ganham 9,6 de vida, greats ganham 8 de vida, e goods ganham 0 de vida.</value>
+  </data>
+  <data name="By default, bads lose 50 health, misses lose 250 health (at ~100% health)." xml:space="preserve">
+    <value>Por padrão, bads tiram 50 de vida e misses tiram 250 de vida (em ~100% de vida).</value>
+  </data>
+  <data name="Disclaimer: This data was data-mined in NX2 and Prime, it is unconfirmed how accurate it is today." xml:space="preserve">
+    <value>Aviso: estes dados foram extraídos via data-mining no NX2 e no Prime; não há confirmação de quão precisos eles ainda são hoje.</value>
+  </data>
+  <data name="Disclaimer: This list is being refined, some charts are missing step artists and some may have incorrect artists." xml:space="preserve">
+    <value>Aviso: esta lista está sendo refinada; alguns charts estão sem autor dos passos e outros podem ter autores incorretos.</value>
+  </data>
+  <data name="Each perfect or great you get increases the multiplier by a minor amount." xml:space="preserve">
+    <value>Cada perfect ou great que você acerta aumenta o multiplicador em uma pequena quantidade.</value>
+  </data>
+  <data name="Effectively, this means that your life gain is heavily affected by combo, reaching maximum gain at ~40-50 combo." xml:space="preserve">
+    <value>Na prática, isso significa que seu ganho de vida é fortemente afetado pelo combo, atingindo o ganho máximo em ~40-50 de combo.</value>
+  </data>
+  <data name="Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings." xml:space="preserve">
+    <value>Muito obrigado a KyleTT por compilar essas informações a partir das gravações do FEFEMZ.</value>
+  </data>
+  <data name="Lifebar overflows exponentially by level, up to about a 2350 overflow at level 28." xml:space="preserve">
+    <value>A lifebar transborda exponencialmente conforme o nível, chegando a um excedente de cerca de 2350 no nível 28.</value>
+  </data>
+  <data name="Lifebars are weird." xml:space="preserve">
+    <value>Lifebars são estranhas.</value>
+  </data>
+  <data name="Misses lose LESS health the further beneath 1000 health you are at (at 0 life you would lose 20 health for a miss)" xml:space="preserve">
+    <value>Misses tiram MENOS vida quanto mais abaixo de 1000 você estiver (em 0 de vida, um miss tiraria 20 de vida)</value>
+  </data>
+  <data name="Misses or back-to-back Bads early in a run put you in a terribly position for maintaining life, as they reset your life gain multiplier and require you to combo ~40-50 to regain it. Start runs strong for increased success rates." xml:space="preserve">
+    <value>Misses ou bads consecutivos no início da run colocam você em uma posição péssima para manter vida, pois resetam seu multiplicador de ganho e exigem ~40-50 de combo para recuperá-lo. Comece as runs forte para aumentar suas taxas de sucesso.</value>
+  </data>
+  <data name="Misses severely hurt your lifebar." xml:space="preserve">
+    <value>Misses prejudicam severamente sua lifebar.</value>
+  </data>
+  <data name="Note that this information is not final until referenced against actual released mix." xml:space="preserve">
+    <value>Observe que essas informações não são finais até serem comparadas com a versão lançada.</value>
+  </data>
+  <data name="Starting life is 500, visible  Life (Rainbow life bar) is 1000." xml:space="preserve">
+    <value>A vida inicial é 500; a vida visível (lifebar Rainbow) é 1000.</value>
+  </data>
+  <data name="TLDR: Misses matter less at low life, but are always significantly more punishing than Bads." xml:space="preserve">
+    <value>TLDR: misses importam menos em vida baixa, mas sempre são significativamente mais punitivos que bads.</value>
+  </data>
+  <data name="Team Infinitesimal, data-mine from NX2 + Prime" xml:space="preserve">
+    <value>Team Infinitesimal, data-mine do NX2 + Prime</value>
+  </data>
+  <data name="This is modified by a multiplier that is almost entirely reset on a miss, and decreased drastically on a bad." xml:space="preserve">
+    <value>Isso é modificado por um multiplicador que é quase totalmente resetado em um miss e drasticamente reduzido em um bad.</value>
+  </data>
+  <data name="To recover from Bads you require 17-21 combo per Bad. Bads typically let you live for 3x as long as misses." xml:space="preserve">
+    <value>Para se recuperar de bads, é necessário 17-21 de combo por bad. Bads geralmente fazem você sobreviver 3x mais que misses.</value>
+  </data>
+  <data name="To remain alive you need to maintain 17-21 combo per Miss." xml:space="preserve">
+    <value>Para permanecer vivo, você precisa manter 17-21 de combo por miss.</value>
+  </data>
+  <data name="To remain at 50% visible life, you need 37-46 combo per Miss." xml:space="preserve">
+    <value>Para manter 50% de vida visível, você precisa de 37-46 de combo por miss.</value>
+  </data>
+  <data name="To remain at Rainbow Life, you 46-55 combo per Miss." xml:space="preserve">
+    <value>Para manter a vida Rainbow, você precisa de 46-55 de combo por miss.</value>
+  </data>
+  <data name="Try to maintain 17-21 combo per bad." xml:space="preserve">
+    <value>Procure manter 17-21 de combo por bad.</value>
+  </data>
+  <data name="Try to maintain 40-50 combo per miss." xml:space="preserve">
+    <value>Procure manter 40-50 de combo por miss.</value>
+  </data>
+  <data name="When at 12% or lower visual life, a miss gives less life loss than a bad, but inhibits your recovery severely. This only really matters for notes at the end of a song or before guaranteed 100+ combo sections." xml:space="preserve">
+    <value>Em 12% ou menos de vida visível, um miss tira menos vida que um bad, mas inibe sua recuperação severamente. Isso só importa de fato para notas no fim da música ou antes de seções com 100+ de combo garantido.</value>
+  </data>
 </root>
