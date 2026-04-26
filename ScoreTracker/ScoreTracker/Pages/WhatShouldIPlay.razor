@@ -18,9 +18,9 @@
 @using ScoreTracker.Web.Shared
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 
-<PageTitle>What Should I Play</PageTitle>
+<PageTitle>@L["What Should I Play"]</PageTitle>
 
-<MudText Typo="Typo.h3">What Should I Play?</MudText>
+<MudText Typo="Typo.h3">@L["What Should I Play?"]</MudText>
 <br/>
 @if (_progress != null && _chartDict.Any())
 {
@@ -50,9 +50,9 @@
 <MudGrid>
     <MudItem xs="4" sm="3">
         <MudSelect T="ChartType?" Label=@L["Chart Type"] Value="_chartType" ValueChanged="SetChartType" Disabled="_isLoading">
-            <MudSelectItem T="ChartType?" Value="null">All</MudSelectItem>
-            <MudSelectItem T="ChartType?" Value="ChartType.Single">Singles</MudSelectItem>
-            <MudSelectItem T="ChartType?" Value="ChartType.Double">Doubles</MudSelectItem>
+            <MudSelectItem T="ChartType?" Value="null">@L["All"]</MudSelectItem>
+            <MudSelectItem T="ChartType?" Value="ChartType.Single">@L["Singles"]</MudSelectItem>
+            <MudSelectItem T="ChartType?" Value="ChartType.Double">@L["Doubles"]</MudSelectItem>
         </MudSelect>
     </MudItem>
     <MudItem xs="2" sm="1">
@@ -82,7 +82,7 @@
             @if (key == "Weekly Charts")
             {
                             <br />
-                <MudLink Typo="Typo.subtitle1" Href="/WeeklyCharts">See Leaderboards</MudLink>
+                <MudLink Typo="Typo.subtitle1" Href="/WeeklyCharts">@L["See Leaderboards"]</MudLink>
             }
         </MudItem>
         @foreach (var chart in _charts[key])
@@ -113,7 +113,7 @@
                     <MudCardActions>
                         @if (_topCharts.Contains(chart.Id))
                         {
-                            <MudTooltip Text=@($"Top 50 {chart.Type}s")>
+                            <MudTooltip Text=@L["Top 50 X", chart.Type]>
                                 <MudIcon Icon="@PiuScoresIcons.Crown" Style="color:#00ffff"></MudIcon>
                             </MudTooltip>
                         }
@@ -187,7 +187,7 @@ else
     @foreach (var sectionName in _hiddenSections)
     {
     <MudItem xs="6" sm="4" md="3">
-        <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>ShowSection(sectionName)">Show @sectionName</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>ShowSection(sectionName)">@L["Show"] @sectionName</MudButton>
     </MudItem>
     }
 </MudGrid>
@@ -195,32 +195,32 @@ else
 {
     <MudGrid>
         <MudItem xs="12">
-            <MudText Typo="Typo.h4">Stats</MudText>
+            <MudText Typo="Typo.h4">@L["Stats"]</MudText>
         </MudItem>
         <MudItem xs="12">
             <b>PUMBILITY</b>: @_stats.SkillRating
         </MudItem>
         <MudItem xs="12">
-            <b>Competitive Level</b>: @_stats.CompetitiveLevel.ToString("0.00") <MudIconButton Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Primary" Target="_blank" Href="/CompetitiveLevel" Size="Size.Small"></MudIconButton>
+            <b>@L["Competitive Level"]</b>: @_stats.CompetitiveLevel.ToString("0.00") <MudIconButton Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Primary" Target="_blank" Href="/CompetitiveLevel" Size="Size.Small"></MudIconButton>
         </MudItem>
         <MudItem xs="12">
-            <b>Singles Level</b>: @_stats.SinglesCompetitiveLevel.ToString("0.00")
+            <b>@L["Singles Level"]</b>: @_stats.SinglesCompetitiveLevel.ToString("0.00")
         </MudItem>
         <MudItem xs="12">
-            <b>Doubles Level</b>: @_stats.DoublesCompetitiveLevel.ToString("0.00")
+            <b>@L["Doubles Level"]</b>: @_stats.DoublesCompetitiveLevel.ToString("0.00")
         </MudItem>
     </MudGrid>
 }
 @if (_playerHistory.Any())
 {
     <ApexChart TItem="PlayerRatingRecord"
-               Title="Competitive Level"
+               Title=@L["Competitive Level"]
                XAxisType="XAxisType.Datetime"
                Options="_scoreBoxesOptions">
         <ApexPointSeries TItem="PlayerRatingRecord"
                          Color="#EA3F24"
                          Items="_playerHistory"
-                         Name="Singles"
+                         Name=@L["Singles"]
                          SeriesType="SeriesType.Line"
                          XValue="@(e => e.Date)"
                          YValue="@(e => (decimal)e.SinglesLevel)"
@@ -228,7 +228,7 @@ else
         <ApexPointSeries TItem="PlayerRatingRecord"
                          Color="#76FA4F"
                          Items="_playerHistory"
-                         Name="Doubles"
+                         Name=@L["Doubles"]
                          SeriesType="SeriesType.Line"
                          XValue="@(e => e.Date)"
                          YValue="@(e => (decimal)e.DoublesLevel)"
@@ -236,7 +236,7 @@ else
         <ApexPointSeries TItem="PlayerRatingRecord"
                          Color="#00FFFF"
                          Items="_playerHistory"
-                         Name="Combined"
+                         Name=@L["Combined"]
                          SeriesType="SeriesType.Line"
                          XValue="@(e => e.Date)"
                          YValue="@(e => (decimal)e.CompetitiveLevel)"
@@ -253,8 +253,8 @@ else
         }
     </DialogContent>
     <DialogActions>
-        <MudButton StartIcon="@Icons.Material.Filled.ThumbUp" Color="Color.Secondary" Variant="Variant.Filled" Disabled="_isSaving" OnClick="SubmitPositiveFeedback">Good Suggestion</MudButton>
-        <MudButton StartIcon="@Icons.Material.Filled.ThumbDown" Color="Color.Secondary" Variant="Variant.Filled" Disabled="_isSaving" OnClick="()=>_showRateDialog=true">Bad Suggestion</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.ThumbUp" Color="Color.Secondary" Variant="Variant.Filled" Disabled="_isSaving" OnClick="SubmitPositiveFeedback">@L["Good Suggestion"]</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.ThumbDown" Color="Color.Secondary" Variant="Variant.Filled" Disabled="_isSaving" OnClick="()=>_showRateDialog=true">@L["Bad Suggestion"]</MudButton>
         <MudSpacer>
 
         </MudSpacer>
@@ -266,20 +266,20 @@ else
     <DialogContent>
         <MudGrid>
             <MudItem xs="12">
-                <MudSelect T="string" @bind-Value="_feedbackCategory" Label="Reason">
-                    <MudSelectItem Value=@("Doesn't Match My Personal Skills")>Doesn't Match My Personal Skills</MudSelectItem>
-                    <MudSelectItem Value=@("I Don't Like The Chart")>I Don't Like The Chart</MudSelectItem>
-                    <MudSelectItem Value=@("Not Relevant to Category")>Not Relevant to Category</MudSelectItem>
-                    <MudSelectItem Value=@("I Just Want to Hide The Chart")>I Just Want to Hide The Chart</MudSelectItem>
-                    <MudSelectItem Value=@("The Category Isn't Interesting to Me")>The Category Isn't Interesting to Me'</MudSelectItem>
-                    <MudSelectItem Value=@("Other")>Other</MudSelectItem>
+                <MudSelect T="string" @bind-Value="_feedbackCategory" Label=@L["Reason"]>
+                    <MudSelectItem Value=@("Doesn't Match My Personal Skills")>@L["Doesn't Match My Personal Skills"]</MudSelectItem>
+                    <MudSelectItem Value=@("I Don't Like The Chart")>@L["I Don't Like The Chart"]</MudSelectItem>
+                    <MudSelectItem Value=@("Not Relevant to Category")>@L["Not Relevant to Category"]</MudSelectItem>
+                    <MudSelectItem Value=@("I Just Want to Hide The Chart")>@L["I Just Want to Hide The Chart"]</MudSelectItem>
+                    <MudSelectItem Value=@("The Category Isn't Interesting to Me")>@L["The Category Isn't Interesting to Me'"]</MudSelectItem>
+                    <MudSelectItem Value=@("Other")>@L["Other"]</MudSelectItem>
                 </MudSelect>
             </MudItem>
             <MudItem xs="12">
-                <MudTextField @bind-Value="_notes" Lines="3" MaxLength="250" Counter=@(250-_notes.Length) Label="Additional Comments"></MudTextField>
+                <MudTextField @bind-Value="_notes" Lines="3" MaxLength="250" Counter=@(250-_notes.Length) Label=@L["Additional Comments"]></MudTextField>
             </MudItem>
             <MudItem xs="12">
-                <MudCheckBox T="bool" @bind-Value="_shouldHide" Label="Hide Chart for this Category"></MudCheckBox>
+                <MudCheckBox T="bool" @bind-Value="_shouldHide" Label=@L["Hide Chart for this Category"]></MudCheckBox>
             </MudItem>
         </MudGrid>
     </DialogContent>
@@ -335,13 +335,13 @@ else
         if (!_todos.Contains(chartId))
         {
             await Mediator.Send(new SaveChartToListCommand(ChartListType.ToDo, chartId));
-            Snackbar.Add("Added to ToDo List!", Severity.Success);
+            Snackbar.Add(L["Added to ToDo List!"].Value, Severity.Success);
             _todos.Add(chartId);
         }
         else
         {
             await Mediator.Send(new RemoveChartFromListCommand(ChartListType.ToDo, chartId));
-            Snackbar.Add("Removed from ToDo List!", Severity.Success);
+            Snackbar.Add(L["Removed from ToDo List!"].Value, Severity.Success);
             _todos.Remove(chartId);
         }
         StateHasChanged();

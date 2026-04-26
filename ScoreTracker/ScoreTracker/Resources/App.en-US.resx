@@ -1767,4 +1767,182 @@
   <data name="Couldn't parse JSON" xml:space="preserve">
 	  <value>Couldn't parse JSON</value>
   </data>
+  <data name="PIU Tier List" xml:space="preserve">
+	  <value>PIU Tier List</value>
+  </data>
+  <data name="Category" xml:space="preserve">
+	  <value>Category</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+	  <value>Title</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+	  <value>Description</value>
+  </data>
+  <data name="Community Completion" xml:space="preserve">
+	  <value>Community Completion</value>
+  </data>
+  <data name="Completion" xml:space="preserve">
+	  <value>Completion</value>
+  </data>
+  <data name="Competitive Level" xml:space="preserve">
+	  <value>Competitive Level</value>
+  </data>
+  <data name="All" xml:space="preserve">
+	  <value>All</value>
+  </data>
+  <data name="Competitive Level: X" xml:space="preserve">
+	  <value>Competitive Level: {0}</value>
+	  <comment>{0} = competitive level (5 decimals).</comment>
+  </data>
+  <data name="Min Level" xml:space="preserve">
+	  <value>Min Level</value>
+  </data>
+  <data name="Max Level" xml:space="preserve">
+	  <value>Max Level</value>
+  </data>
+  <data name="Show Scoreless" xml:space="preserve">
+	  <value>Show Scoreless</value>
+  </data>
+  <data name="Show Top Only" xml:space="preserve">
+	  <value>Show Top Only</value>
+  </data>
+  <data name="My Relative Difficulty" xml:space="preserve">
+	  <value>My Relative Difficulty</value>
+  </data>
+  <data name="Scoring Difficulty" xml:space="preserve">
+	  <value>Scoring Difficulty</value>
+  </data>
+  <data name="PIUGame Leaderboard Difficulty" xml:space="preserve">
+	  <value>PIUGame Leaderboard Difficulty</value>
+  </data>
+  <data name="Weekly Charts" xml:space="preserve">
+	  <value>Weekly Charts</value>
+  </data>
+  <data name="Current" xml:space="preserve">
+	  <value>Current</value>
+  </data>
+  <data name="Show Only Suggested Charts" xml:space="preserve">
+	  <value>Show Only Suggested Charts</value>
+  </data>
+  <data name="Monthly Leaderboard" xml:space="preserve">
+	  <value>Monthly Leaderboard</value>
+  </data>
+  <data name="Road to BITE (Monthly Leaderboard July 8th - August 4th)" xml:space="preserve">
+	  <value>Road to BITE (Monthly Leaderboard July 8th - August 4th)</value>
+	  <comment>Date-window heading used pre-BITE; specific to a fixed annual event window.</comment>
+  </data>
+  <data name="Week X - Top Y Charts" xml:space="preserve">
+	  <value>Week {0} - Top {1} Charts</value>
+	  <comment>{0} = week number, {1} = top-N count (week*4).</comment>
+  </data>
+  <data name="Leaderboard Type" xml:space="preserve">
+	  <value>Leaderboard Type</value>
+  </data>
+  <data name="Combined" xml:space="preserve">
+	  <value>Combined</value>
+  </data>
+  <data name="Co-Op" xml:space="preserve">
+	  <value>Co-Op</value>
+	  <comment>Used as a select-item label on /WeeklyCharts. Distinct from the existing "CoOp" key (no hyphen) used elsewhere — both spellings appear in source verbatim.</comment>
+  </data>
+  <data name="What Should I Play" xml:space="preserve">
+	  <value>What Should I Play</value>
+	  <comment>Page title (no question mark in source).</comment>
+  </data>
+  <data name="What Should I Play?" xml:space="preserve">
+	  <value>What Should I Play?</value>
+	  <comment>h3 header on the same page (with question mark in source).</comment>
+  </data>
+  <data name="See Leaderboards" xml:space="preserve">
+	  <value>See Leaderboards</value>
+  </data>
+  <data name="Top 50 X" xml:space="preserve">
+	  <value>Top 50 {0}</value>
+	  <comment>{0} = chart type (e.g. "Singles" / "Doubles"). Tooltip on the crown icon for top-50 charts.</comment>
+  </data>
+  <data name="Stats" xml:space="preserve">
+	  <value>Stats</value>
+  </data>
+  <data name="Singles Level" xml:space="preserve">
+	  <value>Singles Level</value>
+  </data>
+  <data name="Doubles Level" xml:space="preserve">
+	  <value>Doubles Level</value>
+  </data>
+  <data name="Good Suggestion" xml:space="preserve">
+	  <value>Good Suggestion</value>
+  </data>
+  <data name="Bad Suggestion" xml:space="preserve">
+	  <value>Bad Suggestion</value>
+  </data>
+  <data name="Reason" xml:space="preserve">
+	  <value>Reason</value>
+  </data>
+  <data name="Doesn't Match My Personal Skills" xml:space="preserve">
+	  <value>Doesn't Match My Personal Skills</value>
+  </data>
+  <data name="I Don't Like The Chart" xml:space="preserve">
+	  <value>I Don't Like The Chart</value>
+  </data>
+  <data name="Not Relevant to Category" xml:space="preserve">
+	  <value>Not Relevant to Category</value>
+  </data>
+  <data name="I Just Want to Hide The Chart" xml:space="preserve">
+	  <value>I Just Want to Hide The Chart</value>
+  </data>
+  <data name="The Category Isn't Interesting to Me'" xml:space="preserve">
+	  <value>The Category Isn't Interesting to Me'</value>
+	  <comment>Source has a stray trailing apostrophe — preserved verbatim.</comment>
+  </data>
+  <data name="Other" xml:space="preserve">
+	  <value>Other</value>
+  </data>
+  <data name="Additional Comments" xml:space="preserve">
+	  <value>Additional Comments</value>
+  </data>
+  <data name="Hide Chart for this Category" xml:space="preserve">
+	  <value>Hide Chart for this Category</value>
+  </data>
+  <data name="Added to ToDo List!" xml:space="preserve">
+	  <value>Added to ToDo List!</value>
+  </data>
+  <data name="Removed from ToDo List!" xml:space="preserve">
+	  <value>Removed from ToDo List!</value>
+  </data>
+  <data name="Chart Details" xml:space="preserve">
+	  <value>Chart Details</value>
+  </data>
+  <data name="Step Artist: X" xml:space="preserve">
+	  <value>Step Artist: {0}</value>
+	  <comment>{0} = step artist name (data).</comment>
+  </data>
+  <data name="Note Count: X" xml:space="preserve">
+	  <value>Note Count: {0}</value>
+	  <comment>{0} = note count integer.</comment>
+  </data>
+  <data name="Chart Difficulty by Letter Grade" xml:space="preserve">
+	  <value>Chart Difficulty by Letter Grade</value>
+  </data>
+  <data name="Plate Distribution" xml:space="preserve">
+	  <value>Plate Distribution</value>
+  </data>
+  <data name="Plate Breakdown" xml:space="preserve">
+	  <value>Plate Breakdown</value>
+  </data>
+  <data name="Plates" xml:space="preserve">
+	  <value>Plates</value>
+  </data>
+  <data name="Score Distribution By Player Level" xml:space="preserve">
+	  <value>Score Distribution By Player Level</value>
+  </data>
+  <data name="Scores by Competitive Level" xml:space="preserve">
+	  <value>Scores by Competitive Level</value>
+  </data>
+  <data name="Passes by Competitive Level" xml:space="preserve">
+	  <value>Passes by Competitive Level</value>
+  </data>
+  <data name="Chart Leaderboard" xml:space="preserve">
+	  <value>Chart Leaderboard</value>
+  </data>
 </root>
