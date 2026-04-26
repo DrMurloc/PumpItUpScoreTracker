@@ -49,6 +49,25 @@ namespace ScoreTracker.Data.Repositories
             await database.SaveChangesAsync(cancellationToken);
         }
 
+        public async Task WriteEntries(IEnumerable<UserOfficialLeaderboard> entries,
+            CancellationToken cancellationToken)
+        {
+            var array = entries.ToArray();
+            if (array.Length == 0) return;
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            await database.UserOfficialLeaderboard.AddRangeAsync(
+                array.Select(entry => new UserOfficialLeaderboardEntity
+                {
+                    Id = Guid.NewGuid(),
+                    Place = entry.Place,
+                    LeaderboardName = entry.LeaderboardName,
+                    LeaderboardType = entry.OfficialLeaderboardType,
+                    Username = entry.Username,
+                    Score = entry.Score
+                }), cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
+        }
+
         public async Task<IEnumerable<string>> GetOfficialLeaderboardUsernames(string? leaderboardType,
             CancellationToken cancellationToken)
         {
