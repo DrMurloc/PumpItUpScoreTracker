@@ -14,7 +14,7 @@ namespace ScoreTracker.Application.Handlers
     (IChartRepository charts, IWeeklyTournamentRepository weeklyTournies, IPlayerStatsRepository playerStats,
         IBotClient bot,
         ILogger<WeeklyTournamentSaga> logger, IUserRepository users, IBus bus,
-        IDateTimeOffsetAccessor dateTime) :
+        IDateTimeOffsetAccessor dateTime, IRandomNumberGenerator random) :
         IConsumer<UpdateWeeklyChartsEvent>,
         IRequestHandler<RegisterWeeklyChartScore>
     {
@@ -44,7 +44,6 @@ namespace ScoreTracker.Application.Handlers
 
             var alreadyPlayed = (await weeklyTournies.GetAlreadyPlayedCharts(context.CancellationToken)).Distinct()
                 .ToHashSet();
-            var random = new Random();
             var newCharts = new HashSet<Guid>();
             var chartDict = (await charts.GetCharts(MixEnum.Phoenix, cancellationToken: context.CancellationToken))
                 .ToDictionary(c => c.Id);
