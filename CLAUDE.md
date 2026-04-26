@@ -88,28 +88,38 @@ Adding a package outside its allowed layer is a violation. Adding a project refe
 
 - **xUnit `2.9.3` + Moq `4.20.72`.** Do not introduce alternative double libraries (`FakeItEasy`, `NSubstitute`, `AutoFixture`) without explicit approval.
 - All tests live in `ScoreTracker.Tests/`, mirroring source by namespace.
+- **Double vocabulary follows ENTERPRISE-TESTING.md** (Dummy / Stub / Fake / Spy / Mock / Simulator) even though Moq is the only library. A `Mock<T>` set up only with `ReturnsAsync` and never `Verify`'d is a *stub*; a `Mock<T>` whose `Verify` calls are the assertion is a *mock*; `FakeDateTime.At(...)` returns a stub even though it's named "fake." Talk about the role, not the type.
 
-### Unit tests (`unit`)
+### Test categorization
 
-- **Location**: `ScoreTracker.Tests/DomainTests/`.
+This repo uses **folder-as-tag**: the path encodes ENTERPRISE `Layer` / `Size` / `DependencyMode` for everything in it. Per-test `[Trait]` attributes are not used today and are not required when adding a test to an existing folder. They become the right tool only if a single folder ever mixes dependency modes (e.g., when ephemeral-DB tests land — see [BACKLOG.md](BACKLOG.md)).
+
+| Folder | `Layer` | `Size` | `DependencyMode` |
+|---|---|---|---|
+| `ScoreTracker.Tests/DomainTests/` | `Unit` | `Small` | `None` (rare `TestDouble` for clock/RNG seams) |
+| `ScoreTracker.Tests/ApplicationTests/` | `Component` | `Small` | `TestDouble` |
+
+PR gate: `dotnet build` + `dotnet test` runs both folders. There is no fast/slow split today.
+
+### Unit tests — `DomainTests/`
+
 - **Subjects**: value types, domain services, pure functions, simulators, policies, edge cases.
-- **Naming**: `<TypeName>Tests.cs`, one class per subject.
+- **Naming**: `<TypeName>Tests.cs`, one class per subject. Test method names describe behavior (`ApproveClearsNeedsApprovalAndSnapshotsVerificationType`), not implementation (`CallsRepository`). Natural-language form is preferred over a strict `Given_When_Then` template.
 - **Form**: xUnit `[Fact]` / `[Theory]`. Use real domain objects; mocking is the exception, not the default.
 - **No external dependencies** — no Moq usage if avoidable, no DbContext, no HTTP, no time/RNG calls (use the seams below).
 - Reference: [NameTests.cs](ScoreTracker/ScoreTracker.Tests/DomainTests/NameTests.cs).
 
-### Component tests (`component`)
+### Component tests — `ApplicationTests/`
 
-- **Location**: `ScoreTracker.Tests/ApplicationTests/`.
 - **Subjects**: MediatR handlers and "Sagas" (feature-grouped consumer + handler classes).
-- **Naming**: `<HandlerOrSaga>Tests.cs`.
+- **Naming**: `<HandlerOrSaga>Tests.cs`. Test method names describe behavior, not method names.
 - **Pattern** (canonical, follow this verbatim):
   1. Construct a `Mock<TPort>` for each Domain port the handler depends on.
   2. Construct the real handler with `mock.Object` dependencies.
   3. Call `handler.Handle(new TCommand(...), CancellationToken.None)`.
   4. `Assert` on the returned value where applicable.
   5. `Verify` side-effect calls with `It.Is<T>(predicate)` and `Times.Once` (or appropriate).
-- **Bus assertions**: mock `MassTransit.IBus` and `Verify` `Publish` calls.
+- **Bus assertions**: mock `MassTransit.IBus` and `Verify` `Publish` calls. The publish *is* the observable behavior, so `Verify`-only assertions are appropriate here per ENTERPRISE-TESTING.md.
 - Reference: [CreateUserHandlerTests.cs](ScoreTracker/ScoreTracker.Tests/ApplicationTests/CreateUserHandlerTests.cs).
 
 ### Test data
@@ -127,12 +137,8 @@ Adding a package outside its allowed layer is a violation. Adding a project refe
 
 ### Dependency realism in this project
 
-- **MassTransit in-memory transport is the production transport.** Tests that go through `IBus`/`IConsumer<>` are exercising the real transport, not a fake. Classify any future MassTransit-flow test under `component` or `slice` based on what *else* is mocked, not as `integration-fake`.
-- **SQL Server is never replaced** with EF in-memory or SQLite. Tests either mock the repository port or wait for real-dependency integration tests.
-
-### Expected for PR-sized changes
-
-`dotnet build` + `dotnet test`. There is no fast/slow split today.
+- **MassTransit in-memory transport is the production transport.** Tests that go through `IBus`/`IConsumer<>` are exercising the real transport, not a fake. Classify any future MassTransit-flow test as `Layer=Component` or `Layer=Slice` (with `DependencyMode=TestDouble`) based on what *else* is mocked. Do not call it `Integration` just because it touches the bus.
+- **SQL Server is never replaced** with EF in-memory or SQLite. ENTERPRISE-TESTING.md explicitly classifies in-memory providers as `DependencyMode=InMemory`, not `EphemeralInfra`, and they cannot be called real-DB integration tests. Today, tests either mock the repository port (`DependencyMode=TestDouble`) or wait for real-dependency integration tests (`Layer=Integration, DependencyMode=EphemeralInfra`, planned in [BACKLOG.md](BACKLOG.md)).
 
 ### Local external dependencies
 

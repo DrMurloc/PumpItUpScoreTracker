@@ -149,7 +149,8 @@ public sealed class TierListSagaTests
         scores.Setup(s => s.GetRecordedScores(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
-                new RecordedPhoenixScore(chart.Id, 950000, PhoenixPlate.SuperbGame, false, DateTimeOffset.UtcNow)
+                new RecordedPhoenixScore(chart.Id, 950000, PhoenixPlate.SuperbGame, false,
+                    new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero))
             });
         var tierLists = new Mock<ITierListRepository>();
         tierLists.Setup(t => t.GetAllEntries(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
