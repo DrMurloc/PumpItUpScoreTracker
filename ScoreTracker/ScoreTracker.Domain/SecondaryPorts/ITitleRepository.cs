@@ -16,5 +16,7 @@ namespace ScoreTracker.Domain.SecondaryPorts
         Task<IEnumerable<TitleAggregationRecord>> GetTitleAggregations(CancellationToken cancellationToken);
         Task<int> CountTitledUsers(CancellationToken cancellationToken);
         Task<IEnumerable<TitleAchievedRecord>> GetUsersWithTitle(Name title, CancellationToken cancellationToken);
+
+        Task DeleteHighestTitle(Guid userId, CancellationToken cancellationToken);
     }
 }

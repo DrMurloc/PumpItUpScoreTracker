@@ -348,4 +348,15 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 (int)g.Average(e => e.pr.Score ?? 0),
                 g.Sum(e => e.prs.Pumbility), g.Sum(e => e.prs.PumbilityPlus))).ToArrayAsync(cancellationToken);
     }
+
+    public async Task DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var scores = await database.PhoenixBestAttempt.Where(p => p.UserId == userId).ToArrayAsync(cancellationToken);
+        var stats = await database.PhoenixRecordStats.Where(p => p.UserId == userId).ToArrayAsync(cancellationToken);
+        database.PhoenixBestAttempt.RemoveRange(scores);
+        database.PhoenixRecordStats.RemoveRange(stats);
+        await database.SaveChangesAsync(cancellationToken);
+        _cache.Remove(ScoreCache(userId));
+    }
 }

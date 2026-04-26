@@ -129,4 +129,12 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                             ba.RecordedDate)))
             .ToArrayAsync(cancellationToken);
     }
+
+    public async Task DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var attempts = await database.BestAttempt.Where(b => b.UserId == userId).ToArrayAsync(cancellationToken);
+        database.BestAttempt.RemoveRange(attempts);
+        await database.SaveChangesAsync(cancellationToken);
+    }
 }
