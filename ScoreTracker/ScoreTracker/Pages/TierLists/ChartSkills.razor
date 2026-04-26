@@ -754,6 +754,7 @@ function(val, index) {
     private IDictionary<Guid, RecordedPhoenixScore> _scores = new Dictionary<Guid, RecordedPhoenixScore>();
     private IDictionary<Guid, RecordedPhoenixScore> _folderScores = new Dictionary<Guid, RecordedPhoenixScore>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private IDictionary<Guid, Chart> _allCharts = new Dictionary<Guid, Chart>();
     private ISet<Guid> _unPopularCharts = new HashSet<Guid>();
     private ISet<Guid> _popularCharts = new HashSet<Guid>();
     private bool _isBuildingImage = false;
@@ -1551,7 +1552,9 @@ function(val, index) {
         await UiSettings.SetSetting("TierLists__ListType", _tierListType);
         await UiSettings.SetSetting("TierLists__UsePersonalized", _usePersonalizedData.ToString());
         await UiSettings.SetSetting("TierLists__GroupBy", _groupBy);
-        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, _level, _chartType))).ToDictionary(c => c.Id);
+        _charts = _allCharts.Values
+            .Where(c => c.Level == _level && c.Type == _chartType)
+            .ToDictionary(c => c.Id);
         _folderScores = _scores.Where(kv => _charts.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
         var titles = _titles.Where(t => t is ISpecificChartTitle).ToArray();
         _charTitles = _charts.Values.SelectMany(c => titles.Select(t => (c,t,((ISpecificChartTitle)t).AppliesToChart(c))))
@@ -1840,7 +1843,7 @@ function(val, index) {
         {
             _settings = JsonSerializer.Deserialize<FilterSettings>(settingsString);
         }
-        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).
+        _allCharts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).
           ToDictionary(c => c.Id);
         _titles = PhoenixTitleList.BuildList();
         _chartType = ChartType.Double;
