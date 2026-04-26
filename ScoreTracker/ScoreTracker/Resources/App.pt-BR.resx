@@ -1404,4 +1404,46 @@
   <data name="Your Score" xml:space="preserve">
     <value>Sua pontuação</value>
   </data>
+  <data name="After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed." xml:space="preserve">
+    <value>Após o upload, se algumas linhas/charts/tentativas não tiverem sido carregadas corretamente, você terá a opção de baixar uma lista das linhas com falha e o motivo da falha.</value>
+  </data>
+  <data name="All charts you uploaded were successfully updated!" xml:space="preserve">
+    <value>Todos os charts que você carregou foram atualizados com sucesso!</value>
+  </data>
+  <data name="If you leave this page or cancel, the upload will stop but you will not lose any scores that have already been recorded from your upload." xml:space="preserve">
+    <value>Se você sair desta página ou cancelar, o upload será interrompido, mas você não perderá nenhuma pontuação que já tenha sido registrada no upload.</value>
+  </data>
+  <data name="In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades." xml:space="preserve">
+    <value>Em alguns desses casos, pode ser mais rápido carregar uma planilha em vez de inserir manualmente milhares de notas.</value>
+  </data>
+  <data name="Original Concept (excel score tracking) Constructed by KyleTT" xml:space="preserve">
+    <value>Conceito original (rastreamento de pontuações em Excel) criado por KyleTT</value>
+  </data>
+  <data name="Site constructed and maintained by DrMurloc" xml:space="preserve">
+    <value>Site criado e mantido por DrMurloc</value>
+  </data>
+  <data name="Some adjustments to account for typos or difference in naming conventions have been accounted for. Song Names are Case Insensitive. (Note that some of these look the same because they are whitespace adjustments)" xml:space="preserve">
+    <value>Alguns ajustes para considerar erros de digitação ou diferenças nas convenções de nomenclatura foram aplicados. Os nomes das músicas não diferenciam maiúsculas de minúsculas. (Observe que alguns destes parecem iguais porque são ajustes de espaços em branco)</value>
+  </data>
+  <data name="Some players already maintain scores via Spreadsheets." xml:space="preserve">
+    <value>Alguns jogadores já mantêm suas pontuações em planilhas.</value>
+  </data>
+  <data name="Spreadsheet is uploading and being processed..." xml:space="preserve">
+    <value>A planilha está sendo carregada e processada...</value>
+  </data>
+  <data name="There was an unknown error while parsing the file" xml:space="preserve">
+    <value>Ocorreu um erro desconhecido ao processar o arquivo</value>
+  </data>
+  <data name="Welcome to Score Tracker, X!" xml:space="preserve">
+    <value>Bem-vindo ao Rastreador de Pontuações, {0}!</value>
+  </data>
+  <data name="X/Y Uploaded. Z Remaining. W Failed to record" xml:space="preserve">
+    <value>{0}/{1} Carregado. {2} Restante. {3} Falha no registro</value>
+  </data>
+  <data name="You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again." xml:space="preserve">
+    <value>Você tinha alguns charts que não puderam ser baixados. Você pode baixar o CSV das falhas para fazer ajustes e tentar novamente.</value>
+  </data>
+  <data name="You somehow ended up in a state between realities. Refresh the page to try again." xml:space="preserve">
+    <value>Você de alguma forma acabou em um estado entre realidades. Atualize a página para tentar novamente.</value>
+  </data>
 </root>
