@@ -157,4 +157,67 @@ public sealed class MarchOfMurlocsHandlerTests
 
         Assert.Contains(savedRecords, r => r.Id == previousMoM.Id && !r.IsHighlighted);
     }
+
+    [Fact]
+    public async Task TrySchedulePostponesCycleWhenLatestMoMIsActiveEvenIfExpiredOldMoMExists()
+    {
+        // Regression: pre-fix, FirstOrDefault(IsMoM) could return an old expired MoM and trigger
+        // CycleMoM on every tick — the runaway that filled the DB with garbage tournaments. The
+        // handler must now pick the latest MoM by EndDate.
+        var tournaments = new Mock<ITournamentRepository>();
+        var charts = new Mock<IChartRepository>();
+        var bus = new Mock<IBus>();
+        var scheduler = new Mock<IMessageScheduler>();
+        var now = new DateTimeOffset(2026, 4, 1, 12, 0, 0, TimeSpan.Zero);
+        var activeEnd = now + TimeSpan.FromDays(30);
+        var dateTime = FakeDateTime.At(now);
+
+        var expiredOld = MoM(now - TimeSpan.FromDays(365));
+        var active = MoM(activeEnd);
+        // Return the expired one first so an unordered FirstOrDefault would pick it.
+        tournaments.Setup(t => t.GetAllTournaments(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { expiredOld, active });
+
+        var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
+            scheduler.Object, dateTime.Object);
+
+        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.TryScheduleMoM()).Object);
+
+        bus.Verify(b => b.Publish(It.IsAny<MarchOfMurlocsHandler.CycleMoM>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        scheduler.Verify(s => s.SchedulePublish(
+                (activeEnd + TimeSpan.FromMinutes(1)).DateTime,
+                It.IsAny<MarchOfMurlocsHandler.CycleMoM>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task CycleDoesNothingWhenFutureDatedMoMAlreadyExists()
+    {
+        // Idempotency: a duplicate CycleMoM (e.g. from in-memory transport replay or a double
+        // publish) must not create another pair of tournaments when one is already active.
+        var tournaments = new Mock<ITournamentRepository>();
+        var charts = new Mock<IChartRepository>();
+        var bus = new Mock<IBus>();
+        var scheduler = new Mock<IMessageScheduler>();
+        var now = new DateTimeOffset(2026, 4, 1, 12, 0, 0, TimeSpan.Zero);
+        var dateTime = FakeDateTime.At(now);
+        var active = MoM(now + TimeSpan.FromDays(30));
+
+        tournaments.Setup(t => t.GetAllTournaments(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { active });
+
+        var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
+            scheduler.Object, dateTime.Object);
+
+        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.CycleMoM()).Object);
+
+        tournaments.Verify(t => t.CreateOrSaveTournament(It.IsAny<TournamentConfiguration>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+        tournaments.Verify(t => t.CreateScoringLevelSnapshots(It.IsAny<Guid>(),
+                It.IsAny<IEnumerable<(Guid, double)>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
 }

@@ -37,7 +37,13 @@ namespace ScoreTracker.Application.Handlers
 
         public async Task Consume(ConsumeContext<TryScheduleMoM> context)
         {
-            var mom = (await _tournaments.GetAllTournaments(context.CancellationToken)).FirstOrDefault(e => e.IsMoM);
+            // Pick the most recent MoM, not any-old-MoM. The previous FirstOrDefault was the
+            // root cause of the runaway: once any expired MoM existed, every TryScheduleMoM tick
+            // saw it and immediately fired CycleMoM, regardless of whether a current MoM was active.
+            var mom = (await _tournaments.GetAllTournaments(context.CancellationToken))
+                .Where(e => e.IsMoM)
+                .OrderByDescending(e => e.EndDate)
+                .FirstOrDefault();
             if (mom?.EndDate == null || mom.EndDate < _dateTime.Now)
                 await _bus.Publish(new CycleMoM());
             else
@@ -47,7 +53,15 @@ namespace ScoreTracker.Application.Handlers
 
         public async Task Consume(ConsumeContext<CycleMoM> context)
         {
-            var moms = (await _tournaments.GetAllTournaments(context.CancellationToken)).Where(e => e.IsMoM).ToArray();
+            var moms = (await _tournaments.GetAllTournaments(context.CancellationToken))
+                .Where(e => e.IsMoM)
+                .OrderByDescending(e => e.EndDate)
+                .ToArray();
+            // Idempotency: if a future-dated MoM already exists, this cycle has nothing to do.
+            // Protects against duplicate CycleMoM messages (in-memory transport replay, double-publish, etc.)
+            // landing back-to-back and creating extra tournaments.
+            if (moms.Any(m => m.EndDate != null && m.EndDate > _dateTime.Now))
+                return;
             var oldEnd = moms.FirstOrDefault()?.EndDate ?? _dateTime.Now - TimeSpan.FromMinutes(1);
             var year = _dateTime.Now.Year;
 
