@@ -57,6 +57,15 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | Days Old | dias de idade | lowercase — used as suffix to a number ("42 dias de idade"). |
 | Filters | Filtros | |
 | Settings | Configurações | |
+| All | Todos | Plural masculine. (When the underlying noun is feminine, use `Todas`; pick per key context.) |
+| Category | Categoria | |
+| Description | Descrição | |
+| Level | Nível | "Min/Max Level" → "Nível mín./máx."; "Min/Max" alone → "Mín./Máx." |
+| Median | Mediana | |
+| Min / Max (bare) | Mín. / Máx. | Abbreviated. Used as standalone column or filter labels. |
+| Overview | Visão geral | |
+| Remaining | Restante | |
+| Copied to clipboard! | Copiado para a área de transferência! | Matches the existing "Copy to Clipboard" → "Copiar para a área de transferência" verb form. |
 
 ### PIU domain
 
@@ -68,12 +77,13 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | CoOp | CoOp | Untranslated. "CoOp Aggregation" → "Agregação de CoOp". |
 | Singles / Doubles | Singles / Doubles | Untranslated. |
 | Difficulty Level | Nível de dificuldade | |
-| Letter Grade | Letras de nota | Min/Max forms use singular: "Min Letter Grade" → "Letra de nota mín.", "Max Letter Grade" → "Letra de nota máx." |
+| Letter Grade | Letras de nota | Min/Max forms use singular: "Min Letter Grade" → "Letra de nota mín.", "Max Letter Grade" → "Letra de nota máx." Old/New variants: "Old Letter Grade" → "Letra de nota antiga", "New Letter Grade" → "Letra de nota nova". |
+| Letter-grade tier names (As, Ss, SSs, SSSs) | As, Ss, SSs, SSSs | **Untranslated**. Column-header labels for letter-grade counts ("how many A grades, how many S grades, …"). PIU jargon. |
 | Mix | Versão | "Mix" → "Versão". XX, Phoenix proper names stay untranslated. |
 | Phoenix | Phoenix | Game version proper name. Untranslated. |
 | XX | XX | Game version proper name. Untranslated. |
 | Plate | Plate | **Untranslated**. PIU community uses the English term in pt-BR contexts. |
-| Pass (the verb / noun for completing a chart) | pass | **Untranslated**, lowercase. "Hide Completed Charts" → "Ocultar charts com pass". "Passed Count" → "Contagem de pass". "Not Passed Count" → "Contagem de músicas sem pass". |
+| Pass (the verb / noun for completing a chart) | pass | **Untranslated**, lowercase. "Hide Completed Charts" → "Ocultar charts com pass". "Passed Count" → "Contagem de pass". "Not Passed Count" → "Contagem de músicas sem pass". Bare "Pass" / "Passes" → `pass` / `passes` (chart-series labels). Boolean column headers: "Passed" → `Com pass`, "Unpassed" → `Sem pass`. |
 | Score (singular, generic) | Pontuação | "Score" → "Pontuação"; "Score State" → "Estado da pontuação". |
 | Scores (plural / collection) | Pontuações | "Save Scores" → "Salvar pontuações"; "Official Scores" → "Pontuações oficiais"; "My Score" → "Minhas Pontuações" (intentionally plural in this entry). |
 | Phoenix Score Calculator | Calculadora de pontuação da Phoenix | |
@@ -102,6 +112,15 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | Skill | Habilidade | Chart trait/skill (runs, drills, twists, etc.). |
 | Stage Pass | Pass do estágio | Tristate filter on chart-pass status. |
 | Step Artist | Autor dos passos | Chart designer. Some pt-BR community usage leaves it in English; we translate. |
+| Avg Plate | Plate média | `Plate` stays English (untranslated jargon); modifier translated. |
+| Avg Score | Pontuação média | |
+| Competitive Level | Nível competitivo | "Competitive Level: {0}" → "Nível competitivo: {0}". |
+| Difficulty (bare noun) | Dificuldade | Distinct from `Difficulty Level` → `Nível de dificuldade`. |
+| Pumbility | Pumbility | Untranslated. Proper-noun-style PIU concept. |
+| Rating | Rating | **Untranslated**. Brazilian PIU community uses the English loanword (matches the `Pumbility`/`Plate`/`Bounty` policy). |
+| Score Distribution | Distribuição de pontuação | "Show Score Distribution" → "Mostrar distribuição de pontuação". |
+| Ungraded | Sem nota | Matches `sem pass` / `sem nota` family. "Not Graded Count" → "Contagem de músicas sem nota". |
+| XX Progress | Progresso XX | No article — sidesteps the gender question for the legacy mix proper-noun. |
 
 ### Phrasing patterns to copy
 
@@ -112,6 +131,8 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 - **`Show X` toggles**: render as `Mostrar X` (lowercase X). E.g. "Show Age" → "Mostrar idade", "Show Skills" → "Mostrar habilidades", "Show Step Artist" → "Mostrar autor dos passos".
 - **`Min/Max X` filter labels**: prefer postfixed abbreviation `X mín.` / `X máx.` over prefixed `Mín./Máx. X`. E.g. "Min BPM" → "BPM mín."; "Max Letter Grade" → "Letra de nota máx."
 - **`(Data Backed)` parenthetical**: render as `(Baseado em dados)` / `(Baseada em dados)` — gender-agree with the preceding noun. E.g. "Pass (Data Backed)" → "Pass (Baseado em dados)" (`Pass` masculine); "Score (Data Backed)" → "Pontuação (Baseada em dados)" (`Pontuação` feminine).
+- **`Old X` / `New X` pairs**: render as `X antigo(a)` / `X novo(a)` — gender-agree with the noun. E.g. "Old Letter Grade" → "Letra de nota antiga", "New Letter Grade" → "Letra de nota nova" (`Letra` feminine).
+- **`Show X only` / `top` references**: "Show Top Only" → "Mostrar somente o topo" (literal). "Show Only ToDo Charts" → `Mostrar somente charts "Pendentes"` (established).
 
 ## Open decisions (terms upcoming batches will need)
 
@@ -130,7 +151,6 @@ Pulled from the 442 missing keys. Each is a term that doesn't yet have an establ
 | Match (versus another player) | Partida | Standard pt-BR for game match. (`User Matches` → `Partidas do usuário`, etc.) |
 | Stats | Estatísticas | |
 | Game Stats | Estatísticas do jogo | |
-| Difficulty | Dificuldade | Bare noun. |
 | Calculated Tier List | Faixa calculada | Reuse `Faixas de dificuldade` family. |
 
 ### App / generic UI — high frequency
@@ -140,12 +160,9 @@ Pulled from the 442 missing keys. Each is a term that doesn't yet have an establ
 | Admin / Admin Settings | Admin / Configurações de admin | "Admin" untranslated as role name. |
 | Add | Adicionar | |
 | Add Player | Adicionar jogador | |
-| All | Todos / Todas | Pick gender per key context. |
 | Allow Repeats | Permitir repetições | |
 | Anonymous | Anônimo | |
 | Always | Sempre | |
-| Avg Plate | Plate média | `Plate` stays English (established), modifier translated. |
-| Avg Score | Pontuação média | |
 
 ## Process for future batches
 

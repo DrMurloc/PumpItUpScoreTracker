@@ -585,4 +585,166 @@
   <data name="Step Artist" xml:space="preserve">
     <value>Autor dos passos</value>
   </data>
+  <data name="All" xml:space="preserve">
+    <value>Todos</value>
+  </data>
+  <data name="As" xml:space="preserve">
+    <value>As</value>
+  </data>
+  <data name="Avg Plate" xml:space="preserve">
+    <value>Plate média</value>
+  </data>
+  <data name="Avg Score" xml:space="preserve">
+    <value>Pontuação média</value>
+  </data>
+  <data name="Best Attempts" xml:space="preserve">
+    <value>Melhores tentativas</value>
+  </data>
+  <data name="Category" xml:space="preserve">
+    <value>Categoria</value>
+  </data>
+  <data name="Chart" xml:space="preserve">
+    <value>chart</value>
+  </data>
+  <data name="Community Completion" xml:space="preserve">
+    <value>Conclusão da comunidade</value>
+  </data>
+  <data name="Competitive Level" xml:space="preserve">
+    <value>Nível competitivo</value>
+  </data>
+  <data name="Competitive Level: X" xml:space="preserve">
+    <value>Nível competitivo: {0}</value>
+  </data>
+  <data name="Completion" xml:space="preserve">
+    <value>Conclusão</value>
+  </data>
+  <data name="Copied to clipboard!" xml:space="preserve">
+    <value>Copiado para a área de transferência!</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Descrição</value>
+  </data>
+  <data name="Difficulty" xml:space="preserve">
+    <value>Dificuldade</value>
+  </data>
+  <data name="Difficulty Letters" xml:space="preserve">
+    <value>Letras por dificuldade</value>
+  </data>
+  <data name="Difficulty Passes" xml:space="preserve">
+    <value>Passes por dificuldade</value>
+  </data>
+  <data name="Difficulty Progress" xml:space="preserve">
+    <value>Progresso por dificuldade</value>
+  </data>
+  <data name="Level" xml:space="preserve">
+    <value>Nível</value>
+  </data>
+  <data name="Max" xml:space="preserve">
+    <value>Máx.</value>
+  </data>
+  <data name="Max Level" xml:space="preserve">
+    <value>Nível máx.</value>
+  </data>
+  <data name="Max Score" xml:space="preserve">
+    <value>Pontuação máx.</value>
+  </data>
+  <data name="Median" xml:space="preserve">
+    <value>Mediana</value>
+  </data>
+  <data name="Min" xml:space="preserve">
+    <value>Mín.</value>
+  </data>
+  <data name="Min Level" xml:space="preserve">
+    <value>Nível mín.</value>
+  </data>
+  <data name="Min Score" xml:space="preserve">
+    <value>Pontuação mín.</value>
+  </data>
+  <data name="My Relative Difficulty" xml:space="preserve">
+    <value>Minha dificuldade relativa</value>
+  </data>
+  <data name="New Letter Grade" xml:space="preserve">
+    <value>Letra de nota nova</value>
+  </data>
+  <data name="Old Letter Grade" xml:space="preserve">
+    <value>Letra de nota antiga</value>
+  </data>
+  <data name="Overall Letters" xml:space="preserve">
+    <value>Letras gerais</value>
+  </data>
+  <data name="Overall Passes" xml:space="preserve">
+    <value>Passes gerais</value>
+  </data>
+  <data name="Overview" xml:space="preserve">
+    <value>Visão geral</value>
+  </data>
+  <data name="PIUGame Leaderboard Difficulty" xml:space="preserve">
+    <value>Dificuldade da classificação PIUGame</value>
+  </data>
+  <data name="Pass" xml:space="preserve">
+    <value>pass</value>
+  </data>
+  <data name="Passed" xml:space="preserve">
+    <value>Com pass</value>
+  </data>
+  <data name="Passes" xml:space="preserve">
+    <value>passes</value>
+  </data>
+  <data name="Passes By Level" xml:space="preserve">
+    <value>Passes por nível</value>
+  </data>
+  <data name="Rating" xml:space="preserve">
+    <value>Rating</value>
+  </data>
+  <data name="Remaining" xml:space="preserve">
+    <value>Restante</value>
+  </data>
+  <data name="SSSs" xml:space="preserve">
+    <value>SSSs</value>
+  </data>
+  <data name="SSs" xml:space="preserve">
+    <value>SSs</value>
+  </data>
+  <data name="Score Distribution" xml:space="preserve">
+    <value>Distribuição de pontuação</value>
+  </data>
+  <data name="Score Distribution Lines" xml:space="preserve">
+    <value>Linhas de distribuição de pontuação</value>
+  </data>
+  <data name="Scoring Difficulty" xml:space="preserve">
+    <value>Dificuldade de pontuação</value>
+  </data>
+  <data name="Share Url" xml:space="preserve">
+    <value>URL de compartilhamento</value>
+  </data>
+  <data name="Share Your Progress Page" xml:space="preserve">
+    <value>Compartilhar sua página de progresso</value>
+  </data>
+  <data name="Show Scoreless" xml:space="preserve">
+    <value>Mostrar sem pontuação</value>
+  </data>
+  <data name="Show Top Only" xml:space="preserve">
+    <value>Mostrar somente o topo</value>
+  </data>
+  <data name="Singles vs Doubles" xml:space="preserve">
+    <value>Singles vs Doubles</value>
+  </data>
+  <data name="Ss" xml:space="preserve">
+    <value>Ss</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>Título</value>
+  </data>
+  <data name="Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Ungraded" xml:space="preserve">
+    <value>Sem nota</value>
+  </data>
+  <data name="Unpassed" xml:space="preserve">
+    <value>Sem pass</value>
+  </data>
+  <data name="XX Progress" xml:space="preserve">
+    <value>Progresso XX</value>
+  </data>
 </root>
