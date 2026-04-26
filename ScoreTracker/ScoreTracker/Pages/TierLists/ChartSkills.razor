@@ -1817,7 +1817,7 @@ function(val, index) {
     };
     protected override async Task OnInitializedAsync()
     {
-        _filterNames= new Dictionary<Filter, string>()
+        _filterNames = new Dictionary<Filter, string>()
         {
             { Filter.SongType, L["Song Type"] },
             { Filter.SongName, L["Song Name"] },
@@ -1831,24 +1831,10 @@ function(val, index) {
             },
             { Filter.SongArtist, L["Song Artist"] }
         };
-        if (CurrentUser.IsLoggedIn)
-        {
-            
-            _scores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id)))
-                .ToDictionary(c => c.ChartId);
-            _ages = _scores.ToDictionary(c => c.Key, c => (int)(_now - c.Value.RecordedDate).TotalDays); 
-        }
-        var settingsString = await UiSettings.GetSetting(UserSettingsKey);
-        if (!string.IsNullOrWhiteSpace(settingsString))
-        {
-            _settings = JsonSerializer.Deserialize<FilterSettings>(settingsString);
-        }
-        _allCharts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).
-          ToDictionary(c => c.Id);
         _titles = PhoenixTitleList.BuildList();
         _chartType = ChartType.Double;
         _level = 18;
-        _tierListTypes=new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        _tierListTypes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             { "Pass", L["Pass (Data Backed)"] },
             { "Score", L["Score (Data Backed)"] },
@@ -1857,16 +1843,35 @@ function(val, index) {
             {"PG","PG"}
         };
 
+        // Kick off every independent async fetch in parallel — wall clock is now bounded by the slowest single query, not the sum.
+        var chartsTask = Mediator.Send(new GetChartsQuery(MixEnum.Phoenix));
+        var titleProgressTask = Mediator.Send(new GetTitleProgressQuery(MixEnum.Phoenix));
+        var userSettingsTask = UiSettings.GetSetting(UserSettingsKey);
+        var showAgeSettingTask = UiSettings.GetSetting("TierLists__ShowAge");
+        var levelSettingTask = UiSettings.GetSetting("TierLists__Level");
+        var chartTypeSettingTask = UiSettings.GetSetting("TierLists__ChartType");
+        var listTypeSettingTask = UiSettings.GetSetting("TierLists__ListType");
+        var personalizedSettingTask = UiSettings.GetSetting("TierLists__UsePersonalized");
+        var groupBySettingTask = UiSettings.GetSetting("TierLists__GroupBy");
+        var textViewSettingTask = UiSettings.GetSetting("TierLists__TextView");
+
         if (CurrentUser.IsLoggedIn)
         {
+            var userId = CurrentUser.User.Id;
+            var scoresTask = Mediator.Send(new GetPhoenixRecordsQuery(userId));
+            var topDoublesTask = Mediator.Send(new GetTop50CompetitiveQuery(userId, ChartType.Double));
+            var topSinglesTask = Mediator.Send(new GetTop50CompetitiveQuery(userId, ChartType.Single));
+            var statsTask = Mediator.Send(new GetPlayerStatsQuery(userId));
+            var todosTask = Mediator.Send(new GetSavedChartsQuery());
 
-            _topCharts = (await Mediator.Send(new GetTop50CompetitiveQuery(CurrentUser.User.Id, ChartType.Double)))
-                .Concat(await Mediator.Send(new GetTop50CompetitiveQuery(CurrentUser.User.Id, ChartType.Single)))
+            _scores = (await scoresTask).ToDictionary(c => c.ChartId);
+            _ages = _scores.ToDictionary(c => c.Key, c => (int)(_now - c.Value.RecordedDate).TotalDays);
+            _topCharts = (await topDoublesTask)
+                .Concat(await topSinglesTask)
                 .Select(c => c.ChartId).Distinct().ToHashSet();
-            var stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
+            var stats = await statsTask;
             if (stats.DoublesCompetitiveLevel > 1)
             {
-                
                 _level = (int)Math.Round(stats.DoublesCompetitiveLevel);
             }
             if (stats.SinglesCompetitiveLevel > 1 && stats.SinglesCompetitiveLevel > stats.DoublesCompetitiveLevel)
@@ -1874,25 +1879,33 @@ function(val, index) {
                 _chartType = ChartType.Single;
                 _level = (int)Math.Round(stats.SinglesCompetitiveLevel);
             }
-            _todos = (await Mediator.Send(new GetSavedChartsQuery())).Where(c => c.ListType == ChartListType.ToDo).Select(c => c.ChartId).Distinct().ToHashSet();
+            _todos = (await todosTask).Where(c => c.ListType == ChartListType.ToDo).Select(c => c.ChartId).Distinct().ToHashSet();
         }
-        _showAge = bool.TryParse(await UiSettings.GetSetting("TierLists__ShowAge"), out var res) && res;
-        _level = int.TryParse(await UiSettings.GetSetting("TierLists__Level"), out var l) ? l : 18;
-        _chartType = Enum.TryParse<ChartType>(await UiSettings.GetSetting("TierLists__ChartType"), out var cType) ? cType : ChartType.Double;
-        _tierListType = await UiSettings.GetSetting("TierLists__ListType") ?? "Pass";
-        _usePersonalizedData = (await UiSettings.GetSetting("TierLists__UsePersonalized") ?? true.ToString()) == true.ToString();
-        _groupBy = await UiSettings.GetSetting("TierLists__GroupBy") ?? "Difficulty";
-        _textView = (await UiSettings.GetSetting("TierLists__TextView") ?? false.ToString()) == true.ToString();
+
+        var settingsString = await userSettingsTask;
+        if (!string.IsNullOrWhiteSpace(settingsString))
+        {
+            _settings = JsonSerializer.Deserialize<FilterSettings>(settingsString);
+        }
+        _allCharts = (await chartsTask).ToDictionary(c => c.Id);
+
+        _showAge = bool.TryParse(await showAgeSettingTask, out var res) && res;
+        _level = int.TryParse(await levelSettingTask, out var l) ? l : 18;
+        _chartType = Enum.TryParse<ChartType>(await chartTypeSettingTask, out var cType) ? cType : ChartType.Double;
+        _tierListType = await listTypeSettingTask ?? "Pass";
+        _usePersonalizedData = (await personalizedSettingTask ?? true.ToString()) == true.ToString();
+        _groupBy = await groupBySettingTask ?? "Difficulty";
+        _textView = (await textViewSettingTask ?? false.ToString()) == true.ToString();
         if (DifficultyFilter is >= 1 and <= 29)
         {
             _level = DifficultyFilter.Value;
         }
-        _titleProgress = (await Mediator.Send(new GetTitleProgressQuery(MixEnum.Phoenix))).ToArray();
+        _titleProgress = (await titleProgressTask).ToArray();
         if (Enum.TryParse<ChartType>(ChartTypeFilter, out var chartType))
         {
             _chartType = chartType;
         }
-        if (TierListType!=null && _tierListTypes.ContainsKey(TierListType))
+        if (TierListType != null && _tierListTypes.ContainsKey(TierListType))
         {
             await SetTierListType(TierListType);
         }
