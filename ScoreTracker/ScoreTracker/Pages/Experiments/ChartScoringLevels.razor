@@ -11,15 +11,15 @@
 @using ScoreTracker.Domain.ValueTypes
 @using Swashbuckle.AspNetCore.SwaggerGen
 
-<PageTitle>ChartScoring</PageTitle>
+<PageTitle>@L["ChartScoring"]</PageTitle>
 @if (_isLoading)
 {
     <MudProgressLinear Indeterminate="true" Color="Color.Primary"></MudProgressLinear>
 }
 <MudGrid>
     <MudItem xs="12" sm="6">
-        
-        <MudAutocomplete Disabled="_isLoading" T="string" Value="_selected" ValueChanged="SetChart" CoerceValue="false" CoerceText="true" Label="Chart" SearchFunc="(s,c)=>SearchSongs(s)">
+
+        <MudAutocomplete Disabled="_isLoading" T="string" Value="_selected" ValueChanged="SetChart" CoerceValue="false" CoerceText="true" Label=@L["Chart"] SearchFunc="(s,c)=>SearchSongs(s)">
             <ItemTemplate>
                 <DifficultyBubble Chart="_chartNames[context]" Small="true"></DifficultyBubble> @_chartNames[context].Song.Name
             </ItemTemplate>
@@ -28,7 +28,7 @@
     @if (_selectedChart != null && !_isLoading)
     {
         <MudItem xs="12" sm="6">
-            <MudNumericField T="int" HideSpinButtons="true" Min="1" Max="DifficultyLevel.Max" Label="Target Player Level" Value="_playerLevel" ValueChanged="SetPlayerLevel"></MudNumericField>
+            <MudNumericField T="int" HideSpinButtons="true" Min="1" Max="DifficultyLevel.Max" Label=@L["Target Player Level"] Value="_playerLevel" ValueChanged="SetPlayerLevel"></MudNumericField>
         </MudItem>
     }
 </MudGrid>
@@ -38,21 +38,21 @@
 
     @if (_selectedChart.Type != ChartType.CoOp)
     {
-        <MudText Typo="Typo.h4">Player Weights</MudText>
-        <MudText Typo="Typo.subtitle1">All players with scores within the target folder are assigned weights based on how close their competitive level is to @_playerLevel.</MudText>
-        <MudText Typo="Typo.subtitle1">Highlighted players have a recorded score on the chart in question.</MudText>
+        <MudText Typo="Typo.h4">@L["Player Weights"]</MudText>
+        <MudText Typo="Typo.subtitle1">@L["All players with scores within the target folder are assigned weights based on how close their competitive level is to X.", _playerLevel]</MudText>
+        <MudText Typo="Typo.subtitle1">@L["Highlighted players have a recorded score on the chart in question."]</MudText>
         @foreach (var playerWeight in _playerWeights.OrderByDescending(kv => kv.Value[_playerLevel]))
         {
             <MudText Typo="Typo.body2" Color="_playerScores.ContainsKey(playerWeight.Key)?Color.Success:Color.Default">
-                @($"{(!_users[playerWeight.Key].IsPublic ? "Anonymous" : _users[playerWeight.Key].Name)} - {playerWeight.Value[_playerLevel]:0.000} (Competitively {_playerLevels[playerWeight.Key]:0.00}{(_playerScores.TryGetValue(playerWeight.Key, out var score) ? ", " + score : "")})")
+                @($"{(!_users[playerWeight.Key].IsPublic ? L["Anonymous"].Value : _users[playerWeight.Key].Name)} - {playerWeight.Value[_playerLevel]:0.000} ({L["Competitively"]} {_playerLevels[playerWeight.Key]:0.00}{(_playerScores.TryGetValue(playerWeight.Key, out var score) ? ", " + score : "")})")
             </MudText>
         }
         <br/>
-        <MudText Typo="Typo.h4">Folder Averages</MudText>
-        <MudText Typo="Typo.subtitle1">The target folder and the three surrounding are provided weighted average scores utilizing the player weights above.</MudText>
-        <MudText Typo="Typo.subtitle1">These averages are shifted away from the level in question by .5 of a standard deviation within their respective folder to make sure level changes are better represented by the bulk of a surrounding folder.</MudText>
+        <MudText Typo="Typo.h4">@L["Folder Averages"]</MudText>
+        <MudText Typo="Typo.subtitle1">@L["The target folder and the three surrounding are provided weighted average scores utilizing the player weights above."]</MudText>
+        <MudText Typo="Typo.subtitle1">@L["These averages are shifted away from the level in question by .5 of a standard deviation within their respective folder to make sure level changes are better represented by the bulk of a surrounding folder."]</MudText>
         <ApexChart TItem="DataPoint"
-                   Title=@($"Weighted Average Scores By Folder")
+                   Title=@L["Weighted Average Scores By Folder"]
                                                 @ref="_levelAverageGraph">
 
             <ApexPointSeries TItem="DataPoint"
@@ -64,44 +64,44 @@
 
         </ApexChart>
         <br/>
-        <MudText Typo="Typo.h4">Chart Average</MudText>
-        <MudText Typo="Typo.subtitle1">The chart in question has its weighted average score projected onto the score distributions</MudText>
+        <MudText Typo="Typo.h4">@L["Chart Average"]</MudText>
+        <MudText Typo="Typo.subtitle1">@L["The chart in question has its weighted average score projected onto the score distributions"]</MudText>
         <MudText Typo="Typo.body2">@_selectedChart.Song.Name @_selectedChart.DifficultyString - @_chartAverages[_playerLevel].ToString("N0")</MudText>
         @if (_calculatedLevels.TryGetValue(_selectedChart.Id, out var level))
         {
             @if (_lowLevel[_playerLevel] == 0 && _highLevel[_playerLevel] == 0)
             {
-                <MudText Typo="Typo.body2">There was not enough data for the targeted player level to evaluate a final difficulty. </MudText>
+                <MudText Typo="Typo.body2">@L["There was not enough data for the targeted player level to evaluate a final difficulty."] </MudText>
             }
             else if (_lowLevel[_playerLevel] == 0)
             {
 
-                <MudText Typo="Typo.body2">The weighted average for this chart is better than the average for a @_highLevel[_playerLevel].</MudText>
-                <MudText Typo="Typo.body2">In this case, the chart is determined to be below by @_percentBetween[_playerLevel].ToString("0.00") utilizing standard deviations in the @_highLevel[_playerLevel] folder.</MudText>
+                <MudText Typo="Typo.body2">@L["The weighted average for this chart is better than the average for a X.", _highLevel[_playerLevel]]</MudText>
+                <MudText Typo="Typo.body2">@L["In this case, the chart is determined to be below by X utilizing standard deviations in the Y folder.", _percentBetween[_playerLevel].ToString("0.00"), _highLevel[_playerLevel]]</MudText>
             }
             else if (_highLevel[_playerLevel] == 0)
             {
-                <MudText Typo="Typo.body2">The weighted average for this chart is worst than the average for a @_lowLevel[_playerLevel].</MudText>
-                <MudText Typo="Typo.body2">In this case, the chart is determined to be above by @_percentBetween[_playerLevel].ToString("0.00") utilizing standard deviations in the @_lowLevel[_playerLevel] folder.</MudText>
+                <MudText Typo="Typo.body2">@L["The weighted average for this chart is worst than the average for a X.", _lowLevel[_playerLevel]]</MudText>
+                <MudText Typo="Typo.body2">@L["In this case, the chart is determined to be above by X utilizing standard deviations in the Y folder.", _percentBetween[_playerLevel].ToString("0.00"), _lowLevel[_playerLevel]]</MudText>
             }
             else
             {
-                <MudText Typo="Typo.body2">Determined to be @_percentBetween[_playerLevel].ToString("0.000") between @(_lowLevel[_playerLevel] + .5) and @(_highLevel[_playerLevel] + .5)</MudText>
+                <MudText Typo="Typo.body2">@L["Determined to be X between Y and Z", _percentBetween[_playerLevel].ToString("0.000"), _lowLevel[_playerLevel] + .5, _highLevel[_playerLevel] + .5]</MudText>
             }
-            <MudText>Final Result: @level[_playerLevel].ToString("0.000")</MudText>
+            <MudText>@L["Final Result: X", level[_playerLevel].ToString("0.000")]</MudText>
         }
         else
         {
-            <MudText Typo="Typo.body2">At this point, it's identified that this chart has no players with a weight of .5 or higher (within 1 level). The chart is marked as not having a scoring level as any estimation would be based on missing data.</MudText>
+            <MudText Typo="Typo.body2">@L["At this point, it's identified that this chart has no players with a weight of .5 or higher (within 1 level). The chart is marked as not having a scoring level as any estimation would be based on missing data."]</MudText>
         }
         <br/>
-        <MudText Typo="Typo.h4">Difficulty By Player Level</MudText>
-        <MudText Typo="Typo.subtitle1">The listed scoring difficulty is calculated for players competitively playing in the officially listed folder for a chart.</MudText>
-        <MudText Typo="Typo.subtitle1">The outcome of this algorithm has drastically different results for players at different levels though</MudText>
-        <MudText Typo="Typo.subtitle1">This is intended. There are charts that are relatively easier to score to others in the folder for players just pushing into the folder, but are harder for higher level players to perfect.</MudText>
+        <MudText Typo="Typo.h4">@L["Difficulty By Player Level"]</MudText>
+        <MudText Typo="Typo.subtitle1">@L["The listed scoring difficulty is calculated for players competitively playing in the officially listed folder for a chart."]</MudText>
+        <MudText Typo="Typo.subtitle1">@L["The outcome of this algorithm has drastically different results for players at different levels though"]</MudText>
+        <MudText Typo="Typo.subtitle1">@L["This is intended. There are charts that are relatively easier to score to others in the folder for players just pushing into the folder, but are harder for higher level players to perfect."]</MudText>
         <ApexChart TItem="DataPoint"
                    Options="_scoreBoxesOptions"
-                   Title=@($"Scoring Level by Player Competitive Level")
+                   Title=@L["Scoring Level by Player Competitive Level"]
                                                                                             @ref="_playerLevelLevels">
 
             <ApexPointSeries TItem="DataPoint"
@@ -115,24 +115,24 @@
     }
     else
     {
-        <MudText Typo="Typo.h4">Player Levels</MudText>
-        <MudText Typo="Typo.subtitle1">For CoOps, scoring level is simply the lowest level player who's been able to pass the chart.</MudText>
-        <MudText Typo="Typo.subtitle1">This isn't perfect, but until I have more data other algorithms haven't been successful at projecting CoOps onto difficulty levels</MudText>
+        <MudText Typo="Typo.h4">@L["Player Levels"]</MudText>
+        <MudText Typo="Typo.subtitle1">@L["For CoOps, scoring level is simply the lowest level player who's been able to pass the chart."]</MudText>
+        <MudText Typo="Typo.subtitle1">@L["This isn't perfect, but until I have more data other algorithms haven't been successful at projecting CoOps onto difficulty levels"]</MudText>
         @foreach (var playerWeight in _playerWeights.OrderByDescending(kv => kv.Value[_playerLevel]))
         {
             <MudText Typo="Typo.body2" Color="_playerScores.ContainsKey(playerWeight.Key)?Color.Success:Color.Default">
-                @($"{(!_users[playerWeight.Key].IsPublic ? "Anonymous" : _users[playerWeight.Key].Name)} (Competitively {_playerLevels[playerWeight.Key]:0.00}{(_playerScores.TryGetValue(playerWeight.Key, out var score) ? ", " + score : "")})")
+                @($"{(!_users[playerWeight.Key].IsPublic ? L["Anonymous"].Value : _users[playerWeight.Key].Name)} ({L["Competitively"]} {_playerLevels[playerWeight.Key]:0.00}{(_playerScores.TryGetValue(playerWeight.Key, out var score) ? ", " + score : "")})")
             </MudText>
-        }        
+        }
         <br/>
         @if (!_playerWeights.Any(w => _playerScores.ContainsKey(w.Key)))
         {
-            <MudText Typo="Typo.subtitle1">No one has passed this CoOp yet so no level is assigned.</MudText>
+            <MudText Typo="Typo.subtitle1">@L["No one has passed this CoOp yet so no level is assigned."]</MudText>
         }
         else
         {
-            
-            <MudText Typo="Typo.subtitle1">This gives this chart a scoring level of: @_playerWeights.Where(w=>_playerScores.ContainsKey(w.Key)).Min(w=>_playerLevels[w.Key]).ToString("0.00")</MudText>
+
+            <MudText Typo="Typo.subtitle1">@L["This gives this chart a scoring level of: X", _playerWeights.Where(w=>_playerScores.ContainsKey(w.Key)).Min(w=>_playerLevels[w.Key]).ToString("0.00")]</MudText>
         }
     }
 }

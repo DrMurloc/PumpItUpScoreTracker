@@ -10,7 +10,7 @@
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.ValueTypes
 @using ChartType = ScoreTracker.Domain.Enums.ChartType;
-<PageTitle>LetterDifficulties</PageTitle>
+<PageTitle>@L["LetterDifficulties"]</PageTitle>
 
 <ChartSelector ChartIdSelected="SetChart"></ChartSelector>
 @if (_isLoading)
@@ -20,11 +20,11 @@
 @if (_chartId!=null && !_isLoading)
 {
         <DifficultyBubble Chart="_charts[_chartId.Value]"></DifficultyBubble>
-        <MudText>Folder Weighted Distribution</MudText>
+        <MudText>@L["Folder Weighted Distribution"]</MudText>
 
-    
+
     <ApexChart TItem="Range"
-               Title="Letter Difficulty"
+               Title=@L["Letter Difficulty"]
                @ref=_folderChart>
         <ApexPointSeries TItem="Range"
                          Items="_ranges"
@@ -44,7 +44,7 @@
                          OrderBy="e => ParagonLevelGradeHelperMethods.GetParagonLevel((string)e.X)" />
         <ApexPointSeries TItem="Range"
                          Items="_ranges"
-                         Name="Median"
+                         Name=@L["Median"]
                          Color="#FFFFFF"
                          SeriesType="SeriesType.Line"
                          XValue="@(e => e.letter.GetName())"
@@ -69,7 +69,7 @@
 
         <ApexPointSeries TItem="Range"
                          Items="_ranges"
-                         Name="Selected Chart"
+                         Name=@L["Selected Chart"]
                          SeriesType="SeriesType.Line"
                          Color="#00FFFF"
                          XValue="@(e => e.letter.GetName())"
@@ -80,15 +80,15 @@
 
         <SongImage Song="_charts[_chartId.Value].Song"></SongImage>
         <DifficultyBubble Chart="_charts[_chartId.Value]"></DifficultyBubble>
-        <MudText>Percentile Distribution</MudText>
-    
+        <MudText>@L["Percentile Distribution"]</MudText>
+
     <ApexChart TItem="Range"
-                           Title="Letter Difficulty"
+                           Title=@L["Letter Difficulty"]
                            @ref=_percentChart
                Options="_percentOptions">
         <ApexPointSeries TItem="Range"
                          Items="_ranges"
-                         Name="Difficulty By Letter"
+                         Name=@L["Difficulty By Letter"]
                          SeriesType="SeriesType.Line"
                          XValue="@(e => e.letter.GetName())"
                          YValue="@(e => (decimal)_chartPercentiles[e.letter])"

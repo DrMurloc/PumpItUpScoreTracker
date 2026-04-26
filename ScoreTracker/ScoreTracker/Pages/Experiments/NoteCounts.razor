@@ -11,50 +11,50 @@
 @using ScoreTracker.Web.Components
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 
-<PageTitle>Note Counts</PageTitle>
+<PageTitle>@L["Note Counts"]</PageTitle>
 @if (!_isLoading)
 {
-    <MudSelect T="ChartType" Value="_currentChartType" ValueChanged="SetType" Label="Chart Type">
+    <MudSelect T="ChartType" Value="_currentChartType" ValueChanged="SetType" Label=@L["Chart Type"]>
         <MudSelectItem T="ChartType" Value="ChartType.Single">@ChartType.Single</MudSelectItem>
         <MudSelectItem T="ChartType" Value="ChartType.Double">@ChartType.Double</MudSelectItem>
         <MudSelectItem T="ChartType" Value="ChartType.CoOp">@ChartType.CoOp</MudSelectItem>
     </MudSelect>
     <ApexChart TItem="DataPoint"
                @ref="_graph1"
-                   Title=@($"{_currentChartType} Note counts")
+                   Title=@L["X Note counts", _currentChartType]
                    Options="_scoreBoxesOptions">
 
             <ApexPointSeries TItem="DataPoint"
                          Items="_mins[_currentChartType]"
-                             Name="Minimums"
+                             Name=@L["Minimums"]
                              SeriesType="SeriesType.Line"
                              XValue="@(e => e.X)"
                              YValue="@(e => e.Y)"
                              OrderBy="e => e.X" />
             <ApexPointSeries TItem="DataPoint"
                          Items="_standardMin[_currentChartType]"
-                             Name="Standard Low"
+                             Name=@L["Standard Low"]
                              SeriesType="SeriesType.Line"
                              XValue="@(e => e.X)"
                              YValue="@(e => e.Y)"
                              OrderBy="e => e.X" />
             <ApexPointSeries TItem="DataPoint"
                          Items="_averages[_currentChartType]"
-                             Name="Average"
+                             Name=@L["Average"]
                              SeriesType="SeriesType.Line"
                              XValue="@(e => e.X)"
                              YValue="@(e => e.Y)"
                              OrderBy="e => e.X" />
             <ApexPointSeries TItem="DataPoint"
                          Items="_standardMax[_currentChartType]"
-                             Name="Standard High"
+                             Name=@L["Standard High"]
                              SeriesType="SeriesType.Line"
                              XValue="@(e => e.X)"
                              YValue="@(e => e.Y)"
                              OrderBy="e => e.X" />
             <ApexPointSeries TItem="DataPoint"
                          Items="_maxes[_currentChartType]"
-                             Name="Maximums"
+                             Name=@L["Maximums"]
                              SeriesType="SeriesType.Line"
                              XValue="@(e => e.X)"
                              YValue="@(e => e.Y)"
@@ -63,18 +63,18 @@
         </ApexChart>
         <ApexChart TItem="DataPoint"
                    @ref="_graph2"
-               Title=@($"{_currentChartType} Progress")>
+               Title=@L["X Progress", _currentChartType]>
 
                         <ApexPointSeries TItem="DataPoint"
                          Items="_missingCount[_currentChartType]"
-                                         Name="Missing"
+                                         Name=@L["Missing"]
                                          SeriesType="SeriesType.Line"
                                          XValue="@(e => e.X)"
                                          YValue="@(e => e.Y)"
                                          OrderBy="e => e.X" />
                         <ApexPointSeries TItem="DataPoint"
                          Items="_existingCount[_currentChartType]"
-                                         Name="Existing"
+                                         Name=@L["Existing"]
                                          SeriesType="SeriesType.Line"
                                          XValue="@(e => e.X)"
                                          YValue="@(e => e.Y)"
