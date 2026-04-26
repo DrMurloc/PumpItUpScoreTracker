@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Domain.Enums;
+using ScoreTracker.Domain.ValueTypes;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -95,5 +96,88 @@ public sealed class TierListSagaStaticsTests
         var dict = new Dictionary<Guid, int>();
         for (var i = 0; i < count; i++) dict[Guid.NewGuid()] = weightFor(i);
         return dict;
+    }
+
+    // ---- Multi-user ProcessIntoTierList(IDictionary<string, IDictionary<Guid, PhoenixScore>>, ...) ----
+    //
+    // Each user's group is skipped when scoresDict.Count < 5, so test users must score
+    // at least 5 distinct charts. Three filler charts at the median bracket the two
+    // charts under examination so per-user mean/stddev is stable.
+
+    private static (Guid extreme, Guid mid1, Guid mid2, Guid mid3) FillerChartIds() =>
+        (Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+
+    private static IDictionary<Guid, PhoenixScore> UserBoard(Guid easyChart, Guid hardChart,
+        Guid c, Guid d, Guid e, int easyScore = 1000000, int hardScore = 0, int fillerScore = 500000) =>
+        new Dictionary<Guid, PhoenixScore>
+        {
+            [easyChart] = (PhoenixScore)easyScore,
+            [hardChart] = (PhoenixScore)hardScore,
+            [c] = (PhoenixScore)fillerScore,
+            [d] = (PhoenixScore)fillerScore,
+            [e] = (PhoenixScore)fillerScore
+        };
+
+    [Fact]
+    public void MultiUserProcessIntoTierListClassifiesUnanimouslyHighScoresAsVeryEasyAndLowAsVeryHard()
+    {
+        var easy = Guid.NewGuid();
+        var hard = Guid.NewGuid();
+        var (_, c, d, e) = FillerChartIds();
+        var userScores = Enumerable.Range(0, 5).ToDictionary(
+            i => $"u{i}",
+            i => (IDictionary<Guid, PhoenixScore>)UserBoard(easy, hard, c, d, e));
+
+        var entries = TierListSaga.ProcessIntoTierList(userScores, DifficultyLevel.From(20), "Scores").ToArray();
+
+        Assert.Equal(TierListCategory.VeryEasy, entries.Single(en => en.ChartId == easy).Category);
+        Assert.Equal(TierListCategory.VeryHard, entries.Single(en => en.ChartId == hard).Category);
+        Assert.All(entries, en => Assert.Equal("Scores", (string)en.TierListName));
+    }
+
+    [Fact]
+    public void MultiUserProcessIntoTierListSkipsUsersWhoScoredFewerThanFiveCharts()
+    {
+        // Each user has only 2 charts (< 5), so every group is skipped, chartCount stays 0,
+        // averages are NaN, and every chart falls through to the default Underrated bucket.
+        var chartA = Guid.NewGuid();
+        var chartB = Guid.NewGuid();
+        var userScores = Enumerable.Range(0, 5).ToDictionary(
+            i => $"u{i}",
+            i => (IDictionary<Guid, PhoenixScore>)new Dictionary<Guid, PhoenixScore>
+            {
+                [chartA] = (PhoenixScore)990000,
+                [chartB] = (PhoenixScore)100000
+            });
+
+        var entries = TierListSaga.ProcessIntoTierList(userScores, DifficultyLevel.From(20), "Scores").ToArray();
+
+        Assert.All(entries, en => Assert.Equal(TierListCategory.Underrated, en.Category));
+    }
+
+    [Fact]
+    public void MultiUserProcessIntoTierListWeightsHeavyGroupsHigherThanLightGroups()
+    {
+        // 5 light users + 5 heavy users with reversed score profiles. The heavy group's 100x
+        // weight should drive the final classification toward what *they* saw — chartA hard,
+        // chartB easy — rather than the opposing light view.
+        var chartA = Guid.NewGuid();
+        var chartB = Guid.NewGuid();
+        var (_, c, d, e) = FillerChartIds();
+
+        var light = Enumerable.Range(0, 5).ToDictionary(
+            i => $"light{i}",
+            i => (IDictionary<Guid, PhoenixScore>)UserBoard(chartA, chartB, c, d, e));
+        var heavy = Enumerable.Range(0, 5).ToDictionary(
+            i => $"heavy{i}",
+            i => (IDictionary<Guid, PhoenixScore>)UserBoard(chartB, chartA, c, d, e));
+
+        var combined = light.Concat(heavy).ToDictionary(kv => kv.Key, kv => kv.Value);
+        var weights = combined.ToDictionary(kv => kv.Key, kv => kv.Key.StartsWith("heavy") ? 100.0 : 1.0);
+
+        var entries = TierListSaga.ProcessIntoTierList(combined, DifficultyLevel.From(20), "Scores", weights).ToArray();
+
+        Assert.Equal(TierListCategory.VeryHard, entries.Single(en => en.ChartId == chartA).Category);
+        Assert.Equal(TierListCategory.VeryEasy, entries.Single(en => en.ChartId == chartB).Category);
     }
 }
