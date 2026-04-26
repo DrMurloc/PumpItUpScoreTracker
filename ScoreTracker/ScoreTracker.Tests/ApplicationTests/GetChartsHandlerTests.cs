@@ -17,7 +17,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class GetChartsHandlerTests
 {
     [Fact]
-    public async Task DelegatesAllFiltersToRepository()
+    public async Task ReturnsChartsMatchingAllFilters()
     {
         var expected = new[] { new ChartBuilder().Build() };
         var ids = new[] { Guid.NewGuid() };

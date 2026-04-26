@@ -14,7 +14,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class GetSavedChartsHandlerTests
 {
     [Fact]
-    public async Task DelegatesToRepositoryForCurrentUser()
+    public async Task ReturnsSavedChartsForCurrentUser()
     {
         var user = new UserBuilder().Build();
         var saved = new List<SavedChartRecord>();

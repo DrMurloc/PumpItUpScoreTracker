@@ -13,7 +13,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class GetSongNamesHandlerTests
 {
     [Fact]
-    public async Task DelegatesToRepository()
+    public async Task ReturnsSongNamesForMix()
     {
         var names = new[] { Name.From("song-a"), Name.From("song-b") };
         var charts = new Mock<IChartRepository>();

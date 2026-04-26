@@ -12,7 +12,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class GetUserByDiscordIdHandlerTests
 {
     [Fact]
-    public async Task DelegatesToRepository()
+    public async Task ReturnsUserMatchingExternalLogin()
     {
         var user = new UserBuilder().Build();
         var users = new Mock<IUserRepository>();

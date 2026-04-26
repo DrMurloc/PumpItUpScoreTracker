@@ -15,7 +15,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class GetCoOpRatingHandlerTests
 {
     [Fact]
-    public async Task DelegatesToRepository()
+    public async Task ReturnsCoOpRatingForChart()
     {
         var chartId = Guid.NewGuid();
         var rating = new CoOpRating(chartId, 1, new Dictionary<int, DifficultyLevel> { { 1, DifficultyLevel.From(20) } });

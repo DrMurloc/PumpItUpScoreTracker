@@ -15,7 +15,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class GetMyCoOpRatingHandlerTests
 {
     [Fact]
-    public async Task DelegatesToRepositoryWithCurrentUserId()
+    public async Task ReturnsCurrentUsersCoOpRatingForChart()
     {
         var user = new UserBuilder().Build();
         var chartId = Guid.NewGuid();

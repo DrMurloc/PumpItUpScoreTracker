@@ -14,7 +14,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class GetChartVideosHandlerTests
 {
     [Fact]
-    public async Task DelegatesToRepository()
+    public async Task ReturnsVideoInformationForRequestedCharts()
     {
         var ids = new[] { Guid.NewGuid() };
         var expected = new List<ChartVideoInformation>();

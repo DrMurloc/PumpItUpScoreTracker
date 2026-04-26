@@ -14,7 +14,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class GetTierListHandlerTests
 {
     [Fact]
-    public async Task DelegatesToRepository()
+    public async Task ReturnsAllEntriesForTierList()
     {
         var entries = new List<SongTierListEntry>();
         var name = Name.From("Difficulty");
