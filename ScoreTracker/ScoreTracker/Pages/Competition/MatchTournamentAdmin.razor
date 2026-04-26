@@ -7,35 +7,35 @@
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Records
 @using System.Text.RegularExpressions
-<PageTitle>@TournamentName Brackets</PageTitle>
+<PageTitle>@L["X Brackets", TournamentName]</PageTitle>
 <MudGrid>
     <MudItem xs="12">
-        <MudText Typo="Typo.h4">Players</MudText>
+        <MudText Typo="Typo.h4">@L["Players"]</MudText>
     </MudItem>
     <MudItem xs="12">
-        <MudButton Color="Color.Primary" OnClick="SyncQualifiers" Variant="Variant.Filled" Disabled="_isLoading">Sync Qualifier Leaderboard</MudButton>
+        <MudButton Color="Color.Primary" OnClick="SyncQualifiers" Variant="Variant.Filled" Disabled="_isLoading">@L["Sync Qualifier Leaderboard"]</MudButton>
     </MudItem>
     <MudItem xs="10">
-        <MudTextField @bind-Value="_newPlayerName" Label="New Player Name"></MudTextField>
+        <MudTextField @bind-Value="_newPlayerName" Label=@L["New Player Name"]></MudTextField>
     </MudItem>
     <MudItem xs="2">
-        <MudButton Color="Color.Primary" Disabled="_isLoading || string.IsNullOrWhiteSpace(_newPlayerName) || _players.ContainsKey(_newPlayerName)" Variant="Variant.Filled" OnClick="AddPlayer">Add Player</MudButton>
+        <MudButton Color="Color.Primary" Disabled="_isLoading || string.IsNullOrWhiteSpace(_newPlayerName) || _players.ContainsKey(_newPlayerName)" Variant="Variant.Filled" OnClick="AddPlayer">@L["Add Player"]</MudButton>
     </MudItem>
     <MudItem xs="12">
         <MudTable T="MatchPlayer" Items="_players.Values">
             <HeaderContent>
-                <MudTh><MudTableSortLabel T="MatchPlayer" SortBy="c=>c.Name">Player Name</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel T="MatchPlayer" SortBy="c=>c.Seed">Seed</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel T="MatchPlayer" SortBy="c=>c.DiscordId??0">Discord Id</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel T="MatchPlayer" SortBy="c=>c.Notes">Notes</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel T="MatchPlayer" SortBy="c=>c.PotentialConflict">Potential Conflict</MudTableSortLabel></MudTh>
-                <MudTh>Delete</MudTh>
+                <MudTh><MudTableSortLabel T="MatchPlayer" SortBy="c=>c.Name">@L["Player Name"]</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel T="MatchPlayer" SortBy="c=>c.Seed">@L["Seed"]</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel T="MatchPlayer" SortBy="c=>c.DiscordId??0">@L["Discord Id"]</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel T="MatchPlayer" SortBy="c=>c.Notes">@L["Notes"]</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel T="MatchPlayer" SortBy="c=>c.PotentialConflict">@L["Potential Conflict"]</MudTableSortLabel></MudTh>
+                <MudTh>@L["Delete"]</MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd>@context.Name</MudTd>
-                <MudTd><MudNumericField T="int" Disabled="_isLoading" InputMode="InputMode.numeric" HideSpinButtons="true" Label="Seed" Value="context.Seed" ValueChanged="n=>SetPlayer(context with {Seed=n})"></MudNumericField></MudTd>
-                <MudTd><MudNumericField T="ulong?" Disabled="_isLoading" InputMode="InputMode.numeric" HideSpinButtons="true" Label="Discord Id" Value="context.DiscordId" ValueChanged="n=>SetPlayer(context with {DiscordId = n})" Clearable="true"></MudNumericField></MudTd>
-                <MudTd><MudTextField T="string" Disabled="_isLoading" Label="Notes" Value="context.Notes" ValueChanged="n=>SetPlayer(context with {Notes=n})"></MudTextField></MudTd>
+                <MudTd><MudNumericField T="int" Disabled="_isLoading" InputMode="InputMode.numeric" HideSpinButtons="true" Label=@L["Seed"] Value="context.Seed" ValueChanged="n=>SetPlayer(context with {Seed=n})"></MudNumericField></MudTd>
+                <MudTd><MudNumericField T="ulong?" Disabled="_isLoading" InputMode="InputMode.numeric" HideSpinButtons="true" Label=@L["Discord Id"] Value="context.DiscordId" ValueChanged="n=>SetPlayer(context with {DiscordId = n})" Clearable="true"></MudNumericField></MudTd>
+                <MudTd><MudTextField T="string" Disabled="_isLoading" Label=@L["Notes"] Value="context.Notes" ValueChanged="n=>SetPlayer(context with {Notes=n})"></MudTextField></MudTd>
                 <MudTd><MudCheckBox T="bool" Disabled="_isLoading" Value="context.PotentialConflict" ValueChanged="n=>SetPlayer(context with {PotentialConflict=n})"></MudCheckBox></MudTd>
                 <MudTd><MudIconButton Disabled="_isLoading" Color="Color.Warning" Icon="@Icons.Material.Filled.Delete" OnClick="()=>DeletePlayer(context.Name)"></MudIconButton></MudTd>
             </RowTemplate>
@@ -47,10 +47,10 @@
     <MudItem xs="12">
     </MudItem>
     <MudItem xs="12">
-        <MudText Typo="Typo.h4">Permissions</MudText>
+        <MudText Typo="Typo.h4">@L["Permissions"]</MudText>
     </MudItem>
     <MudItem xs="12">
-        <MudAutocomplete Dense="true" Disabled="_isLoading" T="string" Value="_selectedUser" ValueChanged="SelectPlayer" MaxItems="15" CoerceValue="true" CoerceText="false" Label="Players (Paste UserId from Account Page if not Public)" SearchFunc="(s,c)=>Task.FromResult(_userSearchOptions.Where(o=>string.IsNullOrWhiteSpace(s)||o.Contains(s,StringComparison.OrdinalIgnoreCase)))">
+        <MudAutocomplete Dense="true" Disabled="_isLoading" T="string" Value="_selectedUser" ValueChanged="SelectPlayer" MaxItems="15" CoerceValue="true" CoerceText="false" Label=@L["Players (Paste UserId from Account Page if not Public)"] SearchFunc="(s,c)=>Task.FromResult(_userSearchOptions.Where(o=>string.IsNullOrWhiteSpace(s)||o.Contains(s,StringComparison.OrdinalIgnoreCase)))">
         </MudAutocomplete>
     </MudItem>
     @if (_selectedUserId != null)
@@ -58,7 +58,7 @@
         <MudItem xs="12" sm="4">@_publicUsers[_selectedUserId.Value]</MudItem>
         <MudItem xs="12" sm="4">
 
-            <MudSelect T="TournamentRole" Disabled="_isLoading" @bind-Value="_newRole" Label="Tournament Role">
+            <MudSelect T="TournamentRole" Disabled="_isLoading" @bind-Value="_newRole" Label=@L["Tournament Role"]>
                 @foreach (var role in Enum.GetValues<TournamentRole>())
                 {
                     <MudSelectItem T="TournamentRole" Value="@role">@role.GetName()</MudSelectItem>
@@ -66,7 +66,7 @@
             </MudSelect>
         </MudItem>
         <MudItem xs="12" sm="4">
-            <MudButton Color="Color.Primary" Disabled="_isLoading" OnClick="()=>SetRole(_selectedUserId.Value,_newRole)">Add</MudButton>
+            <MudButton Color="Color.Primary" Disabled="_isLoading" OnClick="()=>SetRole(_selectedUserId.Value,_newRole)">@L["Add"]</MudButton>
         </MudItem>
     }
     @foreach (var role in _tournamentRoles.Where(r=>_publicUsers.ContainsKey(r.Key)))
@@ -75,7 +75,7 @@
             @_publicUsers[role.Key]
         </MudItem>
         <MudItem xs="5">
-            <MudSelect T="TournamentRole" Disabled="_isLoading" Value="role.Value" ValueChanged="r=>SetRole(role.Key,r)" Label="Tournament Role">
+            <MudSelect T="TournamentRole" Disabled="_isLoading" Value="role.Value" ValueChanged="r=>SetRole(role.Key,r)" Label=@L["Tournament Role"]>
                 @foreach (var r in Enum.GetValues<TournamentRole>())
                 {
                     <MudSelectItem T="TournamentRole" Value="@r">@r.GetName()</MudSelectItem>
@@ -88,15 +88,15 @@
     }
     <MudItem xs="12">
         <br/>
-        <MudText Typo="Typo.h4">Machines</MudText>
+        <MudText Typo="Typo.h4">@L["Machines"]</MudText>
     </MudItem>
     <MudItem xs="12">
         <MudTable T="MatchMachineRecord" Items="_machines.OrderBy(m => m.IsWarmup).ThenBy(m => m.Priority)" Breakpoint="Breakpoint.None">
             <HeaderContent>
-                <MudTh>Machine Name</MudTh>
-                <MudTh>Is Warmup</MudTh>
-                <MudTh>Priority</MudTh>
-                <MudTh>Delete</MudTh>
+                <MudTh>@L["Machine Name"]</MudTh>
+                <MudTh>@L["Is Warmup"]</MudTh>
+                <MudTh>@L["Priority"]</MudTh>
+                <MudTh>@L["Delete"]</MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd>@context.MachineName</MudTd>
@@ -116,16 +116,16 @@
         </MudTable>
     </MudItem>
     <MudItem xs="12" sm="4">
-        <MudTextField T="string" @bind-Value="_machineName" Label="Machine Name" MaxLength="32"></MudTextField>
+        <MudTextField T="string" @bind-Value="_machineName" Label=@L["Machine Name"] MaxLength="32"></MudTextField>
     </MudItem>
     <MudItem xs="12" sm="3">
-        <MudCheckBox T="bool" @bind-Value="_isWarmup" Label="Is Warmup"></MudCheckBox>
+        <MudCheckBox T="bool" @bind-Value="_isWarmup" Label=@L["Is Warmup"]></MudCheckBox>
     </MudItem>
     <MudItem xs="12" sm="3">
-        <MudNumericField T="int" @bind-Value="_priority" Label="Priority"></MudNumericField>
+        <MudNumericField T="int" @bind-Value="_priority" Label=@L["Priority"]></MudNumericField>
     </MudItem>
     <MudItem xs="12" sm="2">
-        <MudButton StartIcon="@Icons.Material.Filled.Add" Disabled="_isLoading || string.IsNullOrWhiteSpace(_machineName)" OnClick="AddMachine">Add</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Add" Disabled="_isLoading || string.IsNullOrWhiteSpace(_machineName)" OnClick="AddMachine">@L["Add"]</MudButton>
     </MudItem>
 </MudGrid>
 <br/>
@@ -194,7 +194,7 @@
         await Matches.SaveMatchPlayer(TournamentId, player, CancellationToken.None);
         _players[_newPlayerName] = player;
         _newPlayerName = string.Empty;
-        Snackbar.Add("Player added", Severity.Success);
+        Snackbar.Add(L["Player added"].Value, Severity.Success);
         _isLoading = false;
     }
     private async Task SelectPlayer(string selected)
@@ -213,7 +213,7 @@
             _isLoading = false;
             if (user == null)
             {
-                Snackbar.Add("This user does not exist. Double check the User Id", Severity.Error);
+                Snackbar.Add(L["This user does not exist. Double check the User Id"].Value, Severity.Error);
                 return;
             }
             _publicUsers[user.Id] = user.Name;
@@ -269,7 +269,7 @@
             }
             await Matches.SaveMatchPlayer(TournamentId, _players[player.UserName], CancellationToken.None);
         }
-        Snackbar.Add("Players synced", Severity.Success);
+        Snackbar.Add(L["Players synced"].Value, Severity.Success);
         _isLoading = false;
     }
     protected override async Task OnInitializedAsync()
