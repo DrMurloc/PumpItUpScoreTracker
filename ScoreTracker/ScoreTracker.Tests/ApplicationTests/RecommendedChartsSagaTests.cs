@@ -27,7 +27,7 @@ public sealed class RecommendedChartsSagaTests
     private static readonly DateTimeOffset Now = new(2026, 5, 1, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public async Task HandleSubmitFeedbackPersistsFeedbackForCurrentUser()
+    public async Task SubmitFeedbackPersistsFeedbackForCurrentUser()
     {
         var userId = Guid.NewGuid();
         var users = new Mock<IUserRepository>();
@@ -46,7 +46,7 @@ public sealed class RecommendedChartsSagaTests
     }
 
     [Fact]
-    public async Task HandleGetRecommendedChartsIncludesSSSPlusButNotPGScoresUnderPushPGs()
+    public async Task GetRecommendedChartsIncludesSSSPlusButNotPGScoresUnderPushPGs()
     {
         // GetPGPushes selects scores where score is non-null, != 1,000,000 (PG),
         // and LetterGrade == SSSPlus (>= 995,000). This is the only sub-method that
@@ -68,7 +68,7 @@ public sealed class RecommendedChartsSagaTests
     }
 
     [Fact]
-    public async Task HandleGetRecommendedChartsExcludesPushPGsChartsThatHaveShouldHideFeedback()
+    public async Task GetRecommendedChartsExcludesPushPGsChartsThatHaveShouldHideFeedback()
     {
         var hiddenChart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var visibleChart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
@@ -93,7 +93,7 @@ public sealed class RecommendedChartsSagaTests
     }
 
     [Fact]
-    public async Task HandleGetRecommendedChartsClampsCompetitiveLevelToTenWhenStatsAreLower()
+    public async Task GetRecommendedChartsClampsCompetitiveLevelToTenWhenStatsAreLower()
     {
         // PlayerStats.CompetitiveLevel = 5 → clamped to 10. GetOldScores then iterates
         // BuildRange(competitive - 2, competitive, 0) = levels 8 and 9. We pin that

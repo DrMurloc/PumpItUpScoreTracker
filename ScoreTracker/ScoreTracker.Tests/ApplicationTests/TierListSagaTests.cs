@@ -20,7 +20,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class TierListSagaTests
 {
     [Fact]
-    public async Task ConsumeChartDifficultyUpdatedSavesNothingWhenNoChartsExist()
+    public async Task ChartDifficultyUpdatedSavesNothingWhenNoChartsExist()
     {
         var tierLists = new Mock<ITierListRepository>();
         var saga = BuildSaga(tierLists: tierLists);
@@ -32,7 +32,7 @@ public sealed class TierListSagaTests
     }
 
     [Fact]
-    public async Task ConsumeChartDifficultyUpdatedSkipsChartsThatHaveNoRating()
+    public async Task ChartDifficultyUpdatedSkipsChartsThatHaveNoRating()
     {
         var ratedChart = new ChartBuilder().WithLevel(15).WithType(ChartType.Single).Build();
         var unratedChart = new ChartBuilder().WithLevel(15).WithType(ChartType.Single).Build();
@@ -63,7 +63,7 @@ public sealed class TierListSagaTests
     [InlineData(15.75, TierListCategory.Hard)]       // diff = 0.25
     [InlineData(16.0, TierListCategory.VeryHard)]    // diff = 0.5
     [InlineData(16.5, TierListCategory.Underrated)]  // diff = 1.0
-    public async Task ConsumeChartDifficultyUpdatedAssignsCategoryFromDifficultyDelta(
+    public async Task ChartDifficultyUpdatedAssignsCategoryFromDifficultyDelta(
         double ratingDifficulty, TierListCategory expected)
     {
         var chart = new ChartBuilder().WithLevel(15).WithType(ChartType.Single).Build();
@@ -80,7 +80,7 @@ public sealed class TierListSagaTests
     }
 
     [Fact]
-    public async Task ConsumeChartDifficultyUpdatedAssignsContiguousAscendingOrderStartingAtZero()
+    public async Task ChartDifficultyUpdatedAssignsContiguousAscendingOrderStartingAtZero()
     {
         var c1 = new ChartBuilder().WithLevel(15).WithType(ChartType.Single).Build();
         var c2 = new ChartBuilder().WithLevel(15).WithType(ChartType.Single).Build();
@@ -104,7 +104,7 @@ public sealed class TierListSagaTests
     }
 
     [Fact]
-    public async Task ConsumeChartDifficultyUpdatedSavesEntriesUnderDifficultyTierList()
+    public async Task ChartDifficultyUpdatedSavesEntriesUnderDifficultyTierList()
     {
         var chart = new ChartBuilder().WithLevel(15).Build();
         var charts = ChartsMockReturning(level: 15, type: ChartType.Single, new[] { chart });
@@ -120,7 +120,7 @@ public sealed class TierListSagaTests
     }
 
     [Fact]
-    public async Task HandleRelativeTierListReturnsEmptyWhenUserHasNoMatchingScores()
+    public async Task RelativeTierListReturnsEmptyWhenUserHasNoMatchingScores()
     {
         var charts = ChartsMockReturning(level: 15, type: ChartType.Single,
             new[] { new ChartBuilder().WithLevel(15).Build() });
@@ -141,7 +141,7 @@ public sealed class TierListSagaTests
     [InlineData(23, "Scores")]
     [InlineData(24, "Official Scores")]
     [InlineData(28, "Official Scores")]
-    public async Task HandleRelativeTierListChoosesTierListNameByLevel(int level, string expectedListName)
+    public async Task RelativeTierListChoosesTierListNameByLevel(int level, string expectedListName)
     {
         var chart = new ChartBuilder().WithLevel(level).Build();
         var charts = ChartsMockReturning(level: level, type: ChartType.Single, new[] { chart });
@@ -170,7 +170,7 @@ public sealed class TierListSagaTests
     [InlineData(27, true)]
     [InlineData(9, false)]   // excluded
     [InlineData(28, false)]
-    public async Task ConsumeProcessPassTierListIteratesLevelsTenThroughTwentySevenInclusive(int level, bool expected)
+    public async Task ProcessPassTierListIteratesLevelsTenThroughTwentySevenInclusive(int level, bool expected)
     {
         var charts = new Mock<IChartRepository>();
         charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),

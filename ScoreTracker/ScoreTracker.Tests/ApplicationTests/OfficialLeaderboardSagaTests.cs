@@ -28,7 +28,7 @@ public sealed class OfficialLeaderboardSagaTests
     private static readonly DateTimeOffset Now = new(2026, 5, 1, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public async Task ConsumeStartLeaderboardImportFansOutToPopularityLeaderboardsAndWorldRankings()
+    public async Task StartLeaderboardImportFansOutToPopularityLeaderboardsAndWorldRankings()
     {
         var mediator = new Mock<IMediator>();
         var worldRankings = new Mock<IWorldRankingService>();
@@ -44,7 +44,7 @@ public sealed class OfficialLeaderboardSagaTests
     }
 
     [Fact]
-    public async Task HandleGetGameCardsQueryDelegatesToOfficialSiteClient()
+    public async Task GetGameCardsQueryReturnsCardsFromOfficialSiteClient()
     {
         var officialSite = new Mock<IOfficialSiteClient>();
         var expected = new[] { new GameCardRecord(Name.From("alice"), Id: "card1", IsActive: true) };
@@ -58,7 +58,7 @@ public sealed class OfficialLeaderboardSagaTests
     }
 
     [Fact]
-    public async Task HandleProcessOfficialLeaderboardsClearsEachLeaderboardBeforeWritingEntries()
+    public async Task ProcessOfficialLeaderboardsClearsEachLeaderboardBeforeWritingEntries()
     {
         var officialSite = new Mock<IOfficialSiteClient>();
         officialSite.Setup(s => s.GetLeaderboardEntries(It.IsAny<CancellationToken>())).ReturnsAsync(new[]
@@ -88,7 +88,7 @@ public sealed class OfficialLeaderboardSagaTests
     }
 
     [Fact]
-    public async Task HandleProcessOfficialLeaderboardsAssignsTiedScoresTheSamePlaceWithOlympicGap()
+    public async Task ProcessOfficialLeaderboardsAssignsTiedScoresTheSamePlaceWithOlympicGap()
     {
         var officialSite = new Mock<IOfficialSiteClient>();
         // Two players tied at 100, one at 50 → tied players share place 1, next is place 3 (skipping 2).
@@ -118,7 +118,7 @@ public sealed class OfficialLeaderboardSagaTests
     }
 
     [Fact]
-    public async Task HandleProcessOfficialLeaderboardsSavesAvatarOncePerUniqueUsername()
+    public async Task ProcessOfficialLeaderboardsSavesAvatarOncePerUniqueUsername()
     {
         var aliceAvatar = new Uri("https://example.invalid/alice.png");
         var bobAvatar = new Uri("https://example.invalid/bob.png");
@@ -146,7 +146,7 @@ public sealed class OfficialLeaderboardSagaTests
     }
 
     [Fact]
-    public async Task HandleProcessChartPopularitySavesEntriesUnderPopularityTierList()
+    public async Task ProcessChartPopularitySavesEntriesUnderPopularityTierList()
     {
         var chart = new ChartBuilder().WithLevel(15).WithType(ChartType.Single).Build();
         var officialSite = new Mock<IOfficialSiteClient>();
@@ -166,7 +166,7 @@ public sealed class OfficialLeaderboardSagaTests
     }
 
     [Fact]
-    public async Task HandleProcessChartPopularityClassifiesPlaceMinusOneAsUnrecorded()
+    public async Task ProcessChartPopularityClassifiesPlaceMinusOneAsUnrecorded()
     {
         var chart = new ChartBuilder().WithLevel(15).WithType(ChartType.Single).Build();
         var officialSite = new Mock<IOfficialSiteClient>();

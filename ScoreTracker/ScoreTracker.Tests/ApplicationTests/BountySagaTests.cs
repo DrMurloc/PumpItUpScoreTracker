@@ -20,7 +20,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class BountySagaTests
 {
     [Fact]
-    public async Task ConsumeUpdateBountiesClearsMonthlyBoardOnFirstOfMonth()
+    public async Task UpdateBountiesClearsMonthlyBoardOnFirstOfMonth()
     {
         var bounties = new Mock<IChartBountyRepository>();
         var saga = BuildSaga(bounties: bounties, dateTime: FakeDateTime.At(2026, 5, 1));
@@ -31,7 +31,7 @@ public sealed class BountySagaTests
     }
 
     [Fact]
-    public async Task ConsumeUpdateBountiesDoesNotClearBoardOnOtherDays()
+    public async Task UpdateBountiesDoesNotClearBoardOnOtherDays()
     {
         var bounties = new Mock<IChartBountyRepository>();
         var saga = BuildSaga(bounties: bounties, dateTime: FakeDateTime.At(2026, 5, 15));
@@ -42,7 +42,7 @@ public sealed class BountySagaTests
     }
 
     [Fact]
-    public async Task ConsumeUpdateBountiesAssignsTopBountyToChartsWithoutScores()
+    public async Task UpdateBountiesAssignsTopBountyToChartsWithoutScores()
     {
         var bounties = new Mock<IChartBountyRepository>();
         var charts = new Mock<IChartRepository>();
@@ -65,7 +65,7 @@ public sealed class BountySagaTests
     }
 
     [Fact]
-    public async Task ConsumePlayerScoreUpdatedRedeemsZeroWhenNoBountiesMatch()
+    public async Task PlayerScoreUpdatedRedeemsZeroWhenNoBountiesMatch()
     {
         var bounties = new Mock<IChartBountyRepository>();
         var stats = new Mock<IPlayerStatsRepository>();
@@ -86,7 +86,7 @@ public sealed class BountySagaTests
     }
 
     [Fact]
-    public async Task ConsumePlayerScoreUpdatedSumsBountyWorthForMatchingCharts()
+    public async Task PlayerScoreUpdatedSumsBountyWorthForMatchingCharts()
     {
         var bountyChartId = Guid.NewGuid();
         var bounties = new Mock<IChartBountyRepository>();

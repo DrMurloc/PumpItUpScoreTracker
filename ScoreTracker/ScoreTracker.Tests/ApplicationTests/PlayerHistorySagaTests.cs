@@ -15,7 +15,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class PlayerHistorySagaTests
 {
     [Fact]
-    public async Task ConsumePersistsHistoryRecordStampedWithCurrentTime()
+    public async Task PersistsHistoryRecordStampedWithCurrentTime()
     {
         var userId = Guid.NewGuid();
         var now = new DateTimeOffset(2026, 5, 1, 12, 0, 0, TimeSpan.Zero);

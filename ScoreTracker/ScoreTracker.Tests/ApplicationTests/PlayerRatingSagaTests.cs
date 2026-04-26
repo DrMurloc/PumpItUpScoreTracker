@@ -22,7 +22,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class PlayerRatingSagaTests
 {
     [Fact]
-    public async Task ConsumeUserCreatedSavesZeroedStatsRecord()
+    public async Task UserCreatedSavesZeroedStatsRecord()
     {
         var stats = new Mock<IPlayerStatsRepository>();
         var saga = BuildSaga(stats: stats);
@@ -37,7 +37,7 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
-    public async Task HandleGetTop50ForPlayerExcludesCoOpCharts()
+    public async Task GetTop50ForPlayerExcludesCoOpCharts()
     {
         var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
         var coOp = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(3).Build();
@@ -58,7 +58,7 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
-    public async Task HandleGetTop50ForPlayerFiltersByChartTypeWhenSpecified()
+    public async Task GetTop50ForPlayerFiltersByChartTypeWhenSpecified()
     {
         var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
         var dbl = new ChartBuilder().WithType(ChartType.Double).WithLevel(17).Build();
@@ -79,7 +79,7 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
-    public async Task HandleGetTop50ForPlayerRespectsCountLimitAndOrdersByRatingDescending()
+    public async Task GetTop50ForPlayerRespectsCountLimitAndOrdersByRatingDescending()
     {
         var c1 = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
         var c2 = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
@@ -107,7 +107,7 @@ public sealed class PlayerRatingSagaTests
     [InlineData(null, 100)]
     [InlineData(ChartType.Single, 50)]
     [InlineData(ChartType.Double, 50)]
-    public async Task HandleGetTop50CompetitiveTakesOneHundredForAllAndFiftyForFilteredType(
+    public async Task GetTop50CompetitiveTakesOneHundredForAllAndFiftyForFilteredType(
         ChartType? requestType, int expectedTakeCount)
     {
         // Build 120 charts so the take limit is observable for both 100 (no filter) and 50 (filtered).
@@ -131,7 +131,7 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
-    public async Task HandleRecalculateStatsSavesNewStatsAndAlwaysPublishesStatsUpdatedEvent()
+    public async Task RecalculateStatsSavesNewStatsAndAlwaysPublishesStatsUpdatedEvent()
     {
         var userId = Guid.NewGuid();
         var stats = new Mock<IPlayerStatsRepository>();
@@ -153,7 +153,7 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
-    public async Task HandleRecalculateStatsPublishesRatingsImprovedWhenSkillRatingIncreases()
+    public async Task RecalculateStatsPublishesRatingsImprovedWhenSkillRatingIncreases()
     {
         var userId = Guid.NewGuid();
         var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
@@ -173,7 +173,7 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
-    public async Task HandleRecalculateStatsDoesNotPublishRatingsImprovedWhenNothingImproves()
+    public async Task RecalculateStatsDoesNotPublishRatingsImprovedWhenNothingImproves()
     {
         var userId = Guid.NewGuid();
         var stats = new Mock<IPlayerStatsRepository>();
@@ -198,7 +198,7 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
-    public async Task HandleRecalculatePumbilityCallsUpdateScoreStatsForGivenCharts()
+    public async Task RecalculatePumbilityUpdatesScoreStatsForGivenCharts()
     {
         var userId = Guid.NewGuid();
         var c1 = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
@@ -232,7 +232,7 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
-    public async Task ConsumePlayerScoreUpdatedDelegatesToStatsAndPumbilityRecalc()
+    public async Task PlayerScoreUpdatedRecalculatesStatsAndPumbility()
     {
         var userId = Guid.NewGuid();
         var chartId = Guid.NewGuid();

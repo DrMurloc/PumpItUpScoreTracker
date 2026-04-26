@@ -27,7 +27,7 @@ public sealed class CommunitySagaTests
     private static readonly DateTimeOffset Now = new(2026, 5, 1, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public async Task HandleCreateCommunityThrowsWhenCommunityNameAlreadyExists()
+    public async Task CreateCommunityThrowsWhenCommunityNameAlreadyExists()
     {
         var ctx = new HandlerContext();
         var existing = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Public, false);
@@ -40,7 +40,7 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task HandleCreateCommunitySavesNewCommunityWithCurrentUserAsOwnerAndMember()
+    public async Task CreateCommunitySavesNewCommunityWithCurrentUserAsOwnerAndMember()
     {
         var userId = Guid.NewGuid();
         var ctx = new HandlerContext(currentUserId: userId);
@@ -55,7 +55,7 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task HandleJoinCommunityIsIdempotentForExistingMembers()
+    public async Task JoinCommunityIsIdempotentForExistingMembers()
     {
         var userId = Guid.NewGuid();
         var ctx = new HandlerContext(currentUserId: userId);
@@ -72,7 +72,7 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task HandleJoinCommunityAddsMemberToPublicCommunity()
+    public async Task JoinCommunityAddsMemberToPublicCommunity()
     {
         var userId = Guid.NewGuid();
         var ctx = new HandlerContext(currentUserId: userId);
@@ -88,7 +88,7 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task HandleJoinCommunityThrowsWhenPrivateAndNoInviteCodeProvided()
+    public async Task JoinCommunityThrowsWhenPrivateAndNoInviteCodeProvided()
     {
         var ctx = new HandlerContext();
         var community = new Community(Name.From("Secret"), Guid.NewGuid(), CommunityPrivacyType.Private, false);
@@ -101,7 +101,7 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task HandleLeaveCommunityRemovesMemberFromTheSet()
+    public async Task LeaveCommunityRemovesMemberFromTheSet()
     {
         var userId = Guid.NewGuid();
         var ctx = new HandlerContext(currentUserId: userId);
@@ -119,7 +119,7 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task HandleCreateInviteLinkThrowsWhenCallerIsNotAMember()
+    public async Task CreateInviteLinkThrowsWhenCallerIsNotAMember()
     {
         var callerId = Guid.NewGuid();
         var ctx = new HandlerContext(currentUserId: callerId);
@@ -133,7 +133,7 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task HandleCreateInviteLinkPersistsTheCodeAndReturnsIt()
+    public async Task CreateInviteLinkPersistsTheCodeAndReturnsIt()
     {
         var memberId = Guid.NewGuid();
         var ctx = new HandlerContext(currentUserId: memberId);
@@ -155,7 +155,7 @@ public sealed class CommunitySagaTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task HandleGetMyCommunitiesReturnsPersonalListWhenLoggedInElsePublicList(bool loggedIn)
+    public async Task GetMyCommunitiesReturnsPersonalListWhenLoggedInElsePublicList(bool loggedIn)
     {
         var ctx = new HandlerContext(currentUserId: Guid.NewGuid(), isLoggedIn: loggedIn);
 
@@ -176,7 +176,7 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task HandleGetCommunityHidesPrivateCommunityFromNonMembers()
+    public async Task GetCommunityHidesPrivateCommunityFromNonMembers()
     {
         var ctx = new HandlerContext(currentUserId: Guid.NewGuid(), isLoggedIn: true);
         var privateCommunity = new Community(Name.From("Secret"), Guid.NewGuid(),
@@ -189,7 +189,7 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task ConsumeNewTitlesAcquiredBroadcastsTitleListToCommunityChannels()
+    public async Task NewTitlesAcquiredBroadcastsTitleListToCommunityChannels()
     {
         var userId = Guid.NewGuid();
         var ctx = new HandlerContext();
@@ -207,7 +207,7 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task ConsumePlayerRatingsImprovedDoesNothingWhenUserNotFound()
+    public async Task PlayerRatingsImprovedDoesNothingWhenUserNotFound()
     {
         var userId = Guid.NewGuid();
         var ctx = new HandlerContext();
@@ -221,7 +221,7 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task ConsumePlayerRatingsImprovedSkipsBroadcastWhenNothingActuallyImproved()
+    public async Task PlayerRatingsImprovedSkipsBroadcastWhenNothingActuallyImproved()
     {
         // All "new" values equal "old" values → no parts of the message are appended → no send.
         var userId = Guid.NewGuid();
@@ -236,7 +236,7 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task ConsumeUserUpdatedJoinsWorldAndCountryWhenPublic()
+    public async Task UserUpdatedJoinsWorldAndCountryWhenPublic()
     {
         var userId = Guid.NewGuid();
         var ctx = new HandlerContext();
@@ -254,7 +254,7 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task ConsumeUserUpdatedLeavesWorldWhenNoLongerPublic()
+    public async Task UserUpdatedLeavesWorldWhenNoLongerPublic()
     {
         var userId = Guid.NewGuid();
         var ctx = new HandlerContext();
