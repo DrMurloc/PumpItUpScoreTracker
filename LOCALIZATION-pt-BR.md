@@ -147,6 +147,8 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | Stamina | stamina | **Untranslated**. Brazilian PIU community usage. E.g. "Stamina Session Builder" → "Construtor de sessão de stamina". |
 | Plays (PIU attempts) | plays | **Untranslated**, lowercase mid-phrase. "Play Count" → "Contagem de plays"; "{0} Plays" → "{0} plays". Same loanword treatment as `pass`/`run`/`chart`. |
 | Pre-Score (compound prefix) | pré-pontuação | "Points Pre-Score" → "Pontos pré-pontuação". |
+| Rankings (plural noun, generic) | Rankings | **Untranslated**, matches `Rating` loanword policy. "World Rankings" → "Rankings mundiais"; "Score Rankings" → "Rankings de pontuação". Distinct from `Leaderboard` → `Classificação`. |
+| Tag / Tags | Tag / Tags | **Untranslated**. Brazilian Portuguese tech UI loanword. |
 | Judgment terms (Bad / Miss / Perfect / Great / Good) | Bad / Miss / Perfect / Great / Good | **Untranslated**, including plural forms (`Bads`, `Misses`, `Greats`, `Perfects`, `Goods`). Brazilian PIU community uses the English judgment terms. |
 | X Calculator | Calculadora de X | "Phoenix Score Calculator" → "Calculadora de pontuação da Phoenix" (existing); "Rating Calculator" → "Calculadora de rating"; "PIU Life Calculator" → "Calculadora de vida do PIU". |
 | Delete | Excluir | Action verb. Distinct from `Remove from X` → `Remover de X` (existing). |

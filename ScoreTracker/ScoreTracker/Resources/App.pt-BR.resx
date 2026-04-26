@@ -1806,4 +1806,94 @@
   <data name="Your Points per Second" xml:space="preserve">
     <value>Seus pontos por segundo</value>
   </data>
+  <data name="100% (or everyone with a PG)" xml:space="preserve">
+    <value>100% (ou todos com um PG)</value>
+  </data>
+  <data name="Add UCS" xml:space="preserve">
+    <value>Adicionar UCS</value>
+  </data>
+  <data name="Co-Op" xml:space="preserve">
+    <value>Co-Op</value>
+  </data>
+  <data name="Current" xml:space="preserve">
+    <value>Atual</value>
+  </data>
+  <data name="Home" xml:space="preserve">
+    <value>Início</value>
+  </data>
+  <data name="Leaderboard Player Compare" xml:space="preserve">
+    <value>Comparar jogadores na classificação</value>
+  </data>
+  <data name="Leaderboard Type" xml:space="preserve">
+    <value>Tipo de classificação</value>
+  </data>
+  <data name="Monthly Leaderboard" xml:space="preserve">
+    <value>Classificação mensal</value>
+  </data>
+  <data name="No Recorded Scores" xml:space="preserve">
+    <value>Sem pontuações registradas</value>
+  </data>
+  <data name="Official Leaderboard Search" xml:space="preserve">
+    <value>Busca na classificação oficial</value>
+  </data>
+  <data name="Open" xml:space="preserve">
+    <value>Abrir</value>
+  </data>
+  <data name="Road to BITE (Monthly Leaderboard July 8th - August 4th)" xml:space="preserve">
+    <value>Road to BITE (Classificação mensal de 8 de julho a 4 de agosto)</value>
+  </data>
+  <data name="Score Rankings" xml:space="preserve">
+    <value>Rankings de pontuação</value>
+  </data>
+  <data name="Score Rankings (the colored scores) are based on comparisons to similarly skilled players." xml:space="preserve">
+    <value>Os Rankings de pontuação (as pontuações coloridas) são baseados em comparações com jogadores de habilidade similar.</value>
+  </data>
+  <data name="Scoring Rankings" xml:space="preserve">
+    <value>Rankings de pontuação</value>
+  </data>
+  <data name="Show Only Suggested Charts" xml:space="preserve">
+    <value>Mostrar somente charts sugeridos</value>
+  </data>
+  <data name="Similarly skilled players to you for Doubles (CoOp charts use doubles competitive level):" xml:space="preserve">
+    <value>Jogadores com habilidade similar à sua para Doubles (charts de CoOp usam o nível competitivo de Doubles):</value>
+  </data>
+  <data name="Similarly skilled players to you for Singles:" xml:space="preserve">
+    <value>Jogadores com habilidade similar à sua para Singles:</value>
+  </data>
+  <data name="Tag" xml:space="preserve">
+    <value>Tag</value>
+  </data>
+  <data name="Tags" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="The higher percent of players in your range that you perform better than, the better the color:" xml:space="preserve">
+    <value>Quanto maior a porcentagem de jogadores em sua faixa que você supera, melhor a cor:</value>
+  </data>
+  <data name="UCS Leaderboard" xml:space="preserve">
+    <value>Classificação de UCS</value>
+  </data>
+  <data name="Unknown" xml:space="preserve">
+    <value>Desconhecido</value>
+  </data>
+  <data name="Uploader" xml:space="preserve">
+    <value>Carregador</value>
+  </data>
+  <data name="Validation" xml:space="preserve">
+    <value>Validação</value>
+  </data>
+  <data name="Week X - Top Y Charts" xml:space="preserve">
+    <value>Semana {0} - Top {1} charts</value>
+  </data>
+  <data name="Weekly Charts" xml:space="preserve">
+    <value>Charts Semanais</value>
+  </data>
+  <data name="World Rankings" xml:space="preserve">
+    <value>Rankings mundiais</value>
+  </data>
+  <data name="Wouldn't You Like To Know" xml:space="preserve">
+    <value>Você gostaria de saber, não?</value>
+  </data>
+  <data name="X% of Y Comparable Players" xml:space="preserve">
+    <value>{0}% de {1} jogadores comparáveis</value>
+  </data>
 </root>
