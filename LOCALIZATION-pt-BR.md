@@ -131,6 +131,13 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | Admin (role/area) | Admin | **Untranslated**. Role name. |
 | Chart actions | Salvar / Atualizar / Criar chart | "Save Chart" → "Salvar chart"; "Update Chart" → "Atualizar chart"; "Chart saved" → "Chart salvo" (masculine — community treats `chart` as masc.). |
 | Lifebar (one-word, the UI element) | lifebar | **Untranslated** when referring to the PIU UI element specifically. Bare `Life` translates as `Vida` (e.g. "Max Life" → "Vida máxima", "Life Threshold" → "Limite de vida"). Same split-treatment as `chart` (jargon untranslated) vs related Portuguese words. |
+| Folder (PIU difficulty-level group) | folder | **Untranslated**. Brazilian PIU community uses both `folder` and `pasta`; we keep `folder` to match the loanword policy. E.g. "Folder Averages" → "Médias do folder"; "Weighted Average Scores By Folder" → "Pontuações médias ponderadas por folder". |
+| Bounty / Bounties | Bounty / Bounties | **Untranslated**. PIU community concept. "Bounty Leaderboard" → "Classificação de bounties". |
+| Anonymous | Anônimo | |
+| Avatar | Avatar | **Untranslated**. Common loanword in pt-BR UI. |
+| Calculated Tier List | Faixa calculada | Reuses the `Faixas de dificuldade` family. |
+| Game Stats | Estatísticas do jogo | |
+| User Matches / Match (vs another player) | Partidas do usuário / Partida | |
 | Judgment terms (Bad / Miss / Perfect / Great / Good) | Bad / Miss / Perfect / Great / Good | **Untranslated**, including plural forms (`Bads`, `Misses`, `Greats`, `Perfects`, `Goods`). Brazilian PIU community uses the English judgment terms. |
 | X Calculator | Calculadora de X | "Phoenix Score Calculator" → "Calculadora de pontuação da Phoenix" (existing); "Rating Calculator" → "Calculadora de rating"; "PIU Life Calculator" → "Calculadora de vida do PIU". |
 | Delete | Excluir | Action verb. Distinct from `Remove from X` → `Remover de X` (existing). |
@@ -157,15 +164,10 @@ Pulled from the 442 missing keys. Each is a term that doesn't yet have an establ
 
 | English | Recommendation | Notes |
 |---|---|---|
-| Bounty | **Bounty** (untranslated) | Niche PIU community concept; matches the pattern of leaving `Plate`, `pass`, `chart` untranslated. Confirms with Tier List and Bounty being parallel features. |
 | Pumbility | **Pumbility** (untranslated) | Proper noun for PIU's composite player rating; community uses the English term. |
 | UCS | **UCS** (untranslated) | Acronym (User-Created Step). Untranslated everywhere. |
-| Avatar | Avatar | Untranslated, common loanword in pt-BR UI. |
 | Tournament (singular) | Campeonato | Plural already established as `Campeonatos`. |
-| Match (versus another player) | Partida | Standard pt-BR for game match. (`User Matches` → `Partidas do usuário`, etc.) |
 | Stats | Estatísticas | |
-| Game Stats | Estatísticas do jogo | |
-| Calculated Tier List | Faixa calculada | Reuse `Faixas de dificuldade` family. |
 
 ### App / generic UI — high frequency
 
@@ -175,7 +177,6 @@ Pulled from the 442 missing keys. Each is a term that doesn't yet have an establ
 | Add | Adicionar | |
 | Add Player | Adicionar jogador | |
 | Allow Repeats | Permitir repetições | |
-| Anonymous | Anônimo | |
 | Always | Sempre | |
 
 ## Process for future batches

@@ -1026,4 +1026,133 @@
   <data name="When at 12% or lower visual life, a miss gives less life loss than a bad, but inhibits your recovery severely. This only really matters for notes at the end of a song or before guaranteed 100+ combo sections." xml:space="preserve">
     <value>Em 12% ou menos de vida visível, um miss tira menos vida que um bad, mas inibe sua recuperação severamente. Isso só importa de fato para notas no fim da música ou antes de seções com 100+ de combo garantido.</value>
   </data>
+  <data name="Anonymous" xml:space="preserve">
+    <value>Anônimo</value>
+  </data>
+  <data name="Avatar" xml:space="preserve">
+    <value>Avatar</value>
+  </data>
+  <data name="Bounties" xml:space="preserve">
+    <value>Bounties</value>
+  </data>
+  <data name="Bounty Leaderboard" xml:space="preserve">
+    <value>Classificação de bounties</value>
+  </data>
+  <data name="Calculated Tier List" xml:space="preserve">
+    <value>Faixa calculada</value>
+  </data>
+  <data name="Chart Average" xml:space="preserve">
+    <value>Média do chart</value>
+  </data>
+  <data name="Chart Count By Level" xml:space="preserve">
+    <value>Contagem de charts por nível</value>
+  </data>
+  <data name="ChartScoring" xml:space="preserve">
+    <value>Pontuação de chart</value>
+  </data>
+  <data name="Competitively" xml:space="preserve">
+    <value>Competitivamente</value>
+  </data>
+  <data name="Determined to be X between Y and Z" xml:space="preserve">
+    <value>Determinado como {0} entre {1} e {2}</value>
+  </data>
+  <data name="Difficulty By Letter" xml:space="preserve">
+    <value>Dificuldade por letra</value>
+  </data>
+  <data name="Difficulty By Player Level" xml:space="preserve">
+    <value>Dificuldade por nível de jogador</value>
+  </data>
+  <data name="Existing" xml:space="preserve">
+    <value>Existente</value>
+  </data>
+  <data name="Final Result" xml:space="preserve">
+    <value>Resultado final</value>
+  </data>
+  <data name="Final Result: X" xml:space="preserve">
+    <value>Resultado final: {0}</value>
+  </data>
+  <data name="Folder Averages" xml:space="preserve">
+    <value>Médias do folder</value>
+  </data>
+  <data name="Folder Weighted Distribution" xml:space="preserve">
+    <value>Distribuição ponderada do folder</value>
+  </data>
+  <data name="Game Stats" xml:space="preserve">
+    <value>Estatísticas do jogo</value>
+  </data>
+  <data name="Letter Difficulty" xml:space="preserve">
+    <value>Dificuldade por letra</value>
+  </data>
+  <data name="LetterDifficulties" xml:space="preserve">
+    <value>Dificuldades por letra</value>
+  </data>
+  <data name="Maximums" xml:space="preserve">
+    <value>Máximos</value>
+  </data>
+  <data name="Minimums" xml:space="preserve">
+    <value>Mínimos</value>
+  </data>
+  <data name="Missing" xml:space="preserve">
+    <value>Faltante</value>
+  </data>
+  <data name="Monthly Total" xml:space="preserve">
+    <value>Total mensal</value>
+  </data>
+  <data name="Note Counts" xml:space="preserve">
+    <value>Contagem de notas</value>
+  </data>
+  <data name="Percentile Distribution" xml:space="preserve">
+    <value>Distribuição percentil</value>
+  </data>
+  <data name="Player" xml:space="preserve">
+    <value>Jogador</value>
+  </data>
+  <data name="Player Levels" xml:space="preserve">
+    <value>Níveis de jogador</value>
+  </data>
+  <data name="Player Weights" xml:space="preserve">
+    <value>Pesos dos jogadores</value>
+  </data>
+  <data name="Private User - X" xml:space="preserve">
+    <value>Usuário privado - {0}</value>
+  </data>
+  <data name="Scoring Level by Player Competitive Level" xml:space="preserve">
+    <value>Nível de pontuação por nível competitivo do jogador</value>
+  </data>
+  <data name="Selected Chart" xml:space="preserve">
+    <value>Chart selecionado</value>
+  </data>
+  <data name="Similar Players" xml:space="preserve">
+    <value>Jogadores similares</value>
+  </data>
+  <data name="Standard High" xml:space="preserve">
+    <value>Padrão alto</value>
+  </data>
+  <data name="Standard Low" xml:space="preserve">
+    <value>Padrão baixo</value>
+  </data>
+  <data name="Start" xml:space="preserve">
+    <value>Iniciar</value>
+  </data>
+  <data name="Target Player Level" xml:space="preserve">
+    <value>Nível-alvo do jogador</value>
+  </data>
+  <data name="Total Popularity Singles vs Doubles" xml:space="preserve">
+    <value>Popularidade total Singles vs Doubles</value>
+  </data>
+  <data name="Total Singles vs Doubles" xml:space="preserve">
+    <value>Total Singles vs Doubles</value>
+  </data>
+  <data name="User Matches" xml:space="preserve">
+    <value>Partidas do usuário</value>
+  </data>
+  <data name="Weighted Average Scores By Folder" xml:space="preserve">
+    <value>Pontuações médias ponderadas por folder</value>
+  </data>
+  <data name="X Note counts" xml:space="preserve">
+    <value>Contagem de notas - {0}</value>
+  </data>
+  <data name="X Progress" xml:space="preserve">
+    <value>Progresso - {0}</value>
+  </data>
 </root>
