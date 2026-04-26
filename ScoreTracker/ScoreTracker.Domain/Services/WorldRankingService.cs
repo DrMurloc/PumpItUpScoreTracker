@@ -95,11 +95,6 @@ public sealed class WorldRankingService : IWorldRankingService
         }
     }
 
-    private static double AvgOr0(double[] charts)
-    {
-        return charts.Any() ? charts.Average() : 0;
-    }
-
     public async Task<IEnumerable<RecordedPhoenixScore>> GetAll(Name username, CancellationToken cancellationToken)
     {
         var result = new List<RecordedPhoenixScore>();
