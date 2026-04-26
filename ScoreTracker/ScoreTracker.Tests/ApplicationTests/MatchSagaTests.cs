@@ -26,7 +26,7 @@ public sealed class MatchSagaTests
     private static readonly Guid TournamentId = Guid.NewGuid();
 
     [Fact]
-    public async Task HandleCreateMatchLinkPersistsTheLink()
+    public async Task CreateMatchLinkPersistsTheLink()
     {
         var matches = new Mock<IMatchRepository>();
         var saga = BuildSaga(matches: matches);
@@ -39,7 +39,7 @@ public sealed class MatchSagaTests
     }
 
     [Fact]
-    public async Task HandleDeleteMatchLinkRemovesTheLink()
+    public async Task DeleteMatchLinkRemovesTheLink()
     {
         var matches = new Mock<IMatchRepository>();
         var saga = BuildSaga(matches: matches);
@@ -51,7 +51,7 @@ public sealed class MatchSagaTests
     }
 
     [Fact]
-    public async Task HandleSaveRandomSettingsPersistsByTournamentAndName()
+    public async Task SaveRandomSettingsPersistsByTournamentAndName()
     {
         var matches = new Mock<IMatchRepository>();
         var saga = BuildSaga(matches: matches);
@@ -66,7 +66,7 @@ public sealed class MatchSagaTests
     }
 
     [Fact]
-    public async Task HandleUpdateMatchPersistsAndPublishesMatchUpdatedEvent()
+    public async Task UpdateMatchPersistsAndPublishesMatchUpdatedEvent()
     {
         var matches = new Mock<IMatchRepository>();
         var mediator = new Mock<IMediator>();
@@ -82,7 +82,7 @@ public sealed class MatchSagaTests
     }
 
     [Fact]
-    public async Task HandleGetMatchReturnsRepositoryValue()
+    public async Task GetMatchReturnsStoredMatch()
     {
         var view = NewMatch("Semi");
         var matches = new Mock<IMatchRepository>();
@@ -97,7 +97,7 @@ public sealed class MatchSagaTests
     }
 
     [Fact]
-    public async Task HandleResolveMatchTransitionsStateToFinalizingAndPublishes()
+    public async Task ResolveMatchTransitionsStateToFinalizingAndPublishes()
     {
         var view = NewMatch("Quarter") with { State = MatchState.InProgress };
         var matches = new Mock<IMatchRepository>();
@@ -118,7 +118,7 @@ public sealed class MatchSagaTests
     }
 
     [Fact]
-    public async Task HandleFinishCardDrawSetsStateReadyAndZeroesScoresAndPoints()
+    public async Task FinishCardDrawSetsStateReadyAndZeroesScoresAndPoints()
     {
         var alice = Name.From("alice");
         var bob = Name.From("bob");
@@ -148,7 +148,7 @@ public sealed class MatchSagaTests
     }
 
     [Fact]
-    public async Task HandleUpdateMatchScoresUpdatesNestedScoreAndPublishes()
+    public async Task UpdateMatchScoresUpdatesNestedScoreAndPublishes()
     {
         var alice = Name.From("alice");
         var bob = Name.From("bob");
@@ -188,7 +188,7 @@ public sealed class MatchSagaTests
     }
 
     [Fact]
-    public async Task HandleUpdateMatchScoresSendsDiscordWhenSongFirstCompletes()
+    public async Task UpdateMatchScoresSendsDiscordWhenSongFirstCompletes()
     {
         var alice = Name.From("alice");
         var bob = Name.From("bob");
@@ -230,7 +230,7 @@ public sealed class MatchSagaTests
     }
 
     [Fact]
-    public async Task HandleUpdateMatchScoresDoesNotSendDiscordWhenSongAlreadyComplete()
+    public async Task UpdateMatchScoresDoesNotSendDiscordWhenSongAlreadyComplete()
     {
         var alice = Name.From("alice");
         var bob = Name.From("bob");
@@ -270,7 +270,7 @@ public sealed class MatchSagaTests
     [InlineData(MatchState.NotStarted, "Card draw is ready")]
     [InlineData(MatchState.Ready, "is ready to play")]
     [InlineData(MatchState.InProgress, "TOs are requesting")]
-    public async Task HandlePingMatchTailorsMessageToCurrentState(MatchState state, string expectedSubstring)
+    public async Task PingMatchTailorsMessageToCurrentState(MatchState state, string expectedSubstring)
     {
         var alice = Name.From("alice");
         var view = NewMatch("Round 1") with
@@ -295,7 +295,7 @@ public sealed class MatchSagaTests
     }
 
     [Fact]
-    public async Task HandleDrawChartsForCoOpEasyOverridesChartIdsWithEasyConstantBeforeRandomDraw()
+    public async Task DrawChartsForCoOpEasyOverridesChartIdsWithEasyConstantBeforeRandomDraw()
     {
         // The "CoOp Easy" branch swaps ChartIds for the EasyCoOp constant before delegating
         // chart selection to GetRandomChartsQuery. We pin that GetRandomChartsQuery is sent
@@ -328,7 +328,7 @@ public sealed class MatchSagaTests
     }
 
     [Fact]
-    public async Task HandleFinalizeMatchPromotesWinnersAndCompletesState()
+    public async Task FinalizeMatchPromotesWinnersAndCompletesState()
     {
         var alice = Name.From("alice");
         var bob = Name.From("bob");

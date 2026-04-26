@@ -25,7 +25,7 @@ public sealed class WeeklyTournamentSagaTests
     private static readonly DateTimeOffset Now = new(2026, 5, 1, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public async Task ConsumeUpdateWeeklyChartsExitsEarlyWhenAnyCurrentWeekIsStillActive()
+    public async Task UpdateWeeklyChartsExitsEarlyWhenAnyCurrentWeekIsStillActive()
     {
         var weeklyTournies = new Mock<IWeeklyTournamentRepository>();
         weeklyTournies.Setup(w => w.GetWeeklyCharts(It.IsAny<CancellationToken>()))
@@ -46,7 +46,7 @@ public sealed class WeeklyTournamentSagaTests
     }
 
     [Fact]
-    public async Task ConsumeUpdateWeeklyChartsWritesHistoriesAndClearsBoardWhenWeekExpired()
+    public async Task UpdateWeeklyChartsWritesHistoriesAndClearsBoardWhenWeekExpired()
     {
         // Now is 2026-05-01 12:00 UTC; an expired chart (ExpirationDate < Now) lets the
         // chart-picker run end-to-end with a complete required-bucket fixture.
@@ -70,7 +70,7 @@ public sealed class WeeklyTournamentSagaTests
     }
 
     [Fact]
-    public async Task ConsumeUpdateWeeklyChartsRegistersExactlyOneChartPerMergedBucket()
+    public async Task UpdateWeeklyChartsRegistersExactlyOneChartPerMergedBucket()
     {
         // Required-bucket fixture has 8 charts; after merging CoOp 4-5 → 3,
         // S26 → S25, and D28+D29 → D27, only 3 buckets remain. Each gets one chart.
@@ -85,7 +85,7 @@ public sealed class WeeklyTournamentSagaTests
     }
 
     [Fact]
-    public async Task ConsumeUpdateWeeklyChartsExcludesAlreadyPlayedChartsWhenPicking()
+    public async Task UpdateWeeklyChartsExcludesAlreadyPlayedChartsWhenPicking()
     {
         // Two CoOp 3 charts; one is in alreadyPlayed, so only the unplayed one can be picked.
         var ctx = ExpiredWeekContext();
@@ -106,7 +106,7 @@ public sealed class WeeklyTournamentSagaTests
     }
 
     [Fact]
-    public async Task ConsumeUpdateWeeklyChartsResetsAlreadyPlayedListWhenAllChartsInBucketAreExhausted()
+    public async Task UpdateWeeklyChartsResetsAlreadyPlayedListWhenAllChartsInBucketAreExhausted()
     {
         // All 3 charts in the merged CoOp 3 bucket are in alreadyPlayed → no valid
         // candidates remain after filtering, so the algorithm clears the already-played
@@ -131,7 +131,7 @@ public sealed class WeeklyTournamentSagaTests
     }
 
     [Fact]
-    public async Task ConsumeUpdateWeeklyChartsMergesCoOpFourAndFiveIntoCoOpThreeBucket()
+    public async Task UpdateWeeklyChartsMergesCoOpFourAndFiveIntoCoOpThreeBucket()
     {
         // Mark the CoOp 3 and CoOp 5 charts as already played. After the merge moves
         // levels 4 and 5 into the level-3 bucket, only the CoOp-4 chart is unplayed
@@ -150,7 +150,7 @@ public sealed class WeeklyTournamentSagaTests
     }
 
     [Fact]
-    public async Task HandleRegisterWeeklyChartScoreSkipsWhenChartNotInCurrentWeek()
+    public async Task RegisterWeeklyChartScoreSkipsWhenChartNotInCurrentWeek()
     {
         var someOtherChartId = Guid.NewGuid();
         var weeklyTournies = new Mock<IWeeklyTournamentRepository>();
@@ -168,7 +168,7 @@ public sealed class WeeklyTournamentSagaTests
     }
 
     [Fact]
-    public async Task HandleRegisterWeeklyChartScoreSavesEntryWithComputedCompetitiveLevelWhenNew()
+    public async Task RegisterWeeklyChartScoreSavesEntryWithComputedCompetitiveLevelWhenNew()
     {
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var ctx = new HandlerContext(chart);
@@ -188,7 +188,7 @@ public sealed class WeeklyTournamentSagaTests
     }
 
     [Fact]
-    public async Task HandleRegisterWeeklyChartScoreKeepsHigherExistingScoreWhenLowerSubmitted()
+    public async Task RegisterWeeklyChartScoreKeepsHigherExistingScoreWhenLowerSubmitted()
     {
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var userId = Guid.NewGuid();
@@ -209,7 +209,7 @@ public sealed class WeeklyTournamentSagaTests
     }
 
     [Fact]
-    public async Task HandleRegisterWeeklyChartScoreReplacesScoreWhenHigherSubmitted()
+    public async Task RegisterWeeklyChartScoreReplacesScoreWhenHigherSubmitted()
     {
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var userId = Guid.NewGuid();
@@ -230,7 +230,7 @@ public sealed class WeeklyTournamentSagaTests
     }
 
     [Fact]
-    public async Task HandleRegisterWeeklyChartScoreClearsBrokenWhenSubmissionIsUnbroken()
+    public async Task RegisterWeeklyChartScoreClearsBrokenWhenSubmissionIsUnbroken()
     {
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var userId = Guid.NewGuid();
@@ -251,7 +251,7 @@ public sealed class WeeklyTournamentSagaTests
     }
 
     [Fact]
-    public async Task HandleRegisterWeeklyChartScorePublishesEventWhenPlaceChanges()
+    public async Task RegisterWeeklyChartScorePublishesEventWhenPlaceChanges()
     {
         // No existing entry → existingPlace == null → place change → publish.
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
@@ -273,7 +273,7 @@ public sealed class WeeklyTournamentSagaTests
     }
 
     [Fact]
-    public async Task HandleRegisterWeeklyChartScoreDoesNotPublishWhenPlaceUnchanged()
+    public async Task RegisterWeeklyChartScoreDoesNotPublishWhenPlaceUnchanged()
     {
         // Solo player improving their own (already 1st) score keeps place = 1 → no publish.
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();

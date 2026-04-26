@@ -24,7 +24,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
     private static readonly Guid ChartId = Guid.NewGuid();
 
     [Fact]
-    public async Task HandleNewClearSavesRecordSchedulesFireAndRecordsNewChart()
+    public async Task NewClearSavesRecordSchedulesFireAndRecordsNewChart()
     {
         var ctx = new HandlerContext();
         ctx.Batches.Setup(b => b.RegisterFireAt(UserId, It.IsAny<DateTime>())).Returns(true);
@@ -50,7 +50,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
-    public async Task HandleKeepBestStatsKeepsHigherExistingScore()
+    public async Task KeepBestStatsKeepsHigherExistingScore()
     {
         var ctx = new HandlerContext();
         ctx.GivenExistingScore(score: 950000, plate: PhoenixPlate.SuperbGame, isBroken: false);
@@ -66,7 +66,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
-    public async Task HandleKeepBestStatsKeepsHigherExistingPlate()
+    public async Task KeepBestStatsKeepsHigherExistingPlate()
     {
         var ctx = new HandlerContext();
         ctx.GivenExistingScore(score: 900000, plate: PhoenixPlate.PerfectGame, isBroken: false);
@@ -82,7 +82,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
-    public async Task HandleKeepBestStatsPreservesExistingClearWhenRequestIsBroken()
+    public async Task KeepBestStatsPreservesExistingClearWhenRequestIsBroken()
     {
         var ctx = new HandlerContext();
         ctx.GivenExistingScore(score: 900000, plate: PhoenixPlate.SuperbGame, isBroken: false);
@@ -98,7 +98,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
-    public async Task HandleWithoutKeepBestStatsOverwritesWithRequestValues()
+    public async Task WithoutKeepBestStatsOverwritesWithRequestValues()
     {
         var ctx = new HandlerContext();
         ctx.GivenExistingScore(score: 950000, plate: PhoenixPlate.PerfectGame, isBroken: false);
@@ -115,7 +115,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
-    public async Task HandleNewClearWhenExistingWasBrokenRecordsNewChart()
+    public async Task NewClearWhenExistingWasBrokenRecordsNewChart()
     {
         var ctx = new HandlerContext();
         // Existing was broken at the same score → transition to a clear is a new clear,
@@ -134,7 +134,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
-    public async Task HandleClearedWithHigherScoreFromBrokenIsBothNewChartAndUpscore()
+    public async Task ClearedWithHigherScoreFromBrokenIsBothNewChartAndUpscore()
     {
         // When transitioning from broken→clear with a higher score, both branches fire;
         // the accumulator (per its contract) takes new-clear precedence.
@@ -153,7 +153,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
-    public async Task HandleUpscoreRecordsUpscoreWithPreviousScore()
+    public async Task UpscoreRecordsUpscoreWithPreviousScore()
     {
         var ctx = new HandlerContext();
         ctx.GivenExistingScore(score: 900000, plate: PhoenixPlate.SuperbGame, isBroken: false);
@@ -170,7 +170,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
-    public async Task HandleNoNewClearAndNoUpscoreDoesNotScheduleOrBatch()
+    public async Task NoNewClearAndNoUpscoreDoesNotScheduleOrBatch()
     {
         var ctx = new HandlerContext();
         // Existing un-broken with same score → not a new clear, not an upscore.
@@ -192,7 +192,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
-    public async Task HandleSkipsSchedulingWhenBatchAlreadyActiveButStillRecords()
+    public async Task SkipsSchedulingWhenBatchAlreadyActiveButStillRecords()
     {
         var ctx = new HandlerContext();
         // Batch already active: RegisterFireAt returns false, so the handler must NOT
@@ -212,7 +212,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
-    public async Task ConsumeReschedulesAndDoesNotPublishWhenFireAtIsInTheFuture()
+    public async Task ReschedulesAndDoesNotPublishWhenFireAtIsInTheFuture()
     {
         var ctx = new HandlerContext();
         var fireAt = Now.UtcDateTime + TimeSpan.FromMinutes(1);
@@ -230,7 +230,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
-    public async Task ConsumeTakesBatchAndPublishesWhenFireAtHasBeenReached()
+    public async Task TakesBatchAndPublishesWhenFireAtHasBeenReached()
     {
         var ctx = new HandlerContext();
         var fireAt = Now.UtcDateTime - TimeSpan.FromSeconds(1); // already past

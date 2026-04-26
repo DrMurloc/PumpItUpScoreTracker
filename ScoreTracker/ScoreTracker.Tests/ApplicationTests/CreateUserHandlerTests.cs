@@ -16,7 +16,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class CreateUserHandlerTests
 {
     [Fact]
-    public async Task HandlePersistsUserAndPublishesUserCreatedEvent()
+    public async Task PersistsUserAndPublishesUserCreatedEvent()
     {
         var users = new Mock<IUserRepository>();
         var bus = new Mock<IBus>();
