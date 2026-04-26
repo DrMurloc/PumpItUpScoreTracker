@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,46 +59,46 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string" />
-              <xsd:attribute name="type" type="xsd:string" />
-              <xsd:attribute name="mimetype" type="xsd:string" />
-              <xsd:attribute ref="xml:space" />
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
+              <xsd:attribute name="type" type="xsd:string"/>
+              <xsd:attribute name="mimetype" type="xsd:string"/>
+              <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string" />
-              <xsd:attribute name="name" type="xsd:string" />
+              <xsd:attribute name="alias" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
-              <xsd:attribute ref="xml:space" />
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
+              <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" />
+              <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -118,397 +118,1836 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="1+ Level Easier" xml:space="preserve">
-    <value>1+ Mrgl Mrgler</value>
+    <value>1+ Murgrrglurg Lurggrrrmurgl</value>
   </data>
   <data name="1+ Level Harder" xml:space="preserve">
-    <value>1+ Mrgl Mrglrgler</value>
+    <value>1+ Murgrrglurg Glrglmurgllrglmurgl</value>
   </data>
   <data name="About" xml:space="preserve">
-    <value>Rrglrmrgl</value>
+    <value>Argrlg</value>
   </data>
   <data name="Account" xml:space="preserve">
-    <value>Grgl</value>
+    <value>Mrrglargrl</value>
   </data>
   <data name="Account Creation Line 1" xml:space="preserve">
-    <value>Mrglrgl, grlmgrgl mrgl mrg rglmrgl, mrglrlgrlgrlglrlgl.</value>
+    <value>Glrglmrlgmgla mrlgmrrrrgl mrlg rrglrulgargrlrgl glarlrglargl glublrgl glorggrglargl plglrglgrrr.</value>
   </data>
   <data name="Account Creation Line 2" xml:space="preserve">
-    <value>Mrrrrrrrgl mrglrlgrl grlglmrgl mrglrlgrmgrl, murp murglrp mrglmrgl mrgl mrglrlgrgl.</value>
+    <value>Blgrlrgl mrlg glrglrgrlmgla blublurggrrr, mrogl, glorggrglargl mrrglmurgl prglprglrgl.</value>
   </data>
   <data name="Account Creation Line 3" xml:space="preserve">
-    <value>Grglrmgrl.</value>
+    <value>Mrrglargrl Murglargrl Lrgl 3</value>
   </data>
   <data name="Account Creation?" xml:space="preserve">
-    <value>Grgl Murpmrgl?</value>
+    <value>Mrlg Glarglorg?</value>
     <comment>Button that pops up explination of account creation process</comment>
   </data>
   <data name="Actions" xml:space="preserve">
-    <value>Grlgmrg</value>
+    <value>Grglurgrgl</value>
   </data>
   <data name="Add to Favorites" xml:space="preserve">
-    <value>Mrg Mrglrlgl</value>
+    <value>Blub rrglrulgargrlrgl Mrogl</value>
   </data>
   <data name="Add to ToDo" xml:space="preserve">
-    <value>Mrg Mrglrgl</value>
+    <value>Blub rrglrulgargrlrgl Grgl</value>
   </data>
   <data name="Average" xml:space="preserve">
-    <value>Rorg</value>
+    <value>Mrrglmrg</value>
   </data>
   <data name="Broken" xml:space="preserve">
-    <value>Morgl</value>
+    <value>Brglubrgl</value>
   </data>
   <data name="Cancel" xml:space="preserve">
-    <value>Margl</value>
+    <value>Grrrmrg</value>
   </data>
   <data name="Chart List Share Description" xml:space="preserve">
-    <value>Rorgmurgalrg murgalglurg murp.</value>
+    <value>Mrrglrgrl Blgrlrglurg Blgrl Lurggrarlrgl</value>
   </data>
   <data name="Chart Randomizer" xml:space="preserve">
-    <value>Murgl Rmrgmrml</value>
+    <value>Mrrglrgrl Glorgrulgrgl</value>
   </data>
   <data name="Chart Type" xml:space="preserve">
-    <value>Murgl Morg</value>
+    <value>Mrrglrgrl Mrrglmurg</value>
     <comment>Chart Types = single, double, co op</comment>
   </data>
   <data name="Charts" xml:space="preserve">
-    <value>Murgl</value>
+    <value>Mrglrglrgl</value>
   </data>
   <data name="Charts List" xml:space="preserve">
-    <value>Murgl grog</value>
+    <value>Plglrglgrrr Blgrlrglurg</value>
   </data>
   <data name="Close" xml:space="preserve">
-    <value>Grorp</value>
+    <value>Grlorgl</value>
   </data>
   <data name="Completed" xml:space="preserve">
-    <value>Morgrorp</value>
+    <value>Grglrglmrg</value>
   </data>
   <data name="CoOp" xml:space="preserve">
-    <value>Mrglrl</value>
+    <value>Mrrglurg</value>
   </data>
   <data name="CoOp Aggregation" xml:space="preserve">
-    <value>Mrglrl Grglrmrg</value>
+    <value>Mrrglurg Glubmrrglmrg</value>
   </data>
   <data name="Copy Script" xml:space="preserve">
-    <value>Mrglrglgl</value>
+    <value>Mrrr Murglmurglmrrr</value>
   </data>
   <data name="Copy to Clipboard" xml:space="preserve">
-    <value>Mrglrlglorgrogl</value>
+    <value>Mrrr rrglrulgargrlrgl Rglgurgglorgrgl</value>
   </data>
   <data name="Difficulty Level" xml:space="preserve">
-    <value>Rrorglmrp mrgl</value>
+    <value>Prglmrrglprgl Lurg</value>
   </data>
   <data name="Doubles" xml:space="preserve">
-    <value>Groggl</value>
+    <value>Argrlargl</value>
   </data>
   <data name="Download Failures" xml:space="preserve">
-    <value>Murlg murrgl</value>
+    <value>Murglrrgl Grglglrgl</value>
   </data>
   <data name="Download Scores" xml:space="preserve">
-    <value>Murlg mgrlgmrg</value>
+    <value>Murglrrgl Glublrgl</value>
   </data>
   <data name="Easiest Player" xml:space="preserve">
-    <value>Murglorg Rgromgrg</value>
+    <value>Lrglargrlrglmurgl Glarmurgmrgl</value>
   </data>
   <data name="Easy" xml:space="preserve">
-    <value>Mrgl</value>
+    <value>Mrrgl</value>
   </data>
   <data name="Ending Page" xml:space="preserve">
-    <value>Mrgl morgl</value>
+    <value>Glrglmgla Gurgglub</value>
   </data>
   <data name="Favorites" xml:space="preserve">
-    <value>Gromorg</value>
+    <value>Mrrglrglrgl</value>
   </data>
   <data name="Full Privacy Policy" xml:space="preserve">
-    <value>Mrglmurglmrg</value>
+    <value>Grar Glorgglorggrgl Plglglrglurg</value>
   </data>
   <data name="Hard" xml:space="preserve">
-    <value>Mrglmrgl</value>
+    <value>Grrrmrrgl</value>
   </data>
   <data name="Hardest Player" xml:space="preserve">
-    <value>Mrglgrogmrgl</value>
+    <value>Mrglglubplgl Glarmurgmrgl</value>
   </data>
   <data name="Hide Completed Charts" xml:space="preserve">
-    <value>Mrgl Mrrrgl mrglrgmrgl</value>
+    <value>Rglmroglplgl Gurgprgl Plglrglgrrr</value>
   </data>
   <data name="Import Phoenix Scores" xml:space="preserve">
-    <value>Mrglrlglrlgm mrgl grorg</value>
+    <value>Glubrglmrrr Phoenix Glublrgl</value>
   </data>
   <data name="Language" xml:space="preserve">
-    <value>Mrglrglrglrglrglrglrgl</value>
+    <value>Mrglrglrgl</value>
   </data>
   <data name="Last Updated" xml:space="preserve">
-    <value>Mrgl mrrrglrglrlgmrgl</value>
+    <value>Grargrrr Mrglargrl</value>
   </data>
   <data name="Leaderboard" xml:space="preserve">
-    <value>Mrglrmrgl</value>
+    <value>Arglmrgl</value>
   </data>
   <data name="Letter Grade" xml:space="preserve">
-    <value>Mrgl Rorgl</value>
+    <value>Argl Grargrrrrgl</value>
   </data>
   <data name="Log In With" xml:space="preserve">
-    <value>Mrgl Rorgmurgl {0}</value>
+    <value>Murglmrlgrgl Mglaplgl Mrgl {0}</value>
     <comment>I.E Log In With Discord</comment>
   </data>
   <data name="Login" xml:space="preserve">
-    <value>Mrglmrp</value>
+    <value>Mrgurgl</value>
   </data>
   <data name="Logout" xml:space="preserve">
-    <value>Mrglmrg</value>
+    <value>Mrgurglub</value>
   </data>
   <data name="Make Not Public Disclaimer" xml:space="preserve">
-    <value>Mrrrrrrrrrglrglrlglrlglrglrgl mrgl mrgl mrrlrglrlgrlgrlgrl grorgl mrglrglrgl.</value>
+    <value>Prgl Grglglubmurgl Mrrrrulgglarrgl Grarargrlglorgarglmrgl</value>
   </data>
   <data name="Make Private" xml:space="preserve">
-    <value>Mrgl Mrrrrgl</value>
+    <value>Prgl Rrgl</value>
   </data>
   <data name="Make Public" xml:space="preserve">
-    <value>Mrgl Mrrrrrrrrrgl</value>
+    <value>Prgl Mrrrrulgglarrgl</value>
   </data>
   <data name="Make Public Disclaimer 1" xml:space="preserve">
-    <value>Mrgl mrgl mrrrrrrrglmrgl mrrglr mrgl grorgl murp murp mrrrrrrgl.</value>
+    <value>Prgl Mrrrrulgglarrgl Grarargrlglorgarglmrgl 1</value>
   </data>
   <data name="Make Public Disclaimer 2" xml:space="preserve">
-    <value>Mrgl mrgl mrgl mrrrrglrglrglrglrgl rgorgl mrgl.</value>
+    <value>Prgl Mrrrrulgglarrgl Grarargrlglorgarglmrgl 2</value>
   </data>
   <data name="Medium" xml:space="preserve">
-    <value>Mmmmrgl</value>
+    <value>Mrrglmrg</value>
   </data>
   <data name="Mix" xml:space="preserve">
-    <value>Mrg</value>
+    <value>Mrgla</value>
   </data>
   <data name="My Score" xml:space="preserve">
-    <value>Mrgl mrg</value>
+    <value>Mrrgl Prgl</value>
   </data>
   <data name="Next Letter" xml:space="preserve">
-    <value>Mrgl Rorg Mrgl</value>
+    <value>Glrglargrlplgl Argl</value>
   </data>
   <data name="Not Graded Count" xml:space="preserve">
-    <value>Mrglrglrgl</value>
+    <value>Grglglubmurgl Grrrmrlggrarargl Argrlglarmrogl</value>
   </data>
   <data name="Not Passed Count" xml:space="preserve">
-    <value>Mrgl Mrrrgl</value>
+    <value>Grglglubmurgl Glubglarprgl Argrlglarmrogl</value>
   </data>
   <data name="Official Leaderboard Search" xml:space="preserve">
-    <value>Mrrrglrlgl mrgl mrrrrrrgl</value>
+    <value>Prglrglblublurg Glorgmurgmurgl Mrglmurgmrlgurggrrr</value>
   </data>
   <data name="Official Scores" xml:space="preserve">
-    <value>Mrrgl mrgl</value>
+    <value>Prglrglblublurg Glublrgl</value>
   </data>
   <data name="Open Video" xml:space="preserve">
-    <value>Mrgl mrg mrrrrgl</value>
+    <value>Mrogllurg Grarrulg</value>
   </data>
   <data name="Parse Failures" xml:space="preserve">
-    <value>Mrgl Mrglrgl</value>
+    <value>Murgl Grglglrgl</value>
   </data>
   <data name="Passed Count" xml:space="preserve">
-    <value>Rorgl Murp</value>
+    <value>Glubglarprgl Argrlglarmrogl</value>
   </data>
   <data name="Phoenix Import Confirming" xml:space="preserve">
-    <value>Mrglrglrlgl Mrglmrglrgl rglmrgl mrlrlgrlgrlglrlgrlgmrlrgmrlgmrm mrgl rgmlrmgurpgmurpmurpmurgl</value>
+    <value>Phoenix Glubrglmrrr Blubblgrlglrglmroglargl</value>
   </data>
   <data name="Phoenix Import Info 1" xml:space="preserve">
-    <value>Mrgl murgl mrrlglrlglrgll</value>
+    <value>Phoenix Glubrglmrrr Rrglrulgbrglrulggurgrgl 1</value>
   </data>
   <data name="Phoenix Import Info 2" xml:space="preserve">
-    <value>Mrglrmgurmmurgl mrglrlgrlgrlg murgl murp mrgl</value>
+    <value>Phoenix Glubrglmrrr Rrglrulgbrglrulggurgrgl 2</value>
   </data>
   <data name="Phoenix Import Info 3" xml:space="preserve">
-    <value>Mrgl mrglrrlgrlglrlggl grglrgl</value>
+    <value>Phoenix Glubrglmrrr Rrglrulgbrglrulggurgrgl 3</value>
   </data>
   <data name="Phoenix Import Info 4" xml:space="preserve">
-    <value>Mrgl: Mrglrglrglrlg mrgl mrrglglrglrgl</value>
+    <value>Phoenix Glubrglmrrr Rrglrulgbrglrulggurgrgl 4</value>
   </data>
   <data name="Phoenix Import Saving" xml:space="preserve">
-    <value>Mrgl rorgl mrglgrlgrlglrglrgl rgl</value>
+    <value>Phoenix Glubrglmrrr Mrrglargrlmurgrgl</value>
   </data>
   <data name="Phoenix Import Saving Failures" xml:space="preserve">
-    <value>Mrgl mrgl murp morp mrglrglrglglgrgl grogl</value>
+    <value>Phoenix Glubrglmrrr Mrrglargrlmurgrgl Grglglrgl</value>
   </data>
   <data name="Phoenix Import Saving Progress" xml:space="preserve">
-    <value>{0}/{1} Mrglrglrgl. {2} Mrglrlg. {3} Mrgl morp mrgl</value>
+    <value>{0}/{1} Mrglmrrrbrgl. {2} Grrrrgl. {3} Lurg rrglrulgargrlrgl argrlglar</value>
     <comment>I.E 4/192 Uploaded. 3:29 Remaining. 2 Failed to record</comment>
   </data>
   <data name="Phoenix Import Saving Success" xml:space="preserve">
-    <value>Mrgl mrglrglrglrlg mrgl!</value>
+    <value>Phoenix Glubrglmrrr Mrrglargrlmurgrgl Mrrglblublrgl</value>
   </data>
   <data name="Phoenix Import Uploading" xml:space="preserve">
-    <value>Grrrrrglrmgrlgm mrglmrgl...</value>
+    <value>Phoenix Glubrglmrrr Prglblubmrrgl</value>
   </data>
   <data name="Phoenix Score Calculator" xml:space="preserve">
-    <value>Mrglrlgl Mrgl mrgl</value>
+    <value>Phoenix Prgl Brgl</value>
   </data>
   <data name="Plate" xml:space="preserve">
-    <value>Murp</value>
+    <value>Blgrlmrg</value>
     <comment>I.E MG, PG, UG</comment>
   </data>
   <data name="Players" xml:space="preserve">
-    <value>Morp</value>
+    <value>Murglargrlrgl</value>
   </data>
   <data name="Popularity" xml:space="preserve">
-    <value>Mrrlgrlgl</value>
+    <value>Mrrglurgmrg</value>
   </data>
   <data name="Progress" xml:space="preserve">
-    <value>Mrglrlgl</value>
+    <value>Mrrglrglmrg</value>
   </data>
   <data name="Progress Charts" xml:space="preserve">
-    <value>Mrglrgl mrgl</value>
+    <value>Mrrglrglmrg Mrglrglrgl</value>
   </data>
   <data name="Public" xml:space="preserve">
-    <value>Mrglrgll</value>
+    <value>Arglmrrgl</value>
     <comment>(on/off, if account is set to public)</comment>
   </data>
   <data name="Recorded Date" xml:space="preserve">
-    <value>Mrglrlglrl Mrgl</value>
+    <value>Murgl Mrogl</value>
   </data>
   <data name="Recorded On" xml:space="preserve">
-    <value>Grlgmrgl {0}</value>
+    <value>Murgl Mrlg {0}</value>
     <comment>I.E Recorded on 12/6/2023 (I don't support date localization yet but will eventually)</comment>
   </data>
   <data name="Remaining Charts" xml:space="preserve">
-    <value>{0} (SSS+) - {1} (AA) Murp Mrglrgl</value>
+    <value>{0} (SSS+) - {1} (AA) Grrrrgl Plglrglgrrr</value>
     <comment>I.E 6 (SSA+) - 10 (AA) Charts Remaining</comment>
   </data>
   <data name="Remaining Charts For You" xml:space="preserve">
-    <value>{0} Mrglrgl mrgl Mrrrrgl</value>
+    <value>{0} Grrrrgl Plglrglgrrr Urgblgrl Murglrrgllurg</value>
     <comment>I.E 8 Charts Estimated for You</comment>
   </data>
   <data name="Remove from ToDo" xml:space="preserve">
-    <value>Mrgl mrrrglglglmrgl Mrgl</value>
+    <value>Gurgmrlg mrglmurglmrlg Grgl</value>
   </data>
   <data name="Report Video" xml:space="preserve">
-    <value>Mrglmrgl grglgmrgl</value>
+    <value>Argrlglarblub Grarrulg</value>
   </data>
   <data name="Report Video Tooltip" xml:space="preserve">
-    <value>Rorglmrgl mrgl, Mrglrglr, mrglrlgl mrglrorgorgl</value>
+    <value>Argrlglarblub Grarrulg Grarprglmglamrlgmrlg</value>
   </data>
   <data name="Restart" xml:space="preserve">
-    <value>Mrglrlgrlgl</value>
+    <value>Rgrglrgl</value>
   </data>
   <data name="Save Scores" xml:space="preserve">
-    <value>Mrglrl Mrglrlgl</value>
+    <value>Mrrglargrlmurgrgl Glublrgl</value>
   </data>
   <data name="Saved Charts" xml:space="preserve">
-    <value>Mrglrgl Mrglrglrl</value>
+    <value>Mrgurrgl Mrglrglrgl</value>
   </data>
   <data name="Score" xml:space="preserve">
-    <value>Mrglrgl</value>
+    <value>Grglrgl</value>
   </data>
   <data name="Score Formula Shoutout" xml:space="preserve">
-    <value>Mrglrlgrlgl MR_WEQ Mrglrlglrl mrglmrgl rorglmrgl!</value>
+    <value>Prgl Lrglrgrllurg Mglamglamrlgmrrgl</value>
   </data>
   <data name="Score Loss" xml:space="preserve">
-    <value>{0} Mrglrlgl mrgl</value>
+    <value>{0} Prgl Mrrr</value>
     <comment>I.E: Goods Score Loss</comment>
   </data>
   <data name="Score Loss Note" xml:space="preserve">
-    <value>Mrgl: Mrglrglrlggl 1-4 mrgl mrglrglrgl</value>
+    <value>Prgl Mrrr Glrgl</value>
   </data>
   <data name="Score Range Shoutout" xml:space="preserve">
-    <value>Mrglrglglg daryen mrglrglgl mrglrglrlgl mrrrrrgl</value>
+    <value>Prgl Brglmrgl Mglamglamrlgmrrgl</value>
   </data>
   <data name="Score State" xml:space="preserve">
-    <value>Mrglrlglgl mrglrgl</value>
+    <value>Prgl Glubmurgl</value>
     <comment>Score States = Passed, Unpassed, Unscored</comment>
   </data>
   <data name="Scores Parsed" xml:space="preserve">
-    <value>Mrglrl Mrglrlglrglrl</value>
+    <value>Glublrgl Urgglar</value>
   </data>
   <data name="Show Only ToDo Charts" xml:space="preserve">
-    <value>Mrglrlgl mrgrlglglr mrg</value>
+    <value>Mrrgl Rglglarrulgrgl Grgl Plglrglgrrr</value>
   </data>
   <data name="Show Score Distribution" xml:space="preserve">
-    <value>Mrglrlrlgl rorgl</value>
+    <value>Mrrgl Prgl Mrlgrgrlmrgl</value>
   </data>
   <data name="Singles" xml:space="preserve">
-    <value>Mrglrlgl</value>
+    <value>Mrglargrlrgl</value>
   </data>
   <data name="Song Duration" xml:space="preserve">
-    <value>Mrgl Mrglrlgl</value>
+    <value>Blgrl Mroglrrglmroglargrl</value>
   </data>
   <data name="Song Image" xml:space="preserve">
-    <value>Mrgl Rorglgmrgrlgl</value>
+    <value>Blgrl Grgl</value>
   </data>
   <data name="Song Name" xml:space="preserve">
-    <value>Mrgl Mrg</value>
+    <value>Blgrl Rglgrgl</value>
   </data>
   <data name="Song Type" xml:space="preserve">
-    <value>Mrgl Mrglrlgl</value>
+    <value>Blgrl Mrrglmurg</value>
     <comment>Song Types = Arcade, Full Song, etc.</comment>
   </data>
   <data name="Starting Page" xml:space="preserve">
-    <value>Mrglrglrlgl mrgl</value>
+    <value>Grarglorgglrgl Gurgglub</value>
   </data>
   <data name="Tier Lists" xml:space="preserve">
-    <value>Mrglrlgl Mrrrrgl</value>
+    <value>Brglurgbrgl Rglgurggurgrgl</value>
   </data>
   <data name="Title Progress" xml:space="preserve">
-    <value>Mrglrgll Mrgl</value>
+    <value>Mrrgl Blublurggrrr</value>
   </data>
   <data name="Titles" xml:space="preserve">
-    <value>Mrgl</value>
+    <value>Mrglargrlrgl</value>
   </data>
   <data name="To Do" xml:space="preserve">
-    <value>Mrglrlgl Mrgl</value>
+    <value>Rgl Mrg</value>
   </data>
   <data name="Tools" xml:space="preserve">
-    <value>Rorgl</value>
+    <value>Grglurgrgl</value>
   </data>
   <data name="Total Count" xml:space="preserve">
-    <value>Mrglrorgl</value>
+    <value>Blgrlgrar Argrlglarmrogl</value>
   </data>
   <data name="Tournaments" xml:space="preserve">
-    <value>Mrllrlrlrlgl</value>
+    <value>Murggrglrgl</value>
   </data>
   <data name="Unpassed ToDos" xml:space="preserve">
-    <value>Mrlggllgl {0} Mrglrgl {1} mrglrlgl mrgl rmrrrglrmgrlgm</value>
+    <value>Grglglubmurgl-blubmrrglglrgl Plgl: {0} plglrglgrrr, {1} prgl mrrr</value>
     <comment>I.E You have 19 level 24 charts marked To Do you haven't passed</comment>
   </data>
   <data name="Upload Scores" xml:space="preserve">
-    <value>Mrglrgl Mrrrrlrlgrlgrlgl</value>
+    <value>Glrglmrogl Glublrgl</value>
   </data>
   <data name="Upload XX Scores" xml:space="preserve">
-    <value>Mrglrlgrlgl Mr Mrglrlgl</value>
+    <value>Glrglmrogl XX Glublrgl</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
-    <value>Mrglrorgorgmlrgl</value>
+    <value>Plglgurgrgl Prglglrglprgl urgblgrl rrglrrgl</value>
   </data>
   <data name="Username" xml:space="preserve">
-    <value>Grrmrrgl</value>
+    <value>Murglargrgl</value>
   </data>
   <data name="Very Easy" xml:space="preserve">
-    <value>Mrgl Mrrrrrgl</value>
+    <value>Plglgurg Mrrrrrgllrgl</value>
   </data>
   <data name="Very Hard" xml:space="preserve">
-    <value>Mrgl Grrrrrrrrrrmgrl</value>
+    <value>Plglgurg Urgblubrgrl</value>
   </data>
   <data name="Video" xml:space="preserve">
-    <value>Grrrgl</value>
+    <value>Glarurg</value>
   </data>
   <data name="Vote Count" xml:space="preserve">
-    <value>{0} Grg</value>
+    <value>{0} Mrrrglub Argrlglarmrogl</value>
   </data>
   <data name="Place" xml:space="preserve">
-    <value>Place</value>
+    <value>Gurggurg</value>
     <comment>Place</comment>
   </data>
   <data name="Upload Image" xml:space="preserve">
-    <value>Upload Image</value>
+    <value>Murlgrgl Glarblub</value>
     <comment>Upload Image</comment>
   </data>
   <data name="Song" xml:space="preserve">
-    <value>Song</value>
+    <value>Glurgl</value>
     <comment>Song</comment>
   </data>
   <data name="Submit" xml:space="preserve">
-    <value>Submit</value>
+    <value>Murgblgrl</value>
     <comment>Submit</comment>
   </data>
   <data name="Song Artist" xml:space="preserve">
-    <value>Song Artist</value>
+    <value>Glurgl Glargrl</value>
     <comment>Song Artist</comment>
   </data>
   <data name="Text View" xml:space="preserve">
-    <value>Text View</value>
+    <value>Glrgl Urggrgl</value>
     <comment>Text View</comment>
+  </data>
+  <data name="Communities" xml:space="preserve">
+    <value>Murlgrglrgl</value>
+  </data>
+  <data name="Use Password 1" xml:space="preserve">
+    <value>Mrglrgl mrgl magrgl PIUScores mrgllug gluburgglorg murlgrgl mrrglargrl mrrgl murgmrg grglrglrgl mrlgrgl murlg.</value>
+  </data>
+  <data name="Use Password 2" xml:space="preserve">
+    <value>Mrg mrg grrrgl rgrlmrlgmrrgl mrg rglurg glub murlgrgl murglargrgl argrlg grrrmrrgl, murlg mrgl magrgl rgl rgrgl glurgl murg glrglrgl murgll murlg urgmrg mrglrgl.</value>
+  </data>
+  <data name="Use Password 3" xml:space="preserve">
+    <value>Rgl rulggurgmrrr grglgrglgrrrrgl rgl https://piugame.com Mrg mrgl mglrgl murgmrg mrglgrgl argrlg mrrglubrgl grglrglrgl. Glrglrgl murglar mglrgl gurgrgl mrg blubmrrr murgmrg urgmrgl Murglargrgl/Grrrmrrgl. Urgmrg mrgl mrgblub-grglurgrgl mrlgargl arglgl murlg argl rgl grarrgrlgrrr-murgmrg prglplgl grglrglrgl.</value>
+  </data>
+  <data name="Use Password 4" xml:space="preserve">
+    <value>Blubargrl glrgl, prglprglblgrl blgrlargl mrglrgl murgbagl argrlg argrgl murlgrgl grglrglrgl mrgl grrrgl mrrglubgl arglmrgl.</value>
+  </data>
+  <data name="Photos" xml:space="preserve">
+    <value>Glarblubrgl</value>
+    <comment>Photos</comment>
+  </data>
+  <data name="Qualifiers Leaderboard" xml:space="preserve">
+    <value>{0} Glargrlmrgrgl Arglmrgl</value>
+    <comment>Qualifiers Leaderboard</comment>
+  </data>
+  <data name="Rating" xml:space="preserve">
+    <value>Rrglrgl</value>
+    <comment>Rating</comment>
+  </data>
+  <data name="Pending" xml:space="preserve">
+    <value>Glrgl</value>
+    <comment>Pending</comment>
+  </data>
+  <data name="Event Links" xml:space="preserve">
+    <value>Urgmrg Lrglurgrgl</value>
+    <comment>Event Links</comment>
+  </data>
+  <data name="Rules" xml:space="preserve">
+    <value>Grglurgrgl</value>
+    <comment>Rules</comment>
+  </data>
+  <data name="Event" xml:space="preserve">
+    <value>Urgmrg</value>
+    <comment>Event</comment>
+  </data>
+  <data name="Website" xml:space="preserve">
+    <value>Urgmrgl</value>
+    <comment>Website</comment>
+  </data>
+  <data name="Chart Count" xml:space="preserve">
+    <value>Mrglrgl Grglrgl</value>
+  </data>
+  <data name="Home" xml:space="preserve">
+    <value>Murgmurg</value>
+  </data>
+  <data name="Leaderboard Player Compare" xml:space="preserve">
+    <value>Arglmrgl Murglargrl Mrrglrgl</value>
+  </data>
+  <data name="Max Rating" xml:space="preserve">
+    <value>Mrrrgl Rrglrgl</value>
+  </data>
+  <data name="Qualifier Submit Phrase 1" xml:space="preserve">
+    <value>Murlg mrg grrrgl mrogl rgl brgl mrrr murg rgl urgmrg mrglrgl grglurg. Rgrgl mrg murglargrgl rgl murgargrl argrlblgrlmurgmurgrgl.</value>
+  </data>
+  <data name="Qualifier Submit Phrase 2" xml:space="preserve">
+    <value>Mrglrgl argl murlgrgl urgrulg arglgrrr! Murglrrglplgl mrgla prgl murlgrgl Murglargrgl argl rglglorg glrglglrgl grglrgl Discord argrlg Start.GG.</value>
+  </data>
+  <data name="Qualifiers Submission" xml:space="preserve">
+    <value>{0} Glargrlmrgrgl Arglgrrr</value>
+  </data>
+  <data name="Rating Calculator" xml:space="preserve">
+    <value>Rrglrgl Mrrglargl</value>
+  </data>
+  <data name="Submission Page" xml:space="preserve">
+    <value>Arglgrrr Murgbagl</value>
+  </data>
+  <data name="Suggested Chart" xml:space="preserve">
+    <value>Mrrglurg Mrglrgl</value>
+  </data>
+  <data name="To Leaderboard" xml:space="preserve">
+    <value>Rgl Arglmrgl</value>
+  </data>
+  <data name="Use Script" xml:space="preserve">
+    <value>Urgmrg  Glrglmrg</value>
+  </data>
+  <data name="World Rankings" xml:space="preserve">
+    <value>Glubmurg Grglarglrglrgl</value>
+  </data>
+  <data name="Play Num" xml:space="preserve">
+    <value>Plargl argl lrgl {0}</value>
+  </data>
+  <data name="Open" xml:space="preserve">
+	  <value>Urgla</value>
+	  <comment>Open</comment>
+  </data>
+  <data name="Country" xml:space="preserve">
+	  <value>Murgblgrl</value>
+	  <comment>Country</comment>
+  </data>
+  <data name="Avatar" xml:space="preserve">
+	  <value>Murgblub</value>
+	  <comment>Avatar</comment>
+  </data>
+  <data name="Name" xml:space="preserve">
+	  <value>Mrglar</value>
+	  <comment>Name</comment>
+  </data>
+  <data name="Level" xml:space="preserve">
+	  <value>Rglmrgl</value>
+	  <comment>Level</comment>
+  </data>
+  <data name="Validation" xml:space="preserve">
+	  <value>Grglargl</value>
+	  <comment>Validation</comment>
+  </data>
+  <data name="Add UCS" xml:space="preserve">
+	  <value>Mrgl UCS</value>
+	  <comment>Add UCS</comment>
+  </data>
+  <data name="Uploader" xml:space="preserve">
+	  <value>Murlgrglrgl</value>
+	  <comment>Uploader</comment>
+  </data>
+  <data name="Step Artist" xml:space="preserve">
+	  <value>Rglmrgl Glargrl</value>
+	  <comment>Step Artist</comment>
+  </data>
+  <data name="Tag" xml:space="preserve">
+	  <value>Glar</value>
+	  <comment>Tag</comment>
+  </data>
+  <data name="Add" xml:space="preserve">
+	  <value>Mrgl</value>
+	  <comment>Add</comment>
+  </data>
+  <data name="Tags" xml:space="preserve">
+	  <value>Glarrgl</value>
+	  <comment>Tags</comment>
+  </data>
+  <data name="Link" xml:space="preserve">
+	  <value>Lrglurg</value>
+	  <comment>Link</comment>
+  </data>
+  <data name="UCS Leaderboard" xml:space="preserve">
+	  <value>UCS Arglmrgl</value>
+	  <comment>UCS Leaderboard</comment>
+  </data>
+  <data name="Stage Pass" xml:space="preserve">
+	  <value>Grglargl Brglurg</value>
+	  <comment>Stage Pass</comment>
+  </data>
+  <data name="BPM" xml:space="preserve">
+	  <value>BPM</value>
+	  <comment>BPM</comment>
+  </data>
+  <data name="Note Count" xml:space="preserve">
+	  <value>Mrrglurg Grglrgl</value>
+	  <comment>Note Count</comment>
+  </data>
+  <data name="Pass (Data Backed)" xml:space="preserve">
+	  <value>Brglurg (Glubglrgl Mglalrglblub)</value>
+	  <comment>Pass (Data Backed)</comment>
+  </data>
+  <data name="Score (Data Backed)" xml:space="preserve">
+	  <value>Grglrgl (Glubglrgl Mglalrglblub)</value>
+	  <comment>Score (Data Backed)</comment>
+  </data>
+  <data name="Popularity (PIU Game Leaderboard)" xml:space="preserve">
+	  <value>Mrrglurgmrg (PIU Murgl Arglmrgl)</value>
+	  <comment>Popularity (PIU Game Leaderboard)</comment>
+  </data>
+  <data name="Player Count" xml:space="preserve">
+	  <value>Murglargrl Grglrgl</value>
+	  <comment>Player Count</comment>
+  </data>
+  <data name="Difficulty Categorization" xml:space="preserve">
+	  <value>Grlgrgl Lurgplglrglglarmrogl</value>
+	  <comment>Difficulty Categorization</comment>
+  </data>
+  <data name="Scoring Level" xml:space="preserve">
+	  <value>Grglrglmrg Rglmrgl</value>
+	  <comment>Scoring Level</comment>
+  </data>
+  <data name="Skill" xml:space="preserve">
+	  <value>Glrglurg</value>
+	  <comment>Skill</comment>
+  </data>
+  <data name="Age" xml:space="preserve">
+	  <value>Grarmurgl</value>
+	  <comment>Age</comment>
+  </data>
+  <data name="Score Ranking" xml:space="preserve">
+	  <value>Grglrgl Grglarglrgl</value>
+	  <comment>Score Ranking</comment>
+  </data>
+  <data name="Settings" xml:space="preserve">
+	  <value>Arglrglrgl</value>
+	  <comment>Settings</comment>
+  </data>
+  <data name="Show Skills" xml:space="preserve">
+	  <value>Urgmrl Glrglurgrgl</value>
+	  <comment>Show Skills</comment>
+  </data>
+  <data name="Show Difficulty" xml:space="preserve">
+	  <value>Urgmrl Grlgrgl</value>
+	  <comment>Show Difficulty</comment>
+  </data>
+  <data name="Show Song Name" xml:space="preserve">
+	  <value>Urgmrl Glurgl Mrglar</value>
+	  <comment>Show Song Name</comment>
+  </data>
+  <data name="Show Step Artist" xml:space="preserve">
+	  <value>Urgmrl Rglmrgl Glargrl</value>
+	  <comment>Show Step Artist</comment>
+  </data>
+  <data name="Personalized Difficulty" xml:space="preserve">
+	  <value>Murglargrlrgl Grlgrgl</value>
+	  <comment>Personalized Difficulty</comment>
+  </data>
+  <data name="Show Age" xml:space="preserve">
+	  <value>Urgmrl Grarmurgl</value>
+	  <comment>Show Age</comment>
+  </data>
+  <data name="Filters" xml:space="preserve">
+	  <value>Glrglblubrgl</value>
+	  <comment>Filters</comment>
+  </data>
+  <data name="Min BPM" xml:space="preserve">
+	  <value>Lrgl BPM</value>
+	  <comment>Min BPM</comment>
+  </data>
+  <data name="Max BPM" xml:space="preserve">
+	  <value>Mrrrgl BPM</value>
+	  <comment>Max BPM</comment>
+  </data>
+  <data name="Min Note Count" xml:space="preserve">
+	  <value>Lrgl Mrrglurg Grglrgl</value>
+	  <comment>Min Note Count</comment>
+  </data>
+  <data name="Max Note Count" xml:space="preserve">
+	  <value>Mrrrgl Mrrglurg Grglrgl</value>
+	  <comment>Max Note Count</comment>
+  </data>
+  <data name="Min Letter Grade" xml:space="preserve">
+	  <value>Lrgl Lrglargl Grglargl</value>
+	  <comment>Min Letter Grade</comment>
+  </data>
+  <data name="Max Letter Grade" xml:space="preserve">
+	  <value>Mrrrgl Lrglargl Grglargl</value>
+	  <comment>Max Letter Grade</comment>
+  </data>
+  <data name="Admin" xml:space="preserve">
+	  <value>Grglglubgrar</value>
+  </data>
+  <data name="Do It" xml:space="preserve">
+	  <value>Mrg Rgl</value>
+	  <comment>Admin trigger button — runs RebuildOfficialLeaderboard.</comment>
+  </data>
+  <data name="Clear Cache" xml:space="preserve">
+	  <value>Glrgl Gurgblub</value>
+  </data>
+  <data name="ReCalculate Ratings" xml:space="preserve">
+	  <value>Mrrglarglrgl Rrglrglrgl</value>
+  </data>
+  <data name="Update Chart" xml:space="preserve">
+	  <value>Mrrrmurg Mrglrgl</value>
+  </data>
+  <data name="Chart" xml:space="preserve">
+	  <value>Mrglrgl</value>
+  </data>
+  <data name="Video URL" xml:space="preserve">
+	  <value>Glarurg URL</value>
+  </data>
+  <data name="Channel Name" xml:space="preserve">
+	  <value>Glrgl Mrglar</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+	  <value>Mrgur</value>
+  </data>
+  <data name="Create Song" xml:space="preserve">
+	  <value>Murglar Glurgl</value>
+  </data>
+  <data name="Korean Name" xml:space="preserve">
+	  <value>Prgl Mrglar</value>
+  </data>
+  <data name="Image Name" xml:space="preserve">
+	  <value>Glarblub Mrglar</value>
+  </data>
+  <data name="Minutes" xml:space="preserve">
+	  <value>Murgllrgl</value>
+  </data>
+  <data name="Seconds" xml:space="preserve">
+	  <value>Murgllrgl</value>
+  </data>
+  <data name="Level/Players" xml:space="preserve">
+	  <value>Rglmrgl/Murglargrlrgl</value>
+	  <comment>Combined level/player-count input on the new-chart admin form.</comment>
+  </data>
+  <data name="Youtube Hash" xml:space="preserve">
+	  <value>Youtube Grrrbrgl</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+	  <value>Murglar</value>
+  </data>
+  <data name="Done" xml:space="preserve">
+	  <value>Mrggrl</value>
+  </data>
+  <data name="Restored" xml:space="preserve">
+	  <value>Mrrglrulgmrgl</value>
+  </data>
+  <data name="Video info is not formatted correctly" xml:space="preserve">
+	  <value>Glarurg mrgurgl argl grrrgl gurgmrrr arglmrgl</value>
+  </data>
+  <data name="Chart saved" xml:space="preserve">
+	  <value>Mrglrgl mrgurrgl</value>
+  </data>
+  <data name="Bulk Vote" xml:space="preserve">
+	  <value>Mrrrgurg Grglblgrl</value>
+  </data>
+  <data name="Your Difficulty Rating" xml:space="preserve">
+	  <value>Murlgrgl Grlgrgl Rrglrgl</value>
+  </data>
+  <data name="Saved!" xml:space="preserve">
+	  <value>Mrgurrgl!</value>
+  </data>
+  <data name="Chart Update" xml:space="preserve">
+	  <value>Mrglrgl Mrrrmurg</value>
+  </data>
+  <data name="Difficulty" xml:space="preserve">
+	  <value>Grlgrgl</value>
+  </data>
+  <data name="Save Chart" xml:space="preserve">
+	  <value>Mrgur Mrglrgl</value>
+  </data>
+  <data name="Updated X Y" xml:space="preserve">
+	  <value>Mrglargrl {0} {1}</value>
+	  <comment>{0} = song name, {1} = difficulty string (e.g. "S17"). Snackbar after a chart save on /ChartUpdate.</comment>
+  </data>
+  <data name="Community Invite" xml:space="preserve">
+	  <value>Murlgrgl Argrglmrg</value>
+  </data>
+  <data name="Chart Compare" xml:space="preserve">
+	  <value>Mrglrgl Mrrglrgl</value>
+  </data>
+  <data name="Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings." xml:space="preserve">
+	  <value>Gurgmrrr mrgl murlg mrlgrgl KyleTT mrlgrgl plglgrglmglamrogl mrglrgl glorglurg blgrl FEFEMZ's  murgblub.</value>
+	  <comment>Double space between "FEFEMZ's" and "recordings" preserved verbatim from source.</comment>
+  </data>
+  <data name="Note that this information is not final until referenced against actual released mix." xml:space="preserve">
+	  <value>Mrrglurg rglmrgl mrglrgl glorglurg argl grrrgl mrrglub urglrgl blubbrgl grgl arglmrg grglmrglgurg mrgla.</value>
+  </data>
+  <data name="Added" xml:space="preserve">
+	  <value>Mrglrgl</value>
+  </data>
+  <data name="Changed Level" xml:space="preserve">
+	  <value>Blgrlprglmrrr Rglmrgl</value>
+  </data>
+  <data name="Removed" xml:space="preserve">
+	  <value>Argrl</value>
+  </data>
+  <data name="Step Artists" xml:space="preserve">
+	  <value>Rglmrgl Glargrlrgl</value>
+  </data>
+  <data name="Disclaimer: This list is being refined, some charts are missing step artists and some may have incorrect artists." xml:space="preserve">
+	  <value>Mrrrglub: Mrglrgl glrglmrg argl brglrgl arglglar, grgl mrglrglrgl argrlg grrrmrg rglmrgl glargrlrgl mrrgl grgl mglar magrgl grrrargl glargrlrgl.</value>
+  </data>
+  <data name="PIU Life Calculator" xml:space="preserve">
+	  <value>PIU Murggrgl Mrrglargl</value>
+  </data>
+  <data name="Disclaimer: This data was data-mined in NX2 and Prime, it is unconfirmed how accurate it is today." xml:space="preserve">
+	  <value>Mrrrglub: Mrglrgl glubglrgl mragl glubglrgl-murg murg NX2 mrrgl Rulg, rgl argl glrglblgrlgrglrgrl grarrgrl rglmrlg rgl argl urg.</value>
+  </data>
+  <data name="Lifebar stats" xml:space="preserve">
+	  <value>Murggrglblur grglubgrlrgl</value>
+  </data>
+  <data name="Life Bar by Level" xml:space="preserve">
+	  <value>Murggrgl Lrglglar blgrl Rglmrgl</value>
+  </data>
+  <data name="Starting Life" xml:space="preserve">
+	  <value>Murgargrlrgl Murggrgl</value>
+  </data>
+  <data name="Visible Life" xml:space="preserve">
+	  <value>Urggrgl Murggrgl</value>
+  </data>
+  <data name="Max Life" xml:space="preserve">
+	  <value>Mrrrgl Murggrgl</value>
+  </data>
+  <data name="Life Threshold" xml:space="preserve">
+	  <value>Murggrgl Grrrmurg</value>
+  </data>
+  <data name="Note Count from Full Life to Death/Threshold based on Combo between Breaks" xml:space="preserve">
+	  <value>Mrrglurg Grglrgl blgrl Blubmrrr Murggrgl rgl Murgmrrr/Grrrmurg grarrgl urg Lrgl murggrl Brglubrgl</value>
+  </data>
+  <data name="Perfect Combo, Miss Break" xml:space="preserve">
+	  <value>Mrglub Lrgl, Grrrmrg Brglub</value>
+  </data>
+  <data name="Great Combo, Miss Break" xml:space="preserve">
+	  <value>Mrrglub Lrgl, Grrrmrg Brglub</value>
+  </data>
+  <data name="Perfect Combo, Bad Break" xml:space="preserve">
+	  <value>Mrglub Lrgl, Grrrgl Brglub</value>
+  </data>
+  <data name="Great Combo, Bad Break" xml:space="preserve">
+	  <value>Mrrglub Lrgl, Grrrgl Brglub</value>
+  </data>
+  <data name="Notes to Full Life From Start of Song (50%)" xml:space="preserve">
+	  <value>Mrrglurgrgl rgl Blubmrrr Murggrgl Blgrl Start glub Glurgl (50%)</value>
+  </data>
+  <data name="Perfects" xml:space="preserve">
+	  <value>Mrglubrgl</value>
+  </data>
+  <data name="Greats" xml:space="preserve">
+	  <value>Mrrglubrgl</value>
+  </data>
+  <data name="Lifebar Description" xml:space="preserve">
+	  <value>Murggrglblur Mrrglrglrgl</value>
+  </data>
+  <data name="Starting life is 500, visible  Life (Rainbow life bar) is 1000." xml:space="preserve">
+	  <value>Murgargrlrgl murggrgl argl 500, urggrgl  Murggrgl (Rgl murggrgl lrglglar) argl 1000.</value>
+	  <comment>Double space between "visible" and "Life" preserved verbatim from source.</comment>
+  </data>
+  <data name="Lifebar overflows exponentially by level, up to about a 2350 overflow at level 28." xml:space="preserve">
+	  <value>Murggrglblur gluburggrlrgl arglglubgurgblub blgrl rglmrgl, glrgl rgl argrlg mrg 2350 gluburggrl argl rglmrgl 28.</value>
+  </data>
+  <data name="Life loss description" xml:space="preserve">
+	  <value>Murggrgl grrrglub mrrglrglrgl</value>
+  </data>
+  <data name="By default, bads lose 50 health, misses lose 250 health (at ~100% health)." xml:space="preserve">
+	  <value>Blgrl mrrglub, grrrglrgl rglrglgurg 50 murglargrl, grrrmrgrgl rglrglgurg 250 murglargrl (argl ~100% murglargrl).</value>
+  </data>
+  <data name="Misses lose LESS health the further beneath 1000 health you are at (at 0 life you would lose 20 health for a miss)" xml:space="preserve">
+	  <value>Grrrmrgrgl rglrglgurg LESS murglargrl mrgl glarargrlrgl glrgl 1000 murglargrl murlg argrlg argl (argl 0 murggrgl murlg mrglargrl rglrglgurg 20 murglargrl mrlgrgl mrg grrrmrg)</value>
+  </data>
+  <data name="Life gain description" xml:space="preserve">
+	  <value>Murggrgl glorgrgl mrrglrglrgl</value>
+  </data>
+  <data name="By default at high combo, perfects gain 9.6 life, greats gain 8 life, goods gain 0 life." xml:space="preserve">
+	  <value>Blgrl mrrglub argl argargrl lrgl, mrglubrgl glorgrgl 9.6 murggrgl, mrrglubrgl glorgrgl 8 murggrgl, glorgarglglar glorgrgl 0 murggrgl.</value>
+  </data>
+  <data name="This is modified by a multiplier that is almost entirely reset on a miss, and decreased drastically on a bad." xml:space="preserve">
+	  <value>Mrglrgl argl argrlurgmurggrrr blgrl mrg mrrglrgrl rglmrgl argl brglmrlgrgl blubblgrlmglamrrgl rgrgl urg mrg grrrmrg, mrrgl murglrgllrglmgla rrglrglmrogl urg mrg grrrgl.</value>
+  </data>
+  <data name="Each perfect or great you get increases the multiplier by a minor amount." xml:space="preserve">
+	  <value>Mrlgrl mrglub argrlg mrrglub murlg gurg lrgllrglrgrlglarrgl mrgl mrrglrgrl blgrl mrg rulgprglprgl mrrglmurgrgl.</value>
+  </data>
+  <data name="Effectively, this means that your life gain is heavily affected by combo, reaching maximum gain at ~40-50 combo." xml:space="preserve">
+	  <value>Blgrlglorgbrgl, mrglrgl argrlrgl rglmrgl murlgrgl murggrgl glorgrgl argl glargrrrglorg brglblgrlplglrgrl blgrl lrgl, urgrulgmrrr mrrrgl glorgrgl argl ~40-50 lrgl.</value>
+  </data>
+  <data name="Bads vs Misses Observations" xml:space="preserve">
+	  <value>Grrrglrgl rulg Grrrmrgrgl Urgargrlrgl</value>
+  </data>
+  <data name="To recover from Bads you require 17-21 combo per Bad. Bads typically let you live for 3x as long as misses." xml:space="preserve">
+	  <value>Rgl blgrlmrlg blgrl Grrrglrgl murlg gurg 17-21 lrgl grgl Grrrgl. Grrrglrgl argllrgl arglgrrrglubrgl murlg mroglgurg mrlgrgl 3urggrrrmrogl argl mrgl argl grrrmrgrgl.</value>
+  </data>
+  <data name="To remain alive you need to maintain 17-21 combo per Miss." xml:space="preserve">
+	  <value>Rgl rgl gurgplgl murlg mrogl rgl mroglrglgurgargrl 17-21 lrgl grgl Grrrmrg.</value>
+  </data>
+  <data name="To remain at 50% visible life, you need 37-46 combo per Miss." xml:space="preserve">
+	  <value>Rgl rgl argl 50% urggrgl murggrgl, murlg mrogl 37-46 lrgl grgl Grrrmrg.</value>
+  </data>
+  <data name="To remain at Rainbow Life, you 46-55 combo per Miss." xml:space="preserve">
+	  <value>Rgl rgl argl Rgl Murggrgl, murlg 46-55 lrgl grgl Grrrmrg.</value>
+	  <comment>Likely missing "need" between "you" and "46-55" in source; preserved verbatim.</comment>
+  </data>
+  <data name="Bads at low health let you live for roughly 3x as long as misses, this gap increases the higher the life threshold you want to keep, up to misses punishing 6x as much when maintaining 100% visual life." xml:space="preserve">
+	  <value>Grrrglrgl argl lrgl murglargrl arglgrrrglubrgl murlg mroglgurg mrlgrgl argrlmrrrlrgl 3urggrrrmrogl argl mrgl argl grrrmrgrgl, mrglrgl prglmroglmurg lrgllrglrgrlglarrgl mrgl argargrl mrgl murggrgl grrrmurg murlg plgllrglplglrgl rgl murglargl, glrgl rgl grrrmrgrgl rrglglub 6urggrrrmrogl argl mrrrrrglglrgl arglrgl glarlurgmurg 100% glorgmglaargl murggrgl.</value>
+  </data>
+  <data name="TLDR: Misses matter less at low life, but are always significantly more punishing than Bads." xml:space="preserve">
+	  <value>TLDR: Grrrmrgrgl plgl lrrgl argl lrgl murggrgl, blubgl argrlg mrglrglrgl gurgmrlgmrrgl mrrglrgl rrglglub grargrl Grrrglrgl.</value>
+  </data>
+  <data name="Recovery Observations" xml:space="preserve">
+	  <value>Mrrglubmrg Urgargrlrgl</value>
+  </data>
+  <data name="Misses or back-to-back Bads early in a run put you in a terribly position for maintaining life, as they reset your life gain multiplier and require you to combo ~40-50 to regain it. Start runs strong for increased success rates." xml:space="preserve">
+	  <value>Grrrmrgrgl argrlg mrrgl-rgl-mrrgl Grrrglrgl urgrgl murg mrg prgl rglmurg murlg murg mrg mrrglargrlmglamrrr mroglmrglrglrgl mrlgrgl glarlurgmurg murggrgl, argl glurg rgrgl murlgrgl murggrgl glorgrgl mrrglrgrl mrrgl gurg murlg rgl lrgl ~40-50 rgl mrrglmrrr rgl. Start mrrglglrgl grrrbrgllrgl mrlgrgl mroglgrrrgrglmurgl urgmurglmurg rrglrglrgl.</value>
+  </data>
+  <data name="When at 12% or lower visual life, a miss gives less life loss than a bad, but inhibits your recovery severely. This only really matters for notes at the end of a song or before guaranteed 100+ combo sections." xml:space="preserve">
+	  <value>Arglrgl argl 12% argrlg gurgargrlbrgl glorgmglaargl murggrgl, mrg grrrmrg rulgmrgl lrrgl murggrgl grrrglub grargrl mrg grrrgl, blubgl brglmrglgrarurg murlgrgl mrrglubmrg glorgmrrr. Mrglrgl mglrgl mgla mrrrmurgl mrlgrgl mrrglurgrgl argl mrgl glubargl glub mrg glurgl argrlg glrgl murgbrgllrglrulg 100+ lrgl murgblgrlglrglglub.</value>
+  </data>
+  <data name="TLDR" xml:space="preserve">
+	  <value>TLDR</value>
+  </data>
+  <data name="Misses severely hurt your lifebar." xml:space="preserve">
+	  <value>Grrrmrgrgl glorgmrrr rglrgl murlgrgl murggrglblur.</value>
+  </data>
+  <data name="Bads mostly hurt your recovery." xml:space="preserve">
+	  <value>Grrrglrgl mrglgrrrmrogl rglrgl murlgrgl mrrglubmrg.</value>
+  </data>
+  <data name="Try to maintain 17-21 combo per bad." xml:space="preserve">
+	  <value>Arglgr rgl mroglrglgurgargrl 17-21 lrgl grgl grrrgl.</value>
+  </data>
+  <data name="Try to maintain 40-50 combo per miss." xml:space="preserve">
+	  <value>Arglgr rgl mroglrglgurgargrl 40-50 lrgl grgl grrrmrg.</value>
+  </data>
+  <data name="Lifebars are weird." xml:space="preserve">
+	  <value>Murggrglblurrgl argrlg mrrrgrgl.</value>
+	  <comment>Quote attributed to Zelllooo on the Life Calculator page.</comment>
+  </data>
+  <data name="Source" xml:space="preserve">
+	  <value>Glubmrg</value>
+  </data>
+  <data name="Team Infinitesimal, data-mine from NX2 + Prime" xml:space="preserve">
+	  <value>Glubgrarmurg Glorgrglglrgl, glubglrgl-glarbrgl blgrl NX2 + Rulg</value>
+  </data>
+  <data name="Welcome" xml:space="preserve">
+	  <value>Mrglrglrgl</value>
+  </data>
+  <data name="Welcome to Score Tracker, X!" xml:space="preserve">
+	  <value>Mrglrglrgl rgl Grglrgl Mrlg, {0}!</value>
+	  <comment>{0} = current user's name</comment>
+  </data>
+  <data name="Some players already maintain scores via Spreadsheets." xml:space="preserve">
+	  <value>Grgl murglargrlrgl glrgl mroglrglgurgargrl grglrglrgl murgllurgglrgl Glubglrglrglrgl.</value>
+  </data>
+  <data name="In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades." xml:space="preserve">
+	  <value>Murg grgl glub rglmrglrgl glorgmrrrgurg, rgl mglar brgl arglbrgl rgl murlgrgl mrg Glubglrglrgl gurgrrgl glub murgplgl urggrglrgrl urgmurgl glub grglarglrgl.</value>
+  </data>
+  <data name="After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed." xml:space="preserve">
+	  <value>Mrgl mrgl murlgrgl, arglgl argrlrrgl argrlg grgl rgrlmrlgmrrrrgl/mrglrglrgl/lrglglargurgblgrlrgl rglmrgl mrggl grrrgl murlgrgl arglmrgl, murlg mrgl brgl mrglrgrl mrgl mglaglrglprgl rgl murlgrgl mrg glrglmrg glub mrgl grrrglrglrgl rgrlmrlgmrrrrgl mrrgl mrgl mrrglargl glurg grrrglrglrgl.</value>
+  </data>
+  <data name="Spreadsheet is uploading and being processed..." xml:space="preserve">
+	  <value>Glubglrglrgl argl arglrgrlglorgrgl mrrgl brglrgl urgrgrlmroglmrrgl...</value>
+  </data>
+  <data name="Parsed Scores" xml:space="preserve">
+	  <value>Grglblgrl Grglrglrgl</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+	  <value>Rgrgl</value>
+  </data>
+  <data name="XXLetterGrade" xml:space="preserve">
+	  <value>Argrlglarmrogl</value>
+	  <comment>Column header on the XX-score upload preview grid; matches the legacy property name.</comment>
+  </data>
+  <data name="IsBroken" xml:space="preserve">
+	  <value>Murgblubrrglgrgl</value>
+	  <comment>Column header on the XX-score upload preview grid; matches the legacy property name.</comment>
+  </data>
+  <data name="If you leave this page or cancel, the upload will stop but you will not lose any scores that have already been recorded from your upload." xml:space="preserve">
+	  <value>Arglgl murlg blgrlargl mrglrgl murgbagl argrlg grrrmrg, mrgl murlgrgl mrgl mglamrrrgrrrrgl blubgl murlg mrgl grrrgl rglrglgurg argrgl grglrglrgl rglmrgl magrgl glrgl brglgl gurgmgla blgrl murlgrgl murlgrgl.</value>
+  </data>
+  <data name="X/Y Uploaded. Z Remaining. W Failed to record" xml:space="preserve">
+	  <value>{0}/{1} Prglglubargrl. {2} Mrrglubgrl. {3} Grrrglrglrgl rgl rglurg</value>
+	  <comment>Save progress status. {0}=saved count, {1}=total, {2}=time remaining (m:ss), {3}=failed count</comment>
+  </data>
+  <data name="You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again." xml:space="preserve">
+	  <value>Murlg magr mrg grgl mrglrglrgl rglmrgl mrglargl grrrgl blgrlmrrrglrgl rgl brgl glrglmurgblub. Murlg glargrl murlgrgl mrg CSV glub mrgl grrrglrglrgl rgl mrgla prglmrogl mrrgl arglgr plglglarplgl.</value>
+  </data>
+  <data name="All charts you uploaded were successfully updated!" xml:space="preserve">
+	  <value>Glrgl mrglrglrgl murlg prglglubargrl mrglargl lurgurgrrgl mrglargrl!</value>
+  </data>
+  <data name="You somehow ended up in a state between realities. Refresh the page to try again." xml:space="preserve">
+	  <value>Murlg glubrgl rglgrgl glrgl murg mrg rglargl murggrl prglglarrulg. Mrrglurg mrgl murgbagl rgl arglgr plglglarplgl.</value>
+  </data>
+  <data name="Supported Formats" xml:space="preserve">
+	  <value>Argrglrgl Murgarglrgl</value>
+  </data>
+  <data name="Hide" xml:space="preserve">
+	  <value>Glubgrl</value>
+  </data>
+  <data name="Show" xml:space="preserve">
+	  <value>Urgmrl</value>
+  </data>
+  <data name="Unknown" xml:space="preserve">
+	  <value>Urglrgl</value>
+  </data>
+  <data name="Player" xml:space="preserve">
+	  <value>Murglargrl</value>
+  </data>
+  <data name="Scores" xml:space="preserve">
+	  <value>Grglrglrgl</value>
+  </data>
+  <data name="Download Example" xml:space="preserve">
+	  <value>Murlgrgl Mrglargrl</value>
+  </data>
+  <data name="TRUE/FALSE Template" xml:space="preserve">
+	  <value>TRUE/FALSE Mrrglblub</value>
+  </data>
+  <data name="Letter Grade Template" xml:space="preserve">
+	  <value>Lrglargl Grglargl Mrrglblub</value>
+  </data>
+  <data name="Song Names" xml:space="preserve">
+	  <value>Glurgl Mrglargrgl</value>
+  </data>
+  <data name="Some adjustments to account for typos or difference in naming conventions have been accounted for. Song Names are Case Insensitive. (Note that some of these look the same because they are whitespace adjustments)" xml:space="preserve">
+	  <value>Grgl prglmrogl rgl mrrglargrl mrlgrgl grarglorgglubrgl argrlg grarplglrgrl murg rulgargrl mrrrmrlg magrgl brglgl glubbrglrrglargl mrlgrgl. Glurgl Mrglargrgl argrlg Mrglmrrr Glrglblubrgl. (Mrrglurg rglmrgl grgl glub mrglrglrgl rulgprgl mrgl mglargrl mrrglrgl glurg argrlg mglamrrglglrgl prglmrogl)</value>
+  </data>
+  <data name="Song Name Mappings" xml:space="preserve">
+	  <value>Glurgl Mrglar Mrglargrlrgl</value>
+  </data>
+  <data name="From" xml:space="preserve">
+	  <value>Blgrl</value>
+  </data>
+  <data name="To" xml:space="preserve">
+	  <value>Rgl</value>
+  </data>
+  <data name="Could not find chart" xml:space="preserve">
+	  <value>Glurmrg grrrgl grglmrgl mrglrgl</value>
+  </data>
+  <data name="Could not find song" xml:space="preserve">
+	  <value>Glurmrg grrrgl grglmrgl glurgl</value>
+  </data>
+  <data name="An unknown error occurred" xml:space="preserve">
+	  <value>Mrg urglrgl grrrargrl argrlglrglmrrrrgl</value>
+  </data>
+  <data name="File cannot be larger than 10 MB" xml:space="preserve">
+	  <value>Gluburg grrrglrgl brgl mrrgrgl grargrl 10 MB</value>
+  </data>
+  <data name="There was an unknown error while parsing the file" xml:space="preserve">
+	  <value>Argrlrrgl mragl mrg urglrgl grrrargrl murgll grargurglurgrgl mrgl gluburg</value>
+  </data>
+  <data name="No Recorded Scores" xml:space="preserve">
+	  <value>Grrrgl Gurgmgla Grglrglrgl</value>
+  </data>
+  <data name="None" xml:space="preserve">
+	  <value>Glubgl</value>
+  </data>
+  <data name="X% of Y Comparable Players" xml:space="preserve">
+	  <value>{0}% glub {1} Blubglargrglglrgl Murglargrlrgl</value>
+	  <comment>{0} = percentage like "85.3", {1} = comparable player count</comment>
+  </data>
+  <data name="Wouldn't You Like To Know" xml:space="preserve">
+	  <value>Brglrrglblubbrgl Murlg Lrglmurgl Rgl Mrogllurggrgl</value>
+	  <comment>Easter-egg tooltip shown for the user "CLEARALL18SORQUIT"</comment>
+  </data>
+  <data name="About The Site" xml:space="preserve">
+	  <value>Argrlg Mrgl Urgmrg</value>
+  </data>
+  <data name="Source Code" xml:space="preserve">
+	  <value>Glubmrg Glrglmrg</value>
+  </data>
+  <data name="Privacy Policy" xml:space="preserve">
+	  <value>Grrrmurg Grglubgrl</value>
+  </data>
+  <data name="Site constructed and maintained by DrMurloc" xml:space="preserve">
+	  <value>Urgmrg plglglubargl mrrgl glarrulgargrlrgl blgrl DrMurloc</value>
+  </data>
+  <data name="Original Concept (excel score tracking) Constructed by KyleTT" xml:space="preserve">
+	  <value>Mrlggrglargl Arglglub (mrrglurggrgl grglrgl brglrulgrgl) Plglglubargl blgrl KyleTT</value>
+  </data>
+  <data name="Bounties" xml:space="preserve">
+	  <value>Blubgrlrgl</value>
+  </data>
+  <data name="Bounty Leaderboard" xml:space="preserve">
+	  <value>Blubgrl Arglmrgl</value>
+  </data>
+  <data name="Monthly Total" xml:space="preserve">
+	  <value>Murgllargl Glrglmrrgl</value>
+  </data>
+  <data name="Total" xml:space="preserve">
+	  <value>Glrglmrrgl</value>
+  </data>
+  <data name="Start" xml:space="preserve">
+	  <value>Start</value>
+  </data>
+  <data name="Game Stats" xml:space="preserve">
+	  <value>Murgl Grglubgrlrgl</value>
+  </data>
+  <data name="Total Popularity Singles vs Doubles" xml:space="preserve">
+	  <value>Glrglmrrgl Mrrglurgmrg Mrglargrlrgl rulg Argrlargl</value>
+  </data>
+  <data name="Total Singles vs Doubles" xml:space="preserve">
+	  <value>Glrglmrrgl Mrglargrlrgl rulg Argrlargl</value>
+  </data>
+  <data name="Chart Count By Level" xml:space="preserve">
+	  <value>Mrglrgl Grglrgl Blgrl Rglmrgl</value>
+  </data>
+  <data name="Note Counts" xml:space="preserve">
+	  <value>Mrrglurg Grglrglrgl</value>
+  </data>
+  <data name="X Note counts" xml:space="preserve">
+	  <value>{0} Mrrglurg grglrglrgl</value>
+	  <comment>{0} = ChartType (Single/Double/CoOp). Chart title on /NoteCounts.</comment>
+  </data>
+  <data name="X Progress" xml:space="preserve">
+	  <value>{0} Mrrglrglmrg</value>
+	  <comment>{0} = ChartType. Chart title on /NoteCounts.</comment>
+  </data>
+  <data name="Minimums" xml:space="preserve">
+	  <value>Lrglrgl</value>
+  </data>
+  <data name="Standard Low" xml:space="preserve">
+	  <value>Lrglmrglmrrr Lrgl</value>
+  </data>
+  <data name="Standard High" xml:space="preserve">
+	  <value>Lrglmrglmrrr Argargrl</value>
+  </data>
+  <data name="Maximums" xml:space="preserve">
+	  <value>Mrrrglrgl</value>
+  </data>
+  <data name="Missing" xml:space="preserve">
+	  <value>Grrrmrg</value>
+  </data>
+  <data name="Existing" xml:space="preserve">
+	  <value>Lurgglorgarglmurgl</value>
+  </data>
+  <data name="LetterDifficulties" xml:space="preserve">
+	  <value>Glrglrglglubgrgl</value>
+	  <comment>Page title on /Experiments/LetterDifficulties; the source has no space between "Letter" and "Difficulties".</comment>
+  </data>
+  <data name="Folder Weighted Distribution" xml:space="preserve">
+	  <value>Glubmurg Blubgurg Glubmrrglrgl</value>
+  </data>
+  <data name="Letter Difficulty" xml:space="preserve">
+	  <value>Lrglargl Grlgrgl</value>
+  </data>
+  <data name="Median" xml:space="preserve">
+	  <value>Mrrglmrg</value>
+  </data>
+  <data name="Selected Chart" xml:space="preserve">
+	  <value>Brglmurglargl Mrglrgl</value>
+  </data>
+  <data name="Percentile Distribution" xml:space="preserve">
+	  <value>Mrrglarglrgl Glubmrrglrgl</value>
+  </data>
+  <data name="Difficulty By Letter" xml:space="preserve">
+	  <value>Grlgrgl Blgrl Lrglargl</value>
+  </data>
+  <data name="User Matches" xml:space="preserve">
+	  <value>Murglar Murgbrgl</value>
+  </data>
+  <data name="Calculated Tier List" xml:space="preserve">
+	  <value>Blgrlblgrlplgllrgl Rglgrgl Glrglmrg</value>
+  </data>
+  <data name="Similar Players" xml:space="preserve">
+	  <value>Mrglrrgl Murglargrlrgl</value>
+  </data>
+  <data name="Private User - X" xml:space="preserve">
+	  <value>Grrrmurg Murglar - {0}</value>
+	  <comment>{0} = comparison-score number. Listed for users who have set their profile private.</comment>
+  </data>
+  <data name="Final Result" xml:space="preserve">
+	  <value>Mrrglub Grglub</value>
+  </data>
+  <data name="ChartScoring" xml:space="preserve">
+	  <value>Mrglrrglbrgl</value>
+	  <comment>Page title on /Experiments/ChartScoring; the source has no space between "Chart" and "Scoring".</comment>
+  </data>
+  <data name="Target Player Level" xml:space="preserve">
+	  <value>Mrglargrl Murglargrl Rglmrgl</value>
+  </data>
+  <data name="Player Weights" xml:space="preserve">
+	  <value>Murglargrl Glubgrgrlrgl</value>
+  </data>
+  <data name="All players with scores within the target folder are assigned weights based on how close their competitive level is to X." xml:space="preserve">
+	  <value>Glrgl murglargrlrgl grgl grglrglrgl murgargrl mrgl mrglargrl glubmurg argrlg brglrulgmurglblub glubgrgrlrgl grarrgl urg grarrgrl grlorgl glurgrgl grrrmrrglmrg rglmrgl argl rgl {0}.</value>
+	  <comment>{0} = target player level (integer).</comment>
+  </data>
+  <data name="Highlighted players have a recorded score on the chart in question." xml:space="preserve">
+	  <value>Murglmroglrgl murglargrlrgl magrgl mrg gurgmgla grglrgl urg mrgl mrglrgl murg mrrgl?.</value>
+  </data>
+  <data name="Anonymous" xml:space="preserve">
+	  <value>Murglargrl</value>
+	  <comment>Display name shown for users who have set their profile private.</comment>
+  </data>
+  <data name="Competitively" xml:space="preserve">
+	  <value>Blgrlmurglblubmrrrrgl</value>
+	  <comment>Word used in player-weight rows on /Experiments/ChartScoring (e.g. "(Competitively 12.34)").</comment>
+  </data>
+  <data name="Folder Averages" xml:space="preserve">
+	  <value>Glubmurg Mrrglmrgrgl</value>
+  </data>
+  <data name="The target folder and the three surrounding are provided weighted average scores utilizing the player weights above." xml:space="preserve">
+	  <value>Mrgl mrglargrl glubmurg mrrgl mrgl mrrrgl argrlrgl argrlg glubmrrgl blubgurg mrrglmrg grglrglrgl mrrglgurgmrglmrgl mrgl murglargrl glubgrgrlrgl argargrl.</value>
+  </data>
+  <data name="These averages are shifted away from the level in question by .5 of a standard deviation within their respective folder to make sure level changes are better represented by the bulk of a surrounding folder." xml:space="preserve">
+	  <value>Mrglrglrgl mrrglmrgrgl argrlg mglamrgl murgblgrl blgrl mrgl rglmrgl murg mrrgl? blgrl .5 glub mrg lrglmrglmrrr argrlplglargrl murgargrl glurgrgl blgrlargl glubmurg rgl mrgla prgl rglmrgl mrglargrlrgl argrlg urgmrrr plgllrglgrrrgrar blgrl mrgl mrrrgurg glub mrg argrlrgl glubmurg.</value>
+  </data>
+  <data name="Weighted Average Scores By Folder" xml:space="preserve">
+	  <value>Blubgurg Mrrglmrg Grglrglrgl Blgrl Glubmurg</value>
+  </data>
+  <data name="Chart Average" xml:space="preserve">
+	  <value>Mrglrgl Mrrglmrg</value>
+  </data>
+  <data name="The chart in question has its weighted average score projected onto the score distributions" xml:space="preserve">
+	  <value>Mrgl mrglrgl murg mrrgl? magrgl rglrgl blubgurg mrrglmrg grglrgl mrrglurg mrgl mrgl grglrgl glubmrrglrglrgl</value>
+  </data>
+  <data name="There was not enough data for the targeted player level to evaluate a final difficulty." xml:space="preserve">
+	  <value>Argrlrrgl mragl grrrgl plglmglaglrgl glubglrgl mrlgrgl mrgl rrglblgrlmrglmrrgl murglargrl rglmrgl rgl rglrrgl mrg mrrglub grlgrgl.</value>
+  </data>
+  <data name="The weighted average for this chart is better than the average for a X." xml:space="preserve">
+	  <value>Mrgl blubgurg mrrglmrg mrlgrgl mrglrgl mrglrgl argl urgmrrr grargrl mrgl mrrglmrg mrlgrgl mrg {0}.</value>
+	  <comment>{0} = high-level integer.</comment>
+  </data>
+  <data name="In this case, the chart is determined to be below by X utilizing standard deviations in the Y folder." xml:space="preserve">
+	  <value>Murg mrglrgl mrglmrrr, mrgl mrglrgl argl urggurgprglbrgl rgl brgl blubgrl blgrl {0} mrrglgurgmrglmrgl lrglmrglmrrr mrglargrl murg mrgl {1} glubmurg.</value>
+	  <comment>{0} = percent-between value, {1} = high-level integer.</comment>
+  </data>
+  <data name="The weighted average for this chart is worst than the average for a X." xml:space="preserve">
+	  <value>Mrgl blubgurg mrrglmrg mrlgrgl mrglrgl mrglrgl argl grrrglubgl grargrl mrgl mrrglmrg mrlgrgl mrg {0}.</value>
+	  <comment>Source spelling preserved verbatim ("worst" rather than "worse"). {0} = low-level integer.</comment>
+  </data>
+  <data name="In this case, the chart is determined to be above by X utilizing standard deviations in the Y folder." xml:space="preserve">
+	  <value>Murg mrglrgl mrglmrrr, mrgl mrglrgl argl urggurgprglbrgl rgl brgl argargrl blgrl {0} mrrglgurgmrglmrgl lrglmrglmrrr mrglargrl murg mrgl {1} glubmurg.</value>
+	  <comment>{0} = percent-between value, {1} = low-level integer.</comment>
+  </data>
+  <data name="Determined to be X between Y and Z" xml:space="preserve">
+	  <value>Urggurgprglbrgl rgl brgl {0} murggrl {1} mrrgl {2}</value>
+	  <comment>{0} = percent-between (3 decimals), {1} = low+0.5, {2} = high+0.5.</comment>
+  </data>
+  <data name="Final Result: X" xml:space="preserve">
+	  <value>Mrrglub Grglub: {0}</value>
+	  <comment>{0} = computed level (3 decimals).</comment>
+  </data>
+  <data name="At this point, it's identified that this chart has no players with a weight of .5 or higher (within 1 level). The chart is marked as not having a scoring level as any estimation would be based on missing data." xml:space="preserve">
+	  <value>Argl mrglrgl glubgrgl, rglrgl glrglargl rglmrgl mrglrgl mrglrgl magrgl grrrgl murglargrlrgl grgl mrg glubgrgrl glub .5 argrlg argargrl (murgargrl 1 rglmrgl). Mrgl mrglrgl argl mrogl argl grrrgl blgrl mrg grglrglmrg rglmrgl argl argrgl grglprglmrglmrgl mrglargrl brgl grarrgl urg grrrmrg glubglrgl.</value>
+  </data>
+  <data name="Difficulty By Player Level" xml:space="preserve">
+	  <value>Grlgrgl Blgrl Murglargrl Rglmrgl</value>
+  </data>
+  <data name="The listed scoring difficulty is calculated for players competitively playing in the officially listed folder for a chart." xml:space="preserve">
+	  <value>Mrgl mrrrrulg grglrglmrg grlgrgl argl blgrlblgrlplgllrgl mrlgrgl murglargrlrgl blgrlmurglblubmrrrrgl brgllrgl murg mrgl argrlmrrrgrglmrlg mrrrrulg glubmurg mrlgrgl mrg mrglrgl.</value>
+  </data>
+  <data name="The outcome of this algorithm has drastically different results for players at different levels though" xml:space="preserve">
+	  <value>Mrgl lrglmrlgargl glub mrglrgl mrrglglub magrgl rrglrglmrogl argrglrgl grglubrgl mrlgrgl murglargrlrgl argl argrglrgl rulg mglargl</value>
+  </data>
+  <data name="This is intended. There are charts that are relatively easier to score to others in the folder for players just pushing into the folder, but are harder for higher level players to perfect." xml:space="preserve">
+	  <value>Mrglrgl argl argrlglrgl. Argrlrrgl argrlg mrglrglrgl rglmrgl argrlg mrglglubgrgl mrrglrgl rgl grglrgl rgl argrglrgl murg mrgl glubmurg mrlgrgl murglargrlrgl gurglrgl lrglplglgrrr gluburgglorg mrgl glubmurg, blubgl argrlg grrrmrrglrgl mrlgrgl argargrl rglmrgl murglargrlrgl rgl mrglub.</value>
+  </data>
+  <data name="Scoring Level by Player Competitive Level" xml:space="preserve">
+	  <value>Grglrglmrg Rglmrgl blgrl Murglargrl Grrrmrrglmrg Rglmrgl</value>
+  </data>
+  <data name="Player Levels" xml:space="preserve">
+	  <value>Murglargrl Rulg</value>
+  </data>
+  <data name="For CoOps, scoring level is simply the lowest level player who's been able to pass the chart." xml:space="preserve">
+	  <value>Mrlgrgl Mrrglurgrgl, grglrglmrg rglmrgl argl grarrrglblub mrgl lrglrgl rglmrgl murglargrl argl brglgl blgrlmrrrglrgl rgl brglurg mrgl mrglrgl.</value>
+  </data>
+  <data name="This isn't perfect, but until I have more data other algorithms haven't been successful at projecting CoOps onto difficulty levels" xml:space="preserve">
+	  <value>Mrglrgl glrglmrlg mrglub, blubgl urglrgl Mrg magrgl mrrglrgl glubglrgl argrgl mrrglglubrgl blgrlgrglgrrr brglgl mglalrgl argl mrlgmrrr Mrrglurgrgl mrgl grlgrgl rulg</value>
+  </data>
+  <data name="No one has passed this CoOp yet so no level is assigned." xml:space="preserve">
+	  <value>Grrrgl mrg magrgl brglurgrgl mrglrgl Mrrglurg rrglrulglrgl mogrl grrrgl rglmrgl argl brglrulgmurglblub.</value>
+  </data>
+  <data name="This gives this chart a scoring level of: X" xml:space="preserve">
+	  <value>Mrglrgl rulgmrgl mrglrgl mrglrgl mrg grglrglmrg rglmrgl glub: {0}</value>
+	  <comment>{0} = lowest passing player's competitive level (2 decimals).</comment>
+  </data>
+  <data name="Best Attempts" xml:space="preserve">
+	  <value>Mrrglub Lrglglargurgblgrlrgl</value>
+  </data>
+  <data name="XX Progress" xml:space="preserve">
+	  <value>XX Mrrglrglmrg</value>
+  </data>
+  <data name="Share Your Progress Page" xml:space="preserve">
+	  <value>Mrrgla Murlgrgl Mrrglrglmrg Murgbagl</value>
+  </data>
+  <data name="Overview" xml:space="preserve">
+	  <value>Urgmrgl</value>
+  </data>
+  <data name="As" xml:space="preserve">
+	  <value>Argl</value>
+	  <comment>Plural of letter grade A — column header counting A grades.</comment>
+  </data>
+  <data name="Ss" xml:space="preserve">
+	  <value>SS</value>
+	  <comment>Plural of letter grade S.</comment>
+  </data>
+  <data name="SSs" xml:space="preserve">
+	  <value>SSS</value>
+	  <comment>Plural of letter grade SS.</comment>
+  </data>
+  <data name="SSSs" xml:space="preserve">
+	  <value>Murgargl</value>
+	  <comment>Plural of letter grade SSS.</comment>
+  </data>
+  <data name="Passed" xml:space="preserve">
+	  <value>Brglurgrgl</value>
+  </data>
+  <data name="Unpassed" xml:space="preserve">
+	  <value>Grrrbrglurg</value>
+  </data>
+  <data name="Overall Letters" xml:space="preserve">
+	  <value>Murglrgl Lrglarglrgl</value>
+  </data>
+  <data name="Overall Passes" xml:space="preserve">
+	  <value>Murglrgl Brglurgrgl</value>
+  </data>
+  <data name="Difficulty Letters" xml:space="preserve">
+	  <value>Grlgrgl Lrglarglrgl</value>
+  </data>
+  <data name="Difficulty Passes" xml:space="preserve">
+	  <value>Grlgrgl Brglurgrgl</value>
+  </data>
+  <data name="Share Url" xml:space="preserve">
+	  <value>Mrrgla URL</value>
+  </data>
+  <data name="Copied to clipboard!" xml:space="preserve">
+	  <value>Blubrgl rgl glubmrrgl!</value>
+  </data>
+  <data name="Ungraded" xml:space="preserve">
+	  <value>Glrglgrrrlrgl</value>
+  </data>
+  <data name="Pass" xml:space="preserve">
+	  <value>Brglurg</value>
+  </data>
+  <data name="Difficulty Progress" xml:space="preserve">
+	  <value>Grlgrgl Mrrglrglmrg</value>
+  </data>
+  <data name="Passes" xml:space="preserve">
+	  <value>Brglurgrgl</value>
+  </data>
+  <data name="Min Score" xml:space="preserve">
+	  <value>Lrgl Grglrgl</value>
+  </data>
+  <data name="Avg Score" xml:space="preserve">
+	  <value>Lurglrglprgl Grglrgl</value>
+  </data>
+  <data name="Max Score" xml:space="preserve">
+	  <value>Mrrrgl Grglrgl</value>
+  </data>
+  <data name="Avg Plate" xml:space="preserve">
+	  <value>Lurglrglprgl Blgrlmrg</value>
+  </data>
+  <data name="Passes By Level" xml:space="preserve">
+	  <value>Brglurgrgl Blgrl Rglmrgl</value>
+  </data>
+  <data name="Remaining" xml:space="preserve">
+	  <value>Mrrglubgrl</value>
+  </data>
+  <data name="Score Distribution Lines" xml:space="preserve">
+	  <value>Grglrgl Glubmrrglrgl Lrglrgl</value>
+  </data>
+  <data name="Score Distribution" xml:space="preserve">
+	  <value>Grglrgl Glubmrrglrgl</value>
+  </data>
+  <data name="Min" xml:space="preserve">
+	  <value>Lrgl</value>
+  </data>
+  <data name="Max" xml:space="preserve">
+	  <value>Mrrrgl</value>
+  </data>
+  <data name="Singles vs Doubles" xml:space="preserve">
+	  <value>Mrglargrlrgl rulg Argrlargl</value>
+  </data>
+  <data name="Score Rankings" xml:space="preserve">
+	  <value>Grglrgl Grglarglrglrgl</value>
+  </data>
+  <data name="Scoring Rankings" xml:space="preserve">
+	  <value>Grglrglmrg Grglarglrglrgl</value>
+  </data>
+  <data name="Score Rankings (the colored scores) are based on comparisons to similarly skilled players." xml:space="preserve">
+	  <value>Grglrgl Grglarglrglrgl (mrgl argrlglar grglrglrgl) argrlg grarrgl urg murglplglargrlrgrl rgl rulggurggrgl brglmrogl murglargrlrgl.</value>
+  </data>
+  <data name="The higher percent of players in your range that you perform better than, the better the color:" xml:space="preserve">
+	  <value>Mrgl argargrl mrrglargl glub murglargrlrgl murg murlgrgl murgargrl rglmrgl murlg mrrglbrglrgl urgmrrr grargrl, mrgl urgmrrr mrgl glarblub:</value>
+  </data>
+  <data name="100% (or everyone with a PG)" xml:space="preserve">
+	  <value>100% (argrlg grrrargrlargl grgl mrg PG)</value>
+	  <comment>Top color band on /ScoreRankings.</comment>
+  </data>
+  <data name="Similarly skilled players to you for Singles:" xml:space="preserve">
+	  <value>Rulggurggrgl brglmrogl murglargrlrgl rgl murlg mrlgrgl Mrglargrlrgl:</value>
+  </data>
+  <data name="Similarly skilled players to you for Doubles (CoOp charts use doubles competitive level):" xml:space="preserve">
+	  <value>Rulggurggrgl brglmrogl murglargrlrgl rgl murlg mrlgrgl Argrlargl (Mrrglurg mrglrglrgl urgmrg argrlargl grrrmrrglmrg rglmrgl):</value>
+  </data>
+  <data name="Active Tournaments" xml:space="preserve">
+	  <value>Urgmrrgl Murggrglrgl</value>
+  </data>
+  <data name="Upcoming Tournaments" xml:space="preserve">
+	  <value>Murgargrl Murggrglrgl</value>
+  </data>
+  <data name="Previous Tournaments" xml:space="preserve">
+	  <value>Blgrlargl Murggrglrgl</value>
+  </data>
+  <data name="Tournament" xml:space="preserve">
+	  <value>Murggrgl</value>
+  </data>
+  <data name="Start Date" xml:space="preserve">
+	  <value>Start Urgll</value>
+  </data>
+  <data name="End Date" xml:space="preserve">
+	  <value>Glubargl Urgll</value>
+  </data>
+  <data name="Location" xml:space="preserve">
+	  <value>Urgblgrl</value>
+  </data>
+  <data name="Always" xml:space="preserve">
+	  <value>Mrglrglrgl</value>
+	  <comment>Fallback for tournament StartDate when not set.</comment>
+  </data>
+  <data name="Never" xml:space="preserve">
+	  <value>Grrrglrgl</value>
+	  <comment>Fallback for tournament EndDate when not set.</comment>
+  </data>
+  <data name="Start Date: X" xml:space="preserve">
+	  <value>Start Urgll: {0}</value>
+	  <comment>{0} = formatted date string or the localized "Always" fallback.</comment>
+  </data>
+  <data name="End Date: X" xml:space="preserve">
+	  <value>Glubargl Urgll: {0}</value>
+	  <comment>{0} = formatted date string or the localized "Never" fallback.</comment>
+  </data>
+  <data name="Players have X to play charts. You are allowed to finish the song you are on when your time runs out. Your total score is total combined score of all charts you play." xml:space="preserve">
+	  <value>Murglargrlrgl magrgl {0} rgl plargl mrglrglrgl. Murlg argrlg glrglmglarrgl rgl mrrglubgl mrgl glurgl murlg argrlg urg arglrgl murlgrgl murgll mrrglglrgl grglglrglblgrlrgl. Murlgrgl glrglmrrgl grglrgl argl glrglmrrgl mrrglglub grglrgl glub glrgl mrglrglrgl murlg plargl.</value>
+	  <comment>{0} = MaxTime as h:mm.</comment>
+  </data>
+  <data name="Base Level Scores" xml:space="preserve">
+	  <value>Glubargl Rglmrgl Grglrglrgl</value>
+  </data>
+  <data name="Broken scores get a multiplier of X" xml:space="preserve">
+	  <value>Brglubrgl grglrglrgl gurg mrg mrrglrgrl glub {0}</value>
+	  <comment>{0} = StageBreakModifier value.</comment>
+  </data>
+  <data name="Songs will have score adjusted based on song length (treating 2 minutes as baseline)" xml:space="preserve">
+	  <value>Glurglrgl mrgl magrgl grglrgl prglmroglmrogl grarrgl urg glurgl lrglurg (lurgrulglrglglrgl 2 murgllrgl argl glubargl)</value>
+  </data>
+  <data name="are" xml:space="preserve">
+	  <value>argrlg</value>
+	  <comment>Used in "Repeated charts {are/are not} allowed." sentence on the rules dialog.</comment>
+  </data>
+  <data name="are not" xml:space="preserve">
+	  <value>argrlg grrrgl</value>
+	  <comment>Used in "Repeated charts {are/are not} allowed." sentence on the rules dialog.</comment>
+  </data>
+  <data name="Repeated charts X allowed." xml:space="preserve">
+	  <value>Lrglglrgl mrglrglrgl {0} glrglmglarrgl.</value>
+	  <comment>{0} = "are" or "are not" (also localized as separate keys).</comment>
+  </data>
+  <data name="X Brackets" xml:space="preserve">
+	  <value>{0} Blgrlmrglrgl</value>
+	  <comment>Page title on /Tournament/{id}/Admin. {0} = tournament name.</comment>
+  </data>
+  <data name="Sync Qualifier Leaderboard" xml:space="preserve">
+	  <value>Grglblub Glargrlmrg Arglmrgl</value>
+  </data>
+  <data name="New Player Name" xml:space="preserve">
+	  <value>Mrglgrgl Murglargrl Mrglar</value>
+  </data>
+  <data name="Add Player" xml:space="preserve">
+	  <value>Mrgl Murglargrl</value>
+  </data>
+  <data name="Player Name" xml:space="preserve">
+	  <value>Murglargrl Mrglar</value>
+  </data>
+  <data name="Seed" xml:space="preserve">
+	  <value>Murgrgl</value>
+  </data>
+  <data name="Discord Id" xml:space="preserve">
+	  <value>Discord ID</value>
+  </data>
+  <data name="Notes" xml:space="preserve">
+	  <value>Mrrglurgrgl</value>
+  </data>
+  <data name="Potential Conflict" xml:space="preserve">
+	  <value>Brglmrrr Grrrglar</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+	  <value>Grrrglub</value>
+  </data>
+  <data name="Permissions" xml:space="preserve">
+	  <value>Argrglrgl</value>
+  </data>
+  <data name="Players (Paste UserId from Account Page if not Public)" xml:space="preserve">
+	  <value>Murglargrlrgl (Prargl UserId blgrl Mrrglargrl Murgbagl arglgl grrrgl Arglmrrgl)</value>
+  </data>
+  <data name="Tournament Role" xml:space="preserve">
+	  <value>Murggrgl Rglurg</value>
+  </data>
+  <data name="Machines" xml:space="preserve">
+	  <value>Murggrgrlrgl</value>
+  </data>
+  <data name="Machine Name" xml:space="preserve">
+	  <value>Murggrgrl Mrglar</value>
+  </data>
+  <data name="Is Warmup" xml:space="preserve">
+	  <value>Argl Blgrl</value>
+  </data>
+  <data name="Priority" xml:space="preserve">
+	  <value>Blgrlrgrlgurg</value>
+  </data>
+  <data name="Player added" xml:space="preserve">
+	  <value>Murglargrl mrglrgl</value>
+  </data>
+  <data name="This user does not exist. Double check the User Id" xml:space="preserve">
+	  <value>Mrglrgl murglar mrgrgl grrrgl mrrglgrar. Murgrgrl grglarglglar mrgl Murglar ID</value>
+  </data>
+  <data name="Players synced" xml:space="preserve">
+	  <value>Murglargrlrgl grar</value>
+  </data>
+  <data name="Record Session" xml:space="preserve">
+	  <value>Rglurg Murgmrrgl</value>
+  </data>
+  <data name="Test Scores" xml:space="preserve">
+	  <value>Grrgl Grglrglrgl</value>
+  </data>
+  <data name="Show Extra Info" xml:space="preserve">
+	  <value>Urgmrl Argargrl Mrgurgl</value>
+  </data>
+  <data name="Difficulty Range" xml:space="preserve">
+	  <value>Grlgrgl Murgargrl</value>
+  </data>
+  <data name="Average Difficulty" xml:space="preserve">
+	  <value>Mrrglmrg Grlgrgl</value>
+  </data>
+  <data name="Total Chart Bonus" xml:space="preserve">
+	  <value>Glrglmrrgl Mrglrgl Glubmrg</value>
+  </data>
+  <data name="Pass Rate" xml:space="preserve">
+	  <value>Brglurg Rrglrgl</value>
+  </data>
+  <data name="Average PPS" xml:space="preserve">
+	  <value>Mrrglmrg PPS</value>
+  </data>
+  <data name="Rest Time" xml:space="preserve">
+	  <value>Grrr Murgll</value>
+  </data>
+  <data name="Verification" xml:space="preserve">
+	  <value>Grglblub</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+	  <value>Arglmrg</value>
+  </data>
+  <data name="X Charts" xml:space="preserve">
+	  <value>{0} Mrglrglrgl</value>
+	  <comment>{0} = chart count integer. Button label on /Tournament/Stamina/{id}.</comment>
+  </data>
+  <data name="In Person" xml:space="preserve">
+	  <value>Murg Murglar</value>
+  </data>
+  <data name="Estimated Point Gain Timeline" xml:space="preserve">
+	  <value>Mrrglmurg Glubgrgl Glorgrgl Murgllglrgl</value>
+  </data>
+  <data name="Points Per Second" xml:space="preserve">
+	  <value>Glubgrglrgl Grgl Murgll</value>
+  </data>
+  <data name="Chart Statistics" xml:space="preserve">
+	  <value>Mrglrgl Grglubgrlrgl</value>
+  </data>
+  <data name="Play Count" xml:space="preserve">
+	  <value>Plargl Grglrgl</value>
+  </data>
+  <data name="Best Score" xml:space="preserve">
+	  <value>Mrrglub Grglrgl</value>
+  </data>
+  <data name="X Plays" xml:space="preserve">
+	  <value>{0} Plarglrgl</value>
+	  <comment>{0} = play count integer.</comment>
+  </data>
+  <data name="Stamina Session Builder" xml:space="preserve">
+	  <value>Glubblgrlglrgl Murgmrrgl Blgrlglrgl</value>
+  </data>
+  <data name="Tournament Settings" xml:space="preserve">
+	  <value>Murggrgl Arglrglrgl</value>
+  </data>
+  <data name="PreBuilt Tournament Configuration" xml:space="preserve">
+	  <value>Glararglurgprgl Murggrgl Grglubargl</value>
+  </data>
+  <data name="Default" xml:space="preserve">
+	  <value>Mrrglub</value>
+  </data>
+  <data name="Levels" xml:space="preserve">
+	  <value>Rulg</value>
+  </data>
+  <data name="Adjust Scores to Song Duration (uses 2 minutes as average chart duration)" xml:space="preserve">
+	  <value>Glrglmrg Grglrglrgl rgl Glurgl Murgllrgl (urgmrgrgl 2 murgllrgl argl mrrglmrg mrglrgl murgllrgl)</value>
+  </data>
+  <data name="Continous Modifier Scale (modifier increments between letter grades)" xml:space="preserve">
+	  <value>Prglgurg Mrrglblub Grarrgl (mrrglblub arglglorgglrgl murggrl lrglargl grglarglrgl)</value>
+	  <comment>Source spelling preserved verbatim ("Continous" rather than "Continuous").</comment>
+  </data>
+  <data name="Perfect Score Modifier (Acts as a letter grade beyond SSS+)" xml:space="preserve">
+	  <value>Mrglub Grglrgl Mrrglblub (Mrglplgl argl mrg lrglargl grglargl urgmrrr SSS+)</value>
+  </data>
+  <data name="Minimum Score" xml:space="preserve">
+	  <value>Lrgl Grglrgl</value>
+  </data>
+  <data name="Input Json" xml:space="preserve">
+	  <value>Murggrgl JSON</value>
+  </data>
+  <data name="Set Charts" xml:space="preserve">
+	  <value>Argl Mrglrglrgl</value>
+  </data>
+  <data name="Extra Settings" xml:space="preserve">
+	  <value>Argargrl Arglrglrgl</value>
+  </data>
+  <data name="Allow Repeats" xml:space="preserve">
+	  <value>Argrgl Blgrlblubargrl</value>
+  </data>
+  <data name="Stage Break Modifier" xml:space="preserve">
+	  <value>Grglargl Brglub Mrrglblub</value>
+  </data>
+  <data name="Session Duration (Minutes)" xml:space="preserve">
+	  <value>Murgmrrgl Murgllrgl (Murgllrgl)</value>
+  </data>
+  <data name="Custom Scoring Formula" xml:space="preserve">
+	  <value>Glrgl Grglrglmrg Mrrglargl</value>
+  </data>
+  <data name="Admin Settings" xml:space="preserve">
+	  <value>Grglglubgrar Arglrglrgl</value>
+  </data>
+  <data name="Tournament Dates (EST)" xml:space="preserve">
+	  <value>Murggrgl Urgllrgl (EST)</value>
+  </data>
+  <data name="Tournament Name" xml:space="preserve">
+	  <value>Murggrgl Mrglar</value>
+  </data>
+  <data name="Test With Player Data" xml:space="preserve">
+	  <value>Grrgl Grgl Murglargrl Glubglrgl</value>
+  </data>
+  <data name="Import Your Phoenix Scores" xml:space="preserve">
+	  <value>Murgmrg Murlgrgl Phoenix Grglrglrgl</value>
+  </data>
+  <data name="Hide Record-less Charts" xml:space="preserve">
+	  <value>Glubgrl Rglurg-lrrgl Mrglrglrgl</value>
+  </data>
+  <data name="Hide Zero Scoring Charts" xml:space="preserve">
+	  <value>Glubgrl Grrrrgl Grglrglmrg Mrglrglrgl</value>
+  </data>
+  <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
+	  <value>Murglargrl Rgl Grrgl (Mrrrgl Brgl Argl Rgl Arglmrrgl)</value>
+  </data>
+  <data name="Effective Level" xml:space="preserve">
+	  <value>Grglargl Rglmrgl</value>
+  </data>
+  <data name="Your Score" xml:space="preserve">
+	  <value>Murlgrgl Grglrgl</value>
+  </data>
+  <data name="Points Pre-Score" xml:space="preserve">
+	  <value>Glubgrglrgl Gurggrrrrgl-Grglrgl</value>
+  </data>
+  <data name="Points Per Second Pre-Score" xml:space="preserve">
+	  <value>Glubgrglrgl Grgl Murgll Gurggrrrrgl-Grglrgl</value>
+  </data>
+  <data name="Your Points" xml:space="preserve">
+	  <value>Murlgrgl Glubgrglrgl</value>
+  </data>
+  <data name="Your Points per Second" xml:space="preserve">
+	  <value>Murlgrgl Glubgrglrgl grgl Murgll</value>
+  </data>
+  <data name="Example Set Builder" xml:space="preserve">
+	  <value>Mrglargrl Argl Blgrlglrgl</value>
+  </data>
+  <data name="Seconds of Rest Per Chart" xml:space="preserve">
+	  <value>Murgllrgl glub Grrr Grgl Mrglrgl</value>
+  </data>
+  <data name="Build Session" xml:space="preserve">
+	  <value>Blgrlgl Murgmrrgl</value>
+  </data>
+  <data name="Score: X" xml:space="preserve">
+	  <value>Grglrgl: {0}</value>
+	  <comment>{0} = total session score integer.</comment>
+  </data>
+  <data name="Total Charts: X" xml:space="preserve">
+	  <value>Glrglmrrgl Mrglrglrgl: {0}</value>
+	  <comment>{0} = chart count integer.</comment>
+  </data>
+  <data name="Rest Time Per Chart: X" xml:space="preserve">
+	  <value>Grrr Murgll Grgl Mrglrgl: {0}</value>
+	  <comment>{0} = formatted m:ss timespan.</comment>
+  </data>
+  <data name="Duration" xml:space="preserve">
+	  <value>Murgllrgl</value>
+  </data>
+  <data name="Chart Score" xml:space="preserve">
+	  <value>Mrglrgl Grglrgl</value>
+  </data>
+  <data name="Session Score" xml:space="preserve">
+	  <value>Murgmrrgl Grglrgl</value>
+  </data>
+  <data name="Couldn't parse JSON" xml:space="preserve">
+	  <value>Murgllurgrgl prargl JSON</value>
+  </data>
+  <data name="PIU Tier List" xml:space="preserve">
+	  <value>PIU Rglgrgl Glrglmrg</value>
+  </data>
+  <data name="Category" xml:space="preserve">
+	  <value>Glargrl</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+	  <value>Mrglargrl</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+	  <value>Mrrglrglrgl</value>
+  </data>
+  <data name="Community Completion" xml:space="preserve">
+	  <value>Murlgrgl Grglrglmrg</value>
+  </data>
+  <data name="Completion" xml:space="preserve">
+	  <value>Grglrglmrg</value>
+  </data>
+  <data name="Competitive Level" xml:space="preserve">
+	  <value>Grrrmrrglmrg Rglmrgl</value>
+  </data>
+  <data name="All" xml:space="preserve">
+	  <value>Glrgl</value>
+  </data>
+  <data name="Competitive Level: X" xml:space="preserve">
+	  <value>Grrrmrrglmrg Rglmrgl: {0}</value>
+	  <comment>{0} = competitive level (5 decimals).</comment>
+  </data>
+  <data name="Min Level" xml:space="preserve">
+	  <value>Lrgl Rglmrgl</value>
+  </data>
+  <data name="Max Level" xml:space="preserve">
+	  <value>Mrrrgl Rglmrgl</value>
+  </data>
+  <data name="Show Scoreless" xml:space="preserve">
+	  <value>Urgmrl Grrrgrglrgl</value>
+  </data>
+  <data name="Show Top Only" xml:space="preserve">
+	  <value>Urgmrl Mrrrgl Mglrgl</value>
+  </data>
+  <data name="My Relative Difficulty" xml:space="preserve">
+	  <value>Mgrgl Murgarglrgl Grlgrgl</value>
+  </data>
+  <data name="Scoring Difficulty" xml:space="preserve">
+	  <value>Grglrglmrg Grlgrgl</value>
+  </data>
+  <data name="PIUGame Leaderboard Difficulty" xml:space="preserve">
+	  <value>PIUGame Arglmrgl Grlgrgl</value>
+  </data>
+  <data name="Weekly Charts" xml:space="preserve">
+	  <value>Murgllgrglrgl Mrglrglrgl</value>
+  </data>
+  <data name="Current" xml:space="preserve">
+	  <value>Murgargl</value>
+  </data>
+  <data name="Show Only Suggested Charts" xml:space="preserve">
+	  <value>Urgmrl Mglrgl Mrrglurg Mrglrglrgl</value>
+  </data>
+  <data name="Monthly Leaderboard" xml:space="preserve">
+	  <value>Murgllargl Arglmrgl</value>
+  </data>
+  <data name="Road to BITE (Monthly Leaderboard July 8th - August 4th)" xml:space="preserve">
+	  <value>Glubrulgblub rgl BITE (Murgllargl Arglmrgl Rulg 8rglrgrlplgl - Mrrrbluburg 4rglrgrlplgl)</value>
+	  <comment>Date-window heading used pre-BITE; specific to a fixed annual event window.</comment>
+  </data>
+  <data name="Week X - Top Y Charts" xml:space="preserve">
+	  <value>Murgllgrgl {0} - Mrrrgl {1} Mrglrglrgl</value>
+	  <comment>{0} = week number, {1} = top-N count (week*4).</comment>
+  </data>
+  <data name="Leaderboard Type" xml:space="preserve">
+	  <value>Arglmrgl Rgrgl</value>
+  </data>
+  <data name="Combined" xml:space="preserve">
+	  <value>Mrrglglub</value>
+  </data>
+  <data name="Co-Op" xml:space="preserve">
+	  <value>Lrglarglargrlrgl-Blubargrlgrrr</value>
+	  <comment>Used as a select-item label on /WeeklyCharts. Distinct from the existing "CoOp" key (no hyphen) used elsewhere — both spellings appear in source verbatim.</comment>
+  </data>
+  <data name="What Should I Play" xml:space="preserve">
+	  <value>Glubglubrulg Mrlgrgl Mrg Plargl</value>
+	  <comment>Page title (no question mark in source).</comment>
+  </data>
+  <data name="What Should I Play?" xml:space="preserve">
+	  <value>Glubglubrulg Mrlgrgl Mrg Plargl?</value>
+	  <comment>h3 header on the same page (with question mark in source).</comment>
+  </data>
+  <data name="See Leaderboards" xml:space="preserve">
+	  <value>Urg Arglmrglrgl</value>
+  </data>
+  <data name="Top 50 X" xml:space="preserve">
+	  <value>Mrrrgl 50 {0}</value>
+	  <comment>{0} = chart type (e.g. "Singles" / "Doubles"). Tooltip on the crown icon for top-50 charts.</comment>
+  </data>
+  <data name="Stats" xml:space="preserve">
+	  <value>Grglubgrlrgl</value>
+  </data>
+  <data name="Singles Level" xml:space="preserve">
+	  <value>Mrglargrlrgl Rglmrgl</value>
+  </data>
+  <data name="Doubles Level" xml:space="preserve">
+	  <value>Argrlargl Rglmrgl</value>
+  </data>
+  <data name="Good Suggestion" xml:space="preserve">
+	  <value>Lurgarglblub Mrrglurgrgl</value>
+  </data>
+  <data name="Bad Suggestion" xml:space="preserve">
+	  <value>Grrrgl Mrrglurgrgl</value>
+  </data>
+  <data name="Reason" xml:space="preserve">
+	  <value>Mrrglargl</value>
+  </data>
+  <data name="Doesn't Match My Personal Skills" xml:space="preserve">
+	  <value>Arglglubrgl Murgblubmrogl Mgrgl Murglargrl Glrglurgrgl</value>
+  </data>
+  <data name="I Don't Like The Chart" xml:space="preserve">
+	  <value>Mrg Prglprglblgrl Lrglmurgl Mrgl Mrglrgl</value>
+  </data>
+  <data name="Not Relevant to Category" xml:space="preserve">
+	  <value>Grrrgl Plglgrarrgl rgl Glargrl</value>
+  </data>
+  <data name="I Just Want to Hide The Chart" xml:space="preserve">
+	  <value>Mrg Gurglrgl Plgllrglplglrgl rgl Glubgrl Mrgl Mrglrgl</value>
+  </data>
+  <data name="The Category Isn't Interesting to Me'" xml:space="preserve">
+	  <value>Mrgl Glargrl Glrglmrlg Murglmroglplgl rgl Mrgmrg'</value>
+	  <comment>Source has a stray trailing apostrophe — preserved verbatim.</comment>
+  </data>
+  <data name="Other" xml:space="preserve">
+	  <value>Argrgl</value>
+  </data>
+  <data name="Additional Comments" xml:space="preserve">
+	  <value>Prglglar Mrrglurgrgl</value>
+  </data>
+  <data name="Hide Chart for this Category" xml:space="preserve">
+	  <value>Glubgrl Mrglrgl mrlgrgl mrglrgl Glargrl</value>
+  </data>
+  <data name="Added to ToDo List!" xml:space="preserve">
+	  <value>Mrglrgl rgl Mrgmrrgl Glrglmrg!</value>
+  </data>
+  <data name="Removed from ToDo List!" xml:space="preserve">
+	  <value>Argrl blgrl Mrgmrrgl Glrglmrg!</value>
+  </data>
+  <data name="Chart Details" xml:space="preserve">
+	  <value>Mrglrgl Glargrlrgl</value>
+  </data>
+  <data name="Step Artist: X" xml:space="preserve">
+	  <value>Rglmrgl Glargrl: {0}</value>
+	  <comment>{0} = step artist name (data).</comment>
+  </data>
+  <data name="Note Count: X" xml:space="preserve">
+	  <value>Mrrglurg Grglrgl: {0}</value>
+	  <comment>{0} = note count integer.</comment>
+  </data>
+  <data name="Chart Difficulty by Letter Grade" xml:space="preserve">
+	  <value>Mrglrgl Grlgrgl blgrl Lrglargl Grglargl</value>
+  </data>
+  <data name="Plate Distribution" xml:space="preserve">
+	  <value>Blgrlmrg Glubmrrglrgl</value>
+  </data>
+  <data name="Plate Breakdown" xml:space="preserve">
+	  <value>Blgrlmrg Mrrrmrglblub</value>
+  </data>
+  <data name="Plates" xml:space="preserve">
+	  <value>Blgrlmrgrgl</value>
+  </data>
+  <data name="Score Distribution By Player Level" xml:space="preserve">
+	  <value>Grglrgl Glubmrrglrgl Blgrl Murglargrl Rglmrgl</value>
+  </data>
+  <data name="Scores by Competitive Level" xml:space="preserve">
+	  <value>Grglrglrgl blgrl Grrrmrrglmrg Rglmrgl</value>
+  </data>
+  <data name="Passes by Competitive Level" xml:space="preserve">
+	  <value>Brglurgrgl blgrl Grrrmrrglmrg Rglmrgl</value>
+  </data>
+  <data name="Chart Leaderboard" xml:space="preserve">
+	  <value>Mrglrgl Arglmrgl</value>
   </data>
 </root>
