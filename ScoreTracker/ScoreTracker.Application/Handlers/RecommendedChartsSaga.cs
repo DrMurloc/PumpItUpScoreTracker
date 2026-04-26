@@ -25,11 +25,12 @@ namespace ScoreTracker.Application.Handlers
         private readonly IWeeklyTournamentRepository _weeklyTournament;
         private readonly IChartListRepository _chartList;
         private readonly IDateTimeOffsetAccessor _dateTime;
+        private readonly IRandomNumberGenerator _random;
 
         public RecommendedChartsSaga(IMediator mediator, ICurrentUserAccessor currentUser, IUserRepository users,
             IPlayerStatsRepository stats, IPhoenixRecordRepository scores, IChartBountyRepository bounties,
             IWeeklyTournamentRepository weeklyTournament, IChartListRepository chartList,
-            IDateTimeOffsetAccessor dateTime)
+            IDateTimeOffsetAccessor dateTime, IRandomNumberGenerator random)
         {
             _mediator = mediator;
             _currentUser = currentUser;
@@ -40,6 +41,7 @@ namespace ScoreTracker.Application.Handlers
             _weeklyTournament = weeklyTournament;
             _chartList = chartList;
             _dateTime = dateTime;
+            _random = random;
         }
 
         public async Task<IEnumerable<ChartRecommendation>> Handle(GetRecommendedChartsQuery request,
@@ -59,7 +61,6 @@ namespace ScoreTracker.Application.Handlers
                     g => (ISet<Guid>)g.Select(i => i.ChartId).Distinct().ToHashSet());
             var charts =
                 (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), cancellationToken)).ToDictionary(c => c.Id);
-            var random = new Random();
             return (await GetPushLevels(feedback, cancellationToken, titles, scores, request.ChartType, charts))
                 .Concat(await GetWeeklyCharts(cancellationToken, playerStats.SinglesCompetitiveLevel,
                     playerStats.DoublesCompetitiveLevel, request.LevelOffset, feedback, request.ChartType, charts))
@@ -139,7 +140,7 @@ namespace ScoreTracker.Application.Handlers
                     .ToHashSet();
 
             var cutoff = _dateTime.Now - TimeSpan.FromDays(30);
-            var random = new Random();
+            var random = _random;
             var now = _dateTime.Now;
 
             var skipped = ignoredChartIds.TryGetValue("Revisit Old Scores", out var r) ? r : new HashSet<Guid>();
@@ -162,7 +163,7 @@ namespace ScoreTracker.Application.Handlers
             CancellationToken cancellationToken)
         {
             var skipped = ignoredChartIds.TryGetValue("Improve Your Top 50", out var r) ? r : new HashSet<Guid>();
-            var random = new Random();
+            var random = _random;
             var result = Array.Empty<RecordedPhoenixScore>().AsEnumerable();
 
             if (chartType is null or ChartType.Single)
@@ -170,7 +171,7 @@ namespace ScoreTracker.Application.Handlers
                         new GetTop50CompetitiveQuery(_currentUser.User.Id, ChartType.Single),
                         cancellationToken)).Where(c => c.Score != null && c.Score < 1000000)
                     .Where(c => !skipped.Contains(c.ChartId))
-                    .OrderBy(c => random.Next())
+                    .OrderBy(c => random.Next(int.MaxValue))
                     .Take(chartType == ChartType.Single ? 6 : 3));
 
             if (chartType is null or ChartType.Double)
@@ -178,7 +179,7 @@ namespace ScoreTracker.Application.Handlers
                         new GetTop50CompetitiveQuery(_currentUser.User.Id, ChartType.Double),
                         cancellationToken)).Where(c => c.Score != null && c.Score < 1000000)
                     .Where(c => !skipped.Contains(c.ChartId))
-                    .OrderBy(c => random.Next())
+                    .OrderBy(c => random.Next(int.MaxValue))
                     .Take(chartType == ChartType.Double ? 6 : 3));
             return result
                 .Select(c => new ChartRecommendation("Improve Your Top 50", c.ChartId,
@@ -231,7 +232,7 @@ namespace ScoreTracker.Application.Handlers
 
             var myScores = scores
                 .ToDictionary(s => s.ChartId);
-            var random = new Random();
+            var random = _random;
             var chartOrder = (await GetApproachableCharts(cancellationToken, charts)).Where(id =>
                     chartsResults.ContainsKey(id)
                     && (!myScores.TryGetValue(id, out var score) || score.IsBroken))
@@ -249,14 +250,14 @@ namespace ScoreTracker.Application.Handlers
             IDictionary<string, ISet<Guid>> ignoredChartIds, CancellationToken cancellationToken,
             RecordedPhoenixScore[] scores, ChartType? chartType, IDictionary<Guid, Chart> charts)
         {
-            var random = new Random();
+            var random = _random;
             var ignoredCharts = ignoredChartIds.TryGetValue("Bounties", out var set) ? set : new HashSet<Guid>();
             var existingScores = scores.Where(s => s.Score != null).Select(s => s.ChartId).Distinct().ToHashSet();
             return (await _mediator.Send(new GetChartBountiesQuery(), cancellationToken)).Where(b =>
                     chartType == null || charts[b.ChartId].Type == chartType)
                 .OrderByDescending(b => b.Worth)
                 .Take(20)
-                .OrderBy(r => random.Next())
+                .OrderBy(r => random.Next(int.MaxValue))
                 .Take(5)
                 .Select(b => new ChartRecommendation("Bounties", b.ChartId,
                     "Charts that have low data present on the site", $"{b.Worth} Points"));
@@ -289,7 +290,7 @@ namespace ScoreTracker.Application.Handlers
                 ? cs
                 : new HashSet<Guid>();
             var result = new List<Guid>();
-            var random = new Random();
+            var random = _random;
             var reduction = chartOrder.Where(c => !myScores.TryGetValue(c, out var score) || score.IsBroken)
                 .Where(c => !skippedCharts.Contains(c) && charts.ContainsKey(c))
                 .ToArray();
@@ -299,14 +300,14 @@ namespace ScoreTracker.Application.Handlers
                 result.AddRange(reduction
                     .Where(c => charts[c].Type == ChartType.Single)
                     .Take(chartType == ChartType.Single ? 12 : 6)
-                    .OrderBy(_ => random.Next())
+                    .OrderBy(_ => random.Next(int.MaxValue))
                     .Take(chartType == ChartType.Single ? 6 : 3 + missingDoubles));
 
             if (chartType is null or ChartType.Double)
                 result.AddRange(reduction
                     .Where(c => charts[c].Type == ChartType.Double)
                     .Take(chartType == ChartType.Double ? 12 : 6)
-                    .OrderBy(_ => random.Next())
+                    .OrderBy(_ => random.Next(int.MaxValue))
                     .Take(chartType == ChartType.Double ? 6 : 3 + missingSingles));
             return result.Select(s => new ChartRecommendation($"{pushLevel.Title.Name}", s,
                 "Recommended Charts for achieving your next title"));
