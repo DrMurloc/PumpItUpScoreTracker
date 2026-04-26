@@ -1,4 +1,5 @@
 using MassTransit;
+using ScoreTracker.Application.Handlers;
 using ScoreTracker.Domain.Events;
 
 namespace ScoreTracker.Web.HostedServices;
@@ -32,4 +33,7 @@ public sealed class RecurringJobRunner
 
     public Task PublishStartLeaderboardImport() =>
         _bus.Publish(new StartLeaderboardImportEvent());
+
+    public Task PublishTryScheduleMoM() =>
+        _bus.Publish(new MarchOfMurlocsHandler.TryScheduleMoM());
 }
