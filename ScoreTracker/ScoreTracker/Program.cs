@@ -211,7 +211,7 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     ("update-weekly-charts",             r => r.PublishUpdateWeeklyCharts(),              "0 9 * * *"),  // 04:00 ET
     ("process-pass-tier-list",           r => r.PublishProcessPassTierList(),             "30 9 * * *"), // 04:30 ET
     ("calculate-chart-letter-difficulties", r => r.PublishCalculateChartLetterDifficulties(), "0 10 * * *"), // 05:00 ET
-    ("start-leaderboard-import",         r => r.PublishStartLeaderboardImport(),          "30 10 * * *") // 05:30 ET
+    ("start-leaderboard-import",         r => r.PublishStartLeaderboardImport(),          "30 10 * * 0") // Sundays 05:30 ET
 };
 if (builder.Configuration["PreventRecurringJobs"] == "true")
 {
