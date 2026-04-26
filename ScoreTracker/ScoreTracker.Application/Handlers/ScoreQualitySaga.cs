@@ -74,13 +74,19 @@ public sealed class ScoreQualitySaga :
     private async Task<IEnumerable<Guid>> GetComparablePlayers(ChartType chartType,
         CancellationToken cancellationToken)
     {
-        var myStats = await _playerStats.GetStats(_user.User.Id, cancellationToken);
-        var competitiveLevel = chartType == ChartType.Single
-            ? myStats.SinglesCompetitiveLevel
-            : myStats.DoublesCompetitiveLevel;
-
-        return await _playerStats.GetPlayersByCompetitiveRange(chartType, competitiveLevel,
-            .5, cancellationToken);
+        var userId = _user.User.Id;
+        return await _cache.GetOrCreateAsync(
+            $"{nameof(ScoreQualitySaga)}__{nameof(GetComparablePlayers)}__{userId}__{chartType}",
+            async o =>
+            {
+                o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
+                var myStats = await _playerStats.GetStats(userId, cancellationToken);
+                var competitiveLevel = chartType == ChartType.Single
+                    ? myStats.SinglesCompetitiveLevel
+                    : myStats.DoublesCompetitiveLevel;
+                return (await _playerStats.GetPlayersByCompetitiveRange(chartType, competitiveLevel,
+                    .5, cancellationToken)).ToArray().AsEnumerable();
+            }) ?? Array.Empty<Guid>();
     }
 
     private async Task<IDictionary<Guid, PhoenixScore[]>> GetPlayerScores(ChartType chartType,
