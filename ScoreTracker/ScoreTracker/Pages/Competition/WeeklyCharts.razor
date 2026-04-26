@@ -17,7 +17,7 @@
 @using System.Data.Common
 @using ScoreTracker.Web.Services.Contracts
 
-<PageTitle>Weekly Charts</PageTitle>
+<PageTitle>@L["Weekly Charts"]</PageTitle>
 
 
 <MudGrid>
@@ -36,7 +36,7 @@
     }
     <MudItem xs="6" sm="4">
         <MudSelect T="DateTimeOffset?" Value="_selectedWeek" ValueChanged="SetSelectedDate" Label=@L["Selected Week"] Clearable="true">
-            <MudSelectItem T="DateTimeOffset?" Value="null">Current</MudSelectItem>
+            <MudSelectItem T="DateTimeOffset?" Value="null">@L["Current"]</MudSelectItem>
             @foreach (var date in _pastDates.OrderByDescending(d => d))
             {
 
@@ -51,7 +51,7 @@
     <MudItem xs="6" sm="4">
         @if (_isLoggedIn && _showCompetitiveToggle && _selectedWeek == null)
         {
-            <MudSwitch T="bool" Color="Color.Primary" Label="Show Only Suggested Charts" Value="_showOnlyCompetitive" ValueChanged="v => SetShowOnlyCompetitive(v)"></MudSwitch>
+            <MudSwitch T="bool" Color="Color.Primary" Label=@L["Show Only Suggested Charts"] Value="_showOnlyCompetitive" ValueChanged="v => SetShowOnlyCompetitive(v)"></MudSwitch>
         }
 
     </MudItem>
@@ -103,22 +103,22 @@
 
 </MudGrid>
 <br/>
-<MudText Typo="Typo.h5">@(_isPastBite?"Monthly Leaderboard":"Road to BITE (Monthly Leaderboard July 8th - August 4th)")</MudText>
+<MudText Typo="Typo.h5">@(_isPastBite?L["Monthly Leaderboard"].Value:L["Road to BITE (Monthly Leaderboard July 8th - August 4th)"].Value)</MudText>
 @if (_selectedWeek == null)
 {
-    
-    <MudText Typo="Typo.subtitle1">Week @_currentWeekInMonth - Top @(_currentWeekInMonth*4) Charts</MudText>
+
+    <MudText Typo="Typo.subtitle1">@L["Week X - Top Y Charts", _currentWeekInMonth, _currentWeekInMonth*4]</MudText>
 }
 else if(_monthlyWeeks.Any())
 {
     <MudText Typo="Typo.subtitle1">@((_monthlyWeeks.Min() - TimeSpan.FromDays(7)).ToString("d")) - @(((_isCurrentMonth?DateTimeOffset.Now:(_monthlyWeeks.Max()-TimeSpan.FromDays(1))).ToString("d")))</MudText>
 }
 <br />
-<MudSelect T="ChartType?" Value="_chartType" ValueChanged="SetChartType" Disabled="_isLoading" Label="Leaderboard Type">
-    <MudSelectItem T="ChartType?" Value="null">Combined</MudSelectItem>
-    <MudSelectItem T="ChartType?" Value="ChartType.Single">Singles</MudSelectItem>
-    <MudSelectItem T="ChartType?" Value="ChartType.Double">Doubles</MudSelectItem>
-    <MudSelectItem T="ChartType?" Value="ChartType.CoOp">Co-Op</MudSelectItem>
+<MudSelect T="ChartType?" Value="_chartType" ValueChanged="SetChartType" Disabled="_isLoading" Label=@L["Leaderboard Type"]>
+    <MudSelectItem T="ChartType?" Value="null">@L["Combined"]</MudSelectItem>
+    <MudSelectItem T="ChartType?" Value="ChartType.Single">@L["Singles"]</MudSelectItem>
+    <MudSelectItem T="ChartType?" Value="ChartType.Double">@L["Doubles"]</MudSelectItem>
+    <MudSelectItem T="ChartType?" Value="ChartType.CoOp">@L["Co-Op"]</MudSelectItem>
 </MudSelect>
 <br/>
 <MudTable T="Guid" Items="_monthlyPlaces.OrderBy(kv => kv.Value).Select(kv=>kv.Key)" FixedHeader="true" Striped="true" Breakpoint="Breakpoint.None" Dense="true">
