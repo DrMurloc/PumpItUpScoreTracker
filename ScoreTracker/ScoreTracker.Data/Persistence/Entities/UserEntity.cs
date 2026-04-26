@@ -11,4 +11,6 @@ public sealed class UserEntity
     public string? GameTag { get; set; }
     [Required] public string ProfileImage { get; set; }
     public string? CountryName { get; set; }
+    [Required] public bool IsContentLocked { get; set; }
+    [Required] public DateTimeOffset ClaimsInvalidatedAt { get; set; }
 }

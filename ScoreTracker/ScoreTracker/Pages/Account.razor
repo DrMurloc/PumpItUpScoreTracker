@@ -26,7 +26,13 @@
                 <MudIconButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="CopyUserId" Icon="@Icons.Material.Filled.ContentCopy"></MudIconButton>
             </MudItem>
             <MudItem xs="12" sm="6">
-                <MudTextField T="string" Disabled="_isUpdatingUser" Label=@L["Username"] MaxLength="100" Value="@_name" ValueChanged="UpdateName"></MudTextField>
+                <MudTextField T="string"
+                              Disabled="_isUpdatingUser || _isContentLocked"
+                              Label=@L["Username"]
+                              MaxLength="100"
+                              Value="@_name"
+                              ValueChanged="UpdateName"
+                              HelperText="@(_isContentLocked ? L["Your account is content-locked. Message an admin if you have questions."].Value : null)"></MudTextField>
             </MudItem>
             <MudItem xs="12" sm="6">
                 <MudSelect T="string" Value="_countryName" ValueChanged="UpdateCountry" Label=@L["Country"] Clearable="true">
@@ -117,6 +123,7 @@
     private string _id = string.Empty;
     private string _name = string.Empty;
     private bool _isPublic = false;
+    private bool _isContentLocked = false;
     private bool _showPublicConfirmDialog = false;
     private bool _isUpdatingUser = false;
     private IEnumerable<CountryRecord> _countries = Array.Empty<CountryRecord>();
@@ -147,6 +154,7 @@
         _name = CurrentUser.User.Name;
         _countryName = CurrentUser.User.Country;
         _isPublic = CurrentUser.User.IsPublic;
+        _isContentLocked = CurrentUser.User.IsContentLocked;
         _apiToken = await Mediator.Send(new GetUserApiTokenQuery());
         _countries = (await Users.GetCountries()).OrderBy(c => c.Name);
     }

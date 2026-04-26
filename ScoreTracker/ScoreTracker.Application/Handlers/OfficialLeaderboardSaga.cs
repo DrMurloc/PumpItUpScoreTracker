@@ -232,7 +232,7 @@ namespace ScoreTracker.Application.Handlers
             var user = await _user.GetUser(userId, cancellationToken);
             await _user.SaveUser(
                 new User(userId, user.Name, user.IsPublic, accountData.AccountName, accountData.AvatarUrl,
-                    user.Country),
+                    user.Country, user.IsContentLocked, user.ClaimsInvalidatedAt),
                 cancellationToken);
 
             await _bus.Publish(new TitlesDetectedEvent(user.Id, accountData.Titles.Select(t => t.ToString())),

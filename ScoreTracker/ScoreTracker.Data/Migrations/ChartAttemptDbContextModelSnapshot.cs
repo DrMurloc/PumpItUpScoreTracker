@@ -1398,11 +1398,17 @@ namespace ScoreTracker.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset>("ClaimsInvalidatedAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("CountryName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("GameTag")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsContentLocked")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsPublic")
                         .HasColumnType("bit");

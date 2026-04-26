@@ -2,6 +2,7 @@
 using MediatR;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 
@@ -27,10 +28,15 @@ public sealed class UpdateUserHandler : IRequestHandler<UpdateUserCommand>
         var user = _currentUser.User;
         var existing = await _users.GetUser(user.Id, cancellationToken);
 
+        if ((existing?.IsContentLocked ?? false) && existing!.Name != request.newName)
+            throw new ContentLockedException();
+
         var newUser = new User(user.Id, request.newName, request.newIsPublic, existing?.GameTag,
             existing?.ProfileImage ??
             new Uri("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png", UriKind.Absolute),
-            request.newCountry);
+            request.newCountry,
+            existing?.IsContentLocked ?? false,
+            existing?.ClaimsInvalidatedAt ?? default);
         await _users.SaveUser(newUser, cancellationToken);
         await _bus.Publish(new UserUpdatedEvent(user.Id, user.Country, user.IsPublic), cancellationToken);
     }

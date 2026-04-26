@@ -1896,4 +1896,46 @@
   <data name="X% of Y Comparable Players" xml:space="preserve">
     <value>{0}% de {1} jogadores comparáveis</value>
   </data>
+  <data name="Content Lock" xml:space="preserve">
+    <value>Bloqueio de Conteúdo</value>
+  </data>
+  <data name="Search User (Name or UserId)" xml:space="preserve">
+    <value>Pesquisar Usuário (Nome ou UserId)</value>
+  </data>
+  <data name="Current Username" xml:space="preserve">
+    <value>Nome de Usuário Atual</value>
+  </data>
+  <data name="Lock Status" xml:space="preserve">
+    <value>Status do Bloqueio</value>
+  </data>
+  <data name="Locked" xml:space="preserve">
+    <value>Bloqueado</value>
+  </data>
+  <data name="Unlocked" xml:space="preserve">
+    <value>Desbloqueado</value>
+  </data>
+  <data name="Lock User" xml:space="preserve">
+    <value>Bloquear Usuário</value>
+  </data>
+  <data name="Unlock User" xml:space="preserve">
+    <value>Desbloquear Usuário</value>
+  </data>
+  <data name="User locked" xml:space="preserve">
+    <value>Usuário bloqueado</value>
+  </data>
+  <data name="User unlocked" xml:space="preserve">
+    <value>Usuário desbloqueado</value>
+  </data>
+  <data name="Locking will set this user's username to their GameTag." xml:space="preserve">
+    <value>O bloqueio definirá o nome de usuário deste usuário para sua GameTag.</value>
+  </data>
+  <data name="This user has no GameTag. Choose a username to assign before locking." xml:space="preserve">
+    <value>Este usuário não tem GameTag. Escolha um nome de usuário para atribuir antes de bloquear.</value>
+  </data>
+  <data name="New Username" xml:space="preserve">
+    <value>Novo Nome de Usuário</value>
+  </data>
+  <data name="Your account is content-locked. Message an admin if you have questions." xml:space="preserve">
+    <value>Sua conta está com bloqueio de conteúdo. Envie uma mensagem a um administrador em caso de dúvidas.</value>
+  </data>
 </root>
