@@ -1945,4 +1945,46 @@
   <data name="Chart Leaderboard" xml:space="preserve">
 	  <value>Chart Leaderboard</value>
   </data>
+  <data name="Content Lock" xml:space="preserve">
+	  <value>Content Lock</value>
+  </data>
+  <data name="Search User (Name or UserId)" xml:space="preserve">
+	  <value>Search User (Name or UserId)</value>
+  </data>
+  <data name="Current Username" xml:space="preserve">
+	  <value>Current Username</value>
+  </data>
+  <data name="Lock Status" xml:space="preserve">
+	  <value>Lock Status</value>
+  </data>
+  <data name="Locked" xml:space="preserve">
+	  <value>Locked</value>
+  </data>
+  <data name="Unlocked" xml:space="preserve">
+	  <value>Unlocked</value>
+  </data>
+  <data name="Lock User" xml:space="preserve">
+	  <value>Lock User</value>
+  </data>
+  <data name="Unlock User" xml:space="preserve">
+	  <value>Unlock User</value>
+  </data>
+  <data name="User locked" xml:space="preserve">
+	  <value>User locked</value>
+  </data>
+  <data name="User unlocked" xml:space="preserve">
+	  <value>User unlocked</value>
+  </data>
+  <data name="Locking will set this user's username to their GameTag." xml:space="preserve">
+	  <value>Locking will set this user's username to their GameTag.</value>
+  </data>
+  <data name="This user has no GameTag. Choose a username to assign before locking." xml:space="preserve">
+	  <value>This user has no GameTag. Choose a username to assign before locking.</value>
+  </data>
+  <data name="New Username" xml:space="preserve">
+	  <value>New Username</value>
+  </data>
+  <data name="Your account is content-locked. Message an admin if you have questions." xml:space="preserve">
+	  <value>Your account is content-locked. Message an admin if you have questions.</value>
+  </data>
 </root>

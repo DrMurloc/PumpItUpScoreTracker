@@ -47,7 +47,9 @@ public static class UserExtensions
             new Claim(ScoreTrackerClaimTypes.IsPublic, user.IsPublic.ToString()),
             new Claim(ScoreTrackerClaimTypes.ProfileImage, user.ProfileImage.ToString()),
             new Claim(ScoreTrackerClaimTypes.GameTag, user.GameTag?.ToString() ?? ""),
-            new Claim(ScoreTrackerClaimTypes.Country, user.Country?.ToString() ?? "")
+            new Claim(ScoreTrackerClaimTypes.Country, user.Country?.ToString() ?? ""),
+            new Claim(ScoreTrackerClaimTypes.IsContentLocked, user.IsContentLocked.ToString()),
+            new Claim(ScoreTrackerClaimTypes.ClaimsIssuedAt, DateTimeOffset.UtcNow.ToString("O"))
         }, "External"));
     }
 
@@ -67,6 +69,8 @@ public static class UserExtensions
                     UriKind.Absolute),
             string.IsNullOrWhiteSpace(claimsPrincipal.FindFirstValue(ScoreTrackerClaimTypes.Country))
                 ? null
-                : claimsPrincipal.FindFirstValue(ScoreTrackerClaimTypes.Country));
+                : claimsPrincipal.FindFirstValue(ScoreTrackerClaimTypes.Country),
+            bool.TryParse(claimsPrincipal.FindFirstValue(ScoreTrackerClaimTypes.IsContentLocked), out var locked)
+            && locked);
     }
 }

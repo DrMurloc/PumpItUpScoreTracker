@@ -35,7 +35,9 @@ public sealed class EFUserRepository : IUserRepository
                 IsPublic = user.IsPublic,
                 GameTag = user.GameTag,
                 ProfileImage = user.ProfileImage.ToString(),
-                CountryName = user.Country
+                CountryName = user.Country,
+                IsContentLocked = user.IsContentLocked,
+                ClaimsInvalidatedAt = user.ClaimsInvalidatedAt
             }, cancellationToken);
         }
         else
@@ -45,9 +47,28 @@ public sealed class EFUserRepository : IUserRepository
             existingUser.GameTag = user.GameTag;
             existingUser.CountryName = user.Country;
             existingUser.ProfileImage = user.ProfileImage.ToString();
+            existingUser.IsContentLocked = user.IsContentLocked;
+            existingUser.ClaimsInvalidatedAt = user.ClaimsInvalidatedAt;
         }
 
         await database.SaveChangesAsync(cancellationToken);
+        _cache.Remove(ClaimsInvalidatedAtCacheKey(user.Id));
+    }
+
+    private static string ClaimsInvalidatedAtCacheKey(Guid userId) =>
+        $"{nameof(EFUserRepository)}_ClaimsInvalidatedAt_{userId}";
+
+    public async Task<DateTimeOffset> GetClaimsInvalidatedAt(Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _cache.GetOrCreateAsync(ClaimsInvalidatedAtCacheKey(userId), async cache =>
+        {
+            cache.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30);
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            return await database.User.Where(u => u.Id == userId)
+                .Select(u => (DateTimeOffset?)u.ClaimsInvalidatedAt)
+                .SingleOrDefaultAsync(cancellationToken) ?? DateTimeOffset.MinValue;
+        });
     }
 
     private string FeedbackCache(Guid userId)
@@ -108,7 +129,8 @@ public sealed class EFUserRepository : IUserRepository
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return await database.User.Where(u => u.Name.Contains(searchText))
             .OrderBy(u => u.Name)
-            .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName))
+            .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName,
+                u.IsContentLocked, u.ClaimsInvalidatedAt))
             .ToArrayAsync(cancellationToken);
     }
 
@@ -117,7 +139,8 @@ public sealed class EFUserRepository : IUserRepository
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return await database.User.Where(u => u.Id == userId)
-            .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName))
+            .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName,
+                u.IsContentLocked, u.ClaimsInvalidatedAt))
             .SingleOrDefaultAsync(cancellationToken);
     }
 
@@ -126,7 +149,8 @@ public sealed class EFUserRepository : IUserRepository
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return await database.User.Where(u => userIds.Contains(u.Id))
-            .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName)
+            .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName,
+                u.IsContentLocked, u.ClaimsInvalidatedAt)
             ).ToArrayAsync(cancellationToken);
     }
 
@@ -138,7 +162,8 @@ public sealed class EFUserRepository : IUserRepository
                 join u in database.User on e.UserId equals u.Id
                 where e.LoginProvider == loginProviderName
                       && e.ExternalId == externalId
-                select new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName))
+                select new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName,
+                    u.IsContentLocked, u.ClaimsInvalidatedAt))
             .SingleOrDefaultAsync(cancellationToken);
     }
 

@@ -88,6 +88,24 @@ builder.Services.AddAuthentication("DefaultAuthentication")
         o.SlidingExpiration = true;
         o.ExpireTimeSpan = TimeSpan.FromDays(30);
         o.Cookie.MaxAge = o.ExpireTimeSpan;
+        o.Events.OnValidatePrincipal = async ctx =>
+        {
+            var userIdClaim = ctx.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdClaim, out var userId)) return;
+
+            var issuedAtClaim = ctx.Principal?.FindFirst(ScoreTrackerClaimTypes.ClaimsIssuedAt)?.Value;
+            var issuedAt = DateTimeOffset.TryParse(issuedAtClaim, out var parsed)
+                ? parsed
+                : DateTimeOffset.MinValue;
+
+            var users = ctx.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
+            var invalidatedAt = await users.GetClaimsInvalidatedAt(userId, ctx.HttpContext.RequestAborted);
+            if (issuedAt < invalidatedAt)
+            {
+                ctx.RejectPrincipal();
+                await ctx.HttpContext.SignOutAsync("DefaultAuthentication");
+            }
+        };
     })
     .AddDiscord("Discord", o =>
     {

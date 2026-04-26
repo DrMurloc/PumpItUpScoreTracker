@@ -43,6 +43,76 @@
     }
 </MudCard>
 <MudCard>
+    <MudCardHeader>@L["Content Lock"]</MudCardHeader>
+    <MudCardContent>
+        <MudGrid>
+            <MudItem xs="12">
+                <MudAutocomplete T="ScoreTracker.Domain.Models.User"
+                                 Value="_lockTargetUser"
+                                 ValueChanged="SelectLockTarget"
+                                 Label=@L["Search User (Name or UserId)"]
+                                 SearchFunc="SearchLockUsers"
+                                 ToStringFunc="@(u => u == null ? string.Empty : $"{u.Name} - {u.Id}")"
+                                 ResetValueOnEmptyText="true"
+                                 CoerceText="true"
+                                 MaxItems="25"
+                                 DebounceInterval="300"></MudAutocomplete>
+            </MudItem>
+            @if (_lockTargetUser != null)
+            {
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Id" Disabled="true" Value="@_lockTargetUser.Id.ToString()"></MudTextField>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label=@L["Current Username"] Disabled="true" Value="@_lockTargetUser.Name.ToString()"></MudTextField>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label=@L["GameTag"] Disabled="true" Value="@(_lockTargetUser.GameTag?.ToString() ?? string.Empty)"></MudTextField>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label=@L["Lock Status"] Disabled="true" Value="@(_lockTargetUser.IsContentLocked ? L["Locked"].Value : L["Unlocked"].Value)"></MudTextField>
+                </MudItem>
+                <MudItem xs="12">
+                    @if (_lockTargetUser.IsContentLocked)
+                    {
+                        <MudButton Color="Color.Success" Variant="Variant.Filled" Disabled="_isContentLockSaving" OnClick="UnlockUser">@L["Unlock User"]</MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Color="Color.Warning" Variant="Variant.Filled" Disabled="_isContentLockSaving" OnClick="OpenLockDialog">@L["Lock User"]</MudButton>
+                    }
+                </MudItem>
+            }
+        </MudGrid>
+    </MudCardContent>
+</MudCard>
+
+<MudDialog @bind-Visible="_showLockDialog">
+    <DialogContent>
+        @if (_lockTargetUser != null)
+        {
+            @if (_lockTargetUser.GameTag != null)
+            {
+                <MudText>@L["Locking will set this user's username to their GameTag."]</MudText>
+                <br />
+                <MudText Typo="Typo.body2">@($"{_lockTargetUser.Name} → {_lockTargetUser.GameTag}")</MudText>
+            }
+            else
+            {
+                <MudText>@L["This user has no GameTag. Choose a username to assign before locking."]</MudText>
+                <br />
+                <MudTextField T="string" Label=@L["New Username"] MaxLength="100" @bind-Value="_lockOverrideName"></MudTextField>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" OnClick="() => _showLockDialog = false" Color="Color.Default">@L["Cancel"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Warning" Disabled="_isContentLockSaving" OnClick="LockUser">@L["Lock User"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudCard>
     <MudCardHeader>@L["Update Chart"]</MudCardHeader>
     <MudCardContent>
         <MudItem xs="12">
@@ -390,5 +460,80 @@
         public string YoutubeHash { get; set; } = string.Empty;
         public string StepArtist { get; set; } = string.Empty;
 
+    }
+
+    private ScoreTracker.Domain.Models.User? _lockTargetUser;
+    private bool _showLockDialog = false;
+    private bool _isContentLockSaving = false;
+    private string _lockOverrideName = string.Empty;
+
+    private async Task<IEnumerable<ScoreTracker.Domain.Models.User>> SearchLockUsers(string searchText, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+            return Array.Empty<ScoreTracker.Domain.Models.User>();
+        return await Mediator.Send(new AdminSearchUsersQuery(searchText), cancellationToken);
+    }
+
+    private void SelectLockTarget(ScoreTracker.Domain.Models.User? user)
+    {
+        _lockTargetUser = user;
+        _lockOverrideName = string.Empty;
+    }
+
+    private void OpenLockDialog()
+    {
+        _lockOverrideName = string.Empty;
+        _showLockDialog = true;
+    }
+
+    private async Task LockUser()
+    {
+        if (_lockTargetUser == null) return;
+        Name? overrideName = null;
+        if (_lockTargetUser.GameTag == null)
+        {
+            if (!Name.TryParse(_lockOverrideName, out var parsed))
+            {
+                Snackbar.Add(L["Invalid Name"].Value, Severity.Error);
+                return;
+            }
+            overrideName = parsed;
+        }
+        _isContentLockSaving = true;
+        try
+        {
+            await Mediator.Send(new SetUserContentLockCommand(_lockTargetUser.Id, true, overrideName));
+            _lockTargetUser = await Mediator.Send(new GetUserByIdQuery(_lockTargetUser.Id));
+            _showLockDialog = false;
+            Snackbar.Add(L["User locked"].Value, Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _isContentLockSaving = false;
+        }
+    }
+
+    private async Task UnlockUser()
+    {
+        if (_lockTargetUser == null) return;
+        _isContentLockSaving = true;
+        try
+        {
+            await Mediator.Send(new SetUserContentLockCommand(_lockTargetUser.Id, false, null));
+            _lockTargetUser = await Mediator.Send(new GetUserByIdQuery(_lockTargetUser.Id));
+            Snackbar.Add(L["User unlocked"].Value, Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _isContentLockSaving = false;
+        }
     }
 }
