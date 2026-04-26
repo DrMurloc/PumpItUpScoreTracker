@@ -697,7 +697,7 @@ Use mutation testing to assess test strength in critical areas, not as a blanket
 
 # Required Test Metadata
 
-Each repository should define a consistent way to tag or categorize tests by:
+Every test must be classifiable along these dimensions:
 
 ```text
 Layer
@@ -706,40 +706,45 @@ DependencyMode
 Owner or Area (when meaningful)
 ```
 
-Example metadata values:
+The classification must be **discoverable at the suite level** — meaning a reviewer or CI configuration can determine the values for any test without reading the test body. The mechanism is the repo's choice.
+
+## Acceptable mechanisms
+
+Pick one (or combine when a single suite spans multiple modes):
+
+- **Folder convention.** `tests/Unit/`, `tests/Integration.RealDb/`, etc. The path encodes the values; document the mapping in the project's `CLAUDE.md`. This is the lowest-overhead option and is the right default for most repos.
+- **Test project / module separation.** `Repo.Tests.Unit`, `Repo.Tests.Integration`, etc. Same idea as folder convention but stronger — also enforces dependency boundaries.
+- **Per-test attributes / traits / annotations / tags.** xUnit `[Trait]`, JUnit `@Tag`, Pytest markers, etc. Right tool when a single project legitimately mixes dependency modes (e.g., a few Testcontainers tests living next to in-process tests) and CI needs to filter at test-runner level.
+- **Naming convention.** Test class or method name carries a suffix (`*IntegrationTests`, `*_E2E`). Acceptable when other mechanisms don't fit the test runner.
+- **Build target grouping.** Maven/Gradle/MSBuild target separation. Often paired with project separation.
+
+What matters is that **the classification exists somewhere a reviewer and CI can both consume**. Per-test attribute tagging is one valid option, not the default — do not require it when folder or project structure already does the job.
+
+## Examples
+
+A folder-convention repo (most common):
 
 ```text
-Layer: Unit
-Size: Small
-DependencyMode: None
-Owner: Inventory
+tests/
+  Unit/                       # Layer=Unit, Size=Small, DependencyMode=None
+  Component/                  # Layer=Component, Size=Small, DependencyMode=TestDouble
+  Integration.RealDb/         # Layer=Integration, Size=Medium, DependencyMode=EphemeralInfra
+  E2E/                        # Layer=UIE2E, Size=Large, DependencyMode=SharedEnv
 ```
 
-```text
-Layer: Integration
-Size: Medium
-DependencyMode: EphemeralInfra
-Owner: Pricing
+The project `CLAUDE.md` maps each folder to its triplet; new tests inherit the folder's classification automatically.
+
+A per-test-attribute repo (mixed-mode suite):
+
+```csharp
+[Trait("Layer", "Integration")]
+[Trait("Size", "Medium")]
+[Trait("DependencyMode", "EphemeralInfra")]
+[Trait("Owner", "Pricing")]
+public sealed class PricingMigrationTests { ... }
 ```
 
-```text
-Layer: UIE2E
-Size: Large
-DependencyMode: SharedEnv
-Owner: Checkout
-```
-
-Repositories may express these using whatever their test runner supports:
-
-- Attributes.
-- Annotations.
-- Traits.
-- Categories.
-- Tags.
-- Naming conventions.
-- Folder conventions.
-- Build target grouping.
-- Test project/module separation.
+Used when one suite intentionally mixes modes and `dotnet test --filter "DependencyMode=EphemeralInfra"` is a real workflow.
 
 The mechanism is local to the technology stack. The vocabulary is enterprise-standard.
 
