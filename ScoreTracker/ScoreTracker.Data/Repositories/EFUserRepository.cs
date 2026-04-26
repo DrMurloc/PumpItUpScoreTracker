@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
@@ -12,24 +12,23 @@ namespace ScoreTracker.Data.Repositories;
 
 public sealed class EFUserRepository : IUserRepository
 {
-    private readonly ChartAttemptDbContext _database;
     private readonly IMemoryCache _cache;
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
     public EFUserRepository(IDbContextFactory<ChartAttemptDbContext> factory,
         IMemoryCache cache)
     {
-        _database = factory.CreateDbContext();
         _factory = factory;
         _cache = cache;
     }
 
     public async Task SaveUser(User user, CancellationToken cancellationToken = default)
     {
-        var existingUser = await _database.User.FirstOrDefaultAsync(u => u.Id == user.Id, cancellationToken);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var existingUser = await database.User.FirstOrDefaultAsync(u => u.Id == user.Id, cancellationToken);
         if (existingUser == null)
         {
-            await _database.User.AddAsync(new UserEntity
+            await database.User.AddAsync(new UserEntity
             {
                 Name = user.Name,
                 Id = user.Id,
@@ -48,7 +47,7 @@ public sealed class EFUserRepository : IUserRepository
             existingUser.ProfileImage = user.ProfileImage.ToString();
         }
 
-        await _database.SaveChangesAsync(cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
     }
 
     private string FeedbackCache(Guid userId)
@@ -59,7 +58,8 @@ public sealed class EFUserRepository : IUserRepository
     public async Task SaveFeedback(Guid userId, SuggestionFeedbackRecord feedback,
         CancellationToken cancellationToken = default)
     {
-        await _database.SuggestionFeedback.AddAsync(new SuggestionFeedbackEntity
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        await database.SuggestionFeedback.AddAsync(new SuggestionFeedbackEntity
         {
             Id = Guid.NewGuid(),
             ChartId = feedback.ChartId,
@@ -70,7 +70,7 @@ public sealed class EFUserRepository : IUserRepository
             SuggestionCategory = feedback.SuggestionCategory,
             UserId = userId
         }, cancellationToken);
-        await _database.SaveChangesAsync(cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
         _cache.Remove(FeedbackCache(userId));
     }
 
@@ -80,7 +80,8 @@ public sealed class EFUserRepository : IUserRepository
         return await _cache.GetOrCreateAsync(FeedbackCache(userId), async cache =>
         {
             cache.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(1);
-            return await _database.SuggestionFeedback.Where(f => f.UserId == userId)
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            return await database.SuggestionFeedback.Where(f => f.UserId == userId)
                 .Select(e => new SuggestionFeedbackRecord(e.SuggestionCategory, e.FeedbackCategory, e.Notes,
                     e.ShouldHide, e.IsPositive, e.ChartId))
                 .ToArrayAsync(cancellationToken);
@@ -90,20 +91,22 @@ public sealed class EFUserRepository : IUserRepository
     public async Task CreateExternalLogin(Guid userId, string loginProviderName, string externalId,
         CancellationToken cancellationToken = default)
     {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var entity = new ExternalLoginEntity
         {
             ExternalId = externalId,
             LoginProvider = loginProviderName,
             UserId = userId
         };
-        await _database.ExternalLogin.AddAsync(entity, cancellationToken);
-        await _database.SaveChangesAsync(cancellationToken);
+        await database.ExternalLogin.AddAsync(entity, cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<User>> SearchForUsersByName(string searchText,
         CancellationToken cancellationToken = default)
     {
-        return await _database.User.Where(u => u.Name.Contains(searchText))
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.User.Where(u => u.Name.Contains(searchText))
             .OrderBy(u => u.Name)
             .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName))
             .ToArrayAsync(cancellationToken);
@@ -112,7 +115,8 @@ public sealed class EFUserRepository : IUserRepository
 
     public async Task<User?> GetUser(Guid userId, CancellationToken cancellationToken = default)
     {
-        return await _database.User.Where(u => u.Id == userId)
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.User.Where(u => u.Id == userId)
             .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName))
             .SingleOrDefaultAsync(cancellationToken);
     }
@@ -120,7 +124,8 @@ public sealed class EFUserRepository : IUserRepository
     public async Task<IEnumerable<User>> GetUsers(IEnumerable<Guid> userIds,
         CancellationToken cancellationToken = default)
     {
-        return await _database.User.Where(u => userIds.Contains(u.Id))
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.User.Where(u => userIds.Contains(u.Id))
             .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName)
             ).ToArrayAsync(cancellationToken);
     }
@@ -128,8 +133,9 @@ public sealed class EFUserRepository : IUserRepository
     public async Task<User?> GetUserByExternalLogin(string loginProviderName, string externalId,
         CancellationToken cancellationToken = default)
     {
-        return await (from e in _database.ExternalLogin
-                join u in _database.User on e.UserId equals u.Id
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await (from e in database.ExternalLogin
+                join u in database.User on e.UserId equals u.Id
                 where e.LoginProvider == loginProviderName
                       && e.ExternalId == externalId
                 select new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName))
@@ -139,7 +145,8 @@ public sealed class EFUserRepository : IUserRepository
     public async Task<IDictionary<string, string>> GetUserUiSettings(Guid userId,
         CancellationToken cancellationToken = default)
     {
-        var settings = await _database.UserSettings.FirstOrDefaultAsync(us => us.UserId == userId, cancellationToken);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var settings = await database.UserSettings.FirstOrDefaultAsync(us => us.UserId == userId, cancellationToken);
 
         if (settings == null) return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -150,11 +157,12 @@ public sealed class EFUserRepository : IUserRepository
     public async Task SaveUserUiSettings(Guid userId, IDictionary<string, string> settings,
         CancellationToken cancellationToken = default)
     {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var userSettings =
-            await _database.UserSettings.FirstOrDefaultAsync(us => us.UserId == userId, cancellationToken);
+            await database.UserSettings.FirstOrDefaultAsync(us => us.UserId == userId, cancellationToken);
 
         if (userSettings == null)
-            await _database.UserSettings.AddAsync(new UserSettingsEntity
+            await database.UserSettings.AddAsync(new UserSettingsEntity
             {
                 UserId = userId,
                 UiSettings = JsonSerializer.Serialize(settings)
@@ -162,33 +170,36 @@ public sealed class EFUserRepository : IUserRepository
         else
             userSettings.UiSettings = JsonSerializer.Serialize(settings);
 
-        await _database.SaveChangesAsync(cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<Guid?> GetUserApiToken(Guid userId, CancellationToken cancellationToken = default)
     {
-        return (await _database.UserApiToken.FirstOrDefaultAsync(upt => upt.UserId == userId, cancellationToken))
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return (await database.UserApiToken.FirstOrDefaultAsync(upt => upt.UserId == userId, cancellationToken))
             ?.Token;
     }
 
     public async Task<User?> GetUserByApiToken(Guid apiToken, CancellationToken cancellationToken = default)
     {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var apiEntity =
-            await _database.UserApiToken.FirstOrDefaultAsync(api => api.Token == apiToken, cancellationToken);
+            await database.UserApiToken.FirstOrDefaultAsync(api => api.Token == apiToken, cancellationToken);
         if (apiEntity == null) return null;
 
         apiEntity.CurrentTokenUsageCount++;
         apiEntity.TotalUsageCount++;
-        await _database.SaveChangesAsync(cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
         return await GetUser(apiEntity.UserId, cancellationToken);
     }
 
     public async Task SetUserApiToken(Guid userId, Guid apiToken, CancellationToken cancellationToken = default)
     {
-        var entity = await _database.UserApiToken.FirstOrDefaultAsync(api => api.Token == apiToken, cancellationToken);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var entity = await database.UserApiToken.FirstOrDefaultAsync(api => api.Token == apiToken, cancellationToken);
         if (entity == null)
         {
-            await _database.UserApiToken.AddAsync(new UserApiTokenEntity
+            await database.UserApiToken.AddAsync(new UserApiTokenEntity
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
@@ -203,18 +214,19 @@ public sealed class EFUserRepository : IUserRepository
             entity.Token = apiToken;
         }
 
-        await _database.SaveChangesAsync(cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
     }
 
     public async Task CreateCountry(CountryRecord country, CancellationToken cancellationToken = default)
     {
-        await _database.Country.AddAsync(new CountryEntity
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        await database.Country.AddAsync(new CountryEntity
         {
             ImagePath = country.ImagePath.ToString(),
             Name = country.Name
         }, cancellationToken);
 
-        await _database.SaveChangesAsync(cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<Uri?> GetCountryImage(Name countryName, CancellationToken cancellationToken = default)
@@ -222,7 +234,7 @@ public sealed class EFUserRepository : IUserRepository
         return await _cache.GetOrCreateAsync($"{nameof(EFUserRepository)}__Country__{countryName}__Image", async o =>
         {
             o.AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(1);
-            var database = await _factory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var nameString = countryName.ToString();
             var uri = await database.Country.Where(d => d.Name == nameString).FirstOrDefaultAsync(cancellationToken);
             if (uri == null) return null;
@@ -233,7 +245,8 @@ public sealed class EFUserRepository : IUserRepository
 
     public async Task<IEnumerable<CountryRecord>> GetCountries(CancellationToken cancellationToken = default)
     {
-        return await _database.Country.Select(c => new CountryRecord(c.Name, new Uri(c.ImagePath, UriKind.Absolute)))
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.Country.Select(c => new CountryRecord(c.Name, new Uri(c.ImagePath, UriKind.Absolute)))
             .ToArrayAsync(cancellationToken);
     }
 }

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Data.Persistence;
@@ -10,7 +10,7 @@ namespace ScoreTracker.Data.Repositories
 {
     public sealed class EFOfficialLeaderboardRepository : IOfficialLeaderboardRepository
     {
-        private readonly ChartAttemptDbContext _dbContext;
+        private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
         private readonly ILogger _logger;
         private readonly IMemoryCache _cache;
 
@@ -18,7 +18,7 @@ namespace ScoreTracker.Data.Repositories
             ILogger<EFOfficialLeaderboardRepository> logger,
             IMemoryCache cache)
         {
-            _dbContext = factory.CreateDbContext();
+            _factory = factory;
             _logger = logger;
             _cache = cache;
         }
@@ -27,15 +27,17 @@ namespace ScoreTracker.Data.Repositories
         public async Task ClearLeaderboard(string leaderboardType, string leaderboardName,
             CancellationToken cancellationToken)
         {
-            _dbContext.UserOfficialLeaderboard.RemoveRange(
-                _dbContext.UserOfficialLeaderboard.Where(u =>
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            database.UserOfficialLeaderboard.RemoveRange(
+                database.UserOfficialLeaderboard.Where(u =>
                     u.LeaderboardName == leaderboardName && u.LeaderboardType == leaderboardType));
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
         }
 
         public async Task WriteEntry(UserOfficialLeaderboard entry, CancellationToken cancellationToken)
         {
-            await _dbContext.UserOfficialLeaderboard.AddAsync(new UserOfficialLeaderboardEntity
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            await database.UserOfficialLeaderboard.AddAsync(new UserOfficialLeaderboardEntity
             {
                 Id = Guid.NewGuid(),
                 Place = entry.Place,
@@ -44,12 +46,14 @@ namespace ScoreTracker.Data.Repositories
                 Username = entry.Username,
                 Score = entry.Score
             }, cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
         }
 
         public async Task<IEnumerable<string>> GetOfficialLeaderboardUsernames(string? leaderboardType,
             CancellationToken cancellationToken)
         {
-            var result = _dbContext.UserOfficialLeaderboard.AsQueryable();
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var result = database.UserOfficialLeaderboard.AsQueryable();
             if (leaderboardType != null) result = result.Where(e => e.LeaderboardType == leaderboardType);
             return await result.Select(e => e.Username).Distinct()
                 .ToArrayAsync(cancellationToken);
@@ -58,7 +62,8 @@ namespace ScoreTracker.Data.Repositories
         public async Task<IEnumerable<UserOfficialLeaderboard>> GetOfficialLeaderboardStatuses(string username,
             CancellationToken cancellationToken)
         {
-            return await _dbContext.UserOfficialLeaderboard.Where(e => e.Username == username)
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            return await database.UserOfficialLeaderboard.Where(e => e.Username == username)
                 .Select(e =>
                     new UserOfficialLeaderboard(e.Username, e.Place, e.LeaderboardType, e.LeaderboardName, e.Score))
                 .ToArrayAsync(cancellationToken);
@@ -66,7 +71,8 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task<IEnumerable<WorldRankingRecord>> GetAllWorldRankings(CancellationToken cancellationToken)
         {
-            return await _dbContext.UserWorldRanking
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            return await database.UserWorldRanking
                 .Select(u => new WorldRankingRecord(u.UserName, u.Type, u.AverageLevel, u.AverageScore, u.SinglesCount,
                     u.DoublesCount, u.TotalRating, u.CompetitiveLevel, u.SinglesCompetitive, u.DoublesCompetitive))
                 .ToArrayAsync(cancellationToken);
@@ -74,13 +80,15 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task DeleteWorldRankings(CancellationToken cancellationToken)
         {
-            _dbContext.UserWorldRanking.RemoveRange(_dbContext.UserWorldRanking);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            database.UserWorldRanking.RemoveRange(database.UserWorldRanking);
+            await database.SaveChangesAsync(cancellationToken);
         }
 
         public async Task SaveWorldRanking(WorldRankingRecord record, CancellationToken cancellationToken)
         {
-            await _dbContext.UserWorldRanking.AddAsync(new UserWorldRanking
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            await database.UserWorldRanking.AddAsync(new UserWorldRanking
             {
                 Id = Guid.NewGuid(),
                 Type = record.Type,
@@ -95,19 +103,20 @@ namespace ScoreTracker.Data.Repositories
                 DoublesCompetitive = record.DoublesCompetitiveLevel
             }, cancellationToken);
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
         }
 
         public async Task FixRankingOrders(CancellationToken cancellationToken)
         {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var current = 1;
-            var boards = await _dbContext.UserOfficialLeaderboard.Select(u => u.LeaderboardName).Distinct()
+            var boards = await database.UserOfficialLeaderboard.Select(u => u.LeaderboardName).Distinct()
                 .ToArrayAsync(cancellationToken);
             var max = boards.Length;
             foreach (var boardName in boards)
             {
                 _logger.LogInformation($"Board {current++}/{max}");
-                var rankings = await _dbContext.UserOfficialLeaderboard.Where(b => b.LeaderboardName == boardName)
+                var rankings = await database.UserOfficialLeaderboard.Where(b => b.LeaderboardName == boardName)
                     .ToArrayAsync(cancellationToken);
                 var rollingPlace = 1;
                 foreach (var rankingGroup in rankings.GroupBy(r => r.Score).OrderByDescending(g => g.Key))
@@ -120,7 +129,7 @@ namespace ScoreTracker.Data.Repositories
                     }
                 }
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await database.SaveChangesAsync(cancellationToken);
             }
         }
 
@@ -132,12 +141,13 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task UpdateAllAvatarPaths(Uri oldPath, Uri newPath, CancellationToken cancellationToken)
         {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var oldPathString = oldPath.ToString();
-            var entities = await _dbContext.OfficialUserAvatar.Where(a => a.AvatarUrl == oldPathString)
+            var entities = await database.OfficialUserAvatar.Where(a => a.AvatarUrl == oldPathString)
                 .ToArrayAsync(cancellationToken);
             foreach (var entity in entities) entity.AvatarUrl = newPath.ToString();
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
             _cache.Remove(AvatarCacheKey);
         }
 
@@ -148,7 +158,8 @@ namespace ScoreTracker.Data.Repositories
             return await _cache.GetOrCreateAsync(AvatarCacheKey, async o =>
             {
                 o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(1);
-                return (await _dbContext.OfficialUserAvatar.ToArrayAsync(cancellationToken))
+                await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+                return (await database.OfficialUserAvatar.ToArrayAsync(cancellationToken))
                     .ToDictionary(u => u.UserName, u => new Uri(u.AvatarUrl, UriKind.Absolute),
                         StringComparer.OrdinalIgnoreCase);
             });
@@ -159,10 +170,11 @@ namespace ScoreTracker.Data.Repositories
             var dict = await GetAvatars(cancellationToken);
             if (dict.TryGetValue(username, out var existing) && existing == avatarPath) return;
 
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var entity = await
-                _dbContext.OfficialUserAvatar.FirstOrDefaultAsync(u => u.UserName == username, cancellationToken);
+                database.OfficialUserAvatar.FirstOrDefaultAsync(u => u.UserName == username, cancellationToken);
             if (entity == null)
-                await _dbContext.OfficialUserAvatar.AddAsync(new OfficialUserAvatarEntity
+                await database.OfficialUserAvatar.AddAsync(new OfficialUserAvatarEntity
                 {
                     Id = Guid.NewGuid(),
                     AvatarUrl = avatarPath.ToString(),
@@ -172,7 +184,7 @@ namespace ScoreTracker.Data.Repositories
                 entity.AvatarUrl = avatarPath.ToString();
             dict[username] = avatarPath;
             _cache.Set(AvatarCacheKey, dict, DateTimeOffset.Now + TimeSpan.FromHours(1));
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
         }
     }
 }

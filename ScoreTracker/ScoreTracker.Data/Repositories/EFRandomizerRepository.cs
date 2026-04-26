@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -12,13 +12,14 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Data.Repositories
 {
-    public sealed class EFRandomizerRepository(ChartAttemptDbContext database,
+    public sealed class EFRandomizerRepository(IDbContextFactory<ChartAttemptDbContext> factory,
         IOptions<JsonSerializerOptions> jsonOptions, ICurrentUserAccessor currentUser) : IRandomizerRepository,
         IRequestHandler<GetRandomSettingsQuery, IEnumerable<SavedRandomizerSettings>>
     {
         public async Task SaveSettings(Guid userId, Name settingsName, RandomSettings settings,
             CancellationToken cancellationToken)
         {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
             var nameString = settingsName.ToString();
             var entity = await database.UserRandomSettings.Where(u => u.UserId == userId && u.Name == nameString)
                 .FirstOrDefaultAsync(cancellationToken);
@@ -37,6 +38,7 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task DeleteSettings(Guid userId, Name settingsName, CancellationToken cancellationToken)
         {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
             var nameString = settingsName.ToString();
             var entities = await database.UserRandomSettings.Where(e => e.UserId == userId && e.Name == nameString)
                 .ToArrayAsync(cancellationToken);
@@ -47,6 +49,7 @@ namespace ScoreTracker.Data.Repositories
         public async Task<IEnumerable<SavedRandomizerSettings>> Handle(GetRandomSettingsQuery request,
             CancellationToken cancellationToken)
         {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
             var userId = currentUser.User.Id;
             return (await database.UserRandomSettings.Where(u => u.UserId == userId).ToArrayAsync(cancellationToken))
                 .Select(u => new SavedRandomizerSettings(u.Name,

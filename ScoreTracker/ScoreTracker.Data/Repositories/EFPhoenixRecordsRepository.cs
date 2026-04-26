@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Application.Queries;
@@ -15,9 +15,8 @@ namespace ScoreTracker.Data.Repositories;
 public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     IRequestHandler<GetPlayerChartAggregatesQuery, IEnumerable<UserChartAggregate>>
 {
-    private readonly ChartAttemptDbContext _database;
     private readonly IMemoryCache _cache;
-    private readonly IDbContextFactory<ChartAttemptDbContext> _dbFactory;
+    private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
     private readonly IChartRepository _charts;
 
     private static string ScoreCache(Guid userId)
@@ -27,24 +26,23 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
 
     public EFPhoenixRecordsRepository(IDbContextFactory<ChartAttemptDbContext> factory,
         IMemoryCache cache,
-        IDbContextFactory<ChartAttemptDbContext> dbFactory,
         IChartRepository charts)
     {
-        _database = factory.CreateDbContext();
         _cache = cache;
-        _dbFactory = dbFactory;
+        _factory = factory;
         _charts = charts;
     }
 
     public async Task UpdateBestAttempt(Guid userId, RecordedPhoenixScore score,
         CancellationToken cancellationToken = default)
     {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var existing =
-            await _database.PhoenixBestAttempt.FirstOrDefaultAsync(
+            await database.PhoenixBestAttempt.FirstOrDefaultAsync(
                 pba => pba.UserId == userId && pba.ChartId == score.ChartId, cancellationToken);
         if (existing == null)
         {
-            await _database.AddAsync(new PhoenixRecordEntity
+            await database.AddAsync(new PhoenixRecordEntity
             {
                 ChartId = score.ChartId,
                 UserId = userId,
@@ -65,7 +63,7 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             existing.RecordedDate = score.RecordedDate;
         }
 
-        await _database.SaveChangesAsync(cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
         var cache = await GetCachedScores(userId, cancellationToken);
         cache[score.ChartId] = score;
         _cache.Set(ScoreCache(userId), cache);
@@ -75,7 +73,7 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         CancellationToken cancellationToken = default)
     {
         var statArray = stats.ToArray();
-        var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var chartIds = statArray.Select(s => s.ChartId).ToArray();
         var entities = await database.PhoenixRecordStats.Where(s => s.UserId == userId && chartIds.Contains(s.ChartId))
             .ToDictionaryAsync(e => e.ChartId, cancellationToken);
@@ -108,7 +106,8 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         return await _cache.GetOrCreateAsync(ScoreCache(userId), async o =>
         {
             o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(10);
-            var result = (await _database.PhoenixBestAttempt.Where(pba => pba.UserId == userId)
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var result = (await database.PhoenixBestAttempt.Where(pba => pba.UserId == userId)
                 .Select(pba => new RecordedPhoenixScore(pba.ChartId, pba.Score,
                     PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, pba.RecordedDate))
                 .ToArrayAsync(cancellationToken)).ToDictionary(r => r.ChartId);
@@ -129,7 +128,7 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         var mixId = MixGuids[MixEnum.Phoenix];
         var intLevel = (int)level;
         var chartTypeString = chartType.ToString();
-        var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return (await (from cm in database.ChartMix
                 join c in database.Chart on cm.ChartId equals c.Id
                 join pba in database.PhoenixBestAttempt on c.Id equals pba.ChartId
@@ -147,7 +146,7 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         var intMin = (int)minimumLevel;
         var intMax = (int)maximumLevel;
         var chartTypeString = chartType.ToString();
-        var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return (await (from cm in database.ChartMix
                 join c in database.Chart on cm.ChartId equals c.Id
                 join pba in database.PhoenixBestAttempt on c.Id equals pba.ChartId
@@ -167,8 +166,9 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     public async Task<IEnumerable<UserPhoenixScore>> GetRecordedUserScores(Guid chartId,
         CancellationToken cancellationToken = default)
     {
-        return await (from pba in _database.PhoenixBestAttempt
-                join u in _database.User on pba.UserId equals u.Id
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await (from pba in database.PhoenixBestAttempt
+                join u in database.User on pba.UserId equals u.Id
                 where pba.ChartId == chartId && pba.Score != null
                 select new UserPhoenixScore(pba.UserId, pba.ChartId, u.IsPublic ? u.Name : "Anonymous",
                     pba.Score!.Value,
@@ -178,7 +178,8 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
 
     public async Task<IEnumerable<ChartScoreAggregate>> GetAllChartScoreAggregates(CancellationToken cancellationToken)
     {
-        return await (from pba in _database.PhoenixBestAttempt
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await (from pba in database.PhoenixBestAttempt
             where pba.Score != null
             group pba by pba.ChartId
             into g
@@ -190,8 +191,9 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     {
         var userIdArray = userIds.Distinct().ToArray();
         var chartIdArray = chartIds.Distinct().ToArray();
-        return await (from pba in _database.PhoenixBestAttempt
-                join u in _database.User on pba.UserId equals u.Id
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await (from pba in database.PhoenixBestAttempt
+                join u in database.User on pba.UserId equals u.Id
                 where chartIdArray.Contains(pba.ChartId) && pba.Score != null && userIdArray.Contains(pba.UserId)
                 select new UserPhoenixScore(pba.UserId, pba.ChartId, u.IsPublic ? u.Name : "Anonymous",
                     pba.Score!.Value,
@@ -207,7 +209,7 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         var mixId = MixGuids[MixEnum.Phoenix];
         var intLevel = (int)difficulty;
         var chartTypeString = chartType.ToString();
-        var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return (await (from cm in database.ChartMix
                 join c in database.Chart on cm.ChartId equals c.Id
                 join pba in database.PhoenixBestAttempt on c.Id equals pba.ChartId
@@ -234,7 +236,7 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         var mixId = MixGuids[MixEnum.Phoenix];
         var intLevel = (int)difficulty;
         var chartTypeString = chartType.ToString();
-        var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return (await (from cm in database.ChartMix
                 join c in database.Chart on cm.ChartId equals c.Id
                 join pba in database.PhoenixBestAttempt on c.Id equals pba.ChartId
@@ -252,7 +254,7 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         var mixId = MixGuids[MixEnum.Phoenix];
         var intLevel = (int)difficulty;
         var chartTypeString = chartType.ToString();
-        var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return (await (from cm in database.ChartMix
                 join c in database.Chart on cm.ChartId equals c.Id
                 join pr in database.PhoenixBestAttempt on cm.ChartId equals pr.ChartId
@@ -272,8 +274,9 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         CancellationToken cancellationToken = default)
     {
         var userIdArray = userIds.Distinct().ToArray();
-        return await (from pba in _database.PhoenixBestAttempt
-                join u in _database.User on pba.UserId equals u.Id
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await (from pba in database.PhoenixBestAttempt
+                join u in database.User on pba.UserId equals u.Id
                 where pba.ChartId == chartId && pba.Score != null && userIdArray.Contains(pba.UserId)
                 select new UserPhoenixScore(pba.UserId, pba.ChartId, u.IsPublic ? u.Name : "Anonymous",
                     pba.Score!.Value,
@@ -293,7 +296,7 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     public async Task<IEnumerable<UserChartAggregate>> Handle(GetPlayerChartAggregatesQuery request,
         CancellationToken cancellationToken)
     {
-        var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var playerQuery = from u in database.User select u;
         if (request.CommunityName != null)
         {

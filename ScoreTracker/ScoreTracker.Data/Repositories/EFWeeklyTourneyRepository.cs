@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
@@ -9,15 +9,17 @@ using ScoreTracker.Domain.SecondaryPorts;
 namespace ScoreTracker.Data.Repositories
 {
     public sealed class EFWeeklyTourneyRepository
-        (ChartAttemptDbContext database, IMemoryCache cache) : IWeeklyTournamentRepository
+        (IDbContextFactory<ChartAttemptDbContext> factory, IMemoryCache cache) : IWeeklyTournamentRepository
     {
         public async Task<IEnumerable<Guid>> GetAlreadyPlayedCharts(CancellationToken cancellationToken)
         {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
             return await database.PastTourneyCharts.Select(e => e.ChartId).ToArrayAsync(cancellationToken);
         }
 
         public async Task ClearAlreadyPlayedCharts(IEnumerable<Guid> chartIds, CancellationToken cancellationToken)
         {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
             var entities = await database.PastTourneyCharts.Where(e => chartIds.Contains(e.ChartId))
                 .ToArrayAsync(cancellationToken);
             database.PastTourneyCharts.RemoveRange(entities);
@@ -27,6 +29,7 @@ namespace ScoreTracker.Data.Repositories
         public async Task WriteAlreadyPlayedCharts(IEnumerable<Guid> chartIds, CancellationToken cancellationToken)
         {
             var alreadyPlayed = (await GetAlreadyPlayedCharts(cancellationToken)).Distinct().ToHashSet();
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
             await database.PastTourneyCharts.AddRangeAsync(chartIds
                 .Where(c => !alreadyPlayed.Contains(c)).Select(c => new PastTourneyChartsEntity
                 {
@@ -38,6 +41,7 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task WriteHistories(IEnumerable<UserTourneyHistory> histories, CancellationToken cancellationToken)
         {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
             await database.UserWeeklyPlacing.AddRangeAsync(histories.Select(h => new UserWeeklyPlacingEntity
             {
                 ChartId = h.ChartId,
@@ -54,6 +58,7 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task ClearTheBoard(CancellationToken cancellationToken)
         {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
             var userEntries = await database.WeeklyUserEntry.ToArrayAsync(cancellationToken);
             var weeklyCharts = await database.WeeklyTournamentChart.ToArrayAsync(cancellationToken);
             database.WeeklyUserEntry.RemoveRange(userEntries);
@@ -63,6 +68,7 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task RegisterWeeklyChart(WeeklyTournamentChart chart, CancellationToken cancellationToken)
         {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
             await database.WeeklyTournamentChart.AddAsync(new WeeklyTournamentChartEntity
             {
                 ChartId = chart.ChartId,
@@ -79,6 +85,7 @@ namespace ScoreTracker.Data.Repositories
             return await cache.GetOrCreateAsync(WeeklyChartsKey, async o =>
             {
                 o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
+                await using var database = await factory.CreateDbContextAsync(cancellationToken);
                 return await database.WeeklyTournamentChart.Select(w =>
                     new WeeklyTournamentChart(w.ChartId, w.ExpirationDate)).ToArrayAsync(cancellationToken);
             });
@@ -87,6 +94,7 @@ namespace ScoreTracker.Data.Repositories
         public async Task<IEnumerable<WeeklyTournamentEntry>> GetEntries(Guid? chartId,
             CancellationToken cancellationToken)
         {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
             var query = database.WeeklyUserEntry.AsQueryable();
             if (chartId != null) query = query.Where(w => w.ChartId == chartId);
 
@@ -97,6 +105,7 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task SaveEntry(WeeklyTournamentEntry entry, CancellationToken cancellationToken)
         {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
             var entity = await
                 database.WeeklyUserEntry.FirstOrDefaultAsync(
                     e => e.UserId == entry.UserId && e.ChartId == entry.ChartId, cancellationToken);
@@ -127,6 +136,7 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task<IEnumerable<DateTimeOffset>> GetPastDates(CancellationToken cancellationToken)
         {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
             return await database.UserWeeklyPlacing.Select(u => u.ObtainedDate).Distinct()
                 .ToArrayAsync(cancellationToken);
         }
@@ -134,6 +144,7 @@ namespace ScoreTracker.Data.Repositories
         public async Task<IEnumerable<WeeklyTournamentEntry>> GetPastEntries(DateTimeOffset date,
             CancellationToken cancellationToken)
         {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
             return (await database.UserWeeklyPlacing
                 .Where(e => e.ObtainedDate == date).ToArrayAsync(cancellationToken)).Select(u =>
                 new WeeklyTournamentEntry(u.UserId, u.ChartId, u.Score, Enum.Parse<PhoenixPlate>(u.Plate), u.IsBroken,

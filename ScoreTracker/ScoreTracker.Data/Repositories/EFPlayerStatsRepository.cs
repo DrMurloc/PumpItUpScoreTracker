@@ -29,7 +29,7 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task SaveStats(Guid userId, PlayerStatsRecord newStats, CancellationToken cancellationToken)
         {
-            var database = await _factory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var entity = await database.PlayerStats.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
             if (entity == null)
             {
@@ -84,7 +84,7 @@ namespace ScoreTracker.Data.Repositories
         {
             return await _cache.GetOrCreateAsync(CacheKey(userId), async o =>
             {
-                var database = await _factory.CreateDbContextAsync(cancellationToken);
+                await using var database = await _factory.CreateDbContextAsync(cancellationToken);
                 o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(5);
 
                 var entity =
@@ -105,7 +105,7 @@ namespace ScoreTracker.Data.Repositories
         public async Task<IEnumerable<PlayerStatsRecord>> GetStats(IEnumerable<Guid> userIds,
             CancellationToken cancellationToken)
         {
-            var database = await _factory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             return await database.PlayerStats.Where(s => userIds.Contains(s.UserId)).Select(entity =>
                 new PlayerStatsRecord(entity.UserId, entity.TotalRating, entity.HighestLevel, entity.ClearCount,
                     entity.CoOpRating,
@@ -120,7 +120,7 @@ namespace ScoreTracker.Data.Repositories
             double range,
             CancellationToken cancellationToken)
         {
-            var database = await _factory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var query = database.PlayerStats.AsQueryable();
             var min = competitiveLevel - range;
             var max = competitiveLevel + range;

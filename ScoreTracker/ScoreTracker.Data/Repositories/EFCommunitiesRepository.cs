@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Enums;
@@ -11,31 +11,33 @@ namespace ScoreTracker.Data.Repositories
 {
     public sealed class EFCommunitiesRepository : ICommunityRepository
     {
-        private readonly ChartAttemptDbContext _dbContext;
+        private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
         public EFCommunitiesRepository(IDbContextFactory<ChartAttemptDbContext> factory)
         {
-            _dbContext = factory.CreateDbContext();
+            _factory = factory;
         }
 
         public async Task<Name?> GetCommunityByInviteCode(Guid inviteCode, CancellationToken cancellationToken)
         {
-            return await (from ci in _dbContext.CommunityInviteCode
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            return await (from ci in database.CommunityInviteCode
                 where ci.InviteCode == inviteCode
-                join c in _dbContext.Community on ci.CommunityId equals c.Id
+                join c in database.Community on ci.CommunityId equals c.Id
                 select c.Name).FirstOrDefaultAsync(cancellationToken);
         }
 
         public async Task SaveCommunity(Community community, CancellationToken cancellationToken)
         {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var communityString = community.Name.ToString();
             var entity =
-                await _dbContext.Community.FirstOrDefaultAsync(c => c.Name == communityString, cancellationToken);
+                await database.Community.FirstOrDefaultAsync(c => c.Name == communityString, cancellationToken);
             var communityId = entity?.Id;
             if (communityId == null || entity == null)
             {
                 communityId = Guid.NewGuid();
-                await _dbContext.Community.AddAsync(new CommunityEntity
+                await database.Community.AddAsync(new CommunityEntity
                 {
                     Id = communityId.Value,
                     Name = communityString,
@@ -52,7 +54,7 @@ namespace ScoreTracker.Data.Repositories
             }
 
             //Members
-            var memberEntities = await _dbContext.CommunityMembership.Where(cm => cm.CommunityId == communityId.Value)
+            var memberEntities = await database.CommunityMembership.Where(cm => cm.CommunityId == communityId.Value)
                 .ToArrayAsync(cancellationToken);
             var existingSet = memberEntities.Select(m => m.UserId).Distinct().ToHashSet();
             var toDelete = memberEntities.Where(e => !community.MemberIds.Contains(e.UserId)).ToArray();
@@ -63,11 +65,11 @@ namespace ScoreTracker.Data.Repositories
                     CommunityId = communityId.Value,
                     UserId = m
                 }).ToArray();
-            _dbContext.CommunityMembership.RemoveRange(toDelete);
-            await _dbContext.CommunityMembership.AddRangeAsync(toCreate, cancellationToken);
+            database.CommunityMembership.RemoveRange(toDelete);
+            await database.CommunityMembership.AddRangeAsync(toCreate, cancellationToken);
 
             //Invite Codes
-            var codeEntities = await _dbContext.CommunityInviteCode.Where(ci => ci.CommunityId == communityId.Value)
+            var codeEntities = await database.CommunityInviteCode.Where(ci => ci.CommunityId == communityId.Value)
                 .ToArrayAsync(cancellationToken);
             var existingCodeSet = codeEntities.Select(c => c.InviteCode).Distinct().ToHashSet();
             var deleteCodes = codeEntities.Where(e => !community.InviteCodes.ContainsKey(e.InviteCode)).ToArray();
@@ -78,11 +80,11 @@ namespace ScoreTracker.Data.Repositories
                     CommunityId = communityId.Value,
                     ExpirationDate = m.Value?.ToDateTime(TimeOnly.MinValue)
                 }).ToArray();
-            _dbContext.CommunityInviteCode.RemoveRange(deleteCodes);
-            await _dbContext.CommunityInviteCode.AddRangeAsync(createCodes, cancellationToken);
+            database.CommunityInviteCode.RemoveRange(deleteCodes);
+            await database.CommunityInviteCode.AddRangeAsync(createCodes, cancellationToken);
 
             //Channels
-            var channelEntities = await _dbContext.CommunityChannel.Where(cc => cc.CommunityId == communityId.Value)
+            var channelEntities = await database.CommunityChannel.Where(cc => cc.CommunityId == communityId.Value)
                 .ToArrayAsync(cancellationToken);
             var channelIdSet = channelEntities.Select(e => e.ChannelId).ToHashSet();
             var newStats = community.Channels.ToDictionary(c => c.ChannelId);
@@ -90,7 +92,7 @@ namespace ScoreTracker.Data.Repositories
             {
                 if (!newStats.ContainsKey(channelEntity.ChannelId))
                 {
-                    _dbContext.CommunityChannel.Remove(channelEntity);
+                    database.CommunityChannel.Remove(channelEntity);
                     continue;
                 }
 
@@ -110,20 +112,21 @@ namespace ScoreTracker.Data.Repositories
                     CommunityId = communityId.Value
                 }).ToArray();
 
-            await _dbContext.CommunityChannel.AddRangeAsync(toCreateChannels, cancellationToken);
+            await database.CommunityChannel.AddRangeAsync(toCreateChannels, cancellationToken);
 
 
             //Save
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
         }
 
         public async Task<IEnumerable<CommunityOverviewRecord>> GetCommunities(Guid userId,
             CancellationToken cancellationToken)
         {
-            return (await (from cm in _dbContext.CommunityMembership
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            return (await (from cm in database.CommunityMembership
                 where cm.UserId == userId
-                join c in _dbContext.Community on cm.CommunityId equals c.Id
-                join members in _dbContext.CommunityMembership on c.Id equals members.CommunityId
+                join c in database.Community on cm.CommunityId equals c.Id
+                join members in database.CommunityMembership on c.Id equals members.CommunityId
                 group c by new { c.Name, c.IsRegional, c.PrivacyType, cm.UserId }
                 into g
                 select new
@@ -140,11 +143,12 @@ namespace ScoreTracker.Data.Repositories
         public async Task<IEnumerable<CommunityOverviewRecord>> GetPublicCommunities(
             CancellationToken cancellationToken)
         {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var publicTypes = new[]
                 { CommunityPrivacyType.Public.ToString(), CommunityPrivacyType.PublicWithCode.ToString() };
-            return (await (from c in _dbContext.Community
+            return (await (from c in database.Community
                 where publicTypes.Contains(c.PrivacyType)
-                join members in _dbContext.CommunityMembership on c.Id equals members.CommunityId
+                join members in database.CommunityMembership on c.Id equals members.CommunityId
                 group c by new { c.Name, c.PrivacyType, c.IsRegional }
                 into g
                 select new
@@ -161,12 +165,13 @@ namespace ScoreTracker.Data.Repositories
         public async Task<IEnumerable<CommunityLeaderboardRecord>> GetLeaderboard(Name communityName,
             CancellationToken cancellationToken)
         {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var nameString = communityName.ToString();
-            return await (from c in _dbContext.Community
+            return await (from c in database.Community
                     where c.Name == nameString
-                    join cm in _dbContext.CommunityMembership on c.Id equals cm.CommunityId
-                    join ps in _dbContext.PlayerStats on cm.UserId equals ps.UserId
-                    join u in _dbContext.User on ps.UserId equals u.Id
+                    join cm in database.CommunityMembership on c.Id equals cm.CommunityId
+                    join ps in database.PlayerStats on cm.UserId equals ps.UserId
+                    join u in database.User on ps.UserId equals u.Id
                     select new CommunityLeaderboardRecord(u.Name, u.IsPublic, new Uri(u.ProfileImage, UriKind.Absolute),
                         u.Id,
                         ps.TotalRating, ps.HighestLevel, ps.ClearCount,
@@ -179,16 +184,17 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task<Community?> GetCommunityByName(Name communityName, CancellationToken cancellationToken)
         {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var nameString = communityName.ToString();
-            var entity = await _dbContext.Community.FirstOrDefaultAsync(c => c.Name == nameString, cancellationToken);
+            var entity = await database.Community.FirstOrDefaultAsync(c => c.Name == nameString, cancellationToken);
             if (entity == null) return null;
 
-            var members = await _dbContext.CommunityMembership.Where(cm => cm.CommunityId == entity.Id)
+            var members = await database.CommunityMembership.Where(cm => cm.CommunityId == entity.Id)
                 .ToArrayAsync(cancellationToken);
-            var invites = await _dbContext.CommunityInviteCode.Where(cm => cm.CommunityId == entity.Id)
+            var invites = await database.CommunityInviteCode.Where(cm => cm.CommunityId == entity.Id)
                 .ToArrayAsync(cancellationToken);
 
-            var channels = await _dbContext.CommunityChannel.Where(cm => cm.CommunityId == entity.Id)
+            var channels = await database.CommunityChannel.Where(cm => cm.CommunityId == entity.Id)
                 .ToArrayAsync(cancellationToken);
 
             return new Community(entity.Name, entity.OwningUserId, Enum.Parse<CommunityPrivacyType>(entity.PrivacyType),

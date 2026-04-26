@@ -20,7 +20,7 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task<IEnumerable<UcsChart>> GetUcsCharts(CancellationToken cancellationToken)
         {
-            var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
             var ucsEntities = await database.UcsChart.ToArrayAsync(cancellationToken);
             var songIds = ucsEntities.Select(u => u.SongId).Distinct().ToArray();
             var songs = (await database.Song.Where(s => songIds.Contains(s.Id)).ToArrayAsync(cancellationToken))
@@ -40,7 +40,7 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task CreateUcsChart(UcsChart chart, CancellationToken cancellationToken)
         {
-            var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
             var songString = chart.Chart.Song.Name.ToString();
             var songId = (await database.Song.Where(s => s.Name == songString).FirstAsync(cancellationToken)).Id;
 
@@ -66,7 +66,7 @@ namespace ScoreTracker.Data.Repositories
         public async Task<IEnumerable<UcsLeaderboardEntry>> GetChartLeaderboard(Guid chartId,
             CancellationToken cancellationToken)
         {
-            var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
             return (await database.UcsChartLeaderboardEntry.Where(e => e.ChartId == chartId)
                     .ToArrayAsync(cancellationToken))
                 .Select(e => new UcsLeaderboardEntry(e.UserId, e.Score, Enum.Parse<PhoenixPlate>(e.Plate), e.IsBroken,
@@ -78,7 +78,7 @@ namespace ScoreTracker.Data.Repositories
             Uri? videoPath,
             Uri? imagePath, CancellationToken cancellationToken)
         {
-            var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
             var entity = await database.UcsChartLeaderboardEntry.Where(e => e.ChartId == chartId && e.UserId == userId)
                 .FirstOrDefaultAsync(cancellationToken);
             if (entity == null)
@@ -110,7 +110,7 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task<IEnumerable<ChartTagAggregate>> GetChartTags(CancellationToken cancellationToken)
         {
-            var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
 
             return (await database.UcsChartTag.ToArrayAsync(cancellationToken)).GroupBy(c => (c.ChartId, c.Tag))
                 .Select(g => new ChartTagAggregate(g.Key.ChartId, g.Key.Tag, g.Count())).ToArray();
@@ -118,7 +118,7 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task DeleteChartTag(Guid chartId, Guid userId, Name tag, CancellationToken cancellationToken)
         {
-            var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
             var tagString = tag.ToString();
             var entity = await
                 database.UcsChartTag.FirstOrDefaultAsync(e =>
@@ -132,7 +132,7 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task AddChartTag(Guid chartId, Guid userId, Name tag, CancellationToken cancellationToken)
         {
-            var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
             var tagString = tag.ToString();
             var entity = await
                 database.UcsChartTag.FirstOrDefaultAsync(e =>
@@ -151,14 +151,14 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task<IEnumerable<Name>> GetMyTags(Guid chartId, Guid userId, CancellationToken cancellationToken)
         {
-            var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
             return (await database.UcsChartTag.Where(c => c.ChartId == chartId && c.UserId == userId)
                 .Select(e => e.Tag).ToArrayAsync(cancellationToken)).Select(Name.From).ToArray();
         }
 
         public async Task<IEnumerable<UserChartTag>> GetAllMyTags(Guid userId, CancellationToken cancellationToken)
         {
-            var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _dbFactory.CreateDbContextAsync(cancellationToken);
 
             return (await database.UcsChartTag.Where(c => c.UserId == userId).ToArrayAsync(cancellationToken))
                 .Select(e => new UserChartTag(e.ChartId, e.UserId, e.Tag)).ToArray();

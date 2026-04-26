@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Data.Persistence;
@@ -8,11 +8,13 @@ using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Data.Repositories
 {
-    public sealed class EFPlayerHistoryRepository(ChartAttemptDbContext database) : IPlayerHistoryRepository,
-        IRequestHandler<GetPlayerHistoryQuery, IEnumerable<PlayerRatingRecord>>
+    public sealed class EFPlayerHistoryRepository(IDbContextFactory<ChartAttemptDbContext> factory)
+        : IPlayerHistoryRepository,
+            IRequestHandler<GetPlayerHistoryQuery, IEnumerable<PlayerRatingRecord>>
     {
         public async Task WriteHistory(PlayerRatingRecord record, CancellationToken cancellationToken)
         {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
             await database.PlayerHistory.AddAsync(new PlayerHistoryEntity
             {
                 UserId = record.UserId,
@@ -30,6 +32,7 @@ namespace ScoreTracker.Data.Repositories
         public async Task<IEnumerable<PlayerRatingRecord>> Handle(GetPlayerHistoryQuery request,
             CancellationToken cancellationToken)
         {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
             return await database.PlayerHistory.Where(r => r.UserId == request.UserId)
                 .Select(r => new PlayerRatingRecord(r.UserId, r.Date, r.CompetitiveLevel, r.SinglesLevel,
                     r.DoublesLevel, r.CoOpRating, r.PassCount)).ToArrayAsync(cancellationToken);

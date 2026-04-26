@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
@@ -11,14 +11,12 @@ namespace ScoreTracker.Data.Repositories
 {
     public sealed class EFTierListRepository : ITierListRepository
     {
-        private readonly ChartAttemptDbContext _dbContext;
         private readonly IMemoryCache _cache;
         private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
         public EFTierListRepository(IDbContextFactory<ChartAttemptDbContext> factory,
             IMemoryCache cache)
         {
-            _dbContext = factory.CreateDbContext();
             _cache = cache;
             _factory = factory;
         }
@@ -30,12 +28,13 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task SaveEntry(SongTierListEntry entry, CancellationToken cancellationToken)
         {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var type = entry.TierListName.ToString();
-            var entity = await _dbContext.TierListEntry.Where(e => e.TierListName == type && e.ChartId == entry.ChartId)
+            var entity = await database.TierListEntry.Where(e => e.TierListName == type && e.ChartId == entry.ChartId)
                 .FirstOrDefaultAsync(cancellationToken);
             if (entity == null)
             {
-                await _dbContext.TierListEntry.AddAsync(new TierListEntryEntity
+                await database.TierListEntry.AddAsync(new TierListEntryEntity
                 {
                     Id = Guid.NewGuid(),
                     Category = entry.Category.ToString(),
@@ -50,14 +49,14 @@ namespace ScoreTracker.Data.Repositories
                 entity.Order = entry.Order;
             }
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
             _cache.Remove(TierListKey(entry.TierListName));
         }
 
         public async Task<IEnumerable<Guid>> GetUsersOnLevel(DifficultyLevel level, CancellationToken cancellationToken,
             bool requireActive = false)
         {
-            var database = await _factory.CreateDbContextAsync(cancellationToken);
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var levelInt = (int)level;
             if (!requireActive)
                 return await database.UserHighestTitle.Where(e => e.Level == levelInt).Select(e => e.UserId)
@@ -78,8 +77,9 @@ namespace ScoreTracker.Data.Repositories
             return await _cache.GetOrCreateAsync(TierListKey(tierListName), async o =>
             {
                 o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromDays(1);
+                await using var database = await _factory.CreateDbContextAsync(cancellationToken);
                 var nameString = tierListName.ToString();
-                return (await _dbContext.TierListEntry.ToArrayAsync(cancellationToken))
+                return (await database.TierListEntry.ToArrayAsync(cancellationToken))
                     .Where(e => e.TierListName == nameString).Select(e =>
                         new SongTierListEntry(e.TierListName,
                             e.ChartId, Enum.Parse<TierListCategory>(e.Category), e.Order));
@@ -88,10 +88,11 @@ namespace ScoreTracker.Data.Repositories
 
         public async Task SaveEntries(IEnumerable<SongTierListEntry> entries, CancellationToken cancellationToken)
         {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var entryArray = entries.ToArray();
             var tierLists = entryArray.Select(e => e.TierListName.ToString()).Distinct().ToArray();
             var chartIds = entryArray.Select(e => e.ChartId).Distinct().ToArray();
-            var entities = (await _dbContext.TierListEntry
+            var entities = (await database.TierListEntry
                     .Where(e => tierLists.Contains(e.TierListName) && chartIds.Contains(e.ChartId))
                     .ToArrayAsync(cancellationToken))
                 .GroupBy(e => e.TierListName)
@@ -106,7 +107,7 @@ namespace ScoreTracker.Data.Repositories
                 if (entity == null)
                 {
                     var type = entry.TierListName.ToString();
-                    await _dbContext.TierListEntry.AddAsync(new TierListEntryEntity
+                    await database.TierListEntry.AddAsync(new TierListEntryEntity
                     {
                         Id = Guid.NewGuid(),
                         Category = entry.Category.ToString(),
@@ -123,7 +124,7 @@ namespace ScoreTracker.Data.Repositories
             }
 
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
 
             foreach (var name in tierLists) _cache.Remove(TierListKey(name));
         }
