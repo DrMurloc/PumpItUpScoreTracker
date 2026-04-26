@@ -55,6 +55,7 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<SuggestionFeedbackEntity> SuggestionFeedback { get; set; }
     public DbSet<UserTitleEntity> UserTitle { get; set; }
     public DbSet<OfficialUserAvatarEntity> OfficialUserAvatar { get; set; }
+    public DbSet<OfficialLeaderboardImportStateEntity> OfficialLeaderboardImportState { get; set; }
     public DbSet<QualifiersConfigurationEntity> QualifiersConfiguration { get; set; }
     public DbSet<UserHighestTitleEntity> UserHighestTitle { get; set; }
     public DbSet<UserRandomSettingsEntity> UserRandomSettings { get; set; }
