@@ -130,7 +130,6 @@
             }
     };
 
-    private IEnumerable<(int place,BountyLeaderboard record)> _leaderboard = Array.Empty<(int,BountyLeaderboard)>();
     private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
     private IDictionary<Guid, IDictionary<ParagonLevel, double>> _results = new Dictionary<Guid, IDictionary<ParagonLevel, double>>();
     private IDictionary<ParagonLevel, double[]> _orderedLevelResults = new Dictionary<ParagonLevel, double[]>();

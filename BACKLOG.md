@@ -4,6 +4,99 @@ Items where the codebase isn't yet ready for open-source contributions or doesn'
 
 Scope estimates are rough order of magnitude (S = days, M = a week, L = multiple weeks).
 
+---
+
+## In progress — Configurable "What Should I Play" home page
+
+**Active worktree.** Multi-session feature; partial work already committed. Pick up where the checklist below stops. **Do NOT restart the design discussion** — the decisions in *Locked-in design* are settled.
+
+### Goal
+
+Make the home/`WhatShouldIPlay` page dynamically configurable: which sections show, of what type, in what order, with per-section refinement options.
+
+### Locked-in design
+
+- **Naming.** `Recommendation*` prefix throughout (extends existing `ChartRecommendation`, `RecommendedChartsSaga`, `GetRecommendedChartsQuery` vocabulary). Use `RecommendationSection`, `RecommendationSectionType`, `RecommendationSectionParams`, `UserRecommendationSections` (table), `IUserRecommendationSectionRepository`, `EFUserRecommendationSectionRepository`.
+- **Storage.** Dedicated EF table `UserRecommendationSections`, *not* the `UserSettings` JSON blob (JSON blob is reserved for small UI persistence). Schema sketch: `Id` (PK), `UserId`, `Order`, `SectionType` (string discriminator), nullable typed columns covering union of params (`ChartTypeFilter`, `LevelRangeMode`, `MinLevel`, `MaxLevel`, `DynamicOffsetBelow`, `DynamicOffsetAbove`, `Sort`, `Target`, `TargetThreshold`, `TitleId`, plus a `TitleMode` for `TitlePush`). Unique index on `(UserId, Order)`.
+- **Approach (A) clean replacement.** New section taxonomy *replaces* today's 8-section logic. Existing sections get mapped to new types in the default config so existing users see ~today's home page (minus Bounties).
+- **Section types — exactly 7:**
+  1. **`TitlePush`** — has `Mode ∈ {CurrentDifficultyTarget | SpecificTitle | AllIncompleteSkillTitles}` + optional `TitleId` (only for `SpecificTitle`). Paragon-level fallback: when a difficulty title is fully completed but the section is still configured, push paragon level on the same level pool instead.
+  2. **`PumbilityPush`** — uses the now-extracted `ProjectPumbilityGainsQuery` (already done; see *Done in this worktree* below).
+  3. **`FolderCompletion`** — Folder = `(ChartType: Single|Double|CoOp, Difficulty 1-28 if Single|Double else PlayerCount 2-5 for CoOp)` + `Target ∈ {Pass | LetterGrade≥X | Plate≥Y}`. Model as a value type with a `From` factory that rejects invalid combos (e.g. Level on a CoOp folder).
+  4. **`WeeklyCharts`** — refinement params (chart-type / level range modes).
+  5. **`Upscoring`** — refinement + `Sort ∈ {Best | Worst}`. **Sort uses parse percentile from `GetMyRelativeTierListQuery` / ChartSkills logic, not raw score.** *Best* = high parse charts (over-performers, push to PG); *Worst* = low parse charts (under-performers, catch up).
+  6. **`RevisitOldScores`** — refinement + age threshold (default 30d, matching today).
+  7. ~~Skill Titles as separate type~~ — **subsumed into `TitlePush.Mode = AllIncompleteSkillTitles`.** Skill titles and difficulty titles are both targets of the single Title section.
+- **Default config (per existing user, on first load).** Maps today's 7 non-bounty sections to new types — preserves visible behavior except Bounties going away. Concrete mapping:
+  - "Current Difficulty Title" → `TitlePush(Mode=CurrentDifficultyTarget)`
+  - "Weekly Charts" → `WeeklyCharts`
+  - "Revisit Old Scores" → `RevisitOldScores`
+  - "Improve Your Top 50" → `Upscoring(Sort=Best)` over user's top range
+  - "Skill Title Charts" → `TitlePush(Mode=AllIncompleteSkillTitles)`
+  - "Push PGs" → `Upscoring(Sort=Best, Target=PG)` over user's level
+  - "Fill Scores" → `Upscoring(Sort=Worst, Target=Pass)` below user's level
+- **Localization.** Populate every locale resx file in the same pass — `en-US`, `en-ZW`, `es-MX`, `fr-FR`, `it-IT`, `ja-JP`, `ko-KR`, `pt-BR`. Use the per-locale glossary at the repo root (`LOCALIZATION-<locale>.md`) for style conventions and established term mappings; for `en-ZW` (Murloc-speak), match the pattern of existing values. See ARCHITECTURE.md *Cross-cutting concerns* for full guidance.
+- **Phasing.** One PR at end (per [feedback_pr_granularity.md](feedback_pr_granularity.md)). Internally staged in this worktree.
+
+### Done in this worktree
+
+- [x] **Bounties removed wholesale.** Page, `BountySaga`, `IChartBountyRepository`+impl, both entities, `UpdateBountiesEvent`, `GetChartBountiesQuery`, both records, recurring job + `RecurringJobRunner.PublishUpdateBounties`, the bounty section in `RecommendedChartsSaga` + its tests, eight locale resx files cleaned (`Bounties` / `Bounty Leaderboard` / `Monthly Total` keys), commented-out `UpdateBountiesEvent` references in [Admin.razor](ScoreTracker/ScoreTracker/Pages/Admin/Admin.razor), dead `_leaderboard` field in [ChartLetterDifficulties.razor](ScoreTracker/ScoreTracker/Pages/Experiments/ChartLetterDifficulties.razor), `"Bounties"` test fixture string in [TierListSagaStaticsTests.cs](ScoreTracker/ScoreTracker.Tests/ApplicationTests/TierListSagaStaticsTests.cs) renamed to `"Pass Count"`. **EF migration scaffolded** — [`20260427141100_DropBounties`](ScoreTracker/ScoreTracker.Data/Migrations/20260427141100_DropBounties.cs) drops both tables, model snapshot regenerated.
+- [x] **PUMBILITY projection extracted.** [`ProjectPumbilityGainsQuery`](ScoreTracker/ScoreTracker.Application/Queries/ProjectPumbilityGainsQuery.cs) + [`PumbilityProjection`](ScoreTracker/ScoreTracker.Domain/Records/PumbilityProjection.cs) record + [`PumbilityProjectionSaga`](ScoreTracker/ScoreTracker.Application/Handlers/PumbilityProjectionSaga.cs) handler. [Pumbility.razor](ScoreTracker/ScoreTracker/Pages/Progress/Pumbility.razor) calls the new query (functional parity, the heavy 105-line `ProjectScores` body collapsed to ~6 lines). 7 component tests in [PumbilityProjectionSagaTests.cs](ScoreTracker/ScoreTracker.Tests/ApplicationTests/PumbilityProjectionSagaTests.cs) covering empty/orchestration/clamping cases. Build clean (0 errors), 601 tests passing.
+
+### Remaining work
+
+#### Phase 3 — RecommendationSection infrastructure — *M*
+
+**No saga refactor yet, no UI yet.** Just the plumbing.
+
+- [ ] **Domain types.** `RecommendationSection` record (`Id`, `UserId`, `Order`, `Type`, `Params`). `RecommendationSectionType` enum (the 7 types above). `RecommendationSectionParams` abstract record + per-type sealed subtypes (`TitlePushParams`, `PumbilityPushParams`, `FolderCompletionParams`, `WeeklyChartsParams`, `UpscoringParams`, `RevisitOldScoresParams`). Folder shape as a value type with `From` factory.
+- [ ] **Port.** `IUserRecommendationSectionRepository` in `Domain/SecondaryPorts/` — `GetSections(userId, ct)`, `SaveSections(userId, sections, ct)` (replace-all semantics is simplest).
+- [ ] **Entity.** `UserRecommendationSectionEntity` in `Data/Persistence/Entities/` with the schema sketched above. Add `DbSet<UserRecommendationSectionEntity> UserRecommendationSection` to [ChartAttemptDbContext.cs](ScoreTracker/ScoreTracker.Data/Persistence/ChartAttemptDbContext.cs).
+- [ ] **EF migration.** `dotnet ef migrations add AddUserRecommendationSections` from `ScoreTracker.Data/` with `--startup-project ../ScoreTracker/ScoreTracker.Web.csproj`. (Working command verified in this worktree.)
+- [ ] **Repository impl.** `EFUserRecommendationSectionRepository` in `Data/Repositories/`. The flat row → discriminated `SectionParams` mapping is type-switched in the repo (some boilerplate but contains the mess).
+- [ ] **MediatR commands/queries.** `GetUserRecommendationSectionsQuery(UserId)` + handler. `UpdateUserRecommendationSectionsCommand(UserId, IReadOnlyList<RecommendationSection>)` + handler. Mark with `[ExcludeFromCodeCoverage]`.
+- [ ] **Default config builder.** Domain service or static helper that returns the canonical "today's 7 sections" list for new users. Consumed by `GetUserRecommendationSectionsQuery` handler when no rows exist.
+- [ ] **Tests.** Component tests for the get/update handlers, defaults builder, params discrimination.
+
+#### Phase 4 — Saga refactor + 7 section types — *L*
+
+The heart. **`RecommendedChartsSaga` becomes a section-driven dispatcher.**
+
+- [ ] Refactor [`RecommendedChartsSaga.Handle(GetRecommendedChartsQuery, ...)`](ScoreTracker/ScoreTracker.Application/Handlers/RecommendedChartsSaga.cs) to walk the user's section list (via `GetUserRecommendationSectionsQuery`) and route each to a per-type sub-handler. Drop the hardcoded order in lines 64-75.
+- [ ] **Implement each of the 7 section type sub-handlers.** Each takes `RecommendationSectionParams` (or its concrete subtype via pattern match) and returns `IEnumerable<ChartRecommendation>`.
+  - `TitlePush` — three branches per `Mode`. Paragon fallback for completed difficulty titles. Reuses existing `GetPushLevels` / `GetSkillTitleCharts` logic where applicable.
+  - `PumbilityPush` — call `ProjectPumbilityGainsQuery`, take top-N by gain, optionally filter to charts user hasn't passed.
+  - `FolderCompletion` — filter chart pool by folder definition + target predicate; pull the unfinished ones.
+  - `WeeklyCharts` — reuse existing `GetWeeklyCharts` logic, parameterize by refinement params instead of `request.LevelOffset`/`request.ChartType`.
+  - `Upscoring` — reuse `GetMyRelativeTierListQuery` per level in range, sort by parse percentile (Best=high, Worst=low). Replaces today's *Push PGs* / *Top 50* / *Fill Scores* via params.
+  - `RevisitOldScores` — generalize today's `GetOldScores` to accept refinement + age threshold params.
+- [ ] `ChartRecommendation.Category` becomes the section's display name. For `TitlePush` modes, the category includes the title name (e.g. "Expert 6"). For others, a stable display name.
+- [ ] **Drop the `LevelOffset` / `ChartType` global filters** from `GetRecommendedChartsQuery` — those are now per-section refinements. Migrate the existing UI offset/type controls to per-section editors in Phase 5, OR keep them as page-wide overrides for one release as transition.
+- [ ] **Tests.** Each new sub-handler gets a focused component test. Existing `RecommendedChartsSagaTests` rewritten around section configs.
+- [ ] Add new keys for category display names + section labels to **all eight locale resx files** (`en-US`, `en-ZW`, `es-MX`, `fr-FR`, `it-IT`, `ja-JP`, `ko-KR`, `pt-BR`), following the per-locale `LOCALIZATION-<locale>.md` glossaries.
+
+#### Phase 5 — Configuration UI — *M*
+
+- [ ] Cog button on [WhatShouldIPlay.razor](ScoreTracker/ScoreTracker/Pages/WhatShouldIPlay.razor) opens a MudBlazor modal.
+- [ ] Modal: ordered list of configured sections with up/down (or drag) reorder + delete. "Add section" picker. Per-type params editor (varies by `SectionType`).
+- [ ] Save dispatches `UpdateUserRecommendationSectionsCommand`.
+- [ ] Replace today's `_hiddenSections` machinery with the new config (per-section visibility is now "remove from list" rather than a hide flag).
+- [ ] Add new keys for UI labels to **all eight locale resx files** (`en-US`, `en-ZW`, `es-MX`, `fr-FR`, `it-IT`, `ja-JP`, `ko-KR`, `pt-BR`), following the per-locale `LOCALIZATION-<locale>.md` glossaries.
+
+#### Phase 6 — Polish — *S*
+
+- [ ] Sensible defaults seeded from competitive level when adding a new section.
+- [ ] Verify mobile/responsive behavior of the new modal.
+- [ ] Manual smoke test: load home page as a brand-new user, verify default config renders identical-ish to pre-refactor.
+
+### Notes for the next session
+
+- Working directory: this worktree (`.claude/worktrees/angry-franklin-a0a6a0`, branch `claude/angry-franklin-a0a6a0`).
+- Verified `dotnet ef migrations add` command (run from `ScoreTracker/ScoreTracker.Data/` with `--startup-project ../ScoreTracker/ScoreTracker.Web.csproj`).
+- Build: `dotnet build ScoreTracker/ScoreTracker.sln -c Release`. Tests: `dotnet test ScoreTracker/ScoreTracker.Tests/ScoreTracker.Tests.csproj`.
+- Drops bounties tables — confirmed safe with maintainer (no archival keep needed).
+- One PR at end, no granular splits.
+
 ## Current priority: open-source readiness
 
 The immediate goal is getting this codebase into a good state for community contributions. The phased list below is the contribution-velocity priority. Items in BACKLOG that don't help that goal directly are deferred — they remain valuable for code quality but are off the critical path until OSS readiness lands.

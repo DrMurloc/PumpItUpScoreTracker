@@ -146,8 +146,6 @@
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
 @inject ChartVideoDisplayer VideoDisplayer;
-@inject IPlayerStatsRepository PlayerStats;
-@inject IPhoenixRecordRepository PhoenixRecords;
 @code {
 
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
@@ -218,108 +216,11 @@
     private bool _finishedProjecting = false;
     private async Task ProjectScores()
     {
-        _expectedScore = new Dictionary<Guid, PhoenixScore>();
-        var levelRange = _tierList.Where(kv => kv.Key != TierListCategory.Unrecorded).SelectMany(t => t.Value).Select(t => _charts[t].Level)
-            .Distinct().ToArray();
-        if (!levelRange.Any())
-        {
-            return;
-        }
-        var lowestLevel = levelRange.Min();
-        var highestLevel = levelRange.Max();
-
-        var stats = await PlayerStats.GetStats(CurrentUser.User.Id, CancellationToken.None);
-
-        var singlesLevel = stats.SinglesCompetitiveLevel <= 10 ? 10.0 : stats.SinglesCompetitiveLevel;
-        var doublesLevel = stats.DoublesCompetitiveLevel <= 10 ? 10.0 : stats.DoublesCompetitiveLevel;
-
-        var lowestScore = _ratings.OrderByDescending(kv => kv.Value).Take(50).Min(kv => kv.Value);
-        var singlesPlayers = (await PlayerStats.GetPlayersByCompetitiveRange(ChartType.Single, singlesLevel, 1, CancellationToken.None)).ToArray();
-        var doublesPlayers = (await PlayerStats.GetPlayersByCompetitiveRange(ChartType.Double, doublesLevel, 1, CancellationToken.None)).ToArray();
-        var scoring = ScoringConfiguration.PumbilityScoring(false);
-
-        _chartDifficulty = (await Mediator.Send(new GetTierListQuery("Pass Count"))).ToDictionary(s => s.ChartId, e => e.Category);
-        foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
-        {
-            var playerScores = (await PhoenixRecords.GetRecordedScores(chartType == ChartType.Single ? singlesPlayers : doublesPlayers, chartType, lowestLevel, highestLevel, CancellationToken.None))
-                .Where(s => s is { IsBroken: false,Score: not null })
-                .GroupBy(r => _charts[r.ChartId].Level)
-                .ToDictionary(g => g.Key, g => g.ToArray());
-
-
-            foreach (var levelGroup in playerScores)
-            {
-                var chartGroup = levelGroup.Value.GroupBy(s => s.ChartId).ToDictionary(g => g.Key, g => g.Select(c=>c.Score!.Value).OrderByDescending(c => c).ToArray());
-
-                var percentile =
-                    chartGroup.Any(c => _allScores.TryGetValue(c.Key, out var score) && score is { IsBroken: false, Score: not null })?
-
-                    chartGroup.Where(c => _allScores.TryGetValue(c.Key, out var score) && score is { IsBroken: false, Score: not null })
-                    .Average(c => Array.IndexOf(c.Value, _allScores[c.Key].Score!.Value)/(double)c.Value.Count())*.95:.5;
-
-
-                var chartAverages = chartGroup
-                    .Where(kv=>kv.Value.Count()>3)
-                    .ToDictionary(g=>g.Key,g=>g.Value.Average(c=>(int)c));
-
-
-                var myScores = _allScores.Where(kv => kv.Value.Score != null && chartAverages.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value.Score!.Value);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
-                if (myScores.Count()<(int)Math.Floor(.2*chartAverages.Count()))
-                {
-                    var diff = scoring.GetScore(chartType, levelGroup.Key, PhoenixLetterGrade.AA.GetMinimumScore()) - lowestScore;
-                    if (myScores.Any() && diff>0)
-                    {
-                        _insufficientData[(chartType,levelGroup.Key)] = (int)diff;
-                    }
-                    continue;
-                }
-
-                foreach (var chartAverage in chartAverages)
-                {
-                    var target = percentile * chartGroup[chartAverage.Key].Count();
-                    var highIndex = Math.Floor(target);
-                    var lowIndex = Math.Ceiling(target);
-                    if (lowIndex > chartGroup[chartAverage.Key].Count()-1)
-                    {
-
-                        lowIndex = chartGroup[chartAverage.Key].Count()-1;
-                    }
-                    if (highIndex < 0)
-                    {
-                        highIndex = 0;
-                    }
-                    var highScore = chartGroup[chartAverage.Key][(int)highIndex];
-                    var lowScore = chartGroup[chartAverage.Key][(int)lowIndex];
-
-                    var estimated = lowScore+(highScore-lowScore)*(lowIndex-target);
-                    _expectedScore[chartAverage.Key] = (int)estimated;
-
-                }
-
-
-
-            }
-        }
-
-        foreach (var kv in _expectedScore)
-        {
-            var expectedPumbility = scoring.GetScore(_charts[kv.Key], kv.Value, PhoenixPlate.ExtremeGame, false);
-            var expectedGains = expectedPumbility - lowestScore;
-            if (expectedGains <= 0)
-            {
-                continue;
-            }
-            if (_ratings.TryGetValue(kv.Key, out var rating))
-            {
-                expectedGains = expectedPumbility - rating;
-                if (expectedGains <= 0)
-                {
-                    continue;
-                }
-            }
-            _projectedGains[kv.Key] = (int)expectedGains;
-        }
+        var projection = await Mediator.Send(new ProjectPumbilityGainsQuery(CurrentUser.User.Id), CancellationToken.None);
+        _expectedScore = projection.ExpectedScores.ToDictionary(kv => kv.Key, kv => kv.Value);
+        _projectedGains = projection.ProjectedGains.ToDictionary(kv => kv.Key, kv => kv.Value);
+        _insufficientData = projection.InsufficientDataGains.ToDictionary(kv => kv.Key, kv => kv.Value);
+        _chartDifficulty = projection.ChartDifficulty.ToDictionary(kv => kv.Key, kv => kv.Value);
         _finishedProjecting = true;
     }
 

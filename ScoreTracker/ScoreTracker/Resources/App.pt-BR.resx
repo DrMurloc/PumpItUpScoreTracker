@@ -1032,12 +1032,6 @@
   <data name="Avatar" xml:space="preserve">
     <value>Avatar</value>
   </data>
-  <data name="Bounties" xml:space="preserve">
-    <value>Bounties</value>
-  </data>
-  <data name="Bounty Leaderboard" xml:space="preserve">
-    <value>Classificação de bounties</value>
-  </data>
   <data name="Calculated Tier List" xml:space="preserve">
     <value>Faixa calculada</value>
   </data>
@@ -1094,9 +1088,6 @@
   </data>
   <data name="Missing" xml:space="preserve">
     <value>Faltante</value>
-  </data>
-  <data name="Monthly Total" xml:space="preserve">
-    <value>Total mensal</value>
   </data>
   <data name="Note Counts" xml:space="preserve">
     <value>Contagem de notas</value>

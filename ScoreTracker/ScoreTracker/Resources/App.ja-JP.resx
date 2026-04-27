@@ -1144,15 +1144,6 @@
   <data name="Original Concept (excel score tracking) Constructed by KyleTT" xml:space="preserve">
 	  <value>元案（Excelスコア管理）はKyleTTさんが構築</value>
   </data>
-  <data name="Bounties" xml:space="preserve">
-	  <value>バウンティ</value>
-  </data>
-  <data name="Bounty Leaderboard" xml:space="preserve">
-	  <value>バウンティランキング</value>
-  </data>
-  <data name="Monthly Total" xml:space="preserve">
-	  <value>月間合計</value>
-  </data>
   <data name="Total" xml:space="preserve">
 	  <value>総計</value>
   </data>
