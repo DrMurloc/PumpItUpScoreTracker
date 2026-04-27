@@ -193,8 +193,8 @@ var app = builder.Build();
 
 
 app.UseRequestLocalization(new RequestLocalizationOptions()
-    .AddSupportedCultures("en-US", "pt-BR", "ko-KR", "en-ZW", "es-MX", "fr-FR", "ja-JP")
-    .AddSupportedUICultures("en-US", "pt-BR", "ko-KR", "en-ZW", "es-MX", "fr-FR", "ja-JP")
+    .AddSupportedCultures("en-US", "pt-BR", "ko-KR", "en-ZW", "es-MX", "fr-FR", "ja-JP", "it-IT")
+    .AddSupportedUICultures("en-US", "pt-BR", "ko-KR", "en-ZW", "es-MX", "fr-FR", "ja-JP", "it-IT")
     .SetDefaultCulture("en-US"));
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

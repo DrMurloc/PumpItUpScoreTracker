@@ -1,0 +1,2029 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Microsoft ResX Schema
+
+    Version 2.0
+
+    The primary goals of this format is to allow a simple XML format
+    that is mostly human readable. The generation and parsing of the
+    various data types are done through the TypeConverter classes
+    associated with the data types.
+
+    Example:
+
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+
+    There are any number of "resheader" rows that contain simple
+    name/value pairs.
+
+    Each data row contains a name, and value. The row also contains a
+    type or mimetype. Type corresponds to a .NET class that support
+    text/value conversion through the TypeConverter architecture.
+    Classes that don't support this are serialized and stored with the
+    mimetype set.
+
+    The mimetype is used for serialized objects, and tells the
+    ResXResourceReader how to depersist the object. This is currently not
+    extensible. For a given mimetype the value must be set accordingly:
+
+    Note - application/x-microsoft.net.object.binary.base64 is the format
+    that the ResXResourceWriter will generate, however the reader can
+    read any of the formats listed below.
+
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="1+ Level Easier" xml:space="preserve">
+    <value>1+ livello più facile</value>
+  </data>
+  <data name="1+ Level Harder" xml:space="preserve">
+    <value>1+ livello più difficile</value>
+  </data>
+  <data name="About" xml:space="preserve">
+    <value>Informazioni</value>
+  </data>
+  <data name="Account" xml:space="preserve">
+    <value>Account</value>
+  </data>
+  <data name="Account Creation Line 1" xml:space="preserve">
+    <value>Se non hai un account con Score Tracker, ne verrà creato uno quando selezionerai uno dei provider di accesso.</value>
+  </data>
+  <data name="Account Creation Line 2" xml:space="preserve">
+    <value>Le uniche informazioni memorizzate sul tuo account dal provider di accesso che selezioni sono l'ID esterno (di solito un numero casuale o una combinazione di lettere) e il nome utente. Puoi cambiare il nome utente in qualsiasi momento dopo la creazione dell'account.</value>
+  </data>
+  <data name="Account Creation Line 3" xml:space="preserve">
+    <value>In Score Tracker non vengono memorizzate password: noi non le vogliamo, tu non vuoi che noi le abbiamo, così sono tutti più contenti.</value>
+  </data>
+  <data name="Account Creation?" xml:space="preserve">
+    <value>Crea un account?</value>
+    <comment>Button that pops up explination of account creation process</comment>
+  </data>
+  <data name="Actions" xml:space="preserve">
+    <value>Azioni</value>
+  </data>
+  <data name="Add to Favorites" xml:space="preserve">
+    <value>Aggiungi ai preferiti</value>
+  </data>
+  <data name="Add to ToDo" xml:space="preserve">
+    <value>Aggiungi alla ToDo List</value>
+  </data>
+  <data name="Average" xml:space="preserve">
+    <value>Media</value>
+  </data>
+  <data name="Broken" xml:space="preserve">
+    <value>Rotto</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Annulla</value>
+  </data>
+  <data name="Chart List Share Description" xml:space="preserve">
+    <value>Usa questo link per condividere la tua lista dei chart con altri giocatori.</value>
+  </data>
+  <data name="Chart Randomizer" xml:space="preserve">
+    <value>Generatore casuale di chart</value>
+  </data>
+  <data name="Chart Type" xml:space="preserve">
+    <value>Tipo di chart</value>
+    <comment>Chart Types = single, double, co op</comment>
+  </data>
+  <data name="Charts" xml:space="preserve">
+    <value>Chart</value>
+  </data>
+  <data name="Charts List" xml:space="preserve">
+    <value>Lista dei chart</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Chiudi</value>
+  </data>
+  <data name="Communities" xml:space="preserve">
+    <value>Comunità</value>
+  </data>
+  <data name="Completed" xml:space="preserve">
+    <value>Completato</value>
+  </data>
+  <data name="CoOp" xml:space="preserve">
+    <value>CoOp</value>
+  </data>
+  <data name="CoOp Aggregation" xml:space="preserve">
+    <value>Aggregazione CoOp</value>
+  </data>
+  <data name="Copy Script" xml:space="preserve">
+    <value>Copia lo script</value>
+  </data>
+  <data name="Copy to Clipboard" xml:space="preserve">
+    <value>Copia negli appunti</value>
+  </data>
+  <data name="Difficulty Level" xml:space="preserve">
+    <value>Livello di difficoltà</value>
+  </data>
+  <data name="Doubles" xml:space="preserve">
+    <value>Doubles</value>
+  </data>
+  <data name="Download Failures" xml:space="preserve">
+    <value>Errori di download</value>
+  </data>
+  <data name="Download Scores" xml:space="preserve">
+    <value>Scarica i punteggi</value>
+  </data>
+  <data name="Easiest Player" xml:space="preserve">
+    <value>Giocatore più facile</value>
+  </data>
+  <data name="Easy" xml:space="preserve">
+    <value>Facile</value>
+  </data>
+  <data name="Ending Page" xml:space="preserve">
+    <value>Pagina finale</value>
+  </data>
+  <data name="Favorites" xml:space="preserve">
+    <value>Preferiti</value>
+  </data>
+  <data name="Full Privacy Policy" xml:space="preserve">
+    <value>Informativa sulla privacy completa</value>
+  </data>
+  <data name="Hard" xml:space="preserve">
+    <value>Difficile</value>
+  </data>
+  <data name="Hardest Player" xml:space="preserve">
+    <value>Giocatore più difficile</value>
+  </data>
+  <data name="Hide Completed Charts" xml:space="preserve">
+    <value>Nascondi i chart completati</value>
+  </data>
+  <data name="Import Phoenix Scores" xml:space="preserve">
+    <value>Importa i punteggi Phoenix</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Lingua</value>
+  </data>
+  <data name="Last Updated" xml:space="preserve">
+    <value>Ultimo aggiornamento</value>
+  </data>
+  <data name="Leaderboard" xml:space="preserve">
+    <value>Classifica</value>
+  </data>
+  <data name="Letter Grade" xml:space="preserve">
+    <value>Voto in lettere</value>
+  </data>
+  <data name="Log In With" xml:space="preserve">
+    <value>Accedi con {0}</value>
+    <comment>I.E Log In With Discord</comment>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>Esci</value>
+  </data>
+  <data name="Make Not Public Disclaimer" xml:space="preserve">
+    <value>Rendere privato il tuo account farà sì che i tuoi punteggi e progressi non siano più visibili dall'esterno, nemmeno per chi ti sta già seguendo. Verrai rimosso dalla comunità Mondo.</value>
+  </data>
+  <data name="Make Private" xml:space="preserve">
+    <value>Rendi privato</value>
+  </data>
+  <data name="Make Public" xml:space="preserve">
+    <value>Rendi pubblico</value>
+  </data>
+  <data name="Make Public Disclaimer 1" xml:space="preserve">
+    <value>Rendere pubblico il tuo account farà sì che i tuoi punteggi e progressi siano visibili dall'esterno. Verrai aggiunto anche alla comunità Mondo.</value>
+  </data>
+  <data name="Make Public Disclaimer 2" xml:space="preserve">
+    <value>Se il tuo account era pubblico in precedenza e l'hai reso privato, renderlo di nuovo pubblico permetterà a chi ti sta seguendo di vedere nuovamente i tuoi progressi.</value>
+  </data>
+  <data name="Medium" xml:space="preserve">
+    <value>Medio</value>
+  </data>
+  <data name="Mix" xml:space="preserve">
+    <value>Mix</value>
+  </data>
+  <data name="My Score" xml:space="preserve">
+    <value>Il mio punteggio</value>
+  </data>
+  <data name="Next Letter" xml:space="preserve">
+    <value>Prossima lettera</value>
+  </data>
+  <data name="Not Graded Count" xml:space="preserve">
+    <value>Non valutati</value>
+  </data>
+  <data name="Not Passed Count" xml:space="preserve">
+    <value>Non Passed</value>
+  </data>
+  <data name="Official Leaderboard Search" xml:space="preserve">
+    <value>Ricerca classifica ufficiale</value>
+  </data>
+  <data name="Official Scores" xml:space="preserve">
+    <value>Punteggi ufficiali</value>
+  </data>
+  <data name="Open Video" xml:space="preserve">
+    <value>Apri video</value>
+  </data>
+  <data name="Parse Failures" xml:space="preserve">
+    <value>Errori di analisi</value>
+  </data>
+  <data name="Passed Count" xml:space="preserve">
+    <value>Passed</value>
+  </data>
+  <data name="Phoenix Import Confirming" xml:space="preserve">
+    <value>Procedendo, inizierà il salvataggio dei punteggi caricati sui tuoi record esistenti. Non potrai annullare questa operazione. Potrai interrompere il processo di salvataggio, ma non verranno annullati i caricamenti già effettuati.</value>
+  </data>
+  <data name="Phoenix Import Info 1" xml:space="preserve">
+    <value>Usa il pulsante Copia lo script qui sotto</value>
+  </data>
+  <data name="Phoenix Import Info 2" xml:space="preserve">
+    <value>Usa quello script nei dev-tools mentre sei loggato su https://piugame.com per scaricare un CSV dei tuoi punteggi. (Assicurati di non essere su phoenix.piugame.com)</value>
+  </data>
+  <data name="Phoenix Import Info 3" xml:space="preserve">
+    <value>Puoi poi caricare quel CSV qui per far apparire i tuoi punteggi.</value>
+  </data>
+  <data name="Phoenix Import Info 4" xml:space="preserve">
+    <value>Nota: questo strumento è piuttosto hacky e potrebbe richiedere un po' di debugging da parte tua per funzionare. Assicurati di disattivare i blocchi pubblicità.</value>
+  </data>
+  <data name="Phoenix Import Saving" xml:space="preserve">
+    <value>Se lasci questa pagina o annulli, il caricamento si fermerà ma non perderai i punteggi già registrati dal tuo upload.</value>
+  </data>
+  <data name="Phoenix Import Saving Failures" xml:space="preserve">
+    <value>Alcuni chart non sono stati scaricati. Puoi scaricare un CSV degli errori per fare aggiustamenti e riprovare.</value>
+  </data>
+  <data name="Phoenix Import Saving Progress" xml:space="preserve">
+    <value>{0}/{1} caricati. {2} rimanenti. {3} non registrati</value>
+    <comment>I.E 4/192 Uploaded. 3:29 Remaining. 2 Failed to record</comment>
+  </data>
+  <data name="Phoenix Import Saving Success" xml:space="preserve">
+    <value>Tutti i chart che hai caricato sono stati aggiornati con successo!</value>
+  </data>
+  <data name="Phoenix Import Uploading" xml:space="preserve">
+    <value>Lo Spreadsheet è in fase di caricamento ed elaborazione...</value>
+  </data>
+  <data name="Phoenix Score Calculator" xml:space="preserve">
+    <value>Calcolatore di punteggi Phoenix</value>
+  </data>
+  <data name="Plate" xml:space="preserve">
+    <value>Plate</value>
+    <comment>I.E MG, PG, UG</comment>
+  </data>
+  <data name="Players" xml:space="preserve">
+    <value>Giocatori</value>
+  </data>
+  <data name="Popularity" xml:space="preserve">
+    <value>Popolarità</value>
+  </data>
+  <data name="Progress" xml:space="preserve">
+    <value>Progresso</value>
+  </data>
+  <data name="Progress Charts" xml:space="preserve">
+    <value>Statistiche del giocatore</value>
+  </data>
+  <data name="Public" xml:space="preserve">
+    <value>Pubblico</value>
+    <comment>(on/off, if account is set to public)</comment>
+  </data>
+  <data name="Recorded Date" xml:space="preserve">
+    <value>Data di registrazione</value>
+  </data>
+  <data name="Recorded On" xml:space="preserve">
+    <value>Registrato il {0}</value>
+    <comment>I.E Recorded on 12/6/2023 (I don't support date localization yet but will eventually)</comment>
+  </data>
+  <data name="Remaining Charts" xml:space="preserve">
+    <value>{0} (SSS+) - {1} (AA) chart rimanenti</value>
+    <comment>I.E 6 (SSA+) - 10 (AA) Charts Remaining</comment>
+  </data>
+  <data name="Remaining Charts For You" xml:space="preserve">
+    <value>{0} chart stimati per te</value>
+    <comment>I.E 8 Charts Estimated for You</comment>
+  </data>
+  <data name="Remove from ToDo" xml:space="preserve">
+    <value>Rimuovi dalla ToDo List</value>
+  </data>
+  <data name="Report Video" xml:space="preserve">
+    <value>Segnala video</value>
+  </data>
+  <data name="Report Video Tooltip" xml:space="preserve">
+    <value>Segnala video rotto o errato</value>
+  </data>
+  <data name="Restart" xml:space="preserve">
+    <value>Riavvia</value>
+  </data>
+  <data name="Save Scores" xml:space="preserve">
+    <value>Salva i punteggi</value>
+  </data>
+  <data name="Saved Charts" xml:space="preserve">
+    <value>Chart salvati</value>
+  </data>
+  <data name="Score" xml:space="preserve">
+    <value>Punteggio</value>
+  </data>
+  <data name="Score Formula Shoutout" xml:space="preserve">
+    <value>Un ringraziamento a MR_WEQ per aver fatto il reverse-engineering di questa formula del punteggio!</value>
+  </data>
+  <data name="Score Loss" xml:space="preserve">
+    <value>Perdita di punteggio per {0}</value>
+    <comment>I.E: Goods Score Loss</comment>
+  </data>
+  <data name="Score Loss Note" xml:space="preserve">
+    <value>Nota: la perdita di punteggio può avere un margine di 1-4 punti per arrotondamento</value>
+  </data>
+  <data name="Score Range Shoutout" xml:space="preserve">
+    <value>Un ringraziamento a daryen per aver raccolto i dati e finalizzato gli intervalli di punteggio per i voti in lettere!</value>
+  </data>
+  <data name="Score State" xml:space="preserve">
+    <value>Stato del punteggio</value>
+    <comment>Score States = Passed, Unpassed, Unscored</comment>
+  </data>
+  <data name="Scores Parsed" xml:space="preserve">
+    <value>Punteggi analizzati</value>
+  </data>
+  <data name="Show Only ToDo Charts" xml:space="preserve">
+    <value>Mostra solo i ToDo Charts</value>
+  </data>
+  <data name="Show Score Distribution" xml:space="preserve">
+    <value>Mostra la distribuzione dei punteggi</value>
+  </data>
+  <data name="Singles" xml:space="preserve">
+    <value>Singles</value>
+  </data>
+  <data name="Song Duration" xml:space="preserve">
+    <value>Durata della canzone</value>
+  </data>
+  <data name="Song Image" xml:space="preserve">
+    <value>Immagine della canzone</value>
+  </data>
+  <data name="Song Name" xml:space="preserve">
+    <value>Nome della canzone</value>
+  </data>
+  <data name="Song Type" xml:space="preserve">
+    <value>Tipo di canzone</value>
+    <comment>Song Types = Arcade, Full Song, etc.</comment>
+  </data>
+  <data name="Starting Page" xml:space="preserve">
+    <value>Pagina iniziale</value>
+  </data>
+  <data name="Tier Lists" xml:space="preserve">
+    <value>Tier Lists</value>
+  </data>
+  <data name="Title Progress" xml:space="preserve">
+    <value>Progresso dei titoli</value>
+  </data>
+  <data name="Titles" xml:space="preserve">
+    <value>Titoli</value>
+  </data>
+  <data name="To Do" xml:space="preserve">
+    <value>Da fare</value>
+  </data>
+  <data name="Tools" xml:space="preserve">
+    <value>Strumenti</value>
+  </data>
+  <data name="Total Count" xml:space="preserve">
+    <value>Totale</value>
+  </data>
+  <data name="Tournaments" xml:space="preserve">
+    <value>Tornei</value>
+  </data>
+  <data name="Unpassed ToDos" xml:space="preserve">
+    <value>Hai {0} chart di livello {1} contrassegnati come Da fare che non hai passato.</value>
+    <comment>I.E You have 19 level 24 charts marked To Do you haven't passed</comment>
+  </data>
+  <data name="Upload Scores" xml:space="preserve">
+    <value>Carica i punteggi</value>
+  </data>
+  <data name="Upload XX Scores" xml:space="preserve">
+    <value>Carica i punteggi XX</value>
+  </data>
+  <data name="Use Password 1" xml:space="preserve">
+    <value>Questo farà accedere PIUScores al tuo account e importare i punteggi per te.</value>
+  </data>
+  <data name="Use Password 2" xml:space="preserve">
+    <value>Non memorizzo alcuna registrazione del tuo nome utente o della tua password, dovrai digitarli ogni volta che usi questa funzione.</value>
+  </data>
+  <data name="Use Password 3" xml:space="preserve">
+    <value>Per ridurre al minimo le chiamate a https://piugame.com importerò solo punteggi nuovi o migliorati. Ogni utente riceve solo un'importazione completa tramite Username/Password. Usa l'importatore dev-tools se vuoi reimportare punteggi precedenti.</value>
+  </data>
+  <data name="Use Password 4" xml:space="preserve">
+    <value>Una volta avviato, non lasciare questa pagina o i tuoi punteggi non finiranno di essere salvati.</value>
+  </data>
+  <data name="Used Primarily for debugging" xml:space="preserve">
+    <value>Usato principalmente per il debugging</value>
+  </data>
+  <data name="Username" xml:space="preserve">
+    <value>Nome utente</value>
+  </data>
+  <data name="Very Easy" xml:space="preserve">
+    <value>Molto facile</value>
+  </data>
+  <data name="Very Hard" xml:space="preserve">
+    <value>Molto difficile</value>
+  </data>
+  <data name="Video" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="Vote Count" xml:space="preserve">
+    <value>{0} voti</value>
+  </data>
+  <data name="Photos" xml:space="preserve">
+    <value>Foto</value>
+    <comment>Photos</comment>
+  </data>
+  <data name="Qualifiers Leaderboard" xml:space="preserve">
+    <value>Classifica dei Qualifiers di {0}</value>
+    <comment>Qualifiers Leaderboard</comment>
+  </data>
+  <data name="Place" xml:space="preserve">
+    <value>Posizione</value>
+  </data>
+  <data name="Rating" xml:space="preserve">
+    <value>Rating</value>
+    <comment>Rating</comment>
+  </data>
+  <data name="Pending" xml:space="preserve">
+    <value>In attesa</value>
+    <comment>Pending</comment>
+  </data>
+  <data name="Event Links" xml:space="preserve">
+    <value>Link dell'evento</value>
+    <comment>Event Links</comment>
+  </data>
+  <data name="Rules" xml:space="preserve">
+    <value>Regole</value>
+    <comment>Rules</comment>
+  </data>
+  <data name="Event" xml:space="preserve">
+    <value>Evento</value>
+    <comment>Event</comment>
+  </data>
+  <data name="Website" xml:space="preserve">
+    <value>Sito web</value>
+    <comment>Website</comment>
+  </data>
+  <data name="Chart Count" xml:space="preserve">
+    <value>Numero di chart</value>
+  </data>
+  <data name="Home" xml:space="preserve">
+    <value>Home</value>
+  </data>
+  <data name="Leaderboard Player Compare" xml:space="preserve">
+    <value>Confronto giocatori in classifica</value>
+  </data>
+  <data name="Max Rating" xml:space="preserve">
+    <value>Rating max</value>
+  </data>
+  <data name="Qualifier Submit Phrase 1" xml:space="preserve">
+    <value>Non è necessario aver effettuato l'accesso per usare questo strumento. Digita un nome utente per iniziare a inviare.</value>
+  </data>
+  <data name="Qualifier Submit Phrase 2" xml:space="preserve">
+    <value>Questa è la tua prima submission! Assicurati che il tuo Username sia identificabile tramite Discord o Start.GG.</value>
+  </data>
+  <data name="Qualifiers Submission" xml:space="preserve">
+    <value>Submission Qualifiers di {0}</value>
+  </data>
+  <data name="Rating Calculator" xml:space="preserve">
+    <value>Calcolatore di Rating</value>
+  </data>
+  <data name="Song" xml:space="preserve">
+    <value>Canzone</value>
+  </data>
+  <data name="Song Artist" xml:space="preserve">
+    <value>Artista della canzone</value>
+  </data>
+  <data name="Submission Page" xml:space="preserve">
+    <value>Pagina di invio</value>
+  </data>
+  <data name="Submit" xml:space="preserve">
+    <value>Invia</value>
+  </data>
+  <data name="Suggested Chart" xml:space="preserve">
+    <value>Chart suggerito</value>
+  </data>
+  <data name="To Leaderboard" xml:space="preserve">
+    <value>Vai alla classifica</value>
+  </data>
+  <data name="Upload Image" xml:space="preserve">
+    <value>Carica immagine</value>
+  </data>
+  <data name="Use Script" xml:space="preserve">
+    <value>Usa  script</value>
+  </data>
+  <data name="World Rankings" xml:space="preserve">
+    <value>Classifiche mondiali</value>
+  </data>
+  <data name="Play Num" xml:space="preserve">
+    <value>Gioca almeno {0}</value>
+  </data>
+  <data name="Text View" xml:space="preserve">
+    <value>Vista testo</value>
+    <comment>Text View</comment>
+  </data>
+  <data name="Open" xml:space="preserve">
+    <value>Apri</value>
+    <comment>Open</comment>
+  </data>
+  <data name="Country" xml:space="preserve">
+    <value>Paese</value>
+    <comment>Country</comment>
+  </data>
+  <data name="Avatar" xml:space="preserve">
+    <value>Avatar</value>
+    <comment>Avatar</comment>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Nome</value>
+    <comment>Name</comment>
+  </data>
+  <data name="Level" xml:space="preserve">
+    <value>Livello</value>
+    <comment>Level</comment>
+  </data>
+  <data name="Validation" xml:space="preserve">
+    <value>Validazione</value>
+    <comment>Validation</comment>
+  </data>
+  <data name="Add UCS" xml:space="preserve">
+    <value>Aggiungi UCS</value>
+    <comment>Add UCS</comment>
+  </data>
+  <data name="Uploader" xml:space="preserve">
+    <value>Uploader</value>
+    <comment>Uploader</comment>
+  </data>
+  <data name="Step Artist" xml:space="preserve">
+    <value>Step Artist</value>
+    <comment>Step Artist</comment>
+  </data>
+  <data name="Tag" xml:space="preserve">
+    <value>Tag</value>
+    <comment>Tag</comment>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Aggiungi</value>
+    <comment>Add</comment>
+  </data>
+  <data name="Tags" xml:space="preserve">
+    <value>Tag</value>
+    <comment>Tags</comment>
+  </data>
+  <data name="Link" xml:space="preserve">
+    <value>Link</value>
+    <comment>Link</comment>
+  </data>
+  <data name="UCS Leaderboard" xml:space="preserve">
+    <value>Classifica UCS</value>
+    <comment>UCS Leaderboard</comment>
+  </data>
+  <data name="Stage Pass" xml:space="preserve">
+    <value>Stage Pass</value>
+    <comment>Stage Pass</comment>
+  </data>
+  <data name="BPM" xml:space="preserve">
+    <value>BPM</value>
+    <comment>BPM</comment>
+  </data>
+  <data name="Note Count" xml:space="preserve">
+    <value>Conteggio note</value>
+    <comment>Note Count</comment>
+  </data>
+  <data name="Pass (Data Backed)" xml:space="preserve">
+    <value>Pass (con dati)</value>
+    <comment>Pass (Data Backed)</comment>
+  </data>
+  <data name="Score (Data Backed)" xml:space="preserve">
+    <value>Punteggio (con dati)</value>
+    <comment>Score (Data Backed)</comment>
+  </data>
+  <data name="Popularity (PIU Game Leaderboard)" xml:space="preserve">
+    <value>Popolarità (classifica PIU Game)</value>
+    <comment>Popularity (PIU Game Leaderboard)</comment>
+  </data>
+  <data name="Player Count" xml:space="preserve">
+    <value>Numero di giocatori</value>
+    <comment>Player Count</comment>
+  </data>
+  <data name="Difficulty Categorization" xml:space="preserve">
+    <value>Categorizzazione per difficoltà</value>
+    <comment>Difficulty Categorization</comment>
+  </data>
+  <data name="Scoring Level" xml:space="preserve">
+    <value>Livello di scoring</value>
+    <comment>Scoring Level</comment>
+  </data>
+  <data name="Skill" xml:space="preserve">
+    <value>Abilità</value>
+    <comment>Skill</comment>
+  </data>
+  <data name="Age" xml:space="preserve">
+    <value>Età</value>
+    <comment>Age</comment>
+  </data>
+  <data name="Score Ranking" xml:space="preserve">
+    <value>Classifica per punteggio</value>
+    <comment>Score Ranking</comment>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Impostazioni</value>
+    <comment>Settings</comment>
+  </data>
+  <data name="Show Skills" xml:space="preserve">
+    <value>Mostra le abilità</value>
+    <comment>Show Skills</comment>
+  </data>
+  <data name="Show Difficulty" xml:space="preserve">
+    <value>Mostra la difficoltà</value>
+    <comment>Show Difficulty</comment>
+  </data>
+  <data name="Show Song Name" xml:space="preserve">
+    <value>Mostra il nome della canzone</value>
+    <comment>Show Song Name</comment>
+  </data>
+  <data name="Show Step Artist" xml:space="preserve">
+    <value>Mostra lo Step Artist</value>
+    <comment>Show Step Artist</comment>
+  </data>
+  <data name="Personalized Difficulty" xml:space="preserve">
+    <value>Difficoltà personalizzata</value>
+    <comment>Personalized Difficulty</comment>
+  </data>
+  <data name="Show Age" xml:space="preserve">
+    <value>Mostra l'età</value>
+    <comment>Show Age</comment>
+  </data>
+  <data name="Filters" xml:space="preserve">
+    <value>Filtri</value>
+    <comment>Filters</comment>
+  </data>
+  <data name="Min BPM" xml:space="preserve">
+    <value>BPM min</value>
+    <comment>Min BPM</comment>
+  </data>
+  <data name="Max BPM" xml:space="preserve">
+    <value>BPM max</value>
+    <comment>Max BPM</comment>
+  </data>
+  <data name="Min Note Count" xml:space="preserve">
+    <value>Conteggio note min</value>
+    <comment>Min Note Count</comment>
+  </data>
+  <data name="Max Note Count" xml:space="preserve">
+    <value>Conteggio note max</value>
+    <comment>Max Note Count</comment>
+  </data>
+  <data name="Min Letter Grade" xml:space="preserve">
+    <value>Voto in lettere min</value>
+    <comment>Min Letter Grade</comment>
+  </data>
+  <data name="Max Letter Grade" xml:space="preserve">
+    <value>Voto in lettere max</value>
+    <comment>Max Letter Grade</comment>
+  </data>
+  <data name="Admin" xml:space="preserve">
+    <value>Admin</value>
+  </data>
+  <data name="Do It" xml:space="preserve">
+    <value>Fallo</value>
+    <comment>Admin trigger button — runs RebuildOfficialLeaderboard.</comment>
+  </data>
+  <data name="Clear Cache" xml:space="preserve">
+    <value>Svuota cache</value>
+  </data>
+  <data name="ReCalculate Ratings" xml:space="preserve">
+    <value>Ricalcola i Rating</value>
+  </data>
+  <data name="Update Chart" xml:space="preserve">
+    <value>Aggiorna chart</value>
+  </data>
+  <data name="Chart" xml:space="preserve">
+    <value>Chart</value>
+  </data>
+  <data name="Video URL" xml:space="preserve">
+    <value>URL del video</value>
+  </data>
+  <data name="Channel Name" xml:space="preserve">
+    <value>Nome del canale</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Salva</value>
+  </data>
+  <data name="Create Song" xml:space="preserve">
+    <value>Crea canzone</value>
+  </data>
+  <data name="Korean Name" xml:space="preserve">
+    <value>Nome coreano</value>
+  </data>
+  <data name="Image Name" xml:space="preserve">
+    <value>Nome dell'immagine</value>
+  </data>
+  <data name="Minutes" xml:space="preserve">
+    <value>Minuti</value>
+  </data>
+  <data name="Seconds" xml:space="preserve">
+    <value>Secondi</value>
+  </data>
+  <data name="Level/Players" xml:space="preserve">
+    <value>Livello/Giocatori</value>
+    <comment>Combined level/player-count input on the new-chart admin form.</comment>
+  </data>
+  <data name="Youtube Hash" xml:space="preserve">
+    <value>Hash YouTube</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+    <value>Crea</value>
+  </data>
+  <data name="Done" xml:space="preserve">
+    <value>Fatto</value>
+  </data>
+  <data name="Restored" xml:space="preserve">
+    <value>Ripristinato</value>
+  </data>
+  <data name="Video info is not formatted correctly" xml:space="preserve">
+    <value>Le informazioni sul video non sono formattate correttamente</value>
+  </data>
+  <data name="Chart saved" xml:space="preserve">
+    <value>Chart salvato</value>
+  </data>
+  <data name="Bulk Vote" xml:space="preserve">
+    <value>Voto in massa</value>
+  </data>
+  <data name="Your Difficulty Rating" xml:space="preserve">
+    <value>La tua valutazione di difficoltà</value>
+  </data>
+  <data name="Saved!" xml:space="preserve">
+    <value>Salvato!</value>
+  </data>
+  <data name="Chart Update" xml:space="preserve">
+    <value>Aggiornamento del chart</value>
+  </data>
+  <data name="Difficulty" xml:space="preserve">
+    <value>Difficoltà</value>
+  </data>
+  <data name="Save Chart" xml:space="preserve">
+    <value>Salva chart</value>
+  </data>
+  <data name="Updated X Y" xml:space="preserve">
+    <value>{0} {1} aggiornato</value>
+    <comment>{0} = song name, {1} = difficulty string (e.g. "S17"). Snackbar after a chart save on /ChartUpdate.</comment>
+  </data>
+  <data name="Community Invite" xml:space="preserve">
+    <value>Invito alla comunità</value>
+  </data>
+  <data name="Chart Compare" xml:space="preserve">
+    <value>Confronto chart</value>
+  </data>
+  <data name="Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings." xml:space="preserve">
+    <value>Un grandissimo grazie a KyleTT per aver raccolto queste informazioni dalle  registrazioni di FEFEMZ.</value>
+    <comment>Double space between "FEFEMZ's" and "recordings" preserved verbatim from source.</comment>
+  </data>
+  <data name="Note that this information is not final until referenced against actual released mix." xml:space="preserve">
+    <value>Nota: queste informazioni non sono definitive finché non vengono confrontate con il Mix effettivamente rilasciato.</value>
+  </data>
+  <data name="Added" xml:space="preserve">
+    <value>Aggiunto</value>
+  </data>
+  <data name="Changed Level" xml:space="preserve">
+    <value>Livello modificato</value>
+  </data>
+  <data name="Removed" xml:space="preserve">
+    <value>Rimosso</value>
+  </data>
+  <data name="Step Artists" xml:space="preserve">
+    <value>Step Artist</value>
+  </data>
+  <data name="Disclaimer: This list is being refined, some charts are missing step artists and some may have incorrect artists." xml:space="preserve">
+    <value>Avviso: questa lista è in fase di perfezionamento, alcuni chart non hanno lo Step Artist e alcuni potrebbero avere artisti errati.</value>
+  </data>
+  <data name="PIU Life Calculator" xml:space="preserve">
+    <value>Calcolatore di vita PIU</value>
+  </data>
+  <data name="Disclaimer: This data was data-mined in NX2 and Prime, it is unconfirmed how accurate it is today." xml:space="preserve">
+    <value>Avviso: questi dati sono stati data-mined da NX2 e Prime, non è confermato quanto siano accurati oggi.</value>
+  </data>
+  <data name="Lifebar stats" xml:space="preserve">
+    <value>Statistiche della lifebar</value>
+  </data>
+  <data name="Life Bar by Level" xml:space="preserve">
+    <value>Lifebar per livello</value>
+  </data>
+  <data name="Starting Life" xml:space="preserve">
+    <value>Vita iniziale</value>
+  </data>
+  <data name="Visible Life" xml:space="preserve">
+    <value>Vita visibile</value>
+  </data>
+  <data name="Max Life" xml:space="preserve">
+    <value>Vita max</value>
+  </data>
+  <data name="Life Threshold" xml:space="preserve">
+    <value>Soglia di vita</value>
+  </data>
+  <data name="Note Count from Full Life to Death/Threshold based on Combo between Breaks" xml:space="preserve">
+    <value>Conteggio note da vita piena fino alla morte o alla soglia, in base al combo tra i Break</value>
+  </data>
+  <data name="Perfect Combo, Miss Break" xml:space="preserve">
+    <value>Combo di Perfect, Break con Miss</value>
+  </data>
+  <data name="Great Combo, Miss Break" xml:space="preserve">
+    <value>Combo di Great, Break con Miss</value>
+  </data>
+  <data name="Perfect Combo, Bad Break" xml:space="preserve">
+    <value>Combo di Perfect, Break con Bad</value>
+  </data>
+  <data name="Great Combo, Bad Break" xml:space="preserve">
+    <value>Combo di Great, Break con Bad</value>
+  </data>
+  <data name="Notes to Full Life From Start of Song (50%)" xml:space="preserve">
+    <value>Note necessarie per arrivare a vita piena dall'inizio della canzone (50%)</value>
+  </data>
+  <data name="Perfects" xml:space="preserve">
+    <value>Perfects</value>
+  </data>
+  <data name="Greats" xml:space="preserve">
+    <value>Greats</value>
+  </data>
+  <data name="Lifebar Description" xml:space="preserve">
+    <value>Descrizione della lifebar</value>
+  </data>
+  <data name="Starting life is 500, visible  Life (Rainbow life bar) is 1000." xml:space="preserve">
+    <value>La vita iniziale è 500, la  vita visibile (lifebar arcobaleno) è 1000.</value>
+    <comment>Double space between "visible" and "Life" preserved verbatim from source.</comment>
+  </data>
+  <data name="Lifebar overflows exponentially by level, up to about a 2350 overflow at level 28." xml:space="preserve">
+    <value>La lifebar va in overflow in modo esponenziale per livello, fino a circa 2350 di overflow al livello 28.</value>
+  </data>
+  <data name="Life loss description" xml:space="preserve">
+    <value>Descrizione della perdita di vita</value>
+  </data>
+  <data name="By default, bads lose 50 health, misses lose 250 health (at ~100% health)." xml:space="preserve">
+    <value>Per impostazione predefinita, i Bad tolgono 50 di vita, i Miss tolgono 250 di vita (a circa il 100% di vita).</value>
+  </data>
+  <data name="Misses lose LESS health the further beneath 1000 health you are at (at 0 life you would lose 20 health for a miss)" xml:space="preserve">
+    <value>I Miss tolgono MENO vita più sei sotto i 1000 di vita (a 0 di vita perderesti 20 di vita per un Miss)</value>
+  </data>
+  <data name="Life gain description" xml:space="preserve">
+    <value>Descrizione del recupero di vita</value>
+  </data>
+  <data name="By default at high combo, perfects gain 9.6 life, greats gain 8 life, goods gain 0 life." xml:space="preserve">
+    <value>Per impostazione predefinita ad alto combo, i Perfect danno 9,6 di vita, i Great danno 8 di vita, i Good danno 0 di vita.</value>
+  </data>
+  <data name="This is modified by a multiplier that is almost entirely reset on a miss, and decreased drastically on a bad." xml:space="preserve">
+    <value>Questo viene modificato da un moltiplicatore che si azzera quasi completamente con un Miss e si riduce drasticamente con un Bad.</value>
+  </data>
+  <data name="Each perfect or great you get increases the multiplier by a minor amount." xml:space="preserve">
+    <value>Ogni Perfect o Great che ottieni aumenta il moltiplicatore di una piccola quantità.</value>
+  </data>
+  <data name="Effectively, this means that your life gain is heavily affected by combo, reaching maximum gain at ~40-50 combo." xml:space="preserve">
+    <value>In pratica, questo significa che il tuo recupero di vita è fortemente influenzato dal combo, raggiungendo il guadagno massimo a circa 40-50 combo.</value>
+  </data>
+  <data name="Bads vs Misses Observations" xml:space="preserve">
+    <value>Osservazioni su Bad vs Miss</value>
+  </data>
+  <data name="To recover from Bads you require 17-21 combo per Bad. Bads typically let you live for 3x as long as misses." xml:space="preserve">
+    <value>Per recuperare dai Bad servono 17-21 combo per Bad. I Bad in genere ti fanno sopravvivere 3 volte più a lungo dei Miss.</value>
+  </data>
+  <data name="To remain alive you need to maintain 17-21 combo per Miss." xml:space="preserve">
+    <value>Per rimanere vivo devi mantenere 17-21 combo per Miss.</value>
+  </data>
+  <data name="To remain at 50% visible life, you need 37-46 combo per Miss." xml:space="preserve">
+    <value>Per restare al 50% di vita visibile, ti servono 37-46 combo per Miss.</value>
+  </data>
+  <data name="To remain at Rainbow Life, you 46-55 combo per Miss." xml:space="preserve">
+    <value>Per restare a Rainbow Life, 46-55 combo per Miss.</value>
+    <comment>Likely missing "need" between "you" and "46-55" in source; preserved verbatim.</comment>
+  </data>
+  <data name="Bads at low health let you live for roughly 3x as long as misses, this gap increases the higher the life threshold you want to keep, up to misses punishing 6x as much when maintaining 100% visual life." xml:space="preserve">
+    <value>I Bad a vita bassa ti fanno sopravvivere all'incirca 3 volte più a lungo dei Miss, e questo divario cresce più alta è la soglia di vita che vuoi mantenere, fino a Miss che puniscono 6 volte di più quando si mantiene il 100% di vita visiva.</value>
+  </data>
+  <data name="TLDR: Misses matter less at low life, but are always significantly more punishing than Bads." xml:space="preserve">
+    <value>TLDR: i Miss contano meno a vita bassa, ma sono sempre molto più punitivi dei Bad.</value>
+  </data>
+  <data name="Recovery Observations" xml:space="preserve">
+    <value>Osservazioni sul recupero</value>
+  </data>
+  <data name="Misses or back-to-back Bads early in a run put you in a terribly position for maintaining life, as they reset your life gain multiplier and require you to combo ~40-50 to regain it. Start runs strong for increased success rates." xml:space="preserve">
+    <value>Miss o Bad consecutivi all'inizio di una run ti mettono in una posizione pessima per mantenere la vita, perché azzerano il tuo moltiplicatore di recupero di vita e ti costringono a combare circa 40-50 note per riprenderlo. Inizia le run forte per aumentare le probabilità di successo.</value>
+  </data>
+  <data name="When at 12% or lower visual life, a miss gives less life loss than a bad, but inhibits your recovery severely. This only really matters for notes at the end of a song or before guaranteed 100+ combo sections." xml:space="preserve">
+    <value>Quando sei al 12% o meno di vita visiva, un Miss toglie meno vita di un Bad, ma penalizza pesantemente il tuo recupero. Questo conta davvero solo per le note alla fine di una canzone o prima di sezioni con combo garantito di oltre 100.</value>
+  </data>
+  <data name="TLDR" xml:space="preserve">
+    <value>TLDR</value>
+  </data>
+  <data name="Misses severely hurt your lifebar." xml:space="preserve">
+    <value>I Miss danneggiano gravemente la tua lifebar.</value>
+  </data>
+  <data name="Bads mostly hurt your recovery." xml:space="preserve">
+    <value>I Bad danneggiano soprattutto il tuo recupero.</value>
+  </data>
+  <data name="Try to maintain 17-21 combo per bad." xml:space="preserve">
+    <value>Cerca di mantenere 17-21 combo per Bad.</value>
+  </data>
+  <data name="Try to maintain 40-50 combo per miss." xml:space="preserve">
+    <value>Cerca di mantenere 40-50 combo per Miss.</value>
+  </data>
+  <data name="Lifebars are weird." xml:space="preserve">
+    <value>Le lifebar sono strane.</value>
+    <comment>Quote attributed to Zelllooo on the Life Calculator page.</comment>
+  </data>
+  <data name="Source" xml:space="preserve">
+    <value>Fonte</value>
+  </data>
+  <data name="Team Infinitesimal, data-mine from NX2 + Prime" xml:space="preserve">
+    <value>Team Infinitesimal, data-mine da NX2 + Prime</value>
+  </data>
+  <data name="Welcome" xml:space="preserve">
+    <value>Benvenuto</value>
+  </data>
+  <data name="Welcome to Score Tracker, X!" xml:space="preserve">
+    <value>Benvenuto su Score Tracker, {0}!</value>
+    <comment>{0} = current user's name</comment>
+  </data>
+  <data name="Some players already maintain scores via Spreadsheets." xml:space="preserve">
+    <value>Alcuni giocatori tengono già traccia dei punteggi tramite Spreadsheet.</value>
+  </data>
+  <data name="In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades." xml:space="preserve">
+    <value>In alcuni di questi casi, può essere più veloce caricare uno Spreadsheet invece di inserire manualmente migliaia di voti.</value>
+  </data>
+  <data name="After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed." xml:space="preserve">
+    <value>Dopo il caricamento, se ci sono righe/chart/tentativi che non sono stati caricati correttamente, avrai la possibilità di scaricare un elenco delle righe fallite e il motivo dell'errore.</value>
+  </data>
+  <data name="Spreadsheet is uploading and being processed..." xml:space="preserve">
+    <value>Lo Spreadsheet è in fase di caricamento ed elaborazione...</value>
+  </data>
+  <data name="Parsed Scores" xml:space="preserve">
+    <value>Punteggi analizzati</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>Tipo</value>
+  </data>
+  <data name="XXLetterGrade" xml:space="preserve">
+    <value>XXLetterGrade</value>
+    <comment>Column header on the XX-score upload preview grid; matches the legacy property name.</comment>
+  </data>
+  <data name="IsBroken" xml:space="preserve">
+    <value>IsBroken</value>
+    <comment>Column header on the XX-score upload preview grid; matches the legacy property name.</comment>
+  </data>
+  <data name="If you leave this page or cancel, the upload will stop but you will not lose any scores that have already been recorded from your upload." xml:space="preserve">
+    <value>Se lasci questa pagina o annulli, il caricamento si fermerà ma non perderai i punteggi già registrati dal tuo upload.</value>
+  </data>
+  <data name="X/Y Uploaded. Z Remaining. W Failed to record" xml:space="preserve">
+    <value>{0}/{1} caricati. {2} rimanenti. {3} non registrati</value>
+    <comment>Save progress status. {0}=saved count, {1}=total, {2}=time remaining (m:ss), {3}=failed count</comment>
+  </data>
+  <data name="You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again." xml:space="preserve">
+    <value>Alcuni chart non sono stati scaricati. Puoi scaricare un CSV degli errori per fare aggiustamenti e riprovare.</value>
+  </data>
+  <data name="All charts you uploaded were successfully updated!" xml:space="preserve">
+    <value>Tutti i chart che hai caricato sono stati aggiornati con successo!</value>
+  </data>
+  <data name="You somehow ended up in a state between realities. Refresh the page to try again." xml:space="preserve">
+    <value>In qualche modo sei finito in uno stato tra realtà. Aggiorna la pagina per riprovare.</value>
+  </data>
+  <data name="Supported Formats" xml:space="preserve">
+    <value>Formati supportati</value>
+  </data>
+  <data name="Hide" xml:space="preserve">
+    <value>Nascondi</value>
+  </data>
+  <data name="Show" xml:space="preserve">
+    <value>Mostra</value>
+  </data>
+  <data name="Unknown" xml:space="preserve">
+    <value>Sconosciuto</value>
+  </data>
+  <data name="Player" xml:space="preserve">
+    <value>Giocatore</value>
+  </data>
+  <data name="Scores" xml:space="preserve">
+    <value>Punteggi</value>
+  </data>
+  <data name="Download Example" xml:space="preserve">
+    <value>Scarica esempio</value>
+  </data>
+  <data name="TRUE/FALSE Template" xml:space="preserve">
+    <value>Modello TRUE/FALSE</value>
+  </data>
+  <data name="Letter Grade Template" xml:space="preserve">
+    <value>Modello voto in lettere</value>
+  </data>
+  <data name="Song Names" xml:space="preserve">
+    <value>Nomi delle canzoni</value>
+  </data>
+  <data name="Some adjustments to account for typos or difference in naming conventions have been accounted for. Song Names are Case Insensitive. (Note that some of these look the same because they are whitespace adjustments)" xml:space="preserve">
+    <value>Sono stati gestiti alcuni aggiustamenti per tenere conto di refusi o differenze nelle convenzioni di nomenclatura. I nomi delle canzoni non distinguono maiuscole e minuscole. (Nota: alcuni di questi appaiono uguali perché sono solo aggiustamenti di spaziatura)</value>
+  </data>
+  <data name="Song Name Mappings" xml:space="preserve">
+    <value>Mappature dei nomi delle canzoni</value>
+  </data>
+  <data name="From" xml:space="preserve">
+    <value>Da</value>
+  </data>
+  <data name="To" xml:space="preserve">
+    <value>A</value>
+  </data>
+  <data name="Could not find chart" xml:space="preserve">
+    <value>Impossibile trovare il chart</value>
+  </data>
+  <data name="Could not find song" xml:space="preserve">
+    <value>Impossibile trovare la canzone</value>
+  </data>
+  <data name="An unknown error occurred" xml:space="preserve">
+    <value>Si è verificato un errore sconosciuto</value>
+  </data>
+  <data name="File cannot be larger than 10 MB" xml:space="preserve">
+    <value>Il file non può superare i 10 MB</value>
+  </data>
+  <data name="There was an unknown error while parsing the file" xml:space="preserve">
+    <value>Si è verificato un errore sconosciuto durante l'analisi del file</value>
+  </data>
+  <data name="No Recorded Scores" xml:space="preserve">
+    <value>Nessun punteggio registrato</value>
+  </data>
+  <data name="None" xml:space="preserve">
+    <value>Nessuno</value>
+  </data>
+  <data name="X% of Y Comparable Players" xml:space="preserve">
+    <value>{0}% di {1} giocatori confrontabili</value>
+    <comment>{0} = percentage like "85.3", {1} = comparable player count</comment>
+  </data>
+  <data name="Wouldn't You Like To Know" xml:space="preserve">
+    <value>Non vorresti saperlo?</value>
+    <comment>Easter-egg tooltip shown for the user "CLEARALL18SORQUIT"</comment>
+  </data>
+  <data name="About The Site" xml:space="preserve">
+    <value>Informazioni sul sito</value>
+  </data>
+  <data name="Source Code" xml:space="preserve">
+    <value>Codice sorgente</value>
+  </data>
+  <data name="Privacy Policy" xml:space="preserve">
+    <value>Informativa sulla privacy</value>
+  </data>
+  <data name="Site constructed and maintained by DrMurloc" xml:space="preserve">
+    <value>Sito creato e mantenuto da DrMurloc</value>
+  </data>
+  <data name="Original Concept (excel score tracking) Constructed by KyleTT" xml:space="preserve">
+    <value>Concetto originale (tracciamento punteggi su Excel) realizzato da KyleTT</value>
+  </data>
+  <data name="Bounties" xml:space="preserve">
+    <value>Bounty</value>
+  </data>
+  <data name="Bounty Leaderboard" xml:space="preserve">
+    <value>Classifica dei Bounty</value>
+  </data>
+  <data name="Monthly Total" xml:space="preserve">
+    <value>Totale mensile</value>
+  </data>
+  <data name="Total" xml:space="preserve">
+    <value>Totale</value>
+  </data>
+  <data name="Start" xml:space="preserve">
+    <value>Inizia</value>
+  </data>
+  <data name="Game Stats" xml:space="preserve">
+    <value>Statistiche del gioco</value>
+  </data>
+  <data name="Total Popularity Singles vs Doubles" xml:space="preserve">
+    <value>Popolarità totale Singles vs Doubles</value>
+  </data>
+  <data name="Total Singles vs Doubles" xml:space="preserve">
+    <value>Totale Singles vs Doubles</value>
+  </data>
+  <data name="Chart Count By Level" xml:space="preserve">
+    <value>Numero di chart per livello</value>
+  </data>
+  <data name="Note Counts" xml:space="preserve">
+    <value>Conteggi note</value>
+  </data>
+  <data name="X Note counts" xml:space="preserve">
+    <value>Conteggi note {0}</value>
+    <comment>{0} = ChartType (Single/Double/CoOp). Chart title on /NoteCounts.</comment>
+  </data>
+  <data name="X Progress" xml:space="preserve">
+    <value>Progresso {0}</value>
+    <comment>{0} = ChartType. Chart title on /NoteCounts.</comment>
+  </data>
+  <data name="Minimums" xml:space="preserve">
+    <value>Minimi</value>
+  </data>
+  <data name="Standard Low" xml:space="preserve">
+    <value>Standard basso</value>
+  </data>
+  <data name="Standard High" xml:space="preserve">
+    <value>Standard alto</value>
+  </data>
+  <data name="Maximums" xml:space="preserve">
+    <value>Massimi</value>
+  </data>
+  <data name="Missing" xml:space="preserve">
+    <value>Mancante</value>
+  </data>
+  <data name="Existing" xml:space="preserve">
+    <value>Esistente</value>
+  </data>
+  <data name="LetterDifficulties" xml:space="preserve">
+    <value>LetterDifficulties</value>
+    <comment>Page title on /Experiments/LetterDifficulties; the source has no space between "Letter" and "Difficulties".</comment>
+  </data>
+  <data name="Folder Weighted Distribution" xml:space="preserve">
+    <value>Distribuzione ponderata per folder</value>
+  </data>
+  <data name="Letter Difficulty" xml:space="preserve">
+    <value>Difficoltà per lettera</value>
+  </data>
+  <data name="Median" xml:space="preserve">
+    <value>Mediana</value>
+  </data>
+  <data name="Selected Chart" xml:space="preserve">
+    <value>Chart selezionato</value>
+  </data>
+  <data name="Percentile Distribution" xml:space="preserve">
+    <value>Distribuzione percentile</value>
+  </data>
+  <data name="Difficulty By Letter" xml:space="preserve">
+    <value>Difficoltà per lettera</value>
+  </data>
+  <data name="User Matches" xml:space="preserve">
+    <value>Corrispondenze utente</value>
+  </data>
+  <data name="Calculated Tier List" xml:space="preserve">
+    <value>Tier List calcolata</value>
+  </data>
+  <data name="Similar Players" xml:space="preserve">
+    <value>Giocatori simili</value>
+  </data>
+  <data name="Private User - X" xml:space="preserve">
+    <value>Utente privato - {0}</value>
+    <comment>{0} = comparison-score number. Listed for users who have set their profile private.</comment>
+  </data>
+  <data name="Final Result" xml:space="preserve">
+    <value>Risultato finale</value>
+  </data>
+  <data name="ChartScoring" xml:space="preserve">
+    <value>ChartScoring</value>
+    <comment>Page title on /Experiments/ChartScoring; the source has no space between "Chart" and "Scoring".</comment>
+  </data>
+  <data name="Target Player Level" xml:space="preserve">
+    <value>Livello del giocatore obiettivo</value>
+  </data>
+  <data name="Player Weights" xml:space="preserve">
+    <value>Pesi dei giocatori</value>
+  </data>
+  <data name="All players with scores within the target folder are assigned weights based on how close their competitive level is to X." xml:space="preserve">
+    <value>A tutti i giocatori con punteggi all'interno del folder obiettivo vengono assegnati pesi in base a quanto il loro livello competitivo è vicino a {0}.</value>
+    <comment>{0} = target player level (integer).</comment>
+  </data>
+  <data name="Highlighted players have a recorded score on the chart in question." xml:space="preserve">
+    <value>I giocatori evidenziati hanno un punteggio registrato sul chart in questione.</value>
+  </data>
+  <data name="Anonymous" xml:space="preserve">
+    <value>Anonimo</value>
+    <comment>Display name shown for users who have set their profile private.</comment>
+  </data>
+  <data name="Competitively" xml:space="preserve">
+    <value>Competitivamente</value>
+    <comment>Word used in player-weight rows on /Experiments/ChartScoring (e.g. "(Competitively 12.34)").</comment>
+  </data>
+  <data name="Folder Averages" xml:space="preserve">
+    <value>Medie per folder</value>
+  </data>
+  <data name="The target folder and the three surrounding are provided weighted average scores utilizing the player weights above." xml:space="preserve">
+    <value>Al folder obiettivo e ai tre circostanti vengono forniti punteggi medi ponderati utilizzando i pesi dei giocatori sopra.</value>
+  </data>
+  <data name="These averages are shifted away from the level in question by .5 of a standard deviation within their respective folder to make sure level changes are better represented by the bulk of a surrounding folder." xml:space="preserve">
+    <value>Queste medie vengono spostate dal livello in questione di 0,5 di una deviazione standard all'interno del rispettivo folder, per fare in modo che i cambi di livello siano meglio rappresentati dalla massa di un folder circostante.</value>
+  </data>
+  <data name="Weighted Average Scores By Folder" xml:space="preserve">
+    <value>Punteggi medi ponderati per folder</value>
+  </data>
+  <data name="Chart Average" xml:space="preserve">
+    <value>Media del chart</value>
+  </data>
+  <data name="The chart in question has its weighted average score projected onto the score distributions" xml:space="preserve">
+    <value>Il chart in questione ha il proprio punteggio medio ponderato proiettato sulle distribuzioni dei punteggi</value>
+  </data>
+  <data name="There was not enough data for the targeted player level to evaluate a final difficulty." xml:space="preserve">
+    <value>Non c'erano abbastanza dati per il livello del giocatore obiettivo per valutare una difficoltà finale.</value>
+  </data>
+  <data name="The weighted average for this chart is better than the average for a X." xml:space="preserve">
+    <value>La media ponderata per questo chart è migliore della media per un {0}.</value>
+    <comment>{0} = high-level integer.</comment>
+  </data>
+  <data name="In this case, the chart is determined to be below by X utilizing standard deviations in the Y folder." xml:space="preserve">
+    <value>In questo caso, il chart è determinato essere sotto di {0} utilizzando le deviazioni standard nel folder {1}.</value>
+    <comment>{0} = percent-between value, {1} = high-level integer.</comment>
+  </data>
+  <data name="The weighted average for this chart is worst than the average for a X." xml:space="preserve">
+    <value>La media ponderata per questo chart è peggiore della media per un {0}.</value>
+    <comment>Source spelling preserved verbatim ("worst" rather than "worse"). {0} = low-level integer.</comment>
+  </data>
+  <data name="In this case, the chart is determined to be above by X utilizing standard deviations in the Y folder." xml:space="preserve">
+    <value>In questo caso, il chart è determinato essere sopra di {0} utilizzando le deviazioni standard nel folder {1}.</value>
+    <comment>{0} = percent-between value, {1} = low-level integer.</comment>
+  </data>
+  <data name="Determined to be X between Y and Z" xml:space="preserve">
+    <value>Determinato essere {0} tra {1} e {2}</value>
+    <comment>{0} = percent-between (3 decimals), {1} = low+0.5, {2} = high+0.5.</comment>
+  </data>
+  <data name="Final Result: X" xml:space="preserve">
+    <value>Risultato finale: {0}</value>
+    <comment>{0} = computed level (3 decimals).</comment>
+  </data>
+  <data name="At this point, it's identified that this chart has no players with a weight of .5 or higher (within 1 level). The chart is marked as not having a scoring level as any estimation would be based on missing data." xml:space="preserve">
+    <value>A questo punto, è stato identificato che questo chart non ha giocatori con un peso di 0,5 o superiore (entro 1 livello). Il chart è segnato come privo di un livello di scoring, poiché qualsiasi stima sarebbe basata su dati mancanti.</value>
+  </data>
+  <data name="Difficulty By Player Level" xml:space="preserve">
+    <value>Difficoltà per livello del giocatore</value>
+  </data>
+  <data name="The listed scoring difficulty is calculated for players competitively playing in the officially listed folder for a chart." xml:space="preserve">
+    <value>La difficoltà di scoring indicata è calcolata per i giocatori che giocano competitivamente nel folder ufficialmente indicato per un chart.</value>
+  </data>
+  <data name="The outcome of this algorithm has drastically different results for players at different levels though" xml:space="preserve">
+    <value>L'esito di questo algoritmo ha però risultati drasticamente diversi per giocatori a livelli diversi</value>
+  </data>
+  <data name="This is intended. There are charts that are relatively easier to score to others in the folder for players just pushing into the folder, but are harder for higher level players to perfect." xml:space="preserve">
+    <value>Questo è voluto. Ci sono chart che sono relativamente più facili da scorare rispetto ad altri nel folder per giocatori che stanno appena entrando nel folder, ma sono più difficili da perfezionare per giocatori di livello più alto.</value>
+  </data>
+  <data name="Scoring Level by Player Competitive Level" xml:space="preserve">
+    <value>Livello di scoring per livello competitivo del giocatore</value>
+  </data>
+  <data name="Player Levels" xml:space="preserve">
+    <value>Livelli dei giocatori</value>
+  </data>
+  <data name="For CoOps, scoring level is simply the lowest level player who's been able to pass the chart." xml:space="preserve">
+    <value>Per i CoOp, il livello di scoring è semplicemente il giocatore di livello più basso che è riuscito a passare il chart.</value>
+  </data>
+  <data name="This isn't perfect, but until I have more data other algorithms haven't been successful at projecting CoOps onto difficulty levels" xml:space="preserve">
+    <value>Non è perfetto, ma finché non avrò più dati altri algoritmi non sono riusciti a proiettare i CoOp sui livelli di difficoltà</value>
+  </data>
+  <data name="No one has passed this CoOp yet so no level is assigned." xml:space="preserve">
+    <value>Nessuno ha ancora passato questo CoOp, quindi non è assegnato alcun livello.</value>
+  </data>
+  <data name="This gives this chart a scoring level of: X" xml:space="preserve">
+    <value>Questo dà a questo chart un livello di scoring di: {0}</value>
+    <comment>{0} = lowest passing player's competitive level (2 decimals).</comment>
+  </data>
+  <data name="Best Attempts" xml:space="preserve">
+    <value>Migliori tentativi</value>
+  </data>
+  <data name="XX Progress" xml:space="preserve">
+    <value>Progresso XX</value>
+  </data>
+  <data name="Share Your Progress Page" xml:space="preserve">
+    <value>Condividi la tua pagina dei progressi</value>
+  </data>
+  <data name="Overview" xml:space="preserve">
+    <value>Panoramica</value>
+  </data>
+  <data name="As" xml:space="preserve">
+    <value>As</value>
+    <comment>Plural of letter grade A — column header counting A grades.</comment>
+  </data>
+  <data name="Ss" xml:space="preserve">
+    <value>Ss</value>
+    <comment>Plural of letter grade S.</comment>
+  </data>
+  <data name="SSs" xml:space="preserve">
+    <value>SSs</value>
+    <comment>Plural of letter grade SS.</comment>
+  </data>
+  <data name="SSSs" xml:space="preserve">
+    <value>SSSs</value>
+    <comment>Plural of letter grade SSS.</comment>
+  </data>
+  <data name="Passed" xml:space="preserve">
+    <value>Passed</value>
+  </data>
+  <data name="Unpassed" xml:space="preserve">
+    <value>Unpassed</value>
+  </data>
+  <data name="Overall Letters" xml:space="preserve">
+    <value>Lettere complessive</value>
+  </data>
+  <data name="Overall Passes" xml:space="preserve">
+    <value>Pass complessivi</value>
+  </data>
+  <data name="Difficulty Letters" xml:space="preserve">
+    <value>Lettere per difficoltà</value>
+  </data>
+  <data name="Difficulty Passes" xml:space="preserve">
+    <value>Pass per difficoltà</value>
+  </data>
+  <data name="Share Url" xml:space="preserve">
+    <value>URL di condivisione</value>
+  </data>
+  <data name="Copied to clipboard!" xml:space="preserve">
+    <value>Copiato negli appunti!</value>
+  </data>
+  <data name="Ungraded" xml:space="preserve">
+    <value>Non valutato</value>
+  </data>
+  <data name="Pass" xml:space="preserve">
+    <value>Pass</value>
+  </data>
+  <data name="Difficulty Progress" xml:space="preserve">
+    <value>Progresso per difficoltà</value>
+  </data>
+  <data name="Passes" xml:space="preserve">
+    <value>Pass</value>
+  </data>
+  <data name="Min Score" xml:space="preserve">
+    <value>Punteggio min</value>
+  </data>
+  <data name="Avg Score" xml:space="preserve">
+    <value>Punteggio medio</value>
+  </data>
+  <data name="Max Score" xml:space="preserve">
+    <value>Punteggio max</value>
+  </data>
+  <data name="Avg Plate" xml:space="preserve">
+    <value>Plate medio</value>
+  </data>
+  <data name="Passes By Level" xml:space="preserve">
+    <value>Pass per livello</value>
+  </data>
+  <data name="Remaining" xml:space="preserve">
+    <value>Rimanenti</value>
+  </data>
+  <data name="Score Distribution Lines" xml:space="preserve">
+    <value>Linee di distribuzione dei punteggi</value>
+  </data>
+  <data name="Score Distribution" xml:space="preserve">
+    <value>Distribuzione dei punteggi</value>
+  </data>
+  <data name="Min" xml:space="preserve">
+    <value>Min</value>
+  </data>
+  <data name="Max" xml:space="preserve">
+    <value>Max</value>
+  </data>
+  <data name="Singles vs Doubles" xml:space="preserve">
+    <value>Singles vs Doubles</value>
+  </data>
+  <data name="Score Rankings" xml:space="preserve">
+    <value>Classifiche per punteggio</value>
+  </data>
+  <data name="Scoring Rankings" xml:space="preserve">
+    <value>Classifiche di scoring</value>
+  </data>
+  <data name="Score Rankings (the colored scores) are based on comparisons to similarly skilled players." xml:space="preserve">
+    <value>Le Classifiche per punteggio (i punteggi colorati) si basano su confronti con giocatori di abilità simile.</value>
+  </data>
+  <data name="The higher percent of players in your range that you perform better than, the better the color:" xml:space="preserve">
+    <value>Più alta è la percentuale di giocatori nel tuo intervallo che superi, migliore è il colore:</value>
+  </data>
+  <data name="100% (or everyone with a PG)" xml:space="preserve">
+    <value>100% (oppure tutti con un PG)</value>
+    <comment>Top color band on /ScoreRankings.</comment>
+  </data>
+  <data name="Similarly skilled players to you for Singles:" xml:space="preserve">
+    <value>Giocatori di abilità simile alla tua per Singles:</value>
+  </data>
+  <data name="Similarly skilled players to you for Doubles (CoOp charts use doubles competitive level):" xml:space="preserve">
+    <value>Giocatori di abilità simile alla tua per Doubles (i chart CoOp usano il livello competitivo di Doubles):</value>
+  </data>
+  <data name="Active Tournaments" xml:space="preserve">
+    <value>Tornei attivi</value>
+  </data>
+  <data name="Upcoming Tournaments" xml:space="preserve">
+    <value>Tornei prossimi</value>
+  </data>
+  <data name="Previous Tournaments" xml:space="preserve">
+    <value>Tornei precedenti</value>
+  </data>
+  <data name="Tournament" xml:space="preserve">
+    <value>Torneo</value>
+  </data>
+  <data name="Start Date" xml:space="preserve">
+    <value>Data di inizio</value>
+  </data>
+  <data name="End Date" xml:space="preserve">
+    <value>Data di fine</value>
+  </data>
+  <data name="Location" xml:space="preserve">
+    <value>Luogo</value>
+  </data>
+  <data name="Always" xml:space="preserve">
+    <value>Sempre</value>
+    <comment>Fallback for tournament StartDate when not set.</comment>
+  </data>
+  <data name="Never" xml:space="preserve">
+    <value>Mai</value>
+    <comment>Fallback for tournament EndDate when not set.</comment>
+  </data>
+  <data name="Start Date: X" xml:space="preserve">
+    <value>Data di inizio: {0}</value>
+    <comment>{0} = formatted date string or the localized "Always" fallback.</comment>
+  </data>
+  <data name="End Date: X" xml:space="preserve">
+    <value>Data di fine: {0}</value>
+    <comment>{0} = formatted date string or the localized "Never" fallback.</comment>
+  </data>
+  <data name="Players have X to play charts. You are allowed to finish the song you are on when your time runs out. Your total score is total combined score of all charts you play." xml:space="preserve">
+    <value>I giocatori hanno {0} per giocare i chart. Quando il tempo scade, ti è consentito finire la canzone che stai giocando. Il tuo punteggio totale è la somma combinata dei punteggi di tutti i chart che giochi.</value>
+    <comment>{0} = MaxTime as h:mm.</comment>
+  </data>
+  <data name="Base Level Scores" xml:space="preserve">
+    <value>Punteggi di livello base</value>
+  </data>
+  <data name="Broken scores get a multiplier of X" xml:space="preserve">
+    <value>I punteggi rotti ricevono un moltiplicatore di {0}</value>
+    <comment>{0} = StageBreakModifier value.</comment>
+  </data>
+  <data name="Songs will have score adjusted based on song length (treating 2 minutes as baseline)" xml:space="preserve">
+    <value>Il punteggio delle canzoni verrà aggiustato in base alla lunghezza della canzone (considerando 2 minuti come riferimento)</value>
+  </data>
+  <data name="are" xml:space="preserve">
+    <value>sono</value>
+    <comment>Used in "Repeated charts {are/are not} allowed." sentence on the rules dialog.</comment>
+  </data>
+  <data name="are not" xml:space="preserve">
+    <value>non sono</value>
+    <comment>Used in "Repeated charts {are/are not} allowed." sentence on the rules dialog.</comment>
+  </data>
+  <data name="Repeated charts X allowed." xml:space="preserve">
+    <value>I chart ripetuti {0} consentiti.</value>
+    <comment>{0} = "are" or "are not" (also localized as separate keys).</comment>
+  </data>
+  <data name="X Brackets" xml:space="preserve">
+    <value>Bracket di {0}</value>
+    <comment>Page title on /Tournament/{id}/Admin. {0} = tournament name.</comment>
+  </data>
+  <data name="Sync Qualifier Leaderboard" xml:space="preserve">
+    <value>Sincronizza la classifica dei Qualifiers</value>
+  </data>
+  <data name="New Player Name" xml:space="preserve">
+    <value>Nome del nuovo giocatore</value>
+  </data>
+  <data name="Add Player" xml:space="preserve">
+    <value>Aggiungi giocatore</value>
+  </data>
+  <data name="Player Name" xml:space="preserve">
+    <value>Nome del giocatore</value>
+  </data>
+  <data name="Seed" xml:space="preserve">
+    <value>Seed</value>
+  </data>
+  <data name="Discord Id" xml:space="preserve">
+    <value>Id Discord</value>
+  </data>
+  <data name="Notes" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="Potential Conflict" xml:space="preserve">
+    <value>Potenziale conflitto</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Elimina</value>
+  </data>
+  <data name="Permissions" xml:space="preserve">
+    <value>Autorizzazioni</value>
+  </data>
+  <data name="Players (Paste UserId from Account Page if not Public)" xml:space="preserve">
+    <value>Giocatori (incolla l'UserId dalla pagina account se non Pubblico)</value>
+  </data>
+  <data name="Tournament Role" xml:space="preserve">
+    <value>Ruolo nel torneo</value>
+  </data>
+  <data name="Machines" xml:space="preserve">
+    <value>Macchine</value>
+  </data>
+  <data name="Machine Name" xml:space="preserve">
+    <value>Nome della macchina</value>
+  </data>
+  <data name="Is Warmup" xml:space="preserve">
+    <value>Riscaldamento</value>
+  </data>
+  <data name="Priority" xml:space="preserve">
+    <value>Priorità</value>
+  </data>
+  <data name="Player added" xml:space="preserve">
+    <value>Giocatore aggiunto</value>
+  </data>
+  <data name="This user does not exist. Double check the User Id" xml:space="preserve">
+    <value>Questo utente non esiste. Ricontrolla lo User Id</value>
+  </data>
+  <data name="Players synced" xml:space="preserve">
+    <value>Giocatori sincronizzati</value>
+  </data>
+  <data name="Record Session" xml:space="preserve">
+    <value>Registra sessione</value>
+  </data>
+  <data name="Test Scores" xml:space="preserve">
+    <value>Punteggi di test</value>
+  </data>
+  <data name="Show Extra Info" xml:space="preserve">
+    <value>Mostra informazioni extra</value>
+  </data>
+  <data name="Difficulty Range" xml:space="preserve">
+    <value>Intervallo di difficoltà</value>
+  </data>
+  <data name="Average Difficulty" xml:space="preserve">
+    <value>Difficoltà media</value>
+  </data>
+  <data name="Total Chart Bonus" xml:space="preserve">
+    <value>Bonus totale del chart</value>
+  </data>
+  <data name="Pass Rate" xml:space="preserve">
+    <value>Tasso di Pass</value>
+  </data>
+  <data name="Average PPS" xml:space="preserve">
+    <value>PPS medio</value>
+  </data>
+  <data name="Rest Time" xml:space="preserve">
+    <value>Tempo di riposo</value>
+  </data>
+  <data name="Verification" xml:space="preserve">
+    <value>Verifica</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Modifica</value>
+  </data>
+  <data name="X Charts" xml:space="preserve">
+    <value>{0} chart</value>
+    <comment>{0} = chart count integer. Button label on /Tournament/Stamina/{id}.</comment>
+  </data>
+  <data name="In Person" xml:space="preserve">
+    <value>Di persona</value>
+  </data>
+  <data name="Estimated Point Gain Timeline" xml:space="preserve">
+    <value>Cronologia stimata dei guadagni di punti</value>
+  </data>
+  <data name="Points Per Second" xml:space="preserve">
+    <value>Punti al secondo</value>
+  </data>
+  <data name="Chart Statistics" xml:space="preserve">
+    <value>Statistiche del chart</value>
+  </data>
+  <data name="Play Count" xml:space="preserve">
+    <value>Numero di plays</value>
+  </data>
+  <data name="Best Score" xml:space="preserve">
+    <value>Miglior punteggio</value>
+  </data>
+  <data name="X Plays" xml:space="preserve">
+    <value>{0} plays</value>
+    <comment>{0} = play count integer.</comment>
+  </data>
+  <data name="Stamina Session Builder" xml:space="preserve">
+    <value>Generatore di sessione Stamina</value>
+  </data>
+  <data name="Tournament Settings" xml:space="preserve">
+    <value>Impostazioni del torneo</value>
+  </data>
+  <data name="PreBuilt Tournament Configuration" xml:space="preserve">
+    <value>Configurazione del torneo predefinita</value>
+  </data>
+  <data name="Default" xml:space="preserve">
+    <value>Predefinito</value>
+  </data>
+  <data name="Levels" xml:space="preserve">
+    <value>Livelli</value>
+  </data>
+  <data name="Adjust Scores to Song Duration (uses 2 minutes as average chart duration)" xml:space="preserve">
+    <value>Aggiusta i punteggi alla durata della canzone (usa 2 minuti come durata media del chart)</value>
+  </data>
+  <data name="Continous Modifier Scale (modifier increments between letter grades)" xml:space="preserve">
+    <value>Scala del modificatore continua (il modificatore aumenta tra i voti in lettere)</value>
+    <comment>Source spelling preserved verbatim ("Continous" rather than "Continuous").</comment>
+  </data>
+  <data name="Perfect Score Modifier (Acts as a letter grade beyond SSS+)" xml:space="preserve">
+    <value>Modificatore di punteggio perfetto (funziona come un voto in lettere oltre SSS+)</value>
+  </data>
+  <data name="Minimum Score" xml:space="preserve">
+    <value>Punteggio minimo</value>
+  </data>
+  <data name="Input Json" xml:space="preserve">
+    <value>JSON di input</value>
+  </data>
+  <data name="Set Charts" xml:space="preserve">
+    <value>Imposta i chart</value>
+  </data>
+  <data name="Extra Settings" xml:space="preserve">
+    <value>Impostazioni extra</value>
+  </data>
+  <data name="Allow Repeats" xml:space="preserve">
+    <value>Consenti ripetizioni</value>
+  </data>
+  <data name="Stage Break Modifier" xml:space="preserve">
+    <value>Modificatore Stage Break</value>
+  </data>
+  <data name="Session Duration (Minutes)" xml:space="preserve">
+    <value>Durata della sessione (minuti)</value>
+  </data>
+  <data name="Custom Scoring Formula" xml:space="preserve">
+    <value>Formula di scoring personalizzata</value>
+  </data>
+  <data name="Admin Settings" xml:space="preserve">
+    <value>Impostazioni admin</value>
+  </data>
+  <data name="Tournament Dates (EST)" xml:space="preserve">
+    <value>Date del torneo (EST)</value>
+  </data>
+  <data name="Tournament Name" xml:space="preserve">
+    <value>Nome del torneo</value>
+  </data>
+  <data name="Test With Player Data" xml:space="preserve">
+    <value>Testa con i dati di un giocatore</value>
+  </data>
+  <data name="Import Your Phoenix Scores" xml:space="preserve">
+    <value>Importa i tuoi punteggi Phoenix</value>
+  </data>
+  <data name="Hide Record-less Charts" xml:space="preserve">
+    <value>Nascondi i chart senza record</value>
+  </data>
+  <data name="Hide Zero Scoring Charts" xml:space="preserve">
+    <value>Nascondi i chart con scoring a zero</value>
+  </data>
+  <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
+    <value>Giocatore da testare (deve essere impostato come Pubblico)</value>
+  </data>
+  <data name="Effective Level" xml:space="preserve">
+    <value>Livello effettivo</value>
+  </data>
+  <data name="Your Score" xml:space="preserve">
+    <value>Il tuo punteggio</value>
+  </data>
+  <data name="Points Pre-Score" xml:space="preserve">
+    <value>Punti pre-punteggio</value>
+  </data>
+  <data name="Points Per Second Pre-Score" xml:space="preserve">
+    <value>Punti al secondo pre-punteggio</value>
+  </data>
+  <data name="Your Points" xml:space="preserve">
+    <value>I tuoi punti</value>
+  </data>
+  <data name="Your Points per Second" xml:space="preserve">
+    <value>I tuoi punti al secondo</value>
+  </data>
+  <data name="Example Set Builder" xml:space="preserve">
+    <value>Generatore di set di esempio</value>
+  </data>
+  <data name="Seconds of Rest Per Chart" xml:space="preserve">
+    <value>Secondi di riposo per chart</value>
+  </data>
+  <data name="Build Session" xml:space="preserve">
+    <value>Crea sessione</value>
+  </data>
+  <data name="Score: X" xml:space="preserve">
+    <value>Punteggio: {0}</value>
+    <comment>{0} = total session score integer.</comment>
+  </data>
+  <data name="Total Charts: X" xml:space="preserve">
+    <value>Totale chart: {0}</value>
+    <comment>{0} = chart count integer.</comment>
+  </data>
+  <data name="Rest Time Per Chart: X" xml:space="preserve">
+    <value>Tempo di riposo per chart: {0}</value>
+    <comment>{0} = formatted m:ss timespan.</comment>
+  </data>
+  <data name="Duration" xml:space="preserve">
+    <value>Durata</value>
+  </data>
+  <data name="Chart Score" xml:space="preserve">
+    <value>Punteggio del chart</value>
+  </data>
+  <data name="Session Score" xml:space="preserve">
+    <value>Punteggio della sessione</value>
+  </data>
+  <data name="Couldn't parse JSON" xml:space="preserve">
+    <value>Impossibile analizzare il JSON</value>
+  </data>
+  <data name="PIU Tier List" xml:space="preserve">
+    <value>Tier List PIU</value>
+  </data>
+  <data name="Category" xml:space="preserve">
+    <value>Categoria</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>Titolo</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Descrizione</value>
+  </data>
+  <data name="Community Completion" xml:space="preserve">
+    <value>Completamento della comunità</value>
+  </data>
+  <data name="Completion" xml:space="preserve">
+    <value>Completamento</value>
+  </data>
+  <data name="Competitive Level" xml:space="preserve">
+    <value>Livello competitivo</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>Tutti</value>
+  </data>
+  <data name="Competitive Level: X" xml:space="preserve">
+    <value>Livello competitivo: {0}</value>
+    <comment>{0} = competitive level (5 decimals).</comment>
+  </data>
+  <data name="Min Level" xml:space="preserve">
+    <value>Livello min</value>
+  </data>
+  <data name="Max Level" xml:space="preserve">
+    <value>Livello max</value>
+  </data>
+  <data name="Show Scoreless" xml:space="preserve">
+    <value>Mostra senza punteggio</value>
+  </data>
+  <data name="Show Top Only" xml:space="preserve">
+    <value>Mostra solo i migliori</value>
+  </data>
+  <data name="My Relative Difficulty" xml:space="preserve">
+    <value>La mia difficoltà relativa</value>
+  </data>
+  <data name="Scoring Difficulty" xml:space="preserve">
+    <value>Difficoltà di scoring</value>
+  </data>
+  <data name="PIUGame Leaderboard Difficulty" xml:space="preserve">
+    <value>Difficoltà classifica PIUGame</value>
+  </data>
+  <data name="Weekly Charts" xml:space="preserve">
+    <value>Chart settimanali</value>
+  </data>
+  <data name="Current" xml:space="preserve">
+    <value>Attuale</value>
+  </data>
+  <data name="Show Only Suggested Charts" xml:space="preserve">
+    <value>Mostra solo i chart suggeriti</value>
+  </data>
+  <data name="Monthly Leaderboard" xml:space="preserve">
+    <value>Classifica mensile</value>
+  </data>
+  <data name="Road to BITE (Monthly Leaderboard July 8th - August 4th)" xml:space="preserve">
+    <value>Road to BITE (classifica mensile dall'8 luglio al 4 agosto)</value>
+    <comment>Date-window heading used pre-BITE; specific to a fixed annual event window.</comment>
+  </data>
+  <data name="Week X - Top Y Charts" xml:space="preserve">
+    <value>Settimana {0} - Top {1} chart</value>
+    <comment>{0} = week number, {1} = top-N count (week*4).</comment>
+  </data>
+  <data name="Leaderboard Type" xml:space="preserve">
+    <value>Tipo di classifica</value>
+  </data>
+  <data name="Combined" xml:space="preserve">
+    <value>Combinato</value>
+  </data>
+  <data name="Co-Op" xml:space="preserve">
+    <value>Co-Op</value>
+    <comment>Used as a select-item label on /WeeklyCharts. Distinct from the existing "CoOp" key (no hyphen) used elsewhere — both spellings appear in source verbatim.</comment>
+  </data>
+  <data name="What Should I Play" xml:space="preserve">
+    <value>Cosa dovrei giocare</value>
+    <comment>Page title (no question mark in source).</comment>
+  </data>
+  <data name="What Should I Play?" xml:space="preserve">
+    <value>Cosa dovrei giocare?</value>
+    <comment>h3 header on the same page (with question mark in source).</comment>
+  </data>
+  <data name="See Leaderboards" xml:space="preserve">
+    <value>Vedi le classifiche</value>
+  </data>
+  <data name="Top 50 X" xml:space="preserve">
+    <value>Top 50 {0}</value>
+    <comment>{0} = chart type (e.g. "Singles" / "Doubles"). Tooltip on the crown icon for top-50 charts.</comment>
+  </data>
+  <data name="Stats" xml:space="preserve">
+    <value>Stats</value>
+  </data>
+  <data name="Singles Level" xml:space="preserve">
+    <value>Livello Singles</value>
+  </data>
+  <data name="Doubles Level" xml:space="preserve">
+    <value>Livello Doubles</value>
+  </data>
+  <data name="Good Suggestion" xml:space="preserve">
+    <value>Suggerimento corretto</value>
+  </data>
+  <data name="Bad Suggestion" xml:space="preserve">
+    <value>Suggerimento errato</value>
+  </data>
+  <data name="Reason" xml:space="preserve">
+    <value>Motivo</value>
+  </data>
+  <data name="Doesn't Match My Personal Skills" xml:space="preserve">
+    <value>Non corrisponde alle mie abilità personali</value>
+  </data>
+  <data name="I Don't Like The Chart" xml:space="preserve">
+    <value>Non mi piace il chart</value>
+  </data>
+  <data name="Not Relevant to Category" xml:space="preserve">
+    <value>Non pertinente alla categoria</value>
+  </data>
+  <data name="I Just Want to Hide The Chart" xml:space="preserve">
+    <value>Voglio solo nascondere il chart</value>
+  </data>
+  <data name="The Category Isn't Interesting to Me'" xml:space="preserve">
+    <value>La categoria non mi interessa'</value>
+    <comment>Source has a stray trailing apostrophe — preserved verbatim.</comment>
+  </data>
+  <data name="Other" xml:space="preserve">
+    <value>Altro</value>
+  </data>
+  <data name="Additional Comments" xml:space="preserve">
+    <value>Commenti aggiuntivi</value>
+  </data>
+  <data name="Hide Chart for this Category" xml:space="preserve">
+    <value>Nascondi il chart per questa categoria</value>
+  </data>
+  <data name="Added to ToDo List!" xml:space="preserve">
+    <value>Aggiunto alla ToDo List!</value>
+  </data>
+  <data name="Removed from ToDo List!" xml:space="preserve">
+    <value>Rimosso dalla ToDo List!</value>
+  </data>
+  <data name="Chart Details" xml:space="preserve">
+    <value>Dettagli del chart</value>
+  </data>
+  <data name="Step Artist: X" xml:space="preserve">
+    <value>Step Artist: {0}</value>
+    <comment>{0} = step artist name (data).</comment>
+  </data>
+  <data name="Note Count: X" xml:space="preserve">
+    <value>Conteggio note: {0}</value>
+    <comment>{0} = note count integer.</comment>
+  </data>
+  <data name="Chart Difficulty by Letter Grade" xml:space="preserve">
+    <value>Difficoltà del chart per voto in lettere</value>
+  </data>
+  <data name="Plate Distribution" xml:space="preserve">
+    <value>Distribuzione Plate</value>
+  </data>
+  <data name="Plate Breakdown" xml:space="preserve">
+    <value>Dettaglio Plate</value>
+  </data>
+  <data name="Plates" xml:space="preserve">
+    <value>Plate</value>
+  </data>
+  <data name="Score Distribution By Player Level" xml:space="preserve">
+    <value>Distribuzione dei punteggi per livello del giocatore</value>
+  </data>
+  <data name="Scores by Competitive Level" xml:space="preserve">
+    <value>Punteggi per livello competitivo</value>
+  </data>
+  <data name="Passes by Competitive Level" xml:space="preserve">
+    <value>Pass per livello competitivo</value>
+  </data>
+  <data name="Chart Leaderboard" xml:space="preserve">
+    <value>Classifica del chart</value>
+  </data>
+  <data name="Content Lock" xml:space="preserve">
+    <value>Blocco dei contenuti</value>
+  </data>
+  <data name="Search User (Name or UserId)" xml:space="preserve">
+    <value>Cerca utente (nome o UserId)</value>
+  </data>
+  <data name="Current Username" xml:space="preserve">
+    <value>Nome utente attuale</value>
+  </data>
+  <data name="Lock Status" xml:space="preserve">
+    <value>Stato del blocco</value>
+  </data>
+  <data name="Locked" xml:space="preserve">
+    <value>Bloccato</value>
+  </data>
+  <data name="Unlocked" xml:space="preserve">
+    <value>Sbloccato</value>
+  </data>
+  <data name="Lock User" xml:space="preserve">
+    <value>Blocca utente</value>
+  </data>
+  <data name="Unlock User" xml:space="preserve">
+    <value>Sblocca utente</value>
+  </data>
+  <data name="User locked" xml:space="preserve">
+    <value>Utente bloccato</value>
+  </data>
+  <data name="User unlocked" xml:space="preserve">
+    <value>Utente sbloccato</value>
+  </data>
+  <data name="Locking will set this user's username to their GameTag." xml:space="preserve">
+    <value>Bloccando, il nome utente di questo utente verrà impostato sul suo GameTag.</value>
+  </data>
+  <data name="This user has no GameTag. Choose a username to assign before locking." xml:space="preserve">
+    <value>Questo utente non ha un GameTag. Scegli un nome utente da assegnare prima di bloccarlo.</value>
+  </data>
+  <data name="New Username" xml:space="preserve">
+    <value>Nuovo nome utente</value>
+  </data>
+  <data name="Your account is content-locked. Message an admin if you have questions." xml:space="preserve">
+    <value>Il tuo account ha il content lock attivo. Contatta un admin se hai domande.</value>
+  </data>
+  <data name="Delete All Scores" xml:space="preserve">
+    <value>Elimina tutti i punteggi</value>
+  </data>
+  <data name="This will delete all of your scores and reset your player stats and title progress" xml:space="preserve">
+    <value>Questo eliminerà tutti i tuoi punteggi e azzererà le tue statistiche giocatore e il progresso dei titoli</value>
+  </data>
+  <data name="(Optional) Also delete historical data" xml:space="preserve">
+    <value>(Opzionale) Elimina anche i dati storici</value>
+  </data>
+  <data name="Confirm" xml:space="preserve">
+    <value>Conferma</value>
+  </data>
+  <data name="Your scores have been deleted" xml:space="preserve">
+    <value>I tuoi punteggi sono stati eliminati</value>
+  </data>
+  <data name="Competition" xml:space="preserve">
+    <value>Competizione</value>
+  </data>
+  <data name="Completion Leaderboards" xml:space="preserve">
+    <value>Classifiche di completamento</value>
+  </data>
+  <data name="Discord" xml:space="preserve">
+    <value>Discord</value>
+  </data>
+  <data name="Lifebar Calculator" xml:space="preserve">
+    <value>Calcolatore di lifebar</value>
+  </data>
+  <data name="Official Leaderboards" xml:space="preserve">
+    <value>Classifiche ufficiali</value>
+  </data>
+  <data name="PIU Scores" xml:space="preserve">
+    <value>PIU Scores</value>
+  </data>
+  <data name="PUMBILITY" xml:space="preserve">
+    <value>PUMBILITY</value>
+  </data>
+  <data name="UCS Leaderboards" xml:space="preserve">
+    <value>Classifiche UCS</value>
+  </data>
+</root>
