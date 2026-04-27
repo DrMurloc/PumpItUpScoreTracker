@@ -21,14 +21,13 @@ namespace ScoreTracker.Application.Handlers
         private readonly IUserRepository _users;
         private readonly IPlayerStatsRepository _stats;
         private readonly IPhoenixRecordRepository _scores;
-        private readonly IChartBountyRepository _bounties;
         private readonly IWeeklyTournamentRepository _weeklyTournament;
         private readonly IChartListRepository _chartList;
         private readonly IDateTimeOffsetAccessor _dateTime;
         private readonly IRandomNumberGenerator _random;
 
         public RecommendedChartsSaga(IMediator mediator, ICurrentUserAccessor currentUser, IUserRepository users,
-            IPlayerStatsRepository stats, IPhoenixRecordRepository scores, IChartBountyRepository bounties,
+            IPlayerStatsRepository stats, IPhoenixRecordRepository scores,
             IWeeklyTournamentRepository weeklyTournament, IChartListRepository chartList,
             IDateTimeOffsetAccessor dateTime, IRandomNumberGenerator random)
         {
@@ -37,7 +36,6 @@ namespace ScoreTracker.Application.Handlers
             _users = users;
             _stats = stats;
             _scores = scores;
-            _bounties = bounties;
             _weeklyTournament = weeklyTournament;
             _chartList = chartList;
             _dateTime = dateTime;
@@ -71,7 +69,6 @@ namespace ScoreTracker.Application.Handlers
                     request.LevelOffset, charts))
                 .Concat(await GetPGPushes(feedback, cancellationToken, scores, request.ChartType, charts))
                 .Concat(await GetRandomFromTop50Charts(feedback, request.ChartType, cancellationToken))
-                .Concat(await GetBounties(feedback, cancellationToken, scores, request.ChartType, charts))
                 .ToArray();
         }
 
@@ -244,23 +241,6 @@ namespace ScoreTracker.Application.Handlers
 
             return chartOrder.Select(id =>
                 new ChartRecommendation("Fill Scores", id, "Easier Charts From Lower Levels You Can Fill"));
-        }
-
-        private async Task<IEnumerable<ChartRecommendation>> GetBounties(
-            IDictionary<string, ISet<Guid>> ignoredChartIds, CancellationToken cancellationToken,
-            RecordedPhoenixScore[] scores, ChartType? chartType, IDictionary<Guid, Chart> charts)
-        {
-            var random = _random;
-            var ignoredCharts = ignoredChartIds.TryGetValue("Bounties", out var set) ? set : new HashSet<Guid>();
-            var existingScores = scores.Where(s => s.Score != null).Select(s => s.ChartId).Distinct().ToHashSet();
-            return (await _mediator.Send(new GetChartBountiesQuery(), cancellationToken)).Where(b =>
-                    chartType == null || charts[b.ChartId].Type == chartType)
-                .OrderByDescending(b => b.Worth)
-                .Take(20)
-                .OrderBy(r => random.Next(int.MaxValue))
-                .Take(5)
-                .Select(b => new ChartRecommendation("Bounties", b.ChartId,
-                    "Charts that have low data present on the site", $"{b.Worth} Points"));
         }
 
         private async Task<IEnumerable<ChartRecommendation>> GetPushLevels(

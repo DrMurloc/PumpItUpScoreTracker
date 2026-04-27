@@ -33,7 +33,7 @@ public sealed class RecommendedChartsSagaTests
         var users = new Mock<IUserRepository>();
         var saga = BuildSaga(currentUserId: userId, users: users);
         var feedback = new SuggestionFeedbackRecord(
-            SuggestionCategory: Name.From("Bounties"),
+            SuggestionCategory: Name.From("Push PGs"),
             FeedbackCategory: Name.From("NotInterested"),
             Notes: "Already cleared",
             ShouldHide: true,
@@ -123,7 +123,6 @@ public sealed class RecommendedChartsSagaTests
         public Mock<IUserRepository> Users { get; } = new();
         public Mock<IPlayerStatsRepository> Stats { get; } = new();
         public Mock<IPhoenixRecordRepository> Scores { get; } = new();
-        public Mock<IChartBountyRepository> Bounties { get; } = new();
         public Mock<IWeeklyTournamentRepository> Weekly { get; } = new();
         public Mock<IChartListRepository> ChartList { get; } = new();
         public Mock<IRandomNumberGenerator> Random { get; } = new();
@@ -149,15 +148,13 @@ public sealed class RecommendedChartsSagaTests
                 .ReturnsAsync(Array.Empty<SongTierListEntry>());
             Mediator.Setup(m => m.Send(It.IsAny<GetTop50CompetitiveQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
-            Mediator.Setup(m => m.Send(It.IsAny<GetChartBountiesQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Array.Empty<ChartBounty>());
             Users.Setup(u => u.GetFeedback(userId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<SuggestionFeedbackRecord>());
             Weekly.Setup(w => w.GetWeeklyCharts(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<WeeklyTournamentChart>());
 
             Saga = new RecommendedChartsSaga(Mediator.Object, CurrentUser.Object, Users.Object, Stats.Object,
-                Scores.Object, Bounties.Object, Weekly.Object, ChartList.Object,
+                Scores.Object, Weekly.Object, ChartList.Object,
                 FakeDateTime.At(Now).Object, Random.Object);
         }
 
@@ -220,7 +217,6 @@ public sealed class RecommendedChartsSagaTests
         Mock<IUserRepository>? users = null,
         Mock<IPlayerStatsRepository>? stats = null,
         Mock<IPhoenixRecordRepository>? scores = null,
-        Mock<IChartBountyRepository>? bounties = null,
         Mock<IWeeklyTournamentRepository>? weeklyTournament = null,
         Mock<IChartListRepository>? chartList = null,
         Mock<IDateTimeOffsetAccessor>? dateTime = null,
@@ -233,13 +229,12 @@ public sealed class RecommendedChartsSagaTests
         users ??= new Mock<IUserRepository>();
         stats ??= new Mock<IPlayerStatsRepository>();
         scores ??= new Mock<IPhoenixRecordRepository>();
-        bounties ??= new Mock<IChartBountyRepository>();
         weeklyTournament ??= new Mock<IWeeklyTournamentRepository>();
         chartList ??= new Mock<IChartListRepository>();
         dateTime ??= FakeDateTime.At(Now);
         random ??= new Mock<IRandomNumberGenerator>();
         return new RecommendedChartsSaga(mediator.Object, currentUser.Object, users.Object, stats.Object,
-            scores.Object, bounties.Object, weeklyTournament.Object, chartList.Object, dateTime.Object,
+            scores.Object, weeklyTournament.Object, chartList.Object, dateTime.Object,
             random.Object);
     }
 }

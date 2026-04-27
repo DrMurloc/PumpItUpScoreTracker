@@ -57,37 +57,6 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("BestAttempt", "scores");
                 });
 
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.BountyLeaaderboardEntity", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("MonthlyTotal")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Total")
-                        .HasColumnType("int");
-
-                    b.HasKey("UserId");
-
-                    b.ToTable("BountyLeaderboard", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.ChartBountyEntity", b =>
-                {
-                    b.Property<Guid>("ChartId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Worth")
-                        .HasColumnType("int");
-
-                    b.HasKey("ChartId");
-
-                    b.ToTable("ChartBounty", "scores");
-                });
-
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.ChartDifficultyRatingEntity", b =>
                 {
                     b.Property<Guid>("ChartId")

@@ -1069,15 +1069,6 @@
   <data name="Original Concept (excel score tracking) Constructed by KyleTT" xml:space="preserve">
     <value>원본 컨셉 (엑셀 점수 트래킹) 제작자 KyleTT님</value>
   </data>
-  <data name="Bounties" xml:space="preserve">
-    <value>바운티</value>
-  </data>
-  <data name="Bounty Leaderboard" xml:space="preserve">
-    <value>바운티 리더보드</value>
-  </data>
-  <data name="Monthly Total" xml:space="preserve">
-    <value>월간 합계</value>
-  </data>
   <data name="Total" xml:space="preserve">
     <value>합계</value>
   </data>

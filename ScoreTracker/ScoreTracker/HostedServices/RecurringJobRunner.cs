@@ -16,9 +16,6 @@ public sealed class RecurringJobRunner
     public Task PublishProcessScoresTiersList() =>
         _bus.Publish(new ProcessScoresTiersListCommand());
 
-    public Task PublishUpdateBounties() =>
-        _bus.Publish(new UpdateBountiesEvent());
-
     public Task PublishCalculateScoringDifficulty() =>
         _bus.Publish(new CalculateScoringDifficultyEvent());
 

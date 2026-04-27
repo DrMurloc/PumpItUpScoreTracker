@@ -1143,15 +1143,6 @@
   <data name="Original Concept (excel score tracking) Constructed by KyleTT" xml:space="preserve">
     <value>Concetto originale (tracciamento punteggi su Excel) realizzato da KyleTT</value>
   </data>
-  <data name="Bounties" xml:space="preserve">
-    <value>Bounty</value>
-  </data>
-  <data name="Bounty Leaderboard" xml:space="preserve">
-    <value>Classifica dei Bounty</value>
-  </data>
-  <data name="Monthly Total" xml:space="preserve">
-    <value>Totale mensile</value>
-  </data>
   <data name="Total" xml:space="preserve">
     <value>Totale</value>
   </data>

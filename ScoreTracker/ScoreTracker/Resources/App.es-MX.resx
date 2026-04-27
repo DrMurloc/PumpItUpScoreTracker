@@ -267,12 +267,6 @@
   <data name="Best Score" xml:space="preserve">
     <value>Mejor puntaje</value>
   </data>
-  <data name="Bounties" xml:space="preserve">
-    <value>Bounties</value>
-  </data>
-  <data name="Bounty Leaderboard" xml:space="preserve">
-    <value>Clasificación de Bounties</value>
-  </data>
   <data name="BPM" xml:space="preserve">
     <value>BPM</value>
   </data>
@@ -887,9 +881,6 @@
   </data>
   <data name="Monthly Leaderboard" xml:space="preserve">
     <value>Clasificación mensual</value>
-  </data>
-  <data name="Monthly Total" xml:space="preserve">
-    <value>Total mensual</value>
   </data>
   <data name="My Relative Difficulty" xml:space="preserve">
     <value>Mi dificultad relativa</value>

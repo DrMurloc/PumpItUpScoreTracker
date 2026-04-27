@@ -13,7 +13,7 @@ public sealed class TierListSagaStaticsTests
     [Fact]
     public void ProcessIntoTierListReturnsEmptyForEmptyInput()
     {
-        var result = TierListSaga.ProcessIntoTierList("Bounties", new Dictionary<Guid, int>());
+        var result = TierListSaga.ProcessIntoTierList("Pass Count", new Dictionary<Guid, int>());
         Assert.Empty(result);
     }
 
@@ -21,15 +21,15 @@ public sealed class TierListSagaStaticsTests
     public void ProcessIntoTierListAssignsTierListNameToEveryEntry()
     {
         var weights = MakeWeights(20, _ => 1);
-        var entries = TierListSaga.ProcessIntoTierList("Bounties", weights).ToArray();
-        Assert.All(entries, e => Assert.Equal("Bounties", (string)e.TierListName));
+        var entries = TierListSaga.ProcessIntoTierList("Pass Count", weights).ToArray();
+        Assert.All(entries, e => Assert.Equal("Pass Count", (string)e.TierListName));
     }
 
     [Fact]
     public void ProcessIntoTierListAssignsContiguousAscendingOrder()
     {
         var weights = MakeWeights(20, i => i);
-        var entries = TierListSaga.ProcessIntoTierList("Bounties", weights)
+        var entries = TierListSaga.ProcessIntoTierList("Pass Count", weights)
             .OrderBy(e => e.Order)
             .ToArray();
 
@@ -45,7 +45,7 @@ public sealed class TierListSagaStaticsTests
         var zeroChart = Guid.NewGuid();
         weights[zeroChart] = 0;
 
-        var result = TierListSaga.ProcessIntoTierList("Bounties", weights).ToArray();
+        var result = TierListSaga.ProcessIntoTierList("Pass Count", weights).ToArray();
         var entry = result.Single(e => e.ChartId == zeroChart);
 
         Assert.Equal(TierListCategory.Unrecorded, entry.Category);
@@ -58,7 +58,7 @@ public sealed class TierListSagaStaticsTests
         var topChart = Guid.NewGuid();
         weights[topChart] = 1_000_000;
 
-        var result = TierListSaga.ProcessIntoTierList("Bounties", weights).ToArray();
+        var result = TierListSaga.ProcessIntoTierList("Pass Count", weights).ToArray();
         var entry = result.Single(e => e.ChartId == topChart);
 
         Assert.Equal(TierListCategory.Overrated, entry.Category);
@@ -68,7 +68,7 @@ public sealed class TierListSagaStaticsTests
     public void DistinctChartsProduceDistinctEntries()
     {
         var weights = MakeWeights(50, i => i);
-        var result = TierListSaga.ProcessIntoTierList("Bounties", weights).ToArray();
+        var result = TierListSaga.ProcessIntoTierList("Pass Count", weights).ToArray();
 
         Assert.Equal(weights.Count, result.Length);
         Assert.Equal(weights.Count, result.Select(r => r.ChartId).Distinct().Count());

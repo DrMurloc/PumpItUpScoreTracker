@@ -224,7 +224,6 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<RecurringJobRunner, Task>> Job, string Cron)[]
 {
     ("process-scores-tier-list",         r => r.PublishProcessScoresTiersList(),          "0 7 * * *"),  // 02:00 ET
-    ("update-bounties",                  r => r.PublishUpdateBounties(),                  "30 7 * * *"), // 02:30 ET
     ("calculate-scoring-difficulty",     r => r.PublishCalculateScoringDifficulty(),      "0 8 * * *"),  // 03:00 ET
     ("update-weekly-charts",             r => r.PublishUpdateWeeklyCharts(),              "0 9 * * *"),  // 04:00 ET
     ("process-pass-tier-list",           r => r.PublishProcessPassTierList(),             "30 9 * * *"), // 04:30 ET
