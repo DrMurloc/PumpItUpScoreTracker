@@ -8,7 +8,7 @@ namespace ScoreTracker.Web.Controllers;
 public class CultureController : Controller
 {
     private static readonly ISet<string> SupportedCultures =
-        new[] { "en-US", "pt-BR", "ko-KR", "es-MX", "en-ZW", "fr-FR", "ja-JP" }.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        new[] { "en-US", "pt-BR", "ko-KR", "es-MX", "en-ZW", "fr-FR", "ja-JP", "it-IT" }.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
     [HttpGet("Set")]
     public IActionResult Set([FromQuery(Name = "culture")] string culture,
