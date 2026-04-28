@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -100,19 +101,20 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         await database.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task<IDictionary<Guid, RecordedPhoenixScore>> GetCachedScores(Guid userId,
+    private async Task<ConcurrentDictionary<Guid, RecordedPhoenixScore>> GetCachedScores(Guid userId,
         CancellationToken cancellationToken)
     {
         return await _cache.GetOrCreateAsync(ScoreCache(userId), async o =>
         {
             o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(60);
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            var result = (await database.PhoenixBestAttempt.Where(pba => pba.UserId == userId)
+            var rows = await database.PhoenixBestAttempt.Where(pba => pba.UserId == userId)
                 .Select(pba => new RecordedPhoenixScore(pba.ChartId, pba.Score,
                     PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, pba.RecordedDate))
-                .ToArrayAsync(cancellationToken)).ToDictionary(r => r.ChartId);
+                .ToArrayAsync(cancellationToken);
 
-            return result;
+            return new ConcurrentDictionary<Guid, RecordedPhoenixScore>(
+                rows.Select(r => new KeyValuePair<Guid, RecordedPhoenixScore>(r.ChartId, r)));
         });
     }
 
