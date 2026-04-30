@@ -31,4 +31,10 @@ public interface IPlayerScoreBatchAccumulator
 
     /// <summary>Atomically removes and returns the user's pending batch.</summary>
     PendingScoreBatch TakeBatch(Guid userId);
+
+    /// <summary>
+    /// Diagnostic snapshot of every active batch. Best-effort — entries may be
+    /// added or removed concurrently with the read.
+    /// </summary>
+    IReadOnlyCollection<BatchAccumulatorSnapshotEntry> Dump();
 }

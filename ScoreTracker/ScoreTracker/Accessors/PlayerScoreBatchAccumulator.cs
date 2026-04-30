@@ -49,4 +49,18 @@ public sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
         _newCharts.TryRemove(userId, out _);
         return new PendingScoreBatch(newChartIds, upscoredChartIds);
     }
+
+    public IReadOnlyCollection<BatchAccumulatorSnapshotEntry> Dump()
+    {
+        return _fireAt.ToArray().Select(kv =>
+        {
+            var newChartIds = _newCharts.TryGetValue(kv.Key, out var newSet)
+                ? newSet.ToArray()
+                : Array.Empty<Guid>();
+            var upscored = _upscoreCharts.TryGetValue(kv.Key, out var upscoreMap)
+                ? (IReadOnlyDictionary<Guid, int>)upscoreMap.ToDictionary(e => e.Key, e => (int)e.Value)
+                : new Dictionary<Guid, int>();
+            return new BatchAccumulatorSnapshotEntry(kv.Key, kv.Value, newChartIds, upscored);
+        }).ToArray();
+    }
 }
