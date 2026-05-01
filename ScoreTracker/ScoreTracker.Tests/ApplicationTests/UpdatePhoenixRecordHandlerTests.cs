@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
@@ -249,6 +250,83 @@ public sealed class UpdatePhoenixRecordHandlerTests
         ctx.Scheduler.Verify(s => s.SchedulePublish(
             It.IsAny<DateTime>(),
             It.IsAny<UpdatePhoenixRecordHandler.TryFireScoreMessage>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task FlushDrainsOverdueBatchesAndPublishesPlayerScoreUpdated()
+    {
+        var ctx = new HandlerContext();
+        var overdueUserA = Guid.NewGuid();
+        var overdueUserB = Guid.NewGuid();
+        var futureUser = Guid.NewGuid();
+        var newChartA = Guid.NewGuid();
+        var upscoreChartB = Guid.NewGuid();
+        ctx.Batches.Setup(b => b.Dump()).Returns(new[]
+        {
+            new BatchAccumulatorSnapshotEntry(overdueUserA, Now.UtcDateTime - TimeSpan.FromSeconds(1),
+                new[] { newChartA }, new Dictionary<Guid, int>()),
+            new BatchAccumulatorSnapshotEntry(overdueUserB, Now.UtcDateTime - TimeSpan.FromMinutes(10),
+                Array.Empty<Guid>(), new Dictionary<Guid, int> { { upscoreChartB, 850000 } }),
+            new BatchAccumulatorSnapshotEntry(futureUser, Now.UtcDateTime + TimeSpan.FromMinutes(1),
+                new[] { Guid.NewGuid() }, new Dictionary<Guid, int>())
+        });
+        ctx.Batches.Setup(b => b.TakeBatch(overdueUserA))
+            .Returns(new PendingScoreBatch(new[] { newChartA }, new Dictionary<Guid, int>()));
+        ctx.Batches.Setup(b => b.TakeBatch(overdueUserB))
+            .Returns(new PendingScoreBatch(Array.Empty<Guid>(),
+                new Dictionary<Guid, int> { { upscoreChartB, 850000 } }));
+
+        await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatchesEvent()));
+
+        ctx.Batches.Verify(b => b.TakeBatch(overdueUserA), Times.Once);
+        ctx.Batches.Verify(b => b.TakeBatch(overdueUserB), Times.Once);
+        ctx.Batches.Verify(b => b.TakeBatch(futureUser), Times.Never);
+        ctx.Bus.Verify(b => b.Publish(
+            It.Is<PlayerScoreUpdatedEvent>(e => e.UserId == overdueUserA
+                                                && e.NewChartIds.Length == 1
+                                                && e.NewChartIds[0] == newChartA),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Bus.Verify(b => b.Publish(
+            It.Is<PlayerScoreUpdatedEvent>(e => e.UserId == overdueUserB
+                                                && e.UpscoredChartIds.ContainsKey(upscoreChartB)),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Bus.Verify(b => b.Publish(
+            It.Is<PlayerScoreUpdatedEvent>(e => e.UserId == futureUser),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task FlushSkipsEmptyBatchesFromDrainRace()
+    {
+        // If the original TryFireScoreMessage drains the user between Dump() and TakeBatch(),
+        // we should NOT publish a noisy empty PlayerScoreUpdatedEvent.
+        var ctx = new HandlerContext();
+        var racedUser = Guid.NewGuid();
+        ctx.Batches.Setup(b => b.Dump()).Returns(new[]
+        {
+            new BatchAccumulatorSnapshotEntry(racedUser, Now.UtcDateTime - TimeSpan.FromSeconds(1),
+                new[] { Guid.NewGuid() }, new Dictionary<Guid, int>())
+        });
+        ctx.Batches.Setup(b => b.TakeBatch(racedUser))
+            .Returns(new PendingScoreBatch(Array.Empty<Guid>(), new Dictionary<Guid, int>()));
+
+        await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatchesEvent()));
+
+        ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoreUpdatedEvent>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task FlushDoesNothingWhenNoBatchesActive()
+    {
+        var ctx = new HandlerContext();
+        ctx.Batches.Setup(b => b.Dump()).Returns(Array.Empty<BatchAccumulatorSnapshotEntry>());
+
+        await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatchesEvent()));
+
+        ctx.Batches.Verify(b => b.TakeBatch(It.IsAny<Guid>()), Times.Never);
+        ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoreUpdatedEvent>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
