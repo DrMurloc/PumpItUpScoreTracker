@@ -33,4 +33,7 @@ public sealed class RecurringJobRunner
 
     public Task PublishTryScheduleMoM() =>
         _bus.Publish(new MarchOfMurlocsHandler.TryScheduleMoM());
+
+    public Task PublishFlushOverdueScoreBatches() =>
+        _bus.Publish(new FlushOverdueScoreBatchesEvent());
 }

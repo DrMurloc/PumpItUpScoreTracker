@@ -14,7 +14,8 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
         IMessageScheduler scheduler,
         IPlayerScoreBatchAccumulator batches)
     : IRequestHandler<UpdatePhoenixBestAttemptCommand>,
-        IConsumer<UpdatePhoenixRecordHandler.TryFireScoreMessage>
+        IConsumer<UpdatePhoenixRecordHandler.TryFireScoreMessage>,
+        IConsumer<FlushOverdueScoreBatchesEvent>
 {
     public async Task Handle(UpdatePhoenixBestAttemptCommand request, CancellationToken cancellationToken)
     {
@@ -72,5 +73,21 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
         await bus.Publish(
             new PlayerScoreUpdatedEvent(context.Message.UserId, batch.NewChartIds, batch.UpscoredChartIds),
             context.CancellationToken);
+    }
+
+    // Safety net for batches whose scheduled TryFireScoreMessage was lost
+    // (in-memory MassTransit transport drops in-flight messages on restart).
+    public async Task Consume(ConsumeContext<FlushOverdueScoreBatchesEvent> context)
+    {
+        var now = dateTimeOffset.Now.UtcDateTime;
+        foreach (var entry in batches.Dump())
+        {
+            if (entry.FireAt > now) continue;
+            var batch = batches.TakeBatch(entry.UserId);
+            if (batch.NewChartIds.Length == 0 && batch.UpscoredChartIds.Count == 0) continue;
+            await bus.Publish(
+                new PlayerScoreUpdatedEvent(entry.UserId, batch.NewChartIds, batch.UpscoredChartIds),
+                context.CancellationToken);
+        }
     }
 }

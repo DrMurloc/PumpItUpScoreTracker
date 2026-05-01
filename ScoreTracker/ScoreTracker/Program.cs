@@ -229,7 +229,8 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     ("process-pass-tier-list",           r => r.PublishProcessPassTierList(),             "30 9 * * *"), // 04:30 ET
     ("calculate-chart-letter-difficulties", r => r.PublishCalculateChartLetterDifficulties(), "0 10 * * *"), // 05:00 ET
     ("start-leaderboard-import",         r => r.PublishStartLeaderboardImport(),          "30 10 * * 0"), // Sundays 05:30 ET
-    ("try-schedule-mom",                 r => r.PublishTryScheduleMoM(),                  "0 11 * * *")  // 06:00 ET
+    ("try-schedule-mom",                 r => r.PublishTryScheduleMoM(),                  "0 11 * * *"), // 06:00 ET
+    ("flush-overdue-score-batches",      r => r.PublishFlushOverdueScoreBatches(),        "*/5 * * * *") // every 5 min — safety net for stuck batches
 };
 if (builder.Configuration["PreventRecurringJobs"] == "true")
 {
