@@ -25,10 +25,11 @@ public sealed class UpdatePhoenixRecordHandlerTests
     private static readonly Guid ChartId = Guid.NewGuid();
 
     [Fact]
-    public async Task NewClearSavesRecordSchedulesFireAndRecordsNewChart()
+    public async Task NewClearSavesRecordSchedulesFireAndAddsBatch()
     {
         var ctx = new HandlerContext();
-        ctx.Batches.Setup(b => b.RegisterFireAt(UserId, It.IsAny<DateTime>())).Returns(true);
+        ctx.Batches.Setup(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, true,
+            It.IsAny<PhoenixScore?>())).Returns(true);
 
         await ctx.Handler.Handle(
             new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 950000,
@@ -45,9 +46,8 @@ public sealed class UpdatePhoenixRecordHandlerTests
             It.IsAny<DateTime>(),
             It.Is<UpdatePhoenixRecordHandler.TryFireScoreMessage>(m => m.UserId == UserId),
             It.IsAny<CancellationToken>()), Times.Once);
-        ctx.Batches.Verify(b => b.RecordNewChart(UserId, ChartId), Times.Once);
-        ctx.Batches.Verify(b => b.RecordUpscoreIfNotNew(It.IsAny<Guid>(), It.IsAny<Guid>(),
-            It.IsAny<PhoenixScore>()), Times.Never);
+        ctx.Batches.Verify(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, true,
+            It.Is<PhoenixScore?>(s => !s.HasValue)), Times.Once);
     }
 
     [Fact]
@@ -116,58 +116,59 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
-    public async Task NewClearWhenExistingWasBrokenRecordsNewChart()
+    public async Task NewClearWhenExistingWasBrokenAddsAsNewClearOnly()
     {
         var ctx = new HandlerContext();
         // Existing was broken at the same score → transition to a clear is a new clear,
         // and 950000 < 950000 is false so it is NOT also an upscore.
         ctx.GivenExistingScore(score: 950000, plate: PhoenixPlate.SuperbGame, isBroken: true);
-        ctx.Batches.Setup(b => b.RegisterFireAt(UserId, It.IsAny<DateTime>())).Returns(true);
+        ctx.Batches.Setup(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, true,
+            It.IsAny<PhoenixScore?>())).Returns(true);
 
         await ctx.Handler.Handle(
             new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 950000,
                 Plate: PhoenixPlate.SuperbGame),
             CancellationToken.None);
 
-        ctx.Batches.Verify(b => b.RecordNewChart(UserId, ChartId), Times.Once);
-        ctx.Batches.Verify(b => b.RecordUpscoreIfNotNew(It.IsAny<Guid>(), It.IsAny<Guid>(),
-            It.IsAny<PhoenixScore>()), Times.Never);
+        ctx.Batches.Verify(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, true,
+            It.Is<PhoenixScore?>(s => !s.HasValue)), Times.Once);
     }
 
     [Fact]
-    public async Task ClearedWithHigherScoreFromBrokenIsBothNewChartAndUpscore()
+    public async Task ClearedWithHigherScoreFromBrokenAddsBothFlags()
     {
-        // When transitioning from broken→clear with a higher score, both branches fire;
-        // the accumulator (per its contract) takes new-clear precedence.
+        // Broken→clear with a higher score: AddToBatch is called with isNewClear=true AND
+        // upscoredFrom=previousScore in a single atomic call. New-clear precedence is
+        // resolved inside the accumulator.
         var ctx = new HandlerContext();
         ctx.GivenExistingScore(score: 700000, plate: PhoenixPlate.RoughGame, isBroken: true);
-        ctx.Batches.Setup(b => b.RegisterFireAt(UserId, It.IsAny<DateTime>())).Returns(true);
+        ctx.Batches.Setup(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, true,
+            It.IsAny<PhoenixScore?>())).Returns(true);
 
         await ctx.Handler.Handle(
             new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 950000,
                 Plate: PhoenixPlate.SuperbGame),
             CancellationToken.None);
 
-        ctx.Batches.Verify(b => b.RecordNewChart(UserId, ChartId), Times.Once);
-        ctx.Batches.Verify(b => b.RecordUpscoreIfNotNew(UserId, ChartId,
-            It.Is<PhoenixScore>(s => s == (PhoenixScore)700000)), Times.Once);
+        ctx.Batches.Verify(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, true,
+            It.Is<PhoenixScore?>(s => s.HasValue && s.Value == (PhoenixScore)700000)), Times.Once);
     }
 
     [Fact]
-    public async Task UpscoreRecordsUpscoreWithPreviousScore()
+    public async Task UpscoreAddsAsUpscoreOnly()
     {
         var ctx = new HandlerContext();
         ctx.GivenExistingScore(score: 900000, plate: PhoenixPlate.SuperbGame, isBroken: false);
-        ctx.Batches.Setup(b => b.RegisterFireAt(UserId, It.IsAny<DateTime>())).Returns(true);
+        ctx.Batches.Setup(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, false,
+            It.IsAny<PhoenixScore?>())).Returns(true);
 
         await ctx.Handler.Handle(
             new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 970000,
                 Plate: PhoenixPlate.SuperbGame),
             CancellationToken.None);
 
-        ctx.Batches.Verify(b => b.RecordUpscoreIfNotNew(UserId, ChartId,
-            It.Is<PhoenixScore>(s => s == (PhoenixScore)900000)), Times.Once);
-        ctx.Batches.Verify(b => b.RecordNewChart(It.IsAny<Guid>(), It.IsAny<Guid>()), Times.Never);
+        ctx.Batches.Verify(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, false,
+            It.Is<PhoenixScore?>(s => s.HasValue && s.Value == (PhoenixScore)900000)), Times.Once);
     }
 
     [Fact]
@@ -182,23 +183,22 @@ public sealed class UpdatePhoenixRecordHandlerTests
                 Plate: PhoenixPlate.SuperbGame),
             CancellationToken.None);
 
-        ctx.Batches.Verify(b => b.RegisterFireAt(It.IsAny<Guid>(), It.IsAny<DateTime>()), Times.Never);
+        ctx.Batches.Verify(b => b.AddToBatch(It.IsAny<Guid>(), It.IsAny<DateTime>(),
+            It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<PhoenixScore?>()), Times.Never);
         ctx.Scheduler.Verify(s => s.SchedulePublish(
             It.IsAny<DateTime>(),
             It.IsAny<UpdatePhoenixRecordHandler.TryFireScoreMessage>(),
             It.IsAny<CancellationToken>()), Times.Never);
-        ctx.Batches.Verify(b => b.RecordNewChart(It.IsAny<Guid>(), It.IsAny<Guid>()), Times.Never);
-        ctx.Batches.Verify(b => b.RecordUpscoreIfNotNew(It.IsAny<Guid>(), It.IsAny<Guid>(),
-            It.IsAny<PhoenixScore>()), Times.Never);
     }
 
     [Fact]
-    public async Task SkipsSchedulingWhenBatchAlreadyActiveButStillRecords()
+    public async Task SkipsSchedulingWhenBatchAlreadyActiveButStillAdds()
     {
         var ctx = new HandlerContext();
-        // Batch already active: RegisterFireAt returns false, so the handler must NOT
-        // schedule a new fire message — but it must still record the new clear.
-        ctx.Batches.Setup(b => b.RegisterFireAt(UserId, It.IsAny<DateTime>())).Returns(false);
+        // Batch already active: AddToBatch returns false, so the handler must NOT
+        // schedule a new fire message — but the call itself must still happen.
+        ctx.Batches.Setup(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, true,
+            It.IsAny<PhoenixScore?>())).Returns(false);
 
         await ctx.Handler.Handle(
             new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 950000,
@@ -209,7 +209,8 @@ public sealed class UpdatePhoenixRecordHandlerTests
             It.IsAny<DateTime>(),
             It.IsAny<UpdatePhoenixRecordHandler.TryFireScoreMessage>(),
             It.IsAny<CancellationToken>()), Times.Never);
-        ctx.Batches.Verify(b => b.RecordNewChart(UserId, ChartId), Times.Once);
+        ctx.Batches.Verify(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, true,
+            It.IsAny<PhoenixScore?>()), Times.Once);
     }
 
     [Fact]
@@ -221,8 +222,10 @@ public sealed class UpdatePhoenixRecordHandlerTests
 
         await ctx.Handler.Consume(BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreMessage(UserId)));
 
+        // Reschedule must use a small (+5s) buffer, NOT +2min — the latter compounds on
+        // every retry and starves active players.
         ctx.Scheduler.Verify(s => s.SchedulePublish(
-            fireAt + TimeSpan.FromMinutes(2),
+            fireAt + TimeSpan.FromSeconds(5),
             It.Is<UpdatePhoenixRecordHandler.TryFireScoreMessage>(m => m.UserId == UserId),
             It.IsAny<CancellationToken>()), Times.Once);
         ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoreUpdatedEvent>(),
@@ -236,7 +239,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
         var ctx = new HandlerContext();
         var fireAt = Now.UtcDateTime - TimeSpan.FromSeconds(1); // already past
         var newCharts = new[] { Guid.NewGuid() };
-        var upscored = new System.Collections.Generic.Dictionary<Guid, int> { { Guid.NewGuid(), 900000 } };
+        var upscored = new Dictionary<Guid, int> { { Guid.NewGuid(), 900000 } };
         ctx.Batches.Setup(b => b.GetFireAt(UserId)).Returns(fireAt);
         ctx.Batches.Setup(b => b.TakeBatch(UserId)).Returns(new PendingScoreBatch(newCharts, upscored));
 
@@ -250,6 +253,42 @@ public sealed class UpdatePhoenixRecordHandlerTests
         ctx.Scheduler.Verify(s => s.SchedulePublish(
             It.IsAny<DateTime>(),
             It.IsAny<UpdatePhoenixRecordHandler.TryFireScoreMessage>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TryFireNoOpsWhenBatchAlreadyDrained()
+    {
+        // GetFireAt returns null = the batch was already drained by a concurrent
+        // TryFire or the Hangfire flush. Consumer must not crash, must not publish,
+        // must not reschedule.
+        var ctx = new HandlerContext();
+        ctx.Batches.Setup(b => b.GetFireAt(UserId)).Returns((DateTime?)null);
+
+        await ctx.Handler.Consume(BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreMessage(UserId)));
+
+        ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoreUpdatedEvent>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        ctx.Scheduler.Verify(s => s.SchedulePublish(
+            It.IsAny<DateTime>(),
+            It.IsAny<UpdatePhoenixRecordHandler.TryFireScoreMessage>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        ctx.Batches.Verify(b => b.TakeBatch(It.IsAny<Guid>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TryFireNoOpsWhenAnotherDrainTookTheBatchBetweenGetAndTake()
+    {
+        // FireAt is past (so we proceed to TakeBatch), but TakeBatch returns null
+        // because another consumer drained between our GetFireAt and TakeBatch.
+        var ctx = new HandlerContext();
+        var fireAt = Now.UtcDateTime - TimeSpan.FromSeconds(1);
+        ctx.Batches.Setup(b => b.GetFireAt(UserId)).Returns(fireAt);
+        ctx.Batches.Setup(b => b.TakeBatch(UserId)).Returns((PendingScoreBatch?)null);
+
+        await ctx.Handler.Consume(BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreMessage(UserId)));
+
+        ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoreUpdatedEvent>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -297,10 +336,10 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
-    public async Task FlushSkipsEmptyBatchesFromDrainRace()
+    public async Task FlushSkipsRacedBatchesWhenTakeBatchReturnsNull()
     {
-        // If the original TryFireScoreMessage drains the user between Dump() and TakeBatch(),
-        // we should NOT publish a noisy empty PlayerScoreUpdatedEvent.
+        // If the original TryFireScoreMessage drains the user between Dump() and
+        // TakeBatch(), TakeBatch returns null — we must NOT publish a noisy empty event.
         var ctx = new HandlerContext();
         var racedUser = Guid.NewGuid();
         ctx.Batches.Setup(b => b.Dump()).Returns(new[]
@@ -308,8 +347,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
             new BatchAccumulatorSnapshotEntry(racedUser, Now.UtcDateTime - TimeSpan.FromSeconds(1),
                 new[] { Guid.NewGuid() }, new Dictionary<Guid, int>())
         });
-        ctx.Batches.Setup(b => b.TakeBatch(racedUser))
-            .Returns(new PendingScoreBatch(Array.Empty<Guid>(), new Dictionary<Guid, int>()));
+        ctx.Batches.Setup(b => b.TakeBatch(racedUser)).Returns((PendingScoreBatch?)null);
 
         await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatchesEvent()));
 

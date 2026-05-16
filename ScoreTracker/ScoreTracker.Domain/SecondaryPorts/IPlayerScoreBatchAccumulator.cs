@@ -7,30 +7,31 @@ namespace ScoreTracker.Domain.SecondaryPorts;
 /// Per-user score-update debouncer. UpdatePhoenixRecordHandler accumulates
 /// new clears and upscores into a batch and schedules a single
 /// PlayerScoreUpdatedEvent once the user has stopped recording for a while.
-/// Implementation must be a singleton so state survives across handler instances.
+/// Implementation must be a singleton so state survives across handler instances
+/// and must be safe for concurrent use across all members.
 /// </summary>
 public interface IPlayerScoreBatchAccumulator
 {
     /// <summary>
-    /// Sets the fire-at time for this user. Returns true if no batch existed yet
-    /// (caller should schedule the fire message); false if a batch was already active
-    /// (its fire time has just been pushed forward).
+    /// Atomically adds a chart update to the user's batch (creating the batch if
+    /// needed) and pushes the fire-at time forward. If <paramref name="isNewClear"/>
+    /// is true and <paramref name="upscoredFrom"/> is non-null for the same chart,
+    /// new-clear takes precedence and the upscore is dropped.
+    ///
+    /// Returns true if this call created a new batch (caller should schedule a
+    /// TryFireScoreMessage); false if a batch was already active (its fire-at has
+    /// just been pushed forward).
     /// </summary>
-    bool RegisterFireAt(Guid userId, DateTime fireAt);
+    bool AddToBatch(Guid userId, DateTime fireAt, Guid chartId, bool isNewClear, PhoenixScore? upscoredFrom);
 
-    void RecordNewChart(Guid userId, Guid chartId);
+    /// <summary>Returns the scheduled fire-at, or null if no batch is active for the user.</summary>
+    DateTime? GetFireAt(Guid userId);
 
     /// <summary>
-    /// Records an upscore against the user's batch UNLESS the chart is already
-    /// being tracked as a new clear (a new clear with a higher score takes precedence).
+    /// Atomically removes and returns the user's pending batch, or null if no batch
+    /// is active (e.g. another in-flight drain already took it).
     /// </summary>
-    void RecordUpscoreIfNotNew(Guid userId, Guid chartId, PhoenixScore previousScore);
-
-    /// <summary>Returns the scheduled fire-at time. Throws if no batch is active for the user.</summary>
-    DateTime GetFireAt(Guid userId);
-
-    /// <summary>Atomically removes and returns the user's pending batch.</summary>
-    PendingScoreBatch TakeBatch(Guid userId);
+    PendingScoreBatch? TakeBatch(Guid userId);
 
     /// <summary>
     /// Diagnostic snapshot of every active batch. Best-effort — entries may be
