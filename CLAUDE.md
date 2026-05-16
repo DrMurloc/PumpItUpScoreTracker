@@ -17,10 +17,10 @@ Run from the repo root (the solution lives at `ScoreTracker/ScoreTracker.sln`).
 - **Build**: `dotnet build ScoreTracker/ScoreTracker.sln -c Release`
 - **Typecheck**: covered by `dotnet build` (no separate step).
 - **Lint/static analysis**: none locally configured. DeepSource runs in CI (`.deepsource.toml`).
-- **Unit tests**: `dotnet test ScoreTracker/ScoreTracker.Tests/ScoreTracker.Tests.csproj` — covers `DomainTests/` (unit) and `ApplicationTests/` (component).
+- **Unit tests**: `dotnet test ScoreTracker/ScoreTracker.Tests/ScoreTracker.Tests.csproj` — covers `DomainTests/` (unit) and `ApplicationTests/` (component). No Docker required.
 - **Component / module tests**: same command, same project.
 - **Contract tests**: not present.
-- **Real-dependency integration tests**: not present. SQL Server via Testcontainers is the intended target if/when added.
+- **Real-dependency integration tests**: `dotnet test ScoreTracker/ScoreTracker.Tests.Integration/ScoreTracker.Tests.Integration.csproj` — spins up an ephemeral SQL Server container via Testcontainers.MsSql, applies migrations, runs the suite. Requires Docker Desktop (or equivalent). Currently scaffolded with a migration smoke test; repository coverage to follow.
 - **E2E / Playwright tests**: not present.
 - **Mutation tests**: not present.
 
@@ -49,7 +49,8 @@ Domain  ◄── Application ◄── Data
 | `ScoreTracker.Data` | + `Microsoft.EntityFrameworkCore.SqlServer`, `Azure.Storage.Blobs`, `Discord.Net`, `HtmlAgilityPack`, `SendGrid` | ASP.NET. |
 | `ScoreTracker.Web` | + `MudBlazor`, OAuth providers, `Swashbuckle`, `Tesseract`, MassTransit DI, `Hangfire.AspNetCore`, `Hangfire.SqlServer` | EF Core directly (must go through ports). |
 | `ScoreTracker.CompositionRoot` | DI extensions only | Business logic. |
-| `ScoreTracker.Tests` | + `xunit`, `Moq` | Other doubling libraries (see Test conventions). |
+| `ScoreTracker.Tests` | + `xunit`, `Moq` | Other doubling libraries (see Test conventions). References `ScoreTracker.Application` (for handler tests) and `ScoreTracker.Data` (for parser approval tests against `PiuGameApi`). Does not reference `ScoreTracker.Web`. |
+| `ScoreTracker.Tests.Integration` | + `xunit`, `Moq`, `Testcontainers.MsSql`, `Respawn` | Mocking the port whose implementation is the subject of the test (e.g., do not mock `IPhoenixRecordRepository` when testing `EFPhoenixRecordsRepository`). Mocking incidental collaborator ports for setup — or `IPiuGameApi`-style external clients in slice tests — is fine. |
 
 Adding a package outside its allowed layer is a violation. Adding a project reference that isn't in the graph above is a violation.
 
@@ -87,19 +88,20 @@ Adding a package outside its allowed layer is a violation. Adding a project refe
 ### Frameworks and doubles
 
 - **xUnit `2.9.3` + Moq `4.20.72`.** Do not introduce alternative double libraries (`FakeItEasy`, `NSubstitute`, `AutoFixture`) without explicit approval.
-- All tests live in `ScoreTracker.Tests/`, mirroring source by namespace.
+- Unit and component tests live in `ScoreTracker.Tests/`, mirroring source by namespace. Real-dependency integration tests live in `ScoreTracker.Tests.Integration/` (Testcontainers.MsSql + Respawn).
 - **Double vocabulary follows ENTERPRISE-TESTING.md** (Dummy / Stub / Fake / Spy / Mock / Simulator) even though Moq is the only library. A `Mock<T>` set up only with `ReturnsAsync` and never `Verify`'d is a *stub*; a `Mock<T>` whose `Verify` calls are the assertion is a *mock*; `FakeDateTime.At(...)` returns a stub even though it's named "fake." Talk about the role, not the type.
 
 ### Test categorization
 
-This repo uses **folder-as-tag**: the path encodes ENTERPRISE `Layer` / `Size` / `DependencyMode` for everything in it. Per-test `[Trait]` attributes are not used today and are not required when adding a test to an existing folder. They become the right tool only if a single folder ever mixes dependency modes (e.g., when ephemeral-DB tests land — see [BACKLOG.md](BACKLOG.md)).
+This repo uses **folder-as-tag**: each test project's path (and subfolders within) encodes ENTERPRISE `Layer` / `Size` / `DependencyMode`. Per-test `[Trait]` attributes are not used today and are not required when adding a test to an existing folder.
 
 | Folder | `Layer` | `Size` | `DependencyMode` |
 |---|---|---|---|
 | `ScoreTracker.Tests/DomainTests/` | `Unit` | `Small` | `None` (rare `TestDouble` for clock/RNG seams) |
 | `ScoreTracker.Tests/ApplicationTests/` | `Component` | `Small` | `TestDouble` |
+| `ScoreTracker.Tests.Integration/` | `Integration` | `Medium` | `EphemeralInfra` (SQL Server via Testcontainers) |
 
-PR gate: `dotnet build` + `dotnet test` runs both folders. There is no fast/slow split today.
+PR gate: `dotnet test ScoreTracker/ScoreTracker.Tests/...` runs the fast suite without Docker. `dotnet test ScoreTracker/ScoreTracker.Tests.Integration/...` runs the real-DB suite and needs Docker; today it runs locally only (CI wiring deferred).
 
 ### Unit tests — `DomainTests/`
 
@@ -138,11 +140,11 @@ PR gate: `dotnet build` + `dotnet test` runs both folders. There is no fast/slow
 ### Dependency realism in this project
 
 - **MassTransit in-memory transport is the production transport.** Tests that go through `IBus`/`IConsumer<>` are exercising the real transport, not a fake. Classify any future MassTransit-flow test as `Layer=Component` or `Layer=Slice` (with `DependencyMode=TestDouble`) based on what *else* is mocked. Do not call it `Integration` just because it touches the bus.
-- **SQL Server is never replaced** with EF in-memory or SQLite. ENTERPRISE-TESTING.md explicitly classifies in-memory providers as `DependencyMode=InMemory`, not `EphemeralInfra`, and they cannot be called real-DB integration tests. Today, tests either mock the repository port (`DependencyMode=TestDouble`) or wait for real-dependency integration tests (`Layer=Integration, DependencyMode=EphemeralInfra`, planned in [BACKLOG.md](BACKLOG.md)).
+- **SQL Server is never replaced** with EF in-memory or SQLite. ENTERPRISE-TESTING.md explicitly classifies in-memory providers as `DependencyMode=InMemory`, not `EphemeralInfra`, and they cannot be called real-DB integration tests. Tests in `ScoreTracker.Tests/` mock the repository port (`DependencyMode=TestDouble`); tests in `ScoreTracker.Tests.Integration/` run against a real SQL Server engine provisioned per session by Testcontainers.MsSql, with Respawn resetting the `scores` schema between tests (`DependencyMode=EphemeralInfra`).
 
 ### Local external dependencies
 
-SQL Server is required to *run* the app but is not exercised by the current test suite. There is no `docker-compose` or scripted local bring-up; configure a connection string via user-secrets or `appsettings.Development.json`.
+SQL Server is required to *run* the app and to run `ScoreTracker.Tests.Integration` (the latter via an ephemeral container — start Docker Desktop and the suite provisions and tears down its own SQL Server container). For running the app locally, configure a connection string via user-secrets or `appsettings.Development.json`.
 
 ## Carve-outs from ENTERPRISE.md
 

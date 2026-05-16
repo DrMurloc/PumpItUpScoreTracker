@@ -130,7 +130,7 @@ public sealed class PiuGameApi : IPiuGameApi
                 {
                     results.Add(new PiuGameGetSongLeaderboardResult.EntryResultDto
                     {
-                        Score = int.Parse(scoreNode.InnerText, NumberStyles.AllowThousands),
+                        Score = int.Parse(scoreNode.InnerText, NumberStyles.AllowThousands, CultureInfo.InvariantCulture),
                         ProfileName = profileName,
                         AvatarUrl = new Uri(ImageRegex.Match(avatarNode.GetAttributeValue("style", "")).Groups[1].Value)
                     });
@@ -188,7 +188,7 @@ public sealed class PiuGameApi : IPiuGameApi
             var userName = string.Join("",
                 li.SelectNodes(".//div[contains(@class,'profile_name')]").Select(n => n.InnerText));
             var rating = int.Parse(li.SelectSingleNode(".//div[contains(@class,'score')]/i").InnerText,
-                NumberStyles.AllowThousands);
+                NumberStyles.AllowThousands, CultureInfo.InvariantCulture);
             results.Add(new PiuGameGetLeaderboardResult.Entry
             {
                 ProfileName = userName,
@@ -352,16 +352,22 @@ public sealed class PiuGameApi : IPiuGameApi
                 }
 
                 if (level == 0) level = 29;
+                // PIU formats note counts with "," as thousand separator (e.g. "1,414"). Without an
+                // explicit CultureInfo, int.Parse uses the request thread's current culture, which
+                // ASP.NET Core's RequestLocalizationMiddleware sets per-user. For users browsing in
+                // pt-BR / fr-FR / it-IT etc. (where "," is the decimal separator), parsing throws
+                // FormatException and the score entry is silently dropped by the try/catch below.
+                // Force InvariantCulture so PIU's format is parsed the same way for every request.
                 var perfects = int.Parse(card.SelectSingleNode(".//td[contains(@data-th,'PERFECT')]/div").InnerText,
-                    NumberStyles.AllowThousands);
+                    NumberStyles.AllowThousands, CultureInfo.InvariantCulture);
                 var greats = int.Parse(card.SelectSingleNode(".//td[contains(@data-th,'GREAT')]/div").InnerText,
-                    NumberStyles.AllowThousands);
+                    NumberStyles.AllowThousands, CultureInfo.InvariantCulture);
                 var goods = int.Parse(card.SelectSingleNode(".//td[contains(@data-th,'GOOD')]/div").InnerText,
-                    NumberStyles.AllowThousands);
+                    NumberStyles.AllowThousands, CultureInfo.InvariantCulture);
                 var bads = int.Parse(card.SelectSingleNode(".//td[contains(@data-th,'BAD')]/div").InnerText,
-                    NumberStyles.AllowThousands);
+                    NumberStyles.AllowThousands, CultureInfo.InvariantCulture);
                 var misses = int.Parse(card.SelectSingleNode(".//td[contains(@data-th,'MISS')]/div").InnerText,
-                    NumberStyles.AllowThousands);
+                    NumberStyles.AllowThousands, CultureInfo.InvariantCulture);
                 var scoreScreen = new ScoreScreen(perfects, greats, goods, bads, misses, 0);
                 var plate = scoreScreen.PlateText;
                 results.Add(new PiuGameGetRecentScoresResult

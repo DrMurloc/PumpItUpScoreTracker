@@ -140,10 +140,11 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 (pb.UserId, pb.ChartId));
     }
 
-    public async Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(IEnumerable<Guid> userId,
+    public async Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(IEnumerable<Guid> userIds,
         ChartType chartType, DifficultyLevel minimumLevel, DifficultyLevel maximumLevel,
         CancellationToken cancellationToken)
     {
+        var userIdArray = userIds.ToArray();
         var mixId = MixGuids[MixEnum.Phoenix];
         var intMin = (int)minimumLevel;
         var intMax = (int)maximumLevel;
@@ -152,7 +153,8 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         return (await (from cm in database.ChartMix
                 join c in database.Chart on cm.ChartId equals c.Id
                 join pba in database.PhoenixBestAttempt on c.Id equals pba.ChartId
-                where cm.MixId == mixId && cm.Level >= intMin && cm.Level <= intMax && c.Type == chartTypeString
+                where userIdArray.Contains(pba.UserId)
+                      && cm.MixId == mixId && cm.Level >= intMin && cm.Level <= intMax && c.Type == chartTypeString
                 select pba).ToArrayAsync(cancellationToken))
             .Select(pb =>
                 new RecordedPhoenixScore(pb.ChartId, pb.Score, PhoenixPlateHelperMethods.TryParse(pb.Plate),

@@ -23,6 +23,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ScoreTracker.Application\ScoreTracker.Application.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="ApprovalTests\**\Fixtures\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>
