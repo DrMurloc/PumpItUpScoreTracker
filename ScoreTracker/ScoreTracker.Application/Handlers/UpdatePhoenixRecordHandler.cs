@@ -4,6 +4,7 @@ using ScoreTracker.Application.Commands;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Handlers;
 
@@ -39,19 +40,16 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
         var isUpscore = existing?.Score != null && request.Score != null && existing.Score < request.Score;
         if (!isNewScore && !isUpscore) return;
 
-        //Batches up score posts to reduce noise
+        // Batch up score posts to reduce noise. AddToBatch atomically creates-or-extends
+        // the user's batch; only schedule a drain when this call created the batch.
         var fireAt = dateTimeOffset.Now.UtcDateTime + TimeSpan.FromMinutes(2);
-        if (batches.RegisterFireAt(user.User.Id, fireAt))
+        PhoenixScore? upscoredFrom = isUpscore ? existing!.Score!.Value : null;
+        if (batches.AddToBatch(user.User.Id, fireAt, request.ChartId, isNewScore, upscoredFrom))
         {
             await scheduler.SchedulePublish(fireAt + TimeSpan.FromSeconds(5),
                 new TryFireScoreMessage(user.User.Id),
                 cancellationToken);
         }
-
-        if (isNewScore) batches.RecordNewChart(user.User.Id, request.ChartId);
-
-        if (isUpscore)
-            batches.RecordUpscoreIfNotNew(user.User.Id, request.ChartId, existing!.Score!.Value);
     }
 
     public sealed record ScheduleScoreMessage(Guid UserId, Guid[] ChartIds);
@@ -61,15 +59,20 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
     public async Task Consume(ConsumeContext<TryFireScoreMessage> context)
     {
         var fireAt = batches.GetFireAt(context.Message.UserId);
-        if (dateTimeOffset.Now.UtcDateTime < fireAt)
+        if (fireAt is null) return; // batch already drained by a concurrent TryFire/flush
+        if (dateTimeOffset.Now.UtcDateTime < fireAt.Value)
         {
-            await scheduler.SchedulePublish(fireAt + TimeSpan.FromMinutes(2),
+            // Reschedule to the moving target plus a tiny buffer — using a +2min retry
+            // would compound on every reschedule and starve active players.
+            await scheduler.SchedulePublish(fireAt.Value + TimeSpan.FromSeconds(5),
                 new TryFireScoreMessage(context.Message.UserId),
                 context.CancellationToken);
             return;
         }
 
         var batch = batches.TakeBatch(context.Message.UserId);
+        if (batch is null) return; // raced another drain
+        if (batch.NewChartIds.Length == 0 && batch.UpscoredChartIds.Count == 0) return;
         await bus.Publish(
             new PlayerScoreUpdatedEvent(context.Message.UserId, batch.NewChartIds, batch.UpscoredChartIds),
             context.CancellationToken);
@@ -84,6 +87,7 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
         {
             if (entry.FireAt > now) continue;
             var batch = batches.TakeBatch(entry.UserId);
+            if (batch is null) continue;
             if (batch.NewChartIds.Length == 0 && batch.UpscoredChartIds.Count == 0) continue;
             await bus.Publish(
                 new PlayerScoreUpdatedEvent(entry.UserId, batch.NewChartIds, batch.UpscoredChartIds),
