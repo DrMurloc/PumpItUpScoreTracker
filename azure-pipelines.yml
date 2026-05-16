@@ -1,41 +1,80 @@
-# ASP.NET
-
-# Build and test ASP.NET projects.
-# Add steps that publish symbols, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/apps/aspnet/build-aspnet-4
+# ASP.NET + integration tests
+#
+# Two parallel jobs:
+#   1) Windows: build the whole solution (incl. the deployable Web package), run unit/component/
+#      approval tests via VSTest. Targets ScoreTracker.Tests.dll explicitly so the integration
+#      project (which needs Docker + Linux containers) isn't picked up here.
+#   2) Linux:   run the Testcontainers-backed integration suite against an ephemeral SQL Server
+#      2025 instance. ubuntu-latest agents ship with Docker + Linux container support, which is
+#      what Testcontainers.MsSql needs.
 
 trigger:
 - main
-
-pool:
-  vmImage: 'windows-latest'
 
 variables:
   solution: '**/*.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
-steps:
-- task: NuGetToolInstaller@1
+jobs:
+- job: BuildAndUnitTests
+  displayName: 'Build + Unit/Component/Approval Tests (Windows)'
+  pool:
+    vmImage: 'windows-latest'
+  steps:
+  - task: NuGetToolInstaller@1
 
-- task: NuGetCommand@2
-  inputs:
-    restoreSolution: '$(solution)'
+  - task: NuGetCommand@2
+    inputs:
+      restoreSolution: '$(solution)'
 
-- task: VSBuild@1
-  inputs:
-    solution: '$(solution)'
-    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+  - task: VSBuild@1
+    inputs:
+      solution: '$(solution)'
+      msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
+      platform: '$(buildPlatform)'
+      configuration: '$(buildConfiguration)'
 
-- task: VSTest@2
-  inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
-    
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'drop'
-    publishLocation: 'Container'
+  # Pin VSTest to the unit/component/approval assembly only. The integration assembly is built
+  # alongside but runs in the Linux job below — it needs Docker, which windows-latest doesn't
+  # have configured for Linux containers.
+  - task: VSTest@2
+    inputs:
+      testSelector: 'testAssemblies'
+      testAssembliesVer2: |
+        **\ScoreTracker.Tests\bin\**\ScoreTracker.Tests.dll
+        !**\obj\**
+      platform: '$(buildPlatform)'
+      configuration: '$(buildConfiguration)'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'drop'
+      publishLocation: 'Container'
+
+- job: IntegrationTests
+  displayName: 'Integration Tests (Linux, Testcontainers + SQL Server 2025)'
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - task: UseDotNet@2
+    displayName: 'Install .NET 10 SDK'
+    inputs:
+      packageType: 'sdk'
+      version: '10.0.x'
+
+  # First run on a fresh agent pulls the SQL Server 2025 image (~2 min). Subsequent tests against
+  # the same agent are fast — but Microsoft-hosted agents are fresh per run, so expect that cost
+  # every time. ~3 min total job runtime on a clean agent.
+  - script: dotnet test ScoreTracker/ScoreTracker.Tests.Integration/ScoreTracker.Tests.Integration.csproj -c $(buildConfiguration) --logger "trx;LogFileName=integration.trx" --results-directory $(Agent.TempDirectory)
+    displayName: 'Run integration tests (real SQL Server 2025 via Testcontainers)'
+
+  - task: PublishTestResults@2
+    displayName: 'Publish integration test results'
+    condition: always()
+    inputs:
+      testResultsFormat: 'VSTest'
+      testResultsFiles: '$(Agent.TempDirectory)/**/integration.trx'
+      testRunTitle: 'Integration Tests (SQL Server 2025)'
+      failTaskOnFailedTests: true

@@ -9,7 +9,12 @@ namespace ScoreTracker.Tests.Integration.Fixtures;
 [ExcludeFromCodeCoverage]
 public sealed class SqlServerFixture : IAsyncLifetime
 {
-    private readonly MsSqlContainer _container = new MsSqlBuilder().Build();
+    // Production runs on Azure SQL Database; SQL Server 2025 is the closest local equivalent
+    // (compat level + T-SQL surface). Pin the image explicitly rather than relying on whatever
+    // version Testcontainers.MsSql defaults to.
+    private readonly MsSqlContainer _container = new MsSqlBuilder()
+        .WithImage("mcr.microsoft.com/mssql/server:2025-latest")
+        .Build();
     private IDbContextFactory<ChartAttemptDbContext>? _factory;
     private Respawner? _respawner;
 
