@@ -1,0 +1,124 @@
+﻿<!DOCTYPE html>
+<html>
+<body>
+<!--
+  Real PIU capture of /leaderboard/rating_ranking.php (LEVEL ALL view) — covers both
+  GetLeaderboards (the leaderboard-selector dropdown) and GetLeaderboard (the per-leaderboard
+  rating entries). Per maintainer: avatars on PIU are NOT user-unique so they're kept verbatim;
+  gamer tags and the #ID suffix are scrubbed to placeholders. Ratings (3,088,301 and 3,086,069)
+  are kept verbatim — they're publicly displayed on PIU's leaderboard, and the 7-digit values
+  with comma separators stress-test the line-190 InvariantCulture fix under non-en-US cultures.
+-->
+                <div class="pageWrap box1">
+                    <div class="board_search">
+                        <div class="left total_wrap"></div>
+                        <div class="search">
+                            <label class="select">
+                                <select class="input_st white wd15" onchange="location.href='?lv='+this.value">
+                                    <option value="">All</option>
+                                    <option value="10">LEVEL 10</option>
+                                    <option value="11">LEVEL 11</option>
+                                    <option value="12">LEVEL 12</option>
+                                    <option value="13">LEVEL 13</option>
+                                    <option value="14">LEVEL 14</option>
+                                    <option value="15">LEVEL 15</option>
+                                    <option value="16">LEVEL 16</option>
+                                    <option value="17">LEVEL 17</option>
+                                    <option value="18">LEVEL 18</option>
+                                    <option value="19">LEVEL 19</option>
+                                    <option value="20">LEVEL 20</option>
+                                    <option value="21">LEVEL 21</option>
+                                    <option value="22">LEVEL 22</option>
+                                    <option value="23">LEVEL 23</option>
+                                    <option value="24">LEVEL 24</option>
+                                    <option value="25">LEVEL 25</option>
+                                    <option value="26">LEVEL 26</option>
+                                    <option value="27over">LEVEL 27 OVER</option>
+                                    <option value="10over">LEVEL 10 OVER</option>
+                                    <option value="coop">CO-OP</option>
+                                </select>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="rating_ranking_wrap bg">
+                        <div class="rating_rangking_list_w">
+                            <div class="memo_wrap2 st1">
+                                <div class="in">
+                                    <span class="icon">
+                                        <i class="xi xi-lightbulb-o"></i>
+                                    </span>
+                                    <div class="tw">
+                                        <p class="ti">Game IDs caught cheating will be removed from all rankings.</p>
+                                        <p class="tx">- The act of playing a game with a hand pump</p>
+                                        <p class="tx">- The act of two or more people playing a game (Exclude CO-OP)</p>
+                                        <p class="tx">- The act of someone else playing my game</p>
+                                        <p class="tx">- The act of playing a game on behalf of another person</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <ul class="list">
+                                <li>
+                                    <div class="in flex vc wrap">
+                                        <div class="num">
+                                            <div class="img_wrap">
+                                                <span class="medal_wrap">
+                                                    <i class="img">
+                                                        <img src="/l_img/goldmedal.png"/>
+                                                    </i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="name flex vc wrap">
+                                            <div class="profile_img">
+                                                <div class="resize">
+                                                    <div class="re bgfix" style="background-image:url('https://piugame.com/data/avatar_img/6b0cc0ae9243bb3c5c91931db9c3d92b.png?v=20250923184201')"></div>
+                                                </div>
+                                            </div>
+                                            <div class="name_w">
+                                                <div class="profile_name en">Player1</div>
+                                                <div class="profile_name st1 en">#0001</div>
+                                            </div>
+                                        </div>
+                                        <div class="score">
+                                            <i class="tt en">3,088,301</i>
+                                        </div>
+                                    </div>
+                                    <div class="date">
+                                        <i class="tt">2026-05-16 11:59:25 (GMT+9)</i>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="in flex vc wrap">
+                                        <div class="num">
+                                            <div class="img_wrap">
+                                                <span class="medal_wrap">
+                                                    <i class="img">
+                                                        <img src="/l_img/silvermedal.png"/>
+                                                    </i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="name flex vc wrap">
+                                            <div class="profile_img">
+                                                <div class="resize">
+                                                    <div class="re bgfix" style="background-image:url('https://piugame.com/data/avatar_img/77ebac59a8a18e91a62c580b546797cc.png?v=20250923184201')"></div>
+                                                </div>
+                                            </div>
+                                            <div class="name_w">
+                                                <div class="profile_name en">Player2</div>
+                                                <div class="profile_name st1 en">#0002</div>
+                                            </div>
+                                        </div>
+                                        <div class="score">
+                                            <i class="tt en">3,086,069</i>
+                                        </div>
+                                    </div>
+                                    <div class="date">
+                                        <i class="tt">2026-04-05 10:34:03 (GMT+9)</i>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+</body>
+</html>

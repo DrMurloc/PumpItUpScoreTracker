@@ -18,7 +18,7 @@ public interface IPhoenixRecordRepository
     Task<IEnumerable<(Guid UserId, Guid ChartId)>> GetPgUsers(ChartType chartType, DifficultyLevel level,
         CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(IEnumerable<Guid> userId, ChartType chartType,
+    Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(IEnumerable<Guid> userIds, ChartType chartType,
         DifficultyLevel minimumLevel,
         DifficultyLevel maximumLevel,
         CancellationToken cancellationToken);

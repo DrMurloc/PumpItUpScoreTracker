@@ -1,0 +1,153 @@
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging.Abstractions;
+using ScoreTracker.Data.Repositories;
+using ScoreTracker.Domain.Records;
+using ScoreTracker.Tests.Integration.Fixtures;
+
+namespace ScoreTracker.Tests.Integration;
+
+[Collection(IntegrationTestCollection.Name)]
+[ExcludeFromCodeCoverage]
+public sealed class EFOfficialLeaderboardRepositoryTests : IAsyncLifetime
+{
+    private readonly SqlServerFixture _fixture;
+
+    public EFOfficialLeaderboardRepositoryTests(SqlServerFixture fixture)
+    {
+        _fixture = fixture;
+    }
+
+    public Task InitializeAsync() => _fixture.ResetAsync();
+    public Task DisposeAsync() => Task.CompletedTask;
+
+    // Avatar lookups cache for an hour per instance; fresh cache on each Build() ensures
+    // reads exercise the DB path, not whatever the writer cached in process.
+    private EFOfficialLeaderboardRepository BuildRepository() =>
+        new(_fixture.DbContextFactory,
+            NullLogger<EFOfficialLeaderboardRepository>.Instance,
+            new MemoryCache(new MemoryCacheOptions()));
+
+    [Fact]
+    public async Task WriteEntryAndGetOfficialLeaderboardStatusesRoundTrip()
+    {
+        var entry = new UserOfficialLeaderboard("alice", Place: 3, "Rating", "Top Singles", Score: 950);
+
+        await BuildRepository().WriteEntry(entry, CancellationToken.None);
+
+        var retrieved = (await BuildRepository()
+            .GetOfficialLeaderboardStatuses("alice", CancellationToken.None)).ToList();
+        Assert.Single(retrieved);
+        Assert.Equal("alice", retrieved[0].Username);
+        Assert.Equal(3, retrieved[0].Place);
+        Assert.Equal("Rating", retrieved[0].OfficialLeaderboardType);
+        Assert.Equal("Top Singles", retrieved[0].LeaderboardName);
+        Assert.Equal(950, retrieved[0].Score);
+    }
+
+    [Fact]
+    public async Task ClearLeaderboardRemovesOnlyEntriesMatchingBothTypeAndName()
+    {
+        var writer = BuildRepository();
+        await writer.WriteEntries(new[]
+        {
+            new UserOfficialLeaderboard("alice", 1, "Rating", "Top Singles", 1000),
+            new UserOfficialLeaderboard("bob",   2, "Rating", "Top Singles", 900),
+            new UserOfficialLeaderboard("alice", 1, "Rating", "Top Doubles", 850)
+        }, CancellationToken.None);
+
+        await writer.ClearLeaderboard("Rating", "Top Singles", CancellationToken.None);
+
+        var aliceStatuses = (await BuildRepository()
+            .GetOfficialLeaderboardStatuses("alice", CancellationToken.None)).ToList();
+        Assert.Single(aliceStatuses);
+        Assert.Equal("Top Doubles", aliceStatuses[0].LeaderboardName);
+    }
+
+    [Fact]
+    public async Task SaveAvatarAndGetUserAvatarsRoundTrip()
+    {
+        var avatar = new Uri("https://example.invalid/alice-avatar.png");
+
+        await BuildRepository().SaveAvatar("alice", avatar, CancellationToken.None);
+
+        var avatars = (await BuildRepository().GetUserAvatars(CancellationToken.None)).ToList();
+        Assert.Single(avatars);
+        Assert.Equal("alice", avatars[0].Username);
+        Assert.Equal(avatar, avatars[0].AvatarPath);
+    }
+
+    [Fact]
+    public async Task SaveAvatarOverwritesExistingAvatarForSameUsername()
+    {
+        var first = new Uri("https://example.invalid/old.png");
+        var second = new Uri("https://example.invalid/new.png");
+        var writer = BuildRepository();
+        await writer.SaveAvatar("alice", first, CancellationToken.None);
+        await writer.SaveAvatar("alice", second, CancellationToken.None);
+
+        var avatars = (await BuildRepository().GetUserAvatars(CancellationToken.None)).ToList();
+
+        Assert.Single(avatars);
+        Assert.Equal(second, avatars[0].AvatarPath);
+    }
+
+    [Fact]
+    public async Task LastImportTimestampRoundTripsAndUpdatesTheSingleStateRow()
+    {
+        var first = new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero);
+        var second = new DateTimeOffset(2026, 5, 14, 0, 0, 0, TimeSpan.Zero);
+
+        await BuildRepository().SetLastImportTimestamp(first, CancellationToken.None);
+        var afterFirst = await BuildRepository().GetLastImportTimestamp(CancellationToken.None);
+
+        await BuildRepository().SetLastImportTimestamp(second, CancellationToken.None);
+        var afterSecond = await BuildRepository().GetLastImportTimestamp(CancellationToken.None);
+
+        Assert.Equal(first, afterFirst);
+        Assert.Equal(second, afterSecond);
+    }
+
+    [Fact]
+    public async Task UpdateAllAvatarPathsReplacesEntriesWithMatchingOldPathOnly()
+    {
+        var oldPath = new Uri("https://piu.invalid/alice-v1.png");
+        var newPath = new Uri("https://cdn.invalid/alice-v2.png");
+        var bobsUntouched = new Uri("https://piu.invalid/bob.png");
+        var writer = BuildRepository();
+        await writer.SaveAvatar("alice", oldPath, CancellationToken.None);
+        await writer.SaveAvatar("bob", bobsUntouched, CancellationToken.None);
+
+        await writer.UpdateAllAvatarPaths(oldPath, newPath, CancellationToken.None);
+
+        var avatars = (await BuildRepository().GetUserAvatars(CancellationToken.None)).ToList();
+        var alice = avatars.Single(a => a.Username == "alice");
+        var bob = avatars.Single(a => a.Username == "bob");
+        Assert.Equal(newPath, alice.AvatarPath);
+        Assert.Equal(bobsUntouched, bob.AvatarPath);
+    }
+
+    [Fact]
+    public async Task SaveWorldRankingAndGetAllWorldRankingsRoundTrip()
+    {
+        var record = new WorldRankingRecord(
+            Username: "alice",
+            Type: "Singles",
+            AverageDifficulty: 18.5,
+            AverageScore: 950000,
+            SinglesCount: 50,
+            DoublesCount: 10,
+            TotalRating: 12345,
+            CompetitiveLevel: 19.2,
+            SinglesCompetitiveLevel: 19.4,
+            DoublesCompetitiveLevel: 18.8);
+
+        await BuildRepository().SaveWorldRanking(record, CancellationToken.None);
+
+        var retrieved = (await BuildRepository().GetAllWorldRankings(CancellationToken.None)).ToList();
+        Assert.Single(retrieved);
+        Assert.Equal("alice", retrieved[0].Username);
+        Assert.Equal("Singles", retrieved[0].Type);
+        Assert.Equal(50, retrieved[0].SinglesCount);
+        Assert.Equal(12345, retrieved[0].TotalRating);
+    }
+}
