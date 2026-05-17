@@ -237,6 +237,88 @@ Currently skipped — the codebase consumes external APIs but exposes only a thi
 
 ---
 
+## Onion + DDD + Hexagonal rearchitecture
+
+**Deferred until after Phoenix 2 Phase 3.** Resumes in [Phase 4 (slow burn)](docs/phoenix2/phases/phase-4-slow-burn.md) or after. During Phoenix 2 Phases 1–3, populate Step 1.6's diagnostic catalog organically — every saga the compiler-driven Mix audit forces us to touch gets tagged with its rearch destination. **No code moves until rearch sessions begin.**
+
+Decisions locked from a 2026-05-17 workshop. ADR (Step 1.7) is the first rearch-session deliverable.
+
+### Why not concurrent with Phoenix 2
+
+Phoenix 2 is **compiler-driven and mechanical**: required `MixEnum mix` parameters, composite-FK schema migration, mix-isolation tests before column flips. See [PHOENIX2-ROADMAP.md](PHOENIX2-ROADMAP.md) and [phoenix-records-schema.md](docs/phoenix2/features/phoenix-records-schema.md).
+
+Rearch is **judgment-driven and structural**: what's domain vs orchestration, shared kernel vs vertical. Concurrent execution means rushed rearch decisions under launch pressure, bloated Phoenix 2 PRs, and moving targets for the Phase 1 safety-net tests. Phase 4's slow-burn pace matches rearch energy.
+
+### Locked decisions
+
+- **A1. Vertical taxonomy** — six subdomain verticals, each its own assembly with internal Domain/Application/Infra layers:
+  - **PlayerProgress** (current `ScoreTracker.PersonalProgress`; expanded to include Pumbility, PlayerHistory, ScoreQuality, Title, Skills)
+  - **Competition** (Qualifiers, WeeklyTournament, M.o.M., OfficialLeaderboard — Match/bracket dropped per the [Phoenix 2 carve-out](PHOENIX2-ROADMAP.md))
+  - **Community**
+  - **CatalogDifficulty** (ScoringDifficulty, TierList, Randomizer)
+  - **UCS**
+  - **Recommendations** (RecommendedCharts, PumbilityProjection)
+- **A2. Shared kernel scope (tight)** — `Song`, `Chart`, `ChartType`, `DifficultyLevel`, `Mix` + `[LiveMix]`, `PhoenixScore`, `PhoenixLetterGrade`, `PhoenixPlate`, `Title`, `User` (identity only), `Name`, `Bpm`. Shared ports: `IUserRepository`, `IChartRepository`, `ISongRepository`, `ICurrentUserAccessor` (incl. `GetLiveMix()` / `GetUserSelectedMix()`), `IDateTimeOffsetAccessor`, `IBus`, `IPiuGameApi`. MediatR-in-Domain carve-out stays.
+- **A3. One DbContext** — entities namespaced by vertical (`Data.Persistence.Entities.<Vertical>`) so a future N-context split is cheap.
+- **A4. Cross-vertical communication** — three modes only:
+  - **Sync** = interface (API-equivalent), defined in the providing vertical's published surface.
+  - **In-process listener** = MediatR `INotification`.
+  - **Durable/async** = MassTransit.
+  - **Avoid:** concrete-type or repository imports across verticals. Today's `Application → PersonalProgress` leak (3 sagas importing `PersonalProgress.Queries`) is the canonical anti-example.
+- **A5. PiuGame ACL** — parsers + `IPiuGameApi` adapter live in Infrastructure with translation at the boundary into shared-kernel types. Not its own vertical.
+
+### Plan
+
+**Step 1 — Solidify domain** *~1–2 sessions*. Decisions + cataloging, no code moves.
+- 1.1–1.5. Locked above.
+- 1.6. **Diagnostic catalog.** Walk `Domain/`, `Application/Handlers/`, parser code. Tag each file with destination (shared kernel / which vertical / Application / Infra / stay). **Populated organically during Phoenix 2 Phases 1–3** — every saga the Mix audit forces us into gets a catalog entry.
+- 1.7. **ADR doc** capturing 1.1–1.5. First rearch-session output.
+
+**Step 2 — Pull out of `Domain/` what doesn't belong** *~2–3 sessions*. Driven by 1.2 + 1.6.
+- 2.1. `Domain/Events/` command-shaped messages (`ProcessPassTierListCommand`, `ProcessScoresTiersListCommand`) → owning vertical's Application.
+- 2.2. Most `Domain/Records/` → owning vertical.
+- 2.3. `Domain/Views/` Match projections — may evaporate per the Phoenix 2 Match drop.
+- 2.4. Vertical-specific `Domain/Services/` → owning vertical's internal Domain.
+- 2.5. Vertical-specific `Domain/SecondaryPorts/` → owning vertical.
+- 2.6. Vertical-specific exceptions/enums → owning vertical.
+
+**Step 3 — Push into Domain what does belong** *~3–5 sessions*. "Domain" here = shared kernel **or** a vertical's internal Domain layer. Each pull-up gets a characterization test first.
+- 3.1. Policy in `RecommendedChartsSaga` → Recommendations.Domain.
+- 3.2. Ranking math in `PlayerRatingSaga` / `WorldRankingService` → PlayerProgress.Domain.
+- 3.3. Tier-list bucketing in `TierListSaga` → CatalogDifficulty.Domain.
+- 3.4. Title completion / Paragon rules in handlers → PlayerProgress.Domain.
+- 3.5. Parser business decisions (where it *decides* rather than *translates*) → owning vertical's Domain.
+- 3.6. Inline policy in Razor pages → consuming vertical's Application or Domain.
+
+**Step 4 — Rearchitect Application layer** *~2–3 sessions*. Inverse cleanup.
+- 4.1. Cross-vertical leaks → shared-kernel interface; consumer depends on it, provider implements internally. PersonalProgress's 3 saga imports get fixed here as one of N seams.
+- 4.2. Infra-specific code in Application → push to Infra adapters behind a port.
+- 4.3. Presentation-coupled code in Application → keep in Web/Accessors.
+- 4.4. Saga naming review — with policy moved out, some collapse to plain `IRequestHandler` + `IConsumer`; rename per actual shape.
+- 4.5. `Data → Application` reference removal (was its own *Architecture cleanups* item; folds in here).
+
+### Phoenix 2 interactions
+
+- `IPhoenixRecordRepository` / `IPlayerStatsRepository` are vertical-local post-rearch — they belong to PlayerProgress (or a Scoring sub-area). Phase 1 mix-isolation integration tests follow the port when it moves. Standard rename cost, not a redesign.
+- Mix joins the shared kernel by the end of Phoenix 2 Phase 2; rearch keeps it there.
+- Per-mix derived tables (Weekly Charts × Mix, Tier Lists × Mix, Community Leaderboards × Mix) ship in current structure during Phoenix 2; when their owning vertical extracts, the tables come along.
+
+### Items in this file that this section subsumes
+
+When rearch starts, close or fold these:
+- *Architecture cleanups → Remove `Data → Application` reference* — folds into Step 4.5.
+- *Architecture cleanups → Move command-shaped messages out of `Domain/Events/`* — folds into Step 2.1.
+- *Architecture cleanups → `PersonalProgress` vertical-slice cleanup* — **decision: formalize**, not fold back. Folds into Step 1.1 + Step 4.1.
+- *Architecture cleanups → MediatR-in-Domain decision* — **decision: keep the carve-out**. Close on rearch start.
+
+Independent items (don't fold): *MassTransit version skew*, *Automatic migration application (Production)*, *ID generation seam*.
+
+### Estimate
+
+~8–13 rearch sessions after Phoenix 2 Phase 3 lands. Phase 4 ("slow burn") is the natural start window.
+
+---
+
 ## Architecture cleanups
 
 ### Remove `Data → Application` reference — *M*
