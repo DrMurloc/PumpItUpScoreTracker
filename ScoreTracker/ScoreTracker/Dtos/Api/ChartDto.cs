@@ -12,6 +12,7 @@ namespace ScoreTracker.Web.Dtos.Api
             Level = c.Level;
             Type = c.Type.GetDisplayName();
             Shorthand = c.DifficultyString;
+            NoteCount = c.NoteCount;
             Song = new SongDto
             {
                 Name = c.Song.Name,
@@ -24,6 +25,7 @@ namespace ScoreTracker.Web.Dtos.Api
         public string Type { get; set; } = string.Empty;
         public string Shorthand { get; set; } = string.Empty;
         public int Level { get; set; }
+        public int? NoteCount { get; set; }
         public SongDto Song { get; set; } = new();
     }
 }
