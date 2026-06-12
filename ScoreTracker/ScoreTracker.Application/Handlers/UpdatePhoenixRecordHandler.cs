@@ -4,6 +4,7 @@ using ScoreTracker.Application.Messages;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
 
@@ -74,9 +75,35 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
         var batch = batches.TakeBatch(context.Message.UserId);
         if (batch is null) return; // raced another drain
         if (batch.NewChartIds.Length == 0 && batch.UpscoredChartIds.Count == 0) return;
+        await PublishScoreEvents(context.Message.UserId, batch, context.CancellationToken);
+    }
+
+    // Dual-publish during P3: the thin PlayerScoreUpdatedEvent until its last consumer
+    // migrates, plus the fat PlayerScoresUpdatedEvent contract event (C11).
+    private async Task PublishScoreEvents(Guid userId, PendingScoreBatch batch,
+        CancellationToken cancellationToken)
+    {
         await bus.Publish(
-            new PlayerScoreUpdatedEvent(context.Message.UserId, batch.NewChartIds, batch.UpscoredChartIds),
-            context.CancellationToken);
+            new PlayerScoreUpdatedEvent(userId, batch.NewChartIds, batch.UpscoredChartIds),
+            cancellationToken);
+
+        var involved = batch.NewChartIds.Concat(batch.UpscoredChartIds.Keys).ToHashSet();
+        var bests = (await records.GetRecordedScores(userId, cancellationToken) ?? [])
+            .Where(r => involved.Contains(r.ChartId))
+            .ToDictionary(r => r.ChartId);
+        var changes = involved.Select(chartId =>
+        {
+            var best = bests.GetValueOrDefault(chartId);
+            return new PlayerScoresUpdatedEvent.ScoreChange(
+                chartId,
+                IsNewPass: !batch.UpscoredChartIds.ContainsKey(chartId),
+                OldScore: batch.UpscoredChartIds.TryGetValue(chartId, out var old) ? old : null,
+                NewScore: best?.Score,
+                Plate: best?.Plate?.ToString(),
+                IsBroken: best?.IsBroken ?? false);
+        }).ToArray();
+        await bus.Publish(PlayerScoresUpdatedEvent.Create(dateTimeOffset.Now, userId, changes),
+            cancellationToken);
     }
 
     // Safety net for batches whose scheduled TryFireScoreCommand was lost
@@ -90,9 +117,7 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
             var batch = batches.TakeBatch(entry.UserId);
             if (batch is null) continue;
             if (batch.NewChartIds.Length == 0 && batch.UpscoredChartIds.Count == 0) continue;
-            await bus.Publish(
-                new PlayerScoreUpdatedEvent(entry.UserId, batch.NewChartIds, batch.UpscoredChartIds),
-                context.CancellationToken);
+            await PublishScoreEvents(entry.UserId, batch, context.CancellationToken);
         }
     }
 }

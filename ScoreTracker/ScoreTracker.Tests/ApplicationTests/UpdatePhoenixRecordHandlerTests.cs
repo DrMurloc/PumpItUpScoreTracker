@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
@@ -255,6 +256,40 @@ public sealed class UpdatePhoenixRecordHandlerTests
             It.IsAny<DateTime>(),
             It.IsAny<UpdatePhoenixRecordHandler.TryFireScoreCommand>(),
             It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DualPublishesFatContractEventCarryingScoreFacts()
+    {
+        var ctx = new HandlerContext();
+        var newChart = Guid.NewGuid();
+        var upscoredChart = Guid.NewGuid();
+        ctx.Batches.Setup(b => b.GetFireAt(UserId)).Returns(Now.UtcDateTime - TimeSpan.FromSeconds(1));
+        ctx.Batches.Setup(b => b.TakeBatch(UserId)).Returns(new PendingScoreBatch(
+            new[] { newChart }, new Dictionary<Guid, int> { { upscoredChart, 900000 } }));
+        ctx.Records.Setup(r => r.GetRecordedScores(UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new RecordedPhoenixScore(newChart, 985000, PhoenixPlate.ExtremeGame, false, Now),
+                new RecordedPhoenixScore(upscoredChart, 950000, PhoenixPlate.FairGame, false, Now)
+            });
+
+        await ctx.Handler.Consume(BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreCommand(UserId)));
+
+        ctx.Bus.Verify(b => b.Publish(
+            It.Is<PlayerScoresUpdatedEvent>(e =>
+                e.UserId == UserId
+                && e.OccurredAt == Now
+                && e.SchemaVersion == PlayerScoresUpdatedEvent.CurrentSchemaVersion
+                && e.EventId != Guid.Empty
+                && e.Changes.Count == 2
+                && e.Changes.Single(c => c.ChartId == newChart).IsNewPass
+                && e.Changes.Single(c => c.ChartId == newChart).NewScore == 985000
+                && e.Changes.Single(c => c.ChartId == newChart).Plate == "ExtremeGame"
+                && !e.Changes.Single(c => c.ChartId == upscoredChart).IsNewPass
+                && e.Changes.Single(c => c.ChartId == upscoredChart).OldScore == 900000
+                && e.Changes.Single(c => c.ChartId == upscoredChart).NewScore == 950000),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

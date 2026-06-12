@@ -14,8 +14,23 @@ using ScoreTracker.Domain.ValueTypes;
 namespace ScoreTracker.Data.Repositories;
 
 public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
+    IScoreReader,
     IRequestHandler<GetPlayerChartAggregatesQuery, IEnumerable<UserChartAggregate>>
 {
+    // IScoreReader — the Ledger's published read contract. Adapts the internal
+    // repository methods; consumers migrate onto these during P3 (F1).
+    Task<IEnumerable<RecordedPhoenixScore>> IScoreReader.GetBestScores(Guid userId,
+        CancellationToken cancellationToken)
+    {
+        return GetRecordedScores(userId, cancellationToken);
+    }
+
+    async Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> IScoreReader.GetScores(
+        ChartType chartType, DifficultyLevel level, CancellationToken cancellationToken)
+    {
+        return await GetAllPlayerScores(chartType, level, cancellationToken);
+    }
+
     private readonly IMemoryCache _cache;
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
     private readonly IChartRepository _charts;

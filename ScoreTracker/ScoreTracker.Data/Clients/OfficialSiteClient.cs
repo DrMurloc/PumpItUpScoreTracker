@@ -28,6 +28,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     private readonly IFileUploadClient _fileUpload;
     private readonly IOfficialLeaderboardRepository _leaderboards;
     private readonly IWeeklyTournamentRepository _weeklyTournies;
+    private readonly IDateTimeOffsetAccessor _dateTime;
 
     public OfficialSiteClient(IPiuGameApi piuGame, IChartRepository charts, ILogger<OfficialSiteClient> logger,
         IMediator mediator,
@@ -35,7 +36,8 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         IPhoenixRecordRepository phoenixRecords, IFileUploadClient fileUpload,
         IOfficialLeaderboardRepository leaderboards,
         IWeeklyTournamentRepository weeklyTournies,
-        IBus bus)
+        IBus bus,
+        IDateTimeOffsetAccessor dateTime)
     {
         _piuGame = piuGame;
         _charts = charts;
@@ -47,6 +49,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         _leaderboards = leaderboards;
         _weeklyTournies = weeklyTournies;
         _bus = bus;
+        _dateTime = dateTime;
     }
 
     public async Task<IEnumerable<OfficialChartLeaderboardEntry>> GetAllOfficialChartScores(
@@ -244,7 +247,14 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
             }
         }
 
+        // Dual-publish during P3: thin event until its consumers migrate, plus the fat
+        // ScoreImportCompletedEvent contract event (C11).
         await _bus.Publish(new RecentScoreImportedEvent(userId, entries.ToArray()), cancellationToken);
+        await _bus.Publish(ScoreImportCompletedEvent.Create(_dateTime.Now,
+                ScoreImportCompletedEvent.OfficialImportSource, userId,
+                entries.Select(e => new ScoreImportCompletedEvent.ImportedScore(
+                    e.ChartId, e.Score, e.Plate, e.IsBroken)).ToArray()),
+            cancellationToken);
         return results.Values;
     }
 
