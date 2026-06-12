@@ -17,6 +17,7 @@ namespace ScoreTracker.Application.Handlers
         ILogger<WeeklyTournamentSaga> logger, IUserRepository users, IBus bus,
         IDateTimeOffsetAccessor dateTime, IRandomNumberGenerator random) :
         IConsumer<RotateWeeklyChartsCommand>,
+        IConsumer<ScoreImportCompletedEvent>,
         IRequestHandler<RegisterWeeklyChartScoreCommand>
     {
         public async Task Consume(ConsumeContext<RotateWeeklyChartsCommand> context)
@@ -114,6 +115,19 @@ namespace ScoreTracker.Application.Handlers
                                      (c.Type == ChartType.Double ? baseDoubles :
                                          c.Type == ChartType.Single ? baseSingles : baseDoubles) <= c.Level + 2));
         }
+        // F3 (rearch C30): weekly eligibility is THIS saga's policy. The official-site
+        // gateway publishes the score facts; we decide which land on the board.
+        public async Task Consume(ConsumeContext<ScoreImportCompletedEvent> context)
+        {
+            var weeklyChartIds = (await weeklyTournies.GetWeeklyCharts(context.CancellationToken))
+                .Select(c => c.ChartId).ToHashSet();
+            foreach (var score in context.Message.Scores.Where(s => weeklyChartIds.Contains(s.ChartId)))
+                await Handle(new RegisterWeeklyChartScoreCommand(
+                        new WeeklyTournamentEntry(context.Message.UserId, score.ChartId, score.Score,
+                            Enum.Parse<PhoenixPlate>(score.Plate), score.IsBroken, null, 10.0)),
+                    context.CancellationToken);
+        }
+
         public async Task Handle(RegisterWeeklyChartScoreCommand request, CancellationToken cancellationToken)
         {
             var weeklyCharts = (await weeklyTournies.GetWeeklyCharts(cancellationToken)).Select(c => c.ChartId)

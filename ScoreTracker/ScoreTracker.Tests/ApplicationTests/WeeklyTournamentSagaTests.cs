@@ -294,6 +294,34 @@ public sealed class WeeklyTournamentSagaTests
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact]
+    public async Task ScoreImportRegistersOnlyScoresOnTheCurrentWeeklyBoard()
+    {
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var offBoardChartId = Guid.NewGuid();
+        var ctx = new HandlerContext(chart);
+        ctx.GivenStats(singlesCompetitive: 18.5, doublesCompetitive: 12.0);
+        ctx.GivenNoExistingEntries(chart.Id);
+        var userId = Guid.NewGuid();
+
+        await ctx.Saga.Consume(BuildContext(ScoreImportCompletedEvent.Create(
+            new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero),
+            ScoreImportCompletedEvent.OfficialImportSource, userId,
+            new[]
+            {
+                new ScoreImportCompletedEvent.ImportedScore(chart.Id, 950000, "SuperbGame", false),
+                new ScoreImportCompletedEvent.ImportedScore(offBoardChartId, 999000, "PerfectGame", false)
+            })));
+
+        ctx.WeeklyTournies.Verify(w => w.SaveEntry(
+            It.Is<WeeklyTournamentEntry>(e => e.UserId == userId && e.ChartId == chart.Id
+                                              && e.Score == (PhoenixScore)950000),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.WeeklyTournies.Verify(w => w.SaveEntry(
+            It.Is<WeeklyTournamentEntry>(e => e.ChartId == offBoardChartId),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private sealed class HandlerContext
     {
         public Mock<IChartRepository> Charts { get; } = new();

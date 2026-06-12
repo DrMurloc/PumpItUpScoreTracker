@@ -4,7 +4,6 @@ using System.Web;
 using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using ScoreTracker.Application.Commands;
 using ScoreTracker.Data.Apis.Contracts;
 using ScoreTracker.Data.Apis.Dtos;
 using ScoreTracker.Domain.Enums;
@@ -27,7 +26,6 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     private readonly IPhoenixRecordRepository _phoenixRecords;
     private readonly IFileUploadClient _fileUpload;
     private readonly IOfficialLeaderboardRepository _leaderboards;
-    private readonly IWeeklyTournamentRepository _weeklyTournies;
     private readonly IDateTimeOffsetAccessor _dateTime;
 
     public OfficialSiteClient(IPiuGameApi piuGame, IChartRepository charts, ILogger<OfficialSiteClient> logger,
@@ -35,7 +33,6 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         ICurrentUserAccessor currentUser,
         IPhoenixRecordRepository phoenixRecords, IFileUploadClient fileUpload,
         IOfficialLeaderboardRepository leaderboards,
-        IWeeklyTournamentRepository weeklyTournies,
         IBus bus,
         IDateTimeOffsetAccessor dateTime)
     {
@@ -47,7 +44,6 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         _phoenixRecords = phoenixRecords;
         _fileUpload = fileUpload;
         _leaderboards = leaderboards;
-        _weeklyTournies = weeklyTournies;
         _bus = bus;
         _dateTime = dateTime;
     }
@@ -205,8 +201,6 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         }
 
         var recent = (await _piuGame.GetRecentScores(sessionId, cancellationToken)).ToArray();
-        var weeklyCharts = (await _weeklyTournies.GetWeeklyCharts(cancellationToken)).Select(e => e.ChartId).Distinct()
-            .ToHashSet();
         var entries = new List<ScoreImportCompletedEvent.ImportedScore>();
         foreach (var songGroup in recent.GroupBy(s => s.SongName))
         {
@@ -227,19 +221,6 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
                 var bestPlate = chartGroup.Max(s => s.Plate);
                 var isBroken = chartGroup.All(s => s.IsBroken);
                 entries.Add(new ScoreImportCompletedEvent.ImportedScore(chart.Id, bestScore, bestPlate.ToString(), isBroken));
-                if (weeklyCharts.Contains(chart.Id))
-                    try
-                    {
-                        await _mediator.Send(new RegisterWeeklyChartScoreCommand(
-                                new WeeklyTournamentEntry(userId, chart.Id, bestScore, bestPlate, isBroken,
-                                    null, 10.0)),
-                            cancellationToken);
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.LogError(e,
-                            $"There was an error when registering leaderboard scores for {userId} on {chart.Song.Name} {chart.DifficultyString}");
-                    }
 
                 if (!includeBroken || results.ContainsKey(chart.Id)) continue;
 
