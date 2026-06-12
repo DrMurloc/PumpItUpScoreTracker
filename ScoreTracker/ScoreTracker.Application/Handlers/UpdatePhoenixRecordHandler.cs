@@ -15,7 +15,8 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
         IDateTimeOffsetAccessor dateTimeOffset,
         IBus bus,
         IMessageScheduler scheduler,
-        IPlayerScoreBatchAccumulator batches)
+        IPlayerScoreBatchAccumulator batches,
+        IScoreJournalRepository journal)
     : IRequestHandler<UpdatePhoenixBestAttemptCommand>,
         IConsumer<UpdatePhoenixRecordHandler.TryFireScoreCommand>,
         IConsumer<FlushOverdueScoreBatchesCommand>
@@ -38,6 +39,10 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
         await records.UpdateBestAttempt(user.User.Id,
             new RecordedPhoenixScore(request.ChartId, score, plate, isBroken,
                 dateTimeOffset.Now), cancellationToken);
+        // The journal gets the submission as received (raw request values, including
+        // no-op submissions) — it is play history, not best-attempt state.
+        await journal.Append(new ScoreJournalEntry(dateTimeOffset.Now, request.Source, user.User.Id,
+            request.ChartId, request.Score, request.Plate, request.IsBroken), cancellationToken);
         var isNewScore = (existing?.IsBroken ?? true) && !request.IsBroken;
         var isUpscore = existing?.Score != null && request.Score != null && existing.Score < request.Score;
         if (!isNewScore && !isUpscore) return;

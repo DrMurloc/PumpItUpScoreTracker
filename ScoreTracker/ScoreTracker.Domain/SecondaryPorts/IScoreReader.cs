@@ -43,4 +43,12 @@ public interface IScoreReader
     /// <summary>How many charts a player has cleared in a level×type folder.</summary>
     Task<int> GetClearCount(Guid userId, ChartType chartType, DifficultyLevel level,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     A player's journaled submission history on one chart, oldest first. Entries are
+    ///     submissions as received (including ones that didn't beat the stored best), so
+    ///     scores are not monotonic. History begins at the journal backfill (2026-06).
+    /// </summary>
+    Task<IEnumerable<ScoreJournalEntry>> GetScoreHistory(Guid userId, Guid chartId,
+        CancellationToken cancellationToken = default);
 }

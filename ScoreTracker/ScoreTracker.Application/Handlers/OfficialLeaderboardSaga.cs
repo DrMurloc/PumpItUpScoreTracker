@@ -264,7 +264,8 @@ namespace ScoreTracker.Application.Handlers
             foreach (var score in toSave)
             {
                 await _mediator.Send(
-                    new UpdatePhoenixBestAttemptCommand(score.Chart.Id, score.IsBroken, score.Score, score.Plate),
+                    new UpdatePhoenixBestAttemptCommand(score.Chart.Id, score.IsBroken, score.Score, score.Plate,
+                        Source: ScoreJournalEntry.OfficialImportSource),
                     cancellationToken);
                 count++;
                 batch.Add(new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, score.IsBroken,

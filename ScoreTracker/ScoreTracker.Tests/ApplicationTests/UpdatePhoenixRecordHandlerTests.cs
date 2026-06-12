@@ -174,6 +174,48 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
+    public async Task JournalsSubmissionAsReceivedEvenWhenKeepBestStatsDiscardsIt()
+    {
+        var ctx = new HandlerContext();
+        ctx.GivenExistingScore(score: 950000, plate: PhoenixPlate.PerfectGame, isBroken: false);
+
+        // Worse-on-every-axis submission with KeepBestStats: the stored best keeps the
+        // existing values and no batch/schedule fires — but the journal still gets the
+        // raw submission, because it is play history rather than best-attempt state.
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: true, Score: 900000,
+                Plate: PhoenixPlate.FairGame, KeepBestStats: true),
+            CancellationToken.None);
+
+        ctx.Journal.Verify(j => j.Append(
+            It.Is<ScoreJournalEntry>(e => e.UserId == UserId
+                                          && e.ChartId == ChartId
+                                          && e.OccurredAt == Now
+                                          && e.Source == ScoreJournalEntry.ManualSource
+                                          && e.Score == (PhoenixScore)900000
+                                          && e.Plate == PhoenixPlate.FairGame
+                                          && e.IsBroken),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Batches.Verify(b => b.AddToBatch(It.IsAny<Guid>(), It.IsAny<DateTime>(),
+            It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<PhoenixScore?>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task JournalsSubmissionWithItsDeclaredSource()
+    {
+        var ctx = new HandlerContext();
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 950000,
+                Plate: PhoenixPlate.SuperbGame, Source: ScoreJournalEntry.OfficialImportSource),
+            CancellationToken.None);
+
+        ctx.Journal.Verify(j => j.Append(
+            It.Is<ScoreJournalEntry>(e => e.Source == ScoreJournalEntry.OfficialImportSource),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task NoNewClearAndNoUpscoreDoesNotScheduleOrBatch()
     {
         var ctx = new HandlerContext();
@@ -412,6 +454,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
         public Mock<IBus> Bus { get; } = new();
         public Mock<IMessageScheduler> Scheduler { get; } = new();
         public Mock<IPlayerScoreBatchAccumulator> Batches { get; } = new();
+        public Mock<IScoreJournalRepository> Journal { get; } = new();
 
         public UpdatePhoenixRecordHandler Handler { get; }
 
@@ -419,7 +462,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
         {
             CurrentUser.SetupGet(u => u.User).Returns(new UserBuilder().WithId(UserId).Build());
             Handler = new UpdatePhoenixRecordHandler(Records.Object, CurrentUser.Object, DateTime.Object,
-                Bus.Object, Scheduler.Object, Batches.Object);
+                Bus.Object, Scheduler.Object, Batches.Object, Journal.Object);
         }
 
         public void GivenExistingScore(PhoenixScore score, PhoenixPlate plate, bool isBroken)

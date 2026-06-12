@@ -69,6 +69,18 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         return GetClearCount(userId, chartType, level, cancellationToken);
     }
 
+    async Task<IEnumerable<ScoreJournalEntry>> IScoreReader.GetScoreHistory(Guid userId, Guid chartId,
+        CancellationToken cancellationToken)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return (await database.ScoreEventJournal
+                .Where(e => e.UserId == userId && e.ChartId == chartId)
+                .OrderBy(e => e.OccurredAt)
+                .ToArrayAsync(cancellationToken))
+            .Select(e => new ScoreJournalEntry(e.OccurredAt, e.Source, e.UserId, e.ChartId,
+                e.Score, PhoenixPlateHelperMethods.TryParse(e.Plate), e.IsBroken));
+    }
+
     private readonly IMemoryCache _cache;
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
     private readonly IChartRepository _charts;

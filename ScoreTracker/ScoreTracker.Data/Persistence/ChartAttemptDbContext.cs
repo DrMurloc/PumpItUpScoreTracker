@@ -26,6 +26,7 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<UserChartDifficultyRatingEntity> UserChartDifficultyRating { get; set; }
     public DbSet<ChartDifficultyRatingEntity> ChartDifficultyRating { get; set; }
     public DbSet<PhoenixRecordEntity> PhoenixBestAttempt { get; set; }
+    public DbSet<ScoreEventJournalEntity> ScoreEventJournal { get; set; }
     public DbSet<UserSettingsEntity> UserSettings { get; set; }
     public DbSet<UserOfficialLeaderboardEntity> UserOfficialLeaderboard { get; set; }
     public DbSet<UserCoOpRatingEntity> UserCoOpRating { get; set; }
