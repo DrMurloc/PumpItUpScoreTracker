@@ -19,7 +19,7 @@ Run from the repo root (the solution lives at `ScoreTracker/ScoreTracker.sln`).
 - **Lint/static analysis**: none locally configured. DeepSource runs in CI (`.deepsource.toml`).
 - **Unit tests**: `dotnet test ScoreTracker/ScoreTracker.Tests/ScoreTracker.Tests.csproj` — covers `DomainTests/` (unit) and `ApplicationTests/` (component). No Docker required.
 - **Component / module tests**: same command, same project.
-- **Contract tests**: not present.
+- **Contract tests (API wire-shape approval)**: `dotnet test ScoreTracker/ScoreTracker.Tests.Api/ScoreTracker.Tests.Api.csproj` — pins the exact JSON wire shapes of the public `api/*` endpoints that partner tools consume (controller + mocked `IMediator`, golden JSON inline). A failure here means a public API contract changed — that is breaking-change review territory, not a test to casually update.
 - **Real-dependency integration tests**: `dotnet test ScoreTracker/ScoreTracker.Tests.Integration/ScoreTracker.Tests.Integration.csproj` — spins up an ephemeral SQL Server container via Testcontainers.MsSql, applies migrations, runs the suite. Requires Docker Desktop (or equivalent). Currently scaffolded with a migration smoke test; repository coverage to follow.
 - **E2E / Playwright tests**: not present.
 - **Mutation tests**: not present.
@@ -50,6 +50,7 @@ Domain  ◄── Application ◄── Data
 | `ScoreTracker.Web` | + `MudBlazor`, OAuth providers, `Swashbuckle`, `Tesseract`, MassTransit DI, `Hangfire.AspNetCore`, `Hangfire.SqlServer` | EF Core directly (must go through ports). |
 | `ScoreTracker.CompositionRoot` | DI extensions only | Business logic. |
 | `ScoreTracker.Tests` | + `xunit`, `Moq` | Other doubling libraries (see Test conventions). References `ScoreTracker.Application` (for handler tests) and `ScoreTracker.Data` (for parser approval tests against `PiuGameApi`). Does not reference `ScoreTracker.Web`. |
+| `ScoreTracker.Tests.Api` | + `xunit`, `Moq` | The one sanctioned `ScoreTracker.Web`-referencing test project — it pins the public API wire shapes, which live in Web's controllers/DTOs. Same doubling rules as `ScoreTracker.Tests`. |
 | `ScoreTracker.Tests.Integration` | + `xunit`, `Moq`, `Testcontainers.MsSql`, `Respawn` | Mocking the port whose implementation is the subject of the test (e.g., do not mock `IPhoenixRecordRepository` when testing `EFPhoenixRecordsRepository`). Mocking incidental collaborator ports for setup — or `IPiuGameApi`-style external clients in slice tests — is fine. |
 
 Adding a package outside its allowed layer is a violation. Adding a project reference that isn't in the graph above is a violation.
@@ -99,6 +100,7 @@ This repo uses **folder-as-tag**: each test project's path (and subfolders withi
 |---|---|---|---|
 | `ScoreTracker.Tests/DomainTests/` | `Unit` | `Small` | `None` (rare `TestDouble` for clock/RNG seams) |
 | `ScoreTracker.Tests/ApplicationTests/` | `Component` | `Small` | `TestDouble` |
+| `ScoreTracker.Tests.Api/` | `Approval` (API wire shape) | `Small` | `TestDouble` |
 | `ScoreTracker.Tests.Integration/` | `Integration` | `Medium` | `EphemeralInfra` (SQL Server via Testcontainers) |
 
 PR gate: `dotnet test ScoreTracker/ScoreTracker.Tests/...` runs the fast suite without Docker. `dotnet test ScoreTracker/ScoreTracker.Tests.Integration/...` runs the real-DB suite and needs Docker; today it runs locally only (CI wiring deferred).
