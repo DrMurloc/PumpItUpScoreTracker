@@ -100,6 +100,7 @@ This repo uses **folder-as-tag**: each test project's path (and subfolders withi
 |---|---|---|---|
 | `ScoreTracker.Tests/DomainTests/` | `Unit` | `Small` | `None` (rare `TestDouble` for clock/RNG seams) |
 | `ScoreTracker.Tests/ApplicationTests/` | `Component` | `Small` | `TestDouble` |
+| `ScoreTracker.Tests/ArchitectureTests/` | `Unit` (architecture ratchets — rules are added, never removed) | `Small` | `None` |
 | `ScoreTracker.Tests.Api/` | `Approval` (API wire shape) | `Small` | `TestDouble` |
 | `ScoreTracker.Tests.Integration/` | `Integration` | `Medium` | `EphemeralInfra` (SQL Server via Testcontainers) |
 
