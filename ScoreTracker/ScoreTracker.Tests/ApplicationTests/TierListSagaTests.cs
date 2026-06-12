@@ -259,4 +259,51 @@ public sealed class TierListSagaTests
         ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
         return ctx.Object;
     }
+
+    // Characterization of the Scores tier list recompute (previously untested) ahead of the
+    // rearchitecture — pins orchestration, not the bucketing math (that lives in
+    // TierListSagaStaticsTests).
+
+    [Fact]
+    public async Task ProcessScoresTierListWeighsPlayersByStatsAndSavesUnderScoresTierList()
+    {
+        var chart = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var userId = Guid.NewGuid();
+        var scores = new Mock<IPhoenixRecordRepository>();
+        scores.Setup(s => s.GetAllPlayerScores(It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<(Guid userId, RecordedPhoenixScore record)>());
+        scores.Setup(s => s.GetAllPlayerScores(ChartType.Single, DifficultyLevel.From(20),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                (userId, new RecordedPhoenixScore(chart.Id, PhoenixScore.From(950000), PhoenixPlate.FairGame,
+                    false, DateTimeOffset.MinValue))
+            });
+        var playerStats = new Mock<IPlayerStatsRepository>();
+        playerStats.Setup(p => p.GetStats(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PlayerStatsRecord(userId, TotalRating: 0, HighestLevel: 1, ClearCount: 0,
+                CoOpRating: 0, CoOpScore: 0, SkillRating: 0, SkillScore: 0, SkillLevel: 0,
+                SinglesRating: 0, SinglesScore: 0, SinglesLevel: 0, DoublesRating: 0, DoublesScore: 0,
+                DoublesLevel: 0, CompetitiveLevel: 20.5, SinglesCompetitiveLevel: 20.5,
+                DoublesCompetitiveLevel: 20.5));
+        var tierLists = new Mock<ITierListRepository>();
+        var saved = new List<SongTierListEntry>();
+        tierLists.Setup(t => t.SaveEntries(It.IsAny<IEnumerable<SongTierListEntry>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<IEnumerable<SongTierListEntry>, CancellationToken>((e, _) => saved.AddRange(e))
+            .Returns(Task.CompletedTask);
+        var saga = BuildSaga(scores: scores, tierLists: tierLists, playerStats: playerStats);
+
+        await saga.Consume(BuildContext(new ProcessScoresTiersListCommand()));
+
+        var entry = Assert.Single(saved);
+        Assert.Equal(chart.Id, entry.ChartId);
+        Assert.Equal("Scores", (string)entry.TierListName);
+        // Player weighting is per (level, type) folder the player appears in — exactly once here.
+        playerStats.Verify(p => p.GetStats(userId, It.IsAny<CancellationToken>()), Times.Once);
+        // Levels 1-29 × {Single, Double} — one SaveEntries per folder, even when empty.
+        tierLists.Verify(t => t.SaveEntries(It.IsAny<IEnumerable<SongTierListEntry>>(),
+            It.IsAny<CancellationToken>()), Times.Exactly(58));
+    }
 }
