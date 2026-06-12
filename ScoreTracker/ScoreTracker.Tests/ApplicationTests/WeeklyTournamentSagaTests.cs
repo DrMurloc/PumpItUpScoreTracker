@@ -298,7 +298,7 @@ public sealed class WeeklyTournamentSagaTests
     {
         public Mock<IChartRepository> Charts { get; } = new();
         public Mock<IWeeklyTournamentRepository> WeeklyTournies { get; } = new();
-        public Mock<IPlayerStatsRepository> PlayerStats { get; } = new();
+        public Mock<IPlayerStatsReader> PlayerStats { get; } = new();
         public Mock<IBotClient> Bot { get; } = new();
         public Mock<IUserRepository> Users { get; } = new();
         public Mock<IBus> Bus { get; } = new();
@@ -370,7 +370,7 @@ public sealed class WeeklyTournamentSagaTests
     {
         public Mock<IChartRepository> Charts_ { get; } = new();
         public Mock<IWeeklyTournamentRepository> WeeklyTournies { get; } = new();
-        public Mock<IPlayerStatsRepository> PlayerStats { get; } = new();
+        public Mock<IPlayerStatsReader> PlayerStats { get; } = new();
         public Mock<IBotClient> Bot { get; } = new();
         public Mock<IUserRepository> Users { get; } = new();
         public Mock<IBus> Bus { get; } = new();
@@ -414,7 +414,7 @@ public sealed class WeeklyTournamentSagaTests
     private static WeeklyTournamentSaga BuildSaga(
         Mock<IChartRepository>? charts = null,
         Mock<IWeeklyTournamentRepository>? weeklyTournies = null,
-        Mock<IPlayerStatsRepository>? playerStats = null,
+        Mock<IPlayerStatsReader>? playerStats = null,
         Mock<IBotClient>? bot = null,
         Mock<IUserRepository>? users = null,
         Mock<IBus>? bus = null,
@@ -423,7 +423,7 @@ public sealed class WeeklyTournamentSagaTests
     {
         charts ??= new Mock<IChartRepository>();
         weeklyTournies ??= new Mock<IWeeklyTournamentRepository>();
-        playerStats ??= new Mock<IPlayerStatsRepository>();
+        playerStats ??= new Mock<IPlayerStatsReader>();
         bot ??= new Mock<IBotClient>();
         users ??= new Mock<IUserRepository>();
         bus ??= new Mock<IBus>();

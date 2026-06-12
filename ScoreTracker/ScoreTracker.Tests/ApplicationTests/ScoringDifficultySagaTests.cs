@@ -21,7 +21,7 @@ public sealed class ScoringDifficultySagaTests
     private static ScoringDifficultySaga Build(
         Mock<IChartRepository>? charts = null,
         Mock<IScoreReader>? scores = null,
-        Mock<IPlayerStatsRepository>? playerStats = null)
+        Mock<IPlayerStatsReader>? playerStats = null)
     {
         charts ??= new Mock<IChartRepository>();
         charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
@@ -31,7 +31,7 @@ public sealed class ScoringDifficultySagaTests
         scores.Setup(s => s.GetScores(It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<(Guid, RecordedPhoenixScore)>());
-        playerStats ??= new Mock<IPlayerStatsRepository>();
+        playerStats ??= new Mock<IPlayerStatsReader>();
         return new ScoringDifficultySaga(charts.Object, scores.Object, playerStats.Object);
     }
 

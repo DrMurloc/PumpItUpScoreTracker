@@ -15,11 +15,11 @@ public sealed class ScoreQualitySaga :
 {
     private readonly IMemoryCache _cache;
     private readonly IChartRepository _charts;
-    private readonly IPlayerStatsRepository _playerStats;
+    private readonly IPlayerStatsReader _playerStats;
     private readonly ICurrentUserAccessor _user;
     private readonly IScoreReader _scores;
 
-    public ScoreQualitySaga(ICurrentUserAccessor user, IPlayerStatsRepository playerStats, IMemoryCache cache,
+    public ScoreQualitySaga(ICurrentUserAccessor user, IPlayerStatsReader playerStats, IMemoryCache cache,
         IChartRepository charts, IScoreReader scores)
     {
         _user = user;

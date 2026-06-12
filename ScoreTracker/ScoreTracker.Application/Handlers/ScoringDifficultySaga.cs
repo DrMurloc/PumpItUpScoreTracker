@@ -15,11 +15,11 @@ namespace ScoreTracker.Application.Handlers
         private const int LevelDiff = 3;
         private readonly IChartRepository _chartRepository;
         private readonly IScoreReader _scores;
-        private readonly IPlayerStatsRepository _playerStats;
+        private readonly IPlayerStatsReader _playerStats;
 
         public ScoringDifficultySaga(IChartRepository chartRepository,
             IScoreReader scores,
-            IPlayerStatsRepository playerStats)
+            IPlayerStatsReader playerStats)
         {
             _chartRepository = chartRepository;
             _scores = scores;

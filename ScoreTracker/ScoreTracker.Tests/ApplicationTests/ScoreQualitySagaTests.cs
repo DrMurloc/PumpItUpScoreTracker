@@ -38,7 +38,7 @@ public sealed class ScoreQualitySagaTests
     public async Task GetCompetitivePlayersDelegatesToPlayerStatsRepositoryWithCompetitiveBand()
     {
         var (accessor, userId) = UserAccessor();
-        var playerStats = new Mock<IPlayerStatsRepository>();
+        var playerStats = new Mock<IPlayerStatsReader>();
         var charts = new Mock<IChartRepository>();
         var scores = new Mock<IScoreReader>();
         var cache = new MemoryCache(new MemoryCacheOptions());
@@ -64,7 +64,7 @@ public sealed class ScoreQualitySagaTests
         var (accessor, userId) = UserAccessor();
         var chart = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
 
-        var playerStats = new Mock<IPlayerStatsRepository>();
+        var playerStats = new Mock<IPlayerStatsReader>();
         var charts = new Mock<IChartRepository>();
         var scores = new Mock<IScoreReader>();
         var cache = new MemoryCache(new MemoryCacheOptions());
@@ -106,7 +106,7 @@ public sealed class ScoreQualitySagaTests
         var chart = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
         var competitor = Guid.NewGuid();
 
-        var playerStats = new Mock<IPlayerStatsRepository>();
+        var playerStats = new Mock<IPlayerStatsReader>();
         var charts = new Mock<IChartRepository>();
         var scores = new Mock<IScoreReader>();
         var cache = new MemoryCache(new MemoryCacheOptions());

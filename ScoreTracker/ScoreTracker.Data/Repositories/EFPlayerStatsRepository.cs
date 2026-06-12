@@ -11,6 +11,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 namespace ScoreTracker.Data.Repositories
 {
     public sealed class EFPlayerStatsRepository : IPlayerStatsRepository,
+        IPlayerStatsReader,
         IRequestHandler<GetPlayerStatsQuery, PlayerStatsRecord>
     {
         private readonly IMemoryCache _cache;

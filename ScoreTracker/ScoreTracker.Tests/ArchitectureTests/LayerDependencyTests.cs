@@ -90,6 +90,25 @@ public sealed class LayerDependencyTests
     }
 
     [Fact]
+    public void OnlyProgressionInternalTypesInjectThePlayerStatsRepository()
+    {
+        // F5 ratchet (rearch C23-C26): consumers read player stats through
+        // IPlayerStatsReader. The writers are Progression-internal (PlayerRatingSaga)
+        // plus the wipe flow; the allowlist shrinks at P5.
+        var allowed = new[] { "PlayerRatingSaga", "WipeUserScoresHandler" };
+        var personalProgress = typeof(PersonalProgress.PlayerRatingSaga).Assembly;
+        var violations = ApplicationAssembly.GetTypes().Concat(personalProgress.GetTypes())
+            .Where(t => !t.IsInterface && !allowed.Contains(t.Name))
+            .Where(t => t.GetConstructors().Any(c => c.GetParameters()
+                .Any(p => p.ParameterType.Name == "IPlayerStatsRepository")))
+            .Select(t => t.FullName)
+            .ToArray();
+
+        Assert.True(violations.Length == 0,
+            $"Read player stats through IPlayerStatsReader, not IPlayerStatsRepository: {string.Join(", ", violations)}");
+    }
+
+    [Fact]
     public void ApplicationReferencesNoInfrastructureOrPresentationPackages()
     {
         var forbiddenPrefixes = new[]

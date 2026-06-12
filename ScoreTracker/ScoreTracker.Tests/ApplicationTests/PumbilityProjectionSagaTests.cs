@@ -144,7 +144,7 @@ public sealed class PumbilityProjectionSagaTests
     {
         public Guid UserId { get; } = Guid.NewGuid();
         public Mock<IMediator> Mediator { get; } = new();
-        public Mock<IPlayerStatsRepository> Stats { get; } = new();
+        public Mock<IPlayerStatsReader> Stats { get; } = new();
         public Mock<IScoreReader> PhoenixRecords { get; } = new();
         public PumbilityProjectionSaga Saga { get; }
 

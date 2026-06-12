@@ -121,7 +121,7 @@ public sealed class RecommendedChartsSagaTests
         public Mock<IMediator> Mediator { get; } = new();
         public Mock<ICurrentUserAccessor> CurrentUser { get; } = new();
         public Mock<IUserRepository> Users { get; } = new();
-        public Mock<IPlayerStatsRepository> Stats { get; } = new();
+        public Mock<IPlayerStatsReader> Stats { get; } = new();
         public Mock<IScoreReader> Scores { get; } = new();
         public Mock<IWeeklyTournamentRepository> Weekly { get; } = new();
         public Mock<IChartListRepository> ChartList { get; } = new();
@@ -215,7 +215,7 @@ public sealed class RecommendedChartsSagaTests
         Mock<IMediator>? mediator = null,
         Mock<ICurrentUserAccessor>? currentUser = null,
         Mock<IUserRepository>? users = null,
-        Mock<IPlayerStatsRepository>? stats = null,
+        Mock<IPlayerStatsReader>? stats = null,
         Mock<IScoreReader>? scores = null,
         Mock<IWeeklyTournamentRepository>? weeklyTournament = null,
         Mock<IChartListRepository>? chartList = null,
@@ -227,7 +227,7 @@ public sealed class RecommendedChartsSagaTests
         currentUser.SetupGet(u => u.User).Returns(new UserBuilder().WithId(id).Build());
         mediator ??= new Mock<IMediator>();
         users ??= new Mock<IUserRepository>();
-        stats ??= new Mock<IPlayerStatsRepository>();
+        stats ??= new Mock<IPlayerStatsReader>();
         scores ??= new Mock<IScoreReader>();
         weeklyTournament ??= new Mock<IWeeklyTournamentRepository>();
         chartList ??= new Mock<IChartListRepository>();

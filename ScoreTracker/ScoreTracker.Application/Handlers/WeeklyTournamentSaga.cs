@@ -12,7 +12,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 namespace ScoreTracker.Application.Handlers
 {
     public sealed class WeeklyTournamentSaga
-    (IChartRepository charts, IWeeklyTournamentRepository weeklyTournies, IPlayerStatsRepository playerStats,
+    (IChartRepository charts, IWeeklyTournamentRepository weeklyTournies, IPlayerStatsReader playerStats,
         IBotClient bot,
         ILogger<WeeklyTournamentSaga> logger, IUserRepository users, IBus bus,
         IDateTimeOffsetAccessor dateTime, IRandomNumberGenerator random) :

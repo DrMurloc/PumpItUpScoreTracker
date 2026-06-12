@@ -18,13 +18,13 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     private readonly IChartDifficultyRatingRepository _chartRatings;
     private readonly IChartRepository _chartRepository;
     private readonly ICurrentUserAccessor _currentUser;
-    private readonly IPlayerStatsRepository _playerStats;
+    private readonly IPlayerStatsReader _playerStats;
     private readonly IScoreReader _scores;
     private readonly ITierListRepository _tierLists;
 
     public TierListSaga(IChartDifficultyRatingRepository chartRatings, IChartRepository chartRepository,
         ITierListRepository tierLists, IScoreReader scores,
-        ICurrentUserAccessor currentUser, IPlayerStatsRepository playerStats)
+        ICurrentUserAccessor currentUser, IPlayerStatsReader playerStats)
     {
         _chartRatings = chartRatings;
         _chartRepository = chartRepository;

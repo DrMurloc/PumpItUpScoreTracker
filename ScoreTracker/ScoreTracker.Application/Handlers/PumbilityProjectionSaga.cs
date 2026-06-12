@@ -12,10 +12,10 @@ namespace ScoreTracker.Application.Handlers
     public sealed class PumbilityProjectionSaga : IRequestHandler<ProjectPumbilityGainsQuery, PumbilityProjection>
     {
         private readonly IMediator _mediator;
-        private readonly IPlayerStatsRepository _stats;
+        private readonly IPlayerStatsReader _stats;
         private readonly IScoreReader _scores;
 
-        public PumbilityProjectionSaga(IMediator mediator, IPlayerStatsRepository stats,
+        public PumbilityProjectionSaga(IMediator mediator, IPlayerStatsReader stats,
             IScoreReader scores)
         {
             _mediator = mediator;

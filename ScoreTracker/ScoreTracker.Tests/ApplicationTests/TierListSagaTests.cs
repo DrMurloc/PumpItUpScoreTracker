@@ -204,14 +204,14 @@ public sealed class TierListSagaTests
         Mock<ITierListRepository>? tierLists = null,
         Mock<IScoreReader>? scores = null,
         Mock<ICurrentUserAccessor>? currentUser = null,
-        Mock<IPlayerStatsRepository>? playerStats = null)
+        Mock<IPlayerStatsReader>? playerStats = null)
     {
         chartRatings ??= EmptyRatingsMock();
         charts ??= EmptyChartsMock();
         tierLists ??= new Mock<ITierListRepository>();
         scores ??= new Mock<IScoreReader>();
         currentUser ??= new Mock<ICurrentUserAccessor>();
-        playerStats ??= new Mock<IPlayerStatsRepository>();
+        playerStats ??= new Mock<IPlayerStatsReader>();
         return new TierListSaga(chartRatings.Object, charts.Object, tierLists.Object, scores.Object,
             currentUser.Object, playerStats.Object);
     }
@@ -282,7 +282,7 @@ public sealed class TierListSagaTests
                 (userId, new RecordedPhoenixScore(chart.Id, PhoenixScore.From(950000), PhoenixPlate.FairGame,
                     false, DateTimeOffset.MinValue))
             });
-        var playerStats = new Mock<IPlayerStatsRepository>();
+        var playerStats = new Mock<IPlayerStatsReader>();
         playerStats.Setup(p => p.GetStats(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PlayerStatsRecord(userId, TotalRating: 0, HighestLevel: 1, ClearCount: 0,
                 CoOpRating: 0, CoOpScore: 0, SkillRating: 0, SkillScore: 0, SkillLevel: 0,
