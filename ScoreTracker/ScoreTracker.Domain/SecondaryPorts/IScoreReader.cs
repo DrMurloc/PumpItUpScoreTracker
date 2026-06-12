@@ -1,5 +1,6 @@
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Domain.SecondaryPorts;
@@ -26,4 +27,20 @@ public interface IScoreReader
     /// <summary>Players holding a Perfect Game in a level×type folder.</summary>
     Task<IEnumerable<(Guid UserId, Guid ChartId)>> GetPgUsers(ChartType chartType, DifficultyLevel level,
         CancellationToken cancellationToken);
+
+    /// <summary>Best attempts for a set of players in a level×type folder.</summary>
+    Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetPlayerScores(IEnumerable<Guid> userIds,
+        ChartType chartType, DifficultyLevel difficulty, CancellationToken cancellationToken = default);
+
+    /// <summary>Named best attempts for a set of players across a set of charts.</summary>
+    Task<IEnumerable<UserPhoenixScore>> GetPlayerScores(IEnumerable<Guid> userIds,
+        IEnumerable<Guid> chartIds, CancellationToken cancellationToken = default);
+
+    /// <summary>Named best attempts for a set of players on one chart.</summary>
+    Task<IEnumerable<UserPhoenixScore>> GetPhoenixScores(IEnumerable<Guid> userIds, Guid chartId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>How many charts a player has cleared in a level×type folder.</summary>
+    Task<int> GetClearCount(Guid userId, ChartType chartType, DifficultyLevel level,
+        CancellationToken cancellationToken = default);
 }

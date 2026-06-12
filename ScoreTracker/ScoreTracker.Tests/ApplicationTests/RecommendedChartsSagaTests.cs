@@ -122,7 +122,7 @@ public sealed class RecommendedChartsSagaTests
         public Mock<ICurrentUserAccessor> CurrentUser { get; } = new();
         public Mock<IUserRepository> Users { get; } = new();
         public Mock<IPlayerStatsRepository> Stats { get; } = new();
-        public Mock<IPhoenixRecordRepository> Scores { get; } = new();
+        public Mock<IScoreReader> Scores { get; } = new();
         public Mock<IWeeklyTournamentRepository> Weekly { get; } = new();
         public Mock<IChartListRepository> ChartList { get; } = new();
         public Mock<IRandomNumberGenerator> Random { get; } = new();
@@ -216,7 +216,7 @@ public sealed class RecommendedChartsSagaTests
         Mock<ICurrentUserAccessor>? currentUser = null,
         Mock<IUserRepository>? users = null,
         Mock<IPlayerStatsRepository>? stats = null,
-        Mock<IPhoenixRecordRepository>? scores = null,
+        Mock<IScoreReader>? scores = null,
         Mock<IWeeklyTournamentRepository>? weeklyTournament = null,
         Mock<IChartListRepository>? chartList = null,
         Mock<IDateTimeOffsetAccessor>? dateTime = null,
@@ -228,7 +228,7 @@ public sealed class RecommendedChartsSagaTests
         mediator ??= new Mock<IMediator>();
         users ??= new Mock<IUserRepository>();
         stats ??= new Mock<IPlayerStatsRepository>();
-        scores ??= new Mock<IPhoenixRecordRepository>();
+        scores ??= new Mock<IScoreReader>();
         weeklyTournament ??= new Mock<IWeeklyTournamentRepository>();
         chartList ??= new Mock<IChartListRepository>();
         dateTime ??= FakeDateTime.At(Now);

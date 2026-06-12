@@ -17,12 +17,12 @@ namespace ScoreTracker.Application.Handlers
         private readonly IChartRepository _charts;
         private readonly IRandomizerRepository _repo;
         private readonly ICurrentUserAccessor _currentUser;
-        private readonly IPhoenixRecordRepository _phoenixRecords;
+        private readonly IScoreReader _phoenixRecords;
 
         public RandomizerSaga(IChartRepository charts,
             IRandomizerRepository repo,
             ICurrentUserAccessor currentUser,
-            IPhoenixRecordRepository phoenixRecords,
+            IScoreReader phoenixRecords,
             IRandomNumberGenerator random)
         {
             _charts = charts;
@@ -236,7 +236,7 @@ namespace ScoreTracker.Application.Handlers
             if ((_currentUser.IsLoggedIn && request.Settings.LetterGrades.Any()) ||
                 request.Settings.ClearStatus != null)
                 userScores =
-                    (await _phoenixRecords.GetRecordedScores(_currentUser.User.Id, cancellationToken)).ToDictionary(r =>
+                    (await _phoenixRecords.GetBestScores(_currentUser.User.Id, cancellationToken)).ToDictionary(r =>
                         r.ChartId);
             var includedCharts = GetIncludedCharts(charts, request.Settings, userScores).ToArray();
             if (includedCharts.Length < request.Settings.Count && !request.Settings.AllowRepeats)
@@ -274,7 +274,7 @@ namespace ScoreTracker.Application.Handlers
             if ((_currentUser.IsLoggedIn && request.Settings.LetterGrades.Any()) ||
                 request.Settings.ClearStatus != null)
                 userScores =
-                    (await _phoenixRecords.GetRecordedScores(_currentUser.User.Id, cancellationToken)).ToDictionary(r =>
+                    (await _phoenixRecords.GetBestScores(_currentUser.User.Id, cancellationToken)).ToDictionary(r =>
                         r.ChartId);
             var includedCharts = GetIncludedCharts(charts, request.Settings, userScores).ToArray();
             return includedCharts.Select(kv => charts[kv.Key]).ToArray();

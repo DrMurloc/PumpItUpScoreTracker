@@ -275,7 +275,7 @@ public sealed class CommunitySagaTests
         public Mock<IBotClient> Bot { get; } = new();
         public Mock<IUserRepository> Users { get; } = new();
         public Mock<IChartRepository> Charts { get; } = new();
-        public Mock<IPhoenixRecordRepository> Scores { get; } = new();
+        public Mock<IScoreReader> Scores { get; } = new();
         public Mock<IMediator> Mediator { get; } = new();
         public Mock<IUcsRepository> Ucs { get; } = new();
         public Mock<IDateTimeOffsetAccessor> DateTime { get; } = FakeDateTime.At(Now);

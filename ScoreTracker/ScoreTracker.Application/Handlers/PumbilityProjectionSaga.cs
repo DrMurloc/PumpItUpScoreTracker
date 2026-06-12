@@ -13,10 +13,10 @@ namespace ScoreTracker.Application.Handlers
     {
         private readonly IMediator _mediator;
         private readonly IPlayerStatsRepository _stats;
-        private readonly IPhoenixRecordRepository _scores;
+        private readonly IScoreReader _scores;
 
         public PumbilityProjectionSaga(IMediator mediator, IPlayerStatsRepository stats,
-            IPhoenixRecordRepository scores)
+            IScoreReader scores)
         {
             _mediator = mediator;
             _stats = stats;
@@ -80,7 +80,7 @@ namespace ScoreTracker.Application.Handlers
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
             {
                 var cohort = chartType == ChartType.Single ? singlesPlayers : doublesPlayers;
-                var playerScores = (await _scores.GetRecordedScores(cohort, chartType, lowestLevel, highestLevel,
+                var playerScores = (await _scores.GetScores(cohort, chartType, lowestLevel, highestLevel,
                         cancellationToken))
                     .Where(s => s is { IsBroken: false, Score: not null })
                     .GroupBy(r => charts[r.ChartId].Level)

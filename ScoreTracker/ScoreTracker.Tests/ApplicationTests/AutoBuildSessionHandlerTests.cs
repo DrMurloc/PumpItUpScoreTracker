@@ -29,7 +29,7 @@ public sealed class AutoBuildSessionHandlerTests
     {
         var chart = ChartWithDuration(TimeSpan.FromMinutes(2));
         var charts = new Mock<IChartRepository>();
-        var phoenixRecords = new Mock<IPhoenixRecordRepository>();
+        var phoenixRecords = new Mock<IScoreReader>();
         var configuration = new TournamentConfiguration(ScoringConfiguration.PumbilityScoring(false))
         {
             MaxTime = TimeSpan.FromMinutes(60)
@@ -38,7 +38,7 @@ public sealed class AutoBuildSessionHandlerTests
 
         charts.Setup(r => r.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { chart });
-        phoenixRecords.Setup(r => r.GetRecordedScores(userId, It.IsAny<CancellationToken>()))
+        phoenixRecords.Setup(r => r.GetBestScores(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new RecordedPhoenixScore(chart.Id, 980000, PhoenixPlate.PerfectGame, false, DateTimeOffset.UtcNow)
@@ -60,7 +60,7 @@ public sealed class AutoBuildSessionHandlerTests
         var chartA = ChartWithDuration(TimeSpan.FromMinutes(2));
         var chartB = ChartWithDuration(TimeSpan.FromMinutes(2));
         var charts = new Mock<IChartRepository>();
-        var phoenixRecords = new Mock<IPhoenixRecordRepository>();
+        var phoenixRecords = new Mock<IScoreReader>();
         var configuration = new TournamentConfiguration(ScoringConfiguration.PumbilityScoring(false))
         {
             MaxTime = TimeSpan.FromMinutes(60)
@@ -69,7 +69,7 @@ public sealed class AutoBuildSessionHandlerTests
 
         charts.Setup(r => r.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { chartA, chartB });
-        phoenixRecords.Setup(r => r.GetRecordedScores(userId, It.IsAny<CancellationToken>()))
+        phoenixRecords.Setup(r => r.GetBestScores(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new RecordedPhoenixScore(chartA.Id, null, PhoenixPlate.PerfectGame, false, DateTimeOffset.UtcNow),
@@ -90,7 +90,7 @@ public sealed class AutoBuildSessionHandlerTests
     {
         var chart = ChartWithDuration(TimeSpan.FromMinutes(2));
         var charts = new Mock<IChartRepository>();
-        var phoenixRecords = new Mock<IPhoenixRecordRepository>();
+        var phoenixRecords = new Mock<IScoreReader>();
         var configuration = new TournamentConfiguration(ScoringConfiguration.PumbilityScoring(false))
         {
             MaxTime = TimeSpan.FromMinutes(3)
@@ -99,7 +99,7 @@ public sealed class AutoBuildSessionHandlerTests
 
         charts.Setup(r => r.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { chart });
-        phoenixRecords.Setup(r => r.GetRecordedScores(userId, It.IsAny<CancellationToken>()))
+        phoenixRecords.Setup(r => r.GetBestScores(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new RecordedPhoenixScore(chart.Id, 980000, PhoenixPlate.PerfectGame, false, DateTimeOffset.UtcNow)

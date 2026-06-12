@@ -65,7 +65,7 @@ public sealed class PumbilityProjectionSagaTests
 
         await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
 
-        ctx.PhoenixRecords.Verify(s => s.GetRecordedScores(
+        ctx.PhoenixRecords.Verify(s => s.GetScores(
             It.IsAny<IEnumerable<Guid>>(),
             It.IsAny<ChartType>(),
             It.Is<DifficultyLevel>(l => (int)l == 18),
@@ -145,7 +145,7 @@ public sealed class PumbilityProjectionSagaTests
         public Guid UserId { get; } = Guid.NewGuid();
         public Mock<IMediator> Mediator { get; } = new();
         public Mock<IPlayerStatsRepository> Stats { get; } = new();
-        public Mock<IPhoenixRecordRepository> PhoenixRecords { get; } = new();
+        public Mock<IScoreReader> PhoenixRecords { get; } = new();
         public PumbilityProjectionSaga Saga { get; }
 
         private readonly List<Chart> _charts = new();
@@ -171,7 +171,7 @@ public sealed class PumbilityProjectionSagaTests
                     It.IsAny<ChartType?>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<Guid>());
 
-            PhoenixRecords.Setup(s => s.GetRecordedScores(
+            PhoenixRecords.Setup(s => s.GetScores(
                     It.IsAny<IEnumerable<Guid>>(), It.IsAny<ChartType>(),
                     It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());

@@ -36,10 +36,10 @@ public sealed class RandomizerSagaTests
         return charts;
     }
 
-    private static Mock<IPhoenixRecordRepository> ScoresReturning(Guid userId, IEnumerable<RecordedPhoenixScore> result)
+    private static Mock<IScoreReader> ScoresReturning(Guid userId, IEnumerable<RecordedPhoenixScore> result)
     {
-        var scores = new Mock<IPhoenixRecordRepository>();
-        scores.Setup(s => s.GetRecordedScores(userId, It.IsAny<CancellationToken>()))
+        var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetBestScores(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
         return scores;
     }
@@ -60,7 +60,7 @@ public sealed class RandomizerSagaTests
         var (accessor, userId) = UserAccessor();
         var repo = new Mock<IRandomizerRepository>();
         var saga = new RandomizerSaga(new Mock<IChartRepository>().Object, repo.Object, accessor.Object,
-            new Mock<IPhoenixRecordRepository>().Object, new Mock<IRandomNumberGenerator>().Object);
+            new Mock<IScoreReader>().Object, new Mock<IRandomNumberGenerator>().Object);
 
         var settings = new RandomSettings();
         await saga.Handle(new SaveUserRandomSettingsCommand(Name.From("favorites"), settings),
@@ -77,7 +77,7 @@ public sealed class RandomizerSagaTests
         var (accessor, userId) = UserAccessor();
         var repo = new Mock<IRandomizerRepository>();
         var saga = new RandomizerSaga(new Mock<IChartRepository>().Object, repo.Object, accessor.Object,
-            new Mock<IPhoenixRecordRepository>().Object, new Mock<IRandomNumberGenerator>().Object);
+            new Mock<IScoreReader>().Object, new Mock<IRandomNumberGenerator>().Object);
 
         await saga.Handle(new DeleteRandomSettingsCommand(Name.From("favorites")), CancellationToken.None);
 

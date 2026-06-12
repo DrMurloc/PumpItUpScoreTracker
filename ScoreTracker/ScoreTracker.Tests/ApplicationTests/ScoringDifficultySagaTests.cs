@@ -20,15 +20,15 @@ public sealed class ScoringDifficultySagaTests
 {
     private static ScoringDifficultySaga Build(
         Mock<IChartRepository>? charts = null,
-        Mock<IPhoenixRecordRepository>? scores = null,
+        Mock<IScoreReader>? scores = null,
         Mock<IPlayerStatsRepository>? playerStats = null)
     {
         charts ??= new Mock<IChartRepository>();
         charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
-        scores ??= new Mock<IPhoenixRecordRepository>();
-        scores.Setup(s => s.GetAllPlayerScores(It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
+        scores ??= new Mock<IScoreReader>();
+        scores.Setup(s => s.GetScores(It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<(Guid, RecordedPhoenixScore)>());
         playerStats ??= new Mock<IPlayerStatsRepository>();

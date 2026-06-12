@@ -40,7 +40,7 @@ public sealed class ScoreQualitySagaTests
         var (accessor, userId) = UserAccessor();
         var playerStats = new Mock<IPlayerStatsRepository>();
         var charts = new Mock<IChartRepository>();
-        var scores = new Mock<IPhoenixRecordRepository>();
+        var scores = new Mock<IScoreReader>();
         var cache = new MemoryCache(new MemoryCacheOptions());
 
         playerStats.Setup(p => p.GetStats(userId, It.IsAny<CancellationToken>()))
@@ -66,7 +66,7 @@ public sealed class ScoreQualitySagaTests
 
         var playerStats = new Mock<IPlayerStatsRepository>();
         var charts = new Mock<IChartRepository>();
-        var scores = new Mock<IPhoenixRecordRepository>();
+        var scores = new Mock<IScoreReader>();
         var cache = new MemoryCache(new MemoryCacheOptions());
 
         playerStats.Setup(p => p.GetStats(userId, It.IsAny<CancellationToken>()))
@@ -83,7 +83,7 @@ public sealed class ScoreQualitySagaTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<(Guid, RecordedPhoenixScore)>());
 
-        scores.Setup(r => r.GetRecordedScores(userId, It.IsAny<CancellationToken>()))
+        scores.Setup(r => r.GetBestScores(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new RecordedPhoenixScore(chart.Id, 950000, PhoenixPlate.PerfectGame, false, DateTimeOffset.UtcNow)
@@ -108,7 +108,7 @@ public sealed class ScoreQualitySagaTests
 
         var playerStats = new Mock<IPlayerStatsRepository>();
         var charts = new Mock<IChartRepository>();
-        var scores = new Mock<IPhoenixRecordRepository>();
+        var scores = new Mock<IScoreReader>();
         var cache = new MemoryCache(new MemoryCacheOptions());
 
         playerStats.Setup(p => p.GetStats(userId, It.IsAny<CancellationToken>()))
@@ -127,7 +127,7 @@ public sealed class ScoreQualitySagaTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { (competitor, competitorScore) });
 
-        scores.Setup(r => r.GetRecordedScores(userId, It.IsAny<CancellationToken>()))
+        scores.Setup(r => r.GetBestScores(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new RecordedPhoenixScore(chart.Id, 990000, PhoenixPlate.PerfectGame, false, DateTimeOffset.UtcNow)

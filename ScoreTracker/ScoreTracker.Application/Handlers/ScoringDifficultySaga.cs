@@ -14,11 +14,11 @@ namespace ScoreTracker.Application.Handlers
     {
         private const int LevelDiff = 3;
         private readonly IChartRepository _chartRepository;
-        private readonly IPhoenixRecordRepository _scores;
+        private readonly IScoreReader _scores;
         private readonly IPlayerStatsRepository _playerStats;
 
         public ScoringDifficultySaga(IChartRepository chartRepository,
-            IPhoenixRecordRepository scores,
+            IScoreReader scores,
             IPlayerStatsRepository playerStats)
         {
             _chartRepository = chartRepository;
@@ -34,10 +34,10 @@ namespace ScoreTracker.Application.Handlers
                     cancellationToken: cancellationToken))
                 .ToArray();
             if (!charts.Any()) return;
-            var scores = (await _scores.GetAllPlayerScores(chartType, level, cancellationToken))
-                .Where(s => s.record is { IsBroken: false, Score: not null }).ToArray();
+            var scores = (await _scores.GetScores(chartType, level, cancellationToken))
+                .Where(s => s.Record is { IsBroken: false, Score: not null }).ToArray();
             if (!scores.Any()) return;
-            var stats = (await _playerStats.GetStats(scores.Select(p => p.userId).Distinct(), cancellationToken))
+            var stats = (await _playerStats.GetStats(scores.Select(p => p.UserId).Distinct(), cancellationToken))
                 .ToDictionary(s => s.UserId);
             var results = charts.ToDictionary(c => c.Id,
                 c => (IDictionary<ParagonLevel, double>)new Dictionary<ParagonLevel, double>());
@@ -45,18 +45,18 @@ namespace ScoreTracker.Application.Handlers
             for (var letter = ParagonLevel.AA; letter <= ParagonLevel.PG; letter++)
             {
                 var threshold = letter.MinThreshold();
-                var relevantScores = scores.Where(s => s.record.Score != null && s.record.Score >= threshold);
+                var relevantScores = scores.Where(s => s.Record.Score != null && s.Record.Score >= threshold);
 
 
                 var sums = charts.ToDictionary(c => c.Id, c => 0.0);
                 foreach (var record in relevantScores)
                 {
                     var competitiveLevel = chartType == ChartType.Single
-                        ? stats[record.userId].SinglesCompetitiveLevel
-                        : stats[record.userId].DoublesCompetitiveLevel;
+                        ? stats[record.UserId].SinglesCompetitiveLevel
+                        : stats[record.UserId].DoublesCompetitiveLevel;
                     if (competitiveLevel < 5)
                         continue;
-                    sums[record.record.ChartId] += Math.Pow(1.25, level + .5 - competitiveLevel);
+                    sums[record.Record.ChartId] += Math.Pow(1.25, level + .5 - competitiveLevel);
                 }
 
                 foreach (var kv in sums) results[kv.Key][letter] = kv.Value;
@@ -103,8 +103,8 @@ namespace ScoreTracker.Application.Handlers
                 var phoenixScores = new List<(Guid UserId, RecordedPhoenixScore Record)>();
                 for (var l = min; l <= max; l++)
                     phoenixScores.AddRange(
-                        (await _scores.GetAllPlayerScores(chartType, l, context.CancellationToken)).Where(s =>
-                            s.record.Score != null));
+                        (await _scores.GetScores(chartType, l, context.CancellationToken)).Where(s =>
+                            s.Record.Score != null));
                 var userIds = phoenixScores.Select(u => u.UserId).Distinct().ToArray();
                 var playerWeights = new Dictionary<Guid, IDictionary<DifficultyLevel, double>>();
                 foreach (var userId in userIds)

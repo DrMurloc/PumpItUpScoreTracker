@@ -37,13 +37,13 @@ public sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, IRe
     private readonly ICommunityRepository _communities;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
-    private readonly IPhoenixRecordRepository _scores;
+    private readonly IScoreReader _scores;
     private readonly IUserRepository _users;
     private readonly IUcsRepository _ucs;
     private readonly IDateTimeOffsetAccessor _dateTime;
 
     public CommunitySaga(ICurrentUserAccessor currentUser, ICommunityRepository communities, IBotClient bot,
-        IUserRepository users, IChartRepository charts, IPhoenixRecordRepository scores, IMediator mediator,
+        IUserRepository users, IChartRepository charts, IScoreReader scores, IMediator mediator,
         IUcsRepository ucs, IDateTimeOffsetAccessor dateTime)
     {
         _currentUser = currentUser;
@@ -152,7 +152,7 @@ public sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, IRe
         var user = await _users.GetUser(context.Message.UserId, context.CancellationToken);
         if (user == null) return;
         var scores =
-            (await _scores.GetRecordedScores(context.Message.UserId, context.CancellationToken))
+            (await _scores.GetBestScores(context.Message.UserId, context.CancellationToken))
             .Where(s => s.Score != null)
             .ToDictionary(s =>
                 s.ChartId);

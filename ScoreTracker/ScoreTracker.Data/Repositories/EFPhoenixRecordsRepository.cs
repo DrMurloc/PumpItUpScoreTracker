@@ -44,6 +44,31 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         return GetPgUsers(chartType, level, cancellationToken);
     }
 
+    Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> IScoreReader.GetPlayerScores(
+        IEnumerable<Guid> userIds, ChartType chartType, DifficultyLevel difficulty,
+        CancellationToken cancellationToken)
+    {
+        return GetPlayerScores(userIds, chartType, difficulty, cancellationToken);
+    }
+
+    Task<IEnumerable<UserPhoenixScore>> IScoreReader.GetPlayerScores(IEnumerable<Guid> userIds,
+        IEnumerable<Guid> chartIds, CancellationToken cancellationToken)
+    {
+        return GetPlayerScores(userIds, chartIds, cancellationToken);
+    }
+
+    Task<IEnumerable<UserPhoenixScore>> IScoreReader.GetPhoenixScores(IEnumerable<Guid> userIds, Guid chartId,
+        CancellationToken cancellationToken)
+    {
+        return GetPhoenixScores(userIds, chartId, cancellationToken);
+    }
+
+    Task<int> IScoreReader.GetClearCount(Guid userId, ChartType chartType, DifficultyLevel level,
+        CancellationToken cancellationToken)
+    {
+        return GetClearCount(userId, chartType, level, cancellationToken);
+    }
+
     private readonly IMemoryCache _cache;
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
     private readonly IChartRepository _charts;

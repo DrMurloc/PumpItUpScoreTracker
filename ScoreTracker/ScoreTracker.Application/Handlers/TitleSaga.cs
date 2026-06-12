@@ -21,7 +21,7 @@ public sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumerab
     private readonly IXXChartAttemptRepository _chartAttempts;
     private readonly IChartRepository _charts;
     private readonly ICurrentUserAccessor _currentUser;
-    private readonly IPhoenixRecordRepository _phoenixScores;
+    private readonly IScoreReader _phoenixScores;
     private readonly ITitleRepository _titles;
     private readonly IBus _bus;
 
@@ -29,7 +29,7 @@ public sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumerab
 
     public TitleSaga(ICurrentUserAccessor currentUser,
         IXXChartAttemptRepository chartAttempts,
-        IPhoenixRecordRepository phoenixScores,
+        IScoreReader phoenixScores,
         IChartRepository charts,
         ITitleRepository titles,
         IBus bus)
@@ -68,7 +68,7 @@ public sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumerab
             var userId = _currentUser.User.Id;
             completedTitles = (await _titles.GetCompletedTitles(userId, cancellationToken)).Select(t => t.Title)
                 .ToHashSet();
-            scores = await _phoenixScores.GetRecordedScores(userId, cancellationToken);
+            scores = await _phoenixScores.GetBestScores(userId, cancellationToken);
         }
         else
         {
@@ -84,7 +84,7 @@ public sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumerab
 
     private async Task<IEnumerable<TitleProgress>> GetPhoenixProgress(Guid userId, CancellationToken cancellationToken)
     {
-        var scores = await _phoenixScores.GetRecordedScores(userId, cancellationToken);
+        var scores = await _phoenixScores.GetBestScores(userId, cancellationToken);
         var completed = (await _titles.GetCompletedTitles(userId, cancellationToken)).Select(t => t.Title).ToHashSet();
         var charts = (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
             .ToDictionary(c => c.Id);

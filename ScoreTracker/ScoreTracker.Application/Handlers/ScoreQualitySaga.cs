@@ -17,10 +17,10 @@ public sealed class ScoreQualitySaga :
     private readonly IChartRepository _charts;
     private readonly IPlayerStatsRepository _playerStats;
     private readonly ICurrentUserAccessor _user;
-    private readonly IPhoenixRecordRepository _scores;
+    private readonly IScoreReader _scores;
 
     public ScoreQualitySaga(ICurrentUserAccessor user, IPlayerStatsRepository playerStats, IMemoryCache cache,
-        IChartRepository charts, IPhoenixRecordRepository scores)
+        IChartRepository charts, IScoreReader scores)
     {
         _user = user;
         _playerStats = playerStats;
@@ -49,7 +49,7 @@ public sealed class ScoreQualitySaga :
         var playerScores = await GetPlayerScores(request.ChartType, request.Level, cancellationToken);
         var charts = (await _charts.GetCharts(MixEnum.Phoenix, request.Level, request.ChartType,
             cancellationToken: cancellationToken)).Select(c => c.Id).ToHashSet();
-        return (await _scores.GetRecordedScores(_user.User.Id, cancellationToken))
+        return (await _scores.GetBestScores(_user.User.Id, cancellationToken))
             .Where(s => charts.Contains(s.ChartId))
             .Where(s => s.Score != null)
             .ToDictionary(c => c.ChartId,
@@ -116,7 +116,7 @@ public sealed class ScoreQualitySaga :
             .ToDictionary(g => g.Key,
                 g => g.OrderBy(s => s.Score).Select(s => s.Score).ToArray());
 
-        return (await _scores.GetRecordedScores(_user.User.Id, cancellationToken))
+        return (await _scores.GetBestScores(_user.User.Id, cancellationToken))
             .Where(s => chartIds.Contains(s.ChartId))
             .Where(s => s.Score != null)
             .ToDictionary(c => c.ChartId,

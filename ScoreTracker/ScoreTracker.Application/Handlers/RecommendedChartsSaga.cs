@@ -20,14 +20,14 @@ namespace ScoreTracker.Application.Handlers
         private readonly ICurrentUserAccessor _currentUser;
         private readonly IUserRepository _users;
         private readonly IPlayerStatsRepository _stats;
-        private readonly IPhoenixRecordRepository _scores;
+        private readonly IScoreReader _scores;
         private readonly IWeeklyTournamentRepository _weeklyTournament;
         private readonly IChartListRepository _chartList;
         private readonly IDateTimeOffsetAccessor _dateTime;
         private readonly IRandomNumberGenerator _random;
 
         public RecommendedChartsSaga(IMediator mediator, ICurrentUserAccessor currentUser, IUserRepository users,
-            IPlayerStatsRepository stats, IPhoenixRecordRepository scores,
+            IPlayerStatsRepository stats, IScoreReader scores,
             IWeeklyTournamentRepository weeklyTournament, IChartListRepository chartList,
             IDateTimeOffsetAccessor dateTime, IRandomNumberGenerator random)
         {
