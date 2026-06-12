@@ -207,7 +207,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         var recent = (await _piuGame.GetRecentScores(sessionId, cancellationToken)).ToArray();
         var weeklyCharts = (await _weeklyTournies.GetWeeklyCharts(cancellationToken)).Select(e => e.ChartId).Distinct()
             .ToHashSet();
-        var entries = new List<RecentScoreImportedEvent.Entry>();
+        var entries = new List<ScoreImportCompletedEvent.ImportedScore>();
         foreach (var songGroup in recent.GroupBy(s => s.SongName))
         {
             var songName = await GetMappedName(songGroup.Key, cancellationToken);
@@ -226,7 +226,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
                 var bestScore = chartGroup.Max(s => s.Score);
                 var bestPlate = chartGroup.Max(s => s.Plate);
                 var isBroken = chartGroup.All(s => s.IsBroken);
-                entries.Add(new RecentScoreImportedEvent.Entry(chart.Id, bestScore, bestPlate.ToString(), isBroken));
+                entries.Add(new ScoreImportCompletedEvent.ImportedScore(chart.Id, bestScore, bestPlate.ToString(), isBroken));
                 if (weeklyCharts.Contains(chart.Id))
                     try
                     {
@@ -247,13 +247,8 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
             }
         }
 
-        // Dual-publish during P3: thin event until its consumers migrate, plus the fat
-        // ScoreImportCompletedEvent contract event (C11).
-        await _bus.Publish(new RecentScoreImportedEvent(userId, entries.ToArray()), cancellationToken);
         await _bus.Publish(ScoreImportCompletedEvent.Create(_dateTime.Now,
-                ScoreImportCompletedEvent.OfficialImportSource, userId,
-                entries.Select(e => new ScoreImportCompletedEvent.ImportedScore(
-                    e.ChartId, e.Score, e.Plate, e.IsBroken)).ToArray()),
+                ScoreImportCompletedEvent.OfficialImportSource, userId, entries.ToArray()),
             cancellationToken);
         return results.Values;
     }

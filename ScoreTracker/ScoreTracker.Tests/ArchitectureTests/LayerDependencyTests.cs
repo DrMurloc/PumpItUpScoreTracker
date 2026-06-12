@@ -65,6 +65,31 @@ public sealed class LayerDependencyTests
     }
 
     [Fact]
+    public void OnlyLedgerInternalTypesInjectThePhoenixRecordRepository()
+    {
+        // F1 ratchet (rearch C22): every consumer outside the Score Ledger reads scores
+        // through IScoreReader. The allowlist is the Ledger itself — it shrinks at P5
+        // (PlayerRatingSaga is the one sanctioned holdout until its UpdateScoreStats
+        // write gets a deliberate home in the PlayerProgress vertical work).
+        var allowed = new[]
+        {
+            "UpdatePhoenixRecordHandler", "GetPhoenixRecordHandler", "GetPhoenixRecordsHandler",
+            "GetPhoenixScoresForChartHandler", "GetAllChartScoreAggregatesHandler",
+            "WipeUserScoresHandler", "PlayerRatingSaga"
+        };
+        var personalProgress = typeof(PersonalProgress.PlayerRatingSaga).Assembly;
+        var violations = ApplicationAssembly.GetTypes().Concat(personalProgress.GetTypes())
+            .Where(t => !t.IsInterface && !allowed.Contains(t.Name))
+            .Where(t => t.GetConstructors().Any(c => c.GetParameters()
+                .Any(p => p.ParameterType.Name == "IPhoenixRecordRepository")))
+            .Select(t => t.FullName)
+            .ToArray();
+
+        Assert.True(violations.Length == 0,
+            $"Read scores through IScoreReader, not IPhoenixRecordRepository: {string.Join(", ", violations)}");
+    }
+
+    [Fact]
     public void ApplicationReferencesNoInfrastructureOrPresentationPackages()
     {
         var forbiddenPrefixes = new[]

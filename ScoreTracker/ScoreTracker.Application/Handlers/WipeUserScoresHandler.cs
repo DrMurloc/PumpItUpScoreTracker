@@ -14,14 +14,17 @@ public sealed class WipeUserScoresHandler : IRequestHandler<WipeUserScoresComman
     private readonly ITitleRepository _titles;
     private readonly IPlayerHistoryRepository _playerHistory;
     private readonly IBus _bus;
+    private readonly IDateTimeOffsetAccessor _dateTime;
 
     public WipeUserScoresHandler(IPhoenixRecordRepository phoenixScores,
         IXXChartAttemptRepository xxScores,
         IPlayerStatsRepository playerStats,
         ITitleRepository titles,
         IPlayerHistoryRepository playerHistory,
-        IBus bus)
+        IBus bus,
+        IDateTimeOffsetAccessor dateTime)
     {
+        _dateTime = dateTime;
         _phoenixScores = phoenixScores;
         _xxScores = xxScores;
         _playerStats = playerStats;
@@ -40,7 +43,8 @@ public sealed class WipeUserScoresHandler : IRequestHandler<WipeUserScoresComman
             await _playerHistory.DeleteHistoryForUser(request.UserId, cancellationToken);
 
         await _bus.Publish(
-            new PlayerScoreUpdatedEvent(request.UserId, Array.Empty<Guid>(), new Dictionary<Guid, int>()),
+            PlayerScoresUpdatedEvent.Create(_dateTime.Now, request.UserId,
+                Array.Empty<PlayerScoresUpdatedEvent.ScoreChange>()),
             cancellationToken);
     }
 }

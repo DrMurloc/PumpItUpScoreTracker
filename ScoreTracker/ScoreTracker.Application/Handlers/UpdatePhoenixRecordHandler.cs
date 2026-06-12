@@ -78,15 +78,11 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
         await PublishScoreEvents(context.Message.UserId, batch, context.CancellationToken);
     }
 
-    // Dual-publish during P3: the thin PlayerScoreUpdatedEvent until its last consumer
-    // migrates, plus the fat PlayerScoresUpdatedEvent contract event (C11).
+    // Publishes the fat PlayerScoresUpdatedEvent contract event (C11/C22).
+    
     private async Task PublishScoreEvents(Guid userId, PendingScoreBatch batch,
         CancellationToken cancellationToken)
     {
-        await bus.Publish(
-            new PlayerScoreUpdatedEvent(userId, batch.NewChartIds, batch.UpscoredChartIds),
-            cancellationToken);
-
         var involved = batch.NewChartIds.Concat(batch.UpscoredChartIds.Keys).ToHashSet();
         var bests = (await records.GetRecordedScores(userId, cancellationToken) ?? [])
             .Where(r => involved.Contains(r.ChartId))

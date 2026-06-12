@@ -6,7 +6,7 @@ namespace ScoreTracker.Domain.SecondaryPorts;
 /// <summary>
 /// Per-user score-update debouncer. UpdatePhoenixRecordHandler accumulates
 /// new clears and upscores into a batch and schedules a single
-/// PlayerScoreUpdatedEvent once the user has stopped recording for a while.
+/// PlayerScoresUpdatedEvent once the user has stopped recording for a while.
 /// Implementation must be a singleton so state survives across handler instances
 /// and must be safe for concurrent use across all members.
 /// </summary>
