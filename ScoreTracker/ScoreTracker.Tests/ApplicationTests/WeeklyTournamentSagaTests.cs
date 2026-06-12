@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MassTransit;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using ScoreTracker.Application.Messages;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Domain.Enums;
@@ -36,7 +37,7 @@ public sealed class WeeklyTournamentSagaTests
             });
         var saga = BuildSaga(weeklyTournies: weeklyTournies);
 
-        await saga.Consume(BuildContext(new UpdateWeeklyChartsEvent()));
+        await saga.Consume(BuildContext(new RotateWeeklyCharts()));
 
         weeklyTournies.Verify(w => w.ClearTheBoard(It.IsAny<CancellationToken>()), Times.Never);
         weeklyTournies.Verify(w => w.RegisterWeeklyChart(It.IsAny<WeeklyTournamentChart>(),
@@ -60,7 +61,7 @@ public sealed class WeeklyTournamentSagaTests
                     IsBroken: false, PhotoUrl: null, CompetitiveLevel: 20)
             });
 
-        await ctx.Saga.Consume(BuildContext(new UpdateWeeklyChartsEvent()));
+        await ctx.Saga.Consume(BuildContext(new RotateWeeklyCharts()));
 
         ctx.WeeklyTournies.Verify(w => w.WriteHistories(
             It.Is<IEnumerable<UserTourneyHistory>>(hs => hs.Any(h => h.UserId == entryUser
@@ -77,7 +78,7 @@ public sealed class WeeklyTournamentSagaTests
         var ctx = ExpiredWeekContext();
         var nextMonday3am = new DateTimeOffset(2026, 5, 4, 3, 0, 0, TimeSpan.Zero);
 
-        await ctx.Saga.Consume(BuildContext(new UpdateWeeklyChartsEvent()));
+        await ctx.Saga.Consume(BuildContext(new RotateWeeklyCharts()));
 
         ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(
             It.Is<WeeklyTournamentChart>(c => c.ExpirationDate == nextMonday3am),
@@ -95,7 +96,7 @@ public sealed class WeeklyTournamentSagaTests
         ctx.WeeklyTournies.Setup(w => w.GetAlreadyPlayedCharts(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { played.Id });
 
-        await ctx.Saga.Consume(BuildContext(new UpdateWeeklyChartsEvent()));
+        await ctx.Saga.Consume(BuildContext(new RotateWeeklyCharts()));
 
         ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(
             It.Is<WeeklyTournamentChart>(c => c.ChartId == unplayed.Id),
@@ -118,7 +119,7 @@ public sealed class WeeklyTournamentSagaTests
         ctx.WeeklyTournies.Setup(w => w.GetAlreadyPlayedCharts(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { coop3.Id, coop4.Id, coop5.Id });
 
-        await ctx.Saga.Consume(BuildContext(new UpdateWeeklyChartsEvent()));
+        await ctx.Saga.Consume(BuildContext(new RotateWeeklyCharts()));
 
         ctx.WeeklyTournies.Verify(w => w.ClearAlreadyPlayedCharts(
             It.Is<IEnumerable<Guid>>(ids => ids.Contains(coop3.Id) && ids.Contains(coop4.Id)
@@ -142,7 +143,7 @@ public sealed class WeeklyTournamentSagaTests
         ctx.WeeklyTournies.Setup(w => w.GetAlreadyPlayedCharts(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { ctx.Charts["coop3"].Id, ctx.Charts["coop5"].Id });
 
-        await ctx.Saga.Consume(BuildContext(new UpdateWeeklyChartsEvent()));
+        await ctx.Saga.Consume(BuildContext(new RotateWeeklyCharts()));
 
         ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(
             It.Is<WeeklyTournamentChart>(c => c.ChartId == coop4.Id),

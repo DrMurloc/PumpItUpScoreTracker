@@ -170,7 +170,7 @@ Where possible, capture the contract: real responses go in test fixtures, not ha
 
 ENTERPRISE: *External API and Messaging Tests*
 
-- [ ] One end-to-end test per recurring scheduled message (`UpdateBountiesEvent`, `CalculateScoringDifficultyEvent`, etc.) — start the in-memory bus, publish, assert the consumer side effects via mocked Domain ports.
+- [ ] One end-to-end test per recurring scheduled message (`UpdateBountiesEvent`, `RecalculateScoringDifficulty`, etc.) — start the in-memory bus, publish, assert the consumer side effects via mocked Domain ports.
 - [ ] Tests classify as `component` (the in-memory transport is production-real, but ports are mocked).
 - [ ] Reference: `RecurringJobHostedService` is the publisher; saga classes are the consumers.
 
@@ -283,7 +283,7 @@ Rearch is **judgment-driven and structural**: what's domain vs orchestration, sh
 - 1.7. **ADR doc** capturing 1.1–1.5. ✅ Done — [ADR-001](docs/adr/ADR-001-subdomain-verticals.md) (2026-06-12).
 
 **Step 2 — Pull out of `Domain/` what doesn't belong** *~2–3 sessions*. Driven by 1.2 + 1.6.
-- 2.1. `Domain/Events/` command-shaped messages (`ProcessPassTierListCommand`, `ProcessScoresTiersListCommand`) → owning vertical's Application.
+- 2.1. ✅ Done 2026-06-12 (rearch C6+C7) — all bus trigger messages (the two `Process*` commands plus the five imperatively-renamed recurring triggers) moved to `Application/Messages/`; `Domain/Events/` now holds only past-tense facts. Moves to the owning vertical's Contracts happen in Step 4 / P5.
 - 2.2. Most `Domain/Records/` → owning vertical.
 - 2.3. `Domain/Views/` Match projections — may evaporate per the Phoenix 2 Match drop.
 - 2.4. Vertical-specific `Domain/Services/` → owning vertical's internal Domain.
@@ -340,13 +340,9 @@ ENTERPRISE: *Architecture Priorities*. Also flagged in [ARCHITECTURE.md](ARCHITE
 
 Risk: low — known divergence, no business impact.
 
-### Move command-shaped messages out of `Domain/Events/` — *S*
+### ~~Move command-shaped messages out of `Domain/Events/`~~ — ✅ Done 2026-06-12
 
-ENTERPRISE: *DDD Policy*. Also flagged in [ARCHITECTURE.md](ARCHITECTURE.md).
-
-- [ ] Move `ProcessPassTierListCommand` and `ProcessScoresTiersListCommand` to `Application/Commands/` (or a new `Application/Messages/` if they remain MassTransit-shaped).
-- [ ] Update consumers and publishers (likely just `RecurringJobHostedService` and the saga consumers).
-- [ ] Verify scheduled messages still fire after the move.
+Completed as rearch C6+C7 (see the rearchitecture section, Step 2.1): all bus trigger messages live in `Application/Messages/` with honest imperative names; consumers/publishers/tests updated; recurring jobs publish the renamed records.
 
 ### MediatR-in-Domain decision — *M* (or zero, if accepted as carve-out)
 

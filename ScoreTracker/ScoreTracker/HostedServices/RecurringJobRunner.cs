@@ -1,4 +1,5 @@
 using MassTransit;
+using ScoreTracker.Application.Messages;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Domain.Events;
 
@@ -17,23 +18,23 @@ public sealed class RecurringJobRunner
         _bus.Publish(new ProcessScoresTiersListCommand());
 
     public Task PublishCalculateScoringDifficulty() =>
-        _bus.Publish(new CalculateScoringDifficultyEvent());
+        _bus.Publish(new RecalculateScoringDifficulty());
 
     public Task PublishUpdateWeeklyCharts() =>
-        _bus.Publish(new UpdateWeeklyChartsEvent());
+        _bus.Publish(new RotateWeeklyCharts());
 
     public Task PublishProcessPassTierList() =>
         _bus.Publish(new ProcessPassTierListCommand());
 
     public Task PublishCalculateChartLetterDifficulties() =>
-        _bus.Publish(new CalculateChartLetterDifficultiesEvent());
+        _bus.Publish(new RecalculateChartLetterDifficulties());
 
     public Task PublishStartLeaderboardImport() =>
-        _bus.Publish(new StartLeaderboardImportEvent());
+        _bus.Publish(new StartLeaderboardImport());
 
     public Task PublishTryScheduleMoM() =>
         _bus.Publish(new MarchOfMurlocsHandler.TryScheduleMoM());
 
     public Task PublishFlushOverdueScoreBatches() =>
-        _bus.Publish(new FlushOverdueScoreBatchesEvent());
+        _bus.Publish(new FlushOverdueScoreBatches());
 }

@@ -1,5 +1,6 @@
 using MassTransit;
 using MediatR;
+using ScoreTracker.Application.Messages;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
@@ -16,7 +17,7 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
         IPlayerScoreBatchAccumulator batches)
     : IRequestHandler<UpdatePhoenixBestAttemptCommand>,
         IConsumer<UpdatePhoenixRecordHandler.TryFireScoreMessage>,
-        IConsumer<FlushOverdueScoreBatchesEvent>
+        IConsumer<FlushOverdueScoreBatches>
 {
     public async Task Handle(UpdatePhoenixBestAttemptCommand request, CancellationToken cancellationToken)
     {
@@ -80,7 +81,7 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
 
     // Safety net for batches whose scheduled TryFireScoreMessage was lost
     // (in-memory MassTransit transport drops in-flight messages on restart).
-    public async Task Consume(ConsumeContext<FlushOverdueScoreBatchesEvent> context)
+    public async Task Consume(ConsumeContext<FlushOverdueScoreBatches> context)
     {
         var now = dateTimeOffset.Now.UtcDateTime;
         foreach (var entry in batches.Dump())

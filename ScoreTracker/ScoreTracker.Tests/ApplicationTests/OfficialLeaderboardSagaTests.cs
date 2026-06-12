@@ -7,6 +7,7 @@ using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using ScoreTracker.Application.Messages;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Application.Queries;
@@ -35,7 +36,7 @@ public sealed class OfficialLeaderboardSagaTests
         var worldRankings = new Mock<IWorldRankingService>();
         var saga = BuildSaga(mediator: mediator, worldRankings: worldRankings);
 
-        await saga.Consume(BuildContext(new StartLeaderboardImportEvent()));
+        await saga.Consume(BuildContext(new StartLeaderboardImport()));
 
         mediator.Verify(m => m.Send(It.IsAny<ProcessChartPopularityCommand>(),
             It.IsAny<CancellationToken>()), Times.Once);

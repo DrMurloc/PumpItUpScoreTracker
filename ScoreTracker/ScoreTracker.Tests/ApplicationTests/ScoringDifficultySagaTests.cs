@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
 using Moq;
+using ScoreTracker.Application.Messages;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
@@ -68,7 +69,7 @@ public sealed class ScoringDifficultySagaTests
             .ReturnsAsync(Array.Empty<Chart>());
         var saga = Build(charts: charts);
 
-        await saga.Consume(ContextOf(new CalculateChartLetterDifficultiesEvent()));
+        await saga.Consume(ContextOf(new RecalculateChartLetterDifficulties()));
 
         charts.Verify(c => c.UpdateChartLetterDifficulties(It.IsAny<IEnumerable<ChartLetterGradeDifficulty>>(),
                 It.IsAny<CancellationToken>()),
@@ -84,7 +85,7 @@ public sealed class ScoringDifficultySagaTests
             .ReturnsAsync(Array.Empty<Chart>());
         var saga = Build(charts: charts);
 
-        await saga.Consume(ContextOf(new CalculateScoringDifficultyEvent()));
+        await saga.Consume(ContextOf(new RecalculateScoringDifficulty()));
 
         charts.Verify(c => c.UpdateScoreLevel(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<double>(),
                 It.IsAny<CancellationToken>()),

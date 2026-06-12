@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
 using Moq;
+using ScoreTracker.Application.Messages;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Domain.Enums;
@@ -316,7 +317,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
             .Returns(new PendingScoreBatch(Array.Empty<Guid>(),
                 new Dictionary<Guid, int> { { upscoreChartB, 850000 } }));
 
-        await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatchesEvent()));
+        await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatches()));
 
         ctx.Batches.Verify(b => b.TakeBatch(overdueUserA), Times.Once);
         ctx.Batches.Verify(b => b.TakeBatch(overdueUserB), Times.Once);
@@ -349,7 +350,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
         });
         ctx.Batches.Setup(b => b.TakeBatch(racedUser)).Returns((PendingScoreBatch?)null);
 
-        await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatchesEvent()));
+        await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatches()));
 
         ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoreUpdatedEvent>(),
             It.IsAny<CancellationToken>()), Times.Never);
@@ -361,7 +362,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
         var ctx = new HandlerContext();
         ctx.Batches.Setup(b => b.Dump()).Returns(Array.Empty<BatchAccumulatorSnapshotEntry>());
 
-        await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatchesEvent()));
+        await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatches()));
 
         ctx.Batches.Verify(b => b.TakeBatch(It.IsAny<Guid>()), Times.Never);
         ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoreUpdatedEvent>(),

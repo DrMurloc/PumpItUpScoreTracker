@@ -58,7 +58,7 @@ Domain    ◄──── Application ◄──── Data ────┐
   - `ScoreTracker.Domain.Enums.*` — domain enums (`MixEnum`, `ChartType`, `PhoenixLetterGrade`, etc.).
   - `ScoreTracker.Domain.SecondaryPorts.*` — repository and client interfaces (`IChartRepository`, `IUserRepository`, `IBotClient`, `ICurrentUserAccessor`, `IDateTimeOffsetAccessor`, …). All persistence and integration is invoked through these.
   - `ScoreTracker.Domain.Services.*` — domain services with `Contracts` for interfaces (`IUserAccessService`, `IWorldRankingService`).
-  - `ScoreTracker.Domain.Events.*` — message records published over MassTransit and/or fired by Hangfire recurring jobs. Note: the folder also contains command-shaped messages such as `ProcessPassTierListCommand`.
+  - `ScoreTracker.Domain.Events.*` — past-tense fact records published over MassTransit. (Imperative bus *trigger* messages live in `ScoreTracker.Application.Messages` — see Eventing.)
   - `ScoreTracker.Domain.Exceptions.*` — domain exceptions (`InvalidNameException`, `ChartNotFoundException`, …).
   - `ScoreTracker.Domain.Views.*` — projection types used by the Match feature.
 - **Dependencies** — `MediatR` and `Microsoft.Extensions.Logging.Abstractions` only. No project references. No EF, no MassTransit (the abstractions live one layer up), no ASP.NET.
@@ -143,11 +143,10 @@ Domain    ◄──── Application ◄──── Data ────┐
 - **Library** — MassTransit `8.5.7` (`MassTransit.Abstractions` in Application, full `MassTransit` in `PersonalProgress`). Web uses `MassTransit.Extensions.DependencyInjection 7.3.1` — a version skew, see tech debt.
 - **Transport** — In-memory (`UsingInMemory`). Configured in [Program.cs:56-69](ScoreTracker/ScoreTracker/Program.cs:56). Delayed message scheduler is enabled via `AddDelayedMessageScheduler` + `UseDelayedMessageScheduler`.
 - **Consumer registration** — `o.AddConsumers(typeof(PlayerRatingSaga).Assembly, typeof(TierListSaga).Assembly, typeof(RecurringJobRunner).Assembly)` scans `PersonalProgress`, `Application`, and `Web` for `IConsumer<>` implementations.
-- **Events** (records in `ScoreTracker.Domain.Events`)
-  - Recurring/scheduled: `UpdateBountiesEvent`, `CalculateScoringDifficultyEvent`, `UpdateWeeklyChartsEvent`, `CalculateChartLetterDifficultiesEvent`, `StartLeaderboardImportEvent`.
-  - Score/import flow: `PlayerScoreUpdatedEvent`, `RecentScoreImportedEvent`, `PlayerRatingsImprovedEvent`, `PlayerStatsUpdatedEvent`, `ChartDifficultyUpdatedEvent`, `ImportStatusUpdated`, `ImportStatusError`, `NewTitlesAcquiredEvent`, `TitlesDetectedEvent`, `UcsLeaderboardEntryPlacedEvent`, `UserCreatedEvent`, `UserUpdatedEvent`, `UserWeeklyChartsProgressedEvent`.
-  - Command-shaped (despite living in `Events/`): `ProcessPassTierListCommand`, `ProcessScoresTiersListCommand`.
+- **Events** (past-tense facts; records in `ScoreTracker.Domain.Events`)
+  - Score/import flow: `PlayerScoreUpdatedEvent`, `RecentScoreImportedEvent`, `PlayerRatingsImprovedEvent`, `PlayerStatsUpdatedEvent`, `ChartDifficultyUpdatedEvent`, `ImportStatusUpdated`, `ImportStatusError`, `NewTitlesAcquiredEvent`, `TitlesDetectedEvent`, `UcsLeaderboardPlacedEvent`, `UserCreatedEvent`, `UserUpdatedEvent`, `UserWeeklyChartsProgressedEvent`.
   - Application-internal MediatR notification: `ScoreTracker.Application.Events.MatchUpdatedEvent` (`INotification`).
+- **Trigger messages** (imperative bus commands; records in `ScoreTracker.Application.Messages`) — published by `RecurringJobRunner` / admin pages to kick off work: `RotateWeeklyCharts`, `RecalculateScoringDifficulty`, `RecalculateChartLetterDifficulties`, `StartLeaderboardImport`, `FlushOverdueScoreBatches`, `ProcessScoresTiersListCommand`, `ProcessPassTierListCommand`. They are requests, not facts — the consumer owns the decision (e.g. `RotateWeeklyCharts` exits early when the current week hasn't expired).
 - **Publishers** — Razor pages (e.g. `UploadPhoenixScores.razor`, `Admin.razor`), Hangfire recurring jobs via `RecurringJobRunner`, and many handlers (`CreateUserHandler`, `UpdatePhoenixRecordHandler`, `UpdateUserHandler`, etc.) inject `IBus` and call `Publish`.
 - **Consumers** — The "Saga" classes in `Application/Handlers` and `PersonalProgress/PlayerRatingSaga`.
 - **Operational implication** — Because the transport is in-memory, **in-flight bus messages do not survive a process restart**. Recurring schedules *do* survive restarts because they live in the Hangfire SQL Server store, not the bus — Hangfire re-fires according to its `MisfireHandlingMode` (default: schedule the next occurrence). Any ad-hoc `IBus.Publish` work that was mid-flight at restart is still lost.
@@ -170,7 +169,7 @@ Domain    ◄──── Application ◄──── Data ────┐
 - **Project reference** — `Tests` references `Application`, which transitively pulls `Domain` and `PersonalProgress`. It does not reference `Data` or `Web`.
 - **Mocking convention** — Mock the Domain port interfaces (`IUserRepository`, `IBus`, etc.), construct the real handler with `mock.Object` dependencies, and `Verify` calls with `It.Is<T>(...)` predicates. Do not introduce alternative double libraries (`FakeItEasy`, `NSubstitute`, `AutoFixture`) without explicit approval.
 - **Test helpers** — Reusable scaffolding lives in `ScoreTracker.Tests/TestHelpers/` (`FakeDateTime.At(...)` returns a configured `Mock<IDateTimeOffsetAccessor>`) and `ScoreTracker.Tests/TestData/` (`UserBuilder`, `ChartBuilder` — fluent builders with sensible defaults). Prefer these over hand-rolled doubles in new tests.
-- **Coverage exclusions** — Pure data shapes (commands, queries, events, records, view projections), exception classes, and enum-helper static classes are marked with `[ExcludeFromCodeCoverage]` so coverage % reflects logic, not DTO surface area. Each project has a `GlobalUsings.cs` that exposes `System.Diagnostics.CodeAnalysis` so the attribute requires no per-file `using`. **When adding a new command/query/event/record/exception, mark it `[ExcludeFromCodeCoverage]`.** Excluded folders: `Application/Commands`, `Application/Queries`, `Application/Events`, `Domain/Records`, `Domain/Events`, `Domain/Views`, `Domain/Exceptions`, `Domain/Enums` (helper classes only — enums themselves can't take the attribute), `PersonalProgress/Queries`. Real logic in `Domain/Models`, `Domain/Services`, `Application/Handlers`, and `Domain/ValueTypes` is *not* excluded — that's where coverage is meaningful.
+- **Coverage exclusions** — Pure data shapes (commands, queries, events, records, view projections), exception classes, and enum-helper static classes are marked with `[ExcludeFromCodeCoverage]` so coverage % reflects logic, not DTO surface area. Each project has a `GlobalUsings.cs` that exposes `System.Diagnostics.CodeAnalysis` so the attribute requires no per-file `using`. **When adding a new command/query/event/record/exception, mark it `[ExcludeFromCodeCoverage]`.** Excluded folders: `Application/Commands`, `Application/Queries`, `Application/Events`, `Application/Messages`, `Domain/Records`, `Domain/Events`, `Domain/Views`, `Domain/Exceptions`, `Domain/Enums` (helper classes only — enums themselves can't take the attribute), `PersonalProgress/Queries`. Real logic in `Domain/Models`, `Domain/Services`, `Application/Handlers`, and `Domain/ValueTypes` is *not* excluded — that's where coverage is meaningful.
 
 ## Conventions and rules
 
@@ -182,15 +181,15 @@ Domain    ◄──── Application ◄──── Data ────┐
 - **Repository naming**: implementation is `EF<Port>` (e.g. `EFUserRepository` implements `IUserRepository`). One implementation per port.
 - **Value types validate at construction** via static `From(...)` factories that throw a domain exception. Do not bypass them.
 - **Configuration POCOs** live in `ScoreTracker.Data.Configuration` (or `ScoreTracker.Web.Configuration` for Web-only options) and are bound in `Program.cs`.
-- **Recurring background work** is scheduled via Hangfire (`RecurringJob.AddOrUpdate<RecurringJobRunner>(...)` in `Program.cs`) which fans out to MassTransit by publishing the matching `Domain/Events/` record. Cron expressions are UTC. Do not introduce a second scheduler library.
-- **Async work that should not block the originating request** is published over `IBus` with a record from `ScoreTracker.Domain.Events`.
+- **Recurring background work** is scheduled via Hangfire (`RecurringJob.AddOrUpdate<RecurringJobRunner>(...)` in `Program.cs`) which fans out to MassTransit by publishing the matching `Application/Messages/` trigger record. Cron expressions are UTC. Do not introduce a second scheduler library.
+- **Async work that should not block the originating request** is published over `IBus` — past-tense facts from `Domain/Events/`, imperative triggers from `Application/Messages/`.
 
 ## Known divergences and tech debt
 
 - **`ScoreTracker.Data` references `ScoreTracker.Application`.** `ScoreTracker/ScoreTracker.Data/ScoreTracker.Data.csproj` line 24. This points outward through the onion. **To be removed** — Infrastructure should depend only on Domain.
 - **`ScoreTracker.PersonalProgress` is a parallel Application-layer assembly.** Acceptable as an experimental vertical-slice split, but **do not introduce additional vertical-slice projects without explicit approval**. `Application` referencing `PersonalProgress` makes them effectively co-equal.
 - **MassTransit version skew.** `Web` uses `MassTransit.Extensions.DependencyInjection 7.3.1`; the rest uses `MassTransit 8.5.7`. Consolidate on the v8 DI extensions.
-- **Domain `Events/` folder mixes events and command-shaped messages** (`ProcessPassTierListCommand`, `ProcessScoresTiersListCommand`). Naming/folder placement could be tightened.
+- ~~**Domain `Events/` folder mixes events and command-shaped messages.**~~ **Resolved 2026-06-12** (rearch C6+C7): trigger messages moved to `Application/Messages/` with honest imperative names; `Domain/Events/` holds only past-tense facts.
 - **No MediatR pipeline behaviors and no validation pipeline.** Validation lives only in value-type constructors. Adding a behavior pipeline (logging, validation) is a future option, not a current rule.
 - **No automatic migration on startup.** `Database.Migrate()` is not called; migrations must be applied out-of-band.
 

@@ -46,7 +46,7 @@ Refuse to proceed if any of these are missing:
 
 2. [ ] **Smoke assertion in `RecurringJobRunner`.**
    - File: [`ScoreTracker/HostedServices/RecurringJobRunner.cs`](../../../ScoreTracker/ScoreTracker/HostedServices/RecurringJobRunner.cs)
-   - Method: the one that publishes `StartLeaderboardImportEvent`.
+   - Method: the one that publishes `StartLeaderboardImport`.
    - After the import completes (note: today this is fire-and-forget via `IBus.Publish`; the smoke check may need to live inside `OfficialLeaderboardSaga.Consume` instead, depending on shape).
    - Logic: count imported scores; assert >100 (tune); assert at least one chart at level ≥20 was observed.
    - On failure: `_logger.LogError` (and optional Discord webhook to admin channel — out of scope unless trivial).

@@ -1,6 +1,7 @@
 ﻿using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using ScoreTracker.Application.Messages;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
@@ -15,10 +16,10 @@ namespace ScoreTracker.Application.Handlers
         IBotClient bot,
         ILogger<WeeklyTournamentSaga> logger, IUserRepository users, IBus bus,
         IDateTimeOffsetAccessor dateTime, IRandomNumberGenerator random) :
-        IConsumer<UpdateWeeklyChartsEvent>,
+        IConsumer<RotateWeeklyCharts>,
         IRequestHandler<RegisterWeeklyChartScore>
     {
-        public async Task Consume(ConsumeContext<UpdateWeeklyChartsEvent> context)
+        public async Task Consume(ConsumeContext<RotateWeeklyCharts> context)
         {
             var currentWeek = await weeklyTournies.GetWeeklyCharts(context.CancellationToken);
             if (currentWeek.Any(w => w.ExpirationDate > dateTime.Now))

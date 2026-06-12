@@ -2,6 +2,7 @@
 using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using ScoreTracker.Application.Messages;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
@@ -21,7 +22,7 @@ namespace ScoreTracker.Application.Handlers
         IRequestHandler<UpdateSongImagesCommand>,
         IRequestHandler<GetGameCardsQuery, IEnumerable<GameCardRecord>>,
         IRequestHandler<GetLastLeaderboardImportTimestampQuery, DateTimeOffset?>,
-        IConsumer<StartLeaderboardImportEvent>
+        IConsumer<StartLeaderboardImport>
     {
         private readonly IOfficialSiteClient _officialSite;
         private readonly ITierListRepository _tierLists;
@@ -326,7 +327,7 @@ namespace ScoreTracker.Application.Handlers
             return _leaderboards.GetLastImportTimestamp(cancellationToken);
         }
 
-        public async Task Consume(ConsumeContext<StartLeaderboardImportEvent> context)
+        public async Task Consume(ConsumeContext<StartLeaderboardImport> context)
         {
             await _mediator.Send(new ProcessChartPopularityCommand());
             await _mediator.Send(new ProcessOfficialLeaderboardsCommand());

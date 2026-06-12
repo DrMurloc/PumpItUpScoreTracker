@@ -438,7 +438,7 @@ else if(_monthlyWeeks.Any())
     private bool _isLoading = false;
     private async Task Start()
     {
-        await Bus.Publish(new UpdateWeeklyChartsEvent());
+        await Bus.Publish(new RotateWeeklyCharts());
     }
 
     private async Task Submit()
