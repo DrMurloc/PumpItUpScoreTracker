@@ -227,13 +227,16 @@ Currently skipped — no critical user-visible flow is regressed often enough to
 
 Likely tooling: bUnit for Blazor Server components, Playwright for full browser flows.
 
-### Contract tests — *M* (only if a consumer appears)
+### Contract / API-shape tests — *M*
 
 ENTERPRISE: *Contract Test*
 
-Currently skipped — the codebase consumes external APIs but exposes only a thin MVC surface; there are no known external consumers of this app's API. Revisit if:
-- A second service starts consuming this app's API, or
-- A breaking change in `PiuGameApi` causes a production incident that contract verification would have caught.
+**Status updated 2026-06-11: external consumers exist.** Community tool makers consume the public API (`api/phoenixScores`, `api/tierlist`, `api/weeklyCharts`, `api/tournaments`, `api/charts/random`) and webhook feeds from the import ecosystem rather than building their own importers (see [PRODUCT.md](PRODUCT.md#platform-stance)). The old "revisit if a consumer appears" condition is met — response shapes are a de facto public contract.
+
+- [ ] Approval-style response-shape tests pinning each public API endpoint (golden JSON per endpoint, readable diffs; live in `ScoreTracker.Tests`, classify as `component`).
+- [ ] Same for webhook payloads once they're formalized (see [CONTEXTS.md](CONTEXTS.md) Q7).
+- [ ] Full consumer-driven contract tests (Pact-style) only if a partner tool wants to maintain one — approval tests are the right cost point today.
+- Also still relevant: a breaking change in `PiuGameApi` causing a production incident would justify contract verification on the *consuming* side.
 
 ---
 
@@ -243,6 +246,8 @@ Currently skipped — the codebase consumes external APIs but exposes only a thi
 
 Decisions locked from a 2026-05-17 workshop. ADR (Step 1.7) is the first rearch-session deliverable.
 
+> **Revised 2026-06-11** after the bounded-context analysis in [CONTEXTS.md](CONTEXTS.md). A1 and A5 are updated in place (marked *revised*) and supersede the 2026-05-17 versions where they differ; the remaining deltas are tracked as CONTEXTS.md *Open questions* and get finalized in the Step 1.7 ADR. CONTEXTS.md's friction inventory seeds Step 1.6's diagnostic catalog.
+
 ### Why not concurrent with Phoenix 2
 
 Phoenix 2 is **compiler-driven and mechanical**: required `MixEnum mix` parameters, composite-FK schema migration, mix-isolation tests before column flips. See [PHOENIX2-ROADMAP.md](PHOENIX2-ROADMAP.md) and [phoenix-records-schema.md](docs/phoenix2/features/phoenix-records-schema.md).
@@ -251,13 +256,16 @@ Rearch is **judgment-driven and structural**: what's domain vs orchestration, sh
 
 ### Locked decisions
 
-- **A1. Vertical taxonomy** — six subdomain verticals, each its own assembly with internal Domain/Application/Infra layers:
-  - **PlayerProgress** (current `ScoreTracker.PersonalProgress`; expanded to include Pumbility, PlayerHistory, ScoreQuality, Title, Skills)
-  - **Competition** (Qualifiers, WeeklyTournament, M.o.M., OfficialLeaderboard — Match/bracket dropped per the [Phoenix 2 carve-out](PHOENIX2-ROADMAP.md))
+- **A1. Vertical taxonomy** *(revised 2026-06-11 per [CONTEXTS.md](CONTEXTS.md))* — nine subdomain verticals, each its own assembly with internal Domain/Application/Infra layers:
+  - **ScoreLedger** *(new — was implicit)* — the score system of record + acquisition pipeline: Phoenix/XX records, official-account import, OCR/CSV upload, score-batch accumulation. Core per [PRODUCT.md](PRODUCT.md).
+  - **PlayerProgress** (current `ScoreTracker.PersonalProgress`; expanded to include Pumbility, PlayerHistory, ScoreQuality, Title, Skills — Skills placement is CONTEXTS Q5)
+  - **EventCompetition** (Qualifiers, M.o.M. — Match/bracket and the rest of the generic tournament domain dropped per the [Phoenix 2 carve-out](PHOENIX2-ROADMAP.md))
+  - **WeeklyChallenge** *(split from Competition — weekly serves the casual-competitive core audience, organized events the competitive secondary audience; PRODUCT.md §Audiences)*
+  - **OfficialMirror** *(pulled out of Competition — official leaderboard import, world rankings, avatars, PiuTracker sync, and the PiuGame ACL; revises A5)*
   - **Community**
-  - **CatalogDifficulty** (ScoringDifficulty, TierList, Randomizer)
+  - **ChartIntelligence** *(renames CatalogDifficulty — ScoringDifficulty, TierList, difficulty/preference/co-op votes, popularity; Randomizer placement is CONTEXTS Q4)*
   - **UCS**
-  - **Recommendations** (RecommendedCharts, PumbilityProjection)
+  - **Recommendations** (RecommendedCharts, PumbilityProjection) — *CONTEXTS Q1: keep as its own vertical or fold into PlayerProgress; the ADR decides.*
 - **A2. Shared kernel scope (tight)** — `Song`, `Chart`, `ChartType`, `DifficultyLevel`, `Mix` + `[LiveMix]`, `PhoenixScore`, `PhoenixLetterGrade`, `PhoenixPlate`, `Title`, `User` (identity only), `Name`, `Bpm`. Shared ports: `IUserRepository`, `IChartRepository`, `ISongRepository`, `ICurrentUserAccessor` (incl. `GetLiveMix()` / `GetUserSelectedMix()`), `IDateTimeOffsetAccessor`, `IBus`, `IPiuGameApi`. MediatR-in-Domain carve-out stays.
 - **A3. One DbContext** — entities namespaced by vertical (`Data.Persistence.Entities.<Vertical>`) so a future N-context split is cheap.
 - **A4. Cross-vertical communication** — three modes only:
@@ -265,7 +273,7 @@ Rearch is **judgment-driven and structural**: what's domain vs orchestration, sh
   - **In-process listener** = MediatR `INotification`.
   - **Durable/async** = MassTransit.
   - **Avoid:** concrete-type or repository imports across verticals. Today's `Application → PersonalProgress` leak (3 sagas importing `PersonalProgress.Queries`) is the canonical anti-example.
-- **A5. PiuGame ACL** — parsers + `IPiuGameApi` adapter live in Infrastructure with translation at the boundary into shared-kernel types. Not its own vertical.
+- **A5. PiuGame ACL** *(revised 2026-06-11)* — parsers + `IPiuGameApi` adapter live in **OfficialMirror's** Infrastructure with translation at the boundary into shared-kernel types. Other verticals receive official-site facts from OfficialMirror (events/interfaces), not by scraping directly. Whether `IPiuGameApi` stays on A2's shared-port list once OfficialMirror owns the ACL is CONTEXTS Q6 (ADR).
 
 ### Plan
 
@@ -299,7 +307,7 @@ Rearch is **judgment-driven and structural**: what's domain vs orchestration, sh
 
 ### Phoenix 2 interactions
 
-- `IPhoenixRecordRepository` / `IPlayerStatsRepository` are vertical-local post-rearch — they belong to PlayerProgress (or a Scoring sub-area). Phase 1 mix-isolation integration tests follow the port when it moves. Standard rename cost, not a redesign.
+- `IPhoenixRecordRepository` / `IPlayerStatsRepository` are vertical-local post-rearch — `IPhoenixRecordRepository` belongs to ScoreLedger, `IPlayerStatsRepository` to PlayerProgress. Phase 1 mix-isolation integration tests follow the port when it moves. Standard rename cost, not a redesign.
 - Mix joins the shared kernel by the end of Phoenix 2 Phase 2; rearch keeps it there.
 - Per-mix derived tables (Weekly Charts × Mix, Tier Lists × Mix, Community Leaderboards × Mix) ship in current structure during Phoenix 2; when their owning vertical extracts, the tables come along.
 

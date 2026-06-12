@@ -2,7 +2,7 @@
 
 [Pump It Up](https://en.wikipedia.org/wiki/Pump_It_Up_\(video_game_series\)) (PIU) is a five-panel dance arcade game by [Andamiro](https://www.piugame.com/). Players step on arrows in time with music. This document defines the PIU and project terms the code uses, in a form approachable to people who haven't played the game.
 
-For solution layout and patterns, see [ARCHITECTURE.md](ARCHITECTURE.md). For project conventions, see [CLAUDE.md](CLAUDE.md).
+For solution layout and patterns, see [ARCHITECTURE.md](ARCHITECTURE.md). For project conventions, see [CLAUDE.md](CLAUDE.md). For the product's mission, audiences, and direction, see [PRODUCT.md](PRODUCT.md).
 
 ## Game basics
 

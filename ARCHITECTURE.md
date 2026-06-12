@@ -6,6 +6,8 @@
 
 Pump It Up Score Tracker is a Blazor Server web app (with MVC API controllers) for tracking Pump It Up scores, leaderboards, tournaments, and player progression. It follows an onion architecture: a pure `Domain` core, a `MediatR`-based `Application` layer, an EF Core `Infrastructure` layer, and a Blazor/MVC `Presentation` layer wired through a `CompositionRoot`. Asynchronous work is dispatched over MassTransit on an in-memory transport.
 
+This file describes the code **as it is**. The working domain-boundary map feeding the planned rearchitecture is [CONTEXTS.md](CONTEXTS.md); product direction and audiences are in [PRODUCT.md](PRODUCT.md).
+
 ## Solution layout
 
 ```

@@ -160,6 +160,10 @@ Deliberate, documented divergences. Read these before flagging a violation.
 
 `ARCHITECTURE.md` is the source of truth for solution layout, full dependency graph, eventing detail, data-access detail, glossary (Mix, Chart, Phoenix score, Pumbility, Tier list, Bounty, UCS, Saga), known divergences, and open questions. Update it in the same PR that changes a structural pattern.
 
+## Product & domain authority
+
+[PRODUCT.md](PRODUCT.md) is the source of truth for mission, audience segments, and the core/supporting classification — consult it when judging feature fit or priority. [CONTEXTS.md](CONTEXTS.md) is the **working** bounded-context map feeding the planned rearchitecture (see BACKLOG.md); treat it as direction, not current structure — `ARCHITECTURE.md` still describes the code as it is.
+
 ## Backlog
 
 [BACKLOG.md](BACKLOG.md) tracks the gaps between this codebase and `ENTERPRISE.md` that require real refactor work — real-dependency database tests, external-adapter coverage, dependency-realism labels, the `Data → Application` cleanup, etc. Items in `BACKLOG.md` are not current rules; consult it when picking up follow-on work, not when judging existing code.
