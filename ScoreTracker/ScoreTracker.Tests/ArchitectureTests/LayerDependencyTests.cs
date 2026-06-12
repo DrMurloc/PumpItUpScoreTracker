@@ -14,6 +14,7 @@ public sealed class LayerDependencyTests
 {
     private static readonly Assembly DomainAssembly = typeof(Domain.Models.Chart).Assembly;
     private static readonly Assembly ApplicationAssembly = typeof(Application.Commands.CreateUserCommand).Assembly;
+    private static readonly Assembly SharedKernelAssembly = typeof(Domain.ValueTypes.Name).Assembly;
 
     private static string[] ReferencedNames(Assembly assembly)
     {
@@ -21,9 +22,26 @@ public sealed class LayerDependencyTests
     }
 
     [Fact]
+    public void SharedKernelReferencesNothingButMediatR()
+    {
+        var unexpected = ReferencedNames(SharedKernelAssembly)
+            .Where(n => !n.StartsWith("System", StringComparison.Ordinal)
+                        && n != "netstandard" && n != "mscorlib"
+                        && n != "MediatR" && n != "MediatR.Contracts")
+            .ToArray();
+
+        Assert.True(unexpected.Length == 0,
+            $"ScoreTracker.SharedKernel must stay dependency-free (MediatR carve-out only), found: {string.Join(", ", unexpected)}");
+    }
+
+    [Fact]
     public void DomainReferencesOnlyItsAllowlistedPackages()
     {
-        var allowed = new[] { "MediatR", "MediatR.Contracts", "Microsoft.Extensions.Logging.Abstractions" };
+        var allowed = new[]
+        {
+            "MediatR", "MediatR.Contracts", "Microsoft.Extensions.Logging.Abstractions",
+            "ScoreTracker.SharedKernel"
+        };
         var unexpected = ReferencedNames(DomainAssembly)
             .Where(n => !n.StartsWith("System", StringComparison.Ordinal)
                         && n != "netstandard" && n != "mscorlib"
@@ -35,14 +53,15 @@ public sealed class LayerDependencyTests
     }
 
     [Fact]
-    public void DomainReferencesNoOtherScoreTrackerProject()
+    public void DomainReferencesNoProjectExceptSharedKernel()
     {
         var projectRefs = ReferencedNames(DomainAssembly)
-            .Where(n => n.StartsWith("ScoreTracker", StringComparison.Ordinal))
+            .Where(n => n.StartsWith("ScoreTracker", StringComparison.Ordinal)
+                        && n != "ScoreTracker.SharedKernel")
             .ToArray();
 
         Assert.True(projectRefs.Length == 0,
-            $"ScoreTracker.Domain must reference no other project, found: {string.Join(", ", projectRefs)}");
+            $"ScoreTracker.Domain may reference only SharedKernel, found: {string.Join(", ", projectRefs)}");
     }
 
     [Fact]
