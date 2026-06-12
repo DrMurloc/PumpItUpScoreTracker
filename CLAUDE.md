@@ -33,18 +33,19 @@ These are the project-local realizations of the rules in `ENTERPRISE.md`. When E
 ### Layer graph and per-layer package allowlist
 
 ```
-Domain  ◄── Application ◄── Data
-  ▲           ▲              ▲
-  │           │              │
-  └── PersonalProgress ◄─────┘
-              ▲
-              │
-              └── Web ◄── CompositionRoot
+SharedKernel ◄── Domain  ◄── Application ◄── Data
+                   ▲           ▲              ▲
+                   │           │              │
+                   └── PersonalProgress ◄─────┘
+                               ▲
+                               │
+                               └── Web ◄── CompositionRoot
 ```
 
 | Project | Allowed external packages | Forbidden |
 |---|---|---|
-| `ScoreTracker.Domain` | `MediatR`, `Microsoft.Extensions.Logging.Abstractions` | Anything else. No EF, no `HttpClient`, no MassTransit, no ASP.NET, no Azure/Discord/SendGrid. |
+| `ScoreTracker.SharedKernel` | `MediatR` only | Everything else — the kernel references nothing. Game-model types keep `ScoreTracker.Domain.*` namespaces until the rearch P6 teardown. |
+| `ScoreTracker.Domain` | `MediatR`, `Microsoft.Extensions.Logging.Abstractions` (+ project ref to `SharedKernel`) | Anything else. No EF, no `HttpClient`, no MassTransit, no ASP.NET, no Azure/Discord/SendGrid. |
 | `ScoreTracker.Application` | + `MassTransit.Abstractions`, `Microsoft.Extensions.Caching.Memory` | EF Core, ASP.NET, `HttpClient`, vendor SDKs. Application must never know it's behind a web server. |
 | `ScoreTracker.Data` | + `Microsoft.EntityFrameworkCore.SqlServer`, `Azure.Storage.Blobs`, `Discord.Net`, `HtmlAgilityPack`, `SendGrid` | ASP.NET. |
 | `ScoreTracker.Web` | + `MudBlazor`, OAuth providers, `Swashbuckle`, `Tesseract`, MassTransit DI, `Hangfire.AspNetCore`, `Hangfire.SqlServer` | EF Core directly (must go through ports). |

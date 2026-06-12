@@ -13,7 +13,9 @@ This file describes the code **as it is**. The working domain-boundary map feedi
 ```
 ScoreTracker.sln
 ├── Core (solution folder)
-│   ├── ScoreTracker.Domain          — entities, value types, ports, domain services
+│   ├── ScoreTracker.SharedKernel    — PIU Game Model: value types, enums, Chart/Song,
+│   │                                  scoring engine, IQuery marker (rearch P2)
+│   ├── ScoreTracker.Domain          — entities, ports, domain services
 │   ├── ScoreTracker.Application     — MediatR handlers, MassTransit consumers
 │   └── ScoreTracker.PersonalProgress— vertical-slice experiment (player rating logic)
 ├── Infrastructure (solution folder)
@@ -29,16 +31,17 @@ All projects target `net10.0` with nullable + implicit usings enabled.
 ### Project reference graph
 
 ```
-Domain    ◄──── Application ◄──── Data ────┐
-   ▲              ▲                ▲       │
-   │              │                │       │
-   └── PersonalProgress ◄──────────┘       │
-                  ▲                        │
-                  │                        ▼
-                  └────────── Web ◄── CompositionRoot
+SharedKernel ◄── Domain ◄──── Application ◄──── Data ────┐
+                    ▲              ▲                ▲    │
+                    │              │                │    │
+                    └── PersonalProgress ◄──────────┘    │
+                                   ▲                     │
+                                   │                     ▼
+                                   └──────── Web ◄── CompositionRoot
 ```
 
-- `Domain` references no other project.
+- `SharedKernel` references nothing (MediatR carve-out only). Holds the PIU Game Model: all value types, enums, the value-type exceptions, `Chart`/`Song`, `LifebarSimulator`, the `ScoringConfiguration` engine, and the `IQuery<T>` marker. **Types keep their original `ScoreTracker.Domain.*` namespaces until the P6 teardown** — assembly home and namespace are deliberately decoupled during the rearch to avoid churn.
+- `Domain` references `SharedKernel` only.
 - `Application` references `Domain` and `PersonalProgress`.
 - `PersonalProgress` references `Domain` only.
 - `Data` references `Application` and `Domain`. **The Application reference is a known divergence — see [Known divergences](#known-divergences-and-tech-debt).**
@@ -61,7 +64,7 @@ Domain    ◄──── Application ◄──── Data ────┐
   - `ScoreTracker.Domain.Events.*` — past-tense fact records published over MassTransit. (Imperative bus *trigger* messages live in `ScoreTracker.Application.Messages` — see Eventing.)
   - `ScoreTracker.Domain.Exceptions.*` — domain exceptions (`InvalidNameException`, `ChartNotFoundException`, …).
   - `ScoreTracker.Domain.Views.*` — projection types used by the Match feature.
-- **Dependencies** — `MediatR` and `Microsoft.Extensions.Logging.Abstractions` only. No project references. No EF, no MassTransit (the abstractions live one layer up), no ASP.NET.
+- **Dependencies** — `MediatR` and `Microsoft.Extensions.Logging.Abstractions` only, plus the `ScoreTracker.SharedKernel` project. No EF, no MassTransit (the abstractions live one layer up), no ASP.NET. Note: the `ValueTypes`, `Enums`, value-type exceptions, and `Chart`/`Song`/`LifebarSimulator`/`ScoringConfiguration` now *compile in SharedKernel* while keeping their `ScoreTracker.Domain.*` namespaces.
 - **Conventions**
   - Value types are immutable structs/records with static `From(...)` factories that throw a domain exception on invalid input.
   - Ports use the `I*Repository`, `I*Client`, `I*Accessor` naming.
