@@ -19,11 +19,11 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     private readonly IChartRepository _chartRepository;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IPlayerStatsRepository _playerStats;
-    private readonly IPhoenixRecordRepository _scores;
+    private readonly IScoreReader _scores;
     private readonly ITierListRepository _tierLists;
 
     public TierListSaga(IChartDifficultyRatingRepository chartRatings, IChartRepository chartRepository,
-        ITierListRepository tierLists, IPhoenixRecordRepository scores,
+        ITierListRepository tierLists, IScoreReader scores,
         ICurrentUserAccessor currentUser, IPlayerStatsRepository playerStats)
     {
         _chartRatings = chartRatings;
@@ -117,11 +117,11 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         for (var level = 1; level <= 29; level++)
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
             {
-                var allPhoenixScores = (await _scores.GetAllPlayerScores(chartType, level, context.CancellationToken))
-                    .Where(s => s.record.Score != null)
-                    .GroupBy(r => r.userId).ToDictionary(g => g.Key,
-                        g => (IDictionary<Guid, PhoenixScore>)g.ToDictionary(p => p.record.ChartId,
-                            p => p.record.Score!.Value));
+                var allPhoenixScores = (await _scores.GetScores(chartType, level, context.CancellationToken))
+                    .Where(s => s.Record.Score != null)
+                    .GroupBy(r => r.UserId).ToDictionary(g => g.Key,
+                        g => (IDictionary<Guid, PhoenixScore>)g.ToDictionary(p => p.Record.ChartId,
+                            p => p.Record.Score!.Value));
                 var userIds = allPhoenixScores.Keys;
                 var stats = new Dictionary<Guid, double>();
                 foreach (var userId in userIds)
@@ -146,7 +146,7 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         var filtered = await _chartRepository.GetCharts(MixEnum.Phoenix, request.Level, request.ChartType,
             cancellationToken: cancellationToken);
         var phoenixScores =
-            (await _scores.GetRecordedScores(request.UserId ?? _currentUser.User.Id, cancellationToken)).ToDictionary(
+            (await _scores.GetBestScores(request.UserId ?? _currentUser.User.Id, cancellationToken)).ToDictionary(
                 s => s.ChartId);
 
 
@@ -389,19 +389,19 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
 
     private async Task ProcessCoOpPassTierList(int playerCount, CancellationToken cancellationToken)
     {
-        var scores = (await _scores.GetAllPlayerScores(ChartType.CoOp, playerCount, cancellationToken))
-            .Where(s => s.record is { Score: not null, IsBroken: false }).ToArray();
+        var scores = (await _scores.GetScores(ChartType.CoOp, playerCount, cancellationToken))
+            .Where(s => s.Record is { Score: not null, IsBroken: false }).ToArray();
         var playerLevels =
-            (await _playerStats.GetStats(scores.Select(s => s.userId).Distinct().ToArray(), cancellationToken))
+            (await _playerStats.GetStats(scores.Select(s => s.UserId).Distinct().ToArray(), cancellationToken))
             .ToDictionary(u => u.UserId, u => u.DoublesCompetitiveLevel);
         var playerWeights = playerLevels.ToDictionary(u => u.Key, u => Math.Log(28.0 - u.Value));
 
-        var chartTotals = scores.GroupBy(s => s.record.ChartId)
-            .ToDictionary(g => g.Key, g => g.Sum(r => playerWeights[r.userId]));
+        var chartTotals = scores.GroupBy(s => s.Record.ChartId)
+            .ToDictionary(g => g.Key, g => g.Sum(r => playerWeights[r.UserId]));
         var entries = ProcessIntoTierList("Pass Count", chartTotals);
 
-        var chartMinimums = scores.GroupBy(s => s.record.ChartId)
-            .ToDictionary(g => g.Key, g => g.Min(r => playerLevels[r.userId]));
+        var chartMinimums = scores.GroupBy(s => s.Record.ChartId)
+            .ToDictionary(g => g.Key, g => g.Min(r => playerLevels[r.UserId]));
 
         await _tierLists.SaveEntries(entries, cancellationToken);
         foreach (var kv in chartMinimums)
@@ -459,7 +459,7 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         foreach (var weightValue in userWeights)
         {
             var scores =
-                (await _scores.GetRecordedScores(weightValue.Value, chartType, level, level, cancellationToken))
+                (await _scores.GetScores(weightValue.Value, chartType, level, level, cancellationToken))
                 .Where(s => !s.IsBroken).ToArray();
 
             foreach (var score in scores.Where(s => chartSums.ContainsKey(s.ChartId)))

@@ -18,4 +18,12 @@ public interface IScoreReader
     /// <summary>Bulk read for analytics: every player's best attempt in a level×type folder.</summary>
     Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> GetScores(ChartType chartType,
         DifficultyLevel level, CancellationToken cancellationToken);
+
+    /// <summary>Best attempts for a set of players within a level range.</summary>
+    Task<IEnumerable<RecordedPhoenixScore>> GetScores(IEnumerable<Guid> userIds, ChartType chartType,
+        DifficultyLevel minimumLevel, DifficultyLevel maximumLevel, CancellationToken cancellationToken);
+
+    /// <summary>Players holding a Perfect Game in a level×type folder.</summary>
+    Task<IEnumerable<(Guid UserId, Guid ChartId)>> GetPgUsers(ChartType chartType, DifficultyLevel level,
+        CancellationToken cancellationToken);
 }
