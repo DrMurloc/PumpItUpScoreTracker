@@ -21,7 +21,8 @@ public sealed class ScoringDifficultySagaTests
     private static ScoringDifficultySaga Build(
         Mock<IChartRepository>? charts = null,
         Mock<IScoreReader>? scores = null,
-        Mock<IPlayerStatsReader>? playerStats = null)
+        Mock<IPlayerStatsReader>? playerStats = null,
+        Mock<IChartScoringLevelRepository>? scoringLevels = null)
     {
         charts ??= new Mock<IChartRepository>();
         charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
@@ -32,7 +33,8 @@ public sealed class ScoringDifficultySagaTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<(Guid, RecordedPhoenixScore)>());
         playerStats ??= new Mock<IPlayerStatsReader>();
-        return new ScoringDifficultySaga(charts.Object, scores.Object, playerStats.Object);
+        return new ScoringDifficultySaga(charts.Object, scores.Object, playerStats.Object,
+            scoringLevels?.Object ?? new Mock<IChartScoringLevelRepository>().Object);
     }
 
     private static ConsumeContext<T> ContextOf<T>(T message) where T : class

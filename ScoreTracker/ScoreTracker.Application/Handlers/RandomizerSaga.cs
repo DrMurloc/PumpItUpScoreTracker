@@ -18,13 +18,16 @@ namespace ScoreTracker.Application.Handlers
         private readonly IRandomizerRepository _repo;
         private readonly ICurrentUserAccessor _currentUser;
         private readonly IScoreReader _phoenixRecords;
+        private readonly IChartScoringLevelRepository _scoringLevels;
 
         public RandomizerSaga(IChartRepository charts,
             IRandomizerRepository repo,
             ICurrentUserAccessor currentUser,
             IScoreReader phoenixRecords,
-            IRandomNumberGenerator random)
+            IRandomNumberGenerator random,
+            IChartScoringLevelRepository scoringLevels)
         {
+            _scoringLevels = scoringLevels;
             _charts = charts;
             _repo = repo;
             _currentUser = currentUser;
@@ -48,27 +51,29 @@ namespace ScoreTracker.Application.Handlers
         }
 
         private IEnumerable<KeyValuePair<Guid, int>> GetIncludedCharts(IDictionary<Guid, Chart> charts,
-            RandomSettings settings, IDictionary<Guid, RecordedPhoenixScore> userScores)
+            RandomSettings settings, IDictionary<Guid, RecordedPhoenixScore> userScores,
+            IDictionary<Guid, double> scoringLevels)
         {
             var calculatedWeights = new Dictionary<Guid, int>();
             foreach (var chart in
                      charts.Values.Where(c => !settings.ChartIds.Any() || settings.ChartIds.Contains(c.Id)))
             {
-                if (settings.UseScoringLevels && chart.ScoringLevel == null)
+                double? scoringLevel = scoringLevels.TryGetValue(chart.Id, out var sl) ? sl : null;
+                if (settings.UseScoringLevels && scoringLevel == null)
                 {
                     calculatedWeights[chart.Id] = 0;
                     continue;
                 }
 
                 if (settings.MinCoOpLevel != null && chart.Type == ChartType.CoOp &&
-                    (chart.ScoringLevel < settings.MinCoOpLevel || chart.ScoringLevel == null))
+                    (scoringLevel < settings.MinCoOpLevel || scoringLevel == null))
                 {
                     calculatedWeights[chart.Id] = 0;
                     continue;
                 }
 
                 if (settings.MaxCoOpLevel != null && chart.Type == ChartType.CoOp &&
-                    (chart.ScoringLevel > settings.MaxCoOpLevel || chart.ScoringLevel == null))
+                    (scoringLevel > settings.MaxCoOpLevel || scoringLevel == null))
                 {
                     calculatedWeights[chart.Id] = 0;
                     continue;
@@ -100,7 +105,7 @@ namespace ScoreTracker.Application.Handlers
                     }
 
                 var level = settings.UseScoringLevels
-                    ? (int)Math.Floor(chart.ScoringLevel!.Value)
+                    ? (int)Math.Floor(scoringLevel!.Value)
                     : (int)chart.Level;
                 var levelWeight = chart.Type switch
                 {
@@ -238,7 +243,8 @@ namespace ScoreTracker.Application.Handlers
                 userScores =
                     (await _phoenixRecords.GetBestScores(_currentUser.User.Id, cancellationToken)).ToDictionary(r =>
                         r.ChartId);
-            var includedCharts = GetIncludedCharts(charts, request.Settings, userScores).ToArray();
+            var includedCharts = GetIncludedCharts(charts, request.Settings, userScores,
+                await _scoringLevels.GetScoringLevels(MixEnum.Phoenix, cancellationToken)).ToArray();
             if (includedCharts.Length < request.Settings.Count && !request.Settings.AllowRepeats)
                 return includedCharts.Select(c => charts[c.Key]);
 
@@ -276,7 +282,8 @@ namespace ScoreTracker.Application.Handlers
                 userScores =
                     (await _phoenixRecords.GetBestScores(_currentUser.User.Id, cancellationToken)).ToDictionary(r =>
                         r.ChartId);
-            var includedCharts = GetIncludedCharts(charts, request.Settings, userScores).ToArray();
+            var includedCharts = GetIncludedCharts(charts, request.Settings, userScores,
+                await _scoringLevels.GetScoringLevels(MixEnum.Phoenix, cancellationToken)).ToArray();
             return includedCharts.Select(kv => charts[kv.Key]).ToArray();
         }
 

@@ -44,7 +44,7 @@ public sealed class MarchOfMurlocsHandlerTests
             .ReturnsAsync(Array.Empty<TournamentRecord>());
 
         var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
-            scheduler.Object, dateTime.Object);
+            scheduler.Object, dateTime.Object, EmptyScoringLevels().Object);
 
         await handler.Consume(ContextOf(new MarchOfMurlocsHandler.TryScheduleMoMCommand()).Object);
 
@@ -70,7 +70,7 @@ public sealed class MarchOfMurlocsHandlerTests
             .ReturnsAsync(new[] { endedMoM });
 
         var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
-            scheduler.Object, dateTime.Object);
+            scheduler.Object, dateTime.Object, EmptyScoringLevels().Object);
 
         await handler.Consume(ContextOf(new MarchOfMurlocsHandler.TryScheduleMoMCommand()).Object);
 
@@ -93,7 +93,7 @@ public sealed class MarchOfMurlocsHandlerTests
             .ReturnsAsync(new[] { MoM(endDate) });
 
         var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
-            scheduler.Object, dateTime.Object);
+            scheduler.Object, dateTime.Object, EmptyScoringLevels().Object);
 
         await handler.Consume(ContextOf(new MarchOfMurlocsHandler.TryScheduleMoMCommand()).Object);
 
@@ -141,7 +141,7 @@ public sealed class MarchOfMurlocsHandlerTests
             .Returns(Task.CompletedTask);
 
         var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
-            scheduler.Object, dateTime.Object);
+            scheduler.Object, dateTime.Object, EmptyScoringLevels().Object);
 
         await handler.Consume(ContextOf(new MarchOfMurlocsHandler.CycleMoMCommand()).Object);
 
@@ -179,7 +179,7 @@ public sealed class MarchOfMurlocsHandlerTests
             .ReturnsAsync(new[] { expiredOld, active });
 
         var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
-            scheduler.Object, dateTime.Object);
+            scheduler.Object, dateTime.Object, EmptyScoringLevels().Object);
 
         await handler.Consume(ContextOf(new MarchOfMurlocsHandler.TryScheduleMoMCommand()).Object);
 
@@ -209,7 +209,7 @@ public sealed class MarchOfMurlocsHandlerTests
             .ReturnsAsync(new[] { active });
 
         var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
-            scheduler.Object, dateTime.Object);
+            scheduler.Object, dateTime.Object, EmptyScoringLevels().Object);
 
         await handler.Consume(ContextOf(new MarchOfMurlocsHandler.CycleMoMCommand()).Object);
 
@@ -219,5 +219,13 @@ public sealed class MarchOfMurlocsHandlerTests
         tournaments.Verify(t => t.CreateScoringLevelSnapshots(It.IsAny<Guid>(),
                 It.IsAny<IEnumerable<(Guid, double)>>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    private static Mock<IChartScoringLevelRepository> EmptyScoringLevels()
+    {
+        var scoringLevels = new Mock<IChartScoringLevelRepository>();
+        scoringLevels.Setup(s => s.GetScoringLevels(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, double>());
+        return scoringLevels;
     }
 }

@@ -15,6 +15,7 @@ public sealed class ChartAttemptDbContext : DbContext
 
     public DbSet<MixEntity> Mix { get; set; }
     public DbSet<ChartMixEntity> ChartMix { get; set; }
+    public DbSet<ChartScoringLevelEntity> ChartScoringLevel { get; set; }
     public DbSet<BestAttemptEntity> BestAttempt { get; set; }
     public DbSet<ChartEntity> Chart { get; set; }
     public DbSet<SongEntity> Song { get; set; }

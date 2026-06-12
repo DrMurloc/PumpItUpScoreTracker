@@ -1,4 +1,6 @@
 ﻿using MassTransit;
+using MediatR;
+using ScoreTracker.Application.Queries;
 using ScoreTracker.Application.Messages;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
@@ -10,20 +12,30 @@ using ScoreTracker.Domain.ValueTypes;
 namespace ScoreTracker.Application.Handlers
 {
     public sealed class ScoringDifficultySaga : IConsumer<RecalculateScoringDifficultyCommand>,
-        IConsumer<RecalculateChartLetterDifficultiesCommand>
+        IConsumer<RecalculateChartLetterDifficultiesCommand>,
+        IRequestHandler<GetChartScoringLevelsQuery, IDictionary<Guid, double>>
     {
+        public Task<IDictionary<Guid, double>> Handle(GetChartScoringLevelsQuery request,
+            CancellationToken cancellationToken)
+        {
+            return _scoringLevels.GetScoringLevels(request.Mix, cancellationToken);
+        }
+
         private const int LevelDiff = 3;
         private readonly IChartRepository _chartRepository;
         private readonly IScoreReader _scores;
         private readonly IPlayerStatsReader _playerStats;
+        private readonly IChartScoringLevelRepository _scoringLevels;
 
         public ScoringDifficultySaga(IChartRepository chartRepository,
             IScoreReader scores,
-            IPlayerStatsReader playerStats)
+            IPlayerStatsReader playerStats,
+            IChartScoringLevelRepository scoringLevels)
         {
             _chartRepository = chartRepository;
             _scores = scores;
             _playerStats = playerStats;
+            _scoringLevels = scoringLevels;
         }
 
         public async Task UpdateChartLetterLevel(ChartType chartType, DifficultyLevel level,
@@ -160,7 +172,7 @@ namespace ScoreTracker.Application.Handlers
                 if (!levelAverages.Any())
                 {
                     foreach (var kv in chartScores.Where(c => charts[c.Key].Level == level))
-                        await _chartRepository.UpdateScoreLevel(MixEnum.Phoenix, kv.Key, 0, context.CancellationToken);
+                        await _scoringLevels.SaveScoringLevel(MixEnum.Phoenix, kv.Key, null, context.CancellationToken);
 
                     continue;
                 }
@@ -225,7 +237,7 @@ namespace ScoreTracker.Application.Handlers
                 }
 
                 foreach (var cl in calculatedLevels)
-                    await _chartRepository.UpdateScoreLevel(MixEnum.Phoenix, cl.Key, cl.Value, cancellationToken);
+                    await _scoringLevels.SaveScoringLevel(MixEnum.Phoenix, cl.Key, cl.Value, cancellationToken);
             }
         }
 

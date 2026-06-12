@@ -13,13 +13,16 @@ namespace ScoreTracker.Application.Handlers
         private IBus _bus;
         private readonly IMessageScheduler _scheduler;
         private readonly IDateTimeOffsetAccessor _dateTime;
+        private readonly IChartScoringLevelRepository _scoringLevels;
 
         public MarchOfMurlocsHandler(ITournamentRepository tournaments,
             IChartRepository charts,
             IBus bus,
             IMessageScheduler scheduler,
-            IDateTimeOffsetAccessor dateTime)
+            IDateTimeOffsetAccessor dateTime,
+            IChartScoringLevelRepository scoringLevels)
         {
+            _scoringLevels = scoringLevels;
             _tournaments = tournaments;
             _charts = charts;
             _bus = bus;
@@ -125,12 +128,17 @@ namespace ScoreTracker.Application.Handlers
                 };
 
                 var curCharts = charts.Where(c => c.Type == chartType).ToArray();
-                var levels = curCharts.Select(c => (c.Id,
-                        c.ScoringLevel == null ? c.Level + .5 :
-                        c.Level + 1.5 < c.ScoringLevel ? c.Level + 1.5 :
-                        c.Level + .5 < c.ScoringLevel ? c.ScoringLevel.Value :
-                        c.Level + .5
-                    )).ToArray();
+                var scoringLevels =
+                    await _scoringLevels.GetScoringLevels(MixEnum.Phoenix, context.CancellationToken);
+                var levels = curCharts.Select(c =>
+                {
+                    double? scoringLevel = scoringLevels.TryGetValue(c.Id, out var sl) ? sl : null;
+                    return (c.Id,
+                        scoringLevel == null ? c.Level + .5 :
+                        c.Level + 1.5 < scoringLevel ? c.Level + 1.5 :
+                        c.Level + .5 < scoringLevel ? scoringLevel.Value :
+                        c.Level + .5);
+                }).ToArray();
                 await _tournaments.CreateOrSaveTournament(tournament, context.CancellationToken);
 
                 await _tournaments.CreateScoringLevelSnapshots(tournament.Id, levels, context.CancellationToken);

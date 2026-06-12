@@ -754,6 +754,7 @@ function(val, index) {
     private IDictionary<Guid, RecordedPhoenixScore> _scores = new Dictionary<Guid, RecordedPhoenixScore>();
     private IDictionary<Guid, RecordedPhoenixScore> _folderScores = new Dictionary<Guid, RecordedPhoenixScore>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private IDictionary<Guid, double> _scoringLevels = new Dictionary<Guid, double>();
     private IDictionary<Guid, Chart> _allCharts = new Dictionary<Guid, Chart>();
     private ISet<Guid> _unPopularCharts = new HashSet<Guid>();
     private ISet<Guid> _popularCharts = new HashSet<Guid>();
@@ -1705,7 +1706,7 @@ function(val, index) {
         {
             _finalGroupings = _finalEntries
                 .OrderBy(e => _chartDifficulties[e.ChartId])
-                .ThenBy(e => e.Order).GroupBy(e => _charts[e.ChartId].ScoringLevel?.ToString("0.0") ?? "Not Enough Data")
+                .ThenBy(e => e.Order).GroupBy(e => _scoringLevels.TryGetValue(e.ChartId, out var sl) ? sl.ToString("0.0") : "Not Enough Data")
                 .OrderBy(g => double.TryParse(g.Key,out var d)?d:10000).ToArray();
         }
         foreach (var group in _finalGroupings)
@@ -1831,6 +1832,7 @@ function(val, index) {
             },
             { Filter.SongArtist, L["Song Artist"] }
         };
+        _scoringLevels = await Mediator.Send(new GetChartScoringLevelsQuery());
         _titles = PhoenixTitleList.BuildList();
         _chartType = ChartType.Double;
         _level = 18;
