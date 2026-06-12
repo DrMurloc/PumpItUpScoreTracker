@@ -33,7 +33,7 @@ UCS keeps its own small `UCS` vertical per A1 (chart metadata + leaderboard + ta
 ### 1. Score Ledger — core
 
 - **Purpose.** System of record for personal play results, plus the acquisition pipeline that fills it. The strategic data asset everything downstream derives from.
-- **Owns.** Phoenix best-attempts, legacy XX attempts, recorded dates; manual entry, official-account import, OCR and CSV upload (with song-name correction); the score-batch accumulation policy; score wipe/restore.
+- **Owns.** Phoenix best-attempts, legacy XX attempts, recorded dates; manual entry, official-account import, OCR and CSV upload (with song-name correction); the score-batch accumulation policy; score wipe/restore; the append-only **ScoreEventJournal** (score-history feature groundwork — capture starts in the Phoenix 2 schema window; see ADR-001 Q8).
 - **Today in code.** `UpdatePhoenixRecordHandler`, `EFPhoenixRecordsRepository`, `EFXXChartAttemptRepository`, `PhoenixScoreFileExtractor`, the upload pages, `api/phoenixScores`.
 - **Contract surface.** `PlayerScoreUpdatedEvent` and `RecentScoreImportedEvent` are the de facto integration events of the whole system, and (via webhooks) of partner tools — treat them as published language. Plus `api/phoenixScores`.
 
@@ -139,6 +139,8 @@ Feeds rearch Step 1.6. Factual observations about current code, not blame.
 
 ## Open questions for the rearch ADR (Step 1.7)
 
+> **Resolved 2026-06-12 in [ADR-001](docs/adr/ADR-001-subdomain-verticals.md)** — decisions recorded there; questions kept below for context.
+
 - **Q1.** Recommendations: own vertical (A1, and active WSIP feature work) or inside Player Progression (this map)?
 - **Q2.** Catalog: conceptual context realized as shared kernel + shared ports (A2), or its own vertical?
 - **Q3.** Scoring engine (`ScoringConfiguration`): into the shared kernel (used by tournaments, Pumbility, world rankings) or vertical-local presets over a smaller kernel?
@@ -146,5 +148,6 @@ Feeds rearch Step 1.6. Factual observations about current code, not blame.
 - **Q5.** Chart skill tagging (`SkillsSaga`): PlayerProgress (A1 — skills feed skill titles) vs Catalog (it's chart curation)?
 - **Q6.** Does `IPiuGameApi` remain a shared port (A2) once OfficialMirror owns the ACL, or do other verticals receive official-site facts only via Mirror events/interfaces?
 - **Q7.** Webhooks: per-context event contracts + a generic outbound-delivery service (subscriptions, signing, retries)? Today's partner wiring is bespoke; formalizing it removes per-partner labor and makes the contracts explicit.
+- **Q8.** Event-source the Score Ledger? Score-progression history is a commonly requested feature; today's best-attempt upsert discards it. Phase 1 hedge: append-only journal alongside the upsert (capture now, UI later); promotion of the journal to source of truth is a later, Ledger-internal decision.
 
 Strategy-level (not ADR): whether to expose a Progression API — see [PRODUCT.md](PRODUCT.md#platform-stance).

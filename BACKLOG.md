@@ -242,7 +242,7 @@ ENTERPRISE: *Contract Test*
 
 ## Onion + DDD + Hexagonal rearchitecture
 
-**Deferred until after Phoenix 2 Phase 3.** Resumes in [Phase 4 (slow burn)](docs/phoenix2/phases/phase-4-slow-burn.md) or after. During Phoenix 2 Phases 1–3, populate Step 1.6's diagnostic catalog organically — every saga the compiler-driven Mix audit forces us to touch gets tagged with its rearch destination. **No code moves until rearch sessions begin.**
+**Started 2026-06-12** (owner pulled it forward from the post-Phoenix-2 gate). Working branch: `claude/rearchitecture` ([PR #104](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/104) — commit roadmap in the PR description). The ADR is done: [ADR-001](docs/adr/ADR-001-subdomain-verticals.md). Early phases (safety nets, deletions, contracts, journal) are Phoenix-2-compatible by design; the journal capture commit deliberately rides the Phoenix 2 schema window.
 
 Decisions locked from a 2026-05-17 workshop. ADR (Step 1.7) is the first rearch-session deliverable.
 
@@ -280,7 +280,7 @@ Rearch is **judgment-driven and structural**: what's domain vs orchestration, sh
 **Step 1 — Solidify domain** *~1–2 sessions*. Decisions + cataloging, no code moves.
 - 1.1–1.5. Locked above.
 - 1.6. **Diagnostic catalog.** Walk `Domain/`, `Application/Handlers/`, parser code. Tag each file with destination (shared kernel / which vertical / Application / Infra / stay). **Populated organically during Phoenix 2 Phases 1–3** — every saga the Mix audit forces us into gets a catalog entry.
-- 1.7. **ADR doc** capturing 1.1–1.5. First rearch-session output.
+- 1.7. **ADR doc** capturing 1.1–1.5. ✅ Done — [ADR-001](docs/adr/ADR-001-subdomain-verticals.md) (2026-06-12).
 
 **Step 2 — Pull out of `Domain/` what doesn't belong** *~2–3 sessions*. Driven by 1.2 + 1.6.
 - 2.1. `Domain/Events/` command-shaped messages (`ProcessPassTierListCommand`, `ProcessScoresTiersListCommand`) → owning vertical's Application.
