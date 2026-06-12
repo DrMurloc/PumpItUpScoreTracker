@@ -34,7 +34,7 @@ namespace ScoreTracker.Data.Repositories
             return ucsEntities.Select(e => new UcsChart(e.PiuGameId, new Chart(
                     e.Id, MixEnum.Phoenix, songs[e.SongId], Enum.Parse<ChartType>(e.ChartType), e.Level,
                     MixEnum.Phoenix, e.Artist,
-                    e.Level, null, new HashSet<Skill>()),
+                    null, new HashSet<Skill>()),
                 e.Uploader, e.Artist, e.Description, counts.TryGetValue(e.Id, out var c) ? c : 0));
         }
 

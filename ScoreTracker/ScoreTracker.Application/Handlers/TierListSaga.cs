@@ -21,11 +21,14 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     private readonly IPlayerStatsReader _playerStats;
     private readonly IScoreReader _scores;
     private readonly ITierListRepository _tierLists;
+    private readonly IChartScoringLevelRepository _scoringLevels;
 
     public TierListSaga(IChartDifficultyRatingRepository chartRatings, IChartRepository chartRepository,
         ITierListRepository tierLists, IScoreReader scores,
-        ICurrentUserAccessor currentUser, IPlayerStatsReader playerStats)
+        ICurrentUserAccessor currentUser, IPlayerStatsReader playerStats,
+        IChartScoringLevelRepository scoringLevels)
     {
+        _scoringLevels = scoringLevels;
         _chartRatings = chartRatings;
         _chartRepository = chartRepository;
         _tierLists = tierLists;
@@ -405,7 +408,7 @@ public sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
 
         await _tierLists.SaveEntries(entries, cancellationToken);
         foreach (var kv in chartMinimums)
-            await _chartRepository.UpdateScoreLevel(MixEnum.Phoenix, kv.Key, kv.Value, cancellationToken);
+            await _scoringLevels.SaveScoringLevel(MixEnum.Phoenix, kv.Key, kv.Value, cancellationToken);
     }
 
     private async Task ProcessPgTierList(DifficultyLevel level, ChartType chartType,

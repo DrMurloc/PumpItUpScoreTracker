@@ -85,11 +85,12 @@ public sealed class ScoringDifficultySagaTests
         charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
-        var saga = Build(charts: charts);
+        var scoringLevels = new Mock<IChartScoringLevelRepository>();
+        var saga = Build(charts: charts, scoringLevels: scoringLevels);
 
         await saga.Consume(ContextOf(new RecalculateScoringDifficultyCommand()));
 
-        charts.Verify(c => c.UpdateScoreLevel(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<double>(),
+        scoringLevels.Verify(c => c.SaveScoringLevel(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<double?>(),
                 It.IsAny<CancellationToken>()),
             Times.Never);
     }

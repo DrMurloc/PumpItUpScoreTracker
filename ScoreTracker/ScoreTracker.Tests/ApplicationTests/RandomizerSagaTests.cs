@@ -125,7 +125,7 @@ public sealed class RandomizerSagaTests
     {
         var (accessor, userId) = UserAccessor();
         var withScoringLevel = new ChartBuilder().WithLevel(20).WithType(ChartType.Single)
-            .WithScoringLevel(20.5).Build();
+            .Build();
         var withoutScoringLevel = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
         var charts = ChartsReturning(new[] { withScoringLevel, withoutScoringLevel });
         var settings = SinglesAtLevelTwenty();

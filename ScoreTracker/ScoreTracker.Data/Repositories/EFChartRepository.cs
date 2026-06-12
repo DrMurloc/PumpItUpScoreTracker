@@ -54,20 +54,6 @@ public sealed class EFChartRepository : IChartRepository
         return charts.Values.Where(c => c.Song.Name == songName);
     }
 
-    public async Task UpdateScoreLevel(MixEnum mix, Guid chartId, double scoringLevel,
-        CancellationToken cancellationToken = default)
-    {
-        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixGuids[mix];
-        var chartMix = await database.ChartMix.Where(cm => cm.MixId == mixId && cm.ChartId == chartId)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (chartMix != null)
-        {
-            chartMix.ScoringLevel = scoringLevel == 0 ? null : scoringLevel;
-            await database.SaveChangesAsync(cancellationToken);
-        }
-    }
-
 
     public async Task<IEnumerable<Chart>> GetCoOpCharts(MixEnum mix, CancellationToken cancellationToken = default)
     {
@@ -443,7 +429,7 @@ public sealed class EFChartRepository : IChartRepository
                             s.Artist ?? "Unknown",
                             Bpm.From(s.MinBpm, s.MaxBpm)),
                         Enum.Parse<ChartType>(c.Type),
-                        cm.Level, mix, c.StepArtist, cm.ScoringLevel, cm.NoteCount,
+                        cm.Level, mix, c.StepArtist, cm.NoteCount,
                         new HashSet<Skill>()))
                 .ToDictionaryAsync(c => c.Id,
                     c => c with

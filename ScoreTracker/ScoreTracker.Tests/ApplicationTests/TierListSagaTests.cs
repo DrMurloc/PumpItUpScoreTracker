@@ -213,7 +213,7 @@ public sealed class TierListSagaTests
         currentUser ??= new Mock<ICurrentUserAccessor>();
         playerStats ??= new Mock<IPlayerStatsReader>();
         return new TierListSaga(chartRatings.Object, charts.Object, tierLists.Object, scores.Object,
-            currentUser.Object, playerStats.Object);
+            currentUser.Object, playerStats.Object, new Mock<IChartScoringLevelRepository>().Object);
     }
 
     private static Mock<IChartRepository> EmptyChartsMock()

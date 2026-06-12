@@ -25,7 +25,6 @@ internal static class ApiTestData
         DifficultyLevel.From(20),
         MixEnum.Phoenix,
         Name.From("ANDAMIRO"),
-        20.5,
         731,
         new HashSet<Skill>());
 
@@ -39,7 +38,6 @@ internal static class ApiTestData
         DifficultyLevel.From(22),
         MixEnum.Phoenix,
         null,
-        22.1,
         845,
         new HashSet<Skill>());
 
