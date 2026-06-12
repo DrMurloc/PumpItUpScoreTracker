@@ -6,7 +6,7 @@ namespace ScoreTracker.Application.Queries
 {
     [ExcludeFromCodeCoverage]
     public sealed record GetPhoenixRecordsForCommunityQuery
-        (Name CommuityName, Guid ChartId) : IRequest<IEnumerable<UserPhoenixScore>>
+        (Name CommuityName, Guid ChartId) : IQuery<IEnumerable<UserPhoenixScore>>
     {
     }
 }

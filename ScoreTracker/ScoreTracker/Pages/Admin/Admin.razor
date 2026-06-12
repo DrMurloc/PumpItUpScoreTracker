@@ -295,13 +295,13 @@
     // await OfficialClient.FixAvatars();
     //await Bus.Publish(new ProcessScoresTiersListCommand());
      //await Bus.Publish(new ProcessPassTierListCommand());
-     //   await Bus.Publish(new RecalculateScoringDifficulty());
+     //   await Bus.Publish(new RecalculateScoringDifficultyCommand());
     
     //await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);
     
        //await Mediator.Send(new UpdateSongImagesCommand(false));
 
-        await Bus.Publish(new StartLeaderboardImport());
+        await Bus.Publish(new StartLeaderboardImportCommand());
 
 
         //await Bus.Publish(new ProcessPassTierListCommand());
@@ -321,7 +321,7 @@
         }*/
 
 
-       // await Bus.Publish(new RecalculateChartLetterDifficulties());
+       // await Bus.Publish(new RecalculateChartLetterDifficultiesCommand());
        Snackbar.Add(L["Done"].Value, Severity.Success);
 
     }

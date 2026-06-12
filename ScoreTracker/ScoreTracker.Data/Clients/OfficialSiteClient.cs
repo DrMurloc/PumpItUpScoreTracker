@@ -132,7 +132,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     {
         var currentPage = 1;
         await _mediator.Publish(
-            new ImportStatusUpdated(_currentUser.User.Id, "Logging In",
+            new ImportStatusUpdatedEvent(_currentUser.User.Id, "Logging In",
                 Array.Empty<RecordedPhoenixScore>()), cancellationToken);
         var sessionId = (await _piuGame.GetSessionId(username, password, cancellationToken)).client;
 
@@ -148,7 +148,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
         while (currentPage <= maxPages.Value)
         {
             await _mediator.Publish(
-                new ImportStatusUpdated(_currentUser.User.Id, $"Reading page {currentPage} of {maxPages} (New Passes)",
+                new ImportStatusUpdatedEvent(_currentUser.User.Id, $"Reading page {currentPage} of {maxPages} (New Passes)",
                     Array.Empty<RecordedPhoenixScore>()),
                 cancellationToken);
             var nextPage = await _piuGame.GetBestScores(sessionId, currentPage, cancellationToken);
@@ -166,7 +166,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
             pagesWithNoUpscore++;
             var nextPage = await _piuGame.GetBestScores(sessionId, currentPage, cancellationToken);
             await _mediator.Publish(
-                new ImportStatusUpdated(_currentUser.User.Id, $"Reading page {currentPage} (Up-scores)",
+                new ImportStatusUpdatedEvent(_currentUser.User.Id, $"Reading page {currentPage} (Up-scores)",
                     Array.Empty<RecordedPhoenixScore>()),
                 cancellationToken);
 
@@ -227,7 +227,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
                 if (weeklyCharts.Contains(chart.Id))
                     try
                     {
-                        await _mediator.Send(new RegisterWeeklyChartScore(
+                        await _mediator.Send(new RegisterWeeklyChartScoreCommand(
                                 new WeeklyTournamentEntry(userId, chart.Id, bestScore, bestPlate, isBroken,
                                     null, 10.0)),
                             cancellationToken);

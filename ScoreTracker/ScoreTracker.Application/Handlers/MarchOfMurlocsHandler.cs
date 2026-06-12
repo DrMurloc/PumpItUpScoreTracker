@@ -5,8 +5,8 @@ using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Application.Handlers
 {
-    public sealed class MarchOfMurlocsHandler : IConsumer<MarchOfMurlocsHandler.TryScheduleMoM>,
-        IConsumer<MarchOfMurlocsHandler.CycleMoM>
+    public sealed class MarchOfMurlocsHandler : IConsumer<MarchOfMurlocsHandler.TryScheduleMoMCommand>,
+        IConsumer<MarchOfMurlocsHandler.CycleMoMCommand>
     {
         private ITournamentRepository _tournaments;
         private IChartRepository _charts;
@@ -27,38 +27,38 @@ namespace ScoreTracker.Application.Handlers
             _dateTime = dateTime;
         }
 
-        public sealed record TryScheduleMoM
+        public sealed record TryScheduleMoMCommand
         {
         }
 
-        public sealed record CycleMoM
+        public sealed record CycleMoMCommand
         {
         }
 
-        public async Task Consume(ConsumeContext<TryScheduleMoM> context)
+        public async Task Consume(ConsumeContext<TryScheduleMoMCommand> context)
         {
             // Pick the most recent MoM, not any-old-MoM. The previous FirstOrDefault was the
-            // root cause of the runaway: once any expired MoM existed, every TryScheduleMoM tick
-            // saw it and immediately fired CycleMoM, regardless of whether a current MoM was active.
+            // root cause of the runaway: once any expired MoM existed, every TryScheduleMoMCommand tick
+            // saw it and immediately fired CycleMoMCommand, regardless of whether a current MoM was active.
             var mom = (await _tournaments.GetAllTournaments(context.CancellationToken))
                 .Where(e => e.IsMoM)
                 .OrderByDescending(e => e.EndDate)
                 .FirstOrDefault();
             if (mom?.EndDate == null || mom.EndDate < _dateTime.Now)
-                await _bus.Publish(new CycleMoM());
+                await _bus.Publish(new CycleMoMCommand());
             else
-                await _scheduler.SchedulePublish((mom.EndDate.Value + TimeSpan.FromMinutes(1)).DateTime, new CycleMoM(),
+                await _scheduler.SchedulePublish((mom.EndDate.Value + TimeSpan.FromMinutes(1)).DateTime, new CycleMoMCommand(),
                     context.CancellationToken);
         }
 
-        public async Task Consume(ConsumeContext<CycleMoM> context)
+        public async Task Consume(ConsumeContext<CycleMoMCommand> context)
         {
             var moms = (await _tournaments.GetAllTournaments(context.CancellationToken))
                 .Where(e => e.IsMoM)
                 .OrderByDescending(e => e.EndDate)
                 .ToArray();
             // Idempotency: if a future-dated MoM already exists, this cycle has nothing to do.
-            // Protects against duplicate CycleMoM messages (in-memory transport replay, double-publish, etc.)
+            // Protects against duplicate CycleMoMCommand messages (in-memory transport replay, double-publish, etc.)
             // landing back-to-back and creating extra tournaments.
             if (moms.Any(m => m.EndDate != null && m.EndDate > _dateTime.Now))
                 return;

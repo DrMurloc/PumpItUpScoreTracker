@@ -69,7 +69,7 @@ public sealed class ScoringDifficultySagaTests
             .ReturnsAsync(Array.Empty<Chart>());
         var saga = Build(charts: charts);
 
-        await saga.Consume(ContextOf(new RecalculateChartLetterDifficulties()));
+        await saga.Consume(ContextOf(new RecalculateChartLetterDifficultiesCommand()));
 
         charts.Verify(c => c.UpdateChartLetterDifficulties(It.IsAny<IEnumerable<ChartLetterGradeDifficulty>>(),
                 It.IsAny<CancellationToken>()),
@@ -85,7 +85,7 @@ public sealed class ScoringDifficultySagaTests
             .ReturnsAsync(Array.Empty<Chart>());
         var saga = Build(charts: charts);
 
-        await saga.Consume(ContextOf(new RecalculateScoringDifficulty()));
+        await saga.Consume(ContextOf(new RecalculateScoringDifficultyCommand()));
 
         charts.Verify(c => c.UpdateScoreLevel(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<double>(),
                 It.IsAny<CancellationToken>()),

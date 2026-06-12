@@ -438,7 +438,7 @@ else if(_monthlyWeeks.Any())
     private bool _isLoading = false;
     private async Task Start()
     {
-        await Bus.Publish(new RotateWeeklyCharts());
+        await Bus.Publish(new RotateWeeklyChartsCommand());
     }
 
     private async Task Submit()
@@ -448,7 +448,7 @@ else if(_monthlyWeeks.Any())
             return;
         }
         _isSaving = true;
-        await Mediator.Send(new RegisterWeeklyChartScore(new WeeklyTournamentEntry(_userId, _submittingChartId.Value, _score, _plate, _isBroken, _uploadedPhoto,10.0)));
+        await Mediator.Send(new RegisterWeeklyChartScoreCommand(new WeeklyTournamentEntry(_userId, _submittingChartId.Value, _score, _plate, _isBroken, _uploadedPhoto,10.0)));
         _submittingChartId = null;
         Snackbar.Add("Submitted!",Severity.Success);
         _isSaving = false;

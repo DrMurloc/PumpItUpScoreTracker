@@ -6,7 +6,7 @@ namespace ScoreTracker.PersonalProgress.Queries
 {
     [ExcludeFromCodeCoverage]
     public sealed record GetTop50CompetitiveQuery
-        (Guid UserId, ChartType? ChartType) : IRequest<IEnumerable<RecordedPhoenixScore>>
+        (Guid UserId, ChartType? ChartType) : IQuery<IEnumerable<RecordedPhoenixScore>>
     {
     }
 }

@@ -4,7 +4,7 @@ using ScoreTracker.Domain.Records;
 namespace ScoreTracker.Application.Queries
 {
     [ExcludeFromCodeCoverage]
-    public sealed record GetTournamentRolesQuery(Guid TournamentId) : IRequest<IEnumerable<UserTournamentRole>>
+    public sealed record GetTournamentRolesQuery(Guid TournamentId) : IQuery<IEnumerable<UserTournamentRole>>
     {
     }
 }

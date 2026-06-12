@@ -5,6 +5,6 @@ using ScoreTracker.Domain.Models.Titles;
 namespace ScoreTracker.Application.Queries;
 
 [ExcludeFromCodeCoverage]
-public sealed record GetTitleProgressQuery(MixEnum Mix) : IRequest<IEnumerable<TitleProgress>>
+public sealed record GetTitleProgressQuery(MixEnum Mix) : IQuery<IEnumerable<TitleProgress>>
 {
 }

@@ -4,7 +4,7 @@ using ScoreTracker.Domain.Records;
 namespace ScoreTracker.Application.Queries
 {
     [ExcludeFromCodeCoverage]
-    public sealed record GetRandomSettingsQuery : IRequest<IEnumerable<SavedRandomizerSettings>>
+    public sealed record GetRandomSettingsQuery : IQuery<IEnumerable<SavedRandomizerSettings>>
     {
     }
 }

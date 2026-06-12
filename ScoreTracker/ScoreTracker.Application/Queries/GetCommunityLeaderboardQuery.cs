@@ -6,7 +6,7 @@ namespace ScoreTracker.Application.Queries
 {
     [ExcludeFromCodeCoverage]
     public sealed record GetCommunityLeaderboardQuery
-        (Name Community) : IRequest<IEnumerable<CommunityLeaderboardRecord>>
+        (Name Community) : IQuery<IEnumerable<CommunityLeaderboardRecord>>
     {
     }
 }

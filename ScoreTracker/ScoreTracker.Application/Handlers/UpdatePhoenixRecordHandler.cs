@@ -16,8 +16,8 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
         IMessageScheduler scheduler,
         IPlayerScoreBatchAccumulator batches)
     : IRequestHandler<UpdatePhoenixBestAttemptCommand>,
-        IConsumer<UpdatePhoenixRecordHandler.TryFireScoreMessage>,
-        IConsumer<FlushOverdueScoreBatches>
+        IConsumer<UpdatePhoenixRecordHandler.TryFireScoreCommand>,
+        IConsumer<FlushOverdueScoreBatchesCommand>
 {
     public async Task Handle(UpdatePhoenixBestAttemptCommand request, CancellationToken cancellationToken)
     {
@@ -48,16 +48,16 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
         if (batches.AddToBatch(user.User.Id, fireAt, request.ChartId, isNewScore, upscoredFrom))
         {
             await scheduler.SchedulePublish(fireAt + TimeSpan.FromSeconds(5),
-                new TryFireScoreMessage(user.User.Id),
+                new TryFireScoreCommand(user.User.Id),
                 cancellationToken);
         }
     }
 
     public sealed record ScheduleScoreMessage(Guid UserId, Guid[] ChartIds);
 
-    public sealed record TryFireScoreMessage(Guid UserId);
+    public sealed record TryFireScoreCommand(Guid UserId);
 
-    public async Task Consume(ConsumeContext<TryFireScoreMessage> context)
+    public async Task Consume(ConsumeContext<TryFireScoreCommand> context)
     {
         var fireAt = batches.GetFireAt(context.Message.UserId);
         if (fireAt is null) return; // batch already drained by a concurrent TryFire/flush
@@ -66,7 +66,7 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
             // Reschedule to the moving target plus a tiny buffer — using a +2min retry
             // would compound on every reschedule and starve active players.
             await scheduler.SchedulePublish(fireAt.Value + TimeSpan.FromSeconds(5),
-                new TryFireScoreMessage(context.Message.UserId),
+                new TryFireScoreCommand(context.Message.UserId),
                 context.CancellationToken);
             return;
         }
@@ -79,9 +79,9 @@ public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
             context.CancellationToken);
     }
 
-    // Safety net for batches whose scheduled TryFireScoreMessage was lost
+    // Safety net for batches whose scheduled TryFireScoreCommand was lost
     // (in-memory MassTransit transport drops in-flight messages on restart).
-    public async Task Consume(ConsumeContext<FlushOverdueScoreBatches> context)
+    public async Task Consume(ConsumeContext<FlushOverdueScoreBatchesCommand> context)
     {
         var now = dateTimeOffset.Now.UtcDateTime;
         foreach (var entry in batches.Dump())

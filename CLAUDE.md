@@ -57,7 +57,12 @@ Adding a package outside its allowed layer is a violation. Adding a project refe
 
 ### Use case dispatch
 
-- Every business operation is an `IRequest<T>` (or `IRequest`) record in `Application/Commands/` or `Application/Queries/`, paired with an `IRequestHandler<,>` in `Application/Handlers/`. Async work uses `IConsumer<TEvent>` (MassTransit) in the same `Application/Handlers/` folder.
+- **Message taxonomy — folder + name + interface distinguish the kinds** (arch-test enforced, `MessageTaxonomyTests`):
+  - **Queries** — `*Query` records implementing `IQuery<T>` (`ScoreTracker.SharedKernel.Messaging`), in `Application/Queries/` or `PersonalProgress/Queries/`. Read-only; never travel the bus.
+  - **Commands (MediatR)** — `*Command` records implementing `IRequest`/`IRequest<T>`, in `Application/Commands/`.
+  - **Commands (bus triggers)** — `*Command` plain records (not `IRequest`) in `Application/Messages/`, published via `IBus` by `RecurringJobRunner`/admin pages.
+  - **Events** — `*Event` past-tense fact records (never `IRequest`) in `Domain/Events/` (bus) or `Application/Events/` (`INotification`).
+  - Handlers are `IRequestHandler<,>` / `IConsumer<>` implementations in `Application/Handlers/`.
 - **Razor pages, Blazor components, and MVC controllers dispatch exclusively via `IMediator`.** No `DbContext`, repository, or `HttpClient` is injected into Web code. (Exception: `Accessors/` types in Web that *implement* Domain ports.)
 - Background work is published over `IBus.Publish(...)` — past-tense **facts** are records in `Domain/Events/`; imperative **trigger messages** (recurring-job kicks, admin "run this now" buttons) are records in `Application/Messages/`. In-process notifications use `IMediator.Publish(INotification)`.
 - **Recurring scheduled work uses Hangfire** with SQL Server storage (auto-created `HangFire` schema, durable across restarts). Each recurring job is a one-line `IBus.Publish(...)` on `RecurringJobRunner` ([RecurringJobRunner.cs](ScoreTracker/ScoreTracker/HostedServices/RecurringJobRunner.cs)); registrations live in [Program.cs](ScoreTracker/ScoreTracker/Program.cs) via `RecurringJob.AddOrUpdate<RecurringJobRunner>(...)`. Cron expressions are UTC. Do not introduce a second scheduler library; do not reintroduce hosted-timer / self-rescheduling-bus patterns. The Hangfire dashboard is mounted at `/hangfire` and gated on `User.IsAdmin` via [HangfireDashboardAuthorization.cs](ScoreTracker/ScoreTracker/Security/HangfireDashboardAuthorization.cs). Adding a new recurring job = add a method to `RecurringJobRunner` + one `RecurringJob.AddOrUpdate` line. The `PreventRecurringJobs` config flag, when `true`, removes the registrations instead of scheduling them.
@@ -155,7 +160,7 @@ Deliberate, documented divergences. Read these before flagging a violation.
 
 - **MediatR is permitted in `ScoreTracker.Domain`.** ENTERPRISE.md forbids framework types in Domain; this codebase exempts `MediatR` and `Microsoft.Extensions.Logging.Abstractions`. Any other outside dependency in Domain is a violation.
 - **"Saga" is a feature-grouped class, not a state machine.** A `*Saga` (e.g. `BountySaga`, `TierListSaga`, `MatchSaga`, `PlayerRatingSaga`) contains one MassTransit `IConsumer<>` plus related MediatR `IRequestHandler<>` for that feature. It is **not** a `MassTransit.MassTransitStateMachine`.
-- **Bus trigger messages are imperative by design.** `Application/Messages/` records (`RotateWeeklyCharts`, `StartLeaderboardImport`, …) travel over MassTransit but are commands, not events — do not rename them to past-tense or move them back to `Domain/Events/`. (The old "Events/ mixes events and commands" divergence was resolved 2026-06-12.)
+- **Bus trigger messages are imperative by design.** `Application/Messages/` records (`RotateWeeklyChartsCommand`, `StartLeaderboardImportCommand`, …) travel over MassTransit but are commands, not events — do not rename them to past-tense or move them back to `Domain/Events/`. (The old "Events/ mixes events and commands" divergence was resolved 2026-06-12.)
 - **`ScoreTracker.Data` references `ScoreTracker.Application`.** Onion-direction divergence. Slated for removal — do not lean on it for new code.
 - **No domain-vs-integration-event distinction.** Single bounded context with an in-memory transport makes the distinction moot today. Revisit if a second bounded context appears.
 

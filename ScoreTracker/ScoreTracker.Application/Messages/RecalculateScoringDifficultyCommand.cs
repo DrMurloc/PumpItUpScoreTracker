@@ -1,6 +1,6 @@
 namespace ScoreTracker.Application.Messages;
 
 [ExcludeFromCodeCoverage]
-public sealed record RecalculateScoringDifficulty
+public sealed record RecalculateScoringDifficultyCommand
 {
 }

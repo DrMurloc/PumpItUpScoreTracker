@@ -3,10 +3,10 @@ using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Application.Handlers
+namespace ScoreTracker.Application.Queries
 {
     public sealed record GetMyRelativeTierListQuery
-        (ChartType ChartType, DifficultyLevel Level, Guid? UserId = null) : IRequest<IEnumerable<SongTierListEntry>>
+        (ChartType ChartType, DifficultyLevel Level, Guid? UserId = null) : IQuery<IEnumerable<SongTierListEntry>>
     {
     }
 }

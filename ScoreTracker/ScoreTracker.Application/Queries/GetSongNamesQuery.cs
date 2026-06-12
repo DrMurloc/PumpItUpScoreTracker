@@ -5,6 +5,6 @@ using ScoreTracker.Domain.ValueTypes;
 namespace ScoreTracker.Application.Queries;
 
 [ExcludeFromCodeCoverage]
-public sealed record GetSongNamesQuery(MixEnum Mix) : IRequest<IEnumerable<Name>>
+public sealed record GetSongNamesQuery(MixEnum Mix) : IQuery<IEnumerable<Name>>
 {
 }

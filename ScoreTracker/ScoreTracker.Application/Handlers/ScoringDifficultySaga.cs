@@ -9,8 +9,8 @@ using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Application.Handlers
 {
-    public sealed class ScoringDifficultySaga : IConsumer<RecalculateScoringDifficulty>,
-        IConsumer<RecalculateChartLetterDifficulties>
+    public sealed class ScoringDifficultySaga : IConsumer<RecalculateScoringDifficultyCommand>,
+        IConsumer<RecalculateChartLetterDifficultiesCommand>
     {
         private const int LevelDiff = 3;
         private readonly IChartRepository _chartRepository;
@@ -79,14 +79,14 @@ namespace ScoreTracker.Application.Handlers
             await _chartRepository.UpdateChartLetterDifficulties(updates, cancellationToken);
         }
 
-        public async Task Consume(ConsumeContext<RecalculateChartLetterDifficulties> context)
+        public async Task Consume(ConsumeContext<RecalculateChartLetterDifficultiesCommand> context)
         {
             foreach (var level in DifficultyLevel.All)
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double, ChartType.CoOp })
                 await UpdateChartLetterLevel(chartType, level, context.CancellationToken);
         }
 
-        public async Task Consume(ConsumeContext<RecalculateScoringDifficulty> context)
+        public async Task Consume(ConsumeContext<RecalculateScoringDifficultyCommand> context)
         {
             var cancellationToken = context.CancellationToken;
             var charts = (await _chartRepository.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))

@@ -16,10 +16,10 @@ namespace ScoreTracker.Application.Handlers
         IBotClient bot,
         ILogger<WeeklyTournamentSaga> logger, IUserRepository users, IBus bus,
         IDateTimeOffsetAccessor dateTime, IRandomNumberGenerator random) :
-        IConsumer<RotateWeeklyCharts>,
-        IRequestHandler<RegisterWeeklyChartScore>
+        IConsumer<RotateWeeklyChartsCommand>,
+        IRequestHandler<RegisterWeeklyChartScoreCommand>
     {
-        public async Task Consume(ConsumeContext<RotateWeeklyCharts> context)
+        public async Task Consume(ConsumeContext<RotateWeeklyChartsCommand> context)
         {
             var currentWeek = await weeklyTournies.GetWeeklyCharts(context.CancellationToken);
             if (currentWeek.Any(w => w.ExpirationDate > dateTime.Now))
@@ -114,7 +114,7 @@ namespace ScoreTracker.Application.Handlers
                                      (c.Type == ChartType.Double ? baseDoubles :
                                          c.Type == ChartType.Single ? baseSingles : baseDoubles) <= c.Level + 2));
         }
-        public async Task Handle(RegisterWeeklyChartScore request, CancellationToken cancellationToken)
+        public async Task Handle(RegisterWeeklyChartScoreCommand request, CancellationToken cancellationToken)
         {
             var weeklyCharts = (await weeklyTournies.GetWeeklyCharts(cancellationToken)).Select(c => c.ChartId)
                 .Distinct()

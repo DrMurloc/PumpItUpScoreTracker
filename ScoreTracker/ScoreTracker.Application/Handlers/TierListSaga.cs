@@ -1,5 +1,6 @@
 ﻿using MassTransit;
 using MediatR;
+using ScoreTracker.Application.Queries;
 using ScoreTracker.Application.Messages;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;

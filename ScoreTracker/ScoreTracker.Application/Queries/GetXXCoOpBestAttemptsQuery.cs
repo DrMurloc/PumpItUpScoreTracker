@@ -4,6 +4,6 @@ using ScoreTracker.Domain.Models;
 namespace ScoreTracker.Application.Queries;
 
 [ExcludeFromCodeCoverage]
-public sealed class GetXXCoOpBestAttemptsQuery : IRequest<IEnumerable<BestXXChartAttempt>>
+public sealed class GetXXCoOpBestAttemptsQuery : IQuery<IEnumerable<BestXXChartAttempt>>
 {
 }

@@ -1,6 +1,6 @@
 namespace ScoreTracker.Application.Messages;
 
 [ExcludeFromCodeCoverage]
-public sealed record RotateWeeklyCharts
+public sealed record RecalculateChartLetterDifficultiesCommand
 {
 }

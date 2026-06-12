@@ -7,7 +7,7 @@ namespace ScoreTracker.Application.Queries
 {
     [ExcludeFromCodeCoverage]
     public sealed record GetPlayerScoreQualityQuery
-        (DifficultyLevel Level, ChartType ChartType) : IRequest<IDictionary<Guid, ScoreRankingRecord>>
+        (DifficultyLevel Level, ChartType ChartType) : IQuery<IDictionary<Guid, ScoreRankingRecord>>
     {
     }
 }

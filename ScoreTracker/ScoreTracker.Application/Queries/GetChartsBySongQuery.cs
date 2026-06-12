@@ -6,6 +6,6 @@ using ScoreTracker.Domain.ValueTypes;
 namespace ScoreTracker.Application.Queries;
 
 [ExcludeFromCodeCoverage]
-public sealed record GetChartsBySongQuery(MixEnum Mix, Name SongName) : IRequest<IEnumerable<Chart>>
+public sealed record GetChartsBySongQuery(MixEnum Mix, Name SongName) : IQuery<IEnumerable<Chart>>
 {
 }

@@ -46,12 +46,12 @@ public sealed class MarchOfMurlocsHandlerTests
         var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
             scheduler.Object, dateTime.Object);
 
-        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.TryScheduleMoM()).Object);
+        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.TryScheduleMoMCommand()).Object);
 
-        bus.Verify(b => b.Publish(It.IsAny<MarchOfMurlocsHandler.CycleMoM>(), It.IsAny<CancellationToken>()),
+        bus.Verify(b => b.Publish(It.IsAny<MarchOfMurlocsHandler.CycleMoMCommand>(), It.IsAny<CancellationToken>()),
             Times.Once);
         scheduler.Verify(s => s.SchedulePublish(It.IsAny<DateTime>(),
-                It.IsAny<MarchOfMurlocsHandler.CycleMoM>(), It.IsAny<CancellationToken>()),
+                It.IsAny<MarchOfMurlocsHandler.CycleMoMCommand>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -72,9 +72,9 @@ public sealed class MarchOfMurlocsHandlerTests
         var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
             scheduler.Object, dateTime.Object);
 
-        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.TryScheduleMoM()).Object);
+        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.TryScheduleMoMCommand()).Object);
 
-        bus.Verify(b => b.Publish(It.IsAny<MarchOfMurlocsHandler.CycleMoM>(), It.IsAny<CancellationToken>()),
+        bus.Verify(b => b.Publish(It.IsAny<MarchOfMurlocsHandler.CycleMoMCommand>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -95,13 +95,13 @@ public sealed class MarchOfMurlocsHandlerTests
         var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
             scheduler.Object, dateTime.Object);
 
-        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.TryScheduleMoM()).Object);
+        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.TryScheduleMoMCommand()).Object);
 
-        bus.Verify(b => b.Publish(It.IsAny<MarchOfMurlocsHandler.CycleMoM>(), It.IsAny<CancellationToken>()),
+        bus.Verify(b => b.Publish(It.IsAny<MarchOfMurlocsHandler.CycleMoMCommand>(), It.IsAny<CancellationToken>()),
             Times.Never);
         scheduler.Verify(s => s.SchedulePublish(
                 (endDate + TimeSpan.FromMinutes(1)).DateTime,
-                It.IsAny<MarchOfMurlocsHandler.CycleMoM>(),
+                It.IsAny<MarchOfMurlocsHandler.CycleMoMCommand>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -143,7 +143,7 @@ public sealed class MarchOfMurlocsHandlerTests
         var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
             scheduler.Object, dateTime.Object);
 
-        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.CycleMoM()).Object);
+        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.CycleMoMCommand()).Object);
 
         var newTournaments = savedConfigurations.Where(s => s.IsMom).ToArray();
         Assert.Equal(2, newTournaments.Length);
@@ -162,7 +162,7 @@ public sealed class MarchOfMurlocsHandlerTests
     public async Task TrySchedulePostponesCycleWhenLatestMoMIsActiveEvenIfExpiredOldMoMExists()
     {
         // Regression: pre-fix, FirstOrDefault(IsMoM) could return an old expired MoM and trigger
-        // CycleMoM on every tick — the runaway that filled the DB with garbage tournaments. The
+        // CycleMoMCommand on every tick — the runaway that filled the DB with garbage tournaments. The
         // handler must now pick the latest MoM by EndDate.
         var tournaments = new Mock<ITournamentRepository>();
         var charts = new Mock<IChartRepository>();
@@ -181,13 +181,13 @@ public sealed class MarchOfMurlocsHandlerTests
         var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
             scheduler.Object, dateTime.Object);
 
-        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.TryScheduleMoM()).Object);
+        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.TryScheduleMoMCommand()).Object);
 
-        bus.Verify(b => b.Publish(It.IsAny<MarchOfMurlocsHandler.CycleMoM>(), It.IsAny<CancellationToken>()),
+        bus.Verify(b => b.Publish(It.IsAny<MarchOfMurlocsHandler.CycleMoMCommand>(), It.IsAny<CancellationToken>()),
             Times.Never);
         scheduler.Verify(s => s.SchedulePublish(
                 (activeEnd + TimeSpan.FromMinutes(1)).DateTime,
-                It.IsAny<MarchOfMurlocsHandler.CycleMoM>(),
+                It.IsAny<MarchOfMurlocsHandler.CycleMoMCommand>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -195,7 +195,7 @@ public sealed class MarchOfMurlocsHandlerTests
     [Fact]
     public async Task CycleDoesNothingWhenFutureDatedMoMAlreadyExists()
     {
-        // Idempotency: a duplicate CycleMoM (e.g. from in-memory transport replay or a double
+        // Idempotency: a duplicate CycleMoMCommand (e.g. from in-memory transport replay or a double
         // publish) must not create another pair of tournaments when one is already active.
         var tournaments = new Mock<ITournamentRepository>();
         var charts = new Mock<IChartRepository>();
@@ -211,7 +211,7 @@ public sealed class MarchOfMurlocsHandlerTests
         var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
             scheduler.Object, dateTime.Object);
 
-        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.CycleMoM()).Object);
+        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.CycleMoMCommand()).Object);
 
         tournaments.Verify(t => t.CreateOrSaveTournament(It.IsAny<TournamentConfiguration>(),
                 It.IsAny<CancellationToken>()),

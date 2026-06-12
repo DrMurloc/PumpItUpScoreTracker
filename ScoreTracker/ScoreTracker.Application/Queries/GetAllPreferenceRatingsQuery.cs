@@ -5,7 +5,7 @@ using ScoreTracker.Domain.Records;
 namespace ScoreTracker.Application.Queries
 {
     [ExcludeFromCodeCoverage]
-    public sealed record GetAllPreferenceRatingsQuery(MixEnum Mix) : IRequest<IEnumerable<ChartPreferenceRatingRecord>>
+    public sealed record GetAllPreferenceRatingsQuery(MixEnum Mix) : IQuery<IEnumerable<ChartPreferenceRatingRecord>>
     {
     }
 }

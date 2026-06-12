@@ -22,7 +22,7 @@ namespace ScoreTracker.Application.Handlers
         IRequestHandler<UpdateSongImagesCommand>,
         IRequestHandler<GetGameCardsQuery, IEnumerable<GameCardRecord>>,
         IRequestHandler<GetLastLeaderboardImportTimestampQuery, DateTimeOffset?>,
-        IConsumer<StartLeaderboardImport>
+        IConsumer<StartLeaderboardImportCommand>
     {
         private readonly IOfficialSiteClient _officialSite;
         private readonly ITierListRepository _tierLists;
@@ -197,13 +197,13 @@ namespace ScoreTracker.Application.Handlers
             }
 
             if (accountData.AccountName == "INVALID")
-                await _mediator.Publish(new ImportStatusUpdated(_currentUser.User.Id,
+                await _mediator.Publish(new ImportStatusUpdatedEvent(_currentUser.User.Id,
                     "Invalid Login Information", Array.Empty<RecordedPhoenixScore>()), cancellationToken);
 
 
             if (request.SyncPiuTracker)
             {
-                await _mediator.Publish(new ImportStatusUpdated(_currentUser.User.Id,
+                await _mediator.Publish(new ImportStatusUpdatedEvent(_currentUser.User.Id,
                     "Syncing PIU Tracker... (Can take a while if it's your first time)",
                     Array.Empty<RecordedPhoenixScore>()));
                 try
@@ -213,14 +213,14 @@ namespace ScoreTracker.Application.Handlers
                 catch (PiuTrackerUsedTooRecentException)
                 {
                     await _mediator.Publish(
-                        new ImportStatusError(userId,
+                        new ImportStatusErrorEvent(userId,
                             "PIU Tracker sync failed, you've imported too recently."),
                         cancellationToken);
                 }
                 catch (Exception e)
                 {
                     await _mediator.Publish(
-                        new ImportStatusError(userId,
+                        new ImportStatusErrorEvent(userId,
                             "PIU Tracker sync failed. Check with DrMurloc or Tusa if this persists"),
                         cancellationToken);
                     _logger.LogWarning(e, "PIU Tracker sync failed");
@@ -273,7 +273,7 @@ namespace ScoreTracker.Application.Handlers
                 if (count % 10 != 0) continue;
 
                 await _mediator.Publish(
-                    new ImportStatusUpdated(_currentUser.User.Id,
+                    new ImportStatusUpdatedEvent(_currentUser.User.Id,
                         $"Saving chart result {count} of {scores.Length}",
                         batch.ToArray()),
                     cancellationToken);
@@ -281,7 +281,7 @@ namespace ScoreTracker.Application.Handlers
             }
 
             await _mediator.Publish(
-                new ImportStatusUpdated(_currentUser.User.Id,
+                new ImportStatusUpdatedEvent(_currentUser.User.Id,
                     "Charts finished saving",
                     batch.ToArray()),
                 cancellationToken);
@@ -327,7 +327,7 @@ namespace ScoreTracker.Application.Handlers
             return _leaderboards.GetLastImportTimestamp(cancellationToken);
         }
 
-        public async Task Consume(ConsumeContext<StartLeaderboardImport> context)
+        public async Task Consume(ConsumeContext<StartLeaderboardImportCommand> context)
         {
             await _mediator.Send(new ProcessChartPopularityCommand());
             await _mediator.Send(new ProcessOfficialLeaderboardsCommand());

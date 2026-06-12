@@ -438,8 +438,8 @@
             NavManager.NavigateTo("/Login");
             return;
         }
-        MainLayout.ImportStatusUpdated += StatusUpdate;
-        MainLayout.ImportStatusError += ImportError;
+        MainLayout.ImportStatusUpdatedEvent += StatusUpdate;
+        MainLayout.ImportStatusErrorEvent += ImportError;
         _isPublic = CurrentUser.User.IsPublic;
         _userId = CurrentUser.User.Id;
         _selectedId = await UiSettings.GetSetting("PhoenixScoreUpload__LastGameId") ?? "";
@@ -449,13 +449,13 @@
     }
 
     private List<string> _errors = new List<string>();
-    private void ImportError(object? origin, ImportStatusError e)
+    private void ImportError(object? origin, ImportStatusErrorEvent e)
     {
         if (e.UserId != _userId) return;
         _errors.Add(e.Error);
         InvokeAsync(StateHasChanged);
     }
-    private void StatusUpdate(object? origin, ImportStatusUpdated e)
+    private void StatusUpdate(object? origin, ImportStatusUpdatedEvent e)
     {
         if (e.UserId != _userId) return;
         foreach (var score in e.Scores)
@@ -605,7 +605,7 @@ var csvString=""data:text/csv;charset=utf-8,"";
 
     public void Dispose()
     {
-        MainLayout.ImportStatusUpdated -= StatusUpdate;
-        MainLayout.ImportStatusError -= ImportError;
+        MainLayout.ImportStatusUpdatedEvent -= StatusUpdate;
+        MainLayout.ImportStatusErrorEvent -= ImportError;
     }
 }

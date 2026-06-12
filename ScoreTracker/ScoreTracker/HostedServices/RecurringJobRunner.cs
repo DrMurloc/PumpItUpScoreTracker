@@ -18,23 +18,23 @@ public sealed class RecurringJobRunner
         _bus.Publish(new ProcessScoresTiersListCommand());
 
     public Task PublishCalculateScoringDifficulty() =>
-        _bus.Publish(new RecalculateScoringDifficulty());
+        _bus.Publish(new RecalculateScoringDifficultyCommand());
 
     public Task PublishUpdateWeeklyCharts() =>
-        _bus.Publish(new RotateWeeklyCharts());
+        _bus.Publish(new RotateWeeklyChartsCommand());
 
     public Task PublishProcessPassTierList() =>
         _bus.Publish(new ProcessPassTierListCommand());
 
     public Task PublishCalculateChartLetterDifficulties() =>
-        _bus.Publish(new RecalculateChartLetterDifficulties());
+        _bus.Publish(new RecalculateChartLetterDifficultiesCommand());
 
     public Task PublishStartLeaderboardImport() =>
-        _bus.Publish(new StartLeaderboardImport());
+        _bus.Publish(new StartLeaderboardImportCommand());
 
     public Task PublishTryScheduleMoM() =>
-        _bus.Publish(new MarchOfMurlocsHandler.TryScheduleMoM());
+        _bus.Publish(new MarchOfMurlocsHandler.TryScheduleMoMCommand());
 
     public Task PublishFlushOverdueScoreBatches() =>
-        _bus.Publish(new FlushOverdueScoreBatches());
+        _bus.Publish(new FlushOverdueScoreBatchesCommand());
 }

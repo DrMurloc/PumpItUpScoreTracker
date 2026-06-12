@@ -6,7 +6,7 @@ namespace ScoreTracker.Application.Queries
 {
     [ExcludeFromCodeCoverage]
     public sealed record GetMatchLinksFromMatchQuery
-        (Guid TournamentId, Name FromMatchName) : IRequest<IEnumerable<MatchLink>>
+        (Guid TournamentId, Name FromMatchName) : IQuery<IEnumerable<MatchLink>>
     {
     }
 }

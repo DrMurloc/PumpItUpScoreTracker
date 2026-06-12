@@ -170,7 +170,7 @@ Where possible, capture the contract: real responses go in test fixtures, not ha
 
 ENTERPRISE: *External API and Messaging Tests*
 
-- [ ] One end-to-end test per recurring scheduled message (`UpdateBountiesEvent`, `RecalculateScoringDifficulty`, etc.) — start the in-memory bus, publish, assert the consumer side effects via mocked Domain ports.
+- [ ] One end-to-end test per recurring scheduled message (`UpdateBountiesEvent`, `RecalculateScoringDifficultyCommand`, etc.) — start the in-memory bus, publish, assert the consumer side effects via mocked Domain ports.
 - [ ] Tests classify as `component` (the in-memory transport is production-real, but ports are mocked).
 - [ ] Reference: `RecurringJobHostedService` is the publisher; saga classes are the consumers.
 

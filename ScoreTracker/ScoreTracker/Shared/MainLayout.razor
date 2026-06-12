@@ -12,9 +12,9 @@
 @inherits LayoutComponentBase
 @inject ICurrentUserAccessor CurrentUser
 @implements INotificationHandler<MatchUpdatedEvent>
-@implements INotificationHandler<ImportStatusUpdated>
+@implements INotificationHandler<ImportStatusUpdatedEvent>
 @implements INotificationHandler<PlayerStatsUpdatedEvent>
-@implements INotificationHandler<ImportStatusError>
+@implements INotificationHandler<ImportStatusErrorEvent>
 <PageTitle>@L["PIU Scores"]</PageTitle>
 
 <MudThemeProvider Theme="Theme" />
@@ -261,9 +261,9 @@
             }
         };
 
-    public static event EventHandler<ImportStatusUpdated>? ImportStatusUpdated;
+    public static event EventHandler<ImportStatusUpdatedEvent>? ImportStatusUpdatedEvent;
     public static event EventHandler<MatchUpdatedEvent>? MatchUpdated;
-    public static event EventHandler<ImportStatusError>? ImportStatusError;
+    public static event EventHandler<ImportStatusErrorEvent>? ImportStatusErrorEvent;
     public Task Handle(MatchUpdatedEvent notification, CancellationToken cancellationToken)
     {
         MatchUpdated?.Invoke(this, notification);
@@ -272,9 +272,9 @@
     private string UserName { get; set; }
     public int Rating { get; set; }
 
-    public Task Handle(ImportStatusUpdated notification, CancellationToken cancellationToken)
+    public Task Handle(ImportStatusUpdatedEvent notification, CancellationToken cancellationToken)
     {
-        ImportStatusUpdated?.Invoke(this, notification);
+        ImportStatusUpdatedEvent?.Invoke(this, notification);
         return Task.CompletedTask;
     }
 
@@ -289,9 +289,9 @@
         return Task.CompletedTask;
     }
 
-    public Task Handle(ImportStatusError notification, CancellationToken cancellationToken)
+    public Task Handle(ImportStatusErrorEvent notification, CancellationToken cancellationToken)
     {
-        ImportStatusError?.Invoke(this, notification);
+        ImportStatusErrorEvent?.Invoke(this, notification);
         return Task.CompletedTask;
     }
 }

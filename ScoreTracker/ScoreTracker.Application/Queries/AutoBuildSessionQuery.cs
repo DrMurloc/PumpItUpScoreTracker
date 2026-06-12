@@ -6,7 +6,7 @@ namespace ScoreTracker.Application.Queries
     [ExcludeFromCodeCoverage]
     public sealed record AutoBuildSessionQuery
     (TournamentConfiguration Configuration, Guid UserId,
-        TimeSpan MinimumRestPerChart) : IRequest<TournamentSession>
+        TimeSpan MinimumRestPerChart) : IQuery<TournamentSession>
     {
     }
 }

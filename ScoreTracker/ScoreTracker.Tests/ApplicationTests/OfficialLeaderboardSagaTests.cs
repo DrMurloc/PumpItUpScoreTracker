@@ -36,7 +36,7 @@ public sealed class OfficialLeaderboardSagaTests
         var worldRankings = new Mock<IWorldRankingService>();
         var saga = BuildSaga(mediator: mediator, worldRankings: worldRankings);
 
-        await saga.Consume(BuildContext(new StartLeaderboardImport()));
+        await saga.Consume(BuildContext(new StartLeaderboardImportCommand()));
 
         mediator.Verify(m => m.Send(It.IsAny<ProcessChartPopularityCommand>(),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -327,7 +327,7 @@ public sealed class OfficialLeaderboardSagaTests
 
         await saga.Handle(ImportCommand(syncPiuTracker: true), CancellationToken.None);
 
-        f.Mediator.Verify(m => m.Publish(It.Is<ImportStatusError>(e => e.UserId == ImportUserId),
+        f.Mediator.Verify(m => m.Publish(It.Is<ImportStatusErrorEvent>(e => e.UserId == ImportUserId),
             It.IsAny<CancellationToken>()), Times.Once);
         // The sync failure does not abort the import — profile save still happens.
         f.Users.Verify(u => u.SaveUser(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -368,7 +368,7 @@ public sealed class OfficialLeaderboardSagaTests
 
         await saga.Handle(ImportCommand(), CancellationToken.None);
 
-        f.Mediator.Verify(m => m.Publish(It.Is<ImportStatusUpdated>(s =>
+        f.Mediator.Verify(m => m.Publish(It.Is<ImportStatusUpdatedEvent>(s =>
                 s.Status == "Invalid Login Information"),
             It.IsAny<CancellationToken>()), Times.Once);
     }

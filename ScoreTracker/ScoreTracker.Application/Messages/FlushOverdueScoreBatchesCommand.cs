@@ -1,6 +1,6 @@
 namespace ScoreTracker.Application.Messages;
 
 [ExcludeFromCodeCoverage]
-public sealed record FlushOverdueScoreBatches
+public sealed record FlushOverdueScoreBatchesCommand
 {
 }

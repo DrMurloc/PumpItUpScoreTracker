@@ -19,7 +19,7 @@ public interface IPlayerScoreBatchAccumulator
     /// new-clear takes precedence and the upscore is dropped.
     ///
     /// Returns true if this call created a new batch (caller should schedule a
-    /// TryFireScoreMessage); false if a batch was already active (its fire-at has
+    /// TryFireScoreCommand); false if a batch was already active (its fire-at has
     /// just been pushed forward).
     /// </summary>
     bool AddToBatch(Guid userId, DateTime fireAt, Guid chartId, bool isNewClear, PhoenixScore? upscoredFrom);

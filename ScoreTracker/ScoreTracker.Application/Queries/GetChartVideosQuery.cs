@@ -5,6 +5,6 @@ namespace ScoreTracker.Application.Queries;
 
 [ExcludeFromCodeCoverage]
 public sealed record GetChartVideosQuery
-    (IEnumerable<Guid>? ChartIds = null) : IRequest<IEnumerable<ChartVideoInformation>>
+    (IEnumerable<Guid>? ChartIds = null) : IQuery<IEnumerable<ChartVideoInformation>>
 {
 }

@@ -4,7 +4,7 @@ using ScoreTracker.Domain.Records;
 namespace ScoreTracker.Application.Queries
 {
     [ExcludeFromCodeCoverage]
-    public sealed record GetAllChartScoreAggregatesQuery : IRequest<IEnumerable<ChartScoreAggregate>>
+    public sealed record GetAllChartScoreAggregatesQuery : IQuery<IEnumerable<ChartScoreAggregate>>
     {
     }
 }

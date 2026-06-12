@@ -37,7 +37,7 @@ public sealed class WeeklyTournamentSagaTests
             });
         var saga = BuildSaga(weeklyTournies: weeklyTournies);
 
-        await saga.Consume(BuildContext(new RotateWeeklyCharts()));
+        await saga.Consume(BuildContext(new RotateWeeklyChartsCommand()));
 
         weeklyTournies.Verify(w => w.ClearTheBoard(It.IsAny<CancellationToken>()), Times.Never);
         weeklyTournies.Verify(w => w.RegisterWeeklyChart(It.IsAny<WeeklyTournamentChart>(),
@@ -61,7 +61,7 @@ public sealed class WeeklyTournamentSagaTests
                     IsBroken: false, PhotoUrl: null, CompetitiveLevel: 20)
             });
 
-        await ctx.Saga.Consume(BuildContext(new RotateWeeklyCharts()));
+        await ctx.Saga.Consume(BuildContext(new RotateWeeklyChartsCommand()));
 
         ctx.WeeklyTournies.Verify(w => w.WriteHistories(
             It.Is<IEnumerable<UserTourneyHistory>>(hs => hs.Any(h => h.UserId == entryUser
@@ -78,7 +78,7 @@ public sealed class WeeklyTournamentSagaTests
         var ctx = ExpiredWeekContext();
         var nextMonday3am = new DateTimeOffset(2026, 5, 4, 3, 0, 0, TimeSpan.Zero);
 
-        await ctx.Saga.Consume(BuildContext(new RotateWeeklyCharts()));
+        await ctx.Saga.Consume(BuildContext(new RotateWeeklyChartsCommand()));
 
         ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(
             It.Is<WeeklyTournamentChart>(c => c.ExpirationDate == nextMonday3am),
@@ -96,7 +96,7 @@ public sealed class WeeklyTournamentSagaTests
         ctx.WeeklyTournies.Setup(w => w.GetAlreadyPlayedCharts(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { played.Id });
 
-        await ctx.Saga.Consume(BuildContext(new RotateWeeklyCharts()));
+        await ctx.Saga.Consume(BuildContext(new RotateWeeklyChartsCommand()));
 
         ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(
             It.Is<WeeklyTournamentChart>(c => c.ChartId == unplayed.Id),
@@ -119,7 +119,7 @@ public sealed class WeeklyTournamentSagaTests
         ctx.WeeklyTournies.Setup(w => w.GetAlreadyPlayedCharts(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { coop3.Id, coop4.Id, coop5.Id });
 
-        await ctx.Saga.Consume(BuildContext(new RotateWeeklyCharts()));
+        await ctx.Saga.Consume(BuildContext(new RotateWeeklyChartsCommand()));
 
         ctx.WeeklyTournies.Verify(w => w.ClearAlreadyPlayedCharts(
             It.Is<IEnumerable<Guid>>(ids => ids.Contains(coop3.Id) && ids.Contains(coop4.Id)
@@ -143,7 +143,7 @@ public sealed class WeeklyTournamentSagaTests
         ctx.WeeklyTournies.Setup(w => w.GetAlreadyPlayedCharts(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { ctx.Charts["coop3"].Id, ctx.Charts["coop5"].Id });
 
-        await ctx.Saga.Consume(BuildContext(new RotateWeeklyCharts()));
+        await ctx.Saga.Consume(BuildContext(new RotateWeeklyChartsCommand()));
 
         ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(
             It.Is<WeeklyTournamentChart>(c => c.ChartId == coop4.Id),
@@ -161,7 +161,7 @@ public sealed class WeeklyTournamentSagaTests
 
         var requestedChartId = Guid.NewGuid();
         await saga.Handle(
-            new RegisterWeeklyChartScore(Entry(requestedChartId, score: 950000)),
+            new RegisterWeeklyChartScoreCommand(Entry(requestedChartId, score: 950000)),
             CancellationToken.None);
 
         weeklyTournies.Verify(w => w.SaveEntry(It.IsAny<WeeklyTournamentEntry>(),
@@ -178,7 +178,7 @@ public sealed class WeeklyTournamentSagaTests
 
         var userId = Guid.NewGuid();
         await ctx.Saga.Handle(
-            new RegisterWeeklyChartScore(Entry(chart.Id, score: 950000, userId: userId)),
+            new RegisterWeeklyChartScoreCommand(Entry(chart.Id, score: 950000, userId: userId)),
             CancellationToken.None);
 
         // Single chart → uses SinglesCompetitiveLevel.
@@ -201,7 +201,7 @@ public sealed class WeeklyTournamentSagaTests
         });
 
         await ctx.Saga.Handle(
-            new RegisterWeeklyChartScore(Entry(chart.Id, score: 800000, userId: userId)),
+            new RegisterWeeklyChartScoreCommand(Entry(chart.Id, score: 800000, userId: userId)),
             CancellationToken.None);
 
         ctx.WeeklyTournies.Verify(w => w.SaveEntry(
@@ -222,7 +222,7 @@ public sealed class WeeklyTournamentSagaTests
         });
 
         await ctx.Saga.Handle(
-            new RegisterWeeklyChartScore(Entry(chart.Id, score: 990000, userId: userId)),
+            new RegisterWeeklyChartScoreCommand(Entry(chart.Id, score: 990000, userId: userId)),
             CancellationToken.None);
 
         ctx.WeeklyTournies.Verify(w => w.SaveEntry(
@@ -243,7 +243,7 @@ public sealed class WeeklyTournamentSagaTests
         });
 
         await ctx.Saga.Handle(
-            new RegisterWeeklyChartScore(Entry(chart.Id, score: 950000, userId: userId, isBroken: false)),
+            new RegisterWeeklyChartScoreCommand(Entry(chart.Id, score: 950000, userId: userId, isBroken: false)),
             CancellationToken.None);
 
         ctx.WeeklyTournies.Verify(w => w.SaveEntry(
@@ -264,7 +264,7 @@ public sealed class WeeklyTournamentSagaTests
             .ReturnsAsync(new UserBuilder().WithId(userId).Build());
 
         await ctx.Saga.Handle(
-            new RegisterWeeklyChartScore(Entry(chart.Id, score: 950000, userId: userId)),
+            new RegisterWeeklyChartScoreCommand(Entry(chart.Id, score: 950000, userId: userId)),
             CancellationToken.None);
 
         ctx.Bus.Verify(b => b.Publish(
@@ -287,7 +287,7 @@ public sealed class WeeklyTournamentSagaTests
         });
 
         await ctx.Saga.Handle(
-            new RegisterWeeklyChartScore(Entry(chart.Id, score: 950000, userId: userId)),
+            new RegisterWeeklyChartScoreCommand(Entry(chart.Id, score: 950000, userId: userId)),
             CancellationToken.None);
 
         ctx.Bus.Verify(b => b.Publish(It.IsAny<UserWeeklyChartsProgressedEvent>(),

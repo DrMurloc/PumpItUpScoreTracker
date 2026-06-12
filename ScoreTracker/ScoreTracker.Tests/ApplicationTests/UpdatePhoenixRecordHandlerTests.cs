@@ -45,7 +45,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
             It.IsAny<CancellationToken>()), Times.Once);
         ctx.Scheduler.Verify(s => s.SchedulePublish(
             It.IsAny<DateTime>(),
-            It.Is<UpdatePhoenixRecordHandler.TryFireScoreMessage>(m => m.UserId == UserId),
+            It.Is<UpdatePhoenixRecordHandler.TryFireScoreCommand>(m => m.UserId == UserId),
             It.IsAny<CancellationToken>()), Times.Once);
         ctx.Batches.Verify(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, true,
             It.Is<PhoenixScore?>(s => !s.HasValue)), Times.Once);
@@ -188,7 +188,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
             It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<PhoenixScore?>()), Times.Never);
         ctx.Scheduler.Verify(s => s.SchedulePublish(
             It.IsAny<DateTime>(),
-            It.IsAny<UpdatePhoenixRecordHandler.TryFireScoreMessage>(),
+            It.IsAny<UpdatePhoenixRecordHandler.TryFireScoreCommand>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -208,7 +208,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
 
         ctx.Scheduler.Verify(s => s.SchedulePublish(
             It.IsAny<DateTime>(),
-            It.IsAny<UpdatePhoenixRecordHandler.TryFireScoreMessage>(),
+            It.IsAny<UpdatePhoenixRecordHandler.TryFireScoreCommand>(),
             It.IsAny<CancellationToken>()), Times.Never);
         ctx.Batches.Verify(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, true,
             It.IsAny<PhoenixScore?>()), Times.Once);
@@ -221,13 +221,13 @@ public sealed class UpdatePhoenixRecordHandlerTests
         var fireAt = Now.UtcDateTime + TimeSpan.FromMinutes(1);
         ctx.Batches.Setup(b => b.GetFireAt(UserId)).Returns(fireAt);
 
-        await ctx.Handler.Consume(BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreMessage(UserId)));
+        await ctx.Handler.Consume(BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreCommand(UserId)));
 
         // Reschedule must use a small (+5s) buffer, NOT +2min — the latter compounds on
         // every retry and starves active players.
         ctx.Scheduler.Verify(s => s.SchedulePublish(
             fireAt + TimeSpan.FromSeconds(5),
-            It.Is<UpdatePhoenixRecordHandler.TryFireScoreMessage>(m => m.UserId == UserId),
+            It.Is<UpdatePhoenixRecordHandler.TryFireScoreCommand>(m => m.UserId == UserId),
             It.IsAny<CancellationToken>()), Times.Once);
         ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoreUpdatedEvent>(),
             It.IsAny<CancellationToken>()), Times.Never);
@@ -244,7 +244,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
         ctx.Batches.Setup(b => b.GetFireAt(UserId)).Returns(fireAt);
         ctx.Batches.Setup(b => b.TakeBatch(UserId)).Returns(new PendingScoreBatch(newCharts, upscored));
 
-        await ctx.Handler.Consume(BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreMessage(UserId)));
+        await ctx.Handler.Consume(BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreCommand(UserId)));
 
         ctx.Bus.Verify(b => b.Publish(
             It.Is<PlayerScoreUpdatedEvent>(e => e.UserId == UserId
@@ -253,7 +253,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
             It.IsAny<CancellationToken>()), Times.Once);
         ctx.Scheduler.Verify(s => s.SchedulePublish(
             It.IsAny<DateTime>(),
-            It.IsAny<UpdatePhoenixRecordHandler.TryFireScoreMessage>(),
+            It.IsAny<UpdatePhoenixRecordHandler.TryFireScoreCommand>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -266,13 +266,13 @@ public sealed class UpdatePhoenixRecordHandlerTests
         var ctx = new HandlerContext();
         ctx.Batches.Setup(b => b.GetFireAt(UserId)).Returns((DateTime?)null);
 
-        await ctx.Handler.Consume(BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreMessage(UserId)));
+        await ctx.Handler.Consume(BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreCommand(UserId)));
 
         ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoreUpdatedEvent>(),
             It.IsAny<CancellationToken>()), Times.Never);
         ctx.Scheduler.Verify(s => s.SchedulePublish(
             It.IsAny<DateTime>(),
-            It.IsAny<UpdatePhoenixRecordHandler.TryFireScoreMessage>(),
+            It.IsAny<UpdatePhoenixRecordHandler.TryFireScoreCommand>(),
             It.IsAny<CancellationToken>()), Times.Never);
         ctx.Batches.Verify(b => b.TakeBatch(It.IsAny<Guid>()), Times.Never);
     }
@@ -287,7 +287,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
         ctx.Batches.Setup(b => b.GetFireAt(UserId)).Returns(fireAt);
         ctx.Batches.Setup(b => b.TakeBatch(UserId)).Returns((PendingScoreBatch?)null);
 
-        await ctx.Handler.Consume(BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreMessage(UserId)));
+        await ctx.Handler.Consume(BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreCommand(UserId)));
 
         ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoreUpdatedEvent>(),
             It.IsAny<CancellationToken>()), Times.Never);
@@ -317,7 +317,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
             .Returns(new PendingScoreBatch(Array.Empty<Guid>(),
                 new Dictionary<Guid, int> { { upscoreChartB, 850000 } }));
 
-        await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatches()));
+        await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatchesCommand()));
 
         ctx.Batches.Verify(b => b.TakeBatch(overdueUserA), Times.Once);
         ctx.Batches.Verify(b => b.TakeBatch(overdueUserB), Times.Once);
@@ -339,7 +339,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
     [Fact]
     public async Task FlushSkipsRacedBatchesWhenTakeBatchReturnsNull()
     {
-        // If the original TryFireScoreMessage drains the user between Dump() and
+        // If the original TryFireScoreCommand drains the user between Dump() and
         // TakeBatch(), TakeBatch returns null — we must NOT publish a noisy empty event.
         var ctx = new HandlerContext();
         var racedUser = Guid.NewGuid();
@@ -350,7 +350,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
         });
         ctx.Batches.Setup(b => b.TakeBatch(racedUser)).Returns((PendingScoreBatch?)null);
 
-        await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatches()));
+        await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatchesCommand()));
 
         ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoreUpdatedEvent>(),
             It.IsAny<CancellationToken>()), Times.Never);
@@ -362,7 +362,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
         var ctx = new HandlerContext();
         ctx.Batches.Setup(b => b.Dump()).Returns(Array.Empty<BatchAccumulatorSnapshotEntry>());
 
-        await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatches()));
+        await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatchesCommand()));
 
         ctx.Batches.Verify(b => b.TakeBatch(It.IsAny<Guid>()), Times.Never);
         ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoreUpdatedEvent>(),

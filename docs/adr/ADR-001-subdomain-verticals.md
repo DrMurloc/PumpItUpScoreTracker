@@ -26,6 +26,8 @@ Plus `ScoreTracker.SharedKernel` (not a vertical — the PIU Game Model). `Score
 
 ### D3. Communication: push facts, pull questions
 
+> **Amended 2026-06-12 (owner directive):** the three message kinds are distinguished by folder, name, and interface — queries are `*Query` records implementing `IQuery<T>` (SharedKernel.Messaging) and never travel the bus; commands are `*Command` records (MediatR `IRequest` in `Commands/`, plain bus triggers in `Messages/`); events are past-tense `*Event` records, never `IRequest`. Enforced by `MessageTaxonomyTests` ratchets.
+
 - **Push** — MassTransit events: past-tense facts, **fat** (carrying the producer's facts so consumers don't reach back), with an envelope (`eventId`, `occurredAt`, `source`, `schemaVersion`). Recurring-job trigger messages also live in the owning vertical's Contracts.
 - **Pull** — reader interfaces (`IScoreReader`, `IPlayerStatsReader`, `ICatalogReader`, …): synchronous questions through the owner's front door, returning contract DTOs/kernel types.
 - **Nothing else.** No shared tables, no cross-vertical joins, no foreign repository imports, no cross-vertical EF navigations. Consumer-local projections fed by events are the sanctioned escape hatch where a reader proves too chatty (reference example: M.o.M. snapshotting scoring levels at cycle time).

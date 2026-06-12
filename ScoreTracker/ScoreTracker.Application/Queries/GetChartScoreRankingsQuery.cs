@@ -5,7 +5,7 @@ namespace ScoreTracker.Application.Queries
 {
     [ExcludeFromCodeCoverage]
     public sealed record GetChartScoreRankingsQuery
-        (IEnumerable<Guid> ChartIds) : IRequest<IDictionary<Guid, ScoreRankingRecord>>
+        (IEnumerable<Guid> ChartIds) : IQuery<IDictionary<Guid, ScoreRankingRecord>>
     {
     }
 }

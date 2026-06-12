@@ -6,7 +6,7 @@ namespace ScoreTracker.Application.Queries
 {
     [ExcludeFromCodeCoverage]
     public sealed record GetRecommendedChartsQuery
-        (ChartType? ChartType, int LevelOffset) : IRequest<IEnumerable<ChartRecommendation>>
+        (ChartType? ChartType, int LevelOffset) : IQuery<IEnumerable<ChartRecommendation>>
     {
     }
 }

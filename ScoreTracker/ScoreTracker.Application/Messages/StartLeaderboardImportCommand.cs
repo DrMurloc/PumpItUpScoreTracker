@@ -1,6 +1,6 @@
 namespace ScoreTracker.Application.Messages;
 
 [ExcludeFromCodeCoverage]
-public sealed record RecalculateChartLetterDifficulties
+public sealed record StartLeaderboardImportCommand
 {
 }

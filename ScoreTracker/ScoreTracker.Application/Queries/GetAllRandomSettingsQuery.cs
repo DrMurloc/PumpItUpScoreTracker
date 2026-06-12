@@ -6,7 +6,7 @@ namespace ScoreTracker.Application.Queries
 {
     [ExcludeFromCodeCoverage]
     public sealed record GetAllRandomSettingsQuery
-        (Guid TournamentId) : IRequest<IEnumerable<(Name name, RandomSettings settings)>>
+        (Guid TournamentId) : IQuery<IEnumerable<(Name name, RandomSettings settings)>>
     {
     }
 }

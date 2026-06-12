@@ -7,7 +7,7 @@ namespace ScoreTracker.Application.Queries;
 
 [ExcludeFromCodeCoverage]
 public sealed record GetChartRatingsQuery
-    (MixEnum Mix, DifficultyLevel? Level = null, ChartType? Type = null) : IRequest<
+    (MixEnum Mix, DifficultyLevel? Level = null, ChartType? Type = null) : IQuery<
         IEnumerable<ChartDifficultyRatingRecord>>
 {
 }
