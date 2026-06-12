@@ -248,9 +248,8 @@ public sealed class PlayerRatingSagaTests
         var saga = BuildSaga(charts: ChartsMockReturning(Array.Empty<Chart>()),
             scores: scores, stats: stats);
 
-        await saga.Consume(BuildContext(new PlayerScoreUpdatedEvent(userId,
-            NewChartIds: new[] { chartId },
-            UpscoredChartIds: new Dictionary<Guid, int>())));
+        await saga.Consume(BuildContext(PlayerScoresUpdatedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), userId,
+            new[] { new PlayerScoresUpdatedEvent.ScoreChange(chartId, true, null, 950000, null, false) })));
 
         // RecalculateStats path → SaveStats called; RecalculatePumbility path → UpdateScoreStats called.
         stats.Verify(s => s.SaveStats(userId, It.IsAny<PlayerStatsRecord>(),

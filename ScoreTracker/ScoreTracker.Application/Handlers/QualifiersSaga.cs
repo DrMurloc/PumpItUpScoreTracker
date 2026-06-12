@@ -9,11 +9,11 @@ using ScoreTracker.Domain.SecondaryPorts;
 namespace ScoreTracker.Application.Handlers
 {
     public sealed class QualifiersSaga(IQualifiersRepository qualifiersRepo, IUserRepository userRepo,
-        ILogger<QualifiersSaga> logger, IMediator mediator) : IConsumer<RecentScoreImportedEvent>
+        ILogger<QualifiersSaga> logger, IMediator mediator) : IConsumer<ScoreImportCompletedEvent>
     {
-        public async Task Consume(ConsumeContext<RecentScoreImportedEvent> context)
+        public async Task Consume(ConsumeContext<ScoreImportCompletedEvent> context)
         {
-            var charts = context.Message.Entries.ToDictionary(e => e.ChartId);
+            var charts = context.Message.Scores.ToDictionary(e => e.ChartId);
             var tournaments =
                 await qualifiersRepo.GetRegisteredTournaments(context.Message.UserId, context.CancellationToken);
             foreach (var tournament in tournaments)

@@ -25,7 +25,7 @@ public sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, IRe
     IRequestHandler<RemoveDiscordChannelFromCommunityCommand>,
     IRequestHandler<GetPhoenixRecordsForCommunityQuery, IEnumerable<UserPhoenixScore>>,
     IConsumer<PlayerRatingsImprovedEvent>,
-    IConsumer<PlayerScoreUpdatedEvent>,
+    IConsumer<PlayerScoresUpdatedEvent>,
     IConsumer<NewTitlesAcquiredEvent>,
     IConsumer<UserWeeklyChartsProgressedEvent>,
     IConsumer<UserUpdatedEvent>,
@@ -145,10 +145,11 @@ public sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, IRe
                 $"**{user.Name}**'s top 50 rating has improved!" + message, context.CancellationToken);
     }
 
-    public async Task Consume(ConsumeContext<PlayerScoreUpdatedEvent> context)
+    public async Task Consume(ConsumeContext<PlayerScoresUpdatedEvent> context)
     {
-        var newChartIds = context.Message.NewChartIds.Distinct().ToArray();
-        var upscoreChartScores = context.Message.UpscoredChartIds;
+        var newChartIds = context.Message.Changes.Where(c => c.IsNewPass).Select(c => c.ChartId).Distinct().ToArray();
+        var upscoreChartScores = context.Message.Changes.Where(c => !c.IsNewPass)
+            .ToDictionary(c => c.ChartId, c => c.OldScore ?? 0);
         var user = await _users.GetUser(context.Message.UserId, context.CancellationToken);
         if (user == null) return;
         var scores =

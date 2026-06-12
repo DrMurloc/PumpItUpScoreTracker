@@ -11,7 +11,7 @@ using static ScoreTracker.PersonalProgress.PlayerRatingSaga;
 
 namespace ScoreTracker.PersonalProgress;
 
-public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
+public sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
     IRequestHandler<GetTop50ForPlayerQuery, IEnumerable<RecordedPhoenixScore>>,
     IRequestHandler<GetTop50CompetitiveQuery, IEnumerable<RecordedPhoenixScore>>,
     IRequestHandler<RecalculateStats>,
@@ -35,12 +35,12 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoreUpdatedEvent>,
     }
 
 
-    public async Task Consume(ConsumeContext<PlayerScoreUpdatedEvent> context)
+    public async Task Consume(ConsumeContext<PlayerScoresUpdatedEvent> context)
     {
         await Handle(new RecalculateStats(context.Message.UserId), context.CancellationToken);
         await Handle(
             new RecalculatePumbility(context.Message.UserId,
-                context.Message.NewChartIds.Concat(context.Message.UpscoredChartIds.Keys).Distinct().ToArray()),
+                context.Message.Changes.Select(c => c.ChartId).Distinct().ToArray()),
             context.CancellationToken);
     }
 

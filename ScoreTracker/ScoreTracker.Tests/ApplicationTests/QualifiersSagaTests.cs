@@ -22,9 +22,9 @@ public sealed class QualifiersSagaTests
     private static QualifiersConfiguration Config(IEnumerable<Chart> charts) =>
         new(charts, new Dictionary<Guid, int>(), Name.From("Score"), 0, 1, null, false);
 
-    private static Mock<ConsumeContext<RecentScoreImportedEvent>> ContextOf(RecentScoreImportedEvent message)
+    private static Mock<ConsumeContext<ScoreImportCompletedEvent>> ContextOf(ScoreImportCompletedEvent message)
     {
-        var ctx = new Mock<ConsumeContext<RecentScoreImportedEvent>>();
+        var ctx = new Mock<ConsumeContext<ScoreImportCompletedEvent>>();
         ctx.SetupGet(c => c.Message).Returns(message);
         ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
         return ctx;
@@ -56,8 +56,8 @@ public sealed class QualifiersSagaTests
         var saga = new QualifiersSaga(qualifiersRepo.Object, userRepo.Object,
             NullLogger<QualifiersSaga>.Instance, mediator.Object);
 
-        var entry = new RecentScoreImportedEvent.Entry(chart.Id, 950000, "PerfectGame", false);
-        var message = new RecentScoreImportedEvent(userId, new[] { entry });
+        var entry = new ScoreImportCompletedEvent.ImportedScore(chart.Id, 950000, "PerfectGame", false);
+        var message = ScoreImportCompletedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), ScoreImportCompletedEvent.OfficialImportSource, userId, new[] { entry });
 
         await saga.Consume(ContextOf(message).Object);
 
@@ -94,8 +94,8 @@ public sealed class QualifiersSagaTests
         var saga = new QualifiersSaga(qualifiersRepo.Object, userRepo.Object,
             NullLogger<QualifiersSaga>.Instance, mediator.Object);
 
-        var entry = new RecentScoreImportedEvent.Entry(chart.Id, 800000, "PerfectGame", false);
-        var message = new RecentScoreImportedEvent(userId, new[] { entry });
+        var entry = new ScoreImportCompletedEvent.ImportedScore(chart.Id, 800000, "PerfectGame", false);
+        var message = ScoreImportCompletedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), ScoreImportCompletedEvent.OfficialImportSource, userId, new[] { entry });
 
         await saga.Consume(ContextOf(message).Object);
 
@@ -128,8 +128,8 @@ public sealed class QualifiersSagaTests
         var saga = new QualifiersSaga(qualifiersRepo.Object, userRepo.Object,
             NullLogger<QualifiersSaga>.Instance, mediator.Object);
 
-        var entry = new RecentScoreImportedEvent.Entry(chart.Id, 900000, "PerfectGame", false);
-        var message = new RecentScoreImportedEvent(userId, new[] { entry });
+        var entry = new ScoreImportCompletedEvent.ImportedScore(chart.Id, 900000, "PerfectGame", false);
+        var message = ScoreImportCompletedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), ScoreImportCompletedEvent.OfficialImportSource, userId, new[] { entry });
 
         await saga.Consume(ContextOf(message).Object);
 
@@ -165,8 +165,8 @@ public sealed class QualifiersSagaTests
         var saga = new QualifiersSaga(qualifiersRepo.Object, userRepo.Object,
             NullLogger<QualifiersSaga>.Instance, mediator.Object);
 
-        var entry = new RecentScoreImportedEvent.Entry(chart.Id, 900000, "PerfectGame", false);
-        var message = new RecentScoreImportedEvent(userId, new[] { entry });
+        var entry = new ScoreImportCompletedEvent.ImportedScore(chart.Id, 900000, "PerfectGame", false);
+        var message = ScoreImportCompletedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), ScoreImportCompletedEvent.OfficialImportSource, userId, new[] { entry });
 
         await saga.Consume(ContextOf(message).Object);
 
