@@ -236,6 +236,30 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task UcsPlacementBroadcastsFromEventFactsAlone()
+    {
+        // The fat event carries everything the Discord post needs — the saga must not
+        // reach back into UCS storage (it no longer can: IUcsRepository is UCS-internal).
+        var userId = Guid.NewGuid();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+
+        await ctx.Saga.Consume(BuildContext(UcsLeaderboardPlacedEvent.Create(
+            Now, userId, Guid.NewGuid(), score: 950000, plate: "SuperbGame", isBroken: false,
+            artist: "StepMaker", songName: "Test Song", difficulty: "S15")));
+
+        ctx.Bot.Verify(b => b.SendMessages(
+            It.Is<IEnumerable<string>>(msgs => msgs.Any(m => m.Contains("alice")
+                                                             && m.Contains("950000")
+                                                             && m.Contains("StepMaker")
+                                                             && m.Contains("Test Song")
+                                                             && m.Contains("S15"))),
+            It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+    }
+
+    [Fact]
     public async Task UserUpdatedJoinsWorldAndCountryWhenPublic()
     {
         var userId = Guid.NewGuid();
@@ -277,7 +301,6 @@ public sealed class CommunitySagaTests
         public Mock<IChartRepository> Charts { get; } = new();
         public Mock<IScoreReader> Scores { get; } = new();
         public Mock<IMediator> Mediator { get; } = new();
-        public Mock<IUcsRepository> Ucs { get; } = new();
         public Mock<IDateTimeOffsetAccessor> DateTime { get; } = FakeDateTime.At(Now);
         public CommunitySaga Saga { get; }
 
@@ -289,7 +312,7 @@ public sealed class CommunitySagaTests
             Communities.Setup(c => c.GetCommunities(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
             Saga = new CommunitySaga(CurrentUser.Object, Communities.Object, Bot.Object, Users.Object,
-                Charts.Object, Scores.Object, Mediator.Object, Ucs.Object, DateTime.Object);
+                Charts.Object, Scores.Object, Mediator.Object, DateTime.Object);
         }
 
         public void GivenUser(Guid userId, string name)

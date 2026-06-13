@@ -283,7 +283,6 @@
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showChartTagDialog=false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
-@inject IUcsRepository UcsRepository
 @inject IOfficialSiteClient OfficialSite
 @inject ISnackbar Snackbar
 @inject IUserRepository Users
@@ -322,7 +321,7 @@
     private async Task ShowTagDialog(UcsChart chart)
     {
         _showingChart = chart;
-        _myTags = (await UcsRepository.GetMyTags(chart.Chart.Id, CurrentUser.User.Id, CancellationToken.None)).Distinct().ToHashSet();
+        _myTags = (await Mediator.Send(new GetMyUcsChartTagsQuery(chart.Chart.Id))).Distinct().ToHashSet();
         _showChartTagDialog = true;
     }
 
@@ -355,7 +354,7 @@
         }
         _myTags.Remove(tag);
         _allMyTags[_showingChart.Chart.Id].Remove(tag);
-        await UcsRepository.DeleteChartTag(_showingChart.Chart.Id, CurrentUser.User.Id, tag, CancellationToken.None);
+        await Mediator.Send(new DeleteUcsChartTagCommand(_showingChart.Chart.Id, tag));
         _chartTags[_showingChart.Chart.Id] = _chartTags[_showingChart.Chart.Id].Select(c => c.Tag == tag ? c with { Count = c.Count - 1 } : c)
             .Where(c=>c.Count>0).OrderByDescending(c => c.Count).ToArray();
         _isSaving = false;
@@ -369,7 +368,7 @@
             return;
         }
         var tag = _existingTags.Contains(_newTag) ? _existingTags.Single(t => t == _newTag) : Name.From(_newTag);
-        await UcsRepository.AddChartTag(_showingChart.Chart.Id, CurrentUser.User.Id, tag, CancellationToken.None);
+        await Mediator.Send(new AddUcsChartTagCommand(_showingChart.Chart.Id, tag));
         if (!_existingTags.Contains(tag))
         {
             _existingTags.Add(tag);
@@ -388,7 +387,7 @@
     private async Task OpenSubmit(UcsChart chart)
     {
         _isSaving = true;
-        var entry = (await UcsRepository.GetChartLeaderboard(chart.Chart.Id, CancellationToken.None))
+        var entry = (await Mediator.Send(new GetUcsChartLeaderboardQuery(chart.Chart.Id)))
             .FirstOrDefault(e => e.UserId == CurrentUser.User.Id);
         if (entry != null)
         {
@@ -474,7 +473,7 @@
     {
         _isSaving = true;
         var chartId = chart.Chart.Id;
-        _showingEntries = (await UcsRepository.GetChartLeaderboard(chartId, CancellationToken.None)).OrderByDescending(s => s.Score).Select((s, i) => new LeaderboardEntry(i + 1, s))
+        _showingEntries = (await Mediator.Send(new GetUcsChartLeaderboardQuery(chartId))).OrderByDescending(s => s.Score).Select((s, i) => new LeaderboardEntry(i + 1, s))
             .ToArray();
         _users = (await Users.GetUsers(_showingEntries.Select(e => e.Entry.UserId))).ToDictionary(u => u.Id);
         _levels = (await PlayerStats.GetStats(_showingEntries.Select(e => e.Entry.UserId), CancellationToken.None)).ToDictionary(p => p.UserId,
@@ -492,7 +491,7 @@
         }
         _isSaving = true;
         var chart = new UcsChart(_piuGameEntry.Id, _piuGameEntry.Chart, _piuGameEntry.Chart.StepArtist ?? "Unknown", _artist, _piuGameEntry.Description, 0);
-        await UcsRepository.CreateUcsChart(chart, CancellationToken.None);
+        await Mediator.Send(new CreateUcsChartCommand(chart));
 
         Snackbar.Add("UCS Added!", Severity.Success);
         _charts = _charts.Append(chart).ToArray();
@@ -537,13 +536,13 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _charts = (await UcsRepository.GetUcsCharts(CancellationToken.None)).OrderByDescending(u => u.SubmissionCount).ToArray();
+        _charts = (await Mediator.Send(new GetUcsChartsQuery())).OrderByDescending(u => u.SubmissionCount).ToArray();
 
-        _chartTags = (await UcsRepository.GetChartTags(CancellationToken.None)).GroupBy(c => c.ChartId).ToDictionary(g => g.Key, g => g.OrderByDescending(c => c.Count).ToArray());
+        _chartTags = (await Mediator.Send(new GetUcsChartTagsQuery())).GroupBy(c => c.ChartId).ToDictionary(g => g.Key, g => g.OrderByDescending(c => c.Count).ToArray());
         _existingTags = _chartTags.SelectMany(c => c.Value.Select(t => t.Tag)).Distinct().ToHashSet();
         if (CurrentUser.IsLoggedIn)
         {
-            _allMyTags = (await UcsRepository.GetAllMyTags(CurrentUser.User.Id, CancellationToken.None)).GroupBy(c=>c.ChartId).ToDictionary(g=>g.Key,g=>(ISet<Name>)g.Select(t=>t.Tag).Distinct().ToHashSet());
+            _allMyTags = (await Mediator.Send(new GetAllMyUcsChartTagsQuery())).GroupBy(c=>c.ChartId).ToDictionary(g=>g.Key,g=>(ISet<Name>)g.Select(t=>t.Tag).Distinct().ToHashSet());
 
         }
     }

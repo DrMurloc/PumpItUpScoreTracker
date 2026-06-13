@@ -52,6 +52,17 @@ public sealed class ContractEventSerializationTests
     }
 
     [Fact]
+    public void UcsLeaderboardPlacedEventRoundTripsJson()
+    {
+        AssertRoundTrips(UcsLeaderboardPlacedEvent.Create(
+            new DateTimeOffset(2026, 6, 12, 0, 0, 0, TimeSpan.Zero),
+            Guid.Parse("33333333-3333-3333-3333-333333333333"),
+            Guid.Parse("11111111-1111-1111-1111-111111111111"),
+            score: 950000, plate: "SuperbGame", isBroken: false,
+            artist: "StepMaker", songName: "Test Song", difficulty: "S15"));
+    }
+
+    [Fact]
     public void ContractEventsCarryTheEnvelope()
     {
         var e = PlayerScoresUpdatedEvent.Create(

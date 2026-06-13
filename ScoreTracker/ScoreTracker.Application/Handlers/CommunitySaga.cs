@@ -39,12 +39,11 @@ public sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, IRe
     private readonly IMediator _mediator;
     private readonly IScoreReader _scores;
     private readonly IUserRepository _users;
-    private readonly IUcsRepository _ucs;
     private readonly IDateTimeOffsetAccessor _dateTime;
 
     public CommunitySaga(ICurrentUserAccessor currentUser, ICommunityRepository communities, IBotClient bot,
         IUserRepository users, IChartRepository charts, IScoreReader scores, IMediator mediator,
-        IUcsRepository ucs, IDateTimeOffsetAccessor dateTime)
+        IDateTimeOffsetAccessor dateTime)
     {
         _currentUser = currentUser;
         _communities = communities;
@@ -53,7 +52,6 @@ public sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, IRe
         _charts = charts;
         _scores = scores;
         _mediator = mediator;
-        _ucs = ucs;
         _dateTime = dateTime;
     }
 
@@ -468,13 +466,9 @@ And {count - 10} others!";
     {
         var user = await _users.GetUser(context.Message.UserId);
         if (user == null) return;
-        var entry = (await _ucs.GetChartLeaderboard(context.Message.ChartId, context.CancellationToken)).Single(e =>
-            e.UserId == context.Message.UserId);
-
-        var chart = (await _ucs.GetUcsCharts(context.CancellationToken)).Single(u =>
-            u.Chart.Id == context.Message.ChartId);
+        var placed = context.Message;
         var message =
-            $"{user.Name} scored {entry.Score} #LETTERGRADE|{PhoenixScore.From(entry.Score).LetterGrade}|{entry.IsBroken}# on {chart.Artist}'s {chart.Chart.Song.Name} #DIFFICULTY|{chart.Chart.DifficultyString}# UCS";
+            $"{user.Name} scored {placed.Score} #LETTERGRADE|{PhoenixScore.From(placed.Score).LetterGrade}|{placed.IsBroken}# on {placed.Artist}'s {placed.SongName} #DIFFICULTY|{placed.Difficulty}# UCS";
         await SendToCommunityDiscords(context.Message.UserId, message, context.CancellationToken);
     }
 }
