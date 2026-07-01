@@ -55,7 +55,6 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<UserTitleEntity> UserTitle { get; set; }
     public DbSet<QualifiersConfigurationEntity> QualifiersConfiguration { get; set; }
     public DbSet<UserHighestTitleEntity> UserHighestTitle { get; set; }
-    public DbSet<UserRandomSettingsEntity> UserRandomSettings { get; set; }
     public DbSet<TournamentRoleEntity> TournamentRole { get; set; }
     public DbSet<TournamentPlayerEntity> TournamentPlayer { get; set; }
     public DbSet<SongNameLanguageEntity> SongNameLanguage { get; set; }

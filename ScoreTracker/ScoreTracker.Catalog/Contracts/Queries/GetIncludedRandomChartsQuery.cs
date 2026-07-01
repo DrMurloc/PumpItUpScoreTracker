@@ -1,7 +1,7 @@
-﻿using MediatR;
+using MediatR;
 using ScoreTracker.Domain.Models;
 
-namespace ScoreTracker.Application.Queries
+namespace ScoreTracker.Catalog.Contracts.Queries
 {
     [ExcludeFromCodeCoverage]
     public sealed record GetIncludedRandomChartsQuery(RandomSettings Settings) : IQuery<IEnumerable<Chart>>

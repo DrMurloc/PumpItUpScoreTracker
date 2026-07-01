@@ -1,7 +1,7 @@
-﻿using MediatR;
+using MediatR;
 using ScoreTracker.Domain.Records;
 
-namespace ScoreTracker.Application.Queries
+namespace ScoreTracker.Catalog.Contracts.Queries
 {
     [ExcludeFromCodeCoverage]
     public sealed record GetRandomSettingsQuery : IQuery<IEnumerable<SavedRandomizerSettings>>

@@ -1,4 +1,7 @@
-﻿using MediatR;
+using ScoreTracker.Catalog.Domain;
+using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.Catalog.Contracts.Commands;
+using MediatR;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
@@ -6,9 +9,9 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Application.Handlers
+namespace ScoreTracker.Catalog.Application
 {
-    public sealed class RandomizerSaga : IRequestHandler<GetRandomChartsQuery, IEnumerable<Chart>>,
+    internal sealed class RandomizerSaga : IRequestHandler<GetRandomChartsQuery, IEnumerable<Chart>>,
         IRequestHandler<GetIncludedRandomChartsQuery, IEnumerable<Chart>>,
         IRequestHandler<SaveUserRandomSettingsCommand>,
         IRequestHandler<DeleteRandomSettingsCommand>

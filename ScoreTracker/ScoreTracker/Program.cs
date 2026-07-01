@@ -178,7 +178,8 @@ builder.Services.AddBlazorApplicationInsights()
             typeof(PlayerRatingSaga).Assembly,
             typeof(ScoreTracker.Ucs.Wiring.UcsRegistrationExtensions).Assembly,
             typeof(ScoreTracker.ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions).Assembly,
-            typeof(ScoreTracker.OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions).Assembly);
+            typeof(ScoreTracker.OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions).Assembly,
+            typeof(ScoreTracker.Catalog.Wiring.CatalogRegistrationExtensions).Assembly);
     })
     .AddTransient<IUserAccessService, UserAccessService>()
     .AddInfrastructure(builder.Configuration.GetSection("AzureBlob").Get<AzureBlobConfiguration>(),

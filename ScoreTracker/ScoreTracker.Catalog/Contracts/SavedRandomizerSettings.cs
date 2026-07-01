@@ -1,7 +1,7 @@
-﻿using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Domain.Records
+namespace ScoreTracker.Catalog.Contracts
 {
     [ExcludeFromCodeCoverage]
     public sealed record SavedRandomizerSettings(Name SettingsName, RandomSettings Settings)

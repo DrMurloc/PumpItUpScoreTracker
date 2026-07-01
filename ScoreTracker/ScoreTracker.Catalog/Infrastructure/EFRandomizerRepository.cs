@@ -1,3 +1,7 @@
+using ScoreTracker.Catalog.Infrastructure.Entities;
+using ScoreTracker.Catalog.Domain;
+using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.Catalog.Contracts;
 using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -10,9 +14,9 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Data.Repositories
+namespace ScoreTracker.Catalog.Infrastructure
 {
-    public sealed class EFRandomizerRepository(IDbContextFactory<ChartAttemptDbContext> factory,
+    internal sealed class EFRandomizerRepository(IDbContextFactory<ChartAttemptDbContext> factory,
         IOptions<JsonSerializerOptions> jsonOptions, ICurrentUserAccessor currentUser) : IRandomizerRepository,
         IRequestHandler<GetRandomSettingsQuery, IEnumerable<SavedRandomizerSettings>>
     {
@@ -21,11 +25,11 @@ namespace ScoreTracker.Data.Repositories
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
             var nameString = settingsName.ToString();
-            var entity = await database.UserRandomSettings.Where(u => u.UserId == userId && u.Name == nameString)
+            var entity = await database.Set<UserRandomSettingsEntity>().Where(u => u.UserId == userId && u.Name == nameString)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (entity == null)
-                await database.UserRandomSettings.AddAsync(new UserRandomSettingsEntity
+                await database.Set<UserRandomSettingsEntity>().AddAsync(new UserRandomSettingsEntity
                 {
                     Name = nameString,
                     UserId = userId,
@@ -40,9 +44,9 @@ namespace ScoreTracker.Data.Repositories
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
             var nameString = settingsName.ToString();
-            var entities = await database.UserRandomSettings.Where(e => e.UserId == userId && e.Name == nameString)
+            var entities = await database.Set<UserRandomSettingsEntity>().Where(e => e.UserId == userId && e.Name == nameString)
                 .ToArrayAsync(cancellationToken);
-            database.UserRandomSettings.RemoveRange(entities);
+            database.Set<UserRandomSettingsEntity>().RemoveRange(entities);
             await database.SaveChangesAsync(cancellationToken);
         }
 
@@ -51,7 +55,7 @@ namespace ScoreTracker.Data.Repositories
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
             var userId = currentUser.User.Id;
-            return (await database.UserRandomSettings.Where(u => u.UserId == userId).ToArrayAsync(cancellationToken))
+            return (await database.Set<UserRandomSettingsEntity>().Where(u => u.UserId == userId).ToArrayAsync(cancellationToken))
                 .Select(u => new SavedRandomizerSettings(u.Name,
                     JsonSerializer.Deserialize<RandomSettings>(u.Json, jsonOptions.Value) ?? new RandomSettings()));
         }

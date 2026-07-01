@@ -23,50 +23,32 @@ namespace ScoreTracker.Tests.ArchitectureTests;
 /// </summary>
 public sealed class VerticalBoundaryTests
 {
-    [Fact]
-    public void UcsPublicSurfaceIsContractsAndWiringOnly()
+    // One entry per extracted vertical: the public Wiring marker type anchors the
+    // assembly and its root namespace. New verticals add themselves here.
+    public static TheoryData<Type> VerticalWiringMarkers => new()
     {
-        var offenders = typeof(UcsChart).Assembly.GetTypes()
+        typeof(Ucs.Wiring.UcsRegistrationExtensions),
+        typeof(ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions),
+        typeof(OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions),
+        typeof(Catalog.Wiring.CatalogRegistrationExtensions)
+    };
+
+    [Theory]
+    [MemberData(nameof(VerticalWiringMarkers))]
+    public void VerticalPublicSurfaceIsContractsAndWiringOnly(Type wiringMarker)
+    {
+        var root = wiringMarker.Namespace!.Substring(0,
+            wiringMarker.Namespace!.Length - ".Wiring".Length);
+        var offenders = wiringMarker.Assembly.GetTypes()
             .Where(t => t.IsPublic)
             .Where(t => t.Namespace == null
-                        || (!t.Namespace.StartsWith("ScoreTracker.Ucs.Contracts", StringComparison.Ordinal)
-                            && t.Namespace != "ScoreTracker.Ucs.Wiring"))
+                        || (!t.Namespace.StartsWith(root + ".Contracts", StringComparison.Ordinal)
+                            && t.Namespace != root + ".Wiring"))
             .Select(t => t.FullName)
             .ToArray();
 
         Assert.True(offenders.Length == 0,
-            $"Only Contracts/ and Wiring/ may be public in a vertical assembly: {string.Join(", ", offenders)}");
-    }
-
-    [Fact]
-    public void ScoreLedgerPublicSurfaceIsContractsAndWiringOnly()
-    {
-        var offenders = typeof(ScoreTracker.ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions).Assembly.GetTypes()
-            .Where(t => t.IsPublic)
-            .Where(t => t.Namespace == null
-                        || (!t.Namespace.StartsWith("ScoreTracker.ScoreLedger.Contracts", StringComparison.Ordinal)
-                            && t.Namespace != "ScoreTracker.ScoreLedger.Wiring"))
-            .Select(t => t.FullName)
-            .ToArray();
-
-        Assert.True(offenders.Length == 0,
-            $"Only Contracts/ and Wiring/ may be public in a vertical assembly: {string.Join(", ", offenders)}");
-    }
-
-    [Fact]
-    public void OfficialMirrorPublicSurfaceIsContractsAndWiringOnly()
-    {
-        var offenders = typeof(ScoreTracker.OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions).Assembly
-            .GetTypes()
-            .Where(t => t.IsPublic)
-            .Where(t => t.Namespace == null
-                        || (!t.Namespace.StartsWith("ScoreTracker.OfficialMirror.Contracts", StringComparison.Ordinal)
-                            && t.Namespace != "ScoreTracker.OfficialMirror.Wiring"))
-            .Select(t => t.FullName)
-            .ToArray();
-
-        Assert.True(offenders.Length == 0,
-            $"Only Contracts/ and Wiring/ may be public in a vertical assembly: {string.Join(", ", offenders)}");
+            $"Only Contracts/ and Wiring/ may be public in {root}: {string.Join(", ", offenders)}");
     }
 
     [Fact]

@@ -1,3 +1,7 @@
+using ScoreTracker.Catalog.Domain;
+using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.Catalog.Contracts.Commands;
+using ScoreTracker.Catalog.Application;
 using System;
 using System.Collections.Generic;
 using System.Linq;

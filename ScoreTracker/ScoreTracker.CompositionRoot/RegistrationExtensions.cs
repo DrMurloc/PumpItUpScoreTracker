@@ -1,6 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ScoreTracker.Catalog.Wiring;
 using ScoreTracker.Data.Clients;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Data.Persistence;
@@ -33,6 +34,7 @@ public static class RegistrationExtensions
         builder.Configure<SqlConfiguration>(o => { o.ConnectionString = configuration.ConnectionString; });
         builder.Configure<AzureBlobConfiguration>(o => { o.ConnectionString = blobConfig.ConnectionString; });
 
+        builder.AddCatalog();
         builder.AddOfficialMirror();
         builder.AddScoreLedger();
         builder.AddUcs();
