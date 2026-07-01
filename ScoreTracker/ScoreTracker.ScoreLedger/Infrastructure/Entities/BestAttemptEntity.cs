@@ -1,10 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
-namespace ScoreTracker.Data.Persistence.Entities;
+namespace ScoreTracker.ScoreLedger.Infrastructure.Entities;
 
 [Index(nameof(UserId), nameof(ChartId))]
-public sealed class BestAttemptEntity
+internal sealed class BestAttemptEntity
 {
     [Key] public Guid Id { get; set; }
     [Required] public Guid UserId { get; set; }

@@ -1,7 +1,6 @@
-﻿using MediatR;
 using ScoreTracker.Domain.Models;
 
-namespace ScoreTracker.Application.Queries;
+namespace ScoreTracker.ScoreLedger.Contracts.Queries;
 
 [ExcludeFromCodeCoverage]
 public sealed record GetXXBestChartAttemptsQuery(Guid UserId) : IQuery<IEnumerable<BestXXChartAttempt>>

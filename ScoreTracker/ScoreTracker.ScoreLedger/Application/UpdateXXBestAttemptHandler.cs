@@ -1,12 +1,13 @@
 ﻿using MediatR;
-using ScoreTracker.Application.Commands;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.ScoreLedger.Contracts.Commands;
+using ScoreTracker.ScoreLedger.Domain;
 
-namespace ScoreTracker.Application.Handlers;
+namespace ScoreTracker.ScoreLedger.Application;
 
-public sealed class UpdateXXBestAttemptHandler : IRequestHandler<UpdateXXBestAttemptCommand>
+internal sealed class UpdateXXBestAttemptHandler : IRequestHandler<UpdateXXBestAttemptCommand>
 {
     private readonly IXXChartAttemptRepository _attempts;
     private readonly IChartRepository _charts;

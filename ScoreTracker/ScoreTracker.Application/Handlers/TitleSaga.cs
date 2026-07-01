@@ -18,7 +18,6 @@ public sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumerab
     IConsumer<PlayerScoresUpdatedEvent>,
     IRequestHandler<TitleSaga.ProcessTitles>
 {
-    private readonly IXXChartAttemptRepository _chartAttempts;
     private readonly IChartRepository _charts;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IScoreReader _phoenixScores;
@@ -28,14 +27,12 @@ public sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumerab
     public sealed record ProcessTitles(Guid UserId) : IRequest;
 
     public TitleSaga(ICurrentUserAccessor currentUser,
-        IXXChartAttemptRepository chartAttempts,
         IScoreReader phoenixScores,
         IChartRepository charts,
         ITitleRepository titles,
         IBus bus)
     {
         _currentUser = currentUser;
-        _chartAttempts = chartAttempts;
         _phoenixScores = phoenixScores;
         _charts = charts;
         _titles = titles;
@@ -51,7 +48,7 @@ public sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumerab
             if (_currentUser.IsLoggedIn)
             {
                 var userId = _currentUser.User.Id;
-                attempts = await _chartAttempts.GetBestAttempts(userId, cancellationToken);
+                attempts = await _phoenixScores.GetBestXXAttempts(userId, cancellationToken);
             }
             else
             {

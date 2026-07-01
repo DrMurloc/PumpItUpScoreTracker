@@ -32,7 +32,8 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
     private EFTierListRepository BuildRepository() =>
         new(_fixture.DbContextFactory, new MemoryCache(new MemoryCacheOptions()),
             new EFPhoenixRecordsRepository(_fixture.DbContextFactory,
-                new MemoryCache(new MemoryCacheOptions()), new Mock<IChartRepository>().Object));
+                new MemoryCache(new MemoryCacheOptions()), new Mock<IChartRepository>().Object,
+                new EFXXChartAttemptRepository(_fixture.DbContextFactory)));
 
     [Fact]
     public async Task SaveEntryAndGetAllEntriesRoundTripPreservesAllFields()

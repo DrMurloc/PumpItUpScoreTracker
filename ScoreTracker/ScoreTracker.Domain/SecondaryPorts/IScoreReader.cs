@@ -55,4 +55,8 @@ public interface IScoreReader
     /// <summary>Users with any recorded best-attempt activity on or after the cutoff.</summary>
     Task<IReadOnlySet<Guid>> GetActiveUserIds(DateTimeOffset since,
         CancellationToken cancellationToken = default);
+
+    /// <summary>A player's best XX (legacy mix) attempt per chart. XX records are Ledger-owned too.</summary>
+    Task<IEnumerable<BestXXChartAttempt>> GetBestXXAttempts(Guid userId,
+        CancellationToken cancellationToken = default);
 }

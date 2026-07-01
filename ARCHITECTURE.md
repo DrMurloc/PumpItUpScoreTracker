@@ -18,9 +18,9 @@ ScoreTracker.sln
 │   ├── ScoreTracker.Domain          — entities, ports, domain services
 │   ├── ScoreTracker.Application     — MediatR handlers, MassTransit consumers
 │   ├── ScoreTracker.PersonalProgress— vertical-slice experiment (player rating logic)
-│   ├── ScoreTracker.ScoreLedger     — Score Ledger vertical: Phoenix best attempts +
-│   │                                  score event journal, IScoreReader impl, score
-│   │                                  batch/publish pipeline
+│   ├── ScoreTracker.ScoreLedger     — Score Ledger vertical: Phoenix + XX best
+│   │                                  attempts, score event journal, IScoreReader
+│   │                                  impl, score batch/publish pipeline
 │   └── ScoreTracker.Ucs             — first subdomain vertical (rearch P5 template):
 │                                      public Contracts/ + Wiring/, internal
 │                                      Domain/Application/Infrastructure

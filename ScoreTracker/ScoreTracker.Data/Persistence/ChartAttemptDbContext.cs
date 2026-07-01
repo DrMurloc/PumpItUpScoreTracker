@@ -20,7 +20,6 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<MixEntity> Mix { get; set; }
     public DbSet<ChartMixEntity> ChartMix { get; set; }
     public DbSet<ChartScoringLevelEntity> ChartScoringLevel { get; set; }
-    public DbSet<BestAttemptEntity> BestAttempt { get; set; }
     public DbSet<ChartEntity> Chart { get; set; }
     public DbSet<SongEntity> Song { get; set; }
     public DbSet<UserEntity> User { get; set; }
@@ -111,15 +110,6 @@ public sealed class ChartAttemptDbContext : DbContext
             .Property(u => u.ProfileImage)
             .HasDefaultValue("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png");
 
-        builder.Entity<BestAttemptEntity>().ToTable("BestAttempt")
-            .HasOne<ChartEntity>()
-            .WithMany()
-            .HasForeignKey(ba => ba.ChartId);
-
-        builder.Entity<BestAttemptEntity>()
-            .HasOne<UserEntity>()
-            .WithMany()
-            .HasForeignKey(ba => ba.UserId);
 
 
         builder.Entity<UserChartDifficultyRatingEntity>().ToTable("UserChartDifficultyRating")

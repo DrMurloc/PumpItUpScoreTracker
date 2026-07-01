@@ -1,8 +1,8 @@
-﻿using MediatR;
+using MediatR;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Application.Commands;
+namespace ScoreTracker.ScoreLedger.Contracts.Commands;
 
 [ExcludeFromCodeCoverage]
 public sealed record UpdateXXBestAttemptCommand(Guid chartId,

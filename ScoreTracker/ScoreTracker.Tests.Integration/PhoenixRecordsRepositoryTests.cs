@@ -33,7 +33,8 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
     private EFPhoenixRecordsRepository BuildRepository() =>
         new(_fixture.DbContextFactory,
             new MemoryCache(new MemoryCacheOptions()),
-            Mock.Of<IChartRepository>());
+            Mock.Of<IChartRepository>(),
+            new EFXXChartAttemptRepository(_fixture.DbContextFactory));
 
     [Fact]
     public async Task UpdateBestAttemptInsertsANewRecordReadableViaGetRecordedScore()

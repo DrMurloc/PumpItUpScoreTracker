@@ -95,9 +95,16 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             .ToHashSet();
     }
 
+    Task<IEnumerable<BestXXChartAttempt>> IScoreReader.GetBestXXAttempts(Guid userId,
+        CancellationToken cancellationToken)
+    {
+        return _xxAttempts.GetBestAttempts(userId, cancellationToken);
+    }
+
     private readonly IMemoryCache _cache;
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
     private readonly IChartRepository _charts;
+    private readonly IXXChartAttemptRepository _xxAttempts;
 
     private static string ScoreCache(Guid userId)
     {
@@ -106,11 +113,13 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
 
     public EFPhoenixRecordsRepository(IDbContextFactory<ChartAttemptDbContext> factory,
         IMemoryCache cache,
-        IChartRepository charts)
+        IChartRepository charts,
+        IXXChartAttemptRepository xxAttempts)
     {
         _cache = cache;
         _factory = factory;
         _charts = charts;
+        _xxAttempts = xxAttempts;
     }
 
     public async Task UpdateBestAttempt(Guid userId, RecordedPhoenixScore score,

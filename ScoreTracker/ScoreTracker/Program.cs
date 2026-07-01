@@ -171,7 +171,7 @@ builder.Services.AddBlazorApplicationInsights()
     .AddMediatR(o =>
     {
         o.RegisterServicesFromAssemblies(
-            typeof(UpdateXXBestAttemptHandler).Assembly
+            typeof(CreateUserHandler).Assembly
             , typeof(MainLayout).Assembly, typeof(EFPlayerStatsRepository).Assembly,
             typeof(PlayerRatingSaga).Assembly,
             typeof(ScoreTracker.Ucs.Wiring.UcsRegistrationExtensions).Assembly,

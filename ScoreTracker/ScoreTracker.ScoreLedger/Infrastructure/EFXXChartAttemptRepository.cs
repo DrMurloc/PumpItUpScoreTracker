@@ -1,14 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
-using ScoreTracker.Data.Persistence.Entities;
+using ScoreTracker.ScoreLedger.Infrastructure.Entities;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
-using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Data.Repositories;
+namespace ScoreTracker.ScoreLedger.Infrastructure;
 
-public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
+internal sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
 {
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
@@ -23,7 +23,7 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var chartId = chart.Id;
         return await (
-            from ba in database.BestAttempt
+            from ba in database.Set<BestAttemptEntity>()
             where ba.ChartId == chartId && ba.UserId == userId
             select new XXChartAttempt(Enum.Parse<XXLetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score, ba.RecordedDate)
         ).FirstOrDefaultAsync(cancellationToken);
@@ -34,12 +34,12 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var chartId = chart.Id;
 
-        var previousBest = await database.BestAttempt.Where(ba => ba.ChartId == chartId && ba.UserId == userId)
+        var previousBest = await database.Set<BestAttemptEntity>().Where(ba => ba.ChartId == chartId && ba.UserId == userId)
             .SingleOrDefaultAsync(cancellationToken);
 
         if (previousBest != null)
         {
-            database.BestAttempt.Remove(previousBest);
+            database.Set<BestAttemptEntity>().Remove(previousBest);
             await database.SaveChangesAsync(cancellationToken);
         }
     }
@@ -51,7 +51,7 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var chartId = chart.Id;
 
-        var previousBest = await database.BestAttempt.Where(ba => ba.ChartId == chartId && ba.UserId == userId)
+        var previousBest = await database.Set<BestAttemptEntity>().Where(ba => ba.ChartId == chartId && ba.UserId == userId)
             .SingleOrDefaultAsync(cancellationToken);
         if (previousBest == null)
         {
@@ -65,7 +65,7 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                 UserId = userId,
                 Score = attempt.Score
             };
-            await database.BestAttempt.AddAsync(entity, cancellationToken);
+            await database.Set<BestAttemptEntity>().AddAsync(entity, cancellationToken);
         }
         else
         {
@@ -87,7 +87,7 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                 join c in database.Chart on new
                         { SongId = s.Id, Level = (int)ce.Level, ChartType = ce.Type.ToString() } equals
                     new { c.SongId, c.Level, ChartType = c.Type }
-                join _ in database.BestAttempt on new { UserId = userId, ChartId = c.Id } equals new
+                join _ in database.Set<BestAttemptEntity>() on new { UserId = userId, ChartId = c.Id } equals new
                     { _.UserId, _.ChartId } into gi
                 from ba in gi.DefaultIfEmpty()
                 select new BestXXChartAttempt(
@@ -113,7 +113,7 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                 from s in database.Song
                 join c in database.Chart on s.Id equals c.SongId
                 join m in database.Mix on c.OriginalMixId equals m.Id
-                join _ in database.BestAttempt on new { UserId = userId, ChartId = c.Id } equals new
+                join _ in database.Set<BestAttemptEntity>() on new { UserId = userId, ChartId = c.Id } equals new
                     { _.UserId, _.ChartId } into gi
                 from ba in gi.DefaultIfEmpty()
                 select new BestXXChartAttempt(
@@ -133,8 +133,8 @@ public sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
     public async Task DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var attempts = await database.BestAttempt.Where(b => b.UserId == userId).ToArrayAsync(cancellationToken);
-        database.BestAttempt.RemoveRange(attempts);
+        var attempts = await database.Set<BestAttemptEntity>().Where(b => b.UserId == userId).ToArrayAsync(cancellationToken);
+        database.Set<BestAttemptEntity>().RemoveRange(attempts);
         await database.SaveChangesAsync(cancellationToken);
     }
 }

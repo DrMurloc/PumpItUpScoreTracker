@@ -1,8 +1,8 @@
-﻿using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Models;
 
-namespace ScoreTracker.Domain.SecondaryPorts;
+namespace ScoreTracker.ScoreLedger.Domain;
 
-public interface IXXChartAttemptRepository
+internal interface IXXChartAttemptRepository
 {
     Task<XXChartAttempt?> GetBestAttempt(Guid userId, Chart chart, CancellationToken cancellationToken = default);
     Task RemoveBestAttempt(Guid userId, Chart chart, CancellationToken cancellationToken = default);

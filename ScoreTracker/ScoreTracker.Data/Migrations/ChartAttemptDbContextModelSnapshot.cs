@@ -23,40 +23,6 @@ namespace ScoreTracker.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.BestAttemptEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ChartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsBroken")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("LetterGrade")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("RecordedDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<int?>("Score")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChartId");
-
-                    b.HasIndex("UserId", "ChartId");
-
-                    b.ToTable("BestAttempt", "scores");
-                });
-
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.ChartDifficultyRatingEntity", b =>
                 {
                     b.Property<Guid>("ChartId")
@@ -1704,6 +1670,40 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("UserQualifierHistory", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.ScoreLedger.Infrastructure.Entities.BestAttemptEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsBroken")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LetterGrade")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("RecordedDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int?>("Score")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChartId");
+
+                    b.HasIndex("UserId", "ChartId");
+
+                    b.ToTable("BestAttempt", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.ScoreLedger.Infrastructure.Entities.PhoenixRecordEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1895,21 +1895,6 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("UcsChartTag", "scores");
                 });
 
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.BestAttemptEntity", b =>
-                {
-                    b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
-                        .WithMany()
-                        .HasForeignKey("ChartId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ScoreTracker.Data.Persistence.Entities.UserEntity", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.ChartEntity", b =>
                 {
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.SongEntity", null)
@@ -2014,6 +1999,21 @@ namespace ScoreTracker.Data.Migrations
 
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.UserSettingsEntity", b =>
                 {
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ScoreTracker.ScoreLedger.Infrastructure.Entities.BestAttemptEntity", b =>
+                {
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ChartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.UserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
