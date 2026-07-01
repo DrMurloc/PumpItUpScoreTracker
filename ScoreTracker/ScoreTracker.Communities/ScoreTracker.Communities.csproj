@@ -17,21 +17,19 @@
   <ItemGroup>
     <PackageReference Include="MassTransit.Abstractions" Version="8.5.7" />
     <PackageReference Include="MediatR" Version="14.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
-    <!-- Transitional (P5): the single ChartAttemptDbContext still lives in ScoreTracker.Data. -->
+    <!-- Transitional (P5): the single ChartAttemptDbContext still lives in ScoreTracker.Data.
+         Application + PersonalProgress are also transitional: CommunitySaga sends
+         GetChartsQuery (Application) and GetTop50ForPlayerQuery (PersonalProgress) via
+         IMediator; both references drop when those records find their vertical homes. -->
     <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
-    <!-- Transitional (P5): UpdatePhoenixBestAttemptCommand and GetPhoenixRecordsQuery are still
-         sent by Application sagas (OfficialLeaderboardSaga et al.), so those records stay in
-         Application until the OfficialMirror extraction; the Ledger implements their handlers. -->
     <ProjectReference Include="..\ScoreTracker.Application\ScoreTracker.Application.csproj" />
-    <!-- Vertical→vertical contracts: the completion-leaderboard aggregate resolves community
-         membership through GetCommunityMembersQuery instead of joining Community tables. -->
-    <ProjectReference Include="..\ScoreTracker.Communities\ScoreTracker.Communities.csproj" />
+    <ProjectReference Include="..\ScoreTracker.PersonalProgress\ScoreTracker.PersonalProgress.csproj" />
   </ItemGroup>
 
 </Project>

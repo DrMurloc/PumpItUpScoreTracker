@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
-namespace ScoreTracker.Data.Persistence.Entities;
+namespace ScoreTracker.Communities.Infrastructure.Entities;
 
 [Index(nameof(CommunityId))]
-public sealed class CommunityChannelEntity
+internal sealed class CommunityChannelEntity
 {
     [Key] public Guid Id { get; set; }
     public Guid CommunityId { get; set; }

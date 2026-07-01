@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
@@ -105,6 +106,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
     private readonly IChartRepository _charts;
     private readonly IXXChartAttemptRepository _xxAttempts;
+    private readonly IMediator _mediator;
 
     private static string ScoreCache(Guid userId)
     {
@@ -114,12 +116,14 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     public EFPhoenixRecordsRepository(IDbContextFactory<ChartAttemptDbContext> factory,
         IMemoryCache cache,
         IChartRepository charts,
-        IXXChartAttemptRepository xxAttempts)
+        IXXChartAttemptRepository xxAttempts,
+        IMediator mediator)
     {
         _cache = cache;
         _factory = factory;
         _charts = charts;
         _xxAttempts = xxAttempts;
+        _mediator = mediator;
     }
 
     public async Task UpdateBestAttempt(Guid userId, RecordedPhoenixScore score,
@@ -354,12 +358,12 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         var playerQuery = from u in database.User select u;
         if (request.CommunityName != null)
         {
-            var communityNameString = request.CommunityName.Value.ToString();
-            playerQuery = from u in playerQuery
-                join cm in database.CommunityMembership on u.Id equals cm.UserId
-                join c in database.Community on cm.CommunityId equals c.Id
-                where c.Name == communityNameString
-                select u;
+            // Community membership is another vertical's data — resolved through its
+            // published contract instead of joining its (internal) tables directly.
+            var memberIds = (await _mediator.Send(
+                    new GetCommunityMembersQuery(request.CommunityName.Value), cancellationToken))
+                .ToArray();
+            playerQuery = playerQuery.Where(u => memberIds.Contains(u.Id));
         }
         else
         {

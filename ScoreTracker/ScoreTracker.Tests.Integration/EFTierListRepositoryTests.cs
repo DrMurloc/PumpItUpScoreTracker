@@ -1,3 +1,4 @@
+using MediatR;
 using ScoreTracker.ChartIntelligence.Infrastructure;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
@@ -34,7 +35,8 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
         new(_fixture.DbContextFactory, new MemoryCache(new MemoryCacheOptions()),
             new EFPhoenixRecordsRepository(_fixture.DbContextFactory,
                 new MemoryCache(new MemoryCacheOptions()), new Mock<IChartRepository>().Object,
-                new EFXXChartAttemptRepository(_fixture.DbContextFactory)));
+                new EFXXChartAttemptRepository(_fixture.DbContextFactory),
+                Mock.Of<IMediator>()));
 
     [Fact]
     public async Task SaveEntryAndGetAllEntriesRoundTripPreservesAllFields()

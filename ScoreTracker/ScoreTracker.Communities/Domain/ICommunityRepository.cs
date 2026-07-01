@@ -2,9 +2,9 @@
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Domain.SecondaryPorts
+namespace ScoreTracker.Communities.Domain
 {
-    public interface ICommunityRepository
+    internal interface ICommunityRepository
     {
         Task<Name?> GetCommunityByInviteCode(Guid inviteCode, CancellationToken cancellationToken);
         Task SaveCommunity(Community community, CancellationToken cancellationToken);

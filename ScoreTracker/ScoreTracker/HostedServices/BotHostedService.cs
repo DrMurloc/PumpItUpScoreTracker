@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using ScoreTracker.Application.Commands;
+using ScoreTracker.Communities.Contracts.Commands;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;

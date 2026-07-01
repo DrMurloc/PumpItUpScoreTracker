@@ -1,4 +1,5 @@
-using ScoreTracker.Data.Repositories;
+using ScoreTracker.Communities.Domain;
+using ScoreTracker.Communities.Infrastructure;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Tests.Integration.Fixtures;

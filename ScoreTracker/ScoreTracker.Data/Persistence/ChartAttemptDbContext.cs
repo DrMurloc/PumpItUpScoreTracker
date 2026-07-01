@@ -30,11 +30,7 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<RandomSettingsEntity> RandomSettings { get; set; }
     public DbSet<MatchLinkEntity> MatchLink { get; set; }
     public DbSet<PlayerStatsEntity> PlayerStats { get; set; }
-    public DbSet<CommunityEntity> Community { get; set; }
     public DbSet<PlayerHistoryEntity> PlayerHistory { get; set; }
-    public DbSet<CommunityChannelEntity> CommunityChannel { get; set; }
-    public DbSet<CommunityInviteCodeEntity> CommunityInviteCode { get; set; }
-    public DbSet<CommunityMembershipEntity> CommunityMembership { get; set; }
     public DbSet<SuggestionFeedbackEntity> SuggestionFeedback { get; set; }
     public DbSet<UserTitleEntity> UserTitle { get; set; }
     public DbSet<UserHighestTitleEntity> UserHighestTitle { get; set; }

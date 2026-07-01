@@ -1,3 +1,4 @@
+using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using ScoreTracker.Domain.Enums;
@@ -34,7 +35,8 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
         new(_fixture.DbContextFactory,
             new MemoryCache(new MemoryCacheOptions()),
             Mock.Of<IChartRepository>(),
-            new EFXXChartAttemptRepository(_fixture.DbContextFactory));
+            new EFXXChartAttemptRepository(_fixture.DbContextFactory),
+            Mock.Of<IMediator>());
 
     [Fact]
     public async Task UpdateBestAttemptInsertsANewRecordReadableViaGetRecordedScore()

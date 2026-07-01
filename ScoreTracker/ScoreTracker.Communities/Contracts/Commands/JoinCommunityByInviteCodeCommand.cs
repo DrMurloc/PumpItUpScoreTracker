@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace ScoreTracker.Application.Commands;
+namespace ScoreTracker.Communities.Contracts.Commands;
 
 [ExcludeFromCodeCoverage]
 public sealed record JoinCommunityByInviteCodeCommand(Guid InviteCode) : IRequest

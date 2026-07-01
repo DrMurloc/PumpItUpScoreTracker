@@ -1,5 +1,6 @@
 using ScoreTracker.WeeklyChallenge.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
+using ScoreTracker.Communities.Wiring;
 using ScoreTracker.EventCompetition.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using System;
@@ -36,7 +37,8 @@ public sealed class VerticalBoundaryTests
         typeof(Catalog.Wiring.CatalogRegistrationExtensions),
         typeof(ChartIntelligence.Wiring.ChartIntelligenceRegistrationExtensions),
         typeof(WeeklyChallenge.Wiring.WeeklyChallengeRegistrationExtensions),
-        typeof(EventCompetition.Wiring.EventCompetitionRegistrationExtensions)
+        typeof(EventCompetition.Wiring.EventCompetitionRegistrationExtensions),
+        typeof(Communities.Wiring.CommunitiesRegistrationExtensions)
     };
 
     [Theory]
@@ -102,6 +104,24 @@ public sealed class VerticalBoundaryTests
 
         Assert.Contains(services,
             d => d.ServiceType == typeof(ScoreTracker.WeeklyChallenge.Application.WeeklyTournamentSaga));
+    }
+
+    [Fact]
+    public void MassTransitDiscoversTheCommunitiesInternalConsumers()
+    {
+        // CommunitySaga fans six event streams out to community Discord channels — and it
+        // used to be the Application assembly's AddConsumers marker type in Program.cs.
+        // Internal now, so the AddCommunitiesConsumers hook is the registration path; if
+        // it stops covering the saga, every community feed silently goes quiet.
+        var services = new ServiceCollection();
+        services.AddMassTransit(x =>
+        {
+            x.AddCommunitiesConsumers();
+            x.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
+        });
+
+        Assert.Contains(services,
+            d => d.ServiceType == typeof(ScoreTracker.Communities.Application.CommunitySaga));
     }
 
     [Fact]

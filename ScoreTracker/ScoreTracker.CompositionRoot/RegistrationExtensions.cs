@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Catalog.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
+using ScoreTracker.Communities.Wiring;
 using ScoreTracker.Data.Clients;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Data.Persistence;
@@ -39,6 +40,7 @@ public static class RegistrationExtensions
 
         builder.AddCatalog();
         builder.AddChartIntelligence();
+        builder.AddCommunities();
         builder.AddEventCompetition();
         builder.AddOfficialMirror();
         builder.AddScoreLedger();

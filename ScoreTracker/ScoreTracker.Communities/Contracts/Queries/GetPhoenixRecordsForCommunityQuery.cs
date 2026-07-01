@@ -2,7 +2,7 @@
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Application.Queries
+namespace ScoreTracker.Communities.Contracts.Queries
 {
     [ExcludeFromCodeCoverage]
     public sealed record GetPhoenixRecordsForCommunityQuery

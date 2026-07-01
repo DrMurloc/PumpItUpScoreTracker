@@ -1,6 +1,8 @@
 ﻿using MassTransit;
 using MediatR;
-using ScoreTracker.Application.Commands;
+using ScoreTracker.Communities.Contracts.Commands;
+using ScoreTracker.Communities.Contracts.Queries;
+using ScoreTracker.Communities.Domain;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
@@ -11,10 +13,11 @@ using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
 using ScoreTracker.PersonalProgress.Queries;
 
-namespace ScoreTracker.Application.Handlers;
+namespace ScoreTracker.Communities.Application;
 
-public sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, IRequestHandler<JoinCommunityCommand>,
+internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, IRequestHandler<JoinCommunityCommand>,
     IRequestHandler<LeaveCommunityCommand>,
+    IRequestHandler<GetCommunityMembersQuery, IEnumerable<Guid>>,
     IRequestHandler<GetCommunityLeaderboardQuery, IEnumerable<CommunityLeaderboardRecord>>,
     IRequestHandler<CreateInviteLinkCommand, Guid>,
     IRequestHandler<GetMyCommunitiesQuery, IEnumerable<CommunityOverviewRecord>>,
@@ -345,6 +348,13 @@ And {count - 10} others!";
         CancellationToken cancellationToken)
     {
         return await _communities.GetPublicCommunities(cancellationToken);
+    }
+
+    public async Task<IEnumerable<Guid>> Handle(GetCommunityMembersQuery request,
+        CancellationToken cancellationToken)
+    {
+        var community = await _communities.GetCommunityByName(request.CommunityName, cancellationToken);
+        return community?.MemberIds ?? (IEnumerable<Guid>)Array.Empty<Guid>();
     }
 
     public async Task Handle(JoinCommunityByInviteCodeCommand request, CancellationToken cancellationToken)

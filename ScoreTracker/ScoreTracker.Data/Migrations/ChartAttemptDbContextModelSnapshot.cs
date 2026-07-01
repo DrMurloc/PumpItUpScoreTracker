@@ -326,6 +326,99 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("UserPreferenceRating", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Communities.Infrastructure.Entities.CommunityChannelEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("ChannelId")
+                        .HasColumnType("decimal(20,0)");
+
+                    b.Property<Guid>("CommunityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("SendNewMembers")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SendNewScores")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SendTitles")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CommunityId");
+
+                    b.ToTable("CommunityChannel", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.Communities.Infrastructure.Entities.CommunityEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsRegional")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("OwningUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PrivacyType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name");
+
+                    b.ToTable("Community", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.Communities.Infrastructure.Entities.CommunityInviteCodeEntity", b =>
+                {
+                    b.Property<Guid>("InviteCode")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CommunityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ExpirationDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("InviteCode");
+
+                    b.HasIndex("CommunityId");
+
+                    b.ToTable("CommunityInviteCode", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.Communities.Infrastructure.Entities.CommunityMembershipEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CommunityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CommunityId", "UserId");
+
+                    b.ToTable("CommunityMembership", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.ChartEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -419,99 +512,6 @@ namespace ScoreTracker.Data.Migrations
                     b.HasIndex("MixId");
 
                     b.ToTable("ChartMix", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.CommunityChannelEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("ChannelId")
-                        .HasColumnType("decimal(20,0)");
-
-                    b.Property<Guid>("CommunityId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("SendNewMembers")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("SendNewScores")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("SendTitles")
-                        .HasColumnType("bit");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CommunityId");
-
-                    b.ToTable("CommunityChannel", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.CommunityEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsRegional")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<Guid>("OwningUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("PrivacyType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name");
-
-                    b.ToTable("Community", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.CommunityInviteCodeEntity", b =>
-                {
-                    b.Property<Guid>("InviteCode")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CommunityId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("ExpirationDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("InviteCode");
-
-                    b.HasIndex("CommunityId");
-
-                    b.ToTable("CommunityInviteCode", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.CommunityMembershipEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CommunityId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CommunityId", "UserId");
-
-                    b.ToTable("CommunityMembership", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.CountryEntity", b =>

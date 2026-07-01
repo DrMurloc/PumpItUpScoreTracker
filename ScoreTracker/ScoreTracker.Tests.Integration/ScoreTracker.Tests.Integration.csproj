@@ -27,6 +27,7 @@
     <!-- CompositionRoot supplies VerticalModelContributions so the fixture's context model
          matches production (a context without them silently drops the verticals' tables). -->
     <ProjectReference Include="..\ScoreTracker.CompositionRoot\ScoreTracker.CompositionRoot.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Communities\ScoreTracker.Communities.csproj" />
     <ProjectReference Include="..\ScoreTracker.EventCompetition\ScoreTracker.EventCompetition.csproj" />
     <ProjectReference Include="..\ScoreTracker.WeeklyChallenge\ScoreTracker.WeeklyChallenge.csproj" />
     <ProjectReference Include="..\ScoreTracker.Catalog\ScoreTracker.Catalog.csproj" />
