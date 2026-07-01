@@ -1,6 +1,4 @@
-using ScoreTracker.Domain.Records;
-
-namespace ScoreTracker.Application.Queries;
+namespace ScoreTracker.Ucs.Contracts.Queries;
 
 /// <summary>Every UCS chart tag the current user has applied, across all charts.</summary>
 [ExcludeFromCodeCoverage]

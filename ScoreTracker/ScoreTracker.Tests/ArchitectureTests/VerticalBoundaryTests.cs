@@ -1,0 +1,57 @@
+using System;
+using System.Linq;
+using MassTransit;
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
+using Moq;
+using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Ucs.Contracts;
+using ScoreTracker.Ucs.Contracts.Commands;
+using ScoreTracker.Ucs.Domain;
+using Xunit;
+
+namespace ScoreTracker.Tests.ArchitectureTests;
+
+/// <summary>
+///     Vertical-assembly ratchets (ADR-001 D2): within a vertical, only Contracts/ (the
+///     published surface) and Wiring/ (the AddXxx DI extension + EF model contribution)
+///     are public; everything else is internal and reachable only through those.
+///     Rules are added per extracted vertical and never removed.
+/// </summary>
+public sealed class VerticalBoundaryTests
+{
+    [Fact]
+    public void UcsPublicSurfaceIsContractsAndWiringOnly()
+    {
+        var offenders = typeof(UcsChart).Assembly.GetTypes()
+            .Where(t => t.IsPublic)
+            .Where(t => t.Namespace == null
+                        || (!t.Namespace.StartsWith("ScoreTracker.Ucs.Contracts", StringComparison.Ordinal)
+                            && t.Namespace != "ScoreTracker.Ucs.Wiring"))
+            .Select(t => t.FullName)
+            .ToArray();
+
+        Assert.True(offenders.Length == 0,
+            $"Only Contracts/ and Wiring/ may be public in a vertical assembly: {string.Join(", ", offenders)}");
+    }
+
+    [Fact]
+    public void MediatRDiscoversTheUcsVerticalsInternalHandlers()
+    {
+        // The vertical's handlers are internal classes behind public contract records. If the
+        // host's MediatR assembly scan ever skips non-public types, every UCS page breaks at
+        // runtime while unit tests (which construct the saga directly) stay green — this
+        // wiring test is the tripwire.
+        var services = new ServiceCollection();
+        services.AddMediatR(o => o.RegisterServicesFromAssemblies(typeof(UcsChart).Assembly));
+        services.AddTransient(_ => new Mock<IBus>().Object);
+        services.AddTransient(_ => new Mock<IUcsRepository>().Object);
+        services.AddTransient(_ => new Mock<ICurrentUserAccessor>().Object);
+        services.AddTransient(_ => new Mock<IDateTimeOffsetAccessor>().Object);
+        using var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetService<IRequestHandler<RegisterUcsEntryCommand>>();
+
+        Assert.NotNull(handler);
+    }
+}

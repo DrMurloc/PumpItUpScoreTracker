@@ -1,7 +1,6 @@
 using MediatR;
-using ScoreTracker.Domain.Records;
 
-namespace ScoreTracker.Application.Commands;
+namespace ScoreTracker.Ucs.Contracts.Commands;
 
 [ExcludeFromCodeCoverage]
 public sealed record CreateUcsChartCommand(UcsChart Chart) : IRequest

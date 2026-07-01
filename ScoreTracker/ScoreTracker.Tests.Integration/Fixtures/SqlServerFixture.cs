@@ -1,6 +1,7 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Respawn;
+using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Persistence;
 using Testcontainers.MsSql;
 
@@ -57,6 +58,6 @@ public sealed class SqlServerFixture : IAsyncLifetime
     private sealed class TestDbContextFactory(DbContextOptions<ChartAttemptDbContext> options)
         : IDbContextFactory<ChartAttemptDbContext>
     {
-        public ChartAttemptDbContext CreateDbContext() => new(options);
+        public ChartAttemptDbContext CreateDbContext() => new(options, VerticalModelContributions.All());
     }
 }

@@ -1,6 +1,6 @@
 using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Application.Queries;
+namespace ScoreTracker.Ucs.Contracts.Queries;
 
 /// <summary>Tags the current user has applied to one UCS chart.</summary>
 [ExcludeFromCodeCoverage]

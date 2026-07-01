@@ -1,6 +1,6 @@
-﻿using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Domain.Records;
+namespace ScoreTracker.Ucs.Contracts;
 
 [ExcludeFromCodeCoverage]
 public sealed record ChartTagAggregate(Guid ChartId, Name Tag, int Count)

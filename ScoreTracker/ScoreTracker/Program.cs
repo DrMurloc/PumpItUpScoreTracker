@@ -169,7 +169,8 @@ builder.Services.AddBlazorApplicationInsights()
         o.RegisterServicesFromAssemblies(
             typeof(UpdateXXBestAttemptHandler).Assembly
             , typeof(MainLayout).Assembly, typeof(EFPlayerStatsRepository).Assembly,
-            typeof(PlayerRatingSaga).Assembly);
+            typeof(PlayerRatingSaga).Assembly,
+            typeof(ScoreTracker.Ucs.Wiring.UcsRegistrationExtensions).Assembly);
     })
     .AddTransient<IUserAccessService, UserAccessService>()
     .AddTransient<IWorldRankingService, WorldRankingService>()

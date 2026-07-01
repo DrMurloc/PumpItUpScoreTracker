@@ -6,11 +6,15 @@ namespace ScoreTracker.Data.Persistence;
 
 public sealed class ChartAttemptDbContext : DbContext
 {
+    private readonly IEnumerable<IDbModelContribution> _contributions;
+
 #pragma warning disable CS8618
-    public ChartAttemptDbContext(DbContextOptions<ChartAttemptDbContext> options)
+    public ChartAttemptDbContext(DbContextOptions<ChartAttemptDbContext> options,
+        IEnumerable<IDbModelContribution>? contributions = null)
 #pragma warning restore CS8618
         : base(options)
     {
+        _contributions = contributions ?? Array.Empty<IDbModelContribution>();
     }
 
     public DbSet<MixEntity> Mix { get; set; }
@@ -70,9 +74,6 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<CoOpPlayerEntity> CoOpPlayers { get; set; }
     public DbSet<TournamentMachineEntity> TournamentMachine { get; set; }
     public DbSet<CountryEntity> Country { get; set; }
-    public DbSet<UcsChartEntity> UcsChart { get; set; }
-    public DbSet<UcsChartLeaderboardEntryEntity> UcsChartLeaderboardEntry { get; set; }
-    public DbSet<UcsChartTagEntity> UcsChartTag { get; set; }
     public DbSet<PhoenixRecordStatsEntity> PhoenixRecordStats { get; set; }
     public DbSet<ChartLetterDifficultyEntity> ChartLetterDifficulty { get; set; }
     public DbSet<UserTournamentRegistrationEntity> UserTournamentRegistration { get; set; }
@@ -232,5 +233,9 @@ public sealed class ChartAttemptDbContext : DbContext
         builder.Entity<QualifiersConfigurationEntity>()
             .Property(e => e.ChartPlayCount)
             .HasDefaultValue(3);
+
+        // Vertical-owned entities (ADR-001 D4). Applied last so contributions see the
+        // default schema and shared conventions.
+        foreach (var contribution in _contributions) contribution.Contribute(builder);
     }
 }

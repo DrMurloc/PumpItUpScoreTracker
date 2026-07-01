@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Design: hosts the IDesignTimeDbContextFactory so `dotnet ef` scaffolds with every
+         vertical's model contribution (run with startup-project = ScoreTracker.CompositionRoot). -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.2" />
   </ItemGroup>
@@ -14,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ScoreTracker.Application\ScoreTracker.Application.csproj" />
     <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Ucs\ScoreTracker.Ucs.csproj" />
   </ItemGroup>
 
 </Project>

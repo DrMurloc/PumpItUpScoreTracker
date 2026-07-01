@@ -49,7 +49,8 @@ SharedKernel ◄── Domain  ◄── Application ◄── Data
 | `ScoreTracker.Application` | + `MassTransit.Abstractions`, `Microsoft.Extensions.Caching.Memory` | EF Core, ASP.NET, `HttpClient`, vendor SDKs. Application must never know it's behind a web server. |
 | `ScoreTracker.Data` | + `Microsoft.EntityFrameworkCore.SqlServer`, `Azure.Storage.Blobs`, `Discord.Net`, `HtmlAgilityPack`, `SendGrid` | ASP.NET. |
 | `ScoreTracker.Web` | + `MudBlazor`, OAuth providers, `Swashbuckle`, `Tesseract`, MassTransit DI, `Hangfire.AspNetCore`, `Hangfire.SqlServer` | EF Core directly (must go through ports). |
-| `ScoreTracker.CompositionRoot` | DI extensions only | Business logic. |
+| `ScoreTracker.Ucs` (vertical template, rearch P5) | `MediatR`, `MassTransit.Abstractions`, `Microsoft.Extensions.DependencyInjection.Abstractions` (+ project refs `Domain`, and `Data` transitionally for the shared DbContext) | Everything else. Only `Contracts/` and `Wiring/` namespaces may be public (arch-test enforced, `VerticalBoundaryTests`); EF entities and internal domain types never cross the boundary. Verticals must not be referenced by `Application` (cycles through `Data → Application`). |
+| `ScoreTracker.CompositionRoot` | DI extensions only (+ `Microsoft.EntityFrameworkCore.Design`, private, for the design-time factory) | Business logic. |
 | `ScoreTracker.Tests` | + `xunit`, `Moq` | Other doubling libraries (see Test conventions). References `ScoreTracker.Application` (for handler tests) and `ScoreTracker.Data` (for parser approval tests against `PiuGameApi`). Does not reference `ScoreTracker.Web`. |
 | `ScoreTracker.Tests.Api` | + `xunit`, `Moq` | The one sanctioned `ScoreTracker.Web`-referencing test project — it pins the public API wire shapes, which live in Web's controllers/DTOs. Same doubling rules as `ScoreTracker.Tests`. |
 | `ScoreTracker.Tests.Integration` | + `xunit`, `Moq`, `Testcontainers.MsSql`, `Respawn` | Mocking the port whose implementation is the subject of the test (e.g., do not mock `IPhoenixRecordRepository` when testing `EFPhoenixRecordsRepository`). Mocking incidental collaborator ports for setup — or `IPiuGameApi`-style external clients in slice tests — is fine. |
@@ -59,8 +60,8 @@ Adding a package outside its allowed layer is a violation. Adding a project refe
 ### Use case dispatch
 
 - **Message taxonomy — folder + name + interface distinguish the kinds** (arch-test enforced, `MessageTaxonomyTests`):
-  - **Queries** — `*Query` records implementing `IQuery<T>` (`ScoreTracker.SharedKernel.Messaging`), in `Application/Queries/` or `PersonalProgress/Queries/`. Read-only; never travel the bus.
-  - **Commands (MediatR)** — `*Command` records implementing `IRequest`/`IRequest<T>`, in `Application/Commands/`.
+  - **Queries** — `*Query` records implementing `IQuery<T>` (`ScoreTracker.SharedKernel.Messaging`), in `Application/Queries/`, `PersonalProgress/Queries/`, or a vertical's `Contracts/Queries/`. Read-only; never travel the bus.
+  - **Commands (MediatR)** — `*Command` records implementing `IRequest`/`IRequest<T>`, in `Application/Commands/` or a vertical's `Contracts/Commands/`.
   - **Commands (bus triggers)** — `*Command` plain records (not `IRequest`) in `Application/Messages/`, published via `IBus` by `RecurringJobRunner`/admin pages.
   - **Events** — `*Event` past-tense fact records (never `IRequest`) in `Domain/Events/` (bus) or `Application/Events/` (`INotification`).
   - Handlers are `IRequestHandler<,>` / `IConsumer<>` implementations in `Application/Handlers/`.
@@ -86,9 +87,10 @@ Adding a package outside its allowed layer is a violation. Adding a project refe
 
 ### One DbContext
 
-- `ChartAttemptDbContext` is the only `DbContext`. Add `DbSet`s here. Adding a second context requires explicit discussion.
+- `ChartAttemptDbContext` is the only `DbContext`. Adding a second context requires explicit discussion.
+- Entities owned by an unextracted slice get `DbSet`s on the context. **Entities owned by an extracted vertical live in the vertical** (internal, `<Vertical>/Infrastructure/Entities/`) and are registered via its `IDbModelContribution` in `Wiring/`; the vertical's repositories use `Set<TEntity>()`. Every vertical's contribution must be listed in `CompositionRoot.VerticalModelContributions.All()` — omitting one makes scaffolded migrations silently drop that vertical's tables.
 - Repositories take `IDbContextFactory<ChartAttemptDbContext>` and create scoped contexts.
-- Migrations live in `ScoreTracker.Data/Migrations/` and are applied **manually** — no `Database.Migrate()` at startup.
+- Migrations live in `ScoreTracker.Data/Migrations/` and are applied **manually** — no `Database.Migrate()` at startup. Scaffold from `ScoreTracker.Data` with `dotnet ef migrations add <Name> --startup-project ../ScoreTracker.CompositionRoot` (the design-time factory lives in CompositionRoot so the model includes vertical contributions).
 
 ## Test conventions
 

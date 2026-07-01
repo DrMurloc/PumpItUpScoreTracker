@@ -21,7 +21,8 @@ public sealed class MessageTaxonomyTests
     {
         typeof(Application.Commands.CreateUserCommand).Assembly,
         typeof(PersonalProgress.Queries.GetTop50CompetitiveQuery).Assembly,
-        typeof(Domain.Models.User).Assembly
+        typeof(Domain.Models.User).Assembly,
+        typeof(Ucs.Contracts.UcsChart).Assembly
     };
 
     private static Type[] TypesIn(string namespaceSuffix)
