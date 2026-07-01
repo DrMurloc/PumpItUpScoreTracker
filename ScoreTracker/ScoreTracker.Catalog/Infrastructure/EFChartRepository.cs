@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.Catalog.Infrastructure.Entities;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
@@ -8,18 +9,10 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Data.Repositories;
+namespace ScoreTracker.Catalog.Infrastructure;
 
-public sealed class EFChartRepository : IChartRepository
+internal sealed class EFChartRepository : IChartRepository
 {
-    //Will  need to refactor this if I ever support non prod environments
-    //Mostly saving some tedious joins for now.
-    private static readonly IDictionary<MixEnum, Guid> MixGuids = new Dictionary<MixEnum, Guid>
-    {
-        { MixEnum.XX, Guid.Parse("20F8CCF8-94B1-418D-B923-C375B042BDA8") },
-        { MixEnum.Phoenix, Guid.Parse("1ABB8F5A-BDA3-40F0-9CE7-1C4F9F8F1D3B") }
-    };
-
     private readonly IMemoryCache _cache;
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
@@ -32,7 +25,7 @@ public sealed class EFChartRepository : IChartRepository
     public async Task<IEnumerable<Name>> GetSongNames(MixEnum mix, CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixGuids[mix];
+        var mixId = MixIds.For(mix);
         return (await (from cm in database.ChartMix
             join c in database.Chart on cm.ChartId equals c.Id
             join s in database.Song on c.SongId equals s.Id
@@ -71,7 +64,7 @@ public sealed class EFChartRepository : IChartRepository
             {
                 entry.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromDays(14);
                 await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-                return await database.ChartVideo
+                return await database.Set<ChartVideoEntity>()
                     .Select(c => new ChartVideoInformation(c.ChartId, new Uri(c.VideoUrl), c.ChannelName))
                     .ToDictionaryAsync(c => c.ChartId, cancellationToken);
             });
@@ -100,7 +93,7 @@ public sealed class EFChartRepository : IChartRepository
         };
         await database.Song.AddAsync(newSong, cancellationToken);
         await database.SaveChangesAsync(cancellationToken);
-        await database.SongNameLanguage.AddAsync(new SongNameLanguageEntity
+        await database.Set<SongNameLanguageEntity>().AddAsync(new SongNameLanguageEntity
         {
             CultureCode = "ko-KR",
             EnglishSongName = name.ToString(),
@@ -113,10 +106,10 @@ public sealed class EFChartRepository : IChartRepository
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var entity = await database.ChartVideo.FirstOrDefaultAsync(c => c.ChartId == id, cancellationToken);
+        var entity = await database.Set<ChartVideoEntity>().FirstOrDefaultAsync(c => c.ChartId == id, cancellationToken);
         if (entity == null)
         {
-            await database.ChartVideo.AddAsync(new ChartVideoEntity
+            await database.Set<ChartVideoEntity>().AddAsync(new ChartVideoEntity
             {
                 ChartId = id,
                 ChannelName = channelName,
@@ -159,7 +152,7 @@ public sealed class EFChartRepository : IChartRepository
     public async Task UpdateNoteCount(Guid chartId, int noteCount, CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixGuids[MixEnum.Phoenix];
+        var mixId = MixIds.Phoenix;
         var entity =
             await database.ChartMix.FirstOrDefaultAsync(c => c.ChartId == chartId && c.MixId == mixId,
                 cancellationToken);
@@ -183,7 +176,7 @@ public sealed class EFChartRepository : IChartRepository
         {
             o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(1);
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            return (await database.ChartSkill.ToArrayAsync(cancellationToken))
+            return (await database.Set<ChartSkillEntity>().ToArrayAsync(cancellationToken))
                 .GroupBy(c => c.ChartId)
                 .Select(g => new ChartSkillsRecord(g.Key, g.Select(s => Enum.Parse<Skill>(s.SkillName)),
                     g.Where(s => s.IsHighlighted).Select(s => Enum.Parse<Skill>(s.SkillName))))
@@ -194,7 +187,7 @@ public sealed class EFChartRepository : IChartRepository
     public async Task SaveChartSkills(ChartSkillsRecord record, CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var skills = await database.ChartSkill.Where(cs => cs.ChartId == record.ChartId)
+        var skills = await database.Set<ChartSkillEntity>().Where(cs => cs.ChartId == record.ChartId)
             .ToArrayAsync(cancellationToken);
 
         var newEntities = record.ContainsSkills.Select(s => new ChartSkillEntity
@@ -216,8 +209,8 @@ public sealed class EFChartRepository : IChartRepository
 
         var toDelete = skills.Where(e =>
             !newEntities.Any(s => s.SkillName == e.SkillName && s.IsHighlighted == e.IsHighlighted));
-        await database.ChartSkill.AddRangeAsync(toCreate, cancellationToken);
-        database.ChartSkill.RemoveRange(toDelete);
+        await database.Set<ChartSkillEntity>().AddRangeAsync(toCreate, cancellationToken);
+        database.Set<ChartSkillEntity>().RemoveRange(toDelete);
         await database.SaveChangesAsync(cancellationToken);
 
         var cache = await GetAllCharts(MixEnum.Phoenix, cancellationToken);
@@ -232,10 +225,10 @@ public sealed class EFChartRepository : IChartRepository
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var englishString = englishSongName.ToString();
         var cultureString = cultureCode.ToString();
-        var entity = await database.SongNameLanguage.FirstOrDefaultAsync(
+        var entity = await database.Set<SongNameLanguageEntity>().FirstOrDefaultAsync(
             n => n.CultureCode == cultureString && n.EnglishSongName == englishString, cancellationToken);
         if (entity == null)
-            await database.SongNameLanguage.AddAsync(new SongNameLanguageEntity
+            await database.Set<SongNameLanguageEntity>().AddAsync(new SongNameLanguageEntity
             {
                 CultureCode = cultureCode,
                 EnglishSongName = englishSongName,
@@ -313,7 +306,7 @@ public sealed class EFChartRepository : IChartRepository
             o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(24);
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var cultureString = cultureCode.ToString();
-            return (await database.SongNameLanguage.Where(s => s.CultureCode == cultureString)
+            return (await database.Set<SongNameLanguageEntity>().Where(s => s.CultureCode == cultureString)
                     .ToArrayAsync(cancellationToken)).Select(e => (Name.From(e.EnglishSongName), Name.From(e.SongName)))
                 .ToDictionary(e => e.Item1, e => e.Item2);
         });
@@ -332,7 +325,7 @@ public sealed class EFChartRepository : IChartRepository
 
     public void ClearCache()
     {
-        foreach (var mixId in MixGuids.Values)
+        foreach (var mixId in new[] { MixIds.XX, MixIds.Phoenix })
         {
             var key = ChartCacheKey(mixId);
             _cache.Remove(key);
@@ -361,7 +354,7 @@ public sealed class EFChartRepository : IChartRepository
             ChartId = newChart.Id,
             Id = Guid.NewGuid(),
             Level = level,
-            MixId = MixGuids[mix]
+            MixId = MixIds.For(mix)
         };
         var newChartVideo = new ChartVideoEntity
         {
@@ -371,7 +364,7 @@ public sealed class EFChartRepository : IChartRepository
         };
         await database.Chart.AddAsync(newChart, cancellationToken);
         await database.ChartMix.AddAsync(newChartMix, cancellationToken);
-        await database.ChartVideo.AddAsync(newChartVideo, cancellationToken);
+        await database.Set<ChartVideoEntity>().AddAsync(newChartVideo, cancellationToken);
         await database.SaveChangesAsync(cancellationToken);
         return newChart.Id;
     }
@@ -411,12 +404,12 @@ public sealed class EFChartRepository : IChartRepository
 
     private async Task<IDictionary<Guid, Chart>> GetAllCharts(MixEnum mix, CancellationToken cancellationToken)
     {
-        var mixId = MixGuids[mix];
+        var mixId = MixIds.For(mix);
         return await _cache.GetOrCreateAsync<IDictionary<Guid, Chart>>(ChartCacheKey(mixId), async entry =>
         {
             entry.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromDays(14);
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            var chartSkills = (await database.ChartSkill.ToArrayAsync(cancellationToken)).GroupBy(cs => cs.ChartId)
+            var chartSkills = (await database.Set<ChartSkillEntity>().ToArrayAsync(cancellationToken)).GroupBy(cs => cs.ChartId)
                 .ToDictionary(g => g.Key, g => g.Select(s => Enum.Parse<Skill>(s.SkillName)).Distinct().ToHashSet());
 
             return await (from cm in database.ChartMix

@@ -8,11 +8,6 @@ namespace ScoreTracker.Data.Repositories;
 
 public sealed class EFChartScoringLevelRepository : IChartScoringLevelRepository
 {
-    private static readonly IDictionary<MixEnum, Guid> MixGuids = new Dictionary<MixEnum, Guid>
-    {
-        { MixEnum.XX, Guid.Parse("20F8CCF8-94B1-418D-B923-C375B042BDA8") },
-        { MixEnum.Phoenix, Guid.Parse("1ABB8F5A-BDA3-40F0-9CE7-1C4F9F8F1D3B") }
-    };
 
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
@@ -25,7 +20,7 @@ public sealed class EFChartScoringLevelRepository : IChartScoringLevelRepository
         CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixGuids[mix];
+        var mixId = MixIds.For(mix);
         var existing = await database.ChartScoringLevel
             .FirstOrDefaultAsync(e => e.MixId == mixId && e.ChartId == chartId, cancellationToken);
         if (scoringLevel == null)
@@ -54,7 +49,7 @@ public sealed class EFChartScoringLevelRepository : IChartScoringLevelRepository
         CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixGuids[mix];
+        var mixId = MixIds.For(mix);
         return await database.ChartScoringLevel.Where(e => e.MixId == mixId)
             .ToDictionaryAsync(e => e.ChartId, e => e.ScoringLevel, cancellationToken);
     }

@@ -11,8 +11,8 @@ namespace ScoreTracker.Tests.Integration.TestData;
 [ExcludeFromCodeCoverage]
 public sealed class TestDataSeeder
 {
-    // Hardcoded in EFChartRepository / EFPhoenixRecordsRepository (search for `MixGuids`).
-    // Tests that go through `MixEnum.Phoenix`-typed queries must use this exact ID.
+    // Mirrors ScoreTracker.Data.Persistence.MixIds.Phoenix — tests that go through
+    // `MixEnum.Phoenix`-typed queries must use this exact ID.
     public static readonly Guid PhoenixMixId = Guid.Parse("1ABB8F5A-BDA3-40F0-9CE7-1C4F9F8F1D3B");
 
     private static readonly DateTimeOffset Epoch = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);

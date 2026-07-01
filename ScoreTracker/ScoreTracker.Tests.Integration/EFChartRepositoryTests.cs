@@ -1,3 +1,4 @@
+using ScoreTracker.Catalog.Infrastructure;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Repositories;
 using ScoreTracker.Domain.Enums;

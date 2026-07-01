@@ -18,7 +18,7 @@ public static class RegistrationExtensions
     public static IServiceCollection AddInfrastructure(this IServiceCollection builder,
         AzureBlobConfiguration blobConfig, SqlConfiguration configuration, SendGridConfiguration twilioConfig)
     {
-        foreach (var implementationType in typeof(EFChartRepository).Assembly.GetTypes()
+        foreach (var implementationType in typeof(EFUserRepository).Assembly.GetTypes()
                 )
         foreach (var interfaceType in implementationType.GetInterfaces()
                      .Where(i => i.Assembly == typeof(IChartRepository).Assembly && i != typeof(IBotClient)))

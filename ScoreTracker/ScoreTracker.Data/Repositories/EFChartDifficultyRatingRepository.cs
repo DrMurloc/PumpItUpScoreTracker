@@ -11,13 +11,6 @@ namespace ScoreTracker.Data.Repositories;
 
 public sealed class EFChartDifficultyRatingRepository : IChartDifficultyRatingRepository
 {
-    //Will  need to refactor this if I ever support non prod environments
-    //Mostly saving some tedious joins for now.
-    private static readonly IDictionary<MixEnum, Guid> MixGuids = new Dictionary<MixEnum, Guid>
-    {
-        { MixEnum.XX, Guid.Parse("20F8CCF8-94B1-418D-B923-C375B042BDA8") },
-        { MixEnum.Phoenix, Guid.Parse("1ABB8F5A-BDA3-40F0-9CE7-1C4F9F8F1D3B") }
-    };
 
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
@@ -30,7 +23,7 @@ public sealed class EFChartDifficultyRatingRepository : IChartDifficultyRatingRe
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixGuids[mix];
+        var mixId = MixIds.For(mix);
         var scale = adjustment.GetScale();
         var existingRating = await database.UserChartDifficultyRating.FirstOrDefaultAsync(c =>
             c.ChartId == chartId && c.UserId == userId && c.MixId == mixId, cancellationToken);
@@ -54,7 +47,7 @@ public sealed class EFChartDifficultyRatingRepository : IChartDifficultyRatingRe
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixGuids[mix];
+        var mixId = MixIds.For(mix);
         var scales = await database.UserChartDifficultyRating
             .Where(u => u.ChartId == chartId && u.MixId == mixId).Select(u => u.Scale).ToArrayAsync(cancellationToken);
 
@@ -65,7 +58,7 @@ public sealed class EFChartDifficultyRatingRepository : IChartDifficultyRatingRe
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixGuids[mix];
+        var mixId = MixIds.For(mix);
         return await database.ChartDifficultyRating
             .Where(c => c.MixId == mixId)
             .Select(c => new ChartDifficultyRatingRecord(c.ChartId, c.Difficulty, c.Count, c.StandardDeviation))
@@ -76,7 +69,7 @@ public sealed class EFChartDifficultyRatingRepository : IChartDifficultyRatingRe
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixGuids[mix];
+        var mixId = MixIds.For(mix);
         return await database.ChartDifficultyRating.Where(c => c.ChartId == chartId && c.MixId == mixId)
             .Select(c => new ChartDifficultyRatingRecord(c.ChartId, c.Difficulty, c.Count, c.StandardDeviation))
             .FirstOrDefaultAsync(cancellationToken);
@@ -85,7 +78,7 @@ public sealed class EFChartDifficultyRatingRepository : IChartDifficultyRatingRe
     public async Task ClearAdjustedDifficulty(MixEnum mix, Guid chartId, CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixGuids[mix];
+        var mixId = MixIds.For(mix);
         var entry = await database.ChartDifficultyRating.Where(c => c.ChartId == chartId && c.MixId == mixId)
             .FirstOrDefaultAsync(cancellationToken);
         if (entry != null)
@@ -99,7 +92,7 @@ public sealed class EFChartDifficultyRatingRepository : IChartDifficultyRatingRe
         CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixGuids[mix];
+        var mixId = MixIds.For(mix);
         var result = await database.UserChartDifficultyRating
             .Where(c => c.ChartId == chartId && c.UserId == userId && c.MixId == mixId)
             .FirstOrDefaultAsync(cancellationToken);
@@ -111,7 +104,7 @@ public sealed class EFChartDifficultyRatingRepository : IChartDifficultyRatingRe
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixGuids[mix];
+        var mixId = MixIds.For(mix);
         var results = await database.UserChartDifficultyRating.Where(c => c.UserId == userId && c.MixId == mixId)
             .ToArrayAsync(cancellationToken);
         return results.Select(r => (r.ChartId, DifficultyAdjustmentHelpers.From(r.Scale))).ToArray();
@@ -230,7 +223,7 @@ public sealed class EFChartDifficultyRatingRepository : IChartDifficultyRatingRe
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixGuids[mix];
+        var mixId = MixIds.For(mix);
         var existing =
             await database.ChartDifficultyRating.FirstOrDefaultAsync(c => c.ChartId == chartId && c.MixId == mixId,
                 cancellationToken);

@@ -1,8 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
-namespace ScoreTracker.Data.Persistence.Entities;
+namespace ScoreTracker.Catalog.Infrastructure.Entities;
 
-public sealed class ChartVideoEntity
+internal sealed class ChartVideoEntity
 {
     [Key] public Guid ChartId { get; set; }
 

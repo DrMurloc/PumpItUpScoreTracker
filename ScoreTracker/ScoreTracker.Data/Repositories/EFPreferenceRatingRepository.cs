@@ -10,13 +10,6 @@ namespace ScoreTracker.Data.Repositories;
 
 public sealed class EFPreferenceRatingRepository : IChartPreferenceRepository
 {
-    //Will  need to refactor this if I ever support non prod environments
-    //Mostly saving some tedious joins for now.
-    private static readonly IDictionary<MixEnum, Guid> MixGuids = new Dictionary<MixEnum, Guid>
-    {
-        { MixEnum.XX, Guid.Parse("20F8CCF8-94B1-418D-B923-C375B042BDA8") },
-        { MixEnum.Phoenix, Guid.Parse("1ABB8F5A-BDA3-40F0-9CE7-1C4F9F8F1D3B") }
-    };
 
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
@@ -29,7 +22,7 @@ public sealed class EFPreferenceRatingRepository : IChartPreferenceRepository
         CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixGuids[mix];
+        var mixId = MixIds.For(mix);
         var entity = await database.UserPreferenceRating
             .Where(e => e.MixId == mixId && e.ChartId == chartId && e.UserId == userId)
             .FirstOrDefaultAsync(cancellationToken);
@@ -52,7 +45,7 @@ public sealed class EFPreferenceRatingRepository : IChartPreferenceRepository
         CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixGuids[mix];
+        var mixId = MixIds.For(mix);
         var entity = await database.ChartPreferenceRating.Where(c => c.MixId == mixId && c.ChartId == chartId)
             .FirstOrDefaultAsync(cancellationToken);
         if (entity == null)
@@ -79,7 +72,7 @@ public sealed class EFPreferenceRatingRepository : IChartPreferenceRepository
         CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixGuids[mix];
+        var mixId = MixIds.For(mix);
         return await database.ChartPreferenceRating.Where(c => c.MixId == mixId).Select(cpr =>
                 new ChartPreferenceRatingRecord(cpr.ChartId, cpr.Rating, cpr.Count))
             .ToArrayAsync(cancellationToken);
@@ -89,7 +82,7 @@ public sealed class EFPreferenceRatingRepository : IChartPreferenceRepository
         CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixGuids[mix];
+        var mixId = MixIds.For(mix);
         return (await database.UserPreferenceRating.Where(e => e.MixId == mixId && e.ChartId == chartId)
             .ToArrayAsync(cancellationToken)).Select(e => PreferenceRating.From(e.Rating)).ToArray();
     }
@@ -98,7 +91,7 @@ public sealed class EFPreferenceRatingRepository : IChartPreferenceRepository
         CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixGuids[mix];
+        var mixId = MixIds.For(mix);
         return (await database.UserPreferenceRating.Where(e => e.MixId == mixId && e.UserId == userId)
                 .ToArrayAsync(cancellationToken))
             .Select(u => new UserRatingsRecord(u.ChartId, u.Rating))

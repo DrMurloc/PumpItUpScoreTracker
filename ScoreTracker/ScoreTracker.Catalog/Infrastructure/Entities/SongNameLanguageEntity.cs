@@ -1,11 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace ScoreTracker.Data.Persistence.Entities
+namespace ScoreTracker.Catalog.Infrastructure.Entities
 {
     [Index(nameof(CultureCode))]
-    public sealed class SongNameLanguageEntity
+    internal sealed class SongNameLanguageEntity
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }

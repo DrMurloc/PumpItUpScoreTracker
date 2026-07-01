@@ -184,7 +184,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     public async Task<IEnumerable<(Guid UserId, Guid ChartId)>> GetPgUsers(ChartType chartType, DifficultyLevel level,
         CancellationToken cancellationToken = default)
     {
-        var mixId = MixGuids[MixEnum.Phoenix];
+        var mixId = MixIds.Phoenix;
         var intLevel = (int)level;
         var chartTypeString = chartType.ToString();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
@@ -202,7 +202,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         CancellationToken cancellationToken)
     {
         var userIdArray = userIds.ToArray();
-        var mixId = MixGuids[MixEnum.Phoenix];
+        var mixId = MixIds.Phoenix;
         var intMin = (int)minimumLevel;
         var intMax = (int)maximumLevel;
         var chartTypeString = chartType.ToString();
@@ -267,7 +267,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         CancellationToken cancellationToken = default)
     {
         var userIdArray = userIds.ToArray();
-        var mixId = MixGuids[MixEnum.Phoenix];
+        var mixId = MixIds.Phoenix;
         var intLevel = (int)difficulty;
         var chartTypeString = chartType.ToString();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
@@ -283,18 +283,11 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                     pb.IsBroken, pb.RecordedDate)));
     }
 
-    //Will  need to refactor this if I ever support non prod environments
-    //Mostly saving some tedious joins for now.
-    private static readonly IDictionary<MixEnum, Guid> MixGuids = new Dictionary<MixEnum, Guid>
-    {
-        { MixEnum.XX, Guid.Parse("20F8CCF8-94B1-418D-B923-C375B042BDA8") },
-        { MixEnum.Phoenix, Guid.Parse("1ABB8F5A-BDA3-40F0-9CE7-1C4F9F8F1D3B") }
-    };
 
     public async Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetAllPlayerScores(ChartType chartType,
         DifficultyLevel difficulty, CancellationToken cancellationToken = default)
     {
-        var mixId = MixGuids[MixEnum.Phoenix];
+        var mixId = MixIds.Phoenix;
         var intLevel = (int)difficulty;
         var chartTypeString = chartType.ToString();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
@@ -312,7 +305,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         DifficultyLevel difficulty,
         CancellationToken cancellationToken = default)
     {
-        var mixId = MixGuids[MixEnum.Phoenix];
+        var mixId = MixIds.Phoenix;
         var intLevel = (int)difficulty;
         var chartTypeString = chartType.ToString();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
@@ -394,7 +387,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
 
         if (request.ChartMix != null)
         {
-            var mixId = MixGuids[request.ChartMix.Value];
+            var mixId = MixIds.For(request.ChartMix.Value);
             chartQuery = chartQuery.Where(c => c.OriginalMixId == mixId);
         }
 

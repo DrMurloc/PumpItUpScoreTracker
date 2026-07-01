@@ -23,6 +23,85 @@ namespace ScoreTracker.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.ChartSkillEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsHighlighted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SkillName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChartId");
+
+                    b.HasIndex("SkillName");
+
+                    b.ToTable("ChartSkill", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.ChartVideoEntity", b =>
+                {
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ChannelName")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTimeOffset?>("LastUpdated")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("VideoUrl")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.HasKey("ChartId");
+
+                    b.ToTable("ChartVideo", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.SongNameLanguageEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CultureCode")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
+                    b.Property<string>("EnglishSongName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("SongName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CultureCode");
+
+                    b.ToTable("SongNameLanguage", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.UserRandomSettingsEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -220,55 +299,6 @@ namespace ScoreTracker.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("ChartScoringLevel", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.ChartSkillEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ChartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsHighlighted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("SkillName")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChartId");
-
-                    b.HasIndex("SkillName");
-
-                    b.ToTable("ChartSkill", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.ChartVideoEntity", b =>
-                {
-                    b.Property<Guid>("ChartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ChannelName")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<DateTimeOffset?>("LastUpdated")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("VideoUrl")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.HasKey("ChartId");
-
-                    b.ToTable("ChartVideo", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.CoOpPlayerEntity", b =>
@@ -857,36 +887,6 @@ namespace ScoreTracker.Data.Migrations
                     b.HasIndex("Name");
 
                     b.ToTable("Song", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.SongNameLanguageEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CultureCode")
-                        .IsRequired()
-                        .HasMaxLength(8)
-                        .HasColumnType("nvarchar(8)");
-
-                    b.Property<string>("EnglishSongName")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
-
-                    b.Property<string>("SongName")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CultureCode");
-
-                    b.ToTable("SongNameLanguage", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.SuggestionFeedbackEntity", b =>
@@ -1895,6 +1895,15 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("UcsChartTag", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.ChartVideoEntity", b =>
+                {
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ChartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.ChartEntity", b =>
                 {
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.SongEntity", null)
@@ -1921,15 +1930,6 @@ namespace ScoreTracker.Data.Migrations
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.MixEntity", null)
                         .WithMany()
                         .HasForeignKey("MixId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.ChartVideoEntity", b =>
-                {
-                    b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
-                        .WithMany()
-                        .HasForeignKey("ChartId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

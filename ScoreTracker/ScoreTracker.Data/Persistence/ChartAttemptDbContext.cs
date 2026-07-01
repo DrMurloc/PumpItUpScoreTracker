@@ -24,7 +24,6 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<SongEntity> Song { get; set; }
     public DbSet<UserEntity> User { get; set; }
     public DbSet<ExternalLoginEntity> ExternalLogin { get; set; }
-    public DbSet<ChartVideoEntity> ChartVideo { get; set; }
     public DbSet<SavedChartEntity> SavedChart { get; set; }
     public DbSet<UserChartDifficultyRatingEntity> UserChartDifficultyRating { get; set; }
     public DbSet<ChartDifficultyRatingEntity> ChartDifficultyRating { get; set; }
@@ -43,7 +42,6 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<MatchEntity> Match { get; set; }
     public DbSet<RandomSettingsEntity> RandomSettings { get; set; }
     public DbSet<MatchLinkEntity> MatchLink { get; set; }
-    public DbSet<ChartSkillEntity> ChartSkill { get; set; }
     public DbSet<PlayerStatsEntity> PlayerStats { get; set; }
     public DbSet<CommunityEntity> Community { get; set; }
     public DbSet<TournamentChartLevelEntity> TournamentChartLevel { get; set; }
@@ -57,7 +55,6 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<UserHighestTitleEntity> UserHighestTitle { get; set; }
     public DbSet<TournamentRoleEntity> TournamentRole { get; set; }
     public DbSet<TournamentPlayerEntity> TournamentPlayer { get; set; }
-    public DbSet<SongNameLanguageEntity> SongNameLanguage { get; set; }
     public DbSet<WeeklyTournamentChartEntity> WeeklyTournamentChart { get; set; }
     public DbSet<WeeklyUserEntry> WeeklyUserEntry { get; set; }
     public DbSet<UserWeeklyPlacingEntity> UserWeeklyPlacing { get; set; }
@@ -155,11 +152,6 @@ public sealed class ChartAttemptDbContext : DbContext
             .HasOne<UserEntity>()
             .WithMany()
             .HasForeignKey(e => e.UserId);
-
-        builder.Entity<ChartVideoEntity>().ToTable("ChartVideo")
-            .HasOne<ChartEntity>()
-            .WithMany()
-            .HasForeignKey(e => e.ChartId);
 
         builder.Entity<UserTournamentSessionEntity>()
             .Property(u => u.RestTime)
