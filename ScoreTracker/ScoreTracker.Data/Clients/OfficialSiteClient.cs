@@ -23,7 +23,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     private readonly IMediator _mediator;
     private readonly IBus _bus;
     private readonly ICurrentUserAccessor _currentUser;
-    private readonly IPhoenixRecordRepository _phoenixRecords;
+    private readonly IScoreReader _phoenixRecords;
     private readonly IFileUploadClient _fileUpload;
     private readonly IOfficialLeaderboardRepository _leaderboards;
     private readonly IDateTimeOffsetAccessor _dateTime;
@@ -31,7 +31,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
     public OfficialSiteClient(IPiuGameApi piuGame, IChartRepository charts, ILogger<OfficialSiteClient> logger,
         IMediator mediator,
         ICurrentUserAccessor currentUser,
-        IPhoenixRecordRepository phoenixRecords, IFileUploadClient fileUpload,
+        IScoreReader phoenixRecords, IFileUploadClient fileUpload,
         IOfficialLeaderboardRepository leaderboards,
         IBus bus,
         IDateTimeOffsetAccessor dateTime)
@@ -158,7 +158,7 @@ public sealed class OfficialSiteClient : IOfficialSiteClient
 
         var pagesWithNoUpscore = 0;
         var bestScores =
-            (await _phoenixRecords.GetRecordedScores(_currentUser.User.Id, cancellationToken)).ToDictionary(r =>
+            (await _phoenixRecords.GetBestScores(_currentUser.User.Id, cancellationToken)).ToDictionary(r =>
                 r.ChartId);
         while (pagesWithNoUpscore <= 3 && currentPage <= finalPage)
         {

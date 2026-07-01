@@ -5,6 +5,8 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.ScoreLedger.Application;
+using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.Ucs.Contracts;
 using ScoreTracker.Ucs.Contracts.Commands;
 using ScoreTracker.Ucs.Domain;
@@ -33,6 +35,40 @@ public sealed class VerticalBoundaryTests
 
         Assert.True(offenders.Length == 0,
             $"Only Contracts/ and Wiring/ may be public in a vertical assembly: {string.Join(", ", offenders)}");
+    }
+
+    [Fact]
+    public void ScoreLedgerPublicSurfaceIsContractsAndWiringOnly()
+    {
+        var offenders = typeof(ScoreTracker.ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions).Assembly.GetTypes()
+            .Where(t => t.IsPublic)
+            .Where(t => t.Namespace == null
+                        || (!t.Namespace.StartsWith("ScoreTracker.ScoreLedger.Contracts", StringComparison.Ordinal)
+                            && t.Namespace != "ScoreTracker.ScoreLedger.Wiring"))
+            .Select(t => t.FullName)
+            .ToArray();
+
+        Assert.True(offenders.Length == 0,
+            $"Only Contracts/ and Wiring/ may be public in a vertical assembly: {string.Join(", ", offenders)}");
+    }
+
+    [Fact]
+    public void MassTransitDiscoversTheScoreLedgersInternalConsumers()
+    {
+        // UpdatePhoenixRecordHandler is an internal IConsumer<> (TryFireScoreCommand,
+        // FlushOverdueScoreBatchesCommand). MassTransit's AddConsumers assembly scan skips
+        // internal types (verified when this vertical extracted), so the vertical exposes
+        // AddScoreLedgerConsumers as the explicit registration hook. If that hook ever
+        // stops covering the internal consumers, score-post batching silently stops
+        // draining — this wiring test is the tripwire.
+        var services = new ServiceCollection();
+        services.AddMassTransit(x =>
+        {
+            x.AddScoreLedgerConsumers();
+            x.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
+        });
+
+        Assert.Contains(services, d => d.ServiceType == typeof(UpdatePhoenixRecordHandler));
     }
 
     [Fact]

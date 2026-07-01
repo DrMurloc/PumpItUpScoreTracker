@@ -1,16 +1,17 @@
 using MassTransit;
 using MediatR;
-using ScoreTracker.Application.Messages;
+using ScoreTracker.ScoreLedger.Contracts.Messages;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Application.Handlers;
+namespace ScoreTracker.ScoreLedger.Application;
 
-public sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
+internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository records,
         ICurrentUserAccessor user,
         IDateTimeOffsetAccessor dateTimeOffset,
         IBus bus,

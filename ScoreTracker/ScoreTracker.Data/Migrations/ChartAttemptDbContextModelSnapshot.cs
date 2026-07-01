@@ -625,43 +625,6 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("PastTourneyCharts", "scores");
                 });
 
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.PhoenixRecordEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ChartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsBroken")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("LetterGrade")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Plate")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("RecordedDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<int?>("Score")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChartId");
-
-                    b.HasIndex("UserId", "ChartId")
-                        .IsUnique();
-
-                    b.ToTable("PhoenixRecord", "scores");
-                });
-
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.PhoenixRecordStatsEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -894,48 +857,6 @@ namespace ScoreTracker.Data.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("SavedChart", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.ScoreEventJournalEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ChartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("EventId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsBroken")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("MixId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("OccurredAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Plate")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("Score")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("nvarchar(32)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId", "ChartId", "OccurredAt");
-
-                    b.ToTable("ScoreEventJournal", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.SongEntity", b =>
@@ -1783,6 +1704,85 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("UserQualifierHistory", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.ScoreLedger.Infrastructure.Entities.PhoenixRecordEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsBroken")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LetterGrade")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Plate")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("RecordedDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int?>("Score")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChartId");
+
+                    b.HasIndex("UserId", "ChartId")
+                        .IsUnique();
+
+                    b.ToTable("PhoenixRecord", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.ScoreLedger.Infrastructure.Entities.ScoreEventJournalEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsBroken")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Plate")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Score")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "ChartId", "OccurredAt");
+
+                    b.ToTable("ScoreEventJournal", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Ucs.Infrastructure.Entities.UcsChartEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1967,21 +1967,6 @@ namespace ScoreTracker.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.PhoenixRecordEntity", b =>
-                {
-                    b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
-                        .WithMany()
-                        .HasForeignKey("ChartId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ScoreTracker.Data.Persistence.Entities.UserEntity", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.SavedChartEntity", b =>
                 {
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
@@ -2029,6 +2014,21 @@ namespace ScoreTracker.Data.Migrations
 
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.UserSettingsEntity", b =>
                 {
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ScoreTracker.ScoreLedger.Infrastructure.Entities.PhoenixRecordEntity", b =>
+                {
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ChartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.UserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")

@@ -1,12 +1,13 @@
 using MassTransit;
 using MediatR;
-using ScoreTracker.Application.Commands;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.ScoreLedger.Contracts.Commands;
+using ScoreTracker.ScoreLedger.Domain;
 
-namespace ScoreTracker.Application.Handlers;
+namespace ScoreTracker.ScoreLedger.Application;
 
-public sealed class WipeUserScoresHandler : IRequestHandler<WipeUserScoresCommand>
+internal sealed class WipeUserScoresHandler : IRequestHandler<WipeUserScoresCommand>
 {
     private readonly IPhoenixRecordRepository _phoenixScores;
     private readonly IXXChartAttemptRepository _xxScores;

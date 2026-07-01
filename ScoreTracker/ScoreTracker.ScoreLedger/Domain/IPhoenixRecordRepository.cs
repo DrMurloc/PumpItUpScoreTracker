@@ -3,9 +3,9 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Domain.SecondaryPorts;
+namespace ScoreTracker.ScoreLedger.Domain;
 
-public interface IPhoenixRecordRepository
+internal interface IPhoenixRecordRepository
 {
     Task UpdateBestAttempt(Guid userId, RecordedPhoenixScore score, CancellationToken cancellationToken = default);
 

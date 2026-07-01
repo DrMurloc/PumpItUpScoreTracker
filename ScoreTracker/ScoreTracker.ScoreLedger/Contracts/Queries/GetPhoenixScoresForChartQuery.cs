@@ -1,7 +1,6 @@
-﻿using MediatR;
-using ScoreTracker.Domain.Records;
+﻿using ScoreTracker.Domain.Records;
 
-namespace ScoreTracker.Application.Queries
+namespace ScoreTracker.ScoreLedger.Contracts.Queries
 {
     [ExcludeFromCodeCoverage]
     public sealed record GetPhoenixScoresForChartQuery(Guid ChartId) : IQuery<IEnumerable<UserPhoenixScore>>

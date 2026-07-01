@@ -1,4 +1,4 @@
-﻿@page "/Experiments/LetterDifficulties"
+@page "/Experiments/LetterDifficulties"
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Components
@@ -100,7 +100,7 @@
 
 
 @inject IChartRepository ChartRepository;
-@inject IPhoenixRecordRepository Scores;
+@inject IScoreReader Scores;
 @inject IPlayerStatsRepository PlayerStats;
 @code
 {
@@ -161,7 +161,7 @@
             (await ChartRepository.GetCharts(MixEnum.Phoenix, level, chartType, cancellationToken: CancellationToken.None))
                 .ToArray();
         _charts = charts.ToDictionary(c => c.Id);
-        var scores = (await Scores.GetAllPlayerScores(chartType, level, CancellationToken.None)).ToArray();
+        var scores = (await Scores.GetScores(chartType, level, CancellationToken.None)).Select(s => (userId: s.UserId, record: s.Record)).ToArray();
 
         var stats = (await PlayerStats.GetStats(scores.Select(p => p.userId).Distinct(), CancellationToken.None))
             .ToDictionary(s => s.UserId);

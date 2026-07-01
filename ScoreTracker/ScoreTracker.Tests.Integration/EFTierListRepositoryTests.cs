@@ -5,6 +5,8 @@ using ScoreTracker.Data.Repositories;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.ScoreLedger.Infrastructure;
+using ScoreTracker.ScoreLedger.Infrastructure.Entities;
 using ScoreTracker.Tests.Integration.Fixtures;
 using ScoreTracker.Tests.Integration.TestData;
 
@@ -157,7 +159,7 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
                 new UserHighestTitleEntity { UserId = staleUser, TitleName = "t16b", Level = 16 });
             // The cutoff is now-120d on the repository's own clock (pre-existing seam gap),
             // so the seed rows anchor to the real clock too.
-            ctx.PhoenixBestAttempt.AddRange(
+            ctx.Set<PhoenixRecordEntity>().AddRange(
                 new PhoenixRecordEntity
                 {
                     Id = Guid.NewGuid(), UserId = activeUser, ChartId = chartId,

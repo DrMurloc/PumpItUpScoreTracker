@@ -1,11 +1,11 @@
 ﻿using MediatR;
-using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Records;
-using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.ScoreLedger.Contracts.Queries;
+using ScoreTracker.ScoreLedger.Domain;
 
-namespace ScoreTracker.Application.Handlers
+namespace ScoreTracker.ScoreLedger.Application
 {
-    public sealed class
+    internal sealed class
         GetPhoenixScoresForChartHandler : IRequestHandler<GetPhoenixScoresForChartQuery, IEnumerable<UserPhoenixScore>>
     {
         private readonly IPhoenixRecordRepository _records;

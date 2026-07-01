@@ -29,8 +29,6 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<SavedChartEntity> SavedChart { get; set; }
     public DbSet<UserChartDifficultyRatingEntity> UserChartDifficultyRating { get; set; }
     public DbSet<ChartDifficultyRatingEntity> ChartDifficultyRating { get; set; }
-    public DbSet<PhoenixRecordEntity> PhoenixBestAttempt { get; set; }
-    public DbSet<ScoreEventJournalEntity> ScoreEventJournal { get; set; }
     public DbSet<UserSettingsEntity> UserSettings { get; set; }
     public DbSet<UserOfficialLeaderboardEntity> UserOfficialLeaderboard { get; set; }
     public DbSet<UserCoOpRatingEntity> UserCoOpRating { get; set; }
@@ -109,15 +107,6 @@ public sealed class ChartAttemptDbContext : DbContext
             .WithMany()
             .HasForeignKey(us => us.UserId);
 
-        builder.Entity<PhoenixRecordEntity>().ToTable("PhoenixRecord")
-            .HasOne<ChartEntity>()
-            .WithMany()
-            .HasForeignKey(ba => ba.ChartId);
-
-        builder.Entity<PhoenixRecordEntity>()
-            .HasOne<UserEntity>()
-            .WithMany()
-            .HasForeignKey(ba => ba.UserId);
         builder.Entity<UserEntity>()
             .Property(u => u.ProfileImage)
             .HasDefaultValue("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png");

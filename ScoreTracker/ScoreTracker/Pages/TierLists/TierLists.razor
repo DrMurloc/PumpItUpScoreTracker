@@ -1,4 +1,4 @@
-﻿@page "/TierLists/Old"
+@page "/TierLists/Old"
 @using MediatR
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Enums
@@ -268,7 +268,7 @@ else
 </style>
 @inject IAdminNotificationClient Notifications;
 @inject ISnackbar Snackbar;
-@inject IPhoenixRecordRepository PhoenixRecords;
+@inject IScoreReader PhoenixRecords;
 
 @code {
 
@@ -911,7 +911,7 @@ else
         {
             _averageRating = 0;
         }
-        _allPhoenixScores = (await PhoenixRecords.GetAllPlayerScores(type, difficulty)).GroupBy(r => r.userId)
+        _allPhoenixScores = (await PhoenixRecords.GetScores(type, difficulty, CancellationToken.None)).Select(s => (userId: s.UserId, record: s.Record)).GroupBy(r => r.userId)
             .ToDictionary(g => g.Key, g => g.Select(i=>i.record).ToArray().AsEnumerable());
     
         RefilterCharts();

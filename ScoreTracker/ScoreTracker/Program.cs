@@ -1,4 +1,4 @@
-﻿using BlazorApplicationInsights;
+using BlazorApplicationInsights;
 using Hangfire;
 using Hangfire.SqlServer;
 using MassTransit;
@@ -15,6 +15,7 @@ using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.Domain.ValueTypes;
 using ScoreTracker.PersonalProgress;
+using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Accessors;
 using ScoreTracker.Web.Configuration;
@@ -60,6 +61,9 @@ builder.Services.AddMassTransit(o =>
 {
     o.AddConsumers(typeof(PlayerRatingSaga).Assembly, typeof(TierListSaga).Assembly,
         typeof(RecurringJobRunner).Assembly);
+    // Vertical consumers are internal — assembly scanning skips them (see the
+    // AddScoreLedgerConsumers doc comment and its tripwire test).
+    o.AddScoreLedgerConsumers();
 
     o.AddDelayedMessageScheduler();
 
@@ -170,7 +174,8 @@ builder.Services.AddBlazorApplicationInsights()
             typeof(UpdateXXBestAttemptHandler).Assembly
             , typeof(MainLayout).Assembly, typeof(EFPlayerStatsRepository).Assembly,
             typeof(PlayerRatingSaga).Assembly,
-            typeof(ScoreTracker.Ucs.Wiring.UcsRegistrationExtensions).Assembly);
+            typeof(ScoreTracker.Ucs.Wiring.UcsRegistrationExtensions).Assembly,
+            typeof(ScoreTracker.ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions).Assembly);
     })
     .AddTransient<IUserAccessService, UserAccessService>()
     .AddTransient<IWorldRankingService, WorldRankingService>()

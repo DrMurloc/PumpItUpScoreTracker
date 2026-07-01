@@ -1,4 +1,5 @@
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.Ucs.Wiring;
 
 namespace ScoreTracker.CompositionRoot;
@@ -13,6 +14,6 @@ public static class VerticalModelContributions
 {
     public static IDbModelContribution[] All()
     {
-        return new IDbModelContribution[] { new UcsModelContribution() };
+        return new IDbModelContribution[] { new ScoreLedgerModelContribution(), new UcsModelContribution() };
     }
 }

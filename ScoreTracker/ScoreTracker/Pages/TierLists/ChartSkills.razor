@@ -1,4 +1,4 @@
-﻿@page "/ChartSkills"
+@page "/ChartSkills"
 @page "/PersonalizedTierList"
 @page "/TierLists"
 @using MediatR
@@ -606,7 +606,7 @@
 @inject IUiSettingsAccessor UiSettings;
 @inject IAdminNotificationClient Notifications;
 @inject ISnackbar Snackbar;
-@inject IPhoenixRecordRepository Records;
+@inject IScoreReader Records;
 @inject IPlayerStatsRepository PlayerStats;
 @inject IMemoryCache Cache;
 
@@ -886,7 +886,7 @@ function(val, index) {
     private IDictionary<Guid, string> _variance = new Dictionary<Guid, string>();
     private async Task CalculateVariance(ChartType chartType, DifficultyLevel level)
     {
-        var scores = (await Records.GetAllPlayerScores(chartType, level)).ToArray();
+        var scores = (await Records.GetScores(chartType, level, CancellationToken.None)).Select(s => (userId: s.UserId, record: s.Record)).ToArray();
         var players = (await PlayerStats.GetStats(scores.Select(s => s.userId).Distinct().ToArray(), CancellationToken.None))
             .Where(p => Math.Abs((_chartType == ChartType.Single ? p.SinglesCompetitiveLevel : p.DoublesCompetitiveLevel) - level) < 2.0).ToDictionary(p => p.UserId);
 

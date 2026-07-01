@@ -1,13 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
-namespace ScoreTracker.Data.Persistence.Entities;
+namespace ScoreTracker.ScoreLedger.Infrastructure.Entities;
 
 // Append-only journal of score submissions as received (ADR-001 Q8): the foundation of
 // the score-progression-history feature, and the candidate source-of-truth if the
 // Ledger is ever event-sourced. Rows are never updated or deleted.
 [Index(nameof(UserId), nameof(ChartId), nameof(OccurredAt))]
-public sealed class ScoreEventJournalEntity
+internal sealed class ScoreEventJournalEntity
 {
     [Key] public Guid Id { get; set; }
 

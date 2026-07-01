@@ -1,6 +1,6 @@
 using MediatR;
 
-namespace ScoreTracker.Application.Commands;
+namespace ScoreTracker.ScoreLedger.Contracts.Commands;
 
 [ExcludeFromCodeCoverage]
 public sealed record WipeUserScoresCommand(Guid UserId, bool IncludeHistory) : IRequest

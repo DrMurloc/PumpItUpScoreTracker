@@ -8,6 +8,7 @@ using ScoreTracker.Data.Configuration;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Repositories;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.Ucs.Wiring;
 
 namespace ScoreTracker.CompositionRoot;
@@ -37,6 +38,7 @@ public static class RegistrationExtensions
         builder.Configure<SqlConfiguration>(o => { o.ConnectionString = configuration.ConnectionString; });
         builder.Configure<AzureBlobConfiguration>(o => { o.ConnectionString = blobConfig.ConnectionString; });
 
+        builder.AddScoreLedger();
         builder.AddUcs();
 
         // Not pooled: pooling requires an options-only constructor, and the context takes

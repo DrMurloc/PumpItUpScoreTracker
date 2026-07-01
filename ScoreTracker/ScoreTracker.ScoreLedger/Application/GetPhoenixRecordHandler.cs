@@ -1,11 +1,12 @@
 ﻿using MediatR;
-using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.ScoreLedger.Contracts.Queries;
+using ScoreTracker.ScoreLedger.Domain;
 
-namespace ScoreTracker.Application.Handlers;
+namespace ScoreTracker.ScoreLedger.Application;
 
-public sealed class GetPhoenixRecordHandler : IRequestHandler<GetPhoenixRecordQuery, RecordedPhoenixScore?>
+internal sealed class GetPhoenixRecordHandler : IRequestHandler<GetPhoenixRecordQuery, RecordedPhoenixScore?>
 {
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IPhoenixRecordRepository _records;

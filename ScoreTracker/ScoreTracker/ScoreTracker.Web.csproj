@@ -38,6 +38,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ScoreTracker.CompositionRoot\ScoreTracker.CompositionRoot.csproj" />
     <ProjectReference Include="..\ScoreTracker.PersonalProgress\ScoreTracker.PersonalProgress.csproj" />
+    <ProjectReference Include="..\ScoreTracker.ScoreLedger\ScoreTracker.ScoreLedger.csproj" />
     <ProjectReference Include="..\ScoreTracker.Ucs\ScoreTracker.Ucs.csproj" />
   </ItemGroup>
 

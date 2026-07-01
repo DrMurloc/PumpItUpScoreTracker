@@ -1,13 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
-using ScoreTracker.Data.Persistence.Entities;
+using ScoreTracker.ScoreLedger.Infrastructure.Entities;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Records;
-using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.ScoreLedger.Domain;
 
-namespace ScoreTracker.Data.Repositories;
+namespace ScoreTracker.ScoreLedger.Infrastructure;
 
-public sealed class EFScoreJournalRepository : IScoreJournalRepository
+internal sealed class EFScoreJournalRepository : IScoreJournalRepository
 {
     private static readonly IDictionary<MixEnum, Guid> MixGuids = new Dictionary<MixEnum, Guid>
     {
@@ -25,7 +25,7 @@ public sealed class EFScoreJournalRepository : IScoreJournalRepository
     public async Task Append(ScoreJournalEntry entry, CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        await database.ScoreEventJournal.AddAsync(new ScoreEventJournalEntity
+        await database.Set<ScoreEventJournalEntity>().AddAsync(new ScoreEventJournalEntity
         {
             Id = Guid.NewGuid(),
             EventId = Guid.NewGuid(),

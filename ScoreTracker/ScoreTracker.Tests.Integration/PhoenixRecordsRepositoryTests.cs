@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
-using ScoreTracker.Data.Repositories;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.ScoreLedger.Infrastructure;
 using ScoreTracker.Tests.Integration.Fixtures;
 using ScoreTracker.Tests.Integration.TestData;
 
