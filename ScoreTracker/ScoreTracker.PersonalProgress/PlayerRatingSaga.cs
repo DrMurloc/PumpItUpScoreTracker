@@ -18,16 +18,19 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
     IRequestHandler<RecalculatePumbility>,
     IConsumer<UserCreatedEvent>
 {
-    private readonly IPhoenixRecordRepository _scores;
+    private readonly IScoreReader _scores;
+    private readonly IPhoenixRecordStatsRepository _recordStats;
     private readonly IChartRepository _charts;
     private readonly IPlayerStatsRepository _stats;
     private readonly IBus _bus;
     private readonly IMediator _mediator;
 
-    public PlayerRatingSaga(IPhoenixRecordRepository scores, IChartRepository charts, IPlayerStatsRepository stats,
+    public PlayerRatingSaga(IScoreReader scores, IPhoenixRecordStatsRepository recordStats,
+        IChartRepository charts, IPlayerStatsRepository stats,
         IBus bus, IMediator mediator)
     {
         _scores = scores;
+        _recordStats = recordStats;
         _charts = charts;
         _stats = stats;
         _bus = bus;
@@ -65,7 +68,7 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
             (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
             .ToDictionary(c => c.Id);
         var scoring = ScoringConfiguration.PumbilityScoring(false);
-        return (await _scores.GetRecordedScores(request.UserId, cancellationToken))
+        return (await _scores.GetBestScores(request.UserId, cancellationToken))
             .Where(s => charts[s.ChartId].Type != ChartType.CoOp)
             .Where(s => s.Score != null && (request.ChartType == null ||
                                             charts[s.ChartId].Type == request.ChartType))
@@ -96,7 +99,7 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
         var charts =
             (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
         var recorded =
-            (await _scores.GetRecordedScores(request.UserId, cancellationToken)).ToArray();
+            (await _scores.GetBestScores(request.UserId, cancellationToken)).ToArray();
         var scores = recorded
             .Where(s => s.Score != null)
             .Select(s => new ChartRating(s.ChartId, charts[s.ChartId].Type,
@@ -180,7 +183,7 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
             (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
             .ToDictionary(c => c.Id);
         var count = request.ChartType == null ? 100 : 50;
-        return (await _scores.GetRecordedScores(request.UserId, cancellationToken))
+        return (await _scores.GetBestScores(request.UserId, cancellationToken))
             .Where(s => charts[s.ChartId].Type != ChartType.CoOp)
             .Where(s => s.Score != null && (request.ChartType == null ||
                                             charts[s.ChartId].Type == request.ChartType))
@@ -211,6 +214,6 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
         var ratings = scores.Select(s => new PhoenixRecordStats(s.ChartId,
             pumbility.GetScore(charts[s.ChartId], s.Score, s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken),
             pumbilityPlus.GetScore(charts[s.ChartId], s.Score, s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken)));
-        await _scores.UpdateScoreStats(request.UserId, ratings, cancellationToken);
+        await _recordStats.UpdateScoreStats(request.UserId, ratings, cancellationToken);
     }
 }

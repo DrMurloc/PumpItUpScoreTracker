@@ -67,15 +67,15 @@ public sealed class LayerDependencyTests
     [Fact]
     public void OnlyLedgerInternalTypesInjectThePhoenixRecordRepository()
     {
-        // F1 ratchet (rearch C22): every consumer outside the Score Ledger reads scores
-        // through IScoreReader. The allowlist is the Ledger itself — it shrinks at P5
-        // (PlayerRatingSaga is the one sanctioned holdout until its UpdateScoreStats
-        // write gets a deliberate home in the PlayerProgress vertical work).
+        // F1 ratchet (rearch C22, tightened C34): every consumer outside the Score Ledger
+        // reads scores through IScoreReader. The allowlist is the Ledger itself — the
+        // PlayerRatingSaga holdout resolved when its UpdateScoreStats write moved to
+        // IPhoenixRecordStatsRepository (Progression's own port).
         var allowed = new[]
         {
             "UpdatePhoenixRecordHandler", "GetPhoenixRecordHandler", "GetPhoenixRecordsHandler",
             "GetPhoenixScoresForChartHandler", "GetAllChartScoreAggregatesHandler",
-            "WipeUserScoresHandler", "PlayerRatingSaga"
+            "WipeUserScoresHandler"
         };
         var personalProgress = typeof(PersonalProgress.PlayerRatingSaga).Assembly;
         var violations = ApplicationAssembly.GetTypes().Concat(personalProgress.GetTypes())
