@@ -15,6 +15,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.EventCompetition.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.PersonalProgress;
 using ScoreTracker.ScoreLedger.Wiring;
@@ -70,6 +71,7 @@ builder.Services.AddMassTransit(o =>
     o.AddOfficialMirrorConsumers();
     o.AddChartIntelligenceConsumers();
     o.AddWeeklyChallengeConsumers();
+    o.AddEventCompetitionConsumers();
 
     o.AddDelayedMessageScheduler();
 
@@ -185,7 +187,8 @@ builder.Services.AddBlazorApplicationInsights()
             typeof(ScoreTracker.OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions).Assembly,
             typeof(ScoreTracker.Catalog.Wiring.CatalogRegistrationExtensions).Assembly,
             typeof(ChartIntelligenceRegistrationExtensions).Assembly,
-            typeof(WeeklyChallengeRegistrationExtensions).Assembly);
+            typeof(WeeklyChallengeRegistrationExtensions).Assembly,
+            typeof(EventCompetitionRegistrationExtensions).Assembly);
     })
     .AddTransient<IUserAccessService, UserAccessService>()
     .AddInfrastructure(builder.Configuration.GetSection("AzureBlob").Get<AzureBlobConfiguration>(),

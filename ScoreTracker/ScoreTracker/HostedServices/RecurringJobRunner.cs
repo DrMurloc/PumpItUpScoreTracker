@@ -1,10 +1,9 @@
 using ScoreTracker.WeeklyChallenge.Contracts.Messages;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using MassTransit;
+using ScoreTracker.EventCompetition.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.ScoreLedger.Contracts.Messages;
-using ScoreTracker.Application.Handlers;
-using ScoreTracker.Domain.Events;
 
 namespace ScoreTracker.Web.HostedServices;
 
@@ -36,7 +35,7 @@ public sealed class RecurringJobRunner
         _bus.Publish(new StartLeaderboardImportCommand());
 
     public Task PublishTryScheduleMoM() =>
-        _bus.Publish(new MarchOfMurlocsHandler.TryScheduleMoMCommand());
+        _bus.Publish(new TryScheduleMoMCommand());
 
     public Task PublishFlushOverdueScoreBatches() =>
         _bus.Publish(new FlushOverdueScoreBatchesCommand());

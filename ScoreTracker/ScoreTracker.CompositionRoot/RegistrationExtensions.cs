@@ -8,6 +8,7 @@ using ScoreTracker.Data.Configuration;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Repositories;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.EventCompetition.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.Ucs.Wiring;
@@ -38,6 +39,7 @@ public static class RegistrationExtensions
 
         builder.AddCatalog();
         builder.AddChartIntelligence();
+        builder.AddEventCompetition();
         builder.AddOfficialMirror();
         builder.AddScoreLedger();
         builder.AddUcs();

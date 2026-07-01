@@ -27,7 +27,8 @@ public sealed class MessageTaxonomyTests
         typeof(OfficialMirror.Contracts.Queries.GetGameCardsQuery).Assembly,
         typeof(Catalog.Contracts.Queries.GetRandomSettingsQuery).Assembly,
         typeof(ChartIntelligence.Contracts.Messages.ProcessPassTierListCommand).Assembly,
-        typeof(WeeklyChallenge.Contracts.Messages.RotateWeeklyChartsCommand).Assembly
+        typeof(WeeklyChallenge.Contracts.Messages.RotateWeeklyChartsCommand).Assembly,
+        typeof(EventCompetition.Contracts.Messages.TryScheduleMoMCommand).Assembly
     };
 
     private static Type[] TypesIn(string namespaceSuffix)

@@ -5,7 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
 using Moq;
-using ScoreTracker.Application.Handlers;
+using ScoreTracker.EventCompetition.Application;
+using ScoreTracker.EventCompetition.Contracts.Messages;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
@@ -46,12 +47,12 @@ public sealed class MarchOfMurlocsHandlerTests
         var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
             scheduler.Object, dateTime.Object, EmptyScoringLevels().Object);
 
-        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.TryScheduleMoMCommand()).Object);
+        await handler.Consume(ContextOf(new TryScheduleMoMCommand()).Object);
 
-        bus.Verify(b => b.Publish(It.IsAny<MarchOfMurlocsHandler.CycleMoMCommand>(), It.IsAny<CancellationToken>()),
+        bus.Verify(b => b.Publish(It.IsAny<CycleMoMCommand>(), It.IsAny<CancellationToken>()),
             Times.Once);
         scheduler.Verify(s => s.SchedulePublish(It.IsAny<DateTime>(),
-                It.IsAny<MarchOfMurlocsHandler.CycleMoMCommand>(), It.IsAny<CancellationToken>()),
+                It.IsAny<CycleMoMCommand>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -72,9 +73,9 @@ public sealed class MarchOfMurlocsHandlerTests
         var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
             scheduler.Object, dateTime.Object, EmptyScoringLevels().Object);
 
-        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.TryScheduleMoMCommand()).Object);
+        await handler.Consume(ContextOf(new TryScheduleMoMCommand()).Object);
 
-        bus.Verify(b => b.Publish(It.IsAny<MarchOfMurlocsHandler.CycleMoMCommand>(), It.IsAny<CancellationToken>()),
+        bus.Verify(b => b.Publish(It.IsAny<CycleMoMCommand>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -95,13 +96,13 @@ public sealed class MarchOfMurlocsHandlerTests
         var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
             scheduler.Object, dateTime.Object, EmptyScoringLevels().Object);
 
-        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.TryScheduleMoMCommand()).Object);
+        await handler.Consume(ContextOf(new TryScheduleMoMCommand()).Object);
 
-        bus.Verify(b => b.Publish(It.IsAny<MarchOfMurlocsHandler.CycleMoMCommand>(), It.IsAny<CancellationToken>()),
+        bus.Verify(b => b.Publish(It.IsAny<CycleMoMCommand>(), It.IsAny<CancellationToken>()),
             Times.Never);
         scheduler.Verify(s => s.SchedulePublish(
                 (endDate + TimeSpan.FromMinutes(1)).DateTime,
-                It.IsAny<MarchOfMurlocsHandler.CycleMoMCommand>(),
+                It.IsAny<CycleMoMCommand>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -143,7 +144,7 @@ public sealed class MarchOfMurlocsHandlerTests
         var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
             scheduler.Object, dateTime.Object, EmptyScoringLevels().Object);
 
-        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.CycleMoMCommand()).Object);
+        await handler.Consume(ContextOf(new CycleMoMCommand()).Object);
 
         var newTournaments = savedConfigurations.Where(s => s.IsMom).ToArray();
         Assert.Equal(2, newTournaments.Length);
@@ -181,13 +182,13 @@ public sealed class MarchOfMurlocsHandlerTests
         var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
             scheduler.Object, dateTime.Object, EmptyScoringLevels().Object);
 
-        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.TryScheduleMoMCommand()).Object);
+        await handler.Consume(ContextOf(new TryScheduleMoMCommand()).Object);
 
-        bus.Verify(b => b.Publish(It.IsAny<MarchOfMurlocsHandler.CycleMoMCommand>(), It.IsAny<CancellationToken>()),
+        bus.Verify(b => b.Publish(It.IsAny<CycleMoMCommand>(), It.IsAny<CancellationToken>()),
             Times.Never);
         scheduler.Verify(s => s.SchedulePublish(
                 (activeEnd + TimeSpan.FromMinutes(1)).DateTime,
-                It.IsAny<MarchOfMurlocsHandler.CycleMoMCommand>(),
+                It.IsAny<CycleMoMCommand>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -211,7 +212,7 @@ public sealed class MarchOfMurlocsHandlerTests
         var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
             scheduler.Object, dateTime.Object, EmptyScoringLevels().Object);
 
-        await handler.Consume(ContextOf(new MarchOfMurlocsHandler.CycleMoMCommand()).Object);
+        await handler.Consume(ContextOf(new CycleMoMCommand()).Object);
 
         tournaments.Verify(t => t.CreateOrSaveTournament(It.IsAny<TournamentConfiguration>(),
                 It.IsAny<CancellationToken>()),

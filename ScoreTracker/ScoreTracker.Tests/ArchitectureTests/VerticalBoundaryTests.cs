@@ -1,5 +1,6 @@
 using ScoreTracker.WeeklyChallenge.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
+using ScoreTracker.EventCompetition.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using System;
 using System.Linq;
@@ -34,7 +35,8 @@ public sealed class VerticalBoundaryTests
         typeof(OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions),
         typeof(Catalog.Wiring.CatalogRegistrationExtensions),
         typeof(ChartIntelligence.Wiring.ChartIntelligenceRegistrationExtensions),
-        typeof(WeeklyChallenge.Wiring.WeeklyChallengeRegistrationExtensions)
+        typeof(WeeklyChallenge.Wiring.WeeklyChallengeRegistrationExtensions),
+        typeof(EventCompetition.Wiring.EventCompetitionRegistrationExtensions)
     };
 
     [Theory]
@@ -100,6 +102,26 @@ public sealed class VerticalBoundaryTests
 
         Assert.Contains(services,
             d => d.ServiceType == typeof(ScoreTracker.WeeklyChallenge.Application.WeeklyTournamentSaga));
+    }
+
+    [Fact]
+    public void MassTransitDiscoversTheEventCompetitionsInternalConsumers()
+    {
+        // QualifiersSaga consumes ScoreImportCompletedEvent (auto-qualifier registration);
+        // MarchOfMurlocsHandler consumes the MoM trigger messages. Both are internal, so
+        // the AddEventCompetitionConsumers hook is the registration path — without it,
+        // qualifier auto-submission and MoM season rotation silently stop.
+        var services = new ServiceCollection();
+        services.AddMassTransit(x =>
+        {
+            x.AddEventCompetitionConsumers();
+            x.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
+        });
+
+        Assert.Contains(services,
+            d => d.ServiceType == typeof(ScoreTracker.EventCompetition.Application.QualifiersSaga));
+        Assert.Contains(services,
+            d => d.ServiceType == typeof(ScoreTracker.EventCompetition.Application.MarchOfMurlocsHandler));
     }
 
     [Fact]

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.EventCompetition.Contracts.Queries;
 using ScoreTracker.Web.Dtos.Api;
 using ScoreTracker.Web.Security;
 

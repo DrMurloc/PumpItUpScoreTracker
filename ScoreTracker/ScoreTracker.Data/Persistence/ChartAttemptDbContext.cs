@@ -25,35 +25,24 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<ExternalLoginEntity> ExternalLogin { get; set; }
     public DbSet<SavedChartEntity> SavedChart { get; set; }
     public DbSet<UserSettingsEntity> UserSettings { get; set; }
-    public DbSet<TournamentEntity> Tournament { get; set; }
-    public DbSet<UserTournamentSessionEntity> UserTournamentSession { get; set; }
-    public DbSet<PhotoVerificationEntity> PhotoVerification { get; set; }
-    public DbSet<UserQualifierEntity> UserQualifier { get; set; }
-    public DbSet<UserQualifierHistoryEntity> UserQualifierHistory { get; set; }
     public DbSet<UserApiTokenEntity> UserApiToken { get; set; }
     public DbSet<MatchEntity> Match { get; set; }
     public DbSet<RandomSettingsEntity> RandomSettings { get; set; }
     public DbSet<MatchLinkEntity> MatchLink { get; set; }
     public DbSet<PlayerStatsEntity> PlayerStats { get; set; }
     public DbSet<CommunityEntity> Community { get; set; }
-    public DbSet<TournamentChartLevelEntity> TournamentChartLevel { get; set; }
     public DbSet<PlayerHistoryEntity> PlayerHistory { get; set; }
     public DbSet<CommunityChannelEntity> CommunityChannel { get; set; }
     public DbSet<CommunityInviteCodeEntity> CommunityInviteCode { get; set; }
     public DbSet<CommunityMembershipEntity> CommunityMembership { get; set; }
     public DbSet<SuggestionFeedbackEntity> SuggestionFeedback { get; set; }
     public DbSet<UserTitleEntity> UserTitle { get; set; }
-    public DbSet<QualifiersConfigurationEntity> QualifiersConfiguration { get; set; }
     public DbSet<UserHighestTitleEntity> UserHighestTitle { get; set; }
-    public DbSet<TournamentRoleEntity> TournamentRole { get; set; }
     public DbSet<TournamentPlayerEntity> TournamentPlayer { get; set; }
-    public DbSet<CoOpTeamEntity> CoOpTeam { get; set; }
-    public DbSet<CoOpPlayerEntity> CoOpPlayers { get; set; }
     public DbSet<TournamentMachineEntity> TournamentMachine { get; set; }
     public DbSet<CountryEntity> Country { get; set; }
     public DbSet<PhoenixRecordStatsEntity> PhoenixRecordStats { get; set; }
     public DbSet<ChartLetterDifficultyEntity> ChartLetterDifficulty { get; set; }
-    public DbSet<UserTournamentRegistrationEntity> UserTournamentRegistration { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -115,28 +104,6 @@ public sealed class ChartAttemptDbContext : DbContext
             .WithMany()
             .HasForeignKey(e => e.UserId);
 
-        builder.Entity<UserTournamentSessionEntity>()
-            .Property(u => u.RestTime)
-            .HasDefaultValue(TimeSpan.Zero);
-        builder.Entity<UserTournamentSessionEntity>()
-            .Property(u => u.ChartsPlayed)
-            .HasDefaultValue(0);
-        builder.Entity<UserTournamentSessionEntity>()
-            .Property(u => u.AverageDifficulty)
-            .HasDefaultValue(1);
-
-        builder.Entity<UserTournamentSessionEntity>()
-            .Property(u => u.NeedsApproval)
-            .HasDefaultValue(true);
-
-        builder.Entity<UserTournamentSessionEntity>()
-            .Property(u => u.VerificationType)
-            .HasDefaultValue(SubmissionVerificationType.Unverified.ToString());
-
-        builder.Entity<UserQualifierEntity>()
-            .Property(e => e.TournamentId)
-            .HasDefaultValue(new Guid("fa27b7fb-6ef4-481b-8eee-56fdcf58433c"));
-
         builder.Entity<MatchEntity>()
             .Property(e => e.TournamentId)
             .HasDefaultValue(new Guid("fa27b7fb-6ef4-481b-8eee-56fdcf58433c"));
@@ -146,21 +113,10 @@ public sealed class ChartAttemptDbContext : DbContext
         builder.Entity<RandomSettingsEntity>()
             .Property(e => e.TournamentId)
             .HasDefaultValue(new Guid("fa27b7fb-6ef4-481b-8eee-56fdcf58433c"));
-        builder.Entity<TournamentEntity>()
-            .Property(e => e.Type)
-            .HasDefaultValue(nameof(TournamentType.Stamina));
-
-        builder.Entity<TournamentEntity>()
-            .Property(e => e.Location)
-            .HasDefaultValue("Remote");
 
         builder.Entity<ChartEntity>()
             .Property(e => e.OriginalMixId)
             .HasDefaultValue(new Guid("1ABB8F5A-BDA3-40F0-9CE7-1C4F9F8F1D3B"));
-
-        builder.Entity<QualifiersConfigurationEntity>()
-            .Property(e => e.ChartPlayCount)
-            .HasDefaultValue(3);
 
         // Vertical-owned entities (ADR-001 D4). Applied last so contributions see the
         // default schema and shared conventions.
