@@ -1,4 +1,4 @@
-﻿@page "/UcsLeaderboards"
+@page "/UcsLeaderboards"
 @using ScoreTracker.Domain.SecondaryPorts
 @using MediatR
 @using ScoreTracker.Application.Queries
@@ -285,7 +285,7 @@
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showChartTagDialog=false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
-@inject IOfficialSiteClient OfficialSite
+
 @inject ISnackbar Snackbar
 @inject IUserRepository Users
 @inject IPlayerStatsRepository PlayerStats;
@@ -520,7 +520,7 @@
             Snackbar.Add("This UCS has already been added", Severity.Error);
             return;
         }
-        _piuGameEntry = await OfficialSite.GetUcs(id, CancellationToken.None);
+        _piuGameEntry = await Mediator.Send(new GetOfficialUcsEntryQuery(id));
         if (_piuGameEntry == null)
         {
             Snackbar.Add("Could not find a UCS with id " + id.ToString(),Severity.Error);

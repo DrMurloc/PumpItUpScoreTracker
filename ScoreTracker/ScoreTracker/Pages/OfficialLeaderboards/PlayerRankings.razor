@@ -1,4 +1,4 @@
-﻿@page "/PlayerRankings"
+@page "/PlayerRankings"
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.SecondaryPorts
@@ -202,8 +202,8 @@
         }
     </MudGrid>
 }
-@inject IOfficialLeaderboardRepository Leaderboards;
-@inject IWorldRankingService WorldRankings;
+
+
 @inject IMediator Mediator;
 @inject IChartRepository Charts;
 @code {
@@ -239,7 +239,7 @@
             return;
         }
         var scoringConfig = ScoringConfiguration.PumbilityScoring(false);
-        _scores = (await WorldRankings.GetTop50(username, _currentType, CancellationToken.None))
+        _scores = (await Mediator.Send(new GetWorldRankingTop50Query(username, _currentType)))
             .Select(r => new ScoreEntry(_charts[r.ChartId], r.Score!.Value, (int)scoringConfig.GetScore(_charts[r.ChartId].Level, r.Score!.Value)))
             .ToArray();
         _showingUsername = username;
@@ -266,16 +266,16 @@
     protected override async Task OnInitializedAsync()
     {
         _lastImported = await Mediator.Send(new GetLastLeaderboardImportTimestampQuery());
-        _userAvatars = (await Leaderboards.GetUserAvatars(CancellationToken.None)).ToDictionary(au => au.Username, au => au.AvatarPath, StringComparer.OrdinalIgnoreCase);
+        _userAvatars = (await Mediator.Send(new GetUserAvatarsQuery())).ToDictionary(au => au.Username, au => au.AvatarPath, StringComparer.OrdinalIgnoreCase);
 
-        var records = (await Leaderboards.GetAllWorldRankings(CancellationToken.None)).ToArray();
+        var records = (await Mediator.Send(new GetAllWorldRankingsQuery())).ToArray();
         _usernames = records.Select(r => r.Username.ToString()).Distinct().ToArray();
         _records = records.GroupBy(l => l.Type)
             .ToDictionary(l => l.Key, g => g.OrderByDescending(e => e.TotalRating).Select((e, i) => new TableEntry(i + 1, e)).ToArray());
 
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
-        _userAvatars = (await Leaderboards.GetUserAvatars(CancellationToken.None)).ToDictionary(au => au.Username, au => au.AvatarPath, StringComparer.OrdinalIgnoreCase);
-        var avatars = await Leaderboards.GetUserAvatars(CancellationToken.None);
+        _userAvatars = (await Mediator.Send(new GetUserAvatarsQuery())).ToDictionary(au => au.Username, au => au.AvatarPath, StringComparer.OrdinalIgnoreCase);
+        var avatars = await Mediator.Send(new GetUserAvatarsQuery());
         _counts = avatars
             .GroupBy(a => a.AvatarPath).ToDictionary(g => g.Key, g => g.Count());
         

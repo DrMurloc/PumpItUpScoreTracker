@@ -1,4 +1,4 @@
-﻿@page "/Tournament/{TournamentId:guid}/Qualifiers/Submit"
+@page "/Tournament/{TournamentId:guid}/Qualifiers/Submit"
 @using ScoreTracker.Domain.SecondaryPorts
 @using MediatR
 @using ScoreTracker.Application.Commands
@@ -320,7 +320,7 @@
 @inject IAdminNotificationClient Notifications;
 @inject NavigationManager NavManager;
 @inject ChartVideoDisplayer VideoDisplayer;
-@inject IOfficialSiteClient OfficialSite;
+
 @inject IAdminNotificationClient AdminNotification;
 @code
 {
@@ -583,11 +583,11 @@
         _importResults.Clear();
         try
         {
-            var accountInfo = await OfficialSite.GetAccountData(_piugameUsername, _piugamePassword,null,CancellationToken.None);
+            var accountInfo = await Mediator.Send(new GetOfficialAccountDataQuery(_piugameUsername, _piugamePassword));
 
             await AdminNotification.NotifyAdmin($"{_username} Imported using {accountInfo.AccountName}", CancellationToken.None);
             var newResults = false;
-            var results = await OfficialSite.GetRecentScores(_piugameUsername, _piugamePassword, CancellationToken.None);
+            var results = await Mediator.Send(new GetOfficialRecentScoresQuery(_piugameUsername, _piugamePassword));
             var relevant = results.results.Where(r => _configuration.Charts.Any(c => c.Id == r.Chart.Id)).GroupBy(r => r.Chart.Id)
                 .Select(g => g.OrderByDescending(s => s.Score).First()).ToArray();
             if (!relevant.Any())

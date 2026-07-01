@@ -1,4 +1,4 @@
-﻿@page "/OfficialLeaderboards/PlayerCompare"
+@page "/OfficialLeaderboards/PlayerCompare"
 @using ScoreTracker.Domain.Enums
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.SecondaryPorts
@@ -126,9 +126,9 @@ else
 {
     <MudText>Please select players to compare them</MudText>
 }
-@inject IOfficialLeaderboardRepository Leaderboards;
+
 @inject IMediator Mediator;
-@inject IWorldRankingService WorldRankings;
+
 @code {
     private readonly IDictionary<string, IDictionary<Guid, PhoenixScore>> _players = new Dictionary<string, IDictionary<Guid, PhoenixScore>>(StringComparer.OrdinalIgnoreCase);
     private  IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
@@ -180,7 +180,7 @@ else
         }   
         _isloading = true;
 
-        _players[username] = (await WorldRankings.GetAll(username, CancellationToken.None))
+        _players[username] = (await Mediator.Send(new GetWorldRankingScoresQuery(username)))
             .Where(r => r.Score != null)
             .ToDictionary(r => r.ChartId, r => r.Score!.Value);
 
@@ -192,7 +192,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         _lastImported = await Mediator.Send(new GetLastLeaderboardImportTimestampQuery());
-        _usernames = (await Leaderboards.GetOfficialLeaderboardUsernames(CancellationToken.None)).ToArray();
+        _usernames = (await Mediator.Send(new GetOfficialLeaderboardUsernamesQuery())).ToArray();
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
 
     }

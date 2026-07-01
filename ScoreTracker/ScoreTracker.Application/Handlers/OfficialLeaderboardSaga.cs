@@ -22,6 +22,16 @@ namespace ScoreTracker.Application.Handlers
         IRequestHandler<UpdateSongImagesCommand>,
         IRequestHandler<GetGameCardsQuery, IEnumerable<GameCardRecord>>,
         IRequestHandler<GetLastLeaderboardImportTimestampQuery, DateTimeOffset?>,
+        IRequestHandler<GetWorldRankingTop50Query, IEnumerable<RecordedPhoenixScore>>,
+        IRequestHandler<GetWorldRankingScoresQuery, IEnumerable<RecordedPhoenixScore>>,
+        IRequestHandler<GetUserAvatarsQuery, IEnumerable<(string Username, Uri AvatarPath)>>,
+        IRequestHandler<GetAllWorldRankingsQuery, IEnumerable<WorldRankingRecord>>,
+        IRequestHandler<GetOfficialLeaderboardUsernamesQuery, IEnumerable<string>>,
+        IRequestHandler<GetOfficialLeaderboardStatusesQuery, IEnumerable<UserOfficialLeaderboard>>,
+        IRequestHandler<GetOfficialUcsEntryQuery, PiuGameUcsEntry?>,
+        IRequestHandler<GetOfficialAccountDataQuery, PiuGameAccountDataImport>,
+        IRequestHandler<GetOfficialRecentScoresQuery, (IEnumerable<OfficialRecordedScore> results,
+            IEnumerable<string> nonMapped)>,
         IConsumer<StartLeaderboardImportCommand>
     {
         private readonly IOfficialSiteClient _officialSite;
@@ -60,6 +70,62 @@ namespace ScoreTracker.Application.Handlers
             _charts = charts;
             _worldRankings = worldRankings;
             _dateTime = dateTime;
+        }
+
+        // Read-side pass-throughs for the OfficialLeaderboards/Competition pages (rearch C39):
+        // pages dispatch via IMediator so these ports can go Mirror-internal at the extraction.
+        public async Task<IEnumerable<RecordedPhoenixScore>> Handle(GetWorldRankingTop50Query request,
+            CancellationToken cancellationToken)
+        {
+            return await _worldRankings.GetTop50(request.Username, request.Type, cancellationToken);
+        }
+
+        public async Task<IEnumerable<RecordedPhoenixScore>> Handle(GetWorldRankingScoresQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await _worldRankings.GetAll(request.Username, cancellationToken);
+        }
+
+        public async Task<IEnumerable<(string Username, Uri AvatarPath)>> Handle(GetUserAvatarsQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await _leaderboards.GetUserAvatars(cancellationToken);
+        }
+
+        public async Task<IEnumerable<WorldRankingRecord>> Handle(GetAllWorldRankingsQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await _leaderboards.GetAllWorldRankings(cancellationToken);
+        }
+
+        public async Task<IEnumerable<string>> Handle(GetOfficialLeaderboardUsernamesQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await _leaderboards.GetOfficialLeaderboardUsernames(cancellationToken);
+        }
+
+        public async Task<IEnumerable<UserOfficialLeaderboard>> Handle(GetOfficialLeaderboardStatusesQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await _leaderboards.GetOfficialLeaderboardStatuses(request.Username, cancellationToken);
+        }
+
+        public async Task<PiuGameUcsEntry?> Handle(GetOfficialUcsEntryQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await _officialSite.GetUcs(request.PiuGameId, cancellationToken);
+        }
+
+        public async Task<PiuGameAccountDataImport> Handle(GetOfficialAccountDataQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await _officialSite.GetAccountData(request.Username, request.Password, null, cancellationToken);
+        }
+
+        public async Task<(IEnumerable<OfficialRecordedScore> results, IEnumerable<string> nonMapped)> Handle(
+            GetOfficialRecentScoresQuery request, CancellationToken cancellationToken)
+        {
+            return await _officialSite.GetRecentScores(request.Username, request.Password, cancellationToken);
         }
 
         public async Task Handle(ProcessOfficialLeaderboardsCommand request, CancellationToken cancellationToken)
