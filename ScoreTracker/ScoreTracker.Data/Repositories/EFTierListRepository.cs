@@ -13,12 +13,15 @@ namespace ScoreTracker.Data.Repositories
     {
         private readonly IMemoryCache _cache;
         private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
+        private readonly IScoreReader _scores;
 
         public EFTierListRepository(IDbContextFactory<ChartAttemptDbContext> factory,
-            IMemoryCache cache)
+            IMemoryCache cache,
+            IScoreReader scores)
         {
             _cache = cache;
             _factory = factory;
+            _scores = scores;
         }
 
         private static string TierListKey(Name tierListName)
@@ -62,12 +65,16 @@ namespace ScoreTracker.Data.Repositories
                 return await database.UserHighestTitle.Where(e => e.Level == levelInt).Select(e => e.UserId)
                     .ToArrayAsync(cancellationToken);
 
+            // Activity comes from the Ledger's read contract, not a join onto its table —
+            // the PhoenixRecord table goes Ledger-internal at the P5 extraction.
             var cutoff = DateTimeOffset.Now - TimeSpan.FromDays(120);
-            return await (from uht in database.UserHighestTitle
-                join pba in database.PhoenixBestAttempt on uht.UserId equals pba.UserId
-                where uht.Level == levelInt
-                      && pba.RecordedDate >= cutoff
-                select uht.UserId).Distinct().ToArrayAsync(cancellationToken);
+            var active = await _scores.GetActiveUserIds(cutoff, cancellationToken);
+            return (await database.UserHighestTitle.Where(e => e.Level == levelInt)
+                    .Select(e => e.UserId)
+                    .Distinct()
+                    .ToArrayAsync(cancellationToken))
+                .Where(active.Contains)
+                .ToArray();
         }
 
 

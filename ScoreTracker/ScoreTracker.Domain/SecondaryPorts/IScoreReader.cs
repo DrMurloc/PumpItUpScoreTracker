@@ -51,4 +51,8 @@ public interface IScoreReader
     /// </summary>
     Task<IEnumerable<ScoreJournalEntry>> GetScoreHistory(Guid userId, Guid chartId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Users with any recorded best-attempt activity on or after the cutoff.</summary>
+    Task<IReadOnlySet<Guid>> GetActiveUserIds(DateTimeOffset since,
+        CancellationToken cancellationToken = default);
 }

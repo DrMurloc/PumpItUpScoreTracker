@@ -81,6 +81,18 @@ public sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 e.Score, PhoenixPlateHelperMethods.TryParse(e.Plate), e.IsBroken));
     }
 
+    async Task<IReadOnlySet<Guid>> IScoreReader.GetActiveUserIds(DateTimeOffset since,
+        CancellationToken cancellationToken)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return (await database.PhoenixBestAttempt
+                .Where(pba => pba.RecordedDate >= since)
+                .Select(pba => pba.UserId)
+                .Distinct()
+                .ToArrayAsync(cancellationToken))
+            .ToHashSet();
+    }
+
     private readonly IMemoryCache _cache;
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
     private readonly IChartRepository _charts;
