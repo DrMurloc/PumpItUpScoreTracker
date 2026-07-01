@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,7 @@ public sealed class WeeklyTournamentSagaStaticsTests
     [Fact]
     public void ProcessIntoPlacesReturnsEmptyForNoEntries()
     {
-        var result = WeeklyTournamentSaga.ProcessIntoPlaces(Array.Empty<WeeklyTournamentEntry>());
+        var result = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(Array.Empty<WeeklyTournamentEntry>());
         Assert.Empty(result);
     }
 
@@ -29,7 +30,7 @@ public sealed class WeeklyTournamentSagaStaticsTests
             Entry(chartId, score: 900_000)
         };
 
-        var result = WeeklyTournamentSaga.ProcessIntoPlaces(entries).ToArray();
+        var result = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(entries).ToArray();
         var first = result.Single(r => r.Item2.Score == 950_000);
 
         Assert.Equal(1, first.Item1);
@@ -46,7 +47,7 @@ public sealed class WeeklyTournamentSagaStaticsTests
             Entry(chartId, score: 900_000)
         };
 
-        var result = WeeklyTournamentSaga.ProcessIntoPlaces(entries)
+        var result = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(entries)
             .OrderBy(r => r.Item1)
             .ToArray();
 
@@ -64,7 +65,7 @@ public sealed class WeeklyTournamentSagaStaticsTests
             Entry(chartId, score: 800_000)
         };
 
-        var result = WeeklyTournamentSaga.ProcessIntoPlaces(entries).ToArray();
+        var result = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(entries).ToArray();
 
         var topPlaces = result.Where(r => r.Item2.Score == 950_000).Select(r => r.Item1).ToArray();
         var bottomPlace = result.Single(r => r.Item2.Score == 800_000).Item1;
@@ -77,7 +78,7 @@ public sealed class WeeklyTournamentSagaStaticsTests
     public void GetSuggestedChartsAlwaysIncludesCoOp()
     {
         var coOp = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(3).Build();
-        var result = WeeklyTournamentSaga.GetSuggestedCharts(new[] { coOp }, doublesCompetitive: 0, singlesCompetitive: 0);
+        var result = WeeklyChartSuggestionPolicy.GetSuggestedCharts(new[] { coOp }, doublesCompetitive: 0, singlesCompetitive: 0);
         Assert.Contains(coOp, result);
     }
 
@@ -88,7 +89,7 @@ public sealed class WeeklyTournamentSagaStaticsTests
         var farTooHigh = new ChartBuilder().WithType(ChartType.Single).WithLevel(25).Build();
         var farTooLow = new ChartBuilder().WithType(ChartType.Single).WithLevel(10).Build();
 
-        var result = WeeklyTournamentSaga
+        var result = WeeklyChartSuggestionPolicy
             .GetSuggestedCharts(new[] { inRange, farTooHigh, farTooLow },
                 doublesCompetitive: 0, singlesCompetitive: 21)
             .ToHashSet();
@@ -104,7 +105,7 @@ public sealed class WeeklyTournamentSagaStaticsTests
         var inRange = new ChartBuilder().WithType(ChartType.Double).WithLevel(18).Build();
         var farTooHigh = new ChartBuilder().WithType(ChartType.Double).WithLevel(25).Build();
 
-        var result = WeeklyTournamentSaga
+        var result = WeeklyChartSuggestionPolicy
             .GetSuggestedCharts(new[] { inRange, farTooHigh },
                 doublesCompetitive: 19, singlesCompetitive: 0)
             .ToHashSet();
@@ -118,7 +119,7 @@ public sealed class WeeklyTournamentSagaStaticsTests
     {
         var farFromSingles = new ChartBuilder().WithType(ChartType.Single).WithLevel(25).Build();
 
-        var result = WeeklyTournamentSaga
+        var result = WeeklyChartSuggestionPolicy
             .GetSuggestedCharts(new[] { farFromSingles },
                 doublesCompetitive: 25, singlesCompetitive: 10)
             .ToArray();

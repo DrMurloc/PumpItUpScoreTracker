@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Application.Queries;
@@ -6,6 +6,7 @@ using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.WeeklyChallenge.Contracts.Queries;
 using ScoreTracker.Web.Controllers.Api;
 
 namespace ScoreTracker.Tests.Api;
@@ -13,13 +14,12 @@ namespace ScoreTracker.Tests.Api;
 public sealed class WeeklyChartsApiShapeTests
 {
     private readonly Mock<IMediator> _mediator = new();
-    private readonly Mock<IWeeklyTournamentRepository> _weeklyCharts = new();
     private readonly Mock<IUserRepository> _users = new();
     private readonly WeeklyChartsController _controller;
 
     public WeeklyChartsApiShapeTests()
     {
-        _controller = new WeeklyChartsController(_mediator.Object, _weeklyCharts.Object, _users.Object)
+        _controller = new WeeklyChartsController(_mediator.Object, _users.Object)
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };
@@ -28,7 +28,7 @@ public sealed class WeeklyChartsApiShapeTests
     [Fact]
     public async Task GetWeeklyChartsPreservesResponseShape()
     {
-        _weeklyCharts.Setup(w => w.GetWeeklyCharts(It.IsAny<CancellationToken>()))
+        _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new WeeklyTournamentChart(ApiTestData.ChartId1, ApiTestData.Date2),
@@ -72,7 +72,7 @@ public sealed class WeeklyChartsApiShapeTests
     [Fact]
     public async Task GetWeeklyChartScoresPreservesResponseShapeAndAnonymizesPrivatePlayers()
     {
-        _weeklyCharts.Setup(w => w.GetEntries(null, It.IsAny<CancellationToken>()))
+        _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyChartEntriesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new WeeklyTournamentEntry(ApiTestData.PublicUserId, ApiTestData.ChartId1,

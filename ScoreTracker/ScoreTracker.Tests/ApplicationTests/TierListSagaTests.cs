@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using MassTransit;
 using Moq;
 using ScoreTracker.Application.Queries;
-using ScoreTracker.Application.Messages;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;

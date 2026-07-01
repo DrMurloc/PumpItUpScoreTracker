@@ -24,6 +24,9 @@ ScoreTracker.sln
 │   ├── ScoreTracker.ChartIntelligence— Chart Intelligence vertical: tier lists,
 │   │                                  scoring/letter difficulties, difficulty +
 │   │                                  preference + co-op votes
+│   ├── ScoreTracker.WeeklyChallenge — Weekly Challenge vertical: board rotation,
+│   │                                  entries, placements (first vertical with no
+│   │                                  transitional Application reference)
 │   ├── ScoreTracker.OfficialMirror  — Official Game Mirror vertical: the PiuGame ACL
 │   │                                  (parsers + typed HttpClient), leaderboard/avatar
 │   │                                  mirror, world rankings, score import saga

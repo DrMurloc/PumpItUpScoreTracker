@@ -4,6 +4,7 @@ using ScoreTracker.Data.Persistence;
 using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.Ucs.Wiring;
+using ScoreTracker.WeeklyChallenge.Wiring;
 
 namespace ScoreTracker.CompositionRoot;
 
@@ -19,7 +20,7 @@ public static class VerticalModelContributions
     {
         return new IDbModelContribution[]
         {
-            new CatalogModelContribution(), new ChartIntelligenceModelContribution(), new OfficialMirrorModelContribution(), new ScoreLedgerModelContribution(), new UcsModelContribution()
+            new CatalogModelContribution(), new ChartIntelligenceModelContribution(), new OfficialMirrorModelContribution(), new ScoreLedgerModelContribution(), new UcsModelContribution(), new WeeklyChallengeModelContribution()
         };
     }
 }

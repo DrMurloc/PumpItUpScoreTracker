@@ -1,6 +1,8 @@
-﻿@page "/WhatShouldIPlay"
+@page "/WhatShouldIPlay"
 @page "/"
 @using MediatR
+@using ScoreTracker.WeeklyChallenge.Contracts.Commands
+@using ScoreTracker.WeeklyChallenge.Contracts.Queries
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Data.Migrations
@@ -297,7 +299,7 @@ else
 @inject IAdminNotificationClient Notifications;
 @inject ISnackbar Snackbar;
 @inject ChartVideoDisplayer VideoDisplayer;
-@inject IWeeklyTournamentRepository WeeklyTournaments;
+
 @code {
 
     private readonly ApexChartOptions<PlayerRatingRecord> _scoreBoxesOptions = new ApexChartOptions<PlayerRatingRecord>()
@@ -484,7 +486,7 @@ else
         _stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
         _playerHistory = await Mediator.Send(new GetPlayerHistoryQuery(CurrentUser.User.Id));
 
-        _myEntries = (await WeeklyTournaments.GetEntries(null, CancellationToken.None))
+        _myEntries = (await Mediator.Send(new GetWeeklyChartEntriesQuery()))
             .Where(e => e.UserId == CurrentUser.User.Id)
             .ToDictionary(e => e.ChartId);
         await RefreshRecommendations();

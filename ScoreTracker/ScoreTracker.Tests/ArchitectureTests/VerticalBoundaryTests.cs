@@ -1,3 +1,4 @@
+using ScoreTracker.WeeklyChallenge.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using System;
@@ -32,7 +33,8 @@ public sealed class VerticalBoundaryTests
         typeof(ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions),
         typeof(OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions),
         typeof(Catalog.Wiring.CatalogRegistrationExtensions),
-        typeof(ChartIntelligence.Wiring.ChartIntelligenceRegistrationExtensions)
+        typeof(ChartIntelligence.Wiring.ChartIntelligenceRegistrationExtensions),
+        typeof(WeeklyChallenge.Wiring.WeeklyChallengeRegistrationExtensions)
     };
 
     [Theory]
@@ -84,6 +86,20 @@ public sealed class VerticalBoundaryTests
             d => d.ServiceType == typeof(ScoreTracker.ChartIntelligence.Application.TierListSaga));
         Assert.Contains(services,
             d => d.ServiceType == typeof(ScoreTracker.ChartIntelligence.Application.ScoringDifficultySaga));
+    }
+
+    [Fact]
+    public void MassTransitDiscoversTheWeeklyChallengesInternalConsumers()
+    {
+        var services = new ServiceCollection();
+        services.AddMassTransit(x =>
+        {
+            x.AddWeeklyChallengeConsumers();
+            x.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
+        });
+
+        Assert.Contains(services,
+            d => d.ServiceType == typeof(ScoreTracker.WeeklyChallenge.Application.WeeklyTournamentSaga));
     }
 
     [Fact]

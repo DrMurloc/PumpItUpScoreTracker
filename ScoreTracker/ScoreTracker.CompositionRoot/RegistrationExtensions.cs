@@ -11,6 +11,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.Ucs.Wiring;
+using ScoreTracker.WeeklyChallenge.Wiring;
 
 namespace ScoreTracker.CompositionRoot;
 
@@ -40,6 +41,7 @@ public static class RegistrationExtensions
         builder.AddOfficialMirror();
         builder.AddScoreLedger();
         builder.AddUcs();
+        builder.AddWeeklyChallenge();
 
         // Not pooled: pooling requires an options-only constructor, and the context takes
         // the verticals' IDbModelContribution set from DI (ADR-001 D4).

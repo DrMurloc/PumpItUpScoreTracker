@@ -1,7 +1,10 @@
-﻿using MassTransit;
+using ScoreTracker.Domain.Services;
+using ScoreTracker.WeeklyChallenge.Contracts.Queries;
+using ScoreTracker.WeeklyChallenge.Contracts.Messages;
+using ScoreTracker.WeeklyChallenge.Contracts.Commands;
+using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using ScoreTracker.Application.Messages;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
@@ -9,17 +12,54 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
-namespace ScoreTracker.Application.Handlers
+namespace ScoreTracker.WeeklyChallenge.Application
 {
-    public sealed class WeeklyTournamentSaga
+    internal sealed class WeeklyTournamentSaga
     (IChartRepository charts, IWeeklyTournamentRepository weeklyTournies, IPlayerStatsReader playerStats,
         IBotClient bot,
         ILogger<WeeklyTournamentSaga> logger, IUserRepository users, IBus bus,
         IDateTimeOffsetAccessor dateTime, IRandomNumberGenerator random) :
         IConsumer<RotateWeeklyChartsCommand>,
         IConsumer<ScoreImportCompletedEvent>,
-        IRequestHandler<RegisterWeeklyChartScoreCommand>
+        IRequestHandler<RegisterWeeklyChartScoreCommand>,
+        IRequestHandler<GetWeeklyChartsQuery, IEnumerable<WeeklyTournamentChart>>,
+        IRequestHandler<GetWeeklyChartEntriesQuery, IEnumerable<WeeklyTournamentEntry>>,
+        IRequestHandler<GetPastWeeklyEntriesQuery, IEnumerable<WeeklyTournamentEntry>>,
+        IRequestHandler<GetPastWeeklyDatesQuery, IEnumerable<DateTimeOffset>>,
+        IRequestHandler<GetAlreadyPlayedWeeklyChartsQuery, IEnumerable<Guid>>
     {
+        // Read-side pass-throughs so pages and the partner api/weeklyCharts endpoint
+        // dispatch via IMediator instead of injecting the repository.
+        public async Task<IEnumerable<WeeklyTournamentChart>> Handle(GetWeeklyChartsQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await weeklyTournies.GetWeeklyCharts(cancellationToken);
+        }
+
+        public async Task<IEnumerable<WeeklyTournamentEntry>> Handle(GetWeeklyChartEntriesQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await weeklyTournies.GetEntries(request.ChartId, cancellationToken);
+        }
+
+        public async Task<IEnumerable<WeeklyTournamentEntry>> Handle(GetPastWeeklyEntriesQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await weeklyTournies.GetPastEntries(request.Date, cancellationToken);
+        }
+
+        public async Task<IEnumerable<DateTimeOffset>> Handle(GetPastWeeklyDatesQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await weeklyTournies.GetPastDates(cancellationToken);
+        }
+
+        public async Task<IEnumerable<Guid>> Handle(GetAlreadyPlayedWeeklyChartsQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await weeklyTournies.GetAlreadyPlayedCharts(cancellationToken);
+        }
+
         public async Task Consume(ConsumeContext<RotateWeeklyChartsCommand> context)
         {
             var currentWeek = await weeklyTournies.GetWeeklyCharts(context.CancellationToken);
@@ -35,7 +75,7 @@ namespace ScoreTracker.Application.Handlers
             var scores = await weeklyTournies.GetEntries(null, context.CancellationToken);
             foreach (var chartGroup in scores.GroupBy(s => s.ChartId))
             {
-                var inRangeLeaderboard = ProcessIntoPlaces(chartGroup).ToArray();
+                var inRangeLeaderboard = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(chartGroup).ToArray();
                 await weeklyTournies.WriteHistories(
                     inRangeLeaderboard.Select(e => new UserTourneyHistory(e.Item2.UserId, e.Item2.ChartId, now, e.Item1,
                         e.Item2.CompetitiveLevel,
@@ -93,28 +133,6 @@ namespace ScoreTracker.Application.Handlers
             await weeklyTournies.WriteAlreadyPlayedCharts(newCharts, context.CancellationToken);
         }
 
-        public static IEnumerable<(int, WeeklyTournamentEntry)> ProcessIntoPlaces(
-            IEnumerable<WeeklyTournamentEntry> entries)
-        {
-            var place = 1;
-            foreach (var scoreGroup in entries.GroupBy(e => e.Score).OrderByDescending(g => g.Key))
-            {
-                foreach (var score in scoreGroup) yield return (place, score);
-                place += scoreGroup.Count();
-            }
-        }
-
-        public static IEnumerable<Chart> GetSuggestedCharts(IEnumerable<Chart> chart, double doublesCompetitive,
-            double singlesCompetitive)
-        {
-            var baseDoubles = (int)Math.Floor(doublesCompetitive);
-            var baseSingles = (int)Math.Floor(singlesCompetitive);
-            return chart.Where(c => c.Type == ChartType.CoOp ||
-                                    ((c.Type == ChartType.Double ? baseDoubles :
-                                         c.Type == ChartType.Single ? baseSingles : baseDoubles) >= c.Level - 1 &&
-                                     (c.Type == ChartType.Double ? baseDoubles :
-                                         c.Type == ChartType.Single ? baseSingles : baseDoubles) <= c.Level + 2));
-        }
         // F3 (rearch C30): weekly eligibility is THIS saga's policy. The official-site
         // gateway publishes the score facts; we decide which land on the board.
         public async Task Consume(ConsumeContext<ScoreImportCompletedEvent> context)
@@ -146,7 +164,7 @@ namespace ScoreTracker.Application.Handlers
             var existingEntry =
                 existingEntries.FirstOrDefault(u =>
                     u.UserId == request.Entry.UserId);
-            var existingPlace = ProcessIntoPlaces(existingEntries)
+            var existingPlace = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(existingEntries)
                 .Where(u => u.Item2.UserId == request.Entry.UserId)
                 .Select(u => (int?)u.Item1).FirstOrDefault();
 
@@ -171,7 +189,7 @@ namespace ScoreTracker.Application.Handlers
                 await weeklyTournies.SaveEntry(existingEntry, cancellationToken);
             }
 
-            var newPlace = ProcessIntoPlaces(existingEntries.Where(u => u.UserId != request.Entry.UserId)
+            var newPlace = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(existingEntries.Where(u => u.UserId != request.Entry.UserId)
                 .Append(existingEntry)).First(e => e.Item2.UserId == request.Entry.UserId).Item1;
             if (existingPlace == null || existingPlace != newPlace)
             {

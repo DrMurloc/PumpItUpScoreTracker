@@ -1,4 +1,5 @@
-﻿using MediatR;
+using ScoreTracker.Domain.Services;
+using MediatR;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
@@ -93,7 +94,7 @@ namespace ScoreTracker.Application.Handlers
         {
             var skipped = ignoredChartIds.TryGetValue("Weekly Charts", out var r) ? r : new HashSet<Guid>();
             var allCharts = await _weeklyTournament.GetWeeklyCharts(cancellationToken);
-            var weeklyCharts = WeeklyTournamentSaga.GetSuggestedCharts(allCharts
+            var weeklyCharts = WeeklyChartSuggestionPolicy.GetSuggestedCharts(allCharts
                     .Where(c => !skipped.Contains(c.ChartId)).Select(c => charts[c.ChartId]), doublesCompetitive,
                 singlesCompetitive).ToArray();
             if (chartType != null)

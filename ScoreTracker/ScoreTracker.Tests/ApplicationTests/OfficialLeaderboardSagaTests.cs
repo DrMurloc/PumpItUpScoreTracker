@@ -13,7 +13,6 @@ using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using ScoreTracker.Application.Messages;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Application.Queries;

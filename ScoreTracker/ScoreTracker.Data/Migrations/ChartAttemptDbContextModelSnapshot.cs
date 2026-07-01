@@ -696,20 +696,6 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("Mix", "scores");
                 });
 
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.PastTourneyChartsEntity", b =>
-                {
-                    b.Property<Guid>("ChartId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("PlayedOn")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("ChartId");
-
-                    b.ToTable("PastTourneyCharts", "scores");
-                });
-
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.PhoenixRecordStatsEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -1386,111 +1372,6 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("UserTournamentSession", "scores");
                 });
 
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.UserWeeklyPlacingEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<Guid>("ChartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<double>("CompetitiveLevel")
-                        .HasColumnType("float");
-
-                    b.Property<bool>("IsBroken")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTimeOffset>("ObtainedDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<int>("Place")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Plate")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("nvarchar(32)");
-
-                    b.Property<int>("Score")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("WasWithinRange")
-                        .HasColumnType("bit");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserWeeklyPlacing", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.WeeklyTournamentChartEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<Guid>("ChartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("ExpirationDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("WeeklyTournamentChart", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.WeeklyUserEntry", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<Guid>("ChartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<double>("CompetitiveLevel")
-                        .HasColumnType("float");
-
-                    b.Property<bool>("IsBroken")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Photo")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("Plate")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Score")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("WasWithinRange")
-                        .HasColumnType("bit");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId", "ChartId")
-                        .IsUnique();
-
-                    b.ToTable("WeeklyUserEntry", "scores");
-                });
-
             modelBuilder.Entity("ScoreTracker.Data.Persistence.UserQualifierEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1885,6 +1766,125 @@ namespace ScoreTracker.Data.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("UcsChartTag", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.WeeklyChallenge.Infrastructure.Entities.PastTourneyChartsEntity", b =>
+                {
+                    b.Property<Guid>("ChartId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("PlayedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("ChartId");
+
+                    b.ToTable("PastTourneyCharts", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.WeeklyChallenge.Infrastructure.Entities.UserWeeklyPlacingEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("CompetitiveLevel")
+                        .HasColumnType("float");
+
+                    b.Property<bool>("IsBroken")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset>("ObtainedDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("Place")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Plate")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("WasWithinRange")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserWeeklyPlacing", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.WeeklyChallenge.Infrastructure.Entities.WeeklyTournamentChartEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ExpirationDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("WeeklyTournamentChart", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.WeeklyChallenge.Infrastructure.Entities.WeeklyUserEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("CompetitiveLevel")
+                        .HasColumnType("float");
+
+                    b.Property<bool>("IsBroken")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Photo")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("Plate")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("WasWithinRange")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "ChartId")
+                        .IsUnique();
+
+                    b.ToTable("WeeklyUserEntry", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.ChartVideoEntity", b =>

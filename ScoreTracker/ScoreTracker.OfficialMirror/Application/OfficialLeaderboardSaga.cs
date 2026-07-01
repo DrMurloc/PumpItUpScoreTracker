@@ -8,7 +8,6 @@ using System.Text.RegularExpressions;
 using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using ScoreTracker.Application.Messages;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;

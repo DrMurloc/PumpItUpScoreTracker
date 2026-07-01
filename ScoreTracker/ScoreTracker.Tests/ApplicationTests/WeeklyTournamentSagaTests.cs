@@ -1,3 +1,7 @@
+using ScoreTracker.WeeklyChallenge.Contracts.Queries;
+using ScoreTracker.WeeklyChallenge.Contracts.Messages;
+using ScoreTracker.WeeklyChallenge.Contracts.Commands;
+using ScoreTracker.WeeklyChallenge.Application;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +10,6 @@ using System.Threading.Tasks;
 using MassTransit;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using ScoreTracker.Application.Messages;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Domain.Enums;

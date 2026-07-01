@@ -1,9 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace ScoreTracker.Data.Persistence.Entities
+namespace ScoreTracker.WeeklyChallenge.Infrastructure.Entities
 {
-    public sealed class WeeklyTournamentChartEntity
+    internal sealed class WeeklyTournamentChartEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

@@ -1,3 +1,5 @@
+using ScoreTracker.WeeklyChallenge.Infrastructure.Entities;
+using ScoreTracker.WeeklyChallenge.Infrastructure;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Repositories;
 using ScoreTracker.Domain.Enums;

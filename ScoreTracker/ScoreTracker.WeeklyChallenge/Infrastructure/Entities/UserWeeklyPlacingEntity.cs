@@ -1,11 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace ScoreTracker.Data.Persistence.Entities
+namespace ScoreTracker.WeeklyChallenge.Infrastructure.Entities
 {
     [Index(nameof(UserId))]
-    public sealed class UserWeeklyPlacingEntity
+    internal sealed class UserWeeklyPlacingEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
