@@ -1,7 +1,7 @@
 using MassTransit;
 using MediatR;
 using ScoreTracker.ScoreLedger.Contracts.Messages;
-using ScoreTracker.Application.Commands;
+using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;

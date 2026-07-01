@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using MassTransit;
 using Moq;
 using ScoreTracker.ScoreLedger.Contracts.Messages;
-using ScoreTracker.Application.Commands;
+using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.ScoreLedger.Application;
 using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.Domain.Enums;
