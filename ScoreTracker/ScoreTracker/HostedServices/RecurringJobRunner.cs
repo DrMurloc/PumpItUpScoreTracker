@@ -1,3 +1,4 @@
+using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using MassTransit;
 using ScoreTracker.Application.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Messages;

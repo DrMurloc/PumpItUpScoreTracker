@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Services;
 using MediatR;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
@@ -43,7 +44,7 @@ namespace ScoreTracker.Application.Handlers
                 .OrderByDescending(s => ratings[s.ChartId])
                 .Take(50)
                 .ToDictionary(s => s.ChartId, s => ratings[s.ChartId]);
-            var tierList = TierListSaga.ProcessIntoTierList("PUMBILITY", top50ForTierList)
+            var tierList = TierListProcessor.ProcessIntoTierList("PUMBILITY", top50ForTierList)
                 .Where(e => e.Category != TierListCategory.Unrecorded)
                 .GroupBy(e => e.Category)
                 .ToDictionary(g => g.Key, g => g.Select(e => e.ChartId).ToArray());

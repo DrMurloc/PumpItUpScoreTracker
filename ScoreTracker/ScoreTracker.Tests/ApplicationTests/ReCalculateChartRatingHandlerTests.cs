@@ -1,3 +1,4 @@
+using ScoreTracker.ChartIntelligence.Application;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

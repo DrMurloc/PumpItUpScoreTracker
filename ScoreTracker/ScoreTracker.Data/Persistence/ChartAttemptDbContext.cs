@@ -19,26 +19,18 @@ public sealed class ChartAttemptDbContext : DbContext
 
     public DbSet<MixEntity> Mix { get; set; }
     public DbSet<ChartMixEntity> ChartMix { get; set; }
-    public DbSet<ChartScoringLevelEntity> ChartScoringLevel { get; set; }
     public DbSet<ChartEntity> Chart { get; set; }
     public DbSet<SongEntity> Song { get; set; }
     public DbSet<UserEntity> User { get; set; }
     public DbSet<ExternalLoginEntity> ExternalLogin { get; set; }
     public DbSet<SavedChartEntity> SavedChart { get; set; }
-    public DbSet<UserChartDifficultyRatingEntity> UserChartDifficultyRating { get; set; }
-    public DbSet<ChartDifficultyRatingEntity> ChartDifficultyRating { get; set; }
     public DbSet<UserSettingsEntity> UserSettings { get; set; }
-    public DbSet<UserCoOpRatingEntity> UserCoOpRating { get; set; }
-    public DbSet<CoOpRatingEntity> CoOpRating { get; set; }
     public DbSet<TournamentEntity> Tournament { get; set; }
     public DbSet<UserTournamentSessionEntity> UserTournamentSession { get; set; }
     public DbSet<PhotoVerificationEntity> PhotoVerification { get; set; }
     public DbSet<UserQualifierEntity> UserQualifier { get; set; }
     public DbSet<UserQualifierHistoryEntity> UserQualifierHistory { get; set; }
-    public DbSet<UserPreferenceRatingEntity> UserPreferenceRating { get; set; }
-    public DbSet<ChartPreferenceRatingEntity> ChartPreferenceRating { get; set; }
     public DbSet<UserApiTokenEntity> UserApiToken { get; set; }
-    public DbSet<TierListEntryEntity> TierListEntry { get; set; }
     public DbSet<MatchEntity> Match { get; set; }
     public DbSet<RandomSettingsEntity> RandomSettings { get; set; }
     public DbSet<MatchLinkEntity> MatchLink { get; set; }
@@ -71,18 +63,6 @@ public sealed class ChartAttemptDbContext : DbContext
     {
         builder.HasDefaultSchema("scores");
 
-        builder.Entity<CoOpRatingEntity>().ToTable("CoOpRating")
-            .HasOne<ChartEntity>()
-            .WithMany()
-            .HasForeignKey(c => c.ChartId);
-        builder.Entity<UserCoOpRatingEntity>().ToTable("UserCoOpRating")
-            .HasOne<ChartEntity>()
-            .WithMany()
-            .HasForeignKey(c => c.ChartId);
-        builder.Entity<UserCoOpRatingEntity>()
-            .HasOne<UserEntity>()
-            .WithMany()
-            .HasForeignKey(c => c.UserId);
         builder.Entity<ChartMixEntity>().ToTable("ChartMix")
             .HasOne<ChartEntity>()
             .WithMany()
@@ -103,20 +83,6 @@ public sealed class ChartAttemptDbContext : DbContext
             .HasDefaultValue("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png");
 
 
-
-        builder.Entity<UserChartDifficultyRatingEntity>().ToTable("UserChartDifficultyRating")
-            .HasOne<UserEntity>()
-            .WithMany()
-            .HasForeignKey(ucdr => ucdr.UserId);
-
-
-        builder.Entity<UserChartDifficultyRatingEntity>()
-            .HasOne<ChartEntity>()
-            .WithMany()
-            .HasForeignKey(ucdr => ucdr.ChartId);
-
-        builder.Entity<ChartDifficultyRatingEntity>().ToTable("ChartDifficultyRating")
-            .HasKey(cdr => new { cdr.ChartId, cdr.MixId });
 
         builder.Entity<SavedChartEntity>().ToTable("SavedChart")
             .HasOne<ChartEntity>()

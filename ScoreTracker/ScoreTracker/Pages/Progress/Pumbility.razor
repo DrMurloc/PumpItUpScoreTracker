@@ -1,4 +1,5 @@
-﻿@using MediatR
+@using MediatR
+@using ScoreTracker.Domain.Services
 @using ScoreTracker.Application.Handlers
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Data.Migrations
@@ -239,7 +240,7 @@
         _ratings = _scores.ToDictionary(kv => kv.Key, kv => (int)scoring.GetScore(_charts[kv.Key], kv.Value.Score!.Value, kv.Value.Plate ?? PhoenixPlate.RoughGame, kv.Value.IsBroken));
         var top50 = _scores.Values.OrderByDescending(s => _ratings[s.ChartId]).Take(50);
 
-        _tierList = TierListSaga.ProcessIntoTierList("PUMBILITY", top50.ToDictionary(s => s.ChartId, s => _ratings[s.ChartId])).GroupBy(t => t.Category)
+        _tierList = TierListProcessor.ProcessIntoTierList("PUMBILITY", top50.ToDictionary(s => s.ChartId, s => _ratings[s.ChartId])).GroupBy(t => t.Category)
 
             .ToDictionary(g => g.Key, g => g.OrderByDescending(e => e.Order).Select(e => e.ChartId).ToArray().AsEnumerable());
 

@@ -28,6 +28,7 @@
          matches production (a context without them silently drops the verticals' tables). -->
     <ProjectReference Include="..\ScoreTracker.CompositionRoot\ScoreTracker.CompositionRoot.csproj" />
     <ProjectReference Include="..\ScoreTracker.Catalog\ScoreTracker.Catalog.csproj" />
+    <ProjectReference Include="..\ScoreTracker.ChartIntelligence\ScoreTracker.ChartIntelligence.csproj" />
     <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
     <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
     <ProjectReference Include="..\ScoreTracker.ScoreLedger\ScoreTracker.ScoreLedger.csproj" />

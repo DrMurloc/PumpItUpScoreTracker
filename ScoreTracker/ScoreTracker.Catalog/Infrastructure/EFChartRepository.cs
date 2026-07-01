@@ -342,7 +342,6 @@ internal sealed class EFChartRepository : IChartRepository
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var newChart = new ChartEntity
         {
-            DifficultyRating = null,
             Id = Guid.NewGuid(),
             Level = level,
             SongId = songId,

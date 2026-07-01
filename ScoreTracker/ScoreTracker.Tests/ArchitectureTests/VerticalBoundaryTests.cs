@@ -1,3 +1,4 @@
+using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using System;
 using System.Linq;
@@ -30,7 +31,8 @@ public sealed class VerticalBoundaryTests
         typeof(Ucs.Wiring.UcsRegistrationExtensions),
         typeof(ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions),
         typeof(OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions),
-        typeof(Catalog.Wiring.CatalogRegistrationExtensions)
+        typeof(Catalog.Wiring.CatalogRegistrationExtensions),
+        typeof(ChartIntelligence.Wiring.ChartIntelligenceRegistrationExtensions)
     };
 
     [Theory]
@@ -66,6 +68,22 @@ public sealed class VerticalBoundaryTests
 
         Assert.Contains(services,
             d => d.ServiceType == typeof(ScoreTracker.OfficialMirror.Application.OfficialLeaderboardSaga));
+    }
+
+    [Fact]
+    public void MassTransitDiscoversTheChartIntelligencesInternalConsumers()
+    {
+        var services = new ServiceCollection();
+        services.AddMassTransit(x =>
+        {
+            x.AddChartIntelligenceConsumers();
+            x.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
+        });
+
+        Assert.Contains(services,
+            d => d.ServiceType == typeof(ScoreTracker.ChartIntelligence.Application.TierListSaga));
+        Assert.Contains(services,
+            d => d.ServiceType == typeof(ScoreTracker.ChartIntelligence.Application.ScoringDifficultySaga));
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+using ScoreTracker.ChartIntelligence.Infrastructure;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using ScoreTracker.Data.Persistence.Entities;

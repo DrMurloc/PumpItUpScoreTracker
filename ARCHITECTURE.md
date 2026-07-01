@@ -21,6 +21,9 @@ ScoreTracker.sln
 │   ├── ScoreTracker.Catalog         — Game Content Catalog vertical (growing): chart
 │   │                                  randomizer today; content writes/skills/videos
 │   │                                  follow (ADR-001 Q2/Q4/Q5)
+│   ├── ScoreTracker.ChartIntelligence— Chart Intelligence vertical: tier lists,
+│   │                                  scoring/letter difficulties, difficulty +
+│   │                                  preference + co-op votes
 │   ├── ScoreTracker.OfficialMirror  — Official Game Mirror vertical: the PiuGame ACL
 │   │                                  (parsers + typed HttpClient), leaderboard/avatar
 │   │                                  mirror, world rankings, score import saga

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Localization;
 using Microsoft.OpenApi;
 using MudBlazor.Services;
 using ScoreTracker.Application.Handlers;
+using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Data.Repositories;
@@ -60,12 +61,13 @@ builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSectio
 var sqlConfig = builder.Configuration.GetSection("SQL").Get<SqlConfiguration>()!;
 builder.Services.AddMassTransit(o =>
 {
-    o.AddConsumers(typeof(PlayerRatingSaga).Assembly, typeof(TierListSaga).Assembly,
+    o.AddConsumers(typeof(PlayerRatingSaga).Assembly, typeof(CommunitySaga).Assembly,
         typeof(RecurringJobRunner).Assembly);
     // Vertical consumers are internal — assembly scanning skips them (see the
     // AddScoreLedgerConsumers doc comment and its tripwire test).
     o.AddScoreLedgerConsumers();
     o.AddOfficialMirrorConsumers();
+    o.AddChartIntelligenceConsumers();
 
     o.AddDelayedMessageScheduler();
 
@@ -179,7 +181,8 @@ builder.Services.AddBlazorApplicationInsights()
             typeof(ScoreTracker.Ucs.Wiring.UcsRegistrationExtensions).Assembly,
             typeof(ScoreTracker.ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions).Assembly,
             typeof(ScoreTracker.OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions).Assembly,
-            typeof(ScoreTracker.Catalog.Wiring.CatalogRegistrationExtensions).Assembly);
+            typeof(ScoreTracker.Catalog.Wiring.CatalogRegistrationExtensions).Assembly,
+            typeof(ChartIntelligenceRegistrationExtensions).Assembly);
     })
     .AddTransient<IUserAccessService, UserAccessService>()
     .AddInfrastructure(builder.Configuration.GetSection("AzureBlob").Get<AzureBlobConfiguration>(),

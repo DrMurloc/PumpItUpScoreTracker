@@ -1,5 +1,5 @@
+using ScoreTracker.Domain.Services;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
-using ScoreTracker.Application.Handlers;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts.Commands;
@@ -195,7 +195,7 @@ namespace ScoreTracker.OfficialMirror.Application
 
             foreach (var group in chartLevelGroups)
             {
-                var tierListEntries = TierListSaga.ProcessIntoTierList(group.Value, group.Key.Level, "Official Scores");
+                var tierListEntries = TierListProcessor.ProcessIntoTierList(group.Value, group.Key.Level, "Official Scores");
                 foreach (var entry in tierListEntries) await _tierLists.SaveEntry(entry, cancellationToken);
             }
         }

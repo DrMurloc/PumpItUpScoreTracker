@@ -25,7 +25,8 @@ public sealed class MessageTaxonomyTests
         typeof(Ucs.Contracts.UcsChart).Assembly,
         typeof(ScoreLedger.Contracts.Queries.GetPhoenixRecordQuery).Assembly,
         typeof(OfficialMirror.Contracts.Queries.GetGameCardsQuery).Assembly,
-        typeof(Catalog.Contracts.Queries.GetRandomSettingsQuery).Assembly
+        typeof(Catalog.Contracts.Queries.GetRandomSettingsQuery).Assembly,
+        typeof(ChartIntelligence.Contracts.Messages.ProcessPassTierListCommand).Assembly
     };
 
     private static Type[] TypesIn(string namespaceSuffix)
