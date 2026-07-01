@@ -1,5 +1,6 @@
 using MassTransit;
 using ScoreTracker.Application.Messages;
+using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.ScoreLedger.Contracts.Messages;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Domain.Events;

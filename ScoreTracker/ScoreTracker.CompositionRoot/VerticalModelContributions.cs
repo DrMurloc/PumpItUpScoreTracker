@@ -1,4 +1,5 @@
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.Ucs.Wiring;
 
@@ -14,6 +15,9 @@ public static class VerticalModelContributions
 {
     public static IDbModelContribution[] All()
     {
-        return new IDbModelContribution[] { new ScoreLedgerModelContribution(), new UcsModelContribution() };
+        return new IDbModelContribution[]
+        {
+            new OfficialMirrorModelContribution(), new ScoreLedgerModelContribution(), new UcsModelContribution()
+        };
     }
 }

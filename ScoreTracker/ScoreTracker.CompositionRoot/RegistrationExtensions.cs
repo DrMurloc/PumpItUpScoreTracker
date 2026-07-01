@@ -1,13 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using ScoreTracker.Data.Apis;
-using ScoreTracker.Data.Apis.Contracts;
 using ScoreTracker.Data.Clients;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Repositories;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.Ucs.Wiring;
 
@@ -31,13 +30,10 @@ public static class RegistrationExtensions
             o.ToEmail = twilioConfig.ToEmail;
             o.ApiKey = twilioConfig.ApiKey;
         });
-        builder.AddHttpClient<IPiuGameApi, PiuGameApi>(c =>
-        {
-            c.DefaultRequestHeaders.Add("Origin", "https://piugame.com");
-        });
         builder.Configure<SqlConfiguration>(o => { o.ConnectionString = configuration.ConnectionString; });
         builder.Configure<AzureBlobConfiguration>(o => { o.ConnectionString = blobConfig.ConnectionString; });
 
+        builder.AddOfficialMirror();
         builder.AddScoreLedger();
         builder.AddUcs();
 

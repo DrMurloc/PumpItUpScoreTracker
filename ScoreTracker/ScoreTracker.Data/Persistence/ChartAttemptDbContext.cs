@@ -29,7 +29,6 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<UserChartDifficultyRatingEntity> UserChartDifficultyRating { get; set; }
     public DbSet<ChartDifficultyRatingEntity> ChartDifficultyRating { get; set; }
     public DbSet<UserSettingsEntity> UserSettings { get; set; }
-    public DbSet<UserOfficialLeaderboardEntity> UserOfficialLeaderboard { get; set; }
     public DbSet<UserCoOpRatingEntity> UserCoOpRating { get; set; }
     public DbSet<CoOpRatingEntity> CoOpRating { get; set; }
     public DbSet<TournamentEntity> Tournament { get; set; }
@@ -44,7 +43,6 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<MatchEntity> Match { get; set; }
     public DbSet<RandomSettingsEntity> RandomSettings { get; set; }
     public DbSet<MatchLinkEntity> MatchLink { get; set; }
-    public DbSet<UserWorldRanking> UserWorldRanking { get; set; }
     public DbSet<ChartSkillEntity> ChartSkill { get; set; }
     public DbSet<PlayerStatsEntity> PlayerStats { get; set; }
     public DbSet<CommunityEntity> Community { get; set; }
@@ -55,8 +53,6 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<CommunityMembershipEntity> CommunityMembership { get; set; }
     public DbSet<SuggestionFeedbackEntity> SuggestionFeedback { get; set; }
     public DbSet<UserTitleEntity> UserTitle { get; set; }
-    public DbSet<OfficialUserAvatarEntity> OfficialUserAvatar { get; set; }
-    public DbSet<OfficialLeaderboardImportStateEntity> OfficialLeaderboardImportState { get; set; }
     public DbSet<QualifiersConfigurationEntity> QualifiersConfiguration { get; set; }
     public DbSet<UserHighestTitleEntity> UserHighestTitle { get; set; }
     public DbSet<UserRandomSettingsEntity> UserRandomSettings { get; set; }

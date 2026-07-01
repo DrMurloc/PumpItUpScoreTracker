@@ -1,3 +1,8 @@
+using ScoreTracker.OfficialMirror.Contracts.Messages;
+using ScoreTracker.OfficialMirror.Contracts.Queries;
+using ScoreTracker.OfficialMirror.Contracts.Commands;
+using ScoreTracker.OfficialMirror.Domain;
+using ScoreTracker.OfficialMirror.Application;
 using System;
 using System.Collections.Generic;
 using System.Linq;

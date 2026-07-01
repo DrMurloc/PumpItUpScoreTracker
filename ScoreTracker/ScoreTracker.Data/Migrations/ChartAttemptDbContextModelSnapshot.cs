@@ -542,41 +542,6 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("Mix", "scores");
                 });
 
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.OfficialLeaderboardImportStateEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset>("LastImportedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("OfficialLeaderboardImportState", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.OfficialUserAvatarEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("AvatarUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserName")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserName");
-
-                    b.ToTable("OfficialUserAvatar", "scores");
-                });
-
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.PastTourneyChartsEntity", b =>
                 {
                     b.Property<Guid>("ChartId")
@@ -1258,37 +1223,6 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("UserHighestTitle", "scores");
                 });
 
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.UserOfficialLeaderboardEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("LeaderboardName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LeaderboardType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Place")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Score")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Username");
-
-                    b.ToTable("UserOfficialLeaderboard", "scores");
-                });
-
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.UserPreferenceRatingEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1504,51 +1438,6 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("UserWeeklyPlacing", "scores");
                 });
 
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.UserWorldRanking", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<double>("AverageLevel")
-                        .HasColumnType("float");
-
-                    b.Property<int>("AverageScore")
-                        .HasColumnType("int");
-
-                    b.Property<double>("CompetitiveLevel")
-                        .HasColumnType("float");
-
-                    b.Property<double>("DoublesCompetitive")
-                        .HasColumnType("float");
-
-                    b.Property<int>("DoublesCount")
-                        .HasColumnType("int");
-
-                    b.Property<double>("SinglesCompetitive")
-                        .HasColumnType("float");
-
-                    b.Property<int>("SinglesCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TotalRating")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("UserName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserName", "Type");
-
-                    b.ToTable("UserWorldRanking", "scores");
-                });
-
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.WeeklyTournamentChartEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -1668,6 +1557,117 @@ namespace ScoreTracker.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("UserQualifierHistory", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialLeaderboardImportStateEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("LastImportedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OfficialLeaderboardImportState", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialUserAvatarEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AvatarUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserName");
+
+                    b.ToTable("OfficialUserAvatar", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.UserOfficialLeaderboardEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("LeaderboardName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LeaderboardType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Place")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Username");
+
+                    b.ToTable("UserOfficialLeaderboard", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.UserWorldRanking", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("AverageLevel")
+                        .HasColumnType("float");
+
+                    b.Property<int>("AverageScore")
+                        .HasColumnType("int");
+
+                    b.Property<double>("CompetitiveLevel")
+                        .HasColumnType("float");
+
+                    b.Property<double>("DoublesCompetitive")
+                        .HasColumnType("float");
+
+                    b.Property<int>("DoublesCount")
+                        .HasColumnType("int");
+
+                    b.Property<double>("SinglesCompetitive")
+                        .HasColumnType("float");
+
+                    b.Property<int>("SinglesCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalRating")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserName", "Type");
+
+                    b.ToTable("UserWorldRanking", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.ScoreLedger.Infrastructure.Entities.BestAttemptEntity", b =>

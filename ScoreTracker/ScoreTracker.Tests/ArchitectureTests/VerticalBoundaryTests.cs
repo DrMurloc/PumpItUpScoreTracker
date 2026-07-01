@@ -1,3 +1,4 @@
+using ScoreTracker.OfficialMirror.Wiring;
 using System;
 using System.Linq;
 using MassTransit;
@@ -50,6 +51,39 @@ public sealed class VerticalBoundaryTests
 
         Assert.True(offenders.Length == 0,
             $"Only Contracts/ and Wiring/ may be public in a vertical assembly: {string.Join(", ", offenders)}");
+    }
+
+    [Fact]
+    public void OfficialMirrorPublicSurfaceIsContractsAndWiringOnly()
+    {
+        var offenders = typeof(ScoreTracker.OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions).Assembly
+            .GetTypes()
+            .Where(t => t.IsPublic)
+            .Where(t => t.Namespace == null
+                        || (!t.Namespace.StartsWith("ScoreTracker.OfficialMirror.Contracts", StringComparison.Ordinal)
+                            && t.Namespace != "ScoreTracker.OfficialMirror.Wiring"))
+            .Select(t => t.FullName)
+            .ToArray();
+
+        Assert.True(offenders.Length == 0,
+            $"Only Contracts/ and Wiring/ may be public in a vertical assembly: {string.Join(", ", offenders)}");
+    }
+
+    [Fact]
+    public void MassTransitDiscoversTheOfficialMirrorsInternalConsumers()
+    {
+        // OfficialLeaderboardSaga consumes StartLeaderboardImportCommand. Same rationale
+        // as the ScoreLedger tripwire below: assembly scanning skips internal consumers,
+        // so the AddOfficialMirrorConsumers hook is the registration path.
+        var services = new ServiceCollection();
+        services.AddMassTransit(x =>
+        {
+            x.AddOfficialMirrorConsumers();
+            x.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
+        });
+
+        Assert.Contains(services,
+            d => d.ServiceType == typeof(ScoreTracker.OfficialMirror.Application.OfficialLeaderboardSaga));
     }
 
     [Fact]

@@ -18,6 +18,9 @@ ScoreTracker.sln
 │   ├── ScoreTracker.Domain          — entities, ports, domain services
 │   ├── ScoreTracker.Application     — MediatR handlers, MassTransit consumers
 │   ├── ScoreTracker.PersonalProgress— vertical-slice experiment (player rating logic)
+│   ├── ScoreTracker.OfficialMirror  — Official Game Mirror vertical: the PiuGame ACL
+│   │                                  (parsers + typed HttpClient), leaderboard/avatar
+│   │                                  mirror, world rankings, score import saga
 │   ├── ScoreTracker.ScoreLedger     — Score Ledger vertical: Phoenix + XX best
 │   │                                  attempts, score event journal, IScoreReader
 │   │                                  impl, score batch/publish pipeline
