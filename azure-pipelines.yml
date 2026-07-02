@@ -1,12 +1,26 @@
-# ASP.NET + integration tests
+# ASP.NET build + tests + gated production deploy (multi-stage YAML — no classic release pipeline)
 #
-# Two parallel jobs:
-#   1) Windows: build the whole solution (incl. the deployable Web package), run unit/component/
-#      approval tests via VSTest. Targets ScoreTracker.Tests.dll explicitly so the integration
-#      project (which needs Docker + Linux containers) isn't picked up here.
-#   2) Linux:   run the Testcontainers-backed integration suite against an ephemeral SQL Server
-#      2025 instance. ubuntu-latest agents ship with Docker + Linux container support, which is
-#      what Testcontainers.MsSql needs.
+# Stages:
+#   Build  — two parallel jobs:
+#     1) Windows: build the whole solution, run unit/component/approval tests, publish the
+#        deployable Web zip + EF migration bundle into the 'drop' artifact.
+#     2) Linux:   run the Testcontainers-backed integration suite against an ephemeral
+#        SQL Server 2025 instance (ubuntu-latest ships Docker + Linux containers).
+#   Deploy — main-branch runs only. A deployment job against the 'production' environment:
+#        applies pending EF migrations (efbundle), then zip-deploys the Web app.
+#
+# The manual gate lives on the ENVIRONMENT, not in this file:
+#   Pipelines → Environments → production → Approvals and checks → add an Approval with
+#   yourself as approver. Every run then pauses before the Deploy stage until you sign off.
+#
+# One-time setup (owner):
+#   1. Fill in azureServiceConnection + webAppName below.
+#   2. Pipeline → Edit → Variables → add secret variable ProdSqlConnectionString.
+#   3. Add the approval check to the 'production' environment (it is auto-created on first run,
+#      or pre-create it under Pipelines → Environments).
+#   4. First deploy run will prompt to permit this pipeline to use the service connection and
+#      environment — approve both.
+#   5. Disable/delete the classic release pipeline so it doesn't double-deploy off the drop.
 
 trigger:
 - main
@@ -17,96 +31,128 @@ pr:
 variables:
   solution: 'ScoreTracker/ScoreTracker.sln'
   buildConfiguration: 'Release'
+  # TODO(owner): fill these two in before the first YAML deploy.
+  azureServiceConnection: ''  # Project settings → Service connections — the Azure RM connection name
+  webAppName: ''              # The App Service name hosting the site
 
-jobs:
-- job: BuildAndUnitTests
-  displayName: 'Build + Unit/Component/Approval Tests (Windows)'
-  pool:
-    vmImage: 'windows-latest'
-  steps:
-  # nuget.exe + VSBuild can't handle this solution anymore: NuGet-resolved MSBuild SDKs
-  # (Aspire.AppHost.Sdk) never get assets files from nuget.exe restore, and VS 2022's
-  # MSBuild doesn't support net10 targets. The dotnet CLI is the supported path.
-  - task: UseDotNet@2
-    displayName: 'Install .NET 10 SDK'
-    inputs:
-      packageType: 'sdk'
-      version: '10.0.x'
+stages:
+- stage: Build
+  displayName: 'Build & Test'
+  jobs:
+  - job: BuildAndUnitTests
+    displayName: 'Build + Unit/Component/Approval Tests (Windows)'
+    pool:
+      vmImage: 'windows-latest'
+    steps:
+    # nuget.exe + VSBuild can't handle this solution anymore: NuGet-resolved MSBuild SDKs
+    # (Aspire.AppHost.Sdk) never get assets files from nuget.exe restore, and VS 2022's
+    # MSBuild doesn't support net10 targets. The dotnet CLI is the supported path.
+    - task: UseDotNet@2
+      displayName: 'Install .NET 10 SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '10.0.x'
 
-  - script: dotnet restore $(solution)
-    displayName: 'Restore'
+    - script: dotnet restore $(solution)
+      displayName: 'Restore'
 
-  - script: dotnet build $(solution) -c $(buildConfiguration) --no-restore
-    displayName: 'Build'
+    - script: dotnet build $(solution) -c $(buildConfiguration) --no-restore
+      displayName: 'Build'
 
-  # The integration project builds alongside but runs in the Linux job below — it needs
-  # Docker with Linux containers, which windows-latest doesn't have configured.
-  - script: dotnet test ScoreTracker/ScoreTracker.Tests/ScoreTracker.Tests.csproj -c $(buildConfiguration) --no-build --logger "trx;LogFileName=unit.trx" --results-directory $(Agent.TempDirectory)
-    displayName: 'Unit/Component tests'
+    # The integration project builds alongside but runs in the Linux job below — it needs
+    # Docker with Linux containers, which windows-latest doesn't have configured.
+    - script: dotnet test ScoreTracker/ScoreTracker.Tests/ScoreTracker.Tests.csproj -c $(buildConfiguration) --no-build --logger "trx;LogFileName=unit.trx" --results-directory $(Agent.TempDirectory)
+      displayName: 'Unit/Component tests'
 
-  - script: dotnet test ScoreTracker/ScoreTracker.Tests.Api/ScoreTracker.Tests.Api.csproj -c $(buildConfiguration) --no-build --logger "trx;LogFileName=api.trx" --results-directory $(Agent.TempDirectory)
-    displayName: 'API wire-shape approval tests'
+    - script: dotnet test ScoreTracker/ScoreTracker.Tests.Api/ScoreTracker.Tests.Api.csproj -c $(buildConfiguration) --no-build --logger "trx;LogFileName=api.trx" --results-directory $(Agent.TempDirectory)
+      displayName: 'API wire-shape approval tests'
 
-  - task: PublishTestResults@2
-    displayName: 'Publish test results'
-    condition: always()
-    inputs:
-      testResultsFormat: 'VSTest'
-      testResultsFiles: '$(Agent.TempDirectory)/**/*.trx'
-      failTaskOnFailedTests: true
+    - task: PublishTestResults@2
+      displayName: 'Publish test results'
+      condition: always()
+      inputs:
+        testResultsFormat: 'VSTest'
+        testResultsFiles: '$(Agent.TempDirectory)/**/*.trx'
+        failTaskOnFailedTests: true
 
-  - script: dotnet publish ScoreTracker/ScoreTracker/ScoreTracker.Web.csproj -c $(buildConfiguration) --no-restore -o $(Agent.TempDirectory)/publish
-    displayName: 'Publish Web app'
+    - script: dotnet publish ScoreTracker/ScoreTracker/ScoreTracker.Web.csproj -c $(buildConfiguration) --no-restore -o $(Agent.TempDirectory)/publish
+      displayName: 'Publish Web app'
 
-  # Plain zip (zip-deploy shape), replacing the old WebDeploy package. If the release
-  # stage was set to "Web Deploy package" mode, switch it to zip deploy.
-  - task: ArchiveFiles@2
-    displayName: 'Zip Web app'
-    inputs:
-      rootFolderOrFile: '$(Agent.TempDirectory)/publish'
-      includeRootFolder: false
-      archiveType: 'zip'
-      archiveFile: '$(Build.ArtifactStagingDirectory)/ScoreTracker.Web.zip'
+    - task: ArchiveFiles@2
+      displayName: 'Zip Web app'
+      inputs:
+        rootFolderOrFile: '$(Agent.TempDirectory)/publish'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/ScoreTracker.Web.zip'
 
-  # Deploy-time migrations: a self-contained bundle ships in the drop so the release
-  # pipeline applies pending migrations as its own step right before the app deploy —
-  # automated per-deploy, never at app startup. In the release stage, run:
-  #   efbundle.exe --connection "<connection string>"
-  # It exits 0 with nothing to do when the database is already current.
-  - script: dotnet tool restore
-    displayName: 'Restore dotnet tools (dotnet-ef)'
+    # Deploy-time migrations: a self-contained bundle ships in the drop and the Deploy stage
+    # below runs it right before the app deploy — automated per-deploy, never at app startup.
+    # It exits 0 with nothing to do when the database is already current.
+    - script: dotnet tool restore
+      displayName: 'Restore dotnet tools (dotnet-ef)'
 
-  - script: dotnet ef migrations bundle --project ScoreTracker/ScoreTracker.Data --startup-project ScoreTracker/ScoreTracker.CompositionRoot --configuration $(buildConfiguration) --self-contained -r win-x64 --force -o $(Build.ArtifactStagingDirectory)/efbundle.exe
-    displayName: 'Create EF migration bundle'
+    - script: dotnet ef migrations bundle --project ScoreTracker/ScoreTracker.Data --startup-project ScoreTracker/ScoreTracker.CompositionRoot --configuration $(buildConfiguration) --self-contained -r win-x64 --force -o $(Build.ArtifactStagingDirectory)/efbundle.exe
+      displayName: 'Create EF migration bundle'
 
-  - task: PublishBuildArtifacts@1
-    inputs:
-      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-      ArtifactName: 'drop'
-      publishLocation: 'Container'
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'
 
-- job: IntegrationTests
-  displayName: 'Integration Tests (Linux, Testcontainers + SQL Server 2025)'
-  pool:
-    vmImage: 'ubuntu-latest'
-  steps:
-  - task: UseDotNet@2
-    displayName: 'Install .NET 10 SDK'
-    inputs:
-      packageType: 'sdk'
-      version: '10.0.x'
+  - job: IntegrationTests
+    displayName: 'Integration Tests (Linux, Testcontainers + SQL Server 2025)'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: UseDotNet@2
+      displayName: 'Install .NET 10 SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '10.0.x'
 
-  # First run on a fresh agent pulls the SQL Server 2025 image (~2 min). Subsequent tests against
-  # the same agent are fast — but Microsoft-hosted agents are fresh per run, so expect that cost
-  # every time. ~3 min total job runtime on a clean agent.
-  - script: dotnet test ScoreTracker/ScoreTracker.Tests.Integration/ScoreTracker.Tests.Integration.csproj -c $(buildConfiguration) --logger "trx;LogFileName=integration.trx" --results-directory $(Agent.TempDirectory)
-    displayName: 'Run integration tests (real SQL Server 2025 via Testcontainers)'
+    # First run on a fresh agent pulls the SQL Server 2025 image (~2 min). Subsequent tests against
+    # the same agent are fast — but Microsoft-hosted agents are fresh per run, so expect that cost
+    # every time. ~3 min total job runtime on a clean agent.
+    - script: dotnet test ScoreTracker/ScoreTracker.Tests.Integration/ScoreTracker.Tests.Integration.csproj -c $(buildConfiguration) --logger "trx;LogFileName=integration.trx" --results-directory $(Agent.TempDirectory)
+      displayName: 'Run integration tests (real SQL Server 2025 via Testcontainers)'
 
-  - task: PublishTestResults@2
-    displayName: 'Publish integration test results'
-    condition: always()
-    inputs:
-      testResultsFormat: 'VSTest'
-      testResultsFiles: '$(Agent.TempDirectory)/**/integration.trx'
-      testRunTitle: 'Integration Tests (SQL Server 2025)'
-      failTaskOnFailedTests: true
+    - task: PublishTestResults@2
+      displayName: 'Publish integration test results'
+      condition: always()
+      inputs:
+        testResultsFormat: 'VSTest'
+        testResultsFiles: '$(Agent.TempDirectory)/**/integration.trx'
+        testRunTitle: 'Integration Tests (SQL Server 2025)'
+        failTaskOnFailedTests: true
+
+# Runs only for pushes to main (PR builds stop after Build). The environment's approval
+# check is what makes this wait for a human — see the header comment.
+- stage: DeployProduction
+  displayName: 'Deploy to Production'
+  dependsOn: Build
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  jobs:
+  - deployment: Deploy
+    displayName: 'Migrate database + deploy Web app'
+    pool:
+      vmImage: 'windows-latest'  # efbundle.exe is built self-contained for win-x64
+    environment: 'production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # Deployment jobs download the run's artifacts automatically → $(Pipeline.Workspace)/drop.
+          # Migrations run first: if they fail, the release stops here and the old app keeps
+          # serving against the old schema. All pending migrations are additive-first by policy.
+          - script: '"$(Pipeline.Workspace)\drop\efbundle.exe" --connection "$(ProdSqlConnectionString)"'
+            displayName: 'Apply EF migrations'
+
+          - task: AzureWebApp@1
+            displayName: 'Deploy Web app (zip deploy)'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              appType: 'webApp'
+              appName: '$(webAppName)'
+              package: '$(Pipeline.Workspace)/drop/ScoreTracker.Web.zip'
