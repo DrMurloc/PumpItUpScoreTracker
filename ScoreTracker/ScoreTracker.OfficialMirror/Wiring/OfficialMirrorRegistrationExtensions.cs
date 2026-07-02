@@ -21,7 +21,7 @@ public static class OfficialMirrorRegistrationExtensions
     {
         services.AddHttpClient<IPiuGameApi, PiuGameApi>(c =>
         {
-            c.DefaultRequestHeaders.Add("Origin", "https://piugame.com");
+            c.DefaultRequestHeaders.Add("Origin", "https://phoenix.piugame.com");
         });
         services.AddTransient<IOfficialSiteClient, OfficialSiteClient>();
         services.AddTransient<IPiuTrackerClient, PiuTrackerClient>();

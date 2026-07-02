@@ -3,6 +3,7 @@
 // this project's appsettings.json; secrets live in THIS project's user-secrets and flow
 // through to the Web app as environment variables - the Web app's configuration code is
 // unchanged and never needs its own local secrets.
+using Microsoft.Extensions.Configuration;
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Deterministic SQL Server container: pinned sa password + host port from appsettings.json,

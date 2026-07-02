@@ -16,10 +16,10 @@ namespace ScoreTracker.OfficialMirror.Infrastructure.Apis;
 internal sealed class PiuGameApi : IPiuGameApi
 {
     private static readonly Regex LevelRegex =
-        new(@"^https\:\/\/piugame\.com\/l_img\/stepball\/full\/[a-zA-Z]_num_([0-9])\.png$", RegexOptions.Compiled);
+        new(@"^https\:\/\/(?:phoenix\.)?piugame\.com\/l_img\/stepball\/full\/[a-zA-Z]_num_([0-9])\.png$", RegexOptions.Compiled);
 
     private static readonly Regex TypeRegex =
-        new(@"^https\:\/\/piugame\.com\/l_img\/stepball\/full\/([a-zA-Z])_text\.png$", RegexOptions.Compiled);
+        new(@"^https\:\/\/(?:phoenix\.)?piugame\.com\/l_img\/stepball\/full\/([a-zA-Z])_text\.png$", RegexOptions.Compiled);
 
     private static readonly Regex ShortTypeRegex =
         new(@"\/stepball\/full\/([a-zA-Z]+)_bg\.png", RegexOptions.Compiled);
@@ -44,7 +44,7 @@ internal sealed class PiuGameApi : IPiuGameApi
     public async Task<PiuGameGetSongsResult> Get20AboveSongs(int page, CancellationToken cancellationToken)
     {
         var response = await GetWithRetries(
-            $"https://piugame.com/leaderboard/over_ranking.php?lv=&search=&&page={page}",
+            $"https://phoenix.piugame.com/leaderboard/over_ranking.php?lv=&search=&&page={page}",
             cancellationToken);
         var document = new HtmlDocument();
         document.LoadHtml(response);
@@ -112,7 +112,7 @@ internal sealed class PiuGameApi : IPiuGameApi
         CancellationToken cancellationToken)
     {
         var response =
-            await GetWithRetries($"https://piugame.com/leaderboard/over_ranking_view.php?no={songId}",
+            await GetWithRetries($"https://phoenix.piugame.com/leaderboard/over_ranking_view.php?no={songId}",
                 cancellationToken);
         var document = new HtmlDocument();
         document.LoadHtml(response);
@@ -150,7 +150,7 @@ internal sealed class PiuGameApi : IPiuGameApi
     public async Task<PiuGameGetLeaderboardListResult> GetLeaderboards(CancellationToken cancellationToken)
     {
         var response =
-            await GetWithRetries("https://piugame.com/leaderboard/rating_ranking.php", cancellationToken);
+            await GetWithRetries("https://phoenix.piugame.com/leaderboard/rating_ranking.php", cancellationToken);
 
         var document = new HtmlDocument();
         document.LoadHtml(response);
@@ -173,7 +173,7 @@ internal sealed class PiuGameApi : IPiuGameApi
         CancellationToken cancellationToken)
     {
         var response =
-            await GetWithRetries("https://piugame.com/leaderboard/rating_ranking.php?lv=" + leaderboardId,
+            await GetWithRetries("https://phoenix.piugame.com/leaderboard/rating_ranking.php?lv=" + leaderboardId,
                 cancellationToken);
 
         var document = new HtmlDocument();
@@ -206,7 +206,7 @@ internal sealed class PiuGameApi : IPiuGameApi
         CancellationToken cancellationToken)
     {
         var today = DateTimeOffset.Now - TimeSpan.FromDays(1);
-        var response = await PostWithRetries("https://piugame.com/ajax/top_steps.php",
+        var response = await PostWithRetries("https://phoenix.piugame.com/ajax/top_steps.php",
             new Dictionary<string, string>
             {
                 { "page", page.ToString() },
@@ -306,7 +306,7 @@ internal sealed class PiuGameApi : IPiuGameApi
     public async Task<IEnumerable<PiuGameGetRecentScoresResult>> GetRecentScores(HttpClient client,
         CancellationToken cancellationToken)
     {
-        var response = await GetWithRetries("https://piugame.com/my_page/recently_played.php",
+        var response = await GetWithRetries("https://phoenix.piugame.com/my_page/recently_played.php",
             cancellationToken, client);
 
         var document = new HtmlDocument();
@@ -482,11 +482,11 @@ internal sealed class PiuGameApi : IPiuGameApi
             CookieContainer = cookieContainer
         };
         var client = new HttpClient(webRequestHandler);
-        client.DefaultRequestHeaders.Add("origin", "https://piugame.com");
+        client.DefaultRequestHeaders.Add("origin", "https://phoenix.piugame.com");
 
-        await client.GetAsync("https://piugame.com", cancellationToken);
+        await client.GetAsync("https://phoenix.piugame.com", cancellationToken);
 
-        var result = await PostForMessageWithRetries("https://piugame.com/bbs/login_check.php",
+        var result = await PostForMessageWithRetries("https://phoenix.piugame.com/bbs/login_check.php",
             new Dictionary<string, string>
             {
                 { "url", "/" },
@@ -495,7 +495,7 @@ internal sealed class PiuGameApi : IPiuGameApi
             }, cancellationToken, client);
 
         var sid = cookieContainer
-            .GetCookies(new Uri("https://piugame.com"))
+            .GetCookies(new Uri("https://phoenix.piugame.com"))
             .First(v => v.Name.StartsWith("sid", StringComparison.OrdinalIgnoreCase)).Value;
         await client.GetAsync("https://am-pass.net/", cancellationToken);
         return (client, sid);
@@ -504,7 +504,7 @@ internal sealed class PiuGameApi : IPiuGameApi
     public async Task<PiuGameGetBestScoresResult> GetBestScores(HttpClient client, int page,
         CancellationToken cancellationToken)
     {
-        var response = await GetWithRetries($"https://piugame.com/my_page/my_best_score.php?&&page={page}",
+        var response = await GetWithRetries($"https://phoenix.piugame.com/my_page/my_best_score.php?&&page={page}",
             cancellationToken, client);
 
         var document = new HtmlDocument();
@@ -575,7 +575,7 @@ internal sealed class PiuGameApi : IPiuGameApi
         var pageIndex=1;
         while(true) {
 
-            var nextPageString = await $.get("https://piugame.com/my_page/my_best_score.php?&&page="+pageIndex)
+            var nextPageString = await $.get("https://phoenix.piugame.com/my_page/my_best_score.php?&&page="+pageIndex)
             var page=$(nextPageString);
             var foundScores=$("ul.my_best_scoreList>li>div.in",page);
             foundScores.each(function(){
@@ -603,13 +603,13 @@ internal sealed class PiuGameApi : IPiuGameApi
 
     private static readonly Regex ImageRegex =
         new(
-            @"url\(\'(https\:\/\/piugame\.com\/data\/(avatar|song)_img\/[A-Za-z0-9]+\.[A-Za-z]+\?v\=[0-9]+)\'\)",
+            @"url\(\'(https\:\/\/(?:phoenix\.)?piugame\.com\/data\/(avatar|song)_img\/[A-Za-z0-9]+\.[A-Za-z]+\?v\=[0-9]+)\'\)",
             RegexOptions.Compiled);
 
     public async Task<PiuGameGetAccountDataResult> GetAccountData(HttpClient client,
         CancellationToken cancellationToken)
     {
-        var response = await GetWithRetries("https://piugame.com/my_page/title.php",
+        var response = await GetWithRetries("https://phoenix.piugame.com/my_page/title.php",
             cancellationToken, client);
 
 
@@ -710,7 +710,7 @@ internal sealed class PiuGameApi : IPiuGameApi
 
     public async Task<IEnumerable<GameCardRecord>> GetCards(HttpClient client, CancellationToken cancellationToken)
     {
-        var html = await client.GetStringAsync("https://piugame.com/my_page/game_id_information.php",
+        var html = await client.GetStringAsync("https://phoenix.piugame.com/my_page/game_id_information.php",
             cancellationToken);
         var document = new HtmlDocument();
         document.LoadHtml(html);
@@ -737,7 +737,7 @@ internal sealed class PiuGameApi : IPiuGameApi
 
     public async Task SetCard(HttpClient client, string id, CancellationToken cancellationToken)
     {
-        var result = await PostForMessageWithRetries("https://piugame.com/ajax/sub_profile.php",
+        var result = await PostForMessageWithRetries("https://phoenix.piugame.com/ajax/sub_profile.php",
             new Dictionary<string, string>
             {
                 { "no", id }
