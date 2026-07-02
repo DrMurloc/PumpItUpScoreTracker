@@ -1,4 +1,4 @@
-namespace ScoreTracker.Domain.Events;
+namespace ScoreTracker.Ucs.Contracts.Events;
 
 /// <summary>
 ///     Fat contract event: carries the UCS placement facts so consumers never reach back

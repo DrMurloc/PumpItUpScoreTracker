@@ -1,6 +1,7 @@
 using System;
 using System.Text.Json;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Ucs.Contracts.Events;
 using Xunit;
 
 namespace ScoreTracker.Tests.DomainTests;

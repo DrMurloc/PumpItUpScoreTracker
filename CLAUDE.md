@@ -63,7 +63,7 @@ Adding a package outside its allowed layer is a violation. Adding a project refe
   - **Queries** — `*Query` records implementing `IQuery<T>` (`ScoreTracker.SharedKernel.Messaging`), in `Application/Queries/`, `PersonalProgress/Queries/`, or a vertical's `Contracts/Queries/`. Read-only; never travel the bus.
   - **Commands (MediatR)** — `*Command` records implementing `IRequest`/`IRequest<T>`, in `Application/Commands/` or a vertical's `Contracts/Commands/`.
   - **Commands (bus triggers)** — `*Command` plain records (not `IRequest`) in `Application/Messages/`, published via `IBus` by `RecurringJobRunner`/admin pages.
-  - **Events** — `*Event` past-tense fact records (never `IRequest`) in `Domain/Events/` (bus) or `Application/Events/` (`INotification`).
+  - **Events** — `*Event` past-tense fact records (never `IRequest`) in `Domain/Events/` (bus), `Application/Events/` (`INotification`), or a vertical's `Contracts/Events/` (bus; publishing vertical owns the event once no Application consumer remains).
   - Handlers are `IRequestHandler<,>` / `IConsumer<>` implementations in `Application/Handlers/`.
 - **Razor pages, Blazor components, and MVC controllers dispatch exclusively via `IMediator`.** No `DbContext`, repository, or `HttpClient` is injected into Web code. (Exception: `Accessors/` types in Web that *implement* Domain ports.)
 - Background work is published over `IBus.Publish(...)` — past-tense **facts** are records in `Domain/Events/`; imperative **trigger messages** (recurring-job kicks, admin "run this now" buttons) are records in `Application/Messages/`. In-process notifications use `IMediator.Publish(INotification)`.

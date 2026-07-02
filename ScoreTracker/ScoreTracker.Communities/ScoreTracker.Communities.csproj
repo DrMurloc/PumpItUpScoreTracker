@@ -30,6 +30,8 @@
     <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
     <ProjectReference Include="..\ScoreTracker.Application\ScoreTracker.Application.csproj" />
     <ProjectReference Include="..\ScoreTracker.PersonalProgress\ScoreTracker.PersonalProgress.csproj" />
+    <!-- Vertical→vertical contracts: CommunitySaga consumes UcsLeaderboardPlacedEvent. -->
+    <ProjectReference Include="..\ScoreTracker.Ucs\ScoreTracker.Ucs.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,7 @@
 using MassTransit;
 using MediatR;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Ucs.Contracts.Events;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
 using ScoreTracker.Ucs.Contracts;

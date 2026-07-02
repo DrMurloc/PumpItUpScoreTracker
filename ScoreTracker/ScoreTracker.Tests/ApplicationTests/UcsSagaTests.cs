@@ -5,6 +5,7 @@ using MassTransit;
 using Moq;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Ucs.Contracts.Events;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
 using ScoreTracker.Tests.TestData;

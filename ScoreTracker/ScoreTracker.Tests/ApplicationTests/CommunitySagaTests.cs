@@ -12,6 +12,7 @@ using ScoreTracker.Communities.Domain;
 using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Ucs.Contracts.Events;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
