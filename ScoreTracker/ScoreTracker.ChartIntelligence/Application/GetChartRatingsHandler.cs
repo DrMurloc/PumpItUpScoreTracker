@@ -1,5 +1,5 @@
 using MediatR;
-using ScoreTracker.Application.Queries;
+using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 

@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Caching.Memory;
-using ScoreTracker.Application.Queries;
+using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Records;

@@ -1,7 +1,7 @@
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using MassTransit;
 using MediatR;
-using ScoreTracker.Application.Queries;
+using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;

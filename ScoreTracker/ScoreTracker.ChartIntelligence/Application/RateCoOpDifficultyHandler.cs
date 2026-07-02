@@ -1,5 +1,5 @@
 using MediatR;
-using ScoreTracker.Application.Commands;
+using ScoreTracker.ChartIntelligence.Contracts.Commands;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;

@@ -25,11 +25,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
-    <!-- Transitional (P5): its EF repositories still live in ScoreTracker.Data until the
-         cross-vertical SQL joins onto PlayerStats/UserHighestTitle convert to contract
-         reads; Application holds GetChartsQuery until the chart reads move to Catalog. -->
+    <!-- Transitional (P5): the single ChartAttemptDbContext still lives in ScoreTracker.Data. -->
     <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
-    <ProjectReference Include="..\ScoreTracker.Application\ScoreTracker.Application.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Catalog\ScoreTracker.Catalog.csproj" />
+    <ProjectReference Include="..\ScoreTracker.ChartIntelligence\ScoreTracker.ChartIntelligence.csproj" />
   </ItemGroup>
 
 </Project>

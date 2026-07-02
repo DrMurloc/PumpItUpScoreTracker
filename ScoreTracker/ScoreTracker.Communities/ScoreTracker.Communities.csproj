@@ -28,9 +28,9 @@
          Application is also transitional: CommunitySaga sends GetChartsQuery via IMediator;
          the reference drops when the chart reads move to Catalog. -->
     <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
-    <ProjectReference Include="..\ScoreTracker.Application\ScoreTracker.Application.csproj" />
     <!-- Vertical→vertical contracts: CommunitySaga consumes UcsLeaderboardPlacedEvent and
          sends PlayerProgress's GetTop50ForPlayerQuery. -->
+    <ProjectReference Include="..\ScoreTracker.Catalog\ScoreTracker.Catalog.csproj" />
     <ProjectReference Include="..\ScoreTracker.PlayerProgress\ScoreTracker.PlayerProgress.csproj" />
     <ProjectReference Include="..\ScoreTracker.Ucs\ScoreTracker.Ucs.csproj" />
   </ItemGroup>

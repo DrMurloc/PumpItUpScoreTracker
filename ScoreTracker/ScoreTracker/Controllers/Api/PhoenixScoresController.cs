@@ -1,3 +1,5 @@
+using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Contracts.Queries;

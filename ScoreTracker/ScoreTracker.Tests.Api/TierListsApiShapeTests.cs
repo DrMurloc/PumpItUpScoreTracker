@@ -1,6 +1,10 @@
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ScoreTracker.Catalog.Contracts.Commands;
+using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts.Commands;
+using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Records;

@@ -3,7 +3,7 @@ using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Application.Queries;
+namespace ScoreTracker.ChartIntelligence.Contracts.Queries;
 
 [ExcludeFromCodeCoverage]
 public sealed record GetChartRatingsQuery

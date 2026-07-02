@@ -1,7 +1,8 @@
 using ScoreTracker.Domain.Services;
 using MediatR;
 using ScoreTracker.PlayerProgress.Contracts.Commands;
-using ScoreTracker.Application.Queries;
+using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;

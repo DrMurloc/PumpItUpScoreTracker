@@ -1,6 +1,6 @@
 using ScoreTracker.Domain.Enums;
 
-namespace ScoreTracker.Application.Queries;
+namespace ScoreTracker.ChartIntelligence.Contracts.Queries;
 
 [ExcludeFromCodeCoverage]
 public sealed record GetChartScoringLevelsQuery(MixEnum Mix = MixEnum.Phoenix)

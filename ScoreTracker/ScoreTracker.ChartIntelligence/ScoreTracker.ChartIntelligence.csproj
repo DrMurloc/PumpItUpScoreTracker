@@ -28,7 +28,6 @@
     <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
     <!-- Transitional (P5): this vertical's query/command records stay in Application until
          their senders are all Web-side; the handlers here implement them across the boundary. -->
-    <ProjectReference Include="..\ScoreTracker.Application\ScoreTracker.Application.csproj" />
   </ItemGroup>
 
 </Project>

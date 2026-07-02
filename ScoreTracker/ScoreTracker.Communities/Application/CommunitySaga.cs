@@ -3,7 +3,7 @@ using MediatR;
 using ScoreTracker.Communities.Contracts.Commands;
 using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Communities.Domain;
-using ScoreTracker.Application.Queries;
+using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Ucs.Contracts.Events;

@@ -2,7 +2,7 @@
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Records;
 
-namespace ScoreTracker.Application.Commands;
+namespace ScoreTracker.ChartIntelligence.Contracts.Commands;
 
 [ExcludeFromCodeCoverage]
 public sealed record RateChartDifficultyCommand

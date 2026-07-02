@@ -1,11 +1,11 @@
 ﻿using MediatR;
-using ScoreTracker.Application.Queries;
+using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 
-namespace ScoreTracker.Application.Handlers;
+namespace ScoreTracker.Catalog.Application;
 
-public sealed class GetChartsHandler : IRequestHandler<GetChartsQuery, IEnumerable<Chart>>
+internal sealed class GetChartsHandler : IRequestHandler<GetChartsQuery, IEnumerable<Chart>>
 {
     private readonly IChartRepository _charts;
 

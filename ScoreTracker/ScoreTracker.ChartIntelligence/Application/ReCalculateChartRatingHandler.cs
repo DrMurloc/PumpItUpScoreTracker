@@ -1,6 +1,6 @@
 using MassTransit;
 using MediatR;
-using ScoreTracker.Application.Commands;
+using ScoreTracker.ChartIntelligence.Contracts.Commands;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Records;

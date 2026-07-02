@@ -1,6 +1,8 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.ValueTypes;

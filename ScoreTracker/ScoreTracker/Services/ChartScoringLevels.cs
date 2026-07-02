@@ -1,4 +1,6 @@
 using MediatR;
+using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Application.Queries;
 
 namespace ScoreTracker.Web.Services;

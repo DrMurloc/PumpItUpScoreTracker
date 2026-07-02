@@ -1,12 +1,12 @@
 ﻿using MediatR;
-using ScoreTracker.Application.Commands;
-using ScoreTracker.Application.Queries;
+using ScoreTracker.Catalog.Contracts.Commands;
+using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
-namespace ScoreTracker.Application.Handlers;
+namespace ScoreTracker.Catalog.Application;
 
-public sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumerable<ChartSkillsRecord>>,
+internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumerable<ChartSkillsRecord>>,
     IRequestHandler<UpdateChartSkillCommand>
 {
     private readonly IChartRepository _charts;
