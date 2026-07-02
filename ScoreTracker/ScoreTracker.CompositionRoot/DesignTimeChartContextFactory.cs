@@ -15,7 +15,13 @@ internal sealed class DesignTimeChartContextFactory : IDesignTimeDbContextFactor
     {
         return new ChartAttemptDbContext(new DbContextOptionsBuilder<ChartAttemptDbContext>()
                 .UseSqlServer(
-                    "Server=localhost;Database=DesignTimeOnly;Integrated Security=true;TrustServerCertificate=true")
+                    "Server=localhost;Database=DesignTimeOnly;Integrated Security=true;TrustServerCertificate=true",
+                    // Migration bundles are built from this factory and keep these options
+                    // (only the connection string is swapped in at deploy time). Data-moving
+                    // migrations (e.g. the ScoreEventJournal backfill) can run for minutes
+                    // against prod-sized tables — SqlClient's default 30s killed the
+                    // 2026-07-02 deploy.
+                    o => o.CommandTimeout(3600))
                 .Options,
             VerticalModelContributions.All());
     }
