@@ -1,12 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
-using ScoreTracker.Data.Persistence.Entities;
+using ScoreTracker.ScoreLedger.Infrastructure.Entities;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
-namespace ScoreTracker.Data.Repositories;
+namespace ScoreTracker.ScoreLedger.Infrastructure;
 
-public sealed class EFPhoenixRecordStatsRepository : IPhoenixRecordStatsRepository
+internal sealed class EFPhoenixRecordStatsRepository : IPhoenixRecordStatsRepository
 {
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
@@ -21,7 +21,7 @@ public sealed class EFPhoenixRecordStatsRepository : IPhoenixRecordStatsReposito
         var statArray = stats.ToArray();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var chartIds = statArray.Select(s => s.ChartId).ToArray();
-        var entities = await database.PhoenixRecordStats.Where(s => s.UserId == userId && chartIds.Contains(s.ChartId))
+        var entities = await database.Set<PhoenixRecordStatsEntity>().Where(s => s.UserId == userId && chartIds.Contains(s.ChartId))
             .ToDictionaryAsync(e => e.ChartId, cancellationToken);
         var toCreate = new List<PhoenixRecordStatsEntity>();
         foreach (var stat in statArray)
@@ -41,7 +41,7 @@ public sealed class EFPhoenixRecordStatsRepository : IPhoenixRecordStatsReposito
                 });
             }
 
-        await database.PhoenixRecordStats.AddRangeAsync(toCreate, cancellationToken);
+        await database.Set<PhoenixRecordStatsEntity>().AddRangeAsync(toCreate, cancellationToken);
 
         await database.SaveChangesAsync(cancellationToken);
     }

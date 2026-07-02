@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
-namespace ScoreTracker.Data.Persistence.Entities
+namespace ScoreTracker.PlayerProgress.Infrastructure.Entities
 {
     [Index(nameof(Level))]
     [Index(nameof(TitleName))]
-    public sealed class UserHighestTitleEntity
+    internal sealed class UserHighestTitleEntity
     {
         [Key] public Guid UserId { get; set; }
 

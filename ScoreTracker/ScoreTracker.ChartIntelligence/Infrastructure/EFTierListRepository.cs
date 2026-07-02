@@ -15,14 +15,17 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure
         private readonly IMemoryCache _cache;
         private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
         private readonly IScoreReader _scores;
+        private readonly ITitleRepository _titles;
 
         public EFTierListRepository(IDbContextFactory<ChartAttemptDbContext> factory,
             IMemoryCache cache,
-            IScoreReader scores)
+            IScoreReader scores,
+            ITitleRepository titles)
         {
             _cache = cache;
             _factory = factory;
             _scores = scores;
+            _titles = titles;
         }
 
         private static string TierListKey(Name tierListName)
@@ -60,22 +63,16 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure
         public async Task<IEnumerable<Guid>> GetUsersOnLevel(DifficultyLevel level, CancellationToken cancellationToken,
             bool requireActive = false)
         {
-            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            var levelInt = (int)level;
+            // Title cohorts come from PlayerProgress's ITitleRepository and activity from
+            // the Ledger's IScoreReader — reads through published contracts, not joins onto
+            // other verticals' tables (UserHighestTitle went PlayerProgress-internal at C50).
+            var onLevel = await _titles.GetUserIdsOnHighestLevel(level, cancellationToken);
             if (!requireActive)
-                return await database.UserHighestTitle.Where(e => e.Level == levelInt).Select(e => e.UserId)
-                    .ToArrayAsync(cancellationToken);
+                return onLevel;
 
-            // Activity comes from the Ledger's read contract, not a join onto its table —
-            // the PhoenixRecord table goes Ledger-internal at the P5 extraction.
             var cutoff = DateTimeOffset.Now - TimeSpan.FromDays(120);
             var active = await _scores.GetActiveUserIds(cutoff, cancellationToken);
-            return (await database.UserHighestTitle.Where(e => e.Level == levelInt)
-                    .Select(e => e.UserId)
-                    .Distinct()
-                    .ToArrayAsync(cancellationToken))
-                .Where(active.Contains)
-                .ToArray();
+            return onLevel.Where(active.Contains).ToArray();
         }
 
 

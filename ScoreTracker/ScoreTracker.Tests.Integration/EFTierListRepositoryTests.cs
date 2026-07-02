@@ -3,6 +3,8 @@ using ScoreTracker.ChartIntelligence.Infrastructure;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using ScoreTracker.Data.Persistence.Entities;
+using ScoreTracker.PlayerProgress.Infrastructure;
+using ScoreTracker.PlayerProgress.Infrastructure.Entities;
 using ScoreTracker.Data.Repositories;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Records;
@@ -29,14 +31,15 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
     public Task DisposeAsync() => Task.CompletedTask;
 
     // GetAllEntries caches per TierListName for 24 hours; a fresh repo on read forces the DB path.
-    // The activity reader is the real Ledger implementation (the subject of GetUsersOnLevel's
-    // requireActive path); IChartRepository inside it is an incidental collaborator.
+    // The activity reader and title repository are the real implementations (both subjects of
+    // GetUsersOnLevel); IChartRepository/IMediator/IPlayerStatsReader are incidental collaborators.
     private EFTierListRepository BuildRepository() =>
         new(_fixture.DbContextFactory, new MemoryCache(new MemoryCacheOptions()),
             new EFPhoenixRecordsRepository(_fixture.DbContextFactory,
                 new MemoryCache(new MemoryCacheOptions()), new Mock<IChartRepository>().Object,
                 new EFXXChartAttemptRepository(_fixture.DbContextFactory),
-                Mock.Of<IMediator>()));
+                Mock.Of<IMediator>(), Mock.Of<IPlayerStatsReader>()),
+            new EFTitleRepository(_fixture.DbContextFactory, new MemoryCache(new MemoryCacheOptions())));
 
     [Fact]
     public async Task SaveEntryAndGetAllEntriesRoundTripPreservesAllFields()
@@ -132,7 +135,7 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
 
         await using (var ctx = await _fixture.DbContextFactory.CreateDbContextAsync())
         {
-            ctx.UserHighestTitle.AddRange(
+            ctx.Set<UserHighestTitleEntity>().AddRange(
                 new UserHighestTitleEntity { UserId = userL15, TitleName = "title15", Level = 15 },
                 new UserHighestTitleEntity { UserId = userL16, TitleName = "title16", Level = 16 },
                 new UserHighestTitleEntity { UserId = userL17, TitleName = "title17", Level = 17 });
@@ -158,7 +161,7 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
 
         await using (var ctx = await _fixture.DbContextFactory.CreateDbContextAsync())
         {
-            ctx.UserHighestTitle.AddRange(
+            ctx.Set<UserHighestTitleEntity>().AddRange(
                 new UserHighestTitleEntity { UserId = activeUser, TitleName = "t16a", Level = 16 },
                 new UserHighestTitleEntity { UserId = staleUser, TitleName = "t16b", Level = 16 });
             // The cutoff is now-120d on the repository's own clock (pre-existing seam gap),

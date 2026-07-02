@@ -29,15 +29,10 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<MatchEntity> Match { get; set; }
     public DbSet<RandomSettingsEntity> RandomSettings { get; set; }
     public DbSet<MatchLinkEntity> MatchLink { get; set; }
-    public DbSet<PlayerStatsEntity> PlayerStats { get; set; }
-    public DbSet<PlayerHistoryEntity> PlayerHistory { get; set; }
     public DbSet<SuggestionFeedbackEntity> SuggestionFeedback { get; set; }
-    public DbSet<UserTitleEntity> UserTitle { get; set; }
-    public DbSet<UserHighestTitleEntity> UserHighestTitle { get; set; }
     public DbSet<TournamentPlayerEntity> TournamentPlayer { get; set; }
     public DbSet<TournamentMachineEntity> TournamentMachine { get; set; }
     public DbSet<CountryEntity> Country { get; set; }
-    public DbSet<PhoenixRecordStatsEntity> PhoenixRecordStats { get; set; }
     public DbSet<ChartLetterDifficultyEntity> ChartLetterDifficulty { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -85,8 +80,6 @@ public sealed class ChartAttemptDbContext : DbContext
             .Property(s => s.Type)
             .HasDefaultValue("Arcade");
 
-        builder.Entity<UserTitleEntity>().Property(e => e.ParagonLevel)
-            .HasDefaultValue(ParagonLevel.None.ToString());
         builder.Entity<SongEntity>().Property(s => s.Duration)
             .HasDefaultValue(TimeSpan.FromMinutes(0))
             .HasConversion<long>();

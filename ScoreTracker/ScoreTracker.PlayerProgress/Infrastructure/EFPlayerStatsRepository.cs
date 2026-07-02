@@ -1,16 +1,16 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using ScoreTracker.Application.Queries;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Data.Persistence;
-using ScoreTracker.Data.Persistence.Entities;
+using ScoreTracker.PlayerProgress.Infrastructure.Entities;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
-namespace ScoreTracker.Data.Repositories
+namespace ScoreTracker.PlayerProgress.Infrastructure
 {
-    public sealed class EFPlayerStatsRepository : IPlayerStatsRepository,
+    internal sealed class EFPlayerStatsRepository : IPlayerStatsRepository,
         IPlayerStatsReader,
         IRequestHandler<GetPlayerStatsQuery, PlayerStatsRecord>
     {
@@ -31,7 +31,7 @@ namespace ScoreTracker.Data.Repositories
         public async Task SaveStats(Guid userId, PlayerStatsRecord newStats, CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            var entity = await database.PlayerStats.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+            var entity = await database.Set<PlayerStatsEntity>().FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
             if (entity == null)
             {
                 await database.AddAsync(new PlayerStatsEntity
@@ -89,7 +89,7 @@ namespace ScoreTracker.Data.Repositories
                 o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(30);
 
                 var entity =
-                    await database.PlayerStats.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+                    await database.Set<PlayerStatsEntity>().FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
                 if (entity == null)
                     return new PlayerStatsRecord(userId, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1);
 
@@ -107,7 +107,7 @@ namespace ScoreTracker.Data.Repositories
             CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            return await database.PlayerStats.Where(s => userIds.Contains(s.UserId)).Select(entity =>
+            return await database.Set<PlayerStatsEntity>().Where(s => userIds.Contains(s.UserId)).Select(entity =>
                 new PlayerStatsRecord(entity.UserId, entity.TotalRating, entity.HighestLevel, entity.ClearCount,
                     entity.CoOpRating,
                     entity.AverageCoOpScore, entity.SkillRating, entity.AverageSkillScore, entity.AverageSkillLevel,
@@ -122,7 +122,7 @@ namespace ScoreTracker.Data.Repositories
             CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            var query = database.PlayerStats.AsQueryable();
+            var query = database.Set<PlayerStatsEntity>().AsQueryable();
             var min = competitiveLevel - range;
             var max = competitiveLevel + range;
             if (chartType == null)
@@ -143,10 +143,10 @@ namespace ScoreTracker.Data.Repositories
         public async Task DeleteStats(Guid userId, CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            var entity = await database.PlayerStats.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+            var entity = await database.Set<PlayerStatsEntity>().FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
             if (entity != null)
             {
-                database.PlayerStats.Remove(entity);
+                database.Set<PlayerStatsEntity>().Remove(entity);
                 await database.SaveChangesAsync(cancellationToken);
             }
 

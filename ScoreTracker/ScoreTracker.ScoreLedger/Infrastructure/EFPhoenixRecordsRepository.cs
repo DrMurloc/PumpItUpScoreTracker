@@ -107,6 +107,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     private readonly IChartRepository _charts;
     private readonly IXXChartAttemptRepository _xxAttempts;
     private readonly IMediator _mediator;
+    private readonly IPlayerStatsReader _playerStats;
 
     private static string ScoreCache(Guid userId)
     {
@@ -117,13 +118,15 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         IMemoryCache cache,
         IChartRepository charts,
         IXXChartAttemptRepository xxAttempts,
-        IMediator mediator)
+        IMediator mediator,
+        IPlayerStatsReader playerStats)
     {
         _cache = cache;
         _factory = factory;
         _charts = charts;
         _xxAttempts = xxAttempts;
         _mediator = mediator;
+        _playerStats = playerStats;
     }
 
     public async Task UpdateBestAttempt(Guid userId, RecordedPhoenixScore score,
@@ -312,18 +315,16 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         var mixId = MixIds.Phoenix;
         var intLevel = (int)difficulty;
         var chartTypeString = chartType.ToString();
+        // Competitive-level cohort comes from PlayerProgress's published reader — its
+        // PlayerStats table is vertical-internal, so no SQL join onto it from here.
+        var cohort = (await _playerStats.GetPlayersByCompetitiveRange(chartType, intLevel, .5, cancellationToken))
+            .ToHashSet();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return (await (from cm in database.ChartMix
                 join c in database.Chart on cm.ChartId equals c.Id
                 join pr in database.Set<PhoenixRecordEntity>() on cm.ChartId equals pr.ChartId
-                join ps in database.PlayerStats on pr.UserId equals ps.UserId
                 where cm.MixId == mixId && cm.Level == intLevel && c.Type == chartTypeString
-                      && ((chartTypeString == "Single" && ps.SinglesCompetitiveLevel >= cm.Level - .5 &&
-                           ps.SinglesCompetitiveLevel <= cm.Level + .5) || (chartTypeString == "Double" &&
-                                                                            ps.DoublesCompetitiveLevel >=
-                                                                            cm.Level - .5 &&
-                                                                            ps.DoublesCompetitiveLevel <=
-                                                                            cm.Level + .5))
+                      && cohort.Contains(pr.UserId)
                 select pr).ToArrayAsync(cancellationToken))
             .GroupBy(c => c.ChartId).Select(g => new ChartScoreAggregate(g.Key, g.Count()));
     }
@@ -398,7 +399,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         return await (from p in playerQuery
             join pr in database.Set<PhoenixRecordEntity>() on p.Id equals pr.UserId
             join c in chartQuery on pr.ChartId equals c.Id
-            join prs in database.PhoenixRecordStats on new { pr.ChartId, pr.UserId } equals new
+            join prs in database.Set<PhoenixRecordStatsEntity>() on new { pr.ChartId, pr.UserId } equals new
                 { prs.ChartId, prs.UserId }
             group new { pr, prs } by pr.UserId
             into g
@@ -411,9 +412,9 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var scores = await database.Set<PhoenixRecordEntity>().Where(p => p.UserId == userId).ToArrayAsync(cancellationToken);
-        var stats = await database.PhoenixRecordStats.Where(p => p.UserId == userId).ToArrayAsync(cancellationToken);
+        var stats = await database.Set<PhoenixRecordStatsEntity>().Where(p => p.UserId == userId).ToArrayAsync(cancellationToken);
         database.Set<PhoenixRecordEntity>().RemoveRange(scores);
-        database.PhoenixRecordStats.RemoveRange(stats);
+        database.Set<PhoenixRecordStatsEntity>().RemoveRange(stats);
         await database.SaveChangesAsync(cancellationToken);
         _cache.Remove(ScoreCache(userId));
     }

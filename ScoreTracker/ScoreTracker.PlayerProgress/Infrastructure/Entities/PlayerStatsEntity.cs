@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ScoreTracker.Data.Persistence.Entities
+namespace ScoreTracker.PlayerProgress.Infrastructure.Entities
 {
-    public sealed class PlayerStatsEntity
+    internal sealed class PlayerStatsEntity
     {
         [Key] public Guid UserId { get; set; }
         public int TotalRating { get; set; }

@@ -36,7 +36,7 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
             new MemoryCache(new MemoryCacheOptions()),
             Mock.Of<IChartRepository>(),
             new EFXXChartAttemptRepository(_fixture.DbContextFactory),
-            Mock.Of<IMediator>());
+            Mock.Of<IMediator>(), Mock.Of<IPlayerStatsReader>());
 
     [Fact]
     public async Task UpdateBestAttemptInsertsANewRecordReadableViaGetRecordedScore()

@@ -5,6 +5,7 @@ using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Communities.Domain;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
 
 namespace ScoreTracker.Communities.Infrastructure
@@ -12,10 +13,13 @@ namespace ScoreTracker.Communities.Infrastructure
     internal sealed class EFCommunitiesRepository : ICommunityRepository
     {
         private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
+        private readonly IPlayerStatsReader _playerStats;
 
-        public EFCommunitiesRepository(IDbContextFactory<ChartAttemptDbContext> factory)
+        public EFCommunitiesRepository(IDbContextFactory<ChartAttemptDbContext> factory,
+            IPlayerStatsReader playerStats)
         {
             _factory = factory;
+            _playerStats = playerStats;
         }
 
         public async Task<Name?> GetCommunityByInviteCode(Guid inviteCode, CancellationToken cancellationToken)
@@ -167,19 +171,31 @@ namespace ScoreTracker.Communities.Infrastructure
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var nameString = communityName.ToString();
-            return await (from c in database.Set<CommunityEntity>()
+            var members = await (from c in database.Set<CommunityEntity>()
                     where c.Name == nameString
                     join cm in database.Set<CommunityMembershipEntity>() on c.Id equals cm.CommunityId
-                    join ps in database.PlayerStats on cm.UserId equals ps.UserId
-                    join u in database.User on ps.UserId equals u.Id
-                    select new CommunityLeaderboardRecord(u.Name, u.IsPublic, new Uri(u.ProfileImage, UriKind.Absolute),
-                        u.Id,
-                        ps.TotalRating, ps.HighestLevel, ps.ClearCount,
-                        ps.CoOpRating, ps.AverageCoOpScore, ps.SkillRating, ps.AverageSkillScore, ps.AverageSkillLevel,
-                        ps.SinglesRating, ps.AverageSinglesScore, ps.AverageSinglesLevel, ps.DoublesRating,
-                        ps.AverageDoublesScore, ps.AverageDoublesLevel, ps.CompetitiveLevel, ps.SinglesCompetitiveLevel,
-                        ps.DoublesCompetitiveLevel))
+                    join u in database.User on cm.UserId equals u.Id
+                    select new { u.Id, u.Name, u.IsPublic, u.ProfileImage })
                 .ToArrayAsync(cancellationToken);
+
+            // Stats come from PlayerProgress's published reader — its PlayerStats table is
+            // vertical-internal, so no SQL join onto it from here. The reader returns rows
+            // only for users that have stats, preserving the old inner-join semantics.
+            var stats = (await _playerStats.GetStats(members.Select(m => m.Id).Distinct(), cancellationToken))
+                .ToDictionary(s => s.UserId);
+
+            return members.Where(m => stats.ContainsKey(m.Id))
+                .Select(m =>
+                {
+                    var ps = stats[m.Id];
+                    return new CommunityLeaderboardRecord(m.Name, m.IsPublic,
+                        new Uri(m.ProfileImage, UriKind.Absolute), m.Id,
+                        ps.TotalRating, ps.HighestLevel, ps.ClearCount,
+                        ps.CoOpRating, ps.CoOpScore, ps.SkillRating, ps.SkillScore, ps.SkillLevel,
+                        ps.SinglesRating, ps.SinglesScore, ps.SinglesLevel, ps.DoublesRating,
+                        ps.DoublesScore, ps.DoublesLevel, ps.CompetitiveLevel, ps.SinglesCompetitiveLevel,
+                        ps.DoublesCompetitiveLevel);
+                }).ToArray();
         }
 
         public async Task<Community?> GetCommunityByName(Name communityName, CancellationToken cancellationToken)

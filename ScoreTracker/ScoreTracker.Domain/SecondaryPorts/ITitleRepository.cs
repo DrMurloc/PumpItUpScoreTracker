@@ -17,6 +17,9 @@ namespace ScoreTracker.Domain.SecondaryPorts
         Task<int> CountTitledUsers(CancellationToken cancellationToken);
         Task<IEnumerable<TitleAchievedRecord>> GetUsersWithTitle(Name title, CancellationToken cancellationToken);
 
+        /// <summary>User ids whose highest difficulty title sits exactly on this level (tier-list cohorts).</summary>
+        Task<IEnumerable<Guid>> GetUserIdsOnHighestLevel(DifficultyLevel level, CancellationToken cancellationToken);
+
         Task DeleteHighestTitle(Guid userId, CancellationToken cancellationToken);
     }
 }

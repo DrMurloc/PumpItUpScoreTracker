@@ -2,10 +2,10 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace ScoreTracker.Data.Persistence.Entities
+namespace ScoreTracker.ScoreLedger.Infrastructure.Entities
 {
     [Index(nameof(UserId), nameof(ChartId), IsUnique = true)]
-    public sealed class PhoenixRecordStatsEntity
+    internal sealed class PhoenixRecordStatsEntity
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]

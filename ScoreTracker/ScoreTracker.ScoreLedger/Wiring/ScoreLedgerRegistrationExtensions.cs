@@ -22,6 +22,7 @@ public static class ScoreLedgerRegistrationExtensions
         services.AddTransient<IScoreJournalRepository, EFScoreJournalRepository>();
         services.AddTransient<IXXChartAttemptRepository, EFXXChartAttemptRepository>();
         services.AddTransient<IScoreReader, EFPhoenixRecordsRepository>();
+        services.AddTransient<IPhoenixRecordStatsRepository, EFPhoenixRecordStatsRepository>();
         services.AddSingleton<IDbModelContribution, ScoreLedgerModelContribution>();
         return services;
     }

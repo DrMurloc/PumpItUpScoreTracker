@@ -634,132 +634,6 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("Mix", "scores");
                 });
 
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.PhoenixRecordStatsEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<Guid>("ChartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<double>("Pumbility")
-                        .HasColumnType("float");
-
-                    b.Property<double>("PumbilityPlus")
-                        .HasColumnType("float");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId", "ChartId")
-                        .IsUnique();
-
-                    b.ToTable("PhoenixRecordStats", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.PlayerHistoryEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CoOpRating")
-                        .HasColumnType("int");
-
-                    b.Property<double>("CompetitiveLevel")
-                        .HasColumnType("float");
-
-                    b.Property<DateTimeOffset>("Date")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<double>("DoublesLevel")
-                        .HasColumnType("float");
-
-                    b.Property<int>("PassCount")
-                        .HasColumnType("int");
-
-                    b.Property<double>("SinglesLevel")
-                        .HasColumnType("float");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("PlayerHistory", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.PlayerStatsEntity", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("AverageCoOpScore")
-                        .HasColumnType("int");
-
-                    b.Property<double>("AverageDoublesLevel")
-                        .HasColumnType("float");
-
-                    b.Property<int>("AverageDoublesScore")
-                        .HasColumnType("int");
-
-                    b.Property<double>("AverageSinglesLevel")
-                        .HasColumnType("float");
-
-                    b.Property<int>("AverageSinglesScore")
-                        .HasColumnType("int");
-
-                    b.Property<double>("AverageSkillLevel")
-                        .HasColumnType("float");
-
-                    b.Property<int>("AverageSkillScore")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ClearCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CoOpRating")
-                        .HasColumnType("int");
-
-                    b.Property<double>("CompetitiveLevel")
-                        .HasColumnType("float");
-
-                    b.Property<double>("DoublesCompetitiveLevel")
-                        .HasColumnType("float");
-
-                    b.Property<int>("DoublesRating")
-                        .HasColumnType("int");
-
-                    b.Property<int>("HighestLevel")
-                        .HasColumnType("int");
-
-                    b.Property<double>("SinglesCompetitiveLevel")
-                        .HasColumnType("float");
-
-                    b.Property<int>("SinglesRating")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SkillRating")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TotalRating")
-                        .HasColumnType("int");
-
-                    b.HasKey("UserId");
-
-                    b.ToTable("PlayerStats", "scores");
-                });
-
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.RandomSettingsEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1020,29 +894,6 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("User", "scores");
                 });
 
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.UserHighestTitleEntity", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TitleName")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.HasKey("UserId");
-
-                    b.HasIndex("Level");
-
-                    b.HasIndex("TitleName");
-
-                    b.ToTable("UserHighestTitle", "scores");
-                });
-
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.UserSettingsEntity", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -1055,35 +906,6 @@ namespace ScoreTracker.Data.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("UserSettings", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.UserTitleEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ParagonLevel")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(16)
-                        .HasColumnType("nvarchar(16)")
-                        .HasDefaultValue("None");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Title");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserTitle", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.EventCompetition.Infrastructure.Entities.CoOpPlayerEntity", b =>
@@ -1543,6 +1365,156 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("UserWorldRanking", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.PlayerHistoryEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CoOpRating")
+                        .HasColumnType("int");
+
+                    b.Property<double>("CompetitiveLevel")
+                        .HasColumnType("float");
+
+                    b.Property<DateTimeOffset>("Date")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<double>("DoublesLevel")
+                        .HasColumnType("float");
+
+                    b.Property<int>("PassCount")
+                        .HasColumnType("int");
+
+                    b.Property<double>("SinglesLevel")
+                        .HasColumnType("float");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PlayerHistory", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.PlayerStatsEntity", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("AverageCoOpScore")
+                        .HasColumnType("int");
+
+                    b.Property<double>("AverageDoublesLevel")
+                        .HasColumnType("float");
+
+                    b.Property<int>("AverageDoublesScore")
+                        .HasColumnType("int");
+
+                    b.Property<double>("AverageSinglesLevel")
+                        .HasColumnType("float");
+
+                    b.Property<int>("AverageSinglesScore")
+                        .HasColumnType("int");
+
+                    b.Property<double>("AverageSkillLevel")
+                        .HasColumnType("float");
+
+                    b.Property<int>("AverageSkillScore")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ClearCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CoOpRating")
+                        .HasColumnType("int");
+
+                    b.Property<double>("CompetitiveLevel")
+                        .HasColumnType("float");
+
+                    b.Property<double>("DoublesCompetitiveLevel")
+                        .HasColumnType("float");
+
+                    b.Property<int>("DoublesRating")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HighestLevel")
+                        .HasColumnType("int");
+
+                    b.Property<double>("SinglesCompetitiveLevel")
+                        .HasColumnType("float");
+
+                    b.Property<int>("SinglesRating")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SkillRating")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalRating")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("PlayerStats", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.UserHighestTitleEntity", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TitleName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("Level");
+
+                    b.HasIndex("TitleName");
+
+                    b.ToTable("UserHighestTitle", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.UserTitleEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ParagonLevel")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)")
+                        .HasDefaultValue("None");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Title");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserTitle", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.ScoreLedger.Infrastructure.Entities.BestAttemptEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1612,6 +1584,34 @@ namespace ScoreTracker.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("PhoenixRecord", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.ScoreLedger.Infrastructure.Entities.PhoenixRecordStatsEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("Pumbility")
+                        .HasColumnType("float");
+
+                    b.Property<double>("PumbilityPlus")
+                        .HasColumnType("float");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "ChartId")
+                        .IsUnique();
+
+                    b.ToTable("PhoenixRecordStats", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.ScoreLedger.Infrastructure.Entities.ScoreEventJournalEntity", b =>

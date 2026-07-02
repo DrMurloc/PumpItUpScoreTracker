@@ -26,6 +26,7 @@ public sealed class ScoreLedgerModelContribution : IDbModelContribution
             .HasForeignKey(ba => ba.UserId);
 
         modelBuilder.Entity<ScoreEventJournalEntity>().ToTable("ScoreEventJournal");
+        modelBuilder.Entity<PhoenixRecordStatsEntity>().ToTable("PhoenixRecordStats");
 
         modelBuilder.Entity<BestAttemptEntity>().ToTable("BestAttempt")
             .HasOne<ChartEntity>()

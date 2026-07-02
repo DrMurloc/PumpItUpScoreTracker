@@ -11,7 +11,6 @@ using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.Communities.Wiring;
 using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Configuration;
-using ScoreTracker.Data.Repositories;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
@@ -183,8 +182,10 @@ builder.Services.AddBlazorApplicationInsights()
     .AddMediatR(o =>
     {
         o.RegisterServicesFromAssemblies(
+            // Data no longer holds MediatR handlers — its last two (player stats/history)
+            // moved into the PlayerProgress vertical at C50.
             typeof(CreateUserHandler).Assembly
-            , typeof(MainLayout).Assembly, typeof(EFPlayerStatsRepository).Assembly,
+            , typeof(MainLayout).Assembly,
             typeof(PlayerProgressRegistrationExtensions).Assembly,
             typeof(ScoreTracker.Ucs.Wiring.UcsRegistrationExtensions).Assembly,
             typeof(ScoreTracker.ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions).Assembly,

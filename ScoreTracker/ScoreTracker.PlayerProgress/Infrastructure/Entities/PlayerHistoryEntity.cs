@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace ScoreTracker.Data.Persistence.Entities
+namespace ScoreTracker.PlayerProgress.Infrastructure.Entities
 {
     [Index(nameof(UserId))]
-    public sealed class PlayerHistoryEntity
+    internal sealed class PlayerHistoryEntity
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
