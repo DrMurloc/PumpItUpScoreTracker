@@ -1,10 +1,10 @@
 ﻿using MediatR;
-using ScoreTracker.Application.Commands;
+using ScoreTracker.Identity.Contracts.Commands;
 using ScoreTracker.Domain.SecondaryPorts;
 
-namespace ScoreTracker.Application.Handlers;
+namespace ScoreTracker.Identity.Application;
 
-public sealed class SaveUserUiSettingHandler : IRequestHandler<SaveUserUiSettingCommand>
+internal sealed class SaveUserUiSettingHandler : IRequestHandler<SaveUserUiSettingCommand>
 {
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IUserRepository _users;

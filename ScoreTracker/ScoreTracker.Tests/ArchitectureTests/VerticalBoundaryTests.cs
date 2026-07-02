@@ -2,6 +2,7 @@ using ScoreTracker.WeeklyChallenge.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.Communities.Wiring;
 using ScoreTracker.EventCompetition.Wiring;
+using ScoreTracker.Identity.Wiring;
 using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using System;
@@ -40,7 +41,8 @@ public sealed class VerticalBoundaryTests
         typeof(WeeklyChallenge.Wiring.WeeklyChallengeRegistrationExtensions),
         typeof(EventCompetition.Wiring.EventCompetitionRegistrationExtensions),
         typeof(Communities.Wiring.CommunitiesRegistrationExtensions),
-        typeof(PlayerProgress.Wiring.PlayerProgressRegistrationExtensions)
+        typeof(PlayerProgress.Wiring.PlayerProgressRegistrationExtensions),
+        typeof(Identity.Wiring.IdentityRegistrationExtensions)
     };
 
     [Theory]

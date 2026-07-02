@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace ScoreTracker.Application.Queries
+namespace ScoreTracker.Identity.Contracts.Queries
 {
     [ExcludeFromCodeCoverage]
     public sealed record GetUserApiTokenQuery : IQuery<Guid?>

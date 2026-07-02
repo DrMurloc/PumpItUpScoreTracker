@@ -2,6 +2,7 @@
 using MediatR;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Identity.Contracts.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;

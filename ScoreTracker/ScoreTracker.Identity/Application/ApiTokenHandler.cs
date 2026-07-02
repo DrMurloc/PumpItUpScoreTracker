@@ -1,12 +1,12 @@
 ﻿using MediatR;
-using ScoreTracker.Application.Commands;
-using ScoreTracker.Application.Queries;
+using ScoreTracker.Identity.Contracts.Commands;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 
-namespace ScoreTracker.Application.Handlers
+namespace ScoreTracker.Identity.Application
 {
-    public sealed class ApiTokenHandler : IRequestHandler<GetUserApiTokenQuery, Guid?>,
+    internal sealed class ApiTokenHandler : IRequestHandler<GetUserApiTokenQuery, Guid?>,
         IRequestHandler<GetUserByApiTokenQuery, User?>,
         IRequestHandler<SetApiTokenCommand, Guid>
     {

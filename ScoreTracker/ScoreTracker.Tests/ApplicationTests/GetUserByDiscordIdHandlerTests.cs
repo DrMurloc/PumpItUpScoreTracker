@@ -1,7 +1,10 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Moq;
-using ScoreTracker.Application.Handlers;
+using ScoreTracker.Identity.Contracts.Commands;
+using ScoreTracker.Identity.Contracts.Events;
+using ScoreTracker.Identity.Contracts.Queries;
+using ScoreTracker.Identity.Application;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Tests.TestData;

@@ -39,6 +39,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.Communities", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.PlayerProgress", "ScoreTracker.PlayerProgress\ScoreTracker.PlayerProgress.csproj", "{516FA653-2C2A-4B31-A559-9D6D870350E3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.Identity", "ScoreTracker.Identity\ScoreTracker.Identity.csproj", "{3F38AC1C-914D-475D-A53C-3A1BA996AE6B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -217,6 +219,18 @@ Global
 		{516FA653-2C2A-4B31-A559-9D6D870350E3}.Release|x64.Build.0 = Release|Any CPU
 		{516FA653-2C2A-4B31-A559-9D6D870350E3}.Release|x86.ActiveCfg = Release|Any CPU
 		{516FA653-2C2A-4B31-A559-9D6D870350E3}.Release|x86.Build.0 = Release|Any CPU
+		{3F38AC1C-914D-475D-A53C-3A1BA996AE6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F38AC1C-914D-475D-A53C-3A1BA996AE6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F38AC1C-914D-475D-A53C-3A1BA996AE6B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3F38AC1C-914D-475D-A53C-3A1BA996AE6B}.Debug|x64.Build.0 = Debug|Any CPU
+		{3F38AC1C-914D-475D-A53C-3A1BA996AE6B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3F38AC1C-914D-475D-A53C-3A1BA996AE6B}.Debug|x86.Build.0 = Debug|Any CPU
+		{3F38AC1C-914D-475D-A53C-3A1BA996AE6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F38AC1C-914D-475D-A53C-3A1BA996AE6B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F38AC1C-914D-475D-A53C-3A1BA996AE6B}.Release|x64.ActiveCfg = Release|Any CPU
+		{3F38AC1C-914D-475D-A53C-3A1BA996AE6B}.Release|x64.Build.0 = Release|Any CPU
+		{3F38AC1C-914D-475D-A53C-3A1BA996AE6B}.Release|x86.ActiveCfg = Release|Any CPU
+		{3F38AC1C-914D-475D-A53C-3A1BA996AE6B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -236,6 +250,7 @@ Global
 		{FE8F8C53-1005-453E-BED7-86DC2DEB3DEF} = {1FF2B02B-1C9D-443C-A0A7-76B2D5C3DA71}
 		{9DE80C52-7465-4796-AA13-B34F9EEA7F89} = {1FF2B02B-1C9D-443C-A0A7-76B2D5C3DA71}
 		{516FA653-2C2A-4B31-A559-9D6D870350E3} = {1FF2B02B-1C9D-443C-A0A7-76B2D5C3DA71}
+		{3F38AC1C-914D-475D-A53C-3A1BA996AE6B} = {1FF2B02B-1C9D-443C-A0A7-76B2D5C3DA71}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6891F7A7-F4B8-4BAB-BD81-894909DC9465}

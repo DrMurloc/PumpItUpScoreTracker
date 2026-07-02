@@ -1,11 +1,11 @@
 ﻿using MediatR;
-using ScoreTracker.Application.Queries;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 
-namespace ScoreTracker.Application.Handlers;
+namespace ScoreTracker.Identity.Application;
 
-public sealed class GetUserByIdHandler : IRequestHandler<GetUserByIdQuery, User?>
+internal sealed class GetUserByIdHandler : IRequestHandler<GetUserByIdQuery, User?>
 {
     private readonly IUserRepository _users;
 

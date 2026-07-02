@@ -2,6 +2,9 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
+using ScoreTracker.Identity.Contracts.Commands;
+using ScoreTracker.Identity.Contracts.Events;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
 using System.Text.RegularExpressions;

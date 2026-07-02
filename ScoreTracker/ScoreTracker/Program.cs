@@ -16,6 +16,7 @@ using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.Domain.ValueTypes;
 using ScoreTracker.EventCompetition.Wiring;
+using ScoreTracker.Identity.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
@@ -184,10 +185,11 @@ builder.Services.AddBlazorApplicationInsights()
         o.RegisterServicesFromAssemblies(
             // Data no longer holds MediatR handlers — its last two (player stats/history)
             // moved into the PlayerProgress vertical at C50.
-            typeof(CreateUserHandler).Assembly
+            typeof(MatchSaga).Assembly
             , typeof(MainLayout).Assembly,
             typeof(PlayerProgressRegistrationExtensions).Assembly,
             typeof(ScoreTracker.Ucs.Wiring.UcsRegistrationExtensions).Assembly,
+            typeof(IdentityRegistrationExtensions).Assembly,
             typeof(ScoreTracker.ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions).Assembly,
             typeof(ScoreTracker.OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions).Assembly,
             typeof(ScoreTracker.Catalog.Wiring.CatalogRegistrationExtensions).Assembly,

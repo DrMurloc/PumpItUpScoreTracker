@@ -1,10 +1,10 @@
 ﻿using MediatR;
-using ScoreTracker.Application.Commands;
+using ScoreTracker.Identity.Contracts.Commands;
 using ScoreTracker.Domain.SecondaryPorts;
 
-namespace ScoreTracker.Application.Handlers;
+namespace ScoreTracker.Identity.Application;
 
-public sealed class CreateExternalLoginHandler : IRequestHandler<CreateExternalLoginCommand>
+internal sealed class CreateExternalLoginHandler : IRequestHandler<CreateExternalLoginCommand>
 {
     private readonly IUserRepository _user;
 

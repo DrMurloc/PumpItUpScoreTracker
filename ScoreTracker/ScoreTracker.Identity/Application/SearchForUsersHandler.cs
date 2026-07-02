@@ -1,12 +1,12 @@
 ﻿using MediatR;
 using ScoreTracker.Application.Dtos;
-using ScoreTracker.Application.Queries;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 
-namespace ScoreTracker.Application.Handlers;
+namespace ScoreTracker.Identity.Application;
 
-public sealed class SearchForUsersHandler : IRequestHandler<SearchForUsersQuery, SearchResultDto<User>>
+internal sealed class SearchForUsersHandler : IRequestHandler<SearchForUsersQuery, SearchResultDto<User>>
 {
     private readonly IUserRepository _userRepository;
 

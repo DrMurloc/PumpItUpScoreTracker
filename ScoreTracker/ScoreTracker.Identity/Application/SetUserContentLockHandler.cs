@@ -1,14 +1,15 @@
 using MassTransit;
 using MediatR;
-using ScoreTracker.Application.Commands;
+using ScoreTracker.Identity.Contracts.Commands;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Identity.Contracts.Events;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 
-namespace ScoreTracker.Application.Handlers;
+namespace ScoreTracker.Identity.Application;
 
-public sealed class SetUserContentLockHandler : IRequestHandler<SetUserContentLockCommand>
+internal sealed class SetUserContentLockHandler : IRequestHandler<SetUserContentLockCommand>
 {
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IUserRepository _users;

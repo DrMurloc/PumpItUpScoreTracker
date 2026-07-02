@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Identity\ScoreTracker.Identity.csproj" />
     <!-- Transitional (P5): the single ChartAttemptDbContext still lives in ScoreTracker.Data.
          Application is also transitional: CommunitySaga sends GetChartsQuery via IMediator;
          the reference drops when the chart reads move to Catalog. -->

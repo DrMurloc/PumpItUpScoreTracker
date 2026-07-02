@@ -1,13 +1,14 @@
 ﻿using MassTransit;
 using MediatR;
-using ScoreTracker.Application.Commands;
+using ScoreTracker.Identity.Contracts.Commands;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Identity.Contracts.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 
-namespace ScoreTracker.Application.Handlers;
+namespace ScoreTracker.Identity.Application;
 
-public sealed class CreateUserHandler : IRequestHandler<CreateUserCommand, User>
+internal sealed class CreateUserHandler : IRequestHandler<CreateUserCommand, User>
 {
     private readonly IUserRepository _user;
     private readonly IBus _bus;

@@ -15,21 +15,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MassTransit" Version="8.5.7" />
     <PackageReference Include="MassTransit.Abstractions" Version="8.5.7" />
     <PackageReference Include="MediatR" Version="14.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
-    <ProjectReference Include="..\ScoreTracker.Identity\ScoreTracker.Identity.csproj" />
-    <!-- Transitional (P5): the single ChartAttemptDbContext still lives in ScoreTracker.Data. -->
+    <!-- Transitional (P6): EFUserRepository and the user entities stay in ScoreTracker.Data
+         until the cross-vertical SQL joins onto the User table convert to reader calls. -->
     <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
-    <ProjectReference Include="..\ScoreTracker.Catalog\ScoreTracker.Catalog.csproj" />
-    <ProjectReference Include="..\ScoreTracker.ChartIntelligence\ScoreTracker.ChartIntelligence.csproj" />
   </ItemGroup>
 
 </Project>

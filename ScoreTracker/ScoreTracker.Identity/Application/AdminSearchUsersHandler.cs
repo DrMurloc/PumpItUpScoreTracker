@@ -1,12 +1,12 @@
 using MediatR;
-using ScoreTracker.Application.Queries;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 
-namespace ScoreTracker.Application.Handlers;
+namespace ScoreTracker.Identity.Application;
 
-public sealed class AdminSearchUsersHandler : IRequestHandler<AdminSearchUsersQuery, IEnumerable<User>>
+internal sealed class AdminSearchUsersHandler : IRequestHandler<AdminSearchUsersQuery, IEnumerable<User>>
 {
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IUserRepository _users;

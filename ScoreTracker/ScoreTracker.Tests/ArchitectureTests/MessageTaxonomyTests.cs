@@ -2,6 +2,9 @@ using System;
 using System.Linq;
 using System.Reflection;
 using MediatR;
+using ScoreTracker.Identity.Contracts.Commands;
+using ScoreTracker.Identity.Contracts.Events;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.SharedKernel.Messaging;
 using Xunit;
 
@@ -19,7 +22,7 @@ public sealed class MessageTaxonomyTests
 {
     private static readonly Assembly[] MessageAssemblies =
     {
-        typeof(Application.Commands.CreateUserCommand).Assembly,
+        typeof(Application.Commands.UpdateMatchCommand).Assembly,
         typeof(PlayerProgress.Contracts.Queries.GetTop50CompetitiveQuery).Assembly,
         typeof(Domain.Models.User).Assembly,
         typeof(Ucs.Contracts.UcsChart).Assembly,
@@ -29,7 +32,8 @@ public sealed class MessageTaxonomyTests
         typeof(ChartIntelligence.Contracts.Messages.ProcessPassTierListCommand).Assembly,
         typeof(WeeklyChallenge.Contracts.Messages.RotateWeeklyChartsCommand).Assembly,
         typeof(EventCompetition.Contracts.Messages.TryScheduleMoMCommand).Assembly,
-        typeof(Communities.Contracts.Commands.CreateCommunityCommand).Assembly
+        typeof(Communities.Contracts.Commands.CreateCommunityCommand).Assembly,
+        typeof(Identity.Contracts.Commands.CreateUserCommand).Assembly
     };
 
     private static Type[] TypesIn(string namespaceSuffix)

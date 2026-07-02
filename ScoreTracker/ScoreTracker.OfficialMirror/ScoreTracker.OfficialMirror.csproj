@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Identity\ScoreTracker.Identity.csproj" />
     <!-- Transitional (P5): the single ChartAttemptDbContext still lives in ScoreTracker.Data. -->
     <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
     <!-- Transitional (P5): the import saga sends GetPhoenixRecordsQuery, which stays in
