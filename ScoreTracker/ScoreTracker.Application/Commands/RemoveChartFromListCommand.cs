@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Application.Commands;
 

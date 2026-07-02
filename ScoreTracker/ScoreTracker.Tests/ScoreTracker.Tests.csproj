@@ -23,7 +23,17 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ScoreTracker.Application\ScoreTracker.Application.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Communities\ScoreTracker.Communities.csproj" />
+    <ProjectReference Include="..\ScoreTracker.PlayerProgress\ScoreTracker.PlayerProgress.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Identity\ScoreTracker.Identity.csproj" />
+    <ProjectReference Include="..\ScoreTracker.EventCompetition\ScoreTracker.EventCompetition.csproj" />
+    <ProjectReference Include="..\ScoreTracker.WeeklyChallenge\ScoreTracker.WeeklyChallenge.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Catalog\ScoreTracker.Catalog.csproj" />
+    <ProjectReference Include="..\ScoreTracker.ChartIntelligence\ScoreTracker.ChartIntelligence.csproj" />
     <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
+    <ProjectReference Include="..\ScoreTracker.OfficialMirror\ScoreTracker.OfficialMirror.csproj" />
+    <ProjectReference Include="..\ScoreTracker.ScoreLedger\ScoreTracker.ScoreLedger.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Ucs\ScoreTracker.Ucs.csproj" />
   </ItemGroup>
 
   <ItemGroup>

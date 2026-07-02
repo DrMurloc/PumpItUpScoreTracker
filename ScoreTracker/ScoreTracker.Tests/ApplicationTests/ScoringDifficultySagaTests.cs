@@ -1,3 +1,5 @@
+using ScoreTracker.ChartIntelligence.Contracts.Messages;
+using ScoreTracker.ChartIntelligence.Application;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -5,12 +7,13 @@ using System.Threading.Tasks;
 using MassTransit;
 using Moq;
 using ScoreTracker.Application.Handlers;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -19,19 +22,21 @@ public sealed class ScoringDifficultySagaTests
 {
     private static ScoringDifficultySaga Build(
         Mock<IChartRepository>? charts = null,
-        Mock<IPhoenixRecordRepository>? scores = null,
-        Mock<IPlayerStatsRepository>? playerStats = null)
+        Mock<IScoreReader>? scores = null,
+        Mock<IPlayerStatsReader>? playerStats = null,
+        Mock<IChartScoringLevelRepository>? scoringLevels = null)
     {
         charts ??= new Mock<IChartRepository>();
         charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
-        scores ??= new Mock<IPhoenixRecordRepository>();
-        scores.Setup(s => s.GetAllPlayerScores(It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
+        scores ??= new Mock<IScoreReader>();
+        scores.Setup(s => s.GetScores(It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<(Guid, RecordedPhoenixScore)>());
-        playerStats ??= new Mock<IPlayerStatsRepository>();
-        return new ScoringDifficultySaga(charts.Object, scores.Object, playerStats.Object);
+        playerStats ??= new Mock<IPlayerStatsReader>();
+        return new ScoringDifficultySaga(charts.Object, scores.Object, playerStats.Object,
+            scoringLevels?.Object ?? new Mock<IChartScoringLevelRepository>().Object);
     }
 
     private static ConsumeContext<T> ContextOf<T>(T message) where T : class
@@ -68,7 +73,7 @@ public sealed class ScoringDifficultySagaTests
             .ReturnsAsync(Array.Empty<Chart>());
         var saga = Build(charts: charts);
 
-        await saga.Consume(ContextOf(new CalculateChartLetterDifficultiesEvent()));
+        await saga.Consume(ContextOf(new RecalculateChartLetterDifficultiesCommand()));
 
         charts.Verify(c => c.UpdateChartLetterDifficulties(It.IsAny<IEnumerable<ChartLetterGradeDifficulty>>(),
                 It.IsAny<CancellationToken>()),
@@ -82,11 +87,12 @@ public sealed class ScoringDifficultySagaTests
         charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
-        var saga = Build(charts: charts);
+        var scoringLevels = new Mock<IChartScoringLevelRepository>();
+        var saga = Build(charts: charts, scoringLevels: scoringLevels);
 
-        await saga.Consume(ContextOf(new CalculateScoringDifficultyEvent()));
+        await saga.Consume(ContextOf(new RecalculateScoringDifficultyCommand()));
 
-        charts.Verify(c => c.UpdateScoreLevel(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<double>(),
+        scoringLevels.Verify(c => c.SaveScoringLevel(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<double?>(),
                 It.IsAny<CancellationToken>()),
             Times.Never);
     }

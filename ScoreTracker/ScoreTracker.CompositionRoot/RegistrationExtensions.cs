@@ -1,13 +1,21 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using ScoreTracker.Data.Apis;
-using ScoreTracker.Data.Apis.Contracts;
+using ScoreTracker.Catalog.Wiring;
+using ScoreTracker.ChartIntelligence.Wiring;
+using ScoreTracker.Communities.Wiring;
 using ScoreTracker.Data.Clients;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Repositories;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.EventCompetition.Wiring;
+using ScoreTracker.Identity.Wiring;
+using ScoreTracker.PlayerProgress.Wiring;
+using ScoreTracker.OfficialMirror.Wiring;
+using ScoreTracker.ScoreLedger.Wiring;
+using ScoreTracker.Ucs.Wiring;
+using ScoreTracker.WeeklyChallenge.Wiring;
 
 namespace ScoreTracker.CompositionRoot;
 
@@ -16,7 +24,7 @@ public static class RegistrationExtensions
     public static IServiceCollection AddInfrastructure(this IServiceCollection builder,
         AzureBlobConfiguration blobConfig, SqlConfiguration configuration, SendGridConfiguration twilioConfig)
     {
-        foreach (var implementationType in typeof(EFChartRepository).Assembly.GetTypes()
+        foreach (var implementationType in typeof(EFUserRepository).Assembly.GetTypes()
                 )
         foreach (var interfaceType in implementationType.GetInterfaces()
                      .Where(i => i.Assembly == typeof(IChartRepository).Assembly && i != typeof(IBotClient)))
@@ -29,13 +37,25 @@ public static class RegistrationExtensions
             o.ToEmail = twilioConfig.ToEmail;
             o.ApiKey = twilioConfig.ApiKey;
         });
-        builder.AddHttpClient<IPiuGameApi, PiuGameApi>(c =>
-        {
-            c.DefaultRequestHeaders.Add("Origin", "https://phoenix.piugame.com");
-        });
         builder.Configure<SqlConfiguration>(o => { o.ConnectionString = configuration.ConnectionString; });
         builder.Configure<AzureBlobConfiguration>(o => { o.ConnectionString = blobConfig.ConnectionString; });
 
-        return builder.AddPooledDbContextFactory<ChartAttemptDbContext>(o => { o.UseSqlServer(configuration.ConnectionString); });
+        builder.AddCatalog();
+        builder.AddChartIntelligence();
+        builder.AddCommunities();
+        builder.AddEventCompetition();
+        builder.AddIdentity();
+        builder.AddOfficialMirror();
+        builder.AddPlayerProgress();
+        builder.AddScoreLedger();
+        builder.AddUcs();
+        builder.AddWeeklyChallenge();
+
+        // Not pooled: pooling requires an options-only constructor, and the context takes
+        // the verticals' IDbModelContribution set from DI (ADR-001 D4).
+        return builder.AddDbContextFactory<ChartAttemptDbContext>(o =>
+        {
+            o.UseSqlServer(configuration.ConnectionString);
+        });
     }
 }

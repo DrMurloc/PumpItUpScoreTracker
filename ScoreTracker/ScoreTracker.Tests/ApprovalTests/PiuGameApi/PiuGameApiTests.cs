@@ -10,8 +10,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Moq.Protected;
-using ScoreTracker.Data.Apis;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.OfficialMirror.Infrastructure.Apis;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.SecondaryPorts;
 using Xunit;
 

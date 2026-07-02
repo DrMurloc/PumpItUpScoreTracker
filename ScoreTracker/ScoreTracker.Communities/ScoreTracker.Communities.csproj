@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Only Contracts/ and Wiring/ are public (ADR-001 D2); the vertical's tests see the rest.
+         DynamicProxyGenAssembly2 is Moq's proxy assembly — required to mock internal ports. -->
+    <InternalsVisibleTo Include="ScoreTracker.Tests" />
+    <InternalsVisibleTo Include="ScoreTracker.Tests.Integration" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MassTransit" Version="8.5.7" />
+    <PackageReference Include="MassTransit.Abstractions" Version="8.5.7" />
+    <PackageReference Include="MediatR" Version="14.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Identity\ScoreTracker.Identity.csproj" />
+    <!-- Transitional (P5): the single ChartAttemptDbContext still lives in ScoreTracker.Data.
+         Application is also transitional: CommunitySaga sends GetChartsQuery via IMediator;
+         the reference drops when the chart reads move to Catalog. -->
+    <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
+    <!-- Vertical→vertical contracts: CommunitySaga consumes UcsLeaderboardPlacedEvent and
+         sends PlayerProgress's GetTop50ForPlayerQuery. -->
+    <ProjectReference Include="..\ScoreTracker.Catalog\ScoreTracker.Catalog.csproj" />
+    <ProjectReference Include="..\ScoreTracker.PlayerProgress\ScoreTracker.PlayerProgress.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Ucs\ScoreTracker.Ucs.csproj" />
+  </ItemGroup>
+
+</Project>

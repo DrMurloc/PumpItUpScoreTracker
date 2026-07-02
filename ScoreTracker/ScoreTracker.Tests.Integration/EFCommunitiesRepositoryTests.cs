@@ -1,6 +1,10 @@
-using ScoreTracker.Data.Repositories;
-using ScoreTracker.Domain.Enums;
+using Moq;
+using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Communities.Domain;
+using ScoreTracker.Communities.Infrastructure;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Tests.Integration.Fixtures;
 
 namespace ScoreTracker.Tests.Integration;
@@ -21,7 +25,7 @@ public sealed class EFCommunitiesRepositoryTests : IAsyncLifetime
 
     // No cache layer in this repo — fresh instance only matters for DbContext lifetime.
     private EFCommunitiesRepository BuildRepository() =>
-        new(_fixture.DbContextFactory);
+        new(_fixture.DbContextFactory, Mock.Of<IPlayerStatsReader>());
 
     [Fact]
     public async Task SaveCommunityAndGetCommunityByNameRoundTripPreservesMembersAndInvites()

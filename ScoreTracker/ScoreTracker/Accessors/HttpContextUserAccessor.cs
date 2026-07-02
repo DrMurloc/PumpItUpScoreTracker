@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Web.Security;
 

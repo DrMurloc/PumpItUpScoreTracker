@@ -1,15 +1,17 @@
-﻿@page "/NoteCounts"
+@page "/NoteCounts"
 @using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.Services
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Pages.Tools
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
 @using MediatR
 @using ScoreTracker.Application.Handlers
 @using ScoreTracker.Application.Queries
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Components
-@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
 <PageTitle>@L["Note Counts"]</PageTitle>
 @if (!_isLoading)
@@ -134,7 +136,7 @@
                 
                 var noteCounts = levelGroup.Where(c => c.NoteCount != null).Select(c => c.NoteCount!.Value).ToArray();
                 var average = noteCounts.Average();
-                var standardDeviation = TierListSaga.StdDev(noteCounts, false);
+                var standardDeviation = TierListProcessor.StdDev(noteCounts, false);
                 _averages[typeGroup.Key].Add(new DataPoint(levelGroup.Key,(int)average));
                 _standardMin[typeGroup.Key].Add(new DataPoint(levelGroup.Key,(int)(average-standardDeviation)));
                 _standardMax[typeGroup.Key].Add(new DataPoint(levelGroup.Key,(int)(average+standardDeviation)));

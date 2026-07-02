@@ -1,12 +1,16 @@
-﻿@page "/Tournament/Stamina/{TournamentId:guid}/Record"
+@page "/Tournament/Stamina/{TournamentId:guid}/Record"
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.OfficialMirror.Contracts.Queries
 @using MediatR
+@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.EventCompetition.Contracts.Commands
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Data.Persistence.Entities
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Domain.Records
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.ValueTypes
 @using System.Security.Authentication
 @using ScoreTracker.Web.Components
 
@@ -288,7 +292,7 @@
 @inject ISnackbar Snackbar;
 @inject ILogger<RecordTournamentSession> Logger;
 @inject IAdminNotificationClient Notifications;
-@inject IOfficialSiteClient OfficialSite;
+
 @code
 {
     private string _validation = "Unverified";
@@ -346,7 +350,7 @@
         _isImporting = true;
         try
         {
-            var results = await OfficialSite.GetRecentScores(_username, _password, CancellationToken.None);
+            var results = await Mediator.Send(new GetOfficialRecentScoresQuery(_username, _password));
             _importedScores = results.results.Where(s=>_configuration.Scoring.GetScore(s.Chart,s.Score,s.Plate,s.IsBroken)>0).ToArray();
             _notMapped = results.nonMapped.ToArray();
             _checked = _importedScores.Select(r => false).ToArray();

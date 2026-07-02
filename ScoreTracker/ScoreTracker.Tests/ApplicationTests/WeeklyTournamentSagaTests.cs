@@ -1,3 +1,7 @@
+using ScoreTracker.WeeklyChallenge.Contracts.Queries;
+using ScoreTracker.WeeklyChallenge.Contracts.Messages;
+using ScoreTracker.WeeklyChallenge.Contracts.Commands;
+using ScoreTracker.WeeklyChallenge.Application;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,12 +12,13 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Handlers;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using ScoreTracker.Tests.TestHelpers;
 using Xunit;
@@ -36,7 +41,7 @@ public sealed class WeeklyTournamentSagaTests
             });
         var saga = BuildSaga(weeklyTournies: weeklyTournies);
 
-        await saga.Consume(BuildContext(new UpdateWeeklyChartsEvent()));
+        await saga.Consume(BuildContext(new RotateWeeklyChartsCommand()));
 
         weeklyTournies.Verify(w => w.ClearTheBoard(It.IsAny<CancellationToken>()), Times.Never);
         weeklyTournies.Verify(w => w.RegisterWeeklyChart(It.IsAny<WeeklyTournamentChart>(),
@@ -60,7 +65,7 @@ public sealed class WeeklyTournamentSagaTests
                     IsBroken: false, PhotoUrl: null, CompetitiveLevel: 20)
             });
 
-        await ctx.Saga.Consume(BuildContext(new UpdateWeeklyChartsEvent()));
+        await ctx.Saga.Consume(BuildContext(new RotateWeeklyChartsCommand()));
 
         ctx.WeeklyTournies.Verify(w => w.WriteHistories(
             It.Is<IEnumerable<UserTourneyHistory>>(hs => hs.Any(h => h.UserId == entryUser
@@ -77,7 +82,7 @@ public sealed class WeeklyTournamentSagaTests
         var ctx = ExpiredWeekContext();
         var nextMonday3am = new DateTimeOffset(2026, 5, 4, 3, 0, 0, TimeSpan.Zero);
 
-        await ctx.Saga.Consume(BuildContext(new UpdateWeeklyChartsEvent()));
+        await ctx.Saga.Consume(BuildContext(new RotateWeeklyChartsCommand()));
 
         ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(
             It.Is<WeeklyTournamentChart>(c => c.ExpirationDate == nextMonday3am),
@@ -95,7 +100,7 @@ public sealed class WeeklyTournamentSagaTests
         ctx.WeeklyTournies.Setup(w => w.GetAlreadyPlayedCharts(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { played.Id });
 
-        await ctx.Saga.Consume(BuildContext(new UpdateWeeklyChartsEvent()));
+        await ctx.Saga.Consume(BuildContext(new RotateWeeklyChartsCommand()));
 
         ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(
             It.Is<WeeklyTournamentChart>(c => c.ChartId == unplayed.Id),
@@ -118,7 +123,7 @@ public sealed class WeeklyTournamentSagaTests
         ctx.WeeklyTournies.Setup(w => w.GetAlreadyPlayedCharts(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { coop3.Id, coop4.Id, coop5.Id });
 
-        await ctx.Saga.Consume(BuildContext(new UpdateWeeklyChartsEvent()));
+        await ctx.Saga.Consume(BuildContext(new RotateWeeklyChartsCommand()));
 
         ctx.WeeklyTournies.Verify(w => w.ClearAlreadyPlayedCharts(
             It.Is<IEnumerable<Guid>>(ids => ids.Contains(coop3.Id) && ids.Contains(coop4.Id)
@@ -142,7 +147,7 @@ public sealed class WeeklyTournamentSagaTests
         ctx.WeeklyTournies.Setup(w => w.GetAlreadyPlayedCharts(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { ctx.Charts["coop3"].Id, ctx.Charts["coop5"].Id });
 
-        await ctx.Saga.Consume(BuildContext(new UpdateWeeklyChartsEvent()));
+        await ctx.Saga.Consume(BuildContext(new RotateWeeklyChartsCommand()));
 
         ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(
             It.Is<WeeklyTournamentChart>(c => c.ChartId == coop4.Id),
@@ -160,7 +165,7 @@ public sealed class WeeklyTournamentSagaTests
 
         var requestedChartId = Guid.NewGuid();
         await saga.Handle(
-            new RegisterWeeklyChartScore(Entry(requestedChartId, score: 950000)),
+            new RegisterWeeklyChartScoreCommand(Entry(requestedChartId, score: 950000)),
             CancellationToken.None);
 
         weeklyTournies.Verify(w => w.SaveEntry(It.IsAny<WeeklyTournamentEntry>(),
@@ -177,7 +182,7 @@ public sealed class WeeklyTournamentSagaTests
 
         var userId = Guid.NewGuid();
         await ctx.Saga.Handle(
-            new RegisterWeeklyChartScore(Entry(chart.Id, score: 950000, userId: userId)),
+            new RegisterWeeklyChartScoreCommand(Entry(chart.Id, score: 950000, userId: userId)),
             CancellationToken.None);
 
         // Single chart → uses SinglesCompetitiveLevel.
@@ -200,7 +205,7 @@ public sealed class WeeklyTournamentSagaTests
         });
 
         await ctx.Saga.Handle(
-            new RegisterWeeklyChartScore(Entry(chart.Id, score: 800000, userId: userId)),
+            new RegisterWeeklyChartScoreCommand(Entry(chart.Id, score: 800000, userId: userId)),
             CancellationToken.None);
 
         ctx.WeeklyTournies.Verify(w => w.SaveEntry(
@@ -221,7 +226,7 @@ public sealed class WeeklyTournamentSagaTests
         });
 
         await ctx.Saga.Handle(
-            new RegisterWeeklyChartScore(Entry(chart.Id, score: 990000, userId: userId)),
+            new RegisterWeeklyChartScoreCommand(Entry(chart.Id, score: 990000, userId: userId)),
             CancellationToken.None);
 
         ctx.WeeklyTournies.Verify(w => w.SaveEntry(
@@ -242,7 +247,7 @@ public sealed class WeeklyTournamentSagaTests
         });
 
         await ctx.Saga.Handle(
-            new RegisterWeeklyChartScore(Entry(chart.Id, score: 950000, userId: userId, isBroken: false)),
+            new RegisterWeeklyChartScoreCommand(Entry(chart.Id, score: 950000, userId: userId, isBroken: false)),
             CancellationToken.None);
 
         ctx.WeeklyTournies.Verify(w => w.SaveEntry(
@@ -263,7 +268,7 @@ public sealed class WeeklyTournamentSagaTests
             .ReturnsAsync(new UserBuilder().WithId(userId).Build());
 
         await ctx.Saga.Handle(
-            new RegisterWeeklyChartScore(Entry(chart.Id, score: 950000, userId: userId)),
+            new RegisterWeeklyChartScoreCommand(Entry(chart.Id, score: 950000, userId: userId)),
             CancellationToken.None);
 
         ctx.Bus.Verify(b => b.Publish(
@@ -286,10 +291,38 @@ public sealed class WeeklyTournamentSagaTests
         });
 
         await ctx.Saga.Handle(
-            new RegisterWeeklyChartScore(Entry(chart.Id, score: 950000, userId: userId)),
+            new RegisterWeeklyChartScoreCommand(Entry(chart.Id, score: 950000, userId: userId)),
             CancellationToken.None);
 
         ctx.Bus.Verify(b => b.Publish(It.IsAny<UserWeeklyChartsProgressedEvent>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ScoreImportRegistersOnlyScoresOnTheCurrentWeeklyBoard()
+    {
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var offBoardChartId = Guid.NewGuid();
+        var ctx = new HandlerContext(chart);
+        ctx.GivenStats(singlesCompetitive: 18.5, doublesCompetitive: 12.0);
+        ctx.GivenNoExistingEntries(chart.Id);
+        var userId = Guid.NewGuid();
+
+        await ctx.Saga.Consume(BuildContext(ScoreImportCompletedEvent.Create(
+            new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero),
+            ScoreImportCompletedEvent.OfficialImportSource, userId,
+            new[]
+            {
+                new ScoreImportCompletedEvent.ImportedScore(chart.Id, 950000, "SuperbGame", false),
+                new ScoreImportCompletedEvent.ImportedScore(offBoardChartId, 999000, "PerfectGame", false)
+            })));
+
+        ctx.WeeklyTournies.Verify(w => w.SaveEntry(
+            It.Is<WeeklyTournamentEntry>(e => e.UserId == userId && e.ChartId == chart.Id
+                                              && e.Score == (PhoenixScore)950000),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.WeeklyTournies.Verify(w => w.SaveEntry(
+            It.Is<WeeklyTournamentEntry>(e => e.ChartId == offBoardChartId),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -297,9 +330,9 @@ public sealed class WeeklyTournamentSagaTests
     {
         public Mock<IChartRepository> Charts { get; } = new();
         public Mock<IWeeklyTournamentRepository> WeeklyTournies { get; } = new();
-        public Mock<IPlayerStatsRepository> PlayerStats { get; } = new();
+        public Mock<IPlayerStatsReader> PlayerStats { get; } = new();
         public Mock<IBotClient> Bot { get; } = new();
-        public Mock<IUserRepository> Users { get; } = new();
+        public Mock<IUserReader> Users { get; } = new();
         public Mock<IBus> Bus { get; } = new();
         public WeeklyTournamentSaga Saga { get; }
 
@@ -369,9 +402,9 @@ public sealed class WeeklyTournamentSagaTests
     {
         public Mock<IChartRepository> Charts_ { get; } = new();
         public Mock<IWeeklyTournamentRepository> WeeklyTournies { get; } = new();
-        public Mock<IPlayerStatsRepository> PlayerStats { get; } = new();
+        public Mock<IPlayerStatsReader> PlayerStats { get; } = new();
         public Mock<IBotClient> Bot { get; } = new();
-        public Mock<IUserRepository> Users { get; } = new();
+        public Mock<IUserReader> Users { get; } = new();
         public Mock<IBus> Bus { get; } = new();
         public Mock<IRandomNumberGenerator> Random { get; } = new();
         public IDictionary<string, Chart> Charts { get; }
@@ -413,18 +446,18 @@ public sealed class WeeklyTournamentSagaTests
     private static WeeklyTournamentSaga BuildSaga(
         Mock<IChartRepository>? charts = null,
         Mock<IWeeklyTournamentRepository>? weeklyTournies = null,
-        Mock<IPlayerStatsRepository>? playerStats = null,
+        Mock<IPlayerStatsReader>? playerStats = null,
         Mock<IBotClient>? bot = null,
-        Mock<IUserRepository>? users = null,
+        Mock<IUserReader>? users = null,
         Mock<IBus>? bus = null,
         Mock<IDateTimeOffsetAccessor>? dateTime = null,
         Mock<IRandomNumberGenerator>? random = null)
     {
         charts ??= new Mock<IChartRepository>();
         weeklyTournies ??= new Mock<IWeeklyTournamentRepository>();
-        playerStats ??= new Mock<IPlayerStatsRepository>();
+        playerStats ??= new Mock<IPlayerStatsReader>();
         bot ??= new Mock<IBotClient>();
-        users ??= new Mock<IUserRepository>();
+        users ??= new Mock<IUserReader>();
         bus ??= new Mock<IBus>();
         dateTime ??= FakeDateTime.At(Now);
         random ??= new Mock<IRandomNumberGenerator>();

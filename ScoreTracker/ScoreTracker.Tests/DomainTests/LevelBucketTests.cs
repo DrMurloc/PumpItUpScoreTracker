@@ -1,7 +1,7 @@
 using System.Linq;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Exceptions;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using Xunit;
 
 namespace ScoreTracker.Tests.DomainTests;

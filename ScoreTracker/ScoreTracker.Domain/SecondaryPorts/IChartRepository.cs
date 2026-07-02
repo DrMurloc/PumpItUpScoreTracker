@@ -1,7 +1,8 @@
-﻿using ScoreTracker.Domain.Enums;
+﻿using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Domain.SecondaryPorts;
 
@@ -18,8 +19,6 @@ public interface IChartRepository
     Task<IEnumerable<Chart>> GetChartsForSong(MixEnum mix, Name songName,
         CancellationToken cancellationToken = default);
 
-    Task UpdateScoreLevel(MixEnum mix, Guid chartId, double scoringLevel,
-        CancellationToken cancellationToken = default);
 
     Task<IEnumerable<Chart>> GetCoOpCharts(MixEnum mix, CancellationToken cancellationToken = default);
 

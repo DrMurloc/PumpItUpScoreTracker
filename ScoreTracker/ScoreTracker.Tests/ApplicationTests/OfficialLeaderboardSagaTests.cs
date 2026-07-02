@@ -1,3 +1,12 @@
+using ScoreTracker.Identity.Contracts.Commands;
+using ScoreTracker.Identity.Contracts.Queries;
+using ScoreTracker.ScoreLedger.Contracts.Queries;
+using ScoreTracker.ScoreLedger.Contracts.Commands;
+using ScoreTracker.OfficialMirror.Contracts.Messages;
+using ScoreTracker.OfficialMirror.Contracts.Queries;
+using ScoreTracker.OfficialMirror.Contracts.Commands;
+using ScoreTracker.OfficialMirror.Domain;
+using ScoreTracker.OfficialMirror.Application;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,13 +19,15 @@ using Moq;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Application.Queries;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services.Contracts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using ScoreTracker.Tests.TestHelpers;
 using Xunit;
@@ -34,7 +45,7 @@ public sealed class OfficialLeaderboardSagaTests
         var worldRankings = new Mock<IWorldRankingService>();
         var saga = BuildSaga(mediator: mediator, worldRankings: worldRankings);
 
-        await saga.Consume(BuildContext(new StartLeaderboardImportEvent()));
+        await saga.Consume(BuildContext(new StartLeaderboardImportCommand()));
 
         mediator.Verify(m => m.Send(It.IsAny<ProcessChartPopularityCommand>(),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -185,13 +196,194 @@ public sealed class OfficialLeaderboardSagaTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    // ───────────────────────────────────────────────────────────────────────────
+    // ImportOfficialPlayerScoresCommand characterization (previously untested).
+    // This is the existential Phoenix 2 import path — these tests pin current
+    // behavior ahead of the rearchitecture; they describe what IS, not what ought.
+
+    private static readonly Guid ImportUserId = Guid.Parse("99999999-9999-9999-9999-999999999999");
+    private static readonly Uri NewAvatar = new("https://example.invalid/new-avatar.png");
+
+    private static ImportOfficialPlayerScoresCommand ImportCommand(bool syncPiuTracker = false)
+    {
+        return new ImportOfficialPlayerScoresCommand("user", "pass", "card1", "NEWTAG", false, syncPiuTracker);
+    }
+
+    private sealed record ImportFixture(
+        Mock<IOfficialSiteClient> Site,
+        Mock<IMediator> Mediator,
+        Mock<ICurrentUserAccessor> CurrentUser,
+        Mock<IPiuTrackerClient> PiuTracker,
+        Mock<IBus> Bus,
+        Dictionary<string, string> UiSettings,
+        User ExistingUser);
+
+    private static ImportFixture ArrangeImport(
+        IEnumerable<OfficialRecordedScore>? officialScores = null,
+        IEnumerable<RecordedPhoenixScore>? existingScores = null,
+        string accountName = "NEWTAG",
+        int maxPages = 5,
+        Dictionary<string, string>? uiSettings = null)
+    {
+        var existingUser = new User(ImportUserId, Name.From("OldName"), true, Name.From("OLDTAG"),
+            new Uri("https://example.invalid/old-avatar.png"), Name.From("Canada"));
+        var settings = uiSettings ?? new Dictionary<string, string>();
+
+        var currentUser = new Mock<ICurrentUserAccessor>();
+        currentUser.Setup(c => c.User).Returns(existingUser);
+
+        // User reads and writes go through Identity contracts now, so the mediator
+        // stands in where the repository mock used to.
+        var site = new Mock<IOfficialSiteClient>();
+        site.Setup(s => s.GetAccountData("user", "pass", "card1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PiuGameAccountDataImport(NewAvatar, Name.From(accountName),
+                new[] { Name.From("Title A"), Name.From("Title B") }, "sid123"));
+        site.Setup(s => s.GetScorePageCount("user", "pass", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(maxPages);
+        site.Setup(s => s.GetRecordedScores(ImportUserId, "user", "pass", "card1", It.IsAny<bool>(),
+                It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(officialScores ?? Array.Empty<OfficialRecordedScore>());
+
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingScores ?? Array.Empty<RecordedPhoenixScore>());
+        mediator.Setup(m => m.Send(It.IsAny<GetUserUiSettingsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(settings);
+
+        return new ImportFixture(site, mediator, currentUser, new Mock<IPiuTrackerClient>(),
+            new Mock<IBus>(), settings, existingUser);
+    }
+
+    private static OfficialLeaderboardSaga BuildImportSaga(ImportFixture f)
+    {
+        return BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser,
+            mediator: f.Mediator, piuTracker: f.PiuTracker, bus: f.Bus);
+    }
+
+    [Fact]
+    public async Task ImportSavesOnlyNewOrImprovedScores()
+    {
+        var chartSame = new ChartBuilder().Build();
+        var chartNew = new ChartBuilder().Build();
+        var chartUnbroke = new ChartBuilder().Build();
+        var chartWorse = new ChartBuilder().Build();
+        var f = ArrangeImport(
+            officialScores: new[]
+            {
+                new OfficialRecordedScore(chartSame, 900000, PhoenixPlate.TalentedGame),
+                new OfficialRecordedScore(chartNew, 920000, PhoenixPlate.FairGame),
+                new OfficialRecordedScore(chartUnbroke, 850000, PhoenixPlate.RoughGame),
+                new OfficialRecordedScore(chartWorse, 900000, PhoenixPlate.RoughGame)
+            },
+            existingScores: new[]
+            {
+                new RecordedPhoenixScore(chartSame.Id, 900000, PhoenixPlate.TalentedGame, false, Now),
+                new RecordedPhoenixScore(chartUnbroke.Id, null, null, true, Now),
+                new RecordedPhoenixScore(chartWorse.Id, 950000, PhoenixPlate.SuperbGame, false, Now)
+            });
+        var saga = BuildImportSaga(f);
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        f.Mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.ChartId == chartNew.Id),
+            It.IsAny<CancellationToken>()), Times.Once);
+        f.Mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.ChartId == chartUnbroke.Id),
+            It.IsAny<CancellationToken>()), Times.Once);
+        f.Mediator.Verify(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(),
+            It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task ImportPublishesDetectedTitlesFromAccountData()
+    {
+        var f = ArrangeImport();
+        var saga = BuildImportSaga(f);
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        f.Bus.Verify(b => b.Publish(It.Is<TitlesDetectedEvent>(e =>
+                e.UserId == ImportUserId &&
+                e.TitlesFound.Contains("Title A") && e.TitlesFound.Contains("Title B")),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ImportUpdatesGameTagAndAvatarPreservingOtherProfileFields()
+    {
+        var f = ArrangeImport();
+        var saga = BuildImportSaga(f);
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        f.Mediator.Verify(m => m.Send(It.Is<UpdateUserGameProfileCommand>(c =>
+                c.GameTag.ToString() == "NEWTAG" &&
+                c.AvatarUrl == NewAvatar),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ImportContinuesAfterPiuTrackerRateLimitAndReportsError()
+    {
+        var f = ArrangeImport();
+        f.PiuTracker.Setup(p => p.SyncData(It.IsAny<Name>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new PiuTrackerUsedTooRecentException());
+        var saga = BuildImportSaga(f);
+
+        await saga.Handle(ImportCommand(syncPiuTracker: true), CancellationToken.None);
+
+        f.Mediator.Verify(m => m.Publish(It.Is<ImportStatusErrorEvent>(e => e.UserId == ImportUserId),
+            It.IsAny<CancellationToken>()), Times.Once);
+        // The sync failure does not abort the import — profile save still happens.
+        f.Mediator.Verify(m => m.Send(It.IsAny<UpdateUserGameProfileCommand>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ImportRequestsOnlyPagesNewerThanLastImport()
+    {
+        var f = ArrangeImport(maxPages: 5,
+            uiSettings: new Dictionary<string, string> { ["PreviousPageCount"] = "3" });
+        var saga = BuildImportSaga(f);
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        // limit = maxPages - previous + 1 = 5 - 3 + 1
+        f.Site.Verify(s => s.GetRecordedScores(ImportUserId, "user", "pass", "card1", false, 3,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ImportStoresPageCountForNextImport()
+    {
+        var f = ArrangeImport(maxPages: 5);
+        var saga = BuildImportSaga(f);
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        f.Mediator.Verify(m => m.Send(It.Is<SaveUserUiSettingCommand>(c =>
+                c.SettingName == "PreviousPageCount" && c.NewValue == "5"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ImportReportsInvalidLoginStatus()
+    {
+        var f = ArrangeImport(accountName: "INVALID");
+        var saga = BuildImportSaga(f);
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        f.Mediator.Verify(m => m.Publish(It.Is<ImportStatusUpdatedEvent>(s =>
+                s.Status == "Invalid Login Information"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private static OfficialLeaderboardSaga BuildSaga(
         Mock<IOfficialSiteClient>? officialSite = null,
         Mock<ITierListRepository>? tierLists = null,
         Mock<IWorldRankingService>? worldRankings = null,
         Mock<IOfficialLeaderboardRepository>? leaderboards = null,
         Mock<ICurrentUserAccessor>? currentUser = null,
-        Mock<IUserRepository>? user = null,
         Mock<IMediator>? mediator = null,
         Mock<IPiuTrackerClient>? piuTracker = null,
         Mock<IBus>? bus = null,
@@ -204,7 +396,6 @@ public sealed class OfficialLeaderboardSagaTests
         worldRankings ??= new Mock<IWorldRankingService>();
         leaderboards ??= new Mock<IOfficialLeaderboardRepository>();
         currentUser ??= new Mock<ICurrentUserAccessor>();
-        user ??= new Mock<IUserRepository>();
         mediator ??= new Mock<IMediator>();
         piuTracker ??= new Mock<IPiuTrackerClient>();
         bus ??= new Mock<IBus>();
@@ -212,7 +403,7 @@ public sealed class OfficialLeaderboardSagaTests
         charts ??= new Mock<IChartRepository>();
         dateTime ??= FakeDateTime.At(Now);
         return new OfficialLeaderboardSaga(officialSite.Object, tierLists.Object, worldRankings.Object,
-            leaderboards.Object, currentUser.Object, user.Object, mediator.Object, piuTracker.Object,
+            leaderboards.Object, currentUser.Object, mediator.Object, piuTracker.Object,
             NullLogger<OfficialLeaderboardSaga>.Instance, bus.Object, files.Object, charts.Object,
             dateTime.Object);
     }

@@ -3,6 +3,9 @@ using System.Text.Encodings.Web;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
+using ScoreTracker.Identity.Contracts.Commands;
+using ScoreTracker.Identity.Contracts.Events;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Web.Accessors;
 

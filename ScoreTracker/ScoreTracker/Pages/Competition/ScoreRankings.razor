@@ -1,12 +1,16 @@
 ﻿@page "/ScoreRankings"
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts.Commands
 @using ScoreTracker.Domain.SecondaryPorts
 @using MediatR
 @using ScoreTracker.Application.Queries
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Domain.Records
-@using ScoreTracker.Domain.ValueTypes
-@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @using ScoreTracker.Web.Components
 <PageTitle>@L["Score Rankings"]</PageTitle>
 

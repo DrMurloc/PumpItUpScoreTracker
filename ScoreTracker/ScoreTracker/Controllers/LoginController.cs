@@ -4,9 +4,16 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.Identity.Contracts.Commands;
+using ScoreTracker.Identity.Contracts.Events;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.Web.Configuration;
 using ScoreTracker.Web.Services.Contracts;
 
 namespace ScoreTracker.Web.Controllers;
@@ -21,14 +28,17 @@ public sealed class LoginController : Controller
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
     private readonly IUiSettingsAccessor _uiSettings;
+    private readonly IOptions<DevAuthConfiguration> _devAuth;
 
     public LoginController(IMediator mediator,
         ICurrentUserAccessor currentUser,
-        IUiSettingsAccessor uiSettings)
+        IUiSettingsAccessor uiSettings,
+        IOptions<DevAuthConfiguration> devAuth)
     {
         _mediator = mediator;
         _currentUser = currentUser;
         _uiSettings = uiSettings;
+        _devAuth = devAuth;
     }
 
 
@@ -86,6 +96,39 @@ public sealed class LoginController : Controller
         var url = isNewUser ? "/Welcome" : returnUrl;
 
         return LocalRedirect(url ?? "/");
+    }
+
+    // DevAuth backdoor (cherry-picked from the Phase-1 local-dev slice): environment-config
+    // gated login without OAuth. Both endpoints 404 unless DevAuth:Enabled is true, which
+    // only the local Aspire/dev configuration sets.
+    [HttpPost("Dev")]
+    public async Task<IActionResult> DevLogin([FromForm] Guid userId)
+    {
+        if (!_devAuth.Value.Enabled) return NotFound();
+
+        var user = await _mediator.Send(new GetUserByIdQuery(userId), HttpContext.RequestAborted);
+        if (user == null) return BadRequest("User not found");
+
+        await _currentUser.SetCurrentUser(user);
+        return LocalRedirect(await DevLandingPage());
+    }
+
+    [HttpPost("Dev/Bootstrap")]
+    public async Task<IActionResult> DevLoginBootstrap()
+    {
+        if (!_devAuth.Value.Enabled) return NotFound();
+
+        var user = await _mediator.Send(new CreateUserCommand("Dev User"), HttpContext.RequestAborted);
+        await _currentUser.SetCurrentUser(user);
+        return LocalRedirect(await DevLandingPage());
+    }
+
+    // An empty local catalog means setup isn't finished — land back on the setup page
+    // instead of Welcome/home, which can't render anything useful yet.
+    private async Task<string> DevLandingPage()
+    {
+        var hasCharts = (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), HttpContext.RequestAborted)).Any();
+        return hasCharts ? "/Welcome" : "/Dev/Populate";
     }
 }
 

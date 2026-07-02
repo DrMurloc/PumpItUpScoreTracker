@@ -1,15 +1,17 @@
-﻿@page "/Admin"
+@page "/Admin"
 @using MediatR
+@using ScoreTracker.OfficialMirror.Contracts.Commands
+@using ScoreTracker.OfficialMirror.Contracts.Messages
 @using Microsoft.EntityFrameworkCore
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Data.Persistence
 @using ScoreTracker.Domain.SecondaryPorts
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.Services.Contracts
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Services.Contracts
-@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @using MassTransit
 @using Microsoft.AspNetCore.Mvc
 @using Microsoft.Extensions.Caching.Memory
@@ -17,7 +19,7 @@
 @using ScoreTracker.Application.Handlers
 @using ScoreTracker.Domain.Events
 @using ScoreTracker.Domain.Records
-@using ScoreTracker.PersonalProgress
+@using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.Domain.SecondaryPorts
 @using System.Reflection
 
@@ -235,16 +237,16 @@
 
 @inject ICurrentUserAccessor CurrentUser;
 @inject IChartRepository _charts;
-@inject IOfficialLeaderboardRepository OfficialLeaderboards;
+
 @inject IMediator Mediator;
 @inject IQualifiersRepository Qualifiers;
 @inject IUiSettingsAccessor UiSettings;
 @inject ISnackbar Snackbar;
 @inject NavigationManager NavManager;
 @inject ITierListRepository TierLists;
-@inject IWorldRankingService WorldRanking;
+
 @inject IBus Bus;
-@inject IOfficialSiteClient OfficialClient;
+
 @inject IFileUploadClient Files;
 @inject ChartAttemptDbContext Database;
 @inject IUserRepository Users;
@@ -295,13 +297,13 @@
     // await OfficialClient.FixAvatars();
     //await Bus.Publish(new ProcessScoresTiersListCommand());
      //await Bus.Publish(new ProcessPassTierListCommand());
-     //   await Bus.Publish(new CalculateScoringDifficultyEvent());
+     //   await Bus.Publish(new RecalculateScoringDifficultyCommand());
     
     //await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);
     
        //await Mediator.Send(new UpdateSongImagesCommand(false));
 
-        await Bus.Publish(new StartLeaderboardImportEvent());
+        await Bus.Publish(new StartLeaderboardImportCommand());
 
 
         //await Bus.Publish(new ProcessPassTierListCommand());
@@ -317,11 +319,11 @@
    /* var userIds = await Database.User.Select(u => u.Id).ToArrayAsync();
         foreach (var userId in userIds)
         {
-            await Mediator.Send(new PlayerRatingSaga.RecalculateStats(userId));
+            await Mediator.Send(new RecalculateStatsCommand(userId));
         }*/
 
 
-       // await Bus.Publish(new CalculateChartLetterDifficultiesEvent());
+       // await Bus.Publish(new RecalculateChartLetterDifficultiesCommand());
        Snackbar.Add(L["Done"].Value, Severity.Success);
 
     }

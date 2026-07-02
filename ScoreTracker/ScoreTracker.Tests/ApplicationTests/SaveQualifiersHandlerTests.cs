@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Moq;
-using ScoreTracker.Application.Commands;
-using ScoreTracker.Application.Handlers;
+using ScoreTracker.EventCompetition.Contracts.Commands;
+using ScoreTracker.EventCompetition.Application;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using Xunit;
 

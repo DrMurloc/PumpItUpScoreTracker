@@ -1,7 +1,8 @@
-﻿@page "/OfficialLeaderboards"
-@using ScoreTracker.Domain.Enums
+@page "/OfficialLeaderboards"
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.OfficialMirror.Contracts.Queries
 @using ScoreTracker.Domain.SecondaryPorts
-@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Application.Queries
@@ -82,7 +83,7 @@
         </MudTable>
     }
 </MudGrid>
-@inject IOfficialLeaderboardRepository Leaderboards;
+
 @inject IChartRepository Charts;
 @inject IMediator Mediator;
 @code {
@@ -94,7 +95,7 @@
     private DateTimeOffset? _lastImported;
     private async Task SelectUser(string username)
     {
-        var results = (await Leaderboards.GetOfficialLeaderboardStatuses(username, CancellationToken.None))
+        var results = (await Mediator.Send(new GetOfficialLeaderboardStatusesQuery(username)))
             .OrderBy(e=>e.OfficialLeaderboardType)
             .ThenBy(e=>e.LeaderboardName)
             .ThenBy(e=>e.Place)
@@ -113,7 +114,7 @@
     protected override async Task OnInitializedAsync()
     {
         _lastImported = await Mediator.Send(new GetLastLeaderboardImportTimestampQuery());
-        _usernames = (await Leaderboards.GetOfficialLeaderboardUsernames(CancellationToken.None)).ToArray();
+        _usernames = (await Mediator.Send(new GetOfficialLeaderboardUsernamesQuery())).ToArray();
 
 
     }

@@ -1,18 +1,23 @@
-﻿@page "/Record"
+@page "/Record"
 @page "/Chart"
 @page "/Chart/{ChartId:guid}"
 @using MediatR
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.ScoreLedger.Contracts.Queries
 @using Microsoft.AspNetCore.Mvc
+@using ScoreTracker.Communities.Contracts.Queries
+@using ScoreTracker.Communities.Contracts.Commands
 @using ScoreTracker.Application.Queries
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.Records
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Components;
 @using ScoreTracker.Web.Services.Contracts
-@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @using System.Text.RegularExpressions
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Services
 <PageTitle>@(_selectedChart==null?L["Chart Details"].Value:$"{_selectedChart.Song.Name} {_selectedChart.DifficultyString}")</PageTitle>
 <HeadContent>

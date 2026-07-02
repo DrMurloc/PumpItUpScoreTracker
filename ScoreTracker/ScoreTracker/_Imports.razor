@@ -1,4 +1,4 @@
-﻿@using System.Net.Http
+@using System.Net.Http
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Forms
@@ -11,6 +11,13 @@
 @using ApexCharts;
 @using Microsoft.Extensions.Localization
 @using Color = MudBlazor.Color;
-@using Chart = ScoreTracker.Domain.Models.Chart;
+@using Chart = ScoreTracker.SharedKernel.Models.Chart;
 @using Size = MudBlazor.Size;
 @inject IStringLocalizer<App> L
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Catalog.Contracts.Commands
+@using ScoreTracker.ChartIntelligence.Contracts.Queries
+@using ScoreTracker.ChartIntelligence.Contracts.Commands
+@using ScoreTracker.Identity.Contracts.Queries
+@using ScoreTracker.Identity.Contracts.Commands
+@using ScoreTracker.Identity.Contracts.Events

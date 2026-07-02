@@ -1,15 +1,17 @@
-﻿@page "/Experiments/SimilarPlayers"
+@page "/Experiments/SimilarPlayers"
 @using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.Services
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Dtos
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.SecondaryPorts
-@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @using ScoreTracker.Application.Queries
 @using MediatR
 @using ScoreTracker.Application.Handlers
 @using ScoreTracker.Domain.Models
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
 
 <PageTitle>@L["User Matches"]</PageTitle>
 <MudGrid>
@@ -192,7 +194,7 @@
     private IEnumerable<SongTierListEntry> ProcessIntoTierList(string tierListName, IDictionary<Guid, int> chartWeights)
     {
         var standardDeviationCompare =
-            TierListSaga.StdDev(chartWeights.Select(s => s.Value), false);
+            TierListProcessor.StdDev(chartWeights.Select(s => s.Value), false);
         var averageCompare = chartWeights.Average(kv => kv.Value);
         var mediumMinCompare = averageCompare - standardDeviationCompare / 2;
         var easyMinCompare = averageCompare + standardDeviationCompare / 2;

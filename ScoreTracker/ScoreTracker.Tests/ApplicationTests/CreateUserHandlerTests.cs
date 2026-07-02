@@ -3,12 +3,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
 using Moq;
+using ScoreTracker.Identity.Contracts.Commands;
+using ScoreTracker.Identity.Contracts.Events;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Application.Commands;
-using ScoreTracker.Application.Handlers;
+using ScoreTracker.Identity.Application;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;

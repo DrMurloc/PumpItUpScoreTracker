@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.OpenApi;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.Web.Dtos.Api
 {

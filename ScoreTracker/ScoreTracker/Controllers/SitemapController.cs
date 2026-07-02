@@ -1,7 +1,7 @@
 ﻿using System.Net.Mime;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Mvc;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Web.Controllers

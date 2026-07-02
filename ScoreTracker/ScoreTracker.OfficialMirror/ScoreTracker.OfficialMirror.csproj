@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Only Contracts/ and Wiring/ are public (ADR-001 D2); the vertical's tests see the rest.
+         DynamicProxyGenAssembly2 is Moq's proxy assembly — required to mock internal ports. -->
+    <InternalsVisibleTo Include="ScoreTracker.Tests" />
+    <InternalsVisibleTo Include="ScoreTracker.Tests.Integration" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- HtmlAgilityPack: the PiuGame ACL parses official-site HTML (Q6 — HTML never leaves this assembly). -->
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+    <PackageReference Include="MassTransit" Version="8.5.7" />
+    <PackageReference Include="MassTransit.Abstractions" Version="8.5.7" />
+    <PackageReference Include="MediatR" Version="14.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Identity\ScoreTracker.Identity.csproj" />
+    <!-- Transitional (P5): the single ChartAttemptDbContext still lives in ScoreTracker.Data. -->
+    <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
+    <!-- Transitional (P5): the import saga sends GetPhoenixRecordsQuery, which stays in
+         Application until its other senders (PlayerProgress-bound sagas) extract. -->
+    <ProjectReference Include="..\ScoreTracker.Application\ScoreTracker.Application.csproj" />
+    <!-- Vertical→vertical contracts (ADR-001 D2): the import saga submits scores through
+         the Ledger's published UpdatePhoenixBestAttemptCommand. -->
+    <ProjectReference Include="..\ScoreTracker.ScoreLedger\ScoreTracker.ScoreLedger.csproj" />
+  </ItemGroup>
+
+</Project>

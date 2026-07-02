@@ -1,15 +1,19 @@
-﻿@page "/Account"
+@page "/Account"
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts.Commands
+@using ScoreTracker.ScoreLedger.Contracts.Commands
 @using MediatR
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Dtos
 @using CsvHelper
 @using System.Globalization
 @using System.Web
 @using Microsoft.AspNetCore.Localization
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Web.Services.Contracts
 

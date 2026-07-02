@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
-using ScoreTracker.Application.Queries;
-using ScoreTracker.Data.Repositories;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.EventCompetition.Contracts.Queries;
+using ScoreTracker.EventCompetition.Infrastructure;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Tests.Integration.Fixtures;

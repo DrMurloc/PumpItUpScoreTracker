@@ -1,0 +1,149 @@
+﻿using MassTransit;
+using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.EventCompetition.Contracts.Messages;
+
+namespace ScoreTracker.EventCompetition.Application
+{
+    internal sealed class MarchOfMurlocsHandler : IConsumer<TryScheduleMoMCommand>,
+        IConsumer<CycleMoMCommand>
+    {
+        private ITournamentRepository _tournaments;
+        private IChartRepository _charts;
+        private IBus _bus;
+        private readonly IMessageScheduler _scheduler;
+        private readonly IDateTimeOffsetAccessor _dateTime;
+        private readonly IChartScoringLevelRepository _scoringLevels;
+
+        public MarchOfMurlocsHandler(ITournamentRepository tournaments,
+            IChartRepository charts,
+            IBus bus,
+            IMessageScheduler scheduler,
+            IDateTimeOffsetAccessor dateTime,
+            IChartScoringLevelRepository scoringLevels)
+        {
+            _scoringLevels = scoringLevels;
+            _tournaments = tournaments;
+            _charts = charts;
+            _bus = bus;
+            _scheduler = scheduler;
+            _dateTime = dateTime;
+        }
+
+        public async Task Consume(ConsumeContext<TryScheduleMoMCommand> context)
+        {
+            // Pick the most recent MoM, not any-old-MoM. The previous FirstOrDefault was the
+            // root cause of the runaway: once any expired MoM existed, every TryScheduleMoMCommand tick
+            // saw it and immediately fired CycleMoMCommand, regardless of whether a current MoM was active.
+            var mom = (await _tournaments.GetAllTournaments(context.CancellationToken))
+                .Where(e => e.IsMoM)
+                .OrderByDescending(e => e.EndDate)
+                .FirstOrDefault();
+            if (mom?.EndDate == null || mom.EndDate < _dateTime.Now)
+                await _bus.Publish(new CycleMoMCommand());
+            else
+                await _scheduler.SchedulePublish((mom.EndDate.Value + TimeSpan.FromMinutes(1)).DateTime, new CycleMoMCommand(),
+                    context.CancellationToken);
+        }
+
+        public async Task Consume(ConsumeContext<CycleMoMCommand> context)
+        {
+            var moms = (await _tournaments.GetAllTournaments(context.CancellationToken))
+                .Where(e => e.IsMoM)
+                .OrderByDescending(e => e.EndDate)
+                .ToArray();
+            // Idempotency: if a future-dated MoM already exists, this cycle has nothing to do.
+            // Protects against duplicate CycleMoMCommand messages (in-memory transport replay, double-publish, etc.)
+            // landing back-to-back and creating extra tournaments.
+            if (moms.Any(m => m.EndDate != null && m.EndDate > _dateTime.Now))
+                return;
+            var oldEnd = moms.FirstOrDefault()?.EndDate ?? _dateTime.Now - TimeSpan.FromMinutes(1);
+            var year = _dateTime.Now.Year;
+
+            var newMonth = oldEnd.Month switch
+
+            {
+                12 => 3,
+                1 => 3,
+                2 => 3,
+                3 => 6,
+                4 => 6,
+                5 => 6,
+                7 => 9,
+                8 => 9,
+                9 => 12,
+                10 => 12,
+                11 => 12,
+                _ => 3
+            };
+            var season = newMonth switch
+            {
+                3 => "Winter",
+                6 => "Spring",
+                9 => "Summer",
+                12 => "Fall",
+                _ => throw new ArgumentOutOfRangeException("Date was invalid somehow 2?")
+            };
+            var newEndDate = new DateTimeOffset(new DateTime(_dateTime.Now.Year, newMonth,
+                DateTime.DaysInMonth(_dateTime.Now.Year, newMonth),
+                23, 59, 59), TimeSpan.FromHours(-5));
+
+            var charts = (await _charts.GetCharts(MixEnum.Phoenix)).Where(c => c.Type != ChartType.CoOp).ToArray();
+
+            foreach (var chartType in new[] { ChartType.Double, ChartType.Single })
+            {
+                var scoring = ScoringConfiguration.PumbilityPlus;
+                scoring.AdjustToTime = true;
+                scoring.LevelRatings[22] += 50;
+                scoring.LevelRatings[23] += 150;
+                scoring.LevelRatings[24] += 300;
+                scoring.LevelRatings[25] += 500;
+                scoring.LevelRatings[26] += 750;
+                scoring.LevelRatings[27] += 1050;
+                scoring.LevelRatings[28] += 1400;
+                scoring.LevelRatings[29] += 1800;
+                foreach (var key in scoring.ChartTypeModifiers.Keys)
+                {
+                    if (key == chartType) continue;
+
+                    scoring.ChartTypeModifiers[key] = 0;
+                }
+
+                var tournament = new TournamentConfiguration(Guid.NewGuid(),
+                    $"March of Murlocs {season} {year} - {chartType}s",
+                    scoring, false, true)
+                {
+                    AllowRepeats = false,
+                    EndDate = newEndDate,
+                    StartDate = _dateTime.Now,
+                    MaxTime = TimeSpan.FromHours(1) + TimeSpan.FromMinutes(45)
+                };
+
+                var curCharts = charts.Where(c => c.Type == chartType).ToArray();
+                var scoringLevels =
+                    await _scoringLevels.GetScoringLevels(MixEnum.Phoenix, context.CancellationToken);
+                var levels = curCharts.Select(c =>
+                {
+                    double? scoringLevel = scoringLevels.TryGetValue(c.Id, out var sl) ? sl : null;
+                    return (c.Id,
+                        scoringLevel == null ? c.Level + .5 :
+                        c.Level + 1.5 < scoringLevel ? c.Level + 1.5 :
+                        c.Level + .5 < scoringLevel ? scoringLevel.Value :
+                        c.Level + .5);
+                }).ToArray();
+                await _tournaments.CreateOrSaveTournament(tournament, context.CancellationToken);
+
+                await _tournaments.CreateScoringLevelSnapshots(tournament.Id, levels, context.CancellationToken);
+            }
+
+
+            foreach (var mom in moms)
+            {
+                var updated = mom with { IsHighlighted = false };
+                await _tournaments.CreateOrSaveTournament(updated, context.CancellationToken);
+            }
+        }
+    }
+}

@@ -1,3 +1,9 @@
+using ScoreTracker.Catalog.Contracts.Commands;
+using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts.Commands;
+using ScoreTracker.ChartIntelligence.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts.Messages;
+using ScoreTracker.ChartIntelligence.Application;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -5,13 +11,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
 using Moq;
+using ScoreTracker.Application.Queries;
 using ScoreTracker.Application.Handlers;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using Xunit;
 
@@ -124,8 +132,8 @@ public sealed class TierListSagaTests
     {
         var charts = ChartsMockReturning(level: 15, type: ChartType.Single,
             new[] { new ChartBuilder().WithLevel(15).Build() });
-        var scores = new Mock<IPhoenixRecordRepository>();
-        scores.Setup(s => s.GetRecordedScores(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+        var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetBestScores(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
         var saga = BuildSaga(charts: charts, scores: scores);
 
@@ -145,8 +153,8 @@ public sealed class TierListSagaTests
     {
         var chart = new ChartBuilder().WithLevel(level).Build();
         var charts = ChartsMockReturning(level: level, type: ChartType.Single, new[] { chart });
-        var scores = new Mock<IPhoenixRecordRepository>();
-        scores.Setup(s => s.GetRecordedScores(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+        var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetBestScores(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new RecordedPhoenixScore(chart.Id, 950000, PhoenixPlate.SuperbGame, false,
@@ -176,11 +184,11 @@ public sealed class TierListSagaTests
         charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
-        var scores = new Mock<IPhoenixRecordRepository>();
+        var scores = new Mock<IScoreReader>();
         scores.Setup(s => s.GetPgUsers(It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<(Guid UserId, Guid ChartId)>());
-        scores.Setup(s => s.GetRecordedScores(It.IsAny<IEnumerable<Guid>>(), It.IsAny<ChartType>(),
+        scores.Setup(s => s.GetScores(It.IsAny<IEnumerable<Guid>>(), It.IsAny<ChartType>(),
                 It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
         var tierLists = new Mock<ITierListRepository>();
@@ -200,18 +208,18 @@ public sealed class TierListSagaTests
         Mock<IChartDifficultyRatingRepository>? chartRatings = null,
         Mock<IChartRepository>? charts = null,
         Mock<ITierListRepository>? tierLists = null,
-        Mock<IPhoenixRecordRepository>? scores = null,
+        Mock<IScoreReader>? scores = null,
         Mock<ICurrentUserAccessor>? currentUser = null,
-        Mock<IPlayerStatsRepository>? playerStats = null)
+        Mock<IPlayerStatsReader>? playerStats = null)
     {
         chartRatings ??= EmptyRatingsMock();
         charts ??= EmptyChartsMock();
         tierLists ??= new Mock<ITierListRepository>();
-        scores ??= new Mock<IPhoenixRecordRepository>();
+        scores ??= new Mock<IScoreReader>();
         currentUser ??= new Mock<ICurrentUserAccessor>();
-        playerStats ??= new Mock<IPlayerStatsRepository>();
+        playerStats ??= new Mock<IPlayerStatsReader>();
         return new TierListSaga(chartRatings.Object, charts.Object, tierLists.Object, scores.Object,
-            currentUser.Object, playerStats.Object);
+            currentUser.Object, playerStats.Object, new Mock<IChartScoringLevelRepository>().Object);
     }
 
     private static Mock<IChartRepository> EmptyChartsMock()
@@ -258,5 +266,52 @@ public sealed class TierListSagaTests
         ctx.SetupGet(c => c.Message).Returns(message);
         ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
         return ctx.Object;
+    }
+
+    // Characterization of the Scores tier list recompute (previously untested) ahead of the
+    // rearchitecture — pins orchestration, not the bucketing math (that lives in
+    // TierListSagaStaticsTests).
+
+    [Fact]
+    public async Task ProcessScoresTierListWeighsPlayersByStatsAndSavesUnderScoresTierList()
+    {
+        var chart = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var userId = Guid.NewGuid();
+        var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetScores(It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<(Guid userId, RecordedPhoenixScore record)>());
+        scores.Setup(s => s.GetScores(ChartType.Single, DifficultyLevel.From(20),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                (userId, new RecordedPhoenixScore(chart.Id, PhoenixScore.From(950000), PhoenixPlate.FairGame,
+                    false, DateTimeOffset.MinValue))
+            });
+        var playerStats = new Mock<IPlayerStatsReader>();
+        playerStats.Setup(p => p.GetStats(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PlayerStatsRecord(userId, TotalRating: 0, HighestLevel: 1, ClearCount: 0,
+                CoOpRating: 0, CoOpScore: 0, SkillRating: 0, SkillScore: 0, SkillLevel: 0,
+                SinglesRating: 0, SinglesScore: 0, SinglesLevel: 0, DoublesRating: 0, DoublesScore: 0,
+                DoublesLevel: 0, CompetitiveLevel: 20.5, SinglesCompetitiveLevel: 20.5,
+                DoublesCompetitiveLevel: 20.5));
+        var tierLists = new Mock<ITierListRepository>();
+        var saved = new List<SongTierListEntry>();
+        tierLists.Setup(t => t.SaveEntries(It.IsAny<IEnumerable<SongTierListEntry>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<IEnumerable<SongTierListEntry>, CancellationToken>((e, _) => saved.AddRange(e))
+            .Returns(Task.CompletedTask);
+        var saga = BuildSaga(scores: scores, tierLists: tierLists, playerStats: playerStats);
+
+        await saga.Consume(BuildContext(new ProcessScoresTiersListCommand()));
+
+        var entry = Assert.Single(saved);
+        Assert.Equal(chart.Id, entry.ChartId);
+        Assert.Equal("Scores", (string)entry.TierListName);
+        // Player weighting is per (level, type) folder the player appears in — exactly once here.
+        playerStats.Verify(p => p.GetStats(userId, It.IsAny<CancellationToken>()), Times.Once);
+        // Levels 1-29 × {Single, Double} — one SaveEntries per folder, even when empty.
+        tierLists.Verify(t => t.SaveEntries(It.IsAny<IEnumerable<SongTierListEntry>>(),
+            It.IsAny<CancellationToken>()), Times.Exactly(58));
     }
 }

@@ -14,12 +14,14 @@ Blazor Server + MVC API for tracking Pump It Up scores, leaderboards, tournament
 
 Run from the repo root (the solution lives at `ScoreTracker/ScoreTracker.sln`).
 
+- **Run locally**: `dotnet run --project ScoreTracker/ScoreTracker.AppHost` (requires Docker Desktop). Aspire provisions a deterministic SQL Server container (port + sa password pinned in `ScoreTracker.AppHost/appsettings.json`, persistent volume), applies EF migrations automatically (`AutoMigrate` flows from AppHost), and enables the DevAuth login backdoor. Optional local secrets (real OAuth creds etc.) live in **AppHost user-secrets** and flow through to the Web app; the dev-harness prod API token is pasted on the /Dev/Populate page instead. Production continues to apply migrations manually — without AutoMigrate the app only logs pending-migration drift at startup.
+
 - **Build**: `dotnet build ScoreTracker/ScoreTracker.sln -c Release`
 - **Typecheck**: covered by `dotnet build` (no separate step).
 - **Lint/static analysis**: none locally configured. DeepSource runs in CI (`.deepsource.toml`).
 - **Unit tests**: `dotnet test ScoreTracker/ScoreTracker.Tests/ScoreTracker.Tests.csproj` — covers `DomainTests/` (unit) and `ApplicationTests/` (component). No Docker required.
 - **Component / module tests**: same command, same project.
-- **Contract tests**: not present.
+- **Contract tests (API wire-shape approval)**: `dotnet test ScoreTracker/ScoreTracker.Tests.Api/ScoreTracker.Tests.Api.csproj` — pins the exact JSON wire shapes of the public `api/*` endpoints that partner tools consume (controller + mocked `IMediator`, golden JSON inline). A failure here means a public API contract changed — that is breaking-change review territory, not a test to casually update. The `dev/export/*` endpoints are explicitly OUTSIDE this contract: they serialize raw table rows for the local dev harness, are hidden from Swagger, shift with the schema (including breaking changes), and integrators must not build against them — the stable surface is `api/*` only.
 - **Real-dependency integration tests**: `dotnet test ScoreTracker/ScoreTracker.Tests.Integration/ScoreTracker.Tests.Integration.csproj` — spins up an ephemeral SQL Server container via Testcontainers.MsSql, applies migrations, runs the suite. Requires Docker Desktop (or equivalent). Currently scaffolded with a migration smoke test; repository coverage to follow.
 - **E2E / Playwright tests**: not present.
 - **Mutation tests**: not present.
@@ -33,32 +35,38 @@ These are the project-local realizations of the rules in `ENTERPRISE.md`. When E
 ### Layer graph and per-layer package allowlist
 
 ```
-Domain  ◄── Application ◄── Data
-  ▲           ▲              ▲
-  │           │              │
-  └── PersonalProgress ◄─────┘
-              ▲
-              │
-              └── Web ◄── CompositionRoot
+SharedKernel ◄── Domain ◄── Application ◄── Data ◄── verticals ◄── Web ◄── CompositionRoot
 ```
+
+(Verticals reference `Data` transitionally until P6; some also reference `Application`
+transitionally — see the vertical row below. `Web` and `CompositionRoot` reference every
+vertical.)
 
 | Project | Allowed external packages | Forbidden |
 |---|---|---|
-| `ScoreTracker.Domain` | `MediatR`, `Microsoft.Extensions.Logging.Abstractions` | Anything else. No EF, no `HttpClient`, no MassTransit, no ASP.NET, no Azure/Discord/SendGrid. |
+| `ScoreTracker.SharedKernel` | `MediatR` only | Everything else — the kernel references nothing. Namespaces are honest as of the P6 sweep: `ScoreTracker.SharedKernel.ValueTypes/Enums/Models`. |
+| `ScoreTracker.Domain` | `MediatR`, `Microsoft.Extensions.Logging.Abstractions` (+ project ref to `SharedKernel`) | Anything else. No EF, no `HttpClient`, no MassTransit, no ASP.NET, no Azure/Discord/SendGrid. |
 | `ScoreTracker.Application` | + `MassTransit.Abstractions`, `Microsoft.Extensions.Caching.Memory` | EF Core, ASP.NET, `HttpClient`, vendor SDKs. Application must never know it's behind a web server. |
 | `ScoreTracker.Data` | + `Microsoft.EntityFrameworkCore.SqlServer`, `Azure.Storage.Blobs`, `Discord.Net`, `HtmlAgilityPack`, `SendGrid` | ASP.NET. |
 | `ScoreTracker.Web` | + `MudBlazor`, OAuth providers, `Swashbuckle`, `Tesseract`, MassTransit DI, `Hangfire.AspNetCore`, `Hangfire.SqlServer` | EF Core directly (must go through ports). |
-| `ScoreTracker.CompositionRoot` | DI extensions only | Business logic. |
+| Vertical assemblies: `ScoreTracker.Ucs`, `ScoreTracker.ScoreLedger`, `ScoreTracker.OfficialMirror`, `ScoreTracker.Catalog`, `ScoreTracker.ChartIntelligence`, `ScoreTracker.WeeklyChallenge`, `ScoreTracker.EventCompetition`, `ScoreTracker.Communities`, `ScoreTracker.PlayerProgress`, `ScoreTracker.Identity` (rearch P5-P6; UCS is the template) | `MediatR`, `MassTransit.Abstractions` (+ full `MassTransit` for verticals with bus consumers — `IRegistrationConfigurator`, used by the `AddXxxConsumers` hooks, lives in the full package), `Microsoft.Extensions.DependencyInjection.Abstractions`, `Microsoft.Extensions.Caching.Memory`; `OfficialMirror` additionally `Microsoft.Extensions.Http` + `HtmlAgilityPack` (the PiuGame ACL) (+ project refs `Domain`, `Data` transitionally for the shared DbContext; only `Catalog` still refs `Application` transitionally (`GetRandomChartsQuery`, C5-gated via MatchSaga); `PlayerProgress` holds the six progression sagas and owns the PlayerStats/Titles/History tables; cross-vertical reads of them go through `IPlayerStatsReader`/`ITitleRepository`, never SQL joins) | Everything else. Only `Contracts/` and `Wiring/` namespaces may be public (arch-test enforced, `VerticalBoundaryTests`); EF entities and internal domain types never cross the boundary. Verticals must not be referenced by `Application` (cycles through `Data → Application`). **MassTransit's `AddConsumers` scan skips internal types** — verticals with bus consumers expose an `AddXxxConsumers(IRegistrationConfigurator)` hook called from `Program.cs`'s `AddMassTransit` block (tripwire-tested). |
+| `ScoreTracker.CompositionRoot` | DI extensions only (+ `Microsoft.EntityFrameworkCore.Design`, private, for the design-time factory) | Business logic. |
 | `ScoreTracker.Tests` | + `xunit`, `Moq` | Other doubling libraries (see Test conventions). References `ScoreTracker.Application` (for handler tests) and `ScoreTracker.Data` (for parser approval tests against `PiuGameApi`). Does not reference `ScoreTracker.Web`. |
+| `ScoreTracker.Tests.Api` | + `xunit`, `Moq` | The one sanctioned `ScoreTracker.Web`-referencing test project — it pins the public API wire shapes, which live in Web's controllers/DTOs. Same doubling rules as `ScoreTracker.Tests`. |
 | `ScoreTracker.Tests.Integration` | + `xunit`, `Moq`, `Testcontainers.MsSql`, `Respawn` | Mocking the port whose implementation is the subject of the test (e.g., do not mock `IPhoenixRecordRepository` when testing `EFPhoenixRecordsRepository`). Mocking incidental collaborator ports for setup — or `IPiuGameApi`-style external clients in slice tests — is fine. |
 
 Adding a package outside its allowed layer is a violation. Adding a project reference that isn't in the graph above is a violation.
 
 ### Use case dispatch
 
-- Every business operation is an `IRequest<T>` (or `IRequest`) record in `Application/Commands/` or `Application/Queries/`, paired with an `IRequestHandler<,>` in `Application/Handlers/`. Async work uses `IConsumer<TEvent>` (MassTransit) in the same `Application/Handlers/` folder.
+- **Message taxonomy — folder + name + interface distinguish the kinds** (arch-test enforced, `MessageTaxonomyTests`):
+  - **Queries** — `*Query` records implementing `IQuery<T>` (`ScoreTracker.SharedKernel.Messaging`), in `Application/Queries/` or a vertical's `Contracts/Queries/`. Read-only; never travel the bus.
+  - **Commands (MediatR)** — `*Command` records implementing `IRequest`/`IRequest<T>`, in `Application/Commands/` or a vertical's `Contracts/Commands/`.
+  - **Commands (bus triggers)** — `*Command` plain records (not `IRequest`) in `Application/Messages/`, published via `IBus` by `RecurringJobRunner`/admin pages.
+  - **Events** — `*Event` past-tense fact records (never `IRequest`) in `Domain/Events/` (bus), `Application/Events/` (`INotification`), or a vertical's `Contracts/Events/` (bus; publishing vertical owns the event once no Application consumer remains).
+  - Handlers are `IRequestHandler<,>` / `IConsumer<>` implementations in `Application/Handlers/`.
 - **Razor pages, Blazor components, and MVC controllers dispatch exclusively via `IMediator`.** No `DbContext`, repository, or `HttpClient` is injected into Web code. (Exception: `Accessors/` types in Web that *implement* Domain ports.)
-- Background work is published over `IBus.Publish(...)` with a record from `Domain/Events/`. In-process notifications use `IMediator.Publish(INotification)`.
+- Background work is published over `IBus.Publish(...)` — past-tense **facts** are records in `Domain/Events/`; imperative **trigger messages** (recurring-job kicks, admin "run this now" buttons) are records in `Application/Messages/`. In-process notifications use `IMediator.Publish(INotification)`.
 - **Recurring scheduled work uses Hangfire** with SQL Server storage (auto-created `HangFire` schema, durable across restarts). Each recurring job is a one-line `IBus.Publish(...)` on `RecurringJobRunner` ([RecurringJobRunner.cs](ScoreTracker/ScoreTracker/HostedServices/RecurringJobRunner.cs)); registrations live in [Program.cs](ScoreTracker/ScoreTracker/Program.cs) via `RecurringJob.AddOrUpdate<RecurringJobRunner>(...)`. Cron expressions are UTC. Do not introduce a second scheduler library; do not reintroduce hosted-timer / self-rescheduling-bus patterns. The Hangfire dashboard is mounted at `/hangfire` and gated on `User.IsAdmin` via [HangfireDashboardAuthorization.cs](ScoreTracker/ScoreTracker/Security/HangfireDashboardAuthorization.cs). Adding a new recurring job = add a method to `RecurringJobRunner` + one `RecurringJob.AddOrUpdate` line. The `PreventRecurringJobs` config flag, when `true`, removes the registrations instead of scheduling them.
 
 ### Ports and abstractions
@@ -79,9 +87,10 @@ Adding a package outside its allowed layer is a violation. Adding a project refe
 
 ### One DbContext
 
-- `ChartAttemptDbContext` is the only `DbContext`. Add `DbSet`s here. Adding a second context requires explicit discussion.
+- `ChartAttemptDbContext` is the only `DbContext`. Adding a second context requires explicit discussion.
+- Entities owned by an unextracted slice get `DbSet`s on the context. **Entities owned by an extracted vertical live in the vertical** (internal, `<Vertical>/Infrastructure/Entities/`) and are registered via its `IDbModelContribution` in `Wiring/`; the vertical's repositories use `Set<TEntity>()`. Every vertical's contribution must be listed in `CompositionRoot.VerticalModelContributions.All()` — omitting one makes scaffolded migrations silently drop that vertical's tables.
 - Repositories take `IDbContextFactory<ChartAttemptDbContext>` and create scoped contexts.
-- Migrations live in `ScoreTracker.Data/Migrations/` and are applied **manually** — no `Database.Migrate()` at startup.
+- Migrations live in `ScoreTracker.Data/Migrations/` and are applied **manually** — no `Database.Migrate()` at startup. Scaffold from `ScoreTracker.Data` with `dotnet ef migrations add <Name> --startup-project ../ScoreTracker.CompositionRoot` (the design-time factory lives in CompositionRoot so the model includes vertical contributions).
 
 ## Test conventions
 
@@ -99,6 +108,8 @@ This repo uses **folder-as-tag**: each test project's path (and subfolders withi
 |---|---|---|---|
 | `ScoreTracker.Tests/DomainTests/` | `Unit` | `Small` | `None` (rare `TestDouble` for clock/RNG seams) |
 | `ScoreTracker.Tests/ApplicationTests/` | `Component` | `Small` | `TestDouble` |
+| `ScoreTracker.Tests/ArchitectureTests/` | `Unit` (architecture ratchets — rules are added, never removed) | `Small` | `None` |
+| `ScoreTracker.Tests.Api/` | `Approval` (API wire shape) | `Small` | `TestDouble` |
 | `ScoreTracker.Tests.Integration/` | `Integration` | `Medium` | `EphemeralInfra` (SQL Server via Testcontainers) |
 
 PR gate: `dotnet test ScoreTracker/ScoreTracker.Tests/...` runs the fast suite without Docker. `dotnet test ScoreTracker/ScoreTracker.Tests.Integration/...` runs the real-DB suite and needs Docker; today it runs locally only (CI wiring deferred).
@@ -134,7 +145,7 @@ PR gate: `dotnet test ScoreTracker/ScoreTracker.Tests/...` runs the fast suite w
 ### Coverage exclusions
 
 - Mark new commands, queries, events, records, exceptions, view projections, and enum-helper static classes with `[ExcludeFromCodeCoverage]`. `GlobalUsings.cs` already exposes `System.Diagnostics.CodeAnalysis`.
-- Excluded folders: `Application/Commands`, `Application/Queries`, `Application/Events`, `Domain/Records`, `Domain/Events`, `Domain/Views`, `Domain/Exceptions`, `Domain/Enums` (helpers only), `PersonalProgress/Queries`.
+- Excluded folders: `Application/Commands`, `Application/Queries`, `Application/Events`, `Application/Messages`, `Domain/Records`, `Domain/Events`, `Domain/Views`, `Domain/Exceptions`, `Domain/Enums` (helpers only), vertical `Contracts/` records.
 - **Never** exclude code in `Domain/Models`, `Domain/Services`, `Domain/ValueTypes`, or `Application/Handlers` — that's where coverage matters.
 
 ### Dependency realism in this project
@@ -152,13 +163,17 @@ Deliberate, documented divergences. Read these before flagging a violation.
 
 - **MediatR is permitted in `ScoreTracker.Domain`.** ENTERPRISE.md forbids framework types in Domain; this codebase exempts `MediatR` and `Microsoft.Extensions.Logging.Abstractions`. Any other outside dependency in Domain is a violation.
 - **"Saga" is a feature-grouped class, not a state machine.** A `*Saga` (e.g. `BountySaga`, `TierListSaga`, `MatchSaga`, `PlayerRatingSaga`) contains one MassTransit `IConsumer<>` plus related MediatR `IRequestHandler<>` for that feature. It is **not** a `MassTransit.MassTransitStateMachine`.
-- **`Domain/Events/` mixes events and command-shaped messages** (`ProcessPassTierListCommand`, `ProcessScoresTiersListCommand`). Known divergence from ENTERPRISE's domain-events-vs-integration-events rule. Don't relocate without a planned cleanup.
+- **Bus trigger messages are imperative by design.** `Application/Messages/` records (`RotateWeeklyChartsCommand`, `StartLeaderboardImportCommand`, …) travel over MassTransit but are commands, not events — do not rename them to past-tense or move them back to `Domain/Events/`. (The old "Events/ mixes events and commands" divergence was resolved 2026-06-12.)
 - **`ScoreTracker.Data` references `ScoreTracker.Application`.** Onion-direction divergence. Slated for removal — do not lean on it for new code.
 - **No domain-vs-integration-event distinction.** Single bounded context with an in-memory transport makes the distinction moot today. Revisit if a second bounded context appears.
 
 ## Architecture authority
 
 `ARCHITECTURE.md` is the source of truth for solution layout, full dependency graph, eventing detail, data-access detail, glossary (Mix, Chart, Phoenix score, Pumbility, Tier list, Bounty, UCS, Saga), known divergences, and open questions. Update it in the same PR that changes a structural pattern.
+
+## Product & domain authority
+
+[PRODUCT.md](PRODUCT.md) is the source of truth for mission, audience segments, and the core/supporting classification — consult it when judging feature fit or priority. [CONTEXTS.md](CONTEXTS.md) is the **working** bounded-context map feeding the planned rearchitecture (see BACKLOG.md); treat it as direction, not current structure — `ARCHITECTURE.md` still describes the code as it is.
 
 ## Backlog
 

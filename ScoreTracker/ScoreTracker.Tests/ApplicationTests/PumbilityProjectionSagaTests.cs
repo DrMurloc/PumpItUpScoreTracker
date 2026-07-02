@@ -5,14 +5,24 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Moq;
-using ScoreTracker.Application.Handlers;
+using ScoreTracker.Catalog.Contracts.Commands;
+using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts.Commands;
+using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Application.Queries;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.ScoreLedger.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Application;
+using ScoreTracker.PlayerProgress.Contracts.Commands;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Application;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
-using ScoreTracker.PersonalProgress.Queries;
+using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Tests.TestData;
 using Xunit;
 
@@ -65,7 +75,7 @@ public sealed class PumbilityProjectionSagaTests
 
         await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
 
-        ctx.PhoenixRecords.Verify(s => s.GetRecordedScores(
+        ctx.PhoenixRecords.Verify(s => s.GetScores(
             It.IsAny<IEnumerable<Guid>>(),
             It.IsAny<ChartType>(),
             It.Is<DifficultyLevel>(l => (int)l == 18),
@@ -144,8 +154,8 @@ public sealed class PumbilityProjectionSagaTests
     {
         public Guid UserId { get; } = Guid.NewGuid();
         public Mock<IMediator> Mediator { get; } = new();
-        public Mock<IPlayerStatsRepository> Stats { get; } = new();
-        public Mock<IPhoenixRecordRepository> PhoenixRecords { get; } = new();
+        public Mock<IPlayerStatsReader> Stats { get; } = new();
+        public Mock<IScoreReader> PhoenixRecords { get; } = new();
         public PumbilityProjectionSaga Saga { get; }
 
         private readonly List<Chart> _charts = new();
@@ -171,14 +181,14 @@ public sealed class PumbilityProjectionSagaTests
                     It.IsAny<ChartType?>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<Guid>());
 
-            PhoenixRecords.Setup(s => s.GetRecordedScores(
+            PhoenixRecords.Setup(s => s.GetScores(
                     It.IsAny<IEnumerable<Guid>>(), It.IsAny<ChartType>(),
                     It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
 
             Mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => _charts.AsEnumerable());
-            Mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsQuery>(), It.IsAny<CancellationToken>()))
+            PhoenixRecords.Setup(s => s.GetBestScores(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => _allUserScores.AsEnumerable());
             Mediator.Setup(m => m.Send(It.IsAny<GetTop50ForPlayerQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => _topScores.AsEnumerable());

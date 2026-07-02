@@ -1,4 +1,4 @@
-﻿using BlazorApplicationInsights;
+using BlazorApplicationInsights;
 using Hangfire;
 using Hangfire.SqlServer;
 using MassTransit;
@@ -7,14 +7,20 @@ using Microsoft.Extensions.Localization;
 using Microsoft.OpenApi;
 using MudBlazor.Services;
 using ScoreTracker.Application.Handlers;
+using ScoreTracker.ChartIntelligence.Wiring;
+using ScoreTracker.Communities.Wiring;
 using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Configuration;
-using ScoreTracker.Data.Repositories;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
-using ScoreTracker.Domain.ValueTypes;
-using ScoreTracker.PersonalProgress;
+using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.EventCompetition.Wiring;
+using ScoreTracker.Identity.Wiring;
+using ScoreTracker.OfficialMirror.Wiring;
+using ScoreTracker.PlayerProgress.Wiring;
+using ScoreTracker.ScoreLedger.Wiring;
+using ScoreTracker.WeeklyChallenge.Wiring;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Accessors;
 using ScoreTracker.Web.Configuration;
@@ -29,6 +35,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddServiceDefaults();
 builder.Services.Configure<JsonSerializerOptions>(o =>
 {
     o.Converters.Add(Name.Converter);
@@ -55,11 +62,24 @@ builder.Services.AddCors(o =>
     });
 });
 builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSection("Discord"));
+builder.Services.Configure<DevAuthConfiguration>(builder.Configuration.GetSection("DevAuth"));
+builder.Services.Configure<ProdSyncConfiguration>(builder.Configuration.GetSection("ProdSync"));
+builder.Services.Configure<GoogleConfiguration>(builder.Configuration.GetSection("Google"));
 var sqlConfig = builder.Configuration.GetSection("SQL").Get<SqlConfiguration>()!;
 builder.Services.AddMassTransit(o =>
 {
-    o.AddConsumers(typeof(PlayerRatingSaga).Assembly, typeof(TierListSaga).Assembly,
-        typeof(RecurringJobRunner).Assembly);
+    // Application and Web no longer hold public consumers — every saga lives in a
+    // vertical now. The Web scan stays for future host-level consumers.
+    o.AddConsumers(typeof(RecurringJobRunner).Assembly);
+    // Vertical consumers are internal — assembly scanning skips them (see the
+    // AddScoreLedgerConsumers doc comment and its tripwire test).
+    o.AddPlayerProgressConsumers();
+    o.AddScoreLedgerConsumers();
+    o.AddOfficialMirrorConsumers();
+    o.AddChartIntelligenceConsumers();
+    o.AddWeeklyChallengeConsumers();
+    o.AddEventCompetitionConsumers();
+    o.AddCommunitiesConsumers();
 
     o.AddDelayedMessageScheduler();
 
@@ -161,18 +181,29 @@ builder.Services.AddBlazorApplicationInsights()
     .AddMudServices()
     .AddScoped<ICurrentUserAccessor, HttpContextUserAccessor>()
     .AddTransient<IUiSettingsAccessor, UiSettingsAccessor>()
+    .AddTransient<DevSyncService>()
     .AddHttpContextAccessor()
     .AddHttpClient()
     .AddHostedService<BotHostedService>()
     .AddMediatR(o =>
     {
         o.RegisterServicesFromAssemblies(
-            typeof(UpdateXXBestAttemptHandler).Assembly
-            , typeof(MainLayout).Assembly, typeof(EFPlayerStatsRepository).Assembly,
-            typeof(PlayerRatingSaga).Assembly);
+            // Data no longer holds MediatR handlers — its last two (player stats/history)
+            // moved into the PlayerProgress vertical at C50.
+            typeof(MatchSaga).Assembly
+            , typeof(MainLayout).Assembly,
+            typeof(PlayerProgressRegistrationExtensions).Assembly,
+            typeof(ScoreTracker.Ucs.Wiring.UcsRegistrationExtensions).Assembly,
+            typeof(IdentityRegistrationExtensions).Assembly,
+            typeof(ScoreTracker.ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions).Assembly,
+            typeof(ScoreTracker.OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions).Assembly,
+            typeof(ScoreTracker.Catalog.Wiring.CatalogRegistrationExtensions).Assembly,
+            typeof(ChartIntelligenceRegistrationExtensions).Assembly,
+            typeof(WeeklyChallengeRegistrationExtensions).Assembly,
+            typeof(EventCompetitionRegistrationExtensions).Assembly,
+            typeof(CommunitiesRegistrationExtensions).Assembly);
     })
     .AddTransient<IUserAccessService, UserAccessService>()
-    .AddTransient<IWorldRankingService, WorldRankingService>()
     .AddInfrastructure(builder.Configuration.GetSection("AzureBlob").Get<AzureBlobConfiguration>(),
         sqlConfig,
         builder.Configuration.GetSection("Sendgrid").Get<SendGridConfiguration>())
@@ -183,6 +214,7 @@ builder.Services.AddBlazorApplicationInsights()
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services.AddScoped<IStringLocalizer<App>, StringLocalizer<App>>();
 builder.Services.AddScoped<ChartVideoDisplayer>();
+builder.Services.AddScoped<ChartScoringLevels>();
 builder.Services.AddCookiePolicy(opts =>
 {
     opts.CheckConsentNeeded = ctx => false;
@@ -190,6 +222,10 @@ builder.Services.AddCookiePolicy(opts =>
 });
 
 var app = builder.Build();
+
+// AutoMigrate is set by the Aspire AppHost for local dev; everywhere else this only
+// logs drift (migrations stay manually applied in production).
+await app.Services.ApplyOrReportMigrationsAsync(builder.Configuration["AutoMigrate"] == "true");
 
 
 app.UseRequestLocalization(new RequestLocalizationOptions()
@@ -246,6 +282,7 @@ else
 app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 
 
+app.MapDefaultEndpoints();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 

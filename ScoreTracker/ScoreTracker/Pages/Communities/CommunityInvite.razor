@@ -1,13 +1,16 @@
 ﻿@page "/Communities/Invite/{InviteCode:guid}"
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.Records
 @using MediatR
 @using ScoreTracker.Application.Commands
+@using ScoreTracker.Communities.Contracts.Queries
+@using ScoreTracker.Communities.Contracts.Commands
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Exceptions
 @using ScoreTracker.Domain.Models
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
 <PageTitle>@L["Community Invite"]</PageTitle>
 
 @inject IMediator Mediator

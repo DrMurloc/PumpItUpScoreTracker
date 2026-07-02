@@ -1,10 +1,14 @@
 ﻿@page "/Tournament/{TournamentId:guid}/Admin"
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.Views
 @using MediatR
+@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.EventCompetition.Contracts.Commands
+@using ScoreTracker.Communities.Contracts.Queries
+@using ScoreTracker.Communities.Contracts.Commands
 @using ScoreTracker.Application.Queries
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.Records
 @using System.Text.RegularExpressions
 <PageTitle>@L["X Brackets", TournamentName]</PageTitle>

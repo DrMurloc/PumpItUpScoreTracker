@@ -1,4 +1,5 @@
-﻿using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.Models;
+﻿using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Domain.Models.Titles.XX;
 

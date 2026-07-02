@@ -1,5 +1,5 @@
 ﻿using ScoreTracker.Domain.Records;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Domain.SecondaryPorts
 {
@@ -16,6 +16,9 @@ namespace ScoreTracker.Domain.SecondaryPorts
         Task<IEnumerable<TitleAggregationRecord>> GetTitleAggregations(CancellationToken cancellationToken);
         Task<int> CountTitledUsers(CancellationToken cancellationToken);
         Task<IEnumerable<TitleAchievedRecord>> GetUsersWithTitle(Name title, CancellationToken cancellationToken);
+
+        /// <summary>User ids whose highest difficulty title sits exactly on this level (tier-list cohorts).</summary>
+        Task<IEnumerable<Guid>> GetUserIdsOnHighestLevel(DifficultyLevel level, CancellationToken cancellationToken);
 
         Task DeleteHighestTitle(Guid userId, CancellationToken cancellationToken);
     }

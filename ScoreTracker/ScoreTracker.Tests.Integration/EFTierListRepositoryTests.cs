@@ -1,9 +1,18 @@
+using MediatR;
+using ScoreTracker.ChartIntelligence.Infrastructure;
 using Microsoft.Extensions.Caching.Memory;
+using Moq;
 using ScoreTracker.Data.Persistence.Entities;
+using ScoreTracker.PlayerProgress.Infrastructure;
+using ScoreTracker.PlayerProgress.Infrastructure.Entities;
 using ScoreTracker.Data.Repositories;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.ScoreLedger.Infrastructure;
+using ScoreTracker.ScoreLedger.Infrastructure.Entities;
 using ScoreTracker.Tests.Integration.Fixtures;
+using ScoreTracker.Tests.Integration.TestData;
 
 namespace ScoreTracker.Tests.Integration;
 
@@ -22,8 +31,15 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
     public Task DisposeAsync() => Task.CompletedTask;
 
     // GetAllEntries caches per TierListName for 24 hours; a fresh repo on read forces the DB path.
+    // The activity reader and title repository are the real implementations (both subjects of
+    // GetUsersOnLevel); IChartRepository/IMediator/IPlayerStatsReader are incidental collaborators.
     private EFTierListRepository BuildRepository() =>
-        new(_fixture.DbContextFactory, new MemoryCache(new MemoryCacheOptions()));
+        new(_fixture.DbContextFactory, new MemoryCache(new MemoryCacheOptions()),
+            new EFPhoenixRecordsRepository(_fixture.DbContextFactory,
+                new MemoryCache(new MemoryCacheOptions()), new Mock<IChartRepository>().Object,
+                new EFXXChartAttemptRepository(_fixture.DbContextFactory),
+                Mock.Of<IMediator>(), Mock.Of<IPlayerStatsReader>()),
+            new EFTitleRepository(_fixture.DbContextFactory, new MemoryCache(new MemoryCacheOptions())));
 
     [Fact]
     public async Task SaveEntryAndGetAllEntriesRoundTripPreservesAllFields()
@@ -119,7 +135,7 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
 
         await using (var ctx = await _fixture.DbContextFactory.CreateDbContextAsync())
         {
-            ctx.UserHighestTitle.AddRange(
+            ctx.Set<UserHighestTitleEntity>().AddRange(
                 new UserHighestTitleEntity { UserId = userL15, TitleName = "title15", Level = 15 },
                 new UserHighestTitleEntity { UserId = userL16, TitleName = "title16", Level = 16 },
                 new UserHighestTitleEntity { UserId = userL17, TitleName = "title17", Level = 17 });
@@ -130,5 +146,44 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
 
         Assert.Single(atLevel16);
         Assert.Contains(userL16, atLevel16);
+    }
+
+    [Fact]
+    public async Task GetUsersOnLevelWithRequireActiveKeepsOnlyRecentlyActivePlayers()
+    {
+        // Activity comes from IScoreReader.GetActiveUserIds (the Ledger read contract) instead
+        // of a SQL join onto the Ledger's PhoenixRecord table (rearch C36) — this pins that the
+        // set-intersection rewrite filters the same way the join did.
+        var seeder = new TestDataSeeder(_fixture.DbContextFactory);
+        var activeUser = await seeder.SeedUserAsync();
+        var staleUser = await seeder.SeedUserAsync();
+        var chartId = await seeder.SeedChartAsync();
+
+        await using (var ctx = await _fixture.DbContextFactory.CreateDbContextAsync())
+        {
+            ctx.Set<UserHighestTitleEntity>().AddRange(
+                new UserHighestTitleEntity { UserId = activeUser, TitleName = "t16a", Level = 16 },
+                new UserHighestTitleEntity { UserId = staleUser, TitleName = "t16b", Level = 16 });
+            // The cutoff is now-120d on the repository's own clock (pre-existing seam gap),
+            // so the seed rows anchor to the real clock too.
+            ctx.Set<PhoenixRecordEntity>().AddRange(
+                new PhoenixRecordEntity
+                {
+                    Id = Guid.NewGuid(), UserId = activeUser, ChartId = chartId,
+                    RecordedDate = DateTimeOffset.Now.AddDays(-1), Score = 900000, IsBroken = false
+                },
+                new PhoenixRecordEntity
+                {
+                    Id = Guid.NewGuid(), UserId = staleUser, ChartId = chartId,
+                    RecordedDate = DateTimeOffset.Now.AddDays(-365), Score = 900000, IsBroken = false
+                });
+            await ctx.SaveChangesAsync();
+        }
+
+        var result = (await BuildRepository().GetUsersOnLevel(16, CancellationToken.None, requireActive: true))
+            .ToList();
+
+        Assert.Single(result);
+        Assert.Contains(activeUser, result);
     }
 }

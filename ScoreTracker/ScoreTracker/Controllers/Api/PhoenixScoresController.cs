@@ -1,4 +1,10 @@
-﻿using System.ComponentModel;
+using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts.Queries;
+using ScoreTracker.ScoreLedger.Contracts.Queries;
+using ScoreTracker.ScoreLedger.Contracts.Commands;
+using ScoreTracker.OfficialMirror.Contracts.Queries;
+using ScoreTracker.OfficialMirror.Contracts.Commands;
+using System.ComponentModel;
 using System.Security.Authentication;
 using CsvHelper.Configuration.Attributes;
 using MediatR;
@@ -6,9 +12,9 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Dtos.Api;
 using ScoreTracker.Web.Security;
 

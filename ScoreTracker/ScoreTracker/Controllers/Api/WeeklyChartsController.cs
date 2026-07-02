@@ -1,12 +1,15 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Application.Queries;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Dtos.Api;
 using ScoreTracker.Web.Security;
+using ScoreTracker.WeeklyChallenge.Contracts.Queries;
 
 namespace ScoreTracker.Web.Controllers.Api;
 
@@ -16,16 +19,14 @@ namespace ScoreTracker.Web.Controllers.Api;
 public sealed class WeeklyChartsController : Controller
 {
     private readonly IMediator _mediator;
-    private readonly IWeeklyTournamentRepository _weeklyCharts;
+    // IUserRepository goes at P6 when the Identity vertical publishes its reader.
     private readonly IUserRepository _users;
 
     public WeeklyChartsController(
         IMediator mediator,
-        IWeeklyTournamentRepository weeklyCharts,
         IUserRepository users)
     {
         _mediator = mediator;
-        _weeklyCharts = weeklyCharts;
         _users = users;
     }
 
@@ -35,7 +36,7 @@ public sealed class WeeklyChartsController : Controller
         var chartIds = chartIdString?.Split(",").Select(s => s.Trim()).Where(s => Guid.TryParse(s, out _))
             .Select(Guid.Parse).Distinct().ToHashSet();
 
-        var entries = await _weeklyCharts.GetEntries(null, HttpContext.RequestAborted);
+        var entries = await _mediator.Send(new GetWeeklyChartEntriesQuery(), HttpContext.RequestAborted);
         if (chartIds != null) entries = entries.Where(e => chartIds.Contains(e.ChartId));
 
         var finalEntries = entries.ToArray();
@@ -73,7 +74,8 @@ public sealed class WeeklyChartsController : Controller
                 $"Maximum Difficulty Level must be between {DifficultyLevel.Min} and {DifficultyLevel.Max}");
 
 
-        var chartIds = (await _weeklyCharts.GetWeeklyCharts(HttpContext.RequestAborted)).Select(w => w.ChartId);
+        var chartIds = (await _mediator.Send(new GetWeeklyChartsQuery(), HttpContext.RequestAborted))
+            .Select(w => w.ChartId);
         var charts =
             await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix, ChartIds: chartIds),
                 HttpContext.RequestAborted);

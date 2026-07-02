@@ -1,5 +1,10 @@
-﻿@page "/Login"
+@page "/Login"
+@using MediatR
+@using Microsoft.Extensions.Options
+@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Configuration
 
 <PageTitle>@L["Login"]</PageTitle>
 
@@ -52,16 +57,26 @@
 
 @inject ICurrentUserAccessor CurrentUser;
 @inject NavigationManager NavManager
+@inject IMediator Mediator
+@inject IOptions<DevAuthConfiguration> DevAuth
 @code
 {
     private bool _isDialogVisible = false;
-    protected override Task OnInitializedAsync()
+
+    protected override async Task OnInitializedAsync()
     {
+        // Dev-only: /Login is the first page anyone lands on, so this is where a fresh
+        // local database gets caught. The setup page owns sign-in from there.
+        if (DevAuth.Value.Enabled &&
+            !(await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).Any())
+        {
+            NavManager.NavigateTo("/Dev/Populate");
+            return;
+        }
+
         if (CurrentUser.IsLoggedIn)
         {
             NavManager.NavigateTo("/Charts");
-            
         }
-        return Task.CompletedTask;
     }
 }

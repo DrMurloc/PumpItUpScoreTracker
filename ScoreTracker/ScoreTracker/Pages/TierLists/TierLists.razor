@@ -1,18 +1,22 @@
-﻿@page "/TierLists/Old"
+@page "/TierLists/Old"
 @using MediatR
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts.Commands
 @using ScoreTracker.Application.Queries
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Domain.Models.Titles;
 @using ScoreTracker.Domain.Models.Titles.Phoenix;
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Enums
 @using ScoreTracker.Web.Services.Contracts
-@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @using System.Drawing
 @using System.Net
 @using ScoreTracker.Web.Services
@@ -268,7 +272,7 @@ else
 </style>
 @inject IAdminNotificationClient Notifications;
 @inject ISnackbar Snackbar;
-@inject IPhoenixRecordRepository PhoenixRecords;
+@inject IScoreReader PhoenixRecords;
 
 @code {
 
@@ -911,7 +915,7 @@ else
         {
             _averageRating = 0;
         }
-        _allPhoenixScores = (await PhoenixRecords.GetAllPlayerScores(type, difficulty)).GroupBy(r => r.userId)
+        _allPhoenixScores = (await PhoenixRecords.GetScores(type, difficulty, CancellationToken.None)).Select(s => (userId: s.UserId, record: s.Record)).GroupBy(r => r.userId)
             .ToDictionary(g => g.Key, g => g.Select(i=>i.record).ToArray().AsEnumerable());
     
         RefilterCharts();

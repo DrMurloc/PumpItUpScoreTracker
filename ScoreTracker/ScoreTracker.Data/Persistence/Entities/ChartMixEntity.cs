@@ -15,6 +15,5 @@ public sealed class ChartMixEntity
     [Required] public Guid MixId { get; set; }
 
     [Required] public int Level { get; set; }
-    public double? ScoringLevel { get; set; }
     public int? NoteCount { get; set; }
 }

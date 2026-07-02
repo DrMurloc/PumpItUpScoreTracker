@@ -1,7 +1,15 @@
-﻿@page "/WeeklyCharts"
+@page "/WeeklyCharts"
+@using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.Domain.Models
-@using ChartType = ScoreTracker.Domain.Enums.ChartType
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.WeeklyChallenge.Contracts.Messages
+@using ScoreTracker.Domain.Services
+@using ScoreTracker.WeeklyChallenge.Contracts.Commands
+@using ScoreTracker.WeeklyChallenge.Contracts.Queries
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Communities.Contracts.Queries
+@using ScoreTracker.Communities.Contracts.Commands
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.SecondaryPorts
 @using MediatR
@@ -12,7 +20,7 @@
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Handlers
 @using ScoreTracker.Domain.Events
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Services
 @using System.Data.Common
 @using ScoreTracker.Web.Services.Contracts
@@ -362,7 +370,7 @@ else if(_monthlyWeeks.Any())
 }
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
-@inject IWeeklyTournamentRepository WeeklyTournaments;
+
 @inject IUserRepository Users;
 @inject IUiSettingsAccessor UiSettings;
 @inject NavigationManager NavManager;
@@ -409,7 +417,7 @@ else if(_monthlyWeeks.Any())
             return;
         }
         _isLoadingRemaining = true;
-        var alreadyPlayed = (await WeeklyTournaments.GetAlreadyPlayedCharts(CancellationToken.None)).ToHashSet();
+        var alreadyPlayed = (await Mediator.Send(new GetAlreadyPlayedWeeklyChartsQuery())).ToHashSet();
         _remainingCharts = _charts.Values.Where(c => !alreadyPlayed.Contains(c.Id)).ToArray();
         _showRemaining = true;
         _isLoadingRemaining = false;
@@ -438,7 +446,7 @@ else if(_monthlyWeeks.Any())
     private bool _isLoading = false;
     private async Task Start()
     {
-        await Bus.Publish(new UpdateWeeklyChartsEvent());
+        await Bus.Publish(new RotateWeeklyChartsCommand());
     }
 
     private async Task Submit()
@@ -448,7 +456,7 @@ else if(_monthlyWeeks.Any())
             return;
         }
         _isSaving = true;
-        await Mediator.Send(new RegisterWeeklyChartScore(new WeeklyTournamentEntry(_userId, _submittingChartId.Value, _score, _plate, _isBroken, _uploadedPhoto,10.0)));
+        await Mediator.Send(new RegisterWeeklyChartScoreCommand(new WeeklyTournamentEntry(_userId, _submittingChartId.Value, _score, _plate, _isBroken, _uploadedPhoto,10.0)));
         _submittingChartId = null;
         Snackbar.Add("Submitted!",Severity.Success);
         _isSaving = false;
@@ -473,7 +481,7 @@ else if(_monthlyWeeks.Any())
     private void ShowLeaderboard(Guid chartId)
     {
         _showingChartId = chartId;
-        _entries = WeeklyTournamentSaga.ProcessIntoPlaces(_allEntries[chartId]).ToArray();
+        _entries = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(_allEntries[chartId]).ToArray();
         _showLeaderboard = true;
     }
         private const long MaxFileSize = 10000000;
@@ -518,10 +526,10 @@ else if(_monthlyWeeks.Any())
             
             foreach (var entry in _myScores)
             {
-                _myPlaces[entry.Key] = WeeklyTournamentSaga.ProcessIntoPlaces(_allEntries[entry.Key]).Where(e => e.Item2.UserId == _userId).Select(e => e.Item1).First();
+                _myPlaces[entry.Key] = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(_allEntries[entry.Key]).Where(e => e.Item2.UserId == _userId).Select(e => e.Item1).First();
             }
         }
-        _topPlaces = _allEntries.ToDictionary(kv => kv.Key, kv => WeeklyTournamentSaga.ProcessIntoPlaces(kv.Value)
+        _topPlaces = _allEntries.ToDictionary(kv => kv.Key, kv => WeeklyChartSuggestionPolicy.ProcessIntoPlaces(kv.Value)
             .OrderBy(g => g.Item1).Take(3).ToArray().AsEnumerable());
     }
 
@@ -580,11 +588,11 @@ else if(_monthlyWeeks.Any())
     {
         if (_selectedWeek == null)
         {
-            _allCharts = (await WeeklyTournaments.GetWeeklyCharts(CancellationToken.None)).ToArray();
+            _allCharts = (await Mediator.Send(new GetWeeklyChartsQuery())).ToArray();
             if (_isLoggedIn)
             {
                 var entryDict = _allCharts.ToDictionary(c => c.ChartId);
-                _competitiveCharts = WeeklyTournamentSaga.GetSuggestedCharts(_allCharts.Select(c => _charts[c.ChartId]), _doublesCompetitive, _singlesCompetitive)
+                _competitiveCharts = WeeklyChartSuggestionPolicy.GetSuggestedCharts(_allCharts.Select(c => _charts[c.ChartId]), _doublesCompetitive, _singlesCompetitive)
                     .Select(c => entryDict[c.Id]).ToArray();
             }
             else
@@ -592,12 +600,12 @@ else if(_monthlyWeeks.Any())
                 _competitiveCharts = _allCharts;
             }
 
-            _allEntries = (await WeeklyTournaments.GetEntries(null, CancellationToken.None)).GroupBy(e => e.ChartId).ToDictionary(e => e.Key, e => e.ToArray().AsEnumerable());
+            _allEntries = (await Mediator.Send(new GetWeeklyChartEntriesQuery())).GroupBy(e => e.ChartId).ToDictionary(e => e.Key, e => e.ToArray().AsEnumerable());
 
         }
         else
         {
-            _allEntries = (await WeeklyTournaments.GetPastEntries(_selectedWeek.Value, CancellationToken.None)).GroupBy(e => e.ChartId).ToDictionary(e => e.Key, e => e.ToArray().AsEnumerable());
+            _allEntries = (await Mediator.Send(new GetPastWeeklyEntriesQuery(_selectedWeek.Value))).GroupBy(e => e.ChartId).ToDictionary(e => e.Key, e => e.ToArray().AsEnumerable());
 
             _allCharts = _allEntries.Values.SelectMany(_ => _).Select(c => c.ChartId).Distinct()
                 .Select(id => new WeeklyTournamentChart(id, _selectedWeek.Value));
@@ -665,13 +673,13 @@ else if(_monthlyWeeks.Any())
 
         foreach (var date in monthlyDates)
         {
-            entries.AddRange((await WeeklyTournaments.GetPastEntries(date, CancellationToken.None)).Where(e=>IsValid(e.ChartId)));
+            entries.AddRange((await Mediator.Send(new GetPastWeeklyEntriesQuery(date))).Where(e=>IsValid(e.ChartId)));
 
         }
 
         if (!_isPastBite || weekStart == null || (weekStart.Value.Month == DateTimeOffset.Now.Month && weekStart.Value.Year == DateTimeOffset.Now.Year))
         {
-            entries.AddRange((await WeeklyTournaments.GetEntries(null, CancellationToken.None)).Where(e=>IsValid(e.ChartId)));
+            entries.AddRange((await Mediator.Send(new GetWeeklyChartEntriesQuery())).Where(e=>IsValid(e.ChartId)));
 
         }
 
@@ -740,7 +748,7 @@ else if(_monthlyWeeks.Any())
             _competitiveCharts = _allCharts;
             _showOnlyCompetitive = false;
         }
-        _pastDates = (await WeeklyTournaments.GetPastDates(CancellationToken.None)).ToArray();
+        _pastDates = (await Mediator.Send(new GetPastWeeklyDatesQuery())).ToArray();
         await RecalculateMonthlyLeaderboard();
         await ReprocessLeaderboards();
 

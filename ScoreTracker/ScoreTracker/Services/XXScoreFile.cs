@@ -4,9 +4,10 @@ using System.Globalization;
 using System.Reflection;
 using CsvHelper;
 using Microsoft.AspNetCore.Components.Forms;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Dtos;
 
 namespace ScoreTracker.Web.Services;
@@ -387,7 +388,7 @@ public sealed class XXScoreFile
                     new Chart(Guid.Empty, MixEnum.XX,
                         new Song(name, SongType.Arcade, new Uri("/", UriKind.Relative), TimeSpan.Zero, "Unknown", null),
                         chartType,
-                        level, MixEnum.XX, null, level, null, new HashSet<Skill>()),
+                        level, MixEnum.XX, null, null, new HashSet<Skill>()),
                     string.IsNullOrWhiteSpace(record.LetterGrade)
                         ? null
                         : new XXChartAttempt(Enum.Parse<XXLetterGrade>(record.LetterGrade, true), isBroken, score,

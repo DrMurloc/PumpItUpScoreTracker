@@ -35,7 +35,7 @@ jobs:
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
 
-  # Pin VSTest to the unit/component/approval assembly only. The integration assembly is built
+  # Pin VSTest to the unit/component/approval assemblies only. The integration assembly is built
   # alongside but runs in the Linux job below — it needs Docker, which windows-latest doesn't
   # have configured for Linux containers.
   - task: VSTest@2
@@ -43,6 +43,7 @@ jobs:
       testSelector: 'testAssemblies'
       testAssembliesVer2: |
         **\ScoreTracker.Tests\bin\**\ScoreTracker.Tests.dll
+        **\ScoreTracker.Tests.Api\bin\**\ScoreTracker.Tests.Api.dll
         !**\obj\**
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'

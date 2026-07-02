@@ -1,5 +1,6 @@
+using ScoreTracker.SharedKernel.Models;
 ﻿using System.Collections.Immutable;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Domain.Models.Titles.XX;
 

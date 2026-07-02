@@ -1,3 +1,8 @@
+using ScoreTracker.Catalog.Contracts.Commands;
+using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts.Commands;
+using ScoreTracker.ChartIntelligence.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Application;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -6,7 +11,7 @@ using Moq;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using Xunit;
 

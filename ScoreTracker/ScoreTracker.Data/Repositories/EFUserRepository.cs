@@ -4,13 +4,14 @@ using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Data.Repositories;
 
-public sealed class EFUserRepository : IUserRepository
+public sealed class EFUserRepository : IUserRepository, IUserReader
 {
     private readonly IMemoryCache _cache;
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
@@ -68,44 +69,6 @@ public sealed class EFUserRepository : IUserRepository
             return await database.User.Where(u => u.Id == userId)
                 .Select(u => (DateTimeOffset?)u.ClaimsInvalidatedAt)
                 .SingleOrDefaultAsync(cancellationToken) ?? DateTimeOffset.MinValue;
-        });
-    }
-
-    private string FeedbackCache(Guid userId)
-    {
-        return $"{nameof(EFUserRepository)}_Feedback_{userId}";
-    }
-
-    public async Task SaveFeedback(Guid userId, SuggestionFeedbackRecord feedback,
-        CancellationToken cancellationToken = default)
-    {
-        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        await database.SuggestionFeedback.AddAsync(new SuggestionFeedbackEntity
-        {
-            Id = Guid.NewGuid(),
-            ChartId = feedback.ChartId,
-            FeedbackCategory = feedback.FeedbackCategory,
-            IsPositive = feedback.IsPositive,
-            Notes = feedback.Notes,
-            ShouldHide = feedback.ShouldHide,
-            SuggestionCategory = feedback.SuggestionCategory,
-            UserId = userId
-        }, cancellationToken);
-        await database.SaveChangesAsync(cancellationToken);
-        _cache.Remove(FeedbackCache(userId));
-    }
-
-    public async Task<IEnumerable<SuggestionFeedbackRecord>> GetFeedback(Guid userId,
-        CancellationToken cancellationToken = default)
-    {
-        return await _cache.GetOrCreateAsync(FeedbackCache(userId), async cache =>
-        {
-            cache.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(1);
-            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            return await database.SuggestionFeedback.Where(f => f.UserId == userId)
-                .Select(e => new SuggestionFeedbackRecord(e.SuggestionCategory, e.FeedbackCategory, e.Notes,
-                    e.ShouldHide, e.IsPositive, e.ChartId))
-                .ToArrayAsync(cancellationToken);
         });
     }
 

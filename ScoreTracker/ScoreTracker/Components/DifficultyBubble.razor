@@ -1,10 +1,11 @@
 ﻿@using System.ComponentModel.DataAnnotations
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
-@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @namespace ScoreTracker.Web.Components
+@inject ChartScoringLevels ScoringLevels
 @if (Chart != null)
 {                                
     <MudTooltip ShowOnFocus="true" Placement="Placement.Right">
@@ -20,7 +21,14 @@
         </MudTooltip>
 }
 @code {
-    private string ScoringLevelString => Chart?.ScoringLevel == null ? "" : $"{Chart.ScoringLevel:0.0}";
+    private double? _scoringLevel;
+    private string ScoringLevelString => _scoringLevel == null ? "" : $"{_scoringLevel:0.0}";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _scoringLevel = Chart == null ? null : await ScoringLevels.GetScoringLevel(Chart.Id);
+    }
+
     [Parameter]
     [Required]
     public Chart? Chart { get; set; }

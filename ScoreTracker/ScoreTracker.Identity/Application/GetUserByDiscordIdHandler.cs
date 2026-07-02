@@ -1,0 +1,22 @@
+﻿using MediatR;
+using ScoreTracker.Identity.Contracts.Queries;
+using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.Domain.SecondaryPorts;
+
+namespace ScoreTracker.Identity.Application;
+
+internal sealed class GetUserByDiscordIdHandler : IRequestHandler<GetUserByExternalLoginQuery, User?>
+{
+    private readonly IUserRepository _user;
+
+    public GetUserByDiscordIdHandler(IUserRepository user)
+    {
+        _user = user;
+    }
+
+    public async Task<User?> Handle(GetUserByExternalLoginQuery request, CancellationToken cancellationToken)
+    {
+        return await _user.GetUserByExternalLogin(request.LoginProviderName, request.ExternalId, cancellationToken);
+    }
+}

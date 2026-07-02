@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -7,13 +7,28 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Design: hosts the IDesignTimeDbContextFactory so `dotnet ef` scaffolds with every
+         vertical's model contribution (run with startup-project = ScoreTracker.CompositionRoot). -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ScoreTracker.Application\ScoreTracker.Application.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Communities\ScoreTracker.Communities.csproj" />
+    <ProjectReference Include="..\ScoreTracker.PlayerProgress\ScoreTracker.PlayerProgress.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Identity\ScoreTracker.Identity.csproj" />
+    <ProjectReference Include="..\ScoreTracker.EventCompetition\ScoreTracker.EventCompetition.csproj" />
+    <ProjectReference Include="..\ScoreTracker.WeeklyChallenge\ScoreTracker.WeeklyChallenge.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Catalog\ScoreTracker.Catalog.csproj" />
+    <ProjectReference Include="..\ScoreTracker.ChartIntelligence\ScoreTracker.ChartIntelligence.csproj" />
     <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
+    <ProjectReference Include="..\ScoreTracker.OfficialMirror\ScoreTracker.OfficialMirror.csproj" />
+    <ProjectReference Include="..\ScoreTracker.ScoreLedger\ScoreTracker.ScoreLedger.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Ucs\ScoreTracker.Ucs.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,7 +1,11 @@
-﻿@page "/Completion"
+@page "/Completion"
 @using ScoreTracker.Domain.Models
-@using ChartType = ScoreTracker.Domain.Enums.ChartType
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Communities.Contracts.Queries
+@using ScoreTracker.Communities.Contracts.Commands
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.SecondaryPorts
 @using MediatR
@@ -12,7 +16,7 @@
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Handlers
 @using ScoreTracker.Domain.Events
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Services
 @using System.Data.Common
 @using ScoreTracker.Web.Services.Contracts
@@ -103,7 +107,7 @@
 
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
-@inject IWeeklyTournamentRepository WeeklyTournaments;
+
 @inject IUserRepository Users;
 @inject IUiSettingsAccessor UiSettings;
 @inject NavigationManager NavManager;

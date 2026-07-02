@@ -14,13 +14,15 @@ A community-run web app for tracking [Pump It Up](https://en.wikipedia.org/wiki/
 - Weekly charts and UCS (User-Created Step) tracking
 - Discord bot for community notifications
 
-New to Pump It Up? See [DOMAIN.md](DOMAIN.md) for the terms used here.
+New to Pump It Up? See [DOMAIN.md](DOMAIN.md) for the terms used here. For who the tracker is built for and where it's headed, see [PRODUCT.md](PRODUCT.md).
 
 ## Use it
 
 Open https://piuscores.arroweclip.se/ — the live deployment is the recommended way to use the tracker.
 
 Self-hosting is possible but currently requires SQL Server plus OAuth (Discord / Google / Facebook), SendGrid, and Azure Blob credentials. A friction-free local-dev mode is on the [roadmap](BACKLOG.md).
+
+**Building a PIU tool?** You don't have to build your own importer. The tracker exposes token-authenticated APIs (score submission and import, tier lists, weekly charts, tournaments, random chart draws), and score-import webhooks can be wired into your tool. See [PRODUCT.md](PRODUCT.md#platform-stance) and ask on [Discord](https://discord.gg/AvS5PxnvSN).
 
 ## Contribute
 

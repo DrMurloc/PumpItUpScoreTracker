@@ -1,6 +1,7 @@
 ﻿using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Domain.Views;
 
 namespace ScoreTracker.Domain.SecondaryPorts;

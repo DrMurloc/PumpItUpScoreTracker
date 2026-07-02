@@ -1,14 +1,15 @@
-﻿@page "/Experiments/ChartScoring"
+@page "/Experiments/ChartScoring"
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Dtos
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.SecondaryPorts
-@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @using ScoreTracker.Application.Queries
 @using MediatR
 @using ScoreTracker.Domain.Models
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
 @using Swashbuckle.AspNetCore.SwaggerGen
 
 <PageTitle>@L["ChartScoring"]</PageTitle>
@@ -140,7 +141,7 @@
 
 @inject IPlayerStatsRepository PlayerStats;
 @inject IMediator Mediator;
-@inject IPhoenixRecordRepository Scores;
+@inject IScoreReader Scores;
 @inject IUserRepository Users;
 @inject IChartRepository Charts;
 @code
@@ -231,7 +232,7 @@
         var phoenixScores = new List<(Guid UserId,RecordedPhoenixScore Record)>();
         for (var l = min; l <= max; l++)
         {
-            phoenixScores.AddRange((await Scores.GetAllPlayerScores(_selectedChart.Type,l)).Where(s=>s.record.Score!=null));
+            phoenixScores.AddRange((await Scores.GetScores(_selectedChart.Type, l, CancellationToken.None)).Select(s => (userId: s.UserId, record: s.Record)).Where(s=>s.record.Score!=null));
         }
         _playerScores = phoenixScores.Where(pr => pr.Record.ChartId == _selectedChart!.Id).ToDictionary(pr => pr.UserId, pr => pr.Record.Score!.Value);
 

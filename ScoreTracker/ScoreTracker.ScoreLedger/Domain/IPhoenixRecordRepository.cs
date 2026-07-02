@@ -1,0 +1,52 @@
+﻿using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.Domain.Records;
+using ScoreTracker.SharedKernel.ValueTypes;
+
+namespace ScoreTracker.ScoreLedger.Domain;
+
+internal interface IPhoenixRecordRepository
+{
+    Task UpdateBestAttempt(Guid userId, RecordedPhoenixScore score, CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<(Guid UserId, Guid ChartId)>> GetPgUsers(ChartType chartType, DifficultyLevel level,
+        CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(IEnumerable<Guid> userIds, ChartType chartType,
+        DifficultyLevel minimumLevel,
+        DifficultyLevel maximumLevel,
+        CancellationToken cancellationToken);
+
+    Task<RecordedPhoenixScore?> GetRecordedScore(Guid userId, Guid chartId,
+        CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<UserPhoenixScore>> GetRecordedUserScores(Guid chartId,
+        CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<ChartScoreAggregate>> GetAllChartScoreAggregates(CancellationToken cancellationToken);
+
+    Task<IEnumerable<UserPhoenixScore>> GetPlayerScores(IEnumerable<Guid> userIds,
+        IEnumerable<Guid> chartIds, CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetPlayerScores(IEnumerable<Guid> userIds,
+        ChartType chartType,
+        DifficultyLevel difficulty, CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetAllPlayerScores(ChartType chartType,
+        DifficultyLevel difficulty, CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<ChartScoreAggregate>> GetMeaningfulScoresCount(ChartType chartType, DifficultyLevel difficulty,
+        CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<UserPhoenixScore>> GetPhoenixScores(IEnumerable<Guid> userIds, Guid chartId,
+        CancellationToken cancellationToken = default);
+
+    Task<int> GetClearCount(Guid userId, ChartType chartType, DifficultyLevel level,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default);
+}

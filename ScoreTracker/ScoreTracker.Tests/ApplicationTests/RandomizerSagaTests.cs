@@ -1,3 +1,7 @@
+using ScoreTracker.Catalog.Domain;
+using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.Catalog.Contracts.Commands;
+using ScoreTracker.Catalog.Application;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,10 +11,11 @@ using Moq;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Application.Queries;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using Xunit;
 
@@ -28,6 +33,20 @@ public sealed class RandomizerSagaTests
         return (accessor, userId);
     }
 
+    private static Mock<IChartScoringLevelRepository> EmptyScoringLevels()
+    {
+        return ScoringLevelsReturning();
+    }
+
+    private static Mock<IChartScoringLevelRepository> ScoringLevelsReturning(
+        params (Guid ChartId, double Level)[] levels)
+    {
+        var scoringLevels = new Mock<IChartScoringLevelRepository>();
+        scoringLevels.Setup(s => s.GetScoringLevels(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(levels.ToDictionary(l => l.ChartId, l => l.Level));
+        return scoringLevels;
+    }
+
     private static Mock<IChartRepository> ChartsReturning(IEnumerable<Chart> result)
     {
         var charts = new Mock<IChartRepository>();
@@ -36,10 +55,10 @@ public sealed class RandomizerSagaTests
         return charts;
     }
 
-    private static Mock<IPhoenixRecordRepository> ScoresReturning(Guid userId, IEnumerable<RecordedPhoenixScore> result)
+    private static Mock<IScoreReader> ScoresReturning(Guid userId, IEnumerable<RecordedPhoenixScore> result)
     {
-        var scores = new Mock<IPhoenixRecordRepository>();
-        scores.Setup(s => s.GetRecordedScores(userId, It.IsAny<CancellationToken>()))
+        var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetBestScores(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
         return scores;
     }
@@ -60,7 +79,8 @@ public sealed class RandomizerSagaTests
         var (accessor, userId) = UserAccessor();
         var repo = new Mock<IRandomizerRepository>();
         var saga = new RandomizerSaga(new Mock<IChartRepository>().Object, repo.Object, accessor.Object,
-            new Mock<IPhoenixRecordRepository>().Object, new Mock<IRandomNumberGenerator>().Object);
+            new Mock<IScoreReader>().Object, new Mock<IRandomNumberGenerator>().Object,
+            EmptyScoringLevels().Object);
 
         var settings = new RandomSettings();
         await saga.Handle(new SaveUserRandomSettingsCommand(Name.From("favorites"), settings),
@@ -77,7 +97,8 @@ public sealed class RandomizerSagaTests
         var (accessor, userId) = UserAccessor();
         var repo = new Mock<IRandomizerRepository>();
         var saga = new RandomizerSaga(new Mock<IChartRepository>().Object, repo.Object, accessor.Object,
-            new Mock<IPhoenixRecordRepository>().Object, new Mock<IRandomNumberGenerator>().Object);
+            new Mock<IScoreReader>().Object, new Mock<IRandomNumberGenerator>().Object,
+            EmptyScoringLevels().Object);
 
         await saga.Handle(new DeleteRandomSettingsCommand(Name.From("favorites")), CancellationToken.None);
 
@@ -95,7 +116,8 @@ public sealed class RandomizerSagaTests
         var charts = ChartsReturning(new[] { match, miss });
         var saga = new RandomizerSaga(charts.Object, new Mock<IRandomizerRepository>().Object,
             accessor.Object, ScoresReturning(userId, Array.Empty<RecordedPhoenixScore>()).Object,
-            new Mock<IRandomNumberGenerator>().Object);
+            new Mock<IRandomNumberGenerator>().Object,
+            EmptyScoringLevels().Object);
 
         var result = await saga.Handle(new GetIncludedRandomChartsQuery(SinglesAtLevelTwenty()),
             CancellationToken.None);
@@ -108,7 +130,7 @@ public sealed class RandomizerSagaTests
     {
         var (accessor, userId) = UserAccessor();
         var withScoringLevel = new ChartBuilder().WithLevel(20).WithType(ChartType.Single)
-            .WithScoringLevel(20.5).Build();
+            .Build();
         var withoutScoringLevel = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
         var charts = ChartsReturning(new[] { withScoringLevel, withoutScoringLevel });
         var settings = SinglesAtLevelTwenty();
@@ -116,7 +138,8 @@ public sealed class RandomizerSagaTests
 
         var saga = new RandomizerSaga(charts.Object, new Mock<IRandomizerRepository>().Object,
             accessor.Object, ScoresReturning(userId, Array.Empty<RecordedPhoenixScore>()).Object,
-            new Mock<IRandomNumberGenerator>().Object);
+            new Mock<IRandomNumberGenerator>().Object,
+            ScoringLevelsReturning((withScoringLevel.Id, 20.5)).Object);
 
         var result = await saga.Handle(new GetIncludedRandomChartsQuery(settings), CancellationToken.None);
 
@@ -142,7 +165,8 @@ public sealed class RandomizerSagaTests
         });
 
         var saga = new RandomizerSaga(charts.Object, new Mock<IRandomizerRepository>().Object,
-            accessor.Object, scores.Object, new Mock<IRandomNumberGenerator>().Object);
+            accessor.Object, scores.Object, new Mock<IRandomNumberGenerator>().Object,
+            EmptyScoringLevels().Object);
 
         var result = await saga.Handle(new GetIncludedRandomChartsQuery(settings), CancellationToken.None);
 
@@ -168,7 +192,8 @@ public sealed class RandomizerSagaTests
         });
 
         var saga = new RandomizerSaga(charts.Object, new Mock<IRandomizerRepository>().Object,
-            accessor.Object, scores.Object, new Mock<IRandomNumberGenerator>().Object);
+            accessor.Object, scores.Object, new Mock<IRandomNumberGenerator>().Object,
+            EmptyScoringLevels().Object);
 
         var result = await saga.Handle(new GetIncludedRandomChartsQuery(settings), CancellationToken.None);
 
@@ -193,7 +218,7 @@ public sealed class RandomizerSagaTests
 
         var saga = new RandomizerSaga(charts.Object, new Mock<IRandomizerRepository>().Object,
             accessor.Object, ScoresReturning(userId, Array.Empty<RecordedPhoenixScore>()).Object,
-            random.Object);
+            random.Object, EmptyScoringLevels().Object);
 
         var settings = SinglesAtLevelTwenty(count: 3);
         var result = (await saga.Handle(new GetRandomChartsQuery(settings), CancellationToken.None)).ToArray();
@@ -210,7 +235,8 @@ public sealed class RandomizerSagaTests
         var charts = ChartsReturning(new[] { chart });
         var saga = new RandomizerSaga(charts.Object, new Mock<IRandomizerRepository>().Object,
             accessor.Object, ScoresReturning(userId, Array.Empty<RecordedPhoenixScore>()).Object,
-            new Mock<IRandomNumberGenerator>().Object);
+            new Mock<IRandomNumberGenerator>().Object,
+            EmptyScoringLevels().Object);
 
         var settings = SinglesAtLevelTwenty(count: 5);
         settings.AllowRepeats = false;
@@ -245,7 +271,7 @@ public sealed class RandomizerSagaTests
 
         var saga = new RandomizerSaga(charts.Object, new Mock<IRandomizerRepository>().Object,
             accessor.Object, ScoresReturning(userId, Array.Empty<RecordedPhoenixScore>()).Object,
-            random.Object);
+            random.Object, EmptyScoringLevels().Object);
 
         var result = (await saga.Handle(new GetRandomChartsQuery(settings), CancellationToken.None)).ToArray();
 

@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Web.Accessors;
 

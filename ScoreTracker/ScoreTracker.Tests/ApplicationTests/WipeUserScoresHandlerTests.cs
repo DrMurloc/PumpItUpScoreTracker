@@ -3,8 +3,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
 using Moq;
-using ScoreTracker.Application.Commands;
-using ScoreTracker.Application.Handlers;
+using ScoreTracker.Tests.TestHelpers;
+using ScoreTracker.ScoreLedger.Contracts.Commands;
+using ScoreTracker.ScoreLedger.Application;
+using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.SecondaryPorts;
 using Xunit;
@@ -28,7 +30,7 @@ public sealed class WipeUserScoresHandlerTests
         var history = new Mock<IPlayerHistoryRepository>();
         var bus = new Mock<IBus>();
         var handler = new WipeUserScoresHandler(phoenix.Object, xx.Object, stats.Object, titles.Object, history.Object,
-            bus.Object);
+            bus.Object, FakeDateTime.At(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero)).Object);
         return (handler, phoenix, xx, stats, titles, history, bus);
     }
 
@@ -48,8 +50,8 @@ public sealed class WipeUserScoresHandlerTests
 
         bus.Verify(
             b => b.Publish(
-                It.Is<PlayerScoreUpdatedEvent>(e =>
-                    e.UserId == userId && e.NewChartIds.Length == 0 && e.UpscoredChartIds.Count == 0),
+                It.Is<PlayerScoresUpdatedEvent>(e =>
+                    e.UserId == userId && e.Changes.Count == 0),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }

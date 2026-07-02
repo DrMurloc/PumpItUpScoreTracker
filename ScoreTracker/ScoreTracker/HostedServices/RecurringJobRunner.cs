@@ -1,6 +1,9 @@
+using ScoreTracker.WeeklyChallenge.Contracts.Messages;
+using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using MassTransit;
-using ScoreTracker.Application.Handlers;
-using ScoreTracker.Domain.Events;
+using ScoreTracker.EventCompetition.Contracts.Messages;
+using ScoreTracker.OfficialMirror.Contracts.Messages;
+using ScoreTracker.ScoreLedger.Contracts.Messages;
 
 namespace ScoreTracker.Web.HostedServices;
 
@@ -17,23 +20,23 @@ public sealed class RecurringJobRunner
         _bus.Publish(new ProcessScoresTiersListCommand());
 
     public Task PublishCalculateScoringDifficulty() =>
-        _bus.Publish(new CalculateScoringDifficultyEvent());
+        _bus.Publish(new RecalculateScoringDifficultyCommand());
 
     public Task PublishUpdateWeeklyCharts() =>
-        _bus.Publish(new UpdateWeeklyChartsEvent());
+        _bus.Publish(new RotateWeeklyChartsCommand());
 
     public Task PublishProcessPassTierList() =>
         _bus.Publish(new ProcessPassTierListCommand());
 
     public Task PublishCalculateChartLetterDifficulties() =>
-        _bus.Publish(new CalculateChartLetterDifficultiesEvent());
+        _bus.Publish(new RecalculateChartLetterDifficultiesCommand());
 
     public Task PublishStartLeaderboardImport() =>
-        _bus.Publish(new StartLeaderboardImportEvent());
+        _bus.Publish(new StartLeaderboardImportCommand());
 
     public Task PublishTryScheduleMoM() =>
-        _bus.Publish(new MarchOfMurlocsHandler.TryScheduleMoM());
+        _bus.Publish(new TryScheduleMoMCommand());
 
     public Task PublishFlushOverdueScoreBatches() =>
-        _bus.Publish(new FlushOverdueScoreBatchesEvent());
+        _bus.Publish(new FlushOverdueScoreBatchesCommand());
 }

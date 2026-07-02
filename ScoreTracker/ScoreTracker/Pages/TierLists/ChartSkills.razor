@@ -1,22 +1,27 @@
-﻿@page "/ChartSkills"
+@page "/ChartSkills"
 @page "/PersonalizedTierList"
 @page "/TierLists"
 @using MediatR
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts.Commands
+@using ScoreTracker.Domain.Services
 @using Microsoft.Extensions.Caching.Memory
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Handlers
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.SecondaryPorts
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Domain.Models.Titles
 @using ScoreTracker.Domain.Models.Titles.Interface
 @using ScoreTracker.Domain.Models.Titles.Phoenix
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Components
-@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @using ScoreTracker.Domain.Records
-@using ScoreTracker.PersonalProgress.Queries
+@using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Shared
@@ -606,7 +611,7 @@
 @inject IUiSettingsAccessor UiSettings;
 @inject IAdminNotificationClient Notifications;
 @inject ISnackbar Snackbar;
-@inject IPhoenixRecordRepository Records;
+@inject IScoreReader Records;
 @inject IPlayerStatsRepository PlayerStats;
 @inject IMemoryCache Cache;
 
@@ -754,6 +759,7 @@ function(val, index) {
     private IDictionary<Guid, RecordedPhoenixScore> _scores = new Dictionary<Guid, RecordedPhoenixScore>();
     private IDictionary<Guid, RecordedPhoenixScore> _folderScores = new Dictionary<Guid, RecordedPhoenixScore>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private IDictionary<Guid, double> _scoringLevels = new Dictionary<Guid, double>();
     private IDictionary<Guid, Chart> _allCharts = new Dictionary<Guid, Chart>();
     private ISet<Guid> _unPopularCharts = new HashSet<Guid>();
     private ISet<Guid> _popularCharts = new HashSet<Guid>();
@@ -885,7 +891,7 @@ function(val, index) {
     private IDictionary<Guid, string> _variance = new Dictionary<Guid, string>();
     private async Task CalculateVariance(ChartType chartType, DifficultyLevel level)
     {
-        var scores = (await Records.GetAllPlayerScores(chartType, level)).ToArray();
+        var scores = (await Records.GetScores(chartType, level, CancellationToken.None)).Select(s => (userId: s.UserId, record: s.Record)).ToArray();
         var players = (await PlayerStats.GetStats(scores.Select(s => s.userId).Distinct().ToArray(), CancellationToken.None))
             .Where(p => Math.Abs((_chartType == ChartType.Single ? p.SinglesCompetitiveLevel : p.DoublesCompetitiveLevel) - level) < 2.0).ToDictionary(p => p.UserId);
 
@@ -893,7 +899,7 @@ function(val, index) {
 
 
         var chartStandards = chartGroups.Where(kv => kv.Value.Count() > 5)
-            .Select(kv => (_charts[kv.Key], TierListSaga.StdDev(kv.Value.Select(s => (int)s!.Value), true)))
+            .Select(kv => (_charts[kv.Key], TierListProcessor.StdDev(kv.Value.Select(s => (int)s!.Value), true)))
             .ToArray();
 
         if (!chartStandards.Any())
@@ -901,7 +907,7 @@ function(val, index) {
             return;
         }
         var average = chartStandards.Average(c => c.Item2);
-        var standardDev = TierListSaga.StdDev(chartStandards.Select(c => c.Item2), true);
+        var standardDev = TierListProcessor.StdDev(chartStandards.Select(c => c.Item2), true);
         var results = chartStandards
             .Select(kv => (kv.Item1, (kv.Item2-average)/standardDev))
             .ToArray();
@@ -1422,7 +1428,7 @@ function(val, index) {
             return _charts.Select(kv => new SongTierListEntry("Skill", kv.Key, TierListCategory.Unrecorded, 0));
             
         }
-        return TierListSaga.ProcessIntoTierList("Skill", avgEstimates)
+        return TierListProcessor.ProcessIntoTierList("Skill", avgEstimates)
             .Concat(_charts.Values.Where(c => !c.Skills.Any(s => _averageSkillScore[s] > 0)).Select(s => new SongTierListEntry("Skill", s.Id, TierListCategory.Unrecorded, 9999)))
             .ToArray();
 
@@ -1493,7 +1499,7 @@ function(val, index) {
                     }
                     chartWeights[entry.ChartId] += (TierListCategory.Unrecorded - entry.Category) * userTotals[kv.Key];
                 }
-            return TierListSaga.ProcessIntoTierList("Similar Players", chartWeights).ToArray().AsEnumerable();
+            return TierListProcessor.ProcessIntoTierList("Similar Players", chartWeights).ToArray().AsEnumerable();
         });
     }
 
@@ -1653,7 +1659,7 @@ function(val, index) {
                 .ToArray();
         } else if (_groupBy == "Score")
         {
-            var tierList = TierListSaga.ProcessIntoTierList("Score", _folderScores.Where(kv => kv.Value.Score != null).ToDictionary(kv => kv.Key, kv => (int)kv.Value.Score!.Value))
+            var tierList = TierListProcessor.ProcessIntoTierList("Score", _folderScores.Where(kv => kv.Value.Score != null).ToDictionary(kv => kv.Key, kv => (int)kv.Value.Score!.Value))
                 .ToDictionary(kv => kv.ChartId);
             _finalGroupings = _finalEntries.OrderBy(e => _scores.TryGetValue(e.ChartId, out var s) ? s.Score ?? PhoenixScore.Min : PhoenixScore.Max)
                 .GroupBy(e => _scores.ContainsKey(e.ChartId) ? _scoreNames[tierList[e.ChartId].Category] : _scoreNames[TierListCategory.Unrecorded])
@@ -1670,7 +1676,7 @@ function(val, index) {
             {
                 
                 var now = DateTimeOffset.Now;
-                var tierList = TierListSaga.ProcessIntoTierList("Score", _folderScores.Where(kv => kv.Value.Score != null).ToDictionary(kv => kv.Key, kv => (now - kv.Value.RecordedDate).TotalDays))
+                var tierList = TierListProcessor.ProcessIntoTierList("Score", _folderScores.Where(kv => kv.Value.Score != null).ToDictionary(kv => kv.Key, kv => (now - kv.Value.RecordedDate).TotalDays))
                     .ToDictionary(kv => kv.ChartId);
                 _finalGroupings = _finalEntries.OrderByDescending(e => _scores.TryGetValue(e.ChartId, out var s) ? (now - s.RecordedDate).TotalDays : -1)
                     .GroupBy(e => _scores.ContainsKey(e.ChartId) ? _ageNames[tierList.TryGetValue(e.ChartId, out var t)?t.Category:TierListCategory.Unrecorded] : _ageNames[TierListCategory.Unrecorded])
@@ -1705,7 +1711,7 @@ function(val, index) {
         {
             _finalGroupings = _finalEntries
                 .OrderBy(e => _chartDifficulties[e.ChartId])
-                .ThenBy(e => e.Order).GroupBy(e => _charts[e.ChartId].ScoringLevel?.ToString("0.0") ?? "Not Enough Data")
+                .ThenBy(e => e.Order).GroupBy(e => _scoringLevels.TryGetValue(e.ChartId, out var sl) ? sl.ToString("0.0") : "Not Enough Data")
                 .OrderBy(g => double.TryParse(g.Key,out var d)?d:10000).ToArray();
         }
         foreach (var group in _finalGroupings)
@@ -1831,6 +1837,7 @@ function(val, index) {
             },
             { Filter.SongArtist, L["Song Artist"] }
         };
+        _scoringLevels = await Mediator.Send(new GetChartScoringLevelsQuery());
         _titles = PhoenixTitleList.BuildList();
         _chartType = ChartType.Double;
         _level = 18;

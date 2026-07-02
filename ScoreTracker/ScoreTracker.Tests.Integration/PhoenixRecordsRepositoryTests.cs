@@ -1,10 +1,12 @@
+using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
-using ScoreTracker.Data.Repositories;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.ScoreLedger.Infrastructure;
 using ScoreTracker.Tests.Integration.Fixtures;
 using ScoreTracker.Tests.Integration.TestData;
 
@@ -33,7 +35,9 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
     private EFPhoenixRecordsRepository BuildRepository() =>
         new(_fixture.DbContextFactory,
             new MemoryCache(new MemoryCacheOptions()),
-            Mock.Of<IChartRepository>());
+            Mock.Of<IChartRepository>(),
+            new EFXXChartAttemptRepository(_fixture.DbContextFactory),
+            Mock.Of<IMediator>(), Mock.Of<IPlayerStatsReader>());
 
     [Fact]
     public async Task UpdateBestAttemptInsertsANewRecordReadableViaGetRecordedScore()

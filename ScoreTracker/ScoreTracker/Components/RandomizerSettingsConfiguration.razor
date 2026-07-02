@@ -1,12 +1,14 @@
 @namespace ScoreTracker.Web.Components
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.SecondaryPorts
 @using MediatR
 @using ScoreTracker.Application.Queries
-@using ScoreTracker.Domain.Enums
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Enums
-@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
 <MudExpansionPanels>

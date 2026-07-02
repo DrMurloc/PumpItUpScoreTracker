@@ -72,7 +72,7 @@ In the Hangfire-driven recurring leaderboard import:
 // HostedServices/RecurringJobRunner.cs (illustrative)
 public async Task RunWeeklyLeaderboardImport()
 {
-    var result = await _bus.Request<StartLeaderboardImportEvent, LeaderboardImportCompleted>(/*...*/);
+    var result = await _bus.Request<StartLeaderboardImportCommand, LeaderboardImportCompleted>(/*...*/);
     
     // Smoke assertion: at least N scores at canonical levels imported
     if (result.ImportedScoreCount < 100 || !result.LevelsObserved.Any(l => l >= 20))

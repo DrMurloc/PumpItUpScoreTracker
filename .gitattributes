@@ -1,0 +1,14 @@
+# Normalize all text files to LF in the repository; working trees get native
+# endings via core.autocrlf / editor config. Added during the rearchitecture so
+# line-ending churn never pollutes a refactor diff again.
+* text=auto
+
+# Explicit binaries — never normalize.
+*.ico binary
+*.ttf binary
+*.traineddata binary
+*.png binary
+*.jpg binary
+*.gif binary
+*.woff binary
+*.woff2 binary

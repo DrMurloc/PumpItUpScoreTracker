@@ -170,7 +170,7 @@ Where possible, capture the contract: real responses go in test fixtures, not ha
 
 ENTERPRISE: *External API and Messaging Tests*
 
-- [ ] One end-to-end test per recurring scheduled message (`UpdateBountiesEvent`, `CalculateScoringDifficultyEvent`, etc.) — start the in-memory bus, publish, assert the consumer side effects via mocked Domain ports.
+- [ ] One end-to-end test per recurring scheduled message (`UpdateBountiesEvent`, `RecalculateScoringDifficultyCommand`, etc.) — start the in-memory bus, publish, assert the consumer side effects via mocked Domain ports.
 - [ ] Tests classify as `component` (the in-memory transport is production-real, but ports are mocked).
 - [ ] Reference: `RecurringJobHostedService` is the publisher; saga classes are the consumers.
 
@@ -227,21 +227,26 @@ Currently skipped — no critical user-visible flow is regressed often enough to
 
 Likely tooling: bUnit for Blazor Server components, Playwright for full browser flows.
 
-### Contract tests — *M* (only if a consumer appears)
+### Contract / API-shape tests — *M*
 
 ENTERPRISE: *Contract Test*
 
-Currently skipped — the codebase consumes external APIs but exposes only a thin MVC surface; there are no known external consumers of this app's API. Revisit if:
-- A second service starts consuming this app's API, or
-- A breaking change in `PiuGameApi` causes a production incident that contract verification would have caught.
+**Status updated 2026-06-11: external consumers exist.** Community tool makers consume the public API (`api/phoenixScores`, `api/tierlist`, `api/weeklyCharts`, `api/tournaments`, `api/charts/random`) and webhook feeds from the import ecosystem rather than building their own importers (see [PRODUCT.md](PRODUCT.md#platform-stance)). The old "revisit if a consumer appears" condition is met — response shapes are a de facto public contract.
+
+- [ ] Approval-style response-shape tests pinning each public API endpoint (golden JSON per endpoint, readable diffs; live in `ScoreTracker.Tests`, classify as `component`).
+- [ ] Same for webhook payloads once they're formalized (see [CONTEXTS.md](CONTEXTS.md) Q7).
+- [ ] Full consumer-driven contract tests (Pact-style) only if a partner tool wants to maintain one — approval tests are the right cost point today.
+- Also still relevant: a breaking change in `PiuGameApi` causing a production incident would justify contract verification on the *consuming* side.
 
 ---
 
 ## Onion + DDD + Hexagonal rearchitecture
 
-**Deferred until after Phoenix 2 Phase 3.** Resumes in [Phase 4 (slow burn)](docs/phoenix2/phases/phase-4-slow-burn.md) or after. During Phoenix 2 Phases 1–3, populate Step 1.6's diagnostic catalog organically — every saga the compiler-driven Mix audit forces us to touch gets tagged with its rearch destination. **No code moves until rearch sessions begin.**
+**Started 2026-06-12** (owner pulled it forward from the post-Phoenix-2 gate). Working branch: `claude/rearchitecture` ([PR #104](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/104) — commit roadmap in the PR description). The ADR is done: [ADR-001](docs/adr/ADR-001-subdomain-verticals.md). Early phases (safety nets, deletions, contracts, journal) are Phoenix-2-compatible by design; the journal capture commit deliberately rides the Phoenix 2 schema window.
 
 Decisions locked from a 2026-05-17 workshop. ADR (Step 1.7) is the first rearch-session deliverable.
+
+> **Revised 2026-06-11** after the bounded-context analysis in [CONTEXTS.md](CONTEXTS.md). A1 and A5 are updated in place (marked *revised*) and supersede the 2026-05-17 versions where they differ; the remaining deltas are tracked as CONTEXTS.md *Open questions* and get finalized in the Step 1.7 ADR. CONTEXTS.md's friction inventory seeds Step 1.6's diagnostic catalog.
 
 ### Why not concurrent with Phoenix 2
 
@@ -251,13 +256,16 @@ Rearch is **judgment-driven and structural**: what's domain vs orchestration, sh
 
 ### Locked decisions
 
-- **A1. Vertical taxonomy** — six subdomain verticals, each its own assembly with internal Domain/Application/Infra layers:
-  - **PlayerProgress** (current `ScoreTracker.PersonalProgress`; expanded to include Pumbility, PlayerHistory, ScoreQuality, Title, Skills)
-  - **Competition** (Qualifiers, WeeklyTournament, M.o.M., OfficialLeaderboard — Match/bracket dropped per the [Phoenix 2 carve-out](PHOENIX2-ROADMAP.md))
+- **A1. Vertical taxonomy** *(revised 2026-06-11 per [CONTEXTS.md](CONTEXTS.md))* — nine subdomain verticals, each its own assembly with internal Domain/Application/Infra layers:
+  - **ScoreLedger** *(new — was implicit)* — the score system of record + acquisition pipeline: Phoenix/XX records, official-account import, OCR/CSV upload, score-batch accumulation. Core per [PRODUCT.md](PRODUCT.md).
+  - **PlayerProgress** (current `ScoreTracker.PersonalProgress`; expanded to include Pumbility, PlayerHistory, ScoreQuality, Title, Skills — Skills placement is CONTEXTS Q5)
+  - **EventCompetition** (Qualifiers, M.o.M. — Match/bracket and the rest of the generic tournament domain dropped per the [Phoenix 2 carve-out](PHOENIX2-ROADMAP.md))
+  - **WeeklyChallenge** *(split from Competition — weekly serves the casual-competitive core audience, organized events the competitive secondary audience; PRODUCT.md §Audiences)*
+  - **OfficialMirror** *(pulled out of Competition — official leaderboard import, world rankings, avatars, PiuTracker sync, and the PiuGame ACL; revises A5)*
   - **Community**
-  - **CatalogDifficulty** (ScoringDifficulty, TierList, Randomizer)
+  - **ChartIntelligence** *(renames CatalogDifficulty — ScoringDifficulty, TierList, difficulty/preference/co-op votes, popularity; Randomizer placement is CONTEXTS Q4)*
   - **UCS**
-  - **Recommendations** (RecommendedCharts, PumbilityProjection)
+  - **Recommendations** (RecommendedCharts, PumbilityProjection) — *CONTEXTS Q1: keep as its own vertical or fold into PlayerProgress; the ADR decides.*
 - **A2. Shared kernel scope (tight)** — `Song`, `Chart`, `ChartType`, `DifficultyLevel`, `Mix` + `[LiveMix]`, `PhoenixScore`, `PhoenixLetterGrade`, `PhoenixPlate`, `Title`, `User` (identity only), `Name`, `Bpm`. Shared ports: `IUserRepository`, `IChartRepository`, `ISongRepository`, `ICurrentUserAccessor` (incl. `GetLiveMix()` / `GetUserSelectedMix()`), `IDateTimeOffsetAccessor`, `IBus`, `IPiuGameApi`. MediatR-in-Domain carve-out stays.
 - **A3. One DbContext** — entities namespaced by vertical (`Data.Persistence.Entities.<Vertical>`) so a future N-context split is cheap.
 - **A4. Cross-vertical communication** — three modes only:
@@ -265,17 +273,17 @@ Rearch is **judgment-driven and structural**: what's domain vs orchestration, sh
   - **In-process listener** = MediatR `INotification`.
   - **Durable/async** = MassTransit.
   - **Avoid:** concrete-type or repository imports across verticals. Today's `Application → PersonalProgress` leak (3 sagas importing `PersonalProgress.Queries`) is the canonical anti-example.
-- **A5. PiuGame ACL** — parsers + `IPiuGameApi` adapter live in Infrastructure with translation at the boundary into shared-kernel types. Not its own vertical.
+- **A5. PiuGame ACL** *(revised 2026-06-11)* — parsers + `IPiuGameApi` adapter live in **OfficialMirror's** Infrastructure with translation at the boundary into shared-kernel types. Other verticals receive official-site facts from OfficialMirror (events/interfaces), not by scraping directly. Whether `IPiuGameApi` stays on A2's shared-port list once OfficialMirror owns the ACL is CONTEXTS Q6 (ADR).
 
 ### Plan
 
 **Step 1 — Solidify domain** *~1–2 sessions*. Decisions + cataloging, no code moves.
 - 1.1–1.5. Locked above.
 - 1.6. **Diagnostic catalog.** Walk `Domain/`, `Application/Handlers/`, parser code. Tag each file with destination (shared kernel / which vertical / Application / Infra / stay). **Populated organically during Phoenix 2 Phases 1–3** — every saga the Mix audit forces us into gets a catalog entry.
-- 1.7. **ADR doc** capturing 1.1–1.5. First rearch-session output.
+- 1.7. **ADR doc** capturing 1.1–1.5. ✅ Done — [ADR-001](docs/adr/ADR-001-subdomain-verticals.md) (2026-06-12).
 
 **Step 2 — Pull out of `Domain/` what doesn't belong** *~2–3 sessions*. Driven by 1.2 + 1.6.
-- 2.1. `Domain/Events/` command-shaped messages (`ProcessPassTierListCommand`, `ProcessScoresTiersListCommand`) → owning vertical's Application.
+- 2.1. ✅ Done 2026-06-12 (rearch C6+C7) — all bus trigger messages (the two `Process*` commands plus the five imperatively-renamed recurring triggers) moved to `Application/Messages/`; `Domain/Events/` now holds only past-tense facts. Moves to the owning vertical's Contracts happen in Step 4 / P5.
 - 2.2. Most `Domain/Records/` → owning vertical.
 - 2.3. `Domain/Views/` Match projections — may evaporate per the Phoenix 2 Match drop.
 - 2.4. Vertical-specific `Domain/Services/` → owning vertical's internal Domain.
@@ -299,7 +307,7 @@ Rearch is **judgment-driven and structural**: what's domain vs orchestration, sh
 
 ### Phoenix 2 interactions
 
-- `IPhoenixRecordRepository` / `IPlayerStatsRepository` are vertical-local post-rearch — they belong to PlayerProgress (or a Scoring sub-area). Phase 1 mix-isolation integration tests follow the port when it moves. Standard rename cost, not a redesign.
+- `IPhoenixRecordRepository` / `IPlayerStatsRepository` are vertical-local post-rearch — `IPhoenixRecordRepository` belongs to ScoreLedger, `IPlayerStatsRepository` to PlayerProgress. Phase 1 mix-isolation integration tests follow the port when it moves. Standard rename cost, not a redesign.
 - Mix joins the shared kernel by the end of Phoenix 2 Phase 2; rearch keeps it there.
 - Per-mix derived tables (Weekly Charts × Mix, Tier Lists × Mix, Community Leaderboards × Mix) ship in current structure during Phoenix 2; when their owning vertical extracts, the tables come along.
 
@@ -317,6 +325,42 @@ Independent items (don't fold): *MassTransit version skew*, *Automatic migration
 
 ~8–13 rearch sessions after Phoenix 2 Phase 3 lands. Phase 4 ("slow burn") is the natural start window.
 
+### Epilogue: P0–P6 complete; P7 tail backlogged (2026-07-01)
+
+The committed roadmap (P0–P6) finished on `claude/rearchitecture` at `8cebb6a`: ten vertical
+assemblies behind `Contracts/`+`Wiring/`, zero cross-vertical SQL joins, honest namespaces,
+Application reduced to the Match subsystem + saved-chart handlers + `GetRandomChartsQuery`.
+The Phoenix 2 site went live 2026-07-01, so the tail below is parked in favor of local-dev
+tooling (Aspire + dev harness) and then Phoenix 2 import support.
+
+**P7 tail — approved by ADR-001, deferred:**
+
+- [ ] *MassTransit EF transactional outbox* (ADR-001 transport note) — **carries an unresolved
+  design fork**: the outbox needs publishes enlisted in a scoped, saved `DbContext`, but handlers
+  publish via `IBus` after repository writes on factory-created contexts. Faithful implementation
+  means a unit-of-work rework (likely a MediatR pipeline behavior owning the scope) that changes
+  how every publishing handler works. Design with owner before building.
+- [ ] *Webhook outbound delivery service* (ADR-001 Q7) — per-vertical contract events + one
+  generic delivery service (subscriptions, signing, retries). Partner-facing product work;
+  contract events are already envelope-clean payloads.
+- [ ] *Per-vertical SQL schemas* (`scores.*`, `intel.*`, …) — approved but optional. Mechanical
+  via contribution `ToTable(name, schema)` + one chunky manual migration; touches Respawn config
+  and any raw SQL. Avoid during the Phoenix 2 window.
+
+**P6 remnants — deferred, some owner-gated:**
+
+- [ ] *Match subsystem deletion (C5)* — gated on the owner's Discord deprecation post for
+  `api/tournaments/{id}/matches`. Unpins `GetRandomChartsQuery`, dropping Catalog's last
+  transitional Application reference; lets `IQualifiersRepository`/`ITournamentRepository`
+  internalize into EventCompetition.
+- [ ] *Saved-chart handlers ownership* — last unclaimed piece of the Application rump; owner
+  call between PlayerProgress and Catalog.
+- [ ] *User account/profile split + `IsAdmin` role claim* — behavioral items from the original
+  P6 list; revisit deliberately, not as refactor filler.
+- [ ] *Domain + Data physical teardown* — gated on the above plus converting the remaining
+  cross-vertical SQL joins onto the shared `User`/`Chart` tables to reader calls. Transitional
+  by design; `Data` remains the shared persistence home until then.
+
 ---
 
 ## Architecture cleanups
@@ -332,13 +376,9 @@ ENTERPRISE: *Architecture Priorities*. Also flagged in [ARCHITECTURE.md](ARCHITE
 
 Risk: low — known divergence, no business impact.
 
-### Move command-shaped messages out of `Domain/Events/` — *S*
+### ~~Move command-shaped messages out of `Domain/Events/`~~ — ✅ Done 2026-06-12
 
-ENTERPRISE: *DDD Policy*. Also flagged in [ARCHITECTURE.md](ARCHITECTURE.md).
-
-- [ ] Move `ProcessPassTierListCommand` and `ProcessScoresTiersListCommand` to `Application/Commands/` (or a new `Application/Messages/` if they remain MassTransit-shaped).
-- [ ] Update consumers and publishers (likely just `RecurringJobHostedService` and the saga consumers).
-- [ ] Verify scheduled messages still fire after the move.
+Completed as rearch C6+C7 (see the rearchitecture section, Step 2.1): all bus trigger messages live in `Application/Messages/` with honest imperative names; consumers/publishers/tests updated; recurring jobs publish the renamed records.
 
 ### MediatR-in-Domain decision — *M* (or zero, if accepted as carve-out)
 

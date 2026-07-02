@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -37,7 +37,17 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ScoreTracker.CompositionRoot\ScoreTracker.CompositionRoot.csproj" />
-    <ProjectReference Include="..\ScoreTracker.PersonalProgress\ScoreTracker.PersonalProgress.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Communities\ScoreTracker.Communities.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Identity\ScoreTracker.Identity.csproj" />
+    <ProjectReference Include="..\ScoreTracker.EventCompetition\ScoreTracker.EventCompetition.csproj" />
+    <ProjectReference Include="..\ScoreTracker.WeeklyChallenge\ScoreTracker.WeeklyChallenge.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Catalog\ScoreTracker.Catalog.csproj" />
+    <ProjectReference Include="..\ScoreTracker.ChartIntelligence\ScoreTracker.ChartIntelligence.csproj" />
+    <ProjectReference Include="..\ScoreTracker.OfficialMirror\ScoreTracker.OfficialMirror.csproj" />
+    <ProjectReference Include="..\ScoreTracker.PlayerProgress\ScoreTracker.PlayerProgress.csproj" />
+    <ProjectReference Include="..\ScoreTracker.ScoreLedger\ScoreTracker.ScoreLedger.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Ucs\ScoreTracker.Ucs.csproj" />
+    <ProjectReference Include="..\ScoreTracker.ServiceDefaults\ScoreTracker.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <ItemGroup>

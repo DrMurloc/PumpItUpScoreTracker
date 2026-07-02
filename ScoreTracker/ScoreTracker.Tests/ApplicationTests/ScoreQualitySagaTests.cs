@@ -5,13 +5,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
-using ScoreTracker.Application.Handlers;
-using ScoreTracker.Application.Queries;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.PlayerProgress.Application;
+using ScoreTracker.PlayerProgress.Contracts.Commands;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Application;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using Xunit;
 
@@ -38,9 +42,9 @@ public sealed class ScoreQualitySagaTests
     public async Task GetCompetitivePlayersDelegatesToPlayerStatsRepositoryWithCompetitiveBand()
     {
         var (accessor, userId) = UserAccessor();
-        var playerStats = new Mock<IPlayerStatsRepository>();
+        var playerStats = new Mock<IPlayerStatsReader>();
         var charts = new Mock<IChartRepository>();
-        var scores = new Mock<IPhoenixRecordRepository>();
+        var scores = new Mock<IScoreReader>();
         var cache = new MemoryCache(new MemoryCacheOptions());
 
         playerStats.Setup(p => p.GetStats(userId, It.IsAny<CancellationToken>()))
@@ -64,9 +68,9 @@ public sealed class ScoreQualitySagaTests
         var (accessor, userId) = UserAccessor();
         var chart = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
 
-        var playerStats = new Mock<IPlayerStatsRepository>();
+        var playerStats = new Mock<IPlayerStatsReader>();
         var charts = new Mock<IChartRepository>();
-        var scores = new Mock<IPhoenixRecordRepository>();
+        var scores = new Mock<IScoreReader>();
         var cache = new MemoryCache(new MemoryCacheOptions());
 
         playerStats.Setup(p => p.GetStats(userId, It.IsAny<CancellationToken>()))
@@ -83,7 +87,7 @@ public sealed class ScoreQualitySagaTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<(Guid, RecordedPhoenixScore)>());
 
-        scores.Setup(r => r.GetRecordedScores(userId, It.IsAny<CancellationToken>()))
+        scores.Setup(r => r.GetBestScores(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new RecordedPhoenixScore(chart.Id, 950000, PhoenixPlate.PerfectGame, false, DateTimeOffset.UtcNow)
@@ -106,9 +110,9 @@ public sealed class ScoreQualitySagaTests
         var chart = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
         var competitor = Guid.NewGuid();
 
-        var playerStats = new Mock<IPlayerStatsRepository>();
+        var playerStats = new Mock<IPlayerStatsReader>();
         var charts = new Mock<IChartRepository>();
-        var scores = new Mock<IPhoenixRecordRepository>();
+        var scores = new Mock<IScoreReader>();
         var cache = new MemoryCache(new MemoryCacheOptions());
 
         playerStats.Setup(p => p.GetStats(userId, It.IsAny<CancellationToken>()))
@@ -127,7 +131,7 @@ public sealed class ScoreQualitySagaTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { (competitor, competitorScore) });
 
-        scores.Setup(r => r.GetRecordedScores(userId, It.IsAny<CancellationToken>()))
+        scores.Setup(r => r.GetBestScores(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new RecordedPhoenixScore(chart.Id, 990000, PhoenixPlate.PerfectGame, false, DateTimeOffset.UtcNow)
