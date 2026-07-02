@@ -325,6 +325,42 @@ Independent items (don't fold): *MassTransit version skew*, *Automatic migration
 
 ~8–13 rearch sessions after Phoenix 2 Phase 3 lands. Phase 4 ("slow burn") is the natural start window.
 
+### Epilogue: P0–P6 complete; P7 tail backlogged (2026-07-01)
+
+The committed roadmap (P0–P6) finished on `claude/rearchitecture` at `8cebb6a`: ten vertical
+assemblies behind `Contracts/`+`Wiring/`, zero cross-vertical SQL joins, honest namespaces,
+Application reduced to the Match subsystem + saved-chart handlers + `GetRandomChartsQuery`.
+The Phoenix 2 site went live 2026-07-01, so the tail below is parked in favor of local-dev
+tooling (Aspire + dev harness) and then Phoenix 2 import support.
+
+**P7 tail — approved by ADR-001, deferred:**
+
+- [ ] *MassTransit EF transactional outbox* (ADR-001 transport note) — **carries an unresolved
+  design fork**: the outbox needs publishes enlisted in a scoped, saved `DbContext`, but handlers
+  publish via `IBus` after repository writes on factory-created contexts. Faithful implementation
+  means a unit-of-work rework (likely a MediatR pipeline behavior owning the scope) that changes
+  how every publishing handler works. Design with owner before building.
+- [ ] *Webhook outbound delivery service* (ADR-001 Q7) — per-vertical contract events + one
+  generic delivery service (subscriptions, signing, retries). Partner-facing product work;
+  contract events are already envelope-clean payloads.
+- [ ] *Per-vertical SQL schemas* (`scores.*`, `intel.*`, …) — approved but optional. Mechanical
+  via contribution `ToTable(name, schema)` + one chunky manual migration; touches Respawn config
+  and any raw SQL. Avoid during the Phoenix 2 window.
+
+**P6 remnants — deferred, some owner-gated:**
+
+- [ ] *Match subsystem deletion (C5)* — gated on the owner's Discord deprecation post for
+  `api/tournaments/{id}/matches`. Unpins `GetRandomChartsQuery`, dropping Catalog's last
+  transitional Application reference; lets `IQualifiersRepository`/`ITournamentRepository`
+  internalize into EventCompetition.
+- [ ] *Saved-chart handlers ownership* — last unclaimed piece of the Application rump; owner
+  call between PlayerProgress and Catalog.
+- [ ] *User account/profile split + `IsAdmin` role claim* — behavioral items from the original
+  P6 list; revisit deliberately, not as refactor filler.
+- [ ] *Domain + Data physical teardown* — gated on the above plus converting the remaining
+  cross-vertical SQL joins onto the shared `User`/`Chart` tables to reader calls. Transitional
+  by design; `Data` remains the shared persistence home until then.
+
 ---
 
 ## Architecture cleanups
