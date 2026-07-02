@@ -2,10 +2,11 @@
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Events;
 using ScoreTracker.Application.Queries;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Domain.Views;
 
 namespace ScoreTracker.Application.Handlers;

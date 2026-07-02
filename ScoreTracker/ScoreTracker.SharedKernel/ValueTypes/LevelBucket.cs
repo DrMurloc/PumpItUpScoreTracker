@@ -1,10 +1,10 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Exceptions;
 
-namespace ScoreTracker.Domain.ValueTypes;
+namespace ScoreTracker.SharedKernel.ValueTypes;
 
 public readonly struct LevelBucket : IComparable<LevelBucket>
 {

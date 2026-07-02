@@ -4,9 +4,10 @@ using System.Globalization;
 using System.Reflection;
 using CsvHelper;
 using Microsoft.AspNetCore.Components.Forms;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Dtos;
 
 namespace ScoreTracker.Web.Services;

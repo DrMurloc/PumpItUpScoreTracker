@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.ScoreLedger.Domain;
 

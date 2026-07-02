@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel;
 using System.Reflection;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 
-namespace ScoreTracker.Domain.Enums;
+namespace ScoreTracker.SharedKernel.Enums;
 
 public enum ParagonLevel
 {

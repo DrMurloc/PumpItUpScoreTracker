@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Domain.Views;
 
 namespace ScoreTracker.Application.Queries

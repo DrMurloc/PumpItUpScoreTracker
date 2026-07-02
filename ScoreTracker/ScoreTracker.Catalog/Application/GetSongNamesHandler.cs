@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Catalog.Application;
 

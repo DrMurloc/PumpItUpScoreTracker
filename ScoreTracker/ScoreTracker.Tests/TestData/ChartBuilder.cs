@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Tests.TestData;
 

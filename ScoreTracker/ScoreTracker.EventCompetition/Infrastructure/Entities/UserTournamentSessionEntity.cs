@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace ScoreTracker.EventCompetition.Infrastructure.Entities

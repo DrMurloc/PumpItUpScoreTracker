@@ -11,7 +11,7 @@ using Moq;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using Xunit;
 

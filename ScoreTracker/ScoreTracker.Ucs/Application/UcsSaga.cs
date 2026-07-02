@@ -3,7 +3,7 @@ using MediatR;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Ucs.Contracts.Events;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Ucs.Contracts;
 using ScoreTracker.Ucs.Contracts.Commands;
 using ScoreTracker.Ucs.Contracts.Queries;

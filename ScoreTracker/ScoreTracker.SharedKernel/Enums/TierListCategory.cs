@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScoreTracker.Domain.Enums
+namespace ScoreTracker.SharedKernel.Enums
 {
     public enum TierListCategory
     {

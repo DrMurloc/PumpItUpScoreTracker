@@ -2,7 +2,7 @@
 using System.Text.Json.Serialization;
 using ScoreTracker.Domain.Exceptions;
 
-namespace ScoreTracker.Domain.ValueTypes
+namespace ScoreTracker.SharedKernel.ValueTypes
 {
     public readonly struct Rating : IComparable<Rating>
     {

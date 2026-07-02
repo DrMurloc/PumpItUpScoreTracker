@@ -8,6 +8,7 @@ using ScoreTracker.ScoreLedger.Application;
 using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services.Contracts;
 using Xunit;

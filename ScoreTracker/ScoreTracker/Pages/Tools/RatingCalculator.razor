@@ -3,8 +3,8 @@
 @using ScoreTracker.Application.Queries;
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Web.Dtos
-@using ScoreTracker.Domain.Enums
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
 
 <PageTitle>@L["Rating Calculator"]</PageTitle>
 
@@ -69,8 +69,8 @@
     protected async override Task OnInitializedAsync()
     {
         var charts = await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix));
-        var coOps = charts.Where(c => c.Type == Domain.Enums.ChartType.CoOp).Count();
-        var levels = charts.Where(c => c.Type != Domain.Enums.ChartType.CoOp).GroupBy(c => c.Level)
+        var coOps = charts.Where(c => c.Type == SharedKernel.Enums.ChartType.CoOp).Count();
+        var levels = charts.Where(c => c.Type != SharedKernel.Enums.ChartType.CoOp).GroupBy(c => c.Level)
         .ToDictionary(g => g.Key, g => g.Count());
         Entries = DifficultyLevel.All.Where(l => l.BaseRating != 0).OrderBy(l => l).Select(l => new TableEntry
             {

@@ -1,6 +1,6 @@
 using MediatR;
-using ScoreTracker.Domain.Enums;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.ScoreLedger.Contracts.Commands;
 

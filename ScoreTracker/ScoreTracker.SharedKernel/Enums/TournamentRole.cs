@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Reflection;
 
-namespace ScoreTracker.Domain.Enums;
+namespace ScoreTracker.SharedKernel.Enums;
 
 public enum TournamentRole
 {

@@ -1,4 +1,4 @@
-﻿using ScoreTracker.Domain.ValueTypes;
+﻿using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Domain.Records;
 

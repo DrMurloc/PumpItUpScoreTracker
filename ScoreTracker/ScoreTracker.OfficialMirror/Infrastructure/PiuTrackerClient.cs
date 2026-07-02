@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.Json;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.OfficialMirror.Infrastructure
 {

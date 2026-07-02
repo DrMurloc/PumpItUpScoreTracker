@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.PlayerProgress.Infrastructure.Entities;
 
 namespace ScoreTracker.PlayerProgress.Wiring;

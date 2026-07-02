@@ -1,5 +1,5 @@
 ﻿@page "/Communities"
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.Records
 @using MediatR
@@ -9,9 +9,10 @@
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Exceptions
 @using ScoreTracker.Domain.Models
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
 @using System.Web
-@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 <PageTitle>@L["Communities"]</PageTitle>
 @foreach (var item in new[] { ("Your Communities",true), ("Other Communities",false) })
 {

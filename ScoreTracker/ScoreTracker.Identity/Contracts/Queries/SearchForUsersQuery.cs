@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using ScoreTracker.Application.Dtos;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.Identity.Contracts.Queries;
 

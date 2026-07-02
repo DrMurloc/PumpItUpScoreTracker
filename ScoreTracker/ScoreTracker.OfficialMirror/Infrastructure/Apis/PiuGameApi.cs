@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic.FileIO;
 using ScoreTracker.OfficialMirror.Infrastructure.Apis.Contracts;
 using ScoreTracker.OfficialMirror.Infrastructure.Apis.Dtos;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 

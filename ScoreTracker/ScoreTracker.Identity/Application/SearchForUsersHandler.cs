@@ -2,6 +2,7 @@
 using ScoreTracker.Application.Dtos;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Identity.Application;

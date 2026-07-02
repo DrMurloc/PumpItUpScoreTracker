@@ -1,15 +1,16 @@
 @page "/{RequestedUserId:guid}/Progress"
 @page "/Progress"
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Services.Contracts
 <PageTitle>@L["Best Attempts"]</PageTitle>
 @using MediatR
 @using ScoreTracker.Application.Queries
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
 @using ChartType = MudBlazor.ChartType
 
 <MudPaper>
@@ -144,15 +145,15 @@
         var scores = _scores;
         if (_selectedCharts == SelectedChartsEnum.Doubles)
         {
-            scores = scores.Where(c => c.Chart.Type is Domain.Enums.ChartType.Double or Domain.Enums.ChartType.DoublePerformance).ToArray();
+            scores = scores.Where(c => c.Chart.Type is SharedKernel.Enums.ChartType.Double or SharedKernel.Enums.ChartType.DoublePerformance).ToArray();
         }
         else if (_selectedCharts == SelectedChartsEnum.Singles)
         {
-            scores = scores.Where(c => c.Chart.Type is Domain.Enums.ChartType.Single or Domain.Enums.ChartType.SinglePerformance).ToArray();
+            scores = scores.Where(c => c.Chart.Type is SharedKernel.Enums.ChartType.Single or SharedKernel.Enums.ChartType.SinglePerformance).ToArray();
         }
         else
         {
-            scores = scores.Where(s => s.Chart.Type != Domain.Enums.ChartType.CoOp).ToArray();
+            scores = scores.Where(s => s.Chart.Type != SharedKernel.Enums.ChartType.CoOp).ToArray();
         }
         foreach (var score in scores)
         {

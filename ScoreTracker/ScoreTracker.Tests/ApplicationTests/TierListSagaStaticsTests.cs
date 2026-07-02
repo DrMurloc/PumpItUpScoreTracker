@@ -3,8 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ScoreTracker.Application.Handlers;
-using ScoreTracker.Domain.Enums;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.ValueTypes;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;

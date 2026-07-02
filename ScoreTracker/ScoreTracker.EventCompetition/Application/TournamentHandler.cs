@@ -2,6 +2,7 @@
 using ScoreTracker.EventCompetition.Contracts.Commands;
 using ScoreTracker.EventCompetition.Contracts.Queries;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 

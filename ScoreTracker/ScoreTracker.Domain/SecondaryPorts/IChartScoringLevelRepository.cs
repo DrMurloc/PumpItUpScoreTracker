@@ -1,4 +1,5 @@
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Domain.SecondaryPorts;
 

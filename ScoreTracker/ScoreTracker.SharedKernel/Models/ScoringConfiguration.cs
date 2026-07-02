@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel;
 using System.Data;
 using System.Reflection;
-using ScoreTracker.Domain.Enums;
-using ScoreTracker.Domain.Models;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
 
-namespace ScoreTracker.Domain.Models
+namespace ScoreTracker.SharedKernel.Models
 {
     public sealed class ScoringConfiguration
     {

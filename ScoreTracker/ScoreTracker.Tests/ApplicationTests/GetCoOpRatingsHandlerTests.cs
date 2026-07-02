@@ -10,6 +10,7 @@ using Moq;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using Xunit;
 

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.ScoreLedger.Infrastructure.Entities;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.ScoreLedger.Domain;
 

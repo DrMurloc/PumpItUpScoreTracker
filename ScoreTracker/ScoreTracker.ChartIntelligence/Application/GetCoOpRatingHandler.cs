@@ -1,6 +1,7 @@
 using MediatR;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.ChartIntelligence.Application

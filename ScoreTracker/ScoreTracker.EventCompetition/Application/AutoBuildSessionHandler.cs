@@ -1,7 +1,8 @@
 ﻿using MediatR;
 using ScoreTracker.EventCompetition.Contracts.Queries;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.EventCompetition.Application

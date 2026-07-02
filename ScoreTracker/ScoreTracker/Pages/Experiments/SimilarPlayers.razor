@@ -3,14 +3,15 @@
 @using ScoreTracker.Domain.Services
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Dtos
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.SecondaryPorts
-@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @using ScoreTracker.Application.Queries
 @using MediatR
 @using ScoreTracker.Application.Handlers
 @using ScoreTracker.Domain.Models
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
 
 <PageTitle>@L["User Matches"]</PageTitle>
 <MudGrid>

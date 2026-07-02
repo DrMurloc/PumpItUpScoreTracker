@@ -4,10 +4,11 @@ using ScoreTracker.ScoreLedger.Contracts.Messages;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.ScoreLedger.Domain;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.ScoreLedger.Application;
 

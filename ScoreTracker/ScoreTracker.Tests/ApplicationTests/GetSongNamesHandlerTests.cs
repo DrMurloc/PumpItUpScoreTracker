@@ -7,9 +7,9 @@ using ScoreTracker.ChartIntelligence.Contracts.Commands;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Catalog.Application;
 using ScoreTracker.Application.Queries;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;

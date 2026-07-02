@@ -6,7 +6,7 @@ using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.PlayerProgress.Infrastructure;
 using ScoreTracker.PlayerProgress.Infrastructure.Entities;
 using ScoreTracker.Data.Repositories;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.ScoreLedger.Infrastructure;

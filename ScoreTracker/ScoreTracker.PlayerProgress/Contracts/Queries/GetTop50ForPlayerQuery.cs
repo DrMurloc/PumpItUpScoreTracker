@@ -1,6 +1,7 @@
 ﻿using MediatR;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.PlayerProgress.Contracts.Queries
 {

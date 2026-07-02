@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Repositories;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Tests.Integration.Fixtures;
 using ScoreTracker.Tests.Integration.TestData;
 

@@ -2,7 +2,7 @@ using ScoreTracker.ChartIntelligence.Infrastructure.Entities;
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.ChartIntelligence.Infrastructure;

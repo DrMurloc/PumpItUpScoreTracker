@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Identity.Contracts.Commands;
 

@@ -7,10 +7,11 @@ using ScoreTracker.ChartIntelligence.Contracts.Commands;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.Application.Queries;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Controllers.Api;
 
 namespace ScoreTracker.Tests.Api;

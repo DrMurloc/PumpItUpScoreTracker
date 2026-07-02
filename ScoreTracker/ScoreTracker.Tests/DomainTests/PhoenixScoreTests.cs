@@ -1,5 +1,5 @@
 using ScoreTracker.Domain.Exceptions;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using Xunit;
 
 namespace ScoreTracker.Tests.DomainTests;

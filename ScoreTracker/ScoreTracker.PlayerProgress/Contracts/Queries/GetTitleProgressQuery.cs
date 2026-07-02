@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models.Titles;
 
 namespace ScoreTracker.PlayerProgress.Contracts.Queries;

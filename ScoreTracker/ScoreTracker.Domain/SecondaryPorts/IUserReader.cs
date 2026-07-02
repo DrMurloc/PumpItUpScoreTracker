@@ -1,4 +1,5 @@
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.Domain.SecondaryPorts;
 

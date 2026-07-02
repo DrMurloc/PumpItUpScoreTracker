@@ -1,12 +1,13 @@
 @page "/WeeklyCharts"
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.WeeklyChallenge.Contracts.Messages
 @using ScoreTracker.Domain.Services
 @using ScoreTracker.WeeklyChallenge.Contracts.Commands
 @using ScoreTracker.WeeklyChallenge.Contracts.Queries
-@using ChartType = ScoreTracker.Domain.Enums.ChartType
-@using ScoreTracker.Domain.Enums
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Communities.Contracts.Queries
 @using ScoreTracker.Communities.Contracts.Commands
 @using ScoreTracker.Application.Queries
@@ -19,7 +20,7 @@
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Handlers
 @using ScoreTracker.Domain.Events
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Services
 @using System.Data.Common
 @using ScoreTracker.Web.Services.Contracts

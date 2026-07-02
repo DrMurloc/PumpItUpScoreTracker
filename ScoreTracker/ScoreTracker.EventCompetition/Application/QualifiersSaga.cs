@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using ScoreTracker.EventCompetition.Contracts.Commands;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.EventCompetition.Application

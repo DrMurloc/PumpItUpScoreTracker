@@ -42,7 +42,7 @@ vertical.)
 
 | Project | Allowed external packages | Forbidden |
 |---|---|---|
-| `ScoreTracker.SharedKernel` | `MediatR` only | Everything else — the kernel references nothing. Game-model types keep `ScoreTracker.Domain.*` namespaces until the rearch P6 teardown. |
+| `ScoreTracker.SharedKernel` | `MediatR` only | Everything else — the kernel references nothing. Namespaces are honest as of the P6 sweep: `ScoreTracker.SharedKernel.ValueTypes/Enums/Models`. |
 | `ScoreTracker.Domain` | `MediatR`, `Microsoft.Extensions.Logging.Abstractions` (+ project ref to `SharedKernel`) | Anything else. No EF, no `HttpClient`, no MassTransit, no ASP.NET, no Azure/Discord/SendGrid. |
 | `ScoreTracker.Application` | + `MassTransit.Abstractions`, `Microsoft.Extensions.Caching.Memory` | EF Core, ASP.NET, `HttpClient`, vendor SDKs. Application must never know it's behind a web server. |
 | `ScoreTracker.Data` | + `Microsoft.EntityFrameworkCore.SqlServer`, `Azure.Storage.Blobs`, `Discord.Net`, `HtmlAgilityPack`, `SendGrid` | ASP.NET. |

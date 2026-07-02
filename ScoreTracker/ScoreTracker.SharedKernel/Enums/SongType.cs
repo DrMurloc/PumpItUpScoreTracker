@@ -1,4 +1,4 @@
-﻿namespace ScoreTracker.Domain.Enums;
+﻿namespace ScoreTracker.SharedKernel.Enums;
 
 public enum SongType
 {

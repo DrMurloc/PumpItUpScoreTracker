@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Moq;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Application.Queries;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Tests.TestData;

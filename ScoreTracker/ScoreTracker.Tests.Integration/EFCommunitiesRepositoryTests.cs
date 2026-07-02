@@ -2,8 +2,9 @@ using Moq;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Communities.Domain;
 using ScoreTracker.Communities.Infrastructure;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Tests.Integration.Fixtures;
 
 namespace ScoreTracker.Tests.Integration;

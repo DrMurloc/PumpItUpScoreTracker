@@ -5,6 +5,7 @@ using ScoreTracker.Domain.Events;
 using ScoreTracker.Identity.Contracts.Events;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Identity.Application;

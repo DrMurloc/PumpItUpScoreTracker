@@ -1,4 +1,4 @@
-﻿using ScoreTracker.Domain.Enums;
+﻿using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Dtos.Api;
 using Swashbuckle.AspNetCore.Filters;
 

@@ -1,6 +1,7 @@
-﻿using ScoreTracker.Domain.Enums;
+﻿using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Web.Dtos;
 
@@ -32,8 +33,8 @@ public class BestAttemptDto(Chart _chart)
             ChartId = attempt.Chart.Id,
             SongType = attempt.Chart.Song.Type.ToString(),
             SongDuration = attempt.Chart.Song.Duration,
-            Category = attempt.Chart.Type == Domain.Enums.ChartType.CoOp
-                ? nameof(Domain.Enums.ChartType.CoOp) + " x" + attempt.Chart.PlayerCount
+            Category = attempt.Chart.Type == SharedKernel.Enums.ChartType.CoOp
+                ? nameof(SharedKernel.Enums.ChartType.CoOp) + " x" + attempt.Chart.PlayerCount
                 : attempt.Chart.Type.ToString(),
             IsBroken = attempt.BestAttempt?.IsBroken ?? true,
             XXLetterGrade = attempt.BestAttempt?.LetterGrade.ToString() ?? string.Empty,

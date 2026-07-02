@@ -1,5 +1,5 @@
-using ScoreTracker.Domain.Enums;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Ucs.Contracts;
 
 namespace ScoreTracker.Ucs.Domain;

@@ -6,9 +6,10 @@ using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Application.Commands;
-using ScoreTracker.Domain.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 

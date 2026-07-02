@@ -9,19 +9,20 @@
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Data.Migrations
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Domain.Models.Titles
 @using ScoreTracker.Domain.Models.Titles.Phoenix
 @using ScoreTracker.Domain.Records
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Shared
-@using ChartType = ScoreTracker.Domain.Enums.ChartType
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
 <PageTitle>@L["What Should I Play"]</PageTitle>
 
@@ -472,8 +473,8 @@ else
             .Where(t => t.ListType == ChartListType.ToDo && _chartDict.ContainsKey(t.ChartId))
             .Select(t=>t.ChartId).Distinct().ToHashSet();
 
-        _topCharts = (await Mediator.Send(new GetTop50CompetitiveQuery(CurrentUser.User.Id, Domain.Enums.ChartType.Double)))
-            .Concat(await Mediator.Send(new GetTop50CompetitiveQuery(CurrentUser.User.Id, Domain.Enums.ChartType.Single)))
+        _topCharts = (await Mediator.Send(new GetTop50CompetitiveQuery(CurrentUser.User.Id, SharedKernel.Enums.ChartType.Double)))
+            .Concat(await Mediator.Send(new GetTop50CompetitiveQuery(CurrentUser.User.Id, SharedKernel.Enums.ChartType.Single)))
             .Select(c => c.ChartId).Distinct().ToHashSet();
         var titles = await Mediator.Send(new GetTitleProgressQuery(MixEnum.Phoenix));
         _progress = titles.GetPushingTitle();

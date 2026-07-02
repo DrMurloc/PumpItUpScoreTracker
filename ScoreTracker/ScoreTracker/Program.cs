@@ -14,7 +14,7 @@ using ScoreTracker.Data.Configuration;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
-using ScoreTracker.Domain.ValueTypes;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.EventCompetition.Wiring;
 using ScoreTracker.Identity.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;

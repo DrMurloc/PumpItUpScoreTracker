@@ -1,6 +1,6 @@
 ﻿using ScoreTracker.Domain.Exceptions;
 
-namespace ScoreTracker.Domain.ValueTypes;
+namespace ScoreTracker.SharedKernel.ValueTypes;
 
 public readonly struct StepCount
 {

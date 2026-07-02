@@ -7,14 +7,15 @@
 @using ScoreTracker.PlayerProgress.Contracts.Commands
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
-@using ScoreTracker.Domain.Enums
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
-@using ScoreTracker.Domain.ValueTypes
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services.Contracts
-@using ChartType = ScoreTracker.Domain.Enums.ChartType;
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType;
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
 @inject ChartVideoDisplayer VideoDisplayer
@@ -651,8 +652,8 @@
             _charts = charts.Select(c => new BestAttemptDto(c)
             {
                 ChartId = c.Id,
-                Category = c.Type == Domain.Enums.ChartType.CoOp
-                    ? nameof(Domain.Enums.ChartType.CoOp) + " x" + c.PlayerCount
+                Category = c.Type == SharedKernel.Enums.ChartType.CoOp
+                    ? nameof(SharedKernel.Enums.ChartType.CoOp) + " x" + c.PlayerCount
                     : c.Type.ToString(),
                 IsBroken = !bestAttempts.ContainsKey(c.Id) || bestAttempts[c.Id].IsBroken,
                 XXLetterGrade = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].LetterGrade.ToString() : string.Empty,
@@ -676,8 +677,8 @@
             _charts = charts.Select(c => new BestAttemptDto(c)
             {
                 ChartId = c.Id,
-                Category = c.Type == Domain.Enums.ChartType.CoOp
-                    ? nameof(Domain.Enums.ChartType.CoOp) + " x" + c.PlayerCount
+                Category = c.Type == SharedKernel.Enums.ChartType.CoOp
+                    ? nameof(SharedKernel.Enums.ChartType.CoOp) + " x" + c.PlayerCount
                     : c.Type.ToString(),
                 IsBroken = !bestAttempts.ContainsKey(c.Id) || bestAttempts[c.Id].IsBroken,
                 SongName = c.Song.Name,
