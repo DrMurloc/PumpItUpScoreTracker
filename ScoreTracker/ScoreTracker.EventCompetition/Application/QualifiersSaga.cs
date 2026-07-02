@@ -8,7 +8,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.EventCompetition.Application
 {
-    internal sealed class QualifiersSaga(IQualifiersRepository qualifiersRepo, IUserRepository userRepo,
+    internal sealed class QualifiersSaga(IQualifiersRepository qualifiersRepo, IUserReader userRepo,
         ILogger<QualifiersSaga> logger, IMediator mediator) : IConsumer<ScoreImportCompletedEvent>
     {
         public async Task Consume(ConsumeContext<ScoreImportCompletedEvent> context)

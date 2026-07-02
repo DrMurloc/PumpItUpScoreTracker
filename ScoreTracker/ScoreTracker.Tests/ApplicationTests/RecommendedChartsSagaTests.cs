@@ -12,10 +12,12 @@ using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Application;
+using ScoreTracker.PlayerProgress.Domain;
 using ScoreTracker.PlayerProgress.Contracts.Commands;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts.Commands;
 using ScoreTracker.PlayerProgress.Application;
+using ScoreTracker.PlayerProgress.Domain;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
@@ -39,7 +41,7 @@ public sealed class RecommendedChartsSagaTests
     public async Task SubmitFeedbackPersistsFeedbackForCurrentUser()
     {
         var userId = Guid.NewGuid();
-        var users = new Mock<IUserRepository>();
+        var users = new Mock<IFeedbackRepository>();
         var saga = BuildSaga(currentUserId: userId, users: users);
         var feedback = new SuggestionFeedbackRecord(
             SuggestionCategory: Name.From("Push PGs"),
@@ -129,7 +131,7 @@ public sealed class RecommendedChartsSagaTests
     {
         public Mock<IMediator> Mediator { get; } = new();
         public Mock<ICurrentUserAccessor> CurrentUser { get; } = new();
-        public Mock<IUserRepository> Users { get; } = new();
+        public Mock<IFeedbackRepository> Users { get; } = new();
         public Mock<IPlayerStatsReader> Stats { get; } = new();
         public Mock<IScoreReader> Scores { get; } = new();
         public Mock<IWeeklyTournamentRepository> Weekly { get; } = new();
@@ -223,7 +225,7 @@ public sealed class RecommendedChartsSagaTests
         Guid? currentUserId = null,
         Mock<IMediator>? mediator = null,
         Mock<ICurrentUserAccessor>? currentUser = null,
-        Mock<IUserRepository>? users = null,
+        Mock<IFeedbackRepository>? users = null,
         Mock<IPlayerStatsReader>? stats = null,
         Mock<IScoreReader>? scores = null,
         Mock<IWeeklyTournamentRepository>? weeklyTournament = null,
@@ -235,7 +237,7 @@ public sealed class RecommendedChartsSagaTests
         var id = currentUserId ?? Guid.NewGuid();
         currentUser.SetupGet(u => u.User).Returns(new UserBuilder().WithId(id).Build());
         mediator ??= new Mock<IMediator>();
-        users ??= new Mock<IUserRepository>();
+        users ??= new Mock<IFeedbackRepository>();
         stats ??= new Mock<IPlayerStatsReader>();
         scores ??= new Mock<IScoreReader>();
         weeklyTournament ??= new Mock<IWeeklyTournamentRepository>();

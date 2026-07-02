@@ -29,7 +29,6 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<MatchEntity> Match { get; set; }
     public DbSet<RandomSettingsEntity> RandomSettings { get; set; }
     public DbSet<MatchLinkEntity> MatchLink { get; set; }
-    public DbSet<SuggestionFeedbackEntity> SuggestionFeedback { get; set; }
     public DbSet<TournamentPlayerEntity> TournamentPlayer { get; set; }
     public DbSet<TournamentMachineEntity> TournamentMachine { get; set; }
     public DbSet<CountryEntity> Country { get; set; }

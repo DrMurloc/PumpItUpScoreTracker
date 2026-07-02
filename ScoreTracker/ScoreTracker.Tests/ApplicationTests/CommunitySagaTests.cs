@@ -302,7 +302,7 @@ public sealed class CommunitySagaTests
         public Mock<ICurrentUserAccessor> CurrentUser { get; } = new();
         public Mock<ICommunityRepository> Communities { get; } = new();
         public Mock<IBotClient> Bot { get; } = new();
-        public Mock<IUserRepository> Users { get; } = new();
+        public Mock<IUserReader> Users { get; } = new();
         public Mock<IChartRepository> Charts { get; } = new();
         public Mock<IScoreReader> Scores { get; } = new();
         public Mock<IMediator> Mediator { get; } = new();

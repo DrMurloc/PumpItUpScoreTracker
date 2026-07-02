@@ -43,7 +43,7 @@ public sealed class QualifiersSagaTests
         existing.AddPhoenixScore(chart.Id, 900000, null);
 
         var qualifiersRepo = new Mock<IQualifiersRepository>();
-        var userRepo = new Mock<IUserRepository>();
+        var userRepo = new Mock<IUserReader>();
         var mediator = new Mock<IMediator>();
 
         qualifiersRepo.Setup(r => r.GetRegisteredTournaments(userId, It.IsAny<CancellationToken>()))
@@ -81,7 +81,7 @@ public sealed class QualifiersSagaTests
         existing.AddPhoenixScore(chart.Id, 950000, null);
 
         var qualifiersRepo = new Mock<IQualifiersRepository>();
-        var userRepo = new Mock<IUserRepository>();
+        var userRepo = new Mock<IUserReader>();
         var mediator = new Mock<IMediator>();
 
         qualifiersRepo.Setup(r => r.GetRegisteredTournaments(userId, It.IsAny<CancellationToken>()))
@@ -113,7 +113,7 @@ public sealed class QualifiersSagaTests
         var user = new UserBuilder().WithId(userId).WithName("hero").Build();
 
         var qualifiersRepo = new Mock<IQualifiersRepository>();
-        var userRepo = new Mock<IUserRepository>();
+        var userRepo = new Mock<IUserReader>();
         var mediator = new Mock<IMediator>();
 
         qualifiersRepo.Setup(r => r.GetRegisteredTournaments(userId, It.IsAny<CancellationToken>()))
@@ -150,7 +150,7 @@ public sealed class QualifiersSagaTests
         var userId = Guid.NewGuid();
 
         var qualifiersRepo = new Mock<IQualifiersRepository>();
-        var userRepo = new Mock<IUserRepository>();
+        var userRepo = new Mock<IUserReader>();
         var mediator = new Mock<IMediator>();
 
         qualifiersRepo.Setup(r => r.GetRegisteredTournaments(userId, It.IsAny<CancellationToken>()))

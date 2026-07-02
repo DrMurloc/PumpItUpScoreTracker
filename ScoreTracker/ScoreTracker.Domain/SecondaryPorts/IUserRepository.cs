@@ -7,10 +7,6 @@ namespace ScoreTracker.Domain.SecondaryPorts;
 public interface IUserRepository
 {
     Task SaveUser(User user, CancellationToken cancellationToken = default);
-    Task SaveFeedback(Guid userId, SuggestionFeedbackRecord feedback, CancellationToken cancellationToken = default);
-
-    Task<IEnumerable<SuggestionFeedbackRecord>>
-        GetFeedback(Guid userId, CancellationToken cancellationToken = default);
 
     Task CreateExternalLogin(Guid userId, string loginProviderName, string externalId,
         CancellationToken cancellationToken = default);

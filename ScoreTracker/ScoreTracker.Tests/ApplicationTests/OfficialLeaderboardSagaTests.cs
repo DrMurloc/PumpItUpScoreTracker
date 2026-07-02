@@ -1,3 +1,5 @@
+using ScoreTracker.Identity.Contracts.Commands;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
@@ -208,7 +210,6 @@ public sealed class OfficialLeaderboardSagaTests
 
     private sealed record ImportFixture(
         Mock<IOfficialSiteClient> Site,
-        Mock<IUserRepository> Users,
         Mock<IMediator> Mediator,
         Mock<ICurrentUserAccessor> CurrentUser,
         Mock<IPiuTrackerClient> PiuTracker,
@@ -230,10 +231,8 @@ public sealed class OfficialLeaderboardSagaTests
         var currentUser = new Mock<ICurrentUserAccessor>();
         currentUser.Setup(c => c.User).Returns(existingUser);
 
-        var users = new Mock<IUserRepository>();
-        users.Setup(u => u.GetUser(ImportUserId, It.IsAny<CancellationToken>())).ReturnsAsync(existingUser);
-        users.Setup(u => u.GetUserUiSettings(ImportUserId, It.IsAny<CancellationToken>())).ReturnsAsync(settings);
-
+        // User reads and writes go through Identity contracts now, so the mediator
+        // stands in where the repository mock used to.
         var site = new Mock<IOfficialSiteClient>();
         site.Setup(s => s.GetAccountData("user", "pass", "card1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PiuGameAccountDataImport(NewAvatar, Name.From(accountName),
@@ -247,14 +246,16 @@ public sealed class OfficialLeaderboardSagaTests
         var mediator = new Mock<IMediator>();
         mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingScores ?? Array.Empty<RecordedPhoenixScore>());
+        mediator.Setup(m => m.Send(It.IsAny<GetUserUiSettingsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(settings);
 
-        return new ImportFixture(site, users, mediator, currentUser, new Mock<IPiuTrackerClient>(),
+        return new ImportFixture(site, mediator, currentUser, new Mock<IPiuTrackerClient>(),
             new Mock<IBus>(), settings, existingUser);
     }
 
     private static OfficialLeaderboardSaga BuildImportSaga(ImportFixture f)
     {
-        return BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser, user: f.Users,
+        return BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser,
             mediator: f.Mediator, piuTracker: f.PiuTracker, bus: f.Bus);
     }
 
@@ -313,13 +314,9 @@ public sealed class OfficialLeaderboardSagaTests
 
         await saga.Handle(ImportCommand(), CancellationToken.None);
 
-        f.Users.Verify(u => u.SaveUser(It.Is<User>(saved =>
-                saved.Id == ImportUserId &&
-                saved.GameTag.ToString() == "NEWTAG" &&
-                saved.ProfileImage == NewAvatar &&
-                saved.Name == f.ExistingUser.Name &&
-                saved.IsPublic == f.ExistingUser.IsPublic &&
-                saved.Country == f.ExistingUser.Country),
+        f.Mediator.Verify(m => m.Send(It.Is<UpdateUserGameProfileCommand>(c =>
+                c.GameTag.ToString() == "NEWTAG" &&
+                c.AvatarUrl == NewAvatar),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -336,7 +333,8 @@ public sealed class OfficialLeaderboardSagaTests
         f.Mediator.Verify(m => m.Publish(It.Is<ImportStatusErrorEvent>(e => e.UserId == ImportUserId),
             It.IsAny<CancellationToken>()), Times.Once);
         // The sync failure does not abort the import — profile save still happens.
-        f.Users.Verify(u => u.SaveUser(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
+        f.Mediator.Verify(m => m.Send(It.IsAny<UpdateUserGameProfileCommand>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -361,8 +359,8 @@ public sealed class OfficialLeaderboardSagaTests
 
         await saga.Handle(ImportCommand(), CancellationToken.None);
 
-        f.Users.Verify(u => u.SaveUserUiSettings(ImportUserId,
-            It.Is<IDictionary<string, string>>(d => d["PreviousPageCount"] == "5"),
+        f.Mediator.Verify(m => m.Send(It.Is<SaveUserUiSettingCommand>(c =>
+                c.SettingName == "PreviousPageCount" && c.NewValue == "5"),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -385,7 +383,6 @@ public sealed class OfficialLeaderboardSagaTests
         Mock<IWorldRankingService>? worldRankings = null,
         Mock<IOfficialLeaderboardRepository>? leaderboards = null,
         Mock<ICurrentUserAccessor>? currentUser = null,
-        Mock<IUserRepository>? user = null,
         Mock<IMediator>? mediator = null,
         Mock<IPiuTrackerClient>? piuTracker = null,
         Mock<IBus>? bus = null,
@@ -398,7 +395,6 @@ public sealed class OfficialLeaderboardSagaTests
         worldRankings ??= new Mock<IWorldRankingService>();
         leaderboards ??= new Mock<IOfficialLeaderboardRepository>();
         currentUser ??= new Mock<ICurrentUserAccessor>();
-        user ??= new Mock<IUserRepository>();
         mediator ??= new Mock<IMediator>();
         piuTracker ??= new Mock<IPiuTrackerClient>();
         bus ??= new Mock<IBus>();
@@ -406,7 +402,7 @@ public sealed class OfficialLeaderboardSagaTests
         charts ??= new Mock<IChartRepository>();
         dateTime ??= FakeDateTime.At(Now);
         return new OfficialLeaderboardSaga(officialSite.Object, tierLists.Object, worldRankings.Object,
-            leaderboards.Object, currentUser.Object, user.Object, mediator.Object, piuTracker.Object,
+            leaderboards.Object, currentUser.Object, mediator.Object, piuTracker.Object,
             NullLogger<OfficialLeaderboardSaga>.Instance, bus.Object, files.Object, charts.Object,
             dateTime.Object);
     }

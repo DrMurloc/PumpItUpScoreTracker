@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.PlayerProgress.Application;
+using ScoreTracker.PlayerProgress.Domain;
 using ScoreTracker.PlayerProgress.Infrastructure;
 
 namespace ScoreTracker.PlayerProgress.Wiring;
@@ -23,6 +24,7 @@ public static class PlayerProgressRegistrationExtensions
         services.AddTransient<IPlayerStatsReader, EFPlayerStatsRepository>();
         services.AddTransient<IPlayerHistoryRepository, EFPlayerHistoryRepository>();
         services.AddTransient<ITitleRepository, EFTitleRepository>();
+        services.AddTransient<IFeedbackRepository, EFFeedbackRepository>();
         services.AddSingleton<IDbModelContribution, PlayerProgressModelContribution>();
         return services;
     }

@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
-namespace ScoreTracker.Data.Persistence.Entities
+namespace ScoreTracker.PlayerProgress.Infrastructure.Entities
 {
     [Index(nameof(ChartId))]
     [Index(nameof(UserId))]
-    public sealed class SuggestionFeedbackEntity
+    internal sealed class SuggestionFeedbackEntity
     {
         public Guid UserId { get; set; }
         [Key] public Guid Id { get; set; }

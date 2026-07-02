@@ -43,11 +43,11 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
     private readonly IScoreReader _scores;
-    private readonly IUserRepository _users;
+    private readonly IUserReader _users;
     private readonly IDateTimeOffsetAccessor _dateTime;
 
     public CommunitySaga(ICurrentUserAccessor currentUser, ICommunityRepository communities, IBotClient bot,
-        IUserRepository users, IChartRepository charts, IScoreReader scores, IMediator mediator,
+        IUserReader users, IChartRepository charts, IScoreReader scores, IMediator mediator,
         IDateTimeOffsetAccessor dateTime)
     {
         _currentUser = currentUser;

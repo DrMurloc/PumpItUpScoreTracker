@@ -331,7 +331,7 @@ public sealed class WeeklyTournamentSagaTests
         public Mock<IWeeklyTournamentRepository> WeeklyTournies { get; } = new();
         public Mock<IPlayerStatsReader> PlayerStats { get; } = new();
         public Mock<IBotClient> Bot { get; } = new();
-        public Mock<IUserRepository> Users { get; } = new();
+        public Mock<IUserReader> Users { get; } = new();
         public Mock<IBus> Bus { get; } = new();
         public WeeklyTournamentSaga Saga { get; }
 
@@ -403,7 +403,7 @@ public sealed class WeeklyTournamentSagaTests
         public Mock<IWeeklyTournamentRepository> WeeklyTournies { get; } = new();
         public Mock<IPlayerStatsReader> PlayerStats { get; } = new();
         public Mock<IBotClient> Bot { get; } = new();
-        public Mock<IUserRepository> Users { get; } = new();
+        public Mock<IUserReader> Users { get; } = new();
         public Mock<IBus> Bus { get; } = new();
         public Mock<IRandomNumberGenerator> Random { get; } = new();
         public IDictionary<string, Chart> Charts { get; }
@@ -447,7 +447,7 @@ public sealed class WeeklyTournamentSagaTests
         Mock<IWeeklyTournamentRepository>? weeklyTournies = null,
         Mock<IPlayerStatsReader>? playerStats = null,
         Mock<IBotClient>? bot = null,
-        Mock<IUserRepository>? users = null,
+        Mock<IUserReader>? users = null,
         Mock<IBus>? bus = null,
         Mock<IDateTimeOffsetAccessor>? dateTime = null,
         Mock<IRandomNumberGenerator>? random = null)
@@ -456,7 +456,7 @@ public sealed class WeeklyTournamentSagaTests
         weeklyTournies ??= new Mock<IWeeklyTournamentRepository>();
         playerStats ??= new Mock<IPlayerStatsReader>();
         bot ??= new Mock<IBotClient>();
-        users ??= new Mock<IUserRepository>();
+        users ??= new Mock<IUserReader>();
         bus ??= new Mock<IBus>();
         dateTime ??= FakeDateTime.At(Now);
         random ??= new Mock<IRandomNumberGenerator>();

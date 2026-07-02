@@ -731,45 +731,6 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("Song", "scores");
                 });
 
-            modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.SuggestionFeedbackEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ChartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("FeedbackCategory")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsPositive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Notes")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("ShouldHide")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("SuggestionCategory")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChartId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("SuggestionFeedback", "scores");
-                });
-
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.TournamentMachineEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -1461,6 +1422,45 @@ namespace ScoreTracker.Data.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("PlayerStats", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.SuggestionFeedbackEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FeedbackCategory")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsPositive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("ShouldHide")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SuggestionCategory")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChartId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SuggestionFeedback", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.UserHighestTitleEntity", b =>

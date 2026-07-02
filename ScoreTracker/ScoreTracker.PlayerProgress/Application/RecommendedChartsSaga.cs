@@ -10,6 +10,7 @@ using ScoreTracker.Domain.Models.Titles;
 using ScoreTracker.Domain.Models.Titles.Phoenix;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.PlayerProgress.Domain;
 using ScoreTracker.Domain.ValueTypes;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 
@@ -21,7 +22,7 @@ namespace ScoreTracker.PlayerProgress.Application
     {
         private readonly IMediator _mediator;
         private readonly ICurrentUserAccessor _currentUser;
-        private readonly IUserRepository _users;
+        private readonly IFeedbackRepository _feedback;
         private readonly IPlayerStatsReader _stats;
         private readonly IScoreReader _scores;
         private readonly IWeeklyTournamentRepository _weeklyTournament;
@@ -29,14 +30,14 @@ namespace ScoreTracker.PlayerProgress.Application
         private readonly IDateTimeOffsetAccessor _dateTime;
         private readonly IRandomNumberGenerator _random;
 
-        public RecommendedChartsSaga(IMediator mediator, ICurrentUserAccessor currentUser, IUserRepository users,
+        public RecommendedChartsSaga(IMediator mediator, ICurrentUserAccessor currentUser, IFeedbackRepository feedback,
             IPlayerStatsReader stats, IScoreReader scores,
             IWeeklyTournamentRepository weeklyTournament, IChartListRepository chartList,
             IDateTimeOffsetAccessor dateTime, IRandomNumberGenerator random)
         {
             _mediator = mediator;
             _currentUser = currentUser;
-            _users = users;
+            _feedback = feedback;
             _stats = stats;
             _scores = scores;
             _weeklyTournament = weeklyTournament;
@@ -56,7 +57,7 @@ namespace ScoreTracker.PlayerProgress.Application
                 .ToArray();
             var scores = (await _scores.GetBestScores(_currentUser.User.Id, cancellationToken))
                 .ToArray();
-            var feedback = (await _users.GetFeedback(_currentUser.User.Id, cancellationToken))
+            var feedback = (await _feedback.GetFeedback(_currentUser.User.Id, cancellationToken))
                 .Where(f => f.ShouldHide)
                 .GroupBy(u => u.SuggestionCategory.ToString()).ToDictionary(g => g.Key,
                     g => (ISet<Guid>)g.Select(i => i.ChartId).Distinct().ToHashSet());
@@ -322,7 +323,7 @@ namespace ScoreTracker.PlayerProgress.Application
 
         public async Task Handle(SubmitFeedbackCommand request, CancellationToken cancellationToken)
         {
-            await _users.SaveFeedback(_currentUser.User.Id, request.Feedback, cancellationToken);
+            await _feedback.SaveFeedback(_currentUser.User.Id, request.Feedback, cancellationToken);
         }
     }
 }

@@ -9,6 +9,7 @@ using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Identity.Contracts.Commands;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.Domain.Enums;
@@ -45,7 +46,6 @@ namespace ScoreTracker.OfficialMirror.Application
         private readonly IOfficialLeaderboardRepository _leaderboards;
         private readonly ICurrentUserAccessor _currentUser;
         private readonly IWorldRankingService _worldRankings;
-        private readonly IUserRepository _user;
         private readonly IMediator _mediator;
         private readonly IBus _bus;
         private readonly IFileUploadClient _files;
@@ -56,7 +56,7 @@ namespace ScoreTracker.OfficialMirror.Application
 
         public OfficialLeaderboardSaga(IOfficialSiteClient officialSite, ITierListRepository tierLists,
             IWorldRankingService worldRankings,
-            IOfficialLeaderboardRepository leaderboards, ICurrentUserAccessor currentUser, IUserRepository user,
+            IOfficialLeaderboardRepository leaderboards, ICurrentUserAccessor currentUser,
             IMediator mediator,
             IPiuTrackerClient piuTracker,
             ILogger<OfficialLeaderboardSaga> logger,
@@ -68,7 +68,6 @@ namespace ScoreTracker.OfficialMirror.Application
             _tierLists = tierLists;
             _leaderboards = leaderboards;
             _currentUser = currentUser;
-            _user = user;
             _mediator = mediator;
             _logger = logger;
             _bus = bus;
@@ -302,17 +301,17 @@ namespace ScoreTracker.OfficialMirror.Application
             await _mediator.Send(new SaveUserUiSettingCommand("ProfileImage", accountData.AvatarUrl.ToString()),
                 cancellationToken);
             await _mediator.Send(new SaveUserUiSettingCommand("GameTag", accountData.AccountName), cancellationToken);
-            var user = await _user.GetUser(userId, cancellationToken);
-            await _user.SaveUser(
-                new User(userId, user.Name, user.IsPublic, accountData.AccountName, accountData.AvatarUrl,
-                    user.Country, user.IsContentLocked, user.ClaimsInvalidatedAt),
+            // User writes go through Identity contracts — the Mirror never touches
+            // IUserRepository (ADR-001: writes are owned by their vertical).
+            await _mediator.Send(
+                new UpdateUserGameProfileCommand(accountData.AccountName, accountData.AvatarUrl),
                 cancellationToken);
 
-            await _bus.Publish(new TitlesDetectedEvent(user.Id, accountData.Titles.Select(t => t.ToString())),
+            await _bus.Publish(new TitlesDetectedEvent(userId, accountData.Titles.Select(t => t.ToString())),
                 cancellationToken);
 
             var maxPages = await _officialSite.GetScorePageCount(request.Username, request.Password, cancellationToken);
-            var limit = (await _user.GetUserUiSettings(userId, cancellationToken)).TryGetValue("PreviousPageCount",
+            var limit = (await _mediator.Send(new GetUserUiSettingsQuery(userId), cancellationToken)).TryGetValue("PreviousPageCount",
                 out var result)
                 ? int.TryParse(result, out var previous) ? (int?)maxPages - previous + 1 : null
                 : null;
@@ -360,9 +359,8 @@ namespace ScoreTracker.OfficialMirror.Application
                 cancellationToken);
             batch.Clear();
 
-            var settings = await _user.GetUserUiSettings(userId, cancellationToken);
-            settings["PreviousPageCount"] = maxPages.ToString();
-            await _user.SaveUserUiSettings(userId, settings, cancellationToken);
+            await _mediator.Send(new SaveUserUiSettingCommand("PreviousPageCount", maxPages.ToString()),
+                cancellationToken);
         }
 
         private static readonly Regex NonAlphanumeric = new("[^a-zA-Z0-9]", RegexOptions.Compiled);

@@ -19,6 +19,7 @@ public sealed class PlayerProgressModelContribution : IDbModelContribution
         modelBuilder.Entity<PlayerHistoryEntity>().ToTable("PlayerHistory");
         modelBuilder.Entity<UserTitleEntity>().ToTable("UserTitle");
         modelBuilder.Entity<UserHighestTitleEntity>().ToTable("UserHighestTitle");
+        modelBuilder.Entity<SuggestionFeedbackEntity>().ToTable("SuggestionFeedback");
 
         modelBuilder.Entity<UserTitleEntity>().Property(e => e.ParagonLevel)
             .HasDefaultValue(ParagonLevel.None.ToString());

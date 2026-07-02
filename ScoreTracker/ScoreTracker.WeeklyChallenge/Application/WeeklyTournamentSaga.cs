@@ -17,7 +17,7 @@ namespace ScoreTracker.WeeklyChallenge.Application
     internal sealed class WeeklyTournamentSaga
     (IChartRepository charts, IWeeklyTournamentRepository weeklyTournies, IPlayerStatsReader playerStats,
         IBotClient bot,
-        ILogger<WeeklyTournamentSaga> logger, IUserRepository users, IBus bus,
+        ILogger<WeeklyTournamentSaga> logger, IUserReader users, IBus bus,
         IDateTimeOffsetAccessor dateTime, IRandomNumberGenerator random) :
         IConsumer<RotateWeeklyChartsCommand>,
         IConsumer<ScoreImportCompletedEvent>,
