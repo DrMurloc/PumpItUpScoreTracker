@@ -1,3 +1,4 @@
+using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts.Commands;

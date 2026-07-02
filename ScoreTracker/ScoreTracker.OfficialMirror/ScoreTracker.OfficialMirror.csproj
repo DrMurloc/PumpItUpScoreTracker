@@ -17,6 +17,7 @@
   <ItemGroup>
     <!-- HtmlAgilityPack: the PiuGame ACL parses official-site HTML (Q6 — HTML never leaves this assembly). -->
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+    <PackageReference Include="MassTransit" Version="8.5.7" />
     <PackageReference Include="MassTransit.Abstractions" Version="8.5.7" />
     <PackageReference Include="MediatR" Version="14.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />

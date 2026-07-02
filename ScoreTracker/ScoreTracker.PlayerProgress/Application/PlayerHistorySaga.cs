@@ -3,9 +3,9 @@ using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
-namespace ScoreTracker.Application.Handlers
+namespace ScoreTracker.PlayerProgress.Application
 {
-    public sealed class PlayerHistorySaga(IPlayerHistoryRepository history, IDateTimeOffsetAccessor dateTime)
+    internal sealed class PlayerHistorySaga(IPlayerHistoryRepository history, IDateTimeOffsetAccessor dateTime)
         : IConsumer<PlayerRatingsImprovedEvent>
     {
         public async Task Consume(ConsumeContext<PlayerRatingsImprovedEvent> context)

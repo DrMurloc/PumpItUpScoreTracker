@@ -10,6 +10,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
+using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Exceptions;

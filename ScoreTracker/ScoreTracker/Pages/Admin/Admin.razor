@@ -19,7 +19,7 @@
 @using ScoreTracker.Application.Handlers
 @using ScoreTracker.Domain.Events
 @using ScoreTracker.Domain.Records
-@using ScoreTracker.PersonalProgress
+@using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.Domain.SecondaryPorts
 @using System.Reflection
 
@@ -319,7 +319,7 @@
    /* var userIds = await Database.User.Select(u => u.Id).ToArrayAsync();
         foreach (var userId in userIds)
         {
-            await Mediator.Send(new PlayerRatingSaga.RecalculateStats(userId));
+            await Mediator.Send(new RecalculateStatsCommand(userId));
         }*/
 
 

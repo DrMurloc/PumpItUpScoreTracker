@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Moq;
+using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.ScoreLedger.Application;
 using ScoreTracker.ScoreLedger.Domain;

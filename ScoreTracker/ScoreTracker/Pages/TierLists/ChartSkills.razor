@@ -2,6 +2,9 @@
 @page "/PersonalizedTierList"
 @page "/TierLists"
 @using MediatR
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts.Commands
 @using ScoreTracker.Domain.Services
 @using Microsoft.Extensions.Caching.Memory
 @using ScoreTracker.Application.Commands
@@ -17,7 +20,7 @@
 @using ScoreTracker.Web.Components
 @using ChartType = ScoreTracker.Domain.Enums.ChartType
 @using ScoreTracker.Domain.Records
-@using ScoreTracker.PersonalProgress.Queries
+@using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Shared

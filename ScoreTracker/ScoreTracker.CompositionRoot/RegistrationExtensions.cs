@@ -10,6 +10,7 @@ using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Repositories;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.EventCompetition.Wiring;
+using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.Ucs.Wiring;
@@ -43,6 +44,7 @@ public static class RegistrationExtensions
         builder.AddCommunities();
         builder.AddEventCompetition();
         builder.AddOfficialMirror();
+        builder.AddPlayerProgress();
         builder.AddScoreLedger();
         builder.AddUcs();
         builder.AddWeeklyChallenge();

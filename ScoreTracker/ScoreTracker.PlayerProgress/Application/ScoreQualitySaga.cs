@@ -1,14 +1,15 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Application.Queries;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Application.Handlers;
+namespace ScoreTracker.PlayerProgress.Application;
 
-public sealed class ScoreQualitySaga :
+internal sealed class ScoreQualitySaga :
     IRequestHandler<GetPlayerScoreQualityQuery, IDictionary<Guid, ScoreRankingRecord>>,
     IRequestHandler<GetChartScoreRankingsQuery, IDictionary<Guid, ScoreRankingRecord>>,
     IRequestHandler<GetCompetitivePlayersQuery, IEnumerable<Guid>>

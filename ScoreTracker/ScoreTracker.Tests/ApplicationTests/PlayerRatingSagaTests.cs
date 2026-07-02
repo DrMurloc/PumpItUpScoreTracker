@@ -6,14 +6,17 @@ using System.Threading.Tasks;
 using MassTransit;
 using MediatR;
 using Moq;
+using ScoreTracker.PlayerProgress.Application;
+using ScoreTracker.PlayerProgress.Contracts.Commands;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
-using ScoreTracker.PersonalProgress;
-using ScoreTracker.PersonalProgress.Queries;
+using ScoreTracker.PlayerProgress.Wiring;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Tests.TestData;
 using Xunit;
 
@@ -131,7 +134,7 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
-    public async Task RecalculateStatsSavesNewStatsAndAlwaysPublishesStatsUpdatedEvent()
+    public async Task RecalculateStatsCommandSavesNewStatsAndAlwaysPublishesStatsUpdatedEvent()
     {
         var userId = Guid.NewGuid();
         var stats = new Mock<IPlayerStatsRepository>();
@@ -142,7 +145,7 @@ public sealed class PlayerRatingSagaTests
             scores: ScoresMockReturning(userId, Array.Empty<RecordedPhoenixScore>()),
             stats: stats, bus: bus, mediator: mediator);
 
-        await saga.Handle(new PlayerRatingSaga.RecalculateStats(userId), CancellationToken.None);
+        await saga.Handle(new RecalculateStatsCommand(userId), CancellationToken.None);
 
         stats.Verify(s => s.SaveStats(userId, It.IsAny<PlayerStatsRecord>(),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -153,7 +156,7 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
-    public async Task RecalculateStatsPublishesRatingsImprovedWhenSkillRatingIncreases()
+    public async Task RecalculateStatsCommandPublishesRatingsImprovedWhenSkillRatingIncreases()
     {
         var userId = Guid.NewGuid();
         var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
@@ -165,7 +168,7 @@ public sealed class PlayerRatingSagaTests
             scores: ScoresMockReturning(userId, new[] { Score(single.Id, 950000) }),
             stats: stats, bus: bus);
 
-        await saga.Handle(new PlayerRatingSaga.RecalculateStats(userId), CancellationToken.None);
+        await saga.Handle(new RecalculateStatsCommand(userId), CancellationToken.None);
 
         bus.Verify(b => b.Publish(It.Is<PlayerRatingsImprovedEvent>(e => e.UserId == userId
                                                                          && e.NewTop50 > e.OldTop50),
@@ -173,7 +176,7 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
-    public async Task RecalculateStatsDoesNotPublishRatingsImprovedWhenNothingImproves()
+    public async Task RecalculateStatsCommandDoesNotPublishRatingsImprovedWhenNothingImproves()
     {
         var userId = Guid.NewGuid();
         var stats = new Mock<IPlayerStatsRepository>();
@@ -191,14 +194,14 @@ public sealed class PlayerRatingSagaTests
             scores: ScoresMockReturning(userId, Array.Empty<RecordedPhoenixScore>()),
             stats: stats, bus: bus);
 
-        await saga.Handle(new PlayerRatingSaga.RecalculateStats(userId), CancellationToken.None);
+        await saga.Handle(new RecalculateStatsCommand(userId), CancellationToken.None);
 
         bus.Verify(b => b.Publish(It.IsAny<PlayerRatingsImprovedEvent>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task RecalculatePumbilityUpdatesScoreStatsForGivenCharts()
+    public async Task RecalculatePumbilityCommandUpdatesScoreStatsForGivenCharts()
     {
         var userId = Guid.NewGuid();
         var c1 = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
@@ -223,7 +226,7 @@ public sealed class PlayerRatingSagaTests
         var saga = BuildSaga(charts: charts, scores: scores, recordStats: recordStats);
 
         await saga.Handle(
-            new PlayerRatingSaga.RecalculatePumbility(userId, new[] { c1.Id, c2.Id }),
+            new RecalculatePumbilityCommand(userId, new[] { c1.Id, c2.Id }),
             CancellationToken.None);
 
         recordStats.Verify(s => s.UpdateScoreStats(userId,
@@ -253,7 +256,7 @@ public sealed class PlayerRatingSagaTests
         await saga.Consume(BuildContext(PlayerScoresUpdatedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), userId,
             new[] { new PlayerScoresUpdatedEvent.ScoreChange(chartId, true, null, 950000, null, false) })));
 
-        // RecalculateStats path → SaveStats called; RecalculatePumbility path → UpdateScoreStats called.
+        // RecalculateStatsCommand path → SaveStats called; RecalculatePumbilityCommand path → UpdateScoreStats called.
         stats.Verify(s => s.SaveStats(userId, It.IsAny<PlayerStatsRecord>(),
             It.IsAny<CancellationToken>()), Times.Once);
         recordStats.Verify(s => s.UpdateScoreStats(userId, It.IsAny<IEnumerable<PhoenixRecordStats>>(),

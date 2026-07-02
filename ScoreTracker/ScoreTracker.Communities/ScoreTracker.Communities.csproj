@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="MassTransit" Version="8.5.7" />
     <PackageReference Include="MassTransit.Abstractions" Version="8.5.7" />
     <PackageReference Include="MediatR" Version="14.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
@@ -24,13 +25,13 @@
   <ItemGroup>
     <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
     <!-- Transitional (P5): the single ChartAttemptDbContext still lives in ScoreTracker.Data.
-         Application + PersonalProgress are also transitional: CommunitySaga sends
-         GetChartsQuery (Application) and GetTop50ForPlayerQuery (PersonalProgress) via
-         IMediator; both references drop when those records find their vertical homes. -->
+         Application is also transitional: CommunitySaga sends GetChartsQuery via IMediator;
+         the reference drops when the chart reads move to Catalog. -->
     <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
     <ProjectReference Include="..\ScoreTracker.Application\ScoreTracker.Application.csproj" />
-    <ProjectReference Include="..\ScoreTracker.PersonalProgress\ScoreTracker.PersonalProgress.csproj" />
-    <!-- Vertical→vertical contracts: CommunitySaga consumes UcsLeaderboardPlacedEvent. -->
+    <!-- Vertical→vertical contracts: CommunitySaga consumes UcsLeaderboardPlacedEvent and
+         sends PlayerProgress's GetTop50ForPlayerQuery. -->
+    <ProjectReference Include="..\ScoreTracker.PlayerProgress\ScoreTracker.PlayerProgress.csproj" />
     <ProjectReference Include="..\ScoreTracker.Ucs\ScoreTracker.Ucs.csproj" />
   </ItemGroup>
 

@@ -18,7 +18,7 @@ using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.Domain.ValueTypes;
 using ScoreTracker.EventCompetition.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
-using ScoreTracker.PersonalProgress;
+using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.WeeklyChallenge.Wiring;
 using ScoreTracker.Web;
@@ -64,10 +64,12 @@ builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSectio
 var sqlConfig = builder.Configuration.GetSection("SQL").Get<SqlConfiguration>()!;
 builder.Services.AddMassTransit(o =>
 {
-    o.AddConsumers(typeof(PlayerRatingSaga).Assembly, typeof(TitleSaga).Assembly,
-        typeof(RecurringJobRunner).Assembly);
+    // Application and Web no longer hold public consumers — every saga lives in a
+    // vertical now. The Web scan stays for future host-level consumers.
+    o.AddConsumers(typeof(RecurringJobRunner).Assembly);
     // Vertical consumers are internal — assembly scanning skips them (see the
     // AddScoreLedgerConsumers doc comment and its tripwire test).
+    o.AddPlayerProgressConsumers();
     o.AddScoreLedgerConsumers();
     o.AddOfficialMirrorConsumers();
     o.AddChartIntelligenceConsumers();
@@ -183,7 +185,7 @@ builder.Services.AddBlazorApplicationInsights()
         o.RegisterServicesFromAssemblies(
             typeof(CreateUserHandler).Assembly
             , typeof(MainLayout).Assembly, typeof(EFPlayerStatsRepository).Assembly,
-            typeof(PlayerRatingSaga).Assembly,
+            typeof(PlayerProgressRegistrationExtensions).Assembly,
             typeof(ScoreTracker.Ucs.Wiring.UcsRegistrationExtensions).Assembly,
             typeof(ScoreTracker.ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions).Assembly,
             typeof(ScoreTracker.OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions).Assembly,

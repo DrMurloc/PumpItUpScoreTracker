@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using ScoreTracker.Domain.Records;
 
-namespace ScoreTracker.Application.Queries
+namespace ScoreTracker.PlayerProgress.Contracts.Queries
 {
     [ExcludeFromCodeCoverage]
     public sealed record GetChartScoreRankingsQuery

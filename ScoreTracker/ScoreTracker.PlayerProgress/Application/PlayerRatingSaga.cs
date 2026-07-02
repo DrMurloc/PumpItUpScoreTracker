@@ -6,16 +6,16 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
-using ScoreTracker.PersonalProgress.Queries;
-using static ScoreTracker.PersonalProgress.PlayerRatingSaga;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Contracts.Commands;
 
-namespace ScoreTracker.PersonalProgress;
+namespace ScoreTracker.PlayerProgress.Application;
 
-public sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
+internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
     IRequestHandler<GetTop50ForPlayerQuery, IEnumerable<RecordedPhoenixScore>>,
     IRequestHandler<GetTop50CompetitiveQuery, IEnumerable<RecordedPhoenixScore>>,
-    IRequestHandler<RecalculateStats>,
-    IRequestHandler<RecalculatePumbility>,
+    IRequestHandler<RecalculateStatsCommand>,
+    IRequestHandler<RecalculatePumbilityCommand>,
     IConsumer<UserCreatedEvent>
 {
     private readonly IScoreReader _scores;
@@ -40,9 +40,9 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
 
     public async Task Consume(ConsumeContext<PlayerScoresUpdatedEvent> context)
     {
-        await Handle(new RecalculateStats(context.Message.UserId), context.CancellationToken);
+        await Handle(new RecalculateStatsCommand(context.Message.UserId), context.CancellationToken);
         await Handle(
-            new RecalculatePumbility(context.Message.UserId,
+            new RecalculatePumbilityCommand(context.Message.UserId,
                 context.Message.Changes.Select(c => c.ChartId).Distinct().ToArray()),
             context.CancellationToken);
     }
@@ -84,15 +84,7 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
             context.CancellationToken);
     }
 
-    public sealed record RecalculatePumbility(Guid UserId, IEnumerable<Guid> chartIds) : IRequest
-    {
-    }
-
-    public sealed record RecalculateStats(Guid UserId) : IRequest
-    {
-    }
-
-    public async Task Handle(RecalculateStats request, CancellationToken cancellationToken)
+    public async Task Handle(RecalculateStatsCommand request, CancellationToken cancellationToken)
     {
         var oldStats = await _stats.GetStats(request.UserId, cancellationToken);
         var scoring = ScoringConfiguration.PumbilityScoring(true);
@@ -198,7 +190,7 @@ public sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
         return charts.Any() ? charts.Average() : 0;
     }
 
-    public async Task Handle(RecalculatePumbility request, CancellationToken cancellationToken)
+    public async Task Handle(RecalculatePumbilityCommand request, CancellationToken cancellationToken)
     {
         var scores = (await _scores.GetPlayerScores(new[] { request.UserId },
             request.chartIds,

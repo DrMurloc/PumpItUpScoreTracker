@@ -20,7 +20,7 @@ public sealed class MessageTaxonomyTests
     private static readonly Assembly[] MessageAssemblies =
     {
         typeof(Application.Commands.CreateUserCommand).Assembly,
-        typeof(PersonalProgress.Queries.GetTop50CompetitiveQuery).Assembly,
+        typeof(PlayerProgress.Contracts.Queries.GetTop50CompetitiveQuery).Assembly,
         typeof(Domain.Models.User).Assembly,
         typeof(Ucs.Contracts.UcsChart).Assembly,
         typeof(ScoreLedger.Contracts.Queries.GetPhoenixRecordQuery).Assembly,

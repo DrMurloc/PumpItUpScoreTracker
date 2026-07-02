@@ -2,6 +2,7 @@ using ScoreTracker.WeeklyChallenge.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.Communities.Wiring;
 using ScoreTracker.EventCompetition.Wiring;
+using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using System;
 using System.Linq;
@@ -38,7 +39,8 @@ public sealed class VerticalBoundaryTests
         typeof(ChartIntelligence.Wiring.ChartIntelligenceRegistrationExtensions),
         typeof(WeeklyChallenge.Wiring.WeeklyChallengeRegistrationExtensions),
         typeof(EventCompetition.Wiring.EventCompetitionRegistrationExtensions),
-        typeof(Communities.Wiring.CommunitiesRegistrationExtensions)
+        typeof(Communities.Wiring.CommunitiesRegistrationExtensions),
+        typeof(PlayerProgress.Wiring.PlayerProgressRegistrationExtensions)
     };
 
     [Theory]
@@ -104,6 +106,28 @@ public sealed class VerticalBoundaryTests
 
         Assert.Contains(services,
             d => d.ServiceType == typeof(ScoreTracker.WeeklyChallenge.Application.WeeklyTournamentSaga));
+    }
+
+    [Fact]
+    public void MassTransitDiscoversThePlayerProgressInternalConsumers()
+    {
+        // PlayerRatingSaga is the rating pipeline (stats + Pumbility after every score
+        // import); TitleSaga and PlayerHistorySaga ride the same event streams. All are
+        // internal, so the AddPlayerProgressConsumers hook is the registration path — if
+        // it stops covering them, ratings silently freeze while imports keep succeeding.
+        var services = new ServiceCollection();
+        services.AddMassTransit(x =>
+        {
+            x.AddPlayerProgressConsumers();
+            x.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
+        });
+
+        Assert.Contains(services,
+            d => d.ServiceType == typeof(ScoreTracker.PlayerProgress.Application.PlayerRatingSaga));
+        Assert.Contains(services,
+            d => d.ServiceType == typeof(ScoreTracker.PlayerProgress.Application.TitleSaga));
+        Assert.Contains(services,
+            d => d.ServiceType == typeof(ScoreTracker.PlayerProgress.Application.PlayerHistorySaga));
     }
 
     [Fact]

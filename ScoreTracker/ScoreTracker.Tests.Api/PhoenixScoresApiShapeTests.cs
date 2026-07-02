@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;

@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using ScoreTracker.Application.Queries;
+using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.ScoreLedger.Domain;

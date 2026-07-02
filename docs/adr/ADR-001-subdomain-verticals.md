@@ -43,7 +43,7 @@ Plus `ScoreTracker.SharedKernel` (not a vertical — the PIU Game Model). `Score
 
 | Q | Decision |
 |---|---|
-| Q1 | Recommendations live **inside PlayerProgress**. Extraction of PlayerProgress waits for the in-flight WSIP feature to land. |
+| Q1 | Recommendations live **inside PlayerProgress**. ~~Extraction of PlayerProgress waits for the in-flight WSIP feature to land.~~ Superseded 2026-07-01 (owner): the rearch is structure-only, so extraction proceeds independent of feature work. |
 | Q2 | **Catalog is a small vertical** owning content writes (songs, charts, skills, videos, name mappings); the kernel keeps only types and IDs. Amends A2's kernel-and-shared-ports realization. |
 | Q3 | The `ScoringConfiguration` **engine joins the SharedKernel**; presets live with their owners (M.o.M.'s in EventCompetition, Pumbility's in PlayerProgress). Amends A2's tight-kernel scope. |
 | Q4 | Randomizer = `IRandomChartSelector` in **Catalog**. |

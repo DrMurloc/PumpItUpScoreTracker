@@ -2,7 +2,7 @@
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 
-namespace ScoreTracker.PersonalProgress.Queries
+namespace ScoreTracker.PlayerProgress.Contracts.Queries
 {
     [ExcludeFromCodeCoverage]
     public sealed record GetTop50ForPlayerQuery

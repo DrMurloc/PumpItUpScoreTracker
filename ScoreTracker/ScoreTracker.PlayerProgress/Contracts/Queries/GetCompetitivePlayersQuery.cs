@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using ScoreTracker.Domain.Enums;
 
-namespace ScoreTracker.Application.Queries
+namespace ScoreTracker.PlayerProgress.Contracts.Queries
 {
     [ExcludeFromCodeCoverage]
     public sealed record GetCompetitivePlayersQuery(ChartType ChartType) : IQuery<IEnumerable<Guid>>

@@ -5,9 +5,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Moq;
-using ScoreTracker.Application.Commands;
-using ScoreTracker.Application.Handlers;
 using ScoreTracker.Application.Queries;
+using ScoreTracker.ScoreLedger.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Application;
+using ScoreTracker.PlayerProgress.Contracts.Commands;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Contracts.Commands;
+using ScoreTracker.PlayerProgress.Application;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Models.Titles;
@@ -15,7 +20,7 @@ using ScoreTracker.Domain.Models.Titles.Phoenix;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
-using ScoreTracker.PersonalProgress.Queries;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Tests.TestData;
 using ScoreTracker.Tests.TestHelpers;
 using Xunit;
@@ -138,7 +143,7 @@ public sealed class RecommendedChartsSagaTests
             // Default empty for all the mediator queries that random-using sub-methods rely on.
             Mediator.Setup(m => m.Send(It.IsAny<GetTitleProgressQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new[] { OneTitle() });
-            Mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsQuery>(), It.IsAny<CancellationToken>()))
+            Scores.Setup(s => s.GetBestScores(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
             Mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<Chart>());
@@ -167,7 +172,7 @@ public sealed class RecommendedChartsSagaTests
 
         public RecommendedChartsContext WithScores(params RecordedPhoenixScore[] scores)
         {
-            Mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsQuery>(), It.IsAny<CancellationToken>()))
+            Scores.Setup(s => s.GetBestScores(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(scores);
             return this;
         }

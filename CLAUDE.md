@@ -33,14 +33,12 @@ These are the project-local realizations of the rules in `ENTERPRISE.md`. When E
 ### Layer graph and per-layer package allowlist
 
 ```
-SharedKernel ◄── Domain  ◄── Application ◄── Data
-                   ▲           ▲              ▲
-                   │           │              │
-                   └── PersonalProgress ◄─────┘
-                               ▲
-                               │
-                               └── Web ◄── CompositionRoot
+SharedKernel ◄── Domain ◄── Application ◄── Data ◄── verticals ◄── Web ◄── CompositionRoot
 ```
+
+(Verticals reference `Data` transitionally until P6; some also reference `Application`
+transitionally — see the vertical row below. `Web` and `CompositionRoot` reference every
+vertical.)
 
 | Project | Allowed external packages | Forbidden |
 |---|---|---|
@@ -49,7 +47,7 @@ SharedKernel ◄── Domain  ◄── Application ◄── Data
 | `ScoreTracker.Application` | + `MassTransit.Abstractions`, `Microsoft.Extensions.Caching.Memory` | EF Core, ASP.NET, `HttpClient`, vendor SDKs. Application must never know it's behind a web server. |
 | `ScoreTracker.Data` | + `Microsoft.EntityFrameworkCore.SqlServer`, `Azure.Storage.Blobs`, `Discord.Net`, `HtmlAgilityPack`, `SendGrid` | ASP.NET. |
 | `ScoreTracker.Web` | + `MudBlazor`, OAuth providers, `Swashbuckle`, `Tesseract`, MassTransit DI, `Hangfire.AspNetCore`, `Hangfire.SqlServer` | EF Core directly (must go through ports). |
-| Vertical assemblies: `ScoreTracker.Ucs`, `ScoreTracker.ScoreLedger`, `ScoreTracker.OfficialMirror`, `ScoreTracker.Catalog`, `ScoreTracker.ChartIntelligence`, `ScoreTracker.WeeklyChallenge`, `ScoreTracker.EventCompetition`, `ScoreTracker.Communities` (rearch P5; UCS is the template) | `MediatR`, `MassTransit.Abstractions`, `Microsoft.Extensions.DependencyInjection.Abstractions`, `Microsoft.Extensions.Caching.Memory`; `OfficialMirror` additionally `Microsoft.Extensions.Http` + `HtmlAgilityPack` (the PiuGame ACL) (+ project refs `Domain`, `Data` transitionally for the shared DbContext; `ScoreLedger`/`OfficialMirror`/`Communities` also ref `Application` transitionally — command/query records sent by Application sagas stay there until their senders extract; `Communities` additionally refs `PersonalProgress`) | Everything else. Only `Contracts/` and `Wiring/` namespaces may be public (arch-test enforced, `VerticalBoundaryTests`); EF entities and internal domain types never cross the boundary. Verticals must not be referenced by `Application` (cycles through `Data → Application`). **MassTransit's `AddConsumers` scan skips internal types** — verticals with bus consumers expose an `AddXxxConsumers(IRegistrationConfigurator)` hook called from `Program.cs`'s `AddMassTransit` block (tripwire-tested). |
+| Vertical assemblies: `ScoreTracker.Ucs`, `ScoreTracker.ScoreLedger`, `ScoreTracker.OfficialMirror`, `ScoreTracker.Catalog`, `ScoreTracker.ChartIntelligence`, `ScoreTracker.WeeklyChallenge`, `ScoreTracker.EventCompetition`, `ScoreTracker.Communities`, `ScoreTracker.PlayerProgress` (rearch P5; UCS is the template) | `MediatR`, `MassTransit.Abstractions` (+ full `MassTransit` for verticals with bus consumers — `IRegistrationConfigurator`, used by the `AddXxxConsumers` hooks, lives in the full package), `Microsoft.Extensions.DependencyInjection.Abstractions`, `Microsoft.Extensions.Caching.Memory`; `OfficialMirror` additionally `Microsoft.Extensions.Http` + `HtmlAgilityPack` (the PiuGame ACL) (+ project refs `Domain`, `Data` transitionally for the shared DbContext; `ScoreLedger`/`OfficialMirror`/`Communities` also ref `Application` transitionally — command/query records sent by Application sagas stay there until their senders extract; `PlayerProgress` holds the six progression sagas while its EF repositories stay in `Data` (cross-vertical SQL joins pending conversion)) | Everything else. Only `Contracts/` and `Wiring/` namespaces may be public (arch-test enforced, `VerticalBoundaryTests`); EF entities and internal domain types never cross the boundary. Verticals must not be referenced by `Application` (cycles through `Data → Application`). **MassTransit's `AddConsumers` scan skips internal types** — verticals with bus consumers expose an `AddXxxConsumers(IRegistrationConfigurator)` hook called from `Program.cs`'s `AddMassTransit` block (tripwire-tested). |
 | `ScoreTracker.CompositionRoot` | DI extensions only (+ `Microsoft.EntityFrameworkCore.Design`, private, for the design-time factory) | Business logic. |
 | `ScoreTracker.Tests` | + `xunit`, `Moq` | Other doubling libraries (see Test conventions). References `ScoreTracker.Application` (for handler tests) and `ScoreTracker.Data` (for parser approval tests against `PiuGameApi`). Does not reference `ScoreTracker.Web`. |
 | `ScoreTracker.Tests.Api` | + `xunit`, `Moq` | The one sanctioned `ScoreTracker.Web`-referencing test project — it pins the public API wire shapes, which live in Web's controllers/DTOs. Same doubling rules as `ScoreTracker.Tests`. |
@@ -60,7 +58,7 @@ Adding a package outside its allowed layer is a violation. Adding a project refe
 ### Use case dispatch
 
 - **Message taxonomy — folder + name + interface distinguish the kinds** (arch-test enforced, `MessageTaxonomyTests`):
-  - **Queries** — `*Query` records implementing `IQuery<T>` (`ScoreTracker.SharedKernel.Messaging`), in `Application/Queries/`, `PersonalProgress/Queries/`, or a vertical's `Contracts/Queries/`. Read-only; never travel the bus.
+  - **Queries** — `*Query` records implementing `IQuery<T>` (`ScoreTracker.SharedKernel.Messaging`), in `Application/Queries/` or a vertical's `Contracts/Queries/`. Read-only; never travel the bus.
   - **Commands (MediatR)** — `*Command` records implementing `IRequest`/`IRequest<T>`, in `Application/Commands/` or a vertical's `Contracts/Commands/`.
   - **Commands (bus triggers)** — `*Command` plain records (not `IRequest`) in `Application/Messages/`, published via `IBus` by `RecurringJobRunner`/admin pages.
   - **Events** — `*Event` past-tense fact records (never `IRequest`) in `Domain/Events/` (bus), `Application/Events/` (`INotification`), or a vertical's `Contracts/Events/` (bus; publishing vertical owns the event once no Application consumer remains).
@@ -145,7 +143,7 @@ PR gate: `dotnet test ScoreTracker/ScoreTracker.Tests/...` runs the fast suite w
 ### Coverage exclusions
 
 - Mark new commands, queries, events, records, exceptions, view projections, and enum-helper static classes with `[ExcludeFromCodeCoverage]`. `GlobalUsings.cs` already exposes `System.Diagnostics.CodeAnalysis`.
-- Excluded folders: `Application/Commands`, `Application/Queries`, `Application/Events`, `Application/Messages`, `Domain/Records`, `Domain/Events`, `Domain/Views`, `Domain/Exceptions`, `Domain/Enums` (helpers only), `PersonalProgress/Queries`.
+- Excluded folders: `Application/Commands`, `Application/Queries`, `Application/Events`, `Application/Messages`, `Domain/Records`, `Domain/Events`, `Domain/Views`, `Domain/Exceptions`, `Domain/Enums` (helpers only), vertical `Contracts/` records.
 - **Never** exclude code in `Domain/Models`, `Domain/Services`, `Domain/ValueTypes`, or `Application/Handlers` — that's where coverage matters.
 
 ### Dependency realism in this project

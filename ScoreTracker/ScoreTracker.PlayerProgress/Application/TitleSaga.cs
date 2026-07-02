@@ -1,6 +1,7 @@
 ﻿using MassTransit;
 using MediatR;
 using ScoreTracker.Application.Queries;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
@@ -11,9 +12,9 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
 
-namespace ScoreTracker.Application.Handlers;
+namespace ScoreTracker.PlayerProgress.Application;
 
-public sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumerable<TitleProgress>>,
+internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumerable<TitleProgress>>,
     IConsumer<TitlesDetectedEvent>,
     IConsumer<PlayerScoresUpdatedEvent>,
     IRequestHandler<TitleSaga.ProcessTitles>

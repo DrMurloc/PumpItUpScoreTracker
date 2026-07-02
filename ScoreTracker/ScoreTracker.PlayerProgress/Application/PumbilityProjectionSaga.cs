@@ -1,16 +1,17 @@
 using ScoreTracker.Domain.Services;
 using MediatR;
 using ScoreTracker.Application.Queries;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
-using ScoreTracker.PersonalProgress.Queries;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 
-namespace ScoreTracker.Application.Handlers
+namespace ScoreTracker.PlayerProgress.Application
 {
-    public sealed class PumbilityProjectionSaga : IRequestHandler<ProjectPumbilityGainsQuery, PumbilityProjection>
+    internal sealed class PumbilityProjectionSaga : IRequestHandler<ProjectPumbilityGainsQuery, PumbilityProjection>
     {
         private readonly IMediator _mediator;
         private readonly IPlayerStatsReader _stats;
@@ -29,7 +30,7 @@ namespace ScoreTracker.Application.Handlers
         {
             var charts = (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), cancellationToken))
                 .ToDictionary(c => c.Id);
-            var allScores = (await _mediator.Send(new GetPhoenixRecordsQuery(request.UserId), cancellationToken))
+            var allScores = (await _scores.GetBestScores(request.UserId, cancellationToken))
                 .Where(r => r.Score != null)
                 .ToDictionary(s => s.ChartId);
             var topScores = (await _mediator.Send(

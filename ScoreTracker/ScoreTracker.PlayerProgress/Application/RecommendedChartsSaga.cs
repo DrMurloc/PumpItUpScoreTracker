@@ -1,7 +1,8 @@
 using ScoreTracker.Domain.Services;
 using MediatR;
-using ScoreTracker.Application.Commands;
+using ScoreTracker.PlayerProgress.Contracts.Commands;
 using ScoreTracker.Application.Queries;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Models.Titles;
@@ -9,11 +10,11 @@ using ScoreTracker.Domain.Models.Titles.Phoenix;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
-using ScoreTracker.PersonalProgress.Queries;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 
-namespace ScoreTracker.Application.Handlers
+namespace ScoreTracker.PlayerProgress.Application
 {
-    public sealed class
+    internal sealed class
         RecommendedChartsSaga : IRequestHandler<GetRecommendedChartsQuery, IEnumerable<ChartRecommendation>>,
             IRequestHandler<SubmitFeedbackCommand>
     {
@@ -52,7 +53,7 @@ namespace ScoreTracker.Application.Handlers
             if (!DifficultyLevel.IsValid(competitiveLevel) || competitiveLevel < 10) competitiveLevel = 10;
             var titles = (await _mediator.Send(new GetTitleProgressQuery(MixEnum.Phoenix), cancellationToken))
                 .ToArray();
-            var scores = (await _mediator.Send(new GetPhoenixRecordsQuery(_currentUser.User.Id), cancellationToken))
+            var scores = (await _scores.GetBestScores(_currentUser.User.Id, cancellationToken))
                 .ToArray();
             var feedback = (await _users.GetFeedback(_currentUser.User.Id, cancellationToken))
                 .Where(f => f.ShouldHide)

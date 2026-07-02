@@ -77,7 +77,7 @@ public sealed class LayerDependencyTests
             "GetPhoenixScoresForChartHandler", "GetAllChartScoreAggregatesHandler",
             "WipeUserScoresHandler"
         };
-        var personalProgress = typeof(PersonalProgress.PlayerRatingSaga).Assembly;
+        var personalProgress = typeof(PlayerProgress.Wiring.PlayerProgressRegistrationExtensions).Assembly;
         var violations = ApplicationAssembly.GetTypes().Concat(personalProgress.GetTypes())
             .Where(t => !t.IsInterface && !allowed.Contains(t.Name))
             .Where(t => t.GetConstructors().Any(c => c.GetParameters()
@@ -96,7 +96,7 @@ public sealed class LayerDependencyTests
         // IPlayerStatsReader. The writers are Progression-internal (PlayerRatingSaga)
         // plus the wipe flow; the allowlist shrinks at P5.
         var allowed = new[] { "PlayerRatingSaga", "WipeUserScoresHandler" };
-        var personalProgress = typeof(PersonalProgress.PlayerRatingSaga).Assembly;
+        var personalProgress = typeof(PlayerProgress.Wiring.PlayerProgressRegistrationExtensions).Assembly;
         var violations = ApplicationAssembly.GetTypes().Concat(personalProgress.GetTypes())
             .Where(t => !t.IsInterface && !allowed.Contains(t.Name))
             .Where(t => t.GetConstructors().Any(c => c.GetParameters()

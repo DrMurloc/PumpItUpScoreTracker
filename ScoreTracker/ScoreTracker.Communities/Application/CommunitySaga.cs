@@ -12,7 +12,7 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
-using ScoreTracker.PersonalProgress.Queries;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 
 namespace ScoreTracker.Communities.Application;
 

@@ -5,14 +5,19 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Moq;
-using ScoreTracker.Application.Handlers;
 using ScoreTracker.Application.Queries;
+using ScoreTracker.ScoreLedger.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Application;
+using ScoreTracker.PlayerProgress.Contracts.Commands;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Application;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Domain.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.ValueTypes;
-using ScoreTracker.PersonalProgress.Queries;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Tests.TestData;
 using Xunit;
 
@@ -178,7 +183,7 @@ public sealed class PumbilityProjectionSagaTests
 
             Mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => _charts.AsEnumerable());
-            Mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsQuery>(), It.IsAny<CancellationToken>()))
+            PhoenixRecords.Setup(s => s.GetBestScores(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => _allUserScores.AsEnumerable());
             Mediator.Setup(m => m.Send(It.IsAny<GetTop50ForPlayerQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => _topScores.AsEnumerable());
