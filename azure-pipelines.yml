@@ -13,10 +13,11 @@
 #   Pipelines → Environments → production → Approvals and checks → add an Approval with
 #   yourself as approver. Every run then pauses before the Deploy stage until you sign off.
 #
-# One-time setup (owner):
-#   1. Pipeline → Edit → Variables → add secret variable ProdSqlConnectionString.
-#   2. Add the approval check to the 'production' environment (it is auto-created on first run,
-#      or pre-create it under Pipelines → Environments).
+# One-time setup (owner) — do 1 and 2 BEFORE merging this to main:
+#   1. Pre-create the 'production' environment (Pipelines → Environments → New environment)
+#      and add an Approval check with yourself as approver. Runs triggered by the GitHub app
+#      can't auto-create environments, and without the check the deploy sails straight through.
+#   2. Pipeline → Edit → Variables → add secret variable ProdSqlConnectionString.
 #   3. First deploy run will prompt to permit this pipeline to use the service connection and
 #      environment — approve both.
 #   4. Disable/delete the classic release pipeline so it doesn't double-deploy off the drop.
@@ -125,32 +126,35 @@ stages:
         testRunTitle: 'Integration Tests (SQL Server 2025)'
         failTaskOnFailedTests: true
 
-# Runs only for pushes to main (PR builds stop after Build). The environment's approval
-# check is what makes this wait for a human — see the header comment.
-- stage: DeployProduction
-  displayName: 'Deploy to Production'
-  dependsOn: Build
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-  jobs:
-  - deployment: Deploy
-    displayName: 'Migrate database + deploy Web app'
-    pool:
-      vmImage: 'windows-latest'  # efbundle.exe is built self-contained for win-x64
-    environment: 'production'
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          # Deployment jobs download the run's artifacts automatically → $(Pipeline.Workspace)/drop.
-          # Migrations run first: if they fail, the release stops here and the old app keeps
-          # serving against the old schema. All pending migrations are additive-first by policy.
-          - script: '"$(Pipeline.Workspace)\drop\efbundle.exe" --connection "$(ProdSqlConnectionString)"'
-            displayName: 'Apply EF migrations'
+# Compile-time gate: the stage only exists in main-branch runs, so PR builds stop after
+# Build. A runtime `condition:` is NOT enough here — environment authorization is resolved
+# at run creation for every stage in the graph, so PR runs would fail on the 'production'
+# environment before any condition is evaluated. The environment's approval check is what
+# makes this wait for a human — see the header comment.
+- ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+  - stage: DeployProduction
+    displayName: 'Deploy to Production'
+    dependsOn: Build
+    jobs:
+    - deployment: Deploy
+      displayName: 'Migrate database + deploy Web app'
+      pool:
+        vmImage: 'windows-latest'  # efbundle.exe is built self-contained for win-x64
+      environment: 'production'
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            # Deployment jobs download the run's artifacts automatically → $(Pipeline.Workspace)/drop.
+            # Migrations run first: if they fail, the release stops here and the old app keeps
+            # serving against the old schema. All pending migrations are additive-first by policy.
+            - script: '"$(Pipeline.Workspace)\drop\efbundle.exe" --connection "$(ProdSqlConnectionString)"'
+              displayName: 'Apply EF migrations'
 
-          - task: AzureWebApp@1
-            displayName: 'Deploy Web app (zip deploy)'
-            inputs:
-              azureSubscription: '$(azureServiceConnection)'
-              appType: 'webApp'
-              appName: '$(webAppName)'
-              package: '$(Pipeline.Workspace)/drop/ScoreTracker.Web.zip'
+            - task: AzureWebApp@1
+              displayName: 'Deploy Web app (zip deploy)'
+              inputs:
+                azureSubscription: '$(azureServiceConnection)'
+                appType: 'webApp'
+                appName: '$(webAppName)'
+                package: '$(Pipeline.Workspace)/drop/ScoreTracker.Web.zip'
