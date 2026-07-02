@@ -1,9 +1,9 @@
 @page "/Login"
 @using MediatR
 @using Microsoft.Extensions.Options
-@using ScoreTracker.Domain.Models
+@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.SecondaryPorts
-@using ScoreTracker.Identity.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Configuration
 
 <PageTitle>@L["Login"]</PageTitle>
@@ -32,56 +32,6 @@
             </MudCardActions>
         </MudCard>
     </MudContainer>
-
-    @if (_devAuthEnabled)
-    {
-        <MudContainer Fixed="true" Class="mt-4">
-            <MudCard>
-                <MudCardHeader>
-                    <MudText Typo="Typo.h5" Color="Color.Warning">Dev Login</MudText>
-                </MudCardHeader>
-                <MudCardContent>
-                    <MudText Typo="Typo.body2" Class="mb-3">
-                        Local-only backdoor for contributors. Disabled in production.
-                    </MudText>
-                    @if (_hasAnyUsers)
-                    {
-                        <form method="post" action="/Login/Dev">
-                            <MudAutocomplete T="User"
-                                             Label="Search for a user"
-                                             SearchFunc="SearchUsers"
-                                             ToStringFunc="UserDisplayName"
-                                             Value="_selectedUser"
-                                             ValueChanged="OnUserSelected"
-                                             DebounceInterval="500"
-                                             ResetValueOnEmptyText="true"
-                                             Variant="Variant.Outlined"
-                                             Margin="Margin.Dense"
-                                             Class="mb-3"/>
-                            <input type="hidden" name="userId" value="@(_selectedUser?.Id.ToString())"/>
-                            <MudButton ButtonType="ButtonType.Submit"
-                                       Disabled="@(_selectedUser == null)"
-                                       Variant="Variant.Filled"
-                                       Color="Color.Warning">
-                                Sign In as Selected
-                            </MudButton>
-                        </form>
-                    }
-                    else
-                    {
-                        <MudText Typo="Typo.body2" Class="mb-2">No users in the database yet.</MudText>
-                        <form method="post" action="/Login/Dev/Bootstrap">
-                            <MudButton ButtonType="ButtonType.Submit"
-                                       Variant="Variant.Filled"
-                                       Color="Color.Warning">
-                                Create Dev User &amp; Sign In
-                            </MudButton>
-                        </form>
-                    }
-                </MudCardContent>
-            </MudCard>
-        </MudContainer>
-    }
 
 </MudPaper>
 
@@ -112,32 +62,21 @@
 @code
 {
     private bool _isDialogVisible = false;
-    private bool _devAuthEnabled;
-    private bool _hasAnyUsers;
-    private User? _selectedUser;
 
     protected override async Task OnInitializedAsync()
     {
-        if (CurrentUser.IsLoggedIn)
+        // Dev-only: /Login is the first page anyone lands on, so this is where a fresh
+        // local database gets caught. The setup page owns sign-in from there.
+        if (DevAuth.Value.Enabled &&
+            !(await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).Any())
         {
-            NavManager.NavigateTo("/Charts");
+            NavManager.NavigateTo("/Dev/Populate");
             return;
         }
 
-        _devAuthEnabled = DevAuth.Value.Enabled;
-        if (_devAuthEnabled)
+        if (CurrentUser.IsLoggedIn)
         {
-            _hasAnyUsers = (await Mediator.Send(new SearchForUsersQuery("", 1, 1))).Total > 0;
+            NavManager.NavigateTo("/Charts");
         }
     }
-
-    private async Task<IEnumerable<User>> SearchUsers(string? query, CancellationToken cancellationToken)
-    {
-        var results = await Mediator.Send(new SearchForUsersQuery(query ?? "", 1, 50), cancellationToken);
-        return results.Results;
-    }
-
-    private static string UserDisplayName(User? user) => user?.Name.ToString() ?? "";
-
-    private void OnUserSelected(User? user) => _selectedUser = user;
 }

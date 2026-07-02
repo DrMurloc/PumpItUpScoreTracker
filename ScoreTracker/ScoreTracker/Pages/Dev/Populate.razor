@@ -2,10 +2,13 @@
 @using MediatR
 @using Microsoft.Extensions.Options
 @using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Identity.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Configuration
 @using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Data.Configuration
 
 <PageTitle>Set Up Local Database</PageTitle>
 
@@ -33,8 +36,43 @@
                         <b>Sign in</b>
                         @if (!CurrentUser.IsLoggedIn)
                         {
-                            <MudText Typo="Typo.body2">Use the Dev Login card to create a local user.</MudText>
-                            <MudButton Href="/Login" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" Class="mt-1">Go to Login</MudButton>
+                            <div class="mt-1 d-flex flex-wrap gap-2 align-center">
+                                @if (_discordConfigured)
+                                {
+                                    <MudButton Href="/Login/Discord" StartIcon="@Icons.Custom.Brands.Discord" Size="Size.Small" Variant="Variant.Filled" Style="@($"color:{Colors.Gray.Lighten5};background:{Colors.Indigo.Default};")">Discord</MudButton>
+                                }
+                                @if (_googleConfigured)
+                                {
+                                    <MudButton Href="/Login/Google" StartIcon="@Icons.Custom.Brands.Google" Size="Size.Small" Variant="Variant.Filled" Style="@($"color:{Colors.Gray.Lighten5};background:{Colors.Orange.Darken3};")">Google</MudButton>
+                                }
+                                <form method="post" action="/Login/Dev/Bootstrap" style="display:inline">
+                                    <MudButton ButtonType="ButtonType.Submit" Size="Size.Small" Variant="Variant.Filled" Color="Color.Warning">
+                                        Create Dev User &amp; Sign In
+                                    </MudButton>
+                                </form>
+                            </div>
+                            @if (_hasAnyUsers)
+                            {
+                                <form method="post" action="/Login/Dev" class="mt-2">
+                                    <div class="d-flex gap-2 align-center">
+                                        <MudAutocomplete T="User"
+                                                         Label="…or sign in as an existing user"
+                                                         SearchFunc="SearchUsers"
+                                                         ToStringFunc="@(u => u?.Name.ToString() ?? "")"
+                                                         Value="_selectedUser"
+                                                         ValueChanged="@(u => _selectedUser = u)"
+                                                         DebounceInterval="500"
+                                                         ResetValueOnEmptyText="true"
+                                                         Variant="Variant.Outlined"
+                                                         Margin="Margin.Dense"/>
+                                        <input type="hidden" name="userId" value="@(_selectedUser?.Id.ToString())"/>
+                                        <MudButton ButtonType="ButtonType.Submit" Disabled="@(_selectedUser == null)"
+                                                   Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning">
+                                            Sign In
+                                        </MudButton>
+                                    </div>
+                                </form>
+                            }
                         }
                     </MudListItem>
                     <MudListItem Icon="@(_hasToken ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.Circle)"
@@ -66,12 +104,18 @@
 @inject IUiSettingsAccessor UiSettings
 @inject IOptions<DevAuthConfiguration> DevAuth
 @inject IOptions<ProdSyncConfiguration> ProdSync
+@inject IOptions<DiscordConfiguration> Discord
+@inject IOptions<GoogleConfiguration> Google
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @code {
     private const string TokenSettingKey = "DevHarness__ProdApiToken";
     private string _token = string.Empty;
     private bool _hasToken;
+    private bool _hasAnyUsers;
+    private bool _discordConfigured;
+    private bool _googleConfigured;
+    private User? _selectedUser;
 
     protected override async Task OnInitializedAsync()
     {
@@ -81,11 +125,24 @@
             return;
         }
 
+        _discordConfigured = !string.IsNullOrWhiteSpace(Discord.Value.ClientId);
+        _googleConfigured = !string.IsNullOrWhiteSpace(Google.Value.ClientId);
+
         if (CurrentUser.IsLoggedIn)
         {
             _token = await UiSettings.GetSetting(TokenSettingKey) ?? string.Empty;
             _hasToken = !string.IsNullOrWhiteSpace(_token);
         }
+        else
+        {
+            _hasAnyUsers = (await Mediator.Send(new SearchForUsersQuery("", 1, 1))).Total > 0;
+        }
+    }
+
+    private async Task<IEnumerable<User>> SearchUsers(string? query, CancellationToken cancellationToken)
+    {
+        var results = await Mediator.Send(new SearchForUsersQuery(query ?? "", 1, 50), cancellationToken);
+        return results.Results;
     }
 
     private async Task SaveToken()
