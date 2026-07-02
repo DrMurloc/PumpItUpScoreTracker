@@ -1,9 +1,8 @@
 // Local-dev orchestration (2026-07 workshop): AppHost is the single config authority for
 // running the site locally. Non-secret local defaults (SQL container password/port) live in
-// this project's appsettings.json; secrets (prod API token for the dev harness, optional
-// real OAuth creds) live in THIS project's user-secrets and flow through to the Web app as
-// environment variables â the Web app's configuration code is unchanged and never needs its
-// own local secrets.
+// this project's appsettings.json; secrets live in THIS project's user-secrets and flow
+// through to the Web app as environment variables - the Web app's configuration code is
+// unchanged and never needs its own local secrets.
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Deterministic SQL Server container: pinned sa password + host port from appsettings.json,
@@ -12,7 +11,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 var saPassword = builder.AddParameter("sql-password", builder.Configuration["Sql:Password"]!);
 var sqlPort = int.Parse(builder.Configuration["Sql:HostPort"]!);
 
-// Same engine version the Testcontainers integration suite uses — one cached image,
+// Same engine version the Testcontainers integration suite uses - one cached image,
 // no engine drift between local dev and the real-DB tests.
 var sql = builder.AddSqlServer("sql", saPassword, port: sqlPort)
     .WithImageTag("2025-latest")
@@ -21,9 +20,9 @@ var sql = builder.AddSqlServer("sql", saPassword, port: sqlPort)
 
 var database = sql.AddDatabase("ScoreTracker");
 
-builder.AddProject<Projects.ScoreTracker_Web>("web")
+var web = builder.AddProject<Projects.ScoreTracker_Web>("web")
     .WithExternalHttpEndpoints()
-    // The app reads SQL:ConnectionString (see SqlConfiguration) â flow the container's
+    // The app reads SQL:ConnectionString (see SqlConfiguration) - flow the container's
     // connection string into that section rather than the Aspire-conventional
     // ConnectionStrings__* name, so production config wiring stays untouched.
     .WithEnvironment("SQL__ConnectionString", database)
@@ -36,5 +35,19 @@ builder.AddProject<Projects.ScoreTracker_Web>("web")
     .WithEnvironment("AutoMigrate", "true")
     .WithEnvironment("DevAuth__Enabled", "true")
     .WaitFor(database);
+
+// Copy-paste secret flow-through: any values set in AppHost user-secrets under these
+// sections are forwarded to the Web app verbatim, so prod secrets can be pasted as-is
+// (dotnet user-secrets set "Google:ClientId" "..." --project ScoreTracker.AppHost).
+// SQL is deliberately NOT forwarded - the container's connection string always wins
+// locally, so a pasted prod connection string can never point local dev at prod.
+// Caution: pasting Discord:BotToken makes the LOCAL app connect as the real prod bot
+// (two live gateway sessions, slash commands answered from an empty local DB) - leave
+// it out unless that's what you want; OAuth ClientId/ClientSecret are harmless.
+string[] forwardedSections = ["Discord", "Google", "Facebook", "AzureBlob", "Sendgrid"];
+foreach (var sectionName in forwardedSections)
+foreach (var entry in builder.Configuration.GetSection(sectionName).AsEnumerable())
+    if (entry.Value is not null)
+        web.WithEnvironment(entry.Key.Replace(":", "__"), entry.Value);
 
 builder.Build().Run();
