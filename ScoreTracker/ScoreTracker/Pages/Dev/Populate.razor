@@ -2,97 +2,76 @@
 @using MediatR
 @using Microsoft.Extensions.Options
 @using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Configuration
+@using ScoreTracker.Web.Services.Contracts
 
-<PageTitle>Populate Local Database</PageTitle>
+<PageTitle>Set Up Local Database</PageTitle>
 
 @* Dev-only: gated on the same flag as the login backdoor, which only the local Aspire
    AppHost sets. In any other environment this page bounces straight to home. *@
 @if (!DevAuth.Value.Enabled)
 {
-    <MudText>Not available.</MudText>
     return;
 }
 
-<MudPaper Class="align-center" Elevation="0" MaxWidth="720px">
+<MudPaper Class="align-center" Elevation="0" MaxWidth="640px">
     <MudContainer Fixed="true">
         <MudCard>
             <MudCardHeader>
-                <MudText Typo="Typo.h4" Color="Color.Warning">Populate Local Database</MudText>
+                <MudText Typo="Typo.h5">Hey, you're on an empty database.</MudText>
             </MudCardHeader>
             <MudCardContent>
                 <MudText Typo="Typo.body1" Class="mb-4">
-                    This is a fresh local database — most pages will be empty until it has
-                    the game catalog in it. The sync below pulls data from the production
-                    site through its public partner API (read-only; production is never
-                    written to).
+                    Let's get you set up. Here's what we're about to do:
                 </MudText>
 
-                <MudText Typo="Typo.h6" Class="mb-2">Status</MudText>
-                <MudSimpleTable Dense="true" Class="mb-4">
-                    <tbody>
-                    <tr>
-                        <td>Charts in local database</td>
-                        <td>
-                            @if (_chartCount == 0)
-                            {
-                                <MudChip T="string" Color="Color.Error" Size="Size.Small">empty</MudChip>
-                            }
-                            else
-                            {
-                                <MudChip T="string" Color="Color.Success" Size="Size.Small">@_chartCount</MudChip>
-                            }
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Prod API token (ProdSync:ApiToken)</td>
-                        <td>
-                            @if (string.IsNullOrWhiteSpace(ProdSync.Value.ApiToken))
-                            {
-                                <MudChip T="string" Color="Color.Error" Size="Size.Small">not configured</MudChip>
-                            }
-                            else
-                            {
-                                <MudChip T="string" Color="Color.Success" Size="Size.Small">configured</MudChip>
-                            }
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Sync source</td>
-                        <td><code>@ProdSync.Value.BaseUrl</code></td>
-                    </tr>
-                    </tbody>
-                </MudSimpleTable>
-
-                @if (string.IsNullOrWhiteSpace(ProdSync.Value.ApiToken))
-                {
-                    <MudAlert Severity="Severity.Info" Class="mb-4">
-                        <MudText Typo="Typo.body2">
-                            Set your production API token (from your prod Account page) into the
-                            <b>AppHost's</b> user-secrets, then restart:
-                        </MudText>
-                        <pre style="white-space: pre-wrap; margin-top: 8px;"><code>dotnet user-secrets set "ProdSync:ApiToken" "&lt;token&gt;" --project ScoreTracker/ScoreTracker.AppHost</code></pre>
-                    </MudAlert>
-                }
-
-                <MudText Typo="Typo.h6" Class="mb-2">Sync</MudText>
-                <MudAlert Severity="Severity.Warning">
-                    Sync actions aren't wired up yet — the catalog/scores/tier-list importer is
-                    the next piece of the dev-harness track. Once it lands, the buttons appear
-                    here and this page becomes self-service.
-                </MudAlert>
+                <MudList T="string" Dense="true">
+                    <MudListItem Icon="@(CurrentUser.IsLoggedIn ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.Circle)"
+                                 IconColor="@(CurrentUser.IsLoggedIn ? Color.Success : Color.Default)">
+                        <b>Sign in</b>
+                        @if (!CurrentUser.IsLoggedIn)
+                        {
+                            <MudText Typo="Typo.body2">Use the Dev Login card to create a local user.</MudText>
+                            <MudButton Href="/Login" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" Class="mt-1">Go to Login</MudButton>
+                        }
+                    </MudListItem>
+                    <MudListItem Icon="@(_hasToken ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.Circle)"
+                                 IconColor="@(_hasToken ? Color.Success : Color.Default)">
+                        <b>Paste your production API token</b>
+                        <MudText Typo="Typo.body2">From your Account page on the live site. Used read-only, saved in your local database.</MudText>
+                        <MudTextField T="string" @bind-Value="_token" Label="Prod API token"
+                                      InputType="InputType.Password"
+                                      Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-1"
+                                      Disabled="@(!CurrentUser.IsLoggedIn)"
+                                      Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Save"
+                                      OnAdornmentClick="SaveToken"/>
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Outlined.Circle">
+                        <b>Populate from production</b>
+                        <MudText Typo="Typo.body2">Charts and songs, then your scores, then tier lists — pulled from @ProdSync.Value.BaseUrl.</MudText>
+                        <MudTooltip Text="The importer is the next piece of the dev-harness track — this button goes live when it lands.">
+                            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Class="mt-1" Disabled="true">Populate</MudButton>
+                        </MudTooltip>
+                    </MudListItem>
+                </MudList>
             </MudCardContent>
         </MudCard>
     </MudContainer>
 </MudPaper>
 
 @inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
 @inject IOptions<DevAuthConfiguration> DevAuth
 @inject IOptions<ProdSyncConfiguration> ProdSync
 @inject NavigationManager NavManager
+@inject ISnackbar Snackbar
 @code {
-    private int _chartCount;
+    private const string TokenSettingKey = "DevHarness__ProdApiToken";
+    private string _token = string.Empty;
+    private bool _hasToken;
 
     protected override async Task OnInitializedAsync()
     {
@@ -102,6 +81,17 @@
             return;
         }
 
-        _chartCount = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).Count();
+        if (CurrentUser.IsLoggedIn)
+        {
+            _token = await UiSettings.GetSetting(TokenSettingKey) ?? string.Empty;
+            _hasToken = !string.IsNullOrWhiteSpace(_token);
+        }
+    }
+
+    private async Task SaveToken()
+    {
+        await UiSettings.SetSetting(TokenSettingKey, _token);
+        _hasToken = !string.IsNullOrWhiteSpace(_token);
+        Snackbar.Add(_hasToken ? "Token saved." : "Token cleared.", Severity.Success);
     }
 }

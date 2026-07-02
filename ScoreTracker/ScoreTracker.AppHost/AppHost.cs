@@ -27,9 +27,8 @@ var web = builder.AddProject<Projects.ScoreTracker_Web>("web")
     // connection string into that section rather than the Aspire-conventional
     // ConnectionStrings__* name, so production config wiring stays untouched.
     .WithEnvironment("SQL__ConnectionString", database)
-    // Dev-harness prod sync: token comes from AppHost user-secrets
-    // (dotnet user-secrets set "ProdSync:ApiToken" "<token>" --project ScoreTracker.AppHost).
-    .WithEnvironment("ProdSync__ApiToken", builder.Configuration["ProdSync:ApiToken"] ?? string.Empty)
+    // Dev-harness prod sync source (the API token is pasted on the /Dev/Populate page,
+    // not stored in secrets).
     .WithEnvironment("ProdSync__BaseUrl", builder.Configuration["ProdSync:BaseUrl"] ?? "https://piuscores.arroweclip.se")
     // Running under Aspire IS the local-dev signal: migrations auto-apply and the
     // DevAuth login backdoor lights up. Plain `dotnet run` gets neither.

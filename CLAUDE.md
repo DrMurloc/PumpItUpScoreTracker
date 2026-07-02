@@ -14,7 +14,7 @@ Blazor Server + MVC API for tracking Pump It Up scores, leaderboards, tournament
 
 Run from the repo root (the solution lives at `ScoreTracker/ScoreTracker.sln`).
 
-- **Run locally**: `dotnet run --project ScoreTracker/ScoreTracker.AppHost` (requires Docker Desktop). Aspire provisions a deterministic SQL Server container (port + sa password pinned in `ScoreTracker.AppHost/appsettings.json`, persistent volume), applies EF migrations automatically (`AutoMigrate` flows from AppHost), and enables the DevAuth login backdoor. Secrets for local runs (dev-harness prod API token, optional real OAuth) live in **AppHost user-secrets**, not Web user-secrets: `dotnet user-secrets set "ProdSync:ApiToken" "<token>" --project ScoreTracker/ScoreTracker.AppHost`. Production continues to apply migrations manually — without AutoMigrate the app only logs pending-migration drift at startup.
+- **Run locally**: `dotnet run --project ScoreTracker/ScoreTracker.AppHost` (requires Docker Desktop). Aspire provisions a deterministic SQL Server container (port + sa password pinned in `ScoreTracker.AppHost/appsettings.json`, persistent volume), applies EF migrations automatically (`AutoMigrate` flows from AppHost), and enables the DevAuth login backdoor. Optional local secrets (real OAuth creds etc.) live in **AppHost user-secrets** and flow through to the Web app; the dev-harness prod API token is pasted on the /Dev/Populate page instead. Production continues to apply migrations manually — without AutoMigrate the app only logs pending-migration drift at startup.
 
 - **Build**: `dotnet build ScoreTracker/ScoreTracker.sln -c Release`
 - **Typecheck**: covered by `dotnet build` (no separate step).

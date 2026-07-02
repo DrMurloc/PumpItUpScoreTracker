@@ -1,11 +1,10 @@
 namespace ScoreTracker.Web.Configuration;
 
 /// <summary>
-///     Dev-harness prod sync settings, flowed from the Aspire AppHost (token from AppHost
-///     user-secrets, base URL from AppHost appsettings). Empty token = sync unavailable.
+///     Dev-harness prod sync source, flowed from the Aspire AppHost. The API token is
+///     pasted on the /Dev/Populate page and kept in the local database, not config.
 /// </summary>
 public sealed class ProdSyncConfiguration
 {
-    public string ApiToken { get; set; } = string.Empty;
     public string BaseUrl { get; set; } = "https://piuscores.arroweclip.se";
 }
