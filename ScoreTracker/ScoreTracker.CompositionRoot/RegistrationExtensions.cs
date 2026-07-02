@@ -31,7 +31,7 @@ public static class RegistrationExtensions
         });
         builder.AddHttpClient<IPiuGameApi, PiuGameApi>(c =>
         {
-            c.DefaultRequestHeaders.Add("Origin", "https://piugame.com");
+            c.DefaultRequestHeaders.Add("Origin", "https://phoenix.piugame.com");
         });
         builder.Configure<SqlConfiguration>(o => { o.ConnectionString = configuration.ConnectionString; });
         builder.Configure<AzureBlobConfiguration>(o => { o.ConnectionString = blobConfig.ConnectionString; });
