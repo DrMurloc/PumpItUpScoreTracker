@@ -5,12 +5,14 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Identity.Contracts.Commands;
 using ScoreTracker.Identity.Contracts.Events;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Configuration;
 using ScoreTracker.Web.Services.Contracts;
 
@@ -108,7 +110,7 @@ public sealed class LoginController : Controller
         if (user == null) return BadRequest("User not found");
 
         await _currentUser.SetCurrentUser(user);
-        return LocalRedirect("/");
+        return LocalRedirect(await DevLandingPage());
     }
 
     [HttpPost("Dev/Bootstrap")]
@@ -118,7 +120,15 @@ public sealed class LoginController : Controller
 
         var user = await _mediator.Send(new CreateUserCommand("Dev User"), HttpContext.RequestAborted);
         await _currentUser.SetCurrentUser(user);
-        return LocalRedirect("/Welcome");
+        return LocalRedirect(await DevLandingPage());
+    }
+
+    // An empty local catalog means setup isn't finished — land back on the setup page
+    // instead of Welcome/home, which can't render anything useful yet.
+    private async Task<string> DevLandingPage()
+    {
+        var hasCharts = (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), HttpContext.RequestAborted)).Any();
+        return hasCharts ? "/Welcome" : "/Dev/Populate";
     }
 }
 

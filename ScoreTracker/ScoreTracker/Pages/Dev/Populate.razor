@@ -77,9 +77,9 @@
                     </MudListItem>
                     <MudListItem Icon="@(_hasToken ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.Circle)"
                                  IconColor="@(_hasToken ? Color.Success : Color.Default)">
-                        <b>Paste your production API token</b>
-                        <MudText Typo="Typo.body2">From your Account page on the live site. Used read-only, saved in your local database.</MudText>
-                        <MudTextField T="string" @bind-Value="_token" Label="Prod API token"
+                        <b>Paste your API token</b>
+                        <MudText Typo="Typo.body2">From your <MudLink Href="@($"{ProdSync.Value.BaseUrl}/Account")" Target="_blank">Account page</MudLink> on @ProdSync.Value.BaseUrl. Used read-only, saved in your local database.</MudText>
+                        <MudTextField T="string" @bind-Value="_token" Label="API token"
                                       InputType="InputType.Password"
                                       Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-1"
                                       Disabled="@(!CurrentUser.IsLoggedIn)"
@@ -87,7 +87,7 @@
                                       OnAdornmentClick="SaveToken"/>
                     </MudListItem>
                     <MudListItem Icon="@Icons.Material.Outlined.Circle">
-                        <b>Populate from production</b>
+                        <b>Populate the database</b>
                         <MudText Typo="Typo.body2">Charts and songs, then your scores, then tier lists — pulled from @ProdSync.Value.BaseUrl.</MudText>
                         <MudTooltip Text="The importer is the next piece of the dev-harness track — this button goes live when it lands.">
                             <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Class="mt-1" Disabled="true">Populate</MudButton>
