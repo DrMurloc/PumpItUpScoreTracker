@@ -31,9 +31,10 @@ pr:
 variables:
   solution: 'ScoreTracker/ScoreTracker.sln'
   buildConfiguration: 'Release'
-  # TODO(owner): fill these two in before the first YAML deploy.
-  azureServiceConnection: ''  # Project settings → Service connections — the Azure RM connection name
-  webAppName: ''              # The App Service name hosting the site
+  # TODO(owner): fill in the service connection name before the first YAML deploy
+  # (Project settings → Service connections — the Azure RM connection to Pay-As-You-Go).
+  azureServiceConnection: ''
+  webAppName: 'piuscores'  # Windows App Service in resource group Sharkingbird
 
 stages:
 - stage: Build
