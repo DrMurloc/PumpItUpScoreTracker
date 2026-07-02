@@ -35,6 +35,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddServiceDefaults();
 builder.Services.Configure<JsonSerializerOptions>(o =>
 {
     o.Converters.Add(Name.Converter);
@@ -61,6 +62,7 @@ builder.Services.AddCors(o =>
     });
 });
 builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSection("Discord"));
+builder.Services.Configure<DevAuthConfiguration>(builder.Configuration.GetSection("DevAuth"));
 var sqlConfig = builder.Configuration.GetSection("SQL").Get<SqlConfiguration>()!;
 builder.Services.AddMassTransit(o =>
 {
@@ -218,6 +220,10 @@ builder.Services.AddCookiePolicy(opts =>
 
 var app = builder.Build();
 
+// AutoMigrate is set by the Aspire AppHost for local dev; everywhere else this only
+// logs drift (migrations stay manually applied in production).
+await app.Services.ApplyOrReportMigrationsAsync(builder.Configuration["AutoMigrate"] == "true");
+
 
 app.UseRequestLocalization(new RequestLocalizationOptions()
     .AddSupportedCultures("en-US", "pt-BR", "ko-KR", "en-ZW", "es-MX", "fr-FR", "ja-JP", "it-IT")
@@ -273,6 +279,7 @@ else
 app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 
 
+app.MapDefaultEndpoints();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 

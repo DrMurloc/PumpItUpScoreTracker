@@ -51,10 +51,13 @@ ScoreTracker.sln
 │                                      Domain/Application/Infrastructure
 ├── Infrastructure (solution folder)
 │   └── ScoreTracker.Data            — EF Core, repositories, external API clients
-└── Presentation (solution folder)
+├── Presentation (solution folder)
     ├── ScoreTracker.Web             — Blazor Server pages + MVC API controllers
     ├── ScoreTracker.CompositionRoot — DI extension that wires Infrastructure
-    └── ScoreTracker.Tests           — xUnit tests
+    ├── ScoreTracker.Tests           — xUnit tests
+    ├── ScoreTracker.AppHost         — Aspire local-dev orchestration: deterministic
+    │                                  SQL container, config/secret flow-through
+    └── ScoreTracker.ServiceDefaults — OTel/resilience defaults for the Web host
 ```
 
 All projects target `net10.0` with nullable + implicit usings enabled.
@@ -220,7 +223,7 @@ SharedKernel ◄── Domain ◄── Application ◄── Data ◄── ver
 - **MassTransit version skew.** `Web` uses `MassTransit.Extensions.DependencyInjection 7.3.1`; the rest uses `MassTransit 8.5.7`. Consolidate on the v8 DI extensions.
 - ~~**Domain `Events/` folder mixes events and command-shaped messages.**~~ **Resolved 2026-06-12** (rearch C6+C7): trigger messages moved to `Application/Messages/` with honest imperative names; `Domain/Events/` holds only past-tense facts.
 - **No MediatR pipeline behaviors and no validation pipeline.** Validation lives only in value-type constructors. Adding a behavior pipeline (logging, validation) is a future option, not a current rule.
-- **No automatic migration on startup.** `Database.Migrate()` is not called; migrations must be applied out-of-band.
+- **No automatic migration on startup in production.** Migrations are applied out-of-band in prod; startup only logs pending-migration drift. Local dev (Aspire AppHost) sets `AutoMigrate`, which applies pending migrations at boot via `MigrationStartupExtensions` in CompositionRoot.
 
 ## Glossary
 

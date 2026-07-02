@@ -1,5 +1,7 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Options;
 using ScoreTracker.Application.Commands;
+using ScoreTracker.Data.Configuration;
 using ScoreTracker.Communities.Contracts.Commands;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Records;
@@ -15,15 +17,29 @@ namespace ScoreTracker.Web.HostedServices
 
         public BotHostedService(IBotClient botClient,
             ILogger<BotHostedService> logger,
-            IServiceProvider serviceCollection)
+            IServiceProvider serviceCollection,
+            IOptions<DiscordConfiguration> discordConfig)
         {
             _botClient = botClient;
             _logger = logger;
             _serviceCollection = serviceCollection;
+            _discordConfig = discordConfig;
         }
+
+        private readonly IOptions<DiscordConfiguration> _discordConfig;
+        private bool _started;
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
+            // Local dev runs without a Discord bot token — skip the bot entirely instead
+            // of failing startup on a connection the environment can't make.
+            if (string.IsNullOrWhiteSpace(_discordConfig.Value.BotToken))
+            {
+                _logger.LogWarning("Discord bot token not configured — bot disabled for this run.");
+                return;
+            }
+
+            _started = true;
             await _botClient.Start(cancellationToken);
 
 
@@ -183,6 +199,8 @@ namespace ScoreTracker.Web.HostedServices
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
+            if (!_started) return;
+
             await _botClient.Stop(cancellationToken);
             _logger.LogInformation("Stopped bot client");
         }
