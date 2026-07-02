@@ -55,7 +55,7 @@ jobs:
       testResultsFiles: '$(Agent.TempDirectory)/**/*.trx'
       failTaskOnFailedTests: true
 
-  - script: dotnet publish ScoreTracker/ScoreTracker/ScoreTracker.Web.csproj -c $(buildConfiguration) --no-restore -o $(Build.ArtifactStagingDirectory)/publish
+  - script: dotnet publish ScoreTracker/ScoreTracker/ScoreTracker.Web.csproj -c $(buildConfiguration) --no-restore -o $(Agent.TempDirectory)/publish
     displayName: 'Publish Web app'
 
   # Plain zip (zip-deploy shape), replacing the old WebDeploy package. If the release
@@ -63,14 +63,25 @@ jobs:
   - task: ArchiveFiles@2
     displayName: 'Zip Web app'
     inputs:
-      rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/publish'
+      rootFolderOrFile: '$(Agent.TempDirectory)/publish'
       includeRootFolder: false
       archiveType: 'zip'
       archiveFile: '$(Build.ArtifactStagingDirectory)/ScoreTracker.Web.zip'
 
+  # Deploy-time migrations: a self-contained bundle ships in the drop so the release
+  # pipeline applies pending migrations as its own step right before the app deploy —
+  # automated per-deploy, never at app startup. In the release stage, run:
+  #   efbundle.exe --connection "<connection string>"
+  # It exits 0 with nothing to do when the database is already current.
+  - script: dotnet tool restore
+    displayName: 'Restore dotnet tools (dotnet-ef)'
+
+  - script: dotnet ef migrations bundle --project ScoreTracker/ScoreTracker.Data --startup-project ScoreTracker/ScoreTracker.CompositionRoot --configuration $(buildConfiguration) --self-contained -r win-x64 --force -o $(Build.ArtifactStagingDirectory)/efbundle.exe
+    displayName: 'Create EF migration bundle'
+
   - task: PublishBuildArtifacts@1
     inputs:
-      PathtoPublish: '$(Build.ArtifactStagingDirectory)/ScoreTracker.Web.zip'
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
       ArtifactName: 'drop'
       publishLocation: 'Container'
 
