@@ -14,13 +14,12 @@
 #   yourself as approver. Every run then pauses before the Deploy stage until you sign off.
 #
 # One-time setup (owner):
-#   1. Fill in azureServiceConnection + webAppName below.
-#   2. Pipeline → Edit → Variables → add secret variable ProdSqlConnectionString.
-#   3. Add the approval check to the 'production' environment (it is auto-created on first run,
+#   1. Pipeline → Edit → Variables → add secret variable ProdSqlConnectionString.
+#   2. Add the approval check to the 'production' environment (it is auto-created on first run,
 #      or pre-create it under Pipelines → Environments).
-#   4. First deploy run will prompt to permit this pipeline to use the service connection and
+#   3. First deploy run will prompt to permit this pipeline to use the service connection and
 #      environment — approve both.
-#   5. Disable/delete the classic release pipeline so it doesn't double-deploy off the drop.
+#   4. Disable/delete the classic release pipeline so it doesn't double-deploy off the drop.
 
 trigger:
 - main
@@ -31,9 +30,7 @@ pr:
 variables:
   solution: 'ScoreTracker/ScoreTracker.sln'
   buildConfiguration: 'Release'
-  # TODO(owner): fill in the service connection name before the first YAML deploy
-  # (Project settings → Service connections — the Azure RM connection to Pay-As-You-Go).
-  azureServiceConnection: ''
+  azureServiceConnection: 'Pay-As-You-Go (71fd4e21-2111-4006-988f-28fa73d3d655)'  # ARM connection (Workload Identity federation)
   webAppName: 'piuscores'  # Windows App Service in resource group Sharkingbird
 
 stages:
