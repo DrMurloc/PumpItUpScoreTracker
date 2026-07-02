@@ -11,9 +11,11 @@
 trigger:
 - main
 
+pr:
+- main
+
 variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
+  solution: 'ScoreTracker/ScoreTracker.sln'
   buildConfiguration: 'Release'
 
 jobs:
@@ -22,35 +24,53 @@ jobs:
   pool:
     vmImage: 'windows-latest'
   steps:
-  - task: NuGetToolInstaller@1
-
-  - task: NuGetCommand@2
+  # nuget.exe + VSBuild can't handle this solution anymore: NuGet-resolved MSBuild SDKs
+  # (Aspire.AppHost.Sdk) never get assets files from nuget.exe restore, and VS 2022's
+  # MSBuild doesn't support net10 targets. The dotnet CLI is the supported path.
+  - task: UseDotNet@2
+    displayName: 'Install .NET 10 SDK'
     inputs:
-      restoreSolution: '$(solution)'
+      packageType: 'sdk'
+      version: '10.0.x'
 
-  - task: VSBuild@1
-    inputs:
-      solution: '$(solution)'
-      msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
-      platform: '$(buildPlatform)'
-      configuration: '$(buildConfiguration)'
+  - script: dotnet restore $(solution)
+    displayName: 'Restore'
 
-  # Pin VSTest to the unit/component/approval assemblies only. The integration assembly is built
-  # alongside but runs in the Linux job below — it needs Docker, which windows-latest doesn't
-  # have configured for Linux containers.
-  - task: VSTest@2
+  - script: dotnet build $(solution) -c $(buildConfiguration) --no-restore
+    displayName: 'Build'
+
+  # The integration project builds alongside but runs in the Linux job below — it needs
+  # Docker with Linux containers, which windows-latest doesn't have configured.
+  - script: dotnet test ScoreTracker/ScoreTracker.Tests/ScoreTracker.Tests.csproj -c $(buildConfiguration) --no-build --logger "trx;LogFileName=unit.trx" --results-directory $(Agent.TempDirectory)
+    displayName: 'Unit/Component tests'
+
+  - script: dotnet test ScoreTracker/ScoreTracker.Tests.Api/ScoreTracker.Tests.Api.csproj -c $(buildConfiguration) --no-build --logger "trx;LogFileName=api.trx" --results-directory $(Agent.TempDirectory)
+    displayName: 'API wire-shape approval tests'
+
+  - task: PublishTestResults@2
+    displayName: 'Publish test results'
+    condition: always()
     inputs:
-      testSelector: 'testAssemblies'
-      testAssembliesVer2: |
-        **\ScoreTracker.Tests\bin\**\ScoreTracker.Tests.dll
-        **\ScoreTracker.Tests.Api\bin\**\ScoreTracker.Tests.Api.dll
-        !**\obj\**
-      platform: '$(buildPlatform)'
-      configuration: '$(buildConfiguration)'
+      testResultsFormat: 'VSTest'
+      testResultsFiles: '$(Agent.TempDirectory)/**/*.trx'
+      failTaskOnFailedTests: true
+
+  - script: dotnet publish ScoreTracker/ScoreTracker/ScoreTracker.Web.csproj -c $(buildConfiguration) --no-restore -o $(Build.ArtifactStagingDirectory)/publish
+    displayName: 'Publish Web app'
+
+  # Plain zip (zip-deploy shape), replacing the old WebDeploy package. If the release
+  # stage was set to "Web Deploy package" mode, switch it to zip deploy.
+  - task: ArchiveFiles@2
+    displayName: 'Zip Web app'
+    inputs:
+      rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/publish'
+      includeRootFolder: false
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/ScoreTracker.Web.zip'
 
   - task: PublishBuildArtifacts@1
     inputs:
-      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/ScoreTracker.Web.zip'
       ArtifactName: 'drop'
       publishLocation: 'Container'
 
