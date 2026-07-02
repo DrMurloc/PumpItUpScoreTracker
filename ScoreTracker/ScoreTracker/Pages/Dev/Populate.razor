@@ -86,12 +86,29 @@
                                       Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Save"
                                       OnAdornmentClick="SaveToken"/>
                     </MudListItem>
-                    <MudListItem Icon="@Icons.Material.Outlined.Circle">
+                    <MudListItem Icon="@(_syncComplete ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.Circle)"
+                                 IconColor="@(_syncComplete ? Color.Success : Color.Default)">
                         <b>Populate the database</b>
                         <MudText Typo="Typo.body2">Charts and songs, then your scores, then tier lists — pulled from @ProdSync.Value.BaseUrl.</MudText>
-                        <MudTooltip Text="The importer is the next piece of the dev-harness track — this button goes live when it lands.">
-                            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Class="mt-1" Disabled="true">Populate</MudButton>
-                        </MudTooltip>
+                        <div class="mt-1 d-flex gap-3 align-center">
+                            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
+                                       Disabled="@(!CurrentUser.IsLoggedIn || !_hasToken || _isSyncing)"
+                                       OnClick="RunSync">
+                                Populate
+                            </MudButton>
+                            @if (_isSyncing)
+                            {
+                                <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(_progress))
+                            {
+                                <MudText Typo="Typo.body2">@_progress</MudText>
+                            }
+                        </div>
+                        @if (_syncComplete)
+                        {
+                            <MudButton Href="/" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success" Class="mt-2">You're set — go play</MudButton>
+                        }
                     </MudListItem>
                 </MudList>
             </MudCardContent>
@@ -108,6 +125,7 @@
 @inject IOptions<GoogleConfiguration> Google
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
+@inject ScoreTracker.Web.Services.DevSyncService Sync
 @code {
     private const string TokenSettingKey = "DevHarness__ProdApiToken";
     private string _token = string.Empty;
@@ -116,6 +134,9 @@
     private bool _discordConfigured;
     private bool _googleConfigured;
     private User? _selectedUser;
+    private bool _isSyncing;
+    private bool _syncComplete;
+    private string _progress = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -150,5 +171,30 @@
         await UiSettings.SetSetting(TokenSettingKey, _token);
         _hasToken = !string.IsNullOrWhiteSpace(_token);
         Snackbar.Add(_hasToken ? "Token saved." : "Token cleared.", Severity.Success);
+    }
+
+    private async Task RunSync()
+    {
+        _isSyncing = true;
+        _syncComplete = false;
+        try
+        {
+            await Sync.Sync(_token, CurrentUser.User.Id,
+                message => InvokeAsync(() =>
+                {
+                    _progress = message;
+                    StateHasChanged();
+                }));
+            _syncComplete = true;
+        }
+        catch (Exception e)
+        {
+            _progress = $"Sync failed: {e.Message}";
+            Snackbar.Add("Sync failed — check the token and that the site is reachable.", Severity.Error);
+        }
+        finally
+        {
+            _isSyncing = false;
+        }
     }
 }
