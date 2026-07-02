@@ -303,6 +303,7 @@ else
 @inject IAdminNotificationClient Notifications;
 @inject ISnackbar Snackbar;
 @inject ChartVideoDisplayer VideoDisplayer;
+@inject Microsoft.Extensions.Options.IOptions<ScoreTracker.Web.Configuration.DevAuthConfiguration> DevAuth;
 
 @code {
 
@@ -469,6 +470,14 @@ else
         _chartType = Enum.TryParse<ChartType>(await UiSettings.GetSetting("WhatShouldIPlay__ChartType") ?? "", out var type) ? type : null;
         _chartDict = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix)))
             .ToDictionary(c => c.Id);
+        // Fresh local database (dev only): nothing chart-based can render, so send the
+        // developer to the populate page instead of an empty home page.
+        if (DevAuth.Value.Enabled && _chartDict.Count == 0)
+        {
+            NavManager.NavigateTo("/Dev/Populate");
+            return;
+        }
+
         _todos = (await Mediator.Send(new GetSavedChartsQuery()))
             .Where(t => t.ListType == ChartListType.ToDo && _chartDict.ContainsKey(t.ChartId))
             .Select(t=>t.ChartId).Distinct().ToHashSet();

@@ -1,0 +1,107 @@
+@page "/Dev/Populate"
+@using MediatR
+@using Microsoft.Extensions.Options
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Configuration
+
+<PageTitle>Populate Local Database</PageTitle>
+
+@* Dev-only: gated on the same flag as the login backdoor, which only the local Aspire
+   AppHost sets. In any other environment this page bounces straight to home. *@
+@if (!DevAuth.Value.Enabled)
+{
+    <MudText>Not available.</MudText>
+    return;
+}
+
+<MudPaper Class="align-center" Elevation="0" MaxWidth="720px">
+    <MudContainer Fixed="true">
+        <MudCard>
+            <MudCardHeader>
+                <MudText Typo="Typo.h4" Color="Color.Warning">Populate Local Database</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudText Typo="Typo.body1" Class="mb-4">
+                    This is a fresh local database — most pages will be empty until it has
+                    the game catalog in it. The sync below pulls data from the production
+                    site through its public partner API (read-only; production is never
+                    written to).
+                </MudText>
+
+                <MudText Typo="Typo.h6" Class="mb-2">Status</MudText>
+                <MudSimpleTable Dense="true" Class="mb-4">
+                    <tbody>
+                    <tr>
+                        <td>Charts in local database</td>
+                        <td>
+                            @if (_chartCount == 0)
+                            {
+                                <MudChip T="string" Color="Color.Error" Size="Size.Small">empty</MudChip>
+                            }
+                            else
+                            {
+                                <MudChip T="string" Color="Color.Success" Size="Size.Small">@_chartCount</MudChip>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Prod API token (ProdSync:ApiToken)</td>
+                        <td>
+                            @if (string.IsNullOrWhiteSpace(ProdSync.Value.ApiToken))
+                            {
+                                <MudChip T="string" Color="Color.Error" Size="Size.Small">not configured</MudChip>
+                            }
+                            else
+                            {
+                                <MudChip T="string" Color="Color.Success" Size="Size.Small">configured</MudChip>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Sync source</td>
+                        <td><code>@ProdSync.Value.BaseUrl</code></td>
+                    </tr>
+                    </tbody>
+                </MudSimpleTable>
+
+                @if (string.IsNullOrWhiteSpace(ProdSync.Value.ApiToken))
+                {
+                    <MudAlert Severity="Severity.Info" Class="mb-4">
+                        <MudText Typo="Typo.body2">
+                            Set your production API token (from your prod Account page) into the
+                            <b>AppHost's</b> user-secrets, then restart:
+                        </MudText>
+                        <pre style="white-space: pre-wrap; margin-top: 8px;"><code>dotnet user-secrets set "ProdSync:ApiToken" "&lt;token&gt;" --project ScoreTracker/ScoreTracker.AppHost</code></pre>
+                    </MudAlert>
+                }
+
+                <MudText Typo="Typo.h6" Class="mb-2">Sync</MudText>
+                <MudAlert Severity="Severity.Warning">
+                    Sync actions aren't wired up yet — the catalog/scores/tier-list importer is
+                    the next piece of the dev-harness track. Once it lands, the buttons appear
+                    here and this page becomes self-service.
+                </MudAlert>
+            </MudCardContent>
+        </MudCard>
+    </MudContainer>
+</MudPaper>
+
+@inject IMediator Mediator
+@inject IOptions<DevAuthConfiguration> DevAuth
+@inject IOptions<ProdSyncConfiguration> ProdSync
+@inject NavigationManager NavManager
+@code {
+    private int _chartCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!DevAuth.Value.Enabled)
+        {
+            NavManager.NavigateTo("/");
+            return;
+        }
+
+        _chartCount = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).Count();
+    }
+}

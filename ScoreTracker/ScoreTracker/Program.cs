@@ -63,6 +63,7 @@ builder.Services.AddCors(o =>
 });
 builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSection("Discord"));
 builder.Services.Configure<DevAuthConfiguration>(builder.Configuration.GetSection("DevAuth"));
+builder.Services.Configure<ProdSyncConfiguration>(builder.Configuration.GetSection("ProdSync"));
 var sqlConfig = builder.Configuration.GetSection("SQL").Get<SqlConfiguration>()!;
 builder.Services.AddMassTransit(o =>
 {
