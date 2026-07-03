@@ -42,6 +42,7 @@ That provisions a local SQL Server container, applies migrations, and opens the 
 | [TECHNOLOGIES.md](docs/TECHNOLOGIES.md) | The stack: what each technology contributes and how it's integrated |
 | [CONTRIBUTING.md](docs/CONTRIBUTING.md) | Contribution policies — read before opening a PR |
 | [DOMAIN.md](docs/DOMAIN.md) | Pump It Up domain glossary |
+| [design/](docs/design/login-overhaul.md) | In-flight feature designs (currently: the login overhaul and its [build plan](docs/design/login-overhaul-spec.md)) |
 
 ## Contribute
 
