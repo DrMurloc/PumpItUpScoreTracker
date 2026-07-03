@@ -313,7 +313,7 @@
     <value>下のコピーバトン使ってください</value>
   </data>
   <data name="Phoenix Import Info 2" xml:space="preserve">
-    <value>CHROMEのDEV TOOLSでhttps://piugame.comがログインしてる状態にスクリプトを走ってください。phoenix.piugame.comが使ってない状態が気をつけてください</value>
+    <value>CHROMEのDEV TOOLSでhttps://phoenix.piugame.comがログインしてる状態にスクリプトを走ってください。phoenix.piugame.comが使ってない状態が気をつけてください</value>
   </data>
   <data name="Phoenix Import Info 3" xml:space="preserve">
     <value>スクリプトが作ったCSVファイルここでアップロード出来ます。</value>
@@ -479,7 +479,7 @@
     <value>注意：ユーザーとパスワードを記録しないから、毎回使う場合はも一回入力必要あります。</value>
   </data>
   <data name="Use Password 3" xml:space="preserve">
-    <value>https://piugame.comのAPI呼び出すのを減らすなめに、新しいとか改良スコアどけインポートする。各ユーザーは完全インポート（ユーザーとパスワード）一回だけのサービスを上げます。古いスコアが
+    <value>https://phoenix.piugame.comのAPI呼び出すのを減らすなめに、新しいとか改良スコアどけインポートする。各ユーザーは完全インポート（ユーザーとパスワード）一回だけのサービスを上げます。古いスコアが
           も一回インポート場合、dev-toolsのスクリプト使ってください。</value>
   </data>
   <data name="Use Password 4" xml:space="preserve">

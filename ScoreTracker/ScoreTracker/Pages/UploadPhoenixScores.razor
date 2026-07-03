@@ -373,7 +373,7 @@
         catch (InvalidCredentialException)
         {
             _passwordImportStatus = "Invalid Username/Password";
-            Snackbar.Add("Your password appears to be incorrect, could not log into https://piugame.com", Severity.Error);
+            Snackbar.Add("Your password appears to be incorrect, could not log into https://phoenix.piugame.com", Severity.Error);
         }
         catch (Exception e)
         {
@@ -417,7 +417,7 @@
         catch (InvalidCredentialException)
         {
             _passwordImportStatus = "Invalid Username/Password";
-            Snackbar.Add("Your password appears to be incorrect, could not log into https://piugame.com", Severity.Error);
+            Snackbar.Add("Your password appears to be incorrect, could not log into https://phoenix.piugame.com", Severity.Error);
         }
         catch (Exception e)
         {
@@ -587,17 +587,20 @@ var csvString=""data:text/csv;charset=utf-8,"";
     var pageIndex={_startPage};
     while(true) {{
 
-        var nextPageString = await $.get(""https://piugame.com/my_page/my_best_score.php?&&page=""+pageIndex)
+        var nextPageString = await $.get(""https://phoenix.piugame.com/my_page/my_best_score.php?&&page=""+pageIndex)
         var page=$(nextPageString);
         var foundScores=$(""ul.my_best_scoreList>li>div.in"",page);
         foundScores.each(function(){{
             var songName = $('.song_name',this)[0].children[0].innerText.replaceAll('""','""""').replaceAll('#','Num');
-            var chartType = $($('.stepBall_img_wrap .imG img',this)[0]).attr(""src"").substring(40,41);
-            var difficultyLevel = $('.stepBall_img_wrap .imG img',this).map((index,i)=> $(i).attr(""src"").substring(46,47)).get().join("""").replaceAll(""."","""");
+            var typeMatch = $($('.stepBall_img_wrap .imG img',this)[0]).attr(""src"").match(/\/full\/([a-z]+)_num_/i);
+            var chartType = typeMatch ? typeMatch[1] : ""?"";
+            var difficultyLevel = $('.stepBall_img_wrap .imG img',this).map((index,i)=>{{var m=$(i).attr(""src"").match(/_num_([0-9])\.png/);return m?m[1]:"""";}}).get().join("""");
             var scoreList = $("".etc_con>ul"",this)[0];
-            var letter = $(scoreList.children[1].children[0].children[0].children[0]).attr('src').substring(32).replace("".png"","""").replace(""_p"",""+"");
+            var letterMatch = $(scoreList.children[1].children[0].children[0].children[0]).attr('src').match(/\/grade\/([a-z_]+)\.png/i);
+            var letter = (letterMatch?letterMatch[1]:""?"").replace(""_p"",""+"");
             var score = $(scoreList.children[0].children[0].children[0].children[0])[0].innerText.replaceAll("","","""");
-            var plate = $(scoreList.children[2].children[0].children[0].children[0]).attr(""src"").substring(32,34);
+            var plateMatch = $(scoreList.children[2].children[0].children[0].children[0]).attr(""src"").match(/\/plate\/([a-z]+)\.png/i);
+            var plate = plateMatch?plateMatch[1]:""?"";
             csvString+='""'+songName+'"",'+chartType+difficultyLevel+"",""+score+"",""+letter+"",""+plate+""\r\n"";
         }});
         pageIndex++;

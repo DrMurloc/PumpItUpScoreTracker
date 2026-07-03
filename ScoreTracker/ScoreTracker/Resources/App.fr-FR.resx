@@ -313,7 +313,7 @@
     <value>Utilisez le bouton Copier le script ci-dessous</value>
   </data>
   <data name="Phoenix Import Info 2" xml:space="preserve">
-    <value>Utilisez ce script dans la Console de Développement en étant connecté sur https://piugame.com pour télécharger un CSV de vos scores. (Vérifiez bien que vous n'êtes pas sur phoenix.piugame.com)</value>
+    <value>Utilisez ce script dans la Console de Développement en étant connecté sur https://phoenix.piugame.com pour télécharger un CSV de vos scores. (Vérifiez bien que vous n'êtes pas sur phoenix.piugame.com)</value>
   </data>
   <data name="Phoenix Import Info 3" xml:space="preserve">
     <value>Vous pourrez par la suite uploader ce CSV sur le site pour que vos scores y apparaissent.</value>
@@ -479,7 +479,7 @@
     <value>Je ne garde aucune trace de votre nom d'utilisateur ou mot de passe, vous devrez les entrer a chaque fois que vous utilisez ceci.</value>
   </data>
   <data name="Use Password 3" xml:space="preserve">
-    <value>Pour limiter les requètes vers https://piugame.com, je n'importe que les scores nouveaux ou améliorés. Chaque utilisateur a un import entier avec son nom d'utilisateur et mot de passe. Utilisez l'importateur outils developpeur si vous souhaitez réimporter des scores plus anciens.</value>
+    <value>Pour limiter les requètes vers https://phoenix.piugame.com, je n'importe que les scores nouveaux ou améliorés. Chaque utilisateur a un import entier avec son nom d'utilisateur et mot de passe. Utilisez l'importateur outils developpeur si vous souhaitez réimporter des scores plus anciens.</value>
   </data>
   <data name="Use Password 4" xml:space="preserve">
     <value>Une fois démarré, ne pas quitter cette page pour ne pas interrompre la sauvegarde des scores.</value>

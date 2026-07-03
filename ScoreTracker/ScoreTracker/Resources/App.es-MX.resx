@@ -1033,7 +1033,7 @@
     <value>Use el botón Copiar script de abajo</value>
   </data>
   <data name="Phoenix Import Info 2" xml:space="preserve">
-    <value>Use ese script en las dev tools mientras esté con sesión iniciada en https://piugame.com para descargar un CSV de sus puntajes. (Asegúrese de no estar en phoenix.piugame.com)</value>
+    <value>Use ese script en las dev tools mientras esté con sesión iniciada en https://phoenix.piugame.com para descargar un CSV de sus puntajes. (Asegúrese de no estar en phoenix.piugame.com)</value>
   </data>
   <data name="Phoenix Import Info 3" xml:space="preserve">
     <value>Después puede subir ese CSV aquí para que sus puntajes aparezcan.</value>
@@ -1759,7 +1759,7 @@
     <value>No almacenamos un registro de tu usuario o contraseña, tendrá que introducirlos siempre que uses esa opción.</value>
   </data>
   <data name="Use Password 3" xml:space="preserve">
-    <value>Para minimizar las llamadas para https://piugame.com/, solo importaremos scores nuevos o mejorados. Cada usuario recibirá importación completa usando usuario/contraseña solo una vez. Use el importador dev-tools si quiere reimportar puntajes más antiguas.</value>
+    <value>Para minimizar las llamadas para https://phoenix.piugame.com/, solo importaremos scores nuevos o mejorados. Cada usuario recibirá importación completa usando usuario/contraseña solo una vez. Use el importador dev-tools si quiere reimportar puntajes más antiguas.</value>
   </data>
   <data name="Use Password 4" xml:space="preserve">
     <value>Una vez iniciado, no salga de esta página, de lo contrario sus puntajes no serán guardadas.</value>

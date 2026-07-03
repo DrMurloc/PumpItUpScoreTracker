@@ -298,7 +298,7 @@
     <value>아래의 '스크립트 복사' 버튼을 사용하세요</value>
   </data>
   <data name="Phoenix Import Info 2" xml:space="preserve">
-    <value>https://piugame.com에 로그인한 상태에서 해당 스크립트를 사용하여 점수의 CSV를 다운로드하세요 (https://phoenix.piugame.com에서 작업하지 않도록 주의하세요)</value>
+    <value>https://phoenix.piugame.com에 로그인한 상태에서 해당 스크립트를 사용하여 점수의 CSV를 다운로드하세요 (https://phoenix.piugame.com에서 작업하지 않도록 주의하세요)</value>
   </data>
   <data name="Phoenix Import Info 3" xml:space="preserve">
     <value>CSV 파일을 이곳에 업로드하시면 점수가 표시됩니다.</value>
@@ -572,7 +572,7 @@
     <value>PIUScores가 본인의 계정에 로그인하여 점수를 가져옵니다.</value>
   </data>
   <data name="Use Password 3" xml:space="preserve">
-    <value>https://piugame.com에 대한 호출을 최소화하기 위해 새 점수나 향상된 점수만 가져옵니다. 모든 유저는 아이디/비밀번호를 사용한 전체 가져오기를 한 번씩만 사용할 수 있습니다. 이전 점수를 다시 가져오시려면 개발자 도구 가져오기를 사용해주세요.</value>
+    <value>https://phoenix.piugame.com에 대한 호출을 최소화하기 위해 새 점수나 향상된 점수만 가져옵니다. 모든 유저는 아이디/비밀번호를 사용한 전체 가져오기를 한 번씩만 사용할 수 있습니다. 이전 점수를 다시 가져오시려면 개발자 도구 가져오기를 사용해주세요.</value>
   </data>
   <data name="Open" xml:space="preserve">
     <value>열기</value>
