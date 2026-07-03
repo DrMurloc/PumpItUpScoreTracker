@@ -1974,4 +1974,25 @@
   <data name="This sign-in method is connected to a different account" xml:space="preserve">
 	  <value>Mrgl grrblub uuua RwlRwlRwlRwl blub</value>
   </data>
+  <data name="PIUGAME Login" xml:space="preserve">
+	  <value>PIUGAME Mrgl-Mrgl</value>
+  </data>
+  <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
+	  <value>Mrglname uuua shhhcret grrl piugame.com blub blub, nk mrgglkeep aaaughibbrgubugbugrguburgle</value>
+  </data>
+  <data name="PIUGame.com Username" xml:space="preserve">
+	  <value>PIUGame.com Mrglname</value>
+  </data>
+  <data name="PIUGame.com Password" xml:space="preserve">
+	  <value>PIUGame.com Shhhcret</value>
+  </data>
+  <data name="Log In" xml:space="preserve">
+	  <value>Mrgl-Mrgl</value>
+  </data>
+  <data name="Invalid username or password" xml:space="preserve">
+	  <value>Nk mrglname uuua shhhcret blub!</value>
+  </data>
+  <data name="Could not reach PIUGAME, try again later" xml:space="preserve">
+	  <value>PIUGAME nk mrgl! Rwlrwlrwl blub later</value>
+  </data>
 </root>

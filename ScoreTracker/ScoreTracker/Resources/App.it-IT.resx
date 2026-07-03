@@ -2050,4 +2050,25 @@
   <data name="This sign-in method is connected to a different account" xml:space="preserve">
     <value>Questo metodo di accesso è collegato a un altro account</value>
   </data>
+  <data name="PIUGAME Login" xml:space="preserve">
+    <value>Accesso PIUGAME</value>
+  </data>
+  <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
+    <value>Il tuo nome utente e la tua password vengono inviati direttamente a piugame.com e non vengono mai memorizzati</value>
+  </data>
+  <data name="PIUGame.com Username" xml:space="preserve">
+    <value>Nome utente PIUGame.com</value>
+  </data>
+  <data name="PIUGame.com Password" xml:space="preserve">
+    <value>Password PIUGame.com</value>
+  </data>
+  <data name="Log In" xml:space="preserve">
+    <value>Accedi</value>
+  </data>
+  <data name="Invalid username or password" xml:space="preserve">
+    <value>Nome utente o password non validi</value>
+  </data>
+  <data name="Could not reach PIUGAME, try again later" xml:space="preserve">
+    <value>Impossibile raggiungere PIUGAME, riprova più tardi</value>
+  </data>
 </root>

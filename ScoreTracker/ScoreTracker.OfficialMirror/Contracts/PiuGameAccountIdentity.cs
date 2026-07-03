@@ -17,4 +17,14 @@ public sealed record PiuGameAccountIdentity(
     Uri ProfileImage,
     IEnumerable<GameCardRecord> Cards)
 {
+    /// <summary>
+    ///     The namespaced ExternalLogin ids this identity matches or claims, most-stable-first:
+    ///     the login id (case-normalized — gnuboard login ids are case-insensitive), then every
+    ///     game card's sub-profile number.
+    /// </summary>
+    public IEnumerable<string> GetLoginAliases()
+    {
+        yield return $"mbid:{Username.Trim().ToLowerInvariant()}";
+        foreach (var card in Cards) yield return $"card:{card.Id}";
+    }
 }

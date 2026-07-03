@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Security.Authentication;
+using System.Security.Claims;
 using System.Text.RegularExpressions;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
@@ -12,6 +13,7 @@ using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Configuration;
 using ScoreTracker.Web.Services.Contracts;
@@ -98,6 +100,62 @@ public sealed class LoginController : Controller
         var url = isNewUser ? "/Welcome" : returnUrl;
 
         return LocalRedirect(url ?? "/");
+    }
+
+    // PIUGAME is credential-based, not OAuth: the literal routes below win over the
+    // {providerName} templates, so it never enters the Challenge pipeline. The GET only
+    // redirects to the Blazor form; the POST is the actual sign-in (cookies can only be
+    // issued from an HTTP request, never over the Blazor circuit).
+    [HttpGet("PiuGame")]
+    public IActionResult PiuGameForm()
+    {
+        return LocalRedirect("/PiuGameLogin");
+    }
+
+    [HttpPost("PiuGame")]
+    public async Task<IActionResult> PiuGameLogin([FromForm] string? username, [FromForm] string? password,
+        [FromForm] string? returnUrl)
+    {
+        var backToForm = "/PiuGameLogin" + (string.IsNullOrWhiteSpace(returnUrl)
+            ? ""
+            : $"?returnUrl={Uri.EscapeDataString(returnUrl)}");
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            return LocalRedirect(AppendError(backToForm, "Invalid"));
+
+        OfficialMirror.Contracts.PiuGameAccountIdentity identity;
+        try
+        {
+            identity = await _mediator.Send(new GetPiuGameAccountIdentityQuery(username, password),
+                HttpContext.RequestAborted);
+        }
+        catch (InvalidCredentialException)
+        {
+            return LocalRedirect(AppendError(backToForm, "Invalid"));
+        }
+        catch (HttpRequestException)
+        {
+            return LocalRedirect(AppendError(backToForm, "Unavailable"));
+        }
+
+        var resolution = await _mediator.Send(new ResolveExternalUserCommand("PiuGame",
+                identity.GetLoginAliases().ToArray(), identity.GameTag, identity.GameTag, identity.ProfileImage),
+            HttpContext.RequestAborted);
+
+        await _currentUser.SetCurrentUser(resolution.User);
+
+        var culture = await _uiSettings.GetSetting("Culture", HttpContext.RequestAborted, resolution.User.Id);
+        if (culture != null)
+            HttpContext.Response.Cookies.Append(
+                CookieRequestCultureProvider.DefaultCookieName,
+                CookieRequestCultureProvider.MakeCookieValue(
+                    new RequestCulture(culture, culture)));
+
+        return LocalRedirect(resolution.IsNew ? "/Welcome" : string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl);
+    }
+
+    private static string AppendError(string url, string error)
+    {
+        return url + (url.Contains('?') ? "&" : "?") + $"error={error}";
     }
 
     [HttpGet("{providerName}/Link")]

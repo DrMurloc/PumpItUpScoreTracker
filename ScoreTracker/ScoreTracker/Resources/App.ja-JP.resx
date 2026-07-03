@@ -2051,4 +2051,25 @@
   <data name="This sign-in method is connected to a different account" xml:space="preserve">
     <value>このログイン方法は別のアカウントに連携されています</value>
   </data>
+  <data name="PIUGAME Login" xml:space="preserve">
+    <value>PIUGAMEログイン</value>
+  </data>
+  <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
+    <value>ユーザー名とパスワードはpiugame.comへ直接送信され、保存されることはありません</value>
+  </data>
+  <data name="PIUGame.com Username" xml:space="preserve">
+    <value>PIUGame.comユーザー名</value>
+  </data>
+  <data name="PIUGame.com Password" xml:space="preserve">
+    <value>PIUGame.comパスワード</value>
+  </data>
+  <data name="Log In" xml:space="preserve">
+    <value>ログイン</value>
+  </data>
+  <data name="Invalid username or password" xml:space="preserve">
+    <value>ユーザー名またはパスワードが正しくありません</value>
+  </data>
+  <data name="Could not reach PIUGAME, try again later" xml:space="preserve">
+    <value>PIUGAMEに接続できません。後でもう一度お試しください</value>
+  </data>
 </root>

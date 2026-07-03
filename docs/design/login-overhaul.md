@@ -53,7 +53,7 @@ the Phoenix 2 wave), leading to a username/password form on our site.
   the `sub_profile` numbers look like immutable server-side row ids — Andamiro question pending,
   see Open questions). So we don't bet on one: each identifier is stored as its **own
   `ExternalLogin` row** under provider `PiuGame`, namespaced in `ExternalId`
-  (`mbid:<value>`, `profile:<no>`, `card:<no>`). Login matches on **any** alias and upserts the
+  (`mbid:<login-id, lowercased>`, `card:<sub-profile no>`). Login matches on **any** alias and upserts the
   bundle on every success (self-healing). This reuses the existing table with zero migration —
   the many-to-one shape is exactly what alias rows need.
 - **Drift degrades gracefully.** Unlike OAuth, piugame login re-proves the credentials every

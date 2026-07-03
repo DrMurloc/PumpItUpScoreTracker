@@ -1,0 +1,58 @@
+@page "/PiuGameLogin"
+@using System.Web
+@using ScoreTracker.Domain.SecondaryPorts
+
+<PageTitle>@L["PIUGAME Login"]</PageTitle>
+
+<MudPaper Class="align-center" Elevation="0" MaxWidth="500px">
+    <MudContainer Fixed="true">
+        <MudCard>
+            <MudCardHeader>
+                <MudText Typo="Typo.h4" Color="Color.Primary">@L["PIUGAME Login"]</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (_error != null)
+                {
+                    <MudAlert Severity="Severity.Error" Class="mb-4">@L[_error]</MudAlert>
+                }
+                <MudAlert Severity="Severity.Info" Class="mb-4">@L["Your username and password are sent directly to piugame.com and are never stored"]</MudAlert>
+                <form method="post" action="/Login/PiuGame">
+                    <MudTextField T="string" Label="@L["PIUGame.com Username"].Value" UserAttributes="@UsernameAttributes"></MudTextField>
+                    <MudTextField T="string" InputType="InputType.Password" Label="@L["PIUGame.com Password"].Value" UserAttributes="@PasswordAttributes"></MudTextField>
+                    <input type="hidden" name="returnUrl" value="@_returnUrl"/>
+                    <MudButton ButtonType="ButtonType.Submit" HtmlTag="button" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" FullWidth="true">@L["Log In"]</MudButton>
+                </form>
+            </MudCardContent>
+        </MudCard>
+    </MudContainer>
+</MudPaper>
+
+@inject NavigationManager NavManager
+@code {
+    private string? _error;
+    private string _returnUrl = "/";
+
+    private static readonly Dictionary<string, object> UsernameAttributes = new()
+    {
+        { "name", "username" },
+        { "autocomplete", "username" }
+    };
+
+    private static readonly Dictionary<string, object> PasswordAttributes = new()
+    {
+        { "name", "password" },
+        { "autocomplete", "current-password" }
+    };
+
+    protected override void OnInitialized()
+    {
+        var query = HttpUtility.ParseQueryString(new Uri(NavManager.Uri).Query);
+        _error = query.Get("error") switch
+        {
+            "Invalid" => "Invalid username or password",
+            "Unavailable" => "Could not reach PIUGAME, try again later",
+            _ => null
+        };
+        _returnUrl = query.Get("returnUrl") ?? "/";
+    }
+}

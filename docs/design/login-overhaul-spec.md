@@ -81,11 +81,11 @@ Conventions that apply to every commit and aren't repeated below:
 - **Scope**:
   - `/Login/PiuGame` Razor page: username/password form (POST over the circuit only), the
     "sent directly to piugame.com — never stored" copy, and a first-class button on `/Login`.
-  - On success: match **any alias** — new `IUserRepository.GetUserByAnyExternalLogin(provider,
-    externalIds)`; aliases stored as namespaced `ExternalLogin` rows under provider `PiuGame`
-    (`mbid:<value>`, `profile:<no>`, `card:<no>`), upserted on every successful login
-    (self-healing). No match → create user (name/game tag/profile image from the identity
-    bundle) + alias rows → `/Welcome`.
+  - On success: match **any alias** via Identity's `ResolveExternalUserCommand`; aliases stored
+    as namespaced `ExternalLogin` rows under provider `PiuGame` (`mbid:<login-id, lowercased>`,
+    `card:<sub-profile no>`), upserted on every successful login (self-healing; aliases owned
+    by a different account are never re-pointed). No match → create user (name/game tag/profile
+    image from the identity bundle) + alias rows → `/Welcome`.
   - Cookie issuance reuses the existing callback path (`ICurrentUserAccessor.SetCurrentUser`).
 - **Tests**: handler-level tests for alias match/upsert/create paths.
 - **Docs**: ARCHITECTURE.md login-flow section (provider list + piugame path).

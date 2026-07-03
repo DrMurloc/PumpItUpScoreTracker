@@ -1930,4 +1930,25 @@
   <data name="This sign-in method is connected to a different account" xml:space="preserve">
     <value>이 로그인 방법은 다른 계정에 연결되어 있습니다</value>
   </data>
+  <data name="PIUGAME Login" xml:space="preserve">
+    <value>PIUGAME 로그인</value>
+  </data>
+  <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
+    <value>아이디와 비밀번호는 piugame.com으로 직접 전송되며 절대 저장되지 않습니다</value>
+  </data>
+  <data name="PIUGame.com Username" xml:space="preserve">
+    <value>PIUGame.com 아이디</value>
+  </data>
+  <data name="PIUGame.com Password" xml:space="preserve">
+    <value>PIUGame.com 비밀번호</value>
+  </data>
+  <data name="Log In" xml:space="preserve">
+    <value>로그인</value>
+  </data>
+  <data name="Invalid username or password" xml:space="preserve">
+    <value>아이디 또는 비밀번호가 올바르지 않습니다</value>
+  </data>
+  <data name="Could not reach PIUGAME, try again later" xml:space="preserve">
+    <value>PIUGAME에 연결할 수 없습니다. 나중에 다시 시도해 주세요</value>
+  </data>
 </root>
