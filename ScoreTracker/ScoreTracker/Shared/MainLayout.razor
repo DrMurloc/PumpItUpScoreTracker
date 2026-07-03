@@ -121,8 +121,13 @@
         }
     </MudAppBar>
     <MudDrawer @bind-Open="_isOpen" Variant="@DrawerVariant.Responsive" Breakpoint="Breakpoint.Md" ClipMode="DrawerClipMode.Always" Width="240px" Elevation="1">
+        <MudDrawerHeader Class="d-flex align-center gap-2 py-3" Style="min-height: unset;">
+            <MudIcon Icon="@Icons.Material.Filled.MusicNote" Size="Size.Small"></MudIcon>
+            <MudText Typo="Typo.subtitle1" Style="font-weight: 600; letter-spacing: .02em;">@L["PIU Scores"]</MudText>
+        </MudDrawerHeader>
+        <MudDivider></MudDivider>
         <MudNavMenu Class="dense-nav pb-4">
-            <MudText Typo="Typo.overline" Class="ml-4 mt-1 d-block nav-section">@L["Play"]</MudText>
+            <MudText Typo="Typo.overline" Class="ml-4 mt-2 d-block nav-section">@L["Play"]</MudText>
             @if (CurrentUser.IsLoggedIn)
             {
                 <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">@L["Home"]</MudNavLink>
