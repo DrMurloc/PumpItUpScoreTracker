@@ -19,7 +19,7 @@ Two hard rules on dependency realism:
 - **SQL Server is never faked.** No EF in-memory provider, no SQLite substitute — those can't validate migrations, real SQL, indexes, or concurrency, and tests using them must not be called integration tests. Repository-level logic in the fast suite mocks the port instead.
 - **Don't test through the browser what a lower rung covers.** There is no E2E suite today; the pyramid's upper floors are the approval and integration suites.
 
-The full organizational testing standard (test taxonomy, `Layer`/`Size`/`DependencyMode` classification, double vocabulary) lives in [ENTERPRISE-TESTING.md](ENTERPRISE-TESTING.md). This repo uses **folder-as-tag**: the project/folder a test lives in *is* its classification.
+Tests are classified by **folder-as-tag**: the project/folder a test lives in *is* its classification — no per-test trait attributes to maintain.
 
 ## Running the tests
 

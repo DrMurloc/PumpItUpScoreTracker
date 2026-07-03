@@ -5,10 +5,10 @@ What's in the stack, what each piece contributes, and where it's wired. Everythi
 ## Runtime & UI
 
 ### ASP.NET Core
-One process hosts everything: Razor Pages bootstrapping, **Blazor Server** for the UI, and **MVC controllers** for the [HTTP API](API.md). Composition happens in [`Program.cs`](ScoreTracker/ScoreTracker/Program.cs) — the single place where authentication, MediatR, MassTransit, Hangfire, localization, and DI wiring all meet.
+One process hosts everything: Razor Pages bootstrapping, **Blazor Server** for the UI, and **MVC controllers** for the [HTTP API](API.md). Composition happens in [`Program.cs`](../ScoreTracker/ScoreTracker/Program.cs) — the single place where authentication, MediatR, MassTransit, Hangfire, localization, and DI wiring all meet.
 
 ### Blazor Server
-The UI model. Pages run on the server; the browser holds a SignalR (WebSocket) connection and receives DOM diffs. Implications: page code can inject services and hit the database directly through MediatR (no client API layer needed), but every interaction is a server round-trip, and a "circuit" holds per-user state. Pages live in [`Pages/`](ScoreTracker/ScoreTracker/Pages/), grouped by feature.
+The UI model. Pages run on the server; the browser holds a SignalR (WebSocket) connection and receives DOM diffs. Implications: page code can inject services and hit the database directly through MediatR (no client API layer needed), but every interaction is a server round-trip, and a "circuit" holds per-user state. Pages live in [`Pages/`](../ScoreTracker/ScoreTracker/Pages/), grouped by feature.
 
 ### MudBlazor
 The Blazor component library — tables, dialogs, autocompletes, the app bar and drawer in `MainLayout.razor`. UI work is almost entirely MudBlazor composition; there's very little hand-rolled CSS.
@@ -17,7 +17,7 @@ The Blazor component library — tables, dialogs, autocompletes, the app bar and
 Charting for progress/stat visualizations.
 
 ### Localization (resx)
-Eight locales (`en-US`, `pt-BR`, `ko-KR`, `en-ZW`, `es-MX`, `fr-FR`, `ja-JP`, `it-IT`). A scoped `IStringLocalizer<App>` is injected globally as `L` ([_Imports.razor](ScoreTracker/ScoreTracker/_Imports.razor)); resource keys are the **English UI text verbatim**. Per-locale translation glossaries live at the repo root (`LOCALIZATION-<locale>.md`). New keys must be populated in every locale's resx in the same pass.
+Eight locales (`en-US`, `pt-BR`, `ko-KR`, `en-ZW`, `es-MX`, `fr-FR`, `ja-JP`, `it-IT`). A scoped `IStringLocalizer<App>` is injected globally as `L` ([_Imports.razor](../ScoreTracker/ScoreTracker/_Imports.razor)); resource keys are the **English UI text verbatim**. Per-locale translation glossaries live at the repo root (`LOCALIZATION-<locale>.md`). New keys must be populated in every locale's resx in the same pass.
 
 ## Application core
 
@@ -33,7 +33,7 @@ Recurring scheduled work — see [SCHEDULED-JOBS.md](SCHEDULED-JOBS.md). Schedul
 ## Data
 
 ### EF Core + SQL Server
-One `DbContext` ([`ChartAttemptDbContext`](ScoreTracker/ScoreTracker.Data/Persistence/ChartAttemptDbContext.cs)) for the whole database — see [DATABASE-SCHEMA.md](DATABASE-SCHEMA.md). Verticals contribute their own entities via `IDbModelContribution`. Repositories implement Domain ports (`EF<Port>` naming) and create scoped contexts through `IDbContextFactory`. Migrations are applied by a self-contained **EF migration bundle** during the gated deploy (never at startup in production); the local AppHost auto-migrates.
+One `DbContext` ([`ChartAttemptDbContext`](../ScoreTracker/ScoreTracker.Data/Persistence/ChartAttemptDbContext.cs)) for the whole database — see [DATABASE-SCHEMA.md](DATABASE-SCHEMA.md). Verticals contribute their own entities via `IDbModelContribution`. Repositories implement Domain ports (`EF<Port>` naming) and create scoped contexts through `IDbContextFactory`. Migrations are applied by a self-contained **EF migration bundle** during the gated deploy (never at startup in production); the local AppHost auto-migrates.
 
 ### Azure Blob Storage
 Photo storage (tournament verification, qualifiers) through the `IFileUploadClient` port. Locally defaults to the Azurite emulator connection string — see [HOW-TO-RUN.md](HOW-TO-RUN.md) for the caveats.
@@ -41,7 +41,7 @@ Photo storage (tournament verification, qualifiers) through the `IFileUploadClie
 ## Local development
 
 ### .NET Aspire (AppHost)
-Local orchestration ([`ScoreTracker.AppHost`](ScoreTracker/ScoreTracker.AppHost/AppHost.cs)): a deterministic SQL Server container (pinned port/password, persistent volume), automatic migrations, the dev-login backdoor, config/secret flow-through to the web app, and a dashboard with logs and traces. Running the AppHost **is** the local-dev signal — plain `dotnet run` on the web project gets none of this.
+Local orchestration ([`ScoreTracker.AppHost`](../ScoreTracker/ScoreTracker.AppHost/AppHost.cs)): a deterministic SQL Server container (pinned port/password, persistent volume), automatic migrations, the dev-login backdoor, config/secret flow-through to the web app, and a dashboard with logs and traces. Running the AppHost **is** the local-dev signal — plain `dotnet run` on the web project gets none of this.
 
 ## Integrations
 
@@ -77,7 +77,7 @@ The integration suite provisions a real SQL Server 2025 container per run (same 
 ## Delivery
 
 ### Azure Pipelines
-[Multi-stage YAML](azure-pipelines.yml): build + all test suites on every PR and merge; merges to `main` continue into an **approval-gated production deploy** that first applies the EF migration bundle, then zip-deploys the app to Azure App Service.
+[Multi-stage YAML](../azure-pipelines.yml): build + all test suites on every PR and merge; merges to `main` continue into an **approval-gated production deploy** that first applies the EF migration bundle, then zip-deploys the app to Azure App Service.
 
 ### DeepSource
 Static analysis on PRs (`.deepsource.toml`).

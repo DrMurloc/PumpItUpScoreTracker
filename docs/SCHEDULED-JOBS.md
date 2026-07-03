@@ -1,6 +1,6 @@
 # Scheduled Jobs
 
-Recurring background work is scheduled by **Hangfire** (SQL Server storage, `HangFire` schema — schedules survive restarts) and executed over **MassTransit**: each job is a one-line `IBus.Publish(...)` in [`RecurringJobRunner`](ScoreTracker/ScoreTracker/HostedServices/RecurringJobRunner.cs), registered in [`Program.cs`](ScoreTracker/ScoreTracker/Program.cs) via `RecurringJob.AddOrUpdate`. The published message is consumed by a saga inside the owning vertical.
+Recurring background work is scheduled by **Hangfire** (SQL Server storage, `HangFire` schema — schedules survive restarts) and executed over **MassTransit**: each job is a one-line `IBus.Publish(...)` in [`RecurringJobRunner`](../ScoreTracker/ScoreTracker/HostedServices/RecurringJobRunner.cs), registered in [`Program.cs`](../ScoreTracker/ScoreTracker/Program.cs) via `RecurringJob.AddOrUpdate`. The published message is consumed by a saga inside the owning vertical.
 
 All cron expressions are **UTC**.
 

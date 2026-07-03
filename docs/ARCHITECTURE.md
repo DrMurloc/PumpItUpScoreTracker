@@ -59,7 +59,7 @@ Every external boundary is crossed through a **port defined in the domain** (`I*
 
 ### Enforcement over convention
 
-The rules above are **ratcheted by architecture tests** (`ScoreTracker.Tests/ArchitectureTests/`): layer dependency rules, vertical public-surface checks, MediatR/MassTransit discovery tripwires, message-taxonomy scans. Rules are added, never removed. If you break the philosophy, the build tells you before a reviewer does. The machine-readable conventions (per-layer package allowlists, test patterns) live in [CLAUDE.md](CLAUDE.md).
+The rules above are **ratcheted by architecture tests** (`ScoreTracker.Tests/ArchitectureTests/`): layer dependency rules, vertical public-surface checks, MediatR/MassTransit discovery tripwires, message-taxonomy scans. Rules are added, never removed. If you break the philosophy, the build tells you before a reviewer does. The machine-readable conventions (per-layer package allowlists, test patterns) live in [CLAUDE.md](../CLAUDE.md).
 
 ---
 
@@ -115,7 +115,7 @@ ScoreTracker.<Vertical>/
 └── Infrastructure/     internal: EF entities + repositories (use Set<TEntity>())
 ```
 
-Every vertical's model contribution must be listed in [`VerticalModelContributions.All()`](ScoreTracker/ScoreTracker.CompositionRoot/VerticalModelContributions.cs) — the design-time factory and the integration-test fixture both consume it; omitting one silently drops that vertical's tables from scaffolded migrations.
+Every vertical's model contribution must be listed in [`VerticalModelContributions.All()`](../ScoreTracker/ScoreTracker.CompositionRoot/VerticalModelContributions.cs) — the design-time factory and the integration-test fixture both consume it; omitting one silently drops that vertical's tables from scaffolded migrations.
 
 ### The web app (`ScoreTracker/ScoreTracker/`)
 
@@ -140,7 +140,7 @@ Every vertical's model contribution must be listed in [`VerticalModelContributio
 
 **Login flow**: `/Login/{Provider}` issues the OAuth challenge → `/Login/{Provider}/Callback` maps the external identity to a user (`GetUserByExternalLoginQuery`, creating via `CreateUserCommand` + `CreateExternalLoginCommand` on first sign-in) → claims principal built with custom claims (`ScoreTrackerClaimTypes`: game tag, country, profile image, `ClaimsIssuedAt` for cache-invalidated sign-out) → 30-day sliding cookie (`DefaultAuthentication`). API callers use the separate `ApiToken` Basic-auth scheme. Locally, a `DevAuth`-gated backdoor (`/Login/Dev`, `/Login/Dev/Bootstrap`) skips OAuth entirely and lands on `/Dev/Populate` when the database is empty.
 
-**Localization**: `IStringLocalizer<App>` injected globally as `L`; keys are English UI text verbatim; eight locales, each non-English one with a glossary at the repo root (`LOCALIZATION-<locale>.md`). New keys get populated in every locale in the same pass.
+**Localization**: `IStringLocalizer<App>` injected globally as `L`; keys are English UI text verbatim; eight locales, each non-English one with a translation glossary alongside this doc (`LOCALIZATION-<locale>.md`). New keys get populated in every locale in the same pass.
 
 **Accessors** (`Accessors/`): Web-bound implementations of domain ports that need ASP.NET (`HttpContextUserAccessor : ICurrentUserAccessor`, `DateTimeOffsetAccessor : IDateTimeOffsetAccessor`).
 
@@ -150,4 +150,4 @@ One SQL Server database, one `DbContext`, table-by-table breakdown in [DATABASE-
 
 ### Composition
 
-[`Program.cs`](ScoreTracker/ScoreTracker/Program.cs) is the single bootstrap: authentication, MediatR scans, MassTransit + every vertical's `AddXxxConsumers` hook, Hangfire + recurring-job registrations, localization, Swagger, and the CompositionRoot's `AddInfrastructure(...)` (reflection-binds every `Domain.SecondaryPorts` interface to its `Data` implementation, transient by default; `IBotClient` is the lone singleton).
+[`Program.cs`](../ScoreTracker/ScoreTracker/Program.cs) is the single bootstrap: authentication, MediatR scans, MassTransit + every vertical's `AddXxxConsumers` hook, Hangfire + recurring-job registrations, localization, Swagger, and the CompositionRoot's `AddInfrastructure(...)` (reflection-binds every `Domain.SecondaryPorts` interface to its `Data` implementation, transient by default; `IBotClient` is the lone singleton).

@@ -36,7 +36,7 @@ dotnet run --project ScoreTracker/ScoreTracker.AppHost
 
 This boots the [.NET Aspire](https://learn.microsoft.com/dotnet/aspire/) local orchestration, which:
 
-- provisions a **SQL Server container** with a pinned password and port (from [AppHost appsettings.json](ScoreTracker/ScoreTracker.AppHost/appsettings.json)) and a persistent volume, so your data survives restarts;
+- provisions a **SQL Server container** with a pinned password and port (from [AppHost appsettings.json](../ScoreTracker/ScoreTracker.AppHost/appsettings.json)) and a persistent volume, so your data survives restarts;
 - **applies all EF migrations automatically** at startup;
 - enables the **dev login backdoor** so you don't need OAuth credentials to sign in;
 - opens the **Aspire dashboard** (logs, traces, resource states) in your browser.
@@ -78,7 +78,7 @@ All of these are **bring-your-own credentials**: if you want to test a feature t
 
 ### Azure Blob Storage / Azurite
 
-Photo-upload features store files in Azure Blob Storage. Locally, [appsettings.Development.json](ScoreTracker/ScoreTracker/appsettings.Development.json) already points the client at the local emulator (`UseDevelopmentStorage=true`), and the client doesn't connect until a file operation happens — so **the app runs fine with no blob storage at all**; only the moment you actually upload a photo will error.
+Photo-upload features store files in Azure Blob Storage. Locally, [appsettings.Development.json](../ScoreTracker/ScoreTracker/appsettings.Development.json) already points the client at the local emulator (`UseDevelopmentStorage=true`), and the client doesn't connect until a file operation happens — so **the app runs fine with no blob storage at all**; only the moment you actually upload a photo will error.
 
 To exercise uploads for real, run [Azurite](https://learn.microsoft.com/azure/storage/common/storage-use-azurite) in Docker:
 

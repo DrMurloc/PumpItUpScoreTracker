@@ -47,10 +47,9 @@ Run these locally before opening a PR. The real-database integration suite ([HOW
 ## Conventions
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — architecture philosophy and the code map. Read before any non-trivial PR.
-- [CLAUDE.md](CLAUDE.md) — machine-readable conventions for AI coding agents (layer package allowlists, test patterns, coverage exclusions). If you're contributing with an AI agent, point it here.
+- [CLAUDE.md](../CLAUDE.md) — machine-readable conventions for AI coding agents (layer package allowlists, test patterns, coverage exclusions). If you're contributing with an AI agent, point it here.
 - [DOMAIN.md](DOMAIN.md) — Pump It Up domain glossary (Mix, Chart, Phoenix score, Pumbility, UCS, …).
 
 ## Community
 
-- Discord: <https://discord.gg/AvS5PxnvSN> — where changes get discussed and contributors stay in sync.
-- [Code of Conduct](CODE_OF_CONDUCT.md) · [Security policy](SECURITY.md)
+Discord is where changes get discussed, contributors stay in sync, and community standards live: <https://discord.gg/AvS5PxnvSN>. Security issues: email <joneccker@gmail.com> rather than opening a public issue.

@@ -1,6 +1,6 @@
 # Database Schema
 
-One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](ScoreTracker/ScoreTracker.Data/Persistence/ChartAttemptDbContext.cs)). Almost everything lives in the `scores` schema. Migrations live in [`ScoreTracker.Data/Migrations/`](ScoreTracker/ScoreTracker.Data/Migrations/) and are applied by a self-contained EF bundle during the gated production deploy (locally, the Aspire AppHost auto-migrates at startup).
+One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../ScoreTracker/ScoreTracker.Data/Persistence/ChartAttemptDbContext.cs)). Almost everything lives in the `scores` schema. Migrations live in [`ScoreTracker.Data/Migrations/`](../ScoreTracker/ScoreTracker.Data/Migrations/) and are applied by a self-contained EF bundle during the gated production deploy (locally, the Aspire AppHost auto-migrates at startup).
 
 **Table ownership follows the verticals** (see [ARCHITECTURE.md](ARCHITECTURE.md)): a vertical owns its EF entities as `internal` classes and registers them with the shared context via an `IDbModelContribution` in its `Wiring/` namespace. Cross-vertical reads go through published ports and contracts — never SQL joins onto another vertical's tables. Tables not yet extracted to a vertical live in `ScoreTracker.Data` directly.
 

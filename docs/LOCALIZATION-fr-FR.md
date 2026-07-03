@@ -2,7 +2,7 @@
 
 Working reference for translating `App.en-US.resx` into `App.fr-FR.resx`. Captures the conventions established by the 601 translated entries (196 original + 405 from the 2026-04-26 bulk batch) so future batches stay consistent.
 
-For the localization mechanism itself (resx layout, `L["..."]` usage, key conventions), see [ARCHITECTURE.md](ARCHITECTURE.md#cross-cutting-concerns). For PIU domain terms in English, see [DOMAIN.md](DOMAIN.md). For the parallel ja-JP, ko-KR, and pt-BR conventions, see [LOCALIZATION-ja-JP.md](LOCALIZATION-ja-JP.md), [LOCALIZATION-ko-KR.md](LOCALIZATION-ko-KR.md), and [LOCALIZATION-pt-BR.md](LOCALIZATION-pt-BR.md).
+For the localization mechanism itself (resx layout, `L["..."]` usage, key conventions), see [ARCHITECTURE.md](ARCHITECTURE.md). For PIU domain terms in English, see [DOMAIN.md](DOMAIN.md). For the parallel ja-JP, ko-KR, and pt-BR conventions, see [LOCALIZATION-ja-JP.md](LOCALIZATION-ja-JP.md), [LOCALIZATION-ko-KR.md](LOCALIZATION-ko-KR.md), and [LOCALIZATION-pt-BR.md](LOCALIZATION-pt-BR.md).
 
 ## Style conventions
 
