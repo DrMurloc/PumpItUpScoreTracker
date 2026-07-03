@@ -1995,4 +1995,7 @@
   <data name="Could not reach PIUGAME, try again later" xml:space="preserve">
 	  <value>PIUGAME nk mrgl! Rwlrwlrwl blub later</value>
   </data>
+  <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
+	  <value>PIUGAME mrgl-mrgl blub piugame.com uuua! Grrblub backup mrgl-mrgl aaaughibbrgubugbugrguburgle!</value>
+  </data>
 </root>

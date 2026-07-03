@@ -2072,4 +2072,7 @@
   <data name="Could not reach PIUGAME, try again later" xml:space="preserve">
     <value>PIUGAMEに接続できません。後でもう一度お試しください</value>
   </data>
+  <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
+    <value>PIUGAMEログインはpiugame.comへの接続に依存します。予備のログイン方法を連携してください</value>
+  </data>
 </root>

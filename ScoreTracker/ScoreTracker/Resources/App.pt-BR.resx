@@ -2022,4 +2022,7 @@
   <data name="Could not reach PIUGAME, try again later" xml:space="preserve">
     <value>Não foi possível conectar ao PIUGAME, tente novamente mais tarde</value>
   </data>
+  <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
+    <value>Os logins do PIUGAME dependem do piugame.com estar acessível, conecte um método de login de reserva</value>
+  </data>
 </root>

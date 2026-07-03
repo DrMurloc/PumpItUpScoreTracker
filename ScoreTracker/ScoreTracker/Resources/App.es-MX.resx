@@ -1950,4 +1950,7 @@
   <data name="Could not reach PIUGAME, try again later" xml:space="preserve">
     <value>No se pudo conectar con PIUGAME, inténtalo más tarde</value>
   </data>
+  <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
+    <value>Los inicios de sesión de PIUGAME dependen de que piugame.com esté disponible, conecta un método de inicio de sesión de respaldo</value>
+  </data>
 </root>

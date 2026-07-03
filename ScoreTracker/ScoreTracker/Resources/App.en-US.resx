@@ -2071,4 +2071,7 @@
   <data name="Could not reach PIUGAME, try again later" xml:space="preserve">
     <value>Could not reach PIUGAME, try again later</value>
   </data>
+  <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
+    <value>PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method</value>
+  </data>
 </root>

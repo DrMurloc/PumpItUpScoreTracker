@@ -12,43 +12,52 @@ using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
 
-public sealed class RemoveExternalLoginHandlerTests
+public sealed class DisconnectExternalProviderHandlerTests
 {
     private readonly Guid _userId = Guid.NewGuid();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<IUserRepository> _users = new();
-    private readonly RemoveExternalLoginHandler _handler;
+    private readonly DisconnectExternalProviderHandler _handler;
 
-    public RemoveExternalLoginHandlerTests()
+    public DisconnectExternalProviderHandlerTests()
     {
         _currentUser.Setup(c => c.User).Returns(new UserBuilder().WithId(_userId).Build());
-        _handler = new RemoveExternalLoginHandler(_currentUser.Object, _users.Object);
+        _handler = new DisconnectExternalProviderHandler(_currentUser.Object, _users.Object);
     }
 
     [Fact]
-    public async Task RemovesLoginWhenAnotherMethodRemains()
+    public async Task RemovesEveryAliasRowOfTheProvider()
     {
         _users.Setup(u => u.GetExternalLogins(_userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new ExternalLoginRecord("Discord", "discord-id"),
-                new ExternalLoginRecord("Google", "google-id")
+                new ExternalLoginRecord("PiuGame", "mbid:someone"),
+                new ExternalLoginRecord("PiuGame", "card:123")
             });
 
-        await _handler.Handle(new RemoveExternalLoginCommand("Discord", "discord-id"), CancellationToken.None);
+        await _handler.Handle(new DisconnectExternalProviderCommand("PiuGame"), CancellationToken.None);
 
-        _users.Verify(u => u.RemoveExternalLogin(_userId, "Discord", "discord-id", It.IsAny<CancellationToken>()),
+        _users.Verify(u => u.RemoveExternalLogin(_userId, "PiuGame", "mbid:someone", It.IsAny<CancellationToken>()),
             Times.Once);
+        _users.Verify(u => u.RemoveExternalLogin(_userId, "PiuGame", "card:123", It.IsAny<CancellationToken>()),
+            Times.Once);
+        _users.Verify(u => u.RemoveExternalLogin(_userId, "Discord", It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
-    public async Task ThrowsAndRemovesNothingWhenTargetIsTheLastLogin()
+    public async Task ThrowsWhenDisconnectingTheOnlyProviderEvenAcrossMultipleAliasRows()
     {
         _users.Setup(u => u.GetExternalLogins(_userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { new ExternalLoginRecord("Discord", "discord-id") });
+            .ReturnsAsync(new[]
+            {
+                new ExternalLoginRecord("PiuGame", "mbid:someone"),
+                new ExternalLoginRecord("PiuGame", "card:123")
+            });
 
         await Assert.ThrowsAsync<CannotRemoveLastExternalLoginException>(() =>
-            _handler.Handle(new RemoveExternalLoginCommand("Discord", "discord-id"), CancellationToken.None));
+            _handler.Handle(new DisconnectExternalProviderCommand("PiuGame"), CancellationToken.None));
 
         _users.Verify(
             u => u.RemoveExternalLogin(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(),
@@ -56,12 +65,12 @@ public sealed class RemoveExternalLoginHandlerTests
     }
 
     [Fact]
-    public async Task IgnoresLoginsThatAreNotOnTheAccount()
+    public async Task IgnoresProvidersNotOnTheAccount()
     {
         _users.Setup(u => u.GetExternalLogins(_userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { new ExternalLoginRecord("Discord", "discord-id") });
 
-        await _handler.Handle(new RemoveExternalLoginCommand("Google", "someone-elses-id"), CancellationToken.None);
+        await _handler.Handle(new DisconnectExternalProviderCommand("Google"), CancellationToken.None);
 
         _users.Verify(
             u => u.RemoveExternalLogin(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(),
@@ -78,7 +87,7 @@ public sealed class RemoveExternalLoginHandlerTests
                 new ExternalLoginRecord("Google", "google-id")
             });
 
-        await _handler.Handle(new RemoveExternalLoginCommand("discord", "discord-id"), CancellationToken.None);
+        await _handler.Handle(new DisconnectExternalProviderCommand("discord"), CancellationToken.None);
 
         _users.Verify(u => u.RemoveExternalLogin(_userId, "Discord", "discord-id", It.IsAny<CancellationToken>()),
             Times.Once);

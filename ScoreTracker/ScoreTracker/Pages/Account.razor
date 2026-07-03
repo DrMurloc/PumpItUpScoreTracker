@@ -16,6 +16,9 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Web.Services.Contracts
+@using System.Security.Authentication
+@using ScoreTracker.Identity.Contracts
+@using ScoreTracker.OfficialMirror.Contracts.Queries
 
 <PageTitle>@L["Account"]</PageTitle>
 
@@ -96,18 +99,22 @@
     <MudCardHeader>@L["Sign-In Methods"]</MudCardHeader>
     <MudCardContent>
         <MudText Typo="Typo.body2" Class="mb-4">@L["You can sign in to your account with any connected method"]</MudText>
+        @if (_externalLogins.Any() && _externalLogins.All(l => l.LoginProviderName.Equals("PiuGame", StringComparison.OrdinalIgnoreCase)))
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-4">@L["PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method"]</MudAlert>
+        }
         <MudGrid>
-            @foreach (var login in _externalLogins)
+            @foreach (var provider in ConnectedProviders)
             {
                 <MudItem xs="6" Style="align-content: center;">
-                    <MudIcon Icon="@ProviderIcon(login.LoginProviderName)" Style="vertical-align: middle;" Class="mr-2"></MudIcon>
-                    <MudText Inline="true">@login.LoginProviderName</MudText>
+                    <MudIcon Icon="@ProviderIcon(provider)" Style="vertical-align: middle;" Class="mr-2"></MudIcon>
+                    <MudText Inline="true">@(provider.Equals("PiuGame", StringComparison.OrdinalIgnoreCase) ? "PIUGAME" : provider)</MudText>
                 </MudItem>
                 <MudItem xs="6">
-                    <MudTooltip Text="@(_externalLogins.Count == 1 ? L["This is your only sign-in method and cannot be disconnected"].Value : string.Empty)">
+                    <MudTooltip Text="@(ConnectedProviders.Count == 1 ? L["This is your only sign-in method and cannot be disconnected"].Value : string.Empty)">
                         <MudButton Variant="Variant.Outlined" Color="Color.Error"
-                                   Disabled="_externalLogins.Count == 1"
-                                   OnClick="() => OpenDisconnectDialog(login)">@L["Disconnect"]</MudButton>
+                                   Disabled="ConnectedProviders.Count == 1"
+                                   OnClick="() => OpenDisconnectDialog(provider)">@L["Disconnect"]</MudButton>
                     </MudTooltip>
                 </MudItem>
             }
@@ -115,19 +122,45 @@
     </MudCardContent>
     <MudCardActions>
         <MudSpacer></MudSpacer>
-        @foreach (var provider in ConnectableProviders)
+        @foreach (var provider in ConnectableProviders.Where(p => !ConnectedProviders.Contains(p, StringComparer.OrdinalIgnoreCase)))
         {
             <MudButton Href="@($"/Login/{provider}/Link")" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@ProviderIcon(provider)">@L["Connect"] @provider</MudButton>
         }
+        @if (!ConnectedProviders.Contains("PiuGame", StringComparer.OrdinalIgnoreCase))
+        {
+            <MudButton OnClick="OpenPiuGameDialog" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.SportsEsports">@L["Connect"] PIUGAME</MudButton>
+        }
     </MudCardActions>
 </MudCard>
+
+<MudDialog @bind-Visible="_showPiuGameDialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L["Connect"] PIUGAME</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudAlert Severity="Severity.Info" Class="mb-4">@L["Your username and password are sent directly to piugame.com and are never stored"]</MudAlert>
+        <MudTextField T="string" Label="@L["PIUGame.com Username"].Value" Disabled="_isConnectingPiuGame" @bind-Value="_piuGameUsername"></MudTextField>
+        <MudTextField T="string" InputType="InputType.Password" Label="@L["PIUGame.com Password"].Value" Disabled="_isConnectingPiuGame" @bind-Value="_piuGamePassword"></MudTextField>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text"
+                   OnClick="() => _showPiuGameDialog = false"
+                   Disabled="_isConnectingPiuGame"
+                   Color="Color.Primary">@L["Cancel"]</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   OnClick="ConnectPiuGame"
+                   Disabled="@(_isConnectingPiuGame || string.IsNullOrWhiteSpace(_piuGameUsername) || string.IsNullOrWhiteSpace(_piuGamePassword))"
+                   Color="Color.Primary">@L["Connect"]</MudButton>
+    </DialogActions>
+</MudDialog>
 
 <MudDialog @bind-Visible="_showDisconnectDialog">
     <TitleContent>
         <MudText Typo="Typo.h6">@L["Disconnect Sign-In Method"]</MudText>
     </TitleContent>
     <DialogContent>
-        <MudText>@L["You will no longer be able to sign in with this method"] (@(_disconnectTarget?.LoginProviderName ?? ""))</MudText>
+        <MudText>@L["You will no longer be able to sign in with this method"] (@(_disconnectTarget ?? ""))</MudText>
     </DialogContent>
     <DialogActions>
         <MudSpacer></MudSpacer>
@@ -220,7 +253,12 @@
     private static readonly string[] ConnectableProviders = { "Discord", "Google" };
     private bool _showDisconnectDialog = false;
     private bool _isDisconnecting = false;
-    private ExternalLoginRecord? _disconnectTarget;
+    private string? _disconnectTarget;
+
+    private IReadOnlyList<string> ConnectedProviders => _externalLogins
+        .Select(l => l.LoginProviderName)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToArray();
 
     private static string ProviderIcon(string provider) => provider.ToLowerInvariant() switch
     {
@@ -230,9 +268,59 @@
         _ => Icons.Material.Filled.Login
     };
 
-    private void OpenDisconnectDialog(ExternalLoginRecord login)
+    private bool _showPiuGameDialog = false;
+    private bool _isConnectingPiuGame = false;
+    private string _piuGameUsername = string.Empty;
+    private string _piuGamePassword = string.Empty;
+
+    private void OpenPiuGameDialog()
     {
-        _disconnectTarget = login;
+        _piuGameUsername = string.Empty;
+        _piuGamePassword = string.Empty;
+        _showPiuGameDialog = true;
+    }
+
+    private async Task ConnectPiuGame()
+    {
+        _isConnectingPiuGame = true;
+        try
+        {
+            var identity = await Mediator.Send(new GetPiuGameAccountIdentityQuery(_piuGameUsername, _piuGamePassword));
+            var result = await Mediator.Send(new LinkExternalAliasesCommand("PiuGame", identity.GetLoginAliases().ToArray()));
+            switch (result)
+            {
+                case ExternalLinkResult.Linked:
+                    Snackbar.Add(L["Sign-in method connected"], Severity.Success);
+                    break;
+                case ExternalLinkResult.AlreadyLinked:
+                    Snackbar.Add(L["This sign-in method is already connected to your account"], Severity.Info);
+                    break;
+                case ExternalLinkResult.ConflictingAccount:
+                    Snackbar.Add(L["This sign-in method is connected to a different account"], Severity.Warning);
+                    break;
+            }
+
+            _externalLogins = (await Mediator.Send(new GetExternalLoginsQuery())).ToArray();
+            _showPiuGameDialog = false;
+        }
+        catch (InvalidCredentialException)
+        {
+            Snackbar.Add(L["Invalid username or password"], Severity.Error);
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Add(L["Could not reach PIUGAME, try again later"], Severity.Error);
+        }
+        finally
+        {
+            _piuGamePassword = string.Empty;
+            _isConnectingPiuGame = false;
+        }
+    }
+
+    private void OpenDisconnectDialog(string provider)
+    {
+        _disconnectTarget = provider;
         _showDisconnectDialog = true;
     }
 
@@ -242,7 +330,7 @@
         _isDisconnecting = true;
         try
         {
-            await Mediator.Send(new RemoveExternalLoginCommand(_disconnectTarget.LoginProviderName, _disconnectTarget.ExternalId));
+            await Mediator.Send(new DisconnectExternalProviderCommand(_disconnectTarget));
             _externalLogins = (await Mediator.Send(new GetExternalLoginsQuery())).ToArray();
             Snackbar.Add(L["Sign-in method disconnected"], Severity.Success);
             _showDisconnectDialog = false;
