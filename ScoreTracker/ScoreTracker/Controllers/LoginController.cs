@@ -72,6 +72,8 @@ public sealed class LoginController : Controller
             ?.Value ?? "";
         var name = principal.FindFirst(ClaimTypes.Name)?.Value ??
                    "Unknown Name";
+        await HttpContext.SignOutAsync("ExternalAuthentication");
+
         var user = await _mediator.Send(new GetUserByExternalLoginQuery(id, providerName),
             HttpContext.RequestAborted);
 
@@ -96,6 +98,50 @@ public sealed class LoginController : Controller
         var url = isNewUser ? "/Welcome" : returnUrl;
 
         return LocalRedirect(url ?? "/");
+    }
+
+    [HttpGet("{providerName}/Link")]
+    public async Task<IActionResult> LinkSignIn([FromRoute] string providerName)
+    {
+        if (!AllowedProviders.Contains(providerName)) return BadRequest("Invalid provider name");
+        if (!_currentUser.IsLoggedIn) return LocalRedirect("/Login");
+
+        if (!await HttpContext.IsProviderSupportedAsync(providerName)) return BadRequest();
+
+        return Challenge(new AuthenticationProperties { RedirectUri = $"/Login/{providerName}/Link/Callback" },
+            providerName);
+    }
+
+    [HttpGet("{providerName}/Link/Callback")]
+    public async Task<IActionResult> LinkCallback([FromRoute] string providerName)
+    {
+        if (!AllowedProviders.Contains(providerName)) return BadRequest("Invalid provider name");
+        if (!_currentUser.IsLoggedIn) return LocalRedirect("/Login");
+
+        var authenticateResult = await HttpContext.AuthenticateAsync(providerName);
+
+        if (authenticateResult.Principal == null) return BadRequest("Principal was missing");
+
+        var id = authenticateResult.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
+
+        await HttpContext.SignOutAsync("ExternalAuthentication");
+
+        var owner = await _mediator.Send(new GetUserByExternalLoginQuery(id, providerName),
+            HttpContext.RequestAborted);
+
+        string result;
+        if (owner == null)
+        {
+            await _mediator.Send(new CreateExternalLoginCommand(_currentUser.User.Id, id, providerName),
+                HttpContext.RequestAborted);
+            result = "Linked";
+        }
+        else
+        {
+            result = owner.Id == _currentUser.User.Id ? "AlreadyLinked" : "Conflict";
+        }
+
+        return LocalRedirect($"/Account?linkResult={result}&linkProvider={providerName}");
     }
 
     // DevAuth backdoor (cherry-picked from the Phase-1 local-dev slice): environment-config

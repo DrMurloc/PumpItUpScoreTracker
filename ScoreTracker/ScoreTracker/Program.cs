@@ -127,20 +127,32 @@ builder.Services.AddAuthentication("DefaultAuthentication")
             }
         };
     })
+    // Remote OAuth handlers persist their handshake result into their SignInScheme. Without a
+    // dedicated scheme they default to the session cookie above, so every OAuth round-trip
+    // briefly replaces the live session with the raw external principal — fatal for the
+    // link/verify flows, which must keep the user signed in across the handshake.
+    .AddCookie("ExternalAuthentication", o =>
+    {
+        o.SlidingExpiration = false;
+        o.ExpireTimeSpan = TimeSpan.FromMinutes(15);
+    })
     .AddDiscord("Discord", o =>
     {
         o.ClientId = discordConfig.ClientId;
         o.ClientSecret = discordConfig.ClientSecret;
+        o.SignInScheme = "ExternalAuthentication";
     })
     .AddGoogle("Google", o =>
     {
         o.ClientId = googleConfig.ClientId;
         o.ClientSecret = googleConfig.ClientSecret;
+        o.SignInScheme = "ExternalAuthentication";
     })
     .AddFacebook("Facebook", o =>
     {
         o.AppId = facebookConfig.AppId;
         o.AppSecret = facebookConfig.AppSecret;
+        o.SignInScheme = "ExternalAuthentication";
     })
     .AddScheme<AuthenticationSchemeOptions, ApiTokenAuthenticationScheme>("ApiToken", o => { });
 
