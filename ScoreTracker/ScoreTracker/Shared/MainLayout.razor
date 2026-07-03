@@ -44,9 +44,32 @@
     .appbar-search .mud-input-control {
         margin-top: 0;
     }
+
+    .appbar-search .mud-input.mud-input-outlined {
+        background: rgba(255, 255, 255, .15);
+    }
+
+    .appbar-search .mud-input.mud-input-outlined input,
+    .appbar-search .mud-input-adornment-icon {
+        color: #EDF1F5;
+    }
+
+    .appbar-search .mud-input.mud-input-outlined .mud-input-outlined-border {
+        border-color: rgba(237, 241, 245, .5);
+    }
+
+    .appbar-search .mud-input-label {
+        color: rgba(237, 241, 245, .85);
+    }
+
+    .mud-drawer {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(237, 241, 245, .35) transparent;
+    }
 </style>
 <MudLayout>
-    <MudAppBar Color="Color.Primary" Fixed="false" Dense="true">
+    @* Fixed: the drawer is viewport-pinned, so a scrolling app bar visibly detaches from it. *@
+    <MudAppBar Color="Color.Primary" Fixed="true" Dense="true">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="() => _isOpen = !_isOpen"/>
         <MudText Typo="Typo.subtitle1" Style="font-weight: 500; white-space: nowrap;" Class="mr-6">@(_userId == null ? L["PIU Scores"].Value : $"{UserName}")</MudText>
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
@@ -66,7 +89,12 @@
             <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
                 <ActivatorContent>
                     <MudAvatar Size="Size.Small" Style="cursor: pointer;">
-                        <MudImage Src="@_profileImage" ObjectFit="ObjectFit.Cover" Style="width: 100%; height: 100%;"></MudImage>
+                        @* Native img with an onerror fallback: stored avatar URLs go stale when
+                           piugame rehosts its images (they moved with the Phoenix 2 rollout), so
+                           a broken URL degrades to the default avatar instead of a broken-image glyph. *@
+                        <img src="@_profileImage" alt=""
+                             onerror="this.onerror=null;this.src='https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png';"
+                             style="width: 100%; height: 100%; object-fit: cover;"/>
                     </MudAvatar>
                 </ActivatorContent>
                 <ChildContent>
