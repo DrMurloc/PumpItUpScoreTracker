@@ -313,7 +313,7 @@
     <value>Use the Copy Script button below</value>
   </data>
   <data name="Phoenix Import Info 2" xml:space="preserve">
-    <value>Use that script in the dev tools while logged in on https://piugame.com to download a CSV of your scores. (Make sure you aren't on phoenix.piugame.com)</value>
+    <value>Use that script in the dev tools while logged in on https://phoenix.piugame.com to download a CSV of your scores. (Make sure you aren't on phoenix.piugame.com)</value>
   </data>
   <data name="Phoenix Import Info 3" xml:space="preserve">
     <value>You can then upload that CSV here for yoru scores to show up.</value>
@@ -479,7 +479,7 @@
     <value>I do not store a record of your username or password, you will have to type them in every time you use this.</value>
   </data>
   <data name="Use Password 3" xml:space="preserve">
-    <value>To minimize calls to https://piugame.com I will only import new or improved scores. Every user only gets one full import using Username/Password. Use the dev-tools importer if you wish to re-import older scores.</value>
+    <value>To minimize calls to https://phoenix.piugame.com I will only import new or improved scores. Every user only gets one full import using Username/Password. Use the dev-tools importer if you wish to re-import older scores.</value>
   </data>
   <data name="Use Password 4" xml:space="preserve">
     <value>Once started, don't leave this page or else your scores will not finish saving.</value>

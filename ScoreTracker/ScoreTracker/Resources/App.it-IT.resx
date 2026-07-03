@@ -313,7 +313,7 @@
     <value>Usa il pulsante Copia lo script qui sotto</value>
   </data>
   <data name="Phoenix Import Info 2" xml:space="preserve">
-    <value>Usa quello script nei dev-tools mentre sei loggato su https://piugame.com per scaricare un CSV dei tuoi punteggi. (Assicurati di non essere su phoenix.piugame.com)</value>
+    <value>Usa quello script nei dev-tools mentre sei loggato su https://phoenix.piugame.com per scaricare un CSV dei tuoi punteggi. (Assicurati di non essere su phoenix.piugame.com)</value>
   </data>
   <data name="Phoenix Import Info 3" xml:space="preserve">
     <value>Puoi poi caricare quel CSV qui per far apparire i tuoi punteggi.</value>
@@ -479,7 +479,7 @@
     <value>Non memorizzo alcuna registrazione del tuo nome utente o della tua password, dovrai digitarli ogni volta che usi questa funzione.</value>
   </data>
   <data name="Use Password 3" xml:space="preserve">
-    <value>Per ridurre al minimo le chiamate a https://piugame.com importerò solo punteggi nuovi o migliorati. Ogni utente riceve solo un'importazione completa tramite Username/Password. Usa l'importatore dev-tools se vuoi reimportare punteggi precedenti.</value>
+    <value>Per ridurre al minimo le chiamate a https://phoenix.piugame.com importerò solo punteggi nuovi o migliorati. Ogni utente riceve solo un'importazione completa tramite Username/Password. Usa l'importatore dev-tools se vuoi reimportare punteggi precedenti.</value>
   </data>
   <data name="Use Password 4" xml:space="preserve">
     <value>Una volta avviato, non lasciare questa pagina o i tuoi punteggi non finiranno di essere salvati.</value>

@@ -213,7 +213,9 @@ internal sealed class PiuGameApi : IPiuGameApi
             new Dictionary<string, string>
             {
                 { "page", page.ToString() },
-                { "date", $"{today.Year}{today.Month}" },
+                // Zero-padded month is mandatory: the endpoint answers "20267" with a redirect
+                // script pointing at "202607" and no data.
+                { "date", $"{today.Year}{today.Month:00}" },
                 { "mode", "full" }
             }, cancellationToken);
         var results = new List<PiuGameGetChartPopularityLeaderboardResult.Entry>();
@@ -403,6 +405,7 @@ internal sealed class PiuGameApi : IPiuGameApi
             try
             {
                 var response = await _client.PostAsync(url, new FormUrlEncodedContent(form), cancellationToken);
+                ThrowIfSsoBounced(response);
                 response.EnsureSuccessStatusCode();
                 return await response.Content.ReadAsStringAsync(cancellationToken);
                 break;
@@ -426,6 +429,7 @@ internal sealed class PiuGameApi : IPiuGameApi
                 var response =
                     await (client ?? _client).PostAsync(url, new FormUrlEncodedContent(form), cancellationToken);
 
+                ThrowIfSsoBounced(response);
                 //response.EnsureSuccessStatusCode();
                 return response;
                 break;
@@ -448,6 +452,7 @@ internal sealed class PiuGameApi : IPiuGameApi
             {
                 var request = new HttpRequestMessage(HttpMethod.Get, url);
                 var response = await (client ?? _client).SendAsync(request, cancellationToken);
+                ThrowIfSsoBounced(response);
                 return await response.Content.ReadAsStringAsync(cancellationToken);
                 break;
             }
@@ -458,6 +463,22 @@ internal sealed class PiuGameApi : IPiuGameApi
                 retry++;
                 await Task.Delay(1000, cancellationToken);
             }
+    }
+
+    /// <summary>
+    ///     Since the Phoenix 2 site rollout, phoenix.piugame.com fronts anonymous traffic with an
+    ///     am-pass SSO handshake: a fresh session's first request redirects through am-pass.net
+    ///     and dead-ends on a broken /ssoc URL (their bug — a browser recovers, HttpClient
+    ///     doesn't). The hop still deposits the anonymous session cookies in this client's
+    ///     cookie container, so an immediate retry of the original URL succeeds. Landing on
+    ///     /ssoc is therefore a transient failure for the retry loops above, not a result.
+    /// </summary>
+    private static void ThrowIfSsoBounced(HttpResponseMessage response)
+    {
+        if (response.RequestMessage?.RequestUri?.AbsolutePath.Contains("ssoc", StringComparison.OrdinalIgnoreCase) ==
+            true)
+            throw new HttpRequestException(
+                $"Bounced to the am-pass SSO handshake ({response.RequestMessage.RequestUri}); retrying now that session cookies are set.");
     }
 
     private ChartType? GetChartTypeFromUrl(string chartTypeUrl)
