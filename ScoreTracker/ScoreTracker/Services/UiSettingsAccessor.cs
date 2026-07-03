@@ -55,7 +55,11 @@ public sealed class UiSettingsAccessor : IUiSettingsAccessor
     public async Task<string?> GetSetting(string key, CancellationToken cancellationToken = default,
         Guid? userId = null)
     {
-        if (_currentUser.IsLoggedIn)
+        // An explicit userId means the caller already knows the user (login callbacks run
+        // before HttpContext.User reflects the new session) — always take the DB path.
+        // ProtectedBrowserStorage is JS interop and only works inside a live circuit, never
+        // in an MVC request.
+        if (userId != null || _currentUser.IsLoggedIn)
         {
             var setting = await _mediator.Send(new GetUserUiSettingsQuery(userId), cancellationToken);
             return setting.TryGetValue(key, out var value) ? value : null;
