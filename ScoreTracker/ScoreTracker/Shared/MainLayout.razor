@@ -125,7 +125,10 @@
             <MudIcon Icon="@Icons.Material.Filled.MusicNote" Size="Size.Small"></MudIcon>
             <MudText Typo="Typo.subtitle1" Style="font-weight: 600; letter-spacing: .02em;">@L["PIU Scores"]</MudText>
         </MudDrawerHeader>
-        <MudDivider></MudDivider>
+        @* flex-grow 0: the drawer content is a flex column, and the divider's full-width
+           styling flex-grows — horizontal in a toolbar, but here it stretches vertically and
+           swallows the space between the header and the nav. *@
+        <MudDivider Style="flex-grow: 0;"></MudDivider>
         <MudNavMenu Class="dense-nav pb-4">
             <MudText Typo="Typo.overline" Class="ml-4 mt-2 d-block nav-section">@L["Play"]</MudText>
             @if (CurrentUser.IsLoggedIn)
