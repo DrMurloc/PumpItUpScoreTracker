@@ -1,4 +1,5 @@
 using ScoreTracker.Domain.Records;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.OfficialMirror.Contracts.Queries;
 
@@ -7,7 +8,7 @@ namespace ScoreTracker.OfficialMirror.Contracts.Queries;
 ///     credentials never leave the handler pipeline).
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record GetOfficialAccountDataQuery(string Username, string Password)
+public sealed record GetOfficialAccountDataQuery(string Username, RedactedString Password)
     : IQuery<PiuGameAccountDataImport>
 {
 }

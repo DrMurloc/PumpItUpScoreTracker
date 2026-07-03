@@ -19,9 +19,10 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | Table | Purpose |
 |---|---|
 | `scores.User` | User account: name, profile image, game tag, country, content-lock status |
-| `scores.ExternalLogin` | OAuth provider mappings (Discord/Google/Facebook) to users |
+| `scores.ExternalLogin` | Sign-in method mappings to users, many-to-one (Discord/Google/Facebook OAuth ids; namespaced PiuGame aliases `mbid:*`/`card:*`) |
 | `scores.UserApiToken` | API tokens for the partner API, with usage tracking |
 | `scores.UserSettings` | Per-user UI settings key/value store |
+| `scores.MergeRequest` | Durable account-merge record: survivor/retired users, moved logins + retired-user snapshot (JSON, for undo), state, and the grace-window purge schedule (Identity-vertical entity) |
 
 ## Score Ledger (vertical: `ScoreTracker.ScoreLedger`)
 

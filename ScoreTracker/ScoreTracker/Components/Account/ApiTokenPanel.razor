@@ -1,0 +1,42 @@
+@using MediatR
+
+<MudTextField Label="API Token" Disabled="true" Value="@(_apiToken?.ToString() ?? string.Empty)" HelperText=@($"Authorization Header: Basic {Base64Encode(":" + _apiToken)}")></MudTextField>
+<div class="d-flex flex-wrap gap-2 mt-4">
+    <MudButton OnClick="GenerateToken" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.GeneratingTokens">New Token</MudButton>
+    @if (_apiToken != null)
+    {
+        <MudButton OnClick="CopyToken" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy">Copy Token</MudButton>
+        <MudButton Href="/swagger" Target="_blank" Variant="Variant.Outlined">API Documentation</MudButton>
+    }
+</div>
+
+@inject IMediator Mediator;
+@inject ISnackbar Snackbar;
+@inject IJSRuntime JSRuntime;
+@code
+{
+    private Guid? _apiToken;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _apiToken = await Mediator.Send(new GetUserApiTokenQuery());
+    }
+
+    private static string Base64Encode(string plainText)
+    {
+        var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
+        return Convert.ToBase64String(plainTextBytes);
+    }
+
+    private async Task CopyToken()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _apiToken!.Value);
+        Snackbar.Add("Copied to Clipboard!", Severity.Success);
+    }
+
+    private async Task GenerateToken()
+    {
+        _apiToken = await Mediator.Send(new SetApiTokenCommand());
+        Snackbar.Add("New API Token Generated!", Severity.Success);
+    }
+}

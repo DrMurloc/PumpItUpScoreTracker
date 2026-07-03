@@ -2018,4 +2018,169 @@
   <data name="UCS Leaderboards" xml:space="preserve">
     <value>UCSランキング</value>
   </data>
+  <data name="Sign-In Methods" xml:space="preserve">
+    <value>ログイン方法</value>
+  </data>
+  <data name="You can sign in to your account with any connected method" xml:space="preserve">
+    <value>連携済みのどの方法でもアカウントにログインできます</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>連携</value>
+  </data>
+  <data name="Disconnect" xml:space="preserve">
+    <value>連携解除</value>
+  </data>
+  <data name="Disconnect Sign-In Method" xml:space="preserve">
+    <value>ログイン方法の連携解除</value>
+  </data>
+  <data name="You will no longer be able to sign in with this method" xml:space="preserve">
+    <value>この方法ではログインできなくなります</value>
+  </data>
+  <data name="This is your only sign-in method and cannot be disconnected" xml:space="preserve">
+    <value>唯一のログイン方法のため連携解除できません</value>
+  </data>
+  <data name="Sign-in method connected" xml:space="preserve">
+    <value>ログイン方法を連携しました</value>
+  </data>
+  <data name="Sign-in method disconnected" xml:space="preserve">
+    <value>ログイン方法の連携を解除しました</value>
+  </data>
+  <data name="This sign-in method is already connected to your account" xml:space="preserve">
+    <value>このログイン方法はすでにあなたのアカウントに連携されています</value>
+  </data>
+  <data name="This sign-in method is connected to a different account" xml:space="preserve">
+    <value>このログイン方法は別のアカウントに連携されています</value>
+  </data>
+  <data name="PIUGAME Login" xml:space="preserve">
+    <value>PIUGAMEログイン</value>
+  </data>
+  <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
+    <value>ユーザー名とパスワードはpiugame.comへ直接送信され、保存されることはありません</value>
+  </data>
+  <data name="PIUGame.com Username" xml:space="preserve">
+    <value>PIUGame.comユーザー名</value>
+  </data>
+  <data name="PIUGame.com Password" xml:space="preserve">
+    <value>PIUGame.comパスワード</value>
+  </data>
+  <data name="Log In" xml:space="preserve">
+    <value>ログイン</value>
+  </data>
+  <data name="Invalid username or password" xml:space="preserve">
+    <value>ユーザー名またはパスワードが正しくありません</value>
+  </data>
+  <data name="Could not reach PIUGAME, try again later" xml:space="preserve">
+    <value>PIUGAMEに接続できません。後でもう一度お試しください</value>
+  </data>
+  <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
+    <value>PIUGAMEログインはpiugame.comへの接続に依存します。予備のログイン方法を連携してください</value>
+  </data>
+  <data name="Merge Accounts" xml:space="preserve">
+    <value>アカウント統合</value>
+  </data>
+  <data name="Choose the account to merge with" xml:space="preserve">
+    <value>統合するアカウントを選択してください</value>
+  </data>
+  <data name="Verify the other account" xml:space="preserve">
+    <value>相手アカウントの確認</value>
+  </data>
+  <data name="Sign in with one of that account's methods to prove it's yours" xml:space="preserve">
+    <value>そのアカウントのログイン方法でログインして本人確認をしてください</value>
+  </data>
+  <data name="That PIUGAME account is not connected to the selected account" xml:space="preserve">
+    <value>そのPIUGAMEアカウントは選択したアカウントに連携されていません</value>
+  </data>
+  <data name="Choose which account to keep" xml:space="preserve">
+    <value>残すアカウントを選択してください</value>
+  </data>
+  <data name="All sign-in methods will work on the account you keep, the other account's data is deleted after 30 days" xml:space="preserve">
+    <value>残したアカウントですべてのログイン方法が使えます。もう一方のアカウントのデータは30日後に削除されます</value>
+  </data>
+  <data name="Keep this account" xml:space="preserve">
+    <value>このアカウントを残す</value>
+  </data>
+  <data name="Most history" xml:space="preserve">
+    <value>履歴が多い</value>
+  </data>
+  <data name="Phoenix Scores" xml:space="preserve">
+    <value>Phoenixスコア</value>
+  </data>
+  <data name="XX Scores" xml:space="preserve">
+    <value>XXスコア</value>
+  </data>
+  <data name="Oldest Score" xml:space="preserve">
+    <value>最も古いスコア</value>
+  </data>
+  <data name="Newest Score" xml:space="preserve">
+    <value>最新のスコア</value>
+  </data>
+  <data name="Total Rating" xml:space="preserve">
+    <value>合計レーティング</value>
+  </data>
+  <data name="This account will be deleted" xml:space="preserve">
+    <value>このアカウントは削除されます</value>
+  </data>
+  <data name="Type the name of the account being deleted to confirm" xml:space="preserve">
+    <value>確認のため削除されるアカウントの名前を入力してください</value>
+  </data>
+  <data name="Accounts merged" xml:space="preserve">
+    <value>アカウントを統合しました</value>
+  </data>
+  <data name="You kept the other account, log in again to continue" xml:space="preserve">
+    <value>もう一方のアカウントを残しました。続行するには再ログインしてください</value>
+  </data>
+  <data name="Merged account data is deleted on" xml:space="preserve">
+    <value>統合されたアカウントのデータは{0}に削除されます</value>
+  </data>
+  <data name="Undo Merge" xml:space="preserve">
+    <value>統合を取り消す</value>
+  </data>
+  <data name="Merge undone" xml:space="preserve">
+    <value>統合を取り消しました</value>
+  </data>
+  <data name="Merge another account" xml:space="preserve">
+    <value>別のアカウントを統合</value>
+  </data>
+  <data name="This sign-in method belongs to another account, you can merge the two accounts" xml:space="preserve">
+    <value>このログイン方法は別のアカウントのものです。2つのアカウントを統合できます</value>
+  </data>
+  <data name="Review and merge" xml:space="preserve">
+    <value>確認して統合</value>
+  </data>
+  <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
+    <value>ゲームタグ{0}のアカウントがすでに存在します。あなたですか？</value>
+  </data>
+  <data name="Profile" xml:space="preserve">
+    <value>プロフィール</value>
+  </data>
+  <data name="API" xml:space="preserve">
+    <value>API</value>
+  </data>
+  <data name="Your Data" xml:space="preserve">
+    <value>あなたのデータ</value>
+  </data>
+  <data name="Danger Zone" xml:space="preserve">
+    <value>危険な操作</value>
+  </data>
+  <data name="Play" xml:space="preserve">
+    <value>プレイ</value>
+  </data>
+  <data name="My Progress" xml:space="preserve">
+    <value>マイ進捗</value>
+  </data>
+  <data name="Compete" xml:space="preserve">
+    <value>競争</value>
+  </data>
+  <data name="Community" xml:space="preserve">
+    <value>コミュニティ</value>
+  </data>
+  <data name="Rankings" xml:space="preserve">
+    <value>ランキング</value>
+  </data>
+  <data name="Import Scores" xml:space="preserve">
+    <value>スコアインポート</value>
+  </data>
+  <data name="Find a chart" xml:space="preserve">
+    <value>チャートを探す</value>
+  </data>
 </root>

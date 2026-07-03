@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.EventCompetition.Application;
+using ScoreTracker.EventCompetition.Domain;
 using ScoreTracker.EventCompetition.Infrastructure;
 
 namespace ScoreTracker.EventCompetition.Wiring;
@@ -21,6 +22,7 @@ public static class EventCompetitionRegistrationExtensions
     {
         services.AddTransient<ITournamentRepository, EFTournamentRepository>();
         services.AddTransient<IQualifiersRepository, EFQualifiersRepository>();
+        services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddSingleton<IDbModelContribution, EventCompetitionModelContribution>();
         return services;
     }
@@ -34,5 +36,6 @@ public static class EventCompetitionRegistrationExtensions
     {
         configurator.AddConsumer<QualifiersSaga>();
         configurator.AddConsumer<MarchOfMurlocsHandler>();
+        configurator.AddConsumer<AccountPurgeConsumer>();
     }
 }

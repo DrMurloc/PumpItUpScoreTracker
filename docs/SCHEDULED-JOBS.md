@@ -14,6 +14,7 @@ All cron expressions are **UTC**.
 | `start-leaderboard-import` | Sundays 10:30 | `StartLeaderboardImportCommand` | OfficialLeaderboardSaga (OfficialMirror) | Weekly sync against the official PiuGame site: imports chart leaderboards and rank lists, feeds the official-scores tier lists, recalculates world rankings, stamps the import state. |
 | `try-schedule-mom` | Daily 11:00 | `TryScheduleMoMCommand` | MarchOfMurlocsHandler (EventCompetition) | Checks whether the current March of Murlocs tournament has expired; schedules the next cycle (delayed message) or cycles immediately. Idempotent — defers if a future MoM already exists. |
 | `flush-overdue-score-batches` | Every 5 min | `FlushOverdueScoreBatchesCommand` | UpdatePhoenixRecordHandler (ScoreLedger) | Safety net for score-update batching: fires `PlayerScoresUpdatedEvent` for any accumulated score batch whose 2-minute hold window has expired. Compensates for the in-memory bus losing mid-flight work on restarts. |
+| `process-account-purges` | Daily 11:30 | `ProcessAccountPurgesCommand` | AccountPurgeSaga (Identity) | Purges retired accounts whose 30-day merge grace window ended: publishes `AccountPurgeStartedEvent` (every vertical deletes its own user-keyed rows, idempotently), deletes identity data, and drops the `User` row after a week of daily re-fires — the re-fire week is the in-memory-bus crash-safety mechanism. |
 
 ## Operational notes
 

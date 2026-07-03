@@ -86,12 +86,46 @@ public sealed class EFUserRepository : IUserRepository, IUserReader
         await database.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<IEnumerable<ExternalLoginRecord>> GetExternalLogins(Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.ExternalLogin.Where(e => e.UserId == userId)
+            .OrderBy(e => e.LoginProvider)
+            .Select(e => new ExternalLoginRecord(e.LoginProvider, e.ExternalId))
+            .ToArrayAsync(cancellationToken);
+    }
+
+    public async Task RemoveExternalLogin(Guid userId, string loginProviderName, string externalId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var entity = await database.ExternalLogin.SingleOrDefaultAsync(
+            e => e.UserId == userId && e.LoginProvider == loginProviderName && e.ExternalId == externalId,
+            cancellationToken);
+        if (entity == null) return;
+
+        database.ExternalLogin.Remove(entity);
+        await database.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<IEnumerable<User>> SearchForUsersByName(string searchText,
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return await database.User.Where(u => u.Name.Contains(searchText))
             .OrderBy(u => u.Name)
+            .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName,
+                u.IsContentLocked, u.ClaimsInvalidatedAt))
+            .ToArrayAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<User>> GetUsersByGameTag(Name gameTag,
+        CancellationToken cancellationToken = default)
+    {
+        string tag = gameTag;
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.User.Where(u => u.GameTag == tag)
             .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName,
                 u.IsContentLocked, u.ClaimsInvalidatedAt))
             .ToArrayAsync(cancellationToken);

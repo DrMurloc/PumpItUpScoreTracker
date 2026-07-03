@@ -2,6 +2,7 @@ using ScoreTracker.WeeklyChallenge.Contracts.Messages;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using MassTransit;
 using ScoreTracker.EventCompetition.Contracts.Messages;
+using ScoreTracker.Identity.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.ScoreLedger.Contracts.Messages;
 
@@ -39,4 +40,7 @@ public sealed class RecurringJobRunner
 
     public Task PublishFlushOverdueScoreBatches() =>
         _bus.Publish(new FlushOverdueScoreBatchesCommand());
+
+    public Task PublishProcessAccountPurges() =>
+        _bus.Publish(new ProcessAccountPurgesCommand());
 }

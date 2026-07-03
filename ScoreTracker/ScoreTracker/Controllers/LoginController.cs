@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Security.Authentication;
+using System.Security.Claims;
 using System.Text.RegularExpressions;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
@@ -12,8 +13,10 @@ using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Configuration;
+using ScoreTracker.Web.Services;
 using ScoreTracker.Web.Services.Contracts;
 
 namespace ScoreTracker.Web.Controllers;
@@ -29,16 +32,19 @@ public sealed class LoginController : Controller
     private readonly IMediator _mediator;
     private readonly IUiSettingsAccessor _uiSettings;
     private readonly IOptions<DevAuthConfiguration> _devAuth;
+    private readonly AccountProofService _proofs;
 
     public LoginController(IMediator mediator,
         ICurrentUserAccessor currentUser,
         IUiSettingsAccessor uiSettings,
-        IOptions<DevAuthConfiguration> devAuth)
+        IOptions<DevAuthConfiguration> devAuth,
+        AccountProofService proofs)
     {
         _mediator = mediator;
         _currentUser = currentUser;
         _uiSettings = uiSettings;
         _devAuth = devAuth;
+        _proofs = proofs;
     }
 
 
@@ -72,6 +78,8 @@ public sealed class LoginController : Controller
             ?.Value ?? "";
         var name = principal.FindFirst(ClaimTypes.Name)?.Value ??
                    "Unknown Name";
+        await HttpContext.SignOutAsync("ExternalAuthentication");
+
         var user = await _mediator.Send(new GetUserByExternalLoginQuery(id, providerName),
             HttpContext.RequestAborted);
 
@@ -96,6 +104,176 @@ public sealed class LoginController : Controller
         var url = isNewUser ? "/Welcome" : returnUrl;
 
         return LocalRedirect(url ?? "/");
+    }
+
+    // PIUGAME is credential-based, not OAuth: the literal routes below win over the
+    // {providerName} templates, so it never enters the Challenge pipeline. The GET only
+    // redirects to the Blazor form; the POST is the actual sign-in (cookies can only be
+    // issued from an HTTP request, never over the Blazor circuit).
+    [HttpGet("PiuGame")]
+    public IActionResult PiuGameForm()
+    {
+        return LocalRedirect("/PiuGameLogin");
+    }
+
+    [HttpPost("PiuGame")]
+    public async Task<IActionResult> PiuGameLogin([FromForm] string? username, [FromForm] string? password,
+        [FromForm] string? returnUrl)
+    {
+        var backToForm = "/PiuGameLogin" + (string.IsNullOrWhiteSpace(returnUrl)
+            ? ""
+            : $"?returnUrl={Uri.EscapeDataString(returnUrl)}");
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            return LocalRedirect(AppendError(backToForm, "Invalid"));
+
+        OfficialMirror.Contracts.PiuGameAccountIdentity identity;
+        try
+        {
+            identity = await _mediator.Send(new GetPiuGameAccountIdentityQuery(username, password),
+                HttpContext.RequestAborted);
+        }
+        catch (InvalidCredentialException)
+        {
+            return LocalRedirect(AppendError(backToForm, "Invalid"));
+        }
+        catch (HttpRequestException)
+        {
+            return LocalRedirect(AppendError(backToForm, "Unavailable"));
+        }
+
+        var resolution = await _mediator.Send(new ResolveExternalUserCommand("PiuGame",
+                identity.GetLoginAliases().ToArray(), identity.GameTag, identity.GameTag, identity.ProfileImage),
+            HttpContext.RequestAborted);
+
+        await _currentUser.SetCurrentUser(resolution.User);
+
+        var culture = await _uiSettings.GetSetting("Culture", HttpContext.RequestAborted, resolution.User.Id);
+        if (culture != null)
+            HttpContext.Response.Cookies.Append(
+                CookieRequestCultureProvider.DefaultCookieName,
+                CookieRequestCultureProvider.MakeCookieValue(
+                    new RequestCulture(culture, culture)));
+
+        // Aliases held by a different account were proven by the same credentials — record
+        // that so a drifted-identifier merge is friction-free.
+        foreach (var alias in identity.GetLoginAliases())
+        {
+            var aliasOwner = await _mediator.Send(new GetUserByExternalLoginQuery(alias, "PiuGame"),
+                HttpContext.RequestAborted);
+            if (aliasOwner != null && aliasOwner.Id != resolution.User.Id)
+                _proofs.RecordProof(resolution.User.Id, aliasOwner.Id);
+        }
+
+        // Game-tag doorway: a fresh piugame account whose tag another account already carries
+        // gets the merge invitation (invitation only — the wizard's prove step is the gate).
+        if (resolution.IsNew)
+        {
+            var tagMatch =
+                (await _mediator.Send(new GetUsersByGameTagQuery(identity.GameTag), HttpContext.RequestAborted))
+                .FirstOrDefault(u => u.Id != resolution.User.Id);
+            if (tagMatch != null)
+                return LocalRedirect(
+                    $"/Account/Merge?with={tagMatch.Id}&returnUrl={Uri.EscapeDataString("/Welcome")}");
+        }
+
+        return LocalRedirect(resolution.IsNew ? "/Welcome" : string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl);
+    }
+
+    private static string AppendError(string url, string error)
+    {
+        return url + (url.Contains('?') ? "&" : "?") + $"error={error}";
+    }
+
+    [HttpGet("{providerName}/Link")]
+    public async Task<IActionResult> LinkSignIn([FromRoute] string providerName)
+    {
+        if (!AllowedProviders.Contains(providerName)) return BadRequest("Invalid provider name");
+        if (!_currentUser.IsLoggedIn) return LocalRedirect("/Login");
+
+        if (!await HttpContext.IsProviderSupportedAsync(providerName)) return BadRequest();
+
+        return Challenge(new AuthenticationProperties { RedirectUri = $"/Login/{providerName}/Link/Callback" },
+            providerName);
+    }
+
+    [HttpGet("{providerName}/Link/Callback")]
+    public async Task<IActionResult> LinkCallback([FromRoute] string providerName)
+    {
+        if (!AllowedProviders.Contains(providerName)) return BadRequest("Invalid provider name");
+        if (!_currentUser.IsLoggedIn) return LocalRedirect("/Login");
+
+        var authenticateResult = await HttpContext.AuthenticateAsync(providerName);
+
+        if (authenticateResult.Principal == null) return BadRequest("Principal was missing");
+
+        var id = authenticateResult.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
+
+        await HttpContext.SignOutAsync("ExternalAuthentication");
+
+        var owner = await _mediator.Send(new GetUserByExternalLoginQuery(id, providerName),
+            HttpContext.RequestAborted);
+
+        string result;
+        if (owner == null)
+        {
+            await _mediator.Send(new CreateExternalLoginCommand(_currentUser.User.Id, id, providerName),
+                HttpContext.RequestAborted);
+            result = "Linked";
+        }
+        else if (owner.Id == _currentUser.User.Id)
+        {
+            result = "AlreadyLinked";
+        }
+        else
+        {
+            // The user just completed the other account's OAuth flow — that IS proof of
+            // control, so the collision notice can offer a friction-free merge.
+            _proofs.RecordProof(_currentUser.User.Id, owner.Id);
+            return LocalRedirect(
+                $"/Account?linkResult=Conflict&linkProvider={providerName}&mergeWith={owner.Id}");
+        }
+
+        return LocalRedirect($"/Account?linkResult={result}&linkProvider={providerName}");
+    }
+
+    // Verify mode: completes a provider's flow to prove control of whatever account owns that
+    // external login, WITHOUT touching the current session — the merge wizard's prove step.
+    [HttpGet("{providerName}/Verify")]
+    public async Task<IActionResult> VerifySignIn([FromRoute] string providerName, [FromQuery] string? returnUrl)
+    {
+        if (!AllowedProviders.Contains(providerName)) return BadRequest("Invalid provider name");
+        if (!_currentUser.IsLoggedIn) return LocalRedirect("/Login");
+
+        if (!await HttpContext.IsProviderSupportedAsync(providerName)) return BadRequest();
+
+        var properties = new AuthenticationProperties { RedirectUri = $"/Login/{providerName}/Verify/Callback" };
+        if (!string.IsNullOrWhiteSpace(returnUrl)) properties.Items["returnUrl"] = returnUrl;
+
+        return Challenge(properties, providerName);
+    }
+
+    [HttpGet("{providerName}/Verify/Callback")]
+    public async Task<IActionResult> VerifyCallback([FromRoute] string providerName)
+    {
+        if (!AllowedProviders.Contains(providerName)) return BadRequest("Invalid provider name");
+        if (!_currentUser.IsLoggedIn) return LocalRedirect("/Login");
+
+        var authenticateResult = await HttpContext.AuthenticateAsync(providerName);
+
+        if (authenticateResult.Principal == null) return BadRequest("Principal was missing");
+
+        var returnUrl = "";
+        authenticateResult.Ticket?.Properties.Items.TryGetValue("returnUrl", out returnUrl);
+
+        var id = authenticateResult.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
+
+        await HttpContext.SignOutAsync("ExternalAuthentication");
+
+        var owner = await _mediator.Send(new GetUserByExternalLoginQuery(id, providerName),
+            HttpContext.RequestAborted);
+        if (owner != null) _proofs.RecordProof(_currentUser.User.Id, owner.Id);
+
+        return LocalRedirect(string.IsNullOrWhiteSpace(returnUrl) ? "/Account" : returnUrl);
     }
 
     // DevAuth backdoor (cherry-picked from the Phase-1 local-dev slice): environment-config

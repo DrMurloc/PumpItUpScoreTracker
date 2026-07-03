@@ -2017,4 +2017,169 @@
   <data name="UCS Leaderboards" xml:space="preserve">
     <value>Classifiche UCS</value>
   </data>
+  <data name="Sign-In Methods" xml:space="preserve">
+    <value>Metodi di accesso</value>
+  </data>
+  <data name="You can sign in to your account with any connected method" xml:space="preserve">
+    <value>Puoi accedere al tuo account con qualsiasi metodo collegato</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>Collega</value>
+  </data>
+  <data name="Disconnect" xml:space="preserve">
+    <value>Scollega</value>
+  </data>
+  <data name="Disconnect Sign-In Method" xml:space="preserve">
+    <value>Scollega metodo di accesso</value>
+  </data>
+  <data name="You will no longer be able to sign in with this method" xml:space="preserve">
+    <value>Non potrai più accedere con questo metodo</value>
+  </data>
+  <data name="This is your only sign-in method and cannot be disconnected" xml:space="preserve">
+    <value>Questo è il tuo unico metodo di accesso e non può essere scollegato</value>
+  </data>
+  <data name="Sign-in method connected" xml:space="preserve">
+    <value>Metodo di accesso collegato</value>
+  </data>
+  <data name="Sign-in method disconnected" xml:space="preserve">
+    <value>Metodo di accesso scollegato</value>
+  </data>
+  <data name="This sign-in method is already connected to your account" xml:space="preserve">
+    <value>Questo metodo di accesso è già collegato al tuo account</value>
+  </data>
+  <data name="This sign-in method is connected to a different account" xml:space="preserve">
+    <value>Questo metodo di accesso è collegato a un altro account</value>
+  </data>
+  <data name="PIUGAME Login" xml:space="preserve">
+    <value>Accesso PIUGAME</value>
+  </data>
+  <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
+    <value>Il tuo nome utente e la tua password vengono inviati direttamente a piugame.com e non vengono mai memorizzati</value>
+  </data>
+  <data name="PIUGame.com Username" xml:space="preserve">
+    <value>Nome utente PIUGame.com</value>
+  </data>
+  <data name="PIUGame.com Password" xml:space="preserve">
+    <value>Password PIUGame.com</value>
+  </data>
+  <data name="Log In" xml:space="preserve">
+    <value>Accedi</value>
+  </data>
+  <data name="Invalid username or password" xml:space="preserve">
+    <value>Nome utente o password non validi</value>
+  </data>
+  <data name="Could not reach PIUGAME, try again later" xml:space="preserve">
+    <value>Impossibile raggiungere PIUGAME, riprova più tardi</value>
+  </data>
+  <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
+    <value>Gli accessi PIUGAME dipendono dalla raggiungibilità di piugame.com, collega un metodo di accesso di riserva</value>
+  </data>
+  <data name="Merge Accounts" xml:space="preserve">
+    <value>Unisci account</value>
+  </data>
+  <data name="Choose the account to merge with" xml:space="preserve">
+    <value>Scegli l'account da unire</value>
+  </data>
+  <data name="Verify the other account" xml:space="preserve">
+    <value>Verifica l'altro account</value>
+  </data>
+  <data name="Sign in with one of that account's methods to prove it's yours" xml:space="preserve">
+    <value>Accedi con uno dei metodi di quell'account per dimostrare che è tuo</value>
+  </data>
+  <data name="That PIUGAME account is not connected to the selected account" xml:space="preserve">
+    <value>Quell'account PIUGAME non è collegato all'account selezionato</value>
+  </data>
+  <data name="Choose which account to keep" xml:space="preserve">
+    <value>Scegli quale account mantenere</value>
+  </data>
+  <data name="All sign-in methods will work on the account you keep, the other account's data is deleted after 30 days" xml:space="preserve">
+    <value>Tutti i metodi di accesso funzioneranno sull'account che mantieni, i dati dell'altro account vengono eliminati dopo 30 giorni</value>
+  </data>
+  <data name="Keep this account" xml:space="preserve">
+    <value>Mantieni questo account</value>
+  </data>
+  <data name="Most history" xml:space="preserve">
+    <value>Più cronologia</value>
+  </data>
+  <data name="Phoenix Scores" xml:space="preserve">
+    <value>Punteggi Phoenix</value>
+  </data>
+  <data name="XX Scores" xml:space="preserve">
+    <value>Punteggi XX</value>
+  </data>
+  <data name="Oldest Score" xml:space="preserve">
+    <value>Punteggio più vecchio</value>
+  </data>
+  <data name="Newest Score" xml:space="preserve">
+    <value>Punteggio più recente</value>
+  </data>
+  <data name="Total Rating" xml:space="preserve">
+    <value>Rating totale</value>
+  </data>
+  <data name="This account will be deleted" xml:space="preserve">
+    <value>Questo account verrà eliminato</value>
+  </data>
+  <data name="Type the name of the account being deleted to confirm" xml:space="preserve">
+    <value>Digita il nome dell'account da eliminare per confermare</value>
+  </data>
+  <data name="Accounts merged" xml:space="preserve">
+    <value>Account uniti</value>
+  </data>
+  <data name="You kept the other account, log in again to continue" xml:space="preserve">
+    <value>Hai mantenuto l'altro account, accedi di nuovo per continuare</value>
+  </data>
+  <data name="Merged account data is deleted on" xml:space="preserve">
+    <value>I dati dell'account unito verranno eliminati il {0}</value>
+  </data>
+  <data name="Undo Merge" xml:space="preserve">
+    <value>Annulla unione</value>
+  </data>
+  <data name="Merge undone" xml:space="preserve">
+    <value>Unione annullata</value>
+  </data>
+  <data name="Merge another account" xml:space="preserve">
+    <value>Unisci un altro account</value>
+  </data>
+  <data name="This sign-in method belongs to another account, you can merge the two accounts" xml:space="preserve">
+    <value>Questo metodo di accesso appartiene a un altro account, puoi unire i due account</value>
+  </data>
+  <data name="Review and merge" xml:space="preserve">
+    <value>Rivedi e unisci</value>
+  </data>
+  <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
+    <value>Esiste già un account con il game tag {0}, sei tu?</value>
+  </data>
+  <data name="Profile" xml:space="preserve">
+    <value>Profilo</value>
+  </data>
+  <data name="API" xml:space="preserve">
+    <value>API</value>
+  </data>
+  <data name="Your Data" xml:space="preserve">
+    <value>I tuoi dati</value>
+  </data>
+  <data name="Danger Zone" xml:space="preserve">
+    <value>Zona di pericolo</value>
+  </data>
+  <data name="Play" xml:space="preserve">
+    <value>Gioca</value>
+  </data>
+  <data name="My Progress" xml:space="preserve">
+    <value>I miei progressi</value>
+  </data>
+  <data name="Compete" xml:space="preserve">
+    <value>Competi</value>
+  </data>
+  <data name="Community" xml:space="preserve">
+    <value>Community</value>
+  </data>
+  <data name="Rankings" xml:space="preserve">
+    <value>Classifiche</value>
+  </data>
+  <data name="Import Scores" xml:space="preserve">
+    <value>Importa punteggi</value>
+  </data>
+  <data name="Find a chart" xml:space="preserve">
+    <value>Cerca un chart</value>
+  </data>
 </root>

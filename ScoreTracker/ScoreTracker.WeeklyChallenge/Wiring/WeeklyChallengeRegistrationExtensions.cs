@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.WeeklyChallenge.Application;
+using ScoreTracker.WeeklyChallenge.Domain;
 using ScoreTracker.WeeklyChallenge.Infrastructure;
 
 namespace ScoreTracker.WeeklyChallenge.Wiring;
@@ -19,6 +20,7 @@ public static class WeeklyChallengeRegistrationExtensions
     public static IServiceCollection AddWeeklyChallenge(this IServiceCollection services)
     {
         services.AddTransient<IWeeklyTournamentRepository, EFWeeklyTourneyRepository>();
+        services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddSingleton<IDbModelContribution, WeeklyChallengeModelContribution>();
         return services;
     }
@@ -31,5 +33,6 @@ public static class WeeklyChallengeRegistrationExtensions
     public static void AddWeeklyChallengeConsumers(this IRegistrationConfigurator configurator)
     {
         configurator.AddConsumer<WeeklyTournamentSaga>();
+        configurator.AddConsumer<AccountPurgeConsumer>();
     }
 }

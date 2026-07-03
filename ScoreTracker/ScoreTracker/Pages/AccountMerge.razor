@@ -1,0 +1,334 @@
+@page "/Account/Merge"
+@using System.Security.Authentication
+@using System.Web
+@using MediatR
+@using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Identity.Contracts.Queries
+@using ScoreTracker.Identity.Contracts.Commands
+@using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.Web.Services
+
+<PageTitle>@L["Merge Accounts"]</PageTitle>
+
+<MudPaper Class="align-center" Elevation="0" MaxWidth="900px">
+    <MudContainer Fixed="true">
+        <MudCard>
+            <MudCardHeader>
+                <MudText Typo="Typo.h4" Color="Color.Primary">@L["Merge Accounts"]</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (_step == MergeStep.PickTarget)
+                {
+                    <MudText Class="mb-4">@L["Choose the account to merge with"]</MudText>
+                    <MudAutocomplete T="User" Value="_pickedUser" ValueChanged="PickUser" SearchFunc="SearchUsers"
+                                     Label="@L["Username"].Value" ToStringFunc="@(u => u == null ? "" : u.Name.ToString())"
+                                     ShowProgressIndicator="true"></MudAutocomplete>
+                }
+                else if (_other == null)
+                {
+                    <MudAlert Severity="Severity.Error">@L["Invalid username or password"]</MudAlert>
+                }
+                else if (_step == MergeStep.Prove)
+                {
+                    <MudText Typo="Typo.h6" Class="mb-2">@L["Verify the other account"]</MudText>
+                    <MudText Class="mb-4">@L["Sign in with one of that account's methods to prove it's yours"] (@OtherDisplayName)</MudText>
+                    @foreach (var provider in _otherProviders.Where(p => !p.Equals("PiuGame", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        <MudButton Class="mr-2 mb-2" Href="@VerifyUrl(provider)" Variant="Variant.Filled" Color="Color.Primary">@L["Log In With", provider]</MudButton>
+                    }
+                    @if (_otherProviders.Any(p => p.Equals("PiuGame", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        <MudAlert Severity="Severity.Info" Class="mt-4 mb-2">@L["Your username and password are sent directly to piugame.com and are never stored"]</MudAlert>
+                        <MudTextField T="string" Label="@L["PIUGame.com Username"].Value" Disabled="_isVerifyingPiuGame" @bind-Value="_piuGameUsername"></MudTextField>
+                        <MudTextField T="string" InputType="InputType.Password" Label="@L["PIUGame.com Password"].Value" Disabled="_isVerifyingPiuGame" @bind-Value="_piuGamePassword"></MudTextField>
+                        <MudButton Class="mt-2" Variant="Variant.Filled" Color="Color.Primary"
+                                   Disabled="@(_isVerifyingPiuGame || string.IsNullOrWhiteSpace(_piuGameUsername) || string.IsNullOrWhiteSpace(_piuGamePassword))"
+                                   OnClick="VerifyPiuGame">@L["Log In With", "PIUGAME"]</MudButton>
+                    }
+                }
+                else if (_step == MergeStep.Choose)
+                {
+                    <MudText Typo="Typo.h6" Class="mb-2">@L["Choose which account to keep"]</MudText>
+                    <MudText Class="mb-4">@L["All sign-in methods will work on the account you keep, the other account's data is deleted after 30 days"]</MudText>
+                    <MudGrid>
+                        @foreach (var side in new[] { CurrentUser.User, _other })
+                        {
+                            var stats = _stats.TryGetValue(side.Id, out var s) ? s : null;
+                            <MudItem xs="12" sm="6">
+                                <MudCard Outlined="true">
+                                    <MudCardHeader>
+                                        <CardHeaderAvatar>
+                                            <MudAvatar>
+                                                <MudImage Src="@side.ProfileImage.ToString()"></MudImage>
+                                            </MudAvatar>
+                                        </CardHeaderAvatar>
+                                        <CardHeaderContent>
+                                            <MudText Typo="Typo.h6">@DisplayName(side)</MudText>
+                                            @if (_recommendedKeepId == side.Id)
+                                            {
+                                                <MudChip T="string" Color="Color.Info" Size="Size.Small">@L["Most history"]</MudChip>
+                                            }
+                                        </CardHeaderContent>
+                                    </MudCardHeader>
+                                    <MudCardContent>
+                                        @if (stats == null)
+                                        {
+                                            <MudProgressCircular Indeterminate="true"></MudProgressCircular>
+                                        }
+                                        else
+                                        {
+                                            <MudSimpleTable Dense="true" Elevation="0">
+                                                <tbody>
+                                                <tr><td>@L["Phoenix Scores"]</td><td>@stats.PhoenixCount.ToString("N0")</td></tr>
+                                                <tr><td>@L["XX Scores"]</td><td>@stats.XxCount.ToString("N0")</td></tr>
+                                                <tr><td>@L["Oldest Score"]</td><td>@(stats.OldestScore?.ToString("d") ?? "-")</td></tr>
+                                                <tr><td>@L["Newest Score"]</td><td>@(stats.NewestScore?.ToString("d") ?? "-")</td></tr>
+                                                <tr><td>@L["Total Rating"]</td><td>@stats.TotalRating.ToString("N0")</td></tr>
+                                                </tbody>
+                                            </MudSimpleTable>
+                                        }
+                                    </MudCardContent>
+                                    <MudCardActions>
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                                                   OnClick="() => KeepAccount(side.Id)">@L["Keep this account"]</MudButton>
+                                    </MudCardActions>
+                                </MudCard>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                }
+                else if (_step == MergeStep.Confirm && _survivorId != null)
+                {
+                    var retired = _survivorId == CurrentUser.User.Id ? _other : CurrentUser.User;
+                    var retiredStats = _stats.TryGetValue(retired.Id, out var rs) ? rs : null;
+                    <MudAlert Severity="Severity.Error" Class="mb-4">
+                        @L["This account will be deleted"]: @DisplayName(retired)
+                        @if (retiredStats != null)
+                        {
+                            <br/>
+                            @($"{retiredStats.PhoenixCount:N0} Phoenix / {retiredStats.XxCount:N0} XX")
+                        }
+                    </MudAlert>
+                    <MudText Class="mb-2">@L["All sign-in methods will work on the account you keep, the other account's data is deleted after 30 days"]</MudText>
+                    <MudText Class="mb-2">@L["Type the name of the account being deleted to confirm"] (@DisplayName(retired))</MudText>
+                    <MudTextField T="string" @bind-Value="_confirmationText" Disabled="_isMerging"></MudTextField>
+                    <MudButton Class="mt-4" Variant="Variant.Filled" Color="Color.Error"
+                               Disabled="@(_isMerging || !ConfirmationMatches(retired))"
+                               OnClick="ExecuteMerge">@L["Merge Accounts"]</MudButton>
+                    <MudButton Class="mt-4" Variant="Variant.Text" Disabled="_isMerging"
+                               OnClick="() => _step = MergeStep.Choose">@L["Cancel"]</MudButton>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudContainer>
+</MudPaper>
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject AccountProofService Proofs
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@code {
+    private enum MergeStep
+    {
+        PickTarget,
+        Prove,
+        Choose,
+        Confirm
+    }
+
+    private sealed record SideStats(int PhoenixCount, int XxCount, DateTimeOffset? OldestScore,
+        DateTimeOffset? NewestScore, int TotalRating);
+
+    private MergeStep _step = MergeStep.PickTarget;
+    private User? _other;
+    private User? _pickedUser;
+    private string[] _otherProviders = Array.Empty<string>();
+    private readonly Dictionary<Guid, SideStats> _stats = new();
+    private Guid? _recommendedKeepId;
+    private Guid? _survivorId;
+    private string _confirmationText = string.Empty;
+    private string? _returnUrl;
+    private bool _isVerifyingPiuGame = false;
+    private bool _isMerging = false;
+    private string _piuGameUsername = string.Empty;
+    private string _piuGamePassword = string.Empty;
+
+    private string OtherDisplayName => _other == null ? "" : DisplayName(_other);
+
+    private static string DisplayName(User user)
+    {
+        return user.GameTag?.ToString() ?? user.Name.ToString();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Login");
+            return;
+        }
+
+        var query = HttpUtility.ParseQueryString(new Uri(NavManager.Uri).Query);
+        _returnUrl = query.Get("returnUrl");
+        if (Guid.TryParse(query.Get("with"), out var withId) && withId != CurrentUser.User.Id)
+        {
+            _other = await Mediator.Send(new GetUserByIdQuery(withId));
+            await EvaluateStep();
+        }
+    }
+
+    private async Task<IEnumerable<User>> SearchUsers(string searchText, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(searchText)) return Array.Empty<User>();
+        var result = await Mediator.Send(new SearchForUsersQuery(searchText, 1, 10), cancellationToken);
+        return result.Results.Where(u => u.Id != CurrentUser.User.Id);
+    }
+
+    private async Task PickUser(User? user)
+    {
+        _pickedUser = user;
+        if (user == null) return;
+        _other = user;
+        await EvaluateStep();
+    }
+
+    private async Task EvaluateStep()
+    {
+        if (_other == null)
+        {
+            _step = MergeStep.Prove;
+            return;
+        }
+
+        if (Proofs.HasProof(CurrentUser.User.Id, _other.Id))
+        {
+            _step = MergeStep.Choose;
+            await LoadStats();
+        }
+        else
+        {
+            _otherProviders = (await Mediator.Send(new GetUserSignInProvidersQuery(_other.Id))).ToArray();
+            _step = MergeStep.Prove;
+        }
+    }
+
+    private string VerifyUrl(string provider)
+    {
+        var wizardUrl = $"/Account/Merge?with={_other!.Id}" +
+                        (string.IsNullOrWhiteSpace(_returnUrl) ? "" : $"&returnUrl={HttpUtility.UrlEncode(_returnUrl)}");
+        return $"/Login/{provider}/Verify?returnUrl={HttpUtility.UrlEncode(wizardUrl)}";
+    }
+
+    private async Task VerifyPiuGame()
+    {
+        _isVerifyingPiuGame = true;
+        try
+        {
+            var identity = await Mediator.Send(new GetPiuGameAccountIdentityQuery(_piuGameUsername, _piuGamePassword));
+            var owned = false;
+            foreach (var alias in identity.GetLoginAliases())
+            {
+                var owner = await Mediator.Send(new GetUserByExternalLoginQuery(alias, "PiuGame"));
+                if (owner?.Id != _other!.Id) continue;
+                owned = true;
+                break;
+            }
+
+            if (owned)
+            {
+                Proofs.RecordProof(CurrentUser.User.Id, _other!.Id);
+                await EvaluateStep();
+            }
+            else
+            {
+                Snackbar.Add(L["That PIUGAME account is not connected to the selected account"], Severity.Error);
+            }
+        }
+        catch (InvalidCredentialException)
+        {
+            Snackbar.Add(L["Invalid username or password"], Severity.Error);
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Add(L["Could not reach PIUGAME, try again later"], Severity.Error);
+        }
+        finally
+        {
+            _piuGamePassword = string.Empty;
+            _isVerifyingPiuGame = false;
+        }
+    }
+
+    private async Task LoadStats()
+    {
+        foreach (var side in new[] { CurrentUser.User, _other! })
+        {
+            var phoenix = (await Mediator.Send(new GetPhoenixRecordsQuery(side.Id))).ToArray();
+            var xx = (await Mediator.Send(new GetXXBestChartAttemptsQuery(side.Id)))
+                .Count(a => a.BestAttempt != null);
+            var playerStats = await Mediator.Send(new GetPlayerStatsQuery(side.Id));
+            _stats[side.Id] = new SideStats(
+                phoenix.Length,
+                xx,
+                phoenix.Any() ? phoenix.Min(p => p.RecordedDate) : null,
+                phoenix.Any() ? phoenix.Max(p => p.RecordedDate) : null,
+                playerStats.TotalRating);
+            StateHasChanged();
+        }
+
+        var mine = _stats[CurrentUser.User.Id];
+        var theirs = _stats[_other!.Id];
+        if (mine.PhoenixCount + mine.XxCount != theirs.PhoenixCount + theirs.XxCount)
+            _recommendedKeepId = mine.PhoenixCount + mine.XxCount > theirs.PhoenixCount + theirs.XxCount
+                ? CurrentUser.User.Id
+                : _other.Id;
+    }
+
+    private void KeepAccount(Guid survivorId)
+    {
+        _survivorId = survivorId;
+        _confirmationText = string.Empty;
+        _step = MergeStep.Confirm;
+    }
+
+    private bool ConfirmationMatches(User retired)
+    {
+        return string.Equals(_confirmationText.Trim(), DisplayName(retired), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task ExecuteMerge()
+    {
+        if (_survivorId == null || _other == null) return;
+        var retiredId = _survivorId == CurrentUser.User.Id ? _other.Id : CurrentUser.User.Id;
+        _isMerging = true;
+        try
+        {
+            await Mediator.Send(new ExecuteAccountMergeCommand(_survivorId.Value, retiredId));
+            Snackbar.Add(L["Accounts merged"], Severity.Success);
+            if (_survivorId == CurrentUser.User.Id)
+            {
+                NavManager.NavigateTo(string.IsNullOrWhiteSpace(_returnUrl) ? "/Account" : _returnUrl, true);
+            }
+            else
+            {
+                // The current account was retired: its sessions are invalidated and every
+                // sign-in method now lands on the surviving account.
+                Snackbar.Add(L["You kept the other account, log in again to continue"], Severity.Info);
+                NavManager.NavigateTo("/Logout", true);
+            }
+        }
+        catch (InvalidAccountMergeException e)
+        {
+            Snackbar.Add(e.Message, Severity.Error);
+        }
+        finally
+        {
+            _isMerging = false;
+        }
+    }
+}

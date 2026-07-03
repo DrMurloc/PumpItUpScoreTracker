@@ -20,6 +20,7 @@ using ScoreTracker.Identity.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
+using ScoreTracker.Ucs.Wiring;
 using ScoreTracker.WeeklyChallenge.Wiring;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Accessors;
@@ -80,6 +81,8 @@ builder.Services.AddMassTransit(o =>
     o.AddWeeklyChallengeConsumers();
     o.AddEventCompetitionConsumers();
     o.AddCommunitiesConsumers();
+    o.AddUcsConsumers();
+    o.AddIdentityConsumers();
 
     o.AddDelayedMessageScheduler();
 
@@ -127,20 +130,32 @@ builder.Services.AddAuthentication("DefaultAuthentication")
             }
         };
     })
+    // Remote OAuth handlers persist their handshake result into their SignInScheme. Without a
+    // dedicated scheme they default to the session cookie above, so every OAuth round-trip
+    // briefly replaces the live session with the raw external principal — fatal for the
+    // link/verify flows, which must keep the user signed in across the handshake.
+    .AddCookie("ExternalAuthentication", o =>
+    {
+        o.SlidingExpiration = false;
+        o.ExpireTimeSpan = TimeSpan.FromMinutes(15);
+    })
     .AddDiscord("Discord", o =>
     {
         o.ClientId = discordConfig.ClientId;
         o.ClientSecret = discordConfig.ClientSecret;
+        o.SignInScheme = "ExternalAuthentication";
     })
     .AddGoogle("Google", o =>
     {
         o.ClientId = googleConfig.ClientId;
         o.ClientSecret = googleConfig.ClientSecret;
+        o.SignInScheme = "ExternalAuthentication";
     })
     .AddFacebook("Facebook", o =>
     {
         o.AppId = facebookConfig.AppId;
         o.AppSecret = facebookConfig.AppSecret;
+        o.SignInScheme = "ExternalAuthentication";
     })
     .AddScheme<AuthenticationSchemeOptions, ApiTokenAuthenticationScheme>("ApiToken", o => { });
 
@@ -181,6 +196,7 @@ builder.Services.AddBlazorApplicationInsights()
     .AddMudServices()
     .AddScoped<ICurrentUserAccessor, HttpContextUserAccessor>()
     .AddTransient<IUiSettingsAccessor, UiSettingsAccessor>()
+    .AddSingleton<AccountProofService>()
     .AddTransient<DevSyncService>()
     .AddHttpContextAccessor()
     .AddHttpClient()
@@ -266,7 +282,8 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     ("calculate-chart-letter-difficulties", r => r.PublishCalculateChartLetterDifficulties(), "0 10 * * *"), // 05:00 ET
     ("start-leaderboard-import",         r => r.PublishStartLeaderboardImport(),          "30 10 * * 0"), // Sundays 05:30 ET
     ("try-schedule-mom",                 r => r.PublishTryScheduleMoM(),                  "0 11 * * *"), // 06:00 ET
-    ("flush-overdue-score-batches",      r => r.PublishFlushOverdueScoreBatches(),        "*/5 * * * *") // every 5 min — safety net for stuck batches
+    ("flush-overdue-score-batches",      r => r.PublishFlushOverdueScoreBatches(),        "*/5 * * * *"), // every 5 min — safety net for stuck batches
+    ("process-account-purges",           r => r.PublishProcessAccountPurges(),            "30 11 * * *") // 06:30 ET — merged-account grace-window purges
 };
 if (builder.Configuration["PreventRecurringJobs"] == "true")
 {

@@ -12,7 +12,14 @@ public interface IUserRepository
     Task CreateExternalLogin(Guid userId, string loginProviderName, string externalId,
         CancellationToken cancellationToken = default);
 
+    Task<IEnumerable<ExternalLoginRecord>> GetExternalLogins(Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task RemoveExternalLogin(Guid userId, string loginProviderName, string externalId,
+        CancellationToken cancellationToken = default);
+
     Task<IEnumerable<User>> SearchForUsersByName(string searchText, CancellationToken cancellationToken = default);
+    Task<IEnumerable<User>> GetUsersByGameTag(Name gameTag, CancellationToken cancellationToken = default);
     Task<User?> GetUser(Guid userId, CancellationToken cancellationToken = default);
     Task<DateTimeOffset> GetClaimsInvalidatedAt(Guid userId, CancellationToken cancellationToken = default);
     Task<IEnumerable<User>> GetUsers(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default);

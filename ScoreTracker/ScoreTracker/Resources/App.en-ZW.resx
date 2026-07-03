@@ -1941,4 +1941,169 @@
   <data name="Chart Leaderboard" xml:space="preserve">
 	  <value>Mrglrgl Arglmrgl</value>
   </data>
+  <data name="Sign-In Methods" xml:space="preserve">
+	  <value>Mrgl-Mrgl Grrblubs</value>
+  </data>
+  <data name="You can sign in to your account with any connected method" xml:space="preserve">
+	  <value>Mrgl grrblub aaaughibbrgubugbugrguburgle mrgl mrgl blub</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+	  <value>Grrblub</value>
+  </data>
+  <data name="Disconnect" xml:space="preserve">
+	  <value>Unggh-grrblub</value>
+  </data>
+  <data name="Disconnect Sign-In Method" xml:space="preserve">
+	  <value>Unggh-grrblub Mrgl-Mrgl</value>
+  </data>
+  <data name="You will no longer be able to sign in with this method" xml:space="preserve">
+	  <value>Mrgl nk grrblub mrgggl blub</value>
+  </data>
+  <data name="This is your only sign-in method and cannot be disconnected" xml:space="preserve">
+	  <value>Mrgl uuua grrblub! Nk unggh!</value>
+  </data>
+  <data name="Sign-in method connected" xml:space="preserve">
+	  <value>Grrblub mrglglglgl!</value>
+  </data>
+  <data name="Sign-in method disconnected" xml:space="preserve">
+	  <value>Unggh-grrblub mrglglglgl!</value>
+  </data>
+  <data name="This sign-in method is already connected to your account" xml:space="preserve">
+	  <value>Mrgl grrblub mrgl-mrgl uuua blub</value>
+  </data>
+  <data name="This sign-in method is connected to a different account" xml:space="preserve">
+	  <value>Mrgl grrblub uuua RwlRwlRwlRwl blub</value>
+  </data>
+  <data name="PIUGAME Login" xml:space="preserve">
+	  <value>PIUGAME Mrgl-Mrgl</value>
+  </data>
+  <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
+	  <value>Mrglname uuua shhhcret grrl piugame.com blub blub, nk mrgglkeep aaaughibbrgubugbugrguburgle</value>
+  </data>
+  <data name="PIUGame.com Username" xml:space="preserve">
+	  <value>PIUGame.com Mrglname</value>
+  </data>
+  <data name="PIUGame.com Password" xml:space="preserve">
+	  <value>PIUGame.com Shhhcret</value>
+  </data>
+  <data name="Log In" xml:space="preserve">
+	  <value>Mrgl-Mrgl</value>
+  </data>
+  <data name="Invalid username or password" xml:space="preserve">
+	  <value>Nk mrglname uuua shhhcret blub!</value>
+  </data>
+  <data name="Could not reach PIUGAME, try again later" xml:space="preserve">
+	  <value>PIUGAME nk mrgl! Rwlrwlrwl blub later</value>
+  </data>
+  <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
+	  <value>PIUGAME mrgl-mrgl blub piugame.com uuua! Grrblub backup mrgl-mrgl aaaughibbrgubugbugrguburgle!</value>
+  </data>
+  <data name="Merge Accounts" xml:space="preserve">
+	  <value>Mrgl-Smoosh Mrglccounts</value>
+  </data>
+  <data name="Choose the account to merge with" xml:space="preserve">
+	  <value>Mrgl mrglccount uuua smoosh blub</value>
+  </data>
+  <data name="Verify the other account" xml:space="preserve">
+	  <value>Mrgl-check uuua RwlRwl mrglccount</value>
+  </data>
+  <data name="Sign in with one of that account's methods to prove it's yours" xml:space="preserve">
+	  <value>Mrgl-mrgl uuua RwlRwl grrblub, mrgl uuua blub!</value>
+  </data>
+  <data name="That PIUGAME account is not connected to the selected account" xml:space="preserve">
+	  <value>PIUGAME mrglccount nk RwlRwl mrglccount blub</value>
+  </data>
+  <data name="Choose which account to keep" xml:space="preserve">
+	  <value>Mrgl mrglccount uuua keep blub</value>
+  </data>
+  <data name="All sign-in methods will work on the account you keep, the other account's data is deleted after 30 days" xml:space="preserve">
+	  <value>Mrgl grrblubs blub keep-mrglccount! RwlRwl mrglccount mrgggl 30 mrgldays aaaughibbrgubugbugrguburgle</value>
+  </data>
+  <data name="Keep this account" xml:space="preserve">
+	  <value>Keep mrgl mrglccount</value>
+  </data>
+  <data name="Most history" xml:space="preserve">
+	  <value>Uuua mrglstory</value>
+  </data>
+  <data name="Phoenix Scores" xml:space="preserve">
+	  <value>Phoenix Mrglscores</value>
+  </data>
+  <data name="XX Scores" xml:space="preserve">
+	  <value>XX Mrglscores</value>
+  </data>
+  <data name="Oldest Score" xml:space="preserve">
+	  <value>Mrgloldest Mrglscore</value>
+  </data>
+  <data name="Newest Score" xml:space="preserve">
+	  <value>Mrglnewest Mrglscore</value>
+  </data>
+  <data name="Total Rating" xml:space="preserve">
+	  <value>Mrgltotal Mrglrating</value>
+  </data>
+  <data name="This account will be deleted" xml:space="preserve">
+	  <value>Mrgl mrglccount mrgggl blub!</value>
+  </data>
+  <data name="Type the name of the account being deleted to confirm" xml:space="preserve">
+	  <value>Mrgltype mrglname uuua mrgggl-mrglccount blub confirm</value>
+  </data>
+  <data name="Accounts merged" xml:space="preserve">
+	  <value>Mrglccounts smooshed!</value>
+  </data>
+  <data name="You kept the other account, log in again to continue" xml:space="preserve">
+	  <value>Mrgl keep RwlRwl mrglccount! Mrgl-mrgl again blub</value>
+  </data>
+  <data name="Merged account data is deleted on" xml:space="preserve">
+	  <value>Smooshed mrglccount mrgldata mrgggl {0} blub</value>
+  </data>
+  <data name="Undo Merge" xml:space="preserve">
+	  <value>Un-smoosh</value>
+  </data>
+  <data name="Merge undone" xml:space="preserve">
+	  <value>Un-smooshed!</value>
+  </data>
+  <data name="Merge another account" xml:space="preserve">
+	  <value>Smoosh RwlRwl mrglccount</value>
+  </data>
+  <data name="This sign-in method belongs to another account, you can merge the two accounts" xml:space="preserve">
+	  <value>Mrgl grrblub uuua RwlRwl mrglccount! Mrgl smoosh blub blub</value>
+  </data>
+  <data name="Review and merge" xml:space="preserve">
+	  <value>Mrglview uuua smoosh</value>
+  </data>
+  <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
+	  <value>Mrglccount mrgl gametag {0} uuua blub! Mrgl uuua?</value>
+  </data>
+  <data name="Profile" xml:space="preserve">
+	  <value>Mrglfile</value>
+  </data>
+  <data name="API" xml:space="preserve">
+	  <value>MrglPI</value>
+  </data>
+  <data name="Your Data" xml:space="preserve">
+	  <value>Mrgl Mrgldata</value>
+  </data>
+  <data name="Danger Zone" xml:space="preserve">
+	  <value>RRRGGH Zone!</value>
+  </data>
+  <data name="Play" xml:space="preserve">
+	  <value>Mrglay</value>
+  </data>
+  <data name="My Progress" xml:space="preserve">
+	  <value>Mrgl Mrglprogress</value>
+  </data>
+  <data name="Compete" xml:space="preserve">
+	  <value>Mrglpete</value>
+  </data>
+  <data name="Community" xml:space="preserve">
+	  <value>Mrglmunity</value>
+  </data>
+  <data name="Rankings" xml:space="preserve">
+	  <value>Mrglkings</value>
+  </data>
+  <data name="Import Scores" xml:space="preserve">
+	  <value>Mrglport Mrglscores</value>
+  </data>
+  <data name="Find a chart" xml:space="preserve">
+	  <value>Mrgl a mrglchart</value>
+  </data>
 </root>

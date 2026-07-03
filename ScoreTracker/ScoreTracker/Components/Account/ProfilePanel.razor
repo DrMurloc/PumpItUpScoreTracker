@@ -1,0 +1,285 @@
+@using System.Globalization
+@using System.Web
+@using CsvHelper
+@using MediatR
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.ScoreLedger.Contracts.Commands
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Dtos
+@using ScoreTracker.Web.Services.Contracts
+
+<MudGrid>
+    <MudItem xs="12" sm="6">
+        <MudTextField T="string"
+                      Disabled="_isUpdatingUser || _isContentLocked"
+                      Label=@L["Username"]
+                      MaxLength="100"
+                      Value="@_name"
+                      ValueChanged="UpdateName"
+                      HelperText="@(_isContentLocked ? L["Your account is content-locked. Message an admin if you have questions."].Value : null)"></MudTextField>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudSelect T="string" Value="_countryName" ValueChanged="UpdateCountry" Label=@L["Country"] Clearable="true">
+            @foreach (var country in _countries)
+            {
+                <MudSelectItem T="string" Value="country.Name">
+                    <MudImage Height="15" ObjectFit="ObjectFit.ScaleDown" Src="@country.ImagePath.ToString()"></MudImage>
+                    @country.Name
+                </MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudSelect T="string" Disabled="_isUpdatingUser" Label="@L["Language"]" Value="_currentCulture" ValueChanged="UpdateCulture">
+            <MudSelectItem T="string" Value=@("en-US")>English</MudSelectItem>
+            <MudSelectItem T="string" Value=@("es-MX")>Español</MudSelectItem>
+            <MudSelectItem T="string" Value=@("pt-BR")>Português</MudSelectItem>
+            <MudSelectItem T="string" Value=@("ko-KR")>한국어</MudSelectItem>
+            <MudSelectItem T="string" Value=@("ja-JP")>日本語</MudSelectItem>
+            <MudSelectItem T="string" Value=@("fr-FR")>Français</MudSelectItem>
+            <MudSelectItem T="string" Value=@("it-IT")>Italiano</MudSelectItem>
+            <MudSelectItem T="string" Value=@("en-ZW")>Murloc</MudSelectItem>
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12">
+        <MudSwitch T="bool" Disabled="_isUpdatingUser" Label=@L["Public"] Value="_isPublic" ValueChanged="() => _showPublicConfirmDialog = true" Color="Color.Success"></MudSwitch>
+    </MudItem>
+</MudGrid>
+
+<MudDivider Class="my-6"></MudDivider>
+<MudText Typo="Typo.h6" Class="mb-2">@L["Your Data"]</MudText>
+<div class="d-flex flex-wrap gap-2">
+    <MudButton StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Outlined" Color="Color.Primary" OnClick="DownloadScores">@L["Download Scores"]</MudButton>
+    <MudButton Href="/UploadXXScores" StartIcon="@Icons.Material.Filled.UploadFile" Variant="Variant.Text">@L["Upload XX Scores"]</MudButton>
+</div>
+
+<MudPaper Outlined="true" Class="pa-4 mt-6" Style="border-color: var(--mud-palette-error);">
+    <MudText Typo="Typo.h6" Color="Color.Error">@L["Danger Zone"]</MudText>
+    <MudText Typo="Typo.body2" Class="mb-3">@L["This will delete all of your scores and reset your player stats and title progress"]</MudText>
+    <MudButton StartIcon="@Icons.Material.Filled.DeleteForever" Variant="Variant.Outlined" Color="Color.Error" OnClick="OpenWipeDialog">@L["Delete All Scores"]</MudButton>
+</MudPaper>
+
+<div class="d-flex align-center gap-1 mt-6">
+    <MudTooltip Text=@L["Used Primarily for debugging"]>
+        <MudText Typo="Typo.caption" Style="opacity: .7;">Id: @_id</MudText>
+    </MudTooltip>
+    <MudIconButton Size="Size.Small" OnClick="CopyUserId" Icon="@Icons.Material.Filled.ContentCopy"></MudIconButton>
+</div>
+
+<MudDialog @bind-Visible="_showPublicConfirmDialog">
+    <DialogContent>
+        @if (_isPublic)
+        {
+            <MudText>@L["Make Not Public Disclaimer"]</MudText>
+        }
+        else
+        {
+            <MudText>@L["Make Public Disclaimer 1"]</MudText>
+            <br/>
+            <MudText>@L["Make Public Disclaimer 2"]</MudText>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text"
+                   OnClick="()=>_showPublicConfirmDialog=false"
+                   Color="Color.Primary">@L["Cancel"]</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   OnClick="ToggleIsPublic"
+                   Color="Color.Primary">@(_isPublic?@L["Make Private"]:@L["Make Public"])</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-Visible="_showWipeScoresDialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L["Delete All Scores"]</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudCheckBox T="bool" @bind-Value="_wipeAcknowledged" Color="Color.Error" Disabled="_isWiping">
+            @L["This will delete all of your scores and reset your player stats and title progress"]
+        </MudCheckBox>
+        <MudCheckBox T="bool" @bind-Value="_wipeIncludeHistory" Color="Color.Error" Disabled="_isWiping">
+            @L["(Optional) Also delete historical data"]
+        </MudCheckBox>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text"
+                   OnClick="() => _showWipeScoresDialog = false"
+                   Disabled="_isWiping"
+                   Color="Color.Primary">@L["Cancel"]</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   OnClick="ConfirmWipeScores"
+                   Disabled="@(!_wipeAcknowledged || _isWiping)"
+                   Color="Color.Error">@L["Confirm"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser;
+@inject IMediator Mediator;
+@inject ISnackbar Snackbar;
+@inject IUiSettingsAccessor UiSettings;
+@inject IJSRuntime JSRuntime;
+@inject IUserRepository Users;
+@code
+{
+    private string _id = string.Empty;
+    private string _name = string.Empty;
+    private bool _isPublic = false;
+    private bool _isContentLocked = false;
+    private bool _showPublicConfirmDialog = false;
+    private bool _showWipeScoresDialog = false;
+    private bool _wipeAcknowledged = false;
+    private bool _wipeIncludeHistory = false;
+    private bool _isWiping = false;
+    private bool _isUpdatingUser = false;
+    private IEnumerable<CountryRecord> _countries = Array.Empty<CountryRecord>();
+    private string _countryName = null;
+    private string _currentCulture = "en-US";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var culture = await UiSettings.GetSetting("Culture");
+        _currentCulture = culture ?? CultureInfo.CurrentUICulture.ToString();
+        _id = CurrentUser.User.Id.ToString();
+        _name = CurrentUser.User.Name;
+        _countryName = CurrentUser.User.Country;
+        _isPublic = CurrentUser.User.IsPublic;
+        _isContentLocked = CurrentUser.User.IsContentLocked;
+        _countries = (await Users.GetCountries()).OrderBy(c => c.Name);
+    }
+
+    private async Task UpdateCulture(string newCulture)
+    {
+        _isUpdatingUser = true;
+        await UiSettings.SetSetting("Culture", newCulture);
+        NavManager.NavigateTo($"/Culture/Set?culture={newCulture}&redirectUrl=" + HttpUtility.UrlEncode("/Account"), forceLoad: true);
+    }
+
+    private async Task CopyUserId()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _id);
+        Snackbar.Add("Copied to Clipboard!", Severity.Success);
+    }
+
+    private async Task UpdateUser()
+    {
+        _isUpdatingUser = true;
+        await Mediator.Send(new UpdateUserCommand(_name, _isPublic, string.IsNullOrWhiteSpace(_countryName) ? null : _countryName));
+        /*
+        Why does it always come back to javascript...
+        Blazor interacts over WebSockets that close HTTP responses before it processes.
+        This means we can't update a user's signed in information (stored in a cookie) utilizing standard Blazor back end interactions
+        HttpClient interactions all happen via sockets in the back end, so does not contain cookie information for managing user claims.
+        So the conclusion was to do a quick javascript fetch to a Refresh endpoint to log out and log back in a user when their claims
+        are updated.
+        See https://github.com/dotnet/aspnetcore/issues/34095#issuecomment-874012924 for Microsoft's stance on this.
+        See: >:(  for my stance on this.*/
+        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
+        await module.InvokeVoidAsync("refreshLogin");
+        _isUpdatingUser = false;
+    }
+
+    private async Task ToggleIsPublic()
+    {
+        _showPublicConfirmDialog = false;
+        _isPublic = !_isPublic;
+        await UpdateUser();
+
+        var message = _isPublic ? "Public" : "Private";
+        Snackbar.Add($"Account made {message}", Severity.Success);
+    }
+
+    private async Task UpdateCountry(string newCountry)
+    {
+        _countryName = newCountry;
+        await UpdateUser();
+    }
+
+    private async Task UpdateName(string newName)
+    {
+        if (Name.TryParse(newName, out var name) || name.ToString().Length > 100)
+        {
+            _name = name;
+            await UpdateUser();
+            Snackbar.Add($"User Profile Up set to {_name}", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Invalid Name", Severity.Error);
+        }
+    }
+
+    private void OpenWipeDialog()
+    {
+        _wipeAcknowledged = false;
+        _wipeIncludeHistory = false;
+        _showWipeScoresDialog = true;
+    }
+
+    private async Task ConfirmWipeScores()
+    {
+        _isWiping = true;
+        try
+        {
+            await Mediator.Send(new WipeUserScoresCommand(CurrentUser.User.Id, _wipeIncludeHistory));
+            Snackbar.Add(L["Your scores have been deleted"], Severity.Success);
+            _showWipeScoresDialog = false;
+        }
+        finally
+        {
+            _isWiping = false;
+        }
+    }
+
+    private async Task DownloadScores()
+    {
+        var result = Array.Empty<object>();
+        if (await UiSettings.GetSelectedMix() == MixEnum.XX)
+        {
+            var scores = await Mediator.Send(new GetXXBestChartAttemptsQuery(CurrentUser.User.Id));
+            result = scores.OrderBy(s => s.Chart.Level).ThenBy(s => s.Chart.Type).Select(s => new XXSpreadsheetScoreDto
+            {
+                Difficulty = s.Chart.DifficultyString,
+                IsBroken = s.BestAttempt?.IsBroken.ToString() ?? "",
+                LetterGrade = s.BestAttempt?.LetterGrade.ToString() ?? "",
+                Score = s.BestAttempt?.Score?.ToString() ?? "",
+                Song = s.Chart.Song.Name
+            }).ToArray();
+        }
+        else
+        {
+            var scores = await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id));
+            var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+            result = scores.OrderBy(s => charts[s.ChartId].Level).ThenBy(s => charts[s.ChartId].Type)
+                .Select(s => new
+                {
+                    Difficulty = charts[s.ChartId].DifficultyString,
+                    RecordedDate = s.RecordedDate.ToString("d"),
+                    Song = charts[s.ChartId].Song.Name.ToString(),
+                    IsBroken = s.IsBroken.ToString(),
+                    LetterGrade = s.Score?.LetterGrade.GetName(),
+                    Score = s.Score?.ToString(),
+                    Plate = s.Plate?.GetName()
+                }).ToArray();
+        }
+
+        var stream = new MemoryStream();
+        await using var writer = new StreamWriter(stream);
+        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+        await csv.WriteRecordsAsync(result);
+        await writer.FlushAsync();
+        await csv.FlushAsync();
+        const string fileName = "scores.csv";
+
+        using var streamRef = new DotNetStreamReference(stream: stream);
+        stream.Seek(0, SeekOrigin.Begin);
+
+        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
+        await module.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+    }
+}

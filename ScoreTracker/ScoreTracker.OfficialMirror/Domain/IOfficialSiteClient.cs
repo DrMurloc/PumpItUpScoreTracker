@@ -27,6 +27,9 @@ internal interface IOfficialSiteClient
     Task<IEnumerable<GameCardRecord>> GetGameCards(string username, string password,
         CancellationToken cancellationToken);
 
+    Task<Contracts.PiuGameAccountIdentity> GetAccountIdentity(string username, string password,
+        CancellationToken cancellationToken);
+
     Task<IEnumerable<ChartPopularityLeaderboardEntry>> GetOfficialChartLeaderboardEntries(
         CancellationToken cancellationToken);
 

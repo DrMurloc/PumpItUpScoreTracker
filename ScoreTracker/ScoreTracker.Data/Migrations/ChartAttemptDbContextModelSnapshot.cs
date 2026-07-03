@@ -1215,6 +1215,51 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("UserTournamentSession", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Identity.Infrastructure.Entities.MergeRequestEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("MovedLogins")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("PurgeAfter")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("PurgedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("RetiredUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RetiredUserSnapshot")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<Guid>("SurvivorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RetiredUserId");
+
+                    b.HasIndex("SurvivorUserId");
+
+                    b.HasIndex("State", "PurgeAfter");
+
+                    b.ToTable("MergeRequest", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialLeaderboardImportStateEntity", b =>
                 {
                     b.Property<int>("Id")

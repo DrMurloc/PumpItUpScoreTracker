@@ -38,6 +38,7 @@ namespace ScoreTracker.OfficialMirror.Application
         IRequestHandler<GetOfficialLeaderboardStatusesQuery, IEnumerable<UserOfficialLeaderboard>>,
         IRequestHandler<GetOfficialUcsEntryQuery, PiuGameUcsEntry?>,
         IRequestHandler<GetOfficialAccountDataQuery, PiuGameAccountDataImport>,
+        IRequestHandler<GetPiuGameAccountIdentityQuery, Contracts.PiuGameAccountIdentity>,
         IRequestHandler<GetOfficialRecentScoresQuery, (IEnumerable<OfficialRecordedScore> results,
             IEnumerable<string> nonMapped)>,
         IConsumer<StartLeaderboardImportCommand>
@@ -126,6 +127,12 @@ namespace ScoreTracker.OfficialMirror.Application
             CancellationToken cancellationToken)
         {
             return await _officialSite.GetAccountData(request.Username, request.Password, null, cancellationToken);
+        }
+
+        public async Task<Contracts.PiuGameAccountIdentity> Handle(GetPiuGameAccountIdentityQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await _officialSite.GetAccountIdentity(request.Username, request.Password, cancellationToken);
         }
 
         public async Task<(IEnumerable<OfficialRecordedScore> results, IEnumerable<string> nonMapped)> Handle(

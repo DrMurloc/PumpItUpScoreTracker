@@ -96,6 +96,16 @@
                             
                         }
                     </MudItem>
+                    @if (_mergeInviteUserId != null)
+                    {
+                        <MudItem xs="12">
+                            <MudAlert Severity="Severity.Info">
+                                @L["An account with game tag {0} already exists, is that you?", _mergeInviteTag]
+                                <MudButton Class="ml-2" Variant="Variant.Filled" Color="Color.Info" Size="Size.Small"
+                                           Href="@($"/Account/Merge?with={_mergeInviteUserId}&returnUrl={System.Web.HttpUtility.UrlEncode("/UploadPhoenixScores")}")">@L["Review and merge"]</MudButton>
+                            </MudAlert>
+                        </MudItem>
+                    }
 
                     <MudItem xs="12" sm="6">
                         <MudTooltip Text="Will pull in broken scores from your recent plays, passing scores overwrite broken scores">
@@ -356,10 +366,27 @@
     private string _selectedId = "";
     private IEnumerable<GameCardRecord> _cards = Array.Empty<GameCardRecord>();
 
-    private void SelectId(string id)
+    private async Task SelectId(string id)
     {
         _selectedGameTag = _cards.First(c => c.Id == id).GameTag;
         _selectedId = id;
+        await CheckMergeInvite();
+    }
+
+    private Guid? _mergeInviteUserId;
+    private string _mergeInviteTag = "";
+
+    // Requirement: an import that surfaces a game tag another account already carries offers
+    // a merge. Invitation only — the wizard's prove step is the security gate.
+    private async Task CheckMergeInvite()
+    {
+        _mergeInviteUserId = null;
+        if (string.IsNullOrWhiteSpace(_selectedGameTag)) return;
+        var match = (await Mediator.Send(new GetUsersByGameTagQuery(_selectedGameTag)))
+            .FirstOrDefault(u => u.Id != CurrentUser.User.Id);
+        if (match == null) return;
+        _mergeInviteUserId = match.Id;
+        _mergeInviteTag = _selectedGameTag;
     }
 
     private async Task LoadCards()
@@ -397,13 +424,15 @@
             {
                 _selectedId = _cards.First(c => c.IsActive).Id;
                 _selectedGameTag = _cards.First(c => c.IsActive).GameTag;
+                await CheckMergeInvite();
                 Snackbar.Add($"Select a Game ID to Import", Severity.Info);
                 _isImporting = false;
                 return;
-                
+
             }
             _selectedId = _cards.First().Id;
             _selectedGameTag = _cards.First().GameTag;
+            await CheckMergeInvite();
 
         }
         await UiSettings.SetSetting($"PhoenixScoreUpload__LastGameId", _selectedId);
