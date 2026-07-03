@@ -5,6 +5,10 @@
         public string? Plate { get; set; }
         public string? LetterGrade { get; set; }
         public int? Score { get; set; }
+
+        public double? Pumbility { get; set; }
+
+        public double? PumbilityPlus { get; set; }
         public bool IsBroken { get; set; }
         public DateTimeOffset RecordedDate { get; set; }
         public ChartDto Chart { get; set; }
