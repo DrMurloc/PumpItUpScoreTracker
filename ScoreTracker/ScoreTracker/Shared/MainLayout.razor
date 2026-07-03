@@ -27,22 +27,30 @@
 <ChartVideoDisplay></ChartVideoDisplay>
 <style>
     .dense-nav .mud-nav-link {
-        padding-top: 6px;
-        padding-bottom: 6px;
+        padding-top: 4px;
+        padding-bottom: 4px;
         min-height: unset;
     }
 
     .dense-nav .mud-nav-link-text {
-        font-size: .875rem;
+        font-size: .8125rem;
+        line-height: 1.4;
     }
 
     .dense-nav .mud-nav-link-icon,
     .dense-nav .mud-nav-link .mud-icon-root {
-        font-size: 1.25rem;
+        font-size: 1.125rem;
+    }
+
+    .dense-nav .nav-section {
+        font-size: .6875rem;
+        letter-spacing: .08em;
+        line-height: 1.4;
+        opacity: .65;
     }
 
     .appbar-search .mud-input-control {
-        margin-top: 0;
+        margin: 0;
     }
 
     .appbar-search .mud-input.mud-input-outlined {
@@ -54,17 +62,21 @@
         color: #EDF1F5;
     }
 
+    .appbar-search .mud-input.mud-input-outlined input::placeholder {
+        color: rgba(237, 241, 245, .75);
+        opacity: 1;
+    }
+
     .appbar-search .mud-input.mud-input-outlined .mud-input-outlined-border {
         border-color: rgba(237, 241, 245, .5);
     }
 
-    .appbar-search .mud-input-label {
-        color: rgba(237, 241, 245, .85);
+    .mud-drawer {
+        scrollbar-width: none;
     }
 
-    .mud-drawer {
-        scrollbar-width: thin;
-        scrollbar-color: rgba(237, 241, 245, .35) transparent;
+    .mud-drawer::-webkit-scrollbar {
+        display: none;
     }
 </style>
 <MudLayout>
@@ -74,7 +86,7 @@
         <MudText Typo="Typo.subtitle1" Style="font-weight: 500; white-space: nowrap;" Class="mr-6">@(_userId == null ? L["PIU Scores"].Value : $"{UserName}")</MudText>
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
             <div class="d-flex align-center appbar-search" style="min-width: 220px; max-width: 320px;">
-                <ChartSelector Mix="_currentMix" Label="@L["Find a chart"].Value" Variant="Variant.Outlined" Margin="Margin.Dense" ChartIdSelected="GoToChart"></ChartSelector>
+                <ChartSelector Mix="_currentMix" Label="" Placeholder="@L["Find a chart"].Value" Variant="Variant.Outlined" Margin="Margin.Dense" ChartIdSelected="GoToChart"></ChartSelector>
             </div>
         </MudHidden>
         <MudSpacer></MudSpacer>
@@ -110,7 +122,7 @@
     </MudAppBar>
     <MudDrawer @bind-Open="_isOpen" Variant="@DrawerVariant.Responsive" Breakpoint="Breakpoint.Md" ClipMode="DrawerClipMode.Always" Width="240px" Elevation="1">
         <MudNavMenu Class="dense-nav pb-4">
-            <MudText Typo="Typo.overline" Class="ml-4 mt-2 d-block" Style="opacity: .7;">@L["Play"]</MudText>
+            <MudText Typo="Typo.overline" Class="ml-4 mt-1 d-block nav-section">@L["Play"]</MudText>
             @if (CurrentUser.IsLoggedIn)
             {
                 <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">@L["Home"]</MudNavLink>
@@ -123,7 +135,7 @@
             <MudNavLink Href="/Charts" Icon="@Icons.Material.Filled.List">@L["Charts"]</MudNavLink>
             <MudNavLink Href="/TierLists" Icon="@Icons.Material.Filled.Topic">@L["Tier Lists"]</MudNavLink>
 
-            <MudText Typo="Typo.overline" Class="ml-4 mt-4 d-block" Style="opacity: .7;">@L["My Progress"]</MudText>
+            <MudText Typo="Typo.overline" Class="ml-4 mt-3 d-block nav-section">@L["My Progress"]</MudText>
             @if (CurrentUser.IsLoggedIn)
             {
                 <MudNavLink Href=@(_currentMix==MixEnum.Phoenix?"/Phoenix/Progress":"/Progress") Icon="@Icons.Material.Filled.BarChart">@L["Progress Charts"]</MudNavLink>
@@ -134,7 +146,7 @@
             }
             <MudNavLink Href="/Titles" Icon="@Icons.Material.Filled.Grade">@L["Titles"]</MudNavLink>
 
-            <MudText Typo="Typo.overline" Class="ml-4 mt-4 d-block" Style="opacity: .7;">@L["Compete"]</MudText>
+            <MudText Typo="Typo.overline" Class="ml-4 mt-3 d-block nav-section">@L["Compete"]</MudText>
             <MudNavLink Href="/WeeklyCharts" Icon="@Icons.Material.Filled.ViewWeek">@L["Weekly Charts"]</MudNavLink>
             <MudNavLink Href="/Tournaments/MarchOfMurlocs" Icon="@Icons.Material.Filled.Alarm">March of Murlocs</MudNavLink>
             @foreach (var tourney in _highlightedEvents)
@@ -164,7 +176,7 @@
                 <MudNavLink Href="/OfficialLeaderboards/PlayerCompare" Icon="@Icons.Material.Filled.CompareArrows">@L["Leaderboard Player Compare"]</MudNavLink>
             </MudNavGroup>
 
-            <MudText Typo="Typo.overline" Class="ml-4 mt-4 d-block" Style="opacity: .7;">@L["Community"]</MudText>
+            <MudText Typo="Typo.overline" Class="ml-4 mt-3 d-block nav-section">@L["Community"]</MudText>
             <MudNavLink Href="/Communities" Icon="@Icons.Material.Filled.Group">@L["Communities"]</MudNavLink>
             <MudNavLink Href="https://discord.gg/MEYvr3bFte" Target="_blank" Icon="@Icons.Custom.Brands.Discord">@L["Discord"]</MudNavLink>
 
