@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Web.Configuration;
@@ -18,13 +19,15 @@ public sealed class DevSyncService
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IDevDataTransfer _transfer;
     private readonly IOptions<ProdSyncConfiguration> _options;
+    private readonly IMemoryCache _cache;
 
     public DevSyncService(IHttpClientFactory httpClientFactory, IDevDataTransfer transfer,
-        IOptions<ProdSyncConfiguration> options)
+        IOptions<ProdSyncConfiguration> options, IMemoryCache cache)
     {
         _httpClientFactory = httpClientFactory;
         _transfer = transfer;
         _options = options;
+        _cache = cache;
     }
 
     public async Task Sync(string apiToken, Guid localUserId, Action<string> reportProgress,
@@ -51,6 +54,12 @@ public sealed class DevSyncService
 
         reportProgress($"Writing {scores.Count:N0} scores…");
         await _transfer.ReplaceUserScores(localUserId, scores, cancellationToken);
+
+        // The import writes raw SQL underneath the repositories, so every cached read
+        // (charts per mix, song names, videos, skills, ...) is stale — including the
+        // empty chart list the login page uses to decide you're on an empty database.
+        // Everything cached came from pre-import state; clear it all.
+        if (_cache is MemoryCache concrete) concrete.Clear();
 
         reportProgress("Done.");
     }
