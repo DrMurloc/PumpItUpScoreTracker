@@ -2149,4 +2149,37 @@
   <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
     <value>Esiste già un account con il game tag {0}, sei tu?</value>
   </data>
+  <data name="Profile" xml:space="preserve">
+    <value>Profilo</value>
+  </data>
+  <data name="API" xml:space="preserve">
+    <value>API</value>
+  </data>
+  <data name="Your Data" xml:space="preserve">
+    <value>I tuoi dati</value>
+  </data>
+  <data name="Danger Zone" xml:space="preserve">
+    <value>Zona di pericolo</value>
+  </data>
+  <data name="Play" xml:space="preserve">
+    <value>Gioca</value>
+  </data>
+  <data name="My Progress" xml:space="preserve">
+    <value>I miei progressi</value>
+  </data>
+  <data name="Compete" xml:space="preserve">
+    <value>Competi</value>
+  </data>
+  <data name="Community" xml:space="preserve">
+    <value>Community</value>
+  </data>
+  <data name="Rankings" xml:space="preserve">
+    <value>Classifiche</value>
+  </data>
+  <data name="Import Scores" xml:space="preserve">
+    <value>Importa punteggi</value>
+  </data>
+  <data name="Find a chart" xml:space="preserve">
+    <value>Cerca un chart</value>
+  </data>
 </root>

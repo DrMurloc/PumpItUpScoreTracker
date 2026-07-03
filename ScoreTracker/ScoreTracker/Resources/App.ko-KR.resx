@@ -2029,4 +2029,37 @@
   <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
     <value>게임 태그 {0}인 계정이 이미 있습니다. 본인인가요?</value>
   </data>
+  <data name="Profile" xml:space="preserve">
+    <value>프로필</value>
+  </data>
+  <data name="API" xml:space="preserve">
+    <value>API</value>
+  </data>
+  <data name="Your Data" xml:space="preserve">
+    <value>내 데이터</value>
+  </data>
+  <data name="Danger Zone" xml:space="preserve">
+    <value>위험 구역</value>
+  </data>
+  <data name="Play" xml:space="preserve">
+    <value>플레이</value>
+  </data>
+  <data name="My Progress" xml:space="preserve">
+    <value>내 진행도</value>
+  </data>
+  <data name="Compete" xml:space="preserve">
+    <value>경쟁</value>
+  </data>
+  <data name="Community" xml:space="preserve">
+    <value>커뮤니티</value>
+  </data>
+  <data name="Rankings" xml:space="preserve">
+    <value>랭킹</value>
+  </data>
+  <data name="Import Scores" xml:space="preserve">
+    <value>점수 가져오기</value>
+  </data>
+  <data name="Find a chart" xml:space="preserve">
+    <value>차트 찾기</value>
+  </data>
 </root>

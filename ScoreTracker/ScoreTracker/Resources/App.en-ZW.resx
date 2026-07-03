@@ -2073,4 +2073,37 @@
   <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
 	  <value>Mrglccount mrgl gametag {0} uuua blub! Mrgl uuua?</value>
   </data>
+  <data name="Profile" xml:space="preserve">
+	  <value>Mrglfile</value>
+  </data>
+  <data name="API" xml:space="preserve">
+	  <value>MrglPI</value>
+  </data>
+  <data name="Your Data" xml:space="preserve">
+	  <value>Mrgl Mrgldata</value>
+  </data>
+  <data name="Danger Zone" xml:space="preserve">
+	  <value>RRRGGH Zone!</value>
+  </data>
+  <data name="Play" xml:space="preserve">
+	  <value>Mrglay</value>
+  </data>
+  <data name="My Progress" xml:space="preserve">
+	  <value>Mrgl Mrglprogress</value>
+  </data>
+  <data name="Compete" xml:space="preserve">
+	  <value>Mrglpete</value>
+  </data>
+  <data name="Community" xml:space="preserve">
+	  <value>Mrglmunity</value>
+  </data>
+  <data name="Rankings" xml:space="preserve">
+	  <value>Mrglkings</value>
+  </data>
+  <data name="Import Scores" xml:space="preserve">
+	  <value>Mrglport Mrglscores</value>
+  </data>
+  <data name="Find a chart" xml:space="preserve">
+	  <value>Mrgl a mrglchart</value>
+  </data>
 </root>

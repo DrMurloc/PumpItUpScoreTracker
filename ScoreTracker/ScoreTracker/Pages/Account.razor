@@ -1,302 +1,107 @@
 @page "/Account"
-@using ScoreTracker.Domain.SecondaryPorts
-@using ScoreTracker.ScoreLedger.Contracts.Queries
-@using ScoreTracker.PlayerProgress.Contracts.Queries
-@using ScoreTracker.PlayerProgress.Contracts.Commands
-@using ScoreTracker.ScoreLedger.Contracts.Commands
-@using MediatR
-@using ScoreTracker.Application.Commands
-@using ScoreTracker.Application.Queries
-@using ScoreTracker.SharedKernel.ValueTypes
-@using ScoreTracker.Web.Dtos
-@using CsvHelper
-@using System.Globalization
 @using System.Web
-@using Microsoft.AspNetCore.Localization
-@using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.Domain.Records
-@using ScoreTracker.Web.Services.Contracts
-@using System.Security.Authentication
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Identity.Contracts
-@using ScoreTracker.OfficialMirror.Contracts.Queries
-@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Components.Account
 
 <PageTitle>@L["Account"]</PageTitle>
 
-<MudCard>
-    <MudCardHeader>@L["Account"]</MudCardHeader>
-    <MudCardContent>
-        <MudGrid>
-            <MudItem xs="10">
-                <MudTextField Label="Id" Disabled="true" Value="@_id" HelperText=@L["Used Primarily for debugging"]></MudTextField>
-            </MudItem>
-            <MudItem xs="2">
-                <MudIconButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="CopyUserId" Icon="@Icons.Material.Filled.ContentCopy"></MudIconButton>
-            </MudItem>
-            <MudItem xs="12" sm="6">
-                <MudTextField T="string"
-                              Disabled="_isUpdatingUser || _isContentLocked"
-                              Label=@L["Username"]
-                              MaxLength="100"
-                              Value="@_name"
-                              ValueChanged="UpdateName"
-                              HelperText="@(_isContentLocked ? L["Your account is content-locked. Message an admin if you have questions."].Value : null)"></MudTextField>
-            </MudItem>
-            <MudItem xs="12" sm="6">
-                <MudSelect T="string" Value="_countryName" ValueChanged="UpdateCountry" Label=@L["Country"] Clearable="true">
-                    @foreach (var country in _countries)
-                    {
-                        <MudSelectItem T="string" Value="country.Name">
-                            <MudImage Height="15" ObjectFit="ObjectFit.ScaleDown" Src="@country.ImagePath.ToString()"></MudImage>
-                            @country.Name
-                        </MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="12" sm="6">
-                <MudSelect T="string" Disabled="_isUpdatingUser" Label="@L["Language"]" Value="_currentCulture" ValueChanged="UpdateCulture">
-                    <MudSelectItem T="string" Value=@("en-US")>English</MudSelectItem>
-                    <MudSelectItem T="string" Value=@("es-MX")>Español</MudSelectItem>
-                    <MudSelectItem T="string" Value=@("pt-BR")>Português</MudSelectItem>
-                    <MudSelectItem T="string" Value=@("ko-KR")>한국어</MudSelectItem>
-                    <MudSelectItem T="string" Value=@("ja-JP")>日本語</MudSelectItem>
-                    <MudSelectItem T="string" Value=@("fr-FR")>Français</MudSelectItem>
-                    <MudSelectItem T="string" Value=@("it-IT")>Italiano</MudSelectItem>
-                    <MudSelectItem T="string" Value=@("en-ZW")>Murloc</MudSelectItem>
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="12">
-                <MudSwitch T="bool" Disabled="_isUpdatingUser" Label=@L["Public"] Value="_isPublic" ValueChanged="() => _showPublicConfirmDialog = true" Color="Color.Success"></MudSwitch>
-            </MudItem>
-            <MudItem xs="12">
-                <MudTextField Label="API Token" Disabled="true" Value="@(_apiToken?.ToString()??string.Empty)" HelperText=@($"Authorization Header: Basic {Base64Encode(":"+_apiToken)}")></MudTextField>
-            </MudItem>
-            <MudItem xs="6" sm="4">
-                <MudButton OnClick="GenerateToken" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.GeneratingTokens">New Token</MudButton>
-            </MudItem>
-            @if (_apiToken != null)
-            {
-                <MudItem xs="6" sm="4">
-                    <MudButton OnClick="CopyToken" Disabled="_apiToken==null" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy">Copy Token</MudButton>
-                </MudItem>
-                <MudItem xs="6" sm="4">
-                    <MudButton Href="/swagger" Target="_blank" Variant="Variant.Outlined">API Documentation</MudButton>
-                </MudItem>
-            }
-        </MudGrid>
-    </MudCardContent>
-    <MudCardActions>
-        <MudSpacer></MudSpacer>
-        <MudButton Icon="@Icons.Material.Filled.Download" Variant="Variant.Filled" Color="Color.Primary" OnClick="DownloadScores">@L["Download Scores"]</MudButton>
-        <MudButton Href="/UploadXXScores" Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Filled" Color="Color.Primary">@L["Upload XX Scores"]</MudButton>
-        <MudButton Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Filled" Color="Color.Primary">@L["Import Phoenix Scores"]</MudButton>
-        <MudButton Icon="@Icons.Material.Filled.DeleteForever" Variant="Variant.Filled" Color="Color.Error" OnClick="OpenWipeDialog">@L["Delete All Scores"]</MudButton>
+<div class="d-flex align-center mb-4">
+    <MudText Typo="Typo.h4">@L["Account"]</MudText>
+    <MudSpacer></MudSpacer>
+    <MudButton Href="/Logout" StartIcon="@Icons.Material.Filled.Logout" Variant="Variant.Outlined">@L["Logout"]</MudButton>
+</div>
 
-        <MudButton Href="/Logout" Icon="@Icons.Material.Filled.Logout" Variant="Variant.Filled" Color="Color.Primary">@L["Logout"]</MudButton>
-    </MudCardActions>
-</MudCard>
-<br/>
-<MudCard>
-    <MudCardHeader>@L["Sign-In Methods"]</MudCardHeader>
-    <MudCardContent>
-        <MudText Typo="Typo.body2" Class="mb-4">@L["You can sign in to your account with any connected method"]</MudText>
-        @if (_externalLogins.Any() && _externalLogins.All(l => l.LoginProviderName.Equals("PiuGame", StringComparison.OrdinalIgnoreCase)))
+@if (_mergeInviteUserId != null)
+{
+    <MudAlert Severity="Severity.Warning" Class="mb-4">
+        @L["This sign-in method belongs to another account, you can merge the two accounts"]
+        <MudButton Class="ml-2" Variant="Variant.Filled" Color="Color.Warning" Size="Size.Small"
+                   Href="@($"/Account/Merge?with={_mergeInviteUserId}")">@L["Review and merge"]</MudButton>
+    </MudAlert>
+}
+@foreach (var merge in _activeMerges)
+{
+    <MudAlert Severity="Severity.Info" Class="mb-4">
+        @L["Merged account data is deleted on", merge.PurgeAfter.ToString("d")]
+        @if (merge.SurvivorUserId == CurrentUser.User.Id)
         {
-            <MudAlert Severity="Severity.Warning" Class="mb-4">@L["PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method"]</MudAlert>
+            <MudButton Class="ml-2" Variant="Variant.Outlined" Size="Size.Small" Disabled="_isUndoingMerge"
+                       OnClick="() => UndoMerge(merge.Id)">@L["Undo Merge"]</MudButton>
         }
-        @if (_mergeInviteUserId != null)
-        {
-            <MudAlert Severity="Severity.Warning" Class="mb-4">
-                @L["This sign-in method belongs to another account, you can merge the two accounts"]
-                <MudButton Class="ml-2" Variant="Variant.Filled" Color="Color.Warning" Size="Size.Small"
-                           Href="@($"/Account/Merge?with={_mergeInviteUserId}")">@L["Review and merge"]</MudButton>
-            </MudAlert>
-        }
-        @foreach (var merge in _activeMerges)
-        {
-            <MudAlert Severity="Severity.Info" Class="mb-4">
-                @L["Merged account data is deleted on", merge.PurgeAfter.ToString("d")]
-                @if (merge.SurvivorUserId == CurrentUser.User.Id)
-                {
-                    <MudButton Class="ml-2" Variant="Variant.Outlined" Size="Size.Small" Disabled="_isUndoingMerge"
-                               OnClick="() => UndoMerge(merge.Id)">@L["Undo Merge"]</MudButton>
-                }
-            </MudAlert>
-        }
-        <MudGrid>
-            @foreach (var provider in ConnectedProviders)
-            {
-                <MudItem xs="6" Style="align-content: center;">
-                    <MudIcon Icon="@ProviderIcon(provider)" Style="vertical-align: middle;" Class="mr-2"></MudIcon>
-                    <MudText Inline="true">@(provider.Equals("PiuGame", StringComparison.OrdinalIgnoreCase) ? "PIUGAME" : provider)</MudText>
-                </MudItem>
-                <MudItem xs="6">
-                    <MudTooltip Text="@(ConnectedProviders.Count == 1 ? L["This is your only sign-in method and cannot be disconnected"].Value : string.Empty)">
-                        <MudButton Variant="Variant.Outlined" Color="Color.Error"
-                                   Disabled="ConnectedProviders.Count == 1"
-                                   OnClick="() => OpenDisconnectDialog(provider)">@L["Disconnect"]</MudButton>
-                    </MudTooltip>
-                </MudItem>
-            }
-        </MudGrid>
-    </MudCardContent>
-    <MudCardActions>
-        <MudSpacer></MudSpacer>
-        @foreach (var provider in ConnectableProviders.Where(p => !ConnectedProviders.Contains(p, StringComparer.OrdinalIgnoreCase)))
-        {
-            <MudButton Href="@($"/Login/{provider}/Link")" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@ProviderIcon(provider)">@L["Connect"] @provider</MudButton>
-        }
-        @if (!ConnectedProviders.Contains("PiuGame", StringComparer.OrdinalIgnoreCase))
-        {
-            <MudButton OnClick="OpenPiuGameDialog" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.SportsEsports">@L["Connect"] PIUGAME</MudButton>
-        }
-        <MudButton Href="/Account/Merge" Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.MergeType">@L["Merge another account"]</MudButton>
-    </MudCardActions>
-</MudCard>
+    </MudAlert>
+}
 
-<MudDialog @bind-Visible="_showPiuGameDialog">
-    <TitleContent>
-        <MudText Typo="Typo.h6">@L["Connect"] PIUGAME</MudText>
-    </TitleContent>
-    <DialogContent>
-        <MudAlert Severity="Severity.Info" Class="mb-4">@L["Your username and password are sent directly to piugame.com and are never stored"]</MudAlert>
-        <MudTextField T="string" Label="@L["PIUGame.com Username"].Value" Disabled="_isConnectingPiuGame" @bind-Value="_piuGameUsername"></MudTextField>
-        <MudTextField T="string" InputType="InputType.Password" Label="@L["PIUGame.com Password"].Value" Disabled="_isConnectingPiuGame" @bind-Value="_piuGamePassword"></MudTextField>
-    </DialogContent>
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text"
-                   OnClick="() => _showPiuGameDialog = false"
-                   Disabled="_isConnectingPiuGame"
-                   Color="Color.Primary">@L["Cancel"]</MudButton>
-        <MudButton Variant="Variant.Filled"
-                   OnClick="ConnectPiuGame"
-                   Disabled="@(_isConnectingPiuGame || string.IsNullOrWhiteSpace(_piuGameUsername) || string.IsNullOrWhiteSpace(_piuGamePassword))"
-                   Color="Color.Primary">@L["Connect"]</MudButton>
-    </DialogActions>
-</MudDialog>
-
-<MudDialog @bind-Visible="_showDisconnectDialog">
-    <TitleContent>
-        <MudText Typo="Typo.h6">@L["Disconnect Sign-In Method"]</MudText>
-    </TitleContent>
-    <DialogContent>
-        <MudText>@L["You will no longer be able to sign in with this method"] (@(_disconnectTarget ?? ""))</MudText>
-    </DialogContent>
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text"
-                   OnClick="() => _showDisconnectDialog = false"
-                   Disabled="_isDisconnecting"
-                   Color="Color.Primary">@L["Cancel"]</MudButton>
-        <MudButton Variant="Variant.Filled"
-                   OnClick="ConfirmDisconnect"
-                   Disabled="_isDisconnecting"
-                   Color="Color.Error">@L["Confirm"]</MudButton>
-    </DialogActions>
-</MudDialog>
-
-<MudDialog @bind-Visible="_showPublicConfirmDialog">
-    <DialogContent>
-        @if (_isPublic)
-        {
-            <MudText>@L["Make Not Public Disclaimer"]</MudText>
-
-        }
-        else
-        {
-            <MudText>@L["Make Public Disclaimer 1"]</MudText>
-            <br/>
-            <MudText>@L["Make Public Disclaimer 2"]</MudText>
-        }
-    </DialogContent>
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text"
-                   OnClick="()=>_showPublicConfirmDialog=false"
-                   Color="Color.Primary">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled"
-                   OnClick="ToggleIsPublic"
-                   Color="Color.Primary">@(_isPublic?@L["Make Private"]:@L["Make Public"])</MudButton>
-    </DialogActions>
-</MudDialog>
-
-<MudDialog @bind-Visible="_showWipeScoresDialog">
-    <TitleContent>
-        <MudText Typo="Typo.h6">@L["Delete All Scores"]</MudText>
-    </TitleContent>
-    <DialogContent>
-        <MudCheckBox T="bool" @bind-Value="_wipeAcknowledged" Color="Color.Error" Disabled="_isWiping">
-            @L["This will delete all of your scores and reset your player stats and title progress"]
-        </MudCheckBox>
-        <MudCheckBox T="bool" @bind-Value="_wipeIncludeHistory" Color="Color.Error" Disabled="_isWiping">
-            @L["(Optional) Also delete historical data"]
-        </MudCheckBox>
-    </DialogContent>
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text"
-                   OnClick="CancelWipeDialog"
-                   Disabled="_isWiping"
-                   Color="Color.Primary">@L["Cancel"]</MudButton>
-        <MudButton Variant="Variant.Filled"
-                   OnClick="ConfirmWipeScores"
-                   Disabled="@(!_wipeAcknowledged || _isWiping)"
-                   Color="Color.Error">@L["Confirm"]</MudButton>
-    </DialogActions>
-</MudDialog>
+<MudTabs @bind-ActivePanelIndex="_activeTab" Elevation="1" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+    <MudTabPanel Text="@L["Profile"]" Icon="@Icons.Material.Filled.Person">
+        <ProfilePanel></ProfilePanel>
+    </MudTabPanel>
+    <MudTabPanel Text="@L["Sign-In Methods"]" Icon="@Icons.Material.Filled.Lock">
+        <SignInMethodsPanel MergeInviteRaised="OnMergeInvite"></SignInMethodsPanel>
+    </MudTabPanel>
+    <MudTabPanel Text="@L["API"]" Icon="@Icons.Material.Filled.Code">
+        <ApiTokenPanel></ApiTokenPanel>
+    </MudTabPanel>
+</MudTabs>
 
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
 @inject ISnackbar Snackbar;
-@inject IUiSettingsAccessor UiSettings;
-@inject IJSRuntime JSRuntime;
-@inject IUserRepository Users;
-@inject AccountProofService Proofs;
 @code
 {
-
-    private string _id = string.Empty;
-    private string _name = string.Empty;
-    private bool _isPublic = false;
-    private bool _isContentLocked = false;
-    private bool _showPublicConfirmDialog = false;
-    private bool _showWipeScoresDialog = false;
-    private bool _wipeAcknowledged = false;
-    private bool _wipeIncludeHistory = false;
-    private bool _isWiping = false;
-    private bool _isUpdatingUser = false;
-    private IEnumerable<CountryRecord> _countries = Array.Empty<CountryRecord>();
-    private string _countryName = null;
-    private Guid? _apiToken;
-    private string _currentCulture = "en-US";
-    private IReadOnlyList<ExternalLoginRecord> _externalLogins = Array.Empty<ExternalLoginRecord>();
-    private static readonly string[] ConnectableProviders = { "Discord", "Google" };
-    private bool _showDisconnectDialog = false;
-    private bool _isDisconnecting = false;
-    private string? _disconnectTarget;
-
-    private IReadOnlyList<string> ConnectedProviders => _externalLogins
-        .Select(l => l.LoginProviderName)
-        .Distinct(StringComparer.OrdinalIgnoreCase)
-        .ToArray();
-
-    private static string ProviderIcon(string provider) => provider.ToLowerInvariant() switch
-    {
-        "discord" => Icons.Custom.Brands.Discord,
-        "google" => Icons.Custom.Brands.Google,
-        "facebook" => Icons.Custom.Brands.Facebook,
-        _ => Icons.Material.Filled.Login
-    };
-
-    private bool _showPiuGameDialog = false;
-    private bool _isConnectingPiuGame = false;
-    private string _piuGameUsername = string.Empty;
-    private string _piuGamePassword = string.Empty;
+    private int _activeTab = 0;
     private Guid? _mergeInviteUserId;
     private IReadOnlyList<AccountMergeRecord> _activeMerges = Array.Empty<AccountMergeRecord>();
     private bool _isUndoingMerge = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Login");
+            return;
+        }
+
+        var query = HttpUtility.ParseQueryString(new Uri(NavManager.Uri).Query);
+        _activeTab = query.Get("tab")?.ToLowerInvariant() switch
+        {
+            "signin" => 1,
+            "api" => 2,
+            _ => 0
+        };
+
+        if (Guid.TryParse(query.Get("mergeWith"), out var mergeWith))
+        {
+            _mergeInviteUserId = mergeWith;
+            _activeTab = 1;
+        }
+
+        switch (query.Get("linkResult"))
+        {
+            case "Linked":
+                Snackbar.Add(L["Sign-in method connected"], Severity.Success);
+                _activeTab = 1;
+                break;
+            case "AlreadyLinked":
+                Snackbar.Add(L["This sign-in method is already connected to your account"], Severity.Info);
+                _activeTab = 1;
+                break;
+            case "Conflict":
+                Snackbar.Add(L["This sign-in method is connected to a different account"], Severity.Warning);
+                _activeTab = 1;
+                break;
+        }
+
+        _activeMerges = (await Mediator.Send(new GetActiveAccountMergesQuery())).ToArray();
+    }
+
+    private void OnMergeInvite(Guid conflictingUserId)
+    {
+        _mergeInviteUserId = conflictingUserId;
+        StateHasChanged();
+    }
 
     private async Task UndoMerge(Guid mergeId)
     {
@@ -311,270 +116,5 @@
         {
             _isUndoingMerge = false;
         }
-    }
-
-    private void OpenPiuGameDialog()
-    {
-        _piuGameUsername = string.Empty;
-        _piuGamePassword = string.Empty;
-        _showPiuGameDialog = true;
-    }
-
-    private async Task ConnectPiuGame()
-    {
-        _isConnectingPiuGame = true;
-        try
-        {
-            var identity = await Mediator.Send(new GetPiuGameAccountIdentityQuery(_piuGameUsername, _piuGamePassword));
-            var outcome = await Mediator.Send(new LinkExternalAliasesCommand("PiuGame", identity.GetLoginAliases().ToArray()));
-            switch (outcome.Result)
-            {
-                case ExternalLinkResult.Linked:
-                    Snackbar.Add(L["Sign-in method connected"], Severity.Success);
-                    break;
-                case ExternalLinkResult.AlreadyLinked:
-                    Snackbar.Add(L["This sign-in method is already connected to your account"], Severity.Info);
-                    break;
-                case ExternalLinkResult.ConflictingAccount:
-                    Snackbar.Add(L["This sign-in method is connected to a different account"], Severity.Warning);
-                    if (outcome.ConflictingUserId != null)
-                    {
-                        // The credentials they just typed are proof of the conflicting
-                        // account's piugame login — the merge invitation is friction-free.
-                        Proofs.RecordProof(CurrentUser.User.Id, outcome.ConflictingUserId.Value);
-                        _mergeInviteUserId = outcome.ConflictingUserId;
-                    }
-
-                    break;
-            }
-
-            _externalLogins = (await Mediator.Send(new GetExternalLoginsQuery())).ToArray();
-            _showPiuGameDialog = false;
-        }
-        catch (InvalidCredentialException)
-        {
-            Snackbar.Add(L["Invalid username or password"], Severity.Error);
-        }
-        catch (HttpRequestException)
-        {
-            Snackbar.Add(L["Could not reach PIUGAME, try again later"], Severity.Error);
-        }
-        finally
-        {
-            _piuGamePassword = string.Empty;
-            _isConnectingPiuGame = false;
-        }
-    }
-
-    private void OpenDisconnectDialog(string provider)
-    {
-        _disconnectTarget = provider;
-        _showDisconnectDialog = true;
-    }
-
-    private async Task ConfirmDisconnect()
-    {
-        if (_disconnectTarget == null) return;
-        _isDisconnecting = true;
-        try
-        {
-            await Mediator.Send(new DisconnectExternalProviderCommand(_disconnectTarget));
-            _externalLogins = (await Mediator.Send(new GetExternalLoginsQuery())).ToArray();
-            Snackbar.Add(L["Sign-in method disconnected"], Severity.Success);
-            _showDisconnectDialog = false;
-        }
-        finally
-        {
-            _isDisconnecting = false;
-        }
-    }
-
-    private void ShowLinkResult()
-    {
-        var query = HttpUtility.ParseQueryString(new Uri(NavManager.Uri).Query);
-        if (Guid.TryParse(query.Get("mergeWith"), out var mergeWith)) _mergeInviteUserId = mergeWith;
-        switch (query.Get("linkResult"))
-        {
-            case "Linked":
-                Snackbar.Add(L["Sign-in method connected"], Severity.Success);
-                break;
-            case "AlreadyLinked":
-                Snackbar.Add(L["This sign-in method is already connected to your account"], Severity.Info);
-                break;
-            case "Conflict":
-                Snackbar.Add(L["This sign-in method is connected to a different account"], Severity.Warning);
-                break;
-        }
-    }
-    public static string Base64Encode(string plainText) 
-    {
-        var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
-        return System.Convert.ToBase64String(plainTextBytes);
-    }
-    private async Task UpdateCulture(string newCulture)
-    {
-        _isUpdatingUser = true;
-        await UiSettings.SetSetting("Culture", newCulture);
-        NavManager.NavigateTo($"/Culture/Set?culture={newCulture}&redirectUrl="+HttpUtility.UrlEncode("/Account"),forceLoad:true);
-    }
-    protected override async Task OnInitializedAsync()
-    {
-        if (!CurrentUser.IsLoggedIn)
-        {
-            NavManager.NavigateTo("/Login");
-            return;
-        }
-        var culture = await UiSettings.GetSetting("Culture");
-        _currentCulture = culture??CultureInfo.CurrentUICulture.ToString();
-        _id = CurrentUser.User.Id.ToString();
-        _name = CurrentUser.User.Name;
-        _countryName = CurrentUser.User.Country;
-        _isPublic = CurrentUser.User.IsPublic;
-        _isContentLocked = CurrentUser.User.IsContentLocked;
-        _apiToken = await Mediator.Send(new GetUserApiTokenQuery());
-        _countries = (await Users.GetCountries()).OrderBy(c => c.Name);
-        _externalLogins = (await Mediator.Send(new GetExternalLoginsQuery())).ToArray();
-        _activeMerges = (await Mediator.Send(new GetActiveAccountMergesQuery())).ToArray();
-        ShowLinkResult();
-    }
-
-    private async Task CopyUserId()
-    {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _id);
-        Snackbar.Add("Copied to Clipboard!", Severity.Success);
-    }
-    private async Task CopyToken()
-    {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _apiToken!.Value);
-        Snackbar.Add("Copied to Clipboard!", Severity.Success);
-    }
-
-    private async Task GenerateToken()
-    {
-        _apiToken = await Mediator.Send(new SetApiTokenCommand());
-        Snackbar.Add("New API Token Generated!", Severity.Success);
-    }
-    private async Task UpdateUser()
-    {
-        _isUpdatingUser = true;
-        await Mediator.Send(new UpdateUserCommand(_name,_isPublic,string.IsNullOrWhiteSpace(_countryName)?null:_countryName));
-           /*
-           Why does it always come back to javascript...
-           Blazor interacts over WebSockets that close HTTP responses before it processes.B
-           This means we can't update a user's signed in information (stored in a cookie) utilizing standard Blazor back end interactions
-           HttpClient interactions all happen via sockets in the back end, so does not contain cookie information for managing user claims.
-           So the conclusion was to do a quick javascript fetch to a Refresh endpoint to log out and log back in a user when their claims
-           are updated.
-           See https://github.com/dotnet/aspnetcore/issues/34095#issuecomment-874012924 for Microsoft's stance on this.
-           See: >:(  for my stance on this.*/
-        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
-        await module.InvokeVoidAsync("refreshLogin");
-        _isUpdatingUser = false;
-    }
-
-    private async Task ToggleIsPublic()
-    {
-        _showPublicConfirmDialog = false;
-        _isPublic = !_isPublic;
-        await UpdateUser();
-
-        var message = _isPublic ? "Public" : "Private";
-        Snackbar.Add($"Account made {message}", Severity.Success);
-    }
-
-    private async Task UpdateCountry(string newCountry)
-    {
-        _countryName = newCountry;
-        await UpdateUser();
-        
-    }
-    private async Task UpdateName(string newName)
-    {
-        if (Name.TryParse(newName, out var name) || name.ToString().Length>100)
-        {
-            _name = name;
-            await UpdateUser();
-            Snackbar.Add($"User Profile Up set to {_name}",Severity.Success);
-        }
-        else
-        {
-            Snackbar.Add("Invalid Name",Severity.Error);
-        }
-    }
-
-    private void OpenWipeDialog()
-    {
-        _wipeAcknowledged = false;
-        _wipeIncludeHistory = false;
-        _showWipeScoresDialog = true;
-    }
-
-    private void CancelWipeDialog()
-    {
-        _showWipeScoresDialog = false;
-    }
-
-    private async Task ConfirmWipeScores()
-    {
-        _isWiping = true;
-        try
-        {
-            await Mediator.Send(new WipeUserScoresCommand(CurrentUser.User.Id, _wipeIncludeHistory));
-            Snackbar.Add(L["Your scores have been deleted"], Severity.Success);
-            _showWipeScoresDialog = false;
-        }
-        finally
-        {
-            _isWiping = false;
-        }
-    }
-
-    private async Task DownloadScores()
-    {
-        var result = Array.Empty<object>();
-        if (await UiSettings.GetSelectedMix() == MixEnum.XX)
-        {
-            var scores = await Mediator.Send(new GetXXBestChartAttemptsQuery(CurrentUser.User.Id));
-            result = scores.OrderBy(s => s.Chart.Level).ThenBy(s => s.Chart.Type).Select(s => new XXSpreadsheetScoreDto
-            {
-                Difficulty = s.Chart.DifficultyString,
-                IsBroken = s.BestAttempt?.IsBroken.ToString() ?? "",
-                LetterGrade = s.BestAttempt?.LetterGrade.ToString() ?? "",
-                Score = s.BestAttempt?.Score?.ToString() ?? "",
-                Song = s.Chart.Song.Name
-
-            }).ToArray();
-        }
-        else
-        {
-            var scores = await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id));
-            var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
-            result = scores.OrderBy(s => charts[s.ChartId].Level).ThenBy(s => charts[s.ChartId].Type)
-                .Select(s => new
-                {
-                    Difficulty = charts[s.ChartId].DifficultyString,
-                    RecordedDate = s.RecordedDate.ToString("d"),
-                    Song = charts[s.ChartId].Song.Name.ToString(),
-                    IsBroken=s.IsBroken.ToString(),
-                    LetterGrade=s.Score?.LetterGrade.GetName(),
-                    Score=s.Score?.ToString(),
-                    Plate=s.Plate?.GetName()
-                }).ToArray();
-        }
-        
-
-        var stream = new MemoryStream();
-        await using var writer = new StreamWriter(stream);
-        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-        await csv.WriteRecordsAsync(result);
-        await writer.FlushAsync();
-        await csv.FlushAsync();
-        const string fileName = "scores.csv";
-
-        using var streamRef = new DotNetStreamReference(stream: stream);
-        stream.Seek(0, SeekOrigin.Begin);
-
-        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
-        await module.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
     }
 }

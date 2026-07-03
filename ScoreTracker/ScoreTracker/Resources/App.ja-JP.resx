@@ -2150,4 +2150,37 @@
   <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
     <value>ゲームタグ{0}のアカウントがすでに存在します。あなたですか？</value>
   </data>
+  <data name="Profile" xml:space="preserve">
+    <value>プロフィール</value>
+  </data>
+  <data name="API" xml:space="preserve">
+    <value>API</value>
+  </data>
+  <data name="Your Data" xml:space="preserve">
+    <value>あなたのデータ</value>
+  </data>
+  <data name="Danger Zone" xml:space="preserve">
+    <value>危険な操作</value>
+  </data>
+  <data name="Play" xml:space="preserve">
+    <value>プレイ</value>
+  </data>
+  <data name="My Progress" xml:space="preserve">
+    <value>マイ進捗</value>
+  </data>
+  <data name="Compete" xml:space="preserve">
+    <value>競争</value>
+  </data>
+  <data name="Community" xml:space="preserve">
+    <value>コミュニティ</value>
+  </data>
+  <data name="Rankings" xml:space="preserve">
+    <value>ランキング</value>
+  </data>
+  <data name="Import Scores" xml:space="preserve">
+    <value>スコアインポート</value>
+  </data>
+  <data name="Find a chart" xml:space="preserve">
+    <value>チャートを探す</value>
+  </data>
 </root>
