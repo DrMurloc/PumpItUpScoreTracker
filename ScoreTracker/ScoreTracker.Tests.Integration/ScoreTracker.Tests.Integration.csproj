@@ -5,6 +5,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
+    <!-- Deliberately the AppHost's id: local secrets live in ONE store (the Aspire AppHost's),
+         so a `dotnet user-secrets set` against ScoreTracker.AppHost also configures the
+         live-site tests. Only PiuTest:* keys are read here. -->
+    <UserSecretsId>2957ac5b-8cbb-49cf-be12-3b607ea9b818</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +22,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.2" />
     <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="Testcontainers.MsSql" Version="4.7.0" />
     <PackageReference Include="Respawn" Version="6.2.1" />
