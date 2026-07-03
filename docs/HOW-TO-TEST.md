@@ -43,9 +43,26 @@ dotnet test ScoreTracker/ScoreTracker.Tests.Integration/ScoreTracker.Tests.Integ
 
 **Docker Desktop must be running.** The suite provisions its own ephemeral SQL Server 2025 container via Testcontainers (first run pulls the image, ~2 min), applies every EF migration, runs the tests with Respawn wiping the `scores` schema between them, and tears the container down. No local SQL setup or connection string needed.
 
+### Live-site smoke tests — PIU account required
+
+`Tests.Integration/LiveSite/` exercises every scraper method the score-import flow depends on **against the real phoenix.piugame.com** — the code most likely to break in production, since PIU changes their site without notice. The tests need a real PIU account and **skip automatically when none is configured**, so they never affect contributors.
+
+To run them locally, configure credentials once in the shared user-secrets store (the same one the Aspire AppHost uses):
+
+```sh
+dotnet user-secrets set "PiuTest:Username" "..." --project ScoreTracker/ScoreTracker.AppHost
+dotnet user-secrets set "PiuTest:Password" "..." --project ScoreTracker/ScoreTracker.AppHost
+```
+
+(`PIU_TEST_USERNAME` / `PIU_TEST_PASSWORD` environment variables also work and take precedence.) Then:
+
+```sh
+dotnet test ScoreTracker/ScoreTracker.Tests.Integration/ScoreTracker.Tests.Integration.csproj --filter "FullyQualifiedName~PiuGameLiveSiteTests"
+```
+
 ### What CI runs
 
-Every PR and every merge to `main` runs all three suites on [Azure Pipelines](https://dev.azure.com/joneccker/ScoreTracker) — the fast suites on a Windows agent, the integration suite on a Linux agent with Docker. Merges to `main` additionally build the deployable artifact and wait at a manual approval gate before deploying.
+Every PR and every merge to `main` runs all three suites on [Azure Pipelines](https://dev.azure.com/joneccker/ScoreTracker) — the fast suites on a Windows agent, the integration suite on a Linux agent with Docker. **The live-site smoke tests run in CI too**: the integration job pulls a PIU test account from Azure Key Vault, so scraper breakage fails the build — and since the deploy stage only runs after a green Build stage, a broken importer can't reach production. Merges to `main` additionally build the deployable artifact and wait at a manual approval gate before deploying.
 
 ## Conventions
 
