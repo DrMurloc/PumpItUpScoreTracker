@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -29,8 +30,20 @@ public sealed class PiuGameSessionFixture : IDisposable
 
     public string? SessionId { get; private set; }
 
-    public static string? Username => Environment.GetEnvironmentVariable("PIU_TEST_USERNAME");
-    public static string? Password => Environment.GetEnvironmentVariable("PIU_TEST_PASSWORD");
+    // This project shares the Aspire AppHost's UserSecretsId (see the csproj), so credentials
+    // configured once for local dev also drive these tests:
+    //   dotnet user-secrets set "PiuTest:Username" "..." --project ScoreTracker/ScoreTracker.AppHost
+    // Environment variables (PIU_TEST_USERNAME / PIU_TEST_PASSWORD) still win when both are set.
+    private static readonly Lazy<IConfigurationRoot> Configuration = new(() =>
+        new ConfigurationBuilder()
+            .AddUserSecrets<PiuGameSessionFixture>(optional: true)
+            .Build());
+
+    public static string? Username =>
+        Environment.GetEnvironmentVariable("PIU_TEST_USERNAME") ?? Configuration.Value["PiuTest:Username"];
+
+    public static string? Password =>
+        Environment.GetEnvironmentVariable("PIU_TEST_PASSWORD") ?? Configuration.Value["PiuTest:Password"];
 
     public static bool CredentialsConfigured =>
         !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(Password);
