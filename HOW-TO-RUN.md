@@ -20,7 +20,7 @@ git clone https://github.com/DrMurloc/PumpItUpScoreTracker.git
 cd PumpItUpScoreTracker
 ```
 
-That downloads the repository into a `PumpItUpScoreTracker` folder. If you plan to contribute, [fork the repo on GitHub](https://github.com/DrMurloc/PumpItUpScoreTracker/fork) first and clone your fork instead — see [CONTRIBUTING.md](CONTRIBUTING.md).
+That downloads the repository into a `PumpItUpScoreTracker` folder. If you plan to contribute, ping DrMurloc on [Discord](https://discord.gg/AvS5PxnvSN) for repo access, then branch from `main` — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Getting your environment set up
 
