@@ -2,11 +2,11 @@
 
 [Pump It Up](https://en.wikipedia.org/wiki/Pump_It_Up_\(video_game_series\)) (PIU) is a five-panel dance arcade game by [Andamiro](https://www.piugame.com/). Players step on arrows in time with music. This document defines the PIU and project terms the code uses, in a form approachable to people who haven't played the game.
 
-For solution layout and patterns, see [ARCHITECTURE.md](ARCHITECTURE.md). For project conventions, see [CLAUDE.md](CLAUDE.md). For the product's mission, audiences, and direction, see [PRODUCT.md](PRODUCT.md).
+For solution layout and patterns, see [ARCHITECTURE.md](ARCHITECTURE.md). For project conventions, see [CLAUDE.md](CLAUDE.md).
 
 ## Game basics
 
-- **Pump It Up** — the arcade series. Current release: **Pump It Up 2024 Phoenix** (May 2024). **Phoenix 2** is scheduled for May 2026. Most of this codebase models the Phoenix-era game.
+- **Pump It Up** — the arcade series. Current release: **Phoenix 2** (launched 2026-07-01), preceded by **Pump It Up 2024 Phoenix** (May 2024). Most of this codebase models the Phoenix-era game; Phoenix 2 import support is in progress.
 - **Mix** — a version of PIU. Two mix families matter here: **Phoenix** (current) and **XX** (legacy, pre-Phoenix). Modeled by `MixEnum`.
 - **Song** — a piece of music: title, artist, duration, BPM. One song typically has multiple charts. See [`Song`](ScoreTracker/ScoreTracker.Domain/Models/Song.cs).
 - **Chart** — a specific playable arrangement of a song: a difficulty level + chart type (Single, Double, Co-op) + step pattern. A given song often has many charts (e.g. Single S15, Single S20, Double D18, Co-op-2). See [`Chart`](ScoreTracker/ScoreTracker.Domain/Models/Chart.cs).

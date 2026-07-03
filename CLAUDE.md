@@ -169,12 +169,12 @@ Deliberate, documented divergences. Read these before flagging a violation.
 
 ## Architecture authority
 
-`ARCHITECTURE.md` is the source of truth for solution layout, full dependency graph, eventing detail, data-access detail, glossary (Mix, Chart, Phoenix score, Pumbility, Tier list, Bounty, UCS, Saga), known divergences, and open questions. Update it in the same PR that changes a structural pattern.
+`ARCHITECTURE.md` is the human-facing source of truth: architecture philosophy (bounded-context verticals, DDD + onion + hexagonal) and the code map (solution layout, vertical anatomy, pages/components, login flow, data access). Update it in the same PR that changes a structural pattern. The machine-enforceable conventions (package allowlists, message taxonomy, test patterns) live in this file; decision rationale for the vertical architecture lives in [docs/adr/ADR-001-subdomain-verticals.md](docs/adr/ADR-001-subdomain-verticals.md), which code comments cite as `ADR-001 D2/D3/D4/Q8`.
 
-## Product & domain authority
+## Domain authority
 
-[PRODUCT.md](PRODUCT.md) is the source of truth for mission, audience segments, and the core/supporting classification — consult it when judging feature fit or priority. [CONTEXTS.md](CONTEXTS.md) is the **working** bounded-context map feeding the planned rearchitecture (see BACKLOG.md); treat it as direction, not current structure — `ARCHITECTURE.md` still describes the code as it is.
+[DOMAIN.md](DOMAIN.md) is the glossary for PIU and project terms (Mix, Chart, Phoenix score, Pumbility, Tier list, UCS, Saga). The maintainer is redoing product/roadmap docs post-Phoenix-2; until they exist, feature-fit and priority questions go to the owner, not a doc.
 
-## Backlog
+## Documentation set
 
-[BACKLOG.md](BACKLOG.md) tracks the gaps between this codebase and `ENTERPRISE.md` that require real refactor work — real-dependency database tests, external-adapter coverage, dependency-realism labels, the `Data → Application` cleanup, etc. Items in `BACKLOG.md` are not current rules; consult it when picking up follow-on work, not when judging existing code.
+Reader-facing docs, kept current in the same PR as the change that invalidates them: [README.md](README.md), [HOW-TO-RUN.md](HOW-TO-RUN.md), [HOW-TO-TEST.md](HOW-TO-TEST.md), [ARCHITECTURE.md](ARCHITECTURE.md), [DATABASE-SCHEMA.md](DATABASE-SCHEMA.md) (new tables get a row), [API.md](API.md), [SCHEDULED-JOBS.md](SCHEDULED-JOBS.md) (new jobs get a row), [TECHNOLOGIES.md](TECHNOLOGIES.md), [CONTRIBUTING.md](CONTRIBUTING.md).

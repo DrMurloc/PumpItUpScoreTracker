@@ -1,241 +1,153 @@
 # Architecture
 
-> Last verified against the rearch branch (C54) on 2026-07-01. If you change structural patterns, update this file in the same PR.
+Two sections: the **philosophy** (why the code is shaped this way) and the **code map** (where things are). Domain terms (Mix, Chart, Phoenix score, Pumbility, UCS, …) are defined in [DOMAIN.md](DOMAIN.md).
 
-## Overview
+---
 
-Pump It Up Score Tracker is a Blazor Server web app (with MVC API controllers) for tracking Pump It Up scores, leaderboards, tournaments, and player progression. It follows an onion architecture: a pure `Domain` core, a `MediatR`-based `Application` layer, an EF Core `Infrastructure` layer, and a Blazor/MVC `Presentation` layer wired through a `CompositionRoot`. Asynchronous work is dispatched over MassTransit on an in-memory transport.
+## 1. Architecture Philosophy
 
-This file describes the code **as it is**. The working domain-boundary map feeding the planned rearchitecture is [CONTEXTS.md](CONTEXTS.md); product direction and audiences are in [PRODUCT.md](PRODUCT.md).
+### Verticals split by bounded context
 
-## Solution layout
+The system is decomposed into **vertical slices, one per bounded context** of the Pump It Up scoring domain. Each vertical is its own assembly owning its full stack — domain logic, application handlers, EF entities and repositories — with a deliberately small public surface:
 
-```
-ScoreTracker.sln
-├── Core (solution folder)
-│   ├── ScoreTracker.SharedKernel    — PIU Game Model: value types, enums, Chart/Song,
-│   │                                  scoring engine, IQuery marker (rearch P2)
-│   ├── ScoreTracker.Domain          — entities, ports, domain services
-│   ├── ScoreTracker.Application     — MediatR handlers, MassTransit consumers
-│   ├── ScoreTracker.PlayerProgress  — Player Progress vertical: ratings, titles,
-│   │                                  history, score quality, recommendations
-│   │                                  (owns PlayerStats/Titles/History tables)
-│   ├── ScoreTracker.Catalog         — Game Content Catalog vertical: chart/song
-│   │                                  reads, videos, skills (ADR Q5), randomizer
-│   │                                  (content writes still in Data, ADR Q2)
-│   ├── ScoreTracker.ChartIntelligence— Chart Intelligence vertical: tier lists,
-│   │                                  scoring/letter difficulties, difficulty +
-│   │                                  preference + co-op votes
-│   ├── ScoreTracker.WeeklyChallenge — Weekly Challenge vertical: board rotation,
-│   │                                  entries, placements (first vertical with no
-│   │                                  transitional Application reference)
-│   ├── ScoreTracker.EventCompetition— Event Competition vertical: tournaments,
-│   │                                  sessions, qualifiers, co-op teams, March of
-│   │                                  Murlocs (Match subsystem stays behind, C5-gated)
-│   ├── ScoreTracker.Communities     — Community vertical: communities, memberships,
-│   │                                  invites, Discord channel feeds (six event
-│   │                                  streams fan out to community channels)
-│   ├── ScoreTracker.OfficialMirror  — Official Game Mirror vertical: the PiuGame ACL
-│   │                                  (parsers + typed HttpClient), leaderboard/avatar
-│   │                                  mirror, world rankings, score import saga
-│   ├── ScoreTracker.ScoreLedger     — Score Ledger vertical: Phoenix + XX best
-│   │                                  attempts, score event journal, IScoreReader
-│   │                                  impl, score batch/publish pipeline
-│   ├── ScoreTracker.Ucs             — first subdomain vertical (rearch P5 template):
-│   │                                  public Contracts/ + Wiring/, internal
-│   │                                  Domain/Application/Infrastructure
-│   └── ScoreTracker.Identity        — Identity vertical (P6): accounts, external
-│                                      logins, api tokens, UI settings, content
-│                                      locks (user entities still in Data)
-│                                      public Contracts/ + Wiring/, internal
-│                                      Domain/Application/Infrastructure
-├── Infrastructure (solution folder)
-│   └── ScoreTracker.Data            — EF Core, repositories, external API clients
-├── Presentation (solution folder)
-    ├── ScoreTracker.Web             — Blazor Server pages + MVC API controllers
-    ├── ScoreTracker.CompositionRoot — DI extension that wires Infrastructure
-    ├── ScoreTracker.Tests           — xUnit tests
-    ├── ScoreTracker.AppHost         — Aspire local-dev orchestration: deterministic
-    │                                  SQL container, config/secret flow-through
-    └── ScoreTracker.ServiceDefaults — OTel/resilience defaults for the Web host
-```
+- **`Contracts/`** — the only types other assemblies may consume: commands, queries, DTO records, and the events the vertical publishes.
+- **`Wiring/`** — the DI hook (`AddXxx()`), the bus-consumer hook (`AddXxxConsumers(...)`), and the vertical's database-model contribution.
+- **Everything else is `internal`**, compiler-enforced. EF entities and internal domain types never cross the boundary.
 
-All projects target `net10.0` with nullable + implicit usings enabled.
+Cross-vertical communication happens two ways, and only two ways:
 
-### Project reference graph
+1. **Contracts** — one vertical sends another's published commands/queries via MediatR, or consumes its published events off the bus.
+2. **Published ports** — read interfaces (e.g. `IScoreReader`, `IPlayerStatsReader`) for high-traffic reads.
+
+**Never SQL joins onto another vertical's tables.** A vertical's tables are private storage, not an integration surface. This is what keeps a vertical extractable: its data model can change shape without a ripple, because nothing else touches it below the contract line.
+
+The verticals: **ScoreLedger** (the system of record for scores), **PlayerProgress** (ratings, titles, history), **ChartIntelligence** (tier lists, difficulty analytics), **Catalog** (game content reads, videos, skills), **OfficialMirror** (the anti-corruption layer against the official PiuGame site), **WeeklyChallenge**, **EventCompetition** (tournaments), **Communities**, **Ucs** (user-created steps), and **Identity** (accounts, logins, tokens).
+
+### Onion (dependency direction)
+
+Within and across layers, dependencies point **inward, toward the domain**:
 
 ```
 SharedKernel ◄── Domain ◄── Application ◄── Data ◄── verticals ◄── Web ◄── CompositionRoot
 ```
 
-- `SharedKernel` references nothing (MediatR carve-out only). Holds the PIU Game Model: all value types, enums, the value-type exceptions, `Chart`/`Song`, `LifebarSimulator`, the `ScoringConfiguration` engine, and the `IQuery<T>` marker. **Namespaces are honest as of the P6 sweep (C54)**: `ScoreTracker.SharedKernel.ValueTypes`/`.Enums`/`.Models` (Chart, Song, LifebarSimulator, ScoringConfiguration) — the transitional `ScoreTracker.Domain.*` aliasing is gone.
-- `Domain` references `SharedKernel` only.
-- `Application` references `Domain` only (PersonalProgress dissolved into the `PlayerProgress` vertical, rearch C49).
-- `Data` references `Application` and `Domain`. **The Application reference is a known divergence — see [Known divergences](#known-divergences-and-tech-debt).**
-- `CompositionRoot` references `Application`, `Data`, and every vertical (currently `Ucs`).
-- `Web` references `CompositionRoot` and every vertical.
-- `Tests` references `Application`, `Data`, and every vertical (currently `Ucs`).
-- **Vertical assemblies** (rearch P5; template: `ScoreTracker.Ucs`; also extracted: `ScoreTracker.ScoreLedger`, `ScoreTracker.OfficialMirror`, `ScoreTracker.Catalog`, `ScoreTracker.ChartIntelligence`, `ScoreTracker.WeeklyChallenge`, `ScoreTracker.EventCompetition`, `ScoreTracker.Communities`, `ScoreTracker.PlayerProgress`) reference `Domain` (shared ports, contract events) and — transitionally, until Data dissolves at P6 — `Data` (the shared `ChartAttemptDbContext`). Only `Catalog` still references `Application` transitionally (handles `GetRandomChartsQuery`, which stays in `Application` because MatchSaga sends it — drops at C5). `Communities → PlayerProgress` covers `GetTop50ForPlayerQuery`; `Communities`/`PlayerProgress` → `Catalog` cover the chart reads; `PlayerProgress` → `ChartIntelligence` covers the tier-list reads; `OfficialMirror`/`Communities`/`PlayerProgress` → `Identity` cover `SaveUserUiSettingCommand` and the user lifecycle events (`UserCreatedEvent`/`UserUpdatedEvent` live in `Identity.Contracts.Events`). Cross-vertical reads go through published ports/contracts, never SQL joins onto another vertical’s tables (C50 converted the last three: community leaderboards and score-count cohorts read `IPlayerStatsReader`, tier-list cohorts read `ITitleRepository`; per-score Pumbility stats storage moved to the Ledger, written by PlayerProgress through `IPhoenixRecordStatsRepository`). Vertical→vertical contract references exist where one vertical consumes another's published surface: `OfficialMirror → ScoreLedger` (`UpdatePhoenixBestAttemptCommand`), `ScoreLedger → Communities` (`GetCommunityMembersQuery` replaced the completion-leaderboard's raw membership join). Within a vertical only the `Contracts/` namespace (commands, queries, DTO records) and `Wiring/` (the `AddXxx()` DI extension + `IDbModelContribution`) are public; the internal `Domain/Application/Infrastructure` layers are compiler-enforced (`internal` + `InternalsVisibleTo` for the test projects and Moq's `DynamicProxyGenAssembly2`). **MassTransit's `AddConsumers` assembly scan skips internal types** (MediatR's scan does not) — a vertical with bus consumers exposes an `AddXxxConsumers(IRegistrationConfigurator)` hook in `Wiring/` that `Program.cs` calls inside `AddMassTransit`. Ratchets: `VerticalBoundaryTests` (public-surface + MediatR/MassTransit discovery tripwires), `MessageTaxonomyTests` (scans vertical contracts). `Application` must not reference verticals (it would cycle through `Data → Application`) — a contract event can move into a vertical's `Contracts/Events/` only once every consumer has left `Application` (`UcsLeaderboardPlacedEvent` moved to `Ucs.Contracts.Events` when `CommunitySaga` extracted; `Communities → Ucs` is the consuming reference).
+- **SharedKernel** holds the PIU game model — value types (`PhoenixScore`, `DifficultyLevel`, …), enums, `Chart`/`Song`, the scoring engine. It references nothing.
+- **Domain** holds entities, domain services, and the *ports* (interfaces) everything outside must implement. No EF, no HTTP, no vendor SDKs.
+- **Application** orchestrates use cases via MediatR handlers. It knows the domain and the ports — never that it's behind a web server or in front of SQL Server.
+- **Infrastructure** (`Data`, and each vertical's internal `Infrastructure/`) implements the ports: EF repositories, HTTP clients, blob/email/Discord adapters.
+- **Presentation** (`Web`) renders UI and translates HTTP to MediatR dispatches. It contains no business logic and touches no repository directly.
+- **CompositionRoot** wires it all together — the only place that knows every concrete type.
 
-## Layers
+Business rules live in the center and have no idea what database, web framework, or vendor happens to surround them today.
 
-### Core — `ScoreTracker.Domain`
+### Hexagonal (ports & adapters)
 
-- **Responsibility** — Domain entities, value types, enums, exceptions, secondary ports (interfaces), and pure domain services.
-- **Key types / namespaces**
-  - `ScoreTracker.Domain.Models.*` — aggregates and entities (e.g. [`User`](ScoreTracker/ScoreTracker.Domain/Models/User.cs), [`Chart`](ScoreTracker/ScoreTracker.Domain/Models/Chart.cs), [`Song`](ScoreTracker/ScoreTracker.Domain/Models/Song.cs), [`TournamentSession`](ScoreTracker/ScoreTracker.Domain/Models/TournamentSession.cs)).
-  - `ScoreTracker.Domain.ValueTypes.*` — strongly-typed primitives (e.g. [`Name`](ScoreTracker/ScoreTracker.Domain/ValueTypes/Name.cs), [`PhoenixScore`](ScoreTracker/ScoreTracker.Domain/ValueTypes/PhoenixScore.cs), [`DifficultyLevel`](ScoreTracker/ScoreTracker.Domain/ValueTypes/DifficultyLevel.cs), [`Bpm`](ScoreTracker/ScoreTracker.Domain/ValueTypes/Bpm.cs)).
-  - `ScoreTracker.Domain.Records.*` — read-shaped records used as query results (e.g. `PlayerStatsRecord`, `LeaderboardRecord`).
-  - `ScoreTracker.Domain.Enums.*` — domain enums (`MixEnum`, `ChartType`, `PhoenixLetterGrade`, etc.).
-  - `ScoreTracker.Domain.SecondaryPorts.*` — repository and client interfaces (`IChartRepository`, `IUserRepository`, `IBotClient`, `ICurrentUserAccessor`, `IDateTimeOffsetAccessor`, …). All persistence and integration is invoked through these.
-  - `ScoreTracker.Domain.Services.*` — domain services with `Contracts` for interfaces (`IUserAccessService`, `IWorldRankingService`).
-  - `ScoreTracker.Domain.Events.*` — past-tense fact records published over MassTransit. (Imperative bus *trigger* messages live in `ScoreTracker.Application.Messages` — see Eventing.)
-  - `ScoreTracker.Domain.Exceptions.*` — domain exceptions (`InvalidNameException`, `ChartNotFoundException`, …).
-  - `ScoreTracker.Domain.Views.*` — projection types used by the Match feature.
-- **Dependencies** — `MediatR` and `Microsoft.Extensions.Logging.Abstractions` only, plus the `ScoreTracker.SharedKernel` project. No EF, no MassTransit (the abstractions live one layer up), no ASP.NET. Note: the `ValueTypes`, `Enums`, and `Chart`/`Song`/`LifebarSimulator`/`ScoringConfiguration` live in SharedKernel under `ScoreTracker.SharedKernel.*` namespaces (honest since C54).
-- **Conventions**
-  - Value types are immutable structs/records with static `From(...)` factories that throw a domain exception on invalid input.
-  - Ports use the `I*Repository`, `I*Client`, `I*Accessor` naming.
-  - Records under `Records/` are flat, read-only DTO-style shapes used for query results (not entities).
+Every external boundary is crossed through a **port defined in the domain** (`I*Repository`, `I*Client`, `I*Accessor` in `Domain.SecondaryPorts`) and implemented by an **adapter in infrastructure** (`EFUserRepository`, `AzureBlobFileUploadClient`, `DiscordBotClient`, …). One implementation per port; DI binds them by reflection in the CompositionRoot. Swapping SQL Server, blob storage, or the email provider is an adapter change, not a domain change. The same seam is what makes handlers testable — component tests mock ports, nothing else.
 
-### Application — `ScoreTracker.Application`
+### DDD, pragmatically
 
-- **Responsibility** — Orchestrate domain operations in response to MediatR requests and MassTransit messages. Holds command/query types and the handlers that fulfil them.
-- **Key types / namespaces**
-  - `ScoreTracker.Application.Commands.*` — `IRequest`/`IRequest<T>` records (e.g. [`CreateUserCommand`](ScoreTracker/ScoreTracker.Application/Commands/CreateUserCommand.cs), `UpdatePhoenixBestAttemptCommand`).
-  - `ScoreTracker.Application.Queries.*` — `IQuery<T>` records (`GetChartsQuery`, `GetTierListQuery`, …; `IQuery<T> : IRequest<T>` is the SharedKernel marker distinguishing reads from commands — see CLAUDE.md *Message taxonomy*).
-  - `ScoreTracker.Application.Handlers.*` — `IRequestHandler<,>` and `IConsumer<>` implementations. Two shapes:
-    - Single-purpose handlers: `CreateUserHandler`, `GetChartHandler`, …
-    - "Saga" classes: a single class implementing one `IConsumer<TEvent>` plus one or more `IRequestHandler` for related queries (e.g. [`BountySaga`](ScoreTracker/ScoreTracker.Application/Handlers/BountySaga.cs), `TierListSaga`, `MatchSaga`). These are not MassTransit `MassTransitStateMachine` sagas — they are plain handler classes grouped by feature.
-  - `ScoreTracker.Application.Events.MatchUpdatedEvent` — example of a `MediatR.INotification` (in-process pub/sub); contrast with Domain events that travel over MassTransit.
-- **Dependencies**
-  - `Domain` (entities, ports).
-  - `MediatR`, `MassTransit.Abstractions`, `Microsoft.Extensions.Caching.Memory`. **Does not** reference EF Core, ASP.NET, or `Microsoft.Extensions.DependencyInjection` — handlers are pure C# classes constructed via DI.
-- **Conventions**
-  - Commands and queries are `sealed record`s.
-  - Handlers are `sealed class`es with constructor-injected ports.
-  - "Saga" suffix denotes a feature-grouped handler class (consumer + related requests sharing dependencies). It does not imply state-machine semantics.
-  - Side-effect dispatch from a handler is via injected `IBus.Publish` (MassTransit) for cross-feature events; in-process notifications use `IMediator.Publish` with `INotification`.
+- **Value types validate at construction**: immutable structs/records with `static From(...)` factories that throw domain exceptions on invalid input. There is no such thing as an invalid `PhoenixScore` in flight.
+- **Rich models where invariants demand it** (e.g. `TournamentSession` enforces its approval workflow); **lean property-bag records** where they don't (`User`, `Song`, `Chart`). Rigor is spent where rules are dense.
+- **Message taxonomy is explicit**: *queries* (`IQuery<T>`, read-only, never on the bus), *commands* (imperative requests — MediatR for in-process, plain records on the bus for triggers), *events* (past-tense facts on the bus). Folder + name + interface tell you which is which, and architecture tests enforce it.
+- **A "Saga" here is a feature-grouped handler class** (one bus consumer plus related request handlers sharing dependencies) — not a state machine.
 
-### Infrastructure — `ScoreTracker.Data`
+### Dispatch, eventing, and scheduling
 
-- **Responsibility** — Concrete implementations of Domain ports: EF Core repositories, HTTP API clients, blob storage, email, and the Discord bot.
-- **Key types / namespaces**
-  - `ScoreTracker.Data.Persistence.ChartAttemptDbContext` — single `DbContext` with ~60 `DbSet`s. Connection string from `SqlConfiguration`, SQL Server provider.
-  - `ScoreTracker.Data.Persistence.ChartDbContextFactory` — `IDbContextFactory<ChartAttemptDbContext>` so repositories can create scoped contexts.
-  - `ScoreTracker.Data.Persistence.Entities.*` — EF entity types (separate from Domain models).
-  - `ScoreTracker.Data.Repositories.EF*Repository` — implementations of `ScoreTracker.Domain.SecondaryPorts.I*Repository` (e.g. [`EFUserRepository`](ScoreTracker/ScoreTracker.Data/Repositories/EFUserRepository.cs), `EFChartRepository`).
-  - `ScoreTracker.Data.Migrations.*` — 165 EF migrations from 2022-04 onward, plus `ChartAttemptDbContextModelSnapshot`.
-  - `ScoreTracker.Data.Apis.PiuGameApi` (+ `Apis/Contracts/IPiuGameApi`, `Apis/Dtos/*`) — HTTP client for the official PIU site, registered as a typed `HttpClient`.
-  - `ScoreTracker.Data.Clients.*` — `AzureBlobFileUploadClient`, `DiscordBotClient`, `OfficialSiteClient`, `PiuTrackerClient`, `SendGridAdminNotificationClient`.
-  - `ScoreTracker.Data.Configuration.*` — POCOs bound from configuration (`SqlConfiguration`, `AzureBlobConfiguration`, `DiscordConfiguration`, `SendGridConfiguration`).
-- **Dependencies** — EF Core SqlServer, Azure.Storage.Blobs, Discord.Net, HtmlAgilityPack, SendGrid, MediatR. Project references: `Domain`, **`Application` (divergence)**.
-- **Conventions**
-  - Repository class name is `EF<Port>` and implements one Domain port interface.
-  - Repositories take `IDbContextFactory<ChartAttemptDbContext>` and create their own context per repository instance.
-  - Some repositories also take `IMemoryCache` for read-side caching.
-  - All migrations live in `ScoreTracker.Data/Migrations/` and are applied manually (no startup `Migrate()` call observed).
+- **Synchronous use cases**: UI/API → `IMediator` → handler.
+- **Asynchronous side effects**: handlers publish to MassTransit (`IBus`); consumers in the owning vertical react. The transport is in-memory — fast, but mid-flight messages die with the process, so consumers are idempotent and anything that must re-fire is scheduled.
+- **Recurring work**: Hangfire (SQL-persisted, restart-safe) fires one-line publishers; the real work happens in bus consumers. See [SCHEDULED-JOBS.md](SCHEDULED-JOBS.md).
 
-### Presentation — `ScoreTracker.Web`
+### Enforcement over convention
 
-- **Responsibility** — Blazor Server UI, MVC API controllers, authentication, hosted background services, and process bootstrap.
-- **Key types / namespaces**
-  - [`Program.cs`](ScoreTracker/ScoreTracker/Program.cs) — single composition root for the process. Configures Razor Pages + Server-Side Blazor, MassTransit (in-memory + delayed scheduler), Hangfire (SQL Server storage + dashboard + recurring-job registrations), MediatR (multi-assembly scan), authentication (Discord/Google/Facebook OAuth + cookie + custom `ApiToken` scheme), MudBlazor, Application Insights, Swagger, localization, and calls `AddInfrastructure(...)` from `CompositionRoot`.
-  - `ScoreTracker.Web.Pages.*` — Blazor pages, organized by feature folders (`Admin/`, `Communities/`, `Competition/`, `Experiments/`, `OfficialLeaderboards/`, `Progress/`, `TierLists/`, `Tools/`). Pages dispatch via injected `IMediator`.
-  - `ScoreTracker.Web.Components.*` — Blazor components reused across pages.
-  - `ScoreTracker.Web.Controllers.Api.*` — MVC controllers under `api/*`. Controllers dispatch via `IMediator` and use `[ApiToken]` for auth.
-  - [`ScoreTracker.Web.HostedServices.RecurringJobRunner`](ScoreTracker/ScoreTracker/HostedServices/RecurringJobRunner.cs) — thin `IBus`-only runner whose methods are the entry points Hangfire serializes. One method per recurring job, each a one-line `_bus.Publish(new XEvent())`. Hangfire registrations live in `Program.cs` via `RecurringJob.AddOrUpdate<RecurringJobRunner>(id, r => r.Method(), cron)`. Cron expressions are UTC.
-  - `ScoreTracker.Web.HostedServices.BotHostedService` — Discord bot lifecycle.
-  - `ScoreTracker.Web.Accessors.*` — `HttpContextUserAccessor : ICurrentUserAccessor`, `DateTimeOffsetAccessor : IDateTimeOffsetAccessor`. Concrete implementations of Domain ports that depend on ASP.NET and so live here.
-  - `ScoreTracker.Web.Security.*` — `ApiTokenAttribute`, `ApiTokenAuthenticationScheme`, `ScoreTrackerClaimTypes`, [`HangfireDashboardAuthorization`](ScoreTracker/ScoreTracker/Security/HangfireDashboardAuthorization.cs) (`IDashboardAuthorizationFilter` gating `/hangfire` on `User.IsAdmin`).
-  - `ScoreTracker.Web.Services.*` — `PhoenixScoreFileExtractor` (Tesseract OCR), `UiSettingsAccessor`, `ChartVideoDisplayer`.
-- **Dependencies** — MudBlazor, Tesseract, MassTransit DI, Hangfire (AspNetCore + SqlServer), OAuth providers, Swashbuckle. Project references: `CompositionRoot` and every vertical.
-- **Conventions**
-  - Razor pages dispatch via `IMediator` injected with `[Inject]`. They do not call repositories or `DbContext` directly.
-  - `Controllers/Api/` for HTTP API; route prefix `api/<feature>`; `[ApiToken]` + `[EnableCors("API")]`.
-  - Configuration POCOs are bound in `Program.cs` via `Configuration.GetSection(...).Get<T>()` and `Services.Configure<T>(...)`.
+The rules above are **ratcheted by architecture tests** (`ScoreTracker.Tests/ArchitectureTests/`): layer dependency rules, vertical public-surface checks, MediatR/MassTransit discovery tripwires, message-taxonomy scans. Rules are added, never removed. If you break the philosophy, the build tells you before a reviewer does. The machine-readable conventions (per-layer package allowlists, test patterns) live in [CLAUDE.md](CLAUDE.md).
 
-## Cross-cutting concerns
+---
 
-- **Authentication** — Cookie-based `DefaultAuthentication` (30-day sliding) plus three OAuth providers (Discord, Google, Facebook) and a custom `ApiToken` scheme for API requests. Configured in `Program.cs`.
-- **Authorization** — Single policy named after `ApiTokenAttribute` (`ApiTokenAttribute.AuthPolicy`).
-- **Logging** — `Microsoft.Extensions.Logging` injected as `ILogger<T>`. No custom logging infrastructure.
-- **Telemetry** — Blazor Application Insights via `AddBlazorApplicationInsights()`.
-- **Localization** — `AddLocalization` with `Resources/` path; supported cultures `en-US, pt-BR, ko-KR, en-ZW, es-MX, fr-FR, ja-JP, it-IT`; default `en-US`. A scoped `IStringLocalizer<App>` is injected globally as `L` via [_Imports.razor](ScoreTracker/ScoreTracker/_Imports.razor); strings are resolved with `L["..."]` in Razor markup or `L.GetString("...")` from code. Resource keys use **English UI text as the key verbatim** (e.g. `L["Add to Favorites"]`, `L["Recorded Date"]`). Format strings keep their literal English in the key and use positional placeholders in the value (e.g. key `"You are X place!"` → value `"You are {0} Place!"`, called as `L["You are X place!", placeText]`). Title case in the English source is preserved in the key. Missing keys in non-en resx files fall back to the key string itself, so en-US.resx is the complete superset. **When adding new keys, populate every locale resx file in the same pass** — `en-US`, `en-ZW`, `es-MX`, `fr-FR`, `it-IT`, `ja-JP`, `ko-KR`, `pt-BR`. Each non-English locale has a glossary at the repo root (`LOCALIZATION-<locale>.md`, e.g. [LOCALIZATION-it-IT.md](LOCALIZATION-it-IT.md)) that captures style conventions and established term mappings; follow that file's conventions and reuse its term mappings rather than inventing new ones. For `en-ZW` (Murloc-speak), there's no glossary — match the creative pattern of existing values in `App.en-ZW.resx`. **Skip prose paragraphs that contain inline markup** (e.g. a `<MudText>` body with embedded `<MudLink>` elements interrupting the sentence). Splitting such prose into fragment keys produces poor translations across languages with different word order, and embedding HTML in resx values is not a pattern this codebase has adopted. Leave these hardcoded English; the maintainer handles them manually.
-- **Caching** — `IMemoryCache` injected directly into select repositories (e.g. `EFUserRepository`). No global cache pipeline.
-- **Ambient services** — `ICurrentUserAccessor` (Domain port → `HttpContextUserAccessor` in Web), `IDateTimeOffsetAccessor` (Domain port → `DateTimeOffsetAccessor` in Web).
-- **MediatR pipeline** — None. No `IPipelineBehavior` implementations exist.
-- **Validation** — None as a pipeline. Value types validate at construction (e.g. `Name.From`); commands/queries do not run through a validator.
+## 2. Code Map
 
-## Eventing
+### Solution layout
 
-- **Library** — MassTransit `8.5.7` (`MassTransit.Abstractions` in Application; verticals with bus consumers carry full `MassTransit` for their AddXxxConsumers hooks). Web uses `MassTransit.Extensions.DependencyInjection 7.3.1` — a version skew, see tech debt.
-- **Transport** — In-memory (`UsingInMemory`). Configured in [Program.cs:56-69](ScoreTracker/ScoreTracker/Program.cs:56). Delayed message scheduler is enabled via `AddDelayedMessageScheduler` + `UseDelayedMessageScheduler`.
-- **Consumer registration** — `o.AddConsumers(typeof(RecurringJobRunner).Assembly)` scans `Web`; every saga now lives in a vertical and registers through its `AddXxxConsumers` hook (internal types are invisible to the scan).
-- **Events** (past-tense facts; records in `ScoreTracker.Domain.Events`)
-  - **Fat contract events** (rearch P3; envelope `EventId`/`OccurredAt`/`SchemaVersion`, primitives-only payloads that double as partner webhook bodies): `PlayerScoresUpdatedEvent`, `ScoreImportCompletedEvent`. Dual-published alongside their thin predecessors (`PlayerScoreUpdatedEvent`, `RecentScoreImportedEvent`) until the last consumer migrates; the Ledger's read contract is `IScoreReader` (consumers must not use `IPhoenixRecordRepository`).
-  - Score/import flow: `PlayerScoreUpdatedEvent`, `RecentScoreImportedEvent`, `PlayerRatingsImprovedEvent`, `PlayerStatsUpdatedEvent`, `ChartDifficultyUpdatedEvent`, `ImportStatusUpdatedEvent`, `ImportStatusErrorEvent`, `NewTitlesAcquiredEvent`, `TitlesDetectedEvent`, `UserCreatedEvent`, `UserUpdatedEvent`, `UserWeeklyChartsProgressedEvent`. (`UcsLeaderboardPlacedEvent` lives in `Ucs.Contracts.Events` — vertical-owned contract events sit in the publishing vertical's `Contracts/Events/` once no `Application` consumer remains.)
-  - Application-internal MediatR notification: `ScoreTracker.Application.Events.MatchUpdatedEvent` (`INotification`).
-- **Trigger messages** (imperative bus commands; records in `ScoreTracker.Application.Messages`) — published by `RecurringJobRunner` / admin pages to kick off work: `RotateWeeklyChartsCommand`, `RecalculateScoringDifficultyCommand`, `RecalculateChartLetterDifficultiesCommand`, `StartLeaderboardImportCommand`, `FlushOverdueScoreBatchesCommand`, `ProcessScoresTiersListCommand`, `ProcessPassTierListCommand`. They are requests, not facts — the consumer owns the decision (e.g. `RotateWeeklyChartsCommand` exits early when the current week hasn't expired).
-- **Publishers** — Razor pages (e.g. `UploadPhoenixScores.razor`, `Admin.razor`), Hangfire recurring jobs via `RecurringJobRunner`, and many handlers (`CreateUserHandler`, `UpdatePhoenixRecordHandler`, `UpdateUserHandler`, etc.) inject `IBus` and call `Publish`.
-- **Consumers** — The "Saga" classes inside the verticals (registered via their `AddXxxConsumers` hooks); `Application/Handlers` holds only MatchSaga (C5-gated) and single-purpose handlers.
-- **Operational implication** — Because the transport is in-memory, **in-flight bus messages do not survive a process restart**. Recurring schedules *do* survive restarts because they live in the Hangfire SQL Server store, not the bus — Hangfire re-fires according to its `MisfireHandlingMode` (default: schedule the next occurrence). Any ad-hoc `IBus.Publish` work that was mid-flight at restart is still lost.
+```
+ScoreTracker.sln
+├── Core
+│   ├── ScoreTracker.SharedKernel      PIU game model: value types, enums, Chart/Song,
+│   │                                  scoring engine, IQuery marker
+│   ├── ScoreTracker.Domain            entities, secondary ports, domain services, events
+│   ├── ScoreTracker.Application       MediatR handlers + bus trigger messages (shrinking:
+│   │                                  most logic now lives in verticals)
+│   ├── ScoreTracker.ScoreLedger       score system of record: Phoenix/XX best attempts,
+│   │                                  append-only ScoreEventJournal, IScoreReader
+│   ├── ScoreTracker.PlayerProgress    ratings, titles, player history, recommendations
+│   ├── ScoreTracker.ChartIntelligence tier lists, scoring/letter difficulties, votes
+│   ├── ScoreTracker.Catalog           chart/song reads, videos, skills, randomizer
+│   ├── ScoreTracker.OfficialMirror    PiuGame ACL: scraping, leaderboard mirror,
+│   │                                  world rankings, score import saga
+│   ├── ScoreTracker.WeeklyChallenge   weekly board rotation, entries, placements
+│   ├── ScoreTracker.EventCompetition  tournaments, sessions, qualifiers, co-op teams
+│   ├── ScoreTracker.Communities       communities, memberships, Discord channel feeds
+│   ├── ScoreTracker.Ucs               user-created steps + leaderboards
+│   └── ScoreTracker.Identity          accounts, external logins, api tokens, settings
+├── Infrastructure
+│   └── ScoreTracker.Data              shared DbContext, unextracted repositories,
+│                                      external clients (blob, Discord, SendGrid, PiuGame)
+└── Presentation
+    ├── ScoreTracker (Web)             Blazor Server UI + MVC API controllers
+    ├── ScoreTracker.CompositionRoot   DI wiring, vertical model contributions,
+    │                                  design-time EF factory, migration startup
+    ├── ScoreTracker.AppHost           Aspire local-dev orchestration
+    ├── ScoreTracker.ServiceDefaults   OTel/resilience defaults
+    ├── ScoreTracker.Tests             unit + component + architecture tests
+    ├── ScoreTracker.Tests.Api         API wire-shape approval tests
+    └── ScoreTracker.Tests.Integration real-DB tests (Testcontainers + Respawn)
+```
 
-## Data access
+### Inside a vertical
 
-- **Provider** — EF Core 10 (`Microsoft.EntityFrameworkCore.SqlServer 10.0.2`). SQL Server.
-- **Context** — Single [`ChartAttemptDbContext`](ScoreTracker/ScoreTracker.Data/Persistence/ChartAttemptDbContext.cs) in `ScoreTracker.Data.Persistence`, with ~60 `DbSet`s.
-- **Factory** — [`ChartDbContextFactory`](ScoreTracker/ScoreTracker.Data/Persistence/DbContextFactory.cs) implements `IDbContextFactory<ChartAttemptDbContext>` and is registered transient in `CompositionRoot`. The DbContext itself is registered with `AddDbContext`.
-- **Abstractions** — Repositories (`I*Repository`) are defined in `ScoreTracker.Domain.SecondaryPorts` and implemented as `EF*Repository` in `ScoreTracker.Data.Repositories`. Application code never touches `DbContext` directly (verified — no EF references in `ScoreTracker.Application`).
-- **Registration** — [`RegistrationExtensions.AddInfrastructure`](ScoreTracker/ScoreTracker.CompositionRoot/RegistrationExtensions.cs) reflects over `ScoreTracker.Data` types and binds every `Domain.SecondaryPorts.*` interface they implement as transient. `IBotClient` is registered as a singleton instead. `IPiuGameApi` is registered as a typed `HttpClient`.
-- **Migrations** — `ScoreTracker.Data/Migrations/` (oldest 2022-04). Applied manually (no `db.Database.Migrate()` at startup). Scaffold from `ScoreTracker.Data` with **`dotnet ef migrations add <Name> --startup-project ../ScoreTracker.CompositionRoot`** — the design-time factory lives in CompositionRoot because the model must include every vertical's contribution (see next bullet); scaffolding from Data alone would silently generate `DropTable`s for vertical-owned entities.
-- **Vertical entity ownership** — verticals own their EF entities (internal classes in `<Vertical>/Infrastructure/Entities/`) and register them with the single context via `IDbModelContribution` ([IDbModelContribution.cs](ScoreTracker/ScoreTracker.Data/Persistence/IDbModelContribution.cs)): the vertical's `Wiring/` contribution pins its table names (previously derived from the deleted `DbSet` property names) and its `AddXxx()` extension registers it in DI; the context applies all contributions at the end of `OnModelCreating`. Vertical repositories use `Set<TEntity>()` instead of `DbSet` properties. [`VerticalModelContributions.All()`](ScoreTracker/ScoreTracker.CompositionRoot/VerticalModelContributions.cs) is the canonical list — the design-time factory and the integration-test fixture both consume it. The context factory is registered with `AddDbContextFactory` (not pooled — pooling requires an options-only constructor and the context takes the contribution set).
-- **Score event journal** — `scores.ScoreEventJournal` (rearch P4, ADR-001 Q8) is an append-only log of score submissions *as received* — raw submitted values, including ones that don't beat the stored best. Written by `UpdatePhoenixRecordHandler` through the Ledger-internal `IScoreJournalRepository.Append`; read by consumers through `IScoreReader.GetScoreHistory(userId, chartId)`. Seeded 2026-06 from the Phoenix best-attempt table (`scores.PhoenixRecord`; `Source = 'backfill'`). Rows are never updated or deleted; this is the foundation of score-progression history and the candidate source of truth if the Ledger is event-sourced later.
-- **Hangfire schema** — Hangfire owns its own `HangFire` schema in the same SQL Server database. Tables are auto-created on first boot (`PrepareSchemaIfNecessary = true`); no EF migration manages them. Do not add EF entities for Hangfire's tables.
+`ScoreTracker.Ucs` is the template. Every vertical follows the same internal shape:
 
-## Testing strategy
+```
+ScoreTracker.<Vertical>/
+├── Contracts/          public: Commands/, Queries/, Events/, DTO records
+├── Wiring/             public: AddXxx() DI extension, AddXxxConsumers() bus hook,
+│                       IDbModelContribution (pins its tables on the shared context)
+├── Domain/             internal: models, vertical-local rules
+├── Application/        internal: handlers + sagas (bus consumers)
+└── Infrastructure/     internal: EF entities + repositories (use Set<TEntity>())
+```
 
-- **Framework** — xUnit `2.9.3` with `Moq 4.20.72` for test doubles.
-- **Layout** — `ScoreTracker.Tests` mirrors `src` by namespace. Today: `DomainTests/` for value-type tests (`NameTests`, `DifficultyLevelTests`), `ApplicationTests/` for handler tests (`CreateUserHandlerTests`).
-- **Coverage focus** — Domain value types and a seed handler test demonstrating the Moq mocking pattern (mock the Domain ports, instantiate the handler, `Verify` the side effects). Wider Application/Infrastructure coverage is still to come.
-- **Project reference** — `Tests` references `Application`, `Data`, and every vertical. It does not reference `Web`.
-- **Mocking convention** — Mock the Domain port interfaces (`IUserRepository`, `IBus`, etc.), construct the real handler with `mock.Object` dependencies, and `Verify` calls with `It.Is<T>(...)` predicates. Do not introduce alternative double libraries (`FakeItEasy`, `NSubstitute`, `AutoFixture`) without explicit approval.
-- **Test helpers** — Reusable scaffolding lives in `ScoreTracker.Tests/TestHelpers/` (`FakeDateTime.At(...)` returns a configured `Mock<IDateTimeOffsetAccessor>`) and `ScoreTracker.Tests/TestData/` (`UserBuilder`, `ChartBuilder` — fluent builders with sensible defaults). Prefer these over hand-rolled doubles in new tests.
-- **Coverage exclusions** — Pure data shapes (commands, queries, events, records, view projections), exception classes, and enum-helper static classes are marked with `[ExcludeFromCodeCoverage]` so coverage % reflects logic, not DTO surface area. Each project has a `GlobalUsings.cs` that exposes `System.Diagnostics.CodeAnalysis` so the attribute requires no per-file `using`. **When adding a new command/query/event/record/exception, mark it `[ExcludeFromCodeCoverage]`.** Excluded folders: `Application/Commands`, `Application/Queries`, `Application/Events`, `Application/Messages`, `Domain/Records`, `Domain/Events`, `Domain/Views`, `Domain/Exceptions`, `Domain/Enums` (helper classes only — enums themselves can’t take the attribute), and vertical `Contracts/` records. Real logic in `Domain/Models`, `Domain/Services`, `Application/Handlers`, and `Domain/ValueTypes` is *not* excluded — that's where coverage is meaningful.
+Every vertical's model contribution must be listed in [`VerticalModelContributions.All()`](ScoreTracker/ScoreTracker.CompositionRoot/VerticalModelContributions.cs) — the design-time factory and the integration-test fixture both consume it; omitting one silently drops that vertical's tables from scaffolded migrations.
 
-## Conventions and rules
+### The web app (`ScoreTracker/ScoreTracker/`)
 
-- **Domain has no outward dependencies.** No project references; only MediatR + Logging.Abstractions NuGets.
-- **All persistence and integration goes through ports** defined in `ScoreTracker.Domain.SecondaryPorts`. Application code never references `DbContext`, `HttpClient`, blob storage, etc. directly.
-- **Application handlers do not reference EF Core or ASP.NET.** Confirmed by grep.
-- **Razor pages and API controllers dispatch via `IMediator`.** No direct repository access from Presentation.
-- **One DbContext** (`ChartAttemptDbContext`). Add `DbSet`s here; do not introduce a second context without discussion.
-- **Repository naming**: implementation is `EF<Port>` (e.g. `EFUserRepository` implements `IUserRepository`). One implementation per port.
-- **Value types validate at construction** via static `From(...)` factories that throw a domain exception. Do not bypass them.
-- **Configuration POCOs** live in `ScoreTracker.Data.Configuration` (or `ScoreTracker.Web.Configuration` for Web-only options) and are bound in `Program.cs`.
-- **Recurring background work** is scheduled via Hangfire (`RecurringJob.AddOrUpdate<RecurringJobRunner>(...)` in `Program.cs`) which fans out to MassTransit by publishing the matching `Application/Messages/` trigger record. Cron expressions are UTC. Do not introduce a second scheduler library.
-- **Async work that should not block the originating request** is published over `IBus` — past-tense facts from `Domain/Events/`, imperative triggers from `Application/Messages/`.
+**Pages** (`Pages/`, grouped by feature — all dispatch via `IMediator`, never repositories):
 
-## Known divergences and tech debt
+| Folder | What's there |
+|---|---|
+| *(root)* | `/WhatShouldIPlay` (home: recommendations + quick recording), `/Charts` (the core browser), `/Chart/{id}` (record + detail), `/Login`, `/Welcome`, `/Account` (profile, API tokens), `/UploadPhoenixScores` (bulk import + OCR), `/UploadXXScores` |
+| `TierLists/` | `/TierLists`, `/ChartSkills`, `/PersonalizedTierList` — the site's most-used feature |
+| `Progress/` | `/Progress`, `/Phoenix/Progress`, `/Pumbility`, `/Titles`, `/CompetitiveLevel` |
+| `Competition/` | `/Tournaments`, stamina + match tournament flows, qualifiers submission, `/WeeklyCharts`, `/UcsLeaderboards`, `/ScoreRankings`, `/Completion` |
+| `Communities/` | `/Communities`, invite links, community leaderboards |
+| `OfficialLeaderboards/` | mirrored official leaderboards, player compare, `/PlayerRankings` |
+| `Tools/` | calculators (`/LifeCalculator`, `/PhoenixCalculator`, rating/conversion), `/ChartRandomizer`, `/ChartCompare`, `/StepArtists` |
+| `Experiments/` | stats playground: `/GameStats`, score distributions, letter-difficulty data |
+| `Admin/` | admin dashboard, chart maintenance, bulk voting |
+| `Dev/` | `/Dev/Populate` — the local-database setup harness (dev-only, see [HOW-TO-RUN.md](HOW-TO-RUN.md)) |
 
-- **`ScoreTracker.Data` references `ScoreTracker.Application`.** `ScoreTracker/ScoreTracker.Data/ScoreTracker.Data.csproj` line 24. This points outward through the onion. **To be removed** — Infrastructure should depend only on Domain.
-- ~~**`ScoreTracker.PersonalProgress` is a parallel Application-layer assembly.**~~ **Resolved 2026-07-01** (rearch C49): PersonalProgress dissolved into the `ScoreTracker.PlayerProgress` vertical; `Application` no longer references it.
-- **MassTransit version skew.** `Web` uses `MassTransit.Extensions.DependencyInjection 7.3.1`; the rest uses `MassTransit 8.5.7`. Consolidate on the v8 DI extensions.
-- ~~**Domain `Events/` folder mixes events and command-shaped messages.**~~ **Resolved 2026-06-12** (rearch C6+C7): trigger messages moved to `Application/Messages/` with honest imperative names; `Domain/Events/` holds only past-tense facts.
-- **No MediatR pipeline behaviors and no validation pipeline.** Validation lives only in value-type constructors. Adding a behavior pipeline (logging, validation) is a future option, not a current rule.
-- **No automatic migration on startup in production.** Migrations are applied out-of-band in prod; startup only logs pending-migration drift. Local dev (Aspire AppHost) sets `AutoMigrate`, which applies pending migrations at boot via `MigrationStartupExtensions` in CompositionRoot.
+**Components** (`Components/`): the reusable vocabulary of the UI — `ChartSelector` (autocomplete), `DifficultyBubble`, `SongImage`, `LetterGradeIcon`, `ScoreBreakdown`, `UserLabel`, `TierListSection`, `ChartVideoDisplay`, etc. `Shared/MainLayout.razor` owns the MudBlazor theme, drawer navigation, and subscribes to live-update events (import status, player stats).
 
-## Glossary
+**Controllers** (`Controllers/`): the [API surface](API.md) — thin MediatR dispatchers under `api/*`, the dev-harness exports under `dev/export/*`, and UI-support endpoints (`login`, `logout`, `culture`, sitemap).
 
-For PIU and project domain terms (Mix, Song, Chart, Phoenix score, Pumbility, Tier list, Weekly Charts, Community Leaderboards, UCS, Saga, etc.), see [DOMAIN.md](DOMAIN.md).
+**Login flow**: `/Login/{Provider}` issues the OAuth challenge → `/Login/{Provider}/Callback` maps the external identity to a user (`GetUserByExternalLoginQuery`, creating via `CreateUserCommand` + `CreateExternalLoginCommand` on first sign-in) → claims principal built with custom claims (`ScoreTrackerClaimTypes`: game tag, country, profile image, `ClaimsIssuedAt` for cache-invalidated sign-out) → 30-day sliding cookie (`DefaultAuthentication`). API callers use the separate `ApiToken` Basic-auth scheme. Locally, a `DevAuth`-gated backdoor (`/Login/Dev`, `/Login/Dev/Bootstrap`) skips OAuth entirely and lands on `/Dev/Populate` when the database is empty.
 
-Architecture-internal terms used in this document:
+**Localization**: `IStringLocalizer<App>` injected globally as `L`; keys are English UI text verbatim; eight locales, each non-English one with a glossary at the repo root (`LOCALIZATION-<locale>.md`). New keys get populated in every locale in the same pass.
 
-- **Secondary port** — Outbound interface defined in `ScoreTracker.Domain.SecondaryPorts` and implemented in `ScoreTracker.Data` (or, for ASP.NET-bound concerns, in `ScoreTracker.Web`).
-- **CompositionRoot** — `ScoreTracker.CompositionRoot.RegistrationExtensions.AddInfrastructure`. The DI extension that wires Infrastructure implementations to Domain ports.
+**Accessors** (`Accessors/`): Web-bound implementations of domain ports that need ASP.NET (`HttpContextUserAccessor : ICurrentUserAccessor`, `DateTimeOffsetAccessor : IDateTimeOffsetAccessor`).
 
-## Open questions
+### Data access
 
-- Should `IDateTimeOffsetAccessor` and `ICurrentUserAccessor` implementations move out of `ScoreTracker.Web` once a non-Blazor host appears, or are they Web-bound by intent?
-- `EFUserRepository` constructs both a long-lived `ChartAttemptDbContext` (via `factory.CreateDbContext()`) and stores the factory itself for ad-hoc creation. Is the long-lived context intentional given the repository is registered transient, or a vestige to clean up?
-- The reflective registration in `AddInfrastructure` binds *every* `Domain.SecondaryPorts` interface a `Data` type implements as transient. Are any ports expected to be scoped/singleton (besides `IBotClient`, which is hard-coded singleton)?
+One SQL Server database, one `DbContext`, table-by-table breakdown in [DATABASE-SCHEMA.md](DATABASE-SCHEMA.md). Repositories take `IDbContextFactory<ChartAttemptDbContext>` and create scoped contexts. Migrations: scaffold from `ScoreTracker.Data` with `--startup-project ../ScoreTracker.CompositionRoot` (the design-time factory includes every vertical's contribution); production applies them via the deploy-pipeline EF bundle, local dev auto-migrates through the AppHost.
+
+### Composition
+
+[`Program.cs`](ScoreTracker/ScoreTracker/Program.cs) is the single bootstrap: authentication, MediatR scans, MassTransit + every vertical's `AddXxxConsumers` hook, Hangfire + recurring-job registrations, localization, Swagger, and the CompositionRoot's `AddInfrastructure(...)` (reflection-binds every `Domain.SecondaryPorts` interface to its `Data` implementation, transient by default; `IBotClient` is the lone singleton).
