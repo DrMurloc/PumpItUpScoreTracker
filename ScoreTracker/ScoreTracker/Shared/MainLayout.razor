@@ -25,28 +25,48 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 <ChartVideoDisplay></ChartVideoDisplay>
+<style>
+    .dense-nav .mud-nav-link {
+        padding-top: 6px;
+        padding-bottom: 6px;
+        min-height: unset;
+    }
+
+    .dense-nav .mud-nav-link-text {
+        font-size: .875rem;
+    }
+
+    .dense-nav .mud-nav-link-icon,
+    .dense-nav .mud-nav-link .mud-icon-root {
+        font-size: 1.25rem;
+    }
+
+    .appbar-search .mud-input-control {
+        margin-top: 0;
+    }
+</style>
 <MudLayout>
-    <MudAppBar Color="Color.Primary" Fixed="false">
+    <MudAppBar Color="Color.Primary" Fixed="false" Dense="true">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="() => _isOpen = !_isOpen"/>
-        <MudText Typo="Typo.h6" Class="mr-4">@(_userId == null ? L["PIU Scores"].Value : $"{UserName}")</MudText>
+        <MudText Typo="Typo.subtitle1" Style="font-weight: 500; white-space: nowrap;" Class="mr-6">@(_userId == null ? L["PIU Scores"].Value : $"{UserName}")</MudText>
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
-            <div style="min-width: 240px; max-width: 340px;">
-                <ChartSelector Mix="_currentMix" Label="@L["Find a chart"].Value" ChartIdSelected="GoToChart"></ChartSelector>
+            <div class="d-flex align-center appbar-search" style="min-width: 220px; max-width: 320px;">
+                <ChartSelector Mix="_currentMix" Label="@L["Find a chart"].Value" Variant="Variant.Outlined" Margin="Margin.Dense" ChartIdSelected="GoToChart"></ChartSelector>
             </div>
         </MudHidden>
         <MudSpacer></MudSpacer>
         @if (CurrentUser.IsLoggedIn)
         {
             <MudHidden Breakpoint="Breakpoint.Xs">
-                <MudButton Href="/UploadPhoenixScores" Variant="Variant.Outlined" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.CloudDownload" Class="mr-3">@L["Import Scores"]</MudButton>
+                <MudButton Href="/UploadPhoenixScores" Variant="Variant.Outlined" Color="Color.Inherit" Size="Size.Small" StartIcon="@Icons.Material.Filled.CloudDownload" Class="mr-4">@L["Import Scores"]</MudButton>
             </MudHidden>
             <MudHidden Breakpoint="Breakpoint.SmAndUp">
                 <MudIconButton Href="/UploadPhoenixScores" Color="Color.Inherit" Icon="@Icons.Material.Filled.CloudDownload" Class="mr-1"></MudIconButton>
             </MudHidden>
             <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
                 <ActivatorContent>
-                    <MudAvatar>
-                        <MudImage Src="@_profileImage"></MudImage>
+                    <MudAvatar Size="Size.Small" Style="cursor: pointer;">
+                        <MudImage Src="@_profileImage" ObjectFit="ObjectFit.Cover" Style="width: 100%; height: 100%;"></MudImage>
                     </MudAvatar>
                 </ActivatorContent>
                 <ChildContent>
@@ -60,8 +80,8 @@
             <MudIconButton Icon="@Icons.Material.Filled.NoAccounts" Color="Color.Inherit" Edge="Edge.Start" Href="/Login"></MudIconButton>
         }
     </MudAppBar>
-    <MudDrawer @bind-Open="_isOpen" Variant="@DrawerVariant.Responsive" Breakpoint="Breakpoint.Md" Elevation="1">
-        <MudNavMenu>
+    <MudDrawer @bind-Open="_isOpen" Variant="@DrawerVariant.Responsive" Breakpoint="Breakpoint.Md" ClipMode="DrawerClipMode.Always" Width="240px" Elevation="1">
+        <MudNavMenu Class="dense-nav pb-4">
             <MudText Typo="Typo.overline" Class="ml-4 mt-2 d-block" Style="opacity: .7;">@L["Play"]</MudText>
             @if (CurrentUser.IsLoggedIn)
             {
