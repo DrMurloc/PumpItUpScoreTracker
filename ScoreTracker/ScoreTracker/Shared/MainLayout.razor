@@ -28,125 +28,113 @@
 <MudLayout>
     <MudAppBar Color="Color.Primary" Fixed="false">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="() => _isOpen = !_isOpen"/>
-        <MudText Typo="Typo.h6">@(_userId == null ? L["PIU Scores"].Value : $"{UserName}")</MudText>
+        <MudText Typo="Typo.h6" Class="mr-4">@(_userId == null ? L["PIU Scores"].Value : $"{UserName}")</MudText>
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <div style="min-width: 240px; max-width: 340px;">
+                <ChartSelector Mix="_currentMix" Label="@L["Find a chart"].Value" ChartIdSelected="GoToChart"></ChartSelector>
+            </div>
+        </MudHidden>
         <MudSpacer></MudSpacer>
         @if (CurrentUser.IsLoggedIn)
         {
-            <MudButton Variant="Variant.Filled" Style=@($"background:url('{_profileImage}'); height:50px; background-size:contain;") Href="/Account">
-            </MudButton>
+            <MudHidden Breakpoint="Breakpoint.Xs">
+                <MudButton Href="/UploadPhoenixScores" Variant="Variant.Outlined" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.CloudDownload" Class="mr-3">@L["Import Scores"]</MudButton>
+            </MudHidden>
+            <MudHidden Breakpoint="Breakpoint.SmAndUp">
+                <MudIconButton Href="/UploadPhoenixScores" Color="Color.Inherit" Icon="@Icons.Material.Filled.CloudDownload" Class="mr-1"></MudIconButton>
+            </MudHidden>
+            <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                <ActivatorContent>
+                    <MudAvatar>
+                        <MudImage Src="@_profileImage"></MudImage>
+                    </MudAvatar>
+                </ActivatorContent>
+                <ChildContent>
+                    <MudMenuItem Href="/Account" Icon="@Icons.Material.Filled.AccountCircle">@L["Account"]</MudMenuItem>
+                    <MudMenuItem Href="/Logout" Icon="@Icons.Material.Filled.Logout">@L["Logout"]</MudMenuItem>
+                </ChildContent>
+            </MudMenu>
         }
         else
         {
             <MudIconButton Icon="@Icons.Material.Filled.NoAccounts" Color="Color.Inherit" Edge="Edge.Start" Href="/Login"></MudIconButton>
         }
     </MudAppBar>
-    <MudDrawer @bind-Open="_isOpen" Variant="@DrawerVariant.Temporary">
+    <MudDrawer @bind-Open="_isOpen" Variant="@DrawerVariant.Responsive" Breakpoint="Breakpoint.Md" Elevation="1">
         <MudNavMenu>
+            <MudText Typo="Typo.overline" Class="ml-4 mt-2 d-block" Style="opacity: .7;">@L["Play"]</MudText>
             @if (CurrentUser.IsLoggedIn)
             {
-                <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home">@L["Home"]</MudNavLink>
-                <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                <MudNavLink Href="/Account" Icon="@Icons.Material.Filled.AccountCircle">@L["Account"]</MudNavLink>
-                <MudDivider DividerType="DividerType.Middle"></MudDivider>
+                <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">@L["Home"]</MudNavLink>
+                <MudNavLink Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</MudNavLink>
             }
             else
             {
-                
                 <MudNavLink Href="/Login" Icon="@Icons.Material.Filled.NoAccounts">@L["Login"]</MudNavLink>
-                <MudDivider DividerType="DividerType.Middle"></MudDivider>
             }
-            <MudNavLink Href="/Charts" Icon="@Icons.Material.Filled.List">@L["Charts List"]</MudNavLink>
-            <MudDivider DividerType="DividerType.Middle"></MudDivider>
-            
-            <MudNavLink Href="/Chart" Icon="@Icons.Material.Filled.Description">@L["Chart Details"]</MudNavLink>
-            <MudDivider DividerType="DividerType.Middle"></MudDivider>
+            <MudNavLink Href="/Charts" Icon="@Icons.Material.Filled.List">@L["Charts"]</MudNavLink>
             <MudNavLink Href="/TierLists" Icon="@Icons.Material.Filled.Topic">@L["Tier Lists"]</MudNavLink>
-            <MudDivider DividerType="DividerType.Middle"></MudDivider>
-            <MudNavGroup Title=@L["Progress"] Icon="@Icons.Material.Filled.TrendingUp" Expanded="false">
-                <MudNavLink Href="/Titles" Icon="@Icons.Material.Filled.Grade">@L["Titles"]</MudNavLink>
-                <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                @if (CurrentUser.IsLoggedIn)
-                {
-                    <MudNavLink Href=@(_currentMix==MixEnum.Phoenix?"/Phoenix/Progress":"/Progress") Icon="@Icons.Material.Filled.BarChart">@L["Progress Charts"]</MudNavLink>
-                    <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                    @if (_currentMix == MixEnum.Phoenix)
-                    {
-                        <MudNavLink Href="/Pumbility" Icon="@Icons.Material.Filled.Star">@L["PUMBILITY"]</MudNavLink>
-                    }
-                }
-            </MudNavGroup>
-            <MudDivider DividerType="DividerType.Middle"></MudDivider>
-            <MudNavGroup Title=@L["Tools"] Icon="@Icons.Material.Filled.Build" Expanded="false">
-                <MudNavLink Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</MudNavLink>
-                <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                <MudNavLink Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</MudNavLink>
-                <MudDivider></MudDivider>
-                <MudNavLink Href="/ChartRandomizer" Icon="@Icons.Material.Filled.QuestionMark">@L["Chart Randomizer"]</MudNavLink>
-                <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                <MudNavLink Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</MudNavLink>
-                <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                <MudNavLink Href="/StepArtists" Icon="@Icons.Material.Filled.Brush">@L["Step Artists"]</MudNavLink>
-            </MudNavGroup>
-            <MudDivider DividerType="DividerType.Middle"></MudDivider>
-            <MudNavGroup Title=@L["Official Leaderboards"] Icon="@Icons.Material.Filled.Score">
-                <MudNavLink Href="/OfficialLeaderboards" Icon="@Icons.Material.Filled.Score">@L["Official Leaderboard Search"]</MudNavLink>
-                <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                <MudNavLink Href="/OfficialLeaderboards/PlayerCompare" Icon="@Icons.Material.Filled.CompareArrows">@L["Leaderboard Player Compare"]</MudNavLink>
-                <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                <MudNavLink Href="/PlayerRankings" Icon="@Icons.Material.Filled.Public">@L["World Rankings"]</MudNavLink>
-            </MudNavGroup>
-            <MudDivider DividerType="DividerType.Middle"></MudDivider>
-            <MudNavGroup Title=@L["Competition"] Icon="@Icons.Material.Filled.Leaderboard" Expanded="false">
-                <MudNavLink Href="/WeeklyCharts" Icon="@Icons.Material.Filled.ViewWeek">@L["Weekly Charts"]</MudNavLink>
-                <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                <MudNavLink Href="/Tournaments/MarchOfMurlocs" Icon="@Icons.Material.Filled.Alarm">March of Murlocs</MudNavLink>
-                <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                <MudNavLink Href="/Completion" Icon="@Icons.Material.Filled.Done">@L["Completion Leaderboards"]</MudNavLink>
-                <MudDivider DividerType="DividerType.Middle"></MudDivider>
-                <MudNavLink Href="/UcsLeaderboards" Icon="@Icons.Material.Filled.EditNote">@L["UCS Leaderboards"]</MudNavLink>
-                <!--<MudDivider DividerType="DividerType.Middle"></MudDivider>
-                <MudNavLink Href="/Tournaments" Icon="@Icons.Material.Filled.Leaderboard">@L["Tournaments"]</MudNavLink>-->
-                @foreach (var tourney in _highlightedEvents)
-                {
-                    
-                    <MudDivider></MudDivider>
-                    @if (tourney.Type == TournamentType.Stamina)
-                    {
-                        <MudNavLink Href=@($"/Tournament/Stamina/{tourney.Id}") Icon="@Icons.Material.Filled.Event">
-                            @tourney.Name
-                        </MudNavLink>
-                    }else if (tourney.LinkOverride != null)
-                    {
-                        <MudNavLink Href="@tourney.LinkOverride.ToString()" Target="_blank" Icon="@Icons.Material.Filled.Event">@tourney.Name</MudNavLink>
-                    }
-                    else
-                    {
 
-                        <MudNavLink Href=@($"/Tournament/{tourney.Id}/Qualifiers") Icon="@Icons.Material.Filled.Event">@tourney.Name</MudNavLink>
-                    }
+            <MudText Typo="Typo.overline" Class="ml-4 mt-4 d-block" Style="opacity: .7;">@L["My Progress"]</MudText>
+            @if (CurrentUser.IsLoggedIn)
+            {
+                <MudNavLink Href=@(_currentMix==MixEnum.Phoenix?"/Phoenix/Progress":"/Progress") Icon="@Icons.Material.Filled.BarChart">@L["Progress Charts"]</MudNavLink>
+                @if (_currentMix == MixEnum.Phoenix)
+                {
+                    <MudNavLink Href="/Pumbility" Icon="@Icons.Material.Filled.Star">@L["PUMBILITY"]</MudNavLink>
                 }
+            }
+            <MudNavLink Href="/Titles" Icon="@Icons.Material.Filled.Grade">@L["Titles"]</MudNavLink>
+
+            <MudText Typo="Typo.overline" Class="ml-4 mt-4 d-block" Style="opacity: .7;">@L["Compete"]</MudText>
+            <MudNavLink Href="/WeeklyCharts" Icon="@Icons.Material.Filled.ViewWeek">@L["Weekly Charts"]</MudNavLink>
+            <MudNavLink Href="/Tournaments/MarchOfMurlocs" Icon="@Icons.Material.Filled.Alarm">March of Murlocs</MudNavLink>
+            @foreach (var tourney in _highlightedEvents)
+            {
+                @if (tourney.Type == TournamentType.Stamina)
+                {
+                    <MudNavLink Href=@($"/Tournament/Stamina/{tourney.Id}") Icon="@Icons.Material.Filled.Event">@tourney.Name</MudNavLink>
+                }
+                else if (tourney.LinkOverride != null)
+                {
+                    <MudNavLink Href="@tourney.LinkOverride.ToString()" Target="_blank" Icon="@Icons.Material.Filled.Event">@tourney.Name</MudNavLink>
+                }
+                else
+                {
+                    <MudNavLink Href=@($"/Tournament/{tourney.Id}/Qualifiers") Icon="@Icons.Material.Filled.Event">@tourney.Name</MudNavLink>
+                }
+            }
+            <MudNavGroup Title=@L["Rankings"] Icon="@Icons.Material.Filled.Leaderboard" Expanded="false">
                 @if (CurrentUser.IsLoggedIn)
                 {
-                    <MudDivider></MudDivider>
                     <MudNavLink Href="ScoreRankings" Icon="@Icons.Material.Filled.Stars">@L["Score Ranking"]</MudNavLink>
                 }
+                <MudNavLink Href="/Completion" Icon="@Icons.Material.Filled.Done">@L["Completion Leaderboards"]</MudNavLink>
+                <MudNavLink Href="/UcsLeaderboards" Icon="@Icons.Material.Filled.EditNote">@L["UCS Leaderboards"]</MudNavLink>
+                <MudNavLink Href="/PlayerRankings" Icon="@Icons.Material.Filled.Public">@L["World Rankings"]</MudNavLink>
+                <MudNavLink Href="/OfficialLeaderboards" Icon="@Icons.Material.Filled.Score">@L["Official Leaderboard Search"]</MudNavLink>
+                <MudNavLink Href="/OfficialLeaderboards/PlayerCompare" Icon="@Icons.Material.Filled.CompareArrows">@L["Leaderboard Player Compare"]</MudNavLink>
             </MudNavGroup>
-            <MudDivider DividerType="DividerType.Middle"></MudDivider>
+
+            <MudText Typo="Typo.overline" Class="ml-4 mt-4 d-block" Style="opacity: .7;">@L["Community"]</MudText>
             <MudNavLink Href="/Communities" Icon="@Icons.Material.Filled.Group">@L["Communities"]</MudNavLink>
-            <MudDivider DividerType="DividerType.Middle"></MudDivider>
+            <MudNavLink Href="https://discord.gg/MEYvr3bFte" Target="_blank" Icon="@Icons.Custom.Brands.Discord">@L["Discord"]</MudNavLink>
+
+            <MudDivider Class="my-2"></MudDivider>
+            <MudNavGroup Title=@L["Tools"] Icon="@Icons.Material.Filled.Build" Expanded="false">
+                <MudNavLink Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</MudNavLink>
+                <MudNavLink Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</MudNavLink>
+                <MudNavLink Href="/ChartRandomizer" Icon="@Icons.Material.Filled.QuestionMark">@L["Chart Randomizer"]</MudNavLink>
+                <MudNavLink Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</MudNavLink>
+                <MudNavLink Href="/StepArtists" Icon="@Icons.Material.Filled.Brush">@L["Step Artists"]</MudNavLink>
+            </MudNavGroup>
             <MudNavLink Href="/About" Icon="@Icons.Material.Filled.Info">@L["About"]</MudNavLink>
-            <MudDivider DividerType="DividerType.Middle"></MudDivider>
-            <MudNavGroup Title=@(L["Mix"]+" ("+_currentMix+")") Icon="@Icons.Material.Filled.LibraryMusic">
+            <MudNavGroup Title=@(L["Mix"]+" ("+_currentMix+")") Icon="@Icons.Material.Filled.LibraryMusic" Expanded="false">
                 @foreach (var value in Enum.GetValues<MixEnum>())
                 {
                     <MudNavLink OnClick="()=>SetMix(value)">@value</MudNavLink>
                 }
             </MudNavGroup>
-        </MudNavMenu>
-        
-        <MudSpacer></MudSpacer>
-        <MudNavMenu>
-            <MudNavLink Href="https://discord.gg/MEYvr3bFte" Target="_blank" Icon="@Icons.Custom.Brands.Discord">@L["Discord"]</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
@@ -175,8 +163,16 @@
 @inject NavigationManager NavManager;
 @code
 {
-    private bool _isOpen = false;
+    // Open by default: the Responsive drawer variant keeps it as a persistent sidebar on
+    // desktop widths and auto-collapses to the hamburger-toggled overlay below Md.
+    private bool _isOpen = true;
     private Guid? _userId = null;
+
+    private Task GoToChart(Chart chart)
+    {
+        NavManager.NavigateTo($"/Chart/{chart.Id}");
+        return Task.CompletedTask;
+    }
     private bool _showBite = false;
     private const string BitePopupKey = "MainLayout__BigOne2024PopupShown";
     public static readonly DateTimeOffset _cutoff = new DateTimeOffset(2024, 10, 15, 0, 0, 0, TimeSpan.FromHours(-5));
