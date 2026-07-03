@@ -120,9 +120,7 @@
             <MudIconButton Icon="@Icons.Material.Filled.NoAccounts" Color="Color.Inherit" Edge="Edge.Start" Href="/Login"></MudIconButton>
         }
     </MudAppBar>
-    @* No ClipMode: the drawer runs full viewport height with the brand header owning the
-       top-left corner (app-shell pattern); clipping only injected an appbar-height gap. *@
-    <MudDrawer @bind-Open="_isOpen" Variant="@DrawerVariant.Responsive" Breakpoint="Breakpoint.Md" Width="240px" Elevation="1">
+    <MudDrawer @bind-Open="_isOpen" Variant="@DrawerVariant.Responsive" Breakpoint="Breakpoint.Md" ClipMode="DrawerClipMode.Always" Width="240px" Elevation="1">
         <MudDrawerHeader Class="d-flex align-center gap-2 py-3" Style="min-height: unset;">
             <MudIcon Icon="@Icons.Material.Filled.MusicNote" Size="Size.Small"></MudIcon>
             <MudText Typo="Typo.subtitle1" Style="font-weight: 600; letter-spacing: .02em;">@L["PIU Scores"]</MudText>
