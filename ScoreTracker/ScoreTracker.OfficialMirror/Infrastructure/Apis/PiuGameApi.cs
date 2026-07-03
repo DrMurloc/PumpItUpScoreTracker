@@ -27,6 +27,9 @@ internal sealed class PiuGameApi : IPiuGameApi
     private static readonly Regex ShortLevelRegex =
         new(@"\/stepball\/full\/[a-zA-Z]+_num_([0-9])\.png", RegexOptions.Compiled);
 
+    private static readonly Regex PlateRegex =
+        new(@"\/plate\/([a-zA-Z]+)\.png", RegexOptions.Compiled);
+
     private static readonly Regex
         IdRegex = new(@"over_ranking_view\.php\?no=([a-zA-Z0-9]+)", RegexOptions.Compiled);
 
@@ -538,17 +541,21 @@ internal sealed class PiuGameApi : IPiuGameApi
                 continue;
             var chartType = GetChartTypeFromUrl(typeString);
 
+            // Match the digit out of each level-image filename instead of a fixed character
+            // offset — the offset broke on 2026-07-03 when PIU moved these images from
+            // piugame.com to phoenix.piugame.com (+8 chars) with the Phoenix 2 site rollout.
             var difficulty = string.Join("",
                 scoreCard.SelectNodes(".//div[contains(@class,'stepBall_img_wrap')]//div[contains(@class,'imG')]//img")
-                    .Select(n => n.GetAttributeValue("src", "")
-                        .Substring(46, 1))).TrimStart('.');
+                    .Select(n => ShortLevelRegex.Match(n.GetAttributeValue("src", "")))
+                    .Where(m => m.Success)
+                    .Select(m => m.Groups[1].Value));
 
             var scoreList = scoreCard.SelectNodes(".//div[contains(@class,'etc_con')]//ul").First();
 
             var score = scoreList.ChildNodes[1].ChildNodes[1].ChildNodes[1].ChildNodes[0].InnerText.Trim()
                 .Replace(",", "");
-            var plate = scoreList.ChildNodes[5].ChildNodes[1].ChildNodes[1].ChildNodes[0]
-                .GetAttributeValue("src", "").Substring(32, 2);
+            var plate = PlateRegex.Match(scoreList.ChildNodes[5].ChildNodes[1].ChildNodes[1].ChildNodes[0]
+                .GetAttributeValue("src", "")).Groups[1].Value;
             try
             {
                 scores.Add(new PiuGameGetBestScoresResult.ScoreDto
@@ -562,7 +569,7 @@ internal sealed class PiuGameApi : IPiuGameApi
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error parsing best score");
+                _logger.LogError(e, "Error parsing best score for {SongName}", songName);
             }
         }
 

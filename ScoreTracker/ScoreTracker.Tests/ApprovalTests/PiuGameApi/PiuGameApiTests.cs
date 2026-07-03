@@ -59,6 +59,39 @@ public sealed class PiuGameApiTests
         Assert.Equal(PhoenixPlate.TalentedGame, second.Plate);
     }
 
+    [Fact]
+    public async Task GetBestScoresParsesIdenticallyWhenImagesComeFromThePhoenixHost()
+    {
+        // 2026-07-03 incident: with the Phoenix 2 site rollout, PIU moved the stepball/plate
+        // images from piugame.com to phoenix.piugame.com. GetBestScores was still slicing the
+        // level digit and plate shorthand out of the src by fixed character offset, so every
+        // user's import failed with FormatException ("The input string 'll' was not in a
+        // correct format" — offset 46 landed on 'full' instead of the digit). This fixture is
+        // the happy-path capture with every asset URL on the new host; it must parse to the
+        // exact same values.
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetBestScores_PhoenixHost.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetBestScores(HttpClientReturning(html), page: 1, CancellationToken.None);
+
+        Assert.Equal(238, result.MaxPage);
+        Assert.NotEmpty(result.Scores);
+
+        var first = result.Scores.First();
+        Assert.Equal("TRICKL4SH 220", (string)first.SongName);
+        Assert.Equal(ChartType.Double, first.ChartType);
+        Assert.Equal(20, (int)first.Level);
+        Assert.Equal(999231, (int)first.Score);
+        Assert.Equal(PhoenixPlate.ExtremeGame, first.Plate);
+
+        var second = result.Scores.Skip(1).First();
+        Assert.Equal("Conflict", (string)second.SongName);
+        Assert.Equal(ChartType.Single, second.ChartType);
+        Assert.Equal(15, (int)second.Level);
+        Assert.Equal(850000, (int)second.Score);
+        Assert.Equal(PhoenixPlate.TalentedGame, second.Plate);
+    }
+
     [Theory]
     [InlineData("en-US")]
     [InlineData("pt-BR")]
