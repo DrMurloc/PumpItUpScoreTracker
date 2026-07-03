@@ -6,42 +6,51 @@ A community-run web app for tracking [Pump It Up](https://en.wikipedia.org/wiki/
 
 ## What it does
 
-- Per-player score tracking across the Phoenix and XX mixes
-- Chart and song catalog with difficulty / tier-list browsing
-- Leaderboards — world, regional, and community-scoped
-- Tournament hosting — brackets, score submission with photo verification, approval workflow
+- Per-player score tracking with full submission history
+- Chart and song catalog with difficulty and tier-list browsing
+- Leaderboards — world, official-mirror, and community-scoped
+- Tournament hosting — brackets, qualifiers, score submission with photo verification
 - Player rating ("Pumbility") and progression analytics
-- Weekly charts and UCS (User-Created Step) tracking
+- Weekly challenge charts and UCS (User-Created Step) leaderboards
 - Discord bot for community notifications
+- A token-authenticated [API](docs/API.md) for community tool makers
 
-New to Pump It Up? See [DOMAIN.md](DOMAIN.md) for the terms used here. For who the tracker is built for and where it's headed, see [PRODUCT.md](PRODUCT.md).
+New to Pump It Up? [DOMAIN.md](docs/DOMAIN.md) defines the terms used throughout.
 
-## Use it
+## Run it locally
 
-Open https://piuscores.arroweclip.se/ — the live deployment is the recommended way to use the tracker.
+One command, once [Git, the .NET 10 SDK, and Docker Desktop](docs/HOW-TO-RUN.md#prerequisites) are installed:
 
-Self-hosting is possible but currently requires SQL Server plus OAuth (Discord / Google / Facebook), SendGrid, and Azure Blob credentials. A friction-free local-dev mode is on the [roadmap](BACKLOG.md).
+```sh
+git clone https://github.com/DrMurloc/PumpItUpScoreTracker.git
+cd PumpItUpScoreTracker
+dotnet run --project ScoreTracker/ScoreTracker.AppHost
+```
 
-**Building a PIU tool?** You don't have to build your own importer. The tracker exposes token-authenticated APIs (score submission and import, tier lists, weekly charts, tournaments, random chart draws), and score-import webhooks can be wired into your tool. See [PRODUCT.md](PRODUCT.md#platform-stance) and ask on [Discord](https://discord.gg/AvS5PxnvSN).
+That provisions a local SQL Server container, applies migrations, and opens the app — then a guided setup page populates your database with real chart data from the live site. No credentials required. Full walkthrough: **[HOW-TO-RUN.md](docs/HOW-TO-RUN.md)**.
+
+## Documentation
+
+| Doc | What's in it |
+|---|---|
+| [HOW-TO-RUN.md](docs/HOW-TO-RUN.md) | Prerequisites, local setup, the dev harness, optional configuration |
+| [HOW-TO-TEST.md](docs/HOW-TO-TEST.md) | Testing philosophy and how to run each suite |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Architecture philosophy (bounded-context verticals, DDD + onion + hexagonal) and the code map |
+| [DATABASE-SCHEMA.md](docs/DATABASE-SCHEMA.md) | Every table, grouped by owning vertical |
+| [API.md](docs/API.md) | The API surface at a glance; Swagger is the source of truth |
+| [SCHEDULED-JOBS.md](docs/SCHEDULED-JOBS.md) | The Hangfire recurring jobs: what they do and when |
+| [TECHNOLOGIES.md](docs/TECHNOLOGIES.md) | The stack: what each technology contributes and how it's integrated |
+| [CONTRIBUTING.md](docs/CONTRIBUTING.md) | Contribution policies — read before opening a PR |
+| [DOMAIN.md](docs/DOMAIN.md) | Pump It Up domain glossary |
 
 ## Contribute
 
-Contributions are welcome.
+Contributions are welcome — including AI-assisted ones, with a human firmly in the loop. Read **[CONTRIBUTING.md](docs/CONTRIBUTING.md)** first; the policies there are enforced.
 
-```sh
-dotnet build ScoreTracker/ScoreTracker.sln -c Release
-dotnet test ScoreTracker/ScoreTracker.Tests/ScoreTracker.Tests.csproj
-```
+- **CI**: [Azure Pipelines](https://dev.azure.com/joneccker/ScoreTracker) — build + all test suites on every PR, approval-gated deploy from `main`
+- **Discord**: <https://discord.gg/AvS5PxnvSN> — where changes get discussed
 
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — the flow: branch, PR, ping DrMurloc in Discord
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** — solution layout, layer rules, eventing, data access
-- **[BACKLOG.md](BACKLOG.md)** — areas where help is most welcome
-- **CI** — [Azure Pipelines](https://dev.azure.com/joneccker/ScoreTracker) builds and tests on every push to `main`
-- **Discord** — <https://discord.gg/AvS5PxnvSN>
-
-## Architecture at a glance
-
-ASP.NET Core 10 hosting both Blazor Server (UI) and MVC API controllers, on an onion-architecture core: a pure `Domain` layer, a MediatR-based `Application` layer, an EF Core / SQL Server `Infrastructure` layer, and DI wired through a `CompositionRoot`. Asynchronous and recurring work runs on MassTransit with an in-memory transport. Full detail in [ARCHITECTURE.md](ARCHITECTURE.md).
+**Building a PIU tool?** Don't build your own importer — the tracker exposes token-authenticated APIs and score-import webhooks. See [API.md](docs/API.md) and ask on Discord.
 
 ## License
 

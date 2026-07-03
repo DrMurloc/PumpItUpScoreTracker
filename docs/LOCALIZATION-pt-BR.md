@@ -2,7 +2,7 @@
 
 Working reference for translating `App.en-US.resx` into `App.pt-BR.resx`. Captures the conventions already established by the existing 131 translated entries so future batches stay consistent.
 
-For the localization mechanism itself (resx layout, `L["..."]` usage, key conventions), see [ARCHITECTURE.md](ARCHITECTURE.md#cross-cutting-concerns). For PIU domain terms in English, see [DOMAIN.md](DOMAIN.md).
+For the localization mechanism itself (resx layout, `L["..."]` usage, key conventions), see [ARCHITECTURE.md](ARCHITECTURE.md). For PIU domain terms in English, see [DOMAIN.md](DOMAIN.md).
 
 ## Style conventions
 

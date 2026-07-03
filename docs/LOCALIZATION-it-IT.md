@@ -2,9 +2,9 @@
 
 Working reference for translating `App.en-US.resx` into `App.it-IT.resx`. Unlike the other locale glossaries — which captured conventions inferred from existing translations — this one is **prescriptive**: there are no Italian entries in the resx yet, so this file establishes the conventions ahead of the first translation batch. Decisions here become "established" the moment they're applied to the resx.
 
-For the localization mechanism itself (resx layout, `L["..."]` usage, key conventions), see [ARCHITECTURE.md](ARCHITECTURE.md#cross-cutting-concerns). For PIU domain terms in English, see [DOMAIN.md](DOMAIN.md). For the parallel ja-JP, ko-KR, pt-BR, fr-FR, and es-MX conventions, see [LOCALIZATION-ja-JP.md](LOCALIZATION-ja-JP.md), [LOCALIZATION-ko-KR.md](LOCALIZATION-ko-KR.md), [LOCALIZATION-pt-BR.md](LOCALIZATION-pt-BR.md), [LOCALIZATION-fr-FR.md](LOCALIZATION-fr-FR.md), and [LOCALIZATION-es-MX.md](LOCALIZATION-es-MX.md).
+For the localization mechanism itself (resx layout, `L["..."]` usage, key conventions), see [ARCHITECTURE.md](ARCHITECTURE.md). For PIU domain terms in English, see [DOMAIN.md](DOMAIN.md). For the parallel ja-JP, ko-KR, pt-BR, fr-FR, and es-MX conventions, see [LOCALIZATION-ja-JP.md](LOCALIZATION-ja-JP.md), [LOCALIZATION-ko-KR.md](LOCALIZATION-ko-KR.md), [LOCALIZATION-pt-BR.md](LOCALIZATION-pt-BR.md), [LOCALIZATION-fr-FR.md](LOCALIZATION-fr-FR.md), and [LOCALIZATION-es-MX.md](LOCALIZATION-es-MX.md).
 
-> **Status (2026-04-26):** Glossary only. No `App.it-IT.resx` exists yet, and `it-IT` is not yet listed in the supported-cultures array in [Program.cs](ScoreTracker/ScoreTracker/Program.cs). Both will be wired up when the first translation batch lands.
+> **Status (2026-04-26):** Glossary only. No `App.it-IT.resx` exists yet, and `it-IT` is not yet listed in the supported-cultures array in [Program.cs](../ScoreTracker/ScoreTracker/Program.cs). Both will be wired up when the first translation batch lands.
 
 ## Style conventions
 
@@ -392,7 +392,7 @@ These are terms the en-US source contains that don't yet have an obvious recomme
 
 The first batch is structurally different from the per-locale ongoing batches because the resx and the supported-cultures wiring don't exist yet:
 
-1. **Wire up the supported culture.** In [Program.cs](ScoreTracker/ScoreTracker/Program.cs), add `"it-IT"` to the supported-cultures array used by `AddRequestLocalization`. (Search for the existing `"fr-FR"` registration as the template.) Update the `Cross-cutting concerns` section in [ARCHITECTURE.md](ARCHITECTURE.md#cross-cutting-concerns) to list `it-IT` alongside the others.
+1. **Wire up the supported culture.** In [Program.cs](../ScoreTracker/ScoreTracker/Program.cs), add `"it-IT"` to the supported-cultures array used by `AddRequestLocalization`. (Search for the existing `"fr-FR"` registration as the template.) Update the `Cross-cutting concerns` section in [ARCHITECTURE.md](ARCHITECTURE.md) to list `it-IT` alongside the others.
 2. **Create `App.it-IT.resx`** as a copy of `App.en-US.resx` with values cleared (or with English fallback values that this glossary will overwrite). Don't delete keys — the file must mirror the en-US key set exactly. Italian-localized values fill in over time; missing keys fall back to the English source per CLAUDE.md.
 3. **Pick a feature folder** (Tournaments, Tier Lists, Progress, Admin, Tools, etc.) for the first content batch.
 4. **Translate using this glossary.** If a new term needs a decision, add a row to `Recommended term mappings` **before translating** so the convention is captured.

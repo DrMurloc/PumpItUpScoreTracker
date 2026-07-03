@@ -2,7 +2,7 @@
 
 Working reference for translating `App.en-US.resx` into `App.es-MX.resx`. Captures the conventions established by the original 84 hand-translated entries plus the 506-entry bulk batch on 2026-04-26 that brought the file to full coverage (596/596 keys).
 
-For the localization mechanism itself (resx layout, `L["..."]` usage, key conventions), see [ARCHITECTURE.md](ARCHITECTURE.md#cross-cutting-concerns). For PIU domain terms in English, see [DOMAIN.md](DOMAIN.md). For the parallel ja-JP, ko-KR, pt-BR, and fr-FR conventions, see [LOCALIZATION-ja-JP.md](LOCALIZATION-ja-JP.md), [LOCALIZATION-ko-KR.md](LOCALIZATION-ko-KR.md), [LOCALIZATION-pt-BR.md](LOCALIZATION-pt-BR.md), and [LOCALIZATION-fr-FR.md](LOCALIZATION-fr-FR.md).
+For the localization mechanism itself (resx layout, `L["..."]` usage, key conventions), see [ARCHITECTURE.md](ARCHITECTURE.md). For PIU domain terms in English, see [DOMAIN.md](DOMAIN.md). For the parallel ja-JP, ko-KR, pt-BR, and fr-FR conventions, see [LOCALIZATION-ja-JP.md](LOCALIZATION-ja-JP.md), [LOCALIZATION-ko-KR.md](LOCALIZATION-ko-KR.md), [LOCALIZATION-pt-BR.md](LOCALIZATION-pt-BR.md), and [LOCALIZATION-fr-FR.md](LOCALIZATION-fr-FR.md).
 
 The bulk batch made structural decisions for the entries it added; those decisions are documented in the `2026-04-26 bulk batch — decisions and additions` section near the bottom of this file rather than retrofitted into the long tables (to keep the diff reviewable). A few of those decisions are deliberate divergences from the pre-existing file's conventions that future cleanup batches should propagate to the older entries — flagged below.
 

@@ -2,7 +2,7 @@
 
 Working reference for translating `App.en-US.resx` into `App.ja-JP.resx`. Captures the conventions established by nabulator's seed translations (PR #44) and the machine-translation sweep that followed (PR #90), plus the deviations and known-bad strings a future native-speaker pass should clean up.
 
-For the localization mechanism itself (resx layout, `L["..."]` usage, key conventions), see [ARCHITECTURE.md](ARCHITECTURE.md#cross-cutting-concerns). For PIU domain terms in English, see [DOMAIN.md](DOMAIN.md). For the parallel pt-BR conventions, see [LOCALIZATION-pt-BR.md](LOCALIZATION-pt-BR.md).
+For the localization mechanism itself (resx layout, `L["..."]` usage, key conventions), see [ARCHITECTURE.md](ARCHITECTURE.md). For PIU domain terms in English, see [DOMAIN.md](DOMAIN.md). For the parallel pt-BR conventions, see [LOCALIZATION-pt-BR.md](LOCALIZATION-pt-BR.md).
 
 ## Style conventions
 

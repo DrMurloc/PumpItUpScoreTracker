@@ -2,7 +2,7 @@
 
 Working reference for translating `App.en-US.resx` into `App.ko-KR.resx`. Captures the conventions established by the existing 154 translated entries so future batches stay consistent.
 
-For the localization mechanism itself (resx layout, `L["..."]` usage, key conventions), see [ARCHITECTURE.md](ARCHITECTURE.md#cross-cutting-concerns). For PIU domain terms in English, see [DOMAIN.md](DOMAIN.md). For the parallel ja-JP and pt-BR conventions, see [LOCALIZATION-ja-JP.md](LOCALIZATION-ja-JP.md) and [LOCALIZATION-pt-BR.md](LOCALIZATION-pt-BR.md).
+For the localization mechanism itself (resx layout, `L["..."]` usage, key conventions), see [ARCHITECTURE.md](ARCHITECTURE.md). For PIU domain terms in English, see [DOMAIN.md](DOMAIN.md). For the parallel ja-JP and pt-BR conventions, see [LOCALIZATION-ja-JP.md](LOCALIZATION-ja-JP.md) and [LOCALIZATION-pt-BR.md](LOCALIZATION-pt-BR.md).
 
 ## Style conventions
 
