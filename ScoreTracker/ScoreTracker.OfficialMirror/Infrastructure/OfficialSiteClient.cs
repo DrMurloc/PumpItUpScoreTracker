@@ -308,6 +308,17 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         return await _piuGame.GetCards(session, cancellationToken);
     }
 
+    public async Task<Contracts.PiuGameAccountIdentity> GetAccountIdentity(string username, string password,
+        CancellationToken cancellationToken)
+    {
+        var session = (await _piuGame.GetSessionId(username, password, cancellationToken)).client;
+        var account = await _piuGame.GetAccountData(session, cancellationToken);
+        if (account.AccountName == "INVALID") throw new InvalidCredentialException("Invalid username or password");
+        var cards = (await _piuGame.GetCards(session, cancellationToken)).ToArray();
+        var imagePath = await ConvertPiuGameAvatarToPiuScoresAvatar(account.ImageUrl, cancellationToken);
+        return new Contracts.PiuGameAccountIdentity(username, account.AccountName, imagePath, cards);
+    }
+
     private async Task<string> GetMappedName(string songName, CancellationToken cancellationToken)
     {
         songName = songName.Trim();
