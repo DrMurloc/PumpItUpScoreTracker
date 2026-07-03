@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<body>
+<!--
+  NOTE on fixture formatting: this is a SYNTHETIC fixture that matches what `PiuGameApi.GetBestScores`
+  currently expects, not a verbatim browser save. The parser uses HtmlAgilityPack `ChildNodes[N]`
+  indexing (adapted from JavaScript `.children[N]` in the in-source comment) and assumes a very
+  specific whitespace pattern — whitespace between sibling `<li>`s but inline at the deepest
+  `<div class="img...">` / `<div class="txt_v">` → `<img>` / `<span>` level — PLUS URLs without
+  the `www.` prefix. Browser-saved pages don't match this format. See the spawned task to refactor
+  the parser to use XPath/Elements; once that lands, this fixture can be replaced with a real capture.
+-->
+<div class="my_best_score_wrap">
+    <ul class="my_best_scoreList flex wrap">
+        <li>
+            <div class="in">
+                <div class="level_con mgL">
+                    <div class="stepBall_img_wrap">
+                        <div class="stepBall_in flex vc col hc wrap bgfix cont">
+                            <div class="tw"><img src="https://phoenix.piugame.com/l_img/stepball/full/d_text.png" alt=""></div>
+                            <div class="numw flex vc hc">
+                                <div class="imG"><img src="https://phoenix.piugame.com/l_img/stepball/full/d_num_2.png" alt=""></div>
+                                <div class="imG"><img src="https://phoenix.piugame.com/l_img/stepball/full/d_num_0.png" alt=""></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="song_con">
+                    <div class="song_name"><p>TRICKL4SH 220</p></div>
+                </div>
+                <div class="etc_con">
+                    <ul class="list flex vc hc wrap">
+                        <li>
+                            <div class="li_in">
+                                <div class="txt_v"><span class="num">999,231</span></div>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="li_in">
+                                <div class="img"><img src="https://phoenix.piugame.com/l_img/grade/sss_p.png" alt=""></div>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="li_in">
+                                <div class="img st1"><img src="https://phoenix.piugame.com/l_img/plate/eg.png" alt=""></div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </li>
+        <li>
+            <div class="in">
+                <div class="level_con mgL">
+                    <div class="stepBall_img_wrap">
+                        <div class="stepBall_in flex vc col hc wrap bgfix cont">
+                            <div class="tw"><img src="https://phoenix.piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
+                            <div class="numw flex vc hc">
+                                <div class="imG"><img src="https://phoenix.piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
+                                <div class="imG"><img src="https://phoenix.piugame.com/l_img/stepball/full/s_num_5.png" alt=""></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="song_con">
+                    <div class="song_name"><p>Conflict</p></div>
+                </div>
+                <div class="etc_con">
+                    <ul class="list flex vc hc wrap">
+                        <li>
+                            <div class="li_in">
+                                <div class="txt_v"><span class="num">850,000</span></div>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="li_in">
+                                <div class="img"><img src="https://phoenix.piugame.com/l_img/grade/a.png" alt=""></div>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="li_in">
+                                <div class="img st1"><img src="https://phoenix.piugame.com/l_img/plate/tg.png" alt=""></div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </li>
+    </ul>
+    <div class="page_search">
+        <div class="board_paging">
+            <button type="button" onclick="location.href='?&amp;&amp;page=238'" class="icon"><i class="xi last"></i></button>
+        </div>
+    </div>
+</div>
+</body>
+</html>
