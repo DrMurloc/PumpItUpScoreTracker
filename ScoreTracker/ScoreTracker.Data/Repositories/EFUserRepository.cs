@@ -120,6 +120,17 @@ public sealed class EFUserRepository : IUserRepository, IUserReader
             .ToArrayAsync(cancellationToken);
     }
 
+    public async Task<IEnumerable<User>> GetUsersByGameTag(Name gameTag,
+        CancellationToken cancellationToken = default)
+    {
+        string tag = gameTag;
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.User.Where(u => u.GameTag == tag)
+            .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName,
+                u.IsContentLocked, u.ClaimsInvalidatedAt))
+            .ToArrayAsync(cancellationToken);
+    }
+
 
     public async Task<User?> GetUser(Guid userId, CancellationToken cancellationToken = default)
     {

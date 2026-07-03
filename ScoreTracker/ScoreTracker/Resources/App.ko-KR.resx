@@ -1954,4 +1954,79 @@
   <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
     <value>PIUGAME 로그인은 piugame.com 접속 가능 여부에 따라 달라지므로 예비 로그인 방법을 연결하세요</value>
   </data>
+  <data name="Merge Accounts" xml:space="preserve">
+    <value>계정 병합</value>
+  </data>
+  <data name="Choose the account to merge with" xml:space="preserve">
+    <value>병합할 계정을 선택하세요</value>
+  </data>
+  <data name="Verify the other account" xml:space="preserve">
+    <value>상대 계정 확인</value>
+  </data>
+  <data name="Sign in with one of that account's methods to prove it's yours" xml:space="preserve">
+    <value>해당 계정의 로그인 방법으로 로그인하여 본인임을 증명하세요</value>
+  </data>
+  <data name="That PIUGAME account is not connected to the selected account" xml:space="preserve">
+    <value>해당 PIUGAME 계정은 선택한 계정에 연결되어 있지 않습니다</value>
+  </data>
+  <data name="Choose which account to keep" xml:space="preserve">
+    <value>유지할 계정을 선택하세요</value>
+  </data>
+  <data name="All sign-in methods will work on the account you keep, the other account's data is deleted after 30 days" xml:space="preserve">
+    <value>유지하는 계정에서 모든 로그인 방법을 사용할 수 있으며, 다른 계정의 데이터는 30일 후 삭제됩니다</value>
+  </data>
+  <data name="Keep this account" xml:space="preserve">
+    <value>이 계정 유지</value>
+  </data>
+  <data name="Most history" xml:space="preserve">
+    <value>기록 더 많음</value>
+  </data>
+  <data name="Phoenix Scores" xml:space="preserve">
+    <value>Phoenix 점수</value>
+  </data>
+  <data name="XX Scores" xml:space="preserve">
+    <value>XX 점수</value>
+  </data>
+  <data name="Oldest Score" xml:space="preserve">
+    <value>가장 오래된 점수</value>
+  </data>
+  <data name="Newest Score" xml:space="preserve">
+    <value>최신 점수</value>
+  </data>
+  <data name="Total Rating" xml:space="preserve">
+    <value>총 레이팅</value>
+  </data>
+  <data name="This account will be deleted" xml:space="preserve">
+    <value>이 계정은 삭제됩니다</value>
+  </data>
+  <data name="Type the name of the account being deleted to confirm" xml:space="preserve">
+    <value>확인을 위해 삭제될 계정의 이름을 입력하세요</value>
+  </data>
+  <data name="Accounts merged" xml:space="preserve">
+    <value>계정이 병합되었습니다</value>
+  </data>
+  <data name="You kept the other account, log in again to continue" xml:space="preserve">
+    <value>다른 계정을 유지했습니다. 계속하려면 다시 로그인하세요</value>
+  </data>
+  <data name="Merged account data is deleted on" xml:space="preserve">
+    <value>병합된 계정의 데이터는 {0}에 삭제됩니다</value>
+  </data>
+  <data name="Undo Merge" xml:space="preserve">
+    <value>병합 취소</value>
+  </data>
+  <data name="Merge undone" xml:space="preserve">
+    <value>병합이 취소되었습니다</value>
+  </data>
+  <data name="Merge another account" xml:space="preserve">
+    <value>다른 계정 병합</value>
+  </data>
+  <data name="This sign-in method belongs to another account, you can merge the two accounts" xml:space="preserve">
+    <value>이 로그인 방법은 다른 계정에 속해 있습니다. 두 계정을 병합할 수 있습니다</value>
+  </data>
+  <data name="Review and merge" xml:space="preserve">
+    <value>검토 후 병합</value>
+  </data>
+  <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
+    <value>게임 태그 {0}인 계정이 이미 있습니다. 본인인가요?</value>
+  </data>
 </root>

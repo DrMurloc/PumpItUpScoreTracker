@@ -9,6 +9,6 @@ namespace ScoreTracker.Identity.Contracts.Commands;
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record LinkExternalAliasesCommand(string LoginProviderName, IReadOnlyList<string> ExternalIds)
-    : IRequest<ExternalLinkResult>
+    : IRequest<ExternalLinkOutcome>
 {
 }

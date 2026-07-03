@@ -1998,4 +1998,79 @@
   <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
 	  <value>PIUGAME mrgl-mrgl blub piugame.com uuua! Grrblub backup mrgl-mrgl aaaughibbrgubugbugrguburgle!</value>
   </data>
+  <data name="Merge Accounts" xml:space="preserve">
+	  <value>Mrgl-Smoosh Mrglccounts</value>
+  </data>
+  <data name="Choose the account to merge with" xml:space="preserve">
+	  <value>Mrgl mrglccount uuua smoosh blub</value>
+  </data>
+  <data name="Verify the other account" xml:space="preserve">
+	  <value>Mrgl-check uuua RwlRwl mrglccount</value>
+  </data>
+  <data name="Sign in with one of that account's methods to prove it's yours" xml:space="preserve">
+	  <value>Mrgl-mrgl uuua RwlRwl grrblub, mrgl uuua blub!</value>
+  </data>
+  <data name="That PIUGAME account is not connected to the selected account" xml:space="preserve">
+	  <value>PIUGAME mrglccount nk RwlRwl mrglccount blub</value>
+  </data>
+  <data name="Choose which account to keep" xml:space="preserve">
+	  <value>Mrgl mrglccount uuua keep blub</value>
+  </data>
+  <data name="All sign-in methods will work on the account you keep, the other account's data is deleted after 30 days" xml:space="preserve">
+	  <value>Mrgl grrblubs blub keep-mrglccount! RwlRwl mrglccount mrgggl 30 mrgldays aaaughibbrgubugbugrguburgle</value>
+  </data>
+  <data name="Keep this account" xml:space="preserve">
+	  <value>Keep mrgl mrglccount</value>
+  </data>
+  <data name="Most history" xml:space="preserve">
+	  <value>Uuua mrglstory</value>
+  </data>
+  <data name="Phoenix Scores" xml:space="preserve">
+	  <value>Phoenix Mrglscores</value>
+  </data>
+  <data name="XX Scores" xml:space="preserve">
+	  <value>XX Mrglscores</value>
+  </data>
+  <data name="Oldest Score" xml:space="preserve">
+	  <value>Mrgloldest Mrglscore</value>
+  </data>
+  <data name="Newest Score" xml:space="preserve">
+	  <value>Mrglnewest Mrglscore</value>
+  </data>
+  <data name="Total Rating" xml:space="preserve">
+	  <value>Mrgltotal Mrglrating</value>
+  </data>
+  <data name="This account will be deleted" xml:space="preserve">
+	  <value>Mrgl mrglccount mrgggl blub!</value>
+  </data>
+  <data name="Type the name of the account being deleted to confirm" xml:space="preserve">
+	  <value>Mrgltype mrglname uuua mrgggl-mrglccount blub confirm</value>
+  </data>
+  <data name="Accounts merged" xml:space="preserve">
+	  <value>Mrglccounts smooshed!</value>
+  </data>
+  <data name="You kept the other account, log in again to continue" xml:space="preserve">
+	  <value>Mrgl keep RwlRwl mrglccount! Mrgl-mrgl again blub</value>
+  </data>
+  <data name="Merged account data is deleted on" xml:space="preserve">
+	  <value>Smooshed mrglccount mrgldata mrgggl {0} blub</value>
+  </data>
+  <data name="Undo Merge" xml:space="preserve">
+	  <value>Un-smoosh</value>
+  </data>
+  <data name="Merge undone" xml:space="preserve">
+	  <value>Un-smooshed!</value>
+  </data>
+  <data name="Merge another account" xml:space="preserve">
+	  <value>Smoosh RwlRwl mrglccount</value>
+  </data>
+  <data name="This sign-in method belongs to another account, you can merge the two accounts" xml:space="preserve">
+	  <value>Mrgl grrblub uuua RwlRwl mrglccount! Mrgl smoosh blub blub</value>
+  </data>
+  <data name="Review and merge" xml:space="preserve">
+	  <value>Mrglview uuua smoosh</value>
+  </data>
+  <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
+	  <value>Mrglccount mrgl gametag {0} uuua blub! Mrgl uuua?</value>
+  </data>
 </root>

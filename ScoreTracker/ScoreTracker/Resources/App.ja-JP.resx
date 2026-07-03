@@ -2075,4 +2075,79 @@
   <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
     <value>PIUGAMEログインはpiugame.comへの接続に依存します。予備のログイン方法を連携してください</value>
   </data>
+  <data name="Merge Accounts" xml:space="preserve">
+    <value>アカウント統合</value>
+  </data>
+  <data name="Choose the account to merge with" xml:space="preserve">
+    <value>統合するアカウントを選択してください</value>
+  </data>
+  <data name="Verify the other account" xml:space="preserve">
+    <value>相手アカウントの確認</value>
+  </data>
+  <data name="Sign in with one of that account's methods to prove it's yours" xml:space="preserve">
+    <value>そのアカウントのログイン方法でログインして本人確認をしてください</value>
+  </data>
+  <data name="That PIUGAME account is not connected to the selected account" xml:space="preserve">
+    <value>そのPIUGAMEアカウントは選択したアカウントに連携されていません</value>
+  </data>
+  <data name="Choose which account to keep" xml:space="preserve">
+    <value>残すアカウントを選択してください</value>
+  </data>
+  <data name="All sign-in methods will work on the account you keep, the other account's data is deleted after 30 days" xml:space="preserve">
+    <value>残したアカウントですべてのログイン方法が使えます。もう一方のアカウントのデータは30日後に削除されます</value>
+  </data>
+  <data name="Keep this account" xml:space="preserve">
+    <value>このアカウントを残す</value>
+  </data>
+  <data name="Most history" xml:space="preserve">
+    <value>履歴が多い</value>
+  </data>
+  <data name="Phoenix Scores" xml:space="preserve">
+    <value>Phoenixスコア</value>
+  </data>
+  <data name="XX Scores" xml:space="preserve">
+    <value>XXスコア</value>
+  </data>
+  <data name="Oldest Score" xml:space="preserve">
+    <value>最も古いスコア</value>
+  </data>
+  <data name="Newest Score" xml:space="preserve">
+    <value>最新のスコア</value>
+  </data>
+  <data name="Total Rating" xml:space="preserve">
+    <value>合計レーティング</value>
+  </data>
+  <data name="This account will be deleted" xml:space="preserve">
+    <value>このアカウントは削除されます</value>
+  </data>
+  <data name="Type the name of the account being deleted to confirm" xml:space="preserve">
+    <value>確認のため削除されるアカウントの名前を入力してください</value>
+  </data>
+  <data name="Accounts merged" xml:space="preserve">
+    <value>アカウントを統合しました</value>
+  </data>
+  <data name="You kept the other account, log in again to continue" xml:space="preserve">
+    <value>もう一方のアカウントを残しました。続行するには再ログインしてください</value>
+  </data>
+  <data name="Merged account data is deleted on" xml:space="preserve">
+    <value>統合されたアカウントのデータは{0}に削除されます</value>
+  </data>
+  <data name="Undo Merge" xml:space="preserve">
+    <value>統合を取り消す</value>
+  </data>
+  <data name="Merge undone" xml:space="preserve">
+    <value>統合を取り消しました</value>
+  </data>
+  <data name="Merge another account" xml:space="preserve">
+    <value>別のアカウントを統合</value>
+  </data>
+  <data name="This sign-in method belongs to another account, you can merge the two accounts" xml:space="preserve">
+    <value>このログイン方法は別のアカウントのものです。2つのアカウントを統合できます</value>
+  </data>
+  <data name="Review and merge" xml:space="preserve">
+    <value>確認して統合</value>
+  </data>
+  <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
+    <value>ゲームタグ{0}のアカウントがすでに存在します。あなたですか？</value>
+  </data>
 </root>

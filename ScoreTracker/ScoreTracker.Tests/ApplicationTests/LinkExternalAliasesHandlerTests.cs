@@ -36,7 +36,7 @@ public sealed class LinkExternalAliasesHandlerTests
         var result = await _handler.Handle(
             new LinkExternalAliasesCommand(Provider, new[] { "mbid:someone", "card:123" }), CancellationToken.None);
 
-        Assert.Equal(ExternalLinkResult.Linked, result);
+        Assert.Equal(ExternalLinkResult.Linked, result.Result);
         _users.Verify(u => u.CreateExternalLogin(_me.Id, Provider, "mbid:someone", It.IsAny<CancellationToken>()),
             Times.Once);
         _users.Verify(u => u.CreateExternalLogin(_me.Id, Provider, "card:123", It.IsAny<CancellationToken>()),
@@ -52,7 +52,7 @@ public sealed class LinkExternalAliasesHandlerTests
         var result = await _handler.Handle(
             new LinkExternalAliasesCommand(Provider, new[] { "mbid:someone" }), CancellationToken.None);
 
-        Assert.Equal(ExternalLinkResult.AlreadyLinked, result);
+        Assert.Equal(ExternalLinkResult.AlreadyLinked, result.Result);
         _users.Verify(
             u => u.CreateExternalLogin(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<CancellationToken>()), Times.Never);
@@ -70,7 +70,8 @@ public sealed class LinkExternalAliasesHandlerTests
         var result = await _handler.Handle(
             new LinkExternalAliasesCommand(Provider, new[] { "mbid:someone", "card:123" }), CancellationToken.None);
 
-        Assert.Equal(ExternalLinkResult.ConflictingAccount, result);
+        Assert.Equal(ExternalLinkResult.ConflictingAccount, result.Result);
+        Assert.Equal(somebodyElse.Id, result.ConflictingUserId);
         _users.Verify(
             u => u.CreateExternalLogin(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<CancellationToken>()), Times.Never);

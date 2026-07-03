@@ -5,7 +5,7 @@ using ScoreTracker.Identity.Contracts.Commands;
 
 namespace ScoreTracker.Identity.Application;
 
-internal sealed class LinkExternalAliasesHandler : IRequestHandler<LinkExternalAliasesCommand, ExternalLinkResult>
+internal sealed class LinkExternalAliasesHandler : IRequestHandler<LinkExternalAliasesCommand, ExternalLinkOutcome>
 {
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IUserRepository _users;
@@ -16,7 +16,7 @@ internal sealed class LinkExternalAliasesHandler : IRequestHandler<LinkExternalA
         _users = users;
     }
 
-    public async Task<ExternalLinkResult> Handle(LinkExternalAliasesCommand request,
+    public async Task<ExternalLinkOutcome> Handle(LinkExternalAliasesCommand request,
         CancellationToken cancellationToken)
     {
         var userId = _currentUser.User.Id;
@@ -26,14 +26,15 @@ internal sealed class LinkExternalAliasesHandler : IRequestHandler<LinkExternalA
             var owner = await _users.GetUserByExternalLogin(request.LoginProviderName, externalId,
                 cancellationToken);
             if (owner == null) unclaimed.Add(externalId);
-            else if (owner.Id != userId) return ExternalLinkResult.ConflictingAccount;
+            else if (owner.Id != userId)
+                return new ExternalLinkOutcome(ExternalLinkResult.ConflictingAccount, owner.Id);
         }
 
-        if (!unclaimed.Any()) return ExternalLinkResult.AlreadyLinked;
+        if (!unclaimed.Any()) return new ExternalLinkOutcome(ExternalLinkResult.AlreadyLinked, null);
 
         foreach (var externalId in unclaimed)
             await _users.CreateExternalLogin(userId, request.LoginProviderName, externalId, cancellationToken);
 
-        return ExternalLinkResult.Linked;
+        return new ExternalLinkOutcome(ExternalLinkResult.Linked, null);
     }
 }

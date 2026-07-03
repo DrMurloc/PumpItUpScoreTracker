@@ -2072,4 +2072,79 @@
   <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
     <value>Les connexions PIUGAME dépendent de la disponibilité de piugame.com, associez une méthode de connexion de secours</value>
   </data>
+  <data name="Merge Accounts" xml:space="preserve">
+    <value>Fusionner les comptes</value>
+  </data>
+  <data name="Choose the account to merge with" xml:space="preserve">
+    <value>Choisissez le compte à fusionner</value>
+  </data>
+  <data name="Verify the other account" xml:space="preserve">
+    <value>Vérifiez l'autre compte</value>
+  </data>
+  <data name="Sign in with one of that account's methods to prove it's yours" xml:space="preserve">
+    <value>Connectez-vous avec l'une des méthodes de ce compte pour prouver qu'il est à vous</value>
+  </data>
+  <data name="That PIUGAME account is not connected to the selected account" xml:space="preserve">
+    <value>Ce compte PIUGAME n'est pas associé au compte sélectionné</value>
+  </data>
+  <data name="Choose which account to keep" xml:space="preserve">
+    <value>Choisissez le compte à conserver</value>
+  </data>
+  <data name="All sign-in methods will work on the account you keep, the other account's data is deleted after 30 days" xml:space="preserve">
+    <value>Toutes les méthodes de connexion fonctionneront sur le compte conservé, les données de l'autre compte sont supprimées après 30 jours</value>
+  </data>
+  <data name="Keep this account" xml:space="preserve">
+    <value>Conserver ce compte</value>
+  </data>
+  <data name="Most history" xml:space="preserve">
+    <value>Plus d'historique</value>
+  </data>
+  <data name="Phoenix Scores" xml:space="preserve">
+    <value>Scores Phoenix</value>
+  </data>
+  <data name="XX Scores" xml:space="preserve">
+    <value>Scores XX</value>
+  </data>
+  <data name="Oldest Score" xml:space="preserve">
+    <value>Score le plus ancien</value>
+  </data>
+  <data name="Newest Score" xml:space="preserve">
+    <value>Score le plus récent</value>
+  </data>
+  <data name="Total Rating" xml:space="preserve">
+    <value>Rating total</value>
+  </data>
+  <data name="This account will be deleted" xml:space="preserve">
+    <value>Ce compte sera supprimé</value>
+  </data>
+  <data name="Type the name of the account being deleted to confirm" xml:space="preserve">
+    <value>Saisissez le nom du compte à supprimer pour confirmer</value>
+  </data>
+  <data name="Accounts merged" xml:space="preserve">
+    <value>Comptes fusionnés</value>
+  </data>
+  <data name="You kept the other account, log in again to continue" xml:space="preserve">
+    <value>Vous avez conservé l'autre compte, reconnectez-vous pour continuer</value>
+  </data>
+  <data name="Merged account data is deleted on" xml:space="preserve">
+    <value>Les données du compte fusionné seront supprimées le {0}</value>
+  </data>
+  <data name="Undo Merge" xml:space="preserve">
+    <value>Annuler la fusion</value>
+  </data>
+  <data name="Merge undone" xml:space="preserve">
+    <value>Fusion annulée</value>
+  </data>
+  <data name="Merge another account" xml:space="preserve">
+    <value>Fusionner un autre compte</value>
+  </data>
+  <data name="This sign-in method belongs to another account, you can merge the two accounts" xml:space="preserve">
+    <value>Cette méthode de connexion appartient à un autre compte, vous pouvez fusionner les deux comptes</value>
+  </data>
+  <data name="Review and merge" xml:space="preserve">
+    <value>Examiner et fusionner</value>
+  </data>
+  <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
+    <value>Un compte avec le game tag {0} existe déjà, est-ce vous ?</value>
+  </data>
 </root>

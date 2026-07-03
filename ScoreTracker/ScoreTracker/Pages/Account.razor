@@ -19,6 +19,7 @@
 @using System.Security.Authentication
 @using ScoreTracker.Identity.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.Web.Services
 
 <PageTitle>@L["Account"]</PageTitle>
 
@@ -103,6 +104,25 @@
         {
             <MudAlert Severity="Severity.Warning" Class="mb-4">@L["PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method"]</MudAlert>
         }
+        @if (_mergeInviteUserId != null)
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-4">
+                @L["This sign-in method belongs to another account, you can merge the two accounts"]
+                <MudButton Class="ml-2" Variant="Variant.Filled" Color="Color.Warning" Size="Size.Small"
+                           Href="@($"/Account/Merge?with={_mergeInviteUserId}")">@L["Review and merge"]</MudButton>
+            </MudAlert>
+        }
+        @foreach (var merge in _activeMerges)
+        {
+            <MudAlert Severity="Severity.Info" Class="mb-4">
+                @L["Merged account data is deleted on", merge.PurgeAfter.ToString("d")]
+                @if (merge.SurvivorUserId == CurrentUser.User.Id)
+                {
+                    <MudButton Class="ml-2" Variant="Variant.Outlined" Size="Size.Small" Disabled="_isUndoingMerge"
+                               OnClick="() => UndoMerge(merge.Id)">@L["Undo Merge"]</MudButton>
+                }
+            </MudAlert>
+        }
         <MudGrid>
             @foreach (var provider in ConnectedProviders)
             {
@@ -130,6 +150,7 @@
         {
             <MudButton OnClick="OpenPiuGameDialog" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.SportsEsports">@L["Connect"] PIUGAME</MudButton>
         }
+        <MudButton Href="/Account/Merge" Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.MergeType">@L["Merge another account"]</MudButton>
     </MudCardActions>
 </MudCard>
 
@@ -232,6 +253,7 @@
 @inject IUiSettingsAccessor UiSettings;
 @inject IJSRuntime JSRuntime;
 @inject IUserRepository Users;
+@inject AccountProofService Proofs;
 @code
 {
 
@@ -272,6 +294,24 @@
     private bool _isConnectingPiuGame = false;
     private string _piuGameUsername = string.Empty;
     private string _piuGamePassword = string.Empty;
+    private Guid? _mergeInviteUserId;
+    private IReadOnlyList<AccountMergeRecord> _activeMerges = Array.Empty<AccountMergeRecord>();
+    private bool _isUndoingMerge = false;
+
+    private async Task UndoMerge(Guid mergeId)
+    {
+        _isUndoingMerge = true;
+        try
+        {
+            await Mediator.Send(new UndoAccountMergeCommand(mergeId));
+            _activeMerges = (await Mediator.Send(new GetActiveAccountMergesQuery())).ToArray();
+            Snackbar.Add(L["Merge undone"], Severity.Success);
+        }
+        finally
+        {
+            _isUndoingMerge = false;
+        }
+    }
 
     private void OpenPiuGameDialog()
     {
@@ -286,8 +326,8 @@
         try
         {
             var identity = await Mediator.Send(new GetPiuGameAccountIdentityQuery(_piuGameUsername, _piuGamePassword));
-            var result = await Mediator.Send(new LinkExternalAliasesCommand("PiuGame", identity.GetLoginAliases().ToArray()));
-            switch (result)
+            var outcome = await Mediator.Send(new LinkExternalAliasesCommand("PiuGame", identity.GetLoginAliases().ToArray()));
+            switch (outcome.Result)
             {
                 case ExternalLinkResult.Linked:
                     Snackbar.Add(L["Sign-in method connected"], Severity.Success);
@@ -297,6 +337,14 @@
                     break;
                 case ExternalLinkResult.ConflictingAccount:
                     Snackbar.Add(L["This sign-in method is connected to a different account"], Severity.Warning);
+                    if (outcome.ConflictingUserId != null)
+                    {
+                        // The credentials they just typed are proof of the conflicting
+                        // account's piugame login — the merge invitation is friction-free.
+                        Proofs.RecordProof(CurrentUser.User.Id, outcome.ConflictingUserId.Value);
+                        _mergeInviteUserId = outcome.ConflictingUserId;
+                    }
+
                     break;
             }
 
@@ -344,6 +392,7 @@
     private void ShowLinkResult()
     {
         var query = HttpUtility.ParseQueryString(new Uri(NavManager.Uri).Query);
+        if (Guid.TryParse(query.Get("mergeWith"), out var mergeWith)) _mergeInviteUserId = mergeWith;
         switch (query.Get("linkResult"))
         {
             case "Linked":
@@ -385,6 +434,7 @@
         _apiToken = await Mediator.Send(new GetUserApiTokenQuery());
         _countries = (await Users.GetCountries()).OrderBy(c => c.Name);
         _externalLogins = (await Mediator.Send(new GetExternalLoginsQuery())).ToArray();
+        _activeMerges = (await Mediator.Send(new GetActiveAccountMergesQuery())).ToArray();
         ShowLinkResult();
     }
 
