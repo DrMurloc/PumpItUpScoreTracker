@@ -72,7 +72,7 @@ dotnet user-secrets set "Google:ClientId" "..." --project ScoreTracker/ScoreTrac
 | `Sendgrid:ApiKey` | Admin notification emails | [SendGrid](https://sendgrid.com/) account | Sends fail quietly at the call site; nothing else affected |
 | `AzureBlob:ConnectionString` | Photo uploads (tournament verification, qualifiers) | See below | Defaults to the Azurite emulator connection string |
 
-Bring your own OAuth credentials — the production ones are not shared.
+All of these are **bring-your-own credentials**: if you want to test a feature that needs one, create your own (Discord application, Google OAuth client, Meta app, SendGrid account, storage account). No credentials are provided for local development — production ones are not shared.
 
 **SQL is deliberately not configurable through secrets** — the AppHost always injects the container's connection string, so a pasted production connection string can never point your local environment at prod.
 
