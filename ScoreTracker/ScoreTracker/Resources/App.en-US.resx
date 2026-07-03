@@ -2017,4 +2017,37 @@
   <data name="UCS Leaderboards" xml:space="preserve">
     <value>UCS Leaderboards</value>
   </data>
+  <data name="Sign-In Methods" xml:space="preserve">
+    <value>Sign-In Methods</value>
+  </data>
+  <data name="You can sign in to your account with any connected method" xml:space="preserve">
+    <value>You can sign in to your account with any connected method</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>Connect</value>
+  </data>
+  <data name="Disconnect" xml:space="preserve">
+    <value>Disconnect</value>
+  </data>
+  <data name="Disconnect Sign-In Method" xml:space="preserve">
+    <value>Disconnect Sign-In Method</value>
+  </data>
+  <data name="You will no longer be able to sign in with this method" xml:space="preserve">
+    <value>You will no longer be able to sign in with this method</value>
+  </data>
+  <data name="This is your only sign-in method and cannot be disconnected" xml:space="preserve">
+    <value>This is your only sign-in method and cannot be disconnected</value>
+  </data>
+  <data name="Sign-in method connected" xml:space="preserve">
+    <value>Sign-in method connected</value>
+  </data>
+  <data name="Sign-in method disconnected" xml:space="preserve">
+    <value>Sign-in method disconnected</value>
+  </data>
+  <data name="This sign-in method is already connected to your account" xml:space="preserve">
+    <value>This sign-in method is already connected to your account</value>
+  </data>
+  <data name="This sign-in method is connected to a different account" xml:space="preserve">
+    <value>This sign-in method is connected to a different account</value>
+  </data>
 </root>

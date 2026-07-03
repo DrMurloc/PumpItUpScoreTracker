@@ -91,6 +91,56 @@
         <MudButton Href="/Logout" Icon="@Icons.Material.Filled.Logout" Variant="Variant.Filled" Color="Color.Primary">@L["Logout"]</MudButton>
     </MudCardActions>
 </MudCard>
+<br/>
+<MudCard>
+    <MudCardHeader>@L["Sign-In Methods"]</MudCardHeader>
+    <MudCardContent>
+        <MudText Typo="Typo.body2" Class="mb-4">@L["You can sign in to your account with any connected method"]</MudText>
+        <MudGrid>
+            @foreach (var login in _externalLogins)
+            {
+                <MudItem xs="6" Style="align-content: center;">
+                    <MudIcon Icon="@ProviderIcon(login.LoginProviderName)" Style="vertical-align: middle;" Class="mr-2"></MudIcon>
+                    <MudText Inline="true">@login.LoginProviderName</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTooltip Text="@(_externalLogins.Count == 1 ? L["This is your only sign-in method and cannot be disconnected"].Value : string.Empty)">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error"
+                                   Disabled="_externalLogins.Count == 1"
+                                   OnClick="() => OpenDisconnectDialog(login)">@L["Disconnect"]</MudButton>
+                    </MudTooltip>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudCardContent>
+    <MudCardActions>
+        <MudSpacer></MudSpacer>
+        @foreach (var provider in ConnectableProviders)
+        {
+            <MudButton Href="@($"/Login/{provider}/Link")" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@ProviderIcon(provider)">@L["Connect"] @provider</MudButton>
+        }
+    </MudCardActions>
+</MudCard>
+
+<MudDialog @bind-Visible="_showDisconnectDialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L["Disconnect Sign-In Method"]</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText>@L["You will no longer be able to sign in with this method"] (@(_disconnectTarget?.LoginProviderName ?? ""))</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text"
+                   OnClick="() => _showDisconnectDialog = false"
+                   Disabled="_isDisconnecting"
+                   Color="Color.Primary">@L["Cancel"]</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   OnClick="ConfirmDisconnect"
+                   Disabled="_isDisconnecting"
+                   Color="Color.Error">@L["Confirm"]</MudButton>
+    </DialogActions>
+</MudDialog>
 
 <MudDialog @bind-Visible="_showPublicConfirmDialog">
     <DialogContent>
@@ -166,6 +216,59 @@
     private string _countryName = null;
     private Guid? _apiToken;
     private string _currentCulture = "en-US";
+    private IReadOnlyList<ExternalLoginRecord> _externalLogins = Array.Empty<ExternalLoginRecord>();
+    private static readonly string[] ConnectableProviders = { "Discord", "Google" };
+    private bool _showDisconnectDialog = false;
+    private bool _isDisconnecting = false;
+    private ExternalLoginRecord? _disconnectTarget;
+
+    private static string ProviderIcon(string provider) => provider.ToLowerInvariant() switch
+    {
+        "discord" => Icons.Custom.Brands.Discord,
+        "google" => Icons.Custom.Brands.Google,
+        "facebook" => Icons.Custom.Brands.Facebook,
+        _ => Icons.Material.Filled.Login
+    };
+
+    private void OpenDisconnectDialog(ExternalLoginRecord login)
+    {
+        _disconnectTarget = login;
+        _showDisconnectDialog = true;
+    }
+
+    private async Task ConfirmDisconnect()
+    {
+        if (_disconnectTarget == null) return;
+        _isDisconnecting = true;
+        try
+        {
+            await Mediator.Send(new RemoveExternalLoginCommand(_disconnectTarget.LoginProviderName, _disconnectTarget.ExternalId));
+            _externalLogins = (await Mediator.Send(new GetExternalLoginsQuery())).ToArray();
+            Snackbar.Add(L["Sign-in method disconnected"], Severity.Success);
+            _showDisconnectDialog = false;
+        }
+        finally
+        {
+            _isDisconnecting = false;
+        }
+    }
+
+    private void ShowLinkResult()
+    {
+        var query = HttpUtility.ParseQueryString(new Uri(NavManager.Uri).Query);
+        switch (query.Get("linkResult"))
+        {
+            case "Linked":
+                Snackbar.Add(L["Sign-in method connected"], Severity.Success);
+                break;
+            case "AlreadyLinked":
+                Snackbar.Add(L["This sign-in method is already connected to your account"], Severity.Info);
+                break;
+            case "Conflict":
+                Snackbar.Add(L["This sign-in method is connected to a different account"], Severity.Warning);
+                break;
+        }
+    }
     public static string Base64Encode(string plainText) 
     {
         var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
@@ -193,6 +296,8 @@
         _isContentLocked = CurrentUser.User.IsContentLocked;
         _apiToken = await Mediator.Send(new GetUserApiTokenQuery());
         _countries = (await Users.GetCountries()).OrderBy(c => c.Name);
+        _externalLogins = (await Mediator.Send(new GetExternalLoginsQuery())).ToArray();
+        ShowLinkResult();
     }
 
     private async Task CopyUserId()

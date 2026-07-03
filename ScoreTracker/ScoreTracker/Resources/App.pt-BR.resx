@@ -1968,4 +1968,37 @@
   <data name="UCS Leaderboards" xml:space="preserve">
     <value>Classificações UCS</value>
   </data>
+  <data name="Sign-In Methods" xml:space="preserve">
+    <value>Métodos de login</value>
+  </data>
+  <data name="You can sign in to your account with any connected method" xml:space="preserve">
+    <value>Você pode entrar na sua conta com qualquer método conectado</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>Conectar</value>
+  </data>
+  <data name="Disconnect" xml:space="preserve">
+    <value>Desconectar</value>
+  </data>
+  <data name="Disconnect Sign-In Method" xml:space="preserve">
+    <value>Desconectar método de login</value>
+  </data>
+  <data name="You will no longer be able to sign in with this method" xml:space="preserve">
+    <value>Você não poderá mais entrar com este método</value>
+  </data>
+  <data name="This is your only sign-in method and cannot be disconnected" xml:space="preserve">
+    <value>Este é o seu único método de login e não pode ser desconectado</value>
+  </data>
+  <data name="Sign-in method connected" xml:space="preserve">
+    <value>Método de login conectado</value>
+  </data>
+  <data name="Sign-in method disconnected" xml:space="preserve">
+    <value>Método de login desconectado</value>
+  </data>
+  <data name="This sign-in method is already connected to your account" xml:space="preserve">
+    <value>Este método de login já está conectado à sua conta</value>
+  </data>
+  <data name="This sign-in method is connected to a different account" xml:space="preserve">
+    <value>Este método de login está conectado a outra conta</value>
+  </data>
 </root>

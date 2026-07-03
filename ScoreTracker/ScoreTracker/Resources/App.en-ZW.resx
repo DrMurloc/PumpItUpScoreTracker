@@ -1941,4 +1941,37 @@
   <data name="Chart Leaderboard" xml:space="preserve">
 	  <value>Mrglrgl Arglmrgl</value>
   </data>
+  <data name="Sign-In Methods" xml:space="preserve">
+	  <value>Mrgl-Mrgl Grrblubs</value>
+  </data>
+  <data name="You can sign in to your account with any connected method" xml:space="preserve">
+	  <value>Mrgl grrblub aaaughibbrgubugbugrguburgle mrgl mrgl blub</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+	  <value>Grrblub</value>
+  </data>
+  <data name="Disconnect" xml:space="preserve">
+	  <value>Unggh-grrblub</value>
+  </data>
+  <data name="Disconnect Sign-In Method" xml:space="preserve">
+	  <value>Unggh-grrblub Mrgl-Mrgl</value>
+  </data>
+  <data name="You will no longer be able to sign in with this method" xml:space="preserve">
+	  <value>Mrgl nk grrblub mrgggl blub</value>
+  </data>
+  <data name="This is your only sign-in method and cannot be disconnected" xml:space="preserve">
+	  <value>Mrgl uuua grrblub! Nk unggh!</value>
+  </data>
+  <data name="Sign-in method connected" xml:space="preserve">
+	  <value>Grrblub mrglglglgl!</value>
+  </data>
+  <data name="Sign-in method disconnected" xml:space="preserve">
+	  <value>Unggh-grrblub mrglglglgl!</value>
+  </data>
+  <data name="This sign-in method is already connected to your account" xml:space="preserve">
+	  <value>Mrgl grrblub mrgl-mrgl uuua blub</value>
+  </data>
+  <data name="This sign-in method is connected to a different account" xml:space="preserve">
+	  <value>Mrgl grrblub uuua RwlRwlRwlRwl blub</value>
+  </data>
 </root>

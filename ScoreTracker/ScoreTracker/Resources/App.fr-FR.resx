@@ -2015,4 +2015,37 @@
   <data name="UCS Leaderboards" xml:space="preserve">
     <value>Leaderboards UCS</value>
   </data>
+  <data name="Sign-In Methods" xml:space="preserve">
+    <value>Méthodes de connexion</value>
+  </data>
+  <data name="You can sign in to your account with any connected method" xml:space="preserve">
+    <value>Vous pouvez vous connecter à votre compte avec n'importe quelle méthode associée</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>Associer</value>
+  </data>
+  <data name="Disconnect" xml:space="preserve">
+    <value>Dissocier</value>
+  </data>
+  <data name="Disconnect Sign-In Method" xml:space="preserve">
+    <value>Dissocier la méthode de connexion</value>
+  </data>
+  <data name="You will no longer be able to sign in with this method" xml:space="preserve">
+    <value>Vous ne pourrez plus vous connecter avec cette méthode</value>
+  </data>
+  <data name="This is your only sign-in method and cannot be disconnected" xml:space="preserve">
+    <value>C'est votre seule méthode de connexion, elle ne peut pas être dissociée</value>
+  </data>
+  <data name="Sign-in method connected" xml:space="preserve">
+    <value>Méthode de connexion associée</value>
+  </data>
+  <data name="Sign-in method disconnected" xml:space="preserve">
+    <value>Méthode de connexion dissociée</value>
+  </data>
+  <data name="This sign-in method is already connected to your account" xml:space="preserve">
+    <value>Cette méthode de connexion est déjà associée à votre compte</value>
+  </data>
+  <data name="This sign-in method is connected to a different account" xml:space="preserve">
+    <value>Cette méthode de connexion est associée à un autre compte</value>
+  </data>
 </root>

@@ -1897,4 +1897,37 @@
   <data name="UCS Leaderboards" xml:space="preserve">
     <value>UCS 리더보드</value>
   </data>
+  <data name="Sign-In Methods" xml:space="preserve">
+    <value>로그인 방법</value>
+  </data>
+  <data name="You can sign in to your account with any connected method" xml:space="preserve">
+    <value>연결된 어떤 방법으로도 계정에 로그인할 수 있습니다</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>연결</value>
+  </data>
+  <data name="Disconnect" xml:space="preserve">
+    <value>연결 해제</value>
+  </data>
+  <data name="Disconnect Sign-In Method" xml:space="preserve">
+    <value>로그인 방법 연결 해제</value>
+  </data>
+  <data name="You will no longer be able to sign in with this method" xml:space="preserve">
+    <value>이 방법으로는 더 이상 로그인할 수 없게 됩니다</value>
+  </data>
+  <data name="This is your only sign-in method and cannot be disconnected" xml:space="preserve">
+    <value>유일한 로그인 방법이므로 연결 해제할 수 없습니다</value>
+  </data>
+  <data name="Sign-in method connected" xml:space="preserve">
+    <value>로그인 방법이 연결되었습니다</value>
+  </data>
+  <data name="Sign-in method disconnected" xml:space="preserve">
+    <value>로그인 방법 연결이 해제되었습니다</value>
+  </data>
+  <data name="This sign-in method is already connected to your account" xml:space="preserve">
+    <value>이 로그인 방법은 이미 내 계정에 연결되어 있습니다</value>
+  </data>
+  <data name="This sign-in method is connected to a different account" xml:space="preserve">
+    <value>이 로그인 방법은 다른 계정에 연결되어 있습니다</value>
+  </data>
 </root>

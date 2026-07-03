@@ -2018,4 +2018,37 @@
   <data name="UCS Leaderboards" xml:space="preserve">
     <value>UCSランキング</value>
   </data>
+  <data name="Sign-In Methods" xml:space="preserve">
+    <value>ログイン方法</value>
+  </data>
+  <data name="You can sign in to your account with any connected method" xml:space="preserve">
+    <value>連携済みのどの方法でもアカウントにログインできます</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>連携</value>
+  </data>
+  <data name="Disconnect" xml:space="preserve">
+    <value>連携解除</value>
+  </data>
+  <data name="Disconnect Sign-In Method" xml:space="preserve">
+    <value>ログイン方法の連携解除</value>
+  </data>
+  <data name="You will no longer be able to sign in with this method" xml:space="preserve">
+    <value>この方法ではログインできなくなります</value>
+  </data>
+  <data name="This is your only sign-in method and cannot be disconnected" xml:space="preserve">
+    <value>唯一のログイン方法のため連携解除できません</value>
+  </data>
+  <data name="Sign-in method connected" xml:space="preserve">
+    <value>ログイン方法を連携しました</value>
+  </data>
+  <data name="Sign-in method disconnected" xml:space="preserve">
+    <value>ログイン方法の連携を解除しました</value>
+  </data>
+  <data name="This sign-in method is already connected to your account" xml:space="preserve">
+    <value>このログイン方法はすでにあなたのアカウントに連携されています</value>
+  </data>
+  <data name="This sign-in method is connected to a different account" xml:space="preserve">
+    <value>このログイン方法は別のアカウントに連携されています</value>
+  </data>
 </root>

@@ -2017,4 +2017,37 @@
   <data name="UCS Leaderboards" xml:space="preserve">
     <value>Classifiche UCS</value>
   </data>
+  <data name="Sign-In Methods" xml:space="preserve">
+    <value>Metodi di accesso</value>
+  </data>
+  <data name="You can sign in to your account with any connected method" xml:space="preserve">
+    <value>Puoi accedere al tuo account con qualsiasi metodo collegato</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>Collega</value>
+  </data>
+  <data name="Disconnect" xml:space="preserve">
+    <value>Scollega</value>
+  </data>
+  <data name="Disconnect Sign-In Method" xml:space="preserve">
+    <value>Scollega metodo di accesso</value>
+  </data>
+  <data name="You will no longer be able to sign in with this method" xml:space="preserve">
+    <value>Non potrai più accedere con questo metodo</value>
+  </data>
+  <data name="This is your only sign-in method and cannot be disconnected" xml:space="preserve">
+    <value>Questo è il tuo unico metodo di accesso e non può essere scollegato</value>
+  </data>
+  <data name="Sign-in method connected" xml:space="preserve">
+    <value>Metodo di accesso collegato</value>
+  </data>
+  <data name="Sign-in method disconnected" xml:space="preserve">
+    <value>Metodo di accesso scollegato</value>
+  </data>
+  <data name="This sign-in method is already connected to your account" xml:space="preserve">
+    <value>Questo metodo di accesso è già collegato al tuo account</value>
+  </data>
+  <data name="This sign-in method is connected to a different account" xml:space="preserve">
+    <value>Questo metodo di accesso è collegato a un altro account</value>
+  </data>
 </root>
