@@ -18,6 +18,7 @@ public static class CommunitiesRegistrationExtensions
     public static IServiceCollection AddCommunities(this IServiceCollection services)
     {
         services.AddTransient<ICommunityRepository, EFCommunitiesRepository>();
+        services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddSingleton<IDbModelContribution, CommunitiesModelContribution>();
         return services;
     }
@@ -33,5 +34,6 @@ public static class CommunitiesRegistrationExtensions
     public static void AddCommunitiesConsumers(this IRegistrationConfigurator configurator)
     {
         configurator.AddConsumer<CommunitySaga>();
+        configurator.AddConsumer<AccountPurgeConsumer>();
     }
 }

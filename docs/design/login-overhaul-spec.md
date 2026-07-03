@@ -184,8 +184,12 @@ and dropped" below.)
     `WipeUserScoresCommand(userId, IncludeHistory: true)` (already tested, already an allowed
     arch-test exception for its cross-port reach). Identity deletes its own rows and the
     `User` row last.
-- **Tests**: consumer tests per vertical; one `Tests.Integration` case seeding representative
-  rows across verticals, running the purge, asserting the wipe (Testcontainers + Respawn).
+- **Tests**: component tests for the Identity purge saga (first-fire vs week-later behavior);
+  the per-vertical consumers are thin ExecuteDelete pass-throughs covered by build + the
+  integration suite's migration validation.
+- **Deliberate exclusion**: Catalog's `UserRandomSettings` rows are not purged — the vertical
+  has no consumer infrastructure and the rows are trivial preferences. Pick up when Catalog
+  grows a consumer hook.
 - **Docs**: SCHEDULED-JOBS.md row.
 
 ### C8 (optional follow-up) — self-serve account deletion

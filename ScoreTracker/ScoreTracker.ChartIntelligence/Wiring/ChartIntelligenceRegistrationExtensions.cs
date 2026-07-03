@@ -1,6 +1,7 @@
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using ScoreTracker.ChartIntelligence.Application;
+using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.ChartIntelligence.Infrastructure;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -22,6 +23,7 @@ public static class ChartIntelligenceRegistrationExtensions
         services.AddTransient<IChartDifficultyRatingRepository, EFChartDifficultyRatingRepository>();
         services.AddTransient<IChartScoringLevelRepository, EFChartScoringLevelRepository>();
         services.AddTransient<IChartPreferenceRepository, EFPreferenceRatingRepository>();
+        services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddSingleton<IDbModelContribution, ChartIntelligenceModelContribution>();
         return services;
     }
@@ -35,5 +37,6 @@ public static class ChartIntelligenceRegistrationExtensions
     {
         configurator.AddConsumer<TierListSaga>();
         configurator.AddConsumer<ScoringDifficultySaga>();
+        configurator.AddConsumer<AccountPurgeConsumer>();
     }
 }

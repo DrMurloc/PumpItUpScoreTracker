@@ -23,6 +23,7 @@ public static class ScoreLedgerRegistrationExtensions
         services.AddTransient<IXXChartAttemptRepository, EFXXChartAttemptRepository>();
         services.AddTransient<IScoreReader, EFPhoenixRecordsRepository>();
         services.AddTransient<IPhoenixRecordStatsRepository, EFPhoenixRecordStatsRepository>();
+        services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddSingleton<IDbModelContribution, ScoreLedgerModelContribution>();
         return services;
     }
@@ -36,5 +37,6 @@ public static class ScoreLedgerRegistrationExtensions
     public static void AddScoreLedgerConsumers(this IRegistrationConfigurator configurator)
     {
         configurator.AddConsumer<UpdatePhoenixRecordHandler>();
+        configurator.AddConsumer<AccountPurgeConsumer>();
     }
 }

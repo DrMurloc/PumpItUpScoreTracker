@@ -14,7 +14,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MassTransit.Abstractions" Version="8.5.7" />
+    <!-- Full MassTransit (not just Abstractions): the AddUcsConsumers hook needs
+         IRegistrationConfigurator, which lives in the full package. -->
+    <PackageReference Include="MassTransit" Version="8.5.7" />
     <PackageReference Include="MediatR" Version="14.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
   </ItemGroup>

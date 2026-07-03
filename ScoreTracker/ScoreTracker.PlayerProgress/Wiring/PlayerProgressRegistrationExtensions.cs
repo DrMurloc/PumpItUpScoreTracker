@@ -25,6 +25,7 @@ public static class PlayerProgressRegistrationExtensions
         services.AddTransient<IPlayerHistoryRepository, EFPlayerHistoryRepository>();
         services.AddTransient<ITitleRepository, EFTitleRepository>();
         services.AddTransient<IFeedbackRepository, EFFeedbackRepository>();
+        services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddSingleton<IDbModelContribution, PlayerProgressModelContribution>();
         return services;
     }
@@ -41,5 +42,6 @@ public static class PlayerProgressRegistrationExtensions
         configurator.AddConsumer<PlayerRatingSaga>();
         configurator.AddConsumer<TitleSaga>();
         configurator.AddConsumer<PlayerHistorySaga>();
+        configurator.AddConsumer<AccountPurgeConsumer>();
     }
 }
