@@ -55,7 +55,7 @@ so a broken session can resume from the last checked item.
   `EFScoreJournalRepository` drops the hardcoded `MixIds.Phoenix`. The journal is the only
   non-recomputable store — this lands before any P2 score can exist. Component tests.
 
-- [ ] **Commit 3a — ScoreLedger schema: MixId + Phoenix backfill.**
+- [x] **Commit 3a — ScoreLedger schema: MixId + Phoenix backfill.**
   `PhoenixRecords` (unique index → UserId+ChartId+MixId — biggest table, deploy-gated index rebuild),
   `PhoenixRecordStats`. Entity + repo + migration + DATABASE-SCHEMA.md rows.
 

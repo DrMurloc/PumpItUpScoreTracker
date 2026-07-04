@@ -28,9 +28,9 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 
 | Table | Purpose |
 |---|---|
-| `scores.PhoenixRecord` | Best-known Phoenix attempt per user+chart: score, plate, broken flag |
+| `scores.PhoenixRecord` | Best-known Phoenix-scoring attempt per user+chart+mix: score, plate, broken flag (unique on UserId+ChartId+MixId; pre-Phoenix-2 rows backfilled as Phoenix) |
 | `scores.BestAttempt` | XX-era best attempts per user+chart |
-| `scores.PhoenixRecordStats` | Per-score Pumbility stats, written by PlayerProgress through a Ledger port |
+| `scores.PhoenixRecordStats` | Per-score Pumbility stats per user+chart+mix, written by PlayerProgress through a Ledger port |
 | `scores.ScoreEventJournal` | **Append-only** journal of score submissions *as received* (manual, import, CSV, …), including submissions that don't beat the stored best. Rows are never updated or deleted. Seeded 2026-06 from `PhoenixRecord` (`Source='backfill'`); the foundation of score-progression history |
 
 ## Player Progress (vertical: `ScoreTracker.PlayerProgress`)

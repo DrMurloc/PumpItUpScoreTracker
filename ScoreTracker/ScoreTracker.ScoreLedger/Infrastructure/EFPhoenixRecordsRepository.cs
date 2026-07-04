@@ -144,6 +144,8 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 ChartId = score.ChartId,
                 UserId = userId,
                 Id = new Guid(),
+                // Phoenix until the port takes a mix (plan doc, port-threading commit).
+                MixId = MixIds.Phoenix,
                 IsBroken = score.IsBroken,
                 Score = score.Score,
                 LetterGrade = score.Score?.LetterGrade.GetName(),

@@ -36,6 +36,8 @@ internal sealed class EFPhoenixRecordStatsRepository : IPhoenixRecordStatsReposi
                 {
                     ChartId = stat.ChartId,
                     UserId = userId,
+                    // Phoenix until the port takes a mix (plan doc, port-threading commit).
+                    MixId = MixIds.Phoenix,
                     PumbilityPlus = stat.PumbilityPlus,
                     Pumbility = stat.Pumbility
                 });

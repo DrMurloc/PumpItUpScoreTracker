@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.ScoreLedger.Infrastructure.Entities
 {
-    [Index(nameof(UserId), nameof(ChartId), IsUnique = true)]
+    [Index(nameof(UserId), nameof(ChartId), nameof(MixId), IsUnique = true)]
     internal sealed class PhoenixRecordStatsEntity
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -12,6 +12,7 @@ namespace ScoreTracker.ScoreLedger.Infrastructure.Entities
         public int Id { get; set; }
         public Guid UserId { get; set; }
         public Guid ChartId { get; set; }
+        public Guid MixId { get; set; }
 
         public double Pumbility { get; set; }
         public double PumbilityPlus { get; set; }
