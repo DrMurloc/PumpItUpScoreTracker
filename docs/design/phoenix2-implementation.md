@@ -92,7 +92,7 @@ so a broken session can resume from the last checked item.
   states for Titles / WhatShouldIPlay / Import / OfficialLeaderboards under Phoenix 2; tier-list
   provisional badge; new localization keys populated in all eight locales.
 
-- [ ] **Commit 8 — API mix parameter.**
+- [x] **Commit 8 — API mix parameter.**
   Optional `mix` query param (default Phoenix) on phoenixScores GET/record + tier-list/chart
   endpoints as applicable; contract tests extended additively; API.md updated.
 

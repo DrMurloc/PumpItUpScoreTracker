@@ -51,8 +51,13 @@ public sealed class ChartsController : Controller
         [FromQuery(Name = "SongTypes")] string[]? songTypeString = null,
         [FromQuery(Name = "LevelMin")] int? minInt = null,
         [FromQuery(Name = "LevelMax")] int? maxInt = null,
-        [FromQuery(Name = "Bucket")] string[]? buckets = null)
+        [FromQuery(Name = "Bucket")] string[]? buckets = null,
+        [FromQuery(Name = "Mix")] [DefaultValue("Phoenix")]
+        string? mixString = null)
     {
+        if (!ApiMixParser.TryParse(mixString, out var mix))
+            return BadRequest(ApiMixParser.InvalidMessage);
+
         var settings = new RandomSettings();
 
         var chartTypes = chartTypeString == null
@@ -126,7 +131,7 @@ public sealed class ChartsController : Controller
 
         try
         {
-            var charts = await _mediator.Send(new GetRandomChartsQuery(settings));
+            var charts = await _mediator.Send(new GetRandomChartsQuery(settings, mix));
 
             return Json(charts.Select(c => new ChartDto(c)).ToArray());
         }
@@ -139,7 +144,7 @@ public sealed class ChartsController : Controller
     [HttpGet]
     public async Task<IActionResult> Get(
         [FromQuery(Name = "Mix")] [DefaultValue("Phoenix")]
-        string mixString,
+        string? mixString = null,
         [FromQuery(Name = "Page")] [DefaultValue(1)]
         int page = 1,
         [FromQuery(Name = "Count")] [DefaultValue(50)]
@@ -147,7 +152,11 @@ public sealed class ChartsController : Controller
         [FromQuery(Name = "ChartType")] string? chartTypeString = null,
         [FromQuery(Name = "Level")] int? levelInt = null)
     {
-        if (!Enum.TryParse<MixEnum>(mixString, out var mix))
+        // Grandfathered surface: unlike the ApiMixParser endpoints this one predates the Phoenix 2
+        // work and accepts XX (the legacy catalog is real, queryable data). Omission now defaults
+        // to Phoenix per the API-wide rule — previously it was a 400, so the change is additive.
+        var mix = MixEnum.Phoenix;
+        if (mixString != null && !Enum.TryParse(mixString, true, out mix))
             return BadRequest($"Invalid Mix. Options are: {string.Join(',', Enum.GetValues<MixEnum>())}");
 
         if (!Enum.TryParse<ChartType>(chartTypeString, out var chartType) && chartTypeString != null)
