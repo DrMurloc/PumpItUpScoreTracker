@@ -143,7 +143,7 @@ public sealed class LayerDependencyTests
         var forbiddenPrefixes = new[]
         {
             "Microsoft.EntityFrameworkCore", "Microsoft.AspNetCore", "Azure", "Discord",
-            "SendGrid", "HtmlAgilityPack", "Hangfire", "MudBlazor", "Tesseract", "Swashbuckle"
+            "SendGrid", "HtmlAgilityPack", "Hangfire", "MudBlazor", "Swashbuckle"
         };
         var references = ReferencedNames(ApplicationAssembly);
         var violations = references

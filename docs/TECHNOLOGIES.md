@@ -54,8 +54,8 @@ The anti-corruption layer against the official PiuGame website — HTML scraping
 ### SendGrid
 Admin notification emails. Fails quietly at the call site when unconfigured.
 
-### Tesseract (OCR)
-Server-side OCR (`PhoenixScoreFileExtractor`) that reads scores out of uploaded screenshots on the score-upload page.
+### CsvHelper
+Spreadsheet parsing for the bulk score-upload page (`PhoenixScoreFileExtractor` reads Song/Difficulty/Score/Plate columns out of uploaded CSVs). There is no OCR — a Tesseract experiment from the XX era was removed 2026-07 without ever shipping.
 
 ### OAuth providers (Discord / Google / Facebook)
 Cookie-based auth (`DefaultAuthentication`, 30-day sliding) with three OAuth challenge providers, plus a custom **ApiToken** Basic-auth scheme for API callers. All wired in `Program.cs`.

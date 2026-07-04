@@ -15,7 +15,7 @@ internal sealed class ScoreEventJournalEntity
 
     [Required] public DateTimeOffset OccurredAt { get; set; }
 
-    /// <summary>Acquisition channel: manual | officialImport | csv | ocr | backfill.</summary>
+    /// <summary>Acquisition channel: manual | officialImport | csv | backfill.</summary>
     [Required]
     [MaxLength(32)]
     public string Source { get; set; } = string.Empty;

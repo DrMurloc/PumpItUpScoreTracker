@@ -36,7 +36,7 @@ so a broken session can resume from the last checked item.
 
 ## Commit sequence
 
-- [ ] **Commit 0 — Remove dead Tesseract dependency; correct OCR doc claims.**
+- [x] **Commit 0 — Remove dead Tesseract dependency; correct OCR doc claims.**
   There is no OCR feature (XX-era experiment; only the package reference survived).
   `ScoreTracker.Web.csproj`, `LayerDependencyTests` allowlist, CLAUDE.md Web row,
   ARCHITECTURE.md "/UploadPhoenixScores (bulk import + OCR)", TECHNOLOGIES.md Tesseract section
