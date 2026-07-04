@@ -2182,4 +2182,22 @@
   <data name="Find a chart" xml:space="preserve">
     <value>Cerca un chart</value>
   </data>
+  <data name="Coming Soon" xml:space="preserve">
+    <value>In arrivo</value>
+  </data>
+  <data name="Phoenix 2 titles have not been revealed yet. Check back after launch!" xml:space="preserve">
+    <value>I titoli di Phoenix 2 non sono ancora stati rivelati. Torna dopo il lancio!</value>
+  </data>
+  <data name="Phoenix 2 recommendations are coming soon. Check back after launch!" xml:space="preserve">
+    <value>I consigli per Phoenix 2 sono in arrivo. Torna dopo il lancio!</value>
+  </data>
+  <data name="Coming soon — score import for Phoenix 2 will open after hardware verification." xml:space="preserve">
+    <value>In arrivo — l'importazione dei punteggi di Phoenix 2 si aprirà dopo la verifica dell'hardware.</value>
+  </data>
+  <data name="Phoenix 2 official leaderboards are coming soon." xml:space="preserve">
+    <value>Le classifiche ufficiali di Phoenix 2 sono in arrivo.</value>
+  </data>
+  <data name="Provisional — based on Phoenix data" xml:space="preserve">
+    <value>Provvisorio — basato sui dati di Phoenix</value>
+  </data>
 </root>

@@ -191,6 +191,15 @@
 <MudButton Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.UploadFile" Variant="Variant.Filled" Color="Color.Primary">@L["Import Your Phoenix Scores"]</MudButton>
 
 <br/>
+@* Stamina sessions are pinned to a mix (Phoenix/Phoenix 2 — XX is excluded); the pool and
+   auto-built session follow it. Defaults to the viewer's current mix. *@
+<MudSelect T="MixEnum" Label=@L["Mix"] Value="_sessionMix" ValueChanged="SetSessionMix" Style="max-width:300px;">
+    @foreach (var mix in SessionMixes)
+    {
+        <MudSelectItem T="MixEnum" Value="mix">@mix.GetName()</MudSelectItem>
+    }
+</MudSelect>
+<br/>
 <MudSwitch Label=@L["Hide Record-less Charts"] @bind-Value="_hideUnRecordedCharts" Color="Color.Primary"></MudSwitch>
 <br/>
 <MudSwitch Label=@L["Hide Zero Scoring Charts"] @bind-Value="_hideZeroScoredCharts" Color="Color.Primary"></MudSwitch>
@@ -282,9 +291,13 @@
 </MudGrid>
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
+@inject ScoreTracker.Web.Services.Contracts.IUiSettingsAccessor UiSettings;
 
 @code
 {
+    // Stamina sessions pin a mix; XX is not offered (locked decision, plan doc).
+    private static readonly MixEnum[] SessionMixes = { MixEnum.Phoenix, MixEnum.Phoenix2 };
+    private MixEnum _sessionMix = MixEnum.Phoenix;
     private DateRange _dateRange = new DateRange(null, null);
     private IEnumerable<TournamentRecord> _tournaments = Array.Empty<TournamentRecord>();
 
@@ -330,7 +343,15 @@
     }
     private async Task BuildSession()
     {
-        _currentSession = await Mediator.Send(new AutoBuildSessionQuery(Configuration, _currentUser, TimeSpan.FromSeconds(_restSeconds)));
+        _currentSession = await Mediator.Send(new AutoBuildSessionQuery(Configuration, _currentUser, TimeSpan.FromSeconds(_restSeconds), _sessionMix));
+    }
+
+    private async Task SetSessionMix(MixEnum mix)
+    {
+        _sessionMix = mix;
+        _currentSession = null;
+        _charts = (await Mediator.Send(new GetChartsQuery(_sessionMix))).ToDictionary(c => c.Id);
+        await SetUser(_currentUser);
     }
 
     private async Task SaveTourney()
@@ -367,14 +388,16 @@
     {
         _currentUser = userId ?? (CurrentUser.IsLoggedIn ? CurrentUser.User.Id : _users.First(u => u.Name == "DrMurloc").Id);
 
-        _records = (await Mediator.Send(new GetPhoenixRecordsQuery(_currentUser)))
+        _records = (await Mediator.Send(new GetPhoenixRecordsQuery(_currentUser, _sessionMix)))
             .Where(r => r is { Score: not null, Plate: not null }).ToDictionary(c=>c.ChartId);
     }
     protected override async Task OnInitializedAsync()
     {
+        var viewerMix = await UiSettings.GetSelectedMix();
+        _sessionMix = viewerMix == MixEnum.XX ? MixEnum.Phoenix : viewerMix;
         _users = (await Mediator.Send(new SearchForUsersQuery("", 1, 1000))).Results.OrderBy(u => u.Name.ToString()).ToArray();
 
-        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+        _charts = (await Mediator.Send(new GetChartsQuery(_sessionMix))).ToDictionary(c => c.Id);
 
         await SetUser(CurrentUser.IsLoggedIn ? CurrentUser.User.Id : _users.First(u => u.Name=="DrMurloc").Id);
 

@@ -302,7 +302,8 @@
     private IEnumerable<BestXXChartAttempt> _scores;
     protected override async Task OnInitializedAsync()
     {
-        if (await UiSettings.GetSelectedMix() == MixEnum.Phoenix)
+        // XX keeps this legacy page; Phoenix and Phoenix 2 route to the Phoenix-style page.
+        if (await UiSettings.GetSelectedMix() != MixEnum.XX)
         {
             NavManager.NavigateTo("/Phoenix/Progress");
             return;

@@ -2183,4 +2183,22 @@
   <data name="Find a chart" xml:space="preserve">
     <value>チャートを探す</value>
   </data>
+  <data name="Coming Soon" xml:space="preserve">
+    <value>近日公開</value>
+  </data>
+  <data name="Phoenix 2 titles have not been revealed yet. Check back after launch!" xml:space="preserve">
+    <value>Phoenix 2のタイトルはまだ発表されていません。リリース後にご確認ください。</value>
+  </data>
+  <data name="Phoenix 2 recommendations are coming soon. Check back after launch!" xml:space="preserve">
+    <value>Phoenix 2のおすすめは近日公開予定です。リリース後にご確認ください。</value>
+  </data>
+  <data name="Coming soon — score import for Phoenix 2 will open after hardware verification." xml:space="preserve">
+    <value>Phoenix 2のスコアインポートは、実機での検証が完了した後に開放されます。近日公開予定です。</value>
+  </data>
+  <data name="Phoenix 2 official leaderboards are coming soon." xml:space="preserve">
+    <value>Phoenix 2の公式ランキングは近日公開予定です。</value>
+  </data>
+  <data name="Provisional — based on Phoenix data" xml:space="preserve">
+    <value>暫定（Phoenixのデータに基づく）</value>
+  </data>
 </root>

@@ -218,14 +218,16 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                 return new QualifiersConfiguration(charts, Modifiers, "Phoenix", 1164337603034759278, 2, null, false);
             }
 
+            // Rows backfill Phoenix; an unset MixId only appears in pre-backfill test data.
+            var mix = config.MixId == default ? MixEnum.Phoenix : MixIds.ToEnum(config.MixId);
             var chartIds = config.Charts.Split(",").Select(c => new Guid(c));
             var charts2 =
                 config.AllCharts
-                    ? await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken)
-                    : await _charts.GetCharts(MixEnum.Phoenix, chartIds: chartIds,
+                    ? await _charts.GetCharts(mix, cancellationToken: cancellationToken)
+                    : await _charts.GetCharts(mix, chartIds: chartIds,
                         cancellationToken: cancellationToken);
             return new QualifiersConfiguration(charts2, Modifiers, config.ScoringType, config.NotificationChannel,
-                config.ChartPlayCount, config.CutoffTime, config.AllCharts);
+                config.ChartPlayCount, config.CutoffTime, config.AllCharts, mix);
         }
 
         public async Task SaveTeam(Guid tournamentId, CoOpTeam team, CancellationToken cancellationToken = default)

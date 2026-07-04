@@ -32,17 +32,22 @@
     <MudCardContent>
         @switch (_currentStep)
         {
+            case Step.Information when IsImportGated:
+                @* Phoenix 2: the copy-paste script scrapes the Phoenix 1 site, so it is gated with
+                   the rest of the official import. Manual spreadsheet upload below stays available. *@
+                <ComingSoon Message="@L["Coming soon — score import for Phoenix 2 will open after hardware verification."].Value"></ComingSoon>
+                break;
             case Step.Information:
                 <p>
                     @L["Phoenix Import Info 1"]
                     <br/><br/>
-                    
+
                     @L["Phoenix Import Info 2"]
                     <br/><br/>
-                    
+
                     @L["Phoenix Import Info 3"]
                     <br/><br/>
-                
+
                     @L["Phoenix Import Info 4"]
                     </p>
                 <MudGrid>
@@ -53,6 +58,9 @@
                         <MudNumericField T="int?" Min="1" Label=@L["Ending Page"] @bind-Value="_endPage" Clearable="true"></MudNumericField>
                     </MudItem>
                 </MudGrid>
+                break;
+            case Step.UsePassword when IsImportGated:
+                <ComingSoon Message="@L["Coming soon — score import for Phoenix 2 will open after hardware verification."].Value"></ComingSoon>
                 break;
             case Step.UsePassword:
                 <MudGrid>
@@ -265,12 +273,15 @@
         }
         @if (_currentStep == Step.Information)
         {
-            <MudButton Variant="Variant.Outlined"
-                       Color="@Color.Primary"
-                       StartIcon="@Icons.Material.Filled.ContentCopy"
-                       OnClick="CopyPIUGameScript">
-                @L["Copy Script"]
-            </MudButton>
+            @if (!IsImportGated)
+            {
+                <MudButton Variant="Variant.Outlined"
+                           Color="@Color.Primary"
+                           StartIcon="@Icons.Material.Filled.ContentCopy"
+                           OnClick="CopyPIUGameScript">
+                    @L["Copy Script"]
+                </MudButton>
+            }
             <MudButton HtmlTag="label"
                        Variant="@Variant.Filled"
                        Color="@Color.Primary"
@@ -293,7 +304,7 @@
                        Color="@Color.Primary"
                        StartIcon="@Icons.Material.Filled.FileDownload">@L["Download Failures"]</MudButton>
         }
-        @if (_currentStep == Step.UsePassword)
+        @if (_currentStep == Step.UsePassword && !IsImportGated)
         {
             <MudButton Variant="@Variant.Filled"
                        Disabled="_isImporting || string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)"
@@ -348,6 +359,10 @@
 
     private bool _isScoreTableShowing = false;
     private Step _currentStep = Step.UsePassword;
+    private MixEnum _currentMix = MixEnum.Phoenix;
+    // Locked decision (docs/design/phoenix2-implementation.md): official-site import stays
+    // gated for Phoenix 2 until the owner verifies against his own kit. CSV upload stays open.
+    private bool IsImportGated => _currentMix == MixEnum.Phoenix2;
     private int _maxSaving = 0;
     private int _currentSaved = 0;
     private int _startPage = 1;
@@ -468,7 +483,8 @@
     private Guid _userId;
     protected override async Task OnInitializedAsync()
     {
-        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+        _currentMix = await UiSettings.GetSelectedMix();
+        _charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToDictionary(c => c.Id);
         if (!CurrentUser.IsLoggedIn)
         {
             NavManager.NavigateTo("/Login");
@@ -488,7 +504,8 @@
     private void ImportError(object? origin, ImportStatusErrorEvent e)
     {
         if (e.UserId != _userId) return;
-        _errors.Add(e.Error);
+        // Events arrive per mix now — name the mix when it isn't the Phoenix default.
+        _errors.Add(e.Mix != MixEnum.Phoenix ? $"[{e.Mix.GetName()}] {e.Error}" : e.Error);
         InvokeAsync(StateHasChanged);
     }
     private void StatusUpdate(object? origin, ImportStatusUpdatedEvent e)
@@ -498,14 +515,14 @@
         {
             _scores.Add(score);
         }
-        _passwordImportStatus = e.Status;
+        _passwordImportStatus = e.Mix != MixEnum.Phoenix ? $"[{e.Mix.GetName()}] {e.Status}" : e.Status;
         InvokeAsync(GetRatings);
     }
 
     private IDictionary<Guid, ScoreRankingRecord> _rankings;
     private async Task GetRatings()
     {
-        _rankings = await Mediator.Send(new GetChartScoreRankingsQuery(_scores.Select(s => s.ChartId)));
+        _rankings = await Mediator.Send(new GetChartScoreRankingsQuery(_scores.Select(s => s.ChartId), _currentMix));
         StateHasChanged();
     }
     private void Cancel()
@@ -541,7 +558,7 @@
         var cancellationToken = _currentCancellation.Token;
         _currentSaved = 0;
         var startTime = DateTimeOffset.Now;
-        var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(_userId), cancellationToken)).ToDictionary(s => s.ChartId);
+        var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(_userId, _currentMix), cancellationToken)).ToDictionary(s => s.ChartId);
         var toSaveScores = _spreadSheetScores
             .Where(s => !myScores.ContainsKey(s.ChartId) || s.Score != myScores[s.ChartId].Score || s.Plate != myScores[s.ChartId].Plate || myScores[s.ChartId].IsBroken).ToArray();
 
@@ -559,7 +576,7 @@
             _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxSaving - (double)_currentSaved) / (double)_currentSaved);
             try
             {
-                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(best.ChartId,false,best.Score,best.Plate), cancellationToken);
+                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(best.ChartId,false,best.Score,best.Plate, Mix: _currentMix), cancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -581,7 +598,7 @@
 
         try
         {
-            var result = await Extractor.GetScores(file, _currentCancellation.Token);
+            var result = await Extractor.GetScores(file, _currentMix, _currentCancellation.Token);
             _spreadSheetScores = result.Scores.ToList();
             _failedUploads = result.Errors.ToList();
             _currentStep = Step.Confirming;

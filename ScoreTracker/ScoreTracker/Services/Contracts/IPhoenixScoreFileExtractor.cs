@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components.Forms;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Web.Dtos;
 
@@ -9,5 +10,6 @@ public interface IPhoenixScoreFileExtractor
 {
     Task<(IEnumerable<RecordedPhoenixScore> Scores, IEnumerable<SpreadsheetScoreErrorDto> Errors)> GetScores(
         IBrowserFile file,
+        MixEnum mix = MixEnum.Phoenix,
         CancellationToken cancellationToken = default);
 }

@@ -2106,4 +2106,22 @@
   <data name="Find a chart" xml:space="preserve">
 	  <value>Mrgl a mrglchart</value>
   </data>
+  <data name="Coming Soon" xml:space="preserve">
+    <value>Mrgl Soon</value>
+  </data>
+  <data name="Phoenix 2 titles have not been revealed yet. Check back after launch!" xml:space="preserve">
+    <value>Phoenix 2 mrgltitles glub not mrglvealed. Mrgl back after mrgllaunch!</value>
+  </data>
+  <data name="Phoenix 2 recommendations are coming soon. Check back after launch!" xml:space="preserve">
+    <value>Phoenix 2 mrglmendations mrgl soon. Mrgl back after mrgllaunch!</value>
+  </data>
+  <data name="Coming soon — score import for Phoenix 2 will open after hardware verification." xml:space="preserve">
+    <value>Mrgl soon — Phoenix 2 mrglport mrgl open after mrglware mrglrification.</value>
+  </data>
+  <data name="Phoenix 2 official leaderboards are coming soon." xml:space="preserve">
+    <value>Phoenix 2 official mrglrankings mrgl soon.</value>
+  </data>
+  <data name="Provisional — based on Phoenix data" xml:space="preserve">
+    <value>Mrglvisional — mrgl on Phoenix mrgldata</value>
+  </data>
 </root>

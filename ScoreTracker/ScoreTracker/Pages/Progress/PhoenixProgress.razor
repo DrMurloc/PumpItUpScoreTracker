@@ -288,22 +288,28 @@
             }
             RequestedUserId = CurrentUser.User.Id;
         }
-        if (await UiSettings.GetSelectedMix() == MixEnum.XX)
+        var currentMix = await UiSettings.GetSelectedMix();
+        if (currentMix == MixEnum.XX)
         {
             NavManager.NavigateTo("/Progress");
         }
-        _scores = (await Mediator.Send(new GetPhoenixRecordsQuery(RequestedUserId.Value))).ToArray();
+        _scores = (await Mediator.Send(new GetPhoenixRecordsQuery(RequestedUserId.Value, currentMix))).ToArray();
         var chartScores = _scores.ToDictionary(s => s.ChartId);
-        var charts = await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix));
+        var charts = await Mediator.Send(new GetChartsQuery(currentMix));
         var coOpCharts = charts.Where(c => c.Type == ChartType.CoOp).ToArray();
         var levelCharts = charts.Where(c => c.Type != ChartType.CoOp).GroupBy(c => c.Level).ToDictionary(g => g.Key, g => g.ToArray());
 
-        _stats = await Mediator.Send(new GetPlayerStatsQuery(RequestedUserId.Value));
+        _stats = await Mediator.Send(new GetPlayerStatsQuery(RequestedUserId.Value, currentMix));
 
         _charts = charts.ToDictionary(c => c.Id);
         var entries = new List<DifficultyEntry>();
         foreach(var level in DifficultyLevel.All)
         {
+            // A mix's catalog can have empty levels (Phoenix 2 especially) — skip instead of throwing.
+            if (!levelCharts.ContainsKey(level))
+            {
+                continue;
+            }
             var passed = levelCharts[level].Where(c=>!(chartScores.TryGetValue(c.Id,out var score)?score!.IsBroken:true)).Count();
             var remaining = levelCharts[level].Where(c => (chartScores.TryGetValue(c.Id, out var score) ? score!.IsBroken : true)).Count();
             var totalRating = levelCharts[level].Sum(c => chartScores.TryGetValue(c.Id, out var score) ? (score!.Score?.LetterGrade.GetModifier() ?? 0) * level.BaseRating : 0);

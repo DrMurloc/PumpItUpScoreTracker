@@ -156,8 +156,7 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                     Id = Guid.NewGuid(),
                     UserId = session.UsersId,
                     TournamentId = session.TournamentId,
-                    // Phoenix until session registration exposes the mix dropdown (plan doc).
-                    MixId = MixIds.Phoenix,
+                    MixId = MixIds.For(session.Mix),
                     SessionScore = session.TotalScore,
                     RestTime = session.CurrentRestTime,
                     ChartsPlayed = session.Entries.Count(),
@@ -184,6 +183,7 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                 }
                 else
                 {
+                    entity.MixId = MixIds.For(session.Mix);
                     entity.SessionScore = session.TotalScore;
                     entity.RestTime = session.CurrentRestTime;
                     entity.NeedsApproval = session.NeedsApproval;
@@ -244,13 +244,15 @@ namespace ScoreTracker.EventCompetition.Infrastructure
 
                 var entryEntities = JsonSerializer.Deserialize<SessionEntryEntity[]>(entity.ChartEntries) ??
                                     Array.Empty<SessionEntryEntity>();
-                var charts = (await _charts.GetCharts(MixEnum.Phoenix,
+                // Rows backfill Phoenix; an unset MixId only appears in pre-backfill test data.
+                var mix = entity.MixId == default ? MixEnum.Phoenix : MixIds.ToEnum(entity.MixId);
+                var charts = (await _charts.GetCharts(mix,
                     chartIds: entryEntities.Select(e => e.ChartId).Distinct().ToArray(),
                     cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
                 var entries = entryEntities.Select(e => new TournamentSession.Entry(charts[e.ChartId], e.Score,
                     Enum.Parse<PhoenixPlate>(e.Plate), e.IsBroken, e.SessionScore, e.BonusPoints ?? 0));
 
-                var session = new TournamentSession(userId, tournamentConfig);
+                var session = new TournamentSession(userId, tournamentConfig, mix);
                 foreach (var entry in entries)
                     session.AddWithoutApproval(entry.Chart, entry.Score, entry.Plate, entry.IsBroken);
                 session.SetVerificationType(Enum.Parse<SubmissionVerificationType>(entity.VerificationType));

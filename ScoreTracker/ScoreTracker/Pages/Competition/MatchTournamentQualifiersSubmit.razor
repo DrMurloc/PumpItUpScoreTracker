@@ -693,11 +693,12 @@
             return;
         }
         _registeredUserIds = (await Qualifiers.GetRegisteredUsers(TournamentId)).Distinct().ToHashSet();
-        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
         var tournament = (await Mediator.Send(new GetAllTournamentsQuery()))
             .FirstOrDefault(t => t.Id == TournamentId);
         _tournamentName = tournament.Name;
         _configuration = await Qualifiers.GetQualifiersConfiguration(TournamentId);
+        // The chart pool follows the mix pinned on the tournament's qualifiers configuration.
+        _charts = (await Mediator.Send(new GetChartsQuery(_configuration.Mix))).ToDictionary(c => c.Id);
 
         await RefreshLeaderboard();
         if (CurrentUser.IsLoggedIn)

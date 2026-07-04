@@ -344,7 +344,10 @@
 @inject ICurrentUserAccessor CurrentUser;
 @inject NavigationManager NavManager;
 @inject IUserRepository Users;
+@inject ScoreTracker.Web.Services.Contracts.IUiSettingsAccessor UiSettings;
 @code {
+    // Community stats are Phoenix-lineage — XX viewers keep seeing Phoenix, as before.
+    private MixEnum _currentMix = MixEnum.Phoenix;
     private Guid _showingUserId = Guid.Empty;
     private ChartType? _chartType = null;
     private string _showingType = "CompetitiveLevel";
@@ -366,7 +369,7 @@
         }
         var scoringConfig = ScoringConfiguration.PumbilityScoring(true);
 
-        _scores = (await Mediator.Send(new GetTop50CompetitiveQuery(userId, chartType)))
+        _scores = (await Mediator.Send(new GetTop50CompetitiveQuery(userId, chartType, Mix: _currentMix)))
             .Select(s => new ScoreEntry(_charts[s.ChartId], s.Score ?? 0, s.Plate, s.IsBroken,(int)scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false), ScoringConfiguration.CalculateFungScore(_charts[s.ChartId].Level, s.Score ?? 0, _charts[s.ChartId].Type)))
             .ToArray();
         _showingUserId = userId;
@@ -384,7 +387,7 @@
         _selectingChart = true;
         _hasSelectedChart = true;
         _selectedChart = chart;
-        _communityChartScores = await Mediator.Send(new GetPhoenixRecordsForCommunityQuery(CommunityName, chart.Id));
+        _communityChartScores = await Mediator.Send(new GetPhoenixRecordsForCommunityQuery(CommunityName, chart.Id, _currentMix));
         if (!_showGuests)
         {
             _communityChartScores = _communityChartScores.Where(c => _users[c.UserId].Country == CommunityName).ToArray();
@@ -413,7 +416,7 @@
         }
         var scoringConfig = ScoringConfiguration.PumbilityScoring(true);
 
-        _scores = (await Mediator.Send(new GetTop50ForPlayerQuery(userId, chartType)))
+        _scores = (await Mediator.Send(new GetTop50ForPlayerQuery(userId, chartType, Mix: _currentMix)))
             .Select(s => new ScoreEntry(_charts[s.ChartId], s.Score ?? 0, s.Plate, s.IsBroken,(int)scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false),ScoringConfiguration.CalculateFungScore(_charts[s.ChartId].Level,s.Score??0)))
             .ToArray();
         _showingUserId = userId;
@@ -431,9 +434,11 @@
     protected override async Task OnInitializedAsync()
     {
         var communityName = HttpUtility.UrlDecode(CommunityName);
+        var selectedMix = await UiSettings.GetSelectedMix();
+        _currentMix = selectedMix == MixEnum.XX ? MixEnum.Phoenix : selectedMix;
         var community = await Mediator.Send(new GetCommunityQuery(communityName));
         _community = community;
-        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+        _charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToDictionary(c => c.Id);
         _myCommunities = (await Mediator.Send(new GetMyCommunitiesQuery())).Select(c=>c.CommunityName).ToHashSet();
         if (community.PrivacyType == CommunityPrivacyType.Private)
         {
@@ -449,7 +454,7 @@
                 return;
             }
         }
-        _leaderboard = (await Mediator.Send(new GetCommunityLeaderboardQuery(communityName))).ToArray();
+        _leaderboard = (await Mediator.Send(new GetCommunityLeaderboardQuery(communityName, _currentMix))).ToArray();
         _nameAvatars = _leaderboard.Where(l=>l.IsPublic).ToDictionary(l => l.UserId, l => l.ProfileImage.ToString());
         _users = (await Users.GetUsers(_leaderboard.Select(l => l.UserId).Distinct()))
             .ToDictionary(u => u.Id);
@@ -510,7 +515,7 @@
         _isLoading = true;
         foreach (var userId in _playerScores.Keys)
         {
-            _playerScores[userId] = (await Mediator.Send(new GetPhoenixRecordsQuery(userId))).Where(r => r.Score != null && _charts[r.ChartId].Level >= _minLevel && _charts[r.ChartId].Level <= _maxLevel)
+            _playerScores[userId] = (await Mediator.Send(new GetPhoenixRecordsQuery(userId, _currentMix))).Where(r => r.Score != null && _charts.ContainsKey(r.ChartId) && _charts[r.ChartId].Level >= _minLevel && _charts[r.ChartId].Level <= _maxLevel)
                 .ToDictionary(r => r.ChartId, r => r.Score!.Value);
 
         }
@@ -537,7 +542,7 @@
         else
         {
             _isLoading = true;
-            _playerScores[userId] = (await Mediator.Send(new GetPhoenixRecordsQuery(userId))).Where(r => r.Score != null && _charts[r.ChartId].Level >= _minLevel && _charts[r.ChartId].Level <= _maxLevel)
+            _playerScores[userId] = (await Mediator.Send(new GetPhoenixRecordsQuery(userId, _currentMix))).Where(r => r.Score != null && _charts.ContainsKey(r.ChartId) && _charts[r.ChartId].Level >= _minLevel && _charts[r.ChartId].Level <= _maxLevel)
                 .ToDictionary(r => r.ChartId, r => r.Score!.Value);
 CalculateScoreDiffs();
             _isLoading = false;

@@ -86,7 +86,7 @@ so a broken session can resume from the last checked item.
   tier-list read path returns badged P1 fallback when the P2 list is empty; `Phoenix2TitleList`
   exists and is EMPTY; Pumbility/stats recompute per mix.
 
-- [ ] **Commit 7 — Web UI plumbing + under-construction states.**
+- [x] **Commit 7 — Web UI plumbing + under-construction states.**
   Pages pass current mix everywhere (Charts, Progress, Pumbility, records, CSV upload's
   `GetChartQuery`, UserLabel/leaderboards use viewer mix); recording flows stamp mix; "Coming soon"
   states for Titles / WhatShouldIPlay / Import / OfficialLeaderboards under Phoenix 2; tier-list

@@ -146,8 +146,9 @@
             <MudText Typo="Typo.overline" Class="ml-4 mt-3 d-block nav-section">@L["My Progress"]</MudText>
             @if (CurrentUser.IsLoggedIn)
             {
-                <MudNavLink Href=@(_currentMix==MixEnum.Phoenix?"/Phoenix/Progress":"/Progress") Icon="@Icons.Material.Filled.BarChart">@L["Progress Charts"]</MudNavLink>
-                @if (_currentMix == MixEnum.Phoenix)
+                @* XX keeps its legacy progress page; Phoenix and Phoenix 2 share the Phoenix-style pages. *@
+                <MudNavLink Href=@(_currentMix==MixEnum.XX?"/Progress":"/Phoenix/Progress") Icon="@Icons.Material.Filled.BarChart">@L["Progress Charts"]</MudNavLink>
+                @if (_currentMix != MixEnum.XX)
                 {
                     <MudNavLink Href="/Pumbility" Icon="@Icons.Material.Filled.Star">@L["PUMBILITY"]</MudNavLink>
                 }
@@ -259,9 +260,11 @@
     protected override async Task OnInitializedAsync()
     {
         _userId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null;
+        // Mix first: the displayed rating follows the viewer's current mix.
+        _currentMix = await UiSettings.GetSelectedMix();
         _highlightedEvents = (await Mediator.Send(new GetAllTournamentsQuery()))
             .Where(e => e.IsHighlighted);
-            
+
         var hasShown = await UiSettings.GetSetting(BitePopupKey);
         if (DateTimeOffset.Now<_cutoff && string.IsNullOrWhiteSpace(hasShown))
         {
@@ -279,9 +282,8 @@
         {
                 UserName += $" ({_gamerTag})";
             }
-            Rating = (await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id))).SkillRating;
+            Rating = (await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, _currentMix))).SkillRating;
         }
-        _currentMix = await UiSettings.GetSelectedMix();
     }
 
     private static readonly MudTheme Theme = new()
@@ -350,7 +352,8 @@
 
     public Task Handle(PlayerStatsUpdatedEvent notification, CancellationToken cancellationToken)
     {
-        if (_userId != notification.UserId)
+        // Stats events now arrive per mix — only reflect the one the viewer is looking at.
+        if (_userId != notification.UserId || notification.Mix != _currentMix)
         {
             return Task.CompletedTask;
         }

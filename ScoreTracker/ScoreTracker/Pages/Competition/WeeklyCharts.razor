@@ -417,7 +417,7 @@ else if(_monthlyWeeks.Any())
             return;
         }
         _isLoadingRemaining = true;
-        var alreadyPlayed = (await Mediator.Send(new GetAlreadyPlayedWeeklyChartsQuery())).ToHashSet();
+        var alreadyPlayed = (await Mediator.Send(new GetAlreadyPlayedWeeklyChartsQuery(_currentMix))).ToHashSet();
         _remainingCharts = _charts.Values.Where(c => !alreadyPlayed.Contains(c.Id)).ToArray();
         _showRemaining = true;
         _isLoadingRemaining = false;
@@ -444,9 +444,10 @@ else if(_monthlyWeeks.Any())
     private ISet<string> _selectedCommunities = new HashSet<string>();
     private IDictionary<string, ISet<Guid>> _communities = new Dictionary<string, ISet<Guid>>();
     private bool _isLoading = false;
+    private MixEnum _currentMix = MixEnum.Phoenix;
     private async Task Start()
     {
-        await Bus.Publish(new RotateWeeklyChartsCommand());
+        await Bus.Publish(new RotateWeeklyChartsCommand(_currentMix));
     }
 
     private async Task Submit()
@@ -456,7 +457,7 @@ else if(_monthlyWeeks.Any())
             return;
         }
         _isSaving = true;
-        await Mediator.Send(new RegisterWeeklyChartScoreCommand(new WeeklyTournamentEntry(_userId, _submittingChartId.Value, _score, _plate, _isBroken, _uploadedPhoto,10.0)));
+        await Mediator.Send(new RegisterWeeklyChartScoreCommand(new WeeklyTournamentEntry(_userId, _submittingChartId.Value, _score, _plate, _isBroken, _uploadedPhoto,10.0), _currentMix));
         _submittingChartId = null;
         Snackbar.Add("Submitted!",Severity.Success);
         _isSaving = false;
@@ -588,7 +589,7 @@ else if(_monthlyWeeks.Any())
     {
         if (_selectedWeek == null)
         {
-            _allCharts = (await Mediator.Send(new GetWeeklyChartsQuery())).ToArray();
+            _allCharts = (await Mediator.Send(new GetWeeklyChartsQuery(_currentMix))).ToArray();
             if (_isLoggedIn)
             {
                 var entryDict = _allCharts.ToDictionary(c => c.ChartId);
@@ -600,12 +601,12 @@ else if(_monthlyWeeks.Any())
                 _competitiveCharts = _allCharts;
             }
 
-            _allEntries = (await Mediator.Send(new GetWeeklyChartEntriesQuery())).GroupBy(e => e.ChartId).ToDictionary(e => e.Key, e => e.ToArray().AsEnumerable());
+            _allEntries = (await Mediator.Send(new GetWeeklyChartEntriesQuery(Mix: _currentMix))).GroupBy(e => e.ChartId).ToDictionary(e => e.Key, e => e.ToArray().AsEnumerable());
 
         }
         else
         {
-            _allEntries = (await Mediator.Send(new GetPastWeeklyEntriesQuery(_selectedWeek.Value))).GroupBy(e => e.ChartId).ToDictionary(e => e.Key, e => e.ToArray().AsEnumerable());
+            _allEntries = (await Mediator.Send(new GetPastWeeklyEntriesQuery(_selectedWeek.Value, _currentMix))).GroupBy(e => e.ChartId).ToDictionary(e => e.Key, e => e.ToArray().AsEnumerable());
 
             _allCharts = _allEntries.Values.SelectMany(_ => _).Select(c => c.ChartId).Distinct()
                 .Select(id => new WeeklyTournamentChart(id, _selectedWeek.Value));
@@ -673,13 +674,13 @@ else if(_monthlyWeeks.Any())
 
         foreach (var date in monthlyDates)
         {
-            entries.AddRange((await Mediator.Send(new GetPastWeeklyEntriesQuery(date))).Where(e=>IsValid(e.ChartId)));
+            entries.AddRange((await Mediator.Send(new GetPastWeeklyEntriesQuery(date, _currentMix))).Where(e=>IsValid(e.ChartId)));
 
         }
 
         if (!_isPastBite || weekStart == null || (weekStart.Value.Month == DateTimeOffset.Now.Month && weekStart.Value.Year == DateTimeOffset.Now.Year))
         {
-            entries.AddRange((await Mediator.Send(new GetWeeklyChartEntriesQuery())).Where(e=>IsValid(e.ChartId)));
+            entries.AddRange((await Mediator.Send(new GetWeeklyChartEntriesQuery(Mix: _currentMix))).Where(e=>IsValid(e.ChartId)));
 
         }
 
@@ -714,15 +715,18 @@ else if(_monthlyWeeks.Any())
     {
         _isLoggedIn = CurrentUser.IsLoggedIn;
         _isAdmin = CurrentUser.IsLoggedInAsAdmin;
-        
-        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
-        
+
+        // Weekly boards run per mix; XX never had one, so XX viewers keep the Phoenix board.
+        var selectedMix = await UiSettings.GetSelectedMix();
+        _currentMix = selectedMix == MixEnum.XX ? MixEnum.Phoenix : selectedMix;
+        _charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToDictionary(c => c.Id);
+
         if(_isLoggedIn)
         {
-            
+
             _userId = CurrentUser.User.Id;
             _userName = CurrentUser.User.Name;
-            var stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
+            var stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, _currentMix));
             _singlesCompetitive = stats.SinglesCompetitiveLevel;
             _doublesCompetitive = stats.DoublesCompetitiveLevel;
             
@@ -748,7 +752,7 @@ else if(_monthlyWeeks.Any())
             _competitiveCharts = _allCharts;
             _showOnlyCompetitive = false;
         }
-        _pastDates = (await Mediator.Send(new GetPastWeeklyDatesQuery())).ToArray();
+        _pastDates = (await Mediator.Send(new GetPastWeeklyDatesQuery(_currentMix))).ToArray();
         await RecalculateMonthlyLeaderboard();
         await ReprocessLeaderboards();
 

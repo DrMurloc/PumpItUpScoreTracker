@@ -36,6 +36,9 @@
     [Parameter]
     public Guid ChartId { get; set; } = Guid.Empty;
 
+    [Parameter]
+    public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
     private UserPhoenixScore[] _scores = Array.Empty<UserPhoenixScore>();
 
     private Chart? _chart = null;
@@ -58,11 +61,11 @@
     }
     private async Task LoadChart(Guid chartId)
     {
-        _scores = (await Mediator.Send(new GetPhoenixScoresForChartQuery(chartId))).OrderByDescending(s => (int)s.Score).ToArray();
+        _scores = (await Mediator.Send(new GetPhoenixScoresForChartQuery(chartId, Mix))).OrderByDescending(s => (int)s.Score).ToArray();
         if (_scores.Any())
         {
-            
-            _chart = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, ChartIds: new[] { chartId }))).Single();
+
+            _chart = (await Mediator.Send(new GetChartsQuery(Mix, ChartIds: new[] { chartId }))).Single();
             _boxes = new[]
             {
                 new BoxItem

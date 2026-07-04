@@ -1,11 +1,18 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
+using ScoreTracker.Data.Persistence;
 using ScoreTracker.EventCompetition.Contracts.Queries;
 using ScoreTracker.EventCompetition.Infrastructure;
+using ScoreTracker.EventCompetition.Infrastructure.Entities;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Tests.Integration.Fixtures;
+using ChartType = ScoreTracker.SharedKernel.Enums.ChartType;
 
 namespace ScoreTracker.Tests.Integration;
 
@@ -25,7 +32,8 @@ public sealed class EFTournamentRepositoryTests : IAsyncLifetime
 
     // Several methods cache (GetAllTournaments, GetTournament, GetScoringLevelSnapshot, roles) — a
     // fresh repo + MemoryCache on the read side forces the DB path. `IChartRepository` is only used
-    // by GetSession (rich-aggregate session loading, not covered here), so a Mock.Of is safe.
+    // by GetSession; tests that don't touch sessions use a bare Mock.Of, the session round-trip
+    // tests stub it explicitly (chart loading is incidental to the persistence under test).
     private EFTournamentRepository BuildRepository() =>
         new(new MemoryCache(new MemoryCacheOptions()), Mock.Of<IChartRepository>(), _fixture.DbContextFactory);
 
@@ -142,5 +150,88 @@ public sealed class EFTournamentRepositoryTests : IAsyncLifetime
             .GetScoringLevelSnapshot(Guid.NewGuid(), CancellationToken.None);
 
         Assert.Null(retrieved);
+    }
+
+    private static Chart BuildChart(Guid chartId, MixEnum mix)
+    {
+        var song = new Song($"song_{chartId:N}", SongType.Arcade,
+            new Uri("https://example.invalid/song.png"), TimeSpan.FromMinutes(2), "Artist", null);
+        return new Chart(chartId, mix, song, ChartType.Single, DifficultyLevel.From(20), mix,
+            null, null, new HashSet<Skill>());
+    }
+
+    private EFTournamentRepository BuildRepository(IChartRepository charts) =>
+        new(new MemoryCache(new MemoryCacheOptions()), charts, _fixture.DbContextFactory);
+
+    [Fact]
+    public async Task SessionSavedWithPhoenix2RoundTripsItsMixAndLoadsChartsFromThatMix()
+    {
+        var tournamentId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var chartId = Guid.NewGuid();
+        var chart = BuildChart(chartId, MixEnum.Phoenix2);
+        var chartRepo = new Mock<IChartRepository>();
+        chartRepo.Setup(c => c.GetCharts(MixEnum.Phoenix2, null, null, It.IsAny<IEnumerable<Guid>?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { chart });
+
+        var configuration = new TournamentConfiguration(tournamentId, "P2 Stamina",
+            new ScoringConfiguration(), false, false);
+        await BuildRepository(chartRepo.Object).CreateOrSaveTournament(configuration, CancellationToken.None);
+
+        var session = new TournamentSession(userId, configuration, MixEnum.Phoenix2);
+        session.Add(chart, 950000, PhoenixPlate.SuperbGame, isBroken: false);
+        await BuildRepository(chartRepo.Object).SaveSession(session, CancellationToken.None);
+
+        // The row itself carries the Phoenix 2 mix id, not just the in-memory round trip.
+        await using (var context = await _fixture.DbContextFactory.CreateDbContextAsync())
+        {
+            var entity = await context.Set<UserTournamentSessionEntity>()
+                .SingleAsync(e => e.TournamentId == tournamentId && e.UserId == userId);
+            Assert.Equal(MixIds.Phoenix2, entity.MixId);
+        }
+
+        var loaded = await BuildRepository(chartRepo.Object)
+            .GetSession(tournamentId, userId, CancellationToken.None);
+
+        Assert.Equal(MixEnum.Phoenix2, loaded.Mix);
+        var entry = Assert.Single(loaded.Entries);
+        Assert.Equal(chartId, entry.Chart.Id);
+        chartRepo.Verify(c => c.GetCharts(MixEnum.Phoenix2, null, null,
+            It.Is<IEnumerable<Guid>?>(ids => ids != null && ids.Contains(chartId)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SessionSavedWithoutExplicitMixPersistsPhoenix()
+    {
+        var tournamentId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var chartId = Guid.NewGuid();
+        var chart = BuildChart(chartId, MixEnum.Phoenix);
+        var chartRepo = new Mock<IChartRepository>();
+        chartRepo.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, It.IsAny<IEnumerable<Guid>?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { chart });
+
+        var configuration = new TournamentConfiguration(tournamentId, "P1 Stamina",
+            new ScoringConfiguration(), false, false);
+        await BuildRepository(chartRepo.Object).CreateOrSaveTournament(configuration, CancellationToken.None);
+
+        var session = new TournamentSession(userId, configuration);
+        session.Add(chart, 950000, PhoenixPlate.SuperbGame, isBroken: false);
+        await BuildRepository(chartRepo.Object).SaveSession(session, CancellationToken.None);
+
+        await using (var context = await _fixture.DbContextFactory.CreateDbContextAsync())
+        {
+            var entity = await context.Set<UserTournamentSessionEntity>()
+                .SingleAsync(e => e.TournamentId == tournamentId && e.UserId == userId);
+            Assert.Equal(MixIds.Phoenix, entity.MixId);
+        }
+
+        var loaded = await BuildRepository(chartRepo.Object)
+            .GetSession(tournamentId, userId, CancellationToken.None);
+
+        Assert.Equal(MixEnum.Phoenix, loaded.Mix);
     }
 }

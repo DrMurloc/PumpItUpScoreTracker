@@ -50,7 +50,7 @@
         <MudItem xs="4">
             <MudCheckBox T="bool" Disabled="_isSaving" Value="@_isBroken" ValueChanged="BrokenChanged" Label=@L["Broken"]></MudCheckBox>
         </MudItem>        
-        @if (CurrentMix == MixEnum.Phoenix)
+        @if (CurrentMix != MixEnum.XX)
         {
             <MudItem xs="4">
 
@@ -192,7 +192,7 @@
                 var parsedScore = _inputScore == null ? null : PhoenixScore.TryParse(_inputScore.Value, out var score) ? (PhoenixScore?)score : null;
 
 
-                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(_selectedChart.Id, _isBroken, parsedScore, _selectedPlate));
+                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(_selectedChart.Id, _isBroken, parsedScore, _selectedPlate, Mix: CurrentMix));
                 
                 var chartName = $"{_selectedChart.Song.Name} {DifficultyLevel.ToShorthand(_selectedChart.Type,_selectedChart.Level)}";
                 var grade = parsedScore?.LetterGrade.GetName()+" " ?? "";
@@ -265,10 +265,10 @@
             return;
         }
         _selectedChart = (await Mediator.Send(new GetChartsQuery(CurrentMix, ChartIds: new[] { chartId }))).First();
-        if (CurrentMix == MixEnum.Phoenix)
+        if (CurrentMix != MixEnum.XX)
         {
-            
-            var bestRecord = await Mediator.Send(new GetPhoenixRecordQuery(chartId));
+
+            var bestRecord = await Mediator.Send(new GetPhoenixRecordQuery(chartId, CurrentMix));
             if (bestRecord== null)
             {
                 _selectedLetterGrade = null;
