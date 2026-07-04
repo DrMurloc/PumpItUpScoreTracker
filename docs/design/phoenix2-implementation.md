@@ -102,9 +102,27 @@ so a broken session can resume from the last checked item.
   result distinct from bad credentials; `ImportOfficialPlayerScoresCommand` + saga thread the mix;
   P2 card aliases backfill on import. E2E stays P1-only until kit fixtures exist.
 
-- [ ] **Commit 10 — Exposure.**
+- [x] **Commit 10 — Exposure.**
   MainLayout mix menu includes Phoenix 2 (display names); docs pass (ARCHITECTURE / DATABASE-SCHEMA /
   API / SCHEDULED-JOBS as touched); release-notes draft for the owner (under-construction list).
+
+## Release-notes draft (owner to edit)
+
+> **Phoenix 2 support is here.** You can now switch to Phoenix 2 from the Mix menu — scores,
+> progress, Pumbility, tier lists, weekly challenge, communities, and tournaments all track
+> Phoenix 2 separately from Phoenix, and your Phoenix data is untouched.
+>
+> Still under construction while we verify against real hardware:
+> - **Titles** — Phoenix 2's title list hasn't been revealed yet.
+> - **What Should I Play** — recommendations return after launch.
+> - **Score import** — opens after we verify the importer against a real Phoenix 2 machine.
+>   (CSV upload and manual recording work now.)
+> - **Official leaderboards / world rankings** — the official site changed how rankings work;
+>   the mirror returns later.
+> - **Tier lists** show Phoenix data marked *Provisional* until enough Phoenix 2 scores exist.
+>
+> Tournaments are mix-agnostic: stamina sessions let you pick the mix you played on, and
+> qualifiers state which mix they run on.
 
 ## Launch runbook (owner-driven)
 
