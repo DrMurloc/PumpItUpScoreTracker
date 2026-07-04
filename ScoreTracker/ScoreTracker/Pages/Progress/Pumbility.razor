@@ -100,7 +100,7 @@
     @foreach (var kv in _insufficientData.OrderBy(kv=>kv.Key.Item2).ThenBy(kv=>kv.Key.Item1))
     {
         <MudItem xs="12">
-            <MudImage tabindex="0" Src=@($"https://piuimages.arroweclip.se/difficulty/Phoenix/{kv.Key.Item1.GetShortHand().ToLower()}{kv.Key.Item2}.png") Height="20" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+            <MudImage tabindex="0" Src=@($"https://piuimages.arroweclip.se/difficulty/{_currentMix}/{kv.Key.Item1.GetShortHand().ToLower()}{kv.Key.Item2}.png") Height="20" ObjectFit="ObjectFit.ScaleDown"></MudImage>
             <LetterGradeIcon Grade="PhoenixLetterGrade.AA"></LetterGradeIcon>
             <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"></MudIcon>
             +@kv.Value.ToString("N0") PUMBILITY

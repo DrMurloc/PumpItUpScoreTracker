@@ -457,7 +457,10 @@
 
     }
     public string DifficultyBubblePath(Chart chart) =>
-        $"https://piuimages.arroweclip.se/difficulty/{chart.DifficultyString.ToLower()}.png";
+        chart.Type == SharedKernel.Enums.ChartType.DoublePerformance ||
+        chart.Type == SharedKernel.Enums.ChartType.SinglePerformance || chart.Mix == MixEnum.XX
+            ? $"https://piuimages.arroweclip.se/difficulty/{chart.DifficultyString.ToLower()}.png"
+            : $"https://piuimages.arroweclip.se/difficulty/{chart.Mix}/{chart.DifficultyString.ToLower()}.png";
     private void AddChart()
     {
         _session?.Add(_selectedChart!, _score, _plate, _isBroken);

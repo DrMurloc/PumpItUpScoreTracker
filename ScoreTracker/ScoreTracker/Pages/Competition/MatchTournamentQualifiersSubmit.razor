@@ -375,7 +375,10 @@
     private IEnumerable<string> _usernames = Array.Empty<string>();
 
     public string DifficultyBubblePath(string difficultyShorthand) =>
-        $"https://piuimages.arroweclip.se/difficulty/{difficultyShorthand.ToLower()}.png";
+        difficultyShorthand.StartsWith("SP", StringComparison.OrdinalIgnoreCase) ||
+        difficultyShorthand.StartsWith("DP", StringComparison.OrdinalIgnoreCase)
+            ? $"https://piuimages.arroweclip.se/difficulty/{difficultyShorthand.ToLower()}.png"
+            : $"https://piuimages.arroweclip.se/difficulty/{_configuration.Mix}/{difficultyShorthand.ToLower()}.png";
 
     private bool _isUploading = false;
     private const long MaxFileSize = 20000000;

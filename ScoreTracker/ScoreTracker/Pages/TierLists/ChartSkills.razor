@@ -1009,7 +1009,7 @@ function(val, index) {
         await SaveSettings();
     }
 
-    public string DifficultyBubblePath(ChartType chartType, DifficultyLevel level) =>  $"https://piuimages.arroweclip.se/difficulty/Phoenix/{chartType.GetShortHand().ToLower()}{level}.png";
+    public string DifficultyBubblePath(ChartType chartType, DifficultyLevel level) =>  $"https://piuimages.arroweclip.se/difficulty/{ListMix}/{chartType.GetShortHand().ToLower()}{level}.png";
     private string LetterGradeImage(PhoenixLetterGrade letterGrade, bool isBroken) => 
         $"https://piuimages.arroweclip.se/letters/{letterGrade.ToString().ToLower()}{(isBroken ? "_broken" : "")}.png";
 
