@@ -1,5 +1,6 @@
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.OfficialMirror.Application;
 using ScoreTracker.OfficialMirror.Domain;
@@ -19,9 +20,10 @@ public static class OfficialMirrorRegistrationExtensions
     /// </summary>
     public static IServiceCollection AddOfficialMirror(this IServiceCollection services)
     {
-        services.AddHttpClient<IPiuGameApi, PiuGameApi>(c =>
+        services.AddHttpClient<IPiuGameApi, PiuGameApi>((provider, c) =>
         {
-            c.DefaultRequestHeaders.Add("Origin", "https://phoenix.piugame.com");
+            c.DefaultRequestHeaders.Add("Origin",
+                provider.GetRequiredService<IOptions<PiuGameConfiguration>>().Value.BaseUrl);
         });
         services.AddTransient<IOfficialSiteClient, OfficialSiteClient>();
         services.AddTransient<IPiuTrackerClient, PiuTrackerClient>();

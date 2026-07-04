@@ -98,7 +98,9 @@ ScoreTracker.sln
     ├── ScoreTracker.ServiceDefaults   OTel/resilience defaults
     ├── ScoreTracker.Tests             unit + component + architecture tests
     ├── ScoreTracker.Tests.Api         API wire-shape approval tests
-    └── ScoreTracker.Tests.Integration real-DB tests (Testcontainers + Respawn)
+    ├── ScoreTracker.Tests.Integration real-DB tests (Testcontainers + Respawn)
+    └── ScoreTracker.Tests.E2E         Playwright critical-workflow tests (Kestrel-hosted
+                                       app + WireMock PIU stub + Testcontainers SQL)
 ```
 
 ### Inside a vertical

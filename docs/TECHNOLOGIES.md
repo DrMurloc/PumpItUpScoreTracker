@@ -72,7 +72,13 @@ Client-side telemetry; no-ops without an instrumentation key.
 The only test frameworks — see [HOW-TO-TEST.md](HOW-TO-TEST.md).
 
 ### Testcontainers.MsSql + Respawn
-The integration suite provisions a real SQL Server 2025 container per run (same image tag the AppHost uses — no engine drift), applies migrations, and Respawn resets state between tests.
+The integration and E2E suites provision a real SQL Server 2025 container per run (same image tag the AppHost uses — no engine drift), apply migrations, and Respawn resets state between tests.
+
+### Playwright (+ Mvc.Testing Kestrel host)
+The E2E suite drives a headless Chromium against the real web app, hosted in-process on Kestrel via .NET 10's `WebApplicationFactory.UseKestrel`. The browser downloads automatically on first run.
+
+### WireMock.Net
+Stands in for phoenix.piugame.com in the E2E suite, serving PII-scrubbed snapshot pages (`ScoreTracker.Tests.E2E/PiuGame/Fixtures/`) so logins and score imports never touch the real site. The app's PIU endpoints come from the `PiuGame` config section (defaults = production hosts).
 
 ## Delivery
 

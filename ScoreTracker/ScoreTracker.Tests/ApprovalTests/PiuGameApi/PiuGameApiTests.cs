@@ -8,9 +8,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
 using Moq.Protected;
 using ScoreTracker.OfficialMirror.Infrastructure.Apis;
+using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.SecondaryPorts;
 using Xunit;
@@ -289,7 +291,8 @@ public sealed class PiuGameApiTests
         return new PiuGameApi(
             HttpClientReturning(responseHtml),
             NullLogger<PiuGameApi>.Instance,
-            Mock.Of<ICurrentUserAccessor>());
+            Mock.Of<ICurrentUserAccessor>(),
+            Options.Create(new PiuGameConfiguration()));
     }
 
     private static HttpClient HttpClientReturning(string html)

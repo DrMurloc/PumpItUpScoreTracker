@@ -65,6 +65,7 @@ builder.Services.AddCors(o =>
 builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSection("Discord"));
 builder.Services.Configure<DevAuthConfiguration>(builder.Configuration.GetSection("DevAuth"));
 builder.Services.Configure<ProdSyncConfiguration>(builder.Configuration.GetSection("ProdSync"));
+builder.Services.Configure<PiuGameConfiguration>(builder.Configuration.GetSection("PiuGame"));
 builder.Services.Configure<GoogleConfiguration>(builder.Configuration.GetSection("Google"));
 var sqlConfig = builder.Configuration.GetSection("SQL").Get<SqlConfiguration>()!;
 builder.Services.AddMassTransit(o =>
@@ -304,3 +305,9 @@ app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
 app.Run();
+
+// Exposes the top-level-statement entry point to WebApplicationFactory so the E2E
+// suite can host the real app on Kestrel.
+public partial class Program
+{
+}

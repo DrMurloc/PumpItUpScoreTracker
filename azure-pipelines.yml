@@ -1,11 +1,13 @@
 # ASP.NET build + tests + gated production deploy (multi-stage YAML — no classic release pipeline)
 #
 # Stages:
-#   Build  — two parallel jobs:
+#   Build  — three parallel jobs:
 #     1) Windows: build the whole solution, run unit/component/approval tests, publish the
 #        deployable Web zip + EF migration bundle into the 'drop' artifact.
 #     2) Linux:   run the Testcontainers-backed integration suite against an ephemeral
 #        SQL Server 2025 instance (ubuntu-latest ships Docker + Linux containers).
+#     3) Linux:   run the Playwright E2E suite — the real web app on Kestrel against an
+#        ephemeral SQL Server, with WireMock standing in for phoenix.piugame.com.
 #   Deploy — main-branch runs only. A deployment job against the 'production' environment:
 #        applies pending EF migrations (efbundle), then zip-deploys the Web app.
 #
@@ -145,6 +147,37 @@ stages:
         testResultsFormat: 'VSTest'
         testResultsFiles: '$(Agent.TempDirectory)/**/integration.trx'
         testRunTitle: 'Integration Tests (SQL Server 2025)'
+        failTaskOnFailedTests: true
+
+  - job: E2ETests
+    displayName: 'E2E Tests (Linux, Playwright + Kestrel + Testcontainers + WireMock PIU)'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: UseDotNet@2
+      displayName: 'Install .NET 10 SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '10.0.x'
+
+    - script: dotnet build ScoreTracker/ScoreTracker.Tests.E2E/ScoreTracker.Tests.E2E.csproj -c $(buildConfiguration)
+      displayName: 'Build E2E project'
+
+    # The build drops playwright.ps1 next to the test binaries; --with-deps also installs
+    # the Chromium OS package dependencies the hosted agent lacks.
+    - script: pwsh ScoreTracker/ScoreTracker.Tests.E2E/bin/$(buildConfiguration)/net10.0/playwright.ps1 install --with-deps chromium
+      displayName: 'Install Playwright Chromium'
+
+    - script: dotnet test ScoreTracker/ScoreTracker.Tests.E2E/ScoreTracker.Tests.E2E.csproj -c $(buildConfiguration) --no-build --logger "trx;LogFileName=e2e.trx" --results-directory $(Agent.TempDirectory)
+      displayName: 'Run E2E tests (real app on Kestrel, stubbed PIU site)'
+
+    - task: PublishTestResults@2
+      displayName: 'Publish E2E test results'
+      condition: always()
+      inputs:
+        testResultsFormat: 'VSTest'
+        testResultsFiles: '$(Agent.TempDirectory)/**/e2e.trx'
+        testRunTitle: 'E2E Tests (Playwright)'
         failTaskOnFailedTests: true
 
 # Compile-time gate: the stage only exists in main-branch runs, so PR builds stop after
