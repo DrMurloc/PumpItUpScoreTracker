@@ -37,6 +37,8 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
                 await database.AddAsync(new PlayerStatsEntity
                 {
                     UserId = userId,
+                    // Phoenix until the port takes a mix (plan doc, port-threading commit).
+                    MixId = MixIds.Phoenix,
                     CoOpRating = newStats.CoOpRating,
                     SinglesRating = newStats.SinglesRating,
                     DoublesRating = newStats.DoublesRating,

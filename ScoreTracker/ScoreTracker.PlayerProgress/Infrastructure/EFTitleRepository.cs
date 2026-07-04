@@ -37,7 +37,9 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
                     Id = Guid.NewGuid(),
                     Title = t.Key,
                     ParagonLevel = t.Value.ParagonLevel.ToString(),
-                    UserId = userId
+                    UserId = userId,
+                    // Phoenix until the port takes a mix (plan doc, port-threading commit).
+                    MixId = MixIds.Phoenix
                 });
             //Update
             foreach (var entity in existingEntities.Where(e => titleSet.ContainsKey(e.Title)))
@@ -63,6 +65,8 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
                 await database.Set<UserHighestTitleEntity>().AddAsync(new UserHighestTitleEntity
                 {
                     UserId = userId,
+                    // Phoenix until the port takes a mix (plan doc, port-threading commit).
+                    MixId = MixIds.Phoenix,
                     Level = level,
                     TitleName = title
                 }, cancellationToken);

@@ -47,6 +47,8 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure
                     Category = entry.Category.ToString(),
                     ChartId = entry.ChartId,
                     TierListName = type,
+                    // Phoenix until the port takes a mix (plan doc, port-threading commit).
+                    MixId = MixIds.Phoenix,
                     Order = entry.Order
                 });
             }
@@ -118,6 +120,8 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure
                         Category = entry.Category.ToString(),
                         ChartId = entry.ChartId,
                         TierListName = type,
+                        // Phoenix until the port takes a mix (plan doc, port-threading commit).
+                        MixId = MixIds.Phoenix,
                         Order = entry.Order
                     }, cancellationToken);
                 }

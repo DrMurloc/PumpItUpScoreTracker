@@ -18,6 +18,8 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
             await database.Set<PlayerHistoryEntity>().AddAsync(new PlayerHistoryEntity
             {
                 UserId = record.UserId,
+                // Phoenix until the port takes a mix (plan doc, port-threading commit).
+                MixId = MixIds.Phoenix,
                 CoOpRating = record.CoOpRating,
                 Date = record.Date,
                 CompetitiveLevel = record.CompetitiveLevel,

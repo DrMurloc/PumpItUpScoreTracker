@@ -28,7 +28,7 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 
 | Table | Purpose |
 |---|---|
-| `scores.PhoenixRecord` | Best-known Phoenix-scoring attempt per user+chart+mix: score, plate, broken flag (unique on UserId+ChartId+MixId; pre-Phoenix-2 rows backfilled as Phoenix) |
+| `scores.PhoenixRecord` | Best-known Phoenix-scoring attempt per user+chart+mix: score, plate, broken flag (unique on UserId+ChartId+MixId; pre-Phoenix-2 rows backfilled as Phoenix — as are all MixId columns below) |
 | `scores.BestAttempt` | XX-era best attempts per user+chart |
 | `scores.PhoenixRecordStats` | Per-score Pumbility stats per user+chart+mix, written by PlayerProgress through a Ledger port |
 | `scores.ScoreEventJournal` | **Append-only** journal of score submissions *as received* (manual, import, CSV, …), including submissions that don't beat the stored best. Rows are never updated or deleted. Seeded 2026-06 from `PhoenixRecord` (`Source='backfill'`); the foundation of score-progression history |
@@ -37,24 +37,24 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 
 | Table | Purpose |
 |---|---|
-| `scores.PlayerStats` | Aggregated player stats: ratings, competitive levels, clear counts |
-| `scores.PlayerHistory` | Point-in-time snapshots of player stats |
-| `scores.UserTitle` | Titles earned, with paragon progression |
-| `scores.UserHighestTitle` | Denormalized current-highest title for fast reads |
+| `scores.PlayerStats` | Aggregated player stats per mix (PK UserId+MixId): ratings, competitive levels, clear counts |
+| `scores.PlayerHistory` | Point-in-time snapshots of player stats, per mix |
+| `scores.UserTitle` | Titles earned per mix, with paragon progression |
+| `scores.UserHighestTitle` | Denormalized current-highest title per mix (PK UserId+MixId) for fast reads |
 | `scores.SuggestionFeedback` | User feedback on chart recommendations |
 
 ## Chart Intelligence (vertical: `ScoreTracker.ChartIntelligence`)
 
 | Table | Purpose |
 |---|---|
-| `scores.TierListEntry` | Tier list entries (the site's most-used feature) |
+| `scores.TierListEntry` | Tier list entries per mix (the site's most-used feature) |
 | `scores.ChartScoringLevel` | Calculated scoring-difficulty level per chart+mix |
 | `scores.ChartLetterDifficulty` | Letter-grade (AA–PG) difficulty percentiles per chart |
 | `scores.ChartDifficultyRating` | Aggregated community difficulty ratings (count + std dev) |
 | `scores.UserChartDifficultyRating` | An individual user's difficulty vote |
 | `scores.ChartPreferenceRatingEntity` | Aggregated preference ratings |
 | `scores.UserPreferenceRating` | An individual user's preference vote |
-| `scores.CoOpRating` | Aggregated co-op difficulty ratings |
+| `scores.CoOpRating` | Aggregated co-op difficulty ratings, per mix |
 | `scores.UserCoOpRating` | An individual user's co-op difficulty vote |
 
 ## Game Content Catalog (vertical: `ScoreTracker.Catalog`)

@@ -149,6 +149,8 @@ internal sealed class EFChartDifficultyRatingRepository : IChartDifficultyRating
             {
                 Id = Guid.NewGuid(),
                 ChartId = rating.ChartId,
+                // Phoenix until the port takes a mix (plan doc, port-threading commit).
+                MixId = MixIds.Phoenix,
                 Difficulty = r.Value,
                 Player = r.Key
             });

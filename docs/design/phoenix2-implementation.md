@@ -59,7 +59,7 @@ so a broken session can resume from the last checked item.
   `PhoenixRecords` (unique index → UserId+ChartId+MixId — biggest table, deploy-gated index rebuild),
   `PhoenixRecordStats`. Entity + repo + migration + DATABASE-SCHEMA.md rows.
 
-- [ ] **Commit 3b — PlayerProgress + ChartIntelligence schema.**
+- [x] **Commit 3b — PlayerProgress + ChartIntelligence schema.**
   `PlayerStats` (PK → UserId+MixId), `PlayerHistory`, `UserTitle`, `UserHighestTitle` (PK → UserId+MixId),
   `TierListEntry` (+MixId), `CoOpRating` (+MixId). Backfill Phoenix everywhere.
 
