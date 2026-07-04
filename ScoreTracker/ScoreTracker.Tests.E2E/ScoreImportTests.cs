@@ -38,21 +38,25 @@ public sealed class ScoreImportTests : IAsyncLifetime
         await _page.GotoAsync("/UploadPhoenixScores");
         await FillMudFieldAsync("PIUGame.com Username", PiuGameLoginFlow.Username);
         await FillMudFieldAsync("PIUGame.com Password", PiuGameLoginFlow.Password);
-        // The stubbed account has exactly one game card, so this single click resolves the
-        // card and runs the whole import saga.
-        await _page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Import", Exact = true })
-            .ClickAsync();
+        var import = _page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Import", Exact = true });
+
+        // The captured account has two game cards, so the first click loads the cards,
+        // auto-selects the active one, and asks for confirmation — the real multi-card flow.
+        await import.ClickAsync();
+        await Expect(_page.Locator("div.mud-input-control", new PageLocatorOptions { HasText = "Game Card" }))
+            .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
+        await import.ClickAsync();
 
         await Expect(_page.GetByText("Import Completed!"))
             .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 120_000 });
 
-        // Both snapshot best scores streamed into the results table…
-        await Expect(_page.GetByText("999,231")).ToBeVisibleAsync();
-        await Expect(_page.GetByText("850,000")).ToBeVisibleAsync();
+        // Two of the captured best scores streamed into the results table…
+        await Expect(_page.GetByText("999,231").First).ToBeVisibleAsync();
+        await Expect(_page.GetByText("1,000,000").First).ToBeVisibleAsync();
 
         // …and were persisted to the ledger, mapped onto the right charts.
         Assert.Equal(999231, await LedgerScoreFor(_fixture.Seed.Tricklash220Double20));
-        Assert.Equal(850000, await LedgerScoreFor(_fixture.Seed.ConflictSingle15));
+        Assert.Equal(1000000, await LedgerScoreFor(_fixture.Seed.BluishRoseDouble18));
     }
 
     private async Task FillMudFieldAsync(string label, string value)

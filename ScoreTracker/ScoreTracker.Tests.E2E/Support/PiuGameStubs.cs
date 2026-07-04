@@ -6,15 +6,20 @@ namespace ScoreTracker.Tests.E2E.Support;
 
 /// <summary>
 ///     Maps a WireMock server to answer as phoenix.piugame.com using the snapshot fixtures in
-///     PiuGame/Fixtures. The app under test points PiuGame:BaseUrl (and AmPassUrl) here, so a
-///     PIUGAME login or score import never leaves the machine.
+///     PiuGame/Fixtures — PII-scrubbed raw captures of the real site (2026-07-03). The app
+///     under test points PiuGame:BaseUrl (and AmPassUrl) here, so a PIUGAME login or score
+///     import never leaves the machine.
 /// </summary>
 internal static class PiuGameStubs
 {
-    /// <summary>The account name served by AccountTitles.html / GameCards.html.</summary>
+    /// <summary>The scrubbed account name served by AccountTitles.html / GameCards.html.</summary>
     public const string GameTag = "E2EPLAYER";
 
-    /// <summary>The single game card id served by GameCards.html.</summary>
+    /// <summary>
+    ///     GameCards.html carries TWO cards, like the captured account: the active one
+    ///     (E2EPLAYER, this id) and an alt (E2EALT, 9990002). The import page therefore asks
+    ///     for a card confirmation on the first Import click — tests follow that real flow.
+    /// </summary>
     public const string CardId = "9990001";
 
     public const string SessionId = "e2e-session-token";

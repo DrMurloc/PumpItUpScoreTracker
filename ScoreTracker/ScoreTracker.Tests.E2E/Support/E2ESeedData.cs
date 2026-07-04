@@ -26,21 +26,29 @@ public sealed class E2ESeedData
     /// <summary>TRICKL4SH 220 Double 20 — 999,231 in BestScores_SinglePage.html.</summary>
     public Guid Tricklash220Double20 { get; private set; }
 
-    /// <summary>Conflict Single 15 — 850,000 in BestScores_SinglePage.html.</summary>
-    public Guid ConflictSingle15 { get; private set; }
-
-    /// <summary>Appassionata Double 21 — appears in RecentlyPlayed.html.</summary>
-    public Guid AppassionataDouble21 { get; private set; }
+    /// <summary>Bluish Rose Double 18 — the 1,000,000 in BestScores_SinglePage.html.</summary>
+    public Guid BluishRoseDouble18 { get; private set; }
 
     /// <summary>
-    ///     The charts every PiuGame snapshot page references. Call after ResetDatabaseAsync
-    ///     in any test that logs in or imports through the WireMock site.
+    ///     Every chart on the captured best-scores page (BestScores_SinglePage.html) — the
+    ///     import can only map scores onto charts seeded with the same name, type, and level.
+    ///     Recapturing the fixture means re-deriving this list from the new page. Call after
+    ///     ResetDatabaseAsync in any test that logs in or imports through the WireMock site.
     /// </summary>
     public async Task SeedSnapshotCatalogAsync(CancellationToken cancellationToken = default)
     {
+        await SeedPhoenixChartAsync("Full Moon - FULL SONG -", 20, "Single", cancellationToken);
+        await SeedPhoenixChartAsync("Demon of Laplace", 20, "Double", cancellationToken);
+        await SeedPhoenixChartAsync("DUEL", 18, "Double", cancellationToken);
+        await SeedPhoenixChartAsync("See", 18, "Double", cancellationToken);
         Tricklash220Double20 = await SeedPhoenixChartAsync("TRICKL4SH 220", 20, "Double", cancellationToken);
-        ConflictSingle15 = await SeedPhoenixChartAsync("Conflict", 15, "Single", cancellationToken);
-        AppassionataDouble21 = await SeedPhoenixChartAsync("Appassionata", 21, "Double", cancellationToken);
+        await SeedPhoenixChartAsync("Appassionata", 21, "Double", cancellationToken);
+        await SeedPhoenixChartAsync("GOODBOUNCE", 18, "Double", cancellationToken);
+        await SeedPhoenixChartAsync("Crimson hood", 18, "Double", cancellationToken);
+        await SeedPhoenixChartAsync("Curiosity Overdrive", 20, "Single", cancellationToken);
+        BluishRoseDouble18 = await SeedPhoenixChartAsync("Bluish Rose", 18, "Double", cancellationToken);
+        await SeedPhoenixChartAsync("Rush-More", 23, "Double", cancellationToken);
+        await SeedPhoenixChartAsync("8 6 - FULL SONG -", 23, "Double", cancellationToken);
     }
 
     public async Task EnsurePhoenixMixAsync(CancellationToken cancellationToken = default)
