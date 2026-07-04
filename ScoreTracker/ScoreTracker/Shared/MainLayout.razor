@@ -197,10 +197,10 @@
                 <MudNavLink Href="/StepArtists" Icon="@Icons.Material.Filled.Brush">@L["Step Artists"]</MudNavLink>
             </MudNavGroup>
             <MudNavLink Href="/About" Icon="@Icons.Material.Filled.Info">@L["About"]</MudNavLink>
-            <MudNavGroup Title=@(L["Mix"]+" ("+_currentMix+")") Icon="@Icons.Material.Filled.LibraryMusic" Expanded="false">
-                @foreach (var value in Enum.GetValues<MixEnum>())
+            <MudNavGroup Title=@(L["Mix"]+" ("+_currentMix.GetName()+")") Icon="@Icons.Material.Filled.LibraryMusic" Expanded="false">
+                @foreach (var value in SelectableMixes)
                 {
-                    <MudNavLink OnClick="()=>SetMix(value)">@value</MudNavLink>
+                    <MudNavLink OnClick="()=>SetMix(value)">@value.GetName()</MudNavLink>
                 }
             </MudNavGroup>
         </MudNavMenu>
@@ -245,6 +245,9 @@
     private const string BitePopupKey = "MainLayout__BigOne2024PopupShown";
     public static readonly DateTimeOffset _cutoff = new DateTimeOffset(2024, 10, 15, 0, 0, 0, TimeSpan.FromHours(-5));
     private MixEnum _currentMix = MixEnum.Phoenix;
+    // Pinned until the production Phoenix 2 catalog is seeded — the release-exposure commit
+    // adds MixEnum.Phoenix2 here (docs/design/phoenix2-implementation.md).
+    private static readonly MixEnum[] SelectableMixes = { MixEnum.XX, MixEnum.Phoenix };
     private string _profileImage = string.Empty;
     private string _gamerTag = string.Empty;
     private IEnumerable<TournamentRecord> _highlightedEvents = Array.Empty<TournamentRecord>();

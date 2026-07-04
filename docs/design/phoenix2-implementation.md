@@ -43,7 +43,7 @@ so a broken session can resume from the last checked item.
   (`PhoenixScoreFileExtractor` is a CsvHelper spreadsheet parser), journal source-kind comments
   (`ocr` out of `ScoreEventJournalEntity` + DATABASE-SCHEMA.md row). Verify: build + fast suites.
 
-- [ ] **Commit 1 — Mix model foundation (ships dark).**
+- [x] **Commit 1 — Mix model foundation (ships dark).**
   `MixEnum.Phoenix2`; `MixIds` entry (Guid above); migration widening `scores.Mix.Name` to 10;
   `MixEnum` display-name helper ("Phoenix 2"); MainLayout mix menu pinned to an explicit
   (XX, Phoenix) list so the new enum value does NOT auto-appear (the final commit expands it);
