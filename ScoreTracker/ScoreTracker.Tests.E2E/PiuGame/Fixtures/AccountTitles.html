@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<body>
+<!--
+  SYNTHETIC fixture for /my_page/title.php, built from PiuGameApi.GetAccountData's XPaths
+  (name_w/t2 = account name, profile_img/div/div style = avatar, data_titleList2 = titles).
+  The avatar URL deliberately uses the bare piugame.com host: PiuGameApi.ImageRegex accepts
+  either host, but OfficialSiteClient.ImageRegex (avatar file extraction) only matches the
+  bare host. Replace with a PII-scrubbed real capture via the LiveSite capture utility when
+  convenient.
+-->
+<div class="subProfile_wrap">
+    <div class="profile_img">
+        <div>
+            <div class="bgfix" style="background-image:url('https://piugame.com/data/avatar_img/4f617606e7751b2dc2559d80f09c40bf.png?v=20260701')"></div>
+        </div>
+    </div>
+    <div class="name_w">
+        <p class="t1">TITLE</p>
+        <p class="t2">E2EPLAYER</p>
+    </div>
+</div>
+<ul class="data_titleList2">
+    <li class="have" data-name="BRONZE GAMER"><p class="tt col3">BRONZE GAMER</p></li>
+    <li class="have" data-name="INTERMEDIATE Lv.1"><p class="tt col0">INTERMEDIATE Lv.1</p></li>
+    <li data-name="SILVER GAMER"><p class="tt col2">SILVER GAMER</p></li>
+</ul>
+</body>
+</html>

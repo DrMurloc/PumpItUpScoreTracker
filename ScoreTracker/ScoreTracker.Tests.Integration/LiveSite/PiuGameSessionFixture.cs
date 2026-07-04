@@ -1,8 +1,10 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Infrastructure.Apis;
+using ScoreTracker.OfficialMirror.Wiring;
 
 namespace ScoreTracker.Tests.Integration.LiveSite;
 
@@ -23,7 +25,8 @@ public sealed class PiuGameSessionFixture : IDisposable
         // Mirrors the typed-client registration in OfficialMirrorRegistrationExtensions.
         _publicClient = new HttpClient();
         _publicClient.DefaultRequestHeaders.Add("Origin", "https://phoenix.piugame.com");
-        Api = new PiuGameApi(_publicClient, NullLogger<PiuGameApi>.Instance, Mock.Of<ICurrentUserAccessor>());
+        Api = new PiuGameApi(_publicClient, NullLogger<PiuGameApi>.Instance, Mock.Of<ICurrentUserAccessor>(),
+            Options.Create(new PiuGameConfiguration()));
     }
 
     internal PiuGameApi Api { get; }

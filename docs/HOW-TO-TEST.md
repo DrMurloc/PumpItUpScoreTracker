@@ -13,11 +13,12 @@ The rungs, bottom to top:
 3. **Architecture tests** (`ScoreTracker.Tests/ArchitectureTests/`) — ratchets that enforce the layer rules, vertical public surfaces, and message taxonomy. Rules are added, never removed.
 4. **API wire-shape approval tests** (`ScoreTracker.Tests.Api/`) — pin the exact JSON contracts of the public `api/*` endpoints. A failure means a partner-facing contract changed: that's breaking-change review territory, not a test to casually re-approve.
 5. **Real-database integration tests** (`ScoreTracker.Tests.Integration/`) — run against a real SQL Server provisioned by Testcontainers, with migrations applied and Respawn resetting state between tests. For what only a real engine can verify: migrations, provider-specific SQL, constraints, transactions.
+6. **E2E tests** (`ScoreTracker.Tests.E2E/`) — Playwright driving a headless Chromium against the **real web app on Kestrel** (real DI graph, real MassTransit in-memory bus, real migrations, real SQL Server via Testcontainers), with WireMock answering as phoenix.piugame.com from snapshotted pages. Reserved for **critical user workflows** whose breakage a lower rung can't see: the PIUGAME login flow, the score-import saga end to end, the tier-list page rendering.
 
 Two hard rules on dependency realism:
 
 - **SQL Server is never faked.** No EF in-memory provider, no SQLite substitute — those can't validate migrations, real SQL, indexes, or concurrency, and tests using them must not be called integration tests. Repository-level logic in the fast suite mocks the port instead.
-- **Don't test through the browser what a lower rung covers.** There is no E2E suite today; the pyramid's upper floors are the approval and integration suites.
+- **Don't test through the browser what a lower rung covers.** The E2E suite exists for whole-workflow wiring (page → controller/circuit → handlers → bus → SQL → render), not for logic edge cases — a new scoring rule gets a unit test, not a browser test.
 
 Tests are classified by **folder-as-tag**: the project/folder a test lives in *is* its classification — no per-test trait attributes to maintain.
 
@@ -43,6 +44,14 @@ dotnet test ScoreTracker/ScoreTracker.Tests.Integration/ScoreTracker.Tests.Integ
 
 **Docker Desktop must be running.** The suite provisions its own ephemeral SQL Server 2025 container via Testcontainers (first run pulls the image, ~2 min), applies every EF migration, runs the tests with Respawn wiping the `scores` schema between them, and tears the container down. No local SQL setup or connection string needed.
 
+### E2E suite — Docker required, browser auto-installed
+
+```sh
+dotnet test ScoreTracker/ScoreTracker.Tests.E2E/ScoreTracker.Tests.E2E.csproj
+```
+
+Boots the whole stack once per run: an ephemeral SQL Server (Testcontainers), a WireMock server impersonating phoenix.piugame.com (snapshotted pages in `ScoreTracker.Tests.E2E/PiuGame/Fixtures/`), the real web app hosted on Kestrel through `WebApplicationFactory.UseKestrel`, and a headless Chromium (downloaded automatically on first run, ~150 MB). No real PIU account and no network access to piugame needed — logins and imports run entirely against the stub. Like the integration suite, it is opt-in locally: run it before a PR that touches login, import, or page-level flows.
+
 ### Live-site smoke tests — PIU account required
 
 `Tests.Integration/LiveSite/` exercises every scraper method the score-import flow depends on **against the real phoenix.piugame.com** — the code most likely to break in production, since PIU changes their site without notice. The tests need a real PIU account and **skip automatically when none is configured**, so they never affect contributors.
@@ -62,7 +71,7 @@ dotnet test ScoreTracker/ScoreTracker.Tests.Integration/ScoreTracker.Tests.Integ
 
 ### What CI runs
 
-Every PR and every merge to `main` runs all three suites on [Azure Pipelines](https://dev.azure.com/joneccker/ScoreTracker) — the fast suites on a Windows agent, the integration suite on a Linux agent with Docker. **The live-site smoke tests run in CI too**: the integration job pulls a PIU test account from Azure Key Vault, so scraper breakage fails the build — and since the deploy stage only runs after a green Build stage, a broken importer can't reach production. Merges to `main` additionally build the deployable artifact and wait at a manual approval gate before deploying.
+Every PR and every merge to `main` runs all four suites on [Azure Pipelines](https://dev.azure.com/joneccker/ScoreTracker) — the fast suites on a Windows agent, the integration and E2E suites on parallel Linux agents with Docker. **The live-site smoke tests run in CI too**: the integration job pulls a PIU test account from Azure Key Vault, so scraper breakage fails the build — and since the deploy stage only runs after a green Build stage, a broken importer can't reach production. Merges to `main` additionally build the deployable artifact and wait at a manual approval gate before deploying.
 
 ## Conventions
 

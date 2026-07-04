@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.61.0" />
+    <PackageReference Include="WireMock.Net" Version="2.11.0" />
+    <PackageReference Include="Testcontainers.MsSql" Version="4.7.0" />
+    <PackageReference Include="Respawn" Version="6.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The app under test: the E2E suite hosts the real web app on Kestrel via
+         WebApplicationFactory (the second sanctioned Web reference, after Tests.Api). -->
+    <ProjectReference Include="..\ScoreTracker\ScoreTracker.Web.csproj" />
+    <!-- CompositionRoot supplies VerticalModelContributions so the seeding context's model
+         matches production; Data supplies the public catalog entities the seeder inserts. -->
+    <ProjectReference Include="..\ScoreTracker.CompositionRoot\ScoreTracker.CompositionRoot.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Snapshotted (PII-scrubbed) PIU pages served by the WireMock stub. -->
+    <None Include="PiuGame\Fixtures\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

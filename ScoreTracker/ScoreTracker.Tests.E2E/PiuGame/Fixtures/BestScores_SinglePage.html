@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<body>
+<!--
+  E2E copy of ScoreTracker.Tests/ApprovalTests/PiuGameApi/Fixtures/GetBestScores_PhoenixHost.html
+  with the pagination block removed (single-page import). Keep the whitespace structure intact:
+  the GetBestScores parser uses HtmlAgilityPack ChildNodes[N] indexing, so whitespace text nodes
+  are load-bearing. Songs here must exist in the E2E catalog seed (E2ESeedData):
+  TRICKL4SH 220 (Double 20, 999,231, eg plate) and Conflict (Single 15, 850,000, tg plate).
+-->
+<div class="my_best_score_wrap">
+    <ul class="my_best_scoreList flex wrap">
+        <li>
+            <div class="in">
+                <div class="level_con mgL">
+                    <div class="stepBall_img_wrap">
+                        <div class="stepBall_in flex vc col hc wrap bgfix cont">
+                            <div class="tw"><img src="https://phoenix.piugame.com/l_img/stepball/full/d_text.png" alt=""></div>
+                            <div class="numw flex vc hc">
+                                <div class="imG"><img src="https://phoenix.piugame.com/l_img/stepball/full/d_num_2.png" alt=""></div>
+                                <div class="imG"><img src="https://phoenix.piugame.com/l_img/stepball/full/d_num_0.png" alt=""></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="song_con">
+                    <div class="song_name"><p>TRICKL4SH 220</p></div>
+                </div>
+                <div class="etc_con">
+                    <ul class="list flex vc hc wrap">
+                        <li>
+                            <div class="li_in">
+                                <div class="txt_v"><span class="num">999,231</span></div>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="li_in">
+                                <div class="img"><img src="https://phoenix.piugame.com/l_img/grade/sss_p.png" alt=""></div>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="li_in">
+                                <div class="img st1"><img src="https://phoenix.piugame.com/l_img/plate/eg.png" alt=""></div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </li>
+        <li>
+            <div class="in">
+                <div class="level_con mgL">
+                    <div class="stepBall_img_wrap">
+                        <div class="stepBall_in flex vc col hc wrap bgfix cont">
+                            <div class="tw"><img src="https://phoenix.piugame.com/l_img/stepball/full/s_text.png" alt=""></div>
+                            <div class="numw flex vc hc">
+                                <div class="imG"><img src="https://phoenix.piugame.com/l_img/stepball/full/s_num_1.png" alt=""></div>
+                                <div class="imG"><img src="https://phoenix.piugame.com/l_img/stepball/full/s_num_5.png" alt=""></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="song_con">
+                    <div class="song_name"><p>Conflict</p></div>
+                </div>
+                <div class="etc_con">
+                    <ul class="list flex vc hc wrap">
+                        <li>
+                            <div class="li_in">
+                                <div class="txt_v"><span class="num">850,000</span></div>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="li_in">
+                                <div class="img"><img src="https://phoenix.piugame.com/l_img/grade/a.png" alt=""></div>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="li_in">
+                                <div class="img st1"><img src="https://phoenix.piugame.com/l_img/plate/tg.png" alt=""></div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </li>
+    </ul>
+    <!-- No page_search/last-page block: GetBestScores then reports MaxPage == the requested
+         page, so an E2E import reads exactly one page of best scores. -->
+</div>
+</body>
+</html>
