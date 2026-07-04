@@ -26,9 +26,7 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             EventId = Guid.NewGuid(),
             OccurredAt = entry.OccurredAt,
             Source = entry.Source,
-            // All live submissions are Phoenix-mix today; recorded per row so the journal
-            // stays honest when Phoenix 2 arrives.
-            MixId = MixIds.Phoenix,
+            MixId = MixIds.For(entry.Mix),
             UserId = entry.UserId,
             ChartId = entry.ChartId,
             Score = entry.Score,

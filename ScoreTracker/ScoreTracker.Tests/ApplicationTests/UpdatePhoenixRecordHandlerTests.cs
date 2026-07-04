@@ -218,6 +218,36 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
+    public async Task JournalsSubmissionWithItsDeclaredMix()
+    {
+        var ctx = new HandlerContext();
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 950000,
+                Plate: PhoenixPlate.SuperbGame, Mix: MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        ctx.Journal.Verify(j => j.Append(
+            It.Is<ScoreJournalEntry>(e => e.Mix == MixEnum.Phoenix2),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task JournalsPhoenixMixWhenCommandDoesNotDeclareOne()
+    {
+        var ctx = new HandlerContext();
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 950000,
+                Plate: PhoenixPlate.SuperbGame),
+            CancellationToken.None);
+
+        ctx.Journal.Verify(j => j.Append(
+            It.Is<ScoreJournalEntry>(e => e.Mix == MixEnum.Phoenix),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task NoNewClearAndNoUpscoreDoesNotScheduleOrBatch()
     {
         var ctx = new HandlerContext();

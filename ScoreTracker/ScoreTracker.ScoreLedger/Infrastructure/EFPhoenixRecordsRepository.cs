@@ -82,7 +82,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 .OrderBy(e => e.OccurredAt)
                 .ToArrayAsync(cancellationToken))
             .Select(e => new ScoreJournalEntry(e.OccurredAt, e.Source, e.UserId, e.ChartId,
-                e.Score, PhoenixPlateHelperMethods.TryParse(e.Plate), e.IsBroken));
+                e.Score, PhoenixPlateHelperMethods.TryParse(e.Plate), e.IsBroken, MixIds.ToEnum(e.MixId)));
     }
 
     async Task<IReadOnlySet<Guid>> IScoreReader.GetActiveUserIds(DateTimeOffset since,

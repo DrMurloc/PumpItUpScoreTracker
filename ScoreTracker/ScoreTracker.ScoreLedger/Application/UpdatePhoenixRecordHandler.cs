@@ -44,7 +44,7 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         // The journal gets the submission as received (raw request values, including
         // no-op submissions) — it is play history, not best-attempt state.
         await journal.Append(new ScoreJournalEntry(dateTimeOffset.Now, request.Source, user.User.Id,
-            request.ChartId, request.Score, request.Plate, request.IsBroken), cancellationToken);
+            request.ChartId, request.Score, request.Plate, request.IsBroken, request.Mix), cancellationToken);
         var isNewScore = (existing?.IsBroken ?? true) && !request.IsBroken;
         var isUpscore = existing?.Score != null && request.Score != null && existing.Score < request.Score;
         if (!isNewScore && !isUpscore) return;

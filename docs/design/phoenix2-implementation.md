@@ -50,7 +50,7 @@ so a broken session can resume from the last checked item.
   audit every `switch`/ternary on `MixEnum` (esp. `TitleSaga`'s "not XX ⇒ Phoenix" dispatch and
   `MixIds.For`) so Phoenix2 either routes correctly or throws loudly — no silent Phoenix-1 fallthrough.
 
-- [ ] **Commit 2 — Journal write path takes the mix.**
+- [x] **Commit 2 — Journal write path takes the mix.**
   `UpdatePhoenixBestAttemptCommand` gains `MixEnum` (default Phoenix); handler → journal append;
   `EFScoreJournalRepository` drops the hardcoded `MixIds.Phoenix`. The journal is the only
   non-recomputable store — this lands before any P2 score can exist. Component tests.

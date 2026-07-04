@@ -11,7 +11,8 @@ public sealed record ScoreJournalEntry(
     Guid ChartId,
     PhoenixScore? Score,
     PhoenixPlate? Plate,
-    bool IsBroken)
+    bool IsBroken,
+    MixEnum Mix = MixEnum.Phoenix)
 {
     public const string ManualSource = "manual";
     public const string OfficialImportSource = "officialImport";

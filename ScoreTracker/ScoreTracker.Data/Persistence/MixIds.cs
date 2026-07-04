@@ -26,4 +26,12 @@ public static class MixIds
             _ => throw new ArgumentOutOfRangeException(nameof(mix), mix, "No Mix row id known for mix")
         };
     }
+
+    public static MixEnum ToEnum(Guid mixId)
+    {
+        if (mixId == XX) return MixEnum.XX;
+        if (mixId == Phoenix) return MixEnum.Phoenix;
+        if (mixId == Phoenix2) return MixEnum.Phoenix2;
+        throw new ArgumentOutOfRangeException(nameof(mixId), mixId, "No MixEnum known for Mix row id");
+    }
 }
