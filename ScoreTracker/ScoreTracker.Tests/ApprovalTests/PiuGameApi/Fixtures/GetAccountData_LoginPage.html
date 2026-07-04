@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<body>
+<!--
+  The wrong-password shape of /my_page/title.php: piugame still deposits a session cookie
+  but serves its LOGIN page (login_wrap) instead of the profile — same shape the E2E
+  wrong-password stub uses (scrubbed capture, 2026-07-03). GetAccountData must report the
+  INVALID sentinel WITH RequiresLogin=true so OfficialSiteClient maps it to
+  InvalidCredentialException, not "no game account associated".
+-->
+<div class="login_wrap">
+    <div class="login_in">
+        <form name="flogin" action="/bbs/login_check.php" method="post">
+            <input type="text" name="mb_id">
+            <input type="password" name="mb_password">
+        </form>
+    </div>
+</div>
+</body>
+</html>

@@ -2201,4 +2201,7 @@
   <data name="Provisional — based on Phoenix data" xml:space="preserve">
     <value>暫定（Phoenixのデータに基づく）</value>
   </data>
+  <data name="Your account is not associated with a game profile yet. Play a game on your account first, then try again." xml:space="preserve">
+    <value>アカウントにはまだゲームプロフィールが関連付けられていません。まずアカウントでプレイしてから、もう一度お試しください。</value>
+  </data>
 </root>

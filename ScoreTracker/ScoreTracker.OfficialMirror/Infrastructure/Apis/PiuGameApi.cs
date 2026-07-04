@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Net;
+using System.Security.Authentication;
 using System.Text.RegularExpressions;
 using System.Web;
 using HtmlAgilityPack;
@@ -17,11 +18,13 @@ namespace ScoreTracker.OfficialMirror.Infrastructure.Apis;
 
 internal sealed class PiuGameApi : IPiuGameApi
 {
+    // Stay anchored to the two official hosts, but accept the optional "p2/" path segment —
+    // the Phoenix 2 site serves stepballs from /l_img/p2/stepball/full/ (verified 2026-07-04).
     private static readonly Regex LevelRegex =
-        new(@"^https\:\/\/(?:phoenix\.)?piugame\.com\/l_img\/stepball\/full\/[a-zA-Z]_num_([0-9])\.png$", RegexOptions.Compiled);
+        new(@"^https\:\/\/(?:phoenix\.)?piugame\.com\/l_img\/(?:p2\/)?stepball\/full\/[a-zA-Z]_num_([0-9])\.png$", RegexOptions.Compiled);
 
     private static readonly Regex TypeRegex =
-        new(@"^https\:\/\/(?:phoenix\.)?piugame\.com\/l_img\/stepball\/full\/([a-zA-Z])_text\.png$", RegexOptions.Compiled);
+        new(@"^https\:\/\/(?:phoenix\.)?piugame\.com\/l_img\/(?:p2\/)?stepball\/full\/([a-zA-Z])_text\.png$", RegexOptions.Compiled);
 
     private static readonly Regex ShortTypeRegex =
         new(@"\/stepball\/full\/([a-zA-Z]+)_bg\.png", RegexOptions.Compiled);
@@ -49,10 +52,10 @@ internal sealed class PiuGameApi : IPiuGameApi
         _urls = configuration.Value;
     }
 
-    public async Task<PiuGameGetSongsResult> Get20AboveSongs(int page, CancellationToken cancellationToken)
+    public async Task<PiuGameGetSongsResult> Get20AboveSongs(MixEnum mix, int page, CancellationToken cancellationToken)
     {
         var response = await GetWithRetries(
-            $"{_urls.BaseUrl}/leaderboard/over_ranking.php?lv=&search=&&page={page}",
+            $"{_urls.BaseUrlFor(mix)}/leaderboard/over_ranking.php?lv=&search=&&page={page}",
             cancellationToken);
         var document = new HtmlDocument();
         document.LoadHtml(response);
@@ -116,11 +119,11 @@ internal sealed class PiuGameApi : IPiuGameApi
     }
 
 
-    public async Task<PiuGameGetSongLeaderboardResult> GetSongLeaderboard(string songId,
+    public async Task<PiuGameGetSongLeaderboardResult> GetSongLeaderboard(MixEnum mix, string songId,
         CancellationToken cancellationToken)
     {
         var response =
-            await GetWithRetries($"{_urls.BaseUrl}/leaderboard/over_ranking_view.php?no={songId}",
+            await GetWithRetries($"{_urls.BaseUrlFor(mix)}/leaderboard/over_ranking_view.php?no={songId}",
                 cancellationToken);
         var document = new HtmlDocument();
         document.LoadHtml(response);
@@ -155,10 +158,10 @@ internal sealed class PiuGameApi : IPiuGameApi
         };
     }
 
-    public async Task<PiuGameGetLeaderboardListResult> GetLeaderboards(CancellationToken cancellationToken)
+    public async Task<PiuGameGetLeaderboardListResult> GetLeaderboards(MixEnum mix, CancellationToken cancellationToken)
     {
         var response =
-            await GetWithRetries($"{_urls.BaseUrl}/leaderboard/rating_ranking.php", cancellationToken);
+            await GetWithRetries($"{_urls.BaseUrlFor(mix)}/leaderboard/rating_ranking.php", cancellationToken);
 
         var document = new HtmlDocument();
         document.LoadHtml(response);
@@ -177,11 +180,11 @@ internal sealed class PiuGameApi : IPiuGameApi
         };
     }
 
-    public async Task<PiuGameGetLeaderboardResult> GetLeaderboard(string leaderboardId,
+    public async Task<PiuGameGetLeaderboardResult> GetLeaderboard(MixEnum mix, string leaderboardId,
         CancellationToken cancellationToken)
     {
         var response =
-            await GetWithRetries($"{_urls.BaseUrl}/leaderboard/rating_ranking.php?lv=" + leaderboardId,
+            await GetWithRetries($"{_urls.BaseUrlFor(mix)}/leaderboard/rating_ranking.php?lv=" + leaderboardId,
                 cancellationToken);
 
         var document = new HtmlDocument();
@@ -210,11 +213,11 @@ internal sealed class PiuGameApi : IPiuGameApi
         };
     }
 
-    public async Task<PiuGameGetChartPopularityLeaderboardResult> GetChartPopularityLeaderboard(int page,
+    public async Task<PiuGameGetChartPopularityLeaderboardResult> GetChartPopularityLeaderboard(MixEnum mix, int page,
         CancellationToken cancellationToken)
     {
         var today = DateTimeOffset.Now - TimeSpan.FromDays(1);
-        var response = await PostWithRetries($"{_urls.BaseUrl}/ajax/top_steps.php",
+        var response = await PostWithRetries($"{_urls.BaseUrlFor(mix)}/ajax/top_steps.php",
             new Dictionary<string, string>
             {
                 { "page", page.ToString() },
@@ -313,10 +316,10 @@ internal sealed class PiuGameApi : IPiuGameApi
         };
     }
 
-    public async Task<IEnumerable<PiuGameGetRecentScoresResult>> GetRecentScores(HttpClient client,
+    public async Task<IEnumerable<PiuGameGetRecentScoresResult>> GetRecentScores(MixEnum mix, HttpClient client,
         CancellationToken cancellationToken)
     {
-        var response = await GetWithRetries($"{_urls.BaseUrl}/my_page/recently_played.php",
+        var response = await GetWithRetries($"{_urls.BaseUrlFor(mix)}/my_page/recently_played.php",
             cancellationToken, client);
 
         var document = new HtmlDocument();
@@ -502,20 +505,21 @@ internal sealed class PiuGameApi : IPiuGameApi
             : ChartType.SinglePerformance;
     }
 
-    public async Task<(HttpClient client, string sid)> GetSessionId(string username, string password,
+    public async Task<(HttpClient client, string sid)> GetSessionId(MixEnum mix, string username, string password,
         CancellationToken cancellationToken)
     {
+        var baseUrl = _urls.BaseUrlFor(mix);
         var cookieContainer = new CookieContainer();
         var webRequestHandler = new HttpClientHandler
         {
             CookieContainer = cookieContainer
         };
         var client = new HttpClient(webRequestHandler);
-        client.DefaultRequestHeaders.Add("origin", _urls.BaseUrl);
+        client.DefaultRequestHeaders.Add("origin", baseUrl);
 
-        await client.GetAsync(_urls.BaseUrl, cancellationToken);
+        await client.GetAsync(baseUrl, cancellationToken);
 
-        var result = await PostForMessageWithRetries($"{_urls.BaseUrl}/bbs/login_check.php",
+        var result = await PostForMessageWithRetries($"{baseUrl}/bbs/login_check.php",
             new Dictionary<string, string>
             {
                 { "url", "/" },
@@ -523,17 +527,21 @@ internal sealed class PiuGameApi : IPiuGameApi
                 { "mb_password", password }
             }, cancellationToken, client);
 
+        // No session cookie after the login POST means the site rejected the login outright —
+        // credentials, not profile state. (The usual wrong-password shape still deposits an
+        // anonymous sid and surfaces later as GetAccountData's login-page INVALID.)
         var sid = cookieContainer
-            .GetCookies(new Uri(_urls.BaseUrl))
-            .First(v => v.Name.StartsWith("sid", StringComparison.OrdinalIgnoreCase)).Value;
+            .GetCookies(new Uri(baseUrl))
+            .FirstOrDefault(v => v.Name.StartsWith("sid", StringComparison.OrdinalIgnoreCase))?.Value;
+        if (sid == null) throw new InvalidCredentialException("Could not log in user to PIUgame");
         await client.GetAsync(_urls.AmPassUrl, cancellationToken);
         return (client, sid);
     }
 
-    public async Task<PiuGameGetBestScoresResult> GetBestScores(HttpClient client, int page,
+    public async Task<PiuGameGetBestScoresResult> GetBestScores(MixEnum mix, HttpClient client, int page,
         CancellationToken cancellationToken)
     {
-        var response = await GetWithRetries($"{_urls.BaseUrl}/my_page/my_best_score.php?&&page={page}",
+        var response = await GetWithRetries($"{_urls.BaseUrlFor(mix)}/my_page/my_best_score.php?&&page={page}",
             cancellationToken, client);
 
         var document = new HtmlDocument();
@@ -570,11 +578,15 @@ internal sealed class PiuGameApi : IPiuGameApi
             // Match the digit out of each level-image filename instead of a fixed character
             // offset — the offset broke on 2026-07-03 when PIU moved these images from
             // piugame.com to phoenix.piugame.com (+8 chars) with the Phoenix 2 site rollout.
-            var difficulty = string.Join("",
+            var difficultyDigits = string.Join("",
                 scoreCard.SelectNodes(".//div[contains(@class,'stepBall_img_wrap')]//div[contains(@class,'imG')]//img")
                     .Select(n => ShortLevelRegex.Match(n.GetAttributeValue("src", "")))
                     .Where(m => m.Success)
                     .Select(m => m.Groups[1].Value));
+            // 1948 D29 renders a "??" stepball on the Phoenix 2 site — no parseable digit
+            // images — so the joined digits come back empty (int.Parse used to throw and the
+            // per-score catch silently dropped the card). Owner-confirmed: ?? is functionally a 29.
+            var difficulty = difficultyDigits.Length == 0 ? 29 : int.Parse(difficultyDigits);
 
             var scoreList = scoreCard.SelectNodes(".//div[contains(@class,'etc_con')]//ul").First();
 
@@ -587,7 +599,7 @@ internal sealed class PiuGameApi : IPiuGameApi
                 scores.Add(new PiuGameGetBestScoresResult.ScoreDto
                 {
                     ChartType = chartType!.Value,
-                    Level = int.Parse(difficulty),
+                    Level = difficulty,
                     Plate = PhoenixPlateHelperMethods.ParseShorthand(plate),
                     Score = int.Parse(score),
                     SongName = songName
@@ -639,10 +651,10 @@ internal sealed class PiuGameApi : IPiuGameApi
             @"url\(\'(https\:\/\/(?:phoenix\.)?piugame\.com\/data\/(avatar|song)_img\/[A-Za-z0-9]+\.[A-Za-z]+\?v\=[0-9]+)\'\)",
             RegexOptions.Compiled);
 
-    public async Task<PiuGameGetAccountDataResult> GetAccountData(HttpClient client,
+    public async Task<PiuGameGetAccountDataResult> GetAccountData(MixEnum mix, HttpClient client,
         CancellationToken cancellationToken)
     {
-        var response = await GetWithRetries($"{_urls.BaseUrl}/my_page/title.php",
+        var response = await GetWithRetries($"{_urls.BaseUrlFor(mix)}/my_page/title.php",
             cancellationToken, client);
 
 
@@ -653,7 +665,12 @@ internal sealed class PiuGameApi : IPiuGameApi
             return new PiuGameGetAccountDataResult
             {
                 AccountName = "INVALID",
-                ImageUrl = new Uri("/notset", UriKind.Relative)
+                ImageUrl = new Uri("/notset", UriKind.Relative),
+                // The wrong-password shape is the site's login page (login_wrap); an
+                // authenticated account with no game profile associated (everyone's
+                // launch-week state on Phoenix 2) renders my_page without the title list.
+                RequiresLogin =
+                    document.DocumentNode.SelectSingleNode(".//div[contains(@class,'login_wrap')]") != null
             };
 
         var titles = (from li in document.DocumentNode.SelectNodes(".//ul[contains(@class,'data_titleList2')]/li")
@@ -741,9 +758,10 @@ internal sealed class PiuGameApi : IPiuGameApi
         };
     }
 
-    public async Task<IEnumerable<GameCardRecord>> GetCards(HttpClient client, CancellationToken cancellationToken)
+    public async Task<IEnumerable<GameCardRecord>> GetCards(MixEnum mix, HttpClient client,
+        CancellationToken cancellationToken)
     {
-        var html = await client.GetStringAsync($"{_urls.BaseUrl}/my_page/game_id_information.php",
+        var html = await client.GetStringAsync($"{_urls.BaseUrlFor(mix)}/my_page/game_id_information.php",
             cancellationToken);
         var document = new HtmlDocument();
         document.LoadHtml(html);
@@ -768,9 +786,9 @@ internal sealed class PiuGameApi : IPiuGameApi
             select new GameCardRecord(tag, id, tag == mainId)).ToList();
     }
 
-    public async Task SetCard(HttpClient client, string id, CancellationToken cancellationToken)
+    public async Task SetCard(MixEnum mix, HttpClient client, string id, CancellationToken cancellationToken)
     {
-        var result = await PostForMessageWithRetries($"{_urls.BaseUrl}/ajax/sub_profile.php",
+        var result = await PostForMessageWithRetries($"{_urls.BaseUrlFor(mix)}/ajax/sub_profile.php",
             new Dictionary<string, string>
             {
                 { "no", id }

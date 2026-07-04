@@ -2080,4 +2080,7 @@
   <data name="Provisional — based on Phoenix data" xml:space="preserve">
     <value>잠정 — Phoenix 데이터 기반</value>
   </data>
+  <data name="Your account is not associated with a game profile yet. Play a game on your account first, then try again." xml:space="preserve">
+    <value>계정에 아직 게임 프로필이 연결되어 있지 않습니다. 먼저 계정으로 게임을 플레이한 후 다시 시도해 주세요.</value>
+  </data>
 </root>

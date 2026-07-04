@@ -126,24 +126,28 @@ namespace ScoreTracker.OfficialMirror.Application
         public async Task<PiuGameAccountDataImport> Handle(GetOfficialAccountDataQuery request,
             CancellationToken cancellationToken)
         {
-            return await _officialSite.GetAccountData(request.Username, request.Password, null, cancellationToken);
+            return await _officialSite.GetAccountData(request.Mix, request.Username, request.Password, null,
+                cancellationToken);
         }
 
         public async Task<Contracts.PiuGameAccountIdentity> Handle(GetPiuGameAccountIdentityQuery request,
             CancellationToken cancellationToken)
         {
-            return await _officialSite.GetAccountIdentity(request.Username, request.Password, cancellationToken);
+            return await _officialSite.GetAccountIdentity(request.Mix, request.Username, request.Password,
+                cancellationToken);
         }
 
         public async Task<(IEnumerable<OfficialRecordedScore> results, IEnumerable<string> nonMapped)> Handle(
             GetOfficialRecentScoresQuery request, CancellationToken cancellationToken)
         {
-            return await _officialSite.GetRecentScores(request.Username, request.Password, cancellationToken);
+            return await _officialSite.GetRecentScores(request.Mix, request.Username, request.Password,
+                cancellationToken);
         }
 
         public async Task Handle(ProcessOfficialLeaderboardsCommand request, CancellationToken cancellationToken)
         {
-            var leaderboardEntries = (await _officialSite.GetLeaderboardEntries(cancellationToken)).ToArray();
+            var leaderboardEntries =
+                (await _officialSite.GetLeaderboardEntries(request.Mix, cancellationToken)).ToArray();
             foreach (var leaderboard in leaderboardEntries.GroupBy(l => l.LeaderboardName))
             {
                 await _leaderboards.ClearLeaderboard("Rating", leaderboard.Key, cancellationToken);
@@ -158,17 +162,18 @@ namespace ScoreTracker.OfficialMirror.Application
                         place++;
                     }
                 }
-                await _leaderboards.WriteEntries(batch, cancellationToken);
+                await _leaderboards.WriteEntries(request.Mix, batch, cancellationToken);
             }
 
-            var scores = (await _officialSite.GetAllOfficialChartScores(CancellationToken.None)).ToArray();
+            var scores = (await _officialSite.GetAllOfficialChartScores(request.Mix, CancellationToken.None))
+                .ToArray();
             foreach (var group in scores.GroupBy(u => u.Username))
                 await _leaderboards.SaveAvatar(group.Key, group.First().AvatarUrl, cancellationToken);
-            await PopulateTierLists(scores, cancellationToken);
-            await SaveUserLeaderboards(scores, cancellationToken);
+            await PopulateTierLists(request.Mix, scores, cancellationToken);
+            await SaveUserLeaderboards(request.Mix, scores, cancellationToken);
         }
 
-        private async Task SaveUserLeaderboards(IEnumerable<OfficialChartLeaderboardEntry> entries,
+        private async Task SaveUserLeaderboards(MixEnum mix, IEnumerable<OfficialChartLeaderboardEntry> entries,
             CancellationToken cancellationToken)
         {
             foreach (var group in entries.GroupBy(e => e.Chart.Id))
@@ -187,11 +192,11 @@ namespace ScoreTracker.OfficialMirror.Application
                         place++;
                     }
                 }
-                await _leaderboards.WriteEntries(batch, cancellationToken);
+                await _leaderboards.WriteEntries(mix, batch, cancellationToken);
             }
         }
 
-        private async Task PopulateTierLists(IEnumerable<OfficialChartLeaderboardEntry> entries,
+        private async Task PopulateTierLists(MixEnum mix, IEnumerable<OfficialChartLeaderboardEntry> entries,
             CancellationToken cancellationToken)
         {
             var chartLevelGroups = entries.GroupBy(e => (e.Chart.Type, e.Chart.Level))
@@ -203,10 +208,8 @@ namespace ScoreTracker.OfficialMirror.Application
             foreach (var group in chartLevelGroups)
             {
                 var tierListEntries = TierListProcessor.ProcessIntoTierList(group.Value, group.Key.Level, "Official Scores");
-                // Phoenix until per-mix computation lands (plan doc, saga commit) — the
-                // official mirror scrapes the Phoenix site only until the import commit.
                 foreach (var entry in tierListEntries)
-                    await _tierLists.SaveEntry(MixEnum.Phoenix, entry, cancellationToken);
+                    await _tierLists.SaveEntry(mix, entry, cancellationToken);
             }
         }
 
@@ -230,7 +233,7 @@ namespace ScoreTracker.OfficialMirror.Application
 
         public async Task Handle(ProcessChartPopularityCommand request, CancellationToken cancellationToken)
         {
-            var entries = await _officialSite.GetOfficialChartLeaderboardEntries(cancellationToken);
+            var entries = await _officialSite.GetOfficialChartLeaderboardEntries(request.Mix, cancellationToken);
             foreach (var levelTypeGroup in entries.GroupBy(e => (e.Chart.Level, e.Chart.Type)))
             {
                 var charts = levelTypeGroup.ToArray();
@@ -262,9 +265,7 @@ namespace ScoreTracker.OfficialMirror.Application
                     else
                         category = TierListCategory.Underrated;
 
-                    // Phoenix until per-mix computation lands (plan doc, saga commit) — the
-                    // official mirror scrapes the Phoenix site only until the import commit.
-                    await _tierLists.SaveEntry(MixEnum.Phoenix,
+                    await _tierLists.SaveEntry(request.Mix,
                         new SongTierListEntry("Popularity", chart.Id, category, score),
                         cancellationToken);
                 }
@@ -276,23 +277,25 @@ namespace ScoreTracker.OfficialMirror.Application
             var userId = _currentUser.User.Id;
 
             var accountData =
-                await _officialSite.GetAccountData(request.Username, request.Password, request.Id, cancellationToken);
+                await _officialSite.GetAccountData(request.Mix, request.Username, request.Password, request.Id,
+                    cancellationToken);
             if (accountData.AccountName != request.ExpectedGameTag)
             {
             }
 
-            // Phoenix until per-mix computation lands (plan doc, saga commit).
             if (accountData.AccountName == "INVALID")
                 await _mediator.Publish(new ImportStatusUpdatedEvent(_currentUser.User.Id,
-                    "Invalid Login Information", Array.Empty<RecordedPhoenixScore>(), MixEnum.Phoenix),
+                    "Invalid Login Information", Array.Empty<RecordedPhoenixScore>(), request.Mix),
                     cancellationToken);
 
+            if (request.Mix == MixEnum.Phoenix2)
+                await BackfillCardAliases(userId, request, cancellationToken);
 
             if (request.SyncPiuTracker)
             {
                 await _mediator.Publish(new ImportStatusUpdatedEvent(_currentUser.User.Id,
                     "Syncing PIU Tracker... (Can take a while if it's your first time)",
-                    Array.Empty<RecordedPhoenixScore>(), MixEnum.Phoenix));
+                    Array.Empty<RecordedPhoenixScore>(), request.Mix));
                 try
                 {
                     await _piuTracker.SyncData(accountData.AccountName, accountData.Sid, cancellationToken);
@@ -301,7 +304,7 @@ namespace ScoreTracker.OfficialMirror.Application
                 {
                     await _mediator.Publish(
                         new ImportStatusErrorEvent(userId,
-                            "PIU Tracker sync failed, you've imported too recently.", MixEnum.Phoenix),
+                            "PIU Tracker sync failed, you've imported too recently.", request.Mix),
                         cancellationToken);
                 }
                 catch (Exception e)
@@ -309,7 +312,7 @@ namespace ScoreTracker.OfficialMirror.Application
                     await _mediator.Publish(
                         new ImportStatusErrorEvent(userId,
                             "PIU Tracker sync failed. Check with DrMurloc or Tusa if this persists",
-                            MixEnum.Phoenix),
+                            request.Mix),
                         cancellationToken);
                     _logger.LogWarning(e, "PIU Tracker sync failed");
                 }
@@ -324,19 +327,28 @@ namespace ScoreTracker.OfficialMirror.Application
                 new UpdateUserGameProfileCommand(accountData.AccountName, accountData.AvatarUrl),
                 cancellationToken);
 
-            // Phoenix until per-mix computation lands (plan doc, saga commit).
             await _bus.Publish(new TitlesDetectedEvent(userId, accountData.Titles.Select(t => t.ToString()),
-                    MixEnum.Phoenix),
+                    request.Mix),
                 cancellationToken);
 
-            var maxPages = await _officialSite.GetScorePageCount(request.Username, request.Password, cancellationToken);
-            var limit = (await _mediator.Send(new GetUserUiSettingsQuery(userId), cancellationToken)).TryGetValue("PreviousPageCount",
+            var maxPages =
+                await _officialSite.GetScorePageCount(request.Mix, request.Username, request.Password,
+                    cancellationToken);
+            // Page-count memory is per mix — the parallel sites paginate independently, so a
+            // Phoenix 2 import must not shrink (or inflate) the next Phoenix 1 delta read.
+            // Phoenix keeps the legacy key so existing users' next import stays incremental.
+            var pageCountSetting = request.Mix == MixEnum.Phoenix
+                ? "PreviousPageCount"
+                : $"PreviousPageCount__{request.Mix}";
+            var limit = (await _mediator.Send(new GetUserUiSettingsQuery(userId), cancellationToken)).TryGetValue(
+                pageCountSetting,
                 out var result)
                 ? int.TryParse(result, out var previous) ? (int?)maxPages - previous + 1 : null
                 : null;
 
             var scores =
-                (await _officialSite.GetRecordedScores(_currentUser.User.Id, request.Username, request.Password,
+                (await _officialSite.GetRecordedScores(request.Mix, _currentUser.User.Id, request.Username,
+                    request.Password,
                     request.Id,
                     request.IncludeBroken, limit,
                     cancellationToken))
@@ -344,7 +356,8 @@ namespace ScoreTracker.OfficialMirror.Application
             var count = 0;
             var batch = new List<RecordedPhoenixScore>();
             var existingScores =
-                (await _mediator.Send(new GetPhoenixRecordsQuery(userId), cancellationToken)).ToDictionary(s =>
+                (await _mediator.Send(new GetPhoenixRecordsQuery(userId, request.Mix), cancellationToken))
+                .ToDictionary(s =>
                     s.ChartId);
             var toSave = scores.Where(s =>
                     !existingScores.TryGetValue(s.Chart.Id, out var sc) || (sc.IsBroken && !s.IsBroken) ||
@@ -355,7 +368,7 @@ namespace ScoreTracker.OfficialMirror.Application
             {
                 await _mediator.Send(
                     new UpdatePhoenixBestAttemptCommand(score.Chart.Id, score.IsBroken, score.Score, score.Plate,
-                        Source: ScoreJournalEntry.OfficialImportSource),
+                        Source: ScoreJournalEntry.OfficialImportSource, Mix: request.Mix),
                     cancellationToken);
                 count++;
                 batch.Add(new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, score.IsBroken,
@@ -366,7 +379,7 @@ namespace ScoreTracker.OfficialMirror.Application
                 await _mediator.Publish(
                     new ImportStatusUpdatedEvent(_currentUser.User.Id,
                         $"Saving chart result {count} of {scores.Length}",
-                        batch.ToArray(), MixEnum.Phoenix),
+                        batch.ToArray(), request.Mix),
                     cancellationToken);
                 batch.Clear();
             }
@@ -374,19 +387,44 @@ namespace ScoreTracker.OfficialMirror.Application
             await _mediator.Publish(
                 new ImportStatusUpdatedEvent(_currentUser.User.Id,
                     "Charts finished saving",
-                    batch.ToArray(), MixEnum.Phoenix),
+                    batch.ToArray(), request.Mix),
                 cancellationToken);
             batch.Clear();
 
-            await _mediator.Send(new SaveUserUiSettingCommand("PreviousPageCount", maxPages.ToString()),
+            await _mediator.Send(new SaveUserUiSettingCommand(pageCountSetting, maxPages.ToString()),
                 cancellationToken);
+        }
+
+        /// <summary>
+        ///     /Login/PiuGame stays pinned to Phoenix 1 as the identity source (locked
+        ///     decision), so card:{id} aliases from the Phoenix 2 site can only enter through
+        ///     a P2 import. Additively attach any unclaimed ones to the importing account —
+        ///     mirroring ResolveExternalUserCommand's backfill: aliases owned by a different
+        ///     account are never re-pointed, they stay where they are.
+        /// </summary>
+        private async Task BackfillCardAliases(Guid userId, ImportOfficialPlayerScoresCommand request,
+            CancellationToken cancellationToken)
+        {
+            var cards = await _officialSite.GetGameCards(request.Mix, request.Username, request.Password,
+                cancellationToken);
+            foreach (var alias in cards.Select(c => $"card:{c.Id}"))
+            {
+                var owner = await _mediator.Send(new GetUserByExternalLoginQuery(alias, "PiuGame"),
+                    cancellationToken);
+                if (owner == null)
+                    await _mediator.Send(new CreateExternalLoginCommand(userId, alias, "PiuGame"),
+                        cancellationToken);
+            }
         }
 
         private static readonly Regex NonAlphanumeric = new("[^a-zA-Z0-9]", RegexOptions.Compiled);
 
         public async Task Handle(UpdateSongImagesCommand request, CancellationToken cancellationToken)
         {
-            var entries = await _officialSite.GetOfficialChartLeaderboardEntries(cancellationToken);
+            // Song images are shared per song, not per mix — sourced from the Phoenix 1 site
+            // until the Phoenix 2 new-content admin workflow lands (post-release track).
+            var entries =
+                await _officialSite.GetOfficialChartLeaderboardEntries(MixEnum.Phoenix, cancellationToken);
             foreach (var songGroup in entries.GroupBy(e => e.Chart.Song.Name))
             {
                 var song = songGroup.First().Chart.Song;
@@ -408,21 +446,23 @@ namespace ScoreTracker.OfficialMirror.Application
         public async Task<IEnumerable<GameCardRecord>> Handle(GetGameCardsQuery request,
             CancellationToken cancellationToken)
         {
-            return await _officialSite.GetGameCards(request.Username, request.Password, cancellationToken);
+            return await _officialSite.GetGameCards(request.Mix, request.Username, request.Password,
+                cancellationToken);
         }
 
         public Task<DateTimeOffset?> Handle(GetLastLeaderboardImportTimestampQuery request,
             CancellationToken cancellationToken)
         {
-            return _leaderboards.GetLastImportTimestamp(cancellationToken);
+            return _leaderboards.GetLastImportTimestamp(request.Mix, cancellationToken);
         }
 
         public async Task Consume(ConsumeContext<StartLeaderboardImportCommand> context)
         {
-            await _mediator.Send(new ProcessChartPopularityCommand());
-            await _mediator.Send(new ProcessOfficialLeaderboardsCommand());
-            await _worldRankings.CalculateWorldRankings(CancellationToken.None);
-            await _leaderboards.SetLastImportTimestamp(_dateTime.Now, context.CancellationToken);
+            var mix = context.Message.Mix;
+            await _mediator.Send(new ProcessChartPopularityCommand(mix));
+            await _mediator.Send(new ProcessOfficialLeaderboardsCommand(mix));
+            await _worldRankings.CalculateWorldRankings(mix, CancellationToken.None);
+            await _leaderboards.SetLastImportTimestamp(mix, _dateTime.Now, context.CancellationToken);
         }
     }
 }

@@ -2124,4 +2124,7 @@
   <data name="Provisional — based on Phoenix data" xml:space="preserve">
     <value>Mrglvisional — mrgl on Phoenix mrgldata</value>
   </data>
+  <data name="Your account is not associated with a game profile yet. Play a game on your account first, then try again." xml:space="preserve">
+    <value>Mrgl account is not mrglsociated with a game profile yet. Mrgl a game on mrgl account first, then mrgl again.</value>
+  </data>
 </root>

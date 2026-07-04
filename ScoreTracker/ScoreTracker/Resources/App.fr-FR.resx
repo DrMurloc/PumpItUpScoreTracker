@@ -2198,4 +2198,7 @@
   <data name="Provisional — based on Phoenix data" xml:space="preserve">
     <value>Provisoire — basé sur les données de Phoenix</value>
   </data>
+  <data name="Your account is not associated with a game profile yet. Play a game on your account first, then try again." xml:space="preserve">
+    <value>Votre compte n'est pas encore associé à un profil de jeu. Jouez d'abord une partie avec votre compte, puis réessayez.</value>
+  </data>
 </root>

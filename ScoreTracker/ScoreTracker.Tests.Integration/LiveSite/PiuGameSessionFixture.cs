@@ -5,6 +5,7 @@ using Moq;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Infrastructure.Apis;
 using ScoreTracker.OfficialMirror.Wiring;
+using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Tests.Integration.LiveSite;
 
@@ -65,7 +66,7 @@ public sealed class PiuGameSessionFixture : IDisposable
         {
             if (_authenticatedClient is not null) return _authenticatedClient;
 
-            var (client, sid) = await Api.GetSessionId(Username!, Password!, cancellationToken);
+            var (client, sid) = await Api.GetSessionId(MixEnum.Phoenix, Username!, Password!, cancellationToken);
             Assert.False(string.IsNullOrWhiteSpace(sid),
                 "Login against the live site produced no session id — the PIU login flow has changed shape.");
             SessionId = sid;

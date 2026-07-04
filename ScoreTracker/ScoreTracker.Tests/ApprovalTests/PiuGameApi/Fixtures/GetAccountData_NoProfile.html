@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<body>
+<!--
+  The authenticated-but-no-game-profile shape of /my_page/title.php (Phoenix 2 launch-week
+  state, live recon 2026-07-04): the session IS logged in — no login form anywhere — but
+  the account has no card/game profile associated, so the my_page chrome renders without
+  the data_titleList2 title list. GetAccountData must report the INVALID sentinel with
+  RequiresLogin=false so OfficialSiteClient maps it to NoGameAccountAssociatedException
+  instead of telling the user their (correct) password was wrong.
+-->
+<div class="my_page_wrap">
+    <div class="subProfile_wrap">
+        <div class="profile_img">
+            <div><div class="bgfix"></div></div>
+        </div>
+        <p class="t_notice">No game profile has been associated with this account yet.</p>
+    </div>
+</div>
+</body>
+</html>

@@ -96,7 +96,7 @@ so a broken session can resume from the last checked item.
   Optional `mix` query param (default Phoenix) on phoenixScores GET/record + tier-list/chart
   endpoints as applicable; contract tests extended additively; API.md updated.
 
-- [ ] **Commit 9 — Import backend, dormant behind the Coming-soon UI.**
+- [x] **Commit 9 — Import backend, dormant behind the Coming-soon UI.**
   Per-mix `PiuGameConfiguration` (mix → BaseUrl/AmPassUrl; P2 = piugame.com); stepball regexes accept
   `/l_img/p2/`; ??→29 level fallback (1948 D29); INVALID-sentinel → typed "no profile associated"
   result distinct from bad credentials; `ImportOfficialPlayerScoresCommand` + saga thread the mix;
