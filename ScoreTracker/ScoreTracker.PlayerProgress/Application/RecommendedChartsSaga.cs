@@ -56,7 +56,8 @@ namespace ScoreTracker.PlayerProgress.Application
             if (!DifficultyLevel.IsValid(competitiveLevel) || competitiveLevel < 10) competitiveLevel = 10;
             var titles = (await _mediator.Send(new GetTitleProgressQuery(MixEnum.Phoenix), cancellationToken))
                 .ToArray();
-            var scores = (await _scores.GetBestScores(_currentUser.User.Id, cancellationToken))
+            // Phoenix until per-mix computation lands (plan doc, saga commit).
+            var scores = (await _scores.GetBestScores(MixEnum.Phoenix, _currentUser.User.Id, cancellationToken))
                 .ToArray();
             var feedback = (await _feedback.GetFeedback(_currentUser.User.Id, cancellationToken))
                 .Where(f => f.ShouldHide)

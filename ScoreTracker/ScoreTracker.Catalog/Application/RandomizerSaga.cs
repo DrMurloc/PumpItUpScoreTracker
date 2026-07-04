@@ -244,8 +244,10 @@ namespace ScoreTracker.Catalog.Application
             var userScores = new Dictionary<Guid, RecordedPhoenixScore>();
             if ((_currentUser.IsLoggedIn && request.Settings.LetterGrades.Any()) ||
                 request.Settings.ClearStatus != null)
+                // Phoenix until per-mix computation lands (plan doc, saga commit).
                 userScores =
-                    (await _phoenixRecords.GetBestScores(_currentUser.User.Id, cancellationToken)).ToDictionary(r =>
+                    (await _phoenixRecords.GetBestScores(MixEnum.Phoenix, _currentUser.User.Id, cancellationToken))
+                    .ToDictionary(r =>
                         r.ChartId);
             var includedCharts = GetIncludedCharts(charts, request.Settings, userScores,
                 await _scoringLevels.GetScoringLevels(MixEnum.Phoenix, cancellationToken)).ToArray();
@@ -283,8 +285,10 @@ namespace ScoreTracker.Catalog.Application
             var userScores = new Dictionary<Guid, RecordedPhoenixScore>();
             if ((_currentUser.IsLoggedIn && request.Settings.LetterGrades.Any()) ||
                 request.Settings.ClearStatus != null)
+                // Phoenix until per-mix computation lands (plan doc, saga commit).
                 userScores =
-                    (await _phoenixRecords.GetBestScores(_currentUser.User.Id, cancellationToken)).ToDictionary(r =>
+                    (await _phoenixRecords.GetBestScores(MixEnum.Phoenix, _currentUser.User.Id, cancellationToken))
+                    .ToDictionary(r =>
                         r.ChartId);
             var includedCharts = GetIncludedCharts(charts, request.Settings, userScores,
                 await _scoringLevels.GetScoringLevels(MixEnum.Phoenix, cancellationToken)).ToArray();

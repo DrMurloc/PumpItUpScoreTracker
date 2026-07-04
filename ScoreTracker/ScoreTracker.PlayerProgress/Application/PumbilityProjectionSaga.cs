@@ -32,7 +32,8 @@ namespace ScoreTracker.PlayerProgress.Application
         {
             var charts = (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), cancellationToken))
                 .ToDictionary(c => c.Id);
-            var allScores = (await _scores.GetBestScores(request.UserId, cancellationToken))
+            // Phoenix until per-mix computation lands (plan doc, saga commit).
+            var allScores = (await _scores.GetBestScores(MixEnum.Phoenix, request.UserId, cancellationToken))
                 .Where(r => r.Score != null)
                 .ToDictionary(s => s.ChartId);
             var topScores = (await _mediator.Send(
@@ -84,8 +85,9 @@ namespace ScoreTracker.PlayerProgress.Application
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
             {
                 var cohort = chartType == ChartType.Single ? singlesPlayers : doublesPlayers;
-                var playerScores = (await _scores.GetScores(cohort, chartType, lowestLevel, highestLevel,
-                        cancellationToken))
+                // Phoenix until per-mix computation lands (plan doc, saga commit).
+                var playerScores = (await _scores.GetScores(MixEnum.Phoenix, cohort, chartType, lowestLevel,
+                        highestLevel, cancellationToken))
                     .Where(s => s is { IsBroken: false, Score: not null })
                     .GroupBy(r => charts[r.ChartId].Level)
                     .ToDictionary(g => g.Key, g => g.ToArray());

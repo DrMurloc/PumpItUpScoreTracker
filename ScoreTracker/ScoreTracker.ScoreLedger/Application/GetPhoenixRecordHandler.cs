@@ -20,6 +20,6 @@ internal sealed class GetPhoenixRecordHandler : IRequestHandler<GetPhoenixRecord
 
     public async Task<RecordedPhoenixScore?> Handle(GetPhoenixRecordQuery request, CancellationToken cancellationToken)
     {
-        return await _records.GetRecordedScore(_currentUser.User.Id, request.ChartId, cancellationToken);
+        return await _records.GetRecordedScore(request.Mix, _currentUser.User.Id, request.ChartId, cancellationToken);
     }
 }

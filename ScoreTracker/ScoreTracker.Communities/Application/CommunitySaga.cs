@@ -156,8 +156,9 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             .ToDictionary(c => c.ChartId, c => c.OldScore ?? 0);
         var user = await _users.GetUser(context.Message.UserId, context.CancellationToken);
         if (user == null) return;
+        // Phoenix until per-mix computation lands (plan doc, saga commit).
         var scores =
-            (await _scores.GetBestScores(context.Message.UserId, context.CancellationToken))
+            (await _scores.GetBestScores(MixEnum.Phoenix, context.Message.UserId, context.CancellationToken))
             .Where(s => s.Score != null)
             .ToDictionary(s =>
                 s.ChartId);
@@ -197,7 +198,8 @@ And {count - 10} others!";
                          .OrderByDescending(g => g.Level).ThenBy(g => g.Type))
             {
                 var totalCount = (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix, level, type))).Count();
-                var currentCount = await _scores.GetClearCount(context.Message.UserId, type, level,
+                // Phoenix until per-mix computation lands (plan doc, saga commit).
+                var currentCount = await _scores.GetClearCount(MixEnum.Phoenix, context.Message.UserId, type, level,
                     context.CancellationToken);
                 message += $@"
 #DIFFICULTY|{type.GetShortHand()}{level}# {currentCount}/{totalCount} ({100.0 * currentCount / totalCount:0.0}%)";
@@ -344,7 +346,9 @@ And {count - 10} others!";
         CancellationToken cancellationToken)
     {
         var community = await GetCommunity(request.CommuityName, cancellationToken);
-        return await _scores.GetPhoenixScores(community.MemberIds, request.ChartId, cancellationToken);
+        // Phoenix until per-mix computation lands (plan doc, saga commit).
+        return await _scores.GetPhoenixScores(MixEnum.Phoenix, community.MemberIds, request.ChartId,
+            cancellationToken);
     }
 
     public async Task<IEnumerable<CommunityOverviewRecord>> Handle(GetPublicCommunitiesQuery request,

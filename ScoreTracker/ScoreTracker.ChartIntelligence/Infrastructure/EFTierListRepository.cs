@@ -73,7 +73,7 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure
                 return onLevel;
 
             var cutoff = DateTimeOffset.Now - TimeSpan.FromDays(120);
-            var active = await _scores.GetActiveUserIds(cutoff, cancellationToken);
+            var active = await _scores.GetActiveUserIds(MixEnum.Phoenix, cutoff, cancellationToken);
             return onLevel.Where(active.Contains).ToArray();
         }
 

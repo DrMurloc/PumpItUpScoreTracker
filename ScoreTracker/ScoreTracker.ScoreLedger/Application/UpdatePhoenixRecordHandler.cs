@@ -2,6 +2,7 @@ using MassTransit;
 using MediatR;
 using ScoreTracker.ScoreLedger.Contracts.Messages;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
@@ -25,7 +26,7 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
 {
     public async Task Handle(UpdatePhoenixBestAttemptCommand request, CancellationToken cancellationToken)
     {
-        var existing = await records.GetRecordedScore(user.User.Id, request.ChartId, cancellationToken);
+        var existing = await records.GetRecordedScore(request.Mix, user.User.Id, request.ChartId, cancellationToken);
         var score = request.Score;
         var plate = request.Plate;
         var isBroken = request.IsBroken;
@@ -38,7 +39,7 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         if (request.KeepBestStats && !(existing?.IsBroken ?? true) && request.IsBroken)
             isBroken = false;
 
-        await records.UpdateBestAttempt(user.User.Id,
+        await records.UpdateBestAttempt(request.Mix, user.User.Id,
             new RecordedPhoenixScore(request.ChartId, score, plate, isBroken,
                 dateTimeOffset.Now), cancellationToken);
         // The journal gets the submission as received (raw request values, including
@@ -91,7 +92,8 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         CancellationToken cancellationToken)
     {
         var involved = batch.NewChartIds.Concat(batch.UpscoredChartIds.Keys).ToHashSet();
-        var bests = (await records.GetRecordedScores(userId, cancellationToken) ?? [])
+        // Phoenix until score batches carry the mix (plan doc, events commit).
+        var bests = (await records.GetRecordedScores(MixEnum.Phoenix, userId, cancellationToken) ?? [])
             .Where(r => involved.Contains(r.ChartId))
             .ToDictionary(r => r.ChartId);
         var changes = involved.Select(chartId =>

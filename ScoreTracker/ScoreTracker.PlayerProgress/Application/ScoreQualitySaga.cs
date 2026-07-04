@@ -51,7 +51,8 @@ internal sealed class ScoreQualitySaga :
         var playerScores = await GetPlayerScores(request.ChartType, request.Level, cancellationToken);
         var charts = (await _charts.GetCharts(MixEnum.Phoenix, request.Level, request.ChartType,
             cancellationToken: cancellationToken)).Select(c => c.Id).ToHashSet();
-        return (await _scores.GetBestScores(_user.User.Id, cancellationToken))
+        // Phoenix until per-mix computation lands (plan doc, saga commit).
+        return (await _scores.GetBestScores(MixEnum.Phoenix, _user.User.Id, cancellationToken))
             .Where(s => charts.Contains(s.ChartId))
             .Where(s => s.Score != null)
             .ToDictionary(c => c.ChartId,
@@ -102,7 +103,9 @@ internal sealed class ScoreQualitySaga :
                 o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
 
                 var players = await GetComparablePlayers(chartType, cancellationToken);
-                var scores = await _scores.GetPlayerScores(players, chartType, level, cancellationToken);
+                // Phoenix until per-mix computation lands (plan doc, saga commit).
+                var scores = await _scores.GetPlayerScores(MixEnum.Phoenix, players, chartType, level,
+                    cancellationToken);
                 return scores.Where(s => s.record.Score != null).GroupBy(c => c.record.ChartId)
                     .ToDictionary(g => g.Key,
                         g => g.OrderBy(s => s.record.Score).Select(s => s.record.Score!.Value).ToArray());
@@ -113,12 +116,13 @@ internal sealed class ScoreQualitySaga :
         CancellationToken cancellationToken)
     {
         var players = await GetComparablePlayers(chartType, cancellationToken);
-        var playerScores = (await _scores.GetPlayerScores(players, chartIds, cancellationToken))
+        // Phoenix until per-mix computation lands (plan doc, saga commit).
+        var playerScores = (await _scores.GetPlayerScores(MixEnum.Phoenix, players, chartIds, cancellationToken))
             .GroupBy(c => c.ChartId)
             .ToDictionary(g => g.Key,
                 g => g.OrderBy(s => s.Score).Select(s => s.Score).ToArray());
 
-        return (await _scores.GetBestScores(_user.User.Id, cancellationToken))
+        return (await _scores.GetBestScores(MixEnum.Phoenix, _user.User.Id, cancellationToken))
             .Where(s => chartIds.Contains(s.ChartId))
             .Where(s => s.Score != null)
             .ToDictionary(c => c.ChartId,

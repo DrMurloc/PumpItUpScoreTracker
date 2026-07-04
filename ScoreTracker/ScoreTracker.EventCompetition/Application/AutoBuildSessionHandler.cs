@@ -23,7 +23,8 @@ namespace ScoreTracker.EventCompetition.Application
             var charts = (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
                 .ToDictionary(c => c.Id);
 
-            var orderedScores = (await _phoenixRecords.GetBestScores(request.UserId, cancellationToken))
+            var orderedScores = (await _phoenixRecords.GetBestScores(MixEnum.Phoenix, request.UserId,
+                    cancellationToken))
                 .Where(s => s is { Score: not null, Plate: not null } &&
                             request.Configuration.Scoring.GetScore(charts[s.ChartId], s.Score!.Value, s.Plate!.Value,
                                 s.IsBroken) > 0)

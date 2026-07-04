@@ -68,7 +68,7 @@ so a broken session can resume from the last checked item.
   Phoenix), `UserTournamentSession` (+MixId), `UserOfficialLeaderboard`, `UserWorldRanking`,
   `OfficialLeaderboardImportState` (singleton row → per-mix).
 
-- [ ] **Commit 4 — Read/write ports take the mix.**
+- [x] **Commit 4 — Read/write ports take the mix.**
   `IScoreReader` (all methods), EF repositories filter by mix, every call site passes an explicit
   mix (behavior identical: callers pass Phoenix until the UI plumbing commit). Score-recording
   commands and the API record endpoint thread mix through.

@@ -22,6 +22,6 @@ internal sealed class
     public async Task<IEnumerable<RecordedPhoenixScore>> Handle(GetPhoenixRecordsQuery request,
         CancellationToken cancellationToken)
     {
-        return await _records.GetRecordedScores(request.UserId, cancellationToken);
+        return await _records.GetRecordedScores(request.Mix, request.UserId, cancellationToken);
     }
 }

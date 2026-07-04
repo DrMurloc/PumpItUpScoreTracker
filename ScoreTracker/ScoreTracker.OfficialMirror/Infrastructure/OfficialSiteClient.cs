@@ -160,7 +160,8 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
 
         var pagesWithNoUpscore = 0;
         var bestScores =
-            (await _phoenixRecords.GetBestScores(_currentUser.User.Id, cancellationToken)).ToDictionary(r =>
+            (await _phoenixRecords.GetBestScores(MixEnum.Phoenix, _currentUser.User.Id, cancellationToken))
+            .ToDictionary(r =>
                 r.ChartId);
         while (pagesWithNoUpscore <= 3 && currentPage <= finalPage)
         {

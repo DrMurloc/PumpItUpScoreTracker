@@ -133,7 +133,7 @@ public sealed class TierListSagaTests
         var charts = ChartsMockReturning(level: 15, type: ChartType.Single,
             new[] { new ChartBuilder().WithLevel(15).Build() });
         var scores = new Mock<IScoreReader>();
-        scores.Setup(s => s.GetBestScores(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+        scores.Setup(s => s.GetBestScores(MixEnum.Phoenix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
         var saga = BuildSaga(charts: charts, scores: scores);
 
@@ -154,7 +154,7 @@ public sealed class TierListSagaTests
         var chart = new ChartBuilder().WithLevel(level).Build();
         var charts = ChartsMockReturning(level: level, type: ChartType.Single, new[] { chart });
         var scores = new Mock<IScoreReader>();
-        scores.Setup(s => s.GetBestScores(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+        scores.Setup(s => s.GetBestScores(MixEnum.Phoenix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new RecordedPhoenixScore(chart.Id, 950000, PhoenixPlate.SuperbGame, false,
@@ -185,10 +185,10 @@ public sealed class TierListSagaTests
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
         var scores = new Mock<IScoreReader>();
-        scores.Setup(s => s.GetPgUsers(It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
+        scores.Setup(s => s.GetPgUsers(MixEnum.Phoenix, It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<(Guid UserId, Guid ChartId)>());
-        scores.Setup(s => s.GetScores(It.IsAny<IEnumerable<Guid>>(), It.IsAny<ChartType>(),
+        scores.Setup(s => s.GetScores(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(), It.IsAny<ChartType>(),
                 It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
         var tierLists = new Mock<ITierListRepository>();
@@ -278,10 +278,10 @@ public sealed class TierListSagaTests
         var chart = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
         var userId = Guid.NewGuid();
         var scores = new Mock<IScoreReader>();
-        scores.Setup(s => s.GetScores(It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
+        scores.Setup(s => s.GetScores(MixEnum.Phoenix, It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<(Guid userId, RecordedPhoenixScore record)>());
-        scores.Setup(s => s.GetScores(ChartType.Single, DifficultyLevel.From(20),
+        scores.Setup(s => s.GetScores(MixEnum.Phoenix, ChartType.Single, DifficultyLevel.From(20),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {

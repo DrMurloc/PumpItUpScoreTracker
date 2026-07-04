@@ -218,6 +218,7 @@ public sealed class PlayerRatingSagaTests
             .ReturnsAsync(new[] { c1, c2 });
         var scores = new Mock<IScoreReader>();
         scores.Setup(s => s.GetPlayerScores(
+                MixEnum.Phoenix,
                 It.Is<IEnumerable<Guid>>(ids => ids.Contains(userId)),
                 It.Is<IEnumerable<Guid>>(ids => ids.Contains(c1.Id) && ids.Contains(c2.Id)),
                 It.IsAny<CancellationToken>()))
@@ -233,7 +234,7 @@ public sealed class PlayerRatingSagaTests
             new RecalculatePumbilityCommand(userId, new[] { c1.Id, c2.Id }),
             CancellationToken.None);
 
-        recordStats.Verify(s => s.UpdateScoreStats(userId,
+        recordStats.Verify(s => s.UpdateScoreStats(MixEnum.Phoenix, userId,
             It.Is<IEnumerable<PhoenixRecordStats>>(stats =>
                 stats.Count() == 2 && stats.Any(p => p.ChartId == c1.Id) && stats.Any(p => p.ChartId == c2.Id)),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -247,10 +248,10 @@ public sealed class PlayerRatingSagaTests
         var stats = new Mock<IPlayerStatsRepository>();
         stats.Setup(s => s.GetStats(userId, It.IsAny<CancellationToken>())).ReturnsAsync(ZeroStats(userId));
         var scores = new Mock<IScoreReader>();
-        scores.Setup(s => s.GetBestScores(userId, It.IsAny<CancellationToken>()))
+        scores.Setup(s => s.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
         scores.Setup(s => s.GetPlayerScores(
-                It.IsAny<IEnumerable<Guid>>(), It.IsAny<IEnumerable<Guid>>(),
+                MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(), It.IsAny<IEnumerable<Guid>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<UserPhoenixScore>());
         var recordStats = new Mock<IPhoenixRecordStatsRepository>();
@@ -263,7 +264,8 @@ public sealed class PlayerRatingSagaTests
         // RecalculateStatsCommand path → SaveStats called; RecalculatePumbilityCommand path → UpdateScoreStats called.
         stats.Verify(s => s.SaveStats(userId, It.IsAny<PlayerStatsRecord>(),
             It.IsAny<CancellationToken>()), Times.Once);
-        recordStats.Verify(s => s.UpdateScoreStats(userId, It.IsAny<IEnumerable<PhoenixRecordStats>>(),
+        recordStats.Verify(s => s.UpdateScoreStats(MixEnum.Phoenix, userId,
+            It.IsAny<IEnumerable<PhoenixRecordStats>>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -298,8 +300,9 @@ public sealed class PlayerRatingSagaTests
         IEnumerable<RecordedPhoenixScore> result)
     {
         var m = new Mock<IScoreReader>();
-        m.Setup(s => s.GetBestScores(userId, It.IsAny<CancellationToken>())).ReturnsAsync(result);
-        m.Setup(s => s.GetBestScores(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(result);
+        m.Setup(s => s.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>())).ReturnsAsync(result);
+        m.Setup(s => s.GetBestScores(MixEnum.Phoenix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(result);
         return m;
     }
 

@@ -83,11 +83,12 @@ public sealed class ScoreQualitySagaTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { chart });
 
-        scores.Setup(r => r.GetPlayerScores(It.IsAny<IEnumerable<Guid>>(), ChartType.Single, DifficultyLevel.From(20),
+        scores.Setup(r => r.GetPlayerScores(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(), ChartType.Single,
+                DifficultyLevel.From(20),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<(Guid, RecordedPhoenixScore)>());
 
-        scores.Setup(r => r.GetBestScores(userId, It.IsAny<CancellationToken>()))
+        scores.Setup(r => r.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new RecordedPhoenixScore(chart.Id, 950000, PhoenixPlate.PerfectGame, false, DateTimeOffset.UtcNow)
@@ -127,11 +128,12 @@ public sealed class ScoreQualitySagaTests
 
         var competitorScore = new RecordedPhoenixScore(chart.Id, 800000, PhoenixPlate.PerfectGame, false,
             DateTimeOffset.UtcNow);
-        scores.Setup(r => r.GetPlayerScores(It.IsAny<IEnumerable<Guid>>(), ChartType.Single, DifficultyLevel.From(20),
+        scores.Setup(r => r.GetPlayerScores(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(), ChartType.Single,
+                DifficultyLevel.From(20),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { (competitor, competitorScore) });
 
-        scores.Setup(r => r.GetBestScores(userId, It.IsAny<CancellationToken>()))
+        scores.Setup(r => r.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new RecordedPhoenixScore(chart.Id, 990000, PhoenixPlate.PerfectGame, false, DateTimeOffset.UtcNow)

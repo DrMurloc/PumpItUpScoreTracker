@@ -68,7 +68,8 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
             var userId = _currentUser.User.Id;
             completedTitles = (await _titles.GetCompletedTitles(userId, cancellationToken)).Select(t => t.Title)
                 .ToHashSet();
-            scores = await _phoenixScores.GetBestScores(userId, cancellationToken);
+            // Phoenix until per-mix computation lands (plan doc, saga commit).
+            scores = await _phoenixScores.GetBestScores(MixEnum.Phoenix, userId, cancellationToken);
         }
         else
         {
@@ -84,7 +85,8 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
 
     private async Task<IEnumerable<TitleProgress>> GetPhoenixProgress(Guid userId, CancellationToken cancellationToken)
     {
-        var scores = await _phoenixScores.GetBestScores(userId, cancellationToken);
+        // Phoenix until per-mix computation lands (plan doc, saga commit).
+        var scores = await _phoenixScores.GetBestScores(MixEnum.Phoenix, userId, cancellationToken);
         var completed = (await _titles.GetCompletedTitles(userId, cancellationToken)).Select(t => t.Title).ToHashSet();
         var charts = (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
             .ToDictionary(c => c.Id);

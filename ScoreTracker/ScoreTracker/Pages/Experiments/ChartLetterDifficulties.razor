@@ -162,7 +162,7 @@
             (await ChartRepository.GetCharts(MixEnum.Phoenix, level, chartType, cancellationToken: CancellationToken.None))
                 .ToArray();
         _charts = charts.ToDictionary(c => c.Id);
-        var scores = (await Scores.GetScores(chartType, level, CancellationToken.None)).Select(s => (userId: s.UserId, record: s.Record)).ToArray();
+        var scores = (await Scores.GetScores(MixEnum.Phoenix, chartType, level, CancellationToken.None)).Select(s => (userId: s.UserId, record: s.Record)).ToArray();
 
         var stats = (await PlayerStats.GetStats(scores.Select(p => p.userId).Distinct(), CancellationToken.None))
             .ToDictionary(s => s.UserId);

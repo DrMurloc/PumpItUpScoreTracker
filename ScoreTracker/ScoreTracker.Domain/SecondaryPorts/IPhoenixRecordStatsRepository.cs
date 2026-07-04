@@ -1,3 +1,4 @@
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Records;
 
 namespace ScoreTracker.Domain.SecondaryPorts;
@@ -10,6 +11,6 @@ namespace ScoreTracker.Domain.SecondaryPorts;
 /// </summary>
 public interface IPhoenixRecordStatsRepository
 {
-    Task UpdateScoreStats(Guid userId, IEnumerable<PhoenixRecordStats> stats,
+    Task UpdateScoreStats(MixEnum mix, Guid userId, IEnumerable<PhoenixRecordStats> stats,
         CancellationToken cancellationToken = default);
 }

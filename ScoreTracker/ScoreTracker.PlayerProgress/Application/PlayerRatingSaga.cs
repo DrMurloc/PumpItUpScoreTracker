@@ -70,7 +70,8 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
             (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
             .ToDictionary(c => c.Id);
         var scoring = ScoringConfiguration.PumbilityScoring(false);
-        return (await _scores.GetBestScores(request.UserId, cancellationToken))
+        // Phoenix until per-mix computation lands (plan doc, saga commit).
+        return (await _scores.GetBestScores(MixEnum.Phoenix, request.UserId, cancellationToken))
             .Where(s => charts[s.ChartId].Type != ChartType.CoOp)
             .Where(s => s.Score != null && (request.ChartType == null ||
                                             charts[s.ChartId].Type == request.ChartType))
@@ -92,8 +93,9 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
         var scoring = ScoringConfiguration.PumbilityScoring(true);
         var charts =
             (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
+        // Phoenix until per-mix computation lands (plan doc, saga commit).
         var recorded =
-            (await _scores.GetBestScores(request.UserId, cancellationToken)).ToArray();
+            (await _scores.GetBestScores(MixEnum.Phoenix, request.UserId, cancellationToken)).ToArray();
         var scores = recorded
             .Where(s => s.Score != null)
             .Select(s => new ChartRating(s.ChartId, charts[s.ChartId].Type,
@@ -177,7 +179,8 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
             (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
             .ToDictionary(c => c.Id);
         var count = request.ChartType == null ? 100 : 50;
-        return (await _scores.GetBestScores(request.UserId, cancellationToken))
+        // Phoenix until per-mix computation lands (plan doc, saga commit).
+        return (await _scores.GetBestScores(MixEnum.Phoenix, request.UserId, cancellationToken))
             .Where(s => charts[s.ChartId].Type != ChartType.CoOp)
             .Where(s => s.Score != null && (request.ChartType == null ||
                                             charts[s.ChartId].Type == request.ChartType))
@@ -194,7 +197,8 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
 
     public async Task Handle(RecalculatePumbilityCommand request, CancellationToken cancellationToken)
     {
-        var scores = (await _scores.GetPlayerScores(new[] { request.UserId },
+        // Phoenix until per-mix computation lands (plan doc, saga commit).
+        var scores = (await _scores.GetPlayerScores(MixEnum.Phoenix, new[] { request.UserId },
             request.chartIds,
             cancellationToken)).ToArray();
         var pumbility = ScoringConfiguration.PumbilityScoring(true);
@@ -208,6 +212,7 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
         var ratings = scores.Select(s => new PhoenixRecordStats(s.ChartId,
             pumbility.GetScore(charts[s.ChartId], s.Score, s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken),
             pumbilityPlus.GetScore(charts[s.ChartId], s.Score, s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken)));
-        await _recordStats.UpdateScoreStats(request.UserId, ratings, cancellationToken);
+        // Phoenix until per-mix computation lands (plan doc, saga commit).
+        await _recordStats.UpdateScoreStats(MixEnum.Phoenix, request.UserId, ratings, cancellationToken);
     }
 }

@@ -915,7 +915,7 @@ else
         {
             _averageRating = 0;
         }
-        _allPhoenixScores = (await PhoenixRecords.GetScores(type, difficulty, CancellationToken.None)).Select(s => (userId: s.UserId, record: s.Record)).GroupBy(r => r.userId)
+        _allPhoenixScores = (await PhoenixRecords.GetScores(MixEnum.Phoenix, type, difficulty, CancellationToken.None)).Select(s => (userId: s.UserId, record: s.Record)).GroupBy(r => r.userId)
             .ToDictionary(g => g.Key, g => g.Select(i=>i.record).ToArray().AsEnumerable());
     
         RefilterCharts();

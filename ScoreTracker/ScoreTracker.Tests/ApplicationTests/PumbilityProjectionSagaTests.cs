@@ -76,6 +76,7 @@ public sealed class PumbilityProjectionSagaTests
         await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
 
         ctx.PhoenixRecords.Verify(s => s.GetScores(
+            MixEnum.Phoenix,
             It.IsAny<IEnumerable<Guid>>(),
             It.IsAny<ChartType>(),
             It.Is<DifficultyLevel>(l => (int)l == 18),
@@ -182,13 +183,14 @@ public sealed class PumbilityProjectionSagaTests
                 .ReturnsAsync(Array.Empty<Guid>());
 
             PhoenixRecords.Setup(s => s.GetScores(
-                    It.IsAny<IEnumerable<Guid>>(), It.IsAny<ChartType>(),
+                    MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(), It.IsAny<ChartType>(),
                     It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
 
             Mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => _charts.AsEnumerable());
-            PhoenixRecords.Setup(s => s.GetBestScores(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            PhoenixRecords.Setup(s => s.GetBestScores(MixEnum.Phoenix, It.IsAny<Guid>(),
+                    It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => _allUserScores.AsEnumerable());
             Mediator.Setup(m => m.Send(It.IsAny<GetTop50ForPlayerQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => _topScores.AsEnumerable());

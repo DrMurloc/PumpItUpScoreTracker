@@ -31,7 +31,7 @@ public sealed class ScoringDifficultySagaTests
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
         scores ??= new Mock<IScoreReader>();
-        scores.Setup(s => s.GetScores(It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
+        scores.Setup(s => s.GetScores(MixEnum.Phoenix, It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<(Guid, RecordedPhoenixScore)>());
         playerStats ??= new Mock<IPlayerStatsReader>();

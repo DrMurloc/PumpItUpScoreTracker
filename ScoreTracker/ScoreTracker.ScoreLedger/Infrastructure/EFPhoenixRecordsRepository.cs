@@ -23,74 +23,77 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
 {
     // IScoreReader — the Ledger's published read contract. Adapts the internal
     // repository methods; consumers migrate onto these during P3 (F1).
-    Task<IEnumerable<RecordedPhoenixScore>> IScoreReader.GetBestScores(Guid userId,
+    Task<IEnumerable<RecordedPhoenixScore>> IScoreReader.GetBestScores(MixEnum mix, Guid userId,
         CancellationToken cancellationToken)
     {
-        return GetRecordedScores(userId, cancellationToken);
+        return GetRecordedScores(mix, userId, cancellationToken);
     }
 
     async Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> IScoreReader.GetScores(
-        ChartType chartType, DifficultyLevel level, CancellationToken cancellationToken)
+        MixEnum mix, ChartType chartType, DifficultyLevel level, CancellationToken cancellationToken)
     {
-        return await GetAllPlayerScores(chartType, level, cancellationToken);
+        return await GetAllPlayerScores(mix, chartType, level, cancellationToken);
     }
 
-    Task<IEnumerable<RecordedPhoenixScore>> IScoreReader.GetScores(IEnumerable<Guid> userIds,
+    Task<IEnumerable<RecordedPhoenixScore>> IScoreReader.GetScores(MixEnum mix, IEnumerable<Guid> userIds,
         ChartType chartType, DifficultyLevel minimumLevel, DifficultyLevel maximumLevel,
         CancellationToken cancellationToken)
     {
-        return GetRecordedScores(userIds, chartType, minimumLevel, maximumLevel, cancellationToken);
+        return GetRecordedScores(mix, userIds, chartType, minimumLevel, maximumLevel, cancellationToken);
     }
 
-    Task<IEnumerable<(Guid UserId, Guid ChartId)>> IScoreReader.GetPgUsers(ChartType chartType,
+    Task<IEnumerable<(Guid UserId, Guid ChartId)>> IScoreReader.GetPgUsers(MixEnum mix, ChartType chartType,
         DifficultyLevel level, CancellationToken cancellationToken)
     {
-        return GetPgUsers(chartType, level, cancellationToken);
+        return GetPgUsers(mix, chartType, level, cancellationToken);
     }
 
     Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> IScoreReader.GetPlayerScores(
-        IEnumerable<Guid> userIds, ChartType chartType, DifficultyLevel difficulty,
+        MixEnum mix, IEnumerable<Guid> userIds, ChartType chartType, DifficultyLevel difficulty,
         CancellationToken cancellationToken)
     {
-        return GetPlayerScores(userIds, chartType, difficulty, cancellationToken);
+        return GetPlayerScores(mix, userIds, chartType, difficulty, cancellationToken);
     }
 
-    Task<IEnumerable<UserPhoenixScore>> IScoreReader.GetPlayerScores(IEnumerable<Guid> userIds,
+    Task<IEnumerable<UserPhoenixScore>> IScoreReader.GetPlayerScores(MixEnum mix, IEnumerable<Guid> userIds,
         IEnumerable<Guid> chartIds, CancellationToken cancellationToken)
     {
-        return GetPlayerScores(userIds, chartIds, cancellationToken);
+        return GetPlayerScores(mix, userIds, chartIds, cancellationToken);
     }
 
-    Task<IEnumerable<UserPhoenixScore>> IScoreReader.GetPhoenixScores(IEnumerable<Guid> userIds, Guid chartId,
+    Task<IEnumerable<UserPhoenixScore>> IScoreReader.GetPhoenixScores(MixEnum mix, IEnumerable<Guid> userIds,
+        Guid chartId,
         CancellationToken cancellationToken)
     {
-        return GetPhoenixScores(userIds, chartId, cancellationToken);
+        return GetPhoenixScores(mix, userIds, chartId, cancellationToken);
     }
 
-    Task<int> IScoreReader.GetClearCount(Guid userId, ChartType chartType, DifficultyLevel level,
+    Task<int> IScoreReader.GetClearCount(MixEnum mix, Guid userId, ChartType chartType, DifficultyLevel level,
         CancellationToken cancellationToken)
     {
-        return GetClearCount(userId, chartType, level, cancellationToken);
+        return GetClearCount(mix, userId, chartType, level, cancellationToken);
     }
 
-    async Task<IEnumerable<ScoreJournalEntry>> IScoreReader.GetScoreHistory(Guid userId, Guid chartId,
+    async Task<IEnumerable<ScoreJournalEntry>> IScoreReader.GetScoreHistory(MixEnum mix, Guid userId, Guid chartId,
         CancellationToken cancellationToken)
     {
+        var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return (await database.Set<ScoreEventJournalEntity>()
-                .Where(e => e.UserId == userId && e.ChartId == chartId)
+                .Where(e => e.UserId == userId && e.ChartId == chartId && e.MixId == mixId)
                 .OrderBy(e => e.OccurredAt)
                 .ToArrayAsync(cancellationToken))
             .Select(e => new ScoreJournalEntry(e.OccurredAt, e.Source, e.UserId, e.ChartId,
                 e.Score, PhoenixPlateHelperMethods.TryParse(e.Plate), e.IsBroken, MixIds.ToEnum(e.MixId)));
     }
 
-    async Task<IReadOnlySet<Guid>> IScoreReader.GetActiveUserIds(DateTimeOffset since,
+    async Task<IReadOnlySet<Guid>> IScoreReader.GetActiveUserIds(MixEnum mix, DateTimeOffset since,
         CancellationToken cancellationToken)
     {
+        var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return (await database.Set<PhoenixRecordEntity>()
-                .Where(pba => pba.RecordedDate >= since)
+                .Where(pba => pba.MixId == mixId && pba.RecordedDate >= since)
                 .Select(pba => pba.UserId)
                 .Distinct()
                 .ToArrayAsync(cancellationToken))
@@ -110,9 +113,9 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     private readonly IMediator _mediator;
     private readonly IPlayerStatsReader _playerStats;
 
-    private static string ScoreCache(Guid userId)
+    private static string ScoreCache(Guid userId, MixEnum mix)
     {
-        return $"{nameof(EFPhoenixRecordsRepository)}_UserScores_{userId}";
+        return $"{nameof(EFPhoenixRecordsRepository)}_UserScores_{userId}_{mix}";
     }
 
     public EFPhoenixRecordsRepository(IDbContextFactory<ChartAttemptDbContext> factory,
@@ -130,13 +133,15 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         _playerStats = playerStats;
     }
 
-    public async Task UpdateBestAttempt(Guid userId, RecordedPhoenixScore score,
+    public async Task UpdateBestAttempt(MixEnum mix, Guid userId, RecordedPhoenixScore score,
         CancellationToken cancellationToken = default)
     {
+        var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var existing =
             await database.Set<PhoenixRecordEntity>().FirstOrDefaultAsync(
-                pba => pba.UserId == userId && pba.ChartId == score.ChartId, cancellationToken);
+                pba => pba.UserId == userId && pba.ChartId == score.ChartId && pba.MixId == mixId,
+                cancellationToken);
         if (existing == null)
         {
             await database.AddAsync(new PhoenixRecordEntity
@@ -144,8 +149,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 ChartId = score.ChartId,
                 UserId = userId,
                 Id = new Guid(),
-                // Phoenix until the port takes a mix (plan doc, port-threading commit).
-                MixId = MixIds.Phoenix,
+                MixId = mixId,
                 IsBroken = score.IsBroken,
                 Score = score.Score,
                 LetterGrade = score.Score?.LetterGrade.GetName(),
@@ -163,19 +167,21 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         }
 
         await database.SaveChangesAsync(cancellationToken);
-        var cache = await GetCachedScores(userId, cancellationToken);
+        var cache = await GetCachedScores(mix, userId, cancellationToken);
         cache[score.ChartId] = score;
-        _cache.Set(ScoreCache(userId), cache);
+        _cache.Set(ScoreCache(userId, mix), cache);
     }
 
-    private async Task<ConcurrentDictionary<Guid, RecordedPhoenixScore>> GetCachedScores(Guid userId,
+    private async Task<ConcurrentDictionary<Guid, RecordedPhoenixScore>> GetCachedScores(MixEnum mix, Guid userId,
         CancellationToken cancellationToken)
     {
-        return await _cache.GetOrCreateAsync(ScoreCache(userId), async o =>
+        return await _cache.GetOrCreateAsync(ScoreCache(userId, mix), async o =>
         {
             o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(60);
+            var mixId = MixIds.For(mix);
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            var rows = await database.Set<PhoenixRecordEntity>().Where(pba => pba.UserId == userId)
+            var rows = await database.Set<PhoenixRecordEntity>()
+                .Where(pba => pba.UserId == userId && pba.MixId == mixId)
                 .Select(pba => new RecordedPhoenixScore(pba.ChartId, pba.Score,
                     PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, pba.RecordedDate))
                 .ToArrayAsync(cancellationToken);
@@ -185,34 +191,36 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         });
     }
 
-    public async Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(Guid userId,
+    public async Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(MixEnum mix, Guid userId,
         CancellationToken cancellationToken = default)
     {
-        return (await GetCachedScores(userId, cancellationToken)).Values;
+        return (await GetCachedScores(mix, userId, cancellationToken)).Values;
     }
 
-    public async Task<IEnumerable<(Guid UserId, Guid ChartId)>> GetPgUsers(ChartType chartType, DifficultyLevel level,
+    public async Task<IEnumerable<(Guid UserId, Guid ChartId)>> GetPgUsers(MixEnum mix, ChartType chartType,
+        DifficultyLevel level,
         CancellationToken cancellationToken = default)
     {
-        var mixId = MixIds.Phoenix;
+        var mixId = MixIds.For(mix);
         var intLevel = (int)level;
         var chartTypeString = chartType.ToString();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return (await (from cm in database.ChartMix
                 join c in database.Chart on cm.ChartId equals c.Id
                 join pba in database.Set<PhoenixRecordEntity>() on c.Id equals pba.ChartId
-                where cm.MixId == mixId && cm.Level == intLevel && c.Type == chartTypeString && pba.Score == 1000000
+                where cm.MixId == mixId && pba.MixId == mixId && cm.Level == intLevel && c.Type == chartTypeString &&
+                      pba.Score == 1000000
                 select pba).ToArrayAsync(cancellationToken))
             .Select(pb =>
                 (pb.UserId, pb.ChartId));
     }
 
-    public async Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(IEnumerable<Guid> userIds,
+    public async Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(MixEnum mix, IEnumerable<Guid> userIds,
         ChartType chartType, DifficultyLevel minimumLevel, DifficultyLevel maximumLevel,
         CancellationToken cancellationToken)
     {
         var userIdArray = userIds.ToArray();
-        var mixId = MixIds.Phoenix;
+        var mixId = MixIds.For(mix);
         var intMin = (int)minimumLevel;
         var intMax = (int)maximumLevel;
         var chartTypeString = chartType.ToString();
@@ -221,51 +229,57 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 join c in database.Chart on cm.ChartId equals c.Id
                 join pba in database.Set<PhoenixRecordEntity>() on c.Id equals pba.ChartId
                 where userIdArray.Contains(pba.UserId)
-                      && cm.MixId == mixId && cm.Level >= intMin && cm.Level <= intMax && c.Type == chartTypeString
+                      && cm.MixId == mixId && pba.MixId == mixId && cm.Level >= intMin && cm.Level <= intMax &&
+                      c.Type == chartTypeString
                 select pba).ToArrayAsync(cancellationToken))
             .Select(pb =>
                 new RecordedPhoenixScore(pb.ChartId, pb.Score, PhoenixPlateHelperMethods.TryParse(pb.Plate),
                     pb.IsBroken, pb.RecordedDate));
     }
 
-    public async Task<RecordedPhoenixScore?> GetRecordedScore(Guid userId, Guid chartId,
+    public async Task<RecordedPhoenixScore?> GetRecordedScore(MixEnum mix, Guid userId, Guid chartId,
         CancellationToken cancellationToken = default)
     {
-        return (await GetCachedScores(userId, cancellationToken)).TryGetValue(chartId, out var r) ? r : null;
+        return (await GetCachedScores(mix, userId, cancellationToken)).TryGetValue(chartId, out var r) ? r : null;
     }
 
-    public async Task<IEnumerable<UserPhoenixScore>> GetRecordedUserScores(Guid chartId,
+    public async Task<IEnumerable<UserPhoenixScore>> GetRecordedUserScores(MixEnum mix, Guid chartId,
         CancellationToken cancellationToken = default)
     {
+        var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return await (from pba in database.Set<PhoenixRecordEntity>()
                 join u in database.User on pba.UserId equals u.Id
-                where pba.ChartId == chartId && pba.Score != null
+                where pba.ChartId == chartId && pba.MixId == mixId && pba.Score != null
                 select new UserPhoenixScore(pba.UserId, pba.ChartId, u.IsPublic ? u.Name : "Anonymous",
                     pba.Score!.Value,
                     PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken))
             .ToArrayAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<ChartScoreAggregate>> GetAllChartScoreAggregates(CancellationToken cancellationToken)
+    public async Task<IEnumerable<ChartScoreAggregate>> GetAllChartScoreAggregates(MixEnum mix,
+        CancellationToken cancellationToken)
     {
+        var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return await (from pba in database.Set<PhoenixRecordEntity>()
-            where pba.Score != null
+            where pba.Score != null && pba.MixId == mixId
             group pba by pba.ChartId
             into g
             select new ChartScoreAggregate(g.Key, g.Count())).ToArrayAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<UserPhoenixScore>> GetPlayerScores(IEnumerable<Guid> userIds,
+    public async Task<IEnumerable<UserPhoenixScore>> GetPlayerScores(MixEnum mix, IEnumerable<Guid> userIds,
         IEnumerable<Guid> chartIds, CancellationToken cancellationToken = default)
     {
         var userIdArray = userIds.Distinct().ToArray();
         var chartIdArray = chartIds.Distinct().ToArray();
+        var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return await (from pba in database.Set<PhoenixRecordEntity>()
                 join u in database.User on pba.UserId equals u.Id
-                where chartIdArray.Contains(pba.ChartId) && pba.Score != null && userIdArray.Contains(pba.UserId)
+                where chartIdArray.Contains(pba.ChartId) && pba.MixId == mixId && pba.Score != null &&
+                      userIdArray.Contains(pba.UserId)
                 select new UserPhoenixScore(pba.UserId, pba.ChartId, u.IsPublic ? u.Name : "Anonymous",
                     pba.Score!.Value,
                     PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken))
@@ -273,11 +287,11 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     }
 
     public async Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetPlayerScores(
-        IEnumerable<Guid> userIds, ChartType chartType, DifficultyLevel difficulty,
+        MixEnum mix, IEnumerable<Guid> userIds, ChartType chartType, DifficultyLevel difficulty,
         CancellationToken cancellationToken = default)
     {
         var userIdArray = userIds.ToArray();
-        var mixId = MixIds.Phoenix;
+        var mixId = MixIds.For(mix);
         var intLevel = (int)difficulty;
         var chartTypeString = chartType.ToString();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
@@ -286,7 +300,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 join pba in database.Set<PhoenixRecordEntity>() on c.Id equals pba.ChartId
                 where
                     userIdArray.Contains(pba.UserId) &&
-                    cm.MixId == mixId && cm.Level == intLevel && c.Type == chartTypeString
+                    cm.MixId == mixId && pba.MixId == mixId && cm.Level == intLevel && c.Type == chartTypeString
                 select pba).ToArrayAsync(cancellationToken))
             .Select(pb => (pb.UserId,
                 new RecordedPhoenixScore(pb.ChartId, pb.Score, PhoenixPlateHelperMethods.TryParse(pb.Plate),
@@ -294,28 +308,29 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     }
 
 
-    public async Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetAllPlayerScores(ChartType chartType,
+    public async Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetAllPlayerScores(MixEnum mix,
+        ChartType chartType,
         DifficultyLevel difficulty, CancellationToken cancellationToken = default)
     {
-        var mixId = MixIds.Phoenix;
+        var mixId = MixIds.For(mix);
         var intLevel = (int)difficulty;
         var chartTypeString = chartType.ToString();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return (await (from cm in database.ChartMix
                 join c in database.Chart on cm.ChartId equals c.Id
                 join pba in database.Set<PhoenixRecordEntity>() on c.Id equals pba.ChartId
-                where cm.MixId == mixId && cm.Level == intLevel && c.Type == chartTypeString
+                where cm.MixId == mixId && pba.MixId == mixId && cm.Level == intLevel && c.Type == chartTypeString
                 select pba).ToArrayAsync(cancellationToken))
             .Select(pb => (pb.UserId,
                 new RecordedPhoenixScore(pb.ChartId, pb.Score, PhoenixPlateHelperMethods.TryParse(pb.Plate),
                     pb.IsBroken, pb.RecordedDate)));
     }
 
-    public async Task<IEnumerable<ChartScoreAggregate>> GetMeaningfulScoresCount(ChartType chartType,
+    public async Task<IEnumerable<ChartScoreAggregate>> GetMeaningfulScoresCount(MixEnum mix, ChartType chartType,
         DifficultyLevel difficulty,
         CancellationToken cancellationToken = default)
     {
-        var mixId = MixIds.Phoenix;
+        var mixId = MixIds.For(mix);
         var intLevel = (int)difficulty;
         var chartTypeString = chartType.ToString();
         // Competitive-level cohort comes from PlayerProgress's published reader — its
@@ -326,32 +341,35 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         return (await (from cm in database.ChartMix
                 join c in database.Chart on cm.ChartId equals c.Id
                 join pr in database.Set<PhoenixRecordEntity>() on cm.ChartId equals pr.ChartId
-                where cm.MixId == mixId && cm.Level == intLevel && c.Type == chartTypeString
+                where cm.MixId == mixId && pr.MixId == mixId && cm.Level == intLevel && c.Type == chartTypeString
                       && cohort.Contains(pr.UserId)
                 select pr).ToArrayAsync(cancellationToken))
             .GroupBy(c => c.ChartId).Select(g => new ChartScoreAggregate(g.Key, g.Count()));
     }
 
-    public async Task<IEnumerable<UserPhoenixScore>> GetPhoenixScores(IEnumerable<Guid> userIds, Guid chartId,
+    public async Task<IEnumerable<UserPhoenixScore>> GetPhoenixScores(MixEnum mix, IEnumerable<Guid> userIds,
+        Guid chartId,
         CancellationToken cancellationToken = default)
     {
         var userIdArray = userIds.Distinct().ToArray();
+        var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return await (from pba in database.Set<PhoenixRecordEntity>()
                 join u in database.User on pba.UserId equals u.Id
-                where pba.ChartId == chartId && pba.Score != null && userIdArray.Contains(pba.UserId)
+                where pba.ChartId == chartId && pba.MixId == mixId && pba.Score != null &&
+                      userIdArray.Contains(pba.UserId)
                 select new UserPhoenixScore(pba.UserId, pba.ChartId, u.IsPublic ? u.Name : "Anonymous",
                     pba.Score!.Value,
                     PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken))
             .ToArrayAsync(cancellationToken);
     }
 
-    public async Task<int> GetClearCount(Guid userId, ChartType chartType, DifficultyLevel level,
+    public async Task<int> GetClearCount(MixEnum mix, Guid userId, ChartType chartType, DifficultyLevel level,
         CancellationToken cancellationToken = default)
     {
-        var chartIds = (await _charts.GetCharts(MixEnum.Phoenix, level, chartType, null, cancellationToken))
+        var chartIds = (await _charts.GetCharts(mix, level, chartType, null, cancellationToken))
             .Select(c => c.Id).Distinct().ToHashSet();
-        return (await GetCachedScores(userId, cancellationToken)).Count(c =>
+        return (await GetCachedScores(mix, userId, cancellationToken)).Count(c =>
             chartIds.Contains(c.Key) && !c.Value.IsBroken);
     }
 
@@ -395,15 +413,20 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
 
         if (request.ChartMix != null)
         {
+            // request.ChartMix filters the mix a chart DEBUTED in (OriginalMixId) — a
+            // different semantic from the mix a record was scored under, below.
             var mixId = MixIds.For(request.ChartMix.Value);
             chartQuery = chartQuery.Where(c => c.OriginalMixId == mixId);
         }
 
+        // Phoenix until per-mix computation lands (plan doc, saga commit).
+        var recordMixId = MixIds.Phoenix;
         return await (from p in playerQuery
             join pr in database.Set<PhoenixRecordEntity>() on p.Id equals pr.UserId
             join c in chartQuery on pr.ChartId equals c.Id
-            join prs in database.Set<PhoenixRecordStatsEntity>() on new { pr.ChartId, pr.UserId } equals new
-                { prs.ChartId, prs.UserId }
+            join prs in database.Set<PhoenixRecordStatsEntity>() on new { pr.ChartId, pr.UserId, pr.MixId } equals new
+                { prs.ChartId, prs.UserId, prs.MixId }
+            where pr.MixId == recordMixId
             group new { pr, prs } by pr.UserId
             into g
             select new UserChartAggregate(g.Key, g.Count(e => !e.pr.IsBroken), g.Count(),
@@ -419,6 +442,8 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         database.Set<PhoenixRecordEntity>().RemoveRange(scores);
         database.Set<PhoenixRecordStatsEntity>().RemoveRange(stats);
         await database.SaveChangesAsync(cancellationToken);
-        _cache.Remove(ScoreCache(userId));
+        // The purge spans mixes, so every per-(user, mix) cache entry goes.
+        foreach (var mix in Enum.GetValues<MixEnum>())
+            _cache.Remove(ScoreCache(userId, mix));
     }
 }

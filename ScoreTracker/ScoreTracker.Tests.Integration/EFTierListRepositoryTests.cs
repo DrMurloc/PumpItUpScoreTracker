@@ -170,11 +170,13 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
                 new PhoenixRecordEntity
                 {
                     Id = Guid.NewGuid(), UserId = activeUser, ChartId = chartId,
+                    MixId = TestDataSeeder.PhoenixMixId,
                     RecordedDate = DateTimeOffset.Now.AddDays(-1), Score = 900000, IsBroken = false
                 },
                 new PhoenixRecordEntity
                 {
                     Id = Guid.NewGuid(), UserId = staleUser, ChartId = chartId,
+                    MixId = TestDataSeeder.PhoenixMixId,
                     RecordedDate = DateTimeOffset.Now.AddDays(-365), Score = 900000, IsBroken = false
                 });
             await ctx.SaveChangesAsync();

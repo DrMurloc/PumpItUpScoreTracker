@@ -17,6 +17,6 @@ namespace ScoreTracker.ScoreLedger.Application
 
         public async Task<IEnumerable<UserPhoenixScore>> Handle(GetPhoenixScoresForChartQuery request,
             CancellationToken cancellationToken)
-            => await _records.GetRecordedUserScores(request.ChartId, cancellationToken);
+            => await _records.GetRecordedUserScores(request.Mix, request.ChartId, cancellationToken);
     }
 }

@@ -891,7 +891,7 @@ function(val, index) {
     private IDictionary<Guid, string> _variance = new Dictionary<Guid, string>();
     private async Task CalculateVariance(ChartType chartType, DifficultyLevel level)
     {
-        var scores = (await Records.GetScores(chartType, level, CancellationToken.None)).Select(s => (userId: s.UserId, record: s.Record)).ToArray();
+        var scores = (await Records.GetScores(MixEnum.Phoenix, chartType, level, CancellationToken.None)).Select(s => (userId: s.UserId, record: s.Record)).ToArray();
         var players = (await PlayerStats.GetStats(scores.Select(s => s.userId).Distinct().ToArray(), CancellationToken.None))
             .Where(p => Math.Abs((_chartType == ChartType.Single ? p.SinglesCompetitiveLevel : p.DoublesCompetitiveLevel) - level) < 2.0).ToDictionary(p => p.UserId);
 

@@ -40,7 +40,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
                 Plate: PhoenixPlate.SuperbGame),
             CancellationToken.None);
 
-        ctx.Records.Verify(r => r.UpdateBestAttempt(UserId,
+        ctx.Records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
             It.Is<RecordedPhoenixScore>(s => s.ChartId == ChartId && !s.IsBroken
                                              && s.Score == (PhoenixScore)950000
                                              && s.Plate == PhoenixPlate.SuperbGame
@@ -65,7 +65,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
                 Plate: PhoenixPlate.SuperbGame, KeepBestStats: true),
             CancellationToken.None);
 
-        ctx.Records.Verify(r => r.UpdateBestAttempt(UserId,
+        ctx.Records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
             It.Is<RecordedPhoenixScore>(s => s.Score == (PhoenixScore)950000),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -81,7 +81,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
                 Plate: PhoenixPlate.FairGame, KeepBestStats: true),
             CancellationToken.None);
 
-        ctx.Records.Verify(r => r.UpdateBestAttempt(UserId,
+        ctx.Records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
             It.Is<RecordedPhoenixScore>(s => s.Plate == PhoenixPlate.PerfectGame),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -97,7 +97,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
                 Plate: PhoenixPlate.SuperbGame, KeepBestStats: true),
             CancellationToken.None);
 
-        ctx.Records.Verify(r => r.UpdateBestAttempt(UserId,
+        ctx.Records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
             It.Is<RecordedPhoenixScore>(s => !s.IsBroken),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -113,7 +113,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
                 Plate: PhoenixPlate.FairGame, KeepBestStats: false),
             CancellationToken.None);
 
-        ctx.Records.Verify(r => r.UpdateBestAttempt(UserId,
+        ctx.Records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
             It.Is<RecordedPhoenixScore>(s => s.Score == (PhoenixScore)800000
                                              && s.Plate == PhoenixPlate.FairGame),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -230,6 +230,10 @@ public sealed class UpdatePhoenixRecordHandlerTests
         ctx.Journal.Verify(j => j.Append(
             It.Is<ScoreJournalEntry>(e => e.Mix == MixEnum.Phoenix2),
             It.IsAny<CancellationToken>()), Times.Once);
+        // The declared mix rides the whole write path: the best-attempt row lands under it too.
+        ctx.Records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix2, UserId,
+            It.Is<RecordedPhoenixScore>(s => s.ChartId == ChartId),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -341,7 +345,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
         ctx.Batches.Setup(b => b.GetFireAt(UserId)).Returns(Now.UtcDateTime - TimeSpan.FromSeconds(1));
         ctx.Batches.Setup(b => b.TakeBatch(UserId)).Returns(new PendingScoreBatch(
             new[] { newChart }, new Dictionary<Guid, int> { { upscoredChart, 900000 } }));
-        ctx.Records.Setup(r => r.GetRecordedScores(UserId, It.IsAny<CancellationToken>()))
+        ctx.Records.Setup(r => r.GetRecordedScores(MixEnum.Phoenix, UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new RecordedPhoenixScore(newChart, 985000, PhoenixPlate.ExtremeGame, false, Now),
@@ -499,7 +503,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
 
         public void GivenExistingScore(PhoenixScore score, PhoenixPlate plate, bool isBroken)
         {
-            Records.Setup(r => r.GetRecordedScore(UserId, ChartId, It.IsAny<CancellationToken>()))
+            Records.Setup(r => r.GetRecordedScore(MixEnum.Phoenix, UserId, ChartId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new RecordedPhoenixScore(ChartId, score, plate, isBroken,
                     Now - TimeSpan.FromDays(1)));
         }

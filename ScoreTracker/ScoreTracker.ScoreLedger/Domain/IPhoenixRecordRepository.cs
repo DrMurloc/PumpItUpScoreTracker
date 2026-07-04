@@ -1,4 +1,4 @@
-﻿using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
@@ -8,45 +8,51 @@ namespace ScoreTracker.ScoreLedger.Domain;
 
 internal interface IPhoenixRecordRepository
 {
-    Task UpdateBestAttempt(Guid userId, RecordedPhoenixScore score, CancellationToken cancellationToken = default);
-
-    Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(Guid userId,
+    Task UpdateBestAttempt(MixEnum mix, Guid userId, RecordedPhoenixScore score,
         CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<(Guid UserId, Guid ChartId)>> GetPgUsers(ChartType chartType, DifficultyLevel level,
+    Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(MixEnum mix, Guid userId,
         CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(IEnumerable<Guid> userIds, ChartType chartType,
+    Task<IEnumerable<(Guid UserId, Guid ChartId)>> GetPgUsers(MixEnum mix, ChartType chartType, DifficultyLevel level,
+        CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(MixEnum mix, IEnumerable<Guid> userIds,
+        ChartType chartType,
         DifficultyLevel minimumLevel,
         DifficultyLevel maximumLevel,
         CancellationToken cancellationToken);
 
-    Task<RecordedPhoenixScore?> GetRecordedScore(Guid userId, Guid chartId,
+    Task<RecordedPhoenixScore?> GetRecordedScore(MixEnum mix, Guid userId, Guid chartId,
         CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<UserPhoenixScore>> GetRecordedUserScores(Guid chartId,
+    Task<IEnumerable<UserPhoenixScore>> GetRecordedUserScores(MixEnum mix, Guid chartId,
         CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<ChartScoreAggregate>> GetAllChartScoreAggregates(CancellationToken cancellationToken);
+    Task<IEnumerable<ChartScoreAggregate>> GetAllChartScoreAggregates(MixEnum mix,
+        CancellationToken cancellationToken);
 
-    Task<IEnumerable<UserPhoenixScore>> GetPlayerScores(IEnumerable<Guid> userIds,
+    Task<IEnumerable<UserPhoenixScore>> GetPlayerScores(MixEnum mix, IEnumerable<Guid> userIds,
         IEnumerable<Guid> chartIds, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetPlayerScores(IEnumerable<Guid> userIds,
+    Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetPlayerScores(MixEnum mix,
+        IEnumerable<Guid> userIds,
         ChartType chartType,
         DifficultyLevel difficulty, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetAllPlayerScores(ChartType chartType,
+    Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetAllPlayerScores(MixEnum mix, ChartType chartType,
         DifficultyLevel difficulty, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<ChartScoreAggregate>> GetMeaningfulScoresCount(ChartType chartType, DifficultyLevel difficulty,
+    Task<IEnumerable<ChartScoreAggregate>> GetMeaningfulScoresCount(MixEnum mix, ChartType chartType,
+        DifficultyLevel difficulty,
         CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<UserPhoenixScore>> GetPhoenixScores(IEnumerable<Guid> userIds, Guid chartId,
+    Task<IEnumerable<UserPhoenixScore>> GetPhoenixScores(MixEnum mix, IEnumerable<Guid> userIds, Guid chartId,
         CancellationToken cancellationToken = default);
 
-    Task<int> GetClearCount(Guid userId, ChartType chartType, DifficultyLevel level,
+    Task<int> GetClearCount(MixEnum mix, Guid userId, ChartType chartType, DifficultyLevel level,
         CancellationToken cancellationToken = default);
 
+    // Account purge spans mixes by design — no mix parameter.
     Task DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default);
 }

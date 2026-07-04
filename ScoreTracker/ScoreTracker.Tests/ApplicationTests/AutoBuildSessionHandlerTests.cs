@@ -39,7 +39,7 @@ public sealed class AutoBuildSessionHandlerTests
 
         charts.Setup(r => r.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { chart });
-        phoenixRecords.Setup(r => r.GetBestScores(userId, It.IsAny<CancellationToken>()))
+        phoenixRecords.Setup(r => r.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new RecordedPhoenixScore(chart.Id, 980000, PhoenixPlate.PerfectGame, false, DateTimeOffset.UtcNow)
@@ -70,7 +70,7 @@ public sealed class AutoBuildSessionHandlerTests
 
         charts.Setup(r => r.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { chartA, chartB });
-        phoenixRecords.Setup(r => r.GetBestScores(userId, It.IsAny<CancellationToken>()))
+        phoenixRecords.Setup(r => r.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new RecordedPhoenixScore(chartA.Id, null, PhoenixPlate.PerfectGame, false, DateTimeOffset.UtcNow),
@@ -100,7 +100,7 @@ public sealed class AutoBuildSessionHandlerTests
 
         charts.Setup(r => r.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { chart });
-        phoenixRecords.Setup(r => r.GetBestScores(userId, It.IsAny<CancellationToken>()))
+        phoenixRecords.Setup(r => r.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new RecordedPhoenixScore(chart.Id, 980000, PhoenixPlate.PerfectGame, false, DateTimeOffset.UtcNow)

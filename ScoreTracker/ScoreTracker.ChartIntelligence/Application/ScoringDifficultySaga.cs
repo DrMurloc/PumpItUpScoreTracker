@@ -47,7 +47,8 @@ namespace ScoreTracker.ChartIntelligence.Application
                     cancellationToken: cancellationToken))
                 .ToArray();
             if (!charts.Any()) return;
-            var scores = (await _scores.GetScores(chartType, level, cancellationToken))
+            // Phoenix until per-mix computation lands (plan doc, saga commit).
+            var scores = (await _scores.GetScores(MixEnum.Phoenix, chartType, level, cancellationToken))
                 .Where(s => s.Record is { IsBroken: false, Score: not null }).ToArray();
             if (!scores.Any()) return;
             var stats = (await _playerStats.GetStats(scores.Select(p => p.UserId).Distinct(), cancellationToken))
@@ -115,8 +116,9 @@ namespace ScoreTracker.ChartIntelligence.Application
 
                 var phoenixScores = new List<(Guid UserId, RecordedPhoenixScore Record)>();
                 for (var l = min; l <= max; l++)
+                    // Phoenix until per-mix computation lands (plan doc, saga commit).
                     phoenixScores.AddRange(
-                        (await _scores.GetScores(chartType, l, context.CancellationToken)).Where(s =>
+                        (await _scores.GetScores(MixEnum.Phoenix, chartType, l, context.CancellationToken)).Where(s =>
                             s.Record.Score != null));
                 var userIds = phoenixScores.Select(u => u.UserId).Distinct().ToArray();
                 var playerWeights = new Dictionary<Guid, IDictionary<DifficultyLevel, double>>();

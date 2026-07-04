@@ -150,7 +150,7 @@ public sealed class RecommendedChartsSagaTests
             // Default empty for all the mediator queries that random-using sub-methods rely on.
             Mediator.Setup(m => m.Send(It.IsAny<GetTitleProgressQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new[] { OneTitle() });
-            Scores.Setup(s => s.GetBestScores(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            Scores.Setup(s => s.GetBestScores(MixEnum.Phoenix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
             Mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<Chart>());
@@ -179,7 +179,7 @@ public sealed class RecommendedChartsSagaTests
 
         public RecommendedChartsContext WithScores(params RecordedPhoenixScore[] scores)
         {
-            Scores.Setup(s => s.GetBestScores(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            Scores.Setup(s => s.GetBestScores(MixEnum.Phoenix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(scores);
             return this;
         }

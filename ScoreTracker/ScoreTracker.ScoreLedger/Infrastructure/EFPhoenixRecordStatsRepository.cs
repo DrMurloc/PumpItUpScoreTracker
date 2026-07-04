@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.ScoreLedger.Infrastructure.Entities;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
@@ -15,13 +16,15 @@ internal sealed class EFPhoenixRecordStatsRepository : IPhoenixRecordStatsReposi
         _factory = factory;
     }
 
-    public async Task UpdateScoreStats(Guid userId, IEnumerable<PhoenixRecordStats> stats,
+    public async Task UpdateScoreStats(MixEnum mix, Guid userId, IEnumerable<PhoenixRecordStats> stats,
         CancellationToken cancellationToken = default)
     {
+        var mixId = MixIds.For(mix);
         var statArray = stats.ToArray();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var chartIds = statArray.Select(s => s.ChartId).ToArray();
-        var entities = await database.Set<PhoenixRecordStatsEntity>().Where(s => s.UserId == userId && chartIds.Contains(s.ChartId))
+        var entities = await database.Set<PhoenixRecordStatsEntity>()
+            .Where(s => s.UserId == userId && s.MixId == mixId && chartIds.Contains(s.ChartId))
             .ToDictionaryAsync(e => e.ChartId, cancellationToken);
         var toCreate = new List<PhoenixRecordStatsEntity>();
         foreach (var stat in statArray)
@@ -36,8 +39,7 @@ internal sealed class EFPhoenixRecordStatsRepository : IPhoenixRecordStatsReposi
                 {
                     ChartId = stat.ChartId,
                     UserId = userId,
-                    // Phoenix until the port takes a mix (plan doc, port-threading commit).
-                    MixId = MixIds.Phoenix,
+                    MixId = mixId,
                     PumbilityPlus = stat.PumbilityPlus,
                     Pumbility = stat.Pumbility
                 });

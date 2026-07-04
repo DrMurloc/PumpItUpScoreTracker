@@ -121,7 +121,9 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         for (var level = 1; level <= 29; level++)
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
             {
-                var allPhoenixScores = (await _scores.GetScores(chartType, level, context.CancellationToken))
+                // Phoenix until per-mix computation lands (plan doc, saga commit).
+                var allPhoenixScores = (await _scores.GetScores(MixEnum.Phoenix, chartType, level,
+                        context.CancellationToken))
                     .Where(s => s.Record.Score != null)
                     .GroupBy(r => r.UserId).ToDictionary(g => g.Key,
                         g => (IDictionary<Guid, PhoenixScore>)g.ToDictionary(p => p.Record.ChartId,
@@ -149,8 +151,10 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     {
         var filtered = await _chartRepository.GetCharts(MixEnum.Phoenix, request.Level, request.ChartType,
             cancellationToken: cancellationToken);
+        // Phoenix until per-mix computation lands (plan doc, saga commit).
         var phoenixScores =
-            (await _scores.GetBestScores(request.UserId ?? _currentUser.User.Id, cancellationToken)).ToDictionary(
+            (await _scores.GetBestScores(MixEnum.Phoenix, request.UserId ?? _currentUser.User.Id, cancellationToken))
+            .ToDictionary(
                 s => s.ChartId);
 
 
@@ -230,7 +234,8 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
 
     private async Task ProcessCoOpPassTierList(int playerCount, CancellationToken cancellationToken)
     {
-        var scores = (await _scores.GetScores(ChartType.CoOp, playerCount, cancellationToken))
+        // Phoenix until per-mix computation lands (plan doc, saga commit).
+        var scores = (await _scores.GetScores(MixEnum.Phoenix, ChartType.CoOp, playerCount, cancellationToken))
             .Where(s => s.Record is { Score: not null, IsBroken: false }).ToArray();
         var playerLevels =
             (await _playerStats.GetStats(scores.Select(s => s.UserId).Distinct().ToArray(), cancellationToken))
@@ -255,7 +260,8 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         var charts =
             (await _chartRepository.GetCharts(MixEnum.Phoenix, level, chartType, cancellationToken: cancellationToken))
             .ToArray();
-        var pgUsers = (await _scores.GetPgUsers(chartType, level, cancellationToken)).ToArray();
+        // Phoenix until per-mix computation lands (plan doc, saga commit).
+        var pgUsers = (await _scores.GetPgUsers(MixEnum.Phoenix, chartType, level, cancellationToken)).ToArray();
 
         var stats = (await _playerStats.GetStats(pgUsers.Select(p => p.UserId).Distinct(), cancellationToken))
             .ToDictionary(s => s.UserId);
@@ -299,8 +305,10 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         var chartSums = charts.ToDictionary(c => c.Id, c => 0);
         foreach (var weightValue in userWeights)
         {
+            // Phoenix until per-mix computation lands (plan doc, saga commit).
             var scores =
-                (await _scores.GetScores(weightValue.Value, chartType, level, level, cancellationToken))
+                (await _scores.GetScores(MixEnum.Phoenix, weightValue.Value, chartType, level, level,
+                    cancellationToken))
                 .Where(s => !s.IsBroken).ToArray();
 
             foreach (var score in scores.Where(s => chartSums.ContainsKey(s.ChartId)))

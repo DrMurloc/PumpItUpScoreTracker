@@ -232,7 +232,7 @@
         var phoenixScores = new List<(Guid UserId,RecordedPhoenixScore Record)>();
         for (var l = min; l <= max; l++)
         {
-            phoenixScores.AddRange((await Scores.GetScores(_selectedChart.Type, l, CancellationToken.None)).Select(s => (userId: s.UserId, record: s.Record)).Where(s=>s.record.Score!=null));
+            phoenixScores.AddRange((await Scores.GetScores(MixEnum.Phoenix, _selectedChart.Type, l, CancellationToken.None)).Select(s => (userId: s.UserId, record: s.Record)).Where(s=>s.record.Score!=null));
         }
         _playerScores = phoenixScores.Where(pr => pr.Record.ChartId == _selectedChart!.Id).ToDictionary(pr => pr.UserId, pr => pr.Record.Score!.Value);
 
