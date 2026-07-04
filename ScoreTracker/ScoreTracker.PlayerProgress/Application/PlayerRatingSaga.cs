@@ -156,6 +156,7 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
         );
 
         await _stats.SaveStats(request.UserId, newStats, cancellationToken);
+        // Phoenix until per-mix computation lands (plan doc, saga commit).
         if (newStats.SkillRating > oldStats.SkillRating || newStats.SinglesRating > oldStats.SinglesRating ||
             newStats.DoublesRating > oldStats.DoublesRating || newStats.ClearCount > oldStats.ClearCount ||
             newStats.CoOpRating > oldStats.CoOpRating)
@@ -164,11 +165,12 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
                     newStats.DoublesRating, oldStats.CompetitiveLevel, newStats.CompetitiveLevel,
                     oldStats.SinglesCompetitiveLevel, newStats.SinglesCompetitiveLevel,
                     oldStats.DoublesCompetitiveLevel,
-                    newStats.DoublesCompetitiveLevel, (int)coOps.Sum(s => s.Rating), recorded.Count(r => !r.IsBroken)),
+                    newStats.DoublesCompetitiveLevel, (int)coOps.Sum(s => s.Rating), recorded.Count(r => !r.IsBroken),
+                    MixEnum.Phoenix),
                 cancellationToken);
-        await _bus.Publish(new PlayerStatsUpdatedEvent(request.UserId, newStats),
+        await _bus.Publish(new PlayerStatsUpdatedEvent(request.UserId, newStats, MixEnum.Phoenix),
             cancellationToken);
-        await _mediator.Publish(new PlayerStatsUpdatedEvent(request.UserId, newStats),
+        await _mediator.Publish(new PlayerStatsUpdatedEvent(request.UserId, newStats, MixEnum.Phoenix),
             cancellationToken);
     }
 

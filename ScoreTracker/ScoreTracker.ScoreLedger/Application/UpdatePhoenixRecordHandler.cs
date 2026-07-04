@@ -51,49 +51,48 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         if (!isNewScore && !isUpscore) return;
 
         // Batch up score posts to reduce noise. AddToBatch atomically creates-or-extends
-        // the user's batch; only schedule a drain when this call created the batch.
+        // the (user, mix) batch; only schedule a drain when this call created the batch.
         var fireAt = dateTimeOffset.Now.UtcDateTime + TimeSpan.FromMinutes(2);
         PhoenixScore? upscoredFrom = isUpscore ? existing!.Score!.Value : null;
-        if (batches.AddToBatch(user.User.Id, fireAt, request.ChartId, isNewScore, upscoredFrom))
+        if (batches.AddToBatch(request.Mix, user.User.Id, fireAt, request.ChartId, isNewScore, upscoredFrom))
         {
             await scheduler.SchedulePublish(fireAt + TimeSpan.FromSeconds(5),
-                new TryFireScoreCommand(user.User.Id),
+                new TryFireScoreCommand(user.User.Id, request.Mix),
                 cancellationToken);
         }
     }
 
     public sealed record ScheduleScoreMessage(Guid UserId, Guid[] ChartIds);
 
-    public sealed record TryFireScoreCommand(Guid UserId);
+    public sealed record TryFireScoreCommand(Guid UserId, MixEnum Mix);
 
     public async Task Consume(ConsumeContext<TryFireScoreCommand> context)
     {
-        var fireAt = batches.GetFireAt(context.Message.UserId);
+        var fireAt = batches.GetFireAt(context.Message.Mix, context.Message.UserId);
         if (fireAt is null) return; // batch already drained by a concurrent TryFire/flush
         if (dateTimeOffset.Now.UtcDateTime < fireAt.Value)
         {
             // Reschedule to the moving target plus a tiny buffer — using a +2min retry
             // would compound on every reschedule and starve active players.
             await scheduler.SchedulePublish(fireAt.Value + TimeSpan.FromSeconds(5),
-                new TryFireScoreCommand(context.Message.UserId),
+                new TryFireScoreCommand(context.Message.UserId, context.Message.Mix),
                 context.CancellationToken);
             return;
         }
 
-        var batch = batches.TakeBatch(context.Message.UserId);
+        var batch = batches.TakeBatch(context.Message.Mix, context.Message.UserId);
         if (batch is null) return; // raced another drain
         if (batch.NewChartIds.Length == 0 && batch.UpscoredChartIds.Count == 0) return;
         await PublishScoreEvents(context.Message.UserId, batch, context.CancellationToken);
     }
 
     // Publishes the fat PlayerScoresUpdatedEvent contract event (C11/C22).
-    
+
     private async Task PublishScoreEvents(Guid userId, PendingScoreBatch batch,
         CancellationToken cancellationToken)
     {
         var involved = batch.NewChartIds.Concat(batch.UpscoredChartIds.Keys).ToHashSet();
-        // Phoenix until score batches carry the mix (plan doc, events commit).
-        var bests = (await records.GetRecordedScores(MixEnum.Phoenix, userId, cancellationToken) ?? [])
+        var bests = (await records.GetRecordedScores(batch.Mix, userId, cancellationToken) ?? [])
             .Where(r => involved.Contains(r.ChartId))
             .ToDictionary(r => r.ChartId);
         var changes = involved.Select(chartId =>
@@ -107,7 +106,7 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
                 Plate: best?.Plate?.ToString(),
                 IsBroken: best?.IsBroken ?? false);
         }).ToArray();
-        await bus.Publish(PlayerScoresUpdatedEvent.Create(dateTimeOffset.Now, userId, changes),
+        await bus.Publish(PlayerScoresUpdatedEvent.Create(dateTimeOffset.Now, userId, batch.Mix, changes),
             cancellationToken);
     }
 
@@ -119,7 +118,7 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         foreach (var entry in batches.Dump())
         {
             if (entry.FireAt > now) continue;
-            var batch = batches.TakeBatch(entry.UserId);
+            var batch = batches.TakeBatch(entry.Mix, entry.UserId);
             if (batch is null) continue;
             if (batch.NewChartIds.Length == 0 && batch.UpscoredChartIds.Count == 0) continue;
             await PublishScoreEvents(entry.UserId, batch, context.CancellationToken);

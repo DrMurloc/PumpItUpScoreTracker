@@ -96,6 +96,9 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
 
     public async Task Consume(ConsumeContext<TitlesDetectedEvent> context)
     {
+        // Phoenix until per-mix computation lands (plan doc, saga commit) — title
+        // processing below is Phoenix-hardcoded, so other mixes must not feed it.
+        if (context.Message.Mix != MixEnum.Phoenix) return;
         await ProcessCharts(context.Message.UserId, context.Message.TitlesFound.Select(Name.From),
             context.CancellationToken);
     }
@@ -134,15 +137,20 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         var upgraded = allCompleted.Where(c =>
             existingTitles.ContainsKey(c.Title) && existingTitles[c.Title].ParagonLevel != c.ParagonLevel).ToArray();
 
+        // Phoenix until per-mix computation lands (plan doc, saga commit).
         if (newCompleted.Any() || upgraded.Any())
             await _bus.Publish(
                 new NewTitlesAcquiredEvent(userId, newCompleted,
-                    upgraded.ToDictionary(t => t.Title.ToString(), t => t.ParagonLevel.ToString())),
+                    upgraded.ToDictionary(t => t.Title.ToString(), t => t.ParagonLevel.ToString()),
+                    MixEnum.Phoenix),
                 cancellationToken);
     }
 
     public async Task Consume(ConsumeContext<PlayerScoresUpdatedEvent> context)
     {
+        // Phoenix until per-mix computation lands (plan doc, saga commit) — title
+        // processing below is Phoenix-hardcoded, so other mixes must not feed it.
+        if (context.Message.Mix != MixEnum.Phoenix) return;
         await ProcessCharts(context.Message.UserId, Array.Empty<Name>(), context.CancellationToken);
     }
 

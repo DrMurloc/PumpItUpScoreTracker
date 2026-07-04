@@ -1,3 +1,5 @@
+using ScoreTracker.SharedKernel.Enums;
+
 namespace ScoreTracker.Domain.Events;
 
 /// <summary>
@@ -5,6 +7,8 @@ namespace ScoreTracker.Domain.Events;
 ///     (official-site import today; other sources keep the vocabulary honest).
 ///     Primitives-only — doubles as a partner webhook body (ADR-001 D3). Supersedes the
 ///     thin <see cref="RecentScoreImportedEvent" />, dual-published during P3.
+///     Mix is additive (Phoenix 2 rollout) — SchemaVersion stays 1; a missing mix on an
+///     old payload means Phoenix.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record ScoreImportCompletedEvent(
@@ -13,16 +17,17 @@ public sealed record ScoreImportCompletedEvent(
     int SchemaVersion,
     string Source,
     Guid UserId,
+    MixEnum Mix,
     IReadOnlyList<ScoreImportCompletedEvent.ImportedScore> Scores)
 {
     public const int CurrentSchemaVersion = 1;
     public const string OfficialImportSource = "officialImport";
 
     public static ScoreImportCompletedEvent Create(DateTimeOffset occurredAt, string source, Guid userId,
-        IReadOnlyList<ImportedScore> scores)
+        MixEnum mix, IReadOnlyList<ImportedScore> scores)
     {
         return new ScoreImportCompletedEvent(Guid.NewGuid(), occurredAt, CurrentSchemaVersion, source, userId,
-            scores);
+            mix, scores);
     }
 
     [ExcludeFromCodeCoverage]

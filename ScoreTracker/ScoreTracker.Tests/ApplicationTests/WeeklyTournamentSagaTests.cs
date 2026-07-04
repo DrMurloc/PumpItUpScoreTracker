@@ -310,7 +310,7 @@ public sealed class WeeklyTournamentSagaTests
 
         await ctx.Saga.Consume(BuildContext(ScoreImportCompletedEvent.Create(
             new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero),
-            ScoreImportCompletedEvent.OfficialImportSource, userId,
+            ScoreImportCompletedEvent.OfficialImportSource, userId, MixEnum.Phoenix,
             new[]
             {
                 new ScoreImportCompletedEvent.ImportedScore(chart.Id, 950000, "SuperbGame", false),
@@ -323,6 +323,29 @@ public sealed class WeeklyTournamentSagaTests
             It.IsAny<CancellationToken>()), Times.Once);
         ctx.WeeklyTournies.Verify(w => w.SaveEntry(
             It.Is<WeeklyTournamentEntry>(e => e.ChartId == offBoardChartId),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ScoreImportForAnotherMixIsIgnored()
+    {
+        // The weekly board is Phoenix-only until per-mix rotation lands (plan doc,
+        // saga commit): a Phoenix 2 import must not place entries on it.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new HandlerContext(chart);
+        ctx.GivenStats(singlesCompetitive: 18.5, doublesCompetitive: 12.0);
+        ctx.GivenNoExistingEntries(chart.Id);
+        var userId = Guid.NewGuid();
+
+        await ctx.Saga.Consume(BuildContext(ScoreImportCompletedEvent.Create(
+            new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero),
+            ScoreImportCompletedEvent.OfficialImportSource, userId, MixEnum.Phoenix2,
+            new[]
+            {
+                new ScoreImportCompletedEvent.ImportedScore(chart.Id, 950000, "SuperbGame", false)
+            })));
+
+        ctx.WeeklyTournies.Verify(w => w.SaveEntry(It.IsAny<WeeklyTournamentEntry>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 

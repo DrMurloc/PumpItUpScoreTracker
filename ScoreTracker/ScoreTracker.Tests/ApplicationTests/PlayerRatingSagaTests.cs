@@ -153,9 +153,11 @@ public sealed class PlayerRatingSagaTests
 
         stats.Verify(s => s.SaveStats(userId, It.IsAny<PlayerStatsRecord>(),
             It.IsAny<CancellationToken>()), Times.Once);
-        bus.Verify(b => b.Publish(It.Is<PlayerStatsUpdatedEvent>(e => e.UserId == userId),
+        bus.Verify(b => b.Publish(
+            It.Is<PlayerStatsUpdatedEvent>(e => e.UserId == userId && e.Mix == MixEnum.Phoenix),
             It.IsAny<CancellationToken>()), Times.Once);
-        mediator.Verify(m => m.Publish(It.Is<PlayerStatsUpdatedEvent>(e => e.UserId == userId),
+        mediator.Verify(m => m.Publish(
+            It.Is<PlayerStatsUpdatedEvent>(e => e.UserId == userId && e.Mix == MixEnum.Phoenix),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -175,7 +177,8 @@ public sealed class PlayerRatingSagaTests
         await saga.Handle(new RecalculateStatsCommand(userId), CancellationToken.None);
 
         bus.Verify(b => b.Publish(It.Is<PlayerRatingsImprovedEvent>(e => e.UserId == userId
-                                                                         && e.NewTop50 > e.OldTop50),
+                                                                         && e.NewTop50 > e.OldTop50
+                                                                         && e.Mix == MixEnum.Phoenix),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -259,6 +262,7 @@ public sealed class PlayerRatingSagaTests
             scores: scores, stats: stats, recordStats: recordStats);
 
         await saga.Consume(BuildContext(PlayerScoresUpdatedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), userId,
+            MixEnum.Phoenix,
             new[] { new PlayerScoresUpdatedEvent.ScoreChange(chartId, true, null, 950000, null, false) })));
 
         // RecalculateStatsCommand path → SaveStats called; RecalculatePumbilityCommand path → UpdateScoreStats called.

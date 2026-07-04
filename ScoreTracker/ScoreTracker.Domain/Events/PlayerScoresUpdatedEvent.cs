@@ -1,3 +1,5 @@
+using ScoreTracker.SharedKernel.Enums;
+
 namespace ScoreTracker.Domain.Events;
 
 /// <summary>
@@ -6,6 +8,8 @@ namespace ScoreTracker.Domain.Events;
 ///     it doubles as the partner webhook body (ADR-001 D3). Supersedes the thin
 ///     <see cref="PlayerScoreUpdatedEvent" />, which is dual-published during the P3
 ///     consumer migration and deleted at its end.
+///     Mix is additive (Phoenix 2 rollout) — SchemaVersion stays 1; a missing mix on an
+///     old payload means Phoenix.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record PlayerScoresUpdatedEvent(
@@ -13,14 +17,15 @@ public sealed record PlayerScoresUpdatedEvent(
     DateTimeOffset OccurredAt,
     int SchemaVersion,
     Guid UserId,
+    MixEnum Mix,
     IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange> Changes)
 {
     public const int CurrentSchemaVersion = 1;
 
-    public static PlayerScoresUpdatedEvent Create(DateTimeOffset occurredAt, Guid userId,
+    public static PlayerScoresUpdatedEvent Create(DateTimeOffset occurredAt, Guid userId, MixEnum mix,
         IReadOnlyList<ScoreChange> changes)
     {
-        return new PlayerScoresUpdatedEvent(Guid.NewGuid(), occurredAt, CurrentSchemaVersion, userId, changes);
+        return new PlayerScoresUpdatedEvent(Guid.NewGuid(), occurredAt, CurrentSchemaVersion, userId, mix, changes);
     }
 
     [ExcludeFromCodeCoverage]

@@ -303,7 +303,8 @@ public sealed class OfficialLeaderboardSagaTests
 
         f.Bus.Verify(b => b.Publish(It.Is<TitlesDetectedEvent>(e =>
                 e.UserId == ImportUserId &&
-                e.TitlesFound.Contains("Title A") && e.TitlesFound.Contains("Title B")),
+                e.TitlesFound.Contains("Title A") && e.TitlesFound.Contains("Title B") &&
+                e.Mix == MixEnum.Phoenix),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

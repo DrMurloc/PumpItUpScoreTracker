@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using ScoreTracker.EventCompetition.Contracts.Commands;
 using ScoreTracker.EventCompetition.Application;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
@@ -58,7 +59,7 @@ public sealed class QualifiersSagaTests
             NullLogger<QualifiersSaga>.Instance, mediator.Object);
 
         var entry = new ScoreImportCompletedEvent.ImportedScore(chart.Id, 950000, "PerfectGame", false);
-        var message = ScoreImportCompletedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), ScoreImportCompletedEvent.OfficialImportSource, userId, new[] { entry });
+        var message = ScoreImportCompletedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), ScoreImportCompletedEvent.OfficialImportSource, userId, MixEnum.Phoenix, new[] { entry });
 
         await saga.Consume(ContextOf(message).Object);
 
@@ -96,7 +97,7 @@ public sealed class QualifiersSagaTests
             NullLogger<QualifiersSaga>.Instance, mediator.Object);
 
         var entry = new ScoreImportCompletedEvent.ImportedScore(chart.Id, 800000, "PerfectGame", false);
-        var message = ScoreImportCompletedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), ScoreImportCompletedEvent.OfficialImportSource, userId, new[] { entry });
+        var message = ScoreImportCompletedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), ScoreImportCompletedEvent.OfficialImportSource, userId, MixEnum.Phoenix, new[] { entry });
 
         await saga.Consume(ContextOf(message).Object);
 
@@ -130,7 +131,7 @@ public sealed class QualifiersSagaTests
             NullLogger<QualifiersSaga>.Instance, mediator.Object);
 
         var entry = new ScoreImportCompletedEvent.ImportedScore(chart.Id, 900000, "PerfectGame", false);
-        var message = ScoreImportCompletedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), ScoreImportCompletedEvent.OfficialImportSource, userId, new[] { entry });
+        var message = ScoreImportCompletedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), ScoreImportCompletedEvent.OfficialImportSource, userId, MixEnum.Phoenix, new[] { entry });
 
         await saga.Consume(ContextOf(message).Object);
 
@@ -167,7 +168,7 @@ public sealed class QualifiersSagaTests
             NullLogger<QualifiersSaga>.Instance, mediator.Object);
 
         var entry = new ScoreImportCompletedEvent.ImportedScore(chart.Id, 900000, "PerfectGame", false);
-        var message = ScoreImportCompletedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), ScoreImportCompletedEvent.OfficialImportSource, userId, new[] { entry });
+        var message = ScoreImportCompletedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), ScoreImportCompletedEvent.OfficialImportSource, userId, MixEnum.Phoenix, new[] { entry });
 
         await saga.Consume(ContextOf(message).Object);
 

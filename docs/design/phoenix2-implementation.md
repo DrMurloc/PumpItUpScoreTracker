@@ -73,7 +73,7 @@ so a broken session can resume from the last checked item.
   mix (behavior identical: callers pass Phoenix until the UI plumbing commit). Score-recording
   commands and the API record endpoint thread mix through.
 
-- [ ] **Commit 5 — Bus events carry the mix.**
+- [x] **Commit 5 — Bus events carry the mix.**
   `PlayerScoresUpdatedEvent`, `ScoreImportCompletedEvent`, `ImportStatusUpdatedEvent`,
   `PlayerStatsUpdatedEvent`, `TitlesDetectedEvent`, `NewTitlesAcquiredEvent`,
   `UserWeeklyChartsProgressedEvent` + consumers route by mix; `ContractEventSerializationTests`

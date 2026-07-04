@@ -32,7 +32,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
     public async Task NewClearSavesRecordSchedulesFireAndAddsBatch()
     {
         var ctx = new HandlerContext();
-        ctx.Batches.Setup(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, true,
+        ctx.Batches.Setup(b => b.AddToBatch(MixEnum.Phoenix, UserId, It.IsAny<DateTime>(), ChartId, true,
             It.IsAny<PhoenixScore?>())).Returns(true);
 
         await ctx.Handler.Handle(
@@ -48,9 +48,10 @@ public sealed class UpdatePhoenixRecordHandlerTests
             It.IsAny<CancellationToken>()), Times.Once);
         ctx.Scheduler.Verify(s => s.SchedulePublish(
             It.IsAny<DateTime>(),
-            It.Is<UpdatePhoenixRecordHandler.TryFireScoreCommand>(m => m.UserId == UserId),
+            It.Is<UpdatePhoenixRecordHandler.TryFireScoreCommand>(m =>
+                m.UserId == UserId && m.Mix == MixEnum.Phoenix),
             It.IsAny<CancellationToken>()), Times.Once);
-        ctx.Batches.Verify(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, true,
+        ctx.Batches.Verify(b => b.AddToBatch(MixEnum.Phoenix, UserId, It.IsAny<DateTime>(), ChartId, true,
             It.Is<PhoenixScore?>(s => !s.HasValue)), Times.Once);
     }
 
@@ -126,7 +127,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
         // Existing was broken at the same score → transition to a clear is a new clear,
         // and 950000 < 950000 is false so it is NOT also an upscore.
         ctx.GivenExistingScore(score: 950000, plate: PhoenixPlate.SuperbGame, isBroken: true);
-        ctx.Batches.Setup(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, true,
+        ctx.Batches.Setup(b => b.AddToBatch(MixEnum.Phoenix, UserId, It.IsAny<DateTime>(), ChartId, true,
             It.IsAny<PhoenixScore?>())).Returns(true);
 
         await ctx.Handler.Handle(
@@ -134,7 +135,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
                 Plate: PhoenixPlate.SuperbGame),
             CancellationToken.None);
 
-        ctx.Batches.Verify(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, true,
+        ctx.Batches.Verify(b => b.AddToBatch(MixEnum.Phoenix, UserId, It.IsAny<DateTime>(), ChartId, true,
             It.Is<PhoenixScore?>(s => !s.HasValue)), Times.Once);
     }
 
@@ -146,7 +147,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
         // resolved inside the accumulator.
         var ctx = new HandlerContext();
         ctx.GivenExistingScore(score: 700000, plate: PhoenixPlate.RoughGame, isBroken: true);
-        ctx.Batches.Setup(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, true,
+        ctx.Batches.Setup(b => b.AddToBatch(MixEnum.Phoenix, UserId, It.IsAny<DateTime>(), ChartId, true,
             It.IsAny<PhoenixScore?>())).Returns(true);
 
         await ctx.Handler.Handle(
@@ -154,7 +155,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
                 Plate: PhoenixPlate.SuperbGame),
             CancellationToken.None);
 
-        ctx.Batches.Verify(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, true,
+        ctx.Batches.Verify(b => b.AddToBatch(MixEnum.Phoenix, UserId, It.IsAny<DateTime>(), ChartId, true,
             It.Is<PhoenixScore?>(s => s.HasValue && s.Value == (PhoenixScore)700000)), Times.Once);
     }
 
@@ -163,7 +164,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
     {
         var ctx = new HandlerContext();
         ctx.GivenExistingScore(score: 900000, plate: PhoenixPlate.SuperbGame, isBroken: false);
-        ctx.Batches.Setup(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, false,
+        ctx.Batches.Setup(b => b.AddToBatch(MixEnum.Phoenix, UserId, It.IsAny<DateTime>(), ChartId, false,
             It.IsAny<PhoenixScore?>())).Returns(true);
 
         await ctx.Handler.Handle(
@@ -171,7 +172,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
                 Plate: PhoenixPlate.SuperbGame),
             CancellationToken.None);
 
-        ctx.Batches.Verify(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, false,
+        ctx.Batches.Verify(b => b.AddToBatch(MixEnum.Phoenix, UserId, It.IsAny<DateTime>(), ChartId, false,
             It.Is<PhoenixScore?>(s => s.HasValue && s.Value == (PhoenixScore)900000)), Times.Once);
     }
 
@@ -198,7 +199,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
                                           && e.Plate == PhoenixPlate.FairGame
                                           && e.IsBroken),
             It.IsAny<CancellationToken>()), Times.Once);
-        ctx.Batches.Verify(b => b.AddToBatch(It.IsAny<Guid>(), It.IsAny<DateTime>(),
+        ctx.Batches.Verify(b => b.AddToBatch(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<DateTime>(),
             It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<PhoenixScore?>()), Times.Never);
     }
 
@@ -263,7 +264,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
                 Plate: PhoenixPlate.SuperbGame),
             CancellationToken.None);
 
-        ctx.Batches.Verify(b => b.AddToBatch(It.IsAny<Guid>(), It.IsAny<DateTime>(),
+        ctx.Batches.Verify(b => b.AddToBatch(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<DateTime>(),
             It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<PhoenixScore?>()), Times.Never);
         ctx.Scheduler.Verify(s => s.SchedulePublish(
             It.IsAny<DateTime>(),
@@ -277,7 +278,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
         var ctx = new HandlerContext();
         // Batch already active: AddToBatch returns false, so the handler must NOT
         // schedule a new fire message — but the call itself must still happen.
-        ctx.Batches.Setup(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, true,
+        ctx.Batches.Setup(b => b.AddToBatch(MixEnum.Phoenix, UserId, It.IsAny<DateTime>(), ChartId, true,
             It.IsAny<PhoenixScore?>())).Returns(false);
 
         await ctx.Handler.Handle(
@@ -289,7 +290,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
             It.IsAny<DateTime>(),
             It.IsAny<UpdatePhoenixRecordHandler.TryFireScoreCommand>(),
             It.IsAny<CancellationToken>()), Times.Never);
-        ctx.Batches.Verify(b => b.AddToBatch(UserId, It.IsAny<DateTime>(), ChartId, true,
+        ctx.Batches.Verify(b => b.AddToBatch(MixEnum.Phoenix, UserId, It.IsAny<DateTime>(), ChartId, true,
             It.IsAny<PhoenixScore?>()), Times.Once);
     }
 
@@ -298,19 +299,21 @@ public sealed class UpdatePhoenixRecordHandlerTests
     {
         var ctx = new HandlerContext();
         var fireAt = Now.UtcDateTime + TimeSpan.FromMinutes(1);
-        ctx.Batches.Setup(b => b.GetFireAt(UserId)).Returns(fireAt);
+        ctx.Batches.Setup(b => b.GetFireAt(MixEnum.Phoenix, UserId)).Returns(fireAt);
 
-        await ctx.Handler.Consume(BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreCommand(UserId)));
+        await ctx.Handler.Consume(
+            BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreCommand(UserId, MixEnum.Phoenix)));
 
         // Reschedule must use a small (+5s) buffer, NOT +2min — the latter compounds on
         // every retry and starves active players.
         ctx.Scheduler.Verify(s => s.SchedulePublish(
             fireAt + TimeSpan.FromSeconds(5),
-            It.Is<UpdatePhoenixRecordHandler.TryFireScoreCommand>(m => m.UserId == UserId),
+            It.Is<UpdatePhoenixRecordHandler.TryFireScoreCommand>(m =>
+                m.UserId == UserId && m.Mix == MixEnum.Phoenix),
             It.IsAny<CancellationToken>()), Times.Once);
         ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoresUpdatedEvent>(),
             It.IsAny<CancellationToken>()), Times.Never);
-        ctx.Batches.Verify(b => b.TakeBatch(It.IsAny<Guid>()), Times.Never);
+        ctx.Batches.Verify(b => b.TakeBatch(It.IsAny<MixEnum>(), It.IsAny<Guid>()), Times.Never);
     }
 
     [Fact]
@@ -320,13 +323,16 @@ public sealed class UpdatePhoenixRecordHandlerTests
         var fireAt = Now.UtcDateTime - TimeSpan.FromSeconds(1); // already past
         var newCharts = new[] { Guid.NewGuid() };
         var upscored = new Dictionary<Guid, int> { { Guid.NewGuid(), 900000 } };
-        ctx.Batches.Setup(b => b.GetFireAt(UserId)).Returns(fireAt);
-        ctx.Batches.Setup(b => b.TakeBatch(UserId)).Returns(new PendingScoreBatch(newCharts, upscored));
+        ctx.Batches.Setup(b => b.GetFireAt(MixEnum.Phoenix, UserId)).Returns(fireAt);
+        ctx.Batches.Setup(b => b.TakeBatch(MixEnum.Phoenix, UserId))
+            .Returns(new PendingScoreBatch(MixEnum.Phoenix, newCharts, upscored));
 
-        await ctx.Handler.Consume(BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreCommand(UserId)));
+        await ctx.Handler.Consume(
+            BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreCommand(UserId, MixEnum.Phoenix)));
 
         ctx.Bus.Verify(b => b.Publish(
             It.Is<PlayerScoresUpdatedEvent>(e => e.UserId == UserId
+                                                && e.Mix == MixEnum.Phoenix
                                                 && e.Changes.Count(c => c.IsNewPass) == newCharts.Length
                                                 && e.Changes.Count(c => !c.IsNewPass) == upscored.Count),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -342,9 +348,10 @@ public sealed class UpdatePhoenixRecordHandlerTests
         var ctx = new HandlerContext();
         var newChart = Guid.NewGuid();
         var upscoredChart = Guid.NewGuid();
-        ctx.Batches.Setup(b => b.GetFireAt(UserId)).Returns(Now.UtcDateTime - TimeSpan.FromSeconds(1));
-        ctx.Batches.Setup(b => b.TakeBatch(UserId)).Returns(new PendingScoreBatch(
-            new[] { newChart }, new Dictionary<Guid, int> { { upscoredChart, 900000 } }));
+        ctx.Batches.Setup(b => b.GetFireAt(MixEnum.Phoenix, UserId))
+            .Returns(Now.UtcDateTime - TimeSpan.FromSeconds(1));
+        ctx.Batches.Setup(b => b.TakeBatch(MixEnum.Phoenix, UserId)).Returns(new PendingScoreBatch(
+            MixEnum.Phoenix, new[] { newChart }, new Dictionary<Guid, int> { { upscoredChart, 900000 } }));
         ctx.Records.Setup(r => r.GetRecordedScores(MixEnum.Phoenix, UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
@@ -352,7 +359,8 @@ public sealed class UpdatePhoenixRecordHandlerTests
                 new RecordedPhoenixScore(upscoredChart, 950000, PhoenixPlate.FairGame, false, Now)
             });
 
-        await ctx.Handler.Consume(BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreCommand(UserId)));
+        await ctx.Handler.Consume(
+            BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreCommand(UserId, MixEnum.Phoenix)));
 
         ctx.Bus.Verify(b => b.Publish(
             It.Is<PlayerScoresUpdatedEvent>(e =>
@@ -360,6 +368,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
                 && e.OccurredAt == Now
                 && e.SchemaVersion == PlayerScoresUpdatedEvent.CurrentSchemaVersion
                 && e.EventId != Guid.Empty
+                && e.Mix == MixEnum.Phoenix
                 && e.Changes.Count == 2
                 && e.Changes.Single(c => c.ChartId == newChart).IsNewPass
                 && e.Changes.Single(c => c.ChartId == newChart).NewScore == 985000
@@ -377,9 +386,10 @@ public sealed class UpdatePhoenixRecordHandlerTests
         // TryFire or the Hangfire flush. Consumer must not crash, must not publish,
         // must not reschedule.
         var ctx = new HandlerContext();
-        ctx.Batches.Setup(b => b.GetFireAt(UserId)).Returns((DateTime?)null);
+        ctx.Batches.Setup(b => b.GetFireAt(MixEnum.Phoenix, UserId)).Returns((DateTime?)null);
 
-        await ctx.Handler.Consume(BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreCommand(UserId)));
+        await ctx.Handler.Consume(
+            BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreCommand(UserId, MixEnum.Phoenix)));
 
         ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoresUpdatedEvent>(),
             It.IsAny<CancellationToken>()), Times.Never);
@@ -387,7 +397,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
             It.IsAny<DateTime>(),
             It.IsAny<UpdatePhoenixRecordHandler.TryFireScoreCommand>(),
             It.IsAny<CancellationToken>()), Times.Never);
-        ctx.Batches.Verify(b => b.TakeBatch(It.IsAny<Guid>()), Times.Never);
+        ctx.Batches.Verify(b => b.TakeBatch(It.IsAny<MixEnum>(), It.IsAny<Guid>()), Times.Never);
     }
 
     [Fact]
@@ -397,10 +407,11 @@ public sealed class UpdatePhoenixRecordHandlerTests
         // because another consumer drained between our GetFireAt and TakeBatch.
         var ctx = new HandlerContext();
         var fireAt = Now.UtcDateTime - TimeSpan.FromSeconds(1);
-        ctx.Batches.Setup(b => b.GetFireAt(UserId)).Returns(fireAt);
-        ctx.Batches.Setup(b => b.TakeBatch(UserId)).Returns((PendingScoreBatch?)null);
+        ctx.Batches.Setup(b => b.GetFireAt(MixEnum.Phoenix, UserId)).Returns(fireAt);
+        ctx.Batches.Setup(b => b.TakeBatch(MixEnum.Phoenix, UserId)).Returns((PendingScoreBatch?)null);
 
-        await ctx.Handler.Consume(BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreCommand(UserId)));
+        await ctx.Handler.Consume(
+            BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreCommand(UserId, MixEnum.Phoenix)));
 
         ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoresUpdatedEvent>(),
             It.IsAny<CancellationToken>()), Times.Never);
@@ -417,24 +428,27 @@ public sealed class UpdatePhoenixRecordHandlerTests
         var upscoreChartB = Guid.NewGuid();
         ctx.Batches.Setup(b => b.Dump()).Returns(new[]
         {
-            new BatchAccumulatorSnapshotEntry(overdueUserA, Now.UtcDateTime - TimeSpan.FromSeconds(1),
+            new BatchAccumulatorSnapshotEntry(overdueUserA, MixEnum.Phoenix,
+                Now.UtcDateTime - TimeSpan.FromSeconds(1),
                 new[] { newChartA }, new Dictionary<Guid, int>()),
-            new BatchAccumulatorSnapshotEntry(overdueUserB, Now.UtcDateTime - TimeSpan.FromMinutes(10),
+            new BatchAccumulatorSnapshotEntry(overdueUserB, MixEnum.Phoenix,
+                Now.UtcDateTime - TimeSpan.FromMinutes(10),
                 Array.Empty<Guid>(), new Dictionary<Guid, int> { { upscoreChartB, 850000 } }),
-            new BatchAccumulatorSnapshotEntry(futureUser, Now.UtcDateTime + TimeSpan.FromMinutes(1),
+            new BatchAccumulatorSnapshotEntry(futureUser, MixEnum.Phoenix,
+                Now.UtcDateTime + TimeSpan.FromMinutes(1),
                 new[] { Guid.NewGuid() }, new Dictionary<Guid, int>())
         });
-        ctx.Batches.Setup(b => b.TakeBatch(overdueUserA))
-            .Returns(new PendingScoreBatch(new[] { newChartA }, new Dictionary<Guid, int>()));
-        ctx.Batches.Setup(b => b.TakeBatch(overdueUserB))
-            .Returns(new PendingScoreBatch(Array.Empty<Guid>(),
+        ctx.Batches.Setup(b => b.TakeBatch(MixEnum.Phoenix, overdueUserA))
+            .Returns(new PendingScoreBatch(MixEnum.Phoenix, new[] { newChartA }, new Dictionary<Guid, int>()));
+        ctx.Batches.Setup(b => b.TakeBatch(MixEnum.Phoenix, overdueUserB))
+            .Returns(new PendingScoreBatch(MixEnum.Phoenix, Array.Empty<Guid>(),
                 new Dictionary<Guid, int> { { upscoreChartB, 850000 } }));
 
         await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatchesCommand()));
 
-        ctx.Batches.Verify(b => b.TakeBatch(overdueUserA), Times.Once);
-        ctx.Batches.Verify(b => b.TakeBatch(overdueUserB), Times.Once);
-        ctx.Batches.Verify(b => b.TakeBatch(futureUser), Times.Never);
+        ctx.Batches.Verify(b => b.TakeBatch(MixEnum.Phoenix, overdueUserA), Times.Once);
+        ctx.Batches.Verify(b => b.TakeBatch(MixEnum.Phoenix, overdueUserB), Times.Once);
+        ctx.Batches.Verify(b => b.TakeBatch(It.IsAny<MixEnum>(), futureUser), Times.Never);
         ctx.Bus.Verify(b => b.Publish(
             It.Is<PlayerScoresUpdatedEvent>(e => e.UserId == overdueUserA
                                                 && e.Changes.Count == 1
@@ -458,10 +472,11 @@ public sealed class UpdatePhoenixRecordHandlerTests
         var racedUser = Guid.NewGuid();
         ctx.Batches.Setup(b => b.Dump()).Returns(new[]
         {
-            new BatchAccumulatorSnapshotEntry(racedUser, Now.UtcDateTime - TimeSpan.FromSeconds(1),
+            new BatchAccumulatorSnapshotEntry(racedUser, MixEnum.Phoenix,
+                Now.UtcDateTime - TimeSpan.FromSeconds(1),
                 new[] { Guid.NewGuid() }, new Dictionary<Guid, int>())
         });
-        ctx.Batches.Setup(b => b.TakeBatch(racedUser)).Returns((PendingScoreBatch?)null);
+        ctx.Batches.Setup(b => b.TakeBatch(MixEnum.Phoenix, racedUser)).Returns((PendingScoreBatch?)null);
 
         await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatchesCommand()));
 
@@ -477,9 +492,70 @@ public sealed class UpdatePhoenixRecordHandlerTests
 
         await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatchesCommand()));
 
-        ctx.Batches.Verify(b => b.TakeBatch(It.IsAny<Guid>()), Times.Never);
+        ctx.Batches.Verify(b => b.TakeBatch(It.IsAny<MixEnum>(), It.IsAny<Guid>()), Times.Never);
         ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoresUpdatedEvent>(),
             It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task PhoenixAndPhoenix2SubmissionsBatchSeparatelyAndEventsCarryTheirMix()
+    {
+        var ctx = new HandlerContext();
+        var phoenixChart = Guid.NewGuid();
+        var phoenix2Chart = Guid.NewGuid();
+        ctx.Batches.Setup(b => b.AddToBatch(It.IsAny<MixEnum>(), UserId, It.IsAny<DateTime>(),
+            It.IsAny<Guid>(), true, It.IsAny<PhoenixScore?>())).Returns(true);
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(phoenixChart, IsBroken: false, Score: 950000,
+                Plate: PhoenixPlate.SuperbGame),
+            CancellationToken.None);
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(phoenix2Chart, IsBroken: false, Score: 960000,
+                Plate: PhoenixPlate.SuperbGame, Mix: MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        // Each mix accumulates in its own batch and schedules its own drain message.
+        ctx.Batches.Verify(b => b.AddToBatch(MixEnum.Phoenix, UserId, It.IsAny<DateTime>(), phoenixChart,
+            true, It.Is<PhoenixScore?>(s => !s.HasValue)), Times.Once);
+        ctx.Batches.Verify(b => b.AddToBatch(MixEnum.Phoenix2, UserId, It.IsAny<DateTime>(), phoenix2Chart,
+            true, It.Is<PhoenixScore?>(s => !s.HasValue)), Times.Once);
+        ctx.Scheduler.Verify(s => s.SchedulePublish(It.IsAny<DateTime>(),
+            It.Is<UpdatePhoenixRecordHandler.TryFireScoreCommand>(m =>
+                m.UserId == UserId && m.Mix == MixEnum.Phoenix),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Scheduler.Verify(s => s.SchedulePublish(It.IsAny<DateTime>(),
+            It.Is<UpdatePhoenixRecordHandler.TryFireScoreCommand>(m =>
+                m.UserId == UserId && m.Mix == MixEnum.Phoenix2),
+            It.IsAny<CancellationToken>()), Times.Once);
+
+        // Draining each batch publishes a PlayerScoresUpdatedEvent stamped with that
+        // batch's mix, reading bests from that mix's ledger slice.
+        var fireAt = Now.UtcDateTime - TimeSpan.FromSeconds(1);
+        ctx.Batches.Setup(b => b.GetFireAt(MixEnum.Phoenix, UserId)).Returns(fireAt);
+        ctx.Batches.Setup(b => b.GetFireAt(MixEnum.Phoenix2, UserId)).Returns(fireAt);
+        ctx.Batches.Setup(b => b.TakeBatch(MixEnum.Phoenix, UserId))
+            .Returns(new PendingScoreBatch(MixEnum.Phoenix, new[] { phoenixChart },
+                new Dictionary<Guid, int>()));
+        ctx.Batches.Setup(b => b.TakeBatch(MixEnum.Phoenix2, UserId))
+            .Returns(new PendingScoreBatch(MixEnum.Phoenix2, new[] { phoenix2Chart },
+                new Dictionary<Guid, int>()));
+
+        await ctx.Handler.Consume(
+            BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreCommand(UserId, MixEnum.Phoenix)));
+        await ctx.Handler.Consume(
+            BuildContext(new UpdatePhoenixRecordHandler.TryFireScoreCommand(UserId, MixEnum.Phoenix2)));
+
+        ctx.Bus.Verify(b => b.Publish(
+            It.Is<PlayerScoresUpdatedEvent>(e => e.Mix == MixEnum.Phoenix
+                                                && e.Changes.Single().ChartId == phoenixChart),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Bus.Verify(b => b.Publish(
+            It.Is<PlayerScoresUpdatedEvent>(e => e.Mix == MixEnum.Phoenix2
+                                                && e.Changes.Single().ChartId == phoenix2Chart),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Records.Verify(r => r.GetRecordedScores(MixEnum.Phoenix2, UserId,
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private sealed class HandlerContext

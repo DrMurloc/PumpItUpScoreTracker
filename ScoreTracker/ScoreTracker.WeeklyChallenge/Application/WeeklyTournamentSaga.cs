@@ -138,6 +138,9 @@ namespace ScoreTracker.WeeklyChallenge.Application
         // gateway publishes the score facts; we decide which land on the board.
         public async Task Consume(ConsumeContext<ScoreImportCompletedEvent> context)
         {
+            // Phoenix until per-mix computation lands (plan doc, saga commit) — the
+            // weekly board rotates per mix there; until then only Phoenix imports land.
+            if (context.Message.Mix != MixEnum.Phoenix) return;
             var weeklyChartIds = (await weeklyTournies.GetWeeklyCharts(context.CancellationToken))
                 .Select(c => c.ChartId).ToHashSet();
             foreach (var score in context.Message.Scores.Where(s => weeklyChartIds.Contains(s.ChartId)))
@@ -200,8 +203,10 @@ namespace ScoreTracker.WeeklyChallenge.Application
                     await bot.SendMessage(
                         $"{user.Name} Progressed to {newPlace} on {chart.Song.Name} #DIFFICULTY|{chart.DifficultyString}# - {existingEntry.Score} #LETTERGRADE|{existingEntry.Score.LetterGrade}|{existingEntry.IsBroken}# #PLATE|{existingEntry.Plate}#",
                         1254418262406725773, cancellationToken);
+                    // Phoenix until per-mix computation lands (plan doc, saga commit).
                     await bus.Publish(new UserWeeklyChartsProgressedEvent(user.Id, chart.Id, existingEntry.Score,
-                        existingEntry.Plate.ToString(), existingEntry.IsBroken, newPlace), cancellationToken);
+                        existingEntry.Plate.ToString(), existingEntry.IsBroken, newPlace, MixEnum.Phoenix),
+                        cancellationToken);
                 }
                 catch (Exception e)
                 {

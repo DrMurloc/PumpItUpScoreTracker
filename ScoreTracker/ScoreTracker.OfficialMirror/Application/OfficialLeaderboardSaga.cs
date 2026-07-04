@@ -275,16 +275,18 @@ namespace ScoreTracker.OfficialMirror.Application
             {
             }
 
+            // Phoenix until per-mix computation lands (plan doc, saga commit).
             if (accountData.AccountName == "INVALID")
                 await _mediator.Publish(new ImportStatusUpdatedEvent(_currentUser.User.Id,
-                    "Invalid Login Information", Array.Empty<RecordedPhoenixScore>()), cancellationToken);
+                    "Invalid Login Information", Array.Empty<RecordedPhoenixScore>(), MixEnum.Phoenix),
+                    cancellationToken);
 
 
             if (request.SyncPiuTracker)
             {
                 await _mediator.Publish(new ImportStatusUpdatedEvent(_currentUser.User.Id,
                     "Syncing PIU Tracker... (Can take a while if it's your first time)",
-                    Array.Empty<RecordedPhoenixScore>()));
+                    Array.Empty<RecordedPhoenixScore>(), MixEnum.Phoenix));
                 try
                 {
                     await _piuTracker.SyncData(accountData.AccountName, accountData.Sid, cancellationToken);
@@ -293,14 +295,15 @@ namespace ScoreTracker.OfficialMirror.Application
                 {
                     await _mediator.Publish(
                         new ImportStatusErrorEvent(userId,
-                            "PIU Tracker sync failed, you've imported too recently."),
+                            "PIU Tracker sync failed, you've imported too recently.", MixEnum.Phoenix),
                         cancellationToken);
                 }
                 catch (Exception e)
                 {
                     await _mediator.Publish(
                         new ImportStatusErrorEvent(userId,
-                            "PIU Tracker sync failed. Check with DrMurloc or Tusa if this persists"),
+                            "PIU Tracker sync failed. Check with DrMurloc or Tusa if this persists",
+                            MixEnum.Phoenix),
                         cancellationToken);
                     _logger.LogWarning(e, "PIU Tracker sync failed");
                 }
@@ -315,7 +318,9 @@ namespace ScoreTracker.OfficialMirror.Application
                 new UpdateUserGameProfileCommand(accountData.AccountName, accountData.AvatarUrl),
                 cancellationToken);
 
-            await _bus.Publish(new TitlesDetectedEvent(userId, accountData.Titles.Select(t => t.ToString())),
+            // Phoenix until per-mix computation lands (plan doc, saga commit).
+            await _bus.Publish(new TitlesDetectedEvent(userId, accountData.Titles.Select(t => t.ToString()),
+                    MixEnum.Phoenix),
                 cancellationToken);
 
             var maxPages = await _officialSite.GetScorePageCount(request.Username, request.Password, cancellationToken);
@@ -355,7 +360,7 @@ namespace ScoreTracker.OfficialMirror.Application
                 await _mediator.Publish(
                     new ImportStatusUpdatedEvent(_currentUser.User.Id,
                         $"Saving chart result {count} of {scores.Length}",
-                        batch.ToArray()),
+                        batch.ToArray(), MixEnum.Phoenix),
                     cancellationToken);
                 batch.Clear();
             }
@@ -363,7 +368,7 @@ namespace ScoreTracker.OfficialMirror.Application
             await _mediator.Publish(
                 new ImportStatusUpdatedEvent(_currentUser.User.Id,
                     "Charts finished saving",
-                    batch.ToArray()),
+                    batch.ToArray(), MixEnum.Phoenix),
                 cancellationToken);
             batch.Clear();
 

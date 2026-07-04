@@ -63,6 +63,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
 
     public async Task Consume(ConsumeContext<NewTitlesAcquiredEvent> context)
     {
+        var prefix = MixPrefix(context.Message.Mix);
         var user = await _users.GetUser(context.Message.UserId, context.CancellationToken);
         var message = string.Empty;
         var count = 0;
@@ -77,7 +78,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
                 count++;
                 if (count != 10) continue;
 
-                await SendToCommunityDiscords(user.Id, message,
+                await SendToCommunityDiscords(user.Id, prefix + message,
                     context.CancellationToken);
                 message = "";
                 count = 0;
@@ -101,7 +102,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
                 if (count != 10) continue;
 
                 await SendToCommunityDiscords(user.Id,
-                    message, context.CancellationToken);
+                    prefix + message, context.CancellationToken);
                 message = "";
                 count = 0;
             }
@@ -109,7 +110,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
 
         if (!string.IsNullOrWhiteSpace(message))
             await SendToCommunityDiscords(user.Id,
-                message, context.CancellationToken);
+                prefix + message, context.CancellationToken);
     }
 
     public async Task Consume(ConsumeContext<PlayerRatingsImprovedEvent> context)
@@ -146,23 +147,26 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
 - Doubles Competitive Level improved to {context.Message.NewDoublesCompetitive:0.000} (+{context.Message.NewDoublesCompetitive - context.Message.OldDoublesCompetitive:0.000})";
         if (!string.IsNullOrWhiteSpace(message))
             await SendToCommunityDiscords(context.Message.UserId,
-                $"**{user.Name}**'s top 50 rating has improved!" + message, context.CancellationToken);
+                MixPrefix(context.Message.Mix) + $"**{user.Name}**'s top 50 rating has improved!" + message,
+                context.CancellationToken);
     }
 
     public async Task Consume(ConsumeContext<PlayerScoresUpdatedEvent> context)
     {
+        // Score and chart lookups follow the event's mix so parallel-mix
+        // announcements read the right ledger slice.
+        var mix = context.Message.Mix;
         var newChartIds = context.Message.Changes.Where(c => c.IsNewPass).Select(c => c.ChartId).Distinct().ToArray();
         var upscoreChartScores = context.Message.Changes.Where(c => !c.IsNewPass)
             .ToDictionary(c => c.ChartId, c => c.OldScore ?? 0);
         var user = await _users.GetUser(context.Message.UserId, context.CancellationToken);
         if (user == null) return;
-        // Phoenix until per-mix computation lands (plan doc, saga commit).
         var scores =
-            (await _scores.GetBestScores(MixEnum.Phoenix, context.Message.UserId, context.CancellationToken))
+            (await _scores.GetBestScores(mix, context.Message.UserId, context.CancellationToken))
             .Where(s => s.Score != null)
             .ToDictionary(s =>
                 s.ChartId);
-        var charts = (await _charts.GetCharts(MixEnum.Phoenix,
+        var charts = (await _charts.GetCharts(mix,
             chartIds: newChartIds.Concat(upscoreChartScores.Keys).Distinct(),
             cancellationToken: context.CancellationToken)).ToDictionary(c => c.Id);
 
@@ -197,9 +201,8 @@ And {count - 10} others!";
             foreach (var (type, level) in newCharts.GroupBy(c => (c.Type, c.Level)).Select(c => c.Key)
                          .OrderByDescending(g => g.Level).ThenBy(g => g.Type))
             {
-                var totalCount = (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix, level, type))).Count();
-                // Phoenix until per-mix computation lands (plan doc, saga commit).
-                var currentCount = await _scores.GetClearCount(MixEnum.Phoenix, context.Message.UserId, type, level,
+                var totalCount = (await _mediator.Send(new GetChartsQuery(mix, level, type))).Count();
+                var currentCount = await _scores.GetClearCount(mix, context.Message.UserId, type, level,
                     context.CancellationToken);
                 message += $@"
 #DIFFICULTY|{type.GetShortHand()}{level}# {currentCount}/{totalCount} ({100.0 * currentCount / totalCount:0.0}%)";
@@ -245,7 +248,9 @@ And {count - 10} others!";
 
         if (!string.IsNullOrWhiteSpace(message)) messages.Add(message);
         if (!messages.Any()) return;
-        await SendToCommunityDiscords(user.Id, messages.ToArray(), context.CancellationToken);
+        var prefix = MixPrefix(mix);
+        await SendToCommunityDiscords(user.Id, messages.Select(m => prefix + m).ToArray(),
+            context.CancellationToken);
     }
 
     public async Task Consume(ConsumeContext<UserUpdatedEvent> context)
@@ -263,10 +268,11 @@ And {count - 10} others!";
     {
         var user = await _users.GetUser(context.Message.UserId, context.CancellationToken) ??
                    throw new Exception("User not found");
-        var chart = await _charts.GetChart(MixEnum.Phoenix, context.Message.ChartId) ??
+        var chart = await _charts.GetChart(context.Message.Mix, context.Message.ChartId) ??
                     throw new ChartNotFoundException();
 
         await SendToCommunityDiscords(context.Message.UserId,
+            MixPrefix(context.Message.Mix) +
             $"{user.Name} progressed to {context.Message.Place} on {chart.Song.Name} #DIFFICULTY|{chart.DifficultyString}# - {context.Message.Score:N0} #LETTERGRADE|{PhoenixScore.From(context.Message.Score).LetterGrade}|{context.Message.IsBroken}# #PLATE|{context.Message.Plate}#",
             context.CancellationToken);
     }
@@ -454,6 +460,13 @@ And {count - 10} others!";
             throw new CommunityNotFoundException();
 
         return community;
+    }
+
+    // Phoenix stays unprefixed — it is today's default context; the prefix marks the
+    // new mix while both run in parallel (plan doc: "[Phoenix 2]" Discord prefix).
+    private static string MixPrefix(MixEnum mix)
+    {
+        return mix == MixEnum.Phoenix ? string.Empty : "[" + mix.GetName() + "] ";
     }
 
     private async Task SendToCommunityDiscords(Guid userId, string messages, CancellationToken cancellationToken)

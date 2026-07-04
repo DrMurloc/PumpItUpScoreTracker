@@ -4,6 +4,7 @@ using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.ScoreLedger.Domain;
+using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.ScoreLedger.Application;
 
@@ -43,8 +44,9 @@ internal sealed class WipeUserScoresHandler : IRequestHandler<WipeUserScoresComm
         if (request.IncludeHistory)
             await _playerHistory.DeleteHistoryForUser(request.UserId, cancellationToken);
 
+        // Phoenix until per-mix computation lands (plan doc, saga commit).
         await _bus.Publish(
-            PlayerScoresUpdatedEvent.Create(_dateTime.Now, request.UserId,
+            PlayerScoresUpdatedEvent.Create(_dateTime.Now, request.UserId, MixEnum.Phoenix,
                 Array.Empty<PlayerScoresUpdatedEvent.ScoreChange>()),
             cancellationToken);
     }

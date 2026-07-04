@@ -132,9 +132,10 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         int? maxPages, CancellationToken cancellationToken)
     {
         var currentPage = 1;
+        // Phoenix until per-mix computation lands (plan doc, saga commit).
         await _mediator.Publish(
             new ImportStatusUpdatedEvent(_currentUser.User.Id, "Logging In",
-                Array.Empty<RecordedPhoenixScore>()), cancellationToken);
+                Array.Empty<RecordedPhoenixScore>(), MixEnum.Phoenix), cancellationToken);
         var sessionId = (await _piuGame.GetSessionId(username, password, cancellationToken)).client;
 
         var gameCards = await _piuGame.GetCards(sessionId, cancellationToken);
@@ -150,7 +151,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         {
             await _mediator.Publish(
                 new ImportStatusUpdatedEvent(_currentUser.User.Id, $"Reading page {currentPage} of {maxPages} (New Passes)",
-                    Array.Empty<RecordedPhoenixScore>()),
+                    Array.Empty<RecordedPhoenixScore>(), MixEnum.Phoenix),
                 cancellationToken);
             var nextPage = await _piuGame.GetBestScores(sessionId, currentPage, cancellationToken);
             responses.AddRange(nextPage.Scores);
@@ -169,7 +170,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             var nextPage = await _piuGame.GetBestScores(sessionId, currentPage, cancellationToken);
             await _mediator.Publish(
                 new ImportStatusUpdatedEvent(_currentUser.User.Id, $"Reading page {currentPage} (Up-scores)",
-                    Array.Empty<RecordedPhoenixScore>()),
+                    Array.Empty<RecordedPhoenixScore>(), MixEnum.Phoenix),
                 cancellationToken);
 
             foreach (var score in nextPage.Scores)
@@ -231,8 +232,9 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             }
         }
 
+        // Phoenix until per-mix computation lands (plan doc, saga commit).
         await _bus.Publish(ScoreImportCompletedEvent.Create(_dateTime.Now,
-                ScoreImportCompletedEvent.OfficialImportSource, userId, entries.ToArray()),
+                ScoreImportCompletedEvent.OfficialImportSource, userId, MixEnum.Phoenix, entries.ToArray()),
             cancellationToken);
         return results.Values;
     }

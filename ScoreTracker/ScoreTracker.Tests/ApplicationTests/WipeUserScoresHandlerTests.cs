@@ -7,6 +7,7 @@ using ScoreTracker.Tests.TestHelpers;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.ScoreLedger.Application;
 using ScoreTracker.ScoreLedger.Domain;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.SecondaryPorts;
 using Xunit;
@@ -51,7 +52,7 @@ public sealed class WipeUserScoresHandlerTests
         bus.Verify(
             b => b.Publish(
                 It.Is<PlayerScoresUpdatedEvent>(e =>
-                    e.UserId == userId && e.Changes.Count == 0),
+                    e.UserId == userId && e.Changes.Count == 0 && e.Mix == MixEnum.Phoenix),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
