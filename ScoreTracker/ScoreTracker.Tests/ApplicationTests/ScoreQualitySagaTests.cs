@@ -47,11 +47,11 @@ public sealed class ScoreQualitySagaTests
         var scores = new Mock<IScoreReader>();
         var cache = new MemoryCache(new MemoryCacheOptions());
 
-        playerStats.Setup(p => p.GetStats(userId, It.IsAny<CancellationToken>()))
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Stats(userId, singlesCompetitive: 17.5));
 
         var competitors = new[] { Guid.NewGuid(), Guid.NewGuid() };
-        playerStats.Setup(p => p.GetPlayersByCompetitiveRange(ChartType.Single, 17.5, .5,
+        playerStats.Setup(p => p.GetPlayersByCompetitiveRange(MixEnum.Phoenix, ChartType.Single, 17.5, .5,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(competitors);
 
@@ -73,9 +73,9 @@ public sealed class ScoreQualitySagaTests
         var scores = new Mock<IScoreReader>();
         var cache = new MemoryCache(new MemoryCacheOptions());
 
-        playerStats.Setup(p => p.GetStats(userId, It.IsAny<CancellationToken>()))
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Stats(userId));
-        playerStats.Setup(p => p.GetPlayersByCompetitiveRange(ChartType.Single, It.IsAny<double>(), .5,
+        playerStats.Setup(p => p.GetPlayersByCompetitiveRange(MixEnum.Phoenix, ChartType.Single, It.IsAny<double>(), .5,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Guid>());
 
@@ -116,9 +116,9 @@ public sealed class ScoreQualitySagaTests
         var scores = new Mock<IScoreReader>();
         var cache = new MemoryCache(new MemoryCacheOptions());
 
-        playerStats.Setup(p => p.GetStats(userId, It.IsAny<CancellationToken>()))
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Stats(userId));
-        playerStats.Setup(p => p.GetPlayersByCompetitiveRange(ChartType.Single, It.IsAny<double>(), .5,
+        playerStats.Setup(p => p.GetPlayersByCompetitiveRange(MixEnum.Phoenix, ChartType.Single, It.IsAny<double>(), .5,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { competitor });
 

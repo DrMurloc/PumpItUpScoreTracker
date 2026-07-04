@@ -35,10 +35,10 @@ public sealed class EFWeeklyTourneyRepositoryTests : IAsyncLifetime
         var chartA = Guid.NewGuid();
         var chartB = Guid.NewGuid();
         var writer = BuildRepository();
-        await writer.RegisterWeeklyChart(new WeeklyTournamentChart(chartA, Expiration), CancellationToken.None);
-        await writer.RegisterWeeklyChart(new WeeklyTournamentChart(chartB, Expiration), CancellationToken.None);
+        await writer.RegisterWeeklyChart(MixEnum.Phoenix, new WeeklyTournamentChart(chartA, Expiration), CancellationToken.None);
+        await writer.RegisterWeeklyChart(MixEnum.Phoenix, new WeeklyTournamentChart(chartB, Expiration), CancellationToken.None);
 
-        var charts = (await BuildRepository().GetWeeklyCharts(CancellationToken.None)).ToList();
+        var charts = (await BuildRepository().GetWeeklyCharts(MixEnum.Phoenix, CancellationToken.None)).ToList();
 
         Assert.Equal(2, charts.Count);
         Assert.Contains(charts, c => c.ChartId == chartA);
@@ -55,9 +55,9 @@ public sealed class EFWeeklyTourneyRepositoryTests : IAsyncLifetime
             IsBroken: false, PhotoUrl: new Uri("https://example.invalid/photo.png"),
             CompetitiveLevel: 18.5);
 
-        await BuildRepository().SaveEntry(entry, CancellationToken.None);
+        await BuildRepository().SaveEntry(MixEnum.Phoenix, entry, CancellationToken.None);
 
-        var entries = (await BuildRepository().GetEntries(chartId: null, CancellationToken.None)).ToList();
+        var entries = (await BuildRepository().GetEntries(MixEnum.Phoenix, chartId: null, CancellationToken.None)).ToList();
 
         Assert.Single(entries);
         Assert.Equal(userId, entries[0].UserId);
@@ -75,12 +75,12 @@ public sealed class EFWeeklyTourneyRepositoryTests : IAsyncLifetime
         var userId = Guid.NewGuid();
         var chartId = Guid.NewGuid();
         var writer = BuildRepository();
-        await writer.SaveEntry(new WeeklyTournamentEntry(userId, chartId, 900000,
+        await writer.SaveEntry(MixEnum.Phoenix, new WeeklyTournamentEntry(userId, chartId, 900000,
             PhoenixPlate.MarvelousGame, false, null, 17.0), CancellationToken.None);
-        await writer.SaveEntry(new WeeklyTournamentEntry(userId, chartId, 970000,
+        await writer.SaveEntry(MixEnum.Phoenix, new WeeklyTournamentEntry(userId, chartId, 970000,
             PhoenixPlate.SuperbGame, false, null, 18.0), CancellationToken.None);
 
-        var entries = (await BuildRepository().GetEntries(chartId, CancellationToken.None)).ToList();
+        var entries = (await BuildRepository().GetEntries(MixEnum.Phoenix, chartId, CancellationToken.None)).ToList();
 
         Assert.Single(entries);
         Assert.Equal(970000, (int)entries[0].Score);
@@ -95,12 +95,12 @@ public sealed class EFWeeklyTourneyRepositoryTests : IAsyncLifetime
         var chartA = Guid.NewGuid();
         var chartB = Guid.NewGuid();
         var writer = BuildRepository();
-        await writer.SaveEntry(new WeeklyTournamentEntry(userId, chartA, 900000,
+        await writer.SaveEntry(MixEnum.Phoenix, new WeeklyTournamentEntry(userId, chartA, 900000,
             PhoenixPlate.MarvelousGame, false, null, 17.0), CancellationToken.None);
-        await writer.SaveEntry(new WeeklyTournamentEntry(userId, chartB, 950000,
+        await writer.SaveEntry(MixEnum.Phoenix, new WeeklyTournamentEntry(userId, chartB, 950000,
             PhoenixPlate.SuperbGame, false, null, 18.0), CancellationToken.None);
 
-        var onChartA = (await BuildRepository().GetEntries(chartA, CancellationToken.None)).ToList();
+        var onChartA = (await BuildRepository().GetEntries(MixEnum.Phoenix, chartA, CancellationToken.None)).ToList();
 
         Assert.Single(onChartA);
         Assert.Equal(chartA, onChartA[0].ChartId);
@@ -112,14 +112,14 @@ public sealed class EFWeeklyTourneyRepositoryTests : IAsyncLifetime
         var userId = Guid.NewGuid();
         var chartId = Guid.NewGuid();
         var writer = BuildRepository();
-        await writer.RegisterWeeklyChart(new WeeklyTournamentChart(chartId, Expiration), CancellationToken.None);
-        await writer.SaveEntry(new WeeklyTournamentEntry(userId, chartId, 900000,
+        await writer.RegisterWeeklyChart(MixEnum.Phoenix, new WeeklyTournamentChart(chartId, Expiration), CancellationToken.None);
+        await writer.SaveEntry(MixEnum.Phoenix, new WeeklyTournamentEntry(userId, chartId, 900000,
             PhoenixPlate.MarvelousGame, false, null, 17.0), CancellationToken.None);
 
-        await writer.ClearTheBoard(CancellationToken.None);
+        await writer.ClearTheBoard(MixEnum.Phoenix, CancellationToken.None);
 
-        var charts = (await BuildRepository().GetWeeklyCharts(CancellationToken.None)).ToList();
-        var entries = (await BuildRepository().GetEntries(null, CancellationToken.None)).ToList();
+        var charts = (await BuildRepository().GetWeeklyCharts(MixEnum.Phoenix, CancellationToken.None)).ToList();
+        var entries = (await BuildRepository().GetEntries(MixEnum.Phoenix, null, CancellationToken.None)).ToList();
 
         Assert.Empty(charts);
         Assert.Empty(entries);
@@ -131,14 +131,45 @@ public sealed class EFWeeklyTourneyRepositoryTests : IAsyncLifetime
         var existing = Guid.NewGuid();
         var newChart = Guid.NewGuid();
         var writer = BuildRepository();
-        await writer.WriteAlreadyPlayedCharts(new[] { existing }, CancellationToken.None);
-        await writer.WriteAlreadyPlayedCharts(new[] { existing, newChart }, CancellationToken.None);
+        await writer.WriteAlreadyPlayedCharts(MixEnum.Phoenix, new[] { existing }, CancellationToken.None);
+        await writer.WriteAlreadyPlayedCharts(MixEnum.Phoenix, new[] { existing, newChart }, CancellationToken.None);
 
-        var allCharts = (await BuildRepository().GetAlreadyPlayedCharts(CancellationToken.None)).ToList();
+        var allCharts = (await BuildRepository().GetAlreadyPlayedCharts(MixEnum.Phoenix, CancellationToken.None)).ToList();
 
         Assert.Equal(2, allCharts.Count);
         Assert.Contains(existing, allCharts);
         Assert.Contains(newChart, allCharts);
+    }
+
+    [Fact]
+    public async Task BoardsAreIsolatedPerMix()
+    {
+        // Parallel boards per mix (locked decision): clearing or reading one mix's board
+        // never touches the other's charts or entries.
+        var userId = Guid.NewGuid();
+        var phoenixChart = Guid.NewGuid();
+        var phoenix2Chart = Guid.NewGuid();
+        var writer = BuildRepository();
+        await writer.RegisterWeeklyChart(MixEnum.Phoenix, new WeeklyTournamentChart(phoenixChart, Expiration),
+            CancellationToken.None);
+        await writer.RegisterWeeklyChart(MixEnum.Phoenix2, new WeeklyTournamentChart(phoenix2Chart, Expiration),
+            CancellationToken.None);
+        await writer.SaveEntry(MixEnum.Phoenix, new WeeklyTournamentEntry(userId, phoenixChart, 900000,
+            PhoenixPlate.MarvelousGame, false, null, 17.0), CancellationToken.None);
+        await writer.SaveEntry(MixEnum.Phoenix2, new WeeklyTournamentEntry(userId, phoenix2Chart, 950000,
+            PhoenixPlate.SuperbGame, false, null, 18.0), CancellationToken.None);
+
+        await writer.ClearTheBoard(MixEnum.Phoenix, CancellationToken.None);
+
+        var reader = BuildRepository();
+        Assert.Empty(await reader.GetWeeklyCharts(MixEnum.Phoenix, CancellationToken.None));
+        Assert.Empty(await reader.GetEntries(MixEnum.Phoenix, null, CancellationToken.None));
+        var phoenix2Charts = (await reader.GetWeeklyCharts(MixEnum.Phoenix2, CancellationToken.None)).ToList();
+        var phoenix2Entries = (await reader.GetEntries(MixEnum.Phoenix2, null, CancellationToken.None)).ToList();
+        Assert.Single(phoenix2Charts);
+        Assert.Equal(phoenix2Chart, phoenix2Charts[0].ChartId);
+        Assert.Single(phoenix2Entries);
+        Assert.Equal(950000, (int)phoenix2Entries[0].Score);
     }
 
     [Fact]
@@ -153,9 +184,9 @@ public sealed class EFWeeklyTourneyRepositoryTests : IAsyncLifetime
             CompetitiveLevel: 18.5, Score: PhoenixScore.From(970000),
             Plate: PhoenixPlate.SuperbGame, IsBroken: false);
 
-        await BuildRepository().WriteHistories(new[] { history }, CancellationToken.None);
+        await BuildRepository().WriteHistories(MixEnum.Phoenix, new[] { history }, CancellationToken.None);
 
-        var pastEntries = (await BuildRepository().GetPastEntries(date, CancellationToken.None)).ToList();
+        var pastEntries = (await BuildRepository().GetPastEntries(MixEnum.Phoenix, date, CancellationToken.None)).ToList();
 
         Assert.Single(pastEntries);
         Assert.Equal(userId, pastEntries[0].UserId);

@@ -7,7 +7,8 @@ namespace ScoreTracker.PlayerProgress.Contracts.Queries
 {
     [ExcludeFromCodeCoverage]
     public sealed record GetTop50ForPlayerQuery
-        (Guid UserId, ChartType? ChartType, int Count = 50) : IQuery<IEnumerable<RecordedPhoenixScore>>
+        (Guid UserId, ChartType? ChartType, int Count = 50, MixEnum Mix = MixEnum.Phoenix)
+        : IQuery<IEnumerable<RecordedPhoenixScore>>
     {
     }
 }

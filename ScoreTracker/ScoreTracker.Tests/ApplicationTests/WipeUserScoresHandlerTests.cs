@@ -45,16 +45,24 @@ public sealed class WipeUserScoresHandlerTests
 
         phoenix.Verify(p => p.DeleteAllForUser(userId, It.IsAny<CancellationToken>()), Times.Once);
         xx.Verify(p => p.DeleteAllForUser(userId, It.IsAny<CancellationToken>()), Times.Once);
-        stats.Verify(p => p.DeleteStats(userId, It.IsAny<CancellationToken>()), Times.Once);
-        titles.Verify(p => p.DeleteHighestTitle(userId, It.IsAny<CancellationToken>()), Times.Once);
         history.Verify(p => p.DeleteHistoryForUser(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
 
-        bus.Verify(
-            b => b.Publish(
-                It.Is<PlayerScoresUpdatedEvent>(e =>
-                    e.UserId == userId && e.Changes.Count == 0 && e.Mix == MixEnum.Phoenix),
-                It.IsAny<CancellationToken>()),
-            Times.Once);
+        // Derived per-mix state is cleared — and its consumers notified — for every
+        // parallel mix (Phoenix and Phoenix2), never for legacy XX.
+        foreach (var mix in new[] { MixEnum.Phoenix, MixEnum.Phoenix2 })
+        {
+            stats.Verify(p => p.DeleteStats(mix, userId, It.IsAny<CancellationToken>()), Times.Once);
+            titles.Verify(p => p.DeleteHighestTitle(mix, userId, It.IsAny<CancellationToken>()), Times.Once);
+            bus.Verify(
+                b => b.Publish(
+                    It.Is<PlayerScoresUpdatedEvent>(e =>
+                        e.UserId == userId && e.Changes.Count == 0 && e.Mix == mix),
+                    It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        bus.Verify(b => b.Publish(It.Is<PlayerScoresUpdatedEvent>(e => e.Mix == MixEnum.XX),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

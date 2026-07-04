@@ -39,19 +39,18 @@ namespace ScoreTracker.ChartIntelligence.Application
             _scoringLevels = scoringLevels;
         }
 
-        public async Task UpdateChartLetterLevel(ChartType chartType, DifficultyLevel level,
+        public async Task UpdateChartLetterLevel(MixEnum mix, ChartType chartType, DifficultyLevel level,
             CancellationToken cancellationToken = default)
         {
             var charts =
-                (await _chartRepository.GetCharts(MixEnum.Phoenix, level, chartType,
+                (await _chartRepository.GetCharts(mix, level, chartType,
                     cancellationToken: cancellationToken))
                 .ToArray();
             if (!charts.Any()) return;
-            // Phoenix until per-mix computation lands (plan doc, saga commit).
-            var scores = (await _scores.GetScores(MixEnum.Phoenix, chartType, level, cancellationToken))
+            var scores = (await _scores.GetScores(mix, chartType, level, cancellationToken))
                 .Where(s => s.Record is { IsBroken: false, Score: not null }).ToArray();
             if (!scores.Any()) return;
-            var stats = (await _playerStats.GetStats(scores.Select(p => p.UserId).Distinct(), cancellationToken))
+            var stats = (await _playerStats.GetStats(mix, scores.Select(p => p.UserId).Distinct(), cancellationToken))
                 .ToDictionary(s => s.UserId);
             var results = charts.ToDictionary(c => c.Id,
                 c => (IDictionary<ParagonLevel, double>)new Dictionary<ParagonLevel, double>());
@@ -97,13 +96,14 @@ namespace ScoreTracker.ChartIntelligence.Application
         {
             foreach (var level in DifficultyLevel.All)
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double, ChartType.CoOp })
-                await UpdateChartLetterLevel(chartType, level, context.CancellationToken);
+                await UpdateChartLetterLevel(context.Message.Mix, chartType, level, context.CancellationToken);
         }
 
         public async Task Consume(ConsumeContext<RecalculateScoringDifficultyCommand> context)
         {
             var cancellationToken = context.CancellationToken;
-            var charts = (await _chartRepository.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
+            var mix = context.Message.Mix;
+            var charts = (await _chartRepository.GetCharts(mix, cancellationToken: cancellationToken))
                 .ToDictionary(c => c.Id);
             foreach (var level in DifficultyLevel.All)
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
@@ -116,15 +116,14 @@ namespace ScoreTracker.ChartIntelligence.Application
 
                 var phoenixScores = new List<(Guid UserId, RecordedPhoenixScore Record)>();
                 for (var l = min; l <= max; l++)
-                    // Phoenix until per-mix computation lands (plan doc, saga commit).
                     phoenixScores.AddRange(
-                        (await _scores.GetScores(MixEnum.Phoenix, chartType, l, context.CancellationToken)).Where(s =>
+                        (await _scores.GetScores(mix, chartType, l, context.CancellationToken)).Where(s =>
                             s.Record.Score != null));
                 var userIds = phoenixScores.Select(u => u.UserId).Distinct().ToArray();
                 var playerWeights = new Dictionary<Guid, IDictionary<DifficultyLevel, double>>();
                 foreach (var userId in userIds)
                 {
-                    var stats = await _playerStats.GetStats(userId, CancellationToken.None);
+                    var stats = await _playerStats.GetStats(mix, userId, CancellationToken.None);
                     var competitiveLevel = chartType == ChartType.Single
                         ? stats.SinglesCompetitiveLevel
                         : stats.DoublesCompetitiveLevel;
@@ -175,7 +174,7 @@ namespace ScoreTracker.ChartIntelligence.Application
                 if (!levelAverages.Any())
                 {
                     foreach (var kv in chartScores.Where(c => charts[c.Key].Level == level))
-                        await _scoringLevels.SaveScoringLevel(MixEnum.Phoenix, kv.Key, null, context.CancellationToken);
+                        await _scoringLevels.SaveScoringLevel(mix, kv.Key, null, context.CancellationToken);
 
                     continue;
                 }
@@ -240,7 +239,7 @@ namespace ScoreTracker.ChartIntelligence.Application
                 }
 
                 foreach (var cl in calculatedLevels)
-                    await _scoringLevels.SaveScoringLevel(MixEnum.Phoenix, cl.Key, cl.Value, cancellationToken);
+                    await _scoringLevels.SaveScoringLevel(mix, cl.Key, cl.Value, cancellationToken);
             }
         }
 

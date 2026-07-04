@@ -892,7 +892,7 @@ function(val, index) {
     private async Task CalculateVariance(ChartType chartType, DifficultyLevel level)
     {
         var scores = (await Records.GetScores(MixEnum.Phoenix, chartType, level, CancellationToken.None)).Select(s => (userId: s.UserId, record: s.Record)).ToArray();
-        var players = (await PlayerStats.GetStats(scores.Select(s => s.userId).Distinct().ToArray(), CancellationToken.None))
+        var players = (await PlayerStats.GetStats(MixEnum.Phoenix, scores.Select(s => s.userId).Distinct().ToArray(), CancellationToken.None))
             .Where(p => Math.Abs((_chartType == ChartType.Single ? p.SinglesCompetitiveLevel : p.DoublesCompetitiveLevel) - level) < 2.0).ToDictionary(p => p.UserId);
 
         var chartGroups = scores.GroupBy(r => r.record.ChartId).ToDictionary(g => g.Key, g => g.Where(k => players.ContainsKey(k.userId) && k.record is { Score: not null, IsBroken: false }).Select(k => k.record!.Score).ToArray());
@@ -1462,10 +1462,10 @@ function(val, index) {
         {
             o.SlidingExpiration = TimeSpan.FromHours(1);
 
-            var myLevel = await Titles.GetCurrentTitleLevel(myUserId, CancellationToken.None);
-            var lowLevelTask = TierLists.GetUsersOnLevel(myLevel - 1, CancellationToken.None);
-            var onMyLevelTask = TierLists.GetUsersOnLevel(myLevel, CancellationToken.None);
-            var highLevelTask = TierLists.GetUsersOnLevel(myLevel + 1, CancellationToken.None);
+            var myLevel = await Titles.GetCurrentTitleLevel(MixEnum.Phoenix, myUserId, CancellationToken.None);
+            var lowLevelTask = TierLists.GetUsersOnLevel(MixEnum.Phoenix, myLevel - 1, CancellationToken.None);
+            var onMyLevelTask = TierLists.GetUsersOnLevel(MixEnum.Phoenix, myLevel, CancellationToken.None);
+            var highLevelTask = TierLists.GetUsersOnLevel(MixEnum.Phoenix, myLevel + 1, CancellationToken.None);
             await Task.WhenAll(lowLevelTask, onMyLevelTask, highLevelTask);
 
             var userIds = lowLevelTask.Result

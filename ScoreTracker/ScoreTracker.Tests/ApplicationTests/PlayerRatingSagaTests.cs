@@ -37,7 +37,7 @@ public sealed class PlayerRatingSagaTests
 
         await saga.Consume(BuildContext(new UserCreatedEvent(userId)));
 
-        stats.Verify(s => s.SaveStats(userId,
+        stats.Verify(s => s.SaveStats(MixEnum.Phoenix, userId,
             It.Is<PlayerStatsRecord>(p => p.UserId == userId && p.TotalRating == 0
                                           && p.ClearCount == 0 && p.HighestLevel == DifficultyLevel.From(1)),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -142,7 +142,7 @@ public sealed class PlayerRatingSagaTests
     {
         var userId = Guid.NewGuid();
         var stats = new Mock<IPlayerStatsRepository>();
-        stats.Setup(s => s.GetStats(userId, It.IsAny<CancellationToken>())).ReturnsAsync(ZeroStats(userId));
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>())).ReturnsAsync(ZeroStats(userId));
         var bus = new Mock<IBus>();
         var mediator = new Mock<IMediator>();
         var saga = BuildSaga(charts: ChartsMockReturning(Array.Empty<Chart>()),
@@ -151,7 +151,7 @@ public sealed class PlayerRatingSagaTests
 
         await saga.Handle(new RecalculateStatsCommand(userId), CancellationToken.None);
 
-        stats.Verify(s => s.SaveStats(userId, It.IsAny<PlayerStatsRecord>(),
+        stats.Verify(s => s.SaveStats(MixEnum.Phoenix, userId, It.IsAny<PlayerStatsRecord>(),
             It.IsAny<CancellationToken>()), Times.Once);
         bus.Verify(b => b.Publish(
             It.Is<PlayerStatsUpdatedEvent>(e => e.UserId == userId && e.Mix == MixEnum.Phoenix),
@@ -167,7 +167,7 @@ public sealed class PlayerRatingSagaTests
         var userId = Guid.NewGuid();
         var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var stats = new Mock<IPlayerStatsRepository>();
-        stats.Setup(s => s.GetStats(userId, It.IsAny<CancellationToken>())).ReturnsAsync(ZeroStats(userId));
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>())).ReturnsAsync(ZeroStats(userId));
         var bus = new Mock<IBus>();
         var saga = BuildSaga(
             charts: ChartsMockReturning(new[] { single }),
@@ -189,7 +189,7 @@ public sealed class PlayerRatingSagaTests
         var stats = new Mock<IPlayerStatsRepository>();
         // Old stats already at high values — with no new scores, new stats are all 0,
         // so nothing exceeds old stats and no PlayerRatingsImprovedEvent should fire.
-        stats.Setup(s => s.GetStats(userId, It.IsAny<CancellationToken>()))
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PlayerStatsRecord(userId, TotalRating: 999999, HighestLevel: 25,
                 ClearCount: 1000, CoOpRating: 999999, CoOpScore: 1000000, SkillRating: 999999, SkillScore: 1000000,
                 SkillLevel: 25, SinglesRating: 999999, SinglesScore: 1000000, SinglesLevel: 25,
@@ -249,7 +249,7 @@ public sealed class PlayerRatingSagaTests
         var userId = Guid.NewGuid();
         var chartId = Guid.NewGuid();
         var stats = new Mock<IPlayerStatsRepository>();
-        stats.Setup(s => s.GetStats(userId, It.IsAny<CancellationToken>())).ReturnsAsync(ZeroStats(userId));
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>())).ReturnsAsync(ZeroStats(userId));
         var scores = new Mock<IScoreReader>();
         scores.Setup(s => s.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
@@ -266,7 +266,7 @@ public sealed class PlayerRatingSagaTests
             new[] { new PlayerScoresUpdatedEvent.ScoreChange(chartId, true, null, 950000, null, false) })));
 
         // RecalculateStatsCommand path → SaveStats called; RecalculatePumbilityCommand path → UpdateScoreStats called.
-        stats.Verify(s => s.SaveStats(userId, It.IsAny<PlayerStatsRecord>(),
+        stats.Verify(s => s.SaveStats(MixEnum.Phoenix, userId, It.IsAny<PlayerStatsRecord>(),
             It.IsAny<CancellationToken>()), Times.Once);
         recordStats.Verify(s => s.UpdateScoreStats(MixEnum.Phoenix, userId,
             It.IsAny<IEnumerable<PhoenixRecordStats>>(),

@@ -151,11 +151,11 @@
 
         _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
 
-        var myLevel = await Titles.GetCurrentTitleLevel(CurrentUser.User.Id, CancellationToken.None);
+        var myLevel = await Titles.GetCurrentTitleLevel(MixEnum.Phoenix, CurrentUser.User.Id, CancellationToken.None);
 
-        var userIds = (await TierLists.GetUsersOnLevel(myLevel - 1, CancellationToken.None))
-            .Concat(await TierLists.GetUsersOnLevel(myLevel, CancellationToken.None))
-            .Concat(await TierLists.GetUsersOnLevel(myLevel + 1, CancellationToken.None))
+        var userIds = (await TierLists.GetUsersOnLevel(MixEnum.Phoenix, myLevel - 1, CancellationToken.None))
+            .Concat(await TierLists.GetUsersOnLevel(MixEnum.Phoenix, myLevel, CancellationToken.None))
+            .Concat(await TierLists.GetUsersOnLevel(MixEnum.Phoenix, myLevel + 1, CancellationToken.None))
             .Where(u => u != CurrentUser.User.Id);
         var userTiersLists = new Dictionary<Guid, IEnumerable<SongTierListEntry>>();
         _myTierList = (await Mediator.Send(new GetMyRelativeTierListQuery(_type, _level)))

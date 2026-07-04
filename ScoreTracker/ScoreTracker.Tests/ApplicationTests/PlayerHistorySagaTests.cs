@@ -39,7 +39,7 @@ public sealed class PlayerHistorySagaTests
 
         await saga.Consume(ctx.Object);
 
-        history.Verify(h => h.WriteHistory(
+        history.Verify(h => h.WriteHistory(MixEnum.Phoenix,
             It.Is<PlayerRatingRecord>(r => r.UserId == userId
                                             && r.Date == now
                                             && r.CompetitiveLevel == 17.5

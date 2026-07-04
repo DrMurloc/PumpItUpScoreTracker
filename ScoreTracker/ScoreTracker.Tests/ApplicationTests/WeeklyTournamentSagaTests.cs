@@ -33,7 +33,7 @@ public sealed class WeeklyTournamentSagaTests
     public async Task UpdateWeeklyChartsExitsEarlyWhenAnyCurrentWeekIsStillActive()
     {
         var weeklyTournies = new Mock<IWeeklyTournamentRepository>();
-        weeklyTournies.Setup(w => w.GetWeeklyCharts(It.IsAny<CancellationToken>()))
+        weeklyTournies.Setup(w => w.GetWeeklyCharts(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 // Expiration date in the future relative to `Now` → week still active.
@@ -43,10 +43,33 @@ public sealed class WeeklyTournamentSagaTests
 
         await saga.Consume(BuildContext(new RotateWeeklyChartsCommand()));
 
-        weeklyTournies.Verify(w => w.ClearTheBoard(It.IsAny<CancellationToken>()), Times.Never);
-        weeklyTournies.Verify(w => w.RegisterWeeklyChart(It.IsAny<WeeklyTournamentChart>(),
+        weeklyTournies.Verify(w => w.ClearTheBoard(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()), Times.Never);
+        weeklyTournies.Verify(w => w.RegisterWeeklyChart(It.IsAny<MixEnum>(), It.IsAny<WeeklyTournamentChart>(),
             It.IsAny<CancellationToken>()), Times.Never);
-        weeklyTournies.Verify(w => w.WriteHistories(It.IsAny<IEnumerable<UserTourneyHistory>>(),
+        weeklyTournies.Verify(w => w.WriteHistories(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<UserTourneyHistory>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateWeeklyChartsSkipsRotationEntirelyWhenTheMixHasNoCharts()
+    {
+        // Parallel boards per mix: a rotation message for a mix with no chart catalog yet
+        // (Phoenix 2 before its seed) no-ops without touching histories or the board.
+        var weeklyTournies = new Mock<IWeeklyTournamentRepository>();
+        weeklyTournies.Setup(w => w.GetWeeklyCharts(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<WeeklyTournamentChart>());
+        var charts = new Mock<IChartRepository>();
+        charts.Setup(c => c.GetCharts(MixEnum.Phoenix2, It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
+                It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Chart>());
+        var saga = BuildSaga(charts: charts, weeklyTournies: weeklyTournies);
+
+        await saga.Consume(BuildContext(new RotateWeeklyChartsCommand(MixEnum.Phoenix2)));
+
+        weeklyTournies.Verify(w => w.ClearTheBoard(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()), Times.Never);
+        weeklyTournies.Verify(w => w.RegisterWeeklyChart(It.IsAny<MixEnum>(), It.IsAny<WeeklyTournamentChart>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        weeklyTournies.Verify(w => w.WriteHistories(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<UserTourneyHistory>>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -58,7 +81,7 @@ public sealed class WeeklyTournamentSagaTests
         var ctx = ExpiredWeekContext();
         var entryUser = Guid.NewGuid();
         var entryChart = Guid.NewGuid();
-        ctx.WeeklyTournies.Setup(w => w.GetEntries(null, It.IsAny<CancellationToken>()))
+        ctx.WeeklyTournies.Setup(w => w.GetEntries(MixEnum.Phoenix, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new WeeklyTournamentEntry(entryUser, entryChart, 950000, PhoenixPlate.SuperbGame,
@@ -67,11 +90,11 @@ public sealed class WeeklyTournamentSagaTests
 
         await ctx.Saga.Consume(BuildContext(new RotateWeeklyChartsCommand()));
 
-        ctx.WeeklyTournies.Verify(w => w.WriteHistories(
+        ctx.WeeklyTournies.Verify(w => w.WriteHistories(MixEnum.Phoenix,
             It.Is<IEnumerable<UserTourneyHistory>>(hs => hs.Any(h => h.UserId == entryUser
                                                                     && h.ChartId == entryChart)),
             It.IsAny<CancellationToken>()), Times.Once);
-        ctx.WeeklyTournies.Verify(w => w.ClearTheBoard(It.IsAny<CancellationToken>()), Times.Once);
+        ctx.WeeklyTournies.Verify(w => w.ClearTheBoard(MixEnum.Phoenix, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -84,7 +107,7 @@ public sealed class WeeklyTournamentSagaTests
 
         await ctx.Saga.Consume(BuildContext(new RotateWeeklyChartsCommand()));
 
-        ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(
+        ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(MixEnum.Phoenix,
             It.Is<WeeklyTournamentChart>(c => c.ExpirationDate == nextMonday3am),
             It.IsAny<CancellationToken>()), Times.Exactly(3));
     }
@@ -97,15 +120,15 @@ public sealed class WeeklyTournamentSagaTests
         var unplayed = ctx.Charts["coop3"];
         var played = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(3).WithSongName("played").Build();
         ctx.GivenChartList(ReplaceCoOp3WithBoth(ctx.Charts, played));
-        ctx.WeeklyTournies.Setup(w => w.GetAlreadyPlayedCharts(It.IsAny<CancellationToken>()))
+        ctx.WeeklyTournies.Setup(w => w.GetAlreadyPlayedCharts(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { played.Id });
 
         await ctx.Saga.Consume(BuildContext(new RotateWeeklyChartsCommand()));
 
-        ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(
+        ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(MixEnum.Phoenix,
             It.Is<WeeklyTournamentChart>(c => c.ChartId == unplayed.Id),
             It.IsAny<CancellationToken>()), Times.Once);
-        ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(
+        ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(It.IsAny<MixEnum>(),
             It.Is<WeeklyTournamentChart>(c => c.ChartId == played.Id),
             It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -120,16 +143,16 @@ public sealed class WeeklyTournamentSagaTests
         var coop3 = ctx.Charts["coop3"];
         var coop4 = ctx.Charts["coop4"];
         var coop5 = ctx.Charts["coop5"];
-        ctx.WeeklyTournies.Setup(w => w.GetAlreadyPlayedCharts(It.IsAny<CancellationToken>()))
+        ctx.WeeklyTournies.Setup(w => w.GetAlreadyPlayedCharts(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { coop3.Id, coop4.Id, coop5.Id });
 
         await ctx.Saga.Consume(BuildContext(new RotateWeeklyChartsCommand()));
 
-        ctx.WeeklyTournies.Verify(w => w.ClearAlreadyPlayedCharts(
+        ctx.WeeklyTournies.Verify(w => w.ClearAlreadyPlayedCharts(MixEnum.Phoenix,
             It.Is<IEnumerable<Guid>>(ids => ids.Contains(coop3.Id) && ids.Contains(coop4.Id)
                                              && ids.Contains(coop5.Id)),
             It.IsAny<CancellationToken>()), Times.Once);
-        ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(
+        ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(MixEnum.Phoenix,
             It.Is<WeeklyTournamentChart>(c => c.ChartId == coop3.Id || c.ChartId == coop4.Id
                                               || c.ChartId == coop5.Id),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -144,12 +167,12 @@ public sealed class WeeklyTournamentSagaTests
         // chart can ONLY be picked if the merge actually happened.
         var ctx = ExpiredWeekContext();
         var coop4 = ctx.Charts["coop4"];
-        ctx.WeeklyTournies.Setup(w => w.GetAlreadyPlayedCharts(It.IsAny<CancellationToken>()))
+        ctx.WeeklyTournies.Setup(w => w.GetAlreadyPlayedCharts(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { ctx.Charts["coop3"].Id, ctx.Charts["coop5"].Id });
 
         await ctx.Saga.Consume(BuildContext(new RotateWeeklyChartsCommand()));
 
-        ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(
+        ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(MixEnum.Phoenix,
             It.Is<WeeklyTournamentChart>(c => c.ChartId == coop4.Id),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -159,7 +182,7 @@ public sealed class WeeklyTournamentSagaTests
     {
         var someOtherChartId = Guid.NewGuid();
         var weeklyTournies = new Mock<IWeeklyTournamentRepository>();
-        weeklyTournies.Setup(w => w.GetWeeklyCharts(It.IsAny<CancellationToken>()))
+        weeklyTournies.Setup(w => w.GetWeeklyCharts(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { new WeeklyTournamentChart(someOtherChartId, Now.AddDays(2)) });
         var saga = BuildSaga(weeklyTournies: weeklyTournies);
 
@@ -168,7 +191,7 @@ public sealed class WeeklyTournamentSagaTests
             new RegisterWeeklyChartScoreCommand(Entry(requestedChartId, score: 950000)),
             CancellationToken.None);
 
-        weeklyTournies.Verify(w => w.SaveEntry(It.IsAny<WeeklyTournamentEntry>(),
+        weeklyTournies.Verify(w => w.SaveEntry(It.IsAny<MixEnum>(), It.IsAny<WeeklyTournamentEntry>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -186,7 +209,7 @@ public sealed class WeeklyTournamentSagaTests
             CancellationToken.None);
 
         // Single chart → uses SinglesCompetitiveLevel.
-        ctx.WeeklyTournies.Verify(w => w.SaveEntry(
+        ctx.WeeklyTournies.Verify(w => w.SaveEntry(MixEnum.Phoenix,
             It.Is<WeeklyTournamentEntry>(e => e.UserId == userId && e.Score == (PhoenixScore)950000
                                               && e.CompetitiveLevel == 18.5),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -208,7 +231,7 @@ public sealed class WeeklyTournamentSagaTests
             new RegisterWeeklyChartScoreCommand(Entry(chart.Id, score: 800000, userId: userId)),
             CancellationToken.None);
 
-        ctx.WeeklyTournies.Verify(w => w.SaveEntry(
+        ctx.WeeklyTournies.Verify(w => w.SaveEntry(MixEnum.Phoenix,
             It.Is<WeeklyTournamentEntry>(e => e.UserId == userId && e.Score == (PhoenixScore)950000),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -229,7 +252,7 @@ public sealed class WeeklyTournamentSagaTests
             new RegisterWeeklyChartScoreCommand(Entry(chart.Id, score: 990000, userId: userId)),
             CancellationToken.None);
 
-        ctx.WeeklyTournies.Verify(w => w.SaveEntry(
+        ctx.WeeklyTournies.Verify(w => w.SaveEntry(MixEnum.Phoenix,
             It.Is<WeeklyTournamentEntry>(e => e.UserId == userId && e.Score == (PhoenixScore)990000),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -250,7 +273,7 @@ public sealed class WeeklyTournamentSagaTests
             new RegisterWeeklyChartScoreCommand(Entry(chart.Id, score: 950000, userId: userId, isBroken: false)),
             CancellationToken.None);
 
-        ctx.WeeklyTournies.Verify(w => w.SaveEntry(
+        ctx.WeeklyTournies.Verify(w => w.SaveEntry(MixEnum.Phoenix,
             It.Is<WeeklyTournamentEntry>(e => e.UserId == userId && !e.IsBroken),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -273,7 +296,8 @@ public sealed class WeeklyTournamentSagaTests
 
         ctx.Bus.Verify(b => b.Publish(
             It.Is<UserWeeklyChartsProgressedEvent>(e => e.UserId == userId && e.ChartId == chart.Id
-                                                       && e.Score == 950000 && e.Place == 1),
+                                                       && e.Score == 950000 && e.Place == 1
+                                                       && e.Mix == MixEnum.Phoenix),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -317,22 +341,22 @@ public sealed class WeeklyTournamentSagaTests
                 new ScoreImportCompletedEvent.ImportedScore(offBoardChartId, 999000, "PerfectGame", false)
             })));
 
-        ctx.WeeklyTournies.Verify(w => w.SaveEntry(
+        ctx.WeeklyTournies.Verify(w => w.SaveEntry(MixEnum.Phoenix,
             It.Is<WeeklyTournamentEntry>(e => e.UserId == userId && e.ChartId == chart.Id
                                               && e.Score == (PhoenixScore)950000),
             It.IsAny<CancellationToken>()), Times.Once);
-        ctx.WeeklyTournies.Verify(w => w.SaveEntry(
+        ctx.WeeklyTournies.Verify(w => w.SaveEntry(It.IsAny<MixEnum>(),
             It.Is<WeeklyTournamentEntry>(e => e.ChartId == offBoardChartId),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task ScoreImportForAnotherMixIsIgnored()
+    public async Task ScoreImportRegistersEntriesOntoTheImportingMixesBoard()
     {
-        // The weekly board is Phoenix-only until per-mix rotation lands (plan doc,
-        // saga commit): a Phoenix 2 import must not place entries on it.
+        // Parallel boards per mix: a Phoenix 2 import consults the Phoenix 2 board and
+        // writes its entry there — never onto the Phoenix board.
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
-        var ctx = new HandlerContext(chart);
+        var ctx = new HandlerContext(chart, MixEnum.Phoenix2);
         ctx.GivenStats(singlesCompetitive: 18.5, doublesCompetitive: 12.0);
         ctx.GivenNoExistingEntries(chart.Id);
         var userId = Guid.NewGuid();
@@ -345,12 +369,17 @@ public sealed class WeeklyTournamentSagaTests
                 new ScoreImportCompletedEvent.ImportedScore(chart.Id, 950000, "SuperbGame", false)
             })));
 
-        ctx.WeeklyTournies.Verify(w => w.SaveEntry(It.IsAny<WeeklyTournamentEntry>(),
+        ctx.WeeklyTournies.Verify(w => w.SaveEntry(MixEnum.Phoenix2,
+            It.Is<WeeklyTournamentEntry>(e => e.UserId == userId && e.ChartId == chart.Id
+                                              && e.Score == (PhoenixScore)950000),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.WeeklyTournies.Verify(w => w.SaveEntry(MixEnum.Phoenix, It.IsAny<WeeklyTournamentEntry>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private sealed class HandlerContext
     {
+        private readonly MixEnum _mix;
         public Mock<IChartRepository> Charts { get; } = new();
         public Mock<IWeeklyTournamentRepository> WeeklyTournies { get; } = new();
         public Mock<IPlayerStatsReader> PlayerStats { get; } = new();
@@ -359,11 +388,12 @@ public sealed class WeeklyTournamentSagaTests
         public Mock<IBus> Bus { get; } = new();
         public WeeklyTournamentSaga Saga { get; }
 
-        public HandlerContext(Chart chart)
+        public HandlerContext(Chart chart, MixEnum mix = MixEnum.Phoenix)
         {
-            WeeklyTournies.Setup(w => w.GetWeeklyCharts(It.IsAny<CancellationToken>()))
+            _mix = mix;
+            WeeklyTournies.Setup(w => w.GetWeeklyCharts(mix, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new[] { new WeeklyTournamentChart(chart.Id, Now.AddDays(2)) });
-            Charts.Setup(c => c.GetCharts(MixEnum.Phoenix, It.IsAny<DifficultyLevel?>(),
+            Charts.Setup(c => c.GetCharts(mix, It.IsAny<DifficultyLevel?>(),
                     It.IsAny<ChartType?>(),
                     It.Is<IEnumerable<Guid>>(ids => ids != null),
                     It.IsAny<CancellationToken>()))
@@ -375,7 +405,7 @@ public sealed class WeeklyTournamentSagaTests
 
         public void GivenStats(double singlesCompetitive, double doublesCompetitive)
         {
-            PlayerStats.Setup(s => s.GetStats(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            PlayerStats.Setup(s => s.GetStats(_mix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new PlayerStatsRecord(Guid.NewGuid(), TotalRating: 0, HighestLevel: 1,
                     ClearCount: 0, CoOpRating: 0, CoOpScore: 0, SkillRating: 0, SkillScore: 0,
                     SkillLevel: 0, SinglesRating: 0, SinglesScore: 0, SinglesLevel: 0,
@@ -387,13 +417,13 @@ public sealed class WeeklyTournamentSagaTests
 
         public void GivenNoExistingEntries(Guid chartId)
         {
-            WeeklyTournies.Setup(w => w.GetEntries(chartId, It.IsAny<CancellationToken>()))
+            WeeklyTournies.Setup(w => w.GetEntries(_mix, chartId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<WeeklyTournamentEntry>());
         }
 
         public void GivenExistingEntries(Guid chartId, IEnumerable<WeeklyTournamentEntry> entries)
         {
-            WeeklyTournies.Setup(w => w.GetEntries(chartId, It.IsAny<CancellationToken>()))
+            WeeklyTournies.Setup(w => w.GetEntries(_mix, chartId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(entries);
         }
     }
@@ -403,14 +433,14 @@ public sealed class WeeklyTournamentSagaTests
         var ctx = new ChartPickerContext();
         // GetWeeklyCharts is checked twice (early-return guard, then reused). Return
         // an expired chart so the chart-picker proceeds.
-        ctx.WeeklyTournies.Setup(w => w.GetWeeklyCharts(It.IsAny<CancellationToken>()))
+        ctx.WeeklyTournies.Setup(w => w.GetWeeklyCharts(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new WeeklyTournamentChart(Guid.NewGuid(), Now.AddDays(-1))
             });
-        ctx.WeeklyTournies.Setup(w => w.GetEntries(null, It.IsAny<CancellationToken>()))
+        ctx.WeeklyTournies.Setup(w => w.GetEntries(MixEnum.Phoenix, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<WeeklyTournamentEntry>());
-        ctx.WeeklyTournies.Setup(w => w.GetAlreadyPlayedCharts(It.IsAny<CancellationToken>()))
+        ctx.WeeklyTournies.Setup(w => w.GetAlreadyPlayedCharts(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Guid>());
         ctx.GivenChartList(ctx.Charts.Values);
         return ctx;
@@ -450,8 +480,8 @@ public sealed class WeeklyTournamentSagaTests
                 .ReturnsAsync(charts);
         }
 
-        // The chart-picker hard-codes lookups for these (level, type) buckets and crashes
-        // if any are missing — a known fragility of the algorithm.
+        // The chart-picker hard-codes lookups for these (level, type) buckets; a mix
+        // missing one simply skips that merge now (per-mix rotation robustness).
         private static IDictionary<string, Chart> BuildRequiredChartFixture() =>
             new Dictionary<string, Chart>
             {

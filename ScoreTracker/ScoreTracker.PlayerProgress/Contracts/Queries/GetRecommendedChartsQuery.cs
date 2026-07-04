@@ -6,7 +6,8 @@ namespace ScoreTracker.PlayerProgress.Contracts.Queries
 {
     [ExcludeFromCodeCoverage]
     public sealed record GetRecommendedChartsQuery
-        (ChartType? ChartType, int LevelOffset) : IQuery<IEnumerable<ChartRecommendation>>
+        (ChartType? ChartType, int LevelOffset, MixEnum Mix = MixEnum.Phoenix)
+        : IQuery<IEnumerable<ChartRecommendation>>
     {
     }
 }

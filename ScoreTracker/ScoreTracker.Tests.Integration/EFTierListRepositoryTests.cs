@@ -47,9 +47,9 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
         var chartId = Guid.NewGuid();
         var entry = new SongTierListEntry("PassCount", chartId, TierListCategory.Easy, Order: 5);
 
-        await BuildRepository().SaveEntry(entry, CancellationToken.None);
+        await BuildRepository().SaveEntry(MixEnum.Phoenix, entry, CancellationToken.None);
 
-        var entries = (await BuildRepository().GetAllEntries("PassCount", CancellationToken.None)).ToList();
+        var entries = (await BuildRepository().GetAllEntries(MixEnum.Phoenix, "PassCount", CancellationToken.None)).ToList();
 
         Assert.Single(entries);
         Assert.Equal(chartId, entries[0].ChartId);
@@ -63,12 +63,12 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
     {
         var chartId = Guid.NewGuid();
         var writer = BuildRepository();
-        await writer.SaveEntry(new SongTierListEntry("PassCount", chartId, TierListCategory.Easy, 1),
+        await writer.SaveEntry(MixEnum.Phoenix, new SongTierListEntry("PassCount", chartId, TierListCategory.Easy, 1),
             CancellationToken.None);
-        await writer.SaveEntry(new SongTierListEntry("PassCount", chartId, TierListCategory.Hard, 9),
+        await writer.SaveEntry(MixEnum.Phoenix, new SongTierListEntry("PassCount", chartId, TierListCategory.Hard, 9),
             CancellationToken.None);
 
-        var entries = (await BuildRepository().GetAllEntries("PassCount", CancellationToken.None)).ToList();
+        var entries = (await BuildRepository().GetAllEntries(MixEnum.Phoenix, "PassCount", CancellationToken.None)).ToList();
 
         Assert.Single(entries);
         Assert.Equal(TierListCategory.Hard, entries[0].Category);
@@ -81,14 +81,14 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
         var chartA = Guid.NewGuid();
         var chartB = Guid.NewGuid();
         var writer = BuildRepository();
-        await writer.SaveEntry(new SongTierListEntry("PassCount", chartA, TierListCategory.Easy, 1),
+        await writer.SaveEntry(MixEnum.Phoenix, new SongTierListEntry("PassCount", chartA, TierListCategory.Easy, 1),
             CancellationToken.None);
-        await writer.SaveEntry(new SongTierListEntry("Popularity", chartB, TierListCategory.Hard, 2),
+        await writer.SaveEntry(MixEnum.Phoenix, new SongTierListEntry("Popularity", chartB, TierListCategory.Hard, 2),
             CancellationToken.None);
 
         var reader = BuildRepository();
-        var passCount = (await reader.GetAllEntries("PassCount", CancellationToken.None)).ToList();
-        var popularity = (await reader.GetAllEntries("Popularity", CancellationToken.None)).ToList();
+        var passCount = (await reader.GetAllEntries(MixEnum.Phoenix, "PassCount", CancellationToken.None)).ToList();
+        var popularity = (await reader.GetAllEntries(MixEnum.Phoenix, "Popularity", CancellationToken.None)).ToList();
 
         Assert.Single(passCount);
         Assert.Equal(chartA, passCount[0].ChartId);
@@ -104,16 +104,16 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
         var existingChart = Guid.NewGuid();
         var newChart = Guid.NewGuid();
         var writer = BuildRepository();
-        await writer.SaveEntry(new SongTierListEntry("PassCount", existingChart, TierListCategory.Easy, 1),
+        await writer.SaveEntry(MixEnum.Phoenix, new SongTierListEntry("PassCount", existingChart, TierListCategory.Easy, 1),
             CancellationToken.None);
 
-        await writer.SaveEntries(new[]
+        await writer.SaveEntries(MixEnum.Phoenix, new[]
         {
             new SongTierListEntry("PassCount", existingChart, TierListCategory.Hard, 5), // update
             new SongTierListEntry("PassCount", newChart, TierListCategory.Medium, 3) // insert
         }, CancellationToken.None);
 
-        var entries = (await BuildRepository().GetAllEntries("PassCount", CancellationToken.None))
+        var entries = (await BuildRepository().GetAllEntries(MixEnum.Phoenix, "PassCount", CancellationToken.None))
             .OrderBy(e => e.Order).ToList();
 
         Assert.Equal(2, entries.Count);
@@ -121,6 +121,28 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
         Assert.Equal(TierListCategory.Medium, entries[0].Category);
         Assert.Equal(existingChart, entries[1].ChartId);
         Assert.Equal(TierListCategory.Hard, entries[1].Category);
+    }
+
+    [Fact]
+    public async Task EntriesAreIsolatedPerMixForTheSameTierListAndChart()
+    {
+        // Parallel-mix keying: the same (TierListName, ChartId) can hold a different
+        // category per mix, and each mix reads only its own row.
+        var chartId = Guid.NewGuid();
+        var writer = BuildRepository();
+        await writer.SaveEntry(MixEnum.Phoenix, new SongTierListEntry("PassCount", chartId, TierListCategory.Easy, 1),
+            CancellationToken.None);
+        await writer.SaveEntry(MixEnum.Phoenix2, new SongTierListEntry("PassCount", chartId, TierListCategory.Hard, 2),
+            CancellationToken.None);
+
+        var reader = BuildRepository();
+        var phoenix = (await reader.GetAllEntries(MixEnum.Phoenix, "PassCount", CancellationToken.None)).ToList();
+        var phoenix2 = (await reader.GetAllEntries(MixEnum.Phoenix2, "PassCount", CancellationToken.None)).ToList();
+
+        Assert.Single(phoenix);
+        Assert.Equal(TierListCategory.Easy, phoenix[0].Category);
+        Assert.Single(phoenix2);
+        Assert.Equal(TierListCategory.Hard, phoenix2[0].Category);
     }
 
     [Fact]
@@ -136,13 +158,13 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
         await using (var ctx = await _fixture.DbContextFactory.CreateDbContextAsync())
         {
             ctx.Set<UserHighestTitleEntity>().AddRange(
-                new UserHighestTitleEntity { UserId = userL15, TitleName = "title15", Level = 15 },
-                new UserHighestTitleEntity { UserId = userL16, TitleName = "title16", Level = 16 },
-                new UserHighestTitleEntity { UserId = userL17, TitleName = "title17", Level = 17 });
+                new UserHighestTitleEntity { UserId = userL15, MixId = TestDataSeeder.PhoenixMixId, TitleName = "title15", Level = 15 },
+                new UserHighestTitleEntity { UserId = userL16, MixId = TestDataSeeder.PhoenixMixId, TitleName = "title16", Level = 16 },
+                new UserHighestTitleEntity { UserId = userL17, MixId = TestDataSeeder.PhoenixMixId, TitleName = "title17", Level = 17 });
             await ctx.SaveChangesAsync();
         }
 
-        var atLevel16 = (await BuildRepository().GetUsersOnLevel(16, CancellationToken.None)).ToList();
+        var atLevel16 = (await BuildRepository().GetUsersOnLevel(MixEnum.Phoenix, 16, CancellationToken.None)).ToList();
 
         Assert.Single(atLevel16);
         Assert.Contains(userL16, atLevel16);
@@ -162,8 +184,8 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
         await using (var ctx = await _fixture.DbContextFactory.CreateDbContextAsync())
         {
             ctx.Set<UserHighestTitleEntity>().AddRange(
-                new UserHighestTitleEntity { UserId = activeUser, TitleName = "t16a", Level = 16 },
-                new UserHighestTitleEntity { UserId = staleUser, TitleName = "t16b", Level = 16 });
+                new UserHighestTitleEntity { UserId = activeUser, MixId = TestDataSeeder.PhoenixMixId, TitleName = "t16a", Level = 16 },
+                new UserHighestTitleEntity { UserId = staleUser, MixId = TestDataSeeder.PhoenixMixId, TitleName = "t16b", Level = 16 });
             // The cutoff is now-120d on the repository's own clock (pre-existing seam gap),
             // so the seed rows anchor to the real clock too.
             ctx.Set<PhoenixRecordEntity>().AddRange(
@@ -182,7 +204,7 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
             await ctx.SaveChangesAsync();
         }
 
-        var result = (await BuildRepository().GetUsersOnLevel(16, CancellationToken.None, requireActive: true))
+        var result = (await BuildRepository().GetUsersOnLevel(MixEnum.Phoenix, 16, CancellationToken.None, requireActive: true))
             .ToList();
 
         Assert.Single(result);

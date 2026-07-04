@@ -179,7 +179,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         var messages = new List<string>();
         var message = "";
 
-        var top50 = (await _mediator.Send(new GetTop50ForPlayerQuery(context.Message.UserId, null)))
+        var top50 = (await _mediator.Send(new GetTop50ForPlayerQuery(context.Message.UserId, null, Mix: mix)))
             .Select(c => c.ChartId).Distinct().ToHashSet();
 
         if (count > 0)
@@ -326,7 +326,7 @@ And {count - 10} others!";
                                                                            .User.Id)))
             throw new DeniedFromCommunityException("This community is private and you must be a member to view it");
 
-        return await _communities.GetLeaderboard(request.Community, cancellationToken);
+        return await _communities.GetLeaderboard(request.Mix, request.Community, cancellationToken);
     }
 
     public async Task<Community> Handle(GetCommunityQuery request, CancellationToken cancellationToken)
@@ -352,8 +352,7 @@ And {count - 10} others!";
         CancellationToken cancellationToken)
     {
         var community = await GetCommunity(request.CommuityName, cancellationToken);
-        // Phoenix until per-mix computation lands (plan doc, saga commit).
-        return await _scores.GetPhoenixScores(MixEnum.Phoenix, community.MemberIds, request.ChartId,
+        return await _scores.GetPhoenixScores(request.Mix, community.MemberIds, request.ChartId,
             cancellationToken);
     }
 

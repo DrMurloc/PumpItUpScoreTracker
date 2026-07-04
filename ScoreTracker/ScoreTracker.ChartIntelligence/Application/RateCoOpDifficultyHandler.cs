@@ -48,7 +48,7 @@ namespace ScoreTracker.ChartIntelligence.Application
                 var newRating = new CoOpRating(request.ChartId, ratings[1].Count(),
                     ratings.ToDictionary(r => r.Key, r => (DifficultyLevel)(int)Math.Round(r.Value.Average(l => l))));
 
-                await _ratingRepository.SaveCoOpRating(newRating, cancellationToken);
+                await _ratingRepository.SaveCoOpRating(request.mix, newRating, cancellationToken);
 
                 return newRating;
             }

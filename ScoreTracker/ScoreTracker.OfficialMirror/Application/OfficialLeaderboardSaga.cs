@@ -203,7 +203,10 @@ namespace ScoreTracker.OfficialMirror.Application
             foreach (var group in chartLevelGroups)
             {
                 var tierListEntries = TierListProcessor.ProcessIntoTierList(group.Value, group.Key.Level, "Official Scores");
-                foreach (var entry in tierListEntries) await _tierLists.SaveEntry(entry, cancellationToken);
+                // Phoenix until per-mix computation lands (plan doc, saga commit) — the
+                // official mirror scrapes the Phoenix site only until the import commit.
+                foreach (var entry in tierListEntries)
+                    await _tierLists.SaveEntry(MixEnum.Phoenix, entry, cancellationToken);
             }
         }
 
@@ -259,7 +262,10 @@ namespace ScoreTracker.OfficialMirror.Application
                     else
                         category = TierListCategory.Underrated;
 
-                    await _tierLists.SaveEntry(new SongTierListEntry("Popularity", chart.Id, category, score),
+                    // Phoenix until per-mix computation lands (plan doc, saga commit) — the
+                    // official mirror scrapes the Phoenix site only until the import commit.
+                    await _tierLists.SaveEntry(MixEnum.Phoenix,
+                        new SongTierListEntry("Popularity", chart.Id, category, score),
                         cancellationToken);
                 }
             }

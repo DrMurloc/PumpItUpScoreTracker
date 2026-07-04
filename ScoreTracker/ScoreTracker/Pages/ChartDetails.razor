@@ -342,7 +342,7 @@
             _plateBreakdowns[plate] = 0;
         }
         var playerScores = scores.ToDictionary(p => p.UserId);
-        var stats = (await PlayerStats.GetStats(scores.Select(s=>s.UserId).Distinct().ToArray(),CancellationToken.None)).ToArray();
+        var stats = (await PlayerStats.GetStats(MixEnum.Phoenix, scores.Select(s=>s.UserId).Distinct().ToArray(),CancellationToken.None)).ToArray();
         _playerLevels = stats.ToDictionary(p => p.UserId, p => chart.Type == ChartType.Single ? p.SinglesCompetitiveLevel : p.DoublesCompetitiveLevel);
         var playerGroupings = stats.GroupBy(s => (int)Math.Round(_selectedChart.Type == ChartType.Double ? s.DoublesCompetitiveLevel :
             _selectedChart.Type == ChartType.Single ? s.SinglesCompetitiveLevel : s.CompetitiveLevel)).ToArray();

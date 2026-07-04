@@ -131,10 +131,12 @@ internal sealed class EFChartDifficultyRatingRepository : IChartDifficultyRating
             .FirstOrDefault();
     }
 
-    public async Task SaveCoOpRating(CoOpRating rating, CancellationToken cancellationToken = default)
+    public async Task SaveCoOpRating(MixEnum mix, CoOpRating rating, CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var savedRatings = (await database.Set<CoOpRatingEntity>().Where(c => c.ChartId == rating.ChartId)
+        var mixId = MixIds.For(mix);
+        var savedRatings = (await database.Set<CoOpRatingEntity>()
+            .Where(c => c.ChartId == rating.ChartId && c.MixId == mixId)
             .ToArrayAsync(cancellationToken));
         if (savedRatings.Any())
         {
@@ -149,8 +151,7 @@ internal sealed class EFChartDifficultyRatingRepository : IChartDifficultyRating
             {
                 Id = Guid.NewGuid(),
                 ChartId = rating.ChartId,
-                // Phoenix until the port takes a mix (plan doc, port-threading commit).
-                MixId = MixIds.Phoenix,
+                MixId = mixId,
                 Difficulty = r.Value,
                 Player = r.Key
             });

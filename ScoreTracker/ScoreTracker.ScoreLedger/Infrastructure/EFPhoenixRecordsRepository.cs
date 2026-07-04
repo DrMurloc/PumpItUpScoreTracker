@@ -335,7 +335,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         var chartTypeString = chartType.ToString();
         // Competitive-level cohort comes from PlayerProgress's published reader — its
         // PlayerStats table is vertical-internal, so no SQL join onto it from here.
-        var cohort = (await _playerStats.GetPlayersByCompetitiveRange(chartType, intLevel, .5, cancellationToken))
+        var cohort = (await _playerStats.GetPlayersByCompetitiveRange(mix, chartType, intLevel, .5, cancellationToken))
             .ToHashSet();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return (await (from cm in database.ChartMix
@@ -419,8 +419,8 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             chartQuery = chartQuery.Where(c => c.OriginalMixId == mixId);
         }
 
-        // Phoenix until per-mix computation lands (plan doc, saga commit).
-        var recordMixId = MixIds.Phoenix;
+        // request.Mix is the mix the records were scored under (contrast with ChartMix above).
+        var recordMixId = MixIds.For(request.Mix);
         return await (from p in playerQuery
             join pr in database.Set<PhoenixRecordEntity>() on p.Id equals pr.UserId
             join c in chartQuery on pr.ChartId equals c.Id

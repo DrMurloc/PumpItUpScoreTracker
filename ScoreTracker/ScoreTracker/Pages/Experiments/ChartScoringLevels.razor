@@ -238,7 +238,7 @@
 
         var userIds = phoenixScores.Select(u => u.UserId).Distinct().ToArray();
         _users = (await Users.GetUsers(userIds)).ToDictionary(u => u.Id);
-        var allPlayerStats = await PlayerStats.GetStats(userIds, CancellationToken.None);
+        var allPlayerStats = await PlayerStats.GetStats(MixEnum.Phoenix, userIds, CancellationToken.None);
         foreach (var stats in allPlayerStats)
         {
             var competitiveLevel = _selectedChart.Type == ChartType.Single ? stats.SinglesCompetitiveLevel : stats.DoublesCompetitiveLevel;

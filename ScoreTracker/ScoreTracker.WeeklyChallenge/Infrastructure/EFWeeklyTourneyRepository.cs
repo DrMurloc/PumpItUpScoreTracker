@@ -12,95 +12,115 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
     internal sealed class EFWeeklyTourneyRepository
         (IDbContextFactory<ChartAttemptDbContext> factory, IMemoryCache cache) : IWeeklyTournamentRepository
     {
-        public async Task<IEnumerable<Guid>> GetAlreadyPlayedCharts(CancellationToken cancellationToken)
+        public async Task<IEnumerable<Guid>> GetAlreadyPlayedCharts(MixEnum mix, CancellationToken cancellationToken)
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
-            return await database.Set<PastTourneyChartsEntity>().Select(e => e.ChartId).ToArrayAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
+            return await database.Set<PastTourneyChartsEntity>().Where(e => e.MixId == mixId)
+                .Select(e => e.ChartId).ToArrayAsync(cancellationToken);
         }
 
-        public async Task ClearAlreadyPlayedCharts(IEnumerable<Guid> chartIds, CancellationToken cancellationToken)
+        public async Task ClearAlreadyPlayedCharts(MixEnum mix, IEnumerable<Guid> chartIds,
+            CancellationToken cancellationToken)
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
-            var entities = await database.Set<PastTourneyChartsEntity>().Where(e => chartIds.Contains(e.ChartId))
+            var mixId = MixIds.For(mix);
+            var entities = await database.Set<PastTourneyChartsEntity>()
+                .Where(e => chartIds.Contains(e.ChartId) && e.MixId == mixId)
                 .ToArrayAsync(cancellationToken);
             database.Set<PastTourneyChartsEntity>().RemoveRange(entities);
             await database.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task WriteAlreadyPlayedCharts(IEnumerable<Guid> chartIds, CancellationToken cancellationToken)
+        public async Task WriteAlreadyPlayedCharts(MixEnum mix, IEnumerable<Guid> chartIds,
+            CancellationToken cancellationToken)
         {
-            var alreadyPlayed = (await GetAlreadyPlayedCharts(cancellationToken)).Distinct().ToHashSet();
+            var alreadyPlayed = (await GetAlreadyPlayedCharts(mix, cancellationToken)).Distinct().ToHashSet();
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
             await database.Set<PastTourneyChartsEntity>().AddRangeAsync(chartIds
                 .Where(c => !alreadyPlayed.Contains(c)).Select(c => new PastTourneyChartsEntity
                 {
                     ChartId = c,
-                    // Phoenix until the port takes a mix (plan doc, port-threading commit).
-                    MixId = MixIds.Phoenix,
+                    MixId = mixId,
                     PlayedOn = DateTimeOffset.Now
                 }), cancellationToken);
             await database.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task WriteHistories(IEnumerable<UserTourneyHistory> histories, CancellationToken cancellationToken)
+        public async Task WriteHistories(MixEnum mix, IEnumerable<UserTourneyHistory> histories,
+            CancellationToken cancellationToken)
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
-            await database.Set<UserWeeklyPlacingEntity>().AddRangeAsync(histories.Select(h => new UserWeeklyPlacingEntity
-            {
-                ChartId = h.ChartId,
-                MixId = MixIds.Phoenix,
-                IsBroken = h.IsBroken,
-                ObtainedDate = h.ReceivedOn,
-                Plate = h.Plate.ToString(),
-                Place = h.Place,
-                Score = h.Score,
-                UserId = h.UserId,
-                CompetitiveLevel = h.CompetitiveLevel
-            }), cancellationToken);
+            var mixId = MixIds.For(mix);
+            await database.Set<UserWeeklyPlacingEntity>().AddRangeAsync(histories.Select(h =>
+                new UserWeeklyPlacingEntity
+                {
+                    ChartId = h.ChartId,
+                    MixId = mixId,
+                    IsBroken = h.IsBroken,
+                    ObtainedDate = h.ReceivedOn,
+                    Plate = h.Plate.ToString(),
+                    Place = h.Place,
+                    Score = h.Score,
+                    UserId = h.UserId,
+                    CompetitiveLevel = h.CompetitiveLevel
+                }), cancellationToken);
             await database.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task ClearTheBoard(CancellationToken cancellationToken)
+        public async Task ClearTheBoard(MixEnum mix, CancellationToken cancellationToken)
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
-            var userEntries = await database.Set<WeeklyUserEntry>().ToArrayAsync(cancellationToken);
-            var weeklyCharts = await database.Set<WeeklyTournamentChartEntity>().ToArrayAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
+            var userEntries = await database.Set<WeeklyUserEntry>().Where(e => e.MixId == mixId)
+                .ToArrayAsync(cancellationToken);
+            var weeklyCharts = await database.Set<WeeklyTournamentChartEntity>().Where(e => e.MixId == mixId)
+                .ToArrayAsync(cancellationToken);
             database.Set<WeeklyUserEntry>().RemoveRange(userEntries);
             database.Set<WeeklyTournamentChartEntity>().RemoveRange(weeklyCharts);
             await database.SaveChangesAsync(cancellationToken);
+            cache.Remove(WeeklyChartsKey(mix));
         }
 
-        public async Task RegisterWeeklyChart(WeeklyTournamentChart chart, CancellationToken cancellationToken)
+        public async Task RegisterWeeklyChart(MixEnum mix, WeeklyTournamentChart chart,
+            CancellationToken cancellationToken)
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
             await database.Set<WeeklyTournamentChartEntity>().AddAsync(new WeeklyTournamentChartEntity
             {
                 ChartId = chart.ChartId,
-                MixId = MixIds.Phoenix,
+                MixId = MixIds.For(mix),
                 ExpirationDate = chart.ExpirationDate
             }, cancellationToken);
             await database.SaveChangesAsync(cancellationToken);
-            cache.Remove(WeeklyChartsKey);
+            cache.Remove(WeeklyChartsKey(mix));
         }
 
-        private const string WeeklyChartsKey = $@"{nameof(EFWeeklyTourneyRepository)}__WeeklyCharts";
-
-        public async Task<IEnumerable<WeeklyTournamentChart>> GetWeeklyCharts(CancellationToken cancellationToken)
+        private static string WeeklyChartsKey(MixEnum mix)
         {
-            return await cache.GetOrCreateAsync(WeeklyChartsKey, async o =>
+            return $@"{nameof(EFWeeklyTourneyRepository)}__WeeklyCharts__{mix}";
+        }
+
+        public async Task<IEnumerable<WeeklyTournamentChart>> GetWeeklyCharts(MixEnum mix,
+            CancellationToken cancellationToken)
+        {
+            return await cache.GetOrCreateAsync(WeeklyChartsKey(mix), async o =>
             {
                 o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
                 await using var database = await factory.CreateDbContextAsync(cancellationToken);
-                return await database.Set<WeeklyTournamentChartEntity>().Select(w =>
+                var mixId = MixIds.For(mix);
+                return await database.Set<WeeklyTournamentChartEntity>().Where(w => w.MixId == mixId).Select(w =>
                     new WeeklyTournamentChart(w.ChartId, w.ExpirationDate)).ToArrayAsync(cancellationToken);
             });
         }
 
-        public async Task<IEnumerable<WeeklyTournamentEntry>> GetEntries(Guid? chartId,
+        public async Task<IEnumerable<WeeklyTournamentEntry>> GetEntries(MixEnum mix, Guid? chartId,
             CancellationToken cancellationToken)
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
-            var query = database.Set<WeeklyUserEntry>().AsQueryable();
+            var mixId = MixIds.For(mix);
+            var query = database.Set<WeeklyUserEntry>().Where(w => w.MixId == mixId);
             if (chartId != null) query = query.Where(w => w.ChartId == chartId);
 
             return (await query.ToArrayAsync(cancellationToken)).Select(q => new WeeklyTournamentEntry(q.UserId,
@@ -108,18 +128,20 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
                 q.Photo == null ? null : new Uri(q.Photo, UriKind.Absolute), q.CompetitiveLevel));
         }
 
-        public async Task SaveEntry(WeeklyTournamentEntry entry, CancellationToken cancellationToken)
+        public async Task SaveEntry(MixEnum mix, WeeklyTournamentEntry entry, CancellationToken cancellationToken)
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
             var entity = await
                 database.Set<WeeklyUserEntry>().FirstOrDefaultAsync(
-                    e => e.UserId == entry.UserId && e.ChartId == entry.ChartId, cancellationToken);
+                    e => e.UserId == entry.UserId && e.ChartId == entry.ChartId && e.MixId == mixId,
+                    cancellationToken);
             if (entity == null)
             {
                 await database.Set<WeeklyUserEntry>().AddAsync(new WeeklyUserEntry
                 {
                     ChartId = entry.ChartId,
-                    MixId = MixIds.Phoenix,
+                    MixId = mixId,
                     IsBroken = entry.IsBroken,
                     Plate = entry.Plate.ToString(),
                     Score = entry.Score,
@@ -140,19 +162,22 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
             await database.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<DateTimeOffset>> GetPastDates(CancellationToken cancellationToken)
+        public async Task<IEnumerable<DateTimeOffset>> GetPastDates(MixEnum mix, CancellationToken cancellationToken)
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
-            return await database.Set<UserWeeklyPlacingEntity>().Select(u => u.ObtainedDate).Distinct()
+            var mixId = MixIds.For(mix);
+            return await database.Set<UserWeeklyPlacingEntity>().Where(u => u.MixId == mixId)
+                .Select(u => u.ObtainedDate).Distinct()
                 .ToArrayAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<WeeklyTournamentEntry>> GetPastEntries(DateTimeOffset date,
+        public async Task<IEnumerable<WeeklyTournamentEntry>> GetPastEntries(MixEnum mix, DateTimeOffset date,
             CancellationToken cancellationToken)
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
             return (await database.Set<UserWeeklyPlacingEntity>()
-                .Where(e => e.ObtainedDate == date).ToArrayAsync(cancellationToken)).Select(u =>
+                .Where(e => e.ObtainedDate == date && e.MixId == mixId).ToArrayAsync(cancellationToken)).Select(u =>
                 new WeeklyTournamentEntry(u.UserId, u.ChartId, u.Score, Enum.Parse<PhoenixPlate>(u.Plate), u.IsBroken,
                     null, u.CompetitiveLevel));
         }

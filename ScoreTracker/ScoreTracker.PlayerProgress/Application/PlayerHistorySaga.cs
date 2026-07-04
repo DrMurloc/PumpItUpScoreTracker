@@ -10,7 +10,8 @@ namespace ScoreTracker.PlayerProgress.Application
     {
         public async Task Consume(ConsumeContext<PlayerRatingsImprovedEvent> context)
         {
-            await history.WriteHistory(new PlayerRatingRecord(context.Message.UserId, dateTime.Now,
+            await history.WriteHistory(context.Message.Mix, new PlayerRatingRecord(context.Message.UserId,
+                dateTime.Now,
                 context.Message.NewCompetitive,
                 context.Message.NewSinglesCompetitive, context.Message.NewDoublesCompetitive,
                 context.Message.CoOpRating, context.Message.PassCount), context.CancellationToken);

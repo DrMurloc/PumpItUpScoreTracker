@@ -57,9 +57,9 @@ public sealed class PumbilityProjectionSagaTests
         await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
 
         ctx.Stats.Verify(s => s.GetPlayersByCompetitiveRange(
-            ChartType.Single, It.IsAny<double>(), It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Once);
+            MixEnum.Phoenix, ChartType.Single, It.IsAny<double>(), It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Once);
         ctx.Stats.Verify(s => s.GetPlayersByCompetitiveRange(
-            ChartType.Double, It.IsAny<double>(), It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Once);
+            MixEnum.Phoenix, ChartType.Double, It.IsAny<double>(), It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -114,9 +114,9 @@ public sealed class PumbilityProjectionSagaTests
         await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
 
         ctx.Stats.Verify(s => s.GetPlayersByCompetitiveRange(
-            ChartType.Single, 10.0, It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Once);
+            MixEnum.Phoenix, ChartType.Single, 10.0, It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Once);
         ctx.Stats.Verify(s => s.GetPlayersByCompetitiveRange(
-            ChartType.Double, 10.0, It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Once);
+            MixEnum.Phoenix, ChartType.Double, 10.0, It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -131,9 +131,9 @@ public sealed class PumbilityProjectionSagaTests
         await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
 
         ctx.Stats.Verify(s => s.GetPlayersByCompetitiveRange(
-            ChartType.Single, 17.5, 1, It.IsAny<CancellationToken>()), Times.Once);
+            MixEnum.Phoenix, ChartType.Single, 17.5, 1, It.IsAny<CancellationToken>()), Times.Once);
         ctx.Stats.Verify(s => s.GetPlayersByCompetitiveRange(
-            ChartType.Double, 16.0, 1, It.IsAny<CancellationToken>()), Times.Once);
+            MixEnum.Phoenix, ChartType.Double, 16.0, 1, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -168,7 +168,7 @@ public sealed class PumbilityProjectionSagaTests
 
         public ProjectionContext()
         {
-            Stats.Setup(s => s.GetStats(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            Stats.Setup(s => s.GetStats(MixEnum.Phoenix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => new PlayerStatsRecord(UserId,
                     TotalRating: 0, HighestLevel: 1, ClearCount: 0, CoOpRating: 0, CoOpScore: 0,
                     SkillRating: 0, SkillScore: 0, SkillLevel: 0,
@@ -179,7 +179,7 @@ public sealed class PumbilityProjectionSagaTests
                     DoublesCompetitiveLevel: _doublesCompetitive));
 
             Stats.Setup(s => s.GetPlayersByCompetitiveRange(
-                    It.IsAny<ChartType?>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<CancellationToken>()))
+                    It.IsAny<MixEnum>(), It.IsAny<ChartType?>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<Guid>());
 
             PhoenixRecords.Setup(s => s.GetScores(

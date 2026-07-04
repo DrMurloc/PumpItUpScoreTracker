@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
@@ -23,22 +23,24 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
             _factory = factory;
         }
 
-        private string CacheKey(Guid userId)
+        private string CacheKey(MixEnum mix, Guid userId)
         {
-            return $"{nameof(EFPlayerStatsRepository)}_PlayerStats_{userId}";
+            return $"{nameof(EFPlayerStatsRepository)}_PlayerStats_{mix}_{userId}";
         }
 
-        public async Task SaveStats(Guid userId, PlayerStatsRecord newStats, CancellationToken cancellationToken)
+        public async Task SaveStats(MixEnum mix, Guid userId, PlayerStatsRecord newStats,
+            CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            var entity = await database.Set<PlayerStatsEntity>().FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+            var mixId = MixIds.For(mix);
+            var entity = await database.Set<PlayerStatsEntity>()
+                .FirstOrDefaultAsync(p => p.UserId == userId && p.MixId == mixId, cancellationToken);
             if (entity == null)
             {
                 await database.AddAsync(new PlayerStatsEntity
                 {
                     UserId = userId,
-                    // Phoenix until the port takes a mix (plan doc, port-threading commit).
-                    MixId = MixIds.Phoenix,
+                    MixId = mixId,
                     CoOpRating = newStats.CoOpRating,
                     SinglesRating = newStats.SinglesRating,
                     DoublesRating = newStats.DoublesRating,
@@ -80,18 +82,20 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
             }
 
             await database.SaveChangesAsync(cancellationToken);
-            _cache.Remove(CacheKey(userId));
+            _cache.Remove(CacheKey(mix, userId));
         }
 
-        public async Task<PlayerStatsRecord> GetStats(Guid userId, CancellationToken cancellationToken)
+        public async Task<PlayerStatsRecord> GetStats(MixEnum mix, Guid userId, CancellationToken cancellationToken)
         {
-            return await _cache.GetOrCreateAsync(CacheKey(userId), async o =>
+            return await _cache.GetOrCreateAsync(CacheKey(mix, userId), async o =>
             {
                 await using var database = await _factory.CreateDbContextAsync(cancellationToken);
                 o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(30);
 
+                var mixId = MixIds.For(mix);
                 var entity =
-                    await database.Set<PlayerStatsEntity>().FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+                    await database.Set<PlayerStatsEntity>()
+                        .FirstOrDefaultAsync(p => p.UserId == userId && p.MixId == mixId, cancellationToken);
                 if (entity == null)
                     return new PlayerStatsRecord(userId, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1);
 
@@ -105,26 +109,30 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
             });
         }
 
-        public async Task<IEnumerable<PlayerStatsRecord>> GetStats(IEnumerable<Guid> userIds,
+        public async Task<IEnumerable<PlayerStatsRecord>> GetStats(MixEnum mix, IEnumerable<Guid> userIds,
             CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            return await database.Set<PlayerStatsEntity>().Where(s => userIds.Contains(s.UserId)).Select(entity =>
-                new PlayerStatsRecord(entity.UserId, entity.TotalRating, entity.HighestLevel, entity.ClearCount,
-                    entity.CoOpRating,
-                    entity.AverageCoOpScore, entity.SkillRating, entity.AverageSkillScore, entity.AverageSkillLevel,
-                    entity.SinglesRating,
-                    entity.AverageSinglesScore, entity.AverageSinglesLevel, entity.DoublesRating,
-                    entity.AverageDoublesScore, entity.AverageDoublesLevel, entity.CompetitiveLevel,
-                    entity.SinglesCompetitiveLevel, entity.DoublesCompetitiveLevel)).ToArrayAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
+            return await database.Set<PlayerStatsEntity>()
+                .Where(s => userIds.Contains(s.UserId) && s.MixId == mixId).Select(entity =>
+                    new PlayerStatsRecord(entity.UserId, entity.TotalRating, entity.HighestLevel, entity.ClearCount,
+                        entity.CoOpRating,
+                        entity.AverageCoOpScore, entity.SkillRating, entity.AverageSkillScore, entity.AverageSkillLevel,
+                        entity.SinglesRating,
+                        entity.AverageSinglesScore, entity.AverageSinglesLevel, entity.DoublesRating,
+                        entity.AverageDoublesScore, entity.AverageDoublesLevel, entity.CompetitiveLevel,
+                        entity.SinglesCompetitiveLevel, entity.DoublesCompetitiveLevel)).ToArrayAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<Guid>> GetPlayersByCompetitiveRange(ChartType? chartType, double competitiveLevel,
+        public async Task<IEnumerable<Guid>> GetPlayersByCompetitiveRange(MixEnum mix, ChartType? chartType,
+            double competitiveLevel,
             double range,
             CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            var query = database.Set<PlayerStatsEntity>().AsQueryable();
+            var mixId = MixIds.For(mix);
+            var query = database.Set<PlayerStatsEntity>().Where(p => p.MixId == mixId);
             var min = competitiveLevel - range;
             var max = competitiveLevel + range;
             if (chartType == null)
@@ -139,20 +147,22 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
 
         public async Task<PlayerStatsRecord> Handle(GetPlayerStatsQuery request, CancellationToken cancellationToken)
         {
-            return await GetStats(request.UserId, cancellationToken);
+            return await GetStats(request.Mix, request.UserId, cancellationToken);
         }
 
-        public async Task DeleteStats(Guid userId, CancellationToken cancellationToken)
+        public async Task DeleteStats(MixEnum mix, Guid userId, CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            var entity = await database.Set<PlayerStatsEntity>().FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+            var mixId = MixIds.For(mix);
+            var entity = await database.Set<PlayerStatsEntity>()
+                .FirstOrDefaultAsync(p => p.UserId == userId && p.MixId == mixId, cancellationToken);
             if (entity != null)
             {
                 database.Set<PlayerStatsEntity>().Remove(entity);
                 await database.SaveChangesAsync(cancellationToken);
             }
 
-            _cache.Remove(CacheKey(userId));
+            _cache.Remove(CacheKey(mix, userId));
         }
     }
 }

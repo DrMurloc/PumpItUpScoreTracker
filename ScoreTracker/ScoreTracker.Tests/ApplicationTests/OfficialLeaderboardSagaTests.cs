@@ -171,7 +171,7 @@ public sealed class OfficialLeaderboardSagaTests
 
         await saga.Handle(new ProcessChartPopularityCommand(), CancellationToken.None);
 
-        tierLists.Verify(t => t.SaveEntry(
+        tierLists.Verify(t => t.SaveEntry(MixEnum.Phoenix,
             It.Is<SongTierListEntry>(e => (string)e.TierListName == "Popularity" && e.ChartId == chart.Id),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -191,7 +191,7 @@ public sealed class OfficialLeaderboardSagaTests
 
         await saga.Handle(new ProcessChartPopularityCommand(), CancellationToken.None);
 
-        tierLists.Verify(t => t.SaveEntry(
+        tierLists.Verify(t => t.SaveEntry(MixEnum.Phoenix,
             It.Is<SongTierListEntry>(e => e.Category == TierListCategory.Unrecorded && e.ChartId == chart.Id),
             It.IsAny<CancellationToken>()), Times.Once);
     }

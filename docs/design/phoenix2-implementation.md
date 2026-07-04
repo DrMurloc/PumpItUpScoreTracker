@@ -79,7 +79,7 @@ so a broken session can resume from the last checked item.
   `UserWeeklyChartsProgressedEvent` + consumers route by mix; `ContractEventSerializationTests`
   updated deliberately; Discord "[Phoenix 2]" prefix in CommunitySaga message builders.
 
-- [ ] **Commit 6 — Sagas un-hardcoded; per-mix computation.**
+- [x] **Commit 6 — Sagas un-hardcoded; per-mix computation.**
   TierListSaga / ScoringDifficultySaga / PlayerRatingSaga / PumbilityProjectionSaga /
   RecommendedChartsSaga / WeeklyTournamentSaga / CommunitySaga: replace ~30 `MixEnum.Phoenix`
   literals with parameterized mix; weekly rotation runs per mix (guard: skip a mix with no charts);

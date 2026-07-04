@@ -480,7 +480,7 @@
         _showingEntries = (await Mediator.Send(new GetUcsChartLeaderboardQuery(chartId))).OrderByDescending(s => s.Score).Select((s, i) => new LeaderboardEntry(i + 1, s))
             .ToArray();
         _users = (await Users.GetUsers(_showingEntries.Select(e => e.Entry.UserId))).ToDictionary(u => u.Id);
-        _levels = (await PlayerStats.GetStats(_showingEntries.Select(e => e.Entry.UserId), CancellationToken.None)).ToDictionary(p => p.UserId,
+        _levels = (await PlayerStats.GetStats(MixEnum.Phoenix, _showingEntries.Select(e => e.Entry.UserId), CancellationToken.None)).ToDictionary(p => p.UserId,
             p => chart.Chart.Type == ChartType.Single || chart.Chart.Type==ChartType.SinglePerformance ? p.SinglesCompetitiveLevel : p.DoublesCompetitiveLevel);
         _showingChart = chart;
         _showLeaderboardDialog = true;

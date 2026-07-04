@@ -122,12 +122,12 @@
         }
         _isLoading = true;
         var players = (await Mediator.Send(new GetCompetitivePlayersQuery(ChartType.Single))).ToArray();
-        _competitiveLevelSingles = (await Stats.GetStats(players, CancellationToken.None))
+        _competitiveLevelSingles = (await Stats.GetStats(MixEnum.Phoenix, players, CancellationToken.None))
             .ToDictionary(s => s.UserId, s =>  s.SinglesCompetitiveLevel);
         _comparableUsersSingles = (await Users.GetUsers(players)).ToArray();
 
         players = (await Mediator.Send(new GetCompetitivePlayersQuery(ChartType.Double))).ToArray();
-        _competitiveLevelDoubles = (await Stats.GetStats(players, CancellationToken.None))
+        _competitiveLevelDoubles = (await Stats.GetStats(MixEnum.Phoenix, players, CancellationToken.None))
             .ToDictionary(s => s.UserId, s =>  s.DoublesCompetitiveLevel);
         _comparableUsersDoubles = (await Users.GetUsers(players)).ToArray();
 
