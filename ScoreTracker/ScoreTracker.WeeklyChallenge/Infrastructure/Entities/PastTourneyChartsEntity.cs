@@ -1,10 +1,12 @@
-using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.WeeklyChallenge.Infrastructure.Entities
 {
+    [PrimaryKey(nameof(ChartId), nameof(MixId))]
     internal sealed class PastTourneyChartsEntity
     {
-        [Key] public Guid ChartId { get; set; }
+        public Guid ChartId { get; set; }
+        public Guid MixId { get; set; }
         public DateTimeOffset PlayedOn { get; set; }
     }
 }

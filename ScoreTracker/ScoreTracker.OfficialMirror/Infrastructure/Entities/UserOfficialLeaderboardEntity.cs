@@ -7,6 +7,7 @@ namespace ScoreTracker.OfficialMirror.Infrastructure.Entities
     internal sealed class UserOfficialLeaderboardEntity
     {
         [Key] public Guid Id { get; set; }
+        public Guid MixId { get; set; }
         public int Place { get; set; }
         public string Username { get; set; }
         public string LeaderboardType { get; set; }

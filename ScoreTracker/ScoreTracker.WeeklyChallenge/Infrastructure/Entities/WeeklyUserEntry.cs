@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.WeeklyChallenge.Infrastructure.Entities
 {
-    [Index(nameof(UserId), nameof(ChartId), IsUnique = true)]
+    [Index(nameof(UserId), nameof(ChartId), nameof(MixId), IsUnique = true)]
     internal sealed class WeeklyUserEntry
     {
         [Key]
@@ -13,6 +13,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure.Entities
 
         public Guid UserId { get; set; }
         public Guid ChartId { get; set; }
+        public Guid MixId { get; set; }
         public int Score { get; set; }
         public string Plate { get; set; } = string.Empty;
         public bool IsBroken { get; set; }

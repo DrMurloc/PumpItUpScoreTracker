@@ -63,7 +63,7 @@ so a broken session can resume from the last checked item.
   `PlayerStats` (PK → UserId+MixId), `PlayerHistory`, `UserTitle`, `UserHighestTitle` (PK → UserId+MixId),
   `TierListEntry` (+MixId), `CoOpRating` (+MixId). Backfill Phoenix everywhere.
 
-- [ ] **Commit 3c — WeeklyChallenge + EventCompetition + OfficialMirror schema.**
+- [x] **Commit 3c — WeeklyChallenge + EventCompetition + OfficialMirror schema.**
   `WeeklyTournamentChart`, `UserWeeklyPlacing`, `QualifiersConfiguration` (+MixId column, backfill
   Phoenix), `UserTournamentSession` (+MixId), `UserOfficialLeaderboard`, `UserWorldRanking`,
   `OfficialLeaderboardImportState` (singleton row → per-mix).

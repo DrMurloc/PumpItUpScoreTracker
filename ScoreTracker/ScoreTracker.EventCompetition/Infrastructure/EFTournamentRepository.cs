@@ -156,6 +156,8 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                     Id = Guid.NewGuid(),
                     UserId = session.UsersId,
                     TournamentId = session.TournamentId,
+                    // Phoenix until session registration exposes the mix dropdown (plan doc).
+                    MixId = MixIds.Phoenix,
                     SessionScore = session.TotalScore,
                     RestTime = session.CurrentRestTime,
                     ChartsPlayed = session.Entries.Count(),

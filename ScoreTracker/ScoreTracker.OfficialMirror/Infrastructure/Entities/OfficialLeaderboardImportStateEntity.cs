@@ -5,10 +5,10 @@ namespace ScoreTracker.OfficialMirror.Infrastructure.Entities
 {
     internal sealed class OfficialLeaderboardImportStateEntity
     {
-        // Single-row table: Id is always 1, set explicitly so we never insert duplicates.
+        // One row per mix, keyed by the scores.Mix row id.
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
-        public int Id { get; set; }
+        public Guid MixId { get; set; }
 
         [Required] public DateTimeOffset LastImportedAt { get; set; }
     }

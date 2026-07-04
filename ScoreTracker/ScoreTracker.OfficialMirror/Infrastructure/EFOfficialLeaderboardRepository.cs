@@ -42,6 +42,8 @@ namespace ScoreTracker.OfficialMirror.Infrastructure
             await database.Set<UserOfficialLeaderboardEntity>().AddAsync(new UserOfficialLeaderboardEntity
             {
                 Id = Guid.NewGuid(),
+                // Phoenix until the port takes a mix (plan doc, port-threading commit).
+                MixId = MixIds.Phoenix,
                 Place = entry.Place,
                 LeaderboardName = entry.LeaderboardName,
                 LeaderboardType = entry.OfficialLeaderboardType,
@@ -61,6 +63,7 @@ namespace ScoreTracker.OfficialMirror.Infrastructure
                 array.Select(entry => new UserOfficialLeaderboardEntity
                 {
                     Id = Guid.NewGuid(),
+                    MixId = MixIds.Phoenix,
                     Place = entry.Place,
                     LeaderboardName = entry.LeaderboardName,
                     LeaderboardType = entry.OfficialLeaderboardType,
@@ -112,6 +115,7 @@ namespace ScoreTracker.OfficialMirror.Infrastructure
             await database.Set<UserWorldRanking>().AddAsync(new UserWorldRanking
             {
                 Id = Guid.NewGuid(),
+                MixId = MixIds.Phoenix,
                 Type = record.Type,
                 AverageLevel = record.AverageDifficulty,
                 AverageScore = record.AverageScore,
@@ -212,7 +216,7 @@ namespace ScoreTracker.OfficialMirror.Infrastructure
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var entity = await database.Set<OfficialLeaderboardImportStateEntity>()
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(e => e.MixId == MixIds.Phoenix, cancellationToken);
             return entity?.LastImportedAt;
         }
 
@@ -220,10 +224,10 @@ namespace ScoreTracker.OfficialMirror.Infrastructure
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var entity = await database.Set<OfficialLeaderboardImportStateEntity>()
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(e => e.MixId == MixIds.Phoenix, cancellationToken);
             if (entity == null)
                 await database.Set<OfficialLeaderboardImportStateEntity>().AddAsync(
-                    new OfficialLeaderboardImportStateEntity { Id = 1, LastImportedAt = timestamp },
+                    new OfficialLeaderboardImportStateEntity { MixId = MixIds.Phoenix, LastImportedAt = timestamp },
                     cancellationToken);
             else
                 entity.LastImportedAt = timestamp;

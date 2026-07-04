@@ -5,6 +5,7 @@ namespace ScoreTracker.EventCompetition.Infrastructure.Entities
     internal sealed class QualifiersConfigurationEntity
     {
         [Key] [Required] public Guid TournamentId { get; set; }
+        public Guid MixId { get; set; }
         public string ScoringType { get; set; }
         public string Charts { get; set; }
         public bool AllCharts { get; set; }

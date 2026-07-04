@@ -35,6 +35,8 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
                 .Where(c => !alreadyPlayed.Contains(c)).Select(c => new PastTourneyChartsEntity
                 {
                     ChartId = c,
+                    // Phoenix until the port takes a mix (plan doc, port-threading commit).
+                    MixId = MixIds.Phoenix,
                     PlayedOn = DateTimeOffset.Now
                 }), cancellationToken);
             await database.SaveChangesAsync(cancellationToken);
@@ -46,6 +48,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
             await database.Set<UserWeeklyPlacingEntity>().AddRangeAsync(histories.Select(h => new UserWeeklyPlacingEntity
             {
                 ChartId = h.ChartId,
+                MixId = MixIds.Phoenix,
                 IsBroken = h.IsBroken,
                 ObtainedDate = h.ReceivedOn,
                 Plate = h.Plate.ToString(),
@@ -73,6 +76,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
             await database.Set<WeeklyTournamentChartEntity>().AddAsync(new WeeklyTournamentChartEntity
             {
                 ChartId = chart.ChartId,
+                MixId = MixIds.Phoenix,
                 ExpirationDate = chart.ExpirationDate
             }, cancellationToken);
             await database.SaveChangesAsync(cancellationToken);
@@ -115,6 +119,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
                 await database.Set<WeeklyUserEntry>().AddAsync(new WeeklyUserEntry
                 {
                     ChartId = entry.ChartId,
+                    MixId = MixIds.Phoenix,
                     IsBroken = entry.IsBroken,
                     Plate = entry.Plate.ToString(),
                     Score = entry.Score,

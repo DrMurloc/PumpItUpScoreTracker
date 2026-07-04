@@ -71,19 +71,19 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 
 | Table | Purpose |
 |---|---|
-| `scores.UserOfficialLeaderboard` | Mirrored official leaderboard placements |
-| `scores.UserWorldRanking` | Calculated world-ranking stats (singles/doubles competitive, average level) |
+| `scores.UserOfficialLeaderboard` | Mirrored official leaderboard placements, per mix |
+| `scores.UserWorldRanking` | Calculated world-ranking stats per mix (singles/doubles competitive, average level) |
 | `scores.OfficialUserAvatar` | Cached official avatar URLs |
-| `scores.OfficialLeaderboardImportState` | Timestamp of the last official leaderboard import |
+| `scores.OfficialLeaderboardImportState` | Timestamp of the last official leaderboard import, one row per mix (PK MixId) |
 
 ## Weekly Challenge (vertical: `ScoreTracker.WeeklyChallenge`)
 
 | Table | Purpose |
 |---|---|
-| `scores.WeeklyTournamentChart` | The active weekly chart set, with expiration |
-| `scores.WeeklyUserEntry` | Player entries: score, plate, verification |
-| `scores.UserWeeklyPlacing` | Historical placements from finished weeks |
-| `scores.PastTourneyCharts` | Archive of previously used weekly charts (avoids repeats) |
+| `scores.WeeklyTournamentChart` | The active weekly chart set per mix, with expiration |
+| `scores.WeeklyUserEntry` | Player entries per mix: score, plate, verification |
+| `scores.UserWeeklyPlacing` | Historical placements from finished weeks, per mix |
+| `scores.PastTourneyCharts` | Archive of previously used weekly charts per mix (avoids repeats; PK ChartId+MixId) |
 
 ## Event Competition (vertical: `ScoreTracker.EventCompetition`)
 
@@ -91,11 +91,11 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 |---|---|
 | `scores.Tournament` | Competitive event definition: configuration, location, visibility |
 | `scores.UserTournamentRegistration` | Player registrations |
-| `scores.UserTournamentSession` | A player's session: charts played, scores, approval state |
+| `scores.UserTournamentSession` | A player's session: charts played, scores, approval state, and the mix it was played on |
 | `scores.PhotoVerification` | Photo proofs attached to sessions |
 | `scores.TournamentChartLevel` | Per-tournament chart level overrides |
 | `scores.TournamentRole` | Per-tournament roles (organizer, judge, …) |
-| `scores.QualifiersConfiguration` | Qualifier stage setup: charts, scoring, cutoff |
+| `scores.QualifiersConfiguration` | Qualifier stage setup: charts, scoring, cutoff, and the mix the qualifier runs on |
 | `scores.UserQualifier` | Qualifier entries and approval status |
 | `scores.UserQualifierHistory` | Timestamped snapshots of qualifier submissions |
 | `scores.CoOpTeam` / `scores.CoOpPlayers` | Co-op tournament teams and their members |
