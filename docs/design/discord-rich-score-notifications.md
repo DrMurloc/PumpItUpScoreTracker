@@ -533,31 +533,57 @@ Follow-up passes (later PRs, outside this scope): titles → ratings → weekly 
 `RichBotMessage`, then delete the string-composition paths and, last, the legacy
 `SendMessages` port method once no caller remains.
 
-## Open questions
+## Open calls
 
-1. **Art-row cap**: 5 art rows + grouped overflow is a taste call — confirm the visual
-   weight against a real burst in the test-lab channel (the canary posts make this a
-   one-glance check).
-2. **Digest threshold**: 25 changes is a first guess. Too low and good sessions get
-   flattened; too high and channels still get long cards. Tune against real events.
-3. **Phoenix 2 accent**: the brand colors are now known (Phoenix = blue, Phoenix 2 = green).
-   Current design keeps the grade-colored accent with the textual `[Phoenix 2]` prefix + mix
-   emoji; the alternative is overriding the accent to the mix brand color. The mix emoji may
-   make the override redundant.
-4. **Same-burst aggregation**: titles/rating events that fire from the same import currently
-   arrive as separate messages and would become separate cards (a first import also triggers
-   a title wave through the same 10-per-message chunking). Merging into one card needs
-   cross-event correlation — Phase 2 at the earliest; the titles consumer gets the digest
-   treatment when it migrates to `RichBotMessage`.
-5. **Recent page follow-through**: which UI surfaces get links if the Discord-driven trial
-   performs — Progress page, community leaderboard rows, `UserLabel` popover?
-6. **Session Batcher gap**: 4 h proposed for closing a session envelope — right window, and
-   should import/CSV sessions use a shorter one when no explicit run id is passed?
-7. **Flag thresholds**: Score Quality ≥ 90th percentile and folder completion ≥ 90% ship as
-   named constants; tune against real data before promoting either to config.
-8. **Lamp-worthy boundaries**: which grade/plate floors deserve a folder-lamp milestone —
-   every boundary crossing, or a curated set (e.g. ≥ SSS, ≥ UG, plus All Passed)?
+Each ships with the recommended default unless the owner overrides. Grouped by the build
+phase where the decision lands.
 
-(The earlier "which button?" question is resolved: the single CTA is **View all recent
-scores** → the Recent Scores page, rendered only for public players. A per-community
-leaderboard button stays deferred behind per-channel rendering.)
+**Phase 1 — schema + Session Batcher (answer these first):**
+
+1. **Journal semantics for manual no-ops** — keep journaling manual/realtime submissions
+   as received (powers PLAYED rows, repeat-break history, session durations) vs strict
+   state-changes-only (one guard in the handler; PLAYED rows and repeat-break history
+   disappear from the page). *Recommended: keep as-received* — the import already diffs, so
+   volume is trivial and it's real play history.
+2. **Session Batcher gap window** — how long a quiet spell closes a session envelope.
+   *Recommended: 4 h for all sources* (explicit import/CSV run ids make a per-source window
+   mostly moot).
+
+**Phase 2 — capture (flags + milestones):**
+
+3. **Score Quality flag threshold** — *recommended: ≥ 90th percentile, tie-inclusive*
+   (named constant).
+4. **Folder-completion flag threshold** — *recommended: ≥ 90%* (named constant).
+5. **Lamp-worthy floors** — every grade/plate boundary crossing vs a curated set.
+   *Recommended: curated — All Passed, ≥ SSS, ≥ UG* ("all A" is noise, "all SSS" is a lamp).
+6. **Level-up sixth flag** — "first-ever pass at a new highest level" as a flag kind.
+   *Recommended: skip for v1*; adjacent to competitive/folder flags, easy to add later.
+
+**Phase 3 — the page:**
+
+7. **Page name + route** — "Recent Scores" at `/Player/{id}/RecentScores` (current mock) vs
+   "Sessions"/"Play Sessions" at `/Player/{id}/Sessions`. Owner has used both names.
+   *No recommendation — pure naming, owner's call.* Route is public and permanent once
+   Discord messages link it, so decide before the cards ship.
+8. **Inline-vs-collapse threshold and paging** — *recommended: collapse the full score list
+   above ~10 rows; page by session, ~10 sessions per page.*
+
+**Phase 4 — the Discord cards:**
+
+9. **Art-row cap** — *recommended: 5 art rows + grouped overflow*; confirm visual weight
+   via the canary posts in the test-lab channel.
+10. **Digest threshold** — *recommended: 25 changes*; too low flattens good sessions, too
+    high still floods.
+11. **Phoenix 2 accent** — *recommended: keep the grade-colored accent + textual
+    `[Phoenix 2]` prefix + mix emoji*; a per-mix brand-color override (P2 = green) stays
+    available if the emoji alone reads too subtle at launch.
+
+**Deferred by design (no decision needed now):** same-burst aggregation of titles/rating
+events into one card (Phase 2+, cross-event correlation); surfacing flags on the import
+results page (owner-deferred); the community "recent sessions" feed (components built
+reusable for it); which UI surfaces link the page after the Discord trial; consuming the
+verified-source flag in tournament/qualifier rules.
+
+(Resolved earlier: the card's single CTA is **View all recent scores**, deep-linked to the
+session's roundup, rendered only for public players; per-community leaderboard buttons stay
+deferred behind per-channel rendering.)
