@@ -28,10 +28,10 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 
 | Table | Purpose |
 |---|---|
-| `scores.PhoenixRecord` | Best-known Phoenix-scoring attempt per user+chart+mix: score, plate, broken flag (unique on UserId+ChartId+MixId; pre-Phoenix-2 rows backfilled as Phoenix — as are all MixId columns below) |
+| `scores.PhoenixRecord` | Best-known Phoenix-scoring attempt per user+chart+mix: score, plate, broken flag, and the `Source` of the current best (verified ⇔ `officialImport`; NULL predates capture). Unique on UserId+ChartId+MixId; pre-Phoenix-2 rows backfilled as Phoenix — as are all MixId columns below |
 | `scores.BestAttempt` | XX-era best attempts per user+chart |
 | `scores.PhoenixRecordStats` | Per-score Pumbility stats per user+chart+mix, written by PlayerProgress through a Ledger port |
-| `scores.ScoreEventJournal` | **Append-only** journal of score submissions *as received* (manual, import, CSV, …), including submissions that don't beat the stored best. Rows are never updated or deleted. Seeded 2026-06 from `PhoenixRecord` (`Source='backfill'`); the foundation of score-progression history |
+| `scores.ScoreEventJournal` | **Append-only** journal of best-attempt *changes* (progress only since 2026-07: first entries incl. broken, unbreaks, score/plate improvements, manual corrections — no-ops are never written; rows from before the guard include them). Rows are never updated or deleted. `SessionId` groups rows into play sessions / import runs (NULL predates capture). Seeded 2026-06 from `PhoenixRecord` (`Source='backfill'`, dated at the record's last update); the foundation of score-progression history |
 
 ## Player Progress (vertical: `ScoreTracker.PlayerProgress`)
 
@@ -42,6 +42,8 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.UserTitle` | Titles earned per mix, with paragon progression |
 | `scores.UserHighestTitle` | Denormalized current-highest title per mix (PK UserId+MixId) for fast reads |
 | `scores.SuggestionFeedback` | User feedback on chart recommendations |
+| `scores.ScoreHighlight` | Write-time noteworthy-score flags per journal row (crown, title progress, Score Quality ≥90th, folder ≥90%, competitive improver, folder debut), denormalized Level/ScoringLevel for noteworthy ordering; joined to the journal by (SessionId, ChartId). Never backfilled |
+| `scores.PlayerMilestone` | Session-level milestones with timestamps: Pumbility gains, Singles/Doubles competitive gains, title completions, paragon gains, folder lamps (Kind + compact Detail payload). Never backfilled |
 
 ## Chart Intelligence (vertical: `ScoreTracker.ChartIntelligence`)
 

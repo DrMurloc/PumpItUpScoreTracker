@@ -7,6 +7,7 @@ namespace ScoreTracker.ScoreLedger.Infrastructure.Entities;
 // the score-progression-history feature, and the candidate source-of-truth if the
 // Ledger is ever event-sourced. Rows are never updated or deleted.
 [Index(nameof(UserId), nameof(ChartId), nameof(OccurredAt))]
+[Index(nameof(UserId), nameof(MixId), nameof(OccurredAt))]
 internal sealed class ScoreEventJournalEntity
 {
     [Key] public Guid Id { get; set; }
@@ -31,4 +32,10 @@ internal sealed class ScoreEventJournalEntity
     public string? Plate { get; set; }
 
     [Required] public bool IsBroken { get; set; }
+
+    /// <summary>
+    ///     Play-session / import-run grouping (Session Batcher). NULL = row predates
+    ///     session capture; never backfilled.
+    /// </summary>
+    public Guid? SessionId { get; set; }
 }

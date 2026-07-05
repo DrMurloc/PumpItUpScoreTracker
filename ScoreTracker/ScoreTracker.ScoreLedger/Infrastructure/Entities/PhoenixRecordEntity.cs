@@ -19,4 +19,11 @@ internal sealed class PhoenixRecordEntity
     public string? LetterGrade { get; set; } = string.Empty;
     public string? Plate { get; set; } = string.Empty;
     [Required] public bool IsBroken { get; set; }
+
+    /// <summary>
+    ///     Acquisition channel of the CURRENT best (manual | officialImport | csv).
+    ///     Verified ⇔ officialImport; NULL = predates capture (treated unverified).
+    /// </summary>
+    [MaxLength(32)]
+    public string? Source { get; set; }
 }
