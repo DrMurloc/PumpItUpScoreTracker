@@ -363,21 +363,48 @@ these flags too (owner-flagged, **explicitly deferred, not in this PR**) — rea
 rows. The journal itself stays **append-only**: highlights are a companion table keyed to
 journal rows, never journal mutations.
 
-**SessionId** — the join key and the session grouper. A new nullable column on journal rows
-plus an **additive** field on `PlayerScoresUpdatedEvent` (SchemaVersion stays 1; the Mix
-field set the additive precedent, and partner webhook consumers ignore unknown fields).
-Stamping: official-import runs stamp their import id; a CSV upload mints one id per upload;
-manual entries derive a rolling per-user session (new id after a ≥ 4 h gap since the user's
-latest journal row — one cheap indexed lookup at write time). Highlights key on
-`(SessionId, ChartId)`, and the page groups the feed into **session chunks** ("Official
-import · 8 min ago · 214 scores · 12 highlights") with milestones interleaved. No backfill
-(owner-accepted): pre-capture rows have null `SessionId` and no flags, and render exactly as
-they do today.
+**SessionId — minted by the Session Batcher.** The score batch accumulator
+(`IPlayerScoreBatchAccumulator`) already sees every submission from every source in one
+place; it grows into the **Session Batcher**: alongside its 2-minute event batches it keeps
+a per-`(user, mix, source)` **session envelope** — reuse the open session while activity
+continues, close it after a gap (proposed 4 h; open question), mint a new id on the next
+submission. The command handler asks it for the current session id at journal-append time;
+the drained batch event carries the same id. Import and CSV runs may pass an explicit run
+id, which the batcher honors as that session's identity ("scores you imported at the same
+time"). **Every source hooks in — official import, CSV upload, manual UI entry, API — with
+no exceptions**; the only things a non-import session skips are the steps that need the
+official site (avatar refresh, recent-scores scan), which live in the import saga anyway.
+Being in-memory, an app restart closes open sessions (next submission starts a new one) —
+same durability posture as the transport, acceptable. `SessionId` lands as a new nullable
+column on journal rows plus an **additive** field on `PlayerScoresUpdatedEvent`
+(SchemaVersion stays 1; Mix set the additive precedent). Highlights key on
+`(SessionId, ChartId)`, and the page groups the feed into **session roundups** with
+milestones interleaved. No backfill (owner-accepted): pre-capture rows have null `SessionId`
+and no flags, and render exactly as they do today.
 
-**Milestones** (session-level gold rows, unchanged mechanics): Pumbility gains, title
-completions, and **Singles/Doubles competitive gains** — combined competitive is excluded
-here too. Captured in the PlayerProgress-internal `PlayerMilestone` table by the sagas that
-already publish `PlayerRatingsImprovedEvent`/`NewTitlesAcquiredEvent`; neither fact is
+Riding the same change: the **CSV path gets the import's diff guard and a proper
+`csv` source tag** (today it submits per-chart bests un-diffed and unlabeled, so re-uploads
+journal no-ops stamped `manual`), and its `KeepBestStats` semantics get verified while the
+code is open.
+
+**Milestones** (session-level gold rows). The kinds:
+
+- **Pumbility gains** and **Singles/Doubles competitive gains** — combined competitive is
+  excluded here too.
+- **Title completions** and **Paragon level gains** (title + old → new paragon level; the
+  data already rides `NewTitlesAcquiredEvent.ParagonUpgrades`). Phoenix 2 caveat: paragon
+  and title semantics are expected to change with P2 — capture is mix-keyed and the kinds
+  may need adjusting when the kit reveals how Andamiro did titles.
+- **Folder lamps** — full-folder achievements, detected per touched folder at capture time
+  by aggregating the folder's floor: **All Passed** (pass count = folder size), **All ≥
+  letter grade** (the folder's minimum grade crosses a boundary), **All ≥ plate** (minimum
+  plate crosses). Fire on the transition only (didn't hold before the batch, holds after).
+  Which grade/plate boundaries are lamp-worthy is an open question — announcing "all A" on
+  a folder is noise, "all SSS" is a lamp.
+
+Captured in the PlayerProgress-internal `PlayerMilestone` table (`Kind` + a compact `Detail`
+payload — e.g. `D23`, `D20|SSS`, `S18|UG`, `Expert Lv.2|★3→★4`) by the sagas that already
+publish `PlayerRatingsImprovedEvent`/`NewTitlesAcquiredEvent`; none of these facts are
 persisted with a timestamp today (`PlayerHistoryEntity` has no Pumbility column,
 `UserTitleEntity` has no acquisition date), so capture-now-or-lose-it applies, like the
 journal itself.
@@ -395,11 +422,31 @@ New tables (`ScoreHighlight`, `PlayerMilestone`) and the journal `SessionId` col
 their row in DATABASE-SCHEMA.md.
 - **Honest boundary**: the journal only reaches back to when journaling shipped — the page is
   "recent activity", not all-time history, and says so in an empty-state/footnote line.
+- **Reusable components**: the page is assembled from parameterized components —
+  `SessionRoundupCard`, `MilestoneStrip`, `HighlightRow`, `ScoreJournalTable` — that take
+  DTOs and dispatch nothing themselves. Owner-flagged future surface: a **community
+  "recent sessions" feed** (a snapshot of an active community) would reuse
+  `SessionRoundupCard` unchanged with sessions drawn across members; build for that now,
+  wire it later.
 - **Trial plan**: ships with (or just before) the card so the button has a target. Entry
-  points elsewhere in the UI (Progress page, community leaderboard rows, `UserLabel`) wait
-  until the Discord-driven traffic says the page earns them.
+  points elsewhere in the UI (Progress page, community leaderboard rows, `UserLabel`,
+  community recent-sessions) wait until the Discord-driven traffic says the page earns
+  them.
 - **Localization**: new UI strings get keys in all eight locales in the same PR, per
   convention.
+
+## Verified scores (source of the current best)
+
+Officially imported scores get a durable **verified** marker (owner call, 2026-07-05):
+tournaments and similar surfaces often shouldn't trust CSV/manually-entered scores, so the
+distinction must live where those reads happen — on the **best-attempt record**, not just
+the journal. Mechanism: `PhoenixRecords` gains a `Source` column, updated whenever the best
+attempt updates; **verified ⇔ the current best's source is `officialImport`**. The
+semantics fall out naturally: a manual entry that beats an imported best flips the record
+to unverified; a later import that reconfirms flips it back; a no-op submission leaves it
+untouched. Existing rows backfill `NULL` (= unknown/pre-flag, treated as unverified for
+gating purposes). Exposing the flag to tournament/qualifier rules is follow-up work — this
+PR only captures it.
 
 ## Data model summary
 
@@ -413,7 +460,10 @@ The implementation-facing inventory of everything above. **New code types:**
 | ScoreLedger | `UpdatePhoenixBestAttemptCommand.SessionId` | additive optional param | stamped by OfficialMirror import saga + CSV upload handler; null ⇒ handler derives the rolling session |
 | ScoreLedger | `GetRecentScoreEventsQuery` → `RecentScoreEventRecord`, `ScoreEventClassification` (NewPass / Upscore / Played / Break) | new contracts | the journal's first read path; handler gates on `User.IsPublic` |
 | PlayerProgress | `ScoreHighlight` (internal entity + record), `HighlightFlag` [Flags] enum (PumbilityTop50, TitleProgress, ScoreQuality90, FolderCompletion90, CompetitiveImprover) | new | captured by PlayerProgress consumers of the score event; flags may land moments after journal rows (eventual, acceptable) |
-| PlayerProgress | `PlayerMilestone` (internal entity + record), `MilestoneKind` enum (PumbilityGain, TitleCompleted, SinglesCompetitiveGain, DoublesCompetitiveGain) | new | appended by `PlayerRatingSaga`/`TitleSaga`, which already hold the deltas |
+| PlayerProgress | `PlayerMilestone` (internal entity + record), `MilestoneKind` enum (PumbilityGain, TitleCompleted, ParagonLevelGain, SinglesCompetitiveGain, DoublesCompetitiveGain, FolderPassLamp, FolderGradeLamp, FolderPlateLamp) + compact `Detail` payload | new | appended by `PlayerRatingSaga`/`TitleSaga` + folder-floor checks per touched folder |
+| ScoreLedger | `RecordedPhoenixScore.Source` (source of current best) | additive field | verified ⇔ `officialImport`; updated when the best updates; existing rows NULL |
+| ScoreLedger | Session Batcher (evolved `IPlayerScoreBatchAccumulator`) | behavior | mints/extends per-(user, mix, source) session envelopes; honors explicit import/CSV run ids; in-memory (restart closes sessions) |
+| Web | `SessionRoundupCard`, `MilestoneStrip`, `HighlightRow`, `ScoreJournalTable` | new components | DTO-in, dispatch-free — reusable for the future community recent-sessions feed |
 | PlayerProgress | `GetScoreHighlightsQuery`, `GetPlayerMilestonesQuery` | new contracts | the page merges these with the journal read in memory — no cross-vertical SQL |
 | Data | `DiscordRichMessageRenderer` | new pure translator | RichBotMessage → V2 components + fallback text; `DiscordMessageSplitter` already shipped |
 
@@ -425,7 +475,8 @@ The implementation-facing inventory of everything above. **New code types:**
 |---|---|---|
 | `scores.ScoreEventJournal` | + `SessionId uniqueidentifier NULL` (no backfill) | + `(UserId, MixId, OccurredAt)` for feed paging; + filtered `(SessionId)` for session/import-results reads |
 | `scores.ScoreHighlight` **(new)** | `Id` PK, `UserId`, `MixId`, `ChartId`, `SessionId NULL`, `OccurredAt`, `Flags int`, `Level int`, `ScoringLevel decimal NULL` | `(UserId, MixId, OccurredAt)`; filtered `(SessionId)` |
-| `scores.PlayerMilestone` **(new)** | `Id` PK, `UserId`, `MixId`, `SessionId NULL`, `OccurredAt`, `Kind`, `OldValue decimal NULL`, `NewValue decimal NULL`, `Title nvarchar NULL` | `(UserId, MixId, OccurredAt)` |
+| `scores.PlayerMilestone` **(new)** | `Id` PK, `UserId`, `MixId`, `SessionId NULL`, `OccurredAt`, `Kind`, `OldValue decimal NULL`, `NewValue decimal NULL`, `Title nvarchar NULL`, `Detail nvarchar(64) NULL` | `(UserId, MixId, OccurredAt)` |
+| `scores.PhoenixRecords` | + `Source nvarchar(32) NULL` (source of current best; verified ⇔ `officialImport`; existing rows NULL) | none new |
 
 Both new tables live in PlayerProgress's model contribution (already listed in
 `VerticalModelContributions.All()`); the journal column rides ScoreLedger's. Each change gets
@@ -500,10 +551,12 @@ Follow-up passes (later PRs, outside this scope): titles → ratings → weekly 
    treatment when it migrates to `RichBotMessage`.
 5. **Recent page follow-through**: which UI surfaces get links if the Discord-driven trial
    performs — Progress page, community leaderboard rows, `UserLabel` popover?
-6. **Manual-entry session gap**: 4 h proposed for deriving a rolling "play session" id on
-   manual submissions — right window?
+6. **Session Batcher gap**: 4 h proposed for closing a session envelope — right window, and
+   should import/CSV sessions use a shorter one when no explicit run id is passed?
 7. **Flag thresholds**: Score Quality ≥ 90th percentile and folder completion ≥ 90% ship as
    named constants; tune against real data before promoting either to config.
+8. **Lamp-worthy boundaries**: which grade/plate floors deserve a folder-lamp milestone —
+   every boundary crossing, or a curated set (e.g. ≥ SSS, ≥ UG, plus All Passed)?
 
 (The earlier "which button?" question is resolved: the single CTA is **View all recent
 scores** → the Recent Scores page, rendered only for public players. A per-community
