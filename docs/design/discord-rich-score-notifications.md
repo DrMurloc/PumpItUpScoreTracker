@@ -649,7 +649,10 @@ Already shipped on the branch: the message-drop hotfix (stats chunking +
   dispatch-free), ⭐ Of-note filter, collapse >10 rows, per-session paging with page-size
   selector, `?session=` deep-link anchor, CSV export endpoint (UI controller,
   IsPublic-gated), redirect-home privacy, localization keys in all eight locales, API.md
-  note for the export endpoint.
+  note for the export endpoint. **Owner-required: a Playwright E2E test in
+  `ScoreTracker.Tests.E2E` proving the page functions** (seeded journal/highlights/
+  milestones render as roundups; non-public players redirect home) — Playwright is also
+  the UI iteration loop during development.
 - **C8 — Rich message port + renderer.** `RichBotMessage` records,
   `IBotClient.SendRichMessages`, `DiscordRichMessageRenderer` (Components V2 tree +
   flattened fallback, budget clamps, emoji tokens incl. the recorded `#MIX|…#` ids),
