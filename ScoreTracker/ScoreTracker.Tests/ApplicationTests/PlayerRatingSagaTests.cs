@@ -20,14 +20,19 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.PlayerProgress.Wiring;
+using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Domain;
 using ScoreTracker.Tests.TestData;
+using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
 
 public sealed class PlayerRatingSagaTests
 {
+    private static readonly DateTimeOffset Now = new(2026, 5, 1, 12, 0, 0, TimeSpan.Zero);
+
     [Fact]
     public async Task UserCreatedSavesZeroedStatsRecord()
     {
@@ -183,6 +188,53 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
+    public async Task CompetitiveGainFlagsTheScoresThatDroveIt()
+    {
+        // Singles competitive improved and the changed single's Fung score meets the
+        // old level -> it gets the CompetitiveImprover highlight in its session.
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        var highlights = new Mock<IScoreHighlightRepository>();
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { single }),
+            scores: ScoresMockReturning(userId, new[] { Score(single.Id, 950000) }),
+            stats: stats, highlights: highlights);
+
+        await saga.Handle(new RecalculateStatsCommand(userId, MixEnum.Phoenix, new[] { single.Id }, sessionId),
+            CancellationToken.None);
+
+        highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, userId,
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.ChartId == single.Id && x.SessionId == sessionId
+                && x.Flags == HighlightFlag.CompetitiveImprover)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AdminRecalculationWithoutASessionWritesNoImproverFlags()
+    {
+        var userId = Guid.NewGuid();
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        var highlights = new Mock<IScoreHighlightRepository>();
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { single }),
+            scores: ScoresMockReturning(userId, new[] { Score(single.Id, 950000) }),
+            stats: stats, highlights: highlights);
+
+        await saga.Handle(new RecalculateStatsCommand(userId), CancellationToken.None);
+
+        highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<IEnumerable<ScoreHighlightWrite>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task RecalculateStatsCommandDoesNotPublishRatingsImprovedWhenNothingImproves()
     {
         var userId = Guid.NewGuid();
@@ -279,7 +331,8 @@ public sealed class PlayerRatingSagaTests
         Mock<IPlayerStatsRepository>? stats = null,
         Mock<IBus>? bus = null,
         Mock<IMediator>? mediator = null,
-        Mock<IPhoenixRecordStatsRepository>? recordStats = null)
+        Mock<IPhoenixRecordStatsRepository>? recordStats = null,
+        Mock<IScoreHighlightRepository>? highlights = null)
     {
         scores ??= new Mock<IScoreReader>();
         charts ??= new Mock<IChartRepository>();
@@ -287,8 +340,9 @@ public sealed class PlayerRatingSagaTests
         bus ??= new Mock<IBus>();
         mediator ??= new Mock<IMediator>();
         recordStats ??= new Mock<IPhoenixRecordStatsRepository>();
-        return new PlayerRatingSaga(scores.Object, recordStats.Object, charts.Object, stats.Object, bus.Object,
-            mediator.Object);
+        highlights ??= new Mock<IScoreHighlightRepository>();
+        return new PlayerRatingSaga(scores.Object, recordStats.Object, charts.Object, stats.Object,
+            highlights.Object, FakeDateTime.At(Now).Object, bus.Object, mediator.Object);
     }
 
     private static Mock<IChartRepository> ChartsMockReturning(IEnumerable<Chart> result)

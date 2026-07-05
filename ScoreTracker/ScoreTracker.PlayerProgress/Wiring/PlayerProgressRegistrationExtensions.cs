@@ -26,6 +26,7 @@ public static class PlayerProgressRegistrationExtensions
         services.AddTransient<ITitleRepository, EFTitleRepository>();
         services.AddTransient<IFeedbackRepository, EFFeedbackRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
+        services.AddTransient<IScoreHighlightRepository, EFScoreHighlightRepository>();
         services.AddSingleton<IDbModelContribution, PlayerProgressModelContribution>();
         return services;
     }
@@ -43,5 +44,8 @@ public static class PlayerProgressRegistrationExtensions
         configurator.AddConsumer<TitleSaga>();
         configurator.AddConsumer<PlayerHistorySaga>();
         configurator.AddConsumer<AccountPurgeConsumer>();
+        // Highlight capture republishes score batches as ScoreHighlightsCapturedEvent —
+        // if this registration drops, the Discord score cards silently stop firing.
+        configurator.AddConsumer<HighlightCaptureSaga>();
     }
 }

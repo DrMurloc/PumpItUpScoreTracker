@@ -130,7 +130,7 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
     }
 
     private async Task ProcessCharts(MixEnum mix, Guid userId, IEnumerable<Name> newCharts,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? sessionId = null)
     {
         var existingTitles = (await _titles.GetCompletedTitles(mix, userId, cancellationToken))
             .ToDictionary(t => t.Title);
@@ -164,7 +164,7 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
             await _bus.Publish(
                 new NewTitlesAcquiredEvent(userId, newCompleted,
                     upgraded.ToDictionary(t => t.Title.ToString(), t => t.ParagonLevel.ToString()),
-                    mix),
+                    mix, sessionId),
                 cancellationToken);
     }
 
@@ -182,7 +182,7 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
     public async Task Consume(ConsumeContext<PlayerScoresUpdatedEvent> context)
     {
         await ProcessCharts(context.Message.Mix, context.Message.UserId, Array.Empty<Name>(),
-            context.CancellationToken);
+            context.CancellationToken, context.Message.SessionId);
     }
 
     public async Task Handle(ProcessTitles request, CancellationToken cancellationToken)
