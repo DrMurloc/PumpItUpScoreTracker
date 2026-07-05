@@ -135,9 +135,13 @@ so a broken session can resume from the last checked item.
 ## Post-release track (separate PRs)
 
 - Admin "paste JSON blob" new-song/chart tool (Phoenix2-only; `koreanName` REQUIRED — it feeds the
-  `ko-KR` culture-name rows that Korean-session imports match against; image URL downloaded and
-  rehosted via `IFileUploadClient`).
-- Documented "check for new Phoenix 2 charts" workflow (site sweep diff → official YouTube channel
-  for videos/artists/BPM/Korean titles → song images from official leaderboard pages → paste-ready JSON).
+  `ko-KR` culture-name rows that Korean-session imports match against). **Landed early** (owner
+  pulled it forward to test locally): `/Admin/BulkAddCharts`, schema contract in
+  [new-charts-json.md](new-charts-json.md), source images auto-copied to the CDN on Confirm via
+  `IFileUploadClient.CopyFromSource`.
+- Documented "check for new Phoenix 2 charts" workflow (YouTube watermark walk of the official
+  channel for charts/videos/artists/BPM → official site for canonical English/Korean names and
+  song images → paste-ready JSON; see the collection-workflow section of
+  [new-charts-json.md](new-charts-json.md)).
 - Phoenix 2 leaderboard mirror / world rankings (new pumbility_ranking semantics, authenticated scraping).
 - Rivals-page features (blocked on card association; scrape surface exists at /my_page/rival.php).

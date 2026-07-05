@@ -1,0 +1,301 @@
+@page "/Admin/BulkAddCharts"
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.Services.Contracts
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+<PageTitle>@L["Bulk Add Charts"]</PageTitle>
+
+<MudText Typo="Typo.h4">@L["Bulk Add Charts"]</MudText>
+<MudText Typo="Typo.body2">@L["Paste one JSON blob to create Phoenix 2 songs and charts in bulk."]</MudText>
+<MudText Typo="Typo.caption">@L["Schema reference:"] <code>docs/design/new-charts-json.md</code></MudText>
+<br/>
+<MudTextField T="string" @bind-Value="_jsonInput" Lines="16" Variant="Variant.Outlined" Label="JSON"
+              Style="font-family:monospace" Disabled="_isSaving"></MudTextField>
+<MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ManageSearch"
+           Disabled="_isSaving" OnClick="Parse">@L["Parse"]</MudButton>
+
+@foreach (var error in _globalErrors)
+{
+    <MudAlert Severity="Severity.Error" Dense="true" Class="mt-2">@error</MudAlert>
+}
+
+@if (_entries.Any())
+{
+    <br/>
+    <MudChip T="string" Color="Color.Success" Size="Size.Small">@L["Ready"]: @_entries.Count(e => e.CanCreate)</MudChip>
+    <MudChip T="string" Color="Color.Warning" Size="Size.Small">@L["Will be skipped"]: @_entries.Count(e => e.AlreadyInPhoenix2)</MudChip>
+    <MudChip T="string" Color="Color.Error" Size="Size.Small">@L["Has errors"]: @_entries.Count(e => e.Parse.Errors.Any())</MudChip>
+
+    @foreach (var entry in _entries)
+    {
+        <MudCard Class="mt-2">
+            <MudCardContent>
+                <MudText Typo="Typo.h6">
+                    @entry.Parse.Index. @entry.Parse.DisplayName
+                    @if (entry.Parse.Errors.Any())
+                    {
+                        <MudChip T="string" Color="Color.Error" Size="Size.Small">@L["Has errors"]</MudChip>
+                    }
+                    else if (entry.AlreadyInPhoenix2)
+                    {
+                        <MudChip T="string" Color="Color.Warning" Size="Size.Small">@L["Will be skipped"]</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small">@L["Ready"]</MudChip>
+                    }
+                </MudText>
+                @if (entry.Parse.Song != null)
+                {
+                    var song = entry.Parse.Song;
+                    <MudGrid>
+                        <MudItem xs="12" sm="2">
+                            <MudImage Src="@song.ImageUrl.ToString()" Alt="@song.Name.ToString()" Height="90"
+                                      ObjectFit="ObjectFit.Contain" Class="rounded"></MudImage>
+                        </MudItem>
+                        <MudItem xs="12" sm="10">
+                            <MudSimpleTable Dense="true" Bordered="false" Striped="true">
+                                <tbody>
+                                <tr>
+                                    <td>@L["Song Name"]</td>
+                                    <td>@song.Name.ToString()</td>
+                                </tr>
+                                <tr>
+                                    <td>@L["Korean Name"]</td>
+                                    <td>@song.KoreanName.ToString()</td>
+                                </tr>
+                                <tr>
+                                    <td>@L["Song Artist"]</td>
+                                    <td>@song.Artist.ToString()</td>
+                                </tr>
+                                <tr>
+                                    <td>@L["Song Type"]</td>
+                                    <td>@song.Type.ToString()</td>
+                                </tr>
+                                <tr>
+                                    <td>@L["BPM"]</td>
+                                    <td>@song.Bpm.ToString()</td>
+                                </tr>
+                                <tr>
+                                    <td>@L["Duration"]</td>
+                                    <td>@song.Duration.ToString(@"m\:ss")</td>
+                                </tr>
+                                </tbody>
+                            </MudSimpleTable>
+                            @foreach (var chart in song.Charts)
+                            {
+                                <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small"
+                                         Color="@(chart.Type == ChartType.Single ? Color.Error : chart.Type == ChartType.Double ? Color.Success : Color.Warning)">
+                                    @chart.Type.GetShortHand()@chart.Level.ToString() · @chart.StepArtist.ToString()
+                                </MudChip>
+                            }
+                        </MudItem>
+                    </MudGrid>
+                }
+                @foreach (var error in entry.Parse.Errors)
+                {
+                    <MudAlert Severity="Severity.Error" Dense="true" Class="mt-1">@error</MudAlert>
+                }
+                @foreach (var warning in entry.Warnings)
+                {
+                    <MudAlert Severity="@warning.Severity" Dense="true" Class="mt-1">@warning.Message</MudAlert>
+                }
+            </MudCardContent>
+        </MudCard>
+    }
+
+    <br/>
+    <MudButton Color="Color.Success" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save"
+               Disabled="!CanConfirm" OnClick="Confirm">
+        @L["Confirm and Create"] (@_entries.Count(e => e.CanCreate))
+    </MudButton>
+}
+
+@if (_isSaving)
+{
+    <MudProgressLinear Color="Color.Primary" Max="@Math.Max(1, _entries.Count)" Min="0" Value="@_progress"></MudProgressLinear>
+}
+
+@if (_results.Any())
+{
+    <br/>
+    <MudText Typo="Typo.h6">@L["Results"]</MudText>
+    <MudSimpleTable Dense="true">
+        <tbody>
+        @foreach (var result in _results)
+        {
+            <tr>
+                <td>@result.Song</td>
+                <td>
+                    <MudChip T="string" Size="Size.Small" Color="@result.Color">@L[result.Status]</MudChip>
+                </td>
+                <td>@result.Detail</td>
+            </tr>
+        }
+        </tbody>
+    </MudSimpleTable>
+}
+
+@inject ICurrentUserAccessor CurrentUser;
+@inject IChartRepository _charts;
+@inject IFileUploadClient Files;
+@inject IBulkChartJsonParser Parser;
+@inject ISnackbar Snackbar;
+@inject NavigationManager NavManager;
+@code
+{
+    private string _jsonInput = string.Empty;
+    private bool _isSaving;
+    private int _progress;
+    private IReadOnlyList<string> _globalErrors = Array.Empty<string>();
+    private readonly List<PreviewEntry> _entries = new();
+    private readonly List<CreationResult> _results = new();
+
+    private sealed record PreviewWarning(Severity Severity, string Message);
+
+    private sealed class PreviewEntry
+    {
+        public required BulkSongParseResult Parse { get; init; }
+        public required IReadOnlyList<PreviewWarning> Warnings { get; init; }
+        public required bool AlreadyInPhoenix2 { get; init; }
+        public bool CanCreate => Parse.Song != null && !AlreadyInPhoenix2;
+    }
+
+    private sealed record CreationResult(string Song, string Status, Color Color, string Detail);
+
+    private bool CanConfirm => !_isSaving
+                               && !_globalErrors.Any()
+                               && _entries.Any()
+                               && _entries.All(e => !e.Parse.Errors.Any())
+                               && _entries.Any(e => e.CanCreate);
+
+    private async Task Parse()
+    {
+        _results.Clear();
+        _entries.Clear();
+        var parsed = Parser.Parse(_jsonInput);
+        _globalErrors = parsed.GlobalErrors;
+        if (parsed.Songs.Any())
+        {
+            var phoenix2Names = (await _charts.GetSongNames(MixEnum.Phoenix2)).ToHashSet();
+            var phoenixNames = (await _charts.GetSongNames(MixEnum.Phoenix)).ToHashSet();
+            foreach (var song in parsed.Songs)
+            {
+                var warnings = new List<PreviewWarning>();
+                var alreadyInPhoenix2 = false;
+                if (song.Song != null)
+                {
+                    if (phoenix2Names.Contains(song.Song.Name))
+                    {
+                        alreadyInPhoenix2 = true;
+                        warnings.Add(new PreviewWarning(Severity.Warning,
+                            L["Already exists in the Phoenix 2 catalog — will be skipped."].Value));
+                    }
+                    else if (phoenixNames.Contains(song.Song.Name))
+                    {
+                        warnings.Add(new PreviewWarning(Severity.Info,
+                            L["Exists in the Phoenix catalog — carried-over name collision, verify this is intentional."].Value));
+                    }
+                }
+
+                _entries.Add(new PreviewEntry
+                    { Parse = song, Warnings = warnings, AlreadyInPhoenix2 = alreadyInPhoenix2 });
+            }
+        }
+    }
+
+    private async Task Confirm()
+    {
+        _isSaving = true;
+        _progress = 0;
+        _results.Clear();
+        var created = 0;
+        var failed = 0;
+        var skipped = 0;
+        foreach (var entry in _entries)
+        {
+            _progress++;
+            var song = entry.Parse.Song;
+            if (song == null) continue;
+            if (entry.AlreadyInPhoenix2)
+            {
+                skipped++;
+                _results.Add(new CreationResult(song.Name, "Skipped", Color.Warning,
+                    L["Already exists in the Phoenix 2 catalog — will be skipped."].Value));
+                continue;
+            }
+
+            var imageUrl = song.ImageUrl;
+            var imageNote = string.Empty;
+            if (!song.ImageUrl.Host.Equals(CdnHost, StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    imageUrl = await Files.CopyFromSource(song.ImageUrl, await SongImagePath(song));
+                }
+                catch (Exception)
+                {
+                    imageUrl = song.ImageUrl;
+                    imageNote = " · " +
+                                L["Image could not be copied to the CDN — source URL stored, rehost manually."];
+                }
+            }
+
+            try
+            {
+                var songId = await _charts.CreateSong(song.Name, song.KoreanName, imageUrl, song.Type,
+                    song.Duration, song.Artist, song.Bpm);
+                foreach (var chart in song.Charts)
+                {
+                    await _charts.CreateChart(MixEnum.Phoenix2, songId, chart.Type, chart.Level,
+                        chart.ChannelName, chart.VideoUrl, chart.StepArtist);
+                }
+
+                created++;
+                _results.Add(new CreationResult(song.Name, "Created", Color.Success,
+                    string.Join(", ", song.Charts.Select(c => $"{c.Type.GetShortHand()}{c.Level}")) + imageNote));
+            }
+            catch (Exception ex)
+            {
+                failed++;
+                _results.Add(new CreationResult(song.Name, "Failed", Color.Error, ex.Message));
+            }
+
+            StateHasChanged();
+        }
+
+        _charts.ClearCache();
+        _entries.Clear();
+        _isSaving = false;
+        Snackbar.Add($"{L["Created"]}: {created} · {L["Skipped"]}: {skipped} · {L["Failed"]}: {failed}",
+            failed > 0 ? Severity.Warning : Severity.Success);
+    }
+
+    private const string CdnHost = "piuimages.arroweclip.se";
+
+    // Blob names mirror the owner's manual convention (songs/CometoMe.png). A carried-over
+    // Phoenix song can legitimately share the name — its art must not be overwritten, so a
+    // taken blob name gets a -p2 suffix instead.
+    private async Task<string> SongImagePath(BulkSongSpec song)
+    {
+        var extension = System.IO.Path.GetExtension(song.ImageUrl.AbsolutePath);
+        if (string.IsNullOrEmpty(extension) || extension.Length > 5) extension = ".png";
+        var baseName = new string(song.Name.ToString().Where(char.IsAsciiLetterOrDigit).ToArray());
+        if (string.IsNullOrEmpty(baseName))
+            baseName = System.IO.Path.GetFileNameWithoutExtension(song.ImageUrl.AbsolutePath);
+        if (string.IsNullOrEmpty(baseName)) baseName = "song";
+        var path = $"songs/{baseName}{extension}";
+        return await Files.DoesFileExist(path, out _) ? $"songs/{baseName}-p2{extension}" : path;
+    }
+
+    protected override void OnInitialized()
+    {
+        if (!CurrentUser.User.IsAdmin)
+        {
+            NavManager.NavigateTo("/");
+        }
+    }
+}

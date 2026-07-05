@@ -2201,4 +2201,49 @@
   <data name="Your account is not associated with a game profile yet. Play a game on your account first, then try again." xml:space="preserve">
     <value>Votre compte n'est pas encore associé à un profil de jeu. Jouez d'abord une partie avec votre compte, puis réessayez.</value>
   </data>
+  <data name="Bulk Add Charts" xml:space="preserve">
+    <value>Ajout de charts en masse</value>
+  </data>
+  <data name="Paste one JSON blob to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
+    <value>Collez un seul blob JSON pour créer les chansons et charts Phoenix 2 en masse.</value>
+  </data>
+  <data name="Schema reference:" xml:space="preserve">
+    <value>Référence du schéma :</value>
+  </data>
+  <data name="Parse" xml:space="preserve">
+    <value>Analyser</value>
+  </data>
+  <data name="Ready" xml:space="preserve">
+    <value>Prêt</value>
+  </data>
+  <data name="Will be skipped" xml:space="preserve">
+    <value>Sera ignorée</value>
+  </data>
+  <data name="Has errors" xml:space="preserve">
+    <value>Contient des erreurs</value>
+  </data>
+  <data name="Confirm and Create" xml:space="preserve">
+    <value>Confirmer et créer</value>
+  </data>
+  <data name="Results" xml:space="preserve">
+    <value>Résultats</value>
+  </data>
+  <data name="Already exists in the Phoenix 2 catalog — will be skipped." xml:space="preserve">
+    <value>Existe déjà dans le catalogue Phoenix 2 — sera ignorée.</value>
+  </data>
+  <data name="Exists in the Phoenix catalog — carried-over name collision, verify this is intentional." xml:space="preserve">
+    <value>Existe dans le catalogue Phoenix — collision de nom reprise de Phoenix, vérifiez que c'est intentionnel.</value>
+  </data>
+  <data name="Created" xml:space="preserve">
+    <value>Créée</value>
+  </data>
+  <data name="Skipped" xml:space="preserve">
+    <value>Ignorée</value>
+  </data>
+  <data name="Failed" xml:space="preserve">
+    <value>Échec</value>
+  </data>
+  <data name="Image could not be copied to the CDN — source URL stored, rehost manually." xml:space="preserve">
+    <value>L'image n'a pas pu être copiée sur le CDN — l'URL source a été enregistrée, réhébergez-la manuellement.</value>
+  </data>
 </root>

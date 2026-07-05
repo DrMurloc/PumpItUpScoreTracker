@@ -100,6 +100,7 @@ internal sealed class EFChartRepository : IChartRepository
             EnglishSongName = name.ToString(),
             SongName = koreanName.ToString()
         }, cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
         return newSong.Id;
     }
 
@@ -326,7 +327,7 @@ internal sealed class EFChartRepository : IChartRepository
 
     public void ClearCache()
     {
-        foreach (var mixId in new[] { MixIds.XX, MixIds.Phoenix })
+        foreach (var mixId in new[] { MixIds.XX, MixIds.Phoenix, MixIds.Phoenix2 })
         {
             var key = ChartCacheKey(mixId);
             _cache.Remove(key);

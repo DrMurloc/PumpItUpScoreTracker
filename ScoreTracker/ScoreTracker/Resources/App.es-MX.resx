@@ -2082,4 +2082,49 @@
   <data name="Your account is not associated with a game profile yet. Play a game on your account first, then try again." xml:space="preserve">
     <value>Tu cuenta aún no está asociada a un perfil de juego. Primero juega una partida con tu cuenta y vuelve a intentarlo.</value>
   </data>
+  <data name="Bulk Add Charts" xml:space="preserve">
+    <value>Agregar charts en masa</value>
+  </data>
+  <data name="Paste one JSON blob to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
+    <value>Pega un solo blob JSON para crear canciones y charts de Phoenix 2 en masa.</value>
+  </data>
+  <data name="Schema reference:" xml:space="preserve">
+    <value>Referencia del esquema:</value>
+  </data>
+  <data name="Parse" xml:space="preserve">
+    <value>Analizar</value>
+  </data>
+  <data name="Ready" xml:space="preserve">
+    <value>Listo</value>
+  </data>
+  <data name="Will be skipped" xml:space="preserve">
+    <value>Se omitirá</value>
+  </data>
+  <data name="Has errors" xml:space="preserve">
+    <value>Tiene errores</value>
+  </data>
+  <data name="Confirm and Create" xml:space="preserve">
+    <value>Confirmar y crear</value>
+  </data>
+  <data name="Results" xml:space="preserve">
+    <value>Resultados</value>
+  </data>
+  <data name="Already exists in the Phoenix 2 catalog — will be skipped." xml:space="preserve">
+    <value>Ya existe en el catálogo de Phoenix 2 — se omitirá.</value>
+  </data>
+  <data name="Exists in the Phoenix catalog — carried-over name collision, verify this is intentional." xml:space="preserve">
+    <value>Existe en el catálogo de Phoenix — colisión de nombre heredado, verifica que sea intencional.</value>
+  </data>
+  <data name="Created" xml:space="preserve">
+    <value>Creada</value>
+  </data>
+  <data name="Skipped" xml:space="preserve">
+    <value>Omitida</value>
+  </data>
+  <data name="Failed" xml:space="preserve">
+    <value>Falló</value>
+  </data>
+  <data name="Image could not be copied to the CDN — source URL stored, rehost manually." xml:space="preserve">
+    <value>No se pudo copiar la imagen al CDN — se guardó la URL de origen, vuelva a alojarla manualmente.</value>
+  </data>
 </root>

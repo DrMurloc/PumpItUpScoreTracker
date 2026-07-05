@@ -221,6 +221,7 @@ builder.Services.AddBlazorApplicationInsights()
             typeof(CommunitiesRegistrationExtensions).Assembly);
     })
     .AddTransient<IUserAccessService, UserAccessService>()
+    .AddTransient<IBulkChartJsonParser, BulkChartJsonParser>()
     .AddInfrastructure(builder.Configuration.GetSection("AzureBlob").Get<AzureBlobConfiguration>(),
         sqlConfig,
         builder.Configuration.GetSection("Sendgrid").Get<SendGridConfiguration>())

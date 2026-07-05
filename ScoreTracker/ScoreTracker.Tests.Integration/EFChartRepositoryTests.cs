@@ -2,6 +2,7 @@ using ScoreTracker.Catalog.Infrastructure;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Repositories;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.Integration.Fixtures;
 using ScoreTracker.Tests.Integration.TestData;
 
@@ -98,6 +99,20 @@ public sealed class EFChartRepositoryTests : IAsyncLifetime
     // any of them ever stops mapping Korean → English correctly, every Korean user's score
     // import silently fails to match a chart. There aren't enough Korean users in production
     // to catch regressions organically, so these tests stand in.
+
+    [Fact]
+    public async Task CreateSongPersistsTheKoreanCultureNameRow()
+    {
+        // The bulk-add and single-song admin flows both rely on CreateSong writing the ko-KR
+        // row itself — if it stops persisting, every new song is invisible to Korean imports.
+        await BuildRepository().CreateSong("Nacho Beach", "나쵸 비치",
+            new Uri("https://piuimages.arroweclip.se/songs/NachoBeach.png"), SongType.Arcade,
+            TimeSpan.FromSeconds(105), "Doin", Bpm.From(195, 195));
+
+        var koreanToEnglish = await BuildRepository().GetEnglishLookup("ko-KR", CancellationToken.None);
+
+        Assert.Equal("Nacho Beach", (string)koreanToEnglish["나쵸 비치"]);
+    }
 
     [Fact]
     public async Task SetSongCultureNameThenGetEnglishLookupResolvesKoreanToEnglish()
