@@ -96,3 +96,6 @@ Quality/maintainability analysis wrapping the Windows build job (prepare → bui
 
 ### CodeQL (GitHub code scanning)
 Security analysis (taint tracking, injection flows) on pushes and PRs, via GitHub's default setup — no workflow file in the repo; configured under Settings → Code security. Free for public repos.
+
+### Dependabot
+Dependency alerts + auto security-fix PRs (repo settings) and weekly grouped NuGet version bumps ([.github/dependabot.yml](../.github/dependabot.yml) — minor/patch in one PR; MassTransit majors ignored, the repo is deliberately on 7.x). Bump PRs run the full pipeline including E2E.
