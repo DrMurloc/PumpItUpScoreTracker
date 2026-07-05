@@ -266,12 +266,24 @@ And {count - 10} others!";
     public async Task Consume(ConsumeContext<UserUpdatedEvent> context)
     {
         if (context.Message.IsPublic)
-            await _mediator.Send(new JoinCommunityCommand("World", null, context.Message.UserId));
-        else
+            await JoinSystemCommunity("World", context.Message.UserId, context.CancellationToken);
+        else if (await _communities.GetCommunityByName("World", context.CancellationToken) != null)
             await _mediator.Send(new LeaveCommunityCommand("World", context.Message.UserId));
 
         if (context.Message.Country != null)
-            await _mediator.Send(new JoinCommunityCommand(context.Message.Country, null, context.Message.UserId));
+            await JoinSystemCommunity(context.Message.Country, context.Message.UserId, context.CancellationToken);
+    }
+
+    // System communities (World + one per country) have no seed anywhere — a fresh
+    // database throws CommunityNotFoundException on the first profile update. They
+    // create themselves on first join instead: public, regional, unowned.
+    private async Task JoinSystemCommunity(Name name, Guid userId, CancellationToken cancellationToken)
+    {
+        if (await _communities.GetCommunityByName(name, cancellationToken) == null)
+            await _communities.SaveCommunity(new Community(name, Guid.Empty, CommunityPrivacyType.Public, true),
+                cancellationToken);
+
+        await _mediator.Send(new JoinCommunityCommand(name, null, userId));
     }
 
     public async Task Consume(ConsumeContext<UserWeeklyChartsProgressedEvent> context)

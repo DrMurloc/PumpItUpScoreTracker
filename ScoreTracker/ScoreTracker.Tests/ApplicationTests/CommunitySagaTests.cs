@@ -398,6 +398,7 @@ public sealed class CommunitySagaTests
     {
         var userId = Guid.NewGuid();
         var ctx = new HandlerContext();
+        ctx.GivenCommunityExists("World");
 
         await ctx.Saga.Consume(BuildContext(new UserUpdatedEvent(userId, Country: null, IsPublic: false)));
 
@@ -405,6 +406,69 @@ public sealed class CommunitySagaTests
             It.Is<LeaveCommunityCommand>(l => (string)l.CommunityName == "World" && l.UserId == userId),
             It.IsAny<CancellationToken>()), Times.Once);
         ctx.Mediator.Verify(m => m.Send(It.IsAny<JoinCommunityCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task UserUpdatedSkipsLeaveWhenWorldDoesNotExist()
+    {
+        // A fresh database has no World community — leaving it must be a no-op, not a throw.
+        var userId = Guid.NewGuid();
+        var ctx = new HandlerContext();
+
+        await ctx.Saga.Consume(BuildContext(new UserUpdatedEvent(userId, Country: null, IsPublic: false)));
+
+        ctx.Mediator.Verify(m => m.Send(It.IsAny<LeaveCommunityCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task UserUpdatedCreatesWorldCommunityOnFirstJoin()
+    {
+        // Nothing seeds system communities — they create themselves: public, regional, unowned.
+        var userId = Guid.NewGuid();
+        var ctx = new HandlerContext();
+
+        await ctx.Saga.Consume(BuildContext(new UserUpdatedEvent(userId, Country: null, IsPublic: true)));
+
+        ctx.Communities.Verify(c => c.SaveCommunity(
+            It.Is<Community>(comm => (string)comm.Name == "World" && comm.IsRegional
+                                     && comm.PrivacyType == CommunityPrivacyType.Public
+                                     && comm.OwnerId == Guid.Empty),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Mediator.Verify(m => m.Send(
+            It.Is<JoinCommunityCommand>(j => (string)j.CommunityName == "World" && j.UserId == userId),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task UserUpdatedCreatesCountryCommunityOnFirstJoin()
+    {
+        var userId = Guid.NewGuid();
+        var ctx = new HandlerContext();
+        ctx.GivenCommunityExists("World");
+
+        await ctx.Saga.Consume(BuildContext(new UserUpdatedEvent(userId, Country: "Peru", IsPublic: true)));
+
+        ctx.Communities.Verify(c => c.SaveCommunity(
+            It.Is<Community>(comm => (string)comm.Name == "Peru" && comm.IsRegional),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Mediator.Verify(m => m.Send(
+            It.Is<JoinCommunityCommand>(j => (string)j.CommunityName == "Peru" && j.UserId == userId),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task UserUpdatedDoesNotRecreateExistingSystemCommunities()
+    {
+        var userId = Guid.NewGuid();
+        var ctx = new HandlerContext();
+        ctx.GivenCommunityExists("World");
+        ctx.GivenCommunityExists("Peru");
+
+        await ctx.Saga.Consume(BuildContext(new UserUpdatedEvent(userId, Country: "Peru", IsPublic: true)));
+
+        ctx.Communities.Verify(c => c.SaveCommunity(It.IsAny<Community>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -429,6 +493,13 @@ public sealed class CommunitySagaTests
                 .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
             Saga = new CommunitySaga(CurrentUser.Object, Communities.Object, Bot.Object, Users.Object,
                 Charts.Object, Scores.Object, Mediator.Object, DateTime.Object);
+        }
+
+        public void GivenCommunityExists(string name)
+        {
+            Communities.Setup(c => c.GetCommunityByName(It.Is<Name>(n => (string)n == name),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Community(Name.From(name), Guid.Empty, CommunityPrivacyType.Public, true));
         }
 
         public void GivenUser(Guid userId, string name)
