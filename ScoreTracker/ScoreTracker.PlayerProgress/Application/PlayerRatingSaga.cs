@@ -27,19 +27,21 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
     private readonly IChartRepository _charts;
     private readonly IPlayerStatsRepository _stats;
     private readonly IScoreHighlightRepository _highlights;
+    private readonly IPlayerMilestoneRepository _milestones;
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IBus _bus;
     private readonly IMediator _mediator;
 
     public PlayerRatingSaga(IScoreReader scores, IPhoenixRecordStatsRepository recordStats,
         IChartRepository charts, IPlayerStatsRepository stats, IScoreHighlightRepository highlights,
-        IDateTimeOffsetAccessor dateTime, IBus bus, IMediator mediator)
+        IPlayerMilestoneRepository milestones, IDateTimeOffsetAccessor dateTime, IBus bus, IMediator mediator)
     {
         _scores = scores;
         _recordStats = recordStats;
         _charts = charts;
         _stats = stats;
         _highlights = highlights;
+        _milestones = milestones;
         _dateTime = dateTime;
         _bus = bus;
         _mediator = mediator;
@@ -169,6 +171,7 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
 
         await _stats.SaveStats(mix, request.UserId, newStats, cancellationToken);
         await FlagCompetitiveImprovers(request, oldStats, newStats, competitiveScores, charts, cancellationToken);
+        await CaptureRatingMilestones(request, oldStats, newStats, cancellationToken);
         if (newStats.SkillRating > oldStats.SkillRating || newStats.SinglesRating > oldStats.SinglesRating ||
             newStats.DoublesRating > oldStats.DoublesRating || newStats.ClearCount > oldStats.ClearCount ||
             newStats.CoOpRating > oldStats.CoOpRating)
@@ -206,6 +209,34 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
     private static double AvgOr0(double[] charts)
     {
         return charts.Any() ? charts.Average() : 0;
+    }
+
+    // Pumbility and Singles/Doubles competitive gains become timestamped milestones —
+    // neither was persisted with a timestamp before this table. Combined competitive is
+    // deliberately never a milestone (S and D don't compare).
+    private async Task CaptureRatingMilestones(RecalculateStatsCommand request, PlayerStatsRecord oldStats,
+        PlayerStatsRecord newStats, CancellationToken cancellationToken)
+    {
+        var milestones = new List<PlayerMilestoneWrite>();
+        if (newStats.SkillRating > oldStats.SkillRating)
+            milestones.Add(new PlayerMilestoneWrite(MilestoneKind.PumbilityGain, request.SessionId, _dateTime.Now,
+                oldStats.SkillRating, newStats.SkillRating));
+        if (CompetitiveGained(oldStats.SinglesCompetitiveLevel, newStats.SinglesCompetitiveLevel))
+            milestones.Add(new PlayerMilestoneWrite(MilestoneKind.SinglesCompetitiveGain, request.SessionId,
+                _dateTime.Now, oldStats.SinglesCompetitiveLevel, newStats.SinglesCompetitiveLevel));
+        if (CompetitiveGained(oldStats.DoublesCompetitiveLevel, newStats.DoublesCompetitiveLevel))
+            milestones.Add(new PlayerMilestoneWrite(MilestoneKind.DoublesCompetitiveGain, request.SessionId,
+                _dateTime.Now, oldStats.DoublesCompetitiveLevel, newStats.DoublesCompetitiveLevel));
+
+        if (milestones.Any())
+            await _milestones.Append(request.Mix, request.UserId, milestones, cancellationToken);
+    }
+
+    // Mirrors the Discord ratings message's guard: micro-gains that don't move the
+    // third decimal are recomputation noise, not milestones.
+    private static bool CompetitiveGained(double oldLevel, double newLevel)
+    {
+        return newLevel > oldLevel && oldLevel.ToString("0.000") != newLevel.ToString("0.000");
     }
 
     // The CompetitiveImprover highlight flag: when a batch raised the Singles or Doubles

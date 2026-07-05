@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 using MassTransit;
 using Moq;
 using ScoreTracker.PlayerProgress.Application;
+using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
@@ -14,6 +16,7 @@ using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Tests.TestData;
+using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -89,6 +92,7 @@ public sealed class TitleSagaTests
         public Mock<IScoreReader> Scores { get; } = new();
         public Mock<IChartRepository> Charts { get; } = new();
         public Mock<ITitleRepository> Titles { get; } = new();
+        public Mock<IPlayerMilestoneRepository> Milestones { get; } = new();
         public Mock<IBus> Bus { get; } = new();
         public TitleSaga Saga { get; }
 
@@ -105,7 +109,9 @@ public sealed class TitleSagaTests
             Scores.Setup(s => s.GetBestScores(mix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
 
-            Saga = new TitleSaga(CurrentUser.Object, Scores.Object, Charts.Object, Titles.Object, Bus.Object);
+            Saga = new TitleSaga(CurrentUser.Object, Scores.Object, Charts.Object, Titles.Object,
+                Milestones.Object, FakeDateTime.At(new DateTimeOffset(2026, 5, 1, 12, 0, 0, TimeSpan.Zero)).Object,
+                Bus.Object);
         }
 
         public void GivenBestScores(params RecordedPhoenixScore[] scores)
@@ -113,6 +119,21 @@ public sealed class TitleSagaTests
             Scores.Setup(s => s.GetBestScores(_mix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(scores);
         }
+    }
+
+    [Fact]
+    public async Task CompletedTitlesAreCapturedAsMilestones()
+    {
+        // UserTitle rows have no acquisition date — the milestone is the only record of WHEN.
+        var ctx = new SagaContext(MixEnum.Phoenix);
+
+        await ctx.Saga.Consume(BuildContext(new TitlesDetectedEvent(ctx.UserId,
+            new[] { "Intermediate Lv. 1" }, MixEnum.Phoenix)));
+
+        ctx.Milestones.Verify(m => m.Append(MixEnum.Phoenix, ctx.UserId,
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w => w.Any(x =>
+                x.Kind == MilestoneKind.TitleCompleted && x.Title == "Intermediate Lv. 1")),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private static RecordedPhoenixScore Score(Guid chartId, int score) =>

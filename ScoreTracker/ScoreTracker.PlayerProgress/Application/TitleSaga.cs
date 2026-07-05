@@ -2,7 +2,9 @@ using MassTransit;
 using MediatR;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
@@ -26,6 +28,8 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IScoreReader _phoenixScores;
     private readonly ITitleRepository _titles;
+    private readonly IPlayerMilestoneRepository _milestones;
+    private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IBus _bus;
 
     public sealed record ProcessTitles(Guid UserId, MixEnum Mix = MixEnum.Phoenix) : IRequest;
@@ -34,12 +38,16 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         IScoreReader phoenixScores,
         IChartRepository charts,
         ITitleRepository titles,
+        IPlayerMilestoneRepository milestones,
+        IDateTimeOffsetAccessor dateTime,
         IBus bus)
     {
         _currentUser = currentUser;
         _phoenixScores = phoenixScores;
         _charts = charts;
         _titles = titles;
+        _milestones = milestones;
+        _dateTime = dateTime;
         _bus = bus;
     }
 
@@ -161,11 +169,21 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
             existingTitles.ContainsKey(c.Title) && existingTitles[c.Title].ParagonLevel != c.ParagonLevel).ToArray();
 
         if (newCompleted.Any() || upgraded.Any())
+        {
+            // Title completions and paragon gains become timestamped milestones —
+            // UserTitle rows have no acquisition date, so this is the only record of WHEN.
+            await _milestones.Append(mix, userId, newCompleted
+                    .Select(t => new PlayerMilestoneWrite(MilestoneKind.TitleCompleted, sessionId, _dateTime.Now,
+                        Title: t))
+                    .Concat(upgraded.Select(t => new PlayerMilestoneWrite(MilestoneKind.ParagonLevelGain, sessionId,
+                        _dateTime.Now, Title: t.Title.ToString(), Detail: t.ParagonLevel.ToString()))),
+                cancellationToken);
             await _bus.Publish(
                 new NewTitlesAcquiredEvent(userId, newCompleted,
                     upgraded.ToDictionary(t => t.Title.ToString(), t => t.ParagonLevel.ToString()),
                     mix, sessionId),
                 cancellationToken);
+        }
     }
 
     private static PhoenixTitle GetTitleByName(MixEnum mix, Name title)

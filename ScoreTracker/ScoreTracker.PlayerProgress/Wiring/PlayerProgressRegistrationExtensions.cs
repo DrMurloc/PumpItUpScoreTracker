@@ -27,6 +27,7 @@ public static class PlayerProgressRegistrationExtensions
         services.AddTransient<IFeedbackRepository, EFFeedbackRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddTransient<IScoreHighlightRepository, EFScoreHighlightRepository>();
+        services.AddTransient<IPlayerMilestoneRepository, EFPlayerMilestoneRepository>();
         services.AddSingleton<IDbModelContribution, PlayerProgressModelContribution>();
         return services;
     }

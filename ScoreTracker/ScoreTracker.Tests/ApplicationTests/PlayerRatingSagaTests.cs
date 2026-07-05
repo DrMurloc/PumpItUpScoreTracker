@@ -215,6 +215,34 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
+    public async Task RatingGainsBecomeSessionMilestones()
+    {
+        // Pumbility + Singles competitive gains capture; Doubles didn't gain and the
+        // combined competitive is deliberately never a milestone.
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        var milestones = new Mock<IPlayerMilestoneRepository>();
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { single }),
+            scores: ScoresMockReturning(userId, new[] { Score(single.Id, 950000) }),
+            stats: stats, milestones: milestones);
+
+        await saga.Handle(new RecalculateStatsCommand(userId, MixEnum.Phoenix, new[] { single.Id }, sessionId),
+            CancellationToken.None);
+
+        milestones.Verify(m => m.Append(MixEnum.Phoenix, userId,
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w =>
+                w.Any(x => x.Kind == MilestoneKind.PumbilityGain && x.SessionId == sessionId)
+                && w.Any(x => x.Kind == MilestoneKind.SinglesCompetitiveGain)
+                && w.All(x => x.Kind != MilestoneKind.DoublesCompetitiveGain)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task AdminRecalculationWithoutASessionWritesNoImproverFlags()
     {
         var userId = Guid.NewGuid();
@@ -332,7 +360,8 @@ public sealed class PlayerRatingSagaTests
         Mock<IBus>? bus = null,
         Mock<IMediator>? mediator = null,
         Mock<IPhoenixRecordStatsRepository>? recordStats = null,
-        Mock<IScoreHighlightRepository>? highlights = null)
+        Mock<IScoreHighlightRepository>? highlights = null,
+        Mock<IPlayerMilestoneRepository>? milestones = null)
     {
         scores ??= new Mock<IScoreReader>();
         charts ??= new Mock<IChartRepository>();
@@ -341,8 +370,9 @@ public sealed class PlayerRatingSagaTests
         mediator ??= new Mock<IMediator>();
         recordStats ??= new Mock<IPhoenixRecordStatsRepository>();
         highlights ??= new Mock<IScoreHighlightRepository>();
+        milestones ??= new Mock<IPlayerMilestoneRepository>();
         return new PlayerRatingSaga(scores.Object, recordStats.Object, charts.Object, stats.Object,
-            highlights.Object, FakeDateTime.At(Now).Object, bus.Object, mediator.Object);
+            highlights.Object, milestones.Object, FakeDateTime.At(Now).Object, bus.Object, mediator.Object);
     }
 
     private static Mock<IChartRepository> ChartsMockReturning(IEnumerable<Chart> result)

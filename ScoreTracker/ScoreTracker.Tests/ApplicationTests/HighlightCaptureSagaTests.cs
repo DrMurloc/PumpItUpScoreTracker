@@ -163,6 +163,44 @@ public sealed class HighlightCaptureSagaTests
     }
 
     [Fact]
+    public async Task CompletingAFolderFiresPassGradeAndPlateLamps()
+    {
+        // Two-chart D23 folder: one already passed, this pass completes it — the pass
+        // lamp fires, plus the grade and plate floors that now exist.
+        var chartA = new ChartBuilder().WithType(ChartType.Double).WithLevel(23).Build();
+        var chartB = new ChartBuilder().WithType(ChartType.Double).WithLevel(23).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chartA, chartB);
+        ctx.GivenBest(chartA, 981000);
+        ctx.GivenBest(chartB, 970500);
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chartB)));
+
+        ctx.Milestones.Verify(m => m.Append(MixEnum.Phoenix, UserId,
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w =>
+                w.Any(x => x.Kind == MilestoneKind.FolderPassLamp && x.Detail == "D23")
+                && w.Any(x => x.Kind == MilestoneKind.FolderGradeLamp && x.Detail == "D23|S")
+                && w.Any(x => x.Kind == MilestoneKind.FolderPlateLamp && x.Detail == "D23|FairGame")),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task IncompleteFoldersFireNoLamps()
+    {
+        var chart = new ChartBuilder().WithType(ChartType.Double).WithLevel(23).Build();
+        var others = Enumerable.Range(0, 9)
+            .Select(_ => new ChartBuilder().WithType(ChartType.Double).WithLevel(23).Build()).ToArray();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(others.Append(chart).ToArray());
+        ctx.GivenBest(chart, 910000);
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.Milestones.Verify(m => m.Append(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<IEnumerable<PlayerMilestoneWrite>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task PublishesCapturedEventCarryingFlagsAndSession()
     {
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
@@ -224,6 +262,7 @@ public sealed class HighlightCaptureSagaTests
         public Mock<ITitleRepository> Titles { get; } = new();
         public Mock<IPlayerStatsReader> PlayerStats { get; } = new();
         public Mock<IScoreHighlightRepository> Highlights { get; } = new();
+        public Mock<IPlayerMilestoneRepository> Milestones { get; } = new();
         public Mock<IMediator> Mediator { get; } = new();
         public HighlightCaptureSaga Saga { get; }
 
@@ -246,7 +285,7 @@ public sealed class HighlightCaptureSagaTests
                     It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<(Guid, RecordedPhoenixScore)>());
             Saga = new HighlightCaptureSaga(Charts.Object, Scores.Object, Titles.Object, PlayerStats.Object,
-                Highlights.Object, Mediator.Object, new MemoryCache(new MemoryCacheOptions()),
+                Highlights.Object, Milestones.Object, Mediator.Object, new MemoryCache(new MemoryCacheOptions()),
                 NullLogger<HighlightCaptureSaga>.Instance);
         }
 
