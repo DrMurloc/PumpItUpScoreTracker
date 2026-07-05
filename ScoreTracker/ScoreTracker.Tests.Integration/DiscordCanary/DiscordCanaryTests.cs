@@ -115,7 +115,8 @@ public sealed class DiscordCanaryTests
             Array.Empty<RichBotLink>());
     }
 
-    private static IEnumerable<string> ComponentTexts(IEnumerable<IMessageComponent> components)
+    // Shared with the real-session showcase, which reads its cards back the same way.
+    internal static IEnumerable<string> ComponentTexts(IEnumerable<IMessageComponent> components)
     {
         foreach (var component in components)
             switch (component)
