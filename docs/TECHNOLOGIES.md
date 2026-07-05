@@ -17,7 +17,7 @@ The Blazor component library — tables, dialogs, autocompletes, the app bar and
 Charting for progress/stat visualizations.
 
 ### DartSassBuilder
-Compiles the repo's lone Sass file ([charts.scss](../ScoreTracker/ScoreTracker/wwwroot/css/charts.scss) → committed `charts.css`, compressed) on build. Chosen because it runs on any OS — its predecessor (`Delegate.SassBuilder`) shipped a Windows-only compiler binary that broke the Linux E2E CI job; anything replacing it must stay cross-platform.
+Compiles the repo's lone Sass file ([charts.scss](../ScoreTracker/ScoreTracker/wwwroot/css/charts.scss) → committed `charts.css`, compressed) on build. Chosen because it runs on any OS — its predecessor (`Delegate.SassBuilder`) shipped a Windows-only compiler binary that broke the Linux E2E CI job; anything replacing it must stay cross-platform. Its build tool targets **net8.0**: machines with only a newer runtime need `DOTNET_ROLL_FORWARD=Major` (CI sets this as a pipeline variable; dev machines normally have a net8 runtime around).
 
 ### Localization (resx)
 Eight locales (`en-US`, `pt-BR`, `ko-KR`, `en-ZW`, `es-MX`, `fr-FR`, `ja-JP`, `it-IT`). A scoped `IStringLocalizer<App>` is injected globally as `L` ([_Imports.razor](../ScoreTracker/ScoreTracker/_Imports.razor)); resource keys are the **English UI text verbatim**. Per-locale translation glossaries live at the repo root (`LOCALIZATION-<locale>.md`). New keys must be populated in every locale's resx in the same pass.
