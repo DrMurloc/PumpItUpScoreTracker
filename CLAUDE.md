@@ -128,7 +128,7 @@ See [docs/HOW-TO-TEST.md](docs/HOW-TO-TEST.md) for the philosophy; these are the
 | `ScoreTracker.Tests/ApplicationTests/` | Component | Small | Test doubles (mocked ports) |
 | `ScoreTracker.Tests/ArchitectureTests/` | Unit (ratchets — rules are added, never removed) | Small | None |
 | `ScoreTracker.Tests.Api/` | Approval (API wire shape) | Small | Test doubles |
-| `ScoreTracker.Tests.Integration/` | Integration | Medium | Ephemeral infra (SQL Server via Testcontainers) |
+| `ScoreTracker.Tests.Integration/` | Integration | Medium | Ephemeral infra (SQL Server via Testcontainers). `LiveSite/` + `DiscordCanary/` subfolders are env-gated smoke tests that skip when unconfigured; the Discord canary is manual-run only |
 | `ScoreTracker.Tests.E2E/` | E2E (critical workflows) | Large | Ephemeral infra (SQL Server, Kestrel-hosted app, WireMock PIU stub, headless Chromium) |
 
 PR gate: the fast suites (`ScoreTracker.Tests`, `ScoreTracker.Tests.Api`) run without Docker; the integration and E2E suites need Docker. CI runs all four on every PR.

@@ -1,5 +1,11 @@
 # Discord rich score notifications — design
 
+> **Status: IMPLEMENTED** (PR #124, 2026-07-05) — all build-plan commits C0–C10 landed:
+> fast suite, API wire-shape suite, integration suite, and the Sessions Playwright E2E
+> green; the live Discord canary posted both sample cards to the lab channel and read
+> them back with components attached. Remaining follow-ups live under "Deferred by
+> design" and the legacy-consumer migrations (titles → ratings → weekly → UCS).
+
 Restructure the community Discord score-update announcements from plain-text messages into
 structured cards built on Discord's **Components V2** layout API (containers, sections with
 thumbnail accessories, separators, link buttons). This doc records the design and the decisions

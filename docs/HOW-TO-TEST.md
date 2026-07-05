@@ -69,6 +69,16 @@ dotnet user-secrets set "PiuTest:Password" "..." --project ScoreTracker/ScoreTra
 dotnet test ScoreTracker/ScoreTracker.Tests.Integration/ScoreTracker.Tests.Integration.csproj --filter "FullyQualifiedName~PiuGameLiveSiteTests"
 ```
 
+### Discord canary — testing bot required, manual runs only
+
+`Tests.Integration/DiscordCanary/` posts the sample Components V2 score cards to the owner's private lab channel with the **testing** bot and reads them back over REST — catching what component tests can't: Discord API contract drift, emoji-id resolution, and token/permission validity. **Run it manually when a change touches Discord or Communities code** — it is deliberately unscheduled and never part of the PR gate (real breakage gets heard from the communities faster than a schedule would report it). Messages are left in the channel on purpose: it doubles as a visual gallery of what the cards looked like on every run.
+
+Configuration (skips automatically when absent): `Discord:BotToken` + `DiscordTest:CanaryChannelId` in the shared AppHost user-secrets store, or `DISCORD_CANARY_TOKEN` / `DISCORD_CANARY_CHANNEL` environment variables. Then:
+
+```sh
+dotnet test ScoreTracker/ScoreTracker.Tests.Integration/ScoreTracker.Tests.Integration.csproj --filter "FullyQualifiedName~DiscordCanaryTests"
+```
+
 ### What CI runs
 
 Every PR and every merge to `main` runs all four suites on [Azure Pipelines](https://dev.azure.com/joneccker/ScoreTracker) — the fast suites on a Windows agent, the integration and E2E suites on parallel Linux agents with Docker. **The live-site smoke tests run in CI too**: the integration job pulls a PIU test account from Azure Key Vault, so scraper breakage fails the build — and since the deploy stage only runs after a green Build stage, a broken importer can't reach production. Merges to `main` additionally build the deployable artifact and wait at a manual approval gate before deploying.
