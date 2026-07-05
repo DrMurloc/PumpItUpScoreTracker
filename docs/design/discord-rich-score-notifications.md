@@ -386,6 +386,37 @@ their row in DATABASE-SCHEMA.md.
 - **Localization**: new UI strings get keys in all eight locales in the same PR, per
   convention.
 
+## Data model summary
+
+The implementation-facing inventory of everything above. **New code types:**
+
+| Vertical | Type | Kind | Notes |
+|---|---|---|---|
+| Domain (shared) | `RichBotMessage`, `RichBotSection`, `RichBotText`, `RichBotDivider`, `RichBotLink` | new records | `IBotClient.SendRichMessages` port model; strings carry emoji tokens |
+| Domain (shared) | `PlayerScoresUpdatedEvent.SessionId` | additive field (`Guid?`) | SchemaVersion stays 1 (Mix precedent); partner webhook safe |
+| ScoreLedger | `ScoreJournalEntry.SessionId` | additive field (`Guid?`) | import id / per-CSV-upload / 4 h rolling manual session |
+| ScoreLedger | `UpdatePhoenixBestAttemptCommand.SessionId` | additive optional param | stamped by OfficialMirror import saga + CSV upload handler; null ⇒ handler derives the rolling session |
+| ScoreLedger | `GetRecentScoreEventsQuery` → `RecentScoreEventRecord`, `ScoreEventClassification` (NewPass / Upscore / Played / Break) | new contracts | the journal's first read path; handler gates on `User.IsPublic` |
+| PlayerProgress | `ScoreHighlight` (internal entity + record), `HighlightFlag` [Flags] enum (PumbilityTop50, TitleProgress, ScoreQuality90, FolderCompletion90, CompetitiveImprover) | new | captured by PlayerProgress consumers of the score event; flags may land moments after journal rows (eventual, acceptable) |
+| PlayerProgress | `PlayerMilestone` (internal entity + record), `MilestoneKind` enum (PumbilityGain, TitleCompleted, SinglesCompetitiveGain, DoublesCompetitiveGain) | new | appended by `PlayerRatingSaga`/`TitleSaga`, which already hold the deltas |
+| PlayerProgress | `GetScoreHighlightsQuery`, `GetPlayerMilestonesQuery` | new contracts | the page merges these with the journal read in memory — no cross-vertical SQL |
+| Data | `DiscordRichMessageRenderer` | new pure translator | RichBotMessage → V2 components + fallback text; `DiscordMessageSplitter` already shipped |
+
+**Existing types referenced, unchanged:** `User.IsPublic` (privacy gate), `Chart`/`Song`/`PhoenixScore`/`PhoenixLetterGrade`/`PhoenixPlate` (SharedKernel display), `RecordedPhoenixScore` via `GetTop50ForPlayerQuery` (crown), `TitleProgress` rules (title flag), `ScoreRankingRecord` via the Score Quality machinery (quality flag), `GetChartScoringLevelsQuery` (noteworthy ordering), `Community.ChannelConfiguration` (opt-in flags), `PlayerHistoryEntity`/`UserTitleEntity` (untouched — their gaps are why milestones capture).
+
+**Schema changes (one migration, scaffolded from `Data` with the CompositionRoot startup project):**
+
+| Table | Change | Indexes |
+|---|---|---|
+| `scores.ScoreEventJournal` | + `SessionId uniqueidentifier NULL` (no backfill) | + `(UserId, MixId, OccurredAt)` for feed paging; + filtered `(SessionId)` for session/import-results reads |
+| `scores.ScoreHighlight` **(new)** | `Id` PK, `UserId`, `MixId`, `ChartId`, `SessionId NULL`, `OccurredAt`, `Flags int`, `Level int`, `ScoringLevel decimal NULL` | `(UserId, MixId, OccurredAt)`; filtered `(SessionId)` |
+| `scores.PlayerMilestone` **(new)** | `Id` PK, `UserId`, `MixId`, `SessionId NULL`, `OccurredAt`, `Kind`, `OldValue decimal NULL`, `NewValue decimal NULL`, `Title nvarchar NULL` | `(UserId, MixId, OccurredAt)` |
+
+Both new tables live in PlayerProgress's model contribution (already listed in
+`VerticalModelContributions.All()`); the journal column rides ScoreLedger's. Each change gets
+its row in DATABASE-SCHEMA.md in the same PR. Hangfire, Communities, and Identity tables are
+untouched; the Discord work itself needs no schema.
+
 ## Testing
 
 - **`CommunitySagaTests`**: the score-update tests currently assert on concatenated strings;
