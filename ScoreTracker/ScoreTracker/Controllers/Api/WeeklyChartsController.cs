@@ -15,6 +15,7 @@ using ScoreTracker.WeeklyChallenge.Contracts.Queries;
 namespace ScoreTracker.Web.Controllers.Api;
 
 [ApiToken]
+[ApiController]
 [Route("api/weeklyCharts")]
 [EnableCors("API")]
 public sealed class WeeklyChartsController : Controller

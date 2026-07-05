@@ -17,6 +17,7 @@ using ScoreTracker.Web.Security;
 namespace ScoreTracker.Web.Controllers.Api;
 
 [ApiToken]
+[ApiController]
 [Route("api/charts")]
 [EnableCors("API")]
 public sealed class ChartsController : Controller

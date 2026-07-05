@@ -13,6 +13,7 @@ using ScoreTracker.Web.Security;
 namespace ScoreTracker.Web.Controllers.Api
 {
     [ApiToken]
+    [ApiController]
     [Route("api/tournaments")]
     [EnableCors("API")]
     public class TournamentController : Controller

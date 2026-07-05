@@ -24,6 +24,7 @@ using ScoreTracker.Web.Security;
 namespace ScoreTracker.Web.Controllers.Api;
 
 [ApiToken]
+[ApiController]
 [Route("api/phoenixScores")]
 [EnableCors("API")]
 public sealed class PhoenixScoresController : Controller
@@ -96,7 +97,7 @@ public sealed class PhoenixScoresController : Controller
         { "RecordedDate", "Score", "LetterGrade", "Plate", "Level", "Pumbility", "PumbilityPlus" };
 
     [HttpGet]
-    public async Task<IActionResult> Get([FromQuery(Name = "Page")] [DefaultValue(1)] int page,
+    public async Task<IActionResult> Get([FromQuery(Name = "Page")] [DefaultValue(1)] int page = 1,
         [FromQuery(Name = "Count")] [DefaultValue(50)] int count = 50,
         [FromQuery(Name = "SortBy")] [DefaultValue("RecordedDate")] string sortBy = "RecordedDate",
         [FromQuery(Name = "SortDir")] [DefaultValue("Desc")] string sortDir = "Desc",

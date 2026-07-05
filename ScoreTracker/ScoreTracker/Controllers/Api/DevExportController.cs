@@ -17,6 +17,7 @@ namespace ScoreTracker.Web.Controllers.Api;
 ///     </para>
 /// </summary>
 [ApiToken]
+[ApiController]
 [Route("dev/export")]
 [EnableCors("API")]
 [ApiExplorerSettings(IgnoreApi = true)]

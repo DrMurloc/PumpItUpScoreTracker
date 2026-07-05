@@ -6,6 +6,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Web.Controllers
 {
+    [ApiController]
     [Route("")]
     public sealed class SitemapController : Controller
     {

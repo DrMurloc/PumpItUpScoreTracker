@@ -3,6 +3,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Web.Controllers.Api;
 
+[ApiController]
 [Route("api/admin")]
 public sealed class AdminController : Controller
 {

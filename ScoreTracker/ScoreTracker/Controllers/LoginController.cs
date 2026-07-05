@@ -291,6 +291,7 @@ public sealed class LoginController : Controller
     public async Task<IActionResult> DevLogin([FromForm] Guid userId)
     {
         if (!_devAuth.Value.Enabled) return NotFound();
+        if (!ModelState.IsValid) return BadRequest("Invalid user id");
 
         var user = await _mediator.Send(new GetUserByIdQuery(userId), HttpContext.RequestAborted);
         if (user == null) return BadRequest("User not found");
