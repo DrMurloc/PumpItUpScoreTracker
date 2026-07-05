@@ -1,0 +1,55 @@
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.ScoreLedger.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@namespace ScoreTracker.Web.Components
+<div class="d-flex align-center gap-3 px-4 py-2" data-testid="highlight-row">
+    @if (Chart != null)
+    {
+        <MudImage Src="@Chart.Song.ImagePath.ToString()" Width="44" Height="44" ObjectFit="ObjectFit.Cover"
+                  Style="border-radius: 6px" Alt="@Chart.Song.Name.ToString()"/>
+        <div class="flex-grow-1">
+            <div class="d-flex align-center gap-1">
+                <DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble>
+                <MudLink Href="@($"/Chart/{Chart.Id}")">@Chart.Song.Name</MudLink>
+                @foreach (var badge in Badges)
+                {
+                    <MudTooltip Text="@badge.Tooltip">
+                        <span tabindex="0" style="font-size: .8rem">@badge.Glyph</span>
+                    </MudTooltip>
+                }
+            </div>
+            <ScoreBreakdown Score="Row.Score == null ? null : PhoenixScore.From(Row.Score.Value)"
+                            IsBroken="Row.IsBroken"
+                            Plate="PhoenixPlateHelperMethods.TryParse(Row.Plate)"
+                            ShowScore="true" OneLine="true"></ScoreBreakdown>
+        </div>
+        <div class="d-flex flex-column align-end gap-1">
+            <ClassificationChip Classification="Row.Classification"></ClassificationChip>
+            @if (Row.Classification == ScoreEventClassification.Upscore && Row.PreviousBest != null && Row.Score != null)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Success">+@((Row.Score.Value - Row.PreviousBest.Value).ToString("N0"))</MudText>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] [EditorRequired] public RecentSessionsPage.ScoreEventRecord Row { get; set; } = null!;
+    [Parameter] public Chart? Chart { get; set; }
+    [Parameter] public HighlightFlag Flags { get; set; }
+
+    private IEnumerable<(string Glyph, string Tooltip)> Badges
+    {
+        get
+        {
+            if (Flags.HasFlag(HighlightFlag.PumbilityTop50)) yield return ("👑", L["In your PUMBILITY top 50"].Value);
+            if (Flags.HasFlag(HighlightFlag.TitleProgress)) yield return ("🏅", L["Counts toward a title"].Value);
+            if (Flags.HasFlag(HighlightFlag.ScoreQuality90)) yield return ("📊", L["Top scores among comparable players"].Value);
+            if (Flags.HasFlag(HighlightFlag.FolderCompletion90)) yield return ("📁", L["Nearly complete folder"].Value);
+            if (Flags.HasFlag(HighlightFlag.CompetitiveImprover)) yield return ("⬆", L["Raised your competitive level"].Value);
+            if (Flags.HasFlag(HighlightFlag.FolderDebut)) yield return ("🆕", L["One of your first passes in this folder"].Value);
+        }
+    }
+}

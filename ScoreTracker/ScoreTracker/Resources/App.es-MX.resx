@@ -2130,4 +2130,106 @@
   <data name="Image could not be copied to the CDN — source URL stored, rehost manually." xml:space="preserve">
     <value>No se pudo copiar la imagen al CDN — se guardó la URL de origen, vuelva a alojarla manualmente.</value>
   </data>
+  <data name="Sessions" xml:space="preserve">
+    <value>Sesiones</value>
+  </data>
+  <data name="Play sessions, newest first" xml:space="preserve">
+    <value>Sesiones de juego, las más recientes primero</value>
+  </data>
+  <data name="Of Note" xml:space="preserve">
+    <value>Destacado</value>
+  </data>
+  <data name="Sessions per page" xml:space="preserve">
+    <value>Sesiones por página</value>
+  </data>
+  <data name="No sessions recorded yet." xml:space="preserve">
+    <value>Aún no hay sesiones registradas.</value>
+  </data>
+  <data name="Score history begins with journaling (June 2026) — older plays aren&apos;t shown." xml:space="preserve">
+    <value>El historial de puntuaciones comienza con el registro (junio de 2026); las partidas anteriores no se muestran.</value>
+  </data>
+  <data name="New Pass" xml:space="preserve">
+    <value>Nuevo Pass</value>
+  </data>
+  <data name="Upscore" xml:space="preserve">
+    <value>Upscore</value>
+  </data>
+  <data name="Break" xml:space="preserve">
+    <value>Break</value>
+  </data>
+  <data name="Played" xml:space="preserve">
+    <value>Jugado</value>
+  </data>
+  <data name="New Passes" xml:space="preserve">
+    <value>Nuevos Passes</value>
+  </data>
+  <data name="Upscores" xml:space="preserve">
+    <value>Upscores</value>
+  </data>
+  <data name="Highlights" xml:space="preserve">
+    <value>Destacados</value>
+  </data>
+  <data name="Show All" xml:space="preserve">
+    <value>Mostrar todo</value>
+  </data>
+  <data name="Official Import" xml:space="preserve">
+    <value>Importación oficial</value>
+  </data>
+  <data name="CSV Upload" xml:space="preserve">
+    <value>Carga CSV</value>
+  </data>
+  <data name="Backfill" xml:space="preserve">
+    <value>Retroactivo</value>
+  </data>
+  <data name="Play Session" xml:space="preserve">
+    <value>Sesión de juego</value>
+  </data>
+  <data name="min" xml:space="preserve">
+    <value>min</value>
+  </data>
+  <data name="Score Journal" xml:space="preserve">
+    <value>Diario de puntuaciones</value>
+  </data>
+  <data name="Export CSV" xml:space="preserve">
+    <value>Exportar CSV</value>
+  </data>
+  <data name="When" xml:space="preserve">
+    <value>Cuándo</value>
+  </data>
+  <data name="Result" xml:space="preserve">
+    <value>Resultado</value>
+  </data>
+  <data name="Competitive" xml:space="preserve">
+    <value>Competitivo</value>
+  </data>
+  <data name="Paragon" xml:space="preserve">
+    <value>Paragon</value>
+  </data>
+  <data name="Folder Lamp" xml:space="preserve">
+    <value>Folder Lamp</value>
+  </data>
+  <data name="All {0} passed" xml:space="preserve">
+    <value>Todas las {0} superadas</value>
+  </data>
+  <data name="All {0} at {1} or better" xml:space="preserve">
+    <value>Todas las {0} en {1} o mejor</value>
+  </data>
+  <data name="In your PUMBILITY top 50" xml:space="preserve">
+    <value>En tu top 50 de PUMBILITY</value>
+  </data>
+  <data name="Counts toward a title" xml:space="preserve">
+    <value>Cuenta para un título</value>
+  </data>
+  <data name="Top scores among comparable players" xml:space="preserve">
+    <value>Entre las mejores puntuaciones de jugadores comparables</value>
+  </data>
+  <data name="Nearly complete folder" xml:space="preserve">
+    <value>Carpeta casi completa</value>
+  </data>
+  <data name="Raised your competitive level" xml:space="preserve">
+    <value>Subió tu nivel competitivo</value>
+  </data>
+  <data name="One of your first passes in this folder" xml:space="preserve">
+    <value>Uno de tus primeros passes en esta carpeta</value>
+  </data>
 </root>

@@ -2252,4 +2252,106 @@
   <data name="Image could not be copied to the CDN — source URL stored, rehost manually." xml:space="preserve">
     <value>画像をCDNにコピーできませんでした — 元のURLを保存しました。手動で再ホストしてください。</value>
   </data>
+  <data name="Sessions" xml:space="preserve">
+    <value>セッション</value>
+  </data>
+  <data name="Play sessions, newest first" xml:space="preserve">
+    <value>プレイセッション（新しい順）</value>
+  </data>
+  <data name="Of Note" xml:space="preserve">
+    <value>注目</value>
+  </data>
+  <data name="Sessions per page" xml:space="preserve">
+    <value>ページあたりのセッション数</value>
+  </data>
+  <data name="No sessions recorded yet." xml:space="preserve">
+    <value>まだセッションが記録されていません。</value>
+  </data>
+  <data name="Score history begins with journaling (June 2026) — older plays aren&apos;t shown." xml:space="preserve">
+    <value>スコア履歴はジャーナル記録開始（2026年6月）以降のものです。それ以前のプレイは表示されません。</value>
+  </data>
+  <data name="New Pass" xml:space="preserve">
+    <value>新規クリア</value>
+  </data>
+  <data name="Upscore" xml:space="preserve">
+    <value>スコア更新</value>
+  </data>
+  <data name="Break" xml:space="preserve">
+    <value>ブレイク</value>
+  </data>
+  <data name="Played" xml:space="preserve">
+    <value>プレイ済み</value>
+  </data>
+  <data name="New Passes" xml:space="preserve">
+    <value>新規クリア</value>
+  </data>
+  <data name="Upscores" xml:space="preserve">
+    <value>スコア更新</value>
+  </data>
+  <data name="Highlights" xml:space="preserve">
+    <value>ハイライト</value>
+  </data>
+  <data name="Show All" xml:space="preserve">
+    <value>すべて表示</value>
+  </data>
+  <data name="Official Import" xml:space="preserve">
+    <value>公式インポート</value>
+  </data>
+  <data name="CSV Upload" xml:space="preserve">
+    <value>CSVアップロード</value>
+  </data>
+  <data name="Backfill" xml:space="preserve">
+    <value>バックフィル</value>
+  </data>
+  <data name="Play Session" xml:space="preserve">
+    <value>プレイセッション</value>
+  </data>
+  <data name="min" xml:space="preserve">
+    <value>分</value>
+  </data>
+  <data name="Score Journal" xml:space="preserve">
+    <value>スコアジャーナル</value>
+  </data>
+  <data name="Export CSV" xml:space="preserve">
+    <value>CSVエクスポート</value>
+  </data>
+  <data name="When" xml:space="preserve">
+    <value>日時</value>
+  </data>
+  <data name="Result" xml:space="preserve">
+    <value>結果</value>
+  </data>
+  <data name="Competitive" xml:space="preserve">
+    <value>競技</value>
+  </data>
+  <data name="Paragon" xml:space="preserve">
+    <value>パラゴン</value>
+  </data>
+  <data name="Folder Lamp" xml:space="preserve">
+    <value>フォルダーランプ</value>
+  </data>
+  <data name="All {0} passed" xml:space="preserve">
+    <value>{0} 全曲クリア</value>
+  </data>
+  <data name="All {0} at {1} or better" xml:space="preserve">
+    <value>{0} すべて {1} 以上</value>
+  </data>
+  <data name="In your PUMBILITY top 50" xml:space="preserve">
+    <value>PUMBILITYトップ50入り</value>
+  </data>
+  <data name="Counts toward a title" xml:space="preserve">
+    <value>称号の進捗に加算</value>
+  </data>
+  <data name="Top scores among comparable players" xml:space="preserve">
+    <value>同レベル帯プレイヤーの中で上位スコア</value>
+  </data>
+  <data name="Nearly complete folder" xml:space="preserve">
+    <value>フォルダーほぼ制覇</value>
+  </data>
+  <data name="Raised your competitive level" xml:space="preserve">
+    <value>競技レベルが上昇</value>
+  </data>
+  <data name="One of your first passes in this folder" xml:space="preserve">
+    <value>このフォルダー最初期のクリア</value>
+  </data>
 </root>

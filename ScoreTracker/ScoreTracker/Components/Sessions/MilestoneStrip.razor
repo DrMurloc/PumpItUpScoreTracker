@@ -1,0 +1,43 @@
+@using ScoreTracker.PlayerProgress.Contracts
+@namespace ScoreTracker.Web.Components
+<div class="d-flex align-center gap-2 px-4 py-1 mud-warning-hover" style="border-left: 3px solid var(--mud-palette-warning); background: rgba(255,196,51,.07)" data-testid="milestone-strip">
+    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text">@KindLabel</MudChip>
+    <MudText Typo="Typo.body2">@Description</MudText>
+</div>
+
+@code {
+    [Parameter] [EditorRequired] public PlayerMilestoneRecord Milestone { get; set; } = null!;
+
+    private string KindLabel => Milestone.Kind switch
+    {
+        MilestoneKind.PumbilityGain => "PUMBILITY",
+        MilestoneKind.SinglesCompetitiveGain or MilestoneKind.DoublesCompetitiveGain => @L["Competitive"],
+        MilestoneKind.TitleCompleted => @L["Title"],
+        MilestoneKind.ParagonLevelGain => @L["Paragon"],
+        _ => @L["Folder Lamp"]
+    };
+
+    private string Description => Milestone.Kind switch
+    {
+        MilestoneKind.PumbilityGain =>
+            $"{Milestone.OldValue:N0} → {Milestone.NewValue:N0} (+{Milestone.NewValue - Milestone.OldValue:N0})",
+        MilestoneKind.SinglesCompetitiveGain =>
+            $"{L["Singles"]} {Milestone.OldValue:0.00} → {Milestone.NewValue:0.00}",
+        MilestoneKind.DoublesCompetitiveGain =>
+            $"{L["Doubles"]} {Milestone.OldValue:0.00} → {Milestone.NewValue:0.00}",
+        MilestoneKind.TitleCompleted => $"{L["Completed"]} {Milestone.Title}",
+        MilestoneKind.ParagonLevelGain => $"{Milestone.Title} → {Milestone.Detail}",
+        MilestoneKind.FolderPassLamp => L["All {0} passed", Milestone.Detail ?? string.Empty],
+        MilestoneKind.FolderGradeLamp => FolderFloor(),
+        MilestoneKind.FolderPlateLamp => FolderFloor(),
+        _ => Milestone.Detail ?? string.Empty
+    };
+
+    private string FolderFloor()
+    {
+        var parts = (Milestone.Detail ?? string.Empty).Split('|');
+        return parts.Length == 2
+            ? L["All {0} at {1} or better", parts[0], parts[1]]
+            : Milestone.Detail ?? string.Empty;
+    }
+}

@@ -1,0 +1,191 @@
+@using MediatR
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Identity.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.ScoreLedger.Contracts
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Contracts
+@page "/Player/{UserIdParam:guid}/Sessions"
+
+@if (_user != null)
+{
+    <div class="d-flex align-center gap-3 mb-2">
+        <MudAvatar>
+            <MudImage Src="@_user.ProfileImage.ToString()" Alt="@_user.Name.ToString()"></MudImage>
+        </MudAvatar>
+        <div>
+            <MudText Typo="Typo.h5">@_user.Name — @L["Sessions"]</MudText>
+            <MudText Typo="Typo.caption">@L["Play sessions, newest first"]</MudText>
+        </div>
+    </div>
+
+    <div class="d-flex align-center flex-wrap gap-2 mb-3">
+        <MudSelect T="MixEnum" Value="_mix" ValueChanged="ChangeMix" Dense="true" Style="max-width: 160px"
+                   Label="@L["Mix"]">
+            <MudSelectItem T="MixEnum" Value="MixEnum.Phoenix">Phoenix</MudSelectItem>
+            <MudSelectItem T="MixEnum" Value="MixEnum.Phoenix2">Phoenix 2</MudSelectItem>
+        </MudSelect>
+        <MudChipSet T="string" SelectionMode="SelectionMode.SingleSelection" SelectedValue="@_filter"
+                    SelectedValueChanged="v => _filter = v ?? FilterAll" CheckMark="true">
+            <MudChip Value="@FilterAll" Text="@L["All"]"/>
+            <MudChip Value="@FilterOfNote" Text="@($"⭐ {L["Of Note"]}")"/>
+        </MudChipSet>
+        <MudSpacer/>
+        <MudSelect T="int" Value="_pageSize" ValueChanged="ChangePageSize" Dense="true" Style="max-width: 140px"
+                   Label="@L["Sessions per page"]">
+            <MudSelectItem T="int" Value="5">5</MudSelectItem>
+            <MudSelectItem T="int" Value="10">10</MudSelectItem>
+            <MudSelectItem T="int" Value="25">25</MudSelectItem>
+        </MudSelect>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary"></MudProgressLinear>
+    }
+    else if (!_page.Groups.Any())
+    {
+        <MudText>@L["No sessions recorded yet."]</MudText>
+    }
+    else
+    {
+        foreach (var group in _page.Groups)
+        {
+            <SessionRoundupCard Group="group" Charts="_charts" Flags="_flags"
+                                Milestones="MilestonesFor(group)"
+                                OfNoteOnly="_filter == FilterOfNote"
+                                StartExpanded="IsDeepLinked(group)"></SessionRoundupCard>
+        }
+
+        <div class="d-flex justify-center my-3">
+            <MudPagination Count="PageCount" Selected="_pageNumber" SelectedChanged="ChangePage"></MudPagination>
+        </div>
+
+        <ScoreJournalTable Rows="AllRows" Charts="_charts" ExportUrl="@ExportUrl"></ScoreJournalTable>
+        <MudText Typo="Typo.caption" Class="mt-1 d-block">
+            @L["Score history begins with journaling (June 2026) — older plays aren't shown."]
+        </MudText>
+    }
+}
+
+@inject IMediator Mediator
+@inject NavigationManager NavManager
+@inject IUiSettingsAccessor UiSettings
+@code {
+    private const string FilterAll = "all";
+    private const string FilterOfNote = "ofNote";
+
+    [Parameter] public Guid UserIdParam { get; set; }
+
+    private User? _user;
+    private MixEnum _mix = MixEnum.Phoenix;
+    private string _filter = FilterAll;
+    private int _pageNumber = 1;
+    private int _pageSize = 10;
+    private bool _loading = true;
+    private Guid? _deepLinkedSession;
+
+    private RecentSessionsPage _page = new(0, Array.Empty<RecentSessionsPage.SessionGroup>());
+    private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private IReadOnlyDictionary<(Guid? SessionId, Guid ChartId), HighlightFlag> _flags =
+        new Dictionary<(Guid?, Guid), HighlightFlag>();
+    private ILookup<Guid?, PlayerMilestoneRecord> _milestones =
+        Array.Empty<PlayerMilestoneRecord>().ToLookup(m => m.SessionId);
+
+    private int PageCount => (int)Math.Ceiling(_page.TotalGroups / (double)_pageSize);
+
+    private string ExportUrl => $"/player/{UserIdParam}/scorejournal.csv?mix={_mix}";
+
+    private IReadOnlyList<RecentSessionsPage.ScoreEventRecord> AllRows => _page.Groups
+        .SelectMany(g => g.Rows)
+        .OrderByDescending(r => r.OccurredAt)
+        .ToArray();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Public players only: anyone else's page redirects home. The query behind it
+        // independently returns an empty page, so this is presentation, not the guard.
+        _user = await Mediator.Send(new GetUserByIdQuery(UserIdParam));
+        if (_user is not { IsPublic: true })
+        {
+            NavManager.NavigateTo("/");
+            return;
+        }
+
+        var selectedMix = await UiSettings.GetSelectedMix();
+        _mix = selectedMix == MixEnum.XX ? MixEnum.Phoenix : selectedMix;
+
+        var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        if (Guid.TryParse(query.Get("session"), out var session)) _deepLinkedSession = session;
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _page = await Mediator.Send(new GetRecentSessionsQuery(UserIdParam, _mix, _pageNumber, _pageSize));
+        var chartIds = _page.Groups.SelectMany(g => g.Rows).Select(r => r.ChartId).Distinct().ToArray();
+        _charts = chartIds.Any()
+            ? (await Mediator.Send(new GetChartsQuery(_mix, ChartIds: chartIds))).ToDictionary(c => c.Id)
+            : new Dictionary<Guid, Chart>();
+
+        if (_page.Groups.Any())
+        {
+            var since = _page.Groups.Min(g => g.Start);
+            var until = _page.Groups.Max(g => g.End);
+            _flags = (await Mediator.Send(new GetScoreHighlightsQuery(UserIdParam, _mix, since, until)))
+                .GroupBy(h => (h.SessionId, h.ChartId))
+                .ToDictionary(g => g.Key, g => g.Aggregate(HighlightFlag.None, (f, h) => f | h.Flags));
+            _milestones = (await Mediator.Send(new GetPlayerMilestonesQuery(UserIdParam, _mix, since, until)))
+                .ToLookup(m => m.SessionId);
+        }
+        else
+        {
+            _flags = new Dictionary<(Guid?, Guid), HighlightFlag>();
+            _milestones = Array.Empty<PlayerMilestoneRecord>().ToLookup(m => m.SessionId);
+        }
+
+        _loading = false;
+    }
+
+    private IReadOnlyList<PlayerMilestoneRecord> MilestonesFor(RecentSessionsPage.SessionGroup group)
+    {
+        if (group.SessionId != null) return _milestones[group.SessionId].ToArray();
+        // Session-less milestones (admin recalculations) attach to the matching day group.
+        return _milestones[null]
+            .Where(m => group.Day != null && DateOnly.FromDateTime(m.OccurredAt.Date) == group.Day)
+            .ToArray();
+    }
+
+    private bool IsDeepLinked(RecentSessionsPage.SessionGroup group)
+    {
+        return _deepLinkedSession != null && group.SessionId == _deepLinkedSession;
+    }
+
+    private async Task ChangeMix(MixEnum mix)
+    {
+        _mix = mix;
+        _pageNumber = 1;
+        await LoadAsync();
+    }
+
+    private async Task ChangePage(int page)
+    {
+        _pageNumber = page;
+        await LoadAsync();
+    }
+
+    private async Task ChangePageSize(int size)
+    {
+        _pageSize = size;
+        _pageNumber = 1;
+        await LoadAsync();
+    }
+}

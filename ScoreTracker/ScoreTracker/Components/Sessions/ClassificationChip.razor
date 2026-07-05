@@ -1,0 +1,26 @@
+@using ScoreTracker.ScoreLedger.Contracts
+@namespace ScoreTracker.Web.Components
+<MudChip T="string" Size="Size.Small" Variant="@(Classification == ScoreEventClassification.Played ? Variant.Outlined : Variant.Filled)"
+         Color="@Color">
+    @Label
+</MudChip>
+
+@code {
+    [Parameter] [EditorRequired] public ScoreEventClassification Classification { get; set; }
+
+    private Color Color => Classification switch
+    {
+        ScoreEventClassification.NewPass => Color.Success,
+        ScoreEventClassification.Upscore => Color.Info,
+        ScoreEventClassification.Break => Color.Error,
+        _ => Color.Default
+    };
+
+    private string Label => Classification switch
+    {
+        ScoreEventClassification.NewPass => @L["New Pass"],
+        ScoreEventClassification.Upscore => @L["Upscore"],
+        ScoreEventClassification.Break => @L["Break"],
+        _ => @L["Played"]
+    };
+}
