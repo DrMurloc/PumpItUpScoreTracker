@@ -90,3 +90,9 @@ Stands in for phoenix.piugame.com in the E2E suite, serving PII-scrubbed snapsho
 
 ### DeepSource
 Static analysis on PRs (`.deepsource.toml`).
+
+### SonarQube Cloud
+Quality/maintainability analysis wrapping the Windows build job (prepare → build → tests → analyze → publish quality gate); PR decoration via the SonarQube Cloud GitHub app. EF `Migrations/` are excluded — generated code would swamp the metrics. Free for public repos.
+
+### CodeQL (GitHub code scanning)
+Security analysis (taint tracking, injection flows) on pushes and PRs, via GitHub's default setup — no workflow file in the repo; configured under Settings → Code security. Free for public repos.
