@@ -227,7 +227,6 @@ builder.Services.AddBlazorApplicationInsights()
         builder.Configuration.GetSection("Sendgrid").Get<SendGridConfiguration>())
     .AddTransient<IDateTimeOffsetAccessor, DateTimeOffsetAccessor>()
     .AddTransient<IRandomNumberGenerator, RandomNumberGenerator>()
-    .AddSingleton<IPlayerScoreBatchAccumulator, PlayerScoreBatchAccumulator>()
     .AddControllers();
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services.AddScoped<IStringLocalizer<App>, StringLocalizer<App>>();

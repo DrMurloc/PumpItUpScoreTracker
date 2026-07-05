@@ -24,6 +24,10 @@ public static class ScoreLedgerRegistrationExtensions
         services.AddTransient<IScoreReader, EFPhoenixRecordsRepository>();
         services.AddTransient<IPhoenixRecordStatsRepository, EFPhoenixRecordStatsRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
+        // The Session Batcher: singleton so batch + session state survives across
+        // handler instances (moved here from Web.Accessors — it has no ASP.NET
+        // dependency and the Ledger owns the batching seam).
+        services.AddSingleton<IPlayerScoreBatchAccumulator, PlayerScoreBatchAccumulator>();
         services.AddSingleton<IDbModelContribution, ScoreLedgerModelContribution>();
         return services;
     }

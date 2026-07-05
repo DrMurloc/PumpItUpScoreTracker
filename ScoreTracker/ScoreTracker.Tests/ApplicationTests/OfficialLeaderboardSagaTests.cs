@@ -329,6 +329,32 @@ public sealed class OfficialLeaderboardSagaTests
     }
 
     [Fact]
+    public async Task ImportStampsOneRunIdAcrossEverySubmission()
+    {
+        // One import run = one session on the page; the Session Batcher honors this id.
+        var chartA = new ChartBuilder().Build();
+        var chartB = new ChartBuilder().Build();
+        var f = ArrangeImport(
+            officialScores: new[]
+            {
+                new OfficialRecordedScore(chartA, 920000, PhoenixPlate.FairGame),
+                new OfficialRecordedScore(chartB, 930000, PhoenixPlate.FairGame)
+            },
+            existingScores: Array.Empty<RecordedPhoenixScore>());
+        var saga = BuildImportSaga(f);
+        var sessionIds = new List<Guid?>();
+        f.Mediator.Setup(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest, CancellationToken>((cmd, _) =>
+                sessionIds.Add(((UpdatePhoenixBestAttemptCommand)cmd).SessionId));
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        Assert.Equal(2, sessionIds.Count);
+        Assert.NotNull(sessionIds[0]);
+        Assert.Equal(sessionIds[0], sessionIds[1]);
+    }
+
+    [Fact]
     public async Task ImportPublishesDetectedTitlesFromAccountData()
     {
         var f = ArrangeImport();

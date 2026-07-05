@@ -31,7 +31,8 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             ChartId = entry.ChartId,
             Score = entry.Score,
             Plate = entry.Plate?.GetName(),
-            IsBroken = entry.IsBroken
+            IsBroken = entry.IsBroken,
+            SessionId = entry.SessionId
         }, cancellationToken);
         await database.SaveChangesAsync(cancellationToken);
     }

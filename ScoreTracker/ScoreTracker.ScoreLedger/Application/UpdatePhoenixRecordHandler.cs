@@ -26,6 +26,10 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
 {
     public async Task Handle(UpdatePhoenixBestAttemptCommand request, CancellationToken cancellationToken)
     {
+        // Every submission — no-ops included — extends the session envelope: activity
+        // keeps the session alive even when nothing lands.
+        var sessionId = batches.GetOrExtendSession(request.Mix, user.User.Id, request.Source, dateTimeOffset.Now,
+            request.SessionId);
         var existing = await records.GetRecordedScore(request.Mix, user.User.Id, request.ChartId, cancellationToken);
         var score = request.Score;
         var plate = request.Plate;
@@ -48,11 +52,11 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
 
         await records.UpdateBestAttempt(request.Mix, user.User.Id,
             new RecordedPhoenixScore(request.ChartId, score, plate, isBroken,
-                dateTimeOffset.Now), cancellationToken);
+                dateTimeOffset.Now, request.Source), cancellationToken);
         // The journal is the record's history: it gets the resulting best-attempt state,
         // exactly and only when that state changes.
         await journal.Append(new ScoreJournalEntry(dateTimeOffset.Now, request.Source, user.User.Id,
-            request.ChartId, score, plate, isBroken, request.Mix), cancellationToken);
+            request.ChartId, score, plate, isBroken, request.Mix, sessionId), cancellationToken);
         var isNewScore = (existing?.IsBroken ?? true) && !isBroken;
         var isUpscore = existing?.Score != null && score != null && existing.Score < score;
         if (!isNewScore && !isUpscore) return;
@@ -61,7 +65,8 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         // the (user, mix) batch; only schedule a drain when this call created the batch.
         var fireAt = dateTimeOffset.Now.UtcDateTime + TimeSpan.FromMinutes(2);
         PhoenixScore? upscoredFrom = isUpscore ? existing!.Score!.Value : null;
-        if (batches.AddToBatch(request.Mix, user.User.Id, fireAt, request.ChartId, isNewScore, upscoredFrom))
+        if (batches.AddToBatch(request.Mix, user.User.Id, fireAt, request.ChartId, isNewScore, upscoredFrom,
+                sessionId))
         {
             await scheduler.SchedulePublish(fireAt + TimeSpan.FromSeconds(5),
                 new TryFireScoreCommand(user.User.Id, request.Mix),
@@ -113,7 +118,8 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
                 Plate: best?.Plate?.ToString(),
                 IsBroken: best?.IsBroken ?? false);
         }).ToArray();
-        await bus.Publish(PlayerScoresUpdatedEvent.Create(dateTimeOffset.Now, userId, batch.Mix, changes),
+        await bus.Publish(
+            PlayerScoresUpdatedEvent.Create(dateTimeOffset.Now, userId, batch.Mix, changes, batch.SessionId),
             cancellationToken);
     }
 

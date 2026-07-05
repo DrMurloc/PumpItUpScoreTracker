@@ -4,9 +4,11 @@ using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
-namespace ScoreTracker.Web.Accessors;
+namespace ScoreTracker.ScoreLedger.Infrastructure;
 
-public sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
+// The "Session Batcher": moved here from Web.Accessors (it never had an ASP.NET
+// dependency) when it grew session envelopes alongside its 2-minute event batches.
+internal sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
 {
     private sealed class BatchState
     {
@@ -14,13 +16,44 @@ public sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
         public DateTime FireAt;
         public readonly HashSet<Guid> NewCharts = new();
         public readonly Dictionary<Guid, PhoenixScore> UpscoreCharts = new();
+        public Guid? SessionId;
     }
+
+    private sealed class SessionState
+    {
+        public Guid Id;
+        public DateTimeOffset LastActivity;
+    }
+
+    // A session envelope groups journal rows across event batches: same (user, mix,
+    // source) within the gap = one session. Envelopes are identity only — they never
+    // delay the 2-minute event batches. In-memory by design: a restart closes open
+    // sessions and the next submission starts a fresh one.
+    private static readonly TimeSpan SessionGap = TimeSpan.FromHours(8);
 
     // Keyed per (user, mix): parallel-mix submissions accumulate independently.
     private readonly ConcurrentDictionary<(Guid UserId, MixEnum Mix), BatchState> _batches = new();
 
+    private readonly ConcurrentDictionary<(Guid UserId, MixEnum Mix, string Source), SessionState> _sessions = new();
+
+    public Guid GetOrExtendSession(MixEnum mix, Guid userId, string source, DateTimeOffset now,
+        Guid? explicitSessionId = null)
+    {
+        var state = _sessions.GetOrAdd((userId, mix, source), _ => new SessionState());
+        lock (state)
+        {
+            if (explicitSessionId != null)
+                state.Id = explicitSessionId.Value;
+            else if (state.Id == Guid.Empty || now - state.LastActivity > SessionGap)
+                state.Id = Guid.NewGuid();
+
+            state.LastActivity = now;
+            return state.Id;
+        }
+    }
+
     public bool AddToBatch(MixEnum mix, Guid userId, DateTime fireAt, Guid chartId, bool isNewClear,
-        PhoenixScore? upscoredFrom)
+        PhoenixScore? upscoredFrom, Guid sessionId)
     {
         var key = (userId, mix);
         // Loop guards a race where TakeBatch removes our state between GetOrAdd and
@@ -36,6 +69,9 @@ public sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
                 if (!_batches.TryGetValue(key, out var current) || !ReferenceEquals(current, state))
                     continue;
                 state.FireAt = fireAt;
+                // Last submission wins: a batch that mixes sources (rare — a manual entry
+                // landing mid-import) attributes to the most recent session.
+                state.SessionId = sessionId;
                 if (isNewClear) state.NewCharts.Add(chartId);
                 if (upscoredFrom.HasValue && !state.NewCharts.Contains(chartId))
                     state.UpscoreCharts[chartId] = upscoredFrom.Value;
@@ -61,7 +97,7 @@ public sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
             var newCharts = state.NewCharts.ToArray();
             var upscores = state.UpscoreCharts.ToDictionary(kv => kv.Key, kv => (int)kv.Value);
             _batches.TryRemove(key, out _);
-            return new PendingScoreBatch(mix, newCharts, upscores);
+            return new PendingScoreBatch(mix, newCharts, upscores, state.SessionId);
         }
     }
 

@@ -275,6 +275,9 @@ namespace ScoreTracker.OfficialMirror.Application
         public async Task Handle(ImportOfficialPlayerScoresCommand request, CancellationToken cancellationToken)
         {
             var userId = _currentUser.User.Id;
+            // One import run = one session: every score this run submits shares this id
+            // (the Session Batcher honors explicit run ids over its gap-based envelopes).
+            var importSessionId = Guid.NewGuid();
 
             var accountData =
                 await _officialSite.GetAccountData(request.Mix, request.Username, request.Password, request.Id,
@@ -368,7 +371,8 @@ namespace ScoreTracker.OfficialMirror.Application
             {
                 await _mediator.Send(
                     new UpdatePhoenixBestAttemptCommand(score.Chart.Id, score.IsBroken, score.Score, score.Plate,
-                        Source: ScoreJournalEntry.OfficialImportSource, Mix: request.Mix),
+                        Source: ScoreJournalEntry.OfficialImportSource, Mix: request.Mix,
+                        SessionId: importSessionId),
                     cancellationToken);
                 count++;
                 batch.Add(new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, score.IsBroken,

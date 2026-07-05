@@ -9,7 +9,9 @@ namespace ScoreTracker.Domain.Events;
 ///     <see cref="PlayerScoreUpdatedEvent" />, which is dual-published during the P3
 ///     consumer migration and deleted at its end.
 ///     Mix is additive (Phoenix 2 rollout) — SchemaVersion stays 1; a missing mix on an
-///     old payload means Phoenix.
+///     old payload means Phoenix. SessionId is additive on the same precedent: the
+///     Session Batcher's play-session / import-run id, null on old payloads and on
+///     batches that predate session capture.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record PlayerScoresUpdatedEvent(
@@ -18,14 +20,16 @@ public sealed record PlayerScoresUpdatedEvent(
     int SchemaVersion,
     Guid UserId,
     MixEnum Mix,
-    IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange> Changes)
+    IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange> Changes,
+    Guid? SessionId = null)
 {
     public const int CurrentSchemaVersion = 1;
 
     public static PlayerScoresUpdatedEvent Create(DateTimeOffset occurredAt, Guid userId, MixEnum mix,
-        IReadOnlyList<ScoreChange> changes)
+        IReadOnlyList<ScoreChange> changes, Guid? sessionId = null)
     {
-        return new PlayerScoresUpdatedEvent(Guid.NewGuid(), occurredAt, CurrentSchemaVersion, userId, mix, changes);
+        return new PlayerScoresUpdatedEvent(Guid.NewGuid(), occurredAt, CurrentSchemaVersion, userId, mix, changes,
+            sessionId);
     }
 
     [ExcludeFromCodeCoverage]
