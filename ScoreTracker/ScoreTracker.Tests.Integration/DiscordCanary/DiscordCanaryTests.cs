@@ -78,11 +78,13 @@ public sealed class DiscordCanaryTests
             new IRichBotBlock[]
             {
                 new RichBotDivider(),
+                new RichBotText("🎉 #DIFFICULTY|s18# **All passed!**\n🏆 #DIFFICULTY|s18# **All AA or better**"),
+                new RichBotDivider(),
                 new RichBotSection(
-                    "#DIFFICULTY|d19# 👑 Witch Doctor\n**970,207** #LETTERGRADE|S|False##PLATE|UltimateGame#",
+                    "#DIFFICULTY|d19# **Witch Doctor**\n**970,207** #LETTERGRADE|S|False##PLATE|UltimateGame#\n-# 👑 PUMBILITY top 50 · 🆕 Folder debut",
                     new Uri("https://piuimages.arroweclip.se/songs/WitchDoctor.png")),
                 new RichBotSection(
-                    "#DIFFICULTY|s18# 📊 Turkey March -Minimal Tunes-\n**999,150** #LETTERGRADE|SSSPlus|False##PLATE|UltimateGame#",
+                    "#DIFFICULTY|s18# **Turkey March -Minimal Tunes-**\n**999,150** #LETTERGRADE|SSSPlus|False##PLATE|UltimateGame#\n-# 📊 Top scores among peers",
                     new Uri("https://piuimages.arroweclip.se/songs/TurkeyMarchMinimalTunes.png")),
                 new RichBotDivider(),
                 new RichBotText("#DIFFICULTY|d19# 84/141 (59.6%) · #DIFFICULTY|s18# 182/195 (93.3%)")
@@ -99,8 +101,10 @@ public sealed class DiscordCanaryTests
             new IRichBotBlock[]
             {
                 new RichBotDivider(),
+                new RichBotText("🎉 #DIFFICULTY|s16# **All passed!**"),
+                new RichBotDivider(),
                 new RichBotSection(
-                    "#DIFFICULTY|d20# 👑 Removable Disk0\n**962,410** #LETTERGRADE|AAAPlus|False##PLATE|FairGame#",
+                    "#DIFFICULTY|d20# **Removable Disk0**\n**962,410** #LETTERGRADE|AAAPlus|False##PLATE|FairGame#\n-# 👑 PUMBILITY top 50",
                     new Uri("https://piuimages.arroweclip.se/songs/RemovableDisk0.png")),
                 new RichBotText("…and 36 more highlights"),
                 new RichBotDivider(),

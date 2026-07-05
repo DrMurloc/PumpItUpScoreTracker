@@ -185,6 +185,28 @@ public sealed class HighlightCaptureSagaTests
     }
 
     [Fact]
+    public async Task FolderLampsRideThePublishedEvent()
+    {
+        // The Discord cards' milestone banner renders from the event — the lamps the
+        // capture just persisted must travel with it, not require a racing read-back.
+        var chartA = new ChartBuilder().WithType(ChartType.Double).WithLevel(23).Build();
+        var chartB = new ChartBuilder().WithType(ChartType.Double).WithLevel(23).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chartA, chartB);
+        ctx.GivenBest(chartA, 981000);
+        ctx.GivenBest(chartB, 970500);
+        var context = ctx.Context(NewPassEvent(chartB));
+
+        await ctx.Saga.Consume(context);
+
+        Mock.Get(context).Verify(c => c.Publish(
+            It.Is<ScoreHighlightsCapturedEvent>(e =>
+                e.Milestones.Any(m => m.Kind == MilestoneKind.FolderPassLamp && m.Detail == "D23")
+                && e.Milestones.Any(m => m.Kind == MilestoneKind.FolderGradeLamp && m.Detail == "D23|S")),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task IncompleteFoldersFireNoLamps()
     {
         var chart = new ChartBuilder().WithType(ChartType.Double).WithLevel(23).Build();

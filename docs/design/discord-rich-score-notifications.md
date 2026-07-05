@@ -88,29 +88,44 @@ One card per event (splitting only on budget overflow):
 │  ### JEWEL passed 12 charts                        [avatar]    │  ← header section,
 │                                                                │    avatar accessory
 │  ──────────────────────────────────────────────── separator    │
-│  D24 👑 District 1                                 [song art]  │  ← section per pass,
-│  **997,821** SSS+ UG                                           │    top 5 by level desc,
-│  S20 Ugly Dee                                      [song art]  │    score desc; song name
-│  **985,420** SS+ SG                                            │    is a masked link to
-│  …(up to 5 art rows)…                                          │    the chart page
+│  🎉 D24 **All passed!**                                        │  ← milestone banner band
+│  🏆 D24 **All SS or better**                                   │    (folder lamps, off the
+│  ──────────────────────────────────────────────── separator    │    captured event)
+│  D24 **District 1**                                [song art]  │  ← flagged rows lead, bold
+│  **997,821** SSS+ UG                                           │    song name, named subtext
+│  -# 👑 PUMBILITY top 50 · 🆕 Folder debut                      │    caption per flag
+│  ──────────────────────────────────────────────── separator    │  ← fence: flagged ↑ rest ↓
+│  S20 Ugly Dee                                      [song art]  │  ← then unflagged rows in
+│  **985,420** SS+ SG                                            │    noteworthy order
+│  …(art while the 5 slots last)…                                │
 │  +7 more: S19 ×3, S18 ×2, S17 ×2                               │  ← overflow text display,
 │                                                                │    grouped difficulty counts
 │  ──────────────────────────────────────────────── separator    │
 │  D24 173/210 (82.4%) · S20 141/168 (83.9%)                     │  ← level progress folded in
 │                                                                │    (no more second message)
 │  -# Phoenix · PIU Scores                                       │  ← subdued footer line
-│  [ View District 1 D24 ]                                       │  ← action row, link button
+│  [ View all recent scores ]                                    │  ← action row, link button
 └────────────────────────────────────────────────────────────────┘
 ```
 
 - **Header**: `### **{name}** passed {n} charts` (markdown heading), avatar as the section
   accessory. The `[Phoenix 2]` mix prefix stays **textual** in the header, exactly as decided
   in the Phoenix 2 plan — the accent color is decoration, not the mix signal.
-- **Pass rows**: ordered by the universal noteworthy rule — difficulty level desc, then
-  scoring level desc (supersedes today's level-then-score ordering). Two lines per row:
-  difficulty bubble + crown (top-50) + song name as a masked link; then bold score + grade +
-  plate emoji. Top **5** rows get art (down from 10 text lines — art rows are ~2× the height,
-  so 5 keeps the card scannable on mobile); the rest collapse into one grouped overflow line.
+- **Milestone banner**: folder lamps ride `ScoreHighlightsCapturedEvent.Milestones` (capture
+  writes them, then publishes — deterministic, no read-back race) and open the card as their
+  own band between separators, capped at 6 lines. Rating and title milestones are written by
+  racing consumers and keep their own announcement messages until those migrate onto rich
+  cards.
+- **Pass rows**: flagged rows lead (they own the art slots and never collapse into the
+  overflow line — art while slots last, individual text rows after), fenced from the rest by
+  a separator; within each group the universal noteworthy rule applies — difficulty level
+  desc, then scoring level desc. Two lines per row: difficulty bubble + song name as a masked
+  link (**bold** when flagged); then bold score + grade + plate emoji; flagged rows add a
+  `-#` subtext caption naming each flag (`👑 PUMBILITY top 50 · 📊 Top scores among peers ·
+  🏅 Title progress · 🆕 Folder debut · 📁 Nearly complete folder · ⬆ Raised competitive
+  level` — the Sessions page tooltip vocabulary). Top **5** rows get art (art rows are ~2×
+  the height, so 5 keeps the card scannable on mobile); unflagged overflow collapses into one
+  grouped line.
 - **Level progress**: the same stats currently sent as a second message become a block inside
   the card, joined with `·` separators instead of one line each.
 - **Footer**: `-#` subheadline markdown (Discord's small-text) with the mix logo emoji + mix

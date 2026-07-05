@@ -89,7 +89,9 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         await context.Publish(ScoreHighlightsCapturedEvent.Create(e.OccurredAt, e.UserId, e.Mix, e.SessionId,
             e.Changes.Select(c => new ScoreHighlightsCapturedEvent.HighlightedChange(c.ChartId, c.IsNewPass,
                 c.OldScore, c.NewScore, c.Plate, c.IsBroken,
-                flags.TryGetValue(c.ChartId, out var f) ? f : HighlightFlag.None)).ToArray()));
+                flags.TryGetValue(c.ChartId, out var f) ? f : HighlightFlag.None)).ToArray(),
+            lamps.Select(l => new PlayerMilestoneRecord(l.Kind, l.SessionId, l.OccurredAt, l.OldValue, l.NewValue,
+                l.Title, l.Detail)).ToArray()));
     }
 
     public async Task<IEnumerable<ScoreHighlightRecord>> Handle(GetScoreHighlightsQuery request,

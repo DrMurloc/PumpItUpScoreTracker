@@ -398,12 +398,104 @@ public sealed class CommunitySagaTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public async Task MilestoneBannerLeadsTheCardAsItsOwnBand()
+    {
+        // Folder lamps arrive ON the captured event and render as a banner band between
+        // separators — the loudest thing on the card short of the header.
+        var userId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Double).WithLevel(20).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, chart, score: 950000);
+        var lamps = new[]
+        {
+            new PlayerMilestoneRecord(MilestoneKind.FolderPassLamp, null, Now, null, null, null, "D20"),
+            new PlayerMilestoneRecord(MilestoneKind.FolderPlateLamp, null, Now, null, null, null,
+                "D20|FairGame")
+        };
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null, lamps,
+            (chart.Id, true, HighlightFlag.None))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Any(m =>
+                m.Blocks.OfType<RichBotText>().Any(t =>
+                    t.Markdown.Contains("#DIFFICULTY|D20# **All passed!**")
+                    && t.Markdown.Contains("**All #PLATE|FairGame# or better**")))),
+            It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task FlaggedRowsLeadTheCardAndSpellOutTheirFlags()
+    {
+        // A flagged pass outranks a higher-level unflagged one for the art slots, its
+        // song name is bold, and the flag renders as a named subtext caption — not a
+        // bare glyph squeezed into the title line.
+        var userId = Guid.NewGuid();
+        var flaggedChart = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
+        var plainChart = new ChartBuilder().WithType(ChartType.Single).WithLevel(22).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, new[] { flaggedChart, plainChart },
+            score: 950000);
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
+            (flaggedChart.Id, true, HighlightFlag.ScoreQuality90 | HighlightFlag.FolderDebut),
+            (plainChart.Id, true, HighlightFlag.None))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Any(m =>
+                m.Blocks.OfType<RichBotSection>().First(s => s.Thumbnail != null).Markdown
+                    .Contains($"**[{flaggedChart.Song.Name}]")
+                && m.Blocks.OfType<RichBotSection>().First(s => s.Thumbnail != null).Markdown
+                    .Contains("-# 📊 Top scores among peers · 🆕 Folder debut")
+                && m.Blocks.OfType<RichBotDivider>().Count() > 1)),
+            It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DigestCardCarriesTheMilestoneBannerToo()
+    {
+        var userId = Guid.NewGuid();
+        var charts = Enumerable.Range(0, 30)
+            .Select(_ => new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build())
+            .ToArray();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, charts, score: 950000);
+        var lamps = new[]
+            { new PlayerMilestoneRecord(MilestoneKind.FolderPassLamp, null, Now, null, null, null, "S18") };
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, Guid.NewGuid(), lamps,
+            charts.Select(c => (c.Id, true, HighlightFlag.None)).ToArray())));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Count() == 1
+                && msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
+                    t.Markdown.Contains("#DIFFICULTY|S18# **All passed!**"))),
+            It.IsAny<IEnumerable<ulong>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private static ScoreHighlightsCapturedEvent CapturedEvent(Guid userId, MixEnum mix, Guid? sessionId,
+        params (Guid ChartId, bool IsNewPass, HighlightFlag Flags)[] changes)
+    {
+        return CapturedEvent(userId, mix, sessionId, Array.Empty<PlayerMilestoneRecord>(), changes);
+    }
+
+    private static ScoreHighlightsCapturedEvent CapturedEvent(Guid userId, MixEnum mix, Guid? sessionId,
+        PlayerMilestoneRecord[] milestones,
         params (Guid ChartId, bool IsNewPass, HighlightFlag Flags)[] changes)
     {
         return ScoreHighlightsCapturedEvent.Create(Now, userId, mix, sessionId,
             changes.Select(c => new ScoreHighlightsCapturedEvent.HighlightedChange(c.ChartId, c.IsNewPass,
-                c.IsNewPass ? null : 900000, 950000, "SuperbGame", false, c.Flags)).ToArray());
+                c.IsNewPass ? null : 900000, 950000, "SuperbGame", false, c.Flags)).ToArray(), milestones);
     }
 
     [Fact]
