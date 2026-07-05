@@ -294,9 +294,10 @@ A public, anonymous-viewable feed of a player's recent score activity — the fi
 the score-progression-history feature the journal was built for, trialed here as the Discord
 card's CTA before it gets linked from other UI surfaces.
 
-- **Route**: `/Player/{UserId:guid}/RecentScores` (Blazor page under `Pages/Progress/`,
-  dispatching via `IMediator` like every page). Stable and constructible from the saga, which
-  already has the `UserId`.
+- **Route**: `/Player/{UserId:guid}/Sessions` — the page is named **Sessions**
+  (owner-resolved 2026-07-05; supersedes the earlier `RecentScores` route in older mocks).
+  Blazor page under `Pages/Progress/`, dispatching via `IMediator` like every page. Stable
+  and constructible from the saga, which already has the `UserId`.
 - **Privacy**: the page loads the target user; if the user is **not public**
   (`User.IsPublic == false`) it redirects to home (`NavigationManager.NavigateTo("/")`), and
   the query handler independently returns nothing for non-public users — defense in depth, so
@@ -323,11 +324,13 @@ card's CTA before it gets linked from other UI surfaces.
   deep-links to its session's roundup (`?session={id}` anchor) now that the event carries
   `SessionId`. Rows predating capture (null `SessionId`) group by calendar day under an
   "Older scores" strip. Mix filter defaults to Phoenix (Phoenix 2 appears when it goes
-  live); paged by session. **Below the roundups sits the raw score journal table** — every
-  journal row as stored (time, chart, score, result, classification, source), including
-  backfill rows, whose dates are the best attempt's last update rather than the original
-  play time and are footnoted as such. The roundups are the reading view; the table is the
-  record.
+  live); paged **by session with a selectable page size**. **Below the roundups sits the
+  raw score journal table** — every journal row as stored (time, chart, score, result,
+  classification, source), including backfill rows, whose dates are the best attempt's last
+  update rather than the original play time and are footnoted as such, plus an **Export
+  (CSV) button** — a UI-support controller endpoint (IsPublic-gated, deliberately *not*
+  under the pinned `api/*` contract surface). The roundups are the reading view; the table
+  is the record.
 
 ### Scores of note — flags, milestones, sessions
 
@@ -351,6 +354,9 @@ card's CTA before it gets linked from other UI surfaces.
    `RichBotMessage`). Competitive level is batch-computed, so per-score attribution is a
    heuristic: flag the improved side's rows whose score rating meets the old level; tune at
    implementation.
+6. 🆕 **Folder debut** — one of the **first 3 passes ever in a (type, level) folder**,
+   S23 and D23 counted separately (owner-added 2026-07-05). When one batch lands more than
+   3 passes in a brand-new folder, the top 3 by noteworthy ordering get the flag.
 
 **Write-time capture, not read-time derivation** (supersedes the earlier read-time-badges
 design). PlayerProgress already consumes `PlayerScoresUpdatedEvent` to compute ratings,
@@ -363,12 +369,24 @@ these flags too (owner-flagged, **explicitly deferred, not in this PR**) — rea
 rows. The journal itself stays **append-only**: highlights are a companion table keyed to
 journal rows, never journal mutations.
 
+**Pipeline ordering — cards render after capture.** `CommunitySaga` and the capture
+consumer both subscribing to `PlayerScoresUpdatedEvent` would race, and cards could never
+reliably show flags. So capture publishes a **`ScoreHighlightsCapturedEvent`**
+(PlayerProgress contracts) when it finishes — **always, even with zero flags** — carrying
+the original change set, the `SessionId`, and the per-chart flags; **Communities' score-card
+consumer moves onto that event**. Cards and digests then select and order highlights
+deterministically. Every other consumer of the score event is untouched. (In-memory
+transport caveat: a crash between the two hops drops the card — the same at-most-once
+posture the single hop has today.)
+
 **SessionId — minted by the Session Batcher.** The score batch accumulator
 (`IPlayerScoreBatchAccumulator`) already sees every submission from every source in one
 place; it grows into the **Session Batcher**: alongside its 2-minute event batches it keeps
 a per-`(user, mix, source)` **session envelope** — reuse the open session while activity
-continues, close it after a gap (proposed 4 h; open question), mint a new id on the next
-submission. The command handler asks it for the current session id at journal-append time;
+continues, close it after an **8 h** gap (owner-set), mint a new id on the next submission.
+**Sessions never delay delivery**: the 2-minute event batches drain and Discord fires
+exactly as today — the session envelope is identity, not a gate. Several Discord cards can
+share one `SessionId`; the page rolls them into one roundup. The command handler asks it for the current session id at journal-append time;
 the drained batch event carries the same id. Import and CSV runs may pass an explicit run
 id, which the batcher honors as that session's identity ("scores you imported at the same
 time"). **Every source hooks in — official import, CSV upload, manual UI entry, API — with
@@ -387,6 +405,17 @@ Riding the same change: the **CSV path gets the import's diff guard and a proper
 journal no-ops stamped `manual`), and its `KeepBestStats` semantics get verified while the
 code is open.
 
+**Journal semantics — progress only (owner-resolved 2026-07-05).** The handler currently
+journals every submission as received, including no-ops ("play history"). That changes:
+**a submission journals only when it changes best-attempt state** — first entry for a chart
+(even broken), broken → unbroken, score improvement, or plate improvement (the same
+predicate the import diff uses; an improved-but-still-broken score counts as state change,
+pending owner confirmation). No-ops are not history, they're noise — "there's a lot of
+nuance in pretending we have history on no-ops." Consequences: the page's PLAYED
+classification disappears for new rows (legacy no-op rows already journaled since 2026-06
+render as "Played" but no new ones are written), and classifications reduce to
+**New pass / Upscore / Break** (first or improved broken entry).
+
 **Milestones** (session-level gold rows). The kinds:
 
 - **Pumbility gains** and **Singles/Doubles competitive gains** — combined competitive is
@@ -399,8 +428,8 @@ code is open.
   by aggregating the folder's floor: **All Passed** (pass count = folder size), **All ≥
   letter grade** (the folder's minimum grade crosses a boundary), **All ≥ plate** (minimum
   plate crosses). Fire on the transition only (didn't hold before the batch, holds after).
-  Which grade/plate boundaries are lamp-worthy is an open question — announcing "all A" on
-  a folder is noise, "all SSS" is a lamp.
+  **Every boundary fires — all letters, all plates, no floor** (owner-resolved 2026-07-05):
+  lamping is rare in PIU and the players who do it want every single gain announced.
 
 Captured in the PlayerProgress-internal `PlayerMilestone` table (`Kind` + a compact `Detail`
 payload — e.g. `D23`, `D20|SSS`, `S18|UG`, `Expert Lv.2|★3→★4`) by the sagas that already
@@ -458,12 +487,14 @@ The implementation-facing inventory of everything above. **New code types:**
 | Domain (shared) | `PlayerScoresUpdatedEvent.SessionId` | additive field (`Guid?`) | SchemaVersion stays 1 (Mix precedent); partner webhook safe |
 | ScoreLedger | `ScoreJournalEntry.SessionId` | additive field (`Guid?`) | import id / per-CSV-upload / 4 h rolling manual session |
 | ScoreLedger | `UpdatePhoenixBestAttemptCommand.SessionId` | additive optional param | stamped by OfficialMirror import saga + CSV upload handler; null ⇒ handler derives the rolling session |
-| ScoreLedger | `GetRecentScoreEventsQuery` → `RecentScoreEventRecord`, `ScoreEventClassification` (NewPass / Upscore / Played / Break) | new contracts | the journal's first read path; handler gates on `User.IsPublic` |
-| PlayerProgress | `ScoreHighlight` (internal entity + record), `HighlightFlag` [Flags] enum (PumbilityTop50, TitleProgress, ScoreQuality90, FolderCompletion90, CompetitiveImprover) | new | captured by PlayerProgress consumers of the score event; flags may land moments after journal rows (eventual, acceptable) |
+| ScoreLedger | `GetRecentScoreEventsQuery` → `RecentScoreEventRecord`, `ScoreEventClassification` (NewPass / Upscore / Break; legacy pre-guard rows may render Played) | new contracts | the journal's first read path; handler gates on `User.IsPublic` |
+| PlayerProgress | `ScoreHighlight` (internal entity + record), `HighlightFlag` [Flags] enum (PumbilityTop50, TitleProgress, ScoreQuality90, FolderCompletion90, CompetitiveImprover, FolderDebut) | new | captured by the PlayerProgress capture consumer of the score event |
+| PlayerProgress | `ScoreHighlightsCapturedEvent` | new contracts event | published after capture, always (zero flags included); carries the change set + `SessionId` + per-chart flags; Communities' score-card consumer subscribes to this, not the raw score event |
 | PlayerProgress | `PlayerMilestone` (internal entity + record), `MilestoneKind` enum (PumbilityGain, TitleCompleted, ParagonLevelGain, SinglesCompetitiveGain, DoublesCompetitiveGain, FolderPassLamp, FolderGradeLamp, FolderPlateLamp) + compact `Detail` payload | new | appended by `PlayerRatingSaga`/`TitleSaga` + folder-floor checks per touched folder |
 | ScoreLedger | `RecordedPhoenixScore.Source` (source of current best) | additive field | verified ⇔ `officialImport`; updated when the best updates; existing rows NULL |
 | ScoreLedger | Session Batcher (evolved `IPlayerScoreBatchAccumulator`) | behavior | mints/extends per-(user, mix, source) session envelopes; honors explicit import/CSV run ids; in-memory (restart closes sessions) |
 | Web | `SessionRoundupCard`, `MilestoneStrip`, `HighlightRow`, `ScoreJournalTable` | new components | DTO-in, dispatch-free — reusable for the future community recent-sessions feed |
+| Web | journal CSV export endpoint | new UI controller action | IsPublic-gated; UI-support surface, not `api/*` |
 | PlayerProgress | `GetScoreHighlightsQuery`, `GetPlayerMilestonesQuery` | new contracts | the page merges these with the journal read in memory — no cross-vertical SQL |
 | Data | `DiscordRichMessageRenderer` | new pure translator | RichBotMessage → V2 components + fallback text; `DiscordMessageSplitter` already shipped |
 
@@ -533,57 +564,78 @@ Follow-up passes (later PRs, outside this scope): titles → ratings → weekly 
 `RichBotMessage`, then delete the string-composition paths and, last, the legacy
 `SendMessages` port method once no caller remains.
 
-## Open calls
+## Resolved calls (owner, 2026-07-05)
 
-Each ships with the recommended default unless the owner overrides. Grouped by the build
-phase where the decision lands.
-
-**Phase 1 — schema + Session Batcher (answer these first):**
-
-1. **Journal semantics for manual no-ops** — keep journaling manual/realtime submissions
-   as received (powers PLAYED rows, repeat-break history, session durations) vs strict
-   state-changes-only (one guard in the handler; PLAYED rows and repeat-break history
-   disappear from the page). *Recommended: keep as-received* — the import already diffs, so
-   volume is trivial and it's real play history.
-2. **Session Batcher gap window** — how long a quiet spell closes a session envelope.
-   *Recommended: 4 h for all sources* (explicit import/CSV run ids make a per-source window
-   mostly moot).
-
-**Phase 2 — capture (flags + milestones):**
-
-3. **Score Quality flag threshold** — *recommended: ≥ 90th percentile, tie-inclusive*
-   (named constant).
-4. **Folder-completion flag threshold** — *recommended: ≥ 90%* (named constant).
-5. **Lamp-worthy floors** — every grade/plate boundary crossing vs a curated set.
-   *Recommended: curated — All Passed, ≥ SSS, ≥ UG* ("all A" is noise, "all SSS" is a lamp).
-6. **Level-up sixth flag** — "first-ever pass at a new highest level" as a flag kind.
-   *Recommended: skip for v1*; adjacent to competitive/folder flags, easy to add later.
-
-**Phase 3 — the page:**
-
-7. **Page name + route** — "Recent Scores" at `/Player/{id}/RecentScores` (current mock) vs
-   "Sessions"/"Play Sessions" at `/Player/{id}/Sessions`. Owner has used both names.
-   *No recommendation — pure naming, owner's call.* Route is public and permanent once
-   Discord messages link it, so decide before the cards ship.
-8. **Inline-vs-collapse threshold and paging** — *recommended: collapse the full score list
-   above ~10 rows; page by session, ~10 sessions per page.*
-
-**Phase 4 — the Discord cards:**
-
-9. **Art-row cap** — *recommended: 5 art rows + grouped overflow*; confirm visual weight
-   via the canary posts in the test-lab channel.
-10. **Digest threshold** — *recommended: 25 changes*; too low flattens good sessions, too
-    high still floods.
-11. **Phoenix 2 accent** — *recommended: keep the grade-colored accent + textual
-    `[Phoenix 2]` prefix + mix emoji*; a per-mix brand-color override (P2 = green) stays
-    available if the emoji alone reads too subtle at launch.
+1. **Journal = progress only.** No no-op rows — a submission journals only when it changes
+   best-attempt state (first entry even if broken, broken→unbroken, score↑, plate↑).
+   PLAYED disappears for new rows; legacy no-op rows render "Played". *(One nuance pending
+   owner confirmation: an improved-but-still-broken score counts as state change — see
+   remaining questions.)*
+2. **Session gap = 8 h.** Sessions never delay Discord delivery — the 2-minute event
+   batches fire as today; the envelope is identity only.
+3. **Score Quality flag ≥ 90th percentile**, tie-inclusive. ✓
+4. **Folder-completion flag ≥ 90%.** ✓
+5. **Folder lamps fire on every boundary** — all letters, all plates, plus All Passed. No
+   floor: lampers want every gain announced.
+6. **Folder-debut flag** — first 3 passes in a (type, level) folder, S/D counted
+   separately.
+7. **Page = "Sessions"** at `/Player/{id}/Sessions`.
+8. **Collapse above ~10 rows; paged by session with a selectable page size; the journal
+   table gets a CSV export button.**
+9. **Art-row cap 5** (iteration 1; tune via lab-channel posts).
+10. **Digest threshold 25** (iteration 1).
+11. **P2 accent = grade color + textual prefix + mix emoji** (brand-color override in
+    reserve).
 
 **Deferred by design (no decision needed now):** same-burst aggregation of titles/rating
-events into one card (Phase 2+, cross-event correlation); surfacing flags on the import
-results page (owner-deferred); the community "recent sessions" feed (components built
-reusable for it); which UI surfaces link the page after the Discord trial; consuming the
-verified-source flag in tournament/qualifier rules.
+events into one card; surfacing flags on the import results page (owner-deferred); the
+community "recent sessions" feed (components built reusable for it); which UI surfaces link
+the page after the Discord trial; consuming the verified-source flag in tournament rules.
 
 (Resolved earlier: the card's single CTA is **View all recent scores**, deep-linked to the
 session's roundup, rendered only for public players; per-community leaderboard buttons stay
 deferred behind per-channel rendering.)
+
+## Build plan (one PR — #124 — sequential commits, each green on the fast suites)
+
+Already shipped on the branch: the message-drop hotfix (stats chunking +
+`DiscordMessageSplitter`).
+
+- **C1 — Journal progress-only guard + CSV alignment.** State-change predicate in
+  `UpdatePhoenixRecordHandler` (journal ⇔ record changed); CSV upload gains the import's
+  diff guard, `csv` source tag, and a `KeepBestStats` semantics check. Handler tests.
+- **C2 — Schema migration.** Journal `SessionId` + `(UserId, MixId, OccurredAt)` +
+  filtered `(SessionId)` indexes; `ScoreHighlight`; `PlayerMilestone` (incl. `Detail`);
+  `PhoenixRecords.Source`. Entities + model contributions + DATABASE-SCHEMA.md rows.
+- **C3 — Session Batcher + stamping + verified source.** Session envelopes (8 h,
+  per user/mix/source, explicit run-id support); `SessionId` on the command, journal
+  writes, and `PlayerScoresUpdatedEvent` (additive — serialization tests updated); import
+  saga and CSV pass run ids; `PhoenixRecords.Source` written on best-attempt updates.
+- **C4 — Highlight capture (PlayerProgress).** `HighlightFlag` enum + capture consumer
+  computing all six flags; `ScoreHighlightsCapturedEvent` published always (zero flags
+  included); `GetScoreHighlightsQuery`. Saga tests per flag.
+- **C5 — Milestone capture (PlayerProgress).** `MilestoneKind` + `PlayerMilestone` writes
+  from `PlayerRatingSaga`/`TitleSaga` + folder-floor lamp detection (every boundary) +
+  paragon gains; `GetPlayerMilestonesQuery`. Saga tests per kind.
+- **C6 — Journal read + classification (ScoreLedger).** Repository read,
+  `GetRecentScoreEventsQuery` (IsPublic-gated), New pass / Upscore / Break classification
+  (legacy rows may render Played). Component + integration tests.
+- **C7 — Sessions page.** `/Player/{id}/Sessions` + `SessionRoundupCard` /
+  `MilestoneStrip` / `HighlightRow` / `ScoreJournalTable` components (DTO-in,
+  dispatch-free), ⭐ Of-note filter, collapse >10 rows, per-session paging with page-size
+  selector, `?session=` deep-link anchor, CSV export endpoint (UI controller,
+  IsPublic-gated), redirect-home privacy, localization keys in all eight locales, API.md
+  note for the export endpoint.
+- **C8 — Rich message port + renderer.** `RichBotMessage` records,
+  `IBotClient.SendRichMessages`, `DiscordRichMessageRenderer` (Components V2 tree +
+  flattened fallback, budget clamps, emoji tokens incl. the recorded `#MIX|…#` ids),
+  `Discord:RichScoreMessages` kill-switch. Renderer unit tests.
+- **C9 — Cards + digest (Communities).** Score-card consumer moves onto
+  `ScoreHighlightsCapturedEvent`; passes/upscores cards, ≤3-change art exception, digest
+  >25, noteworthy ordering via `GetChartScoringLevelsQuery`, per-channel fallback,
+  public-only deep-link button, mix prefix + emoji. `CommunitySagaTests` rewritten
+  structurally.
+- **C10 — Discord canary (opt-in) + docs sweep.** Env-gated manual-run canary posting the
+  sample cards to the owner's lab channel (token + channel id from user secrets/env —
+  never committed) with REST readback; HOW-TO-TEST note; ARCHITECTURE.md event-flow
+  update; design doc flipped to "implemented".
