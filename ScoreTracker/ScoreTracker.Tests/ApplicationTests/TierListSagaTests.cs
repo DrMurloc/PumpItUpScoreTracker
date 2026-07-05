@@ -35,7 +35,7 @@ public sealed class TierListSagaTests
 
         await saga.Consume(BuildContext(new ChartDifficultyUpdatedEvent(ChartType.Single, 15)));
 
-        tierLists.Verify(t => t.SaveEntry(It.IsAny<SongTierListEntry>(), It.IsAny<CancellationToken>()),
+        tierLists.Verify(t => t.SaveEntry(It.IsAny<MixEnum>(), It.IsAny<SongTierListEntry>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -51,10 +51,10 @@ public sealed class TierListSagaTests
 
         await saga.Consume(BuildContext(new ChartDifficultyUpdatedEvent(ChartType.Single, 15)));
 
-        tierLists.Verify(t => t.SaveEntry(
+        tierLists.Verify(t => t.SaveEntry(MixEnum.Phoenix,
             It.Is<SongTierListEntry>(e => e.ChartId == ratedChart.Id), It.IsAny<CancellationToken>()),
             Times.Once);
-        tierLists.Verify(t => t.SaveEntry(
+        tierLists.Verify(t => t.SaveEntry(MixEnum.Phoenix,
             It.Is<SongTierListEntry>(e => e.ChartId == unratedChart.Id), It.IsAny<CancellationToken>()),
             Times.Never);
     }
@@ -82,7 +82,7 @@ public sealed class TierListSagaTests
 
         await saga.Consume(BuildContext(new ChartDifficultyUpdatedEvent(ChartType.Single, 15)));
 
-        tierLists.Verify(t => t.SaveEntry(
+        tierLists.Verify(t => t.SaveEntry(MixEnum.Phoenix,
             It.Is<SongTierListEntry>(e => e.ChartId == chart.Id && e.Category == expected),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -102,8 +102,8 @@ public sealed class TierListSagaTests
         });
         var saved = new List<SongTierListEntry>();
         var tierLists = new Mock<ITierListRepository>();
-        tierLists.Setup(t => t.SaveEntry(It.IsAny<SongTierListEntry>(), It.IsAny<CancellationToken>()))
-            .Callback<SongTierListEntry, CancellationToken>((e, _) => saved.Add(e));
+        tierLists.Setup(t => t.SaveEntry(It.IsAny<MixEnum>(), It.IsAny<SongTierListEntry>(), It.IsAny<CancellationToken>()))
+            .Callback<MixEnum, SongTierListEntry, CancellationToken>((_, e, _) => saved.Add(e));
         var saga = BuildSaga(charts: charts, chartRatings: ratings, tierLists: tierLists);
 
         await saga.Consume(BuildContext(new ChartDifficultyUpdatedEvent(ChartType.Single, 15)));
@@ -122,7 +122,7 @@ public sealed class TierListSagaTests
 
         await saga.Consume(BuildContext(new ChartDifficultyUpdatedEvent(ChartType.Single, 15)));
 
-        tierLists.Verify(t => t.SaveEntry(
+        tierLists.Verify(t => t.SaveEntry(MixEnum.Phoenix,
             It.Is<SongTierListEntry>(e => (string)e.TierListName == "Difficulty"),
             It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
@@ -133,7 +133,7 @@ public sealed class TierListSagaTests
         var charts = ChartsMockReturning(level: 15, type: ChartType.Single,
             new[] { new ChartBuilder().WithLevel(15).Build() });
         var scores = new Mock<IScoreReader>();
-        scores.Setup(s => s.GetBestScores(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+        scores.Setup(s => s.GetBestScores(MixEnum.Phoenix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
         var saga = BuildSaga(charts: charts, scores: scores);
 
@@ -154,14 +154,14 @@ public sealed class TierListSagaTests
         var chart = new ChartBuilder().WithLevel(level).Build();
         var charts = ChartsMockReturning(level: level, type: ChartType.Single, new[] { chart });
         var scores = new Mock<IScoreReader>();
-        scores.Setup(s => s.GetBestScores(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+        scores.Setup(s => s.GetBestScores(MixEnum.Phoenix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new RecordedPhoenixScore(chart.Id, 950000, PhoenixPlate.SuperbGame, false,
                     new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero))
             });
         var tierLists = new Mock<ITierListRepository>();
-        tierLists.Setup(t => t.GetAllEntries(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+        tierLists.Setup(t => t.GetAllEntries(MixEnum.Phoenix, It.IsAny<Name>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<SongTierListEntry>());
         var saga = BuildSaga(charts: charts, scores: scores, tierLists: tierLists);
 
@@ -169,7 +169,7 @@ public sealed class TierListSagaTests
             new GetMyRelativeTierListQuery(ChartType.Single, DifficultyLevel.From(level), Guid.NewGuid()),
             CancellationToken.None);
 
-        tierLists.Verify(t => t.GetAllEntries(
+        tierLists.Verify(t => t.GetAllEntries(MixEnum.Phoenix,
             It.Is<Name>(n => (string)n == expectedListName), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -185,14 +185,14 @@ public sealed class TierListSagaTests
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
         var scores = new Mock<IScoreReader>();
-        scores.Setup(s => s.GetPgUsers(It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
+        scores.Setup(s => s.GetPgUsers(MixEnum.Phoenix, It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<(Guid UserId, Guid ChartId)>());
-        scores.Setup(s => s.GetScores(It.IsAny<IEnumerable<Guid>>(), It.IsAny<ChartType>(),
+        scores.Setup(s => s.GetScores(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(), It.IsAny<ChartType>(),
                 It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
         var tierLists = new Mock<ITierListRepository>();
-        tierLists.Setup(t => t.GetUsersOnLevel(It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>(),
+        tierLists.Setup(t => t.GetUsersOnLevel(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>(),
                 It.IsAny<bool>()))
             .ReturnsAsync(Array.Empty<Guid>());
         var saga = BuildSaga(charts: charts, scores: scores, tierLists: tierLists);
@@ -278,10 +278,10 @@ public sealed class TierListSagaTests
         var chart = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
         var userId = Guid.NewGuid();
         var scores = new Mock<IScoreReader>();
-        scores.Setup(s => s.GetScores(It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
+        scores.Setup(s => s.GetScores(MixEnum.Phoenix, It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<(Guid userId, RecordedPhoenixScore record)>());
-        scores.Setup(s => s.GetScores(ChartType.Single, DifficultyLevel.From(20),
+        scores.Setup(s => s.GetScores(MixEnum.Phoenix, ChartType.Single, DifficultyLevel.From(20),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
@@ -289,7 +289,7 @@ public sealed class TierListSagaTests
                     false, DateTimeOffset.MinValue))
             });
         var playerStats = new Mock<IPlayerStatsReader>();
-        playerStats.Setup(p => p.GetStats(userId, It.IsAny<CancellationToken>()))
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PlayerStatsRecord(userId, TotalRating: 0, HighestLevel: 1, ClearCount: 0,
                 CoOpRating: 0, CoOpScore: 0, SkillRating: 0, SkillScore: 0, SkillLevel: 0,
                 SinglesRating: 0, SinglesScore: 0, SinglesLevel: 0, DoublesRating: 0, DoublesScore: 0,
@@ -297,9 +297,9 @@ public sealed class TierListSagaTests
                 DoublesCompetitiveLevel: 20.5));
         var tierLists = new Mock<ITierListRepository>();
         var saved = new List<SongTierListEntry>();
-        tierLists.Setup(t => t.SaveEntries(It.IsAny<IEnumerable<SongTierListEntry>>(),
+        tierLists.Setup(t => t.SaveEntries(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<SongTierListEntry>>(),
                 It.IsAny<CancellationToken>()))
-            .Callback<IEnumerable<SongTierListEntry>, CancellationToken>((e, _) => saved.AddRange(e))
+            .Callback<MixEnum, IEnumerable<SongTierListEntry>, CancellationToken>((_, e, _) => saved.AddRange(e))
             .Returns(Task.CompletedTask);
         var saga = BuildSaga(scores: scores, tierLists: tierLists, playerStats: playerStats);
 
@@ -309,9 +309,9 @@ public sealed class TierListSagaTests
         Assert.Equal(chart.Id, entry.ChartId);
         Assert.Equal("Scores", (string)entry.TierListName);
         // Player weighting is per (level, type) folder the player appears in — exactly once here.
-        playerStats.Verify(p => p.GetStats(userId, It.IsAny<CancellationToken>()), Times.Once);
+        playerStats.Verify(p => p.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()), Times.Once);
         // Levels 1-29 × {Single, Double} — one SaveEntries per folder, even when empty.
-        tierLists.Verify(t => t.SaveEntries(It.IsAny<IEnumerable<SongTierListEntry>>(),
+        tierLists.Verify(t => t.SaveEntries(MixEnum.Phoenix, It.IsAny<IEnumerable<SongTierListEntry>>(),
             It.IsAny<CancellationToken>()), Times.Exactly(58));
     }
 }

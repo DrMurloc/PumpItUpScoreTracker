@@ -253,8 +253,9 @@
         }
         else
         {
-            var scores = await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id));
-            var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+            var currentMix = await UiSettings.GetSelectedMix();
+            var scores = await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, currentMix));
+            var charts = (await Mediator.Send(new GetChartsQuery(currentMix))).ToDictionary(c => c.Id);
             result = scores.OrderBy(s => charts[s.ChartId].Level).ThenBy(s => charts[s.ChartId].Type)
                 .Select(s => new
                 {

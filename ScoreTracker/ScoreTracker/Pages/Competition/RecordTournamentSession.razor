@@ -55,6 +55,16 @@
         <MudItem xs="6" sm="3" md="2">
             <MudButton Disabled="_isSaving" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Variant="Variant.Outlined" OnClick="ShowAddDialog">Add Chart</MudButton>
         </MudItem>
+        <MudItem xs="12" sm="5" md="3">
+            @* The session pins a mix (Phoenix/Phoenix 2 — XX is excluded); the chart pool follows it
+               and it is stored with the session. *@
+            <MudSelect T="MixEnum" Label=@L["Mix"] Value="_session.Mix" ValueChanged="SetSessionMix" Disabled="_isSaving">
+                @foreach (var mix in SessionMixes)
+                {
+                    <MudSelectItem T="MixEnum" Value="mix">@mix.GetName()</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
         <MudItem xs="12">
         </MudItem>
         <MudItem xs="12" sm="5" md="3">
@@ -292,9 +302,12 @@
 @inject ISnackbar Snackbar;
 @inject ILogger<RecordTournamentSession> Logger;
 @inject IAdminNotificationClient Notifications;
+@inject ScoreTracker.Web.Services.Contracts.IUiSettingsAccessor UiSettings;
 
 @code
 {
+    // Stamina sessions pin a mix; XX is not offered (locked decision, plan doc).
+    private static readonly MixEnum[] SessionMixes = { MixEnum.Phoenix, MixEnum.Phoenix2 };
     private string _validation = "Unverified";
     private string _videoUrl = string.Empty;
     public Uri? VideoUrl => Uri.TryCreate(_videoUrl, UriKind.Absolute, out var result) ? result : null;
@@ -444,7 +457,10 @@
 
     }
     public string DifficultyBubblePath(Chart chart) =>
-        $"https://piuimages.arroweclip.se/difficulty/{chart.DifficultyString.ToLower()}.png";
+        chart.Type == SharedKernel.Enums.ChartType.DoublePerformance ||
+        chart.Type == SharedKernel.Enums.ChartType.SinglePerformance || chart.Mix == MixEnum.XX
+            ? $"https://piuimages.arroweclip.se/difficulty/{chart.DifficultyString.ToLower()}.png"
+            : $"https://piuimages.arroweclip.se/difficulty/{chart.Mix}/{chart.DifficultyString.ToLower()}.png";
     private void AddChart()
     {
         _session?.Add(_selectedChart!, _score, _plate, _isBroken);
@@ -489,10 +505,31 @@
         Snackbar.Add("Session Saved!", Severity.Success);
     }
 
+    private async Task SetSessionMix(MixEnum mix)
+    {
+        if (_session == null)
+        {
+            return;
+        }
+        _session.Mix = mix;
+        _allCharts = await Mediator.Send(new GetChartsQuery(mix));
+    }
+
     private async Task LoadUser(Guid userId)
     {
         _session = await TournamentRepository.GetSession(TournamentId, userId, CancellationToken.None);
         _videoUrl = _session.VideoUrl?.ToString() ?? "";
+        if (!_session.Entries.Any())
+        {
+            // Fresh session: default the pinned mix to the viewer's current mix (XX excluded).
+            var viewerMix = await UiSettings.GetSelectedMix();
+            if (viewerMix != MixEnum.XX)
+            {
+                _session.Mix = viewerMix;
+            }
+        }
+        // The chart pool follows the session's stored mix.
+        _allCharts = await Mediator.Send(new GetChartsQuery(_session.Mix));
     }
     protected override async Task OnInitializedAsync()
     {
@@ -505,7 +542,6 @@
         {
             NavManager.NavigateTo("/Tournaments");
         }
-        _allCharts = await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix));
         var userId = CurrentUser.User.Id;
         if (CurrentUser.User.IsAdmin && UserId != null)
         {

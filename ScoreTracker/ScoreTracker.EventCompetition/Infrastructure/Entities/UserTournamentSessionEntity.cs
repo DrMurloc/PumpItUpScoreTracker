@@ -11,6 +11,8 @@ namespace ScoreTracker.EventCompetition.Infrastructure.Entities
         [Required] public Guid UserId { get; set; }
         [Required] public Guid TournamentId { get; set; }
 
+        [Required] public Guid MixId { get; set; }
+
         [Required] public int SessionScore { get; set; }
         [Required] public string ChartEntries { get; set; } = string.Empty;
         [Required] public TimeSpan RestTime { get; set; } = TimeSpan.MinValue;

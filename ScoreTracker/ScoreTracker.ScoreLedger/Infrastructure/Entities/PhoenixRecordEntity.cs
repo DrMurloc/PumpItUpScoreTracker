@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.ScoreLedger.Infrastructure.Entities;
 
-[Index(nameof(UserId), nameof(ChartId), IsUnique = true)]
+[Index(nameof(UserId), nameof(ChartId), nameof(MixId), IsUnique = true)]
 [Index(nameof(ChartId))]
 internal sealed class PhoenixRecordEntity
 {
@@ -11,6 +11,8 @@ internal sealed class PhoenixRecordEntity
     [Required] public Guid UserId { get; set; }
 
     [Required] public Guid ChartId { get; set; }
+
+    [Required] public Guid MixId { get; set; }
 
     [Required] public DateTimeOffset RecordedDate { get; set; }
     public int? Score { get; set; }

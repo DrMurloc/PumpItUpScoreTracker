@@ -135,6 +135,7 @@
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
 @inject NavigationManager NavManager;
+@inject IUiSettingsAccessor UiSettings;
 
 @code {
 
@@ -172,6 +173,8 @@
     private IEnumerable<Chart> FilteredCharts => _charts.Where(c =>(!_showTopOnly ||_topCharts.Contains(c.Id)) && c.Level >= _minLevel && c.Level <= _maxLevel && (_showScoreless || _scores.ContainsKey(c.Id)));
     private Chart[] _charts = Array.Empty<Chart>();
     private ChartType _currentType = ChartType.CoOp;
+    // Competitive level is a Phoenix-lineage stat — XX viewers keep seeing Phoenix, as before.
+    private MixEnum _currentMix = MixEnum.Phoenix;
     private bool _showTopOnly = false;
     private int _competetiveCount = 1;
     private PlayerStatsRecord? _stats = null;
@@ -182,21 +185,21 @@
     private async Task SetType(ChartType type)
     {
         _currentType = type;
-        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, Type: type is ChartType.CoOp ? null : type))).ToArray();
+        _charts = (await Mediator.Send(new GetChartsQuery(_currentMix, Type: type is ChartType.CoOp ? null : type))).ToArray();
         var charts = (_charts)
             .ToDictionary(c => c.Id);
-            
+
         foreach (var level in DifficultyLevel.All)
         {
-            var newList = (await Mediator.Send(new GetMyRelativeTierListQuery(ChartType.Single, level)))
-                .Concat(await Mediator.Send(new GetMyRelativeTierListQuery(ChartType.Double,level)));
-            
+            var newList = (await Mediator.Send(new GetMyRelativeTierListQuery(ChartType.Single, level, Mix: _currentMix)))
+                .Concat(await Mediator.Send(new GetMyRelativeTierListQuery(ChartType.Double, level, Mix: _currentMix)));
+
             foreach (var item in newList)
             {
                 _myDifficulty[item.ChartId] = item.Category;
             }
         }
-        var top = (await Mediator.Send(new GetTop50CompetitiveQuery(CurrentUser.User.Id, type is ChartType.CoOp ? null : type))).ToArray();
+        var top = (await Mediator.Send(new GetTop50CompetitiveQuery(CurrentUser.User.Id, type is ChartType.CoOp ? null : type, Mix: _currentMix))).ToArray();
         _topCharts = top.Select(c => c.ChartId).Distinct().ToHashSet();
 
         _competetiveScores = top
@@ -216,12 +219,14 @@
             NavManager.NavigateTo("/Login");
             return;
         }
-        _stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
-        _scores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id)))
+        var selectedMix = await UiSettings.GetSelectedMix();
+        _currentMix = selectedMix == MixEnum.XX ? MixEnum.Phoenix : selectedMix;
+        _stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, _currentMix));
+        _scores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _currentMix)))
             .Where(r=>r.Score!=null)
             .ToDictionary(r => r.ChartId,r=>r.Score!.Value);
-        _scoreDifficulty = (await Mediator.Send(new GetTierListQuery("Scores"))).ToDictionary(e => e.ChartId, e => e.Category);
-        _officialScoreDifficulty = (await Mediator.Send(new GetTierListQuery("Official Scores"))).ToDictionary(e => e.ChartId, e => e.Category);
+        _scoreDifficulty = (await Mediator.Send(new GetTierListQuery("Scores", _currentMix))).ToDictionary(e => e.ChartId, e => e.Category);
+        _officialScoreDifficulty = (await Mediator.Send(new GetTierListQuery("Official Scores", _currentMix))).ToDictionary(e => e.ChartId, e => e.Category);
         await SetType(ChartType.CoOp);
     }
 }

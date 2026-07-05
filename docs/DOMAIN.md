@@ -6,8 +6,8 @@ For solution layout and patterns, see [ARCHITECTURE.md](ARCHITECTURE.md). For pr
 
 ## Game basics
 
-- **Pump It Up** — the arcade series. Current release: **Pump It Up 2024 Phoenix** (May 2024). **Phoenix 2** is announced — its website went live 2026-07-01, but the game itself has not released yet. Most of this codebase models the Phoenix-era game; Phoenix 2 support is in progress.
-- **Mix** — a version of PIU. Two mix families matter here: **Phoenix** (current) and **XX** (legacy, pre-Phoenix). Modeled by `MixEnum`.
+- **Pump It Up** — the arcade series. Current release: **Pump It Up 2024 Phoenix** (May 2024). **Phoenix 2** is announced — its website went live 2026-07-01 at piugame.com (Phoenix's site moved to phoenix.piugame.com), but the game itself has not released yet.
+- **Mix** — a version of PIU. Three mixes matter here: **XX** (legacy, pre-Phoenix, its own tables/pages), and **Phoenix** / **Phoenix 2**, which run **in parallel** — both use Phoenix scoring, share `Chart` rows via per-mix `ChartMix` levels, and every score-derived table is keyed by mix. Modeled by `MixEnum`; users switch via the current-mix selector, and several Phoenix 2 surfaces show "Coming soon" until post-launch verification (titles, recommendations, import, official leaderboards).
 - **Song** — a piece of music: title, artist, duration, BPM. One song typically has multiple charts. See [`Song`](../ScoreTracker/ScoreTracker.SharedKernel/Models/Song.cs).
 - **Chart** — a specific playable arrangement of a song: a difficulty level + chart type (Single, Double, Co-op) + step pattern. A given song often has many charts (e.g. Single S15, Single S20, Double D18, Co-op-2). See [`Chart`](../ScoreTracker/ScoreTracker.SharedKernel/Models/Chart.cs).
 - **Difficulty level** — numeric chart rating (e.g. 15, 20, 26). Higher = harder. See [`DifficultyLevel`](../ScoreTracker/ScoreTracker.SharedKernel/ValueTypes/DifficultyLevel.cs).

@@ -9,6 +9,7 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure.Entities
         [Key] public Guid Id { get; set; }
 
         [Required] public Guid ChartId { get; set; }
+        [Required] public Guid MixId { get; set; }
         [Required] public int Player { get; set; }
         [Required] public int Difficulty { get; set; }
     }

@@ -1,6 +1,7 @@
 using System;
 using System.Text.Json;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Ucs.Contracts.Events;
 using Xunit;
 
@@ -9,6 +10,9 @@ namespace ScoreTracker.Tests.DomainTests;
 /// <summary>
 ///     Contract events double as partner webhook bodies (ADR-001 D3): they must
 ///     round-trip plain JSON with no custom converters registered.
+///     Commit 5 (Phoenix 2 plan) adds an additive Mix field to the score contract
+///     events — deliberately pinned here with a non-default value; SchemaVersion
+///     stays 1 because the change is additive (missing mix on old payloads = Phoenix).
 /// </summary>
 public sealed class ContractEventSerializationTests
 {
@@ -27,6 +31,7 @@ public sealed class ContractEventSerializationTests
         AssertRoundTrips(PlayerScoresUpdatedEvent.Create(
             new DateTimeOffset(2026, 6, 12, 0, 0, 0, TimeSpan.Zero),
             Guid.Parse("33333333-3333-3333-3333-333333333333"),
+            MixEnum.Phoenix2,
             new[]
             {
                 new PlayerScoresUpdatedEvent.ScoreChange(
@@ -45,6 +50,7 @@ public sealed class ContractEventSerializationTests
             new DateTimeOffset(2026, 6, 12, 0, 0, 0, TimeSpan.Zero),
             ScoreImportCompletedEvent.OfficialImportSource,
             Guid.Parse("33333333-3333-3333-3333-333333333333"),
+            MixEnum.Phoenix2,
             new[]
             {
                 new ScoreImportCompletedEvent.ImportedScore(
@@ -67,11 +73,26 @@ public sealed class ContractEventSerializationTests
     public void ContractEventsCarryTheEnvelope()
     {
         var e = PlayerScoresUpdatedEvent.Create(
-            new DateTimeOffset(2026, 6, 12, 0, 0, 0, TimeSpan.Zero), Guid.NewGuid(),
+            new DateTimeOffset(2026, 6, 12, 0, 0, 0, TimeSpan.Zero), Guid.NewGuid(), MixEnum.Phoenix2,
             Array.Empty<PlayerScoresUpdatedEvent.ScoreChange>());
 
         Assert.NotEqual(Guid.Empty, e.EventId);
         Assert.Equal(PlayerScoresUpdatedEvent.CurrentSchemaVersion, e.SchemaVersion);
         Assert.Equal(new DateTimeOffset(2026, 6, 12, 0, 0, 0, TimeSpan.Zero), e.OccurredAt);
+        Assert.Equal(MixEnum.Phoenix2, e.Mix);
+    }
+
+    [Fact]
+    public void ScoreContractEventsCarryTheMixOnTheWire()
+    {
+        // Additive Phoenix 2 field: the wire payload must actually contain the mix
+        // (not silently drop it), so partners can split parallel-mix traffic.
+        var json = JsonSerializer.Serialize(PlayerScoresUpdatedEvent.Create(
+            new DateTimeOffset(2026, 6, 12, 0, 0, 0, TimeSpan.Zero), Guid.NewGuid(), MixEnum.Phoenix2,
+            Array.Empty<PlayerScoresUpdatedEvent.ScoreChange>()), Wire);
+
+        using var doc = JsonDocument.Parse(json);
+        Assert.True(doc.RootElement.TryGetProperty("mix", out var mix));
+        Assert.Equal((int)MixEnum.Phoenix2, mix.GetInt32());
     }
 }

@@ -8,5 +8,11 @@
         public string? Plate { get; set; }
         public int? Score { get; set; }
         public bool IsBroken { get; set; }
+
+        /// <summary>
+        ///     Optional. "Phoenix" (the permanent default when omitted) or "Phoenix2",
+        ///     case-insensitive. Selects which mix's chart the score is recorded against.
+        /// </summary>
+        public string? Mix { get; set; }
     }
 }

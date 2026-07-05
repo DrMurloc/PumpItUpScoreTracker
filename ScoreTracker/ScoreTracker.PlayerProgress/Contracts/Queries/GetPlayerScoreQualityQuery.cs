@@ -7,7 +7,8 @@ namespace ScoreTracker.PlayerProgress.Contracts.Queries
 {
     [ExcludeFromCodeCoverage]
     public sealed record GetPlayerScoreQualityQuery
-        (DifficultyLevel Level, ChartType ChartType) : IQuery<IDictionary<Guid, ScoreRankingRecord>>
+        (DifficultyLevel Level, ChartType ChartType, MixEnum Mix = MixEnum.Phoenix)
+        : IQuery<IDictionary<Guid, ScoreRankingRecord>>
     {
     }
 }

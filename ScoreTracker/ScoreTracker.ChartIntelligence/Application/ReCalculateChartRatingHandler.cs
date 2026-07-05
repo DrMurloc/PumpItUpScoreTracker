@@ -48,7 +48,7 @@ internal sealed class
             standardDeviation,
             cancellationToken);
 
-        await _bus.Publish(new ChartDifficultyUpdatedEvent(chart.Type, chart.Level), cancellationToken);
+        await _bus.Publish(new ChartDifficultyUpdatedEvent(chart.Type, chart.Level, request.Mix), cancellationToken);
         return new ChartDifficultyRatingRecord(request.ChartId, baseDifficulty, ratings.Length, standardDeviation);
     }
 }

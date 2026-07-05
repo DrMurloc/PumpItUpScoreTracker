@@ -2133,4 +2133,73 @@
   <data name="Find a chart" xml:space="preserve">
     <value>Buscar um chart</value>
   </data>
+  <data name="Coming Soon" xml:space="preserve">
+    <value>Em breve</value>
+  </data>
+  <data name="Phoenix 2 titles have not been revealed yet. Check back after launch!" xml:space="preserve">
+    <value>Os títulos da Phoenix 2 ainda não foram revelados. Volte após o lançamento!</value>
+  </data>
+  <data name="Phoenix 2 recommendations are coming soon. Check back after launch!" xml:space="preserve">
+    <value>As recomendações para a Phoenix 2 chegam em breve. Volte após o lançamento!</value>
+  </data>
+  <data name="Coming soon — score import for Phoenix 2 will open after hardware verification." xml:space="preserve">
+    <value>Em breve — a importação de pontuações da Phoenix 2 será liberada após a verificação do hardware.</value>
+  </data>
+  <data name="Phoenix 2 official leaderboards are coming soon." xml:space="preserve">
+    <value>As classificações oficiais da Phoenix 2 chegam em breve.</value>
+  </data>
+  <data name="Provisional — based on Phoenix data" xml:space="preserve">
+    <value>Provisório — baseado em dados da Phoenix</value>
+  </data>
+  <data name="Your account is not associated with a game profile yet. Play a game on your account first, then try again." xml:space="preserve">
+    <value>Sua conta ainda não está associada a um perfil de jogo. Primeiro jogue uma partida com sua conta e tente novamente.</value>
+  </data>
+  <data name="Bulk Add Charts" xml:space="preserve">
+    <value>Adicionar charts em massa</value>
+  </data>
+  <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
+    <value>Envie um arquivo JSON para criar músicas e charts do Phoenix 2 em massa.</value>
+  </data>
+  <data name="Schema reference:" xml:space="preserve">
+    <value>Referência do esquema:</value>
+  </data>
+  <data name="Upload JSON" xml:space="preserve">
+    <value>Enviar JSON</value>
+  </data>
+  <data name="File is too large — 5 MB max." xml:space="preserve">
+    <value>O arquivo é grande demais — máximo de 5 MB.</value>
+  </data>
+  <data name="Ready" xml:space="preserve">
+    <value>Pronto</value>
+  </data>
+  <data name="Will be skipped" xml:space="preserve">
+    <value>Será ignorada</value>
+  </data>
+  <data name="Has errors" xml:space="preserve">
+    <value>Contém erros</value>
+  </data>
+  <data name="Confirm and Create" xml:space="preserve">
+    <value>Confirmar e criar</value>
+  </data>
+  <data name="Results" xml:space="preserve">
+    <value>Resultados</value>
+  </data>
+  <data name="Already exists in the Phoenix 2 catalog — will be skipped." xml:space="preserve">
+    <value>Já existe no catálogo do Phoenix 2 — será ignorada.</value>
+  </data>
+  <data name="Exists in the Phoenix catalog — carried-over name collision, verify this is intentional." xml:space="preserve">
+    <value>Existe no catálogo do Phoenix — colisão de nome herdado, verifique se é intencional.</value>
+  </data>
+  <data name="Created" xml:space="preserve">
+    <value>Criada</value>
+  </data>
+  <data name="Skipped" xml:space="preserve">
+    <value>Ignorada</value>
+  </data>
+  <data name="Failed" xml:space="preserve">
+    <value>Falhou</value>
+  </data>
+  <data name="Image could not be copied to the CDN — source URL stored, rehost manually." xml:space="preserve">
+    <value>Não foi possível copiar a imagem para o CDN — a URL de origem foi salva, re-hospede manualmente.</value>
+  </data>
 </root>

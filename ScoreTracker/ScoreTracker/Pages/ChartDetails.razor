@@ -28,9 +28,10 @@
     </HeadContent>
 
 <MudText Typo="Typo.h3">@L["Chart Details"]</MudText>
-@if (_nameAvatars.Any())
+@if (_initialized)
 {
-    
+    @* Gated on init (not on leaderboard data) — the selector must work even when the
+       current mix has no leaderboard rows yet (Phoenix 2 launch week). *@
     <ChartSelector ChartIdSelected="SelectChart" Mix="_currentMix"></ChartSelector>
 }
 @if (!_isLoading && _selectedChart != null)
@@ -55,7 +56,7 @@
         <MudText Typo="Typo.h5">@L["Your Score"]</MudText>
         <EditChartGrid ChartId="_selectedChart.Id" CurrentMix="_currentMix"></EditChartGrid>
     }
-    @if (_currentMix == MixEnum.Phoenix)
+    @if (_currentMix != MixEnum.XX)
     {
         <MudText Typo="Typo.h5">@L["Chart Difficulty by Letter Grade"]</MudText>
         <ApexChart TItem="LevelDistribution"
@@ -161,7 +162,15 @@
                         }
                     </MudTd>
                     <MudTd>
-                        <UserLabel User="_users[context.Item2.UserId]"></UserLabel>
+                        @if (_users.TryGetValue(context.Item2.UserId, out var scoreUser))
+                        {
+                            <UserLabel User="scoreUser"></UserLabel>
+                        }
+                        else
+                        {
+                            @* Scorer without stats in the current mix (possible in Phoenix 2 launch week). *@
+                            <MudText>@context.Item2.UserName</MudText>
+                        }
                     </MudTd>
                     <MudTd>
                         @if (_playerLevels.TryGetValue(context.Item2.UserId, out var s))
@@ -208,9 +217,9 @@
 }
 <MudDialog @bind-Visible="_showChartOverview">
     <DialogContent>
-        @if (_selectedChart != null && _currentMix == MixEnum.Phoenix)
+        @if (_selectedChart != null && _currentMix != MixEnum.XX)
         {
-            <ChartOverview ChartId="_selectedChart.Id"></ChartOverview>
+            <ChartOverview ChartId="_selectedChart.Id" Mix="_currentMix"></ChartOverview>
         }
     </DialogContent>
     <DialogActions>
@@ -230,6 +239,7 @@
 @inject IChartRepository Charts;
 @code {
     private MixEnum _currentMix = MixEnum.Phoenix;
+    private bool _initialized = false;
     private bool _showChartOverview = false;
     private string _video = string.Empty;
     private string _artist = string.Empty;
@@ -335,14 +345,14 @@
         _isLoading = true;
         _selectedChart = chart;
         StateHasChanged();
-        var scores = (await Mediator.Send(new GetPhoenixScoresForChartQuery(chart.Id))).ToArray();
+        var scores = (await Mediator.Send(new GetPhoenixScoresForChartQuery(chart.Id, _currentMix))).ToArray();
         _plateBreakdowns = scores.Where(s => s.Plate != null).GroupBy(s => s.Plate!.Value).ToDictionary(g => g.Key, g => g.Count());
         foreach (var plate in Enum.GetValues<PhoenixPlate>().Where(p => !_plateBreakdowns.ContainsKey(p)))
         {
             _plateBreakdowns[plate] = 0;
         }
         var playerScores = scores.ToDictionary(p => p.UserId);
-        var stats = (await PlayerStats.GetStats(scores.Select(s=>s.UserId).Distinct().ToArray(),CancellationToken.None)).ToArray();
+        var stats = (await PlayerStats.GetStats(_currentMix, scores.Select(s=>s.UserId).Distinct().ToArray(),CancellationToken.None)).ToArray();
         _playerLevels = stats.ToDictionary(p => p.UserId, p => chart.Type == ChartType.Single ? p.SinglesCompetitiveLevel : p.DoublesCompetitiveLevel);
         var playerGroupings = stats.GroupBy(s => (int)Math.Round(_selectedChart.Type == ChartType.Double ? s.DoublesCompetitiveLevel :
             _selectedChart.Type == ChartType.Single ? s.SinglesCompetitiveLevel : s.CompetitiveLevel)).ToArray();
@@ -350,7 +360,7 @@
         _scoreMaximums = playerGroupings.ToDictionary(g => g.Key, g => (PhoenixScore)(int)g.Max(s => playerScores[s.UserId].Score));;
 
         _scoreAverages = playerGroupings.ToDictionary(g => g.Key, g => (PhoenixScore)(int)g.Average(s => playerScores[s.UserId].Score));
-        _worldScores = (await Mediator.Send(new GetPhoenixRecordsForCommunityQuery("World", chart.Id))).ToArray();
+        _worldScores = (await Mediator.Send(new GetPhoenixRecordsForCommunityQuery("World", chart.Id, _currentMix))).ToArray();
         _passCounts = playerGroupings.ToDictionary(g => g.Key, g => g.Count(s => !playerScores[s.UserId].IsBroken));
         _isLoading = false;
         NavManager.NavigateTo("/Chart/" + _selectedChart.Id.ToString());
@@ -358,8 +368,8 @@
         _levelDistribution = (await Charts.GetChartLetterGradeDifficulties(new[] { chart.Id })).First().Percentiles.Select(kv => new LevelDistribution(kv.Key, kv.Value)).OrderBy(r => r.Level).ToArray();
         if (CurrentUser.IsLoggedIn)
         {
-            _myScore = (await Mediator.Send(new GetPhoenixRecordQuery(_selectedChart.Id)))?.Score;
-            var myStats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id));
+            _myScore = (await Mediator.Send(new GetPhoenixRecordQuery(_selectedChart.Id, _currentMix)))?.Score;
+            var myStats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, _currentMix));
             _myLevel = (int)Math.Floor(_selectedChart.Type == ChartType.Single ? myStats.SinglesCompetitiveLevel : _selectedChart.Type == ChartType.Double ? myStats.DoublesCompetitiveLevel : myStats.CompetitiveLevel);
         }
         if (_scoreGraph != null)
@@ -407,8 +417,9 @@
     {
         _currentMix = await UiSettings.GetSelectedMix();
 
-        _nameAvatars = (await Mediator.Send(new GetCommunityLeaderboardQuery("World"))).ToDictionary(u => u.UserId, u => u.ProfileImage.ToString());
+        _nameAvatars = (await Mediator.Send(new GetCommunityLeaderboardQuery("World", _currentMix))).ToDictionary(u => u.UserId, u => u.ProfileImage.ToString());
         _users = (await Users.GetUsers(_nameAvatars.Keys)).ToDictionary(u => u.Id, u => u);
+        _initialized = true;
         if (ChartId != null)
         {
             var chart = (await Mediator.Send(new GetChartsQuery(_currentMix, null, null, new[] { ChartId.Value }))).FirstOrDefault();
@@ -420,7 +431,7 @@
         }
         if (CurrentUser.IsLoggedInAsAdmin)
         {
-            _artists = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).Where(c => c.StepArtist != null).Select(c => c.StepArtist!.Value.ToString()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+            _artists = (await Mediator.Send(new GetChartsQuery(_currentMix))).Where(c => c.StepArtist != null).Select(c => c.StepArtist!.Value.ToString()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         }
     }
 

@@ -81,12 +81,14 @@ public sealed class PhoenixScoresController : Controller
             return BadRequest("Plate is Invalid");
         if (body.Score != null && !PhoenixScore.TryParse(body.Score.Value, out _))
             return BadRequest("Score is invalid");
+        if (!ApiMixParser.TryParse(body.Mix, out var mix))
+            return BadRequest(ApiMixParser.InvalidMessage);
 
-        var chart = await _mediator.Send(new GetChartQuery(MixEnum.Phoenix, songName, level, chartType));
+        var chart = await _mediator.Send(new GetChartQuery(mix, songName, level, chartType));
         if (chart == null) return NotFound("Chart not found");
 
         await _mediator.Send(new UpdatePhoenixBestAttemptCommand(chart.Id, body.IsBroken, body.Score,
-            body.Plate == null ? null : Enum.Parse<PhoenixPlate>(body.Plate), keepBestStats));
+            body.Plate == null ? null : Enum.Parse<PhoenixPlate>(body.Plate), keepBestStats, Mix: mix));
         return Ok();
     }
 
@@ -103,7 +105,9 @@ public sealed class PhoenixScoresController : Controller
         [FromQuery(Name = "ChartType")] string? chartType = null,
         [FromQuery(Name = "MinLetterGrade")] string? minLetterGrade = null,
         [FromQuery(Name = "MinPlate")] string? minPlate = null,
-        [FromQuery(Name = "IsBroken")] bool? isBroken = null)
+        [FromQuery(Name = "IsBroken")] bool? isBroken = null,
+        [FromQuery(Name = "Mix")] [DefaultValue("Phoenix")]
+        string? mixString = null)
     {
         var sortKey = SortKeys.FirstOrDefault(k => k.Equals(sortBy, StringComparison.OrdinalIgnoreCase));
         if (sortKey == null) return BadRequest($"SortBy is invalid, valid values: {string.Join(", ", SortKeys)}");
@@ -143,8 +147,11 @@ public sealed class PhoenixScoresController : Controller
             minPlateFilter = parsedPlate;
         }
 
-        var records = (await _mediator.Send(new GetPhoenixRecordsQuery(_currentUser.User.Id))).ToArray();
-        var charts = (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+        if (!ApiMixParser.TryParse(mixString, out var mix))
+            return BadRequest(ApiMixParser.InvalidMessage);
+
+        var records = (await _mediator.Send(new GetPhoenixRecordsQuery(_currentUser.User.Id, mix))).ToArray();
+        var charts = (await _mediator.Send(new GetChartsQuery(mix))).ToDictionary(c => c.Id);
 
         // Mirrors PlayerRatingSaga's per-score stats exactly so the API number matches the site.
         var pumbilityScoring = ScoringConfiguration.PumbilityScoring(true);

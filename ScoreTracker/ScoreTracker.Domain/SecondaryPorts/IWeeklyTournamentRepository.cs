@@ -1,21 +1,28 @@
-﻿using ScoreTracker.Domain.Records;
+using ScoreTracker.Domain.Records;
+using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Domain.SecondaryPorts
 {
     public interface IWeeklyTournamentRepository
     {
-        Task<IEnumerable<Guid>> GetAlreadyPlayedCharts(CancellationToken cancellationToken);
-        Task ClearAlreadyPlayedCharts(IEnumerable<Guid> chartIds, CancellationToken cancellationToken);
-        Task WriteAlreadyPlayedCharts(IEnumerable<Guid> chartIds, CancellationToken cancellationToken);
-        Task WriteHistories(IEnumerable<UserTourneyHistory> histories, CancellationToken cancellationToken);
-        Task ClearTheBoard(CancellationToken cancellationToken);
-        Task RegisterWeeklyChart(WeeklyTournamentChart chart, CancellationToken cancellationToken);
-        Task<IEnumerable<WeeklyTournamentChart>> GetWeeklyCharts(CancellationToken cancellationToken);
-        Task<IEnumerable<WeeklyTournamentEntry>> GetEntries(Guid? chartId, CancellationToken cancellationToken);
-        Task SaveEntry(WeeklyTournamentEntry entry, CancellationToken cancellationToken);
-        Task<IEnumerable<DateTimeOffset>> GetPastDates(CancellationToken cancellationToken);
+        Task<IEnumerable<Guid>> GetAlreadyPlayedCharts(MixEnum mix, CancellationToken cancellationToken);
+        Task ClearAlreadyPlayedCharts(MixEnum mix, IEnumerable<Guid> chartIds, CancellationToken cancellationToken);
+        Task WriteAlreadyPlayedCharts(MixEnum mix, IEnumerable<Guid> chartIds, CancellationToken cancellationToken);
 
-        Task<IEnumerable<WeeklyTournamentEntry>> GetPastEntries(DateTimeOffset date,
+        Task WriteHistories(MixEnum mix, IEnumerable<UserTourneyHistory> histories,
+            CancellationToken cancellationToken);
+
+        Task ClearTheBoard(MixEnum mix, CancellationToken cancellationToken);
+        Task RegisterWeeklyChart(MixEnum mix, WeeklyTournamentChart chart, CancellationToken cancellationToken);
+        Task<IEnumerable<WeeklyTournamentChart>> GetWeeklyCharts(MixEnum mix, CancellationToken cancellationToken);
+
+        Task<IEnumerable<WeeklyTournamentEntry>> GetEntries(MixEnum mix, Guid? chartId,
+            CancellationToken cancellationToken);
+
+        Task SaveEntry(MixEnum mix, WeeklyTournamentEntry entry, CancellationToken cancellationToken);
+        Task<IEnumerable<DateTimeOffset>> GetPastDates(MixEnum mix, CancellationToken cancellationToken);
+
+        Task<IEnumerable<WeeklyTournamentEntry>> GetPastEntries(MixEnum mix, DateTimeOffset date,
             CancellationToken cancellationToken);
     }
 }

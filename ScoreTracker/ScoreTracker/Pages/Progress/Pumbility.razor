@@ -100,7 +100,7 @@
     @foreach (var kv in _insufficientData.OrderBy(kv=>kv.Key.Item2).ThenBy(kv=>kv.Key.Item1))
     {
         <MudItem xs="12">
-            <MudImage tabindex="0" Src=@($"https://piuimages.arroweclip.se/difficulty/Phoenix/{kv.Key.Item1.GetShortHand().ToLower()}{kv.Key.Item2}.png") Height="20" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+            <MudImage tabindex="0" Src=@($"https://piuimages.arroweclip.se/difficulty/{_currentMix}/{kv.Key.Item1.GetShortHand().ToLower()}{kv.Key.Item2}.png") Height="20" ObjectFit="ObjectFit.ScaleDown"></MudImage>
             <LetterGradeIcon Grade="PhoenixLetterGrade.AA"></LetterGradeIcon>
             <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"></MudIcon>
             +@kv.Value.ToString("N0") PUMBILITY
@@ -151,8 +151,11 @@
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
 @inject ChartVideoDisplayer VideoDisplayer;
+@inject IUiSettingsAccessor UiSettings;
 @code {
 
+    // PUMBILITY is a Phoenix-lineage stat — XX viewers keep seeing Phoenix, as before.
+    private MixEnum _currentMix = MixEnum.Phoenix;
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private IDictionary<Guid, RecordedPhoenixScore> _scores = new Dictionary<Guid, RecordedPhoenixScore>();
     private IDictionary<Guid, int> _ratings = new Dictionary<Guid, int>();
@@ -201,7 +204,8 @@
         _newPassLevel = newLevel;
         _newPassLetterGrade = newLetterGrade;
         _oldPassLetterGrade = oldLetter;
-        var lowestScore = _ratings.OrderByDescending(kv => kv.Value).Take(50).Last().Value;
+        // No recorded scores yet (every Phoenix 2 player's launch-week state): gains baseline is 0.
+        var lowestScore = _ratings.Any() ? _ratings.OrderByDescending(kv => kv.Value).Take(50).Last().Value : 0;
         var oldRating = lowestScore;
         if (_oldPassLetterGrade != null)
         {
@@ -221,7 +225,7 @@
     private bool _finishedProjecting = false;
     private async Task ProjectScores()
     {
-        var projection = await Mediator.Send(new ProjectPumbilityGainsQuery(CurrentUser.User.Id), CancellationToken.None);
+        var projection = await Mediator.Send(new ProjectPumbilityGainsQuery(CurrentUser.User.Id, _currentMix), CancellationToken.None);
         _expectedScore = projection.ExpectedScores.ToDictionary(kv => kv.Key, kv => kv.Value);
         _projectedGains = projection.ProjectedGains.ToDictionary(kv => kv.Key, kv => kv.Value);
         _insufficientData = projection.InsufficientDataGains.ToDictionary(kv => kv.Key, kv => kv.Value);
@@ -237,10 +241,12 @@
             NavManager.NavigateTo("/");
             return;
         }
+        var selectedMix = await UiSettings.GetSelectedMix();
+        _currentMix = selectedMix == MixEnum.XX ? MixEnum.Phoenix : selectedMix;
         var scoring = ScoringConfiguration.PumbilityScoring(false);
-        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
-        _allScores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id))).Where(r=>r.Score!=null).ToDictionary(s => s.ChartId);
-        _scores = (await Mediator.Send(new GetTop50ForPlayerQuery(CurrentUser.User.Id, null, 100))).ToDictionary(s => s.ChartId);
+        _charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToDictionary(c => c.Id);
+        _allScores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _currentMix))).Where(r=>r.Score!=null).ToDictionary(s => s.ChartId);
+        _scores = (await Mediator.Send(new GetTop50ForPlayerQuery(CurrentUser.User.Id, null, 100, _currentMix))).ToDictionary(s => s.ChartId);
         _ratings = _scores.ToDictionary(kv => kv.Key, kv => (int)scoring.GetScore(_charts[kv.Key], kv.Value.Score!.Value, kv.Value.Plate ?? PhoenixPlate.RoughGame, kv.Value.IsBroken));
         var top50 = _scores.Values.OrderByDescending(s => _ratings[s.ChartId]).Take(50);
 

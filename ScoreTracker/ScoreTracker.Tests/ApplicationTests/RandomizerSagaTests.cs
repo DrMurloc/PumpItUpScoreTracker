@@ -58,7 +58,7 @@ public sealed class RandomizerSagaTests
     private static Mock<IScoreReader> ScoresReturning(Guid userId, IEnumerable<RecordedPhoenixScore> result)
     {
         var scores = new Mock<IScoreReader>();
-        scores.Setup(s => s.GetBestScores(userId, It.IsAny<CancellationToken>()))
+        scores.Setup(s => s.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
         return scores;
     }

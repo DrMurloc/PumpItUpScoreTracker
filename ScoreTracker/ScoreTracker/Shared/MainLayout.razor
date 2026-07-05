@@ -146,8 +146,9 @@
             <MudText Typo="Typo.overline" Class="ml-4 mt-3 d-block nav-section">@L["My Progress"]</MudText>
             @if (CurrentUser.IsLoggedIn)
             {
-                <MudNavLink Href=@(_currentMix==MixEnum.Phoenix?"/Phoenix/Progress":"/Progress") Icon="@Icons.Material.Filled.BarChart">@L["Progress Charts"]</MudNavLink>
-                @if (_currentMix == MixEnum.Phoenix)
+                @* XX keeps its legacy progress page; Phoenix and Phoenix 2 share the Phoenix-style pages. *@
+                <MudNavLink Href=@(_currentMix==MixEnum.XX?"/Progress":"/Phoenix/Progress") Icon="@Icons.Material.Filled.BarChart">@L["Progress Charts"]</MudNavLink>
+                @if (_currentMix != MixEnum.XX)
                 {
                     <MudNavLink Href="/Pumbility" Icon="@Icons.Material.Filled.Star">@L["PUMBILITY"]</MudNavLink>
                 }
@@ -197,10 +198,10 @@
                 <MudNavLink Href="/StepArtists" Icon="@Icons.Material.Filled.Brush">@L["Step Artists"]</MudNavLink>
             </MudNavGroup>
             <MudNavLink Href="/About" Icon="@Icons.Material.Filled.Info">@L["About"]</MudNavLink>
-            <MudNavGroup Title=@(L["Mix"]+" ("+_currentMix+")") Icon="@Icons.Material.Filled.LibraryMusic" Expanded="false">
-                @foreach (var value in Enum.GetValues<MixEnum>())
+            <MudNavGroup Title=@(L["Mix"]+" ("+_currentMix.GetName()+")") Icon="@Icons.Material.Filled.LibraryMusic" Expanded="false">
+                @foreach (var value in SelectableMixes)
                 {
-                    <MudNavLink OnClick="()=>SetMix(value)">@value</MudNavLink>
+                    <MudNavLink OnClick="()=>SetMix(value)">@value.GetName()</MudNavLink>
                 }
             </MudNavGroup>
         </MudNavMenu>
@@ -245,6 +246,9 @@
     private const string BitePopupKey = "MainLayout__BigOne2024PopupShown";
     public static readonly DateTimeOffset _cutoff = new DateTimeOffset(2024, 10, 15, 0, 0, 0, TimeSpan.FromHours(-5));
     private MixEnum _currentMix = MixEnum.Phoenix;
+    // Launch order: deploy this build, then run the ChartMix seed script immediately —
+    // Phoenix 2 is briefly selectable-but-empty in between (docs/design/phoenix2-implementation.md).
+    private static readonly MixEnum[] SelectableMixes = { MixEnum.XX, MixEnum.Phoenix, MixEnum.Phoenix2 };
     private string _profileImage = string.Empty;
     private string _gamerTag = string.Empty;
     private IEnumerable<TournamentRecord> _highlightedEvents = Array.Empty<TournamentRecord>();
@@ -256,9 +260,11 @@
     protected override async Task OnInitializedAsync()
     {
         _userId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null;
+        // Mix first: the displayed rating follows the viewer's current mix.
+        _currentMix = await UiSettings.GetSelectedMix();
         _highlightedEvents = (await Mediator.Send(new GetAllTournamentsQuery()))
             .Where(e => e.IsHighlighted);
-            
+
         var hasShown = await UiSettings.GetSetting(BitePopupKey);
         if (DateTimeOffset.Now<_cutoff && string.IsNullOrWhiteSpace(hasShown))
         {
@@ -276,9 +282,8 @@
         {
                 UserName += $" ({_gamerTag})";
             }
-            Rating = (await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id))).SkillRating;
+            Rating = (await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, _currentMix))).SkillRating;
         }
-        _currentMix = await UiSettings.GetSelectedMix();
     }
 
     private static readonly MudTheme Theme = new()
@@ -347,7 +352,8 @@
 
     public Task Handle(PlayerStatsUpdatedEvent notification, CancellationToken cancellationToken)
     {
-        if (_userId != notification.UserId)
+        // Stats events now arrive per mix — only reflect the one the viewer is looking at.
+        if (_userId != notification.UserId || notification.Mix != _currentMix)
         {
             return Task.CompletedTask;
         }

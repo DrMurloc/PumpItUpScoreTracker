@@ -12,6 +12,7 @@
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Contracts
 <PageTitle>@L["Score Rankings"]</PageTitle>
 
 <MudText Typo="Typo.h5">@L["Scoring Rankings"]</MudText>
@@ -101,8 +102,11 @@
 @inject IUserRepository Users;
 @inject IPlayerStatsRepository Stats;
 @inject IQualifiersRepository Qualifiers;
+@inject IUiSettingsAccessor UiSettings;
 @code
 {
+    // Score rankings are a Phoenix-lineage stat — XX viewers keep seeing Phoenix, as before.
+    private MixEnum _currentMix = MixEnum.Phoenix;
     private ChartType _chartType = ChartType.Single;
     private bool _isLoading = false;
     private IEnumerable<User> _comparableUsersSingles = Array.Empty<User>();
@@ -121,13 +125,15 @@
             return;
         }
         _isLoading = true;
-        var players = (await Mediator.Send(new GetCompetitivePlayersQuery(ChartType.Single))).ToArray();
-        _competitiveLevelSingles = (await Stats.GetStats(players, CancellationToken.None))
+        var selectedMix = await UiSettings.GetSelectedMix();
+        _currentMix = selectedMix == MixEnum.XX ? MixEnum.Phoenix : selectedMix;
+        var players = (await Mediator.Send(new GetCompetitivePlayersQuery(ChartType.Single, _currentMix))).ToArray();
+        _competitiveLevelSingles = (await Stats.GetStats(_currentMix, players, CancellationToken.None))
             .ToDictionary(s => s.UserId, s =>  s.SinglesCompetitiveLevel);
         _comparableUsersSingles = (await Users.GetUsers(players)).ToArray();
 
-        players = (await Mediator.Send(new GetCompetitivePlayersQuery(ChartType.Double))).ToArray();
-        _competitiveLevelDoubles = (await Stats.GetStats(players, CancellationToken.None))
+        players = (await Mediator.Send(new GetCompetitivePlayersQuery(ChartType.Double, _currentMix))).ToArray();
+        _competitiveLevelDoubles = (await Stats.GetStats(_currentMix, players, CancellationToken.None))
             .ToDictionary(s => s.UserId, s =>  s.DoublesCompetitiveLevel);
         _comparableUsersDoubles = (await Users.GetUsers(players)).ToArray();
 

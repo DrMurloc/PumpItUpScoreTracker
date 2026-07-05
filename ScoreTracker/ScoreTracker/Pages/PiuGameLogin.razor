@@ -61,6 +61,7 @@
         _error = query.Get("error") switch
         {
             "Invalid" => "Invalid username or password",
+            "NoGameAccount" => "Your account is not associated with a game profile yet. Play a game on your account first, then try again.",
             "Unavailable" => "Could not reach PIUGAME, try again later",
             _ => null
         };

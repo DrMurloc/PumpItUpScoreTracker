@@ -161,6 +161,10 @@
     <MudCardHeader>@L["Create Song"]</MudCardHeader>
     <MudCardContent>
         <MudGrid>
+            <MudItem xs="12">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlaylistAdd"
+                           Href="/Admin/BulkAddCharts">@L["Bulk Add Charts"]</MudButton>
+            </MudItem>
             <MudItem xs="3">
                 <MudTextField T="string" @bind-Value="_songName" Label=@L["Song Name"]></MudTextField>
             </MudItem>

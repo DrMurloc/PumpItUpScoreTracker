@@ -115,6 +115,7 @@ public sealed class RateCoOpDifficultyHandlerTests
 
         Assert.NotNull(result);
         Assert.Equal(chart.Id, result!.ChartId);
-        ratings.Verify(r => r.SaveCoOpRating(It.IsAny<CoOpRating>(), It.IsAny<CancellationToken>()), Times.Once);
+        ratings.Verify(r => r.SaveCoOpRating(MixEnum.Phoenix, It.IsAny<CoOpRating>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

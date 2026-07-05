@@ -167,7 +167,7 @@ namespace ScoreTracker.Communities.Infrastructure
                     g.Count, g.IsRegional));
         }
 
-        public async Task<IEnumerable<CommunityLeaderboardRecord>> GetLeaderboard(Name communityName,
+        public async Task<IEnumerable<CommunityLeaderboardRecord>> GetLeaderboard(MixEnum mix, Name communityName,
             CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
@@ -181,8 +181,9 @@ namespace ScoreTracker.Communities.Infrastructure
 
             // Stats come from PlayerProgress's published reader — its PlayerStats table is
             // vertical-internal, so no SQL join onto it from here. The reader returns rows
-            // only for users that have stats, preserving the old inner-join semantics.
-            var stats = (await _playerStats.GetStats(members.Select(m => m.Id).Distinct(), cancellationToken))
+            // only for users that have stats (in the requested mix), preserving the old
+            // inner-join semantics.
+            var stats = (await _playerStats.GetStats(mix, members.Select(m => m.Id).Distinct(), cancellationToken))
                 .ToDictionary(s => s.UserId);
 
             return members.Where(m => stats.ContainsKey(m.Id))

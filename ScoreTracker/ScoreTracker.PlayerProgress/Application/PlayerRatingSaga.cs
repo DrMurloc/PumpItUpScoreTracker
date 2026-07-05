@@ -1,4 +1,4 @@
-﻿using MassTransit;
+using MassTransit;
 using MediatR;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
@@ -42,10 +42,12 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
 
     public async Task Consume(ConsumeContext<PlayerScoresUpdatedEvent> context)
     {
-        await Handle(new RecalculateStatsCommand(context.Message.UserId), context.CancellationToken);
+        // Stats and Pumbility recompute for the mix the scores landed in.
+        await Handle(new RecalculateStatsCommand(context.Message.UserId, context.Message.Mix),
+            context.CancellationToken);
         await Handle(
             new RecalculatePumbilityCommand(context.Message.UserId,
-                context.Message.Changes.Select(c => c.ChartId).Distinct().ToArray()),
+                context.Message.Changes.Select(c => c.ChartId).Distinct().ToArray(), context.Message.Mix),
             context.CancellationToken);
     }
 
@@ -67,10 +69,10 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
         CancellationToken cancellationToken)
     {
         var charts =
-            (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
+            (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
             .ToDictionary(c => c.Id);
         var scoring = ScoringConfiguration.PumbilityScoring(false);
-        return (await _scores.GetBestScores(request.UserId, cancellationToken))
+        return (await _scores.GetBestScores(request.Mix, request.UserId, cancellationToken))
             .Where(s => charts[s.ChartId].Type != ChartType.CoOp)
             .Where(s => s.Score != null && (request.ChartType == null ||
                                             charts[s.ChartId].Type == request.ChartType))
@@ -81,19 +83,22 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
 
     public async Task Consume(ConsumeContext<UserCreatedEvent> context)
     {
-        await _stats.SaveStats(context.Message.UserId,
+        // New users start with a Phoenix stats row (default mix at release); other mixes'
+        // rows appear the first time that mix's stats recompute.
+        await _stats.SaveStats(MixEnum.Phoenix, context.Message.UserId,
             new PlayerStatsRecord(context.Message.UserId, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1),
             context.CancellationToken);
     }
 
     public async Task Handle(RecalculateStatsCommand request, CancellationToken cancellationToken)
     {
-        var oldStats = await _stats.GetStats(request.UserId, cancellationToken);
+        var mix = request.Mix;
+        var oldStats = await _stats.GetStats(mix, request.UserId, cancellationToken);
         var scoring = ScoringConfiguration.PumbilityScoring(true);
         var charts =
-            (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
+            (await _charts.GetCharts(mix, cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
         var recorded =
-            (await _scores.GetBestScores(request.UserId, cancellationToken)).ToArray();
+            (await _scores.GetBestScores(mix, request.UserId, cancellationToken)).ToArray();
         var scores = recorded
             .Where(s => s.Score != null)
             .Select(s => new ChartRating(s.ChartId, charts[s.ChartId].Type,
@@ -153,7 +158,7 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
             competitiveDoubles
         );
 
-        await _stats.SaveStats(request.UserId, newStats, cancellationToken);
+        await _stats.SaveStats(mix, request.UserId, newStats, cancellationToken);
         if (newStats.SkillRating > oldStats.SkillRating || newStats.SinglesRating > oldStats.SinglesRating ||
             newStats.DoublesRating > oldStats.DoublesRating || newStats.ClearCount > oldStats.ClearCount ||
             newStats.CoOpRating > oldStats.CoOpRating)
@@ -162,11 +167,12 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
                     newStats.DoublesRating, oldStats.CompetitiveLevel, newStats.CompetitiveLevel,
                     oldStats.SinglesCompetitiveLevel, newStats.SinglesCompetitiveLevel,
                     oldStats.DoublesCompetitiveLevel,
-                    newStats.DoublesCompetitiveLevel, (int)coOps.Sum(s => s.Rating), recorded.Count(r => !r.IsBroken)),
+                    newStats.DoublesCompetitiveLevel, (int)coOps.Sum(s => s.Rating), recorded.Count(r => !r.IsBroken),
+                    mix),
                 cancellationToken);
-        await _bus.Publish(new PlayerStatsUpdatedEvent(request.UserId, newStats),
+        await _bus.Publish(new PlayerStatsUpdatedEvent(request.UserId, newStats, mix),
             cancellationToken);
-        await _mediator.Publish(new PlayerStatsUpdatedEvent(request.UserId, newStats),
+        await _mediator.Publish(new PlayerStatsUpdatedEvent(request.UserId, newStats, mix),
             cancellationToken);
     }
 
@@ -174,10 +180,10 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
         CancellationToken cancellationToken)
     {
         var charts =
-            (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
+            (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
             .ToDictionary(c => c.Id);
         var count = request.ChartType == null ? 100 : 50;
-        return (await _scores.GetBestScores(request.UserId, cancellationToken))
+        return (await _scores.GetBestScores(request.Mix, request.UserId, cancellationToken))
             .Where(s => charts[s.ChartId].Type != ChartType.CoOp)
             .Where(s => s.Score != null && (request.ChartType == null ||
                                             charts[s.ChartId].Type == request.ChartType))
@@ -194,13 +200,14 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
 
     public async Task Handle(RecalculatePumbilityCommand request, CancellationToken cancellationToken)
     {
-        var scores = (await _scores.GetPlayerScores(new[] { request.UserId },
+        var mix = request.Mix;
+        var scores = (await _scores.GetPlayerScores(mix, new[] { request.UserId },
             request.chartIds,
             cancellationToken)).ToArray();
         var pumbility = ScoringConfiguration.PumbilityScoring(true);
         var pumbilityPlus = ScoringConfiguration.PumbilityPlus;
 
-        var charts = (await _charts.GetCharts(MixEnum.Phoenix,
+        var charts = (await _charts.GetCharts(mix,
                 chartIds: request.chartIds,
                 cancellationToken: cancellationToken))
             .ToDictionary(c => c.Id);
@@ -208,6 +215,6 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
         var ratings = scores.Select(s => new PhoenixRecordStats(s.ChartId,
             pumbility.GetScore(charts[s.ChartId], s.Score, s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken),
             pumbilityPlus.GetScore(charts[s.ChartId], s.Score, s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken)));
-        await _recordStats.UpdateScoreStats(request.UserId, ratings, cancellationToken);
+        await _recordStats.UpdateScoreStats(mix, request.UserId, ratings, cancellationToken);
     }
 }

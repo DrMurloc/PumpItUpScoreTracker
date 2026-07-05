@@ -6,8 +6,16 @@
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Application.Queries
+@using ScoreTracker.Web.Services.Contracts
 @using MediatR
 <PageTitle>Official Leaderboard Search</PageTitle>
+@if (_currentMix == MixEnum.Phoenix2)
+{
+    @* Locked decision (docs/design/phoenix2-implementation.md): the Phoenix 2 mirror is deferred. *@
+    <ComingSoon Message="@L["Phoenix 2 official leaderboards are coming soon."].Value"></ComingSoon>
+}
+else
+{
 <MudText>@L["Last Updated"] - @(_lastImported?.ToLocalTime().ToString() ?? "—")</MudText>
 <MudAutocomplete T="string" AdornmentIcon="@Icons.Material.Filled.Search"
                  ResetValueOnEmptyText="true"
@@ -83,10 +91,13 @@
         </MudTable>
     }
 </MudGrid>
+}
 
 @inject IChartRepository Charts;
 @inject IMediator Mediator;
+@inject IUiSettingsAccessor UiSettings;
 @code {
+    private MixEnum _currentMix = MixEnum.Phoenix;
     private string _selectedUsername = string.Empty;
     private string[] _usernames = Array.Empty<string>();
     private UserOfficialLeaderboard[] _chartResults = Array.Empty<UserOfficialLeaderboard>();
@@ -113,6 +124,12 @@
     }
     protected override async Task OnInitializedAsync()
     {
+        _currentMix = await UiSettings.GetSelectedMix();
+        if (_currentMix == MixEnum.Phoenix2)
+        {
+            // Coming-soon state — the mirror only has Phoenix data.
+            return;
+        }
         _lastImported = await Mediator.Send(new GetLastLeaderboardImportTimestampQuery());
         _usernames = (await Mediator.Send(new GetOfficialLeaderboardUsernamesQuery())).ToArray();
 

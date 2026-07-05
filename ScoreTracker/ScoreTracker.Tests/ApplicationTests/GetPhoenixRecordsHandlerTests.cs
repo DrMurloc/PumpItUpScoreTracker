@@ -8,6 +8,7 @@ using ScoreTracker.Application.Queries;
 using ScoreTracker.ScoreLedger.Application;
 using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services.Contracts;
@@ -23,7 +24,8 @@ public sealed class GetPhoenixRecordsHandlerTests
         var userId = Guid.NewGuid();
         var scores = new List<RecordedPhoenixScore>();
         var records = new Mock<IPhoenixRecordRepository>();
-        records.Setup(r => r.GetRecordedScores(userId, It.IsAny<CancellationToken>())).ReturnsAsync(scores);
+        records.Setup(r => r.GetRecordedScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(scores);
 
         var handler = new GetPhoenixRecordsHandler(new Mock<IUserAccessService>().Object, records.Object);
         var result = await handler.Handle(new GetPhoenixRecordsQuery(userId), CancellationToken.None);

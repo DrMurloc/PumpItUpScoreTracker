@@ -232,13 +232,13 @@
         var phoenixScores = new List<(Guid UserId,RecordedPhoenixScore Record)>();
         for (var l = min; l <= max; l++)
         {
-            phoenixScores.AddRange((await Scores.GetScores(_selectedChart.Type, l, CancellationToken.None)).Select(s => (userId: s.UserId, record: s.Record)).Where(s=>s.record.Score!=null));
+            phoenixScores.AddRange((await Scores.GetScores(MixEnum.Phoenix, _selectedChart.Type, l, CancellationToken.None)).Select(s => (userId: s.UserId, record: s.Record)).Where(s=>s.record.Score!=null));
         }
         _playerScores = phoenixScores.Where(pr => pr.Record.ChartId == _selectedChart!.Id).ToDictionary(pr => pr.UserId, pr => pr.Record.Score!.Value);
 
         var userIds = phoenixScores.Select(u => u.UserId).Distinct().ToArray();
         _users = (await Users.GetUsers(userIds)).ToDictionary(u => u.Id);
-        var allPlayerStats = await PlayerStats.GetStats(userIds, CancellationToken.None);
+        var allPlayerStats = await PlayerStats.GetStats(MixEnum.Phoenix, userIds, CancellationToken.None);
         foreach (var stats in allPlayerStats)
         {
             var competitiveLevel = _selectedChart.Type == ChartType.Single ? stats.SinglesCompetitiveLevel : stats.DoublesCompetitiveLevel;

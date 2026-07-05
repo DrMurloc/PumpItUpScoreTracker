@@ -24,6 +24,16 @@ These endpoints are the contract for community tool makers. Their exact JSON wir
 | Weekly charts | `api/weeklyCharts` | The current weekly challenge board and player scores on it |
 | Tournaments | `api/tournaments` | Tournament list; `api/tournaments/{id}/matches` for bracket matches, filterable by phase/state |
 
+### The `Mix` parameter (Phoenix 2)
+
+Mix-aware endpoints take an **optional `Mix` parameter** — a query parameter on GETs (`?Mix=Phoenix2`), a body field on the `api/phoenixScores` score POST:
+
+- **The default is `Phoenix`, permanently.** Omitting `Mix` never follows the player's on-site mix selection, so integrations that predate Phoenix 2 keep receiving byte-identical responses.
+- Accepted values (case-insensitive): `Phoenix` and `Phoenix2` — anything else, including `XX`, is a `400` listing the valid options. One grandfathered exception: `api/charts` GET predates the parameter and still accepts `XX` for legacy catalog reads (and previously *required* `Mix`; omitting it now defaults to Phoenix).
+- Applies to: `api/phoenixScores` GET + score POST (**not** POST `import` — the importer is Phoenix-only for now), `api/charts` GET + `random`, all four `api/tierlist/*` rankings, and both `api/weeklyCharts` GETs (each mix runs its own weekly board).
+- Tier lists return the **raw list for the requested mix**: unlike the site UI, the API never substitutes Phoenix data for an empty Phoenix 2 tier list, so expect `[]` until Phoenix 2 data accumulates rather than a response that silently changes meaning later.
+- `api/tournaments` takes no `Mix` parameter — tournament sessions carry their own mix.
+
 ## NOT the partner surface
 
 - **`dev/export/*`** — raw table exports that exist solely so a local development copy of the site can populate itself (see [HOW-TO-RUN.md](HOW-TO-RUN.md)). They serialize physical table rows and **change without notice — including breaking changes — whenever the schema does**. Hidden from Swagger, not covered by the wire-shape tests. **Integrators must not build against these.**

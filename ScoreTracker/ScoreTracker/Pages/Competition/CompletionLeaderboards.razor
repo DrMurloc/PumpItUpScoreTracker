@@ -122,6 +122,9 @@
     private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
 
     private MixEnum? _selectedMix = MixEnum.Phoenix;
+    // Completion stats are Phoenix-lineage — XX viewers keep seeing Phoenix, as before.
+    // (Distinct from _selectedMix above, which filters charts by their ORIGINAL mix.)
+    private MixEnum _currentMix = MixEnum.Phoenix;
     private DifficultyLevel? _minLevel = null;
     private DifficultyLevel? _maxLevel =null;
     private ChartType? _chartType = null;
@@ -166,10 +169,10 @@
         _isLoading = true;
         var results = (await Mediator.Send(new GetPlayerChartAggregatesQuery(_selectedMix,
             _communityName,_minLevel,
-            _maxLevel,_chartType))).ToArray();
+            _maxLevel,_chartType, Mix: _currentMix))).ToArray();
         _results = results;
         _users = (await Users.GetUsers(results.Select(r => r.UserId))).ToDictionary(u => u.Id);
-        var charts = await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix));
+        var charts = await Mediator.Send(new GetChartsQuery(_currentMix));
         if (_selectedMix != null)
         {
             charts = charts.Where(c => c.OriginalMix == _selectedMix);
@@ -199,7 +202,8 @@
     private IEnumerable<CommunityOverviewRecord> _myCommunities = Array.Empty<CommunityOverviewRecord>();
     protected override async Task OnInitializedAsync()
     {
-
+        var selectedMix = await UiSettings.GetSelectedMix();
+        _currentMix = selectedMix == MixEnum.XX ? MixEnum.Phoenix : selectedMix;
         await LoadResults();
         if (CurrentUser.IsLoggedIn)
         {

@@ -24,7 +24,8 @@ public sealed class GetPhoenixRecordHandlerTests
         var score = new RecordedPhoenixScore(chartId, 995010, PhoenixPlate.MarvelousGame, false,
             new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
         var records = new Mock<IPhoenixRecordRepository>();
-        records.Setup(r => r.GetRecordedScore(user.Id, chartId, It.IsAny<CancellationToken>())).ReturnsAsync(score);
+        records.Setup(r => r.GetRecordedScore(MixEnum.Phoenix, user.Id, chartId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(score);
         var currentUser = new Mock<ICurrentUserAccessor>();
         currentUser.SetupGet(c => c.User).Returns(user);
 
@@ -39,7 +40,8 @@ public sealed class GetPhoenixRecordHandlerTests
     {
         var user = new UserBuilder().Build();
         var records = new Mock<IPhoenixRecordRepository>();
-        records.Setup(r => r.GetRecordedScore(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+        records.Setup(r => r.GetRecordedScore(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<Guid>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync((RecordedPhoenixScore?)null);
         var currentUser = new Mock<ICurrentUserAccessor>();
         currentUser.SetupGet(c => c.User).Returns(user);

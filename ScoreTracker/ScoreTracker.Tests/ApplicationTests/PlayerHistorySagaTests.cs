@@ -7,6 +7,7 @@ using ScoreTracker.PlayerProgress.Application;
 using ScoreTracker.PlayerProgress.Contracts.Commands;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Application;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -31,14 +32,14 @@ public sealed class PlayerHistorySagaTests
             OldCompetitive: 0, NewCompetitive: 17.5,
             OldSinglesCompetitive: 0, NewSinglesCompetitive: 17.0,
             OldDoublesCompetitive: 0, NewDoublesCompetitive: 18.0,
-            CoOpRating: 200, PassCount: 42);
+            CoOpRating: 200, PassCount: 42, Mix: MixEnum.Phoenix);
         var ctx = new Mock<ConsumeContext<PlayerRatingsImprovedEvent>>();
         ctx.SetupGet(c => c.Message).Returns(message);
         ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
 
         await saga.Consume(ctx.Object);
 
-        history.Verify(h => h.WriteHistory(
+        history.Verify(h => h.WriteHistory(MixEnum.Phoenix,
             It.Is<PlayerRatingRecord>(r => r.UserId == userId
                                             && r.Date == now
                                             && r.CompetitiveLevel == 17.5

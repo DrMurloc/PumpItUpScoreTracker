@@ -59,6 +59,9 @@ public sealed class E2EAppFixture : IAsyncLifetime
             builder.UseSetting("PreventRecurringJobs", "true");
             builder.UseSetting("DevAuth:Enabled", "true");
             builder.UseSetting("PiuGame:BaseUrl", PiuGame.Urls[0]);
+            // Phoenix 2 host points at the same stub so no test path can ever reach the real
+            // site; fixtures stay P1-only until owner-kit captures exist (plan doc, commit 9).
+            builder.UseSetting("PiuGame:Phoenix2BaseUrl", PiuGame.Urls[0]);
             builder.UseSetting("PiuGame:UcsBaseUrl", PiuGame.Urls[0]);
             builder.UseSetting("PiuGame:AmPassUrl", PiuGame.Urls[0]);
             // The OAuth handlers validate ClientId/Secret on first scheme resolution and the

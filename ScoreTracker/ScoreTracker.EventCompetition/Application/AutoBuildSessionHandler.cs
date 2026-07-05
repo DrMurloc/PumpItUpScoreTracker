@@ -20,10 +20,11 @@ namespace ScoreTracker.EventCompetition.Application
 
         public async Task<TournamentSession> Handle(AutoBuildSessionQuery request, CancellationToken cancellationToken)
         {
-            var charts = (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
+            var charts = (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
                 .ToDictionary(c => c.Id);
 
-            var orderedScores = (await _phoenixRecords.GetBestScores(request.UserId, cancellationToken))
+            var orderedScores = (await _phoenixRecords.GetBestScores(request.Mix, request.UserId,
+                    cancellationToken))
                 .Where(s => s is { Score: not null, Plate: not null } &&
                             request.Configuration.Scoring.GetScore(charts[s.ChartId], s.Score!.Value, s.Plate!.Value,
                                 s.IsBroken) > 0)
@@ -32,7 +33,7 @@ namespace ScoreTracker.EventCompetition.Application
                     request.Configuration.Scoring.GetScore(charts[r.ChartId], r.Score!.Value, r.Plate!.Value,
                         r.IsBroken));
 
-            var session = new TournamentSession(request.UserId, request.Configuration);
+            var session = new TournamentSession(request.UserId, request.Configuration, request.Mix);
 
             foreach (var score in orderedScores)
             {

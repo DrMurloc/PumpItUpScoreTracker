@@ -19,7 +19,7 @@ namespace ScoreTracker.ScoreLedger.Application
         public async Task<IEnumerable<ChartScoreAggregate>> Handle(GetAllChartScoreAggregatesQuery request,
             CancellationToken cancellationToken)
         {
-            return await _records.GetAllChartScoreAggregates(cancellationToken);
+            return await _records.GetAllChartScoreAggregates(request.Mix, cancellationToken);
         }
     }
 }

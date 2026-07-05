@@ -7,6 +7,7 @@ using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.SharedKernel.Enums;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -18,7 +19,8 @@ public sealed class GetAllChartScoreAggregatesHandlerTests
     {
         var aggregates = new List<ChartScoreAggregate>();
         var records = new Mock<IPhoenixRecordRepository>();
-        records.Setup(r => r.GetAllChartScoreAggregates(It.IsAny<CancellationToken>())).ReturnsAsync(aggregates);
+        records.Setup(r => r.GetAllChartScoreAggregates(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(aggregates);
 
         var handler = new GetAllChartScoreAggregatesHandler(records.Object);
         var result = await handler.Handle(new GetAllChartScoreAggregatesQuery(), CancellationToken.None);

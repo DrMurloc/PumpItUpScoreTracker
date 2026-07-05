@@ -22,6 +22,10 @@ public static class OfficialMirrorRegistrationExtensions
     {
         services.AddHttpClient<IPiuGameApi, PiuGameApi>((provider, c) =>
         {
+            // Shared anonymous-scrape client. Its Origin stays the Phoenix host: the only
+            // scheduled scrapes are Phoenix (P2 mirror deliberately unscheduled), and the
+            // authenticated flows build their own per-mix client in GetSessionId, which sets
+            // Origin from BaseUrlFor(mix).
             c.DefaultRequestHeaders.Add("Origin",
                 provider.GetRequiredService<IOptions<PiuGameConfiguration>>().Value.BaseUrl);
         });

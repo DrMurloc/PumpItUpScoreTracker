@@ -5,6 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
@@ -36,12 +37,13 @@ namespace ScoreTracker.OfficialMirror.Infrastructure
             await database.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task WriteEntry(UserOfficialLeaderboard entry, CancellationToken cancellationToken)
+        public async Task WriteEntry(MixEnum mix, UserOfficialLeaderboard entry, CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             await database.Set<UserOfficialLeaderboardEntity>().AddAsync(new UserOfficialLeaderboardEntity
             {
                 Id = Guid.NewGuid(),
+                MixId = MixIds.For(mix),
                 Place = entry.Place,
                 LeaderboardName = entry.LeaderboardName,
                 LeaderboardType = entry.OfficialLeaderboardType,
@@ -51,16 +53,18 @@ namespace ScoreTracker.OfficialMirror.Infrastructure
             await database.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task WriteEntries(IEnumerable<UserOfficialLeaderboard> entries,
+        public async Task WriteEntries(MixEnum mix, IEnumerable<UserOfficialLeaderboard> entries,
             CancellationToken cancellationToken)
         {
             var array = entries.ToArray();
             if (array.Length == 0) return;
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
             await database.Set<UserOfficialLeaderboardEntity>().AddRangeAsync(
                 array.Select(entry => new UserOfficialLeaderboardEntity
                 {
                     Id = Guid.NewGuid(),
+                    MixId = mixId,
                     Place = entry.Place,
                     LeaderboardName = entry.LeaderboardName,
                     LeaderboardType = entry.OfficialLeaderboardType,
@@ -106,12 +110,14 @@ namespace ScoreTracker.OfficialMirror.Infrastructure
             await database.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task SaveWorldRanking(WorldRankingRecord record, CancellationToken cancellationToken)
+        public async Task SaveWorldRanking(MixEnum mix, WorldRankingRecord record,
+            CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             await database.Set<UserWorldRanking>().AddAsync(new UserWorldRanking
             {
                 Id = Guid.NewGuid(),
+                MixId = MixIds.For(mix),
                 Type = record.Type,
                 AverageLevel = record.AverageDifficulty,
                 AverageScore = record.AverageScore,
@@ -208,22 +214,25 @@ namespace ScoreTracker.OfficialMirror.Infrastructure
             await database.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<DateTimeOffset?> GetLastImportTimestamp(CancellationToken cancellationToken)
+        public async Task<DateTimeOffset?> GetLastImportTimestamp(MixEnum mix, CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
             var entity = await database.Set<OfficialLeaderboardImportStateEntity>()
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(e => e.MixId == mixId, cancellationToken);
             return entity?.LastImportedAt;
         }
 
-        public async Task SetLastImportTimestamp(DateTimeOffset timestamp, CancellationToken cancellationToken)
+        public async Task SetLastImportTimestamp(MixEnum mix, DateTimeOffset timestamp,
+            CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
             var entity = await database.Set<OfficialLeaderboardImportStateEntity>()
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(e => e.MixId == mixId, cancellationToken);
             if (entity == null)
                 await database.Set<OfficialLeaderboardImportStateEntity>().AddAsync(
-                    new OfficialLeaderboardImportStateEntity { Id = 1, LastImportedAt = timestamp },
+                    new OfficialLeaderboardImportStateEntity { MixId = mixId, LastImportedAt = timestamp },
                     cancellationToken);
             else
                 entity.LastImportedAt = timestamp;

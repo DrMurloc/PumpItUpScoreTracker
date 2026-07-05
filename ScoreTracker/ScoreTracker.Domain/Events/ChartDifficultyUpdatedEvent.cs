@@ -3,7 +3,7 @@
 namespace ScoreTracker.Domain.Events
 {
     [ExcludeFromCodeCoverage]
-    public sealed record ChartDifficultyUpdatedEvent(ChartType ChartType, int Level)
+    public sealed record ChartDifficultyUpdatedEvent(ChartType ChartType, int Level, MixEnum Mix = MixEnum.Phoenix)
     {
     }
 }

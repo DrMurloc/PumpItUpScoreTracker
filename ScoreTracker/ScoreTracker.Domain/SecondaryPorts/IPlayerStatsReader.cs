@@ -10,11 +10,12 @@ namespace ScoreTracker.Domain.SecondaryPorts;
 /// </summary>
 public interface IPlayerStatsReader
 {
-    Task<PlayerStatsRecord> GetStats(Guid userId, CancellationToken cancellationToken);
+    Task<PlayerStatsRecord> GetStats(MixEnum mix, Guid userId, CancellationToken cancellationToken);
 
-    Task<IEnumerable<PlayerStatsRecord>> GetStats(IEnumerable<Guid> userIds, CancellationToken cancellationToken);
+    Task<IEnumerable<PlayerStatsRecord>> GetStats(MixEnum mix, IEnumerable<Guid> userIds,
+        CancellationToken cancellationToken);
 
     /// <summary>Cohort lookup: players whose competitive level is within ±range of the given level.</summary>
-    Task<IEnumerable<Guid>> GetPlayersByCompetitiveRange(ChartType? chartType, double competitiveLevel,
+    Task<IEnumerable<Guid>> GetPlayersByCompetitiveRange(MixEnum mix, ChartType? chartType, double competitiveLevel,
         double range, CancellationToken cancellationToken);
 }

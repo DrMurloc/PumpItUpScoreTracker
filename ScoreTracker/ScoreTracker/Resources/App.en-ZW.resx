@@ -2106,4 +2106,73 @@
   <data name="Find a chart" xml:space="preserve">
 	  <value>Mrgl a mrglchart</value>
   </data>
+  <data name="Coming Soon" xml:space="preserve">
+    <value>Mrgl Soon</value>
+  </data>
+  <data name="Phoenix 2 titles have not been revealed yet. Check back after launch!" xml:space="preserve">
+    <value>Phoenix 2 mrgltitles glub not mrglvealed. Mrgl back after mrgllaunch!</value>
+  </data>
+  <data name="Phoenix 2 recommendations are coming soon. Check back after launch!" xml:space="preserve">
+    <value>Phoenix 2 mrglmendations mrgl soon. Mrgl back after mrgllaunch!</value>
+  </data>
+  <data name="Coming soon — score import for Phoenix 2 will open after hardware verification." xml:space="preserve">
+    <value>Mrgl soon — Phoenix 2 mrglport mrgl open after mrglware mrglrification.</value>
+  </data>
+  <data name="Phoenix 2 official leaderboards are coming soon." xml:space="preserve">
+    <value>Phoenix 2 official mrglrankings mrgl soon.</value>
+  </data>
+  <data name="Provisional — based on Phoenix data" xml:space="preserve">
+    <value>Mrglvisional — mrgl on Phoenix mrgldata</value>
+  </data>
+  <data name="Your account is not associated with a game profile yet. Play a game on your account first, then try again." xml:space="preserve">
+    <value>Mrgl account is not mrglsociated with a game profile yet. Mrgl a game on mrgl account first, then mrgl again.</value>
+  </data>
+  <data name="Bulk Add Charts" xml:space="preserve">
+    <value>Mrglbulk Add Mrglcharts</value>
+  </data>
+  <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
+    <value>Mrglupload a JSON mrglfile to murglar Phoenix 2 mrglsongs and mrglcharts in mrglbulk!</value>
+  </data>
+  <data name="Schema reference:" xml:space="preserve">
+    <value>Mrglschema mrglference:</value>
+  </data>
+  <data name="Upload JSON" xml:space="preserve">
+    <value>Mrglupload JSON</value>
+  </data>
+  <data name="File is too large — 5 MB max." xml:space="preserve">
+    <value>Mrglfile too mrglbig — 5 MB mrglmax!</value>
+  </data>
+  <data name="Ready" xml:space="preserve">
+    <value>Mrglready</value>
+  </data>
+  <data name="Will be skipped" xml:space="preserve">
+    <value>Mrgl be mrglskipped</value>
+  </data>
+  <data name="Has errors" xml:space="preserve">
+    <value>Has mrglerrors</value>
+  </data>
+  <data name="Confirm and Create" xml:space="preserve">
+    <value>Mrglfirm and Murglar</value>
+  </data>
+  <data name="Results" xml:space="preserve">
+    <value>Mrglsults</value>
+  </data>
+  <data name="Already exists in the Phoenix 2 catalog — will be skipped." xml:space="preserve">
+    <value>Mrglready mrglexists in the Phoenix 2 mrglcatalog — mrgl be mrglskipped.</value>
+  </data>
+  <data name="Exists in the Phoenix catalog — carried-over name collision, verify this is intentional." xml:space="preserve">
+    <value>Mrglexists in the Phoenix mrglcatalog — mrgl-over name mrgllision, mrglrify this is mrgltentional.</value>
+  </data>
+  <data name="Created" xml:space="preserve">
+    <value>Murglar'd</value>
+  </data>
+  <data name="Skipped" xml:space="preserve">
+    <value>Mrglskipped</value>
+  </data>
+  <data name="Failed" xml:space="preserve">
+    <value>Mrglfailed</value>
+  </data>
+  <data name="Image could not be copied to the CDN — source URL stored, rehost manually." xml:space="preserve">
+    <value>Mrglimage could not mrgl to the CDN — mrglsource URL mrglstored, mrglhost mrglually!</value>
+  </data>
 </root>

@@ -162,7 +162,7 @@ namespace ScoreTracker.Catalog.Application
                 newSettings.ClearLevelMinimums();
                 newSettings.ClearChartTypeMinimums();
                 newSettings.ClearCustomMinimums();
-                var result = await Handle(new GetRandomChartsQuery(newSettings), cancellationToken);
+                var result = await Handle(new GetRandomChartsQuery(newSettings, request.Mix), cancellationToken);
                 results.AddRange(result);
             }
 
@@ -183,7 +183,7 @@ namespace ScoreTracker.Catalog.Application
                 newSettings.ClearLevelMinimums();
                 newSettings.ClearChartTypeMinimums();
                 newSettings.ClearCustomMinimums();
-                var result = await Handle(new GetRandomChartsQuery(newSettings), cancellationToken);
+                var result = await Handle(new GetRandomChartsQuery(newSettings, request.Mix), cancellationToken);
                 results.AddRange(result);
             }
 
@@ -209,7 +209,7 @@ namespace ScoreTracker.Catalog.Application
                 if (chartType == ChartType.CoOp)
                     newSettings.PlayerCountWeights =
                         newSettings.PlayerCountWeights.ToDictionary(kv => kv.Key, kv => kv.Key == level ? 1 : 0);
-                var result = await Handle(new GetRandomChartsQuery(newSettings), cancellationToken);
+                var result = await Handle(new GetRandomChartsQuery(newSettings, request.Mix), cancellationToken);
                 results.AddRange(result);
             }
 
@@ -234,21 +234,22 @@ namespace ScoreTracker.Catalog.Application
                         newSettings.PlayerCountWeights[level] = customMinimum.Value;
                 }
 
-                var result = await Handle(new GetRandomChartsQuery(newSettings), cancellationToken);
+                var result = await Handle(new GetRandomChartsQuery(newSettings, request.Mix), cancellationToken);
                 results.AddRange(result);
             }
 
             var charts =
-                (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
+                (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
                 .ToDictionary(c => c.Id);
             var userScores = new Dictionary<Guid, RecordedPhoenixScore>();
             if ((_currentUser.IsLoggedIn && request.Settings.LetterGrades.Any()) ||
                 request.Settings.ClearStatus != null)
                 userScores =
-                    (await _phoenixRecords.GetBestScores(_currentUser.User.Id, cancellationToken)).ToDictionary(r =>
+                    (await _phoenixRecords.GetBestScores(request.Mix, _currentUser.User.Id, cancellationToken))
+                    .ToDictionary(r =>
                         r.ChartId);
             var includedCharts = GetIncludedCharts(charts, request.Settings, userScores,
-                await _scoringLevels.GetScoringLevels(MixEnum.Phoenix, cancellationToken)).ToArray();
+                await _scoringLevels.GetScoringLevels(request.Mix, cancellationToken)).ToArray();
             if (includedCharts.Length < request.Settings.Count && !request.Settings.AllowRepeats)
                 return includedCharts.Select(c => charts[c.Key]);
 
@@ -278,16 +279,17 @@ namespace ScoreTracker.Catalog.Application
             CancellationToken cancellationToken)
         {
             var charts =
-                (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
+                (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
                 .ToDictionary(c => c.Id);
             var userScores = new Dictionary<Guid, RecordedPhoenixScore>();
             if ((_currentUser.IsLoggedIn && request.Settings.LetterGrades.Any()) ||
                 request.Settings.ClearStatus != null)
                 userScores =
-                    (await _phoenixRecords.GetBestScores(_currentUser.User.Id, cancellationToken)).ToDictionary(r =>
+                    (await _phoenixRecords.GetBestScores(request.Mix, _currentUser.User.Id, cancellationToken))
+                    .ToDictionary(r =>
                         r.ChartId);
             var includedCharts = GetIncludedCharts(charts, request.Settings, userScores,
-                await _scoringLevels.GetScoringLevels(MixEnum.Phoenix, cancellationToken)).ToArray();
+                await _scoringLevels.GetScoringLevels(request.Mix, cancellationToken)).ToArray();
             return includedCharts.Select(kv => charts[kv.Key]).ToArray();
         }
 

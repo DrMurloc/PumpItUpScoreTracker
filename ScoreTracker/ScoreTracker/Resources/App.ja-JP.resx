@@ -2183,4 +2183,73 @@
   <data name="Find a chart" xml:space="preserve">
     <value>チャートを探す</value>
   </data>
+  <data name="Coming Soon" xml:space="preserve">
+    <value>近日公開</value>
+  </data>
+  <data name="Phoenix 2 titles have not been revealed yet. Check back after launch!" xml:space="preserve">
+    <value>Phoenix 2のタイトルはまだ発表されていません。リリース後にご確認ください。</value>
+  </data>
+  <data name="Phoenix 2 recommendations are coming soon. Check back after launch!" xml:space="preserve">
+    <value>Phoenix 2のおすすめは近日公開予定です。リリース後にご確認ください。</value>
+  </data>
+  <data name="Coming soon — score import for Phoenix 2 will open after hardware verification." xml:space="preserve">
+    <value>Phoenix 2のスコアインポートは、実機での検証が完了した後に開放されます。近日公開予定です。</value>
+  </data>
+  <data name="Phoenix 2 official leaderboards are coming soon." xml:space="preserve">
+    <value>Phoenix 2の公式ランキングは近日公開予定です。</value>
+  </data>
+  <data name="Provisional — based on Phoenix data" xml:space="preserve">
+    <value>暫定（Phoenixのデータに基づく）</value>
+  </data>
+  <data name="Your account is not associated with a game profile yet. Play a game on your account first, then try again." xml:space="preserve">
+    <value>アカウントにはまだゲームプロフィールが関連付けられていません。まずアカウントでプレイしてから、もう一度お試しください。</value>
+  </data>
+  <data name="Bulk Add Charts" xml:space="preserve">
+    <value>チャート一括追加</value>
+  </data>
+  <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
+    <value>JSONファイルをアップロードして、Phoenix 2の楽曲とチャートを一括作成します。</value>
+  </data>
+  <data name="Schema reference:" xml:space="preserve">
+    <value>スキーマの参照:</value>
+  </data>
+  <data name="Upload JSON" xml:space="preserve">
+    <value>JSONをアップロード</value>
+  </data>
+  <data name="File is too large — 5 MB max." xml:space="preserve">
+    <value>ファイルが大きすぎます — 最大5MBです。</value>
+  </data>
+  <data name="Ready" xml:space="preserve">
+    <value>準備完了</value>
+  </data>
+  <data name="Will be skipped" xml:space="preserve">
+    <value>スキップされます</value>
+  </data>
+  <data name="Has errors" xml:space="preserve">
+    <value>エラーあり</value>
+  </data>
+  <data name="Confirm and Create" xml:space="preserve">
+    <value>確認して作成</value>
+  </data>
+  <data name="Results" xml:space="preserve">
+    <value>結果</value>
+  </data>
+  <data name="Already exists in the Phoenix 2 catalog — will be skipped." xml:space="preserve">
+    <value>Phoenix 2のカタログに既に存在します — スキップされます。</value>
+  </data>
+  <data name="Exists in the Phoenix catalog — carried-over name collision, verify this is intentional." xml:space="preserve">
+    <value>Phoenixのカタログに存在します — 引き継ぎによる名前の重複です。意図したものか確認してください。</value>
+  </data>
+  <data name="Created" xml:space="preserve">
+    <value>作成済み</value>
+  </data>
+  <data name="Skipped" xml:space="preserve">
+    <value>スキップ</value>
+  </data>
+  <data name="Failed" xml:space="preserve">
+    <value>失敗</value>
+  </data>
+  <data name="Image could not be copied to the CDN — source URL stored, rehost manually." xml:space="preserve">
+    <value>画像をCDNにコピーできませんでした — 元のURLを保存しました。手動で再ホストしてください。</value>
+  </data>
 </root>

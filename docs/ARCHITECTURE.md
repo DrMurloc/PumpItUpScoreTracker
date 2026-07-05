@@ -125,7 +125,7 @@ Every vertical's model contribution must be listed in [`VerticalModelContributio
 
 | Folder | What's there |
 |---|---|
-| *(root)* | `/WhatShouldIPlay` (home: recommendations + quick recording), `/Charts` (the core browser), `/Chart/{id}` (record + detail), `/Login`, `/Welcome`, `/Account` (profile, API tokens), `/UploadPhoenixScores` (bulk import + OCR), `/UploadXXScores` |
+| *(root)* | `/WhatShouldIPlay` (home: recommendations + quick recording), `/Charts` (the core browser), `/Chart/{id}` (record + detail), `/Login`, `/Welcome`, `/Account` (profile, API tokens), `/UploadPhoenixScores` (bulk CSV import), `/UploadXXScores` |
 | `TierLists/` | `/TierLists`, `/ChartSkills`, `/PersonalizedTierList` — the site's most-used feature |
 | `Progress/` | `/Progress`, `/Phoenix/Progress`, `/Pumbility`, `/Titles`, `/CompetitiveLevel` |
 | `Competition/` | `/Tournaments`, stamina + match tournament flows, qualifiers submission, `/WeeklyCharts`, `/UcsLeaderboards`, `/ScoreRankings`, `/Completion` |

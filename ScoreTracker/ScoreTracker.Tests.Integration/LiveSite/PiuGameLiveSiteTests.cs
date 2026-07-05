@@ -34,7 +34,7 @@ public sealed class PiuGameLiveSiteTests : IClassFixture<PiuGameSessionFixture>
     {
         var client = await _fixture.GetAuthenticatedClient(CancellationToken.None);
 
-        var account = await _fixture.Api.GetAccountData(client, CancellationToken.None);
+        var account = await _fixture.Api.GetAccountData(MixEnum.Phoenix, client, CancellationToken.None);
 
         Assert.False(string.IsNullOrWhiteSpace(account.AccountName.ToString()), "Account name did not parse.");
         Assert.NotEqual("INVALID", account.AccountName.ToString());
@@ -46,7 +46,7 @@ public sealed class PiuGameLiveSiteTests : IClassFixture<PiuGameSessionFixture>
     {
         var client = await _fixture.GetAuthenticatedClient(CancellationToken.None);
 
-        var cards = (await _fixture.Api.GetCards(client, CancellationToken.None)).ToList();
+        var cards = (await _fixture.Api.GetCards(MixEnum.Phoenix, client, CancellationToken.None)).ToList();
 
         Assert.NotEmpty(cards);
         Assert.Equal(1, cards.Count(c => c.IsActive));
@@ -60,11 +60,11 @@ public sealed class PiuGameLiveSiteTests : IClassFixture<PiuGameSessionFixture>
         // Re-selecting the already-active card exercises that endpoint without changing
         // any account state.
         var client = await _fixture.GetAuthenticatedClient(CancellationToken.None);
-        var cards = (await _fixture.Api.GetCards(client, CancellationToken.None)).ToList();
+        var cards = (await _fixture.Api.GetCards(MixEnum.Phoenix, client, CancellationToken.None)).ToList();
         var activeCard = Assert.Single(cards, c => c.IsActive);
 
-        await _fixture.Api.SetCard(client, activeCard.Id, CancellationToken.None);
-        var result = await _fixture.Api.GetBestScores(client, 1, CancellationToken.None);
+        await _fixture.Api.SetCard(MixEnum.Phoenix, client, activeCard.Id, CancellationToken.None);
+        var result = await _fixture.Api.GetBestScores(MixEnum.Phoenix, client, 1, CancellationToken.None);
 
         // The per-card try/catch swallows parse failures, so an empty page here means the
         // parser is silently dropping every card — exactly the 2026-07-03 incident shape.
@@ -82,7 +82,7 @@ public sealed class PiuGameLiveSiteTests : IClassFixture<PiuGameSessionFixture>
     {
         var client = await _fixture.GetAuthenticatedClient(CancellationToken.None);
 
-        var recents = (await _fixture.Api.GetRecentScores(client, CancellationToken.None)).ToList();
+        var recents = (await _fixture.Api.GetRecentScores(MixEnum.Phoenix, client, CancellationToken.None)).ToList();
 
         // Requires the account to have at least one recent play — the parser drops
         // unparseable cards silently, so empty-when-you-played-yesterday means breakage.
@@ -97,7 +97,7 @@ public sealed class PiuGameLiveSiteTests : IClassFixture<PiuGameSessionFixture>
     [LiveSiteFact]
     public async Task Over_20_songs_and_their_song_leaderboards_parse()
     {
-        var songs = await _fixture.Api.Get20AboveSongs(1, CancellationToken.None);
+        var songs = await _fixture.Api.Get20AboveSongs(MixEnum.Phoenix, 1, CancellationToken.None);
 
         Assert.NotEmpty(songs.Results);
         Assert.All(songs.Results, s =>
@@ -106,7 +106,8 @@ public sealed class PiuGameLiveSiteTests : IClassFixture<PiuGameSessionFixture>
             Assert.False(string.IsNullOrWhiteSpace(s.Id), "Song leaderboard id did not parse.");
         });
 
-        var leaderboard = await _fixture.Api.GetSongLeaderboard(songs.Results.First().Id, CancellationToken.None);
+        var leaderboard =
+            await _fixture.Api.GetSongLeaderboard(MixEnum.Phoenix, songs.Results.First().Id, CancellationToken.None);
 
         Assert.NotEmpty(leaderboard.Results);
         Assert.All(leaderboard.Results, e =>
@@ -119,13 +120,13 @@ public sealed class PiuGameLiveSiteTests : IClassFixture<PiuGameSessionFixture>
     [LiveSiteFact]
     public async Task Rating_leaderboard_list_and_a_leaderboard_parse()
     {
-        var leaderboards = await _fixture.Api.GetLeaderboards(CancellationToken.None);
+        var leaderboards = await _fixture.Api.GetLeaderboards(MixEnum.Phoenix, CancellationToken.None);
 
         Assert.NotEmpty(leaderboards.Entries);
         Assert.All(leaderboards.Entries, e => Assert.False(string.IsNullOrWhiteSpace(e.Name)));
 
         var withId = leaderboards.Entries.First(e => !string.IsNullOrWhiteSpace(e.Id));
-        var leaderboard = await _fixture.Api.GetLeaderboard(withId.Id, CancellationToken.None);
+        var leaderboard = await _fixture.Api.GetLeaderboard(MixEnum.Phoenix, withId.Id, CancellationToken.None);
 
         Assert.NotEmpty(leaderboard.Entries);
         Assert.All(leaderboard.Entries, e =>
@@ -138,7 +139,7 @@ public sealed class PiuGameLiveSiteTests : IClassFixture<PiuGameSessionFixture>
     [LiveSiteFact]
     public async Task Chart_popularity_leaderboard_parses()
     {
-        var result = await _fixture.Api.GetChartPopularityLeaderboard(1, CancellationToken.None);
+        var result = await _fixture.Api.GetChartPopularityLeaderboard(MixEnum.Phoenix, 1, CancellationToken.None);
 
         Assert.NotEmpty(result.Entries);
         Assert.All(result.Entries, e =>

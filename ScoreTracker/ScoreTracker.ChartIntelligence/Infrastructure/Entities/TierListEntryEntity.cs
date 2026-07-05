@@ -8,12 +8,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.ChartIntelligence.Infrastructure.Entities
 {
-    [Index(nameof(TierListName))]
+    [Index(nameof(TierListName), nameof(MixId))]
     internal class TierListEntryEntity
     {
         [Key] public Guid Id { get; set; }
         public string TierListName { get; set; } = string.Empty;
         public Guid ChartId { get; set; }
+        public Guid MixId { get; set; }
         public string Category { get; set; } = string.Empty;
         public int Order { get; set; }
     }

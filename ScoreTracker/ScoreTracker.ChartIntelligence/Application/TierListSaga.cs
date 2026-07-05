@@ -42,10 +42,11 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     public async Task Consume(ConsumeContext<ChartDifficultyUpdatedEvent> context)
     {
         var cancellationToken = context.CancellationToken;
-        var charts = (await _chartRepository.GetCharts(MixEnum.Phoenix, context.Message.Level,
+        var mix = context.Message.Mix;
+        var charts = (await _chartRepository.GetCharts(mix, context.Message.Level,
                 context.Message.ChartType, cancellationToken: cancellationToken))
             .ToArray();
-        var ratings = (await _chartRatings.GetAllChartRatedDifficulties(MixEnum.Phoenix, cancellationToken))
+        var ratings = (await _chartRatings.GetAllChartRatedDifficulties(mix, cancellationToken))
             .ToDictionary(r => r.ChartId);
         var order = 0;
         foreach (var chart in charts)
@@ -58,37 +59,37 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
             switch (diff)
             {
                 case <= -.75:
-                    await _tierLists.SaveEntry(
+                    await _tierLists.SaveEntry(mix,
                         new SongTierListEntry("Difficulty", chart.Id, TierListCategory.Overrated, order),
                         cancellationToken);
                     break;
                 case <= -.375:
-                    await _tierLists.SaveEntry(
+                    await _tierLists.SaveEntry(mix,
                         new SongTierListEntry("Difficulty", chart.Id, TierListCategory.VeryEasy, order),
                         cancellationToken);
                     break;
                 case <= -.125:
-                    await _tierLists.SaveEntry(
+                    await _tierLists.SaveEntry(mix,
                         new SongTierListEntry("Difficulty", chart.Id, TierListCategory.Easy, order),
                         cancellationToken);
                     break;
                 case < .125:
-                    await _tierLists.SaveEntry(
+                    await _tierLists.SaveEntry(mix,
                         new SongTierListEntry("Difficulty", chart.Id, TierListCategory.Medium, order),
                         cancellationToken);
                     break;
                 case < .375:
-                    await _tierLists.SaveEntry(
+                    await _tierLists.SaveEntry(mix,
                         new SongTierListEntry("Difficulty", chart.Id, TierListCategory.Hard, order),
                         cancellationToken);
                     break;
                 case < .75:
-                    await _tierLists.SaveEntry(
+                    await _tierLists.SaveEntry(mix,
                         new SongTierListEntry("Difficulty", chart.Id, TierListCategory.VeryHard, order),
                         cancellationToken);
                     break;
                 default:
-                    await _tierLists.SaveEntry(
+                    await _tierLists.SaveEntry(mix,
                         new SongTierListEntry("Difficulty", chart.Id, TierListCategory.Underrated, order),
                         cancellationToken);
                     break;
@@ -100,28 +101,31 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
 
     public async Task Consume(ConsumeContext<ProcessPassTierListCommand> context)
     {
+        var mix = context.Message.Mix;
         foreach (var level in Enumerable.Range(10, 18))
         {
-            await ProcessPgTierList(level, ChartType.Single, context.CancellationToken);
-            await ProcessPgTierList(level, ChartType.Double, context.CancellationToken);
+            await ProcessPgTierList(mix, level, ChartType.Single, context.CancellationToken);
+            await ProcessPgTierList(mix, level, ChartType.Double, context.CancellationToken);
 
-            await ProcessPassTierList(level, ChartType.Single, context.CancellationToken);
-            await ProcessPassTierList(level, ChartType.Double, context.CancellationToken);
+            await ProcessPassTierList(mix, level, ChartType.Single, context.CancellationToken);
+            await ProcessPassTierList(mix, level, ChartType.Double, context.CancellationToken);
         }
 
         foreach (var playerCount in Enumerable.Range(2, 5))
         {
-            await ProcessPgTierList(playerCount, ChartType.CoOp, context.CancellationToken);
-            await ProcessCoOpPassTierList(playerCount, context.CancellationToken);
+            await ProcessPgTierList(mix, playerCount, ChartType.CoOp, context.CancellationToken);
+            await ProcessCoOpPassTierList(mix, playerCount, context.CancellationToken);
         }
     }
 
     public async Task Consume(ConsumeContext<ProcessScoresTiersListCommand> context)
     {
+        var mix = context.Message.Mix;
         for (var level = 1; level <= 29; level++)
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
             {
-                var allPhoenixScores = (await _scores.GetScores(chartType, level, context.CancellationToken))
+                var allPhoenixScores = (await _scores.GetScores(mix, chartType, level,
+                        context.CancellationToken))
                     .Where(s => s.Record.Score != null)
                     .GroupBy(r => r.UserId).ToDictionary(g => g.Key,
                         g => (IDictionary<Guid, PhoenixScore>)g.ToDictionary(p => p.Record.ChartId,
@@ -130,7 +134,7 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
                 var stats = new Dictionary<Guid, double>();
                 foreach (var userId in userIds)
                 {
-                    var record = await _playerStats.GetStats(userId, context.CancellationToken);
+                    var record = await _playerStats.GetStats(mix, userId, context.CancellationToken);
                     stats[userId] = level + .5 - (chartType is ChartType.Single
                         ? record.SinglesCompetitiveLevel
                         : record.DoublesCompetitiveLevel);
@@ -140,17 +144,18 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
                 var results =
                     TierListProcessor.ProcessIntoTierList(allPhoenixScores.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value), level,
                         "Scores", weights);
-                await _tierLists.SaveEntries(results, context.CancellationToken);
+                await _tierLists.SaveEntries(mix, results, context.CancellationToken);
             }
     }
 
     public async Task<IEnumerable<SongTierListEntry>> Handle(GetMyRelativeTierListQuery request,
         CancellationToken cancellationToken)
     {
-        var filtered = await _chartRepository.GetCharts(MixEnum.Phoenix, request.Level, request.ChartType,
+        var filtered = await _chartRepository.GetCharts(request.Mix, request.Level, request.ChartType,
             cancellationToken: cancellationToken);
         var phoenixScores =
-            (await _scores.GetBestScores(request.UserId ?? _currentUser.User.Id, cancellationToken)).ToDictionary(
+            (await _scores.GetBestScores(request.Mix, request.UserId ?? _currentUser.User.Id, cancellationToken))
+            .ToDictionary(
                 s => s.ChartId);
 
 
@@ -160,7 +165,8 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         if (!filteredCompareScoreArray.Any()) return Array.Empty<SongTierListEntry>();
 
         var officialScoreTierListEntries =
-            (await _tierLists.GetAllEntries(request.Level >= 24 ? "Official Scores" : "Scores", cancellationToken))
+            (await _tierLists.GetAllEntries(request.Mix, request.Level >= 24 ? "Official Scores" : "Scores",
+                cancellationToken))
             .ToDictionary(e => e.ChartId);
         var standardDeviationCompare =
             TierListProcessor.StdDev(filteredCompareScoreArray.Select(s => (int)(phoenixScores[s.Id].Score ?? 0)), true);
@@ -228,12 +234,12 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         return result;
     }
 
-    private async Task ProcessCoOpPassTierList(int playerCount, CancellationToken cancellationToken)
+    private async Task ProcessCoOpPassTierList(MixEnum mix, int playerCount, CancellationToken cancellationToken)
     {
-        var scores = (await _scores.GetScores(ChartType.CoOp, playerCount, cancellationToken))
+        var scores = (await _scores.GetScores(mix, ChartType.CoOp, playerCount, cancellationToken))
             .Where(s => s.Record is { Score: not null, IsBroken: false }).ToArray();
         var playerLevels =
-            (await _playerStats.GetStats(scores.Select(s => s.UserId).Distinct().ToArray(), cancellationToken))
+            (await _playerStats.GetStats(mix, scores.Select(s => s.UserId).Distinct().ToArray(), cancellationToken))
             .ToDictionary(u => u.UserId, u => u.DoublesCompetitiveLevel);
         var playerWeights = playerLevels.ToDictionary(u => u.Key, u => Math.Log(28.0 - u.Value));
 
@@ -244,20 +250,20 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         var chartMinimums = scores.GroupBy(s => s.Record.ChartId)
             .ToDictionary(g => g.Key, g => g.Min(r => playerLevels[r.UserId]));
 
-        await _tierLists.SaveEntries(entries, cancellationToken);
+        await _tierLists.SaveEntries(mix, entries, cancellationToken);
         foreach (var kv in chartMinimums)
-            await _scoringLevels.SaveScoringLevel(MixEnum.Phoenix, kv.Key, kv.Value, cancellationToken);
+            await _scoringLevels.SaveScoringLevel(mix, kv.Key, kv.Value, cancellationToken);
     }
 
-    private async Task ProcessPgTierList(DifficultyLevel level, ChartType chartType,
+    private async Task ProcessPgTierList(MixEnum mix, DifficultyLevel level, ChartType chartType,
         CancellationToken cancellationToken)
     {
         var charts =
-            (await _chartRepository.GetCharts(MixEnum.Phoenix, level, chartType, cancellationToken: cancellationToken))
+            (await _chartRepository.GetCharts(mix, level, chartType, cancellationToken: cancellationToken))
             .ToArray();
-        var pgUsers = (await _scores.GetPgUsers(chartType, level, cancellationToken)).ToArray();
+        var pgUsers = (await _scores.GetPgUsers(mix, chartType, level, cancellationToken)).ToArray();
 
-        var stats = (await _playerStats.GetStats(pgUsers.Select(p => p.UserId).Distinct(), cancellationToken))
+        var stats = (await _playerStats.GetStats(mix, pgUsers.Select(p => p.UserId).Distinct(), cancellationToken))
             .ToDictionary(s => s.UserId);
 
         var pgSums = charts.ToDictionary(c => c.Id, c => 0.0);
@@ -277,30 +283,31 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         var result = new List<SongTierListEntry>();
         result.AddRange(TierListProcessor.ProcessIntoTierList("PG",
             pgSums.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value)));
-        await _tierLists.SaveEntries(result, cancellationToken);
+        await _tierLists.SaveEntries(mix, result, cancellationToken);
     }
 
-    private async Task ProcessPassTierList(DifficultyLevel level, ChartType chartType,
+    private async Task ProcessPassTierList(MixEnum mix, DifficultyLevel level, ChartType chartType,
         CancellationToken cancellationToken)
     {
         var charts =
-            (await _chartRepository.GetCharts(MixEnum.Phoenix, level, chartType, cancellationToken: cancellationToken))
+            (await _chartRepository.GetCharts(mix, level, chartType, cancellationToken: cancellationToken))
             .ToArray();
         var userWeights = new Dictionary<int, IEnumerable<Guid>>
         {
-            { 7, await _tierLists.GetUsersOnLevel(level - 3, cancellationToken, true) },
-            { 6, await _tierLists.GetUsersOnLevel(level - 2, cancellationToken, true) },
-            { 5, await _tierLists.GetUsersOnLevel(level - 1, cancellationToken, true) },
-            { 4, await _tierLists.GetUsersOnLevel(level, cancellationToken, true) }
+            { 7, await _tierLists.GetUsersOnLevel(mix, level - 3, cancellationToken, true) },
+            { 6, await _tierLists.GetUsersOnLevel(mix, level - 2, cancellationToken, true) },
+            { 5, await _tierLists.GetUsersOnLevel(mix, level - 1, cancellationToken, true) },
+            { 4, await _tierLists.GetUsersOnLevel(mix, level, cancellationToken, true) }
         };
-        if (level < 27) userWeights[3] = await _tierLists.GetUsersOnLevel(level + 3, cancellationToken);
-        if (level < 28) userWeights[2] = await _tierLists.GetUsersOnLevel(level + 2, cancellationToken);
-        if (level < 29) userWeights[1] = await _tierLists.GetUsersOnLevel(level + 1, cancellationToken);
+        if (level < 27) userWeights[3] = await _tierLists.GetUsersOnLevel(mix, level + 3, cancellationToken);
+        if (level < 28) userWeights[2] = await _tierLists.GetUsersOnLevel(mix, level + 2, cancellationToken);
+        if (level < 29) userWeights[1] = await _tierLists.GetUsersOnLevel(mix, level + 1, cancellationToken);
         var chartSums = charts.ToDictionary(c => c.Id, c => 0);
         foreach (var weightValue in userWeights)
         {
             var scores =
-                (await _scores.GetScores(weightValue.Value, chartType, level, level, cancellationToken))
+                (await _scores.GetScores(mix, weightValue.Value, chartType, level, level,
+                    cancellationToken))
                 .Where(s => !s.IsBroken).ToArray();
 
             foreach (var score in scores.Where(s => chartSums.ContainsKey(s.ChartId)))
@@ -312,6 +319,6 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
 
         var result = new List<SongTierListEntry>();
         result.AddRange(TierListProcessor.ProcessIntoTierList("Pass Count", chartSums));
-        await _tierLists.SaveEntries(result, cancellationToken);
+        await _tierLists.SaveEntries(mix, result, cancellationToken);
     }
 }

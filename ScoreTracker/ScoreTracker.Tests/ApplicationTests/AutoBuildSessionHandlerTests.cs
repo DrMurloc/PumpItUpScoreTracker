@@ -39,7 +39,7 @@ public sealed class AutoBuildSessionHandlerTests
 
         charts.Setup(r => r.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { chart });
-        phoenixRecords.Setup(r => r.GetBestScores(userId, It.IsAny<CancellationToken>()))
+        phoenixRecords.Setup(r => r.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new RecordedPhoenixScore(chart.Id, 980000, PhoenixPlate.PerfectGame, false, DateTimeOffset.UtcNow)
@@ -70,7 +70,7 @@ public sealed class AutoBuildSessionHandlerTests
 
         charts.Setup(r => r.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { chartA, chartB });
-        phoenixRecords.Setup(r => r.GetBestScores(userId, It.IsAny<CancellationToken>()))
+        phoenixRecords.Setup(r => r.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new RecordedPhoenixScore(chartA.Id, null, PhoenixPlate.PerfectGame, false, DateTimeOffset.UtcNow),
@@ -87,6 +87,40 @@ public sealed class AutoBuildSessionHandlerTests
     }
 
     [Fact]
+    public async Task BuildsPhoenix2SessionFromPhoenix2ChartsAndScoresAndStampsTheMix()
+    {
+        var chart = ChartWithDuration(TimeSpan.FromMinutes(2));
+        var charts = new Mock<IChartRepository>();
+        var phoenixRecords = new Mock<IScoreReader>();
+        var configuration = new TournamentConfiguration(ScoringConfiguration.PumbilityScoring(false))
+        {
+            MaxTime = TimeSpan.FromMinutes(60)
+        };
+        var userId = Guid.NewGuid();
+
+        charts.Setup(r => r.GetCharts(MixEnum.Phoenix2, null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { chart });
+        phoenixRecords.Setup(r => r.GetBestScores(MixEnum.Phoenix2, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new RecordedPhoenixScore(chart.Id, 980000, PhoenixPlate.PerfectGame, false, DateTimeOffset.UtcNow)
+            });
+
+        var handler = new AutoBuildSessionHandler(charts.Object, phoenixRecords.Object);
+
+        var session = await handler.Handle(
+            new AutoBuildSessionQuery(configuration, userId, TimeSpan.Zero, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.Equal(MixEnum.Phoenix2, session.Mix);
+        Assert.Single(session.Entries);
+        charts.Verify(r => r.GetCharts(MixEnum.Phoenix2, null, null, null, It.IsAny<CancellationToken>()),
+            Times.Once);
+        phoenixRecords.Verify(r => r.GetBestScores(MixEnum.Phoenix2, userId, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task ReturnsEmptySessionWhenMinimumRestIsLargerThanRemainingBudget()
     {
         var chart = ChartWithDuration(TimeSpan.FromMinutes(2));
@@ -100,7 +134,7 @@ public sealed class AutoBuildSessionHandlerTests
 
         charts.Setup(r => r.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { chart });
-        phoenixRecords.Setup(r => r.GetBestScores(userId, It.IsAny<CancellationToken>()))
+        phoenixRecords.Setup(r => r.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new RecordedPhoenixScore(chart.Id, 980000, PhoenixPlate.PerfectGame, false, DateTimeOffset.UtcNow)

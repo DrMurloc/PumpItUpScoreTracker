@@ -32,7 +32,7 @@ public interface IChartDifficultyRatingRepository
 
     Task<IEnumerable<CoOpRating>> GetAllCoOpRatings(CancellationToken cancellationToken = default);
     Task<CoOpRating?> GetCoOpRating(Guid chartId, CancellationToken cancellationToken = default);
-    Task SaveCoOpRating(CoOpRating rating, CancellationToken cancellationToken = default);
+    Task SaveCoOpRating(MixEnum mix, CoOpRating rating, CancellationToken cancellationToken = default);
     Task ClearCoOpRating(Guid chartId, CancellationToken cancellationToken = default);
 
     Task<IDictionary<int, DifficultyLevel>?> GetMyCoOpRating(Guid userId, Guid chartId,

@@ -25,7 +25,7 @@ internal sealed class WorldRankingService : IWorldRankingService
         _dateTime = dateTime;
     }
 
-    public async Task CalculateWorldRankings(CancellationToken cancellationToken)
+    public async Task CalculateWorldRankings(MixEnum mix, CancellationToken cancellationToken)
     {
         var scoringConfig = ScoringConfiguration.PumbilityScoring(false);
 
@@ -88,7 +88,7 @@ internal sealed class WorldRankingService : IWorldRankingService
                                       u.Item2.chartType))
                               / 50.0;
 
-                await _leaderboards.SaveWorldRanking(new WorldRankingRecord(username, type,
+                await _leaderboards.SaveWorldRanking(mix, new WorldRankingRecord(username, type,
                     totalDifficulty / (double)totalCount, (int)(totalScore / (double)totalCount), singlesCount,
                     doublesCount,
                     totalRating, competitive, singles, doubles), cancellationToken);

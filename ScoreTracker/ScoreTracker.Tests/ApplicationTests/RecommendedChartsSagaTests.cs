@@ -144,13 +144,13 @@ public sealed class RecommendedChartsSagaTests
         {
             var userId = currentUserId ?? Guid.NewGuid();
             CurrentUser.SetupGet(u => u.User).Returns(new UserBuilder().WithId(userId).Build());
-            Stats.Setup(s => s.GetStats(userId, It.IsAny<CancellationToken>())).ReturnsAsync(ZeroStats(userId));
+            Stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>())).ReturnsAsync(ZeroStats(userId));
             // Random.Next(...) returns 0 by default → OrderBy keys are uniform → input order preserved.
             Random.Setup(r => r.Next(It.IsAny<int>())).Returns(0);
             // Default empty for all the mediator queries that random-using sub-methods rely on.
             Mediator.Setup(m => m.Send(It.IsAny<GetTitleProgressQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new[] { OneTitle() });
-            Scores.Setup(s => s.GetBestScores(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            Scores.Setup(s => s.GetBestScores(MixEnum.Phoenix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
             Mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<Chart>());
@@ -162,7 +162,7 @@ public sealed class RecommendedChartsSagaTests
                 .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
             Users.Setup(u => u.GetFeedback(userId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<SuggestionFeedbackRecord>());
-            Weekly.Setup(w => w.GetWeeklyCharts(It.IsAny<CancellationToken>()))
+            Weekly.Setup(w => w.GetWeeklyCharts(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<WeeklyTournamentChart>());
 
             Saga = new RecommendedChartsSaga(Mediator.Object, CurrentUser.Object, Users.Object, Stats.Object,
@@ -179,7 +179,7 @@ public sealed class RecommendedChartsSagaTests
 
         public RecommendedChartsContext WithScores(params RecordedPhoenixScore[] scores)
         {
-            Scores.Setup(s => s.GetBestScores(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            Scores.Setup(s => s.GetBestScores(MixEnum.Phoenix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(scores);
             return this;
         }
@@ -193,7 +193,7 @@ public sealed class RecommendedChartsSagaTests
 
         public RecommendedChartsContext WithCompetitiveLevel(double level)
         {
-            Stats.Setup(s => s.GetStats(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            Stats.Setup(s => s.GetStats(MixEnum.Phoenix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new PlayerStatsRecord(Guid.NewGuid(), TotalRating: 0, HighestLevel: 1,
                     ClearCount: 0, CoOpRating: 0, CoOpScore: 0, SkillRating: 0, SkillScore: 0,
                     SkillLevel: 0, SinglesRating: 0, SinglesScore: 0, SinglesLevel: 0,

@@ -1,10 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.PlayerProgress.Infrastructure.Entities
 {
+    [PrimaryKey(nameof(UserId), nameof(MixId))]
     internal sealed class PlayerStatsEntity
     {
-        [Key] public Guid UserId { get; set; }
+        public Guid UserId { get; set; }
+        public Guid MixId { get; set; }
         public int TotalRating { get; set; }
         public int HighestLevel { get; set; }
         public int ClearCount { get; set; }

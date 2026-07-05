@@ -165,7 +165,7 @@
 
 
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Video)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Video))">@L["Video"]</MudMenuItem>
-                @if (_currentMix == MixEnum.Phoenix)
+                @if (_currentMix != MixEnum.XX)
                 {
                     <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Overview)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Overview))">@L["Leaderboard"]</MudMenuItem>
                 }
@@ -174,7 +174,7 @@
                     <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Broken)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Broken))">@L["Broken"]</MudMenuItem>
                     <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Grade)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Grade))">@L["Letter Grade"]</MudMenuItem>
                     <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Score)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Score))">@L["Score"]</MudMenuItem>
-                    @if (_currentMix == MixEnum.Phoenix)
+                    @if (_currentMix != MixEnum.XX)
                     {
                         <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Plate)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Plate))">@L["Plate"]</MudMenuItem>
                     }
@@ -211,7 +211,7 @@
         {
             <MudTh>@L["Video"]</MudTh>
         }
-        @if (_currentMix == MixEnum.Phoenix && ColumnStatus(ColumnEnum.Overview))
+        @if (_currentMix != MixEnum.XX && ColumnStatus(ColumnEnum.Overview))
         {
             <MudTh>@L["Leaderboard"]</MudTh>
         }
@@ -228,7 +228,7 @@
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => _currentMix==MixEnum.XX?e.XXLetterGrade:e.PhoenixLetterGrade">@L["Letter Grade"]</MudTableSortLabel></MudTh>
         }
-        @if (ColumnStatus(ColumnEnum.Plate) && _currentMix==MixEnum.Phoenix)
+        @if (ColumnStatus(ColumnEnum.Plate) && _currentMix!=MixEnum.XX)
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.PhoenixPlate">@L["Plate"]</MudTableSortLabel></MudTh>
         }
@@ -285,7 +285,7 @@
                   
             </MudTd>
         }
-        @if (_currentMix==MixEnum.Phoenix && ColumnStatus(ColumnEnum.Overview))
+        @if (_currentMix!=MixEnum.XX && ColumnStatus(ColumnEnum.Overview))
         {
             <MudTd>
                 @if (_chartScoreCount.ContainsKey(context.ChartId) && _chartScoreCount[context.ChartId] > 0)
@@ -342,10 +342,10 @@
                 }
             </MudTd>
         }
-        @if (ColumnStatus(ColumnEnum.Plate) && _currentMix==MixEnum.Phoenix)
+        @if (ColumnStatus(ColumnEnum.Plate) && _currentMix!=MixEnum.XX)
         {
-            
-            
+
+
             <MudTd>
                 @if (CanEdit)
                 {
@@ -421,9 +421,9 @@
 </MudDialog>
 <MudDialog @bind-Visible="_showChartOverview">
     <DialogContent>
-        @if (_overViewChart != null && _currentMix == MixEnum.Phoenix)
+        @if (_overViewChart != null && _currentMix != MixEnum.XX)
         {
-            <ChartOverview ChartId="_overViewChart.Value"></ChartOverview>
+            <ChartOverview ChartId="_overViewChart.Value" Mix="_currentMix"></ChartOverview>
         }
     </DialogContent>
     <DialogActions>
@@ -671,7 +671,7 @@
         }
         else
         {
-            var records = userId == null ? Array.Empty<RecordedPhoenixScore>() : await Mediator.Send(new GetPhoenixRecordsQuery(userId.Value));
+            var records = userId == null ? Array.Empty<RecordedPhoenixScore>() : await Mediator.Send(new GetPhoenixRecordsQuery(userId.Value, _currentMix));
             var bestAttempts = records.ToDictionary(b => b.ChartId);
             
             _charts = charts.Select(c => new BestAttemptDto(c)
@@ -716,7 +716,7 @@
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();
-        _chartScoreCount = (await Mediator.Send(new GetAllChartScoreAggregatesQuery())).ToDictionary(c => c.ChartId, c => c.Count);
+        _chartScoreCount = (await Mediator.Send(new GetAllChartScoreAggregatesQuery(_currentMix))).ToDictionary(c => c.ChartId, c => c.Count);
         await LoadCharts(RequestedUserId);
         if (CurrentUser.IsLoggedIn)
         {
@@ -805,7 +805,7 @@
     private async Task SetBroken(BestAttemptDto dto, bool newBroken)
     {
         dto.IsBroken = newBroken;
-        if (string.IsNullOrWhiteSpace(dto.XXLetterGrade) && !newBroken && _currentMix==MixEnum.Phoenix)
+        if (string.IsNullOrWhiteSpace(dto.XXLetterGrade) && !newBroken && _currentMix!=MixEnum.XX)
         {
             dto.XXLetterGrade = XXLetterGrade.A.ToString();
         }
@@ -847,7 +847,7 @@
         {
             try
             {
-                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(dto.ChartId, dto.IsBroken, dto.Score, dto.PhoenixPlate));
+                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(dto.ChartId, dto.IsBroken, dto.Score, dto.PhoenixPlate, Mix: _currentMix));
                 dto.RecordedOn = DateTimeOffset.Now;
                 
 

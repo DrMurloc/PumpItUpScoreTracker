@@ -28,33 +28,33 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 
 | Table | Purpose |
 |---|---|
-| `scores.PhoenixRecord` | Best-known Phoenix attempt per user+chart: score, plate, broken flag |
+| `scores.PhoenixRecord` | Best-known Phoenix-scoring attempt per user+chart+mix: score, plate, broken flag (unique on UserId+ChartId+MixId; pre-Phoenix-2 rows backfilled as Phoenix — as are all MixId columns below) |
 | `scores.BestAttempt` | XX-era best attempts per user+chart |
-| `scores.PhoenixRecordStats` | Per-score Pumbility stats, written by PlayerProgress through a Ledger port |
-| `scores.ScoreEventJournal` | **Append-only** journal of score submissions *as received* (manual, import, OCR, …), including submissions that don't beat the stored best. Rows are never updated or deleted. Seeded 2026-06 from `PhoenixRecord` (`Source='backfill'`); the foundation of score-progression history |
+| `scores.PhoenixRecordStats` | Per-score Pumbility stats per user+chart+mix, written by PlayerProgress through a Ledger port |
+| `scores.ScoreEventJournal` | **Append-only** journal of score submissions *as received* (manual, import, CSV, …), including submissions that don't beat the stored best. Rows are never updated or deleted. Seeded 2026-06 from `PhoenixRecord` (`Source='backfill'`); the foundation of score-progression history |
 
 ## Player Progress (vertical: `ScoreTracker.PlayerProgress`)
 
 | Table | Purpose |
 |---|---|
-| `scores.PlayerStats` | Aggregated player stats: ratings, competitive levels, clear counts |
-| `scores.PlayerHistory` | Point-in-time snapshots of player stats |
-| `scores.UserTitle` | Titles earned, with paragon progression |
-| `scores.UserHighestTitle` | Denormalized current-highest title for fast reads |
+| `scores.PlayerStats` | Aggregated player stats per mix (PK UserId+MixId): ratings, competitive levels, clear counts |
+| `scores.PlayerHistory` | Point-in-time snapshots of player stats, per mix |
+| `scores.UserTitle` | Titles earned per mix, with paragon progression |
+| `scores.UserHighestTitle` | Denormalized current-highest title per mix (PK UserId+MixId) for fast reads |
 | `scores.SuggestionFeedback` | User feedback on chart recommendations |
 
 ## Chart Intelligence (vertical: `ScoreTracker.ChartIntelligence`)
 
 | Table | Purpose |
 |---|---|
-| `scores.TierListEntry` | Tier list entries (the site's most-used feature) |
+| `scores.TierListEntry` | Tier list entries per mix (the site's most-used feature) |
 | `scores.ChartScoringLevel` | Calculated scoring-difficulty level per chart+mix |
 | `scores.ChartLetterDifficulty` | Letter-grade (AA–PG) difficulty percentiles per chart |
 | `scores.ChartDifficultyRating` | Aggregated community difficulty ratings (count + std dev) |
 | `scores.UserChartDifficultyRating` | An individual user's difficulty vote |
 | `scores.ChartPreferenceRatingEntity` | Aggregated preference ratings |
 | `scores.UserPreferenceRating` | An individual user's preference vote |
-| `scores.CoOpRating` | Aggregated co-op difficulty ratings |
+| `scores.CoOpRating` | Aggregated co-op difficulty ratings, per mix |
 | `scores.UserCoOpRating` | An individual user's co-op difficulty vote |
 
 ## Game Content Catalog (vertical: `ScoreTracker.Catalog`)
@@ -71,19 +71,19 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 
 | Table | Purpose |
 |---|---|
-| `scores.UserOfficialLeaderboard` | Mirrored official leaderboard placements |
-| `scores.UserWorldRanking` | Calculated world-ranking stats (singles/doubles competitive, average level) |
+| `scores.UserOfficialLeaderboard` | Mirrored official leaderboard placements, per mix |
+| `scores.UserWorldRanking` | Calculated world-ranking stats per mix (singles/doubles competitive, average level) |
 | `scores.OfficialUserAvatar` | Cached official avatar URLs |
-| `scores.OfficialLeaderboardImportState` | Timestamp of the last official leaderboard import |
+| `scores.OfficialLeaderboardImportState` | Timestamp of the last official leaderboard import, one row per mix (PK MixId) |
 
 ## Weekly Challenge (vertical: `ScoreTracker.WeeklyChallenge`)
 
 | Table | Purpose |
 |---|---|
-| `scores.WeeklyTournamentChart` | The active weekly chart set, with expiration |
-| `scores.WeeklyUserEntry` | Player entries: score, plate, verification |
-| `scores.UserWeeklyPlacing` | Historical placements from finished weeks |
-| `scores.PastTourneyCharts` | Archive of previously used weekly charts (avoids repeats) |
+| `scores.WeeklyTournamentChart` | The active weekly chart set per mix, with expiration |
+| `scores.WeeklyUserEntry` | Player entries per mix: score, plate, verification |
+| `scores.UserWeeklyPlacing` | Historical placements from finished weeks, per mix |
+| `scores.PastTourneyCharts` | Archive of previously used weekly charts per mix (avoids repeats; PK ChartId+MixId) |
 
 ## Event Competition (vertical: `ScoreTracker.EventCompetition`)
 
@@ -91,11 +91,11 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 |---|---|
 | `scores.Tournament` | Competitive event definition: configuration, location, visibility |
 | `scores.UserTournamentRegistration` | Player registrations |
-| `scores.UserTournamentSession` | A player's session: charts played, scores, approval state |
+| `scores.UserTournamentSession` | A player's session: charts played, scores, approval state, and the mix it was played on |
 | `scores.PhotoVerification` | Photo proofs attached to sessions |
 | `scores.TournamentChartLevel` | Per-tournament chart level overrides |
 | `scores.TournamentRole` | Per-tournament roles (organizer, judge, …) |
-| `scores.QualifiersConfiguration` | Qualifier stage setup: charts, scoring, cutoff |
+| `scores.QualifiersConfiguration` | Qualifier stage setup: charts, scoring, cutoff, and the mix the qualifier runs on |
 | `scores.UserQualifier` | Qualifier entries and approval status |
 | `scores.UserQualifierHistory` | Timestamped snapshots of qualifier submissions |
 | `scores.CoOpTeam` / `scores.CoOpPlayers` | Co-op tournament teams and their members |

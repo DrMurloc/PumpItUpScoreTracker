@@ -1,12 +1,15 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
+using ScoreTracker.Data.Persistence;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.ScoreLedger.Infrastructure;
+using ScoreTracker.ScoreLedger.Infrastructure.Entities;
 using ScoreTracker.Tests.Integration.Fixtures;
 using ScoreTracker.Tests.Integration.TestData;
 
@@ -46,10 +49,10 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
         var chartId = await _seed.SeedChartAsync();
 
         var writer = BuildRepository();
-        await writer.UpdateBestAttempt(userId, new RecordedPhoenixScore(chartId,
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, userId, new RecordedPhoenixScore(chartId,
             PhoenixScore.From(950000), PhoenixPlate.SuperbGame, IsBroken: false, RecordedAt));
 
-        var retrieved = await BuildRepository().GetRecordedScore(userId, chartId);
+        var retrieved = await BuildRepository().GetRecordedScore(MixEnum.Phoenix, userId, chartId);
 
         Assert.NotNull(retrieved);
         Assert.Equal(chartId, retrieved!.ChartId);
@@ -70,12 +73,12 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
         var chartId = await _seed.SeedChartAsync();
 
         var writer = BuildRepository();
-        await writer.UpdateBestAttempt(userId, new RecordedPhoenixScore(chartId,
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, userId, new RecordedPhoenixScore(chartId,
             PhoenixScore.From(980000), PhoenixPlate.ExtremeGame, false, RecordedAt));
-        await writer.UpdateBestAttempt(userId, new RecordedPhoenixScore(chartId,
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, userId, new RecordedPhoenixScore(chartId,
             PhoenixScore.From(950000), PhoenixPlate.SuperbGame, false, RecordedAt));
 
-        var retrieved = await BuildRepository().GetRecordedScore(userId, chartId);
+        var retrieved = await BuildRepository().GetRecordedScore(MixEnum.Phoenix, userId, chartId);
 
         Assert.NotNull(retrieved);
         Assert.Equal(950000, (int)retrieved!.Score!.Value);
@@ -91,16 +94,16 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
         var chartY = await _seed.SeedChartAsync();
 
         var writer = BuildRepository();
-        await writer.UpdateBestAttempt(userA, new RecordedPhoenixScore(chartX,
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, userA, new RecordedPhoenixScore(chartX,
             PhoenixScore.From(900000), PhoenixPlate.TalentedGame, false, RecordedAt));
-        await writer.UpdateBestAttempt(userA, new RecordedPhoenixScore(chartY,
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, userA, new RecordedPhoenixScore(chartY,
             PhoenixScore.From(910000), PhoenixPlate.MarvelousGame, false, RecordedAt));
-        await writer.UpdateBestAttempt(userB, new RecordedPhoenixScore(chartX,
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, userB, new RecordedPhoenixScore(chartX,
             PhoenixScore.From(920000), PhoenixPlate.SuperbGame, false, RecordedAt));
 
         var reader = BuildRepository();
-        var userAScores = (await reader.GetRecordedScores(userA)).ToList();
-        var userBScores = (await reader.GetRecordedScores(userB)).ToList();
+        var userAScores = (await reader.GetRecordedScores(MixEnum.Phoenix, userA)).ToList();
+        var userBScores = (await reader.GetRecordedScores(MixEnum.Phoenix, userB)).ToList();
 
         Assert.Equal(2, userAScores.Count);
         Assert.Contains(userAScores, s => s.ChartId == chartX);
@@ -112,7 +115,7 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task GetRecordedScoreReturnsNullWhenNoRecordExists()
     {
-        var retrieved = await BuildRepository().GetRecordedScore(Guid.NewGuid(), Guid.NewGuid());
+        var retrieved = await BuildRepository().GetRecordedScore(MixEnum.Phoenix, Guid.NewGuid(), Guid.NewGuid());
 
         Assert.Null(retrieved);
     }
@@ -135,10 +138,10 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
         var chartId = await _seed.SeedChartAsync();
 
         var writer = BuildRepository();
-        await writer.UpdateBestAttempt(userId, new RecordedPhoenixScore(chartId,
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, userId, new RecordedPhoenixScore(chartId,
             PhoenixScore.From(900000), plate, false, RecordedAt));
 
-        var retrieved = await BuildRepository().GetRecordedScore(userId, chartId);
+        var retrieved = await BuildRepository().GetRecordedScore(MixEnum.Phoenix, userId, chartId);
 
         Assert.NotNull(retrieved);
         Assert.Equal(plate, retrieved!.Plate);
@@ -156,15 +159,15 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
         var chart17 = await _seed.SeedPhoenixChartAsync(level: 17);
 
         var writer = BuildRepository();
-        await writer.UpdateBestAttempt(userId,
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, userId,
             new RecordedPhoenixScore(chart13, PhoenixScore.From(900000), PhoenixPlate.MarvelousGame, false, RecordedAt));
-        await writer.UpdateBestAttempt(userId,
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, userId,
             new RecordedPhoenixScore(chart15, PhoenixScore.From(920000), PhoenixPlate.MarvelousGame, false, RecordedAt));
-        await writer.UpdateBestAttempt(userId,
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, userId,
             new RecordedPhoenixScore(chart17, PhoenixScore.From(940000), PhoenixPlate.MarvelousGame, false, RecordedAt));
 
         var inRange = (await BuildRepository().GetRecordedScores(
-            new[] { userId }, ChartType.Single, 14, 16, CancellationToken.None)).ToList();
+            MixEnum.Phoenix, new[] { userId }, ChartType.Single, 14, 16, CancellationToken.None)).ToList();
 
         Assert.Single(inRange);
         Assert.Equal(chart15, inRange[0].ChartId);
@@ -178,13 +181,13 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
         var doubleChart = await _seed.SeedPhoenixChartAsync(level: 15, type: "Double");
 
         var writer = BuildRepository();
-        await writer.UpdateBestAttempt(userId,
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, userId,
             new RecordedPhoenixScore(singleChart, PhoenixScore.From(900000), PhoenixPlate.SuperbGame, false, RecordedAt));
-        await writer.UpdateBestAttempt(userId,
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, userId,
             new RecordedPhoenixScore(doubleChart, PhoenixScore.From(900000), PhoenixPlate.SuperbGame, false, RecordedAt));
 
         var singles = (await BuildRepository().GetRecordedScores(
-            new[] { userId }, ChartType.Single, 15, 15, CancellationToken.None)).ToList();
+            MixEnum.Phoenix, new[] { userId }, ChartType.Single, 15, 15, CancellationToken.None)).ToList();
 
         Assert.Single(singles);
         Assert.Equal(singleChart, singles[0].ChartId);
@@ -203,16 +206,53 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
         var chart = await _seed.SeedPhoenixChartAsync(level: 15, type: "Single");
 
         var writer = BuildRepository();
-        await writer.UpdateBestAttempt(requested,
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, requested,
             new RecordedPhoenixScore(chart, PhoenixScore.From(900000), PhoenixPlate.MarvelousGame, false, RecordedAt));
-        await writer.UpdateBestAttempt(unrequested,
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, unrequested,
             new RecordedPhoenixScore(chart, PhoenixScore.From(950000), PhoenixPlate.SuperbGame, false, RecordedAt));
 
         var scores = (await BuildRepository().GetRecordedScores(
-            new[] { requested }, ChartType.Single, 15, 15, CancellationToken.None)).ToList();
+            MixEnum.Phoenix, new[] { requested }, ChartType.Single, 15, 15, CancellationToken.None)).ToList();
 
         Assert.Single(scores);
         Assert.Equal(900000, (int)scores[0].Score!.Value);
         Assert.Equal(PhoenixPlate.MarvelousGame, scores[0].Plate);
+    }
+
+    [Fact]
+    public async Task UpdateBestAttemptKeepsSeparateRowsPerMixForTheSameUserAndChart()
+    {
+        // Phoenix 2 parallel-mix invariant: the same (user, chart) pair holds one best attempt
+        // PER MIX (unique index UserId+ChartId+MixId), and mix-scoped reads never leak the
+        // other mix's record.
+        var userId = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedChartAsync();
+
+        var writer = BuildRepository();
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, userId, new RecordedPhoenixScore(chartId,
+            PhoenixScore.From(900000), PhoenixPlate.TalentedGame, IsBroken: false, RecordedAt));
+        await writer.UpdateBestAttempt(MixEnum.Phoenix2, userId, new RecordedPhoenixScore(chartId,
+            PhoenixScore.From(990000), PhoenixPlate.PerfectGame, IsBroken: false, RecordedAt));
+
+        await using (var ctx = await _fixture.DbContextFactory.CreateDbContextAsync())
+        {
+            var rows = await ctx.Set<PhoenixRecordEntity>()
+                .Where(r => r.UserId == userId && r.ChartId == chartId)
+                .ToListAsync();
+            Assert.Equal(2, rows.Count);
+            Assert.Single(rows, r => r.MixId == MixIds.Phoenix);
+            Assert.Single(rows, r => r.MixId == MixIds.Phoenix2);
+        }
+
+        var reader = BuildRepository();
+        var phoenixScores = (await reader.GetRecordedScores(MixEnum.Phoenix, userId)).ToList();
+        var phoenix2Scores = (await reader.GetRecordedScores(MixEnum.Phoenix2, userId)).ToList();
+
+        Assert.Single(phoenixScores);
+        Assert.Equal(900000, (int)phoenixScores[0].Score!.Value);
+        Assert.Equal(PhoenixPlate.TalentedGame, phoenixScores[0].Plate);
+        Assert.Single(phoenix2Scores);
+        Assert.Equal(990000, (int)phoenix2Scores[0].Score!.Value);
+        Assert.Equal(PhoenixPlate.PerfectGame, phoenix2Scores[0].Plate);
     }
 }

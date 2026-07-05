@@ -24,7 +24,7 @@ public sealed class PhoenixScoreFileExtractor : IPhoenixScoreFileExtractor
     }
 
     public async Task<(IEnumerable<RecordedPhoenixScore> Scores, IEnumerable<SpreadsheetScoreErrorDto> Errors)>
-        GetScores(IBrowserFile file, CancellationToken cancellationToken = default)
+        GetScores(IBrowserFile file, MixEnum mix = MixEnum.Phoenix, CancellationToken cancellationToken = default)
     {
         await using var readStream = file.OpenReadStream(XXScoreFile.MaxByteCount, cancellationToken);
         using var reader = new StreamReader(readStream);
@@ -86,7 +86,7 @@ public sealed class PhoenixScoreFileExtractor : IPhoenixScoreFileExtractor
                     name = "Witch Doctor #1";
                 if (name.ToString().EndsWith("End of a Dream", StringComparison.OrdinalIgnoreCase))
                     name = "Re:End of a Dream";
-                var chart = await _mediator.Send(new GetChartQuery(MixEnum.Phoenix, name, level, chartType),
+                var chart = await _mediator.Send(new GetChartQuery(mix, name, level, chartType),
                     cancellationToken);
                 if (chart == null)
                     throw new ScoreFileParseException($"This chart was not found: {name} {chartType} {level}");

@@ -24,6 +24,17 @@ public sealed class TournamentSessionTests
     }
 
     [Fact]
+    public void MixDefaultsToPhoenixAndConstructorPinsAnExplicitOne()
+    {
+        Assert.Equal(MixEnum.Phoenix, new TournamentSession(Guid.NewGuid(), Config()).Mix);
+        Assert.Equal(MixEnum.Phoenix2,
+            new TournamentSession(Guid.NewGuid(), Config(), MixEnum.Phoenix2).Mix);
+        Assert.Equal(MixEnum.Phoenix2,
+            new TournamentSession(Guid.NewGuid(), Config(), Array.Empty<TournamentSession.Entry>(),
+                MixEnum.Phoenix2).Mix);
+    }
+
+    [Fact]
     public void ApproveClearsNeedsApprovalAndSnapshotsVerificationType()
     {
         var session = new TournamentSession(Guid.NewGuid(), Config());

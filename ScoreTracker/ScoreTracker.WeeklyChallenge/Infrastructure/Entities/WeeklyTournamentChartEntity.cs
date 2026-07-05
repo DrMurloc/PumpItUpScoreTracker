@@ -10,6 +10,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure.Entities
         public int Id { get; set; }
 
         public Guid ChartId { get; set; }
+        public Guid MixId { get; set; }
         public DateTimeOffset ExpirationDate { get; set; }
     }
 }

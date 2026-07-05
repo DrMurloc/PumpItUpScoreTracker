@@ -80,7 +80,7 @@
         }
         _isSaving = true;
         await Mediator.Send(new UpdateChartSkillCommand(new ChartSkillsRecord(_currentChart.Id, _skills, Array.Empty<Skill>())));
-        await TierLists.SaveEntry(new SongTierListEntry("Chabala", _currentChart.Id, _category, 1), CancellationToken.None);
+        await TierLists.SaveEntry(MixEnum.Phoenix, new SongTierListEntry("Chabala", _currentChart.Id, _category, 1), CancellationToken.None);
         Snackbar.Add(L["Updated X Y", _currentChart.Song.Name, _currentChart.DifficultyString].Value);
         _isSaving = false;
     }

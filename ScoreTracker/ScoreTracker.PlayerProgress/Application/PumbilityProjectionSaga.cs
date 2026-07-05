@@ -30,13 +30,14 @@ namespace ScoreTracker.PlayerProgress.Application
         public async Task<PumbilityProjection> Handle(ProjectPumbilityGainsQuery request,
             CancellationToken cancellationToken)
         {
-            var charts = (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), cancellationToken))
+            var mix = request.Mix;
+            var charts = (await _mediator.Send(new GetChartsQuery(mix), cancellationToken))
                 .ToDictionary(c => c.Id);
-            var allScores = (await _scores.GetBestScores(request.UserId, cancellationToken))
+            var allScores = (await _scores.GetBestScores(mix, request.UserId, cancellationToken))
                 .Where(r => r.Score != null)
                 .ToDictionary(s => s.ChartId);
             var topScores = (await _mediator.Send(
-                    new GetTop50ForPlayerQuery(request.UserId, null, 100), cancellationToken))
+                    new GetTop50ForPlayerQuery(request.UserId, null, 100, mix), cancellationToken))
                 .ToDictionary(s => s.ChartId);
             var scoring = ScoringConfiguration.PumbilityScoring(false);
             var ratings = topScores.ToDictionary(kv => kv.Key,
@@ -65,17 +66,17 @@ namespace ScoreTracker.PlayerProgress.Application
 
             var lowestLevel = DifficultyLevel.From(levelRange.Min());
             var highestLevel = DifficultyLevel.From(levelRange.Max());
-            var stats = await _stats.GetStats(request.UserId, cancellationToken);
+            var stats = await _stats.GetStats(mix, request.UserId, cancellationToken);
             var singlesLevel = stats.SinglesCompetitiveLevel <= 10 ? 10.0 : stats.SinglesCompetitiveLevel;
             var doublesLevel = stats.DoublesCompetitiveLevel <= 10 ? 10.0 : stats.DoublesCompetitiveLevel;
             var lowestScore = ratings.OrderByDescending(kv => kv.Value).Take(50).Min(kv => kv.Value);
 
-            var singlesPlayers = (await _stats.GetPlayersByCompetitiveRange(ChartType.Single, singlesLevel, 1,
+            var singlesPlayers = (await _stats.GetPlayersByCompetitiveRange(mix, ChartType.Single, singlesLevel, 1,
                 cancellationToken)).ToArray();
-            var doublesPlayers = (await _stats.GetPlayersByCompetitiveRange(ChartType.Double, doublesLevel, 1,
+            var doublesPlayers = (await _stats.GetPlayersByCompetitiveRange(mix, ChartType.Double, doublesLevel, 1,
                 cancellationToken)).ToArray();
 
-            var chartDifficulty = (await _mediator.Send(new GetTierListQuery("Pass Count"), cancellationToken))
+            var chartDifficulty = (await _mediator.Send(new GetTierListQuery("Pass Count", mix), cancellationToken))
                 .ToDictionary(s => s.ChartId, e => e.Category);
 
             var expectedScore = new Dictionary<Guid, PhoenixScore>();
@@ -84,8 +85,8 @@ namespace ScoreTracker.PlayerProgress.Application
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
             {
                 var cohort = chartType == ChartType.Single ? singlesPlayers : doublesPlayers;
-                var playerScores = (await _scores.GetScores(cohort, chartType, lowestLevel, highestLevel,
-                        cancellationToken))
+                var playerScores = (await _scores.GetScores(mix, cohort, chartType, lowestLevel,
+                        highestLevel, cancellationToken))
                     .Where(s => s is { IsBroken: false, Score: not null })
                     .GroupBy(r => charts[r.ChartId].Level)
                     .ToDictionary(g => g.Key, g => g.ToArray());

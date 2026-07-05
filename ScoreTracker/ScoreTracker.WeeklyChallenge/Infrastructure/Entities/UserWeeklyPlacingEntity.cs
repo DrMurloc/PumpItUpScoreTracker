@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.WeeklyChallenge.Infrastructure.Entities
 {
-    [Index(nameof(UserId))]
+    [Index(nameof(UserId), nameof(MixId))]
     internal sealed class UserWeeklyPlacingEntity
     {
         [Key]
@@ -13,6 +13,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure.Entities
 
         public Guid UserId { get; set; }
         public Guid ChartId { get; set; }
+        public Guid MixId { get; set; }
         public int Place { get; set; }
         public DateTimeOffset ObtainedDate { get; set; }
         public bool WasWithinRange { get; set; }

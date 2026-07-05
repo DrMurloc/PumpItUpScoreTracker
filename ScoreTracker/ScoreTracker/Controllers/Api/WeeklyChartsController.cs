@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using System.ComponentModel;
+using MediatR;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Catalog.Contracts.Queries;
@@ -31,18 +32,23 @@ public sealed class WeeklyChartsController : Controller
     }
 
     [HttpGet("scores")]
-    public async Task<IActionResult> GetWeeklyChartScores([FromQuery(Name = "ChartIds")] string? chartIdString)
+    public async Task<IActionResult> GetWeeklyChartScores([FromQuery(Name = "ChartIds")] string? chartIdString,
+        [FromQuery(Name = "Mix")] [DefaultValue("Phoenix")]
+        string? mixString = null)
     {
+        if (!ApiMixParser.TryParse(mixString, out var mix))
+            return BadRequest(ApiMixParser.InvalidMessage);
+
         var chartIds = chartIdString?.Split(",").Select(s => s.Trim()).Where(s => Guid.TryParse(s, out _))
             .Select(Guid.Parse).Distinct().ToHashSet();
 
-        var entries = await _mediator.Send(new GetWeeklyChartEntriesQuery(), HttpContext.RequestAborted);
+        var entries = await _mediator.Send(new GetWeeklyChartEntriesQuery(Mix: mix), HttpContext.RequestAborted);
         if (chartIds != null) entries = entries.Where(e => chartIds.Contains(e.ChartId));
 
         var finalEntries = entries.ToArray();
         var charts =
             (await _mediator.Send(
-                new GetChartsQuery(MixEnum.Phoenix, ChartIds: finalEntries.Select(e => e.ChartId)),
+                new GetChartsQuery(mix, ChartIds: finalEntries.Select(e => e.ChartId)),
                 HttpContext.RequestAborted))
             .ToDictionary(c => c.Id);
         var users = (await _users.GetUsers(finalEntries.Select(e => e.UserId), HttpContext.RequestAborted))
@@ -60,7 +66,9 @@ public sealed class WeeklyChartsController : Controller
     public async Task<IActionResult> GetWeeklyCharts(
         [FromQuery(Name = "ChartType")] string? chartTypeString = null,
         [FromQuery(Name = "LevelMin")] int? minInt = null,
-        [FromQuery(Name = "LevelMax")] int? maxInt = null)
+        [FromQuery(Name = "LevelMax")] int? maxInt = null,
+        [FromQuery(Name = "Mix")] [DefaultValue("Phoenix")]
+        string? mixString = null)
     {
         if (chartTypeString != null && !Enum.TryParse<ChartType>(chartTypeString, out _))
             return BadRequest($"Invalid Chart Type. Options are: {string.Join(',', Enum.GetValues<ChartType>())}");
@@ -73,11 +81,14 @@ public sealed class WeeklyChartsController : Controller
             return BadRequest(
                 $"Maximum Difficulty Level must be between {DifficultyLevel.Min} and {DifficultyLevel.Max}");
 
+        if (!ApiMixParser.TryParse(mixString, out var mix))
+            return BadRequest(ApiMixParser.InvalidMessage);
 
-        var chartIds = (await _mediator.Send(new GetWeeklyChartsQuery(), HttpContext.RequestAborted))
+        // Each mix runs its own weekly board (locked decision) — this reads the requested mix's.
+        var chartIds = (await _mediator.Send(new GetWeeklyChartsQuery(mix), HttpContext.RequestAborted))
             .Select(w => w.ChartId);
         var charts =
-            await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix, ChartIds: chartIds),
+            await _mediator.Send(new GetChartsQuery(mix, ChartIds: chartIds),
                 HttpContext.RequestAborted);
 
         if (chartTypeString != null)

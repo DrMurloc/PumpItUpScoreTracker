@@ -210,6 +210,9 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<int>("Difficulty")
                         .HasColumnType("int");
 
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Player")
                         .HasColumnType("int");
 
@@ -233,6 +236,9 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<Guid>("ChartId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Order")
                         .HasColumnType("int");
 
@@ -242,7 +248,7 @@ namespace ScoreTracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TierListName");
+                    b.HasIndex("TierListName", "MixId");
 
                     b.ToTable("TierListEntry", "scores");
                 });
@@ -626,8 +632,8 @@ namespace ScoreTracker.Data.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)");
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.HasKey("Id");
 
@@ -973,6 +979,9 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<DateTimeOffset?>("CutoffTime")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<decimal>("NotificationChannel")
                         .HasColumnType("decimal(20,0)");
 
@@ -1180,6 +1189,9 @@ namespace ScoreTracker.Data.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(0);
 
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("NeedsApproval")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -1262,13 +1274,13 @@ namespace ScoreTracker.Data.Migrations
 
             modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialLeaderboardImportStateEntity", b =>
                 {
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("LastImportedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.HasKey("Id");
+                    b.HasKey("MixId");
 
                     b.ToTable("OfficialLeaderboardImportState", "scores");
                 });
@@ -1309,6 +1321,9 @@ namespace ScoreTracker.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Place")
                         .HasColumnType("int");
 
@@ -1346,6 +1361,9 @@ namespace ScoreTracker.Data.Migrations
 
                     b.Property<int>("DoublesCount")
                         .HasColumnType("int");
+
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<double>("SinglesCompetitive")
                         .HasColumnType("float");
@@ -1391,6 +1409,9 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<double>("DoublesLevel")
                         .HasColumnType("float");
 
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("PassCount")
                         .HasColumnType("int");
 
@@ -1402,7 +1423,7 @@ namespace ScoreTracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "MixId");
 
                     b.ToTable("PlayerHistory", "scores");
                 });
@@ -1410,7 +1431,9 @@ namespace ScoreTracker.Data.Migrations
             modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.PlayerStatsEntity", b =>
                 {
                     b.Property<Guid>("UserId")
-                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MixId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("AverageCoOpScore")
@@ -1464,7 +1487,7 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<int>("TotalRating")
                         .HasColumnType("int");
 
-                    b.HasKey("UserId");
+                    b.HasKey("UserId", "MixId");
 
                     b.ToTable("PlayerStats", "scores");
                 });
@@ -1511,7 +1534,9 @@ namespace ScoreTracker.Data.Migrations
             modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.UserHighestTitleEntity", b =>
                 {
                     b.Property<Guid>("UserId")
-                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MixId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Level")
@@ -1522,7 +1547,7 @@ namespace ScoreTracker.Data.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
-                    b.HasKey("UserId");
+                    b.HasKey("UserId", "MixId");
 
                     b.HasIndex("Level");
 
@@ -1535,6 +1560,9 @@ namespace ScoreTracker.Data.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MixId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ParagonLevel")
@@ -1555,7 +1583,7 @@ namespace ScoreTracker.Data.Migrations
 
                     b.HasIndex("Title");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "MixId");
 
                     b.ToTable("UserTitle", "scores");
                 });
@@ -1609,6 +1637,9 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<string>("LetterGrade")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Plate")
                         .HasColumnType("nvarchar(max)");
 
@@ -1625,7 +1656,7 @@ namespace ScoreTracker.Data.Migrations
 
                     b.HasIndex("ChartId");
 
-                    b.HasIndex("UserId", "ChartId")
+                    b.HasIndex("UserId", "ChartId", "MixId")
                         .IsUnique();
 
                     b.ToTable("PhoenixRecord", "scores");
@@ -1642,6 +1673,9 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<Guid>("ChartId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<double>("Pumbility")
                         .HasColumnType("float");
 
@@ -1653,7 +1687,7 @@ namespace ScoreTracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId", "ChartId")
+                    b.HasIndex("UserId", "ChartId", "MixId")
                         .IsUnique();
 
                     b.ToTable("PhoenixRecordStats", "scores");
@@ -1816,13 +1850,15 @@ namespace ScoreTracker.Data.Migrations
             modelBuilder.Entity("ScoreTracker.WeeklyChallenge.Infrastructure.Entities.PastTourneyChartsEntity", b =>
                 {
                     b.Property<Guid>("ChartId")
-                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MixId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("PlayedOn")
                         .HasColumnType("datetimeoffset");
 
-                    b.HasKey("ChartId");
+                    b.HasKey("ChartId", "MixId");
 
                     b.ToTable("PastTourneyCharts", "scores");
                 });
@@ -1843,6 +1879,9 @@ namespace ScoreTracker.Data.Migrations
 
                     b.Property<bool>("IsBroken")
                         .HasColumnType("bit");
+
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("ObtainedDate")
                         .HasColumnType("datetimeoffset");
@@ -1866,7 +1905,7 @@ namespace ScoreTracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "MixId");
 
                     b.ToTable("UserWeeklyPlacing", "scores");
                 });
@@ -1884,6 +1923,9 @@ namespace ScoreTracker.Data.Migrations
 
                     b.Property<DateTimeOffset>("ExpirationDate")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -1907,6 +1949,9 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<bool>("IsBroken")
                         .HasColumnType("bit");
 
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Photo")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -1926,7 +1971,7 @@ namespace ScoreTracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId", "ChartId")
+                    b.HasIndex("UserId", "ChartId", "MixId")
                         .IsUnique();
 
                     b.ToTable("WeeklyUserEntry", "scores");

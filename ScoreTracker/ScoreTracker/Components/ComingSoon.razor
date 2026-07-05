@@ -1,0 +1,13 @@
+@namespace ScoreTracker.Web.Components
+@using System.ComponentModel.DataAnnotations
+@* Shared under-construction state for surfaces gated while Phoenix 2 parity lands
+   (docs/design/phoenix2-implementation.md). Callers pass a localized message. *@
+<MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Construction" Class="my-4">
+    <MudText Typo="Typo.h6">@L["Coming Soon"]</MudText>
+    <MudText>@Message</MudText>
+</MudAlert>
+@code {
+    [Parameter]
+    [Required]
+    public string Message { get; set; } = string.Empty;
+}

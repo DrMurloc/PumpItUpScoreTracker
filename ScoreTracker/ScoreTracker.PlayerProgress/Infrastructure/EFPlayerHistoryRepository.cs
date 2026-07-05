@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.PlayerProgress.Infrastructure.Entities;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
@@ -12,12 +13,13 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
         : IPlayerHistoryRepository,
             IRequestHandler<GetPlayerHistoryQuery, IEnumerable<PlayerRatingRecord>>
     {
-        public async Task WriteHistory(PlayerRatingRecord record, CancellationToken cancellationToken)
+        public async Task WriteHistory(MixEnum mix, PlayerRatingRecord record, CancellationToken cancellationToken)
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
             await database.Set<PlayerHistoryEntity>().AddAsync(new PlayerHistoryEntity
             {
                 UserId = record.UserId,
+                MixId = MixIds.For(mix),
                 CoOpRating = record.CoOpRating,
                 Date = record.Date,
                 CompetitiveLevel = record.CompetitiveLevel,
@@ -33,15 +35,19 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
             CancellationToken cancellationToken)
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
-            return await database.Set<PlayerHistoryEntity>().Where(r => r.UserId == request.UserId)
+            var mixId = MixIds.For(request.Mix);
+            return await database.Set<PlayerHistoryEntity>()
+                .Where(r => r.UserId == request.UserId && r.MixId == mixId)
                 .Select(r => new PlayerRatingRecord(r.UserId, r.Date, r.CompetitiveLevel, r.SinglesLevel,
                     r.DoublesLevel, r.CoOpRating, r.PassCount)).ToArrayAsync(cancellationToken);
         }
 
         public async Task DeleteHistoryForUser(Guid userId, CancellationToken cancellationToken)
         {
+            // Account-level wipe: spans every mix by design.
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
-            var entries = await database.Set<PlayerHistoryEntity>().Where(r => r.UserId == userId).ToArrayAsync(cancellationToken);
+            var entries = await database.Set<PlayerHistoryEntity>().Where(r => r.UserId == userId)
+                .ToArrayAsync(cancellationToken);
             database.Set<PlayerHistoryEntity>().RemoveRange(entries);
             await database.SaveChangesAsync(cancellationToken);
         }

@@ -16,6 +16,14 @@
 @using ScoreTracker.Web.Services.Contracts
 <PageTitle>@L["Titles"]</PageTitle>
 
+@if (_currentMix == MixEnum.Phoenix2)
+{
+    @* Locked decision (docs/design/phoenix2-implementation.md): the Phoenix 2 title list is
+       empty until the titles are revealed — explicit state instead of a blank grid. *@
+    <ComingSoon Message="@L["Phoenix 2 titles have not been revealed yet. Check back after launch!"].Value"></ComingSoon>
+}
+else
+{
 <MudDataGrid @ref="_dataGrid" T="TitleProgressDto" Items="_titleProgress" Hover="true" ReadOnly="true"
              Groupable="true" FixedHeader="true" Height="500" Loading="@_isLoading">
     <ToolBarContent>
@@ -101,7 +109,7 @@
                         <br/>
                         <MudText>@context.Item.AdditionalNote</MudText>
                     }
-                    @if (_currentMix == MixEnum.Phoenix && context.Item.CompletionCount < context.Item.RequiredCount && context.Item.DifficultyLevel != null)
+                    @if (_currentMix != MixEnum.XX && context.Item.CompletionCount < context.Item.RequiredCount && context.Item.DifficultyLevel != null)
                     {
                         <br/>
                         <MudText>@(_difficultyCounts[context.Item.DifficultyLevel.Value]-_completedCounts[context.Item.DifficultyLevel.Value]) Remaining Charts In Folder</MudText>
@@ -143,6 +151,7 @@
         }
     </ChildRowContent>
 </MudDataGrid>
+}
 <br/>
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
@@ -167,7 +176,7 @@
             _showingTitle = null;
             return;
         }
-        var titles = (await TitleRepo.GetUsersWithTitle(title, CancellationToken.None)).ToArray();
+        var titles = (await TitleRepo.GetUsersWithTitle(_currentMix, title, CancellationToken.None)).ToArray();
         var users = (await Users.GetUsers(titles.Select(t=>t.UserId), CancellationToken.None)).ToDictionary(u=>u.Id);
         _currentTitleUsers = titles.Where(t=>users[t.UserId].IsPublic)
             .Select(t=>(users[t.UserId],t)).ToArray();
@@ -179,12 +188,12 @@
         _isLoading = true;
         _titleProgress = (await Mediator.Send(new GetTitleProgressQuery(_currentMix))).Select(TitleProgressDto.From).ToArray();
         _isLoading = false;
-        if (_currentMix == MixEnum.Phoenix)
+        if (_currentMix != MixEnum.XX)
         {
-            
+
             var charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToDictionary(c => c.Id);
             _difficultyCounts = charts.Values.GroupBy(c => (int)c.Level).ToDictionary(g => g.Key, g => g.Count());
-            _completedCounts = CurrentUser.IsLoggedIn?(await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id)))
+            _completedCounts = CurrentUser.IsLoggedIn?(await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _currentMix)))
                 .Where(r => !r.IsBroken)
                 .GroupBy(r => (int)charts[r.ChartId].Level)
                 .ToDictionary(g => g.Key, g => g.Count()) : new Dictionary<int, int>();
@@ -200,12 +209,18 @@
             _dataGrid?.GroupItems();
         }
         _userCount = await TitleRepo.CountTitledUsers(CancellationToken.None);
-        _titleCounts = (await TitleRepo.GetTitleAggregations(CancellationToken.None)).ToDictionary(t => t.Title, t => t.Count);
+        _titleCounts = (await TitleRepo.GetTitleAggregations(_currentMix, CancellationToken.None)).ToDictionary(t => t.Title, t => t.Count);
     }
 
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();
+        if (_currentMix == MixEnum.Phoenix2)
+        {
+            // Coming-soon state — the Phoenix 2 title list is deliberately empty.
+            _isLoading = false;
+            return;
+        }
         await LoadTitles();
     }
 }

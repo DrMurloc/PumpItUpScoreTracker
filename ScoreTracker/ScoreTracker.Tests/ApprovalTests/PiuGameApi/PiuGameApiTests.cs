@@ -36,7 +36,8 @@ public sealed class PiuGameApiTests
         var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetBestScores_HappyPath.html"));
         var api = BuildApi(html);
 
-        var result = await api.GetBestScores(HttpClientReturning(html), page: 1, CancellationToken.None);
+        var result = await api.GetBestScores(MixEnum.Phoenix, HttpClientReturning(html), page: 1,
+            CancellationToken.None);
 
         // Pagination — last page button on the fixture is `?&&page=238`.
         Assert.Equal(238, result.MaxPage);
@@ -74,7 +75,8 @@ public sealed class PiuGameApiTests
         var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetBestScores_PhoenixHost.html"));
         var api = BuildApi(html);
 
-        var result = await api.GetBestScores(HttpClientReturning(html), page: 1, CancellationToken.None);
+        var result = await api.GetBestScores(MixEnum.Phoenix, HttpClientReturning(html), page: 1,
+            CancellationToken.None);
 
         Assert.Equal(238, result.MaxPage);
         Assert.NotEmpty(result.Scores);
@@ -115,7 +117,7 @@ public sealed class PiuGameApiTests
             var stubbedClient = HttpClientReturning(html);
             var api = BuildApi(html);
 
-            var result = (await api.GetRecentScores(stubbedClient, CancellationToken.None)).ToList();
+            var result = (await api.GetRecentScores(MixEnum.Phoenix, stubbedClient, CancellationToken.None)).ToList();
 
             // The fixture has 3 cards; card 2 is STAGE BREAK and is auto-skipped by the parser.
             Assert.Equal(2, result.Count);
@@ -158,7 +160,7 @@ public sealed class PiuGameApiTests
         var stubbedClient = HttpClientReturning(html);
         var api = BuildApi(html);
 
-        var result = (await api.GetRecentScores(stubbedClient, CancellationToken.None)).ToList();
+        var result = (await api.GetRecentScores(MixEnum.Phoenix, stubbedClient, CancellationToken.None)).ToList();
 
         // Same 3 cards as the English fixture; STAGE BREAK card is auto-skipped → 2 entries.
         Assert.Equal(2, result.Count);
@@ -203,7 +205,7 @@ public sealed class PiuGameApiTests
             var stubbedClient = HttpClientReturning(html);
             var api = BuildApi(html);
 
-            var result = await api.GetSongLeaderboard(songId: "any", CancellationToken.None);
+            var result = await api.GetSongLeaderboard(MixEnum.Phoenix, songId: "any", CancellationToken.None);
 
             Assert.Equal(2, result.Results.Length);
 
@@ -237,7 +239,7 @@ public sealed class PiuGameApiTests
         var stubbedClient = HttpClientReturning(html);
         var api = BuildApi(html);
 
-        var result = await api.GetLeaderboards(CancellationToken.None);
+        var result = await api.GetLeaderboards(MixEnum.Phoenix, CancellationToken.None);
 
         // PIU offers: All + LEVEL 10..26 (17 levels) + LEVEL 27 OVER + LEVEL 10 OVER + CO-OP = 21.
         Assert.Equal(21, result.Entries.Length);
@@ -272,7 +274,7 @@ public sealed class PiuGameApiTests
             var stubbedClient = HttpClientReturning(html);
             var api = BuildApi(html);
 
-            var result = await api.GetLeaderboard(leaderboardId: "any", CancellationToken.None);
+            var result = await api.GetLeaderboard(MixEnum.Phoenix, leaderboardId: "any", CancellationToken.None);
 
             Assert.Equal(2, result.Entries.Length);
             Assert.Equal("Player1#0001", result.Entries[0].ProfileName);
@@ -284,6 +286,102 @@ public sealed class PiuGameApiTests
         {
             CultureInfo.CurrentCulture = previousCulture;
         }
+    }
+
+    [Fact]
+    public async Task GetRecentScoresParsesPhoenix2StepballPathsIdentically()
+    {
+        // The Phoenix 2 site serves stepball images from /l_img/p2/stepball/full/ (extra
+        // "p2" segment, live recon 2026-07-04). The ANCHORED LevelRegex/TypeRegex used to
+        // reject that path, sending every P2 card to the SinglePerformance fallback with a
+        // fallback level. The fixture is the happy-path capture rewritten onto the P2 paths;
+        // it must parse to the exact same chart types and levels.
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetRecentScores_Phoenix2Host.html"));
+        var stubbedClient = HttpClientReturning(html);
+        var api = BuildApi(html);
+
+        var result = (await api.GetRecentScores(MixEnum.Phoenix2, stubbedClient, CancellationToken.None)).ToList();
+
+        // Same 3 cards as the happy path; STAGE BREAK card auto-skipped → 2 entries.
+        Assert.Equal(2, result.Count);
+
+        Assert.Equal("TRICKL4SH 220", (string)result[0].SongName);
+        Assert.Equal(ChartType.Double, result[0].ChartType);
+        Assert.Equal(20, (int)result[0].Level);
+        Assert.Equal(940078, (int)result[0].Score);
+        Assert.True(result[0].IsBroken);
+
+        Assert.Equal("Appassionata", (string)result[1].SongName);
+        Assert.Equal(ChartType.Double, result[1].ChartType);
+        Assert.Equal(21, (int)result[1].Level);
+        Assert.Equal(965679, (int)result[1].Score);
+        Assert.False(result[1].IsBroken);
+    }
+
+    [Fact]
+    public async Task GetBestScoresParsesPhoenix2PathsAndReadsTheUnknownLevelStepballAs29()
+    {
+        // Two P2-specific behaviors in one fixture (the PhoenixHost capture rewritten onto
+        // piugame.com + /p2/ stepball paths):
+        //  1. Chart TYPE comes from the anchored TypeRegex — pre-fix, the p2 segment made
+        //     every card fall back to SinglePerformance.
+        //  2. The second card is the "??" stepball (1948 D29 renders no parseable digit
+        //     images on P2): the joined level digits come back empty, which used to
+        //     int.Parse-throw and silently drop the card. Owner-confirmed ?? == 29.
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetBestScores_Phoenix2Host.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetBestScores(MixEnum.Phoenix2, HttpClientReturning(html), page: 1,
+            CancellationToken.None);
+
+        Assert.Equal(238, result.MaxPage);
+        Assert.Equal(2, result.Scores.Length);
+
+        var first = result.Scores.First();
+        Assert.Equal("TRICKL4SH 220", (string)first.SongName);
+        Assert.Equal(ChartType.Double, first.ChartType);
+        Assert.Equal(20, (int)first.Level);
+        Assert.Equal(999231, (int)first.Score);
+        Assert.Equal(PhoenixPlate.ExtremeGame, first.Plate);
+
+        // The ?? card is KEPT and read as a 29, not dropped.
+        var second = result.Scores.Skip(1).First();
+        Assert.Equal("Conflict", (string)second.SongName);
+        Assert.Equal(ChartType.Single, second.ChartType);
+        Assert.Equal(29, (int)second.Level);
+        Assert.Equal(850000, (int)second.Score);
+        Assert.Equal(PhoenixPlate.TalentedGame, second.Plate);
+    }
+
+    [Fact]
+    public async Task GetAccountDataReportsTheLoginPageAsInvalidRequiringLogin()
+    {
+        // Wrong-password shape: the site still deposits a session cookie but serves its
+        // login page. INVALID + RequiresLogin=true is what keeps OfficialSiteClient mapping
+        // this to InvalidCredentialException (the E2E invalid-login flow pins the same shape).
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetAccountData_LoginPage.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetAccountData(MixEnum.Phoenix, HttpClientReturning(html), CancellationToken.None);
+
+        Assert.Equal("INVALID", (string)result.AccountName);
+        Assert.True(result.RequiresLogin);
+    }
+
+    [Fact]
+    public async Task GetAccountDataReportsAnAuthenticatedProfilelessPageAsInvalidWithoutLogin()
+    {
+        // Phoenix 2 launch-week state: authenticated fine, but no game profile/card is
+        // associated, so my_page renders without the title list AND without a login form.
+        // INVALID + RequiresLogin=false lets OfficialSiteClient raise
+        // NoGameAccountAssociatedException instead of "wrong password".
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetAccountData_NoProfile.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetAccountData(MixEnum.Phoenix2, HttpClientReturning(html), CancellationToken.None);
+
+        Assert.Equal("INVALID", (string)result.AccountName);
+        Assert.False(result.RequiresLogin);
     }
 
     private static PiuGameApi BuildApi(string responseHtml)

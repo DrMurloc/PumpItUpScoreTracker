@@ -35,10 +35,10 @@ public sealed class WorldRankingServiceTests
         var saveOrder = new List<string>();
         leaderboards.Setup(l => l.DeleteWorldRankings(It.IsAny<CancellationToken>()))
             .Callback(() => saveOrder.Add("delete")).Returns(Task.CompletedTask);
-        leaderboards.Setup(l => l.SaveWorldRanking(It.IsAny<WorldRankingRecord>(), It.IsAny<CancellationToken>()))
+        leaderboards.Setup(l => l.SaveWorldRanking(MixEnum.Phoenix, It.IsAny<WorldRankingRecord>(), It.IsAny<CancellationToken>()))
             .Callback(() => saveOrder.Add("save")).Returns(Task.CompletedTask);
 
-        await BuildService(leaderboards: leaderboards).CalculateWorldRankings(CancellationToken.None);
+        await BuildService(leaderboards: leaderboards).CalculateWorldRankings(MixEnum.Phoenix, CancellationToken.None);
 
         Assert.NotEmpty(saveOrder);
         Assert.Equal("delete", saveOrder[0]);
@@ -50,10 +50,10 @@ public sealed class WorldRankingServiceTests
     {
         var leaderboards = LeaderboardsMock(usernames: Array.Empty<string>());
 
-        await BuildService(leaderboards: leaderboards).CalculateWorldRankings(CancellationToken.None);
+        await BuildService(leaderboards: leaderboards).CalculateWorldRankings(MixEnum.Phoenix, CancellationToken.None);
 
         leaderboards.Verify(l => l.DeleteWorldRankings(It.IsAny<CancellationToken>()), Times.Once);
-        leaderboards.Verify(l => l.SaveWorldRanking(It.IsAny<WorldRankingRecord>(),
+        leaderboards.Verify(l => l.SaveWorldRanking(MixEnum.Phoenix, It.IsAny<WorldRankingRecord>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -71,10 +71,10 @@ public sealed class WorldRankingServiceTests
                 }
             });
 
-        await BuildService(leaderboards: leaderboards).CalculateWorldRankings(CancellationToken.None);
+        await BuildService(leaderboards: leaderboards).CalculateWorldRankings(MixEnum.Phoenix, CancellationToken.None);
 
         // No "Chart" non-CoOp records → no rankings saved (the records.Any() guard).
-        leaderboards.Verify(l => l.SaveWorldRanking(It.IsAny<WorldRankingRecord>(),
+        leaderboards.Verify(l => l.SaveWorldRanking(MixEnum.Phoenix, It.IsAny<WorldRankingRecord>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -92,15 +92,15 @@ public sealed class WorldRankingServiceTests
                 }
             });
 
-        await BuildService(leaderboards: leaderboards).CalculateWorldRankings(CancellationToken.None);
+        await BuildService(leaderboards: leaderboards).CalculateWorldRankings(MixEnum.Phoenix, CancellationToken.None);
 
-        leaderboards.Verify(l => l.SaveWorldRanking(
+        leaderboards.Verify(l => l.SaveWorldRanking(MixEnum.Phoenix,
             It.Is<WorldRankingRecord>(r => (string)r.Username == "alice" && r.Type == "Singles"),
             It.IsAny<CancellationToken>()), Times.Once);
-        leaderboards.Verify(l => l.SaveWorldRanking(
+        leaderboards.Verify(l => l.SaveWorldRanking(MixEnum.Phoenix,
             It.Is<WorldRankingRecord>(r => (string)r.Username == "alice" && r.Type == "Doubles"),
             It.IsAny<CancellationToken>()), Times.Once);
-        leaderboards.Verify(l => l.SaveWorldRanking(
+        leaderboards.Verify(l => l.SaveWorldRanking(MixEnum.Phoenix,
             It.Is<WorldRankingRecord>(r => (string)r.Username == "alice" && r.Type == "All"),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -120,15 +120,15 @@ public sealed class WorldRankingServiceTests
                 }
             });
 
-        await BuildService(leaderboards: leaderboards).CalculateWorldRankings(CancellationToken.None);
+        await BuildService(leaderboards: leaderboards).CalculateWorldRankings(MixEnum.Phoenix, CancellationToken.None);
 
-        leaderboards.Verify(l => l.SaveWorldRanking(
+        leaderboards.Verify(l => l.SaveWorldRanking(MixEnum.Phoenix,
             It.Is<WorldRankingRecord>(r => r.Type == "Singles" && r.SinglesCount == 2 && r.DoublesCount == 0),
             It.IsAny<CancellationToken>()), Times.Once);
-        leaderboards.Verify(l => l.SaveWorldRanking(
+        leaderboards.Verify(l => l.SaveWorldRanking(MixEnum.Phoenix,
             It.Is<WorldRankingRecord>(r => r.Type == "Doubles" && r.SinglesCount == 0 && r.DoublesCount == 1),
             It.IsAny<CancellationToken>()), Times.Once);
-        leaderboards.Verify(l => l.SaveWorldRanking(
+        leaderboards.Verify(l => l.SaveWorldRanking(MixEnum.Phoenix,
             It.Is<WorldRankingRecord>(r => r.Type == "All" && r.SinglesCount == 2 && r.DoublesCount == 1),
             It.IsAny<CancellationToken>()), Times.Once);
     }

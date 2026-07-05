@@ -5,6 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using ScoreTracker.Data.Repositories;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Tests.Integration.Fixtures;
 
 namespace ScoreTracker.Tests.Integration;
@@ -35,7 +36,7 @@ public sealed class EFOfficialLeaderboardRepositoryTests : IAsyncLifetime
     {
         var entry = new UserOfficialLeaderboard("alice", Place: 3, "Rating", "Top Singles", Score: 950);
 
-        await BuildRepository().WriteEntry(entry, CancellationToken.None);
+        await BuildRepository().WriteEntry(MixEnum.Phoenix, entry, CancellationToken.None);
 
         var retrieved = (await BuildRepository()
             .GetOfficialLeaderboardStatuses("alice", CancellationToken.None)).ToList();
@@ -51,7 +52,7 @@ public sealed class EFOfficialLeaderboardRepositoryTests : IAsyncLifetime
     public async Task ClearLeaderboardRemovesOnlyEntriesMatchingBothTypeAndName()
     {
         var writer = BuildRepository();
-        await writer.WriteEntries(new[]
+        await writer.WriteEntries(MixEnum.Phoenix, new[]
         {
             new UserOfficialLeaderboard("alice", 1, "Rating", "Top Singles", 1000),
             new UserOfficialLeaderboard("bob",   2, "Rating", "Top Singles", 900),
@@ -95,19 +96,39 @@ public sealed class EFOfficialLeaderboardRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task LastImportTimestampRoundTripsAndUpdatesTheSingleStateRow()
+    public async Task LastImportTimestampRoundTripsAndUpdatesTheMixesStateRow()
     {
         var first = new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero);
         var second = new DateTimeOffset(2026, 5, 14, 0, 0, 0, TimeSpan.Zero);
 
-        await BuildRepository().SetLastImportTimestamp(first, CancellationToken.None);
-        var afterFirst = await BuildRepository().GetLastImportTimestamp(CancellationToken.None);
+        await BuildRepository().SetLastImportTimestamp(MixEnum.Phoenix, first, CancellationToken.None);
+        var afterFirst = await BuildRepository().GetLastImportTimestamp(MixEnum.Phoenix, CancellationToken.None);
 
-        await BuildRepository().SetLastImportTimestamp(second, CancellationToken.None);
-        var afterSecond = await BuildRepository().GetLastImportTimestamp(CancellationToken.None);
+        await BuildRepository().SetLastImportTimestamp(MixEnum.Phoenix, second, CancellationToken.None);
+        var afterSecond = await BuildRepository().GetLastImportTimestamp(MixEnum.Phoenix, CancellationToken.None);
 
         Assert.Equal(first, afterFirst);
         Assert.Equal(second, afterSecond);
+    }
+
+    [Fact]
+    public async Task LastImportTimestampIsTrackedPerMix()
+    {
+        // Commit-9 split of the former singleton state row: a Phoenix 2 mirror run (when it
+        // is eventually scheduled) must not masquerade as a fresh Phoenix 1 import.
+        var phoenixTime = new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero);
+        var phoenix2Time = new DateTimeOffset(2026, 7, 4, 0, 0, 0, TimeSpan.Zero);
+        var writer = BuildRepository();
+
+        await writer.SetLastImportTimestamp(MixEnum.Phoenix, phoenixTime, CancellationToken.None);
+        Assert.Null(await BuildRepository().GetLastImportTimestamp(MixEnum.Phoenix2, CancellationToken.None));
+
+        await writer.SetLastImportTimestamp(MixEnum.Phoenix2, phoenix2Time, CancellationToken.None);
+
+        Assert.Equal(phoenixTime,
+            await BuildRepository().GetLastImportTimestamp(MixEnum.Phoenix, CancellationToken.None));
+        Assert.Equal(phoenix2Time,
+            await BuildRepository().GetLastImportTimestamp(MixEnum.Phoenix2, CancellationToken.None));
     }
 
     [Fact]
@@ -144,7 +165,7 @@ public sealed class EFOfficialLeaderboardRepositoryTests : IAsyncLifetime
             SinglesCompetitiveLevel: 19.4,
             DoublesCompetitiveLevel: 18.8);
 
-        await BuildRepository().SaveWorldRanking(record, CancellationToken.None);
+        await BuildRepository().SaveWorldRanking(MixEnum.Phoenix, record, CancellationToken.None);
 
         var retrieved = (await BuildRepository().GetAllWorldRankings(CancellationToken.None)).ToList();
         Assert.Single(retrieved);

@@ -53,20 +53,27 @@ namespace ScoreTracker.Domain.Models
 
         public int CurrentScore { get; }
 
-        public TournamentSession(Guid userId, TournamentConfiguration configuration)
+        // Mutable: stamina session registration picks the mix (Phoenix/Phoenix2) before any
+        // entries exist; persistence round-trips it through UserTournamentSessionEntity.MixId.
+        public MixEnum Mix { get; set; }
+
+        public TournamentSession(Guid userId, TournamentConfiguration configuration, MixEnum mix = MixEnum.Phoenix)
         {
             _configuration = configuration;
             Entries = new List<Entry>();
             CurrentScore = 0;
             UsersId = userId;
+            Mix = mix;
         }
 
-        public TournamentSession(Guid userId, TournamentConfiguration configuration, IEnumerable<Entry> entries)
+        public TournamentSession(Guid userId, TournamentConfiguration configuration, IEnumerable<Entry> entries,
+            MixEnum mix = MixEnum.Phoenix)
         {
             _configuration = configuration;
             Entries = entries.ToList();
             CurrentScore = Entries.Sum(e => e.SessionScore);
             UsersId = userId;
+            Mix = mix;
         }
 
         public TimeSpan CurrentRestTime => _configuration.MaxTime - TotalPlayTime;

@@ -12,6 +12,7 @@ using ScoreTracker.Identity.Contracts.Events;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
+using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
@@ -135,6 +136,13 @@ public sealed class LoginController : Controller
         catch (InvalidCredentialException)
         {
             return LocalRedirect(AppendError(backToForm, "Invalid"));
+        }
+        catch (NoGameAccountAssociatedException)
+        {
+            // Authenticated fine, but no game profile/card on the account yet — the
+            // launch-week state for everyone on a brand-new mix's site. Distinct message so
+            // users don't retype a password that already worked.
+            return LocalRedirect(AppendError(backToForm, "NoGameAccount"));
         }
         catch (HttpRequestException)
         {

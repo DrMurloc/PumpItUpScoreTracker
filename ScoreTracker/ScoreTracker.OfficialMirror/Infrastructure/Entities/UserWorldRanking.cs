@@ -7,6 +7,7 @@ namespace ScoreTracker.OfficialMirror.Infrastructure.Entities
     internal sealed class UserWorldRanking
     {
         [Key] public Guid Id { get; set; }
+        public Guid MixId { get; set; }
         public string Type { get; set; } = string.Empty;
         public string UserName { get; set; } = string.Empty;
         public double AverageLevel { get; set; }
