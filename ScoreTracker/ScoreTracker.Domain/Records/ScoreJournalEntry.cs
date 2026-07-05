@@ -16,4 +16,5 @@ public sealed record ScoreJournalEntry(
 {
     public const string ManualSource = "manual";
     public const string OfficialImportSource = "officialImport";
+    public const string CsvSource = "csv";
 }

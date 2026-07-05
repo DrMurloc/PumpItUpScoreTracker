@@ -559,8 +559,13 @@
         _currentSaved = 0;
         var startTime = DateTimeOffset.Now;
         var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(_userId, _currentMix), cancellationToken)).ToDictionary(s => s.ChartId);
+        // Same improvement guard as the official import: a stale or re-uploaded file must
+        // never regress records, and unchanged rows must not reach the ledger at all.
         var toSaveScores = _spreadSheetScores
-            .Where(s => !myScores.ContainsKey(s.ChartId) || s.Score != myScores[s.ChartId].Score || s.Plate != myScores[s.ChartId].Plate || myScores[s.ChartId].IsBroken).ToArray();
+            .Where(s => !myScores.TryGetValue(s.ChartId, out var existing)
+                        || existing.IsBroken
+                        || existing.Plate < s.Plate
+                        || existing.Score < s.Score).ToArray();
 
         _maxSaving = toSaveScores.Length;
         foreach (var best in toSaveScores)
@@ -576,7 +581,8 @@
             _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxSaving - (double)_currentSaved) / (double)_currentSaved);
             try
             {
-                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(best.ChartId,false,best.Score,best.Plate, Mix: _currentMix), cancellationToken);
+                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(best.ChartId, false, best.Score, best.Plate,
+                    Source: ScoreJournalEntry.CsvSource, Mix: _currentMix), cancellationToken);
             }
             catch (OperationCanceledException)
             {

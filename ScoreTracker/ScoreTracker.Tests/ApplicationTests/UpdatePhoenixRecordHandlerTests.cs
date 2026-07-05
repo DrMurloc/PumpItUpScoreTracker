@@ -56,10 +56,10 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
-    public async Task KeepBestStatsKeepsHigherExistingScore()
+    public async Task KeepBestStatsKeepsHigherExistingScoreWhileImprovedPlateWrites()
     {
         var ctx = new HandlerContext();
-        ctx.GivenExistingScore(score: 950000, plate: PhoenixPlate.SuperbGame, isBroken: false);
+        ctx.GivenExistingScore(score: 950000, plate: PhoenixPlate.FairGame, isBroken: false);
 
         await ctx.Handler.Handle(
             new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 900000,
@@ -67,23 +67,33 @@ public sealed class UpdatePhoenixRecordHandlerTests
             CancellationToken.None);
 
         ctx.Records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
-            It.Is<RecordedPhoenixScore>(s => s.Score == (PhoenixScore)950000),
+            It.Is<RecordedPhoenixScore>(s => s.Score == (PhoenixScore)950000
+                                             && s.Plate == PhoenixPlate.SuperbGame),
+            It.IsAny<CancellationToken>()), Times.Once);
+        // The journal mirrors the resulting record, not the raw submission.
+        ctx.Journal.Verify(j => j.Append(
+            It.Is<ScoreJournalEntry>(e => e.Score == (PhoenixScore)950000
+                                          && e.Plate == PhoenixPlate.SuperbGame
+                                          && !e.IsBroken),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task KeepBestStatsKeepsHigherExistingPlate()
+    public async Task KeepBestStatsKeepsHigherExistingPlateWhileImprovedScoreWrites()
     {
         var ctx = new HandlerContext();
         ctx.GivenExistingScore(score: 900000, plate: PhoenixPlate.PerfectGame, isBroken: false);
+        ctx.Batches.Setup(b => b.AddToBatch(MixEnum.Phoenix, UserId, It.IsAny<DateTime>(), ChartId, false,
+            It.IsAny<PhoenixScore?>())).Returns(true);
 
         await ctx.Handler.Handle(
-            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 900000,
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 950000,
                 Plate: PhoenixPlate.FairGame, KeepBestStats: true),
             CancellationToken.None);
 
         ctx.Records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
-            It.Is<RecordedPhoenixScore>(s => s.Plate == PhoenixPlate.PerfectGame),
+            It.Is<RecordedPhoenixScore>(s => s.Score == (PhoenixScore)950000
+                                             && s.Plate == PhoenixPlate.PerfectGame),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -106,6 +116,8 @@ public sealed class UpdatePhoenixRecordHandlerTests
     [Fact]
     public async Task WithoutKeepBestStatsOverwritesWithRequestValues()
     {
+        // Manual input is authoritative: a deliberate downward correction rewrites the
+        // record, journals (it is record history), and never announces.
         var ctx = new HandlerContext();
         ctx.GivenExistingScore(score: 950000, plate: PhoenixPlate.PerfectGame, isBroken: false);
 
@@ -118,6 +130,12 @@ public sealed class UpdatePhoenixRecordHandlerTests
             It.Is<RecordedPhoenixScore>(s => s.Score == (PhoenixScore)800000
                                              && s.Plate == PhoenixPlate.FairGame),
             It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Journal.Verify(j => j.Append(
+            It.Is<ScoreJournalEntry>(e => e.Score == (PhoenixScore)800000
+                                          && e.Plate == PhoenixPlate.FairGame),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Batches.Verify(b => b.AddToBatch(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<DateTime>(),
+            It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<PhoenixScore?>()), Times.Never);
     }
 
     [Fact]
@@ -177,30 +195,89 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
-    public async Task JournalsSubmissionAsReceivedEvenWhenKeepBestStatsDiscardsIt()
+    public async Task NoOpSubmissionTouchesNothing()
     {
+        // Progress only (owner call): a worse-on-every-axis submission with KeepBestStats
+        // leaves the best attempt unchanged — no record write (RecordedDate must not
+        // bump), no journal row, no batch. No-ops are noise, not history.
         var ctx = new HandlerContext();
         ctx.GivenExistingScore(score: 950000, plate: PhoenixPlate.PerfectGame, isBroken: false);
 
-        // Worse-on-every-axis submission with KeepBestStats: the stored best keeps the
-        // existing values and no batch/schedule fires — but the journal still gets the
-        // raw submission, because it is play history rather than best-attempt state.
         await ctx.Handler.Handle(
             new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: true, Score: 900000,
                 Plate: PhoenixPlate.FairGame, KeepBestStats: true),
             CancellationToken.None);
 
-        ctx.Journal.Verify(j => j.Append(
-            It.Is<ScoreJournalEntry>(e => e.UserId == UserId
-                                          && e.ChartId == ChartId
-                                          && e.OccurredAt == Now
-                                          && e.Source == ScoreJournalEntry.ManualSource
-                                          && e.Score == (PhoenixScore)900000
-                                          && e.Plate == PhoenixPlate.FairGame
-                                          && e.IsBroken),
-            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Records.Verify(r => r.UpdateBestAttempt(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<RecordedPhoenixScore>(), It.IsAny<CancellationToken>()), Times.Never);
+        ctx.Journal.Verify(j => j.Append(It.IsAny<ScoreJournalEntry>(), It.IsAny<CancellationToken>()),
+            Times.Never);
         ctx.Batches.Verify(b => b.AddToBatch(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<DateTime>(),
             It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<PhoenixScore?>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task IdenticalResubmissionTouchesNothing()
+    {
+        // Re-typing the exact stored values (or an import re-scrape past the cutoff)
+        // carries no information — nothing is written anywhere.
+        var ctx = new HandlerContext();
+        ctx.GivenExistingScore(score: 950000, plate: PhoenixPlate.SuperbGame, isBroken: false);
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 950000,
+                Plate: PhoenixPlate.SuperbGame),
+            CancellationToken.None);
+
+        ctx.Records.Verify(r => r.UpdateBestAttempt(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<RecordedPhoenixScore>(), It.IsAny<CancellationToken>()), Times.Never);
+        ctx.Journal.Verify(j => j.Append(It.IsAny<ScoreJournalEntry>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task FirstEntryJournalsEvenWhenBroken()
+    {
+        var ctx = new HandlerContext();
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: true, Score: 700000,
+                Plate: PhoenixPlate.RoughGame),
+            CancellationToken.None);
+
+        ctx.Records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
+            It.Is<RecordedPhoenixScore>(s => s.IsBroken && s.Score == (PhoenixScore)700000),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Journal.Verify(j => j.Append(
+            It.Is<ScoreJournalEntry>(e => e.IsBroken && e.Score == (PhoenixScore)700000),
+            It.IsAny<CancellationToken>()), Times.Once);
+        // A broken first entry is journal-worthy but never announces.
+        ctx.Batches.Verify(b => b.AddToBatch(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<DateTime>(),
+            It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<PhoenixScore?>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task BrokenImprovementJournalsTheNewBrokenBest()
+    {
+        // Broken 700k -> broken 850k: the record changed, so it journals (a Break
+        // improvement). Upscore batching on the raw score comparison is today's
+        // behavior and stays.
+        var ctx = new HandlerContext();
+        ctx.GivenExistingScore(score: 700000, plate: PhoenixPlate.RoughGame, isBroken: true);
+        ctx.Batches.Setup(b => b.AddToBatch(MixEnum.Phoenix, UserId, It.IsAny<DateTime>(), ChartId, false,
+            It.IsAny<PhoenixScore?>())).Returns(true);
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: true, Score: 850000,
+                Plate: PhoenixPlate.RoughGame),
+            CancellationToken.None);
+
+        ctx.Records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
+            It.Is<RecordedPhoenixScore>(s => s.IsBroken && s.Score == (PhoenixScore)850000),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Journal.Verify(j => j.Append(
+            It.Is<ScoreJournalEntry>(e => e.IsBroken && e.Score == (PhoenixScore)850000),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
