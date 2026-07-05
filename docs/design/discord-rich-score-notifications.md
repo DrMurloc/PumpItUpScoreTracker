@@ -406,15 +406,31 @@ journal no-ops stamped `manual`), and its `KeepBestStats` semantics get verified
 code is open.
 
 **Journal semantics — progress only (owner-resolved 2026-07-05).** The handler currently
-journals every submission as received, including no-ops ("play history"). That changes:
-**a submission journals only when it changes best-attempt state** — first entry for a chart
-(even broken), broken → unbroken, score improvement, or plate improvement (the same
-predicate the import diff uses; an improved-but-still-broken score counts as state change,
-pending owner confirmation). No-ops are not history, they're noise — "there's a lot of
-nuance in pretending we have history on no-ops." Consequences: the page's PLAYED
-classification disappears for new rows (legacy no-op rows already journaled since 2026-06
-render as "Played" but no new ones are written), and classifications reduce to
-**New pass / Upscore / Break** (first or improved broken entry).
+journals every submission as received, including no-ops ("play history"). That is bad data
+— the import deliberately scrapes a few pages past the presumed cutoff (the official site
+gives no dates or watermark), so re-submissions carry no information. The rule becomes:
+**a row is journaled iff the submission changed the stored best attempt.** Concretely:
+
+- **Changes that journal**: first entry for a chart (even broken), broken → unbroken,
+  score up, plate up, broken-beats-broken (both broken, higher score — the record changed,
+  so it journals as a Break improvement), and any deliberate manual overwrite — including
+  downward corrections, since manual is authoritative and always writes the record.
+  Identical re-entries and no-ops never journal, from any source.
+- **Per-source record rules**: **manual/API always overwrite** the record with what was
+  typed. **CSV keeps its current broken-front behavior** (passes only today) and gains the
+  import's diff guard — improvements/new entries only, so re-uploads neither churn records
+  nor journal. **Official import** submits only its diffed set; the *IncludeBroken*
+  checkbox governs whether broken plays may touch records (owner describes it as
+  opt-in-to-overwrite-passes; exact current behavior gets verified in C1 before any change).
+- **Pending owner confirmation (the one open carve-out)**: import-scraped broken plays
+  journaling as **journal-only rows** when the checkbox leaves records untouched — they're
+  real plays from the recent-scores scrape, so the journal could record them (classified
+  Break) while the record keeps the pass. If declined, v1 journals nothing that doesn't
+  change the record.
+
+Consequences: the page's PLAYED classification disappears for new rows (legacy no-op rows
+already journaled since 2026-06 render as "Played" but no new ones are written), and
+classifications reduce to **New pass / Upscore / Break**.
 
 **Milestones** (session-level gold rows). The kinds:
 
@@ -601,9 +617,17 @@ deferred behind per-channel rendering.)
 Already shipped on the branch: the message-drop hotfix (stats chunking +
 `DiscordMessageSplitter`).
 
-- **C1 — Journal progress-only guard + CSV alignment.** State-change predicate in
-  `UpdatePhoenixRecordHandler` (journal ⇔ record changed); CSV upload gains the import's
-  diff guard, `csv` source tag, and a `KeepBestStats` semantics check. Handler tests.
+- **C0 — Self-creating system communities.** Owner reports local errors about missing
+  communities: nothing seeds "World"/country communities on a fresh database, and
+  `CommunitySaga`'s `UserUpdatedEvent` consumer throws `CommunityNotFoundException` joining
+  them. Fix at the root: system communities (World + regional/country) auto-create on
+  first join — self-healing in every environment, and new countries create their community
+  on demand. Verified against the local dev DB.
+- **C1 — Journal progress-only guard + CSV alignment.** Journal ⇔ record changed in
+  `UpdatePhoenixRecordHandler`; verify the import's IncludeBroken record semantics before
+  touching them; CSV keeps its broken-front behavior but gains the import's diff guard +
+  `csv` source tag (+ the pending journal-only broken-import carve-out if confirmed).
+  Handler tests.
 - **C2 — Schema migration.** Journal `SessionId` + `(UserId, MixId, OccurredAt)` +
   filtered `(SessionId)` indexes; `ScoreHighlight`; `PlayerMilestone` (incl. `Detail`);
   `PhoenixRecords.Source`. Entities + model contributions + DATABASE-SCHEMA.md rows.
