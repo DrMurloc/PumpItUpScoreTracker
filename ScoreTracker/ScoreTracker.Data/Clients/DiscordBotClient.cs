@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Data.Clients;
@@ -250,6 +251,17 @@ public sealed class DiscordBotClient : IBotClient
             { PhoenixLetterGrade.SSSPlus, "<:piu_sssplus_broken:1238541136545714196>" }
         };
 
+    // Uploaded to the PIU Scores official server alongside the grade/plate bubbles
+    // (owner, 2026-07-05). Color is the mix signal at inline size: Phoenix = blue,
+    // Phoenix 2 = green, XX = pink.
+    private readonly IDictionary<string, string> _mixEmojis = new Dictionary<string, string>(
+        StringComparer.OrdinalIgnoreCase)
+    {
+        { "Phoenix", "<:phoenix_logo:1523325598171398164>" },
+        { "Phoenix2", "<:phoenix2_logo:1523325648976875704>" },
+        { "XX", "<:xx_logo:1523325684259356703>" }
+    };
+
     private readonly IDictionary<PhoenixPlate, string> _plateEmojis = new Dictionary<PhoenixPlate, string>
     {
         {
@@ -382,35 +394,89 @@ public sealed class DiscordBotClient : IBotClient
             { "coop5", "<:coop5:1238582931858001991>" } //
         };
 
+    /// <summary>
+    ///     Swaps the emoji-token vocabulary (#LETTERGRADE|…#, #PLATE|…#, #DIFFICULTY|…#,
+    ///     #MIX|…#) for the guild emojis — shared by the plain and rich send paths.
+    /// </summary>
+    private string ReplaceEmojiTokens(string message)
+    {
+        var replacedMessage = _letterGradeEmojis.Aggregate(message,
+            (current, letterKv) => current.Replace($"#LETTERGRADE|{letterKv.Key}#", letterKv.Value,
+                StringComparison.OrdinalIgnoreCase).Replace($"#LETTERGRADE|{letterKv.Key}|False#", letterKv.Value,
+                StringComparison.OrdinalIgnoreCase));
+
+        replacedMessage = _brokenLetterGradeEmojis.Aggregate(replacedMessage,
+            (current, letterKv) => current.Replace($"#LETTERGRADE|{letterKv.Key}|True#", letterKv.Value,
+                StringComparison.OrdinalIgnoreCase));
+
+        replacedMessage = _plateEmojis.Aggregate(replacedMessage,
+            (current, plateKv) => current.Replace($"#PLATE|{plateKv.Key}#", plateKv.Value,
+                StringComparison.OrdinalIgnoreCase));
+
+        replacedMessage = _difficultyShortHandEmojis.Aggregate(replacedMessage,
+            (current, difficultyKv) => current.Replace($"#DIFFICULTY|{difficultyKv.Key}#", difficultyKv.Value,
+                StringComparison.OrdinalIgnoreCase));
+
+        replacedMessage = _mixEmojis.Aggregate(replacedMessage,
+            (current, mixKv) => current.Replace($"#MIX|{mixKv.Key}#", mixKv.Value,
+                StringComparison.OrdinalIgnoreCase));
+
+        replacedMessage = replacedMessage.Replace("#LETTERGRADE|#", "");
+        replacedMessage = replacedMessage.Replace("#PLATE|#", "");
+        replacedMessage = replacedMessage.Replace("#DIFFICULTY|#", "");
+        replacedMessage = replacedMessage.Replace("#MIX|#", "");
+        return replacedMessage;
+    }
+
+    public async Task SendRichMessages(IEnumerable<RichBotMessage> messages, IEnumerable<ulong> channelIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (_client == null) throw new Exception("Client was never started");
+        var rendered = messages
+            .Select(m => DiscordRichMessageRenderer.Render(m, ReplaceEmojiTokens))
+            .ToArray();
+
+        foreach (var channelId in channelIds)
+            try
+            {
+                if (await _client.GetChannelAsync(channelId) is not IMessageChannel channel)
+                {
+                    _logger.LogWarning($"Channel {channelId} was not found");
+                    continue;
+                }
+
+                foreach (var (components, fallbackText) in rendered)
+                {
+                    // The kill switch and any per-channel V2 failure both degrade to the
+                    // plain-text path — an announcement never silently drops.
+                    if (_configuration.RichScoreMessages)
+                        try
+                        {
+                            await channel.SendMessageAsync(components: components,
+                                flags: MessageFlags.ComponentsV2);
+                            continue;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex,
+                                $"Rich send to channel {channelId} failed — falling back to plain text");
+                        }
+
+                    foreach (var part in DiscordMessageSplitter.Split(ReplaceEmojiTokens(fallbackText)))
+                        await channel.SendMessageAsync(part);
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning($"Could not send rich messages to channel {channelId}.", e);
+            }
+    }
+
     private async Task SendMessages(IEnumerable<string> messageEntities, IEnumerable<ulong> channelIds,
         Func<string, string> messageRetrieval,
         Action<string, IUserMessage>? process = default)
     {
-        var replacedMessages = new List<string>();
-        foreach (var message in messageEntities)
-        {
-            var replacedMessage = _letterGradeEmojis.Aggregate(message,
-                (current, letterKv) => current.Replace($"#LETTERGRADE|{letterKv.Key}#", letterKv.Value,
-                    StringComparison.OrdinalIgnoreCase).Replace($"#LETTERGRADE|{letterKv.Key}|False#", letterKv.Value,
-                    StringComparison.OrdinalIgnoreCase));
-
-            replacedMessage = _brokenLetterGradeEmojis.Aggregate(replacedMessage,
-                (current, letterKv) => current.Replace($"#LETTERGRADE|{letterKv.Key}|True#", letterKv.Value,
-                    StringComparison.OrdinalIgnoreCase));
-
-            replacedMessage = _plateEmojis.Aggregate(replacedMessage,
-                (current, plateKv) => current.Replace($"#PLATE|{plateKv.Key}#", plateKv.Value,
-                    StringComparison.OrdinalIgnoreCase));
-
-            replacedMessage = _difficultyShortHandEmojis.Aggregate(replacedMessage,
-                (current, difficultyKv) => current.Replace($"#DIFFICULTY|{difficultyKv.Key}#", difficultyKv.Value,
-                    StringComparison.OrdinalIgnoreCase));
-
-            replacedMessage = replacedMessage.Replace("#LETTERGRADE|#", "");
-            replacedMessage = replacedMessage.Replace("#PLATE|#", "");
-            replacedMessage = replacedMessage.Replace("#DIFFICULTY|#", "");
-            replacedMessages.Add(replacedMessage);
-        }
+        var replacedMessages = messageEntities.Select(ReplaceEmojiTokens).ToList();
 
         if (_client == null) throw new Exception("Client was never started");
         foreach (var channelId in channelIds)
