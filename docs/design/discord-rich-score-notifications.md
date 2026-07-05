@@ -323,7 +323,11 @@ card's CTA before it gets linked from other UI surfaces.
   deep-links to its session's roundup (`?session={id}` anchor) now that the event carries
   `SessionId`. Rows predating capture (null `SessionId`) group by calendar day under an
   "Older scores" strip. Mix filter defaults to Phoenix (Phoenix 2 appears when it goes
-  live); paged by session.
+  live); paged by session. **Below the roundups sits the raw score journal table** — every
+  journal row as stored (time, chart, score, result, classification, source), including
+  backfill rows, whose dates are the best attempt's last update rather than the original
+  play time and are footnoted as such. The roundups are the reading view; the table is the
+  record.
 
 ### Scores of note — flags, milestones, sessions
 
