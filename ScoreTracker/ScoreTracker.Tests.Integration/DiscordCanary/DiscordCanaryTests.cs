@@ -66,22 +66,26 @@ public sealed class DiscordCanaryTests
         await bot.Stop();
     }
 
+    // Header art = the default avatar; row art = real song images from the CDN, so the
+    // lab-channel gallery reads exactly like a production card.
+    private static readonly Uri Avatar =
+        new("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png");
+
     private static RichBotMessage SamplePassesCard(string marker)
     {
-        var avatar = new Uri("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png");
         return new RichBotMessage(
-            new RichBotSection("### **Canary** passed 2 charts", avatar),
+            new RichBotSection("### **Canary** passed 2 charts", Avatar),
             new IRichBotBlock[]
             {
                 new RichBotDivider(),
                 new RichBotSection(
-                    "#DIFFICULTY|d23# 👑 Sample Song\n**970,207** #LETTERGRADE|S|False##PLATE|UltimateGame#",
-                    avatar),
+                    "#DIFFICULTY|d19# 👑 Witch Doctor\n**970,207** #LETTERGRADE|S|False##PLATE|UltimateGame#",
+                    new Uri("https://piuimages.arroweclip.se/songs/WitchDoctor.png")),
                 new RichBotSection(
-                    "#DIFFICULTY|s17# 📊 Another Song\n**999,150** #LETTERGRADE|SSSPlus|False##PLATE|UltimateGame#",
-                    avatar),
+                    "#DIFFICULTY|s18# 📊 Turkey March -Minimal Tunes-\n**999,150** #LETTERGRADE|SSSPlus|False##PLATE|UltimateGame#",
+                    new Uri("https://piuimages.arroweclip.se/songs/TurkeyMarchMinimalTunes.png")),
                 new RichBotDivider(),
-                new RichBotText("#DIFFICULTY|d23# 84/141 (59.6%) · #DIFFICULTY|s17# 182/195 (93.3%)")
+                new RichBotText("#DIFFICULTY|d19# 84/141 (59.6%) · #DIFFICULTY|s18# 182/195 (93.3%)")
             },
             $"#MIX|Phoenix# Phoenix · PIU Scores · {marker}",
             0xE8C24A,
@@ -90,15 +94,14 @@ public sealed class DiscordCanaryTests
 
     private static RichBotMessage SampleDigestCard(string marker)
     {
-        var avatar = new Uri("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png");
         return new RichBotMessage(
-            new RichBotSection("### [Phoenix 2] **Canary** passed 1,872 · upscored 141", avatar),
+            new RichBotSection("### [Phoenix 2] **Canary** passed 1,872 · upscored 141", Avatar),
             new IRichBotBlock[]
             {
                 new RichBotDivider(),
                 new RichBotSection(
-                    "#DIFFICULTY|d23# 👑 Digest Highlight\n**962,410** #LETTERGRADE|AAAPlus|False##PLATE|FairGame#",
-                    avatar),
+                    "#DIFFICULTY|d20# 👑 Removable Disk0\n**962,410** #LETTERGRADE|AAAPlus|False##PLATE|FairGame#",
+                    new Uri("https://piuimages.arroweclip.se/songs/RemovableDisk0.png")),
                 new RichBotText("…and 36 more highlights"),
                 new RichBotDivider(),
                 new RichBotText("Levels S1–S22 · D4–D23 — highest new pass D23")
