@@ -310,6 +310,32 @@ card's CTA before it gets linked from other UI surfaces.
   `/Chart/{id}`), score, grade/plate icons, a pass/upscore/played chip, and the acquisition
   source chip (`manual` / `officialImport` / `csv`). Mix filter defaulting to Phoenix
   (Phoenix 2 appears when it goes live). Paged at 50.
+
+### Scores of note (badges, milestones, and the "Of note" filter)
+
+Two mechanisms with different costs:
+
+- **Badges on score rows — derived at read time, ship with the page.**
+  - 👑 *Pumbility contributor*: the row's chart is in the player's current top 50
+    (`GetTop50ForPlayerQuery`) — the exact rule the Discord crown already uses, with the
+    same "as of now" semantics.
+  - 🏅 *Title progress*: the row's level/grade counts toward a not-yet-complete title per
+    the existing title rules (the `TitleProgress` machinery behind `GetTitleProgressQuery`).
+- **Milestone rows — need write-time capture (small, additive).** Pumbility gains and title
+  completions are batch-computed by `PlayerRatingSaga`/`TitleSaga` and published
+  (`PlayerRatingsImprovedEvent`, `NewTitlesAcquiredEvent`) but never persisted with
+  timestamps: `PlayerHistoryEntity` snapshots competitive level only (no Pumbility), and
+  `UserTitleEntity` has no acquisition date. A new PlayerProgress-internal **`PlayerMilestone`**
+  table (`UserId`, `MixId`, `OccurredAt`, `Kind`, payload columns), appended by those sagas
+  at publish time, plus a published `GetPlayerMilestonesQuery`, lets the feed interleave
+  highlighted rows — *"PUMBILITY 8,172 → 8,214 (+42)"*, *"Title completed: Advanced Lv.9"* —
+  by timestamp. Ratings and titles compute per import batch, so milestone rows attribute to
+  the **session** (they sit between score rows at the batch timestamp), not to a single
+  score; the badges are the per-score signal. No backfill is possible — title acquisition
+  *dates* before capture simply don't exist (one more capture-now-or-lose-it case, like the
+  journal itself). New table = a row in DATABASE-SCHEMA.md.
+- **Filter**: a chip row above the feed — **All · Passes · Upscores · Of note** — where
+  "Of note" keeps badged score rows and milestone rows only.
 - **Honest boundary**: the journal only reaches back to when journaling shipped — the page is
   "recent activity", not all-time history, and says so in an empty-state/footnote line.
 - **Trial plan**: ships with (or just before) the card so the button has a target. Entry
