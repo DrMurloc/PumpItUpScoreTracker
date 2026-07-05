@@ -9,13 +9,18 @@
 <PageTitle>@L["Bulk Add Charts"]</PageTitle>
 
 <MudText Typo="Typo.h4">@L["Bulk Add Charts"]</MudText>
-<MudText Typo="Typo.body2">@L["Paste one JSON blob to create Phoenix 2 songs and charts in bulk."]</MudText>
+<MudText Typo="Typo.body2">@L["Upload a JSON file to create Phoenix 2 songs and charts in bulk."]</MudText>
 <MudText Typo="Typo.caption">@L["Schema reference:"] <code>docs/design/new-charts-json.md</code></MudText>
 <br/>
-<MudTextField T="string" @bind-Value="_jsonInput" Lines="16" Variant="Variant.Outlined" Label="JSON"
-              Style="font-family:monospace" Disabled="_isSaving"></MudTextField>
-<MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ManageSearch"
-           Disabled="_isSaving" OnClick="Parse">@L["Parse"]</MudButton>
+@* A file upload, not a paste box: bulk blobs overflow the SignalR message cap that
+   textarea binds ride on, arriving server-side as an empty string. *@
+<MudButton HtmlTag="label" Color="Color.Primary" Variant="Variant.Filled"
+           StartIcon="@Icons.Material.Filled.UploadFile" Disabled="_isSaving"
+           for="bulkJsonUpload">@L["Upload JSON"]</MudButton>
+@if (!string.IsNullOrEmpty(_fileName))
+{
+    <MudText Typo="Typo.caption" Class="ml-2" Style="display:inline">@_fileName</MudText>
+}
 
 @foreach (var error in _globalErrors)
 {
@@ -139,6 +144,8 @@
     </MudSimpleTable>
 }
 
+<InputFile id="bulkJsonUpload" OnChange="@UploadJson" hidden accept=".json,application/json"/>
+
 @inject ICurrentUserAccessor CurrentUser;
 @inject IChartRepository _charts;
 @inject IFileUploadClient Files;
@@ -147,7 +154,10 @@
 @inject NavigationManager NavManager;
 @code
 {
+    private const long MaxJsonBytes = 5 * 1024 * 1024;
+
     private string _jsonInput = string.Empty;
+    private string _fileName = string.Empty;
     private bool _isSaving;
     private int _progress;
     private IReadOnlyList<string> _globalErrors = Array.Empty<string>();
@@ -171,6 +181,22 @@
                                && _entries.Any()
                                && _entries.All(e => !e.Parse.Errors.Any())
                                && _entries.Any(e => e.CanCreate);
+
+    private async Task UploadJson(InputFileChangeEventArgs e)
+    {
+        _results.Clear();
+        _entries.Clear();
+        _fileName = e.File.Name;
+        if (e.File.Size > MaxJsonBytes)
+        {
+            _globalErrors = new[] { L["File is too large — 5 MB max."].Value };
+            return;
+        }
+
+        using var reader = new StreamReader(e.File.OpenReadStream(MaxJsonBytes));
+        _jsonInput = await reader.ReadToEndAsync();
+        await Parse();
+    }
 
     private async Task Parse()
     {

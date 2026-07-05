@@ -2157,14 +2157,17 @@
   <data name="Bulk Add Charts" xml:space="preserve">
     <value>Adicionar charts em massa</value>
   </data>
-  <data name="Paste one JSON blob to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
-    <value>Cole um único blob JSON para criar músicas e charts do Phoenix 2 em massa.</value>
+  <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
+    <value>Envie um arquivo JSON para criar músicas e charts do Phoenix 2 em massa.</value>
   </data>
   <data name="Schema reference:" xml:space="preserve">
     <value>Referência do esquema:</value>
   </data>
-  <data name="Parse" xml:space="preserve">
-    <value>Analisar</value>
+  <data name="Upload JSON" xml:space="preserve">
+    <value>Enviar JSON</value>
+  </data>
+  <data name="File is too large — 5 MB max." xml:space="preserve">
+    <value>O arquivo é grande demais — máximo de 5 MB.</value>
   </data>
   <data name="Ready" xml:space="preserve">
     <value>Pronto</value>

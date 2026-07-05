@@ -2130,14 +2130,17 @@
   <data name="Bulk Add Charts" xml:space="preserve">
     <value>Mrglbulk Add Mrglcharts</value>
   </data>
-  <data name="Paste one JSON blob to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
-    <value>Mrglpaste one JSON mrglblob to murglar Phoenix 2 mrglsongs and mrglcharts in mrglbulk!</value>
+  <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
+    <value>Mrglupload a JSON mrglfile to murglar Phoenix 2 mrglsongs and mrglcharts in mrglbulk!</value>
   </data>
   <data name="Schema reference:" xml:space="preserve">
     <value>Mrglschema mrglference:</value>
   </data>
-  <data name="Parse" xml:space="preserve">
-    <value>Mrglparse</value>
+  <data name="Upload JSON" xml:space="preserve">
+    <value>Mrglupload JSON</value>
+  </data>
+  <data name="File is too large — 5 MB max." xml:space="preserve">
+    <value>Mrglfile too mrglbig — 5 MB mrglmax!</value>
   </data>
   <data name="Ready" xml:space="preserve">
     <value>Mrglready</value>

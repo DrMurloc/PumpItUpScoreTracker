@@ -2086,14 +2086,17 @@
   <data name="Bulk Add Charts" xml:space="preserve">
     <value>채보 일괄 추가</value>
   </data>
-  <data name="Paste one JSON blob to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
-    <value>JSON 하나를 붙여넣어 Phoenix 2 곡과 채보를 일괄 생성합니다.</value>
+  <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
+    <value>JSON 파일을 업로드하여 Phoenix 2 곡과 채보를 일괄 생성합니다.</value>
   </data>
   <data name="Schema reference:" xml:space="preserve">
     <value>스키마 참조:</value>
   </data>
-  <data name="Parse" xml:space="preserve">
-    <value>분석</value>
+  <data name="Upload JSON" xml:space="preserve">
+    <value>JSON 업로드</value>
+  </data>
+  <data name="File is too large — 5 MB max." xml:space="preserve">
+    <value>파일이 너무 큽니다 — 최대 5MB입니다.</value>
   </data>
   <data name="Ready" xml:space="preserve">
     <value>준비됨</value>

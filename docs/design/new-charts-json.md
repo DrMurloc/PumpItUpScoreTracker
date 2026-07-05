@@ -2,9 +2,10 @@
 
 The contract between the `/Admin/BulkAddCharts` tool and anything that produces new-song
 JSON for it (today: hand-written by the owner; later: the automated "check for new Phoenix 2
-charts" workflow below). Paste one blob → validation preview → Confirm → songs, charts, and
-the `ko-KR` culture-name rows are created. **Charts are always created for Phoenix 2** —
-the tool has no mix picker; Phoenix-era content is considered complete.
+charts" workflow below). Upload one `.json` file (a file picker, not a paste box — bulk blobs
+overflow the SignalR message cap that Blazor textarea binds ride on) → validation preview →
+Confirm → songs, charts, and the `ko-KR` culture-name rows are created. **Charts are always
+created for Phoenix 2** — the tool has no mix picker; Phoenix-era content is considered complete.
 
 Parsing/validation lives in `BulkChartJsonParser`
 (`ScoreTracker.Domain/Services/BulkChartJsonParser.cs`, unit-tested in
@@ -127,6 +128,6 @@ process, so the blob stays the contract between the tool and the workflow:
    piugame.com: the canonical English `name`, the canonical Korean `koreanName`, and the
    `song_img2` `imageUrl`. A YouTube-vs-site name mismatch is flagged for review, never
    silently resolved.
-3. **Emit the JSON** exactly in the schema above and paste it into `/Admin/BulkAddCharts` —
+3. **Emit the JSON** exactly in the schema above and upload it to `/Admin/BulkAddCharts` —
    the preview stays the human checkpoint before anything is written, and its
    already-in-catalog warnings are the dedup net when the watermark is stale.

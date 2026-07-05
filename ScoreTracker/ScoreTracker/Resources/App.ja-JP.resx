@@ -2207,14 +2207,17 @@
   <data name="Bulk Add Charts" xml:space="preserve">
     <value>チャート一括追加</value>
   </data>
-  <data name="Paste one JSON blob to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
-    <value>JSONを1つ貼り付けて、Phoenix 2の楽曲とチャートを一括作成します。</value>
+  <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
+    <value>JSONファイルをアップロードして、Phoenix 2の楽曲とチャートを一括作成します。</value>
   </data>
   <data name="Schema reference:" xml:space="preserve">
     <value>スキーマの参照:</value>
   </data>
-  <data name="Parse" xml:space="preserve">
-    <value>解析</value>
+  <data name="Upload JSON" xml:space="preserve">
+    <value>JSONをアップロード</value>
+  </data>
+  <data name="File is too large — 5 MB max." xml:space="preserve">
+    <value>ファイルが大きすぎます — 最大5MBです。</value>
   </data>
   <data name="Ready" xml:space="preserve">
     <value>準備完了</value>
