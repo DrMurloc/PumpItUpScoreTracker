@@ -88,9 +88,6 @@ Stands in for phoenix.piugame.com in the E2E suite, serving PII-scrubbed snapsho
 ### Azure Pipelines
 [Multi-stage YAML](../azure-pipelines.yml): build + all test suites on every PR and merge; merges to `main` continue into an **approval-gated production deploy** that first applies the EF migration bundle, then zip-deploys the app to Azure App Service.
 
-### DeepSource
-Static analysis on PRs (`.deepsource.toml`).
-
 ### SonarQube Cloud
 Quality/maintainability analysis wrapping the Windows build job (prepare → build → tests → analyze → publish quality gate); PR decoration via the SonarQube Cloud GitHub app. EF `Migrations/` are excluded — generated code would swamp the metrics. Free for public repos.
 
