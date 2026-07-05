@@ -110,9 +110,10 @@ One card per event (splitting only on budget overflow):
 - **Footer**: `-#` subheadline markdown (Discord's small-text) with the mix logo emoji + mix
   name + product name (see "Mix logo emojis" below). V2 has no timestamp concept; the message
   timestamp covers it.
-- **Button**: one link button — **"View all recent scores"** — to the player's Recent Scores
-  page (section below). Rendered only when the player is public (`User.IsPublic`, already
-  loaded by the saga); non-public players get the card without the button. (A per-community
+- **Button**: one link button — **"View all recent scores"** — deep-linking to this
+  session's roundup on the player's page (section below; the event's `SessionId` rides the
+  URL). Rendered only when the player is public (`User.IsPublic`, already loaded by the
+  saga); non-public players get the card without the button. (A per-community
   "leaderboard" button stays deferred — the saga sends one identical message to every channel
   across all of the player's communities, and per-channel rendering is a bigger port change.)
 - **Accent color**: the letter-grade color of the best new score, matching the site's grade
@@ -309,10 +310,20 @@ card's CTA before it gets linked from other UI surfaces.
   **Upscore** / **Played** by comparing against the player's prior journal state for that
   chart (the `(UserId, ChartId, OccurredAt)` index makes the prior-best lookup cheap).
   Chart/song display data comes from the Catalog read path like other pages.
-- **Presentation**: newest-first rows — time-ago, difficulty bubble, song (linked to
-  `/Chart/{id}`), score, grade/plate icons, a pass/upscore/played chip, and the acquisition
-  source chip (`manual` / `officialImport` / `csv`). Mix filter defaulting to Phoenix
-  (Phoenix 2 appears when it goes live). Paged at 50.
+- **Presentation — session roundup cards, not a table** (owner direction 2026-07-05): the
+  page is a newest-first stack of per-session cards. Each card: header (session kind —
+  import / play session / CSV — plus when and mix; the kind *is* the source, no per-row
+  source chips) → aggregate counts (passes · upscores · highlights) → the gold **milestone
+  strip** → **highlights** (flagged scores only, universal noteworthy order, song art —
+  visually the same rows as the Discord card) → folder-progress deltas → and, above ~10
+  rows, a collapsed "Show all N scores" detail list (the compact row treatment lives inside
+  the expander). Small sessions render everything inline, including non-highlight
+  PLAYED/BREAK rows. A 2,013-score initial import stays one calm card. **The Discord digest
+  and the session roundup are the same concept at two zoom levels** — the card's button
+  deep-links to its session's roundup (`?session={id}` anchor) now that the event carries
+  `SessionId`. Rows predating capture (null `SessionId`) group by calendar day under an
+  "Older scores" strip. Mix filter defaults to Phoenix (Phoenix 2 appears when it goes
+  live); paged by session.
 
 ### Scores of note — flags, milestones, sessions
 
