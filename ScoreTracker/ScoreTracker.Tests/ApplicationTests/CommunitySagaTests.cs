@@ -323,6 +323,35 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task LevelProgressStatsChunkAcrossMessagesInsteadOfOverflowingOneSend()
+    {
+        // 12 distinct (type, level) groups — unchunked, the progress summary grows past
+        // Discord's 2,000-char content cap on import-sized events and the send is
+        // silently dropped by the per-message catch.
+        var userId = Guid.NewGuid();
+        var charts = Enumerable.Range(10, 12)
+            .Select(level => new ChartBuilder().WithType(ChartType.Single).WithLevel(level).Build())
+            .ToArray();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, charts, score: 950000);
+
+        await ctx.Saga.Consume(BuildContext(PlayerScoresUpdatedEvent.Create(Now, userId, MixEnum.Phoenix,
+            charts.Select(c => new PlayerScoresUpdatedEvent.ScoreChange(c.Id, IsNewPass: true,
+                OldScore: null, NewScore: 950000, Plate: "SuperbGame", IsBroken: false)).ToArray())));
+
+        // Pass list + two stats chunks (10 groups, then the remaining 2).
+        ctx.Bot.Verify(b => b.SendMessages(It.IsAny<IEnumerable<string>>(), It.IsAny<IEnumerable<ulong>>(),
+            It.IsAny<CancellationToken>()), Times.Exactly(3));
+        // The tail groups past the first chunk still arrive.
+        ctx.Bot.Verify(b => b.SendMessages(
+            It.Is<IEnumerable<string>>(msgs => msgs.Any(m => m.Contains("#DIFFICULTY|S10# 1/1"))),
+            It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task UcsPlacementBroadcastsFromEventFactsAlone()
     {
         // The fat event carries everything the Discord post needs — the saga must not
@@ -425,6 +454,23 @@ public sealed class CommunitySagaTests
                 .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
             Mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new[] { chart });
+        }
+
+        public void GivenScoreAnnouncementLookups(MixEnum mix, Guid userId, Chart[] charts, int score)
+        {
+            Scores.Setup(s => s.GetBestScores(mix, userId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(charts.Select(c =>
+                    new RecordedPhoenixScore(c.Id, score, PhoenixPlate.SuperbGame, false, Now)).ToArray());
+            Scores.Setup(s => s.GetClearCount(mix, userId, It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(1);
+            Charts.Setup(c => c.GetCharts(mix, It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
+                    It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(charts);
+            Mediator.Setup(m => m.Send(It.IsAny<GetTop50ForPlayerQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
+            Mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(charts);
         }
 
         public void GivenUserCommunitiesWithChannel(Guid userId, string communityName, ulong channelId)

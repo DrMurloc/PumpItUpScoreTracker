@@ -425,8 +425,11 @@ public sealed class DiscordBotClient : IBotClient
                 foreach (var message in replacedMessages)
                     try
                     {
-                        var userMessage = await channel.SendMessageAsync(messageRetrieval(message));
-                        if (process != null) process(message, userMessage);
+                        foreach (var part in DiscordMessageSplitter.Split(messageRetrieval(message)))
+                        {
+                            var userMessage = await channel.SendMessageAsync(part);
+                            if (process != null) process(message, userMessage);
+                        }
                     }
                     catch (Exception ex)
                     {

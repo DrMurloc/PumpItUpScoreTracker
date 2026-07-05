@@ -198,6 +198,10 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
 And {count - 10} others!";
             messages.Add(message);
             message = "";
+            // An initial import touches enough (type, level) groups that one message
+            // overflows Discord's 2,000-char cap and the send is dropped — chunk like
+            // every other list in this saga.
+            count = 0;
             foreach (var (type, level) in newCharts.GroupBy(c => (c.Type, c.Level)).Select(c => c.Key)
                          .OrderByDescending(g => g.Level).ThenBy(g => g.Type))
             {
@@ -206,9 +210,15 @@ And {count - 10} others!";
                     context.CancellationToken);
                 message += $@"
 #DIFFICULTY|{type.GetShortHand()}{level}# {currentCount}/{totalCount} ({100.0 * currentCount / totalCount:0.0}%)";
+                count++;
+                if (count != 10) continue;
+
+                messages.Add(message);
+                message = "";
+                count = 0;
             }
 
-            messages.Add(message);
+            if (!string.IsNullOrWhiteSpace(message)) messages.Add(message);
         }
 
 
