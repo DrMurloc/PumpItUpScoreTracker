@@ -1,0 +1,20 @@
+# Dependabot version updates (freshness bumps). Security alerts/fixes are separate
+# and configured in repo settings, not here.
+version: 2
+updates:
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # One grouped PR per week for minor/patch bumps across all ~20 csproj files.
+    # Majors arrive as individual PRs so breaking upgrades stay deliberate.
+    groups:
+      nuget-minor-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      # Deliberately on MassTransit 7.x — v8+ is a breaking rearchitecture.
+      # Without this, the major bump gets re-offered forever.
+      - dependency-name: "MassTransit*"
+        update-types: ["version-update:semver-major"]

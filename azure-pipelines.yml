@@ -63,6 +63,25 @@ stages:
         packageType: 'sdk'
         version: '10.0.x'
 
+    # SonarQube Cloud analysis brackets the build: Prepare BEFORE restore/build (it hooks the
+    # compiler), Analyze + Publish after the test steps. Requires (once, owner-side): the
+    # "SonarQube Cloud" Marketplace extension installed in the joneccker DevOps org, and a
+    # service connection named 'SonarCloud' holding a sonarcloud.io token (My Account →
+    # Security). PR decoration comes from the SonarQube Cloud GitHub app via the project
+    # binding created when the project is imported on sonarcloud.io.
+    - task: SonarCloudPrepare@4
+      displayName: 'Prepare SonarQube Cloud analysis'
+      inputs:
+        SonarCloud: 'SonarCloud'
+        organization: 'drmurloc'                        # verify against the SonarCloud org key
+        scannerMode: 'dotnet'
+        projectKey: 'DrMurloc_PumpItUpScoreTracker'     # verify against the imported project's key
+        projectName: 'PumpItUpScoreTracker'
+        extraProperties: |
+          # EF migrations are generated code — 89k of the repo's 128k C# lines; analyzing
+          # them buries real findings and wrecks the new-code metrics.
+          sonar.exclusions=**/Migrations/**
+
     - script: dotnet restore $(solution)
       displayName: 'Restore'
 
@@ -84,6 +103,14 @@ stages:
         testResultsFormat: 'VSTest'
         testResultsFiles: '$(Agent.TempDirectory)/**/*.trx'
         failTaskOnFailedTests: true
+
+    - task: SonarCloudAnalyze@4
+      displayName: 'Run SonarQube Cloud analysis'
+
+    - task: SonarCloudPublish@4
+      displayName: 'Publish SonarQube Cloud quality gate'
+      inputs:
+        pollingTimeoutSec: '300'
 
     - script: dotnet publish ScoreTracker/ScoreTracker/ScoreTracker.Web.csproj -c $(buildConfiguration) --no-restore -o $(Agent.TempDirectory)/publish
       displayName: 'Publish Web app'
