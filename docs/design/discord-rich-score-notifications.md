@@ -130,13 +130,19 @@ and anywhere else a mix name appears. The official logo assets (pulled from the 
 | Phoenix 2 | `https://www.piugame.com/l_img/logo.png` (1642×667) | Green — "PUMP IT UP 2026 PHOENIX 2" |
 | XX | `https://phoenix.piugame.com/l_img/quick_xx_logo.png` (112×66) | Pink/magenta |
 
-Ready-to-upload 128×128 transparent PNGs are prepared in `Downloads\discord-mix-emojis\`
-(`piu_phoenix.png`, `piu_phoenix2.png`, `piu_xx.png`, all well under Discord's 256 KB emoji
-cap). The owner uploads them to the **PIU Scores official server** alongside the existing
-grade/plate/difficulty bubbles — same management model, same rendering rules (the bot is a
-member of that guild; channels that render the current bubbles render these). The adapter
-dictionary then needs the three raw emoji strings (`<:piu_phoenix:…>` etc. — type `\:name:`
-in Discord to expand one); **pending from the owner as of 2026-07-05**. At inline size the
+The 128×128 transparent PNGs were prepared in `Downloads\discord-mix-emojis\` and the owner
+uploaded them to the **PIU Scores official server** alongside the existing
+grade/plate/difficulty bubbles (2026-07-05) — same management model, same rendering rules
+(the bot is a member of that guild; channels that render the current bubbles render these).
+The adapter dictionary entries:
+
+```
+Phoenix  → <:phoenix_logo:1523325598171398164>
+Phoenix2 → <:phoenix2_logo:1523325648976875704>
+XX       → <:xx_logo:1523325684259356703>
+```
+
+At inline size the
 wordmark text is not legible, but the color (blue vs green) is the mix signal — the textual
 mix name always sits next to the emoji, so the emoji is color-coding, not the sole carrier.
 (Note from the same recon: the Phoenix 2 site also cross-promotes a separate "R!SE — Pump It
@@ -344,18 +350,23 @@ card's CTA before it gets linked from other UI surfaces.
 
 ## Rollout
 
-0. Ship the Recent Scores page (independently useful, zero risk, gives the card's button a
-   target from day one). Upload the mix emojis as application emojis and record their IDs in
-   the adapter dictionaries.
-1. Ship the port model + renderer + saga change (cards + digest) with the automatic
-   per-channel fallback. No schema change; channel opt-in flags untouched; partner webhook
-   payloads (`PlayerScoresUpdatedEvent` JSON, ADR-001 D3) completely unaffected.
-2. A `Discord:RichScoreMessages` config kill-switch (default on) is cheap insurance for a
+Owner's call (2026-07-05): the whole scope — message-drop hotfix, Recent Scores page, port
+model + renderer + saga cards + digest — lands on **one PR** (#124, this branch), built in
+this order so each commit stands alone:
+
+1. *(shipped)* The message-drop hotfix — stats chunking + the transport splitter.
+2. The Recent Scores page (the card's button target exists before any card links to it).
+   Mix emojis are already uploaded and recorded above.
+3. The port model + renderer + saga change (cards + digest) with the automatic per-channel
+   fallback. No schema change; channel opt-in flags untouched; partner webhook payloads
+   (`PlayerScoresUpdatedEvent` JSON, ADR-001 D3) completely unaffected.
+4. A `Discord:RichScoreMessages` config kill-switch (default on) is cheap insurance for a
    community-facing surface — flipping it re-routes to the legacy string path without a
    deploy rollback. Delete after burn-in.
-3. Follow-up passes (separate PRs): titles → ratings → weekly → UCS onto `RichBotMessage`,
-   then delete the string-composition paths and, last, the legacy `SendMessages` port method
-   once no caller remains.
+
+Follow-up passes (later PRs, outside this scope): titles → ratings → weekly → UCS onto
+`RichBotMessage`, then delete the string-composition paths and, last, the legacy
+`SendMessages` port method once no caller remains.
 
 ## Open questions
 
