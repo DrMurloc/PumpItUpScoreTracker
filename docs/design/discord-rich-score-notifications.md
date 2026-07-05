@@ -100,7 +100,8 @@ One card per event (splitting only on budget overflow):
 - **Header**: `### **{name}** passed {n} charts` (markdown heading), avatar as the section
   accessory. The `[Phoenix 2]` mix prefix stays **textual** in the header, exactly as decided
   in the Phoenix 2 plan — the accent color is decoration, not the mix signal.
-- **Pass rows**: same ordering as today (level desc, then score desc). Two lines per row:
+- **Pass rows**: ordered by the universal noteworthy rule — difficulty level desc, then
+  scoring level desc (supersedes today's level-then-score ordering). Two lines per row:
   difficulty bubble + crown (top-50) + song name as a masked link; then bold score + grade +
   plate emoji. Top **5** rows get art (down from 10 text lines — art rows are ~2× the height,
   so 5 keeps the card scannable on mobile); the rest collapse into one grouped overflow line.
@@ -199,6 +200,8 @@ The redesign replaces all of that with a threshold: when an event carries more t
 └────────────────────────────────────────────────────────────────┘
 ```
 
+- Highlights follow the universal noteworthy ordering (level desc, then scoring level desc),
+  preferring flagged scores when the capture table has them for the session.
 - Exactly **one message** per import per channel, regardless of dump size.
 - Level progress is capped at the top 3 levels (by new-pass count) — which also retires the
   overflow bug, since the non-digest card only ever contains a small event's level groups.
@@ -311,31 +314,70 @@ card's CTA before it gets linked from other UI surfaces.
   source chip (`manual` / `officialImport` / `csv`). Mix filter defaulting to Phoenix
   (Phoenix 2 appears when it goes live). Paged at 50.
 
-### Scores of note (badges, milestones, and the "Of note" filter)
+### Scores of note — flags, milestones, sessions
 
-Two mechanisms with different costs:
+**Five flag kinds** mark a score row as noteworthy:
 
-- **Badges on score rows — derived at read time, ship with the page.**
-  - 👑 *Pumbility contributor*: the row's chart is in the player's current top 50
-    (`GetTop50ForPlayerQuery`) — the exact rule the Discord crown already uses, with the
-    same "as of now" semantics.
-  - 🏅 *Title progress*: the row's level/grade counts toward a not-yet-complete title per
-    the existing title rules (the `TitleProgress` machinery behind `GetTitleProgressQuery`).
-- **Milestone rows — need write-time capture (small, additive).** Pumbility gains and title
-  completions are batch-computed by `PlayerRatingSaga`/`TitleSaga` and published
-  (`PlayerRatingsImprovedEvent`, `NewTitlesAcquiredEvent`) but never persisted with
-  timestamps: `PlayerHistoryEntity` snapshots competitive level only (no Pumbility), and
-  `UserTitleEntity` has no acquisition date. A new PlayerProgress-internal **`PlayerMilestone`**
-  table (`UserId`, `MixId`, `OccurredAt`, `Kind`, payload columns), appended by those sagas
-  at publish time, plus a published `GetPlayerMilestonesQuery`, lets the feed interleave
-  highlighted rows — *"PUMBILITY 8,172 → 8,214 (+42)"*, *"Title completed: Advanced Lv.9"* —
-  by timestamp. Ratings and titles compute per import batch, so milestone rows attribute to
-  the **session** (they sit between score rows at the batch timestamp), not to a single
-  score; the badges are the per-score signal. No backfill is possible — title acquisition
-  *dates* before capture simply don't exist (one more capture-now-or-lose-it case, like the
-  journal itself). New table = a row in DATABASE-SCHEMA.md.
-- **Filter**: a chip row above the feed — **All · Passes · Upscores · Of note** — where
-  "Of note" keeps badged score rows and milestone rows only.
+1. 👑 **Pumbility contributor** — the chart sits in the player's top 50 at batch time.
+2. 🏅 **Title progress** — the score counts toward a not-yet-complete title (the
+   `TitleProgress` rules behind `GetTitleProgressQuery`).
+3. 📊 **Score Quality ≥ 90th** — the score ranks in the top decile against comparable
+   players (the Score Quality machinery: `GetPlayerScoreQualityQuery` →
+   `ScoreRankingRecord(Ranking, PlayerCount)`, `ScoreQualitySaga`). Compute the percentile
+   **tie-inclusive** (share of cohort scores ≤ yours) so a Perfect Game always lands at the
+   100th percentile even when much of the cohort also has the PG.
+4. 📁 **Folder completionist** — a new pass in a (type, level) folder whose completion is
+   ≥ 90% after the batch (clear count ÷ folder size — the same lookups the card's
+   level-progress block uses).
+5. ⬆ **Competitive improver** — the batch raised the player's **Singles or Doubles**
+   competitive level. Never the combined number: singles and doubles don't compare, so
+   combined movement is not notability (it stays computed for the page that shows it; the
+   legacy ratings Discord message still posts it — trim that when the consumer migrates to
+   `RichBotMessage`). Competitive level is batch-computed, so per-score attribution is a
+   heuristic: flag the improved side's rows whose score rating meets the old level; tune at
+   implementation.
+
+**Write-time capture, not read-time derivation** (supersedes the earlier read-time-badges
+design). PlayerProgress already consumes `PlayerScoresUpdatedEvent` to compute ratings,
+titles, and score quality; the same processing now also appends **`ScoreHighlight`** rows —
+a PlayerProgress-internal table (`UserId`, `MixId`, `ChartId`, `SessionId`, flag kinds,
+denormalized `Level` + `ScoringLevel` for ordering). Why write-time wins: the flags are
+**historically true** (a read-time crown drifts as the top 50 moves under it), the feed
+reads them with zero extra queries, and future surfaces — the import-results page wants
+these flags too (owner-flagged, **explicitly deferred, not in this PR**) — read the same
+rows. The journal itself stays **append-only**: highlights are a companion table keyed to
+journal rows, never journal mutations.
+
+**SessionId** — the join key and the session grouper. A new nullable column on journal rows
+plus an **additive** field on `PlayerScoresUpdatedEvent` (SchemaVersion stays 1; the Mix
+field set the additive precedent, and partner webhook consumers ignore unknown fields).
+Stamping: official-import runs stamp their import id; a CSV upload mints one id per upload;
+manual entries derive a rolling per-user session (new id after a ≥ 4 h gap since the user's
+latest journal row — one cheap indexed lookup at write time). Highlights key on
+`(SessionId, ChartId)`, and the page groups the feed into **session chunks** ("Official
+import · 8 min ago · 214 scores · 12 highlights") with milestones interleaved. No backfill
+(owner-accepted): pre-capture rows have null `SessionId` and no flags, and render exactly as
+they do today.
+
+**Milestones** (session-level gold rows, unchanged mechanics): Pumbility gains, title
+completions, and **Singles/Doubles competitive gains** — combined competitive is excluded
+here too. Captured in the PlayerProgress-internal `PlayerMilestone` table by the sagas that
+already publish `PlayerRatingsImprovedEvent`/`NewTitlesAcquiredEvent`; neither fact is
+persisted with a timestamp today (`PlayerHistoryEntity` has no Pumbility column,
+`UserTitleEntity` has no acquisition date), so capture-now-or-lose-it applies, like the
+journal itself.
+
+**Noteworthy ordering — one universal rule**: wherever noteworthy scores are shown *as a
+set* — the ⭐ Of-note filter, a session chunk's highlights, the Discord card and digest
+highlight rows — order by **difficulty level descending, then scoring level descending**
+(ChartIntelligence's `GetChartScoringLevelsQuery`). The chronological feed stays
+chronological; the rule governs prioritized views.
+
+**Filter**: a chip row above the feed — **All · Passes · Upscores · Of note** — where
+"Of note" keeps flagged score rows and milestone rows only, in noteworthy order.
+
+New tables (`ScoreHighlight`, `PlayerMilestone`) and the journal `SessionId` column each get
+their row in DATABASE-SCHEMA.md.
 - **Honest boundary**: the journal only reaches back to when journaling shipped — the page is
   "recent activity", not all-time history, and says so in an empty-state/footnote line.
 - **Trial plan**: ships with (or just before) the card so the button has a target. Entry
@@ -412,6 +454,10 @@ Follow-up passes (later PRs, outside this scope): titles → ratings → weekly 
    treatment when it migrates to `RichBotMessage`.
 5. **Recent page follow-through**: which UI surfaces get links if the Discord-driven trial
    performs — Progress page, community leaderboard rows, `UserLabel` popover?
+6. **Manual-entry session gap**: 4 h proposed for deriving a rolling "play session" id on
+   manual submissions — right window?
+7. **Flag thresholds**: Score Quality ≥ 90th percentile and folder completion ≥ 90% ship as
+   named constants; tune against real data before promoting either to config.
 
 (The earlier "which button?" question is resolved: the single CTA is **View all recent
 scores** → the Recent Scores page, rendered only for public players. A per-community
