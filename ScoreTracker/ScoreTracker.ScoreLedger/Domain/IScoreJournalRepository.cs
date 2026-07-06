@@ -13,18 +13,23 @@ internal interface IScoreJournalRepository
     Task Append(ScoreJournalEntry entry, CancellationToken cancellationToken);
 
     /// <summary>
-    ///     Paged groups, newest activity first: one group per SessionId, and one per
-    ///     calendar day for rows predating session capture. Rows ride along.
+    ///     Paged groups across every mix, newest activity first: one group per
+    ///     SessionId, and one per (mix, calendar day) for rows predating session
+    ///     capture. Rows ride along; each group carries its mix.
     /// </summary>
-    Task<(int TotalGroups, IReadOnlyList<JournalSessionRows> Groups)> GetSessionGroups(MixEnum mix, Guid userId,
+    Task<(int TotalGroups, IReadOnlyList<JournalSessionRows> Groups)> GetSessionGroups(Guid userId,
         int page, int pageSize, CancellationToken cancellationToken);
 
-    /// <summary>Full journal history for the given charts, oldest first — classification input.</summary>
-    Task<IReadOnlyList<ScoreJournalEntry>> GetChartHistories(MixEnum mix, Guid userId, IEnumerable<Guid> chartIds,
+    /// <summary>
+    ///     Full journal history for the given charts, oldest first — classification
+    ///     input. Chart ids are mix-scoped by construction, so no mix filter is needed.
+    /// </summary>
+    Task<IReadOnlyList<ScoreJournalEntry>> GetChartHistories(Guid userId, IEnumerable<Guid> chartIds,
         CancellationToken cancellationToken);
 }
 
 internal sealed record JournalSessionRows(
     Guid? SessionId,
     DateOnly? Day,
+    MixEnum Mix,
     IReadOnlyList<ScoreJournalEntry> Rows);

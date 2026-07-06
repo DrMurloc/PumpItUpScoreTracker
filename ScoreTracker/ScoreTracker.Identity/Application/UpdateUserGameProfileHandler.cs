@@ -23,7 +23,7 @@ internal sealed class UpdateUserGameProfileHandler : IRequestHandler<UpdateUserG
         var user = await _users.GetUser(_currentUser.User.Id, cancellationToken)
                    ?? throw new UserNotFoundException(_currentUser.User.Id);
         await _users.SaveUser(
-            user with { GameTag = request.GameTag, ProfileImage = request.AvatarUrl },
+            user with { GameTag = request.GameTag, ProfileImage = request.AvatarUrl ?? user.ProfileImage },
             cancellationToken);
     }
 }

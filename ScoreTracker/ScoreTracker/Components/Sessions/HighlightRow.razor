@@ -4,7 +4,7 @@
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
 @namespace ScoreTracker.Web.Components
-<div class="d-flex align-center gap-3 px-4 py-2" data-testid="highlight-row">
+<div class="d-flex align-center gap-2 px-3 py-1" data-testid="highlight-row">
     @if (Chart != null)
     {
         <MudImage Src="@Chart.Song.ImagePath.ToString()" Width="44" Height="44" ObjectFit="ObjectFit.Cover"

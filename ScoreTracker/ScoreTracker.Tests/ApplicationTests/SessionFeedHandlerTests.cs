@@ -29,12 +29,12 @@ public sealed class SessionFeedHandlerTests
         // Defense in depth behind the page's redirect-to-home.
         var ctx = new HandlerContext(isPublic: false);
 
-        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId, MixEnum.Phoenix),
+        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId),
             CancellationToken.None);
 
         Assert.Equal(0, page.TotalGroups);
         Assert.Empty(page.Groups);
-        ctx.Journal.Verify(j => j.GetSessionGroups(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<int>(),
+        ctx.Journal.Verify(j => j.GetSessionGroups(It.IsAny<Guid>(), It.IsAny<int>(),
             It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -50,10 +50,10 @@ public sealed class SessionFeedHandlerTests
             Entry(Now.AddDays(-1), 950000),
             Entry(Now, 950000)
         };
-        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), rows));
+        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix, rows));
         ctx.GivenHistories(rows);
 
-        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId, MixEnum.Phoenix),
+        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId),
             CancellationToken.None);
 
         var byTime = page.Groups.Single().Rows.OrderBy(r => r.OccurredAt).ToArray();
@@ -73,10 +73,10 @@ public sealed class SessionFeedHandlerTests
             Entry(Now.AddDays(-1), 950000, plate: PhoenixPlate.FairGame),
             Entry(Now, 950000, plate: PhoenixPlate.SuperbGame)
         };
-        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), rows));
+        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix, rows));
         ctx.GivenHistories(rows);
 
-        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId, MixEnum.Phoenix),
+        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId),
             CancellationToken.None);
 
         var latest = page.Groups.Single().Rows.OrderBy(r => r.OccurredAt).Last();
@@ -93,10 +93,10 @@ public sealed class SessionFeedHandlerTests
             Entry(Now.AddMinutes(-90), 900000, sessionId: sessionId, source: "officialImport"),
             Entry(Now, 950000, sessionId: sessionId, source: "officialImport")
         };
-        ctx.GivenGroups(new JournalSessionRows(sessionId, null, rows));
+        ctx.GivenGroups(new JournalSessionRows(sessionId, null, MixEnum.Phoenix, rows));
         ctx.GivenHistories(rows);
 
-        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId, MixEnum.Phoenix),
+        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId),
             CancellationToken.None);
 
         var group = page.Groups.Single();
@@ -130,14 +130,14 @@ public sealed class SessionFeedHandlerTests
 
         public void GivenGroups(params JournalSessionRows[] groups)
         {
-            Journal.Setup(j => j.GetSessionGroups(MixEnum.Phoenix, UserId, It.IsAny<int>(), It.IsAny<int>(),
+            Journal.Setup(j => j.GetSessionGroups(UserId, It.IsAny<int>(), It.IsAny<int>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync((groups.Length, groups));
         }
 
         public void GivenHistories(IEnumerable<ScoreJournalEntry> rows)
         {
-            Journal.Setup(j => j.GetChartHistories(MixEnum.Phoenix, UserId, It.IsAny<IEnumerable<Guid>>(),
+            Journal.Setup(j => j.GetChartHistories(UserId, It.IsAny<IEnumerable<Guid>>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(rows.ToArray());
         }

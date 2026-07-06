@@ -62,7 +62,7 @@ public sealed class SessionBackfillMigrationTests : IAsyncLifetime
             await context.Database.ExecuteSqlRawAsync(BackfillRecentSessions.Sql);
         }
 
-        var (_, groups) = await repo.GetSessionGroups(MixEnum.Phoenix, userId, page: 1, pageSize: 10,
+        var (_, groups) = await repo.GetSessionGroups(userId, page: 1, pageSize: 10,
             CancellationToken.None);
 
         // Newest first: pre-stamped, cluster5, cluster4, cluster3 (midnight, whole),

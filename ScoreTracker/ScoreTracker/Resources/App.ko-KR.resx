@@ -2242,4 +2242,7 @@
   <data name="{0} more scores" xml:space="preserve">
     <value>점수 {0}개 더</value>
   </data>
+  <data name="View your session" xml:space="preserve">
+    <value>내 세션 보기</value>
+  </data>
 </root>

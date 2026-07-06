@@ -31,10 +31,10 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
         var user = await _users.GetUser(request.UserId, cancellationToken);
         if (user is not { IsPublic: true }) return new RecentSessionsPage(0, Array.Empty<RecentSessionsPage.SessionGroup>());
 
-        var (total, groups) = await _journal.GetSessionGroups(request.Mix, request.UserId,
+        var (total, groups) = await _journal.GetSessionGroups(request.UserId,
             Math.Max(1, request.Page), Math.Clamp(request.PageSize, 1, 50), cancellationToken);
         var chartIds = groups.SelectMany(g => g.Rows).Select(r => r.ChartId).Distinct().ToArray();
-        var histories = (await _journal.GetChartHistories(request.Mix, request.UserId, chartIds,
+        var histories = (await _journal.GetChartHistories(request.UserId, chartIds,
                 cancellationToken))
             .GroupBy(r => r.ChartId)
             .ToDictionary(g => g.Key, g => g.OrderBy(r => r.OccurredAt).ToArray());
@@ -42,6 +42,7 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
         return new RecentSessionsPage(total, groups.Select(g => new RecentSessionsPage.SessionGroup(
                 g.SessionId,
                 g.Day,
+                g.Mix,
                 DominantSource(g.Rows),
                 g.Rows.Min(r => r.OccurredAt),
                 g.Rows.Max(r => r.OccurredAt),

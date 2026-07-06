@@ -143,6 +143,17 @@
                             }
                         </MudItem>
                     }
+                    @if (_importCompleted && CurrentUser.User.IsPublic)
+                    {
+                        <MudItem xs="12">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Timeline"
+                                       Href="@($"/Player/{CurrentUser.User.Id}/Sessions")"
+                                       data-testid="view-session-link">
+                                @L["View your session"]
+                            </MudButton>
+                        </MudItem>
+                    }
                     @if (_errors.Any())
                     {
                         <MudItem xs="12">
@@ -454,9 +465,12 @@
         await UiSettings.SetSetting($"PhoenixScoreUpload__LastGameTag", _selectedGameTag);
 
         _scores.Clear();
+        _importCompleted = false;
         _passwordImportStatus = "Starting Import...";
             await Mediator.Send(new ImportOfficialPlayerScoresCommand(_username, _password, _selectedId, _selectedGameTag,_includeBroken,_alsoImportPiuTracker));
             _passwordImportStatus = "Import Completed!";
+            // The session snapshot's page is the import's natural landing spot.
+            _importCompleted = true;
         }
         catch (InvalidCredentialException)
         {
@@ -472,6 +486,7 @@
         _isImporting = false;
     }
     private bool _isImporting = false;
+    private bool _importCompleted = false;
     private int? _endPage = null;
     private TimeSpan _remainingTime = TimeSpan.MinValue;
     private IDictionary<Guid,Chart> _charts = new Dictionary<Guid, Chart>();

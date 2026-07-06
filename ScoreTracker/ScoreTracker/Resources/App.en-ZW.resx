@@ -2286,4 +2286,7 @@
   <data name="{0} more scores" xml:space="preserve">
     <value>{0} mr mrgls</value>
   </data>
+  <data name="View your session" xml:space="preserve">
+    <value>See yr mrgl sesh</value>
+  </data>
 </root>

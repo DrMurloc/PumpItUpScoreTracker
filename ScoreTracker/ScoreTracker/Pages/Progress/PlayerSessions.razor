@@ -25,11 +25,6 @@
     </div>
 
     <div class="d-flex align-center flex-wrap gap-2 mb-3">
-        <MudSelect T="MixEnum" Value="_mix" ValueChanged="ChangeMix" Dense="true" Style="max-width: 160px"
-                   Label="@L["Mix"]">
-            <MudSelectItem T="MixEnum" Value="MixEnum.Phoenix">Phoenix</MudSelectItem>
-            <MudSelectItem T="MixEnum" Value="MixEnum.Phoenix2">Phoenix 2</MudSelectItem>
-        </MudSelect>
         <MudChipSet T="string" SelectionMode="SelectionMode.SingleSelection" SelectedValue="@_filter"
                     SelectedValueChanged="v => _filter = v ?? FilterAll" CheckMark="true">
             <MudChip Value="@FilterAll" Text="@L["All"]"/>
@@ -38,9 +33,9 @@
         <MudSpacer/>
         <MudSelect T="int" Value="_pageSize" ValueChanged="ChangePageSize" Dense="true" Style="max-width: 140px"
                    Label="@L["Sessions per page"]">
-            <MudSelectItem T="int" Value="5">5</MudSelectItem>
             <MudSelectItem T="int" Value="10">10</MudSelectItem>
-            <MudSelectItem T="int" Value="25">25</MudSelectItem>
+            <MudSelectItem T="int" Value="20">20</MudSelectItem>
+            <MudSelectItem T="int" Value="50">50</MudSelectItem>
         </MudSelect>
     </div>
 
@@ -54,13 +49,17 @@
     }
     else
     {
-        foreach (var group in _page.Groups)
-        {
-            <SessionRoundupCard Group="group" Mix="_mix" Charts="_charts" Flags="_flags"
-                                Milestones="MilestonesFor(group)"
-                                OfNoteOnly="_filter == FilterOfNote"
-                                StartExpanded="IsDeepLinked(group)"></SessionRoundupCard>
-        }
+        <MudGrid Spacing="2">
+            @foreach (var group in _page.Groups)
+            {
+                <MudItem xs="12" md="6">
+                    <SessionRoundupCard Group="group" Mix="group.Mix" Charts="_charts" Flags="_flags"
+                                        Milestones="MilestonesFor(group)"
+                                        OfNoteOnly="_filter == FilterOfNote"
+                                        StartExpanded="IsDeepLinked(group)"></SessionRoundupCard>
+                </MudItem>
+            }
+        </MudGrid>
 
         <div class="d-flex justify-center my-3">
             <MudPagination Count="PageCount" Selected="_pageNumber" SelectedChanged="ChangePage"></MudPagination>
@@ -82,7 +81,6 @@
     [Parameter] public Guid UserIdParam { get; set; }
 
     private User? _user;
-    private MixEnum _mix = MixEnum.Phoenix;
     private string _filter = FilterAll;
     private int _pageNumber = 1;
     private int _pageSize = 10;
@@ -109,9 +107,6 @@
             return;
         }
 
-        var selectedMix = await UiSettings.GetSelectedMix();
-        _mix = selectedMix == MixEnum.XX ? MixEnum.Phoenix : selectedMix;
-
         var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
         var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
         if (Guid.TryParse(query.Get("session"), out var session)) _deepLinkedSession = session;
@@ -122,28 +117,33 @@
     private async Task LoadAsync()
     {
         _loading = true;
-        _page = await Mediator.Send(new GetRecentSessionsQuery(UserIdParam, _mix, _pageNumber, _pageSize));
-        var chartIds = _page.Groups.SelectMany(g => g.Rows).Select(r => r.ChartId).Distinct().ToArray();
-        _charts = chartIds.Any()
-            ? (await Mediator.Send(new GetChartsQuery(_mix, ChartIds: chartIds))).ToDictionary(c => c.Id)
-            : new Dictionary<Guid, Chart>();
+        _page = await Mediator.Send(new GetRecentSessionsQuery(UserIdParam, _pageNumber, _pageSize));
 
-        if (_page.Groups.Any())
+        // One continuous timeline across mixes: chart, flag, and milestone lookups run
+        // per mix present on the page and merge.
+        var charts = new Dictionary<Guid, Chart>();
+        var flags = new Dictionary<(Guid? SessionId, Guid ChartId), HighlightFlag>();
+        var milestones = new List<PlayerMilestoneRecord>();
+        foreach (var mixGroups in _page.Groups.GroupBy(g => g.Mix))
         {
-            var since = _page.Groups.Min(g => g.Start);
-            var until = _page.Groups.Max(g => g.End);
-            _flags = (await Mediator.Send(new GetScoreHighlightsQuery(UserIdParam, _mix, since, until)))
-                .GroupBy(h => (h.SessionId, h.ChartId))
-                .ToDictionary(g => g.Key, g => g.Aggregate(HighlightFlag.None, (f, h) => f | h.Flags));
-            _milestones = (await Mediator.Send(new GetPlayerMilestonesQuery(UserIdParam, _mix, since, until)))
-                .ToLookup(m => m.SessionId);
-        }
-        else
-        {
-            _flags = new Dictionary<(Guid?, Guid), HighlightFlag>();
-            _milestones = Array.Empty<PlayerMilestoneRecord>().ToLookup(m => m.SessionId);
+            var chartIds = mixGroups.SelectMany(g => g.Rows).Select(r => r.ChartId).Distinct().ToArray();
+            if (!chartIds.Any()) continue;
+            foreach (var chart in await Mediator.Send(new GetChartsQuery(mixGroups.Key, ChartIds: chartIds)))
+                charts[chart.Id] = chart;
+
+            var since = mixGroups.Min(g => g.Start);
+            var until = mixGroups.Max(g => g.End);
+            foreach (var pair in (await Mediator.Send(
+                             new GetScoreHighlightsQuery(UserIdParam, mixGroups.Key, since, until)))
+                         .GroupBy(h => (h.SessionId, h.ChartId)))
+                flags[pair.Key] = pair.Aggregate(HighlightFlag.None, (f, h) => f | h.Flags);
+            milestones.AddRange(
+                await Mediator.Send(new GetPlayerMilestonesQuery(UserIdParam, mixGroups.Key, since, until)));
         }
 
+        _charts = charts;
+        _flags = flags;
+        _milestones = milestones.ToLookup(m => m.SessionId);
         _loading = false;
     }
 
@@ -159,13 +159,6 @@
     private bool IsDeepLinked(RecentSessionsPage.SessionGroup group)
     {
         return _deepLinkedSession != null && group.SessionId == _deepLinkedSession;
-    }
-
-    private async Task ChangeMix(MixEnum mix)
-    {
-        _mix = mix;
-        _pageNumber = 1;
-        await LoadAsync();
     }
 
     private async Task ChangePage(int page)

@@ -2362,4 +2362,7 @@
   <data name="{0} more scores" xml:space="preserve">
     <value>Altri {0} punteggi</value>
   </data>
+  <data name="View your session" xml:space="preserve">
+    <value>Vedi la tua sessione</value>
+  </data>
 </root>

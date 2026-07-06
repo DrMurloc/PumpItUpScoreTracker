@@ -321,8 +321,11 @@ namespace ScoreTracker.OfficialMirror.Application
                 }
             }
 
-            await _mediator.Send(new SaveUserUiSettingCommand("ProfileImage", accountData.AvatarUrl.ToString()),
-                cancellationToken);
+            // A scrape that yielded no recognizable avatar keeps the player's existing
+            // one — persisting the miss is what used to break avatars sporadically.
+            if (accountData.AvatarUrl != null)
+                await _mediator.Send(new SaveUserUiSettingCommand("ProfileImage", accountData.AvatarUrl.ToString()),
+                    cancellationToken);
             await _mediator.Send(new SaveUserUiSettingCommand("GameTag", accountData.AccountName), cancellationToken);
             // User writes go through Identity contracts — the Mirror never touches
             // IUserRepository (ADR-001: writes are owned by their vertical).

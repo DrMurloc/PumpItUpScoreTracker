@@ -4,31 +4,34 @@
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Domain.Records
 @namespace ScoreTracker.Web.Components
-<MudPaper Class="mb-4" Elevation="3" id="@AnchorId" data-testid="session-card"
-          Style="@($"border-left: 4px solid #{Mix.GetAccentColor():X6}; border-radius: 8px; overflow: hidden")">
-    <div class="d-flex align-center flex-wrap gap-2 px-4 py-2"
+<MudPaper Elevation="3" id="@AnchorId" data-testid="session-card"
+          Style="@($"border-left: 4px solid #{Mix.GetAccentColor():X6}; border-radius: 8px; overflow: hidden; height: 100%; display: flex; flex-direction: column")">
+    <div class="d-flex align-center flex-wrap gap-2 px-3 py-1"
          style="border-bottom: 1px solid var(--mud-palette-table-lines)">
         <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
                  Color="@(Group.Source == "officialImport" ? Color.Info : Color.Success)">
             @SourceLabel
         </MudChip>
-        <MudText Typo="Typo.subtitle1"><b>@SessionTitle</b></MudText>
+        <MudText Typo="Typo.subtitle2"><b>@SessionTitle</b></MudText>
+        <MudText Typo="Typo.caption" Style="@($"color:#{Mix.GetAccentColor():X6}; font-weight:600")">
+            @Mix.GetName()
+        </MudText>
         <MudSpacer/>
         <MudText Typo="Typo.caption">@Group.End.ToLocalTime().ToString("g")@DurationSuffix</MudText>
     </div>
 
-    <div class="d-flex gap-6 px-4 py-2">
+    <div class="d-flex align-baseline gap-4 px-3 py-1">
         @if (PassCount > 0)
         {
-            <div><MudText Typo="Typo.h6" Style="line-height:1">@PassCount</MudText><MudText Typo="Typo.caption">@L["New Passes"]</MudText></div>
+            <MudText Typo="Typo.body2"><b>@PassCount</b> @L["New Passes"]</MudText>
         }
         @if (UpscoreCount > 0)
         {
-            <div><MudText Typo="Typo.h6" Style="line-height:1">@UpscoreCount</MudText><MudText Typo="Typo.caption">@L["Upscores"]</MudText></div>
+            <MudText Typo="Typo.body2"><b>@UpscoreCount</b> @L["Upscores"]</MudText>
         }
         @if (Highlighted.Any())
         {
-            <div><MudText Typo="Typo.h6" Style="line-height:1">@Highlighted.Count</MudText><MudText Typo="Typo.caption">@L["Highlights"]</MudText></div>
+            <MudText Typo="Typo.body2"><b>@Highlighted.Count</b> @L["Highlights"]</MudText>
         }
     </div>
 
@@ -43,16 +46,16 @@
                       Flags="FlagsFor(row)"></HighlightRow>
     }
 
-    @if (HiddenRowCount > 0)
-    {
-        <MudText Typo="Typo.caption" Class="px-4 pb-1 d-block">@L["{0} more scores", HiddenRowCount]</MudText>
-    }
-
-    <div class="d-flex px-2 pb-2">
+    <MudSpacer/>
+    <div class="d-flex align-center px-2 pb-1">
         <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="() => _showAllScores = true"
                    StartIcon="@Icons.Material.Filled.List" data-testid="view-all-scores">
             @L["View all scores"] (@Group.Rows.Count)
         </MudButton>
+        @if (HiddenRowCount > 0)
+        {
+            <MudText Typo="Typo.caption" Class="ml-1">· @L["{0} more scores", HiddenRowCount]</MudText>
+        }
     </div>
 </MudPaper>
 

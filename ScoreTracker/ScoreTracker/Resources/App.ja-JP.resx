@@ -2363,4 +2363,7 @@
   <data name="{0} more scores" xml:space="preserve">
     <value>他 {0} 件のスコア</value>
   </data>
+  <data name="View your session" xml:space="preserve">
+    <value>セッションを見る</value>
+  </data>
 </root>
