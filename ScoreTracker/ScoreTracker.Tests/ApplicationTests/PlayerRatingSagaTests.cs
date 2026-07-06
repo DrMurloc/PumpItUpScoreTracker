@@ -324,33 +324,68 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
-    public async Task PlayerScoreUpdatedRecalculatesStatsAndPumbility()
+    public async Task CaptureSessionStatsRecalculatesStatsAndPumbilityAndReturnsTheHarvest()
     {
+        // The session-snapshot rating step: one dispatch recalculates stats + Pumbility
+        // record stats and hands the minted milestones + improver charts back to the
+        // orchestrator for the card.
         var userId = Guid.NewGuid();
-        var chartId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var stats = new Mock<IPlayerStatsRepository>();
-        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>())).ReturnsAsync(ZeroStats(userId));
-        var scores = new Mock<IScoreReader>();
-        scores.Setup(s => s.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        var scores = ScoresMockReturning(userId, new[] { Score(single.Id, 950000) });
         scores.Setup(s => s.GetPlayerScores(
                 MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(), It.IsAny<IEnumerable<Guid>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<UserPhoenixScore>());
         var recordStats = new Mock<IPhoenixRecordStatsRepository>();
-        var saga = BuildSaga(charts: ChartsMockReturning(Array.Empty<Chart>()),
+        var saga = BuildSaga(charts: ChartsMockReturning(new[] { single }),
             scores: scores, stats: stats, recordStats: recordStats);
 
-        await saga.Consume(BuildContext(PlayerScoresUpdatedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), userId,
-            MixEnum.Phoenix,
-            new[] { new PlayerScoresUpdatedEvent.ScoreChange(chartId, true, null, 950000, null, false) })));
+        var result = await saga.Handle(
+            new PlayerRatingSaga.CaptureSessionStats(userId, MixEnum.Phoenix, new[] { single.Id }, sessionId),
+            CancellationToken.None);
 
-        // RecalculateStatsCommand path → SaveStats called; RecalculatePumbilityCommand path → UpdateScoreStats called.
         stats.Verify(s => s.SaveStats(MixEnum.Phoenix, userId, It.IsAny<PlayerStatsRecord>(),
             It.IsAny<CancellationToken>()), Times.Once);
         recordStats.Verify(s => s.UpdateScoreStats(MixEnum.Phoenix, userId,
             It.IsAny<IEnumerable<PhoenixRecordStats>>(),
             It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Contains(result.Milestones, m => m.Kind == MilestoneKind.PumbilityGain);
+        Assert.Contains(single.Id, result.ImproverChartIds);
+    }
+
+    [Fact]
+    public async Task CompetitiveMicroGainsUnderAHundredthAreNotMilestones()
+    {
+        // Revision-2 noise floor: the +0.002-style lines were the poster child of the
+        // old message dump. (Pumbility still captures at any gain — even +1.)
+        var userId = Guid.NewGuid();
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var stats = new Mock<IPlayerStatsRepository>();
+        var old = ZeroStats(userId) with
+        {
+            // Just under a hundredth below what one 950k S20 recomputes to.
+            SinglesCompetitiveLevel = ScoringConfiguration.CalculateFungScore(single.Level, 950000) - 0.009,
+            CompetitiveLevel = 0
+        };
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(old);
+        var milestones = new Mock<IPlayerMilestoneRepository>();
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { single }),
+            scores: ScoresMockReturning(userId, new[] { Score(single.Id, 950000) }),
+            stats: stats, milestones: milestones);
+
+        await saga.Handle(new RecalculateStatsCommand(userId, MixEnum.Phoenix, new[] { single.Id },
+            Guid.NewGuid()), CancellationToken.None);
+
+        milestones.Verify(m => m.Append(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w =>
+                w.Any(x => x.Kind == MilestoneKind.SinglesCompetitiveGain)),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private static PlayerRatingSaga BuildSaga(

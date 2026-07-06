@@ -15,13 +15,29 @@ using ScoreTracker.PlayerProgress.Domain;
 
 namespace ScoreTracker.PlayerProgress.Application;
 
-internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
+internal sealed class PlayerRatingSaga :
     IRequestHandler<GetTop50ForPlayerQuery, IEnumerable<RecordedPhoenixScore>>,
     IRequestHandler<GetTop50CompetitiveQuery, IEnumerable<RecordedPhoenixScore>>,
     IRequestHandler<RecalculateStatsCommand>,
     IRequestHandler<RecalculatePumbilityCommand>,
+    IRequestHandler<PlayerRatingSaga.CaptureSessionStats, PlayerRatingSaga.SessionStatsResult>,
     IConsumer<UserCreatedEvent>
 {
+    /// <summary>
+    ///     The rating step of the session-snapshot pipeline: recalculates stats and
+    ///     Pumbility record stats for the batch and hands back what the snapshot event
+    ///     needs — the rating milestones minted and the charts that earned the
+    ///     CompetitiveImprover flag. Dispatched in-process by the capture orchestrator
+    ///     (this saga no longer consumes the raw score event; ordering comes from
+    ///     pipeline shape).
+    /// </summary>
+    public sealed record CaptureSessionStats(
+        Guid UserId, MixEnum Mix, IReadOnlyList<Guid> ChangedChartIds, Guid? SessionId)
+        : IRequest<SessionStatsResult>;
+
+    public sealed record SessionStatsResult(
+        IReadOnlyList<PlayerMilestoneRecord> Milestones, IReadOnlyList<Guid> ImproverChartIds);
+
     private readonly IScoreReader _scores;
     private readonly IPhoenixRecordStatsRepository _recordStats;
     private readonly IChartRepository _charts;
@@ -48,18 +64,14 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
     }
 
 
-    public async Task Consume(ConsumeContext<PlayerScoresUpdatedEvent> context)
+    public async Task<SessionStatsResult> Handle(CaptureSessionStats request,
+        CancellationToken cancellationToken)
     {
-        // Stats and Pumbility recompute for the mix the scores landed in. The change
-        // set + session ride along so competitive gains can be attributed to the
-        // scores that drove them.
-        await Handle(new RecalculateStatsCommand(context.Message.UserId, context.Message.Mix,
-                context.Message.Changes.Select(c => c.ChartId).Distinct().ToArray(), context.Message.SessionId),
-            context.CancellationToken);
-        await Handle(
-            new RecalculatePumbilityCommand(context.Message.UserId,
-                context.Message.Changes.Select(c => c.ChartId).Distinct().ToArray(), context.Message.Mix),
-            context.CancellationToken);
+        var result = await RecalculateCore(new RecalculateStatsCommand(request.UserId, request.Mix,
+            request.ChangedChartIds, request.SessionId), cancellationToken);
+        await Handle(new RecalculatePumbilityCommand(request.UserId, request.ChangedChartIds.ToArray(),
+            request.Mix), cancellationToken);
+        return result;
     }
 
     private double AverageOrDefault(IEnumerable<int> values, double def)
@@ -102,6 +114,14 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
     }
 
     public async Task Handle(RecalculateStatsCommand request, CancellationToken cancellationToken)
+    {
+        // The public recalc entry (admin tools, scheduled maintenance) — the session
+        // pipeline goes through CaptureSessionStats, which needs the core's outputs.
+        await RecalculateCore(request, cancellationToken);
+    }
+
+    private async Task<SessionStatsResult> RecalculateCore(RecalculateStatsCommand request,
+        CancellationToken cancellationToken)
     {
         var mix = request.Mix;
         var oldStats = await _stats.GetStats(mix, request.UserId, cancellationToken);
@@ -170,8 +190,9 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
         );
 
         await _stats.SaveStats(mix, request.UserId, newStats, cancellationToken);
-        await FlagCompetitiveImprovers(request, oldStats, newStats, competitiveScores, charts, cancellationToken);
-        await CaptureRatingMilestones(request, oldStats, newStats, cancellationToken);
+        var improvers = await FlagCompetitiveImprovers(request, oldStats, newStats, competitiveScores, charts,
+            cancellationToken);
+        var milestones = await CaptureRatingMilestones(request, oldStats, newStats, cancellationToken);
         if (newStats.SkillRating > oldStats.SkillRating || newStats.SinglesRating > oldStats.SinglesRating ||
             newStats.DoublesRating > oldStats.DoublesRating || newStats.ClearCount > oldStats.ClearCount ||
             newStats.CoOpRating > oldStats.CoOpRating)
@@ -187,6 +208,7 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
             cancellationToken);
         await _mediator.Publish(new PlayerStatsUpdatedEvent(request.UserId, newStats, mix),
             cancellationToken);
+        return new SessionStatsResult(milestones, improvers);
     }
 
     public async Task<IEnumerable<RecordedPhoenixScore>> Handle(GetTop50CompetitiveQuery request,
@@ -213,9 +235,11 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
 
     // Pumbility and Singles/Doubles competitive gains become timestamped milestones —
     // neither was persisted with a timestamp before this table. Combined competitive is
-    // deliberately never a milestone (S and D don't compare).
-    private async Task CaptureRatingMilestones(RecalculateStatsCommand request, PlayerStatsRecord oldStats,
-        PlayerStatsRecord newStats, CancellationToken cancellationToken)
+    // deliberately never a milestone (S and D don't compare). PUMBILITY floors at any
+    // gain — even +1 (owner: "which happens").
+    private async Task<IReadOnlyList<PlayerMilestoneRecord>> CaptureRatingMilestones(
+        RecalculateStatsCommand request, PlayerStatsRecord oldStats, PlayerStatsRecord newStats,
+        CancellationToken cancellationToken)
     {
         var milestones = new List<PlayerMilestoneWrite>();
         if (newStats.SkillRating > oldStats.SkillRating)
@@ -230,26 +254,31 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
 
         if (milestones.Any())
             await _milestones.Append(request.Mix, request.UserId, milestones, cancellationToken);
+        return milestones
+            .Select(m => new PlayerMilestoneRecord(m.Kind, m.SessionId, m.OccurredAt, m.OldValue, m.NewValue,
+                m.Title, m.Detail))
+            .ToArray();
     }
 
-    // Mirrors the Discord ratings message's guard: micro-gains that don't move the
-    // third decimal are recomputation noise, not milestones.
+    // The revision-2 noise floor (owner call): competitive micro-gains under a
+    // hundredth are recomputation noise, not milestones — the +0.002 lines were the
+    // poster child of the old message dump.
     private static bool CompetitiveGained(double oldLevel, double newLevel)
     {
-        return newLevel > oldLevel && oldLevel.ToString("0.000") != newLevel.ToString("0.000");
+        return newLevel - oldLevel >= 0.01;
     }
 
     // The CompetitiveImprover highlight flag: when a batch raised the Singles or Doubles
     // competitive level (never combined — S and D don't compare), flag the changed scores
     // on the improved side strong enough to pull the average up (Fung score at or above
-    // the OLD level). Written here because this saga owns the old-vs-new numbers; capture
-    // may already have published its event, so the flag can trail the Discord card — the
-    // Sessions page reads the table and always shows the full set.
-    private async Task FlagCompetitiveImprovers(RecalculateStatsCommand request, PlayerStatsRecord oldStats,
-        PlayerStatsRecord newStats, ChartCompetitive[] competitiveScores, IDictionary<Guid, Chart> charts,
-        CancellationToken cancellationToken)
+    // the OLD level). Written here because this saga owns the old-vs-new numbers; the
+    // orchestrator merges the returned ids into the snapshot event's flags, so the ⬆
+    // badge rides the Discord card instead of trailing it.
+    private async Task<IReadOnlyList<Guid>> FlagCompetitiveImprovers(RecalculateStatsCommand request,
+        PlayerStatsRecord oldStats, PlayerStatsRecord newStats, ChartCompetitive[] competitiveScores,
+        IDictionary<Guid, Chart> charts, CancellationToken cancellationToken)
     {
-        if (request.ChangedChartIds == null || request.SessionId == null) return;
+        if (request.ChangedChartIds == null || request.SessionId == null) return Array.Empty<Guid>();
         var changed = request.ChangedChartIds.ToHashSet();
         var writes = new List<ScoreHighlightWrite>();
         foreach (var (type, oldLevel, improved) in new[]
@@ -269,6 +298,7 @@ internal sealed class PlayerRatingSaga : IConsumer<PlayerScoresUpdatedEvent>,
 
         if (writes.Any())
             await _highlights.UpsertFlags(request.Mix, request.UserId, writes, cancellationToken);
+        return writes.Select(w => w.ChartId).Distinct().ToArray();
     }
 
     public async Task Handle(RecalculatePumbilityCommand request, CancellationToken cancellationToken)

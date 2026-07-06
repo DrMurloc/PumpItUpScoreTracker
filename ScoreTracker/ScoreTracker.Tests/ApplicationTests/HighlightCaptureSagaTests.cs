@@ -207,6 +207,67 @@ public sealed class HighlightCaptureSagaTests
     }
 
     [Fact]
+    public async Task RatingAndTitleStepsEnrichThePublishedSnapshot()
+    {
+        // The orchestration (revision 2): the rating and title steps run in-process
+        // before the publish, so their milestones, the ⬆ improver flag, and the
+        // per-title progress deltas all ride the one snapshot event.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var sessionId = Guid.NewGuid();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 950000);
+        ctx.GivenRatingStep(
+            new[] { new PlayerMilestoneRecord(MilestoneKind.PumbilityGain, sessionId, Now, 100, 150, null, null) },
+            chart.Id);
+        ctx.GivenTitleStep(
+            new[]
+            {
+                new PlayerMilestoneRecord(MilestoneKind.TitleCompleted, sessionId, Now, null, null,
+                    "Intermediate Lv. 1", null)
+            },
+            new TitleProgressDelta("Expert Lv. 4", 0.82, 0.86));
+        var context = ctx.Context(NewPassEvent(chart, sessionId));
+
+        await ctx.Saga.Consume(context);
+
+        Mock.Get(context).Verify(c => c.Publish(
+            It.Is<ScoreHighlightsCapturedEvent>(e =>
+                e.Changes.Single().Flags.HasFlag(HighlightFlag.CompetitiveImprover)
+                && e.Milestones.Any(m => m.Kind == MilestoneKind.PumbilityGain)
+                && e.Milestones.Any(m => m.Kind == MilestoneKind.TitleCompleted)
+                && e.TitleProgress.Single().Title == "Expert Lv. 4"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AFailedStepShipsTheSnapshotWithoutItsSection()
+    {
+        // Failure isolation per step: the rating step blowing up costs the stats
+        // section, never the announcement — the title step's output still ships.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 950000);
+        ctx.Mediator.Setup(m => m.Send(It.IsAny<PlayerRatingSaga.CaptureSessionStats>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("recalc boom"));
+        ctx.GivenTitleStep(new[]
+        {
+            new PlayerMilestoneRecord(MilestoneKind.TitleCompleted, null, Now, null, null, "Advanced Lv. 2", null)
+        });
+        var context = ctx.Context(NewPassEvent(chart));
+
+        await ctx.Saga.Consume(context);
+
+        Mock.Get(context).Verify(c => c.Publish(
+            It.Is<ScoreHighlightsCapturedEvent>(e =>
+                e.Milestones.All(m => m.Kind != MilestoneKind.PumbilityGain)
+                && e.Milestones.Any(m => m.Kind == MilestoneKind.TitleCompleted)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task IncompleteFoldersFireNoLamps()
     {
         var chart = new ChartBuilder().WithType(ChartType.Double).WithLevel(23).Build();
@@ -329,6 +390,20 @@ public sealed class HighlightCaptureSagaTests
                 .ReturnsAsync(chartIds
                     .Select(id => new RecordedPhoenixScore(id, 950000, PhoenixPlate.FairGame, false, Now))
                     .ToArray());
+        }
+
+        public void GivenRatingStep(PlayerMilestoneRecord[] milestones, params Guid[] improverChartIds)
+        {
+            Mediator.Setup(m => m.Send(It.IsAny<PlayerRatingSaga.CaptureSessionStats>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PlayerRatingSaga.SessionStatsResult(milestones, improverChartIds));
+        }
+
+        public void GivenTitleStep(PlayerMilestoneRecord[] milestones, params TitleProgressDelta[] progress)
+        {
+            Mediator.Setup(m => m.Send(It.IsAny<TitleSaga.CaptureSessionTitles>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new TitleSaga.SessionTitlesResult(milestones, progress));
         }
 
         public void GivenCohort(Chart chart, PhoenixScore[] ascendingScores)

@@ -20,13 +20,15 @@ using ScoreTracker.SharedKernel.ValueTypes;
 namespace ScoreTracker.PlayerProgress.Application;
 
 /// <summary>
-///     Write-time noteworthy-score capture (design doc: discord-rich-score-notifications).
-///     Computes the highlight flags for every score batch, persists them, and publishes
-///     <see cref="ScoreHighlightsCapturedEvent" /> — ALWAYS, even with zero flags or on a
-///     capture failure, because the Discord score cards render off that event. The
-///     CompetitiveImprover flag is written separately by PlayerRatingSaga (it owns the
-///     old-vs-new competitive numbers) and may land after the event publishes; the
-///     Sessions page reads the table, so it always shows the complete set.
+///     The session-snapshot orchestrator (design doc revision 2). The ONLY consumer of
+///     the raw score event on the progression side: it computes the highlight flags and
+///     folder lamps, then dispatches the rating step and the title step in-process and
+///     in order, merges their outputs (rating/title milestones, the CompetitiveImprover
+///     flag, per-title progress deltas), and publishes ONE
+///     <see cref="ScoreHighlightsCapturedEvent" /> that the Discord card renders from —
+///     ALWAYS, even with zero flags: each step is failure-isolated, and a failed step
+///     just means its card section is absent. Ordering comes from pipeline shape, not
+///     racing consumers (ADR-001 doctrine).
 /// </summary>
 internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>,
     IRequestHandler<GetScoreHighlightsQuery, IEnumerable<ScoreHighlightRecord>>,
@@ -86,12 +88,49 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         if (lamps.Any())
             await _milestones.Append(e.Mix, e.UserId, lamps, context.CancellationToken);
 
+        var milestones = lamps
+            .Select(l => new PlayerMilestoneRecord(l.Kind, l.SessionId, l.OccurredAt, l.OldValue, l.NewValue,
+                l.Title, l.Detail))
+            .ToList();
+        var titleProgress = (IReadOnlyList<TitleProgressDelta>)Array.Empty<TitleProgressDelta>();
+
+        // The rating step: recalc + Pumbility record stats + rating milestones + the
+        // CompetitiveImprover flags, which merge into the event so the ⬆ badge rides
+        // the card instead of trailing it.
+        try
+        {
+            var stats = await _mediator.Send(new PlayerRatingSaga.CaptureSessionStats(e.UserId, e.Mix,
+                e.Changes.Select(c => c.ChartId).Distinct().ToArray(), e.SessionId), context.CancellationToken);
+            milestones.AddRange(stats.Milestones);
+            foreach (var chartId in stats.ImproverChartIds)
+                flags[chartId] = flags.GetValueOrDefault(chartId) | HighlightFlag.CompetitiveImprover;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Rating step failed for user {UserId} ({Mix}) — snapshot ships without stats",
+                e.UserId, e.Mix);
+        }
+
+        // The title step: completions + paragon gains (announced by the card, not the
+        // legacy message) and the per-title progress deltas.
+        try
+        {
+            var titles = await _mediator.Send(new TitleSaga.CaptureSessionTitles(e.UserId, e.Mix, e.SessionId,
+                e.Changes), context.CancellationToken);
+            milestones.AddRange(titles.Milestones);
+            titleProgress = titles.Progress;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Title step failed for user {UserId} ({Mix}) — snapshot ships without titles",
+                e.UserId, e.Mix);
+        }
+
         await context.Publish(ScoreHighlightsCapturedEvent.Create(e.OccurredAt, e.UserId, e.Mix, e.SessionId,
             e.Changes.Select(c => new ScoreHighlightsCapturedEvent.HighlightedChange(c.ChartId, c.IsNewPass,
                 c.OldScore, c.NewScore, c.Plate, c.IsBroken,
                 flags.TryGetValue(c.ChartId, out var f) ? f : HighlightFlag.None)).ToArray(),
-            lamps.Select(l => new PlayerMilestoneRecord(l.Kind, l.SessionId, l.OccurredAt, l.OldValue, l.NewValue,
-                l.Title, l.Detail)).ToArray()));
+            milestones, titleProgress));
     }
 
     public async Task<IEnumerable<ScoreHighlightRecord>> Handle(GetScoreHighlightsQuery request,
