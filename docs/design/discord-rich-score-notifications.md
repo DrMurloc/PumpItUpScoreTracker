@@ -87,6 +87,15 @@ never dies.
 - **S4 — samples + showcase + docs.** Canary/PoC samples to the final shape, the
   real-session showcase updated for the event shape, ARCHITECTURE.md pipeline note,
   Sessions page renders `WeeklyPlacement` milestones.
+- **S5 — session backfill (owner call: "everyone has something to start from").** The
+  `BackfillRecentSessions` data migration stamps SessionIds onto each player's LAST
+  THREE journal clusters per mix at deploy time, using the live Session Batcher's
+  8-hour-gap rule over the journal's real OccurredAt timestamps — past-midnight
+  sessions stay whole, double visits split, older history keeps day-bucketing.
+  Highlights/milestones stay un-backfilled (write-time truths). Ids are materialized
+  into temp tables before the update (NEWID() in an expanded CTE re-evaluates per
+  row); behavior is asserted by `SessionBackfillMigrationTests` against the exact
+  production SQL.
 
 Restructure the community Discord score-update announcements from plain-text messages into
 structured cards built on Discord's **Components V2** layout API (containers, sections with
