@@ -125,7 +125,16 @@ public sealed class SessionSnapshotPoCTests
                     "**970,995** (+4,466) #LETTERGRADE|AAAPlus|False# → #LETTERGRADE|S|False##PLATE|FairGame#\n" +
                     "-# 🏅 Title progress",
                     new Uri("https://piuimages.arroweclip.se/songs/INVASION.png")),
-                new RichBotText("+12 more: S22, D21, D20, S18, D18, S17, S16, CO-OP ×5"),
+                // Co-ops always show (owner call): up to 3, pass-tier difficulty desc, text
+                // rows once the 5 art slots are spent.
+                new RichBotText(
+                    $"#DIFFICULTY|CoOp3# [Yo! Say!! Fairy!!!]({Site}/Chart/892F0C6A-86FF-4377-9A00-6F3BDFCB549B) " +
+                    "**998,491** (+5,831) #LETTERGRADE|SSS|False# → #LETTERGRADE|SSSPlus|False##PLATE|ExtremeGame#\n" +
+                    $"#DIFFICULTY|CoOp3# [Allegro Furioso]({Site}/Chart/03657405-354F-4375-8679-D911EF153B28) " +
+                    "**993,843** (+895) #LETTERGRADE|SSS|False##PLATE|MarvelousGame#\n" +
+                    $"#DIFFICULTY|CoOp2# [Awakening]({Site}/Chart/5ACF4C94-7A0A-4C43-A0E4-F153D7C5338B) " +
+                    "**981,612** (+10,092) #LETTERGRADE|S|False# → #LETTERGRADE|SS|False##PLATE|FairGame#"),
+                new RichBotText("+9 more: S22, D21, D20, S18, D18, S17, S16, CO-OP ×2"),
                 new RichBotDivider(),
                 new RichBotText("#DIFFICULTY|S23# 29/56 (51.8%) · #DIFFICULTY|S18# 43/189 (22.8%) · " +
                                 "#DIFFICULTY|S17# 13/196 (6.6%) · #DIFFICULTY|S16# 14/189 (7.4%)")

@@ -5,6 +5,85 @@
 > green; the live Discord canary posted both sample cards to the lab channel and read
 > them back with components attached. Remaining follow-ups live under "Deferred by
 > design" and the legacy-consumer migrations (titles → ratings → weekly → UCS).
+>
+> **Revision 2 LOCKED (2026-07-05, same PR): the session snapshot** — supersedes the
+> passes/upscores/digest card split below. See "Revision 2" at the end of this doc for
+> the locked spec and the S1–S4 build plan.
+
+## Revision 2 — the session snapshot (locked 2026-07-05)
+
+Owner direction after seeing C0–C10 live: score events were still "a big dump of scores —
+unclear what was or wasn't actually meaningful." The card becomes **one message per score
+batch**, shaped like the Sessions page roundup: stats that moved → achievements → only the
+scores worth reading. Everything else is a count. **This becomes the ONLY score-triggered
+community Discord message** — the separate passed/upscored walls and the standalone
+ratings / titles / weekly messages all retire (UCS placements are a separate ecosystem,
+out of scope).
+
+Locked calls (owner, 2026-07-05):
+
+1. **One message per session batch.** Legacy ratings/titles/weekly messages retire for
+   score flows. The `NewTitlesAcquiredEvent` announcement survives ONLY for the
+   `TitlesDetectedEvent` path (titles granted by the official site — no session covers
+   them). Titles-completed listing caps at **10** names (owner: 3 is too few), then
+   "+N more titles".
+2. **Title progress = real per-title deltas** ("Expert Lv.4 82% → 86%") when nothing
+   completed, computed by the title step from the batch's old→new scores, capped at 3,
+   nearest-to-complete first. Not milestones — event payload only (the page has /Titles).
+3. **Weekly placements fold into the card** — up to **4**, difficulty descending, and we
+   *flex* them (any placement, not just #1). The separate weekly message retires. Stored
+   as `WeeklyPlacement` milestones so the Sessions page shows them too.
+4. **Noise floors at capture**: Singles/Doubles competitive milestones only mint at
+   ≥ **0.01** change (the +0.002 lines were the poster child of the dump). PUMBILITY
+   shows on ANY gain — even +1 ("which happens").
+5. **💥 big gain**: the session's single biggest upscore gets a row + caption when the
+   gain is ≥ **+10,000**.
+6. **PUMBILITY = combined only.** "Players don't care about separate. Combined is all
+   that matters (the official PUMBILITY)." Singles/Doubles PUMBILITY lines die with the
+   legacy message; Singles/Doubles *competitive* stay (subject to the floor).
+7. **Co-ops always show** — they can't earn S/D flags, so they get their own rule: up to
+   **3** co-op rows, ordered by Pass-tier-list difficulty descending, remainder in the
+   count line.
+
+**Card anatomy (top to bottom, sections absent when empty):** header (name, `passed N ·
+upscored M`, level span incl. CO-OP, avatar, grade-colored accent, `[Phoenix 2]` textual
+prefix) → ① stats (PUMBILITY combined old→new(+diff); Singles/Doubles competitive past
+the floor; never combined competitive) → ② achievements (titles ≤10 named, paragon gains
+one line each with the NEW GRADE'S EMOJI — never aggregated into "+N", folder lamps every
+boundary, weekly placements ≤4, per-title progress deltas ≤3 as the nothing-completed
+fallback) → ③ notable scores (flagged rows first — 👑📊🏅🆕📁⬆💥 — art on the first 5,
+individually rendered up to 10, then co-op rows ≤3; song name bold when flagged; `-#`
+caption names each flag; everything else is `+N more: D23 ×2 …` grouped by difficulty) →
+folder progress line → footer → **"See more"** link button to
+`/Player/{id}/Sessions?session={id}` (public players only).
+
+**Pipeline (what makes ① and ② deterministic):** the capture consumer becomes the
+session-snapshot orchestrator. After flags + lamps it dispatches, in-process and in
+order: the rating step (recalc, improver flags, rating milestones — floors applied at
+minting) and the title step (completions, paragon, progress deltas), plus the weekly
+placements via a WeeklyChallenge **contract** command (cross-vertical by contract, never
+by reference). Only then does it publish the enriched captured event the card renders
+from. `PlayerRatingSaga`, `TitleSaga`, and the weekly processor stop consuming the raw
+score event — ordering comes from pipeline shape, not racing (ADR-001 doctrine). Every
+step is failure-isolated: a failed step publishes with that section absent; the card
+never dies.
+
+**Build plan:**
+
+- **S1 — snapshot pipeline (PlayerProgress).** Capture orchestrates rating + title steps
+  in-process (internal MediatR requests returning their milestones/flags/deltas); raw-
+  event consumers removed from both sagas; competitive milestone floor 0.01; event gains
+  stats/titles/progress payload; consumer-registration tripwires updated.
+- **S2 — weekly join (WeeklyChallenge).** Weekly processing moves behind a contract
+  command returning placements (its raw-event consumer retires to avoid double
+  processing); capture stores `WeeklyPlacement` milestones; site UI event unchanged.
+- **S3 — the one card (Communities).** Snapshot builder per the anatomy above;
+  passes/upscores/digest builders and `DigestThreshold` deleted; ratings/weekly
+  consumers retired; titles consumer kept only for the detected-titles path;
+  CommunitySagaTests rewritten.
+- **S4 — samples + showcase + docs.** Canary/PoC samples to the final shape, the
+  real-session showcase updated for the event shape, ARCHITECTURE.md pipeline note,
+  Sessions page renders `WeeklyPlacement` milestones.
 
 Restructure the community Discord score-update announcements from plain-text messages into
 structured cards built on Discord's **Components V2** layout API (containers, sections with
