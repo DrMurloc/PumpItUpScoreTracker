@@ -542,6 +542,37 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task TheAccentStripeIsTheMixBrandColor()
+    {
+        // Owner call (2026-07-05, reversing the earlier grade-accent decision): with
+        // two mixes running in parallel, the stripe identifies the MIX at a glance —
+        // grades already color every row via their emojis.
+        var userId = Guid.NewGuid();
+        var phoenixChart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var phoenix2Chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20)
+            .WithMix(MixEnum.Phoenix2).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, phoenixChart, score: 950000);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, phoenix2Chart, score: 950000);
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
+            (phoenixChart.Id, true, HighlightFlag.None))));
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix2, null,
+            (phoenix2Chart.Id, true, HighlightFlag.None))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs =>
+                msgs.Single().AccentColor == MixEnum.Phoenix.GetAccentColor()),
+            It.IsAny<IEnumerable<ulong>>(), It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs =>
+                msgs.Single().AccentColor == MixEnum.Phoenix2.GetAccentColor()),
+            It.IsAny<IEnumerable<ulong>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task MilestoneBannerLeadsTheCardAsItsOwnBand()
     {
         // Folder lamps arrive ON the captured event and render as a banner band between

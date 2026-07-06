@@ -140,7 +140,7 @@ public sealed class SessionSnapshotPoCTests
                                 "#DIFFICULTY|S17# 13/196 (6.6%) · #DIFFICULTY|S16# 14/189 (7.4%)")
             },
             $"#MIX|Phoenix# Phoenix · PIU Scores · {marker}",
-            0xE8C24A,
+            0x1D9BCC,
             new[] { new RichBotLink("See more", new Uri(Site)) });
     }
 
@@ -170,7 +170,7 @@ public sealed class SessionSnapshotPoCTests
                 new RichBotText("+7 more: S23, S21 ×3, D20 ×3")
             },
             $"#MIX|Phoenix# Phoenix · PIU Scores · {marker}",
-            0xE8C24A,
+            0x1D9BCC,
             new[] { new RichBotLink("See more", new Uri(Site)) });
     }
 
@@ -205,7 +205,7 @@ public sealed class SessionSnapshotPoCTests
                 new RichBotText("#DIFFICULTY|D23# 84/141 (59.6%) · #DIFFICULTY|D20# 122/168 (72.6%)")
             },
             $"#MIX|Phoenix# Phoenix · PIU Scores · {marker}",
-            0xAEB6C4,
+            0x1D9BCC,
             new[]
             {
                 new RichBotLink("See more",
@@ -251,7 +251,7 @@ public sealed class SessionSnapshotPoCTests
                     "#DIFFICULTY|D23# 84/141 (59.6%) · #DIFFICULTY|S18# 182/195 (93.3%) · #DIFFICULTY|S13# 153/153 (100%)")
             },
             $"#MIX|Phoenix# Phoenix · PIU Scores · {marker}",
-            0xE8C24A,
+            0x1D9BCC,
             new[] { new RichBotLink("See more", new Uri(Site)) });
     }
 }

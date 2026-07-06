@@ -303,7 +303,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
 
         return new RichBotMessage(new RichBotSection(headerMarkdown, user.ProfileImage), blocks,
             $"#MIX|{e.Mix}# {e.Mix.GetName()} · PIU Scores",
-            AccentFor(known.Select(c => bests[c.ChartId])), links);
+            e.Mix.GetAccentColor(), links);
     }
 
     private static bool IsBigGain(ScoreHighlightsCapturedEvent.HighlightedChange change,
@@ -493,17 +493,6 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         if (flags.HasFlag(HighlightFlag.CompetitiveImprover)) parts.Add("⬆ Raised competitive level");
         if (bigGain) parts.Add("💥 Biggest gain of the session");
         return "\n-# " + string.Join(" · ", parts);
-    }
-
-    // The card frame takes the best changed grade's color; the mix stays a textual
-    // prefix + emoji, never the accent (locked decision).
-    private static uint AccentFor(IEnumerable<RecordedPhoenixScore> bests)
-    {
-        var top = bests.Where(b => b.Score != null).Select(b => b.Score!.Value.LetterGrade)
-            .DefaultIfEmpty(PhoenixLetterGrade.A).Max();
-        return top >= PhoenixLetterGrade.SSS ? 0xE8C24Au
-            : top >= PhoenixLetterGrade.S ? 0xAEB6C4u
-            : 0x6E8CA0u;
     }
 
     private static string Charts(int count)

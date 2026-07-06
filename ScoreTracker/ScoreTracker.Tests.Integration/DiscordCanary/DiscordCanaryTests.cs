@@ -101,7 +101,7 @@ public sealed class DiscordCanaryTests
                 new RichBotText("#DIFFICULTY|d19# 84/141 (59.6%) · #DIFFICULTY|s18# 182/195 (93.3%)")
             },
             $"#MIX|Phoenix# Phoenix · PIU Scores · {marker}",
-            0xE8C24A,
+            0x1D9BCC,
             new[] { new RichBotLink("See more", new Uri("https://piuscores.arroweclip.se")) });
     }
 
@@ -127,7 +127,7 @@ public sealed class DiscordCanaryTests
                 new RichBotText("#DIFFICULTY|s13# 153/153 (100%) · #DIFFICULTY|s14# 148/151 (98.0%)")
             },
             $"#MIX|Phoenix2# Phoenix2 · PIU Scores · {marker}",
-            0xE8C24A,
+            0x81B644,
             new[] { new RichBotLink("See more", new Uri("https://piuscores.arroweclip.se")) });
     }
 
