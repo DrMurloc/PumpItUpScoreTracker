@@ -2354,4 +2354,7 @@
   <data name="One of your first passes in this folder" xml:space="preserve">
     <value>このフォルダー最初期のクリア</value>
   </data>
+  <data name="Weekly" xml:space="preserve">
+    <value>ウィークリー</value>
+  </data>
 </root>

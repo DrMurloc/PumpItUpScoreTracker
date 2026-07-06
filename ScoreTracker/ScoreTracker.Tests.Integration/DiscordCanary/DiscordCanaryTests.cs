@@ -75,14 +75,20 @@ public sealed class DiscordCanaryTests
     private static readonly Uri Avatar =
         new("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png");
 
+    // The two samples mirror the session-snapshot anatomy (design doc revision 2):
+    // stats → achievements → notable scores, everything else a count.
     private static RichBotMessage SamplePassesCard(string marker)
     {
         return new RichBotMessage(
-            new RichBotSection("### **Canary** passed 2 charts", Avatar),
+            new RichBotSection("### **Canary** — passed 2 · upscored 1\n-# S18–D19", Avatar),
             new IRichBotBlock[]
             {
                 new RichBotDivider(),
-                new RichBotText("🎉 #DIFFICULTY|s18# **All passed!**\n🏆 #DIFFICULTY|s18# **All AA or better**"),
+                new RichBotText("📈 **PUMBILITY** 21,480 → **21,530** (+50)"),
+                new RichBotDivider(),
+                new RichBotText("🏅 **Intermediate Lv. 10** completed\n" +
+                                "🎉 #DIFFICULTY|s18# **All passed!**\n" +
+                                "🏆 **#1** on Witch Doctor #DIFFICULTY|d19# weekly"),
                 new RichBotDivider(),
                 new RichBotSection(
                     "#DIFFICULTY|d19# **Witch Doctor**\n**970,207** #LETTERGRADE|S|False##PLATE|UltimateGame#\n-# 👑 PUMBILITY top 50 · 🆕 Folder debut",
@@ -90,33 +96,39 @@ public sealed class DiscordCanaryTests
                 new RichBotSection(
                     "#DIFFICULTY|s18# **Turkey March -Minimal Tunes-**\n**999,150** #LETTERGRADE|SSSPlus|False##PLATE|UltimateGame#\n-# 📊 Top scores among peers",
                     new Uri("https://piuimages.arroweclip.se/songs/TurkeyMarchMinimalTunes.png")),
+                new RichBotText("+1 more: S16"),
                 new RichBotDivider(),
                 new RichBotText("#DIFFICULTY|d19# 84/141 (59.6%) · #DIFFICULTY|s18# 182/195 (93.3%)")
             },
             $"#MIX|Phoenix# Phoenix · PIU Scores · {marker}",
             0xE8C24A,
-            new[] { new RichBotLink("View all recent scores", new Uri("https://piuscores.arroweclip.se")) });
+            new[] { new RichBotLink("See more", new Uri("https://piuscores.arroweclip.se")) });
     }
 
     private static RichBotMessage SampleDigestCard(string marker)
     {
         return new RichBotMessage(
-            new RichBotSection("### [Phoenix 2] **Canary** passed 1,872 · upscored 141", Avatar),
+            new RichBotSection(
+                "### [Phoenix 2] **Canary** — passed 1,872 · upscored 141\n-# S1–S22 · D4–D23 · CO-OP",
+                Avatar),
             new IRichBotBlock[]
             {
                 new RichBotDivider(),
-                new RichBotText("🎉 #DIFFICULTY|s16# **All passed!**"),
+                new RichBotText("📈 **PUMBILITY** 0 → **18,437** (+18,437)"),
+                new RichBotDivider(),
+                new RichBotText("🏅 **Intermediate Lv. 1** completed\n…and 4 more titles\n" +
+                                "🎉 #DIFFICULTY|s13# **All passed!**"),
                 new RichBotDivider(),
                 new RichBotSection(
                     "#DIFFICULTY|d20# **Removable Disk0**\n**962,410** #LETTERGRADE|AAAPlus|False##PLATE|FairGame#\n-# 👑 PUMBILITY top 50",
                     new Uri("https://piuimages.arroweclip.se/songs/RemovableDisk0.png")),
-                new RichBotText("…and 36 more highlights"),
+                new RichBotText("+2,008 more: D23 ×12, S22 ×48, S21 ×95, CO-OP ×31"),
                 new RichBotDivider(),
-                new RichBotText("Levels S1–S22 · D4–D23 — highest new pass D23")
+                new RichBotText("#DIFFICULTY|s13# 153/153 (100%) · #DIFFICULTY|s14# 148/151 (98.0%)")
             },
             $"#MIX|Phoenix2# Phoenix2 · PIU Scores · {marker}",
             0xE8C24A,
-            Array.Empty<RichBotLink>());
+            new[] { new RichBotLink("See more", new Uri("https://piuscores.arroweclip.se")) });
     }
 
     // Shared with the real-session showcase, which reads its cards back the same way.

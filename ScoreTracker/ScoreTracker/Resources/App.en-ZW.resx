@@ -2277,4 +2277,7 @@
   <data name="One of your first passes in this folder" xml:space="preserve">
     <value>Frst mrgl!</value>
   </data>
+  <data name="Weekly" xml:space="preserve">
+    <value>Wkly Mrgl!</value>
+  </data>
 </root>

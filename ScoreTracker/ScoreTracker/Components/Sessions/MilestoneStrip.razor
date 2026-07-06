@@ -14,6 +14,7 @@
         MilestoneKind.SinglesCompetitiveGain or MilestoneKind.DoublesCompetitiveGain => @L["Competitive"],
         MilestoneKind.TitleCompleted => @L["Title"],
         MilestoneKind.ParagonLevelGain => @L["Paragon"],
+        MilestoneKind.WeeklyPlacement => @L["Weekly"],
         _ => @L["Folder Lamp"]
     };
 
@@ -30,6 +31,7 @@
         MilestoneKind.FolderPassLamp => L["All {0} passed", Milestone.Detail ?? string.Empty],
         MilestoneKind.FolderGradeLamp => FolderFloor(),
         MilestoneKind.FolderPlateLamp => FolderFloor(),
+        MilestoneKind.WeeklyPlacement => $"#{Milestone.NewValue:0} — {Milestone.Title} {Milestone.Detail}",
         _ => Milestone.Detail ?? string.Empty
     };
 

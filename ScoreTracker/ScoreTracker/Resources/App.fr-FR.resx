@@ -2351,4 +2351,7 @@
   <data name="One of your first passes in this folder" xml:space="preserve">
     <value>L&apos;un de vos premiers pass dans ce dossier</value>
   </data>
+  <data name="Weekly" xml:space="preserve">
+    <value>Hebdo</value>
+  </data>
 </root>

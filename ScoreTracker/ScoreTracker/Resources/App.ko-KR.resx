@@ -2233,4 +2233,7 @@
   <data name="One of your first passes in this folder" xml:space="preserve">
     <value>이 폴더의 첫 클리어 중 하나</value>
   </data>
+  <data name="Weekly" xml:space="preserve">
+    <value>주간</value>
+  </data>
 </root>

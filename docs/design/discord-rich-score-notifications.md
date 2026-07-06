@@ -6,9 +6,9 @@
 > them back with components attached. Remaining follow-ups live under "Deferred by
 > design" and the legacy-consumer migrations (titles → ratings → weekly → UCS).
 >
-> **Revision 2 LOCKED (2026-07-05, same PR): the session snapshot** — supersedes the
-> passes/upscores/digest card split below. See "Revision 2" at the end of this doc for
-> the locked spec and the S1–S4 build plan.
+> **Revision 2 IMPLEMENTED (2026-07-05, same PR): the session snapshot** — supersedes
+> the passes/upscores/digest card split below; S1–S4 all landed. The spec below is the
+> as-built reference.
 
 ## Revision 2 — the session snapshot (locked 2026-07-05)
 
