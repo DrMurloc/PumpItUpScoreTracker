@@ -2236,4 +2236,10 @@
   <data name="Weekly" xml:space="preserve">
     <value>주간</value>
   </data>
+  <data name="View all scores" xml:space="preserve">
+    <value>모든 점수 보기</value>
+  </data>
+  <data name="{0} more scores" xml:space="preserve">
+    <value>점수 {0}개 더</value>
+  </data>
 </root>

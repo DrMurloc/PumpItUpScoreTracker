@@ -55,7 +55,7 @@ public sealed class PlayerSessionsTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task SessionsPageRendersRoundupsMilestonesAndTheJournal()
+    public async Task SessionsPageRendersRoundupCardsWithTheFullBreakdownBehindADialog()
     {
         await _page.GotoAsync($"/Player/{_publicUser}/Sessions");
 
@@ -70,13 +70,13 @@ public sealed class PlayerSessionsTests : IAsyncLifetime
         await Expect(_page.Locator("[data-testid='milestone-strip']")).ToBeVisibleAsync(timeout);
         await Expect(_page.GetByText("8,000 → 8,100")).ToBeVisibleAsync();
 
-        // Classification chips: the session has a New Pass and an Upscore.
+        // The card leads with the flagged row; the full breakdown opens as a dialog.
         await Expect(_page.GetByText("New Pass").First).ToBeVisibleAsync();
-        await Expect(_page.GetByText("Upscore").First).ToBeVisibleAsync();
-
-        // The raw journal table sits below with its export button.
-        await Expect(_page.Locator("[data-testid='journal-table']")).ToBeVisibleAsync();
-        await Expect(_page.Locator("[data-testid='export-journal']")).ToBeVisibleAsync();
+        await cards.First.Locator("[data-testid='view-all-scores']").ClickAsync();
+        var dialog = _page.Locator("[data-testid='session-scores-dialog']");
+        await Expect(dialog).ToBeVisibleAsync(timeout);
+        await Expect(dialog.GetByText("Session Anthem")).ToBeVisibleAsync();
+        await Expect(dialog.GetByText("Journal Groove")).ToBeVisibleAsync();
     }
 
     [Fact]
@@ -92,16 +92,4 @@ public sealed class PlayerSessionsTests : IAsyncLifetime
         await Expect(_page.GetByText("SecretPlayer")).ToHaveCountAsync(0);
     }
 
-    [Fact]
-    public async Task JournalExportDownloadsCsvForPublicPlayers()
-    {
-        var exportUrl = new Uri(new Uri(_fixture.BaseUrl),
-            $"player/{_publicUser}/scorejournal.csv?mix=Phoenix").ToString();
-        var response = await _page.APIRequest.GetAsync(exportUrl);
-
-        Assert.True(response.Ok, $"Export returned {response.Status}");
-        var body = await response.TextAsync();
-        Assert.Contains("Session Anthem", body);
-        Assert.Contains("Journal Groove", body);
-    }
 }

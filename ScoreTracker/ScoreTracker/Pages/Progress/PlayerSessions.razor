@@ -56,7 +56,7 @@
     {
         foreach (var group in _page.Groups)
         {
-            <SessionRoundupCard Group="group" Charts="_charts" Flags="_flags"
+            <SessionRoundupCard Group="group" Mix="_mix" Charts="_charts" Flags="_flags"
                                 Milestones="MilestonesFor(group)"
                                 OfNoteOnly="_filter == FilterOfNote"
                                 StartExpanded="IsDeepLinked(group)"></SessionRoundupCard>
@@ -66,7 +66,6 @@
             <MudPagination Count="PageCount" Selected="_pageNumber" SelectedChanged="ChangePage"></MudPagination>
         </div>
 
-        <ScoreJournalTable Rows="AllRows" Charts="_charts" ExportUrl="@ExportUrl"></ScoreJournalTable>
         <MudText Typo="Typo.caption" Class="mt-1 d-block">
             @L["Score history begins with journaling (June 2026) — older plays aren't shown."]
         </MudText>
@@ -98,13 +97,6 @@
         Array.Empty<PlayerMilestoneRecord>().ToLookup(m => m.SessionId);
 
     private int PageCount => (int)Math.Ceiling(_page.TotalGroups / (double)_pageSize);
-
-    private string ExportUrl => $"/player/{UserIdParam}/scorejournal.csv?mix={_mix}";
-
-    private IReadOnlyList<RecentSessionsPage.ScoreEventRecord> AllRows => _page.Groups
-        .SelectMany(g => g.Rows)
-        .OrderByDescending(r => r.OccurredAt)
-        .ToArray();
 
     protected override async Task OnInitializedAsync()
     {

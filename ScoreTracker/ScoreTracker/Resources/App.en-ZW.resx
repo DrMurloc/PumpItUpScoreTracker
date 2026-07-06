@@ -2280,4 +2280,10 @@
   <data name="Weekly" xml:space="preserve">
     <value>Wkly Mrgl!</value>
   </data>
+  <data name="View all scores" xml:space="preserve">
+    <value>See all mrgls</value>
+  </data>
+  <data name="{0} more scores" xml:space="preserve">
+    <value>{0} mr mrgls</value>
+  </data>
 </root>

@@ -2235,4 +2235,10 @@
   <data name="Weekly" xml:space="preserve">
     <value>Semanal</value>
   </data>
+  <data name="View all scores" xml:space="preserve">
+    <value>Ver todas las puntuaciones</value>
+  </data>
+  <data name="{0} more scores" xml:space="preserve">
+    <value>{0} puntuaciones más</value>
+  </data>
 </root>

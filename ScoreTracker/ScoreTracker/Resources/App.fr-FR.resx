@@ -2354,4 +2354,10 @@
   <data name="Weekly" xml:space="preserve">
     <value>Hebdo</value>
   </data>
+  <data name="View all scores" xml:space="preserve">
+    <value>Voir tous les scores</value>
+  </data>
+  <data name="{0} more scores" xml:space="preserve">
+    <value>{0} scores de plus</value>
+  </data>
 </root>
