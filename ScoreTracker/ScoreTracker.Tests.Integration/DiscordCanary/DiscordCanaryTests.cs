@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using ScoreTracker.Data.Clients;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Tests.Integration.DiscordCanary;
 
@@ -101,7 +102,7 @@ public sealed class DiscordCanaryTests
                 new RichBotText("#DIFFICULTY|d19# 84/141 (59.6%) · #DIFFICULTY|s18# 182/195 (93.3%)")
             },
             $"#MIX|Phoenix# Phoenix · PIU Scores · {marker}",
-            0x1D9BCC,
+            MixEnum.Phoenix.GetAccentColor(),
             new[] { new RichBotLink("See more", new Uri("https://piuscores.arroweclip.se")) });
     }
 
@@ -127,7 +128,7 @@ public sealed class DiscordCanaryTests
                 new RichBotText("#DIFFICULTY|s13# 153/153 (100%) · #DIFFICULTY|s14# 148/151 (98.0%)")
             },
             $"#MIX|Phoenix2# Phoenix2 · PIU Scores · {marker}",
-            0x81B644,
+            MixEnum.Phoenix2.GetAccentColor(),
             new[] { new RichBotLink("See more", new Uri("https://piuscores.arroweclip.se")) });
     }
 

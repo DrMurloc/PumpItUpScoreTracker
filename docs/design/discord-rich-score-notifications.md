@@ -49,8 +49,8 @@ Locked calls (owner, 2026-07-05):
 upscored M`, level span incl. CO-OP, avatar, **mix-brand accent stripe** — owner call
 2026-07-05 reversing the earlier grade-accent decision: with parallel mixes the stripe
 identifies the MIX at a glance (grades already color every row via emojis). Colors are
-sampled from the official mix logos and live in `MixEnum.GetAccentColor()`: Phoenix
-`#1D9BCC`, Phoenix 2 `#81B644`, XX `#D49D3B`. The `[Phoenix 2]` textual prefix stays) → ① stats (PUMBILITY combined old→new(+diff); Singles/Doubles competitive past
+sampled from the official mix logos (Phoenix 2 deepened for stripe contrast) and live in `MixEnum.GetAccentColor()`: Phoenix
+`#1D9BCC`, Phoenix 2 `#6CA832`, XX `#D49D3B`. The `[Phoenix 2]` textual prefix stays) → ① stats (PUMBILITY combined old→new(+diff); Singles/Doubles competitive past
 the floor; never combined competitive) → ② achievements (titles ≤10 named, paragon gains
 one line each with the NEW GRADE'S EMOJI — never aggregated into "+N", folder lamps every
 boundary, weekly placements ≤4, per-title progress deltas ≤3 as the nothing-completed
