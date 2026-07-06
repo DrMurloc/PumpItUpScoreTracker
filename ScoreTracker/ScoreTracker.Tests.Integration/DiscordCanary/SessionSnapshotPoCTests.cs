@@ -59,6 +59,82 @@ public sealed class SessionSnapshotPoCTests
         await bot.Stop();
     }
 
+    [DiscordCanaryFact]
+    public async Task PostsEsiSessionRender()
+    {
+        var marker = $"snapshot PoC {Guid.NewGuid():N}";
+        using var bot = new DiscordBotClient(NullLogger<DiscordBotClient>.Instance,
+            Options.Create(new DiscordConfiguration
+            {
+                BotToken = DiscordCanaryTests.CanaryToken!, RichScoreMessages = true
+            }));
+        await bot.Start();
+        var ready = new TaskCompletionSource();
+        bot.WhenReady(() =>
+        {
+            ready.TrySetResult();
+            return Task.CompletedTask;
+        });
+        await ready.Task.WaitAsync(TimeSpan.FromSeconds(30));
+
+        await bot.SendRichMessages(new[] { EsiSession(marker) },
+            new[] { DiscordCanaryTests.CanaryChannel!.Value });
+        await bot.Stop();
+    }
+
+    /// <summary>
+    ///     A real production session (17 changes, co-op included) rendered through the
+    ///     snapshot ruleset — 5 notable rows survive, 12 compress, the paragon gain
+    ///     renders as its own grade-named line, and combined competitive (+0.010) plus
+    ///     the sub-floor noise are filtered. Flags are hand-inferred from the legacy
+    ///     message; the real pipeline computes them.
+    /// </summary>
+    private static RichBotMessage EsiSession(string marker)
+    {
+        return new RichBotMessage(
+            new RichBotSection("### **esi** — passed 5 · upscored 12\n-# S16–S23 · D18–D21 · CO-OP", Avatar),
+            new IRichBotBlock[]
+            {
+                new RichBotDivider(),
+                new RichBotText("📈 **Singles competitive** 21.416 → **21.447** (+0.031)"),
+                new RichBotDivider(),
+                new RichBotText("🏅 **Intermediate Lv. 7** paragon → #LETTERGRADE|B|False#"),
+                new RichBotDivider(),
+                new RichBotSection(
+                    $"#DIFFICULTY|S23# **[SONIC BOOM]({Site}/Chart/7028986E-00E1-4E2C-AE25-8F31F085442C)**\n" +
+                    "**922,198** #LETTERGRADE|AA|False##PLATE|RoughGame#\n" +
+                    "-# 👑 PUMBILITY top 50 · ⬆ Raised competitive level",
+                    new Uri("https://piuimages.arroweclip.se/songs/SonicBoom.png")),
+                new RichBotSection(
+                    $"#DIFFICULTY|S23# **[Darkside of The Mind]({Site}/Chart/3378C127-2359-43DE-92F1-F2BEF6D9C24C)**\n" +
+                    "**914,174** #LETTERGRADE|AA|False##PLATE|RoughGame#\n" +
+                    "-# 👑 PUMBILITY top 50 · ⬆ Raised competitive level",
+                    new Uri("https://piuimages.arroweclip.se/songs/DarksideOfTheMind.png")),
+                new RichBotSection(
+                    $"#DIFFICULTY|S22# **[See]({Site}/Chart/6E79EFF8-04DC-450F-878B-88F699060E6F)** " +
+                    "**963,636** (+26,436) #LETTERGRADE|AAPlus|False# → #LETTERGRADE|AAAPlus|False##PLATE|TalentedGame#\n" +
+                    "-# ⬆ Raised competitive level",
+                    new Uri("https://piuimages.arroweclip.se/songs/See.png")),
+                new RichBotSection(
+                    $"#DIFFICULTY|S21# **[Dignity]({Site}/Chart/DFFADEE8-351B-4B8A-9A81-FC35680F5F26)** " +
+                    "**948,548** (+27,704) #LETTERGRADE|AA|False# → #LETTERGRADE|AAPlus|False##PLATE|TalentedGame#\n" +
+                    "-# 💥 Biggest gain of the session",
+                    new Uri("https://piuimages.arroweclip.se/songs/Dignity.png")),
+                new RichBotSection(
+                    $"#DIFFICULTY|S21# **[INVASION]({Site}/Chart/5B54020E-1730-4709-BBB2-82DB69DBDF35)** " +
+                    "**970,995** (+4,466) #LETTERGRADE|AAAPlus|False# → #LETTERGRADE|S|False##PLATE|FairGame#\n" +
+                    "-# 🏅 Title progress",
+                    new Uri("https://piuimages.arroweclip.se/songs/INVASION.png")),
+                new RichBotText("+12 more: S22, D21, D20, S18, D18, S17, S16, CO-OP ×5"),
+                new RichBotDivider(),
+                new RichBotText("#DIFFICULTY|S23# 29/56 (51.8%) · #DIFFICULTY|S18# 43/189 (22.8%) · " +
+                                "#DIFFICULTY|S17# 13/196 (6.6%) · #DIFFICULTY|S16# 14/189 (7.4%)")
+            },
+            $"#MIX|Phoenix# Phoenix · PIU Scores · {marker}",
+            0xE8C24A,
+            new[] { new RichBotLink("See more", new Uri(Site)) });
+    }
+
     /// <summary>Scenario A — the exact session from the owner's screenshot, one card.</summary>
     private static RichBotMessage UpscoreSession(string marker)
     {
