@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 using MassTransit;
 using Moq;
 using ScoreTracker.PlayerProgress.Application;
+using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
@@ -14,6 +16,7 @@ using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Tests.TestData;
+using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -58,17 +61,17 @@ public sealed class TitleSagaTests
     }
 
     [Fact]
-    public async Task Phoenix2ScoreEventProducesZeroTitlesAndNoAcquisitionEvent()
+    public async Task Phoenix2ScoreCaptureProducesZeroTitlesAndNoAcquisitionEvent()
     {
-        // The commit-5 "ignore non-Phoenix" guard is gone: a Phoenix 2 score event flows
-        // through title processing and simply completes nothing.
+        // The commit-5 "ignore non-Phoenix" guard is gone: a Phoenix 2 batch flows
+        // through the title step and simply completes nothing (its list is empty).
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var ctx = new SagaContext(MixEnum.Phoenix2, chart);
         ctx.GivenBestScores(Score(chart.Id, 999000));
 
-        await ctx.Saga.Consume(BuildContext(PlayerScoresUpdatedEvent.Create(
-            new DateTimeOffset(2026, 7, 1, 0, 0, 0, TimeSpan.Zero), ctx.UserId, MixEnum.Phoenix2,
-            new[] { new PlayerScoresUpdatedEvent.ScoreChange(chart.Id, true, null, 999000, "SuperbGame", false) })));
+        var result = await ctx.Saga.Handle(new TitleSaga.CaptureSessionTitles(ctx.UserId, MixEnum.Phoenix2, null,
+                new[] { new PlayerScoresUpdatedEvent.ScoreChange(chart.Id, true, null, 999000, "SuperbGame", false) }),
+            CancellationToken.None);
 
         ctx.Titles.Verify(t => t.SaveTitles(MixEnum.Phoenix2, ctx.UserId,
             It.Is<IEnumerable<TitleAchievedRecord>>(titles => !titles.Any()),
@@ -79,6 +82,51 @@ public sealed class TitleSagaTests
             It.IsAny<CancellationToken>()), Times.Never);
         ctx.Bus.Verify(b => b.Publish(It.IsAny<NewTitlesAcquiredEvent>(), It.IsAny<CancellationToken>()),
             Times.Never);
+        Assert.Empty(result.Progress);
+    }
+
+    [Fact]
+    public async Task CaptureSuppressesTheLegacyAnnouncementTheCardNowCarries()
+    {
+        // Score-driven completions ride the snapshot card; the legacy Discord message
+        // must NOT also fire (it survives only on the detected-titles path).
+        var charts = Enumerable.Range(0, 30)
+            .Select(_ => new ChartBuilder().WithType(ChartType.Single).WithLevel(24).Build()).ToArray();
+        var ctx = new SagaContext(MixEnum.Phoenix, charts);
+        ctx.GivenBestScores(charts.Select(c => Score(c.Id, 1000000)).ToArray());
+
+        var result = await ctx.Saga.Handle(new TitleSaga.CaptureSessionTitles(ctx.UserId, MixEnum.Phoenix, null,
+                new[]
+                {
+                    new PlayerScoresUpdatedEvent.ScoreChange(charts[0].Id, true, null, 1000000, "PerfectGame",
+                        false)
+                }),
+            CancellationToken.None);
+
+        Assert.Contains(result.Milestones, m => m.Kind == MilestoneKind.TitleCompleted);
+        ctx.Bus.Verify(b => b.Publish(It.IsAny<NewTitlesAcquiredEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task ProgressDeltasReportTitlesThatMovedTowardCompletion()
+    {
+        // Real per-title deltas (owner call): the before-state reconstructs from the
+        // change's old score, and only titles whose rounded percent moved make the list.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new SagaContext(MixEnum.Phoenix, chart);
+        ctx.GivenBestScores(Score(chart.Id, 999000));
+
+        var result = await ctx.Saga.Handle(new TitleSaga.CaptureSessionTitles(ctx.UserId, MixEnum.Phoenix, null,
+                new[]
+                {
+                    new PlayerScoresUpdatedEvent.ScoreChange(chart.Id, false, 500000, 999000, "SuperbGame", false)
+                }),
+            CancellationToken.None);
+
+        Assert.NotEmpty(result.Progress);
+        Assert.All(result.Progress, d => Assert.True(d.NewPercent > d.OldPercent));
+        Assert.True(result.Progress.Count <= 5);
     }
 
     private sealed class SagaContext
@@ -89,6 +137,7 @@ public sealed class TitleSagaTests
         public Mock<IScoreReader> Scores { get; } = new();
         public Mock<IChartRepository> Charts { get; } = new();
         public Mock<ITitleRepository> Titles { get; } = new();
+        public Mock<IPlayerMilestoneRepository> Milestones { get; } = new();
         public Mock<IBus> Bus { get; } = new();
         public TitleSaga Saga { get; }
 
@@ -105,7 +154,9 @@ public sealed class TitleSagaTests
             Scores.Setup(s => s.GetBestScores(mix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
 
-            Saga = new TitleSaga(CurrentUser.Object, Scores.Object, Charts.Object, Titles.Object, Bus.Object);
+            Saga = new TitleSaga(CurrentUser.Object, Scores.Object, Charts.Object, Titles.Object,
+                Milestones.Object, FakeDateTime.At(new DateTimeOffset(2026, 5, 1, 12, 0, 0, TimeSpan.Zero)).Object,
+                Bus.Object);
         }
 
         public void GivenBestScores(params RecordedPhoenixScore[] scores)
@@ -115,9 +166,30 @@ public sealed class TitleSagaTests
         }
     }
 
+    [Fact]
+    public async Task CompletedTitlesAreCapturedAsMilestones()
+    {
+        // UserTitle rows have no acquisition date — the milestone is the only record of WHEN.
+        var ctx = new SagaContext(MixEnum.Phoenix);
+
+        await ctx.Saga.Consume(BuildContext(new TitlesDetectedEvent(ctx.UserId,
+            DetectedTitles, MixEnum.Phoenix)));
+
+        ctx.Milestones.Verify(m => m.Append(MixEnum.Phoenix, ctx.UserId,
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w => w.Any(x =>
+                x.Kind == MilestoneKind.TitleCompleted && x.Title == "Intermediate Lv. 1")),
+            It.IsAny<CancellationToken>()), Times.Once);
+        // Site-detected titles have no session and no card — the legacy announcement
+        // stays alive on this path only.
+        ctx.Bus.Verify(b => b.Publish(It.IsAny<NewTitlesAcquiredEvent>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
     private static RecordedPhoenixScore Score(Guid chartId, int score) =>
         new(chartId, score, PhoenixPlate.SuperbGame, false,
             new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+
+    private static readonly string[] DetectedTitles = { "Intermediate Lv. 1" };
 
     private static ConsumeContext<T> BuildContext<T>(T message) where T : class
     {

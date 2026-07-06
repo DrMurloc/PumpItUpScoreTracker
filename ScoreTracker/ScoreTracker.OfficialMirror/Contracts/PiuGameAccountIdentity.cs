@@ -14,7 +14,7 @@ namespace ScoreTracker.OfficialMirror.Contracts;
 public sealed record PiuGameAccountIdentity(
     string Username,
     Name GameTag,
-    Uri ProfileImage,
+    Uri? ProfileImage,
     IEnumerable<GameCardRecord> Cards)
 {
     /// <summary>

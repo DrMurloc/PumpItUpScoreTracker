@@ -143,6 +143,17 @@
                             }
                         </MudItem>
                     }
+                    @if (_importCompleted && CurrentUser.User.IsPublic)
+                    {
+                        <MudItem xs="12">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Timeline"
+                                       Href="@($"/Player/{CurrentUser.User.Id}/Sessions")"
+                                       data-testid="view-session-link">
+                                @L["View your session"]
+                            </MudButton>
+                        </MudItem>
+                    }
                     @if (_errors.Any())
                     {
                         <MudItem xs="12">
@@ -454,9 +465,12 @@
         await UiSettings.SetSetting($"PhoenixScoreUpload__LastGameTag", _selectedGameTag);
 
         _scores.Clear();
+        _importCompleted = false;
         _passwordImportStatus = "Starting Import...";
             await Mediator.Send(new ImportOfficialPlayerScoresCommand(_username, _password, _selectedId, _selectedGameTag,_includeBroken,_alsoImportPiuTracker));
             _passwordImportStatus = "Import Completed!";
+            // The session snapshot's page is the import's natural landing spot.
+            _importCompleted = true;
         }
         catch (InvalidCredentialException)
         {
@@ -472,6 +486,7 @@
         _isImporting = false;
     }
     private bool _isImporting = false;
+    private bool _importCompleted = false;
     private int? _endPage = null;
     private TimeSpan _remainingTime = TimeSpan.MinValue;
     private IDictionary<Guid,Chart> _charts = new Dictionary<Guid, Chart>();
@@ -558,9 +573,16 @@
         var cancellationToken = _currentCancellation.Token;
         _currentSaved = 0;
         var startTime = DateTimeOffset.Now;
+        // One upload = one session.
+        var uploadSessionId = Guid.NewGuid();
         var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(_userId, _currentMix), cancellationToken)).ToDictionary(s => s.ChartId);
+        // Same improvement guard as the official import: a stale or re-uploaded file must
+        // never regress records, and unchanged rows must not reach the ledger at all.
         var toSaveScores = _spreadSheetScores
-            .Where(s => !myScores.ContainsKey(s.ChartId) || s.Score != myScores[s.ChartId].Score || s.Plate != myScores[s.ChartId].Plate || myScores[s.ChartId].IsBroken).ToArray();
+            .Where(s => !myScores.TryGetValue(s.ChartId, out var existing)
+                        || existing.IsBroken
+                        || existing.Plate < s.Plate
+                        || existing.Score < s.Score).ToArray();
 
         _maxSaving = toSaveScores.Length;
         foreach (var best in toSaveScores)
@@ -576,7 +598,9 @@
             _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxSaving - (double)_currentSaved) / (double)_currentSaved);
             try
             {
-                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(best.ChartId,false,best.Score,best.Plate, Mix: _currentMix), cancellationToken);
+                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(best.ChartId, false, best.Score, best.Plate,
+                    Source: ScoreJournalEntry.CsvSource, Mix: _currentMix, SessionId: uploadSessionId),
+                    cancellationToken);
             }
             catch (OperationCanceledException)
             {

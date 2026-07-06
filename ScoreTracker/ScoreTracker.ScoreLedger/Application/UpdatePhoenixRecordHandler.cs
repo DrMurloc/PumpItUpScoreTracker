@@ -26,6 +26,10 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
 {
     public async Task Handle(UpdatePhoenixBestAttemptCommand request, CancellationToken cancellationToken)
     {
+        // Every submission — no-ops included — extends the session envelope: activity
+        // keeps the session alive even when nothing lands.
+        var sessionId = batches.GetOrExtendSession(request.Mix, user.User.Id, request.Source, dateTimeOffset.Now,
+            request.SessionId);
         var existing = await records.GetRecordedScore(request.Mix, user.User.Id, request.ChartId, cancellationToken);
         var score = request.Score;
         var plate = request.Plate;
@@ -39,22 +43,30 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         if (request.KeepBestStats && !(existing?.IsBroken ?? true) && request.IsBroken)
             isBroken = false;
 
+        // Progress only: a submission that leaves the best attempt unchanged is noise
+        // (the import deliberately re-scrapes past its cutoff, so repeats are expected),
+        // not history — it must not touch the record, the journal, or RecordedDate.
+        var recordChanged = existing == null || score != existing.Score || plate != existing.Plate ||
+                            isBroken != existing.IsBroken;
+        if (!recordChanged) return;
+
         await records.UpdateBestAttempt(request.Mix, user.User.Id,
             new RecordedPhoenixScore(request.ChartId, score, plate, isBroken,
-                dateTimeOffset.Now), cancellationToken);
-        // The journal gets the submission as received (raw request values, including
-        // no-op submissions) — it is play history, not best-attempt state.
+                dateTimeOffset.Now, request.Source), cancellationToken);
+        // The journal is the record's history: it gets the resulting best-attempt state,
+        // exactly and only when that state changes.
         await journal.Append(new ScoreJournalEntry(dateTimeOffset.Now, request.Source, user.User.Id,
-            request.ChartId, request.Score, request.Plate, request.IsBroken, request.Mix), cancellationToken);
-        var isNewScore = (existing?.IsBroken ?? true) && !request.IsBroken;
-        var isUpscore = existing?.Score != null && request.Score != null && existing.Score < request.Score;
+            request.ChartId, score, plate, isBroken, request.Mix, sessionId), cancellationToken);
+        var isNewScore = (existing?.IsBroken ?? true) && !isBroken;
+        var isUpscore = existing?.Score != null && score != null && existing.Score < score;
         if (!isNewScore && !isUpscore) return;
 
         // Batch up score posts to reduce noise. AddToBatch atomically creates-or-extends
         // the (user, mix) batch; only schedule a drain when this call created the batch.
         var fireAt = dateTimeOffset.Now.UtcDateTime + TimeSpan.FromMinutes(2);
         PhoenixScore? upscoredFrom = isUpscore ? existing!.Score!.Value : null;
-        if (batches.AddToBatch(request.Mix, user.User.Id, fireAt, request.ChartId, isNewScore, upscoredFrom))
+        if (batches.AddToBatch(request.Mix, user.User.Id, fireAt, request.ChartId, isNewScore, upscoredFrom,
+                sessionId))
         {
             await scheduler.SchedulePublish(fireAt + TimeSpan.FromSeconds(5),
                 new TryFireScoreCommand(user.User.Id, request.Mix),
@@ -106,7 +118,8 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
                 Plate: best?.Plate?.ToString(),
                 IsBroken: best?.IsBroken ?? false);
         }).ToArray();
-        await bus.Publish(PlayerScoresUpdatedEvent.Create(dateTimeOffset.Now, userId, batch.Mix, changes),
+        await bus.Publish(
+            PlayerScoresUpdatedEvent.Create(dateTimeOffset.Now, userId, batch.Mix, changes, batch.SessionId),
             cancellationToken);
     }
 

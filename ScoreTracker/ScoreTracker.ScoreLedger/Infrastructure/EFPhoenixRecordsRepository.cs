@@ -154,7 +154,8 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 Score = score.Score,
                 LetterGrade = score.Score?.LetterGrade.GetName(),
                 Plate = score.Plate?.GetName(),
-                RecordedDate = score.RecordedDate
+                RecordedDate = score.RecordedDate,
+                Source = score.Source
             }, cancellationToken);
         }
         else
@@ -164,6 +165,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             existing.Plate = score.Plate?.GetName();
             existing.IsBroken = score.IsBroken;
             existing.RecordedDate = score.RecordedDate;
+            existing.Source = score.Source;
         }
 
         await database.SaveChangesAsync(cancellationToken);
@@ -183,7 +185,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             var rows = await database.Set<PhoenixRecordEntity>()
                 .Where(pba => pba.UserId == userId && pba.MixId == mixId)
                 .Select(pba => new RecordedPhoenixScore(pba.ChartId, pba.Score,
-                    PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, pba.RecordedDate))
+                    PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, pba.RecordedDate, pba.Source))
                 .ToArrayAsync(cancellationToken);
 
             return new ConcurrentDictionary<Guid, RecordedPhoenixScore>(

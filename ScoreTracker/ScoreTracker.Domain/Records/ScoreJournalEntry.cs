@@ -12,8 +12,10 @@ public sealed record ScoreJournalEntry(
     PhoenixScore? Score,
     PhoenixPlate? Plate,
     bool IsBroken,
-    MixEnum Mix = MixEnum.Phoenix)
+    MixEnum Mix = MixEnum.Phoenix,
+    Guid? SessionId = null)
 {
     public const string ManualSource = "manual";
     public const string OfficialImportSource = "officialImport";
+    public const string CsvSource = "csv";
 }

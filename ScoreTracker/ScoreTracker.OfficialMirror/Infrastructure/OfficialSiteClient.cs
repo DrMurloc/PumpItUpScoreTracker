@@ -85,7 +85,8 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             var scores = await _piuGame.GetSongLeaderboard(mix, song.Id, cancellationToken);
             foreach (var score in scores.Results)
                 result.Add(new OfficialChartLeaderboardEntry(score.ProfileName, chart, score.Score,
-                    await ConvertPiuGameAvatarToPiuScoresAvatar(score.AvatarUrl, cancellationToken)));
+                    await ConvertPiuGameAvatarToPiuScoresAvatar(score.AvatarUrl, cancellationToken)
+                    ?? DefaultAvatar));
         }
 
         return result;
@@ -111,6 +112,9 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         return result;
     }
 
+    private static readonly Uri DefaultAvatar =
+        new("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png");
+
     public async Task<int> GetScorePageCount(MixEnum mix, string username, string password,
         CancellationToken cancellationToken)
     {
@@ -119,10 +123,17 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         return response.MaxPage;
     }
 
-    private async Task<Uri> ConvertPiuGameAvatarToPiuScoresAvatar(Uri avatar, CancellationToken cancellationToken)
+    /// <summary>
+    ///     Mirrors the official site's avatar onto the piuimages CDN. Returns null when
+    ///     the scraped URL doesn't carry a recognizable file — persisting anything in
+    ///     that case wrote the bare /avatars/ directory URL over players' good avatars
+    ///     (the sporadic broken-avatar bug). Callers treat null as "keep what you have".
+    /// </summary>
+    private async Task<Uri?> ConvertPiuGameAvatarToPiuScoresAvatar(Uri avatar, CancellationToken cancellationToken)
     {
-        var file = ImageRegex.Match(avatar.ToString()).Groups[1].Value;
-        var path = $"/avatars/{HttpUtility.UrlEncode(file)}";
+        var match = ImageRegex.Match(avatar.ToString());
+        if (!match.Success || string.IsNullOrWhiteSpace(match.Groups[1].Value)) return null;
+        var path = $"/avatars/{HttpUtility.UrlEncode(match.Groups[1].Value)}";
         if (!await _fileUpload.DoesFileExist(path, out var imagePath, cancellationToken))
             imagePath = await _fileUpload.CopyFromSource(avatar, path, cancellationToken);
 
@@ -275,7 +286,10 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     }
 
 
-    private readonly Regex ImageRegex = new(@"https\:\/\/piugame\.com\/data\/avatar_img\/([A-Za-z0-9]+.png)\?v\=",
+    // Loosened from the pinned "https://piugame.com/.../file.png?v=" form: Phoenix 2's
+    // markup varies the host, extension, and query, and a miss must never fabricate an
+    // empty filename.
+    private readonly Regex ImageRegex = new(@"avatar_img\/([A-Za-z0-9_\-]+\.[A-Za-z]{3,4})",
         RegexOptions.Compiled);
 
     public async Task<PiuGameAccountDataImport> GetAccountData(MixEnum mix, string username, string password,
@@ -426,6 +440,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         foreach (var group in groups)
         {
             var newPath = await ConvertPiuGameAvatarToPiuScoresAvatar(group.Key, CancellationToken.None);
+            if (newPath == null) continue;
             await _leaderboards.UpdateAllAvatarPaths(group.Key, newPath, CancellationToken.None);
         }
     }

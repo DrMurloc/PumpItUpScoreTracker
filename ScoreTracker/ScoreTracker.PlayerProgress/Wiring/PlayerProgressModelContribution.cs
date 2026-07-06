@@ -20,6 +20,13 @@ public sealed class PlayerProgressModelContribution : IDbModelContribution
         modelBuilder.Entity<UserTitleEntity>().ToTable("UserTitle");
         modelBuilder.Entity<UserHighestTitleEntity>().ToTable("UserHighestTitle");
         modelBuilder.Entity<SuggestionFeedbackEntity>().ToTable("SuggestionFeedback");
+        modelBuilder.Entity<ScoreHighlightEntity>().ToTable("ScoreHighlight");
+        modelBuilder.Entity<PlayerMilestoneEntity>().ToTable("PlayerMilestone");
+
+        // Session lookups (page deep-links, future import-results reads) skip the
+        // pre-capture rows entirely.
+        modelBuilder.Entity<ScoreHighlightEntity>().HasIndex(e => e.SessionId)
+            .HasFilter("[SessionId] IS NOT NULL");
 
         modelBuilder.Entity<UserTitleEntity>().Property(e => e.ParagonLevel)
             .HasDefaultValue(ParagonLevel.None.ToString());

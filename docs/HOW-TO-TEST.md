@@ -69,6 +69,22 @@ dotnet user-secrets set "PiuTest:Password" "..." --project ScoreTracker/ScoreTra
 dotnet test ScoreTracker/ScoreTracker.Tests.Integration/ScoreTracker.Tests.Integration.csproj --filter "FullyQualifiedName~PiuGameLiveSiteTests"
 ```
 
+### Discord canary — testing bot required, manual runs only
+
+`Tests.Integration/DiscordCanary/` posts the sample Components V2 score cards to the owner's private lab channel with the **testing** bot and reads them back over REST — catching what component tests can't: Discord API contract drift, emoji-id resolution, and token/permission validity. **Run it manually when a change touches Discord or Communities code** — it is deliberately unscheduled and never part of the PR gate (real breakage gets heard from the communities faster than a schedule would report it). Messages are left in the channel on purpose: it doubles as a visual gallery of what the cards looked like on every run.
+
+Configuration (skips automatically when absent): `Discord:BotToken` + `DiscordTest:CanaryChannelId` in the shared AppHost user-secrets store, or `DISCORD_CANARY_TOKEN` / `DISCORD_CANARY_CHANNEL` environment variables. Then:
+
+```sh
+dotnet test ScoreTracker/ScoreTracker.Tests.Integration/ScoreTracker.Tests.Integration.csproj --filter "FullyQualifiedName~DiscordCanaryTests"
+```
+
+**Real-session showcase** (same folder): `RealSessionShowcaseTests` replays a real play session out of the **local development database** through the production pipeline — it picks the best-looking historical day from the player's records, computes honest highlight flags and folder lamps against today's data (Score Quality is skipped; a local database has no comparable-player cohort), stamps journal/highlight/milestone rows so the card's deep link opens that session on the Sessions page, and publishes the captured event on the real in-memory bus so the real CommunitySaga + renderer + testing bot produce the card. Use it to preview card-design changes with real data. It additionally needs `DiscordTest:ExampleConnectionString` (the local Aspire SQL database) in user-secrets, temporarily attaches the lab channel to the World community, hard-gates that no other Discord channel exists in that database before publishing, and detaches afterwards. It **mutates the local database** (demo session rows) — never point it anywhere but local dev.
+
+```sh
+dotnet test ScoreTracker/ScoreTracker.Tests.Integration/ScoreTracker.Tests.Integration.csproj --filter "FullyQualifiedName~RealSessionShowcaseTests"
+```
+
 ### What CI runs
 
 Every PR and every merge to `main` runs all four suites on [Azure Pipelines](https://dev.azure.com/joneccker/ScoreTracker) — the fast suites on a Windows agent, the integration and E2E suites on parallel Linux agents with Docker. **The live-site smoke tests run in CI too**: the integration job pulls a PIU test account from Azure Key Vault, so scraper breakage fails the build — and since the deploy stage only runs after a green Build stage, a broken importer can't reach production. Merges to `main` additionally build the deployable artifact and wait at a manual approval gate before deploying.

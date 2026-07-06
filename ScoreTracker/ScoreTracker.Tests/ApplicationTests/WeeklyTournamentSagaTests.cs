@@ -377,6 +377,41 @@ public sealed class WeeklyTournamentSagaTests
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact]
+    public async Task PlacementsQueryAnswersOnlyForChartsOnTheBoardWithAnEntry()
+    {
+        // The snapshot card's weekly read: the player's current place on whichever of
+        // the batch's charts sit on this week's board — nothing for off-board charts,
+        // nothing when the player has no entry.
+        var weeklyChart = new ChartBuilder().WithType(ChartType.Double).WithLevel(21).Build();
+        var offBoardChart = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var ctx = new HandlerContext(weeklyChart);
+        ctx.GivenExistingEntries(weeklyChart.Id, new[] { Entry(weeklyChart.Id, 970000, userId) });
+
+        var placements = (await ctx.Saga.Handle(
+            new GetUserWeeklyPlacementsQuery(userId, MixEnum.Phoenix, new[] { weeklyChart.Id, offBoardChart }),
+            CancellationToken.None)).ToArray();
+
+        var placement = Assert.Single(placements);
+        Assert.Equal(weeklyChart.Id, placement.ChartId);
+        Assert.Equal(1, placement.Place);
+    }
+
+    [Fact]
+    public async Task PlacementsQueryReturnsNothingForPlayersOffTheBoard()
+    {
+        var weeklyChart = new ChartBuilder().WithType(ChartType.Double).WithLevel(21).Build();
+        var ctx = new HandlerContext(weeklyChart);
+        ctx.GivenExistingEntries(weeklyChart.Id, new[] { Entry(weeklyChart.Id, 990000) });
+
+        var placements = await ctx.Saga.Handle(
+            new GetUserWeeklyPlacementsQuery(Guid.NewGuid(), MixEnum.Phoenix, new[] { weeklyChart.Id }),
+            CancellationToken.None);
+
+        Assert.Empty(placements);
+    }
+
     private sealed class HandlerContext
     {
         private readonly MixEnum _mix;

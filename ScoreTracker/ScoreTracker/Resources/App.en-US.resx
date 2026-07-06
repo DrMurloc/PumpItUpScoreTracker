@@ -2251,4 +2251,118 @@
   <data name="Image could not be copied to the CDN — source URL stored, rehost manually." xml:space="preserve">
     <value>Image could not be copied to the CDN — source URL stored, rehost manually.</value>
   </data>
+  <data name="Sessions" xml:space="preserve">
+    <value>Sessions</value>
+  </data>
+  <data name="Play sessions, newest first" xml:space="preserve">
+    <value>Play sessions, newest first</value>
+  </data>
+  <data name="Of Note" xml:space="preserve">
+    <value>Of Note</value>
+  </data>
+  <data name="Sessions per page" xml:space="preserve">
+    <value>Sessions per page</value>
+  </data>
+  <data name="No sessions recorded yet." xml:space="preserve">
+    <value>No sessions recorded yet.</value>
+  </data>
+  <data name="Score history begins with journaling (June 2026) — older plays aren&apos;t shown." xml:space="preserve">
+    <value>Score history begins with journaling (June 2026) — older plays aren&apos;t shown.</value>
+  </data>
+  <data name="New Pass" xml:space="preserve">
+    <value>New Pass</value>
+  </data>
+  <data name="Upscore" xml:space="preserve">
+    <value>Upscore</value>
+  </data>
+  <data name="Break" xml:space="preserve">
+    <value>Break</value>
+  </data>
+  <data name="Played" xml:space="preserve">
+    <value>Played</value>
+  </data>
+  <data name="New Passes" xml:space="preserve">
+    <value>New Passes</value>
+  </data>
+  <data name="Upscores" xml:space="preserve">
+    <value>Upscores</value>
+  </data>
+  <data name="Highlights" xml:space="preserve">
+    <value>Highlights</value>
+  </data>
+  <data name="Show All" xml:space="preserve">
+    <value>Show All</value>
+  </data>
+  <data name="Official Import" xml:space="preserve">
+    <value>Official Import</value>
+  </data>
+  <data name="CSV Upload" xml:space="preserve">
+    <value>CSV Upload</value>
+  </data>
+  <data name="Backfill" xml:space="preserve">
+    <value>Backfill</value>
+  </data>
+  <data name="Play Session" xml:space="preserve">
+    <value>Play Session</value>
+  </data>
+  <data name="min" xml:space="preserve">
+    <value>min</value>
+  </data>
+  <data name="Score Journal" xml:space="preserve">
+    <value>Score Journal</value>
+  </data>
+  <data name="Export CSV" xml:space="preserve">
+    <value>Export CSV</value>
+  </data>
+  <data name="When" xml:space="preserve">
+    <value>When</value>
+  </data>
+  <data name="Result" xml:space="preserve">
+    <value>Result</value>
+  </data>
+  <data name="Competitive" xml:space="preserve">
+    <value>Competitive</value>
+  </data>
+  <data name="Paragon" xml:space="preserve">
+    <value>Paragon</value>
+  </data>
+  <data name="Folder Lamp" xml:space="preserve">
+    <value>Folder Lamp</value>
+  </data>
+  <data name="All {0} passed" xml:space="preserve">
+    <value>All {0} passed</value>
+  </data>
+  <data name="All {0} at {1} or better" xml:space="preserve">
+    <value>All {0} at {1} or better</value>
+  </data>
+  <data name="In your PUMBILITY top 50" xml:space="preserve">
+    <value>In your PUMBILITY top 50</value>
+  </data>
+  <data name="Counts toward a title" xml:space="preserve">
+    <value>Counts toward a title</value>
+  </data>
+  <data name="Top scores among comparable players" xml:space="preserve">
+    <value>Top scores among comparable players</value>
+  </data>
+  <data name="Nearly complete folder" xml:space="preserve">
+    <value>Nearly complete folder</value>
+  </data>
+  <data name="Raised your competitive level" xml:space="preserve">
+    <value>Raised your competitive level</value>
+  </data>
+  <data name="One of your first passes in this folder" xml:space="preserve">
+    <value>One of your first passes in this folder</value>
+  </data>
+  <data name="Weekly" xml:space="preserve">
+    <value>Weekly</value>
+  </data>
+  <data name="View all scores" xml:space="preserve">
+    <value>View all scores</value>
+  </data>
+  <data name="{0} more scores" xml:space="preserve">
+    <value>{0} more scores</value>
+  </data>
+  <data name="View your session" xml:space="preserve">
+    <value>View your session</value>
+  </data>
 </root>

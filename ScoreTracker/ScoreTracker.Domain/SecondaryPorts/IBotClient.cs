@@ -1,4 +1,6 @@
-﻿namespace ScoreTracker.Domain.SecondaryPorts
+﻿using ScoreTracker.Domain.Records;
+
+namespace ScoreTracker.Domain.SecondaryPorts
 {
     public interface IBotClient : IDisposable
     {
@@ -16,6 +18,14 @@
         }
 
         public Task SendMessages(IEnumerable<string> messages, IEnumerable<ulong> channelIds,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///     Structured cards (Discord Components V2). A channel whose rich send fails
+        ///     receives the message's plain-text fallback instead — an announcement never
+        ///     silently drops on a rendering problem.
+        /// </summary>
+        public Task SendRichMessages(IEnumerable<RichBotMessage> messages, IEnumerable<ulong> channelIds,
             CancellationToken cancellationToken = default);
 
         public Task RegisterMenuSlashCommand(string name, string description, string response,

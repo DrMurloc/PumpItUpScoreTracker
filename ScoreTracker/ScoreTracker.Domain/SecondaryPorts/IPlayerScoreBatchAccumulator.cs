@@ -16,17 +16,28 @@ namespace ScoreTracker.Domain.SecondaryPorts;
 public interface IPlayerScoreBatchAccumulator
 {
     /// <summary>
+    /// Returns the open session id for (user, mix, source), extending its activity
+    /// window — or mints a new one when none is open or the gap (8 h) has elapsed.
+    /// An explicit id (an import/CSV run id) takes over the envelope. Session
+    /// envelopes are identity only: they group journal rows and never delay the
+    /// event batches below.
+    /// </summary>
+    Guid GetOrExtendSession(MixEnum mix, Guid userId, string source, DateTimeOffset now,
+        Guid? explicitSessionId = null);
+
+    /// <summary>
     /// Atomically adds a chart update to the (user, mix) batch (creating the batch if
     /// needed) and pushes the fire-at time forward. If <paramref name="isNewClear"/>
     /// is true and <paramref name="upscoredFrom"/> is non-null for the same chart,
-    /// new-clear takes precedence and the upscore is dropped.
+    /// new-clear takes precedence and the upscore is dropped. The batch carries the
+    /// most recent <paramref name="sessionId"/> onto its published event.
     ///
     /// Returns true if this call created a new batch (caller should schedule a
     /// TryFireScoreCommand); false if a batch was already active (its fire-at has
     /// just been pushed forward).
     /// </summary>
     bool AddToBatch(MixEnum mix, Guid userId, DateTime fireAt, Guid chartId, bool isNewClear,
-        PhoenixScore? upscoredFrom);
+        PhoenixScore? upscoredFrom, Guid sessionId);
 
     /// <summary>Returns the scheduled fire-at, or null if no batch is active for the (user, mix).</summary>
     DateTime? GetFireAt(MixEnum mix, Guid userId);

@@ -92,6 +92,54 @@ public sealed class E2ESeedData
         return chartId;
     }
 
+    public async Task<Guid> SeedUserAsync(string name, bool isPublic = true,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = Guid.NewGuid();
+        await using var context = await _factory.CreateDbContextAsync(cancellationToken);
+        context.User.Add(new UserEntity
+        {
+            Id = userId,
+            Name = name,
+            IsPublic = isPublic,
+            ProfileImage = "https://e2e-files.invalid/avatar.png",
+            IsContentLocked = false,
+            ClaimsInvalidatedAt = new DateTimeOffset(2020, 1, 1, 0, 0, 0, TimeSpan.Zero)
+        });
+        await context.SaveChangesAsync(cancellationToken);
+        return userId;
+    }
+
+    /// <summary>Journal, highlight, and milestone rows belong to vertical-internal entities — seeded with SQL.</summary>
+    public async Task SeedJournalRowAsync(Guid userId, Guid chartId, DateTimeOffset occurredAt, int? score,
+        string? plate, bool isBroken, Guid? sessionId, string source = "manual",
+        CancellationToken cancellationToken = default)
+    {
+        await using var context = await _factory.CreateDbContextAsync(cancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT INTO [scores].[ScoreEventJournal] ([Id], [EventId], [OccurredAt], [Source], [MixId], [UserId], [ChartId], [Score], [Plate], [IsBroken], [SessionId]) VALUES ({Guid.NewGuid()}, {Guid.NewGuid()}, {occurredAt}, {source}, {PhoenixMixId}, {userId}, {chartId}, {score}, {plate}, {isBroken}, {sessionId})",
+            cancellationToken);
+    }
+
+    public async Task SeedHighlightAsync(Guid userId, Guid chartId, Guid? sessionId, DateTimeOffset occurredAt,
+        int flags, int level, CancellationToken cancellationToken = default)
+    {
+        await using var context = await _factory.CreateDbContextAsync(cancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT INTO [scores].[ScoreHighlight] ([Id], [UserId], [MixId], [ChartId], [SessionId], [OccurredAt], [Flags], [Level], [ScoringLevel]) VALUES ({Guid.NewGuid()}, {userId}, {PhoenixMixId}, {chartId}, {sessionId}, {occurredAt}, {flags}, {level}, {null})",
+            cancellationToken);
+    }
+
+    public async Task SeedMilestoneAsync(Guid userId, Guid? sessionId, DateTimeOffset occurredAt, string kind,
+        double? oldValue = null, double? newValue = null, string? title = null, string? detail = null,
+        CancellationToken cancellationToken = default)
+    {
+        await using var context = await _factory.CreateDbContextAsync(cancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT INTO [scores].[PlayerMilestone] ([Id], [UserId], [MixId], [SessionId], [OccurredAt], [Kind], [OldValue], [NewValue], [Title], [Detail]) VALUES ({Guid.NewGuid()}, {userId}, {PhoenixMixId}, {sessionId}, {occurredAt}, {kind}, {oldValue}, {newValue}, {title}, {detail})",
+            cancellationToken);
+    }
+
     /// <summary>
     ///     TierListEntry belongs to the ChartIntelligence vertical (internal entity), so it
     ///     is seeded with SQL rather than an entity type. TierListName is one of the four

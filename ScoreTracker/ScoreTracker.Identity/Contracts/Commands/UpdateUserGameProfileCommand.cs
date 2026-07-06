@@ -5,10 +5,11 @@ namespace ScoreTracker.Identity.Contracts.Commands;
 
 /// <summary>
 ///     Sets the current user's game tag and avatar from official account data (sent by
-///     the OfficialMirror import saga after scraping account info). All other user fields
-///     are preserved.
+///     the OfficialMirror import saga after scraping account info). A null avatar means
+///     the scrape carried none — the user's existing avatar is preserved, never
+///     overwritten with a miss. All other user fields are preserved.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record UpdateUserGameProfileCommand(Name GameTag, Uri AvatarUrl) : IRequest
+public sealed record UpdateUserGameProfileCommand(Name GameTag, Uri? AvatarUrl) : IRequest
 {
 }

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -2174,5 +2174,119 @@
   </data>
   <data name="Image could not be copied to the CDN — source URL stored, rehost manually." xml:space="preserve">
     <value>Mrglimage could not mrgl to the CDN — mrglsource URL mrglstored, mrglhost mrglually!</value>
+  </data>
+  <data name="Sessions" xml:space="preserve">
+    <value>Mrglglsh</value>
+  </data>
+  <data name="Play sessions, newest first" xml:space="preserve">
+    <value>Mrgl mrgl, mrrglrgl mrgl</value>
+  </data>
+  <data name="Of Note" xml:space="preserve">
+    <value>Mrgl!</value>
+  </data>
+  <data name="Sessions per page" xml:space="preserve">
+    <value>Mrglsh grr pagrgl</value>
+  </data>
+  <data name="No sessions recorded yet." xml:space="preserve">
+    <value>Mrgl mrgl... grrl.</value>
+  </data>
+  <data name="Score history begins with journaling (June 2026) — older plays aren&apos;t shown." xml:space="preserve">
+    <value>Mrglrgl mrgl 2026 — grrrl mrgl mrgl.</value>
+  </data>
+  <data name="New Pass" xml:space="preserve">
+    <value>MRGL PASS</value>
+  </data>
+  <data name="Upscore" xml:space="preserve">
+    <value>MRGLSCORE</value>
+  </data>
+  <data name="Break" xml:space="preserve">
+    <value>GRRRK</value>
+  </data>
+  <data name="Played" xml:space="preserve">
+    <value>Mrgld</value>
+  </data>
+  <data name="New Passes" xml:space="preserve">
+    <value>MRGL PASSES</value>
+  </data>
+  <data name="Upscores" xml:space="preserve">
+    <value>MRGLSCORES</value>
+  </data>
+  <data name="Highlights" xml:space="preserve">
+    <value>MRGLIGHTS</value>
+  </data>
+  <data name="Show All" xml:space="preserve">
+    <value>Mrgl mrgl!</value>
+  </data>
+  <data name="Official Import" xml:space="preserve">
+    <value>Mrglficial</value>
+  </data>
+  <data name="CSV Upload" xml:space="preserve">
+    <value>CSV Mrgl</value>
+  </data>
+  <data name="Backfill" xml:space="preserve">
+    <value>Mrglfill</value>
+  </data>
+  <data name="Play Session" xml:space="preserve">
+    <value>Mrgl Mrglsh</value>
+  </data>
+  <data name="min" xml:space="preserve">
+    <value>mrgl</value>
+  </data>
+  <data name="Score Journal" xml:space="preserve">
+    <value>Mrgl Jrrnl</value>
+  </data>
+  <data name="Export CSV" xml:space="preserve">
+    <value>Exprrt CSV</value>
+  </data>
+  <data name="When" xml:space="preserve">
+    <value>Mrgn?</value>
+  </data>
+  <data name="Result" xml:space="preserve">
+    <value>Rslt</value>
+  </data>
+  <data name="Competitive" xml:space="preserve">
+    <value>Cmptrgl</value>
+  </data>
+  <data name="Paragon" xml:space="preserve">
+    <value>Prrgn</value>
+  </data>
+  <data name="Folder Lamp" xml:space="preserve">
+    <value>Mrgl Lmp!</value>
+  </data>
+  <data name="All {0} passed" xml:space="preserve">
+    <value>Mrgl {0} mrgl!</value>
+  </data>
+  <data name="All {0} at {1} or better" xml:space="preserve">
+    <value>Mrgl {0} {1} mrgl!</value>
+  </data>
+  <data name="In your PUMBILITY top 50" xml:space="preserve">
+    <value>Mrgl top 50!</value>
+  </data>
+  <data name="Counts toward a title" xml:space="preserve">
+    <value>Mrgl ttl!</value>
+  </data>
+  <data name="Top scores among comparable players" xml:space="preserve">
+    <value>Mrgl mrgl scrr!</value>
+  </data>
+  <data name="Nearly complete folder" xml:space="preserve">
+    <value>Mrgl fldr!</value>
+  </data>
+  <data name="Raised your competitive level" xml:space="preserve">
+    <value>Mrgl up!</value>
+  </data>
+  <data name="One of your first passes in this folder" xml:space="preserve">
+    <value>Frst mrgl!</value>
+  </data>
+  <data name="Weekly" xml:space="preserve">
+    <value>Wkly Mrgl!</value>
+  </data>
+  <data name="View all scores" xml:space="preserve">
+    <value>See all mrgls</value>
+  </data>
+  <data name="{0} more scores" xml:space="preserve">
+    <value>{0} mr mrgls</value>
+  </data>
+  <data name="View your session" xml:space="preserve">
+    <value>See yr mrgl sesh</value>
   </data>
 </root>

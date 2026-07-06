@@ -26,6 +26,9 @@ public sealed class ScoreLedgerModelContribution : IDbModelContribution
             .HasForeignKey(ba => ba.UserId);
 
         modelBuilder.Entity<ScoreEventJournalEntity>().ToTable("ScoreEventJournal");
+        // Session lookups skip the pre-capture rows (SessionId is never backfilled).
+        modelBuilder.Entity<ScoreEventJournalEntity>().HasIndex(e => e.SessionId)
+            .HasFilter("[SessionId] IS NOT NULL");
         modelBuilder.Entity<PhoenixRecordStatsEntity>().ToTable("PhoenixRecordStats");
 
         modelBuilder.Entity<BestAttemptEntity>().ToTable("BestAttempt")

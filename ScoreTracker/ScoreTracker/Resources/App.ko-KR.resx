@@ -2131,4 +2131,118 @@
   <data name="Image could not be copied to the CDN — source URL stored, rehost manually." xml:space="preserve">
     <value>이미지를 CDN에 복사하지 못했습니다 — 원본 URL이 저장되었으니 수동으로 다시 호스팅하세요.</value>
   </data>
+  <data name="Sessions" xml:space="preserve">
+    <value>세션</value>
+  </data>
+  <data name="Play sessions, newest first" xml:space="preserve">
+    <value>플레이 세션, 최신순</value>
+  </data>
+  <data name="Of Note" xml:space="preserve">
+    <value>주목할 만한</value>
+  </data>
+  <data name="Sessions per page" xml:space="preserve">
+    <value>페이지당 세션 수</value>
+  </data>
+  <data name="No sessions recorded yet." xml:space="preserve">
+    <value>아직 기록된 세션이 없습니다.</value>
+  </data>
+  <data name="Score history begins with journaling (June 2026) — older plays aren&apos;t shown." xml:space="preserve">
+    <value>점수 기록은 저널 기록 시작(2026년 6월)부터입니다. 이전 플레이는 표시되지 않습니다.</value>
+  </data>
+  <data name="New Pass" xml:space="preserve">
+    <value>신규 클리어</value>
+  </data>
+  <data name="Upscore" xml:space="preserve">
+    <value>점수 갱신</value>
+  </data>
+  <data name="Break" xml:space="preserve">
+    <value>브레이크</value>
+  </data>
+  <data name="Played" xml:space="preserve">
+    <value>플레이함</value>
+  </data>
+  <data name="New Passes" xml:space="preserve">
+    <value>신규 클리어</value>
+  </data>
+  <data name="Upscores" xml:space="preserve">
+    <value>점수 갱신</value>
+  </data>
+  <data name="Highlights" xml:space="preserve">
+    <value>하이라이트</value>
+  </data>
+  <data name="Show All" xml:space="preserve">
+    <value>모두 보기</value>
+  </data>
+  <data name="Official Import" xml:space="preserve">
+    <value>공식 임포트</value>
+  </data>
+  <data name="CSV Upload" xml:space="preserve">
+    <value>CSV 업로드</value>
+  </data>
+  <data name="Backfill" xml:space="preserve">
+    <value>백필</value>
+  </data>
+  <data name="Play Session" xml:space="preserve">
+    <value>플레이 세션</value>
+  </data>
+  <data name="min" xml:space="preserve">
+    <value>분</value>
+  </data>
+  <data name="Score Journal" xml:space="preserve">
+    <value>점수 저널</value>
+  </data>
+  <data name="Export CSV" xml:space="preserve">
+    <value>CSV 내보내기</value>
+  </data>
+  <data name="When" xml:space="preserve">
+    <value>일시</value>
+  </data>
+  <data name="Result" xml:space="preserve">
+    <value>결과</value>
+  </data>
+  <data name="Competitive" xml:space="preserve">
+    <value>경쟁</value>
+  </data>
+  <data name="Paragon" xml:space="preserve">
+    <value>파라곤</value>
+  </data>
+  <data name="Folder Lamp" xml:space="preserve">
+    <value>폴더 램프</value>
+  </data>
+  <data name="All {0} passed" xml:space="preserve">
+    <value>{0} 전곡 클리어</value>
+  </data>
+  <data name="All {0} at {1} or better" xml:space="preserve">
+    <value>{0} 모두 {1} 이상</value>
+  </data>
+  <data name="In your PUMBILITY top 50" xml:space="preserve">
+    <value>PUMBILITY 상위 50 포함</value>
+  </data>
+  <data name="Counts toward a title" xml:space="preserve">
+    <value>칭호 진행에 반영됨</value>
+  </data>
+  <data name="Top scores among comparable players" xml:space="preserve">
+    <value>비슷한 실력대에서 상위 점수</value>
+  </data>
+  <data name="Nearly complete folder" xml:space="preserve">
+    <value>폴더 거의 완료</value>
+  </data>
+  <data name="Raised your competitive level" xml:space="preserve">
+    <value>경쟁 레벨 상승</value>
+  </data>
+  <data name="One of your first passes in this folder" xml:space="preserve">
+    <value>이 폴더의 첫 클리어 중 하나</value>
+  </data>
+  <data name="Weekly" xml:space="preserve">
+    <value>주간</value>
+  </data>
+  <data name="View all scores" xml:space="preserve">
+    <value>모든 점수 보기</value>
+  </data>
+  <data name="{0} more scores" xml:space="preserve">
+    <value>점수 {0}개 더</value>
+  </data>
+  <data name="View your session" xml:space="preserve">
+    <value>내 세션 보기</value>
+  </data>
 </root>

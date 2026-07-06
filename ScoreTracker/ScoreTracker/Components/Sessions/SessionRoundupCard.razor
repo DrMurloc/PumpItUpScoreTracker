@@ -1,0 +1,158 @@
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.ScoreLedger.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Domain.Records
+@namespace ScoreTracker.Web.Components
+<MudPaper Elevation="3" id="@AnchorId" data-testid="session-card"
+          Style="@($"border-left: 4px solid #{Mix.GetAccentColor():X6}; border-radius: 8px; overflow: hidden; height: 100%; display: flex; flex-direction: column")">
+    <div class="d-flex align-center flex-wrap gap-2 px-3 py-1"
+         style="border-bottom: 1px solid var(--mud-palette-table-lines)">
+        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                 Color="@(Group.Source == "officialImport" ? Color.Info : Color.Success)">
+            @SourceLabel
+        </MudChip>
+        <MudText Typo="Typo.subtitle2"><b>@SessionTitle</b></MudText>
+        <MudText Typo="Typo.caption" Style="@($"color:#{Mix.GetAccentColor():X6}; font-weight:600")">
+            @Mix.GetName()
+        </MudText>
+        <MudSpacer/>
+        <MudText Typo="Typo.caption">@Group.End.ToLocalTime().ToString("g")@DurationSuffix</MudText>
+    </div>
+
+    <div class="d-flex align-baseline gap-4 px-3 py-1">
+        @if (PassCount > 0)
+        {
+            <MudText Typo="Typo.body2"><b>@PassCount</b> @L["New Passes"]</MudText>
+        }
+        @if (UpscoreCount > 0)
+        {
+            <MudText Typo="Typo.body2"><b>@UpscoreCount</b> @L["Upscores"]</MudText>
+        }
+        @if (Highlighted.Count > 0)
+        {
+            <MudText Typo="Typo.body2"><b>@Highlighted.Count</b> @L["Highlights"]</MudText>
+        }
+    </div>
+
+    @foreach (var milestone in Milestones.OrderBy(m => m.Kind))
+    {
+        <MilestoneStrip Milestone="milestone"></MilestoneStrip>
+    }
+
+    @foreach (var row in InlineRows)
+    {
+        <HighlightRow Row="row" Chart="Charts.GetValueOrDefault(row.ChartId)"
+                      Flags="FlagsFor(row)"></HighlightRow>
+    }
+
+    <MudSpacer/>
+    <div class="d-flex align-center px-2 pb-1">
+        <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="() => _showAllScores = true"
+                   StartIcon="@Icons.Material.Filled.List" data-testid="view-all-scores">
+            @L["View all scores"] (@Group.Rows.Count)
+        </MudButton>
+        @if (HiddenRowCount > 0)
+        {
+            <MudText Typo="Typo.caption" Class="ml-1">· @L["{0} more scores", HiddenRowCount]</MudText>
+        }
+    </div>
+</MudPaper>
+
+<MudDialog @bind-Visible="_showAllScores"
+           Options="new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true }">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@SessionTitle — @Group.End.ToLocalTime().ToString("d")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <div style="max-height: 65vh; overflow-y: auto" data-testid="session-scores-dialog">
+            @foreach (var row in Ordered)
+            {
+                <HighlightRow Row="row" Chart="Charts.GetValueOrDefault(row.ChartId)"
+                              Flags="FlagsFor(row)"></HighlightRow>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _showAllScores = false">@L["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private bool _showAllScores;
+
+    [Parameter] [EditorRequired] public RecentSessionsPage.SessionGroup Group { get; set; } = null!;
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+    [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
+    [Parameter] public IReadOnlyDictionary<(Guid? SessionId, Guid ChartId), HighlightFlags> Flags { get; set; } =
+        new Dictionary<(Guid?, Guid), HighlightFlags>();
+    [Parameter] public IReadOnlyList<PlayerMilestoneRecord> Milestones { get; set; } =
+        Array.Empty<PlayerMilestoneRecord>();
+    /// <summary>Show only milestones + flagged rows (the ⭐ Of-note filter).</summary>
+    [Parameter] public bool OfNoteOnly { get; set; }
+    [Parameter] public bool StartExpanded { get; set; }
+
+    // The card leads with what mattered, like the Discord post: flagged rows inline
+    // (noteworthy order), a taste of the top scores when nothing was flagged, and the
+    // full breakdown behind View all scores.
+    private const int InlineFlaggedLimit = 6;
+    private const int InlineFallbackRows = 3;
+
+    // Computed once per parameter set — a property recomputing these copies would run
+    // on every Blazor render.
+    private IReadOnlyList<RecentSessionsPage.ScoreEventRecord> Highlighted = Array.Empty<RecentSessionsPage.ScoreEventRecord>();
+    private IReadOnlyList<RecentSessionsPage.ScoreEventRecord> Ordered = Array.Empty<RecentSessionsPage.ScoreEventRecord>();
+    private IReadOnlyList<RecentSessionsPage.ScoreEventRecord> InlineRows = Array.Empty<RecentSessionsPage.ScoreEventRecord>();
+
+    protected override void OnParametersSet()
+    {
+        if (StartExpanded) _showAllScores = true;
+
+        // Universal noteworthy ordering for flagged rows, then the rest by level.
+        Ordered = Group.Rows
+            .OrderByDescending(r => FlagsFor(r) != HighlightFlags.None)
+            .ThenByDescending(r => Charts.GetValueOrDefault(r.ChartId)?.Level ?? 0)
+            .ThenByDescending(r => r.OccurredAt)
+            .ToArray();
+        Highlighted = Ordered.Where(r => FlagsFor(r) != HighlightFlags.None).ToArray();
+        if (OfNoteOnly)
+            InlineRows = Highlighted;
+        else if (Highlighted.Count > 0)
+            InlineRows = Highlighted.Take(InlineFlaggedLimit).ToArray();
+        else
+            InlineRows = Ordered.Take(InlineFallbackRows).ToArray();
+    }
+
+    public string AnchorId => Group.SessionId != null ? $"session-{Group.SessionId}" : $"day-{Group.Day:yyyyMMdd}";
+
+    private HighlightFlags FlagsFor(RecentSessionsPage.ScoreEventRecord row)
+    {
+        return Flags.GetValueOrDefault((row.SessionId, row.ChartId));
+    }
+
+    private int HiddenRowCount => OfNoteOnly ? 0 : Group.Rows.Count - InlineRows.Count;
+
+    private int PassCount => Group.Rows.Count(r => r.Classification == ScoreEventClassification.NewPass);
+    private int UpscoreCount => Group.Rows.Count(r => r.Classification == ScoreEventClassification.Upscore);
+
+    private string SourceLabel => Group.Source switch
+    {
+        "officialImport" => @L["Official Import"],
+        "csv" => @L["CSV Upload"],
+        "backfill" => @L["Backfill"],
+        _ => @L["Play Session"]
+    };
+
+    private string SessionTitle => Group.SessionId != null
+        ? SourceLabel
+        : Group.Day?.ToString("d") ?? SourceLabel;
+
+    private string DurationSuffix
+    {
+        get
+        {
+            var duration = Group.End - Group.Start;
+            return duration.TotalMinutes < 5 ? string.Empty : $" · {(int)duration.TotalMinutes} {L["min"]}";
+        }
+    }
+}

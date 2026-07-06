@@ -2,7 +2,9 @@ using MassTransit;
 using MediatR;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
@@ -19,13 +21,30 @@ namespace ScoreTracker.PlayerProgress.Application;
 
 internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumerable<TitleProgress>>,
     IConsumer<TitlesDetectedEvent>,
-    IConsumer<PlayerScoresUpdatedEvent>,
-    IRequestHandler<TitleSaga.ProcessTitles>
+    IRequestHandler<TitleSaga.ProcessTitles>,
+    IRequestHandler<TitleSaga.CaptureSessionTitles, TitleSaga.SessionTitlesResult>
 {
+    /// <summary>
+    ///     The title step of the session-snapshot pipeline: processes completions and
+    ///     paragon gains for the batch (WITHOUT the legacy Discord announcement — the
+    ///     snapshot card carries them) and computes the per-title progress deltas from
+    ///     the batch's old→new scores. Dispatched in-process by the capture
+    ///     orchestrator; this saga no longer consumes the raw score event. The legacy
+    ///     announcement survives only on the <see cref="TitlesDetectedEvent" /> path —
+    ///     titles granted by the official site have no session, so no card covers them.
+    /// </summary>
+    public sealed record CaptureSessionTitles(Guid UserId, MixEnum Mix, Guid? SessionId,
+        IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange> Changes) : IRequest<SessionTitlesResult>;
+
+    public sealed record SessionTitlesResult(
+        IReadOnlyList<PlayerMilestoneRecord> Milestones, IReadOnlyList<TitleProgressDelta> Progress);
+
     private readonly IChartRepository _charts;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IScoreReader _phoenixScores;
     private readonly ITitleRepository _titles;
+    private readonly IPlayerMilestoneRepository _milestones;
+    private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IBus _bus;
 
     public sealed record ProcessTitles(Guid UserId, MixEnum Mix = MixEnum.Phoenix) : IRequest;
@@ -34,12 +53,16 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         IScoreReader phoenixScores,
         IChartRepository charts,
         ITitleRepository titles,
+        IPlayerMilestoneRepository milestones,
+        IDateTimeOffsetAccessor dateTime,
         IBus bus)
     {
         _currentUser = currentUser;
         _phoenixScores = phoenixScores;
         _charts = charts;
         _titles = titles;
+        _milestones = milestones;
+        _dateTime = dateTime;
         _bus = bus;
     }
 
@@ -129,8 +152,9 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         return tp is PhoenixTitleProgress pt ? pt.ParagonLevel : ParagonLevel.None;
     }
 
-    private async Task ProcessCharts(MixEnum mix, Guid userId, IEnumerable<Name> newCharts,
-        CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<PlayerMilestoneRecord>> ProcessCharts(MixEnum mix, Guid userId,
+        IEnumerable<Name> newCharts, CancellationToken cancellationToken, Guid? sessionId = null,
+        bool announceLegacy = true)
     {
         var existingTitles = (await _titles.GetCompletedTitles(mix, userId, cancellationToken))
             .ToDictionary(t => t.Title);
@@ -160,12 +184,27 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         var upgraded = allCompleted.Where(c =>
             existingTitles.ContainsKey(c.Title) && existingTitles[c.Title].ParagonLevel != c.ParagonLevel).ToArray();
 
-        if (newCompleted.Any() || upgraded.Any())
+        if (newCompleted.Length == 0 && upgraded.Length == 0) return Array.Empty<PlayerMilestoneRecord>();
+
+        // Title completions and paragon gains become timestamped milestones —
+        // UserTitle rows have no acquisition date, so this is the only record of WHEN.
+        var writes = newCompleted
+            .Select(t => new PlayerMilestoneWrite(MilestoneKind.TitleCompleted, sessionId, _dateTime.Now,
+                Title: t))
+            .Concat(upgraded.Select(t => new PlayerMilestoneWrite(MilestoneKind.ParagonLevelGain, sessionId,
+                _dateTime.Now, Title: t.Title.ToString(), Detail: t.ParagonLevel.ToString())))
+            .ToArray();
+        await _milestones.Append(mix, userId, writes, cancellationToken);
+        if (announceLegacy)
             await _bus.Publish(
                 new NewTitlesAcquiredEvent(userId, newCompleted,
                     upgraded.ToDictionary(t => t.Title.ToString(), t => t.ParagonLevel.ToString()),
-                    mix),
+                    mix, sessionId),
                 cancellationToken);
+        return writes
+            .Select(w => new PlayerMilestoneRecord(w.Kind, w.SessionId, w.OccurredAt, w.OldValue, w.NewValue,
+                w.Title, w.Detail))
+            .ToArray();
     }
 
     private static PhoenixTitle GetTitleByName(MixEnum mix, Name title)
@@ -179,10 +218,72 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         };
     }
 
-    public async Task Consume(ConsumeContext<PlayerScoresUpdatedEvent> context)
+    public async Task<SessionTitlesResult> Handle(CaptureSessionTitles request,
+        CancellationToken cancellationToken)
     {
-        await ProcessCharts(context.Message.Mix, context.Message.UserId, Array.Empty<Name>(),
-            context.CancellationToken);
+        // XX and unknown mixes have no title persistence — an empty result, not a throw
+        // (the old raw-event consumer would have faulted on an XX score event).
+        if (request.Mix is not (MixEnum.Phoenix or MixEnum.Phoenix2))
+            return new SessionTitlesResult(Array.Empty<PlayerMilestoneRecord>(), Array.Empty<TitleProgressDelta>());
+
+        var progress = await ComputeProgressDeltas(request, cancellationToken);
+        var milestones = await ProcessCharts(request.Mix, request.UserId, Array.Empty<Name>(), cancellationToken,
+            request.SessionId, announceLegacy: false);
+        return new SessionTitlesResult(milestones, progress);
+    }
+
+    /// <summary>
+    ///     Per-title progress movement across the batch (design doc revision 2, owner
+    ///     call: real deltas, not a summary line). The before-state is reconstructed
+    ///     from the changes' old scores — a chart with no prior score drops out, an
+    ///     upscored chart reverts to its old score (old plate isn't on the event, so
+    ///     plate-based progress is approximated by the current plate). Only titles
+    ///     whose ROUNDED percent actually moved make the list, nearest-to-complete
+    ///     first, capped at 5 — the card shows at most 3.
+    /// </summary>
+    private async Task<IReadOnlyList<TitleProgressDelta>> ComputeProgressDeltas(CaptureSessionTitles request,
+        CancellationToken cancellationToken)
+    {
+        var charts = (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
+            .ToDictionary(c => c.Id);
+        var completed = (await _titles.GetCompletedTitles(request.Mix, request.UserId, cancellationToken))
+            .Select(t => t.Title).ToHashSet();
+        var current = (await _phoenixScores.GetBestScores(request.Mix, request.UserId, cancellationToken))
+            .ToArray();
+        var changed = request.Changes.GroupBy(c => c.ChartId).ToDictionary(g => g.Key, g => g.First());
+        var before = current
+            .Where(s => !changed.TryGetValue(s.ChartId, out var c) || c.OldScore != null)
+            .Select(s => changed.TryGetValue(s.ChartId, out var c)
+                ? s with { Score = PhoenixScore.From(c.OldScore!.Value), IsBroken = c.IsNewPass }
+                : s)
+            .ToArray();
+
+        var beforeByTitle = BuildProgress(request.Mix, charts, before, completed)
+            .ToDictionary(t => t.Title.Name);
+        return BuildProgress(request.Mix, charts, current, completed)
+            .Where(t => !t.IsComplete && t.Title.CompletionRequired > 0)
+            .Select(t => new TitleProgressDelta(t.Title.Name,
+                beforeByTitle.TryGetValue(t.Title.Name, out var b) ? Percent(b) : 0,
+                Percent(t)))
+            .Where(d => (int)(d.NewPercent * 100) > (int)(d.OldPercent * 100))
+            .OrderByDescending(d => d.NewPercent)
+            .Take(5)
+            .ToArray();
+    }
+
+    private static double Percent(TitleProgress progress)
+    {
+        return progress.Title.CompletionRequired <= 0
+            ? 0
+            : Math.Min(1.0, progress.CompletionCount / progress.Title.CompletionRequired);
+    }
+
+    private static IEnumerable<TitleProgress> BuildProgress(MixEnum mix, IDictionary<Guid, Chart> charts,
+        IEnumerable<RecordedPhoenixScore> scores, ISet<Name> completed)
+    {
+        return mix == MixEnum.Phoenix
+            ? PhoenixTitleList.BuildProgress(charts, scores, completed)
+            : Phoenix2TitleList.BuildProgress(charts, scores, completed);
     }
 
     public async Task Handle(ProcessTitles request, CancellationToken cancellationToken)

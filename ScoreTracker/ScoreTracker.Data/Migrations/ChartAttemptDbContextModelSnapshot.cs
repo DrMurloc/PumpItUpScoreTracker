@@ -1428,6 +1428,50 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("PlayerHistory", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.PlayerMilestoneEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Detail")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double?>("NewValue")
+                        .HasColumnType("float");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<double?>("OldValue")
+                        .HasColumnType("float");
+
+                    b.Property<Guid?>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "MixId", "OccurredAt");
+
+                    b.ToTable("PlayerMilestone", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.PlayerStatsEntity", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -1490,6 +1534,46 @@ namespace ScoreTracker.Data.Migrations
                     b.HasKey("UserId", "MixId");
 
                     b.ToTable("PlayerStats", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.ScoreHighlightEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Flags")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<double?>("ScoringLevel")
+                        .HasColumnType("float");
+
+                    b.Property<Guid?>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId")
+                        .HasFilter("[SessionId] IS NOT NULL");
+
+                    b.HasIndex("UserId", "MixId", "OccurredAt");
+
+                    b.ToTable("ScoreHighlight", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.SuggestionFeedbackEntity", b =>
@@ -1649,6 +1733,10 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<int?>("Score")
                         .HasColumnType("int");
 
+                    b.Property<string>("Source")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1720,6 +1808,9 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<int?>("Score")
                         .HasColumnType("int");
 
+                    b.Property<Guid?>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Source")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -1730,7 +1821,12 @@ namespace ScoreTracker.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("SessionId")
+                        .HasFilter("[SessionId] IS NOT NULL");
+
                     b.HasIndex("UserId", "ChartId", "OccurredAt");
+
+                    b.HasIndex("UserId", "MixId", "OccurredAt");
 
                     b.ToTable("ScoreEventJournal", "scores");
                 });

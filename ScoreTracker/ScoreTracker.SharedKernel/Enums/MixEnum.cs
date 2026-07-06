@@ -19,4 +19,22 @@ public static class MixEnumHelperMethods
         return typeof(MixEnum).GetField(enumValue.ToString())?.GetCustomAttribute<DescriptionAttribute>()
             ?.Description ?? enumValue.ToString();
     }
+
+    /// <summary>
+    ///     The mix's brand color as 0xRRGGBB — sampled from the official mix logos (the
+    ///     same art as the Discord logo emojis; Phoenix 2's deepened slightly from the
+    ///     sampled value for stripe contrast, owner call). The session-snapshot card's
+    ///     accent stripe uses this so the mix reads at a glance while several run in
+    ///     parallel.
+    /// </summary>
+    public static uint GetAccentColor(this MixEnum enumValue)
+    {
+        return enumValue switch
+        {
+            MixEnum.Phoenix => 0x1D9BCCu,
+            MixEnum.Phoenix2 => 0x6CA832u,
+            MixEnum.XX => 0xD49D3Bu,
+            _ => 0x6E8CA0u
+        };
+    }
 }

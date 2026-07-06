@@ -4,6 +4,6 @@ namespace ScoreTracker.Domain.Events;
 
 [ExcludeFromCodeCoverage]
 public sealed record NewTitlesAcquiredEvent(Guid UserId, IEnumerable<string> NewTitles,
-    IDictionary<string, string> ParagonUpgrades, MixEnum Mix)
+    IDictionary<string, string> ParagonUpgrades, MixEnum Mix, Guid? SessionId = null)
 {
 }

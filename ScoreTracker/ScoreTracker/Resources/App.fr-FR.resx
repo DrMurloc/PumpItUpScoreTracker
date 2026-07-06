@@ -2249,4 +2249,118 @@
   <data name="Image could not be copied to the CDN — source URL stored, rehost manually." xml:space="preserve">
     <value>L'image n'a pas pu être copiée sur le CDN — l'URL source a été enregistrée, réhébergez-la manuellement.</value>
   </data>
+  <data name="Sessions" xml:space="preserve">
+    <value>Sessions</value>
+  </data>
+  <data name="Play sessions, newest first" xml:space="preserve">
+    <value>Sessions de jeu, les plus récentes d&apos;abord</value>
+  </data>
+  <data name="Of Note" xml:space="preserve">
+    <value>À noter</value>
+  </data>
+  <data name="Sessions per page" xml:space="preserve">
+    <value>Sessions par page</value>
+  </data>
+  <data name="No sessions recorded yet." xml:space="preserve">
+    <value>Aucune session enregistrée pour l&apos;instant.</value>
+  </data>
+  <data name="Score history begins with journaling (June 2026) — older plays aren&apos;t shown." xml:space="preserve">
+    <value>L&apos;historique des scores commence avec la journalisation (juin 2026) — les parties antérieures ne sont pas affichées.</value>
+  </data>
+  <data name="New Pass" xml:space="preserve">
+    <value>Nouveau Pass</value>
+  </data>
+  <data name="Upscore" xml:space="preserve">
+    <value>Upscore</value>
+  </data>
+  <data name="Break" xml:space="preserve">
+    <value>Break</value>
+  </data>
+  <data name="Played" xml:space="preserve">
+    <value>Joué</value>
+  </data>
+  <data name="New Passes" xml:space="preserve">
+    <value>Nouveaux Pass</value>
+  </data>
+  <data name="Upscores" xml:space="preserve">
+    <value>Upscores</value>
+  </data>
+  <data name="Highlights" xml:space="preserve">
+    <value>Points forts</value>
+  </data>
+  <data name="Show All" xml:space="preserve">
+    <value>Tout afficher</value>
+  </data>
+  <data name="Official Import" xml:space="preserve">
+    <value>Import officiel</value>
+  </data>
+  <data name="CSV Upload" xml:space="preserve">
+    <value>Import CSV</value>
+  </data>
+  <data name="Backfill" xml:space="preserve">
+    <value>Rétroactif</value>
+  </data>
+  <data name="Play Session" xml:space="preserve">
+    <value>Session de jeu</value>
+  </data>
+  <data name="min" xml:space="preserve">
+    <value>min</value>
+  </data>
+  <data name="Score Journal" xml:space="preserve">
+    <value>Journal des scores</value>
+  </data>
+  <data name="Export CSV" xml:space="preserve">
+    <value>Exporter en CSV</value>
+  </data>
+  <data name="When" xml:space="preserve">
+    <value>Quand</value>
+  </data>
+  <data name="Result" xml:space="preserve">
+    <value>Résultat</value>
+  </data>
+  <data name="Competitive" xml:space="preserve">
+    <value>Compétitif</value>
+  </data>
+  <data name="Paragon" xml:space="preserve">
+    <value>Paragon</value>
+  </data>
+  <data name="Folder Lamp" xml:space="preserve">
+    <value>Folder Lamp</value>
+  </data>
+  <data name="All {0} passed" xml:space="preserve">
+    <value>Toutes les {0} réussies</value>
+  </data>
+  <data name="All {0} at {1} or better" xml:space="preserve">
+    <value>Toutes les {0} à {1} ou mieux</value>
+  </data>
+  <data name="In your PUMBILITY top 50" xml:space="preserve">
+    <value>Dans votre top 50 PUMBILITY</value>
+  </data>
+  <data name="Counts toward a title" xml:space="preserve">
+    <value>Compte pour un titre</value>
+  </data>
+  <data name="Top scores among comparable players" xml:space="preserve">
+    <value>Parmi les meilleurs scores de joueurs comparables</value>
+  </data>
+  <data name="Nearly complete folder" xml:space="preserve">
+    <value>Dossier presque complet</value>
+  </data>
+  <data name="Raised your competitive level" xml:space="preserve">
+    <value>A augmenté votre niveau compétitif</value>
+  </data>
+  <data name="One of your first passes in this folder" xml:space="preserve">
+    <value>L&apos;un de vos premiers pass dans ce dossier</value>
+  </data>
+  <data name="Weekly" xml:space="preserve">
+    <value>Hebdo</value>
+  </data>
+  <data name="View all scores" xml:space="preserve">
+    <value>Voir tous les scores</value>
+  </data>
+  <data name="{0} more scores" xml:space="preserve">
+    <value>{0} scores de plus</value>
+  </data>
+  <data name="View your session" xml:space="preserve">
+    <value>Voir votre session</value>
+  </data>
 </root>
