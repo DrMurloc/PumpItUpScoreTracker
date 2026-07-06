@@ -52,7 +52,8 @@
         <MudGrid Spacing="2">
             @foreach (var group in _page.Groups)
             {
-                <MudItem xs="12" md="6">
+                @* 1-up phones, 2-up small, 3-up tablet/desktop, 4-up extra large. *@
+                <MudItem xs="12" sm="6" md="4" xl="3">
                     <SessionRoundupCard Group="group" Mix="group.Mix" Charts="_charts" Flags="_flags"
                                         Milestones="MilestonesFor(group)"
                                         OfNoteOnly="_filter == FilterOfNote"
