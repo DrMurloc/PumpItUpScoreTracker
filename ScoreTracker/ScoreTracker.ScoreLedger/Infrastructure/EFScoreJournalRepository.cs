@@ -61,7 +61,7 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             .OrderByDescending(k => k.Latest)
             .ToArray();
         var pageKeys = ordered.Skip((page - 1) * pageSize).Take(pageSize).ToArray();
-        if (!pageKeys.Any()) return (ordered.Length, Array.Empty<JournalSessionRows>());
+        if (pageKeys.Length == 0) return (ordered.Length, Array.Empty<JournalSessionRows>());
 
         var sessionIds = pageKeys.Where(k => k.SessionId != null).Select(k => k.SessionId).ToArray();
         // Day buckets load by date (a superset across mixes) and split per mix below.

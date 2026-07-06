@@ -173,7 +173,7 @@ public sealed class TitleSagaTests
         var ctx = new SagaContext(MixEnum.Phoenix);
 
         await ctx.Saga.Consume(BuildContext(new TitlesDetectedEvent(ctx.UserId,
-            new[] { "Intermediate Lv. 1" }, MixEnum.Phoenix)));
+            DetectedTitles, MixEnum.Phoenix)));
 
         ctx.Milestones.Verify(m => m.Append(MixEnum.Phoenix, ctx.UserId,
             It.Is<IEnumerable<PlayerMilestoneWrite>>(w => w.Any(x =>
@@ -188,6 +188,8 @@ public sealed class TitleSagaTests
     private static RecordedPhoenixScore Score(Guid chartId, int score) =>
         new(chartId, score, PhoenixPlate.SuperbGame, false,
             new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+
+    private static readonly string[] DetectedTitles = { "Intermediate Lv. 1" };
 
     private static ConsumeContext<T> BuildContext<T>(T message) where T : class
     {

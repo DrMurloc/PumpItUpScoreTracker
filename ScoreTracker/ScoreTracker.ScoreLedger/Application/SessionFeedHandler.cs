@@ -64,19 +64,23 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
         var priorBest = prior.Where(p => p.Score != null).Select(p => (int?)(int)p.Score!.Value).Max();
         var priorPassed = prior.Any(p => !p.IsBroken);
         var priorBestPlate = prior.Where(p => !p.IsBroken && p.Plate != null).Select(p => p.Plate).Max();
-
-        var classification = row.IsBroken
-            ? ScoreEventClassification.Break
-            : !priorPassed
-                ? ScoreEventClassification.NewPass
-                : row.Score != null && (priorBest == null || (int)row.Score.Value > priorBest
-                                        || ((int)row.Score.Value == priorBest && row.Plate > priorBestPlate))
-                    ? ScoreEventClassification.Upscore
-                    : ScoreEventClassification.Played;
+        var classification = ClassifyRow(row, priorPassed, priorBest, priorBestPlate);
 
         return new RecentSessionsPage.ScoreEventRecord(row.ChartId, row.OccurredAt,
             row.Score == null ? null : (int)row.Score.Value, row.Plate?.ToString(), row.IsBroken, row.Source,
             row.SessionId, classification,
             classification == ScoreEventClassification.Upscore ? priorBest : null);
+    }
+
+    private static ScoreEventClassification ClassifyRow(ScoreJournalEntry row, bool priorPassed, int? priorBest,
+        PhoenixPlate? priorBestPlate)
+    {
+        if (row.IsBroken) return ScoreEventClassification.Break;
+        if (!priorPassed) return ScoreEventClassification.NewPass;
+        if (row.Score == null) return ScoreEventClassification.Played;
+        var score = (int)row.Score.Value;
+        if (priorBest == null || score > priorBest || (score == priorBest && row.Plate > priorBestPlate))
+            return ScoreEventClassification.Upscore;
+        return ScoreEventClassification.Played;
     }
 }

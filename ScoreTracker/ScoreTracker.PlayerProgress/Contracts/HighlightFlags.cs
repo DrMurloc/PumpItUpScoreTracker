@@ -5,7 +5,7 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 ///     (a read-time crown would drift as the top 50 moves under it).
 /// </summary>
 [Flags]
-public enum HighlightFlag
+public enum HighlightFlags
 {
     None = 0,
 

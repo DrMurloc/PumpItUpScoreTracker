@@ -63,7 +63,7 @@ public sealed class DiscordCanaryTests
         // components attached, not just that the socket client didn't throw.
         await using var rest = new DiscordRestClient();
         await rest.LoginAsync(TokenType.Bot, Token);
-        var channel = Assert.IsAssignableFrom<IMessageChannel>(await rest.GetChannelAsync(ChannelId.Value));
+        var channel = Assert.IsType<IMessageChannel>(await rest.GetChannelAsync(ChannelId.Value), exactMatch: false);
         var recent = (await channel.GetMessagesAsync(15).FlattenAsync()).ToArray();
         var mine = recent.Where(m => ComponentTexts(m.Components).Any(t => t.Contains(marker))).ToArray();
 

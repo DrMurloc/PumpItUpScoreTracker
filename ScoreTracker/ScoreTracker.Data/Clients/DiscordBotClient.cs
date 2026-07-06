@@ -431,7 +431,7 @@ public sealed class DiscordBotClient : IBotClient
     public async Task SendRichMessages(IEnumerable<RichBotMessage> messages, IEnumerable<ulong> channelIds,
         CancellationToken cancellationToken = default)
     {
-        if (_client == null) throw new Exception("Client was never started");
+        if (_client == null) throw new InvalidOperationException("Client was never started");
         var rendered = messages
             .Select(m => DiscordRichMessageRenderer.Render(m, ReplaceEmojiTokens))
             .ToArray();
@@ -441,35 +441,41 @@ public sealed class DiscordBotClient : IBotClient
             {
                 if (await _client.GetChannelAsync(channelId) is not IMessageChannel channel)
                 {
-                    _logger.LogWarning($"Channel {channelId} was not found");
+                    _logger.LogWarning("Channel {ChannelId} was not found", channelId);
                     continue;
                 }
 
-                foreach (var (components, fallbackText) in rendered)
-                {
-                    // The kill switch and any per-channel V2 failure both degrade to the
-                    // plain-text path — an announcement never silently drops.
-                    if (_configuration.RichScoreMessages)
-                        try
-                        {
-                            await channel.SendMessageAsync(components: components,
-                                flags: MessageFlags.ComponentsV2);
-                            continue;
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex,
-                                $"Rich send to channel {channelId} failed — falling back to plain text");
-                        }
-
-                    foreach (var part in DiscordMessageSplitter.Split(ReplaceEmojiTokens(fallbackText)))
-                        await channel.SendMessageAsync(part);
-                }
+                await SendRichToChannel(channel, rendered, channelId);
             }
             catch (Exception e)
             {
-                _logger.LogWarning($"Could not send rich messages to channel {channelId}.", e);
+                _logger.LogWarning(e, "Could not send rich messages to channel {ChannelId}", channelId);
             }
+    }
+
+    private async Task SendRichToChannel(IMessageChannel channel,
+        IEnumerable<(MessageComponent Components, string FallbackText)> rendered, ulong channelId)
+    {
+        foreach (var (components, fallbackText) in rendered)
+        {
+            // The kill switch and any per-channel V2 failure both degrade to the
+            // plain-text path — an announcement never silently drops.
+            if (_configuration.RichScoreMessages)
+                try
+                {
+                    await channel.SendMessageAsync(components: components,
+                        flags: MessageFlags.ComponentsV2);
+                    continue;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Rich send to channel {ChannelId} failed — falling back to plain text", channelId);
+                }
+
+            foreach (var part in DiscordMessageSplitter.Split(ReplaceEmojiTokens(fallbackText)))
+                await channel.SendMessageAsync(part);
+        }
     }
 
     private async Task SendMessages(IEnumerable<string> messageEntities, IEnumerable<ulong> channelIds,
@@ -478,33 +484,40 @@ public sealed class DiscordBotClient : IBotClient
     {
         var replacedMessages = messageEntities.Select(ReplaceEmojiTokens).ToList();
 
-        if (_client == null) throw new Exception("Client was never started");
+        if (_client == null) throw new InvalidOperationException("Client was never started");
         foreach (var channelId in channelIds)
             try
             {
                 if (await _client.GetChannelAsync(channelId) is not IMessageChannel channel)
                 {
-                    _logger.LogWarning($"Channel {channelId} was not found");
+                    _logger.LogWarning("Channel {ChannelId} was not found", channelId);
                     continue;
                 }
 
-                foreach (var message in replacedMessages)
-                    try
-                    {
-                        foreach (var part in DiscordMessageSplitter.Split(messageRetrieval(message)))
-                        {
-                            var userMessage = await channel.SendMessageAsync(part);
-                            if (process != null) process(message, userMessage);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning($"Could not send message to channel {channelId}. Message :{message}", ex);
-                    }
+                await SendPlainToChannel(channel, replacedMessages, messageRetrieval, process, channelId);
             }
             catch (Exception e)
             {
-                _logger.LogWarning($"Could not send messages to channel {channelId}.", e);
+                _logger.LogWarning(e, "Could not send messages to channel {ChannelId}", channelId);
+            }
+    }
+
+    private async Task SendPlainToChannel(IMessageChannel channel, IEnumerable<string> messages,
+        Func<string, string> messageRetrieval, Action<string, IUserMessage>? process, ulong channelId)
+    {
+        foreach (var message in messages)
+            try
+            {
+                foreach (var part in DiscordMessageSplitter.Split(messageRetrieval(message)))
+                {
+                    var userMessage = await channel.SendMessageAsync(part);
+                    if (process != null) process(message, userMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not send message to channel {ChannelId}. Message: {Message}",
+                    channelId, message);
             }
     }
 }

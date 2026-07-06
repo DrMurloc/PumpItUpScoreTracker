@@ -46,7 +46,7 @@ public sealed class HighlightCaptureSagaTests
 
         ctx.Highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, UserId,
             It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
-                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlag.PumbilityTop50) && x.Level == 20)),
+                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlags.PumbilityTop50) && x.Level == 20)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -64,7 +64,7 @@ public sealed class HighlightCaptureSagaTests
 
         ctx.Highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, UserId,
             It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
-                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlag.TitleProgress))),
+                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlags.TitleProgress))),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -82,7 +82,7 @@ public sealed class HighlightCaptureSagaTests
 
         ctx.Highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, UserId,
             It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
-                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlag.ScoreQuality90))),
+                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlags.ScoreQuality90))),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -100,7 +100,7 @@ public sealed class HighlightCaptureSagaTests
 
         ctx.Highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
             It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
-                x.Flags.HasFlag(HighlightFlag.ScoreQuality90))),
+                x.Flags.HasFlag(HighlightFlags.ScoreQuality90))),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -120,7 +120,7 @@ public sealed class HighlightCaptureSagaTests
 
         ctx.Highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, UserId,
             It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
-                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlag.FolderDebut))),
+                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlags.FolderDebut))),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -139,7 +139,7 @@ public sealed class HighlightCaptureSagaTests
 
         ctx.Highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
             It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
-                x.Flags.HasFlag(HighlightFlag.FolderDebut))),
+                x.Flags.HasFlag(HighlightFlags.FolderDebut))),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -159,7 +159,7 @@ public sealed class HighlightCaptureSagaTests
 
         ctx.Highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, UserId,
             It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
-                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlag.FolderCompletion90))),
+                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlags.FolderCompletion90))),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -264,7 +264,7 @@ public sealed class HighlightCaptureSagaTests
 
         Mock.Get(context).Verify(c => c.Publish(
             It.Is<ScoreHighlightsCapturedEvent>(e =>
-                e.Changes.Single().Flags.HasFlag(HighlightFlag.CompetitiveImprover)
+                e.Changes.Single().Flags.HasFlag(HighlightFlags.CompetitiveImprover)
                 && e.Milestones.Any(m => m.Kind == MilestoneKind.PumbilityGain)
                 && e.Milestones.Any(m => m.Kind == MilestoneKind.TitleCompleted)
                 && e.TitleProgress.Single().Title == "Expert Lv. 4"),
@@ -333,7 +333,7 @@ public sealed class HighlightCaptureSagaTests
                                                      && e.OccurredAt == Now
                                                      && e.Changes.Single().ChartId == chart.Id
                                                      && e.Changes.Single().Flags
-                                                         .HasFlag(HighlightFlag.PumbilityTop50)),
+                                                         .HasFlag(HighlightFlags.PumbilityTop50)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -352,7 +352,7 @@ public sealed class HighlightCaptureSagaTests
 
         Mock.Get(context).Verify(c => c.Publish(
             It.Is<ScoreHighlightsCapturedEvent>(e =>
-                e.Changes.Single().Flags == HighlightFlag.None),
+                e.Changes.Single().Flags == HighlightFlags.None),
             It.IsAny<CancellationToken>()), Times.Once);
         ctx.Highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
             It.IsAny<IEnumerable<ScoreHighlightWrite>>(), It.IsAny<CancellationToken>()), Times.Never);

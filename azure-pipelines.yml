@@ -81,6 +81,17 @@ stages:
           # EF migrations are generated code — 89k of the repo's 128k C# lines; analyzing
           # them buries real findings and wrecks the new-code metrics.
           sonar.exclusions=**/Migrations/**
+          # Coverage comes from the coverlet collectors on the two fast suites below.
+          # Before this property existed the analysis had NO coverage input, so the
+          # gate's coverage-on-new-code condition read 0.0% on every PR.
+          sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
+          # The coverage METRIC is scoped to where the house philosophy says it matters
+          # (CLAUDE.md): Domain models/services and Application handlers. Blazor UI (no
+          # unit harness), EF/vendor adapters and vertical Infrastructure/ (covered by
+          # the real-DB integration and E2E suites, whose coverage never reaches this
+          # Windows analysis), and composition wiring are excluded from the metric —
+          # they are still fully analyzed for issues.
+          sonar.coverage.exclusions=**/*.razor,ScoreTracker/ScoreTracker/**,**/Infrastructure/**,ScoreTracker/ScoreTracker.Data/**,ScoreTracker/ScoreTracker.CompositionRoot/**,ScoreTracker/ScoreTracker.AppHost/**,ScoreTracker/ScoreTracker.ServiceDefaults/**
 
     - script: dotnet restore $(solution)
       displayName: 'Restore'
@@ -90,10 +101,10 @@ stages:
 
     # The integration project builds alongside but runs in the Linux job below — it needs
     # Docker with Linux containers, which windows-latest doesn't have configured.
-    - script: dotnet test ScoreTracker/ScoreTracker.Tests/ScoreTracker.Tests.csproj -c $(buildConfiguration) --no-build --logger "trx;LogFileName=unit.trx" --results-directory $(Agent.TempDirectory)
+    - script: dotnet test ScoreTracker/ScoreTracker.Tests/ScoreTracker.Tests.csproj -c $(buildConfiguration) --no-build --logger "trx;LogFileName=unit.trx" --results-directory $(Agent.TempDirectory) --collect:"XPlat Code Coverage;Format=opencover"
       displayName: 'Unit/Component tests'
 
-    - script: dotnet test ScoreTracker/ScoreTracker.Tests.Api/ScoreTracker.Tests.Api.csproj -c $(buildConfiguration) --no-build --logger "trx;LogFileName=api.trx" --results-directory $(Agent.TempDirectory)
+    - script: dotnet test ScoreTracker/ScoreTracker.Tests.Api/ScoreTracker.Tests.Api.csproj -c $(buildConfiguration) --no-build --logger "trx;LogFileName=api.trx" --results-directory $(Agent.TempDirectory) --collect:"XPlat Code Coverage;Format=opencover"
       displayName: 'API wire-shape approval tests'
 
     - task: PublishTestResults@2

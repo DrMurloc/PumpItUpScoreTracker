@@ -151,7 +151,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         var known = e.Changes
             .Where(c => charts.ContainsKey(c.ChartId) && bests.ContainsKey(c.ChartId))
             .ToArray();
-        if (!known.Any()) return;
+        if (known.Length == 0) return;
 
         // The 💥 row: the session's single biggest upscore, when it cleared the
         // threshold (owner call: +10k). It earns a row even with no other flag.
@@ -163,7 +163,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
 
         bool Notable(ScoreHighlightsCapturedEvent.HighlightedChange c)
         {
-            return c.Flags != HighlightFlag.None || ReferenceEquals(c, bigGain);
+            return c.Flags != HighlightFlags.None || ReferenceEquals(c, bigGain);
         }
 
         // Notable rows lead and own the art; within each group the universal noteworthy
@@ -182,10 +182,10 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         // their own rows: up to 3, community co-op difficulty rating descending.
         var coOpChanges = known.Where(c => charts[c.ChartId].Type == ChartType.CoOp).ToArray();
         var coOpRows = Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>();
-        if (coOpChanges.Any())
+        if (coOpChanges.Length > 0)
         {
             var coOpRatings = (await _mediator.Send(new GetCoOpRatingsQuery(), context.CancellationToken))
-                .ToDictionary(r => r.ChartId, r => r.Ratings.Any() ? r.Ratings.Values.Max(l => (int)l) : 0);
+                .ToDictionary(r => r.ChartId, r => r.Ratings.Count > 0 ? r.Ratings.Values.Max(l => (int)l) : 0);
             coOpRows = coOpChanges
                 .OrderByDescending(c => coOpRatings.GetValueOrDefault(c.ChartId, 0))
                 .ThenByDescending(c => (int)(bests[c.ChartId].Score ?? 0))
@@ -209,105 +209,126 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             // The board read is a flex, not a fact the card owes anyone.
         }
 
-        var message = await BuildSnapshotCard(e, user, known, notable, coOpRows, charts, bests, weekly,
-            context.CancellationToken);
+        var inputs = new SnapshotInputs(e, user, known, notable, coOpRows, charts, bests, weekly);
+        var message = await BuildSnapshotCard(inputs, context.CancellationToken);
         await SendRichToCommunityDiscords(user.Id, new[] { message }, context.CancellationToken);
     }
 
-    private async Task<RichBotMessage> BuildSnapshotCard(ScoreHighlightsCapturedEvent e, User user,
-        ScoreHighlightsCapturedEvent.HighlightedChange[] known,
-        ScoreHighlightsCapturedEvent.HighlightedChange[] notable,
-        ScoreHighlightsCapturedEvent.HighlightedChange[] coOpRows, IDictionary<Guid, Chart> charts,
-        IDictionary<Guid, RecordedPhoenixScore> bests, WeeklyPlacementRecord[] weekly,
+    /// <summary>Everything the snapshot card renders from, shaped by the consumer.</summary>
+    private sealed record SnapshotInputs(
+        ScoreHighlightsCapturedEvent E,
+        User User,
+        ScoreHighlightsCapturedEvent.HighlightedChange[] Known,
+        ScoreHighlightsCapturedEvent.HighlightedChange[] Notable,
+        ScoreHighlightsCapturedEvent.HighlightedChange[] CoOpRows,
+        Dictionary<Guid, Chart> Charts,
+        Dictionary<Guid, RecordedPhoenixScore> Bests,
+        WeeklyPlacementRecord[] Weekly);
+
+    private async Task<RichBotMessage> BuildSnapshotCard(SnapshotInputs inputs,
         CancellationToken cancellationToken)
     {
         var blocks = new List<IRichBotBlock> { new RichBotDivider() };
 
         // ① Stats that moved (capture already floored the noise).
-        var stats = StatLines(e.Milestones);
-        if (stats.Any())
-        {
-            blocks.Add(new RichBotText(string.Join("\n", stats)));
-            blocks.Add(new RichBotDivider());
-        }
-
+        AddSection(blocks, StatLines(inputs.E.Milestones));
         // ② Achievements: titles, paragon, folder lamps, weekly placements — or the
         // per-title progress deltas when nothing completed.
-        var achievements = AchievementLines(e, weekly, charts);
-        if (achievements.Any())
-        {
-            blocks.Add(new RichBotText(string.Join("\n", achievements)));
-            blocks.Add(new RichBotDivider());
-        }
+        AddSection(blocks, AchievementLines(inputs.E, inputs.Weekly, inputs.Charts));
+        // ③ Notable scores: art while the slots last, individual text rows after,
+        // everything else one grouped count line.
+        AddNotableRows(blocks, inputs);
+        AddOverflowLine(blocks, inputs);
 
-        // ③ Notable scores: art while the slots last, individual text rows after.
-        var artLeft = ArtRowCap;
-        foreach (var change in notable)
-            blocks.Add(Row(change, charts, bests, bigGain: IsBigGain(change, e, known), ref artLeft));
-        foreach (var change in coOpRows)
-            blocks.Add(Row(change, charts, bests, bigGain: IsBigGain(change, e, known), ref artLeft));
-
-        var shown = notable.Concat(coOpRows).Select(c => c.ChartId).ToHashSet();
-        var rest = known.Where(c => !shown.Contains(c.ChartId)).ToArray();
-        if (rest.Any())
-        {
-            var parts = rest
-                .Where(c => charts[c.ChartId].Type != ChartType.CoOp)
-                .GroupBy(c => charts[c.ChartId].DifficultyString)
-                .OrderByDescending(g => (int)charts[g.First().ChartId].Level)
-                .Select(g => g.Count() == 1 ? g.Key : $"{g.Key} ×{g.Count()}")
-                .ToList();
-            var restCoOps = rest.Count(c => charts[c.ChartId].Type == ChartType.CoOp);
-            if (restCoOps > 0) parts.Add($"CO-OP ×{restCoOps}");
-            blocks.Add(new RichBotText($"+{rest.Length} more: {string.Join(", ", parts)}"));
-        }
-
-        var passCharts = known
+        var passCharts = inputs.Known
             .Where(c => c.IsNewPass && !c.IsBroken)
-            .Select(c => charts[c.ChartId])
+            .Select(c => inputs.Charts[c.ChartId])
             .Where(c => c.Type is ChartType.Single or ChartType.Double);
-        var folderStats = await FolderProgress(e.Mix, e.UserId, passCharts, FolderLineCap, cancellationToken);
+        var folderStats = await FolderProgress(inputs.E.Mix, inputs.E.UserId, passCharts, FolderLineCap,
+            cancellationToken);
         if (!string.IsNullOrWhiteSpace(folderStats))
         {
             blocks.Add(new RichBotDivider());
             blocks.Add(new RichBotText(folderStats));
         }
 
-        var passes = known.Count(c => c.IsNewPass && !c.IsBroken);
-        var upscores = known.Count(c => !c.IsNewPass && !c.IsBroken);
-        var counts = passes > 0 && upscores > 0
-            ? $"passed {passes:N0} · upscored {upscores:N0}"
-            : passes > 0
-                ? $"passed {passes:N0} {Charts(passes)}"
-                : upscores > 0
-                    ? $"upscored {upscores:N0} {Charts(upscores)}"
-                    : $"updated {known.Length:N0} {Charts(known.Length)}";
-        var span = LevelSpan(known
-            .Where(c => charts[c.ChartId].Type != ChartType.CoOp)
-            .Select(c => charts[c.ChartId]).ToArray());
-        if (coOpRows.Any() || known.Any(c => charts[c.ChartId].Type == ChartType.CoOp))
-            span = span.Length > 0 ? $"{span} · CO-OP" : "CO-OP";
-        var headerMarkdown = $"### {MixPrefix(e.Mix)}**{user.Name}** — {counts}" +
-                             (span.Length > 0 ? $"\n-# {span}" : string.Empty);
-
-        // The deep link only renders for public players — the Sessions page redirects
-        // everyone else home anyway.
-        var links = user.IsPublic
-            ? new[]
-            {
-                new RichBotLink("See more",
-                    new Uri($"{SiteBase}/Player/{user.Id}/Sessions" +
-                            (e.SessionId == null ? string.Empty : $"?session={e.SessionId}")))
-            }
-            : Array.Empty<RichBotLink>();
-
-        return new RichBotMessage(new RichBotSection(headerMarkdown, user.ProfileImage), blocks,
-            $"#MIX|{e.Mix}# {e.Mix.GetName()} · PIU Scores",
-            e.Mix.GetAccentColor(), links);
+        return new RichBotMessage(HeaderSection(inputs), blocks,
+            $"#MIX|{inputs.E.Mix}# {inputs.E.Mix.GetName()} · PIU Scores",
+            inputs.E.Mix.GetAccentColor(), Links(inputs));
     }
 
+    private static void AddSection(List<IRichBotBlock> blocks, List<string> lines)
+    {
+        if (lines.Count == 0) return;
+        blocks.Add(new RichBotText(string.Join("\n", lines)));
+        blocks.Add(new RichBotDivider());
+    }
+
+    private static void AddNotableRows(List<IRichBotBlock> blocks, SnapshotInputs inputs)
+    {
+        var artLeft = ArtRowCap;
+        foreach (var change in inputs.Notable.Concat(inputs.CoOpRows))
+        {
+            var chart = inputs.Charts[change.ChartId];
+            var text = RowText(change, chart, inputs.Bests[change.ChartId], IsBigGain(change, inputs.Known));
+            blocks.Add(artLeft-- > 0 ? new RichBotSection(text, chart.Song.ImagePath) : new RichBotText(text));
+        }
+    }
+
+    private static void AddOverflowLine(List<IRichBotBlock> blocks, SnapshotInputs inputs)
+    {
+        var shown = inputs.Notable.Concat(inputs.CoOpRows).Select(c => c.ChartId).ToHashSet();
+        var rest = inputs.Known.Where(c => !shown.Contains(c.ChartId)).ToArray();
+        if (rest.Length == 0) return;
+
+        var parts = rest
+            .Where(c => inputs.Charts[c.ChartId].Type != ChartType.CoOp)
+            .GroupBy(c => inputs.Charts[c.ChartId].DifficultyString)
+            .OrderByDescending(g => (int)inputs.Charts[g.First().ChartId].Level)
+            .Select(g => g.Count() == 1 ? g.Key : $"{g.Key} ×{g.Count()}")
+            .ToList();
+        var restCoOps = rest.Count(c => inputs.Charts[c.ChartId].Type == ChartType.CoOp);
+        if (restCoOps > 0) parts.Add($"CO-OP ×{restCoOps}");
+        blocks.Add(new RichBotText($"+{rest.Length} more: {string.Join(", ", parts)}"));
+    }
+
+    private static RichBotSection HeaderSection(SnapshotInputs inputs)
+    {
+        var span = LevelSpan(inputs.Known
+            .Where(c => inputs.Charts[c.ChartId].Type != ChartType.CoOp)
+            .Select(c => inputs.Charts[c.ChartId]).ToArray());
+        if (inputs.Known.Any(c => inputs.Charts[c.ChartId].Type == ChartType.CoOp))
+            span = span.Length > 0 ? $"{span} · CO-OP" : "CO-OP";
+        var header = $"### {MixPrefix(inputs.E.Mix)}**{inputs.User.Name}** — {CountsText(inputs.Known)}" +
+                     (span.Length > 0 ? $"\n-# {span}" : string.Empty);
+        return new RichBotSection(header, inputs.User.ProfileImage);
+    }
+
+    private static string CountsText(ScoreHighlightsCapturedEvent.HighlightedChange[] known)
+    {
+        var passes = known.Count(c => c.IsNewPass && !c.IsBroken);
+        var upscores = known.Count(c => !c.IsNewPass && !c.IsBroken);
+        if (passes > 0 && upscores > 0) return $"passed {passes:N0} · upscored {upscores:N0}";
+        if (passes > 0) return $"passed {passes:N0} {Charts(passes)}";
+        if (upscores > 0) return $"upscored {upscores:N0} {Charts(upscores)}";
+        return $"updated {known.Length:N0} {Charts(known.Length)}";
+    }
+
+    // The deep link only renders for public players — the Sessions page redirects
+    // everyone else home anyway.
+    private static RichBotLink[] Links(SnapshotInputs inputs)
+    {
+        if (!inputs.User.IsPublic) return Array.Empty<RichBotLink>();
+        var session = inputs.E.SessionId == null ? string.Empty : $"?session={inputs.E.SessionId}";
+        return new[]
+        {
+            new RichBotLink("See more", new Uri($"{SiteBase}/Player/{inputs.User.Id}/Sessions{session}"))
+        };
+    }
+
+    /// <summary>The 💥 row: the session's single biggest upscore, when ≥ the threshold.</summary>
     private static bool IsBigGain(ScoreHighlightsCapturedEvent.HighlightedChange change,
-        ScoreHighlightsCapturedEvent e, ScoreHighlightsCapturedEvent.HighlightedChange[] known)
+        ScoreHighlightsCapturedEvent.HighlightedChange[] known)
     {
         if (change.IsBroken || change.OldScore == null || change.NewScore == null) return false;
         var gain = change.NewScore.Value - change.OldScore.Value;
@@ -317,24 +338,13 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             .Max(c => c.NewScore!.Value - c.OldScore!.Value);
     }
 
-    private IRichBotBlock Row(ScoreHighlightsCapturedEvent.HighlightedChange change,
-        IDictionary<Guid, Chart> charts, IDictionary<Guid, RecordedPhoenixScore> bests, bool bigGain,
-        ref int artLeft)
-    {
-        var chart = charts[change.ChartId];
-        var text = RowText(change, chart, bests[change.ChartId], bigGain);
-        if (artLeft <= 0) return new RichBotText(text);
-        artLeft--;
-        return new RichBotSection(text, chart.Song.ImagePath);
-    }
-
     private static string RowText(ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart,
         RecordedPhoenixScore best, bool bigGain)
     {
         return change.IsNewPass ? PassRow(change, chart, best, bigGain) : UpscoreRow(change, chart, best, bigGain);
     }
 
-    private static IReadOnlyList<string> StatLines(IReadOnlyList<PlayerMilestoneRecord> milestones)
+    private static List<string> StatLines(IReadOnlyList<PlayerMilestoneRecord> milestones)
     {
         var lines = new List<string>();
         foreach (var m in milestones)
@@ -355,8 +365,8 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         return lines;
     }
 
-    private static IReadOnlyList<string> AchievementLines(ScoreHighlightsCapturedEvent e,
-        WeeklyPlacementRecord[] weekly, IDictionary<Guid, Chart> charts)
+    private static List<string> AchievementLines(ScoreHighlightsCapturedEvent e,
+        WeeklyPlacementRecord[] weekly, Dictionary<Guid, Chart> charts)
     {
         var lines = new List<string>();
         var titles = e.Milestones.Where(m => m.Kind == MilestoneKind.TitleCompleted).ToArray();
@@ -476,21 +486,21 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         bool bigGain)
     {
         var link = $"[{chart.Song.Name}]({SiteBase}/Chart/{chart.Id})";
-        return change.Flags == HighlightFlag.None && !bigGain ? link : $"**{link}**";
+        return change.Flags == HighlightFlags.None && !bigGain ? link : $"**{link}**";
     }
 
     // The why-it's-noteworthy caption, rendered as Discord subtext under the score.
     // Vocabulary mirrors the Sessions page badge tooltips.
-    private static string FlagCaption(HighlightFlag flags, bool bigGain)
+    private static string FlagCaption(HighlightFlags flags, bool bigGain)
     {
-        if (flags == HighlightFlag.None && !bigGain) return string.Empty;
+        if (flags == HighlightFlags.None && !bigGain) return string.Empty;
         var parts = new List<string>();
-        if (flags.HasFlag(HighlightFlag.PumbilityTop50)) parts.Add("👑 PUMBILITY top 50");
-        if (flags.HasFlag(HighlightFlag.ScoreQuality90)) parts.Add("📊 Top scores among peers");
-        if (flags.HasFlag(HighlightFlag.TitleProgress)) parts.Add("🏅 Title progress");
-        if (flags.HasFlag(HighlightFlag.FolderDebut)) parts.Add("🆕 Folder debut");
-        if (flags.HasFlag(HighlightFlag.FolderCompletion90)) parts.Add("📁 Nearly complete folder");
-        if (flags.HasFlag(HighlightFlag.CompetitiveImprover)) parts.Add("⬆ Raised competitive level");
+        if (flags.HasFlag(HighlightFlags.PumbilityTop50)) parts.Add("👑 PUMBILITY top 50");
+        if (flags.HasFlag(HighlightFlags.ScoreQuality90)) parts.Add("📊 Top scores among peers");
+        if (flags.HasFlag(HighlightFlags.TitleProgress)) parts.Add("🏅 Title progress");
+        if (flags.HasFlag(HighlightFlags.FolderDebut)) parts.Add("🆕 Folder debut");
+        if (flags.HasFlag(HighlightFlags.FolderCompletion90)) parts.Add("📁 Nearly complete folder");
+        if (flags.HasFlag(HighlightFlags.CompetitiveImprover)) parts.Add("⬆ Raised competitive level");
         if (bigGain) parts.Add("💥 Biggest gain of the session");
         return "\n-# " + string.Join(" · ", parts);
     }
@@ -520,7 +530,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             await _communities.SaveCommunity(new Community(name, Guid.Empty, CommunityPrivacyType.Public, true),
                 cancellationToken);
 
-        await _mediator.Send(new JoinCommunityCommand(name, null, userId));
+        await _mediator.Send(new JoinCommunityCommand(name, null, userId), cancellationToken);
     }
 
     public async Task Handle(AddDiscordChannelToCommunityCommand request, CancellationToken cancellationToken)

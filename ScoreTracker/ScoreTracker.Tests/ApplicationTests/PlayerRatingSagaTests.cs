@@ -210,7 +210,7 @@ public sealed class PlayerRatingSagaTests
         highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, userId,
             It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
                 x.ChartId == single.Id && x.SessionId == sessionId
-                && x.Flags == HighlightFlag.CompetitiveImprover)),
+                && x.Flags == HighlightFlags.CompetitiveImprover)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

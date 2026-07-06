@@ -49,8 +49,8 @@ public sealed class SessionSnapshotPoCTests
 
         await using var rest = new DiscordRestClient();
         await rest.LoginAsync(TokenType.Bot, DiscordCanaryTests.CanaryToken);
-        var channel = Assert.IsAssignableFrom<IMessageChannel>(
-            await rest.GetChannelAsync(DiscordCanaryTests.CanaryChannel.Value));
+        var channel = Assert.IsType<IMessageChannel>(
+            await rest.GetChannelAsync(DiscordCanaryTests.CanaryChannel.Value), exactMatch: false);
         var recent = (await channel.GetMessagesAsync(15).FlattenAsync()).ToArray();
         var mine = recent.Where(m =>
             DiscordCanaryTests.ComponentTexts(m.Components).Any(t => t.Contains(marker))).ToArray();
@@ -79,6 +79,14 @@ public sealed class SessionSnapshotPoCTests
 
         await bot.SendRichMessages(new[] { EsiSession(marker) },
             new[] { DiscordCanaryTests.CanaryChannel!.Value });
+
+        await using var rest = new DiscordRestClient();
+        await rest.LoginAsync(TokenType.Bot, DiscordCanaryTests.CanaryToken);
+        var channel = Assert.IsType<IMessageChannel>(
+            await rest.GetChannelAsync(DiscordCanaryTests.CanaryChannel.Value), exactMatch: false);
+        var recent = (await channel.GetMessagesAsync(10).FlattenAsync()).ToArray();
+        Assert.Contains(recent, m =>
+            DiscordCanaryTests.ComponentTexts(m.Components).Any(t => t.Contains(marker)));
         await bot.Stop();
     }
 

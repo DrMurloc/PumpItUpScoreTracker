@@ -184,7 +184,7 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         var upgraded = allCompleted.Where(c =>
             existingTitles.ContainsKey(c.Title) && existingTitles[c.Title].ParagonLevel != c.ParagonLevel).ToArray();
 
-        if (!newCompleted.Any() && !upgraded.Any()) return Array.Empty<PlayerMilestoneRecord>();
+        if (newCompleted.Length == 0 && upgraded.Length == 0) return Array.Empty<PlayerMilestoneRecord>();
 
         // Title completions and paragon gains become timestamped milestones —
         // UserTitle rows have no acquisition date, so this is the only record of WHEN.

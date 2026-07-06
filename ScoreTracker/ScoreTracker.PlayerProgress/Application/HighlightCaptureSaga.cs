@@ -85,7 +85,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
     public async Task Consume(ConsumeContext<PlayerScoresUpdatedEvent> context)
     {
         var e = context.Message;
-        var flags = new Dictionary<Guid, HighlightFlag>();
+        var flags = new Dictionary<Guid, HighlightFlags>();
         var writes = new List<ScoreHighlightWrite>();
         var lamps = new List<PlayerMilestoneWrite>();
 
@@ -100,14 +100,15 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
                 // un-flagged and let the page read whatever the table has.
                 _logger.LogError(ex, "Highlight capture failed for user {UserId} ({Mix}) — publishing un-flagged",
                     e.UserId, e.Mix);
+                // `writes` was never reassigned on the throwing path — only the
+                // by-reference collections the compute mutated need clearing.
                 flags.Clear();
-                writes.Clear();
                 lamps.Clear();
             }
 
-        if (writes.Any())
+        if (writes.Count > 0)
             await _highlights.UpsertFlags(e.Mix, e.UserId, writes, context.CancellationToken);
-        if (lamps.Any())
+        if (lamps.Count > 0)
             await _milestones.Append(e.Mix, e.UserId, lamps, context.CancellationToken);
 
         var milestones = lamps
@@ -125,7 +126,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
                 e.Changes.Select(c => c.ChartId).Distinct().ToArray(), e.SessionId), context.CancellationToken);
             milestones.AddRange(stats.Milestones);
             foreach (var chartId in stats.ImproverChartIds)
-                flags[chartId] = flags.GetValueOrDefault(chartId) | HighlightFlag.CompetitiveImprover;
+                flags[chartId] = flags.GetValueOrDefault(chartId) | HighlightFlags.CompetitiveImprover;
         }
         catch (Exception ex)
         {
@@ -151,7 +152,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         await context.Publish(ScoreHighlightsCapturedEvent.Create(e.OccurredAt, e.UserId, e.Mix, e.SessionId,
             e.Changes.Select(c => new ScoreHighlightsCapturedEvent.HighlightedChange(c.ChartId, c.IsNewPass,
                 c.OldScore, c.NewScore, c.Plate, c.IsBroken,
-                flags.TryGetValue(c.ChartId, out var f) ? f : HighlightFlag.None)).ToArray(),
+                flags.TryGetValue(c.ChartId, out var f) ? f : HighlightFlags.None)).ToArray(),
             milestones, titleProgress));
     }
 
@@ -169,8 +170,43 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
             cancellationToken);
     }
 
+    /// <summary>Everything the flag computation reads, loaded once per batch.</summary>
+    private sealed record CaptureData(
+        Dictionary<Guid, Chart> Charts,
+        Dictionary<Guid, RecordedPhoenixScore> Bests,
+        HashSet<Guid> Top50,
+        PhoenixTitleProgress[] IncompleteTitles,
+        IDictionary<Guid, double> ScoringLevels,
+        Dictionary<(ChartType Type, DifficultyLevel Level), int> FolderSizes,
+        Dictionary<(ChartType Type, DifficultyLevel Level), int> FolderClears);
+
     private async Task<List<ScoreHighlightWrite>> ComputeFlags(PlayerScoresUpdatedEvent e,
-        Dictionary<Guid, HighlightFlag> flags, List<PlayerMilestoneWrite> lamps,
+        Dictionary<Guid, HighlightFlags> flags, List<PlayerMilestoneWrite> lamps,
+        CancellationToken cancellationToken)
+    {
+        var data = await LoadCaptureData(e, cancellationToken);
+        var known = e.Changes
+            .Where(c => data.Charts.ContainsKey(c.ChartId) && data.Bests.ContainsKey(c.ChartId))
+            .ToArray();
+
+        FlagTop50AndTitleProgress(known, data, flags);
+        foreach (var folder in known.GroupBy(c => (data.Charts[c.ChartId].Type, data.Charts[c.ChartId].Level)))
+        {
+            await FlagScoreQuality(e, folder.Key, folder.ToArray(), data, flags, cancellationToken);
+            var newPasses = folder.Where(c => c.IsNewPass && !data.Bests[c.ChartId].IsBroken).ToArray();
+            CaptureFolderLamps(e, folder.ToArray(), folder.Key, data, newPasses.Length, lamps);
+            FlagFolderCompletionAndDebut(folder.Key, newPasses, data, flags);
+        }
+
+        return known
+            .Where(c => flags.GetValueOrDefault(c.ChartId) != HighlightFlags.None)
+            .Select(c => new ScoreHighlightWrite(c.ChartId, e.SessionId, e.OccurredAt, flags[c.ChartId],
+                data.Charts[c.ChartId].Level,
+                data.ScoringLevels.TryGetValue(c.ChartId, out var sl) ? sl : null))
+            .ToList();
+    }
+
+    private async Task<CaptureData> LoadCaptureData(PlayerScoresUpdatedEvent e,
         CancellationToken cancellationToken)
     {
         var charts = (await _charts.GetCharts(e.Mix, cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
@@ -194,75 +230,67 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
             .Where(b => !b.IsBroken && b.Score != null && charts.ContainsKey(b.ChartId))
             .GroupBy(b => (charts[b.ChartId].Type, charts[b.ChartId].Level))
             .ToDictionary(g => g.Key, g => g.Count());
+        return new CaptureData(charts, bests, top50, incompleteTitles, scoringLevels, folderSizes, folderClears);
+    }
 
-        var known = e.Changes
-            .Where(c => charts.ContainsKey(c.ChartId) && bests.ContainsKey(c.ChartId))
-            .ToArray();
-
+    private static void FlagTop50AndTitleProgress(PlayerScoresUpdatedEvent.ScoreChange[] known,
+        CaptureData data, Dictionary<Guid, HighlightFlags> flags)
+    {
         foreach (var change in known)
         {
-            var chart = charts[change.ChartId];
-            var best = bests[change.ChartId];
-            var f = HighlightFlag.None;
-            if (!best.IsBroken && best.Score != null)
-            {
-                if (top50.Contains(chart.Id)) f |= HighlightFlag.PumbilityTop50;
-                if (incompleteTitles.Any(t => t.PhoenixTitle.CompletionProgress(chart, best) > 0))
-                    f |= HighlightFlag.TitleProgress;
-            }
+            var chart = data.Charts[change.ChartId];
+            var best = data.Bests[change.ChartId];
+            if (best.IsBroken || best.Score == null) continue;
 
-            if (f != HighlightFlag.None) flags[chart.Id] = f;
+            var f = HighlightFlags.None;
+            if (data.Top50.Contains(chart.Id)) f |= HighlightFlags.PumbilityTop50;
+            if (data.IncompleteTitles.Any(t => t.PhoenixTitle.CompletionProgress(chart, best) > 0))
+                f |= HighlightFlags.TitleProgress;
+            if (f != HighlightFlags.None) flags[chart.Id] = f;
         }
+    }
 
-        foreach (var folder in known.GroupBy(c => (charts[c.ChartId].Type, charts[c.ChartId].Level)))
+    // Score Quality vs comparable players — Singles/Doubles only (competitive cohorts
+    // have no Co-Op side).
+    private async Task FlagScoreQuality(PlayerScoresUpdatedEvent e,
+        (ChartType Type, DifficultyLevel Level) folder, PlayerScoresUpdatedEvent.ScoreChange[] folderChanges,
+        CaptureData data, Dictionary<Guid, HighlightFlags> flags, CancellationToken cancellationToken)
+    {
+        if (folder.Type is not (ChartType.Single or ChartType.Double)) return;
+        var cohort = await GetCohortScores(e.Mix, e.UserId, folder.Type, folder.Level, cancellationToken);
+        foreach (var change in folderChanges)
         {
-            var (type, level) = folder.Key;
-            var size = folderSizes.GetValueOrDefault(folder.Key);
-            var clears = folderClears.GetValueOrDefault(folder.Key);
-
-            // Score Quality vs comparable players — Singles/Doubles only (competitive
-            // cohorts have no Co-Op side).
-            if (type is ChartType.Single or ChartType.Double)
-            {
-                var cohort = await GetCohortScores(e.Mix, e.UserId, type, level, cancellationToken);
-                foreach (var change in folder)
-                {
-                    var best = bests[change.ChartId];
-                    if (best.IsBroken || best.Score == null) continue;
-                    var cohortScores = cohort.GetValueOrDefault(change.ChartId, Array.Empty<PhoenixScore>());
-                    if (ScoreRankings.TieInclusivePercentile(cohortScores, best.Score.Value) >= 0.9)
-                        flags[change.ChartId] = flags.GetValueOrDefault(change.ChartId) | HighlightFlag.ScoreQuality90;
-                }
-            }
-
-            var newPasses = folder.Where(c => c.IsNewPass && !bests[c.ChartId].IsBroken).ToArray();
-            CaptureFolderLamps(e, folder.ToArray(), type, level, size, clears, newPasses.Length, charts, bests,
-                lamps);
-            if (!newPasses.Any()) continue;
-
-            if (size > 0 && clears / (double)size >= 0.9)
-                foreach (var pass in newPasses)
-                    flags[pass.ChartId] = flags.GetValueOrDefault(pass.ChartId) | HighlightFlag.FolderCompletion90;
-
-            // Folder debut: the first 3 passes ever in this folder (S and D counted
-            // separately). A batch landing several at once debuts its top ones by
-            // noteworthy ordering.
-            var passesBefore = clears - newPasses.Length;
-            var debutSlots = 3 - passesBefore;
-            if (debutSlots <= 0) continue;
-            foreach (var pass in newPasses
-                         .OrderByDescending(c => scoringLevels.TryGetValue(c.ChartId, out var sl) ? sl : 0)
-                         .ThenByDescending(c => (int?)bests[c.ChartId].Score ?? 0)
-                         .Take(debutSlots))
-                flags[pass.ChartId] = flags.GetValueOrDefault(pass.ChartId) | HighlightFlag.FolderDebut;
+            var best = data.Bests[change.ChartId];
+            if (best.IsBroken || best.Score == null) continue;
+            var cohortScores = cohort.GetValueOrDefault(change.ChartId, Array.Empty<PhoenixScore>());
+            if (ScoreRankings.TieInclusivePercentile(cohortScores, best.Score.Value) >= 0.9)
+                flags[change.ChartId] = flags.GetValueOrDefault(change.ChartId) | HighlightFlags.ScoreQuality90;
         }
+    }
 
-        return known
-            .Where(c => flags.GetValueOrDefault(c.ChartId) != HighlightFlag.None)
-            .Select(c => new ScoreHighlightWrite(c.ChartId, e.SessionId, e.OccurredAt, flags[c.ChartId],
-                charts[c.ChartId].Level,
-                scoringLevels.TryGetValue(c.ChartId, out var sl) ? sl : null))
-            .ToList();
+    private static void FlagFolderCompletionAndDebut((ChartType Type, DifficultyLevel Level) folder,
+        PlayerScoresUpdatedEvent.ScoreChange[] newPasses, CaptureData data,
+        Dictionary<Guid, HighlightFlags> flags)
+    {
+        if (newPasses.Length == 0) return;
+        var size = data.FolderSizes.GetValueOrDefault(folder);
+        var clears = data.FolderClears.GetValueOrDefault(folder);
+
+        if (size > 0 && clears / (double)size >= 0.9)
+            foreach (var chartId in newPasses.Select(p => p.ChartId))
+                flags[chartId] = flags.GetValueOrDefault(chartId) | HighlightFlags.FolderCompletion90;
+
+        // Folder debut: the first 3 passes ever in this folder (S and D counted
+        // separately). A batch landing several at once debuts its top ones by
+        // noteworthy ordering.
+        var debutSlots = 3 - (clears - newPasses.Length);
+        if (debutSlots <= 0) return;
+        foreach (var chartId in newPasses
+                     .OrderByDescending(c => data.ScoringLevels.TryGetValue(c.ChartId, out var sl) ? sl : 0)
+                     .ThenByDescending(c => (int?)data.Bests[c.ChartId].Score ?? 0)
+                     .Take(debutSlots)
+                     .Select(p => p.ChartId))
+            flags[chartId] = flags.GetValueOrDefault(chartId) | HighlightFlags.FolderDebut;
     }
 
     // Folder lamps fire on the crossing, every letter and plate boundary, no floor
@@ -272,39 +300,40 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
     // verified against the change's old score; old plates aren't on the event, so a
     // plate lamp can rarely re-fire when a floor chart improves score at the same plate.
     private static void CaptureFolderLamps(PlayerScoresUpdatedEvent e,
-        PlayerScoresUpdatedEvent.ScoreChange[] folderChanges, ChartType type, DifficultyLevel level, int size,
-        int clears, int newPassCount, Dictionary<Guid, Chart> charts,
-        Dictionary<Guid, RecordedPhoenixScore> bests, List<PlayerMilestoneWrite> lamps)
+        PlayerScoresUpdatedEvent.ScoreChange[] folderChanges, (ChartType Type, DifficultyLevel Level) folder,
+        CaptureData data, int newPassCount, List<PlayerMilestoneWrite> lamps)
     {
+        var size = data.FolderSizes.GetValueOrDefault(folder);
+        var clears = data.FolderClears.GetValueOrDefault(folder);
         if (size == 0 || clears != size) return;
-        var folder = $"{type.GetShortHand()}{(int)level}";
+        var folderName = $"{folder.Type.GetShortHand()}{(int)folder.Level}";
         var newlyCompleted = clears - newPassCount < size;
         if (newlyCompleted)
             lamps.Add(new PlayerMilestoneWrite(MilestoneKind.FolderPassLamp, e.SessionId, e.OccurredAt,
-                Detail: folder));
+                Detail: folderName));
 
-        var folderBests = charts.Values
-            .Where(c => c.Type == type && c.Level == level)
-            .Select(c => bests.GetValueOrDefault(c.Id))
+        var folderBests = data.Charts.Values
+            .Where(c => c.Type == folder.Type && c.Level == folder.Level)
+            .Select(c => data.Bests.GetValueOrDefault(c.Id))
             .ToArray();
         if (folderBests.Any(b => b?.Score == null || b.IsBroken)) return;
 
         var minGrade = folderBests.Min(b => b!.Score!.Value.LetterGrade);
         var gradeFloorIsNew = newlyCompleted || folderChanges.Any(c =>
-            bests[c.ChartId].Score!.Value.LetterGrade == minGrade
+            data.Bests[c.ChartId].Score!.Value.LetterGrade == minGrade
             && (c.IsNewPass || c.OldScore == null ||
                 PhoenixScore.From(c.OldScore.Value).LetterGrade < minGrade));
         if (gradeFloorIsNew)
             lamps.Add(new PlayerMilestoneWrite(MilestoneKind.FolderGradeLamp, e.SessionId, e.OccurredAt,
-                Detail: $"{folder}|{minGrade.GetName()}"));
+                Detail: $"{folderName}|{minGrade.GetName()}"));
 
         if (folderBests.Any(b => b!.Plate == null)) return;
         var minPlate = folderBests.Min(b => b!.Plate!.Value);
         var plateFloorIsNew = newlyCompleted ||
-                              folderChanges.Any(c => bests[c.ChartId].Plate == minPlate);
+                              folderChanges.Any(c => data.Bests[c.ChartId].Plate == minPlate);
         if (plateFloorIsNew)
             lamps.Add(new PlayerMilestoneWrite(MilestoneKind.FolderPlateLamp, e.SessionId, e.OccurredAt,
-                Detail: $"{folder}|{minPlate}"));
+                Detail: $"{folderName}|{minPlate}"));
     }
 
     private async Task<IReadOnlyDictionary<Guid, PhoenixScore[]>> GetCohortScores(MixEnum mix, Guid userId,

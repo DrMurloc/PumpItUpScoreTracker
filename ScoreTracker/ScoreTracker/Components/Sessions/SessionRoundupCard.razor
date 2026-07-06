@@ -29,7 +29,7 @@
         {
             <MudText Typo="Typo.body2"><b>@UpscoreCount</b> @L["Upscores"]</MudText>
         }
-        @if (Highlighted.Any())
+        @if (Highlighted.Count > 0)
         {
             <MudText Typo="Typo.body2"><b>@Highlighted.Count</b> @L["Highlights"]</MudText>
         }
@@ -84,8 +84,8 @@
     [Parameter] [EditorRequired] public RecentSessionsPage.SessionGroup Group { get; set; } = null!;
     [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
     [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
-    [Parameter] public IReadOnlyDictionary<(Guid? SessionId, Guid ChartId), HighlightFlag> Flags { get; set; } =
-        new Dictionary<(Guid?, Guid), HighlightFlag>();
+    [Parameter] public IReadOnlyDictionary<(Guid? SessionId, Guid ChartId), HighlightFlags> Flags { get; set; } =
+        new Dictionary<(Guid?, Guid), HighlightFlags>();
     [Parameter] public IReadOnlyList<PlayerMilestoneRecord> Milestones { get; set; } =
         Array.Empty<PlayerMilestoneRecord>();
     /// <summary>Show only milestones + flagged rows (the ⭐ Of-note filter).</summary>
@@ -98,38 +98,36 @@
     private const int InlineFlaggedLimit = 6;
     private const int InlineFallbackRows = 3;
 
+    // Computed once per parameter set — a property recomputing these copies would run
+    // on every Blazor render.
+    private IReadOnlyList<RecentSessionsPage.ScoreEventRecord> Highlighted = Array.Empty<RecentSessionsPage.ScoreEventRecord>();
+    private IReadOnlyList<RecentSessionsPage.ScoreEventRecord> Ordered = Array.Empty<RecentSessionsPage.ScoreEventRecord>();
+    private IReadOnlyList<RecentSessionsPage.ScoreEventRecord> InlineRows = Array.Empty<RecentSessionsPage.ScoreEventRecord>();
+
     protected override void OnParametersSet()
     {
         if (StartExpanded) _showAllScores = true;
+
+        // Universal noteworthy ordering for flagged rows, then the rest by level.
+        Ordered = Group.Rows
+            .OrderByDescending(r => FlagsFor(r) != HighlightFlags.None)
+            .ThenByDescending(r => Charts.GetValueOrDefault(r.ChartId)?.Level ?? 0)
+            .ThenByDescending(r => r.OccurredAt)
+            .ToArray();
+        Highlighted = Ordered.Where(r => FlagsFor(r) != HighlightFlags.None).ToArray();
+        if (OfNoteOnly)
+            InlineRows = Highlighted;
+        else if (Highlighted.Count > 0)
+            InlineRows = Highlighted.Take(InlineFlaggedLimit).ToArray();
+        else
+            InlineRows = Ordered.Take(InlineFallbackRows).ToArray();
     }
 
     public string AnchorId => Group.SessionId != null ? $"session-{Group.SessionId}" : $"day-{Group.Day:yyyyMMdd}";
 
-    private HighlightFlag FlagsFor(RecentSessionsPage.ScoreEventRecord row)
+    private HighlightFlags FlagsFor(RecentSessionsPage.ScoreEventRecord row)
     {
         return Flags.GetValueOrDefault((row.SessionId, row.ChartId));
-    }
-
-    private IReadOnlyList<RecentSessionsPage.ScoreEventRecord> Highlighted => Group.Rows
-        .Where(r => FlagsFor(r) != HighlightFlag.None)
-        .ToArray();
-
-    private IEnumerable<RecentSessionsPage.ScoreEventRecord> Ordered => Group.Rows
-        // Universal noteworthy ordering for flagged rows, then the rest by level.
-        .OrderByDescending(r => FlagsFor(r) != HighlightFlag.None)
-        .ThenByDescending(r => Charts.GetValueOrDefault(r.ChartId)?.Level ?? 0)
-        .ThenByDescending(r => r.OccurredAt);
-
-    private IReadOnlyList<RecentSessionsPage.ScoreEventRecord> InlineRows
-    {
-        get
-        {
-            if (OfNoteOnly)
-                return Ordered.Where(r => FlagsFor(r) != HighlightFlag.None).ToArray();
-            return Highlighted.Any()
-                ? Ordered.Where(r => FlagsFor(r) != HighlightFlag.None).Take(InlineFlaggedLimit).ToArray()
-                : Ordered.Take(InlineFallbackRows).ToArray();
-        }
     }
 
     private int HiddenRowCount => OfNoteOnly ? 0 : Group.Rows.Count - InlineRows.Count;

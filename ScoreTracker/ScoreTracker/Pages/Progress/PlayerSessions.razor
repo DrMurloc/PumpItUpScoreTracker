@@ -89,8 +89,8 @@
 
     private RecentSessionsPage _page = new(0, Array.Empty<RecentSessionsPage.SessionGroup>());
     private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
-    private IReadOnlyDictionary<(Guid? SessionId, Guid ChartId), HighlightFlag> _flags =
-        new Dictionary<(Guid?, Guid), HighlightFlag>();
+    private IReadOnlyDictionary<(Guid? SessionId, Guid ChartId), HighlightFlags> _flags =
+        new Dictionary<(Guid?, Guid), HighlightFlags>();
     private ILookup<Guid?, PlayerMilestoneRecord> _milestones =
         Array.Empty<PlayerMilestoneRecord>().ToLookup(m => m.SessionId);
 
@@ -122,7 +122,7 @@
         // One continuous timeline across mixes: chart, flag, and milestone lookups run
         // per mix present on the page and merge.
         var charts = new Dictionary<Guid, Chart>();
-        var flags = new Dictionary<(Guid? SessionId, Guid ChartId), HighlightFlag>();
+        var flags = new Dictionary<(Guid? SessionId, Guid ChartId), HighlightFlags>();
         var milestones = new List<PlayerMilestoneRecord>();
         foreach (var mixGroups in _page.Groups.GroupBy(g => g.Mix))
         {
@@ -136,7 +136,7 @@
             foreach (var pair in (await Mediator.Send(
                              new GetScoreHighlightsQuery(UserIdParam, mixGroups.Key, since, until)))
                          .GroupBy(h => (h.SessionId, h.ChartId)))
-                flags[pair.Key] = pair.Aggregate(HighlightFlag.None, (f, h) => f | h.Flags);
+                flags[pair.Key] = pair.Aggregate(HighlightFlags.None, (f, h) => f | h.Flags);
             milestones.AddRange(
                 await Mediator.Send(new GetPlayerMilestonesQuery(UserIdParam, mixGroups.Key, since, until)));
         }

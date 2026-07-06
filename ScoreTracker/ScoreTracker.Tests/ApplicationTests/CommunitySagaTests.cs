@@ -254,7 +254,7 @@ public sealed class CommunitySagaTests
         ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, chart, score: 950000);
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix2, null,
-            (chart.Id, true, HighlightFlag.None))));
+            (chart.Id, true, HighlightFlags.None))));
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Any(m =>
@@ -277,7 +277,7 @@ public sealed class CommunitySagaTests
         ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, chart, score: 950000);
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
-            (chart.Id, true, HighlightFlag.PumbilityTop50))));
+            (chart.Id, true, HighlightFlags.PumbilityTop50))));
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Any(m =>
@@ -301,7 +301,7 @@ public sealed class CommunitySagaTests
         ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, charts, score: 950000);
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, Guid.NewGuid(),
-            charts.Select(c => (c.Id, true, HighlightFlag.None)).ToArray())));
+            charts.Select(c => (c.Id, true, HighlightFlags.None)).ToArray())));
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Count() == 1
@@ -328,9 +328,9 @@ public sealed class CommunitySagaTests
         ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, privateUser, chart, score: 950000);
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(publicUser, MixEnum.Phoenix, sessionId,
-            (chart.Id, true, HighlightFlag.None))));
+            (chart.Id, true, HighlightFlags.None))));
         await ctx.Saga.Consume(BuildContext(CapturedEvent(privateUser, MixEnum.Phoenix, sessionId,
-            (chart.Id, true, HighlightFlag.None))));
+            (chart.Id, true, HighlightFlags.None))));
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.All(m =>
@@ -360,7 +360,7 @@ public sealed class CommunitySagaTests
         ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, charts, score: 950000);
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
-            charts.Select(c => (c.Id, true, HighlightFlag.None)).ToArray())));
+            charts.Select(c => (c.Id, true, HighlightFlags.None)).ToArray())));
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Count() == 1
@@ -394,7 +394,7 @@ public sealed class CommunitySagaTests
         };
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, sessionId, milestones,
-            (chart.Id, true, HighlightFlag.None))));
+            (chart.Id, true, HighlightFlags.None))));
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
@@ -424,7 +424,7 @@ public sealed class CommunitySagaTests
             .ToArray();
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null, milestones,
-            (chart.Id, true, HighlightFlag.None))));
+            (chart.Id, true, HighlightFlags.None))));
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
@@ -449,7 +449,7 @@ public sealed class CommunitySagaTests
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
                 Array.Empty<PlayerMilestoneRecord>(),
                 new[] { new TitleProgressDelta("Expert Lv. 4", 0.82, 0.86) },
-                (chart.Id, true, HighlightFlag.None))));
+                (chart.Id, true, HighlightFlags.None))));
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
@@ -472,7 +472,7 @@ public sealed class CommunitySagaTests
         ctx.GivenWeeklyPlacements(charts.Select(c => new WeeklyPlacementRecord(c.Id, 2)).ToArray());
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
-            charts.Select(c => (c.Id, true, HighlightFlag.None)).ToArray())));
+            charts.Select(c => (c.Id, true, HighlightFlags.None)).ToArray())));
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
@@ -496,7 +496,7 @@ public sealed class CommunitySagaTests
         ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, coOps, score: 993000);
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
-            coOps.Select(c => (c.Id, false, HighlightFlag.None)).ToArray())));
+            coOps.Select(c => (c.Id, false, HighlightFlags.None)).ToArray())));
 
         // 3 co-op rows render individually (art while slots last) and the remainder
         // compresses with a CO-OP count; co-ops never earn S/D flags but always show.
@@ -527,9 +527,9 @@ public sealed class CommunitySagaTests
             new[]
             {
                 new ScoreHighlightsCapturedEvent.HighlightedChange(biggest.Id, false, 922296, 950000,
-                    "TalentedGame", false, HighlightFlag.None),
+                    "TalentedGame", false, HighlightFlags.None),
                 new ScoreHighlightsCapturedEvent.HighlightedChange(smaller.Id, false, 938000, 950000,
-                    "TalentedGame", false, HighlightFlag.None)
+                    "TalentedGame", false, HighlightFlags.None)
             })));
 
         ctx.Bot.Verify(b => b.SendRichMessages(
@@ -558,9 +558,9 @@ public sealed class CommunitySagaTests
         ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, phoenix2Chart, score: 950000);
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
-            (phoenixChart.Id, true, HighlightFlag.None))));
+            (phoenixChart.Id, true, HighlightFlags.None))));
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix2, null,
-            (phoenix2Chart.Id, true, HighlightFlag.None))));
+            (phoenix2Chart.Id, true, HighlightFlags.None))));
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs =>
@@ -591,7 +591,7 @@ public sealed class CommunitySagaTests
         };
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null, lamps,
-            (chart.Id, true, HighlightFlag.None))));
+            (chart.Id, true, HighlightFlags.None))));
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Any(m =>
@@ -618,8 +618,8 @@ public sealed class CommunitySagaTests
             score: 950000);
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
-            (flaggedChart.Id, true, HighlightFlag.ScoreQuality90 | HighlightFlag.FolderDebut),
-            (plainChart.Id, true, HighlightFlag.None))));
+            (flaggedChart.Id, true, HighlightFlags.ScoreQuality90 | HighlightFlags.FolderDebut),
+            (plainChart.Id, true, HighlightFlags.None))));
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Any(m =>
@@ -647,7 +647,7 @@ public sealed class CommunitySagaTests
             { new PlayerMilestoneRecord(MilestoneKind.FolderPassLamp, null, Now, null, null, null, "S18") };
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, Guid.NewGuid(), lamps,
-            charts.Select(c => (c.Id, true, HighlightFlag.None)).ToArray())));
+            charts.Select(c => (c.Id, true, HighlightFlags.None)).ToArray())));
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Count() == 1
@@ -658,21 +658,21 @@ public sealed class CommunitySagaTests
     }
 
     private static ScoreHighlightsCapturedEvent CapturedEvent(Guid userId, MixEnum mix, Guid? sessionId,
-        params (Guid ChartId, bool IsNewPass, HighlightFlag Flags)[] changes)
+        params (Guid ChartId, bool IsNewPass, HighlightFlags Flags)[] changes)
     {
         return CapturedEvent(userId, mix, sessionId, Array.Empty<PlayerMilestoneRecord>(), changes);
     }
 
     private static ScoreHighlightsCapturedEvent CapturedEvent(Guid userId, MixEnum mix, Guid? sessionId,
         PlayerMilestoneRecord[] milestones,
-        params (Guid ChartId, bool IsNewPass, HighlightFlag Flags)[] changes)
+        params (Guid ChartId, bool IsNewPass, HighlightFlags Flags)[] changes)
     {
         return CapturedEvent(userId, mix, sessionId, milestones, Array.Empty<TitleProgressDelta>(), changes);
     }
 
     private static ScoreHighlightsCapturedEvent CapturedEvent(Guid userId, MixEnum mix, Guid? sessionId,
         PlayerMilestoneRecord[] milestones, TitleProgressDelta[] titleProgress,
-        params (Guid ChartId, bool IsNewPass, HighlightFlag Flags)[] changes)
+        params (Guid ChartId, bool IsNewPass, HighlightFlags Flags)[] changes)
     {
         return ScoreHighlightsCapturedEvent.Create(Now, userId, mix, sessionId,
             changes.Select(c => new ScoreHighlightsCapturedEvent.HighlightedChange(c.ChartId, c.IsNewPass,

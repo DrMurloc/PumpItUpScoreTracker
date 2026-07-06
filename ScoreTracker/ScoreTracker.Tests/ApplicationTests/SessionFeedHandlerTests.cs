@@ -105,7 +105,7 @@ public sealed class SessionFeedHandlerTests
         Assert.Equal(Now.AddMinutes(-90), group.Start);
         Assert.Equal(Now, group.End);
         // Newest first within the group.
-        Assert.Equal(Now, group.Rows.First().OccurredAt);
+        Assert.Equal(Now, group.Rows[0].OccurredAt);
     }
 
     private static ScoreJournalEntry Entry(DateTimeOffset at, int score, bool isBroken = false,

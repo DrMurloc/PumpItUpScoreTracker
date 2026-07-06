@@ -5,6 +5,6 @@ public sealed record ScoreHighlightRecord(
     Guid ChartId,
     Guid? SessionId,
     DateTimeOffset OccurredAt,
-    HighlightFlag Flags,
+    HighlightFlags Flags,
     int Level,
     double? ScoringLevel);

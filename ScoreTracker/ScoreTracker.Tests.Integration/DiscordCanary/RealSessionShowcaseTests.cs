@@ -250,7 +250,7 @@ public sealed class RealSessionShowcaseTests
             $"database, found {foreignChannels} foreign channel row(s).");
     }
 
-    private async Task DetachLabChannel()
+    private static async Task DetachLabChannel()
     {
         await using var connection = new SqlConnection(DatabaseConnection);
         await connection.OpenAsync();
@@ -292,20 +292,20 @@ public sealed class RealSessionShowcaseTests
             .ToDictionary(g => g.Key, g => g.Count());
 
         var known = rows.Where(r => charts.ContainsKey(r.ChartId) && bests.ContainsKey(r.ChartId)).ToArray();
-        var flags = new Dictionary<Guid, HighlightFlag>();
+        var flags = new Dictionary<Guid, HighlightFlags>();
         foreach (var row in known)
         {
             var chart = charts[row.ChartId];
             var best = bests[row.ChartId];
-            var f = HighlightFlag.None;
+            var f = HighlightFlags.None;
             if (!best.IsBroken && best.Score != null)
             {
-                if (top50.Contains(chart.Id)) f |= HighlightFlag.PumbilityTop50;
+                if (top50.Contains(chart.Id)) f |= HighlightFlags.PumbilityTop50;
                 if (incompleteTitles.Any(t => t.PhoenixTitle.CompletionProgress(chart, best) > 0))
-                    f |= HighlightFlag.TitleProgress;
+                    f |= HighlightFlags.TitleProgress;
             }
 
-            if (f != HighlightFlag.None) flags[chart.Id] = f;
+            if (f != HighlightFlags.None) flags[chart.Id] = f;
         }
 
         var lamps = new List<PlayerMilestoneRecord>();
@@ -319,7 +319,7 @@ public sealed class RealSessionShowcaseTests
 
             if (size > 0 && clears / (double)size >= 0.9)
                 foreach (var pass in newPasses)
-                    flags[pass.ChartId] = flags.GetValueOrDefault(pass.ChartId) | HighlightFlag.FolderCompletion90;
+                    flags[pass.ChartId] = flags.GetValueOrDefault(pass.ChartId) | HighlightFlags.FolderCompletion90;
 
             if (size == 0 || clears != size) continue;
             var folderName = $"{type.GetShortHand()}{(int)level}";
@@ -403,7 +403,7 @@ public sealed class RealSessionShowcaseTests
         }
 
         var stamps = picked.Rows.ToDictionary(r => r.ChartId, r => r.RecordedAt);
-        foreach (var change in changes.Where(c => c.Flags != HighlightFlag.None))
+        foreach (var change in changes.Where(c => c.Flags != HighlightFlags.None))
         {
             await using var insert = new SqlCommand(
                 """
@@ -445,11 +445,11 @@ public sealed class RealSessionShowcaseTests
 
     // ── Readback ────────────────────────────────────────────────────────────────
 
-    private async Task<string[]> AwaitCardsInLabChannel(string userName, DateTimeOffset postedAfter)
+    private static async Task<string[]> AwaitCardsInLabChannel(string userName, DateTimeOffset postedAfter)
     {
         await using var rest = new DiscordRestClient();
         await rest.LoginAsync(TokenType.Bot, Token);
-        var channel = Assert.IsAssignableFrom<IMessageChannel>(await rest.GetChannelAsync(ChannelId!.Value));
+        var channel = Assert.IsType<IMessageChannel>(await rest.GetChannelAsync(ChannelId!.Value), exactMatch: false);
         for (var attempt = 0; attempt < 30; attempt++)
         {
             var recent = (await channel.GetMessagesAsync(10).FlattenAsync()).ToArray();
@@ -458,7 +458,7 @@ public sealed class RealSessionShowcaseTests
                 .SelectMany(m => DiscordCanaryTests.ComponentTexts(m.Components))
                 .Where(t => t.Contains(userName))
                 .ToArray();
-            if (cards.Any()) return cards;
+            if (cards.Length > 0) return cards;
             await Task.Delay(TimeSpan.FromSeconds(3));
         }
 
@@ -478,7 +478,7 @@ public sealed class RealSessionShowcaseTests
     private static async Task<Guid> ScalarGuid(SqlConnection connection, string sql) =>
         (Guid)(await Scalar(connection, sql) ?? throw new InvalidOperationException($"No result: {sql}"));
 
-    private async Task<int> CountAsync(string sql, params (string Name, object Value)[] parameters)
+    private static async Task<int> CountAsync(string sql, params (string Name, object Value)[] parameters)
     {
         await using var connection = new SqlConnection(DatabaseConnection);
         await connection.OpenAsync();

@@ -616,7 +616,7 @@ The implementation-facing inventory of everything above. **New code types:**
 | ScoreLedger | `ScoreJournalEntry.SessionId` | additive field (`Guid?`) | import id / per-CSV-upload / 4 h rolling manual session |
 | ScoreLedger | `UpdatePhoenixBestAttemptCommand.SessionId` | additive optional param | stamped by OfficialMirror import saga + CSV upload handler; null ⇒ handler derives the rolling session |
 | ScoreLedger | `GetRecentScoreEventsQuery` → `RecentScoreEventRecord`, `ScoreEventClassification` (NewPass / Upscore / Break; legacy pre-guard rows may render Played) | new contracts | the journal's first read path; handler gates on `User.IsPublic` |
-| PlayerProgress | `ScoreHighlight` (internal entity + record), `HighlightFlag` [Flags] enum (PumbilityTop50, TitleProgress, ScoreQuality90, FolderCompletion90, CompetitiveImprover, FolderDebut) | new | captured by the PlayerProgress capture consumer of the score event |
+| PlayerProgress | `ScoreHighlight` (internal entity + record), `HighlightFlags` [Flags] enum (PumbilityTop50, TitleProgress, ScoreQuality90, FolderCompletion90, CompetitiveImprover, FolderDebut) | new | captured by the PlayerProgress capture consumer of the score event |
 | PlayerProgress | `ScoreHighlightsCapturedEvent` | new contracts event | published after capture, always (zero flags included); carries the change set + `SessionId` + per-chart flags; Communities' score-card consumer subscribes to this, not the raw score event |
 | PlayerProgress | `PlayerMilestone` (internal entity + record), `MilestoneKind` enum (PumbilityGain, TitleCompleted, ParagonLevelGain, SinglesCompetitiveGain, DoublesCompetitiveGain, FolderPassLamp, FolderGradeLamp, FolderPlateLamp) + compact `Detail` payload | new | appended by `PlayerRatingSaga`/`TitleSaga` + folder-floor checks per touched folder |
 | ScoreLedger | `RecordedPhoenixScore.Source` (source of current best) | additive field | verified ⇔ `officialImport`; updated when the best updates; existing rows NULL |
@@ -747,7 +747,7 @@ Already shipped on the branch: the message-drop hotfix (stats chunking +
   per user/mix/source, explicit run-id support); `SessionId` on the command, journal
   writes, and `PlayerScoresUpdatedEvent` (additive — serialization tests updated); import
   saga and CSV pass run ids; `PhoenixRecords.Source` written on best-attempt updates.
-- **C4 — Highlight capture (PlayerProgress).** `HighlightFlag` enum + capture consumer
+- **C4 — Highlight capture (PlayerProgress).** `HighlightFlags` enum + capture consumer
   computing all six flags; `ScoreHighlightsCapturedEvent` published always (zero flags
   included); `GetScoreHighlightsQuery`. Saga tests per flag.
 - **C5 — Milestone capture (PlayerProgress).** `MilestoneKind` + `PlayerMilestone` writes

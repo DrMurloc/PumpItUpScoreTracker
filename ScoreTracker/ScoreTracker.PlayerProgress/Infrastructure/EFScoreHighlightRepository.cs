@@ -19,7 +19,7 @@ internal sealed class EFScoreHighlightRepository : IScoreHighlightRepository
     public async Task UpsertFlags(MixEnum mix, Guid userId, IEnumerable<ScoreHighlightWrite> highlights,
         CancellationToken cancellationToken)
     {
-        var writes = highlights.Where(h => h.Flags != HighlightFlag.None).ToArray();
+        var writes = highlights.Where(h => h.Flags != HighlightFlags.None).ToArray();
         if (!writes.Any()) return;
 
         var mixId = MixIds.For(mix);
@@ -71,7 +71,7 @@ internal sealed class EFScoreHighlightRepository : IScoreHighlightRepository
         return (await database.Set<ScoreHighlightEntity>()
                 .Where(e => e.UserId == userId && e.MixId == mixId && e.OccurredAt >= since && e.OccurredAt <= until)
                 .ToArrayAsync(cancellationToken))
-            .Select(e => new ScoreHighlightRecord(e.ChartId, e.SessionId, e.OccurredAt, (HighlightFlag)e.Flags,
+            .Select(e => new ScoreHighlightRecord(e.ChartId, e.SessionId, e.OccurredAt, (HighlightFlags)e.Flags,
                 e.Level, e.ScoringLevel));
     }
 }

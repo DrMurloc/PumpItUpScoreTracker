@@ -23,7 +23,7 @@ internal sealed class ScoreHighlightEntity
 
     [Required] public DateTimeOffset OccurredAt { get; set; }
 
-    /// <summary>Bit flags — see <c>HighlightFlag</c> in PlayerProgress contracts.</summary>
+    /// <summary>Bit flags — see <c>HighlightFlags</c> in PlayerProgress contracts.</summary>
     [Required]
     public int Flags { get; set; }
 
