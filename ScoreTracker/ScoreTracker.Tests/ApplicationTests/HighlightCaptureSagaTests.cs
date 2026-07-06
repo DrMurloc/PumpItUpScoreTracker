@@ -23,6 +23,7 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
+using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -207,6 +208,36 @@ public sealed class HighlightCaptureSagaTests
     }
 
     [Fact]
+    public async Task WeeklyPlacementChangesBecomeMilestones()
+    {
+        // Weekly registration rides its own eligibility flow, so placements arrive as
+        // the weekly vertical's progressed event — captured here as the gold rows the
+        // Sessions page shows (SessionId deliberately null: no batch session exists).
+        var chart = new ChartBuilder().WithType(ChartType.Double).WithLevel(21).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+
+        await ctx.Saga.Consume(WeeklyContext(new UserWeeklyChartsProgressedEvent(UserId, chart.Id,
+            1000000, "PerfectGame", false, 1, MixEnum.Phoenix)));
+
+        ctx.Milestones.Verify(m => m.Append(MixEnum.Phoenix, UserId,
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w => w.Any(x =>
+                x.Kind == MilestoneKind.WeeklyPlacement && x.NewValue == 1
+                && x.Title == chart.Song.Name && x.Detail == chart.DifficultyString
+                && x.SessionId == null)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private static ConsumeContext<UserWeeklyChartsProgressedEvent> WeeklyContext(
+        UserWeeklyChartsProgressedEvent message)
+    {
+        var ctx = new Mock<ConsumeContext<UserWeeklyChartsProgressedEvent>>();
+        ctx.SetupGet(c => c.Message).Returns(message);
+        ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
+        return ctx.Object;
+    }
+
+    [Fact]
     public async Task RatingAndTitleStepsEnrichThePublishedSnapshot()
     {
         // The orchestration (revision 2): the rating and title steps run in-process
@@ -369,7 +400,7 @@ public sealed class HighlightCaptureSagaTests
                 .ReturnsAsync(Array.Empty<(Guid, RecordedPhoenixScore)>());
             Saga = new HighlightCaptureSaga(Charts.Object, Scores.Object, Titles.Object, PlayerStats.Object,
                 Highlights.Object, Milestones.Object, Mediator.Object, new MemoryCache(new MemoryCacheOptions()),
-                NullLogger<HighlightCaptureSaga>.Instance);
+                FakeDateTime.At(Now).Object, NullLogger<HighlightCaptureSaga>.Instance);
         }
 
         public void GivenCharts(params Chart[] charts)

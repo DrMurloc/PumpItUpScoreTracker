@@ -28,5 +28,12 @@ public enum MilestoneKind
     FolderGradeLamp,
 
     /// <summary>The folder's minimum plate reached a new floor. Detail = "D23|UltimateGame".</summary>
-    FolderPlateLamp
+    FolderPlateLamp,
+
+    /// <summary>
+    ///     Weekly-board placement changed. NewValue = the place, Title = the song,
+    ///     Detail = the difficulty string (e.g. "D21"). SessionId stays null — weekly
+    ///     registration follows its own eligibility flow, not the score batches.
+    /// </summary>
+    WeeklyPlacement
 }

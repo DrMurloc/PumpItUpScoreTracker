@@ -1,4 +1,5 @@
 using ScoreTracker.Domain.Services;
+using ScoreTracker.WeeklyChallenge.Contracts;
 using ScoreTracker.WeeklyChallenge.Contracts.Queries;
 using ScoreTracker.WeeklyChallenge.Contracts.Messages;
 using ScoreTracker.WeeklyChallenge.Contracts.Commands;
@@ -27,8 +28,30 @@ namespace ScoreTracker.WeeklyChallenge.Application
         IRequestHandler<GetWeeklyChartEntriesQuery, IEnumerable<WeeklyTournamentEntry>>,
         IRequestHandler<GetPastWeeklyEntriesQuery, IEnumerable<WeeklyTournamentEntry>>,
         IRequestHandler<GetPastWeeklyDatesQuery, IEnumerable<DateTimeOffset>>,
-        IRequestHandler<GetAlreadyPlayedWeeklyChartsQuery, IEnumerable<Guid>>
+        IRequestHandler<GetAlreadyPlayedWeeklyChartsQuery, IEnumerable<Guid>>,
+        IRequestHandler<GetUserWeeklyPlacementsQuery, IEnumerable<WeeklyPlacementRecord>>
     {
+        // The session-snapshot card's weekly read: current placements for whichever of
+        // the batch's charts sit on this week's board.
+        public async Task<IEnumerable<WeeklyPlacementRecord>> Handle(GetUserWeeklyPlacementsQuery request,
+            CancellationToken cancellationToken)
+        {
+            var weeklyChartIds = (await weeklyTournies.GetWeeklyCharts(request.Mix, cancellationToken))
+                .Select(c => c.ChartId).ToHashSet();
+            var placements = new List<WeeklyPlacementRecord>();
+            foreach (var chartId in request.ChartIds.Where(weeklyChartIds.Contains).Distinct())
+            {
+                var entries = await weeklyTournies.GetEntries(request.Mix, chartId, cancellationToken);
+                var place = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(entries)
+                    .Where(e => e.Item2.UserId == request.UserId)
+                    .Select(e => (int?)e.Item1)
+                    .FirstOrDefault();
+                if (place != null) placements.Add(new WeeklyPlacementRecord(chartId, place.Value));
+            }
+
+            return placements;
+        }
+
         // Read-side pass-throughs so pages and the partner api/weeklyCharts endpoint
         // dispatch via IMediator instead of injecting the repository.
         public async Task<IEnumerable<WeeklyTournamentChart>> Handle(GetWeeklyChartsQuery request,

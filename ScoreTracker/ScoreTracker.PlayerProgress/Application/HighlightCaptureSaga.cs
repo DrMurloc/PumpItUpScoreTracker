@@ -31,11 +31,13 @@ namespace ScoreTracker.PlayerProgress.Application;
 ///     racing consumers (ADR-001 doctrine).
 /// </summary>
 internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>,
+    IConsumer<UserWeeklyChartsProgressedEvent>,
     IRequestHandler<GetScoreHighlightsQuery, IEnumerable<ScoreHighlightRecord>>,
     IRequestHandler<GetPlayerMilestonesQuery, IEnumerable<PlayerMilestoneRecord>>
 {
     private readonly IMemoryCache _cache;
     private readonly IChartRepository _charts;
+    private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IScoreHighlightRepository _highlights;
     private readonly ILogger<HighlightCaptureSaga> _logger;
     private readonly IMediator _mediator;
@@ -47,7 +49,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
     public HighlightCaptureSaga(IChartRepository charts, IScoreReader scores, ITitleRepository titles,
         IPlayerStatsReader playerStats, IScoreHighlightRepository highlights,
         IPlayerMilestoneRepository milestones, IMediator mediator, IMemoryCache cache,
-        ILogger<HighlightCaptureSaga> logger)
+        IDateTimeOffsetAccessor dateTime, ILogger<HighlightCaptureSaga> logger)
     {
         _charts = charts;
         _scores = scores;
@@ -57,7 +59,27 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         _milestones = milestones;
         _mediator = mediator;
         _cache = cache;
+        _dateTime = dateTime;
         _logger = logger;
+    }
+
+    /// <summary>
+    ///     Weekly-board placement changes become milestones (the gold rows on the
+    ///     Sessions page). SessionId stays null — weekly registration rides its own
+    ///     eligibility flow (import completion / photo submission), not the score
+    ///     batches, so there is no batch session to attribute it to.
+    /// </summary>
+    public async Task Consume(ConsumeContext<UserWeeklyChartsProgressedEvent> context)
+    {
+        var e = context.Message;
+        var chart = (await _charts.GetCharts(e.Mix, chartIds: new[] { e.ChartId },
+            cancellationToken: context.CancellationToken)).FirstOrDefault();
+        if (chart == null) return;
+        await _milestones.Append(e.Mix, e.UserId, new[]
+        {
+            new PlayerMilestoneWrite(MilestoneKind.WeeklyPlacement, null, _dateTime.Now,
+                NewValue: e.Place, Title: chart.Song.Name, Detail: chart.DifficultyString)
+        }, context.CancellationToken);
     }
 
     public async Task Consume(ConsumeContext<PlayerScoresUpdatedEvent> context)
