@@ -36,6 +36,10 @@ public sealed class DiscordCanaryTests
 
     public static bool Configured => !string.IsNullOrWhiteSpace(Token) && ChannelId != null;
 
+    // The other lab-channel tests (session snapshot PoC) share the canary's config.
+    internal static string? CanaryToken => Token;
+    internal static ulong? CanaryChannel => ChannelId;
+
     [DiscordCanaryFact]
     public async Task PostsSampleCardsToTheLabChannelAndReadsThemBack()
     {
