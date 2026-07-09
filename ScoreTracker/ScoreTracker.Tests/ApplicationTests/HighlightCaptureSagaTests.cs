@@ -46,15 +46,39 @@ public sealed class HighlightCaptureSagaTests
 
         ctx.Highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, UserId,
             It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
-                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlags.PumbilityTop50) && x.Level == 20)),
+                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlags.PumbilityTop50) && x.Level == 20
+                && x.Detail != null && x.Detail.PumbilityRank == 1)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task TitleProgressFlagsScoresCountingTowardIncompleteTitles()
+    public async Task TitleProgressFlagsChartSpecificSkillTitlesWithScoreDetail()
     {
-        // A non-broken AA on a level with an incomplete difficulty title contributes
-        // (PhoenixDifficultyTitle.CompletionProgress > 0) and gets the flag.
+        // Per-row title progress is skill titles only (owner call): Moonlight S18 is
+        // [DRILL] Lv.4, and a non-broken score below the SSS threshold carries the
+        // score/threshold the card renders as "972k/990k".
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(18)
+            .WithSongName("Moonlight").Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 972000);
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.Highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, UserId,
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlags.TitleProgress)
+                && x.Detail != null && x.Detail.SkillTitleName == "[DRILL] Lv.4"
+                && x.Detail.SkillTitleScore == 972000 && x.Detail.SkillTitleThreshold == 990000)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GenericDifficultyTitleProgressDoesNotFlagPerRow()
+    {
+        // A plain level-20 chart nudges the "Advanced" difficulty titles but is not
+        // chart-specific — it must NOT claim the per-row TitleProgress flag (that noise
+        // rides the card's top section as a delta instead).
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var ctx = new HandlerContext();
         ctx.GivenCharts(chart);
@@ -62,10 +86,10 @@ public sealed class HighlightCaptureSagaTests
 
         await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
 
-        ctx.Highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, UserId,
+        ctx.Highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
             It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
-                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlags.TitleProgress))),
-            It.IsAny<CancellationToken>()), Times.Once);
+                x.Flags.HasFlag(HighlightFlags.TitleProgress))),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -82,7 +106,9 @@ public sealed class HighlightCaptureSagaTests
 
         ctx.Highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, UserId,
             It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
-                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlags.ScoreQuality90))),
+                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlags.ScoreQuality90)
+                && x.Detail != null && x.Detail.PeerCount == 10 && x.Detail.PeerBetterCount == 0
+                && x.Detail.PeerPgCount == 0)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -95,6 +121,27 @@ public sealed class HighlightCaptureSagaTests
         ctx.GivenBest(chart, 910000);
         ctx.GivenCohort(chart, Enumerable.Range(0, 10)
             .Select(i => (PhoenixScore)(905000 + i * 10000)).ToArray());
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.Highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.Flags.HasFlag(HighlightFlags.ScoreQuality90))),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ScoreQualityDoesNotFlagAPerfectGameMostPeersAlsoHold()
+    {
+        // A PG is 100th percentile tie-inclusive, but a PG most of the cohort also holds
+        // isn't noteworthy (owner call) — suppress it.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 1000000);
+        // Six peers, four of them also PG (> half) — suppressed.
+        ctx.GivenCohort(chart, new[] { 940000, 960000, 1000000, 1000000, 1000000, 1000000 }
+            .Select(s => (PhoenixScore)s).ToArray());
 
         await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
 
@@ -120,7 +167,8 @@ public sealed class HighlightCaptureSagaTests
 
         ctx.Highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, UserId,
             It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
-                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlags.FolderDebut))),
+                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlags.FolderDebut)
+                && x.Detail != null && x.Detail.FolderDebutOrdinal == 2)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

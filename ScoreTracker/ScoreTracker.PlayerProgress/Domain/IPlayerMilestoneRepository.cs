@@ -10,6 +10,10 @@ internal interface IPlayerMilestoneRepository
 
     Task<IEnumerable<PlayerMilestoneRecord>> GetMilestones(MixEnum mix, Guid userId, DateTimeOffset since,
         DateTimeOffset until, CancellationToken cancellationToken);
+
+    /// <summary>Reads session-attached milestones for specific sessions (FK by SessionId).</summary>
+    Task<IEnumerable<PlayerMilestoneRecord>> GetMilestonesBySessions(Guid userId, IEnumerable<Guid> sessionIds,
+        CancellationToken cancellationToken);
 }
 
 internal sealed record PlayerMilestoneWrite(

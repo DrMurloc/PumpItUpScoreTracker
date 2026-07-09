@@ -23,7 +23,7 @@
         <MudText Typo="Typo.h5">@progress.Title.Name</MudText>
     </MudItem>
     <MudItem xs="12" sm="8" md="9">
-        <MudProgressLinear Color="@(progress.CompletionCount >= progress.Title.CompletionRequired ? Color.Success : Color.Primary)" Value="100.0 * (progress.CompletionCount / (double)progress.Title.CompletionRequired)">
+        <MudProgressLinear Color="@(progress.CompletionCount >= progress.Title.CompletionRequired ? Color.Success : Color.Primary)" Value="100.0 * progress.PercentComplete">
             @if (progress.CompletionCount < progress.Title.CompletionRequired)
             {
                 <MudText Typo="Typo.subtitle1">

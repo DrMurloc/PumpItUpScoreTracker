@@ -42,10 +42,11 @@ internal sealed class EFScoreHighlightRepository : IScoreHighlightRepository
             {
                 row.Flags |= (int)write.Flags;
                 if (row.ScoringLevel == null && write.ScoringLevel != null) row.ScoringLevel = write.ScoringLevel;
+                MergeDetail(row, write.Detail);
             }
             else
             {
-                await database.AddAsync(new ScoreHighlightEntity
+                var entity = new ScoreHighlightEntity
                 {
                     Id = Guid.NewGuid(),
                     UserId = userId,
@@ -56,11 +57,34 @@ internal sealed class EFScoreHighlightRepository : IScoreHighlightRepository
                     Flags = (int)write.Flags,
                     Level = write.Level,
                     ScoringLevel = write.ScoringLevel
-                }, cancellationToken);
+                };
+                MergeDetail(entity, write.Detail);
+                await database.AddAsync(entity, cancellationToken);
             }
         }
 
         await database.SaveChangesAsync(cancellationToken);
+    }
+
+    // Detail is set once by capture; the improver pass carries none, so fill only nulls.
+    private static void MergeDetail(ScoreHighlightEntity row, HighlightDetail? detail)
+    {
+        if (detail == null) return;
+        row.PumbilityRank ??= detail.PumbilityRank;
+        row.FolderDebutOrdinal ??= detail.FolderDebutOrdinal;
+        row.PeerCount ??= detail.PeerCount;
+        row.PeerBetterCount ??= detail.PeerBetterCount;
+        row.PeerPgCount ??= detail.PeerPgCount;
+        row.SkillTitleName ??= detail.SkillTitleName;
+        row.SkillTitleScore ??= detail.SkillTitleScore;
+        row.SkillTitleThreshold ??= detail.SkillTitleThreshold;
+    }
+
+    private static ScoreHighlightRecord ToRecord(ScoreHighlightEntity e)
+    {
+        return new ScoreHighlightRecord(e.ChartId, e.SessionId, e.OccurredAt, (HighlightFlags)e.Flags, e.Level,
+            e.ScoringLevel, new HighlightDetail(e.PumbilityRank, e.FolderDebutOrdinal, e.PeerCount, e.PeerBetterCount,
+                e.PeerPgCount, e.SkillTitleName, e.SkillTitleScore, e.SkillTitleThreshold));
     }
 
     public async Task<IEnumerable<ScoreHighlightRecord>> GetHighlights(MixEnum mix, Guid userId,
@@ -71,7 +95,18 @@ internal sealed class EFScoreHighlightRepository : IScoreHighlightRepository
         return (await database.Set<ScoreHighlightEntity>()
                 .Where(e => e.UserId == userId && e.MixId == mixId && e.OccurredAt >= since && e.OccurredAt <= until)
                 .ToArrayAsync(cancellationToken))
-            .Select(e => new ScoreHighlightRecord(e.ChartId, e.SessionId, e.OccurredAt, (HighlightFlags)e.Flags,
-                e.Level, e.ScoringLevel));
+            .Select(ToRecord);
+    }
+
+    public async Task<IEnumerable<ScoreHighlightRecord>> GetHighlightsBySessions(Guid userId,
+        IEnumerable<Guid> sessionIds, CancellationToken cancellationToken)
+    {
+        var ids = sessionIds.Distinct().Select(s => (Guid?)s).ToArray();
+        if (ids.Length == 0) return Array.Empty<ScoreHighlightRecord>();
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return (await database.Set<ScoreHighlightEntity>()
+                .Where(e => e.UserId == userId && ids.Contains(e.SessionId))
+                .ToArrayAsync(cancellationToken))
+            .Select(ToRecord);
     }
 }

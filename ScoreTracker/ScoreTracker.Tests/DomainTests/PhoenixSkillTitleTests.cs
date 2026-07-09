@@ -79,4 +79,31 @@ public sealed class PhoenixSkillTitleTests
     {
         Assert.Equal(990000, Title().CompletionRequired);
     }
+
+    [Fact]
+    public void CompletionFloorIsAtNineHundredThousand()
+    {
+        Assert.Equal(900_000, Title().CompletionFloor);
+    }
+
+    [Fact]
+    public void PercentCompleteRebasesFromTheFloorNotZero()
+    {
+        // 945k on a skill chart is halfway from the 900k floor to the 990k target — not ~95%.
+        var progress = new PhoenixTitleProgress(Title());
+        var chart = new ChartBuilder().WithSongName(Song).WithType(ChartType.Single).WithLevel(26).Build();
+        progress.ApplyAttempt(chart, Attempt(945000));
+
+        Assert.Equal(0.5, progress.PercentComplete, 3);
+    }
+
+    [Fact]
+    public void PercentCompleteClampsToZeroBelowTheFloor()
+    {
+        var progress = new PhoenixTitleProgress(Title());
+        var chart = new ChartBuilder().WithSongName(Song).WithType(ChartType.Single).WithLevel(26).Build();
+        progress.ApplyAttempt(chart, Attempt(880000));
+
+        Assert.Equal(0, progress.PercentComplete);
+    }
 }

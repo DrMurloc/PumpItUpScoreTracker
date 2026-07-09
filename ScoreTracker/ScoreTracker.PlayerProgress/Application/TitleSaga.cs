@@ -10,6 +10,7 @@ using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Models.Titles;
+using ScoreTracker.Domain.Models.Titles.Interface;
 using ScoreTracker.Domain.Models.Titles.Phoenix;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.Models.Titles.XX;
@@ -142,9 +143,13 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
 
     public async Task Consume(ConsumeContext<TitlesDetectedEvent> context)
     {
+        // The site path owns only the badges the score pipeline can't compute
+        // (CompletionRequired == 0): events, play/plate counts, staff. Difficulty, skill,
+        // boss-breaker and co-op completions ride the session card via the score path, so
+        // this path stops announcing them (it still saves everything — DB stays correct).
         await ProcessCharts(context.Message.Mix, context.Message.UserId,
             context.Message.TitlesFound.Select(Name.From),
-            context.CancellationToken);
+            context.CancellationToken, siteOnlyAnnounce: true);
     }
 
     private ParagonLevel GetLevel(TitleProgress tp)
@@ -154,7 +159,7 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
 
     private async Task<IReadOnlyList<PlayerMilestoneRecord>> ProcessCharts(MixEnum mix, Guid userId,
         IEnumerable<Name> newCharts, CancellationToken cancellationToken, Guid? sessionId = null,
-        bool announceLegacy = true)
+        bool announceLegacy = true, bool mint = true, bool siteOnlyAnnounce = false)
     {
         var existingTitles = (await _titles.GetCompletedTitles(mix, userId, cancellationToken))
             .ToDictionary(t => t.Title);
@@ -178,11 +183,22 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         if (highest != null)
             await _titles.SetHighestDifficultyTitle(mix, userId, highest.Name, highest.Level, cancellationToken);
 
+        // The score path (CaptureSessionTitles) persists through here but mints its own
+        // milestones from the batch's before→after crossing, so it skips this tail.
+        if (!mint) return Array.Empty<PlayerMilestoneRecord>();
 
         var newCompleted = allCompleted.Where(c => !existingTitles.ContainsKey(c.Title))
             .Select(c => c.Title.ToString()).ToArray();
         var upgraded = allCompleted.Where(c =>
             existingTitles.ContainsKey(c.Title) && existingTitles[c.Title].ParagonLevel != c.ParagonLevel).ToArray();
+
+        // The site path announces only the badges the score pipeline can't compute.
+        if (siteOnlyAnnounce)
+        {
+            newCompleted = newCompleted.Where(n => GetTitleByName(mix, Name.From(n)).CompletionRequired == 0)
+                .ToArray();
+            upgraded = upgraded.Where(u => GetTitleByName(mix, u.Title).CompletionRequired == 0).ToArray();
+        }
 
         if (newCompleted.Length == 0 && upgraded.Length == 0) return Array.Empty<PlayerMilestoneRecord>();
 
@@ -226,9 +242,15 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         if (request.Mix is not (MixEnum.Phoenix or MixEnum.Phoenix2))
             return new SessionTitlesResult(Array.Empty<PlayerMilestoneRecord>(), Array.Empty<TitleProgressDelta>());
 
+        // Persist the up-to-date title set (SaveTitles + highest) WITHOUT minting or
+        // announcing — the card's title milestones come from this batch's before→after
+        // crossing, which surfaces a completion even when the site-detection path already
+        // saved the same title (it fires first during imports).
+        await ProcessCharts(request.Mix, request.UserId, Array.Empty<Name>(), cancellationToken,
+            request.SessionId, announceLegacy: false, mint: false);
+
+        var milestones = await ComputeBatchCompletions(request, cancellationToken);
         var progress = await ComputeProgressDeltas(request, cancellationToken);
-        var milestones = await ProcessCharts(request.Mix, request.UserId, Array.Empty<Name>(), cancellationToken,
-            request.SessionId, announceLegacy: false);
         return new SessionTitlesResult(milestones, progress);
     }
 
@@ -239,7 +261,8 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
     ///     upscored chart reverts to its old score (old plate isn't on the event, so
     ///     plate-based progress is approximated by the current plate). Only titles
     ///     whose ROUNDED percent actually moved make the list, nearest-to-complete
-    ///     first, capped at 5 — the card shows at most 3.
+    ///     first, capped at 5 — the card shows at most 3. Chart-specific titles (skill,
+    ///     boss-breaker) are excluded: they ride the per-row caption, not the top deltas.
     /// </summary>
     private async Task<IReadOnlyList<TitleProgressDelta>> ComputeProgressDeltas(CaptureSessionTitles request,
         CancellationToken cancellationToken)
@@ -250,18 +273,12 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
             .Select(t => t.Title).ToHashSet();
         var current = (await _phoenixScores.GetBestScores(request.Mix, request.UserId, cancellationToken))
             .ToArray();
-        var changed = request.Changes.GroupBy(c => c.ChartId).ToDictionary(g => g.Key, g => g.First());
-        var before = current
-            .Where(s => !changed.TryGetValue(s.ChartId, out var c) || c.OldScore != null)
-            .Select(s => changed.TryGetValue(s.ChartId, out var c)
-                ? s with { Score = PhoenixScore.From(c.OldScore!.Value), IsBroken = c.IsNewPass }
-                : s)
-            .ToArray();
+        var before = BeforeScores(current, request.Changes);
 
         var beforeByTitle = BuildProgress(request.Mix, charts, before, completed)
             .ToDictionary(t => t.Title.Name);
         return BuildProgress(request.Mix, charts, current, completed)
-            .Where(t => !t.IsComplete && t.Title.CompletionRequired > 0)
+            .Where(t => !t.IsComplete && t.Title.CompletionRequired > 0 && t.Title is not ISpecificChartTitle)
             .Select(t => new TitleProgressDelta(t.Title.Name,
                 beforeByTitle.TryGetValue(t.Title.Name, out var b) ? Percent(b) : 0,
                 Percent(t)))
@@ -269,6 +286,63 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
             .OrderByDescending(d => d.NewPercent)
             .Take(5)
             .ToArray();
+    }
+
+    // The batch's before-state: current scores with the changed charts reverted to their
+    // old score (a chart with no prior score drops out; an upscored chart reverts, its plate
+    // approximated by the current one).
+    private static RecordedPhoenixScore[] BeforeScores(IReadOnlyList<RecordedPhoenixScore> current,
+        IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange> changes)
+    {
+        var changed = changes.GroupBy(c => c.ChartId).ToDictionary(g => g.Key, g => g.First());
+        return current
+            .Where(s => !changed.TryGetValue(s.ChartId, out var c) || c.OldScore != null)
+            .Select(s => changed.TryGetValue(s.ChartId, out var c)
+                ? s with { Score = PhoenixScore.From(c.OldScore!.Value), IsBroken = c.IsNewPass }
+                : s)
+            .ToArray();
+    }
+
+    /// <summary>
+    ///     Title completions and paragon gains this batch crossed, from the changes' old→new
+    ///     scores against a SCORE-ONLY completion state (empty completed set) — so a fresh
+    ///     crossing surfaces even when the site-detection path already persisted the title
+    ///     (it fires first during imports). Mints the milestones the snapshot card renders,
+    ///     chart-specific titles (skill, boss-breaker) included.
+    /// </summary>
+    private async Task<IReadOnlyList<PlayerMilestoneRecord>> ComputeBatchCompletions(CaptureSessionTitles request,
+        CancellationToken cancellationToken)
+    {
+        var charts = (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
+            .ToDictionary(c => c.Id);
+        var current = (await _phoenixScores.GetBestScores(request.Mix, request.UserId, cancellationToken))
+            .ToArray();
+        var before = BeforeScores(current, request.Changes);
+
+        var empty = (ISet<Name>)new HashSet<Name>();
+        var beforeByTitle = BuildProgress(request.Mix, charts, before, empty).ToDictionary(t => t.Title.Name);
+
+        var writes = new List<PlayerMilestoneWrite>();
+        foreach (var title in BuildProgress(request.Mix, charts, current, empty)
+                     .Where(t => t.Title.CompletionRequired > 0 && t.IsComplete))
+        {
+            var wasBefore = beforeByTitle.GetValueOrDefault(title.Title.Name);
+            var newlyComplete = wasBefore is not { IsComplete: true };
+            if (newlyComplete)
+                writes.Add(new PlayerMilestoneWrite(MilestoneKind.TitleCompleted, request.SessionId, _dateTime.Now,
+                    Title: title.Title.Name.ToString()));
+
+            var newParagon = GetLevel(title);
+            var oldParagon = wasBefore == null ? ParagonLevel.None : GetLevel(wasBefore);
+            if (newParagon != ParagonLevel.None && (newlyComplete || newParagon > oldParagon))
+                writes.Add(new PlayerMilestoneWrite(MilestoneKind.ParagonLevelGain, request.SessionId,
+                    _dateTime.Now, Title: title.Title.Name.ToString(), Detail: newParagon.ToString()));
+        }
+
+        if (writes.Count == 0) return Array.Empty<PlayerMilestoneRecord>();
+        await _milestones.Append(request.Mix, request.UserId, writes, cancellationToken);
+        return writes.Select(w => new PlayerMilestoneRecord(w.Kind, w.SessionId, w.OccurredAt, w.OldValue,
+            w.NewValue, w.Title, w.Detail)).ToList();
     }
 
     private static double Percent(TitleProgress progress)

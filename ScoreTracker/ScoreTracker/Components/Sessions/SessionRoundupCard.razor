@@ -43,7 +43,7 @@
     @foreach (var row in InlineRows)
     {
         <HighlightRow Row="row" Chart="Charts.GetValueOrDefault(row.ChartId)"
-                      Flags="FlagsFor(row)"></HighlightRow>
+                      Flags="FlagsFor(row)" Detail="DetailFor(row)"></HighlightRow>
     }
 
     <MudSpacer/>
@@ -69,7 +69,7 @@
             @foreach (var row in Ordered)
             {
                 <HighlightRow Row="row" Chart="Charts.GetValueOrDefault(row.ChartId)"
-                              Flags="FlagsFor(row)"></HighlightRow>
+                              Flags="FlagsFor(row)" Detail="DetailFor(row)"></HighlightRow>
             }
         </div>
     </DialogContent>
@@ -86,6 +86,8 @@
     [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
     [Parameter] public IReadOnlyDictionary<(Guid? SessionId, Guid ChartId), HighlightFlags> Flags { get; set; } =
         new Dictionary<(Guid?, Guid), HighlightFlags>();
+    [Parameter] public IReadOnlyDictionary<(Guid? SessionId, Guid ChartId), HighlightDetail> Details { get; set; } =
+        new Dictionary<(Guid?, Guid), HighlightDetail>();
     [Parameter] public IReadOnlyList<PlayerMilestoneRecord> Milestones { get; set; } =
         Array.Empty<PlayerMilestoneRecord>();
     /// <summary>Show only milestones + flagged rows (the ⭐ Of-note filter).</summary>
@@ -128,6 +130,11 @@
     private HighlightFlags FlagsFor(RecentSessionsPage.ScoreEventRecord row)
     {
         return Flags.GetValueOrDefault((row.SessionId, row.ChartId));
+    }
+
+    private HighlightDetail? DetailFor(RecentSessionsPage.ScoreEventRecord row)
+    {
+        return Details.GetValueOrDefault((row.SessionId, row.ChartId));
     }
 
     private int HiddenRowCount => OfNoteOnly ? 0 : Group.Rows.Count - InlineRows.Count;

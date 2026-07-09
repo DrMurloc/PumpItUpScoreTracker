@@ -13,6 +13,7 @@ public sealed class TitleProgressDto
     public int CompletionCount { get; set; }
     public bool IsCompleted { get; set; }
     public int RequiredCount { get; set; }
+    public int Floor { get; set; }
     public string AdditionalNote { get; set; } = string.Empty;
     public int? DifficultyLevel { get; set; }
     public bool HasParagonLevel { get; set; }
@@ -26,6 +27,7 @@ public sealed class TitleProgressDto
         {
             CompletionCount = (int)progress.CompletionCount,
             RequiredCount = progress.Title.CompletionRequired,
+            Floor = progress.Title.CompletionFloor,
             TitleCategory = progress.Title.Category,
             TitleDescription = progress.Title.Description,
             TitleName = progress.Title.Name,

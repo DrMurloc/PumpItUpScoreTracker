@@ -55,4 +55,21 @@ internal sealed class EFPlayerMilestoneRepository : IPlayerMilestoneRepository
             .Where(r => r != null)
             .Cast<PlayerMilestoneRecord>();
     }
+
+    public async Task<IEnumerable<PlayerMilestoneRecord>> GetMilestonesBySessions(Guid userId,
+        IEnumerable<Guid> sessionIds, CancellationToken cancellationToken)
+    {
+        var ids = sessionIds.Distinct().Select(s => (Guid?)s).ToArray();
+        if (ids.Length == 0) return Array.Empty<PlayerMilestoneRecord>();
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return (await database.Set<PlayerMilestoneEntity>()
+                .Where(e => e.UserId == userId && ids.Contains(e.SessionId))
+                .ToArrayAsync(cancellationToken))
+            .Select(e => Enum.TryParse<MilestoneKind>(e.Kind, out var kind)
+                ? new PlayerMilestoneRecord(kind, e.SessionId, e.OccurredAt, e.OldValue, e.NewValue, e.Title,
+                    e.Detail)
+                : null)
+            .Where(r => r != null)
+            .Cast<PlayerMilestoneRecord>();
+    }
 }

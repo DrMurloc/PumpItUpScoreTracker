@@ -16,7 +16,7 @@
                 @foreach (var badge in Badges)
                 {
                     <MudTooltip Text="@badge.Tooltip">
-                        <span tabindex="0" style="font-size: .8rem">@badge.Glyph</span>
+                        <span tabindex="0" style="font-size: .8rem">@badge.Glyph@(badge.Suffix == null ? "" : $" {badge.Suffix}")</span>
                     </MudTooltip>
                 }
             </div>
@@ -39,17 +39,43 @@
     [Parameter] [EditorRequired] public RecentSessionsPage.ScoreEventRecord Row { get; set; } = null!;
     [Parameter] public Chart? Chart { get; set; }
     [Parameter] public HighlightFlags Flags { get; set; }
+    [Parameter] public HighlightDetail? Detail { get; set; }
 
-    private IEnumerable<(string Glyph, string Tooltip)> Badges
+    // Same detail the Discord card carries, rendered as compact language-neutral suffixes
+    // (the localized tooltip carries the words): 👑 #4 · 📊 #3/47 · 🏅 972k/990k · 🆕 #1.
+    private IEnumerable<(string Glyph, string? Suffix, string Tooltip)> Badges
     {
         get
         {
-            if (Flags.HasFlag(HighlightFlags.PumbilityTop50)) yield return ("👑", L["In your PUMBILITY top 50"].Value);
-            if (Flags.HasFlag(HighlightFlags.TitleProgress)) yield return ("🏅", L["Counts toward a title"].Value);
-            if (Flags.HasFlag(HighlightFlags.ScoreQuality90)) yield return ("📊", L["Top scores among comparable players"].Value);
-            if (Flags.HasFlag(HighlightFlags.FolderCompletion90)) yield return ("📁", L["Nearly complete folder"].Value);
-            if (Flags.HasFlag(HighlightFlags.CompetitiveImprover)) yield return ("⬆", L["Raised your competitive level"].Value);
-            if (Flags.HasFlag(HighlightFlags.FolderDebut)) yield return ("🆕", L["One of your first passes in this folder"].Value);
+            if (Flags.HasFlag(HighlightFlags.PumbilityTop50))
+                yield return ("👑", Detail?.PumbilityRank is { } r ? $"#{r}" : null,
+                    L["In your PUMBILITY top 50"].Value);
+            if (Flags.HasFlag(HighlightFlags.TitleProgress))
+                yield return ("🏅", SkillSuffix, L["Counts toward a title"].Value);
+            if (Flags.HasFlag(HighlightFlags.ScoreQuality90))
+                yield return ("📊", PeerSuffix, L["Top scores among comparable players"].Value);
+            if (Flags.HasFlag(HighlightFlags.FolderCompletion90))
+                yield return ("📁", null, L["Nearly complete folder"].Value);
+            if (Flags.HasFlag(HighlightFlags.CompetitiveImprover))
+                yield return ("⬆", null, L["Raised your competitive level"].Value);
+            if (Flags.HasFlag(HighlightFlags.FolderDebut))
+                yield return ("🆕", Detail?.FolderDebutOrdinal is { } o ? $"#{o}" : null,
+                    L["One of your first passes in this folder"].Value);
         }
     }
+
+    private string? PeerSuffix
+    {
+        get
+        {
+            if (Detail?.PeerCount is not { } count || count == 0) return null;
+            if (Row.Score == 1_000_000 && Detail.PeerPgCount is { } pg) return $"PG {pg}/{count}";
+            return $"#{(Detail.PeerBetterCount ?? 0) + 1}/{count}";
+        }
+    }
+
+    private string? SkillSuffix =>
+        Detail?.SkillTitleScore is { } score && Detail.SkillTitleThreshold is { } threshold
+            ? $"{score / 1000}k/{threshold / 1000}k"
+            : null;
 }

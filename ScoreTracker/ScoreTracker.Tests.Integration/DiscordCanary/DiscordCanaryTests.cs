@@ -87,19 +87,20 @@ public sealed class DiscordCanaryTests
                 new RichBotDivider(),
                 new RichBotText("📈 **PUMBILITY** 21,480 → **21,530** (+50)"),
                 new RichBotDivider(),
-                new RichBotText("🏅 **Intermediate Lv. 10** completed\n" +
+                new RichBotText("🏅 **[Intermediate Lv. 10]** completed\n" +
+                                "🏅 [Advanced Lv. 3] 62% → **71%**\n" +
                                 "🎉 #DIFFICULTY|s18# **All passed!**\n" +
                                 "🏆 **#1** on Witch Doctor #DIFFICULTY|d19# weekly"),
                 new RichBotDivider(),
                 new RichBotSection(
-                    "#DIFFICULTY|d19# **Witch Doctor**\n**970,207** #LETTERGRADE|S|False##PLATE|UltimateGame#\n-# 👑 PUMBILITY top 50 · 🆕 Folder debut",
+                    "#DIFFICULTY|d19# **Witch Doctor**\n**970,207** #LETTERGRADE|S|False##PLATE|UltimateGame#\n-# 👑 #4 in your PUMBILITY · 🆕 First D19",
                     new Uri("https://piuimages.arroweclip.se/songs/WitchDoctor.png")),
                 new RichBotSection(
-                    "#DIFFICULTY|s18# **Turkey March -Minimal Tunes-**\n**999,150** #LETTERGRADE|SSSPlus|False##PLATE|UltimateGame#\n-# 📊 Top scores among peers",
+                    "#DIFFICULTY|s18# **Turkey March -Minimal Tunes-**\n**972,340** #LETTERGRADE|SSS|False##PLATE|SuperbGame#\n-# 🏅 [DRILL] Lv.4 (972k/990k) · 📊 #3 of 47 peers",
                     new Uri("https://piuimages.arroweclip.se/songs/TurkeyMarchMinimalTunes.png")),
-                new RichBotText("+1 more: S16"),
+                new RichBotText("-# More scores\n#DIFFICULTY|s16# Bad Apple — **945,120** #LETTERGRADE|SS|False##PLATE|MarvelousGame#"),
                 new RichBotDivider(),
-                new RichBotText("#DIFFICULTY|d19# 84/141 (59.6%) · #DIFFICULTY|s18# 182/195 (93.3%)")
+                new RichBotText("#DIFFICULTY|d19# 84/141 · #DIFFICULTY|s18# 182/195")
             },
             $"#MIX|Phoenix# Phoenix · PIU Scores · {marker}",
             MixEnum.Phoenix.GetAccentColor(),
@@ -117,15 +118,18 @@ public sealed class DiscordCanaryTests
                 new RichBotDivider(),
                 new RichBotText("📈 **PUMBILITY** 0 → **18,437** (+18,437)"),
                 new RichBotDivider(),
-                new RichBotText("🏅 **Intermediate Lv. 1** completed\n…and 4 more titles\n" +
+                new RichBotText("🏅 **[Intermediate Lv. 1]** completed\n…and 4 more titles\n" +
                                 "🎉 #DIFFICULTY|s13# **All passed!**"),
                 new RichBotDivider(),
                 new RichBotSection(
-                    "#DIFFICULTY|d20# **Removable Disk0**\n**962,410** #LETTERGRADE|AAAPlus|False##PLATE|FairGame#\n-# 👑 PUMBILITY top 50",
+                    "#DIFFICULTY|d20# **Removable Disk0**\n**962,410** #LETTERGRADE|AAAPlus|False##PLATE|FairGame#\n-# 👑 #7 in your PUMBILITY",
                     new Uri("https://piuimages.arroweclip.se/songs/RemovableDisk0.png")),
+                new RichBotText("-# More scores\n" +
+                                "#DIFFICULTY|d19# Yog-Sothoth — **951,020** #LETTERGRADE|SS|False##PLATE|SuperbGame#\n" +
+                                "#DIFFICULTY|s21# Errorcode 0 — **933,400** #LETTERGRADE|S|False##PLATE|MarvelousGame#"),
                 new RichBotText("+2,008 more: D23 ×12, S22 ×48, S21 ×95, CO-OP ×31"),
                 new RichBotDivider(),
-                new RichBotText("#DIFFICULTY|s13# 153/153 (100%) · #DIFFICULTY|s14# 148/151 (98.0%)")
+                new RichBotText("#DIFFICULTY|s13# 153/153 · #DIFFICULTY|s14# 148/151")
             },
             $"#MIX|Phoenix2# Phoenix2 · PIU Scores · {marker}",
             MixEnum.Phoenix2.GetAccentColor(),

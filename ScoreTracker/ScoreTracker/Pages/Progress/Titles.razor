@@ -56,7 +56,7 @@ else
                 <CellTemplate>
                     @if (context.Item.IsTrackable)
                     {
-                        <MudProgressLinear Color="@(context.Item.CompletionCount >= context.Item.RequiredCount ? Color.Success : Color.Primary)"  Min="@(context.Item.TitleCategory=="Skill"?PhoenixLetterGrade.AA.GetMinimumScore():0)" Max="context.Item.RequiredCount" Value="context.Item.CompletionCount">
+                        <MudProgressLinear Color="@(context.Item.CompletionCount >= context.Item.RequiredCount ? Color.Success : Color.Primary)"  Min="context.Item.Floor" Max="context.Item.RequiredCount" Value="context.Item.CompletionCount">
                             @if (context.Item.CompletionCount < context.Item.RequiredCount)
                             {
                                 @if (context.Item.TitleCategory == "Skill")
