@@ -195,7 +195,9 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         PhoenixTitleProgress[] IncompleteTitles,
         IDictionary<Guid, double> ScoringLevels,
         Dictionary<(ChartType Type, DifficultyLevel Level), int> FolderSizes,
-        Dictionary<(ChartType Type, DifficultyLevel Level), int> FolderClears);
+        Dictionary<(ChartType Type, DifficultyLevel Level), int> FolderClears,
+        double SinglesCompetitive,
+        double DoublesCompetitive);
 
     private async Task<List<ScoreHighlightWrite>> ComputeFlags(PlayerScoresUpdatedEvent e,
         Dictionary<Guid, HighlightFlags> flags, Dictionary<Guid, HighlightDetail> details,
@@ -243,6 +245,11 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
             .ToArray();
         var scoringLevels = await _mediator.Send(new GetChartScoringLevelsQuery(e.Mix), cancellationToken);
 
+        // Competitive levels gate Score Quality (and are cheap to carry): a back-filled chart
+        // more than 5 levels under the player's competitive level for its type is noise, not a
+        // peer flag — the cohort is never even built for it.
+        var stats = await _playerStats.GetStats(e.Mix, e.UserId, cancellationToken);
+
         // Folder totals and clears come from data already in hand — no extra queries.
         var folderSizes = charts.Values.GroupBy(c => (c.Type, c.Level))
             .ToDictionary(g => g.Key, g => g.Count());
@@ -250,7 +257,8 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
             .Where(b => !b.IsBroken && b.Score != null && charts.ContainsKey(b.ChartId))
             .GroupBy(b => (charts[b.ChartId].Type, charts[b.ChartId].Level))
             .ToDictionary(g => g.Key, g => g.Count());
-        return new CaptureData(charts, bests, top50, incompleteTitles, scoringLevels, folderSizes, folderClears);
+        return new CaptureData(charts, bests, top50, incompleteTitles, scoringLevels, folderSizes, folderClears,
+            stats.SinglesCompetitiveLevel, stats.DoublesCompetitiveLevel);
     }
 
     private const int PerfectGameScore = 1_000_000;
@@ -308,7 +316,14 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         CancellationToken cancellationToken)
     {
         if (folder.Type is not (ChartType.Single or ChartType.Double)) return;
-        var cohort = await GetCohortScores(e.Mix, e.UserId, folder.Type, folder.Level, cancellationToken);
+
+        // Owner call: below (competitive − 5) for the chart's type, peer comparison is noise
+        // (a 23-competitive player back-filling S5s). Skip the whole folder — no cohort, no flag.
+        var competitive = folder.Type == ChartType.Single ? data.SinglesCompetitive : data.DoublesCompetitive;
+        if ((int)folder.Level < competitive - 5) return;
+
+        var cohort = await GetCohortScores(e.Mix, e.UserId, folder.Type, folder.Level, competitive,
+            cancellationToken);
         foreach (var change in folderChanges)
         {
             var best = data.Bests[change.ChartId];
@@ -408,17 +423,13 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
     }
 
     private async Task<IReadOnlyDictionary<Guid, PhoenixScore[]>> GetCohortScores(MixEnum mix, Guid userId,
-        ChartType type, DifficultyLevel level, CancellationToken cancellationToken)
+        ChartType type, DifficultyLevel level, double competitive, CancellationToken cancellationToken)
     {
         return await _cache.GetOrCreateAsync(
             $"{nameof(HighlightCaptureSaga)}__Cohort__{mix}__{userId}__{type}__{(int)level}",
             async o =>
             {
                 o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
-                var stats = await _playerStats.GetStats(mix, userId, cancellationToken);
-                var competitive = type == ChartType.Single
-                    ? stats.SinglesCompetitiveLevel
-                    : stats.DoublesCompetitiveLevel;
                 var players = await _playerStats.GetPlayersByCompetitiveRange(mix, type, competitive, .5,
                     cancellationToken);
                 return (IReadOnlyDictionary<Guid, PhoenixScore[]>)(await _scores.GetPlayerScores(mix, players, type,
