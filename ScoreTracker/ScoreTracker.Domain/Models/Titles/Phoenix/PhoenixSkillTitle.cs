@@ -24,6 +24,10 @@ public sealed class PhoenixSkillTitle : PhoenixTitle, ISpecificChartTitle
 
     public override bool PopulatesFromDatabase => false;
 
+    // Owner call: skill progress measures the climb from a decent pass (900k) to the SSS,
+    // so a fresh pass doesn't read as nearly complete.
+    public override int CompletionFloor => 900_000;
+
 
     public override double CompletionProgress(Chart chart, RecordedPhoenixScore attempt)
     {

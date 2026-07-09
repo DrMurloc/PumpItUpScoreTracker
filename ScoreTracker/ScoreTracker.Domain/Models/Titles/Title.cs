@@ -20,4 +20,11 @@ public abstract class Title
     public Name Category { get; }
     public string Description { get; }
     public int CompletionRequired { get; }
+
+    /// <summary>
+    ///     The progress baseline below which "how close" is meaningless — 0 for
+    ///     rating-accumulation titles, but skill titles floor at a decent pass so a
+    ///     barely-passed chart doesn't read as ~98% of the way to the SSS.
+    /// </summary>
+    public virtual int CompletionFloor => 0;
 }
