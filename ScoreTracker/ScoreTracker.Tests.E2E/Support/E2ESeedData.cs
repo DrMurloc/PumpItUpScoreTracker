@@ -122,11 +122,11 @@ public sealed class E2ESeedData
     }
 
     public async Task SeedHighlightAsync(Guid userId, Guid chartId, Guid? sessionId, DateTimeOffset occurredAt,
-        int flags, int level, CancellationToken cancellationToken = default)
+        int flags, int level, int? pumbilityRank = null, CancellationToken cancellationToken = default)
     {
         await using var context = await _factory.CreateDbContextAsync(cancellationToken);
         await context.Database.ExecuteSqlInterpolatedAsync(
-            $"INSERT INTO [scores].[ScoreHighlight] ([Id], [UserId], [MixId], [ChartId], [SessionId], [OccurredAt], [Flags], [Level], [ScoringLevel]) VALUES ({Guid.NewGuid()}, {userId}, {PhoenixMixId}, {chartId}, {sessionId}, {occurredAt}, {flags}, {level}, {null})",
+            $"INSERT INTO [scores].[ScoreHighlight] ([Id], [UserId], [MixId], [ChartId], [SessionId], [OccurredAt], [Flags], [Level], [ScoringLevel], [PumbilityRank]) VALUES ({Guid.NewGuid()}, {userId}, {PhoenixMixId}, {chartId}, {sessionId}, {occurredAt}, {flags}, {level}, {null}, {pumbilityRank})",
             cancellationToken);
     }
 

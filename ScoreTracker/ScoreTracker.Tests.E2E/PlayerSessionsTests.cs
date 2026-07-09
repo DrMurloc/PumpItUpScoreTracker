@@ -43,7 +43,7 @@ public sealed class PlayerSessionsTests : IAsyncLifetime
         await _fixture.Seed.SeedMilestoneAsync(_publicUser, sessionId, Now, "PumbilityGain",
             oldValue: 8000, newValue: 8100);
         await _fixture.Seed.SeedHighlightAsync(_publicUser, passChart, sessionId, Now.AddMinutes(-3),
-            flags: 1 /* PumbilityTop50 */, level: 21);
+            flags: 1 /* PumbilityTop50 */, level: 21, pumbilityRank: 4);
 
         _browser = await _fixture.NewBrowserContextAsync();
         _page = await _browser.NewPageAsync();
@@ -70,8 +70,9 @@ public sealed class PlayerSessionsTests : IAsyncLifetime
         await Expect(_page.Locator("[data-testid='milestone-strip']")).ToBeVisibleAsync(timeout);
         await Expect(_page.GetByText("8,000 → 8,100")).ToBeVisibleAsync();
 
-        // The card leads with the flagged row; the full breakdown opens as a dialog.
+        // The card leads with the flagged row, whose crown badge now carries the pumbility rank.
         await Expect(_page.GetByText("New Pass").First).ToBeVisibleAsync();
+        await Expect(cards.First.GetByText("#4")).ToBeVisibleAsync();
         await cards.First.Locator("[data-testid='view-all-scores']").ClickAsync();
         var dialog = _page.Locator("[data-testid='session-scores-dialog']");
         await Expect(dialog).ToBeVisibleAsync(timeout);
