@@ -15,6 +15,14 @@ internal interface IScoreHighlightRepository
 
     Task<IEnumerable<ScoreHighlightRecord>> GetHighlights(MixEnum mix, Guid userId, DateTimeOffset since,
         DateTimeOffset until, CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     Reads highlights for specific sessions (the Sessions page). FK by SessionId, not a
+    ///     date window — highlight OccurredAt is the batch-drain time, minutes past the
+    ///     journal rows, so a row-time window drops the freshest session's flags.
+    /// </summary>
+    Task<IEnumerable<ScoreHighlightRecord>> GetHighlightsBySessions(Guid userId, IEnumerable<Guid> sessionIds,
+        CancellationToken cancellationToken);
 }
 
 internal sealed record ScoreHighlightWrite(

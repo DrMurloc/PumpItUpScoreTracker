@@ -33,7 +33,9 @@ namespace ScoreTracker.PlayerProgress.Application;
 internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>,
     IConsumer<UserWeeklyChartsProgressedEvent>,
     IRequestHandler<GetScoreHighlightsQuery, IEnumerable<ScoreHighlightRecord>>,
-    IRequestHandler<GetPlayerMilestonesQuery, IEnumerable<PlayerMilestoneRecord>>
+    IRequestHandler<GetPlayerMilestonesQuery, IEnumerable<PlayerMilestoneRecord>>,
+    IRequestHandler<GetScoreHighlightsForSessionsQuery, IEnumerable<ScoreHighlightRecord>>,
+    IRequestHandler<GetPlayerMilestonesForSessionsQuery, IEnumerable<PlayerMilestoneRecord>>
 {
     private readonly IMemoryCache _cache;
     private readonly IChartRepository _charts;
@@ -168,6 +170,18 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
     {
         return await _milestones.GetMilestones(request.Mix, request.UserId, request.Since, request.Until,
             cancellationToken);
+    }
+
+    public async Task<IEnumerable<ScoreHighlightRecord>> Handle(GetScoreHighlightsForSessionsQuery request,
+        CancellationToken cancellationToken)
+    {
+        return await _highlights.GetHighlightsBySessions(request.UserId, request.SessionIds, cancellationToken);
+    }
+
+    public async Task<IEnumerable<PlayerMilestoneRecord>> Handle(GetPlayerMilestonesForSessionsQuery request,
+        CancellationToken cancellationToken)
+    {
+        return await _milestones.GetMilestonesBySessions(request.UserId, request.SessionIds, cancellationToken);
     }
 
     /// <summary>Everything the flag computation reads, loaded once per batch.</summary>

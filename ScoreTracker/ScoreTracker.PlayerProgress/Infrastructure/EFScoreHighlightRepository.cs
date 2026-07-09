@@ -74,4 +74,17 @@ internal sealed class EFScoreHighlightRepository : IScoreHighlightRepository
             .Select(e => new ScoreHighlightRecord(e.ChartId, e.SessionId, e.OccurredAt, (HighlightFlags)e.Flags,
                 e.Level, e.ScoringLevel));
     }
+
+    public async Task<IEnumerable<ScoreHighlightRecord>> GetHighlightsBySessions(Guid userId,
+        IEnumerable<Guid> sessionIds, CancellationToken cancellationToken)
+    {
+        var ids = sessionIds.Distinct().Select(s => (Guid?)s).ToArray();
+        if (ids.Length == 0) return Array.Empty<ScoreHighlightRecord>();
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return (await database.Set<ScoreHighlightEntity>()
+                .Where(e => e.UserId == userId && ids.Contains(e.SessionId))
+                .ToArrayAsync(cancellationToken))
+            .Select(e => new ScoreHighlightRecord(e.ChartId, e.SessionId, e.OccurredAt, (HighlightFlags)e.Flags,
+                e.Level, e.ScoringLevel));
+    }
 }

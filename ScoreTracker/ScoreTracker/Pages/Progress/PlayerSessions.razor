@@ -120,26 +120,42 @@
         _loading = true;
         _page = await Mediator.Send(new GetRecentSessionsQuery(UserIdParam, _pageNumber, _pageSize));
 
-        // One continuous timeline across mixes: chart, flag, and milestone lookups run
-        // per mix present on the page and merge.
+        // Charts still resolve per mix (chart reads are mix-scoped).
         var charts = new Dictionary<Guid, Chart>();
-        var flags = new Dictionary<(Guid? SessionId, Guid ChartId), HighlightFlags>();
-        var milestones = new List<PlayerMilestoneRecord>();
         foreach (var mixGroups in _page.Groups.GroupBy(g => g.Mix))
         {
             var chartIds = mixGroups.SelectMany(g => g.Rows).Select(r => r.ChartId).Distinct().ToArray();
             if (!chartIds.Any()) continue;
             foreach (var chart in await Mediator.Send(new GetChartsQuery(mixGroups.Key, ChartIds: chartIds)))
                 charts[chart.Id] = chart;
+        }
 
-            var since = mixGroups.Min(g => g.Start);
-            var until = mixGroups.Max(g => g.End);
-            foreach (var pair in (await Mediator.Send(
-                             new GetScoreHighlightsQuery(UserIdParam, mixGroups.Key, since, until)))
+        // Highlights and session milestones FK straight to SessionId — never a date window.
+        // A highlight's OccurredAt is the batch-drain time, minutes past its journal rows, so
+        // a row-time window silently drops the freshest session's flags — exactly the session
+        // the Discord card deep-links to, which is why "Of Note" showed nothing.
+        var sessionIds = _page.Groups.Where(g => g.SessionId != null).Select(g => g.SessionId!.Value)
+            .Distinct().ToArray();
+        var flags = new Dictionary<(Guid? SessionId, Guid ChartId), HighlightFlags>();
+        var milestones = new List<PlayerMilestoneRecord>();
+        if (sessionIds.Any())
+        {
+            foreach (var pair in (await Mediator.Send(new GetScoreHighlightsForSessionsQuery(UserIdParam, sessionIds)))
                          .GroupBy(h => (h.SessionId, h.ChartId)))
                 flags[pair.Key] = pair.Aggregate(HighlightFlags.None, (f, h) => f | h.Flags);
-            milestones.AddRange(
-                await Mediator.Send(new GetPlayerMilestonesQuery(UserIdParam, mixGroups.Key, since, until)));
+            milestones.AddRange(await Mediator.Send(new GetPlayerMilestonesForSessionsQuery(UserIdParam, sessionIds)));
+        }
+
+        // Session-less groups (pre-capture calendar days) carry only session-less milestones
+        // — weekly placements, admin recalcs — which have no session to FK to and match by day
+        // over their own window.
+        foreach (var dayGroups in _page.Groups.Where(g => g.SessionId == null && g.Day != null).GroupBy(g => g.Mix))
+        {
+            var since = dayGroups.Min(g => g.Start);
+            var until = dayGroups.Max(g => g.End);
+            milestones.AddRange((await Mediator.Send(new GetPlayerMilestonesQuery(UserIdParam, dayGroups.Key,
+                    since, until)))
+                .Where(m => m.SessionId == null));
         }
 
         _charts = charts;
