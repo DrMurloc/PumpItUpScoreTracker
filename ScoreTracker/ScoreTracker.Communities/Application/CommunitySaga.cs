@@ -182,7 +182,15 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             .ToArray();
         var notable = standard.Where(Notable).Take(NotableRowCap).ToArray();
         var notableIds = notable.Select(c => c.ChartId).ToHashSet();
-        var moreScores = standard.Where(c => !notableIds.Contains(c.ChartId)).Take(MoreScoresCap).ToArray();
+        // Re-sort the remainder purely by level (owner call): when notable overflows its cap
+        // the extra flagged rows are lower-level, and leaving them in the notable-first order
+        // would float them above higher-level unflagged charts. "More scores" is one clean run.
+        var moreScores = standard.Where(c => !notableIds.Contains(c.ChartId))
+            .OrderByDescending(c => (int)charts[c.ChartId].Level)
+            .ThenByDescending(c => scoringLevels.TryGetValue(c.ChartId, out var sl) ? sl : 0)
+            .ThenByDescending(c => (int)(bests[c.ChartId].Score ?? 0))
+            .Take(MoreScoresCap)
+            .ToArray();
 
         // Co-ops get their own compact bucket (owner call): up to 5, community co-op pass
         // difficulty descending. They no longer take art rows.

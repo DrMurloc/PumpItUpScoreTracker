@@ -374,6 +374,47 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task MoreScoresStayDescendingByLevelWhenNotableOverflows()
+    {
+        // Bug: when the notable bucket overflows its cap, the extra flagged (low-level) rows
+        // used to leak into "More scores" ahead of higher-level unflagged charts — two
+        // descending runs, not one. The bucket must be a single level-desc run.
+        var userId = Guid.NewGuid();
+        var flaggedLow = Enumerable.Range(0, 11)
+            .Select(_ => new ChartBuilder().WithType(ChartType.Single).WithLevel(5).Build()).ToArray();
+        var plainHigh = new ChartBuilder().WithType(ChartType.Single).WithLevel(23).Build();
+        var all = flaggedLow.Append(plainHigh).ToArray();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, all, score: 950000);
+
+        var changes = flaggedLow.Select(c => (c.Id, true, HighlightFlags.ScoreQuality90))
+            .Append((plainHigh.Id, true, HighlightFlags.None)).ToArray();
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null, changes)));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => MoreScoresAreLevelDescending(msgs)),
+            It.IsAny<IEnumerable<ulong>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // The "More scores" bucket, minus its label line, must be sorted by level descending.
+    private static bool MoreScoresAreLevelDescending(IEnumerable<RichBotMessage> msgs)
+    {
+        var rows = msgs.Single().Blocks.OfType<RichBotText>()
+            .First(t => t.Markdown.StartsWith("-# More scores")).Markdown
+            .Split('\n').Skip(1).ToArray();
+        var levels = rows.Select(r =>
+        {
+            var start = r.IndexOf("#DIFFICULTY|", StringComparison.Ordinal) + "#DIFFICULTY|S".Length;
+            var end = r.IndexOf('#', start);
+            return int.Parse(r[start..end]);
+        }).ToArray();
+        return levels.SequenceEqual(levels.OrderByDescending(l => l));
+    }
+
+    [Fact]
     public async Task StatsAndAchievementsOpenTheCardAsTheirOwnSections()
     {
         var userId = Guid.NewGuid();
