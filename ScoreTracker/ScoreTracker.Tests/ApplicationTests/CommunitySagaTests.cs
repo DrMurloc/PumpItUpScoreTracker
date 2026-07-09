@@ -202,8 +202,10 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task NewTitlesAcquiredBroadcastsTitleListToCommunityChannels()
+    public async Task NewTitlesWithNoSessionRenderAsARichTitlesCard()
     {
+        // Zero-score imports (and admin recomputes) still surface title completions — now as
+        // a rich card in the session card's language, not a plain-text list (owner Q1=a).
         var userId = Guid.NewGuid();
         var ctx = new HandlerContext();
         ctx.GivenUser(userId, name: "alice");
@@ -214,14 +216,39 @@ public sealed class CommunitySagaTests
             ParagonUpgrades: new Dictionary<string, string>(),
             Mix: MixEnum.Phoenix)));
 
-        ctx.Bot.Verify(b => b.SendMessages(
-            It.Is<IEnumerable<string>>(msgs => msgs.Any(m => m.Contains("alice") && m.Contains("First Title"))),
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Any(m =>
+                m.Header!.Markdown.Contains("alice")
+                && m.Blocks.OfType<RichBotText>().Any(t =>
+                    t.Markdown.Contains("🏅 **[First Title]** completed")
+                    && t.Markdown.Contains("🏅 **[Second Title]** completed")))),
             It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
-            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task Phoenix2TitleBroadcastCarriesTheMixPrefix()
+    public async Task TitlesCardRendersParagonGainsWithTheirGradeEmoji()
+    {
+        var userId = Guid.NewGuid();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+
+        await ctx.Saga.Consume(BuildContext(new NewTitlesAcquiredEvent(userId,
+            NewTitles: Array.Empty<string>(),
+            ParagonUpgrades: new Dictionary<string, string> { ["Expert Lv. 2"] = "PG" },
+            Mix: MixEnum.Phoenix)));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Any(m =>
+                m.Blocks.OfType<RichBotText>().Any(t =>
+                    t.Markdown.Contains("🏅 **[Expert Lv. 2]** paragon → #PLATE|PerfectGame#")))),
+            It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Phoenix2TitlesCardCarriesTheMixPrefix()
     {
         var userId = Guid.NewGuid();
         var ctx = new HandlerContext();
@@ -233,8 +260,8 @@ public sealed class CommunitySagaTests
             ParagonUpgrades: new Dictionary<string, string>(),
             Mix: MixEnum.Phoenix2)));
 
-        ctx.Bot.Verify(b => b.SendMessages(
-            It.Is<IEnumerable<string>>(msgs => msgs.All(m => m.StartsWith("[Phoenix 2] "))),
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.All(m => m.Header!.Markdown.Contains("[Phoenix 2] "))),
             It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
             It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }

@@ -66,56 +66,48 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         _dateTime = dateTime;
     }
 
+    // Titles with no session — a zero-score import that still detected new badges, or an admin
+    // recompute — get their own rich card in the session card's visual language (owner call:
+    // ALL title completions show in a card). Chunked so a rare big badge dump never overruns
+    // the char ceiling.
     public async Task Consume(ConsumeContext<NewTitlesAcquiredEvent> context)
     {
-        var prefix = MixPrefix(context.Message.Mix);
-        var user = await _users.GetUser(context.Message.UserId, context.CancellationToken);
-        var message = string.Empty;
-        var count = 0;
-        if (context.Message.NewTitles.Any())
-        {
-            message = $"**{user.Name}** completed the Titles:";
-            foreach (var title in context.Message.NewTitles.OrderBy(t => t))
-            {
-                message += $@"
-- {title}";
+        var e = context.Message;
+        var user = await _users.GetUser(e.UserId, context.CancellationToken);
+        if (user == null) return;
+        var cards = BuildTitlesCards(user, e.Mix, e.NewTitles.ToArray(), e.ParagonUpgrades);
+        await SendRichToCommunityDiscords(user.Id, cards, context.CancellationToken);
+    }
 
-                count++;
-                if (count != 10) continue;
+    private IReadOnlyList<RichBotMessage> BuildTitlesCards(User user, MixEnum mix,
+        IReadOnlyList<string> newTitles, IDictionary<string, string> paragonUpgrades)
+    {
+        var lines = new List<string>();
+        lines.AddRange(newTitles.OrderBy(t => t).Select(t => $"🏅 **{Bracket(t)}** completed"));
+        lines.AddRange(paragonUpgrades.OrderBy(p => p.Key)
+            .Select(p => $"🏅 **{Bracket(p.Key)}** paragon → {ParagonEmoji(p.Value)}"));
+        if (lines.Count == 0) return Array.Empty<RichBotMessage>();
 
-                await SendToCommunityDiscords(user.Id, prefix + message,
-                    context.CancellationToken);
-                message = "";
-                count = 0;
-            }
-        }
+        var earned = TitlesEarnedText(newTitles.Count, paragonUpgrades.Count);
+        var links = user.IsPublic
+            ? new[] { new RichBotLink("See more", new Uri($"{SiteBase}/Player/{user.Id}/Sessions")) }
+            : Array.Empty<RichBotLink>();
 
-        if (context.Message.ParagonUpgrades.Any())
-        {
-            if (!string.IsNullOrWhiteSpace(message))
-                message += @"
-";
-            message += $"**{user.Name}** Advanced their Paragon Title Levels:";
-            foreach (var upgradedTitle in context.Message.ParagonUpgrades.OrderBy(t => t.Key))
-            {
-                var emoji = upgradedTitle.Value == "PG"
-                    ? "#PLATE|PerfectGame#"
-                    : "#LETTERGRADE|" + upgradedTitle.Value + "#";
-                message += $@"
-- {upgradedTitle.Key} {emoji}";
-                count++;
-                if (count != 10) continue;
+        return lines.Chunk(TitleCardLineCap)
+            .Select(chunk => new RichBotMessage(
+                new RichBotSection($"### {MixPrefix(mix)}**{user.Name}** — {earned}", user.ProfileImage),
+                new IRichBotBlock[] { new RichBotDivider(), new RichBotText(string.Join("\n", chunk)) },
+                $"#MIX|{mix}# {mix.GetName()} · PIU Scores",
+                mix.GetAccentColor(), links))
+            .ToArray();
+    }
 
-                await SendToCommunityDiscords(user.Id,
-                    prefix + message, context.CancellationToken);
-                message = "";
-                count = 0;
-            }
-        }
-
-        if (!string.IsNullOrWhiteSpace(message))
-            await SendToCommunityDiscords(user.Id,
-                prefix + message, context.CancellationToken);
+    private static string TitlesEarnedText(int titles, int paragons)
+    {
+        var parts = new List<string>();
+        if (titles > 0) parts.Add($"{titles} {(titles == 1 ? "title" : "titles")}");
+        if (paragons > 0) parts.Add($"{paragons} paragon{(paragons == 1 ? string.Empty : "s")}");
+        return string.Join(" · ", parts);
     }
 
     // The session snapshot (design doc revision 2): ONE card per score batch — stats
@@ -132,6 +124,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     private const int WeeklyLineCap = 4;
     private const int ProgressDeltaCap = 3;
     private const int FolderLineCap = 6;
+    private const int TitleCardLineCap = 20;
     private const int BigGainThreshold = 10000;
     private const string SiteBase = "https://piuscores.arroweclip.se";
 
