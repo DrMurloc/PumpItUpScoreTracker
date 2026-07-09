@@ -88,18 +88,19 @@ public sealed class TitleSagaTests
     [Fact]
     public async Task CaptureSuppressesTheLegacyAnnouncementTheCardNowCarries()
     {
-        // Score-driven completions ride the snapshot card; the legacy Discord message
-        // must NOT also fire (it survives only on the detected-titles path).
-        var charts = Enumerable.Range(0, 30)
-            .Select(_ => new ChartBuilder().WithType(ChartType.Single).WithLevel(24).Build()).ToArray();
-        var ctx = new SagaContext(MixEnum.Phoenix, charts);
-        ctx.GivenBestScores(charts.Select(c => Score(c.Id, 1000000)).ToArray());
+        // Score-driven completions ride the snapshot card; the legacy Discord message must
+        // NOT also fire (it survives only on the detected-titles path). Another Truth S6 is
+        // the [The 1st] boss breaker — passing it crosses the title incomplete → done, which
+        // the batch-crossing detects even though the site path may have saved it first.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(6)
+            .WithSongName("Another Truth").Build();
+        var ctx = new SagaContext(MixEnum.Phoenix, chart);
+        ctx.GivenBestScores(Score(chart.Id, 950000));
 
         var result = await ctx.Saga.Handle(new TitleSaga.CaptureSessionTitles(ctx.UserId, MixEnum.Phoenix, null,
                 new[]
                 {
-                    new PlayerScoresUpdatedEvent.ScoreChange(charts[0].Id, true, null, 1000000, "PerfectGame",
-                        false)
+                    new PlayerScoresUpdatedEvent.ScoreChange(chart.Id, true, null, 950000, "SuperbGame", false)
                 }),
             CancellationToken.None);
 
@@ -167,29 +168,47 @@ public sealed class TitleSagaTests
     }
 
     [Fact]
-    public async Task CompletedTitlesAreCapturedAsMilestones()
+    public async Task DetectedBasicBadgesAreCapturedAsMilestonesAndAnnounced()
     {
-        // UserTitle rows have no acquisition date — the milestone is the only record of WHEN.
+        // Site-only badges (CompletionRequired == 0: events, play/plate counts) have no
+        // session and no card — the legacy announcement stays alive on this path only.
         var ctx = new SagaContext(MixEnum.Phoenix);
 
         await ctx.Saga.Consume(BuildContext(new TitlesDetectedEvent(ctx.UserId,
-            DetectedTitles, MixEnum.Phoenix)));
+            new[] { "RISE CHALLENGER" }, MixEnum.Phoenix)));
 
         ctx.Milestones.Verify(m => m.Append(MixEnum.Phoenix, ctx.UserId,
             It.Is<IEnumerable<PlayerMilestoneWrite>>(w => w.Any(x =>
-                x.Kind == MilestoneKind.TitleCompleted && x.Title == "Intermediate Lv. 1")),
+                x.Kind == MilestoneKind.TitleCompleted && x.Title == "RISE CHALLENGER")),
             It.IsAny<CancellationToken>()), Times.Once);
-        // Site-detected titles have no session and no card — the legacy announcement
-        // stays alive on this path only.
         ctx.Bus.Verify(b => b.Publish(It.IsAny<NewTitlesAcquiredEvent>(), It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task DetectedComputableTitlesAreSavedButLeftToTheScorePath()
+    {
+        // A difficulty title the site reports (CompletionRequired > 0) is score-computable,
+        // so the site path saves it (DB stays correct) but does NOT announce or milestone it —
+        // the session card carries it via the score path instead.
+        var ctx = new SagaContext(MixEnum.Phoenix);
+
+        await ctx.Saga.Consume(BuildContext(new TitlesDetectedEvent(ctx.UserId,
+            new[] { "Intermediate Lv. 1" }, MixEnum.Phoenix)));
+
+        ctx.Titles.Verify(t => t.SaveTitles(MixEnum.Phoenix, ctx.UserId,
+            It.Is<IEnumerable<TitleAchievedRecord>>(titles =>
+                titles.Any(x => x.Title.ToString() == "Intermediate Lv. 1")),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Bus.Verify(b => b.Publish(It.IsAny<NewTitlesAcquiredEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        ctx.Milestones.Verify(m => m.Append(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<IEnumerable<PlayerMilestoneWrite>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private static RecordedPhoenixScore Score(Guid chartId, int score) =>
         new(chartId, score, PhoenixPlate.SuperbGame, false,
             new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
-
-    private static readonly string[] DetectedTitles = { "Intermediate Lv. 1" };
 
     private static ConsumeContext<T> BuildContext<T>(T message) where T : class
     {
