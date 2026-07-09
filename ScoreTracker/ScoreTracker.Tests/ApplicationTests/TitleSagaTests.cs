@@ -24,17 +24,19 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class TitleSagaTests
 {
     [Fact]
-    public async Task TitleProgressForPhoenix2IsEmptyAndDoesNotThrow()
+    public async Task TitleProgressForPhoenix2BuildsFromThePhoenix2List()
     {
-        // Locked decision: Phoenix 2 launches with an EMPTY title list (including
-        // difficulty titles) — progress must be empty, never a Phoenix fallthrough.
+        // The real Phoenix 2 catalog (crawled from the live title.php) — its own list,
+        // never a Phoenix fallthrough.
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var ctx = new SagaContext(MixEnum.Phoenix2, chart);
         ctx.GivenBestScores(Score(chart.Id, 950000));
 
-        var progress = await ctx.Saga.Handle(new GetTitleProgressQuery(MixEnum.Phoenix2), CancellationToken.None);
+        var progress =
+            (await ctx.Saga.Handle(new GetTitleProgressQuery(MixEnum.Phoenix2), CancellationToken.None)).ToArray();
 
-        Assert.Empty(progress);
+        Assert.Contains(progress, p => p.Title.Name == "[S] INTERMEDIATE LV.1");
+        Assert.DoesNotContain(progress, p => p.Title.Name == "Intermediate Lv. 1"); // Phoenix-only
     }
 
     [Fact]
@@ -61,10 +63,12 @@ public sealed class TitleSagaTests
     }
 
     [Fact]
-    public async Task Phoenix2ScoreCaptureProducesZeroTitlesAndNoAcquisitionEvent()
+    public async Task Phoenix2ScoreCaptureBelowEveryThresholdCompletesNothingButReportsPoolProgress()
     {
-        // The commit-5 "ignore non-Phoenix" guard is gone: a Phoenix 2 batch flows
-        // through the title step and simply completes nothing (its list is empty).
+        // One 999k on an unremarkable L20 single: no P2 title completes (the pool value is
+        // far below the 5000+ ladder floor and the chart matches no skill/boss title), no
+        // legacy event fires, and highest-difficulty stays untouched (P2's ladder isn't
+        // level-keyed). The PUMBILITY ladder still MOVED, so progress deltas report it.
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var ctx = new SagaContext(MixEnum.Phoenix2, chart);
         ctx.GivenBestScores(Score(chart.Id, 999000));
@@ -82,7 +86,7 @@ public sealed class TitleSagaTests
             It.IsAny<CancellationToken>()), Times.Never);
         ctx.Bus.Verify(b => b.Publish(It.IsAny<NewTitlesAcquiredEvent>(), It.IsAny<CancellationToken>()),
             Times.Never);
-        Assert.Empty(result.Progress);
+        Assert.Contains(result.Progress, d => d.Title == "[S] INTERMEDIATE LV.1");
     }
 
     [Fact]

@@ -60,4 +60,14 @@ public sealed class PhoenixTitleProgress : TitleProgress
 
         for (var i = ParagonLevel.F; i <= attempt.Score!.Value.GetParagonLevel(); i++) _paragonProgress[i]++;
     }
+
+    /// <summary>
+    ///     Direct progress for titles the list builder computes as a whole rather than
+    ///     accumulating per attempt — Phoenix 2's PUMBILITY-pool titles (a top-50 pool sum)
+    ///     and its title-set metas (counts of other completed titles).
+    /// </summary>
+    public void ApplyDirectProgress(double value)
+    {
+        CompletionCount = value;
+    }
 }
