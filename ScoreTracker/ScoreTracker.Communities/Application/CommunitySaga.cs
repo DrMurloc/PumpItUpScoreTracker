@@ -124,8 +124,9 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     // old ratings/weekly messages are retired (titles keep a legacy announcement only
     // for site-detected titles, which no card covers).
     private const int ArtRowCap = 5;
-    private const int InlineRowCap = 10;
-    private const int CoOpRowCap = 3;
+    private const int NotableRowCap = 10;
+    private const int MoreScoresCap = 10;
+    private const int CoOpScoresCap = 5;
     private const int WeeklyLineCap = 4;
     private const int TitleNameCap = 10;
     private const int ProgressDeltaCap = 3;
@@ -166,9 +167,10 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             return c.Flags != HighlightFlags.None || ReferenceEquals(c, bigGain);
         }
 
-        // Notable rows lead and own the art; within each group the universal noteworthy
-        // ordering applies — difficulty desc, scoring level desc, score desc (the same
-        // composite the Sessions page uses).
+        // Non-co-op rows in the universal noteworthy order (difficulty desc, scoring level
+        // desc, score desc): flagged rows lead as art/text rows and own the captions, the
+        // rest fall to the compact "More scores" block, anything past that to the grouped
+        // overflow line.
         var standard = known
             .Where(c => charts[c.ChartId].Type != ChartType.CoOp)
             .OrderByDescending(Notable)
@@ -176,20 +178,22 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             .ThenByDescending(c => scoringLevels.TryGetValue(c.ChartId, out var sl) ? sl : 0)
             .ThenByDescending(c => (int)(bests[c.ChartId].Score ?? 0))
             .ToArray();
-        var notable = standard.Where(Notable).Take(InlineRowCap).ToArray();
+        var notable = standard.Where(Notable).Take(NotableRowCap).ToArray();
+        var notableIds = notable.Select(c => c.ChartId).ToHashSet();
+        var moreScores = standard.Where(c => !notableIds.Contains(c.ChartId)).Take(MoreScoresCap).ToArray();
 
-        // Co-ops always show (owner call) — they can't earn the S/D flags, so they get
-        // their own rows: up to 3, community co-op difficulty rating descending.
+        // Co-ops get their own compact bucket (owner call): up to 5, community co-op pass
+        // difficulty descending. They no longer take art rows.
         var coOpChanges = known.Where(c => charts[c.ChartId].Type == ChartType.CoOp).ToArray();
-        var coOpRows = Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>();
+        var coOpScores = Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>();
         if (coOpChanges.Length > 0)
         {
             var coOpRatings = (await _mediator.Send(new GetCoOpRatingsQuery(), context.CancellationToken))
                 .ToDictionary(r => r.ChartId, r => r.Ratings.Count > 0 ? r.Ratings.Values.Max(l => (int)l) : 0);
-            coOpRows = coOpChanges
+            coOpScores = coOpChanges
                 .OrderByDescending(c => coOpRatings.GetValueOrDefault(c.ChartId, 0))
                 .ThenByDescending(c => (int)(bests[c.ChartId].Score ?? 0))
-                .Take(CoOpRowCap)
+                .Take(CoOpScoresCap)
                 .ToArray();
         }
 
@@ -209,7 +213,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             // The board read is a flex, not a fact the card owes anyone.
         }
 
-        var inputs = new SnapshotInputs(e, user, known, notable, coOpRows, charts, bests, weekly);
+        var inputs = new SnapshotInputs(e, user, known, notable, moreScores, coOpScores, charts, bests, weekly);
         var message = await BuildSnapshotCard(inputs, context.CancellationToken);
         await SendRichToCommunityDiscords(user.Id, new[] { message }, context.CancellationToken);
     }
@@ -220,7 +224,8 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         User User,
         ScoreHighlightsCapturedEvent.HighlightedChange[] Known,
         ScoreHighlightsCapturedEvent.HighlightedChange[] Notable,
-        ScoreHighlightsCapturedEvent.HighlightedChange[] CoOpRows,
+        ScoreHighlightsCapturedEvent.HighlightedChange[] MoreScores,
+        ScoreHighlightsCapturedEvent.HighlightedChange[] CoOpScores,
         Dictionary<Guid, Chart> Charts,
         Dictionary<Guid, RecordedPhoenixScore> Bests,
         WeeklyPlacementRecord[] Weekly);
@@ -238,6 +243,8 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         // ③ Notable scores: art while the slots last, individual text rows after,
         // everything else one grouped count line.
         AddNotableRows(blocks, inputs);
+        AddCompactBucket(blocks, inputs.MoreScores, inputs, "More scores");
+        AddCompactBucket(blocks, inputs.CoOpScores, inputs, "Co-op");
         AddOverflowLine(blocks, inputs);
 
         var passCharts = inputs.Known
@@ -267,7 +274,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     private static void AddNotableRows(List<IRichBotBlock> blocks, SnapshotInputs inputs)
     {
         var artLeft = ArtRowCap;
-        foreach (var change in inputs.Notable.Concat(inputs.CoOpRows))
+        foreach (var change in inputs.Notable)
         {
             var chart = inputs.Charts[change.ChartId];
             var text = RowText(change, chart, inputs.Bests[change.ChartId], IsBigGain(change, inputs.Known));
@@ -275,9 +282,27 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         }
     }
 
+    // The low-ceremony buckets (owner call): one compact line per score in a single text
+    // block — difficulty, song, score, grade — no art, no caption. Non-co-op "More scores"
+    // and co-op each get their own labelled block.
+    private static void AddCompactBucket(List<IRichBotBlock> blocks,
+        ScoreHighlightsCapturedEvent.HighlightedChange[] rows, SnapshotInputs inputs, string label)
+    {
+        if (rows.Length == 0) return;
+        var lines = rows.Select(c => CompactRow(inputs.Charts[c.ChartId], inputs.Bests[c.ChartId]));
+        blocks.Add(new RichBotText($"-# {label}\n" + string.Join("\n", lines)));
+    }
+
+    private static string CompactRow(Chart chart, RecordedPhoenixScore best)
+    {
+        return $"#DIFFICULTY|{chart.DifficultyString}# {chart.Song.Name} — **{(int)best.Score!.Value:N0}** " +
+               $"#LETTERGRADE|{best.Score!.Value.LetterGrade}|{best.IsBroken}##PLATE|{best.Plate}#";
+    }
+
     private static void AddOverflowLine(List<IRichBotBlock> blocks, SnapshotInputs inputs)
     {
-        var shown = inputs.Notable.Concat(inputs.CoOpRows).Select(c => c.ChartId).ToHashSet();
+        var shown = inputs.Notable.Concat(inputs.MoreScores).Concat(inputs.CoOpScores)
+            .Select(c => c.ChartId).ToHashSet();
         var rest = inputs.Known.Where(c => !shown.Contains(c.ChartId)).ToArray();
         if (rest.Length == 0) return;
 
@@ -370,14 +395,14 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     {
         var lines = new List<string>();
         var titles = e.Milestones.Where(m => m.Kind == MilestoneKind.TitleCompleted).ToArray();
-        lines.AddRange(titles.Take(TitleNameCap).Select(t => $"🏅 **{t.Title}** completed"));
+        lines.AddRange(titles.Take(TitleNameCap).Select(t => $"🏅 **{Bracket(t.Title)}** completed"));
         if (titles.Length > TitleNameCap)
             lines.Add($"…and {titles.Length - TitleNameCap} more titles");
 
         // Paragon gains are never counted or aggregated — the new grade IS the content
         // (owner call), so every gain is its own grade-named line.
         var paragons = e.Milestones.Where(m => m.Kind == MilestoneKind.ParagonLevelGain).ToArray();
-        lines.AddRange(paragons.Select(p => $"🏅 **{p.Title}** paragon → {ParagonEmoji(p.Detail)}"));
+        lines.AddRange(paragons.Select(p => $"🏅 **{Bracket(p.Title)}** paragon → {ParagonEmoji(p.Detail)}"));
 
         foreach (var lamp in e.Milestones.Where(m => m.Kind is MilestoneKind.FolderPassLamp
                      or MilestoneKind.FolderGradeLamp or MilestoneKind.FolderPlateLamp))
@@ -387,11 +412,11 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             $"🏆 **#{w.Place}** on {charts[w.ChartId].Song.Name} " +
             $"#DIFFICULTY|{charts[w.ChartId].DifficultyString}# weekly"));
 
-        // The nothing-completed fallback: real per-title progress deltas (owner call),
-        // nearest to complete first.
-        if (!titles.Any() && !paragons.Any())
-            lines.AddRange(e.TitleProgress.Take(ProgressDeltaCap).Select(d =>
-                $"🏅 {d.Title} {(int)(d.OldPercent * 100)}% → **{(int)(d.NewPercent * 100)}%**"));
+        // Generic title progress (difficulty/co-op) always rides the top section, nearest to
+        // complete first (owner call) — completed titles show only their completion line, and
+        // chart-specific skill progress rides the per-row caption instead.
+        lines.AddRange(e.TitleProgress.Take(ProgressDeltaCap).Select(d =>
+            $"🏅 {Bracket(d.Title)} {(int)(d.OldPercent * 100)}% → **{(int)(d.NewPercent * 100)}%**"));
 
         return lines;
     }
@@ -436,7 +461,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
                 cancellationToken);
             if (total > 0)
                 parts.Add(
-                    $"#DIFFICULTY|{group.Key.Type.GetShortHand()}{group.Key.Level}# {clears}/{total} ({100.0 * clears / total:0.0}%)");
+                    $"#DIFFICULTY|{group.Key.Type.GetShortHand()}{group.Key.Level}# {clears}/{total}");
         }
 
         return string.Join(" · ", parts);
@@ -462,7 +487,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     {
         return $"#DIFFICULTY|{chart.DifficultyString}# {SongLink(change, chart, bigGain)}\n" +
                $"**{(int)best.Score!.Value:N0}** #LETTERGRADE|{best.Score!.Value.LetterGrade}|{best.IsBroken}##PLATE|{best.Plate}#" +
-               FlagCaption(change.Flags, bigGain);
+               FlagCaption(change, chart, best, bigGain);
     }
 
     private static string UpscoreRow(ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart,
@@ -479,7 +504,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         }
 
         return row + $" #LETTERGRADE|{best.Score!.Value.LetterGrade}|{best.IsBroken}##PLATE|{best.Plate}#" +
-               FlagCaption(change.Flags, bigGain);
+               FlagCaption(change, chart, best, bigGain);
     }
 
     private static string SongLink(ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart,
@@ -489,20 +514,65 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         return change.Flags == HighlightFlags.None && !bigGain ? link : $"**{link}**";
     }
 
-    // The why-it's-noteworthy caption, rendered as Discord subtext under the score.
-    // Vocabulary mirrors the Sessions page badge tooltips.
-    private static string FlagCaption(HighlightFlags flags, bool bigGain)
+    // The why-it's-noteworthy caption, rendered as Discord subtext under the score. Each flag
+    // renders its captured detail — the pumbility rank, the peer standing (or PG ratio), the
+    // skill title's score/threshold, the folder-debut ordinal. Vocabulary mirrors the
+    // Sessions page badges.
+    private static string FlagCaption(ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart,
+        RecordedPhoenixScore best, bool bigGain)
     {
+        var flags = change.Flags;
         if (flags == HighlightFlags.None && !bigGain) return string.Empty;
+        var d = change.Detail;
         var parts = new List<string>();
-        if (flags.HasFlag(HighlightFlags.PumbilityTop50)) parts.Add("👑 PUMBILITY top 50");
-        if (flags.HasFlag(HighlightFlags.ScoreQuality90)) parts.Add("📊 Top scores among peers");
-        if (flags.HasFlag(HighlightFlags.TitleProgress)) parts.Add("🏅 Title progress");
-        if (flags.HasFlag(HighlightFlags.FolderDebut)) parts.Add("🆕 Folder debut");
+        if (flags.HasFlag(HighlightFlags.PumbilityTop50))
+            parts.Add(d?.PumbilityRank != null ? $"👑 #{d.PumbilityRank} in your PUMBILITY" : "👑 PUMBILITY top 50");
+        if (flags.HasFlag(HighlightFlags.ScoreQuality90)) parts.Add(PeerCaption(d, best));
+        if (flags.HasFlag(HighlightFlags.TitleProgress)) parts.Add(SkillCaption(d));
+        if (flags.HasFlag(HighlightFlags.FolderDebut))
+            parts.Add(d?.FolderDebutOrdinal != null
+                ? $"🆕 {Ordinal(d.FolderDebutOrdinal.Value)} {chart.Type.GetShortHand()}{(int)chart.Level}"
+                : "🆕 Folder debut");
         if (flags.HasFlag(HighlightFlags.FolderCompletion90)) parts.Add("📁 Nearly complete folder");
         if (flags.HasFlag(HighlightFlags.CompetitiveImprover)) parts.Add("⬆ Raised competitive level");
         if (bigGain) parts.Add("💥 Biggest gain of the session");
         return "\n-# " + string.Join(" · ", parts);
+    }
+
+    private static string PeerCaption(HighlightDetail? d, RecordedPhoenixScore best)
+    {
+        if (d?.PeerCount is null or 0) return "📊 Top scores among peers";
+        var isPg = best.Score != null && (int)best.Score.Value == 1_000_000;
+        if (isPg && d.PeerPgCount != null)
+            return $"📊 PG · {d.PeerPgCount} of {d.PeerCount} peers have it";
+        return $"📊 #{(d.PeerBetterCount ?? 0) + 1} of {d.PeerCount} peers";
+    }
+
+    private static string SkillCaption(HighlightDetail? d)
+    {
+        if (d?.SkillTitleName == null) return "🏅 Title progress";
+        return d.SkillTitleScore != null && d.SkillTitleThreshold != null
+            ? $"🏅 {Bracket(d.SkillTitleName)} ({Abbrev(d.SkillTitleScore.Value)}/{Abbrev(d.SkillTitleThreshold.Value)})"
+            : $"🏅 {Bracket(d.SkillTitleName)}";
+    }
+
+    // In-game titles show bracketed ([Expert Lv. 4]); skill/co-op/boss names already carry
+    // their own bracket, so wrap only when one isn't there.
+    private static string Bracket(string? title)
+    {
+        if (string.IsNullOrEmpty(title)) return string.Empty;
+        return title.StartsWith('[') ? title : $"[{title}]";
+    }
+
+    private static string Ordinal(int n)
+    {
+        return n switch { 1 => "First", 2 => "Second", 3 => "Third", _ => $"#{n}" };
+    }
+
+    // Floored to thousands so a near-threshold score never rounds up to a false complete.
+    private static string Abbrev(int score)
+    {
+        return $"{score / 1000}k";
     }
 
     private static string Charts(int count)

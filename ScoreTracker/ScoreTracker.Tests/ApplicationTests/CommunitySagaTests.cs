@@ -345,11 +345,11 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task UnremarkablePassesCompressEntirelyIntoTheCountAndFolderLines()
+    public async Task UnremarkablePassesFillTheMoreScoresBucketThenOverflow()
     {
-        // The snapshot's core promise: a session with nothing notable is counts, not a
-        // wall — no per-score rows at all, one "+N more" line, the folder progress
-        // capped to the top folders, and the totals in the header.
+        // Owner call: non-highlighted scores now show — up to 10 compact one-liners in the
+        // "More scores" bucket (no art), the rest compress into "+N more", and the folder
+        // progress + header totals still summarize.
         var userId = Guid.NewGuid();
         var charts = Enumerable.Range(10, 12)
             .Select(level => new ChartBuilder().WithType(ChartType.Single).WithLevel(level).Build())
@@ -366,7 +366,8 @@ public sealed class CommunitySagaTests
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Count() == 1
                 && msgs.Single().Header!.Markdown.Contains("passed 12")
                 && !msgs.Single().Blocks.OfType<RichBotSection>().Any()
-                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("+12 more"))
+                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("-# More scores"))
+                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("+2 more"))
                 && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("#DIFFICULTY|S21# 1/1"))),
             It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -401,8 +402,8 @@ public sealed class CommunitySagaTests
                     t.Markdown.Contains("📈 **PUMBILITY** 21,480 → **21,530** (+50)")
                     && t.Markdown.Contains("📈 **Singles competitive** 21.42 → **21.45**"))
                 && msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
-                    t.Markdown.Contains("🏅 **Intermediate Lv. 10** completed")
-                    && t.Markdown.Contains("🏅 **Intermediate Lv. 7** paragon → #LETTERGRADE|SS|False#"))),
+                    t.Markdown.Contains("🏅 **[Intermediate Lv. 10]** completed")
+                    && t.Markdown.Contains("🏅 **[Intermediate Lv. 7]** paragon → #LETTERGRADE|SS|False#"))),
             It.IsAny<IEnumerable<ulong>>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -428,17 +429,19 @@ public sealed class CommunitySagaTests
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
-                t.Markdown.Contains("**Title 10** completed")
-                && !t.Markdown.Contains("**Title 11** completed")
+                t.Markdown.Contains("**[Title 10]** completed")
+                && !t.Markdown.Contains("[Title 11]")
                 && t.Markdown.Contains("…and 2 more titles")
-                && t.Markdown.Contains("🏅 **Expert Lv. 2** paragon → #PLATE|PerfectGame#"))),
+                && t.Markdown.Contains("🏅 **[Expert Lv. 2]** paragon → #PLATE|PerfectGame#"))),
             It.IsAny<IEnumerable<ulong>>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task ProgressDeltasShowOnlyWhenNothingCompleted()
+    public async Task GenericProgressDeltasAlwaysRideTheTopSectionAlongsideCompletions()
     {
+        // Owner call (D3): generic title progress shows up top ALWAYS, not only as a
+        // nothing-completed fallback — a completion and a delta coexist, both bracketed.
         var userId = Guid.NewGuid();
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var ctx = new HandlerContext();
@@ -447,13 +450,18 @@ public sealed class CommunitySagaTests
         ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, chart, score: 950000);
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
-                Array.Empty<PlayerMilestoneRecord>(),
+                new[]
+                {
+                    new PlayerMilestoneRecord(MilestoneKind.TitleCompleted, null, Now, null, null,
+                        "Advanced Lv. 1", null)
+                },
                 new[] { new TitleProgressDelta("Expert Lv. 4", 0.82, 0.86) },
                 (chart.Id, true, HighlightFlags.None))));
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
-                t.Markdown.Contains("🏅 Expert Lv. 4 82% → **86%**"))),
+                t.Markdown.Contains("🏅 **[Advanced Lv. 1]** completed")
+                && t.Markdown.Contains("🏅 [Expert Lv. 4] 82% → **86%**"))),
             It.IsAny<IEnumerable<ulong>>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -484,10 +492,10 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task CoOpsAlwaysShowCappedAtThree()
+    public async Task CoOpsShowAsACompactBucketCappedAtFive()
     {
         var userId = Guid.NewGuid();
-        var coOps = Enumerable.Range(0, 5)
+        var coOps = Enumerable.Range(0, 7)
             .Select(_ => new ChartBuilder().WithType(ChartType.CoOp).WithLevel(2).Build())
             .ToArray();
         var ctx = new HandlerContext();
@@ -498,19 +506,20 @@ public sealed class CommunitySagaTests
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
             coOps.Select(c => (c.Id, false, HighlightFlags.None)).ToArray())));
 
-        // 3 co-op rows render individually (art while slots last) and the remainder
-        // compresses with a CO-OP count; co-ops never earn S/D flags but always show.
+        // Co-ops drop their art rows (owner call): up to 5 compact one-liners in their own
+        // labelled bucket, the remainder compressing with a CO-OP count; header still marks CO-OP.
         ctx.Bot.Verify(b => b.SendRichMessages(
-            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotSection>().Count() == 3
-                && msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
-                    t.Markdown.Contains("+2 more: CO-OP ×2"))
+            It.Is<IEnumerable<RichBotMessage>>(msgs => !msgs.Single().Blocks.OfType<RichBotSection>().Any()
+                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("-# Co-op")
+                    && t.Markdown.Split('\n').Count(l => l.Contains("#DIFFICULTY|")) == 5)
+                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("+2 more: CO-OP ×2"))
                 && msgs.Single().Header!.Markdown.Contains("CO-OP")),
             It.IsAny<IEnumerable<ulong>>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task TheSessionsBiggestGainOverTenThousandEarnsARow()
+    public async Task TheSessionsBiggestGainEarnsAnArtRowTheOthersFallToMoreScores()
     {
         var userId = Guid.NewGuid();
         var biggest = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
@@ -520,8 +529,8 @@ public sealed class CommunitySagaTests
         ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
         ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, new[] { biggest, smaller }, score: 950000);
 
-        // biggest: +27,704; smaller: +12,000 — over the threshold too, but only the
-        // session's single biggest gain earns the 💥 row (owner call).
+        // biggest: +27,704; smaller: +12,000 — over the threshold too, but only the session's
+        // single biggest gain earns the 💥 art row (owner call); the other is a compact row.
         await ctx.Saga.Consume(BuildContext(ScoreHighlightsCapturedEvent.Create(Now, userId, MixEnum.Phoenix,
             null,
             new[]
@@ -536,7 +545,40 @@ public sealed class CommunitySagaTests
             It.Is<IEnumerable<RichBotMessage>>(msgs =>
                 msgs.Single().Blocks.OfType<RichBotSection>().Single().Markdown
                     .Contains("💥 Biggest gain of the session")
-                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("+1 more: S22"))),
+                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("-# More scores")
+                    && t.Markdown.Contains("#DIFFICULTY|S22#"))),
+            It.IsAny<IEnumerable<ulong>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task EnrichedCaptionsRenderRankPeersOrdinalAndSkillScore()
+    {
+        // #5–#8: the per-row caption renders the captured detail — pumbility rank, peer
+        // standing, skill title score/threshold, folder-debut ordinal — not generic text.
+        var userId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Double).WithLevel(24).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, chart, score: 972000);
+        var detail = new HighlightDetail(PumbilityRank: 4, FolderDebutOrdinal: 1, PeerCount: 47,
+            PeerBetterCount: 2, PeerPgCount: 0, SkillTitleName: "[DRILL] Lv.10", SkillTitleScore: 972000,
+            SkillTitleThreshold: 990000);
+        var change = new ScoreHighlightsCapturedEvent.HighlightedChange(chart.Id, true, null, 972000,
+            "SuperbGame", false,
+            HighlightFlags.PumbilityTop50 | HighlightFlags.ScoreQuality90 | HighlightFlags.TitleProgress
+            | HighlightFlags.FolderDebut, detail);
+
+        await ctx.Saga.Consume(BuildContext(ScoreHighlightsCapturedEvent.Create(Now, userId, MixEnum.Phoenix,
+            null, new[] { change })));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotSection>().Any(s =>
+                s.Markdown.Contains("👑 #4 in your PUMBILITY")
+                && s.Markdown.Contains("📊 #3 of 47 peers")
+                && s.Markdown.Contains("🏅 [DRILL] Lv.10 (972k/990k)")
+                && s.Markdown.Contains("🆕 First D24"))),
             It.IsAny<IEnumerable<ulong>>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
