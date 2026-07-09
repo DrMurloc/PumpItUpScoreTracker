@@ -92,6 +92,13 @@ namespace ScoreTracker.SharedKernel.Models
                 PhoenixPlate.SuperbGame, includeLevelOverride);
         }
 
+        public double GetScore(ChartType type, DifficultyLevel level, PhoenixScore score, PhoenixPlate plate,
+            bool isBroken = false, bool includeLevelOverride = true)
+        {
+            return GetScore(Guid.Empty, level, type, SongType.Arcade, BaseAverageTime, isBroken, score, plate,
+                includeLevelOverride);
+        }
+
         private double GetScore(Guid chartId, DifficultyLevel level, ChartType chartType, SongType songType,
             TimeSpan duration, bool isBroken, PhoenixScore score, PhoenixPlate plate, bool includeLevelOverride)
         {
@@ -144,6 +151,18 @@ namespace ScoreTracker.SharedKernel.Models
                     var scoreModifier = letterGradeModifier;
                     if (isBroken) scoreModifier -= StageBreakModifier;
                     return result * scoreModifier;
+                }
+                case CalculationType.GradePlusPlate:
+                {
+                    // Phoenix 2 PUMBILITY: the grade multiplier and the plate bonus combine
+                    // ADDITIVELY before multiplying the base (validated against real per-chart
+                    // pumbility samples; a multiplicative plate overshoots every sample).
+                    var result = GetScorelessScore(chartId, level, chartType, songType, duration,
+                        includeLevelOverride);
+                    result *= letterGradeModifier + PlateModifiers[plate];
+                    if (isBroken) result *= StageBreakModifier;
+
+                    return result;
                 }
                 case CalculationType.Custom:
                 default:
@@ -199,7 +218,12 @@ namespace ScoreTracker.SharedKernel.Models
 
             [Description("All Modifiers Multiplied * (LetterModifier - BrokenModifier)")]
             Avalanche,
-            Custom
+            Custom,
+
+            // Appended after Custom: this enum rides serialized tournament configurations,
+            // so existing ordinals must not shift.
+            [Description("Base * (LetterModifier + PlateModifier)")]
+            GradePlusPlate
         }
 
         public static double CalculateFungScore(DifficultyLevel level, PhoenixScore score, ChartType? type = null)
@@ -207,6 +231,23 @@ namespace ScoreTracker.SharedKernel.Models
             var result = level + (score - 965000.0) / 17500.0;
             if (type == ChartType.Single && level >= 20) result *= Math.Pow(1.008, level - 19);
             return result;
+        }
+
+        /// <summary>
+        ///     The PUMBILITY formula for a mix — Phoenix and Phoenix 2 compute per-chart
+        ///     PUMBILITY differently, so every caller must say which era it is scoring.
+        ///     <paramref name="includeCoOp" /> only applies to Phoenix: on Phoenix 2 the
+        ///     official formula never counts CO-OP, whatever the caller asks for.
+        /// </summary>
+        public static ScoringConfiguration PumbilityScoring(MixEnum mix, bool includeCoOp)
+        {
+            return mix switch
+            {
+                MixEnum.Phoenix => PumbilityScoring(includeCoOp),
+                MixEnum.Phoenix2 => Phoenix2PumbilityScoring(),
+                _ => throw new ArgumentOutOfRangeException(nameof(mix), mix,
+                    "No PUMBILITY formula exists for this mix")
+            };
         }
 
         public static ScoringConfiguration PumbilityScoring(bool includeCoOp)
@@ -217,6 +258,76 @@ namespace ScoreTracker.SharedKernel.Models
                 StageBreakModifier = 0.0
             };
             config.ChartTypeModifiers[ChartType.CoOp] = includeCoOp ? 1 : 0;
+            return config;
+        }
+
+        /// <summary>
+        ///     Phoenix 2's per-level base value: 130 + 5·L, with the growth doubling above 24.
+        ///     Verified exact from live data for levels 16–25; the kink at 24 is real.
+        /// </summary>
+        public static int Phoenix2BaseRating(DifficultyLevel level)
+        {
+            return 130 + 5 * (int)level + 5 * Math.Max(0, (int)level - 24);
+        }
+
+        /// <summary>
+        ///     Phoenix 2's official PUMBILITY per-chart formula, reverse-engineered from the
+        ///     live pumbility rankings + per-chart leaderboards and validated against owner-
+        ///     collected real per-chart values (2026-07): contribution =
+        ///     Base(level) × (gradeMultiplier + plateBonus) — grade and plate combine
+        ///     ADDITIVELY. CO-OP, U.C.S. and half-double (performance) charts never
+        ///     contribute (official site text), and broken plays never contribute
+        ///     (owner-confirmed). Totals are TWO independent top-50 pools — Singles and
+        ///     Doubles — summed by the caller; this config only prices a single chart.
+        /// </summary>
+        private static ScoringConfiguration Phoenix2PumbilityScoring()
+        {
+            var config = new ScoringConfiguration
+            {
+                Formula = CalculationType.GradePlusPlate,
+                AdjustToTime = false,
+                StageBreakModifier = 0.0,
+                // A perfect 1,000,000 stays on the SSS+ grade multiplier — PG's bump is the
+                // plate bonus, not a grade override.
+                PgLetterGradeModifier = 1.50,
+                LevelRatings = DifficultyLevel.All.ToDictionary(l => l, Phoenix2BaseRating)
+            };
+            config.ChartTypeModifiers[ChartType.CoOp] = 0.0;
+            // SinglePerformance/DoublePerformance stay 0 from the defaults (half-double excluded).
+
+            // Grade multipliers — verified exact for A+ and above.
+            config.LetterGradeModifiers[PhoenixLetterGrade.SSSPlus] = 1.50;
+            config.LetterGradeModifiers[PhoenixLetterGrade.SSS] = 1.49;
+            config.LetterGradeModifiers[PhoenixLetterGrade.SSPlus] = 1.48;
+            config.LetterGradeModifiers[PhoenixLetterGrade.SS] = 1.47;
+            config.LetterGradeModifiers[PhoenixLetterGrade.SPlus] = 1.46;
+            config.LetterGradeModifiers[PhoenixLetterGrade.S] = 1.45;
+            config.LetterGradeModifiers[PhoenixLetterGrade.AAAPlus] = 1.43;
+            config.LetterGradeModifiers[PhoenixLetterGrade.AAA] = 1.41;
+            config.LetterGradeModifiers[PhoenixLetterGrade.AAPlus] = 1.39;
+            config.LetterGradeModifiers[PhoenixLetterGrade.AA] = 1.37;
+            config.LetterGradeModifiers[PhoenixLetterGrade.APlus] = 1.35;
+            // TODO(P2-pumbility): grades below A+ are UNVERIFIED — no live sample exists yet.
+            // Pattern-extended at −0.02 per step pending real data.
+            config.LetterGradeModifiers[PhoenixLetterGrade.A] = 1.33;
+            config.LetterGradeModifiers[PhoenixLetterGrade.B] = 1.31;
+            config.LetterGradeModifiers[PhoenixLetterGrade.C] = 1.29;
+            config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.27;
+            config.LetterGradeModifiers[PhoenixLetterGrade.F] = 1.25;
+
+            // Plate bonuses (ADDITIVE terms, not multipliers).
+            // TODO(P2-pumbility): community data suggested singles-specific UG/EG/RG values
+            // (.017/.014/−.010); treated as a data error for now (owner call 2026-07-09) —
+            // the doubles-verified table applies to both types. Adjust here if live singles
+            // data disagrees, then run the P2 recalculation job.
+            config.PlateModifiers[PhoenixPlate.RoughGame] = 0.000;
+            config.PlateModifiers[PhoenixPlate.FairGame] = 0.002;
+            config.PlateModifiers[PhoenixPlate.TalentedGame] = 0.004;
+            config.PlateModifiers[PhoenixPlate.MarvelousGame] = 0.006;
+            config.PlateModifiers[PhoenixPlate.SuperbGame] = 0.008;
+            config.PlateModifiers[PhoenixPlate.ExtremeGame] = 0.012;
+            config.PlateModifiers[PhoenixPlate.UltimateGame] = 0.016;
+            config.PlateModifiers[PhoenixPlate.PerfectGame] = 0.020;
             return config;
         }
 
