@@ -10,6 +10,49 @@
 > the passes/upscores/digest card split below; S1–S4 all landed. The spec below is the
 > as-built reference.
 
+## Revision 3 — iteration 2 (locked & implemented 2026-07-08)
+
+Owner feedback after the snapshot card ran live. Eight card changes plus a live-bug fix, one
+PR. Decisions and rationale:
+
+1. **Non-highlighted scores show.** Flagged rows keep art (≤5); the rest render as compact
+   one-liners — ≤10 "More scores" (non-co-op) + ≤5 "Co-op" (co-op difficulty desc) — then the
+   grouped "+N more". Co-ops lost their dedicated art rows.
+2. **Score-computable title completions ride the card.** The "piugame site detected" legacy
+   message now covers only badges the score pipeline can't compute (`CompletionRequired == 0`:
+   events, play/plate counts, staff). Difficulty, skill, boss-breaker and co-op completions
+   flow through the session card. The site-detection path fires first during imports, so the
+   score path (`CaptureSessionTitles`) detects completions by the batch's **before→after
+   crossing** against a score-only completion state — a fresh crossing surfaces even when the
+   site path already persisted the title. Both paths still `SaveTitles` the full set (replace
+   semantics — nothing is dropped); only mint/announce is scoped.
+3. **Skill-title % floored at 900k.** `Title.CompletionFloor` (0 default, 900k for skill) +
+   `TitleProgress.PercentComplete` rebase so a fresh pass isn't ~95%. The card shows
+   `score/threshold` for skill instead of a percent, so the floor is a /Titles-surface fix
+   (page, personalized tier list, `TitleProgressBar`, WhatShouldIPlay).
+4. **Folder line drops the percent** — `23/143`, not `(16%)`.
+5. **Pumbility rank** — `👑 #4 in your PUMBILITY` (position in the pumbility-ordered top 50).
+6. **Peer standing** — `📊 #3 of 47 peers`; for a PG, `📊 PG · 12 of 47 peers have it`. A PG a
+   majority of the cohort also holds is suppressed (not noteworthy); an empty cohort never flags.
+7. **Folder-debut ordinal** — `🆕 First D24` / `Second` / `Third`.
+8. **Title routing.** Completions and generic difficulty/co-op progress deltas always ride the
+   top section; chart-specific **skill** progress rides the per-row caption as
+   `🏅 [DRILL] Lv.4 (972k/990k)`. Per-row `TitleProgress` is now skill-only, which also cuts the
+   flag's noise. Titles render **bracketed** everywhere (`[Expert Lv. 4]`); already-bracketed
+   skill/co-op/boss names aren't double-wrapped.
+
+**Persistence.** The captured detail (pumbility rank, folder-debut ordinal, peer
+count/better/PG-holders, skill title name/score/threshold) persists on `ScoreHighlight` as a
+`HighlightDetail` carried on the write, the read record, and the captured event, so the Sessions
+page renders the same numbers as the card — compact language-neutral badge suffixes (`👑 #4`,
+`📊 #3/47`, `🏅 972k/990k`, `🆕 #1`) with the existing localized tooltips carrying the words.
+
+**Live-bug fix ("Of Note" showed nothing on the freshest session).** A highlight's `OccurredAt`
+is the batch-drain time — minutes past its journal rows — so the page's row-time window dropped
+exactly the session the Discord "See more" button deep-links to. The page now reads highlights
+and session-attached milestones **by SessionId** (FK, indexed), not a date window; session-less
+rows (weekly placements, admin recalcs) still match by day.
+
 ## Revision 2 — the session snapshot (locked 2026-07-05)
 
 Owner direction after seeing C0–C10 live: score events were still "a big dump of scores —
