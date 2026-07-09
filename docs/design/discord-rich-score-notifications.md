@@ -10,6 +10,39 @@
 > the passes/upscores/digest card split below; S1–S4 all landed. The spec below is the
 > as-built reference.
 
+## Revision 4 — iteration 3 (locked & implemented 2026-07-09)
+
+Owner feedback after iteration 2 ran live. Three asks plus a sort bug, one PR:
+
+1. **Long cards were truncating.** The Components V2 text ceiling (4000 chars) is measured
+   *after* emoji tokens expand to `<:piu_…:snowflake>` mentions (~30 chars each), but the saga
+   only capped by row count, so dense cards overran and the renderer chopped a row mid-line. The
+   saga now estimates rendered width (literal length + a per-token width) and packs against a
+   margin: header, stats, achievements (**all** titles, uncapped — owner call, the budget is the
+   only backstop), and the **folder line are reserved first**; only the score buckets flex to
+   fit, overflowing the rest into the "+N more" count. The folder breakdown always survives on
+   the bottom.
+2. **Site-detected titles ride the main card.** All title completions are top priority and show
+   in a card. The import stamps `TitlesDetectedEvent` with the run's `SessionId` when it saved
+   scores; the title path attributes the site-only badges (`CompletionRequired == 0`) to that
+   session instead of announcing them, and `CaptureSessionTitles` single-sources the card's
+   completions from the milestone table by session — folding site badges in with the
+   score-crossing ones (disjoint title sets, no double-count). A **zero-score** import (detected
+   a badge but saved no scores) keeps a null `SessionId` and its titles render as their own rich
+   **titles-card** (`NewTitlesAcquiredEvent`, upgraded from the old plain-text list — owner Q1=a),
+   not the session card. Big fresh imports showing nothing but titles is intended.
+3. **Peer comparison stops below competitive − 5.** A chart more than 5 levels under the player's
+   competitive level for its type (singles competitive → singles charts, doubles → doubles) is
+   noise (a 23-competitive player back-filling S5s). The `ScoreQuality90` flag is skipped
+   entirely below the cutoff (no cohort built), so those scores fall to folder/overflow. The same
+   gate applies to the card's **weekly** placement lines. No cohort-size floor (owner call: strong
+   high-level players legitimately have thin peer groups). Prod validation (query in the PR
+   thread): of 1,420 peer-flagged highlights, ~15% sit >5 levels below competitive, and those are
+   exactly the tiny-cohort S-low back-fills.
+4. **"More scores" sort fix.** When the notable bucket overflowed its cap, the extra flagged rows
+   (lower-level) leaked into "More scores" ahead of higher-level unflagged charts (two descending
+   runs). The bucket is re-sorted into one level-descending run.
+
 ## Revision 3 — iteration 2 (locked & implemented 2026-07-08)
 
 Owner feedback after the snapshot card ran live. Eight card changes plus a live-bug fix, one

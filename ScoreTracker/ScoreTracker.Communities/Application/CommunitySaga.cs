@@ -114,9 +114,10 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     // that moved, achievements earned, and only the scores worth reading; everything
     // else is a count. Renders from ScoreHighlightsCapturedEvent, which the capture
     // orchestrator publishes AFTER the rating/title steps ran, so every section is
-    // deterministic. This is the only score-triggered community Discord message; the
-    // old ratings/weekly messages are retired (titles keep a legacy announcement only
-    // for site-detected titles, which no card covers).
+    // deterministic. This is the only score-triggered community Discord message; the old
+    // ratings/weekly messages are retired. Site-detected title completions ride this card
+    // too when their import saved scores (iteration 3); a zero-score import's titles get
+    // their own rich card via NewTitlesAcquiredEvent instead.
     private const int ArtRowCap = 5;
     private const int NotableRowCap = 10;
     private const int MoreScoresCap = 10;
