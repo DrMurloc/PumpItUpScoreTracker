@@ -450,8 +450,10 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task TitleListingCapsAtTenNamesAndParagonLinesNeverAggregate()
+    public async Task EveryTitleCompletionIsListedWithNoNameCap()
     {
+        // Owner call: titles are the card's top priority — list them ALL (the 4000-char
+        // budget is the only backstop), never "…and N more titles". Paragons don't aggregate.
         var userId = Guid.NewGuid();
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var ctx = new HandlerContext();
@@ -470,9 +472,10 @@ public sealed class CommunitySagaTests
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
-                t.Markdown.Contains("**[Title 10]** completed")
-                && !t.Markdown.Contains("[Title 11]")
-                && t.Markdown.Contains("…and 2 more titles")
+                t.Markdown.Contains("**[Title 1]** completed")
+                && t.Markdown.Contains("**[Title 11]** completed")
+                && t.Markdown.Contains("**[Title 12]** completed")
+                && !t.Markdown.Contains("more titles")
                 && t.Markdown.Contains("🏅 **[Expert Lv. 2]** paragon → #PLATE|PerfectGame#"))),
             It.IsAny<IEnumerable<ulong>>(),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -765,6 +768,30 @@ public sealed class CommunitySagaTests
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Count() == 1
                 && msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
                     t.Markdown.Contains("#DIFFICULTY|S18# **All passed!**"))),
+            It.IsAny<IEnumerable<ulong>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TheFolderBreakdownSurvivesAScoreHeavyCard()
+    {
+        // Owner call: the folder line is reserved before scores fill in, so a card packed
+        // with notable rows still ends with it — the scores overflow to the count line.
+        var userId = Guid.NewGuid();
+        var charts = Enumerable.Range(0, 40)
+            .Select(_ => new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build()).ToArray();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, charts, score: 950000);
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
+            charts.Select(c => (c.Id, true, HighlightFlags.ScoreQuality90)).ToArray())));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs =>
+                msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("#DIFFICULTY|S20# 1/40"))
+                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains(" more:"))),
             It.IsAny<IEnumerable<ulong>>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }

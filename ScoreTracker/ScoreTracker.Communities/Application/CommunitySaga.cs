@@ -130,11 +130,21 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     private const int MoreScoresCap = 10;
     private const int CoOpScoresCap = 5;
     private const int WeeklyLineCap = 4;
-    private const int TitleNameCap = 10;
     private const int ProgressDeltaCap = 3;
     private const int FolderLineCap = 6;
     private const int BigGainThreshold = 10000;
     private const string SiteBase = "https://piuscores.arroweclip.se";
+
+    // Discord's Components V2 text ceiling is 4000 chars measured AFTER emoji tokens expand
+    // (#DIFFICULTY|…# → <:piu_…:snowflake>). The saga can't see the real snowflakes, so it
+    // packs against a conservative estimate: literal length + a per-token width, kept under a
+    // margin so nothing reaches the renderer's mid-line truncation. The stats, achievements
+    // (all titles), and folder line are reserved first; only the score buckets flex to fit.
+    private const int TokenWidth = 30;
+    private const int CardCharBudget = 3600;
+    private const int FooterReserve = 90;
+    private static readonly string[] EmojiTokenPrefixes =
+        { "#DIFFICULTY|", "#LETTERGRADE|", "#PLATE|", "#MIX|" };
 
     public async Task Consume(ConsumeContext<ScoreHighlightsCapturedEvent> context)
     {
@@ -247,35 +257,73 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     private async Task<RichBotMessage> BuildSnapshotCard(SnapshotInputs inputs,
         CancellationToken cancellationToken)
     {
-        var blocks = new List<IRichBotBlock> { new RichBotDivider() };
+        var header = HeaderSection(inputs);
+        var statLines = StatLines(inputs.E.Milestones);
+        var achievementLines = AchievementLines(inputs.E, inputs.Weekly, inputs.Charts);
 
-        // ① Stats that moved (capture already floored the noise).
-        AddSection(blocks, StatLines(inputs.E.Milestones));
-        // ② Achievements: titles, paragon, folder lamps, weekly placements — or the
-        // per-title progress deltas when nothing completed.
-        AddSection(blocks, AchievementLines(inputs.E, inputs.Weekly, inputs.Charts));
-        // ③ Notable scores: art while the slots last, individual text rows after,
-        // everything else one grouped count line.
-        AddNotableRows(blocks, inputs);
-        AddCompactBucket(blocks, inputs.MoreScores, inputs, "More scores");
-        AddCompactBucket(blocks, inputs.CoOpScores, inputs, "Co-op");
-        AddOverflowLine(blocks, inputs);
-
+        // The folder breakdown is computed and reserved up front (owner call): scores yield
+        // to it, never the reverse, so a title-heavy or score-heavy card still ends with it.
         var passCharts = inputs.Known
             .Where(c => c.IsNewPass && !c.IsBroken)
             .Select(c => inputs.Charts[c.ChartId])
             .Where(c => c.Type is ChartType.Single or ChartType.Double);
         var folderStats = await FolderProgress(inputs.E.Mix, inputs.E.UserId, passCharts, FolderLineCap,
             cancellationToken);
+
+        var remaining = CardCharBudget - FooterReserve
+            - Estimate(header.Markdown)
+            - EstimateLines(statLines)
+            - EstimateLines(achievementLines)
+            - (string.IsNullOrWhiteSpace(folderStats) ? 0 : Estimate(folderStats));
+
+        var blocks = new List<IRichBotBlock> { new RichBotDivider() };
+
+        // ① Stats that moved (capture already floored the noise).
+        AddSection(blocks, statLines);
+        // ② Achievements: titles, paragon, folder lamps, weekly placements — or the
+        // per-title progress deltas when nothing completed.
+        AddSection(blocks, achievementLines);
+        // ③ Notable scores lead, then the compact buckets — each filling only what the
+        // reserved sections leave. Whatever doesn't fit (or overruns a cap) is a count line.
+        var shown = new HashSet<Guid>();
+        AddNotableRows(blocks, inputs, ref remaining, shown);
+        AddCompactBucket(blocks, inputs.MoreScores, inputs, "More scores", ref remaining, shown);
+        AddCompactBucket(blocks, inputs.CoOpScores, inputs, "Co-op", ref remaining, shown);
+        AddOverflowLine(blocks, inputs, shown);
+
         if (!string.IsNullOrWhiteSpace(folderStats))
         {
             blocks.Add(new RichBotDivider());
             blocks.Add(new RichBotText(folderStats));
         }
 
-        return new RichBotMessage(HeaderSection(inputs), blocks,
+        return new RichBotMessage(header, blocks,
             $"#MIX|{inputs.E.Mix}# {inputs.E.Mix.GetName()} · PIU Scores",
             inputs.E.Mix.GetAccentColor(), Links(inputs));
+    }
+
+    // Estimated rendered width of a block once emoji tokens expand — literal length plus a
+    // conservative per-token width. Over-estimating is safe: it trims early, never late.
+    private static int Estimate(string? markdown)
+    {
+        if (string.IsNullOrEmpty(markdown)) return 0;
+        var tokens = 0;
+        foreach (var prefix in EmojiTokenPrefixes)
+        {
+            var idx = markdown.IndexOf(prefix, StringComparison.Ordinal);
+            while (idx >= 0)
+            {
+                tokens++;
+                idx = markdown.IndexOf(prefix, idx + prefix.Length, StringComparison.Ordinal);
+            }
+        }
+
+        return markdown.Length + tokens * TokenWidth;
+    }
+
+    private static int EstimateLines(List<string> lines)
+    {
+        return lines.Count == 0 ? 0 : Estimate(string.Join("\n", lines));
     }
 
     private static void AddSection(List<IRichBotBlock> blocks, List<string> lines)
@@ -285,25 +333,46 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         blocks.Add(new RichBotDivider());
     }
 
-    private static void AddNotableRows(List<IRichBotBlock> blocks, SnapshotInputs inputs)
+    private static void AddNotableRows(List<IRichBotBlock> blocks, SnapshotInputs inputs, ref int remaining,
+        HashSet<Guid> shown)
     {
         var artLeft = ArtRowCap;
         foreach (var change in inputs.Notable)
         {
             var chart = inputs.Charts[change.ChartId];
             var text = RowText(change, chart, inputs.Bests[change.ChartId], IsBigGain(change, inputs.Known));
+            var cost = Estimate(text);
+            // Notable rows are the priciest; when one won't fit, the rest fall to overflow
+            // (the cheaper compact buckets still get their turn at the leftover budget).
+            if (cost > remaining) break;
+            remaining -= cost;
+            shown.Add(change.ChartId);
             blocks.Add(artLeft-- > 0 ? new RichBotSection(text, chart.Song.ImagePath) : new RichBotText(text));
         }
     }
 
     // The low-ceremony buckets (owner call): one compact line per score in a single text
     // block — difficulty, song, score, grade — no art, no caption. Non-co-op "More scores"
-    // and co-op each get their own labelled block.
+    // and co-op each get their own labelled block, filling as many rows as the budget allows.
     private static void AddCompactBucket(List<IRichBotBlock> blocks,
-        ScoreHighlightsCapturedEvent.HighlightedChange[] rows, SnapshotInputs inputs, string label)
+        ScoreHighlightsCapturedEvent.HighlightedChange[] rows, SnapshotInputs inputs, string label,
+        ref int remaining, HashSet<Guid> shown)
     {
         if (rows.Length == 0) return;
-        var lines = rows.Select(c => CompactRow(inputs.Charts[c.ChartId], inputs.Bests[c.ChartId]));
+        var used = Estimate($"-# {label}");
+        var lines = new List<string>();
+        foreach (var c in rows)
+        {
+            var row = CompactRow(inputs.Charts[c.ChartId], inputs.Bests[c.ChartId]);
+            var cost = Estimate(row) + 1; // + newline
+            if (used + cost > remaining) break;
+            used += cost;
+            lines.Add(row);
+            shown.Add(c.ChartId);
+        }
+
+        if (lines.Count == 0) return;
+        remaining -= used;
         blocks.Add(new RichBotText($"-# {label}\n" + string.Join("\n", lines)));
     }
 
@@ -313,10 +382,10 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
                $"#LETTERGRADE|{best.Score!.Value.LetterGrade}|{best.IsBroken}##PLATE|{best.Plate}#";
     }
 
-    private static void AddOverflowLine(List<IRichBotBlock> blocks, SnapshotInputs inputs)
+    private static void AddOverflowLine(List<IRichBotBlock> blocks, SnapshotInputs inputs, HashSet<Guid> shown)
     {
-        var shown = inputs.Notable.Concat(inputs.MoreScores).Concat(inputs.CoOpScores)
-            .Select(c => c.ChartId).ToHashSet();
+        // `shown` is what actually rendered (budget-trimmed), so the count reflects the real
+        // remainder — not just what the row caps would have dropped.
         var rest = inputs.Known.Where(c => !shown.Contains(c.ChartId)).ToArray();
         if (rest.Length == 0) return;
 
@@ -409,9 +478,9 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     {
         var lines = new List<string>();
         var titles = e.Milestones.Where(m => m.Kind == MilestoneKind.TitleCompleted).ToArray();
-        lines.AddRange(titles.Take(TitleNameCap).Select(t => $"🏅 **{Bracket(t.Title)}** completed"));
-        if (titles.Length > TitleNameCap)
-            lines.Add($"…and {titles.Length - TitleNameCap} more titles");
+        // Every completion is listed — titles are the card's top priority (owner call), and
+        // the 4000-char budget (not a name cap) is the only backstop.
+        lines.AddRange(titles.Select(t => $"🏅 **{Bracket(t.Title)}** completed"));
 
         // Paragon gains are never counted or aggregated — the new grade IS the content
         // (owner call), so every gain is its own grade-named line.
