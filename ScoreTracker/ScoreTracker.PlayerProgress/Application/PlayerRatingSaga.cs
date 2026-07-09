@@ -87,13 +87,23 @@ internal sealed class PlayerRatingSaga :
         var charts =
             (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
             .ToDictionary(c => c.Id);
-        var scoring = ScoringConfiguration.PumbilityScoring(false);
+        var scoring = ScoringConfiguration.PumbilityScoring(request.Mix, false);
+
+        // Phoenix 2 prices plates and stage breaks into the ranking; Phoenix keeps its
+        // historical plate-blind ordering byte-identical.
+        double Rank(RecordedPhoenixScore s)
+        {
+            return request.Mix == MixEnum.Phoenix2
+                ? scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level, s.Score!.Value,
+                    s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken)
+                : scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level, s.Score!.Value);
+        }
+
         return (await _scores.GetBestScores(request.Mix, request.UserId, cancellationToken))
             .Where(s => charts[s.ChartId].Type != ChartType.CoOp)
             .Where(s => s.Score != null && (request.ChartType == null ||
                                             charts[s.ChartId].Type == request.ChartType))
-            .OrderByDescending(s =>
-                scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level, s.Score!.Value))
+            .OrderByDescending(Rank)
             .Take(request.Count).ToArray();
     }
 
@@ -127,7 +137,7 @@ internal sealed class PlayerRatingSaga :
         var scores = (await _scores.GetPlayerScores(mix, new[] { request.UserId },
             request.chartIds,
             cancellationToken)).ToArray();
-        var pumbility = ScoringConfiguration.PumbilityScoring(true);
+        var pumbility = ScoringConfiguration.PumbilityScoring(mix, true);
         var pumbilityPlus = ScoringConfiguration.PumbilityPlus;
 
         var charts = (await _charts.GetCharts(mix,
@@ -155,16 +165,25 @@ internal sealed class PlayerRatingSaga :
     {
         var mix = request.Mix;
         var oldStats = await _stats.GetStats(mix, request.UserId, cancellationToken);
-        var scoring = ScoringConfiguration.PumbilityScoring(true);
+        var scoring = ScoringConfiguration.PumbilityScoring(mix, true);
         var charts =
             (await _charts.GetCharts(mix, cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
         var recorded =
             (await _scores.GetBestScores(mix, request.UserId, cancellationToken)).ToArray();
+
+        // Phoenix 2's formula prices the plate (and zeroes stage breaks); Phoenix keeps its
+        // historical plate-blind rating byte-identical.
+        double Rate(RecordedPhoenixScore s)
+        {
+            return mix == MixEnum.Phoenix2
+                ? scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level, s.Score!.Value,
+                    s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken)
+                : scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level, s.Score!.Value);
+        }
+
         var scores = recorded
             .Where(s => s.Score != null)
-            .Select(s => new ChartRating(s.ChartId, charts[s.ChartId].Type,
-                scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level,
-                    s.Score!.Value), s.Score!.Value, s.IsBroken))
+            .Select(s => new ChartRating(s.ChartId, charts[s.ChartId].Type, Rate(s), s.Score!.Value, s.IsBroken))
             .ToArray();
         var competitiveScores = recorded.Where(s => s.Score != null)
             .Select(s => new ChartCompetitive(s.ChartId, charts[s.ChartId].Type,
@@ -200,14 +219,23 @@ internal sealed class PlayerRatingSaga :
                 .Take(50).Select(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score))
                 .ToArray());
 
+        // Phoenix 2's official PUMBILITY is TWO independent top-50 pools — Singles and
+        // Doubles — summed (the mixed pool stays Phoenix-only). Summing the int-floored
+        // pools keeps SkillRating == SinglesRating + DoublesRating exactly, so the three
+        // displayed values always reconcile.
+        var skillPool = mix == MixEnum.Phoenix2 ? top50Singles.Concat(top50Doubles).ToArray() : top50;
+        var skillRating = mix == MixEnum.Phoenix2
+            ? (int)top50Singles.Sum(s => s.Rating) + (int)top50Doubles.Sum(s => s.Rating)
+            : (int)top50.Sum(s => s.Rating);
+
         var newStats = new PlayerStatsRecord(request.UserId, (int)scores.Sum(s => s.Rating),
             recorded.Any(r => !r.IsBroken) ? recorded.Where(r => !r.IsBroken).Max(r => charts[r.ChartId].Level) : 1,
             recorded.Count(r => !r.IsBroken),
             (int)coOps.Sum(s => s.Rating),
             (int)AverageOrDefault(coOps.Select(s => (int)s.Score), 0),
-            (int)top50.Sum(s => s.Rating),
-            (int)AverageOrDefault(top50.Select(s => (int)s.Score), 0),
-            AverageOrDefault(top50.Select(s => (int)charts[s.ChartId].Level), 1),
+            skillRating,
+            (int)AverageOrDefault(skillPool.Select(s => (int)s.Score), 0),
+            AverageOrDefault(skillPool.Select(s => (int)charts[s.ChartId].Level), 1),
             (int)top50Singles.Sum(s => s.Rating),
             (int)AverageOrDefault(top50Singles.Select(s => (int)s.Score), 0),
             AverageOrDefault(top50Singles.Select(s => (int)charts[s.ChartId].Level), 1),
