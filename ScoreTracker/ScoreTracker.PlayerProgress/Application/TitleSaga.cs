@@ -144,12 +144,16 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
     public async Task Consume(ConsumeContext<TitlesDetectedEvent> context)
     {
         // The site path owns only the badges the score pipeline can't compute
-        // (CompletionRequired == 0): events, play/plate counts, staff. Difficulty, skill,
-        // boss-breaker and co-op completions ride the session card via the score path, so
-        // this path stops announcing them (it still saves everything — DB stays correct).
+        // (CompletionRequired == 0): events, play/plate counts, staff. When the detecting
+        // import also saved scores, these completions are attributed to that session and ride
+        // its snapshot card (no legacy announce — the card carries them); when it saved none,
+        // SessionId is null and they get their own announcement. Either way everything is
+        // saved — the DB stays correct.
+        var sessionId = context.Message.SessionId;
         await ProcessCharts(context.Message.Mix, context.Message.UserId,
             context.Message.TitlesFound.Select(Name.From),
-            context.CancellationToken, siteOnlyAnnounce: true);
+            context.CancellationToken, sessionId: sessionId,
+            announceLegacy: sessionId == null, siteOnlyAnnounce: true);
     }
 
     private ParagonLevel GetLevel(TitleProgress tp)
@@ -249,8 +253,21 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         await ProcessCharts(request.Mix, request.UserId, Array.Empty<Name>(), cancellationToken,
             request.SessionId, announceLegacy: false, mint: false);
 
-        var milestones = await ComputeBatchCompletions(request, cancellationToken);
+        var scoreMilestones = await ComputeBatchCompletions(request, cancellationToken);
         var progress = await ComputeProgressDeltas(request, cancellationToken);
+
+        // The card shows ALL of the session's title completions (owner call), so single-source
+        // them from the milestone table by session: this folds in the site-detection path's
+        // basic-badge completions (written against this same SessionId before the batch
+        // drained) alongside the score-crossing ones just computed — no double-count, since the
+        // two paths own disjoint title sets (CompletionRequired == 0 vs > 0). A null-session
+        // batch (manual entry) has no site path, so it uses the score-crossing list directly.
+        IReadOnlyList<PlayerMilestoneRecord> milestones = request.SessionId == null
+            ? scoreMilestones
+            : (await _milestones.GetMilestonesBySessions(request.UserId, new[] { request.SessionId.Value },
+                    cancellationToken))
+                .Where(m => m.Kind is MilestoneKind.TitleCompleted or MilestoneKind.ParagonLevelGain)
+                .ToArray();
         return new SessionTitlesResult(milestones, progress);
     }
 

@@ -152,6 +152,43 @@ public sealed class HighlightCaptureSagaTests
     }
 
     [Fact]
+    public async Task ScoreQualityIsSuppressedMoreThanFiveLevelsBelowCompetitive()
+    {
+        // Owner call: the default player's competitive level is 20, so a level-14 back-fill
+        // (more than 5 below) never earns a peer flag — even against a cohort it would top.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(14).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 950000);
+        ctx.GivenCohort(chart, Enumerable.Range(0, 10).Select(i => (PhoenixScore)(900000 + i)).ToArray());
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.Highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.Flags.HasFlag(HighlightFlags.ScoreQuality90))),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ScoreQualityStillFlagsExactlyFiveLevelsBelowCompetitive()
+    {
+        // The cutoff is inclusive: level == competitive − 5 (20 − 5 = 15) still compares.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 950000);
+        ctx.GivenCohort(chart, Enumerable.Range(0, 10).Select(i => (PhoenixScore)(900000 + i)).ToArray());
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.Highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, UserId,
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlags.ScoreQuality90))),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task FolderDebutFlagsTheFirstPassesInAFolder()
     {
         // Folder has 10 charts; this is the player's second-ever pass there.

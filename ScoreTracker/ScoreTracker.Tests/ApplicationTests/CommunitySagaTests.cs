@@ -202,8 +202,10 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task NewTitlesAcquiredBroadcastsTitleListToCommunityChannels()
+    public async Task NewTitlesWithNoSessionRenderAsARichTitlesCard()
     {
+        // Zero-score imports (and admin recomputes) still surface title completions — now as
+        // a rich card in the session card's language, not a plain-text list (owner Q1=a).
         var userId = Guid.NewGuid();
         var ctx = new HandlerContext();
         ctx.GivenUser(userId, name: "alice");
@@ -214,14 +216,39 @@ public sealed class CommunitySagaTests
             ParagonUpgrades: new Dictionary<string, string>(),
             Mix: MixEnum.Phoenix)));
 
-        ctx.Bot.Verify(b => b.SendMessages(
-            It.Is<IEnumerable<string>>(msgs => msgs.Any(m => m.Contains("alice") && m.Contains("First Title"))),
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Any(m =>
+                m.Header!.Markdown.Contains("alice")
+                && m.Blocks.OfType<RichBotText>().Any(t =>
+                    t.Markdown.Contains("🏅 **[First Title]** completed")
+                    && t.Markdown.Contains("🏅 **[Second Title]** completed")))),
             It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
-            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task Phoenix2TitleBroadcastCarriesTheMixPrefix()
+    public async Task TitlesCardRendersParagonGainsWithTheirGradeEmoji()
+    {
+        var userId = Guid.NewGuid();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+
+        await ctx.Saga.Consume(BuildContext(new NewTitlesAcquiredEvent(userId,
+            NewTitles: Array.Empty<string>(),
+            ParagonUpgrades: new Dictionary<string, string> { ["Expert Lv. 2"] = "PG" },
+            Mix: MixEnum.Phoenix)));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Any(m =>
+                m.Blocks.OfType<RichBotText>().Any(t =>
+                    t.Markdown.Contains("🏅 **[Expert Lv. 2]** paragon → #PLATE|PerfectGame#")))),
+            It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Phoenix2TitlesCardCarriesTheMixPrefix()
     {
         var userId = Guid.NewGuid();
         var ctx = new HandlerContext();
@@ -233,8 +260,8 @@ public sealed class CommunitySagaTests
             ParagonUpgrades: new Dictionary<string, string>(),
             Mix: MixEnum.Phoenix2)));
 
-        ctx.Bot.Verify(b => b.SendMessages(
-            It.Is<IEnumerable<string>>(msgs => msgs.All(m => m.StartsWith("[Phoenix 2] "))),
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.All(m => m.Header!.Markdown.Contains("[Phoenix 2] "))),
             It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
             It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
@@ -374,6 +401,47 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task MoreScoresStayDescendingByLevelWhenNotableOverflows()
+    {
+        // Bug: when the notable bucket overflows its cap, the extra flagged (low-level) rows
+        // used to leak into "More scores" ahead of higher-level unflagged charts — two
+        // descending runs, not one. The bucket must be a single level-desc run.
+        var userId = Guid.NewGuid();
+        var flaggedLow = Enumerable.Range(0, 11)
+            .Select(_ => new ChartBuilder().WithType(ChartType.Single).WithLevel(5).Build()).ToArray();
+        var plainHigh = new ChartBuilder().WithType(ChartType.Single).WithLevel(23).Build();
+        var all = flaggedLow.Append(plainHigh).ToArray();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, all, score: 950000);
+
+        var changes = flaggedLow.Select(c => (c.Id, true, HighlightFlags.ScoreQuality90))
+            .Append((plainHigh.Id, true, HighlightFlags.None)).ToArray();
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null, changes)));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => MoreScoresAreLevelDescending(msgs)),
+            It.IsAny<IEnumerable<ulong>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // The "More scores" bucket, minus its label line, must be sorted by level descending.
+    private static bool MoreScoresAreLevelDescending(IEnumerable<RichBotMessage> msgs)
+    {
+        var rows = msgs.Single().Blocks.OfType<RichBotText>()
+            .First(t => t.Markdown.StartsWith("-# More scores")).Markdown
+            .Split('\n').Skip(1).ToArray();
+        var levels = rows.Select(r =>
+        {
+            var start = r.IndexOf("#DIFFICULTY|", StringComparison.Ordinal) + "#DIFFICULTY|S".Length;
+            var end = r.IndexOf('#', start);
+            return int.Parse(r[start..end]);
+        }).ToArray();
+        return levels.SequenceEqual(levels.OrderByDescending(l => l));
+    }
+
+    [Fact]
     public async Task StatsAndAchievementsOpenTheCardAsTheirOwnSections()
     {
         var userId = Guid.NewGuid();
@@ -409,8 +477,10 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task TitleListingCapsAtTenNamesAndParagonLinesNeverAggregate()
+    public async Task EveryTitleCompletionIsListedWithNoNameCap()
     {
+        // Owner call: titles are the card's top priority — list them ALL (the 4000-char
+        // budget is the only backstop), never "…and N more titles". Paragons don't aggregate.
         var userId = Guid.NewGuid();
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var ctx = new HandlerContext();
@@ -429,9 +499,10 @@ public sealed class CommunitySagaTests
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
-                t.Markdown.Contains("**[Title 10]** completed")
-                && !t.Markdown.Contains("[Title 11]")
-                && t.Markdown.Contains("…and 2 more titles")
+                t.Markdown.Contains("**[Title 1]** completed")
+                && t.Markdown.Contains("**[Title 11]** completed")
+                && t.Markdown.Contains("**[Title 12]** completed")
+                && !t.Markdown.Contains("more titles")
                 && t.Markdown.Contains("🏅 **[Expert Lv. 2]** paragon → #PLATE|PerfectGame#"))),
             It.IsAny<IEnumerable<ulong>>(),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -487,6 +558,35 @@ public sealed class CommunitySagaTests
                 t.Markdown.Contains($"🏆 **#2** on {charts[5].Song.Name} #DIFFICULTY|S21# weekly")
                 && t.Markdown.Split('\n').Count(line => line.Contains("weekly")) == 4
                 && !t.Markdown.Contains("#DIFFICULTY|S17# weekly"))),
+            It.IsAny<IEnumerable<ulong>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task WeeklyPlacementsBelowCompetitiveMinusFiveAreDropped()
+    {
+        // Owner call: weekly inclusion follows the same competitive − 5 gate as the peer
+        // flag. For a 22-competitive player, weekly placements on S16/S12 are noise; the
+        // S21/S18 placements stay.
+        var userId = Guid.NewGuid();
+        var all = new[] { 21, 18, 16, 12 }
+            .Select(l => new ChartBuilder().WithType(ChartType.Single).WithLevel(l).Build()).ToArray();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, all, score: 950000);
+        ctx.GivenCompetitive(singles: 22);
+        ctx.GivenWeeklyPlacements(all.Select(c => new WeeklyPlacementRecord(c.Id, 3)).ToArray());
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
+            all.Select(c => (c.Id, true, HighlightFlags.None)).ToArray())));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
+                t.Markdown.Contains("#DIFFICULTY|S21# weekly")
+                && t.Markdown.Contains("#DIFFICULTY|S18# weekly")
+                && !t.Markdown.Contains("#DIFFICULTY|S16# weekly")
+                && !t.Markdown.Contains("#DIFFICULTY|S12# weekly"))),
             It.IsAny<IEnumerable<ulong>>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -699,6 +799,30 @@ public sealed class CommunitySagaTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public async Task TheFolderBreakdownSurvivesAScoreHeavyCard()
+    {
+        // Owner call: the folder line is reserved before scores fill in, so a card packed
+        // with notable rows still ends with it — the scores overflow to the count line.
+        var userId = Guid.NewGuid();
+        var charts = Enumerable.Range(0, 40)
+            .Select(_ => new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build()).ToArray();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, charts, score: 950000);
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
+            charts.Select(c => (c.Id, true, HighlightFlags.ScoreQuality90)).ToArray())));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs =>
+                msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("#DIFFICULTY|S20# 1/40"))
+                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains(" more:"))),
+            It.IsAny<IEnumerable<ulong>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private static ScoreHighlightsCapturedEvent CapturedEvent(Guid userId, MixEnum mix, Guid? sessionId,
         params (Guid ChartId, bool IsNewPass, HighlightFlags Flags)[] changes)
     {
@@ -851,6 +975,7 @@ public sealed class CommunitySagaTests
         public Mock<IUserReader> Users { get; } = new();
         public Mock<IChartRepository> Charts { get; } = new();
         public Mock<IScoreReader> Scores { get; } = new();
+        public Mock<IPlayerStatsReader> PlayerStats { get; } = new();
         public Mock<IMediator> Mediator { get; } = new();
         public Mock<IDateTimeOffsetAccessor> DateTime { get; } = FakeDateTime.At(Now);
         public CommunitySaga Saga { get; }
@@ -862,8 +987,24 @@ public sealed class CommunitySagaTests
             CurrentUser.SetupGet(u => u.IsLoggedIn).Returns(isLoggedIn);
             Communities.Setup(c => c.GetCommunities(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
+            // Default competitive levels of 0 leave the weekly gate wide open (threshold −5);
+            // tests exercising the gate raise them with GivenCompetitive.
+            PlayerStats.Setup(p => p.GetStats(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+                It.IsAny<CancellationToken>())).ReturnsAsync(Stats(0, 0));
             Saga = new CommunitySaga(CurrentUser.Object, Communities.Object, Bot.Object, Users.Object,
-                Charts.Object, Scores.Object, Mediator.Object, DateTime.Object);
+                Charts.Object, Scores.Object, Mediator.Object, PlayerStats.Object, DateTime.Object);
+        }
+
+        private static PlayerStatsRecord Stats(double singlesCompetitive, double doublesCompetitive)
+        {
+            return new PlayerStatsRecord(Guid.Empty, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1,
+                0, singlesCompetitive, doublesCompetitive);
+        }
+
+        public void GivenCompetitive(double singles, double doubles = 0)
+        {
+            PlayerStats.Setup(p => p.GetStats(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+                It.IsAny<CancellationToken>())).ReturnsAsync(Stats(singles, doubles));
         }
 
         public void GivenCommunityExists(string name)

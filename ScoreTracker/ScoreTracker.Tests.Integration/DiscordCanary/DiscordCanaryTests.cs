@@ -56,7 +56,8 @@ public sealed class DiscordCanaryTests
         });
         await ready.Task.WaitAsync(TimeSpan.FromSeconds(30));
 
-        await bot.SendRichMessages(new[] { SamplePassesCard(marker), SampleDigestCard(marker) },
+        await bot.SendRichMessages(
+            new[] { SamplePassesCard(marker), SampleDigestCard(marker), SampleTitlesCard(marker) },
             new[] { ChannelId!.Value });
 
         // Independent REST readback — proves the messages actually landed with V2
@@ -67,7 +68,7 @@ public sealed class DiscordCanaryTests
         var recent = (await channel.GetMessagesAsync(15).FlattenAsync()).ToArray();
         var mine = recent.Where(m => ComponentTexts(m.Components).Any(t => t.Contains(marker))).ToArray();
 
-        Assert.Equal(2, mine.Length);
+        Assert.Equal(3, mine.Length);
         await bot.Stop();
     }
 
@@ -118,7 +119,9 @@ public sealed class DiscordCanaryTests
                 new RichBotDivider(),
                 new RichBotText("📈 **PUMBILITY** 0 → **18,437** (+18,437)"),
                 new RichBotDivider(),
-                new RichBotText("🏅 **[Intermediate Lv. 1]** completed\n…and 4 more titles\n" +
+                new RichBotText("🏅 **[Intermediate Lv. 1]** completed\n" +
+                                "🏅 **[Advanced Lv. 1]** completed\n" +
+                                "🏅 **[RISE CHALLENGER]** completed\n" +
                                 "🎉 #DIFFICULTY|s13# **All passed!**"),
                 new RichBotDivider(),
                 new RichBotSection(
@@ -133,6 +136,26 @@ public sealed class DiscordCanaryTests
             },
             $"#MIX|Phoenix2# Phoenix2 · PIU Scores · {marker}",
             MixEnum.Phoenix2.GetAccentColor(),
+            new[] { new RichBotLink("See more", new Uri("https://piuscores.arroweclip.se")) });
+    }
+
+    // Iteration 3: the standalone titles-card — a zero-score import (detected badges but saved
+    // no scores) or an admin recompute renders completions and paragon gains in the session
+    // card's language, no scores/folder sections.
+    private static RichBotMessage SampleTitlesCard(string marker)
+    {
+        return new RichBotMessage(
+            new RichBotSection("### **Canary** — 3 titles · 1 paragon", Avatar),
+            new IRichBotBlock[]
+            {
+                new RichBotDivider(),
+                new RichBotText("🏅 **[RISE CHALLENGER]** completed\n" +
+                                "🏅 **[The 1st]** completed\n" +
+                                "🏅 **[Extra Stage Clearer]** completed\n" +
+                                "🏅 **[Expert Lv. 2]** paragon → #PLATE|PerfectGame#")
+            },
+            $"#MIX|Phoenix# Phoenix · PIU Scores · {marker}",
+            MixEnum.Phoenix.GetAccentColor(),
             new[] { new RichBotLink("See more", new Uri("https://piuscores.arroweclip.se")) });
     }
 

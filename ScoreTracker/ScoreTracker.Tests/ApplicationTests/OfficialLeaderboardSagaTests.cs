@@ -370,6 +370,31 @@ public sealed class OfficialLeaderboardSagaTests
     }
 
     [Fact]
+    public async Task DetectedTitlesCarryTheRunSessionWhenScoresWereSaved()
+    {
+        // When the run saved scores, the detected titles ride that session's snapshot card —
+        // the event carries the same run id the scores were stamped with.
+        var chart = new ChartBuilder().Build();
+        var f = ArrangeImport(
+            officialScores: new[] { new OfficialRecordedScore(chart, 920000, PhoenixPlate.FairGame) },
+            existingScores: Array.Empty<RecordedPhoenixScore>());
+        var saga = BuildImportSaga(f);
+        Guid? scoreSession = null;
+        f.Mediator.Setup(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest, CancellationToken>((cmd, _) =>
+                scoreSession = ((UpdatePhoenixBestAttemptCommand)cmd).SessionId);
+        Guid? titleSession = null;
+        f.Bus.Setup(b => b.Publish(It.IsAny<TitlesDetectedEvent>(), It.IsAny<CancellationToken>()))
+            .Callback<TitlesDetectedEvent, CancellationToken>((e, _) => titleSession = e.SessionId)
+            .Returns(Task.CompletedTask);
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        Assert.NotNull(titleSession);
+        Assert.Equal(scoreSession, titleSession);
+    }
+
+    [Fact]
     public async Task ImportUpdatesGameTagAndAvatarPreservingOtherProfileFields()
     {
         var f = ArrangeImport();
