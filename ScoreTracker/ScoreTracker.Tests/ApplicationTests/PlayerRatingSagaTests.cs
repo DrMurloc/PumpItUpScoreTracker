@@ -389,6 +389,62 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
+    public async Task Phoenix2SessionsMintSinglesAndDoublesPumbilityMilestones()
+    {
+        // P2's title ladder gates on the per-type pools, so pool gains are milestones
+        // there — alongside the total PUMBILITY gain.
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var dbl = new ChartBuilder().WithType(ChartType.Double).WithLevel(22).Build();
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix2, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        var milestones = new Mock<IPlayerMilestoneRepository>();
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { single, dbl }, MixEnum.Phoenix2),
+            scores: ScoresMockReturning(userId, new[] { Score(single.Id, 950000), Score(dbl.Id, 960000) },
+                MixEnum.Phoenix2),
+            stats: stats, milestones: milestones);
+
+        await saga.Handle(new RecalculateStatsCommand(userId, MixEnum.Phoenix2, new[] { single.Id, dbl.Id },
+            sessionId), CancellationToken.None);
+
+        milestones.Verify(m => m.Append(MixEnum.Phoenix2, userId,
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w =>
+                w.Any(x => x.Kind == MilestoneKind.PumbilityGain && x.SessionId == sessionId)
+                && w.Any(x => x.Kind == MilestoneKind.SinglesPumbilityGain)
+                && w.Any(x => x.Kind == MilestoneKind.DoublesPumbilityGain)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task PhoenixSessionsNeverMintPerTypePumbilityMilestones()
+    {
+        // Phoenix stays total-only: its S/D ratings exist too, but pre-P2 sessions never
+        // minted them and shouldn't start now.
+        var userId = Guid.NewGuid();
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        var milestones = new Mock<IPlayerMilestoneRepository>();
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { single }),
+            scores: ScoresMockReturning(userId, new[] { Score(single.Id, 950000) }),
+            stats: stats, milestones: milestones);
+
+        await saga.Handle(new RecalculateStatsCommand(userId, MixEnum.Phoenix, new[] { single.Id },
+            Guid.NewGuid()), CancellationToken.None);
+
+        milestones.Verify(m => m.Append(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w =>
+                w.Any(x => x.Kind == MilestoneKind.SinglesPumbilityGain
+                           || x.Kind == MilestoneKind.DoublesPumbilityGain)),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task Phoenix2SkillRatingIsTheSumOfTheSinglesAndDoublesTop50Pools()
     {
         // Phoenix 2's official PUMBILITY: two independent top-50 pools summed, each chart

@@ -10,7 +10,8 @@
 
     private string KindLabel => Milestone.Kind switch
     {
-        MilestoneKind.PumbilityGain => "PUMBILITY",
+        MilestoneKind.PumbilityGain or MilestoneKind.SinglesPumbilityGain
+            or MilestoneKind.DoublesPumbilityGain => "PUMBILITY",
         MilestoneKind.SinglesCompetitiveGain or MilestoneKind.DoublesCompetitiveGain => @L["Competitive"],
         MilestoneKind.TitleCompleted => @L["Title"],
         MilestoneKind.ParagonLevelGain => @L["Paragon"],
@@ -22,6 +23,10 @@
     {
         MilestoneKind.PumbilityGain =>
             $"{Milestone.OldValue:N0} → {Milestone.NewValue:N0} (+{Milestone.NewValue - Milestone.OldValue:N0})",
+        MilestoneKind.SinglesPumbilityGain =>
+            $"{L["Singles"]} {Milestone.OldValue:N0} → {Milestone.NewValue:N0} (+{Milestone.NewValue - Milestone.OldValue:N0})",
+        MilestoneKind.DoublesPumbilityGain =>
+            $"{L["Doubles"]} {Milestone.OldValue:N0} → {Milestone.NewValue:N0} (+{Milestone.NewValue - Milestone.OldValue:N0})",
         MilestoneKind.SinglesCompetitiveGain =>
             $"{L["Singles"]} {Milestone.OldValue:0.00} → {Milestone.NewValue:0.00}",
         MilestoneKind.DoublesCompetitiveGain =>

@@ -292,6 +292,19 @@ internal sealed class PlayerRatingSaga :
         if (newStats.SkillRating > oldStats.SkillRating)
             milestones.Add(new PlayerMilestoneWrite(MilestoneKind.PumbilityGain, request.SessionId, _dateTime.Now,
                 oldStats.SkillRating, newStats.SkillRating));
+        // Phoenix 2's separate Singles/Doubles PUMBILITY pools mint their own milestones —
+        // the P2 title ladder gates on them. Phoenix stays total-only: its S/D ratings
+        // exist too, but pre-P2 sessions never minted them and shouldn't start now.
+        if (request.Mix == MixEnum.Phoenix2)
+        {
+            if (newStats.SinglesRating > oldStats.SinglesRating)
+                milestones.Add(new PlayerMilestoneWrite(MilestoneKind.SinglesPumbilityGain, request.SessionId,
+                    _dateTime.Now, oldStats.SinglesRating, newStats.SinglesRating));
+            if (newStats.DoublesRating > oldStats.DoublesRating)
+                milestones.Add(new PlayerMilestoneWrite(MilestoneKind.DoublesPumbilityGain, request.SessionId,
+                    _dateTime.Now, oldStats.DoublesRating, newStats.DoublesRating));
+        }
+
         if (CompetitiveGained(oldStats.SinglesCompetitiveLevel, newStats.SinglesCompetitiveLevel))
             milestones.Add(new PlayerMilestoneWrite(MilestoneKind.SinglesCompetitiveGain, request.SessionId,
                 _dateTime.Now, oldStats.SinglesCompetitiveLevel, newStats.SinglesCompetitiveLevel));
