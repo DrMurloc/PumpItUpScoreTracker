@@ -7,4 +7,5 @@ public sealed record ScoreHighlightRecord(
     DateTimeOffset OccurredAt,
     HighlightFlags Flags,
     int Level,
-    double? ScoringLevel);
+    double? ScoringLevel,
+    HighlightDetail? Detail = null);

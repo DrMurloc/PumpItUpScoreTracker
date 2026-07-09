@@ -42,7 +42,7 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.UserTitle` | Titles earned per mix, with paragon progression |
 | `scores.UserHighestTitle` | Denormalized current-highest title per mix (PK UserId+MixId) for fast reads |
 | `scores.SuggestionFeedback` | User feedback on chart recommendations |
-| `scores.ScoreHighlight` | Write-time noteworthy-score flags per journal row (crown, title progress, Score Quality ≥90th, folder ≥90%, competitive improver, folder debut), denormalized Level/ScoringLevel for noteworthy ordering; joined to the journal by (SessionId, ChartId). Never backfilled |
+| `scores.ScoreHighlight` | Write-time noteworthy-score flags per journal row (crown, title progress, Score Quality ≥90th, folder ≥90%, competitive improver, folder debut), denormalized Level/ScoringLevel for noteworthy ordering plus per-flag caption detail (PumbilityRank, FolderDebutOrdinal, Peer{Count,BetterCount,PgCount}, SkillTitle{Name,Score,Threshold}); joined to the journal by (SessionId, ChartId). Never backfilled |
 | `scores.PlayerMilestone` | Session-level milestones with timestamps: Pumbility gains, Singles/Doubles competitive gains, title completions, paragon gains, folder lamps (Kind + compact Detail payload). Never backfilled |
 
 ## Chart Intelligence (vertical: `ScoreTracker.ChartIntelligence`)

@@ -32,4 +32,22 @@ internal sealed class ScoreHighlightEntity
     public int Level { get; set; }
 
     public double? ScoringLevel { get; set; }
+
+    // Caption detail computed at capture (historically true) — see HighlightDetail in
+    // PlayerProgress contracts. Null when the row's flags need no detail.
+    public int? PumbilityRank { get; set; }
+
+    public int? FolderDebutOrdinal { get; set; }
+
+    public int? PeerCount { get; set; }
+
+    public int? PeerBetterCount { get; set; }
+
+    public int? PeerPgCount { get; set; }
+
+    public string? SkillTitleName { get; set; }
+
+    public int? SkillTitleScore { get; set; }
+
+    public int? SkillTitleThreshold { get; set; }
 }

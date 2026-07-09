@@ -31,4 +31,5 @@ internal sealed record ScoreHighlightWrite(
     DateTimeOffset OccurredAt,
     HighlightFlags Flags,
     int Level,
-    double? ScoringLevel);
+    double? ScoringLevel,
+    HighlightDetail? Detail = null);

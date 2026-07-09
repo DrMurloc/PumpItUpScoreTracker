@@ -41,5 +41,6 @@ public sealed record ScoreHighlightsCapturedEvent(
         int? NewScore,
         string? Plate,
         bool IsBroken,
-        HighlightFlags Flags);
+        HighlightFlags Flags,
+        HighlightDetail? Detail = null);
 }
