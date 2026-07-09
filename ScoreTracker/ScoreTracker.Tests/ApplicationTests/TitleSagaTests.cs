@@ -165,6 +165,13 @@ public sealed class TitleSagaTests
             Scores.Setup(s => s.GetBestScores(_mix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(scores);
         }
+
+        public void GivenSessionMilestones(Guid sessionId, params PlayerMilestoneRecord[] milestones)
+        {
+            Milestones.Setup(m => m.GetMilestonesBySessions(It.IsAny<Guid>(),
+                    It.Is<IEnumerable<Guid>>(ids => ids.Contains(sessionId)), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(milestones);
+        }
     }
 
     [Fact]
@@ -204,6 +211,60 @@ public sealed class TitleSagaTests
             Times.Never);
         ctx.Milestones.Verify(m => m.Append(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
             It.IsAny<IEnumerable<PlayerMilestoneWrite>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DetectedBadgesRideTheSessionWhenTheImportSavedScores()
+    {
+        // With a SessionId (the import saved scores), a site-only badge is attributed to that
+        // session and the legacy announcement is suppressed — the snapshot card carries it.
+        var sessionId = Guid.NewGuid();
+        var ctx = new SagaContext(MixEnum.Phoenix);
+
+        await ctx.Saga.Consume(BuildContext(new TitlesDetectedEvent(ctx.UserId,
+            new[] { "RISE CHALLENGER" }, MixEnum.Phoenix, sessionId)));
+
+        ctx.Milestones.Verify(m => m.Append(MixEnum.Phoenix, ctx.UserId,
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w => w.Any(x =>
+                x.Kind == MilestoneKind.TitleCompleted && x.Title == "RISE CHALLENGER"
+                && x.SessionId == sessionId)),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Bus.Verify(b => b.Publish(It.IsAny<NewTitlesAcquiredEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task CaptureSingleSourcesTheSessionsTitleMilestonesFoldingInSiteBadges()
+    {
+        // The card shows ALL of a session's completions: with a SessionId, CaptureSessionTitles
+        // single-sources from the milestone table, folding the site path's basic badges and
+        // paragon gains in with the score-crossing ones — and dropping non-title milestones.
+        var when = new DateTimeOffset(2026, 5, 1, 12, 0, 0, TimeSpan.Zero);
+        var sessionId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(6)
+            .WithSongName("Another Truth").Build();
+        var ctx = new SagaContext(MixEnum.Phoenix, chart);
+        ctx.GivenBestScores(Score(chart.Id, 950000));
+        ctx.GivenSessionMilestones(sessionId,
+            new PlayerMilestoneRecord(MilestoneKind.TitleCompleted, sessionId, when, null, null,
+                "RISE CHALLENGER", null),
+            new PlayerMilestoneRecord(MilestoneKind.ParagonLevelGain, sessionId, when, null, null,
+                "Expert Lv. 2", "PG"),
+            new PlayerMilestoneRecord(MilestoneKind.PumbilityGain, sessionId, when, 1, 2, null, null));
+
+        var result = await ctx.Saga.Handle(new TitleSaga.CaptureSessionTitles(ctx.UserId, MixEnum.Phoenix,
+                sessionId,
+                new[]
+                {
+                    new PlayerScoresUpdatedEvent.ScoreChange(chart.Id, true, null, 950000, "SuperbGame", false)
+                }),
+            CancellationToken.None);
+
+        Assert.Contains(result.Milestones,
+            m => m.Kind == MilestoneKind.TitleCompleted && m.Title == "RISE CHALLENGER");
+        Assert.Contains(result.Milestones,
+            m => m.Kind == MilestoneKind.ParagonLevelGain && m.Title == "Expert Lv. 2");
+        Assert.DoesNotContain(result.Milestones, m => m.Kind == MilestoneKind.PumbilityGain);
     }
 
     private static RecordedPhoenixScore Score(Guid chartId, int score) =>

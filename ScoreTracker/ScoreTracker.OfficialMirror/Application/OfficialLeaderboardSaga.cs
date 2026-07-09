@@ -333,10 +333,6 @@ namespace ScoreTracker.OfficialMirror.Application
                 new UpdateUserGameProfileCommand(accountData.AccountName, accountData.AvatarUrl),
                 cancellationToken);
 
-            await _bus.Publish(new TitlesDetectedEvent(userId, accountData.Titles.Select(t => t.ToString()),
-                    request.Mix),
-                cancellationToken);
-
             var maxPages =
                 await _officialSite.GetScorePageCount(request.Mix, request.Username, request.Password,
                     cancellationToken);
@@ -397,6 +393,13 @@ namespace ScoreTracker.OfficialMirror.Application
                     batch.ToArray(), request.Mix),
                 cancellationToken);
             batch.Clear();
+
+            // Titles are announced last, now that we know whether this run saved any scores.
+            // With a score batch, they ride its session snapshot card (SessionId flows to the
+            // title path); with none, SessionId stays null and they get their own announcement.
+            await _bus.Publish(new TitlesDetectedEvent(userId, accountData.Titles.Select(t => t.ToString()),
+                    request.Mix, toSave.Length > 0 ? importSessionId : null),
+                cancellationToken);
 
             await _mediator.Send(new SaveUserUiSettingCommand(pageCountSetting, maxPages.ToString()),
                 cancellationToken);
