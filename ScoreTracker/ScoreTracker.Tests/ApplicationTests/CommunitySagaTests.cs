@@ -492,6 +492,35 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task WeeklyPlacementsBelowCompetitiveMinusFiveAreDropped()
+    {
+        // Owner call: weekly inclusion follows the same competitive − 5 gate as the peer
+        // flag. For a 22-competitive player, weekly placements on S16/S12 are noise; the
+        // S21/S18 placements stay.
+        var userId = Guid.NewGuid();
+        var all = new[] { 21, 18, 16, 12 }
+            .Select(l => new ChartBuilder().WithType(ChartType.Single).WithLevel(l).Build()).ToArray();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, all, score: 950000);
+        ctx.GivenCompetitive(singles: 22);
+        ctx.GivenWeeklyPlacements(all.Select(c => new WeeklyPlacementRecord(c.Id, 3)).ToArray());
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
+            all.Select(c => (c.Id, true, HighlightFlags.None)).ToArray())));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
+                t.Markdown.Contains("#DIFFICULTY|S21# weekly")
+                && t.Markdown.Contains("#DIFFICULTY|S18# weekly")
+                && !t.Markdown.Contains("#DIFFICULTY|S16# weekly")
+                && !t.Markdown.Contains("#DIFFICULTY|S12# weekly"))),
+            It.IsAny<IEnumerable<ulong>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task CoOpsShowAsACompactBucketCappedAtFive()
     {
         var userId = Guid.NewGuid();
@@ -851,6 +880,7 @@ public sealed class CommunitySagaTests
         public Mock<IUserReader> Users { get; } = new();
         public Mock<IChartRepository> Charts { get; } = new();
         public Mock<IScoreReader> Scores { get; } = new();
+        public Mock<IPlayerStatsReader> PlayerStats { get; } = new();
         public Mock<IMediator> Mediator { get; } = new();
         public Mock<IDateTimeOffsetAccessor> DateTime { get; } = FakeDateTime.At(Now);
         public CommunitySaga Saga { get; }
@@ -862,8 +892,24 @@ public sealed class CommunitySagaTests
             CurrentUser.SetupGet(u => u.IsLoggedIn).Returns(isLoggedIn);
             Communities.Setup(c => c.GetCommunities(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
+            // Default competitive levels of 0 leave the weekly gate wide open (threshold −5);
+            // tests exercising the gate raise them with GivenCompetitive.
+            PlayerStats.Setup(p => p.GetStats(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+                It.IsAny<CancellationToken>())).ReturnsAsync(Stats(0, 0));
             Saga = new CommunitySaga(CurrentUser.Object, Communities.Object, Bot.Object, Users.Object,
-                Charts.Object, Scores.Object, Mediator.Object, DateTime.Object);
+                Charts.Object, Scores.Object, Mediator.Object, PlayerStats.Object, DateTime.Object);
+        }
+
+        private static PlayerStatsRecord Stats(double singlesCompetitive, double doublesCompetitive)
+        {
+            return new PlayerStatsRecord(Guid.Empty, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1,
+                0, singlesCompetitive, doublesCompetitive);
+        }
+
+        public void GivenCompetitive(double singles, double doubles = 0)
+        {
+            PlayerStats.Setup(p => p.GetStats(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+                It.IsAny<CancellationToken>())).ReturnsAsync(Stats(singles, doubles));
         }
 
         public void GivenCommunityExists(string name)

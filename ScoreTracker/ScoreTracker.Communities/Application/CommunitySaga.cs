@@ -48,11 +48,12 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     private readonly IMediator _mediator;
     private readonly IScoreReader _scores;
     private readonly IUserReader _users;
+    private readonly IPlayerStatsReader _playerStats;
     private readonly IDateTimeOffsetAccessor _dateTime;
 
     public CommunitySaga(ICurrentUserAccessor currentUser, ICommunityRepository communities, IBotClient bot,
         IUserReader users, IChartRepository charts, IScoreReader scores, IMediator mediator,
-        IDateTimeOffsetAccessor dateTime)
+        IPlayerStatsReader playerStats, IDateTimeOffsetAccessor dateTime)
     {
         _currentUser = currentUser;
         _communities = communities;
@@ -61,6 +62,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         _charts = charts;
         _scores = scores;
         _mediator = mediator;
+        _playerStats = playerStats;
         _dateTime = dateTime;
     }
 
@@ -198,12 +200,16 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         }
 
         // The weekly read: current placements for whichever batch charts sit on this
-        // week's board. Failure costs the weekly lines, never the card.
+        // week's board. Gated on competitive − 5 (owner call) exactly like the peer flag —
+        // a 23-competitive player placing on a weekly D10 is the same noise. Failure costs
+        // the weekly lines, never the card.
         var weekly = Array.Empty<WeeklyPlacementRecord>();
         try
         {
+            var stats = await _playerStats.GetStats(e.Mix, e.UserId, context.CancellationToken);
             weekly = (await _mediator.Send(new GetUserWeeklyPlacementsQuery(e.UserId, e.Mix,
                     known.Select(c => c.ChartId).Distinct().ToArray()), context.CancellationToken))
+                .Where(w => (int)charts[w.ChartId].Level >= CompetitiveFor(charts[w.ChartId].Type, stats) - 5)
                 .OrderByDescending(w => (int)charts[w.ChartId].Level)
                 .Take(WeeklyLineCap)
                 .ToArray();
@@ -578,6 +584,18 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     private static string Charts(int count)
     {
         return count == 1 ? "chart" : "charts";
+    }
+
+    // The competitive level for a chart's type; co-op (and anything without a competitive
+    // side) returns 0, so its gate threshold is −5 and it never gets filtered.
+    private static double CompetitiveFor(ChartType type, PlayerStatsRecord stats)
+    {
+        return type switch
+        {
+            ChartType.Single => stats.SinglesCompetitiveLevel,
+            ChartType.Double => stats.DoublesCompetitiveLevel,
+            _ => 0
+        };
     }
 
     public async Task Consume(ConsumeContext<UserUpdatedEvent> context)
