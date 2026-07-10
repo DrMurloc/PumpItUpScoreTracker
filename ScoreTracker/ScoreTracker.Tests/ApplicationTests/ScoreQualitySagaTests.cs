@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -55,7 +55,7 @@ public sealed class ScoreQualitySagaTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(competitors);
 
-        var saga = new ScoreQualitySaga(accessor.Object, playerStats.Object, cache, charts.Object, scores.Object);
+        var saga = new ScoreQualitySaga(accessor.Object, playerStats.Object, cache, charts.Object, scores.Object, new CohortScoreProvider(playerStats.Object, scores.Object, cache));
 
         var result = await saga.Handle(new GetCompetitivePlayersQuery(ChartType.Single), CancellationToken.None);
 
@@ -94,7 +94,7 @@ public sealed class ScoreQualitySagaTests
                 new RecordedPhoenixScore(chart.Id, 950000, PhoenixPlate.PerfectGame, false, DateTimeOffset.UtcNow)
             });
 
-        var saga = new ScoreQualitySaga(accessor.Object, playerStats.Object, cache, charts.Object, scores.Object);
+        var saga = new ScoreQualitySaga(accessor.Object, playerStats.Object, cache, charts.Object, scores.Object, new CohortScoreProvider(playerStats.Object, scores.Object, cache));
 
         var result = await saga.Handle(new GetPlayerScoreQualityQuery(DifficultyLevel.From(20), ChartType.Single),
             CancellationToken.None);
@@ -139,7 +139,7 @@ public sealed class ScoreQualitySagaTests
                 new RecordedPhoenixScore(chart.Id, 990000, PhoenixPlate.PerfectGame, false, DateTimeOffset.UtcNow)
             });
 
-        var saga = new ScoreQualitySaga(accessor.Object, playerStats.Object, cache, charts.Object, scores.Object);
+        var saga = new ScoreQualitySaga(accessor.Object, playerStats.Object, cache, charts.Object, scores.Object, new CohortScoreProvider(playerStats.Object, scores.Object, cache));
 
         var result = await saga.Handle(new GetPlayerScoreQualityQuery(DifficultyLevel.From(20), ChartType.Single),
             CancellationToken.None);
@@ -192,8 +192,11 @@ public sealed class ScoreQualitySagaTests
             });
 
         var chartIds = new[] { playedChart.Id, unplayedChart.Id };
-        var saga1 = new ScoreQualitySaga(accessor1.Object, playerStats.Object, cache, charts.Object, scores.Object);
-        var saga2 = new ScoreQualitySaga(accessor2.Object, playerStats.Object, cache, charts.Object, scores.Object);
+        var provider = new CohortScoreProvider(playerStats.Object, scores.Object, cache);
+        var saga1 = new ScoreQualitySaga(accessor1.Object, playerStats.Object, cache, charts.Object, scores.Object,
+            provider);
+        var saga2 = new ScoreQualitySaga(accessor2.Object, playerStats.Object, cache, charts.Object, scores.Object,
+            provider);
 
         var result1 = await saga1.Handle(new GetChartScoreRankingsQuery(chartIds), CancellationToken.None);
         var result2 = await saga2.Handle(new GetChartScoreRankingsQuery(chartIds), CancellationToken.None);
@@ -204,8 +207,8 @@ public sealed class ScoreQualitySagaTests
         Assert.Equal(result1[playedChart.Id], result2[playedChart.Id]);
         Assert.Equal(result1[unplayedChart.Id], result2[unplayedChart.Id]);
 
-        // The second user's rankings — including the chart nobody in the cohort has
-        // played — must come from cache, not a second ledger query.
+        // The second user's rankings â€” including the chart nobody in the cohort has
+        // played â€” must come from cache, not a second ledger query.
         scores.Verify(r => r.GetPlayerScores(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
             It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()), Times.Once);
     }

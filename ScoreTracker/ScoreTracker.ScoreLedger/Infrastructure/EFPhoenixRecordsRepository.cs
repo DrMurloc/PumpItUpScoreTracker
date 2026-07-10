@@ -100,6 +100,17 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             .ToHashSet();
     }
 
+    async Task<int> IScoreReader.GetPlayDayCount(MixEnum mix, Guid userId, CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.Set<ScoreEventJournalEntity>()
+            .Where(e => e.UserId == userId && e.MixId == mixId)
+            .Select(e => e.OccurredAt.Date)
+            .Distinct()
+            .CountAsync(cancellationToken);
+    }
+
     Task<IEnumerable<BestXXChartAttempt>> IScoreReader.GetBestXXAttempts(Guid userId,
         CancellationToken cancellationToken)
     {

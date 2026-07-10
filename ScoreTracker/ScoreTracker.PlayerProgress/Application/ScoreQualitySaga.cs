@@ -17,18 +17,20 @@ internal sealed class ScoreQualitySaga :
 {
     private readonly IMemoryCache _cache;
     private readonly IChartRepository _charts;
+    private readonly CohortScoreProvider _cohorts;
     private readonly IPlayerStatsReader _playerStats;
     private readonly ICurrentUserAccessor _user;
     private readonly IScoreReader _scores;
 
     public ScoreQualitySaga(ICurrentUserAccessor user, IPlayerStatsReader playerStats, IMemoryCache cache,
-        IChartRepository charts, IScoreReader scores)
+        IChartRepository charts, IScoreReader scores, CohortScoreProvider cohorts)
     {
         _user = user;
         _playerStats = playerStats;
         _cache = cache;
         _charts = charts;
         _scores = scores;
+        _cohorts = cohorts;
     }
 
     public async Task<IDictionary<Guid, ScoreRankingRecord>> Handle(GetChartScoreRankingsQuery request,
@@ -73,9 +75,8 @@ internal sealed class ScoreQualitySaga :
                 });
     }
 
-    // Half-level buckets let players of similar strength share cached cohorts and
-    // cohort scores; exact-level keys made every cache entry per-user, so each visitor
-    // paid for their own copy of the same near-identical ledger query.
+    // The bucketing/caching itself lives in CohortScoreProvider (shared with the recap
+    // saga); this class only resolves "the current web user's bucket".
     private async Task<double> GetCompetitiveLevelBucket(MixEnum mix, ChartType chartType,
         CancellationToken cancellationToken)
     {
@@ -83,21 +84,14 @@ internal sealed class ScoreQualitySaga :
         var competitiveLevel = chartType == ChartType.Single
             ? myStats.SinglesCompetitiveLevel
             : myStats.DoublesCompetitiveLevel;
-        return Math.Round(competitiveLevel * 2, MidpointRounding.AwayFromZero) / 2.0;
+        return CohortScoreProvider.Bucket(competitiveLevel);
     }
 
     private async Task<IEnumerable<Guid>> GetComparablePlayers(MixEnum mix, ChartType chartType,
         CancellationToken cancellationToken)
     {
         var bucket = await GetCompetitiveLevelBucket(mix, chartType, cancellationToken);
-        return await _cache.GetOrCreateAsync(
-            $"{nameof(ScoreQualitySaga)}__{nameof(GetComparablePlayers)}__{mix}__{bucket}__{chartType}",
-            async o =>
-            {
-                o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
-                return (await _playerStats.GetPlayersByCompetitiveRange(mix, chartType, bucket,
-                    .5, cancellationToken)).ToArray().AsEnumerable();
-            }) ?? Array.Empty<Guid>();
+        return await _cohorts.GetComparablePlayers(mix, chartType, bucket, cancellationToken);
     }
 
     private async Task<IDictionary<Guid, PhoenixScore[]>> GetPlayerScores(MixEnum mix, ChartType chartType,
@@ -123,7 +117,9 @@ internal sealed class ScoreQualitySaga :
         ISet<Guid> chartIds,
         CancellationToken cancellationToken)
     {
-        var playerScores = await GetCohortScoresByChart(mix, chartType, chartIds, cancellationToken);
+        var bucket = await GetCompetitiveLevelBucket(mix, chartType, cancellationToken);
+        var playerScores = await _cohorts.GetCohortScoresByChart(mix, chartType, bucket, chartIds,
+            cancellationToken);
 
         return (await _scores.GetBestScores(mix, _user.User.Id, cancellationToken))
             .Where(s => chartIds.Contains(s.ChartId))
@@ -145,52 +141,6 @@ internal sealed class ScoreQualitySaga :
                     return new ScoreRankingRecord(index / (double)playerScores[c.ChartId].Length,
                         playerScores[c.ChartId].Length);
                 });
-    }
-
-    // Cohort score distributions are cached per chart (not per requested chart set) so
-    // overlapping pages — home recommendations, uploads, breakdowns — hit the same
-    // entries, and only genuinely unseen charts reach the ledger.
-    private async Task<IReadOnlyDictionary<Guid, PhoenixScore[]>> GetCohortScoresByChart(MixEnum mix,
-        ChartType chartType, ISet<Guid> chartIds, CancellationToken cancellationToken)
-    {
-        var bucket = await GetCompetitiveLevelBucket(mix, chartType, cancellationToken);
-        var result = new Dictionary<Guid, PhoenixScore[]>();
-        var missing = new List<Guid>();
-        foreach (var chartId in chartIds)
-            if (_cache.TryGetValue(CohortScoresKey(mix, chartType, bucket, chartId),
-                    out PhoenixScore[]? cached) && cached != null)
-            {
-                if (cached.Length > 0) result[chartId] = cached;
-            }
-            else
-            {
-                missing.Add(chartId);
-            }
-
-        if (!missing.Any()) return result;
-
-        var players = await GetComparablePlayers(mix, chartType, cancellationToken);
-        var fetched = (await _scores.GetPlayerScores(mix, players, missing, cancellationToken))
-            .GroupBy(c => c.ChartId)
-            .ToDictionary(g => g.Key,
-                g => g.OrderBy(s => s.Score).Select(s => s.Score).ToArray());
-        foreach (var chartId in missing)
-        {
-            var scores = fetched.TryGetValue(chartId, out var chartScores)
-                ? chartScores
-                : Array.Empty<PhoenixScore>();
-            // Charts nobody in the cohort has played are cached as empty so they don't
-            // re-trigger the ledger query on every page load.
-            _cache.Set(CohortScoresKey(mix, chartType, bucket, chartId), scores, TimeSpan.FromHours(1));
-            if (scores.Length > 0) result[chartId] = scores;
-        }
-
-        return result;
-    }
-
-    private static string CohortScoresKey(MixEnum mix, ChartType chartType, double bucket, Guid chartId)
-    {
-        return $"{nameof(ScoreQualitySaga)}__CohortScores__{mix}__{chartType}__{bucket}__{chartId}";
     }
 
     public async Task<IEnumerable<Guid>> Handle(GetCompetitivePlayersQuery request, CancellationToken cancellationToken)
