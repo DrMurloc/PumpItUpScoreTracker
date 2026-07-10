@@ -2656,4 +2656,10 @@
   <data name="If your scores made the trip: {0} of your {1} passes map onto Phoenix 2 charts." xml:space="preserve">
     <value>If your scores made the trip: {0} of your {1} passes map onto Phoenix 2 charts.</value>
   </data>
+  <data name="only {0} have it" xml:space="preserve">
+    <value>only {0} have it</value>
+  </data>
+  <data name="Rebuild Recap PG Cards" xml:space="preserve">
+    <value>Rebuild Recap PG Cards</value>
+  </data>
 </root>

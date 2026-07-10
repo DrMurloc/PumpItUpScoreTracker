@@ -2,7 +2,6 @@ using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Models.Titles.Phoenix;
 using ScoreTracker.PlayerProgress.Contracts.Events;
@@ -28,6 +27,7 @@ namespace ScoreTracker.PlayerProgress.Application;
 ///     and the bucket-cached cohort scores.
 /// </summary>
 internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
+    IConsumer<RebuildRecapPgCardsCommand>,
     IConsumer<ScoreHighlightsCapturedEvent>
 {
     /// <summary>Below this many passes there isn't enough data for a meaningful recap.</summary>
@@ -320,20 +320,77 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
         return badges;
     }
 
-    private IReadOnlyList<RecapChartHighlight> BuildImpressivePgs(RecordedPhoenixScore[] passes,
+    /// <summary>
+    ///     Patch-only sweep: rewrites ImpressivePgs on every stored recap for the mix and
+    ///     nothing else — each payload keeps its rivals, weekly story, and ComputedAt.
+    ///     The targeted backfill for PG-card logic changes (owner call, round four).
+    /// </summary>
+    public async Task Consume(ConsumeContext<RebuildRecapPgCardsCommand> context)
+    {
+        var mix = context.Message.Mix;
+        var cancellationToken = context.CancellationToken;
+        var charts = (await _charts.GetCharts(mix, cancellationToken: cancellationToken))
+            .ToDictionary(c => c.Id);
+        var aggregates = (await _scores.GetChartScoreAggregates(mix, cancellationToken))
+            .ToDictionary(a => a.ChartId);
+        var population = Math.Max(1,
+            (await _scores.GetActiveUserIds(mix, DateTimeOffset.MinValue, cancellationToken)).Count);
+
+        var userIds = (await _recaps.GetRecapUserIds(mix, cancellationToken)).ToArray();
+        _logger.LogInformation("PG-card rebuild starting for {Count} recaps on {Mix}", userIds.Length, mix);
+        var patched = 0;
+        foreach (var userId in userIds)
+            try
+            {
+                var recap = await _recaps.GetRecap(userId, mix, cancellationToken);
+                if (recap == null) continue;
+                var passes = (await _scores.GetBestScores(mix, userId, cancellationToken))
+                    .Where(b => !b.IsBroken)
+                    .ToArray();
+                await _recaps.SaveRecap(userId, mix,
+                    recap with { ImpressivePgs = ComputeImpressivePgs(passes, charts, aggregates, population) },
+                    cancellationToken);
+                patched++;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "PG-card rebuild failed for {UserId} on {Mix}", userId, mix);
+            }
+
+        _logger.LogInformation("PG-card rebuild finished: {Patched} of {Count} on {Mix}",
+            patched, userIds.Length, mix);
+    }
+
+    private IReadOnlyList<RecapRareChart> BuildImpressivePgs(RecordedPhoenixScore[] passes,
         SharedInputs shared)
     {
+        return ComputeImpressivePgs(passes, shared.Charts, shared.ChartAggregates,
+            Math.Max(1, shared.ActiveUserIds.Count));
+    }
+
+    /// <summary>
+    ///     Your top-50 PGs by level form the pool; within it, the rarest win — fewest
+    ///     PG holders sitewide, shown against the whole active population (round four:
+    ///     the tier-list Hard-or-higher filter read badly in the wild).
+    /// </summary>
+    private static IReadOnlyList<RecapRareChart> ComputeImpressivePgs(
+        IEnumerable<RecordedPhoenixScore> passes,
+        IReadOnlyDictionary<Guid, Chart> charts,
+        IReadOnlyDictionary<Guid, ChartScoreAggregate> aggregates,
+        int population)
+    {
         return passes
-            .Where(p => p.Plate == PhoenixPlate.PerfectGame)
-            .Select(p => (Record: p, Chart: shared.Charts.GetValueOrDefault(p.ChartId)))
-            .Where(x => x.Chart != null)
-            .Select(x => (x.Chart!, Tier: shared.PgTiers.GetValueOrDefault(x.Chart!.Id, TierListCategory.Unrecorded)))
-            .Where(x => IsHardOrHigher(x.Tier))
-            .OrderByDescending(x => (int)x.Item1.Level)
-            .ThenByDescending(x => x.Tier)
-            .Take(6)
-            .Select(x => new RecapChartHighlight(x.Item1.Id, x.Item1.Song.Name.ToString(), x.Item1.Type,
-                x.Item1.Level, x.Tier))
+            .Where(p => p.Plate == PhoenixPlate.PerfectGame && charts.ContainsKey(p.ChartId))
+            .Select(p => charts[p.ChartId])
+            .OrderByDescending(c => (int)c.Level)
+            .Take(50)
+            .Select(c => (Chart: c, Aggregate: aggregates.GetValueOrDefault(c.Id)))
+            .Where(x => x.Aggregate is { PgCount: > 0 })
+            .OrderBy(x => x.Aggregate!.PgCount)
+            .ThenByDescending(x => (int)x.Chart.Level)
+            .Take(5)
+            .Select(x => new RecapRareChart(x.Chart.Id, x.Chart.Song.Name.ToString(), x.Chart.Type,
+                x.Chart.Level, x.Aggregate!.PgCount / (double)population, x.Aggregate.PgCount))
             .ToArray();
     }
 
@@ -553,7 +610,6 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
             .GroupBy(t => t.Title)
             .ToDictionary(g => g.Key, g => g.Sum(t => t.Count));
         var titledUsers = await _titles.CountTitledUsers(cancellationToken);
-        var pgTiers = await LoadTierCategories("PG", mix, cancellationToken);
         var chartAggregates = (await _scores.GetChartScoreAggregates(mix, cancellationToken))
             .ToDictionary(a => a.ChartId);
 
@@ -577,7 +633,6 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
             titleHolders,
             titledUsers,
             PhoenixTitleList.BuildList().Count(),
-            pgTiers,
             charts.Values.Where(c => RecapBadges.IsBanYaArtist(c.Song.Artist)).Select(c => c.Id).ToHashSet(),
             charts.Values.Where(c => c.Type == ChartType.CoOp && (int)c.Level == 2).Select(c => c.Id)
                 .ToHashSet(),
@@ -587,19 +642,6 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
                 c.Type == ChartType.Single && (int)c.Level == 22 &&
                 c.Song.Name.ToString().Contains("Uh-Heung", StringComparison.OrdinalIgnoreCase))?.Id,
             folders);
-    }
-
-    private async Task<IReadOnlyDictionary<Guid, TierListCategory>> LoadTierCategories(Name tierListName,
-        MixEnum mix, CancellationToken cancellationToken)
-    {
-        return (await _mediator.Send(new GetTierListQuery(tierListName, mix), cancellationToken))
-            .GroupBy(e => e.ChartId)
-            .ToDictionary(g => g.Key, g => g.First().Category);
-    }
-
-    private static bool IsHardOrHigher(TierListCategory category)
-    {
-        return category is TierListCategory.Hard or TierListCategory.VeryHard or TierListCategory.Underrated;
     }
 
     private sealed record FolderCharts(ChartType Type, DifficultyLevel Level, IReadOnlyList<Guid> ChartIds);
@@ -618,7 +660,6 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
         IReadOnlyDictionary<Name, int> TitleHolders,
         int TitledUsers,
         int TotalTitles,
-        IReadOnlyDictionary<Guid, TierListCategory> PgTiers,
         IReadOnlySet<Guid> BanYaChartIds,
         IReadOnlySet<Guid> CoOpX2ChartIds,
         IReadOnlySet<Guid> Singles24PlusChartIds,

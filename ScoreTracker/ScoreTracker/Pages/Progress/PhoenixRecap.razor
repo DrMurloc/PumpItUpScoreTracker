@@ -217,7 +217,7 @@ else if (_user != null && _recap != null)
                                 <span class="precap-cat precap-cat-hl">@L["Perfect Games"]</span>
                                 @foreach (var pg in _recap.ImpressivePgs)
                                 {
-                                    <div class="precap-row">@Pill(pg.ChartType, pg.Level)<span class="precap-song">@pg.SongName</span><span class="precap-meta precap-hot">@TierName(pg.Difficulty)</span></div>
+                                    <div class="precap-row">@Pill(pg.ChartType, pg.Level)<span class="precap-song">@pg.SongName</span><span class="precap-meta precap-hot">@L["only {0} have it", pg.PassRate.ToString("P1")]</span></div>
                                 }
                             </div>
                         }
@@ -618,16 +618,6 @@ else if (_user != null && _recap != null)
             RecapPlayerType.BalancedPlayer => L["Balanced Player"],
             RecapPlayerType.Competitive => L["Competitive"],
             _ => L["Perfectionist"]
-        };
-    }
-
-    private string TierName(TierListCategory category)
-    {
-        return category switch
-        {
-            TierListCategory.VeryHard => L["Very Hard"],
-            TierListCategory.Underrated => L["Underrated"],
-            _ => L[category.ToString()]
         };
     }
 

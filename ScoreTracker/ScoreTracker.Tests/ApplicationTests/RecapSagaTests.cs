@@ -143,19 +143,84 @@ public sealed class RecapSagaTests
     }
 
     [Fact]
-    public async Task ImpressivePgsOrderByFolderThenTier()
+    public async Task ImpressivePgsRankByFewestSitewideHolders()
     {
-        var s16 = new ChartBuilder().WithType(ChartType.Single).WithLevel(16).WithSongName("Small PG").Build();
-        var s18 = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).WithSongName("Big PG").Build();
-        var ctx = new HandlerContext(s16, s18);
+        var common = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).WithSongName("Common PG").Build();
+        var rare = new ChartBuilder().WithType(ChartType.Single).WithLevel(16).WithSongName("Rare PG").Build();
+        var ctx = new HandlerContext(common, rare);
         ctx.GivenEligiblePasses(8);
-        ctx.GivenPass(s16, 1_000_000, PhoenixPlate.PerfectGame);
-        ctx.GivenPass(s18, 1_000_000, PhoenixPlate.PerfectGame);
-        ctx.GivenTierList("PG", (s16.Id, TierListCategory.VeryHard), (s18.Id, TierListCategory.Hard));
+        ctx.GivenPass(common, 1_000_000, PhoenixPlate.PerfectGame);
+        ctx.GivenPass(rare, 1_000_000, PhoenixPlate.PerfectGame);
+        ctx.Scores.Setup(s => s.GetChartScoreAggregates(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new ChartScoreAggregate(common.Id, 200, 180, 50),
+                new ChartScoreAggregate(rare.Id, 200, 180, 3)
+            });
 
         await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
 
-        Assert.Equal(new[] { s18.Id, s16.Id }, ctx.Saved!.ImpressivePgs.Select(p => p.ChartId).ToArray());
+        Assert.Equal(new[] { rare.Id, common.Id }, ctx.Saved!.ImpressivePgs.Select(p => p.ChartId).ToArray());
+        Assert.Equal(3, ctx.Saved.ImpressivePgs[0].Passers);
+    }
+
+    [Fact]
+    public async Task PgCardRebuildPatchesOnlyThePgField()
+    {
+        var rarePg = new ChartBuilder().WithType(ChartType.Single).WithLevel(22).WithSongName("Rare PG").Build();
+        var ctx = new HandlerContext(rarePg);
+        ctx.GivenPass(rarePg, 1_000_000, PhoenixPlate.PerfectGame);
+        var existing = new PlayerRecap(PlayerRecap.CurrentSchemaVersion, Now.AddDays(-3), null,
+            new RecapRollup(10, Now.AddYears(-1), 100, 1, .5, null, null, null, null, 0, 0,
+                Array.Empty<RecapStepArtist>()),
+            RecapPlayerType.Competitive, 985_000,
+            Array.Empty<RecapEarnedBadge>(), null,
+            Array.Empty<RecapRareChart>(), Array.Empty<RecapScoreHighlight>(), Array.Empty<RecapRareChart>(),
+            null,
+            new RecapTrophies(Array.Empty<RecapRareTitle>(), Array.Empty<RecapPlateCount>(), null, null,
+                Array.Empty<RecapGradeCount>(), 1, 0),
+            null);
+        ctx.Recaps.Setup(r => r.GetRecapUserIds(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { UserId });
+        ctx.Recaps.Setup(r => r.GetRecap(UserId, MixEnum.Phoenix, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existing);
+        ctx.Scores.Setup(s => s.GetChartScoreAggregates(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new ChartScoreAggregate(rarePg.Id, 100, 90, 2) });
+
+        await ctx.Saga.Consume(ctx.Context(new RebuildRecapPgCardsCommand()));
+
+        Assert.NotNull(ctx.Saved);
+        var pg = Assert.Single(ctx.Saved!.ImpressivePgs);
+        Assert.Equal(rarePg.Id, pg.ChartId);
+        // Everything else — including ComputedAt — rides through untouched.
+        Assert.Equal(existing.ComputedAt, ctx.Saved.ComputedAt);
+        Assert.Equal(existing.PlayerType, ctx.Saved.PlayerType);
+        Assert.Same(existing.Trophies, ctx.Saved.Trophies);
+    }
+
+    [Fact]
+    public async Task ImpressivePgPoolIsTheTopFiftyByLevel()
+    {
+        // Fifty level-20 PGs fill the pool; a level-1 PG with the rarest holder count
+        // sits outside the top-50-by-level window and must not appear.
+        var pool = Enumerable.Range(0, 50)
+            .Select(i => new ChartBuilder().WithType(ChartType.Single).WithLevel(20)
+                .WithSongName($"Pool {i}").Build())
+            .ToArray();
+        var lowLevel = new ChartBuilder().WithType(ChartType.Single).WithLevel(1).WithSongName("Meme PG").Build();
+        var ctx = new HandlerContext(pool.Append(lowLevel).ToArray());
+        ctx.GivenEligiblePasses(0);
+        foreach (var chart in pool) ctx.GivenPass(chart, 1_000_000, PhoenixPlate.PerfectGame);
+        ctx.GivenPass(lowLevel, 1_000_000, PhoenixPlate.PerfectGame);
+        ctx.Scores.Setup(s => s.GetChartScoreAggregates(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(pool.Select(c => new ChartScoreAggregate(c.Id, 100, 90, 20))
+                .Append(new ChartScoreAggregate(lowLevel.Id, 100, 90, 1))
+                .ToArray());
+
+        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+
+        Assert.DoesNotContain(ctx.Saved!.ImpressivePgs, p => p.ChartId == lowLevel.Id);
+        Assert.Equal(5, ctx.Saved.ImpressivePgs.Count);
     }
 
     [Fact]
@@ -577,15 +642,6 @@ public sealed class RecapSagaTests
                     .ToArray());
         }
 
-        public void GivenTierList(string name, params (Guid ChartId, TierListCategory Category)[] entries)
-        {
-            Mediator.Setup(m => m.Send(It.Is<GetTierListQuery>(q => q.TierListName == Name.From(name)),
-                    It.IsAny<CancellationToken>()))
-                .ReturnsAsync(entries
-                    .Select(e => new SongTierListEntry(Name.From(name), e.ChartId, e.Category, 0))
-                    .ToArray());
-        }
-
         public void GivenAllStats(params PlayerStatsRecord[] stats)
         {
             PlayerStats.Setup(p => p.GetStats(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
@@ -613,6 +669,14 @@ public sealed class RecapSagaTests
         public ConsumeContext<ScoreHighlightsCapturedEvent> Context(ScoreHighlightsCapturedEvent message)
         {
             var ctx = new Mock<ConsumeContext<ScoreHighlightsCapturedEvent>>();
+            ctx.SetupGet(c => c.Message).Returns(message);
+            ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
+            return ctx.Object;
+        }
+
+        public ConsumeContext<RebuildRecapPgCardsCommand> Context(RebuildRecapPgCardsCommand message)
+        {
+            var ctx = new Mock<ConsumeContext<RebuildRecapPgCardsCommand>>();
             ctx.SetupGet(c => c.Message).Returns(message);
             ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
             return ctx.Object;

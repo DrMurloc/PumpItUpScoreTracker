@@ -55,6 +55,8 @@
        on the bus, runs in the background). Design: docs/design/phoenix-season-recap.md. *@
     <MudButton OnClick="ComputeMyRecap" Color="Color.Primary" Variant="Variant.Filled">@L["Compute My Season Recap"]</MudButton>
     <MudButton OnClick="ComputeAllRecaps" Color="Color.Secondary" Variant="Variant.Filled">@L["Compute All Season Recaps"]</MudButton>
+    @* Targeted patch: rewrites only the PG card on stored recaps, no full rebuilds. *@
+    <MudButton OnClick="RebuildRecapPgCards" Variant="Variant.Outlined">@L["Rebuild Recap PG Cards"]</MudButton>
 </MudCard>
 <MudCard>
     <MudCardHeader>@L["Content Lock"]</MudCardHeader>
@@ -445,6 +447,12 @@
     private async Task ComputeAllRecaps()
     {
         await Bus.Publish(new CalculateSeasonRecapsCommand(null));
+        Snackbar.Add(L["Done"].Value, Severity.Success);
+    }
+
+    private async Task RebuildRecapPgCards()
+    {
+        await Bus.Publish(new RebuildRecapPgCardsCommand());
         Snackbar.Add(L["Done"].Value, Severity.Success);
     }
 

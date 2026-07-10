@@ -69,6 +69,16 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
             return JsonSerializer.Deserialize<PlayerRecap>(entity.Payload, SerializerOptions);
         }
 
+        public async Task<IEnumerable<Guid>> GetRecapUserIds(MixEnum mix, CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
+            return await database.Set<PlayerSeasonRecapEntity>()
+                .Where(r => r.MixId == mixId)
+                .Select(r => r.UserId)
+                .ToArrayAsync(cancellationToken);
+        }
+
         public async Task<PlayerRecap?> Handle(GetPlayerRecapQuery request, CancellationToken cancellationToken)
         {
             return await GetRecap(request.UserId, request.Mix, cancellationToken);

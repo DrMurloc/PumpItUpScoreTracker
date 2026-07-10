@@ -13,4 +13,7 @@ internal interface IPlayerSeasonRecapRepository
     ///     until an admin refires the sweep.
     /// </summary>
     Task<PlayerRecap?> GetRecap(Guid userId, MixEnum mix, CancellationToken cancellationToken);
+
+    /// <summary>Everyone with a stored recap on the mix — the targeted-patch sweep list.</summary>
+    Task<IEnumerable<Guid>> GetRecapUserIds(MixEnum mix, CancellationToken cancellationToken);
 }

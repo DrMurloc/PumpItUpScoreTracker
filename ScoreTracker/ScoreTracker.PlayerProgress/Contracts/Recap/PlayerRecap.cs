@@ -19,13 +19,17 @@ public sealed record PlayerRecap(
     int? PlayerTypeAverageScore,
     IReadOnlyList<RecapEarnedBadge> Badges,
     RecapRivals? Rivals,
-    IReadOnlyList<RecapChartHighlight> ImpressivePgs,
+    IReadOnlyList<RecapRareChart> ImpressivePgs,
     IReadOnlyList<RecapScoreHighlight> ImpressiveScores,
     IReadOnlyList<RecapRareChart> RarestPasses,
     RecapWeekly? Weekly,
     RecapTrophies Trophies,
     RecapPhoenix2Projection? Projection)
 {
+    // Still 2 after the PG-card rework (round four): old ImpressivePgs items deserialize
+    // into RecapRareChart with zero rarity, and the targeted RebuildRecapPgCardsCommand
+    // patches just that field — a version bump would have forced the full-rebuild sweep
+    // the owner explicitly didn't want.
     public const int CurrentSchemaVersion = 2;
 }
 
@@ -76,15 +80,6 @@ public sealed record RecapRivals(IReadOnlyList<RecapRival> Singles, IReadOnlyLis
 
 [ExcludeFromCodeCoverage]
 public sealed record RecapRival(Guid UserId, string Name, double CompetitiveLevel, int SharedTop50Charts);
-
-/// <summary>An impressive PG or pass: ordered by folder then tier-list difficulty.</summary>
-[ExcludeFromCodeCoverage]
-public sealed record RecapChartHighlight(
-    Guid ChartId,
-    string SongName,
-    ChartType ChartType,
-    int Level,
-    TierListCategory Difficulty);
 
 [ExcludeFromCodeCoverage]
 public sealed record RecapScoreHighlight(
