@@ -28,6 +28,16 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
             return $"{nameof(EFPlayerStatsRepository)}_PlayerStats_{mix}_{userId}";
         }
 
+        public async Task<IEnumerable<Guid>> GetUserIdsWithStats(MixEnum mix, CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
+            return await database.Set<PlayerStatsEntity>()
+                .Where(p => p.MixId == mixId)
+                .Select(p => p.UserId)
+                .ToArrayAsync(cancellationToken);
+        }
+
         public async Task SaveStats(MixEnum mix, Guid userId, PlayerStatsRecord newStats,
             CancellationToken cancellationToken)
         {

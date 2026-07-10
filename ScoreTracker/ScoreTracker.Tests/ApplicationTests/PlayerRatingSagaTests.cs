@@ -11,6 +11,7 @@ using ScoreTracker.Identity.Contracts.Events;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Application;
 using ScoreTracker.PlayerProgress.Contracts.Commands;
+using ScoreTracker.PlayerProgress.Contracts.Messages;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
@@ -526,6 +527,39 @@ public sealed class PlayerRatingSagaTests
 
         Assert.Equal(ultimate.Id, result[0].ChartId);
         Assert.Equal(rough.Id, result[1].ChartId);
+    }
+
+    [Fact]
+    public async Task RecalculateMixRatingsSweepsEveryPlayerOfTheMix()
+    {
+        // The formula-adjustment exit path: every user with stats for the mix goes
+        // through both the stats and the per-chart PUMBILITY recalculations.
+        var user1 = Guid.NewGuid();
+        var user2 = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetUserIdsWithStats(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { user1, user2 });
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix2, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(user1));
+        var scores = ScoresMockReturning(user1, new[] { Score(chart.Id, 950000) }, MixEnum.Phoenix2);
+        scores.Setup(s => s.GetPlayerScores(MixEnum.Phoenix2, It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<UserPhoenixScore>());
+        var recordStats = new Mock<IPhoenixRecordStatsRepository>();
+        var saga = BuildSaga(charts: ChartsMockReturning(new[] { chart }, MixEnum.Phoenix2),
+            scores: scores, stats: stats, recordStats: recordStats);
+
+        await saga.Consume(BuildContext(new RecalculateMixRatingsCommand(MixEnum.Phoenix2)));
+
+        stats.Verify(s => s.SaveStats(MixEnum.Phoenix2, user1, It.IsAny<PlayerStatsRecord>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+        stats.Verify(s => s.SaveStats(MixEnum.Phoenix2, user2, It.IsAny<PlayerStatsRecord>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+        recordStats.Verify(s => s.UpdateScoreStats(MixEnum.Phoenix2, user1,
+            It.IsAny<IEnumerable<PhoenixRecordStats>>(), It.IsAny<CancellationToken>()), Times.Once);
+        recordStats.Verify(s => s.UpdateScoreStats(MixEnum.Phoenix2, user2,
+            It.IsAny<IEnumerable<PhoenixRecordStats>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private static PlayerRatingSaga BuildSaga(

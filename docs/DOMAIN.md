@@ -21,7 +21,9 @@ For solution layout and patterns, see [ARCHITECTURE.md](ARCHITECTURE.md). For pr
 
 ## Player progression
 
-- **Pumbility** — a composite player rating computed from a player's top scores; the closest single number to "how good is this player overall." Calculated by `PlayerRatingSaga` / `WorldRankingService`.
+- **Pumbility** — a composite player rating computed from a player's top scores; the closest single number to "how good is this player overall." Calculated by `PlayerRatingSaga` / `WorldRankingService`, with a **different formula per mix** (`ScoringConfiguration.PumbilityScoring(mix, …)`):
+  - **Phoenix**: one mixed top-50 pool; per chart `BaseRating(level) × gradeModifier`, plate-blind.
+  - **Phoenix 2** (reverse-engineered from the live site and validated against real per-chart data, 2026-07): **two independent top-50 pools — Singles and Doubles — summed**; per chart `Base(level) × (gradeMultiplier + plateBonus)` (additive), where `Base = 130 + 5·L + 5·max(0, L−24)`. CO-OP, UCS, half-double and broken plays never contribute. The site exposes all three values (Total/Singles/Doubles), and the Phoenix 2 title ladder gates on the per-type pools.
 - **Competitive Level progress** — a tier/level system tracking a player's competitive standing, driven primarily by Weekly Charts performance. UI at `Pages/Progress/CompetitiveLevel.razor`.
 
 ## Community-tracked systems

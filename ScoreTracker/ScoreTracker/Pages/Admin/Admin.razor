@@ -19,6 +19,7 @@
 @using ScoreTracker.Application.Handlers
 @using ScoreTracker.Domain.Events
 @using ScoreTracker.Domain.Records
+@using ScoreTracker.PlayerProgress.Contracts.Messages
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.Domain.SecondaryPorts
 @using System.Reflection
@@ -43,6 +44,11 @@
         <br />
         <MudProgressLinear Color="Color.Primary" Max="_maxReCalculate" Min="0" Value="@_currentReCalculate"></MudProgressLinear>
     }
+</MudCard>
+<MudCard>
+    @* The formula-adjustment exit path: sweeps every Phoenix 2 player through the stats +
+       per-chart PUMBILITY recalculations (queued on the bus, runs in the background). *@
+    <MudButton OnClick="RecalculatePhoenix2Ratings" Color="Color.Primary" Variant="Variant.Filled">@L["Recalculate Phoenix 2 Player Ratings"]</MudButton>
 </MudCard>
 <MudCard>
     <MudCardHeader>@L["Content Lock"]</MudCardHeader>
@@ -418,6 +424,12 @@
         _isSaving = false;
 
     }
+    private async Task RecalculatePhoenix2Ratings()
+    {
+        await Bus.Publish(new RecalculateMixRatingsCommand(MixEnum.Phoenix2));
+        Snackbar.Add(L["Done"].Value, Severity.Success);
+    }
+
     private async Task ReCalculateScores()
     {
         _isReCalculating = true;

@@ -2365,4 +2365,7 @@
   <data name="View your session" xml:space="preserve">
     <value>View your session</value>
   </data>
+  <data name="Recalculate Phoenix 2 Player Ratings" xml:space="preserve">
+    <value>Recalculate Phoenix 2 Player Ratings</value>
+  </data>
 </root>

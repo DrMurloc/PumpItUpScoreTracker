@@ -34,6 +34,39 @@ so a broken session can resume from the last checked item.
 - 1948 D29 renders as "??" on the P2 site but is functionally a 29 — import parser needs a ??→29
   level fallback, and the anchored stepball regexes need to accept the `/l_img/p2/` path segment.
 
+## Update 2026-07-09 — PUMBILITY formula + titles LANDED (supersedes two assumptions above)
+
+The "Pumbility assumed unchanged" and "empty Phoenix 2 title list" placeholders are resolved; both
+shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
+
+- **Phoenix 2 PUMBILITY confirmed different and implemented.** Reverse-engineered from the live
+  pumbility rankings + per-chart boards, validated against owner-collected real per-chart values
+  (48 pinned as golden unit tests). Per chart: `Base(level) × (gradeMultiplier + plateBonus)` —
+  ADDITIVE grade+plate, `Base = 130 + 5·L + 5·max(0, L−24)`; totals are two independent top-50
+  pools (Singles + Doubles) summed. Grades 1.35 (A+) → 1.50 (SSS+); plates RG 0.000 → PG +0.020
+  (doubles-verified table applied to both types — the community's singles-specific UG/EG/RG values
+  treated as data error, owner call 2026-07-09; TODO in `ScoringConfiguration`). Below-A+ grades
+  pattern-extended, unverified. Broken plays never count (owner-confirmed). Everything dispatches
+  through `ScoringConfiguration.PumbilityScoring(mix, …)`; Phoenix arm byte-identical.
+  `SkillRating = SinglesRating + DoublesRating` on P2 rows; S/D pool gains mint their own
+  milestones (P2 only). Exit path for constant adjustments: edit the config, hit the admin
+  "Recalculate Phoenix 2 Player Ratings" button (`RecalculateMixRatingsCommand` bus sweep).
+- **All 272 Phoenix 2 titles landed** (crawled authenticated from my_page/title.php 2026-07-09):
+  [S]/[D] ladders + 8 hidden total tiers gate on the pool values (`Phoenix2PumbilityTitle`;
+  `[P.B] BRONZE` observed live, 7 placeholder names pending reveals); nine skill ladders
+  (chart + SSS, `Phoenix2ChartGradeTitle`) with EXPERT/SPECIALIST metas; 34 boss breakers
+  (`Phoenix2ChartClearTitle`; `1948 D??` matches any level); step-artist/play-count/CO-OP/judgment
+  badges site-detected only (CO-OP Rating formula unknown — TODO).
+- **Avatar hosts split by era**: P2 serves `/data/avatar_img2/` — `ImageRegex` accepts both, and
+  BOTH shapes are pinned by approval fixtures (this was the recurring avatar bug).
+- **Still deferred → next PR: the P2 leaderboard mirror / world rankings.** The P2 site replaced
+  per-level rating boards with `leaderboard/pumbility_ranking.php` (`?t=` = All / `s` / `d`,
+  `&page=` pagination, daily 01:00 GMT+9 recompute, name masked-title rows) and per-chart
+  `over_ranking_view.php?no=` TOP-100 boards (score + grade, no plate). Scraper parsing was proven
+  in recon (selectors: `ul.pumbilitySt li`, `.profile_name.pl0`/`.st1`, `.score i.tt` +
+  `.pumbility-point-sub`); wire into `GetLeaderboardEntries`'s P2 arm + unlock the PlayerRankings
+  ComingSoon gate when built.
+
 ## Commit sequence
 
 - [x] **Commit 0 — Remove dead Tesseract dependency; correct OCR doc claims.**

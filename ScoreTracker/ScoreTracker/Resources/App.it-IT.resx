@@ -2365,4 +2365,7 @@
   <data name="View your session" xml:space="preserve">
     <value>Vedi la tua sessione</value>
   </data>
+  <data name="Recalculate Phoenix 2 Player Ratings" xml:space="preserve">
+    <value>Ricalcola i Rating dei giocatori di Phoenix 2</value>
+  </data>
 </root>

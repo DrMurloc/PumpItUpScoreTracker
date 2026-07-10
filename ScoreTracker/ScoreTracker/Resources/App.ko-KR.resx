@@ -2245,4 +2245,7 @@
   <data name="View your session" xml:space="preserve">
     <value>내 세션 보기</value>
   </data>
+  <data name="Recalculate Phoenix 2 Player Ratings" xml:space="preserve">
+    <value>피닉스 2 플레이어 레이팅 재계산</value>
+  </data>
 </root>

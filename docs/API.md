@@ -19,7 +19,7 @@ These endpoints are the contract for community tool makers. Their exact JSON wir
 | Area | Route | What's there |
 |---|---|---|
 | Charts | `api/charts` | Paginated chart listing by mix/level/type; `api/charts/random` for weighted random draws |
-| Phoenix scores | `api/phoenixScores` | GET your recorded scores (paginated; sortable via `SortBy` = RecordedDate/Score/LetterGrade/Plate/Level/Pumbility/PumbilityPlus + `SortDir`; filterable via `MinLevel`/`MaxLevel`/`ChartType`/`MinLetterGrade`/`MinPlate`/`IsBroken`; each record carries its Pumbility and PUMBILITY+ worth); POST a single best attempt; POST `import` to trigger an official-site import with your game account credentials |
+| Phoenix scores | `api/phoenixScores` | GET your recorded scores (paginated; sortable via `SortBy` = RecordedDate/Score/LetterGrade/Plate/Level/Pumbility/PumbilityPlus + `SortDir`; filterable via `MinLevel`/`MaxLevel`/`ChartType`/`MinLetterGrade`/`MinPlate`/`IsBroken`; each record carries its Pumbility and PUMBILITY+ worth — the Pumbility value uses the requested mix's formula, so the same score reads differently on `mix=Phoenix` vs `mix=Phoenix2`); POST a single best attempt; POST `import` to trigger an official-site import with your game account credentials |
 | Tier lists | `api/tierlist` | Four rankings per level+chart type: `scores`, `officialscores`, `passcount`, `popularity` |
 | Weekly charts | `api/weeklyCharts` | The current weekly challenge board and player scores on it |
 | Tournaments | `api/tournaments` | Tournament list; `api/tournaments/{id}/matches` for bracket matches, filterable by phase/state |
