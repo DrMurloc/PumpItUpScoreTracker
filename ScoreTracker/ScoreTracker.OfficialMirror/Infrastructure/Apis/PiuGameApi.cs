@@ -646,9 +646,13 @@ internal sealed class PiuGameApi : IPiuGameApi
          */
     }
 
+    // Avatar hosting differs BY LOGIN ERA: Phoenix pages serve /data/avatar_img/, Phoenix 2
+    // pages serve /data/avatar_img2/ (verified 2026-07-09). Accept both — narrowing this to
+    // one variant is the recurring avatar-import bug; both shapes are pinned by approval
+    // fixtures (GetSongLeaderboard_HappyPath vs _Phoenix2Host, GetAccountData_Phoenix2Avatar).
     private static readonly Regex ImageRegex =
         new(
-            @"url\(\'(https\:\/\/(?:phoenix\.)?piugame\.com\/data\/(avatar|song)_img\/[A-Za-z0-9]+\.[A-Za-z]+\?v\=[0-9]+)\'\)",
+            @"url\(\'(https\:\/\/(?:phoenix\.)?piugame\.com\/data\/(avatar|song)_img2?\/[A-Za-z0-9]+\.[A-Za-z]+\?v\=[0-9]+)\'\)",
             RegexOptions.Compiled);
 
     public async Task<PiuGameGetAccountDataResult> GetAccountData(MixEnum mix, HttpClient client,

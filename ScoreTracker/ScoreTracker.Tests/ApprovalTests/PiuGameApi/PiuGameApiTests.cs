@@ -384,6 +384,50 @@ public sealed class PiuGameApiTests
         Assert.False(result.RequiresLogin);
     }
 
+    [Fact]
+    public async Task GetSongLeaderboardParsesThePhoenix2AvatarHost()
+    {
+        // Phoenix 2 serves avatars from /data/avatar_img2/ (Phoenix uses /avatar_img/) —
+        // the recurring avatar-import bug is narrowing the regex to one variant, which
+        // silently drops EVERY leaderboard row (the avatar Uri throw hits the per-row
+        // catch). This fixture pins the Phoenix 2 shape; the HappyPath fixture pins
+        // Phoenix. Break either and this suite goes red, not production imports.
+        var html = await File.ReadAllTextAsync(
+            Path.Combine(FixtureRoot, "GetSongLeaderboard_Phoenix2Host.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetSongLeaderboard(MixEnum.Phoenix2, songId: "any", CancellationToken.None);
+
+        Assert.Equal(2, result.Results.Length);
+        Assert.Equal("SUNNY#5412", result.Results[0].ProfileName);
+        Assert.Equal(996996, result.Results[0].Score);
+        Assert.Equal(
+            new Uri("https://piugame.com/data/avatar_img2/6ed01094850e66d34aa4831f567363d4.png?v=20260701144004"),
+            result.Results[0].AvatarUrl);
+        Assert.Equal("JOA#8436", result.Results[1].ProfileName);
+        Assert.Equal(995196, result.Results[1].Score);
+    }
+
+    [Fact]
+    public async Task GetAccountDataParsesThePhoenix2AvatarHost()
+    {
+        // Same avatar_img2 pin for the account-data path: before the regex accepted the
+        // Phoenix 2 host, the profile-image Uri constructor threw and the whole PIUGAME
+        // login/import flow failed for Phoenix 2 accounts.
+        var html = await File.ReadAllTextAsync(
+            Path.Combine(FixtureRoot, "GetAccountData_Phoenix2Avatar.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetAccountData(MixEnum.Phoenix2, HttpClientReturning(html), CancellationToken.None);
+
+        Assert.Equal("DRMURLOC", (string)result.AccountName);
+        Assert.Equal(
+            new Uri("https://piugame.com/data/avatar_img2/33ecd96b847c0f8433ca999e63ba6c75.png?v=20260701144004"),
+            result.ImageUrl);
+        Assert.Contains(result.TitleEntries, t => t.Name == "BEGINNER" && t.Have && t.ColClass == "col0");
+        Assert.Contains(result.TitleEntries, t => t.Name == "EXC FOLLOWER" && !t.Have && t.ColClass == "col1");
+    }
+
     private static PiuGameApi BuildApi(string responseHtml)
     {
         return new PiuGameApi(
