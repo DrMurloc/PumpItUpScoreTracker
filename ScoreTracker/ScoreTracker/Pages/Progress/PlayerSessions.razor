@@ -1,6 +1,7 @@
 @using MediatR
 @using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Identity.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
@@ -75,6 +76,7 @@
 @inject IMediator Mediator
 @inject NavigationManager NavManager
 @inject IUiSettingsAccessor UiSettings
+@inject ICurrentUserAccessor CurrentUser
 @code {
     private const string FilterAll = "all";
     private const string FilterOfNote = "ofNote";
@@ -101,10 +103,12 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Public players only: anyone else's page redirects home. The query behind it
-        // independently returns an empty page, so this is presentation, not the guard.
+        // Public players only: anyone else's private page redirects home; your own never
+        // does. The query behind it independently returns an empty page to non-owners, so
+        // this is presentation, not the guard.
         _user = await Mediator.Send(new GetUserByIdQuery(UserIdParam));
-        if (_user is not { IsPublic: true })
+        var isOwner = CurrentUser.IsLoggedIn && CurrentUser.User.Id == UserIdParam;
+        if (_user == null || (!_user.IsPublic && !isOwner))
         {
             NavManager.NavigateTo("/");
             return;

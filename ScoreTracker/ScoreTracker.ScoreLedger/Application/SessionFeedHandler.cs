@@ -17,19 +17,24 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
 {
     private readonly IScoreJournalRepository _journal;
     private readonly IUserReader _users;
+    private readonly ICurrentUserAccessor _currentUser;
 
-    public SessionFeedHandler(IScoreJournalRepository journal, IUserReader users)
+    public SessionFeedHandler(IScoreJournalRepository journal, IUserReader users, ICurrentUserAccessor currentUser)
     {
         _journal = journal;
         _users = users;
+        _currentUser = currentUser;
     }
 
     public async Task<RecentSessionsPage> Handle(GetRecentSessionsQuery request,
         CancellationToken cancellationToken)
     {
-        // Defense in depth behind the page's redirect: non-public players read as empty.
+        // Defense in depth behind the page's redirect: non-public players read as empty
+        // to everyone but themselves.
         var user = await _users.GetUser(request.UserId, cancellationToken);
-        if (user is not { IsPublic: true }) return new RecentSessionsPage(0, Array.Empty<RecentSessionsPage.SessionGroup>());
+        var isOwner = _currentUser.IsLoggedIn && _currentUser.User.Id == request.UserId;
+        if (user is not { IsPublic: true } && !isOwner)
+            return new RecentSessionsPage(0, Array.Empty<RecentSessionsPage.SessionGroup>());
 
         var (total, groups) = await _journal.GetSessionGroups(request.UserId,
             Math.Max(1, request.Page), Math.Clamp(request.PageSize, 1, 50), cancellationToken);
