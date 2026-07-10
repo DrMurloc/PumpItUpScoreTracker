@@ -280,12 +280,14 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         CancellationToken cancellationToken)
     {
         var mixId = MixIds.For(mix);
+        var perfectGame = PhoenixPlate.PerfectGame.ToString();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return await (from pba in database.Set<PhoenixRecordEntity>()
             where pba.Score != null && pba.MixId == mixId
             group pba by pba.ChartId
             into g
-            select new ChartScoreAggregate(g.Key, g.Count(), g.Count(p => !p.IsBroken)))
+            select new ChartScoreAggregate(g.Key, g.Count(), g.Count(p => !p.IsBroken),
+                g.Count(p => !p.IsBroken && p.Plate == perfectGame)))
             .ToArrayAsync(cancellationToken);
     }
 

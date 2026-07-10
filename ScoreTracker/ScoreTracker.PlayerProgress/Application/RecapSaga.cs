@@ -2,7 +2,6 @@ using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Models.Titles.Phoenix;
 using ScoreTracker.PlayerProgress.Contracts.Events;
@@ -320,20 +319,27 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
         return badges;
     }
 
-    private IReadOnlyList<RecapChartHighlight> BuildImpressivePgs(RecordedPhoenixScore[] passes,
+    /// <summary>
+    ///     Your top-50 PGs by level form the pool; within it, the rarest win — fewest
+    ///     PG holders sitewide, shown against the whole active population (round four:
+    ///     the tier-list Hard-or-higher filter read badly in the wild).
+    /// </summary>
+    private IReadOnlyList<RecapRareChart> BuildImpressivePgs(RecordedPhoenixScore[] passes,
         SharedInputs shared)
     {
+        var population = Math.Max(1, shared.ActiveUserIds.Count);
         return passes
-            .Where(p => p.Plate == PhoenixPlate.PerfectGame)
-            .Select(p => (Record: p, Chart: shared.Charts.GetValueOrDefault(p.ChartId)))
-            .Where(x => x.Chart != null)
-            .Select(x => (x.Chart!, Tier: shared.PgTiers.GetValueOrDefault(x.Chart!.Id, TierListCategory.Unrecorded)))
-            .Where(x => IsHardOrHigher(x.Tier))
-            .OrderByDescending(x => (int)x.Item1.Level)
-            .ThenByDescending(x => x.Tier)
-            .Take(6)
-            .Select(x => new RecapChartHighlight(x.Item1.Id, x.Item1.Song.Name.ToString(), x.Item1.Type,
-                x.Item1.Level, x.Tier))
+            .Where(p => p.Plate == PhoenixPlate.PerfectGame && shared.Charts.ContainsKey(p.ChartId))
+            .Select(p => shared.Charts[p.ChartId])
+            .OrderByDescending(c => (int)c.Level)
+            .Take(50)
+            .Select(c => (Chart: c, Aggregate: shared.ChartAggregates.GetValueOrDefault(c.Id)))
+            .Where(x => x.Aggregate is { PgCount: > 0 })
+            .OrderBy(x => x.Aggregate!.PgCount)
+            .ThenByDescending(x => (int)x.Chart.Level)
+            .Take(5)
+            .Select(x => new RecapRareChart(x.Chart.Id, x.Chart.Song.Name.ToString(), x.Chart.Type,
+                x.Chart.Level, x.Aggregate!.PgCount / (double)population, x.Aggregate.PgCount))
             .ToArray();
     }
 
@@ -553,7 +559,6 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
             .GroupBy(t => t.Title)
             .ToDictionary(g => g.Key, g => g.Sum(t => t.Count));
         var titledUsers = await _titles.CountTitledUsers(cancellationToken);
-        var pgTiers = await LoadTierCategories("PG", mix, cancellationToken);
         var chartAggregates = (await _scores.GetChartScoreAggregates(mix, cancellationToken))
             .ToDictionary(a => a.ChartId);
 
@@ -577,7 +582,6 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
             titleHolders,
             titledUsers,
             PhoenixTitleList.BuildList().Count(),
-            pgTiers,
             charts.Values.Where(c => RecapBadges.IsBanYaArtist(c.Song.Artist)).Select(c => c.Id).ToHashSet(),
             charts.Values.Where(c => c.Type == ChartType.CoOp && (int)c.Level == 2).Select(c => c.Id)
                 .ToHashSet(),
@@ -587,19 +591,6 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
                 c.Type == ChartType.Single && (int)c.Level == 22 &&
                 c.Song.Name.ToString().Contains("Uh-Heung", StringComparison.OrdinalIgnoreCase))?.Id,
             folders);
-    }
-
-    private async Task<IReadOnlyDictionary<Guid, TierListCategory>> LoadTierCategories(Name tierListName,
-        MixEnum mix, CancellationToken cancellationToken)
-    {
-        return (await _mediator.Send(new GetTierListQuery(tierListName, mix), cancellationToken))
-            .GroupBy(e => e.ChartId)
-            .ToDictionary(g => g.Key, g => g.First().Category);
-    }
-
-    private static bool IsHardOrHigher(TierListCategory category)
-    {
-        return category is TierListCategory.Hard or TierListCategory.VeryHard or TierListCategory.Underrated;
     }
 
     private sealed record FolderCharts(ChartType Type, DifficultyLevel Level, IReadOnlyList<Guid> ChartIds);
@@ -618,7 +609,6 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
         IReadOnlyDictionary<Name, int> TitleHolders,
         int TitledUsers,
         int TotalTitles,
-        IReadOnlyDictionary<Guid, TierListCategory> PgTiers,
         IReadOnlySet<Guid> BanYaChartIds,
         IReadOnlySet<Guid> CoOpX2ChartIds,
         IReadOnlySet<Guid> Singles24PlusChartIds,

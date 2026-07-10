@@ -19,14 +19,14 @@ public sealed record PlayerRecap(
     int? PlayerTypeAverageScore,
     IReadOnlyList<RecapEarnedBadge> Badges,
     RecapRivals? Rivals,
-    IReadOnlyList<RecapChartHighlight> ImpressivePgs,
+    IReadOnlyList<RecapRareChart> ImpressivePgs,
     IReadOnlyList<RecapScoreHighlight> ImpressiveScores,
     IReadOnlyList<RecapRareChart> RarestPasses,
     RecapWeekly? Weekly,
     RecapTrophies Trophies,
     RecapPhoenix2Projection? Projection)
 {
-    public const int CurrentSchemaVersion = 2;
+    public const int CurrentSchemaVersion = 3;
 }
 
 /// <summary>Competitive-level journey, first PlayerHistory snapshot to the latest.</summary>
@@ -76,15 +76,6 @@ public sealed record RecapRivals(IReadOnlyList<RecapRival> Singles, IReadOnlyLis
 
 [ExcludeFromCodeCoverage]
 public sealed record RecapRival(Guid UserId, string Name, double CompetitiveLevel, int SharedTop50Charts);
-
-/// <summary>An impressive PG or pass: ordered by folder then tier-list difficulty.</summary>
-[ExcludeFromCodeCoverage]
-public sealed record RecapChartHighlight(
-    Guid ChartId,
-    string SongName,
-    ChartType ChartType,
-    int Level,
-    TierListCategory Difficulty);
 
 [ExcludeFromCodeCoverage]
 public sealed record RecapScoreHighlight(

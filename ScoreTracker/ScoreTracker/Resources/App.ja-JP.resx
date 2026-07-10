@@ -2657,4 +2657,7 @@
   <data name="If your scores made the trip: {0} of your {1} passes map onto Phoenix 2 charts." xml:space="preserve">
     <value>もしスコアを持ち込めたら：あなたのクリア{1}譜面中{0}譜面がPhoenix 2の譜面に投影されます。</value>
   </data>
+  <data name="only {0} have it" xml:space="preserve">
+    <value>保有率{0}</value>
+  </data>
 </root>

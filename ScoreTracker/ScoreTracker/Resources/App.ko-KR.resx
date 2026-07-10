@@ -2536,4 +2536,7 @@
   <data name="If your scores made the trip: {0} of your {1} passes map onto Phoenix 2 charts." xml:space="preserve">
     <value>점수를 가져갈 수 있다면: 클리어한 {1}개 중 {0}개가 Phoenix 2 채보에 투영됩니다.</value>
   </data>
+  <data name="only {0} have it" xml:space="preserve">
+    <value>보유율 {0}</value>
+  </data>
 </root>

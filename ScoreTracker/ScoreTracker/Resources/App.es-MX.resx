@@ -2535,4 +2535,7 @@
   <data name="If your scores made the trip: {0} of your {1} passes map onto Phoenix 2 charts." xml:space="preserve">
     <value>Si tus scores hicieran el viaje: {0} de tus {1} passes se proyectan en charts de Phoenix 2.</value>
   </data>
+  <data name="only {0} have it" xml:space="preserve">
+    <value>solo el {0} lo tiene</value>
+  </data>
 </root>

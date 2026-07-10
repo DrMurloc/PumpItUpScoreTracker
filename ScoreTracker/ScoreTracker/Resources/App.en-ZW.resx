@@ -2580,4 +2580,7 @@
   <data name="If your scores made the trip: {0} of your {1} passes map onto Phoenix 2 charts." xml:space="preserve">
     <value>Mrgl mrgl trip: {0} of {1} mrgls map mrgl Phoenix 2.</value>
   </data>
+  <data name="only {0} have it" xml:space="preserve">
+    <value>only {0} mrgl it</value>
+  </data>
 </root>
