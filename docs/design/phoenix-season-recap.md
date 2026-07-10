@@ -27,7 +27,7 @@ A Raider.IO-style end-of-season recap: one animated, screenshottable page that w
 - **Eligibility:** ≥10 non-broken Phoenix scores (~1,371 users in prod: 1,289 with ≥50, 82 with 10–49). Sections degrade gracefully when their data is thin.
 - Future option (post-launch, based on observed job cost): a self-serve recalculate button for users.
 
-**Perf note:** rival matching is the expensive step. The all-users job memoizes each user's top-50 competitive (fung) chart-id set once per run, so matching is set intersection — O(users × scores) overall for ~1,450 users.
+**Perf note:** rival matching is the expensive step. The all-users job memoizes each user's top-50 competitive (fung) chart-id set once per run, so matching is set intersection — O(users × scores) overall for ~1,450 users. The impressive-scores step must reuse `ScoreQualitySaga`'s cached cohort machinery rather than issuing per-user raw cohort-ranking queries — cohort ranking against prod SQL is exactly what caused the 2026-07-10 CPU incident (fixed by PR #129's bucket caching + covering index).
 
 ## Slides
 
@@ -63,7 +63,7 @@ Show all earned; lead with the biggest.
 - **CoOp ladder** — completion of CoOp ×2 charts (`ChartType.CoOp`, `Level == 2`; player count *is* the Level field): **>50% Socialite, >75% Clearly Has Friends, >90% Friendship is Magic, 100% "I Hope You Held Hands on Canon D"**. (Prod: 123 / 80 / 50 / 12.)
 - **BanYa Lover** — >50% of charts passed on songs where `Artist LIKE '%banya%' OR Artist LIKE '%yahpp%'` (covers `BanYa`, `Banya Production`, `YAHPP`, and collabs; **msgoon excluded** — no BanYa Production membership). ~162 songs in prod; 55 songs have NULL artist and silently don't count.
 - **"Big Feet or Injured Back?"** — SSS+ (≥995,000, not broken) on **Uh-Heung S22**. Chart resolved at compute time by song name + Single + level 22 (never a hardcoded chart id). (Prod: 18 holders.)
-- **"Grand Mashter"** *(not a typo)* — passed >95% of S24+ singles (all Single charts level ≥24 in the Phoenix folder) with no score above AAA+ (≤969,999) among them. *(Scope of the score cap — S24+ charts only vs whole account — pending owner confirmation; spec assumes S24+-scoped. Holder count not yet calibrated.)*
+- **"Grand Mashter"** *(not a typo)* — more than **80%** of S24+ singles passed **at AA+ or lower** (≤949,999). Only mash-grade passes count toward the 80%; stray AAAs don't disqualify. (Retuned 2026-07-09 — the original 95%-passed/hard-AAA+-cap version had no plausible holders. Holder count pending calibration.)
 - **"Now You Can Play the Game"** — passed any Double level ≥28 (≥ so a D29-only pass still counts). (Prod: 5 holders.)
 
 ### 5. Rivals
@@ -82,8 +82,9 @@ Records with `Plate = PerfectGame`, ordered folder descending then PG difficulty
 From `UserWeeklyPlacing` (rows carry `Place`, `Score`, `Plate`, `WasWithinRange`, `ObtainedDate`):
 
 - **Longest streak** (headline): consecutive **rotations** entered — order the distinct global placement weeks by `ObtainedDate`, longest unbroken run the user appears in. Rotation-indexed, not calendar-indexed, so a skipped rotation breaks nobody's streak unfairly. (Prod: top streak is 78 consecutive rotations; the top 20 range 8–78 — strong headline material.)
-- Weeks entered (total), wins + podium count.
-- **Best result**: best `Place` (tie-break: higher chart level, then more recent), shown with the chart and week.
+- Weeks entered (total), wins + podium count — **computed within range**: on charts where the player was within range, re-rank among within-range entrants only (from the placing rows' `Score`/`WasWithinRange`, not the stored overall `Place`), so a level-19 player isn't "beaten" by level-25 tourists.
+- **Best result**: best within-range rank (tie-break: higher chart level, then more recent), shown with the chart and week.
+- **Giant Slayer**: count of weekly moments where the player outscored an entrant ≥1.0 competitive level above them (each row snapshots the entrant's `CompetitiveLevel`; margin tunable at calibration).
 
 Exact highlight composition is the one soft area of this spec — owner is open to iteration here.
 
@@ -122,5 +123,6 @@ New keys populated in all 8 locales in the same pass, per convention. Badge name
 
 - Popup expiry cutoff (set when the P2 launch date is known).
 - Self-serve recalculate button — decide post-launch from all-users job timings.
-- Grand Mashter score-cap scope (S24+-scoped assumed) — owner to confirm; holder count not yet calibrated (first query attempt had a CTE-scope bug).
+- Grand Mashter holder count — calibrate with the retuned >80%-at-AA+-or-lower definition.
+- Giant Slayer level margin (≥1.0 assumed) — calibrate.
 - Weekly slide highlight composition — iterate once rendered.
