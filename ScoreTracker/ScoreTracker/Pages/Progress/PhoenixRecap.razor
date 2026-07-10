@@ -23,6 +23,9 @@ else if (_user != null && _recap != null)
 {
     <div class="precap-deck" id="precap-deck">
 
+        @* The deck overlays the whole app shell — this is the way out besides browser back. *@
+        <button class="precap-close" title="@L["Close"]" @onclick="@(() => NavManager.NavigateTo("/"))">&#10005;</button>
+
         @* ============ Cover ============ *@
         <section class="precap-slide" style="--gx:50%;--gy:12%">
             <div class="precap-inner">
@@ -513,9 +516,16 @@ else if (_user != null && _recap != null)
             .precap-scrollhint::after { animation: none; }
             .precap-reveal { opacity: 1; transform: none; transition: none; }
         }
+        .precap-close { position: fixed; top: 14px; right: 16px; z-index: 2; width: 40px; height: 40px;
+            border-radius: 999px; border: 1px solid var(--phair); background: rgba(10,18,31,.8);
+            color: var(--pdim); font-size: 16px; cursor: pointer; }
+        .precap-close:hover, .precap-close:focus-visible { color: var(--pink); border-color: var(--paccent); }
         @@media (max-width: 640px) {
             .precap-brand { letter-spacing: .16em; font-size: 9px; }
             .precap-rival::before { display: none; }
+            @* Stacked single-column slides run taller than a phone viewport — hard
+               snapping fights the scroll there, proximity keeps the feel without traps. *@
+            .precap-deck { scroll-snap-type: y proximity; }
         }
     </style>
 }
