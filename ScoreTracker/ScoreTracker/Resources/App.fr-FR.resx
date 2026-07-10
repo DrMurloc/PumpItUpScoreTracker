@@ -2669,8 +2669,8 @@
   <data name="My Sessions" xml:space="preserve">
     <value>Mes sessions</value>
   </data>
-  <data name="LIVE" xml:space="preserve">
-    <value>EN COURS</value>
+  <data name="Weekly" xml:space="preserve">
+    <value>Hebdo</value>
   </data>
   <data name="More" xml:space="preserve">
     <value>Plus</value>

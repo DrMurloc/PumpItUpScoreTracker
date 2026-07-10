@@ -99,18 +99,6 @@
     padding: 8px 16px 2px;
 }
 
-.live-pill {
-    background: var(--mix-secondary);
-    color: var(--mix-bg);
-    font-family: var(--font-display);
-    font-size: .6rem;
-    font-weight: 700;
-    letter-spacing: .08em;
-    border-radius: 8px;
-    padding: 1px 6px;
-    margin-left: 4px;
-}
-
 .mix-pill {
     display: inline-flex;
     align-items: center;
@@ -238,6 +226,17 @@
 
 .bottom-nav .bn.active {
     color: var(--mix-primary);
+}
+
+/* The Communities slot only earns space on squarish viewports (fold phones, landscape). */
+.bottom-nav .bn-wide {
+    display: none;
+}
+
+@media (min-aspect-ratio: 1/1) {
+    .bottom-nav .bn-wide {
+        display: flex;
+    }
 }
 
 /* Keep page content clear of the fixed bottom nav (Md breakpoint = 960px). */

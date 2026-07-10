@@ -2672,8 +2672,8 @@
   <data name="My Sessions" xml:space="preserve">
     <value>マイセッション</value>
   </data>
-  <data name="LIVE" xml:space="preserve">
-    <value>開催中</value>
+  <data name="Weekly" xml:space="preserve">
+    <value>週間</value>
   </data>
   <data name="More" xml:space="preserve">
     <value>その他</value>
