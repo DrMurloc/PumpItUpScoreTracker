@@ -2251,4 +2251,10 @@
   <data name="Rankings use the official Phoenix 2 PUMBILITY formula." xml:space="preserve">
     <value>랭킹은 공식 피닉스 2 PUMBILITY 공식을 사용합니다.</value>
   </data>
+  <data name="Compute My Season Recap" xml:space="preserve">
+    <value>내 시즌 리캡 계산</value>
+  </data>
+  <data name="Compute All Season Recaps" xml:space="preserve">
+    <value>전체 시즌 리캡 계산</value>
+  </data>
 </root>

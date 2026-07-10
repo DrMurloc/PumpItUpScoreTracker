@@ -51,6 +51,12 @@
     <MudButton OnClick="RecalculatePhoenix2Ratings" Color="Color.Primary" Variant="Variant.Filled">@L["Recalculate Phoenix 2 Player Ratings"]</MudButton>
 </MudCard>
 <MudCard>
+    @* Season recaps: owner-first smoke test, then the one-shot all-players sweep (queued
+       on the bus, runs in the background). Design: docs/design/phoenix-season-recap.md. *@
+    <MudButton OnClick="ComputeMyRecap" Color="Color.Primary" Variant="Variant.Filled">@L["Compute My Season Recap"]</MudButton>
+    <MudButton OnClick="ComputeAllRecaps" Color="Color.Secondary" Variant="Variant.Filled">@L["Compute All Season Recaps"]</MudButton>
+</MudCard>
+<MudCard>
     <MudCardHeader>@L["Content Lock"]</MudCardHeader>
     <MudCardContent>
         <MudGrid>
@@ -427,6 +433,18 @@
     private async Task RecalculatePhoenix2Ratings()
     {
         await Bus.Publish(new RecalculateMixRatingsCommand(MixEnum.Phoenix2));
+        Snackbar.Add(L["Done"].Value, Severity.Success);
+    }
+
+    private async Task ComputeMyRecap()
+    {
+        await Bus.Publish(new CalculateSeasonRecapsCommand(CurrentUser.User.Id));
+        Snackbar.Add(L["Done"].Value, Severity.Success);
+    }
+
+    private async Task ComputeAllRecaps()
+    {
+        await Bus.Publish(new CalculateSeasonRecapsCommand(null));
         Snackbar.Add(L["Done"].Value, Severity.Success);
     }
 

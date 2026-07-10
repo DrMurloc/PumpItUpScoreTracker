@@ -2250,4 +2250,10 @@
   <data name="Rankings use the official Phoenix 2 PUMBILITY formula." xml:space="preserve">
     <value>Las clasificaciones usan la fórmula oficial de PUMBILITY de Phoenix 2.</value>
   </data>
+  <data name="Compute My Season Recap" xml:space="preserve">
+    <value>Calcular mi resumen de temporada</value>
+  </data>
+  <data name="Compute All Season Recaps" xml:space="preserve">
+    <value>Calcular los resumenes de temporada de todos</value>
+  </data>
 </root>
