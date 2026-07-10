@@ -337,7 +337,7 @@ public sealed class RecapSagaTests
     }
 
     [Fact]
-    public async Task RarestPassesRankBySitewidePassRateWithAnAttemptFloor()
+    public async Task RarestPassesRankByFewestSitewidePassers()
     {
         var brutal = new ChartBuilder().WithType(ChartType.Single).WithLevel(24).WithSongName("Brutal").Build();
         var common = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).WithSongName("Common").Build();
@@ -352,16 +352,15 @@ public sealed class RecapSagaTests
             {
                 new ChartScoreAggregate(brutal.Id, 100, 5),
                 new ChartScoreAggregate(common.Id, 100, 80),
-                // Two players tried it — below the 20-attempt floor, however "rare".
+                // Barely recorded — obscurity is a legitimate flavor of rare (owner call).
                 new ChartScoreAggregate(obscure.Id, 2, 1)
             });
 
         await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
 
-        Assert.Equal(new[] { brutal.Id, common.Id },
+        Assert.Equal(new[] { obscure.Id, brutal.Id, common.Id },
             ctx.Saved!.RarestPasses.Select(r => r.ChartId).ToArray());
-        // Rate denominates over the whole active population (1 user in this fixture).
-        Assert.Equal(5, ctx.Saved.RarestPasses[0].Passers);
+        Assert.Equal(1, ctx.Saved.RarestPasses[0].Passers);
     }
 
     [Fact]

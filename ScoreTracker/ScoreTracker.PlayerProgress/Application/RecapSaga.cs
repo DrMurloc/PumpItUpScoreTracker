@@ -220,18 +220,19 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
     ///     Passes few others on the site have. The denominator is EVERY active PIUScores
     ///     player, not players who recorded the chart — on a boss chart the only people
     ///     who record it are exactly the peers who can pass it, which read as "45% pass
-    ///     it" for a chart 3% of the site has passed. The 20-record floor still guards
-    ///     obscure charts nobody has touched.
+    ///     it" for a chart 3% of the site has passed. No record-count floor: the
+    ///     low-record tail IS the boss ladder (Ultimatum D27 has one passer sitewide),
+    ///     and obscurity is a legitimate flavor of rare (owner call). PassCount > 0 only
+    ///     guards the scoreless-pass edge, where the player's own pass isn't countable.
     /// </summary>
     private IReadOnlyList<RecapRareChart> BuildRarestPasses(RecordedPhoenixScore[] passes, SharedInputs shared)
     {
-        const int minimumAttempts = 20;
         var population = Math.Max(1, shared.ActiveUserIds.Count);
         return passes
             .Where(p => shared.Charts.ContainsKey(p.ChartId))
             .Select(p => (Chart: shared.Charts[p.ChartId],
                 Aggregate: shared.ChartAggregates.GetValueOrDefault(p.ChartId)))
-            .Where(x => x.Aggregate is { } a && a.Count >= minimumAttempts && a.PassCount > 0)
+            .Where(x => x.Aggregate is { PassCount: > 0 })
             .OrderBy(x => x.Aggregate!.PassCount)
             .ThenByDescending(x => x.Aggregate!.Count)
             .Take(5)
