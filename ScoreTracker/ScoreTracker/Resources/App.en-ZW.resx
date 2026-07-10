@@ -2301,4 +2301,253 @@
   <data name="Compute All Season Recaps" xml:space="preserve">
     <value>Mrgrgl Mrrgl Season Recaps</value>
   </data>
+  <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
+    <value>Mrgl mrgl recap mrrgl... mrgl soon.</value>
+  </data>
+  <data name="Your Phoenix Story" xml:space="preserve">
+    <value>Mrgl Phoenix Mrrglory</value>
+  </data>
+  <data name="PIUScores presents" xml:space="preserve">
+    <value>PIUScores mrglents</value>
+  </data>
+  <data name="{0} charts passed" xml:space="preserve">
+    <value>{0} mrgls mrgled</value>
+  </data>
+  <data name="Step on" xml:space="preserve">
+    <value>Mrgl on</value>
+  </data>
+  <data name="The arc" xml:space="preserve">
+    <value>Mrgl arc</value>
+  </data>
+  <data name="You walked in a {0}. You&apos;re walking out a {1}." xml:space="preserve">
+    <value>Mrgl in {0}. Mrgl out {1}.</value>
+  </data>
+  <data name="The grind" xml:space="preserve">
+    <value>Mrgl grind</value>
+  </data>
+  <data name="days on the pad" xml:space="preserve">
+    <value>mrgl days on pad</value>
+  </data>
+  <data name="arrows stepped, best scores only" xml:space="preserve">
+    <value>mrgl arrows mrgled</value>
+  </data>
+  <data name="of charts recorded" xml:space="preserve">
+    <value>of mrgl charts</value>
+  </data>
+  <data name="competitive singles, all PIUScores players" xml:space="preserve">
+    <value>mrgl singles, all mrgls</value>
+  </data>
+  <data name="competitive doubles, all PIUScores players" xml:space="preserve">
+    <value>mrgl doubles, all mrgls</value>
+  </data>
+  <data name="total charts passed" xml:space="preserve">
+    <value>mrgl charts mrgled</value>
+  </data>
+  <data name="Your step artists" xml:space="preserve">
+    <value>Mrgl step mrglists</value>
+  </data>
+  <data name="{0} charts" xml:space="preserve">
+    <value>{0} mrgls</value>
+  </data>
+  <data name="Some step artists are mislabeled in the wild — we report what the community knows." xml:space="preserve">
+    <value>Some mrgl artists mrgled wrong. Mrgl.</value>
+  </data>
+  <data name="Your play style" xml:space="preserve">
+    <value>Mrgl style</value>
+  </data>
+  <data name="Top-50 average score {0} — {1}" xml:space="preserve">
+    <value>Mrgl-50 mrglverage {0} — {1}</value>
+  </data>
+  <data name="Earned, not given" xml:space="preserve">
+    <value>Mrgled, not given</value>
+  </data>
+  <data name="Badges on the jacket" xml:space="preserve">
+    <value>Mrgl badges</value>
+  </data>
+  <data name="Community rivals" xml:space="preserve">
+    <value>Mrgl rivals</value>
+  </data>
+  <data name="You weren&apos;t climbing alone" xml:space="preserve">
+    <value>Mrgl not alone</value>
+  </data>
+  <data name="shared top-50 charts" xml:space="preserve">
+    <value>mrgl top-50 mrgls</value>
+  </data>
+  <data name="For the record" xml:space="preserve">
+    <value>For mrgl record</value>
+  </data>
+  <data name="The ones worth framing" xml:space="preserve">
+    <value>Mrgl frames</value>
+  </data>
+  <data name="Perfect Games" xml:space="preserve">
+    <value>Mrglfect Games</value>
+  </data>
+  <data name="Scores, vs your level" xml:space="preserve">
+    <value>Mrgl scores</value>
+  </data>
+  <data name="Weekly charts" xml:space="preserve">
+    <value>Mrgl weekly</value>
+  </data>
+  <data name="weeks. No misses." xml:space="preserve">
+    <value>mrgl weeks. No mrgl.</value>
+  </data>
+  <data name="weeks entered" xml:space="preserve">
+    <value>mrgl weeks</value>
+  </data>
+  <data name="podiums in range" xml:space="preserve">
+    <value>mrgl podiums</value>
+  </data>
+  <data name="wins in range" xml:space="preserve">
+    <value>mrgl wins</value>
+  </data>
+  <data name="Giant Slayer moments" xml:space="preserve">
+    <value>Mrgl Slayer mrgments</value>
+  </data>
+  <data name="of {0} in range" xml:space="preserve">
+    <value>of {0} mrgls</value>
+  </data>
+  <data name="week of {0}" xml:space="preserve">
+    <value>mrgl week {0}</value>
+  </data>
+  <data name="Giants slain" xml:space="preserve">
+    <value>Mrgl giants mrgled</value>
+  </data>
+  <data name="outscored {0}" xml:space="preserve">
+    <value>out-mrgled {0}</value>
+  </data>
+  <data name="+{0} levels up" xml:space="preserve">
+    <value>+{0} mrgls up</value>
+  </data>
+  <data name="Trophy shelf" xml:space="preserve">
+    <value>Mrgl shelf</value>
+  </data>
+  <data name="The cabinet" xml:space="preserve">
+    <value>Mrgl cabinet</value>
+  </data>
+  <data name="Rarest titles" xml:space="preserve">
+    <value>Mrgl rare titles</value>
+  </data>
+  <data name="held by {0} of titled players" xml:space="preserve">
+    <value>mrgl {0} mrgls have it</value>
+  </data>
+  <data name="Plate cabinet" xml:space="preserve">
+    <value>Mrgl plates</value>
+  </data>
+  <data name="Longest-standing best" xml:space="preserve">
+    <value>Old mrgl record</value>
+  </data>
+  <data name="standing since {0}" xml:space="preserve">
+    <value>mrgl since {0}</value>
+  </data>
+  <data name="{0} singles · {1} doubles passed" xml:space="preserve">
+    <value>{0} mrgls · {1} mrrgls</value>
+  </data>
+  <data name="Next season" xml:space="preserve">
+    <value>Next mrgl season</value>
+  </data>
+  <data name="See you in" xml:space="preserve">
+    <value>Mrgl you in</value>
+  </data>
+  <data name="{0} of your {1} passes carry over." xml:space="preserve">
+    <value>{0} of {1} mrgls carry mrgl.</value>
+  </data>
+  <data name="projected Singles PUMBILITY" xml:space="preserve">
+    <value>mrgl Singles PUMBILITY</value>
+  </data>
+  <data name="projected Doubles PUMBILITY" xml:space="preserve">
+    <value>mrgl Doubles PUMBILITY</value>
+  </data>
+  <data name="projected total" xml:space="preserve">
+    <value>mrgl total</value>
+  </data>
+  <data name="Top {0}" xml:space="preserve">
+    <value>Mrgl {0}</value>
+  </data>
+  <data name="{0} of all Phoenix titles collected" xml:space="preserve">
+    <value>{0} mrgl titles</value>
+  </data>
+  <data name="{0} folders at 90% or better" xml:space="preserve">
+    <value>{0} mrgl folders</value>
+  </data>
+  <data name="{0} of CoOp x2 charts cleared" xml:space="preserve">
+    <value>{0} mrgl CoOp</value>
+  </data>
+  <data name="{0} of every BanYa &amp; YAHPP chart passed" xml:space="preserve">
+    <value>{0} BanYa mrgls</value>
+  </data>
+  <data name="SSS+ on Uh-Heung S22." xml:space="preserve">
+    <value>SSS+ on Uh-Heung S22. Mrgl.</value>
+  </data>
+  <data name="More than 75% of S24+ passed at AA+ or lower." xml:space="preserve">
+    <value>Mrgl 75% S24+ mrgled AA+.</value>
+  </data>
+  <data name="Passed a D28." xml:space="preserve">
+    <value>Mrgled a D28.</value>
+  </data>
+  <data name="Underrated" xml:space="preserve">
+    <value>Undermrgled</value>
+  </data>
+  <data name="Pass Pusher" xml:space="preserve">
+    <value>Pass Pusher</value>
+  </data>
+  <data name="Pass Refiner" xml:space="preserve">
+    <value>Pass Refiner</value>
+  </data>
+  <data name="Balanced Player" xml:space="preserve">
+    <value>Balanced Player</value>
+  </data>
+  <data name="Perfectionist" xml:space="preserve">
+    <value>Perfectionist</value>
+  </data>
+  <data name="Title Hunter" xml:space="preserve">
+    <value>Title Hunter</value>
+  </data>
+  <data name="Title Collector" xml:space="preserve">
+    <value>Title Collector</value>
+  </data>
+  <data name="Title Master" xml:space="preserve">
+    <value>Title Master</value>
+  </data>
+  <data name="Seriously, Leave Some Titles for the Rest of Us" xml:space="preserve">
+    <value>Seriously, Leave Some Titles for the Rest of Us</value>
+  </data>
+  <data name="Special Snowflake" xml:space="preserve">
+    <value>Special Snowflake</value>
+  </data>
+  <data name="Completionist" xml:space="preserve">
+    <value>Completionist</value>
+  </data>
+  <data name="Completionist Plus" xml:space="preserve">
+    <value>Completionist Plus</value>
+  </data>
+  <data name="Completionist Supreme" xml:space="preserve">
+    <value>Completionist Supreme</value>
+  </data>
+  <data name="Completionist Ultra" xml:space="preserve">
+    <value>Completionist Ultra</value>
+  </data>
+  <data name="You Know Pump It Up Doesn&apos;t Do Lamps, Right?" xml:space="preserve">
+    <value>You Know Pump It Up Doesn&apos;t Do Lamps, Right?</value>
+  </data>
+  <data name="Socialite" xml:space="preserve">
+    <value>Socialite</value>
+  </data>
+  <data name="Clearly Has Friends" xml:space="preserve">
+    <value>Clearly Has Friends</value>
+  </data>
+  <data name="Friendship is Magic" xml:space="preserve">
+    <value>Friendship is Magic</value>
+  </data>
+  <data name="I Hope You Held Hands on Canon D" xml:space="preserve">
+    <value>I Hope You Held Hands on Canon D</value>
+  </data>
+  <data name="BanYa Lover" xml:space="preserve">
+    <value>BanYa Lover</value>
+  </data>
+  <data name="Big Feet or Injured Back?" xml:space="preserve">
+    <value>Big Feet or Injured Back?</value>
+  </data>
+  <data name="Now You Can Play the Game" xml:space="preserve">
+    <value>Now You Can Play the Game</value>
+  </data>
 </root>

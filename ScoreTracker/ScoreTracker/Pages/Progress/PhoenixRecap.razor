@@ -1,0 +1,702 @@
+@using MediatR
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Identity.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts.Recap
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@page "/Player/{UserIdParam:guid}/PhoenixRecap"
+
+<PageTitle>@L["Your Phoenix Story"]</PageTitle>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary"></MudProgressLinear>
+}
+else if (_user != null && _recap == null)
+{
+    <MudText Typo="Typo.h5" Class="mt-4">@L["Your Phoenix Story"]</MudText>
+    <MudText Class="mt-2">@L["This recap hasn't been computed yet — check back soon."]</MudText>
+}
+else if (_user != null && _recap != null)
+{
+    <div class="precap-deck" id="precap-deck">
+
+        @* ============ Cover ============ *@
+        <section class="precap-slide" style="--gx:50%;--gy:12%">
+            <div class="precap-inner">
+                <div class="precap-eyebrow">@L["PIUScores presents"]</div>
+                <h1 class="precap-h1">@L["Your Phoenix Story"]</h1>
+                <div class="precap-coverline">
+                    <span class="precap-tag">@_user.Name</span>
+                    <span class="precap-lede">@CoverRange()&nbsp;·&nbsp;<strong>@L["{0} charts passed", _recap.Rollup.ChartsPassed.ToString("N0")]</strong></span>
+                </div>
+            </div>
+            <div class="precap-scrollhint">@L["Step on"]</div>
+            @Brand()
+        </section>
+
+        @* ============ The Arc ============ *@
+        @if (_recap.Arc is { } arc)
+        {
+            <section class="precap-slide" style="--gx:20%;--gy:0%">
+                <div class="precap-inner">
+                    <div class="precap-eyebrow">@L["The arc"]</div>
+                    <h2 class="precap-h2">@arc.StartCompetitive.ToString("F1") <span class="precap-hl">&#8599;</span> @arc.EndCompetitive.ToString("F1")</h2>
+                    <p class="precap-lede">@L["You walked in a {0}. You're walking out a {1}.", ((int)arc.StartCompetitive).ToString(), ((int)arc.EndCompetitive).ToString()]</p>
+                    <div class="precap-panel">
+                        @* Rendered as one markup string: Razor treats lowercase <text> (SVG) as its own construct. *@
+                        @((MarkupString)ArcSvg())
+                    </div>
+                </div>
+                @Brand()
+            </section>
+        }
+
+        @* ============ The grind ============ *@
+        <section class="precap-slide" style="--gx:80%;--gy:0%">
+            <div class="precap-inner">
+                <div class="precap-eyebrow">@L["The grind"]</div>
+                <h2 class="precap-h2"><span class="precap-hl" data-count="@_recap.Rollup.PlayDays">@_recap.Rollup.PlayDays.ToString("N0")</span> @L["days on the pad"]</h2>
+                <div class="precap-statgrid">
+                    @if (_recap.Rollup.TotalNoteCount > 0)
+                    {
+                        <div class="precap-stat">
+                            <div class="precap-num" data-count="@_recap.Rollup.TotalNoteCount">@_recap.Rollup.TotalNoteCount.ToString("N0")</div>
+                            <div class="precap-cap">@L["arrows stepped, best scores only"]</div>
+                        </div>
+                    }
+                    <div class="precap-stat">
+                        <div class="precap-num">@FormatDuration(_recap.Rollup.TotalDurationSeconds)</div>
+                        <div class="precap-cap">@L["of charts recorded"]</div>
+                    </div>
+                    @if (_recap.Rollup.SinglesRank is { } sRank)
+                    {
+                        <div class="precap-stat">
+                            <div class="precap-num">#@sRank</div>
+                            <div class="precap-cap">@L["competitive singles, all PIUScores players"]</div>
+                            <div class="precap-rank">@TopShare(_recap.Rollup.SinglesPercentile)</div>
+                        </div>
+                    }
+                    @if (_recap.Rollup.DoublesRank is { } dRank)
+                    {
+                        <div class="precap-stat">
+                            <div class="precap-num">#@dRank</div>
+                            <div class="precap-cap">@L["competitive doubles, all PIUScores players"]</div>
+                            <div class="precap-rank">@TopShare(_recap.Rollup.DoublesPercentile)</div>
+                        </div>
+                    }
+                    <div class="precap-stat">
+                        <div class="precap-num">#@_recap.Rollup.ChartsPassedRank</div>
+                        <div class="precap-cap">@L["total charts passed"]</div>
+                        <div class="precap-rank">@TopShare(_recap.Rollup.ChartsPassedPercentile)</div>
+                    </div>
+                </div>
+                @if (_recap.Rollup.TopStepArtists.Any())
+                {
+                    <div class="precap-list">
+                        <span class="precap-cat">@L["Your step artists"]</span>
+                        @foreach (var artist in _recap.Rollup.TopStepArtists)
+                        {
+                            <div class="precap-row"><span class="precap-song">@artist.Name</span><span class="precap-rownum">@L["{0} charts", artist.ChartCount.ToString("N0")]</span></div>
+                        }
+                    </div>
+                    <p class="precap-footnote">@L["Some step artists are mislabeled in the wild — we report what the community knows."]</p>
+                }
+            </div>
+            @Brand()
+        </section>
+
+        @* ============ Player type ============ *@
+        @if (_recap.PlayerType is { } playerType)
+        {
+            <section class="precap-slide precap-center" style="--gx:50%;--gy:100%">
+                <div class="precap-inner">
+                    <div class="precap-eyebrow precap-eyebrow-center">@L["Your play style"]</div>
+                    <h1 class="precap-h1">@TypeName(playerType)</h1>
+                    @if (_recap.PlayerTypeAverageScore is { } avg)
+                    {
+                        <p class="precap-lede precap-lede-center">@L["Top-50 average score {0} — {1}", avg.ToString("N0"), ((PhoenixScore)avg).LetterGrade.GetName()]</p>
+                    }
+                    <div class="precap-typebar">
+                        @foreach (var band in TypeBands)
+                        {
+                            <div class="precap-seg @(band.Type == playerType ? "precap-you" : "")">
+                                <div class="precap-segname">@TypeName(band.Type)</div>
+                                <div class="precap-seggrade">@band.Grades</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+                @Brand()
+            </section>
+        }
+
+        @* ============ Badges ============ *@
+        @if (_recap.Badges.Any())
+        {
+            <section class="precap-slide" style="--gx:15%;--gy:20%">
+                <div class="precap-inner">
+                    <div class="precap-eyebrow">@L["Earned, not given"]</div>
+                    <h2 class="precap-h2">@L["Badges on the jacket"]</h2>
+                    <div class="precap-badgewall">
+                        @foreach (var badge in _recap.Badges)
+                        {
+                            <div class="precap-badge @(GoldBadges.Contains(badge.Badge) ? "precap-badge-gold" : "")">
+                                <div class="precap-glyph"><i></i></div>
+                                <div>
+                                    <h3>@BadgeName(badge.Badge)</h3>
+                                    <p>@BadgeDetail(badge)</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+                @Brand()
+            </section>
+        }
+
+        @* ============ Rivals ============ *@
+        @if (_recap.Rivals is { } rivals && (rivals.Singles.Any() || rivals.Doubles.Any()))
+        {
+            <section class="precap-slide" style="--gx:85%;--gy:80%">
+                <div class="precap-inner">
+                    <div class="precap-eyebrow">@L["Community rivals"]</div>
+                    <h2 class="precap-h2">@L["You weren't climbing alone"]</h2>
+                    @foreach (var (label, list) in new[] { (L["Singles"], rivals.Singles), (L["Doubles"], rivals.Doubles) })
+                    {
+                        @if (list.Any())
+                        {
+                            <span class="precap-cat">@label</span>
+                            <div class="precap-rivalcards">
+                                @foreach (var rival in list)
+                                {
+                                    <div class="precap-rival">
+                                        <div class="precap-rivalname">@rival.Name</div>
+                                        <div class="precap-rivallevel">@rival.CompetitiveLevel.ToString("F2")</div>
+                                        <div class="precap-rivalov"><b>@rival.SharedTop50Charts</b> @L["shared top-50 charts"]</div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+                @Brand()
+            </section>
+        }
+
+        @* ============ Highlights ============ *@
+        @if (_recap.ImpressivePgs.Any() || _recap.ImpressivePasses.Any() || _recap.ImpressiveScores.Any())
+        {
+            <section class="precap-slide" style="--gx:50%;--gy:0%">
+                <div class="precap-inner">
+                    <div class="precap-eyebrow">@L["For the record"]</div>
+                    <h2 class="precap-h2">@L["The ones worth framing"]</h2>
+                    <div class="precap-hlgrid">
+                        @if (_recap.ImpressivePgs.Any())
+                        {
+                            <div class="precap-hlcol">
+                                <span class="precap-cat precap-cat-hl">@L["Perfect Games"]</span>
+                                @foreach (var pg in _recap.ImpressivePgs)
+                                {
+                                    <div class="precap-row">@Pill(pg.ChartType, pg.Level)<span class="precap-song">@pg.SongName</span><span class="precap-meta precap-hot">@TierName(pg.Difficulty)</span></div>
+                                }
+                            </div>
+                        }
+                        @if (_recap.ImpressivePasses.Any())
+                        {
+                            <div class="precap-hlcol">
+                                <span class="precap-cat precap-cat-hl">@L["Passes"]</span>
+                                @foreach (var pass in _recap.ImpressivePasses)
+                                {
+                                    <div class="precap-row">@Pill(pass.ChartType, pass.Level)<span class="precap-song">@pass.SongName</span><span class="precap-meta precap-hot">@TierName(pass.Difficulty)</span></div>
+                                }
+                            </div>
+                        }
+                        @if (_recap.ImpressiveScores.Any())
+                        {
+                            <div class="precap-hlcol">
+                                <span class="precap-cat precap-cat-hl">@L["Scores, vs your level"]</span>
+                                @foreach (var score in _recap.ImpressiveScores)
+                                {
+                                    <div class="precap-row">@Pill(score.ChartType, score.Level)<span class="precap-song">@score.SongName</span><span class="precap-score">@score.Score.ToString("N0")</span><span class="precap-meta precap-hot">@TopShare(1 - score.PercentileVsPeers)</span></div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+                @Brand()
+            </section>
+        }
+
+        @* ============ Weekly ============ *@
+        @if (_recap.Weekly is { } weekly)
+        {
+            <section class="precap-slide" style="--gx:20%;--gy:100%">
+                <div class="precap-inner">
+                    <div class="precap-eyebrow">@L["Weekly charts"]</div>
+                    <h2 class="precap-h2"><span class="precap-hl" data-count="@weekly.LongestStreak">@weekly.LongestStreak</span> @L["weeks. No misses."]</h2>
+                    <div class="precap-weekstats">
+                        <div class="precap-weekstat"><div class="precap-num">@weekly.WeeksEntered</div><div class="precap-cap">@L["weeks entered"]</div></div>
+                        <div class="precap-weekstat"><div class="precap-num">@weekly.PodiumsInRange</div><div class="precap-cap">@L["podiums in range"]</div></div>
+                        <div class="precap-weekstat"><div class="precap-num">@weekly.WinsInRange</div><div class="precap-cap">@L["wins in range"]</div></div>
+                        @if (weekly.GiantSlayerCount > 0)
+                        {
+                            <div class="precap-weekstat"><div class="precap-num precap-gold">&times;@weekly.GiantSlayerCount</div><div class="precap-cap">@L["Giant Slayer moments"]</div></div>
+                        }
+                    </div>
+                    @if (weekly.BestWeek is { } best)
+                    {
+                        <div class="precap-bestweek">
+                            <span class="precap-place">#@best.Place</span>
+                            <span class="precap-bestwhat">@L["of {0} in range", best.OfCount.ToString()] — <b>@best.SongName @best.ChartType.GetShortHand()@best.Level</b> · @L["week of {0}", best.Week.ToString("MMM d, yyyy")]</span>
+                        </div>
+                    }
+                    @if (weekly.TopGiantSlayers.Any())
+                    {
+                        <div class="precap-list">
+                            <span class="precap-cat precap-cat-gold">@L["Giants slain"]</span>
+                            @foreach (var giant in weekly.TopGiantSlayers)
+                            {
+                                <div class="precap-row">@Pill(giant.ChartType, giant.Level)<span class="precap-song">@giant.SongName — @L["outscored {0}", giant.OutscoredName]</span><span class="precap-meta precap-hot">@L["+{0} levels up", giant.LevelGap.ToString("F1")]</span></div>
+                            }
+                        </div>
+                    }
+                </div>
+                @Brand()
+            </section>
+        }
+
+        @* ============ Trophy shelf ============ *@
+        <section class="precap-slide" style="--gx:75%;--gy:15%">
+            <div class="precap-inner">
+                <div class="precap-eyebrow">@L["Trophy shelf"]</div>
+                <h2 class="precap-h2">@L["The cabinet"]</h2>
+                <div class="precap-hlgrid">
+                    @if (_recap.Trophies.RarestTitles.Any())
+                    {
+                        <div class="precap-hlcol">
+                            <span class="precap-cat precap-cat-gold">@L["Rarest titles"]</span>
+                            @foreach (var title in _recap.Trophies.RarestTitles)
+                            {
+                                <div class="precap-row"><span class="precap-song">@title.Title</span><span class="precap-meta precap-hot">@L["held by {0} of titled players", title.HolderShare.ToString("P1")]</span></div>
+                            }
+                        </div>
+                    }
+                    @if (_recap.Trophies.PlateCounts.Any())
+                    {
+                        <div class="precap-hlcol">
+                            <span class="precap-cat precap-cat-hl">@L["Plate cabinet"]</span>
+                            @foreach (var plate in _recap.Trophies.PlateCounts)
+                            {
+                                <div class="precap-row"><span class="precap-song">@plate.Plate.GetShorthand()</span><span class="precap-rownum">&times;@plate.Count.ToString("N0")</span></div>
+                            }
+                        </div>
+                    }
+                    <div class="precap-hlcol">
+                        @if (_recap.Trophies.LongestStanding is { } oldest)
+                        {
+                            <span class="precap-cat precap-cat-hl">@L["Longest-standing best"]</span>
+                            <div class="precap-row">@Pill(oldest.ChartType, oldest.Level)<span class="precap-song">@oldest.SongName</span><span class="precap-meta">@L["standing since {0}", oldest.RecordedDate.ToString("MMM yyyy")]</span></div>
+                        }
+                        <span class="precap-cat" style="margin-top:14px">@L["Singles vs Doubles"]</span>
+                        <div class="precap-row"><span class="precap-song">@L["{0} singles · {1} doubles passed", _recap.Trophies.SinglesPassCount.ToString("N0"), _recap.Trophies.DoublesPassCount.ToString("N0")]</span></div>
+                    </div>
+                </div>
+            </div>
+            @Brand()
+        </section>
+
+        @* ============ Phoenix 2 finale ============ *@
+        @if (_recap.Projection is { } projection)
+        {
+            <section class="precap-slide precap-p2 precap-center">
+                <div class="precap-inner">
+                    <div class="precap-eyebrow precap-eyebrow-center">@L["Next season"]</div>
+                    <h1 class="precap-h1">@L["See you in"]<br/><span class="precap-hl">Phoenix&nbsp;2</span></h1>
+                    <p class="precap-lede precap-lede-center">@L["{0} of your {1} passes carry over.", projection.CarriedOverPasses.ToString("N0"), projection.TotalPasses.ToString("N0")]</p>
+                    <div class="precap-statgrid">
+                        <div class="precap-stat precap-p2stat"><div class="precap-num" data-count="@projection.SinglesPumbility">@projection.SinglesPumbility.ToString("N0")</div><div class="precap-cap">@L["projected Singles PUMBILITY"]</div></div>
+                        <div class="precap-stat precap-p2stat"><div class="precap-num" data-count="@projection.DoublesPumbility">@projection.DoublesPumbility.ToString("N0")</div><div class="precap-cap">@L["projected Doubles PUMBILITY"]</div></div>
+                        <div class="precap-stat precap-p2stat"><div class="precap-num" data-count="@projection.TotalPumbility">@projection.TotalPumbility.ToString("N0")</div><div class="precap-cap">@L["projected total"]</div></div>
+                    </div>
+                    <div class="precap-titlechips">
+                        @if (projection.ProjectedSinglesTitle != null)
+                        {
+                            <div class="precap-titlechip">@projection.ProjectedSinglesTitle</div>
+                        }
+                        @if (projection.ProjectedDoublesTitle != null)
+                        {
+                            <div class="precap-titlechip">@projection.ProjectedDoublesTitle</div>
+                        }
+                    </div>
+                </div>
+                @Brand()
+            </section>
+        }
+    </div>
+
+    <style>
+        .precap-deck {
+            --pbg: #05070D; --ppanel: #0A121F; --pink: #ECF4FB; --pdim: #8CA1B6; --pfaint: #55677B;
+            --phair: rgba(140,161,182,.14); --paccent: #27ABDE; --pgold: #E9BC4F; --pp2: #8CC63E;
+            --ppillS: #E14D66; --ppillD: #43B569; --ppillC: #E2A93B;
+            --pdisplay: "Bahnschrift SemiCondensed", "Bahnschrift", "Arial Narrow", "Segoe UI", system-ui, sans-serif;
+            --pmono: "Cascadia Code", "Consolas", ui-monospace, monospace;
+            position: fixed; inset: 0; z-index: 1400; overflow-y: auto; overflow-x: hidden;
+            scroll-snap-type: y mandatory; background: var(--pbg); color: var(--pink);
+            font-family: "Segoe UI", system-ui, sans-serif; line-height: 1.5;
+        }
+        .precap-slide { position: relative; min-height: 100vh; min-height: 100dvh; scroll-snap-align: start;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: clamp(20px, 4vw, 56px); box-sizing: border-box; overflow: hidden; border-bottom: 1px solid var(--phair); }
+        .precap-slide::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+            background: radial-gradient(ellipse 80% 55% at var(--gx,50%) var(--gy,0%), rgba(29,155,204,.18), transparent 70%); }
+        .precap-p2::before { background: radial-gradient(ellipse 80% 55% at 50% 100%, rgba(108,168,50,.16), transparent 70%); }
+        .precap-inner { position: relative; width: min(1060px, 100%); z-index: 1; }
+        .precap-center .precap-inner { text-align: center; }
+        .precap-eyebrow { font-family: var(--pdisplay); font-size: clamp(11px,1.2vw,13px); letter-spacing: .34em;
+            text-transform: uppercase; color: var(--paccent); display: flex; align-items: center; gap: 14px; margin-bottom: clamp(14px,2.4vh,26px); }
+        .precap-eyebrow::after { content: ""; flex: 0 0 clamp(40px,6vw,90px); height: 1px; background: var(--paccent); opacity: .5; }
+        .precap-eyebrow-center { justify-content: center; }
+        .precap-p2 .precap-eyebrow { color: var(--pp2); } .precap-p2 .precap-eyebrow::after { background: var(--pp2); }
+        .precap-h1, .precap-h2 { font-family: var(--pdisplay); font-weight: 700; text-transform: uppercase;
+            line-height: .92; margin: 0 0 clamp(16px,3vh,30px); text-wrap: balance; color: var(--pink); }
+        .precap-h1 { font-size: clamp(48px,9.5vw,124px); }
+        .precap-h2 { font-size: clamp(34px,6vw,78px); }
+        .precap-hl { color: var(--paccent); } .precap-p2 .precap-hl { color: var(--pp2); }
+        .precap-gold { color: var(--pgold); }
+        .precap-lede { color: var(--pdim); font-size: clamp(15px,1.6vw,19px); max-width: 58ch; margin: 0; }
+        .precap-lede strong { color: var(--pink); font-weight: 600; }
+        .precap-lede-center { margin: 0 auto; }
+        .precap-footnote { color: var(--pfaint); font-size: 12px; margin-top: 14px; }
+        .precap-brand { position: absolute; left: clamp(20px,4vw,56px); right: clamp(20px,4vw,56px); bottom: 16px;
+            display: flex; justify-content: space-between; font-family: var(--pdisplay); font-size: 11px;
+            letter-spacing: .28em; text-transform: uppercase; color: var(--pfaint); z-index: 1; }
+        .precap-brand b { color: var(--pdim); font-weight: 600; }
+        .precap-tag { display: inline-flex; align-items: center; gap: 10px; border: 1px solid var(--phair);
+            background: var(--ppanel); border-radius: 999px; padding: 8px 18px; font-family: var(--pdisplay);
+            letter-spacing: .18em; text-transform: uppercase; font-size: clamp(12px,1.4vw,15px); }
+        .precap-tag::before { content: ""; width: 8px; height: 8px; background: var(--paccent); transform: rotate(45deg); }
+        .precap-coverline { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 8px; }
+        .precap-scrollhint { position: absolute; left: 50%; bottom: 52px; transform: translateX(-50%);
+            color: var(--paccent); font-family: var(--pdisplay); font-size: 11px; letter-spacing: .3em;
+            text-transform: uppercase; display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 1; }
+        .precap-scrollhint::after { content: ""; width: 10px; height: 10px; border-right: 2px solid var(--paccent);
+            border-bottom: 2px solid var(--paccent); transform: rotate(45deg); animation: precap-bob 1.6s ease-in-out infinite; }
+        @@keyframes precap-bob { 50% { transform: rotate(45deg) translate(4px,4px); } }
+        .precap-panel { background: var(--ppanel); border: 1px solid var(--phair); border-radius: 12px; padding: clamp(16px,2.5vw,30px); }
+        .precap-arc { width: 100%; height: auto; display: block; }
+        .precap-arcline { fill: none; stroke: var(--paccent); stroke-width: 2.5; stroke-linecap: round;
+            stroke-dasharray: 1400; stroke-dashoffset: 1400; animation: precap-draw 2.2s cubic-bezier(.4,0,.2,1) .4s forwards; }
+        @@keyframes precap-draw { to { stroke-dashoffset: 0; } }
+        .precap-arcdot { fill: var(--paccent); opacity: 0; animation: precap-in .4s ease 2.5s forwards; }
+        .precap-arcend { font-family: var(--pmono); font-size: 20px; font-weight: 700; fill: var(--paccent);
+            opacity: 0; animation: precap-in .5s ease 2.6s forwards; }
+        @@keyframes precap-in { to { opacity: 1; } }
+        .precap-axis { font-family: var(--pmono); font-size: 11px; fill: var(--pfaint); }
+        .precap-grid { stroke: var(--phair); stroke-width: 1; }
+        .precap-statgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-top: clamp(16px,2.5vh,26px); }
+        .precap-stat { background: var(--ppanel); border: 1px solid var(--phair); border-radius: 10px; padding: 18px 20px 16px; }
+        .precap-num { font-family: var(--pmono); font-variant-numeric: tabular-nums; font-size: clamp(26px,3.2vw,40px); font-weight: 700; line-height: 1.05; }
+        .precap-cap { color: var(--pdim); font-size: 13px; margin-top: 6px; }
+        .precap-rank { color: var(--pgold); font-family: var(--pdisplay); letter-spacing: .14em; font-size: 12px; text-transform: uppercase; margin-top: 8px; }
+        .precap-p2stat { border-color: rgba(140,198,62,.25); } .precap-p2stat .precap-num { color: var(--pp2); }
+        .precap-list { margin-top: clamp(14px,2.2vh,22px); }
+        .precap-cat { font-family: var(--pdisplay); font-size: 10px; letter-spacing: .22em; text-transform: uppercase;
+            color: var(--pfaint); display: block; margin: 12px 0 6px; }
+        .precap-cat-hl { color: var(--paccent); } .precap-cat-gold { color: var(--pgold); }
+        .precap-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--phair); }
+        .precap-song { flex: 1; font-size: 14px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .precap-rownum, .precap-score { font-family: var(--pmono); font-variant-numeric: tabular-nums; font-size: 13px; color: var(--pdim); }
+        .precap-score { color: var(--pink); }
+        .precap-meta { font-family: var(--pmono); font-size: 11px; color: var(--pfaint); text-transform: uppercase; white-space: nowrap; }
+        .precap-hot { color: var(--pgold); }
+        .precap-pill { display: inline-block; font-family: var(--pmono); font-size: 12px; font-weight: 700;
+            padding: 3px 9px; border-radius: 4px; min-width: 34px; text-align: center; }
+        .precap-pill-s { background: var(--ppillS); color: #fff; }
+        .precap-pill-d { background: var(--ppillD); color: #06130A; }
+        .precap-pill-c { background: var(--ppillC); color: #1A1204; }
+        .precap-typebar { display: flex; gap: 4px; margin-top: clamp(18px,3vh,32px); }
+        .precap-seg { flex: 1; text-align: center; padding: 12px 4px 10px; border-radius: 6px; background: var(--ppanel); border: 1px solid var(--phair); }
+        .precap-segname { font-family: var(--pdisplay); text-transform: uppercase; letter-spacing: .1em; font-size: clamp(8px,1vw,11px); color: var(--pfaint); }
+        .precap-seggrade { font-family: var(--pmono); font-size: 10px; color: var(--pfaint); margin-top: 4px; }
+        .precap-you { background: linear-gradient(180deg, rgba(39,171,222,.22), rgba(39,171,222,.06)); border-color: var(--paccent); }
+        .precap-you .precap-segname { color: var(--paccent); } .precap-you .precap-seggrade { color: var(--pdim); }
+        .precap-badgewall { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: clamp(14px,2.2vh,24px); }
+        .precap-badge { background: var(--ppanel); border: 1px solid var(--phair); border-radius: 12px; padding: 18px 20px; display: flex; gap: 16px; align-items: flex-start; }
+        .precap-glyph { flex: 0 0 40px; height: 40px; border-radius: 8px; background: linear-gradient(160deg, #1D9BCC, #0E4A63); display: grid; place-items: center; }
+        .precap-glyph i { width: 12px; height: 12px; background: #fff; transform: rotate(45deg); display: block; }
+        .precap-badge-gold .precap-glyph { background: linear-gradient(160deg, var(--pgold), #7A5D1C); }
+        .precap-badge-gold .precap-glyph i { background: #100C02; }
+        .precap-badge h3 { margin: 0 0 4px; font-family: var(--pdisplay); text-transform: uppercase; letter-spacing: .06em; font-size: 16px; line-height: 1.15; color: var(--pink); }
+        .precap-badge-gold h3 { color: var(--pgold); }
+        .precap-badge p { margin: 0; color: var(--pdim); font-size: 13px; }
+        .precap-rivalcards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin-bottom: 8px; }
+        .precap-rival { background: var(--ppanel); border: 1px solid var(--phair); border-radius: 12px; padding: 16px 18px; position: relative; }
+        .precap-rival::before { content: "VS"; position: absolute; top: 12px; right: 14px; font-family: var(--pdisplay); font-size: 11px; letter-spacing: .2em; color: var(--pfaint); }
+        .precap-rivalname { font-family: var(--pdisplay); font-size: 18px; text-transform: uppercase; letter-spacing: .04em; }
+        .precap-rivallevel { font-family: var(--pmono); font-variant-numeric: tabular-nums; color: var(--pdim); font-size: 13px; margin-top: 2px; }
+        .precap-rivalov { margin-top: 10px; font-size: 13px; color: var(--pdim); }
+        .precap-rivalov b { color: var(--paccent); font-family: var(--pmono); font-size: 16px; }
+        .precap-hlgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: clamp(12px,2vh,20px); }
+        .precap-hlcol { background: var(--ppanel); border: 1px solid var(--phair); border-radius: 12px; padding: 16px 18px; }
+        .precap-weekstats { display: flex; flex-wrap: wrap; gap: 12px; margin: clamp(12px,2vh,20px) 0; }
+        .precap-weekstat { border: 1px solid var(--phair); background: var(--ppanel); border-radius: 10px; padding: 12px 18px; }
+        .precap-weekstat .precap-num { font-size: 24px; }
+        .precap-bestweek { border: 1px solid var(--phair); border-left: 3px solid var(--pgold); background: var(--ppanel);
+            border-radius: 10px; padding: 14px 18px; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+        .precap-place { font-family: var(--pdisplay); font-size: 24px; color: var(--pgold); }
+        .precap-bestwhat { color: var(--pdim); font-size: 14px; }
+        .precap-bestwhat b { color: var(--pink); }
+        .precap-titlechips { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 22px; }
+        .precap-titlechip { display: inline-flex; align-items: center; gap: 12px; border: 1px solid #6CA832;
+            border-radius: 999px; padding: 10px 22px; font-family: var(--pdisplay); text-transform: uppercase; letter-spacing: .16em; font-size: 14px; }
+        .precap-titlechip::before { content: ""; width: 9px; height: 9px; background: var(--pp2); transform: rotate(45deg); }
+        .precap-reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+        .precap-slide.precap-in .precap-reveal { opacity: 1; transform: none; }
+        @@media (prefers-reduced-motion: reduce) {
+            .precap-arcline { animation: none; stroke-dashoffset: 0; }
+            .precap-arcdot, .precap-arcend { animation: none; opacity: 1; }
+            .precap-scrollhint::after { animation: none; }
+            .precap-reveal { opacity: 1; transform: none; transition: none; }
+        }
+        @@media (max-width: 640px) {
+            .precap-brand { letter-spacing: .16em; font-size: 9px; }
+            .precap-rival::before { display: none; }
+        }
+    </style>
+}
+
+@inject IMediator Mediator
+@inject NavigationManager NavManager
+@inject IJSRuntime JS
+@code {
+    [Parameter] public Guid UserIdParam { get; set; }
+
+    private static readonly (RecapPlayerType Type, string Grades)[] TypeBands =
+    {
+        (RecapPlayerType.PassPusher, "≤AA+"),
+        (RecapPlayerType.PassRefiner, "AAA–AAA+"),
+        (RecapPlayerType.BalancedPlayer, "S–S+"),
+        (RecapPlayerType.Competitive, "SS–SSS"),
+        (RecapPlayerType.Perfectionist, "SSS+")
+    };
+
+    private static readonly ISet<RecapBadge> GoldBadges = new HashSet<RecapBadge>
+    {
+        RecapBadge.SpecialSnowflake, RecapBadge.YouKnowPumpItUpDoesntDoLamps,
+        RecapBadge.IHopeYouHeldHandsOnCanonD, RecapBadge.BigFeetOrInjuredBack,
+        RecapBadge.GrandMashter, RecapBadge.NowYouCanPlayTheGame, RecapBadge.Dove
+    };
+
+    private User? _user;
+    private PlayerRecap? _recap;
+    private bool _loading = true;
+    private IJSObjectReference? _module;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Public players only, same gate as the Sessions page.
+        _user = await Mediator.Send(new GetUserByIdQuery(UserIdParam));
+        if (_user is not { IsPublic: true })
+        {
+            NavManager.NavigateTo("/");
+            return;
+        }
+
+        _recap = await Mediator.Send(new GetPlayerRecapQuery(UserIdParam));
+        _loading = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _recap == null) return;
+        _module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/phoenix-recap.js");
+        await _module.InvokeVoidAsync("init", "precap-deck");
+    }
+
+    private RenderFragment Brand() => @<div class="precap-brand"><span><b>PIUScores</b> · Phoenix Recap</span><span>@_user!.Name</span></div>;
+
+    private RenderFragment Pill(ChartType type, int level)
+    {
+        var css = type switch
+        {
+            ChartType.Double => "precap-pill precap-pill-d",
+            ChartType.CoOp => "precap-pill precap-pill-c",
+            _ => "precap-pill precap-pill-s"
+        };
+        return @<span class="@css">@type.GetShortHand()@level</span>;
+    }
+
+    private string CoverRange()
+    {
+        var start = _recap!.Arc?.Points.FirstOrDefault()?.Date;
+        return start == null
+            ? _recap.ComputedAt.Year.ToString()
+            : $"{start.Value:MMM yyyy} — {_recap.ComputedAt:MMM yyyy}";
+    }
+
+    private string TopShare(double? percentile)
+    {
+        return percentile == null ? string.Empty : L["Top {0}", percentile.Value.ToString("P1")];
+    }
+
+    private string FormatDuration(long seconds)
+    {
+        var time = TimeSpan.FromSeconds(seconds);
+        return $"{(int)time.TotalHours}h {time.Minutes}m";
+    }
+
+    private string TypeName(RecapPlayerType type)
+    {
+        return type switch
+        {
+            RecapPlayerType.PassPusher => L["Pass Pusher"],
+            RecapPlayerType.PassRefiner => L["Pass Refiner"],
+            RecapPlayerType.BalancedPlayer => L["Balanced Player"],
+            RecapPlayerType.Competitive => L["Competitive"],
+            _ => L["Perfectionist"]
+        };
+    }
+
+    private string TierName(TierListCategory category)
+    {
+        return category switch
+        {
+            TierListCategory.VeryHard => L["Very Hard"],
+            TierListCategory.Underrated => L["Underrated"],
+            _ => L[category.ToString()]
+        };
+    }
+
+    private string BadgeName(RecapBadge badge)
+    {
+        return badge switch
+        {
+            RecapBadge.TitleHunter => L["Title Hunter"],
+            RecapBadge.TitleCollector => L["Title Collector"],
+            RecapBadge.TitleMaster => L["Title Master"],
+            RecapBadge.LeaveSomeTitlesForTheRestOfUs => L["Seriously, Leave Some Titles for the Rest of Us"],
+            RecapBadge.SpecialSnowflake => L["Special Snowflake"],
+            RecapBadge.Completionist => L["Completionist"],
+            RecapBadge.CompletionistPlus => L["Completionist Plus"],
+            RecapBadge.CompletionistSupreme => L["Completionist Supreme"],
+            RecapBadge.CompletionistUltra => L["Completionist Ultra"],
+            RecapBadge.YouKnowPumpItUpDoesntDoLamps => L["You Know Pump It Up Doesn't Do Lamps, Right?"],
+            RecapBadge.Socialite => L["Socialite"],
+            RecapBadge.ClearlyHasFriends => L["Clearly Has Friends"],
+            RecapBadge.FriendshipIsMagic => L["Friendship is Magic"],
+            RecapBadge.IHopeYouHeldHandsOnCanonD => L["I Hope You Held Hands on Canon D"],
+            RecapBadge.BanYaLover => L["BanYa Lover"],
+            RecapBadge.BigFeetOrInjuredBack => L["Big Feet or Injured Back?"],
+            RecapBadge.GrandMashter => "Grand Mashter",
+            RecapBadge.NowYouCanPlayTheGame => L["Now You Can Play the Game"],
+            _ => "Dove 🕊️"
+        };
+    }
+
+    private string BadgeDetail(RecapEarnedBadge badge)
+    {
+        return badge.Badge switch
+        {
+            RecapBadge.TitleHunter or RecapBadge.TitleCollector or RecapBadge.TitleMaster
+                or RecapBadge.LeaveSomeTitlesForTheRestOfUs when badge.Share != null =>
+                L["{0} of all Phoenix titles collected", badge.Share.Value.ToString("P0")],
+            RecapBadge.SpecialSnowflake when badge is { Subject: not null, Share: not null } =>
+                $"{badge.Subject} — " + L["held by {0} of titled players", badge.Share.Value.ToString("P1")],
+            RecapBadge.Completionist or RecapBadge.CompletionistPlus or RecapBadge.CompletionistSupreme
+                or RecapBadge.CompletionistUltra or RecapBadge.YouKnowPumpItUpDoesntDoLamps when badge.Count != null =>
+                L["{0} folders at 90% or better", badge.Count.Value.ToString()],
+            RecapBadge.Socialite or RecapBadge.ClearlyHasFriends or RecapBadge.FriendshipIsMagic
+                or RecapBadge.IHopeYouHeldHandsOnCanonD when badge.Share != null =>
+                L["{0} of CoOp x2 charts cleared", badge.Share.Value.ToString("P0")],
+            RecapBadge.BanYaLover when badge.Share != null =>
+                L["{0} of every BanYa & YAHPP chart passed", badge.Share.Value.ToString("P0")],
+            RecapBadge.BigFeetOrInjuredBack => L["SSS+ on Uh-Heung S22."],
+            RecapBadge.GrandMashter => L["More than 75% of S24+ passed at AA+ or lower."],
+            RecapBadge.NowYouCanPlayTheGame => L["Passed a D28."],
+            RecapBadge.Dove => "🕊️",
+            _ => string.Empty
+        };
+    }
+
+    // Arc chart geometry: x spreads 70..850, y maps the level range (padded) onto 260..40.
+    private const double ArcLeft = 70, ArcRight = 850, ArcTop = 40, ArcBottom = 260;
+
+    private (double Min, double Max) ArcRange()
+    {
+        var levels = _recap!.Arc!.Points.Select(p => p.CompetitiveLevel).ToArray();
+        var min = Math.Floor(levels.Min() - .3);
+        var max = Math.Ceiling(levels.Max() + .3);
+        return (min, Math.Max(max, min + 1));
+    }
+
+    private IEnumerable<(double X, double Y)> ArcCoordinates()
+    {
+        var points = _recap!.Arc!.Points;
+        var (min, max) = ArcRange();
+        return points.Select((p, i) => (
+            ArcLeft + (points.Count == 1 ? 0 : i * (ArcRight - ArcLeft) / (points.Count - 1)),
+            ArcBottom - (p.CompetitiveLevel - min) / (max - min) * (ArcBottom - ArcTop)));
+    }
+
+    private string ArcLinePath()
+    {
+        return string.Join(" ", ArcCoordinates().Select((c, i) =>
+            $"{(i == 0 ? "M" : "L")}{c.X.ToString("F0", System.Globalization.CultureInfo.InvariantCulture)} {c.Y.ToString("F0", System.Globalization.CultureInfo.InvariantCulture)}"));
+    }
+
+    private string ArcAreaPath()
+    {
+        var coordinates = ArcCoordinates().ToArray();
+        return ArcLinePath() +
+               $" L{coordinates[^1].X.ToString("F0", System.Globalization.CultureInfo.InvariantCulture)} 300 L{coordinates[0].X.ToString("F0", System.Globalization.CultureInfo.InvariantCulture)} 300 Z";
+    }
+
+    private (double X, double Y) ArcStart() => ArcCoordinates().First();
+    private (double X, double Y) ArcEnd() => ArcCoordinates().Last();
+
+    private IEnumerable<(double Y, string Label)> ArcGridLines()
+    {
+        var (min, max) = ArcRange();
+        for (var level = (int)Math.Ceiling(min); level <= (int)Math.Floor(max); level++)
+        {
+            var y = ArcBottom - (level - min) / (max - min) * (ArcBottom - ArcTop);
+            yield return (y, level.ToString());
+        }
+    }
+
+    private string ArcSvg()
+    {
+        var arc = _recap!.Arc!;
+        var svg = new System.Text.StringBuilder();
+        svg.Append("<svg class=\"precap-arc\" viewBox=\"0 0 900 300\" role=\"img\">");
+        foreach (var (y, label) in ArcGridLines())
+        {
+            var yText = y.ToString("F0", System.Globalization.CultureInfo.InvariantCulture);
+            svg.Append($"<line class=\"precap-grid\" x1=\"60\" y1=\"{yText}\" x2=\"880\" y2=\"{yText}\"/>");
+            svg.Append($"<text class=\"precap-axis\" x=\"50\" y=\"{yText}\" text-anchor=\"end\">{label}</text>");
+        }
+
+        svg.Append("<defs><linearGradient id=\"precapArcFill\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">");
+        svg.Append("<stop offset=\"0\" stop-color=\"#27ABDE\" stop-opacity=\".22\"/>");
+        svg.Append("<stop offset=\"1\" stop-color=\"#27ABDE\" stop-opacity=\"0\"/></linearGradient></defs>");
+        svg.Append($"<path fill=\"url(#precapArcFill)\" d=\"{ArcAreaPath()}\"/>");
+        svg.Append($"<path class=\"precap-arcline\" d=\"{ArcLinePath()}\"/>");
+        var end = ArcEnd();
+        var start = ArcStart();
+        var invariant = System.Globalization.CultureInfo.InvariantCulture;
+        svg.Append($"<circle class=\"precap-arcdot\" cx=\"{end.X.ToString("F0", invariant)}\" cy=\"{end.Y.ToString("F0", invariant)}\" r=\"6\"/>");
+        svg.Append($"<text class=\"precap-axis\" x=\"70\" y=\"{(start.Y - 10).ToString("F0", invariant)}\">{arc.StartCompetitive.ToString("F1", invariant)}</text>");
+        svg.Append($"<text class=\"precap-arcend\" x=\"{(end.X - 4).ToString("F0", invariant)}\" y=\"{(end.Y - 14).ToString("F0", invariant)}\" text-anchor=\"end\">{arc.EndCompetitive.ToString("F1", invariant)}</text>");
+        svg.Append("</svg>");
+        return svg.ToString();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_module != null) await _module.DisposeAsync();
+    }
+}

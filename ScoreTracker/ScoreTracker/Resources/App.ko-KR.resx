@@ -2257,4 +2257,253 @@
   <data name="Compute All Season Recaps" xml:space="preserve">
     <value>전체 시즌 리캡 계산</value>
   </data>
+  <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
+    <value>이 리캡은 아직 계산되지 않았습니다. 나중에 다시 확인해 주세요.</value>
+  </data>
+  <data name="Your Phoenix Story" xml:space="preserve">
+    <value>당신의 피닉스 스토리</value>
+  </data>
+  <data name="PIUScores presents" xml:space="preserve">
+    <value>PIUScores presents</value>
+  </data>
+  <data name="{0} charts passed" xml:space="preserve">
+    <value>{0}개 채보 클리어</value>
+  </data>
+  <data name="Step on" xml:space="preserve">
+    <value>스크롤</value>
+  </data>
+  <data name="The arc" xml:space="preserve">
+    <value>성장 곡선</value>
+  </data>
+  <data name="You walked in a {0}. You&apos;re walking out a {1}." xml:space="preserve">
+    <value>레벨 {0}에서 시작해 레벨 {1}로 떠납니다.</value>
+  </data>
+  <data name="The grind" xml:space="preserve">
+    <value>그라인드</value>
+  </data>
+  <data name="days on the pad" xml:space="preserve">
+    <value>일 플레이</value>
+  </data>
+  <data name="arrows stepped, best scores only" xml:space="preserve">
+    <value>밟은 화살표 (최고 기록 기준)</value>
+  </data>
+  <data name="of charts recorded" xml:space="preserve">
+    <value>의 채보 시간</value>
+  </data>
+  <data name="competitive singles, all PIUScores players" xml:space="preserve">
+    <value>싱글 경쟁 레벨 (PIUScores 전체)</value>
+  </data>
+  <data name="competitive doubles, all PIUScores players" xml:space="preserve">
+    <value>더블 경쟁 레벨 (PIUScores 전체)</value>
+  </data>
+  <data name="total charts passed" xml:space="preserve">
+    <value>총 클리어 채보 수</value>
+  </data>
+  <data name="Your step artists" xml:space="preserve">
+    <value>나의 스텝 아티스트</value>
+  </data>
+  <data name="{0} charts" xml:space="preserve">
+    <value>{0}개 채보</value>
+  </data>
+  <data name="Some step artists are mislabeled in the wild — we report what the community knows." xml:space="preserve">
+    <value>일부 스텝 아티스트 표기는 부정확할 수 있습니다. 커뮤니티가 아는 정보를 표시합니다.</value>
+  </data>
+  <data name="Your play style" xml:space="preserve">
+    <value>나의 플레이 스타일</value>
+  </data>
+  <data name="Top-50 average score {0} — {1}" xml:space="preserve">
+    <value>톱50 평균 점수 {0} — {1}</value>
+  </data>
+  <data name="Earned, not given" xml:space="preserve">
+    <value>노력으로 얻은 것</value>
+  </data>
+  <data name="Badges on the jacket" xml:space="preserve">
+    <value>재킷의 배지</value>
+  </data>
+  <data name="Community rivals" xml:space="preserve">
+    <value>커뮤니티 라이벌</value>
+  </data>
+  <data name="You weren&apos;t climbing alone" xml:space="preserve">
+    <value>혼자 오른 게 아니었다</value>
+  </data>
+  <data name="shared top-50 charts" xml:space="preserve">
+    <value>톱50 공통 채보</value>
+  </data>
+  <data name="For the record" xml:space="preserve">
+    <value>기록으로 남기다</value>
+  </data>
+  <data name="The ones worth framing" xml:space="preserve">
+    <value>액자에 걸어둘 기록들</value>
+  </data>
+  <data name="Perfect Games" xml:space="preserve">
+    <value>퍼펙트 게임</value>
+  </data>
+  <data name="Scores, vs your level" xml:space="preserve">
+    <value>점수 (동레벨 비교)</value>
+  </data>
+  <data name="Weekly charts" xml:space="preserve">
+    <value>주간 채보</value>
+  </data>
+  <data name="weeks. No misses." xml:space="preserve">
+    <value>주 연속. 개근.</value>
+  </data>
+  <data name="weeks entered" xml:space="preserve">
+    <value>참여 주</value>
+  </data>
+  <data name="podiums in range" xml:space="preserve">
+    <value>범위 내 포디움</value>
+  </data>
+  <data name="wins in range" xml:space="preserve">
+    <value>범위 내 우승</value>
+  </data>
+  <data name="Giant Slayer moments" xml:space="preserve">
+    <value>자이언트 슬레이어 순간</value>
+  </data>
+  <data name="of {0} in range" xml:space="preserve">
+    <value>(범위 내 {0}명 중)</value>
+  </data>
+  <data name="week of {0}" xml:space="preserve">
+    <value>{0} 주</value>
+  </data>
+  <data name="Giants slain" xml:space="preserve">
+    <value>쓰러뜨린 거인들</value>
+  </data>
+  <data name="outscored {0}" xml:space="preserve">
+    <value>{0}을(를) 넘어섰다</value>
+  </data>
+  <data name="+{0} levels up" xml:space="preserve">
+    <value>+{0} 레벨 위</value>
+  </data>
+  <data name="Trophy shelf" xml:space="preserve">
+    <value>트로피 진열장</value>
+  </data>
+  <data name="The cabinet" xml:space="preserve">
+    <value>진열장</value>
+  </data>
+  <data name="Rarest titles" xml:space="preserve">
+    <value>가장 희귀한 타이틀</value>
+  </data>
+  <data name="held by {0} of titled players" xml:space="preserve">
+    <value>타이틀 보유자의 {0}만 보유</value>
+  </data>
+  <data name="Plate cabinet" xml:space="preserve">
+    <value>플레이트 진열장</value>
+  </data>
+  <data name="Longest-standing best" xml:space="preserve">
+    <value>가장 오래된 기록</value>
+  </data>
+  <data name="standing since {0}" xml:space="preserve">
+    <value>{0}부터 유지</value>
+  </data>
+  <data name="{0} singles · {1} doubles passed" xml:space="preserve">
+    <value>싱글 {0} · 더블 {1} 클리어</value>
+  </data>
+  <data name="Next season" xml:space="preserve">
+    <value>다음 시즌</value>
+  </data>
+  <data name="See you in" xml:space="preserve">
+    <value>다시 만나요,</value>
+  </data>
+  <data name="{0} of your {1} passes carry over." xml:space="preserve">
+    <value>클리어한 {1}개 중 {0}개가 이어집니다.</value>
+  </data>
+  <data name="projected Singles PUMBILITY" xml:space="preserve">
+    <value>예상 싱글 PUMBILITY</value>
+  </data>
+  <data name="projected Doubles PUMBILITY" xml:space="preserve">
+    <value>예상 더블 PUMBILITY</value>
+  </data>
+  <data name="projected total" xml:space="preserve">
+    <value>예상 합계</value>
+  </data>
+  <data name="Top {0}" xml:space="preserve">
+    <value>상위 {0}</value>
+  </data>
+  <data name="{0} of all Phoenix titles collected" xml:space="preserve">
+    <value>전체 피닉스 타이틀의 {0} 수집</value>
+  </data>
+  <data name="{0} folders at 90% or better" xml:space="preserve">
+    <value>{0}개 폴더 90% 이상</value>
+  </data>
+  <data name="{0} of CoOp x2 charts cleared" xml:space="preserve">
+    <value>CoOp x2 채보의 {0} 클리어</value>
+  </data>
+  <data name="{0} of every BanYa &amp; YAHPP chart passed" xml:space="preserve">
+    <value>BanYa &amp; YAHPP 채보의 {0} 클리어</value>
+  </data>
+  <data name="SSS+ on Uh-Heung S22." xml:space="preserve">
+    <value>Uh-Heung S22에서 SSS+.</value>
+  </data>
+  <data name="More than 75% of S24+ passed at AA+ or lower." xml:space="preserve">
+    <value>S24+의 75% 이상을 AA+ 이하로 클리어.</value>
+  </data>
+  <data name="Passed a D28." xml:space="preserve">
+    <value>D28 클리어.</value>
+  </data>
+  <data name="Underrated" xml:space="preserve">
+    <value>과소평가</value>
+  </data>
+  <data name="Pass Pusher" xml:space="preserve">
+    <value>Pass Pusher</value>
+  </data>
+  <data name="Pass Refiner" xml:space="preserve">
+    <value>Pass Refiner</value>
+  </data>
+  <data name="Balanced Player" xml:space="preserve">
+    <value>Balanced Player</value>
+  </data>
+  <data name="Perfectionist" xml:space="preserve">
+    <value>Perfectionist</value>
+  </data>
+  <data name="Title Hunter" xml:space="preserve">
+    <value>Title Hunter</value>
+  </data>
+  <data name="Title Collector" xml:space="preserve">
+    <value>Title Collector</value>
+  </data>
+  <data name="Title Master" xml:space="preserve">
+    <value>Title Master</value>
+  </data>
+  <data name="Seriously, Leave Some Titles for the Rest of Us" xml:space="preserve">
+    <value>Seriously, Leave Some Titles for the Rest of Us</value>
+  </data>
+  <data name="Special Snowflake" xml:space="preserve">
+    <value>Special Snowflake</value>
+  </data>
+  <data name="Completionist" xml:space="preserve">
+    <value>Completionist</value>
+  </data>
+  <data name="Completionist Plus" xml:space="preserve">
+    <value>Completionist Plus</value>
+  </data>
+  <data name="Completionist Supreme" xml:space="preserve">
+    <value>Completionist Supreme</value>
+  </data>
+  <data name="Completionist Ultra" xml:space="preserve">
+    <value>Completionist Ultra</value>
+  </data>
+  <data name="You Know Pump It Up Doesn&apos;t Do Lamps, Right?" xml:space="preserve">
+    <value>You Know Pump It Up Doesn&apos;t Do Lamps, Right?</value>
+  </data>
+  <data name="Socialite" xml:space="preserve">
+    <value>Socialite</value>
+  </data>
+  <data name="Clearly Has Friends" xml:space="preserve">
+    <value>Clearly Has Friends</value>
+  </data>
+  <data name="Friendship is Magic" xml:space="preserve">
+    <value>Friendship is Magic</value>
+  </data>
+  <data name="I Hope You Held Hands on Canon D" xml:space="preserve">
+    <value>I Hope You Held Hands on Canon D</value>
+  </data>
+  <data name="BanYa Lover" xml:space="preserve">
+    <value>BanYa Lover</value>
+  </data>
+  <data name="Big Feet or Injured Back?" xml:space="preserve">
+    <value>Big Feet or Injured Back?</value>
+  </data>
+  <data name="Now You Can Play the Game" xml:space="preserve">
+    <value>Now You Can Play the Game</value>
+  </data>
 </root>

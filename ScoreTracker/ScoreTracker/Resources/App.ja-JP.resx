@@ -2378,4 +2378,253 @@
   <data name="Compute All Season Recaps" xml:space="preserve">
     <value>全員のシーズンリキャップを計算</value>
   </data>
+  <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
+    <value>このリキャップはまだ計算されていません。後でもう一度お試しください。</value>
+  </data>
+  <data name="Your Phoenix Story" xml:space="preserve">
+    <value>あなたのフェニックス・ストーリー</value>
+  </data>
+  <data name="PIUScores presents" xml:space="preserve">
+    <value>PIUScores presents</value>
+  </data>
+  <data name="{0} charts passed" xml:space="preserve">
+    <value>{0}譜面クリア</value>
+  </data>
+  <data name="Step on" xml:space="preserve">
+    <value>スクロール</value>
+  </data>
+  <data name="The arc" xml:space="preserve">
+    <value>あなたの軌跡</value>
+  </data>
+  <data name="You walked in a {0}. You&apos;re walking out a {1}." xml:space="preserve">
+    <value>レベル{0}で始まり、レベル{1}で羽ばたく。</value>
+  </data>
+  <data name="The grind" xml:space="preserve">
+    <value>グラインド</value>
+  </data>
+  <data name="days on the pad" xml:space="preserve">
+    <value>日プレイ</value>
+  </data>
+  <data name="arrows stepped, best scores only" xml:space="preserve">
+    <value>踏んだ矢印（自己ベストのみ）</value>
+  </data>
+  <data name="of charts recorded" xml:space="preserve">
+    <value>のプレイ時間</value>
+  </data>
+  <data name="competitive singles, all PIUScores players" xml:space="preserve">
+    <value>シングル競争力（PIUScores全体）</value>
+  </data>
+  <data name="competitive doubles, all PIUScores players" xml:space="preserve">
+    <value>ダブル競争力（PIUScores全体）</value>
+  </data>
+  <data name="total charts passed" xml:space="preserve">
+    <value>クリア譜面数</value>
+  </data>
+  <data name="Your step artists" xml:space="preserve">
+    <value>あなたのステップアーティスト</value>
+  </data>
+  <data name="{0} charts" xml:space="preserve">
+    <value>{0}譜面</value>
+  </data>
+  <data name="Some step artists are mislabeled in the wild — we report what the community knows." xml:space="preserve">
+    <value>一部のステップアーティスト表記には誤りがあります。コミュニティの知る情報を表示しています。</value>
+  </data>
+  <data name="Your play style" xml:space="preserve">
+    <value>あなたのプレイスタイル</value>
+  </data>
+  <data name="Top-50 average score {0} — {1}" xml:space="preserve">
+    <value>トップ50平均スコア {0} — {1}</value>
+  </data>
+  <data name="Earned, not given" xml:space="preserve">
+    <value>勝ち取った称号</value>
+  </data>
+  <data name="Badges on the jacket" xml:space="preserve">
+    <value>ジャケットのバッジ</value>
+  </data>
+  <data name="Community rivals" xml:space="preserve">
+    <value>コミュニティのライバル</value>
+  </data>
+  <data name="You weren&apos;t climbing alone" xml:space="preserve">
+    <value>一人で登ったわけじゃない</value>
+  </data>
+  <data name="shared top-50 charts" xml:space="preserve">
+    <value>トップ50共通譜面</value>
+  </data>
+  <data name="For the record" xml:space="preserve">
+    <value>記録のために</value>
+  </data>
+  <data name="The ones worth framing" xml:space="preserve">
+    <value>額に入れて飾りたい記録</value>
+  </data>
+  <data name="Perfect Games" xml:space="preserve">
+    <value>パーフェクトゲーム</value>
+  </data>
+  <data name="Scores, vs your level" xml:space="preserve">
+    <value>スコア（同レベル帯比較）</value>
+  </data>
+  <data name="Weekly charts" xml:space="preserve">
+    <value>ウィークリーチャート</value>
+  </data>
+  <data name="weeks. No misses." xml:space="preserve">
+    <value>週連続。皆勤。</value>
+  </data>
+  <data name="weeks entered" xml:space="preserve">
+    <value>参加週</value>
+  </data>
+  <data name="podiums in range" xml:space="preserve">
+    <value>同範囲内で表彰台</value>
+  </data>
+  <data name="wins in range" xml:space="preserve">
+    <value>同範囲内で優勝</value>
+  </data>
+  <data name="Giant Slayer moments" xml:space="preserve">
+    <value>ジャイアントスレイヤーの瞬間</value>
+  </data>
+  <data name="of {0} in range" xml:space="preserve">
+    <value>（同範囲{0}人中）</value>
+  </data>
+  <data name="week of {0}" xml:space="preserve">
+    <value>{0}の週</value>
+  </data>
+  <data name="Giants slain" xml:space="preserve">
+    <value>倒した巨人</value>
+  </data>
+  <data name="outscored {0}" xml:space="preserve">
+    <value>{0}を上回った</value>
+  </data>
+  <data name="+{0} levels up" xml:space="preserve">
+    <value>+{0}レベル上</value>
+  </data>
+  <data name="Trophy shelf" xml:space="preserve">
+    <value>トロフィー棚</value>
+  </data>
+  <data name="The cabinet" xml:space="preserve">
+    <value>ショーケース</value>
+  </data>
+  <data name="Rarest titles" xml:space="preserve">
+    <value>最もレアな称号</value>
+  </data>
+  <data name="held by {0} of titled players" xml:space="preserve">
+    <value>称号持ちプレイヤーの{0}が保有</value>
+  </data>
+  <data name="Plate cabinet" xml:space="preserve">
+    <value>プレート棚</value>
+  </data>
+  <data name="Longest-standing best" xml:space="preserve">
+    <value>最も長く残る記録</value>
+  </data>
+  <data name="standing since {0}" xml:space="preserve">
+    <value>{0}から不動</value>
+  </data>
+  <data name="{0} singles · {1} doubles passed" xml:space="preserve">
+    <value>シングル{0}・ダブル{1}クリア</value>
+  </data>
+  <data name="Next season" xml:space="preserve">
+    <value>次のシーズン</value>
+  </data>
+  <data name="See you in" xml:space="preserve">
+    <value>また会おう、</value>
+  </data>
+  <data name="{0} of your {1} passes carry over." xml:space="preserve">
+    <value>あなたのクリア{1}譜面中{0}譜面が引き継がれます。</value>
+  </data>
+  <data name="projected Singles PUMBILITY" xml:space="preserve">
+    <value>予測シングルPUMBILITY</value>
+  </data>
+  <data name="projected Doubles PUMBILITY" xml:space="preserve">
+    <value>予測ダブルPUMBILITY</value>
+  </data>
+  <data name="projected total" xml:space="preserve">
+    <value>予測合計</value>
+  </data>
+  <data name="Top {0}" xml:space="preserve">
+    <value>上位{0}</value>
+  </data>
+  <data name="{0} of all Phoenix titles collected" xml:space="preserve">
+    <value>全フェニックス称号の{0}を収集</value>
+  </data>
+  <data name="{0} folders at 90% or better" xml:space="preserve">
+    <value>{0}フォルダが90%以上</value>
+  </data>
+  <data name="{0} of CoOp x2 charts cleared" xml:space="preserve">
+    <value>CoOp x2譜面の{0}をクリア</value>
+  </data>
+  <data name="{0} of every BanYa &amp; YAHPP chart passed" xml:space="preserve">
+    <value>BanYa &amp; YAHPP譜面の{0}をクリア</value>
+  </data>
+  <data name="SSS+ on Uh-Heung S22." xml:space="preserve">
+    <value>Uh-Heung S22でSSS+。</value>
+  </data>
+  <data name="More than 75% of S24+ passed at AA+ or lower." xml:space="preserve">
+    <value>S24以上の75%超をAA+以下でクリア。</value>
+  </data>
+  <data name="Passed a D28." xml:space="preserve">
+    <value>D28をクリア。</value>
+  </data>
+  <data name="Underrated" xml:space="preserve">
+    <value>過小評価</value>
+  </data>
+  <data name="Pass Pusher" xml:space="preserve">
+    <value>Pass Pusher</value>
+  </data>
+  <data name="Pass Refiner" xml:space="preserve">
+    <value>Pass Refiner</value>
+  </data>
+  <data name="Balanced Player" xml:space="preserve">
+    <value>Balanced Player</value>
+  </data>
+  <data name="Perfectionist" xml:space="preserve">
+    <value>Perfectionist</value>
+  </data>
+  <data name="Title Hunter" xml:space="preserve">
+    <value>Title Hunter</value>
+  </data>
+  <data name="Title Collector" xml:space="preserve">
+    <value>Title Collector</value>
+  </data>
+  <data name="Title Master" xml:space="preserve">
+    <value>Title Master</value>
+  </data>
+  <data name="Seriously, Leave Some Titles for the Rest of Us" xml:space="preserve">
+    <value>Seriously, Leave Some Titles for the Rest of Us</value>
+  </data>
+  <data name="Special Snowflake" xml:space="preserve">
+    <value>Special Snowflake</value>
+  </data>
+  <data name="Completionist" xml:space="preserve">
+    <value>Completionist</value>
+  </data>
+  <data name="Completionist Plus" xml:space="preserve">
+    <value>Completionist Plus</value>
+  </data>
+  <data name="Completionist Supreme" xml:space="preserve">
+    <value>Completionist Supreme</value>
+  </data>
+  <data name="Completionist Ultra" xml:space="preserve">
+    <value>Completionist Ultra</value>
+  </data>
+  <data name="You Know Pump It Up Doesn&apos;t Do Lamps, Right?" xml:space="preserve">
+    <value>You Know Pump It Up Doesn&apos;t Do Lamps, Right?</value>
+  </data>
+  <data name="Socialite" xml:space="preserve">
+    <value>Socialite</value>
+  </data>
+  <data name="Clearly Has Friends" xml:space="preserve">
+    <value>Clearly Has Friends</value>
+  </data>
+  <data name="Friendship is Magic" xml:space="preserve">
+    <value>Friendship is Magic</value>
+  </data>
+  <data name="I Hope You Held Hands on Canon D" xml:space="preserve">
+    <value>I Hope You Held Hands on Canon D</value>
+  </data>
+  <data name="BanYa Lover" xml:space="preserve">
+    <value>BanYa Lover</value>
+  </data>
+  <data name="Big Feet or Injured Back?" xml:space="preserve">
+    <value>Big Feet or Injured Back?</value>
+  </data>
+  <data name="Now You Can Play the Game" xml:space="preserve">
+    <value>Now You Can Play the Game</value>
+  </data>
 </root>
