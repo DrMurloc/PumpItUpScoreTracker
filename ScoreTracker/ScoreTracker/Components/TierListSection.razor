@@ -8,6 +8,7 @@
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Enums
 @using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Theming
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
 @inject ChartVideoDisplayer VideoDisplayer
@@ -74,26 +75,16 @@
     </MudGrid>
 }
 @code {
-    private string CardClass(Guid chartId) => 
+    private string CardClass(Guid chartId) =>
         Passes.Contains(chartId) || !CurrentUser.IsLoggedIn ? "border-solid border-2" : "border-dashed border-2";
     private string CardStyle(Guid chartId) => Type == TierListType.MyScores ? $@"border-color:{PlateColor(chartId)}":
-        Passes.Contains(chartId) ? $@"border-color:{Colors.Green.Darken1}" :
-    ToDos.Contains(chartId) ? $@"border-color:{Colors.Green.Darken1}" :
+        Passes.Contains(chartId) ? "border-color:var(--mud-palette-success)" :
+    ToDos.Contains(chartId) ? "border-color:var(--mud-palette-success)" :
     $@"border-color:{OutlineColor}";
 
-    private string PlateColor(Guid chartId) => Scores.TryGetValue(chartId, out var record) ?
-        record.Plate switch{
-            PhoenixPlate.RoughGame => Colors.DeepOrange.Darken3,
-            PhoenixPlate.FairGame => Colors.DeepOrange.Darken3,
-            PhoenixPlate.TalentedGame => Colors.Gray.Lighten1,
-            PhoenixPlate.MarvelousGame => Colors.Gray.Lighten1,
-            PhoenixPlate.ExtremeGame => Colors.Amber.Lighten1,
-            PhoenixPlate.SuperbGame => Colors.Amber.Lighten1,
-            PhoenixPlate.UltimateGame => Colors.LightBlue.Lighten1,
-            PhoenixPlate.PerfectGame => Colors.LightBlue.Lighten1,
-            _=>Colors.Gray.Darken1
-            } :
-        Colors.Purple.Darken1;
+    private string PlateColor(Guid chartId) => Scores.TryGetValue(chartId, out var record)
+        ? ThemeScales.PlateColor(record.Plate)
+        : ThemeScales.PlateColor(null);
     [Parameter]
     public string Name { get; set; } = string.Empty;
     [Parameter]

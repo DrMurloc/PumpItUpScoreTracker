@@ -184,11 +184,34 @@ public static class MixThemes
             [TierListCategory.Unrecorded] = "#757575"
         };
 
+    // Plate chip/border colors, following the official Play Data page's metal ladder:
+    // bronze (RG/FG) → silver (TG/MG) → gold (SG/EG) → ice-blue (UG/PG). Shared across
+    // mixes today; when the owner's Phoenix 2 plate art arrives (P2's colors are close
+    // but not identical), these lift into MixPalette per mix — consumers already read
+    // the vars, so that change costs nothing downstream. "None" marks unplayed charts.
+    private static readonly IReadOnlyDictionary<PhoenixPlate, string> PlateColors =
+        new Dictionary<PhoenixPlate, string>
+        {
+            [PhoenixPlate.PerfectGame] = "#6FD1F6",
+            [PhoenixPlate.UltimateGame] = "#4FB3E8",
+            [PhoenixPlate.ExtremeGame] = "#FFD24A",
+            [PhoenixPlate.SuperbGame] = "#F5C02E",
+            [PhoenixPlate.MarvelousGame] = "#C9CED4",
+            [PhoenixPlate.TalentedGame] = "#B4BCC4",
+            [PhoenixPlate.FairGame] = "#D97742",
+            [PhoenixPlate.RoughGame] = "#C05C2E"
+        };
+
+    private const string PlateNoneColor = "#8E24AA";
+
     public static string CssVariablesFor(MixEnum mix)
     {
         var p = PaletteFor(mix);
         var difficulty = string.Join("\n", DifficultyColors.Select(kv =>
             $"    --diff-{ThemeScales.DifficultySlug(kv.Key)}: {kv.Value};"));
+        var plates = string.Join("\n", PlateColors.Select(kv =>
+            $"    --plate-{kv.Key.GetShorthand().ToLowerInvariant()}: {kv.Value};"))
+            + $"\n    --plate-none: {PlateNoneColor};";
         return $@":root {{
     --mix-bg: {p.Background};
     --mix-surface: {p.Surface};
@@ -208,6 +231,7 @@ public static class MixThemes
     --rarity-sapphire: {p.Rarity.Sapphire};
     --rarity-prism: {p.Rarity.Prism};
 {difficulty}
+{plates}
 }}";
     }
 

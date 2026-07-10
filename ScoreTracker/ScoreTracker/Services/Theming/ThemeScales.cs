@@ -68,6 +68,12 @@ public static class ThemeScales
     public static string DifficultyColor(TierListCategory category) =>
         $"var(--diff-{DifficultySlug(category)})";
 
+    /// <summary>Plate color token; null = unplayed ("plate-none").</summary>
+    public static string PlateColor(PhoenixPlate? plate) =>
+        plate == null
+            ? "var(--plate-none)"
+            : $"var(--plate-{plate.Value.GetShorthand().ToLowerInvariant()})";
+
     internal static string DifficultySlug(TierListCategory category) => category switch
     {
         TierListCategory.Overrated => "overrated",
