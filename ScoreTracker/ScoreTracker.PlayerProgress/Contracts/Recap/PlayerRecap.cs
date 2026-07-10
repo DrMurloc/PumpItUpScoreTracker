@@ -20,7 +20,6 @@ public sealed record PlayerRecap(
     IReadOnlyList<RecapEarnedBadge> Badges,
     RecapRivals? Rivals,
     IReadOnlyList<RecapChartHighlight> ImpressivePgs,
-    IReadOnlyList<RecapChartHighlight> ImpressivePasses,
     IReadOnlyList<RecapScoreHighlight> ImpressiveScores,
     IReadOnlyList<RecapRareChart> RarestPasses,
     RecapWeekly? Weekly,

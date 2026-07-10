@@ -143,24 +143,6 @@ public sealed class RecapSagaTests
     }
 
     [Fact]
-    public async Task ImpressivePassesOnlyIncludeHardOrHigherTierCharts()
-    {
-        var hard = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).WithSongName("Hard Song").Build();
-        var medium = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).WithSongName("Medium Song").Build();
-        var ctx = new HandlerContext(hard, medium);
-        ctx.GivenEligiblePasses(8);
-        ctx.GivenPass(hard, 950_000);
-        ctx.GivenPass(medium, 950_000);
-        ctx.GivenTierList("Difficulty", (hard.Id, TierListCategory.Hard), (medium.Id, TierListCategory.Medium));
-
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
-
-        var highlight = Assert.Single(ctx.Saved!.ImpressivePasses);
-        Assert.Equal(hard.Id, highlight.ChartId);
-        Assert.Equal(TierListCategory.Hard, highlight.Difficulty);
-    }
-
-    [Fact]
     public async Task ImpressivePgsOrderByFolderThenTier()
     {
         var s16 = new ChartBuilder().WithType(ChartType.Single).WithLevel(16).WithSongName("Small PG").Build();

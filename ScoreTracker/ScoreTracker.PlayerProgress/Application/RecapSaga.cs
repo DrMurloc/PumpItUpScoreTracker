@@ -152,7 +152,6 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
             await BuildBadges(mix, userId, user, bests, passes, shared, cancellationToken),
             await BuildRivals(mix, userId, myStats, shared, cancellationToken),
             BuildImpressivePgs(passes, shared),
-            BuildImpressivePasses(passes, shared),
             await BuildImpressiveScores(mix, userId, myStats, shared, cancellationToken),
             BuildRarestPasses(passes, shared),
             WeeklyRecapCalculator.Calculate(userId, shared.WeeklyRows, shared.Charts, shared.UserNames),
@@ -317,26 +316,6 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
             .Take(6)
             .Select(x => new RecapChartHighlight(x.Item1.Id, x.Item1.Song.Name.ToString(), x.Item1.Type,
                 x.Item1.Level, x.Tier))
-            .ToArray();
-    }
-
-    private IReadOnlyList<RecapChartHighlight> BuildImpressivePasses(RecordedPhoenixScore[] passes,
-        SharedInputs shared)
-    {
-        var candidates = passes
-            .Select(p => shared.Charts.GetValueOrDefault(p.ChartId))
-            .Where(c => c != null)
-            .Select(c => (Chart: c!, Tier: shared.PassTiers.GetValueOrDefault(c!.Id, TierListCategory.Unrecorded)))
-            .Where(x => IsHardOrHigher(x.Tier))
-            .ToArray();
-        return new[] { ChartType.Single, ChartType.Double }
-            .SelectMany(type => candidates
-                .Where(x => x.Chart.Type == type)
-                .OrderByDescending(x => (int)x.Chart.Level)
-                .ThenByDescending(x => x.Tier)
-                .Take(3))
-            .Select(x => new RecapChartHighlight(x.Chart.Id, x.Chart.Song.Name.ToString(), x.Chart.Type,
-                x.Chart.Level, x.Tier))
             .ToArray();
     }
 
@@ -557,7 +536,6 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
             .ToDictionary(g => g.Key, g => g.Sum(t => t.Count));
         var titledUsers = await _titles.CountTitledUsers(cancellationToken);
         var pgTiers = await LoadTierCategories("PG", mix, cancellationToken);
-        var passTiers = await LoadTierCategories("Difficulty", mix, cancellationToken);
         var chartAggregates = (await _scores.GetChartScoreAggregates(mix, cancellationToken))
             .ToDictionary(a => a.ChartId);
 
@@ -582,7 +560,6 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
             titledUsers,
             PhoenixTitleList.BuildList().Count(),
             pgTiers,
-            passTiers,
             charts.Values.Where(c => RecapBadges.IsBanYaArtist(c.Song.Artist)).Select(c => c.Id).ToHashSet(),
             charts.Values.Where(c => c.Type == ChartType.CoOp && (int)c.Level == 2).Select(c => c.Id)
                 .ToHashSet(),
@@ -624,7 +601,6 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
         int TitledUsers,
         int TotalTitles,
         IReadOnlyDictionary<Guid, TierListCategory> PgTiers,
-        IReadOnlyDictionary<Guid, TierListCategory> PassTiers,
         IReadOnlySet<Guid> BanYaChartIds,
         IReadOnlySet<Guid> CoOpX2ChartIds,
         IReadOnlySet<Guid> Singles24PlusChartIds,

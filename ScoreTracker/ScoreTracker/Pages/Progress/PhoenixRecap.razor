@@ -204,7 +204,7 @@ else if (_user != null && _recap != null)
         }
 
         @* ============ Highlights ============ *@
-        @if (_recap.ImpressivePgs.Any() || _recap.ImpressivePasses.Any() || _recap.ImpressiveScores.Any() || _recap.RarestPasses.Any())
+        @if (_recap.ImpressivePgs.Any() || _recap.ImpressiveScores.Any() || _recap.RarestPasses.Any())
         {
             <section class="precap-slide" style="--gx:50%;--gy:0%">
                 <div class="precap-inner">
@@ -218,16 +218,6 @@ else if (_user != null && _recap != null)
                                 @foreach (var pg in _recap.ImpressivePgs)
                                 {
                                     <div class="precap-row">@Pill(pg.ChartType, pg.Level)<span class="precap-song">@pg.SongName</span><span class="precap-meta precap-hot">@TierName(pg.Difficulty)</span></div>
-                                }
-                            </div>
-                        }
-                        @if (_recap.ImpressivePasses.Any())
-                        {
-                            <div class="precap-hlcol">
-                                <span class="precap-cat precap-cat-hl">@L["Passes"]</span>
-                                @foreach (var pass in _recap.ImpressivePasses)
-                                {
-                                    <div class="precap-row">@Pill(pass.ChartType, pass.Level)<span class="precap-song">@pass.SongName</span><span class="precap-meta precap-hot">@TierName(pass.Difficulty)</span></div>
                                 }
                             </div>
                         }

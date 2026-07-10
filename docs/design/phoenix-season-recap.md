@@ -75,7 +75,7 @@ Show all earned; lead with the biggest.
 Records with `Plate = PerfectGame`, ordered folder descending then PG difficulty descending; only charts whose **"PG" tier list** category is `Hard`, `VeryHard`, or `Underrated`.
 
 ### 7. Most impressive passes
-3 singles + 3 doubles, folder descending; only charts whose **"Difficulty" (pass) tier list** category is `Hard`, `VeryHard`, or `Underrated`.
+*Cut in round three (owner call): the generic Hard-or-higher pass list was a worse view of the same data than Rarest passes, which replaced it on the highlights slide.*
 
 ### 8. Most impressive scores
 3 singles + 3 doubles from competitive-contributing scores, descending, taking scores with **>90% tie-inclusive percentile** vs the ±0.5 competitive cohort (reuse `ScoreQualitySaga` mechanics / `ScoreRankings.TieInclusivePercentile`). PGs excluded (they live on slide 6).
