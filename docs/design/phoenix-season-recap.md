@@ -85,7 +85,7 @@ From `UserWeeklyPlacing` (rows carry `Place`, `Score`, `Plate`, `WasWithinRange`
 - **Longest streak** (headline): consecutive **rotations** entered — order the distinct global placement weeks by `ObtainedDate`, longest unbroken run the user appears in. Rotation-indexed, not calendar-indexed, so a skipped rotation breaks nobody's streak unfairly. (Prod: top streak is 78 consecutive rotations; the top 20 range 8–78 — strong headline material.)
 - Weeks entered (total), wins + podium count — **computed within range**: on charts where the player was within range, re-rank among within-range entrants only (from the placing rows' `Score`/`WasWithinRange`, not the stored overall `Place`), so a level-19 player isn't "beaten" by level-25 tourists.
 - **Best result**: best within-range rank (tie-break: higher chart level, then more recent), shown with the chart and week.
-- **Giant Slayer**: count of weekly moments where the player outscored an entrant ≥1.0 competitive level above them (each row snapshots the entrant's `CompetitiveLevel`; margin tunable at calibration).
+- **Giant Slayer**: weekly moments where the player outscored an entrant ≥1.0 competitive level above them (each row snapshots the entrant's `CompetitiveLevel`; margin tunable at calibration). Show the total count **plus the top 3 moments individually** (when they exist): the outscored player, the chart, and the level gap — ranked by gap descending, tie-break score margin.
 
 Exact highlight composition is the one soft area of this spec — owner is open to iteration here.
 
