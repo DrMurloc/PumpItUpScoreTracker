@@ -62,6 +62,9 @@ Show all earned; lead with the biggest.
 - **Completionist ladder** — count of `(Type, Level)` folders (S and D counted separately, no level floor) with ≥90% of charts passed: **5 / 10 / 20 / 30 / 40** → Completionist, Plus, Supreme, Ultra, **"You Know Pump It Up Doesn't Do Lamps, Right?"** (Prod: 106 / 45 / 21 / 10 / **1** players — validated as specced.)
 - **CoOp ladder** — completion of CoOp ×2 charts (`ChartType.CoOp`, `Level == 2`; player count *is* the Level field): **>50% Socialite, >75% Clearly Has Friends, >90% Friendship is Magic, 100% "I Hope You Held Hands on Canon D"**. (Prod: 123 / 80 / 50 / 12.)
 - **BanYa Lover** — >50% of charts passed on songs where `Artist LIKE '%banya%' OR Artist LIKE '%yahpp%'` (covers `BanYa`, `Banya Production`, `YAHPP`, and collabs; **msgoon excluded** — no BanYa Production membership). ~162 songs in prod; 55 songs have NULL artist and silently don't count.
+- **"Big Feet or Injured Back?"** — SSS+ (≥995,000, not broken) on **Uh-Heung S22**. Chart resolved at compute time by song name + Single + level 22 (never a hardcoded chart id).
+- **"Grand Mashter"** *(not a typo)* — passed >95% of S24+ singles (all Single charts level ≥24 in the Phoenix folder) with no score above AAA+ (≤969,999) among them. *(Scope of the score cap — S24+ charts only vs whole account — pending owner confirmation; spec assumes S24+-scoped.)*
+- **"Now You Can Play the Game"** — passed any Double level ≥28 (≥ so a D29-only pass still counts).
 
 ### 5. Rivals
 3 singles + 3 doubles rivals. Pool ladder (owner-confirmed): **your user-created communities → your country community → all players** (country communities are auto-joined system communities like "World", so "non-World" alone would make USA ≈ World). Candidates are within **±0.25** of your singles/doubles competitive level, **public users only**, ranked by overlap of top-50 competitive (fung) chart-id sets. (Prod: 586 users have 6+ community candidates, 208 more have ≥1, rest fall back.)
@@ -75,10 +78,19 @@ Records with `Plate = PerfectGame`, ordered folder descending then PG difficulty
 ### 8. Most impressive scores
 3 singles + 3 doubles from competitive-contributing scores, descending, taking scores with **>90% tie-inclusive percentile** vs the ±0.5 competitive cohort (reuse `ScoreQualitySaga` mechanics / `ScoreRankings.TieInclusivePercentile`). PGs excluded (they live on slide 6).
 
-### 9. Trophy shelf
-Your 3 rarest titles (with % of titled users — `Beginner` at 99.6% is the free joke line), plate cabinet (count per plate), longest-standing best (oldest `RecordedDate` among current bests), weekly-challenge recap (entries / podiums / wins from `UserWeeklyPlacing`), community placements, singles-vs-doubles identity split.
+### 9. Weekly Charts
+From `UserWeeklyPlacing` (rows carry `Place`, `Score`, `Plate`, `WasWithinRange`, `ObtainedDate`):
 
-### 10. Phoenix 2 finale
+- **Longest streak** (headline): consecutive **rotations** entered — order the distinct global placement weeks by `ObtainedDate`, longest unbroken run the user appears in. Rotation-indexed, not calendar-indexed, so a skipped rotation breaks nobody's streak unfairly.
+- Weeks entered (total), wins + podium count.
+- **Best result**: best `Place` (tie-break: higher chart level, then more recent), shown with the chart and week.
+
+Exact highlight composition is the one soft area of this spec — owner is open to iteration here.
+
+### 10. Trophy shelf
+Your 3 rarest titles (with % of titled users — `Beginner` at 99.6% is the free joke line), plate cabinet (count per plate), longest-standing best (oldest `RecordedDate` among current bests), community placements, singles-vs-doubles identity split.
+
+### 11. Phoenix 2 finale
 P1 scores projected onto Phoenix 2: carried-over charts (4,367 of 4,571 — 95.5%) rescored with P2 `ChartMix` levels through the mix-keyed P2 formula (PR #128), **two-pool Singles/Doubles Pumbility totals + the projected P2 title** (`Phoenix2PumbilityTitle` thresholds). Green accent; "see you in Phoenix 2". Note the existing `PumbilityProjectionSaga` is P1→peer-expectation, *not* this — the P1→P2 rescoring is new code.
 
 **Dropped ideas:** White Whale (owner), import counts (data too thin), nightly Hangfire job (owner wants admin-triggered).
@@ -110,3 +122,6 @@ New keys populated in all 8 locales in the same pass, per convention. Badge name
 
 - Popup expiry cutoff (set when the P2 launch date is known).
 - Self-serve recalculate button — decide post-launch from all-users job timings.
+- Grand Mashter score-cap scope (S24+-scoped assumed) — owner to confirm.
+- Meme-badge holder counts not yet prod-calibrated (queries handed to owner 2026-07-09).
+- Weekly slide highlight composition — iterate once rendered.
