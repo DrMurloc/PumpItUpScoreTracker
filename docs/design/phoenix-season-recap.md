@@ -62,9 +62,9 @@ Show all earned; lead with the biggest.
 - **Completionist ladder** — count of `(Type, Level)` folders (S and D counted separately, no level floor) with ≥90% of charts passed: **5 / 10 / 20 / 30 / 40** → Completionist, Plus, Supreme, Ultra, **"You Know Pump It Up Doesn't Do Lamps, Right?"** (Prod: 106 / 45 / 21 / 10 / **1** players — validated as specced.)
 - **CoOp ladder** — completion of CoOp ×2 charts (`ChartType.CoOp`, `Level == 2`; player count *is* the Level field): **>50% Socialite, >75% Clearly Has Friends, >90% Friendship is Magic, 100% "I Hope You Held Hands on Canon D"**. (Prod: 123 / 80 / 50 / 12.)
 - **BanYa Lover** — >50% of charts passed on songs where `Artist LIKE '%banya%' OR Artist LIKE '%yahpp%'` (covers `BanYa`, `Banya Production`, `YAHPP`, and collabs; **msgoon excluded** — no BanYa Production membership). ~162 songs in prod; 55 songs have NULL artist and silently don't count.
-- **"Big Feet or Injured Back?"** — SSS+ (≥995,000, not broken) on **Uh-Heung S22**. Chart resolved at compute time by song name + Single + level 22 (never a hardcoded chart id).
-- **"Grand Mashter"** *(not a typo)* — passed >95% of S24+ singles (all Single charts level ≥24 in the Phoenix folder) with no score above AAA+ (≤969,999) among them. *(Scope of the score cap — S24+ charts only vs whole account — pending owner confirmation; spec assumes S24+-scoped.)*
-- **"Now You Can Play the Game"** — passed any Double level ≥28 (≥ so a D29-only pass still counts).
+- **"Big Feet or Injured Back?"** — SSS+ (≥995,000, not broken) on **Uh-Heung S22**. Chart resolved at compute time by song name + Single + level 22 (never a hardcoded chart id). (Prod: 18 holders.)
+- **"Grand Mashter"** *(not a typo)* — passed >95% of S24+ singles (all Single charts level ≥24 in the Phoenix folder) with no score above AAA+ (≤969,999) among them. *(Scope of the score cap — S24+ charts only vs whole account — pending owner confirmation; spec assumes S24+-scoped. Holder count not yet calibrated.)*
+- **"Now You Can Play the Game"** — passed any Double level ≥28 (≥ so a D29-only pass still counts). (Prod: 5 holders.)
 
 ### 5. Rivals
 3 singles + 3 doubles rivals. Pool ladder (owner-confirmed): **your user-created communities → your country community → all players** (country communities are auto-joined system communities like "World", so "non-World" alone would make USA ≈ World). Candidates are within **±0.25** of your singles/doubles competitive level, **public users only**, ranked by overlap of top-50 competitive (fung) chart-id sets. (Prod: 586 users have 6+ community candidates, 208 more have ≥1, rest fall back.)
@@ -81,7 +81,7 @@ Records with `Plate = PerfectGame`, ordered folder descending then PG difficulty
 ### 9. Weekly Charts
 From `UserWeeklyPlacing` (rows carry `Place`, `Score`, `Plate`, `WasWithinRange`, `ObtainedDate`):
 
-- **Longest streak** (headline): consecutive **rotations** entered — order the distinct global placement weeks by `ObtainedDate`, longest unbroken run the user appears in. Rotation-indexed, not calendar-indexed, so a skipped rotation breaks nobody's streak unfairly.
+- **Longest streak** (headline): consecutive **rotations** entered — order the distinct global placement weeks by `ObtainedDate`, longest unbroken run the user appears in. Rotation-indexed, not calendar-indexed, so a skipped rotation breaks nobody's streak unfairly. (Prod: top streak is 78 consecutive rotations; the top 20 range 8–78 — strong headline material.)
 - Weeks entered (total), wins + podium count.
 - **Best result**: best `Place` (tie-break: higher chart level, then more recent), shown with the chart and week.
 
@@ -122,6 +122,5 @@ New keys populated in all 8 locales in the same pass, per convention. Badge name
 
 - Popup expiry cutoff (set when the P2 launch date is known).
 - Self-serve recalculate button — decide post-launch from all-users job timings.
-- Grand Mashter score-cap scope (S24+-scoped assumed) — owner to confirm.
-- Meme-badge holder counts not yet prod-calibrated (queries handed to owner 2026-07-09).
+- Grand Mashter score-cap scope (S24+-scoped assumed) — owner to confirm; holder count not yet calibrated (first query attempt had a CTE-scope bug).
 - Weekly slide highlight composition — iterate once rendered.
