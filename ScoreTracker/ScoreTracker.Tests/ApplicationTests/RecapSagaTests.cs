@@ -265,6 +265,8 @@ public sealed class RecapSagaTests
         public Mock<IPlayerStatsReader> PlayerStats { get; } = new();
         public Mock<IUserReader> Users { get; } = new();
         public Mock<IPlayerSeasonRecapRepository> Recaps { get; } = new();
+        public Mock<IWeeklyPlacingReader> Weekly { get; } = new();
+        public Mock<ICommunityReader> Communities { get; } = new();
         public Mock<IMediator> Mediator { get; } = new();
         public RecapSaga Saga { get; }
         public PlayerRecap? Saved { get; private set; }
@@ -310,6 +312,17 @@ public sealed class RecapSagaTests
                 .ReturnsAsync((Guid id, CancellationToken _) => new User(id, Name.From("Player"), true,
                     gameTag == null ? (Name?)null : Name.From(gameTag),
                     new Uri("https://example.invalid/avatar.png"), null));
+            Users.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((IEnumerable<Guid> ids, CancellationToken _) => ids
+                    .Select(id => new User(id, Name.From("Player"), true, null,
+                        new Uri("https://example.invalid/avatar.png"), null))
+                    .ToArray());
+            Weekly.Setup(w => w.GetAllPlacings(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<WeeklyPlacingRow>());
+            Communities.Setup(c => c.GetUserCommunities(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
+            Communities.Setup(c => c.GetMembers(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<Guid>());
             Recaps.Setup(r => r.SaveRecap(It.IsAny<Guid>(), It.IsAny<MixEnum>(), It.IsAny<PlayerRecap>(),
                     It.IsAny<CancellationToken>()))
                 .Callback<Guid, MixEnum, PlayerRecap, CancellationToken>((_, _, recap, _) => Saved = recap)
@@ -327,6 +340,7 @@ public sealed class RecapSagaTests
             Saga = new RecapSaga(Charts.Object, Scores.Object, Titles.Object, PlayerStats.Object,
                 Users.Object, Recaps.Object,
                 new CohortScoreProvider(PlayerStats.Object, Scores.Object, cache),
+                Weekly.Object, Communities.Object,
                 Mediator.Object, FakeDateTime.At(Now).Object, NullLogger<RecapSaga>.Instance);
         }
 

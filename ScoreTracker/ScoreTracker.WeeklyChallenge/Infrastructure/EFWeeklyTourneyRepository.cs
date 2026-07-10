@@ -10,8 +10,21 @@ using ScoreTracker.Domain.SecondaryPorts;
 namespace ScoreTracker.WeeklyChallenge.Infrastructure
 {
     internal sealed class EFWeeklyTourneyRepository
-        (IDbContextFactory<ChartAttemptDbContext> factory, IMemoryCache cache) : IWeeklyTournamentRepository
+        (IDbContextFactory<ChartAttemptDbContext> factory, IMemoryCache cache)
+        : IWeeklyTournamentRepository, IWeeklyPlacingReader
     {
+        async Task<IEnumerable<WeeklyPlacingRow>> IWeeklyPlacingReader.GetAllPlacings(MixEnum mix,
+            CancellationToken cancellationToken)
+        {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
+            return (await database.Set<UserWeeklyPlacingEntity>()
+                    .Where(e => e.MixId == mixId)
+                    .ToArrayAsync(cancellationToken))
+                .Select(e => new WeeklyPlacingRow(e.UserId, e.ChartId, e.ObtainedDate, e.Place, e.Score,
+                    e.IsBroken, e.WasWithinRange, e.CompetitiveLevel));
+        }
+
         public async Task<IEnumerable<Guid>> GetAlreadyPlayedCharts(MixEnum mix, CancellationToken cancellationToken)
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
