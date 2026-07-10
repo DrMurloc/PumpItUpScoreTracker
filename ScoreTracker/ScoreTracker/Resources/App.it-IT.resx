@@ -2662,4 +2662,25 @@
   <data name="Rebuild Recap PG Cards" xml:space="preserve">
     <value>Ricostruisci le card PG del recap</value>
   </data>
+  <data name="Site Theme" xml:space="preserve">
+    <value>Tema del sito</value>
+  </data>
+  <data name="Match Current Mix" xml:space="preserve">
+    <value>Segui il Mix attuale</value>
+  </data>
+  <data name="My Sessions" xml:space="preserve">
+    <value>Le mie sessioni</value>
+  </data>
+  <data name="Weekly" xml:space="preserve">
+    <value>Weekly</value>
+  </data>
+  <data name="More" xml:space="preserve">
+    <value>Altro</value>
+  </data>
+  <data name="Import" xml:space="preserve">
+    <value>Importa</value>
+  </data>
+  <data name="Tiers" xml:space="preserve">
+    <value>Tier</value>
+  </data>
 </root>

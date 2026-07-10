@@ -2586,4 +2586,25 @@
   <data name="Rebuild Recap PG Cards" xml:space="preserve">
     <value>Mrgl Recap PG Mrgls</value>
   </data>
+  <data name="Site Theme" xml:space="preserve">
+    <value>Mrglsite Thrgleme</value>
+  </data>
+  <data name="Match Current Mix" xml:space="preserve">
+    <value>Mrgltch Currglent Mrglx</value>
+  </data>
+  <data name="My Sessions" xml:space="preserve">
+    <value>Mrgly Mrglssions</value>
+  </data>
+  <data name="Weekly" xml:space="preserve">
+    <value>Wrglkly</value>
+  </data>
+  <data name="More" xml:space="preserve">
+    <value>Mrgl…</value>
+  </data>
+  <data name="Import" xml:space="preserve">
+    <value>Mrglport</value>
+  </data>
+  <data name="Tiers" xml:space="preserve">
+    <value>Trgls</value>
+  </data>
 </root>

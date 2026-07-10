@@ -2542,4 +2542,25 @@
   <data name="Rebuild Recap PG Cards" xml:space="preserve">
     <value>리캡 PG 카드 재구축</value>
   </data>
+  <data name="Site Theme" xml:space="preserve">
+    <value>사이트 테마</value>
+  </data>
+  <data name="Match Current Mix" xml:space="preserve">
+    <value>현재 시리즈에 맞추기</value>
+  </data>
+  <data name="My Sessions" xml:space="preserve">
+    <value>내 세션</value>
+  </data>
+  <data name="Weekly" xml:space="preserve">
+    <value>주간</value>
+  </data>
+  <data name="More" xml:space="preserve">
+    <value>더보기</value>
+  </data>
+  <data name="Import" xml:space="preserve">
+    <value>가져오기</value>
+  </data>
+  <data name="Tiers" xml:space="preserve">
+    <value>티어</value>
+  </data>
 </root>

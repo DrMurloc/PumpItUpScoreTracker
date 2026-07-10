@@ -1,0 +1,268 @@
+/* Self-hosted display face — headings, stat numerals, wordmark. Latin subset only:
+   Korean/Japanese glyphs fall through per-glyph to the system CJK fonts in the stack
+   (see --font-display), which keeps mixed-script headings from going anemic. */
+@font-face {
+    font-family: 'Barlow Condensed';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('/fonts/barlow-condensed-500.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Barlow Condensed';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('/fonts/barlow-condensed-600.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Barlow Condensed';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('/fonts/barlow-condensed-700.woff2') format('woff2');
+}
+
+:root {
+    --font-display: 'Barlow Condensed', 'Malgun Gothic', 'Yu Gothic UI', 'Apple SD Gothic Neo', 'Hiragino Sans', sans-serif;
+}
+
+/* Big-number treatment for stats (rating, Pumbility, scores). tabular-nums keeps digit
+   columns steady while values tick up live. */
+.stat-display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .02em;
+}
+
+/* ===== Shell: wordmark, top nav, mega-menus, mix pill ===== */
+
+.wordmark {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: .08em;
+    color: var(--mix-ink);
+    text-shadow: 0 0 12px var(--mix-glow);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.top-nav {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 14px;
+}
+
+.top-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: .95rem;
+    letter-spacing: .05em;
+    color: var(--mix-ink);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.top-nav-btn:hover {
+    background: rgba(255, 255, 255, .08);
+}
+
+.mega-panel {
+    display: flex;
+    gap: 8px;
+    padding: 4px 6px;
+}
+
+.mega-col {
+    min-width: 180px;
+}
+
+.mega-head {
+    font-family: var(--font-display);
+    font-size: .7rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    padding: 8px 16px 2px;
+}
+
+.mix-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: transparent;
+    border: 1px solid var(--mix-primary);
+    border-radius: 16px;
+    padding: 3px 12px;
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: .8rem;
+    letter-spacing: .08em;
+    color: var(--mix-ink);
+    white-space: nowrap;
+}
+
+.mix-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--mix-primary);
+    box-shadow: 0 0 8px var(--mix-glow);
+}
+
+/* App-bar chart search — a quiet pill that matches the mix pill, not a form field.
+   The outlined border and dropdown caret are stripped; focus brings the theme primary in. */
+.appbar-search .mud-input-control {
+    margin: 0;
+}
+
+.appbar-search .mud-input.mud-input-outlined {
+    background: rgba(255, 255, 255, .07);
+    border-radius: 16px;
+    font-size: .85rem;
+}
+
+.appbar-search .mud-input.mud-input-outlined:focus-within {
+    background: rgba(255, 255, 255, .11);
+    box-shadow: 0 0 0 1px var(--mix-primary);
+}
+
+.appbar-search .mud-input.mud-input-outlined input {
+    color: var(--mix-ink);
+    padding: 5px 14px;
+    height: unset;
+}
+
+.appbar-search .mud-input.mud-input-outlined input::placeholder {
+    color: var(--mix-ink-muted);
+    opacity: 1;
+}
+
+.appbar-search .mud-input.mud-input-outlined .mud-input-outlined-border {
+    border: none;
+}
+
+.appbar-search .mud-input-adornment {
+    display: none;
+}
+
+/* ===== Atmosphere: per-mix page-ground light, derived from each game's attract screen.
+   Ground only — cards and surfaces stay flat so contrast is untouched. Trial feature:
+   deleting a theme's block (or all three) fully removes it. ===== */
+
+.mud-layout.theme-phoenix {
+    background:
+        radial-gradient(1200px 800px at 85% -10%, rgba(255, 107, 53, .10), transparent 60%),
+        radial-gradient(1000px 700px at 10% 110%, rgba(63, 169, 245, .08), transparent 60%),
+        var(--mix-bg);
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+.mud-layout.theme-xx {
+    background:
+        radial-gradient(1100px 700px at 80% -10%, rgba(255, 47, 160, .10), transparent 60%),
+        radial-gradient(900px 700px at 5% 105%, rgba(53, 200, 255, .08), transparent 60%),
+        var(--mix-bg);
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+.mud-layout.theme-phoenix2 {
+    background:
+        radial-gradient(1200px 700px at 70% -15%, rgba(79, 227, 63, .10), transparent 55%),
+        radial-gradient(1000px 800px at 15% 115%, rgba(43, 193, 216, .07), transparent 60%),
+        var(--mix-bg);
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+/* ===== Mobile: bottom nav + More sheet ===== */
+
+.bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1300;
+    display: flex;
+    align-items: stretch;
+    background: var(--mix-nav);
+    border-top: 1px solid rgba(255, 255, 255, .08);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-nav .bn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 8px 0 9px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-size: .68rem;
+    letter-spacing: .04em;
+    color: var(--mix-ink-muted);
+    text-decoration: none;
+}
+
+.bottom-nav .bn.active {
+    color: var(--mix-primary);
+}
+
+/* The Communities slot only earns space on squarish viewports (fold phones, landscape). */
+.bottom-nav .bn-wide {
+    display: none;
+}
+
+@media (min-aspect-ratio: 1/1) {
+    .bottom-nav .bn-wide {
+        display: flex;
+    }
+}
+
+/* Keep page content clear of the fixed bottom nav (Md breakpoint = 960px). */
+@media (max-width: 959.98px) {
+    .mud-main-content {
+        padding-bottom: 72px;
+    }
+}
+
+.more-sheet {
+    overflow-y: auto;
+}
+
+/* Rarity treatment ramp — glow intensity rises with the band. Hue alone can't order the
+   bands monotonically (gold is brighter than sapphire), so treatment does; the percentile
+   number always rides alongside, so color is never the only channel. Shadows omit a color
+   on purpose: they take currentColor from the band hue. */
+.rarity-glow-1 {
+    text-shadow: 0 0 6px;
+}
+
+.rarity-glow-2 {
+    text-shadow: 0 0 4px, 0 0 10px;
+}
+
+.rarity-glow-3 {
+    text-shadow: 0 0 4px, 0 0 10px, 0 0 18px;
+    font-weight: 600;
+}

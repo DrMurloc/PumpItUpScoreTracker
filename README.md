@@ -36,6 +36,7 @@ That provisions a local SQL Server container, applies migrations, and opens the 
 | [HOW-TO-RUN.md](docs/HOW-TO-RUN.md) | Prerequisites, local setup, the dev harness, optional configuration |
 | [HOW-TO-TEST.md](docs/HOW-TO-TEST.md) | Testing philosophy and how to run each suite |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Architecture philosophy (bounded-context verticals, DDD + onion + hexagonal) and the code map |
+| [UX-GUIDELINES.md](docs/UX-GUIDELINES.md) | The design system: per-mix themes, color tokens, the two semantic ramps, and the UX rules |
 | [DATABASE-SCHEMA.md](docs/DATABASE-SCHEMA.md) | Every table, grouped by owning vertical |
 | [API.md](docs/API.md) | The API surface at a glance; Swagger is the source of truth |
 | [SCHEDULED-JOBS.md](docs/SCHEDULED-JOBS.md) | The Hangfire recurring jobs: what they do and when |

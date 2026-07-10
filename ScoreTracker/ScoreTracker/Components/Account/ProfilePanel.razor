@@ -10,6 +10,7 @@
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.Theming
 
 <MudGrid>
     <MudItem xs="12" sm="6">
@@ -42,6 +43,16 @@
             <MudSelectItem T="string" Value=@("fr-FR")>Français</MudSelectItem>
             <MudSelectItem T="string" Value=@("it-IT")>Italiano</MudSelectItem>
             <MudSelectItem T="string" Value=@("en-ZW")>Murloc</MudSelectItem>
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        @* Perma-set the theme to one mix, overriding the theme-follows-mix default. *@
+        <MudSelect T="string" Label=@L["Site Theme"] Value="_themeOverride" ValueChanged="UpdateThemeOverride">
+            <MudSelectItem T="string" Value="@MixThemes.MatchMixValue">@L["Match Current Mix"]</MudSelectItem>
+            @foreach (var mix in MixThemes.ThemedMixes)
+            {
+                <MudSelectItem T="string" Value="@mix.ToString()">@mix.GetName()</MudSelectItem>
+            }
         </MudSelect>
     </MudItem>
     <MudItem xs="12">
@@ -140,11 +151,13 @@
     private IEnumerable<CountryRecord> _countries = Array.Empty<CountryRecord>();
     private string _countryName = null;
     private string _currentCulture = "en-US";
+    private string _themeOverride = MixThemes.MatchMixValue;
 
     protected override async Task OnInitializedAsync()
     {
         var culture = await UiSettings.GetSetting("Culture");
         _currentCulture = culture ?? CultureInfo.CurrentUICulture.ToString();
+        _themeOverride = await UiSettings.GetSetting(MixThemes.OverrideSettingKey) ?? MixThemes.MatchMixValue;
         _id = CurrentUser.User.Id.ToString();
         _name = CurrentUser.User.Name;
         _countryName = CurrentUser.User.Country;
@@ -158,6 +171,14 @@
         _isUpdatingUser = true;
         await UiSettings.SetSetting("Culture", newCulture);
         NavManager.NavigateTo($"/Culture/Set?culture={newCulture}&redirectUrl=" + HttpUtility.UrlEncode("/Account"), forceLoad: true);
+    }
+
+    private async Task UpdateThemeOverride(string newValue)
+    {
+        _themeOverride = newValue;
+        await UiSettings.SetSetting(MixThemes.OverrideSettingKey, newValue);
+        // Theme is resolved once at layout init — same full-reload pattern as mix switching.
+        NavManager.NavigateTo("/Account", forceLoad: true);
     }
 
     private async Task CopyUserId()

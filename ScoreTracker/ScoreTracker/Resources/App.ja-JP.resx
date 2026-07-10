@@ -2663,4 +2663,25 @@
   <data name="Rebuild Recap PG Cards" xml:space="preserve">
     <value>リキャップPGカード再構築</value>
   </data>
+  <data name="Site Theme" xml:space="preserve">
+    <value>サイトテーマ</value>
+  </data>
+  <data name="Match Current Mix" xml:space="preserve">
+    <value>現在のバージョンに合わせる</value>
+  </data>
+  <data name="My Sessions" xml:space="preserve">
+    <value>マイセッション</value>
+  </data>
+  <data name="Weekly" xml:space="preserve">
+    <value>週間</value>
+  </data>
+  <data name="More" xml:space="preserve">
+    <value>その他</value>
+  </data>
+  <data name="Import" xml:space="preserve">
+    <value>インポート</value>
+  </data>
+  <data name="Tiers" xml:space="preserve">
+    <value>ティア</value>
+  </data>
 </root>
