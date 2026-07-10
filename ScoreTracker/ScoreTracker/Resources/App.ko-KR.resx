@@ -2506,4 +2506,13 @@
   <data name="Now You Can Play the Game" xml:space="preserve">
     <value>Now You Can Play the Game</value>
   </data>
+  <data name="My Recap" xml:space="preserve">
+    <value>내 리캡</value>
+  </data>
+  <data name="Your Phoenix Story is ready" xml:space="preserve">
+    <value>당신의 피닉스 스토리가 준비되었습니다</value>
+  </data>
+  <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
+    <value>3년 반의 펌프를 하나의 리캡으로. 지금 확인하고 멋진 부분은 스크린샷으로 남기세요.</value>
+  </data>
 </root>

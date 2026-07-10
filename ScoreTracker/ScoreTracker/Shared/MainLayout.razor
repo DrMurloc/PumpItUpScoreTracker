@@ -152,6 +152,10 @@
                 {
                     <MudNavLink Href="/Pumbility" Icon="@Icons.Material.Filled.Star">@L["PUMBILITY"]</MudNavLink>
                 }
+                @if (_hasRecap)
+                {
+                    <MudNavLink Href=@($"/Player/{_userId}/PhoenixRecap") Icon="@Icons.Material.Filled.LocalFireDepartment">@L["My Recap"]</MudNavLink>
+                }
             }
             <MudNavLink Href="/Titles" Icon="@Icons.Material.Filled.Grade">@L["Titles"]</MudNavLink>
 
@@ -213,13 +217,30 @@
             <MudDialog @bind-Visible="_showBite">
                 <DialogContent>
                     <MudImage Src="https://piuimages.arroweclip.se/TheBigOne.png" Height="400" ObjectFit="ObjectFit.ScaleDown" Style="display:block;margin-left:auto;margin-right:auto;"></MudImage>
-                    
+
                 </DialogContent>
                 <DialogActions>
                     <MudSpacer></MudSpacer>
                     <MudButton Href="https://bigone.cl/en/index.html" Target="_blank" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Link" Variant="Variant.Outlined">@L["Open"]</MudButton>
                     <MudButton Variant="Variant.Text"
                                OnClick="()=>_showBite=false"
+                               Color="Color.Primary">@L["Close"]</MudButton>
+                </DialogActions>
+            </MudDialog>
+
+            @* One-time Phoenix Recap pointer (B1G ONE pattern): shows once per user, only
+               after their recap row exists. No expiry cutoff yet — set one when the
+               Phoenix 2 launch date is known (docs/design/phoenix-season-recap.md). *@
+            <MudDialog @bind-Visible="_showRecapPopup">
+                <DialogContent>
+                    <MudText Typo="Typo.h5">@L["Your Phoenix Story is ready"]</MudText>
+                    <MudText Class="mt-2">@L["Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts."]</MudText>
+                </DialogContent>
+                <DialogActions>
+                    <MudSpacer></MudSpacer>
+                    <MudButton Href=@($"/Player/{_userId}/PhoenixRecap") Color="Color.Primary" StartIcon="@Icons.Material.Filled.LocalFireDepartment" Variant="Variant.Filled" OnClick="()=>_showRecapPopup=false">@L["Open"]</MudButton>
+                    <MudButton Variant="Variant.Text"
+                               OnClick="()=>_showRecapPopup=false"
                                Color="Color.Primary">@L["Close"]</MudButton>
                 </DialogActions>
             </MudDialog>
@@ -243,7 +264,10 @@
         return Task.CompletedTask;
     }
     private bool _showBite = false;
+    private bool _showRecapPopup = false;
+    private bool _hasRecap = false;
     private const string BitePopupKey = "MainLayout__BigOne2024PopupShown";
+    private const string RecapPopupKey = "MainLayout__PhoenixRecapPopupShown";
     public static readonly DateTimeOffset _cutoff = new DateTimeOffset(2024, 10, 15, 0, 0, 0, TimeSpan.FromHours(-5));
     private MixEnum _currentMix = MixEnum.Phoenix;
     // Launch order: deploy this build, then run the ChartMix seed script immediately —
@@ -270,6 +294,17 @@
         {
             _showBite = true;
             await UiSettings.SetSetting(BitePopupKey,"true");
+        }
+        if (CurrentUser.IsLoggedIn)
+        {
+            // Only pester players whose recap actually exists; the flag flips on first show.
+            _hasRecap = await Mediator.Send(new GetPlayerRecapQuery(CurrentUser.User.Id)) != null;
+            var recapShown = await UiSettings.GetSetting(RecapPopupKey);
+            if (_hasRecap && string.IsNullOrWhiteSpace(recapShown))
+            {
+                _showRecapPopup = true;
+                await UiSettings.SetSetting(RecapPopupKey, "true");
+            }
         }
         if (CurrentUser.IsLoggedIn)
         {

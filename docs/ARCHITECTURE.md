@@ -127,7 +127,7 @@ Every vertical's model contribution must be listed in [`VerticalModelContributio
 |---|---|
 | *(root)* | `/WhatShouldIPlay` (home: recommendations + quick recording), `/Charts` (the core browser), `/Chart/{id}` (record + detail), `/Login`, `/Welcome`, `/Account` (profile, API tokens), `/UploadPhoenixScores` (bulk CSV import), `/UploadXXScores` |
 | `TierLists/` | `/TierLists`, `/ChartSkills`, `/PersonalizedTierList` — the site's most-used feature |
-| `Progress/` | `/Progress`, `/Phoenix/Progress`, `/Pumbility`, `/Titles`, `/CompetitiveLevel`, `/Player/{id}/Sessions` (public session roundups + score journal — the Discord score card's link target) |
+| `Progress/` | `/Progress`, `/Phoenix/Progress`, `/Pumbility`, `/Titles`, `/CompetitiveLevel`, `/Player/{id}/Sessions` (public session roundups + score journal — the Discord score card's link target), `/Player/{id}/PhoenixRecap` (the season-recap slide deck, admin-computed — see [docs/design/phoenix-season-recap.md](design/phoenix-season-recap.md)) |
 | `Competition/` | `/Tournaments`, stamina + match tournament flows, qualifiers submission, `/WeeklyCharts`, `/UcsLeaderboards`, `/ScoreRankings`, `/Completion` |
 | `Communities/` | `/Communities`, invite links, community leaderboards |
 | `OfficialLeaderboards/` | mirrored official leaderboards, player compare, `/PlayerRankings` |

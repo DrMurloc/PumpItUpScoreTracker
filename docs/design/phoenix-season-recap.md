@@ -1,7 +1,6 @@
 # Phoenix Season Recap
 
-**Status:** decisions locked 2026-07-09 (owner + prod-data validation); awaiting "Go" for implementation.
-**Branch:** `claude/phoenix-season-recap-a0db4f`, stacked on PR #128 (`claude/phoenix2-pumbility-crawl-cf2710`) — the P2 pumbility formula, mix-keyed `PumbilityScoring`, and Phoenix 2 title list are dependencies.
+**Status:** implemented — C1–C9 all landed on `claude/phoenix-season-recap-a0db4f` (2026-07-10). PR #128 has since merged to main and this branch merged main back in, so it PRs cleanly against main.
 
 A Raider.IO-style end-of-season recap: one animated, screenshottable page that walks a player through their Phoenix era. Every threshold below was validated against production data on 2026-07-09; measured player counts are noted so future tuning has a baseline.
 

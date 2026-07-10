@@ -2577,4 +2577,13 @@
   <data name="Now You Can Play the Game" xml:space="preserve">
     <value>Now You Can Play the Game</value>
   </data>
+  <data name="My Recap" xml:space="preserve">
+    <value>Meu recap</value>
+  </data>
+  <data name="Your Phoenix Story is ready" xml:space="preserve">
+    <value>Sua história Phoenix está pronta</value>
+  </data>
+  <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
+    <value>Três anos e meio de Pump, um só recap. Vá ver o seu — e tire prints das melhores partes.</value>
+  </data>
 </root>
