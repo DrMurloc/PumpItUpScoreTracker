@@ -238,8 +238,11 @@
         }
     </MudAppBar>
     @* The mobile "More" sheet: everything that didn't earn a bottom-nav slot, mirroring
-       the desktop menu groups in the same order. Bottom-anchored for thumb reach. *@
-    <MudDrawer @bind-Open="_showMore" Anchor="Anchor.Bottom" Variant="@DrawerVariant.Temporary" Height="auto" Class="more-sheet" Elevation="4">
+       the desktop menu groups in the same order. Bottom-anchored for thumb reach.
+       Fixed Height: a bottom drawer hides by translating its own height off-screen, so
+       "auto" breaks the closed state and the sheet renders permanently open. *@
+    <MudHidden Breakpoint="Breakpoint.MdAndUp">
+        <MudDrawer @bind-Open="_showMore" Anchor="Anchor.Bottom" Variant="@DrawerVariant.Temporary" Height="75vh" Class="more-sheet" Elevation="4">
         <MudNavMenu Class="dense-nav pb-4 pt-2">
             <MudText Typo="Typo.overline" Class="ml-4 mt-2 d-block nav-section">@L["My Progress"]</MudText>
             @if (CurrentUser.IsLoggedIn)
@@ -303,7 +306,8 @@
             </MudNavGroup>
             <MudNavLink Href="/About" Icon="@Icons.Material.Filled.Info">@L["About"]</MudNavLink>
         </MudNavMenu>
-    </MudDrawer>
+        </MudDrawer>
+    </MudHidden>
 
     @* Thumb-reach primary nav at phone/tablet widths; desktop uses the top nav. *@
     <MudHidden Breakpoint="Breakpoint.MdAndUp">
