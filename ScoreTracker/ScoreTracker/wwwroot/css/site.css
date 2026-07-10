@@ -136,18 +136,27 @@
     box-shadow: 0 0 8px var(--mix-glow);
 }
 
-/* App-bar chart search, re-tinted through tokens. */
+/* App-bar chart search — a quiet pill that matches the mix pill, not a form field.
+   The outlined border and dropdown caret are stripped; focus brings the theme primary in. */
 .appbar-search .mud-input-control {
     margin: 0;
 }
 
 .appbar-search .mud-input.mud-input-outlined {
-    background: rgba(255, 255, 255, .12);
+    background: rgba(255, 255, 255, .07);
+    border-radius: 16px;
+    font-size: .85rem;
 }
 
-.appbar-search .mud-input.mud-input-outlined input,
-.appbar-search .mud-input-adornment-icon {
+.appbar-search .mud-input.mud-input-outlined:focus-within {
+    background: rgba(255, 255, 255, .11);
+    box-shadow: 0 0 0 1px var(--mix-primary);
+}
+
+.appbar-search .mud-input.mud-input-outlined input {
     color: var(--mix-ink);
+    padding: 5px 14px;
+    height: unset;
 }
 
 .appbar-search .mud-input.mud-input-outlined input::placeholder {
@@ -156,7 +165,11 @@
 }
 
 .appbar-search .mud-input.mud-input-outlined .mud-input-outlined-border {
-    border-color: var(--mix-ink-muted);
+    border: none;
+}
+
+.appbar-search .mud-input-adornment {
+    display: none;
 }
 
 /* Rarity treatment ramp — glow intensity rises with the band. Hue alone can't order the

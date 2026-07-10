@@ -194,7 +194,7 @@
 
         <MudSpacer></MudSpacer>
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
-            <div class="d-flex align-center appbar-search mr-3" style="min-width: 200px; max-width: 300px;">
+            <div class="d-flex align-center appbar-search mr-3" style="min-width: 170px; max-width: 220px;">
                 <ChartSelector Mix="_currentMix" Label="" Placeholder="@L["Find a chart"].Value" Variant="Variant.Outlined" Margin="Margin.Dense" ChartIdSelected="GoToChart"></ChartSelector>
             </div>
         </MudHidden>
@@ -215,12 +215,6 @@
 
         @if (CurrentUser.IsLoggedIn)
         {
-            <MudHidden Breakpoint="Breakpoint.Xs">
-                <MudButton Href="/UploadPhoenixScores" Variant="Variant.Outlined" Color="Color.Inherit" Size="Size.Small" StartIcon="@Icons.Material.Filled.CloudDownload" Class="mr-4">@L["Import Scores"]</MudButton>
-            </MudHidden>
-            <MudHidden Breakpoint="Breakpoint.SmAndUp">
-                <MudIconButton Href="/UploadPhoenixScores" Color="Color.Inherit" Icon="@Icons.Material.Filled.CloudDownload" Class="mr-1"></MudIconButton>
-            </MudHidden>
             <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
                 <ActivatorContent>
                     <MudAvatar Size="Size.Small" Style="cursor: pointer;">
@@ -234,6 +228,7 @@
                 </ActivatorContent>
                 <ChildContent>
                     <div class="px-4 py-1" style="color: var(--mix-ink-muted); font-size: .8rem;">@UserName</div>
+                    <MudMenuItem Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</MudMenuItem>
                     <MudMenuItem Href="/Account" Icon="@Icons.Material.Filled.AccountCircle">@L["Account"]</MudMenuItem>
                     <MudMenuItem Href="/Logout" Icon="@Icons.Material.Filled.Logout">@L["Logout"]</MudMenuItem>
                 </ChildContent>
