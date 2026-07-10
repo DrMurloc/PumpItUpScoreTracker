@@ -22,6 +22,7 @@ public sealed record PlayerRecap(
     IReadOnlyList<RecapChartHighlight> ImpressivePgs,
     IReadOnlyList<RecapChartHighlight> ImpressivePasses,
     IReadOnlyList<RecapScoreHighlight> ImpressiveScores,
+    IReadOnlyList<RecapRareChart> RarestPasses,
     RecapWeekly? Weekly,
     RecapTrophies Trophies,
     RecapPhoenix2Projection? Projection)
@@ -48,6 +49,7 @@ public sealed record RecapArcPoint(DateTimeOffset Date, double CompetitiveLevel)
 [ExcludeFromCodeCoverage]
 public sealed record RecapRollup(
     int PlayDays,
+    DateTimeOffset? FirstRecordedOn,
     int ChartsPassed,
     int ChartsPassedRank,
     double ChartsPassedPercentile,
@@ -93,6 +95,16 @@ public sealed record RecapScoreHighlight(
     int Level,
     int Score,
     double PercentileVsPeers);
+
+/// <summary>A pass few others have: sitewide pass rate (passers ÷ players who tried it) and the passer count.</summary>
+[ExcludeFromCodeCoverage]
+public sealed record RecapRareChart(
+    Guid ChartId,
+    string SongName,
+    ChartType ChartType,
+    int Level,
+    double PassRate,
+    int Passers);
 
 [ExcludeFromCodeCoverage]
 public sealed record RecapWeekly(

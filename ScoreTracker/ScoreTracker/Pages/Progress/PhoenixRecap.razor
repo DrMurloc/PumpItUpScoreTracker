@@ -58,9 +58,23 @@ else if (_user != null && _recap != null)
         <section class="precap-slide" style="--gx:80%;--gy:0%">
             <div class="precap-inner">
                 <div class="precap-eyebrow">@L["The grind"]</div>
-                <h2 class="precap-h2"><span class="precap-hl" data-count="@_recap.Rollup.PlayDays">@_recap.Rollup.PlayDays.ToString("N0")</span> @L["days on the pad"]</h2>
+                @if (IsFreshImporter)
+                {
+                    @* Sub-week importers have no history to flex yet — greet them instead
+                       of showing "1 days on the pad". *@
+                    <h2 class="precap-h2">@L["Welcome to PIUScores"]</h2>
+                    <p class="precap-lede">@L["Your Phoenix story starts here — {0} charts already on the books.", _recap.Rollup.ChartsPassed.ToString("N0")]</p>
+                }
+                else if (_recap.Rollup.PlayDays > 1)
+                {
+                    <h2 class="precap-h2"><span class="precap-hl" data-count="@_recap.Rollup.PlayDays">@_recap.Rollup.PlayDays.ToString("N0")</span> @L["days on the pad"]</h2>
+                }
+                else
+                {
+                    <h2 class="precap-h2"><span class="precap-hl" data-count="@_recap.Rollup.TotalNoteCount">@_recap.Rollup.TotalNoteCount.ToString("N0")</span> @L["arrows stepped"]</h2>
+                }
                 <div class="precap-statgrid">
-                    @if (_recap.Rollup.TotalNoteCount > 0)
+                    @if (_recap.Rollup.TotalNoteCount > 0 && (IsFreshImporter || _recap.Rollup.PlayDays > 1))
                     {
                         <div class="precap-stat">
                             <div class="precap-num" data-count="@_recap.Rollup.TotalNoteCount">@_recap.Rollup.TotalNoteCount.ToString("N0")</div>
@@ -187,7 +201,7 @@ else if (_user != null && _recap != null)
         }
 
         @* ============ Highlights ============ *@
-        @if (_recap.ImpressivePgs.Any() || _recap.ImpressivePasses.Any() || _recap.ImpressiveScores.Any())
+        @if (_recap.ImpressivePgs.Any() || _recap.ImpressivePasses.Any() || _recap.ImpressiveScores.Any() || _recap.RarestPasses.Any())
         {
             <section class="precap-slide" style="--gx:50%;--gy:0%">
                 <div class="precap-inner">
@@ -221,6 +235,16 @@ else if (_user != null && _recap != null)
                                 @foreach (var score in _recap.ImpressiveScores)
                                 {
                                     <div class="precap-row">@Pill(score.ChartType, score.Level)<span class="precap-song">@score.SongName</span><span class="precap-score">@score.Score.ToString("N0")</span><span class="precap-meta precap-hot">@TopShare(1 - score.PercentileVsPeers)</span></div>
+                                }
+                            </div>
+                        }
+                        @if (_recap.RarestPasses.Any())
+                        {
+                            <div class="precap-hlcol">
+                                <span class="precap-cat precap-cat-gold">@L["Rarest passes"]</span>
+                                @foreach (var rare in _recap.RarestPasses)
+                                {
+                                    <div class="precap-row">@Pill(rare.ChartType, rare.Level)<span class="precap-song">@rare.SongName</span><span class="precap-meta precap-hot">@L["only {0} pass it", rare.PassRate.ToString("P0")]</span></div>
                                 }
                             </div>
                         }
@@ -564,6 +588,9 @@ else if (_user != null && _recap != null)
             ? _recap.ComputedAt.Year.ToString()
             : $"{start.Value:MMM yyyy} — {_recap.ComputedAt:MMM yyyy}";
     }
+
+    private bool IsFreshImporter =>
+        _recap!.Rollup.FirstRecordedOn is { } first && (_recap.ComputedAt - first).TotalDays < 7;
 
     private string TopShare(double? percentile)
     {

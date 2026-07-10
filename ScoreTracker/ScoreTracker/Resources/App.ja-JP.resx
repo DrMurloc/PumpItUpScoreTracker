@@ -2639,4 +2639,19 @@
   <data name="Grade breakdown" xml:space="preserve">
     <value>グレード分布</value>
   </data>
+  <data name="Welcome to PIUScores" xml:space="preserve">
+    <value>PIUScoresへようこそ</value>
+  </data>
+  <data name="Your Phoenix story starts here — {0} charts already on the books." xml:space="preserve">
+    <value>あなたのフェニックス・ストーリーはここから。すでに{0}譜面を記録済み。</value>
+  </data>
+  <data name="arrows stepped" xml:space="preserve">
+    <value>踏んだ矢印</value>
+  </data>
+  <data name="Rarest passes" xml:space="preserve">
+    <value>最もレアなクリア</value>
+  </data>
+  <data name="only {0} pass it" xml:space="preserve">
+    <value>クリア率{0}</value>
+  </data>
 </root>

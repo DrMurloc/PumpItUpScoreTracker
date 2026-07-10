@@ -25,6 +25,7 @@ A Raider.IO-style end-of-season recap: one animated, screenshottable page that w
 - Results persist to a new table **`scores.PlayerSeasonRecap`** (PK `UserId + MixId`; `Payload` JSON, `SchemaVersion`, `ComputedAt`). The page reads the persisted row only — no live computation.
 - Recap is keyed by mix (`MixEnum.Phoenix` now) so a future Phoenix 2 recap reuses the whole pipeline.
 - **Eligibility:** ≥10 non-broken Phoenix scores (~1,371 users in prod: 1,289 with ≥50, 82 with 10–49). Sections degrade gracefully when their data is thin.
+- **Fresh importers** (first recorded best under 7 days old) get a "Welcome to PIUScores" hero on the grind slide instead of "1 days on the pad"; a non-fresh player whose journal spans a single day gets the arrows-stepped hero instead. Weekly/arc/badge/rival slides simply don't render without their data.
 - Future option (post-launch, based on observed job cost): a self-serve recalculate button for users.
 
 **Perf note:** rival matching is the expensive step. The all-users job memoizes each user's top-50 competitive (fung) chart-id set once per run, so matching is set intersection — O(users × scores) overall for ~1,450 users. The impressive-scores step must reuse `ScoreQualitySaga`'s cached cohort machinery rather than issuing per-user raw cohort-ranking queries — cohort ranking against prod SQL is exactly what caused the 2026-07-10 CPU incident (fixed by PR #129's bucket caching + covering index).
@@ -78,6 +79,8 @@ Records with `Plate = PerfectGame`, ordered folder descending then PG difficulty
 
 ### 8. Most impressive scores
 3 singles + 3 doubles from competitive-contributing scores, descending, taking scores with **>90% tie-inclusive percentile** vs the ±0.5 competitive cohort (reuse `ScoreQualitySaga` mechanics / `ScoreRankings.TieInclusivePercentile`). PGs excluded (they live on slide 6).
+
+The highlights slide also carries **Rarest passes** (round two): the player's top 5 passes by lowest sitewide pass rate (passers ÷ players with a scored record, from the extended `ChartScoreAggregate`), floored at 20 attempters so a two-record obscurity can't outrank a boss chart.
 
 ### 9. Weekly Charts
 From `UserWeeklyPlacing` (rows carry `Place`, `Score`, `Plate`, `WasWithinRange`, `ObtainedDate`):

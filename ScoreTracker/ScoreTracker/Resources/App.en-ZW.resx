@@ -2562,4 +2562,19 @@
   <data name="Grade breakdown" xml:space="preserve">
     <value>Mrgl grades</value>
   </data>
+  <data name="Welcome to PIUScores" xml:space="preserve">
+    <value>Mrglcome to PIUScores</value>
+  </data>
+  <data name="Your Phoenix story starts here — {0} charts already on the books." xml:space="preserve">
+    <value>Mrgl story mrgls here — {0} mrgls!</value>
+  </data>
+  <data name="arrows stepped" xml:space="preserve">
+    <value>mrgl arrows</value>
+  </data>
+  <data name="Rarest passes" xml:space="preserve">
+    <value>Mrgl rare mrgls</value>
+  </data>
+  <data name="only {0} pass it" xml:space="preserve">
+    <value>only {0} mrgl it</value>
+  </data>
 </root>

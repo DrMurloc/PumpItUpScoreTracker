@@ -2638,4 +2638,19 @@
   <data name="Grade breakdown" xml:space="preserve">
     <value>Grade breakdown</value>
   </data>
+  <data name="Welcome to PIUScores" xml:space="preserve">
+    <value>Welcome to PIUScores</value>
+  </data>
+  <data name="Your Phoenix story starts here — {0} charts already on the books." xml:space="preserve">
+    <value>Your Phoenix story starts here — {0} charts already on the books.</value>
+  </data>
+  <data name="arrows stepped" xml:space="preserve">
+    <value>arrows stepped</value>
+  </data>
+  <data name="Rarest passes" xml:space="preserve">
+    <value>Rarest passes</value>
+  </data>
+  <data name="only {0} pass it" xml:space="preserve">
+    <value>only {0} pass it</value>
+  </data>
 </root>

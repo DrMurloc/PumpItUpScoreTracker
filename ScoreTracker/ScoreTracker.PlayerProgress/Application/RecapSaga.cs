@@ -154,6 +154,7 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
             BuildImpressivePgs(passes, shared),
             BuildImpressivePasses(passes, shared),
             await BuildImpressiveScores(mix, userId, myStats, shared, cancellationToken),
+            BuildRarestPasses(passes, shared),
             WeeklyRecapCalculator.Calculate(userId, shared.WeeklyRows, shared.Charts, shared.UserNames),
             await BuildTrophies(mix, userId, passes, shared, cancellationToken),
             Phoenix2ProjectionCalculator.Calculate(bests, shared.Phoenix2Charts));
@@ -211,9 +212,29 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
             .Select(g => new RecapStepArtist(g.Key.ToString(), g.Count()))
             .ToArray();
 
-        return new RecapRollup(playDays, passes.Length, clearRank, clearPercentile,
-            singlesRank, singlesPercentile, doublesRank, doublesPercentile,
+        return new RecapRollup(playDays, bests.Min(b => b.RecordedDate), passes.Length, clearRank,
+            clearPercentile, singlesRank, singlesPercentile, doublesRank, doublesPercentile,
             totalSeconds, totalNotes, topStepArtists);
+    }
+
+    /// <summary>
+    ///     Passes few others on the site have: lowest sitewide pass rate first, floored at
+    ///     20 players with a scored record so a two-attempt obscurity can't outrank a boss.
+    /// </summary>
+    private IReadOnlyList<RecapRareChart> BuildRarestPasses(RecordedPhoenixScore[] passes, SharedInputs shared)
+    {
+        const int minimumAttempts = 20;
+        return passes
+            .Where(p => shared.Charts.ContainsKey(p.ChartId))
+            .Select(p => (Chart: shared.Charts[p.ChartId],
+                Aggregate: shared.ChartAggregates.GetValueOrDefault(p.ChartId)))
+            .Where(x => x.Aggregate is { } a && a.Count >= minimumAttempts && a.PassCount > 0)
+            .OrderBy(x => x.Aggregate!.PassCount / (double)x.Aggregate.Count)
+            .ThenBy(x => x.Aggregate!.PassCount)
+            .Take(5)
+            .Select(x => new RecapRareChart(x.Chart.Id, x.Chart.Song.Name.ToString(), x.Chart.Type,
+                x.Chart.Level, x.Aggregate!.PassCount / (double)x.Aggregate.Count, x.Aggregate.PassCount))
+            .ToArray();
     }
 
     private static (int? Rank, double? Percentile) RankAmong(double[] rankedLevels, double mine)
@@ -530,6 +551,8 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
         var titledUsers = await _titles.CountTitledUsers(cancellationToken);
         var pgTiers = await LoadTierCategories("PG", mix, cancellationToken);
         var passTiers = await LoadTierCategories("Difficulty", mix, cancellationToken);
+        var chartAggregates = (await _scores.GetChartScoreAggregates(mix, cancellationToken))
+            .ToDictionary(a => a.ChartId);
 
         var folders = charts.Values
             .Where(c => c.Type is ChartType.Single or ChartType.Double)
@@ -545,6 +568,7 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
             users.Values.ToDictionary(u => u.Id, u => u.Name.ToString()),
             weeklyRows,
             phoenix2Charts,
+            chartAggregates,
             allStats.Where(s => s.SinglesCompetitiveLevel > 0).Select(s => s.SinglesCompetitiveLevel).ToArray(),
             allStats.Where(s => s.DoublesCompetitiveLevel > 0).Select(s => s.DoublesCompetitiveLevel).ToArray(),
             titleHolders,
@@ -586,6 +610,7 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
         IReadOnlyDictionary<Guid, string> UserNames,
         IReadOnlyList<WeeklyPlacingRow> WeeklyRows,
         IReadOnlyDictionary<Guid, Chart> Phoenix2Charts,
+        IReadOnlyDictionary<Guid, ChartScoreAggregate> ChartAggregates,
         double[] SinglesLevels,
         double[] DoublesLevels,
         IReadOnlyDictionary<Name, int> TitleHolders,

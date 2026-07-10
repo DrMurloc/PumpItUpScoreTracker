@@ -2638,4 +2638,19 @@
   <data name="Grade breakdown" xml:space="preserve">
     <value>Distribuzione dei grade</value>
   </data>
+  <data name="Welcome to PIUScores" xml:space="preserve">
+    <value>Benvenuto su PIUScores</value>
+  </data>
+  <data name="Your Phoenix story starts here — {0} charts already on the books." xml:space="preserve">
+    <value>La tua storia Phoenix inizia qui — {0} chart già registrate.</value>
+  </data>
+  <data name="arrows stepped" xml:space="preserve">
+    <value>frecce calpestate</value>
+  </data>
+  <data name="Rarest passes" xml:space="preserve">
+    <value>Pass più rari</value>
+  </data>
+  <data name="only {0} pass it" xml:space="preserve">
+    <value>solo il {0} la passa</value>
+  </data>
 </root>

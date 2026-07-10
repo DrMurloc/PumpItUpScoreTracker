@@ -2517,4 +2517,19 @@
   <data name="Grade breakdown" xml:space="preserve">
     <value>Distribución de grados</value>
   </data>
+  <data name="Welcome to PIUScores" xml:space="preserve">
+    <value>Bienvenido a PIUScores</value>
+  </data>
+  <data name="Your Phoenix story starts here — {0} charts already on the books." xml:space="preserve">
+    <value>Tu historia Phoenix empieza aquí — {0} charts ya registrados.</value>
+  </data>
+  <data name="arrows stepped" xml:space="preserve">
+    <value>flechas pisadas</value>
+  </data>
+  <data name="Rarest passes" xml:space="preserve">
+    <value>Passes más raros</value>
+  </data>
+  <data name="only {0} pass it" xml:space="preserve">
+    <value>solo el {0} lo pasa</value>
+  </data>
 </root>

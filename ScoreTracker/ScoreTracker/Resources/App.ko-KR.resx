@@ -2518,4 +2518,19 @@
   <data name="Grade breakdown" xml:space="preserve">
     <value>등급 분포</value>
   </data>
+  <data name="Welcome to PIUScores" xml:space="preserve">
+    <value>PIUScores에 오신 것을 환영합니다</value>
+  </data>
+  <data name="Your Phoenix story starts here — {0} charts already on the books." xml:space="preserve">
+    <value>당신의 피닉스 스토리는 여기서 시작됩니다. 이미 {0}개 채보 기록.</value>
+  </data>
+  <data name="arrows stepped" xml:space="preserve">
+    <value>밟은 화살표</value>
+  </data>
+  <data name="Rarest passes" xml:space="preserve">
+    <value>가장 희귀한 클리어</value>
+  </data>
+  <data name="only {0} pass it" xml:space="preserve">
+    <value>클리어율 {0}</value>
+  </data>
 </root>

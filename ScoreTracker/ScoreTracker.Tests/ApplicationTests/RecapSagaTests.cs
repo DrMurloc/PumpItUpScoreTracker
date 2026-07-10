@@ -307,6 +307,45 @@ public sealed class RecapSagaTests
     }
 
     [Fact]
+    public async Task RarestPassesRankBySitewidePassRateWithAnAttemptFloor()
+    {
+        var brutal = new ChartBuilder().WithType(ChartType.Single).WithLevel(24).WithSongName("Brutal").Build();
+        var common = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).WithSongName("Common").Build();
+        var obscure = new ChartBuilder().WithType(ChartType.Single).WithLevel(10).WithSongName("Obscure").Build();
+        var ctx = new HandlerContext(brutal, common, obscure);
+        ctx.GivenEligiblePasses(7);
+        ctx.GivenPass(brutal, 920_000);
+        ctx.GivenPass(common, 990_000);
+        ctx.GivenPass(obscure, 990_000);
+        ctx.Scores.Setup(s => s.GetChartScoreAggregates(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new ChartScoreAggregate(brutal.Id, 100, 5),
+                new ChartScoreAggregate(common.Id, 100, 80),
+                // Two players tried it — below the 20-attempt floor, however "rare".
+                new ChartScoreAggregate(obscure.Id, 2, 1)
+            });
+
+        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+
+        Assert.Equal(new[] { brutal.Id, common.Id },
+            ctx.Saved!.RarestPasses.Select(r => r.ChartId).ToArray());
+        Assert.Equal(.05, ctx.Saved.RarestPasses[0].PassRate, 5);
+        Assert.Equal(5, ctx.Saved.RarestPasses[0].Passers);
+    }
+
+    [Fact]
+    public async Task FirstRecordedDateRidesTheRollup()
+    {
+        var ctx = new HandlerContext();
+        ctx.GivenEligiblePasses(10);
+
+        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+
+        Assert.Equal(Now, ctx.Saved!.Rollup.FirstRecordedOn);
+    }
+
+    [Fact]
     public async Task PlayDaysComeFromTheJournal()
     {
         var ctx = new HandlerContext();
@@ -361,6 +400,8 @@ public sealed class RecapSagaTests
             Scores.Setup(s => s.GetPlayDayCount(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(0);
+            Scores.Setup(s => s.GetChartScoreAggregates(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<ChartScoreAggregate>());
             Scores.Setup(s => s.GetPlayerScores(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
                     It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<UserPhoenixScore>());

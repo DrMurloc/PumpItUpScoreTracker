@@ -66,6 +66,10 @@ public interface IScoreReader
     /// </summary>
     Task<int> GetPlayDayCount(MixEnum mix, Guid userId, CancellationToken cancellationToken = default);
 
+    /// <summary>Per-chart population counts for a mix: players with a scored record, and how many passed.</summary>
+    Task<IEnumerable<ChartScoreAggregate>> GetChartScoreAggregates(MixEnum mix,
+        CancellationToken cancellationToken = default);
+
     /// <summary>A player's best XX (legacy mix) attempt per chart. XX records are Ledger-owned too.</summary>
     Task<IEnumerable<BestXXChartAttempt>> GetBestXXAttempts(Guid userId,
         CancellationToken cancellationToken = default);
