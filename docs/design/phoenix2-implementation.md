@@ -59,13 +59,16 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   badges site-detected only (CO-OP Rating formula unknown — TODO).
 - **Avatar hosts split by era**: P2 serves `/data/avatar_img2/` — `ImageRegex` accepts both, and
   BOTH shapes are pinned by approval fixtures (this was the recurring avatar bug).
-- **Still deferred → next PR: the P2 leaderboard mirror / world rankings.** The P2 site replaced
-  per-level rating boards with `leaderboard/pumbility_ranking.php` (`?t=` = All / `s` / `d`,
-  `&page=` pagination, daily 01:00 GMT+9 recompute, name masked-title rows) and per-chart
-  `over_ranking_view.php?no=` TOP-100 boards (score + grade, no plate). Scraper parsing was proven
-  in recon (selectors: `ul.pumbilitySt li`, `.profile_name.pl0`/`.st1`, `.score i.tt` +
-  `.pumbility-point-sub`); wire into `GetLeaderboardEntries`'s P2 arm + unlock the PlayerRankings
-  ComingSoon gate when built.
+- **P2 leaderboard mirror / world rankings: LANDED (same branch, C10–C14).** The P2 site
+  replaced per-level rating boards with `leaderboard/pumbility_ranking.php` (`?t=` = All / `s` /
+  `d`, `&page=` pagination, daily 01:00 GMT+9 recompute) — those three tabs now import as the
+  mix's "Rating" leaderboards (`PUMBILITY` / `PUMBILITY Singles` / `PUMBILITY Doubles`).
+  **piugame.com serves no anonymous ranking traffic** (verified 2026-07-09: the pumbility board
+  AND the over_ranking chart list are login-gated; individual chart boards are public), so P2
+  imports authenticate with `PiuGame:ServiceUsername`/`ServicePassword` — a dedicated dummy
+  account — and fail loudly when unset. Repository reads/clears/world-rankings went per-mix
+  end-to-end (chart-board names collide across mixes). The three OfficialLeaderboards pages
+  un-gated; `start-phoenix2-leaderboard-import` runs Sundays 16:30 UTC.
 
 ## Commit sequence
 
