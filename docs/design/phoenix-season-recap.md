@@ -63,7 +63,7 @@ Show all earned; lead with the biggest.
 - **CoOp ladder** — completion of CoOp ×2 charts (`ChartType.CoOp`, `Level == 2`; player count *is* the Level field): **>50% Socialite, >75% Clearly Has Friends, >90% Friendship is Magic, 100% "I Hope You Held Hands on Canon D"**. (Prod: 123 / 80 / 50 / 12.)
 - **BanYa Lover** — >50% of charts passed on songs where `Artist LIKE '%banya%' OR Artist LIKE '%yahpp%'` (covers `BanYa`, `Banya Production`, `YAHPP`, and collabs; **msgoon excluded** — no BanYa Production membership). ~162 songs in prod; 55 songs have NULL artist and silently don't count.
 - **"Big Feet or Injured Back?"** — SSS+ (≥995,000, not broken) on **Uh-Heung S22**. Chart resolved at compute time by song name + Single + level 22 (never a hardcoded chart id). (Prod: 18 holders.)
-- **"Grand Mashter"** *(not a typo)* — more than **80%** of S24+ singles passed **at AA+ or lower** (≤949,999). Only mash-grade passes count toward the 80%; stray AAAs don't disqualify. (Retuned 2026-07-09 — the original 95%-passed/hard-AAA+-cap version had no plausible holders. Holder count pending calibration.)
+- **"Grand Mashter"** *(not a typo)* — more than **75%** of S24+ singles passed **at AA+ or lower** (≤949,999). Only mash-grade passes count toward the 75%; stray AAAs don't disqualify. (Prod: 16 holders. Calibrated 2026-07-09 — the original 95%-passed/hard-AAA+-cap version had no plausible holders; 36 S24+ charts exist today, so the bar is currently ≥28 mash-grade passes.)
 - **"Now You Can Play the Game"** — passed any Double level ≥28 (≥ so a D29-only pass still counts). (Prod: 5 holders.)
 
 ### 5. Rivals
@@ -123,6 +123,5 @@ New keys populated in all 8 locales in the same pass, per convention. Badge name
 
 - Popup expiry cutoff (set when the P2 launch date is known).
 - Self-serve recalculate button — decide post-launch from all-users job timings.
-- Grand Mashter holder count — calibrate with the retuned >80%-at-AA+-or-lower definition.
 - Giant Slayer level margin (≥1.0 assumed) — calibrate.
 - Weekly slide highlight composition — iterate once rendered.
