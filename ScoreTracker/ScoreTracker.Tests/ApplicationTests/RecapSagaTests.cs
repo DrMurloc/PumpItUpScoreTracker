@@ -13,6 +13,7 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.PlayerProgress.Application;
+using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.PlayerProgress.Contracts.Messages;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts.Recap;
@@ -237,6 +238,75 @@ public sealed class RecapSagaTests
     }
 
     [Fact]
+    public async Task SessionSettleRecomputesThatPlayersRecap()
+    {
+        var ctx = new HandlerContext();
+        ctx.GivenEligiblePasses(10);
+
+        await ctx.Saga.Consume(ctx.Context(ScoreHighlightsCapturedEvent.Create(Now, UserId, MixEnum.Phoenix,
+            null, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>())));
+
+        ctx.Recaps.Verify(r => r.SaveRecap(UserId, MixEnum.Phoenix, It.IsAny<PlayerRecap>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task NonPhoenixSessionsDoNotTouchTheRecap()
+    {
+        var ctx = new HandlerContext();
+        ctx.GivenEligiblePasses(10);
+
+        await ctx.Saga.Consume(ctx.Context(ScoreHighlightsCapturedEvent.Create(Now, UserId, MixEnum.Phoenix2,
+            null, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>())));
+
+        ctx.Recaps.Verify(r => r.SaveRecap(It.IsAny<Guid>(), It.IsAny<MixEnum>(), It.IsAny<PlayerRecap>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CommunityRivalsOutrankBetterMatchedStrangers()
+    {
+        var communityFriend = Guid.NewGuid();
+        var stranger = Guid.NewGuid();
+        var ctx = new HandlerContext(activeUsers: new[] { UserId, communityFriend, stranger });
+        ctx.GivenEligiblePasses(10);
+        ctx.GivenAllStats(
+            Stats(UserId, clearCount: 100, singles: 20.0),
+            Stats(communityFriend, clearCount: 90, singles: 20.2),
+            Stats(stranger, clearCount: 110, singles: 20.01));
+        ctx.GivenCommunity("My Community", communityFriend);
+        // The stranger shares my whole top-50; the friend shares none of it.
+        var sharedCharts = Enumerable.Range(0, 5).Select(_ => Guid.NewGuid()).ToArray();
+        ctx.GivenTop50CompetitiveCharts(UserId, sharedCharts);
+        ctx.GivenTop50CompetitiveCharts(stranger, sharedCharts);
+        ctx.GivenTop50CompetitiveCharts(communityFriend, Guid.NewGuid());
+
+        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+
+        var singles = ctx.Saved!.Rivals!.Singles;
+        Assert.Equal(communityFriend, singles[0].UserId);
+        Assert.Equal(stranger, singles[1].UserId);
+    }
+
+    [Fact]
+    public async Task TrophiesCarryHighestTitleAndCollapsedGrades()
+    {
+        var ctx = new HandlerContext();
+        ctx.GivenEligiblePasses(10);
+        // Ten filler passes at 920,000 = AA; "Intermediate Lv. 1" is a real difficulty title.
+        ctx.GivenCompletedTitles("Intermediate Lv. 1");
+        ctx.GivenTitleRarity(("Intermediate Lv. 1", 420));
+
+        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+
+        Assert.Equal("Intermediate Lv. 1", ctx.Saved!.Trophies.HighestTitle);
+        Assert.Equal(420, ctx.Saved.Trophies.HighestTitleHolders);
+        var grades = Assert.Single(ctx.Saved.Trophies.GradeCounts);
+        Assert.Equal(PhoenixLetterGrade.AA, grades.Grade);
+        Assert.Equal(10, grades.Count);
+    }
+
+    [Fact]
     public async Task PlayDaysComeFromTheJournal()
     {
         var ctx = new HandlerContext();
@@ -341,7 +411,7 @@ public sealed class RecapSagaTests
                 Users.Object, Recaps.Object,
                 new CohortScoreProvider(PlayerStats.Object, Scores.Object, cache),
                 Weekly.Object, Communities.Object,
-                Mediator.Object, FakeDateTime.At(Now).Object, NullLogger<RecapSaga>.Instance);
+                Mediator.Object, FakeDateTime.At(Now).Object, cache, NullLogger<RecapSaga>.Instance);
         }
 
         public void GivenEligiblePasses(int count, bool forAnyUser = false)
@@ -381,6 +451,27 @@ public sealed class RecapSagaTests
                 .ReturnsAsync(records
                     .Select(r => new RecordedPhoenixScore(r.Chart.Id, r.Score, r.Plate, false, Now))
                     .ToArray());
+        }
+
+        public void GivenTop50CompetitiveCharts(Guid userId, params Guid[] chartIds)
+        {
+            Mediator.Setup(m => m.Send(It.Is<GetTop50CompetitiveQuery>(q => q.UserId == userId),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(chartIds
+                    .Select(id => new RecordedPhoenixScore(id, 950_000, PhoenixPlate.FairGame, false, Now))
+                    .ToArray());
+        }
+
+        public void GivenCommunity(string name, params Guid[] members)
+        {
+            Communities.Setup(c => c.GetUserCommunities(UserId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new[]
+                {
+                    new CommunityOverviewRecord(Name.From(name), CommunityPrivacyType.Public, members.Length,
+                        false)
+                });
+            Communities.Setup(c => c.GetMembers(Name.From(name), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(members);
         }
 
         public void GivenCohortScores(Chart chart, params int[] ascendingScores)
@@ -440,6 +531,14 @@ public sealed class RecapSagaTests
         public ConsumeContext<CalculateSeasonRecapsCommand> Context(CalculateSeasonRecapsCommand message)
         {
             var ctx = new Mock<ConsumeContext<CalculateSeasonRecapsCommand>>();
+            ctx.SetupGet(c => c.Message).Returns(message);
+            ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
+            return ctx.Object;
+        }
+
+        public ConsumeContext<ScoreHighlightsCapturedEvent> Context(ScoreHighlightsCapturedEvent message)
+        {
+            var ctx = new Mock<ConsumeContext<ScoreHighlightsCapturedEvent>>();
             ctx.SetupGet(c => c.Message).Returns(message);
             ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
             return ctx.Object;

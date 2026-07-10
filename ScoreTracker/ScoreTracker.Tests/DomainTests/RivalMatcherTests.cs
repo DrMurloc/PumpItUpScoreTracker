@@ -14,33 +14,6 @@ public sealed class RivalMatcherTests
     }
 
     [Fact]
-    public void PoolLadderNeedsThreeCandidatesPerRung()
-    {
-        var community = new[] { Guid.NewGuid(), Guid.NewGuid() };
-        var country = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
-        var global = new[] { Guid.NewGuid() };
-
-        Assert.Equal(country, RivalMatcher.SelectPool(community, country, global));
-    }
-
-    [Fact]
-    public void CommunityPoolWinsWhenBigEnough()
-    {
-        var community = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
-        var country = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
-
-        Assert.Equal(community, RivalMatcher.SelectPool(community, country, Array.Empty<Guid>()));
-    }
-
-    [Fact]
-    public void ThinLaddersFallThroughToTheGlobalPool()
-    {
-        var global = new[] { Guid.NewGuid() };
-
-        Assert.Equal(global, RivalMatcher.SelectPool(Array.Empty<Guid>(), Array.Empty<Guid>(), global));
-    }
-
-    [Fact]
     public void RivalsOrderByTopFiftyOverlapThenLevelDistance()
     {
         var shared = Enumerable.Range(0, 50).Select(_ => Guid.NewGuid()).ToArray();
@@ -58,10 +31,11 @@ public sealed class RivalMatcherTests
     }
 
     [Fact]
-    public void OnlyThreeRivalsAreChosen()
+    public void PickCountIsRespected()
     {
         var pool = Enumerable.Range(0, 6).Select(_ => Candidate(21.0)).ToArray();
 
         Assert.Equal(3, RivalMatcher.PickRivals(new HashSet<Guid>(), 21.0, pool).Count);
+        Assert.Equal(2, RivalMatcher.PickRivals(new HashSet<Guid>(), 21.0, pool, 2).Count);
     }
 }

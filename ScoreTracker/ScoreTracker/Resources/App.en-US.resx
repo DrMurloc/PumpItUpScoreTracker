@@ -2629,10 +2629,13 @@
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts.</value>
   </data>
-  <data name="Oldest record still standing" xml:space="preserve">
-    <value>Oldest record still standing</value>
+  <data name="Highest title" xml:space="preserve">
+    <value>Highest title</value>
   </data>
-  <data name="set {0} — never beaten since" xml:space="preserve">
-    <value>set {0} — never beaten since</value>
+  <data name="reached by {0} players" xml:space="preserve">
+    <value>reached by {0} players</value>
+  </data>
+  <data name="Grade breakdown" xml:space="preserve">
+    <value>Grade breakdown</value>
   </data>
 </root>

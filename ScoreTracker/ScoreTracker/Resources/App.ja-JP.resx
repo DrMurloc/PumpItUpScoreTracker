@@ -2630,10 +2630,13 @@
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>3年半のPumpを、ひとつのリキャップに。あなたの記録を見に行こう。いいところはスクショで。</value>
   </data>
-  <data name="Oldest record still standing" xml:space="preserve">
-    <value>最も長く破られていない記録</value>
+  <data name="Highest title" xml:space="preserve">
+    <value>最高難易度称号</value>
   </data>
-  <data name="set {0} — never beaten since" xml:space="preserve">
-    <value>{0}に記録、以来更新なし</value>
+  <data name="reached by {0} players" xml:space="preserve">
+    <value>{0}人が到達</value>
+  </data>
+  <data name="Grade breakdown" xml:space="preserve">
+    <value>グレード分布</value>
   </data>
 </root>

@@ -2553,10 +2553,13 @@
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>Mrgl years of Pump, one mrgl recap. Mrgl mrgl screenshot!</value>
   </data>
-  <data name="Oldest record still standing" xml:space="preserve">
-    <value>Old mrgl still mrgl</value>
+  <data name="Highest title" xml:space="preserve">
+    <value>Mrglest title</value>
   </data>
-  <data name="set {0} — never beaten since" xml:space="preserve">
-    <value>mrgl {0} — never mrgled</value>
+  <data name="reached by {0} players" xml:space="preserve">
+    <value>mrgled by {0} mrgls</value>
+  </data>
+  <data name="Grade breakdown" xml:space="preserve">
+    <value>Mrgl grades</value>
   </data>
 </root>

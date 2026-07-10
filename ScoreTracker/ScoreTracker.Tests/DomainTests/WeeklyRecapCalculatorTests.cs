@@ -124,6 +124,47 @@ public sealed class WeeklyRecapCalculatorTests
     }
 
     [Fact]
+    public void TheSameGiantOnlyCountsOnceAcrossWeeks()
+    {
+        var giant = Guid.NewGuid();
+        var rows = new[]
+        {
+            Row(Me, Week1, 980_000, level: 20.0),
+            Row(giant, Week1, 940_000, level: 21.5),
+            Row(Me, Week1.AddDays(7), 985_000, level: 20.0),
+            Row(giant, Week1.AddDays(7), 950_000, level: 21.5),
+            Row(Me, Week1.AddDays(14), 990_000, level: 20.0),
+            Row(giant, Week1.AddDays(14), 960_000, level: 21.5)
+        };
+
+        var weekly = WeeklyRecapCalculator.Calculate(Me, rows, Charts, Names());
+
+        Assert.Equal(1, weekly!.GiantSlayerCount);
+        Assert.Single(weekly.TopGiantSlayers);
+    }
+
+    [Fact]
+    public void BrokenRunsOnEitherSideAreNotSlayings()
+    {
+        var brokenGiant = Guid.NewGuid();
+        var giantIBrokeAgainst = Guid.NewGuid();
+        var week2 = Week1.AddDays(7);
+        var rows = new[]
+        {
+            // Week 1: the giant broke the chart — beating their break is no story.
+            Row(Me, Week1, 950_000, level: 20.0),
+            new WeeklyPlacingRow(brokenGiant, ChartA.Id, Week1, 0, 900_000, true, false, 21.5),
+            // Week 2: I broke — outscoring someone while failing the chart counts even less.
+            new WeeklyPlacingRow(Me, ChartA.Id, week2, 0, 960_000, true, true, 20.0),
+            Row(giantIBrokeAgainst, week2, 940_000, level: 21.5)
+        };
+
+        var weekly = WeeklyRecapCalculator.Calculate(Me, rows, Charts, Names());
+
+        Assert.Equal(0, weekly!.GiantSlayerCount);
+    }
+
+    [Fact]
     public void BestWeekPrefersLowerPlaceThenBiggerPool()
     {
         var other = Guid.NewGuid();

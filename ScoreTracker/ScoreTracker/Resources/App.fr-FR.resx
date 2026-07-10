@@ -2627,10 +2627,13 @@
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>Trois ans et demi de Pump, un seul récap. Va voir le tien — et fais des captures des meilleurs moments.</value>
   </data>
-  <data name="Oldest record still standing" xml:space="preserve">
-    <value>Plus vieux record encore debout</value>
+  <data name="Highest title" xml:space="preserve">
+    <value>Titre le plus haut</value>
   </data>
-  <data name="set {0} — never beaten since" xml:space="preserve">
-    <value>établi en {0} — jamais battu depuis</value>
+  <data name="reached by {0} players" xml:space="preserve">
+    <value>atteint par {0} joueurs</value>
+  </data>
+  <data name="Grade breakdown" xml:space="preserve">
+    <value>Répartition des grades</value>
   </data>
 </root>

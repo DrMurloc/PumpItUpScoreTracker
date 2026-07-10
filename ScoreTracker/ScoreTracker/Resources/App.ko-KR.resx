@@ -2509,10 +2509,13 @@
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>3년 반의 펌프를 하나의 리캡으로. 지금 확인하고 멋진 부분은 스크린샷으로 남기세요.</value>
   </data>
-  <data name="Oldest record still standing" xml:space="preserve">
-    <value>가장 오래 깨지지 않은 기록</value>
+  <data name="Highest title" xml:space="preserve">
+    <value>최고 난이도 타이틀</value>
   </data>
-  <data name="set {0} — never beaten since" xml:space="preserve">
-    <value>{0} 기록, 그 후 갱신 없음</value>
+  <data name="reached by {0} players" xml:space="preserve">
+    <value>{0}명 도달</value>
+  </data>
+  <data name="Grade breakdown" xml:space="preserve">
+    <value>등급 분포</value>
   </data>
 </root>

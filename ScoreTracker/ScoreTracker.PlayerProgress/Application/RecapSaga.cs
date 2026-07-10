@@ -1,9 +1,11 @@
 using MassTransit;
 using MediatR;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Models.Titles.Phoenix;
+using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.PlayerProgress.Contracts.Messages;
@@ -25,13 +27,19 @@ namespace ScoreTracker.PlayerProgress.Application;
 ///     once per consume and shared — per-player work is in-memory except the top-50 reads
 ///     and the bucket-cached cohort scores.
 /// </summary>
-internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>
+internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
+    IConsumer<ScoreHighlightsCapturedEvent>
 {
     /// <summary>Below this many passes there isn't enough data for a meaningful recap.</summary>
     public const int MinimumPasses = 10;
 
     private const int MaxArcPoints = 40;
 
+    /// <summary>The difficulty-title ladder by name — resolves a player's highest reached title.</summary>
+    private static readonly IReadOnlyDictionary<Name, PhoenixDifficultyTitle> DifficultyTitles =
+        PhoenixTitleList.BuildList().OfType<PhoenixDifficultyTitle>().ToDictionary(t => t.Name);
+
+    private readonly IMemoryCache _cache;
     private readonly IChartRepository _charts;
     private readonly CohortScoreProvider _cohorts;
     private readonly ICommunityReader _communities;
@@ -48,8 +56,9 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>
     public RecapSaga(IChartRepository charts, IScoreReader scores, ITitleRepository titles,
         IPlayerStatsReader stats, IUserReader users, IPlayerSeasonRecapRepository recaps,
         CohortScoreProvider cohorts, IWeeklyPlacingReader weekly, ICommunityReader communities,
-        IMediator mediator, IDateTimeOffsetAccessor dateTime, ILogger<RecapSaga> logger)
+        IMediator mediator, IDateTimeOffsetAccessor dateTime, IMemoryCache cache, ILogger<RecapSaga> logger)
     {
+        _cache = cache;
         _charts = charts;
         _scores = scores;
         _titles = titles;
@@ -64,11 +73,33 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>
         _logger = logger;
     }
 
+    /// <summary>
+    ///     Recap freshness rides the same signal as the Discord card: a settled score
+    ///     batch. Cross-player inputs come from the 30-minute shared cache so a busy
+    ///     import evening stays cheap — only the triggering player's own data is re-read.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ScoreHighlightsCapturedEvent> context)
+    {
+        if (context.Message.Mix != MixEnum.Phoenix) return;
+        try
+        {
+            var shared = await GetSharedCached(MixEnum.Phoenix, context.CancellationToken);
+            await ComputeAndSave(MixEnum.Phoenix, context.Message.UserId, shared, context.CancellationToken);
+        }
+        catch (Exception e)
+        {
+            // Recaps are a nicety — a failure here must never disturb the import pipeline.
+            _logger.LogError(e, "Post-session recap recompute failed for {UserId}", context.Message.UserId);
+        }
+    }
+
     public async Task Consume(ConsumeContext<CalculateSeasonRecapsCommand> context)
     {
         var mix = context.Message.Mix;
         var cancellationToken = context.CancellationToken;
+        // Admin-triggered runs load fresh and reseed the shared cache the event path reads.
         var shared = await LoadShared(mix, cancellationToken);
+        _cache.Set(SharedCacheKey(mix), shared, TimeSpan.FromMinutes(30));
 
         if (context.Message.UserId is { } single)
         {
@@ -333,12 +364,12 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>
         SharedInputs shared, CancellationToken cancellationToken)
     {
         var communities = (await _communities.GetUserCommunities(userId, cancellationToken)).ToArray();
-        var communityMembers = await MemberUnion(communities.Where(c => !c.IsRegional), shared, cancellationToken);
+        var communityMembers = await MemberUnion(communities.Where(c => !c.IsRegional), cancellationToken);
         // The regional system communities are World + one per country; excluding World
         // leaves exactly the player's country community (owner call: country beats
         // global but user-created communities beat both).
         var countryMembers = await MemberUnion(
-            communities.Where(c => c.IsRegional && c.CommunityName != "World"), shared, cancellationToken);
+            communities.Where(c => c.IsRegional && c.CommunityName != "World"), cancellationToken);
 
         var singles = await PickRivalsForType(mix, userId, ChartType.Single, myStats.SinglesCompetitiveLevel,
             communityMembers, countryMembers, shared, cancellationToken);
@@ -365,54 +396,82 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>
             .Select(s => s.UserId)
             .ToArray();
 
-        var pool = RivalMatcher.SelectPool(
+        // Strict priority: any in-range member of your user-created communities outranks
+        // everyone outside them; the country community and then the global pool only top
+        // up leftover slots.
+        var tiers = new[]
+        {
             inRange.Where(communityMembers.Contains).ToArray(),
-            inRange.Where(countryMembers.Contains).ToArray(),
-            inRange);
-        if (pool.Count == 0) return Array.Empty<RecapRival>();
+            inRange.Where(id => countryMembers.Contains(id) && !communityMembers.Contains(id)).ToArray(),
+            inRange.Where(id => !communityMembers.Contains(id) && !countryMembers.Contains(id)).ToArray()
+        };
 
-        var myTop50 = await GetTop50Set(mix, userId, type, shared, cancellationToken);
-        var candidates = new List<RivalMatcher.Candidate>();
-        foreach (var candidateId in pool)
-            candidates.Add(new RivalMatcher.Candidate(candidateId, levelByUser[candidateId],
-                await GetTop50Set(mix, candidateId, type, shared, cancellationToken)));
+        var myTop50 = await GetTop50Set(mix, userId, type, refresh: true, cancellationToken);
+        var picked = new List<RecapRival>();
+        foreach (var tier in tiers)
+        {
+            if (picked.Count >= 3) break;
+            var candidates = new List<RivalMatcher.Candidate>();
+            foreach (var candidateId in tier)
+                candidates.Add(new RivalMatcher.Candidate(candidateId, levelByUser[candidateId],
+                    await GetTop50Set(mix, candidateId, type, refresh: false, cancellationToken)));
+            picked.AddRange(RivalMatcher.PickRivals(myTop50, myLevel, candidates, 3 - picked.Count)
+                .Select(r => new RecapRival(r.Candidate.UserId,
+                    shared.UserNames.GetValueOrDefault(r.Candidate.UserId, "another player"),
+                    r.Candidate.CompetitiveLevel, r.Overlap)));
+        }
 
-        return RivalMatcher.PickRivals(myTop50, myLevel, candidates)
-            .Select(r => new RecapRival(r.Candidate.UserId,
-                shared.UserNames.GetValueOrDefault(r.Candidate.UserId, "another player"),
-                r.Candidate.CompetitiveLevel, r.Overlap))
-            .ToArray();
+        return picked;
     }
 
     private async Task<IReadOnlySet<Guid>> MemberUnion(IEnumerable<CommunityOverviewRecord> communities,
-        SharedInputs shared, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         var union = new HashSet<Guid>();
         foreach (var community in communities)
         {
-            var key = community.CommunityName.ToString();
-            if (!shared.CommunityMembers.TryGetValue(key, out var members))
-            {
-                members = (await _communities.GetMembers(community.CommunityName, cancellationToken)).ToArray();
-                shared.CommunityMembers[key] = members;
-            }
-
+            var members = await _cache.GetOrCreateAsync(
+                $"{nameof(RecapSaga)}__Members__{community.CommunityName}",
+                async o =>
+                {
+                    o.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30);
+                    return (await _communities.GetMembers(community.CommunityName, cancellationToken))
+                        .ToArray();
+                }) ?? Array.Empty<Guid>();
             union.UnionWith(members);
         }
 
         return union;
     }
 
-    private async Task<IReadOnlySet<Guid>> GetTop50Set(MixEnum mix, Guid userId, ChartType type,
-        SharedInputs shared, CancellationToken cancellationToken)
+    private async Task<IReadOnlySet<Guid>> GetTop50Set(MixEnum mix, Guid userId, ChartType type, bool refresh,
+        CancellationToken cancellationToken)
     {
-        if (shared.Top50Sets.TryGetValue((userId, type), out var cached)) return cached;
+        // Candidate sets tolerate staleness (top-50 chart-id sets drift slowly); the
+        // subject's own set always recomputes so a fresh import reshapes their overlaps.
+        var key = $"{nameof(RecapSaga)}__Top50__{mix}__{type}__{userId}";
+        if (!refresh && _cache.TryGetValue(key, out IReadOnlySet<Guid>? cached) && cached != null)
+            return cached;
 
         var set = (await _mediator.Send(new GetTop50CompetitiveQuery(userId, type, mix), cancellationToken))
             .Select(s => s.ChartId)
             .ToHashSet();
-        shared.Top50Sets[(userId, type)] = set;
+        _cache.Set(key, (IReadOnlySet<Guid>)set, TimeSpan.FromHours(6));
         return set;
+    }
+
+    private async Task<SharedInputs> GetSharedCached(MixEnum mix, CancellationToken cancellationToken)
+    {
+        return await _cache.GetOrCreateAsync(SharedCacheKey(mix), async o =>
+        {
+            o.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30);
+            return await LoadShared(mix, cancellationToken);
+        }) ?? throw new InvalidOperationException("Recap shared inputs could not be loaded");
+    }
+
+    private static string SharedCacheKey(MixEnum mix)
+    {
+        return $"{nameof(RecapSaga)}__Shared__{mix}";
     }
 
     private async Task<RecapTrophies> BuildTrophies(MixEnum mix, Guid userId, RecordedPhoenixScore[] passes,
@@ -429,19 +488,23 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>
             .Select(kv => new RecapPlateCount(kv.Key, kv.Value))
             .ToArray();
 
-        var oldest = passes
-            .Where(p => shared.Charts.ContainsKey(p.ChartId))
-            .OrderBy(p => p.RecordedDate)
-            .Select(p => (Record: p, Chart: shared.Charts[p.ChartId]))
-            .Select(x => new RecapOldestBest(x.Chart.Id, x.Chart.Song.Name.ToString(), x.Chart.Type,
-                x.Chart.Level, x.Record.Score == null ? null : (int)x.Record.Score.Value, x.Record.RecordedDate))
+        var highest = earnedTitles
+            .Where(DifficultyTitles.ContainsKey)
+            .Select(t => DifficultyTitles[t])
+            .OrderByDescending(t => (int)t.Level)
+            .ThenByDescending(t => t.RequiredRating)
             .FirstOrDefault();
 
         var passedCharts = passes
             .Select(p => shared.Charts.GetValueOrDefault(p.ChartId))
             .Where(c => c != null)
             .ToArray();
-        return new RecapTrophies(rarest, plates, oldest,
+        return new RecapTrophies(rarest, plates,
+            highest?.Name.ToString(),
+            highest != null && shared.TitleHolders.TryGetValue(highest.Name, out var holders)
+                ? holders
+                : null,
+            GradeDistribution.Calculate(passes),
             passedCharts.Count(c => c!.Type == ChartType.Single),
             passedCharts.Count(c => c!.Type == ChartType.Double));
     }
@@ -534,12 +597,5 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>
         IReadOnlySet<Guid> CoOpX2ChartIds,
         IReadOnlySet<Guid> Singles24PlusChartIds,
         Guid? UhHeungSingles22,
-        IReadOnlyList<FolderCharts> Folders)
-    {
-        /// <summary>Per-consume memo: community name → member ids (rival pools).</summary>
-        public Dictionary<string, Guid[]> CommunityMembers { get; } = new();
-
-        /// <summary>Per-consume memo: top-50 competitive chart-id sets (rival overlap).</summary>
-        public Dictionary<(Guid UserId, ChartType Type), IReadOnlySet<Guid>> Top50Sets { get; } = new();
-    }
+        IReadOnlyList<FolderCharts> Folders);
 }

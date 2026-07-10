@@ -20,6 +20,7 @@ A Raider.IO-style end-of-season recap: one animated, screenshottable page that w
 1. **Compute my recap** — publishes the trigger for the admin's own user (fast feedback loop).
 2. **Compute all recaps** — one-shot job over every eligible user.
 
+- **Plus per-player freshness** (owner call after round one — compute proved fast): RecapSaga also consumes `ScoreHighlightsCapturedEvent`, so a settled Phoenix score batch recomputes that player's recap on the same signal that fires the Discord card. Cross-player inputs ride a 30-minute shared cache (candidate top-50 sets 6 h; the subject's own set always recomputes), so a busy import evening stays cheap. Failures are swallowed and logged — recaps never disturb the import pipeline.
 - Trigger is an imperative bus command in PlayerProgress `Contracts/` (e.g. `CalculateSeasonRecapsCommand(Guid? UserId)`), consumed by a new **RecapSaga** in PlayerProgress. Idempotent upsert — safe to re-fire after a process restart (in-memory transport caveat).
 - Results persist to a new table **`scores.PlayerSeasonRecap`** (PK `UserId + MixId`; `Payload` JSON, `SchemaVersion`, `ComputedAt`). The page reads the persisted row only — no live computation.
 - Recap is keyed by mix (`MixEnum.Phoenix` now) so a future Phoenix 2 recap reuses the whole pipeline.
@@ -67,7 +68,7 @@ Show all earned; lead with the biggest.
 - **"Dove 🕊️"** — easter egg: exact `GameTag` match `DULKI #2827`. Rendered with the emoji, not the word.
 
 ### 5. Rivals
-3 singles + 3 doubles rivals. Pool ladder (owner-confirmed): **your user-created communities → your country community → all players** (country communities are auto-joined system communities like "World", so "non-World" alone would make USA ≈ World). Candidates are within **±0.25** of your singles/doubles competitive level, **public users only**, ranked by overlap of top-50 competitive (fung) chart-id sets. (Prod: 586 users have 6+ community candidates, 208 more have ≥1, rest fall back.)
+3 singles + 3 doubles rivals. Candidates are within **±0.25** of your singles/doubles competitive level, **public users only**, ranked by overlap of top-50 competitive (fung) chart-id sets. Tiers are **strict priority, not thresholds** (owner call after round one — a ≥3-candidates-or-fall-through rule surfaced strangers over community mates): ANY in-range member of your user-created communities outranks everyone outside them; your country community and then the global pool only top up leftover slots. (Country communities are auto-joined system communities like "World", so "non-World" alone would make USA ≈ World.)
 
 ### 6. Most impressive PGs
 Records with `Plate = PerfectGame`, ordered folder descending then PG difficulty descending; only charts whose **"PG" tier list** category is `Hard`, `VeryHard`, or `Underrated`.
@@ -84,12 +85,12 @@ From `UserWeeklyPlacing` (rows carry `Place`, `Score`, `Plate`, `WasWithinRange`
 - **Longest streak** (headline): consecutive **rotations** entered — order the distinct global placement weeks by `ObtainedDate`, longest unbroken run the user appears in. Rotation-indexed, not calendar-indexed, so a skipped rotation breaks nobody's streak unfairly. (Prod: top streak is 78 consecutive rotations; the top 20 range 8–78 — strong headline material.)
 - Weeks entered (total), wins + podium count — **computed within range**: on charts where the player was within range, re-rank among within-range entrants only (from the placing rows' `Score`/`WasWithinRange`, not the stored overall `Place`), so a level-19 player isn't "beaten" by level-25 tourists.
 - **Best result**: best within-range rank (tie-break: higher chart level, then more recent), shown with the chart and week.
-- **Giant Slayer**: weekly moments where the player outscored an entrant ≥1.0 competitive level above them (each row snapshots the entrant's `CompetitiveLevel`; margin tunable at calibration). Show the total count **plus the top 3 moments individually** (when they exist): the outscored player, the chart, and the level gap — ranked by gap descending, tie-break score margin.
+- **Giant Slayer**: the player outscored an entrant ≥1.0 competitive level above them (each row snapshots the entrant's `CompetitiveLevel`; margin tunable). Tightened after round one (raw per-week moments read ~68 for the owner): **both runs must be unbroken**, and **each giant counts once** however many weeks you beat them — the count is distinct players slain, and the top 3 callouts keep each giant's most dramatic fall (biggest gap, then score margin).
 
 Exact highlight composition is the one soft area of this spec — owner is open to iteration here.
 
 ### 10. Trophy shelf
-Your 3 rarest titles (with % of titled users — `Beginner` at 99.6% is the free joke line), plate cabinet (count per plate), longest-standing best (oldest `RecordedDate` among current bests), community placements, singles-vs-doubles identity split.
+Left panel: **highest difficulty title** (+ how many players reached it, from the rarity aggregations), your 3 rarest titles (with % of titled users), and the singles-vs-doubles split. Middle: plate cabinet (count per plate). Right: **grade distribution** with plus-grades folded in (SS+ counts as SS — ten buckets max, bar-filled rows). Title names render in brackets (`[EXPERT Lv. 1]`), matching the game. *Longest-standing best was cut after round one (read as confusing); community placements stay future polish.*
 
 ### 11. Phoenix 2 finale
 P1 scores projected onto Phoenix 2: carried-over charts (4,367 of 4,571 — 95.5%) rescored with P2 `ChartMix` levels through the mix-keyed P2 formula (PR #128), **two-pool Singles/Doubles Pumbility totals + two projected titles** — the highest `Phoenix2PumbilityTitle` from the Singles pool ladder and the highest from the Doubles pool ladder (`PumbilityPool.Singles`/`Doubles`; the hidden Total tiers are not projected). Green accent; "see you in Phoenix 2". Note the existing `PumbilityProjectionSaga` is P1→peer-expectation, *not* this — the P1→P2 rescoring is new code.

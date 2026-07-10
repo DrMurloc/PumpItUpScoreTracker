@@ -274,20 +274,33 @@ else if (_user != null && _recap != null)
                 <div class="precap-eyebrow">@L["Trophy shelf"]</div>
                 <h2 class="precap-h2">@L["The cabinet"]</h2>
                 <div class="precap-hlgrid">
-                    @if (_recap.Trophies.RarestTitles.Any())
-                    {
-                        <div class="precap-hlcol">
+                    <div class="precap-hlcol">
+                        @if (_recap.Trophies.HighestTitle is { } highestTitle)
+                        {
+                            <span class="precap-cat precap-cat-gold">@L["Highest title"]</span>
+                            <div class="precap-row precap-row-block">
+                                <span class="precap-song precap-song-wrap">[@highestTitle]</span>
+                                @if (_recap.Trophies.HighestTitleHolders is { } holders)
+                                {
+                                    <span class="precap-meta precap-hot">@L["reached by {0} players", holders.ToString("N0")]</span>
+                                }
+                            </div>
+                        }
+                        @if (_recap.Trophies.RarestTitles.Any())
+                        {
                             <span class="precap-cat precap-cat-gold">@L["Rarest titles"]</span>
                             @foreach (var title in _recap.Trophies.RarestTitles)
                             {
                                 @* Title names run long — stack the rarity under a wrapping title. *@
                                 <div class="precap-row precap-row-block">
-                                    <span class="precap-song precap-song-wrap">@title.Title</span>
+                                    <span class="precap-song precap-song-wrap">[@title.Title]</span>
                                     <span class="precap-meta precap-hot">@L["held by {0} of titled players", title.HolderShare.ToString("P1")]</span>
                                 </div>
                             }
-                        </div>
-                    }
+                        }
+                        <span class="precap-cat">@L["Singles vs Doubles"]</span>
+                        <div class="precap-row"><span class="precap-song">@L["{0} singles · {1} doubles passed", _recap.Trophies.SinglesPassCount.ToString("N0"), _recap.Trophies.DoublesPassCount.ToString("N0")]</span></div>
+                    </div>
                     @if (_recap.Trophies.PlateCounts.Any())
                     {
                         <div class="precap-hlcol">
@@ -298,15 +311,19 @@ else if (_user != null && _recap != null)
                             }
                         </div>
                     }
-                    <div class="precap-hlcol">
-                        @if (_recap.Trophies.LongestStanding is { } oldest)
-                        {
-                            <span class="precap-cat precap-cat-hl">@L["Oldest record still standing"]</span>
-                            <div class="precap-row">@Pill(oldest.ChartType, oldest.Level)<span class="precap-song">@oldest.SongName</span><span class="precap-meta">@L["set {0} — never beaten since", oldest.RecordedDate.ToString("MMM yyyy")]</span></div>
-                        }
-                        <span class="precap-cat" style="margin-top:14px">@L["Singles vs Doubles"]</span>
-                        <div class="precap-row"><span class="precap-song">@L["{0} singles · {1} doubles passed", _recap.Trophies.SinglesPassCount.ToString("N0"), _recap.Trophies.DoublesPassCount.ToString("N0")]</span></div>
-                    </div>
+                    @if (_recap.Trophies.GradeCounts.Any())
+                    {
+                        <div class="precap-hlcol">
+                            <span class="precap-cat precap-cat-hl">@L["Grade breakdown"]</span>
+                            @foreach (var grade in _recap.Trophies.GradeCounts)
+                            {
+                                <div class="precap-row precap-gradebar" style="--fill:@GradeBarFill(grade.Count)">
+                                    <span class="precap-song">@grade.Grade.GetName()</span>
+                                    <span class="precap-rownum">&times;@grade.Count.ToString("N0")</span>
+                                </div>
+                            }
+                        </div>
+                    }
                 </div>
             </div>
             @Brand()
@@ -416,6 +433,9 @@ else if (_user != null && _recap != null)
         .precap-row-block .precap-meta { display: block; margin-top: 2px; }
         .precap-song { flex: 1; font-size: 14px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .precap-song-wrap { display: block; white-space: normal; overflow: visible; text-overflow: clip; }
+        .precap-gradebar { position: relative; }
+        .precap-gradebar::before { content: ""; position: absolute; left: 0; top: 4px; bottom: 4px;
+            width: var(--fill, 0%); background: rgba(39,171,222,.10); border-radius: 4px; pointer-events: none; }
         .precap-rownum, .precap-score { font-family: var(--pmono); font-variant-numeric: tabular-nums; font-size: 13px; color: var(--pdim); }
         .precap-score { color: var(--pink); }
         .precap-meta { font-family: var(--pmono); font-size: 11px; color: var(--pfaint); text-transform: uppercase; white-space: nowrap; }
@@ -556,6 +576,12 @@ else if (_user != null && _recap != null)
         return $"{(int)time.TotalHours}h {time.Minutes}m";
     }
 
+    private string GradeBarFill(int count)
+    {
+        var max = _recap!.Trophies.GradeCounts.Max(g => g.Count);
+        return max == 0 ? "0%" : $"{count * 100 / max}%";
+    }
+
     private string TypeName(RecapPlayerType type)
     {
         return type switch
@@ -612,7 +638,7 @@ else if (_user != null && _recap != null)
                 or RecapBadge.LeaveSomeTitlesForTheRestOfUs when badge.Share != null =>
                 L["{0} of all Phoenix titles collected", badge.Share.Value.ToString("P0")],
             RecapBadge.SpecialSnowflake when badge is { Subject: not null, Share: not null } =>
-                $"{badge.Subject} — " + L["held by {0} of titled players", badge.Share.Value.ToString("P1")],
+                $"[{badge.Subject}] — " + L["held by {0} of titled players", badge.Share.Value.ToString("P1")],
             RecapBadge.Completionist or RecapBadge.CompletionistPlus or RecapBadge.CompletionistSupreme
                 or RecapBadge.CompletionistUltra or RecapBadge.YouKnowPumpItUpDoesntDoLamps when badge.Count != null =>
                 L["{0} folders at 90% or better", badge.Count.Value.ToString()],

@@ -47,13 +47,23 @@ internal static class WeeklyRecapCalculator
                 placements.Add((rank, pool.Length, my.ChartId, group.Key.Week));
             }
 
-            giants.AddRange(group
-                .Where(r => r.UserId != userId &&
-                            r.CompetitiveLevel >= my.CompetitiveLevel + GiantSlayerLevelGap &&
-                            my.Score > r.Score)
-                .Select(r => (my.ChartId, r.UserId, r.CompetitiveLevel - my.CompetitiveLevel,
-                    my.Score - r.Score)));
+            // Slaying requires a real fight: both runs unbroken — beating someone's
+            // stage-break is not a story worth telling.
+            if (!my.IsBroken)
+                giants.AddRange(group
+                    .Where(r => r.UserId != userId && !r.IsBroken &&
+                                r.CompetitiveLevel >= my.CompetitiveLevel + GiantSlayerLevelGap &&
+                                my.Score > r.Score)
+                    .Select(r => (my.ChartId, r.UserId, r.CompetitiveLevel - my.CompetitiveLevel,
+                        my.Score - r.Score)));
         }
+
+        // One giant = one story, however many weeks you beat them: dedupe per player,
+        // keeping their most dramatic fall (biggest gap, then biggest score margin).
+        var distinctGiants = giants
+            .GroupBy(g => g.GiantId)
+            .Select(g => g.OrderByDescending(x => x.Gap).ThenByDescending(x => x.Margin).First())
+            .ToArray();
 
         var best = placements
             .Where(p => charts.ContainsKey(p.ChartId))
@@ -68,7 +78,7 @@ internal static class WeeklyRecapCalculator
             })
             .FirstOrDefault();
 
-        var topGiants = giants
+        var topGiants = distinctGiants
             .Where(g => charts.ContainsKey(g.ChartId))
             .OrderByDescending(g => g.Gap)
             .ThenByDescending(g => g.Margin)
@@ -86,7 +96,7 @@ internal static class WeeklyRecapCalculator
             myRotations.Length,
             placements.Count(p => p.Rank <= 3),
             placements.Count(p => p.Rank == 1),
-            giants.Count,
+            distinctGiants.Length,
             topGiants,
             best);
     }

@@ -26,7 +26,7 @@ public sealed record PlayerRecap(
     RecapTrophies Trophies,
     RecapPhoenix2Projection? Projection)
 {
-    public const int CurrentSchemaVersion = 1;
+    public const int CurrentSchemaVersion = 2;
 }
 
 /// <summary>Competitive-level journey, first PlayerHistory snapshot to the latest.</summary>
@@ -127,7 +127,9 @@ public sealed record RecapBestWeek(
 public sealed record RecapTrophies(
     IReadOnlyList<RecapRareTitle> RarestTitles,
     IReadOnlyList<RecapPlateCount> PlateCounts,
-    RecapOldestBest? LongestStanding,
+    string? HighestTitle,
+    int? HighestTitleHolders,
+    IReadOnlyList<RecapGradeCount> GradeCounts,
     int SinglesPassCount,
     int DoublesPassCount);
 
@@ -137,14 +139,9 @@ public sealed record RecapRareTitle(string Title, double HolderShare);
 [ExcludeFromCodeCoverage]
 public sealed record RecapPlateCount(PhoenixPlate Plate, int Count);
 
+/// <summary>Pass counts per letter grade with plus-grades folded in (SS+ counts as SS).</summary>
 [ExcludeFromCodeCoverage]
-public sealed record RecapOldestBest(
-    Guid ChartId,
-    string SongName,
-    ChartType ChartType,
-    int Level,
-    int? Score,
-    DateTimeOffset RecordedDate);
+public sealed record RecapGradeCount(PhoenixLetterGrade Grade, int Count);
 
 /// <summary>
 ///     Phoenix 1 scores rescored on Phoenix 2 levels with the P2 formula: two top-50
