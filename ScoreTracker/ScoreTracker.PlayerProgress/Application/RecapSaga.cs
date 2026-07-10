@@ -125,7 +125,7 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>
             await BuildImpressiveScores(mix, userId, myStats, shared, cancellationToken),
             WeeklyRecapCalculator.Calculate(userId, shared.WeeklyRows, shared.Charts, shared.UserNames),
             await BuildTrophies(mix, userId, passes, shared, cancellationToken),
-            Projection: null);
+            Phoenix2ProjectionCalculator.Calculate(bests, shared.Phoenix2Charts));
 
         await _recaps.SaveRecap(userId, mix, recap, cancellationToken);
         return true;
@@ -456,6 +456,11 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>
         var allStats = (await _stats.GetStats(mix, activeUserIds, cancellationToken)).ToArray();
         var users = (await _users.GetUsers(activeUserIds, cancellationToken)).ToDictionary(u => u.Id);
         var weeklyRows = (await _weekly.GetAllPlacings(mix, cancellationToken)).ToArray();
+        // The "next season" finale only makes sense projecting Phoenix onto Phoenix 2.
+        var phoenix2Charts = mix == MixEnum.Phoenix
+            ? (await _charts.GetCharts(MixEnum.Phoenix2, cancellationToken: cancellationToken))
+            .ToDictionary(c => c.Id)
+            : new Dictionary<Guid, Chart>();
         var titleHolders = (await _titles.GetTitleAggregations(mix, cancellationToken))
             .GroupBy(t => t.Title)
             .ToDictionary(g => g.Key, g => g.Sum(t => t.Count));
@@ -476,6 +481,7 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>
             users,
             users.Values.ToDictionary(u => u.Id, u => u.Name.ToString()),
             weeklyRows,
+            phoenix2Charts,
             allStats.Where(s => s.SinglesCompetitiveLevel > 0).Select(s => s.SinglesCompetitiveLevel).ToArray(),
             allStats.Where(s => s.DoublesCompetitiveLevel > 0).Select(s => s.DoublesCompetitiveLevel).ToArray(),
             titleHolders,
@@ -516,6 +522,7 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>
         IReadOnlyDictionary<Guid, User> Users,
         IReadOnlyDictionary<Guid, string> UserNames,
         IReadOnlyList<WeeklyPlacingRow> WeeklyRows,
+        IReadOnlyDictionary<Guid, Chart> Phoenix2Charts,
         double[] SinglesLevels,
         double[] DoublesLevels,
         IReadOnlyDictionary<Name, int> TitleHolders,
