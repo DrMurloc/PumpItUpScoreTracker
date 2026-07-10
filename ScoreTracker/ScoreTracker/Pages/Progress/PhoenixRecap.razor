@@ -237,7 +237,7 @@ else if (_user != null && _recap != null)
                                 <span class="precap-cat precap-cat-gold">@L["Rarest passes"]</span>
                                 @foreach (var rare in _recap.RarestPasses)
                                 {
-                                    <div class="precap-row">@Pill(rare.ChartType, rare.Level)<span class="precap-song">@rare.SongName</span><span class="precap-meta precap-hot">@L["only {0} pass it", rare.PassRate.ToString("P0")]</span></div>
+                                    <div class="precap-row">@Pill(rare.ChartType, rare.Level)<span class="precap-song">@rare.SongName</span><span class="precap-meta precap-hot">@L["only {0} pass it", rare.PassRate.ToString("P1")]</span></div>
                                 }
                             </div>
                         }

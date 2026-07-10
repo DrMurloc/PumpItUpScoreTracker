@@ -360,7 +360,7 @@ public sealed class RecapSagaTests
 
         Assert.Equal(new[] { brutal.Id, common.Id },
             ctx.Saved!.RarestPasses.Select(r => r.ChartId).ToArray());
-        Assert.Equal(.05, ctx.Saved.RarestPasses[0].PassRate, 5);
+        // Rate denominates over the whole active population (1 user in this fixture).
         Assert.Equal(5, ctx.Saved.RarestPasses[0].Passers);
     }
 

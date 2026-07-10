@@ -80,7 +80,7 @@ Records with `Plate = PerfectGame`, ordered folder descending then PG difficulty
 ### 8. Most impressive scores
 3 singles + 3 doubles from competitive-contributing scores, descending, taking scores with **>90% tie-inclusive percentile** vs the ±0.5 competitive cohort (reuse `ScoreQualitySaga` mechanics / `ScoreRankings.TieInclusivePercentile`). PGs excluded (they live on slide 6).
 
-The highlights slide also carries **Rarest passes** (round two): the player's top 5 passes by lowest sitewide pass rate (passers ÷ players with a scored record, from the extended `ChartScoreAggregate`), floored at 20 attempters so a two-record obscurity can't outrank a boss chart.
+The highlights slide also carries **Rarest passes** (round two, denominator fixed in round three): the player's top 5 passes by fewest sitewide passers, with the rate shown as passers ÷ **every active PIUScores player** — NOT players who recorded the chart (on a boss chart the recorders are exactly the peers who pass it, which read as "45% pass it" for a chart ~3% of the site has passed). Floored at 20 scored records so an untouched obscurity can't outrank a boss chart.
 
 ### 9. Weekly Charts
 From `UserWeeklyPlacing` (rows carry `Place`, `Score`, `Plate`, `WasWithinRange`, `ObtainedDate`):

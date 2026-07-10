@@ -217,22 +217,26 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
     }
 
     /// <summary>
-    ///     Passes few others on the site have: lowest sitewide pass rate first, floored at
-    ///     20 players with a scored record so a two-attempt obscurity can't outrank a boss.
+    ///     Passes few others on the site have. The denominator is EVERY active PIUScores
+    ///     player, not players who recorded the chart — on a boss chart the only people
+    ///     who record it are exactly the peers who can pass it, which read as "45% pass
+    ///     it" for a chart 3% of the site has passed. The 20-record floor still guards
+    ///     obscure charts nobody has touched.
     /// </summary>
     private IReadOnlyList<RecapRareChart> BuildRarestPasses(RecordedPhoenixScore[] passes, SharedInputs shared)
     {
         const int minimumAttempts = 20;
+        var population = Math.Max(1, shared.ActiveUserIds.Count);
         return passes
             .Where(p => shared.Charts.ContainsKey(p.ChartId))
             .Select(p => (Chart: shared.Charts[p.ChartId],
                 Aggregate: shared.ChartAggregates.GetValueOrDefault(p.ChartId)))
             .Where(x => x.Aggregate is { } a && a.Count >= minimumAttempts && a.PassCount > 0)
-            .OrderBy(x => x.Aggregate!.PassCount / (double)x.Aggregate.Count)
-            .ThenBy(x => x.Aggregate!.PassCount)
+            .OrderBy(x => x.Aggregate!.PassCount)
+            .ThenByDescending(x => x.Aggregate!.Count)
             .Take(5)
             .Select(x => new RecapRareChart(x.Chart.Id, x.Chart.Song.Name.ToString(), x.Chart.Type,
-                x.Chart.Level, x.Aggregate!.PassCount / (double)x.Aggregate.Count, x.Aggregate.PassCount))
+                x.Chart.Level, x.Aggregate!.PassCount / (double)population, x.Aggregate.PassCount))
             .ToArray();
     }
 
