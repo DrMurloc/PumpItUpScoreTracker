@@ -20,8 +20,8 @@ Tier lists are the site's most-used feature (~28% of traffic, ~60% of it anonymo
 | Decision | Outcome |
 |---|---|
 | Anonymous experience | First-class (~60% of usage). Population data renders fast with no login. |
-| Lens naming | "Ranked by" picker: **Community Pass** (default), **Community Score** primary; Popularity / Chabala / PG behind "Other lists". No "(Data Backed)" suffixes. |
-| Personalization | Explicit, **visibly badged** toggle ("Tuned to you"). Never silently changes a shared reference list. |
+| Lens naming | "Ranked by" picker: **Pass Difficulty** (default), **Score Difficulty** primary; Popularity / Chabala / PG behind "Other lists". No "(Data Backed)" suffixes. |
+| Personalization | Explicit, **visibly badged** toggle ("Personalized"). Never silently changes a shared reference list. |
 | Score recording | Lives in the chart-details dialog (manual recordings are rare). |
 | Folder Level / titles | Decoupled into its own design doc. **Paragon/title progress remains for Phoenix 1 unchanged.** Phoenix 2 gets a solution later. |
 | Download image | Full redesign, themed, "fancy": shared renderer also produces per-folder `og:image`. |
@@ -32,12 +32,14 @@ Tier lists are the site's most-used feature (~28% of traffic, ~60% of it anonymo
 | Precompute | On the table; sized in §6 (2,333 users total, ~1,800 with scores, weekly-ish import cadence). |
 | Skills / Chabala | Phoenix 1 only (manual upkeep unsustainable). Per-mix capability flag, §8. |
 
+**Mock feedback round 1 (2026-07-10, applied in workshop-v2):** "Personalized" replaces "Tuned to me" · lens names are **Pass Difficulty** / **Score Difficulty** · Ranked-by hides while My Progress is active (the lens has no effect there) · tier sections collapse, collapsed set persisted per user in UiSettings · border language locked (§4) · filters drawer gains song type / letter grade / plate as first-class · details dialog leads with the video, as today's video dialog does.
+
 ## 3. Mental model: three concepts the UI stops blending
 
 Today "Difficulty Categorization", "Group By", and a hidden "Personalized Difficulty" checkbox interleave three orthogonal ideas. The overhaul separates them:
 
-1. **Ranked by (lens)** — which data ranks the charts. Community Pass, Community Score, Scoring Level; Popularity, Chabala (P1), PG under "Other lists". One picker, plain names.
-2. **Tuned to me** — an explicit toggle that bends the active lens with my skill/similar-player data. When ON, the page and any exported image carry a **"Tuned to {gametag}"** badge; OFF is the shared community reference. (Fixes the trust problem: two players comparing screens can see *why* their lists differ.)
+1. **Ranked by (lens)** — which data ranks the charts. Pass Difficulty, Score Difficulty, Scoring Level; Popularity, Chabala (P1), PG under "Other lists". One picker, plain names. The picker **hides while My Progress is active** — the lens has no effect on personal buckets, and a control that does nothing is worse than no control.
+2. **Personalized** — an explicit toggle that bends the active lens with my skill/similar-player data. When ON, the page and any exported image carry a **"Personalized for {gametag}"** badge; OFF is the shared community reference. (Fixes the trust problem: two players comparing screens can see *why* their lists differ.)
 3. **View** — *whose buckets section the folder*:
    - **Tier List** — sections are the lens's tiers, displayed with the friendly scale **"1+ Level Easier / Very Easy / Easy / Medium / Hard / Very Hard / 1+ Level Harder / Not Rated"** (raw enum names like "Overrated" never render).
    - **My Progress** — sections are *my* buckets: score percentile (rarity ramp + printed %), my score bands, score recency. This absorbs Group By's Age/Score/Score Ranking and is the home of job #1.
@@ -49,7 +51,7 @@ Today "Difficulty Categorization", "Group By", and a hidden "Personalized Diffic
 
 ```
 ┌─ sticky toolbar ──────────────────────────────────────────────┐
-│ [◀ D18 ▶]  Ranked by: Community Pass ▾   [⚡ Tuned to me]      │
+│ [◀ D18 ▶]  Ranked by: Pass Difficulty ▾   [⚡ Personalized]    │
 │ [Tier List | My Progress]   …   [density ▪▪▫] [Download] [Filters] │
 │ (active-filter chips row, only when filters are active)        │
 └───────────────────────────────────────────────────────────────┘
@@ -60,13 +62,15 @@ Today "Difficulty Categorization", "Group By", and a hidden "Personalized Diffic
 ```
 
 - **Folder picker**: type + level is one domain concept (*folder*), so it is one control — tap the pill, choose Single/Double/CoOp and level in a single gesture, **one load**. Prev/next arrows for sequential folder walking. This kills the S14→D18 double-load by construction; cancellation (§6) covers rapid stepping.
-- **Toolbar**: sticky, compact (2 rows max). Download is a first-class button — it's the offline mechanism and the community's sharing tool, never buried again. Filters follow rule 6: collapsed row, active filters as removable chips, full panel in a drawer. Long-tail filters (BPM, note count, artists) demote gracefully since that data moves into the details dialog.
+- **Toolbar**: sticky, compact (2 rows max). Download is a first-class button — it's the offline mechanism and the community's sharing tool, never buried again. Filters follow rule 6: collapsed row, active filters as removable chips, full panel in a drawer. Drawer contents: To-Do / passed / unplayed, **song type (Arcade, Remix, Shortcut, Full Song — each its own filter)**, **letter grade**, and **plate**. Long-tail data filters (BPM, note count, artists) retire — the details dialog carries that data.
 - **Progress strip** replaces today's nine stacked bars: one **segmented lamp strip** (Pass → AA … SSS+ → PG as compact chips with counts), the Paragon/title line (P1), and the rarity-styled "averaging better than X% of N similar players" sentence. Collapsible; collapsed state is a one-line summary. **Anonymous users** instead get the rule-9 empty state: "Import your scores to light this folder up" with sign-in/import actions.
+- **Sections**: diff-ramp stripe + friendly localized names ("1+ Level Easier" … "1+ Level Harder"); raw enum names never render. Sections **collapse from the header**; the collapsed set persists per user (UiSettings, part of the page settings blob).
+- **Border language** (owner-locked): **solid green = passed**, **dashed blue = To-Do**, **dashed green = passed in another mix** (new state — one extra indexed cross-mix pass-set read in the personal overlay), neutral otherwise. Precedence passed > To-Do > other-mix; a passed To-Do just renders as passed (rare case, deliberately unhandled). The two dashed states differ by hue only — run the rule-8 colorblind-simulator check before ship (accepted follow-up). A small legend renders above the sections for signed-in users.
 - **Cards** (per density, all via `Universal__Density`):
-  - *Comfortable* (default): jacket + `DifficultyBubble` + grade/plate overlay, song name, To-Do + Details actions. Pass = solid success border, unpassed = dashed (shape channel per rule 8), To-Do = filled bookmark icon (not color-only).
+  - *Comfortable* (default): jacket + `DifficultyBubble` + grade/plate overlay, song name, To-Do + Details actions.
   - *Compact*: jacket sticker sheet with corner badges — the at-a-glance completion view and the closest on-screen analog of the share image.
   - *Table*: sortable rows (song, tier, my score, grade, plate, percentile, To-Do). Text View's replacement.
-- **Chart-details dialog** (tap any card): video, chart meta (BPM, note count, step artist, song artist), placements across all lenses, To-Do toggle, score recording (reuses the existing edit grid — deliberately low-key), link to `/Chart/{id}`. Leaves a slot for future comments/UGC. One shared component — candidates elsewhere (/Charts, WeeklyCharts) adopt it in later passes.
+- **Chart-details dialog** (tap any card): **leads with the video** (as today's video dialog does), then chart meta (BPM, note count, step artist, song artist), placements across all lenses, To-Do toggle, score recording (reuses the existing edit grid — deliberately low-key), link to `/Chart/{id}`. Leaves a slot for future comments/UGC. One shared component — candidates elsewhere (/Charts, WeeklyCharts) adopt it in later passes.
 - **Mobile (rule 10)**: at phone widths a bottom action bar carries folder pill, Filters, and Download; the toolbar collapses to essentials.
 
 ## 5. Loading, empty, and failure states (rule 9)
@@ -104,7 +108,7 @@ Scarce resource is **SQL DTUs**, not storage (post-incident target tier is small
 - **Routes**: `/TierLists/{Single|Double|CoOp}/{level}` (e.g. `/TierLists/Double/18`). Query-param form 301s to it. `/ChartSkills` and `/PersonalizedTierList` 301 to `/TierLists`.
 - **Sitemap**: one entry per folder (~60 URLs) via the existing sitemap controller.
 - **`og:image` per folder**: the share renderer's community version, regenerated on the tier-list refresh cadence, served static. Discord unfurls become the tier list itself — the site's real social channel. Anything deeper (SSR strategy, crawler-facing text) is deferred to a separate SEO pass.
-- **Share image (Download)**: rebuilt on **SkiaSharp** (cross-platform; System.Drawing is Windows-only and retires with this). One renderer, two consumers: the Download button (user's current view, stamped **Community** or **Tuned to {gametag}**) and the og:image job (community only). Themed from the mix palette: folder bubble + lens title header, tier rows on the `--diff-*` ramp with jacket thumbnails and grade/plate badges, footer with site URL + QR code + date.
+- **Share image (Download)**: rebuilt on **SkiaSharp** (cross-platform; System.Drawing is Windows-only and retires with this). One renderer, two consumers: the Download button (user's current view, stamped **Community** or **Personalized — {gametag}**) and the og:image job (community only). Themed from the mix palette: folder bubble + lens title header, tier rows on the `--diff-*` ramp with jacket thumbnails and grade/plate badges, footer with site URL + QR code + date.
 
 ## 8. Per-mix capability flags
 
@@ -135,7 +139,7 @@ Every string on the page goes through `L[…]` — the current page has dozens o
 | 5 Density | `Universal__Density` lands here: Comfortable (default) / Compact / Table; Text View retired |
 | 6 Filters are furniture | Collapsed sticky row + chips + drawer; filters never push the answer down |
 | 7 +40% text | Full `L[…]` coverage; no fixed-width labels; the "Pneum" hack replaced by generic truncation-with-tooltip |
-| 8 Color never alone | Pass = border *style* + color; To-Do = icon + color; percentile = printed number + glow ramp; tier names printed beside tier colors |
+| 8 Color never alone | Passed vs To-Do borders pair hue with dash pattern; the dashed pair (blue To-Do vs green other-mix) is hue-differentiated only — colorblind-simulator check is an accepted pre-ship follow-up; percentile = printed number + glow ramp; tier names printed beside tier colors |
 | 9 Loading looks like layout | Section skeletons; two-phase paint; import CTA empty state; blank-page guard removed |
 | 10 Thumbs first | Mobile bottom action bar (folder, Filters, Download) |
 
