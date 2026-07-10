@@ -172,6 +172,37 @@
     display: none;
 }
 
+/* ===== Atmosphere: per-mix page-ground light, derived from each game's attract screen.
+   Ground only — cards and surfaces stay flat so contrast is untouched. Trial feature:
+   deleting a theme's block (or all three) fully removes it. ===== */
+
+.mud-layout.theme-phoenix {
+    background:
+        radial-gradient(1200px 800px at 85% -10%, rgba(255, 107, 53, .10), transparent 60%),
+        radial-gradient(1000px 700px at 10% 110%, rgba(63, 169, 245, .08), transparent 60%),
+        var(--mix-bg);
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+.mud-layout.theme-xx {
+    background:
+        radial-gradient(1100px 700px at 80% -10%, rgba(255, 47, 160, .10), transparent 60%),
+        radial-gradient(900px 700px at 5% 105%, rgba(53, 200, 255, .08), transparent 60%),
+        var(--mix-bg);
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+.mud-layout.theme-phoenix2 {
+    background:
+        radial-gradient(1200px 700px at 70% -15%, rgba(79, 227, 63, .10), transparent 55%),
+        radial-gradient(1000px 800px at 15% 115%, rgba(43, 193, 216, .07), transparent 60%),
+        var(--mix-bg);
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
 /* ===== Mobile: bottom nav + More sheet ===== */
 
 .bottom-nav {
