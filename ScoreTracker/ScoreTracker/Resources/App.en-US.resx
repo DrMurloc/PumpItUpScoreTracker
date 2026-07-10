@@ -2509,12 +2509,6 @@
   <data name="Plate cabinet" xml:space="preserve">
     <value>Plate cabinet</value>
   </data>
-  <data name="Longest-standing best" xml:space="preserve">
-    <value>Longest-standing best</value>
-  </data>
-  <data name="standing since {0}" xml:space="preserve">
-    <value>standing since {0}</value>
-  </data>
   <data name="{0} singles · {1} doubles passed" xml:space="preserve">
     <value>{0} singles · {1} doubles passed</value>
   </data>
@@ -2634,5 +2628,11 @@
   </data>
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts.</value>
+  </data>
+  <data name="Oldest record still standing" xml:space="preserve">
+    <value>Oldest record still standing</value>
+  </data>
+  <data name="set {0} — never beaten since" xml:space="preserve">
+    <value>set {0} — never beaten since</value>
   </data>
 </root>

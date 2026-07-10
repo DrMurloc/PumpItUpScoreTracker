@@ -2433,12 +2433,6 @@
   <data name="Plate cabinet" xml:space="preserve">
     <value>Mrgl plates</value>
   </data>
-  <data name="Longest-standing best" xml:space="preserve">
-    <value>Old mrgl record</value>
-  </data>
-  <data name="standing since {0}" xml:space="preserve">
-    <value>mrgl since {0}</value>
-  </data>
   <data name="{0} singles · {1} doubles passed" xml:space="preserve">
     <value>{0} mrgls · {1} mrrgls</value>
   </data>
@@ -2558,5 +2552,11 @@
   </data>
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>Mrgl years of Pump, one mrgl recap. Mrgl mrgl screenshot!</value>
+  </data>
+  <data name="Oldest record still standing" xml:space="preserve">
+    <value>Old mrgl still mrgl</value>
+  </data>
+  <data name="set {0} — never beaten since" xml:space="preserve">
+    <value>mrgl {0} — never mrgled</value>
   </data>
 </root>

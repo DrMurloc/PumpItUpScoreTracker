@@ -2460,12 +2460,6 @@
   <data name="Plate cabinet" xml:space="preserve">
     <value>Vitrine de plates</value>
   </data>
-  <data name="Longest-standing best" xml:space="preserve">
-    <value>Recorde mais antigo de pé</value>
-  </data>
-  <data name="standing since {0}" xml:space="preserve">
-    <value>de pé desde {0}</value>
-  </data>
   <data name="{0} singles · {1} doubles passed" xml:space="preserve">
     <value>{0} singles · {1} doubles passados</value>
   </data>
@@ -2585,5 +2579,11 @@
   </data>
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>Três anos e meio de Pump, um só recap. Vá ver o seu — e tire prints das melhores partes.</value>
+  </data>
+  <data name="Oldest record still standing" xml:space="preserve">
+    <value>Recorde mais antigo ainda de pé</value>
+  </data>
+  <data name="set {0} — never beaten since" xml:space="preserve">
+    <value>feito em {0} — nunca superado desde então</value>
   </data>
 </root>

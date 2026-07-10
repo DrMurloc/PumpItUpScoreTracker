@@ -2510,12 +2510,6 @@
   <data name="Plate cabinet" xml:space="preserve">
     <value>プレート棚</value>
   </data>
-  <data name="Longest-standing best" xml:space="preserve">
-    <value>最も長く残る記録</value>
-  </data>
-  <data name="standing since {0}" xml:space="preserve">
-    <value>{0}から不動</value>
-  </data>
   <data name="{0} singles · {1} doubles passed" xml:space="preserve">
     <value>シングル{0}・ダブル{1}クリア</value>
   </data>
@@ -2635,5 +2629,11 @@
   </data>
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>3年半のPumpを、ひとつのリキャップに。あなたの記録を見に行こう。いいところはスクショで。</value>
+  </data>
+  <data name="Oldest record still standing" xml:space="preserve">
+    <value>最も長く破られていない記録</value>
+  </data>
+  <data name="set {0} — never beaten since" xml:space="preserve">
+    <value>{0}に記録、以来更新なし</value>
   </data>
 </root>

@@ -280,7 +280,11 @@ else if (_user != null && _recap != null)
                             <span class="precap-cat precap-cat-gold">@L["Rarest titles"]</span>
                             @foreach (var title in _recap.Trophies.RarestTitles)
                             {
-                                <div class="precap-row"><span class="precap-song">@title.Title</span><span class="precap-meta precap-hot">@L["held by {0} of titled players", title.HolderShare.ToString("P1")]</span></div>
+                                @* Title names run long — stack the rarity under a wrapping title. *@
+                                <div class="precap-row precap-row-block">
+                                    <span class="precap-song precap-song-wrap">@title.Title</span>
+                                    <span class="precap-meta precap-hot">@L["held by {0} of titled players", title.HolderShare.ToString("P1")]</span>
+                                </div>
                             }
                         </div>
                     }
@@ -297,8 +301,8 @@ else if (_user != null && _recap != null)
                     <div class="precap-hlcol">
                         @if (_recap.Trophies.LongestStanding is { } oldest)
                         {
-                            <span class="precap-cat precap-cat-hl">@L["Longest-standing best"]</span>
-                            <div class="precap-row">@Pill(oldest.ChartType, oldest.Level)<span class="precap-song">@oldest.SongName</span><span class="precap-meta">@L["standing since {0}", oldest.RecordedDate.ToString("MMM yyyy")]</span></div>
+                            <span class="precap-cat precap-cat-hl">@L["Oldest record still standing"]</span>
+                            <div class="precap-row">@Pill(oldest.ChartType, oldest.Level)<span class="precap-song">@oldest.SongName</span><span class="precap-meta">@L["set {0} — never beaten since", oldest.RecordedDate.ToString("MMM yyyy")]</span></div>
                         }
                         <span class="precap-cat" style="margin-top:14px">@L["Singles vs Doubles"]</span>
                         <div class="precap-row"><span class="precap-song">@L["{0} singles · {1} doubles passed", _recap.Trophies.SinglesPassCount.ToString("N0"), _recap.Trophies.DoublesPassCount.ToString("N0")]</span></div>
@@ -408,7 +412,10 @@ else if (_user != null && _recap != null)
             color: var(--pfaint); display: block; margin: 12px 0 6px; }
         .precap-cat-hl { color: var(--paccent); } .precap-cat-gold { color: var(--pgold); }
         .precap-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--phair); }
+        .precap-row-block { display: block; }
+        .precap-row-block .precap-meta { display: block; margin-top: 2px; }
         .precap-song { flex: 1; font-size: 14px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .precap-song-wrap { display: block; white-space: normal; overflow: visible; text-overflow: clip; }
         .precap-rownum, .precap-score { font-family: var(--pmono); font-variant-numeric: tabular-nums; font-size: 13px; color: var(--pdim); }
         .precap-score { color: var(--pink); }
         .precap-meta { font-family: var(--pmono); font-size: 11px; color: var(--pfaint); text-transform: uppercase; white-space: nowrap; }
