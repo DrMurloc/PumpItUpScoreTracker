@@ -2519,9 +2519,6 @@
   <data name="See you in" xml:space="preserve">
     <value>また会おう、</value>
   </data>
-  <data name="{0} of your {1} passes carry over." xml:space="preserve">
-    <value>あなたのクリア{1}譜面中{0}譜面が引き継がれます。</value>
-  </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>予測シングルPUMBILITY</value>
   </data>
@@ -2656,5 +2653,8 @@
   </data>
   <data name="Phoenix Recap" xml:space="preserve">
     <value>フェニックスリキャップ</value>
+  </data>
+  <data name="If your scores made the trip: {0} of your {1} passes map onto Phoenix 2 charts." xml:space="preserve">
+    <value>もしスコアを持ち込めたら：あなたのクリア{1}譜面中{0}譜面がPhoenix 2の譜面に投影されます。</value>
   </data>
 </root>

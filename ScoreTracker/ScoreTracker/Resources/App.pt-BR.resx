@@ -2469,9 +2469,6 @@
   <data name="See you in" xml:space="preserve">
     <value>Até logo no</value>
   </data>
-  <data name="{0} of your {1} passes carry over." xml:space="preserve">
-    <value>{0} dos seus {1} passes são levados adiante.</value>
-  </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>PUMBILITY Singles projetado</value>
   </data>
@@ -2606,5 +2603,8 @@
   </data>
   <data name="Phoenix Recap" xml:space="preserve">
     <value>Recap Phoenix</value>
+  </data>
+  <data name="If your scores made the trip: {0} of your {1} passes map onto Phoenix 2 charts." xml:space="preserve">
+    <value>Se seus scores fizessem a viagem: {0} dos seus {1} passes se projetam nos charts do Phoenix 2.</value>
   </data>
 </root>

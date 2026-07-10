@@ -2442,9 +2442,6 @@
   <data name="See you in" xml:space="preserve">
     <value>Mrgl you in</value>
   </data>
-  <data name="{0} of your {1} passes carry over." xml:space="preserve">
-    <value>{0} of {1} mrgls carry mrgl.</value>
-  </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>mrgl Singles PUMBILITY</value>
   </data>
@@ -2579,5 +2576,8 @@
   </data>
   <data name="Phoenix Recap" xml:space="preserve">
     <value>Mrgl Recap</value>
+  </data>
+  <data name="If your scores made the trip: {0} of your {1} passes map onto Phoenix 2 charts." xml:space="preserve">
+    <value>Mrgl mrgl trip: {0} of {1} mrgls map mrgl Phoenix 2.</value>
   </data>
 </root>

@@ -2518,9 +2518,6 @@
   <data name="See you in" xml:space="preserve">
     <value>See you in</value>
   </data>
-  <data name="{0} of your {1} passes carry over." xml:space="preserve">
-    <value>{0} of your {1} passes carry over.</value>
-  </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>projected Singles PUMBILITY</value>
   </data>
@@ -2655,5 +2652,8 @@
   </data>
   <data name="Phoenix Recap" xml:space="preserve">
     <value>Phoenix Recap</value>
+  </data>
+  <data name="If your scores made the trip: {0} of your {1} passes map onto Phoenix 2 charts." xml:space="preserve">
+    <value>If your scores made the trip: {0} of your {1} passes map onto Phoenix 2 charts.</value>
   </data>
 </root>
