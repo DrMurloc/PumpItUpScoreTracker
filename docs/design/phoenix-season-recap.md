@@ -93,7 +93,7 @@ Exact highlight composition is the one soft area of this spec — owner is open 
 Your 3 rarest titles (with % of titled users — `Beginner` at 99.6% is the free joke line), plate cabinet (count per plate), longest-standing best (oldest `RecordedDate` among current bests), community placements, singles-vs-doubles identity split.
 
 ### 11. Phoenix 2 finale
-P1 scores projected onto Phoenix 2: carried-over charts (4,367 of 4,571 — 95.5%) rescored with P2 `ChartMix` levels through the mix-keyed P2 formula (PR #128), **two-pool Singles/Doubles Pumbility totals + the projected P2 title** (`Phoenix2PumbilityTitle` thresholds). Green accent; "see you in Phoenix 2". Note the existing `PumbilityProjectionSaga` is P1→peer-expectation, *not* this — the P1→P2 rescoring is new code.
+P1 scores projected onto Phoenix 2: carried-over charts (4,367 of 4,571 — 95.5%) rescored with P2 `ChartMix` levels through the mix-keyed P2 formula (PR #128), **two-pool Singles/Doubles Pumbility totals + two projected titles** — the highest `Phoenix2PumbilityTitle` from the Singles pool ladder and the highest from the Doubles pool ladder (`PumbilityPool.Singles`/`Doubles`; the hidden Total tiers are not projected). Green accent; "see you in Phoenix 2". Note the existing `PumbilityProjectionSaga` is P1→peer-expectation, *not* this — the P1→P2 rescoring is new code.
 
 **Dropped ideas:** White Whale (owner), import counts (data too thin), nightly Hangfire job (owner wants admin-triggered).
 
