@@ -28,6 +28,7 @@ public static class PlayerProgressRegistrationExtensions
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddTransient<IScoreHighlightRepository, EFScoreHighlightRepository>();
         services.AddTransient<IPlayerMilestoneRepository, EFPlayerMilestoneRepository>();
+        services.AddTransient<IPlayerSeasonRecapRepository, EFPlayerSeasonRecapRepository>();
         services.AddSingleton<IDbModelContribution, PlayerProgressModelContribution>();
         return services;
     }
