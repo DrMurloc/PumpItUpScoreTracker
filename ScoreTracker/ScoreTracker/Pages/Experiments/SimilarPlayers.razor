@@ -3,6 +3,7 @@
 @using ScoreTracker.Domain.Services
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Dtos
+@using ScoreTracker.Web.Services.Theming
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.SecondaryPorts
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
@@ -124,17 +125,9 @@
             _comparingUsers.Remove(userId);
         }
     }
-    private string CategoryColor(TierListCategory category) => category switch
-    {
-        TierListCategory.Overrated=>"#00FFFF",
-        TierListCategory.VeryEasy=>"#00FFBB",
-        TierListCategory.Easy=>"#00FF55",
-        TierListCategory.Medium=>"#00FF00",
-        TierListCategory.Hard=>"#55BB00",
-        TierListCategory.VeryHard=>"#BB5500",
-        TierListCategory.Underrated=>"#FF0000",
-        TierListCategory.Unrecorded=>"#888888"
-        };
+    // Normalized onto the sitewide difficulty ramp — this page previously spoke its own
+    // neon dialect (green→red hex gradient, red Underrated) that drifted from the tier lists.
+    private string CategoryColor(TierListCategory category) => ThemeScales.DifficultyColor(category);
     private ISet<Guid> _comparingUsers = new HashSet<Guid>();
     private int _level = 18;
     private ChartType _type = ChartType.Double;

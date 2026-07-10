@@ -18,6 +18,7 @@
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.Theming
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
 <PageTitle>@L["Competitive Level"]</PageTitle>
@@ -155,16 +156,9 @@
         return result;
     }
     
-    private string CategoryColor(TierListCategory category) => category switch
-    {
-        TierListCategory.Overrated=>"#00FFFF",
-        TierListCategory.VeryEasy=>"#00FFBB",
-        TierListCategory.Easy=>"#00FF55",
-        TierListCategory.Medium=>"#00FF00",
-        TierListCategory.Hard=>"#55BB00",
-        TierListCategory.VeryHard=>"#BB5500",
-        TierListCategory.Underrated=>"#FF0000"
-        };
+    // Normalized onto the sitewide difficulty ramp — this page previously spoke its own
+    // neon dialect (green→red hex gradient, red Underrated) that drifted from the tier lists.
+    private string CategoryColor(TierListCategory category) => ThemeScales.DifficultyColor(category);
     private IDictionary<Guid, PhoenixScore> _scores = new Dictionary<Guid, PhoenixScore>();
     private IDictionary<DifficultyLevel, IEnumerable<PhoenixScore>> _competetiveScores = new Dictionary<DifficultyLevel, IEnumerable<PhoenixScore>>();
     private IDictionary<Guid, TierListCategory> _scoreDifficulty = new Dictionary<Guid, TierListCategory>();

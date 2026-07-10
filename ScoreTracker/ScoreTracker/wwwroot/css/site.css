@@ -37,3 +37,20 @@
     font-variant-numeric: tabular-nums;
     letter-spacing: .02em;
 }
+
+/* Rarity treatment ramp — glow intensity rises with the band. Hue alone can't order the
+   bands monotonically (gold is brighter than sapphire), so treatment does; the percentile
+   number always rides alongside, so color is never the only channel. Shadows omit a color
+   on purpose: they take currentColor from the band hue. */
+.rarity-glow-1 {
+    text-shadow: 0 0 6px;
+}
+
+.rarity-glow-2 {
+    text-shadow: 0 0 4px, 0 0 10px;
+}
+
+.rarity-glow-3 {
+    text-shadow: 0 0 4px, 0 0 10px, 0 0 18px;
+    font-weight: 600;
+}

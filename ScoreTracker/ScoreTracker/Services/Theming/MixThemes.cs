@@ -24,7 +24,8 @@ public sealed record MixPalette(
     string Accent,
     string Ink,
     string InkMuted,
-    string Glow)
+    string Glow,
+    RarityRamp Rarity)
 {
     // Semantic alert colors are intentionally shared across mixes: red/green/amber alerts
     // must read identically no matter which theme is active.
@@ -32,6 +33,22 @@ public sealed record MixPalette(
     public const string Success = "#6EDE7F";
     public const string Warning = "#FFC433";
 }
+
+/// <summary>
+/// The rarity scale: how good is this relative to the population (score percentiles,
+/// leaderboard positions). Starts at neutral grey — a low percentile is common, not a
+/// failure — and climbs the ladder PIU's own plate metals taught players: silver, gold,
+/// then blue as the elite anchor (SSS grades, UG/PG plates, Perfect judgments all agree).
+/// Names describe the color on purpose (show-don't-tell survives localization).
+/// Hues are tuned per mix; band meaning and order never change.
+/// </summary>
+public sealed record RarityRamp(
+    string Common,
+    string Silver,
+    string Emerald,
+    string Gold,
+    string Sapphire,
+    string Prism);
 
 public static class MixThemes
 {
@@ -64,7 +81,14 @@ public static class MixThemes
         Ink: "#F2E9F5",
         InkMuted: "#A99BB8",
         // Cyan glow under magenta primaries = the XX dueling-neon signature.
-        Glow: "rgba(53, 200, 255, .40)");
+        Glow: "rgba(53, 200, 255, .40)",
+        Rarity: new RarityRamp(
+            Common: "#958CA6",
+            Silver: "#D5CDE3",
+            Emerald: "#2ECC40",
+            Gold: "#FFD91C",
+            Sapphire: "#3B9EFF",
+            Prism: "#F0E9FF"));
 
     private static readonly MixPalette Phoenix = new(
         Background: "#070B15",
@@ -77,7 +101,14 @@ public static class MixThemes
         Accent: "#FFD24A",
         Ink: "#E9EFF7",
         InkMuted: "#93A3B8",
-        Glow: "rgba(63, 169, 245, .40)");
+        Glow: "rgba(63, 169, 245, .40)",
+        Rarity: new RarityRamp(
+            Common: "#8B98A9",
+            Silver: "#CBD5E1",
+            Emerald: "#3FD35A",
+            Gold: "#FFD24A",
+            Sapphire: "#38B6FF",
+            Prism: "#9BE9FF"));
 
     private static readonly MixPalette Phoenix2 = new(
         Background: "#060D08",
@@ -91,7 +122,14 @@ public static class MixThemes
         Accent: "#E93CF2",
         Ink: "#EAF5EC",
         InkMuted: "#9AB3A3",
-        Glow: "rgba(79, 227, 63, .40)");
+        Glow: "rgba(79, 227, 63, .40)",
+        Rarity: new RarityRamp(
+            Common: "#8FA396",
+            Silver: "#CBDCD0",
+            Emerald: "#46D838",
+            Gold: "#FFC72E",
+            Sapphire: "#29C9F7",
+            Prism: "#E9FFD9"));
 
     private static readonly IReadOnlyDictionary<MixEnum, MudTheme> Themes =
         new[] { MixEnum.XX, MixEnum.Phoenix, MixEnum.Phoenix2 }
@@ -128,9 +166,29 @@ public static class MixThemes
     /// The --mix-* custom properties for the active palette. Rendered into a style block by
     /// the layout; pages style against the tokens, never against literal colors.
     /// </summary>
+    // The difficulty scale: how hard is this chart relative to its level (tier lists).
+    // Green→red heat — red means danger here exactly as it does in-game, which is why the
+    // rarity ramp never uses it. Shared across mixes today; emitted as vars so a per-mix
+    // tune later costs no consumer churn. Values are the pre-façade canonical hues
+    // (ChartSkills/Pumbility) — the two neon-dialect clones normalize onto these.
+    private static readonly IReadOnlyDictionary<TierListCategory, string> DifficultyColors =
+        new Dictionary<TierListCategory, string>
+        {
+            [TierListCategory.Overrated] = "#00ACC1",
+            [TierListCategory.VeryEasy] = "#43A047",
+            [TierListCategory.Easy] = "#7CB342",
+            [TierListCategory.Medium] = "#FDD835",
+            [TierListCategory.Hard] = "#FB8C00",
+            [TierListCategory.VeryHard] = "#E53935",
+            [TierListCategory.Underrated] = "#8E24AA",
+            [TierListCategory.Unrecorded] = "#757575"
+        };
+
     public static string CssVariablesFor(MixEnum mix)
     {
         var p = PaletteFor(mix);
+        var difficulty = string.Join("\n", DifficultyColors.Select(kv =>
+            $"    --diff-{ThemeScales.DifficultySlug(kv.Key)}: {kv.Value};"));
         return $@":root {{
     --mix-bg: {p.Background};
     --mix-surface: {p.Surface};
@@ -143,6 +201,13 @@ public static class MixThemes
     --mix-ink: {p.Ink};
     --mix-ink-muted: {p.InkMuted};
     --mix-glow: {p.Glow};
+    --rarity-common: {p.Rarity.Common};
+    --rarity-silver: {p.Rarity.Silver};
+    --rarity-emerald: {p.Rarity.Emerald};
+    --rarity-gold: {p.Rarity.Gold};
+    --rarity-sapphire: {p.Rarity.Sapphire};
+    --rarity-prism: {p.Rarity.Prism};
+{difficulty}
 }}";
     }
 

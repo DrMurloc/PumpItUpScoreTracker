@@ -24,6 +24,7 @@
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.Theming
 @using ScoreTracker.Web.Shared
 @using System.Text.Json
 @using System.ComponentModel
@@ -90,7 +91,7 @@
             var rating = _finalEntries.Where(e => _scoreRankings.ContainsKey(e.ChartId)).Average(e => _scoreRankings[e.ChartId].Ranking);
             <MudItem xs="12">
                 <MudText>
-                    Averaging better than <div style=@($"display:inline;{RankingColors.ColorStyle(rating)}")>@((100.0*rating).ToString("N2"))%</div> of @_competitivePlayerCount similar players in this folder.
+                    Averaging better than <div style=@($"display:inline;{ThemeScales.RarityStyle(rating)}")>@((100.0*rating).ToString("N2"))%</div> of @_competitivePlayerCount similar players in this folder.
                 </MudText>
             </MudItem>
         }
@@ -882,16 +883,7 @@ function(val, index) {
     private IEnumerable<TitleProgress> _titleProgress = Array.Empty<TitleProgress>();
     private Task<IEnumerable<string>> FilterSongName(string search) => Task.FromResult(_finalEntries.Select(c => _charts[c.ChartId].Song.Name.ToString()).Distinct().Where(
         n => string.IsNullOrWhiteSpace(search)|| n.Contains(search, StringComparison.OrdinalIgnoreCase)).OrderBy(n => n == search ? 0 : 1).AsEnumerable());
-    private string TierListColor(TierListCategory category) => category switch{
-        TierListCategory.Overrated=>Colors.Cyan.Darken1,
-        TierListCategory.VeryEasy=>Colors.Green.Darken1,
-        TierListCategory.Easy=>Colors.LightGreen.Darken1,
-        TierListCategory.Medium=>Colors.Yellow.Darken1,
-        TierListCategory.Hard=>Colors.Orange.Darken1,
-        TierListCategory.VeryHard=>Colors.Red.Darken1,
-        TierListCategory.Underrated=>Colors.Purple.Darken1,
-        TierListCategory.Unrecorded=>Colors.Gray.Darken1,
-    };
+    private string TierListColor(TierListCategory category) => ThemeScales.DifficultyColor(category);
     private IDictionary<Guid, string> _variance = new Dictionary<Guid, string>();
     private async Task CalculateVariance(ChartType chartType, DifficultyLevel level)
     {

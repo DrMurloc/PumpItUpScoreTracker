@@ -16,6 +16,7 @@
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.Theming
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @page "/Pumbility"
 
@@ -178,16 +179,7 @@
     private IDictionary<TierListCategory, IEnumerable<Guid>> _tierList = new Dictionary<TierListCategory, IEnumerable<Guid>>();
     private IDictionary<Guid, TierListCategory> _chartDifficulty = new Dictionary<Guid, TierListCategory>();
 
-    private string TierListColor(TierListCategory category) => category switch{
-        TierListCategory.Overrated=>Colors.Cyan.Darken1,
-        TierListCategory.VeryEasy=>Colors.Green.Darken1,
-        TierListCategory.Easy=>Colors.LightGreen.Darken1,
-        TierListCategory.Medium=>Colors.Yellow.Darken1,
-        TierListCategory.Hard=>Colors.Orange.Darken1,
-        TierListCategory.VeryHard=>Colors.Red.Darken1,
-        TierListCategory.Underrated=>Colors.Purple.Darken1,
-        TierListCategory.Unrecorded=>Colors.Gray.Darken1,
-    };
+    private string TierListColor(TierListCategory category) => ThemeScales.DifficultyColor(category);
     private int GetTierListOrder(TierListCategory category) => category switch{
         TierListCategory.Overrated => 1,
         TierListCategory.VeryEasy => 2,
