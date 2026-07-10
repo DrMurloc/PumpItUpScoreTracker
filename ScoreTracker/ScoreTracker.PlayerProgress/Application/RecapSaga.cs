@@ -153,7 +153,7 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
             await BuildRivals(mix, userId, myStats, shared, cancellationToken),
             BuildImpressivePgs(passes, shared),
             await BuildImpressiveScores(mix, userId, myStats, shared, cancellationToken),
-            BuildRarestPasses(passes, shared),
+            BuildRarestPasses(passes, myStats, shared),
             WeeklyRecapCalculator.Calculate(userId, shared.WeeklyRows, shared.Charts, shared.UserNames),
             await BuildTrophies(mix, userId, passes, shared, cancellationToken),
             Phoenix2ProjectionCalculator.Calculate(bests, shared.Phoenix2Charts));
@@ -220,19 +220,32 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
     ///     Passes few others on the site have. The denominator is EVERY active PIUScores
     ///     player, not players who recorded the chart — on a boss chart the only people
     ///     who record it are exactly the peers who can pass it, which read as "45% pass
-    ///     it" for a chart 3% of the site has passed. No record-count floor: the
-    ///     low-record tail IS the boss ladder (Ultimatum D27 has one passer sitewide),
-    ///     and obscurity is a legitimate flavor of rare (owner call). PassCount > 0 only
-    ///     guards the scoreless-pass edge, where the player's own pass isn't countable.
+    ///     it" for a chart 3% of the site has passed. Singles/doubles only count at your
+    ///     competitive level − 6 or above — without that floor the list is S2s the
+    ///     elites never bothered recording. Co-op is exempt (its "level" is a player
+    ///     count, and rounding up four players for Gargoyle IS the rarity — 28 passers
+    ///     sitewide). PassCount > 0 only guards the scoreless-pass edge.
     /// </summary>
-    private IReadOnlyList<RecapRareChart> BuildRarestPasses(RecordedPhoenixScore[] passes, SharedInputs shared)
+    private IReadOnlyList<RecapRareChart> BuildRarestPasses(RecordedPhoenixScore[] passes,
+        PlayerStatsRecord myStats, SharedInputs shared)
     {
         var population = Math.Max(1, shared.ActiveUserIds.Count);
+
+        double LevelFloor(Chart chart)
+        {
+            var competitive = chart.Type == ChartType.Single
+                ? myStats.SinglesCompetitiveLevel
+                : myStats.DoublesCompetitiveLevel;
+            if (competitive <= 0) competitive = myStats.CompetitiveLevel;
+            return competitive - 6;
+        }
+
         return passes
             .Where(p => shared.Charts.ContainsKey(p.ChartId))
             .Select(p => (Chart: shared.Charts[p.ChartId],
                 Aggregate: shared.ChartAggregates.GetValueOrDefault(p.ChartId)))
             .Where(x => x.Aggregate is { PassCount: > 0 })
+            .Where(x => x.Chart.Type == ChartType.CoOp || (int)x.Chart.Level >= LevelFloor(x.Chart))
             .OrderBy(x => x.Aggregate!.PassCount)
             .ThenByDescending(x => x.Aggregate!.Count)
             .Take(5)

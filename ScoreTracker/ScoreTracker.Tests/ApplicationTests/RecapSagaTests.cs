@@ -337,30 +337,34 @@ public sealed class RecapSagaTests
     }
 
     [Fact]
-    public async Task RarestPassesRankByFewestSitewidePassers()
+    public async Task RarestPassesRankByFewestSitewidePassersAboveTheLevelFloor()
     {
+        // Fixture stats put singles competitive at 20.0 — the floor is level 14.
         var brutal = new ChartBuilder().WithType(ChartType.Single).WithLevel(24).WithSongName("Brutal").Build();
         var common = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).WithSongName("Common").Build();
-        var obscure = new ChartBuilder().WithType(ChartType.Single).WithLevel(10).WithSongName("Obscure").Build();
-        var ctx = new HandlerContext(brutal, common, obscure);
-        ctx.GivenEligiblePasses(7);
+        var trivial = new ChartBuilder().WithType(ChartType.Single).WithLevel(2).WithSongName("Trivial").Build();
+        var coOp = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(4).WithSongName("Squad Song").Build();
+        var ctx = new HandlerContext(brutal, common, trivial, coOp);
+        ctx.GivenEligiblePasses(6);
         ctx.GivenPass(brutal, 920_000);
         ctx.GivenPass(common, 990_000);
-        ctx.GivenPass(obscure, 990_000);
+        ctx.GivenPass(trivial, 990_000);
+        ctx.GivenPass(coOp, 950_000);
         ctx.Scores.Setup(s => s.GetChartScoreAggregates(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new ChartScoreAggregate(brutal.Id, 100, 5),
                 new ChartScoreAggregate(common.Id, 100, 80),
-                // Barely recorded — obscurity is a legitimate flavor of rare (owner call).
-                new ChartScoreAggregate(obscure.Id, 2, 1)
+                // An S2 nobody records is not a flex — the level floor removes it.
+                new ChartScoreAggregate(trivial.Id, 2, 1),
+                // Co-op is floor-exempt: its "level" is a player count.
+                new ChartScoreAggregate(coOp.Id, 30, 3)
             });
 
         await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
 
-        Assert.Equal(new[] { obscure.Id, brutal.Id, common.Id },
+        Assert.Equal(new[] { coOp.Id, brutal.Id, common.Id },
             ctx.Saved!.RarestPasses.Select(r => r.ChartId).ToArray());
-        Assert.Equal(1, ctx.Saved.RarestPasses[0].Passers);
     }
 
     [Fact]
