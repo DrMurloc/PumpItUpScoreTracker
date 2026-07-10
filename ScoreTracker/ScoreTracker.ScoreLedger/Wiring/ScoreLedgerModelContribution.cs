@@ -25,6 +25,14 @@ public sealed class ScoreLedgerModelContribution : IDbModelContribution
             .WithMany()
             .HasForeignKey(ba => ba.UserId);
 
+        // Covers the cohort ranking reads (mix + chart-set lookups projecting
+        // user/score/plate); without it they scan the whole table. Built ONLINE because
+        // the migration bundle applies against the live table during deploys.
+        modelBuilder.Entity<PhoenixRecordEntity>()
+            .HasIndex(e => new { e.MixId, e.ChartId })
+            .IncludeProperties(e => new { e.UserId, e.Score, e.Plate, e.IsBroken })
+            .IsCreatedOnline();
+
         modelBuilder.Entity<ScoreEventJournalEntity>().ToTable("ScoreEventJournal");
         // Session lookups skip the pre-capture rows (SessionId is never backfilled).
         modelBuilder.Entity<ScoreEventJournalEntity>().HasIndex(e => e.SessionId)
