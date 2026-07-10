@@ -25,6 +25,17 @@ public sealed class PiuGameConfiguration
     public string AmPassUrl { get; set; } = "https://am-pass.net";
 
     /// <summary>
+    ///     Service-account credentials for the login-gated Phoenix 2 leaderboards — unlike
+    ///     Phoenix, piugame.com serves NO anonymous ranking traffic (pumbility_ranking.php
+    ///     and the over_ranking chart list both require a session; verified 2026-07-09).
+    ///     Unset = Phoenix 2 leaderboard imports throw with a pointer here. Use a dedicated
+    ///     dummy account, never a real player's.
+    /// </summary>
+    public string? ServiceUsername { get; set; }
+
+    public string? ServicePassword { get; set; }
+
+    /// <summary>
     ///     The official-site host for a mix. XX has no scrapeable site; anything unknown
     ///     throws loudly rather than silently scraping the wrong mix's boards.
     /// </summary>

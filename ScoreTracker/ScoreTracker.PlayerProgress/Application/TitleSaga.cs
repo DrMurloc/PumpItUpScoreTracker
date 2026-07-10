@@ -111,8 +111,6 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
                 var charts = (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
                     .ToDictionary(c => c.Id);
 
-                // Phoenix2's list is deliberately EMPTY at launch (locked decision), so its
-                // progress is always an empty collection until the real list is known.
                 return request.Mix == MixEnum.Phoenix
                     ? PhoenixTitleList.BuildProgress(charts, scores, completedTitles)
                     : Phoenix2TitleList.BuildProgress(charts, scores, completedTitles);
@@ -167,7 +165,6 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
     {
         var existingTitles = (await _titles.GetCompletedTitles(mix, userId, cancellationToken))
             .ToDictionary(t => t.Title);
-        // A Phoenix2 score event simply produces zero titles here — the mix's list is empty.
         var titleProgress = (await GetProgress(mix, userId, cancellationToken)).ToArray();
         var newTitlesHash = newCharts.Distinct().ToHashSet();
         foreach (var title in titleProgress)

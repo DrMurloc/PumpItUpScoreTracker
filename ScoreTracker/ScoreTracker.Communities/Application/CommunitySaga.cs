@@ -456,6 +456,14 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
                     lines.Add($"📈 **PUMBILITY** {m.OldValue:N0} → **{m.NewValue:N0}** " +
                               $"(+{m.NewValue - m.OldValue:N0})");
                     break;
+                case MilestoneKind.SinglesPumbilityGain:
+                    lines.Add($"📈 **PUMBILITY (S)** {m.OldValue:N0} → **{m.NewValue:N0}** " +
+                              $"(+{m.NewValue - m.OldValue:N0})");
+                    break;
+                case MilestoneKind.DoublesPumbilityGain:
+                    lines.Add($"📈 **PUMBILITY (D)** {m.OldValue:N0} → **{m.NewValue:N0}** " +
+                              $"(+{m.NewValue - m.OldValue:N0})");
+                    break;
                 case MilestoneKind.SinglesCompetitiveGain:
                     lines.Add($"📈 **Singles competitive** {m.OldValue:0.00} → **{m.NewValue:0.00}**");
                     break;

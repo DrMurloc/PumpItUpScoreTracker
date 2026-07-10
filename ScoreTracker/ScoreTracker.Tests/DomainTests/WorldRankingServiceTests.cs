@@ -33,7 +33,7 @@ public sealed class WorldRankingServiceTests
                 ["alice"] = new[] { Status("alice", "Cool Song S15", score: 950000) }
             });
         var saveOrder = new List<string>();
-        leaderboards.Setup(l => l.DeleteWorldRankings(It.IsAny<CancellationToken>()))
+        leaderboards.Setup(l => l.DeleteWorldRankings(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
             .Callback(() => saveOrder.Add("delete")).Returns(Task.CompletedTask);
         leaderboards.Setup(l => l.SaveWorldRanking(MixEnum.Phoenix, It.IsAny<WorldRankingRecord>(), It.IsAny<CancellationToken>()))
             .Callback(() => saveOrder.Add("save")).Returns(Task.CompletedTask);
@@ -52,7 +52,7 @@ public sealed class WorldRankingServiceTests
 
         await BuildService(leaderboards: leaderboards).CalculateWorldRankings(MixEnum.Phoenix, CancellationToken.None);
 
-        leaderboards.Verify(l => l.DeleteWorldRankings(It.IsAny<CancellationToken>()), Times.Once);
+        leaderboards.Verify(l => l.DeleteWorldRankings(MixEnum.Phoenix, It.IsAny<CancellationToken>()), Times.Once);
         leaderboards.Verify(l => l.SaveWorldRanking(MixEnum.Phoenix, It.IsAny<WorldRankingRecord>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -148,7 +148,7 @@ public sealed class WorldRankingServiceTests
         var charts = ChartsForSongMock(songName: "Cool Song", new[] { chart });
 
         var result = await BuildService(leaderboards: leaderboards, charts: charts)
-            .GetAll(Name.From("alice"), CancellationToken.None);
+            .GetAll(MixEnum.Phoenix, Name.From("alice"), CancellationToken.None);
 
         var record = Assert.Single(result);
         Assert.Equal(chartId, record.ChartId);
@@ -170,7 +170,7 @@ public sealed class WorldRankingServiceTests
         var charts = ChartsForSongMock(songName: "Cool Song", new[] { chart });
 
         var result = await BuildService(leaderboards: leaderboards, charts: charts)
-            .GetAll(Name.From("alice"), CancellationToken.None);
+            .GetAll(MixEnum.Phoenix, Name.From("alice"), CancellationToken.None);
 
         Assert.Empty(result);
     }
@@ -189,7 +189,7 @@ public sealed class WorldRankingServiceTests
         var charts = ChartsForSongMock(songName: "Cool Song", new[] { chart });
 
         var result = await BuildService(leaderboards: leaderboards, charts: charts)
-            .GetAll(Name.From("alice"), CancellationToken.None);
+            .GetAll(MixEnum.Phoenix, Name.From("alice"), CancellationToken.None);
 
         Assert.Equal(Now, result.Single().RecordedDate);
     }
@@ -219,7 +219,7 @@ public sealed class WorldRankingServiceTests
                 It.IsAny<CancellationToken>())).ReturnsAsync(new[] { dbl });
 
         var result = (await BuildService(leaderboards: leaderboards, charts: charts)
-            .GetTop50(Name.From("alice"), type, CancellationToken.None)).ToArray();
+            .GetTop50(MixEnum.Phoenix, Name.From("alice"), type, CancellationToken.None)).ToArray();
 
         Assert.Equal(expectedSingleCount, result.Count(r => r.ChartId == single.Id));
         Assert.Equal(expectedDoubleCount, result.Count(r => r.ChartId == dbl.Id));
@@ -242,11 +242,11 @@ public sealed class WorldRankingServiceTests
         IDictionary<string, UserOfficialLeaderboard[]>? statuses = null)
     {
         var m = new Mock<IOfficialLeaderboardRepository>();
-        m.Setup(l => l.GetOfficialLeaderboardUsernames("Chart", It.IsAny<CancellationToken>()))
+        m.Setup(l => l.GetOfficialLeaderboardUsernames(MixEnum.Phoenix, "Chart", It.IsAny<CancellationToken>()))
             .ReturnsAsync(usernames);
         if (statuses != null)
             foreach (var (user, entries) in statuses)
-                m.Setup(l => l.GetOfficialLeaderboardStatuses(user, It.IsAny<CancellationToken>()))
+                m.Setup(l => l.GetOfficialLeaderboardStatuses(MixEnum.Phoenix, user, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(entries);
         return m;
     }

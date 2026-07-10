@@ -35,5 +35,14 @@ public enum MilestoneKind
     ///     Detail = the difficulty string (e.g. "D21"). SessionId stays null — weekly
     ///     registration follows its own eligibility flow, not the score batches.
     /// </summary>
-    WeeklyPlacement
+    WeeklyPlacement,
+
+    /// <summary>
+    ///     Singles PUMBILITY pool went up. OldValue → NewValue. Phoenix 2 only — its
+    ///     title ladder gates on the per-type pools, so the pools are milestones there.
+    /// </summary>
+    SinglesPumbilityGain,
+
+    /// <summary>Doubles PUMBILITY pool went up. OldValue → NewValue. Phoenix 2 only.</summary>
+    DoublesPumbilityGain
 }

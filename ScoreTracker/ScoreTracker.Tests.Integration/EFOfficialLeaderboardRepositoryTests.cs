@@ -32,6 +32,68 @@ public sealed class EFOfficialLeaderboardRepositoryTests : IAsyncLifetime
             new MemoryCache(new MemoryCacheOptions()));
 
     [Fact]
+    public async Task ClearLeaderboardOnlyTouchesItsOwnMix()
+    {
+        // Phoenix and Phoenix 2 chart boards share names ("Conflict S22" exists on both
+        // sites) — a P2 import's clear must never wipe the Phoenix mirror's rows.
+        var writer = BuildRepository();
+        await writer.WriteEntries(MixEnum.Phoenix, new[]
+        {
+            new UserOfficialLeaderboard("alice", 1, "Chart", "Conflict S22", 990000)
+        }, CancellationToken.None);
+        await writer.WriteEntries(MixEnum.Phoenix2, new[]
+        {
+            new UserOfficialLeaderboard("byeol", 1, "Chart", "Conflict S22", 995000)
+        }, CancellationToken.None);
+
+        await writer.ClearLeaderboard(MixEnum.Phoenix2, "Chart", "Conflict S22", CancellationToken.None);
+
+        var phoenix = (await BuildRepository()
+            .GetOfficialLeaderboardStatuses(MixEnum.Phoenix, "alice", CancellationToken.None)).ToList();
+        var phoenix2 = (await BuildRepository()
+            .GetOfficialLeaderboardStatuses(MixEnum.Phoenix2, "byeol", CancellationToken.None)).ToList();
+        Assert.Single(phoenix);
+        Assert.Empty(phoenix2);
+    }
+
+    [Fact]
+    public async Task DeleteWorldRankingsOnlyTouchesItsOwnMix()
+    {
+        // The world-ranking recalculation deletes-then-rebuilds per mix — a Phoenix 2 run
+        // must leave Phoenix's rankings standing.
+        var writer = BuildRepository();
+        var record = new WorldRankingRecord("alice", "Singles", 20, 950000, 50, 0, 12345, 20.5, 19.4, 18.8);
+        await writer.SaveWorldRanking(MixEnum.Phoenix, record, CancellationToken.None);
+        await writer.SaveWorldRanking(MixEnum.Phoenix2, record with { Username = "byeol" }, CancellationToken.None);
+
+        await writer.DeleteWorldRankings(MixEnum.Phoenix2, CancellationToken.None);
+
+        Assert.Single(await BuildRepository().GetAllWorldRankings(MixEnum.Phoenix, CancellationToken.None));
+        Assert.Empty(await BuildRepository().GetAllWorldRankings(MixEnum.Phoenix2, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task UsernameReadsAreScopedToTheirMix()
+    {
+        var writer = BuildRepository();
+        await writer.WriteEntries(MixEnum.Phoenix, new[]
+        {
+            new UserOfficialLeaderboard("alice", 1, "Chart", "Conflict S22", 990000)
+        }, CancellationToken.None);
+        await writer.WriteEntries(MixEnum.Phoenix2, new[]
+        {
+            new UserOfficialLeaderboard("byeol", 1, "Rating", "PUMBILITY", 17418)
+        }, CancellationToken.None);
+
+        var phoenixNames = (await BuildRepository()
+            .GetOfficialLeaderboardUsernames(MixEnum.Phoenix, null, CancellationToken.None)).ToList();
+        var phoenix2Names = (await BuildRepository()
+            .GetOfficialLeaderboardUsernames(MixEnum.Phoenix2, null, CancellationToken.None)).ToList();
+        Assert.Equal(new[] { "alice" }, phoenixNames);
+        Assert.Equal(new[] { "byeol" }, phoenix2Names);
+    }
+
+    [Fact]
     public async Task WriteEntryAndGetOfficialLeaderboardStatusesRoundTrip()
     {
         var entry = new UserOfficialLeaderboard("alice", Place: 3, "Rating", "Top Singles", Score: 950);
@@ -39,7 +101,7 @@ public sealed class EFOfficialLeaderboardRepositoryTests : IAsyncLifetime
         await BuildRepository().WriteEntry(MixEnum.Phoenix, entry, CancellationToken.None);
 
         var retrieved = (await BuildRepository()
-            .GetOfficialLeaderboardStatuses("alice", CancellationToken.None)).ToList();
+            .GetOfficialLeaderboardStatuses(MixEnum.Phoenix, "alice", CancellationToken.None)).ToList();
         Assert.Single(retrieved);
         Assert.Equal("alice", retrieved[0].Username);
         Assert.Equal(3, retrieved[0].Place);
@@ -59,10 +121,10 @@ public sealed class EFOfficialLeaderboardRepositoryTests : IAsyncLifetime
             new UserOfficialLeaderboard("alice", 1, "Rating", "Top Doubles", 850)
         }, CancellationToken.None);
 
-        await writer.ClearLeaderboard("Rating", "Top Singles", CancellationToken.None);
+        await writer.ClearLeaderboard(MixEnum.Phoenix, "Rating", "Top Singles", CancellationToken.None);
 
         var aliceStatuses = (await BuildRepository()
-            .GetOfficialLeaderboardStatuses("alice", CancellationToken.None)).ToList();
+            .GetOfficialLeaderboardStatuses(MixEnum.Phoenix, "alice", CancellationToken.None)).ToList();
         Assert.Single(aliceStatuses);
         Assert.Equal("Top Doubles", aliceStatuses[0].LeaderboardName);
     }
@@ -167,7 +229,7 @@ public sealed class EFOfficialLeaderboardRepositoryTests : IAsyncLifetime
 
         await BuildRepository().SaveWorldRanking(MixEnum.Phoenix, record, CancellationToken.None);
 
-        var retrieved = (await BuildRepository().GetAllWorldRankings(CancellationToken.None)).ToList();
+        var retrieved = (await BuildRepository().GetAllWorldRankings(MixEnum.Phoenix, CancellationToken.None)).ToList();
         Assert.Single(retrieved);
         Assert.Equal("alice", retrieved[0].Username);
         Assert.Equal("Singles", retrieved[0].Type);

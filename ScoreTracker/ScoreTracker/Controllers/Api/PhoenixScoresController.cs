@@ -154,7 +154,7 @@ public sealed class PhoenixScoresController : Controller
         var charts = (await _mediator.Send(new GetChartsQuery(mix))).ToDictionary(c => c.Id);
 
         // Mirrors PlayerRatingSaga's per-score stats exactly so the API number matches the site.
-        var pumbilityScoring = ScoringConfiguration.PumbilityScoring(true);
+        var pumbilityScoring = ScoringConfiguration.PumbilityScoring(mix, true);
         var pumbilityPlusScoring = ScoringConfiguration.PumbilityPlus;
         var rows = records.Where(r => charts.ContainsKey(r.ChartId)).Select(r =>
         {

@@ -2363,4 +2363,10 @@
   <data name="View your session" xml:space="preserve">
     <value>Voir votre session</value>
   </data>
+  <data name="Recalculate Phoenix 2 Player Ratings" xml:space="preserve">
+    <value>Recalculer les Ratings des joueurs Phoenix 2</value>
+  </data>
+  <data name="Rankings use the official Phoenix 2 PUMBILITY formula." xml:space="preserve">
+    <value>Les classements utilisent la formule officielle PUMBILITY de Phoenix 2.</value>
+  </data>
 </root>

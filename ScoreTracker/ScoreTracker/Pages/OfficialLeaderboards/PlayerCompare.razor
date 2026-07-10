@@ -13,13 +13,6 @@
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Contracts
 <PageTitle>Official Leaderboard Player Compare</PageTitle>
-@if (_currentMix == MixEnum.Phoenix2)
-{
-    @* Locked decision (docs/design/phoenix2-implementation.md): the Phoenix 2 mirror is deferred. *@
-    <ComingSoon Message="@L["Phoenix 2 official leaderboards are coming soon."].Value"></ComingSoon>
-}
-else
-{
 <MudText>@L["Last Updated"] - @(_lastImported?.ToLocalTime().ToString() ?? "—")</MudText>
 <MudAutocomplete T="string" AdornmentIcon="@Icons.Material.Filled.Search"
                  ResetValueOnEmptyText="true"
@@ -136,7 +129,6 @@ else
 {
     <MudText>Please select players to compare them</MudText>
 }
-}
 
 @inject IMediator Mediator;
 @inject IUiSettingsAccessor UiSettings;
@@ -193,7 +185,7 @@ else
         }   
         _isloading = true;
 
-        _players[username] = (await Mediator.Send(new GetWorldRankingScoresQuery(username)))
+        _players[username] = (await Mediator.Send(new GetWorldRankingScoresQuery(username, _currentMix)))
             .Where(r => r.Score != null)
             .ToDictionary(r => r.ChartId, r => r.Score!.Value);
 
@@ -205,14 +197,10 @@ else
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();
-        if (_currentMix == MixEnum.Phoenix2)
-        {
-            // Coming-soon state — the mirror only has Phoenix data.
-            return;
-        }
-        _lastImported = await Mediator.Send(new GetLastLeaderboardImportTimestampQuery());
-        _usernames = (await Mediator.Send(new GetOfficialLeaderboardUsernamesQuery())).ToArray();
-        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+        if (_currentMix == MixEnum.XX) _currentMix = MixEnum.Phoenix;
+        _lastImported = await Mediator.Send(new GetLastLeaderboardImportTimestampQuery(_currentMix));
+        _usernames = (await Mediator.Send(new GetOfficialLeaderboardUsernamesQuery(_currentMix))).ToArray();
+        _charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToDictionary(c => c.Id);
 
     }
 }

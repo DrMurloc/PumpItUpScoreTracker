@@ -14,5 +14,7 @@ public interface IPlayerStatsRepository
     Task<IEnumerable<Guid>> GetPlayersByCompetitiveRange(MixEnum mix, ChartType? chartType, double competitiveLevel,
         double range, CancellationToken cancellationToken);
 
+    Task<IEnumerable<Guid>> GetUserIdsWithStats(MixEnum mix, CancellationToken cancellationToken);
+
     Task DeleteStats(MixEnum mix, Guid userId, CancellationToken cancellationToken);
 }

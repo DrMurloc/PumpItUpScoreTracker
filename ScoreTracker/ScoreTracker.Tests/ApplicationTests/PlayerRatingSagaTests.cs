@@ -11,6 +11,7 @@ using ScoreTracker.Identity.Contracts.Events;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Application;
 using ScoreTracker.PlayerProgress.Contracts.Commands;
+using ScoreTracker.PlayerProgress.Contracts.Messages;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
@@ -388,6 +389,179 @@ public sealed class PlayerRatingSagaTests
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact]
+    public async Task Phoenix2SessionsMintSinglesAndDoublesPumbilityMilestones()
+    {
+        // P2's title ladder gates on the per-type pools, so pool gains are milestones
+        // there — alongside the total PUMBILITY gain.
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var dbl = new ChartBuilder().WithType(ChartType.Double).WithLevel(22).Build();
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix2, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        var milestones = new Mock<IPlayerMilestoneRepository>();
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { single, dbl }, MixEnum.Phoenix2),
+            scores: ScoresMockReturning(userId, new[] { Score(single.Id, 950000), Score(dbl.Id, 960000) },
+                MixEnum.Phoenix2),
+            stats: stats, milestones: milestones);
+
+        await saga.Handle(new RecalculateStatsCommand(userId, MixEnum.Phoenix2, new[] { single.Id, dbl.Id },
+            sessionId), CancellationToken.None);
+
+        milestones.Verify(m => m.Append(MixEnum.Phoenix2, userId,
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w =>
+                w.Any(x => x.Kind == MilestoneKind.PumbilityGain && x.SessionId == sessionId)
+                && w.Any(x => x.Kind == MilestoneKind.SinglesPumbilityGain)
+                && w.Any(x => x.Kind == MilestoneKind.DoublesPumbilityGain)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task PhoenixSessionsNeverMintPerTypePumbilityMilestones()
+    {
+        // Phoenix stays total-only: its S/D ratings exist too, but pre-P2 sessions never
+        // minted them and shouldn't start now.
+        var userId = Guid.NewGuid();
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        var milestones = new Mock<IPlayerMilestoneRepository>();
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { single }),
+            scores: ScoresMockReturning(userId, new[] { Score(single.Id, 950000) }),
+            stats: stats, milestones: milestones);
+
+        await saga.Handle(new RecalculateStatsCommand(userId, MixEnum.Phoenix, new[] { single.Id },
+            Guid.NewGuid()), CancellationToken.None);
+
+        milestones.Verify(m => m.Append(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w =>
+                w.Any(x => x.Kind == MilestoneKind.SinglesPumbilityGain
+                           || x.Kind == MilestoneKind.DoublesPumbilityGain)),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Phoenix2SkillRatingIsTheSumOfTheSinglesAndDoublesTop50Pools()
+    {
+        // Phoenix 2's official PUMBILITY: two independent top-50 pools summed, each chart
+        // worth Base(level) x (grade + plate) — additive. All four charts carry the SG
+        // plate (+0.008) from the Score helper.
+        var userId = Guid.NewGuid();
+        var s1 = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build(); // 995k SSS+ -> 230x1.508
+        var s2 = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build(); // 970k S    -> 235x1.458
+        var d1 = new ChartBuilder().WithType(ChartType.Double).WithLevel(24).Build(); // 950k AAA  -> 250x1.418
+        var d2 = new ChartBuilder().WithType(ChartType.Double).WithLevel(23).Build(); // 925k AA+  -> 245x1.398
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix2, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { s1, s2, d1, d2 }, MixEnum.Phoenix2),
+            scores: ScoresMockReturning(userId, new[]
+            {
+                Score(s1.Id, 995000), Score(s2.Id, 970000),
+                Score(d1.Id, 950000), Score(d2.Id, 925000)
+            }, MixEnum.Phoenix2),
+            stats: stats);
+
+        await saga.Handle(new RecalculateStatsCommand(userId, MixEnum.Phoenix2), CancellationToken.None);
+
+        // Singles pool: 346.84 + 342.63 = 689.47 -> 689; Doubles pool: 354.5 + 342.51 = 697.01 -> 697.
+        stats.Verify(s => s.SaveStats(MixEnum.Phoenix2, userId,
+            It.Is<PlayerStatsRecord>(p => p.SinglesRating == 689 && p.DoublesRating == 697
+                                          && p.SkillRating == 689 + 697),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Phoenix2BrokenPlaysNeverEnterThePools()
+    {
+        // A broken 995k would top the singles pool if counted; Phoenix 2 excludes it, so
+        // the pool is only the clean 900k AA (230 x 1.378 = 316.94 -> 316).
+        var userId = Guid.NewGuid();
+        var broken = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var clean = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix2, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { broken, clean }, MixEnum.Phoenix2),
+            scores: ScoresMockReturning(userId, new[]
+            {
+                Score(broken.Id, 995000, isBroken: true),
+                Score(clean.Id, 900000)
+            }, MixEnum.Phoenix2),
+            stats: stats);
+
+        await saga.Handle(new RecalculateStatsCommand(userId, MixEnum.Phoenix2), CancellationToken.None);
+
+        stats.Verify(s => s.SaveStats(MixEnum.Phoenix2, userId,
+            It.Is<PlayerStatsRecord>(p => p.SinglesRating == 316 && p.SkillRating == 316
+                                          && p.DoublesRating == 0),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Phoenix2Top50OrdersByPlateWhenScoresTie()
+    {
+        // Same chart level, same score — the better plate outranks on Phoenix 2 (plates
+        // are priced into the formula there, unlike Phoenix).
+        var userId = Guid.NewGuid();
+        var rough = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ultimate = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { rough, ultimate }, MixEnum.Phoenix2),
+            scores: ScoresMockReturning(userId, new[]
+            {
+                Score(rough.Id, 970000, plate: PhoenixPlate.RoughGame),
+                Score(ultimate.Id, 970000, plate: PhoenixPlate.UltimateGame)
+            }, MixEnum.Phoenix2));
+
+        var result = (await saga.Handle(
+            new GetTop50ForPlayerQuery(userId, ChartType: null, Mix: MixEnum.Phoenix2),
+            CancellationToken.None)).ToArray();
+
+        Assert.Equal(ultimate.Id, result[0].ChartId);
+        Assert.Equal(rough.Id, result[1].ChartId);
+    }
+
+    [Fact]
+    public async Task RecalculateMixRatingsSweepsEveryPlayerOfTheMix()
+    {
+        // The formula-adjustment exit path: every user with stats for the mix goes
+        // through both the stats and the per-chart PUMBILITY recalculations.
+        var user1 = Guid.NewGuid();
+        var user2 = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetUserIdsWithStats(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { user1, user2 });
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix2, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(user1));
+        var scores = ScoresMockReturning(user1, new[] { Score(chart.Id, 950000) }, MixEnum.Phoenix2);
+        scores.Setup(s => s.GetPlayerScores(MixEnum.Phoenix2, It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<UserPhoenixScore>());
+        var recordStats = new Mock<IPhoenixRecordStatsRepository>();
+        var saga = BuildSaga(charts: ChartsMockReturning(new[] { chart }, MixEnum.Phoenix2),
+            scores: scores, stats: stats, recordStats: recordStats);
+
+        await saga.Consume(BuildContext(new RecalculateMixRatingsCommand(MixEnum.Phoenix2)));
+
+        stats.Verify(s => s.SaveStats(MixEnum.Phoenix2, user1, It.IsAny<PlayerStatsRecord>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+        stats.Verify(s => s.SaveStats(MixEnum.Phoenix2, user2, It.IsAny<PlayerStatsRecord>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+        recordStats.Verify(s => s.UpdateScoreStats(MixEnum.Phoenix2, user1,
+            It.IsAny<IEnumerable<PhoenixRecordStats>>(), It.IsAny<CancellationToken>()), Times.Once);
+        recordStats.Verify(s => s.UpdateScoreStats(MixEnum.Phoenix2, user2,
+            It.IsAny<IEnumerable<PhoenixRecordStats>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private static PlayerRatingSaga BuildSaga(
         Mock<IScoreReader>? scores = null,
         Mock<IChartRepository>? charts = null,
@@ -410,27 +584,29 @@ public sealed class PlayerRatingSagaTests
             highlights.Object, milestones.Object, FakeDateTime.At(Now).Object, bus.Object, mediator.Object);
     }
 
-    private static Mock<IChartRepository> ChartsMockReturning(IEnumerable<Chart> result)
+    private static Mock<IChartRepository> ChartsMockReturning(IEnumerable<Chart> result,
+        MixEnum mix = MixEnum.Phoenix)
     {
         var m = new Mock<IChartRepository>();
-        m.Setup(c => c.GetCharts(MixEnum.Phoenix, It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
+        m.Setup(c => c.GetCharts(mix, It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
         return m;
     }
 
     private static Mock<IScoreReader> ScoresMockReturning(Guid userId,
-        IEnumerable<RecordedPhoenixScore> result)
+        IEnumerable<RecordedPhoenixScore> result, MixEnum mix = MixEnum.Phoenix)
     {
         var m = new Mock<IScoreReader>();
-        m.Setup(s => s.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>())).ReturnsAsync(result);
-        m.Setup(s => s.GetBestScores(MixEnum.Phoenix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+        m.Setup(s => s.GetBestScores(mix, userId, It.IsAny<CancellationToken>())).ReturnsAsync(result);
+        m.Setup(s => s.GetBestScores(mix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
         return m;
     }
 
-    private static RecordedPhoenixScore Score(Guid chartId, int score, bool isBroken = false) =>
-        new(chartId, score, PhoenixPlate.SuperbGame, isBroken,
+    private static RecordedPhoenixScore Score(Guid chartId, int score, bool isBroken = false,
+        PhoenixPlate plate = PhoenixPlate.SuperbGame) =>
+        new(chartId, score, plate, isBroken,
             new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
 
     private static PlayerStatsRecord ZeroStats(Guid userId) =>

@@ -27,10 +27,11 @@ internal sealed class WorldRankingService : IWorldRankingService
 
     public async Task CalculateWorldRankings(MixEnum mix, CancellationToken cancellationToken)
     {
-        var scoringConfig = ScoringConfiguration.PumbilityScoring(false);
+        var scoringConfig = ScoringConfiguration.PumbilityScoring(mix, false);
 
-        var entries = (await _leaderboards.GetOfficialLeaderboardUsernames("Chart", cancellationToken)).ToArray();
-        await _leaderboards.DeleteWorldRankings(cancellationToken);
+        var entries = (await _leaderboards.GetOfficialLeaderboardUsernames(mix, "Chart", cancellationToken))
+            .ToArray();
+        await _leaderboards.DeleteWorldRankings(mix, cancellationToken);
         var max = entries.Count();
         var current = 1;
         foreach (var username in entries)
@@ -38,7 +39,7 @@ internal sealed class WorldRankingService : IWorldRankingService
             _logger.LogInformation($"User {current++}/{max}");
             foreach (var type in new[] { "Singles", "Doubles", "All" })
             {
-                var statuses = (await _leaderboards.GetOfficialLeaderboardStatuses(username, cancellationToken))
+                var statuses = (await _leaderboards.GetOfficialLeaderboardStatuses(mix, username, cancellationToken))
                     .Where(l => l.OfficialLeaderboardType == "Chart" && !l.LeaderboardName.Contains("CoOp"))
                     .Select(l => (l.Score, DifficultyLevel.ParseShortHand(l.LeaderboardName.Split(" ")[^1])))
                     .ToArray();
@@ -96,16 +97,17 @@ internal sealed class WorldRankingService : IWorldRankingService
         }
     }
 
-    public async Task<IEnumerable<RecordedPhoenixScore>> GetAll(Name username, CancellationToken cancellationToken)
+    public async Task<IEnumerable<RecordedPhoenixScore>> GetAll(MixEnum mix, Name username,
+        CancellationToken cancellationToken)
     {
         var result = new List<RecordedPhoenixScore>();
-        foreach (var record in (await _leaderboards.GetOfficialLeaderboardStatuses(username, cancellationToken))
+        foreach (var record in (await _leaderboards.GetOfficialLeaderboardStatuses(mix, username, cancellationToken))
                  .Where(l => l.OfficialLeaderboardType == "Chart" && !l.LeaderboardName.Contains("CoOp"))
                  .Select(l => (l.Score, DifficultyLevel.ParseShortHand(l.LeaderboardName.Split(" ")[^1]),
                      l.LeaderboardName)))
         {
             var songName = string.Join(" ", record.LeaderboardName.Split(" ").Reverse().Skip(1).Reverse());
-            var charts = await _charts.GetChartsForSong(MixEnum.Phoenix, songName, cancellationToken);
+            var charts = await _charts.GetChartsForSong(mix, songName, cancellationToken);
             var chart = charts
                 .FirstOrDefault(c => c.Type == record.Item2.chartType && c.Level == record.Item2.level);
             if (chart != null)
@@ -115,12 +117,12 @@ internal sealed class WorldRankingService : IWorldRankingService
         return result;
     }
 
-    public async Task<IEnumerable<RecordedPhoenixScore>> GetTop50(Name username, string type,
+    public async Task<IEnumerable<RecordedPhoenixScore>> GetTop50(MixEnum mix, Name username, string type,
         CancellationToken cancellationToken)
     {
-        var scoringConfig = ScoringConfiguration.PumbilityScoring(false);
+        var scoringConfig = ScoringConfiguration.PumbilityScoring(mix, false);
         var result = new List<RecordedPhoenixScore>();
-        foreach (var record in (await _leaderboards.GetOfficialLeaderboardStatuses(username, cancellationToken))
+        foreach (var record in (await _leaderboards.GetOfficialLeaderboardStatuses(mix, username, cancellationToken))
                  .Where(l => l.OfficialLeaderboardType == "Chart" && !l.LeaderboardName.Contains("CoOp"))
                  .Select(l => (l.Score, DifficultyLevel.ParseShortHand(l.LeaderboardName.Split(" ")[^1]),
                      l.LeaderboardName))
@@ -130,7 +132,7 @@ internal sealed class WorldRankingService : IWorldRankingService
                  .Take(50))
         {
             var songName = string.Join(" ", record.LeaderboardName.Split(" ").Reverse().Skip(1).Reverse());
-            var charts = await _charts.GetChartsForSong(MixEnum.Phoenix, songName, cancellationToken);
+            var charts = await _charts.GetChartsForSong(mix, songName, cancellationToken);
             var chart = charts
                 .FirstOrDefault(c => c.Type == record.Item2.chartType && c.Level == record.Item2.level);
             if (chart != null)

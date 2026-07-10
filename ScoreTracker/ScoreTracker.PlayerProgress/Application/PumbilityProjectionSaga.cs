@@ -39,7 +39,11 @@ namespace ScoreTracker.PlayerProgress.Application
             var topScores = (await _mediator.Send(
                     new GetTop50ForPlayerQuery(request.UserId, null, 100, mix), cancellationToken))
                 .ToDictionary(s => s.ChartId);
-            var scoring = ScoringConfiguration.PumbilityScoring(false);
+            // TODO(P2-pumbility): projections still model ONE mixed top-50 pool. Phoenix 2
+            // uses two independent pools (S+D), so its gain baseline ("lowest of top 50")
+            // should be per-pool. The page is disabled on Phoenix 2; proper two-pool
+            // projection lands with the What-Should-I-Play overhaul.
+            var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
             var ratings = topScores.ToDictionary(kv => kv.Key,
                 kv => (int)scoring.GetScore(charts[kv.Key], kv.Value.Score!.Value,
                     kv.Value.Plate ?? PhoenixPlate.RoughGame, kv.Value.IsBroken));

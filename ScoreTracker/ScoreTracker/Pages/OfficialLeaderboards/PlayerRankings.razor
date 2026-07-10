@@ -14,17 +14,16 @@
 @using ScoreTracker.Web.Pages.OfficialLeaderboards
 @using ScoreTracker.Web.Services.Contracts
 <PageTitle>Official Leaderboard Search</PageTitle>
+<MudText>Users ranked based on their top 50 best charts on the Official Leaderboards. You must be in the top 100 of a 20+ chart to show up on this list.</MudText>
+<br/>
 @if (_currentMix == MixEnum.Phoenix2)
 {
-    @* Locked decision (docs/design/phoenix2-implementation.md): the Phoenix 2 mirror /
-       world rankings are deferred (the P2 site replaced per-level boards). *@
-    <ComingSoon Message="@L["Phoenix 2 official leaderboards are coming soon."].Value"></ComingSoon>
+    <MudText>@L["Rankings use the official Phoenix 2 PUMBILITY formula."]</MudText>
 }
 else
 {
-<MudText>Users ranked based on their top 50 best charts on the Official Leaderboards. You must be in the top 100 of a 20+ chart to show up on this list.</MudText>
-<br/>
-<MudText>Note this uses a slightly different rating calculation, it provides partial points between letter grades (I.E halfway between an AA and a AA+ will give 1.025x instead of 1x rating)</MudText>
+    <MudText>Note this uses a slightly different rating calculation, it provides partial points between letter grades (I.E halfway between an AA and a AA+ will give 1.025x instead of 1x rating)</MudText>
+}
 <br />
 <MudText>@L["Last Updated"] - @(_lastImported?.ToLocalTime().ToString() ?? "—")</MudText>
 <br />
@@ -213,7 +212,6 @@ else
         }
     </MudGrid>
 }
-}
 
 
 @inject IMediator Mediator;
@@ -252,8 +250,8 @@ else
             _showingUsername = string.Empty;
             return;
         }
-        var scoringConfig = ScoringConfiguration.PumbilityScoring(false);
-        _scores = (await Mediator.Send(new GetWorldRankingTop50Query(username, _currentType)))
+        var scoringConfig = ScoringConfiguration.PumbilityScoring(_currentMix, false);
+        _scores = (await Mediator.Send(new GetWorldRankingTop50Query(username, _currentType, _currentMix)))
             .Select(r => new ScoreEntry(_charts[r.ChartId], r.Score!.Value, (int)scoringConfig.GetScore(_charts[r.ChartId].Level, r.Score!.Value)))
             .ToArray();
         _showingUsername = username;
@@ -280,20 +278,16 @@ else
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();
-        if (_currentMix == MixEnum.Phoenix2)
-        {
-            // Coming-soon state — the mirror only has Phoenix data.
-            return;
-        }
-        _lastImported = await Mediator.Send(new GetLastLeaderboardImportTimestampQuery());
+        if (_currentMix == MixEnum.XX) _currentMix = MixEnum.Phoenix;
+        _lastImported = await Mediator.Send(new GetLastLeaderboardImportTimestampQuery(_currentMix));
         _userAvatars = (await Mediator.Send(new GetUserAvatarsQuery())).ToDictionary(au => au.Username, au => au.AvatarPath, StringComparer.OrdinalIgnoreCase);
 
-        var records = (await Mediator.Send(new GetAllWorldRankingsQuery())).ToArray();
+        var records = (await Mediator.Send(new GetAllWorldRankingsQuery(_currentMix))).ToArray();
         _usernames = records.Select(r => r.Username.ToString()).Distinct().ToArray();
         _records = records.GroupBy(l => l.Type)
             .ToDictionary(l => l.Key, g => g.OrderByDescending(e => e.TotalRating).Select((e, i) => new TableEntry(i + 1, e)).ToArray());
 
-        _charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
+        _charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToDictionary(c => c.Id);
         _userAvatars = (await Mediator.Send(new GetUserAvatarsQuery())).ToDictionary(au => au.Username, au => au.AvatarPath, StringComparer.OrdinalIgnoreCase);
         var avatars = await Mediator.Send(new GetUserAvatarsQuery());
         _counts = avatars

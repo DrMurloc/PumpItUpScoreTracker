@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -384,6 +385,138 @@ public sealed class PiuGameApiTests
         Assert.False(result.RequiresLogin);
     }
 
+    [Theory]
+    [InlineData("en-US")]
+    [InlineData("pt-BR")]
+    [InlineData("fr-FR")]
+    [InlineData("it-IT")]
+    public async Task GetPumbilityRankingsParsesEntriesAcrossCultures(string cultureName)
+    {
+        // PUMBILITY values render as "17,418<span>.45</span>" — "," thousands, "." decimals,
+        // whatever the request thread's culture says. Same latent bug class as the pt-BR
+        // recent-scores incident; pinned invariant from day one.
+        var previousCulture = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cultureName);
+        try
+        {
+            var html = await File.ReadAllTextAsync(
+                Path.Combine(FixtureRoot, "GetPumbilityRankings_Phoenix2.html"));
+            var api = BuildApi(html);
+
+            var result = await api.GetPumbilityRankings(MixEnum.Phoenix2, null, 1, HttpClientReturning(html),
+                CancellationToken.None);
+
+            Assert.Equal(2, result.Entries.Length);
+            Assert.Equal("BYEOL#3627", result.Entries[0].ProfileName);
+            Assert.Equal("BEGINNER", result.Entries[0].Title);
+            Assert.Equal(17418.45, result.Entries[0].Pumbility, 2);
+            Assert.Equal(
+                new Uri(
+                    "https://piugame.com/data/avatar_img2/33ecd96b847c0f8433ca999e63ba6c75.png?v=20260701144004"),
+                result.Entries[0].AvatarUrl);
+            Assert.Equal("JYUNG#5351", result.Entries[1].ProfileName);
+            Assert.Equal("[S] ADVANCED LV.3", result.Entries[1].Title);
+            Assert.Equal(16032.26, result.Entries[1].Pumbility, 2);
+            // The viewer's own "MY RANKING DATA" block reuses the ranking markup — the
+            // service account must never leak into results.
+            Assert.DoesNotContain(result.Entries, e => e.ProfileName.StartsWith("DRMURLOC"));
+            Assert.False(result.IsEnd);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+        }
+    }
+
+    [Fact]
+    public async Task GetPumbilityRankingsReportsTheLastPage()
+    {
+        // Same fixture minus the pagination icons = the board's final page.
+        var html = (await File.ReadAllTextAsync(
+                Path.Combine(FixtureRoot, "GetPumbilityRankings_Phoenix2.html")))
+            .Replace(@"<i class=""xi next""></i>", "")
+            .Replace(@"<i class=""xi last""></i>", "");
+        var api = BuildApi(html);
+
+        var result = await api.GetPumbilityRankings(MixEnum.Phoenix2, null, 1, HttpClientReturning(html),
+            CancellationToken.None);
+
+        Assert.True(result.IsEnd);
+        Assert.Equal(2, result.Entries.Length);
+    }
+
+    [Theory]
+    [InlineData(null, "t=&")]
+    [InlineData(ChartType.Single, "t=s&")]
+    [InlineData(ChartType.Double, "t=d&")]
+    public async Task GetPumbilityRankingsRequestsTheRightTab(ChartType? chartType, string expectedQuery)
+    {
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetPumbilityRankings_Phoenix2.html"));
+        var api = BuildApi(html);
+        var (client, requests) = CapturingHttpClientReturning(html);
+
+        await api.GetPumbilityRankings(MixEnum.Phoenix2, chartType, 3, client, CancellationToken.None);
+
+        var request = Assert.Single(requests);
+        Assert.Contains("/leaderboard/pumbility_ranking.php", request.ToString());
+        Assert.Contains(expectedQuery, request.Query);
+        Assert.Contains("page=3", request.Query);
+    }
+
+    [Fact]
+    public async Task GetPumbilityRankingsRejectsTabsTheBoardDoesNotHave()
+    {
+        var api = BuildApi("<html></html>");
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            api.GetPumbilityRankings(MixEnum.Phoenix2, ChartType.CoOp, 1, HttpClientReturning("<html></html>"),
+                CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task GetSongLeaderboardParsesThePhoenix2AvatarHost()
+    {
+        // Phoenix 2 serves avatars from /data/avatar_img2/ (Phoenix uses /avatar_img/) —
+        // the recurring avatar-import bug is narrowing the regex to one variant, which
+        // silently drops EVERY leaderboard row (the avatar Uri throw hits the per-row
+        // catch). This fixture pins the Phoenix 2 shape; the HappyPath fixture pins
+        // Phoenix. Break either and this suite goes red, not production imports.
+        var html = await File.ReadAllTextAsync(
+            Path.Combine(FixtureRoot, "GetSongLeaderboard_Phoenix2Host.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetSongLeaderboard(MixEnum.Phoenix2, songId: "any", CancellationToken.None);
+
+        Assert.Equal(2, result.Results.Length);
+        Assert.Equal("SUNNY#5412", result.Results[0].ProfileName);
+        Assert.Equal(996996, result.Results[0].Score);
+        Assert.Equal(
+            new Uri("https://piugame.com/data/avatar_img2/6ed01094850e66d34aa4831f567363d4.png?v=20260701144004"),
+            result.Results[0].AvatarUrl);
+        Assert.Equal("JOA#8436", result.Results[1].ProfileName);
+        Assert.Equal(995196, result.Results[1].Score);
+    }
+
+    [Fact]
+    public async Task GetAccountDataParsesThePhoenix2AvatarHost()
+    {
+        // Same avatar_img2 pin for the account-data path: before the regex accepted the
+        // Phoenix 2 host, the profile-image Uri constructor threw and the whole PIUGAME
+        // login/import flow failed for Phoenix 2 accounts.
+        var html = await File.ReadAllTextAsync(
+            Path.Combine(FixtureRoot, "GetAccountData_Phoenix2Avatar.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetAccountData(MixEnum.Phoenix2, HttpClientReturning(html), CancellationToken.None);
+
+        Assert.Equal("DRMURLOC", (string)result.AccountName);
+        Assert.Equal(
+            new Uri("https://piugame.com/data/avatar_img2/33ecd96b847c0f8433ca999e63ba6c75.png?v=20260701144004"),
+            result.ImageUrl);
+        Assert.Contains(result.TitleEntries, t => t.Name == "BEGINNER" && t.Have && t.ColClass == "col0");
+        Assert.Contains(result.TitleEntries, t => t.Name == "EXC FOLLOWER" && !t.Have && t.ColClass == "col1");
+    }
+
     private static PiuGameApi BuildApi(string responseHtml)
     {
         return new PiuGameApi(
@@ -405,5 +538,21 @@ public sealed class PiuGameApiTests
                 Content = new StringContent(html, Encoding.UTF8, "text/html")
             });
         return new HttpClient(handler.Object);
+    }
+
+    private static (HttpClient Client, List<Uri> Requests) CapturingHttpClientReturning(string html)
+    {
+        var requests = new List<Uri>();
+        var handler = new Mock<HttpMessageHandler>();
+        handler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+            .Callback<HttpRequestMessage, CancellationToken>((req, _) => requests.Add(req.RequestUri!))
+            .ReturnsAsync(() => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(html, Encoding.UTF8, "text/html")
+            });
+        return (new HttpClient(handler.Object), requests);
     }
 }
