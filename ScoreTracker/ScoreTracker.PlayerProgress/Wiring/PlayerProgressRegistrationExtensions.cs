@@ -28,6 +28,8 @@ public static class PlayerProgressRegistrationExtensions
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddTransient<IScoreHighlightRepository, EFScoreHighlightRepository>();
         services.AddTransient<IPlayerMilestoneRepository, EFPlayerMilestoneRepository>();
+        services.AddTransient<IPlayerSeasonRecapRepository, EFPlayerSeasonRecapRepository>();
+        services.AddTransient<CohortScoreProvider>();
         services.AddSingleton<IDbModelContribution, PlayerProgressModelContribution>();
         return services;
     }
@@ -51,5 +53,7 @@ public static class PlayerProgressRegistrationExtensions
         // registration drops, stats, Pumbility, titles, AND the Discord cards all
         // silently stop updating after score imports.
         configurator.AddConsumer<HighlightCaptureSaga>();
+        // Season recaps: admin-triggered, one user or the full sweep.
+        configurator.AddConsumer<RecapSaga>();
     }
 }

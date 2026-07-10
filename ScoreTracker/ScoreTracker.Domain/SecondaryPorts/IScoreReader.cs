@@ -59,6 +59,17 @@ public interface IScoreReader
     Task<IReadOnlySet<Guid>> GetActiveUserIds(MixEnum mix, DateTimeOffset since,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    ///     Distinct calendar days with any journaled score event for the player in a mix.
+    ///     The 2026-06 backfill dated rows at each record's last update, so this spans the
+    ///     whole mix era as a lower bound on real play days.
+    /// </summary>
+    Task<int> GetPlayDayCount(MixEnum mix, Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>Per-chart population counts for a mix: players with a scored record, and how many passed.</summary>
+    Task<IEnumerable<ChartScoreAggregate>> GetChartScoreAggregates(MixEnum mix,
+        CancellationToken cancellationToken = default);
+
     /// <summary>A player's best XX (legacy mix) attempt per chart. XX records are Ledger-owned too.</summary>
     Task<IEnumerable<BestXXChartAttempt>> GetBestXXAttempts(Guid userId,
         CancellationToken cancellationToken = default);

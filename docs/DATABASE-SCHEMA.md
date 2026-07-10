@@ -44,6 +44,7 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.SuggestionFeedback` | User feedback on chart recommendations |
 | `scores.ScoreHighlight` | Write-time noteworthy-score flags per journal row (crown, title progress, Score Quality ≥90th, folder ≥90%, competitive improver, folder debut), denormalized Level/ScoringLevel for noteworthy ordering plus per-flag caption detail (PumbilityRank, FolderDebutOrdinal, Peer{Count,BetterCount,PgCount}, SkillTitle{Name,Score,Threshold}); joined to the journal by (SessionId, ChartId). Never backfilled |
 | `scores.PlayerMilestone` | Session-level milestones with timestamps: Pumbility gains, Singles/Doubles competitive gains, title completions, paragon gains, folder lamps (Kind + compact Detail payload). Never backfilled |
+| `scores.PlayerSeasonRecap` | Computed season-recap payload per user+mix (PK UserId+MixId): JSON `PlayerRecap` contract + SchemaVersion + ComputedAt. Written whole by the recap saga (admin-triggered), read whole by the recap page; older-schema rows read as "not computed yet" |
 
 ## Chart Intelligence (vertical: `ScoreTracker.ChartIntelligence`)
 

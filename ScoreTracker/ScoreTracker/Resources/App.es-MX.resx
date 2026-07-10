@@ -2250,4 +2250,289 @@
   <data name="Rankings use the official Phoenix 2 PUMBILITY formula." xml:space="preserve">
     <value>Las clasificaciones usan la fórmula oficial de PUMBILITY de Phoenix 2.</value>
   </data>
+  <data name="Compute My Season Recap" xml:space="preserve">
+    <value>Calcular mi resumen de temporada</value>
+  </data>
+  <data name="Compute All Season Recaps" xml:space="preserve">
+    <value>Calcular los resumenes de temporada de todos</value>
+  </data>
+  <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
+    <value>Este resumen aún no se ha calculado — vuelve pronto.</value>
+  </data>
+  <data name="Your Phoenix Story" xml:space="preserve">
+    <value>Tu historia Phoenix</value>
+  </data>
+  <data name="PIUScores presents" xml:space="preserve">
+    <value>PIUScores presenta</value>
+  </data>
+  <data name="{0} charts passed" xml:space="preserve">
+    <value>{0} charts pasados</value>
+  </data>
+  <data name="Step on" xml:space="preserve">
+    <value>Adelante</value>
+  </data>
+  <data name="The arc" xml:space="preserve">
+    <value>El arco</value>
+  </data>
+  <data name="You walked in a {0}. You&apos;re walking out a {1}." xml:space="preserve">
+    <value>Entraste siendo un {0}. Sales siendo un {1}.</value>
+  </data>
+  <data name="The grind" xml:space="preserve">
+    <value>El esfuerzo</value>
+  </data>
+  <data name="days on the pad" xml:space="preserve">
+    <value>días en la máquina</value>
+  </data>
+  <data name="arrows stepped, best scores only" xml:space="preserve">
+    <value>flechas pisadas, solo mejores puntajes</value>
+  </data>
+  <data name="of charts recorded" xml:space="preserve">
+    <value>de charts registrados</value>
+  </data>
+  <data name="competitive singles, all PIUScores players" xml:space="preserve">
+    <value>singles competitivo, entre todos en PIUScores</value>
+  </data>
+  <data name="competitive doubles, all PIUScores players" xml:space="preserve">
+    <value>doubles competitivo, entre todos en PIUScores</value>
+  </data>
+  <data name="total charts passed" xml:space="preserve">
+    <value>charts superados en total</value>
+  </data>
+  <data name="Your step artists" xml:space="preserve">
+    <value>Tus step artists</value>
+  </data>
+  <data name="{0} charts" xml:space="preserve">
+    <value>{0} charts</value>
+  </data>
+  <data name="Some step artists are mislabeled in the wild — we report what the community knows." xml:space="preserve">
+    <value>Algunos step artists están mal etiquetados — mostramos lo que la comunidad sabe.</value>
+  </data>
+  <data name="Your play style" xml:space="preserve">
+    <value>Tu estilo de juego</value>
+  </data>
+  <data name="Top-50 average score {0} — {1}" xml:space="preserve">
+    <value>Puntaje promedio del top 50: {0} — {1}</value>
+  </data>
+  <data name="Earned, not given" xml:space="preserve">
+    <value>Ganado, no regalado</value>
+  </data>
+  <data name="Badges on the jacket" xml:space="preserve">
+    <value>Insignias en la chaqueta</value>
+  </data>
+  <data name="Community rivals" xml:space="preserve">
+    <value>Rivales de tu comunidad</value>
+  </data>
+  <data name="You weren&apos;t climbing alone" xml:space="preserve">
+    <value>No subiste solo</value>
+  </data>
+  <data name="shared top-50 charts" xml:space="preserve">
+    <value>charts compartidos del top 50</value>
+  </data>
+  <data name="For the record" xml:space="preserve">
+    <value>Para el registro</value>
+  </data>
+  <data name="The ones worth framing" xml:space="preserve">
+    <value>Los que merecen un marco</value>
+  </data>
+  <data name="Perfect Games" xml:space="preserve">
+    <value>Perfect Games</value>
+  </data>
+  <data name="Scores, vs your level" xml:space="preserve">
+    <value>Puntajes, contra tu nivel</value>
+  </data>
+  <data name="Weekly charts" xml:space="preserve">
+    <value>Charts semanales</value>
+  </data>
+  <data name="weeks. No misses." xml:space="preserve">
+    <value>semanas. Sin faltar.</value>
+  </data>
+  <data name="weeks entered" xml:space="preserve">
+    <value>semanas participadas</value>
+  </data>
+  <data name="podiums in range" xml:space="preserve">
+    <value>podios en tu rango</value>
+  </data>
+  <data name="wins in range" xml:space="preserve">
+    <value>victorias en tu rango</value>
+  </data>
+  <data name="Giant Slayer moments" xml:space="preserve">
+    <value>momentos Giant Slayer</value>
+  </data>
+  <data name="of {0} in range" xml:space="preserve">
+    <value>de {0} en tu rango</value>
+  </data>
+  <data name="week of {0}" xml:space="preserve">
+    <value>semana del {0}</value>
+  </data>
+  <data name="Giants slain" xml:space="preserve">
+    <value>Gigantes derrotados</value>
+  </data>
+  <data name="outscored {0}" xml:space="preserve">
+    <value>superaste a {0}</value>
+  </data>
+  <data name="+{0} levels up" xml:space="preserve">
+    <value>+{0} niveles arriba</value>
+  </data>
+  <data name="Trophy shelf" xml:space="preserve">
+    <value>Vitrina de trofeos</value>
+  </data>
+  <data name="The cabinet" xml:space="preserve">
+    <value>La vitrina</value>
+  </data>
+  <data name="Rarest titles" xml:space="preserve">
+    <value>Títulos más raros</value>
+  </data>
+  <data name="held by {0} of titled players" xml:space="preserve">
+    <value>en manos del {0} de jugadores con títulos</value>
+  </data>
+  <data name="Plate cabinet" xml:space="preserve">
+    <value>Vitrina de placas</value>
+  </data>
+  <data name="{0} singles · {1} doubles passed" xml:space="preserve">
+    <value>{0} singles · {1} doubles superados</value>
+  </data>
+  <data name="Next season" xml:space="preserve">
+    <value>Próxima temporada</value>
+  </data>
+  <data name="See you in" xml:space="preserve">
+    <value>Nos vemos en</value>
+  </data>
+  <data name="projected Singles PUMBILITY" xml:space="preserve">
+    <value>PUMBILITY Singles proyectado</value>
+  </data>
+  <data name="projected Doubles PUMBILITY" xml:space="preserve">
+    <value>PUMBILITY Doubles proyectado</value>
+  </data>
+  <data name="projected total" xml:space="preserve">
+    <value>total proyectado</value>
+  </data>
+  <data name="Top {0}" xml:space="preserve">
+    <value>Top {0}</value>
+  </data>
+  <data name="{0} of all Phoenix titles collected" xml:space="preserve">
+    <value>{0} de todos los títulos Phoenix</value>
+  </data>
+  <data name="{0} folders at 90% or better" xml:space="preserve">
+    <value>{0} folders al 90% o más</value>
+  </data>
+  <data name="{0} of CoOp x2 charts cleared" xml:space="preserve">
+    <value>{0} de charts CoOp x2 superados</value>
+  </data>
+  <data name="{0} of every BanYa &amp; YAHPP chart passed" xml:space="preserve">
+    <value>{0} de todos los charts de BanYa y YAHPP</value>
+  </data>
+  <data name="SSS+ on Uh-Heung S22." xml:space="preserve">
+    <value>SSS+ en Uh-Heung S22.</value>
+  </data>
+  <data name="More than 75% of S24+ passed at AA+ or lower." xml:space="preserve">
+    <value>Más del 75% de S24+ superados con AA+ o menos.</value>
+  </data>
+  <data name="Passed a D28." xml:space="preserve">
+    <value>Superó un D28.</value>
+  </data>
+  <data name="Underrated" xml:space="preserve">
+    <value>Subestimado</value>
+  </data>
+  <data name="Pass Pusher" xml:space="preserve">
+    <value>Pass Pusher</value>
+  </data>
+  <data name="Pass Refiner" xml:space="preserve">
+    <value>Pass Refiner</value>
+  </data>
+  <data name="Balanced Player" xml:space="preserve">
+    <value>Balanced Player</value>
+  </data>
+  <data name="Perfectionist" xml:space="preserve">
+    <value>Perfectionist</value>
+  </data>
+  <data name="Title Hunter" xml:space="preserve">
+    <value>Title Hunter</value>
+  </data>
+  <data name="Title Collector" xml:space="preserve">
+    <value>Title Collector</value>
+  </data>
+  <data name="Title Master" xml:space="preserve">
+    <value>Title Master</value>
+  </data>
+  <data name="Seriously, Leave Some Titles for the Rest of Us" xml:space="preserve">
+    <value>Seriously, Leave Some Titles for the Rest of Us</value>
+  </data>
+  <data name="Special Snowflake" xml:space="preserve">
+    <value>Special Snowflake</value>
+  </data>
+  <data name="Completionist" xml:space="preserve">
+    <value>Completionist</value>
+  </data>
+  <data name="Completionist Plus" xml:space="preserve">
+    <value>Completionist Plus</value>
+  </data>
+  <data name="Completionist Supreme" xml:space="preserve">
+    <value>Completionist Supreme</value>
+  </data>
+  <data name="Completionist Ultra" xml:space="preserve">
+    <value>Completionist Ultra</value>
+  </data>
+  <data name="You Know Pump It Up Doesn&apos;t Do Lamps, Right?" xml:space="preserve">
+    <value>You Know Pump It Up Doesn&apos;t Do Lamps, Right?</value>
+  </data>
+  <data name="Socialite" xml:space="preserve">
+    <value>Socialite</value>
+  </data>
+  <data name="Clearly Has Friends" xml:space="preserve">
+    <value>Clearly Has Friends</value>
+  </data>
+  <data name="Friendship is Magic" xml:space="preserve">
+    <value>Friendship is Magic</value>
+  </data>
+  <data name="I Hope You Held Hands on Canon D" xml:space="preserve">
+    <value>I Hope You Held Hands on Canon D</value>
+  </data>
+  <data name="BanYa Lover" xml:space="preserve">
+    <value>BanYa Lover</value>
+  </data>
+  <data name="Big Feet or Injured Back?" xml:space="preserve">
+    <value>Big Feet or Injured Back?</value>
+  </data>
+  <data name="Now You Can Play the Game" xml:space="preserve">
+    <value>Now You Can Play the Game</value>
+  </data>
+  <data name="My Recap" xml:space="preserve">
+    <value>Mi resumen</value>
+  </data>
+  <data name="Your Phoenix Story is ready" xml:space="preserve">
+    <value>Tu historia Phoenix está lista</value>
+  </data>
+  <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
+    <value>Tres años y medio de Pump, un solo resumen. Ve a ver el tuyo — y toma capturas de lo mejor.</value>
+  </data>
+  <data name="Highest title" xml:space="preserve">
+    <value>Título más alto</value>
+  </data>
+  <data name="reached by {0} players" xml:space="preserve">
+    <value>alcanzado por {0} jugadores</value>
+  </data>
+  <data name="Grade breakdown" xml:space="preserve">
+    <value>Distribución de grados</value>
+  </data>
+  <data name="Welcome to PIUScores" xml:space="preserve">
+    <value>Bienvenido a PIUScores</value>
+  </data>
+  <data name="Your Phoenix story starts here — {0} charts already on the books." xml:space="preserve">
+    <value>Tu historia Phoenix empieza aquí — {0} charts ya registrados.</value>
+  </data>
+  <data name="arrows stepped" xml:space="preserve">
+    <value>flechas pisadas</value>
+  </data>
+  <data name="Rarest passes" xml:space="preserve">
+    <value>Passes más raros</value>
+  </data>
+  <data name="only {0} pass it" xml:space="preserve">
+    <value>solo el {0} lo pasa</value>
+  </data>
+  <data name="Phoenix Recap" xml:space="preserve">
+    <value>Resumen Phoenix</value>
+  </data>
+  <data name="If your scores made the trip: {0} of your {1} passes map onto Phoenix 2 charts." xml:space="preserve">
+    <value>Si tus scores hicieran el viaje: {0} de tus {1} passes se proyectan en charts de Phoenix 2.</value>
+  </data>
 </root>

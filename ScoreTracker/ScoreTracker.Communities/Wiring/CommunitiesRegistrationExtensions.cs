@@ -4,6 +4,7 @@ using ScoreTracker.Communities.Application;
 using ScoreTracker.Communities.Domain;
 using ScoreTracker.Communities.Infrastructure;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Communities.Wiring;
 
@@ -18,6 +19,7 @@ public static class CommunitiesRegistrationExtensions
     public static IServiceCollection AddCommunities(this IServiceCollection services)
     {
         services.AddTransient<ICommunityRepository, EFCommunitiesRepository>();
+        services.AddTransient<ICommunityReader, EFCommunitiesRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddSingleton<IDbModelContribution, CommunitiesModelContribution>();
         return services;

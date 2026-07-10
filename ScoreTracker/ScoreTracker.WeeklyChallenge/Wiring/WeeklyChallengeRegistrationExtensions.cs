@@ -20,6 +20,7 @@ public static class WeeklyChallengeRegistrationExtensions
     public static IServiceCollection AddWeeklyChallenge(this IServiceCollection services)
     {
         services.AddTransient<IWeeklyTournamentRepository, EFWeeklyTourneyRepository>();
+        services.AddTransient<IWeeklyPlacingReader, EFWeeklyTourneyRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddSingleton<IDbModelContribution, WeeklyChallengeModelContribution>();
         return services;

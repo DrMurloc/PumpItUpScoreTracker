@@ -11,7 +11,7 @@ using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Communities.Infrastructure
 {
-    internal sealed class EFCommunitiesRepository : ICommunityRepository
+    internal sealed class EFCommunitiesRepository : ICommunityRepository, ICommunityReader
     {
         private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
         private readonly IPlayerStatsReader _playerStats;
@@ -143,6 +143,25 @@ namespace ScoreTracker.Communities.Infrastructure
                 }).ToArrayAsync(cancellationToken)).Select(g =>
                 new CommunityOverviewRecord(g.Name, Enum.Parse<CommunityPrivacyType>(g.PrivacyType),
                     g.Count, g.IsRegional));
+        }
+
+        // ICommunityReader (the published port): GetUserCommunities rides the same query
+        // the "my communities" page uses; GetMembers mirrors GetCommunityMembersQuery.
+        async Task<IEnumerable<CommunityOverviewRecord>> ICommunityReader.GetUserCommunities(Guid userId,
+            CancellationToken cancellationToken)
+        {
+            return await GetCommunities(userId, cancellationToken);
+        }
+
+        async Task<IEnumerable<Guid>> ICommunityReader.GetMembers(Name communityName,
+            CancellationToken cancellationToken)
+        {
+            var nameString = communityName.ToString();
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            return await (from c in database.Set<CommunityEntity>()
+                where c.Name == nameString
+                join cm in database.Set<CommunityMembershipEntity>() on c.Id equals cm.CommunityId
+                select cm.UserId).ToArrayAsync(cancellationToken);
         }
 
         public async Task<IEnumerable<CommunityOverviewRecord>> GetPublicCommunities(

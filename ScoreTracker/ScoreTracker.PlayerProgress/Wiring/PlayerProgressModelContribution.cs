@@ -22,6 +22,8 @@ public sealed class PlayerProgressModelContribution : IDbModelContribution
         modelBuilder.Entity<SuggestionFeedbackEntity>().ToTable("SuggestionFeedback");
         modelBuilder.Entity<ScoreHighlightEntity>().ToTable("ScoreHighlight");
         modelBuilder.Entity<PlayerMilestoneEntity>().ToTable("PlayerMilestone");
+        modelBuilder.Entity<PlayerSeasonRecapEntity>().ToTable("PlayerSeasonRecap");
+        modelBuilder.Entity<PlayerSeasonRecapEntity>().HasKey(e => new { e.UserId, e.MixId });
 
         // Session lookups (page deep-links, future import-results reads) skip the
         // pre-capture rows entirely.

@@ -101,6 +101,13 @@
             </MudTd>
             <MudTd>
                 <UserLabel User="_users[context.UserId]"></UserLabel>
+                @if (context.IsPublic)
+                {
+                    <MudTooltip Text="@L["Phoenix Recap"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.LocalFireDepartment"
+                                       Href=@($"/Player/{context.UserId}/PhoenixRecap")></MudIconButton>
+                    </MudTooltip>
+                }
             </MudTd>
             <MudTd>
                 @if (_currentType != LeaderboardType.Total && _currentType != LeaderboardType.CoOp)
