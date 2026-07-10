@@ -65,6 +65,7 @@ Show all earned; lead with the biggest.
 - **"Big Feet or Injured Back?"** — SSS+ (≥995,000, not broken) on **Uh-Heung S22**. Chart resolved at compute time by song name + Single + level 22 (never a hardcoded chart id). (Prod: 18 holders.)
 - **"Grand Mashter"** *(not a typo)* — more than **75%** of S24+ singles passed **at AA+ or lower** (≤949,999). Only mash-grade passes count toward the 75%; stray AAAs don't disqualify. (Prod: 16 holders. Calibrated 2026-07-09 — the original 95%-passed/hard-AAA+-cap version had no plausible holders; 36 S24+ charts exist today, so the bar is currently ≥28 mash-grade passes.)
 - **"Now You Can Play the Game"** — passed any Double level ≥28 (≥ so a D29-only pass still counts). (Prod: 5 holders.)
+- **"Dove 🕊️"** — easter egg: exact `GameTag` match `DULKI #2827`. Rendered with the emoji, not the word.
 
 ### 5. Rivals
 3 singles + 3 doubles rivals. Pool ladder (owner-confirmed): **your user-created communities → your country community → all players** (country communities are auto-joined system communities like "World", so "non-World" alone would make USA ≈ World). Candidates are within **±0.25** of your singles/doubles competitive level, **public users only**, ranked by overlap of top-50 competitive (fung) chart-id sets. (Prod: 586 users have 6+ community candidates, 208 more have ≥1, rest fall back.)
