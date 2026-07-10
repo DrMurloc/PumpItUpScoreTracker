@@ -12,6 +12,13 @@ internal static class RivalMatcher
 {
     public const double CompetitiveRange = .25;
 
+    /// <summary>
+    ///     Community mates qualify at double the range — a rival you know at 0.4 away
+    ///     beats a perfectly matched stranger (and at the top of the ladder ±0.25 is a
+    ///     handful of players worldwide).
+    /// </summary>
+    public const double CommunityCompetitiveRange = .5;
+
     internal sealed record Candidate(Guid UserId, double CompetitiveLevel, IReadOnlySet<Guid> Top50ChartIds);
 
     public static IReadOnlyList<(Candidate Candidate, int Overlap)> PickRivals(IReadOnlySet<Guid> myTop50,

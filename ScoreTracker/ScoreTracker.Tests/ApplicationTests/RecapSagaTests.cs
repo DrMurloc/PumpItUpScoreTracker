@@ -307,6 +307,54 @@ public sealed class RecapSagaTests
     }
 
     [Fact]
+    public async Task WorldNeverCountsAsAUserCommunity()
+    {
+        // Production data carries World with IsRegional = 0 — trusting the flag folds
+        // all of World into the community tier and rivals degenerate to global.
+        var worldMate = Guid.NewGuid();
+        var stranger = Guid.NewGuid();
+        var ctx = new HandlerContext(activeUsers: new[] { UserId, worldMate, stranger });
+        ctx.GivenEligiblePasses(10);
+        ctx.GivenAllStats(
+            Stats(UserId, clearCount: 100, singles: 20.0),
+            Stats(worldMate, clearCount: 90, singles: 20.1),
+            Stats(stranger, clearCount: 110, singles: 20.05));
+        ctx.GivenCommunity("World", worldMate);
+        var sharedCharts = Enumerable.Range(0, 5).Select(_ => Guid.NewGuid()).ToArray();
+        ctx.GivenTop50CompetitiveCharts(UserId, sharedCharts);
+        ctx.GivenTop50CompetitiveCharts(stranger, sharedCharts);
+        ctx.GivenTop50CompetitiveCharts(worldMate, Guid.NewGuid());
+
+        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+
+        // Both land in the global tier, so the higher overlap wins — World membership
+        // must confer no priority.
+        Assert.Equal(stranger, ctx.Saved!.Rivals!.Singles[0].UserId);
+    }
+
+    [Fact]
+    public async Task CommunityMatesQualifyAtTheWiderRange()
+    {
+        var communityFriend = Guid.NewGuid();
+        var stranger = Guid.NewGuid();
+        var ctx = new HandlerContext(activeUsers: new[] { UserId, communityFriend, stranger });
+        ctx.GivenEligiblePasses(10);
+        ctx.GivenAllStats(
+            Stats(UserId, clearCount: 100, singles: 20.0),
+            // 0.4 above me: outside the stranger range, inside the community range.
+            Stats(communityFriend, clearCount: 90, singles: 20.4),
+            Stats(stranger, clearCount: 110, singles: 20.05));
+        ctx.GivenCommunity("My Community", communityFriend);
+        ctx.GivenTop50CompetitiveCharts(UserId, Guid.NewGuid());
+        ctx.GivenTop50CompetitiveCharts(stranger, Guid.NewGuid());
+        ctx.GivenTop50CompetitiveCharts(communityFriend, Guid.NewGuid());
+
+        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+
+        Assert.Equal(communityFriend, ctx.Saved!.Rivals!.Singles[0].UserId);
+    }
+
+    [Fact]
     public async Task RarestPassesRankBySitewidePassRateWithAnAttemptFloor()
     {
         var brutal = new ChartBuilder().WithType(ChartType.Single).WithLevel(24).WithSongName("Brutal").Build();

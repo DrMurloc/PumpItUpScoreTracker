@@ -385,10 +385,11 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
         SharedInputs shared, CancellationToken cancellationToken)
     {
         var communities = (await _communities.GetUserCommunities(userId, cancellationToken)).ToArray();
-        var communityMembers = await MemberUnion(communities.Where(c => !c.IsRegional), cancellationToken);
-        // The regional system communities are World + one per country; excluding World
-        // leaves exactly the player's country community (owner call: country beats
-        // global but user-created communities beat both).
+        // World must be excluded by NAME: in production data it carries IsRegional = 0,
+        // so trusting the flag folds all 567 World members into the "your communities"
+        // tier and rivals degenerate to the global pool (2026-07-10 debugging session).
+        var communityMembers = await MemberUnion(
+            communities.Where(c => !c.IsRegional && c.CommunityName != "World"), cancellationToken);
         var countryMembers = await MemberUnion(
             communities.Where(c => c.IsRegional && c.CommunityName != "World"), cancellationToken);
 
@@ -409,22 +410,28 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
 
         var levelByUser = shared.AllStats.ToDictionary(s => s.UserId,
             s => type == ChartType.Single ? s.SinglesCompetitiveLevel : s.DoublesCompetitiveLevel);
-        var inRange = shared.AllStats
-            .Where(s => s.UserId != userId)
+        var eligible = shared.AllStats
+            .Where(s => s.UserId != userId && levelByUser[s.UserId] > 0)
             .Where(s => shared.Users.TryGetValue(s.UserId, out var u) && u.IsPublic)
-            .Where(s => Math.Abs(levelByUser[s.UserId] - myLevel) <= RivalMatcher.CompetitiveRange &&
-                        levelByUser[s.UserId] > 0)
             .Select(s => s.UserId)
             .ToArray();
 
-        // Strict priority: any in-range member of your user-created communities outranks
-        // everyone outside them; the country community and then the global pool only top
-        // up leftover slots.
+        bool InRange(Guid id, double range)
+        {
+            return Math.Abs(levelByUser[id] - myLevel) <= range;
+        }
+
+        // Strict priority: any member of your user-created communities inside the WIDER
+        // community range outranks everyone outside them; the country community and then
+        // the global pool (tight range) only top up leftover slots.
         var tiers = new[]
         {
-            inRange.Where(communityMembers.Contains).ToArray(),
-            inRange.Where(id => countryMembers.Contains(id) && !communityMembers.Contains(id)).ToArray(),
-            inRange.Where(id => !communityMembers.Contains(id) && !countryMembers.Contains(id)).ToArray()
+            eligible.Where(id => communityMembers.Contains(id) &&
+                                 InRange(id, RivalMatcher.CommunityCompetitiveRange)).ToArray(),
+            eligible.Where(id => countryMembers.Contains(id) && !communityMembers.Contains(id) &&
+                                 InRange(id, RivalMatcher.CompetitiveRange)).ToArray(),
+            eligible.Where(id => !communityMembers.Contains(id) && !countryMembers.Contains(id) &&
+                                 InRange(id, RivalMatcher.CompetitiveRange)).ToArray()
         };
 
         var myTop50 = await GetTop50Set(mix, userId, type, refresh: true, cancellationToken);
