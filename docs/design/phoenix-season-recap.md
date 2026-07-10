@@ -1,0 +1,112 @@
+# Phoenix Season Recap
+
+**Status:** decisions locked 2026-07-09 (owner + prod-data validation); awaiting "Go" for implementation.
+**Branch:** `claude/phoenix-season-recap-a0db4f`, stacked on PR #128 (`claude/phoenix2-pumbility-crawl-cf2710`) — the P2 pumbility formula, mix-keyed `PumbilityScoring`, and Phoenix 2 title list are dependencies.
+
+A Raider.IO-style end-of-season recap: one animated, screenshottable page that walks a player through their Phoenix era. Every threshold below was validated against production data on 2026-07-09; measured player counts are noted so future tuning has a baseline.
+
+---
+
+## Page & access
+
+- Route **`/Player/{userId}/PhoenixRecap`** — public shareable URL, gated exactly like `/Player/{id}/Sessions` (public profiles only), plus a "My Recap" entry for the signed-in user.
+- Full-screen **slide deck** (scroll-snap sections), CSS keyframe animations only — Blazor Server friendly, no JS interop. Each slide is self-contained and screenshottable.
+- Phoenix accent `#1D9BCC` (`MixEnum.GetAccentColor()`) throughout; the finale slide flips to Phoenix 2 green `#6CA832`.
+- **One-time popup** on login pointing at the page: `MudDialog` in `MainLayout` following the B1G ONE 2024 pattern (`UserSettings` flag, key `MainLayout__PhoenixRecapPopupShown`). Only shown when the viewer's recap row exists. No expiry cutoff initially (set one when the P2 launch date is known).
+
+## Compute model
+
+**Owner decision: not a recurring job.** Two buttons on `/Admin`:
+
+1. **Compute my recap** — publishes the trigger for the admin's own user (fast feedback loop).
+2. **Compute all recaps** — one-shot job over every eligible user.
+
+- Trigger is an imperative bus command in PlayerProgress `Contracts/` (e.g. `CalculateSeasonRecapsCommand(Guid? UserId)`), consumed by a new **RecapSaga** in PlayerProgress. Idempotent upsert — safe to re-fire after a process restart (in-memory transport caveat).
+- Results persist to a new table **`scores.PlayerSeasonRecap`** (PK `UserId + MixId`; `Payload` JSON, `SchemaVersion`, `ComputedAt`). The page reads the persisted row only — no live computation.
+- Recap is keyed by mix (`MixEnum.Phoenix` now) so a future Phoenix 2 recap reuses the whole pipeline.
+- **Eligibility:** ≥10 non-broken Phoenix scores (~1,371 users in prod: 1,289 with ≥50, 82 with 10–49). Sections degrade gracefully when their data is thin.
+- Future option (post-launch, based on observed job cost): a self-serve recalculate button for users.
+
+**Perf note:** rival matching is the expensive step. The all-users job memoizes each user's top-50 competitive (fung) chart-id set once per run, so matching is set intersection — O(users × scores) overall for ~1,450 users.
+
+## Slides
+
+In deck order. Data sources are published contracts/ports only (see Architecture).
+
+### 1. Your Arc (opener)
+First vs latest `PlayerHistory` snapshot: competitive level then → now, pass-count growth, animated climb.
+
+### 2. Play rollup
+- **Play days**: distinct calendar days in `ScoreEventJournal` (prod: avg 23.8, max 538). *Import counts were dropped — session capture only started 2026-07 (avg 2.4 tracked sessions), too thin to brag about.*
+- **Charts passed** + rank + percentile across all PIUScores Phoenix players.
+- **Singles & doubles competitive rank** + percentile.
+- **Total chart time & note count** (best scores only): `Song.Duration` is .NET ticks (validated: min 38 s, max 6:18, zero missing); `ChartMix.NoteCount` missing on only 9 charts. Rendered with fun conversions ("2.5 days of nonstop Pump").
+- **Top 5 step artists** — with the mislabel disclaimer (~22% of charts have no step artist).
+
+### 3. Player type
+Average score of the top-50 Pumbility scores (minimum 10 scores; computed over what exists below 50). Five types (owner-named; prod distribution noted):
+
+| Type | Avg-score band | Prod players |
+|---|---|---|
+| Pass Pusher | ≤ AA+ (< 950,000) | 321 |
+| Pass Refiner | AAA–AAA+ (950,000–969,999) | 653 |
+| Balanced Player | S–S+ (970,000–979,999) | 205 |
+| Competitive | SS–SSS (980,000–994,999) | 140 |
+| Perfectionist | SSS+ (≥ 995,000) | 43 |
+
+### 4. Badges
+Show all earned; lead with the biggest.
+
+- **Title collection** — measured against the **full Phoenix title list including site-detected titles** (213 in code today; use `PhoenixTitleList.BuildList().Count()` at runtime, never hardcode). Owner decision: site-detected titles count — people fly to other countries to earn them. Thresholds are personal-progress percentages, deliberately not population-tuned: **Title Hunter ≥50%, Title Collector ≥75%, Title Master ≥90%, "Seriously, Leave Some Titles for the Rest of Us" ≥95%**. (Prod today: 37 / 5 / 0 / 0 players — the top two are aspirational and that's intended.)
+- **Special Snowflake** — holds ≥1 title held by <1% of titled users (`GetTitleAggregations` / `CountTitledUsers`; ~≤13 of 1,314 holders). The only comparative title badge.
+- **Completionist ladder** — count of `(Type, Level)` folders (S and D counted separately, no level floor) with ≥90% of charts passed: **5 / 10 / 20 / 30 / 40** → Completionist, Plus, Supreme, Ultra, **"You Know Pump It Up Doesn't Do Lamps, Right?"** (Prod: 106 / 45 / 21 / 10 / **1** players — validated as specced.)
+- **CoOp ladder** — completion of CoOp ×2 charts (`ChartType.CoOp`, `Level == 2`; player count *is* the Level field): **>50% Socialite, >75% Clearly Has Friends, >90% Friendship is Magic, 100% "I Hope You Held Hands on Canon D"**. (Prod: 123 / 80 / 50 / 12.)
+- **BanYa Lover** — >50% of charts passed on songs where `Artist LIKE '%banya%' OR Artist LIKE '%yahpp%'` (covers `BanYa`, `Banya Production`, `YAHPP`, and collabs; **msgoon excluded** — no BanYa Production membership). ~162 songs in prod; 55 songs have NULL artist and silently don't count.
+
+### 5. Rivals
+3 singles + 3 doubles rivals. Pool ladder (owner-confirmed): **your user-created communities → your country community → all players** (country communities are auto-joined system communities like "World", so "non-World" alone would make USA ≈ World). Candidates are within **±0.25** of your singles/doubles competitive level, **public users only**, ranked by overlap of top-50 competitive (fung) chart-id sets. (Prod: 586 users have 6+ community candidates, 208 more have ≥1, rest fall back.)
+
+### 6. Most impressive PGs
+Records with `Plate = PerfectGame`, ordered folder descending then PG difficulty descending; only charts whose **"PG" tier list** category is `Hard`, `VeryHard`, or `Underrated`.
+
+### 7. Most impressive passes
+3 singles + 3 doubles, folder descending; only charts whose **"Difficulty" (pass) tier list** category is `Hard`, `VeryHard`, or `Underrated`.
+
+### 8. Most impressive scores
+3 singles + 3 doubles from competitive-contributing scores, descending, taking scores with **>90% tie-inclusive percentile** vs the ±0.5 competitive cohort (reuse `ScoreQualitySaga` mechanics / `ScoreRankings.TieInclusivePercentile`). PGs excluded (they live on slide 6).
+
+### 9. Trophy shelf
+Your 3 rarest titles (with % of titled users — `Beginner` at 99.6% is the free joke line), plate cabinet (count per plate), longest-standing best (oldest `RecordedDate` among current bests), weekly-challenge recap (entries / podiums / wins from `UserWeeklyPlacing`), community placements, singles-vs-doubles identity split.
+
+### 10. Phoenix 2 finale
+P1 scores projected onto Phoenix 2: carried-over charts (4,367 of 4,571 — 95.5%) rescored with P2 `ChartMix` levels through the mix-keyed P2 formula (PR #128), **two-pool Singles/Doubles Pumbility totals + the projected P2 title** (`Phoenix2PumbilityTitle` thresholds). Green accent; "see you in Phoenix 2". Note the existing `PumbilityProjectionSaga` is P1→peer-expectation, *not* this — the P1→P2 rescoring is new code.
+
+**Dropped ideas:** White Whale (owner), import counts (data too thin), nightly Hangfire job (owner wants admin-triggered).
+
+## Localization
+
+New keys populated in all 8 locales in the same pass, per convention. Badge names: translate where a faithful localized version exists (use the per-locale glossaries); where the pun doesn't carry ("You Know Pump It Up Doesn't Do Lamps, Right?", "I Hope You Held Hands on Canon D"), best-effort localized humor or keep English per glossary judgment — owner delegated this call.
+
+## Architecture placement
+
+- **RecapSaga + calculators live in PlayerProgress** — precedent: `HighlightCaptureSaga` already does cross-vertical enrichment through published contracts.
+- Cross-vertical reads via published contracts/ports only: `GetPhoenixRecordsQuery` + journal queries (ScoreLedger), `GetChartsQuery` (Catalog), `GetTierListQuery` (ChartIntelligence), `GetMyCommunitiesQuery`/`GetCommunityMembersQuery` (Communities), `GetUserWeeklyPlacementsQuery` (WeeklyChallenge), `IPlayerStatsReader`/`ITitleRepository` (Domain ports). Never SQL joins onto other verticals' tables.
+- Pure calculators (player type, badges, rival matcher, P2 projection assembly) are Domain services with unit tests; the saga orchestrates and persists.
+- `PlayerSeasonRecapEntity` is internal to PlayerProgress, registered via its `IDbModelContribution`; new row in [DATABASE-SCHEMA.md](../DATABASE-SCHEMA.md).
+
+## Commit plan
+
+- **C1** — this design doc.
+- **C2** — Domain: recap payload records + pure calculators (player type, title %, completionist, co-op, BanYa, snowflake, plate cabinet) + `DomainTests`.
+- **C3** — Contracts + persistence: trigger command, `GetPlayerRecapQuery`, `PlayerSeasonRecapEntity` + model contribution + migration + repository; DATABASE-SCHEMA.md row.
+- **C4** — RecapSaga compute pipeline (rollup, badges, impressive picks) + `ApplicationTests` with mocked ports.
+- **C5** — Rival matcher + saga wiring + tests.
+- **C6** — P2 projection step + tests (consistent with `Phoenix2PumbilityScoringTests` golden rows).
+- **C7** — Admin: the two compute buttons on `Admin.razor` publishing the triggers.
+- **C8** — Web: the `/Player/{id}/PhoenixRecap` slide deck + localization keys (8 locales).
+- **C9** — Popup + "My Recap" nav entry + polish.
+
+## Open items
+
+- Popup expiry cutoff (set when the P2 launch date is known).
+- Self-serve recalculate button — decide post-launch from all-users job timings.
