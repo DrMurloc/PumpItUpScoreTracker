@@ -2583,4 +2583,7 @@
   <data name="only {0} have it" xml:space="preserve">
     <value>only {0} mrgl it</value>
   </data>
+  <data name="Rebuild Recap PG Cards" xml:space="preserve">
+    <value>Mrgl Recap PG Mrgls</value>
+  </data>
 </root>

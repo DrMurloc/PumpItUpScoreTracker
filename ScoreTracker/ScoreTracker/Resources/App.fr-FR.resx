@@ -2657,4 +2657,7 @@
   <data name="only {0} have it" xml:space="preserve">
     <value>seuls {0} le détiennent</value>
   </data>
+  <data name="Rebuild Recap PG Cards" xml:space="preserve">
+    <value>Reconstruire les cartes PG du récap</value>
+  </data>
 </root>

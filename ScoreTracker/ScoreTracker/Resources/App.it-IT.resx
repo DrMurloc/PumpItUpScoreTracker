@@ -2659,4 +2659,7 @@
   <data name="only {0} have it" xml:space="preserve">
     <value>solo il {0} ce l&apos;ha</value>
   </data>
+  <data name="Rebuild Recap PG Cards" xml:space="preserve">
+    <value>Ricostruisci le card PG del recap</value>
+  </data>
 </root>

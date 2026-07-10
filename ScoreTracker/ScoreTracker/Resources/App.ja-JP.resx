@@ -2660,4 +2660,7 @@
   <data name="only {0} have it" xml:space="preserve">
     <value>保有率{0}</value>
   </data>
+  <data name="Rebuild Recap PG Cards" xml:space="preserve">
+    <value>リキャップPGカード再構築</value>
+  </data>
 </root>

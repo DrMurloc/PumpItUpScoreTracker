@@ -27,6 +27,7 @@ namespace ScoreTracker.PlayerProgress.Application;
 ///     and the bucket-cached cohort scores.
 /// </summary>
 internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
+    IConsumer<RebuildRecapPgCardsCommand>,
     IConsumer<ScoreHighlightsCapturedEvent>
 {
     /// <summary>Below this many passes there isn't enough data for a meaningful recap.</summary>
@@ -320,20 +321,70 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
     }
 
     /// <summary>
+    ///     Patch-only sweep: rewrites ImpressivePgs on every stored recap for the mix and
+    ///     nothing else — each payload keeps its rivals, weekly story, and ComputedAt.
+    ///     The targeted backfill for PG-card logic changes (owner call, round four).
+    /// </summary>
+    public async Task Consume(ConsumeContext<RebuildRecapPgCardsCommand> context)
+    {
+        var mix = context.Message.Mix;
+        var cancellationToken = context.CancellationToken;
+        var charts = (await _charts.GetCharts(mix, cancellationToken: cancellationToken))
+            .ToDictionary(c => c.Id);
+        var aggregates = (await _scores.GetChartScoreAggregates(mix, cancellationToken))
+            .ToDictionary(a => a.ChartId);
+        var population = Math.Max(1,
+            (await _scores.GetActiveUserIds(mix, DateTimeOffset.MinValue, cancellationToken)).Count);
+
+        var userIds = (await _recaps.GetRecapUserIds(mix, cancellationToken)).ToArray();
+        _logger.LogInformation("PG-card rebuild starting for {Count} recaps on {Mix}", userIds.Length, mix);
+        var patched = 0;
+        foreach (var userId in userIds)
+            try
+            {
+                var recap = await _recaps.GetRecap(userId, mix, cancellationToken);
+                if (recap == null) continue;
+                var passes = (await _scores.GetBestScores(mix, userId, cancellationToken))
+                    .Where(b => !b.IsBroken)
+                    .ToArray();
+                await _recaps.SaveRecap(userId, mix,
+                    recap with { ImpressivePgs = ComputeImpressivePgs(passes, charts, aggregates, population) },
+                    cancellationToken);
+                patched++;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "PG-card rebuild failed for {UserId} on {Mix}", userId, mix);
+            }
+
+        _logger.LogInformation("PG-card rebuild finished: {Patched} of {Count} on {Mix}",
+            patched, userIds.Length, mix);
+    }
+
+    private IReadOnlyList<RecapRareChart> BuildImpressivePgs(RecordedPhoenixScore[] passes,
+        SharedInputs shared)
+    {
+        return ComputeImpressivePgs(passes, shared.Charts, shared.ChartAggregates,
+            Math.Max(1, shared.ActiveUserIds.Count));
+    }
+
+    /// <summary>
     ///     Your top-50 PGs by level form the pool; within it, the rarest win — fewest
     ///     PG holders sitewide, shown against the whole active population (round four:
     ///     the tier-list Hard-or-higher filter read badly in the wild).
     /// </summary>
-    private IReadOnlyList<RecapRareChart> BuildImpressivePgs(RecordedPhoenixScore[] passes,
-        SharedInputs shared)
+    private static IReadOnlyList<RecapRareChart> ComputeImpressivePgs(
+        IEnumerable<RecordedPhoenixScore> passes,
+        IReadOnlyDictionary<Guid, Chart> charts,
+        IReadOnlyDictionary<Guid, ChartScoreAggregate> aggregates,
+        int population)
     {
-        var population = Math.Max(1, shared.ActiveUserIds.Count);
         return passes
-            .Where(p => p.Plate == PhoenixPlate.PerfectGame && shared.Charts.ContainsKey(p.ChartId))
-            .Select(p => shared.Charts[p.ChartId])
+            .Where(p => p.Plate == PhoenixPlate.PerfectGame && charts.ContainsKey(p.ChartId))
+            .Select(p => charts[p.ChartId])
             .OrderByDescending(c => (int)c.Level)
             .Take(50)
-            .Select(c => (Chart: c, Aggregate: shared.ChartAggregates.GetValueOrDefault(c.Id)))
+            .Select(c => (Chart: c, Aggregate: aggregates.GetValueOrDefault(c.Id)))
             .Where(x => x.Aggregate is { PgCount: > 0 })
             .OrderBy(x => x.Aggregate!.PgCount)
             .ThenByDescending(x => (int)x.Chart.Level)

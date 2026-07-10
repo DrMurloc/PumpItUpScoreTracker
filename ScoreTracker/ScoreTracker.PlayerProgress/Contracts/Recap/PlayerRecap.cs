@@ -26,7 +26,11 @@ public sealed record PlayerRecap(
     RecapTrophies Trophies,
     RecapPhoenix2Projection? Projection)
 {
-    public const int CurrentSchemaVersion = 3;
+    // Still 2 after the PG-card rework (round four): old ImpressivePgs items deserialize
+    // into RecapRareChart with zero rarity, and the targeted RebuildRecapPgCardsCommand
+    // patches just that field — a version bump would have forced the full-rebuild sweep
+    // the owner explicitly didn't want.
+    public const int CurrentSchemaVersion = 2;
 }
 
 /// <summary>Competitive-level journey, first PlayerHistory snapshot to the latest.</summary>

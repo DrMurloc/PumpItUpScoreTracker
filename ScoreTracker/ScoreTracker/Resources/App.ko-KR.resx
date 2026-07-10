@@ -2539,4 +2539,7 @@
   <data name="only {0} have it" xml:space="preserve">
     <value>보유율 {0}</value>
   </data>
+  <data name="Rebuild Recap PG Cards" xml:space="preserve">
+    <value>리캡 PG 카드 재구축</value>
+  </data>
 </root>

@@ -2610,4 +2610,7 @@
   <data name="only {0} have it" xml:space="preserve">
     <value>só {0} têm</value>
   </data>
+  <data name="Rebuild Recap PG Cards" xml:space="preserve">
+    <value>Reconstruir cards PG do recap</value>
+  </data>
 </root>

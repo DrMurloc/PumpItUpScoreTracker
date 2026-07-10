@@ -165,6 +165,40 @@ public sealed class RecapSagaTests
     }
 
     [Fact]
+    public async Task PgCardRebuildPatchesOnlyThePgField()
+    {
+        var rarePg = new ChartBuilder().WithType(ChartType.Single).WithLevel(22).WithSongName("Rare PG").Build();
+        var ctx = new HandlerContext(rarePg);
+        ctx.GivenPass(rarePg, 1_000_000, PhoenixPlate.PerfectGame);
+        var existing = new PlayerRecap(PlayerRecap.CurrentSchemaVersion, Now.AddDays(-3), null,
+            new RecapRollup(10, Now.AddYears(-1), 100, 1, .5, null, null, null, null, 0, 0,
+                Array.Empty<RecapStepArtist>()),
+            RecapPlayerType.Competitive, 985_000,
+            Array.Empty<RecapEarnedBadge>(), null,
+            Array.Empty<RecapRareChart>(), Array.Empty<RecapScoreHighlight>(), Array.Empty<RecapRareChart>(),
+            null,
+            new RecapTrophies(Array.Empty<RecapRareTitle>(), Array.Empty<RecapPlateCount>(), null, null,
+                Array.Empty<RecapGradeCount>(), 1, 0),
+            null);
+        ctx.Recaps.Setup(r => r.GetRecapUserIds(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { UserId });
+        ctx.Recaps.Setup(r => r.GetRecap(UserId, MixEnum.Phoenix, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existing);
+        ctx.Scores.Setup(s => s.GetChartScoreAggregates(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new ChartScoreAggregate(rarePg.Id, 100, 90, 2) });
+
+        await ctx.Saga.Consume(ctx.Context(new RebuildRecapPgCardsCommand()));
+
+        Assert.NotNull(ctx.Saved);
+        var pg = Assert.Single(ctx.Saved!.ImpressivePgs);
+        Assert.Equal(rarePg.Id, pg.ChartId);
+        // Everything else — including ComputedAt — rides through untouched.
+        Assert.Equal(existing.ComputedAt, ctx.Saved.ComputedAt);
+        Assert.Equal(existing.PlayerType, ctx.Saved.PlayerType);
+        Assert.Same(existing.Trophies, ctx.Saved.Trophies);
+    }
+
+    [Fact]
     public async Task ImpressivePgPoolIsTheTopFiftyByLevel()
     {
         // Fifty level-20 PGs fill the pool; a level-1 PG with the rarest holder count
@@ -635,6 +669,14 @@ public sealed class RecapSagaTests
         public ConsumeContext<ScoreHighlightsCapturedEvent> Context(ScoreHighlightsCapturedEvent message)
         {
             var ctx = new Mock<ConsumeContext<ScoreHighlightsCapturedEvent>>();
+            ctx.SetupGet(c => c.Message).Returns(message);
+            ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
+            return ctx.Object;
+        }
+
+        public ConsumeContext<RebuildRecapPgCardsCommand> Context(RebuildRecapPgCardsCommand message)
+        {
+            var ctx = new Mock<ConsumeContext<RebuildRecapPgCardsCommand>>();
             ctx.SetupGet(c => c.Message).Returns(message);
             ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
             return ctx.Object;
