@@ -1,5 +1,6 @@
 @using MediatR
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Identity.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Recap
@@ -523,6 +524,7 @@ else if (_user != null && _recap != null)
 @inject IMediator Mediator
 @inject NavigationManager NavManager
 @inject IJSRuntime JS
+@inject ICurrentUserAccessor CurrentUser
 @code {
     [Parameter] public Guid UserIdParam { get; set; }
 
@@ -549,9 +551,11 @@ else if (_user != null && _recap != null)
 
     protected override async Task OnInitializedAsync()
     {
-        // Public players only, same gate as the Sessions page.
+        // Public players only — except the owner, whose recap is always theirs to see.
+        // Same gate as the Sessions page.
         _user = await Mediator.Send(new GetUserByIdQuery(UserIdParam));
-        if (_user is not { IsPublic: true })
+        var isOwner = CurrentUser.IsLoggedIn && CurrentUser.User.Id == UserIdParam;
+        if (_user == null || (!_user.IsPublic && !isOwner))
         {
             NavManager.NavigateTo("/");
             return;
