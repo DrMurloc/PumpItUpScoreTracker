@@ -6,8 +6,10 @@ using System.Web;
 using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using ScoreTracker.OfficialMirror.Infrastructure.Apis.Contracts;
 using ScoreTracker.OfficialMirror.Infrastructure.Apis.Dtos;
+using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
@@ -30,6 +32,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     private readonly IFileUploadClient _fileUpload;
     private readonly IOfficialLeaderboardRepository _leaderboards;
     private readonly IDateTimeOffsetAccessor _dateTime;
+    private readonly PiuGameConfiguration _configuration;
 
     public OfficialSiteClient(IPiuGameApi piuGame, IChartRepository charts, ILogger<OfficialSiteClient> logger,
         IMediator mediator,
@@ -37,7 +40,8 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         IScoreReader phoenixRecords, IFileUploadClient fileUpload,
         IOfficialLeaderboardRepository leaderboards,
         IBus bus,
-        IDateTimeOffsetAccessor dateTime)
+        IDateTimeOffsetAccessor dateTime,
+        IOptions<PiuGameConfiguration> configuration)
     {
         _piuGame = piuGame;
         _charts = charts;
@@ -49,16 +53,37 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         _leaderboards = leaderboards;
         _bus = bus;
         _dateTime = dateTime;
+        _configuration = configuration.Value;
+    }
+
+    /// <summary>
+    ///     Unlike the Phoenix mirror (fully anonymous), piugame.com serves no anonymous
+    ///     ranking traffic — Phoenix 2 sweeps authenticate once per call with the
+    ///     configured service account.
+    /// </summary>
+    private async Task<HttpClient> GetServiceClient(MixEnum mix, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(_configuration.ServiceUsername) ||
+            string.IsNullOrWhiteSpace(_configuration.ServicePassword))
+            throw new InvalidOperationException(
+                "The Phoenix 2 leaderboards are login-gated: configure PiuGame:ServiceUsername and " +
+                "PiuGame:ServicePassword (a dedicated service account) to run this import.");
+
+        var (client, _) = await _piuGame.GetSessionId(mix, _configuration.ServiceUsername,
+            _configuration.ServicePassword, cancellationToken);
+        return client;
     }
 
     public async Task<IEnumerable<OfficialChartLeaderboardEntry>> GetAllOfficialChartScores(MixEnum mix,
         CancellationToken cancellationToken)
     {
+        // The Phoenix 2 chart LIST is login-gated (the individual boards are public).
+        var listClient = mix == MixEnum.Phoenix2 ? await GetServiceClient(mix, cancellationToken) : null;
         var songs = new List<PiuGameGetSongsResult.SongDto>();
         var page = 1;
         while (true)
         {
-            var nextPage = await _piuGame.Get20AboveSongs(mix, page, cancellationToken);
+            var nextPage = await _piuGame.Get20AboveSongs(mix, page, cancellationToken, listClient);
             songs.AddRange(nextPage.Results);
             if (nextPage.IsEnd) break;
 
@@ -95,6 +120,8 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     public async Task<IEnumerable<UserOfficialLeaderboard>> GetLeaderboardEntries(MixEnum mix,
         CancellationToken cancellationToken)
     {
+        if (mix == MixEnum.Phoenix2) return await GetPumbilityLeaderboardEntries(mix, cancellationToken);
+
         var leaderboardList = await _piuGame.GetLeaderboards(mix, cancellationToken);
         var result = new List<UserOfficialLeaderboard>();
         foreach (var leaderboard in leaderboardList.Entries)
@@ -107,6 +134,48 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                     entry.Rating));
                 place++;
             }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    ///     Phoenix 2 replaced the per-level rating boards with one daily PUMBILITY board —
+    ///     its All/Single/Double tabs ARE the mix's "Rating" leaderboards. The site clamps
+    ///     out-of-range pages to the last one, so paging stops on the end markers or the
+    ///     first page that adds nothing new.
+    /// </summary>
+    private async Task<IEnumerable<UserOfficialLeaderboard>> GetPumbilityLeaderboardEntries(MixEnum mix,
+        CancellationToken cancellationToken)
+    {
+        var client = await GetServiceClient(mix, cancellationToken);
+        var result = new List<UserOfficialLeaderboard>();
+        foreach (var (chartType, boardName) in new (ChartType?, string)[]
+                 {
+                     (null, "PUMBILITY"),
+                     (ChartType.Single, "PUMBILITY Singles"),
+                     (ChartType.Double, "PUMBILITY Doubles")
+                 })
+        {
+            var seen = new HashSet<string>();
+            var place = 1;
+            for (var page = 1;; page++)
+            {
+                var board = await _piuGame.GetPumbilityRankings(mix, chartType, page, client, cancellationToken);
+                var added = 0;
+                foreach (var entry in board.Entries)
+                {
+                    if (!seen.Add(entry.ProfileName)) continue;
+
+                    result.Add(new UserOfficialLeaderboard(entry.ProfileName, place++, "Rating", boardName,
+                        (int)entry.Pumbility));
+                    added++;
+                }
+
+                if (board.IsEnd || added == 0) break;
+            }
+
+            _logger.LogInformation("{Board}: {Count} ranked players", boardName, place - 1);
         }
 
         return result;
