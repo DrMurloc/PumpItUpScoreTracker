@@ -281,8 +281,11 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     ("update-weekly-charts",             r => r.PublishUpdateWeeklyCharts(),              "0 9 * * *"),  // 04:00 ET
     ("process-pass-tier-list",           r => r.PublishProcessPassTierList(),             "30 9 * * *"), // 04:30 ET
     ("calculate-chart-letter-difficulties", r => r.PublishCalculateChartLetterDifficulties(), "0 10 * * *"), // 05:00 ET
-    // Phoenix-only by design: Phoenix 2 mirror scraping is deliberately unscheduled pending mirror-semantics work (the P2 site replaced per-level rating boards with a single login-gated Pumbility board).
     ("start-leaderboard-import",         r => r.PublishStartLeaderboardImport(),          "30 10 * * 0"), // Sundays 05:30 ET
+    // The P2 pumbility board recomputes daily at 01:00 GMT+9 (16:00 UTC); Sundays 16:30 UTC
+    // imports right after a fresh recompute. Requires PiuGame:ServiceUsername/ServicePassword
+    // (the P2 boards are login-gated) — without them the import fails loudly naming the keys.
+    ("start-phoenix2-leaderboard-import", r => r.PublishStartPhoenix2LeaderboardImport(),  "30 16 * * 0"), // Sundays 16:30 UTC
     ("try-schedule-mom",                 r => r.PublishTryScheduleMoM(),                  "0 11 * * *"), // 06:00 ET
     ("flush-overdue-score-batches",      r => r.PublishFlushOverdueScoreBatches(),        "*/5 * * * *"), // every 5 min — safety net for stuck batches
     ("process-account-purges",           r => r.PublishProcessAccountPurges(),            "30 11 * * *") // 06:30 ET — merged-account grace-window purges

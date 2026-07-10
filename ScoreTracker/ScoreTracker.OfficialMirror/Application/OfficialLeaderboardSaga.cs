@@ -84,13 +84,13 @@ namespace ScoreTracker.OfficialMirror.Application
         public async Task<IEnumerable<RecordedPhoenixScore>> Handle(GetWorldRankingTop50Query request,
             CancellationToken cancellationToken)
         {
-            return await _worldRankings.GetTop50(request.Username, request.Type, cancellationToken);
+            return await _worldRankings.GetTop50(request.Mix, request.Username, request.Type, cancellationToken);
         }
 
         public async Task<IEnumerable<RecordedPhoenixScore>> Handle(GetWorldRankingScoresQuery request,
             CancellationToken cancellationToken)
         {
-            return await _worldRankings.GetAll(request.Username, cancellationToken);
+            return await _worldRankings.GetAll(request.Mix, request.Username, cancellationToken);
         }
 
         public async Task<IEnumerable<(string Username, Uri AvatarPath)>> Handle(GetUserAvatarsQuery request,
@@ -102,19 +102,20 @@ namespace ScoreTracker.OfficialMirror.Application
         public async Task<IEnumerable<WorldRankingRecord>> Handle(GetAllWorldRankingsQuery request,
             CancellationToken cancellationToken)
         {
-            return await _leaderboards.GetAllWorldRankings(cancellationToken);
+            return await _leaderboards.GetAllWorldRankings(request.Mix, cancellationToken);
         }
 
         public async Task<IEnumerable<string>> Handle(GetOfficialLeaderboardUsernamesQuery request,
             CancellationToken cancellationToken)
         {
-            return await _leaderboards.GetOfficialLeaderboardUsernames(cancellationToken);
+            return await _leaderboards.GetOfficialLeaderboardUsernames(request.Mix, cancellationToken);
         }
 
         public async Task<IEnumerable<UserOfficialLeaderboard>> Handle(GetOfficialLeaderboardStatusesQuery request,
             CancellationToken cancellationToken)
         {
-            return await _leaderboards.GetOfficialLeaderboardStatuses(request.Username, cancellationToken);
+            return await _leaderboards.GetOfficialLeaderboardStatuses(request.Mix, request.Username,
+                cancellationToken);
         }
 
         public async Task<PiuGameUcsEntry?> Handle(GetOfficialUcsEntryQuery request,
@@ -150,7 +151,7 @@ namespace ScoreTracker.OfficialMirror.Application
                 (await _officialSite.GetLeaderboardEntries(request.Mix, cancellationToken)).ToArray();
             foreach (var leaderboard in leaderboardEntries.GroupBy(l => l.LeaderboardName))
             {
-                await _leaderboards.ClearLeaderboard("Rating", leaderboard.Key, cancellationToken);
+                await _leaderboards.ClearLeaderboard(request.Mix, "Rating", leaderboard.Key, cancellationToken);
                 var batch = new List<UserOfficialLeaderboard>();
                 var place = 1;
                 foreach (var scoreGroup in leaderboard.GroupBy(l => l.Score).OrderByDescending(kv => kv.Key))
@@ -179,7 +180,7 @@ namespace ScoreTracker.OfficialMirror.Application
             foreach (var group in entries.GroupBy(e => e.Chart.Id))
             {
                 var leaderboardName = group.First().Chart.Song.Name + " " + group.First().Chart.DifficultyString;
-                await _leaderboards.ClearLeaderboard("Chart", leaderboardName, cancellationToken);
+                await _leaderboards.ClearLeaderboard(mix, "Chart", leaderboardName, cancellationToken);
                 var batch = new List<UserOfficialLeaderboard>();
                 var place = 1;
                 foreach (var scoreGroup in group.GroupBy(e => (int)e.Score).OrderByDescending(g => g.Key))

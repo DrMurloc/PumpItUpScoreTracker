@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ScoreTracker.Data.Persistence;
 
@@ -11,9 +12,11 @@ using ScoreTracker.Data.Persistence;
 namespace ScoreTracker.Data.Migrations
 {
     [DbContext(typeof(ChartAttemptDbContext))]
-    partial class ChartAttemptDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260710031131_PhoenixRecordCohortReadIndex")]
+    partial class PhoenixRecordCohortReadIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1470,29 +1473,6 @@ namespace ScoreTracker.Data.Migrations
                     b.HasIndex("UserId", "MixId", "OccurredAt");
 
                     b.ToTable("PlayerMilestone", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.PlayerSeasonRecapEntity", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("MixId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("ComputedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Payload")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("SchemaVersion")
-                        .HasColumnType("int");
-
-                    b.HasKey("UserId", "MixId");
-
-                    b.ToTable("PlayerSeasonRecap", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.PlayerStatsEntity", b =>

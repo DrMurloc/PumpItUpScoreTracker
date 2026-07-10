@@ -52,11 +52,12 @@ internal sealed class PiuGameApi : IPiuGameApi
         _urls = configuration.Value;
     }
 
-    public async Task<PiuGameGetSongsResult> Get20AboveSongs(MixEnum mix, int page, CancellationToken cancellationToken)
+    public async Task<PiuGameGetSongsResult> Get20AboveSongs(MixEnum mix, int page,
+        CancellationToken cancellationToken, HttpClient? client = null)
     {
         var response = await GetWithRetries(
             $"{_urls.BaseUrlFor(mix)}/leaderboard/over_ranking.php?lv=&search=&&page={page}",
-            cancellationToken);
+            cancellationToken, client);
         var document = new HtmlDocument();
         document.LoadHtml(response);
         var result = new List<PiuGameGetSongsResult.SongDto>();
@@ -155,6 +156,68 @@ internal sealed class PiuGameApi : IPiuGameApi
         return new PiuGameGetSongLeaderboardResult
         {
             Results = results.ToArray()
+        };
+    }
+
+    public async Task<PiuGameGetPumbilityRankingResult> GetPumbilityRankings(MixEnum mix, ChartType? chartType,
+        int page, HttpClient client, CancellationToken cancellationToken)
+    {
+        var tab = chartType switch
+        {
+            null => "",
+            ChartType.Single => "s",
+            ChartType.Double => "d",
+            _ => throw new ArgumentOutOfRangeException(nameof(chartType), chartType,
+                "The PUMBILITY ranking only has All/Single/Double tabs")
+        };
+        var response = await GetWithRetries(
+            $"{_urls.BaseUrlFor(mix)}/leaderboard/pumbility_ranking.php?t={tab}&page={page}",
+            cancellationToken, client);
+        var document = new HtmlDocument();
+        document.LoadHtml(response);
+
+        // The page renders the viewer's own "MY RANKING DATA" block with the same list
+        // markup as the ranking itself — exclude it or the service account leaks into
+        // every page of results.
+        var lis = document.DocumentNode.SelectNodes(
+            "//ul[contains(@class,'pumbilitySt') and not(ancestor::div[contains(@class,'my_pumblitiy_wrap')])]/li");
+        var entries = new List<PiuGameGetPumbilityRankingResult.Entry>();
+        if (lis != null)
+            foreach (var li in lis)
+                try
+                {
+                    var profileName = string.Join("", li.SelectNodes(".//div[contains(@class,'profile_name')]")
+                        .Select(n => n.InnerText.Trim()));
+                    var title = li.SelectSingleNode(".//div[contains(@class,'profile_title')]")?.InnerText.Trim()
+                                ?? string.Empty;
+                    // The value renders as "17,418<span class=pumbility-point-sub>.45</span>" —
+                    // InnerText flattens to "17,418.45". Invariant parse: PIU always uses ","
+                    // thousands / "." decimals regardless of the request thread's culture.
+                    var scoreText = li.SelectSingleNode(".//div[contains(@class,'score')]//i[contains(@class,'tt')]")
+                        .InnerText.Replace(",", "").Trim();
+                    var avatarNode =
+                        li.SelectSingleNode(".//div[contains(@class,'profile_img')]//div[contains(@class,'bgfix')]");
+                    var avatarMatch = ImageRegex.Match(avatarNode?.GetAttributeValue("style", "") ?? "");
+                    entries.Add(new PiuGameGetPumbilityRankingResult.Entry
+                    {
+                        ProfileName = HttpUtility.HtmlDecode(profileName),
+                        Title = HttpUtility.HtmlDecode(title),
+                        Pumbility = double.Parse(scoreText, NumberStyles.AllowDecimalPoint,
+                            CultureInfo.InvariantCulture),
+                        AvatarUrl = avatarMatch.Success ? new Uri(avatarMatch.Groups[1].Value) : null
+                    });
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "Error parsing a PUMBILITY ranking row on page {Page}", page);
+                }
+
+        var nextIcon = document.DocumentNode.SelectNodes("//i[contains(@class,'next')]");
+        var lastIcon = document.DocumentNode.SelectNodes("//i[contains(@class,'last')]");
+        return new PiuGameGetPumbilityRankingResult
+        {
+            Entries = entries.ToArray(),
+            IsEnd = (nextIcon == null || !nextIcon.Any()) && (lastIcon == null || !lastIcon.Any())
         };
     }
 

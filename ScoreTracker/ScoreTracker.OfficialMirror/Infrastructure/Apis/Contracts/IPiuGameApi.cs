@@ -9,7 +9,19 @@ namespace ScoreTracker.OfficialMirror.Infrastructure.Apis.Contracts
     // mixless — UCS has a single shared site.
     internal interface IPiuGameApi
     {
-        Task<PiuGameGetSongsResult> Get20AboveSongs(MixEnum mix, int page, CancellationToken cancellationToken);
+        /// <summary>
+        ///     On the Phoenix 2 site this page is login-gated — pass an authenticated
+        ///     client (service login) for Phoenix 2; Phoenix stays anonymous (null).
+        /// </summary>
+        Task<PiuGameGetSongsResult> Get20AboveSongs(MixEnum mix, int page, CancellationToken cancellationToken,
+            HttpClient? client = null);
+
+        /// <summary>
+        ///     The Phoenix 2 PUMBILITY ranking (login-gated — always needs an authenticated
+        ///     client). Tab: null = All, Single = the ?t=s board, Double = ?t=d.
+        /// </summary>
+        Task<PiuGameGetPumbilityRankingResult> GetPumbilityRankings(MixEnum mix, ChartType? chartType, int page,
+            HttpClient client, CancellationToken cancellationToken);
 
         Task<PiuGameGetSongLeaderboardResult> GetSongLeaderboard(MixEnum mix, string songId,
             CancellationToken cancellationToken);

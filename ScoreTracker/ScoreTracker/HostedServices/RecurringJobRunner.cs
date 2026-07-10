@@ -5,6 +5,7 @@ using ScoreTracker.EventCompetition.Contracts.Messages;
 using ScoreTracker.Identity.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.ScoreLedger.Contracts.Messages;
+using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Web.HostedServices;
 
@@ -34,6 +35,9 @@ public sealed class RecurringJobRunner
 
     public Task PublishStartLeaderboardImport() =>
         _bus.Publish(new StartLeaderboardImportCommand());
+
+    public Task PublishStartPhoenix2LeaderboardImport() =>
+        _bus.Publish(new StartLeaderboardImportCommand(MixEnum.Phoenix2));
 
     public Task PublishTryScheduleMoM() =>
         _bus.Publish(new TryScheduleMoMCommand());

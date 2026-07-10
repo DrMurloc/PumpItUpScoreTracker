@@ -108,9 +108,9 @@ public sealed class OfficialLeaderboardSagaTests
             .ReturnsAsync(Array.Empty<OfficialChartLeaderboardEntry>());
         var leaderboards = new Mock<IOfficialLeaderboardRepository>();
         var operations = new List<string>();
-        leaderboards.Setup(l => l.ClearLeaderboard(It.IsAny<string>(), It.IsAny<string>(),
+        leaderboards.Setup(l => l.ClearLeaderboard(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
-            .Callback<string, string, CancellationToken>((_, name, _) => operations.Add($"clear:{name}"))
+            .Callback<MixEnum, string, string, CancellationToken>((_, _, name, _) => operations.Add($"clear:{name}"))
             .Returns(Task.CompletedTask);
         leaderboards.Setup(l => l.WriteEntries(It.IsAny<MixEnum>(),
                 It.IsAny<IEnumerable<UserOfficialLeaderboard>>(),
