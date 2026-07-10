@@ -191,7 +191,7 @@
         }
         var chartArray = charts.ToArray();
         _chartCount = chartArray.Count();
-        var pumbility = ScoringConfiguration.PumbilityScoring(true);
+        var pumbility = ScoringConfiguration.PumbilityScoring(_currentMix, true);
         var pumbilityPlus = ScoringConfiguration.PumbilityPlus;
         _pumbilityMax = (int) chartArray.Sum(c => pumbility.GetScore(c, PhoenixScore.Max, PhoenixPlate.PerfectGame, false));
         _pumbilityPlusMax = (int)chartArray.Sum(c => pumbilityPlus.GetScore(c, PhoenixScore.Max, PhoenixPlate.PerfectGame, false));

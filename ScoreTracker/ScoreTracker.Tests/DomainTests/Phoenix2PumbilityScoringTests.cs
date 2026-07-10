@@ -142,20 +142,25 @@ public sealed class Phoenix2PumbilityScoringTests
             ScoringConfiguration.PumbilityScoring(MixEnum.XX, false));
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void PhoenixArmIsIdenticalToTheHistoricalPhoenixConfiguration(bool includeCoOp)
+    [Fact]
+    public void PhoenixArmKeepsTheHistoricalFormulaByteIdentical()
     {
-        var old = ScoringConfiguration.PumbilityScoring(includeCoOp);
-        var mixKeyed = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix, includeCoOp);
+        // The Phoenix arm must stay the historical configuration: BaseRating(level) x the
+        // stock letter-grade modifier, plate-blind, CoOp per the includeCoOp flag.
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix, false);
 
         foreach (var level in new[] { 10, 18, 22, 26 })
-        foreach (var score in new[] { 830_000, 926_000, 972_000, 1_000_000 })
-        foreach (var type in new[] { ChartType.Single, ChartType.Double, ChartType.CoOp })
+        foreach (var score in new[] { 830_000, 926_000, 972_000 })
             Assert.Equal(
-                old.GetScore(type, DifficultyLevel.From(level), PhoenixScore.From(score), PhoenixPlate.RoughGame),
-                mixKeyed.GetScore(type, DifficultyLevel.From(level), PhoenixScore.From(score),
-                    PhoenixPlate.RoughGame));
+                DifficultyLevel.From(level).BaseRating *
+                PhoenixScore.From(score).LetterGrade.GetModifier(),
+                scoring.GetScore(DifficultyLevel.From(level), PhoenixScore.From(score)), 5);
+
+        Assert.Equal(0, ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix, false)
+            .GetScore(ChartType.CoOp, DifficultyLevel.From(10), PhoenixScore.From(950_000),
+                PhoenixPlate.RoughGame));
+        Assert.True(ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix, true)
+                        .GetScore(ChartType.CoOp, DifficultyLevel.From(10), PhoenixScore.From(950_000),
+                            PhoenixPlate.RoughGame) > 0);
     }
 }

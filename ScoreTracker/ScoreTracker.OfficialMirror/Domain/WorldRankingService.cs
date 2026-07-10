@@ -27,7 +27,7 @@ internal sealed class WorldRankingService : IWorldRankingService
 
     public async Task CalculateWorldRankings(MixEnum mix, CancellationToken cancellationToken)
     {
-        var scoringConfig = ScoringConfiguration.PumbilityScoring(false);
+        var scoringConfig = ScoringConfiguration.PumbilityScoring(mix, false);
 
         var entries = (await _leaderboards.GetOfficialLeaderboardUsernames("Chart", cancellationToken)).ToArray();
         await _leaderboards.DeleteWorldRankings(cancellationToken);
@@ -118,7 +118,9 @@ internal sealed class WorldRankingService : IWorldRankingService
     public async Task<IEnumerable<RecordedPhoenixScore>> GetTop50(Name username, string type,
         CancellationToken cancellationToken)
     {
-        var scoringConfig = ScoringConfiguration.PumbilityScoring(false);
+        // This read is still hardwired to the Phoenix mirror (see the GetChartsForSong
+        // calls below); it goes per-mix with the Phoenix 2 world-rankings work.
+        var scoringConfig = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix, false);
         var result = new List<RecordedPhoenixScore>();
         foreach (var record in (await _leaderboards.GetOfficialLeaderboardStatuses(username, cancellationToken))
                  .Where(l => l.OfficialLeaderboardType == "Chart" && !l.LeaderboardName.Contains("CoOp"))

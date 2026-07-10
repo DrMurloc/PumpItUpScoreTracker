@@ -21,6 +21,22 @@
 
 <MudText Typo="Typo.h6">PUMBILITY</MudText>
 
+@if (_currentMix == MixEnum.Phoenix2 && _stats != null)
+{
+    @* Phoenix 2's PUMBILITY is two independent top-50 pools summed — surface all three. *@
+    <div class="d-flex flex-wrap gap-2 my-2">
+        <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled">
+            @L["Total"]: @(((int)_stats.SkillRating).ToString("N0"))
+        </MudChip>
+        <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">
+            @L["Singles"]: @(((int)_stats.SinglesRating).ToString("N0"))
+        </MudChip>
+        <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">
+            @L["Doubles"]: @(((int)_stats.DoublesRating).ToString("N0"))
+        </MudChip>
+    </div>
+}
+
 <MudGrid>
 
     @foreach (var group in _tierList.OrderBy(kv => GetTierListOrder(kv.Key)))
@@ -209,13 +225,13 @@
         var oldRating = lowestScore;
         if (_oldPassLetterGrade != null)
         {
-            oldRating = (int)ScoringConfiguration.PumbilityScoring(false).GetScore(_newPassLevel, _oldPassLetterGrade.Value.GetMinimumScore());
+            oldRating = (int)ScoringConfiguration.PumbilityScoring(_currentMix, false).GetScore(_newPassLevel, _oldPassLetterGrade.Value.GetMinimumScore());
             if (oldRating < lowestScore)
             {
                 oldRating = lowestScore;
             }
         }
-        var rating = (int)ScoringConfiguration.PumbilityScoring(false).GetScore(_newPassLevel, newLetterGrade.GetMinimumScore());
+        var rating = (int)ScoringConfiguration.PumbilityScoring(_currentMix, false).GetScore(_newPassLevel, newLetterGrade.GetMinimumScore());
         _projectedNewPassRating = rating - oldRating;
         if (_projectedNewPassRating <= 0)
         {
@@ -234,6 +250,7 @@
     }
 
     private IDictionary<Guid, RecordedPhoenixScore> _allScores = new Dictionary<Guid, RecordedPhoenixScore>();
+    private PlayerStatsRecord? _stats;
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn)
@@ -243,7 +260,9 @@
         }
         var selectedMix = await UiSettings.GetSelectedMix();
         _currentMix = selectedMix == MixEnum.XX ? MixEnum.Phoenix : selectedMix;
-        var scoring = ScoringConfiguration.PumbilityScoring(false);
+        if (_currentMix == MixEnum.Phoenix2)
+            _stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, _currentMix));
+        var scoring = ScoringConfiguration.PumbilityScoring(_currentMix, false);
         _charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToDictionary(c => c.Id);
         _allScores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _currentMix))).Where(r=>r.Score!=null).ToDictionary(s => s.ChartId);
         _scores = (await Mediator.Send(new GetTop50ForPlayerQuery(CurrentUser.User.Id, null, 100, _currentMix))).ToDictionary(s => s.ChartId);

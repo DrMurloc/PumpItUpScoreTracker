@@ -31,7 +31,7 @@ public sealed class AutoBuildSessionHandlerTests
         var chart = ChartWithDuration(TimeSpan.FromMinutes(2));
         var charts = new Mock<IChartRepository>();
         var phoenixRecords = new Mock<IScoreReader>();
-        var configuration = new TournamentConfiguration(ScoringConfiguration.PumbilityScoring(false))
+        var configuration = new TournamentConfiguration(ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix, false))
         {
             MaxTime = TimeSpan.FromMinutes(60)
         };
@@ -62,7 +62,7 @@ public sealed class AutoBuildSessionHandlerTests
         var chartB = ChartWithDuration(TimeSpan.FromMinutes(2));
         var charts = new Mock<IChartRepository>();
         var phoenixRecords = new Mock<IScoreReader>();
-        var configuration = new TournamentConfiguration(ScoringConfiguration.PumbilityScoring(false))
+        var configuration = new TournamentConfiguration(ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix, false))
         {
             MaxTime = TimeSpan.FromMinutes(60)
         };
@@ -92,7 +92,7 @@ public sealed class AutoBuildSessionHandlerTests
         var chart = ChartWithDuration(TimeSpan.FromMinutes(2));
         var charts = new Mock<IChartRepository>();
         var phoenixRecords = new Mock<IScoreReader>();
-        var configuration = new TournamentConfiguration(ScoringConfiguration.PumbilityScoring(false))
+        var configuration = new TournamentConfiguration(ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix, false))
         {
             MaxTime = TimeSpan.FromMinutes(60)
         };
@@ -126,7 +126,7 @@ public sealed class AutoBuildSessionHandlerTests
         var chart = ChartWithDuration(TimeSpan.FromMinutes(2));
         var charts = new Mock<IChartRepository>();
         var phoenixRecords = new Mock<IScoreReader>();
-        var configuration = new TournamentConfiguration(ScoringConfiguration.PumbilityScoring(false))
+        var configuration = new TournamentConfiguration(ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix, false))
         {
             MaxTime = TimeSpan.FromMinutes(3)
         };

@@ -252,7 +252,7 @@ else
             _showingUsername = string.Empty;
             return;
         }
-        var scoringConfig = ScoringConfiguration.PumbilityScoring(false);
+        var scoringConfig = ScoringConfiguration.PumbilityScoring(_currentMix, false);
         _scores = (await Mediator.Send(new GetWorldRankingTop50Query(username, _currentType)))
             .Select(r => new ScoreEntry(_charts[r.ChartId], r.Score!.Value, (int)scoringConfig.GetScore(_charts[r.ChartId].Level, r.Score!.Value)))
             .ToArray();

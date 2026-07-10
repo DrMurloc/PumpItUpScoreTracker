@@ -243,14 +243,14 @@ namespace ScoreTracker.SharedKernel.Models
         {
             return mix switch
             {
-                MixEnum.Phoenix => PumbilityScoring(includeCoOp),
+                MixEnum.Phoenix => PhoenixPumbilityScoring(includeCoOp),
                 MixEnum.Phoenix2 => Phoenix2PumbilityScoring(),
                 _ => throw new ArgumentOutOfRangeException(nameof(mix), mix,
                     "No PUMBILITY formula exists for this mix")
             };
         }
 
-        public static ScoringConfiguration PumbilityScoring(bool includeCoOp)
+        private static ScoringConfiguration PhoenixPumbilityScoring(bool includeCoOp)
         {
             var config = new ScoringConfiguration
             {
