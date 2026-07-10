@@ -8,7 +8,7 @@ A Raider.IO-style end-of-season recap: one animated, screenshottable page that w
 
 ## Page & access
 
-- Route **`/Player/{userId}/PhoenixRecap`** — public shareable URL, gated exactly like `/Player/{id}/Sessions` (public profiles only), plus a "My Recap" entry for the signed-in user.
+- Route **`/Player/{userId}/PhoenixRecap`** — public shareable URL, gated exactly like `/Player/{id}/Sessions` (public profiles only), plus a "My Recap" entry for the signed-in user. Community leaderboard rows link public members' recaps (the circulation path: "look at mine" → "what's yours?").
 - Full-screen **slide deck** (scroll-snap sections), CSS keyframe animations only — Blazor Server friendly, no JS interop. Each slide is self-contained and screenshottable.
 - Phoenix accent `#1D9BCC` (`MixEnum.GetAccentColor()`) throughout; the finale slide flips to Phoenix 2 green `#6CA832`.
 - **One-time popup** on login pointing at the page: `MudDialog` in `MainLayout` following the B1G ONE 2024 pattern (`UserSettings` flag, key `MainLayout__PhoenixRecapPopupShown`). Only shown when the viewer's recap row exists. No expiry cutoff initially (set one when the P2 launch date is known).

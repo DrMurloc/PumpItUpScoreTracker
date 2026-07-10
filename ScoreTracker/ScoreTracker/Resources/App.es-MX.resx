@@ -2532,4 +2532,7 @@
   <data name="only {0} pass it" xml:space="preserve">
     <value>solo el {0} lo pasa</value>
   </data>
+  <data name="Phoenix Recap" xml:space="preserve">
+    <value>Resumen Phoenix</value>
+  </data>
 </root>

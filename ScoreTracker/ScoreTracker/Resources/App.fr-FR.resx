@@ -2651,4 +2651,7 @@
   <data name="only {0} pass it" xml:space="preserve">
     <value>seuls {0} le passent</value>
   </data>
+  <data name="Phoenix Recap" xml:space="preserve">
+    <value>Récap Phoenix</value>
+  </data>
 </root>

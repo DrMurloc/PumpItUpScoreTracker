@@ -2654,4 +2654,7 @@
   <data name="only {0} pass it" xml:space="preserve">
     <value>クリア率{0}</value>
   </data>
+  <data name="Phoenix Recap" xml:space="preserve">
+    <value>フェニックスリキャップ</value>
+  </data>
 </root>
