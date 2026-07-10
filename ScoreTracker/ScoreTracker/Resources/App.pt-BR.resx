@@ -2613,4 +2613,10 @@
   <data name="Rebuild Recap PG Cards" xml:space="preserve">
     <value>Reconstruir cards PG do recap</value>
   </data>
+  <data name="Site Theme" xml:space="preserve">
+    <value>Tema do site</value>
+  </data>
+  <data name="Match Current Mix" xml:space="preserve">
+    <value>Acompanhar a versão atual</value>
+  </data>
 </root>

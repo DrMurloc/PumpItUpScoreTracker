@@ -2662,4 +2662,10 @@
   <data name="Rebuild Recap PG Cards" xml:space="preserve">
     <value>Rebuild Recap PG Cards</value>
   </data>
+  <data name="Site Theme" xml:space="preserve">
+    <value>Site Theme</value>
+  </data>
+  <data name="Match Current Mix" xml:space="preserve">
+    <value>Match Current Mix</value>
+  </data>
 </root>

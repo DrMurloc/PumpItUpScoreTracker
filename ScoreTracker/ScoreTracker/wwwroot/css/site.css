@@ -1,0 +1,39 @@
+/* Self-hosted display face — headings, stat numerals, wordmark. Latin subset only:
+   Korean/Japanese glyphs fall through per-glyph to the system CJK fonts in the stack
+   (see --font-display), which keeps mixed-script headings from going anemic. */
+@font-face {
+    font-family: 'Barlow Condensed';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('/fonts/barlow-condensed-500.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Barlow Condensed';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('/fonts/barlow-condensed-600.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Barlow Condensed';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('/fonts/barlow-condensed-700.woff2') format('woff2');
+}
+
+:root {
+    --font-display: 'Barlow Condensed', 'Malgun Gothic', 'Yu Gothic UI', 'Apple SD Gothic Neo', 'Hiragino Sans', sans-serif;
+}
+
+/* Big-number treatment for stats (rating, Pumbility, scores). tabular-nums keeps digit
+   columns steady while values tick up live. */
+.stat-display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .02em;
+}

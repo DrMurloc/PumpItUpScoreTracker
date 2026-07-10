@@ -2663,4 +2663,10 @@
   <data name="Rebuild Recap PG Cards" xml:space="preserve">
     <value>リキャップPGカード再構築</value>
   </data>
+  <data name="Site Theme" xml:space="preserve">
+    <value>サイトテーマ</value>
+  </data>
+  <data name="Match Current Mix" xml:space="preserve">
+    <value>現在のバージョンに合わせる</value>
+  </data>
 </root>

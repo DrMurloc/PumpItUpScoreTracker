@@ -8,6 +8,7 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.Theming
 @using ScoreTracker.Application.Events
 @using ScoreTracker.Domain.Events
 @using MassTransit
@@ -20,11 +21,15 @@
 @implements INotificationHandler<ImportStatusErrorEvent>
 <PageTitle>@L["PIU Scores"]</PageTitle>
 
-<MudThemeProvider Theme="Theme" />
+<MudThemeProvider Theme="_theme" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 <ChartVideoDisplay></ChartVideoDisplay>
+@* The active palette's --mix-* tokens; pages style against these, never literal colors. *@
+<style>
+    @((MarkupString)MixThemes.CssVariablesFor(_themeMix))
+</style>
 <style>
     .dense-nav .mud-nav-link {
         padding-top: 4px;
@@ -79,9 +84,10 @@
         display: none;
     }
 </style>
-<MudLayout>
+<MudLayout Class="@MixThemes.CssClassFor(_themeMix)">
     @* Fixed: the drawer is viewport-pinned, so a scrolling app bar visibly detaches from it. *@
-    <MudAppBar Color="Color.Primary" Fixed="true" Dense="true">
+    @* No Color: the bar wears the palette's AppbarBackground so the shell re-skins per mix. *@
+    <MudAppBar Fixed="true" Dense="true">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="() => _isOpen = !_isOpen"/>
         <MudText Typo="Typo.subtitle1" Style="font-weight: 500; white-space: nowrap;" Class="mr-6">@(_userId == null ? L["PIU Scores"].Value : $"{UserName}")</MudText>
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
@@ -270,9 +276,13 @@
     private const string RecapPopupKey = "MainLayout__PhoenixRecapPopupShown";
     public static readonly DateTimeOffset _cutoff = new DateTimeOffset(2024, 10, 15, 0, 0, 0, TimeSpan.FromHours(-5));
     private MixEnum _currentMix = MixEnum.Phoenix;
+    // Theme resolution: /Account override → current mix. Defaults cover the first render;
+    // the real values land in OnInitializedAsync before content renders.
+    private MixEnum _themeMix = MixEnum.Phoenix;
+    private MudTheme _theme = MixThemes.ThemeFor(MixEnum.Phoenix);
     // Launch order: deploy this build, then run the ChartMix seed script immediately —
     // Phoenix 2 is briefly selectable-but-empty in between (docs/design/phoenix2-implementation.md).
-    private static readonly MixEnum[] SelectableMixes = { MixEnum.XX, MixEnum.Phoenix, MixEnum.Phoenix2 };
+    private static readonly MixEnum[] SelectableMixes = MixThemes.ThemedMixes;
     private string _profileImage = string.Empty;
     private string _gamerTag = string.Empty;
     private IEnumerable<TournamentRecord> _highlightedEvents = Array.Empty<TournamentRecord>();
@@ -286,6 +296,9 @@
         _userId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null;
         // Mix first: the displayed rating follows the viewer's current mix.
         _currentMix = await UiSettings.GetSelectedMix();
+        _themeMix = MixThemes.ResolveThemeMix(
+            await UiSettings.GetSetting(MixThemes.OverrideSettingKey), _currentMix);
+        _theme = MixThemes.ThemeFor(_themeMix);
         _highlightedEvents = (await Mediator.Send(new GetAllTournamentsQuery()))
             .Where(e => e.IsHighlighted);
 
@@ -320,53 +333,6 @@
             Rating = (await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, _currentMix))).SkillRating;
         }
     }
-
-    private static readonly MudTheme Theme = new()
-        {
-            
-            PaletteLight = new()
-            {
-    //77BCDC
-    //466E8d
-                Primary = "#80B3D4",
-                Secondary = "#8FBCD8",
-                Error = "#C72020",
-                Success = "#6EDE7F",
-                Warning = "#FFC433",
-                TextPrimary = "#EDF1F5",
-                TextSecondary = "#EDF1F5",
-                ActionDefault = "#EDF1F5",
-                ActionDisabled = "#d3d3d3",
-                Background = "#18191A",
-                BackgroundGray = "#3A3B3C",
-                Surface = "#242526",
-                TextDisabled = "#d3d3d3",
-                DrawerBackground = "#283E5C",
-                DrawerIcon = "#EDF1F5",
-                DrawerText = "#EDF1F5"
-            },
-            PaletteDark = new()
-            {
-                //77BCDC
-                //466E8d
-                Primary = "#80B3D4",
-                Secondary = "#8FBCD8",
-                Error = "#C72020",
-                Success = "#6EDE7F",
-                Warning = "#FFC433",
-                TextPrimary = "#EDF1F5",
-                TextSecondary = "#EDF1F5",
-                ActionDefault = "#EDF1F5",
-                ActionDisabled = "#d3d3d3",
-                Background = "#18191A",
-                BackgroundGray = "#3A3B3C",
-                Surface = "#242526",
-                TextDisabled = "#d3d3d3",
-                DrawerBackground = "#283E5C",
-                DrawerIcon = "#EDF1F5",
-                DrawerText = "#EDF1F5"
-            }
-        };
 
     public static event EventHandler<ImportStatusUpdatedEvent>? ImportStatusUpdatedEvent;
     public static event EventHandler<MatchUpdatedEvent>? MatchUpdated;
