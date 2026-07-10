@@ -13,8 +13,10 @@
 @using ScoreTracker.Domain.Events
 @using MassTransit
 @using ScoreTracker.Domain.Records
+@using Microsoft.AspNetCore.Components.Routing
 @inherits LayoutComponentBase
 @inject ICurrentUserAccessor CurrentUser
+@implements IDisposable
 @implements INotificationHandler<MatchUpdatedEvent>
 @implements INotificationHandler<ImportStatusUpdatedEvent>
 @implements INotificationHandler<PlayerStatsUpdatedEvent>
@@ -66,10 +68,6 @@
     @* Fixed: the drawer is viewport-pinned, so a scrolling app bar visibly detaches from it. *@
     @* No Color: the bar wears the palette's AppbarBackground so the shell re-skins per mix. *@
     <MudAppBar Fixed="true" Dense="true">
-        @* Hamburger + drawer survive below Md only, until the mobile bottom nav replaces them. *@
-        <MudHidden Breakpoint="Breakpoint.MdAndUp">
-            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="() => _isOpen = !_isOpen"/>
-        </MudHidden>
         <a href="/" class="wordmark mr-2">PIU SCORES</a>
 
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
@@ -239,32 +237,11 @@
             <MudIconButton Icon="@Icons.Material.Filled.NoAccounts" Color="Color.Inherit" Edge="Edge.Start" Href="/Login"></MudIconButton>
         }
     </MudAppBar>
-    @* Mobile-only stopgap: the desktop drawer retired in favor of the top nav; this
-       Temporary overlay serves sub-Md widths until the bottom nav lands. *@
-    <MudDrawer @bind-Open="_isOpen" Variant="@DrawerVariant.Temporary" ClipMode="DrawerClipMode.Always" Width="240px" Elevation="1">
-        <MudDrawerHeader Class="d-flex align-center gap-2 py-3" Style="min-height: unset;">
-            <MudIcon Icon="@Icons.Material.Filled.MusicNote" Size="Size.Small"></MudIcon>
-            <MudText Typo="Typo.subtitle1" Style="font-weight: 600; letter-spacing: .02em;">@L["PIU Scores"]</MudText>
-        </MudDrawerHeader>
-        @* flex-grow 0: the drawer content is a flex column, and the divider's full-width
-           styling flex-grows — horizontal in a toolbar, but here it stretches vertically and
-           swallows the space between the header and the nav. *@
-        <MudDivider Style="flex-grow: 0;"></MudDivider>
-        <MudNavMenu Class="dense-nav pb-4">
-            <MudText Typo="Typo.overline" Class="ml-4 mt-2 d-block nav-section">@L["Play"]</MudText>
-            @if (CurrentUser.IsLoggedIn)
-            {
-                <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">@L["Home"]</MudNavLink>
-                <MudNavLink Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</MudNavLink>
-            }
-            else
-            {
-                <MudNavLink Href="/Login" Icon="@Icons.Material.Filled.NoAccounts">@L["Login"]</MudNavLink>
-            }
-            <MudNavLink Href="/Charts" Icon="@Icons.Material.Filled.List">@L["Charts"]</MudNavLink>
-            <MudNavLink Href="/TierLists" Icon="@Icons.Material.Filled.Topic">@L["Tier Lists"]</MudNavLink>
-
-            <MudText Typo="Typo.overline" Class="ml-4 mt-3 d-block nav-section">@L["My Progress"]</MudText>
+    @* The mobile "More" sheet: everything that didn't earn a bottom-nav slot, mirroring
+       the desktop menu groups in the same order. Bottom-anchored for thumb reach. *@
+    <MudDrawer @bind-Open="_showMore" Anchor="Anchor.Bottom" Variant="@DrawerVariant.Temporary" Height="auto" Class="more-sheet" Elevation="4">
+        <MudNavMenu Class="dense-nav pb-4 pt-2">
+            <MudText Typo="Typo.overline" Class="ml-4 mt-2 d-block nav-section">@L["My Progress"]</MudText>
             @if (CurrentUser.IsLoggedIn)
             {
                 @* XX keeps its legacy progress page; Phoenix and Phoenix 2 share the Phoenix-style pages. *@
@@ -277,6 +254,7 @@
                 {
                     <MudNavLink Href=@($"/Player/{_userId}/PhoenixRecap") Icon="@Icons.Material.Filled.LocalFireDepartment">@L["My Recap"]</MudNavLink>
                 }
+                <MudNavLink Href=@($"/Player/{_userId}/Sessions") Icon="@Icons.Material.Filled.History">@L["My Sessions"]</MudNavLink>
             }
             <MudNavLink Href="/Titles" Icon="@Icons.Material.Filled.Grade">@L["Titles"]</MudNavLink>
 
@@ -320,11 +298,33 @@
                 <MudNavLink Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</MudNavLink>
                 <MudNavLink Href="/ChartRandomizer" Icon="@Icons.Material.Filled.QuestionMark">@L["Chart Randomizer"]</MudNavLink>
                 <MudNavLink Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</MudNavLink>
+                <MudNavLink Href="/ChartCompare" Icon="@Icons.Material.Filled.Compare">@L["Chart Compare"]</MudNavLink>
                 <MudNavLink Href="/StepArtists" Icon="@Icons.Material.Filled.Brush">@L["Step Artists"]</MudNavLink>
             </MudNavGroup>
             <MudNavLink Href="/About" Icon="@Icons.Material.Filled.Info">@L["About"]</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
+
+    @* Thumb-reach primary nav at phone/tablet widths; desktop uses the top nav. *@
+    <MudHidden Breakpoint="Breakpoint.MdAndUp">
+        <nav class="bottom-nav">
+            @if (CurrentUser.IsLoggedIn)
+            {
+                <a href="/" class="@BnClass("/")"><MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Small"></MudIcon><span>@L["Play"]</span></a>
+            }
+            <a href="/TierLists" class="@BnClass("/TierLists")"><MudIcon Icon="@Icons.Material.Filled.Topic" Size="Size.Small"></MudIcon><span>@L["Tiers"]</span></a>
+            <a href="/Charts" class="@BnClass("/Charts")"><MudIcon Icon="@Icons.Material.Filled.List" Size="Size.Small"></MudIcon><span>@L["Charts"]</span></a>
+            @if (CurrentUser.IsLoggedIn)
+            {
+                <a href="/UploadPhoenixScores" class="@BnClass("/UploadPhoenixScores")"><MudIcon Icon="@Icons.Material.Filled.CloudDownload" Size="Size.Small"></MudIcon><span>@L["Import"]</span></a>
+            }
+            else
+            {
+                <a href="/Login" class="@BnClass("/Login")"><MudIcon Icon="@Icons.Material.Filled.Login" Size="Size.Small"></MudIcon><span>@L["Login"]</span></a>
+            }
+            <button type="button" class="bn" @onclick="() => _showMore = true"><MudIcon Icon="@Icons.Material.Filled.MoreHoriz" Size="Size.Small"></MudIcon><span>@L["More"]</span></button>
+        </nav>
+    </MudHidden>
     <MudMainContent>
         <MudContainer>
             @Body
@@ -368,14 +368,35 @@
 @inject NavigationManager NavManager;
 @code
 {
-    // Closed by default: the drawer is now a hamburger-toggled mobile overlay only.
-    private bool _isOpen = false;
+    private bool _showMore = false;
     private Guid? _userId = null;
 
     private Task GoToChart(Chart chart)
     {
         NavManager.NavigateTo($"/Chart/{chart.Id}");
         return Task.CompletedTask;
+    }
+
+    // Bottom-nav active state. The layout doesn't re-render on navigation by itself,
+    // so OnLocationChanged below nudges it (and closes the More sheet).
+    private string BnClass(string href)
+    {
+        var path = "/" + NavManager.ToBaseRelativePath(NavManager.Uri).Split('?')[0].TrimEnd('/');
+        var active = href == "/"
+            ? path == "/"
+            : path.StartsWith(href, StringComparison.OrdinalIgnoreCase);
+        return active ? "bn active" : "bn";
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        _showMore = false;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        NavManager.LocationChanged -= OnLocationChanged;
     }
     private bool _showBite = false;
     private bool _showRecapPopup = false;
@@ -401,6 +422,7 @@
     }
     protected override async Task OnInitializedAsync()
     {
+        NavManager.LocationChanged += OnLocationChanged;
         _userId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null;
         // Mix first: the displayed rating follows the viewer's current mix.
         _currentMix = await UiSettings.GetSelectedMix();

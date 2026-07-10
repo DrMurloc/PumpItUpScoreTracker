@@ -2554,4 +2554,13 @@
   <data name="LIVE" xml:space="preserve">
     <value>진행중</value>
   </data>
+  <data name="More" xml:space="preserve">
+    <value>더보기</value>
+  </data>
+  <data name="Import" xml:space="preserve">
+    <value>가져오기</value>
+  </data>
+  <data name="Tiers" xml:space="preserve">
+    <value>티어</value>
+  </data>
 </root>

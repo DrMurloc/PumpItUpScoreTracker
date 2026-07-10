@@ -2553,4 +2553,13 @@
   <data name="LIVE" xml:space="preserve">
     <value>EN CURSO</value>
   </data>
+  <data name="More" xml:space="preserve">
+    <value>Más</value>
+  </data>
+  <data name="Import" xml:space="preserve">
+    <value>Importar</value>
+  </data>
+  <data name="Tiers" xml:space="preserve">
+    <value>Tiers</value>
+  </data>
 </root>

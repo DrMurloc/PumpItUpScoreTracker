@@ -2598,4 +2598,13 @@
   <data name="LIVE" xml:space="preserve">
     <value>MRGL!</value>
   </data>
+  <data name="More" xml:space="preserve">
+    <value>Mrgl…</value>
+  </data>
+  <data name="Import" xml:space="preserve">
+    <value>Mrglport</value>
+  </data>
+  <data name="Tiers" xml:space="preserve">
+    <value>Trgls</value>
+  </data>
 </root>

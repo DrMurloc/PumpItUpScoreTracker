@@ -172,6 +172,55 @@
     display: none;
 }
 
+/* ===== Mobile: bottom nav + More sheet ===== */
+
+.bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1300;
+    display: flex;
+    align-items: stretch;
+    background: var(--mix-nav);
+    border-top: 1px solid rgba(255, 255, 255, .08);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-nav .bn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 8px 0 9px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-size: .68rem;
+    letter-spacing: .04em;
+    color: var(--mix-ink-muted);
+    text-decoration: none;
+}
+
+.bottom-nav .bn.active {
+    color: var(--mix-primary);
+}
+
+/* Keep page content clear of the fixed bottom nav (Md breakpoint = 960px). */
+@media (max-width: 959.98px) {
+    .mud-main-content {
+        padding-bottom: 72px;
+    }
+}
+
+.more-sheet {
+    max-height: 75vh;
+    overflow-y: auto;
+}
+
 /* Rarity treatment ramp — glow intensity rises with the band. Hue alone can't order the
    bands monotonically (gold is brighter than sapphire), so treatment does; the percentile
    number always rides alongside, so color is never the only channel. Shadows omit a color

@@ -2674,4 +2674,13 @@
   <data name="LIVE" xml:space="preserve">
     <value>LIVE</value>
   </data>
+  <data name="More" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="Import" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="Tiers" xml:space="preserve">
+    <value>Tiers</value>
+  </data>
 </root>
