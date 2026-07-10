@@ -9,13 +9,6 @@
 @using ScoreTracker.Web.Services.Contracts
 @using MediatR
 <PageTitle>Official Leaderboard Search</PageTitle>
-@if (_currentMix == MixEnum.Phoenix2)
-{
-    @* Locked decision (docs/design/phoenix2-implementation.md): the Phoenix 2 mirror is deferred. *@
-    <ComingSoon Message="@L["Phoenix 2 official leaderboards are coming soon."].Value"></ComingSoon>
-}
-else
-{
 <MudText>@L["Last Updated"] - @(_lastImported?.ToLocalTime().ToString() ?? "—")</MudText>
 <MudAutocomplete T="string" AdornmentIcon="@Icons.Material.Filled.Search"
                  ResetValueOnEmptyText="true"
@@ -91,7 +84,6 @@ else
         </MudTable>
     }
 </MudGrid>
-}
 
 @inject IChartRepository Charts;
 @inject IMediator Mediator;
@@ -106,32 +98,30 @@ else
     private DateTimeOffset? _lastImported;
     private async Task SelectUser(string username)
     {
-        var results = (await Mediator.Send(new GetOfficialLeaderboardStatusesQuery(username)))
+        var results = (await Mediator.Send(new GetOfficialLeaderboardStatusesQuery(username, _currentMix)))
             .OrderBy(e=>e.OfficialLeaderboardType)
             .ThenBy(e=>e.LeaderboardName)
             .ThenBy(e=>e.Place)
             .ToArray();
         _nonChartResults = results.Where(r => r.OfficialLeaderboardType != "Chart").ToArray();
-        _chartResults = results.Where(r => r.OfficialLeaderboardType == "Chart").ToArray();
-        var charts = (await Charts.GetCharts(MixEnum.Phoenix))
+        var charts = (await Charts.GetCharts(_currentMix))
             .ToDictionary(c => c.Song.Name.ToString() + " " + c.DifficultyString, StringComparer.OrdinalIgnoreCase);
-        foreach (var result in _chartResults)
-        {
-            _chartMap[result.LeaderboardName] = charts[result.LeaderboardName];
-        }
+        // Chart boards only render with their catalog chart (image, difficulty bubble) —
+        // a mirrored board whose chart isn't imported yet (the Phoenix 2 launch state)
+        // drops from the table until the song lands in the catalog.
+        _chartResults = results
+            .Where(r => r.OfficialLeaderboardType == "Chart" && charts.ContainsKey(r.LeaderboardName))
+            .ToArray();
+        foreach (var result in _chartResults) _chartMap[result.LeaderboardName] = charts[result.LeaderboardName];
 
 
     }
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();
-        if (_currentMix == MixEnum.Phoenix2)
-        {
-            // Coming-soon state — the mirror only has Phoenix data.
-            return;
-        }
-        _lastImported = await Mediator.Send(new GetLastLeaderboardImportTimestampQuery());
-        _usernames = (await Mediator.Send(new GetOfficialLeaderboardUsernamesQuery())).ToArray();
+        if (_currentMix == MixEnum.XX) _currentMix = MixEnum.Phoenix;
+        _lastImported = await Mediator.Send(new GetLastLeaderboardImportTimestampQuery(_currentMix));
+        _usernames = (await Mediator.Send(new GetOfficialLeaderboardUsernamesQuery(_currentMix))).ToArray();
 
 
     }

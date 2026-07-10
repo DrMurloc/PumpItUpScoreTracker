@@ -2369,4 +2369,7 @@
   <data name="Recalculate Phoenix 2 Player Ratings" xml:space="preserve">
     <value>フェニックス2プレイヤー評定再計算</value>
   </data>
+  <data name="Rankings use the official Phoenix 2 PUMBILITY formula." xml:space="preserve">
+    <value>ランキングは公式フェニックス2 PUMBILITY計算式を使用します。</value>
+  </data>
 </root>

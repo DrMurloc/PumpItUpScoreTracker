@@ -2247,4 +2247,7 @@
   <data name="Recalculate Phoenix 2 Player Ratings" xml:space="preserve">
     <value>Recalcular Ratings de jugadores de Phoenix 2</value>
   </data>
+  <data name="Rankings use the official Phoenix 2 PUMBILITY formula." xml:space="preserve">
+    <value>Las clasificaciones usan la fórmula oficial de PUMBILITY de Phoenix 2.</value>
+  </data>
 </root>
