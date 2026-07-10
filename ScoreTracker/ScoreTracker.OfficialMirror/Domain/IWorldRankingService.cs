@@ -9,9 +9,10 @@ namespace ScoreTracker.OfficialMirror.Domain
     {
         Task CalculateWorldRankings(MixEnum mix, CancellationToken cancellationToken);
 
-        Task<IEnumerable<RecordedPhoenixScore>> GetTop50(Name username, string type,
+        Task<IEnumerable<RecordedPhoenixScore>> GetTop50(MixEnum mix, Name username, string type,
             CancellationToken cancellationToken);
 
-        Task<IEnumerable<RecordedPhoenixScore>> GetAll(Name username, CancellationToken cancellationToken);
+        Task<IEnumerable<RecordedPhoenixScore>> GetAll(MixEnum mix, Name username,
+            CancellationToken cancellationToken);
     }
 }

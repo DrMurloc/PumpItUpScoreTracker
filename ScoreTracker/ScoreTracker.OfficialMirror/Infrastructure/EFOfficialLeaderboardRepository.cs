@@ -27,13 +27,15 @@ namespace ScoreTracker.OfficialMirror.Infrastructure
         }
 
 
-        public async Task ClearLeaderboard(string leaderboardType, string leaderboardName,
+        public async Task ClearLeaderboard(MixEnum mix, string leaderboardType, string leaderboardName,
             CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
             database.Set<UserOfficialLeaderboardEntity>().RemoveRange(
                 database.Set<UserOfficialLeaderboardEntity>().Where(u =>
-                    u.LeaderboardName == leaderboardName && u.LeaderboardType == leaderboardType));
+                    u.MixId == mixId && u.LeaderboardName == leaderboardName &&
+                    u.LeaderboardType == leaderboardType));
             await database.SaveChangesAsync(cancellationToken);
         }
 
@@ -74,39 +76,46 @@ namespace ScoreTracker.OfficialMirror.Infrastructure
             await database.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<string>> GetOfficialLeaderboardUsernames(string? leaderboardType,
+        public async Task<IEnumerable<string>> GetOfficialLeaderboardUsernames(MixEnum mix, string? leaderboardType,
             CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            var result = database.Set<UserOfficialLeaderboardEntity>().AsQueryable();
+            var mixId = MixIds.For(mix);
+            var result = database.Set<UserOfficialLeaderboardEntity>().Where(e => e.MixId == mixId);
             if (leaderboardType != null) result = result.Where(e => e.LeaderboardType == leaderboardType);
             return await result.Select(e => e.Username).Distinct()
                 .ToArrayAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<UserOfficialLeaderboard>> GetOfficialLeaderboardStatuses(string username,
-            CancellationToken cancellationToken)
+        public async Task<IEnumerable<UserOfficialLeaderboard>> GetOfficialLeaderboardStatuses(MixEnum mix,
+            string username, CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            return await database.Set<UserOfficialLeaderboardEntity>().Where(e => e.Username == username)
+            var mixId = MixIds.For(mix);
+            return await database.Set<UserOfficialLeaderboardEntity>()
+                .Where(e => e.MixId == mixId && e.Username == username)
                 .Select(e =>
                     new UserOfficialLeaderboard(e.Username, e.Place, e.LeaderboardType, e.LeaderboardName, e.Score))
                 .ToArrayAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<WorldRankingRecord>> GetAllWorldRankings(CancellationToken cancellationToken)
+        public async Task<IEnumerable<WorldRankingRecord>> GetAllWorldRankings(MixEnum mix,
+            CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            return await database.Set<UserWorldRanking>()
+            var mixId = MixIds.For(mix);
+            return await database.Set<UserWorldRanking>().Where(u => u.MixId == mixId)
                 .Select(u => new WorldRankingRecord(u.UserName, u.Type, u.AverageLevel, u.AverageScore, u.SinglesCount,
                     u.DoublesCount, u.TotalRating, u.CompetitiveLevel, u.SinglesCompetitive, u.DoublesCompetitive))
                 .ToArrayAsync(cancellationToken);
         }
 
-        public async Task DeleteWorldRankings(CancellationToken cancellationToken)
+        public async Task DeleteWorldRankings(MixEnum mix, CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            database.Set<UserWorldRanking>().RemoveRange(database.Set<UserWorldRanking>());
+            var mixId = MixIds.For(mix);
+            database.Set<UserWorldRanking>().RemoveRange(
+                database.Set<UserWorldRanking>().Where(u => u.MixId == mixId));
             await database.SaveChangesAsync(cancellationToken);
         }
 
@@ -133,17 +142,20 @@ namespace ScoreTracker.OfficialMirror.Infrastructure
             await database.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task FixRankingOrders(CancellationToken cancellationToken)
+        public async Task FixRankingOrders(MixEnum mix, CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
             var current = 1;
-            var boards = await database.Set<UserOfficialLeaderboardEntity>().Select(u => u.LeaderboardName).Distinct()
+            var boards = await database.Set<UserOfficialLeaderboardEntity>().Where(u => u.MixId == mixId)
+                .Select(u => u.LeaderboardName).Distinct()
                 .ToArrayAsync(cancellationToken);
             var max = boards.Length;
             foreach (var boardName in boards)
             {
                 _logger.LogInformation($"Board {current++}/{max}");
-                var rankings = await database.Set<UserOfficialLeaderboardEntity>().Where(b => b.LeaderboardName == boardName)
+                var rankings = await database.Set<UserOfficialLeaderboardEntity>()
+                    .Where(b => b.MixId == mixId && b.LeaderboardName == boardName)
                     .ToArrayAsync(cancellationToken);
                 var rollingPlace = 1;
                 foreach (var rankingGroup in rankings.GroupBy(r => r.Score).OrderByDescending(g => g.Key))
