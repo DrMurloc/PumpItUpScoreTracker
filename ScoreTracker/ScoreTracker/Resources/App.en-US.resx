@@ -2668,4 +2668,10 @@
   <data name="Match Current Mix" xml:space="preserve">
     <value>Match Current Mix</value>
   </data>
+  <data name="My Sessions" xml:space="preserve">
+    <value>My Sessions</value>
+  </data>
+  <data name="LIVE" xml:space="preserve">
+    <value>LIVE</value>
+  </data>
 </root>

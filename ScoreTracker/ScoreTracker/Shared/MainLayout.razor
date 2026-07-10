@@ -54,28 +54,6 @@
         opacity: .65;
     }
 
-    .appbar-search .mud-input-control {
-        margin: 0;
-    }
-
-    .appbar-search .mud-input.mud-input-outlined {
-        background: rgba(255, 255, 255, .15);
-    }
-
-    .appbar-search .mud-input.mud-input-outlined input,
-    .appbar-search .mud-input-adornment-icon {
-        color: #EDF1F5;
-    }
-
-    .appbar-search .mud-input.mud-input-outlined input::placeholder {
-        color: rgba(237, 241, 245, .75);
-        opacity: 1;
-    }
-
-    .appbar-search .mud-input.mud-input-outlined .mud-input-outlined-border {
-        border-color: rgba(237, 241, 245, .5);
-    }
-
     .mud-drawer {
         scrollbar-width: none;
     }
@@ -88,14 +66,153 @@
     @* Fixed: the drawer is viewport-pinned, so a scrolling app bar visibly detaches from it. *@
     @* No Color: the bar wears the palette's AppbarBackground so the shell re-skins per mix. *@
     <MudAppBar Fixed="true" Dense="true">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="() => _isOpen = !_isOpen"/>
-        <MudText Typo="Typo.subtitle1" Style="font-weight: 500; white-space: nowrap;" Class="mr-6">@(_userId == null ? L["PIU Scores"].Value : $"{UserName}")</MudText>
+        @* Hamburger + drawer survive below Md only, until the mobile bottom nav replaces them. *@
+        <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="() => _isOpen = !_isOpen"/>
+        </MudHidden>
+        <a href="/" class="wordmark mr-2">PIU SCORES</a>
+
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
-            <div class="d-flex align-center appbar-search" style="min-width: 220px; max-width: 320px;">
+            <nav class="top-nav">
+                <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true">
+                    <ActivatorContent>
+                        <button class="top-nav-btn">@L["Play"] <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon></button>
+                    </ActivatorContent>
+                    <ChildContent>
+                        @if (CurrentUser.IsLoggedIn)
+                        {
+                            <MudMenuItem Href="/" Icon="@Icons.Material.Filled.Home">@L["What Should I Play"]</MudMenuItem>
+                        }
+                        <MudMenuItem Href="/Charts" Icon="@Icons.Material.Filled.List">@L["Charts"]</MudMenuItem>
+                        @if (CurrentUser.IsLoggedIn)
+                        {
+                            <MudMenuItem Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</MudMenuItem>
+                        }
+                    </ChildContent>
+                </MudMenu>
+
+                <a href="/TierLists" class="top-nav-btn">@L["Tier Lists"]</a>
+
+                <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true">
+                    <ActivatorContent>
+                        <button class="top-nav-btn">@L["My Progress"] <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon></button>
+                    </ActivatorContent>
+                    <ChildContent>
+                        @if (CurrentUser.IsLoggedIn)
+                        {
+                            @* XX keeps its legacy progress page; Phoenix and Phoenix 2 share the Phoenix-style pages. *@
+                            <MudMenuItem Href=@(_currentMix == MixEnum.XX ? "/Progress" : "/Phoenix/Progress") Icon="@Icons.Material.Filled.BarChart">@L["Progress Charts"]</MudMenuItem>
+                            @if (_currentMix != MixEnum.XX)
+                            {
+                                <MudMenuItem Href="/Pumbility" Icon="@Icons.Material.Filled.Star">@L["PUMBILITY"]</MudMenuItem>
+                            }
+                            @if (_hasRecap)
+                            {
+                                <MudMenuItem Href=@($"/Player/{_userId}/PhoenixRecap") Icon="@Icons.Material.Filled.LocalFireDepartment">@L["My Recap"]</MudMenuItem>
+                            }
+                            <MudMenuItem Href=@($"/Player/{_userId}/Sessions") Icon="@Icons.Material.Filled.History">@L["My Sessions"]</MudMenuItem>
+                        }
+                        <MudMenuItem Href="/Titles" Icon="@Icons.Material.Filled.Grade">@L["Titles"]</MudMenuItem>
+                    </ChildContent>
+                </MudMenu>
+
+                <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true">
+                    <ActivatorContent>
+                        <button class="top-nav-btn">
+                            @L["Compete"]
+                            @if (_highlightedEvents.Any())
+                            {
+                                <span class="live-pill">@L["LIVE"]</span>
+                            }
+                            <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon>
+                        </button>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <div class="mega-panel">
+                            <div class="mega-col">
+                                <div class="mega-head">@L["Compete"]</div>
+                                <MudMenuItem Href="/WeeklyCharts" Icon="@Icons.Material.Filled.ViewWeek">@L["Weekly Charts"]</MudMenuItem>
+                                <MudMenuItem Href="/Tournaments/MarchOfMurlocs" Icon="@Icons.Material.Filled.Alarm">March of Murlocs</MudMenuItem>
+                                @foreach (var tourney in _highlightedEvents)
+                                {
+                                    @if (tourney.Type == TournamentType.Stamina)
+                                    {
+                                        <MudMenuItem Href=@($"/Tournament/Stamina/{tourney.Id}") Icon="@Icons.Material.Filled.Event">@tourney.Name</MudMenuItem>
+                                    }
+                                    else if (tourney.LinkOverride != null)
+                                    {
+                                        <MudMenuItem Href="@tourney.LinkOverride.ToString()" Target="_blank" Icon="@Icons.Material.Filled.Event">@tourney.Name</MudMenuItem>
+                                    }
+                                    else
+                                    {
+                                        <MudMenuItem Href=@($"/Tournament/{tourney.Id}/Qualifiers") Icon="@Icons.Material.Filled.Event">@tourney.Name</MudMenuItem>
+                                    }
+                                }
+                            </div>
+                            <div class="mega-col">
+                                <div class="mega-head">@L["Rankings"]</div>
+                                @if (CurrentUser.IsLoggedIn)
+                                {
+                                    <MudMenuItem Href="/ScoreRankings" Icon="@Icons.Material.Filled.Stars">@L["Score Ranking"]</MudMenuItem>
+                                }
+                                <MudMenuItem Href="/Completion" Icon="@Icons.Material.Filled.Done">@L["Completion Leaderboards"]</MudMenuItem>
+                                <MudMenuItem Href="/UcsLeaderboards" Icon="@Icons.Material.Filled.EditNote">@L["UCS Leaderboards"]</MudMenuItem>
+                                <MudMenuItem Href="/PlayerRankings" Icon="@Icons.Material.Filled.Public">@L["World Rankings"]</MudMenuItem>
+                                <MudMenuItem Href="/OfficialLeaderboards" Icon="@Icons.Material.Filled.Score">@L["Official Leaderboard Search"]</MudMenuItem>
+                                <MudMenuItem Href="/OfficialLeaderboards/PlayerCompare" Icon="@Icons.Material.Filled.CompareArrows">@L["Leaderboard Player Compare"]</MudMenuItem>
+                            </div>
+                        </div>
+                    </ChildContent>
+                </MudMenu>
+
+                <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true">
+                    <ActivatorContent>
+                        <button class="top-nav-btn">@L["Community"] <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon></button>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <MudMenuItem Href="/Communities" Icon="@Icons.Material.Filled.Group">@L["Communities"]</MudMenuItem>
+                        <MudMenuItem Href="https://discord.gg/MEYvr3bFte" Target="_blank" Icon="@Icons.Custom.Brands.Discord">@L["Discord"]</MudMenuItem>
+                    </ChildContent>
+                </MudMenu>
+
+                <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true">
+                    <ActivatorContent>
+                        <button class="top-nav-btn">@L["Tools"] <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon></button>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <MudMenuItem Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</MudMenuItem>
+                        <MudMenuItem Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</MudMenuItem>
+                        <MudMenuItem Href="/ChartRandomizer" Icon="@Icons.Material.Filled.QuestionMark">@L["Chart Randomizer"]</MudMenuItem>
+                        <MudMenuItem Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</MudMenuItem>
+                        <MudMenuItem Href="/ChartCompare" Icon="@Icons.Material.Filled.Compare">@L["Chart Compare"]</MudMenuItem>
+                        <MudMenuItem Href="/StepArtists" Icon="@Icons.Material.Filled.Brush">@L["Step Artists"]</MudMenuItem>
+                        <MudMenuItem Href="/About" Icon="@Icons.Material.Filled.Info">@L["About"]</MudMenuItem>
+                    </ChildContent>
+                </MudMenu>
+            </nav>
+        </MudHidden>
+
+        <MudSpacer></MudSpacer>
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <div class="d-flex align-center appbar-search mr-3" style="min-width: 200px; max-width: 300px;">
                 <ChartSelector Mix="_currentMix" Label="" Placeholder="@L["Find a chart"].Value" Variant="Variant.Outlined" Margin="Margin.Dense" ChartIdSelected="GoToChart"></ChartSelector>
             </div>
         </MudHidden>
-        <MudSpacer></MudSpacer>
+
+        @* The mix switcher: promoted from the bottom of the drawer — it changes the whole
+           site's data context, so it lives in the shell header like an org switcher. *@
+        <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
+            <ActivatorContent>
+                <button class="mix-pill mr-3" title="@L["Mix"]"><i class="mix-dot"></i>@_currentMix.GetName()</button>
+            </ActivatorContent>
+            <ChildContent>
+                @foreach (var value in SelectableMixes)
+                {
+                    <MudMenuItem OnClick="() => SetMix(value)">@value.GetName()</MudMenuItem>
+                }
+            </ChildContent>
+        </MudMenu>
+
         @if (CurrentUser.IsLoggedIn)
         {
             <MudHidden Breakpoint="Breakpoint.Xs">
@@ -116,6 +233,7 @@
                     </MudAvatar>
                 </ActivatorContent>
                 <ChildContent>
+                    <div class="px-4 py-1" style="color: var(--mix-ink-muted); font-size: .8rem;">@UserName</div>
                     <MudMenuItem Href="/Account" Icon="@Icons.Material.Filled.AccountCircle">@L["Account"]</MudMenuItem>
                     <MudMenuItem Href="/Logout" Icon="@Icons.Material.Filled.Logout">@L["Logout"]</MudMenuItem>
                 </ChildContent>
@@ -126,7 +244,9 @@
             <MudIconButton Icon="@Icons.Material.Filled.NoAccounts" Color="Color.Inherit" Edge="Edge.Start" Href="/Login"></MudIconButton>
         }
     </MudAppBar>
-    <MudDrawer @bind-Open="_isOpen" Variant="@DrawerVariant.Responsive" Breakpoint="Breakpoint.Md" ClipMode="DrawerClipMode.Always" Width="240px" Elevation="1">
+    @* Mobile-only stopgap: the desktop drawer retired in favor of the top nav; this
+       Temporary overlay serves sub-Md widths until the bottom nav lands. *@
+    <MudDrawer @bind-Open="_isOpen" Variant="@DrawerVariant.Temporary" ClipMode="DrawerClipMode.Always" Width="240px" Elevation="1">
         <MudDrawerHeader Class="d-flex align-center gap-2 py-3" Style="min-height: unset;">
             <MudIcon Icon="@Icons.Material.Filled.MusicNote" Size="Size.Small"></MudIcon>
             <MudText Typo="Typo.subtitle1" Style="font-weight: 600; letter-spacing: .02em;">@L["PIU Scores"]</MudText>
@@ -208,12 +328,6 @@
                 <MudNavLink Href="/StepArtists" Icon="@Icons.Material.Filled.Brush">@L["Step Artists"]</MudNavLink>
             </MudNavGroup>
             <MudNavLink Href="/About" Icon="@Icons.Material.Filled.Info">@L["About"]</MudNavLink>
-            <MudNavGroup Title=@(L["Mix"]+" ("+_currentMix.GetName()+")") Icon="@Icons.Material.Filled.LibraryMusic" Expanded="false">
-                @foreach (var value in SelectableMixes)
-                {
-                    <MudNavLink OnClick="()=>SetMix(value)">@value.GetName()</MudNavLink>
-                }
-            </MudNavGroup>
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
@@ -259,9 +373,8 @@
 @inject NavigationManager NavManager;
 @code
 {
-    // Open by default: the Responsive drawer variant keeps it as a persistent sidebar on
-    // desktop widths and auto-collapses to the hamburger-toggled overlay below Md.
-    private bool _isOpen = true;
+    // Closed by default: the drawer is now a hamburger-toggled mobile overlay only.
+    private bool _isOpen = false;
     private Guid? _userId = null;
 
     private Task GoToChart(Chart chart)

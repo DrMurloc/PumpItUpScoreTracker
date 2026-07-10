@@ -38,6 +38,127 @@
     letter-spacing: .02em;
 }
 
+/* ===== Shell: wordmark, top nav, mega-menus, mix pill ===== */
+
+.wordmark {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: .08em;
+    color: var(--mix-ink);
+    text-shadow: 0 0 12px var(--mix-glow);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.top-nav {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 14px;
+}
+
+.top-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: .95rem;
+    letter-spacing: .05em;
+    color: var(--mix-ink);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.top-nav-btn:hover {
+    background: rgba(255, 255, 255, .08);
+}
+
+.mega-panel {
+    display: flex;
+    gap: 8px;
+    padding: 4px 6px;
+}
+
+.mega-col {
+    min-width: 180px;
+}
+
+.mega-head {
+    font-family: var(--font-display);
+    font-size: .7rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    padding: 8px 16px 2px;
+}
+
+.live-pill {
+    background: var(--mix-secondary);
+    color: var(--mix-bg);
+    font-family: var(--font-display);
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    border-radius: 8px;
+    padding: 1px 6px;
+    margin-left: 4px;
+}
+
+.mix-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: transparent;
+    border: 1px solid var(--mix-primary);
+    border-radius: 16px;
+    padding: 3px 12px;
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: .8rem;
+    letter-spacing: .08em;
+    color: var(--mix-ink);
+    white-space: nowrap;
+}
+
+.mix-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--mix-primary);
+    box-shadow: 0 0 8px var(--mix-glow);
+}
+
+/* App-bar chart search, re-tinted through tokens. */
+.appbar-search .mud-input-control {
+    margin: 0;
+}
+
+.appbar-search .mud-input.mud-input-outlined {
+    background: rgba(255, 255, 255, .12);
+}
+
+.appbar-search .mud-input.mud-input-outlined input,
+.appbar-search .mud-input-adornment-icon {
+    color: var(--mix-ink);
+}
+
+.appbar-search .mud-input.mud-input-outlined input::placeholder {
+    color: var(--mix-ink-muted);
+    opacity: 1;
+}
+
+.appbar-search .mud-input.mud-input-outlined .mud-input-outlined-border {
+    border-color: var(--mix-ink-muted);
+}
+
 /* Rarity treatment ramp — glow intensity rises with the band. Hue alone can't order the
    bands monotonically (gold is brighter than sapphire), so treatment does; the percentile
    number always rides alongside, so color is never the only channel. Shadows omit a color

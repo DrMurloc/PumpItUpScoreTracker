@@ -2669,4 +2669,10 @@
   <data name="Match Current Mix" xml:space="preserve">
     <value>現在のバージョンに合わせる</value>
   </data>
+  <data name="My Sessions" xml:space="preserve">
+    <value>マイセッション</value>
+  </data>
+  <data name="LIVE" xml:space="preserve">
+    <value>開催中</value>
+  </data>
 </root>
