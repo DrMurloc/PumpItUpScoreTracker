@@ -7,6 +7,7 @@
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Services.Theming
 @using ScoreTracker.Application.Events
@@ -320,8 +321,21 @@
     </MudHidden>
     <MudMainContent>
         <MudContainer>
-            @Body
-            
+            @if (LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath))
+            {
+                @* Pre-XX mixes only reach pages validated for them (LegacyMixGate);
+                   everything else shows this until it gets a field-test pass. *@
+                <div class="tier-list-cta">
+                    <MudIcon Icon="@Icons.Material.Filled.Construction"></MudIcon>
+                    <MudText Typo="Typo.h5">@L["This page isn't ready for older mixes yet"]</MudText>
+                    <MudButton Href="/Charts" Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.QueueMusic">@L["Charts"]</MudButton>
+                </div>
+            }
+            else
+            {
+                @Body
+            }
+
             <MudDialog @bind-Visible="_showBite">
                 <DialogContent>
                     <MudImage Src="https://piuimages.arroweclip.se/TheBigOne.png" Height="400" ObjectFit="ObjectFit.ScaleDown" Style="display:block;margin-left:auto;margin-right:auto;"></MudImage>

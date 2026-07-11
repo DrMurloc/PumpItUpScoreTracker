@@ -2936,4 +2936,28 @@
   <data name="Debuted in: X" xml:space="preserve">
     <value>Debuted in: {0}</value>
   </data>
+  <data name="This page isn't ready for older mixes yet" xml:space="preserve">
+    <value>This page isn't ready for older mixes yet</value>
+  </data>
+  <data name="Prime" xml:space="preserve">
+    <value>Prime</value>
+  </data>
+  <data name="Fiesta" xml:space="preserve">
+    <value>Fiesta</value>
+  </data>
+  <data name="NX" xml:space="preserve">
+    <value>NX</value>
+  </data>
+  <data name="Exceed / Zero" xml:space="preserve">
+    <value>Exceed / Zero</value>
+  </data>
+  <data name="Premiere / Prex" xml:space="preserve">
+    <value>Premiere / Prex</value>
+  </data>
+  <data name="Classic" xml:space="preserve">
+    <value>Classic</value>
+  </data>
+  <data name="American" xml:space="preserve">
+    <value>American</value>
+  </data>
 </root>

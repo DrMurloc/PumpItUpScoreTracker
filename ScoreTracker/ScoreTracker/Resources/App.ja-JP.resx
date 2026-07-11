@@ -2937,4 +2937,28 @@
   <data name="Debuted in: X" xml:space="preserve">
     <value>初出バージョン: {0}</value>
   </data>
+  <data name="This page isn't ready for older mixes yet" xml:space="preserve">
+    <value>このページはまだ旧バージョンに対応していません</value>
+  </data>
+  <data name="Prime" xml:space="preserve">
+    <value>Prime</value>
+  </data>
+  <data name="Fiesta" xml:space="preserve">
+    <value>Fiesta</value>
+  </data>
+  <data name="NX" xml:space="preserve">
+    <value>NX</value>
+  </data>
+  <data name="Exceed / Zero" xml:space="preserve">
+    <value>Exceed / Zero</value>
+  </data>
+  <data name="Premiere / Prex" xml:space="preserve">
+    <value>Premiere / Prex</value>
+  </data>
+  <data name="Classic" xml:space="preserve">
+    <value>クラシック</value>
+  </data>
+  <data name="American" xml:space="preserve">
+    <value>アメリカ版</value>
+  </data>
 </root>
