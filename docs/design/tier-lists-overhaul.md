@@ -72,7 +72,7 @@ Today "Difficulty Categorization", "Group By", and a hidden "Personalized Diffic
   - *Comfortable* (default): jacket + `DifficultyBubble` + grade/plate overlay, song name, To-Do + Details actions.
   - *Compact*: jacket sticker sheet with corner badges — the at-a-glance completion view and the closest on-screen analog of the share image.
   - *Table*: sortable rows (song, tier, my score, grade, plate, percentile, To-Do). Text View's replacement.
-- **Chart-details dialog** (tap any card): **leads with the video** (as today's video dialog does), then chart meta (BPM, note count, step artist, song artist), placements across all lenses, To-Do toggle, score recording (reuses the existing edit grid — deliberately low-key), link to `/Chart/{id}`. Leaves a slot for future comments/UGC. One shared component — candidates elsewhere (/Charts, WeeklyCharts) adopt it in later passes.
+- **Chart-details dialog** (tap any card): **leads with the video** (as today's video dialog does), then chart meta (BPM, note count, step artist, song artist), placements across all lenses, To-Do toggle, score recording (reuses the existing edit grid — deliberately low-key), link to `/Chart/{id}`. Ingested PIU Center step-data metadata lands here too, with the attribution footer (§8a). Leaves a slot for future comments/UGC. One shared component — candidates elsewhere (/Charts, WeeklyCharts) adopt it in later passes.
 - **Mobile (rule 10)**: at phone widths a bottom action bar carries folder pill, Filters, and Download; the toolbar collapses to essentials.
 
 ## 5. Loading, empty, and failure states (rule 9)
@@ -130,16 +130,16 @@ Skill automation is out of scope for the overhaul itself; Phoenix 1 skills stay 
 
 piucenter's `/skill` pages are generated from a **per-chart feature matrix** (~35 numeric columns: Run/Drill/Jack/Footswitch/Bracket frequencies, five twist-angle grades, travel distance, irregular rhythm, hands, etc.), computed by a pipeline ([maxwshen/piu-analysis](https://github.com/maxwshen/piu-analysis)) that parses stepcharts and annotates limb placement (author-estimated 80–90% accurate). The raw matrix is strictly richer than our boolean tags — frequencies with tunable thresholds, and the raw material for "you're weak at brackets" analysis.
 
-**Status (owner knowledge, 2026-07-11 — the public GitHub lags the live project):** piucenter is **active** — data covers through the latest Phoenix 1 patch, the community Discord was active as of May 2026, and **aesthete** currently maintains it. The owner has an existing, warm integration conversation with the maintainers — backlogged, not blocked.
+**Status (owner knowledge, 2026-07-11 — the public GitHub lags the live project):** piucenter is **active** — data covers through the latest Phoenix 1 patch, the community Discord was active as of May 2026, and **aesthete** currently maintains it. The owner knows the maintainers and has discussed integration before; no export negotiation gates this work.
 
-- **Plan**: revive that conversation and agree a **stable export** (features file or small endpoint) plus an update cadence — realistically per-game-patch, consumed by a recurring Hangfire job with a watermark check (no scraping, no heavy nightly pulls).
-- **Attribution**: PIU Center gets a visible credit link wherever its data renders — the By-Skill view header and the skills row of the details dialog ("Skill data: PIU Center, maintained by aesthete").
-- **Name mapping**: their unique key is `"<Song> - <Artist> <S|D><level> <variant>"` (e.g. `Super Fantasy - SHK S16 arcade`) — parseable into (song, artist, type, level, variant) and matched against Catalog with normalization plus an admin-reviewed alias table for the long tail.
+- **Plan (owner-locked): HTML-crawl it now.** A **weekly** Hangfire job, **gap-driven** — it only fetches for charts we're missing skill data on, so steady-state runs are near no-ops. Crawl the **per-chart pages** (`/chart/<key>`), not the `/skill` listings: the listings only expose top-20-per-level names, while chart pages carry the full per-chart analysis — which also feeds the metadata ingestion below. HtmlAgilityPack client in the OfficialMirror ACL mold. "Charts that changed" is deferred — charts only really change between mixes.
+- **Generic external-name map**: mismatched names land in a shared alias table keyed with a **Source column** — `(Source, ExternalKey) → ChartId` — because a second community-tool integration is planned later. piucenter's key format `"<Song> - <Artist> <S|D><level> <variant>"` doubles as the crawl-URL builder, so the alias table is also the fetch plan. Most songs should auto-match on normalization; owner + Claude seed the long tail.
+- **Metadata beyond skills**: piucenter is effectively our **primary chart step-data source** going forward. Anything meaningful on their chart pages (data-driven difficulty prediction, stepchart-derived stats, similar charts) is fair game to ingest into the chart-details surface, with a **"PIU Center" attribution footer on the chart detail page**.
+- **Attribution swap (owner-locked)**: PIU Center credit replaces **all** existing skills attribution — the Chabala skills credit goes away. Chabala's ongoing role is his **difficulty attribution** only: the Chabala lens becomes an import of his posted tier lists (later; Phoenix 1 only).
 - **Phoenix 2**: expectation is that active downstream usage encourages upstream P2 coverage; the per-mix skills capability flag simply flips on when their data exists for a mix.
 - **Fallback only**: forking piu-analysis and managing simfiles/runs ourselves is explicitly *not* the plan while piucenter is maintained — it's the contingency if the project goes dormant.
-- **Chabala follow-on**: once skills are automated, Chabala ingestion becomes a small admin tool — AI-extract a tier list from the PNG he posts to Google Drive (jacket-crop matching against our jacket art), proposed → admin-confirmed. Separate project, unblocked by this one.
 
-Suggested sequence: (1) revive the integration conversation with aesthete; (2) agree export format + cadence; (3) recurring ingestion job + alias review queue; (4) P1 skills flip to ingested data with the credit link; (5) P2 when upstream covers it; (6) Chabala PNG extractor.
+Sequence: (1) crawler + generic alias table; (2) weekly gap-driven job; (3) P1 skills flip to ingested data, attribution swapped to PIU Center; (4) chart-detail metadata ingestion + footer credit; (5) P2 when upstream covers it; (6) Chabala difficulty-attribution import (later, P1 only).
 
 ## 9. Localization (rule 7)
 
@@ -180,5 +180,5 @@ Folder Level progression (own doc) · skill-tagging automation · UGC comments (
 All three original questions were resolved 2026-07-11 (toolbar + per-page density; By-Skill view stays for P1; QR approved — see the round-2 feedback note in §2). Remaining follow-ups, none blocking implementation:
 
 1. Colorblind-simulator pass on the dashed-blue / dashed-green border pair before ship (rule 8).
-2. Revive the backlogged piucenter integration conversation (aesthete) and agree an export format (§8a) — gates the skill-automation project, not the overhaul.
+2. Build the piucenter crawler + generic alias table (§8a) — its own project, independent of the overhaul.
 3. Folder Level workshop ([folder-level-progression.md](folder-level-progression.md)).
