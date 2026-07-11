@@ -20,8 +20,8 @@
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Services.Theming
+@using ScoreTracker.Application.Queries
 @using System.Text.Json
-@using System.Drawing
 @implements IDisposable
 @inject ChartVideoDisplayer VideoDisplayer
 <PageTitle>@L["PIU Tier List"]</PageTitle>
@@ -783,7 +783,9 @@ else
         public HashSet<string> StepArtists { get; set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> SongArtists { get; set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     }
-    private sealed record TierGroup(string Key, string Name, string Color, IReadOnlyList<SongTierListEntry> Entries);
+    // Color is the on-screen CSS token reference; ShareHex is the same hue resolved to a
+    // raw hex for the share-card renderer (which can't read CSS custom properties).
+    private sealed record TierGroup(string Key, string Name, string Color, string ShareHex, IReadOnlyList<SongTierListEntry> Entries);
 
     private IEnumerable<TitleProgress> _titleProgress = Array.Empty<TitleProgress>();
     private IEnumerable<Guid> _unpassedTodos => _finalEntries.Select(e => e.ChartId).Where(chartId => _scores.ContainsKey(chartId) && _scores[chartId].IsBroken && _todos.Contains(chartId));
@@ -1016,7 +1018,7 @@ else
         await SaveSettings();
     }
 
-    // --- Image download (System.Drawing; rebuilt on SkiaSharp in C8) ------------------
+    // --- Share image (SkiaSharp renderer via IShareCardRenderer, C8) --------------------
 
     public string DifficultyBubblePath(ChartType chartType, DifficultyLevel level) => $"https://piuimages.arroweclip.se/difficulty/{_currentMix}/{chartType.GetShortHand().ToLower()}{level}.png";
     private string LetterGradeImage(PhoenixLetterGrade letterGrade, bool isBroken) =>
@@ -1024,138 +1026,71 @@ else
 
     private string PlateImage(PhoenixPlate plate) => $"https://piuimages.arroweclip.se/plates/{plate.GetShorthand().ToLower()}.png";
 
+    private string LensDisplayName(string lens) => lens switch
+    {
+        "Pass" => L["Pass Difficulty"],
+        "Score" => L["Score Difficulty"],
+        "Popularity" => L["Popularity"],
+        _ => lens
+    };
+
     private async Task DownloadImage()
     {
         _isBuildingImage = true;
-        using var client = new HttpClient();
-        const int width = 1000;
-        const int songWidth = 140;
-        const int padding = 15;
-        const int songHeight = 80;
-        const int sectionTextHeight = 45;
-        const int gradeWidth = 30;
-        const int gradeHeight = 22;
-        const int gradePadding = 5;
-        var visibleGroups = _groups
-            .Select(g => (g.Name, Entries: g.Entries.Where(ShouldChartShow).ToArray()))
-            .Where(g => g.Entries.Any())
-            .ToArray();
-        var height = 50 + padding * 2 + 50 + padding;
-        foreach (var group in visibleGroups)
+        try
         {
-            height += sectionTextHeight;
-            var xTest = padding;
-            foreach (var _ in group.Entries)
-            {
-                if (xTest > width - 155)
-                {
+            var palette = MixThemes.PaletteFor(_currentMix);
+            var rows = _groups
+                .Select(g => (Group: g,
+                    Entries: g.Entries.Where(ShouldChartShow).Where(e => _charts.ContainsKey(e.ChartId)).ToArray()))
+                .Where(g => g.Entries.Any())
+                .Select(g => new TierListShareCard.Row(g.Group.Name, g.Group.ShareHex, g.Entries
+                    .Select(e =>
+                    {
+                        var chart = _charts[e.ChartId];
+                        var score = _scores.TryGetValue(chart.Id, out var s) ? s : null;
+                        return new TierListShareCard.Tile(
+                            chart.Song.ImagePath.ToString(),
+                            score?.Score != null
+                                ? LetterGradeImage(score.Score.Value.LetterGrade, score.IsBroken)
+                                : null,
+                            score?.Plate != null ? PlateImage(score.Plate.Value) : null,
+                            score is { IsBroken: false } ? MixPalette.Success :
+                            _todos.Contains(chart.Id) ? MixPalette.Info : null);
+                    })
+                    .ToArray()))
+                .ToArray();
+            var title = _chartType == ChartType.CoOp
+                ? $"{L["CoOp"]} ×{_level}"
+                : $"{L[_chartType == ChartType.Single ? "Singles" : "Doubles"]} {_level}";
+            var stamp = PersonalizedActive
+                ? L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name].ToString()
+                : L["Community"].ToString();
+            var linkUrl = $"https://piuscores.arroweclip.se/TierLists/{_chartType}/{_level}";
+            var card = new TierListShareCard(
+                title,
+                $"{LensDisplayName(_tierListType)} · {_currentMix} · {_now:yyyy-MM-dd}",
+                stamp,
+                palette.Primary,
+                palette.Background,
+                palette.Surface,
+                palette.Ink,
+                palette.InkMuted,
+                linkUrl,
+                DifficultyBubblePath(_chartType, _level),
+                rows);
 
-                    xTest = padding;
-                    height += songHeight + padding;
-                }
-                xTest += songWidth + padding;
-            }
-
-            height += songHeight + padding;
+            var bytes = await Mediator.Send(new GetTierListShareCardQuery(card));
+            using var stream = new MemoryStream(bytes);
+            using var streamRef = new DotNetStreamReference(stream);
+            var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
+            await module.InvokeVoidAsync("downloadFileFromStream",
+                $"TierList_{_chartType}{_level}_{_now:yyyy-MM-dd}.png", streamRef);
         }
-        height += padding;
-        using var bmp = new Bitmap(width, height);
-        using var gr = Graphics.FromImage(bmp);
-
-        gr.Clear(System.Drawing.Color.Black);
-        var x = padding;
-        var y = padding;
-
-        var userName = CurrentUser.IsLoggedIn ? " - " + (CurrentUser.User.GameTag ?? CurrentUser.User.Name) : "";
-        //Bubble and Tier List Name
-        var bubble = await LoadImage(client, DifficultyBubblePath(_chartType, _level), 50, 50);
-        gr.DrawImage(bubble, new Rectangle(x, y, 50, 50));
-        x += 50 + padding;
-        gr.DrawString((_groupBy == "Difficulty" ? _tierListType : _groupBy) + userName, new Font("Tahoma", 36), Brushes.White, x, y);
-        y += 50 + padding * 2;
-
-        var greenPen = new Pen(System.Drawing.Color.Chartreuse, 3);
-        var bluePen = new Pen(System.Drawing.Color.Blue, 3);
-        var redPen = new Pen(System.Drawing.Color.Red, 3);
-        //Sections
-        foreach (var group in visibleGroups)
+        finally
         {
-            x = padding;
-            gr.DrawString(group.Name, new Font("Tahoma", 24), Brushes.White, x, y);
-            y += sectionTextHeight;
-            foreach (var entry in group.Entries)
-            {
-                if (x > width - 155)
-                {
-
-                    x = padding;
-                    y += songHeight + padding;
-                }
-                var chart = _charts[entry.ChartId];
-                var songBmp = await LoadImage(client, chart.Song.ImagePath.ToString(), songWidth, songHeight);
-                gr.DrawImage(songBmp, new Rectangle(x, y, songWidth, songHeight));
-
-                if (_todos.Contains(entry.ChartId))
-                {
-                    gr.DrawRectangle(bluePen, new Rectangle(x, y, songWidth, songHeight));
-                } else if (CurrentUser.IsLoggedIn)
-                {
-
-                    gr.DrawRectangle(redPen, new Rectangle(x, y, songWidth, songHeight));
-                }
-                if (_scores.TryGetValue(chart.Id, out var score))
-                {
-                    if (score.Plate != null)
-                    {
-                        var bitmap = await LoadImage(client, PlateImage(score.Plate.Value), gradeWidth, gradeHeight);
-
-                        gr.DrawImage(bitmap, new Rectangle(x + songWidth - gradeWidth - gradePadding, y + songHeight - gradeHeight - gradePadding, gradeWidth, gradeHeight));
-                    }
-                    if (score.Score != null)
-                    {
-                        var letterGrade = score.Score.Value.LetterGrade;
-                        var bitmap = await LoadImage(client, LetterGradeImage(letterGrade, score.IsBroken), gradeWidth, gradeHeight);
-                        gr.DrawImage(bitmap, new Rectangle(x + songWidth - (gradeWidth + gradePadding) * 2, y + songHeight - gradeHeight - gradePadding, gradeWidth, gradeHeight));
-
-                    }
-                    if (!score.IsBroken)
-                    {
-                        gr.DrawRectangle(greenPen, new Rectangle(x, y, songWidth, songHeight));
-                    }
-                }
-                x += songWidth + padding;
-            }
-            y += songHeight + padding;
+            _isBuildingImage = false;
         }
-        y += padding;
-        gr.DrawString("Generated on https://piuscores.arroweclip.se", new Font("Tahoma", 24), Brushes.White, padding, y);
-        //Download file
-
-        var stream = new MemoryStream();
-        bmp.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
-
-        using var streamRef = new DotNetStreamReference(stream: stream);
-        stream.Seek(0, SeekOrigin.Begin);
-        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
-        await module.InvokeVoidAsync("downloadFileFromStream", $"{_chartType}{_level}_{DateTimeOffset.Now:yyyy-MM-dd}.png", streamRef);
-        _isBuildingImage = false;
-    }
-
-    private static IDictionary<string, Bitmap> _cachedImages = new Dictionary<string, Bitmap>(StringComparer.OrdinalIgnoreCase);
-
-    private static async Task<Bitmap> LoadImage(HttpClient client, string location, int newWidth, int newHeight)
-    {
-        if (_cachedImages.TryGetValue(location, out var bitmap))
-        {
-            return bitmap;
-        }
-        var stream = await client.GetStreamAsync(location);
-
-        var bmp = new Bitmap(newWidth, newHeight);
-        var gr = Graphics.FromImage(bmp);
-        gr.DrawImage(new Bitmap(stream), new Rectangle(0, 0, newWidth, newHeight));
-        _cachedImages[location] = bmp;
-        return bmp;
     }
 
     // --- Filtering ---------------------------------------------------------------------
@@ -1540,13 +1475,14 @@ else
             .Select(g =>
             {
                 var name = TierName(g.Key);
-                return new TierGroup(name, L[name], ThemeScales.DifficultyColor(g.Key), g.ToArray());
+                return new TierGroup(name, L[name], ThemeScales.DifficultyColor(g.Key),
+                    MixThemes.DifficultyHex(g.Key), g.ToArray());
             })
             .ToArray();
     }
 
     private TierGroup ToNeutralGroup(IGrouping<string, SongTierListEntry> group) =>
-        new(group.Key, L[group.Key], NeutralSectionColor, group.ToArray());
+        new(group.Key, L[group.Key], NeutralSectionColor, MixThemes.PaletteFor(_currentMix).InkMuted, group.ToArray());
 
     private IReadOnlyList<TierGroup> GroupByScore()
     {
@@ -1614,7 +1550,8 @@ else
             .ThenBy(e => e.Order)
             .GroupBy(e => _scoringLevels.TryGetValue(e.ChartId, out var sl) ? sl.ToString("0.0") : "Not Enough Data")
             .OrderBy(g => double.TryParse(g.Key, out var d) ? d : 10000)
-            .Select(g => new TierGroup(g.Key, double.TryParse(g.Key, out _) ? g.Key : L[g.Key], NeutralSectionColor, g.ToArray()))
+            .Select(g => new TierGroup(g.Key, double.TryParse(g.Key, out _) ? g.Key : L[g.Key], NeutralSectionColor,
+                MixThemes.PaletteFor(_currentMix).InkMuted, g.ToArray()))
             .ToArray();
     }
 
@@ -1645,7 +1582,14 @@ else
             .OrderBy(g => CurrentUser.IsLoggedIn ? g.PassRate : 0)
             .ThenBy(g => g.Average ?? int.MaxValue)
             .ThenBy(g => g.Key.GetName())
-            .Select(g => new TierGroup($"Skill:{g.Key}", g.Key.GetName(), SkillHeatColor(g.PassRate), g.Entries))
+            .Select(g =>
+            {
+                var heat = SkillHeatCategory(g.PassRate);
+                return new TierGroup($"Skill:{g.Key}", g.Key.GetName(),
+                    heat == null ? NeutralSectionColor : ThemeScales.DifficultyColor(heat.Value),
+                    heat == null ? MixThemes.PaletteFor(_currentMix).InkMuted : MixThemes.DifficultyHex(heat.Value),
+                    g.Entries);
+            })
             .ToList();
 
         var untagged = _finalEntries
@@ -1654,19 +1598,20 @@ else
             .ToArray();
         if (untagged.Any())
         {
-            skillGroups.Add(new TierGroup("Skill:None", L["Not Tagged"], NeutralSectionColor, untagged));
+            skillGroups.Add(new TierGroup("Skill:None", L["Not Tagged"], NeutralSectionColor,
+                MixThemes.PaletteFor(_currentMix).InkMuted, untagged));
         }
 
         return skillGroups;
     }
 
-    private string SkillHeatColor(double passRate)
+    private TierListCategory? SkillHeatCategory(double passRate)
     {
-        return !CurrentUser.IsLoggedIn ? NeutralSectionColor :
-            passRate < .4 ? ThemeScales.DifficultyColor(TierListCategory.VeryHard) :
-            passRate < .65 ? ThemeScales.DifficultyColor(TierListCategory.Hard) :
-            passRate < .85 ? ThemeScales.DifficultyColor(TierListCategory.Medium) :
-            ThemeScales.DifficultyColor(TierListCategory.VeryEasy);
+        return !CurrentUser.IsLoggedIn ? null :
+            passRate < .4 ? TierListCategory.VeryHard :
+            passRate < .65 ? TierListCategory.Hard :
+            passRate < .85 ? TierListCategory.Medium :
+            TierListCategory.VeryEasy;
     }
 
     private IDictionary<(ChartType,DifficultyLevel), string> _chabalaLinks = new Dictionary<(ChartType, DifficultyLevel), string>()
