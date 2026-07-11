@@ -31,7 +31,7 @@
     <meta name="description" content="PIU Charts organized by difficulty with optional personalization based on individual skill."/>
     <meta property="og:title" content="PIU Tier List">
     <meta property="og:description" content="PIU Charts organized by difficulty with optional personalization based on individual skill." >
-    @if (_currentMix != MixEnum.XX)
+    @if (!_currentMix.UsesLegacyScoring())
     {
         @* C9: the unfurl of a folder link IS the community tier list — the image is
            regenerated daily by the refresh-folder-share-cards job. *@
@@ -39,10 +39,12 @@
         <meta property="og:image" content="@($"https://piuimages.arroweclip.se/tier-lists/{_currentMix}/{_chartType.GetShortHand().ToLower()}{_level}.png")">
     }
 </HeadContent>
-@if (_currentMix == MixEnum.XX)
+@if (_currentMix.UsesLegacyScoring())
 {
     @* Round-5 decision: XX and older mixes get a whole-page coming-soon state — the old
-       silent Phoenix-data masquerade (ListMix) is retired for this page. *@
+       silent Phoenix-data masquerade (ListMix) is retired for this page. The condition
+       predates the legacy-mix enum values; UsesLegacyScoring is that "XX and older"
+       intent (docs/design/legacy-mixes.md keeps legacy tier lists out of scope). *@
     <div class="tier-list-cta">
         <MudIcon Icon="@Icons.Material.Filled.Construction"></MudIcon>
         <MudText Typo="Typo.h5">@L["Tier lists for XX and older coming soon"]</MudText>
