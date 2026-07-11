@@ -38,7 +38,7 @@ Tier lists are the site's most-used feature (~28% of traffic, ~60% of it anonymo
 
 **Round 4 (2026-07-11, applied in workshop-v3):** the four ApexCharts **radar panels are retired as a concept** — the By-Skill view absorbs their information: one section per skill, sorted by the player's weakest skill first, with per-skill pass count + average score in each section header (heat-colored by pass rate). The information is the same; the placement makes it actionable (the charts to fix are directly under the stat). The details dialog gains the user's **cross-mix score journey** — a compact timeline from ScoreLedger's append-only `ScoreEventJournal`, linking to the full journey. PIU Center attribution renders in the By-Skill header and the dialog's skills row.
 
-**Round 5 (2026-07-11):** piucenter ingestion boundary locked (§8a) — no import of their full chart rendering; chart details link out for "see more"; categorization-relevant metadata + numeric skill frequencies only, the latter banked for future cross-skill transfer prediction. Rollout fixed as **one PR** with the C1–C10 series (§12).
+**Round 5 (2026-07-11):** piucenter ingestion boundary locked (§8a) — no import of their full chart rendering; chart details link out for "see more"; categorization-relevant metadata + numeric skill frequencies only, the latter banked for future cross-skill transfer prediction. Rollout fixed as **one PR** with the C1–C10 series (§12). **XX and older mixes**: the page shows a localized **"Tier lists for XX and older coming soon"** state instead of today's silent Phoenix-data fallback (`ListMix` masquerade retired for this page) — the owner has ideas for those mixes, deliberately out of scope.
 
 ## 3. Mental model: three concepts the UI stops blending
 
@@ -122,11 +122,13 @@ One flag set, resolved per `ListMix`:
 
 | Capability | Phoenix (1) | Phoenix 2 | XX (views Phoenix data) |
 |---|---|---|---|
-| Skill tags on cards / By-Skill view (radar charts retired — round 4) | ✅ | ❌ off until piucenter data covers P2 | ✅ (Phoenix data) |
-| Chabala lens | ✅ (existing links) | ❌ | ✅ |
-| Paragon / title progress strip | ✅ unchanged | ❌ (Folder Level doc will fill this) | per existing XX behavior |
+| Skill tags on cards / By-Skill view (radar charts retired — round 4) | ✅ | ❌ off until piucenter data covers P2 | n/a — page shows "coming soon" |
+| Chabala lens | ✅ (existing links; becomes imported difficulty attribution later) | ❌ | n/a — page shows "coming soon" |
+| Paragon / title progress strip | ✅ unchanged | ❌ (Folder Level doc will fill this) | n/a — page shows "coming soon" |
 | Personalized blend inputs | Pass Count + Skill + Similar Players | Pass Count + Similar Players | n/a |
 | Provisional-fallback badge | n/a | ✅ stays | n/a |
+
+XX and older mixes get the whole-page **"Tier lists for XX and older coming soon"** state (round 5) — the per-capability XX column is moot for this page.
 
 Skill automation is out of scope for the overhaul itself; Phoenix 1 skills stay read-only ("leave something behind"). Research findings for the follow-on project:
 
