@@ -729,7 +729,7 @@
 	  
   <comment>Show Age</comment></data>
   <data name="Filters" xml:space="preserve">
-	  <value>フィアルた</value>
+	  <value>フィルター</value>
 	  
   <comment>Filters</comment></data>
   <data name="Min BPM" xml:space="preserve">
@@ -2886,5 +2886,11 @@
   </data>
   <data name="Not Enough Data" xml:space="preserve">
     <value>データ不足</value>
+  </data>
+  <data name="Applied Filters" xml:space="preserve">
+    <value>適用中のフィルター</value>
+  </data>
+  <data name="Title Levels" xml:space="preserve">
+    <value>タイトルレベル</value>
   </data>
 </root>

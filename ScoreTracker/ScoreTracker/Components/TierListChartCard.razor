@@ -21,6 +21,12 @@
                 <div class="tier-chart-card-bubble">
                     <DifficultyBubble Chart="Chart" Height="18"></DifficultyBubble>
                 </div>
+                @if (TierLabel != null)
+                {
+                    @* Lens tier when the section grouping isn't the lens; the tooltip
+                       prints the word so the hue never travels alone (rule 8). *@
+                    <span class="tier-chart-card-lens-dot" style="background:@TierColor"></span>
+                }
                 @if (Score?.Score != null)
                 {
                     <div class="tier-chart-card-compact-grade">
@@ -52,6 +58,10 @@ else
         {
             <ScoreBreakdown Score="Score.Score.Value" IsBroken="Score.IsBroken" OneLine="true" ShowScore="true"
                             Plate="Score.Plate" Ranking="Ranking"></ScoreBreakdown>
+        }
+        @if (TierLabel != null)
+        {
+            <MudText Typo="Typo.caption" Class="tier-chart-card-tier" Style="@($"color:{TierColor}")">@TierLabel</MudText>
         }
     </div>
     <div class="tier-chart-card-actions">
@@ -92,6 +102,12 @@ else
 
     [Parameter] public UiDensity Density { get; set; } = UiDensity.Comfortable;
 
+    // The active lens tier ("Hard", "Very Easy", …) when the page's grouping isn't the
+    // lens itself; null hides the annotation. Color is a theme token reference.
+    [Parameter] public string? TierLabel { get; set; }
+
+    [Parameter] public string? TierColor { get; set; }
+
     [Parameter] public EventCallback<Guid> OnToDo { get; set; }
 
     [Parameter] public EventCallback<Guid> OnOpen { get; set; }
@@ -105,8 +121,15 @@ else
         PassedInAnotherMix ? L["Passed in another mix"] : null;
 
     // Compact hides the name, so the tooltip carries the identity (rule 7: no
-    // truncation without a tooltip).
-    private string CompactTooltip => StateTitle == null
-        ? $"{Chart.Song.Name} {Chart.DifficultyString}"
-        : $"{Chart.Song.Name} {Chart.DifficultyString} — {StateTitle}";
+    // truncation without a tooltip) plus the state and lens-tier words (rule 8).
+    private string CompactTooltip
+    {
+        get
+        {
+            var suffix = string.Join(" — ", new[] { StateTitle, TierLabel }.Where(p => p != null));
+            return suffix.Length == 0
+                ? $"{Chart.Song.Name} {Chart.DifficultyString}"
+                : $"{Chart.Song.Name} {Chart.DifficultyString} — {suffix}";
+        }
+    }
 }

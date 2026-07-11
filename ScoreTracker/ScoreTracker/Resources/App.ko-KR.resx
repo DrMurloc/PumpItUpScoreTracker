@@ -2766,4 +2766,10 @@
   <data name="Not Enough Data" xml:space="preserve">
     <value>데이터 부족</value>
   </data>
+  <data name="Applied Filters" xml:space="preserve">
+    <value>적용된 필터</value>
+  </data>
+  <data name="Title Levels" xml:space="preserve">
+    <value>칭호 레벨</value>
+  </data>
 </root>

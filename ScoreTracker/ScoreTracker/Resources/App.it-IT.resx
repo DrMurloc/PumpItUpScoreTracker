@@ -2886,4 +2886,10 @@
   <data name="Not Enough Data" xml:space="preserve">
     <value>Dati insufficienti</value>
   </data>
+  <data name="Applied Filters" xml:space="preserve">
+    <value>Filtri applicati</value>
+  </data>
+  <data name="Title Levels" xml:space="preserve">
+    <value>Livelli dei titoli</value>
+  </data>
 </root>

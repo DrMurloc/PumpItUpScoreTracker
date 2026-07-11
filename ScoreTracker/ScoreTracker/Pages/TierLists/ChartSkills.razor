@@ -48,27 +48,12 @@
 }
 else
 {
-    @* 1 — sticky toolbar: the folder, the lens, the view, the actions. Filters are
-       furniture (rule 6): active ones surface as chips, the panel lives in a drawer. *@
+    @* 1 — sticky toolbar carries only what changes the DATA you're looking at:
+       folder → view → personalized (owner's field-test divide, round 6). Presentation
+       controls (lens ordering, density, Download, Filters) live in the content bar
+       directly above the list. *@
     <div class="tier-toolbar">
         <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></FolderPicker>
-        @if (!IsMyProgress)
-        {
-            <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
-                <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
-                <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
-                <MudSelectItem T="string" Value="@("Popularity")">@L["Popularity"]</MudSelectItem>
-                @if (ChabalaAvailable)
-                {
-                    <MudSelectItem T="string" Value="@("Chabala")">Chabala</MudSelectItem>
-                }
-                <MudSelectItem T="string" Value="@("PG")">PG</MudSelectItem>
-            </MudSelect>
-        }
-        @if (CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score")
-        {
-            <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
-        }
         <MudButtonGroup OverrideStyles="false">
             <MudButton Variant="@(_groupBy == "Difficulty" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Difficulty"))">@L["Tier List"]</MudButton>
             <MudButton Variant="@(IsMyProgress ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping(CurrentUser.IsLoggedIn ? "Score" : "Scoring Level"))">@L["My Progress"]</MudButton>
@@ -77,6 +62,96 @@ else
                 <MudButton Variant="@(IsSkillView ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Skill"))">@L["By Skill"]</MudButton>
             }
         </MudButtonGroup>
+        @if (CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score")
+        {
+            <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
+        }
+    </div>
+    @if (_isProvisionalFallback || PersonalizedActive)
+    {
+        <div class="tier-badges">
+            @if (_isProvisionalFallback)
+            {
+                <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Construction">@L["Provisional — based on Phoenix data"]</MudChip>
+            }
+            @if (PersonalizedActive)
+            {
+                <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Bolt">@L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name]</MudChip>
+            }
+        </div>
+    }
+    @* 3 — progress strip (logged in) or the rule-9 import CTA (anonymous). *@
+    @if (CurrentUser.IsLoggedIn)
+    {
+        @* General folder progress (pass rate + the grade lamps) always shows; the title
+           bars collapse under "Title Levels", default collapsed (round-6 field test). *@
+        <div class="tier-progress-strip">
+            <div class="tier-progress-strip-summary">
+                <MudText Typo="Typo.subtitle1">@L["Folder Progress"]</MudText>
+                <MudText Typo="Typo.caption">@L["{0} / {1} passed", PassedCount, _charts.Count]</MudText>
+            </div>
+            <LampStrip Lamps="_lamps" Total="_charts.Count"></LampStrip>
+            @if (_competitivePlayerCount > 0 && _finalEntries.Any(e => _scoreRankings.ContainsKey(e.ChartId)))
+            {
+                var rating = _finalEntries.Where(e => _scoreRankings.ContainsKey(e.ChartId)).Average(e => _scoreRankings[e.ChartId].Ranking);
+                <MudText Typo="Typo.body2">
+                    @L["Averaging better than"] <span style="@ThemeScales.RarityStyle(rating)">@((100.0 * rating).ToString("N2"))%</span> @L["of {0} similar players in this folder", _competitivePlayerCount]
+                </MudText>
+            }
+            @if (_unpassedTodos.Any())
+            {
+                <MudText Typo="Typo.caption">@L.GetString("Unpassed ToDos", _unpassedTodos.Count(), _level)</MudText>
+            }
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
+                       StartIcon="@(_titlesCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"
+                       OnClick="ToggleTitles" aria-expanded="@(_titlesCollapsed ? "false" : "true")">@L["Title Levels"]</MudButton>
+            @if (!_titlesCollapsed)
+            {
+                <MudGrid>
+                    <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == _level) || (_chartType == ChartType.CoOp && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
+                </MudGrid>
+            }
+        </div>
+        @* 4 — the border language, printed (rule 8). *@
+        <BorderLegend></BorderLegend>
+    }
+    else
+    {
+        <div class="tier-list-cta">
+            <MudText Typo="Typo.h6">@L["Import your scores to light this folder up"]</MudText>
+            <div class="tier-list-cta-actions">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/Login">@L["Login"]</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/UploadPhoenixScores">@L["Import Scores"]</MudButton>
+            </div>
+        </div>
+    }
+    @if (_tierListType == "Chabala" && ChabalaAvailable)
+    {
+        <MudLink Href="@_chabalaLinks[(_chartType, _level)]" Target="_blank">@L["Original Chabala Tier List"]</MudLink>
+    }
+    @if (_groupBy == "Score Ranking")
+    {
+        <MudText Typo="Typo.body2">@L["Score Ranking: What percent of players of comparable (+/- .5 competitive level) your score is on a chart."]</MudText>
+    }
+    @if (IsSkillView)
+    {
+        @* Skill sections sort weakest-first — the radar charts' information, placed
+           where it's actionable (round 4). Attribution per the round-3 agreement. *@
+        <MudText Typo="Typo.caption" Class="tier-attribution">@L["Skill data: PIU Center — maintained by aesthete"]</MudText>
+    }
+    @* 2 — content bar: how the list PRESENTS (lens ordering, grouping, density,
+       Download, Filters). Sits with the list it affects, not in the sticky toolbar. *@
+    <div class="tier-content-bar">
+        <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
+            <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
+            <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
+            <MudSelectItem T="string" Value="@("Popularity")">@L["Popularity"]</MudSelectItem>
+            @if (ChabalaAvailable)
+            {
+                <MudSelectItem T="string" Value="@("Chabala")">Chabala</MudSelectItem>
+            }
+            <MudSelectItem T="string" Value="@("PG")">PG</MudSelectItem>
+        </MudSelect>
         @if (IsMyProgress)
         {
             <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Grouped by"]" Value="_groupBy" ValueChanged="ChangeGrouping">
@@ -108,120 +183,55 @@ else
         </MudButtonGroup>
         <MudSpacer></MudSpacer>
         <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.FileDownload" Disabled="_isBuildingImage || _isLoading">@L["Download"]</MudButton>
-        <MudButton OnClick="() => _filtersOpen = true" Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.FilterList">@L["Filters"]</MudButton>
-        @* 2 — active-filter chips: each active filter is one removable chip. *@
-        @if (HasActiveFilters)
-        {
-            <div class="tier-filter-chips">
-                @if (!string.IsNullOrWhiteSpace(_songFilter))
-                {
-                    <MudChip T="string" Size="Size.Small" OnClose="ClearSongNameFilter">@L["Song Name"]: @_songFilter</MudChip>
-                }
-                @if (_settings.SongTypes.Any())
-                {
-                    <MudChip T="string" Size="Size.Small" OnClose="ClearSongTypeFilter">@L["Song Type"]: @string.Join(", ", _settings.SongTypes)</MudChip>
-                }
-                @if (_settings.ToDo != null)
-                {
-                    <MudChip T="string" Size="Size.Small" OnClose="ClearToDoFilter">@L["To Do"]</MudChip>
-                }
-                @if (_settings.Completion != null)
-                {
-                    <MudChip T="string" Size="Size.Small" OnClose="ClearCompletionFilter">@L["Stage Pass"]</MudChip>
-                }
-                @if (_settings.MinLetterGrade != null || _settings.MaxLetterGrade != null)
-                {
-                    <MudChip T="string" Size="Size.Small" OnClose="ClearLetterGradeFilter">@L["Letter Grade"]</MudChip>
-                }
-                @if (_settings.MinBpm != null || _settings.MaxBpm != null)
-                {
-                    <MudChip T="string" Size="Size.Small" OnClose="ClearBpmFilter">@L["BPM"]</MudChip>
-                }
-                @if (_settings.MinNoteCount != null || _settings.MaxNoteCount != null)
-                {
-                    <MudChip T="string" Size="Size.Small" OnClose="ClearNoteCountFilter">@L["Note Count"]</MudChip>
-                }
-                @if (_settings.StepArtists.Any())
-                {
-                    <MudChip T="string" Size="Size.Small" OnClose="ClearStepArtistFilter">@L["Step Artist"]</MudChip>
-                }
-                @if (_settings.SongArtists.Any())
-                {
-                    <MudChip T="string" Size="Size.Small" OnClose="ClearSongArtistFilter">@L["Song Artist"]</MudChip>
-                }
-            </div>
-        }
+        <MudTooltip Text=@L["Filters"]>
+            <MudBadge Content="ActiveFilterCount" Visible="HasActiveFilters" Color="Color.Primary" Overlap="true">
+                <MudIconButton Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary" Variant="Variant.Outlined"
+                               OnClick="() => _filtersOpen = true" aria-label="@L["Filters"]"></MudIconButton>
+            </MudBadge>
+        </MudTooltip>
     </div>
-    @if (_isProvisionalFallback || PersonalizedActive)
+    @* Active-filter chips: labeled so it's obvious what the chips are (round 6). *@
+    @if (HasActiveFilters)
     {
-        <div class="tier-badges">
-            @if (_isProvisionalFallback)
+        <div class="tier-filter-chips">
+            <span class="tier-filter-chips-label">@L["Applied Filters"]:</span>
+            @if (!string.IsNullOrWhiteSpace(_songFilter))
             {
-                <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Construction">@L["Provisional — based on Phoenix data"]</MudChip>
+                <MudChip T="string" Size="Size.Small" OnClose="ClearSongNameFilter">@L["Song Name"]: @_songFilter</MudChip>
             }
-            @if (PersonalizedActive)
+            @if (_settings.SongTypes.Any())
             {
-                <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Bolt">@L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name]</MudChip>
+                <MudChip T="string" Size="Size.Small" OnClose="ClearSongTypeFilter">@L["Song Type"]: @string.Join(", ", _settings.SongTypes)</MudChip>
             }
-        </div>
-    }
-    @* 3 — progress strip (logged in) or the rule-9 import CTA (anonymous). *@
-    @if (CurrentUser.IsLoggedIn)
-    {
-        <div class="tier-progress-strip">
-            <div class="tier-progress-strip-header" role="button" tabindex="0" @onclick="ToggleStrip">
-                <MudIcon Size="Size.Small" Icon="@(_stripCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"></MudIcon>
-                <MudText Typo="Typo.subtitle1">@L["Folder Progress"]</MudText>
-                @if (_stripCollapsed)
-                {
-                    <MudText Typo="Typo.caption">@L["{0} / {1} passed", PassedCount, _charts.Count]</MudText>
-                }
-            </div>
-            @if (!_stripCollapsed)
+            @if (_settings.ToDo != null)
             {
-                <MudGrid>
-                    <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == _level) || (_chartType == ChartType.CoOp && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
-                </MudGrid>
-                <LampStrip Lamps="_lamps" Total="_charts.Count"></LampStrip>
-                @if (_competitivePlayerCount > 0 && _finalEntries.Any(e => _scoreRankings.ContainsKey(e.ChartId)))
-                {
-                    var rating = _finalEntries.Where(e => _scoreRankings.ContainsKey(e.ChartId)).Average(e => _scoreRankings[e.ChartId].Ranking);
-                    <MudText Typo="Typo.body2">
-                        @L["Averaging better than"] <span style="@ThemeScales.RarityStyle(rating)">@((100.0 * rating).ToString("N2"))%</span> @L["of {0} similar players in this folder", _competitivePlayerCount]
-                    </MudText>
-                }
-                @if (_unpassedTodos.Any())
-                {
-                    <MudText Typo="Typo.caption">@L.GetString("Unpassed ToDos", _unpassedTodos.Count(), _level)</MudText>
-                }
+                <MudChip T="string" Size="Size.Small" OnClose="ClearToDoFilter">@L["To Do"]</MudChip>
+            }
+            @if (_settings.Completion != null)
+            {
+                <MudChip T="string" Size="Size.Small" OnClose="ClearCompletionFilter">@L["Stage Pass"]</MudChip>
+            }
+            @if (_settings.MinLetterGrade != null || _settings.MaxLetterGrade != null)
+            {
+                <MudChip T="string" Size="Size.Small" OnClose="ClearLetterGradeFilter">@L["Letter Grade"]</MudChip>
+            }
+            @if (_settings.MinBpm != null || _settings.MaxBpm != null)
+            {
+                <MudChip T="string" Size="Size.Small" OnClose="ClearBpmFilter">@L["BPM"]</MudChip>
+            }
+            @if (_settings.MinNoteCount != null || _settings.MaxNoteCount != null)
+            {
+                <MudChip T="string" Size="Size.Small" OnClose="ClearNoteCountFilter">@L["Note Count"]</MudChip>
+            }
+            @if (_settings.StepArtists.Any())
+            {
+                <MudChip T="string" Size="Size.Small" OnClose="ClearStepArtistFilter">@L["Step Artist"]</MudChip>
+            }
+            @if (_settings.SongArtists.Any())
+            {
+                <MudChip T="string" Size="Size.Small" OnClose="ClearSongArtistFilter">@L["Song Artist"]</MudChip>
             }
         </div>
-        @* 4 — the border language, printed (rule 8). *@
-        <BorderLegend></BorderLegend>
-    }
-    else
-    {
-        <div class="tier-list-cta">
-            <MudText Typo="Typo.h6">@L["Import your scores to light this folder up"]</MudText>
-            <div class="tier-list-cta-actions">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/Login">@L["Login"]</MudButton>
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/UploadPhoenixScores">@L["Import Scores"]</MudButton>
-            </div>
-        </div>
-    }
-    @if (_tierListType == "Chabala" && ChabalaAvailable)
-    {
-        <MudLink Href="@_chabalaLinks[(_chartType, _level)]" Target="_blank">@L["Original Chabala Tier List"]</MudLink>
-    }
-    @if (_groupBy == "Score Ranking")
-    {
-        <MudText Typo="Typo.body2">@L["Score Ranking: What percent of players of comparable (+/- .5 competitive level) your score is on a chart."]</MudText>
-    }
-    @if (IsSkillView)
-    {
-        @* Skill sections sort weakest-first — the radar charts' information, placed
-           where it's actionable (round 4). Attribution per the round-3 agreement. *@
-        <MudText Typo="Typo.caption" Class="tier-attribution">@L["Skill data: PIU Center — maintained by aesthete"]</MudText>
     }
     @* 5/6/7 — the answer: tier sections, skeleton while loading, honest empty state. *@
     @if (_isLoading)
@@ -252,8 +262,13 @@ else
                         <table class="tier-table">
                             <thead>
                             <tr>
+                                <th class="tier-table-jacket-cell"></th>
                                 <th>@L["Song Name"]</th>
                                 <th>@L["Chart"]</th>
+                                @if (ShowLensAnnotation)
+                                {
+                                    <th>@LensDisplayName(_tierListType)</th>
+                                }
                                 @if (CurrentUser.IsLoggedIn)
                                 {
                                     <th>@L["My Score"]</th>
@@ -268,8 +283,17 @@ else
                                 var chart = _charts[entry.ChartId];
                                 var score = _scores.TryGetValue(chart.Id, out var rowScore) ? rowScore : null;
                                 <tr class="@RowClass(chart.Id, score)">
+                                    <td class="tier-table-jacket-cell">
+                                        <div class="tier-table-jacket" role="button" tabindex="0"
+                                             @onclick="() => OpenDetails(chart.Id)"
+                                             style="background-image:url('@chart.Song.ImagePath')"></div>
+                                    </td>
                                     <td>@chart.Song.Name</td>
                                     <td>@chart.DifficultyString</td>
+                                    @if (ShowLensAnnotation)
+                                    {
+                                        <td><span style="color:@ThemeScales.DifficultyColor(entry.Category)">@L[TierName(entry.Category)]</span></td>
+                                    }
                                     @if (CurrentUser.IsLoggedIn)
                                     {
                                         <td>
@@ -315,6 +339,8 @@ else
                                                ShowName="_settings.ShowSongName"
                                                ShowToDo="CurrentUser.IsLoggedIn"
                                                Density="_density"
+                                               TierLabel="@(ShowLensAnnotation ? (string)L[TierName(entry.Category)] : null)"
+                                               TierColor="@(ShowLensAnnotation ? ThemeScales.DifficultyColor(entry.Category) : null)"
                                                OnToDo="ToggleToDo"
                                                OnOpen="OpenDetails"></TierListChartCard>
                         }
@@ -419,11 +445,25 @@ else
         max-width: 190px;
     }
 
+    .tier-content-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin: 8px 0 4px;
+    }
+
     .tier-filter-chips {
-        flex-basis: 100%;
         display: flex;
         flex-wrap: wrap;
         gap: 4px;
+        align-items: center;
+        margin-bottom: 4px;
+    }
+
+    .tier-filter-chips-label {
+        font-size: .75rem;
+        color: var(--mud-palette-text-secondary);
     }
 
     .tier-badges {
@@ -440,11 +480,10 @@ else
         margin: 8px 0;
     }
 
-    .tier-progress-strip-header {
+    .tier-progress-strip-summary {
         display: flex;
-        align-items: center;
+        align-items: baseline;
         gap: 8px;
-        cursor: pointer;
     }
 
     @* Section / card / lamp / legend / folder-picker styles live in wwwroot/css/site.css —
@@ -469,6 +508,19 @@ else
     .tier-table td {
         padding: 4px 8px;
         border-bottom: 1px solid var(--mud-palette-lines-default);
+    }
+
+    .tier-table-jacket-cell {
+        width: 36px;
+    }
+
+    .tier-table-jacket {
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        background-size: cover;
+        background-position: center;
+        cursor: pointer;
     }
 
     .tier-row-pass td:first-child {
@@ -614,7 +666,8 @@ else
     private bool _isLoading = true;
     private bool _showAge = false;
     private bool _filtersOpen = false;
-    private bool _stripCollapsed = false;
+    // Title bars default collapsed (round-6 field test); general progress always shows.
+    private bool _titlesCollapsed = true;
     private HashSet<string> _collapsedTiers = new HashSet<string>();
 
     private ISet<Guid> _todos = new HashSet<Guid>();
@@ -753,6 +806,18 @@ else
         _settings.Completion != null || _settings.MinLetterGrade != null || _settings.MaxLetterGrade != null ||
         _settings.MinBpm != null || _settings.MaxBpm != null || _settings.MinNoteCount != null ||
         _settings.MaxNoteCount != null || _settings.StepArtists.Any() || _settings.SongArtists.Any();
+
+    // Counts one per chip, matching the chips row exactly (min/max pairs are one chip).
+    private int ActiveFilterCount =>
+        (string.IsNullOrWhiteSpace(_songFilter) ? 0 : 1) +
+        (_settings.SongTypes.Any() ? 1 : 0) +
+        (_settings.ToDo != null ? 1 : 0) +
+        (_settings.Completion != null ? 1 : 0) +
+        (_settings.MinLetterGrade != null || _settings.MaxLetterGrade != null ? 1 : 0) +
+        (_settings.MinBpm != null || _settings.MaxBpm != null ? 1 : 0) +
+        (_settings.MinNoteCount != null || _settings.MaxNoteCount != null ? 1 : 0) +
+        (_settings.StepArtists.Any() ? 1 : 0) +
+        (_settings.SongArtists.Any() ? 1 : 0);
 
     private Task ClearSongNameFilter()
     {
@@ -983,6 +1048,10 @@ else
 
     private bool IsSkillView => _groupBy == "Skill";
 
+    // When grouping isn't the lens itself, each card/row carries its lens tier —
+    // word + color, never color alone (rule 8; round-6 field test).
+    private bool ShowLensAnnotation => _groupBy != "Difficulty";
+
     private bool ChabalaAvailable => _currentMix == MixEnum.Phoenix && _chabalaLinks.ContainsKey((_chartType, _level));
 
     private bool PersonalizedActive => _usePersonalizedData && CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score";
@@ -1051,10 +1120,10 @@ else
             new Dictionary<string, object?> { { "TierListType", _tierListType } }));
     }
 
-    private async Task ToggleStrip()
+    private async Task ToggleTitles()
     {
-        _stripCollapsed = !_stripCollapsed;
-        await UiSettings.SetSetting("TierLists__StripCollapsed", _stripCollapsed.ToString());
+        _titlesCollapsed = !_titlesCollapsed;
+        await UiSettings.SetSetting("TierLists__TitlesCollapsed", _titlesCollapsed.ToString());
     }
 
     private async Task SetTierCollapsed(string key, bool collapsed)
@@ -1470,7 +1539,7 @@ else
         var groupBySettingTask = UiSettings.GetSetting("TierLists__GroupBy");
         var densitySettingTask = UiSettings.GetSetting(DensitySettingKey);
         var legacyTextViewTask = UiSettings.GetSetting("TierLists__TextView");
-        var stripCollapsedSettingTask = UiSettings.GetSetting("TierLists__StripCollapsed");
+        var titlesCollapsedSettingTask = UiSettings.GetSetting("TierLists__TitlesCollapsed");
         var collapsedTiersSettingTask = UiSettings.GetSetting("TierLists__CollapsedTiers");
 
         if (CurrentUser.IsLoggedIn)
@@ -1510,7 +1579,8 @@ else
             bool.TryParse(await legacyTextViewTask, out var legacyTextView) && legacyTextView
                 ? UiDensity.Table
                 : UiDensity.Comfortable;
-        _stripCollapsed = bool.TryParse(await stripCollapsedSettingTask, out var stripCollapsed) && stripCollapsed;
+        // Unset (or unparseable) means collapsed — the round-6 default.
+        _titlesCollapsed = !bool.TryParse(await titlesCollapsedSettingTask, out var titlesCollapsed) || titlesCollapsed;
         var collapsedTiersJson = await collapsedTiersSettingTask;
         if (!string.IsNullOrWhiteSpace(collapsedTiersJson))
         {

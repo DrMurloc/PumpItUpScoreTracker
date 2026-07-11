@@ -1,6 +1,6 @@
 # Tier Lists Overhaul — Design
 
-**Status: draft for owner review.** Decisions below were locked in the 2026-07-10 workshop; open items are marked. Companion doc: [folder-level-progression.md](folder-level-progression.md) (deliberately decoupled, not yet workshopped). The old page at `/TierLists/Old` is out of scope entirely.
+**Status: implemented (C1–C10 landed); round-6 field-test items in flight.** Decisions below were locked in the 2026-07-10 workshop; open items are marked. Companion doc: [folder-level-progression.md](folder-level-progression.md) (deliberately decoupled, not yet workshopped). The old page at `/TierLists/Old` is removed as part of this series (round 6 pulled it into scope).
 
 ## 1. Why
 
@@ -39,6 +39,8 @@ Tier lists are the site's most-used feature (~28% of traffic, ~60% of it anonymo
 **Round 4 (2026-07-11, applied in workshop-v3):** the four ApexCharts **radar panels are retired as a concept** — the By-Skill view absorbs their information: one section per skill, sorted by the player's weakest skill first, with per-skill pass count + average score in each section header (heat-colored by pass rate). The information is the same; the placement makes it actionable (the charts to fix are directly under the stat). The details dialog gains the user's **cross-mix score journey** — a compact timeline from ScoreLedger's append-only `ScoreEventJournal`, linking to the full journey. PIU Center attribution renders in the By-Skill header and the dialog's skills row.
 
 **Round 5 (2026-07-11):** piucenter ingestion boundary locked (§8a) — no import of their full chart rendering; chart details link out for "see more"; categorization-relevant metadata + numeric skill frequencies only, the latter banked for future cross-skill transfer prediction. Rollout fixed as **one PR** with the C1–C10 series (§12). **XX and older mixes**: the page shows a localized **"Tier lists for XX and older coming soon"** state instead of today's silent Phoenix-data fallback (`ListMix` masquerade retired for this page) — the owner has ideas for those mixes, deliberately out of scope.
+
+**Round 6 (2026-07-11, owner field test of C1–C10, desktop):** the toolbar splits on a new principle — **"changes the data you see" stays sticky (folder → view → Personalized); "changes how it presents" moves to a content bar directly above the list** (Ranked-by, Grouped-by, density, Download, Filters-as-icon-with-count-badge) — the single big toolbar read as overwhelming. This amends UX-GUIDELINES rule 6 (the filter row is no longer sticky; the drawer + chips move with the content, the mobile bottom bar keeps thumb reach). **Ranked-by shows in every view** (reversing round 1's hide-under-My-Progress): when the grouping isn't the lens, each card/row carries its lens tier — a named column in Table, the tier word on the card in Comfortable, a top-right diff-colored dot + tooltip word in Compact. **Progress strip**: general folder progress (pass rate + grade lamps + rarity line) always shows; the title bars collapse under **"Title Levels"** (same label on every mix), default collapsed. **"Applied Filters:"** label precedes the chips. Table density regains the song jacket as column 1 (rule 2). Bug fixes from the same session: jacket `url(&quot;)` corruption, legend swatch CSS-order override, MudMenu-based folder picker closing on type switch (rebuilt on an owned popover; component genericized to `FolderPicker`). Shared component styles moved to `site.css` — page style blocks can't back reusable components. Scope additions from the same session: the piucenter crawler, `/TierLists/Old` removal, and the Playwright rewrite are now in scope (§12 addendum).
 
 ## 3. Mental model: three concepts the UI stops blending
 
@@ -168,7 +170,7 @@ Every string on the page goes through `L[…]` — the current page has dozens o
 
 ## 11. Out of scope
 
-Folder Level progression (own doc) · skill-tagging automation · UGC comments (dialog reserves the slot) · deep SEO pass · native apps (explicit non-goal — perf work exists to avoid them) · `/TierLists/Old` removal timing.
+Folder Level progression (own doc) · UGC comments (dialog reserves the slot) · deep SEO pass · native apps (explicit non-goal — perf work exists to avoid them). *(Round 6 pulled `/TierLists/Old` removal and the Playwright rewrite into this PR, and greenlit the piucenter crawler (§8a) as its own follow-up PR.)*
 
 ## 12. Rollout: one PR, a fixed commit series (owner field-tests each checkpoint)
 
@@ -185,7 +187,7 @@ The design-doc commits already on this branch are the prelude (C0); implementati
 9. **C9 — og:image**: `refresh-folder-share-cards` Hangfire job + blob wiring + per-folder meta tags; SCHEDULED-JOBS.md row.
 10. **C10 — cleanup**: localization sweep (all eight locales, universal-terms glossary note), `UiColorTokenTests` ChartSkills 7 → 0, UX-GUIDELINES rule-5 reword + CLAUDE.md density line, final E2E pass.
 
-Outside this PR: the piucenter crawler + alias table (§8a), Folder Level (own doc), `/TierLists/Old` removal.
+**Round-6 addendum** — the series continues on the same PR: **C11** field-test bug fixes (jacket URLs, legend CSS order, folder-picker popover) · **C12** field-test UX (toolbar data/presentation split, lens in every view, Title Levels collapse, table jacket column, Applied Filters label) · **C13** Playwright rewrite against the new markup · **C14** `/TierLists/Old` + `TierListSection` removal (26 color-literal allowlist entries burn down). Outside this PR: the piucenter crawler + alias table (§8a — greenlit, its own PR), Folder Level (own doc).
 
 ## 13. Open questions
 
