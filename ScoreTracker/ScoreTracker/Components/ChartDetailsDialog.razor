@@ -5,6 +5,7 @@
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.ScoreLedger.Contracts.Commands
 @using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
@@ -13,6 +14,7 @@
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
+@inject ISnackbar Snackbar
 
 @* The one shared chart-details surface (design doc §4): leads with the video like
    today's video dialog, then meta, the cross-mix score journey (ScoreEventJournal),
@@ -99,22 +101,36 @@
                 </div>
             }
             @* Round 10: buttons never shrink into vertical letter-stacks (nowrap + wrap
-               to their own line instead); the PIU Center link gets its own line. *@
+               to their own line instead); the PIU Center link gets its own line.
+               Round 11: the score inputs are always visible (no Record Score toggle) and
+               purpose-built — EditChartGrid brought duplicate To-Do/favorite buttons and
+               a layout that fell apart on phones. *@
             @if (CurrentUser.IsLoggedIn)
             {
                 <div class="chart-details-actions">
                     <MudButton Variant="Variant.Outlined" Color="Color.Info"
                                StartIcon="@(IsToDo ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)"
                                OnClick="() => OnToDo.InvokeAsync(Chart.Id)">@(IsToDo ? L["On ToDo List"] : L["Add to ToDo List"])</MudButton>
-                    <MudButton Variant="Variant.Text" OnClick="() => _showRecording = !_showRecording">@L["Record Score"]</MudButton>
+                </div>
+                <div class="chart-details-record">
+                    <MudText Typo="Typo.overline">@L["Record Score"]</MudText>
+                    <div class="chart-details-record-row">
+                        <MudNumericField T="int?" Label="@L["Score"]" @bind-Value="_inputScore" Min="0" Max="1000000"
+                                         HideSpinButtons="true" Class="chart-details-record-score"></MudNumericField>
+                        <MudSelect T="PhoenixPlate?" Label="@L["Plate"]" @bind-Value="_inputPlate" Clearable="true"
+                                   Class="chart-details-record-plate">
+                            @foreach (var plate in Enum.GetValues<PhoenixPlate>())
+                            {
+                                <MudSelectItem T="PhoenixPlate?" Value="plate">@plate.GetName()</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudCheckBox T="bool" @bind-Value="_inputBroken" Label="@L["Broken"]" Class="chart-details-record-broken"></MudCheckBox>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isSaving"
+                                   OnClick="SaveScore">@L["Save"]</MudButton>
+                    </div>
                 </div>
             }
             <MudLink Href="@PiuCenterUrl" Target="_blank" Typo="Typo.caption" Class="chart-details-piucenter">@L["View full chart on PIU Center"]</MudLink>
-            @if (_showRecording && CurrentUser.IsLoggedIn)
-            {
-                <EditChartGrid ShowChartName="false" ChartId="Chart.Id" CurrentMix="Mix"
-                               NewAttemptRecorded="HandleAttemptRecorded"></EditChartGrid>
-            }
             @* Reserved slot: chart comments land here if user-generated content ever ships. *@
         }
     </DialogContent>
@@ -198,12 +214,40 @@
         display: inline-block;
         margin-top: 8px;
     }
+
+    .chart-details-record {
+        margin-top: 8px;
+    }
+
+    .chart-details-record-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .chart-details-record-score {
+        flex: 1 1 130px;
+        max-width: 200px;
+    }
+
+    .chart-details-record-plate {
+        flex: 0 1 150px;
+        min-width: 120px;
+    }
+
+    .chart-details-record-broken {
+        white-space: nowrap;
+    }
 </style>
 
 @code {
     private readonly DialogOptions _options = new() { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small };
     private Guid _loadedChartId = Guid.Empty;
-    private bool _showRecording;
+    private int? _inputScore;
+    private PhoenixPlate? _inputPlate;
+    private bool _inputBroken;
+    private bool _isSaving;
     private string? _videoUrl;
     private IReadOnlyList<ScoreJournalEntry> _journey = Array.Empty<ScoreJournalEntry>();
     private IReadOnlyList<(string Label, string Color)> _placements = Array.Empty<(string, string)>();
@@ -234,7 +278,10 @@
     {
         if (!Visible || Chart == null || Chart.Id == _loadedChartId) return;
         _loadedChartId = Chart.Id;
-        _showRecording = false;
+        // Prefill the recording inputs from the current best (round 11).
+        _inputScore = Score?.Score == null ? null : (int)Score.Score.Value;
+        _inputPlate = Score?.Plate;
+        _inputBroken = Score?.IsBroken ?? false;
         _videoUrl = (await Mediator.Send(new GetChartVideosQuery(new[] { Chart.Id })))
             .FirstOrDefault()?.VideoUrl.ToString();
         _journey = CurrentUser.IsLoggedIn
@@ -312,9 +359,27 @@
         }
     }
 
-    private void HandleAttemptRecorded(Chart chart, XXChartAttempt? attempt)
+    private async Task SaveScore()
     {
-        _ = OnScoreRecorded.InvokeAsync();
+        if (Chart == null) return;
+        _isSaving = true;
+        try
+        {
+            var parsedScore = _inputScore == null ? null :
+                PhoenixScore.TryParse(_inputScore.Value, out var score) ? (PhoenixScore?)score : null;
+            await Mediator.Send(new UpdatePhoenixBestAttemptCommand(Chart.Id, _inputBroken, parsedScore, _inputPlate,
+                Mix: Mix));
+            Snackbar.Add($"Recorded {(_inputBroken ? "Broken" : "Passing")} for {Chart.Song.Name}", Severity.Success);
+            await OnScoreRecorded.InvokeAsync();
+            // The journey timeline gains the new entry immediately.
+            _journey = (await Mediator.Send(new GetChartScoreJourneyQuery(Chart.Id))).ToArray();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("There was an error while recording the score", Severity.Error);
+        }
+
+        _isSaving = false;
     }
 
     private Task Close()
