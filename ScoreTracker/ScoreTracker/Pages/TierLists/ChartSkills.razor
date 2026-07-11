@@ -1175,6 +1175,7 @@ else
         "Pass" => L["Pass Difficulty"],
         "Score" => L["Score Difficulty"],
         "Popularity" => L["Popularity"],
+        "Community" => L["Community Rating"],
         _ => lens
     };
 
@@ -1211,9 +1212,12 @@ else
                 ? L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name].ToString()
                 : L["Community"].ToString();
             var linkUrl = $"https://piuscores.arroweclip.se/TierLists/{_chartType}/{_level}";
+            // The mix rides the card itself: with 31 selectable mixes, a shared
+            // "Singles 18" screenshot is meaningless without it. GetName, not
+            // ToString — "The Perfect Collection", never "PerfectCollection".
             var card = new TierListShareCard(
                 title,
-                $"{LensDisplayName(_tierListType)} · {_currentMix} · {_now:yyyy-MM-dd}",
+                $"{LensDisplayName(_tierListType)} · {_currentMix.GetName()} · {_now:yyyy-MM-dd}",
                 stamp,
                 palette.Primary,
                 palette.Background,
@@ -1229,7 +1233,7 @@ else
             using var streamRef = new DotNetStreamReference(stream);
             var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
             await module.InvokeVoidAsync("downloadFileFromStream",
-                $"TierList_{_chartType}{_level}_{_now:yyyy-MM-dd}.png", streamRef);
+                $"TierList_{_currentMix}_{_chartType}{_level}_{_now:yyyy-MM-dd}.png", streamRef);
         }
         finally
         {
