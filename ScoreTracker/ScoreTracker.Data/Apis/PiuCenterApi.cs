@@ -38,6 +38,7 @@ namespace ScoreTracker.Data.Apis
         private readonly HttpClient _http;
         private readonly ILogger<PiuCenterApi> _logger;
         private readonly IOptions<PiuCenterConfiguration> _options;
+        private readonly System.Diagnostics.Stopwatch _throttle = new();
         private string? _version;
 
         public PiuCenterApi(IOptions<PiuCenterConfiguration> options, ILogger<PiuCenterApi> logger)
@@ -51,6 +52,11 @@ namespace ScoreTracker.Data.Apis
             _http = httpClient;
             _options = options;
             _logger = logger;
+        }
+
+        public async Task<string> GetDataVersion(CancellationToken cancellationToken = default)
+        {
+            return _version ??= await ResolveVersion(_http, cancellationToken);
         }
 
         public async Task<IReadOnlyList<PiuCenterChartListing>> GetChartTable(
@@ -89,6 +95,12 @@ namespace ScoreTracker.Data.Apis
         public async Task<PiuCenterChartPage?> GetChartPage(string externalKey,
             CancellationToken cancellationToken = default)
         {
+            // Politeness throttle between successive per-chart fetches (~1 req/s by
+            // default) — the crawl loop calls this thousands of times on a fresh release.
+            var remaining = _options.Value.RequestDelayMs - (int)_throttle.ElapsedMilliseconds;
+            if (_throttle.IsRunning && remaining > 0) await Task.Delay(remaining, cancellationToken);
+            _throttle.Restart();
+
             // A key the current data release doesn't know comes back as the SPA shell;
             // GetDataFile turns that into null. The crawl only fetches keys listed in the
             // chart table, so shell-instead-of-JSON here genuinely means "not analyzed".
@@ -114,12 +126,15 @@ namespace ScoreTracker.Data.Apis
             var segmentCount = 0;
             var badgeCounts = new Dictionary<string, int>();
             var rareCounts = new Dictionary<string, int>();
+            IReadOnlyList<string> lastSegmentSkills = Array.Empty<string>();
             if (meta.TryGetProperty("Segment metadata", out var segments) &&
                 segments.ValueKind == JsonValueKind.Array)
                 foreach (var segment in segments.EnumerateArray())
                 {
                     segmentCount++;
-                    foreach (var badge in ReadStringArray(segment, "Skill badges"))
+                    var badges = ReadStringArray(segment, "Skill badges");
+                    lastSegmentSkills = badges;
+                    foreach (var badge in badges)
                         badgeCounts[badge] = badgeCounts.TryGetValue(badge, out var count) ? count + 1 : 1;
                     foreach (var rare in ReadStringArray(segment, "rare skills"))
                         rareCounts[rare] = rareCounts.TryGetValue(rare, out var count) ? count + 1 : 1;
@@ -131,6 +146,7 @@ namespace ScoreTracker.Data.Apis
                 segmentCount,
                 badgeCounts,
                 rareCounts,
+                lastSegmentSkills,
                 ReadDecimal(meta, "nps_summary"),
                 meta.TryGetProperty("notetype_bpm_summary", out var notetype) ? notetype.GetString() : null,
                 meta.TryGetProperty("sord_chartlevel", out var sord) ? sord.GetString() : null);

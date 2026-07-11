@@ -14,6 +14,7 @@ namespace ScoreTracker.Domain.Records
         int SegmentCount,
         IReadOnlyDictionary<string, int> SegmentSkillCounts,
         IReadOnlyDictionary<string, int> RareSkillCounts,
+        IReadOnlyList<string> LastSegmentSkills,
         decimal? Nps,
         string? NotetypeBpmSummary,
         string? SordChartLevel);

@@ -9,6 +9,9 @@ namespace ScoreTracker.Domain.SecondaryPorts
     /// </summary>
     public interface IPiuCenterClient
     {
+        /// <summary>The current data-release stamp (e.g. "050726") — changes when they republish analysis.</summary>
+        Task<string> GetDataVersion(CancellationToken cancellationToken = default);
+
         /// <summary>Their full chart enumeration — every chart they have analysis for, all packs.</summary>
         Task<IReadOnlyList<PiuCenterChartListing>> GetChartTable(CancellationToken cancellationToken = default);
 

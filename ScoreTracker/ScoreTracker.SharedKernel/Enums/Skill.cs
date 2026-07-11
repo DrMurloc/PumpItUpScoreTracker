@@ -56,8 +56,13 @@ public enum Skill
     [Name("Jacks")] [Description("Jacks")] [SkillCategory(SkillCategory.Tech)]
     Jacks,
 
+    // Functionally retired by the PiuCenter skill flip (no measurable counterpart) —
+    // the member survives so pre-flip rows still Enum.Parse; remove in a post-flip cleanup.
     [Name("Gimmicks")] [Description("Gimmicks")] [SkillCategory(SkillCategory.Tech)]
-    Gimmicks
+    Gimmicks,
+
+    [Name("Runs")] [Description("Sustained streams of steps")] [SkillCategory(SkillCategory.Stamina)]
+    Runs
 }
 
 [ExcludeFromCodeCoverage]
