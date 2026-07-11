@@ -1,9 +1,11 @@
 using ScoreTracker.Catalog.Contracts.Commands;
 using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Commands;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using ScoreTracker.ChartIntelligence.Application;
+using ScoreTracker.ChartIntelligence.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -210,7 +212,9 @@ public sealed class TierListSagaTests
         Mock<ITierListRepository>? tierLists = null,
         Mock<IScoreReader>? scores = null,
         Mock<ICurrentUserAccessor>? currentUser = null,
-        Mock<IPlayerStatsReader>? playerStats = null)
+        Mock<IPlayerStatsReader>? playerStats = null,
+        Mock<IChartScoreStatsRepository>? chartStats = null,
+        Mock<IFolderCohortStatsRepository>? cohortStats = null)
     {
         chartRatings ??= EmptyRatingsMock();
         charts ??= EmptyChartsMock();
@@ -218,8 +222,11 @@ public sealed class TierListSagaTests
         scores ??= new Mock<IScoreReader>();
         currentUser ??= new Mock<ICurrentUserAccessor>();
         playerStats ??= new Mock<IPlayerStatsReader>();
+        chartStats ??= new Mock<IChartScoreStatsRepository>();
+        cohortStats ??= new Mock<IFolderCohortStatsRepository>();
         return new TierListSaga(chartRatings.Object, charts.Object, tierLists.Object, scores.Object,
-            currentUser.Object, playerStats.Object, new Mock<IChartScoringLevelRepository>().Object);
+            currentUser.Object, playerStats.Object, new Mock<IChartScoringLevelRepository>().Object,
+            chartStats.Object, cohortStats.Object);
     }
 
     private static Mock<IChartRepository> EmptyChartsMock()
@@ -289,12 +296,9 @@ public sealed class TierListSagaTests
                     false, DateTimeOffset.MinValue))
             });
         var playerStats = new Mock<IPlayerStatsReader>();
-        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new PlayerStatsRecord(userId, TotalRating: 0, HighestLevel: 1, ClearCount: 0,
-                CoOpRating: 0, CoOpScore: 0, SkillRating: 0, SkillScore: 0, SkillLevel: 0,
-                SinglesRating: 0, SinglesScore: 0, SinglesLevel: 0, DoublesRating: 0, DoublesScore: 0,
-                DoublesLevel: 0, CompetitiveLevel: 20.5, SinglesCompetitiveLevel: 20.5,
-                DoublesCompetitiveLevel: 20.5));
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MixEnum _, IEnumerable<Guid> ids, CancellationToken _) =>
+                ids.Select(id => Stats(id, singlesCompetitive: 20.5)).ToArray());
         var tierLists = new Mock<ITierListRepository>();
         var saved = new List<SongTierListEntry>();
         tierLists.Setup(t => t.SaveEntries(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<SongTierListEntry>>(),
@@ -308,10 +312,156 @@ public sealed class TierListSagaTests
         var entry = Assert.Single(saved);
         Assert.Equal(chart.Id, entry.ChartId);
         Assert.Equal("Scores", (string)entry.TierListName);
-        // Player weighting is per (level, type) folder the player appears in — exactly once here.
-        playerStats.Verify(p => p.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()), Times.Once);
+        // Stats are fetched in ONE batch per folder; only the player's folder names them.
+        playerStats.Verify(p => p.GetStats(MixEnum.Phoenix,
+            It.Is<IEnumerable<Guid>>(ids => ids.Contains(userId)), It.IsAny<CancellationToken>()), Times.Once);
         // Levels 1-29 × {Single, Double} — one SaveEntries per folder, even when empty.
         tierLists.Verify(t => t.SaveEntries(MixEnum.Phoenix, It.IsAny<IEnumerable<SongTierListEntry>>(),
             It.IsAny<CancellationToken>()), Times.Exactly(58));
+    }
+
+    [Fact]
+    public async Task ProcessScoresTierListPersistsVarianceOverComparablePlayersOnly()
+    {
+        var measured = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var singleScore = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var comparableA = Guid.NewGuid();
+        var comparableB = Guid.NewGuid();
+        var outOfBand = Guid.NewGuid();
+        var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetScores(MixEnum.Phoenix, It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<(Guid userId, RecordedPhoenixScore record)>());
+        scores.Setup(s => s.GetScores(MixEnum.Phoenix, ChartType.Single, DifficultyLevel.From(20),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                (comparableA, Score(measured.Id, 950000)),
+                (comparableA, Score(singleScore.Id, 900000)),
+                (comparableB, Score(measured.Id, 960000)),
+                (outOfBand, Score(measured.Id, 999000))
+            });
+        var playerStats = new Mock<IPlayerStatsReader>();
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MixEnum _, IEnumerable<Guid> ids, CancellationToken _) => ids.Select(id =>
+                id == comparableA ? Stats(comparableA, singlesCompetitive: 20.5) :
+                id == comparableB ? Stats(comparableB, singlesCompetitive: 19.0) :
+                Stats(outOfBand, singlesCompetitive: 24.0)).ToArray());
+        var chartStats = new Mock<IChartScoreStatsRepository>();
+        var savedStats = new List<ChartScoreStatsRecord>();
+        chartStats.Setup(c => c.SaveStats(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<ChartScoreStatsRecord>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<MixEnum, IEnumerable<ChartScoreStatsRecord>, CancellationToken>((_, s, _) =>
+                savedStats.AddRange(s))
+            .Returns(Task.CompletedTask);
+        var saga = BuildSaga(scores: scores, playerStats: playerStats, chartStats: chartStats);
+
+        await saga.Consume(BuildContext(new ProcessScoresTiersListCommand()));
+
+        // The out-of-band player (comp 24 vs folder 20) is excluded, and the chart with a
+        // single comparable score is not computable — only the two-score chart persists.
+        var stat = Assert.Single(savedStats);
+        Assert.Equal(measured.Id, stat.ChartId);
+        Assert.Equal(2, stat.ScoreCount);
+        // Sample stddev of {950000, 960000} = sqrt(50,000,000) ≈ 7071.068.
+        Assert.Equal(7071.068, stat.ScoreStandardDeviation, precision: 3);
+    }
+
+    [Fact]
+    public async Task ProcessScoresTierListPersistsFolderPassHistogramsByCompetitiveBucket()
+    {
+        var chart1 = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var chart2 = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var playerA = Guid.NewGuid(); // 20.5 → bucket 41, passes both
+        var playerB = Guid.NewGuid(); // 20.5 → bucket 41, passes one (one broken attempt)
+        var playerC = Guid.NewGuid(); // 19.0 → bucket 38, passes one
+        var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetScores(MixEnum.Phoenix, It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<(Guid userId, RecordedPhoenixScore record)>());
+        scores.Setup(s => s.GetScores(MixEnum.Phoenix, ChartType.Single, DifficultyLevel.From(20),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                (playerA, Score(chart1.Id, 950000)),
+                (playerA, Score(chart2.Id, 940000)),
+                (playerB, Score(chart1.Id, 930000)),
+                (playerB, new RecordedPhoenixScore(chart2.Id, PhoenixScore.From(700000), null, true,
+                    DateTimeOffset.MinValue)),
+                (playerC, Score(chart1.Id, 920000))
+            });
+        var playerStats = new Mock<IPlayerStatsReader>();
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MixEnum _, IEnumerable<Guid> ids, CancellationToken _) => ids.Select(id =>
+                Stats(id, singlesCompetitive: id == playerC ? 19.0 : 20.5)).ToArray());
+        var cohortStats = new Mock<IFolderCohortStatsRepository>();
+        var savedBuckets = new List<FolderCohortBucketRecord>();
+        cohortStats.Setup(c => c.SaveFolder(MixEnum.Phoenix, ChartType.Single, 20,
+                It.IsAny<IEnumerable<FolderCohortBucketRecord>>(), It.IsAny<CancellationToken>()))
+            .Callback<MixEnum, ChartType, int, IEnumerable<FolderCohortBucketRecord>, CancellationToken>(
+                (_, _, _, b, _) => savedBuckets.AddRange(b))
+            .Returns(Task.CompletedTask);
+        var saga = BuildSaga(scores: scores, playerStats: playerStats, cohortStats: cohortStats);
+
+        await saga.Consume(BuildContext(new ProcessScoresTiersListCommand()));
+
+        Assert.Equal(2, savedBuckets.Count);
+        var midBucket = Assert.Single(savedBuckets, b => b.Bucket == 41);
+        Assert.Equal(1, midBucket.PassHistogram[2]); // player A: 2 passes
+        Assert.Equal(1, midBucket.PassHistogram[1]); // player B: 1 pass (broken attempt = 0)
+        var lowBucket = Assert.Single(savedBuckets, b => b.Bucket == 38);
+        Assert.Equal(1, lowBucket.PassHistogram[1]); // player C: 1 pass
+    }
+
+    [Fact]
+    public async Task FolderCohortQueryMergesBucketsInsideTheSimilarPlayersWindow()
+    {
+        var cohortStats = new Mock<IFolderCohortStatsRepository>();
+        cohortStats.Setup(c => c.GetBuckets(MixEnum.Phoenix, ChartType.Double, 20, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new FolderCohortBucketRecord(40, new Dictionary<int, int> { { 5, 2 } }), // 20.0 — in window
+                new FolderCohortBucketRecord(41, new Dictionary<int, int> { { 10, 1 }, { 20, 1 } }), // 20.5 — in window
+                new FolderCohortBucketRecord(44, new Dictionary<int, int> { { 57, 3 } }) // 22.0 — outside ±0.5
+            });
+        var saga = BuildSaga(cohortStats: cohortStats);
+
+        var result = await saga.Handle(
+            new GetFolderCohortStatsQuery(MixEnum.Phoenix, ChartType.Double, 20, CompetitiveLevel: 20.3,
+                PassCount: 10), CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Equal(4, result!.PlayerCount);
+        Assert.Equal(10.0, result.AveragePasses); // (5 + 5 + 10 + 20) / 4
+        Assert.Equal(0.75, result.PassPercentile); // 3 of 4 at or below 10 passes
+    }
+
+    [Fact]
+    public async Task FolderCohortQueryReturnsNullWhenNoBucketsFallInTheWindow()
+    {
+        var cohortStats = new Mock<IFolderCohortStatsRepository>();
+        cohortStats.Setup(c => c.GetBuckets(MixEnum.Phoenix, ChartType.Double, 20, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new FolderCohortBucketRecord(50, new Dictionary<int, int> { { 3, 4 } }) });
+        var saga = BuildSaga(cohortStats: cohortStats);
+
+        var result = await saga.Handle(
+            new GetFolderCohortStatsQuery(MixEnum.Phoenix, ChartType.Double, 20, CompetitiveLevel: 20.0,
+                PassCount: 3), CancellationToken.None);
+
+        Assert.Null(result);
+    }
+
+    private static RecordedPhoenixScore Score(Guid chartId, int score)
+    {
+        return new RecordedPhoenixScore(chartId, PhoenixScore.From(score), null, false, DateTimeOffset.MinValue);
+    }
+
+    private static PlayerStatsRecord Stats(Guid userId, double singlesCompetitive)
+    {
+        return new PlayerStatsRecord(userId, TotalRating: 0, HighestLevel: 1, ClearCount: 0,
+            CoOpRating: 0, CoOpScore: 0, SkillRating: 0, SkillScore: 0, SkillLevel: 0,
+            SinglesRating: 0, SinglesScore: 0, SinglesLevel: 0, DoublesRating: 0, DoublesScore: 0,
+            DoublesLevel: 0, CompetitiveLevel: singlesCompetitive, SinglesCompetitiveLevel: singlesCompetitive,
+            DoublesCompetitiveLevel: singlesCompetitive);
     }
 }

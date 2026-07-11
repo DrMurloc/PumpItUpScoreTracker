@@ -45,6 +45,37 @@ public sealed class ChartIntelligenceModelContribution : IDbModelContribution
             .HasKey(cdr => new { cdr.ChartId, cdr.MixId });
 
         modelBuilder.Entity<TierListEntryEntity>().ToTable("TierListEntry");
+
+        // Tier-lists overhaul C1 (design doc §6): materialized per-user relative tier
+        // lists. The (MixId, ChartId) covering index serves the similar-players
+        // aggregation — every user's category for one folder's charts in a single seek.
+        modelBuilder.Entity<UserTierListEntryEntity>().ToTable("UserTierListEntry")
+            .HasKey(e => new { e.MixId, e.UserId, e.ChartId });
+        modelBuilder.Entity<UserTierListEntryEntity>()
+            .HasIndex(e => new { e.MixId, e.ChartId })
+            .IncludeProperties(e => new { e.Category, e.Order });
+        modelBuilder.Entity<UserTierListEntryEntity>()
+            .HasOne<UserEntity>()
+            .WithMany()
+            .HasForeignKey(e => e.UserId);
+        modelBuilder.Entity<UserTierListEntryEntity>()
+            .HasOne<ChartEntity>()
+            .WithMany()
+            .HasForeignKey(e => e.ChartId);
+
+        // Population score variance per chart, refreshed by the daily scores rebuild.
+        modelBuilder.Entity<ChartScoreStatsEntity>().ToTable("ChartScoreStats")
+            .HasKey(e => new { e.MixId, e.ChartId });
+        modelBuilder.Entity<ChartScoreStatsEntity>()
+            .HasOne<ChartEntity>()
+            .WithMany()
+            .HasForeignKey(e => e.ChartId);
+
+        // Folder pass-count histograms per competitive-level bucket (round 7), refreshed
+        // by the daily scores rebuild; read as a tiny keyed range per folder view.
+        modelBuilder.Entity<FolderCohortStatsEntity>().ToTable("FolderCohortStats")
+            .HasKey(e => new { e.MixId, e.ChartType, e.Level, e.Bucket });
+
         modelBuilder.Entity<ChartScoringLevelEntity>().ToTable("ChartScoringLevel");
         modelBuilder.Entity<UserPreferenceRatingEntity>().ToTable("UserPreferenceRating");
         modelBuilder.Entity<ChartPreferenceRatingEntity>().ToTable("ChartPreferenceRating");

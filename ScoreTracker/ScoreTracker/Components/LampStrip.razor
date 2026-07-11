@@ -1,0 +1,31 @@
+@namespace ScoreTracker.Web.Components
+
+@* The folder lamp ladder as one compact strip — replaces the old nine stacked
+   progress bars (rule 1: the answer belongs above the fold, not the meters). *@
+<div class="lamp-strip">
+    @foreach (var lamp in Lamps)
+    {
+        var complete = Total > 0 && lamp.Count >= Total;
+        <div class="lamp-chip @(complete ? "lamp-chip-complete" : null)">
+            <span class="lamp-chip-label">@lamp.Label</span>
+            <span class="lamp-chip-count">@lamp.Count/@Total</span>
+            <span class="lamp-chip-meter">
+                <span class="lamp-chip-fill" style="width:@FillPercent(lamp.Count)%"></span>
+            </span>
+        </div>
+    }
+</div>
+
+@code {
+
+    public sealed record Lamp(string Label, int Count);
+
+    [Parameter] public IReadOnlyList<Lamp> Lamps { get; set; } = Array.Empty<Lamp>();
+
+    [Parameter] public int Total { get; set; }
+
+    private int FillPercent(int count)
+    {
+        return Total <= 0 ? 0 : (int)Math.Round(100.0 * Math.Min(count, Total) / Total);
+    }
+}

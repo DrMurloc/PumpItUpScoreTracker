@@ -1,5 +1,6 @@
 @page "/Admin"
 @using MediatR
+@using ScoreTracker.ChartIntelligence.Contracts.Messages
 @using ScoreTracker.OfficialMirror.Contracts.Commands
 @using ScoreTracker.OfficialMirror.Contracts.Messages
 @using Microsoft.EntityFrameworkCore
@@ -30,6 +31,8 @@
     @L["Do It"]
 </MudButton>
 <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="ClearCache">@L["Clear Cache"]</MudButton>
+<MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_backfillQueued" OnClick="BackfillUserTierLists">@L["Backfill User Tier Lists"]</MudButton>
+<MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_tierListRebuildQueued" OnClick="RebuildTierLists">@L["Rebuild Tier Lists"]</MudButton>
 @foreach (var name in MissingUsers)
 {
     <br/>
@@ -299,6 +302,30 @@
     private void ClearCache()
     {
         _charts.ClearCache();
+    }
+
+    private bool _backfillQueued = false;
+    private async Task BackfillUserTierLists()
+    {
+        // One-time, throttled materialization of every scoring user's relative tier
+        // lists (UserTierListSaga). Disabled after queueing — the saga takes minutes and
+        // double-publishing just doubles the load for the same converged rows.
+        _backfillQueued = true;
+        await Bus.Publish(new BackfillUserTierListsCommand());
+        Snackbar.Add("User tier list backfill queued", Severity.Success);
+    }
+
+    private bool _tierListRebuildQueued = false;
+    private async Task RebuildTierLists()
+    {
+        // The daily tier-list rebuilds, on demand — the same messages the Hangfire jobs
+        // publish. Locally PreventRecurringJobs strips the recurring registrations, so
+        // this button is the sanctioned trigger (it also refreshes ChartScoreStats and
+        // the round-7 FolderCohortStats histograms).
+        _tierListRebuildQueued = true;
+        await Bus.Publish(new ProcessScoresTiersListCommand());
+        await Bus.Publish(new ProcessPassTierListCommand());
+        Snackbar.Add("Tier list rebuild queued", Severity.Success);
     }
     private async Task RebuildOfficialLeaderboard()
     {

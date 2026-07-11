@@ -140,6 +140,16 @@ public sealed class E2ESeedData
             cancellationToken);
     }
 
+    /// <summary>ChartVideo belongs to the Catalog vertical (internal entity) — seeded with SQL.</summary>
+    public async Task SeedChartVideoAsync(Guid chartId, string videoUrl,
+        CancellationToken cancellationToken = default)
+    {
+        await using var context = await _factory.CreateDbContextAsync(cancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT INTO [scores].[ChartVideo] ([ChartId], [VideoUrl], [ChannelName], [LastUpdated]) VALUES ({chartId}, {videoUrl}, {"e2e"}, {DateTimeOffset.UtcNow})",
+            cancellationToken);
+    }
+
     /// <summary>
     ///     TierListEntry belongs to the ChartIntelligence vertical (internal entity), so it
     ///     is seeded with SQL rather than an entity type. TierListName is one of the four

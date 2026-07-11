@@ -46,8 +46,9 @@ public sealed class UiColorTokenTests
         // The recap deck is deliberately self-styled slide art (its design doc owns its
         // palette); it stays allowlisted rather than tokenized.
         ["Pages/Progress/PhoenixRecap.razor"] = 22,
-        ["Pages/TierLists/ChartSkills.razor"] = 7,
-        ["Pages/TierLists/TierLists.razor"] = 26,
+        // ChartSkills.razor burned to zero across the tier-lists overhaul (C4 shell + C7
+        // radar removal) and left the allowlist entirely; the old page at /TierLists/Old
+        // (26 entries) was deleted outright in the same series (C14).
         ["Pages/Tools/ChartRandomizer.razor"] = 2,
         ["Pages/WhatShouldIPlay.razor"] = 4
     };

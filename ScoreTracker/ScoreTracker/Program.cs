@@ -259,6 +259,39 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+// Tier-lists overhaul C3: legacy tier list URLs 301 to the canonical path form
+// (/TierLists/{Single|Double|CoOp}/{level}); the lens survives as a query param.
+// A real 301 (not a Blazor NavigateTo) so crawlers and old bookmarks consolidate.
+app.Use(async (context, next) =>
+{
+    var path = context.Request.Path;
+    var isLegacyAlias = path.Equals("/ChartSkills", StringComparison.OrdinalIgnoreCase) ||
+                        path.Equals("/PersonalizedTierList", StringComparison.OrdinalIgnoreCase) ||
+                        path.Equals("/TierLists/Old", StringComparison.OrdinalIgnoreCase);
+    var isLegacyQueryForm = path.Equals("/TierLists", StringComparison.OrdinalIgnoreCase) &&
+                            (context.Request.Query.ContainsKey("Difficulty") ||
+                             context.Request.Query.ContainsKey("ChartType"));
+    if (isLegacyAlias || isLegacyQueryForm)
+    {
+        var query = context.Request.Query;
+        var type = Enum.TryParse<ScoreTracker.SharedKernel.Enums.ChartType>(query["ChartType"], true,
+            out var parsedType)
+            ? parsedType
+            : ScoreTracker.SharedKernel.Enums.ChartType.Double;
+        var level = int.TryParse(query["Difficulty"], out var parsedLevel) && parsedLevel is >= 1 and <= 29
+            ? parsedLevel
+            : 18;
+        var target = $"/TierLists/{type}/{level}";
+        if (query.TryGetValue("TierListType", out var lens) && !string.IsNullOrWhiteSpace(lens))
+            target += $"?TierListType={Uri.EscapeDataString(lens.ToString())}";
+        context.Response.Redirect(target, true);
+        return;
+    }
+
+    await next();
+});
+
 app.UseSwagger();
 app.UseSwaggerUI(c => { });
 app.UseRouting();
@@ -288,7 +321,8 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     ("start-phoenix2-leaderboard-import", r => r.PublishStartPhoenix2LeaderboardImport(),  "30 16 * * 0"), // Sundays 16:30 UTC
     ("try-schedule-mom",                 r => r.PublishTryScheduleMoM(),                  "0 11 * * *"), // 06:00 ET
     ("flush-overdue-score-batches",      r => r.PublishFlushOverdueScoreBatches(),        "*/5 * * * *"), // every 5 min — safety net for stuck batches
-    ("process-account-purges",           r => r.PublishProcessAccountPurges(),            "30 11 * * *") // 06:30 ET — merged-account grace-window purges
+    ("process-account-purges",           r => r.PublishProcessAccountPurges(),            "30 11 * * *"), // 06:30 ET — merged-account grace-window purges
+    ("refresh-folder-share-cards",       r => r.PublishRefreshFolderShareCards(),         "30 10 * * *") // 05:30 ET — og:images, right after the tier-list rebuilds
 };
 if (builder.Configuration["PreventRecurringJobs"] == "true")
 {

@@ -23,5 +23,7 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
             .ExecuteDeleteAsync(cancellationToken);
         await database.Set<UserCoOpRatingEntity>().Where(e => e.UserId == userId)
             .ExecuteDeleteAsync(cancellationToken);
+        await database.Set<UserTierListEntryEntity>().Where(e => e.UserId == userId)
+            .ExecuteDeleteAsync(cancellationToken);
     }
 }

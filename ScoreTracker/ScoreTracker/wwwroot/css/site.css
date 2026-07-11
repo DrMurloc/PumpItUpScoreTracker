@@ -266,3 +266,267 @@
     text-shadow: 0 0 4px, 0 0 10px, 0 0 18px;
     font-weight: 600;
 }
+
+/* ===== Tier-list component vocabulary: sections, chart cards + the border language,
+   lamp strip, border legend, folder picker. These back Components/* (TierSection,
+   TierListChartCard, TierListSkeleton, LampStrip, BorderLegend, FolderPicker), so they
+   live here rather than in any page's style block — the components must render
+   correctly wherever they're reused. ===== */
+
+.tier-section {
+    margin: 12px 0;
+}
+
+.tier-section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    cursor: pointer;
+    border-left: 4px solid var(--tier-section-color, var(--mud-palette-text-secondary));
+    padding-left: 8px;
+}
+
+.tier-section-name {
+    color: var(--tier-section-color, var(--mud-palette-text-secondary));
+}
+
+.tier-section-count, .tier-section-stat {
+    color: var(--mud-palette-text-secondary);
+}
+
+.tier-section-body {
+    margin-top: 8px;
+}
+
+.tier-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 10px;
+}
+
+.tier-card-grid-compact {
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 6px;
+}
+
+.tier-chart-card {
+    border: 2px solid var(--mud-palette-lines-default);
+    border-radius: 8px;
+    background: var(--mud-palette-surface);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.tier-chart-card-jacket {
+    height: 92px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.tier-chart-card-bubble {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+}
+
+.tier-chart-card-body {
+    padding: 4px 8px;
+    min-width: 0;
+    flex-grow: 1;
+}
+
+.tier-chart-card-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tier-chart-card-actions {
+    display: flex;
+    align-items: center;
+    padding: 0 4px 4px;
+}
+
+.tier-chart-card-compact {
+    cursor: pointer;
+}
+
+.tier-chart-card-compact-jacket {
+    height: 72px;
+}
+
+.tier-chart-card-compact-grade {
+    position: absolute;
+    bottom: 3px;
+    right: 3px;
+    background: var(--mud-palette-background);
+    border-radius: 4px;
+    padding: 1px 3px;
+}
+
+.tier-chart-card-skeleton {
+    border-radius: 8px;
+}
+
+.tier-chart-card-lens-dot {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .45);
+}
+
+.tier-chart-card-tier {
+    display: block;
+}
+
+.tier-chart-card-meta {
+    display: block;
+    color: var(--mud-palette-text-secondary);
+}
+
+.tier-chart-card-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    padding-bottom: 4px;
+}
+
+.tier-chart-card-skill {
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 8px;
+    padding: 0 5px;
+    font-size: .65rem;
+    color: var(--mud-palette-text-secondary);
+    white-space: nowrap;
+}
+
+.lamp-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0;
+}
+
+.lamp-chip {
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 12px;
+    padding: 2px 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .75rem;
+}
+
+.lamp-chip-meter {
+    width: 48px;
+    height: 4px;
+    background: var(--mud-palette-lines-default);
+    border-radius: 2px;
+    overflow: hidden;
+    display: inline-block;
+}
+
+.lamp-chip-fill {
+    display: block;
+    height: 100%;
+    background: var(--mud-palette-primary);
+}
+
+.lamp-chip-complete .lamp-chip-fill {
+    background: var(--mud-palette-success);
+}
+
+.border-legend {
+    font-size: .75rem;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin: 8px 0;
+}
+
+.border-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.border-legend-swatch {
+    width: 20px;
+    height: 12px;
+    display: inline-block;
+    border: 2px solid var(--mud-palette-lines-default);
+    border-radius: 3px;
+}
+
+/* The card border language (owner-locked): solid success = passed, dashed info = To-Do,
+   dashed success = passed in another mix. Declared AFTER the card and swatch bases on
+   purpose — those declare `border` shorthands at equal specificity, so source order is
+   what guarantees the state classes win everywhere they're worn. */
+.tier-chart-card-pass {
+    border-color: var(--mud-palette-success);
+    border-style: solid;
+}
+
+.tier-chart-card-todo {
+    border-color: var(--mud-palette-info);
+    border-style: dashed;
+}
+
+.tier-chart-card-other-mix {
+    border-color: var(--mud-palette-success);
+    border-style: dashed;
+}
+
+.folder-picker {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.folder-picker-anchor {
+    position: relative;
+}
+
+.folder-picker-pop {
+    padding: 8px;
+}
+
+.folder-picker-types {
+    margin-bottom: 8px;
+}
+
+.folder-picker-levels {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 2px;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.folder-picker-level {
+    background: none;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 0;
+    cursor: pointer;
+    font: inherit;
+    color: var(--mud-palette-text-primary);
+    text-align: center;
+}
+
+.folder-picker-level:hover {
+    background: rgba(255, 255, 255, .08);
+}
+
+.folder-picker-current {
+    color: var(--mud-palette-primary);
+    font-weight: 600;
+}
