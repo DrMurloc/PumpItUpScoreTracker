@@ -112,10 +112,12 @@ failure is reported in the results table and the remaining songs still run. The 
 cleared once at the end. Re-parsing after a partial run marks the songs that did get created
 as "already exists", so re-Confirm only retries the failures.
 
-## Collection workflow (future automation)
+## Collection workflow
 
-The intended pipeline that will emit this JSON — a direct automation of the owner's manual
-process, so the blob stays the contract between the tool and the workflow:
+Automated as the repo skill [.claude/skills/check-new-charts/](../../.claude/skills/check-new-charts/SKILL.md)
+(scripts + durable state under `%USERPROFILE%\.piu-score-tracker\check-new-charts\`) — a
+direct automation of the owner's manual process, so the blob stays the contract between the
+tool and the workflow:
 
 1. **YouTube watermark walk** — new charts are announced as per-chart videos on
    `youtube.com/@PUMPITUPOfficial` (batches of ~5 songs, BGA videos mixed in between). Given
