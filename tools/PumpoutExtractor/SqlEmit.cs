@@ -108,13 +108,18 @@ public static class SqlEmit
         return sql.ToString();
     }
 
+    /// <summary>A ChartMix row S3 emits — S4's vote backfill votes on exactly these.</summary>
+    public sealed record BackfillRow(Guid ChartGuid, MixMap.MixDef Mix, long Level, string Mode, string? Slot,
+        int PlayerCount, long PumpoutChartId, bool MatchedProd);
+
     // ---- S3: membership backfill + cut content ------------------------------------
     public static string MembershipBackfill(
         Matcher matcher,
         PumpoutDump dump,
         IReadOnlyDictionary<long, PumpoutDump.Debut> debuts,
         List<string> report,
-        List<string> artNeeded)
+        List<string> artNeeded,
+        List<BackfillRow> emittedRows)
     {
         var sql = Header("S3 — ChartMix membership backfill + cut-content songs/charts (run AFTER the LegacySlot/PlayerCount/BestAttempt.MixId migration is live)");
 
@@ -215,6 +220,8 @@ public static class SqlEmit
                     $"IF NOT EXISTS (SELECT 1 FROM [scores].[ChartMix] WHERE [ChartId] = '{chartGuid}' AND [MixId] = '{mix.Id}')");
                 sql.AppendLine(
                     $"    INSERT INTO [scores].[ChartMix] ([Id], [ChartId], [MixId], [Level], [NoteCount], [LegacySlot]) VALUES ('{rowGuid}', '{chartGuid}', '{mix.Id}', {level}, NULL, {slot});");
+                emittedRows.Add(new BackfillRow(chartGuid, mix, level.Value, mode, state.Slot, state.PlayerCount,
+                    chartId, prodChartIdByPump.ContainsKey(chartId) && !insertedCharts.Contains(chartId)));
                 rows++;
             }
 
@@ -224,6 +231,103 @@ public static class SqlEmit
         report.Insert(0, $"membership rows emitted: {rows}; new songs: {neededSongs.Count}; new charts: {insertedCharts.Count}");
         sql.AppendLine("COMMIT TRAN;");
         return sql.ToString();
+    }
+
+    // ---- S4: hindsight difficulty votes (owner decision: vote-based legacy tier data) ---
+    // One PumpoutBackfill vote per S3 ChartMix row, scaled by where the chart's rating
+    // ended up (prod's current level for still-alive charts, pumpout's last-known state
+    // for cut ones). Pre-Exceed rows and player-count co-ops vote Medium — their scales
+    // don't compare. Aggregates are recomputed set-based with the exact
+    // ReCalculateChartRatingHandler math (level + .5 + adjustment; population stddev).
+    public static readonly Guid BackfillUserId = DeterministicGuid("backfill-user", 0);
+
+    public static string VoteBackfill(
+        IReadOnlyList<BackfillRow> rows,
+        IReadOnlyDictionary<Guid, int> prodLevelByChartGuid,
+        PumpoutDump dump,
+        List<string> report)
+    {
+        var sql = Header("S4 — PumpoutBackfill hindsight difficulty votes (run AFTER s3)");
+
+        sql.AppendLine("-- The synthetic voter. Not public, no game tag; delete this user to retract every backfill vote.");
+        sql.AppendLine($"IF NOT EXISTS (SELECT 1 FROM [scores].[User] WHERE [Id] = '{BackfillUserId}')");
+        sql.AppendLine(
+            $"    INSERT INTO [scores].[User] ([Id], [Name], [IsPublic], [ProfileImage], [IsContentLocked], [ClaimsInvalidatedAt]) VALUES ('{BackfillUserId}', N'PumpoutBackfill', 0, N'https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png', 0, '2026-07-11');");
+        sql.AppendLine();
+
+        var distribution = new Dictionary<int, int>();
+        foreach (var row in rows)
+        {
+            var scale = ScaleFor(row);
+            distribution[scale] = distribution.GetValueOrDefault(scale) + 1;
+            var voteGuid = DeterministicGuid("vote", row.PumpoutChartId * 1000 + row.Mix.SortOrder);
+            sql.AppendLine(
+                $"IF NOT EXISTS (SELECT 1 FROM [scores].[UserChartDifficultyRating] WHERE [UserId] = '{BackfillUserId}' AND [ChartId] = '{row.ChartGuid}' AND [MixId] = '{row.Mix.Id}')");
+            sql.AppendLine(
+                $"    INSERT INTO [scores].[UserChartDifficultyRating] ([Id], [UserId], [ChartId], [MixId], [Scale]) VALUES ('{voteGuid}', '{BackfillUserId}', '{row.ChartGuid}', '{row.Mix.Id}', {scale});");
+        }
+
+        sql.AppendLine();
+        sql.AppendLine("-- Recompute aggregates for every (chart, mix) the backfill touched, folding in any");
+        sql.AppendLine("-- organic votes (XX-era voting predates this). Mirrors ReCalculateChartRatingHandler.");
+        sql.AppendLine(@"
+;WITH affected AS (
+    SELECT DISTINCT v.[ChartId], v.[MixId]
+    FROM [scores].[UserChartDifficultyRating] v
+    WHERE v.[UserId] = '" + BackfillUserId + @"'
+), calc AS (
+    SELECT v.[ChartId], v.[MixId],
+        AVG(cm.[Level] + 0.5 + CASE v.[Scale]
+            WHEN -4 THEN -2.0 WHEN -3 THEN -1.0 WHEN -2 THEN -0.5 WHEN -1 THEN -0.25
+            WHEN 0 THEN 0.0 WHEN 1 THEN 0.25 WHEN 2 THEN 0.5 WHEN 3 THEN 1.0 WHEN 4 THEN 2.0 END) AS [Difficulty],
+        COUNT(*) AS [Cnt],
+        ISNULL(STDEVP(CASE v.[Scale]
+            WHEN -4 THEN -2.0 WHEN -3 THEN -1.0 WHEN -2 THEN -0.5 WHEN -1 THEN -0.25
+            WHEN 0 THEN 0.0 WHEN 1 THEN 0.25 WHEN 2 THEN 0.5 WHEN 3 THEN 1.0 WHEN 4 THEN 2.0 END), 0) AS [SD]
+    FROM [scores].[UserChartDifficultyRating] v
+    JOIN affected a ON a.[ChartId] = v.[ChartId] AND a.[MixId] = v.[MixId]
+    JOIN [scores].[ChartMix] cm ON cm.[ChartId] = v.[ChartId] AND cm.[MixId] = v.[MixId]
+    GROUP BY v.[ChartId], v.[MixId]
+)
+MERGE [scores].[ChartDifficultyRating] AS t
+USING calc AS s ON t.[ChartId] = s.[ChartId] AND t.[MixId] = s.[MixId]
+WHEN MATCHED THEN UPDATE SET t.[Difficulty] = s.[Difficulty], t.[Count] = s.[Cnt], t.[StandardDeviation] = s.[SD]
+WHEN NOT MATCHED THEN INSERT ([ChartId], [MixId], [Difficulty], [Count], [StandardDeviation])
+    VALUES (s.[ChartId], s.[MixId], s.[Difficulty], s.[Cnt], s.[SD]);");
+        sql.AppendLine();
+        sql.AppendLine("COMMIT TRAN;");
+
+        report.Add("vote distribution (scale: count): " + string.Join(", ",
+            distribution.OrderBy(kv => kv.Key).Select(kv => $"{kv.Key}: {kv.Value}")));
+        return sql.ToString();
+
+        int ScaleFor(BackfillRow row)
+        {
+            // Cross-scale comparisons are lies: pre-Exceed eras rate 1-10 on their own
+            // ladder, and mainline co-ops store player count in Level.
+            if (row.Mix.PreExceedSlots || row.Mode == "C") return 0;
+
+            long? final = null;
+            if (row.MatchedProd && prodLevelByChartGuid.TryGetValue(row.ChartGuid, out var prodLevel))
+            {
+                final = prodLevel;
+            }
+            else
+            {
+                var last = dump.LastKnownState(row.PumpoutChartId);
+                if (last.Mode == row.Mode) final = last.Level;
+            }
+
+            if (final is null) return 0;
+            return (final.Value - row.Level) switch
+            {
+                <= -2 => -4, // 2+ Levels Overrated
+                -1 => -3, // 1 Level Overrated
+                1 => 3, // 1 Level Underrated
+                >= 2 => 4, // 2+ Levels Underrated
+                _ => 0 // Medium — "landed where it was rated"
+            };
+        }
     }
 }
 

@@ -41,8 +41,13 @@ var artNeeded = new List<string>();
 
 File.WriteAllText(Path.Combine(outDir, "s1-pumpout-catalog-corrections.sql"), SqlEmit.Corrections(matcher, skipped));
 File.WriteAllText(Path.Combine(outDir, "s2-originalmix-backfill.sql"), SqlEmit.OriginalMixBackfill(matcher, debuts));
+var backfillRows = new List<SqlEmit.BackfillRow>();
 File.WriteAllText(Path.Combine(outDir, "s3-membership-backfill.sql"),
-    SqlEmit.MembershipBackfill(matcher, dump, debuts, s3Report, artNeeded));
+    SqlEmit.MembershipBackfill(matcher, dump, debuts, s3Report, artNeeded, backfillRows));
+var prodLevels = matcher.ChartMatches.ToDictionary(m => m.Prod.Id, m => m.Prod.Level);
+var s4Report = new List<string>();
+File.WriteAllText(Path.Combine(outDir, "s4-vote-backfill.sql"),
+    SqlEmit.VoteBackfill(backfillRows, prodLevels, dump, s4Report));
 
 File.WriteAllLines(Path.Combine(reportDir, "notes.txt"), matcher.Notes);
 File.WriteAllLines(Path.Combine(reportDir, "prod-residuals.txt"),
@@ -50,6 +55,7 @@ File.WriteAllLines(Path.Combine(reportDir, "prod-residuals.txt"),
 File.WriteAllLines(Path.Combine(reportDir, "suspects.txt"),
     matcher.Suspects.Select(s => $"PROD: {s.ProdSong} {s.ProdChart}  <->  PUMPOUT: {s.PumpoutSong} {s.PumpoutChart}  [{s.Reason}]"));
 File.WriteAllLines(Path.Combine(reportDir, "s3-report.txt"), s3Report);
+File.WriteAllLines(Path.Combine(reportDir, "s4-report.txt"), s4Report);
 File.WriteAllLines(Path.Combine(reportDir, "art-needed.txt"), artNeeded);
 File.WriteAllLines(Path.Combine(reportDir, "skipped.txt"), skipped);
 
@@ -58,6 +64,8 @@ Console.WriteLine($"Scripts written to {outDir}:");
 Console.WriteLine("  s1-pumpout-catalog-corrections.sql (schema-independent)");
 Console.WriteLine("  s2-originalmix-backfill.sql        (needs the Mix-seeding migration live)");
 Console.WriteLine("  s3-membership-backfill.sql         (needs LegacySlot/PlayerCount/BestAttempt.MixId live)");
+Console.WriteLine("  s4-vote-backfill.sql               (run AFTER s3 — PumpoutBackfill hindsight votes)");
+if (s4Report.Count > 0) Console.WriteLine("  " + s4Report[0]);
 Console.WriteLine($"Reports in {reportDir} — REVIEW suspects.txt and s3-report.txt before running S3.");
 if (s3Report.Count > 0) Console.WriteLine($"  {s3Report[0]}");
 return 0;
