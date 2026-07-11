@@ -2,11 +2,35 @@
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Enums
 
-@* The tier list's chart card (Comfortable density). Border language is owner-locked
-   (design doc §4): solid success = passed, dashed info-blue = To-Do, dashed success =
-   passed in another mix; precedence passed > To-Do > other-mix. Hue always pairs with
-   the dash pattern or a printed value (rule 8). *@
+@* The tier list's chart card. Border language is owner-locked (design doc §4): solid
+   success = passed, dashed info-blue = To-Do, dashed success = passed in another mix;
+   precedence passed > To-Do > other-mix. Hue always pairs with the dash pattern or a
+   printed value (rule 8). Compact is the jacket "sticker sheet" (rule 5); Table
+   density is the page's job, not the card's. *@
+@if (Density == UiDensity.Compact)
+{
+    <MudTooltip Text="@CompactTooltip" ShowOnFocus="true">
+        <div class="tier-chart-card tier-chart-card-compact @StateClass" role="button" tabindex="0"
+             @onclick="() => OnVideo.InvokeAsync(Chart.Id)">
+            <div class="tier-chart-card-jacket tier-chart-card-compact-jacket"
+                 style="background-image:url(&quot;@Chart.Song.ImagePath&quot;)">
+                <div class="tier-chart-card-bubble">
+                    <DifficultyBubble Chart="Chart" Height="18"></DifficultyBubble>
+                </div>
+                @if (Score?.Score != null)
+                {
+                    <div class="tier-chart-card-compact-grade">
+                        <LetterGradeIcon Grade="Score.Score.Value.LetterGrade" IsBroken="Score.IsBroken" Height="16"></LetterGradeIcon>
+                    </div>
+                }
+            </div>
+        </div>
+    </MudTooltip>
+}
+else
+{
 <div class="tier-chart-card @StateClass" title="@StateTitle">
     <div class="tier-chart-card-jacket" style="background-image:url(&quot;@Chart.Song.ImagePath&quot;)">
         <div class="tier-chart-card-bubble">
@@ -42,6 +66,7 @@
                        OnClick="() => OnVideo.InvokeAsync(Chart.Id)" aria-label="@L["Video"]"></MudIconButton>
     </div>
 </div>
+}
 
 @code {
 
@@ -61,6 +86,8 @@
 
     [Parameter] public bool ShowToDo { get; set; } = true;
 
+    [Parameter] public UiDensity Density { get; set; } = UiDensity.Comfortable;
+
     [Parameter] public EventCallback<Guid> OnToDo { get; set; }
 
     [Parameter] public EventCallback<Guid> OnVideo { get; set; }
@@ -72,4 +99,10 @@
     private string? StateTitle => Passed ? L["Passed"] :
         IsToDo ? L["To Do"] :
         PassedInAnotherMix ? L["Passed in another mix"] : null;
+
+    // Compact hides the name, so the tooltip carries the identity (rule 7: no
+    // truncation without a tooltip).
+    private string CompactTooltip => StateTitle == null
+        ? $"{Chart.Song.Name} {Chart.DifficultyString}"
+        : $"{Chart.Song.Name} {Chart.DifficultyString} — {StateTitle}";
 }

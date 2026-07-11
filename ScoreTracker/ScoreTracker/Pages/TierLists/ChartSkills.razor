@@ -1,6 +1,7 @@
 @page "/TierLists"
 @page "/TierLists/{ChartTypeRoute}/{LevelRoute:int}"
 @using MediatR
+@using ScoreTracker.Web.Enums
 @using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.Domain.Services
@@ -77,6 +78,23 @@ else
                 <MudSelectItem T="string" Value="@("Scoring Level")">@L["Scoring Level"]</MudSelectItem>
             </MudSelect>
         }
+        <MudButtonGroup OverrideStyles="false">
+            <MudTooltip Text=@L["Comfortable"]>
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy"
+                               Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)"
+                               OnClick="() => SetDensity(UiDensity.Comfortable)" aria-label="@L["Comfortable"]"></MudIconButton>
+            </MudTooltip>
+            <MudTooltip Text=@L["Compact"]>
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView"
+                               Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)"
+                               OnClick="() => SetDensity(UiDensity.Compact)" aria-label="@L["Compact"]"></MudIconButton>
+            </MudTooltip>
+            <MudTooltip Text=@L["Table"]>
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows"
+                               Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)"
+                               OnClick="() => SetDensity(UiDensity.Table)" aria-label="@L["Table"]"></MudIconButton>
+            </MudTooltip>
+        </MudButtonGroup>
         <MudSpacer></MudSpacer>
         <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.FileDownload" Disabled="_isBuildingImage || _isLoading">@L["Download"]</MudButton>
         <MudButton OnClick="() => _filtersOpen = true" Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.FilterList">@L["Filters"]</MudButton>
@@ -211,18 +229,60 @@ else
             }
             <TierSection Name="@group.Name" Color="@group.Color" Count="visible.Length" Stat="@GroupStat(visible)"
                          Collapsed="_collapsedTiers.Contains(group.Key)" CollapsedChanged="c => SetTierCollapsed(group.Key, c)">
-                @if (_textView)
+                @if (_density == UiDensity.Table)
                 {
-                    foreach (var chart in visible.Select(e => _charts[e.ChartId]))
-                    {
-                        <MudText Color="@(Passed(chart.Id) ? Color.Success : _todos.Contains(chart.Id) ? Color.Info : Color.Default)">
-                            @($"{chart.Song.Name} {chart.DifficultyString}") @(_scores.TryGetValue(chart.Id, out var rowScore) && rowScore.Score > 0 ? $"- {rowScore.Score!.Value.ToGradeString()}" : "")
-                        </MudText>
-                    }
+                    <div class="tier-table-wrap">
+                        <table class="tier-table">
+                            <thead>
+                            <tr>
+                                <th>@L["Song Name"]</th>
+                                <th>@L["Chart"]</th>
+                                @if (CurrentUser.IsLoggedIn)
+                                {
+                                    <th>@L["My Score"]</th>
+                                    <th>@L["Better Than"]</th>
+                                    <th></th>
+                                }
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var entry in visible)
+                            {
+                                var chart = _charts[entry.ChartId];
+                                var score = _scores.TryGetValue(chart.Id, out var rowScore) ? rowScore : null;
+                                <tr class="@RowClass(chart.Id, score)">
+                                    <td>@chart.Song.Name</td>
+                                    <td>@chart.DifficultyString</td>
+                                    @if (CurrentUser.IsLoggedIn)
+                                    {
+                                        <td>
+                                            @if (score?.Score != null)
+                                            {
+                                                <ScoreBreakdown Score="score.Score.Value" IsBroken="score.IsBroken" OneLine="true" ShowScore="true" Plate="score.Plate"></ScoreBreakdown>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (_scoreRankings.TryGetValue(chart.Id, out var rowRank))
+                                            {
+                                                <span style="@ThemeScales.RarityStyle(rowRank.Ranking)">@((100.0 * rowRank.Ranking).ToString("N1"))%</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <MudIconButton Size="Size.Small"
+                                                           Icon="@(_todos.Contains(chart.Id) ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)"
+                                                           Color="@(_todos.Contains(chart.Id) ? Color.Info : Color.Default)"
+                                                           OnClick="() => ToggleToDo(chart.Id)" aria-label="@L["To Do"]"></MudIconButton>
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
                 }
                 else
                 {
-                    <div class="tier-card-grid">
+                    <div class="@(_density == UiDensity.Compact ? "tier-card-grid tier-card-grid-compact" : "tier-card-grid")">
                         @foreach (var entry in visible)
                         {
                             var chart = _charts[entry.ChartId];
@@ -235,6 +295,7 @@ else
                                                PassedInAnotherMix="_otherMixPasses.Contains(chart.Id)"
                                                ShowName="_settings.ShowSongName"
                                                ShowToDo="CurrentUser.IsLoggedIn"
+                                               Density="_density"
                                                OnToDo="ToggleToDo"
                                                OnVideo="VideoDisplayer.ShowVideo"></TierListChartCard>
                         }
@@ -396,7 +457,6 @@ else
             <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ClearFilters">@L["Clear Filters"]</MudButton>
             <MudDivider></MudDivider>
             <MudText Typo="Typo.subtitle1">@L["Display"]</MudText>
-            <MudSwitch T="bool" Color="Color.Primary" Value="_textView" ValueChanged="SetTextView" Label=@L["Text View"]></MudSwitch>
             <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowSongName" ValueChanged="SetShowName" Label=@L["Show Song Name"]></MudSwitch>
             <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowStepArtist" ValueChanged="SetShowStepArtist" Label=@L["Show Step Artist"]></MudSwitch>
             <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowSkills" ValueChanged="SetShowSkills" Label=@L["Show Skills"]></MudSwitch>
@@ -407,6 +467,15 @@ else
             }
         </div>
     </MudDrawer>
+    @* Rule 10: at phone widths the primary actions live in the bottom third. *@
+    <div class="tier-bottom-bar">
+        <TierListFolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></TierListFolderPicker>
+        <MudSpacer></MudSpacer>
+        <MudIconButton Icon="@Icons.Material.Filled.FileDownload" Color="Color.Primary" OnClick="DownloadImage"
+                       Disabled="_isBuildingImage || _isLoading" aria-label="@L["Download"]"></MudIconButton>
+        <MudIconButton Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary"
+                       OnClick="() => _filtersOpen = true" aria-label="@L["Filters"]"></MudIconButton>
+    </div>
 }
 <style>
     .tier-toolbar {
@@ -483,6 +552,80 @@ else
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
         gap: 10px;
+    }
+
+    .tier-card-grid-compact {
+        grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+        gap: 6px;
+    }
+
+    .tier-chart-card-compact {
+        cursor: pointer;
+    }
+
+    .tier-chart-card-compact-jacket {
+        height: 72px;
+    }
+
+    .tier-chart-card-compact-grade {
+        position: absolute;
+        bottom: 3px;
+        right: 3px;
+        background: var(--mud-palette-background);
+        border-radius: 4px;
+        padding: 1px 3px;
+    }
+
+    .tier-table-wrap {
+        overflow-x: auto;
+    }
+
+    .tier-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .tier-table th {
+        text-align: left;
+        color: var(--mud-palette-text-secondary);
+        font-size: .75rem;
+        padding: 4px 8px;
+        border-bottom: 1px solid var(--mud-palette-lines-default);
+    }
+
+    .tier-table td {
+        padding: 4px 8px;
+        border-bottom: 1px solid var(--mud-palette-lines-default);
+    }
+
+    .tier-row-pass td:first-child {
+        border-left: 3px solid var(--mud-palette-success);
+    }
+
+    .tier-row-todo td:first-child {
+        border-left: 3px dashed var(--mud-palette-info);
+    }
+
+    .tier-row-other-mix td:first-child {
+        border-left: 3px dashed var(--mud-palette-success);
+    }
+
+    .tier-bottom-bar {
+        display: none;
+    }
+
+    @@media (max-width: 600px) {
+        .tier-bottom-bar {
+            display: flex;
+            position: sticky;
+            bottom: 0;
+            z-index: 20;
+            gap: 8px;
+            align-items: center;
+            padding: 8px;
+            background: var(--mud-palette-surface);
+            border-top: 1px solid var(--mud-palette-lines-default);
+        }
     }
 
     .tier-chart-card {
@@ -860,7 +1003,10 @@ function(val, index) {
     private decimal _lowestBpm = 0;
     private decimal _highestBpm = 0;
     private ChartType _chartType = ChartType.Double;
-    private bool _textView = false;
+    // Round-2 decision: density persists PER PAGE ("you use different ones based on
+    // your current task"), never a site-wide Universal__ key.
+    private const string DensitySettingKey = "Density__TierLists";
+    private UiDensity _density = UiDensity.Comfortable;
     private bool _isLoading = true;
     private bool _showAge = false;
     private bool _filtersOpen = false;
@@ -959,10 +1105,17 @@ function(val, index) {
         await SaveSettings();
     }
 
-    private async Task SetTextView(bool newSetting)
+    private async Task SetDensity(UiDensity density)
     {
-        _textView = newSetting;
-        await UiSettings.SetSetting("TierLists__TextView", newSetting.ToString());
+        _density = density;
+        await UiSettings.SetSetting(DensitySettingKey, density.ToString());
+    }
+
+    private string RowClass(Guid chartId, RecordedPhoenixScore? score)
+    {
+        return score is { IsBroken: false } ? "tier-row-pass" :
+            _todos.Contains(chartId) ? "tier-row-todo" :
+            _otherMixPasses.Contains(chartId) ? "tier-row-other-mix" : string.Empty;
     }
 
     private async Task SetShowAge(bool newSetting)
@@ -1800,7 +1953,8 @@ function(val, index) {
         var listTypeSettingTask = UiSettings.GetSetting("TierLists__ListType");
         var personalizedSettingTask = UiSettings.GetSetting("TierLists__UsePersonalized");
         var groupBySettingTask = UiSettings.GetSetting("TierLists__GroupBy");
-        var textViewSettingTask = UiSettings.GetSetting("TierLists__TextView");
+        var densitySettingTask = UiSettings.GetSetting(DensitySettingKey);
+        var legacyTextViewTask = UiSettings.GetSetting("TierLists__TextView");
         var stripCollapsedSettingTask = UiSettings.GetSetting("TierLists__StripCollapsed");
         var collapsedTiersSettingTask = UiSettings.GetSetting("TierLists__CollapsedTiers");
 
@@ -1836,7 +1990,11 @@ function(val, index) {
         }
 
         _showAge = bool.TryParse(await showAgeSettingTask, out var showAge) && showAge;
-        _textView = bool.TryParse(await textViewSettingTask, out var textView) && textView;
+        // One-time migration: Text View retires into its successor, the Table density.
+        _density = Enum.TryParse<UiDensity>(await densitySettingTask, out var density) ? density :
+            bool.TryParse(await legacyTextViewTask, out var legacyTextView) && legacyTextView
+                ? UiDensity.Table
+                : UiDensity.Comfortable;
         _stripCollapsed = bool.TryParse(await stripCollapsedSettingTask, out var stripCollapsed) && stripCollapsed;
         var collapsedTiersJson = await collapsedTiersSettingTask;
         if (!string.IsNullOrWhiteSpace(collapsedTiersJson))
