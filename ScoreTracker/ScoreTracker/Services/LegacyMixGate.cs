@@ -27,12 +27,19 @@ public static class LegacyMixGate
         "Logout",
         "Welcome",
         "Account",
+        "About",
         "Dev"
     };
 
+    /// <summary>True for the mixes the gate applies to at all: older than XX.</summary>
+    public static bool IsGatedMix(MixEnum mix)
+    {
+        return mix.UsesLegacyScoring() && mix != MixEnum.XX;
+    }
+
     public static bool IsGated(MixEnum mix, string path)
     {
-        if (!mix.UsesLegacyScoring() || mix == MixEnum.XX) return false;
+        if (!IsGatedMix(mix)) return false;
         var firstSegment = path.Trim('/').Split('/')[0];
         if (firstSegment.Length == 0) return true; // home (WhatShouldIPlay) is not legacy-ready
         return !ReadySegments.Contains(firstSegment);
