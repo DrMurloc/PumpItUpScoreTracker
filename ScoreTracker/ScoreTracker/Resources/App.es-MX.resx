@@ -2409,6 +2409,9 @@
   <data name="Top {0}" xml:space="preserve">
     <value>Top {0}</value>
   </data>
+  <data name="1st" xml:space="preserve">
+    <value>1er lugar</value>
+  </data>
   <data name="{0} of all Phoenix titles collected" xml:space="preserve">
     <value>{0} de todos los títulos Phoenix</value>
   </data>

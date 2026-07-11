@@ -148,6 +148,35 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ChartScoreAggregatesCountPgsWrittenThroughUpdateBestAttempt()
+    {
+        // The Plate column stores GetName() spellings ("Perfect Game"), so the aggregate's
+        // PG count must compare against the same spelling. Regression: it compared
+        // ToString() ("PerfectGame"), every chart aggregated to zero PGs, and the recap
+        // page's Perfect Games card vanished sitewide.
+        var pgUser = await _seed.SeedUserAsync();
+        var passUser = await _seed.SeedUserAsync();
+        var breakUser = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedChartAsync();
+
+        var writer = BuildRepository();
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, pgUser, new RecordedPhoenixScore(chartId,
+            PhoenixScore.From(1000000), PhoenixPlate.PerfectGame, IsBroken: false, RecordedAt));
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, passUser, new RecordedPhoenixScore(chartId,
+            PhoenixScore.From(950000), PhoenixPlate.SuperbGame, IsBroken: false, RecordedAt));
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, breakUser, new RecordedPhoenixScore(chartId,
+            PhoenixScore.From(900000), PhoenixPlate.RoughGame, IsBroken: true, RecordedAt));
+
+        var aggregates = await BuildRepository().GetAllChartScoreAggregates(
+            MixEnum.Phoenix, CancellationToken.None);
+
+        var aggregate = Assert.Single(aggregates, a => a.ChartId == chartId);
+        Assert.Equal(3, aggregate.Count);
+        Assert.Equal(2, aggregate.PassCount);
+        Assert.Equal(1, aggregate.PgCount);
+    }
+
+    [Fact]
     public async Task LevelRangeQueryReturnsOnlyChartsWhosePhoenixMixLevelIsInRange()
     {
         // Exercises the ChartMix → Chart → PhoenixBestAttempt join chain plus the level-range

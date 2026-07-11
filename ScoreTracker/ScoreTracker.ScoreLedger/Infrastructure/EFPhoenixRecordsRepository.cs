@@ -280,7 +280,9 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         CancellationToken cancellationToken)
     {
         var mixId = MixIds.For(mix);
-        var perfectGame = PhoenixPlate.PerfectGame.ToString();
+        // The Plate column stores GetName() spellings ("Perfect Game", with the space) —
+        // matching ToString() ("PerfectGame") counts zero PGs on every chart.
+        var perfectGame = PhoenixPlate.PerfectGame.GetName();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return await (from pba in database.Set<PhoenixRecordEntity>()
             where pba.Score != null && pba.MixId == mixId

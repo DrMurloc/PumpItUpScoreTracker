@@ -2531,6 +2531,9 @@
   <data name="Top {0}" xml:space="preserve">
     <value>上位{0}</value>
   </data>
+  <data name="1st" xml:space="preserve">
+    <value>1位</value>
+  </data>
   <data name="{0} of all Phoenix titles collected" xml:space="preserve">
     <value>全フェニックス称号の{0}を収集</value>
   </data>
