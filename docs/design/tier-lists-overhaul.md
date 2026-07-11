@@ -34,6 +34,8 @@ Tier lists are the site's most-used feature (~28% of traffic, ~60% of it anonymo
 
 **Mock feedback round 1 (2026-07-10, applied in workshop-v2):** "Personalized" replaces "Tuned to me" · lens names are **Pass Difficulty** / **Score Difficulty** · Ranked-by hides while My Progress is active (the lens has no effect there) · tier sections collapse, collapsed set persisted per user in UiSettings · border language locked (§4) · filters drawer gains song type / letter grade / plate as first-class · details dialog leads with the video, as today's video dialog does.
 
+**Round 4 (2026-07-11, applied in workshop-v3):** the four ApexCharts **radar panels are retired as a concept** — the By-Skill view absorbs their information: one section per skill, sorted by the player's weakest skill first, with per-skill pass count + average score in each section header (heat-colored by pass rate). The information is the same; the placement makes it actionable (the charts to fix are directly under the stat). The details dialog gains the user's **cross-mix score journey** — a compact timeline from ScoreLedger's append-only `ScoreEventJournal`, linking to the full journey. PIU Center attribution renders in the By-Skill header and the dialog's skills row.
+
 **Round 2 (2026-07-11):** density is chosen in the page toolbar and **persists per page** ("you use different ones based on your current task") — this amends UX-GUIDELINES rule 5: the three sanctioned modes are unchanged, but the UiSettings key becomes per-page (`Density__<Page>`), with `Universal__Density` retired before it ever shipped; the guideline reword lands in the implementation PR · QR + folder URL on share images approved · section collapse persists **globally by tier name** (a tier you never care about stays collapsed across folders — per-folder would make sections "pop around" as you walk folders) · By-Skill view **stays** in the View switch for P1, upgraded from "demote" because skill automation is now a live prospect (§8a).
 
 ## 3. Mental model: three concepts the UI stops blending
@@ -72,7 +74,7 @@ Today "Difficulty Categorization", "Group By", and a hidden "Personalized Diffic
   - *Comfortable* (default): jacket + `DifficultyBubble` + grade/plate overlay, song name, To-Do + Details actions.
   - *Compact*: jacket sticker sheet with corner badges — the at-a-glance completion view and the closest on-screen analog of the share image.
   - *Table*: sortable rows (song, tier, my score, grade, plate, percentile, To-Do). Text View's replacement.
-- **Chart-details dialog** (tap any card): **leads with the video** (as today's video dialog does), then chart meta (BPM, note count, step artist, song artist), placements across all lenses, To-Do toggle, score recording (reuses the existing edit grid — deliberately low-key), link to `/Chart/{id}`. Ingested PIU Center step-data metadata lands here too, with the attribution footer (§8a). Leaves a slot for future comments/UGC. One shared component — candidates elsewhere (/Charts, WeeklyCharts) adopt it in later passes.
+- **Chart-details dialog** (tap any card): **leads with the video** (as today's video dialog does), then chart meta (BPM, note count, step artist, song artist), the user's **cross-mix score journey** (compact timeline from ScoreLedger's `ScoreEventJournal`, linking to the full journey), placements across all lenses, To-Do toggle, score recording (reuses the existing edit grid — deliberately low-key), link to `/Chart/{id}`. Ingested PIU Center step-data metadata lands here too, with the attribution footer (§8a). Leaves a slot for future comments/UGC. One shared component — candidates elsewhere (/Charts, WeeklyCharts) adopt it in later passes.
 - **Mobile (rule 10)**: at phone widths a bottom action bar carries folder pill, Filters, and Download; the toolbar collapses to essentials.
 
 ## 5. Loading, empty, and failure states (rule 9)
@@ -118,7 +120,7 @@ One flag set, resolved per `ListMix`:
 
 | Capability | Phoenix (1) | Phoenix 2 | XX (views Phoenix data) |
 |---|---|---|---|
-| Skill tags on cards / By-Skill view / radar charts | ✅ | ❌ off until tagging is automated | ✅ (Phoenix data) |
+| Skill tags on cards / By-Skill view (radar charts retired — round 4) | ✅ | ❌ off until piucenter data covers P2 | ✅ (Phoenix data) |
 | Chabala lens | ✅ (existing links) | ❌ | ✅ |
 | Paragon / title progress strip | ✅ unchanged | ❌ (Folder Level doc will fill this) | per existing XX behavior |
 | Personalized blend inputs | Pass Count + Skill + Similar Players | Pass Count + Similar Players | n/a |
@@ -189,7 +191,7 @@ All three original questions were resolved 2026-07-11 (toolbar + per-page densit
 
 - **Pages**: `Pages/TierLists/ChartSkills.razor` rebuilt (blend math leaves the page — see below); gains `/TierLists/{Single|Double|CoOp}/{level}` routes with 301s from `/ChartSkills`, `/PersonalizedTierList`, and query-param forms. Sitemap controller +~60 folder URLs. `/Chart/{id}` untouched until the crawler project (attribution footer).
 - **New shared components** (`Components/`): `ChartDetailsDialog` (video-first; wraps `EditChartGrid` + `ChartVideoDisplayer`), `FolderPicker`, `ChartCard` (all three densities), `TierSection` (collapsible), `LampStrip`, `FilterDrawer` + `FilterChips`, `DensityToggle`, `TierListSkeleton`, `BorderLegend`. `TitleProgressBar` gains a compact variant; `DifficultyBubble`/`ScoreBreakdown` consumed as-is.
-- **Retired**: Text View, per-element Show-X toggles, `TierListSection` (old page only). **Ratchets**: `UiColorTokenTests` ChartSkills 7 → 0; `L[…]` sweep, all eight locales.
+- **Retired**: Text View, per-element Show-X toggles, `TierListSection` (old page only), the four ApexCharts radar panels (By-Skill view absorbs them — round 4). **Ratchets**: `UiColorTokenTests` ChartSkills 7 → 0; `L[…]` sweep, all eight locales.
 
 ### Architecture
 
@@ -197,7 +199,7 @@ All three original questions were resolved 2026-07-11 (toolbar + per-page densit
 - **New contract**: `GetBlendedTierListQuery` (ChartIntelligence) — lens/personalized blend moves from the .razor into a handler: cacheable, cancellable, testable in ApplicationTests; internalizes the page's direct `ITierListRepository.GetUsersOnLevel` port injection.
 - **New internal entities** (ChartIntelligence, via its `IDbModelContribution`): `UserTierListEntry` + repository, `ChartScoreStats`.
 - **New consumer**: `UserTierListMaterializer : IConsumer<PlayerScoresUpdatedEvent>` (event already fires per score batch).
-- **ScoreLedger**: cross-mix passed-chart-ids read (`IScoreReader` method or small contract query) for the dashed-green border.
+- **ScoreLedger**: cross-mix passed-chart-ids read (`IScoreReader` method or small contract query) for the dashed-green border; plus a `GetChartScoreJourneyQuery(userId, chartId)` contract reading the append-only `ScoreEventJournal` across mixes for the dialog's journey timeline.
 - **SharedKernel**: `MixCapabilities` static policy (skills/Chabala/radar/titles per mix) — gates display and blend inputs; SharedKernel references nothing so both Web and ChartIntelligence read it.
 - **Share renderer**: `IShareCardRenderer` port in `Domain.SecondaryPorts`, SkiaSharp implementation in `Data.Clients` (Data allowlist +SkiaSharp), output via existing `IFileUploadClient`; shared by the Download endpoint and the og:image job.
 - **Crawler project (later)**: piucenter client behind a Domain port, HtmlAgilityPack impl in `Data.Apis` (`PiuGameApi` precedent); ingestion consumers in Catalog.
