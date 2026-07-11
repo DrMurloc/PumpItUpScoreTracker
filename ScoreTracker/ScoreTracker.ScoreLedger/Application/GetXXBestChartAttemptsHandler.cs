@@ -26,6 +26,6 @@ internal sealed class
     {
         if (!await _userAccess.HasAccessTo(request.UserId, cancellationToken)) return Array.Empty<BestXXChartAttempt>();
 
-        return await _chartAttemptRepository.GetBestAttempts(request.UserId, cancellationToken);
+        return await _chartAttemptRepository.GetBestAttempts(request.UserId, request.Mix, cancellationToken);
     }
 }

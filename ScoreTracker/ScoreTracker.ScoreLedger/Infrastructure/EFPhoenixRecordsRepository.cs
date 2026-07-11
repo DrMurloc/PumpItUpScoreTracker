@@ -120,7 +120,9 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     Task<IEnumerable<BestXXChartAttempt>> IScoreReader.GetBestXXAttempts(Guid userId,
         CancellationToken cancellationToken)
     {
-        return _xxAttempts.GetBestAttempts(userId, cancellationToken);
+        // The published IScoreReader surface is XX-specific by name; legacy-mix reads
+        // go through GetXXBestChartAttemptsQuery with an explicit mix.
+        return _xxAttempts.GetBestAttempts(userId, MixEnum.XX, cancellationToken);
     }
 
     private readonly IMemoryCache _cache;

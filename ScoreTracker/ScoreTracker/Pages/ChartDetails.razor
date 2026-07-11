@@ -58,7 +58,7 @@
         <MudText Typo="Typo.h5">@L["Your Score"]</MudText>
         <EditChartGrid ChartId="_selectedChart.Id" CurrentMix="_currentMix"></EditChartGrid>
     }
-    @if (_currentMix != MixEnum.XX)
+    @if (!_currentMix.UsesLegacyScoring())
     {
         <MudText Typo="Typo.h5">@L["Chart Difficulty by Letter Grade"]</MudText>
         <ApexChart TItem="LevelDistribution"
@@ -219,7 +219,7 @@
 }
 <MudDialog @bind-Visible="_showChartOverview">
     <DialogContent>
-        @if (_selectedChart != null && _currentMix != MixEnum.XX)
+        @if (_selectedChart != null && !_currentMix.UsesLegacyScoring())
         {
             <ChartOverview ChartId="_selectedChart.Id" Mix="_currentMix"></ChartOverview>
         }

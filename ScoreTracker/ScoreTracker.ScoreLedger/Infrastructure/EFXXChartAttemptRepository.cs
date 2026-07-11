@@ -113,19 +113,19 @@ internal sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
         return result;
     }
 
-    public async Task<IEnumerable<BestXXChartAttempt>> GetBestAttempts(Guid userId,
+    public async Task<IEnumerable<BestXXChartAttempt>> GetBestAttempts(Guid userId, MixEnum mix,
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        // This page is the whole-XX-catalog view — attempts stay scoped to XX rows.
+        // Whole-catalog view with the user's attempts for ONE mix left-joined in.
         // OriginalMix maps through MixIds, not Enum.Parse(Mix.Name): legacy mix names
         // ("Prex 3", "OBG SE") are display strings, not enum identifiers.
-        var xxMixId = MixIds.XX;
+        var mixId = MixIds.For(mix);
         return await (
                 from s in database.Song
                 join c in database.Chart on s.Id equals c.SongId
                 join _ in database.Set<BestAttemptEntity>() on
-                    new { UserId = userId, ChartId = c.Id, MixId = xxMixId } equals new
+                    new { UserId = userId, ChartId = c.Id, MixId = mixId } equals new
                         { _.UserId, _.ChartId, _.MixId } into gi
                 from ba in gi.DefaultIfEmpty()
                 select new BestXXChartAttempt(
@@ -133,7 +133,7 @@ internal sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                         new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration,
                             s.Artist ?? "Unknown",
                             Bpm.From(s.MinBpm, s.MaxBpm)),
-                        Enum.Parse<ChartType>(c.Type), c.Level, MixEnum.XX, c.StepArtist, null,
+                        Enum.Parse<ChartType>(c.Type), c.Level, mix, c.StepArtist, null,
                         new HashSet<Skill>()),
                     ba == null
                         ? null

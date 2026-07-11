@@ -165,7 +165,7 @@
 
 
                 <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Video)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Video))">@L["Video"]</MudMenuItem>
-                @if (_currentMix != MixEnum.XX)
+                @if (!_currentMix.UsesLegacyScoring())
                 {
                     <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Overview)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Overview))">@L["Leaderboard"]</MudMenuItem>
                 }
@@ -174,7 +174,7 @@
                     <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Broken)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Broken))">@L["Broken"]</MudMenuItem>
                     <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Grade)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Grade))">@L["Letter Grade"]</MudMenuItem>
                     <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Score)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Score))">@L["Score"]</MudMenuItem>
-                    @if (_currentMix != MixEnum.XX)
+                    @if (!_currentMix.UsesLegacyScoring())
                     {
                         <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Plate)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Plate))">@L["Plate"]</MudMenuItem>
                     }
@@ -211,7 +211,7 @@
         {
             <MudTh>@L["Video"]</MudTh>
         }
-        @if (_currentMix != MixEnum.XX && ColumnStatus(ColumnEnum.Overview))
+        @if (!_currentMix.UsesLegacyScoring() && ColumnStatus(ColumnEnum.Overview))
         {
             <MudTh>@L["Leaderboard"]</MudTh>
         }
@@ -226,9 +226,9 @@
         }
         @if (ColumnStatus(ColumnEnum.Grade))
         {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => _currentMix==MixEnum.XX?e.XXLetterGrade:e.PhoenixLetterGrade">@L["Letter Grade"]</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => _currentMix.UsesLegacyScoring()?e.XXLetterGrade:e.PhoenixLetterGrade">@L["Letter Grade"]</MudTableSortLabel></MudTh>
         }
-        @if (ColumnStatus(ColumnEnum.Plate) && _currentMix!=MixEnum.XX)
+        @if (ColumnStatus(ColumnEnum.Plate) && !_currentMix.UsesLegacyScoring())
         {
             <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.PhoenixPlate">@L["Plate"]</MudTableSortLabel></MudTh>
         }
@@ -285,7 +285,7 @@
                   
             </MudTd>
         }
-        @if (_currentMix!=MixEnum.XX && ColumnStatus(ColumnEnum.Overview))
+        @if (!_currentMix.UsesLegacyScoring() && ColumnStatus(ColumnEnum.Overview))
         {
             <MudTd>
                 @if (_chartScoreCount.ContainsKey(context.ChartId) && _chartScoreCount[context.ChartId] > 0)
@@ -326,7 +326,7 @@
         {
             
             <MudTd>
-                @if (CanEdit && _currentMix == MixEnum.XX)
+                @if (CanEdit && _currentMix.UsesLegacyScoring())
                 {
                     
                     <MudSelect T="string" Value="@context.XXLetterGrade" ValueChanged="@(newValue => SetLetter(context, newValue))" Clearable="true" Margin="@Margin.Dense">
@@ -338,11 +338,11 @@
                 }
                 else
                 {
-                    <MudText>@(_currentMix==MixEnum.XX?context.XXLetterGrade:context.PhoenixLetterGrade?.GetName())</MudText>
+                    <MudText>@(_currentMix.UsesLegacyScoring()?context.XXLetterGrade:context.PhoenixLetterGrade?.GetName())</MudText>
                 }
             </MudTd>
         }
-        @if (ColumnStatus(ColumnEnum.Plate) && _currentMix!=MixEnum.XX)
+        @if (ColumnStatus(ColumnEnum.Plate) && !_currentMix.UsesLegacyScoring())
         {
 
 
@@ -421,7 +421,7 @@
 </MudDialog>
 <MudDialog @bind-Visible="_showChartOverview">
     <DialogContent>
-        @if (_overViewChart != null && _currentMix != MixEnum.XX)
+        @if (_overViewChart != null && !_currentMix.UsesLegacyScoring())
         {
             <ChartOverview ChartId="_overViewChart.Value" Mix="_currentMix"></ChartOverview>
         }
@@ -538,12 +538,12 @@
     private ISet<Guid> _favoriteCharts = new HashSet<Guid>();
     private ISet<Guid> _todoCharts = new HashSet<Guid>();
     private IEnumerable<string> _songNames = Array.Empty<string>();
-    private int NotGradedCount => _currentMix==MixEnum.XX? FileredCharts.Count(c => string.IsNullOrWhiteSpace(c.XXLetterGrade))
+    private int NotGradedCount => _currentMix.UsesLegacyScoring()? FileredCharts.Count(c => string.IsNullOrWhiteSpace(c.XXLetterGrade))
     :FileredCharts.Count(c=>c.PhoenixLetterGrade==null);
     private int NotPassedCount => FileredCharts.Count(c => c.IsBroken);
     private int BrokenCount => FileredCharts.Count(c => c is { Score: { },IsBroken: true });
 
-    private int PassedCount => _currentMix == MixEnum.XX ?
+    private int PassedCount => _currentMix.UsesLegacyScoring() ?
         FileredCharts.Count(c => !string.IsNullOrWhiteSpace(c.XXLetterGrade) && !c.IsBroken)
         : FileredCharts.Count(c => c.PhoenixLetterGrade != null && !c.IsBroken);
     private string CountText(int count) => $"{count} votes";
@@ -587,8 +587,8 @@
             {
                 ScoreState.NotPassed => result && chart.IsBroken,
                 ScoreState.Broken=>result && chart is { Score: { },IsBroken: true },
-                ScoreState.Passed => result && (_currentMix==MixEnum.XX?!string.IsNullOrWhiteSpace(chart.XXLetterGrade):chart.PhoenixLetterGrade!=null) && !chart.IsBroken,
-                ScoreState.Ungraded => result && (_currentMix==MixEnum.XX?string.IsNullOrWhiteSpace(chart.XXLetterGrade):chart.PhoenixLetterGrade==null),
+                ScoreState.Passed => result && (_currentMix.UsesLegacyScoring()?!string.IsNullOrWhiteSpace(chart.XXLetterGrade):chart.PhoenixLetterGrade!=null) && !chart.IsBroken,
+                ScoreState.Ungraded => result && (_currentMix.UsesLegacyScoring()?string.IsNullOrWhiteSpace(chart.XXLetterGrade):chart.PhoenixLetterGrade==null),
                 _ => result
                 };
         }
@@ -643,10 +643,10 @@
 
         var charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToArray();
         _songArtists = charts.Select(c => c.Song.Artist.ToString()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-        if (_currentMix == MixEnum.XX)
+        if (_currentMix.UsesLegacyScoring())
         {
             var bestAttempts = userId == null ? new Dictionary<Guid, XXChartAttempt>() :
-                (await Mediator.Send(new GetXXBestChartAttemptsQuery(userId.Value))).Where(b=>b.BestAttempt!=null)
+                (await Mediator.Send(new GetXXBestChartAttemptsQuery(userId.Value, _currentMix))).Where(b=>b.BestAttempt!=null)
                     .ToDictionary(b => b.Chart.Id,b=>(XXChartAttempt)b.BestAttempt!);
             
             _charts = charts.Select(c => new BestAttemptDto(c)
@@ -778,7 +778,7 @@
     }
     private async Task SetScore(BestAttemptDto dto, int? newScore)
     {
-        if (_currentMix == MixEnum.XX)
+        if (_currentMix.UsesLegacyScoring())
         {
             dto.Score = newScore;
             if (string.IsNullOrWhiteSpace(dto.XXLetterGrade) && newScore != null)
@@ -805,7 +805,7 @@
     private async Task SetBroken(BestAttemptDto dto, bool newBroken)
     {
         dto.IsBroken = newBroken;
-        if (string.IsNullOrWhiteSpace(dto.XXLetterGrade) && !newBroken && _currentMix!=MixEnum.XX)
+        if (string.IsNullOrWhiteSpace(dto.XXLetterGrade) && !newBroken && !_currentMix.UsesLegacyScoring())
         {
             dto.XXLetterGrade = XXLetterGrade.A.ToString();
         }
@@ -823,13 +823,13 @@
     private async Task UpdateBest(BestAttemptDto dto)
     {
         var chartType = Enum.Parse<ChartType>(dto.ChartType);
-        if (_currentMix == MixEnum.XX)
+        if (_currentMix.UsesLegacyScoring())
         {
             XXLetterGrade? letterGrade = Enum.TryParse<XXLetterGrade>(dto.XXLetterGrade, out var grade) ? grade : null;
 
             try
             {
-                await Mediator.Send(new UpdateXXBestAttemptCommand(dto.ChartId, letterGrade, dto.IsBroken, dto.Score));
+                await Mediator.Send(new UpdateXXBestAttemptCommand(dto.ChartId, letterGrade, dto.IsBroken, dto.Score, Mix: _currentMix));
 
                 dto.RecordedOn = letterGrade == null ? null : DateTimeOffset.Now;
 
