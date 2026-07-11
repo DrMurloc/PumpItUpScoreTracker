@@ -29,16 +29,41 @@ public sealed class PiuCenterSkillMapperTests
     }
 
     [Fact]
-    public void BadgeFractionsOnlyTagPastTheThreshold()
+    public void BadgeFractionsOnlyTagPastTheirSkillsThreshold()
     {
+        // twist_90 carries a raised bar (0.40, calibration) — the default 0.30 no
+        // longer tags it; drill keeps the default.
         var record = PiuCenterSkillMapper.Map(Guid.Empty, new[]
         {
             Metric("badge_fraction:twist_90", PiuCenterSkillMapper.BadgeFractionThreshold),
-            Metric("badge_fraction:jack", PiuCenterSkillMapper.BadgeFractionThreshold - 0.01m)
+            Metric("badge_fraction:drill", PiuCenterSkillMapper.BadgeFractionThreshold),
+            Metric("badge_fraction:jack", PiuCenterSkillMapper.ThresholdFor("jack") - 0.01m)
         }, null, null);
 
-        Assert.Contains(Skill.Twists, record.ContainsSkills);
+        Assert.DoesNotContain(Skill.Twists, record.ContainsSkills);
+        Assert.Contains(Skill.Drills, record.ContainsSkills);
         Assert.DoesNotContain(Skill.Jacks, record.ContainsSkills);
+
+        var raised = PiuCenterSkillMapper.Map(Guid.Empty, new[]
+        {
+            Metric("badge_fraction:twist_90", PiuCenterSkillMapper.ThresholdFor("twist_90"))
+        }, null, null);
+        Assert.Contains(Skill.Twists, raised.ContainsSkills);
+    }
+
+    [Fact]
+    public void UbiquitousTechniquesStayMetricsOnly()
+    {
+        // doublestep/side3_singles ride nearly every chart — mapping them made
+        // Technical an umbrella over 76% of the catalog (calibration 2026-07-11).
+        var record = PiuCenterSkillMapper.Map(Guid.Empty, new[]
+        {
+            Metric("top3:doublestep", 1),
+            Metric("badge_fraction:side3_singles", 0.9m)
+        }, null, null);
+
+        Assert.Empty(record.ContainsSkills);
+        Assert.Empty(record.HighlightsSkill);
     }
 
     [Fact]
@@ -55,20 +80,29 @@ public sealed class PiuCenterSkillMapperTests
     }
 
     [Fact]
-    public void EndRunDerivesFromAFinalRunSegmentOnlyWhenTheChartIsNotRunDominant()
+    public void EndRunNeedsAPeakFinalRunSegmentOnANonRunDominantChart()
     {
         var closer = PiuCenterSkillMapper.Map(Guid.Empty, new[]
         {
             Metric("top3:twists", 1),
-            Metric("last_segment_badge:run", 1)
+            Metric("last_segment_badge:run", 1),
+            Metric("last_segment_is_peak", 1)
+        }, null, null);
+        var softEnding = PiuCenterSkillMapper.Map(Guid.Empty, new[]
+        {
+            Metric("top3:twists", 1),
+            Metric("last_segment_badge:run", 1),
+            Metric("last_segment_is_peak", 0)
         }, null, null);
         var runChart = PiuCenterSkillMapper.Map(Guid.Empty, new[]
         {
             Metric("top3:run", 1),
-            Metric("last_segment_badge:run", 1)
+            Metric("last_segment_badge:run", 1),
+            Metric("last_segment_is_peak", 1)
         }, null, null);
 
         Assert.Contains(Skill.EndRun, closer.ContainsSkills);
+        Assert.DoesNotContain(Skill.EndRun, softEnding.ContainsSkills);
         Assert.DoesNotContain(Skill.EndRun, runChart.ContainsSkills);
         Assert.Contains(Skill.Runs, runChart.HighlightsSkill);
     }

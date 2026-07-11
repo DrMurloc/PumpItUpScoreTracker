@@ -242,6 +242,8 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>
 
         foreach (var skill in page.LastSegmentSkills)
             rows.Add(new ChartSkillMetric(chartId, $"{PiuCenterMetrics.LastSegmentPrefix}{skill}", 1, null));
+        rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.LastSegmentIsPeak,
+            page.LastSegmentIsPeak ? 1 : 0, null));
 
         foreach (var (label, count) in page.RareSkillCounts)
             rows.Add(new ChartSkillMetric(chartId, Truncate($"{PiuCenterMetrics.RarePrefix}{label}", 64), count,

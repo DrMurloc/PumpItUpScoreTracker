@@ -16,11 +16,28 @@ namespace ScoreTracker.Catalog.Domain;
 /// </summary>
 internal static class PiuCenterSkillMapper
 {
-    // Tunable constants — baselined 2026-07-11 against the archived hand tags and the
-    // 050726 corpus (see the PR's calibration notes).
+    // Tunable constants — calibrated 2026-07-11 against the full 050726 corpus (4,337
+    // matched charts) and the archived hand tags. The default threshold tags a skill
+    // when it rides >=30% of a chart's sections; ubiquitous skills get a higher bar so
+    // no section swallows more than ~a third of a folder on coverage alone (their
+    // top-3 dominance pick can still exceed that — dominance is dominance).
     internal const decimal BadgeFractionThreshold = 0.30m;
     internal const double FastNpsQuantile = 0.75;
     internal const double SlowNpsQuantile = 0.25;
+
+    private static readonly IReadOnlyDictionary<string, decimal> RaisedThresholds =
+        new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["jack"] = 0.40m,
+            ["jump"] = 0.50m,
+            ["run"] = 0.40m,
+            ["twist_90"] = 0.40m
+        };
+
+    internal static decimal ThresholdFor(string theirSkill)
+    {
+        return RaisedThresholds.TryGetValue(theirSkill, out var raised) ? raised : BadgeFractionThreshold;
+    }
 
     private static readonly string[] RunSkills = { "run", "anchor_run", "run_without_twists" };
 
@@ -48,11 +65,12 @@ internal static class PiuCenterSkillMapper
             ["mid4_doubles"] = new[] { Skill.HalfDouble },
             ["sustained"] = new[] { Skill.Stamina },
             ["bursty"] = new[] { Skill.Bursts },
-            ["doublestep"] = new[] { Skill.Technical },
+            // doublestep and side3_singles are deliberately unmapped: they ride nearly
+            // every chart, so mapping them made Technical an umbrella over 76% of the
+            // catalog. They stay banked as metrics only.
             ["footswitch"] = new[] { Skill.Technical },
             ["hold_footswitch"] = new[] { Skill.Technical },
             ["hold_footslide"] = new[] { Skill.Technical },
-            ["side3_singles"] = new[] { Skill.Technical },
             ["5-stair"] = new[] { Skill.Technical },
             ["10-stair"] = new[] { Skill.Technical },
             ["yog_walk"] = new[] { Skill.Technical },
@@ -69,6 +87,7 @@ internal static class PiuCenterSkillMapper
         var contains = new HashSet<Skill>();
         decimal? nps = null;
         var endsOnRun = false;
+        var lastSegmentIsPeak = false;
         var runDominant = false;
 
         foreach (var metric in chartMetrics)
@@ -80,20 +99,26 @@ internal static class PiuCenterSkillMapper
             }
             else if (metric.MetricName.StartsWith(PiuCenterMetrics.BadgeFractionPrefix, StringComparison.Ordinal))
             {
-                if (metric.Value >= BadgeFractionThreshold)
-                    AddMapped(contains, metric.MetricName[PiuCenterMetrics.BadgeFractionPrefix.Length..]);
+                var theirs = metric.MetricName[PiuCenterMetrics.BadgeFractionPrefix.Length..];
+                if (metric.Value >= ThresholdFor(theirs)) AddMapped(contains, theirs);
             }
             else if (metric.MetricName.StartsWith(PiuCenterMetrics.LastSegmentPrefix, StringComparison.Ordinal))
             {
                 if (RunSkills.Contains(metric.MetricName[PiuCenterMetrics.LastSegmentPrefix.Length..]))
                     endsOnRun = true;
             }
+            else if (metric.MetricName == PiuCenterMetrics.LastSegmentIsPeak)
+            {
+                lastSegmentIsPeak = metric.Value >= 1;
+            }
             else if (metric.MetricName == PiuCenterMetrics.Nps)
             {
                 nps = metric.Value;
             }
 
-        if (endsOnRun && !runDominant) contains.Add(Skill.EndRun);
+        // EndRun means the chart's crux is a closing run — the final segment must be
+        // its hardest, not merely run-flavored (calibration halved the rule's reach).
+        if (endsOnRun && lastSegmentIsPeak && !runDominant) contains.Add(Skill.EndRun);
         if (nps != null && fastNpsCutoff != null && nps >= fastNpsCutoff) contains.Add(Skill.Fast);
         if (nps != null && slowNpsCutoff != null && nps <= slowNpsCutoff) contains.Add(Skill.Slow);
 

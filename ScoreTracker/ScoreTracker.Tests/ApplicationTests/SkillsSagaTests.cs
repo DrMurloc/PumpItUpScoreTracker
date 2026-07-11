@@ -87,8 +87,8 @@ public sealed class SkillsSagaTests
                 new ChartSkillMetric(chartId, "top3:drill", 1m, null),
                 new ChartSkillMetric(chartId, "badge_fraction:drill", 0.8m, null),
                 new ChartSkillMetric(chartId, "badge_fraction:twist_90", 0.6m, null),
-                new ChartSkillMetric(chartId, "badge_fraction:jump", 0.4m, null),
-                // Below the contains threshold — must not become a chip.
+                new ChartSkillMetric(chartId, "badge_fraction:jump", 0.55m, null),
+                // Below its per-skill threshold — must not become a chip.
                 new ChartSkillMetric(chartId, "badge_fraction:jack", 0.1m, null)
             });
 

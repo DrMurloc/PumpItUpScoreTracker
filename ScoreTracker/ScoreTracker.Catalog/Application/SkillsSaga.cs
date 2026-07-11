@@ -52,16 +52,22 @@ internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumera
         var result = new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>();
         foreach (var group in metrics.GroupBy(m => m.ChartId))
         {
-            // Best segment coverage per mapped skill; dominance rank from the top-3 pick.
+            // Best segment coverage per mapped skill (for display), the skills whose
+            // coverage cleared their per-skill bar (for membership), and dominance
+            // rank from the top-3 pick — the same policy the flip mapper applies.
             var fractions = new Dictionary<Skill, decimal>();
+            var qualified = new HashSet<Skill>();
             var topRank = new Dictionary<Skill, decimal>();
             foreach (var metric in group)
                 if (metric.MetricName.StartsWith(PiuCenterMetrics.BadgeFractionPrefix, StringComparison.Ordinal))
                 {
-                    foreach (var skill in PiuCenterSkillMapper.MapTheirSkill(
-                                 metric.MetricName[PiuCenterMetrics.BadgeFractionPrefix.Length..]))
+                    var theirs = metric.MetricName[PiuCenterMetrics.BadgeFractionPrefix.Length..];
+                    foreach (var skill in PiuCenterSkillMapper.MapTheirSkill(theirs))
+                    {
                         if (!fractions.TryGetValue(skill, out var best) || metric.Value > best)
                             fractions[skill] = metric.Value;
+                        if (metric.Value >= PiuCenterSkillMapper.ThresholdFor(theirs)) qualified.Add(skill);
+                    }
                 }
                 else if (metric.MetricName.StartsWith(PiuCenterMetrics.Top3Prefix, StringComparison.Ordinal))
                 {
@@ -75,11 +81,10 @@ internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumera
                 .OrderBy(kv => kv.Value)
                 .Select(kv => new ChartSkillChipRecord(kv.Key, true,
                     fractions.TryGetValue(kv.Key, out var f) ? f : null))
-                .Concat(fractions
-                    .Where(kv => !topRank.ContainsKey(kv.Key) &&
-                                 kv.Value >= PiuCenterSkillMapper.BadgeFractionThreshold)
-                    .OrderByDescending(kv => kv.Value)
-                    .Select(kv => new ChartSkillChipRecord(kv.Key, false, kv.Value)))
+                .Concat(qualified
+                    .Where(s => !topRank.ContainsKey(s))
+                    .OrderByDescending(s => fractions[s])
+                    .Select(s => new ChartSkillChipRecord(s, false, fractions[s])))
                 .ToArray();
             if (chips.Length > 0) result[group.Key] = chips;
         }

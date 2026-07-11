@@ -127,6 +127,8 @@ namespace ScoreTracker.Data.Apis
             var badgeCounts = new Dictionary<string, int>();
             var rareCounts = new Dictionary<string, int>();
             IReadOnlyList<string> lastSegmentSkills = Array.Empty<string>();
+            decimal lastSegmentLevel = 0;
+            decimal maxSegmentLevel = 0;
             if (meta.TryGetProperty("Segment metadata", out var segments) &&
                 segments.ValueKind == JsonValueKind.Array)
                 foreach (var segment in segments.EnumerateArray())
@@ -134,6 +136,8 @@ namespace ScoreTracker.Data.Apis
                     segmentCount++;
                     var badges = ReadStringArray(segment, "Skill badges");
                     lastSegmentSkills = badges;
+                    lastSegmentLevel = ReadDecimal(segment, "level") ?? 0;
+                    if (lastSegmentLevel > maxSegmentLevel) maxSegmentLevel = lastSegmentLevel;
                     foreach (var badge in badges)
                         badgeCounts[badge] = badgeCounts.TryGetValue(badge, out var count) ? count + 1 : 1;
                     foreach (var rare in ReadStringArray(segment, "rare skills"))
@@ -147,6 +151,7 @@ namespace ScoreTracker.Data.Apis
                 badgeCounts,
                 rareCounts,
                 lastSegmentSkills,
+                segmentCount > 0 && lastSegmentLevel >= maxSegmentLevel,
                 ReadDecimal(meta, "nps_summary"),
                 meta.TryGetProperty("notetype_bpm_summary", out var notetype) ? notetype.GetString() : null,
                 meta.TryGetProperty("sord_chartlevel", out var sord) ? sord.GetString() : null);

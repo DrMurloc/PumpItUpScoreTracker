@@ -17,6 +17,7 @@ internal static class PiuCenterMetrics
     public const string Top3Prefix = "top3:";
     public const string BadgeFractionPrefix = "badge_fraction:";
     public const string LastSegmentPrefix = "last_segment_badge:";
+    public const string LastSegmentIsPeak = "last_segment_is_peak";
     public const string PracticeRankPrefix = "practice_rank:";
     public const string RarePrefix = "rare:";
 }

@@ -108,6 +108,8 @@ public sealed class PiuCenterApiTests
         Assert.Equal(4, page.SegmentSkillCounts["twist_90"]);
         Assert.Equal(3, page.SegmentSkillCounts["bracket_jump"]);
         Assert.Equal(2, page.RareSkillCounts["bracket drill-5"]);
+        // Segment 6 (20.28) outranks the final segment (20.27) — not an end-peak chart.
+        Assert.False(page.LastSegmentIsPeak);
         Assert.Equal(12.0m, page.Nps);
         Assert.Equal("D20", page.SordChartLevel);
     }

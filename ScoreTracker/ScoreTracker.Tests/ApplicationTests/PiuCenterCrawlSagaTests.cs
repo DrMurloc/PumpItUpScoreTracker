@@ -120,7 +120,7 @@ public sealed class PiuCenterCrawlSagaTests
         var page = new PiuCenterChartPage(key, new[] { "bracket_drill", "bracket_run", "bracket" }, 8,
             new Dictionary<string, int> { ["twist_90"] = 4, ["drill"] = 2 },
             new Dictionary<string, int> { ["bracket drill-5"] = 2 },
-            new[] { "run" }, 12.0m, "12th notes @ 240 bpm", "D20");
+            new[] { "run" }, true, 12.0m, "12th notes @ 240 bpm", "D20");
         SetupDefaults(new[] { chart }, new[] { Listing(key, ChartType.Double, 20) },
             new[] { new ExternalChartAlias(key, chart.Id, ExternalAliasStatus.Auto, Now) }, page: page);
 
