@@ -4,18 +4,19 @@
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
 @* One control for one domain concept: a folder is (type, level). Picking both in a
-   single gesture is what kills the S14→D18 double-load (design doc §4). *@
-<div class="tier-folder-picker">
+   single gesture is what kills the S14→D18 double-load (design doc §4). Owns its
+   popover deliberately — MudMenu closes on any interior click, but switching the
+   chart type must keep the panel open. *@
+<div class="folder-picker">
     <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" Size="Size.Small" Disabled="@(Disabled || !CanStep(-1))"
                    OnClick="() => Step(-1)" aria-label="@L["Previous Folder"]"></MudIconButton>
-    <MudMenu Dense="true">
-        <ActivatorContent>
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="Disabled"
-                       StartIcon="@Icons.Material.Filled.Folder">@FolderLabel</MudButton>
-        </ActivatorContent>
-        <ChildContent>
-            <div class="tier-folder-picker-pop">
-                <MudButtonGroup OverrideStyles="false" Class="tier-folder-picker-types">
+    <div class="folder-picker-anchor">
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="Disabled"
+                   StartIcon="@Icons.Material.Filled.Folder" OnClick="ToggleOpen"
+                   aria-haspopup="true" aria-expanded="@(_open ? "true" : "false")">@FolderLabel</MudButton>
+        <MudPopover Open="_open" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft">
+            <div class="folder-picker-pop">
+                <MudButtonGroup OverrideStyles="false" Class="folder-picker-types">
                     <MudButton Variant="@TypeVariant(ChartType.Single)" Color="Color.Primary" Size="Size.Small"
                                OnClick="() => SetPendingType(ChartType.Single)">@L["Singles"]</MudButton>
                     <MudButton Variant="@TypeVariant(ChartType.Double)" Color="Color.Primary" Size="Size.Small"
@@ -23,23 +24,26 @@
                     <MudButton Variant="@TypeVariant(ChartType.CoOp)" Color="Color.Primary" Size="Size.Small"
                                OnClick="() => SetPendingType(ChartType.CoOp)">@L["CoOp"]</MudButton>
                 </MudButtonGroup>
-                <div class="tier-folder-picker-levels">
+                <div class="folder-picker-levels">
                     @foreach (var level in LevelsFor(_pendingType))
                     {
                         var captured = level;
-                        <MudMenuItem OnClick="() => Pick(captured)">
-                            <span class="@(captured == Level && _pendingType == Type ? "tier-folder-picker-current" : null)">@captured</span>
-                        </MudMenuItem>
+                        <button type="button"
+                                class="folder-picker-level @(captured == Level && _pendingType == Type ? "folder-picker-current" : null)"
+                                @onclick="() => Pick(captured)">@captured</button>
                     }
                 </div>
             </div>
-        </ChildContent>
-    </MudMenu>
+        </MudPopover>
+    </div>
     <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Disabled="@(Disabled || !CanStep(1))"
                    OnClick="() => Step(1)" aria-label="@L["Next Folder"]"></MudIconButton>
 </div>
+@* Transparent click-away layer: below the popover (1200), above page content. *@
+<MudOverlay Visible="_open" OnClick="() => _open = false" ZIndex="1199"></MudOverlay>
 
 @code {
+    private bool _open;
     private ChartType _pendingType;
 
     [Parameter] public ChartType Type { get; set; } = ChartType.Double;
@@ -54,9 +58,10 @@
         ? $"{L["CoOp"]} ×{Level}"
         : $"{Type.GetShortHand()}{Level}";
 
-    protected override void OnParametersSet()
+    private void ToggleOpen()
     {
         _pendingType = Type;
+        _open = !_open;
     }
 
     private Variant TypeVariant(ChartType type)
@@ -94,6 +99,7 @@
 
     private async Task Pick(int level)
     {
+        _open = false;
         var (min, max) = Bounds(_pendingType);
         await FolderChanged.InvokeAsync((_pendingType, Math.Clamp(level, min, max)));
     }

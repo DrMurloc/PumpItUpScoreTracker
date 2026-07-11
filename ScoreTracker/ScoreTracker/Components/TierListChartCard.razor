@@ -14,8 +14,10 @@
     <MudTooltip Text="@CompactTooltip" ShowOnFocus="true">
         <div class="tier-chart-card tier-chart-card-compact @StateClass" role="button" tabindex="0"
              @onclick="() => OnOpen.InvokeAsync(Chart.Id)">
+            @* Single quotes on purpose: Blazor sets attributes via the DOM, so HTML
+               entities like &quot; are never decoded and would corrupt the CSS. *@
             <div class="tier-chart-card-jacket tier-chart-card-compact-jacket"
-                 style="background-image:url(&quot;@Chart.Song.ImagePath&quot;)">
+                 style="background-image:url('@Chart.Song.ImagePath')">
                 <div class="tier-chart-card-bubble">
                     <DifficultyBubble Chart="Chart" Height="18"></DifficultyBubble>
                 </div>
@@ -34,7 +36,7 @@ else
 <div class="tier-chart-card @StateClass" title="@StateTitle">
     <div class="tier-chart-card-jacket" role="button" tabindex="0"
          @onclick="() => OnOpen.InvokeAsync(Chart.Id)"
-         style="background-image:url(&quot;@Chart.Song.ImagePath&quot;)">
+         style="background-image:url('@Chart.Song.ImagePath')">
         <div class="tier-chart-card-bubble">
             <DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble>
         </div>

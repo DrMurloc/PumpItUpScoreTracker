@@ -51,7 +51,7 @@ else
     @* 1 — sticky toolbar: the folder, the lens, the view, the actions. Filters are
        furniture (rule 6): active ones surface as chips, the panel lives in a drawer. *@
     <div class="tier-toolbar">
-        <TierListFolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></TierListFolderPicker>
+        <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></FolderPicker>
         @if (!IsMyProgress)
         {
             <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
@@ -388,7 +388,7 @@ else
     </MudDrawer>
     @* Rule 10: at phone widths the primary actions live in the bottom third. *@
     <div class="tier-bottom-bar">
-        <TierListFolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></TierListFolderPicker>
+        <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></FolderPicker>
         <MudSpacer></MudSpacer>
         <MudIconButton Icon="@Icons.Material.Filled.FileDownload" Color="Color.Primary" OnClick="DownloadImage"
                        Disabled="_isBuildingImage || _isLoading" aria-label="@L["Download"]"></MudIconButton>
@@ -447,59 +447,8 @@ else
         cursor: pointer;
     }
 
-    .tier-section {
-        margin: 12px 0;
-    }
-
-    .tier-section-header {
-        display: flex;
-        align-items: baseline;
-        gap: 8px;
-        cursor: pointer;
-        border-left: 4px solid var(--tier-section-color, var(--mud-palette-text-secondary));
-        padding-left: 8px;
-    }
-
-    .tier-section-name {
-        color: var(--tier-section-color, var(--mud-palette-text-secondary));
-    }
-
-    .tier-section-count, .tier-section-stat {
-        color: var(--mud-palette-text-secondary);
-    }
-
-    .tier-section-body {
-        margin-top: 8px;
-    }
-
-    .tier-card-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-        gap: 10px;
-    }
-
-    .tier-card-grid-compact {
-        grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-        gap: 6px;
-    }
-
-    .tier-chart-card-compact {
-        cursor: pointer;
-    }
-
-    .tier-chart-card-compact-jacket {
-        height: 72px;
-    }
-
-    .tier-chart-card-compact-grade {
-        position: absolute;
-        bottom: 3px;
-        right: 3px;
-        background: var(--mud-palette-background);
-        border-radius: 4px;
-        padding: 1px 3px;
-    }
-
+    @* Section / card / lamp / legend / folder-picker styles live in wwwroot/css/site.css —
+       they belong to the shared components, not this page. *@
     .tier-table-wrap {
         overflow-x: auto;
     }
@@ -552,126 +501,6 @@ else
         }
     }
 
-    .tier-chart-card {
-        border: 2px solid var(--mud-palette-lines-default);
-        border-radius: 8px;
-        background: var(--mud-palette-surface);
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .tier-chart-card-pass {
-        border-color: var(--mud-palette-success);
-        border-style: solid;
-    }
-
-    .tier-chart-card-todo {
-        border-color: var(--mud-palette-info);
-        border-style: dashed;
-    }
-
-    .tier-chart-card-other-mix {
-        border-color: var(--mud-palette-success);
-        border-style: dashed;
-    }
-
-    .tier-chart-card-jacket {
-        height: 92px;
-        background-size: cover;
-        background-position: center;
-        position: relative;
-    }
-
-    .tier-chart-card-bubble {
-        position: absolute;
-        top: 4px;
-        left: 4px;
-    }
-
-    .tier-chart-card-body {
-        padding: 4px 8px;
-        min-width: 0;
-        flex-grow: 1;
-    }
-
-    .tier-chart-card-name {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .tier-chart-card-actions {
-        display: flex;
-        align-items: center;
-        padding: 0 4px 4px;
-    }
-
-    .tier-chart-card-skeleton {
-        border-radius: 8px;
-    }
-
-    .lamp-strip {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin: 8px 0;
-    }
-
-    .lamp-chip {
-        background: var(--mud-palette-surface);
-        border: 1px solid var(--mud-palette-lines-default);
-        border-radius: 12px;
-        padding: 2px 8px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: .75rem;
-    }
-
-    .lamp-chip-meter {
-        width: 48px;
-        height: 4px;
-        background: var(--mud-palette-lines-default);
-        border-radius: 2px;
-        overflow: hidden;
-        display: inline-block;
-    }
-
-    .lamp-chip-fill {
-        display: block;
-        height: 100%;
-        background: var(--mud-palette-primary);
-    }
-
-    .lamp-chip-complete .lamp-chip-fill {
-        background: var(--mud-palette-success);
-    }
-
-    .border-legend {
-        font-size: .75rem;
-        color: var(--mud-palette-text-secondary);
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        align-items: center;
-        margin: 8px 0;
-    }
-
-    .border-legend-item {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .border-legend-swatch {
-        width: 20px;
-        height: 12px;
-        display: inline-block;
-        border: 2px solid var(--mud-palette-lines-default);
-        border-radius: 3px;
-    }
-
     .tier-list-cta {
         border: 1px dashed var(--mud-palette-lines-default);
         border-radius: 8px;
@@ -687,32 +516,6 @@ else
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-    }
-
-    .tier-folder-picker {
-        display: flex;
-        align-items: center;
-        gap: 2px;
-    }
-
-    .tier-folder-picker-pop {
-        padding: 8px;
-    }
-
-    .tier-folder-picker-types {
-        margin-bottom: 8px;
-    }
-
-    .tier-folder-picker-levels {
-        display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        max-height: 260px;
-        overflow-y: auto;
-    }
-
-    .tier-folder-picker-current {
-        color: var(--mud-palette-primary);
-        font-weight: 600;
     }
 
     .tier-filter-drawer {
