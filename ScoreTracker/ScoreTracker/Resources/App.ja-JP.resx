@@ -2913,4 +2913,7 @@
   <data name="You: {0} · similar players average {1}" xml:space="preserve">
     <value>あなた: {0} · 同レベルの平均: {1}</value>
   </data>
+  <data name="Rebuild Tier Lists" xml:space="preserve">
+    <value>ティアリスト再構築</value>
+  </data>
 </root>

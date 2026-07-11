@@ -2793,4 +2793,7 @@
   <data name="You: {0} · similar players average {1}" xml:space="preserve">
     <value>나: {0} · 비슷한 플레이어 평균: {1}</value>
   </data>
+  <data name="Rebuild Tier Lists" xml:space="preserve">
+    <value>티어리스트 재구축</value>
+  </data>
 </root>

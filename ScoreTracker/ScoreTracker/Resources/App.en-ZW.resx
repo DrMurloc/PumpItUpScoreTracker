@@ -2835,4 +2835,7 @@
   <data name="You: {0} · similar players average {1}" xml:space="preserve">
     <value>Mrgl: {0} · similar mrglplayers avermrgl {1}</value>
   </data>
+  <data name="Rebuild Tier Lists" xml:space="preserve">
+    <value>Remrglbuild Mrgl Lists</value>
+  </data>
 </root>

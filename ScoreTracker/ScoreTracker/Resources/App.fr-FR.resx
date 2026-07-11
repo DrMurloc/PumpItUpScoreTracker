@@ -2910,4 +2910,7 @@
   <data name="You: {0} · similar players average {1}" xml:space="preserve">
     <value>Vous : {0} · moyenne des joueurs similaires : {1}</value>
   </data>
+  <data name="Rebuild Tier Lists" xml:space="preserve">
+    <value>Reconstruire les Tier Lists</value>
+  </data>
 </root>
