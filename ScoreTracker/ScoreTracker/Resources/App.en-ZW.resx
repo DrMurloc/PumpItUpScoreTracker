@@ -2826,16 +2826,19 @@
   <data name="Recorded {0} days ago" xml:space="preserve">
     <value>Recormrgled {0} days ago</value>
   </data>
-  <data name="Competitive Ranking in Folder" xml:space="preserve">
-    <value>Competimrgl Ranking in Mrglfolder</value>
-  </data>
-  <data name="Folder Passes vs Similar Players" xml:space="preserve">
-    <value>Mrglfolder Passes vs Similar Mrglplayers</value>
-  </data>
   <data name="You: {0} · similar players average {1}" xml:space="preserve">
     <value>Mrgl: {0} · similar mrglplayers avermrgl {1}</value>
   </data>
   <data name="Rebuild Tier Lists" xml:space="preserve">
     <value>Remrglbuild Mrgl Lists</value>
+  </data>
+  <data name="Score in Folder" xml:space="preserve">
+    <value>Scormrgl in Mrglfolder</value>
+  </data>
+  <data name="Passes in Folder" xml:space="preserve">
+    <value>Passes in Mrglfolder</value>
+  </data>
+  <data name="Folder Stats" xml:space="preserve">
+    <value>Mrglfolder Stats</value>
   </data>
 </root>

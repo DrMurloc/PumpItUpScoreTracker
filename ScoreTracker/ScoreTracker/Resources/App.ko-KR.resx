@@ -2784,16 +2784,19 @@
   <data name="Recorded {0} days ago" xml:space="preserve">
     <value>{0}일 전에 기록됨</value>
   </data>
-  <data name="Competitive Ranking in Folder" xml:space="preserve">
-    <value>폴더 내 경쟁 랭킹</value>
-  </data>
-  <data name="Folder Passes vs Similar Players" xml:space="preserve">
-    <value>폴더 클리어 수 vs 비슷한 플레이어</value>
-  </data>
   <data name="You: {0} · similar players average {1}" xml:space="preserve">
     <value>나: {0} · 비슷한 플레이어 평균: {1}</value>
   </data>
   <data name="Rebuild Tier Lists" xml:space="preserve">
     <value>티어리스트 재구축</value>
+  </data>
+  <data name="Score in Folder" xml:space="preserve">
+    <value>폴더 내 점수</value>
+  </data>
+  <data name="Passes in Folder" xml:space="preserve">
+    <value>폴더 내 클리어 수</value>
+  </data>
+  <data name="Folder Stats" xml:space="preserve">
+    <value>폴더 통계</value>
   </data>
 </root>

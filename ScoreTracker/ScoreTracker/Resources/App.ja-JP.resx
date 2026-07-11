@@ -2904,16 +2904,19 @@
   <data name="Recorded {0} days ago" xml:space="preserve">
     <value>{0}日前に記録</value>
   </data>
-  <data name="Competitive Ranking in Folder" xml:space="preserve">
-    <value>フォルダー内競技ランキング</value>
-  </data>
-  <data name="Folder Passes vs Similar Players" xml:space="preserve">
-    <value>フォルダークリア数 vs 同レベルのプレイヤー</value>
-  </data>
   <data name="You: {0} · similar players average {1}" xml:space="preserve">
     <value>あなた: {0} · 同レベルの平均: {1}</value>
   </data>
   <data name="Rebuild Tier Lists" xml:space="preserve">
     <value>ティアリスト再構築</value>
+  </data>
+  <data name="Score in Folder" xml:space="preserve">
+    <value>フォルダー内スコア</value>
+  </data>
+  <data name="Passes in Folder" xml:space="preserve">
+    <value>フォルダー内クリア数</value>
+  </data>
+  <data name="Folder Stats" xml:space="preserve">
+    <value>フォルダー統計</value>
   </data>
 </root>

@@ -2855,16 +2855,19 @@
   <data name="Recorded {0} days ago" xml:space="preserve">
     <value>Registrado há {0} dias</value>
   </data>
-  <data name="Competitive Ranking in Folder" xml:space="preserve">
-    <value>Classificação competitiva na pasta</value>
-  </data>
-  <data name="Folder Passes vs Similar Players" xml:space="preserve">
-    <value>Passes da pasta vs jogadores similares</value>
-  </data>
   <data name="You: {0} · similar players average {1}" xml:space="preserve">
     <value>Você: {0} · média de jogadores similares: {1}</value>
   </data>
   <data name="Rebuild Tier Lists" xml:space="preserve">
     <value>Reconstruir Tier Lists</value>
+  </data>
+  <data name="Score in Folder" xml:space="preserve">
+    <value>Pontuação na pasta</value>
+  </data>
+  <data name="Passes in Folder" xml:space="preserve">
+    <value>Passes na pasta</value>
+  </data>
+  <data name="Folder Stats" xml:space="preserve">
+    <value>Estatísticas da pasta</value>
   </data>
 </root>

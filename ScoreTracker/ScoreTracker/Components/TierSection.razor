@@ -8,10 +8,15 @@
         <MudIcon Size="Size.Small"
                  Icon="@(Collapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"></MudIcon>
         <MudText Typo="Typo.h5" Class="tier-section-name">@Name</MudText>
-        <MudText Typo="Typo.caption" Class="tier-section-count">@Count</MudText>
+        @* The stat ("9 / 43 cleared") already carries the count — showing both is
+           redundant (round 8), so the bare count is the anonymous fallback only. *@
         @if (!string.IsNullOrWhiteSpace(Stat))
         {
             <MudText Typo="Typo.caption" Class="tier-section-stat">@Stat</MudText>
+        }
+        else
+        {
+            <MudText Typo="Typo.caption" Class="tier-section-count">@Count</MudText>
         }
     </div>
     @if (!Collapsed)

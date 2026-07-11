@@ -50,37 +50,50 @@
 }
 else
 {
+    <div class="tier-page">
     @* 1 — sticky toolbar carries what changes the DATA you're looking at (folder →
        view → personalized) plus the page's one ACTION, Download, right-aligned
-       (round 7). Presentation controls live in the content bar above the list. *@
+       (round 7). Presentation controls live in the content bar above the list.
+       Round 8: two explicit rows below 960px (display:contents flattens them on
+       desktop); Download hands off to the bottom action bar and Folder Stats
+       becomes the drawer trigger. *@
     <div class="tier-toolbar">
-        <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></FolderPicker>
-        <MudButtonGroup OverrideStyles="false">
-            <MudButton Variant="@(_groupBy == "Difficulty" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Difficulty"))">@L["Tier List"]</MudButton>
-            <MudButton Variant="@(IsMyProgress ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping(CurrentUser.IsLoggedIn ? "Score" : "Scoring Level"))">@L["My Progress"]</MudButton>
-            @if (_currentMix.HasSkillData())
+        <div class="tier-toolbar-row">
+            <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></FolderPicker>
+            <MudButtonGroup OverrideStyles="false">
+                <MudButton Variant="@(_groupBy == "Difficulty" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Difficulty"))">@L["Tier List"]</MudButton>
+                <MudButton Variant="@(IsMyProgress ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping(CurrentUser.IsLoggedIn ? "Score" : "Scoring Level"))">@L["My Progress"]</MudButton>
+                @if (_currentMix.HasSkillData())
+                {
+                    <MudButton Variant="@(IsSkillView ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Skill"))">@L["By Skill"]</MudButton>
+                }
+            </MudButtonGroup>
+        </div>
+        <div class="tier-toolbar-row">
+            @if (CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score")
             {
-                <MudButton Variant="@(IsSkillView ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Skill"))">@L["By Skill"]</MudButton>
+                <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
             }
-        </MudButtonGroup>
-        @if (CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score")
-        {
-            <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
-        }
-        <MudSpacer></MudSpacer>
-        <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined"
-                   StartIcon="@(_isBuildingImage ? null : Icons.Material.Filled.FileDownload)"
-                   Disabled="_isBuildingImage || _isLoading">
-            @if (_isBuildingImage)
+            <MudSpacer></MudSpacer>
+            @if (CurrentUser.IsLoggedIn)
             {
-                <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2"></MudProgressCircular>
-                @L["Generating"]
+                <MudButton Class="tier-compact-only" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.QueryStats" OnClick="() => _statsOpen = true">@L["Folder Stats"]</MudButton>
             }
-            else
-            {
-                @L["Download"]
-            }
-        </MudButton>
+            <MudButton Class="tier-desktop-only" OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined"
+                       StartIcon="@(_isBuildingImage ? null : Icons.Material.Filled.FileDownload)"
+                       Disabled="_isBuildingImage || _isLoading">
+                @if (_isBuildingImage)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2"></MudProgressCircular>
+                    @L["Generating"]
+                }
+                else
+                {
+                    @L["Download"]
+                }
+            </MudButton>
+        </div>
     </div>
     @if (_isProvisionalFallback || PersonalizedActive)
     {
@@ -95,12 +108,13 @@ else
             }
         </div>
     }
-    @* 3 — progress strip (logged in) or the rule-9 import CTA (anonymous). *@
+    @* 3 — progress strip (logged in) or the rule-9 import CTA (anonymous). Round 8:
+       below 960px the whole strip + legend live behind the Folder Stats drawer —
+       mobile's fold belongs to the tier sections (rule 1). The stats markup is one
+       shared fragment so the inline strip and the drawer can't drift apart. *@
     @if (CurrentUser.IsLoggedIn)
     {
-        @* General folder progress (pass rate + the grade lamps) always shows; the title
-           bars collapse under "Title Levels", default collapsed (round-6 field test). *@
-        <div class="tier-progress-strip">
+        RenderFragment folderStatsCore = @<text>
             <div class="tier-progress-strip-summary">
                 <MudText Typo="Typo.subtitle1">@L["Folder Progress"]</MudText>
                 <MudText Typo="Typo.caption">@L["{0} / {1} passed", PassedCount, _charts.Count]</MudText>
@@ -112,7 +126,7 @@ else
             {
                 var rating = _finalEntries.Where(e => _scoreRankings.ContainsKey(e.ChartId)).Average(e => _scoreRankings[e.ChartId].Ranking);
                 <div class="tier-cohort-bar">
-                    <span class="tier-cohort-bar-label">@L["Competitive Ranking in Folder"]</span>
+                    <span class="tier-cohort-bar-label">@L["Score in Folder"]</span>
                     <span class="tier-cohort-bar-meter">
                         <span class="tier-cohort-bar-fill" style="width:@((100.0 * rating).ToString("0"))%;background:@ThemeScales.CssVar(ThemeScales.BandFor(rating))"></span>
                     </span>
@@ -123,7 +137,7 @@ else
             @if (_cohortSummary != null)
             {
                 <div class="tier-cohort-bar">
-                    <span class="tier-cohort-bar-label">@L["Folder Passes vs Similar Players"]</span>
+                    <span class="tier-cohort-bar-label">@L["Passes in Folder"]</span>
                     <span class="tier-cohort-bar-meter">
                         <span class="tier-cohort-bar-fill" style="width:@((100.0 * _cohortSummary.PassPercentile).ToString("0"))%;background:@ThemeScales.CssVar(ThemeScales.BandFor(_cohortSummary.PassPercentile))"></span>
                     </span>
@@ -135,6 +149,10 @@ else
             {
                 <MudText Typo="Typo.caption">@L.GetString("Unpassed ToDos", _unpassedTodos.Count(), _level)</MudText>
             }
+        </text>;
+
+        <div class="tier-progress-strip tier-desktop-only">
+            @folderStatsCore
             <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
                        StartIcon="@(_titlesCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"
                        OnClick="ToggleTitles" aria-expanded="@(_titlesCollapsed ? "false" : "true")">@L["Folder Levels"]</MudButton>
@@ -146,7 +164,20 @@ else
             }
         </div>
         @* 4 — the border language, printed (rule 8). *@
-        <BorderLegend></BorderLegend>
+        <div class="tier-desktop-only">
+            <BorderLegend></BorderLegend>
+        </div>
+        <MudDrawer @bind-Open="_statsOpen" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="320px">
+            <div class="tier-filter-drawer">
+                <MudText Typo="Typo.h6">@L["Folder Stats"]</MudText>
+                @folderStatsCore
+                <BorderLegend></BorderLegend>
+                <MudText Typo="Typo.overline">@L["Folder Levels"]</MudText>
+                <MudGrid>
+                    <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == _level) || (_chartType == ChartType.CoOp && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
+                </MudGrid>
+            </div>
+        </MudDrawer>
     }
     else
     {
@@ -504,8 +535,17 @@ else
                         TierColor="@(_detailsChart != null && _chartDifficulties.TryGetValue(_detailsChart.Id, out var detailsTierColor) ? ThemeScales.DifficultyColor(detailsTierColor) : null)"
                         ScoreAgeDays="@(_detailsChart != null && _scores.TryGetValue(_detailsChart.Id, out var detailsAge) ? (int)(_now - detailsAge.RecordedDate).TotalDays : null)"
                         OnToDo="ToggleToDo" OnScoreRecorded="RefreshScores"></ChartDetailsDialog>
+    </div>
 }
 <style>
+    /* Round 8: one clamp for 4K, one 960px breakpoint (matches the shell's bottom
+       nav). Below it: two explicit toolbar rows, the bottom action bar takes over
+       Download/Filters, and the strip + legend live behind the Folder Stats drawer. */
+    .tier-page {
+        max-width: 1680px;
+        margin: 0 auto;
+    }
+
     .tier-toolbar {
         position: sticky;
         top: 0;
@@ -519,6 +559,40 @@ else
         flex-wrap: wrap;
         gap: 8px;
         align-items: center;
+    }
+
+    /* Desktop: the rows flatten away so the toolbar reads as one line. */
+    .tier-toolbar-row {
+        display: contents;
+    }
+
+    .tier-compact-only {
+        display: none;
+    }
+
+    @@media (max-width: 959.98px) {
+        .tier-desktop-only {
+            display: none;
+        }
+
+        .tier-compact-only {
+            display: inline-flex;
+        }
+
+        .tier-toolbar {
+            display: block;
+        }
+
+        .tier-toolbar-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tier-toolbar-row + .tier-toolbar-row {
+            margin-top: 8px;
+        }
     }
 
     .tier-toolbar-select {
@@ -662,7 +736,9 @@ else
         display: none;
     }
 
-    @@media (max-width: 600px) {
+    /* Round 8: the action bar covers the whole compact tier (was phones-only) so
+       flip-phone and tablet widths get thumb-reach Download/Filters too. */
+    @@media (max-width: 959.98px) {
         .tier-bottom-bar {
             display: flex;
             position: sticky;
@@ -1152,6 +1228,7 @@ else
     private FolderCohortSummaryRecord? _cohortSummary;
     private double _singlesCompetitive = 1;
     private double _doublesCompetitive = 1;
+    private bool _statsOpen = false;
     private bool _usePersonalizedData = true;
     private IReadOnlyList<TierGroup> _groups = Array.Empty<TierGroup>();
     private IEnumerable<SongTierListEntry> _finalEntries = Array.Empty<SongTierListEntry>();
