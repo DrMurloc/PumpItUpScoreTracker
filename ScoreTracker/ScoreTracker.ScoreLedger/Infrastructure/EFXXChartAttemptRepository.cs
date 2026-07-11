@@ -23,9 +23,10 @@ internal sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var chartId = chart.Id;
+        var mixId = MixIds.For(chart.Mix);
         return await (
             from ba in database.Set<BestAttemptEntity>()
-            where ba.ChartId == chartId && ba.UserId == userId
+            where ba.ChartId == chartId && ba.UserId == userId && ba.MixId == mixId
             select new XXChartAttempt(Enum.Parse<XXLetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score, ba.RecordedDate)
         ).FirstOrDefaultAsync(cancellationToken);
     }
@@ -34,8 +35,10 @@ internal sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var chartId = chart.Id;
+        var mixId = MixIds.For(chart.Mix);
 
-        var previousBest = await database.Set<BestAttemptEntity>().Where(ba => ba.ChartId == chartId && ba.UserId == userId)
+        var previousBest = await database.Set<BestAttemptEntity>()
+            .Where(ba => ba.ChartId == chartId && ba.UserId == userId && ba.MixId == mixId)
             .SingleOrDefaultAsync(cancellationToken);
 
         if (previousBest != null)
@@ -51,8 +54,10 @@ internal sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var chartId = chart.Id;
+        var mixId = MixIds.For(chart.Mix);
 
-        var previousBest = await database.Set<BestAttemptEntity>().Where(ba => ba.ChartId == chartId && ba.UserId == userId)
+        var previousBest = await database.Set<BestAttemptEntity>()
+            .Where(ba => ba.ChartId == chartId && ba.UserId == userId && ba.MixId == mixId)
             .SingleOrDefaultAsync(cancellationToken);
         if (previousBest == null)
         {
@@ -64,6 +69,7 @@ internal sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                 LetterGrade = attempt.LetterGrade.ToString(),
                 RecordedDate = recordedOn,
                 UserId = userId,
+                MixId = mixId,
                 Score = attempt.Score
             };
             await database.Set<BestAttemptEntity>().AddAsync(entity, cancellationToken);
@@ -88,8 +94,9 @@ internal sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                 join c in database.Chart on new
                         { SongId = s.Id, Level = (int)ce.Level, ChartType = ce.Type.ToString() } equals
                     new { c.SongId, c.Level, ChartType = c.Type }
-                join _ in database.Set<BestAttemptEntity>() on new { UserId = userId, ChartId = c.Id } equals new
-                    { _.UserId, _.ChartId } into gi
+                join _ in database.Set<BestAttemptEntity>() on
+                    new { UserId = userId, ChartId = c.Id, MixId = MixIds.For(ce.Mix) } equals new
+                        { _.UserId, _.ChartId, _.MixId } into gi
                 from ba in gi.DefaultIfEmpty()
                 select new BestXXChartAttempt(
                     new Chart(c.Id, ce.Mix,
@@ -110,15 +117,19 @@ internal sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // This page is the whole-XX-catalog view — attempts stay scoped to XX rows.
+        // OriginalMix maps through MixIds, not Enum.Parse(Mix.Name): legacy mix names
+        // ("Prex 3", "OBG SE") are display strings, not enum identifiers.
+        var xxMixId = MixIds.XX;
         return await (
                 from s in database.Song
                 join c in database.Chart on s.Id equals c.SongId
-                join m in database.Mix on c.OriginalMixId equals m.Id
-                join _ in database.Set<BestAttemptEntity>() on new { UserId = userId, ChartId = c.Id } equals new
-                    { _.UserId, _.ChartId } into gi
+                join _ in database.Set<BestAttemptEntity>() on
+                    new { UserId = userId, ChartId = c.Id, MixId = xxMixId } equals new
+                        { _.UserId, _.ChartId, _.MixId } into gi
                 from ba in gi.DefaultIfEmpty()
                 select new BestXXChartAttempt(
-                    new Chart(c.Id, Enum.Parse<MixEnum>(m.Name),
+                    new Chart(c.Id, MixIds.ToEnum(c.OriginalMixId),
                         new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration,
                             s.Artist ?? "Unknown",
                             Bpm.From(s.MinBpm, s.MaxBpm)),

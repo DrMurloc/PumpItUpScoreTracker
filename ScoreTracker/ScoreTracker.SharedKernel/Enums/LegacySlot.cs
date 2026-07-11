@@ -50,4 +50,10 @@ public static class LegacySlotHelperMethods
         slot = default;
         return value is not null && Enum.TryParse(value.Replace(" ", ""), true, out slot);
     }
+
+    /// <summary>Expression-tree-friendly form (no out param) for EF projection lambdas.</summary>
+    public static LegacySlot? ToNullableLegacySlot(string? value)
+    {
+        return TryParseLegacySlot(value, out var slot) ? slot : null;
+    }
 }
