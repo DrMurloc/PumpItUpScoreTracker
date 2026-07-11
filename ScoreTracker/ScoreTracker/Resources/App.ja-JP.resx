@@ -2925,4 +2925,25 @@
   <data name="Advanced" xml:space="preserve">
     <value>詳細設定</value>
   </data>
+  <data name="Step Analysis" xml:space="preserve">
+    <value>ステップ分析</value>
+  </data>
+  <data name="Dominant Skills" xml:space="preserve">
+    <value>主要スキル</value>
+  </data>
+  <data name="Notes per Second" xml:space="preserve">
+    <value>秒間ノーツ数</value>
+  </data>
+  <data name="Sustain Time" xml:space="preserve">
+    <value>サステイン時間</value>
+  </data>
+  <data name="Time Under Tension" xml:space="preserve">
+    <value>負荷継続時間</value>
+  </data>
+  <data name="Step analysis data from PIU Center" xml:space="preserve">
+    <value>ステップ分析データ提供：PIU Center</value>
+  </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>各スキルが登場するチャートセクションの割合</value>
+  </data>
 </root>

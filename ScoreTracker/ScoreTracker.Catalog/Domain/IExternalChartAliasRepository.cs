@@ -8,6 +8,10 @@ internal interface IExternalChartAliasRepository
 
     Task<IReadOnlyList<ExternalChartAlias>> GetAliases(string source, CancellationToken cancellationToken = default);
 
+    /// <summary>The chart's resolved external key (NotFound candidates excluded), or null.</summary>
+    Task<ExternalChartAlias?> GetAliasForChart(string source, Guid chartId,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Admin resolution: binds the key to a chart and marks it Manual.</summary>
     Task ResolveAlias(string source, string externalKey, Guid chartId, DateTimeOffset resolvedAt,
         CancellationToken cancellationToken = default);

@@ -2805,4 +2805,25 @@
   <data name="Advanced" xml:space="preserve">
     <value>고급</value>
   </data>
+  <data name="Step Analysis" xml:space="preserve">
+    <value>스텝 분석</value>
+  </data>
+  <data name="Dominant Skills" xml:space="preserve">
+    <value>주요 스킬</value>
+  </data>
+  <data name="Notes per Second" xml:space="preserve">
+    <value>초당 노트 수</value>
+  </data>
+  <data name="Sustain Time" xml:space="preserve">
+    <value>지속 시간</value>
+  </data>
+  <data name="Time Under Tension" xml:space="preserve">
+    <value>부하 지속 시간</value>
+  </data>
+  <data name="Step analysis data from PIU Center" xml:space="preserve">
+    <value>스텝 분석 데이터 제공: PIU Center</value>
+  </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>각 스킬이 나오는 채보 구간 비율</value>
+  </data>
 </root>

@@ -2804,4 +2804,25 @@
   <data name="Advanced" xml:space="preserve">
     <value>Avanzado</value>
   </data>
+  <data name="Step Analysis" xml:space="preserve">
+    <value>Análisis de pasos</value>
+  </data>
+  <data name="Dominant Skills" xml:space="preserve">
+    <value>Habilidades dominantes</value>
+  </data>
+  <data name="Notes per Second" xml:space="preserve">
+    <value>Notas por segundo</value>
+  </data>
+  <data name="Sustain Time" xml:space="preserve">
+    <value>Tiempo sostenido</value>
+  </data>
+  <data name="Time Under Tension" xml:space="preserve">
+    <value>Tiempo bajo tensión</value>
+  </data>
+  <data name="Step analysis data from PIU Center" xml:space="preserve">
+    <value>Datos de análisis de pasos de PIU Center</value>
+  </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>Proporción de secciones del chart con cada habilidad</value>
+  </data>
 </root>

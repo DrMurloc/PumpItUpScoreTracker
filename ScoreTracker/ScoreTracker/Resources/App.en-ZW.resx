@@ -2847,4 +2847,25 @@
   <data name="Advanced" xml:space="preserve">
     <value>Advmrglanced</value>
   </data>
+  <data name="Step Analysis" xml:space="preserve">
+    <value>Sterp Analrgsis</value>
+  </data>
+  <data name="Dominant Skills" xml:space="preserve">
+    <value>Dominrgnt Skrglls</value>
+  </data>
+  <data name="Notes per Second" xml:space="preserve">
+    <value>Nrgtes per Secrnd</value>
+  </data>
+  <data name="Sustain Time" xml:space="preserve">
+    <value>Sustrgn Time</value>
+  </data>
+  <data name="Time Under Tension" xml:space="preserve">
+    <value>Time Undrgr Tensrgn</value>
+  </data>
+  <data name="Step analysis data from PIU Center" xml:space="preserve">
+    <value>Sterp analrgsis data from PIU Center, mrgl</value>
+  </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>Shrgre of chart sectrgns featrgring each skrgll</value>
+  </data>
 </root>

@@ -287,6 +287,8 @@
             ? (await Mediator.Send(new GetChartScoreJourneyQuery(Chart.Id))).ToArray()
             : Array.Empty<ScoreJournalEntry>();
         _placements = await LoadPlacements(Chart.Id);
+        // The alias table's key beats the guessed one (crawler project hardening).
+        _externalKey = (await Mediator.Send(new GetChartStepAnalysisQuery(Chart.Id)))?.ExternalKey;
     }
 
     private async Task<IReadOnlyList<(string, string)>> LoadPlacements(Guid chartId)
@@ -346,15 +348,28 @@
         return mix == MixEnum.Phoenix2 ? "Phoenix 2" : mix.ToString();
     }
 
-    // Best-effort key in piucenter's format ("<Song> - <Artist> <S|D><level> arcade");
-    // the alias table (crawler project) hardens mismatches later.
+    private string? _externalKey;
+
+    // The resolved alias key when the crawler has one; otherwise a best-effort guess
+    // in the current key format ("<Song>_-_<Artist>_<S|D><level>_<SONGTYPE>").
     private string PiuCenterUrl
     {
         get
         {
+            if (_externalKey != null)
+                return $"https://www.piucenter.com/chart/{Uri.EscapeDataString(_externalKey)}";
             if (Chart == null) return "https://www.piucenter.com/chart";
-            var key = $"{Chart.Song.Name} - {Chart.Song.Artist} {Chart.Type.GetShortHand()}{Chart.Level} arcade";
-            return $"https://www.piucenter.com/chart/{Uri.EscapeDataString(key).Replace("%20", "+")}";
+            var suffix = Chart.Song.Type switch
+            {
+                SongType.Remix => "REMIX",
+                SongType.ShortCut => "SHORTCUT",
+                SongType.FullSong => "FULLSONG",
+                _ => "ARCADE"
+            };
+            var key =
+                $"{Chart.Song.Name}_-_{Chart.Song.Artist}_{Chart.Type.GetShortHand()}{(int)Chart.Level}_{suffix}"
+                    .Replace(' ', '_');
+            return $"https://www.piucenter.com/chart/{Uri.EscapeDataString(key)}";
         }
     }
 

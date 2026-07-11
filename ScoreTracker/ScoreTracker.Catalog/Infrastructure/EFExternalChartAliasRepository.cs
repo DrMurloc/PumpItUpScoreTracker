@@ -57,6 +57,21 @@ internal sealed class EFExternalChartAliasRepository : IExternalChartAliasReposi
             .ToArray();
     }
 
+    public async Task<ExternalChartAlias?> GetAliasForChart(string source, Guid chartId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var notFound = ExternalAliasStatus.NotFound.ToString();
+        var entity = await database.Set<ExternalChartAliasEntity>()
+            .Where(e => e.Source == source && e.ChartId == chartId && e.Status != notFound)
+            .OrderBy(e => e.ExternalKey)
+            .FirstOrDefaultAsync(cancellationToken);
+        return entity == null
+            ? null
+            : new ExternalChartAlias(entity.ExternalKey, entity.ChartId,
+                Enum.Parse<ExternalAliasStatus>(entity.Status), entity.LastCheckedAt);
+    }
+
     public async Task ResolveAlias(string source, string externalKey, Guid chartId, DateTimeOffset resolvedAt,
         CancellationToken cancellationToken = default)
     {
