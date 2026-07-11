@@ -13,7 +13,7 @@
 {
     <MudTooltip Text="@CompactTooltip" ShowOnFocus="true">
         <div class="tier-chart-card tier-chart-card-compact @StateClass" role="button" tabindex="0"
-             @onclick="() => OnVideo.InvokeAsync(Chart.Id)">
+             @onclick="() => OnOpen.InvokeAsync(Chart.Id)">
             <div class="tier-chart-card-jacket tier-chart-card-compact-jacket"
                  style="background-image:url(&quot;@Chart.Song.ImagePath&quot;)">
                 <div class="tier-chart-card-bubble">
@@ -32,7 +32,9 @@
 else
 {
 <div class="tier-chart-card @StateClass" title="@StateTitle">
-    <div class="tier-chart-card-jacket" style="background-image:url(&quot;@Chart.Song.ImagePath&quot;)">
+    <div class="tier-chart-card-jacket" role="button" tabindex="0"
+         @onclick="() => OnOpen.InvokeAsync(Chart.Id)"
+         style="background-image:url(&quot;@Chart.Song.ImagePath&quot;)">
         <div class="tier-chart-card-bubble">
             <DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble>
         </div>
@@ -62,8 +64,8 @@ else
             </MudTooltip>
         }
         <MudSpacer></MudSpacer>
-        <MudIconButton Size="Size.Small" Icon="@Icons.Custom.Brands.YouTube"
-                       OnClick="() => OnVideo.InvokeAsync(Chart.Id)" aria-label="@L["Video"]"></MudIconButton>
+        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Info"
+                       OnClick="() => OnOpen.InvokeAsync(Chart.Id)" aria-label="@L["Details"]"></MudIconButton>
     </div>
 </div>
 }
@@ -90,7 +92,7 @@ else
 
     [Parameter] public EventCallback<Guid> OnToDo { get; set; }
 
-    [Parameter] public EventCallback<Guid> OnVideo { get; set; }
+    [Parameter] public EventCallback<Guid> OnOpen { get; set; }
 
     private string StateClass => Passed ? "tier-chart-card-pass" :
         IsToDo ? "tier-chart-card-todo" :

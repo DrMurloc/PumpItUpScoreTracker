@@ -1,0 +1,288 @@
+@namespace ScoreTracker.Web.Components
+@using MediatR
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.ChartIntelligence.Contracts.Queries
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+
+@* The one shared chart-details surface (design doc §4): leads with the video like
+   today's video dialog, then meta, the cross-mix score journey (ScoreEventJournal),
+   placements across lenses, To-Do, quiet recording, and the PIU Center link-out
+   (their full chart rendering is deliberately not imported — §8a). *@
+<MudDialog Visible="Visible" VisibleChanged="VisibleChanged" Options="_options">
+    <DialogContent>
+        @if (Chart != null)
+        {
+            @if (!string.IsNullOrWhiteSpace(_videoUrl))
+            {
+                <iframe class="chart-details-video" src="@_videoUrl" allow="encrypted-media" allowfullscreen></iframe>
+            }
+            <div class="chart-details-title">
+                <DifficultyBubble Chart="Chart"></DifficultyBubble>
+                <MudText Typo="Typo.h5">@Chart.Song.Name</MudText>
+            </div>
+            <div class="chart-details-meta">
+                @if (Chart.Song.Bpm != null)
+                {
+                    <div><span class="chart-details-meta-label">@L["BPM"]</span><span>@Chart.Song.Bpm</span></div>
+                }
+                @if (Chart.NoteCount != null)
+                {
+                    <div><span class="chart-details-meta-label">@L["Note Count"]</span><span>@Chart.NoteCount</span></div>
+                }
+                @if (Chart.StepArtist != null)
+                {
+                    <div><span class="chart-details-meta-label">@L["Step Artist"]</span><span>@Chart.StepArtist</span></div>
+                }
+                <div><span class="chart-details-meta-label">@L["Song Artist"]</span><span>@Chart.Song.Artist</span></div>
+                <div><span class="chart-details-meta-label">@L["Song Type"]</span><span>@Chart.Song.Type</span></div>
+            </div>
+            @if (Score?.Score != null)
+            {
+                <div class="chart-details-score">
+                    <ScoreBreakdown Score="Score.Score.Value" IsBroken="Score.IsBroken" OneLine="true" ShowScore="true"
+                                    Plate="Score.Plate" Ranking="Ranking"></ScoreBreakdown>
+                </div>
+            }
+            @if (_journey.Any())
+            {
+                <MudText Typo="Typo.overline">@L["Your journey — all mixes"]</MudText>
+                <div class="chart-details-journey">
+                    @foreach (var entry in _journey)
+                    {
+                        <div class="chart-details-journey-row">
+                            <span class="chart-details-journey-date">@entry.OccurredAt.ToString("yyyy-MM-dd")</span>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@MixName(entry.Mix)</MudChip>
+                            <span class="chart-details-journey-score">@(entry.Score?.ToString() ?? "—")</span>
+                            @if (entry.Score != null)
+                            {
+                                <LetterGradeIcon Grade="entry.Score.Value.LetterGrade" IsBroken="entry.IsBroken" Height="16"></LetterGradeIcon>
+                            }
+                        </div>
+                    }
+                </div>
+                @if (CurrentUser.IsLoggedIn)
+                {
+                    <MudLink Href="@($"/Player/{CurrentUser.User.Id}/Sessions")" Typo="Typo.caption">@L["Full score journey"]</MudLink>
+                }
+            }
+            @if (_placements.Any())
+            {
+                <div class="chart-details-placements">
+                    @foreach (var placement in _placements)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                                 Style="@($"color:{placement.Color};border-color:{placement.Color}")">@placement.Label</MudChip>
+                    }
+                </div>
+            }
+            @if (Chart.Skills.Any())
+            {
+                <div class="chart-details-skills">
+                    @foreach (var skill in Chart.Skills)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@skill.GetName()</MudChip>
+                    }
+                </div>
+            }
+            <div class="chart-details-actions">
+                @if (CurrentUser.IsLoggedIn)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Info"
+                               StartIcon="@(IsToDo ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)"
+                               OnClick="() => OnToDo.InvokeAsync(Chart.Id)">@(IsToDo ? L["On ToDo List"] : L["Add to ToDo List"])</MudButton>
+                    <MudButton Variant="Variant.Text" OnClick="() => _showRecording = !_showRecording">@L["Record Score"]</MudButton>
+                }
+                <MudSpacer></MudSpacer>
+                <MudLink Href="@PiuCenterUrl" Target="_blank" Typo="Typo.caption">@L["View full chart on PIU Center"]</MudLink>
+            </div>
+            @if (_showRecording && CurrentUser.IsLoggedIn)
+            {
+                <EditChartGrid ShowChartName="false" ChartId="Chart.Id" CurrentMix="Mix"
+                               NewAttemptRecorded="HandleAttemptRecorded"></EditChartGrid>
+            }
+            @* Reserved slot: chart comments land here if user-generated content ever ships. *@
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close"
+                   OnClick="Close">@L["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+<style>
+    .chart-details-video {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border: 0;
+    }
+
+    .chart-details-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 8px 0;
+    }
+
+    .chart-details-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 4px 12px;
+        margin-bottom: 8px;
+    }
+
+    .chart-details-meta-label {
+        color: var(--mud-palette-text-secondary);
+        font-size: .7rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        display: block;
+    }
+
+    .chart-details-score {
+        margin: 8px 0;
+    }
+
+    .chart-details-journey-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 2px 0;
+        border-bottom: 1px dashed var(--mud-palette-lines-default);
+    }
+
+    .chart-details-journey-date {
+        color: var(--mud-palette-text-secondary);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .chart-details-journey-score {
+        flex: 1;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .chart-details-placements, .chart-details-skills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin: 8px 0;
+    }
+
+    .chart-details-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+    }
+</style>
+
+@code {
+    private readonly DialogOptions _options = new() { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small };
+    private Guid _loadedChartId = Guid.Empty;
+    private bool _showRecording;
+    private string? _videoUrl;
+    private IReadOnlyList<ScoreJournalEntry> _journey = Array.Empty<ScoreJournalEntry>();
+    private IReadOnlyList<(string Label, string Color)> _placements = Array.Empty<(string, string)>();
+
+    [Parameter] public Chart? Chart { get; set; }
+
+    [Parameter] public bool Visible { get; set; }
+
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    [Parameter] public RecordedPhoenixScore? Score { get; set; }
+
+    [Parameter] public ScoreRankingRecord? Ranking { get; set; }
+
+    [Parameter] public bool IsToDo { get; set; }
+
+    [Parameter] public EventCallback<Guid> OnToDo { get; set; }
+
+    [Parameter] public EventCallback OnScoreRecorded { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!Visible || Chart == null || Chart.Id == _loadedChartId) return;
+        _loadedChartId = Chart.Id;
+        _showRecording = false;
+        _videoUrl = (await Mediator.Send(new GetChartVideosQuery(new[] { Chart.Id })))
+            .FirstOrDefault()?.VideoUrl.ToString();
+        _journey = CurrentUser.IsLoggedIn
+            ? (await Mediator.Send(new GetChartScoreJourneyQuery(Chart.Id))).ToArray()
+            : Array.Empty<ScoreJournalEntry>();
+        _placements = await LoadPlacements(Chart.Id);
+    }
+
+    private async Task<IReadOnlyList<(string, string)>> LoadPlacements(Guid chartId)
+    {
+        var placements = new List<(string, string)>();
+        foreach (var (listName, label) in new[]
+                 {
+                     ("Pass Count", L["Pass Difficulty"].ToString()),
+                     ("Scores", L["Score Difficulty"].ToString()),
+                     ("Popularity", L["Popularity"].ToString())
+                 })
+        {
+            var result = await Mediator.Send(new GetTierListWithFallbackQuery(listName, Mix));
+            var entry = result.Entries.FirstOrDefault(e => e.ChartId == chartId);
+            if (entry == null || entry.Category == TierListCategory.Unrecorded) continue;
+            placements.Add(($"{label}: {CategoryName(entry.Category)}",
+                ThemeScales.DifficultyColor(entry.Category)));
+        }
+
+        return placements;
+    }
+
+    private string CategoryName(TierListCategory category)
+    {
+        return category switch
+        {
+            TierListCategory.Overrated => L["1+ Level Easier"],
+            TierListCategory.VeryEasy => L["Very Easy"],
+            TierListCategory.Easy => L["Easy"],
+            TierListCategory.Medium => L["Medium"],
+            TierListCategory.Hard => L["Hard"],
+            TierListCategory.VeryHard => L["Very Hard"],
+            TierListCategory.Underrated => L["1+ Level Harder"],
+            _ => L["Not Rated"]
+        };
+    }
+
+    private static string MixName(MixEnum mix)
+    {
+        return mix == MixEnum.Phoenix2 ? "Phoenix 2" : mix.ToString();
+    }
+
+    // Best-effort key in piucenter's format ("<Song> - <Artist> <S|D><level> arcade");
+    // the alias table (crawler project) hardens mismatches later.
+    private string PiuCenterUrl
+    {
+        get
+        {
+            if (Chart == null) return "https://www.piucenter.com/chart";
+            var key = $"{Chart.Song.Name} - {Chart.Song.Artist} {Chart.Type.GetShortHand()}{Chart.Level} arcade";
+            return $"https://www.piucenter.com/chart/{Uri.EscapeDataString(key).Replace("%20", "+")}";
+        }
+    }
+
+    private void HandleAttemptRecorded(Chart chart, XXChartAttempt? attempt)
+    {
+        _ = OnScoreRecorded.InvokeAsync();
+    }
+
+    private Task Close()
+    {
+        return VisibleChanged.InvokeAsync(false);
+    }
+}

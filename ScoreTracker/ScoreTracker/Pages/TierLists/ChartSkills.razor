@@ -272,6 +272,8 @@ else
                                                            Icon="@(_todos.Contains(chart.Id) ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)"
                                                            Color="@(_todos.Contains(chart.Id) ? Color.Info : Color.Default)"
                                                            OnClick="() => ToggleToDo(chart.Id)" aria-label="@L["To Do"]"></MudIconButton>
+                                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Info"
+                                                           OnClick="() => OpenDetails(chart.Id)" aria-label="@L["Details"]"></MudIconButton>
                                         </td>
                                     }
                                 </tr>
@@ -297,7 +299,7 @@ else
                                                ShowToDo="CurrentUser.IsLoggedIn"
                                                Density="_density"
                                                OnToDo="ToggleToDo"
-                                               OnVideo="VideoDisplayer.ShowVideo"></TierListChartCard>
+                                               OnOpen="OpenDetails"></TierListChartCard>
                         }
                     </div>
                 }
@@ -476,6 +478,11 @@ else
         <MudIconButton Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary"
                        OnClick="() => _filtersOpen = true" aria-label="@L["Filters"]"></MudIconButton>
     </div>
+    <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"
+                        Score="_detailsChart != null && _scores.TryGetValue(_detailsChart.Id, out var detailsScore) ? detailsScore : null"
+                        Ranking="_detailsChart != null && _scoreRankings.TryGetValue(_detailsChart.Id, out var detailsRank) ? detailsRank : null"
+                        IsToDo="_detailsChart != null && _todos.Contains(_detailsChart.Id)"
+                        OnToDo="ToggleToDo" OnScoreRecorded="RefreshScores"></ChartDetailsDialog>
 }
 <style>
     .tier-toolbar {
@@ -1109,6 +1116,24 @@ function(val, index) {
     {
         _density = density;
         await UiSettings.SetSetting(DensitySettingKey, density.ToString());
+    }
+
+    private bool _detailsOpen = false;
+    private Chart? _detailsChart;
+
+    private void OpenDetails(Guid chartId)
+    {
+        if (!_charts.TryGetValue(chartId, out var chart)) return;
+        _detailsChart = chart;
+        _detailsOpen = true;
+    }
+
+    private async Task RefreshScores()
+    {
+        if (!CurrentUser.IsLoggedIn) return;
+        _scores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _currentMix)))
+            .ToDictionary(c => c.ChartId);
+        await Recalculate();
     }
 
     private string RowClass(Guid chartId, RecordedPhoenixScore? score)
