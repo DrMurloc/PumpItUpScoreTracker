@@ -34,9 +34,11 @@ Tier lists are the site's most-used feature (~28% of traffic, ~60% of it anonymo
 
 **Mock feedback round 1 (2026-07-10, applied in workshop-v2):** "Personalized" replaces "Tuned to me" · lens names are **Pass Difficulty** / **Score Difficulty** · Ranked-by hides while My Progress is active (the lens has no effect there) · tier sections collapse, collapsed set persisted per user in UiSettings · border language locked (§4) · filters drawer gains song type / letter grade / plate as first-class · details dialog leads with the video, as today's video dialog does.
 
+**Round 2 (2026-07-11):** density is chosen in the page toolbar and **persists per page** ("you use different ones based on your current task") — this amends UX-GUIDELINES rule 5: the three sanctioned modes are unchanged, but the UiSettings key becomes per-page (`Density__<Page>`), with `Universal__Density` retired before it ever shipped; the guideline reword lands in the implementation PR · QR + folder URL on share images approved · section collapse persists **globally by tier name** (a tier you never care about stays collapsed across folders — per-folder would make sections "pop around" as you walk folders) · By-Skill view **stays** in the View switch for P1, upgraded from "demote" because skill automation is now a live prospect (§8a). *(Round 3 = the piucenter integration decisions, recorded in §8a.)*
+
 **Round 4 (2026-07-11, applied in workshop-v3):** the four ApexCharts **radar panels are retired as a concept** — the By-Skill view absorbs their information: one section per skill, sorted by the player's weakest skill first, with per-skill pass count + average score in each section header (heat-colored by pass rate). The information is the same; the placement makes it actionable (the charts to fix are directly under the stat). The details dialog gains the user's **cross-mix score journey** — a compact timeline from ScoreLedger's append-only `ScoreEventJournal`, linking to the full journey. PIU Center attribution renders in the By-Skill header and the dialog's skills row.
 
-**Round 2 (2026-07-11):** density is chosen in the page toolbar and **persists per page** ("you use different ones based on your current task") — this amends UX-GUIDELINES rule 5: the three sanctioned modes are unchanged, but the UiSettings key becomes per-page (`Density__<Page>`), with `Universal__Density` retired before it ever shipped; the guideline reword lands in the implementation PR · QR + folder URL on share images approved · section collapse persists **globally by tier name** (a tier you never care about stays collapsed across folders — per-folder would make sections "pop around" as you walk folders) · By-Skill view **stays** in the View switch for P1, upgraded from "demote" because skill automation is now a live prospect (§8a).
+**Round 5 (2026-07-11):** piucenter ingestion boundary locked (§8a) — no import of their full chart rendering; chart details link out for "see more"; categorization-relevant metadata + numeric skill frequencies only, the latter banked for future cross-skill transfer prediction. Rollout fixed as **one PR** with the C1–C10 series (§12).
 
 ## 3. Mental model: three concepts the UI stops blending
 
@@ -74,7 +76,7 @@ Today "Difficulty Categorization", "Group By", and a hidden "Personalized Diffic
   - *Comfortable* (default): jacket + `DifficultyBubble` + grade/plate overlay, song name, To-Do + Details actions.
   - *Compact*: jacket sticker sheet with corner badges — the at-a-glance completion view and the closest on-screen analog of the share image.
   - *Table*: sortable rows (song, tier, my score, grade, plate, percentile, To-Do). Text View's replacement.
-- **Chart-details dialog** (tap any card): **leads with the video** (as today's video dialog does), then chart meta (BPM, note count, step artist, song artist), the user's **cross-mix score journey** (compact timeline from ScoreLedger's `ScoreEventJournal`, linking to the full journey), placements across all lenses, To-Do toggle, score recording (reuses the existing edit grid — deliberately low-key), link to `/Chart/{id}`. Ingested PIU Center step-data metadata lands here too, with the attribution footer (§8a). Leaves a slot for future comments/UGC. One shared component — candidates elsewhere (/Charts, WeeklyCharts) adopt it in later passes.
+- **Chart-details dialog** (tap any card): **leads with the video** (as today's video dialog does), then chart meta (BPM, note count, step artist, song artist), the user's **cross-mix score journey** (compact timeline from ScoreLedger's `ScoreEventJournal`, linking to the full journey), placements across all lenses, To-Do toggle, score recording (reuses the existing edit grid — deliberately low-key), link to `/Chart/{id}`, and a **"View full chart on PIU Center"** link-out (§8a — their scrollable chart rendering is deliberately not imported). Ingested PIU Center step-data metadata lands here too, with the attribution footer. Leaves a slot for future comments/UGC. One shared component — candidates elsewhere (/Charts, WeeklyCharts) adopt it in later passes.
 - **Mobile (rule 10)**: at phone widths a bottom action bar carries folder pill, Filters, and Download; the toolbar collapses to essentials.
 
 ## 5. Loading, empty, and failure states (rule 9)
@@ -136,7 +138,7 @@ piucenter's `/skill` pages are generated from a **per-chart feature matrix** (~3
 
 - **Plan (owner-locked): HTML-crawl it now.** A **weekly** Hangfire job, **gap-driven** — it only fetches for charts we're missing skill data on, so steady-state runs are near no-ops. Crawl the **per-chart pages** (`/chart/<key>`), not the `/skill` listings: the listings only expose top-20-per-level names, while chart pages carry the full per-chart analysis — which also feeds the metadata ingestion below. HtmlAgilityPack client in the OfficialMirror ACL mold. "Charts that changed" is deferred — charts only really change between mixes.
 - **Generic external-name map**: mismatched names land in a shared alias table keyed with a **Source column** — `(Source, ExternalKey) → ChartId` — because a second community-tool integration is planned later. piucenter's key format `"<Song> - <Artist> <S|D><level> <variant>"` doubles as the crawl-URL builder, so the alias table is also the fetch plan. Most songs should auto-match on normalization; owner + Claude seed the long tail.
-- **Metadata beyond skills**: piucenter is effectively our **primary chart step-data source** going forward. Anything meaningful on their chart pages (data-driven difficulty prediction, stepchart-derived stats, similar charts) is fair game to ingest into the chart-details surface, with a **"PIU Center" attribution footer on the chart detail page**.
+- **Ingestion boundary (owner-locked, round 5)**: we do **not** import their full scrollable chart rendering — that's piucenter's own value, and our chart details **link out** to it ("View full chart on PIU Center") for "see more". We ingest only what directly answers *how charts are categorized*, plus the **numeric skill frequencies** (`ChartSkillMetric`) banked for future personalized algorithms — cross-skill transfer prediction ("you were good at X, you'll be good at Y") when the personalization revisit happens. piucenter remains our primary step-data source, with the **"PIU Center" attribution footer on the chart detail page**. The link-out ships with the overhaul as a best-effort URL from their key format; the alias table (crawler project) hardens it.
 - **Attribution swap (owner-locked)**: PIU Center credit replaces **all** existing skills attribution — the Chabala skills credit goes away. Chabala's ongoing role is his **difficulty attribution** only: the Chabala lens becomes an import of his posted tier lists (later; Phoenix 1 only).
 - **Phoenix 2**: expectation is that active downstream usage encourages upstream P2 coverage; the per-mix skills capability flag simply flips on when their data exists for a mix.
 - **Fallback only**: forking piu-analysis and managing simfiles/runs ourselves is explicitly *not* the plan while piucenter is maintained — it's the contingency if the project goes dormant.
@@ -166,16 +168,22 @@ Every string on the page goes through `L[…]` — the current page has dozens o
 
 Folder Level progression (own doc) · skill-tagging automation · UGC comments (dialog reserves the slot) · deep SEO pass · native apps (explicit non-goal — perf work exists to avoid them) · `/TierLists/Old` removal timing.
 
-## 12. Rollout sketch (phased commits, owner field-tests each)
+## 12. Rollout: one PR, a fixed commit series (owner field-tests each checkpoint)
 
-1. **C1 — data layer**: population aggregates + per-user relative tier list materialization + backfill job (no UI change).
-2. **C2 — routes**: path-based folder URLs + 301s + sitemap entries.
-3. **C3 — shell**: sticky toolbar, folder picker, lens/view/tuned model, coalesced+cancellable reload, answer-first layout, progress strip, skeleton/empty states.
-4. **C4 — density**: per-page density setting (`Density__TierLists`) + the three modes; Text View retired.
-5. **C5 — details dialog** (with recording); card actions simplify.
-6. **C6 — share renderer**: SkiaSharp, download button swap.
-7. **C7 — og:image job + sitemap wiring**.
-8. **C8 — cleanup**: localization sweep, color-token allowlist burn-down, dead settings migration.
+The design-doc commits already on this branch are the prelude (C0); implementation lands as follow-on commits on the same branch. **One PR total** — the PR #134 pattern. Suites stay green at every commit; the Playwright tier-list workflow updates land with the commit that moves its cheese (C3/C4), never deferred.
+
+1. **C1 — data layer** (no UI change): `ChartScoreStats` + `UserTierListEntry` entities, repositories, and migrations with covering indexes designed up front; `UserTierListMaterializer` consuming `PlayerScoresUpdatedEvent`; tier-list sagas persist stats during rebuilds; admin-triggered throttled backfill command. DATABASE-SCHEMA.md rows.
+2. **C2 — contracts** (no UI change): `GetBlendedTierListQuery` (ChartIntelligence — the blend math leaves the page, gains ApplicationTests per the handler pattern); ScoreLedger's cross-mix pass read + `GetChartScoreJourneyQuery`.
+3. **C3 — routes**: `/TierLists/{Single|Double|CoOp}/{level}`, 301s from `/ChartSkills` / `/PersonalizedTierList` / query-param forms, sitemap folder entries.
+4. **C4 — shell**: sticky toolbar, folder picker, lens/view/Personalized model, coalesced + cancellable reload on the blend query, answer-first layout, progress strip + lamp strip, skeletons and empty states, border language + legend.
+5. **C5 — density**: `Density__TierLists` + Comfortable/Compact/Table via `ChartCard`/`TierSection`; Text View retired; legacy `TierLists__*` settings read-migrated once.
+6. **C6 — details dialog**: video-first `ChartDetailsDialog` — meta, cross-mix journey, placements, To-Do, quiet recording, PIU Center link-out, comments slot.
+7. **C7 — By-Skill view**: weakest-first skill sections with per-skill stats; the four ApexCharts radar panels removed.
+8. **C8 — share renderer**: `IShareCardRenderer` port + SkiaSharp client in Data; Download swap with the Community/Personalized stamp.
+9. **C9 — og:image**: `refresh-folder-share-cards` Hangfire job + blob wiring + per-folder meta tags; SCHEDULED-JOBS.md row.
+10. **C10 — cleanup**: localization sweep (all eight locales, universal-terms glossary note), `UiColorTokenTests` ChartSkills 7 → 0, UX-GUIDELINES rule-5 reword + CLAUDE.md density line, final E2E pass.
+
+Outside this PR: the piucenter crawler + alias table (§8a), Folder Level (own doc), `/TierLists/Old` removal.
 
 ## 13. Open questions
 
