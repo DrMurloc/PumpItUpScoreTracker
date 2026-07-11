@@ -13,6 +13,13 @@ public sealed record Chart(Guid Id, MixEnum OriginalMix, Song Song, ChartType Ty
     public string DifficultyString => $"{Type.GetShortHand()}{Level}";
 
     /// <summary>
+    ///     Human-facing difficulty. Slot-aware because pre-Exceed slots are identity:
+    ///     the same song can carry Hard 6 AND Crazy 6 — "S6" alone is ambiguous there
+    ///     (docs/design/legacy-mixes.md).
+    /// </summary>
+    public string DifficultyDisplay => Slot != null ? $"{Slot.Value.GetName()} {Level}" : DifficultyString;
+
+    /// <summary>
     ///     Mainline co-op charts have no difficulty, so their Level slot historically
     ///     stores the player count — but legacy Routine-era co-ops carry BOTH a real
     ///     difficulty (in Level) and a player count, so persistence supplies the

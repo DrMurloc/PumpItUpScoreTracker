@@ -31,6 +31,12 @@ namespace ScoreTracker.Data.Migrations
             // tool generates reference exactly these ids. IF NOT EXISTS keeps the seed safe
             // if a row was ever hand-inserted ahead of deploy (the Phoenix 2 precedent).
             migrationBuilder.Sql(@"
+-- The primary trio predates migration-managed seeding (prod rows were hand-run
+-- scripts), so INSERT-if-missing makes fresh local databases self-consistent,
+-- then the UPDATEs set the picker columns everywhere including prod.
+IF NOT EXISTS (SELECT 1 FROM [scores].[Mix] WHERE [Id] = '20F8CCF8-94B1-418D-B923-C375B042BDA8') INSERT INTO [scores].[Mix] ([Id], [Name], [SortOrder], [IsPrimary]) VALUES ('20F8CCF8-94B1-418D-B923-C375B042BDA8', N'XX', 260, 1);
+IF NOT EXISTS (SELECT 1 FROM [scores].[Mix] WHERE [Id] = '1ABB8F5A-BDA3-40F0-9CE7-1C4F9F8F1D3B') INSERT INTO [scores].[Mix] ([Id], [Name], [SortOrder], [IsPrimary]) VALUES ('1ABB8F5A-BDA3-40F0-9CE7-1C4F9F8F1D3B', N'Phoenix', 270, 1);
+IF NOT EXISTS (SELECT 1 FROM [scores].[Mix] WHERE [Id] = 'A9B7D3C1-52E8-4F06-9B1A-2F8C33E01948') INSERT INTO [scores].[Mix] ([Id], [Name], [SortOrder], [IsPrimary]) VALUES ('A9B7D3C1-52E8-4F06-9B1A-2F8C33E01948', N'Phoenix2', 280, 1);
 UPDATE [scores].[Mix] SET [SortOrder] = 260, [IsPrimary] = 1 WHERE [Id] = '20F8CCF8-94B1-418D-B923-C375B042BDA8'; -- XX
 UPDATE [scores].[Mix] SET [SortOrder] = 270, [IsPrimary] = 1 WHERE [Id] = '1ABB8F5A-BDA3-40F0-9CE7-1C4F9F8F1D3B'; -- Phoenix
 UPDATE [scores].[Mix] SET [SortOrder] = 280, [IsPrimary] = 1 WHERE [Id] = 'A9B7D3C1-52E8-4F06-9B1A-2F8C33E01948'; -- Phoenix2

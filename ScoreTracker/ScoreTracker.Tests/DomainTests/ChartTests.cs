@@ -48,6 +48,20 @@ public sealed class ChartTests
         Assert.Equal("HDB12", chart.DifficultyString);
     }
 
+    [Fact]
+    public void DifficultyDisplayIsSlotAwareBecauseSlotsAreIdentity()
+    {
+        // The Perfect Collection's Final Audition 2 has BOTH a Hard 6 and a Crazy 6 —
+        // "S6" alone cannot name either of them.
+        var hard = new ChartBuilder().WithType(ChartType.Single).WithLevel(6).WithSlot(LegacySlot.Hard).Build();
+        var crazy = new ChartBuilder().WithType(ChartType.Single).WithLevel(6).WithSlot(LegacySlot.Crazy).Build();
+        var modern = new ChartBuilder().WithType(ChartType.Single).WithLevel(6).Build();
+
+        Assert.Equal("Hard 6", hard.DifficultyDisplay);
+        Assert.Equal("Crazy 6", crazy.DifficultyDisplay);
+        Assert.Equal("S6", modern.DifficultyDisplay);
+    }
+
     [Theory]
     [InlineData("Crazy", LegacySlot.Crazy)]
     [InlineData("Another Crazy", LegacySlot.AnotherCrazy)]

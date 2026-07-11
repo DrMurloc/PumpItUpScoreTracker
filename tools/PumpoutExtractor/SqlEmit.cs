@@ -57,7 +57,9 @@ public static class SqlEmit
                 }
             }
 
-            if (m.Prod.MinBpm is null && m.Pumpout.BpmMin is not null)
+            // Pumpout stores "unknown" BPM as 0; the site's Bpm value type rejects
+            // non-positive values, so only genuine readings are worth filling.
+            if (m.Prod.MinBpm is null && m.Pumpout.BpmMin is > 0)
             {
                 sql.AppendLine($"-- {Esc(m.Prod.Name)} BPM");
                 sql.AppendLine(
@@ -150,8 +152,10 @@ public static class SqlEmit
             var imageName = new string(name.Where(char.IsLetterOrDigit).ToArray());
             var imagePath = $"https://piuimages.arroweclip.se/songs/{imageName}.png";
             artNeeded.Add($"{imageName}.png <= https://pumpout2020.anyhowstep.com{song.CardPaths.FirstOrDefault() ?? "(no card)"} ({Esc(song.Title)})");
-            var bpmMin = song.BpmMin?.ToString() ?? "NULL";
-            var bpmMax = song.BpmMax?.ToString() ?? "NULL";
+            // Pumpout stores "unknown" BPM as 0, but the site's Bpm value type
+            // (correctly) rejects non-positive values — import unknowns as NULL.
+            var bpmMin = song.BpmMin is > 0 ? song.BpmMin.ToString() : "NULL";
+            var bpmMax = song.BpmMax is > 0 ? song.BpmMax.ToString() : "NULL";
             var artist = song.ArtistDisplay is null ? "NULL" : $"N'{Esc(song.ArtistDisplay)}'";
             sql.AppendLine($"IF NOT EXISTS (SELECT 1 FROM [scores].[Song] WHERE [Id] = '{guid}')");
             sql.AppendLine(
