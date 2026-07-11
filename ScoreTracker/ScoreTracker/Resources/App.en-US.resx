@@ -2726,9 +2726,6 @@
   <data name="{0} / {1} passed" xml:space="preserve">
     <value>{0} / {1} passed</value>
   </data>
-  <data name="Averaging better than" xml:space="preserve">
-    <value>Averaging better than</value>
-  </data>
   <data name="of {0} similar players in this folder" xml:space="preserve">
     <value>of {0} similar players in this folder</value>
   </data>
@@ -2905,5 +2902,14 @@
   </data>
   <data name="Recorded {0} days ago" xml:space="preserve">
     <value>Recorded {0} days ago</value>
+  </data>
+  <data name="Competitive Ranking in Folder" xml:space="preserve">
+    <value>Competitive Ranking in Folder</value>
+  </data>
+  <data name="Folder Passes vs Similar Players" xml:space="preserve">
+    <value>Folder Passes vs Similar Players</value>
+  </data>
+  <data name="You: {0} · similar players average {1}" xml:space="preserve">
+    <value>You: {0} · similar players average {1}</value>
   </data>
 </root>

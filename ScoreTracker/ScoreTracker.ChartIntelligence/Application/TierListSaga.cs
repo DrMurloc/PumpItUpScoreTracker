@@ -3,6 +3,7 @@ using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using ScoreTracker.ChartIntelligence.Domain;
 using MassTransit;
 using MediatR;
+using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
@@ -15,7 +16,8 @@ namespace ScoreTracker.ChartIntelligence.Application;
 internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     IConsumer<ProcessScoresTiersListCommand>,
     IConsumer<ProcessPassTierListCommand>,
-    IRequestHandler<GetMyRelativeTierListQuery, IEnumerable<SongTierListEntry>>
+    IRequestHandler<GetMyRelativeTierListQuery, IEnumerable<SongTierListEntry>>,
+    IRequestHandler<GetFolderCohortStatsQuery, FolderCohortSummaryRecord?>
 {
     private readonly IChartDifficultyRatingRepository _chartRatings;
     private readonly IChartRepository _chartRepository;
@@ -25,12 +27,15 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     private readonly ITierListRepository _tierLists;
     private readonly IChartScoringLevelRepository _scoringLevels;
     private readonly IChartScoreStatsRepository _chartStats;
+    private readonly IFolderCohortStatsRepository _cohortStats;
 
     public TierListSaga(IChartDifficultyRatingRepository chartRatings, IChartRepository chartRepository,
         ITierListRepository tierLists, IScoreReader scores,
         ICurrentUserAccessor currentUser, IPlayerStatsReader playerStats,
-        IChartScoringLevelRepository scoringLevels, IChartScoreStatsRepository chartStats)
+        IChartScoringLevelRepository scoringLevels, IChartScoreStatsRepository chartStats,
+        IFolderCohortStatsRepository cohortStats)
     {
+        _cohortStats = cohortStats;
         _chartStats = chartStats;
         _scoringLevels = scoringLevels;
         _chartRatings = chartRatings;
@@ -127,21 +132,20 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         for (var level = 1; level <= 29; level++)
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
             {
-                var allPhoenixScores = (await _scores.GetScores(mix, chartType, level,
-                        context.CancellationToken))
+                var folderRecords = (await _scores.GetScores(mix, chartType, level,
+                    context.CancellationToken)).ToArray();
+                var allPhoenixScores = folderRecords
                     .Where(s => s.Record.Score != null)
                     .GroupBy(r => r.UserId).ToDictionary(g => g.Key,
                         g => (IDictionary<Guid, PhoenixScore>)g.ToDictionary(p => p.Record.ChartId,
                             p => p.Record.Score!.Value));
-                var userIds = allPhoenixScores.Keys;
-                var stats = new Dictionary<Guid, double>();
-                foreach (var userId in userIds)
-                {
-                    var record = await _playerStats.GetStats(mix, userId, context.CancellationToken);
-                    stats[userId] = level + .5 - (chartType is ChartType.Single
-                        ? record.SinglesCompetitiveLevel
-                        : record.DoublesCompetitiveLevel);
-                }
+                var playerLevels =
+                    (await _playerStats.GetStats(mix, folderRecords.Select(r => r.UserId).Distinct().ToArray(),
+                        context.CancellationToken))
+                    .ToDictionary(s => s.UserId, s => chartType is ChartType.Single
+                        ? s.SinglesCompetitiveLevel
+                        : s.DoublesCompetitiveLevel);
+                var stats = allPhoenixScores.Keys.ToDictionary(id => id, id => level + .5 - playerLevels[id]);
 
                 var weights = stats.ToDictionary(kv => kv.Key.ToString(), kv => Math.Pow(.5, Math.Abs(kv.Value)));
                 var results =
@@ -172,7 +176,39 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
                     .ToArray();
                 if (statEntries.Any())
                     await _chartStats.SaveStats(mix, statEntries, context.CancellationToken);
+
+                // Round 7: folder pass-count histograms per half-level competitive bucket —
+                // powers the "Folder Passes vs Similar Players" strip bar. Everyone with a
+                // record in the folder counts (a broken attempt is 0 passes); read-time
+                // merges of neighboring buckets reproduce the ±0.5 similar-players window.
+                var passBuckets = folderRecords
+                    .GroupBy(r => r.UserId)
+                    .Select(g => (Bucket: (int)Math.Round(playerLevels[g.Key] * 2),
+                        Passes: g.Count(r => !r.Record.IsBroken)))
+                    .GroupBy(p => p.Bucket)
+                    .Select(g => new FolderCohortBucketRecord(g.Key,
+                        g.GroupBy(p => p.Passes).ToDictionary(h => h.Key, h => h.Count())))
+                    .ToArray();
+                if (passBuckets.Any())
+                    await _cohortStats.SaveFolder(mix, chartType, level, passBuckets, context.CancellationToken);
             }
+    }
+
+    public async Task<FolderCohortSummaryRecord?> Handle(GetFolderCohortStatsQuery request,
+        CancellationToken cancellationToken)
+    {
+        var buckets = (await _cohortStats.GetBuckets(request.Mix, request.ChartType, request.Level,
+                cancellationToken))
+            .Where(b => Math.Abs(b.Bucket / 2.0 - request.CompetitiveLevel) <= .5)
+            .ToArray();
+        var players = buckets.Sum(b => b.PassHistogram.Values.Sum());
+        if (players == 0) return null;
+
+        var totalPasses = buckets.Sum(b => b.PassHistogram.Sum(kv => (long)kv.Key * kv.Value));
+        var atOrBelow = buckets.Sum(b => b.PassHistogram.Where(kv => kv.Key <= request.PassCount)
+            .Sum(kv => kv.Value));
+        return new FolderCohortSummaryRecord(players, totalPasses / (double)players,
+            atOrBelow / (double)players);
     }
 
     public async Task<IEnumerable<SongTierListEntry>> Handle(GetMyRelativeTierListQuery request,

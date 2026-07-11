@@ -26,6 +26,7 @@ public static class ChartIntelligenceRegistrationExtensions
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddTransient<IUserTierListRepository, EFUserTierListRepository>();
         services.AddTransient<IChartScoreStatsRepository, EFChartScoreStatsRepository>();
+        services.AddTransient<IFolderCohortStatsRepository, EFFolderCohortStatsRepository>();
         services.AddSingleton<IDbModelContribution, ChartIntelligenceModelContribution>();
         return services;
     }

@@ -71,6 +71,11 @@ public sealed class ChartIntelligenceModelContribution : IDbModelContribution
             .WithMany()
             .HasForeignKey(e => e.ChartId);
 
+        // Folder pass-count histograms per competitive-level bucket (round 7), refreshed
+        // by the daily scores rebuild; read as a tiny keyed range per folder view.
+        modelBuilder.Entity<FolderCohortStatsEntity>().ToTable("FolderCohortStats")
+            .HasKey(e => new { e.MixId, e.ChartType, e.Level, e.Bucket });
+
         modelBuilder.Entity<ChartScoringLevelEntity>().ToTable("ChartScoringLevel");
         modelBuilder.Entity<UserPreferenceRatingEntity>().ToTable("UserPreferenceRating");
         modelBuilder.Entity<ChartPreferenceRatingEntity>().ToTable("ChartPreferenceRating");

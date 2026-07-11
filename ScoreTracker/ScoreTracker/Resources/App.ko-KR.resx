@@ -2607,9 +2607,6 @@
   <data name="{0} / {1} passed" xml:space="preserve">
     <value>{0} / {1} 패스</value>
   </data>
-  <data name="Averaging better than" xml:space="preserve">
-    <value>이 폴더에서 평균 상위</value>
-  </data>
   <data name="of {0} similar players in this folder" xml:space="preserve">
     <value>(유사 플레이어 {0}명 중)</value>
   </data>
@@ -2786,5 +2783,14 @@
   </data>
   <data name="Recorded {0} days ago" xml:space="preserve">
     <value>{0}일 전에 기록됨</value>
+  </data>
+  <data name="Competitive Ranking in Folder" xml:space="preserve">
+    <value>폴더 내 경쟁 랭킹</value>
+  </data>
+  <data name="Folder Passes vs Similar Players" xml:space="preserve">
+    <value>폴더 클리어 수 vs 비슷한 플레이어</value>
+  </data>
+  <data name="You: {0} · similar players average {1}" xml:space="preserve">
+    <value>나: {0} · 비슷한 플레이어 평균: {1}</value>
   </data>
 </root>

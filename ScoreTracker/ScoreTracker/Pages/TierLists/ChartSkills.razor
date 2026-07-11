@@ -4,6 +4,8 @@
 @using ScoreTracker.Web.Enums
 @using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.ChartIntelligence.Contracts.Queries
 @using ScoreTracker.Domain.Services
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
@@ -104,12 +106,30 @@ else
                 <MudText Typo="Typo.caption">@L["{0} / {1} passed", PassedCount, _charts.Count]</MudText>
             </div>
             <LampStrip Lamps="_lamps" Total="_charts.Count"></LampStrip>
+            @* Round 7: cohort standing as labeled bars — fill + hue from the rarity ramp,
+               with the percentage always printed beside it (rule 8). *@
             @if (_competitivePlayerCount > 0 && _finalEntries.Any(e => _scoreRankings.ContainsKey(e.ChartId)))
             {
                 var rating = _finalEntries.Where(e => _scoreRankings.ContainsKey(e.ChartId)).Average(e => _scoreRankings[e.ChartId].Ranking);
-                <MudText Typo="Typo.body2">
-                    @L["Averaging better than"] <span style="@ThemeScales.RarityStyle(rating)">@((100.0 * rating).ToString("N2"))%</span> @L["of {0} similar players in this folder", _competitivePlayerCount]
-                </MudText>
+                <div class="tier-cohort-bar">
+                    <span class="tier-cohort-bar-label">@L["Competitive Ranking in Folder"]</span>
+                    <span class="tier-cohort-bar-meter">
+                        <span class="tier-cohort-bar-fill" style="width:@((100.0 * rating).ToString("0"))%;background:@ThemeScales.CssVar(ThemeScales.BandFor(rating))"></span>
+                    </span>
+                    <span class="tier-cohort-bar-value @ThemeScales.RarityClass(ThemeScales.BandFor(rating))" style="@ThemeScales.RarityStyle(rating)">@((100.0 * rating).ToString("N1"))%</span>
+                    <span class="tier-cohort-bar-note">@L["of {0} similar players in this folder", _competitivePlayerCount]</span>
+                </div>
+            }
+            @if (_cohortSummary != null)
+            {
+                <div class="tier-cohort-bar">
+                    <span class="tier-cohort-bar-label">@L["Folder Passes vs Similar Players"]</span>
+                    <span class="tier-cohort-bar-meter">
+                        <span class="tier-cohort-bar-fill" style="width:@((100.0 * _cohortSummary.PassPercentile).ToString("0"))%;background:@ThemeScales.CssVar(ThemeScales.BandFor(_cohortSummary.PassPercentile))"></span>
+                    </span>
+                    <span class="tier-cohort-bar-value @ThemeScales.RarityClass(ThemeScales.BandFor(_cohortSummary.PassPercentile))" style="@ThemeScales.RarityStyle(_cohortSummary.PassPercentile)">@((100.0 * _cohortSummary.PassPercentile).ToString("N0"))%</span>
+                    <span class="tier-cohort-bar-note">@L["You: {0} · similar players average {1}", PassedCount, _cohortSummary.AveragePasses.ToString("N1")]</span>
+                </div>
             }
             @if (_unpassedTodos.Any())
             {
@@ -544,6 +564,44 @@ else
         display: flex;
         align-items: baseline;
         gap: 8px;
+    }
+
+    .tier-cohort-bar {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 6px 0;
+    }
+
+    .tier-cohort-bar-label {
+        font-size: .8rem;
+        color: var(--mud-palette-text-secondary);
+        min-width: 220px;
+    }
+
+    .tier-cohort-bar-meter {
+        width: 160px;
+        height: 6px;
+        background: var(--mud-palette-lines-default);
+        border-radius: 3px;
+        overflow: hidden;
+        display: inline-block;
+    }
+
+    .tier-cohort-bar-fill {
+        display: block;
+        height: 100%;
+    }
+
+    .tier-cohort-bar-value {
+        font-size: .85rem;
+        font-weight: 600;
+    }
+
+    .tier-cohort-bar-note {
+        font-size: .75rem;
+        color: var(--mud-palette-text-secondary);
     }
 
     @* Section / card / lamp / legend / folder-picker styles live in wwwroot/css/site.css —
@@ -1091,6 +1149,9 @@ else
     private string _tierListType = "Pass";
     private string? _songFilter;
     private int _competitivePlayerCount = 0;
+    private FolderCohortSummaryRecord? _cohortSummary;
+    private double _singlesCompetitive = 1;
+    private double _doublesCompetitive = 1;
     private bool _usePersonalizedData = true;
     private IReadOnlyList<TierGroup> _groups = Array.Empty<TierGroup>();
     private IEnumerable<SongTierListEntry> _finalEntries = Array.Empty<SongTierListEntry>();
@@ -1295,9 +1356,17 @@ else
         var rankingsTask = Mediator.Send(new GetPlayerScoreQualityQuery(_level, _chartType, _currentMix), cancellationToken);
         var crossMixTask = Mediator.Send(new GetCrossMixPassesQuery(_currentMix), cancellationToken);
         var competitiveTask = Mediator.Send(new GetCompetitivePlayersQuery(_chartType, _currentMix), cancellationToken);
+        // Round 7: pass standing among similar players, from the folder's materialized
+        // cohort histograms. CoOp has no cohort data (the rebuild covers S/D only).
+        var cohortTask = _chartType == ChartType.CoOp
+            ? Task.FromResult<FolderCohortSummaryRecord?>(null)
+            : Mediator.Send(new GetFolderCohortStatsQuery(_currentMix, _chartType, _level,
+                _chartType == ChartType.Single ? _singlesCompetitive : _doublesCompetitive, PassedCount),
+                cancellationToken);
         _scoreRankings = await rankingsTask;
         _otherMixPasses = await crossMixTask;
         _competitivePlayerCount = (await competitiveTask).Count();
+        _cohortSummary = await cohortTask;
         cancellationToken.ThrowIfCancellationRequested();
 
         var baseRating = DifficultyLevel.From(_level).BaseRating;
@@ -1615,6 +1684,8 @@ else
 
             _scores = (await scoresTask).ToDictionary(c => c.ChartId);
             var stats = await statsTask;
+            _singlesCompetitive = stats.SinglesCompetitiveLevel;
+            _doublesCompetitive = stats.DoublesCompetitiveLevel;
             if (stats.DoublesCompetitiveLevel > 1)
             {
                 _level = (int)Math.Round(stats.DoublesCompetitiveLevel);
