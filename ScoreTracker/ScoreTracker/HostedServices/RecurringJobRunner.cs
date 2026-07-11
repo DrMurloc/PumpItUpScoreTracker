@@ -1,4 +1,5 @@
 using ScoreTracker.WeeklyChallenge.Contracts.Messages;
+using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using MassTransit;
 using ScoreTracker.EventCompetition.Contracts.Messages;
@@ -6,6 +7,7 @@ using ScoreTracker.Identity.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.ScoreLedger.Contracts.Messages;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.Web.Services.Theming;
 
 namespace ScoreTracker.Web.HostedServices;
 
@@ -47,4 +49,16 @@ public sealed class RecurringJobRunner
 
     public Task PublishProcessAccountPurges() =>
         _bus.Publish(new ProcessAccountPurgesCommand());
+
+    public Task PublishRefreshFolderShareCards() =>
+        _bus.Publish(new RefreshFolderShareCardsCommand(ShareTheme(MixEnum.Phoenix)));
+
+    // The Web layer resolves presentation (MixThemes is the single palette source);
+    // the vertical's share-card saga stays palette-blind.
+    private static FolderShareCardTheme ShareTheme(MixEnum mix)
+    {
+        var palette = MixThemes.PaletteFor(mix);
+        return new FolderShareCardTheme(palette.Background, palette.Surface, palette.Ink, palette.InkMuted,
+            palette.Primary, Enum.GetValues<TierListCategory>().ToDictionary(c => c, MixThemes.DifficultyHex));
+    }
 }

@@ -320,7 +320,8 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     ("start-phoenix2-leaderboard-import", r => r.PublishStartPhoenix2LeaderboardImport(),  "30 16 * * 0"), // Sundays 16:30 UTC
     ("try-schedule-mom",                 r => r.PublishTryScheduleMoM(),                  "0 11 * * *"), // 06:00 ET
     ("flush-overdue-score-batches",      r => r.PublishFlushOverdueScoreBatches(),        "*/5 * * * *"), // every 5 min — safety net for stuck batches
-    ("process-account-purges",           r => r.PublishProcessAccountPurges(),            "30 11 * * *") // 06:30 ET — merged-account grace-window purges
+    ("process-account-purges",           r => r.PublishProcessAccountPurges(),            "30 11 * * *"), // 06:30 ET — merged-account grace-window purges
+    ("refresh-folder-share-cards",       r => r.PublishRefreshFolderShareCards(),         "30 10 * * *") // 05:30 ET — og:images, right after the tier-list rebuilds
 };
 if (builder.Configuration["PreventRecurringJobs"] == "true")
 {
