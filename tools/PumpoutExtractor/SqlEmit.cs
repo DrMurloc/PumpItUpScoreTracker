@@ -150,6 +150,7 @@ public static class SqlEmit
             };
             if (name.Length > MaxNameLength) { report.Add($"SKIPPED song (name too long): {name}"); continue; }
             var imageName = new string(name.Where(char.IsLetterOrDigit).ToArray());
+            if (imageName.Length == 0) imageName = $"song{songId}"; // "!" sanitizes to nothing
             var imagePath = $"https://piuimages.arroweclip.se/songs/{imageName}.png";
             artNeeded.Add($"{imageName}.png <= https://pumpout2020.anyhowstep.com{song.CardPaths.FirstOrDefault() ?? "(no card)"} ({Esc(song.Title)})");
             // Pumpout stores "unknown" BPM as 0, but the site's Bpm value type
