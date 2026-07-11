@@ -2918,4 +2918,7 @@
   <data name="Folder Stats" xml:space="preserve">
     <value>Folder Stats</value>
   </data>
+  <data name="Advanced" xml:space="preserve">
+    <value>Advanced</value>
+  </data>
 </root>

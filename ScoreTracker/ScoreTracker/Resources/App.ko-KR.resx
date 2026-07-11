@@ -2799,4 +2799,7 @@
   <data name="Folder Stats" xml:space="preserve">
     <value>폴더 통계</value>
   </data>
+  <data name="Advanced" xml:space="preserve">
+    <value>고급</value>
+  </data>
 </root>

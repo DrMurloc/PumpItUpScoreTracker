@@ -2870,4 +2870,7 @@
   <data name="Folder Stats" xml:space="preserve">
     <value>Estatísticas da pasta</value>
   </data>
+  <data name="Advanced" xml:space="preserve">
+    <value>Avançado</value>
+  </data>
 </root>

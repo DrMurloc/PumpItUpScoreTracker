@@ -2841,4 +2841,7 @@
   <data name="Folder Stats" xml:space="preserve">
     <value>Mrglfolder Stats</value>
   </data>
+  <data name="Advanced" xml:space="preserve">
+    <value>Advmrglanced</value>
+  </data>
 </root>

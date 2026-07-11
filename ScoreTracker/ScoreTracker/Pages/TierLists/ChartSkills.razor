@@ -50,17 +50,43 @@
 }
 else
 {
+    @* Round 9: the lens controls render in the desktop content bar AND the compact
+       Advanced drawer — one fragment so they can't drift. *@
+    RenderFragment lensControls = @<text>
+        <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
+            <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
+            <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
+            <MudSelectItem T="string" Value="@("Popularity")">@L["Popularity"]</MudSelectItem>
+            @if (ChabalaAvailable)
+            {
+                <MudSelectItem T="string" Value="@("Chabala")">Chabala</MudSelectItem>
+            }
+            <MudSelectItem T="string" Value="@("PG")">PG</MudSelectItem>
+        </MudSelect>
+        @if (IsMyProgress)
+        {
+            <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Grouped by"]" Value="_groupBy" ValueChanged="ChangeGrouping">
+                @if (CurrentUser.IsLoggedIn)
+                {
+                    <MudSelectItem T="string" Value="@("Score")">@L["Score"]</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("Age")">@L["Age"]</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("Score Ranking")">@L["Score Ranking"]</MudSelectItem>
+                }
+                <MudSelectItem T="string" Value="@("Scoring Level")">@L["Scoring Level"]</MudSelectItem>
+            </MudSelect>
+        }
+    </text>;
     <div class="tier-page">
-    @* 1 — sticky toolbar carries what changes the DATA you're looking at (folder →
-       view → personalized) plus the page's one ACTION, Download, right-aligned
-       (round 7). Presentation controls live in the content bar above the list.
-       Round 8: two explicit rows below 960px (display:contents flattens them on
-       desktop); Download hands off to the bottom action bar and Folder Stats
-       becomes the drawer trigger. *@
+    @* 1 — sticky toolbar. Desktop: one line — folder → view → personalized → Download.
+       Round 9 compact (<960): one clean row of Folder → view → Advanced; the Advanced
+       drawer holds Personalized, Ranked-by, Grouped-by, Download, and the whole filter
+       panel (replacing round 8's bottom action bar, which fought the shell's bottom
+       nav). Below 600 the Advanced button slots before the view group and everything
+       centers, so the wrap is deliberate instead of ragged. *@
     <div class="tier-toolbar">
         <div class="tier-toolbar-row">
             <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></FolderPicker>
-            <MudButtonGroup OverrideStyles="false">
+            <MudButtonGroup OverrideStyles="false" Class="tier-views-group">
                 <MudButton Variant="@(_groupBy == "Difficulty" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Difficulty"))">@L["Tier List"]</MudButton>
                 <MudButton Variant="@(IsMyProgress ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping(CurrentUser.IsLoggedIn ? "Score" : "Scoring Level"))">@L["My Progress"]</MudButton>
                 @if (_currentMix.HasSkillData())
@@ -68,19 +94,16 @@ else
                     <MudButton Variant="@(IsSkillView ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Skill"))">@L["By Skill"]</MudButton>
                 }
             </MudButtonGroup>
+            <MudButton Class="tier-compact-only tier-advanced-btn" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.Tune" OnClick="() => _advancedOpen = true">@L["Advanced"]</MudButton>
         </div>
-        <div class="tier-toolbar-row">
+        <div class="tier-toolbar-row tier-desktop-only">
             @if (CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score")
             {
                 <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
             }
             <MudSpacer></MudSpacer>
-            @if (CurrentUser.IsLoggedIn)
-            {
-                <MudButton Class="tier-compact-only" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small"
-                           StartIcon="@Icons.Material.Filled.QueryStats" OnClick="() => _statsOpen = true">@L["Folder Stats"]</MudButton>
-            }
-            <MudButton Class="tier-desktop-only" OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined"
+            <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined"
                        StartIcon="@(_isBuildingImage ? null : Icons.Material.Filled.FileDownload)"
                        Disabled="_isBuildingImage || _isLoading">
                 @if (_isBuildingImage)
@@ -206,28 +229,16 @@ else
     @* 2 — content bar: how the list PRESENTS (lens ordering, grouping, density,
        Download, Filters). Sits with the list it affects, not in the sticky toolbar. *@
     <div class="tier-content-bar">
-        <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
-            <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
-            <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
-            <MudSelectItem T="string" Value="@("Popularity")">@L["Popularity"]</MudSelectItem>
-            @if (ChabalaAvailable)
-            {
-                <MudSelectItem T="string" Value="@("Chabala")">Chabala</MudSelectItem>
-            }
-            <MudSelectItem T="string" Value="@("PG")">PG</MudSelectItem>
-        </MudSelect>
-        @if (IsMyProgress)
+        @if (CurrentUser.IsLoggedIn)
         {
-            <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Grouped by"]" Value="_groupBy" ValueChanged="ChangeGrouping">
-                @if (CurrentUser.IsLoggedIn)
-                {
-                    <MudSelectItem T="string" Value="@("Score")">@L["Score"]</MudSelectItem>
-                    <MudSelectItem T="string" Value="@("Age")">@L["Age"]</MudSelectItem>
-                    <MudSelectItem T="string" Value="@("Score Ranking")">@L["Score Ranking"]</MudSelectItem>
-                }
-                <MudSelectItem T="string" Value="@("Scoring Level")">@L["Scoring Level"]</MudSelectItem>
-            </MudSelect>
+            @* Round 9: on compact, Folder Stats takes the Ranked-by slot (the lens
+               controls live in the Advanced drawer there). *@
+            <MudButton Class="tier-compact-only" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.QueryStats" OnClick="() => _statsOpen = true">@L["Folder Stats"]</MudButton>
         }
+        <div class="tier-flat tier-desktop-only">
+            @lensControls
+        </div>
         <MudSpacer></MudSpacer>
         <MudButtonGroup OverrideStyles="false">
             <MudTooltip Text=@L["Comfortable"]>
@@ -246,12 +257,14 @@ else
                                OnClick="() => SetDensity(UiDensity.Table)" aria-label="@L["Table"]"></MudIconButton>
             </MudTooltip>
         </MudButtonGroup>
-        <MudTooltip Text=@L["Filters and Columns"]>
-            <MudBadge Content="ActiveFilterCount" Visible="HasActiveFilters" Color="Color.Primary" Overlap="true">
-                <MudIconButton Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary" Variant="Variant.Outlined"
-                               OnClick="() => _filtersOpen = true" aria-label="@L["Filters and Columns"]"></MudIconButton>
-            </MudBadge>
-        </MudTooltip>
+        <div class="tier-flat tier-desktop-only">
+            <MudTooltip Text=@L["Filters and Columns"]>
+                <MudBadge Content="ActiveFilterCount" Visible="HasActiveFilters" Color="Color.Primary" Overlap="true">
+                    <MudIconButton Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary" Variant="Variant.Outlined"
+                                   OnClick="() => _filtersOpen = true" aria-label="@L["Filters and Columns"]"></MudIconButton>
+                </MudBadge>
+            </MudTooltip>
+        </div>
     </div>
     @* Active-filter chips: labeled so it's obvious what the chips are (round 6). *@
     @if (HasActiveFilters)
@@ -444,11 +457,12 @@ else
             </TierSection>
         }
     }
-    @* Filters drawer — the full panel (rule 6). *@
-    <MudDrawer @bind-Open="_filtersOpen" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="320px">
-        <div class="tier-filter-drawer">
-            <MudText Typo="Typo.h6">@L["Filters"]</MudText>
-            <MudAutocomplete T="string" Label=@L["Song Name"] AdornmentIcon="@Icons.Material.Filled.Search" @bind-Value="_songFilter" SearchFunc="(s,c)=>FilterSongName(s)" CoerceText="false" CoerceValue="true"></MudAutocomplete>
+    @* Filters drawer — the full panel (rule 6). Round 9: the panel is one shared
+       fragment so the desktop Filters drawer and the compact Advanced drawer can't
+       drift apart. *@
+    @{
+        RenderFragment filterPanel = @<text>
+        <MudAutocomplete T="string" Label=@L["Song Name"] AdornmentIcon="@Icons.Material.Filled.Search" @bind-Value="_songFilter" SearchFunc="(s,c)=>FilterSongName(s)" CoerceText="false" CoerceValue="true"></MudAutocomplete>
             <MudSelect T="SongType" Clearable="true" MultiSelection="true" SelectedValues="_settings.SongTypes" SelectedValuesChanged="SetSongTypeFilter" Label=@L["Song Type"]>
                 @foreach (var type in Enum.GetValues<SongType>())
                 {
@@ -515,17 +529,43 @@ else
                 <MudSwitch T="bool" Color="Color.Primary" Value="_showAge" ValueChanged="SetShowAge"
                            Disabled="_density == UiDensity.Compact" Label=@L["Show Age"]></MudSwitch>
             }
+        </text>;
+    }
+    <MudDrawer @bind-Open="_filtersOpen" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="320px">
+        <div class="tier-filter-drawer">
+            <MudText Typo="Typo.h6">@L["Filters"]</MudText>
+            @filterPanel
         </div>
     </MudDrawer>
-    @* Rule 10: at phone widths the primary actions live in the bottom third. *@
-    <div class="tier-bottom-bar">
-        <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></FolderPicker>
-        <MudSpacer></MudSpacer>
-        <MudIconButton Icon="@Icons.Material.Filled.FileDownload" Color="Color.Primary" OnClick="DownloadImage"
-                       Disabled="_isBuildingImage || _isLoading" aria-label="@L["Download"]"></MudIconButton>
-        <MudIconButton Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary"
-                       OnClick="() => _filtersOpen = true" aria-label="@L["Filters"]"></MudIconButton>
-    </div>
+    @* Round 9: the compact Advanced drawer replaces the bottom action bar (which
+       stacked awkwardly on the shell's bottom nav). Everything that isn't
+       folder / view / Folder Stats lives here below 960. *@
+    <MudDrawer @bind-Open="_advancedOpen" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="320px">
+        <div class="tier-filter-drawer">
+            <MudText Typo="Typo.h6">@L["Advanced"]</MudText>
+            @if (CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score")
+            {
+                <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
+            }
+            @lensControls
+            <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined"
+                       StartIcon="@(_isBuildingImage ? null : Icons.Material.Filled.FileDownload)"
+                       Disabled="_isBuildingImage || _isLoading">
+                @if (_isBuildingImage)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2"></MudProgressCircular>
+                    @L["Generating"]
+                }
+                else
+                {
+                    @L["Download"]
+                }
+            </MudButton>
+            <MudDivider></MudDivider>
+            <MudText Typo="Typo.subtitle1">@L["Filters and Columns"]</MudText>
+            @filterPanel
+        </div>
+    </MudDrawer>
     <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"
                         Score="_detailsChart != null && _scores.TryGetValue(_detailsChart.Id, out var detailsScore) ? detailsScore : null"
                         Ranking="_detailsChart != null && _scoreRankings.TryGetValue(_detailsChart.Id, out var detailsRank) ? detailsRank : null"
@@ -561,8 +601,10 @@ else
         align-items: center;
     }
 
-    /* Desktop: the rows flatten away so the toolbar reads as one line. */
-    .tier-toolbar-row {
+    /* Desktop: the rows (and the tier-flat wrappers around shared fragments)
+       flatten away so the toolbar and content bar read as single lines. */
+    .tier-toolbar-row,
+    .tier-flat {
         display: contents;
     }
 
@@ -590,8 +632,28 @@ else
             gap: 8px;
         }
 
-        .tier-toolbar-row + .tier-toolbar-row {
-            margin-top: 8px;
+        /* The desktop-only second row (Personalized + Download) hides wholesale —
+           the Advanced drawer carries both on compact. Two classes beat the
+           display:flex row rule above. */
+        .tier-toolbar-row.tier-desktop-only {
+            display: none;
+        }
+    }
+
+    /* Round 9: under 600px the Advanced button slots between the folder and the view
+       group and the row centers, so the wrap lands as folder+Advanced / views instead
+       of a ragged break. */
+    @@media (max-width: 599.98px) {
+        .tier-toolbar-row {
+            justify-content: center;
+        }
+
+        .tier-advanced-btn {
+            order: 1;
+        }
+
+        .tier-views-group {
+            order: 2;
         }
     }
 
@@ -730,26 +792,6 @@ else
 
     .tier-row-other-mix td:first-child {
         border-left: 3px dashed var(--mud-palette-success);
-    }
-
-    .tier-bottom-bar {
-        display: none;
-    }
-
-    /* Round 8: the action bar covers the whole compact tier (was phones-only) so
-       flip-phone and tablet widths get thumb-reach Download/Filters too. */
-    @@media (max-width: 959.98px) {
-        .tier-bottom-bar {
-            display: flex;
-            position: sticky;
-            bottom: 0;
-            z-index: 20;
-            gap: 8px;
-            align-items: center;
-            padding: 8px;
-            background: var(--mud-palette-surface);
-            border-top: 1px solid var(--mud-palette-lines-default);
-        }
     }
 
     .tier-list-cta {
@@ -1229,6 +1271,7 @@ else
     private double _singlesCompetitive = 1;
     private double _doublesCompetitive = 1;
     private bool _statsOpen = false;
+    private bool _advancedOpen = false;
     private bool _usePersonalizedData = true;
     private IReadOnlyList<TierGroup> _groups = Array.Empty<TierGroup>();
     private IEnumerable<SongTierListEntry> _finalEntries = Array.Empty<SongTierListEntry>();

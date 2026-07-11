@@ -2919,4 +2919,7 @@
   <data name="Folder Stats" xml:space="preserve">
     <value>フォルダー統計</value>
   </data>
+  <data name="Advanced" xml:space="preserve">
+    <value>詳細設定</value>
+  </data>
 </root>

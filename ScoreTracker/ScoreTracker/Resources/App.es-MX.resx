@@ -2798,4 +2798,7 @@
   <data name="Folder Stats" xml:space="preserve">
     <value>Estadísticas de la carpeta</value>
   </data>
+  <data name="Advanced" xml:space="preserve">
+    <value>Avanzado</value>
+  </data>
 </root>
