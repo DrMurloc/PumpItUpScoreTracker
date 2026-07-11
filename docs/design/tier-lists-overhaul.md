@@ -126,17 +126,20 @@ One flag set, resolved per `ListMix`:
 
 Skill automation is out of scope for the overhaul itself; Phoenix 1 skills stay read-only ("leave something behind"). Research findings for the follow-on project:
 
-### 8a. Skill automation research (2026-07-11, piucenter.com)
+### 8a. Skill automation: piucenter.com integration (2026-07-11)
 
-piucenter's `/skill` pages are generated from a **per-chart feature matrix** (~35 numeric columns: Run/Drill/Jack/Footswitch/Bracket frequencies, five twist-angle grades, travel distance, irregular rhythm, hands, etc.), computed by an open-source pipeline ([maxwshen/piu-analysis](https://github.com/maxwshen/piu-analysis)) that parses community `.ssc` simfiles and annotates limb placement (author-estimated 80–90% accurate). Key facts that reshape the plan:
+piucenter's `/skill` pages are generated from a **per-chart feature matrix** (~35 numeric columns: Run/Drill/Jack/Footswitch/Bracket frequencies, five twist-angle grades, travel distance, irregular rhythm, hands, etc.), computed by a pipeline ([maxwshen/piu-analysis](https://github.com/maxwshen/piu-analysis)) that parses stepcharts and annotates limb placement (author-estimated 80–90% accurate). The raw matrix is strictly richer than our boolean tags — frequencies with tunable thresholds, and the raw material for "you're weak at brackets" analysis.
 
-- **The dataset is frozen at August 2021** (XX era). The site is a dormant Heroku app serving CSVs from a private S3 bucket; the 2023 repo activity is Dependabot only. There is nothing to ingest *nightly* — piucenter is a **one-time bootstrap**, not a feed. Coverage: XX-and-earlier charts only (most carry into Phoenix unchanged; Phoenix-new songs 2023→ are absent, and the gap grows).
-- **Neither repo has a license** — data reuse needs the author's (maxwshen) blessing regardless of path. First step is a DM, which may also yield `features.csv` directly and skip scraping entirely. Scraping the site is the weak fallback: `/skill/<name>` pages expose only top-20-per-level chart lists, not the frequencies.
-- **The sustainable path is running the pipeline ourselves**: fork piu-analysis, feed it community simfile packs per release (eventually Phoenix 2), emit the feature matrix on a schedule. That upgrades our skill system from hand-set boolean tags to per-chart skill *frequencies* with tunable thresholds — and is what makes skills first-class again.
-- **Name mapping**: their unique key is `"<Song> - <Artist> <S|D><level> <variant>"` (e.g. `Super Fantasy - SHK S16 arcade`) — parseable into (song, artist, type, level, variant) and matched against Catalog with normalization plus an admin-reviewed alias table for the long tail, exactly the "song name mapping as time goes on" expectation.
+**Status (owner knowledge, 2026-07-11 — the public GitHub lags the live project):** piucenter is **active** — data covers through the latest Phoenix 1 patch, the community Discord was active as of May 2026, and **aesthete** currently maintains it. The owner has an existing, warm integration conversation with the maintainers — backlogged, not blocked.
+
+- **Plan**: revive that conversation and agree a **stable export** (features file or small endpoint) plus an update cadence — realistically per-game-patch, consumed by a recurring Hangfire job with a watermark check (no scraping, no heavy nightly pulls).
+- **Attribution**: PIU Center gets a visible credit link wherever its data renders — the By-Skill view header and the skills row of the details dialog ("Skill data: PIU Center, maintained by aesthete").
+- **Name mapping**: their unique key is `"<Song> - <Artist> <S|D><level> <variant>"` (e.g. `Super Fantasy - SHK S16 arcade`) — parseable into (song, artist, type, level, variant) and matched against Catalog with normalization plus an admin-reviewed alias table for the long tail.
+- **Phoenix 2**: expectation is that active downstream usage encourages upstream P2 coverage; the per-mix skills capability flag simply flips on when their data exists for a mix.
+- **Fallback only**: forking piu-analysis and managing simfiles/runs ourselves is explicitly *not* the plan while piucenter is maintained — it's the contingency if the project goes dormant.
 - **Chabala follow-on**: once skills are automated, Chabala ingestion becomes a small admin tool — AI-extract a tier list from the PNG he posts to Google Drive (jacket-crop matching against our jacket art), proposed → admin-confirmed. Separate project, unblocked by this one.
 
-Suggested sequence: (1) DM maxwshen for blessing + `features.csv`; (2) one-time import behind the existing skills model for P1; (3) fork the pipeline for continuing coverage; (4) Chabala PNG extractor.
+Suggested sequence: (1) revive the integration conversation with aesthete; (2) agree export format + cadence; (3) recurring ingestion job + alias review queue; (4) P1 skills flip to ingested data with the credit link; (5) P2 when upstream covers it; (6) Chabala PNG extractor.
 
 ## 9. Localization (rule 7)
 
@@ -177,5 +180,5 @@ Folder Level progression (own doc) · skill-tagging automation · UGC comments (
 All three original questions were resolved 2026-07-11 (toolbar + per-page density; By-Skill view stays for P1; QR approved — see the round-2 feedback note in §2). Remaining follow-ups, none blocking implementation:
 
 1. Colorblind-simulator pass on the dashed-blue / dashed-green border pair before ship (rule 8).
-2. DM maxwshen re: piucenter data blessing (§8a) — gates the skill-automation project, not the overhaul.
+2. Revive the backlogged piucenter integration conversation (aesthete) and agree an export format (§8a) — gates the skill-automation project, not the overhaul.
 3. Folder Level workshop ([folder-level-progression.md](folder-level-progression.md)).
