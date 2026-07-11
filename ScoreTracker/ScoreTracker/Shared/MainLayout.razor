@@ -357,10 +357,17 @@
     </MudHidden>
     <MudMainContent>
         <MudContainer>
-            @if (LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath))
+            @if (!_mixLoaded)
             {
-                @* Pre-XX mixes only reach pages validated for them (LegacyMixGate);
-                   everything else shows this until it gets a field-test pass. *@
+                @* Body held until the selected mix is known: rendering it against the
+                   default let gated pages start their (crashing) loads before the gate
+                   could evaluate — the WhatShouldIPlay race from field-test round 2. *@
+                <MudProgressLinear Indeterminate="true" Color="Color.Primary"></MudProgressLinear>
+            }
+            else if (LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath))
+            {
+                @* One render frame at most — RedirectIfGated is already navigating to
+                   /TierLists. The panel is the backstop, not the destination. *@
                 <div class="tier-list-cta">
                     <MudIcon Icon="@Icons.Material.Filled.Construction"></MudIcon>
                     <MudText Typo="Typo.h5">@L["This page isn't ready for older mixes yet"]</MudText>
@@ -434,7 +441,21 @@
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         _showMore = false;
+        RedirectIfGated();
         InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    ///     Gated routes soft-redirect to the tier lists page (the one destination every
+    ///     mix can render) instead of loading — pages that predate legacy mixes throw
+    ///     on them, so they must never begin initializing (docs/design/legacy-mixes.md).
+    /// </summary>
+    private bool RedirectIfGated()
+    {
+        if (!_mixLoaded) return false;
+        if (!LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath)) return false;
+        NavManager.NavigateTo("/TierLists");
+        return true;
     }
 
     public void Dispose()
@@ -448,6 +469,8 @@
     private const string RecapPopupKey = "MainLayout__PhoenixRecapPopupShown";
     public static readonly DateTimeOffset _cutoff = new DateTimeOffset(2024, 10, 15, 0, 0, 0, TimeSpan.FromHours(-5));
     private MixEnum _currentMix = MixEnum.Phoenix;
+    // The body must not render until the real selection is loaded (see the gate above).
+    private bool _mixLoaded;
     // Pre-XX mixes: nav only offers destinations LegacyMixGate lets through.
     private bool _gatedMix => LegacyMixGate.IsGatedMix(_currentMix);
     // Theme resolution: /Account override → current mix. Defaults cover the first render;
@@ -468,6 +491,12 @@
         _userId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null;
         // Mix first: the displayed rating follows the viewer's current mix.
         _currentMix = await UiSettings.GetSelectedMix();
+        // Only now can the gate evaluate — the body is held until this point, because
+        // rendering it with the default mix let gated pages begin their crashing loads.
+        // No early return: the layout persists across the soft redirect, so its own
+        // init (theme, events, live updates) must still complete.
+        _mixLoaded = true;
+        RedirectIfGated();
         _themeMix = MixThemes.ResolveThemeMix(
             await UiSettings.GetSetting(MixThemes.OverrideSettingKey), _currentMix);
         _theme = MixThemes.ThemeFor(_themeMix);

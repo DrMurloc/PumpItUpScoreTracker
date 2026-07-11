@@ -97,7 +97,13 @@ else
        centers, so the wrap is deliberate instead of ragged. *@
     <div class="tier-toolbar">
         <div class="tier-toolbar-row">
-            <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></FolderPicker>
+            @if (!IsLegacy)
+            {
+                @* Legacy folder navigation is a future-session problem (owner call):
+                   old catalogs have era-scaled sparse folders the picker doesn't model
+                   yet, so legacy mixes land on their fullest folder and stay there. *@
+                <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></FolderPicker>
+            }
             <MudButtonGroup OverrideStyles="false" Class="tier-views-group">
                 <MudButton Variant="@(_groupBy == "Difficulty" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Difficulty"))">@L["Tier List"]</MudButton>
                 <MudButton Variant="@(IsMyProgress ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping(CurrentUser.IsLoggedIn ? "Score" : "Scoring Level"))">@L["My Progress"]</MudButton>
