@@ -118,7 +118,7 @@ The machine-enforceable subset of [docs/UX-GUIDELINES.md](docs/UX-GUIDELINES.md)
 - **Theme resolution**: `/Account` override → selected mix → Phoenix; dark-only (both Mud palettes deliberately identical). `MixThemes` is the single source: it builds the `MudTheme` and emits the CSS custom properties.
 - **Two semantic ramps, fixed meaning, per-mix hues**: rarity (grey → silver → emerald → gold → sapphire → prism; never red; glow classes carry the monotonic ordering) and difficulty (`TierListCategory` green→red). Consumers call `ThemeScales.RarityStyle/BandFor/DifficultyColor/PlateColor` — never re-implement band cutoffs.
 - **One concept, one component**: `DifficultyBubble`, `LetterGradeIcon`, `ScoreBreakdown`, `UserLabel`. New visual concept = new shared component in `Components/`.
-- **Density**: `Universal__Density` UiSettings key is reserved for the Comfortable/Compact/Table user preference (lands with the tier-list overhaul). Do not invent per-page density mechanisms.
+- **Density**: the Comfortable/Compact/Table preference persists **per page** via `Density__<Page>` UiSettings keys (landed with the tier-list overhaul; `Universal__Density` was retired unshipped). The three sanctioned modes are fixed — never invent a fourth.
 - **Localization**: every UI string goes through `L[…]`; new keys land in **all** locales in the same pass, following each `docs/LOCALIZATION-<locale>.md` glossary (Mix: ko `시리즈`, ja `バージョン`, es/pt `versión`/`versão`, fr/it `Mix`).
 
 ## Test conventions

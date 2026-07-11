@@ -2684,4 +2684,207 @@
   <data name="Tiers" xml:space="preserve">
     <value>ティア</value>
   </data>
+  <!-- Tier-lists overhaul (PR #135)。"Why Don't You Get Up and Dance, Man?" は
+       ゲーム内ミームのため全ロケール共通・翻訳しない。 -->
+  <data name="Ranked by" xml:space="preserve">
+    <value>ランキング基準</value>
+  </data>
+  <data name="Pass Difficulty" xml:space="preserve">
+    <value>パス難易度</value>
+  </data>
+  <data name="Score Difficulty" xml:space="preserve">
+    <value>スコア難易度</value>
+  </data>
+  <data name="Personalized" xml:space="preserve">
+    <value>パーソナライズ</value>
+  </data>
+  <data name="Personalized for {0}" xml:space="preserve">
+    <value>{0}向けにパーソナライズ</value>
+  </data>
+  <data name="Tier List" xml:space="preserve">
+    <value>ティアリスト</value>
+  </data>
+  <data name="By Skill" xml:space="preserve">
+    <value>スキル別</value>
+  </data>
+  <data name="Grouped by" xml:space="preserve">
+    <value>グループ化</value>
+  </data>
+  <data name="Download" xml:space="preserve">
+    <value>ダウンロード</value>
+  </data>
+  <data name="Comfortable" xml:space="preserve">
+    <value>標準</value>
+  </data>
+  <data name="Compact" xml:space="preserve">
+    <value>コンパクト</value>
+  </data>
+  <data name="Table" xml:space="preserve">
+    <value>テーブル</value>
+  </data>
+  <data name="Tier lists for XX and older coming soon" xml:space="preserve">
+    <value>XX以前のバージョンのティアリストは近日公開</value>
+  </data>
+  <data name="Folder Progress" xml:space="preserve">
+    <value>フォルダー進捗</value>
+  </data>
+  <data name="{0} / {1} passed" xml:space="preserve">
+    <value>{0} / {1} パス</value>
+  </data>
+  <data name="Averaging better than" xml:space="preserve">
+    <value>このフォルダーでの平均は上位</value>
+  </data>
+  <data name="of {0} similar players in this folder" xml:space="preserve">
+    <value>（類似プレイヤー{0}人中）</value>
+  </data>
+  <data name="Import your scores to light this folder up" xml:space="preserve">
+    <value>スコアをインポートしてこのフォルダーを輝かせよう</value>
+  </data>
+  <data name="Original Chabala Tier List" xml:space="preserve">
+    <value>Chabala氏のオリジナルティアリスト</value>
+  </data>
+  <data name="Score Ranking: What percent of players of comparable (+/- .5 competitive level) your score is on a chart." xml:space="preserve">
+    <value>Score Ranking：同レベル帯（±0.5）のプレイヤーの中であなたのスコアが上回る割合です。</value>
+  </data>
+  <data name="No charts match your filters" xml:space="preserve">
+    <value>フィルターに一致するチャートがありません</value>
+  </data>
+  <data name="Clear Filters" xml:space="preserve">
+    <value>フィルターをクリア</value>
+  </data>
+  <data name="{0} / {1} cleared" xml:space="preserve">
+    <value>{0} / {1} クリア</value>
+  </data>
+  <data name="Skill data: PIU Center — maintained by aesthete" xml:space="preserve">
+    <value>スキルデータ：PIU Center — 管理者 aesthete</value>
+  </data>
+  <data name="Not Tagged" xml:space="preserve">
+    <value>タグなし</value>
+  </data>
+  <data name="Display" xml:space="preserve">
+    <value>表示</value>
+  </data>
+  <data name="Better Than" xml:space="preserve">
+    <value>上位</value>
+  </data>
+  <data name="Previous Folder" xml:space="preserve">
+    <value>前のフォルダー</value>
+  </data>
+  <data name="Next Folder" xml:space="preserve">
+    <value>次のフォルダー</value>
+  </data>
+  <data name="Details" xml:space="preserve">
+    <value>詳細</value>
+  </data>
+  <data name="Passed in another mix" xml:space="preserve">
+    <value>別バージョンでパス済み</value>
+  </data>
+  <data name="Remove from ToDo List" xml:space="preserve">
+    <value>ToDoリストから削除</value>
+  </data>
+  <data name="Add to ToDo List" xml:space="preserve">
+    <value>ToDoリストに追加</value>
+  </data>
+  <data name="On ToDo List" xml:space="preserve">
+    <value>ToDoリスト登録済み</value>
+  </data>
+  <data name="Your journey — all mixes" xml:space="preserve">
+    <value>あなたの記録 — 全バージョン</value>
+  </data>
+  <data name="Full score journey" xml:space="preserve">
+    <value>スコア履歴をすべて見る</value>
+  </data>
+  <data name="Record Score" xml:space="preserve">
+    <value>スコアを記録</value>
+  </data>
+  <data name="View full chart on PIU Center" xml:space="preserve">
+    <value>PIU Centerでチャート全体を見る</value>
+  </data>
+  <data name="Skill data: PIU Center" xml:space="preserve">
+    <value>スキルデータ：PIU Center</value>
+  </data>
+  <data name="Amazing" xml:space="preserve">
+    <value>素晴らしい</value>
+  </data>
+  <data name="Very Good" xml:space="preserve">
+    <value>とても良い</value>
+  </data>
+  <data name="Good" xml:space="preserve">
+    <value>良い</value>
+  </data>
+  <data name="Low" xml:space="preserve">
+    <value>低い</value>
+  </data>
+  <data name="Very Low" xml:space="preserve">
+    <value>とても低い</value>
+  </data>
+  <data name="Why Don't You Get Up and Dance, Man?" xml:space="preserve">
+    <value>Why Don't You Get Up and Dance, Man?</value>
+  </data>
+  <data name="Not Recorded" xml:space="preserve">
+    <value>未記録</value>
+  </data>
+  <data name="Ancient" xml:space="preserve">
+    <value>大昔</value>
+  </data>
+  <data name="Very Old" xml:space="preserve">
+    <value>かなり古い</value>
+  </data>
+  <data name="Old" xml:space="preserve">
+    <value>古い</value>
+  </data>
+  <data name="New" xml:space="preserve">
+    <value>新しい</value>
+  </data>
+  <data name="Very New" xml:space="preserve">
+    <value>かなり新しい</value>
+  </data>
+  <data name="Most Recent" xml:space="preserve">
+    <value>最新</value>
+  </data>
+  <data name="Ultra Popular" xml:space="preserve">
+    <value>超人気</value>
+  </data>
+  <data name="Very Popular" xml:space="preserve">
+    <value>大人気</value>
+  </data>
+  <data name="Popular" xml:space="preserve">
+    <value>人気</value>
+  </data>
+  <data name="Unpopular" xml:space="preserve">
+    <value>不人気</value>
+  </data>
+  <data name="Very Unpopular" xml:space="preserve">
+    <value>かなり不人気</value>
+  </data>
+  <data name="Ultra Unpopular" xml:space="preserve">
+    <value>超不人気</value>
+  </data>
+  <data name="Last Place" xml:space="preserve">
+    <value>最下位</value>
+  </data>
+  <data name="0 -> 10%" xml:space="preserve">
+    <value>0 -> 10%</value>
+  </data>
+  <data name="10% -> 25%" xml:space="preserve">
+    <value>10% -> 25%</value>
+  </data>
+  <data name="25% -> 50%" xml:space="preserve">
+    <value>25% -> 50%</value>
+  </data>
+  <data name="50% -> 75%" xml:space="preserve">
+    <value>50% -> 75%</value>
+  </data>
+  <data name="75% -> 90%" xml:space="preserve">
+    <value>75% -> 90%</value>
+  </data>
+  <data name="90% -> 99.9%" xml:space="preserve">
+    <value>90% -> 99.9%</value>
+  </data>
+  <data name="The Best" xml:space="preserve">
+    <value>トップ</value>
+  </data>
+  <data name="Not Enough Data" xml:space="preserve">
+    <value>データ不足</value>
+  </data>
 </root>
