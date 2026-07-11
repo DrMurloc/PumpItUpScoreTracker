@@ -4,6 +4,7 @@ using ScoreTracker.ChartIntelligence.Contracts.Commands;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using ScoreTracker.ChartIntelligence.Application;
+using ScoreTracker.ChartIntelligence.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -210,7 +211,8 @@ public sealed class TierListSagaTests
         Mock<ITierListRepository>? tierLists = null,
         Mock<IScoreReader>? scores = null,
         Mock<ICurrentUserAccessor>? currentUser = null,
-        Mock<IPlayerStatsReader>? playerStats = null)
+        Mock<IPlayerStatsReader>? playerStats = null,
+        Mock<IChartScoreStatsRepository>? chartStats = null)
     {
         chartRatings ??= EmptyRatingsMock();
         charts ??= EmptyChartsMock();
@@ -218,8 +220,10 @@ public sealed class TierListSagaTests
         scores ??= new Mock<IScoreReader>();
         currentUser ??= new Mock<ICurrentUserAccessor>();
         playerStats ??= new Mock<IPlayerStatsReader>();
+        chartStats ??= new Mock<IChartScoreStatsRepository>();
         return new TierListSaga(chartRatings.Object, charts.Object, tierLists.Object, scores.Object,
-            currentUser.Object, playerStats.Object, new Mock<IChartScoringLevelRepository>().Object);
+            currentUser.Object, playerStats.Object, new Mock<IChartScoringLevelRepository>().Object,
+            chartStats.Object);
     }
 
     private static Mock<IChartRepository> EmptyChartsMock()
@@ -313,5 +317,67 @@ public sealed class TierListSagaTests
         // Levels 1-29 × {Single, Double} — one SaveEntries per folder, even when empty.
         tierLists.Verify(t => t.SaveEntries(MixEnum.Phoenix, It.IsAny<IEnumerable<SongTierListEntry>>(),
             It.IsAny<CancellationToken>()), Times.Exactly(58));
+    }
+
+    [Fact]
+    public async Task ProcessScoresTierListPersistsVarianceOverComparablePlayersOnly()
+    {
+        var measured = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var singleScore = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var comparableA = Guid.NewGuid();
+        var comparableB = Guid.NewGuid();
+        var outOfBand = Guid.NewGuid();
+        var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetScores(MixEnum.Phoenix, It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<(Guid userId, RecordedPhoenixScore record)>());
+        scores.Setup(s => s.GetScores(MixEnum.Phoenix, ChartType.Single, DifficultyLevel.From(20),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                (comparableA, Score(measured.Id, 950000)),
+                (comparableA, Score(singleScore.Id, 900000)),
+                (comparableB, Score(measured.Id, 960000)),
+                (outOfBand, Score(measured.Id, 999000))
+            });
+        var playerStats = new Mock<IPlayerStatsReader>();
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, comparableA, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Stats(comparableA, singlesCompetitive: 20.5));
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, comparableB, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Stats(comparableB, singlesCompetitive: 19.0));
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, outOfBand, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Stats(outOfBand, singlesCompetitive: 24.0));
+        var chartStats = new Mock<IChartScoreStatsRepository>();
+        var savedStats = new List<ChartScoreStatsRecord>();
+        chartStats.Setup(c => c.SaveStats(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<ChartScoreStatsRecord>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<MixEnum, IEnumerable<ChartScoreStatsRecord>, CancellationToken>((_, s, _) =>
+                savedStats.AddRange(s))
+            .Returns(Task.CompletedTask);
+        var saga = BuildSaga(scores: scores, playerStats: playerStats, chartStats: chartStats);
+
+        await saga.Consume(BuildContext(new ProcessScoresTiersListCommand()));
+
+        // The out-of-band player (comp 24 vs folder 20) is excluded, and the chart with a
+        // single comparable score is not computable — only the two-score chart persists.
+        var stat = Assert.Single(savedStats);
+        Assert.Equal(measured.Id, stat.ChartId);
+        Assert.Equal(2, stat.ScoreCount);
+        // Sample stddev of {950000, 960000} = sqrt(50,000,000) ≈ 7071.068.
+        Assert.Equal(7071.068, stat.ScoreStandardDeviation, precision: 3);
+    }
+
+    private static RecordedPhoenixScore Score(Guid chartId, int score)
+    {
+        return new RecordedPhoenixScore(chartId, PhoenixScore.From(score), null, false, DateTimeOffset.MinValue);
+    }
+
+    private static PlayerStatsRecord Stats(Guid userId, double singlesCompetitive)
+    {
+        return new PlayerStatsRecord(userId, TotalRating: 0, HighestLevel: 1, ClearCount: 0,
+            CoOpRating: 0, CoOpScore: 0, SkillRating: 0, SkillScore: 0, SkillLevel: 0,
+            SinglesRating: 0, SinglesScore: 0, SinglesLevel: 0, DoublesRating: 0, DoublesScore: 0,
+            DoublesLevel: 0, CompetitiveLevel: singlesCompetitive, SinglesCompetitiveLevel: singlesCompetitive,
+            DoublesCompetitiveLevel: singlesCompetitive);
     }
 }

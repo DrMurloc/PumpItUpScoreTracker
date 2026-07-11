@@ -1,5 +1,6 @@
 using ScoreTracker.Domain.Services;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
+using ScoreTracker.ChartIntelligence.Domain;
 using MassTransit;
 using MediatR;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
@@ -23,12 +24,14 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     private readonly IScoreReader _scores;
     private readonly ITierListRepository _tierLists;
     private readonly IChartScoringLevelRepository _scoringLevels;
+    private readonly IChartScoreStatsRepository _chartStats;
 
     public TierListSaga(IChartDifficultyRatingRepository chartRatings, IChartRepository chartRepository,
         ITierListRepository tierLists, IScoreReader scores,
         ICurrentUserAccessor currentUser, IPlayerStatsReader playerStats,
-        IChartScoringLevelRepository scoringLevels)
+        IChartScoringLevelRepository scoringLevels, IChartScoreStatsRepository chartStats)
     {
+        _chartStats = chartStats;
         _scoringLevels = scoringLevels;
         _chartRatings = chartRatings;
         _chartRepository = chartRepository;
@@ -145,6 +148,30 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
                     TierListProcessor.ProcessIntoTierList(allPhoenixScores.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value), level,
                         "Scores", weights);
                 await _tierLists.SaveEntries(mix, results, context.CancellationToken);
+
+                // Materialized population variance (tier-lists overhaul C1, design doc §6
+                // Tier 1): per-chart score stddev over comparable players — the same
+                // ±2-levels-of-the-folder band the page-side variance used. Readers apply
+                // their own minimum-count rule; below two scores nothing is computable.
+                // stats[u] = level + .5 - competitiveLevel, so |comp - level| < 2 ⇔ |.5 - stats[u]| < 2.
+                var comparableScores = new Dictionary<Guid, List<int>>();
+                foreach (var (userId, userScores) in allPhoenixScores)
+                {
+                    if (Math.Abs(.5 - stats[userId]) >= 2.0) continue;
+                    foreach (var (chartId, score) in userScores)
+                    {
+                        if (!comparableScores.TryGetValue(chartId, out var chartScoreList))
+                            comparableScores[chartId] = chartScoreList = new List<int>();
+                        chartScoreList.Add(score);
+                    }
+                }
+
+                var statEntries = comparableScores.Where(kv => kv.Value.Count >= 2)
+                    .Select(kv => new ChartScoreStatsRecord(kv.Key,
+                        TierListProcessor.StdDev(kv.Value, true), kv.Value.Count))
+                    .ToArray();
+                if (statEntries.Any())
+                    await _chartStats.SaveStats(mix, statEntries, context.CancellationToken);
             }
     }
 

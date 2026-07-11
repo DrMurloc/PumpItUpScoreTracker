@@ -51,6 +51,8 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | Table | Purpose |
 |---|---|
 | `scores.TierListEntry` | Tier list entries per mix (the site's most-used feature) |
+| `scores.UserTierListEntry` | Materialized per-user relative tier lists, event-driven off score imports (tier-lists overhaul C1) |
+| `scores.ChartScoreStats` | Population score variance per chart, refreshed by the daily scores tier-list rebuild (tier-lists overhaul C1) |
 | `scores.ChartScoringLevel` | Calculated scoring-difficulty level per chart+mix |
 | `scores.ChartLetterDifficulty` | Letter-grade (AA–PG) difficulty percentiles per chart |
 | `scores.ChartDifficultyRating` | Aggregated community difficulty ratings (count + std dev) |
