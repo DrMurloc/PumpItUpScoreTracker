@@ -2410,6 +2410,9 @@
   <data name="Top {0}" xml:space="preserve">
     <value>상위 {0}</value>
   </data>
+  <data name="1st" xml:space="preserve">
+    <value>1위</value>
+  </data>
   <data name="{0} of all Phoenix titles collected" xml:space="preserve">
     <value>전체 피닉스 타이틀의 {0} 수집</value>
   </data>
