@@ -187,7 +187,7 @@ The design-doc commits already on this branch are the prelude (C0); implementati
 9. **C9 — og:image**: `refresh-folder-share-cards` Hangfire job + blob wiring + per-folder meta tags; SCHEDULED-JOBS.md row.
 10. **C10 — cleanup**: localization sweep (all eight locales, universal-terms glossary note), `UiColorTokenTests` ChartSkills 7 → 0, UX-GUIDELINES rule-5 reword + CLAUDE.md density line, final E2E pass.
 
-**Round-6 addendum** — the series continues on the same PR: **C11** field-test bug fixes (jacket URLs, legend CSS order, folder-picker popover) · **C12** field-test UX (toolbar data/presentation split, lens in every view, Title Levels collapse, table jacket column, Applied Filters label) · **C13** Playwright rewrite against the new markup · **C14** `/TierLists/Old` + `TierListSection` removal (26 color-literal allowlist entries burn down). Outside this PR: the piucenter crawler + alias table (§8a — greenlit, its own PR), Folder Level (own doc).
+**Round-6 addendum** — the series continues on the same PR: **C11** field-test bug fixes (jacket URLs, legend CSS order, folder-picker popover) · **C12** field-test UX (toolbar data/presentation split, lens in every view, Title Levels collapse, table jacket column, Applied Filters label) · **C13** `/TierLists/Old` + `TierListSection` removal (26 color-literal allowlist entries burn down; the URL survives as a 301) · **C14** Playwright rewrite against the new markup. Outside this PR: the piucenter crawler + alias table (§8a — greenlit, its own PR), Folder Level (own doc).
 
 ## 13. Open questions
 

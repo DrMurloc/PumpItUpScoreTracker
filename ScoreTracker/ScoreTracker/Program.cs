@@ -267,7 +267,8 @@ app.Use(async (context, next) =>
 {
     var path = context.Request.Path;
     var isLegacyAlias = path.Equals("/ChartSkills", StringComparison.OrdinalIgnoreCase) ||
-                        path.Equals("/PersonalizedTierList", StringComparison.OrdinalIgnoreCase);
+                        path.Equals("/PersonalizedTierList", StringComparison.OrdinalIgnoreCase) ||
+                        path.Equals("/TierLists/Old", StringComparison.OrdinalIgnoreCase);
     var isLegacyQueryForm = path.Equals("/TierLists", StringComparison.OrdinalIgnoreCase) &&
                             (context.Request.Query.ContainsKey("Difficulty") ||
                              context.Request.Query.ContainsKey("ChartType"));

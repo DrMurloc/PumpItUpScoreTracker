@@ -47,8 +47,8 @@ public sealed class UiColorTokenTests
         // palette); it stays allowlisted rather than tokenized.
         ["Pages/Progress/PhoenixRecap.razor"] = 22,
         // ChartSkills.razor burned to zero across the tier-lists overhaul (C4 shell + C7
-        // radar removal) and left the allowlist entirely.
-        ["Pages/TierLists/TierLists.razor"] = 26,
+        // radar removal) and left the allowlist entirely; the old page at /TierLists/Old
+        // (26 entries) was deleted outright in the same series (C14).
         ["Pages/Tools/ChartRandomizer.razor"] = 2,
         ["Pages/WhatShouldIPlay.razor"] = 4
     };
