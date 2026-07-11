@@ -34,6 +34,8 @@ Tier lists are the site's most-used feature (~28% of traffic, ~60% of it anonymo
 
 **Mock feedback round 1 (2026-07-10, applied in workshop-v2):** "Personalized" replaces "Tuned to me" · lens names are **Pass Difficulty** / **Score Difficulty** · Ranked-by hides while My Progress is active (the lens has no effect there) · tier sections collapse, collapsed set persisted per user in UiSettings · border language locked (§4) · filters drawer gains song type / letter grade / plate as first-class · details dialog leads with the video, as today's video dialog does.
 
+**Round 2 (2026-07-11):** density is chosen in the page toolbar and **persists per page** ("you use different ones based on your current task") — this amends UX-GUIDELINES rule 5: the three sanctioned modes are unchanged, but the UiSettings key becomes per-page (`Density__<Page>`), with `Universal__Density` retired before it ever shipped; the guideline reword lands in the implementation PR · QR + folder URL on share images approved · section collapse persists **globally by tier name** (a tier you never care about stays collapsed across folders — per-folder would make sections "pop around" as you walk folders) · By-Skill view **stays** in the View switch for P1, upgraded from "demote" because skill automation is now a live prospect (§8a).
+
 ## 3. Mental model: three concepts the UI stops blending
 
 Today "Difficulty Categorization", "Group By", and a hidden "Personalized Difficulty" checkbox interleave three orthogonal ideas. The overhaul separates them:
@@ -66,7 +68,7 @@ Today "Difficulty Categorization", "Group By", and a hidden "Personalized Diffic
 - **Progress strip** replaces today's nine stacked bars: one **segmented lamp strip** (Pass → AA … SSS+ → PG as compact chips with counts), the Paragon/title line (P1), and the rarity-styled "averaging better than X% of N similar players" sentence. Collapsible; collapsed state is a one-line summary. **Anonymous users** instead get the rule-9 empty state: "Import your scores to light this folder up" with sign-in/import actions.
 - **Sections**: diff-ramp stripe + friendly localized names ("1+ Level Easier" … "1+ Level Harder"); raw enum names never render. Sections **collapse from the header**; the collapsed set persists per user (UiSettings, part of the page settings blob).
 - **Border language** (owner-locked): **solid green = passed**, **dashed blue = To-Do**, **dashed green = passed in another mix** (new state — one extra indexed cross-mix pass-set read in the personal overlay), neutral otherwise. Precedence passed > To-Do > other-mix; a passed To-Do just renders as passed (rare case, deliberately unhandled). The two dashed states differ by hue only — run the rule-8 colorblind-simulator check before ship (accepted follow-up). A small legend renders above the sections for signed-in users.
-- **Cards** (per density, all via `Universal__Density`):
+- **Cards** (per density; the mode is picked in the toolbar and persisted **per page** — `Density__TierLists`):
   - *Comfortable* (default): jacket + `DifficultyBubble` + grade/plate overlay, song name, To-Do + Details actions.
   - *Compact*: jacket sticker sheet with corner badges — the at-a-glance completion view and the closest on-screen analog of the share image.
   - *Table*: sortable rows (song, tier, my score, grade, plate, percentile, To-Do). Text View's replacement.
@@ -122,7 +124,19 @@ One flag set, resolved per `ListMix`:
 | Personalized blend inputs | Pass Count + Skill + Similar Players | Pass Count + Similar Players | n/a |
 | Provisional-fallback badge | n/a | ✅ stays | n/a |
 
-Skill automation is explicitly out of scope; Phoenix 1 skills stay read-only ("leave something behind").
+Skill automation is out of scope for the overhaul itself; Phoenix 1 skills stay read-only ("leave something behind"). Research findings for the follow-on project:
+
+### 8a. Skill automation research (2026-07-11, piucenter.com)
+
+piucenter's `/skill` pages are generated from a **per-chart feature matrix** (~35 numeric columns: Run/Drill/Jack/Footswitch/Bracket frequencies, five twist-angle grades, travel distance, irregular rhythm, hands, etc.), computed by an open-source pipeline ([maxwshen/piu-analysis](https://github.com/maxwshen/piu-analysis)) that parses community `.ssc` simfiles and annotates limb placement (author-estimated 80–90% accurate). Key facts that reshape the plan:
+
+- **The dataset is frozen at August 2021** (XX era). The site is a dormant Heroku app serving CSVs from a private S3 bucket; the 2023 repo activity is Dependabot only. There is nothing to ingest *nightly* — piucenter is a **one-time bootstrap**, not a feed. Coverage: XX-and-earlier charts only (most carry into Phoenix unchanged; Phoenix-new songs 2023→ are absent, and the gap grows).
+- **Neither repo has a license** — data reuse needs the author's (maxwshen) blessing regardless of path. First step is a DM, which may also yield `features.csv` directly and skip scraping entirely. Scraping the site is the weak fallback: `/skill/<name>` pages expose only top-20-per-level chart lists, not the frequencies.
+- **The sustainable path is running the pipeline ourselves**: fork piu-analysis, feed it community simfile packs per release (eventually Phoenix 2), emit the feature matrix on a schedule. That upgrades our skill system from hand-set boolean tags to per-chart skill *frequencies* with tunable thresholds — and is what makes skills first-class again.
+- **Name mapping**: their unique key is `"<Song> - <Artist> <S|D><level> <variant>"` (e.g. `Super Fantasy - SHK S16 arcade`) — parseable into (song, artist, type, level, variant) and matched against Catalog with normalization plus an admin-reviewed alias table for the long tail, exactly the "song name mapping as time goes on" expectation.
+- **Chabala follow-on**: once skills are automated, Chabala ingestion becomes a small admin tool — AI-extract a tier list from the PNG he posts to Google Drive (jacket-crop matching against our jacket art), proposed → admin-confirmed. Separate project, unblocked by this one.
+
+Suggested sequence: (1) DM maxwshen for blessing + `features.csv`; (2) one-time import behind the existing skills model for P1; (3) fork the pipeline for continuing coverage; (4) Chabala PNG extractor.
 
 ## 9. Localization (rule 7)
 
@@ -136,7 +150,7 @@ Every string on the page goes through `L[…]` — the current page has dozens o
 | 2 Show don't tell | Jackets are the identifier at every density; grades/plates as art; bubbles everywhere |
 | 3 One concept one component | Details dialog is one shared component; cards render `DifficultyBubble`/`ScoreBreakdown`/`LetterGradeIcon`; no page-local restyles |
 | 4 No color literals | All new UI reads `--mix-*`/`--diff-*`/`--rarity-*`/`--plate-*`; burns down ChartSkills' 7 allowlist entries; variance icon re-encodes with shape + label |
-| 5 Density | `Universal__Density` lands here: Comfortable (default) / Compact / Table; Text View retired |
+| 5 Density | The three sanctioned modes land here: Comfortable (default) / Compact / Table; Text View retired. Persistence is per page (`Density__<Page>`) per the round-2 amendment — rule 5's wording updates in the implementation PR |
 | 6 Filters are furniture | Collapsed sticky row + chips + drawer; filters never push the answer down |
 | 7 +40% text | Full `L[…]` coverage; no fixed-width labels; the "Pneum" hack replaced by generic truncation-with-tooltip |
 | 8 Color never alone | Passed vs To-Do borders pair hue with dash pattern; the dashed pair (blue To-Do vs green other-mix) is hue-differentiated only — colorblind-simulator check is an accepted pre-ship follow-up; percentile = printed number + glow ramp; tier names printed beside tier colors |
@@ -160,6 +174,8 @@ Folder Level progression (own doc) · skill-tagging automation · UGC comments (
 
 ## 13. Open questions
 
-1. Density switcher placement: in the page toolbar (writes the universal setting) vs. `/Account` only. Design assumes toolbar.
-2. Does the By-Skill view (P1) stay in the View switch or demote into the details-dialog-only presentation of skills?
-3. Share-image QR: link to the exact folder URL — confirm we're happy putting URLs in community-shared images.
+All three original questions were resolved 2026-07-11 (toolbar + per-page density; By-Skill view stays for P1; QR approved — see the round-2 feedback note in §2). Remaining follow-ups, none blocking implementation:
+
+1. Colorblind-simulator pass on the dashed-blue / dashed-green border pair before ship (rule 8).
+2. DM maxwshen re: piucenter data blessing (§8a) — gates the skill-automation project, not the overhaul.
+3. Folder Level workshop ([folder-level-progression.md](folder-level-progression.md)).
