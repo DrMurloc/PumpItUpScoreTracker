@@ -2684,4 +2684,7 @@
   <data name="Tiers" xml:space="preserve">
     <value>ティア</value>
   </data>
+  <data name="More Mixes" xml:space="preserve">
+    <value>その他のバージョン</value>
+  </data>
 </root>

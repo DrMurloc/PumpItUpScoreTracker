@@ -2681,4 +2681,7 @@
   <data name="Tiers" xml:space="preserve">
     <value>Tiers</value>
   </data>
+  <data name="More Mixes" xml:space="preserve">
+    <value>Plus de Mix</value>
+  </data>
 </root>

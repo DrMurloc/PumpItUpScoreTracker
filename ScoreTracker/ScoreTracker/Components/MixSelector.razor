@@ -1,0 +1,46 @@
+@using ScoreTracker.SharedKernel.Enums
+@namespace ScoreTracker.Web.Components
+
+@* The mix picker's option list (docs/design/legacy-mixes.md): the primary trio up
+   front, every legacy mix behind a "More Mixes" expander so three decades of catalog
+   don't bury the mixes almost everyone is on. Renders MudMenuItems — embed inside a
+   MudMenu (the app-bar pill is the canonical host). *@
+
+@foreach (var mix in Primary)
+{
+    <MudMenuItem OnClick="() => Select(mix)">@mix.GetName()</MudMenuItem>
+}
+@if (!_showLegacy)
+{
+    <MudMenuItem AutoClose="false" OnClick="() => _showLegacy = true" Icon="@Icons.Material.Filled.History">@L["More Mixes"]</MudMenuItem>
+}
+else
+{
+    <MudDivider/>
+    @foreach (var mix in Legacy)
+    {
+        <MudMenuItem OnClick="() => Select(mix)">@mix.GetName()</MudMenuItem>
+    }
+}
+
+@code {
+    private bool _showLegacy;
+
+    [Parameter] public EventCallback<MixEnum> OnSelected { get; set; }
+
+    private static readonly MixEnum[] Primary = Enum.GetValues<MixEnum>()
+        .Where(m => m.IsPrimary())
+        .OrderByDescending(m => m.DisplayOrder())
+        .ToArray();
+
+    private static readonly MixEnum[] Legacy = Enum.GetValues<MixEnum>()
+        .Where(m => !m.IsPrimary())
+        .OrderByDescending(m => m.DisplayOrder())
+        .ToArray();
+
+    private async Task Select(MixEnum mix)
+    {
+        _showLegacy = false;
+        await OnSelected.InvokeAsync(mix);
+    }
+}

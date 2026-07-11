@@ -2563,4 +2563,7 @@
   <data name="Tiers" xml:space="preserve">
     <value>티어</value>
   </data>
+  <data name="More Mixes" xml:space="preserve">
+    <value>시리즈 더 보기</value>
+  </data>
 </root>

@@ -54,6 +54,62 @@ public static class MixEnumHelperMethods
     }
 
     /// <summary>
+    ///     Phoenix-era mixes track numeric 1M-scale scores with plates; everything else
+    ///     (XX and older, plus the Infinity/Pro line) uses the legacy model — letter
+    ///     grade + broken flag + optional era-scale score (docs/design/legacy-mixes.md).
+    /// </summary>
+    public static bool UsesLegacyScoring(this MixEnum enumValue)
+    {
+        return enumValue is not (MixEnum.Phoenix or MixEnum.Phoenix2);
+    }
+
+    /// <summary>Primary mixes show directly in the mix picker; the rest live behind "More". Mirrors Mix.IsPrimary.</summary>
+    public static bool IsPrimary(this MixEnum enumValue)
+    {
+        return enumValue is MixEnum.XX or MixEnum.Phoenix or MixEnum.Phoenix2;
+    }
+
+    /// <summary>Timeline position, oldest lowest. Mirrors the Mix table's SortOrder seed values.</summary>
+    public static int DisplayOrder(this MixEnum enumValue)
+    {
+        return enumValue switch
+        {
+            MixEnum.FirstDanceFloor => 10,
+            MixEnum.SecondUltimateRemix => 20,
+            MixEnum.ThirdObg => 30,
+            MixEnum.ObgSeasonEvolution => 40,
+            MixEnum.Collection => 50,
+            MixEnum.PerfectCollection => 60,
+            MixEnum.Extra => 70,
+            MixEnum.Premiere => 80,
+            MixEnum.Prex => 90,
+            MixEnum.Rebirth => 100,
+            MixEnum.Premiere2 => 110,
+            MixEnum.Prex2 => 120,
+            MixEnum.Premiere3 => 130,
+            MixEnum.Prex3 => 140,
+            MixEnum.Exceed => 150,
+            MixEnum.Exceed2 => 160,
+            MixEnum.Zero => 170,
+            MixEnum.Nx => 180,
+            MixEnum.Pro => 185,
+            MixEnum.Nx2 => 190,
+            MixEnum.NxAbsolute => 200,
+            MixEnum.Pro2 => 205,
+            MixEnum.Fiesta => 210,
+            MixEnum.FiestaEx => 220,
+            MixEnum.Fiesta2 => 230,
+            MixEnum.Infinity => 235,
+            MixEnum.Prime => 240,
+            MixEnum.Prime2 => 250,
+            MixEnum.XX => 260,
+            MixEnum.Phoenix => 270,
+            MixEnum.Phoenix2 => 280,
+            _ => 0
+        };
+    }
+
+    /// <summary>
     ///     The mix's brand color as 0xRRGGBB — sampled from the official mix logos (the
     ///     same art as the Discord logo emojis; Phoenix 2's deepened slightly from the
     ///     sampled value for stripe contrast, owner call). The session-snapshot card's
