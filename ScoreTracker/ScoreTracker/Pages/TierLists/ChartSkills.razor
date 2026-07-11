@@ -257,14 +257,14 @@ else
                                OnClick="() => SetDensity(UiDensity.Table)" aria-label="@L["Table"]"></MudIconButton>
             </MudTooltip>
         </MudButtonGroup>
-        <div class="tier-flat tier-desktop-only">
-            <MudTooltip Text=@L["Filters and Columns"]>
-                <MudBadge Content="ActiveFilterCount" Visible="HasActiveFilters" Color="Color.Primary" Overlap="true">
-                    <MudIconButton Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary" Variant="Variant.Outlined"
-                                   OnClick="() => _filtersOpen = true" aria-label="@L["Filters and Columns"]"></MudIconButton>
-                </MudBadge>
-            </MudTooltip>
-        </div>
+        @* The Filters icon + drawer are width-independent (round 9 refinement) —
+           filtering always lives here, never inside Advanced. *@
+        <MudTooltip Text=@L["Filters and Columns"]>
+            <MudBadge Content="ActiveFilterCount" Visible="HasActiveFilters" Color="Color.Primary" Overlap="true">
+                <MudIconButton Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary" Variant="Variant.Outlined"
+                               OnClick="() => _filtersOpen = true" aria-label="@L["Filters and Columns"]"></MudIconButton>
+            </MudBadge>
+        </MudTooltip>
     </div>
     @* Active-filter chips: labeled so it's obvious what the chips are (round 6). *@
     @if (HasActiveFilters)
@@ -538,16 +538,17 @@ else
         </div>
     </MudDrawer>
     @* Round 9: the compact Advanced drawer replaces the bottom action bar (which
-       stacked awkwardly on the shell's bottom nav). Everything that isn't
-       folder / view / Folder Stats lives here below 960. *@
+       stacked awkwardly on the shell's bottom nav). Owner-specced order: Ranked-by →
+       Grouped-by → Personalized → Download. Filtering deliberately is NOT here —
+       the Filters icon + drawer are the same at every width. *@
     <MudDrawer @bind-Open="_advancedOpen" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="320px">
         <div class="tier-filter-drawer">
             <MudText Typo="Typo.h6">@L["Advanced"]</MudText>
+            @lensControls
             @if (CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score")
             {
                 <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
             }
-            @lensControls
             <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined"
                        StartIcon="@(_isBuildingImage ? null : Icons.Material.Filled.FileDownload)"
                        Disabled="_isBuildingImage || _isLoading">
@@ -561,9 +562,6 @@ else
                     @L["Download"]
                 }
             </MudButton>
-            <MudDivider></MudDivider>
-            <MudText Typo="Typo.subtitle1">@L["Filters and Columns"]</MudText>
-            @filterPanel
         </div>
     </MudDrawer>
     <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"
