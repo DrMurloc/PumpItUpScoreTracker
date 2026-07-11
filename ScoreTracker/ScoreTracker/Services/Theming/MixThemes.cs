@@ -32,6 +32,10 @@ public sealed record MixPalette(
     public const string Error = "#C72020";
     public const string Success = "#6EDE7F";
     public const string Warning = "#FFC433";
+
+    // Matches MudBlazor's default Info blue — the To-Do border reads var(--mud-palette-info),
+    // and render targets that can't read CSS vars (the share card) read this.
+    public const string Info = "#2196F3";
 }
 
 /// <summary>
@@ -223,6 +227,16 @@ public static class MixThemes
             // Non-slot legacy chips (Half-Double, levelled co-ops, unrated) read neutral.
             ["neutral"] = "#90A4AE"
         };
+
+    /// <summary>
+    ///     Raw hex for a difficulty category — for render targets that can't read CSS
+    ///     custom properties (the SkiaSharp share card). On-screen consumers keep using
+    ///     ThemeScales/var(--diff-*).
+    /// </summary>
+    public static string DifficultyHex(TierListCategory category)
+    {
+        return DifficultyColors[category];
+    }
 
     public static string CssVariablesFor(MixEnum mix)
     {

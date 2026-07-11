@@ -175,6 +175,27 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("ChartPreferenceRating", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.ChartScoreStatsEntity", b =>
+                {
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ScoreCount")
+                        .HasColumnType("int");
+
+                    b.Property<double>("ScoreStandardDeviation")
+                        .HasColumnType("float");
+
+                    b.HasKey("MixId", "ChartId");
+
+                    b.HasIndex("ChartId");
+
+                    b.ToTable("ChartScoreStats", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.ChartScoringLevelEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -221,6 +242,30 @@ namespace ScoreTracker.Data.Migrations
                     b.HasIndex("ChartId");
 
                     b.ToTable("CoOpRating", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.FolderCohortStatsEntity", b =>
+                {
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ChartType")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Bucket")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PassHistogramJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("MixId", "ChartType", "Level", "Bucket");
+
+                    b.ToTable("FolderCohortStats", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.TierListEntryEntity", b =>
@@ -330,6 +375,37 @@ namespace ScoreTracker.Data.Migrations
                     b.HasIndex("MixId", "UserId", "ChartId");
 
                     b.ToTable("UserPreferenceRating", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.UserTierListEntryEntity", b =>
+                {
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.HasKey("MixId", "UserId", "ChartId");
+
+                    b.HasIndex("ChartId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("MixId", "ChartId");
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("MixId", "ChartId"), new[] { "Category", "Order" });
+
+                    b.ToTable("UserTierListEntry", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.Communities.Infrastructure.Entities.CommunityChannelEntity", b =>
@@ -2154,6 +2230,15 @@ namespace ScoreTracker.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.ChartScoreStatsEntity", b =>
+                {
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ChartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.CoOpRatingEntity", b =>
                 {
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
@@ -2179,6 +2264,21 @@ namespace ScoreTracker.Data.Migrations
                 });
 
             modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.UserCoOpRatingEntity", b =>
+                {
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ChartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.UserTierListEntryEntity", b =>
                 {
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
                         .WithMany()

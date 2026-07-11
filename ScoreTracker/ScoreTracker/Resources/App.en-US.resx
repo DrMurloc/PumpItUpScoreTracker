@@ -707,10 +707,6 @@
 	  <value>Show Skills</value>
 	  <comment>Show Skills</comment>
   </data>
-  <data name="Show Difficulty" xml:space="preserve">
-	  <value>Show Difficulty</value>
-	  <comment>Show Difficulty</comment>
-  </data>
   <data name="Show Song Name" xml:space="preserve">
 	  <value>Show Song Name</value>
 	  <comment>Show Song Name</comment>
@@ -2530,6 +2526,9 @@
   <data name="Top {0}" xml:space="preserve">
     <value>Top {0}</value>
   </data>
+  <data name="1st" xml:space="preserve">
+    <value>1st</value>
+  </data>
   <data name="{0} of all Phoenix titles collected" xml:space="preserve">
     <value>{0} of all Phoenix titles collected</value>
   </data>
@@ -2682,6 +2681,248 @@
   </data>
   <data name="Tiers" xml:space="preserve">
     <value>Tiers</value>
+  </data>
+  <!-- Tier-lists overhaul (PR #135). "Why Don't You Get Up and Dance, Man?" is an
+       in-game meme and a universal do-not-translate term in every locale. -->
+  <data name="Ranked by" xml:space="preserve">
+    <value>Ranked by</value>
+  </data>
+  <data name="Pass Difficulty" xml:space="preserve">
+    <value>Pass Difficulty</value>
+  </data>
+  <data name="Score Difficulty" xml:space="preserve">
+    <value>Score Difficulty</value>
+  </data>
+  <data name="Personalized" xml:space="preserve">
+    <value>Personalized</value>
+  </data>
+  <data name="Personalized for {0}" xml:space="preserve">
+    <value>Personalized for {0}</value>
+  </data>
+  <data name="Tier List" xml:space="preserve">
+    <value>Tier List</value>
+  </data>
+  <data name="By Skill" xml:space="preserve">
+    <value>By Skill</value>
+  </data>
+  <data name="Grouped by" xml:space="preserve">
+    <value>Grouped by</value>
+  </data>
+  <data name="Download" xml:space="preserve">
+    <value>Download</value>
+  </data>
+  <data name="Comfortable" xml:space="preserve">
+    <value>Comfortable</value>
+  </data>
+  <data name="Compact" xml:space="preserve">
+    <value>Compact</value>
+  </data>
+  <data name="Table" xml:space="preserve">
+    <value>Table</value>
+  </data>
+  <data name="Tier lists for XX and older coming soon" xml:space="preserve">
+    <value>Tier lists for XX and older coming soon</value>
+  </data>
+  <data name="Folder Progress" xml:space="preserve">
+    <value>Folder Progress</value>
+  </data>
+  <data name="{0} / {1} passed" xml:space="preserve">
+    <value>{0} / {1} passed</value>
+  </data>
+  <data name="of {0} similar players in this folder" xml:space="preserve">
+    <value>of {0} similar players in this folder</value>
+  </data>
+  <data name="Import your scores to light this folder up" xml:space="preserve">
+    <value>Import your scores to light this folder up</value>
+  </data>
+  <data name="Original Chabala Tier List" xml:space="preserve">
+    <value>Original Chabala Tier List</value>
+  </data>
+  <data name="Score Ranking: What percent of players of comparable (+/- .5 competitive level) your score is on a chart." xml:space="preserve">
+    <value>Score Ranking: What percent of players of comparable (+/- .5 competitive level) your score is on a chart.</value>
+  </data>
+  <data name="No charts match your filters" xml:space="preserve">
+    <value>No charts match your filters</value>
+  </data>
+  <data name="Clear Filters" xml:space="preserve">
+    <value>Clear Filters</value>
+  </data>
+  <data name="{0} / {1} cleared" xml:space="preserve">
+    <value>{0} / {1} cleared</value>
+  </data>
+  <data name="Skill data: PIU Center — maintained by aesthete" xml:space="preserve">
+    <value>Skill data: PIU Center — maintained by aesthete</value>
+  </data>
+  <data name="Not Tagged" xml:space="preserve">
+    <value>Not Tagged</value>
+  </data>
+  <data name="Display" xml:space="preserve">
+    <value>Display</value>
+  </data>
+  <data name="Better Than" xml:space="preserve">
+    <value>Better Than</value>
+  </data>
+  <data name="Previous Folder" xml:space="preserve">
+    <value>Previous Folder</value>
+  </data>
+  <data name="Next Folder" xml:space="preserve">
+    <value>Next Folder</value>
+  </data>
+  <data name="Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Passed in another mix" xml:space="preserve">
+    <value>Passed in another mix</value>
+  </data>
+  <data name="Remove from ToDo List" xml:space="preserve">
+    <value>Remove from ToDo List</value>
+  </data>
+  <data name="Add to ToDo List" xml:space="preserve">
+    <value>Add to ToDo List</value>
+  </data>
+  <data name="On ToDo List" xml:space="preserve">
+    <value>On ToDo List</value>
+  </data>
+  <data name="Your journey — all mixes" xml:space="preserve">
+    <value>Your journey — all mixes</value>
+  </data>
+  <data name="Full score journey" xml:space="preserve">
+    <value>Full score journey</value>
+  </data>
+  <data name="Record Score" xml:space="preserve">
+    <value>Record Score</value>
+  </data>
+  <data name="View full chart on PIU Center" xml:space="preserve">
+    <value>View full chart on PIU Center</value>
+  </data>
+  <data name="Skill data: PIU Center" xml:space="preserve">
+    <value>Skill data: PIU Center</value>
+  </data>
+  <data name="Amazing" xml:space="preserve">
+    <value>Amazing</value>
+  </data>
+  <data name="Very Good" xml:space="preserve">
+    <value>Very Good</value>
+  </data>
+  <data name="Good" xml:space="preserve">
+    <value>Good</value>
+  </data>
+  <data name="Low" xml:space="preserve">
+    <value>Low</value>
+  </data>
+  <data name="Very Low" xml:space="preserve">
+    <value>Very Low</value>
+  </data>
+  <data name="Why Don't You Get Up and Dance, Man?" xml:space="preserve">
+    <value>Why Don't You Get Up and Dance, Man?</value>
+  </data>
+  <data name="Not Recorded" xml:space="preserve">
+    <value>Not Recorded</value>
+  </data>
+  <data name="Ancient" xml:space="preserve">
+    <value>Ancient</value>
+  </data>
+  <data name="Very Old" xml:space="preserve">
+    <value>Very Old</value>
+  </data>
+  <data name="Old" xml:space="preserve">
+    <value>Old</value>
+  </data>
+  <data name="New" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="Very New" xml:space="preserve">
+    <value>Very New</value>
+  </data>
+  <data name="Most Recent" xml:space="preserve">
+    <value>Most Recent</value>
+  </data>
+  <data name="Ultra Popular" xml:space="preserve">
+    <value>Ultra Popular</value>
+  </data>
+  <data name="Very Popular" xml:space="preserve">
+    <value>Very Popular</value>
+  </data>
+  <data name="Popular" xml:space="preserve">
+    <value>Popular</value>
+  </data>
+  <data name="Unpopular" xml:space="preserve">
+    <value>Unpopular</value>
+  </data>
+  <data name="Very Unpopular" xml:space="preserve">
+    <value>Very Unpopular</value>
+  </data>
+  <data name="Ultra Unpopular" xml:space="preserve">
+    <value>Ultra Unpopular</value>
+  </data>
+  <data name="Last Place" xml:space="preserve">
+    <value>Last Place</value>
+  </data>
+  <data name="0 -> 10%" xml:space="preserve">
+    <value>0 -> 10%</value>
+  </data>
+  <data name="10% -> 25%" xml:space="preserve">
+    <value>10% -> 25%</value>
+  </data>
+  <data name="25% -> 50%" xml:space="preserve">
+    <value>25% -> 50%</value>
+  </data>
+  <data name="50% -> 75%" xml:space="preserve">
+    <value>50% -> 75%</value>
+  </data>
+  <data name="75% -> 90%" xml:space="preserve">
+    <value>75% -> 90%</value>
+  </data>
+  <data name="90% -> 99.9%" xml:space="preserve">
+    <value>90% -> 99.9%</value>
+  </data>
+  <data name="The Best" xml:space="preserve">
+    <value>The Best</value>
+  </data>
+  <data name="Not Enough Data" xml:space="preserve">
+    <value>Not Enough Data</value>
+  </data>
+  <data name="Applied Filters" xml:space="preserve">
+    <value>Applied Filters</value>
+  </data>
+  <data name="Filters and Columns" xml:space="preserve">
+    <value>Filters and Columns</value>
+  </data>
+  <data name="Not available in Compact view" xml:space="preserve">
+    <value>Not available in Compact view</value>
+  </data>
+  <data name="Generating" xml:space="preserve">
+    <value>Generating</value>
+  </data>
+  <data name="Folder Levels" xml:space="preserve">
+    <value>Folder Levels</value>
+  </data>
+  <data name="Skills" xml:space="preserve">
+    <value>Skills</value>
+  </data>
+  <data name="{0} days ago" xml:space="preserve">
+    <value>{0} days ago</value>
+  </data>
+  <data name="Recorded {0} days ago" xml:space="preserve">
+    <value>Recorded {0} days ago</value>
+  </data>
+  <data name="You: {0} · similar players average {1}" xml:space="preserve">
+    <value>You: {0} · similar players average {1}</value>
+  </data>
+  <data name="Rebuild Tier Lists" xml:space="preserve">
+    <value>Rebuild Tier Lists</value>
+  </data>
+  <data name="Score in Folder" xml:space="preserve">
+    <value>Score in Folder</value>
+  </data>
+  <data name="Passes in Folder" xml:space="preserve">
+    <value>Passes in Folder</value>
+  </data>
+  <data name="Folder Stats" xml:space="preserve">
+    <value>Folder Stats</value>
+  </data>
+  <data name="Advanced" xml:space="preserve">
+    <value>Advanced</value>
   </data>
   <data name="More Mixes" xml:space="preserve">
     <value>More Mixes</value>
