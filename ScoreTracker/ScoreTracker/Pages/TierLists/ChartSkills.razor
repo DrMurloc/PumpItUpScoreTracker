@@ -568,9 +568,6 @@ else
                         Score="_detailsChart != null && _scores.TryGetValue(_detailsChart.Id, out var detailsScore) ? detailsScore : null"
                         Ranking="_detailsChart != null && _scoreRankings.TryGetValue(_detailsChart.Id, out var detailsRank) ? detailsRank : null"
                         IsToDo="_detailsChart != null && _todos.Contains(_detailsChart.Id)"
-                        LensName="@LensDisplayName(_tierListType)"
-                        TierLabel="@(_detailsChart != null && _chartDifficulties.TryGetValue(_detailsChart.Id, out var detailsTier) ? (string)L[TierName(detailsTier)] : null)"
-                        TierColor="@(_detailsChart != null && _chartDifficulties.TryGetValue(_detailsChart.Id, out var detailsTierColor) ? ThemeScales.DifficultyColor(detailsTierColor) : null)"
                         ScoreAgeDays="@(_detailsChart != null && _scores.TryGetValue(_detailsChart.Id, out var detailsAge) ? (int)(_now - detailsAge.RecordedDate).TotalDays : null)"
                         OnToDo="ToggleToDo" OnScoreRecorded="RefreshScores"></ChartDetailsDialog>
     </div>

@@ -45,11 +45,6 @@
                 }
                 <div><span class="chart-details-meta-label">@L["Song Artist"]</span><span>@Chart.Song.Artist</span></div>
                 <div><span class="chart-details-meta-label">@L["Song Type"]</span><span>@Chart.Song.Type</span></div>
-                @if (LensName != null && TierLabel != null)
-                {
-                    @* The active lens tier always shows here, whatever the page density (round 7). *@
-                    <div><span class="chart-details-meta-label">@LensName</span><span style="@($"color:{TierColor}")">@TierLabel</span></div>
-                }
             </div>
             @if (Score?.Score != null)
             {
@@ -103,17 +98,18 @@
                     }
                 </div>
             }
-            <div class="chart-details-actions">
-                @if (CurrentUser.IsLoggedIn)
-                {
+            @* Round 10: buttons never shrink into vertical letter-stacks (nowrap + wrap
+               to their own line instead); the PIU Center link gets its own line. *@
+            @if (CurrentUser.IsLoggedIn)
+            {
+                <div class="chart-details-actions">
                     <MudButton Variant="Variant.Outlined" Color="Color.Info"
                                StartIcon="@(IsToDo ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)"
                                OnClick="() => OnToDo.InvokeAsync(Chart.Id)">@(IsToDo ? L["On ToDo List"] : L["Add to ToDo List"])</MudButton>
                     <MudButton Variant="Variant.Text" OnClick="() => _showRecording = !_showRecording">@L["Record Score"]</MudButton>
-                }
-                <MudSpacer></MudSpacer>
-                <MudLink Href="@PiuCenterUrl" Target="_blank" Typo="Typo.caption">@L["View full chart on PIU Center"]</MudLink>
-            </div>
+                </div>
+            }
+            <MudLink Href="@PiuCenterUrl" Target="_blank" Typo="Typo.caption" Class="chart-details-piucenter">@L["View full chart on PIU Center"]</MudLink>
             @if (_showRecording && CurrentUser.IsLoggedIn)
             {
                 <EditChartGrid ShowChartName="false" ChartId="Chart.Id" CurrentMix="Mix"
@@ -189,7 +185,17 @@
     .chart-details-actions {
         display: flex;
         align-items: center;
+        flex-wrap: wrap;
         gap: 8px;
+        margin-top: 8px;
+    }
+
+    .chart-details-actions .mud-button-root {
+        white-space: nowrap;
+    }
+
+    .chart-details-piucenter {
+        display: inline-block;
         margin-top: 8px;
     }
 </style>
@@ -220,14 +226,8 @@
 
     [Parameter] public EventCallback OnScoreRecorded { get; set; }
 
-    // Active-lens tier for the meta grid (always shown regardless of density, round 7);
-    // color is a theme token reference.
-    [Parameter] public string? LensName { get; set; }
-
-    [Parameter] public string? TierLabel { get; set; }
-
-    [Parameter] public string? TierColor { get; set; }
-
+    // Round 10: the active-lens meta row was removed — the placements chips already
+    // name every lens's tier, so it double-printed the active one.
     [Parameter] public int? ScoreAgeDays { get; set; }
 
     protected override async Task OnParametersSetAsync()
@@ -246,24 +246,24 @@
     private async Task<IReadOnlyList<(string, string)>> LoadPlacements(Guid chartId)
     {
         var placements = new List<(string, string)>();
-        foreach (var (listName, label) in new[]
+        foreach (var (listName, label, names) in new (string, string, Func<TierListCategory, string>)[]
                  {
-                     ("Pass Count", L["Pass Difficulty"].ToString()),
-                     ("Scores", L["Score Difficulty"].ToString()),
-                     ("Popularity", L["Popularity"].ToString())
+                     ("Pass Count", L["Pass Difficulty"].ToString(), DifficultyName),
+                     ("Scores", L["Score Difficulty"].ToString(), DifficultyName),
+                     ("Popularity", L["Popularity"].ToString(), PopularityName)
                  })
         {
             var result = await Mediator.Send(new GetTierListWithFallbackQuery(listName, Mix));
             var entry = result.Entries.FirstOrDefault(e => e.ChartId == chartId);
             if (entry == null || entry.Category == TierListCategory.Unrecorded) continue;
-            placements.Add(($"{label}: {CategoryName(entry.Category)}",
+            placements.Add(($"{label}: {names(entry.Category)}",
                 ThemeScales.DifficultyColor(entry.Category)));
         }
 
         return placements;
     }
 
-    private string CategoryName(TierListCategory category)
+    private string DifficultyName(TierListCategory category)
     {
         return category switch
         {
@@ -275,6 +275,23 @@
             TierListCategory.VeryHard => L["Very Hard"],
             TierListCategory.Underrated => L["1+ Level Harder"],
             _ => L["Not Rated"]
+        };
+    }
+
+    // Round 10: the Popularity list speaks popularity, not difficulty — mirrors the
+    // page's popularity bucket names ("Popularity: Very Hard" made no sense).
+    private string PopularityName(TierListCategory category)
+    {
+        return category switch
+        {
+            TierListCategory.Overrated => L["Ultra Popular"],
+            TierListCategory.VeryEasy => L["Very Popular"],
+            TierListCategory.Easy => L["Popular"],
+            TierListCategory.Medium => L["Average"],
+            TierListCategory.Hard => L["Unpopular"],
+            TierListCategory.VeryHard => L["Very Unpopular"],
+            TierListCategory.Underrated => L["Ultra Unpopular"],
+            _ => L["Unknown"]
         };
     }
 
