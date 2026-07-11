@@ -2946,4 +2946,7 @@
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>各スキルが登場するチャートセクションの割合</value>
   </data>
+  <data name="Show Skill Metric" xml:space="preserve">
+    <value>スキル指標を表示</value>
+  </data>
 </root>

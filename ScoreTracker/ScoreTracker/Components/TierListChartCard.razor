@@ -73,10 +73,16 @@ else
         }
         @if (Skills is { Count: > 0 })
         {
+            @* Top skills by dominance, category-tinted (variant B) — the name is always
+               printed, so the hue never carries the meaning alone (rule 8). *@
             <div class="tier-chart-card-skills">
-                @foreach (var skill in Skills)
+                @foreach (var skill in Skills.Take(MaxSkillChips))
                 {
-                    <span class="tier-chart-card-skill">@skill</span>
+                    <span class="tier-chart-card-skill @skill.CategoryClass">@skill.Label@(skill.Metric == null ? null : $" {skill.Metric}")</span>
+                }
+                @if (Skills.Count > MaxSkillChips)
+                {
+                    <span class="tier-chart-card-skill tier-chart-card-skill-more">+@(Skills.Count - MaxSkillChips)</span>
                 }
             </div>
         }
@@ -129,7 +135,13 @@ else
     // passes null in other densities.
     [Parameter] public string? StepArtist { get; set; }
 
-    [Parameter] public IReadOnlyList<string>? Skills { get; set; }
+    [Parameter] public IReadOnlyList<CardSkillChip>? Skills { get; set; }
+
+    // Owner-locked (piucenter round 1): up to three chips, dominance-ordered, "+n" overflow.
+    private const int MaxSkillChips = 3;
+
+    /// <summary>CategoryClass is a site.css skillcat-* class; Metric is preformatted or null.</summary>
+    public sealed record CardSkillChip(string Label, string CategoryClass, string? Metric);
 
     [Parameter] public int? AgeDays { get; set; }
 

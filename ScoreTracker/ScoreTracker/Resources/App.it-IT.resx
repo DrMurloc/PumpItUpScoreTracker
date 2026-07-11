@@ -2945,4 +2945,7 @@
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>Quota di sezioni del chart con ogni abilità</value>
   </data>
+  <data name="Show Skill Metric" xml:space="preserve">
+    <value>Mostra la metrica delle abilità</value>
+  </data>
 </root>

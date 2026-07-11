@@ -2943,4 +2943,7 @@
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>Part des sections du chart présentant chaque compétence</value>
   </data>
+  <data name="Show Skill Metric" xml:space="preserve">
+    <value>Afficher la mesure de compétence</value>
+  </data>
 </root>

@@ -2945,4 +2945,7 @@
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>Share of chart sections featuring each skill</value>
   </data>
+  <data name="Show Skill Metric" xml:space="preserve">
+    <value>Show Skill Metric</value>
+  </data>
 </root>

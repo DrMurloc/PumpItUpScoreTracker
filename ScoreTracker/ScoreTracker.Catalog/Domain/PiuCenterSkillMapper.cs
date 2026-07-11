@@ -115,6 +115,11 @@ internal static class PiuCenterSkillMapper
         return builder.ToString();
     }
 
+    public static IReadOnlyList<Skill> MapTheirSkill(string theirSkill)
+    {
+        return TheirsToOurs.TryGetValue(theirSkill, out var ours) ? ours : Array.Empty<Skill>();
+    }
+
     private static void AddMapped(ISet<Skill> target, string theirSkill)
     {
         if (!TheirsToOurs.TryGetValue(theirSkill, out var ours)) return;

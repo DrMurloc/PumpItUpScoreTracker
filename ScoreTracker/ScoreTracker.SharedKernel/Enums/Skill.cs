@@ -113,6 +113,12 @@ public static class SkillHelpers
         return Categories[skill].Contains(category);
     }
 
+    /// <summary>The skill's leading category — the one its display color keys off.</summary>
+    public static SkillCategory GetPrimaryCategory(this Skill skill)
+    {
+        return Categories[skill].FirstOrDefault();
+    }
+
     public static string GetDescription(this Skill skill)
     {
         return Descriptions[skill];

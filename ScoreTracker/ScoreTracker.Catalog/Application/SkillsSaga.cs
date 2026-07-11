@@ -5,12 +5,14 @@ using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Catalog.Domain;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Catalog.Application;
 
 internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumerable<ChartSkillsRecord>>,
     IRequestHandler<UpdateChartSkillCommand>,
-    IRequestHandler<GetChartStepAnalysisQuery, ChartStepAnalysisRecord?>
+    IRequestHandler<GetChartStepAnalysisQuery, ChartStepAnalysisRecord?>,
+    IRequestHandler<GetChartSkillChipsQuery, IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>>
 {
     private readonly IExternalChartAliasRepository _aliases;
     private readonly IChartRepository _charts;
@@ -22,6 +24,48 @@ internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumera
         _charts = charts;
         _metrics = metrics;
         _aliases = aliases;
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>> Handle(
+        GetChartSkillChipsQuery request, CancellationToken cancellationToken)
+    {
+        var metrics = await _metrics.GetMetrics(request.ChartIds, PiuCenterMetrics.Source, cancellationToken);
+        var result = new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>();
+        foreach (var group in metrics.GroupBy(m => m.ChartId))
+        {
+            // Best segment coverage per mapped skill; dominance rank from the top-3 pick.
+            var fractions = new Dictionary<Skill, decimal>();
+            var topRank = new Dictionary<Skill, decimal>();
+            foreach (var metric in group)
+                if (metric.MetricName.StartsWith(PiuCenterMetrics.BadgeFractionPrefix, StringComparison.Ordinal))
+                {
+                    foreach (var skill in PiuCenterSkillMapper.MapTheirSkill(
+                                 metric.MetricName[PiuCenterMetrics.BadgeFractionPrefix.Length..]))
+                        if (!fractions.TryGetValue(skill, out var best) || metric.Value > best)
+                            fractions[skill] = metric.Value;
+                }
+                else if (metric.MetricName.StartsWith(PiuCenterMetrics.Top3Prefix, StringComparison.Ordinal))
+                {
+                    foreach (var skill in PiuCenterSkillMapper.MapTheirSkill(
+                                 metric.MetricName[PiuCenterMetrics.Top3Prefix.Length..]))
+                        if (!topRank.TryGetValue(skill, out var best) || metric.Value < best)
+                            topRank[skill] = metric.Value;
+                }
+
+            var chips = topRank
+                .OrderBy(kv => kv.Value)
+                .Select(kv => new ChartSkillChipRecord(kv.Key, true,
+                    fractions.TryGetValue(kv.Key, out var f) ? f : null))
+                .Concat(fractions
+                    .Where(kv => !topRank.ContainsKey(kv.Key) &&
+                                 kv.Value >= PiuCenterSkillMapper.BadgeFractionThreshold)
+                    .OrderByDescending(kv => kv.Value)
+                    .Select(kv => new ChartSkillChipRecord(kv.Key, false, kv.Value)))
+                .ToArray();
+            if (chips.Length > 0) result[group.Key] = chips;
+        }
+
+        return result;
     }
 
     public async Task<ChartStepAnalysisRecord?> Handle(GetChartStepAnalysisQuery request,

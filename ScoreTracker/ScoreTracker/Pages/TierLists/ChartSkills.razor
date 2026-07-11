@@ -2,6 +2,8 @@
 @page "/TierLists/{ChartTypeRoute}/{LevelRoute:int}"
 @using MediatR
 @using ScoreTracker.Web.Enums
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.ChartIntelligence.Contracts
@@ -393,7 +395,12 @@ else
                                     }
                                     @if (_settings.ShowSkills)
                                     {
-                                        <td class="tier-table-skills">@string.Join(", ", chart.Skills)</td>
+                                        <td class="tier-table-skills">
+                                            @foreach (var chip in SkillChipsFor(chart) ?? Array.Empty<TierListChartCard.CardSkillChip>())
+                                            {
+                                                <span class="tier-chart-card-skill @chip.CategoryClass">@chip.Label@(chip.Metric == null ? null : $" {chip.Metric}")</span>
+                                            }
+                                        </td>
                                     }
                                     @if (CurrentUser.IsLoggedIn)
                                     {
@@ -452,7 +459,7 @@ else
                                                TierLabel="@(ShowLensAnnotation ? (string)L[TierName(entry.Category)] : null)"
                                                TierColor="@(ShowLensAnnotation ? ThemeScales.DifficultyColor(entry.Category) : null)"
                                                StepArtist="@(_settings.ShowStepArtist ? chart.StepArtist?.ToString() : null)"
-                                               Skills="@(_settings.ShowSkills && !IsSkillView ? chart.Skills.Select(s => s.ToString()).ToArray() : null)"
+                                               Skills="@(_settings.ShowSkills && !IsSkillView ? SkillChipsFor(chart) : null)"
                                                AgeDays="@(_showAge && score != null ? (int)(_now - score.RecordedDate).TotalDays : null)"
                                                OnToDo="ToggleToDo"
                                                OnOpen="OpenDetails"></TierListChartCard>
@@ -529,6 +536,8 @@ else
                        Disabled="_density == UiDensity.Compact" Label=@L["Show Step Artist"]></MudSwitch>
             <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowSkills" ValueChanged="SetShowSkills"
                        Disabled="_density == UiDensity.Compact" Label=@L["Show Skills"]></MudSwitch>
+            <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowSkillMetric" ValueChanged="SetShowSkillMetric"
+                       Disabled="_density == UiDensity.Compact || !_settings.ShowSkills" Label=@L["Show Skill Metric"]></MudSwitch>
             @if (CurrentUser.IsLoggedIn)
             {
                 <MudSwitch T="bool" Color="Color.Primary" Value="_showAge" ValueChanged="SetShowAge"
@@ -871,6 +880,32 @@ else
     private IDictionary<Guid, RecordedPhoenixScore> _scores = new Dictionary<Guid, RecordedPhoenixScore>();
     private IDictionary<Guid, RecordedPhoenixScore> _folderScores = new Dictionary<Guid, RecordedPhoenixScore>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+
+    private IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>> _skillChips =
+        new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>();
+
+    // Card + table chips: dominance-ordered metrics when banked, mapped tags as the
+    // pre-crawl fallback. Metric text is preformatted here so the card stays dumb.
+    private IReadOnlyList<TierListChartCard.CardSkillChip>? SkillChipsFor(Chart chart)
+    {
+        static string CategoryClass(Skill skill)
+        {
+            return $"skillcat-{skill.GetPrimaryCategory().ToString().ToLowerInvariant()}";
+        }
+
+        if (_skillChips.TryGetValue(chart.Id, out var chips) && chips.Count > 0)
+            return chips.Select(c => new TierListChartCard.CardSkillChip(
+                    c.Skill.GetName(),
+                    CategoryClass(c.Skill),
+                    _settings.ShowSkillMetric && c.SegmentFraction != null
+                        ? $"{(int)Math.Round(c.SegmentFraction.Value * 100)}%"
+                        : null))
+                .ToArray();
+        if (!chart.Skills.Any()) return null;
+        return chart.Skills
+            .Select(s => new TierListChartCard.CardSkillChip(s.GetName(), CategoryClass(s), null))
+            .ToArray();
+    }
     private IDictionary<Guid, double> _scoringLevels = new Dictionary<Guid, double>();
     private IDictionary<Guid, Chart> _allCharts = new Dictionary<Guid, Chart>();
     private ISet<Guid> _unPopularCharts = new HashSet<Guid>();
@@ -897,6 +932,7 @@ else
         public bool ShowStepArtist { get; set; }
         public bool ShowSongName { get; set; } = true;
         public bool ShowSkills { get; set; } = true;
+        public bool ShowSkillMetric { get; set; }
         public int? MinNoteCount { get; set; }
         public int? MaxNoteCount { get; set; }
         public HashSet<string> StepArtists { get; set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -999,6 +1035,12 @@ else
     private async Task SetShowSkills(bool show)
     {
         _settings.ShowSkills = show;
+        await SaveSettings();
+    }
+
+    private async Task SetShowSkillMetric(bool show)
+    {
+        _settings.ShowSkillMetric = show;
         await SaveSettings();
     }
 
@@ -1450,6 +1492,9 @@ else
             .Where(c => c.Level == _level && c.Type == _chartType)
             .ToDictionary(c => c.Id);
         _folderScores = _scores.Where(kv => _charts.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
+        // Dominance-ordered skills + segment coverage for the card chips and the
+        // table's Skills column; empty until the first piucenter crawl banks metrics.
+        _skillChips = await Mediator.Send(new GetChartSkillChipsQuery(_charts.Keys.ToArray()), cancellationToken);
 
         // Population phase — works logged-out, renders as soon as it lands.
         var blendTask = Mediator.Send(new GetBlendedTierListQuery(_chartType, _level, _tierListType,

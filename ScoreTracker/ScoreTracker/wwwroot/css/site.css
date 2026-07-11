@@ -405,6 +405,28 @@
     white-space: nowrap;
 }
 
+/* Category-tinted chips (piucenter variant B): identity hue per skill category via
+   the --skillcat-* tokens; the printed name carries the meaning (rule 8). */
+.skillcat-speed { --skill-chip: var(--skillcat-speed); }
+.skillcat-stamina { --skill-chip: var(--skillcat-stamina); }
+.skillcat-twist { --skill-chip: var(--skillcat-twist); }
+.skillcat-bracket { --skill-chip: var(--skillcat-bracket); }
+.skillcat-tech { --skill-chip: var(--skillcat-tech); }
+
+.tier-chart-card-skill[class*="skillcat-"] {
+    color: color-mix(in srgb, var(--skill-chip) 55%, var(--mix-ink));
+    background: color-mix(in srgb, var(--skill-chip) 16%, transparent);
+    border-color: color-mix(in srgb, var(--skill-chip) 45%, transparent);
+}
+
+.tier-chart-card-skill-more {
+    opacity: .75;
+}
+
+.tier-table-skills .tier-chart-card-skill {
+    margin-right: 3px;
+}
+
 .lamp-strip {
     display: flex;
     flex-wrap: wrap;

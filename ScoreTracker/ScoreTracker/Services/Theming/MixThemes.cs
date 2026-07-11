@@ -226,6 +226,11 @@ public static class MixThemes
         var plates = string.Join("\n", PlateColors.Select(kv =>
             $"    --plate-{kv.Key.GetShorthand().ToLowerInvariant()}: {kv.Value};"))
             + $"\n    --plate-none: {PlateNoneColor};";
+        // The five skill-category identity colors (Speed/Stamina/Twist/Bracket/Tech),
+        // promoted from the SharedKernel constants so markup can tint skill chips
+        // without color literals. Mix-invariant — category identity never re-hues.
+        var skillCategories = string.Join("\n", Enum.GetValues<SkillCategory>().Select(c =>
+            $"    --skillcat-{c.ToString().ToLowerInvariant()}: {c.GetColor()};"));
         return $@":root {{
     --mix-bg: {p.Background};
     --mix-surface: {p.Surface};
@@ -246,6 +251,7 @@ public static class MixThemes
     --rarity-prism: {p.Rarity.Prism};
 {difficulty}
 {plates}
+{skillCategories}
 }}";
     }
 
