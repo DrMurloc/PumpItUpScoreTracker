@@ -33,5 +33,6 @@ msbuild.wrn
 # Visual Studio 2015
 .vs/
 
-# Claude Code local settings and worktrees
-.claude/
+# Claude Code local settings and worktrees stay untracked; repo skills are committed
+.claude/*
+!.claude/skills/
