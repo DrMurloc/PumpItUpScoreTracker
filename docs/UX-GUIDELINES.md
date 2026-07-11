@@ -29,6 +29,7 @@ The palette record is the single source of truth: it builds the MudBlazor `MudTh
    - `--rarity-*` — the rarity ramp (below)
    - `--diff-*` — the difficulty ramp (below)
    - `--plate-*` — plate colors on the official metal ladder (PG/UG ice-blue, SG/EG gold, TG/MG silver, FG/RG bronze, `--plate-none` for unplayed)
+   - `--slot-*` — legacy slot colors, the pre-Exceed song-wheel vocabulary (Crazy red, Freestyle green, Nightmare purple, `--slot-neutral` for HDB/levelled co-ops). **Deliberately not the difficulty ramp**: old-scale levels don't translate to modern ones, and legacy chips render as CSS (never image bubbles) so the different look announces the different scale ([legacy-mixes design](design/legacy-mixes.md)).
    - Grade tokens are deliberately deferred: grades render as images today, and Phoenix 2 ships a different grade set (art pending). They land with their first text-rendered consumer.
 
 Consumers never look up hues. C# code calls the [`ThemeScales`](../ScoreTracker/ScoreTracker/Services/Theming/ThemeScales.cs) façade; markup uses `var(--…)`. Both return token references, so components stay theme-blind.

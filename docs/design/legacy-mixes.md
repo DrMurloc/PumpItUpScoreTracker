@@ -1,6 +1,6 @@
 # Legacy Mixes — catalog backfill & old-mix score tracking
 
-**Status:** design locked 2026-07-11 (all decisions below are owner-confirmed that day unless noted). PR 1 (catalog corrections script) delivered to the owner's Downloads folder, pending manual run. PR 2 and PR 3 not started — owner is sequencing rollout against other in-flight features.
+**Status:** implemented — the C1–C10 series landed on `claude/pumpout-data-source-857ee9` on 2026-07-11 (fast suites green per commit; migrations validated on real SQL via the integration fixture). Remaining to go live: owner runs the S-scripts post-deploy (S1 any time — already in Downloads; S2 after the Mix-seeding migration is live; S3 after the LegacyChartSchema migration is live, regenerated first via `tools/PumpoutExtractor` so it embeds both), reviews `reports/suspects.txt` (the 7 known prod misattributions need hand-written fixes), and uploads cut-content card art per `reports/art-needed.txt`.
 
 People play old mixes constantly — Prime cabs, Fiesta cabs, NX cabs — and have no good way to track progress on them. This feature backfills the full historical Pump It Up catalog (The 1st Dance Floor → Prime 2, plus Infinity) into the site and opens score tracking on every mix, with CSV + manual entry as the primary upload paths. **Tier lists for XX-and-older are explicitly out of scope** — that is a separate problem from the (Phoenix 1/2-focused) tier list overhaul.
 
