@@ -1,6 +1,5 @@
-@page "/ChartSkills"
-@page "/PersonalizedTierList"
 @page "/TierLists"
+@page "/TierLists/{ChartTypeRoute}/{LevelRoute:int}"
 @using MediatR
 @using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Queries
@@ -749,6 +748,11 @@ function(val, index) {
     [Parameter]
     [SupplyParameterFromQuery(Name = "TierListType")]
     public string? TierListType { get; set; } = string.Empty;
+
+    [Parameter] public string? ChartTypeRoute { get; set; }
+
+    [Parameter] public int? LevelRoute { get; set; }
+
     private DateTimeOffset _now = DateTimeOffset.Now;
     private IDictionary<Skill, List<Chart>> SkillCharts = Enum.GetValues<Skill>().ToDictionary(s => s, s => new List<Chart>());
 
@@ -1284,13 +1288,10 @@ function(val, index) {
 
     private void SetQueryString()
     {
-
-        NavManager.NavigateTo(NavManager.GetUriWithQueryParameters(new Dictionary<string, object?>
-        {
-            { "Difficulty", _level },
-            { "ChartType", _chartType.ToString() },
-            {"TierListType",_tierListType}
-        }));
+        // C3: the canonical folder URL is path-based; the lens rides as a query param.
+        NavManager.NavigateTo(NavManager.GetUriWithQueryParameters(
+            $"/TierLists/{_chartType}/{_level}",
+            new Dictionary<string, object?> { { "TierListType", _tierListType } }));
     }
 
     public async Task ToggleToDo(Guid chartId)
@@ -1922,6 +1923,16 @@ function(val, index) {
         if (Enum.TryParse<ChartType>(ChartTypeFilter, out var chartType))
         {
             _chartType = chartType;
+        }
+        // C3: the canonical path route (/TierLists/{Type}/{level}) wins over legacy
+        // query params and saved settings.
+        if (Enum.TryParse<ChartType>(ChartTypeRoute, true, out var routeType))
+        {
+            _chartType = routeType;
+        }
+        if (LevelRoute is >= 1 and <= 29)
+        {
+            _level = LevelRoute.Value;
         }
         if (TierListType != null && _tierListTypes.ContainsKey(TierListType))
         {
