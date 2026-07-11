@@ -169,7 +169,7 @@ Folder Level progression (own doc) · skill-tagging automation · UGC comments (
 1. **C1 — data layer**: population aggregates + per-user relative tier list materialization + backfill job (no UI change).
 2. **C2 — routes**: path-based folder URLs + 301s + sitemap entries.
 3. **C3 — shell**: sticky toolbar, folder picker, lens/view/tuned model, coalesced+cancellable reload, answer-first layout, progress strip, skeleton/empty states.
-4. **C4 — density**: `Universal__Density` + the three modes; Text View retired.
+4. **C4 — density**: per-page density setting (`Density__TierLists`) + the three modes; Text View retired.
 5. **C5 — details dialog** (with recording); card actions simplify.
 6. **C6 — share renderer**: SkiaSharp, download button swap.
 7. **C7 — og:image job + sitemap wiring**.
@@ -182,3 +182,41 @@ All three original questions were resolved 2026-07-11 (toolbar + per-page densit
 1. Colorblind-simulator pass on the dashed-blue / dashed-green border pair before ship (rule 8).
 2. Build the piucenter crawler + generic alias table (§8a) — its own project, independent of the overhaul.
 3. Folder Level workshop ([folder-level-progression.md](folder-level-progression.md)).
+
+## 14. Technical scoping (2026-07-11)
+
+### UI surface area
+
+- **Pages**: `Pages/TierLists/ChartSkills.razor` rebuilt (blend math leaves the page — see below); gains `/TierLists/{Single|Double|CoOp}/{level}` routes with 301s from `/ChartSkills`, `/PersonalizedTierList`, and query-param forms. Sitemap controller +~60 folder URLs. `/Chart/{id}` untouched until the crawler project (attribution footer).
+- **New shared components** (`Components/`): `ChartDetailsDialog` (video-first; wraps `EditChartGrid` + `ChartVideoDisplayer`), `FolderPicker`, `ChartCard` (all three densities), `TierSection` (collapsible), `LampStrip`, `FilterDrawer` + `FilterChips`, `DensityToggle`, `TierListSkeleton`, `BorderLegend`. `TitleProgressBar` gains a compact variant; `DifficultyBubble`/`ScoreBreakdown` consumed as-is.
+- **Retired**: Text View, per-element Show-X toggles, `TierListSection` (old page only). **Ratchets**: `UiColorTokenTests` ChartSkills 7 → 0; `L[…]` sweep, all eight locales.
+
+### Architecture
+
+- **Verticals**: ChartIntelligence (center of gravity), ScoreLedger (one published read added), Catalog (crawler project only), PlayerProgress/Identity consumed as-is, plus Web and CompositionRoot.
+- **New contract**: `GetBlendedTierListQuery` (ChartIntelligence) — lens/personalized blend moves from the .razor into a handler: cacheable, cancellable, testable in ApplicationTests; internalizes the page's direct `ITierListRepository.GetUsersOnLevel` port injection.
+- **New internal entities** (ChartIntelligence, via its `IDbModelContribution`): `UserTierListEntry` + repository, `ChartScoreStats`.
+- **New consumer**: `UserTierListMaterializer : IConsumer<PlayerScoresUpdatedEvent>` (event already fires per score batch).
+- **ScoreLedger**: cross-mix passed-chart-ids read (`IScoreReader` method or small contract query) for the dashed-green border.
+- **SharedKernel**: `MixCapabilities` static policy (skills/Chabala/radar/titles per mix) — gates display and blend inputs; SharedKernel references nothing so both Web and ChartIntelligence read it.
+- **Share renderer**: `IShareCardRenderer` port in `Domain.SecondaryPorts`, SkiaSharp implementation in `Data.Clients` (Data allowlist +SkiaSharp), output via existing `IFileUploadClient`; shared by the Download endpoint and the og:image job.
+- **Crawler project (later)**: piucenter client behind a Domain port, HtmlAgilityPack impl in `Data.Apis` (`PiuGameApi` precedent); ingestion consumers in Catalog.
+
+### SQL
+
+| Table | Owner | Shape |
+|---|---|---|
+| `scores.UserTierListEntry` | ChartIntelligence | PK (Mix, UserId, ChartId); covering index (Mix, ChartId) for similar-players aggregation; ~800K rows post-backfill |
+| `scores.ChartScoreStats` | ChartIntelligence | (Mix, ChartId) → variance band + per-grade clear stats; kills per-view `CalculateVariance` |
+| `scores.ExternalChartAlias` | Catalog *(crawler)* | unique (Source, ExternalKey) → ChartId |
+| `scores.ChartSkillMetric` | Catalog *(crawler)* | (ChartId, Skill, Frequency, Source) — frequencies alongside boolean `scores.ChartSkill` |
+
+No changed tables: `scores.TierListEntry` stays untouched (stats are a sibling); `scores.UserSettings` is key/value (new keys `Density__TierLists`, collapsed-tiers JSON; legacy `TierLists__*` keys read-migrated once). 2–3 EF migrations, indexes designed up front (PR #129 discipline), DATABASE-SCHEMA.md rows per table. Backfill = admin-triggered throttled bus command (~27K folder computations), not a migration.
+
+### Jobs & background services
+
+- **Event-driven, no schedule**: `UserTierListMaterializer` (idempotent per in-memory-transport rules).
+- **Extended existing**: `TierListSaga` + `ScoringDifficultySaga` also persist `ChartScoreStats` during their daily rebuilds.
+- **New Hangfire rows** (each = `RecurringJobRunner` method + `Program.cs` line + SCHEDULED-JOBS.md row): `refresh-folder-share-cards` (daily ~10:30 UTC, after tier-list rebuilds — regenerates per-folder og:images to blob); `crawl-piucenter` (weekly, gap-driven; crawler project).
+- **One-time**: `UserTierListEntry` backfill, admin-triggered.
+- **Not happening**: no new hosted services/timers, no second scheduler, no second DbContext.
