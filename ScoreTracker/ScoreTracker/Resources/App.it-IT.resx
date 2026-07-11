@@ -2948,4 +2948,28 @@
   <data name="Show Skill Metric" xml:space="preserve">
     <value>Mostra la metrica delle abilità</value>
   </data>
+  <data name="Queued" xml:space="preserve">
+    <value>In coda</value>
+  </data>
+  <data name="Key" xml:space="preserve">
+    <value>Chiave</value>
+  </data>
+  <data name="Last Checked" xml:space="preserve">
+    <value>Ultimo controllo</value>
+  </data>
+  <data name="Run PIU Center Crawl" xml:space="preserve">
+    <value>Avvia la scansione di PIU Center</value>
+  </data>
+  <data name="Unmatched PIU Center Keys" xml:space="preserve">
+    <value>Chiavi PIU Center non abbinate</value>
+  </data>
+  <data name="No unmatched keys" xml:space="preserve">
+    <value>Nessuna chiave non abbinata</value>
+  </data>
+  <data name="Select a key, pick the chart it belongs to, then bind" xml:space="preserve">
+    <value>Seleziona una chiave, scegli il chart a cui appartiene e collegali</value>
+  </data>
+  <data name="Bind Selected Chart" xml:space="preserve">
+    <value>Collega il chart selezionato</value>
+  </data>
 </root>

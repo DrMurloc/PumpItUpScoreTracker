@@ -10,20 +10,39 @@ using ScoreTracker.SharedKernel.Enums;
 namespace ScoreTracker.Catalog.Application;
 
 internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumerable<ChartSkillsRecord>>,
-    IRequestHandler<UpdateChartSkillCommand>,
     IRequestHandler<GetChartStepAnalysisQuery, ChartStepAnalysisRecord?>,
-    IRequestHandler<GetChartSkillChipsQuery, IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>>
+    IRequestHandler<GetChartSkillChipsQuery, IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>>,
+    IRequestHandler<GetUnresolvedAliasesQuery, IReadOnlyList<UnresolvedAliasRecord>>,
+    IRequestHandler<ResolveExternalAliasCommand>
 {
     private readonly IExternalChartAliasRepository _aliases;
     private readonly IChartRepository _charts;
+    private readonly IDateTimeOffsetAccessor _clock;
     private readonly IChartSkillMetricRepository _metrics;
 
     public SkillsSaga(IChartRepository charts, IChartSkillMetricRepository metrics,
-        IExternalChartAliasRepository aliases)
+        IExternalChartAliasRepository aliases, IDateTimeOffsetAccessor clock)
     {
         _charts = charts;
         _metrics = metrics;
         _aliases = aliases;
+        _clock = clock;
+    }
+
+    public async Task<IReadOnlyList<UnresolvedAliasRecord>> Handle(GetUnresolvedAliasesQuery request,
+        CancellationToken cancellationToken)
+    {
+        return (await _aliases.GetAliases(request.Source, cancellationToken))
+            .Where(a => a.ChartId == null)
+            .OrderBy(a => a.ExternalKey)
+            .Select(a => new UnresolvedAliasRecord(a.ExternalKey, a.LastCheckedAt))
+            .ToArray();
+    }
+
+    public async Task Handle(ResolveExternalAliasCommand request, CancellationToken cancellationToken)
+    {
+        await _aliases.ResolveAlias(request.Source, request.ExternalKey, request.ChartId, _clock.Now,
+            cancellationToken);
     }
 
     public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>> Handle(
@@ -100,10 +119,5 @@ internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumera
         CancellationToken cancellationToken)
     {
         return await _charts.GetChartSkills(cancellationToken);
-    }
-
-    public async Task Handle(UpdateChartSkillCommand request, CancellationToken cancellationToken)
-    {
-        await _charts.SaveChartSkills(request.Skills, cancellationToken);
     }
 }

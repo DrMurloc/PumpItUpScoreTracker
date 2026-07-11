@@ -2829,4 +2829,28 @@
   <data name="Show Skill Metric" xml:space="preserve">
     <value>스킬 지표 표시</value>
   </data>
+  <data name="Queued" xml:space="preserve">
+    <value>대기열에 추가됨</value>
+  </data>
+  <data name="Key" xml:space="preserve">
+    <value>키</value>
+  </data>
+  <data name="Last Checked" xml:space="preserve">
+    <value>마지막 확인</value>
+  </data>
+  <data name="Run PIU Center Crawl" xml:space="preserve">
+    <value>PIU Center 크롤 실행</value>
+  </data>
+  <data name="Unmatched PIU Center Keys" xml:space="preserve">
+    <value>매칭되지 않은 PIU Center 키</value>
+  </data>
+  <data name="No unmatched keys" xml:space="preserve">
+    <value>매칭되지 않은 키가 없습니다</value>
+  </data>
+  <data name="Select a key, pick the chart it belongs to, then bind" xml:space="preserve">
+    <value>키를 선택하고 해당 채보를 골라 연결하세요</value>
+  </data>
+  <data name="Bind Selected Chart" xml:space="preserve">
+    <value>선택한 채보 연결</value>
+  </data>
 </root>

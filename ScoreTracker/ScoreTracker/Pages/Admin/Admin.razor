@@ -33,6 +33,7 @@
 <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="ClearCache">@L["Clear Cache"]</MudButton>
 <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_backfillQueued" OnClick="BackfillUserTierLists">@L["Backfill User Tier Lists"]</MudButton>
 <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_tierListRebuildQueued" OnClick="RebuildTierLists">@L["Rebuild Tier Lists"]</MudButton>
+<MudButton Color="Color.Warning" Variant="Variant.Outlined" Href="/Admin/PiuCenter">PIU Center</MudButton>
 @foreach (var name in MissingUsers)
 {
     <br/>

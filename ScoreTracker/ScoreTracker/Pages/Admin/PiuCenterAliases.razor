@@ -1,0 +1,102 @@
+@page "/Admin/PiuCenter"
+@using MassTransit
+@using MediatR
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.Catalog.Contracts.Commands
+@using ScoreTracker.Catalog.Contracts.Messages
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+
+@* The human-in-the-loop surface for the piucenter integration (design doc §8a):
+   trigger the crawl on demand and bind the keys the normalizer couldn't auto-match.
+   This replaces the deleted hand-tag editor as skills' admin tool. *@
+<PageTitle>PIU Center</PageTitle>
+<MudText Typo="Typo.h4">PIU Center</MudText>
+<br/>
+<MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_crawlQueued" OnClick="RunCrawl">@L["Run PIU Center Crawl"]</MudButton>
+<br/><br/>
+<MudText Typo="Typo.h5">@L["Unmatched PIU Center Keys"]</MudText>
+@if (!_unresolved.Any())
+{
+    <MudText Typo="Typo.caption">@L["No unmatched keys"]</MudText>
+}
+else
+{
+    <MudText Typo="Typo.caption">@L["Select a key, pick the chart it belongs to, then bind"]</MudText>
+    <ChartSelector ChartIdSelected="SelectChart"></ChartSelector>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled"
+               Disabled="_selectedKey == null || _selectedChart == null || _isBinding"
+               OnClick="Bind">
+        @L["Bind Selected Chart"]@(_selectedChart == null ? "" : $" — {_selectedChart.Song.Name} {_selectedChart.DifficultyString}")
+    </MudButton>
+    <MudTable T="UnresolvedAliasRecord" Items="_unresolved" Dense="true" Hover="true"
+              RowClass="cursor-pointer"
+              OnRowClick="(TableRowClickEventArgs<UnresolvedAliasRecord> row) => _selectedKey = row.Item?.ExternalKey"
+              RowClassFunc="RowClass">
+        <HeaderContent>
+            <MudTh>@L["Key"]</MudTh>
+            <MudTh>@L["Last Checked"]</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd Style="font-family:monospace">@context.ExternalKey</MudTd>
+            <MudTd>@context.LastCheckedAt.ToString("yyyy-MM-dd")</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@inject IMediator Mediator;
+@inject IBus Bus;
+@inject ICurrentUserAccessor CurrentUser;
+@inject ISnackbar Snackbar;
+@inject NavigationManager NavManager;
+@code {
+    private IReadOnlyList<UnresolvedAliasRecord> _unresolved = Array.Empty<UnresolvedAliasRecord>();
+    private string? _selectedKey;
+    private Chart? _selectedChart;
+    private bool _crawlQueued;
+    private bool _isBinding;
+
+    private string RowClass(UnresolvedAliasRecord row, int index)
+    {
+        return row.ExternalKey == _selectedKey ? "mud-selected-item" : string.Empty;
+    }
+
+    private async Task RunCrawl()
+    {
+        _crawlQueued = true;
+        await Bus.Publish(new CrawlPiuCenterCommand());
+        Snackbar.Add(L["Queued"].Value, Severity.Success);
+    }
+
+    private Task SelectChart(Chart chart)
+    {
+        _selectedChart = chart;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task Bind()
+    {
+        if (_selectedKey == null || _selectedChart == null) return;
+        _isBinding = true;
+        await Mediator.Send(new ResolveExternalAliasCommand(ExternalAliasSources.PiuCenter, _selectedKey,
+            _selectedChart.Id));
+        Snackbar.Add(L["Updated X Y", _selectedChart.Song.Name, _selectedKey].Value, Severity.Success);
+        _unresolved = await Mediator.Send(new GetUnresolvedAliasesQuery());
+        _selectedKey = null;
+        _isBinding = false;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.User.IsAdmin)
+        {
+            NavManager.NavigateTo("/");
+            return;
+        }
+
+        _unresolved = await Mediator.Send(new GetUnresolvedAliasesQuery());
+    }
+}

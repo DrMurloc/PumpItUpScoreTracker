@@ -2949,4 +2949,28 @@
   <data name="Show Skill Metric" xml:space="preserve">
     <value>スキル指標を表示</value>
   </data>
+  <data name="Queued" xml:space="preserve">
+    <value>キューに追加しました</value>
+  </data>
+  <data name="Key" xml:space="preserve">
+    <value>キー</value>
+  </data>
+  <data name="Last Checked" xml:space="preserve">
+    <value>最終確認</value>
+  </data>
+  <data name="Run PIU Center Crawl" xml:space="preserve">
+    <value>PIU Centerクロールを実行</value>
+  </data>
+  <data name="Unmatched PIU Center Keys" xml:space="preserve">
+    <value>未マッチのPIU Centerキー</value>
+  </data>
+  <data name="No unmatched keys" xml:space="preserve">
+    <value>未マッチのキーはありません</value>
+  </data>
+  <data name="Select a key, pick the chart it belongs to, then bind" xml:space="preserve">
+    <value>キーを選択し、対応するチャートを選んでバインドしてください</value>
+  </data>
+  <data name="Bind Selected Chart" xml:space="preserve">
+    <value>選択したチャートをバインド</value>
+  </data>
 </root>

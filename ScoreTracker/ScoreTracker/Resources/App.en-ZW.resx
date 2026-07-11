@@ -2871,4 +2871,28 @@
   <data name="Show Skill Metric" xml:space="preserve">
     <value>Shrgw Skrgll Metrgc</value>
   </data>
+  <data name="Queued" xml:space="preserve">
+    <value>Qrgd, mrgl</value>
+  </data>
+  <data name="Key" xml:space="preserve">
+    <value>Krgy</value>
+  </data>
+  <data name="Last Checked" xml:space="preserve">
+    <value>Lrgst Chrgcked</value>
+  </data>
+  <data name="Run PIU Center Crawl" xml:space="preserve">
+    <value>Rrgn PIU Center Crrgwl</value>
+  </data>
+  <data name="Unmatched PIU Center Keys" xml:space="preserve">
+    <value>Unmrgtched PIU Center Krgys</value>
+  </data>
+  <data name="No unmatched keys" xml:space="preserve">
+    <value>No unmrgtched krgys, mrgl</value>
+  </data>
+  <data name="Select a key, pick the chart it belongs to, then bind" xml:space="preserve">
+    <value>Selrgct a krgy, prgck the chrgrt it belrgngs to, thrgn brgnd</value>
+  </data>
+  <data name="Bind Selected Chart" xml:space="preserve">
+    <value>Brgnd Selrgcted Chrgrt</value>
+  </data>
 </root>
