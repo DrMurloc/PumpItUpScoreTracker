@@ -2566,4 +2566,10 @@
   <data name="More Mixes" xml:space="preserve">
     <value>시리즈 더 보기</value>
   </data>
+  <data name="scale" xml:space="preserve">
+    <value>기준</value>
+  </data>
+  <data name="not comparable to modern levels" xml:space="preserve">
+    <value>현행 레벨과 비교할 수 없습니다</value>
+  </data>
 </root>

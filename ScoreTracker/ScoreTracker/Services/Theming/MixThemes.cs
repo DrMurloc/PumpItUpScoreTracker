@@ -204,6 +204,26 @@ public static class MixThemes
 
     private const string PlateNoneColor = "#8E24AA";
 
+    // Legacy slot colors: the classic song-wheel language of the pre-Exceed eras
+    // (Crazy red, Freestyle green, Nightmare purple…). Deliberately NOT the difficulty
+    // ramp — old-scale numbers don't translate to modern levels, and the distinct
+    // vocabulary is the signal that a chip lives on a different scale
+    // (docs/design/legacy-mixes.md). Another-variants reuse their base slot's hue.
+    private static readonly IReadOnlyDictionary<string, string> SlotColors =
+        new Dictionary<string, string>
+        {
+            ["easy"] = "#FDD835",
+            ["normal"] = "#42A5F5",
+            ["hard"] = "#FB8C00",
+            ["crazy"] = "#E53935",
+            ["freestyle"] = "#43A047",
+            ["nightmare"] = "#8E24AA",
+            ["practice"] = "#9E9E9E",
+            ["another"] = "#00ACC1",
+            // Non-slot legacy chips (Half-Double, levelled co-ops, unrated) read neutral.
+            ["neutral"] = "#90A4AE"
+        };
+
     public static string CssVariablesFor(MixEnum mix)
     {
         var p = PaletteFor(mix);
@@ -211,7 +231,8 @@ public static class MixThemes
             $"    --diff-{ThemeScales.DifficultySlug(kv.Key)}: {kv.Value};"));
         var plates = string.Join("\n", PlateColors.Select(kv =>
             $"    --plate-{kv.Key.GetShorthand().ToLowerInvariant()}: {kv.Value};"))
-            + $"\n    --plate-none: {PlateNoneColor};";
+            + $"\n    --plate-none: {PlateNoneColor};"
+            + "\n" + string.Join("\n", SlotColors.Select(kv => $"    --slot-{kv.Key}: {kv.Value};"));
         return $@":root {{
     --mix-bg: {p.Background};
     --mix-surface: {p.Surface};

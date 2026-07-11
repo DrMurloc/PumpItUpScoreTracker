@@ -2686,4 +2686,10 @@
   <data name="More Mixes" xml:space="preserve">
     <value>Altri Mix</value>
   </data>
+  <data name="scale" xml:space="preserve">
+    <value>scala</value>
+  </data>
+  <data name="not comparable to modern levels" xml:space="preserve">
+    <value>non paragonabile ai livelli moderni</value>
+  </data>
 </root>

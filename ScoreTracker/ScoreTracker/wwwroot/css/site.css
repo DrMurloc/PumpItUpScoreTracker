@@ -266,3 +266,21 @@
     text-shadow: 0 0 4px, 0 0 10px, 0 0 18px;
     font-weight: 600;
 }
+
+/* Legacy difficulty chips (docs/design/legacy-mixes.md): rendered, not image bubbles.
+   Pre-Exceed slots, Half-Doubles, and levelled legacy co-ops announce "different
+   scale" by looking deliberately unlike the modern bubble art. Hue rides the
+   --slot-* tokens via inline style from ThemeScales.SlotColor. */
+.legacy-chip {
+    display: inline-flex;
+    align-items: center;
+    border: 2px solid var(--slot-neutral);
+    border-radius: 12px;
+    padding: 1px 8px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: .06em;
+    color: var(--slot-neutral);
+    white-space: nowrap;
+    line-height: 1.5;
+}

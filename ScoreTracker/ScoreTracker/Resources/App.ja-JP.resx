@@ -2687,4 +2687,10 @@
   <data name="More Mixes" xml:space="preserve">
     <value>その他のバージョン</value>
   </data>
+  <data name="scale" xml:space="preserve">
+    <value>基準</value>
+  </data>
+  <data name="not comparable to modern levels" xml:space="preserve">
+    <value>現行レベルとは比較できません</value>
+  </data>
 </root>
