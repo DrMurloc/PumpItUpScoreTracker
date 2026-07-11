@@ -2958,4 +2958,7 @@
   <data name="American" xml:space="preserve">
     <value>Américains</value>
   </data>
+  <data name="Community Rating" xml:space="preserve">
+    <value>Note de la communauté</value>
+  </data>
 </root>

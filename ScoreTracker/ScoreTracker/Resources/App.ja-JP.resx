@@ -2961,4 +2961,7 @@
   <data name="American" xml:space="preserve">
     <value>アメリカ版</value>
   </data>
+  <data name="Community Rating" xml:space="preserve">
+    <value>コミュニティ評価</value>
+  </data>
 </root>

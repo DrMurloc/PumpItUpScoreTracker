@@ -2912,4 +2912,7 @@
   <data name="American" xml:space="preserve">
     <value>Americanos</value>
   </data>
+  <data name="Community Rating" xml:space="preserve">
+    <value>Avaliação da comunidade</value>
+  </data>
 </root>

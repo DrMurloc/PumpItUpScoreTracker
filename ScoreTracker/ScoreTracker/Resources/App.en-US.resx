@@ -2960,4 +2960,7 @@
   <data name="American" xml:space="preserve">
     <value>American</value>
   </data>
+  <data name="Community Rating" xml:space="preserve">
+    <value>Community Rating</value>
+  </data>
 </root>

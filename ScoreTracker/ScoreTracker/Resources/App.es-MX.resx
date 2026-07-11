@@ -2840,4 +2840,7 @@
   <data name="American" xml:space="preserve">
     <value>Americanos</value>
   </data>
+  <data name="Community Rating" xml:space="preserve">
+    <value>Valoración de la comunidad</value>
+  </data>
 </root>

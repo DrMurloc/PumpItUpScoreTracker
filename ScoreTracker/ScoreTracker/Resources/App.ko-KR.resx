@@ -2841,4 +2841,7 @@
   <data name="American" xml:space="preserve">
     <value>미국판</value>
   </data>
+  <data name="Community Rating" xml:space="preserve">
+    <value>커뮤니티 평가</value>
+  </data>
 </root>
