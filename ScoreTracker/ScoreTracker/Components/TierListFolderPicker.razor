@@ -1,0 +1,100 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+@* One control for one domain concept: a folder is (type, level). Picking both in a
+   single gesture is what kills the S14→D18 double-load (design doc §4). *@
+<div class="tier-folder-picker">
+    <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" Size="Size.Small" Disabled="@(Disabled || !CanStep(-1))"
+                   OnClick="() => Step(-1)" aria-label="@L["Previous Folder"]"></MudIconButton>
+    <MudMenu Dense="true">
+        <ActivatorContent>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="Disabled"
+                       StartIcon="@Icons.Material.Filled.Folder">@FolderLabel</MudButton>
+        </ActivatorContent>
+        <ChildContent>
+            <div class="tier-folder-picker-pop">
+                <MudButtonGroup OverrideStyles="false" Class="tier-folder-picker-types">
+                    <MudButton Variant="@TypeVariant(ChartType.Single)" Color="Color.Primary" Size="Size.Small"
+                               OnClick="() => SetPendingType(ChartType.Single)">@L["Singles"]</MudButton>
+                    <MudButton Variant="@TypeVariant(ChartType.Double)" Color="Color.Primary" Size="Size.Small"
+                               OnClick="() => SetPendingType(ChartType.Double)">@L["Doubles"]</MudButton>
+                    <MudButton Variant="@TypeVariant(ChartType.CoOp)" Color="Color.Primary" Size="Size.Small"
+                               OnClick="() => SetPendingType(ChartType.CoOp)">@L["CoOp"]</MudButton>
+                </MudButtonGroup>
+                <div class="tier-folder-picker-levels">
+                    @foreach (var level in LevelsFor(_pendingType))
+                    {
+                        var captured = level;
+                        <MudMenuItem OnClick="() => Pick(captured)">
+                            <span class="@(captured == Level && _pendingType == Type ? "tier-folder-picker-current" : null)">@captured</span>
+                        </MudMenuItem>
+                    }
+                </div>
+            </div>
+        </ChildContent>
+    </MudMenu>
+    <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Disabled="@(Disabled || !CanStep(1))"
+                   OnClick="() => Step(1)" aria-label="@L["Next Folder"]"></MudIconButton>
+</div>
+
+@code {
+    private ChartType _pendingType;
+
+    [Parameter] public ChartType Type { get; set; } = ChartType.Double;
+
+    [Parameter] public int Level { get; set; } = 18;
+
+    [Parameter] public bool Disabled { get; set; }
+
+    [Parameter] public EventCallback<(ChartType Type, int Level)> FolderChanged { get; set; }
+
+    private string FolderLabel => Type == ChartType.CoOp
+        ? $"{L["CoOp"]} ×{Level}"
+        : $"{Type.GetShortHand()}{Level}";
+
+    protected override void OnParametersSet()
+    {
+        _pendingType = Type;
+    }
+
+    private Variant TypeVariant(ChartType type)
+    {
+        return _pendingType == type ? Variant.Filled : Variant.Outlined;
+    }
+
+    private void SetPendingType(ChartType type)
+    {
+        _pendingType = type;
+    }
+
+    private static IEnumerable<int> LevelsFor(ChartType type)
+    {
+        return type == ChartType.CoOp ? Enumerable.Range(2, 4) : Enumerable.Range(1, DifficultyLevel.Max);
+    }
+
+    private (int Min, int Max) Bounds(ChartType type)
+    {
+        return type == ChartType.CoOp ? (2, 5) : (1, DifficultyLevel.Max);
+    }
+
+    private bool CanStep(int direction)
+    {
+        var (min, max) = Bounds(Type);
+        var target = Level + direction;
+        return target >= min && target <= max;
+    }
+
+    private async Task Step(int direction)
+    {
+        if (!CanStep(direction)) return;
+        await FolderChanged.InvokeAsync((Type, Level + direction));
+    }
+
+    private async Task Pick(int level)
+    {
+        var (min, max) = Bounds(_pendingType);
+        await FolderChanged.InvokeAsync((_pendingType, Math.Clamp(level, min, max)));
+    }
+}

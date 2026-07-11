@@ -1,0 +1,27 @@
+@namespace ScoreTracker.Web.Components
+
+@* Loading state shaped like the content it becomes (rule 9): section headers with
+   jacket-card grids, never a lone spinner. *@
+<div class="tier-list-skeleton" aria-hidden="true">
+    @for (var section = 0; section < Sections; section++)
+    {
+        <div class="tier-section">
+            <div class="tier-section-header">
+                <MudSkeleton SkeletonType="SkeletonType.Text" Width="180px" Height="28px"></MudSkeleton>
+            </div>
+            <div class="tier-section-body tier-card-grid">
+                @for (var card = 0; card < CardsPerSection; card++)
+                {
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="140px" Class="tier-chart-card-skeleton"></MudSkeleton>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+
+    [Parameter] public int Sections { get; set; } = 3;
+
+    [Parameter] public int CardsPerSection { get; set; } = 6;
+}

@@ -46,7 +46,8 @@ public sealed class UiColorTokenTests
         // The recap deck is deliberately self-styled slide art (its design doc owns its
         // palette); it stays allowlisted rather than tokenized.
         ["Pages/Progress/PhoenixRecap.razor"] = 22,
-        ["Pages/TierLists/ChartSkills.razor"] = 7,
+        // C4 shell rewrite: the lone survivor is the ApexCharts radar style, which C7 removes.
+        ["Pages/TierLists/ChartSkills.razor"] = 1,
         ["Pages/TierLists/TierLists.razor"] = 26,
         ["Pages/Tools/ChartRandomizer.razor"] = 2,
         ["Pages/WhatShouldIPlay.razor"] = 4
