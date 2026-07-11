@@ -2571,4 +2571,7 @@
   <data name="not comparable to modern levels" xml:space="preserve">
     <value>no comparable con los niveles modernos</value>
   </data>
+  <data name="Debuted in: X" xml:space="preserve">
+    <value>Debutó en: {0}</value>
+  </data>
 </root>

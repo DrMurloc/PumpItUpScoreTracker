@@ -2693,4 +2693,7 @@
   <data name="not comparable to modern levels" xml:space="preserve">
     <value>現行レベルとは比較できません</value>
   </data>
+  <data name="Debuted in: X" xml:space="preserve">
+    <value>初出バージョン: {0}</value>
+  </data>
 </root>

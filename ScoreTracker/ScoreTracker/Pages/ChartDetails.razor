@@ -46,6 +46,8 @@
     {
         <MudText>@L["Note Count: X", _selectedChart.NoteCount]</MudText>
     }
+    @* True debut attribution backfilled from the pumpout catalog (docs/design/legacy-mixes.md). *@
+    <MudText>@L["Debuted in: X", _selectedChart.OriginalMix.GetName()]</MudText>
     <br/>
     <MudButton Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Custom.Brands.YouTube" OnClick="()=>VideoDisplayer.ShowVideo(_selectedChart.Id)">@L["Open Video"]</MudButton>
     <br />

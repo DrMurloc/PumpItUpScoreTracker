@@ -2572,4 +2572,7 @@
   <data name="not comparable to modern levels" xml:space="preserve">
     <value>현행 레벨과 비교할 수 없습니다</value>
   </data>
+  <data name="Debuted in: X" xml:space="preserve">
+    <value>첫 등장 시리즈: {0}</value>
+  </data>
 </root>
