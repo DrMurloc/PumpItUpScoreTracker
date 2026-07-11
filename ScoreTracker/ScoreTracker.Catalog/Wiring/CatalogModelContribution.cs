@@ -18,6 +18,10 @@ public sealed class CatalogModelContribution : IDbModelContribution
         modelBuilder.Entity<UserRandomSettingsEntity>().ToTable("UserRandomSettings");
         modelBuilder.Entity<ChartSkillEntity>().ToTable("ChartSkill");
         modelBuilder.Entity<SongNameLanguageEntity>().ToTable("SongNameLanguage");
+        modelBuilder.Entity<ExternalChartAliasEntity>().ToTable("ExternalChartAlias");
+        modelBuilder.Entity<ChartSkillArchiveEntity>().ToTable("ChartSkillArchive");
+        modelBuilder.Entity<ChartSkillMetricEntity>().ToTable("ChartSkillMetric")
+            .HasKey(e => new { e.ChartId, e.Source, e.MetricName });
 
         modelBuilder.Entity<ChartVideoEntity>().ToTable("ChartVideo")
             .HasOne<ChartEntity>()

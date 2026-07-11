@@ -18,6 +18,8 @@ public static class CatalogRegistrationExtensions
     {
         services.AddTransient<IChartRepository, EFChartRepository>();
         services.AddTransient<IRandomizerRepository, EFRandomizerRepository>();
+        services.AddTransient<IExternalChartAliasRepository, EFExternalChartAliasRepository>();
+        services.AddTransient<IChartSkillMetricRepository, EFChartSkillMetricRepository>();
         services.AddSingleton<IDbModelContribution, CatalogModelContribution>();
         return services;
     }

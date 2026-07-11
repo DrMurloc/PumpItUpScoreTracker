@@ -68,7 +68,10 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | Table | Purpose |
 |---|---|
 | `scores.ChartVideo` | YouTube video links per chart with uploader metadata |
-| `scores.ChartSkill` | Skill tags on charts (drills, gimmicks, …) with highlight flags |
+| `scores.ChartSkill` | Skill tags on charts with highlight flags — regenerated per piucenter crawl since the PiuCenter integration (hand tags archived) |
+| `scores.ChartSkillArchive` | One-time snapshot of the pre-crawler hand-maintained ChartSkill rows; never read by the app |
+| `scores.ChartSkillMetric` | Banked per-chart numeric step-analysis facts per external source ((ChartId, Source, MetricName) → decimal + optional grade): badge fractions, top-3 ranks, practice ranks, NPS/sustain/difficulty prediction |
+| `scores.ExternalChartAlias` | Generic external-name map ((Source, ExternalKey) → nullable ChartId) with Auto/Manual/NotFound status + last-checked stamp; for piucenter the key doubles as the fetch URL, so this is also the crawl plan and negative cache |
 | `scores.SongNameLanguage` | Localized song names per culture |
 | `scores.UserRandomSettings` | Saved randomizer presets (JSON) |
 | `scores.SavedChart` | User bookmark lists of charts *(ownership split pending — currently shared)* |
