@@ -707,10 +707,6 @@
 	  <value>Montrer les Compétences</value>
 	  <comment>Montrer les Compétences</comment>
   </data>
-  <data name="Show Difficulty" xml:space="preserve">
-	  <value>Montrer la Difficulté</value>
-	  <comment>Montrer la Difficulté</comment>
-  </data>
   <data name="Show Song Name" xml:space="preserve">
 	  <value>Montrer le Nom de la Chanson</value>
 	  <comment>Montrer le Nom de la Chanson</comment>
@@ -2887,7 +2883,25 @@
   <data name="Applied Filters" xml:space="preserve">
     <value>Filtres appliqués</value>
   </data>
-  <data name="Title Levels" xml:space="preserve">
-    <value>Niveaux de titre</value>
+  <data name="Filters and Columns" xml:space="preserve">
+    <value>Filtres et colonnes</value>
+  </data>
+  <data name="Not available in Compact view" xml:space="preserve">
+    <value>Indisponible en vue compacte</value>
+  </data>
+  <data name="Generating" xml:space="preserve">
+    <value>Génération</value>
+  </data>
+  <data name="Folder Levels" xml:space="preserve">
+    <value>Niveaux du dossier</value>
+  </data>
+  <data name="Skills" xml:space="preserve">
+    <value>Compétences</value>
+  </data>
+  <data name="{0} days ago" xml:space="preserve">
+    <value>il y a {0} jours</value>
+  </data>
+  <data name="Recorded {0} days ago" xml:space="preserve">
+    <value>Enregistré il y a {0} jours</value>
   </data>
 </root>

@@ -712,10 +712,6 @@
 	  <value>Urgmrl Glrglurgrgl</value>
 	  <comment>Show Skills</comment>
   </data>
-  <data name="Show Difficulty" xml:space="preserve">
-	  <value>Urgmrl Grlgrgl</value>
-	  <comment>Show Difficulty</comment>
-  </data>
   <data name="Show Song Name" xml:space="preserve">
 	  <value>Urgmrl Glurgl Mrglar</value>
 	  <comment>Show Song Name</comment>
@@ -2812,7 +2808,25 @@
   <data name="Applied Filters" xml:space="preserve">
     <value>Applied Glrglblubrgl</value>
   </data>
-  <data name="Title Levels" xml:space="preserve">
-    <value>Mrglargrlrgl Levels</value>
+  <data name="Filters and Columns" xml:space="preserve">
+    <value>Glrglblubrgl and Columrgls</value>
+  </data>
+  <data name="Not available in Compact view" xml:space="preserve">
+    <value>Not availamrgl in Compact mrglview</value>
+  </data>
+  <data name="Generating" xml:space="preserve">
+    <value>Genermrglating</value>
+  </data>
+  <data name="Folder Levels" xml:space="preserve">
+    <value>Mrglfolder Levels</value>
+  </data>
+  <data name="Skills" xml:space="preserve">
+    <value>Skrglls</value>
+  </data>
+  <data name="{0} days ago" xml:space="preserve">
+    <value>{0} mrgldays ago</value>
+  </data>
+  <data name="Recorded {0} days ago" xml:space="preserve">
+    <value>Recormrgled {0} days ago</value>
   </data>
 </root>

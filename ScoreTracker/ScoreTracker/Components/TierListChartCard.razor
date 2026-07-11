@@ -63,6 +63,23 @@ else
         {
             <MudText Typo="Typo.caption" Class="tier-chart-card-tier" Style="@($"color:{TierColor}")">@TierLabel</MudText>
         }
+        @if (StepArtist != null)
+        {
+            <MudText Typo="Typo.caption" Class="tier-chart-card-meta">@StepArtist</MudText>
+        }
+        @if (AgeDays != null)
+        {
+            <MudText Typo="Typo.caption" Class="tier-chart-card-meta">@L["{0} days ago", AgeDays]</MudText>
+        }
+        @if (Skills is { Count: > 0 })
+        {
+            <div class="tier-chart-card-skills">
+                @foreach (var skill in Skills)
+                {
+                    <span class="tier-chart-card-skill">@skill</span>
+                }
+            </div>
+        }
     </div>
     <div class="tier-chart-card-actions">
         @if (ShowToDo)
@@ -107,6 +124,14 @@ else
     [Parameter] public string? TierLabel { get; set; }
 
     [Parameter] public string? TierColor { get; set; }
+
+    // Optional column info (the drawer's Display switches) — Comfortable only; the page
+    // passes null in other densities.
+    [Parameter] public string? StepArtist { get; set; }
+
+    [Parameter] public IReadOnlyList<string>? Skills { get; set; }
+
+    [Parameter] public int? AgeDays { get; set; }
 
     [Parameter] public EventCallback<Guid> OnToDo { get; set; }
 

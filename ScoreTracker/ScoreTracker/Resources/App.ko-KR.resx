@@ -658,9 +658,6 @@
   <data name="Show Skills" xml:space="preserve">
     <value>스킬 표시</value>
   </data>
-  <data name="Show Difficulty" xml:space="preserve">
-    <value>난이도 표시</value>
-  </data>
   <data name="Show Song Name" xml:space="preserve">
     <value>노래 이름 표시</value>
   </data>
@@ -2769,7 +2766,25 @@
   <data name="Applied Filters" xml:space="preserve">
     <value>적용된 필터</value>
   </data>
-  <data name="Title Levels" xml:space="preserve">
-    <value>칭호 레벨</value>
+  <data name="Filters and Columns" xml:space="preserve">
+    <value>필터 및 열</value>
+  </data>
+  <data name="Not available in Compact view" xml:space="preserve">
+    <value>컴팩트 보기에서는 사용할 수 없습니다</value>
+  </data>
+  <data name="Generating" xml:space="preserve">
+    <value>생성 중</value>
+  </data>
+  <data name="Folder Levels" xml:space="preserve">
+    <value>폴더 레벨</value>
+  </data>
+  <data name="Skills" xml:space="preserve">
+    <value>스킬</value>
+  </data>
+  <data name="{0} days ago" xml:space="preserve">
+    <value>{0}일 전</value>
+  </data>
+  <data name="Recorded {0} days ago" xml:space="preserve">
+    <value>{0}일 전에 기록됨</value>
   </data>
 </root>

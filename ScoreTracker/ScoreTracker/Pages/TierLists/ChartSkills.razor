@@ -48,10 +48,9 @@
 }
 else
 {
-    @* 1 — sticky toolbar carries only what changes the DATA you're looking at:
-       folder → view → personalized (owner's field-test divide, round 6). Presentation
-       controls (lens ordering, density, Download, Filters) live in the content bar
-       directly above the list. *@
+    @* 1 — sticky toolbar carries what changes the DATA you're looking at (folder →
+       view → personalized) plus the page's one ACTION, Download, right-aligned
+       (round 7). Presentation controls live in the content bar above the list. *@
     <div class="tier-toolbar">
         <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></FolderPicker>
         <MudButtonGroup OverrideStyles="false">
@@ -66,6 +65,20 @@ else
         {
             <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
         }
+        <MudSpacer></MudSpacer>
+        <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined"
+                   StartIcon="@(_isBuildingImage ? null : Icons.Material.Filled.FileDownload)"
+                   Disabled="_isBuildingImage || _isLoading">
+            @if (_isBuildingImage)
+            {
+                <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2"></MudProgressCircular>
+                @L["Generating"]
+            }
+            else
+            {
+                @L["Download"]
+            }
+        </MudButton>
     </div>
     @if (_isProvisionalFallback || PersonalizedActive)
     {
@@ -104,7 +117,7 @@ else
             }
             <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
                        StartIcon="@(_titlesCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"
-                       OnClick="ToggleTitles" aria-expanded="@(_titlesCollapsed ? "false" : "true")">@L["Title Levels"]</MudButton>
+                       OnClick="ToggleTitles" aria-expanded="@(_titlesCollapsed ? "false" : "true")">@L["Folder Levels"]</MudButton>
             @if (!_titlesCollapsed)
             {
                 <MudGrid>
@@ -164,6 +177,7 @@ else
                 <MudSelectItem T="string" Value="@("Scoring Level")">@L["Scoring Level"]</MudSelectItem>
             </MudSelect>
         }
+        <MudSpacer></MudSpacer>
         <MudButtonGroup OverrideStyles="false">
             <MudTooltip Text=@L["Comfortable"]>
                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy"
@@ -181,12 +195,10 @@ else
                                OnClick="() => SetDensity(UiDensity.Table)" aria-label="@L["Table"]"></MudIconButton>
             </MudTooltip>
         </MudButtonGroup>
-        <MudSpacer></MudSpacer>
-        <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.FileDownload" Disabled="_isBuildingImage || _isLoading">@L["Download"]</MudButton>
-        <MudTooltip Text=@L["Filters"]>
+        <MudTooltip Text=@L["Filters and Columns"]>
             <MudBadge Content="ActiveFilterCount" Visible="HasActiveFilters" Color="Color.Primary" Overlap="true">
                 <MudIconButton Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary" Variant="Variant.Outlined"
-                               OnClick="() => _filtersOpen = true" aria-label="@L["Filters"]"></MudIconButton>
+                               OnClick="() => _filtersOpen = true" aria-label="@L["Filters and Columns"]"></MudIconButton>
             </MudBadge>
         </MudTooltip>
     </div>
@@ -269,8 +281,20 @@ else
                                 {
                                     <th>@LensDisplayName(_tierListType)</th>
                                 }
+                                @if (_settings.ShowStepArtist)
+                                {
+                                    <th>@L["Step Artist"]</th>
+                                }
+                                @if (_settings.ShowSkills)
+                                {
+                                    <th>@L["Skills"]</th>
+                                }
                                 @if (CurrentUser.IsLoggedIn)
                                 {
+                                    @if (_showAge)
+                                    {
+                                        <th>@L["Age"]</th>
+                                    }
                                     <th>@L["My Score"]</th>
                                     <th>@L["Better Than"]</th>
                                     <th></th>
@@ -294,8 +318,25 @@ else
                                     {
                                         <td><span style="color:@ThemeScales.DifficultyColor(entry.Category)">@L[TierName(entry.Category)]</span></td>
                                     }
+                                    @if (_settings.ShowStepArtist)
+                                    {
+                                        <td>@chart.StepArtist</td>
+                                    }
+                                    @if (_settings.ShowSkills)
+                                    {
+                                        <td class="tier-table-skills">@string.Join(", ", chart.Skills)</td>
+                                    }
                                     @if (CurrentUser.IsLoggedIn)
                                     {
+                                        @if (_showAge)
+                                        {
+                                            <td>
+                                                @if (score != null)
+                                                {
+                                                    @L["{0} days ago", (int)(_now - score.RecordedDate).TotalDays]
+                                                }
+                                            </td>
+                                        }
                                         <td>
                                             @if (score?.Score != null)
                                             {
@@ -341,6 +382,9 @@ else
                                                Density="_density"
                                                TierLabel="@(ShowLensAnnotation ? (string)L[TierName(entry.Category)] : null)"
                                                TierColor="@(ShowLensAnnotation ? ThemeScales.DifficultyColor(entry.Category) : null)"
+                                               StepArtist="@(_settings.ShowStepArtist ? chart.StepArtist?.ToString() : null)"
+                                               Skills="@(_settings.ShowSkills && !IsSkillView ? chart.Skills.Select(s => s.ToString()).ToArray() : null)"
+                                               AgeDays="@(_showAge && score != null ? (int)(_now - score.RecordedDate).TotalDays : null)"
                                                OnToDo="ToggleToDo"
                                                OnOpen="OpenDetails"></TierListChartCard>
                         }
@@ -401,14 +445,24 @@ else
             </MudSelect>
             <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ClearFilters">@L["Clear Filters"]</MudButton>
             <MudDivider></MudDivider>
+            @* Columns: extra info on Comfortable cards / as Table columns. Compact is the
+               jacket sticker sheet — nothing fits, so the switches disable there (round 7).
+               "Show Difficulty" retired: the lens annotation is always on since round 6. *@
             <MudText Typo="Typo.subtitle1">@L["Display"]</MudText>
-            <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowSongName" ValueChanged="SetShowName" Label=@L["Show Song Name"]></MudSwitch>
-            <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowStepArtist" ValueChanged="SetShowStepArtist" Label=@L["Show Step Artist"]></MudSwitch>
-            <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowSkills" ValueChanged="SetShowSkills" Label=@L["Show Skills"]></MudSwitch>
-            <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowDifficulty" ValueChanged="SetShowDifficulty" Label=@L["Show Difficulty"]></MudSwitch>
+            @if (_density == UiDensity.Compact)
+            {
+                <MudText Typo="Typo.caption">@L["Not available in Compact view"]</MudText>
+            }
+            <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowSongName" ValueChanged="SetShowName"
+                       Disabled="_density != UiDensity.Comfortable" Label=@L["Show Song Name"]></MudSwitch>
+            <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowStepArtist" ValueChanged="SetShowStepArtist"
+                       Disabled="_density == UiDensity.Compact" Label=@L["Show Step Artist"]></MudSwitch>
+            <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowSkills" ValueChanged="SetShowSkills"
+                       Disabled="_density == UiDensity.Compact" Label=@L["Show Skills"]></MudSwitch>
             @if (CurrentUser.IsLoggedIn)
             {
-                <MudSwitch T="bool" Color="Color.Primary" Value="_showAge" ValueChanged="SetShowAge" Label=@L["Show Age"]></MudSwitch>
+                <MudSwitch T="bool" Color="Color.Primary" Value="_showAge" ValueChanged="SetShowAge"
+                           Disabled="_density == UiDensity.Compact" Label=@L["Show Age"]></MudSwitch>
             }
         </div>
     </MudDrawer>
@@ -425,6 +479,10 @@ else
                         Score="_detailsChart != null && _scores.TryGetValue(_detailsChart.Id, out var detailsScore) ? detailsScore : null"
                         Ranking="_detailsChart != null && _scoreRankings.TryGetValue(_detailsChart.Id, out var detailsRank) ? detailsRank : null"
                         IsToDo="_detailsChart != null && _todos.Contains(_detailsChart.Id)"
+                        LensName="@LensDisplayName(_tierListType)"
+                        TierLabel="@(_detailsChart != null && _chartDifficulties.TryGetValue(_detailsChart.Id, out var detailsTier) ? (string)L[TierName(detailsTier)] : null)"
+                        TierColor="@(_detailsChart != null && _chartDifficulties.TryGetValue(_detailsChart.Id, out var detailsTierColor) ? ThemeScales.DifficultyColor(detailsTierColor) : null)"
+                        ScoreAgeDays="@(_detailsChart != null && _scores.TryGetValue(_detailsChart.Id, out var detailsAge) ? (int)(_now - detailsAge.RecordedDate).TotalDays : null)"
                         OnToDo="ToggleToDo" OnScoreRecorded="RefreshScores"></ChartDetailsDialog>
 }
 <style>
@@ -433,7 +491,9 @@ else
         top: 0;
         z-index: 20;
         background: var(--mud-palette-surface);
-        border-bottom: 1px solid var(--mud-palette-lines-default);
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 8px;
+        margin-top: 12px;
         padding: 8px;
         display: flex;
         flex-wrap: wrap;
@@ -521,6 +581,11 @@ else
         background-size: cover;
         background-position: center;
         cursor: pointer;
+    }
+
+    .tier-table-skills {
+        font-size: .8rem;
+        color: var(--mud-palette-text-secondary);
     }
 
     .tier-row-pass td:first-child {
@@ -639,7 +704,6 @@ else
         public bool ShowStepArtist { get; set; }
         public bool ShowSongName { get; set; } = true;
         public bool ShowSkills { get; set; } = true;
-        public bool ShowDifficulty { get; set; } = true;
         public int? MinNoteCount { get; set; }
         public int? MaxNoteCount { get; set; }
         public HashSet<string> StepArtists { get; set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -742,12 +806,6 @@ else
     private async Task SetShowSkills(bool show)
     {
         _settings.ShowSkills = show;
-        await SaveSettings();
-    }
-
-    private async Task SetShowDifficulty(bool show)
-    {
-        _settings.ShowDifficulty = show;
         await SaveSettings();
     }
 
@@ -1340,10 +1398,22 @@ else
         _tierListType == "Chabala" && category == TierListCategory.Unrecorded ? "Subjective" :
         _tierNames[category];
 
+    // Round 7: the lens always orders cards within a section, in every view — hardest
+    // first (most-popular first under the Popularity lens), scoring level as the
+    // tiebreaker, blend order as the final stabilizer. Unrecorded sinks to the bottom.
+    private IEnumerable<SongTierListEntry> LensOrdered(IEnumerable<SongTierListEntry> entries)
+    {
+        var byCategory = _tierListType == "Popularity"
+            ? entries.OrderBy(e => e.Category == TierListCategory.Unrecorded ? int.MaxValue : (int)e.Category)
+            : entries.OrderByDescending(e => e.Category == TierListCategory.Unrecorded ? int.MinValue : (int)e.Category);
+        return byCategory
+            .ThenByDescending(e => _scoringLevels.TryGetValue(e.ChartId, out var sl) ? sl : 0)
+            .ThenBy(e => e.Order);
+    }
+
     private IReadOnlyList<TierGroup> GroupByTier()
     {
-        var groups = _finalEntries
-            .OrderBy(e => e.Order)
+        var groups = LensOrdered(_finalEntries)
             .GroupBy(e => e.Category);
         // Hardest-first is the community-image convention; the popularity lens reads
         // most-popular first. Not Rated always sinks to the bottom.
@@ -1368,8 +1438,7 @@ else
         var tierList = TierListProcessor
             .ProcessIntoTierList("Score", _folderScores.Where(kv => kv.Value.Score != null).ToDictionary(kv => kv.Key, kv => (int)kv.Value.Score!.Value))
             .ToDictionary(e => e.ChartId);
-        return _finalEntries
-            .OrderBy(e => _scores.TryGetValue(e.ChartId, out var s) ? s.Score ?? PhoenixScore.Min : PhoenixScore.Max)
+        return LensOrdered(_finalEntries)
             .GroupBy(e => _scoreNames[tierList.TryGetValue(e.ChartId, out var t) ? t.Category : TierListCategory.Unrecorded])
             .Select(ToNeutralGroup)
             .ToArray();
@@ -1379,7 +1448,7 @@ else
     {
         if (_folderScores.Values.Select(s => s.RecordedDate).Distinct().Count() < 5)
         {
-            return _finalEntries
+            return LensOrdered(_finalEntries)
                 .GroupBy(_ => _ageNames[TierListCategory.Unrecorded])
                 .Select(ToNeutralGroup)
                 .ToArray();
@@ -1387,8 +1456,7 @@ else
         var tierList = TierListProcessor
             .ProcessIntoTierList("Score", _folderScores.Where(kv => kv.Value.Score != null).ToDictionary(kv => kv.Key, kv => (_now - kv.Value.RecordedDate).TotalDays))
             .ToDictionary(e => e.ChartId);
-        return _finalEntries
-            .OrderByDescending(e => _scores.TryGetValue(e.ChartId, out var s) ? (_now - s.RecordedDate).TotalDays : -1)
+        return LensOrdered(_finalEntries)
             .GroupBy(e => _scores.ContainsKey(e.ChartId)
                 ? _ageNames[tierList.TryGetValue(e.ChartId, out var t) ? t.Category : TierListCategory.Unrecorded]
                 : _ageNames[TierListCategory.Unrecorded])
@@ -1398,8 +1466,7 @@ else
 
     private IReadOnlyList<TierGroup> GroupByScoreRanking()
     {
-        return _finalEntries
-            .OrderBy(e => _scoreRankings.TryGetValue(e.ChartId, out var r) ? r.Ranking : 99999)
+        return LensOrdered(_finalEntries)
             .GroupBy(e => _scoreRankings.TryGetValue(e.ChartId, out var r) ?
                 (r.Ranking <= 0.01 ?
                     "Last Place" :
@@ -1424,9 +1491,7 @@ else
 
     private IReadOnlyList<TierGroup> GroupByScoringLevel()
     {
-        return _finalEntries
-            .OrderBy(e => _chartDifficulties[e.ChartId])
-            .ThenBy(e => e.Order)
+        return LensOrdered(_finalEntries)
             .GroupBy(e => _scoringLevels.TryGetValue(e.ChartId, out var sl) ? sl.ToString("0.0") : "Not Enough Data")
             .OrderBy(g => double.TryParse(g.Key, out var d) ? d : 10000)
             .Select(g => new TierGroup(g.Key, double.TryParse(g.Key, out _) ? g.Key : L[g.Key], NeutralSectionColor,
@@ -1445,9 +1510,8 @@ else
             .GroupBy(p => p.Skill)
             .Select(g =>
             {
-                var entries = g.Where(p => entryByChart.ContainsKey(p.Chart.Id))
-                    .Select(p => entryByChart[p.Chart.Id])
-                    .OrderBy(e => e.Order)
+                var entries = LensOrdered(g.Where(p => entryByChart.ContainsKey(p.Chart.Id))
+                        .Select(p => entryByChart[p.Chart.Id]))
                     .ToArray();
                 var scored = entries
                     .Where(e => _scores.TryGetValue(e.ChartId, out var s) && s is { Score: not null, IsBroken: false })

@@ -45,12 +45,21 @@
                 }
                 <div><span class="chart-details-meta-label">@L["Song Artist"]</span><span>@Chart.Song.Artist</span></div>
                 <div><span class="chart-details-meta-label">@L["Song Type"]</span><span>@Chart.Song.Type</span></div>
+                @if (LensName != null && TierLabel != null)
+                {
+                    @* The active lens tier always shows here, whatever the page density (round 7). *@
+                    <div><span class="chart-details-meta-label">@LensName</span><span style="@($"color:{TierColor}")">@TierLabel</span></div>
+                }
             </div>
             @if (Score?.Score != null)
             {
                 <div class="chart-details-score">
                     <ScoreBreakdown Score="Score.Score.Value" IsBroken="Score.IsBroken" OneLine="true" ShowScore="true"
                                     Plate="Score.Plate" Ranking="Ranking"></ScoreBreakdown>
+                    @if (ScoreAgeDays != null)
+                    {
+                        <MudText Typo="Typo.caption">@L["Recorded {0} days ago", ScoreAgeDays]</MudText>
+                    }
                 </div>
             }
             @if (_journey.Any())
@@ -210,6 +219,16 @@
     [Parameter] public EventCallback<Guid> OnToDo { get; set; }
 
     [Parameter] public EventCallback OnScoreRecorded { get; set; }
+
+    // Active-lens tier for the meta grid (always shown regardless of density, round 7);
+    // color is a theme token reference.
+    [Parameter] public string? LensName { get; set; }
+
+    [Parameter] public string? TierLabel { get; set; }
+
+    [Parameter] public string? TierColor { get; set; }
+
+    [Parameter] public int? ScoreAgeDays { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {

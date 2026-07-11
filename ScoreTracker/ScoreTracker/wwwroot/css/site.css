@@ -384,6 +384,27 @@
     display: block;
 }
 
+.tier-chart-card-meta {
+    display: block;
+    color: var(--mud-palette-text-secondary);
+}
+
+.tier-chart-card-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    padding-bottom: 4px;
+}
+
+.tier-chart-card-skill {
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 8px;
+    padding: 0 5px;
+    font-size: .65rem;
+    color: var(--mud-palette-text-secondary);
+    white-space: nowrap;
+}
+
 .lamp-strip {
     display: flex;
     flex-wrap: wrap;

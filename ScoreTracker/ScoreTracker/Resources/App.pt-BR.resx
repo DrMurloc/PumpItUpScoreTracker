@@ -564,9 +564,6 @@
   <data name="Show Age" xml:space="preserve">
     <value>Mostrar idade</value>
   </data>
-  <data name="Show Difficulty" xml:space="preserve">
-    <value>Mostrar dificuldade</value>
-  </data>
   <data name="Show Skills" xml:space="preserve">
     <value>Mostrar habilidades</value>
   </data>
@@ -2840,7 +2837,25 @@
   <data name="Applied Filters" xml:space="preserve">
     <value>Filtros aplicados</value>
   </data>
-  <data name="Title Levels" xml:space="preserve">
-    <value>Níveis de título</value>
+  <data name="Filters and Columns" xml:space="preserve">
+    <value>Filtros e colunas</value>
+  </data>
+  <data name="Not available in Compact view" xml:space="preserve">
+    <value>Não disponível na visualização compacta</value>
+  </data>
+  <data name="Generating" xml:space="preserve">
+    <value>Gerando</value>
+  </data>
+  <data name="Folder Levels" xml:space="preserve">
+    <value>Níveis da pasta</value>
+  </data>
+  <data name="Skills" xml:space="preserve">
+    <value>Habilidades</value>
+  </data>
+  <data name="{0} days ago" xml:space="preserve">
+    <value>há {0} dias</value>
+  </data>
+  <data name="Recorded {0} days ago" xml:space="preserve">
+    <value>Registrado há {0} dias</value>
   </data>
 </root>

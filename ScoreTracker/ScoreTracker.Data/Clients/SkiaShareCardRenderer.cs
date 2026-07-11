@@ -31,6 +31,17 @@ public sealed class SkiaShareCardRenderer : IShareCardRenderer
     public async Task<byte[]> RenderTierListCard(TierListShareCard card,
         CancellationToken cancellationToken = default)
     {
+        // A folder is ~60 tiles; fetching each jacket/grade/plate sequentially made a
+        // cold render take ~10s. All the URLs are independent, so fetch them together —
+        // one pre-load pass de-duped by URL, then the per-tile lookups hit the cache.
+        var allUrls = card.Rows.SelectMany(r => r.Tiles)
+            .SelectMany(t => new[] { t.JacketUrl, t.GradeUrl, t.PlateUrl })
+            .Append(card.BubbleUrl)
+            .Where(u => u != null)
+            .Select(u => u!)
+            .Distinct();
+        await Task.WhenAll(allUrls.Select(u => LoadImage(u, cancellationToken)));
+
         var bubble = card.BubbleUrl == null ? null : await LoadImage(card.BubbleUrl, cancellationToken);
         var tiles = new Dictionary<TierListShareCard.Tile, (SKBitmap? Jacket, SKBitmap? Grade, SKBitmap? Plate)>();
         foreach (var tile in card.Rows.SelectMany(r => r.Tiles))

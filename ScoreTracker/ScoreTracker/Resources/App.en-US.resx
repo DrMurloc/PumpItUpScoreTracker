@@ -707,10 +707,6 @@
 	  <value>Show Skills</value>
 	  <comment>Show Skills</comment>
   </data>
-  <data name="Show Difficulty" xml:space="preserve">
-	  <value>Show Difficulty</value>
-	  <comment>Show Difficulty</comment>
-  </data>
   <data name="Show Song Name" xml:space="preserve">
 	  <value>Show Song Name</value>
 	  <comment>Show Song Name</comment>
@@ -2889,7 +2885,25 @@
   <data name="Applied Filters" xml:space="preserve">
     <value>Applied Filters</value>
   </data>
-  <data name="Title Levels" xml:space="preserve">
-    <value>Title Levels</value>
+  <data name="Filters and Columns" xml:space="preserve">
+    <value>Filters and Columns</value>
+  </data>
+  <data name="Not available in Compact view" xml:space="preserve">
+    <value>Not available in Compact view</value>
+  </data>
+  <data name="Generating" xml:space="preserve">
+    <value>Generating</value>
+  </data>
+  <data name="Folder Levels" xml:space="preserve">
+    <value>Folder Levels</value>
+  </data>
+  <data name="Skills" xml:space="preserve">
+    <value>Skills</value>
+  </data>
+  <data name="{0} days ago" xml:space="preserve">
+    <value>{0} days ago</value>
+  </data>
+  <data name="Recorded {0} days ago" xml:space="preserve">
+    <value>Recorded {0} days ago</value>
   </data>
 </root>
