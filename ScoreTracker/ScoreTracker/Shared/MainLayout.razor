@@ -7,24 +7,32 @@
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.Theming
 @using ScoreTracker.Application.Events
 @using ScoreTracker.Domain.Events
 @using MassTransit
 @using ScoreTracker.Domain.Records
+@using Microsoft.AspNetCore.Components.Routing
 @inherits LayoutComponentBase
 @inject ICurrentUserAccessor CurrentUser
+@implements IDisposable
 @implements INotificationHandler<MatchUpdatedEvent>
 @implements INotificationHandler<ImportStatusUpdatedEvent>
 @implements INotificationHandler<PlayerStatsUpdatedEvent>
 @implements INotificationHandler<ImportStatusErrorEvent>
 <PageTitle>@L["PIU Scores"]</PageTitle>
 
-<MudThemeProvider Theme="Theme" />
+<MudThemeProvider Theme="_theme" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 <ChartVideoDisplay></ChartVideoDisplay>
+@* The active palette's --mix-* tokens; pages style against these, never literal colors. *@
+<style>
+    @((MarkupString)MixThemes.CssVariablesFor(_themeMix))
+</style>
 <style>
     .dense-nav .mud-nav-link {
         padding-top: 4px;
@@ -49,28 +57,6 @@
         opacity: .65;
     }
 
-    .appbar-search .mud-input-control {
-        margin: 0;
-    }
-
-    .appbar-search .mud-input.mud-input-outlined {
-        background: rgba(255, 255, 255, .15);
-    }
-
-    .appbar-search .mud-input.mud-input-outlined input,
-    .appbar-search .mud-input-adornment-icon {
-        color: #EDF1F5;
-    }
-
-    .appbar-search .mud-input.mud-input-outlined input::placeholder {
-        color: rgba(237, 241, 245, .75);
-        opacity: 1;
-    }
-
-    .appbar-search .mud-input.mud-input-outlined .mud-input-outlined-border {
-        border-color: rgba(237, 241, 245, .5);
-    }
-
     .mud-drawer {
         scrollbar-width: none;
     }
@@ -79,25 +65,163 @@
         display: none;
     }
 </style>
-<MudLayout>
+<MudLayout Class="@MixThemes.CssClassFor(_themeMix)">
     @* Fixed: the drawer is viewport-pinned, so a scrolling app bar visibly detaches from it. *@
-    <MudAppBar Color="Color.Primary" Fixed="true" Dense="true">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="() => _isOpen = !_isOpen"/>
-        <MudText Typo="Typo.subtitle1" Style="font-weight: 500; white-space: nowrap;" Class="mr-6">@(_userId == null ? L["PIU Scores"].Value : $"{UserName}")</MudText>
+    @* No Color: the bar wears the palette's AppbarBackground so the shell re-skins per mix. *@
+    <MudAppBar Fixed="true" Dense="true">
+        <a href="/" class="wordmark mr-2">PIU SCORES</a>
+
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
-            <div class="d-flex align-center appbar-search" style="min-width: 220px; max-width: 320px;">
+            <nav class="top-nav">
+                <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true">
+                    <ActivatorContent>
+                        <button class="top-nav-btn">@L["Play"] <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon></button>
+                    </ActivatorContent>
+                    <ChildContent>
+                        @if (CurrentUser.IsLoggedIn && !_gatedMix)
+                        {
+                            <MudMenuItem Href="/" Icon="@Icons.Material.Filled.Home">@L["What Should I Play"]</MudMenuItem>
+                        }
+                        <MudMenuItem Href="/Charts" Icon="@Icons.Material.Filled.List">@L["Charts"]</MudMenuItem>
+                        @if (CurrentUser.IsLoggedIn && !_gatedMix)
+                        {
+                            <MudMenuItem Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</MudMenuItem>
+                        }
+                        @if (CurrentUser.IsLoggedIn && _gatedMix)
+                        {
+                            <MudMenuItem Href="/UploadXXScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</MudMenuItem>
+                        }
+                    </ChildContent>
+                </MudMenu>
+
+                <a href="/TierLists" class="top-nav-btn">@L["Tier Lists"]</a>
+
+                @* Nav follows LegacyMixGate: destinations a pre-XX mix can't reach yet
+                   simply don't show (docs/design/legacy-mixes.md). *@
+                @if (!_gatedMix)
+                {
+                <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true">
+                    <ActivatorContent>
+                        <button class="top-nav-btn">@L["My Progress"] <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon></button>
+                    </ActivatorContent>
+                    <ChildContent>
+                        @if (CurrentUser.IsLoggedIn)
+                        {
+                            @* XX keeps its legacy progress page; Phoenix and Phoenix 2 share the Phoenix-style pages. *@
+                            <MudMenuItem Href=@(_currentMix == MixEnum.XX ? "/Progress" : "/Phoenix/Progress") Icon="@Icons.Material.Filled.BarChart">@L["Progress Charts"]</MudMenuItem>
+                            @if (_currentMix != MixEnum.XX)
+                            {
+                                <MudMenuItem Href="/Pumbility" Icon="@Icons.Material.Filled.Star">@L["PUMBILITY"]</MudMenuItem>
+                            }
+                            @if (_hasRecap)
+                            {
+                                <MudMenuItem Href=@($"/Player/{_userId}/PhoenixRecap") Icon="@Icons.Material.Filled.LocalFireDepartment">@L["My Recap"]</MudMenuItem>
+                            }
+                            <MudMenuItem Href=@($"/Player/{_userId}/Sessions") Icon="@Icons.Material.Filled.History">@L["My Sessions"]</MudMenuItem>
+                        }
+                        <MudMenuItem Href="/Titles" Icon="@Icons.Material.Filled.Grade">@L["Titles"]</MudMenuItem>
+                    </ChildContent>
+                </MudMenu>
+                }
+
+                @if (!_gatedMix)
+                {
+                <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true">
+                    <ActivatorContent>
+                        <button class="top-nav-btn">@L["Compete"] <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon></button>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <div class="mega-panel">
+                            <div class="mega-col">
+                                <div class="mega-head">@L["Compete"]</div>
+                                <MudMenuItem Href="/WeeklyCharts" Icon="@Icons.Material.Filled.ViewWeek">@L["Weekly Charts"]</MudMenuItem>
+                                <MudMenuItem Href="/Tournaments/MarchOfMurlocs" Icon="@Icons.Material.Filled.Alarm">March of Murlocs</MudMenuItem>
+                                @foreach (var tourney in _highlightedEvents)
+                                {
+                                    @if (tourney.Type == TournamentType.Stamina)
+                                    {
+                                        <MudMenuItem Href=@($"/Tournament/Stamina/{tourney.Id}") Icon="@Icons.Material.Filled.Event">@tourney.Name</MudMenuItem>
+                                    }
+                                    else if (tourney.LinkOverride != null)
+                                    {
+                                        <MudMenuItem Href="@tourney.LinkOverride.ToString()" Target="_blank" Icon="@Icons.Material.Filled.Event">@tourney.Name</MudMenuItem>
+                                    }
+                                    else
+                                    {
+                                        <MudMenuItem Href=@($"/Tournament/{tourney.Id}/Qualifiers") Icon="@Icons.Material.Filled.Event">@tourney.Name</MudMenuItem>
+                                    }
+                                }
+                            </div>
+                            <div class="mega-col">
+                                <div class="mega-head">@L["Rankings"]</div>
+                                @if (CurrentUser.IsLoggedIn)
+                                {
+                                    <MudMenuItem Href="/ScoreRankings" Icon="@Icons.Material.Filled.Stars">@L["Score Ranking"]</MudMenuItem>
+                                }
+                                <MudMenuItem Href="/Completion" Icon="@Icons.Material.Filled.Done">@L["Completion Leaderboards"]</MudMenuItem>
+                                <MudMenuItem Href="/UcsLeaderboards" Icon="@Icons.Material.Filled.EditNote">@L["UCS Leaderboards"]</MudMenuItem>
+                                <MudMenuItem Href="/PlayerRankings" Icon="@Icons.Material.Filled.Public">@L["World Rankings"]</MudMenuItem>
+                                <MudMenuItem Href="/OfficialLeaderboards" Icon="@Icons.Material.Filled.Score">@L["Official Leaderboard Search"]</MudMenuItem>
+                                <MudMenuItem Href="/OfficialLeaderboards/PlayerCompare" Icon="@Icons.Material.Filled.CompareArrows">@L["Leaderboard Player Compare"]</MudMenuItem>
+                            </div>
+                        </div>
+                    </ChildContent>
+                </MudMenu>
+                }
+
+                <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true">
+                    <ActivatorContent>
+                        <button class="top-nav-btn">@L["Community"] <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon></button>
+                    </ActivatorContent>
+                    <ChildContent>
+                        @if (!_gatedMix)
+                        {
+                            <MudMenuItem Href="/Communities" Icon="@Icons.Material.Filled.Group">@L["Communities"]</MudMenuItem>
+                        }
+                        <MudMenuItem Href="https://discord.gg/MEYvr3bFte" Target="_blank" Icon="@Icons.Custom.Brands.Discord">@L["Discord"]</MudMenuItem>
+                    </ChildContent>
+                </MudMenu>
+
+                <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true">
+                    <ActivatorContent>
+                        <button class="top-nav-btn">@L["Tools"] <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon></button>
+                    </ActivatorContent>
+                    <ChildContent>
+                        @if (!_gatedMix)
+                        {
+                            <MudMenuItem Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</MudMenuItem>
+                            <MudMenuItem Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</MudMenuItem>
+                            <MudMenuItem Href="/ChartRandomizer" Icon="@Icons.Material.Filled.QuestionMark">@L["Chart Randomizer"]</MudMenuItem>
+                            <MudMenuItem Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</MudMenuItem>
+                            <MudMenuItem Href="/ChartCompare" Icon="@Icons.Material.Filled.Compare">@L["Chart Compare"]</MudMenuItem>
+                            <MudMenuItem Href="/StepArtists" Icon="@Icons.Material.Filled.Brush">@L["Step Artists"]</MudMenuItem>
+                        }
+                        <MudMenuItem Href="/About" Icon="@Icons.Material.Filled.Info">@L["About"]</MudMenuItem>
+                    </ChildContent>
+                </MudMenu>
+            </nav>
+        </MudHidden>
+
+        <MudSpacer></MudSpacer>
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <div class="d-flex align-center appbar-search mr-3" style="min-width: 170px; max-width: 220px;">
                 <ChartSelector Mix="_currentMix" Label="" Placeholder="@L["Find a chart"].Value" Variant="Variant.Outlined" Margin="Margin.Dense" ChartIdSelected="GoToChart"></ChartSelector>
             </div>
         </MudHidden>
-        <MudSpacer></MudSpacer>
+
+        @* The mix switcher: promoted from the bottom of the drawer — it changes the whole
+           site's data context, so it lives in the shell header like an org switcher. *@
+        <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
+            <ActivatorContent>
+                <button class="mix-pill mr-3" title="@L["Mix"]"><i class="mix-dot"></i>@_currentMix.GetName()</button>
+            </ActivatorContent>
+            <ChildContent>
+                <MixSelector OnSelected="SetMix"></MixSelector>
+            </ChildContent>
+        </MudMenu>
+
         @if (CurrentUser.IsLoggedIn)
         {
-            <MudHidden Breakpoint="Breakpoint.Xs">
-                <MudButton Href="/UploadPhoenixScores" Variant="Variant.Outlined" Color="Color.Inherit" Size="Size.Small" StartIcon="@Icons.Material.Filled.CloudDownload" Class="mr-4">@L["Import Scores"]</MudButton>
-            </MudHidden>
-            <MudHidden Breakpoint="Breakpoint.SmAndUp">
-                <MudIconButton Href="/UploadPhoenixScores" Color="Color.Inherit" Icon="@Icons.Material.Filled.CloudDownload" Class="mr-1"></MudIconButton>
-            </MudHidden>
             <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
                 <ActivatorContent>
                     <MudAvatar Size="Size.Small" Style="cursor: pointer;">
@@ -110,6 +234,8 @@
                     </MudAvatar>
                 </ActivatorContent>
                 <ChildContent>
+                    <div class="px-4 py-1" style="color: var(--mix-ink-muted); font-size: .8rem;">@UserName</div>
+                    <MudMenuItem Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</MudMenuItem>
                     <MudMenuItem Href="/Account" Icon="@Icons.Material.Filled.AccountCircle">@L["Account"]</MudMenuItem>
                     <MudMenuItem Href="/Logout" Icon="@Icons.Material.Filled.Logout">@L["Logout"]</MudMenuItem>
                 </ChildContent>
@@ -120,30 +246,22 @@
             <MudIconButton Icon="@Icons.Material.Filled.NoAccounts" Color="Color.Inherit" Edge="Edge.Start" Href="/Login"></MudIconButton>
         }
     </MudAppBar>
-    <MudDrawer @bind-Open="_isOpen" Variant="@DrawerVariant.Responsive" Breakpoint="Breakpoint.Md" ClipMode="DrawerClipMode.Always" Width="240px" Elevation="1">
-        <MudDrawerHeader Class="d-flex align-center gap-2 py-3" Style="min-height: unset;">
-            <MudIcon Icon="@Icons.Material.Filled.MusicNote" Size="Size.Small"></MudIcon>
-            <MudText Typo="Typo.subtitle1" Style="font-weight: 600; letter-spacing: .02em;">@L["PIU Scores"]</MudText>
-        </MudDrawerHeader>
-        @* flex-grow 0: the drawer content is a flex column, and the divider's full-width
-           styling flex-grows — horizontal in a toolbar, but here it stretches vertically and
-           swallows the space between the header and the nav. *@
-        <MudDivider Style="flex-grow: 0;"></MudDivider>
-        <MudNavMenu Class="dense-nav pb-4">
-            <MudText Typo="Typo.overline" Class="ml-4 mt-2 d-block nav-section">@L["Play"]</MudText>
-            @if (CurrentUser.IsLoggedIn)
+    @* The mobile "More" sheet: everything that didn't earn a bottom-nav slot, mirroring
+       the desktop menu groups in the same order. Bottom-anchored for thumb reach.
+       Fixed Height: a bottom drawer hides by translating its own height off-screen, so
+       "auto" breaks the closed state and the sheet renders permanently open. *@
+    <MudHidden Breakpoint="Breakpoint.MdAndUp">
+        <MudDrawer @bind-Open="_showMore" Anchor="Anchor.Bottom" Variant="@DrawerVariant.Temporary" Height="75vh" Class="more-sheet" Elevation="4">
+        <MudNavMenu Class="dense-nav pb-4 pt-2">
+            @* Nav follows LegacyMixGate: destinations a pre-XX mix can't reach yet
+               simply don't show (docs/design/legacy-mixes.md). *@
+            @if (_gatedMix && CurrentUser.IsLoggedIn)
             {
-                <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">@L["Home"]</MudNavLink>
-                <MudNavLink Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</MudNavLink>
+                <MudNavLink Href="/UploadXXScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</MudNavLink>
             }
-            else
+            @if (!_gatedMix)
             {
-                <MudNavLink Href="/Login" Icon="@Icons.Material.Filled.NoAccounts">@L["Login"]</MudNavLink>
-            }
-            <MudNavLink Href="/Charts" Icon="@Icons.Material.Filled.List">@L["Charts"]</MudNavLink>
-            <MudNavLink Href="/TierLists" Icon="@Icons.Material.Filled.Topic">@L["Tier Lists"]</MudNavLink>
-
-            <MudText Typo="Typo.overline" Class="ml-4 mt-3 d-block nav-section">@L["My Progress"]</MudText>
+            <MudText Typo="Typo.overline" Class="ml-4 mt-2 d-block nav-section">@L["My Progress"]</MudText>
             @if (CurrentUser.IsLoggedIn)
             {
                 @* XX keeps its legacy progress page; Phoenix and Phoenix 2 share the Phoenix-style pages. *@
@@ -156,6 +274,7 @@
                 {
                     <MudNavLink Href=@($"/Player/{_userId}/PhoenixRecap") Icon="@Icons.Material.Filled.LocalFireDepartment">@L["My Recap"]</MudNavLink>
                 }
+                <MudNavLink Href=@($"/Player/{_userId}/Sessions") Icon="@Icons.Material.Filled.History">@L["My Sessions"]</MudNavLink>
             }
             <MudNavLink Href="/Titles" Icon="@Icons.Material.Filled.Grade">@L["Titles"]</MudNavLink>
 
@@ -191,29 +310,75 @@
 
             <MudText Typo="Typo.overline" Class="ml-4 mt-3 d-block nav-section">@L["Community"]</MudText>
             <MudNavLink Href="/Communities" Icon="@Icons.Material.Filled.Group">@L["Communities"]</MudNavLink>
+            }
             <MudNavLink Href="https://discord.gg/MEYvr3bFte" Target="_blank" Icon="@Icons.Custom.Brands.Discord">@L["Discord"]</MudNavLink>
 
             <MudDivider Class="my-2"></MudDivider>
+            @if (!_gatedMix)
+            {
             <MudNavGroup Title=@L["Tools"] Icon="@Icons.Material.Filled.Build" Expanded="false">
                 <MudNavLink Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</MudNavLink>
                 <MudNavLink Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</MudNavLink>
                 <MudNavLink Href="/ChartRandomizer" Icon="@Icons.Material.Filled.QuestionMark">@L["Chart Randomizer"]</MudNavLink>
                 <MudNavLink Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</MudNavLink>
+                <MudNavLink Href="/ChartCompare" Icon="@Icons.Material.Filled.Compare">@L["Chart Compare"]</MudNavLink>
                 <MudNavLink Href="/StepArtists" Icon="@Icons.Material.Filled.Brush">@L["Step Artists"]</MudNavLink>
             </MudNavGroup>
+            }
             <MudNavLink Href="/About" Icon="@Icons.Material.Filled.Info">@L["About"]</MudNavLink>
-            <MudNavGroup Title=@(L["Mix"]+" ("+_currentMix.GetName()+")") Icon="@Icons.Material.Filled.LibraryMusic" Expanded="false">
-                @foreach (var value in SelectableMixes)
-                {
-                    <MudNavLink OnClick="()=>SetMix(value)">@value.GetName()</MudNavLink>
-                }
-            </MudNavGroup>
         </MudNavMenu>
-    </MudDrawer>
+        </MudDrawer>
+    </MudHidden>
+
+    @* Thumb-reach primary nav at phone/tablet widths; desktop uses the top nav. *@
+    <MudHidden Breakpoint="Breakpoint.MdAndUp">
+        <nav class="bottom-nav">
+            @if (CurrentUser.IsLoggedIn && !_gatedMix)
+            {
+                <a href="/" class="@BnClass("/")"><MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Small"></MudIcon><span>@L["Play"]</span></a>
+            }
+            <a href="/TierLists" class="@BnClass("/TierLists")"><MudIcon Icon="@Icons.Material.Filled.Topic" Size="Size.Small"></MudIcon><span>@L["Tiers"]</span></a>
+            <a href="/Charts" class="@BnClass("/Charts")"><MudIcon Icon="@Icons.Material.Filled.List" Size="Size.Small"></MudIcon><span>@L["Charts"]</span></a>
+            @if (!_gatedMix)
+            {
+                <a href="/WeeklyCharts" class="@BnClass("/WeeklyCharts")"><MudIcon Icon="@Icons.Material.Filled.ViewWeek" Size="Size.Small"></MudIcon><span>@L["Weekly"]</span></a>
+            }
+            @if (!CurrentUser.IsLoggedIn)
+            {
+                <a href="/Login" class="@BnClass("/Login")"><MudIcon Icon="@Icons.Material.Filled.Login" Size="Size.Small"></MudIcon><span>@L["Login"]</span></a>
+            }
+            @* Extra slot for squarish viewports (fold phones, landscape) — hidden on tall phones. *@
+            @if (!_gatedMix)
+            {
+                <a href="/Communities" class="@($"{BnClass("/Communities")} bn-wide")"><MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Small"></MudIcon><span>@L["Communities"]</span></a>
+            }
+            <button type="button" class="bn" @onclick="() => _showMore = true"><MudIcon Icon="@Icons.Material.Filled.MoreHoriz" Size="Size.Small"></MudIcon><span>@L["More"]</span></button>
+        </nav>
+    </MudHidden>
     <MudMainContent>
         <MudContainer>
-            @Body
-            
+            @if (!_mixLoaded)
+            {
+                @* Body held until the selected mix is known: rendering it against the
+                   default let gated pages start their (crashing) loads before the gate
+                   could evaluate — the WhatShouldIPlay race from field-test round 2. *@
+                <MudProgressLinear Indeterminate="true" Color="Color.Primary"></MudProgressLinear>
+            }
+            else if (LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath))
+            {
+                @* One render frame at most — RedirectIfGated is already navigating to
+                   /TierLists. The panel is the backstop, not the destination. *@
+                <div class="tier-list-cta">
+                    <MudIcon Icon="@Icons.Material.Filled.Construction"></MudIcon>
+                    <MudText Typo="Typo.h5">@L["This page isn't ready for older mixes yet"]</MudText>
+                    <MudButton Href="/Charts" Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.QueueMusic">@L["Charts"]</MudButton>
+                </div>
+            }
+            else
+            {
+                @Body
+            }
+
             <MudDialog @bind-Visible="_showBite">
                 <DialogContent>
                     <MudImage Src="https://piuimages.arroweclip.se/TheBigOne.png" Height="400" ObjectFit="ObjectFit.ScaleDown" Style="display:block;margin-left:auto;margin-right:auto;"></MudImage>
@@ -253,15 +418,49 @@
 @inject NavigationManager NavManager;
 @code
 {
-    // Open by default: the Responsive drawer variant keeps it as a persistent sidebar on
-    // desktop widths and auto-collapses to the hamburger-toggled overlay below Md.
-    private bool _isOpen = true;
+    private bool _showMore = false;
     private Guid? _userId = null;
 
     private Task GoToChart(Chart chart)
     {
         NavManager.NavigateTo($"/Chart/{chart.Id}");
         return Task.CompletedTask;
+    }
+
+    // Bottom-nav active state. The layout doesn't re-render on navigation by itself,
+    // so OnLocationChanged below nudges it (and closes the More sheet).
+    private string BnClass(string href)
+    {
+        var path = "/" + NavManager.ToBaseRelativePath(NavManager.Uri).Split('?')[0].TrimEnd('/');
+        var active = href == "/"
+            ? path == "/"
+            : path.StartsWith(href, StringComparison.OrdinalIgnoreCase);
+        return active ? "bn active" : "bn";
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        _showMore = false;
+        RedirectIfGated();
+        InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    ///     Gated routes soft-redirect to the tier lists page (the one destination every
+    ///     mix can render) instead of loading — pages that predate legacy mixes throw
+    ///     on them, so they must never begin initializing (docs/design/legacy-mixes.md).
+    /// </summary>
+    private bool RedirectIfGated()
+    {
+        if (!_mixLoaded) return false;
+        if (!LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath)) return false;
+        NavManager.NavigateTo("/TierLists");
+        return true;
+    }
+
+    public void Dispose()
+    {
+        NavManager.LocationChanged -= OnLocationChanged;
     }
     private bool _showBite = false;
     private bool _showRecapPopup = false;
@@ -270,9 +469,14 @@
     private const string RecapPopupKey = "MainLayout__PhoenixRecapPopupShown";
     public static readonly DateTimeOffset _cutoff = new DateTimeOffset(2024, 10, 15, 0, 0, 0, TimeSpan.FromHours(-5));
     private MixEnum _currentMix = MixEnum.Phoenix;
-    // Launch order: deploy this build, then run the ChartMix seed script immediately —
-    // Phoenix 2 is briefly selectable-but-empty in between (docs/design/phoenix2-implementation.md).
-    private static readonly MixEnum[] SelectableMixes = { MixEnum.XX, MixEnum.Phoenix, MixEnum.Phoenix2 };
+    // The body must not render until the real selection is loaded (see the gate above).
+    private bool _mixLoaded;
+    // Pre-XX mixes: nav only offers destinations LegacyMixGate lets through.
+    private bool _gatedMix => LegacyMixGate.IsGatedMix(_currentMix);
+    // Theme resolution: /Account override → current mix. Defaults cover the first render;
+    // the real values land in OnInitializedAsync before content renders.
+    private MixEnum _themeMix = MixEnum.Phoenix;
+    private MudTheme _theme = MixThemes.ThemeFor(MixEnum.Phoenix);
     private string _profileImage = string.Empty;
     private string _gamerTag = string.Empty;
     private IEnumerable<TournamentRecord> _highlightedEvents = Array.Empty<TournamentRecord>();
@@ -283,9 +487,19 @@
     }
     protected override async Task OnInitializedAsync()
     {
+        NavManager.LocationChanged += OnLocationChanged;
         _userId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null;
         // Mix first: the displayed rating follows the viewer's current mix.
         _currentMix = await UiSettings.GetSelectedMix();
+        // Only now can the gate evaluate — the body is held until this point, because
+        // rendering it with the default mix let gated pages begin their crashing loads.
+        // No early return: the layout persists across the soft redirect, so its own
+        // init (theme, events, live updates) must still complete.
+        _mixLoaded = true;
+        RedirectIfGated();
+        _themeMix = MixThemes.ResolveThemeMix(
+            await UiSettings.GetSetting(MixThemes.OverrideSettingKey), _currentMix);
+        _theme = MixThemes.ThemeFor(_themeMix);
         _highlightedEvents = (await Mediator.Send(new GetAllTournamentsQuery()))
             .Where(e => e.IsHighlighted);
 
@@ -320,53 +534,6 @@
             Rating = (await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, _currentMix))).SkillRating;
         }
     }
-
-    private static readonly MudTheme Theme = new()
-        {
-            
-            PaletteLight = new()
-            {
-    //77BCDC
-    //466E8d
-                Primary = "#80B3D4",
-                Secondary = "#8FBCD8",
-                Error = "#C72020",
-                Success = "#6EDE7F",
-                Warning = "#FFC433",
-                TextPrimary = "#EDF1F5",
-                TextSecondary = "#EDF1F5",
-                ActionDefault = "#EDF1F5",
-                ActionDisabled = "#d3d3d3",
-                Background = "#18191A",
-                BackgroundGray = "#3A3B3C",
-                Surface = "#242526",
-                TextDisabled = "#d3d3d3",
-                DrawerBackground = "#283E5C",
-                DrawerIcon = "#EDF1F5",
-                DrawerText = "#EDF1F5"
-            },
-            PaletteDark = new()
-            {
-                //77BCDC
-                //466E8d
-                Primary = "#80B3D4",
-                Secondary = "#8FBCD8",
-                Error = "#C72020",
-                Success = "#6EDE7F",
-                Warning = "#FFC433",
-                TextPrimary = "#EDF1F5",
-                TextSecondary = "#EDF1F5",
-                ActionDefault = "#EDF1F5",
-                ActionDisabled = "#d3d3d3",
-                Background = "#18191A",
-                BackgroundGray = "#3A3B3C",
-                Surface = "#242526",
-                TextDisabled = "#d3d3d3",
-                DrawerBackground = "#283E5C",
-                DrawerIcon = "#EDF1F5",
-                DrawerText = "#EDF1F5"
-            }
-        };
 
     public static event EventHandler<ImportStatusUpdatedEvent>? ImportStatusUpdatedEvent;
     public static event EventHandler<MatchUpdatedEvent>? MatchUpdated;

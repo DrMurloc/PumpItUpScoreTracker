@@ -1,0 +1,630 @@
+/* Self-hosted display face — headings, stat numerals, wordmark. Latin subset only:
+   Korean/Japanese glyphs fall through per-glyph to the system CJK fonts in the stack
+   (see --font-display), which keeps mixed-script headings from going anemic. */
+@font-face {
+    font-family: 'Barlow Condensed';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('/fonts/barlow-condensed-500.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Barlow Condensed';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('/fonts/barlow-condensed-600.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Barlow Condensed';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('/fonts/barlow-condensed-700.woff2') format('woff2');
+}
+
+:root {
+    --font-display: 'Barlow Condensed', 'Malgun Gothic', 'Yu Gothic UI', 'Apple SD Gothic Neo', 'Hiragino Sans', sans-serif;
+}
+
+/* Big-number treatment for stats (rating, Pumbility, scores). tabular-nums keeps digit
+   columns steady while values tick up live. */
+.stat-display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .02em;
+}
+
+/* ===== Shell: wordmark, top nav, mega-menus, mix pill ===== */
+
+.wordmark {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: .08em;
+    color: var(--mix-ink);
+    text-shadow: 0 0 12px var(--mix-glow);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.top-nav {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 14px;
+}
+
+.top-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: .95rem;
+    letter-spacing: .05em;
+    color: var(--mix-ink);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.top-nav-btn:hover {
+    background: rgba(255, 255, 255, .08);
+}
+
+.mega-panel {
+    display: flex;
+    gap: 8px;
+    padding: 4px 6px;
+}
+
+.mega-col {
+    min-width: 180px;
+}
+
+.mega-head {
+    font-family: var(--font-display);
+    font-size: .7rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    padding: 8px 16px 2px;
+}
+
+.mix-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: transparent;
+    border: 1px solid var(--mix-primary);
+    border-radius: 16px;
+    padding: 3px 12px;
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: .8rem;
+    letter-spacing: .08em;
+    color: var(--mix-ink);
+    white-space: nowrap;
+}
+
+.mix-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--mix-primary);
+    box-shadow: 0 0 8px var(--mix-glow);
+}
+
+/* App-bar chart search — a quiet pill that matches the mix pill, not a form field.
+   The outlined border and dropdown caret are stripped; focus brings the theme primary in. */
+.appbar-search .mud-input-control {
+    margin: 0;
+}
+
+.appbar-search .mud-input.mud-input-outlined {
+    background: rgba(255, 255, 255, .07);
+    border-radius: 16px;
+    font-size: .85rem;
+}
+
+.appbar-search .mud-input.mud-input-outlined:focus-within {
+    background: rgba(255, 255, 255, .11);
+    box-shadow: 0 0 0 1px var(--mix-primary);
+}
+
+.appbar-search .mud-input.mud-input-outlined input {
+    color: var(--mix-ink);
+    padding: 5px 14px;
+    height: unset;
+}
+
+.appbar-search .mud-input.mud-input-outlined input::placeholder {
+    color: var(--mix-ink-muted);
+    opacity: 1;
+}
+
+.appbar-search .mud-input.mud-input-outlined .mud-input-outlined-border {
+    border: none;
+}
+
+.appbar-search .mud-input-adornment {
+    display: none;
+}
+
+/* ===== Atmosphere: per-mix page-ground light, derived from each game's attract screen.
+   Ground only — cards and surfaces stay flat so contrast is untouched. Trial feature:
+   deleting a theme's block (or all three) fully removes it. ===== */
+
+.mud-layout.theme-phoenix {
+    background:
+        radial-gradient(1200px 800px at 85% -10%, rgba(255, 107, 53, .10), transparent 60%),
+        radial-gradient(1000px 700px at 10% 110%, rgba(63, 169, 245, .08), transparent 60%),
+        var(--mix-bg);
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+.mud-layout.theme-xx {
+    background:
+        radial-gradient(1100px 700px at 80% -10%, rgba(255, 47, 160, .10), transparent 60%),
+        radial-gradient(900px 700px at 5% 105%, rgba(53, 200, 255, .08), transparent 60%),
+        var(--mix-bg);
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+.mud-layout.theme-phoenix2 {
+    background:
+        radial-gradient(1200px 700px at 70% -15%, rgba(79, 227, 63, .10), transparent 55%),
+        radial-gradient(1000px 800px at 15% 115%, rgba(43, 193, 216, .07), transparent 60%),
+        var(--mix-bg);
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+/* ===== Mobile: bottom nav + More sheet ===== */
+
+.bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1300;
+    display: flex;
+    align-items: stretch;
+    background: var(--mix-nav);
+    border-top: 1px solid rgba(255, 255, 255, .08);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-nav .bn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 8px 0 9px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-size: .68rem;
+    letter-spacing: .04em;
+    color: var(--mix-ink-muted);
+    text-decoration: none;
+}
+
+.bottom-nav .bn.active {
+    color: var(--mix-primary);
+}
+
+/* The Communities slot only earns space on squarish viewports (fold phones, landscape). */
+.bottom-nav .bn-wide {
+    display: none;
+}
+
+@media (min-aspect-ratio: 1/1) {
+    .bottom-nav .bn-wide {
+        display: flex;
+    }
+}
+
+/* Keep page content clear of the fixed bottom nav (Md breakpoint = 960px). */
+@media (max-width: 959.98px) {
+    .mud-main-content {
+        padding-bottom: 72px;
+    }
+}
+
+.more-sheet {
+    overflow-y: auto;
+}
+
+/* Rarity treatment ramp — glow intensity rises with the band. Hue alone can't order the
+   bands monotonically (gold is brighter than sapphire), so treatment does; the percentile
+   number always rides alongside, so color is never the only channel. Shadows omit a color
+   on purpose: they take currentColor from the band hue. */
+.rarity-glow-1 {
+    text-shadow: 0 0 6px;
+}
+
+.rarity-glow-2 {
+    text-shadow: 0 0 4px, 0 0 10px;
+}
+
+.rarity-glow-3 {
+    text-shadow: 0 0 4px, 0 0 10px, 0 0 18px;
+    font-weight: 600;
+}
+
+/* Legacy difficulty chips (docs/design/legacy-mixes.md): rendered, not image bubbles.
+   Pre-Exceed slots, Half-Doubles, and levelled legacy co-ops announce "different
+   scale" by looking deliberately unlike the modern bubble art. Hue rides the
+   --slot-* tokens via inline style from ThemeScales.SlotColor. */
+.legacy-chip {
+    display: inline-flex;
+    align-items: center;
+    border: 2px solid var(--slot-neutral);
+    border-radius: 12px;
+    padding: 1px 8px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: .06em;
+    color: var(--slot-neutral);
+    white-space: nowrap;
+    line-height: 1.5;
+}
+/* ===== Tier-list component vocabulary: sections, chart cards + the border language,
+   lamp strip, border legend, folder picker. These back Components/* (TierSection,
+   TierListChartCard, TierListSkeleton, LampStrip, BorderLegend, FolderPicker), so they
+   live here rather than in any page's style block — the components must render
+   correctly wherever they're reused. ===== */
+
+.tier-section {
+    margin: 12px 0;
+}
+
+.tier-section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    cursor: pointer;
+    border-left: 4px solid var(--tier-section-color, var(--mud-palette-text-secondary));
+    padding-left: 8px;
+}
+
+.tier-section-name {
+    color: var(--tier-section-color, var(--mud-palette-text-secondary));
+}
+
+.tier-section-count, .tier-section-stat {
+    color: var(--mud-palette-text-secondary);
+}
+
+.tier-section-body {
+    margin-top: 8px;
+}
+
+.tier-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 10px;
+}
+
+.tier-card-grid-compact {
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 6px;
+}
+
+.tier-chart-card {
+    border: 2px solid var(--mud-palette-lines-default);
+    border-radius: 8px;
+    background: var(--mud-palette-surface);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.tier-chart-card-jacket {
+    height: 92px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.tier-chart-card-bubble {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+}
+
+.tier-chart-card-body {
+    padding: 4px 8px;
+    min-width: 0;
+    flex-grow: 1;
+}
+
+.tier-chart-card-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tier-chart-card-actions {
+    display: flex;
+    align-items: center;
+    padding: 0 4px 4px;
+}
+
+.tier-chart-card-compact {
+    cursor: pointer;
+}
+
+.tier-chart-card-compact-jacket {
+    height: 72px;
+}
+
+.tier-chart-card-compact-grade {
+    position: absolute;
+    bottom: 3px;
+    right: 3px;
+    background: var(--mud-palette-background);
+    border-radius: 4px;
+    padding: 1px 3px;
+}
+
+.tier-chart-card-skeleton {
+    border-radius: 8px;
+}
+
+.tier-chart-card-lens-dot {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .45);
+}
+
+.tier-chart-card-tier {
+    display: block;
+}
+
+.tier-chart-card-meta {
+    display: block;
+    color: var(--mud-palette-text-secondary);
+}
+
+.tier-chart-card-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    padding-bottom: 4px;
+}
+
+.tier-chart-card-skill {
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 8px;
+    padding: 0 5px;
+    font-size: .65rem;
+    color: var(--mud-palette-text-secondary);
+    white-space: nowrap;
+}
+
+/* Category-tinted chips (piucenter variant B): identity hue per skill category via
+   the --skillcat-* tokens; the printed name carries the meaning (rule 8). */
+.skillcat-speed { --skill-chip: var(--skillcat-speed); }
+.skillcat-stamina { --skill-chip: var(--skillcat-stamina); }
+.skillcat-twist { --skill-chip: var(--skillcat-twist); }
+.skillcat-bracket { --skill-chip: var(--skillcat-bracket); }
+.skillcat-tech { --skill-chip: var(--skillcat-tech); }
+
+.tier-chart-card-skill[class*="skillcat-"] {
+    color: color-mix(in srgb, var(--skill-chip) 55%, var(--mix-ink));
+    background: color-mix(in srgb, var(--skill-chip) 16%, transparent);
+    border-color: color-mix(in srgb, var(--skill-chip) 45%, transparent);
+}
+
+.tier-chart-card-skill-more {
+    opacity: .75;
+}
+
+.tier-table-skills .tier-chart-card-skill {
+    margin-right: 3px;
+}
+
+/* Folder Stats: personal per-skill pass rates, weakest first (piucenter round 3).
+   Rides the same --skill-chip category tint the chips use. */
+.tier-folder-skills {
+    margin-top: 8px;
+}
+
+.tier-folder-skills-title {
+    display: block;
+    color: var(--mix-ink-muted);
+}
+
+/* Bar + % = ability over played charts; the trailing count = completion (played /
+   charts carrying the skill). Sorted by their product upstream. */
+.tier-folder-skill-row {
+    display: grid;
+    grid-template-columns: 92px 1fr 38px 44px;
+    align-items: center;
+    gap: 8px;
+    font-size: .75rem;
+    padding: 1px 0;
+}
+
+.tier-folder-skill-label {
+    color: color-mix(in srgb, var(--skill-chip) 60%, var(--mix-ink));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tier-folder-skill-track {
+    height: 5px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--skill-chip) 14%, transparent);
+    overflow: hidden;
+}
+
+.tier-folder-skill-fill {
+    display: block;
+    height: 100%;
+    border-radius: 3px;
+    background: var(--skill-chip);
+}
+
+.tier-folder-skill-value {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.tier-folder-skill-count {
+    text-align: right;
+    color: var(--mix-ink-muted);
+    font-size: .68rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.tier-chart-card-scoreline {
+    display: block;
+}
+
+.lamp-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0;
+}
+
+.lamp-chip {
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 12px;
+    padding: 2px 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .75rem;
+}
+
+.lamp-chip-meter {
+    width: 48px;
+    height: 4px;
+    background: var(--mud-palette-lines-default);
+    border-radius: 2px;
+    overflow: hidden;
+    display: inline-block;
+}
+
+.lamp-chip-fill {
+    display: block;
+    height: 100%;
+    background: var(--mud-palette-primary);
+}
+
+.lamp-chip-complete .lamp-chip-fill {
+    background: var(--mud-palette-success);
+}
+
+.border-legend {
+    font-size: .75rem;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin: 8px 0;
+}
+
+.border-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.border-legend-swatch {
+    width: 20px;
+    height: 12px;
+    display: inline-block;
+    border: 2px solid var(--mud-palette-lines-default);
+    border-radius: 3px;
+}
+
+/* The card border language (owner-locked): solid success = passed, dashed info = To-Do,
+   dashed success = passed in another mix. Declared AFTER the card and swatch bases on
+   purpose — those declare `border` shorthands at equal specificity, so source order is
+   what guarantees the state classes win everywhere they're worn. */
+.tier-chart-card-pass {
+    border-color: var(--mud-palette-success);
+    border-style: solid;
+}
+
+.tier-chart-card-todo {
+    border-color: var(--mud-palette-info);
+    border-style: dashed;
+}
+
+.tier-chart-card-other-mix {
+    border-color: var(--mud-palette-success);
+    border-style: dashed;
+}
+
+.folder-picker {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.folder-picker-anchor {
+    position: relative;
+}
+
+.folder-picker-pop {
+    padding: 8px;
+}
+
+.folder-picker-types {
+    margin-bottom: 8px;
+}
+
+.folder-picker-levels {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 2px;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.folder-picker-level {
+    background: none;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 0;
+    cursor: pointer;
+    font: inherit;
+    color: var(--mud-palette-text-primary);
+    text-align: center;
+}
+
+.folder-picker-level:hover {
+    background: rgba(255, 255, 255, .08);
+}
+
+.folder-picker-current {
+    color: var(--mud-palette-primary);
+    font-weight: 600;
+}

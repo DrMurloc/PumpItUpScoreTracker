@@ -63,4 +63,30 @@ public sealed class UpdateXXBestAttemptHandlerTests
         attempts.Verify(a => a.SetBestAttempt(It.IsAny<Guid>(), It.IsAny<Chart>(), It.IsAny<XXChartAttempt>(),
             It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    [Fact]
+    public async Task MaterializesTheChartForTheRequestedLegacyMix()
+    {
+        // Recording on a legacy mix keys the attempt to that mix's chart context —
+        // the repository derives MixId from Chart.Mix (docs/design/legacy-mixes.md).
+        var user = new UserBuilder().Build();
+        var chart = new ChartBuilder().WithMix(MixEnum.Prime).WithLevel(18).Build();
+        var charts = new Mock<IChartRepository>();
+        charts.Setup(c => c.GetChart(MixEnum.Prime, chart.Id, It.IsAny<CancellationToken>())).ReturnsAsync(chart);
+        var attempts = new Mock<IXXChartAttemptRepository>();
+        var currentUser = new Mock<ICurrentUserAccessor>();
+        currentUser.SetupGet(c => c.User).Returns(user);
+
+        var handler = new UpdateXXBestAttemptHandler(attempts.Object, currentUser.Object,
+            FakeDateTime.At(2026, 7, 11).Object, charts.Object);
+        await handler.Handle(
+            new UpdateXXBestAttemptCommand(chart.Id, XXLetterGrade.A, false, null, MixEnum.Prime),
+            CancellationToken.None);
+
+        attempts.Verify(a => a.SetBestAttempt(user.Id,
+            It.Is<Chart>(c => c.Mix == MixEnum.Prime),
+            It.Is<XXChartAttempt>(x => x.LetterGrade == XXLetterGrade.A),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
+        charts.Verify(c => c.GetChart(MixEnum.XX, It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 }

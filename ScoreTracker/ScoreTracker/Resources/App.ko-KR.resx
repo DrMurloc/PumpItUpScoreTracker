@@ -658,9 +658,6 @@
   <data name="Show Skills" xml:space="preserve">
     <value>스킬 표시</value>
   </data>
-  <data name="Show Difficulty" xml:space="preserve">
-    <value>난이도 표시</value>
-  </data>
   <data name="Show Song Name" xml:space="preserve">
     <value>노래 이름 표시</value>
   </data>
@@ -2410,6 +2407,9 @@
   <data name="Top {0}" xml:space="preserve">
     <value>상위 {0}</value>
   </data>
+  <data name="1st" xml:space="preserve">
+    <value>1위</value>
+  </data>
   <data name="{0} of all Phoenix titles collected" xml:space="preserve">
     <value>전체 피닉스 타이틀의 {0} 수집</value>
   </data>
@@ -2541,5 +2541,367 @@
   </data>
   <data name="Rebuild Recap PG Cards" xml:space="preserve">
     <value>리캡 PG 카드 재구축</value>
+  </data>
+  <data name="Site Theme" xml:space="preserve">
+    <value>사이트 테마</value>
+  </data>
+  <data name="Match Current Mix" xml:space="preserve">
+    <value>현재 시리즈에 맞추기</value>
+  </data>
+  <data name="My Sessions" xml:space="preserve">
+    <value>내 세션</value>
+  </data>
+  <data name="Weekly" xml:space="preserve">
+    <value>주간</value>
+  </data>
+  <data name="More" xml:space="preserve">
+    <value>더보기</value>
+  </data>
+  <data name="Import" xml:space="preserve">
+    <value>가져오기</value>
+  </data>
+  <data name="Tiers" xml:space="preserve">
+    <value>티어</value>
+  </data>
+  <!-- Tier-lists overhaul (PR #135). "Why Don't You Get Up and Dance, Man?"는
+       게임 내 밈이므로 모든 로케일 공통, 번역하지 않음. -->
+  <data name="Ranked by" xml:space="preserve">
+    <value>정렬 기준</value>
+  </data>
+  <data name="Pass Difficulty" xml:space="preserve">
+    <value>패스 난이도</value>
+  </data>
+  <data name="Score Difficulty" xml:space="preserve">
+    <value>스코어 난이도</value>
+  </data>
+  <data name="Personalized" xml:space="preserve">
+    <value>개인화</value>
+  </data>
+  <data name="Personalized for {0}" xml:space="preserve">
+    <value>{0}님을 위한 개인화</value>
+  </data>
+  <data name="Tier List" xml:space="preserve">
+    <value>티어리스트</value>
+  </data>
+  <data name="By Skill" xml:space="preserve">
+    <value>스킬별</value>
+  </data>
+  <data name="Grouped by" xml:space="preserve">
+    <value>그룹 기준</value>
+  </data>
+  <data name="Download" xml:space="preserve">
+    <value>다운로드</value>
+  </data>
+  <data name="Comfortable" xml:space="preserve">
+    <value>기본</value>
+  </data>
+  <data name="Compact" xml:space="preserve">
+    <value>컴팩트</value>
+  </data>
+  <data name="Table" xml:space="preserve">
+    <value>테이블</value>
+  </data>
+  <data name="Tier lists for XX and older coming soon" xml:space="preserve">
+    <value>XX 이전 시리즈의 티어리스트는 준비 중입니다</value>
+  </data>
+  <data name="Folder Progress" xml:space="preserve">
+    <value>폴더 진행도</value>
+  </data>
+  <data name="{0} / {1} passed" xml:space="preserve">
+    <value>{0} / {1} 패스</value>
+  </data>
+  <data name="of {0} similar players in this folder" xml:space="preserve">
+    <value>(유사 플레이어 {0}명 중)</value>
+  </data>
+  <data name="Import your scores to light this folder up" xml:space="preserve">
+    <value>점수를 가져와서 이 폴더를 밝혀보세요</value>
+  </data>
+  <data name="Original Chabala Tier List" xml:space="preserve">
+    <value>Chabala의 오리지널 티어리스트</value>
+  </data>
+  <data name="Score Ranking: What percent of players of comparable (+/- .5 competitive level) your score is on a chart." xml:space="preserve">
+    <value>Score Ranking: 비슷한 수준(±0.5 경쟁 레벨)의 플레이어 중 내 점수가 앞서는 비율입니다.</value>
+  </data>
+  <data name="No charts match your filters" xml:space="preserve">
+    <value>필터와 일치하는 채보가 없습니다</value>
+  </data>
+  <data name="Clear Filters" xml:space="preserve">
+    <value>필터 초기화</value>
+  </data>
+  <data name="{0} / {1} cleared" xml:space="preserve">
+    <value>{0} / {1} 클리어</value>
+  </data>
+  <data name="Skill data: PIU Center — maintained by aesthete" xml:space="preserve">
+    <value>스킬 데이터: PIU Center — 관리자 aesthete</value>
+  </data>
+  <data name="Not Tagged" xml:space="preserve">
+    <value>태그 없음</value>
+  </data>
+  <data name="Display" xml:space="preserve">
+    <value>표시</value>
+  </data>
+  <data name="Better Than" xml:space="preserve">
+    <value>상위</value>
+  </data>
+  <data name="Previous Folder" xml:space="preserve">
+    <value>이전 폴더</value>
+  </data>
+  <data name="Next Folder" xml:space="preserve">
+    <value>다음 폴더</value>
+  </data>
+  <data name="Details" xml:space="preserve">
+    <value>상세 정보</value>
+  </data>
+  <data name="Passed in another mix" xml:space="preserve">
+    <value>다른 시리즈에서 패스함</value>
+  </data>
+  <data name="Remove from ToDo List" xml:space="preserve">
+    <value>ToDo 목록에서 제거</value>
+  </data>
+  <data name="Add to ToDo List" xml:space="preserve">
+    <value>ToDo 목록에 추가</value>
+  </data>
+  <data name="On ToDo List" xml:space="preserve">
+    <value>ToDo 목록에 있음</value>
+  </data>
+  <data name="Record Score" xml:space="preserve">
+    <value>점수 기록</value>
+  </data>
+  <data name="View full chart on PIU Center" xml:space="preserve">
+    <value>PIU Center에서 채보 전체 보기</value>
+  </data>
+  <data name="Skill data: PIU Center" xml:space="preserve">
+    <value>스킬 데이터: PIU Center</value>
+  </data>
+  <data name="Amazing" xml:space="preserve">
+    <value>놀라움</value>
+  </data>
+  <data name="Very Good" xml:space="preserve">
+    <value>매우 좋음</value>
+  </data>
+  <data name="Good" xml:space="preserve">
+    <value>좋음</value>
+  </data>
+  <data name="Low" xml:space="preserve">
+    <value>낮음</value>
+  </data>
+  <data name="Very Low" xml:space="preserve">
+    <value>매우 낮음</value>
+  </data>
+  <data name="Why Don't You Get Up and Dance, Man?" xml:space="preserve">
+    <value>Why Don't You Get Up and Dance, Man?</value>
+  </data>
+  <data name="Not Recorded" xml:space="preserve">
+    <value>기록 없음</value>
+  </data>
+  <data name="Ancient" xml:space="preserve">
+    <value>아주 오래됨</value>
+  </data>
+  <data name="Very Old" xml:space="preserve">
+    <value>매우 오래됨</value>
+  </data>
+  <data name="Old" xml:space="preserve">
+    <value>오래됨</value>
+  </data>
+  <data name="New" xml:space="preserve">
+    <value>새로움</value>
+  </data>
+  <data name="Very New" xml:space="preserve">
+    <value>매우 새로움</value>
+  </data>
+  <data name="Most Recent" xml:space="preserve">
+    <value>가장 최근</value>
+  </data>
+  <data name="Ultra Popular" xml:space="preserve">
+    <value>초인기</value>
+  </data>
+  <data name="Very Popular" xml:space="preserve">
+    <value>매우 인기</value>
+  </data>
+  <data name="Popular" xml:space="preserve">
+    <value>인기</value>
+  </data>
+  <data name="Unpopular" xml:space="preserve">
+    <value>비인기</value>
+  </data>
+  <data name="Very Unpopular" xml:space="preserve">
+    <value>매우 비인기</value>
+  </data>
+  <data name="Ultra Unpopular" xml:space="preserve">
+    <value>극비인기</value>
+  </data>
+  <data name="Last Place" xml:space="preserve">
+    <value>최하위</value>
+  </data>
+  <data name="0 -> 10%" xml:space="preserve">
+    <value>0 -> 10%</value>
+  </data>
+  <data name="10% -> 25%" xml:space="preserve">
+    <value>10% -> 25%</value>
+  </data>
+  <data name="25% -> 50%" xml:space="preserve">
+    <value>25% -> 50%</value>
+  </data>
+  <data name="50% -> 75%" xml:space="preserve">
+    <value>50% -> 75%</value>
+  </data>
+  <data name="75% -> 90%" xml:space="preserve">
+    <value>75% -> 90%</value>
+  </data>
+  <data name="90% -> 99.9%" xml:space="preserve">
+    <value>90% -> 99.9%</value>
+  </data>
+  <data name="The Best" xml:space="preserve">
+    <value>최고</value>
+  </data>
+  <data name="Not Enough Data" xml:space="preserve">
+    <value>데이터 부족</value>
+  </data>
+  <data name="Applied Filters" xml:space="preserve">
+    <value>적용된 필터</value>
+  </data>
+  <data name="Filters and Columns" xml:space="preserve">
+    <value>필터 및 열</value>
+  </data>
+  <data name="Not available in Compact view" xml:space="preserve">
+    <value>컴팩트 보기에서는 사용할 수 없습니다</value>
+  </data>
+  <data name="Generating" xml:space="preserve">
+    <value>생성 중</value>
+  </data>
+  <data name="Folder Levels" xml:space="preserve">
+    <value>폴더 레벨</value>
+  </data>
+  <data name="Skills" xml:space="preserve">
+    <value>스킬</value>
+  </data>
+  <data name="{0} days ago" xml:space="preserve">
+    <value>{0}일 전</value>
+  </data>
+  <data name="Recorded {0} days ago" xml:space="preserve">
+    <value>{0}일 전에 기록됨</value>
+  </data>
+  <data name="You: {0} · similar players average {1}" xml:space="preserve">
+    <value>나: {0} · 비슷한 플레이어 평균: {1}</value>
+  </data>
+  <data name="Rebuild Tier Lists" xml:space="preserve">
+    <value>티어리스트 재구축</value>
+  </data>
+  <data name="Score in Folder" xml:space="preserve">
+    <value>폴더 내 점수</value>
+  </data>
+  <data name="Passes in Folder" xml:space="preserve">
+    <value>폴더 내 클리어 수</value>
+  </data>
+  <data name="Folder Stats" xml:space="preserve">
+    <value>폴더 통계</value>
+  </data>
+  <data name="Advanced" xml:space="preserve">
+    <value>고급</value>
+  </data>
+  <data name="Step Analysis" xml:space="preserve">
+    <value>스텝 분석</value>
+  </data>
+  <data name="Dominant Skills" xml:space="preserve">
+    <value>주요 스킬</value>
+  </data>
+  <data name="Notes per Second" xml:space="preserve">
+    <value>초당 노트 수</value>
+  </data>
+  <data name="Sustain Time" xml:space="preserve">
+    <value>지속 시간</value>
+  </data>
+  <data name="Time Under Tension" xml:space="preserve">
+    <value>부하 지속 시간</value>
+  </data>
+  <data name="Step analysis data from PIU Center" xml:space="preserve">
+    <value>스텝 분석 데이터 제공: PIU Center</value>
+  </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>각 스킬이 나오는 채보 구간 비율</value>
+  </data>
+  <data name="Show Skill Metric" xml:space="preserve">
+    <value>스킬 지표 표시</value>
+  </data>
+  <data name="Queued" xml:space="preserve">
+    <value>대기열에 추가됨</value>
+  </data>
+  <data name="Key" xml:space="preserve">
+    <value>키</value>
+  </data>
+  <data name="Last Checked" xml:space="preserve">
+    <value>마지막 확인</value>
+  </data>
+  <data name="Run PIU Center Crawl" xml:space="preserve">
+    <value>PIU Center 크롤 실행</value>
+  </data>
+  <data name="Unmatched PIU Center Keys" xml:space="preserve">
+    <value>매칭되지 않은 PIU Center 키</value>
+  </data>
+  <data name="No unmatched keys" xml:space="preserve">
+    <value>매칭되지 않은 키가 없습니다</value>
+  </data>
+  <data name="Select a key, pick the chart it belongs to, then bind" xml:space="preserve">
+    <value>키를 선택하고 해당 채보를 골라 연결하세요</value>
+  </data>
+  <data name="Bind Selected Chart" xml:space="preserve">
+    <value>선택한 채보 연결</value>
+  </data>
+  <data name="Uploading" xml:space="preserve">
+    <value>업로드 중</value>
+  </data>
+  <data name="Upload PIU Center Snapshot" xml:space="preserve">
+    <value>PIU Center 스냅샷 업로드</value>
+  </data>
+  <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
+    <value>스냅샷 zip은 이미 받아 둔 데이터 릴리스를 직접 가져옵니다. 크롤과 같은 과정이며 별도 다운로드가 없습니다</value>
+  </data>
+  <data name="There was an error uploading the snapshot" xml:space="preserve">
+    <value>스냅샷 업로드 중 오류가 발생했습니다</value>
+  </data>
+  <data name="More Mixes" xml:space="preserve">
+    <value>시리즈 더 보기</value>
+  </data>
+  <data name="scale" xml:space="preserve">
+    <value>기준</value>
+  </data>
+  <data name="not comparable to modern levels" xml:space="preserve">
+    <value>현행 레벨과 비교할 수 없습니다</value>
+  </data>
+  <data name="Debuted in: X" xml:space="preserve">
+    <value>첫 등장 시리즈: {0}</value>
+  </data>
+  <data name="This page isn't ready for older mixes yet" xml:space="preserve">
+    <value>이 페이지는 아직 이전 시리즈를 지원하지 않습니다</value>
+  </data>
+  <data name="Prime" xml:space="preserve">
+    <value>Prime</value>
+  </data>
+  <data name="Fiesta" xml:space="preserve">
+    <value>Fiesta</value>
+  </data>
+  <data name="NX" xml:space="preserve">
+    <value>NX</value>
+  </data>
+  <data name="Exceed / Zero" xml:space="preserve">
+    <value>Exceed / Zero</value>
+  </data>
+  <data name="Premiere / Prex" xml:space="preserve">
+    <value>Premiere / Prex</value>
+  </data>
+  <data name="Classic" xml:space="preserve">
+    <value>클래식</value>
+  </data>
+  <data name="American" xml:space="preserve">
+    <value>미국판</value>
+  </data>
+  <data name="Community Rating" xml:space="preserve">
+    <value>커뮤니티 평가</value>
+  </data>
+  <data name="Your Skills in Folder" xml:space="preserve">
+    <value>이 폴더에서의 내 스킬</value>
+  </data>
+  <data name="Score History" xml:space="preserve">
+    <value>점수 기록</value>
   </data>
 </root>

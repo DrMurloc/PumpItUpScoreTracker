@@ -1,0 +1,176 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Enums
+
+@* The tier list's chart card. Border language is owner-locked (design doc §4): solid
+   success = passed, dashed info-blue = To-Do, dashed success = passed in another mix;
+   precedence passed > To-Do > other-mix. Hue always pairs with the dash pattern or a
+   printed value (rule 8). Compact is the jacket "sticker sheet" (rule 5); Table
+   density is the page's job, not the card's. *@
+@if (Density == UiDensity.Compact)
+{
+    <MudTooltip Text="@CompactTooltip" ShowOnFocus="true">
+        <div class="tier-chart-card tier-chart-card-compact @StateClass" role="button" tabindex="0"
+             @onclick="() => OnOpen.InvokeAsync(Chart.Id)">
+            @* Single quotes on purpose: Blazor sets attributes via the DOM, so HTML
+               entities like &quot; are never decoded and would corrupt the CSS. *@
+            <div class="tier-chart-card-jacket tier-chart-card-compact-jacket"
+                 style="background-image:url('@Chart.Song.ImagePath')">
+                <div class="tier-chart-card-bubble">
+                    <DifficultyBubble Chart="Chart" Height="18"></DifficultyBubble>
+                </div>
+                @if (TierLabel != null)
+                {
+                    @* Lens tier when the section grouping isn't the lens; the tooltip
+                       prints the word so the hue never travels alone (rule 8). *@
+                    <span class="tier-chart-card-lens-dot" style="background:@TierColor"></span>
+                }
+                @if (Score?.Score != null)
+                {
+                    <div class="tier-chart-card-compact-grade">
+                        <LetterGradeIcon Grade="Score.Score.Value.LetterGrade" IsBroken="Score.IsBroken" Height="16"></LetterGradeIcon>
+                    </div>
+                }
+            </div>
+        </div>
+    </MudTooltip>
+}
+else
+{
+<div class="tier-chart-card @StateClass" title="@StateTitle">
+    <div class="tier-chart-card-jacket" role="button" tabindex="0"
+         @onclick="() => OnOpen.InvokeAsync(Chart.Id)"
+         style="background-image:url('@Chart.Song.ImagePath')">
+        <div class="tier-chart-card-bubble">
+            <DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble>
+        </div>
+    </div>
+    <div class="tier-chart-card-body">
+        @if (ShowName)
+        {
+            <MudTooltip Text="@Chart.Song.Name.ToString()" ShowOnFocus="true">
+                <MudText Typo="Typo.subtitle1" Class="tier-chart-card-name">@Chart.Song.Name</MudText>
+            </MudTooltip>
+        }
+        @if (Score?.Score != null)
+        {
+            @* Own line always — short song names left the tooltip-wrapped name and the
+               score sharing a row (owner, piucenter round 3). *@
+            <div class="tier-chart-card-scoreline">
+                <ScoreBreakdown Score="Score.Score.Value" IsBroken="Score.IsBroken" OneLine="true" ShowScore="true"
+                                Plate="Score.Plate" Ranking="Ranking"></ScoreBreakdown>
+            </div>
+        }
+        @if (TierLabel != null)
+        {
+            <MudText Typo="Typo.caption" Class="tier-chart-card-tier" Style="@($"color:{TierColor}")">@TierLabel</MudText>
+        }
+        @if (StepArtist != null)
+        {
+            <MudText Typo="Typo.caption" Class="tier-chart-card-meta">@StepArtist</MudText>
+        }
+        @if (AgeDays != null)
+        {
+            <MudText Typo="Typo.caption" Class="tier-chart-card-meta">@L["{0} days ago", AgeDays]</MudText>
+        }
+        @if (Skills is { Count: > 0 })
+        {
+            @* Top skills by dominance, category-tinted (variant B) — the name is always
+               printed, so the hue never carries the meaning alone (rule 8). *@
+            <div class="tier-chart-card-skills">
+                @foreach (var skill in Skills.Take(MaxSkillChips))
+                {
+                    <span class="tier-chart-card-skill @skill.CategoryClass">@skill.Label@(skill.Metric == null ? null : $" {skill.Metric}")</span>
+                }
+                @if (Skills.Count > MaxSkillChips)
+                {
+                    <span class="tier-chart-card-skill tier-chart-card-skill-more">+@(Skills.Count - MaxSkillChips)</span>
+                }
+            </div>
+        }
+    </div>
+    <div class="tier-chart-card-actions">
+        @if (ShowToDo)
+        {
+            <MudTooltip Text="@(IsToDo ? L["Remove from ToDo List"] : L["Add to ToDo List"])">
+                <MudIconButton Size="Size.Small"
+                               Icon="@(IsToDo ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)"
+                               Color="@(IsToDo ? Color.Info : Color.Default)"
+                               OnClick="() => OnToDo.InvokeAsync(Chart.Id)"
+                               aria-label="@L["To Do"]"></MudIconButton>
+            </MudTooltip>
+        }
+        <MudSpacer></MudSpacer>
+        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Info"
+                       OnClick="() => OnOpen.InvokeAsync(Chart.Id)" aria-label="@L["Details"]"></MudIconButton>
+    </div>
+</div>
+}
+
+@code {
+
+    [Parameter] public Chart Chart { get; set; } = null!;
+
+    [Parameter] public RecordedPhoenixScore? Score { get; set; }
+
+    [Parameter] public ScoreRankingRecord? Ranking { get; set; }
+
+    [Parameter] public bool Passed { get; set; }
+
+    [Parameter] public bool IsToDo { get; set; }
+
+    [Parameter] public bool PassedInAnotherMix { get; set; }
+
+    [Parameter] public bool ShowName { get; set; } = true;
+
+    [Parameter] public bool ShowToDo { get; set; } = true;
+
+    [Parameter] public UiDensity Density { get; set; } = UiDensity.Comfortable;
+
+    // The active lens tier ("Hard", "Very Easy", …) when the page's grouping isn't the
+    // lens itself; null hides the annotation. Color is a theme token reference.
+    [Parameter] public string? TierLabel { get; set; }
+
+    [Parameter] public string? TierColor { get; set; }
+
+    // Optional column info (the drawer's Display switches) — Comfortable only; the page
+    // passes null in other densities.
+    [Parameter] public string? StepArtist { get; set; }
+
+    [Parameter] public IReadOnlyList<CardSkillChip>? Skills { get; set; }
+
+    // Owner-locked (piucenter round 1): up to three chips, dominance-ordered, "+n" overflow.
+    private const int MaxSkillChips = 3;
+
+    /// <summary>CategoryClass is a site.css skillcat-* class; Metric is preformatted or null.</summary>
+    public sealed record CardSkillChip(string Label, string CategoryClass, string? Metric);
+
+    [Parameter] public int? AgeDays { get; set; }
+
+    [Parameter] public EventCallback<Guid> OnToDo { get; set; }
+
+    [Parameter] public EventCallback<Guid> OnOpen { get; set; }
+
+    private string StateClass => Passed ? "tier-chart-card-pass" :
+        IsToDo ? "tier-chart-card-todo" :
+        PassedInAnotherMix ? "tier-chart-card-other-mix" : string.Empty;
+
+    private string? StateTitle => Passed ? L["Passed"] :
+        IsToDo ? L["To Do"] :
+        PassedInAnotherMix ? L["Passed in another mix"] : null;
+
+    // Compact hides the name, so the tooltip carries the identity (rule 7: no
+    // truncation without a tooltip) plus the state and lens-tier words (rule 8).
+    private string CompactTooltip
+    {
+        get
+        {
+            var suffix = string.Join(" — ", new[] { StateTitle, TierLabel }.Where(p => p != null));
+            return suffix.Length == 0
+                ? $"{Chart.Song.Name} {Chart.DifficultyString}"
+                : $"{Chart.Song.Name} {Chart.DifficultyString} — {suffix}";
+        }
+    }
+}

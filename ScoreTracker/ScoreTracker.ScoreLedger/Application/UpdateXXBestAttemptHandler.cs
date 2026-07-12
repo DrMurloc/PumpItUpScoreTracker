@@ -29,7 +29,9 @@ internal sealed class UpdateXXBestAttemptHandler : IRequestHandler<UpdateXXBestA
 
     public async Task Handle(UpdateXXBestAttemptCommand request, CancellationToken cancellationToken)
     {
-        var chart = await _charts.GetChart(MixEnum.XX, request.chartId, cancellationToken);
+        // The chart is materialized for the requested mix, so the repository keys the
+        // attempt per (user, chart, mix) — each legacy mix gets its own best.
+        var chart = await _charts.GetChart(request.Mix, request.chartId, cancellationToken);
         if (request.LetterGrade != null)
             await _attempts.SetBestAttempt(_user.User.Id, chart,
                 new XXChartAttempt(request.LetterGrade.Value, request.IsBroken, request.Score, _dateTimeOffset.Now),

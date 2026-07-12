@@ -1,0 +1,54 @@
+@namespace ScoreTracker.Web.Components
+
+@* One collapsible tier section: diff-ramp stripe, localized name, count, optional
+   personal stat. Collapse persistence is the page's job (global by tier name). *@
+<div class="tier-section" style="--tier-section-color:@Color">
+    <div class="tier-section-header" role="button" tabindex="0" @onclick="Toggle"
+         @onkeydown="OnHeaderKey" aria-expanded="@(!Collapsed)">
+        <MudIcon Size="Size.Small"
+                 Icon="@(Collapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"></MudIcon>
+        <MudText Typo="Typo.h5" Class="tier-section-name">@Name</MudText>
+        @* The stat ("9 / 43 cleared") already carries the count — showing both is
+           redundant (round 8), so the bare count is the anonymous fallback only. *@
+        @if (!string.IsNullOrWhiteSpace(Stat))
+        {
+            <MudText Typo="Typo.caption" Class="tier-section-stat">@Stat</MudText>
+        }
+        else
+        {
+            <MudText Typo="Typo.caption" Class="tier-section-count">@Count</MudText>
+        }
+    </div>
+    @if (!Collapsed)
+    {
+        <div class="tier-section-body">@ChildContent</div>
+    }
+</div>
+
+@code {
+
+    [Parameter] public string Name { get; set; } = string.Empty;
+
+    /// <summary>A CSS color reference — always a token (e.g. ThemeScales.DifficultyColor), never a literal.</summary>
+    [Parameter] public string Color { get; set; } = "var(--mud-palette-text-secondary)";
+
+    [Parameter] public int Count { get; set; }
+
+    [Parameter] public string? Stat { get; set; }
+
+    [Parameter] public bool Collapsed { get; set; }
+
+    [Parameter] public EventCallback<bool> CollapsedChanged { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private Task Toggle()
+    {
+        return CollapsedChanged.InvokeAsync(!Collapsed);
+    }
+
+    private Task OnHeaderKey(KeyboardEventArgs args)
+    {
+        return args.Key is "Enter" or " " ? Toggle() : Task.CompletedTask;
+    }
+}

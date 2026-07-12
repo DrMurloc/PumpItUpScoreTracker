@@ -1,0 +1,493 @@
+@namespace ScoreTracker.Web.Components
+@using MediatR
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.ChartIntelligence.Contracts.Queries
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.ScoreLedger.Contracts.Commands
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject ISnackbar Snackbar
+
+@* The one shared chart-details surface (design doc §4): leads with the video like
+   today's video dialog, then meta, the cross-mix score journey (ScoreEventJournal),
+   placements across lenses, To-Do, quiet recording, and the PIU Center link-out
+   (their full chart rendering is deliberately not imported — §8a). *@
+<MudDialog Visible="Visible" VisibleChanged="VisibleChanged" Options="_options" Class="chart-details-dialog">
+    <DialogContent>
+        @if (Chart != null)
+        {
+            @if (!string.IsNullOrWhiteSpace(_videoUrl))
+            {
+                <iframe class="chart-details-video" src="@_videoUrl" allow="encrypted-media" allowfullscreen></iframe>
+            }
+            <div class="chart-details-title">
+                <DifficultyBubble Chart="Chart"></DifficultyBubble>
+                <MudText Typo="Typo.h5">@Chart.Song.Name</MudText>
+                <MudSpacer></MudSpacer>
+                @if (CurrentUser.IsLoggedIn)
+                {
+                    <MudTooltip Text="@(IsToDo ? L["On ToDo List"] : L["Add to ToDo List"])">
+                        <MudIconButton Icon="@(IsToDo ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)"
+                                       Color="@(IsToDo ? Color.Info : Color.Default)"
+                                       OnClick="() => OnToDo.InvokeAsync(Chart.Id)"
+                                       aria-label="@L["To Do"]"></MudIconButton>
+                    </MudTooltip>
+                }
+            </div>
+            <div class="chart-details-meta">
+                @if (Chart.Song.Bpm != null)
+                {
+                    <div><span class="chart-details-meta-label">@L["BPM"]</span><span>@Chart.Song.Bpm</span></div>
+                }
+                @if (Chart.NoteCount != null)
+                {
+                    <div><span class="chart-details-meta-label">@L["Note Count"]</span><span>@Chart.NoteCount</span></div>
+                }
+                @if (Chart.StepArtist != null)
+                {
+                    <div><span class="chart-details-meta-label">@L["Step Artist"]</span><span>@Chart.StepArtist</span></div>
+                }
+                <div><span class="chart-details-meta-label">@L["Song Artist"]</span><span>@Chart.Song.Artist</span></div>
+                <div><span class="chart-details-meta-label">@L["Song Type"]</span><span>@Chart.Song.Type</span></div>
+            </div>
+            @if (Score?.Score != null)
+            {
+                <div class="chart-details-score">
+                    <ScoreBreakdown Score="Score.Score.Value" IsBroken="Score.IsBroken" OneLine="true" ShowScore="true"
+                                    Plate="Score.Plate" Ranking="Ranking"></ScoreBreakdown>
+                    @if (ScoreAgeDays != null)
+                    {
+                        <MudText Typo="Typo.caption" Class="chart-details-score-age">@L["Recorded {0} days ago", ScoreAgeDays]</MudText>
+                    }
+                </div>
+            }
+            @if (_placements.Any())
+            {
+                <div class="chart-details-placements">
+                    @foreach (var placement in _placements)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                                 Style="@($"color:{placement.Color};border-color:{placement.Color}")">@placement.Label</MudChip>
+                    }
+                </div>
+            }
+            @* Skill coverage bars — mapped skills ordered dominance-first (their top-3
+               pick, then segment coverage), tinted per category. Pre-crawl charts fall
+               back to the plain tag chips. *@
+            @if (_skillChips.Any())
+            {
+                <MudText Typo="Typo.overline">@L["Skills"]</MudText>
+                <div class="chart-details-skill-bars">
+                    @foreach (var chip in _skillChips.Take(6))
+                    {
+                        @* Null coverage = a whole-chart quality (piucenter's sustained/
+                           bursty classify the chart, not its sections): full bar, no number. *@
+                        var percent = chip.SegmentFraction == null
+                            ? (int?)null
+                            : (int)Math.Round(chip.SegmentFraction.Value * 100);
+                        <div class="chart-details-skill-bar skillcat-@(chip.Skill.GetPrimaryCategory().ToString().ToLowerInvariant())">
+                            <span class="chart-details-skill-bar-label">@chip.Skill.GetName()</span>
+                            <span class="chart-details-skill-bar-track"><span class="chart-details-skill-bar-fill" style="width:@(percent ?? 100)%"></span></span>
+                            <span class="chart-details-skill-bar-value">@(percent == null ? "" : $"{percent}%")</span>
+                        </div>
+                    }
+                </div>
+                <MudText Typo="Typo.caption" Class="chart-details-skill-note">@L["Share of chart sections featuring each skill"]</MudText>
+            }
+            else if (Chart.Skills.Any())
+            {
+                <div class="chart-details-skills">
+                    @foreach (var skill in Chart.Skills)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@skill.GetName()</MudChip>
+                    }
+                </div>
+            }
+            @* Round 4 (piucenter): "Your journey" renamed Score History and moved next
+               to the recording inputs it feeds — past scores directly above the new one. *@
+            @if (_journey.Any())
+            {
+                <MudText Typo="Typo.overline">@L["Score History"]</MudText>
+                <div class="chart-details-journey">
+                    @foreach (var entry in _journey)
+                    {
+                        <div class="chart-details-journey-row">
+                            <span class="chart-details-journey-date">@entry.OccurredAt.ToString("yyyy-MM-dd")</span>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@MixName(entry.Mix)</MudChip>
+                            <span class="chart-details-journey-score">@(entry.Score?.ToString() ?? "—")</span>
+                            @if (entry.Score != null)
+                            {
+                                <LetterGradeIcon Grade="entry.Score.Value.LetterGrade" IsBroken="entry.IsBroken" Height="16"></LetterGradeIcon>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            @* Round 10: buttons never shrink into vertical letter-stacks (nowrap + wrap
+               to their own line instead); the PIU Center link gets its own line.
+               Round 11: the score inputs are always visible (no Record Score toggle) and
+               purpose-built — EditChartGrid brought duplicate To-Do/favorite buttons and
+               a layout that fell apart on phones. To-Do moved to the title-row icon. *@
+            @if (CurrentUser.IsLoggedIn)
+            {
+                <div class="chart-details-record">
+                    <MudText Typo="Typo.overline">@L["Record Score"]</MudText>
+                    <div class="chart-details-record-row">
+                        <MudNumericField T="int?" Label="@L["Score"]" @bind-Value="_inputScore" Min="0" Max="1000000"
+                                         HideSpinButtons="true" Class="chart-details-record-score"></MudNumericField>
+                        <MudSelect T="PhoenixPlate?" Label="@L["Plate"]" @bind-Value="_inputPlate" Clearable="true"
+                                   Class="chart-details-record-plate">
+                            @foreach (var plate in Enum.GetValues<PhoenixPlate>())
+                            {
+                                <MudSelectItem T="PhoenixPlate?" Value="plate">@plate.GetName()</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudCheckBox T="bool" @bind-Value="_inputBroken" Label="@L["Broken"]" Class="chart-details-record-broken"></MudCheckBox>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isSaving"
+                                   OnClick="SaveScore">@L["Save"]</MudButton>
+                    </div>
+                </div>
+            }
+            <MudLink Href="@PiuCenterUrl" Target="_blank" Typo="Typo.caption" Class="chart-details-piucenter">@L["View full chart on PIU Center"]</MudLink>
+            @* Reserved slot: chart comments land here if user-generated content ever ships. *@
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close"
+                   OnClick="Close">@L["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+<style>
+    .chart-details-video {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border: 0;
+    }
+
+    .chart-details-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 8px 0;
+    }
+
+    .chart-details-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 4px 12px;
+        margin-bottom: 8px;
+    }
+
+    .chart-details-meta-label {
+        color: var(--mud-palette-text-secondary);
+        font-size: .7rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        display: block;
+    }
+
+    .chart-details-score {
+        margin: 8px 0;
+    }
+
+    /* Age reads under the score, not beside it (owner, piucenter round 3). */
+    .chart-details-score-age {
+        display: block;
+        margin-top: 2px;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    /* Section headings carry a hairline so Journey/Skills/Record read as their own
+       blocks instead of bleeding together (owner, piucenter round 3). */
+    .chart-details-dialog .mud-typography-overline {
+        display: block;
+        border-top: 1px solid var(--mud-palette-lines-default);
+        padding-top: 10px;
+        margin-top: 12px;
+    }
+
+    .chart-details-skill-note {
+        display: block;
+        color: var(--mud-palette-text-secondary);
+        margin-top: 2px;
+    }
+
+    .chart-details-journey-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 2px 0;
+        border-bottom: 1px dashed var(--mud-palette-lines-default);
+    }
+
+    .chart-details-journey-date {
+        color: var(--mud-palette-text-secondary);
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* No flex-grow: the grade icon sits beside the score, not floated to the far
+       right (owner, piucenter round 4). */
+    .chart-details-journey-score {
+        font-variant-numeric: tabular-nums;
+    }
+
+    .chart-details-placements, .chart-details-skills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin: 8px 0;
+    }
+
+    /* Owner call (piucenter round 2): the desktop dialog ran wide enough that the
+       16:9 video outgrew laptop viewports — cap under MudBlazor's Small. */
+    .mud-dialog.chart-details-dialog {
+        max-width: 520px;
+    }
+
+    .chart-details-skill-bars {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 4px 16px;
+        margin: 2px 0 8px;
+    }
+
+    .chart-details-skill-bar {
+        display: grid;
+        grid-template-columns: 92px 1fr 38px;
+        align-items: center;
+        gap: 8px;
+        font-size: .75rem;
+    }
+
+    .chart-details-skill-bar-label {
+        color: color-mix(in srgb, var(--skill-chip) 60%, var(--mix-ink));
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .chart-details-skill-bar-track {
+        height: 5px;
+        border-radius: 3px;
+        background: color-mix(in srgb, var(--skill-chip) 14%, transparent);
+        overflow: hidden;
+    }
+
+    .chart-details-skill-bar-fill {
+        display: block;
+        height: 100%;
+        border-radius: 3px;
+        background: var(--skill-chip);
+    }
+
+    .chart-details-skill-bar-value {
+        text-align: right;
+        color: var(--mix-ink-muted);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .chart-details-piucenter {
+        display: inline-block;
+        margin-top: 8px;
+    }
+
+    .chart-details-record {
+        margin-top: 8px;
+    }
+
+    /* Round 12: a grid keeps everything left-packed (the trailing 1fr ghost column
+       absorbs the slack — Broken stays glued to Plate, not to Save). */
+    .chart-details-record-row {
+        display: grid;
+        grid-template-columns: minmax(130px, 200px) minmax(130px, 170px) max-content max-content 1fr;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .chart-details-record-broken {
+        white-space: nowrap;
+        margin: 0;
+    }
+
+    @@media (max-width: 599.98px) {
+        .chart-details-record-row {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>
+
+@code {
+    private readonly DialogOptions _options = new() { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small };
+    private Guid _loadedChartId = Guid.Empty;
+    private int? _inputScore;
+    private PhoenixPlate? _inputPlate;
+    private bool _inputBroken;
+    private bool _isSaving;
+    private string? _videoUrl;
+    private IReadOnlyList<ScoreJournalEntry> _journey = Array.Empty<ScoreJournalEntry>();
+    private IReadOnlyList<(string Label, string Color)> _placements = Array.Empty<(string, string)>();
+
+    [Parameter] public Chart? Chart { get; set; }
+
+    [Parameter] public bool Visible { get; set; }
+
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    [Parameter] public RecordedPhoenixScore? Score { get; set; }
+
+    [Parameter] public ScoreRankingRecord? Ranking { get; set; }
+
+    [Parameter] public bool IsToDo { get; set; }
+
+    [Parameter] public EventCallback<Guid> OnToDo { get; set; }
+
+    [Parameter] public EventCallback OnScoreRecorded { get; set; }
+
+    // Round 10: the active-lens meta row was removed — the placements chips already
+    // name every lens's tier, so it double-printed the active one.
+    [Parameter] public int? ScoreAgeDays { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!Visible || Chart == null || Chart.Id == _loadedChartId) return;
+        _loadedChartId = Chart.Id;
+        // Prefill the recording inputs from the current best (round 11).
+        _inputScore = Score?.Score == null ? null : (int)Score.Score.Value;
+        _inputPlate = Score?.Plate;
+        _inputBroken = Score?.IsBroken ?? false;
+        _videoUrl = (await Mediator.Send(new GetChartVideosQuery(new[] { Chart.Id })))
+            .FirstOrDefault()?.VideoUrl.ToString();
+        _journey = CurrentUser.IsLoggedIn
+            ? (await Mediator.Send(new GetChartScoreJourneyQuery(Chart.Id))).ToArray()
+            : Array.Empty<ScoreJournalEntry>();
+        _placements = await LoadPlacements(Chart.Id);
+        // The alias table's key beats the guessed one (crawler project hardening).
+        _externalKey = (await Mediator.Send(new GetChartStepAnalysisQuery(Chart.Id)))?.ExternalKey;
+        // Coverage bars: mapped skills, dominance-ordered, from the banked metrics.
+        _skillChips = (await Mediator.Send(new GetChartSkillChipsQuery(new[] { Chart.Id })))
+            .GetValueOrDefault(Chart.Id) ?? Array.Empty<ChartSkillChipRecord>();
+    }
+
+    private async Task<IReadOnlyList<(string, string)>> LoadPlacements(Guid chartId)
+    {
+        var placements = new List<(string, string)>();
+        foreach (var (listName, label, names) in new (string, string, Func<TierListCategory, string>)[]
+                 {
+                     ("Pass Count", L["Pass Difficulty"].ToString(), DifficultyName),
+                     ("Scores", L["Score Difficulty"].ToString(), DifficultyName),
+                     ("Popularity", L["Popularity"].ToString(), PopularityName)
+                 })
+        {
+            var result = await Mediator.Send(new GetTierListWithFallbackQuery(listName, Mix));
+            var entry = result.Entries.FirstOrDefault(e => e.ChartId == chartId);
+            if (entry == null || entry.Category == TierListCategory.Unrecorded) continue;
+            placements.Add(($"{label}: {names(entry.Category)}",
+                ThemeScales.DifficultyColor(entry.Category)));
+        }
+
+        return placements;
+    }
+
+    private string DifficultyName(TierListCategory category)
+    {
+        return category switch
+        {
+            TierListCategory.Overrated => L["1+ Level Easier"],
+            TierListCategory.VeryEasy => L["Very Easy"],
+            TierListCategory.Easy => L["Easy"],
+            TierListCategory.Medium => L["Medium"],
+            TierListCategory.Hard => L["Hard"],
+            TierListCategory.VeryHard => L["Very Hard"],
+            TierListCategory.Underrated => L["1+ Level Harder"],
+            _ => L["Not Rated"]
+        };
+    }
+
+    // Round 10: the Popularity list speaks popularity, not difficulty — mirrors the
+    // page's popularity bucket names ("Popularity: Very Hard" made no sense).
+    private string PopularityName(TierListCategory category)
+    {
+        return category switch
+        {
+            TierListCategory.Overrated => L["Ultra Popular"],
+            TierListCategory.VeryEasy => L["Very Popular"],
+            TierListCategory.Easy => L["Popular"],
+            TierListCategory.Medium => L["Average"],
+            TierListCategory.Hard => L["Unpopular"],
+            TierListCategory.VeryHard => L["Very Unpopular"],
+            TierListCategory.Underrated => L["Ultra Unpopular"],
+            _ => L["Unknown"]
+        };
+    }
+
+    private static string MixName(MixEnum mix)
+    {
+        return mix == MixEnum.Phoenix2 ? "Phoenix 2" : mix.ToString();
+    }
+
+    private string? _externalKey;
+    private IReadOnlyList<ChartSkillChipRecord> _skillChips = Array.Empty<ChartSkillChipRecord>();
+
+    // The resolved alias key when the crawler has one; otherwise a best-effort guess
+    // in the current key format ("<Song>_-_<Artist>_<S|D><level>_<SONGTYPE>").
+    private string PiuCenterUrl
+    {
+        get
+        {
+            if (_externalKey != null)
+                return $"https://www.piucenter.com/chart/{Uri.EscapeDataString(_externalKey)}";
+            if (Chart == null) return "https://www.piucenter.com/chart";
+            var suffix = Chart.Song.Type switch
+            {
+                SongType.Remix => "REMIX",
+                SongType.ShortCut => "SHORTCUT",
+                SongType.FullSong => "FULLSONG",
+                _ => "ARCADE"
+            };
+            var key =
+                $"{Chart.Song.Name}_-_{Chart.Song.Artist}_{Chart.Type.GetShortHand()}{(int)Chart.Level}_{suffix}"
+                    .Replace(' ', '_');
+            return $"https://www.piucenter.com/chart/{Uri.EscapeDataString(key)}";
+        }
+    }
+
+    private async Task SaveScore()
+    {
+        if (Chart == null) return;
+        _isSaving = true;
+        try
+        {
+            var parsedScore = _inputScore == null ? null :
+                PhoenixScore.TryParse(_inputScore.Value, out var score) ? (PhoenixScore?)score : null;
+            await Mediator.Send(new UpdatePhoenixBestAttemptCommand(Chart.Id, _inputBroken, parsedScore, _inputPlate,
+                Mix: Mix));
+            Snackbar.Add($"Recorded {(_inputBroken ? "Broken" : "Passing")} for {Chart.Song.Name}", Severity.Success);
+            await OnScoreRecorded.InvokeAsync();
+            // The journey timeline gains the new entry immediately.
+            _journey = (await Mediator.Send(new GetChartScoreJourneyQuery(Chart.Id))).ToArray();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("There was an error while recording the score", Severity.Error);
+        }
+
+        _isSaving = false;
+    }
+
+    private Task Close()
+    {
+        return VisibleChanged.InvokeAsync(false);
+    }
+}

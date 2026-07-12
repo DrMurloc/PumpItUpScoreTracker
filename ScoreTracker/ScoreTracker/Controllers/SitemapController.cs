@@ -13,9 +13,17 @@ namespace ScoreTracker.Web.Controllers
         [Route("sitemap.xml")]
         public async Task<IActionResult> GetSitemap([FromServices] IChartRepository _charts)
         {
-            var pages = (from chart in await _charts.GetCharts(MixEnum.Phoenix)
-                select $"https://piuscores.arroweclip.se/Chart/{chart.Id}").ToList();
+            var charts = (await _charts.GetCharts(MixEnum.Phoenix)).ToArray();
+            var pages = charts.Select(chart => $"https://piuscores.arroweclip.se/Chart/{chart.Id}").ToList();
             pages.Add("https://piuscores.arroweclip.se/TierLists");
+            // Tier-lists overhaul C3: one canonical URL per Singles/Doubles folder that
+            // actually has charts — each is an indexable community tier list.
+            pages.AddRange(charts
+                .Where(c => c.Type is ChartType.Single or ChartType.Double)
+                .Select(c => (c.Type, Level: (int)c.Level))
+                .Distinct()
+                .OrderBy(f => f.Type).ThenBy(f => f.Level)
+                .Select(f => $"https://piuscores.arroweclip.se/TierLists/{f.Type}/{f.Level}"));
             pages.Add("https://piuscores.arroweclip.se/ChartRandomizer");
             pages.Add("https://piuscores.arroweclip.se/PhoenixCalculator");
             pages.Add("https://piuscores.arroweclip.se/LifeCalculator");

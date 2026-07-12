@@ -24,7 +24,7 @@ public sealed class SessionFeedHandlerTests
     private static readonly Guid ChartId = Guid.NewGuid();
 
     [Fact]
-    public async Task NonPublicPlayersReadAsAnEmptyPage()
+    public async Task NonPublicPlayersReadAsAnEmptyPageToAnonymousViewers()
     {
         // Defense in depth behind the page's redirect-to-home.
         var ctx = new HandlerContext(isPublic: false);
@@ -36,6 +36,35 @@ public sealed class SessionFeedHandlerTests
         Assert.Empty(page.Groups);
         ctx.Journal.Verify(j => j.GetSessionGroups(It.IsAny<Guid>(), It.IsAny<int>(),
             It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task NonPublicPlayersReadAsAnEmptyPageToOtherPlayers()
+    {
+        var ctx = new HandlerContext(isPublic: false, viewerId: Guid.NewGuid());
+
+        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId),
+            CancellationToken.None);
+
+        Assert.Equal(0, page.TotalGroups);
+        Assert.Empty(page.Groups);
+        ctx.Journal.Verify(j => j.GetSessionGroups(It.IsAny<Guid>(), It.IsAny<int>(),
+            It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task NonPublicPlayersStillReadTheirOwnSessions()
+    {
+        var ctx = new HandlerContext(isPublic: false, viewerId: UserId);
+        var rows = new[] { Entry(Now, 950000) };
+        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix, rows));
+        ctx.GivenHistories(rows);
+
+        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId),
+            CancellationToken.None);
+
+        Assert.Equal(1, page.TotalGroups);
+        Assert.Single(page.Groups.Single().Rows);
     }
 
     [Fact]
@@ -119,13 +148,19 @@ public sealed class SessionFeedHandlerTests
     {
         public Mock<IScoreJournalRepository> Journal { get; } = new();
         public Mock<IUserReader> Users { get; } = new();
+        public Mock<ICurrentUserAccessor> CurrentUser { get; } = new();
         public SessionFeedHandler Handler { get; }
 
-        public HandlerContext(bool isPublic = true)
+        public HandlerContext(bool isPublic = true, Guid? viewerId = null)
         {
             Users.Setup(u => u.GetUser(UserId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new UserBuilder().WithId(UserId).WithIsPublic(isPublic).Build());
-            Handler = new SessionFeedHandler(Journal.Object, Users.Object);
+            if (viewerId is { } viewer)
+            {
+                CurrentUser.Setup(c => c.IsLoggedIn).Returns(true);
+                CurrentUser.Setup(c => c.User).Returns(new UserBuilder().WithId(viewer).Build());
+            }
+            Handler = new SessionFeedHandler(Journal.Object, Users.Object, CurrentUser.Object);
         }
 
         public void GivenGroups(params JournalSessionRows[] groups)

@@ -48,5 +48,11 @@ public sealed class ScoreLedgerModelContribution : IDbModelContribution
             .HasOne<UserEntity>()
             .WithMany()
             .HasForeignKey(ba => ba.UserId);
+
+        // XX is the table's original, implicit scope — the column default keeps every
+        // pre-legacy-mix row valid without a data backfill (PhoenixRecordsPerMix precedent).
+        modelBuilder.Entity<BestAttemptEntity>()
+            .Property(ba => ba.MixId)
+            .HasDefaultValue(MixIds.XX);
     }
 }

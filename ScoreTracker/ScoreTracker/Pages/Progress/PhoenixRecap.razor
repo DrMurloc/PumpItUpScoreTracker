@@ -1,5 +1,6 @@
 @using MediatR
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Identity.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Recap
@@ -47,7 +48,7 @@ else if (_user != null && _recap != null)
                 <div class="precap-inner">
                     <div class="precap-eyebrow">@L["The arc"]</div>
                     <h2 class="precap-h2">@arc.StartCompetitive.ToString("F1") <span class="precap-hl">&#8599;</span> @arc.EndCompetitive.ToString("F1")</h2>
-                    <p class="precap-lede">@L["You walked in a {0}. You're walking out a {1}.", ((int)arc.StartCompetitive).ToString(), ((int)arc.EndCompetitive).ToString()]</p>
+                    <p class="precap-lede">@L["You walked in a {0}. You're walking out a {1}.", WholeLevel(arc.StartCompetitive).ToString(), WholeLevel(arc.EndCompetitive).ToString()]</p>
                     <div class="precap-panel">
                         @* Rendered as one markup string: Razor treats lowercase <text> (SVG) as its own construct. *@
                         @((MarkupString)ArcSvg())
@@ -93,7 +94,7 @@ else if (_user != null && _recap != null)
                         <div class="precap-stat">
                             <div class="precap-num">#@sRank</div>
                             <div class="precap-cap">@L["competitive singles, all PIUScores players"]</div>
-                            <div class="precap-rank">@TopShare(_recap.Rollup.SinglesPercentile)</div>
+                            <div class="precap-rank">@TopShare(_recap.Rollup.SinglesPercentile, sRank)</div>
                         </div>
                     }
                     @if (_recap.Rollup.DoublesRank is { } dRank)
@@ -101,13 +102,13 @@ else if (_user != null && _recap != null)
                         <div class="precap-stat">
                             <div class="precap-num">#@dRank</div>
                             <div class="precap-cap">@L["competitive doubles, all PIUScores players"]</div>
-                            <div class="precap-rank">@TopShare(_recap.Rollup.DoublesPercentile)</div>
+                            <div class="precap-rank">@TopShare(_recap.Rollup.DoublesPercentile, dRank)</div>
                         </div>
                     }
                     <div class="precap-stat">
                         <div class="precap-num">#@_recap.Rollup.ChartsPassedRank</div>
                         <div class="precap-cap">@L["total charts passed"]</div>
-                        <div class="precap-rank">@TopShare(_recap.Rollup.ChartsPassedPercentile)</div>
+                        <div class="precap-rank">@TopShare(_recap.Rollup.ChartsPassedPercentile, _recap.Rollup.ChartsPassedRank)</div>
                     </div>
                 </div>
                 @if (_recap.Rollup.TopStepArtists.Any())
@@ -217,7 +218,7 @@ else if (_user != null && _recap != null)
                                 <span class="precap-cat precap-cat-hl">@L["Perfect Games"]</span>
                                 @foreach (var pg in _recap.ImpressivePgs)
                                 {
-                                    <div class="precap-row">@Pill(pg.ChartType, pg.Level)<span class="precap-song">@pg.SongName</span><span class="precap-meta precap-hot">@L["only {0} have it", pg.PassRate.ToString("P1")]</span></div>
+                                    <div class="precap-row">@Pill(pg.ChartType, pg.Level)<span class="precap-song">@pg.SongName</span><span class="precap-meta precap-hot">@L["only {0} have it", RareShare(pg.PassRate)]</span></div>
                                 }
                             </div>
                         }
@@ -237,7 +238,7 @@ else if (_user != null && _recap != null)
                                 <span class="precap-cat precap-cat-gold">@L["Rarest passes"]</span>
                                 @foreach (var rare in _recap.RarestPasses)
                                 {
-                                    <div class="precap-row">@Pill(rare.ChartType, rare.Level)<span class="precap-song">@rare.SongName</span><span class="precap-meta precap-hot">@L["only {0} pass it", rare.PassRate.ToString("P1")]</span></div>
+                                    <div class="precap-row">@Pill(rare.ChartType, rare.Level)<span class="precap-song">@rare.SongName</span><span class="precap-meta precap-hot">@L["only {0} pass it", RareShare(rare.PassRate)]</span></div>
                                 }
                             </div>
                         }
@@ -311,7 +312,7 @@ else if (_user != null && _recap != null)
                                 @* Title names run long — stack the rarity under a wrapping title. *@
                                 <div class="precap-row precap-row-block">
                                     <span class="precap-song precap-song-wrap">[@title.Title]</span>
-                                    <span class="precap-meta precap-hot">@L["held by {0} of titled players", title.HolderShare.ToString("P1")]</span>
+                                    <span class="precap-meta precap-hot">@L["held by {0} of titled players", RareShare(title.HolderShare)]</span>
                                 </div>
                             }
                         }
@@ -523,6 +524,7 @@ else if (_user != null && _recap != null)
 @inject IMediator Mediator
 @inject NavigationManager NavManager
 @inject IJSRuntime JS
+@inject ICurrentUserAccessor CurrentUser
 @code {
     [Parameter] public Guid UserIdParam { get; set; }
 
@@ -549,9 +551,11 @@ else if (_user != null && _recap != null)
 
     protected override async Task OnInitializedAsync()
     {
-        // Public players only, same gate as the Sessions page.
+        // Public players only — except the owner, whose recap is always theirs to see.
+        // Same gate as the Sessions page.
         _user = await Mediator.Send(new GetUserByIdQuery(UserIdParam));
-        if (_user is not { IsPublic: true })
+        var isOwner = CurrentUser.IsLoggedIn && CurrentUser.User.Id == UserIdParam;
+        if (_user == null || (!_user.IsPublic && !isOwner))
         {
             NavManager.NavigateTo("/");
             return;
@@ -592,9 +596,28 @@ else if (_user != null && _recap != null)
     private bool IsFreshImporter =>
         _recap!.Rollup.FirstRecordedOn is { } first && (_recap.ComputedAt - first).TotalDays < 7;
 
-    private string TopShare(double? percentile)
+    private string TopShare(double? percentile, int? rank = null)
     {
-        return percentile == null ? string.Empty : L["Top {0}", percentile.Value.ToString("P1")];
+        if (percentile == null) return string.Empty;
+        // Below .05% the share renders "Top 0.0%", which reads as a bug. That deep in the
+        // tail it's first place in practice — say so; clamp the rare non-first case instead.
+        if (percentile.Value < .0005)
+            return rank is > 1 ? L["Top {0}", 0.001.ToString("P1")] : L["1st"];
+        return L["Top {0}", percentile.Value.ToString("P1")];
+    }
+
+    // The arc headline rounds to one decimal (25.96 → "26.0"), so the whole-level callout
+    // must floor that displayed value, not the raw one — or "26.0" reads as "a 25".
+    private static int WholeLevel(double competitive)
+    {
+        return (int)Math.Floor(Math.Round(competitive, 1));
+    }
+
+    // Rarity shares can drop below the 0.1% display grain (one PG holder sitewide);
+    // add a decimal there instead of rendering "only 0.0% have it".
+    private static string RareShare(double share)
+    {
+        return share.ToString(share < .0005 ? "P2" : "P1");
     }
 
     private string FormatDuration(long seconds)
@@ -655,7 +678,7 @@ else if (_user != null && _recap != null)
                 or RecapBadge.LeaveSomeTitlesForTheRestOfUs when badge.Share != null =>
                 L["{0} of all Phoenix titles collected", badge.Share.Value.ToString("P0")],
             RecapBadge.SpecialSnowflake when badge is { Subject: not null, Share: not null } =>
-                $"[{badge.Subject}] — " + L["held by {0} of titled players", badge.Share.Value.ToString("P1")],
+                $"[{badge.Subject}] — " + L["held by {0} of titled players", RareShare(badge.Share.Value)],
             RecapBadge.Completionist or RecapBadge.CompletionistPlus or RecapBadge.CompletionistSupreme
                 or RecapBadge.CompletionistUltra or RecapBadge.YouKnowPumpItUpDoesntDoLamps when badge.Count != null =>
                 L["{0} folders at 90% or better", badge.Count.Value.ToString()],

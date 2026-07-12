@@ -16,6 +16,7 @@ Reader-facing docs live in `docs/` (README.md stays at the root). Keep them curr
 - [docs/HOW-TO-RUN.md](docs/HOW-TO-RUN.md) — prerequisites, Aspire local run, the /Dev/Populate harness, optional secrets
 - [docs/HOW-TO-TEST.md](docs/HOW-TO-TEST.md) — test philosophy + suite commands
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — update in the same PR that changes a structural pattern
+- [docs/UX-GUIDELINES.md](docs/UX-GUIDELINES.md) — the design system (per-mix themes, color tokens, the two semantic ramps) + the ten UX rules; update in the same PR that changes a UI pattern
 - [docs/DATABASE-SCHEMA.md](docs/DATABASE-SCHEMA.md) — new tables get a row
 - [docs/API.md](docs/API.md) — the API surface map; Swagger is shape truth
 - [docs/SCHEDULED-JOBS.md](docs/SCHEDULED-JOBS.md) — new recurring jobs get a row
@@ -60,7 +61,7 @@ SharedKernel ◄── Domain ◄── Application ◄── Data ◄── ver
 | `ScoreTracker.SharedKernel` | `MediatR` only | Everything else — the kernel references nothing. Namespaces: `ScoreTracker.SharedKernel.ValueTypes/Enums/Models`. |
 | `ScoreTracker.Domain` | `MediatR`, `Microsoft.Extensions.Logging.Abstractions` (+ project ref to `SharedKernel`) | Anything else. No EF, no `HttpClient`, no MassTransit, no ASP.NET, no Azure/Discord/SendGrid. |
 | `ScoreTracker.Application` | + `MassTransit.Abstractions`, `Microsoft.Extensions.Caching.Memory` | EF Core, ASP.NET, `HttpClient`, vendor SDKs. Application must never know it's behind a web server. |
-| `ScoreTracker.Data` | + `Microsoft.EntityFrameworkCore.SqlServer`, `Azure.Storage.Blobs`, `Discord.Net`, `HtmlAgilityPack`, `SendGrid` | ASP.NET. |
+| `ScoreTracker.Data` | + `Microsoft.EntityFrameworkCore.SqlServer`, `Azure.Storage.Blobs`, `Discord.Net`, `HtmlAgilityPack`, `SendGrid`, `SkiaSharp` (+ Linux native assets) + `QRCoder` (the share-card renderer) | ASP.NET. |
 | `ScoreTracker.Web` | + `MudBlazor`, OAuth providers, `Swashbuckle`, MassTransit DI, `Hangfire.AspNetCore`, `Hangfire.SqlServer` | EF Core directly (must go through ports). |
 | Vertical assemblies: `ScoreTracker.Ucs`, `ScoreTracker.ScoreLedger`, `ScoreTracker.OfficialMirror`, `ScoreTracker.Catalog`, `ScoreTracker.ChartIntelligence`, `ScoreTracker.WeeklyChallenge`, `ScoreTracker.EventCompetition`, `ScoreTracker.Communities`, `ScoreTracker.PlayerProgress`, `ScoreTracker.Identity` (UCS is the template) | `MediatR`, `MassTransit.Abstractions` (+ full `MassTransit` for verticals with bus consumers — `IRegistrationConfigurator`, used by the `AddXxxConsumers` hooks, lives in the full package), `Microsoft.Extensions.DependencyInjection.Abstractions`, `Microsoft.Extensions.Caching.Memory`; `OfficialMirror` additionally `Microsoft.Extensions.Http` + `HtmlAgilityPack` (the PiuGame ACL) (+ project refs `Domain`, `Data` transitionally for the shared DbContext; only `Catalog` still refs `Application` transitionally (`GetRandomChartsQuery`, gated on the Match-subsystem deletion); cross-vertical reads go through published ports (`IScoreReader`, `IPlayerStatsReader`, `ITitleRepository`, `IUserReader`), never SQL joins) | Everything else. Only `Contracts/` and `Wiring/` namespaces may be public (arch-test enforced, `VerticalBoundaryTests`); EF entities and internal domain types never cross the boundary. Verticals must not be referenced by `Application` (cycles through `Data → Application`). **MassTransit's `AddConsumers` scan skips internal types** — verticals with bus consumers expose an `AddXxxConsumers(IRegistrationConfigurator)` hook called from `Program.cs`'s `AddMassTransit` block (tripwire-tested). |
 | `ScoreTracker.CompositionRoot` | DI extensions only (+ `Microsoft.EntityFrameworkCore.Design`, private, for the design-time factory) | Business logic. |
@@ -108,6 +109,17 @@ Adding a package outside its allowed layer is a violation. Adding a project refe
 - Repositories take `IDbContextFactory<ChartAttemptDbContext>` and create scoped contexts.
 - Migrations live in `ScoreTracker.Data/Migrations/`. Scaffold from `ScoreTracker.Data` with `dotnet ef migrations add <Name> --startup-project ../ScoreTracker.CompositionRoot` (the design-time factory lives in CompositionRoot so the model includes vertical contributions). **Application**: production applies migrations via the self-contained EF bundle in the deploy pipeline's gated stage; local dev auto-migrates at startup through the AppHost's `AutoMigrate` flag. The app never migrates at startup in production — it only logs pending-migration drift.
 - New tables get a row in [docs/DATABASE-SCHEMA.md](docs/DATABASE-SCHEMA.md).
+
+## UI conventions
+
+The machine-enforceable subset of [docs/UX-GUIDELINES.md](docs/UX-GUIDELINES.md):
+
+- **No color literals in `Pages/`, `Components/`, or `Shared/`** — no hex strings, no MudBlazor `Colors.*` constants (arch-test enforced, `UiColorTokenTests`, shrink-only allowlist). A brand color belongs in a `MixPalette` (`Services/Theming/MixThemes.cs`); a color that carries data meaning belongs in a semantic token group with a `ThemeScales` accessor. Markup reads `var(--mix-*/--rarity-*/--diff-*/--plate-*/--slot-*)`.
+- **Theme resolution**: `/Account` override → selected mix → Phoenix; dark-only (both Mud palettes deliberately identical). `MixThemes` is the single source: it builds the `MudTheme` and emits the CSS custom properties.
+- **Two semantic ramps, fixed meaning, per-mix hues**: rarity (grey → silver → emerald → gold → sapphire → prism; never red; glow classes carry the monotonic ordering) and difficulty (`TierListCategory` green→red). Consumers call `ThemeScales.RarityStyle/BandFor/DifficultyColor/PlateColor/SlotColor` — never re-implement band cutoffs. Legacy difficulty chips (`--slot-*`, pre-Exceed slots/HDB/levelled co-ops) render as CSS, never image bubbles, and never borrow the difficulty ramp — old scales don't translate ([docs/design/legacy-mixes.md](docs/design/legacy-mixes.md)).
+- **One concept, one component**: `DifficultyBubble`, `LetterGradeIcon`, `ScoreBreakdown`, `UserLabel`. New visual concept = new shared component in `Components/`.
+- **Density**: the Comfortable/Compact/Table preference persists **per page** via `Density__<Page>` UiSettings keys (landed with the tier-list overhaul; `Universal__Density` was retired unshipped). The three sanctioned modes are fixed — never invent a fourth.
+- **Localization**: every UI string goes through `L[…]`; new keys land in **all** locales in the same pass, following each `docs/LOCALIZATION-<locale>.md` glossary (Mix: ko `시리즈`, ja `バージョン`, es/pt `versión`/`versão`, fr/it `Mix`).
 
 ## Test conventions
 

@@ -712,10 +712,6 @@
 	  <value>Urgmrl Glrglurgrgl</value>
 	  <comment>Show Skills</comment>
   </data>
-  <data name="Show Difficulty" xml:space="preserve">
-	  <value>Urgmrl Grlgrgl</value>
-	  <comment>Show Difficulty</comment>
-  </data>
   <data name="Show Song Name" xml:space="preserve">
 	  <value>Urgmrl Glurgl Mrglar</value>
 	  <comment>Show Song Name</comment>
@@ -2454,6 +2450,9 @@
   <data name="Top {0}" xml:space="preserve">
     <value>Mrgl {0}</value>
   </data>
+  <data name="1st" xml:space="preserve">
+    <value>1st, mrgl</value>
+  </data>
   <data name="{0} of all Phoenix titles collected" xml:space="preserve">
     <value>{0} mrgl titles</value>
   </data>
@@ -2585,5 +2584,366 @@
   </data>
   <data name="Rebuild Recap PG Cards" xml:space="preserve">
     <value>Mrgl Recap PG Mrgls</value>
+  </data>
+  <data name="Site Theme" xml:space="preserve">
+    <value>Mrglsite Thrgleme</value>
+  </data>
+  <data name="Match Current Mix" xml:space="preserve">
+    <value>Mrgltch Currglent Mrglx</value>
+  </data>
+  <data name="My Sessions" xml:space="preserve">
+    <value>Mrgly Mrglssions</value>
+  </data>
+  <data name="Weekly" xml:space="preserve">
+    <value>Wrglkly</value>
+  </data>
+  <data name="More" xml:space="preserve">
+    <value>Mrgl…</value>
+  </data>
+  <data name="Import" xml:space="preserve">
+    <value>Mrglport</value>
+  </data>
+  <data name="Tiers" xml:space="preserve">
+    <value>Trgls</value>
+  </data>
+  <!-- Tier-lists overhaul (PR #135). The meme stays un-mrgl'd: universal term. -->
+  <data name="Ranked by" xml:space="preserve">
+    <value>Mrglranked by</value>
+  </data>
+  <data name="Pass Difficulty" xml:space="preserve">
+    <value>Mrglpass Difficulty</value>
+  </data>
+  <data name="Score Difficulty" xml:space="preserve">
+    <value>Mrglscore Difficulty</value>
+  </data>
+  <data name="Personalized" xml:space="preserve">
+    <value>Mrglsonalized</value>
+  </data>
+  <data name="Personalized for {0}" xml:space="preserve">
+    <value>Mrglsonalized for {0}</value>
+  </data>
+  <data name="Tier List" xml:space="preserve">
+    <value>Mrgl List</value>
+  </data>
+  <data name="By Skill" xml:space="preserve">
+    <value>By Mrglskill</value>
+  </data>
+  <data name="Grouped by" xml:space="preserve">
+    <value>Mrglgrouped by</value>
+  </data>
+  <data name="Download" xml:space="preserve">
+    <value>Mrgldownload</value>
+  </data>
+  <data name="Comfortable" xml:space="preserve">
+    <value>Mrglfortable</value>
+  </data>
+  <data name="Compact" xml:space="preserve">
+    <value>Mrglpact</value>
+  </data>
+  <data name="Table" xml:space="preserve">
+    <value>Mrgltable</value>
+  </data>
+  <data name="Tier lists for XX and older coming soon" xml:space="preserve">
+    <value>Mrgl lists for XX and older coming soon, mrgl!</value>
+  </data>
+  <data name="Folder Progress" xml:space="preserve">
+    <value>Mrglfolder Mrglprogress</value>
+  </data>
+  <data name="{0} / {1} passed" xml:space="preserve">
+    <value>{0} / {1} mrglpassed</value>
+  </data>
+  <data name="of {0} similar players in this folder" xml:space="preserve">
+    <value>of {0} similar mrgls in this folder</value>
+  </data>
+  <data name="Import your scores to light this folder up" xml:space="preserve">
+    <value>Mrglport your scores to light this folder up, mrgl!</value>
+  </data>
+  <data name="Original Chabala Tier List" xml:space="preserve">
+    <value>Original Chabala Mrgl List</value>
+  </data>
+  <data name="Score Ranking: What percent of players of comparable (+/- .5 competitive level) your score is on a chart." xml:space="preserve">
+    <value>Mrglscore Ranking: What percent of mrgls of comparable (+/- .5 competitive level) your score is on a chart.</value>
+  </data>
+  <data name="No charts match your filters" xml:space="preserve">
+    <value>No charts match your mrglfilters</value>
+  </data>
+  <data name="Clear Filters" xml:space="preserve">
+    <value>Mrglclear Filters</value>
+  </data>
+  <data name="{0} / {1} cleared" xml:space="preserve">
+    <value>{0} / {1} mrglcleared</value>
+  </data>
+  <data name="Skill data: PIU Center — maintained by aesthete" xml:space="preserve">
+    <value>Mrglskill data: PIU Center — maintained by aesthete</value>
+  </data>
+  <data name="Not Tagged" xml:space="preserve">
+    <value>Not Mrgltagged</value>
+  </data>
+  <data name="Display" xml:space="preserve">
+    <value>Mrgldisplay</value>
+  </data>
+  <data name="Better Than" xml:space="preserve">
+    <value>Mrglbetter Than</value>
+  </data>
+  <data name="Previous Folder" xml:space="preserve">
+    <value>Previous Mrglfolder</value>
+  </data>
+  <data name="Next Folder" xml:space="preserve">
+    <value>Next Mrglfolder</value>
+  </data>
+  <data name="Details" xml:space="preserve">
+    <value>Mrgldetails</value>
+  </data>
+  <data name="Passed in another mix" xml:space="preserve">
+    <value>Mrglpassed in another mix</value>
+  </data>
+  <data name="Remove from ToDo List" xml:space="preserve">
+    <value>Remove from Mrgl-Do List</value>
+  </data>
+  <data name="Add to ToDo List" xml:space="preserve">
+    <value>Add to Mrgl-Do List</value>
+  </data>
+  <data name="On ToDo List" xml:space="preserve">
+    <value>On Mrgl-Do List</value>
+  </data>
+  <data name="Record Score" xml:space="preserve">
+    <value>Mrglrecord Score</value>
+  </data>
+  <data name="View full chart on PIU Center" xml:space="preserve">
+    <value>View full chart on PIU Center, mrgl</value>
+  </data>
+  <data name="Skill data: PIU Center" xml:space="preserve">
+    <value>Mrglskill data: PIU Center</value>
+  </data>
+  <data name="Amazing" xml:space="preserve">
+    <value>Mrglmazing</value>
+  </data>
+  <data name="Very Good" xml:space="preserve">
+    <value>Very Mrglgood</value>
+  </data>
+  <data name="Good" xml:space="preserve">
+    <value>Mrglgood</value>
+  </data>
+  <data name="Low" xml:space="preserve">
+    <value>Mrgllow</value>
+  </data>
+  <data name="Very Low" xml:space="preserve">
+    <value>Very Mrgllow</value>
+  </data>
+  <data name="Why Don't You Get Up and Dance, Man?" xml:space="preserve">
+    <value>Why Don't You Get Up and Dance, Man?</value>
+  </data>
+  <data name="Not Recorded" xml:space="preserve">
+    <value>Not Mrglcorded</value>
+  </data>
+  <data name="Ancient" xml:space="preserve">
+    <value>Mrglcient</value>
+  </data>
+  <data name="Very Old" xml:space="preserve">
+    <value>Very Mrglold</value>
+  </data>
+  <data name="Old" xml:space="preserve">
+    <value>Mrglold</value>
+  </data>
+  <data name="New" xml:space="preserve">
+    <value>Mrglnew</value>
+  </data>
+  <data name="Very New" xml:space="preserve">
+    <value>Very Mrglnew</value>
+  </data>
+  <data name="Most Recent" xml:space="preserve">
+    <value>Most Mrglcent</value>
+  </data>
+  <data name="Ultra Popular" xml:space="preserve">
+    <value>Ultra Mrglpopular</value>
+  </data>
+  <data name="Very Popular" xml:space="preserve">
+    <value>Very Mrglpopular</value>
+  </data>
+  <data name="Popular" xml:space="preserve">
+    <value>Mrglpopular</value>
+  </data>
+  <data name="Unpopular" xml:space="preserve">
+    <value>Unmrglpopular</value>
+  </data>
+  <data name="Very Unpopular" xml:space="preserve">
+    <value>Very Unmrglpopular</value>
+  </data>
+  <data name="Ultra Unpopular" xml:space="preserve">
+    <value>Ultra Unmrglpopular</value>
+  </data>
+  <data name="Last Place" xml:space="preserve">
+    <value>Last Mrglplace</value>
+  </data>
+  <data name="0 -> 10%" xml:space="preserve">
+    <value>0 -> 10%</value>
+  </data>
+  <data name="10% -> 25%" xml:space="preserve">
+    <value>10% -> 25%</value>
+  </data>
+  <data name="25% -> 50%" xml:space="preserve">
+    <value>25% -> 50%</value>
+  </data>
+  <data name="50% -> 75%" xml:space="preserve">
+    <value>50% -> 75%</value>
+  </data>
+  <data name="75% -> 90%" xml:space="preserve">
+    <value>75% -> 90%</value>
+  </data>
+  <data name="90% -> 99.9%" xml:space="preserve">
+    <value>90% -> 99.9%</value>
+  </data>
+  <data name="The Best" xml:space="preserve">
+    <value>The Mrglbest</value>
+  </data>
+  <data name="Not Enough Data" xml:space="preserve">
+    <value>Not Enough Mrgldata</value>
+  </data>
+  <data name="Applied Filters" xml:space="preserve">
+    <value>Applied Glrglblubrgl</value>
+  </data>
+  <data name="Filters and Columns" xml:space="preserve">
+    <value>Glrglblubrgl and Columrgls</value>
+  </data>
+  <data name="Not available in Compact view" xml:space="preserve">
+    <value>Not availamrgl in Compact mrglview</value>
+  </data>
+  <data name="Generating" xml:space="preserve">
+    <value>Genermrglating</value>
+  </data>
+  <data name="Folder Levels" xml:space="preserve">
+    <value>Mrglfolder Levels</value>
+  </data>
+  <data name="Skills" xml:space="preserve">
+    <value>Skrglls</value>
+  </data>
+  <data name="{0} days ago" xml:space="preserve">
+    <value>{0} mrgldays ago</value>
+  </data>
+  <data name="Recorded {0} days ago" xml:space="preserve">
+    <value>Recormrgled {0} days ago</value>
+  </data>
+  <data name="You: {0} · similar players average {1}" xml:space="preserve">
+    <value>Mrgl: {0} · similar mrglplayers avermrgl {1}</value>
+  </data>
+  <data name="Rebuild Tier Lists" xml:space="preserve">
+    <value>Remrglbuild Mrgl Lists</value>
+  </data>
+  <data name="Score in Folder" xml:space="preserve">
+    <value>Scormrgl in Mrglfolder</value>
+  </data>
+  <data name="Passes in Folder" xml:space="preserve">
+    <value>Passes in Mrglfolder</value>
+  </data>
+  <data name="Folder Stats" xml:space="preserve">
+    <value>Mrglfolder Stats</value>
+  </data>
+  <data name="Advanced" xml:space="preserve">
+    <value>Advmrglanced</value>
+  </data>
+  <data name="Step Analysis" xml:space="preserve">
+    <value>Sterp Analrgsis</value>
+  </data>
+  <data name="Dominant Skills" xml:space="preserve">
+    <value>Dominrgnt Skrglls</value>
+  </data>
+  <data name="Notes per Second" xml:space="preserve">
+    <value>Nrgtes per Secrnd</value>
+  </data>
+  <data name="Sustain Time" xml:space="preserve">
+    <value>Sustrgn Time</value>
+  </data>
+  <data name="Time Under Tension" xml:space="preserve">
+    <value>Time Undrgr Tensrgn</value>
+  </data>
+  <data name="Step analysis data from PIU Center" xml:space="preserve">
+    <value>Sterp analrgsis data from PIU Center, mrgl</value>
+  </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>Shrgre of chart sectrgns featrgring each skrgll</value>
+  </data>
+  <data name="Show Skill Metric" xml:space="preserve">
+    <value>Shrgw Skrgll Metrgc</value>
+  </data>
+  <data name="Queued" xml:space="preserve">
+    <value>Qrgd, mrgl</value>
+  </data>
+  <data name="Key" xml:space="preserve">
+    <value>Krgy</value>
+  </data>
+  <data name="Last Checked" xml:space="preserve">
+    <value>Lrgst Chrgcked</value>
+  </data>
+  <data name="Run PIU Center Crawl" xml:space="preserve">
+    <value>Rrgn PIU Center Crrgwl</value>
+  </data>
+  <data name="Unmatched PIU Center Keys" xml:space="preserve">
+    <value>Unmrgtched PIU Center Krgys</value>
+  </data>
+  <data name="No unmatched keys" xml:space="preserve">
+    <value>No unmrgtched krgys, mrgl</value>
+  </data>
+  <data name="Select a key, pick the chart it belongs to, then bind" xml:space="preserve">
+    <value>Selrgct a krgy, prgck the chrgrt it belrgngs to, thrgn brgnd</value>
+  </data>
+  <data name="Bind Selected Chart" xml:space="preserve">
+    <value>Brgnd Selrgcted Chrgrt</value>
+  </data>
+  <data name="Uploading" xml:space="preserve">
+    <value>Uplrgding</value>
+  </data>
+  <data name="Upload PIU Center Snapshot" xml:space="preserve">
+    <value>Uplrgd PIU Center Snapshrgt, mrgl</value>
+  </data>
+  <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
+    <value>A snapshrgt zip imprgrts a fetched data relrgse directly - same pipelrgn as the crrgwl, no fetchrgn, mrgl</value>
+  </data>
+  <data name="There was an error uploading the snapshot" xml:space="preserve">
+    <value>There was an errgr uplrgding the snapshrgt, mrgl</value>
+  </data>
+  <data name="More Mixes" xml:space="preserve">
+    <value>More Mixes</value>
+  </data>
+  <data name="scale" xml:space="preserve">
+    <value>scale</value>
+  </data>
+  <data name="not comparable to modern levels" xml:space="preserve">
+    <value>not comparable to modern levels</value>
+  </data>
+  <data name="Debuted in: X" xml:space="preserve">
+    <value>Debuted in: {0}</value>
+  </data>
+  <data name="This page isn't ready for older mixes yet" xml:space="preserve">
+    <value>This page isn't ready for older mixes yet</value>
+  </data>
+  <data name="Prime" xml:space="preserve">
+    <value>Prime</value>
+  </data>
+  <data name="Fiesta" xml:space="preserve">
+    <value>Fiesta</value>
+  </data>
+  <data name="NX" xml:space="preserve">
+    <value>NX</value>
+  </data>
+  <data name="Exceed / Zero" xml:space="preserve">
+    <value>Exceed / Zero</value>
+  </data>
+  <data name="Premiere / Prex" xml:space="preserve">
+    <value>Premiere / Prex</value>
+  </data>
+  <data name="Classic" xml:space="preserve">
+    <value>Classic</value>
+  </data>
+  <data name="American" xml:space="preserve">
+    <value>American</value>
+  </data>
+  <data name="Community Rating" xml:space="preserve">
+    <value>Community Rating</value>
+  </data>
+  <data name="Your Skills in Folder" xml:space="preserve">
+    <value>Yrgr Skrglls in Frglder, mrgl</value>
+  </data>
+  <data name="Score History" xml:space="preserve">
+    <value>Scrgre Histrgry</value>
   </data>
 </root>

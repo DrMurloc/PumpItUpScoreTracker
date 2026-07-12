@@ -105,6 +105,9 @@ public sealed class ChartAttemptDbContext : DbContext
         builder.Entity<ChartEntity>()
             .Property(e => e.OriginalMixId)
             .HasDefaultValue(new Guid("1ABB8F5A-BDA3-40F0-9CE7-1C4F9F8F1D3B"));
+        builder.Entity<ChartEntity>()
+            .Property(e => e.PlayerCount)
+            .HasDefaultValue(1);
 
         // Vertical-owned entities (ADR-001 D4). Applied last so contributions see the
         // default schema and shared conventions.

@@ -8,6 +8,7 @@ using ScoreTracker.ScoreLedger.Application;
 using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services.Contracts;
@@ -29,7 +30,8 @@ public sealed class GetXXBestChartAttemptsHandlerTests
         var result = await handler.Handle(new GetXXBestChartAttemptsQuery(userId), CancellationToken.None);
 
         Assert.Empty(result);
-        attempts.Verify(a => a.GetBestAttempts(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        attempts.Verify(a => a.GetBestAttempts(It.IsAny<Guid>(), It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -40,10 +42,29 @@ public sealed class GetXXBestChartAttemptsHandlerTests
         var access = new Mock<IUserAccessService>();
         access.Setup(a => a.HasAccessTo(userId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
         var attempts = new Mock<IXXChartAttemptRepository>();
-        attempts.Setup(a => a.GetBestAttempts(userId, It.IsAny<CancellationToken>())).ReturnsAsync(attemptList);
+        attempts.Setup(a => a.GetBestAttempts(userId, MixEnum.XX, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(attemptList);
 
         var handler = new GetXXBestChartAttemptsHandler(attempts.Object, access.Object);
         var result = await handler.Handle(new GetXXBestChartAttemptsQuery(userId), CancellationToken.None);
+
+        Assert.Same(attemptList, result);
+    }
+
+    [Fact]
+    public async Task PassesTheRequestedLegacyMixToTheRepository()
+    {
+        var userId = Guid.NewGuid();
+        var attemptList = new List<BestXXChartAttempt>();
+        var access = new Mock<IUserAccessService>();
+        access.Setup(a => a.HasAccessTo(userId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var attempts = new Mock<IXXChartAttemptRepository>();
+        attempts.Setup(a => a.GetBestAttempts(userId, MixEnum.Fiesta2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(attemptList);
+
+        var handler = new GetXXBestChartAttemptsHandler(attempts.Object, access.Object);
+        var result = await handler.Handle(new GetXXBestChartAttemptsQuery(userId, MixEnum.Fiesta2),
+            CancellationToken.None);
 
         Assert.Same(attemptList, result);
     }

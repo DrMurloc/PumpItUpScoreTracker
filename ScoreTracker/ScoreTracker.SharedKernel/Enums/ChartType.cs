@@ -9,7 +9,12 @@ public enum ChartType
     [Description("D")] Double,
     [Description("SP")] SinglePerformance,
     [Description("DP")] DoublePerformance,
-    [Description("CoOp")] CoOp
+    [Description("CoOp")] CoOp,
+
+    // Legacy-only pad layout (middle six panels); every HDB chart was removed by
+    // XX. Routine deliberately has NO value here — it collapses onto CoOp with a
+    // real difficulty level (docs/design/legacy-mixes.md).
+    [Description("HDB")] HalfDouble
 }
 
 [ExcludeFromCodeCoverage]

@@ -1,0 +1,302 @@
+﻿[
+    {
+        "name":  "SONIC_BOOM_-_USAO_S7_ARCADE",
+        "sord":  "singles",
+        "level":  7,
+        "pack":  "PHOENIX",
+        "skills":  [
+                       "side3_singles",
+                       "anchor_run",
+                       "jack"
+                   ],
+        "NPS":  4.3,
+        "BPM info":  "\u003eQuarter notes @ 205 bpm",
+        "Sustain time":  6,
+        "Total time under tension":  11
+    },
+    {
+        "name":  "Accident_-_MAX_S7_ARCADE",
+        "sord":  "singles",
+        "level":  7,
+        "pack":  "FIESTA 2",
+        "skills":  [
+                       "bursty",
+                       "twists",
+                       "run"
+                   ],
+        "NPS":  6.1,
+        "BPM info":  "8th notes @ 183 bpm",
+        "Sustain time":  11,
+        "Total time under tension":  61
+    },
+    {
+        "name":  "Wedding_Crashers_-_SHORT_CUT_-_-_SHK_S4_SHORTCUT",
+        "sord":  "singles",
+        "level":  4,
+        "pack":  "XX",
+        "skills":  [
+                       "run_without_twists",
+                       "run",
+                       "doublestep"
+                   ],
+        "NPS":  2.8,
+        "BPM info":  "Quarter notes @ 165 bpm",
+        "Sustain time":  13,
+        "Total time under tension":  30
+    },
+    {
+        "name":  "With_my_Lover_-_BanYa_D14_ARCADE",
+        "sord":  "doubles",
+        "level":  14,
+        "pack":  "1ST~3RD",
+        "skills":  [
+                       "bracket",
+                       "doublestep",
+                       "jump"
+                   ],
+        "NPS":  5.2,
+        "BPM info":  "\u003e8th notes @ 124 bpm",
+        "Sustain time":  24,
+        "Total time under tension":  69
+    },
+    {
+        "name":  "THE_REVOLUTION_-_MAX__DOOM_S7_ARCADE",
+        "sord":  "singles",
+        "level":  7,
+        "pack":  "PRIME",
+        "skills":  [
+                       "anchor_run",
+                       "run",
+                       "run_without_twists"
+                   ],
+        "NPS":  5.3,
+        "BPM info":  "8th notes @ 160 bpm",
+        "Sustain time":  16,
+        "Total time under tension":  69
+    },
+    {
+        "name":  "Hello_-_BanYa_D18_ARCADE",
+        "sord":  "doubles",
+        "level":  18,
+        "pack":  "REBIRTH~PREX 3",
+        "skills":  [
+                       "co-op_pad_transition",
+                       "jack",
+                       "twists"
+                   ],
+        "NPS":  9.3,
+        "BPM info":  "16th notes @ 140 bpm",
+        "Sustain time":  8,
+        "Total time under tension":  30
+    },
+    {
+        "name":  "Turkey_Virus_-_Banya_Production_S15_REMIX",
+        "sord":  "singles",
+        "level":  15,
+        "pack":  "NX ABSOLUTE",
+        "skills":  [
+                       "bursty",
+                       "side3_singles",
+                       "drill"
+                   ],
+        "NPS":  9.9,
+        "BPM info":  "16th notes @ 149 bpm",
+        "Sustain time":  4,
+        "Total time under tension":  4
+    },
+    {
+        "name":  "Final_Audition_Ep._2-1_-_YAHPP_S21_ARCADE",
+        "sord":  "singles",
+        "level":  21,
+        "pack":  "NX~NX2",
+        "skills":  [
+                       "side3_singles",
+                       "twists",
+                       "jack"
+                   ],
+        "NPS":  11.3,
+        "BPM info":  "16th notes @ 170 bpm",
+        "Sustain time":  23,
+        "Total time under tension":  61
+    },
+    {
+        "name":  "Baroque_Virus_-_FULL_SONG_-_v2_-_Zircon_D23_INFOBAR_2_FULLSONG",
+        "sord":  "doubles",
+        "level":  23,
+        "pack":  "XX",
+        "skills":  [
+                       "hold_footslide",
+                       "bracket",
+                       "bracket_twist"
+                   ],
+        "NPS":  9.0,
+        "BPM info":  "16th notes @ 135 bpm",
+        "Sustain time":  35,
+        "Total time under tension":  156
+    },
+    {
+        "name":  "Extravaganza_-_SHORT_CUT_-_-_Banya_D16_SHORTCUT",
+        "sord":  "doubles",
+        "level":  16,
+        "pack":  "FIESTA",
+        "skills":  [
+                       "twists",
+                       "jump",
+                       "cross-pad_transition"
+                   ],
+        "NPS":  9.8,
+        "BPM info":  "16th notes @ 146 bpm",
+        "Sustain time":  7,
+        "Total time under tension":  7
+    },
+    {
+        "name":  "Oh!_Rosa_-_BanYa_S9_ARCADE",
+        "sord":  "singles",
+        "level":  9,
+        "pack":  "S.E.~EXTRA",
+        "skills":  [
+                       "footswitch",
+                       "jump",
+                       "twists"
+                   ],
+        "NPS":  4.9,
+        "BPM info":  "8th notes @ 148 bpm",
+        "Sustain time":  7,
+        "Total time under tension":  22
+    },
+    {
+        "name":  "The_Quick_Brown_Fox_Jumps_Over_The_Lazy_Dog_-_Doin_D22_ARCADE",
+        "sord":  "doubles",
+        "level":  22,
+        "pack":  "PRIME 2",
+        "skills":  [
+                       "bursty",
+                       "run_without_twists",
+                       "mid4_doubles"
+                   ],
+        "NPS":  13.3,
+        "BPM info":  "16th notes @ 200 bpm",
+        "Sustain time":  8,
+        "Total time under tension":  8
+    },
+    {
+        "name":  "Take_Out_-_SHORT_CUT_-_-_SHK_S18_SHORTCUT",
+        "sord":  "singles",
+        "level":  18,
+        "pack":  "FIESTA EX",
+        "skills":  [
+                       "run",
+                       "run_without_twists",
+                       "bursty"
+                   ],
+        "NPS":  11.3,
+        "BPM info":  "16th notes @ 170 bpm",
+        "Sustain time":  13,
+        "Total time under tension":  13
+    },
+    {
+        "name":  "Love_is_a_Danger_Zone_-_SHORT_CUT_-_-_Banya_D18_HALFDOUBLE_SHORTCUT",
+        "sord":  "doubles",
+        "level":  18,
+        "pack":  "FIESTA",
+        "skills":  [
+                       "twists",
+                       "jack",
+                       "mid6_doubles"
+                   ],
+        "NPS":  9.3,
+        "BPM info":  "16th notes @ 140 bpm",
+        "Sustain time":  17,
+        "Total time under tension":  27
+    },
+    {
+        "name":  "Witch_Doctor_-_BanYa_S17_ARCADE",
+        "sord":  "singles",
+        "level":  17,
+        "pack":  "EXCEED~ZERO",
+        "skills":  [
+                       "drill",
+                       "bursty",
+                       "bracket"
+                   ],
+        "NPS":  10.7,
+        "BPM info":  "16th notes @ 160 bpm",
+        "Sustain time":  21,
+        "Total time under tension":  39
+    },
+    {
+        "name":  "Hello_William_-_Banya_Production_D20_HALFDOUBLE_ARCADE",
+        "sord":  "doubles",
+        "level":  20,
+        "pack":  "FIESTA",
+        "skills":  [
+                       "footswitch",
+                       "mid4_doubles",
+                       "jack"
+                   ],
+        "NPS":  11.3,
+        "BPM info":  "16th notes @ 170 bpm",
+        "Sustain time":  10,
+        "Total time under tension":  33
+    },
+    {
+        "name":  "Love_is_a_Danger_Zone_2_Try_To_B.P.M_-_BanYa_D17_HALFDOUBLE_REMIX",
+        "sord":  "doubles",
+        "level":  17,
+        "pack":  "EXCEED~ZERO",
+        "skills":  [
+                       "footswitch",
+                       "jack",
+                       "twists"
+                   ],
+        "NPS":  7.8,
+        "BPM info":  "16th notes @ 118 bpm",
+        "Sustain time":  6,
+        "Total time under tension":  11
+    },
+    {
+        "name":  "Slam_-_Novasonic_S7_ARCADE",
+        "sord":  "singles",
+        "level":  7,
+        "pack":  "S.E.~EXTRA",
+        "skills":  [
+                       "jump",
+                       "doublestep",
+                       "twists"
+                   ],
+        "NPS":  4.4,
+        "BPM info":  "8th notes @ 132 bpm",
+        "Sustain time":  5,
+        "Total time under tension":  5
+    },
+    {
+        "name":  "Repentance_-_Abel_D20_ARCADE",
+        "sord":  "doubles",
+        "level":  20,
+        "pack":  "XX",
+        "skills":  [
+                       "bracket_drill",
+                       "bracket_run",
+                       "bracket"
+                   ],
+        "NPS":  12.0,
+        "BPM info":  "12th notes @ 240 bpm",
+        "Sustain time":  13,
+        "Total time under tension":  35
+    },
+    {
+        "name":  "Tribe_Attacker_-_Hi-G_D10_HALFDOUBLE_ARCADE",
+        "sord":  "doubles",
+        "level":  10,
+        "pack":  "FIESTA 2",
+        "skills":  [
+                       "jack",
+                       "jump",
+                       "mid6_doubles"
+                   ],
+        "NPS":  5.0,
+        "BPM info":  "8th notes @ 150 bpm",
+        "Sustain time":  6,
+        "Total time under tension":  16
+    }
+]

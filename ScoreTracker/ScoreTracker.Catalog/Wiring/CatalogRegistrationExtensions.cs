@@ -1,4 +1,6 @@
+using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
+using ScoreTracker.Catalog.Application;
 using ScoreTracker.Catalog.Domain;
 using ScoreTracker.Catalog.Infrastructure;
 using ScoreTracker.Data.Persistence;
@@ -18,7 +20,20 @@ public static class CatalogRegistrationExtensions
     {
         services.AddTransient<IChartRepository, EFChartRepository>();
         services.AddTransient<IRandomizerRepository, EFRandomizerRepository>();
+        services.AddTransient<IExternalChartAliasRepository, EFExternalChartAliasRepository>();
+        services.AddTransient<IChartSkillMetricRepository, EFChartSkillMetricRepository>();
         services.AddSingleton<IDbModelContribution, CatalogModelContribution>();
         return services;
+    }
+
+    /// <summary>
+    ///     MassTransit's AddConsumers assembly scan skips internal types, so the vertical
+    ///     registers its internal consumers explicitly through this hook — call it inside
+    ///     the host's AddMassTransit block. Guarded by the
+    ///     MassTransitDiscoversTheCatalogsInternalConsumers tripwire test.
+    /// </summary>
+    public static void AddCatalogConsumers(this IRegistrationConfigurator configurator)
+    {
+        configurator.AddConsumer<PiuCenterCrawlSaga>();
     }
 }

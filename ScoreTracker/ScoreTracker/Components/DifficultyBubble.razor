@@ -3,18 +3,33 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.Theming
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @namespace ScoreTracker.Web.Components
 @inject ChartScoringLevels ScoringLevels
 @if (Chart != null)
-{                                
+{
     <MudTooltip ShowOnFocus="true" Placement="Placement.Right">
         <ChildContent>
-            <MudImage tabindex="0" Src="@DifficultyBubblePath" Height="Height ?? (Small ? 22 : 35)" Alt="@Chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-
+            @if (UseLegacyChip)
+            {
+                @* Legacy chips are deliberately rendered, not image bubbles: pre-Exceed
+                   slots have no official art, and looking different from the modern
+                   bubbles IS the message — these numbers live on a different scale
+                   (docs/design/legacy-mixes.md). *@
+                <span tabindex="0" class="legacy-chip" style="border-color:@ThemeScales.SlotColor(Chart.Slot);color:@ThemeScales.SlotColor(Chart.Slot);font-size:@(Small ? ".62rem" : ".78rem");">@ChipText</span>
+            }
+            else
+            {
+                <MudImage tabindex="0" Src="@DifficultyBubblePath" Height="Height ?? (Small ? 22 : 35)" Alt="@Chart.DifficultyString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+            }
         </ChildContent>
         <TooltipContent>
-            <MudText Typo="Typo.caption">@Chart.Song.Name @Chart.DifficultyString</MudText><br/>
+            <MudText Typo="Typo.caption">@Chart.Song.Name @(UseLegacyChip ? ChipText : Chart.DifficultyString)</MudText><br/>
+            @if (UseLegacyChip && Chart.Slot != null)
+            {
+                <MudText Typo="Typo.caption">@Chart.Mix.GetName() @L["scale"] — @L["not comparable to modern levels"]</MudText><br/>
+            }
             <MudText Typo="Typo.caption">@Chart.StepArtist</MudText><br/>
             <MudText Typo="Typo.caption">@ScoringLevelString</MudText>
         </TooltipContent>
@@ -38,7 +53,29 @@
     [Parameter]
     public int? Height { get; set; }
 
-    public string DifficultyBubblePath => Chart?.Type==ChartType.DoublePerformance || Chart?.Type==ChartType.SinglePerformance|| Chart?.Mix == MixEnum.XX ?
-        $"https://piuimages.arroweclip.se/difficulty/{Chart.DifficultyString.ToLower()}.png" : $"https://piuimages.arroweclip.se/difficulty/{Chart?.Mix}/{Chart?.DifficultyString.ToLower()}.png";
+    // Chip cases: pre-Exceed slots, Half-Double (no bubble art exists in any set),
+    // and legacy co-ops that carry a real difficulty next to their player count.
+    private bool UseLegacyChip =>
+        Chart != null &&
+        (Chart.Slot != null ||
+         Chart.Type == ChartType.HalfDouble ||
+         (Chart.Type == ChartType.CoOp && Chart.Mix.UsesLegacyScoring() && Chart.Level != Chart.PlayerCount));
+
+    private string ChipText => Chart == null
+        ? string.Empty
+        : Chart.Slot != null
+            ? $"{Chart.Slot.Value.GetName().ToUpperInvariant()} {Chart.Level}"
+            : Chart.Type == ChartType.CoOp
+                ? $"CO-OP ×{Chart.PlayerCount} · {Chart.Level}"
+                : $"HDB {Chart.Level}";
+
+    // Modern mixes keep their per-mix bubble art; every numbered legacy mix
+    // (Exceed → Prime 2, Infinity, Pro) reuses the XX image set — same S/D notation,
+    // zero new assets. SP/DP predate per-mix art and were always served flat.
+    public string DifficultyBubblePath =>
+        Chart?.Type == ChartType.DoublePerformance || Chart?.Type == ChartType.SinglePerformance ||
+        Chart?.Mix == MixEnum.XX || Chart?.Mix.UsesLegacyScoring() == true
+            ? $"https://piuimages.arroweclip.se/difficulty/{Chart?.DifficultyString.ToLower()}.png"
+            : $"https://piuimages.arroweclip.se/difficulty/{Chart?.Mix}/{Chart?.DifficultyString.ToLower()}.png";
 
 }

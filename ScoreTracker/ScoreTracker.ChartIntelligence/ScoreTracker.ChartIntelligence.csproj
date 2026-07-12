@@ -24,6 +24,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
+    <!-- Cross-vertical read of the Catalog's published skill-chip contract (the
+         personalized blend's frequency weights) — contracts only, per ADR-001 D2. -->
+    <ProjectReference Include="..\ScoreTracker.Catalog\ScoreTracker.Catalog.csproj" />
     <!-- Transitional (P5): the single ChartAttemptDbContext still lives in ScoreTracker.Data. -->
     <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
     <!-- Transitional (P5): this vertical's query/command records stay in Application until

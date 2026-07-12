@@ -23,6 +23,31 @@ namespace ScoreTracker.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.ChartSkillArchiveEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ArchivedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsHighlighted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SkillName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ChartSkillArchive", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.ChartSkillEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -49,6 +74,34 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("ChartSkill", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.ChartSkillMetricEntity", b =>
+                {
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Source")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("MetricName")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Grade")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<decimal>("Value")
+                        .HasPrecision(9, 4)
+                        .HasColumnType("decimal(9,4)");
+
+                    b.HasKey("ChartId", "Source", "MetricName");
+
+                    b.HasIndex("Source");
+
+                    b.ToTable("ChartSkillMetric", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.ChartVideoEntity", b =>
                 {
                     b.Property<Guid>("ChartId")
@@ -70,6 +123,43 @@ namespace ScoreTracker.Data.Migrations
                     b.HasKey("ChartId");
 
                     b.ToTable("ChartVideo", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.ExternalChartAliasEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ExternalKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset>("LastCheckedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Source", "ExternalKey")
+                        .IsUnique();
+
+                    b.HasIndex("Source", "Status");
+
+                    b.ToTable("ExternalChartAlias", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.SongNameLanguageEntity", b =>
@@ -175,6 +265,27 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("ChartPreferenceRating", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.ChartScoreStatsEntity", b =>
+                {
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ScoreCount")
+                        .HasColumnType("int");
+
+                    b.Property<double>("ScoreStandardDeviation")
+                        .HasColumnType("float");
+
+                    b.HasKey("MixId", "ChartId");
+
+                    b.HasIndex("ChartId");
+
+                    b.ToTable("ChartScoreStats", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.ChartScoringLevelEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -221,6 +332,30 @@ namespace ScoreTracker.Data.Migrations
                     b.HasIndex("ChartId");
 
                     b.ToTable("CoOpRating", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.FolderCohortStatsEntity", b =>
+                {
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ChartType")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Bucket")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PassHistogramJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("MixId", "ChartType", "Level", "Bucket");
+
+                    b.ToTable("FolderCohortStats", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.TierListEntryEntity", b =>
@@ -332,6 +467,37 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("UserPreferenceRating", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.UserTierListEntryEntity", b =>
+                {
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.HasKey("MixId", "UserId", "ChartId");
+
+                    b.HasIndex("ChartId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("MixId", "ChartId");
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("MixId", "ChartId"), new[] { "Category", "Order" });
+
+                    b.ToTable("UserTierListEntry", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Communities.Infrastructure.Entities.CommunityChannelEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -439,6 +605,11 @@ namespace ScoreTracker.Data.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasDefaultValue(new Guid("1abb8f5a-bda3-40f0-9ce7-1c4f9f8f1d3b"));
 
+                    b.Property<int>("PlayerCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
                     b.Property<Guid>("SongId")
                         .HasColumnType("uniqueidentifier");
 
@@ -499,6 +670,10 @@ namespace ScoreTracker.Data.Migrations
 
                     b.Property<Guid>("ChartId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("LegacySlot")
+                        .HasMaxLength(24)
+                        .HasColumnType("nvarchar(24)");
 
                     b.Property<int>("Level")
                         .HasColumnType("int");
@@ -630,10 +805,16 @@ namespace ScoreTracker.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -1735,6 +1916,11 @@ namespace ScoreTracker.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("MixId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValue(new Guid("20f8ccf8-94b1-418d-b923-c375b042bda8"));
+
                     b.Property<DateTimeOffset>("RecordedDate")
                         .HasColumnType("datetimeoffset");
 
@@ -1748,7 +1934,7 @@ namespace ScoreTracker.Data.Migrations
 
                     b.HasIndex("ChartId");
 
-                    b.HasIndex("UserId", "ChartId");
+                    b.HasIndex("UserId", "ChartId", "MixId");
 
                     b.ToTable("BestAttempt", "scores");
                 });
@@ -2134,6 +2320,15 @@ namespace ScoreTracker.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.ChartScoreStatsEntity", b =>
+                {
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ChartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.CoOpRatingEntity", b =>
                 {
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
@@ -2159,6 +2354,21 @@ namespace ScoreTracker.Data.Migrations
                 });
 
             modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.UserCoOpRatingEntity", b =>
+                {
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ChartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.UserTierListEntryEntity", b =>
                 {
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
                         .WithMany()

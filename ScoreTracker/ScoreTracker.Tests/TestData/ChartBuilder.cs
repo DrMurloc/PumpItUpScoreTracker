@@ -24,10 +24,14 @@ internal sealed class ChartBuilder
     private Name? _stepArtist;
     private int? _noteCount;
     private IReadOnlySet<Skill> _skills = new HashSet<Skill>();
+    private LegacySlot? _slot;
+    private int? _playerCountOverride;
 
     public ChartBuilder WithId(Guid id) { _id = id; return this; }
     public ChartBuilder WithSong(Song song) { _song = song; return this; }
     public ChartBuilder WithSongName(string name) { _song = _song with { Name = Name.From(name) }; return this; }
+    public ChartBuilder WithArtist(string artist) { _song = _song with { Artist = Name.From(artist) }; return this; }
+    public ChartBuilder WithSongType(SongType type) { _song = _song with { Type = type }; return this; }
     public ChartBuilder WithType(ChartType type) { _type = type; return this; }
     public ChartBuilder WithLevel(int level) { _level = DifficultyLevel.From(level); return this; }
     public ChartBuilder WithLevel(DifficultyLevel level) { _level = level; return this; }
@@ -36,9 +40,11 @@ internal sealed class ChartBuilder
     public ChartBuilder WithStepArtist(string stepArtist) { _stepArtist = Name.From(stepArtist); return this; }
     public ChartBuilder WithNoteCount(int noteCount) { _noteCount = noteCount; return this; }
     public ChartBuilder WithSkills(IReadOnlySet<Skill> skills) { _skills = skills; return this; }
+    public ChartBuilder WithSlot(LegacySlot slot) { _slot = slot; return this; }
+    public ChartBuilder WithPlayerCount(int playerCount) { _playerCountOverride = playerCount; return this; }
 
     public Chart Build() => new(_id, _originalMix, _song, _type, _level, _mix,
-        _stepArtist, _noteCount, _skills);
+        _stepArtist, _noteCount, _skills, _slot, _playerCountOverride);
 
     public static implicit operator Chart(ChartBuilder b) => b.Build();
 }

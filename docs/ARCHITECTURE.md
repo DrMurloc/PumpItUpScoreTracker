@@ -136,7 +136,7 @@ Every vertical's model contribution must be listed in [`VerticalModelContributio
 | `Admin/` | admin dashboard, chart maintenance, bulk voting |
 | `Dev/` | `/Dev/Populate` — the local-database setup harness (dev-only, see [HOW-TO-RUN.md](HOW-TO-RUN.md)) |
 
-**Components** (`Components/`): the reusable vocabulary of the UI — `ChartSelector` (autocomplete), `DifficultyBubble`, `SongImage`, `LetterGradeIcon`, `ScoreBreakdown`, `UserLabel`, `TierListSection`, `ChartVideoDisplay`, etc. `Shared/MainLayout.razor` owns the MudBlazor theme, drawer navigation, and subscribes to live-update events (import status, player stats).
+**Components** (`Components/`): the reusable vocabulary of the UI — `ChartSelector` (autocomplete), `DifficultyBubble`, `SongImage`, `LetterGradeIcon`, `ScoreBreakdown`, `UserLabel`, `TierListSection`, `ChartVideoDisplay`, etc. `Shared/MainLayout.razor` owns the shell — desktop top nav with click mega-menus, the mobile bottom nav + More sheet, the app-bar mix pill — resolves the per-mix theme (`Services/Theming/MixThemes`, see [UX-GUIDELINES.md](UX-GUIDELINES.md)), and subscribes to live-update events (import status, player stats).
 
 **Controllers** (`Controllers/`): the [API surface](API.md) — thin MediatR dispatchers under `api/*`, the dev-harness exports under `dev/export/*`, and UI-support endpoints (`login`, `logout`, `culture`, sitemap).
 
