@@ -3218,4 +3218,13 @@
   <data name="This page is full." xml:space="preserve">
     <value>Questa pagina è piena.</value>
   </data>
+  <data name="Competitive Level over time for your selected mixes." xml:space="preserve">
+    <value>Il tuo livello competitivo nel tempo per i Mix selezionati.</value>
+  </data>
+  <data name="Your level history starts tracking with your next import." xml:space="preserve">
+    <value>La cronologia del tuo livello inizierà a registrarsi con la prossima importazione.</value>
+  </data>
+  <data name="Range" xml:space="preserve">
+    <value>Intervallo</value>
+  </data>
 </root>

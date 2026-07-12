@@ -793,3 +793,8 @@
     opacity: .45;
     pointer-events: none;
 }
+
+.dash-chart-fill {
+    flex: 1;
+    min-height: 0;
+}

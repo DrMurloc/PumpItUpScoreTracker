@@ -3096,4 +3096,13 @@
   <data name="This page is full." xml:space="preserve">
     <value>Esta página está llena.</value>
   </data>
+  <data name="Competitive Level over time for your selected mixes." xml:space="preserve">
+    <value>Tu Nivel Competitivo a lo largo del tiempo en las versiones que elijas.</value>
+  </data>
+  <data name="Your level history starts tracking with your next import." xml:space="preserve">
+    <value>Tu historial de nivel comenzará a registrarse con tu próxima importación.</value>
+  </data>
+  <data name="Range" xml:space="preserve">
+    <value>Rango</value>
+  </data>
 </root>

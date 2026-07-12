@@ -3219,4 +3219,13 @@
   <data name="This page is full." xml:space="preserve">
     <value>このページは満杯です。</value>
   </data>
+  <data name="Competitive Level over time for your selected mixes." xml:space="preserve">
+    <value>選択したバージョンでの競技レベルの推移。</value>
+  </data>
+  <data name="Your level history starts tracking with your next import." xml:space="preserve">
+    <value>レベル履歴は次回のインポートから記録されます。</value>
+  </data>
+  <data name="Range" xml:space="preserve">
+    <value>期間</value>
+  </data>
 </root>

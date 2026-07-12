@@ -25,6 +25,11 @@ public sealed record MixPalette(
     string Ink,
     string InkMuted,
     string Glow,
+    // Chart series pair (Singles/Doubles) for render targets that can't read CSS vars
+    // (ApexCharts config). CVD-validated per mix; era distinction rides line STYLE
+    // (dashed), never a third hue — Combined died with the widget overhaul.
+    string ChartSingles,
+    string ChartDoubles,
     RarityRamp Rarity)
 {
     // Semantic alert colors are intentionally shared across mixes: red/green/amber alerts
@@ -86,6 +91,8 @@ public static class MixThemes
         InkMuted: "#A99BB8",
         // Cyan glow under magenta primaries = the XX dueling-neon signature.
         Glow: "rgba(53, 200, 255, .40)",
+        ChartSingles: "#FF2FA0",
+        ChartDoubles: "#3B9EFF",
         Rarity: new RarityRamp(
             Common: "#958CA6",
             Silver: "#D5CDE3",
@@ -106,6 +113,8 @@ public static class MixThemes
         Ink: "#E9EFF7",
         InkMuted: "#93A3B8",
         Glow: "rgba(63, 169, 245, .40)",
+        ChartSingles: "#FF6B35",
+        ChartDoubles: "#38B6FF",
         Rarity: new RarityRamp(
             Common: "#8B98A9",
             Silver: "#CBD5E1",
@@ -127,6 +136,8 @@ public static class MixThemes
         Ink: "#EAF5EC",
         InkMuted: "#9AB3A3",
         Glow: "rgba(79, 227, 63, .40)",
+        ChartSingles: "#E93CF2",
+        ChartDoubles: "#29C9F7",
         Rarity: new RarityRamp(
             Common: "#8FA396",
             Silver: "#CBDCD0",
@@ -264,6 +275,8 @@ public static class MixThemes
     --mix-ink: {p.Ink};
     --mix-ink-muted: {p.InkMuted};
     --mix-glow: {p.Glow};
+    --chart-singles: {p.ChartSingles};
+    --chart-doubles: {p.ChartDoubles};
     --rarity-common: {p.Rarity.Common};
     --rarity-silver: {p.Rarity.Silver};
     --rarity-emerald: {p.Rarity.Emerald};

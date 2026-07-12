@@ -3099,4 +3099,13 @@
   <data name="This page is full." xml:space="preserve">
     <value>이 페이지는 가득 찼습니다.</value>
   </data>
+  <data name="Competitive Level over time for your selected mixes." xml:space="preserve">
+    <value>선택한 시리즈의 경쟁 레벨 변화를 보여줍니다.</value>
+  </data>
+  <data name="Your level history starts tracking with your next import." xml:space="preserve">
+    <value>레벨 기록은 다음 가져오기부터 기록됩니다.</value>
+  </data>
+  <data name="Range" xml:space="preserve">
+    <value>기간</value>
+  </data>
 </root>

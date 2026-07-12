@@ -1,0 +1,154 @@
+@using MediatR
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ScoreTracker.Web.Services.Theming
+
+@* W1 (design doc §3): multi-mix Competitive Level graph. Color = chart type from the
+   active theme's chart pair; era = line STYLE — the effective mix draws solid, other
+   mixes dashed and dimmed (CVD-independent channel). Phoenix 2 lines start from the
+   floor on purpose; the re-grind is the story. No Combined series (owner). *@
+
+@if (!_loaded)
+{
+    <div class="dash-widget-message">
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
+    </div>
+}
+else if (!_series.Any())
+{
+    <div class="dash-widget-message">
+        <div>
+            <MudText Typo="Typo.body2">@L["Your level history starts tracking with your next import."]</MudText>
+            <MudLink Href="/UploadPhoenixScores" Typo="Typo.body2">@L["Upload Scores"]</MudLink>
+        </div>
+    </div>
+}
+else
+{
+    <div class="dash-chart-fill">
+        <ApexChart TItem="PlayerRatingRecord" XAxisType="XAxisType.Datetime" Options="_options"
+                   Height="@("100%")" @key="_renderKey">
+            @foreach (var series in _series)
+            {
+                <ApexPointSeries TItem="PlayerRatingRecord"
+                                 Items="series.Points"
+                                 Name="@series.Label"
+                                 Color="@series.Color"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(e => e.Date)"
+                                 YValue="@(e => (decimal)series.YSelector(e))"
+                                 OrderBy="e => e.X"/>
+            }
+        </ApexChart>
+    </div>
+}
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+
+@code {
+
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public MixEnum EffectiveMix { get; set; }
+
+    private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
+
+    private sealed record LevelSeries(string Label, string Color, bool Dashed,
+        IReadOnlyList<PlayerRatingRecord> Points, Func<PlayerRatingRecord, double> YSelector);
+
+    private bool _loaded;
+    private string _renderKey = string.Empty;
+    private string? _loadedFor;
+    private List<LevelSeries> _series = new();
+    private ApexChartOptions<PlayerRatingRecord> _options = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Reload only when identity-relevant inputs change — parent re-renders (edit
+        // mode mutations elsewhere on the page) must not refetch every widget (§2.3).
+        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{EffectiveMix}";
+        if (signature == _loadedFor) return;
+        _loadedFor = signature;
+        _loaded = false;
+
+        var config = WidgetConfigJson.Read<CompetitiveLevelConfig>(Widget.ConfigJson);
+        var mixes = (config.Mixes?.Where(m => Supported.Contains(m)).Distinct().ToArray()
+                     ?? new[] { Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix })
+            .OrderByDescending(m => m == EffectiveMix)
+            .ToArray();
+        if (!mixes.Any()) mixes = new[] { MixEnum.Phoenix };
+
+        var themeMix = MixThemes.ResolveThemeMix(
+            await UiSettings.GetSetting(MixThemes.OverrideSettingKey), await UiSettings.GetSelectedMix());
+        var palette = MixThemes.PaletteFor(themeMix);
+        var cutoff = config.RangeMonths > 0
+            ? DateTimeOffset.Now.AddMonths(-config.RangeMonths)
+            : DateTimeOffset.MinValue;
+
+        _series = new List<LevelSeries>();
+        var dashes = new List<double>();
+        var annotations = new List<AnnotationsYAxis>();
+        foreach (var mix in mixes)
+        {
+            var history = (await Mediator.Send(new GetPlayerHistoryQuery(CurrentUser.User.Id, mix)))
+                .OrderBy(h => h.Date).ToArray();
+            var inRange = history.Where(h => h.Date >= cutoff).ToArray();
+            var dashed = mix != EffectiveMix && mixes.Length > 1;
+
+            if (inRange.Length >= 2)
+            {
+                if (config.ShowSingles)
+                {
+                    _series.Add(new LevelSeries($"{L["Singles"]} · {mix}", palette.ChartSingles, dashed,
+                        inRange, h => h.SinglesLevel));
+                    dashes.Add(dashed ? 5 : 0);
+                }
+
+                if (config.ShowDoubles)
+                {
+                    _series.Add(new LevelSeries($"{L["Doubles"]} · {mix}", palette.ChartDoubles, dashed,
+                        inRange, h => h.DoublesLevel));
+                    dashes.Add(dashed ? 5 : 0);
+                }
+            }
+            else if (history.Any())
+            {
+                // "Where you left off": the mix's data sits entirely left of the range —
+                // ghost lines at its final levels, the reference the re-grind chases.
+                var last = history.Last();
+                if (config.ShowSingles)
+                    annotations.Add(new AnnotationsYAxis
+                    {
+                        Y = last.SinglesLevel, BorderColor = palette.ChartSingles, StrokeDashArray = 4,
+                        Label = new Label { Text = $"{mix} {L["Singles"]} {last.SinglesLevel:0.0}" }
+                    });
+                if (config.ShowDoubles)
+                    annotations.Add(new AnnotationsYAxis
+                    {
+                        Y = last.DoublesLevel, BorderColor = palette.ChartDoubles, StrokeDashArray = 4,
+                        Label = new Label { Text = $"{mix} {L["Doubles"]} {last.DoublesLevel:0.0}" }
+                    });
+            }
+        }
+
+        _options = new ApexChartOptions<PlayerRatingRecord>
+        {
+            Chart = new ApexCharts.Chart
+                { Toolbar = new ApexCharts.Toolbar { Show = false }, Background = "transparent" },
+            Stroke = new Stroke { Curve = Curve.Smooth, DashArray = dashes },
+            Yaxis = new List<YAxis> { new() { DecimalsInFloat = 2 } },
+            Annotations = annotations.Any() ? new Annotations { Yaxis = annotations } : null,
+            Theme = new ApexCharts.Theme { Mode = Mode.Dark }
+        };
+        _renderKey = signature;
+        _loaded = true;
+    }
+
+}

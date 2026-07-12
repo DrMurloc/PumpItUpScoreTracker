@@ -1,0 +1,60 @@
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.HomeDashboard
+
+@* Config contract (C4): receives Widget + OnSave/OnCancel; the page persists. *@
+
+<MudCheckBox T="bool" @bind-Value="_phoenix" Label="Phoenix"/>
+<MudCheckBox T="bool" @bind-Value="_phoenix2" Label="Phoenix 2"/>
+<MudSelect T="int" @bind-Value="_rangeMonths" Label="@L["Range"]" Class="my-3">
+    <MudSelectItem T="int" Value="3">3</MudSelectItem>
+    <MudSelectItem T="int" Value="6">6</MudSelectItem>
+    <MudSelectItem T="int" Value="12">12</MudSelectItem>
+    <MudSelectItem T="int" Value="0">@L["All"]</MudSelectItem>
+</MudSelect>
+<MudCheckBox T="bool" @bind-Value="_showSingles" Label="@L["Singles"]"/>
+<MudCheckBox T="bool" @bind-Value="_showDoubles" Label="@L["Doubles"]"/>
+<div class="d-flex justify-end gap-2 mt-4">
+    <MudButton OnClick="() => OnCancel.InvokeAsync()">@L["Cancel"]</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save">@L["Save"]</MudButton>
+</div>
+
+@code {
+
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public EventCallback<(string ConfigJson, int ConfigVersion)> OnSave { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private bool _phoenix;
+    private bool _phoenix2;
+    private int _rangeMonths = 6;
+    private bool _showSingles = true;
+    private bool _showDoubles = true;
+
+    protected override void OnParametersSet()
+    {
+        var config = WidgetConfigJson.Read<CompetitiveLevelConfig>(Widget.ConfigJson);
+        var mixes = config.Mixes ?? new List<MixEnum>();
+        _phoenix = !mixes.Any() || mixes.Contains(MixEnum.Phoenix);
+        _phoenix2 = mixes.Contains(MixEnum.Phoenix2);
+        _rangeMonths = config.RangeMonths;
+        _showSingles = config.ShowSingles;
+        _showDoubles = config.ShowDoubles;
+    }
+
+    private async Task Save()
+    {
+        var mixes = new List<MixEnum>();
+        if (_phoenix) mixes.Add(MixEnum.Phoenix);
+        if (_phoenix2) mixes.Add(MixEnum.Phoenix2);
+        var config = new CompetitiveLevelConfig
+        {
+            Mixes = mixes.Any() ? mixes : null,
+            RangeMonths = _rangeMonths,
+            ShowSingles = _showSingles || !_showDoubles,
+            ShowDoubles = _showDoubles || !_showSingles
+        };
+        await OnSave.InvokeAsync((WidgetConfigJson.Write(config), 1));
+    }
+
+}
