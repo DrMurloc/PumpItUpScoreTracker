@@ -275,19 +275,27 @@ else
         }
         @if (_contextTournamentId == null || CanOperate)
         {
-            <button type="button" class="rand-add-tile" @onclick="() => _showAddChart = !_showAddChart"
-                    aria-label="@L["Add Chart"]">
-                <span class="rand-add-tile-plus">+</span>
-                <span class="rand-add-tile-label">@L["Add Chart"]</span>
-            </button>
+            @* Option C (owner-picked): the popup belongs to the slot you tapped — same
+               anchor/popover/click-away vocabulary as the level selector. *@
+            <div class="folder-picker-anchor rand-add-anchor">
+                <button type="button" class="rand-add-tile" @onclick="() => _showAddChart = !_showAddChart"
+                        aria-haspopup="true" aria-expanded="@(_showAddChart ? "true" : "false")"
+                        aria-label="@L["Add Chart"]">
+                    <span class="rand-add-tile-plus">+</span>
+                    <span class="rand-add-tile-label">@L["Add Chart"]</span>
+                </button>
+                <MudPopover Open="_showAddChart" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft">
+                    <div class="folder-picker-pop rand-add-pop">
+                        <MudText Typo="Typo.subtitle2">@L["Add a chart to the draw"]</MudText>
+                        <MudText Typo="Typo.caption" Class="rand-section-hint">@L["It lands at the end, unprotected."]</MudText>
+                        <ChartSelector Mix="_mix" Label="" Placeholder="@L["Search by song name…"].Value"
+                                       ChartIdSelected="AddChart"></ChartSelector>
+                    </div>
+                </MudPopover>
+            </div>
         }
     </div>
-    @if (_showAddChart)
-    {
-        <div class="rand-add-row">
-            <ChartSelector Mix="_mix" ChartIdSelected="AddChart"></ChartSelector>
-        </div>
-    }
+    <MudOverlay Visible="_showAddChart" OnClick="() => _showAddChart = false" ZIndex="1199"></MudOverlay>
 }
 
 @* Settings drawer: panel + live-count footer. Bottom-anchored (thumb reach). *@
@@ -734,6 +742,8 @@ else
             _cards.Add(new CardVm
                 { PullId = Guid.NewGuid(), Chart = chart, Order = _cards.Count + 1, State = DrawCardState.None });
         }
+
+        Snackbar.Add(L["{0} added to the draw", chart.Song.Name.ToString()], Severity.Success);
     }
 
     // Draft-mode staff actions: confirm-on-second-tap — the tablet is in player hands.

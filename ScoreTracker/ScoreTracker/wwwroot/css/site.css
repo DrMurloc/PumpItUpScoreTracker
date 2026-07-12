@@ -480,9 +480,21 @@ html.nav-away .page-dock,
     outline-offset: 2px;
 }
 
-.rand-add-row {
-    max-width: 420px;
-    margin-top: 8px;
+.rand-add-anchor {
+    display: flex;
+}
+
+.rand-add-anchor .rand-add-tile {
+    flex: 1;
+    width: 100%;
+}
+
+.rand-add-pop {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 300px;
+    max-width: 90vw;
 }
 
 .rand-empty {
