@@ -151,6 +151,98 @@ public sealed class PumbilityProjectionSagaTests
         Assert.Empty(result.ProjectedGains);
     }
 
+    [Fact]
+    public async Task PhoenixRanksOneMixedPool()
+    {
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build();
+        var ctx = new ProjectionContext().WithCharts(chart).WithTopScore(chart.Id);
+
+        await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
+
+        ctx.Mediator.Verify(m => m.Send(It.Is<GetTop50ForPlayerQuery>(q => q.ChartType == null),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Mediator.Verify(m => m.Send(It.Is<GetTop50ForPlayerQuery>(q => q.ChartType != null),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Phoenix2RanksIndependentSinglesAndDoublesPools()
+    {
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build();
+        var ctx = new ProjectionContext().WithCharts(chart).WithTopScore(chart.Id);
+
+        await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        ctx.Mediator.Verify(m => m.Send(It.Is<GetTop50ForPlayerQuery>(q => q.ChartType == ChartType.Single),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Mediator.Verify(m => m.Send(It.Is<GetTop50ForPlayerQuery>(q => q.ChartType == ChartType.Double),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Mediator.Verify(m => m.Send(It.Is<GetTop50ForPlayerQuery>(q => q.ChartType == null),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ExpectedScoreInterpolatesCohortDistributionAtMyPercentile()
+    {
+        // My 950k on c1 sits at index 1 of the cohort's descending c1 scores
+        // [960, 950, 940, 930]k → percentile (1/4)·0.95 = 0.2375. On c2's distribution
+        // [970, 955, 945, 935]k the target (0.95) interpolates between index 0 and 1:
+        // 955,000 + (970,000 − 955,000)·(1 − 0.95) = 955,750.
+        var c1 = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build();
+        var c2 = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build();
+        var ctx = new ProjectionContext()
+            .WithCharts(c1, c2)
+            .WithTopScore(c1.Id, 950_000)
+            .WithBestScore(c1.Id, 950_000)
+            .WithCohortUser()
+            .WithCohortScores(ChartType.Single, c1.Id, 960_000, 950_000, 940_000, 930_000)
+            .WithCohortScores(ChartType.Single, c2.Id, 970_000, 955_000, 945_000, 935_000);
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
+
+        Assert.Equal(955_750, (int)result.ExpectedScores[c2.Id]);
+    }
+
+    [Fact]
+    public async Task Phoenix2GainsMeasureAgainstTheChartsOwnPool()
+    {
+        // Singles pool is FULL (50 rated charts) → its baseline is the lowest of those
+        // ratings; the doubles pool has one score → underfilled, baseline 0. The same
+        // expected score therefore yields a full-contribution gain on a doubles chart
+        // and a baseline-reduced gain on a singles chart.
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+        var poolCharts = Enumerable.Range(0, 50)
+            .Select(_ => new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build())
+            .ToArray();
+        var doublesChart = new ChartBuilder().WithType(ChartType.Double).WithLevel(18).Build();
+        var singleCandidate = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build();
+        var doubleCandidate = new ChartBuilder().WithType(ChartType.Double).WithLevel(18).Build();
+
+        var ctx = new ProjectionContext()
+            .WithCharts(poolCharts.Concat(new[] { doublesChart, singleCandidate, doubleCandidate }).ToArray())
+            .WithTopScore(doublesChart.Id, 951_000)
+            .WithCohortUser()
+            .WithCohortScores(ChartType.Single, singleCandidate.Id, 970_000, 960_000, 950_000, 940_000)
+            .WithCohortScores(ChartType.Double, doubleCandidate.Id, 970_000, 960_000, 950_000, 940_000);
+        foreach (var poolChart in poolCharts) ctx.WithTopScore(poolChart.Id, 951_000);
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        // No cohort data on my played charts → percentile defaults to 0.5, which lands
+        // exactly on sorted[2] = 950,000 for both candidates.
+        Assert.Equal(950_000, (int)result.ExpectedScores[singleCandidate.Id]);
+        Assert.Equal(950_000, (int)result.ExpectedScores[doubleCandidate.Id]);
+
+        var singlesBaseline = (int)scoring.GetScore(poolCharts[0], 951_000, PhoenixPlate.SuperbGame, false);
+        var expectedSingleGain = (int)(scoring.GetScore(singleCandidate, 950_000, PhoenixPlate.ExtremeGame, false)
+                                       - singlesBaseline);
+        var expectedDoubleGain = (int)scoring.GetScore(doubleCandidate, 950_000, PhoenixPlate.ExtremeGame, false);
+        Assert.Equal(expectedSingleGain, result.ProjectedGains[singleCandidate.Id]);
+        Assert.Equal(expectedDoubleGain, result.ProjectedGains[doubleCandidate.Id]);
+    }
+
     private sealed class ProjectionContext
     {
         public Guid UserId { get; } = Guid.NewGuid();
@@ -166,9 +258,12 @@ public sealed class PumbilityProjectionSagaTests
         private double _singlesCompetitive = 17.0;
         private double _doublesCompetitive = 17.0;
 
+        private readonly List<Guid> _cohortUsers = new();
+        private readonly List<(ChartType Type, RecordedPhoenixScore Score)> _cohortScores = new();
+
         public ProjectionContext()
         {
-            Stats.Setup(s => s.GetStats(MixEnum.Phoenix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            Stats.Setup(s => s.GetStats(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => new PlayerStatsRecord(UserId,
                     TotalRating: 0, HighestLevel: 1, ClearCount: 0, CoOpRating: 0, CoOpScore: 0,
                     SkillRating: 0, SkillScore: 0, SkillLevel: 0,
@@ -180,20 +275,29 @@ public sealed class PumbilityProjectionSagaTests
 
             Stats.Setup(s => s.GetPlayersByCompetitiveRange(
                     It.IsAny<MixEnum>(), It.IsAny<ChartType?>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Array.Empty<Guid>());
+                .ReturnsAsync(() => _cohortUsers.AsEnumerable());
 
             PhoenixRecords.Setup(s => s.GetScores(
-                    MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(), It.IsAny<ChartType>(),
+                    It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ChartType>(),
                     It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
+                .ReturnsAsync((MixEnum _, IEnumerable<Guid> _, ChartType type, DifficultyLevel _,
+                        DifficultyLevel _, CancellationToken _) =>
+                    _cohortScores.Where(cs => cs.Type == type).Select(cs => cs.Score).ToArray());
 
             Mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => _charts.AsEnumerable());
-            PhoenixRecords.Setup(s => s.GetBestScores(MixEnum.Phoenix, It.IsAny<Guid>(),
+            PhoenixRecords.Setup(s => s.GetBestScores(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => _allUserScores.AsEnumerable());
+            // Per-type filtering mirrors the real handler: ChartType == null is the mixed
+            // pool; a typed query only returns that type's charts.
             Mediator.Setup(m => m.Send(It.IsAny<GetTop50ForPlayerQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(() => _topScores.AsEnumerable());
+                .ReturnsAsync((IRequest<IEnumerable<RecordedPhoenixScore>> request, CancellationToken _) =>
+                {
+                    var query = (GetTop50ForPlayerQuery)request;
+                    return _topScores.Where(ts => query.ChartType == null ||
+                                                  _charts.First(c => c.Id == ts.ChartId).Type == query.ChartType);
+                });
             Mediator.Setup(m => m.Send(It.IsAny<GetTierListQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => _passCountTierList.AsEnumerable());
 
@@ -223,6 +327,27 @@ public sealed class PumbilityProjectionSagaTests
         {
             _singlesCompetitive = singles;
             _doublesCompetitive = doubles;
+            return this;
+        }
+
+        public ProjectionContext WithBestScore(Guid chartId, int score)
+        {
+            _allUserScores.Add(new RecordedPhoenixScore(chartId, score, PhoenixPlate.SuperbGame,
+                IsBroken: false, RecordedDate: new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero)));
+            return this;
+        }
+
+        public ProjectionContext WithCohortUser()
+        {
+            _cohortUsers.Add(Guid.NewGuid());
+            return this;
+        }
+
+        public ProjectionContext WithCohortScores(ChartType type, Guid chartId, params int[] scores)
+        {
+            _cohortScores.AddRange(scores.Select(s => (type,
+                new RecordedPhoenixScore(chartId, s, PhoenixPlate.SuperbGame, IsBroken: false,
+                    RecordedDate: new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero)))));
             return this;
         }
     }
