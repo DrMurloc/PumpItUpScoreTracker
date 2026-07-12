@@ -382,6 +382,176 @@ html.nav-away .page-dock,
     display: block;
 }
 
+/* ===== Randomizer page (draw-first layout) ===== */
+
+.rand-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+
+.rand-saved-select {
+    max-width: 280px;
+    margin-left: auto;
+}
+
+.rand-anon-note {
+    color: var(--mix-ink-muted);
+    margin-bottom: 4px;
+}
+
+.rand-chipbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin: 4px 0;
+}
+
+.rand-countline {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 8px;
+}
+
+.rand-count-n {
+    font-weight: 800;
+    color: var(--mix-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.rand-count-label {
+    font-size: .78rem;
+    color: var(--mix-ink-muted);
+}
+
+.rand-actionbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.rand-grid {
+    display: grid;
+    gap: 8px;
+}
+
+.rand-grid-compact {
+    grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+}
+
+.rand-grid-comfortable {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+}
+
+.rand-add-tile {
+    border: 2px dashed var(--mud-palette-lines-default);
+    border-radius: 8px;
+    background: none;
+    color: var(--mix-ink-muted);
+    font-size: 1.7rem;
+    min-height: 104px;
+    cursor: pointer;
+}
+
+.rand-add-tile:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: 2px;
+}
+
+.rand-add-row {
+    max-width: 420px;
+    margin-top: 8px;
+}
+
+.rand-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 40px 16px;
+    text-align: center;
+    color: var(--mix-ink-muted);
+}
+
+.rand-table .rand-table-order {
+    font-weight: 800;
+    color: var(--mix-accent);
+    font-variant-numeric: tabular-nums;
+    width: 34px;
+}
+
+.rand-table .rand-table-name {
+    font-weight: 600;
+}
+
+.rand-table .rand-table-actions {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.rand-row-vetoed .rand-table-name {
+    text-decoration: line-through;
+    color: var(--mud-palette-text-secondary);
+}
+
+.rand-row-held .rand-table-name {
+    color: var(--mix-primary);
+}
+
+.rand-drawer {
+    display: flex;
+    flex-direction: column;
+}
+
+.rand-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 16px 8px;
+}
+
+.rand-drawer-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid rgba(255, 255, 255, .08);
+}
+
+.rand-drawer-count {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-right: auto;
+}
+
+.rand-save-name {
+    max-width: 200px;
+}
+
+/* Dock content shared by randomizer (and future dock pages). */
+.page-dock .dock-cta {
+    flex: 1;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--mix-primary);
+    color: var(--mix-primary-contrast);
+    font-weight: 800;
+    letter-spacing: .04em;
+    box-shadow: 0 0 20px var(--mix-glow);
+}
+
+.page-dock .dock-side {
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 12px;
+}
+
 /* ===== Randomizer settings panel ===== */
 
 .rand-settings {
