@@ -1413,6 +1413,77 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("UserTournamentSession", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.HomePage.Infrastructure.Entities.HomePageEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("DefaultMixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<byte>("Ordinal")
+                        .HasColumnType("tinyint");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("HomePage", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.HomePage.Infrastructure.Entities.HomePageWidgetEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ConfigJson")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("ConfigVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte>("Ordinal")
+                        .HasColumnType("tinyint");
+
+                    b.Property<Guid>("PageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SizePreset")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("WidgetType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PageId");
+
+                    b.ToTable("HomePageWidget", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Identity.Infrastructure.Entities.MergeRequestEntity", b =>
                 {
                     b.Property<Guid>("Id")

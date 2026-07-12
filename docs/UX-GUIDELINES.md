@@ -84,3 +84,37 @@ Percentile semantics are the established `ScoreRankingRecord.Ranking` convention
 - **`UiColorTokenTests`** (ArchitectureTests) scans `Pages/`, `Components/`, `Shared/` for hex literals and `Colors.*` constants against a shrink-only allowlist. Exceeding an allowance fails; dropping *below* one also fails until you lower the entry — that's the ratchet.
 - Adding a color: if it's brand, it belongs in a `MixPalette`; if it carries data meaning, it belongs in a semantic token group with a `ThemeScales` accessor. If it's neither, question it.
 - The remaining rules are review discipline today. Candidates for future ratchets: `L[…]` coverage scanning, skeleton-presence checks on data pages.
+
+## 4. Home dashboard widgets
+
+The widget home page ([design doc](design/home-page-widgets.md)) adds a vocabulary with its own rules:
+
+- **The host owns the chrome.** `WidgetHost` renders the card frame, title, edit controls, per-cell
+  `ErrorBoundary`, and the unknown-type fallback. Widget components render **bodies only** — never
+  their own card, title bar, or error handling.
+- **Lifecycle states are mandatory** (design doc §2.3): fixed-footprint skeleton, empty state with a
+  setup CTA (an empty widget is an onboarding surface, not a blank box), isolated errors, and configs
+  that tolerate old blobs forever. The board never gates as a whole.
+- **Sizes are presets** on the 4-column grid (`1x1`, `2x1`, `1x2`, `2x2` …), declared per widget type.
+  No freeform resize. Mobile derives a single column from auto-flow order; drag is desktop-only and
+  the arrows are the accessible path everywhere.
+- **Mix resolution cascades**: widget config override → page default → current mix. Widgets declare
+  `SupportedMixes` and clamp.
+- **Config blobs are public API** (D19): camelCase via `WidgetConfigJson`, exported/imported and
+  described by the capability schema, pinned by `Tests.Api` goldens. Changing a config record's shape
+  or a `TypeId` is breaking-change review.
+- **Widgets reload only when their identity inputs change** (instance id, config, effective mix) —
+  edit-mode mutations elsewhere on the board must not refetch every widget.
+- Chart series colors come from the `MixPalette` chart pair (`--chart-singles`/`--chart-doubles`,
+  or `PaletteFor(mix).ChartSingles` for render targets that can't read CSS vars). Era/mix distinction
+  rides line *style* (dashed), never a third hue.
+- **Chart rows/cards in widgets open `ChartDetailsDialog` on click** (browse mode only — edit mode
+  owns clicks for arranging). Every catalog widget inherits this rule.
+- **Drag is swap, not insertion**: dropping widget A on widget B trades their places; bystanders
+  never move. The arrows remain the accessible and mobile reorder path.
+- **Quiet scrolling**: widget inner scrollers use `dash-scroll` — no scrollbar at rest, a thin themed
+  thumb on hover, and edge fades as the "there's more" affordance (scroll-aware where the browser
+  supports scroll-driven animations, static bottom fade elsewhere). Touch keeps native overlays.
+- **Graphs start from `ApexChartTheming.BaseOptions` + its `WrapperClass`** on the container: frozen
+  canvas, display face, palette fore color, whisper-grid, dark theme, themed tooltips. Charts layer
+  their specifics (strokes, fills, axes) on top — never rebuild the base by hand.

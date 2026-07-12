@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "page": {
+    "name": "Session Day",
+    "defaultMix": "Phoenix2",
+    "widgets": [
+      {
+        "type": "pumbility",
+        "title": "Doubles push",
+        "size": "2x1",
+        "config": {
+          "mix": "Phoenix2",
+          "showProjections": true
+        }
+      },
+      {
+        "type": "weekly-challenge",
+        "size": "1x1"
+      }
+    ]
+  }
+}

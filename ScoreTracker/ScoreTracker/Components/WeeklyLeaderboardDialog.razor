@@ -1,0 +1,106 @@
+@namespace ScoreTracker.Web.Components
+@using MediatR
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.WeeklyChallenge.Contracts.Queries
+@using ScoreTracker.Web.Services.Theming
+
+@* Compact weekly leaderboard for one chart (widget-shell round 3, option 1): the top
+   ten plus your own row when you sit outside it. Deliberately reusable — the Daily
+   Step widget will want exactly this shape. Name lookup mirrors the WeeklyCharts
+   page's established read path. *@
+<MudDialog Visible="Visible" VisibleChanged="VisibleChanged" Options="DialogSizing" Class="weekly-lb-dialog">
+    <TitleContent>
+        @if (Chart != null)
+        {
+            <div class="weekly-lb-title">
+                <DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble>
+                <MudText Typo="Typo.h6">@Chart.Song.Name</MudText>
+            </div>
+        }
+    </TitleContent>
+    <DialogContent>
+        @if (!_loaded)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
+        }
+        else if (!_rows.Any())
+        {
+            <MudText Typo="Typo.body2">@L["No entries yet."]</MudText>
+        }
+        else
+        {
+            @foreach (var row in _rows)
+            {
+                <div class="weekly-lb-row @(row.IsMe ? "weekly-lb-me" : "")">
+                    <span class="weekly-lb-place" style="@ThemeScales.RarityStyle(row.Percentile)">
+                        #@row.Place
+                    </span>
+                    <span class="weekly-lb-user">
+                        @if (_users.TryGetValue(row.Entry.UserId, out var user))
+                        {
+                            <UserLabel User="user"></UserLabel>
+                        }
+                    </span>
+                    <ScoreBreakdown Score="row.Entry.Score" Plate="row.Entry.Plate"
+                                    IsBroken="row.Entry.IsBroken" OneLine="true" ShowScore="true">
+                    </ScoreBreakdown>
+                </div>
+            }
+            <MudLink Href="/WeeklyCharts" Typo="Typo.caption">@L["See Leaderboards"]</MudLink>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => VisibleChanged.InvokeAsync(false)">@L["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IUserRepository Users
+
+@code {
+
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public Chart? Chart { get; set; }
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    private static readonly DialogOptions DialogSizing = new()
+        { FullWidth = true, MaxWidth = MaxWidth.ExtraSmall, CloseOnEscapeKey = true };
+
+    private sealed record LeaderboardRow(int Place, double Percentile, WeeklyTournamentEntry Entry, bool IsMe);
+
+    private bool _loaded;
+    private Guid? _loadedFor;
+    private List<LeaderboardRow> _rows = new();
+    private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!Visible || Chart == null || Chart.Id == _loadedFor) return;
+        _loadedFor = Chart.Id;
+        _loaded = false;
+
+        var entries = (await Mediator.Send(new GetWeeklyChartEntriesQuery(Mix: Mix)))
+            .Where(e => e.ChartId == Chart.Id)
+            .OrderBy(e => e.IsBroken)
+            .ThenByDescending(e => (int)e.Score)
+            .ToArray();
+
+        var me = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : (Guid?)null;
+        _rows = entries
+            .Select((e, i) => new LeaderboardRow(i + 1, 1.0 - (double)(i + 1) / entries.Length, e,
+                e.UserId == me))
+            .Where(r => r.Place <= 10 || r.IsMe)
+            .ToList();
+
+        var users = await Users.GetUsers(_rows.Select(r => r.Entry.UserId).Distinct().ToArray());
+        _users = users.ToDictionary(u => u.Id);
+        _loaded = true;
+    }
+
+}

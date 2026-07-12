@@ -1,0 +1,651 @@
+@page "/Home"
+@using MediatR
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.HomePage.Contracts.Commands
+@using ScoreTracker.HomePage.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Components.HomeWidgets
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+@* Unlisted pre-release route (D7): no nav links anywhere, but open to whoever finds
+   it. Becomes "/" at cutover, when /WhatShouldIPlay retires. *@
+
+<PageTitle>@L["Home"]</PageTitle>
+
+@if (_loaded && !_pages.Any())
+{
+    <div class="dash-hero">
+        <MudText Typo="Typo.h4">@L["Home"]</MudText>
+        <MudText Typo="Typo.body1">@L["Build your home page from widgets you choose."]</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateFirstPage" Disabled="_isSaving">
+            @L["Create"]
+        </MudButton>
+    </div>
+}
+else if (_loaded)
+{
+    @if (_editMode && !CurrentUser.IsLoggedInAsAdmin)
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-2">
+            @L["This page is pre-release — your layout and widget settings may be reset before launch."]
+        </MudAlert>
+    }
+
+    <div class="dash-toolbar">
+        <div class="dash-pagebar">
+            @foreach (var dashPage in _pages)
+            {
+                <button class="dash-pagetab @(dashPage.Id == _selectedPage!.Id ? "active" : "")"
+                        @onclick="() => SelectPage(dashPage)">
+                    @dashPage.Name.ToString()
+                </button>
+            }
+            @if (_editMode && _pages.Count < HomePageRecord.MaxPagesPerUser)
+            {
+                <button class="dash-pagetab dash-pagetab-new" @onclick="CreatePage">+ @L["New Page"]</button>
+            }
+        </div>
+        <MudSpacer/>
+        @if (_editMode)
+        {
+            <MudMenu Dense="true" Icon="@Icons.Material.Filled.MoreVert" title="@L["Export page"]">
+                <MudMenuItem Icon="@Icons.Material.Filled.Output" OnClick="OpenExport">@L["Export page"]</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.Input" OnClick="OpenImport">@L["Import page"]</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.Schema" OnClick="OpenSchema">@L["Widget schema"]</MudMenuItem>
+            </MudMenu>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Settings" OnClick="OpenPageSettings">
+                @L["Settings"]
+            </MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add" OnClick="() => _drawerOpen = true">
+                @L["Add Widgets"]
+            </MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.Check" OnClick="() => _editMode = false">
+                @L["Done"]
+            </MudButton>
+        }
+        else
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" title="@L["Edit"]" Color="Color.Primary"
+                           OnClick="EnterEditMode"/>
+        }
+    </div>
+
+    <div @ref="_boardElement">
+    @if (_selectedPage != null)
+    {
+        @if (!_selectedPage.Widgets.Any())
+        {
+            <div class="dash-hero">
+                <MudText Typo="Typo.body1">@L["Add widgets to this page in edit mode."]</MudText>
+                @if (_editMode)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Add" OnClick="() => _drawerOpen = true">
+                        @L["Add Widgets"]
+                    </MudButton>
+                }
+            </div>
+        }
+        else
+        {
+            var ordered = _selectedPage.Widgets.OrderBy(w => w.Ordinal).ToArray();
+            <div class="dash-grid">
+                @foreach (var widget in ordered)
+                {
+                    var w = widget;
+                    var size = SizePreset.TryParse(w.SizePreset) ?? SizePreset.OneByOne;
+                    <div @key="w.Id" class="dash-cell dash-cols-@size.Columns dash-rows-@size.Rows"
+                         data-widget-id="@w.Id">
+                        <WidgetHost Widget="w" EffectiveMix="EffectiveMixFor(_selectedPage)"
+                                    EditMode="_editMode"
+                                    IsFirst="w.Id == ordered.First().Id" IsLast="w.Id == ordered.Last().Id"
+                                    OnMove="d => MoveWidget(w, d)"
+                                    OnResize="s => ResizeWidget(w, s)"
+                                    OnRename="() => OpenRename(w)"
+                                    OnRemove="() => RemoveWidget(w)"
+                                    OnConfigure="() => OpenConfigure(w)"
+                                    OnChartClick="OpenChartDetails"/>
+                    </div>
+                }
+            </div>
+        }
+    }
+    </div>
+
+    <MudDrawer @bind-Open="_drawerOpen" Anchor="Anchor.End" Elevation="2" Width="340px"
+               Variant="@DrawerVariant.Temporary" Class="dash-drawer">
+        <div class="dash-drawer-body">
+            <MudText Typo="Typo.h6">@L["Add Widgets"]</MudText>
+            @if (PageIsFull)
+            {
+                <MudText Typo="Typo.body2">@L["This page is full."]</MudText>
+            }
+            @foreach (var category in WidgetRegistry.All.GroupBy(d => d.Category))
+            {
+                <MudText Typo="Typo.overline" Class="mt-3">@category.Key</MudText>
+                @foreach (var descriptor in category)
+                {
+                    var d = descriptor;
+                    <div class="dash-drawer-item @(PageIsFull ? "disabled" : "")"
+                         @onclick="() => AddWidget(d)">
+                        <MudIcon Icon="@d.Icon" Size="Size.Small"/>
+                        <div>
+                            <MudText Typo="Typo.body2">@L[d.NameKey]</MudText>
+                            <MudText Typo="Typo.caption">@L[d.DescriptionKey]</MudText>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </MudDrawer>
+
+    <MudDialog @bind-Visible="_showRename" Options="CompactDialog">
+        <TitleContent>
+            <MudText Typo="Typo.h6">@L["Rename"]</MudText>
+        </TitleContent>
+        <DialogContent>
+            <MudTextField @bind-Value="_renameValue" Label="@L["Name"]" MaxLength="64" Immediate="true"/>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="() => _showRename = false">@L["Cancel"]</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveRename" Disabled="_isSaving">
+                @L["Save"]
+            </MudButton>
+        </DialogActions>
+    </MudDialog>
+
+    <MudDialog @bind-Visible="_showPageSettings" Options="CompactDialog">
+        <TitleContent>
+            <MudText Typo="Typo.h6">@L["Settings"]</MudText>
+        </TitleContent>
+        <DialogContent>
+            @if (_selectedPage != null)
+            {
+                <MudTextField @bind-Value="_pageNameValue" Label="@L["Name"]" MaxLength="64" Class="mb-3"/>
+                <MudSelect T="MixEnum?" @bind-Value="_pageMixValue" Label="@L["Mix"]" Class="mb-3">
+                    <MudSelectItem T="MixEnum?" Value="null">@L["Follow current mix"]</MudSelectItem>
+                    @foreach (var mix in Enum.GetValues<MixEnum>())
+                    {
+                        <MudSelectItem T="MixEnum?" Value="mix">@mix.ToString()</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudCheckBox T="bool" @bind-Value="_pageDefaultValue" Label="@L["Default"]"/>
+            }
+        </DialogContent>
+        <DialogActions>
+            <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="DeletePage"
+                       Disabled="_isSaving">
+                @L["Delete"]
+            </MudButton>
+            <MudSpacer/>
+            <MudButton OnClick="() => _showPageSettings = false">@L["Cancel"]</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SavePageSettings"
+                       Disabled="_isSaving">
+                @L["Save"]
+            </MudButton>
+        </DialogActions>
+    </MudDialog>
+
+    <MudDialog @bind-Visible="_showExport" Options="DocumentDialog">
+        <TitleContent>
+            <MudText Typo="Typo.h6">@L["Export page"]</MudText>
+        </TitleContent>
+        <DialogContent>
+            <MudTextField T="string" Value="_documentJson" Lines="14" ReadOnly="true"
+                          Variant="Variant.Outlined" Class="dash-json"/>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="() => _showExport = false">@L["Close"]</MudButton>
+        </DialogActions>
+    </MudDialog>
+
+    <MudDialog @bind-Visible="_showImport" Options="DocumentDialog">
+        <TitleContent>
+            <MudText Typo="Typo.h6">@L["Import page"]</MudText>
+        </TitleContent>
+        <DialogContent>
+            <MudTextField T="string" @bind-Value="_importJson" Lines="12" Variant="Variant.Outlined"
+                          Class="dash-json" Immediate="true"/>
+            @foreach (var error in _importErrors)
+            {
+                @* Validation errors stay English on purpose (D19) — they get pasted
+                   back into whatever AI produced the document. *@
+                <MudText Typo="Typo.caption" Color="Color.Error" Style="display:block">@error</MudText>
+            }
+            @if (_importResult != null)
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2">
+                    @L["This import will replace this page's widgets."] (@_importResult.Widgets.Count)
+                </MudAlert>
+            }
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="() => _showImport = false">@L["Cancel"]</MudButton>
+            @if (_importResult == null)
+            {
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ValidateImport">
+                    @L["Import"]
+                </MudButton>
+            }
+            else
+            {
+                <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="ConfirmImport"
+                           Disabled="_isSaving">
+                    @L["Import"]
+                </MudButton>
+            }
+        </DialogActions>
+    </MudDialog>
+
+    <MudDialog @bind-Visible="_showSchema" Options="DocumentDialog">
+        <TitleContent>
+            <MudText Typo="Typo.h6">@L["Widget schema"]</MudText>
+        </TitleContent>
+        <DialogContent>
+            <MudTextField T="string" Value="_documentJson" Lines="14" ReadOnly="true"
+                          Variant="Variant.Outlined" Class="dash-json"/>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="() => _showSchema = false">@L["Close"]</MudButton>
+        </DialogActions>
+    </MudDialog>
+
+    @if (_selectedPage != null)
+    {
+        <ChartDetailsDialog @bind-Visible="_showChartDetails" Chart="_detailsChart"
+                            Mix="EffectiveMixFor(_selectedPage)"
+                            IsToDo="_detailsChart != null && _todos != null && _todos.Contains(_detailsChart.Id)"
+                            OnToDo="ToggleToDo"/>
+    }
+
+    <MudDialog @bind-Visible="_showConfigure" Options="CompactDialog">
+        <TitleContent>
+            <MudText Typo="Typo.h6">@L["Configure"]</MudText>
+        </TitleContent>
+        <DialogContent>
+            @if (_configureWidget != null && _configureComponent != null)
+            {
+                <DynamicComponent Type="_configureComponent" Parameters="_configureParameters"/>
+            }
+        </DialogContent>
+    </MudDialog>
+}
+
+@implements IAsyncDisposable
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject NavigationManager NavManager
+@inject IUiSettingsAccessor UiSettings
+@inject IJSRuntime JS
+
+@code {
+
+    private ElementReference _boardElement;
+    private bool _dragInteropActive;
+    private DotNetObjectReference<HomeDashboard>? _selfReference;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Drag binds only in edit mode, delegated from the stable board wrapper so
+        // Blazor re-renders inside it never orphan the listener (§2.4).
+        var shouldBeActive = _editMode && _selectedPage != null && _selectedPage.Widgets.Any();
+        if (shouldBeActive && !_dragInteropActive)
+        {
+            _selfReference ??= DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("dashboardGrid.init", _boardElement, _selfReference);
+            _dragInteropActive = true;
+        }
+        else if (!shouldBeActive && _dragInteropActive)
+        {
+            await JS.InvokeVoidAsync("dashboardGrid.dispose");
+            _dragInteropActive = false;
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnWidgetMovedToEnd(string widgetId)
+    {
+        if (!Guid.TryParse(widgetId, out var id)) return;
+        await Mediator.Send(new MoveHomePageWidgetCommand(id, int.MaxValue));
+        await LoadPages();
+        await Track("homedash_widget_dragged");
+    }
+
+    [JSInvokable]
+    public async Task OnWidgetSwapped(string widgetId, string targetWidgetId)
+    {
+        if (!Guid.TryParse(widgetId, out var id) || !Guid.TryParse(targetWidgetId, out var targetId)) return;
+        await Mediator.Send(new SwapHomePageWidgetsCommand(id, targetId));
+        await LoadPages();
+        await Track("homedash_widget_dragged");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_dragInteropActive)
+            try
+            {
+                await JS.InvokeVoidAsync("dashboardGrid.dispose");
+            }
+            catch (JSDisconnectedException)
+            {
+                // Circuit already gone — nothing to clean client-side.
+            }
+
+        _selfReference?.Dispose();
+    }
+
+    private IReadOnlyList<HomePageRecord> _pages = Array.Empty<HomePageRecord>();
+    private HomePageRecord? _selectedPage;
+    private MixEnum _currentMix = MixEnum.Phoenix;
+    private bool _loaded;
+    private bool _isSaving;
+    private bool _editMode;
+    private bool _drawerOpen;
+
+    private bool _showRename;
+    private HomePageWidgetRecord? _renameWidget;
+    private string _renameValue = string.Empty;
+
+    private bool _showPageSettings;
+    private string _pageNameValue = string.Empty;
+    private MixEnum? _pageMixValue;
+    private bool _pageDefaultValue;
+
+    private bool _showConfigure;
+    private HomePageWidgetRecord? _configureWidget;
+    private Type? _configureComponent;
+    private IDictionary<string, object> _configureParameters = new Dictionary<string, object>();
+
+    private bool PageIsFull => _selectedPage != null &&
+                               _selectedPage.Widgets.Count >= HomePageRecord.MaxWidgetsPerPage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Login");
+            return;
+        }
+
+        _currentMix = await UiSettings.GetSelectedMix();
+        await LoadPages();
+    }
+
+    private async Task LoadPages()
+    {
+        var selectedId = _selectedPage?.Id;
+        _pages = await Mediator.Send(new GetMyHomePagesQuery());
+        _selectedPage = _pages.FirstOrDefault(p => p.Id == selectedId)
+                        ?? _pages.FirstOrDefault(p => p.IsDefault) ?? _pages.FirstOrDefault();
+        _loaded = true;
+        StateHasChanged();
+    }
+
+    private async Task CreateFirstPage()
+    {
+        _isSaving = true;
+        var page = await Mediator.Send(new CreateHomePageCommand(L["Home"].Value));
+        // Beta starter: the trio, pre-placed — field-testers get a living board, not a
+        // blank canvas. The full curated default (D1) ships with the cutover.
+        foreach (var typeId in new[] { "competitive-level", "pumbility", "weekly-challenge" })
+        {
+            var descriptor = WidgetRegistry.TryGet(typeId);
+            if (descriptor == null) continue;
+            await Mediator.Send(new AddHomePageWidgetCommand(page.Id, descriptor.TypeId,
+                descriptor.DefaultSize.Token, null, "{}", 1));
+        }
+
+        await LoadPages();
+        await Track("homedash_first_page_created");
+        _isSaving = false;
+    }
+
+    private static readonly DialogOptions CompactDialog = new()
+        { FullWidth = true, MaxWidth = MaxWidth.ExtraSmall, CloseOnEscapeKey = true };
+
+    private static readonly DialogOptions DocumentDialog = new()
+        { FullWidth = true, MaxWidth = MaxWidth.Small, CloseOnEscapeKey = true };
+
+    // The standing chart-interaction rule: widget chart rows open the shared details
+    // dialog (browse mode only — edit mode owns clicks for arranging).
+    private bool _showChartDetails;
+    private Chart? _detailsChart;
+    private ISet<Guid>? _todos;
+
+    private async Task OpenChartDetails(Chart chart)
+    {
+        if (_editMode) return;
+        _todos ??= (await Mediator.Send(new GetSavedChartsQuery()))
+            .Where(t => t.ListType == ChartListType.ToDo)
+            .Select(t => t.ChartId)
+            .ToHashSet();
+        _detailsChart = chart;
+        _showChartDetails = true;
+    }
+
+    private async Task ToggleToDo(Guid chartId)
+    {
+        if (_todos == null) return;
+        if (_todos.Add(chartId))
+        {
+            await Mediator.Send(new SaveChartToListCommand(ChartListType.ToDo, chartId));
+        }
+        else
+        {
+            _todos.Remove(chartId);
+            await Mediator.Send(new RemoveChartFromListCommand(ChartListType.ToDo, chartId));
+        }
+    }
+
+    private async Task Track(string eventName)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("dashboardGrid.track", eventName);
+        }
+        catch (JSException)
+        {
+            // Telemetry must never break the board.
+        }
+    }
+
+    private async Task CreatePage()
+    {
+        _isSaving = true;
+        var page = await Mediator.Send(new CreateHomePageCommand(L["New Page"].Value));
+        await LoadPages();
+        _selectedPage = _pages.First(p => p.Id == page.Id);
+        _isSaving = false;
+    }
+
+    private void SelectPage(HomePageRecord page)
+    {
+        _selectedPage = page;
+    }
+
+    private async Task EnterEditMode()
+    {
+        _editMode = true;
+        await Track("homedash_edit_entered");
+    }
+
+    // D13 cascade: page default → current mix (widgets add their own override on top).
+    private MixEnum EffectiveMixFor(HomePageRecord page)
+    {
+        return page.DefaultMix ?? _currentMix;
+    }
+
+    private async Task AddWidget(WidgetDescriptor descriptor)
+    {
+        if (_selectedPage == null || PageIsFull) return;
+        _isSaving = true;
+        await Mediator.Send(new AddHomePageWidgetCommand(_selectedPage.Id, descriptor.TypeId,
+            descriptor.DefaultSize.Token, null, "{}", 1));
+        await LoadPages();
+        await Track("homedash_widget_added_" + descriptor.TypeId);
+        _isSaving = false;
+    }
+
+    private async Task MoveWidget(HomePageWidgetRecord widget, int direction)
+    {
+        await Mediator.Send(new MoveHomePageWidgetCommand(widget.Id, widget.Ordinal + direction));
+        await LoadPages();
+    }
+
+    private async Task ResizeWidget(HomePageWidgetRecord widget, SizePreset size)
+    {
+        await Mediator.Send(new ResizeHomePageWidgetCommand(widget.Id, size.Token));
+        await LoadPages();
+    }
+
+    private async Task RemoveWidget(HomePageWidgetRecord widget)
+    {
+        await Mediator.Send(new RemoveHomePageWidgetCommand(widget.Id));
+        await LoadPages();
+        await Track("homedash_widget_removed_" + widget.WidgetType);
+    }
+
+    private void OpenRename(HomePageWidgetRecord widget)
+    {
+        _renameWidget = widget;
+        _renameValue = widget.Title ?? string.Empty;
+        _showRename = true;
+    }
+
+    private async Task SaveRename()
+    {
+        if (_renameWidget == null) return;
+        _isSaving = true;
+        await Mediator.Send(new RenameHomePageWidgetCommand(_renameWidget.Id,
+            string.IsNullOrWhiteSpace(_renameValue) ? null : _renameValue.Trim()));
+        _showRename = false;
+        await LoadPages();
+        _isSaving = false;
+    }
+
+    private void OpenPageSettings()
+    {
+        if (_selectedPage == null) return;
+        _pageNameValue = _selectedPage.Name;
+        _pageMixValue = _selectedPage.DefaultMix;
+        _pageDefaultValue = _selectedPage.IsDefault;
+        _showPageSettings = true;
+    }
+
+    private async Task SavePageSettings()
+    {
+        if (_selectedPage == null) return;
+        _isSaving = true;
+        if (!string.IsNullOrWhiteSpace(_pageNameValue) && _pageNameValue.Trim() != _selectedPage.Name)
+            await Mediator.Send(new RenameHomePageCommand(_selectedPage.Id, _pageNameValue.Trim()));
+        if (_pageMixValue != _selectedPage.DefaultMix)
+            await Mediator.Send(new SetHomePageMixCommand(_selectedPage.Id, _pageMixValue));
+        if (_pageDefaultValue && !_selectedPage.IsDefault)
+            await Mediator.Send(new SetDefaultHomePageCommand(_selectedPage.Id));
+        _showPageSettings = false;
+        await LoadPages();
+        _isSaving = false;
+    }
+
+    private async Task DeletePage()
+    {
+        if (_selectedPage == null) return;
+        _isSaving = true;
+        await Mediator.Send(new DeleteHomePageCommand(_selectedPage.Id));
+        _showPageSettings = false;
+        _selectedPage = null;
+        await LoadPages();
+        _isSaving = false;
+    }
+
+    private bool _showExport;
+    private bool _showImport;
+    private bool _showSchema;
+    private string _documentJson = string.Empty;
+    private string _importJson = string.Empty;
+    private IReadOnlyList<string> _importErrors = Array.Empty<string>();
+    private PageImportResult? _importResult;
+
+    private void OpenExport()
+    {
+        if (_selectedPage == null) return;
+        _documentJson = PageExportService.Export(_selectedPage);
+        _showExport = true;
+    }
+
+    private void OpenSchema()
+    {
+        _documentJson = CapabilitySchemaService.Build();
+        _showSchema = true;
+    }
+
+    private void OpenImport()
+    {
+        _importJson = string.Empty;
+        _importErrors = Array.Empty<string>();
+        _importResult = null;
+        _showImport = true;
+    }
+
+    private void ValidateImport()
+    {
+        var result = PageExportService.Parse(_importJson);
+        _importErrors = result.Errors;
+        _importResult = result.IsValid ? result : null;
+    }
+
+    private async Task ConfirmImport()
+    {
+        if (_selectedPage == null || _importResult == null) return;
+        _isSaving = true;
+        await Mediator.Send(new ReplaceHomePageWidgetsCommand(_selectedPage.Id, _importResult.Widgets));
+        var name = _importResult.Name.Trim();
+        if (name.Length is > 0 and <= HomePageRecord.MaxNameLength && name != _selectedPage.Name)
+            await Mediator.Send(new RenameHomePageCommand(_selectedPage.Id, name));
+        if (_importResult.DefaultMix != _selectedPage.DefaultMix)
+            await Mediator.Send(new SetHomePageMixCommand(_selectedPage.Id, _importResult.DefaultMix));
+        _showImport = false;
+        await LoadPages();
+        await Track("homedash_page_imported");
+        _isSaving = false;
+    }
+
+    private void OpenConfigure(HomePageWidgetRecord widget)
+    {
+        var descriptor = WidgetRegistry.TryGet(widget.WidgetType);
+        if (descriptor?.ConfigComponent == null) return;
+        _configureWidget = widget;
+        _configureComponent = descriptor.ConfigComponent;
+        _configureParameters = new Dictionary<string, object>
+        {
+            ["Widget"] = widget,
+            ["OnSave"] = EventCallback.Factory.Create<(string ConfigJson, int ConfigVersion)>(this, SaveConfig),
+            ["OnCancel"] = EventCallback.Factory.Create(this, () => _showConfigure = false)
+        };
+        _showConfigure = true;
+    }
+
+    private async Task SaveConfig((string ConfigJson, int ConfigVersion) config)
+    {
+        if (_configureWidget == null) return;
+        _isSaving = true;
+        await Mediator.Send(new UpdateHomePageWidgetConfigCommand(_configureWidget.Id, config.ConfigJson,
+            config.ConfigVersion));
+        _showConfigure = false;
+        await LoadPages();
+        _isSaving = false;
+    }
+
+}

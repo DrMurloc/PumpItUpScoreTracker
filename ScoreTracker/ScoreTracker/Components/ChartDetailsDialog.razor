@@ -168,6 +168,12 @@
     </DialogActions>
 </MudDialog>
 <style>
+    /* Desktop cap (owner, widget-shell field-test round 1): MaxWidth.Small let the
+       video domineer — nothing in the dialog needs more than ~520px. */
+    .mud-dialog.chart-details-dialog {
+        max-width: 520px;
+    }
+
     .chart-details-video {
         width: 100%;
         aspect-ratio: 16 / 9;

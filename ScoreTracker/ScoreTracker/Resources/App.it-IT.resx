@@ -3173,4 +3173,115 @@
   <data name="Older scores count for less — {0} of your nearby scores are much older than the rest of your record." xml:space="preserve">
     <value>I punteggi vecchi contano meno — {0} dei tuoi punteggi nelle vicinanze sono molto più vecchi del resto del tuo storico.</value>
   </data>
+  <data name="Build your home page from widgets you choose." xml:space="preserve">
+    <value>Costruisci la tua home page con i widget che preferisci.</value>
+  </data>
+  <data name="Add widgets to this page in edit mode." xml:space="preserve">
+    <value>Aggiungi widget a questa pagina in modalità modifica.</value>
+  </data>
+  <data name="This widget is no longer available." xml:space="preserve">
+    <value>Questo widget non è più disponibile.</value>
+  </data>
+  <data name="Something went wrong loading this widget." xml:space="preserve">
+    <value>Si è verificato un errore durante il caricamento di questo widget.</value>
+  </data>
+  <data name="This page is pre-release — your layout and widget settings may be reset before launch." xml:space="preserve">
+    <value>Questa pagina è in anteprima: il layout e le impostazioni dei widget potrebbero essere azzerati prima del rilascio.</value>
+  </data>
+  <data name="New Page" xml:space="preserve">
+    <value>Nuova pagina</value>
+  </data>
+  <data name="Add Widgets" xml:space="preserve">
+    <value>Aggiungi widget</value>
+  </data>
+  <data name="Rename" xml:space="preserve">
+    <value>Rinomina</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Rimuovi</value>
+  </data>
+  <data name="Configure" xml:space="preserve">
+    <value>Configura</value>
+  </data>
+  <data name="Size" xml:space="preserve">
+    <value>Dimensione</value>
+  </data>
+  <data name="Move earlier" xml:space="preserve">
+    <value>Sposta prima</value>
+  </data>
+  <data name="Move later" xml:space="preserve">
+    <value>Sposta dopo</value>
+  </data>
+  <data name="Follow current mix" xml:space="preserve">
+    <value>Segui il Mix attuale</value>
+  </data>
+  <data name="This page is full." xml:space="preserve">
+    <value>Questa pagina è piena.</value>
+  </data>
+  <data name="Competitive Level over time for your selected mixes." xml:space="preserve">
+    <value>Il tuo livello competitivo nel tempo per i Mix selezionati.</value>
+  </data>
+  <data name="Your level history starts tracking with your next import." xml:space="preserve">
+    <value>La cronologia del tuo livello inizierà a registrarsi con la prossima importazione.</value>
+  </data>
+  <data name="Range" xml:space="preserve">
+    <value>Intervallo</value>
+  </data>
+  <data name="Pumbility targets tuned to your skill profile." xml:space="preserve">
+    <value>Obiettivi Pumbility calibrati sul tuo profilo di abilità.</value>
+  </data>
+  <data name="Trend starts tracking from today." xml:space="preserve">
+    <value>L'andamento inizia a registrarsi da oggi.</value>
+  </data>
+  <data name="Best projected targets" xml:space="preserve">
+    <value>Migliori obiettivi previsti</value>
+  </data>
+  <data name="No scores yet — Pumbility starts with your first import." xml:space="preserve">
+    <value>Ancora nessun punteggio: Pumbility inizia con la tua prima importazione.</value>
+  </data>
+  <data name="Show projected targets" xml:space="preserve">
+    <value>Mostra gli obiettivi previsti</value>
+  </data>
+  <data name="Dismissed charts" xml:space="preserve">
+    <value>Chart scartati</value>
+  </data>
+  <data name="Restore all" xml:space="preserve">
+    <value>Ripristina tutti</value>
+  </data>
+  <data name="Dismiss" xml:space="preserve">
+    <value>Scarta</value>
+  </data>
+  <data name="This week's board and your placements." xml:space="preserve">
+    <value>La board di questa settimana e i tuoi piazzamenti.</value>
+  </data>
+  <data name="New board soon." xml:space="preserve">
+    <value>Una nuova board in arrivo.</value>
+  </data>
+  <data name="Match my range" xml:space="preserve">
+    <value>Adatta al mio livello</value>
+  </data>
+  <data name="Custom" xml:space="preserve">
+    <value>Personalizzato</value>
+  </data>
+  <data name="Board" xml:space="preserve">
+    <value>Board</value>
+  </data>
+  <data name="Export page" xml:space="preserve">
+    <value>Esporta pagina</value>
+  </data>
+  <data name="Import page" xml:space="preserve">
+    <value>Importa pagina</value>
+  </data>
+  <data name="Widget schema" xml:space="preserve">
+    <value>Schema dei widget</value>
+  </data>
+  <data name="This import will replace this page's widgets." xml:space="preserve">
+    <value>Questa importazione sostituirà i widget di questa pagina.</value>
+  </data>
+  <data name="Months" xml:space="preserve">
+    <value>mesi</value>
+  </data>
+  <data name="No entries yet." xml:space="preserve">
+    <value>Ancora nessuna partecipazione.</value>
+  </data>
 </root>

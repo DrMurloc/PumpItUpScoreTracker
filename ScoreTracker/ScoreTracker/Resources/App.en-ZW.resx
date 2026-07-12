@@ -3096,4 +3096,115 @@
   <data name="Older scores count for less — {0} of your nearby scores are much older than the rest of your record." xml:space="preserve">
     <value>Older mrglscores count for mrglless — {0} of your nearby mrglscores are much older than the rest of your mrglrecord. Mrgl!</value>
   </data>
+  <data name="Build your home page from widgets you choose." xml:space="preserve">
+    <value>Mrglglgl! Grrbl home mrgl widgets mrglglgl!</value>
+  </data>
+  <data name="Add widgets to this page in edit mode." xml:space="preserve">
+    <value>Mrgl widgets grrbl edit mode mrglglgl!</value>
+  </data>
+  <data name="This widget is no longer available." xml:space="preserve">
+    <value>Mrgl widget grrblrgl gone mrglglgl.</value>
+  </data>
+  <data name="Something went wrong loading this widget." xml:space="preserve">
+    <value>Mrgl widget go boom mrglglgl...</value>
+  </data>
+  <data name="This page is pre-release — your layout and widget settings may be reset before launch." xml:space="preserve">
+    <value>Mrglglgl! Page grrbl pre-release — widgets mrgl go poof mrglglgl!</value>
+  </data>
+  <data name="New Page" xml:space="preserve">
+    <value>Mrgl Page</value>
+  </data>
+  <data name="Add Widgets" xml:space="preserve">
+    <value>Mrgl Widgets!</value>
+  </data>
+  <data name="Rename" xml:space="preserve">
+    <value>Re-mrgl</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Grrbl!</value>
+  </data>
+  <data name="Configure" xml:space="preserve">
+    <value>Mrgl-figure</value>
+  </data>
+  <data name="Size" xml:space="preserve">
+    <value>Mrgl-size</value>
+  </data>
+  <data name="Move earlier" xml:space="preserve">
+    <value>Mrgl bck!</value>
+  </data>
+  <data name="Move later" xml:space="preserve">
+    <value>Mrgl fwd!</value>
+  </data>
+  <data name="Follow current mix" xml:space="preserve">
+    <value>Mrgl current mix mrgl</value>
+  </data>
+  <data name="This page is full." xml:space="preserve">
+    <value>Page mrgl FULL mrglglgl!</value>
+  </data>
+  <data name="Competitive Level over time for your selected mixes." xml:space="preserve">
+    <value>Mrgl level go up mrgl down mrglglgl!</value>
+  </data>
+  <data name="Your level history starts tracking with your next import." xml:space="preserve">
+    <value>Mrgl history start next mrgl-port mrglglgl.</value>
+  </data>
+  <data name="Range" xml:space="preserve">
+    <value>Mrgl-range</value>
+  </data>
+  <data name="Pumbility targets tuned to your skill profile." xml:space="preserve">
+    <value>Mrgl PUMBILITY go BIG mrglglgl!</value>
+  </data>
+  <data name="Trend starts tracking from today." xml:space="preserve">
+    <value>Mrgl trend start today mrglglgl.</value>
+  </data>
+  <data name="Best projected targets" xml:space="preserve">
+    <value>Best mrgl targets!</value>
+  </data>
+  <data name="No scores yet — Pumbility starts with your first import." xml:space="preserve">
+    <value>No mrgl scores... PUMBILITY need mrgl-port mrglglgl!</value>
+  </data>
+  <data name="Show projected targets" xml:space="preserve">
+    <value>Show mrgl targets!</value>
+  </data>
+  <data name="Dismissed charts" xml:space="preserve">
+    <value>Grrbl'd charts</value>
+  </data>
+  <data name="Restore all" xml:space="preserve">
+    <value>Un-grrbl all!</value>
+  </data>
+  <data name="Dismiss" xml:space="preserve">
+    <value>Grrbl it!</value>
+  </data>
+  <data name="This week's board and your placements." xml:space="preserve">
+    <value>Mrgl week board mrgl placements mrglglgl!</value>
+  </data>
+  <data name="New board soon." xml:space="preserve">
+    <value>New mrgl board soon mrglglgl.</value>
+  </data>
+  <data name="Match my range" xml:space="preserve">
+    <value>Mrgl my range!</value>
+  </data>
+  <data name="Custom" xml:space="preserve">
+    <value>Mrgl-stom</value>
+  </data>
+  <data name="Board" xml:space="preserve">
+    <value>Mrgl Board</value>
+  </data>
+  <data name="Export page" xml:space="preserve">
+    <value>Ex-mrgl page</value>
+  </data>
+  <data name="Import page" xml:space="preserve">
+    <value>Im-mrgl page</value>
+  </data>
+  <data name="Widget schema" xml:space="preserve">
+    <value>Mrgl schema</value>
+  </data>
+  <data name="This import will replace this page's widgets." xml:space="preserve">
+    <value>Mrgl import GRRBL page widgets mrglglgl!</value>
+  </data>
+  <data name="Months" xml:space="preserve">
+    <value>Mrgl-months</value>
+  </data>
+  <data name="No entries yet." xml:space="preserve">
+    <value>No mrgl entries yet mrglglgl.</value>
+  </data>
 </root>

@@ -1,0 +1,72 @@
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.HomeDashboard
+
+<MudSelect T="MixEnum?" @bind-Value="_mix" Label="@L["Mix"]" Class="mb-3">
+    <MudSelectItem T="MixEnum?" Value="null">@L["Follow current mix"]</MudSelectItem>
+    <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix">Phoenix</MudSelectItem>
+    <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix2">Phoenix 2</MudSelectItem>
+</MudSelect>
+<MudSelect T="WeeklyBoardMode" @bind-Value="_mode" Label="@L["Board"]" Class="mb-3">
+    <MudSelectItem T="WeeklyBoardMode" Value="WeeklyBoardMode.MatchMyRange">@L["Match my range"]</MudSelectItem>
+    <MudSelectItem T="WeeklyBoardMode" Value="WeeklyBoardMode.Custom">@L["Custom"]</MudSelectItem>
+    <MudSelectItem T="WeeklyBoardMode" Value="WeeklyBoardMode.All">@L["All"]</MudSelectItem>
+</MudSelect>
+@if (_mode == WeeklyBoardMode.Custom)
+{
+    <MudCheckBox T="bool" @bind-Value="_singles" Label="@L["Singles"]"/>
+    <MudCheckBox T="bool" @bind-Value="_doubles" Label="@L["Doubles"]"/>
+    <MudCheckBox T="bool" @bind-Value="_coOp" Label="CO-OP"/>
+    <div class="d-flex gap-3">
+        <MudNumericField T="int" @bind-Value="_minLevel" Min="1" Max="DifficultyLevel.Max" Label="@L["Min"]"/>
+        <MudNumericField T="int" @bind-Value="_maxLevel" Min="1" Max="DifficultyLevel.Max" Label="@L["Max"]"/>
+    </div>
+}
+<div class="d-flex justify-end gap-2 mt-4">
+    <MudButton OnClick="() => OnCancel.InvokeAsync()">@L["Cancel"]</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save">@L["Save"]</MudButton>
+</div>
+
+@code {
+
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public EventCallback<(string ConfigJson, int ConfigVersion)> OnSave { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private MixEnum? _mix;
+    private WeeklyBoardMode _mode = WeeklyBoardMode.MatchMyRange;
+    private bool _singles = true;
+    private bool _doubles = true;
+    private bool _coOp = true;
+    private int _minLevel = 1;
+    private int _maxLevel = DifficultyLevel.Max;
+
+    protected override void OnParametersSet()
+    {
+        var config = WidgetConfigJson.Read<WeeklyConfig>(Widget.ConfigJson);
+        _mix = config.Mix;
+        _mode = config.Mode;
+        _singles = config.IncludeSingles;
+        _doubles = config.IncludeDoubles;
+        _coOp = config.IncludeCoOp;
+        _minLevel = config.MinLevel ?? 1;
+        _maxLevel = config.MaxLevel ?? DifficultyLevel.Max;
+    }
+
+    private async Task Save()
+    {
+        var config = new WeeklyConfig
+        {
+            Mix = _mix,
+            Mode = _mode,
+            IncludeSingles = _singles || (!_doubles && !_coOp),
+            IncludeDoubles = _doubles,
+            IncludeCoOp = _coOp,
+            MinLevel = _minLevel <= 1 ? null : _minLevel,
+            MaxLevel = _maxLevel >= DifficultyLevel.Max ? null : _maxLevel
+        };
+        await OnSave.InvokeAsync((WidgetConfigJson.Write(config), 1));
+    }
+
+}
