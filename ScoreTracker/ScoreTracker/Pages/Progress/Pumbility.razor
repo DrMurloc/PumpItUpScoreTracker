@@ -153,6 +153,15 @@
                         <MudText Style=@($"color:{TierListColor(difficulty)}")>@difficulty</MudText>
                     }
                     <MudText>+@_projectedGains[chart.Id].ToString("N0") PUMBILITY</MudText>
+                    @if (_skillAdjustments.TryGetValue(chart.Id, out var skillWhy))
+                    {
+                        @* Why this target: the skill-profile nudge (Projections v2). *@
+                        <MudTooltip Text="@string.Join(", ", skillWhy.Select(a => a.Skill.GetName() + " " + (a.ScoreDelta >= 0 ? "+" : "") + ((int)a.ScoreDelta).ToString("N0")))">
+                            <MudText Typo="Typo.caption">
+                                @string.Join(" ", skillWhy.Take(2).Select(a => (a.ScoreDelta >= 0 ? "+" : "-") + a.Skill.GetName()))
+                            </MudText>
+                        </MudTooltip>
+                    }
                 </MudCardContent>
                 <MudCardActions>
                     <MudSpacer></MudSpacer>
@@ -238,8 +247,12 @@
         _projectedGains = projection.ProjectedGains.ToDictionary(kv => kv.Key, kv => kv.Value);
         _insufficientData = projection.InsufficientDataGains.ToDictionary(kv => kv.Key, kv => kv.Value);
         _chartDifficulty = projection.ChartDifficulty.ToDictionary(kv => kv.Key, kv => kv.Value);
+        _skillAdjustments = projection.SkillAdjustments.ToDictionary(kv => kv.Key, kv => kv.Value);
         _finishedProjecting = true;
     }
+
+    private IDictionary<Guid, IReadOnlyList<SkillAdjustmentRecord>> _skillAdjustments =
+        new Dictionary<Guid, IReadOnlyList<SkillAdjustmentRecord>>();
 
     private IDictionary<Guid, RecordedPhoenixScore> _allScores = new Dictionary<Guid, RecordedPhoenixScore>();
     private PlayerStatsRecord? _stats;

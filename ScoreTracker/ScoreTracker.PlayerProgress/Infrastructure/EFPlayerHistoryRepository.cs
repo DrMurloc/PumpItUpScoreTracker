@@ -25,7 +25,8 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
                 CompetitiveLevel = record.CompetitiveLevel,
                 SinglesLevel = record.SinglesLevel,
                 DoublesLevel = record.DoublesLevel,
-                PassCount = record.PassCount
+                PassCount = record.PassCount,
+                SkillRating = record.SkillRating
             }, cancellationToken);
             await database.SaveChangesAsync(cancellationToken);
         }
@@ -39,7 +40,7 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
             return await database.Set<PlayerHistoryEntity>()
                 .Where(r => r.UserId == request.UserId && r.MixId == mixId)
                 .Select(r => new PlayerRatingRecord(r.UserId, r.Date, r.CompetitiveLevel, r.SinglesLevel,
-                    r.DoublesLevel, r.CoOpRating, r.PassCount)).ToArrayAsync(cancellationToken);
+                    r.DoublesLevel, r.CoOpRating, r.PassCount, r.SkillRating)).ToArrayAsync(cancellationToken);
         }
 
         public async Task DeleteHistoryForUser(Guid userId, CancellationToken cancellationToken)

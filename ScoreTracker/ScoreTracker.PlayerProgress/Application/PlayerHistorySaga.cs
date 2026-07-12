@@ -14,7 +14,8 @@ namespace ScoreTracker.PlayerProgress.Application
                 dateTime.Now,
                 context.Message.NewCompetitive,
                 context.Message.NewSinglesCompetitive, context.Message.NewDoublesCompetitive,
-                context.Message.CoOpRating, context.Message.PassCount), context.CancellationToken);
+                context.Message.CoOpRating, context.Message.PassCount,
+                context.Message.NewTop50), context.CancellationToken);
         }
     }
 }
