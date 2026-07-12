@@ -4,12 +4,19 @@ using ScoreTracker.SharedKernel.Enums;
 namespace ScoreTracker.Randomizer.Domain
 {
     /// <summary>
-    ///     Draw persistence. A context (user XOR tournament) has at most one active draw;
-    ///     its slug is minted once and survives redraws, so spectator links stay stable.
+    ///     Draw persistence. Personal context: one rolling draw per user, slug minted once.
+    ///     Tournament context: many named draws — matches — each with its own stable slug;
+    ///     redraws refill in place so spectator links keep working.
     /// </summary>
     internal interface IDrawRepository
     {
-        Task<DrawDto> ReplaceDraw(Guid? userId, Guid? tournamentId, MixEnum mix, IReadOnlyList<Guid> chartIds,
+        Task<DrawDto> ReplacePersonalDraw(Guid userId, MixEnum mix, IReadOnlyList<Guid> chartIds,
+            CancellationToken cancellationToken);
+
+        Task<DrawDto> CreateTournamentDraw(Guid tournamentId, string name, MixEnum mix,
+            IReadOnlyList<Guid> chartIds, CancellationToken cancellationToken);
+
+        Task<DrawDto> RedrawCards(Guid drawId, MixEnum mix, IReadOnlyList<Guid> chartIds,
             CancellationToken cancellationToken);
 
         Task SetCardState(Guid drawId, Guid pullId, DrawCardState state, CancellationToken cancellationToken);
@@ -18,5 +25,7 @@ namespace ScoreTracker.Randomizer.Domain
         Task<DrawDto?> GetDraw(Guid drawId, CancellationToken cancellationToken);
         Task<DrawDto?> GetActiveDraw(Guid? userId, Guid? tournamentId, CancellationToken cancellationToken);
         Task<DrawDto?> GetBySlug(Guid slug, CancellationToken cancellationToken);
+        Task<IEnumerable<DrawDto>> GetTournamentDraws(Guid tournamentId, CancellationToken cancellationToken);
+        Task DeleteDraw(Guid drawId, CancellationToken cancellationToken);
     }
 }

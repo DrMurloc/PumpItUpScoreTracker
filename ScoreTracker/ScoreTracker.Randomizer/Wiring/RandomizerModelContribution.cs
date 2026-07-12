@@ -24,15 +24,14 @@ public sealed class RandomizerModelContribution : IDbModelContribution
 
         modelBuilder.Entity<RandomizerDrawEntity>().ToTable("RandomizerDraw");
         modelBuilder.Entity<RandomizerDrawEntity>().HasIndex(e => e.Slug).IsUnique();
-        // One active draw per context; the filtered unique indexes are the invariant.
+        // Personal keeps one rolling draw (the filtered unique index is the invariant);
+        // tournaments hold many named draws (matches), so theirs is a plain index.
         modelBuilder.Entity<RandomizerDrawEntity>()
             .HasIndex(e => e.UserId)
             .IsUnique()
             .HasFilter("[UserId] IS NOT NULL");
         modelBuilder.Entity<RandomizerDrawEntity>()
-            .HasIndex(e => e.TournamentId)
-            .IsUnique()
-            .HasFilter("[TournamentId] IS NOT NULL");
+            .HasIndex(e => e.TournamentId);
 
         modelBuilder.Entity<RandomizerDrawCardEntity>().ToTable("RandomizerDrawCard")
             .HasOne<RandomizerDrawEntity>()

@@ -12,25 +12,21 @@ namespace ScoreTracker.Randomizer.Infrastructure
 {
     internal sealed class EFDrawRepository(IDbContextFactory<ChartAttemptDbContext> factory,
         IDateTimeOffsetAccessor clock) : IDrawRepository,
-        IRequestHandler<GetDrawBySlugQuery, DrawDto?>
+        IRequestHandler<GetDrawBySlugQuery, DrawDto?>,
+        IRequestHandler<GetTournamentDrawsQuery, IEnumerable<DrawDto>>
     {
-        public async Task<DrawDto> ReplaceDraw(Guid? userId, Guid? tournamentId, MixEnum mix,
-            IReadOnlyList<Guid> chartIds, CancellationToken cancellationToken)
+        public async Task<DrawDto> ReplacePersonalDraw(Guid userId, MixEnum mix, IReadOnlyList<Guid> chartIds,
+            CancellationToken cancellationToken)
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
-            var draw = tournamentId != null
-                ? await database.Set<RandomizerDrawEntity>()
-                    .FirstOrDefaultAsync(d => d.TournamentId == tournamentId, cancellationToken)
-                : await database.Set<RandomizerDrawEntity>()
-                    .FirstOrDefaultAsync(d => d.UserId == userId, cancellationToken);
-
+            var draw = await database.Set<RandomizerDrawEntity>()
+                .FirstOrDefaultAsync(d => d.UserId == userId, cancellationToken);
             if (draw == null)
             {
                 draw = new RandomizerDrawEntity
                 {
                     Id = Guid.NewGuid(),
-                    UserId = tournamentId == null ? userId : null,
-                    TournamentId = tournamentId,
+                    UserId = userId,
                     Slug = Guid.NewGuid(),
                     CreatedAt = clock.Now
                 };
@@ -45,18 +41,48 @@ namespace ScoreTracker.Randomizer.Infrastructure
 
             draw.Mix = mix.ToString();
             draw.UpdatedAt = clock.Now;
-            await database.Set<RandomizerDrawCardEntity>().AddRangeAsync(chartIds.Select((chartId, i) =>
-                new RandomizerDrawCardEntity
-                {
-                    PullId = Guid.NewGuid(),
-                    DrawId = draw.Id,
-                    ChartId = chartId,
-                    Order = i + 1,
-                    State = nameof(DrawCardState.None)
-                }), cancellationToken);
+            await AddCards(database, draw.Id, chartIds, cancellationToken);
             await database.SaveChangesAsync(cancellationToken);
             return await Load(database, draw.Id, cancellationToken)
                    ?? throw new InvalidOperationException("Draw vanished during creation.");
+        }
+
+        public async Task<DrawDto> CreateTournamentDraw(Guid tournamentId, string name, MixEnum mix,
+            IReadOnlyList<Guid> chartIds, CancellationToken cancellationToken)
+        {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
+            var draw = new RandomizerDrawEntity
+            {
+                Id = Guid.NewGuid(),
+                TournamentId = tournamentId,
+                Name = name,
+                Slug = Guid.NewGuid(),
+                Mix = mix.ToString(),
+                CreatedAt = clock.Now,
+                UpdatedAt = clock.Now
+            };
+            await database.Set<RandomizerDrawEntity>().AddAsync(draw, cancellationToken);
+            await AddCards(database, draw.Id, chartIds, cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
+            return await Load(database, draw.Id, cancellationToken)
+                   ?? throw new InvalidOperationException("Draw vanished during creation.");
+        }
+
+        public async Task<DrawDto> RedrawCards(Guid drawId, MixEnum mix, IReadOnlyList<Guid> chartIds,
+            CancellationToken cancellationToken)
+        {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
+            var draw = await database.Set<RandomizerDrawEntity>()
+                .FirstAsync(d => d.Id == drawId, cancellationToken);
+            var oldCards = await database.Set<RandomizerDrawCardEntity>()
+                .Where(c => c.DrawId == drawId).ToArrayAsync(cancellationToken);
+            database.Set<RandomizerDrawCardEntity>().RemoveRange(oldCards);
+            draw.Mix = mix.ToString();
+            draw.UpdatedAt = clock.Now;
+            await AddCards(database, drawId, chartIds, cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
+            return await Load(database, drawId, cancellationToken)
+                   ?? throw new InvalidOperationException("Draw vanished during redraw.");
         }
 
         public async Task SetCardState(Guid drawId, Guid pullId, DrawCardState state,
@@ -118,9 +144,12 @@ namespace ScoreTracker.Randomizer.Infrastructure
             CancellationToken cancellationToken)
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
+            // Personal: the one rolling draw. Tournament: the most recently touched match.
             var draw = tournamentId != null
                 ? await database.Set<RandomizerDrawEntity>()
-                    .FirstOrDefaultAsync(d => d.TournamentId == tournamentId, cancellationToken)
+                    .Where(d => d.TournamentId == tournamentId)
+                    .OrderByDescending(d => d.UpdatedAt)
+                    .FirstOrDefaultAsync(cancellationToken)
                 : await database.Set<RandomizerDrawEntity>()
                     .FirstOrDefaultAsync(d => d.UserId == userId, cancellationToken);
             return draw == null ? null : await Load(database, draw.Id, cancellationToken);
@@ -134,9 +163,59 @@ namespace ScoreTracker.Randomizer.Infrastructure
             return draw == null ? null : await Load(database, draw.Id, cancellationToken);
         }
 
+        public async Task<IEnumerable<DrawDto>> GetTournamentDraws(Guid tournamentId,
+            CancellationToken cancellationToken)
+        {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
+            var draws = await database.Set<RandomizerDrawEntity>()
+                .Where(d => d.TournamentId == tournamentId)
+                .OrderByDescending(d => d.UpdatedAt)
+                .Select(d => d.Id)
+                .ToArrayAsync(cancellationToken);
+            var results = new List<DrawDto>();
+            foreach (var id in draws)
+            {
+                var dto = await Load(database, id, cancellationToken);
+                if (dto != null) results.Add(dto);
+            }
+
+            return results;
+        }
+
+        public async Task DeleteDraw(Guid drawId, CancellationToken cancellationToken)
+        {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
+            var draw = await database.Set<RandomizerDrawEntity>()
+                .FirstOrDefaultAsync(d => d.Id == drawId, cancellationToken);
+            if (draw == null) return;
+
+            database.Set<RandomizerDrawEntity>().Remove(draw);
+            await database.SaveChangesAsync(cancellationToken);
+        }
+
         public async Task<DrawDto?> Handle(GetDrawBySlugQuery request, CancellationToken cancellationToken)
         {
             return await GetBySlug(request.Slug, cancellationToken);
+        }
+
+        public async Task<IEnumerable<DrawDto>> Handle(GetTournamentDrawsQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await GetTournamentDraws(request.TournamentId, cancellationToken);
+        }
+
+        private static async Task AddCards(ChartAttemptDbContext database, Guid drawId,
+            IReadOnlyList<Guid> chartIds, CancellationToken cancellationToken)
+        {
+            await database.Set<RandomizerDrawCardEntity>().AddRangeAsync(chartIds.Select((chartId, i) =>
+                new RandomizerDrawCardEntity
+                {
+                    PullId = Guid.NewGuid(),
+                    DrawId = drawId,
+                    ChartId = chartId,
+                    Order = i + 1,
+                    State = nameof(DrawCardState.None)
+                }), cancellationToken);
         }
 
         private async Task Touch(ChartAttemptDbContext database, Guid drawId, CancellationToken cancellationToken)
@@ -161,7 +240,8 @@ namespace ScoreTracker.Randomizer.Infrastructure
                 Enum.TryParse<MixEnum>(draw.Mix, out var mix) ? mix : MixEnum.Phoenix,
                 draw.TournamentId,
                 cards.Select(c => new DrawCardDto(c.PullId, c.ChartId, c.Order,
-                    Enum.TryParse<DrawCardState>(c.State, out var state) ? state : DrawCardState.None)).ToArray());
+                    Enum.TryParse<DrawCardState>(c.State, out var state) ? state : DrawCardState.None)).ToArray(),
+                draw.Name);
         }
     }
 }

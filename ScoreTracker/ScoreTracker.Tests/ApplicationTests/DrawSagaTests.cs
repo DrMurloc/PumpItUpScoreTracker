@@ -61,7 +61,7 @@ public sealed class DrawSagaTests
         LogIn();
         var chartIds = new[] { Guid.NewGuid(), Guid.NewGuid() };
         var draw = Draw();
-        _draws.Setup(d => d.ReplaceDraw(_user.Id, null, MixEnum.Phoenix, chartIds, It.IsAny<CancellationToken>()))
+        _draws.Setup(d => d.ReplacePersonalDraw(_user.Id, MixEnum.Phoenix, chartIds, It.IsAny<CancellationToken>()))
             .ReturnsAsync(draw);
 
         var result = await BuildSaga()
@@ -80,26 +80,78 @@ public sealed class DrawSagaTests
         RolesAre(tournamentId);
 
         await Assert.ThrowsAsync<NotAuthorizedException>(() => BuildSaga().Handle(
-            new CreateDrawCommand(tournamentId, MixEnum.Phoenix, Array.Empty<Guid>()), CancellationToken.None));
+            new CreateDrawCommand(tournamentId, MixEnum.Phoenix, Array.Empty<Guid>(), "R1"),
+            CancellationToken.None));
 
-        _draws.Verify(d => d.ReplaceDraw(It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<MixEnum>(),
+        _draws.Verify(d => d.CreateTournamentDraw(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<MixEnum>(),
             It.IsAny<IReadOnlyList<Guid>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task AssistantsCanOperateTournamentDraws()
+    public async Task TournamentMatchesRequireAName()
+    {
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        RolesAre(tournamentId, new UserTournamentRole(tournamentId, _user.Id, TournamentRole.Assistant));
+
+        await Assert.ThrowsAsync<RandomizerException>(() => BuildSaga().Handle(
+            new CreateDrawCommand(tournamentId, MixEnum.Phoenix, new[] { Guid.NewGuid() }),
+            CancellationToken.None));
+
+        _draws.Verify(d => d.CreateTournamentDraw(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<MixEnum>(),
+            It.IsAny<IReadOnlyList<Guid>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AssistantsCreateNamedTournamentMatches()
     {
         LogIn();
         var tournamentId = Guid.NewGuid();
         RolesAre(tournamentId, new UserTournamentRole(tournamentId, _user.Id, TournamentRole.Assistant));
         var draw = Draw(tournamentId);
-        _draws.Setup(d => d.ReplaceDraw(null, tournamentId, MixEnum.Phoenix2, It.IsAny<IReadOnlyList<Guid>>(),
-            It.IsAny<CancellationToken>())).ReturnsAsync(draw);
+        _draws.Setup(d => d.CreateTournamentDraw(tournamentId, "R1 - Ada vs Kei", MixEnum.Phoenix2,
+            It.IsAny<IReadOnlyList<Guid>>(), It.IsAny<CancellationToken>())).ReturnsAsync(draw);
 
         var result = await BuildSaga().Handle(
-            new CreateDrawCommand(tournamentId, MixEnum.Phoenix2, new[] { Guid.NewGuid() }), CancellationToken.None);
+            new CreateDrawCommand(tournamentId, MixEnum.Phoenix2, new[] { Guid.NewGuid() }, "R1 - Ada vs Kei"),
+            CancellationToken.None);
 
         Assert.Equal(draw, result);
+    }
+
+    [Fact]
+    public async Task RedrawRefillsTheDrawUnderItsContextAuthorization()
+    {
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        var draw = Draw(tournamentId);
+        var chartIds = new[] { Guid.NewGuid() };
+        RolesAre(tournamentId, new UserTournamentRole(tournamentId, _user.Id, TournamentRole.Assistant));
+        _draws.Setup(d => d.GetDraw(draw.Id, It.IsAny<CancellationToken>())).ReturnsAsync(draw);
+        _draws.Setup(d => d.RedrawCards(draw.Id, MixEnum.Phoenix, chartIds, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(draw);
+
+        var result = await BuildSaga()
+            .Handle(new RedrawCardsCommand(draw.Id, MixEnum.Phoenix, chartIds), CancellationToken.None);
+
+        Assert.Equal(draw, result);
+        _mediator.Verify(m => m.Publish(It.Is<DrawUpdatedEvent>(e => e.DrawId == draw.Id),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeletingAMatchRequiresARoleAndPublishes()
+    {
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        var draw = Draw(tournamentId);
+        RolesAre(tournamentId);
+        _draws.Setup(d => d.GetDraw(draw.Id, It.IsAny<CancellationToken>())).ReturnsAsync(draw);
+
+        await Assert.ThrowsAsync<NotAuthorizedException>(() => BuildSaga()
+            .Handle(new DeleteDrawCommand(draw.Id), CancellationToken.None));
+
+        _draws.Verify(d => d.DeleteDraw(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

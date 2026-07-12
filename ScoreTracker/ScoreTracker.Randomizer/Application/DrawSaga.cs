@@ -21,6 +21,8 @@ namespace ScoreTracker.Randomizer.Application
     /// </summary>
     internal sealed class DrawSaga :
         IRequestHandler<CreateDrawCommand, DrawDto>,
+        IRequestHandler<RedrawCardsCommand, DrawDto>,
+        IRequestHandler<DeleteDrawCommand>,
         IRequestHandler<SetDrawCardStateCommand>,
         IRequestHandler<ClearVetoedCardsCommand, DrawDto>,
         IRequestHandler<AddChartToDrawCommand, DrawDto>,
@@ -46,10 +48,41 @@ namespace ScoreTracker.Randomizer.Application
         public async Task<DrawDto> Handle(CreateDrawCommand request, CancellationToken cancellationToken)
         {
             await EnsureCanOperateDraws(request.TournamentId, cancellationToken);
-            var draw = await _draws.ReplaceDraw(request.TournamentId == null ? _currentUser.User.Id : null,
-                request.TournamentId, request.Mix, request.ChartIds, cancellationToken);
+            DrawDto draw;
+            if (request.TournamentId == null)
+            {
+                draw = await _draws.ReplacePersonalDraw(_currentUser.User.Id, request.Mix, request.ChartIds,
+                    cancellationToken);
+            }
+            else
+            {
+                // A match is a named draw — the name is what the switcher, spectate tabs,
+                // and verbal callouts hang on, so it's required (owner-locked round 6).
+                if (string.IsNullOrWhiteSpace(request.MatchName))
+                    throw new RandomizerException("Give the match a name.");
+
+                draw = await _draws.CreateTournamentDraw(request.TournamentId.Value, request.MatchName.Trim(),
+                    request.Mix, request.ChartIds, cancellationToken);
+            }
+
             await _mediator.Publish(new DrawUpdatedEvent(draw.Id, draw.Slug), cancellationToken);
             return draw;
+        }
+
+        public async Task<DrawDto> Handle(RedrawCardsCommand request, CancellationToken cancellationToken)
+        {
+            var draw = await AuthorizeDraw(request.DrawId, cancellationToken);
+            var result = await _draws.RedrawCards(request.DrawId, request.Mix, request.ChartIds, cancellationToken);
+            await _mediator.Publish(new DrawUpdatedEvent(draw.Id, draw.Slug), cancellationToken);
+            return result;
+        }
+
+        public async Task Handle(DeleteDrawCommand request, CancellationToken cancellationToken)
+        {
+            var draw = await AuthorizeDraw(request.DrawId, cancellationToken);
+            await _draws.DeleteDraw(request.DrawId, cancellationToken);
+            // Spectators following the deleted match refresh into its siblings.
+            await _mediator.Publish(new DrawUpdatedEvent(draw.Id, draw.Slug), cancellationToken);
         }
 
         public async Task Handle(SetDrawCardStateCommand request, CancellationToken cancellationToken)

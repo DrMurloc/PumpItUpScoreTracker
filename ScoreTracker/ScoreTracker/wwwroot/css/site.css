@@ -652,6 +652,32 @@ html.nav-away .page-dock,
     margin-bottom: 10px;
 }
 
+/* Two-line preset items: name + summary — legible on touch, no hover needed. */
+.rand-preset-item {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+    padding: 2px 0;
+}
+
+.rand-preset-name {
+    font-weight: 700;
+    font-size: .85rem;
+}
+
+.rand-preset-summary {
+    font-size: .7rem;
+    color: var(--mix-ink-muted);
+}
+
+.rand-preset-select {
+    min-width: 220px;
+}
+
+.rand-drawer-presets {
+    margin-bottom: 14px;
+}
+
 .rand-exit-chip {
     display: inline-flex;
     align-items: center;

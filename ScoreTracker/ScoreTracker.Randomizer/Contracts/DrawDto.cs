@@ -10,7 +10,7 @@ namespace ScoreTracker.Randomizer.Contracts
     /// </summary>
     [ExcludeFromCodeCoverage]
     public sealed record DrawDto(Guid Id, Guid Slug, MixEnum Mix, Guid? TournamentId,
-        IReadOnlyList<DrawCardDto> Cards)
+        IReadOnlyList<DrawCardDto> Cards, string? Name = null)
     {
     }
 

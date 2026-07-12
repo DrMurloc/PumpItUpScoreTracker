@@ -41,8 +41,22 @@ else
         <MudText Typo="Typo.h5">@_title</MudText>
         <span class="rand-live"><span class="rand-live-dot"></span>@L["LIVE"]</span>
     </div>
+    @if (_siblings.Count > 1)
+    {
+        @* Any match link opens with tabs to the night's other matches (round 6). *@
+        <div class="rand-chipbar">
+            @foreach (var sibling in _siblings)
+            {
+                var m = sibling;
+                <MudChip T="string" Size="Size.Small"
+                         Variant="@(m.Slug == Slug ? Variant.Filled : Variant.Outlined)"
+                         Color="@(m.Slug == Slug ? Color.Primary : Color.Default)"
+                         OnClick="() => FollowMatch(m)">@m.Name</MudChip>
+            }
+        </div>
+    }
     <div class="rand-countline">
-        <span class="rand-count-label">@_mix.GetName() · @L["{0} cards", _cards.Count]</span>
+        <span class="rand-count-label">@(_matchName == null ? null : $"{_matchName} · ")@_mix.GetName() · @L["{0} cards", _cards.Count]</span>
         <MudSpacer></MudSpacer>
         <span class="rand-legend"><i class="rand-legend-held"></i>@L["Held"]</span>
         <span class="rand-legend"><i class="rand-legend-vetoed"></i>@L["Vetoed"]</span>
@@ -72,6 +86,7 @@ else
 <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="@(_detailsChart?.Mix ?? _mix)"></ChartDetailsDialog>
 
 @inject IMediator Mediator
+@inject NavigationManager NavManager
 @implements IDisposable
 @code {
 
@@ -81,9 +96,12 @@ else
 
     private bool _loading = true;
     private bool _missing;
+    private Guid _loadedSlug;
     private string _title = string.Empty;
+    private string? _matchName;
     private MixEnum _mix = MixEnum.Phoenix;
     private List<CardVm> _cards = new();
+    private List<DrawDto> _siblings = new();
     private bool _detailsOpen;
     private Chart? _detailsChart;
 
@@ -93,25 +111,54 @@ else
         _detailsOpen = true;
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         MainLayout.DrawUpdated += OnDrawUpdated;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Also covers tab navigation between sibling matches (slug param changes).
+        if (_loadedSlug == Slug) return;
+
+        _loadedSlug = Slug;
+        _loading = true;
         await Load();
         _loading = false;
     }
 
+    private void FollowMatch(DrawDto match)
+    {
+        if (match.Slug == Slug) return;
+
+        NavManager.NavigateTo($"/Randomizer/Live/{match.Slug}");
+    }
+
     private async Task Load()
     {
+        _missing = false;
         var draw = await Mediator.Send(new GetDrawBySlugQuery(Slug));
         if (draw == null)
         {
+            // The match may have been deleted mid-night — follow its newest sibling
+            // instead of dead-ending the viewer.
+            var sibling = _siblings.FirstOrDefault(s => s.Slug != Slug);
+            if (sibling != null)
+            {
+                NavManager.NavigateTo($"/Randomizer/Live/{sibling.Slug}");
+                return;
+            }
+
             _missing = true;
             return;
         }
 
         _mix = draw.Mix;
+        _matchName = draw.Name;
         _title = L["Live Draw"];
         if (draw.TournamentId != null)
+        {
+            _siblings = (await Mediator.Send(new GetTournamentDrawsQuery(draw.TournamentId.Value))).ToList();
             try
             {
                 _title = (await Mediator.Send(new GetTournamentQuery(draw.TournamentId.Value))).Name.ToString();
@@ -120,6 +167,7 @@ else
             {
                 // The name is garnish — a spectator link never breaks over it.
             }
+        }
 
         var charts = (await Mediator.Send(new GetChartsQuery(draw.Mix,
                 ChartIds: draw.Cards.Select(c => c.ChartId).Distinct().ToArray())))
@@ -132,7 +180,8 @@ else
 
     private async void OnDrawUpdated(object? sender, DrawUpdatedEvent e)
     {
-        if (e.Slug != Slug) return;
+        // Our match, or any sibling (a new match appearing should light up the tabs).
+        if (e.Slug != Slug && _siblings.All(s => s.Id != e.DrawId) && _siblings.Count > 0) return;
 
         await InvokeAsync(async () =>
         {
