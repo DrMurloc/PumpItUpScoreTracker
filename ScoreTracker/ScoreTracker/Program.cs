@@ -236,6 +236,8 @@ builder.Services.AddLocalization(options => options.ResourcesPath = "Resources")
 builder.Services.AddScoped<IStringLocalizer<App>, StringLocalizer<App>>();
 builder.Services.AddScoped<ChartVideoDisplayer>();
 builder.Services.AddScoped<ChartScoringLevels>();
+// Circuit-scoped: widgets on a home-page board share one chart catalog per mix (§2.5).
+builder.Services.AddScoped<ScoreTracker.Web.Services.HomeDashboard.ChartCatalogCache>();
 builder.Services.AddCookiePolicy(opts =>
 {
     opts.CheckConsentNeeded = ctx => false;

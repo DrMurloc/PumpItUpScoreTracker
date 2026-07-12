@@ -1,0 +1,59 @@
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.HomeDashboard
+
+<MudSelect T="MixEnum?" @bind-Value="_mix" Label="@L["Mix"]" Class="mb-3">
+    <MudSelectItem T="MixEnum?" Value="null">@L["Follow current mix"]</MudSelectItem>
+    <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix">Phoenix</MudSelectItem>
+    <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix2">Phoenix 2</MudSelectItem>
+</MudSelect>
+<MudSwitch T="bool" @bind-Value="_showProjections" Color="Color.Primary"
+           Label="@L["Show projected targets"]"/>
+@if (_dismissedCount > 0)
+{
+    <div class="d-flex align-center gap-2 mt-2">
+        <MudText Typo="Typo.body2">@L["Dismissed charts"]: @_dismissedCount</MudText>
+        <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="() => _restoreAll = true"
+                   Disabled="_restoreAll">
+            @L["Restore all"]
+        </MudButton>
+    </div>
+}
+<div class="d-flex justify-end gap-2 mt-4">
+    <MudButton OnClick="() => OnCancel.InvokeAsync()">@L["Cancel"]</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save">@L["Save"]</MudButton>
+</div>
+
+@code {
+
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public EventCallback<(string ConfigJson, int ConfigVersion)> OnSave { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private MixEnum? _mix;
+    private bool _showProjections = true;
+    private int _dismissedCount;
+    private bool _restoreAll;
+
+    protected override void OnParametersSet()
+    {
+        var config = WidgetConfigJson.Read<PumbilityConfig>(Widget.ConfigJson);
+        _mix = config.Mix;
+        _showProjections = config.ShowProjections;
+        _dismissedCount = config.DismissedCharts.Count;
+        _restoreAll = false;
+    }
+
+    private async Task Save()
+    {
+        var existing = WidgetConfigJson.Read<PumbilityConfig>(Widget.ConfigJson);
+        var config = new PumbilityConfig
+        {
+            Mix = _mix,
+            ShowProjections = _showProjections,
+            DismissedCharts = _restoreAll ? new List<Guid>() : existing.DismissedCharts
+        };
+        await OnSave.InvokeAsync((WidgetConfigJson.Write(config), 1));
+    }
+
+}

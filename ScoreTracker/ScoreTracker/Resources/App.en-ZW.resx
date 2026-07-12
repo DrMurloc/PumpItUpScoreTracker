@@ -3150,4 +3150,28 @@
   <data name="Range" xml:space="preserve">
     <value>Mrgl-range</value>
   </data>
+  <data name="Pumbility targets tuned to your skill profile." xml:space="preserve">
+    <value>Mrgl PUMBILITY go BIG mrglglgl!</value>
+  </data>
+  <data name="Trend starts tracking from today." xml:space="preserve">
+    <value>Mrgl trend start today mrglglgl.</value>
+  </data>
+  <data name="Best projected targets" xml:space="preserve">
+    <value>Best mrgl targets!</value>
+  </data>
+  <data name="No scores yet — Pumbility starts with your first import." xml:space="preserve">
+    <value>No mrgl scores... PUMBILITY need mrgl-port mrglglgl!</value>
+  </data>
+  <data name="Show projected targets" xml:space="preserve">
+    <value>Show mrgl targets!</value>
+  </data>
+  <data name="Dismissed charts" xml:space="preserve">
+    <value>Grrbl'd charts</value>
+  </data>
+  <data name="Restore all" xml:space="preserve">
+    <value>Un-grrbl all!</value>
+  </data>
+  <data name="Dismiss" xml:space="preserve">
+    <value>Grrbl it!</value>
+  </data>
 </root>

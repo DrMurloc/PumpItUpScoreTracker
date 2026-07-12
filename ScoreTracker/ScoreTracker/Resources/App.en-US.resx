@@ -3227,4 +3227,28 @@
   <data name="Range" xml:space="preserve">
     <value>Range</value>
   </data>
+  <data name="Pumbility targets tuned to your skill profile." xml:space="preserve">
+    <value>Pumbility targets tuned to your skill profile.</value>
+  </data>
+  <data name="Trend starts tracking from today." xml:space="preserve">
+    <value>Trend starts tracking from today.</value>
+  </data>
+  <data name="Best projected targets" xml:space="preserve">
+    <value>Best projected targets</value>
+  </data>
+  <data name="No scores yet — Pumbility starts with your first import." xml:space="preserve">
+    <value>No scores yet — Pumbility starts with your first import.</value>
+  </data>
+  <data name="Show projected targets" xml:space="preserve">
+    <value>Show projected targets</value>
+  </data>
+  <data name="Dismissed charts" xml:space="preserve">
+    <value>Dismissed charts</value>
+  </data>
+  <data name="Restore all" xml:space="preserve">
+    <value>Restore all</value>
+  </data>
+  <data name="Dismiss" xml:space="preserve">
+    <value>Dismiss</value>
+  </data>
 </root>

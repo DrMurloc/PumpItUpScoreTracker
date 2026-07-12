@@ -3108,4 +3108,28 @@
   <data name="Range" xml:space="preserve">
     <value>기간</value>
   </data>
+  <data name="Pumbility targets tuned to your skill profile." xml:space="preserve">
+    <value>스킬 프로필에 맞춘 펌빌리티 목표.</value>
+  </data>
+  <data name="Trend starts tracking from today." xml:space="preserve">
+    <value>추세는 오늘부터 기록됩니다.</value>
+  </data>
+  <data name="Best projected targets" xml:space="preserve">
+    <value>추천 목표 채보</value>
+  </data>
+  <data name="No scores yet — Pumbility starts with your first import." xml:space="preserve">
+    <value>아직 점수가 없습니다. 펌빌리티는 첫 가져오기부터 시작됩니다.</value>
+  </data>
+  <data name="Show projected targets" xml:space="preserve">
+    <value>목표 채보 표시</value>
+  </data>
+  <data name="Dismissed charts" xml:space="preserve">
+    <value>숨긴 채보</value>
+  </data>
+  <data name="Restore all" xml:space="preserve">
+    <value>모두 복원</value>
+  </data>
+  <data name="Dismiss" xml:space="preserve">
+    <value>숨기기</value>
+  </data>
 </root>

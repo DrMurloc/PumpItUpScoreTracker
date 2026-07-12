@@ -1,0 +1,179 @@
+@using MediatR
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.HomePage.Contracts.Commands
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Services.HomeDashboard
+
+@* W2 (design doc §3): PUMBILITY at a glance. Trend renders once the history capture
+   (PR #141) has two points — before that, an honest caption. Targets consume
+   Projections v2 (per-pool baselines, skill-weighted expected scores) and explain
+   themselves with skill chips; the list scrolls (never a hard snap to three) and
+   every row can be dismissed permanently into this instance's config blacklist. *@
+
+@if (!_loaded)
+{
+    <div class="dash-widget-message">
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
+    </div>
+}
+else if (_stats == null || ((int)_stats.SkillRating == 0 && _stats.ClearCount == 0))
+{
+    <div class="dash-widget-message">
+        <div>
+            <MudText Typo="Typo.body2">@L["No scores yet — Pumbility starts with your first import."]</MudText>
+            <MudLink Href="/UploadPhoenixScores" Typo="Typo.body2">@L["Upload Scores"]</MudLink>
+        </div>
+    </div>
+}
+else
+{
+    <div class="dash-pumbility">
+        <div class="dash-pumbility-left">
+            <span class="dash-stat-num rarity-glow-1">@(((int)_stats.SkillRating).ToString("N0"))</span>
+            @if (_weeklyDelta is > 0)
+            {
+                <span class="dash-stat-delta">▲ @_weeklyDelta.Value.ToString("N0")</span>
+            }
+            @if (_sparkPoints != null)
+            {
+                <svg class="dash-sparkline" viewBox="0 0 100 26" preserveAspectRatio="none">
+                    <polyline points="@_sparkPoints" fill="none" stroke="var(--rarity-gold)"
+                              stroke-width="2" vector-effect="non-scaling-stroke"/>
+                </svg>
+            }
+            else
+            {
+                <MudText Typo="Typo.caption" Class="dash-muted">@L["Trend starts tracking from today."]</MudText>
+            }
+            @if (_mix == MixEnum.Phoenix2)
+            {
+                <MudText Typo="Typo.caption" Class="dash-muted">
+                    @L["Singles"] @(((int)_stats.SinglesRating).ToString("N0"))
+                    · @L["Doubles"] @(((int)_stats.DoublesRating).ToString("N0"))
+                </MudText>
+            }
+        </div>
+        @if (_showTargets && _targets.Any())
+        {
+            <div class="dash-pumbility-targets">
+                <MudText Typo="Typo.caption" Class="dash-muted">@L["Best projected targets"]</MudText>
+                <div class="dash-targets">
+                    @foreach (var target in _targets.Where(t => !_dismissed.Contains(t.ChartId)))
+                    {
+                        <div class="dash-target-row">
+                            <span class="dash-target-name">@target.Label</span>
+                            @foreach (var chip in target.Skills.Take(1))
+                            {
+                                <span class="dash-skillchip" style="color:@chip.Skill.GetColor()">
+                                    @(chip.ScoreDelta >= 0 ? "+" : "-")@chip.Skill.GetName()
+                                </span>
+                            }
+                            <span class="dash-target-gain">+@target.Gain.ToString("N0")</span>
+                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close"
+                                           title="@L["Dismiss"]" OnClick="() => Dismiss(target.ChartId)"/>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject ChartCatalogCache ChartCatalog
+
+@code {
+
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public MixEnum EffectiveMix { get; set; }
+
+    private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
+
+    private sealed record TargetRow(Guid ChartId, string Label, int Gain,
+        IReadOnlyList<SkillAdjustmentRecord> Skills);
+
+    private bool _loaded;
+    private string? _loadedFor;
+    private PlayerStatsRecord? _stats;
+    private int? _weeklyDelta;
+    private string? _sparkPoints;
+    private bool _showTargets;
+    private MixEnum _mix;
+    private List<TargetRow> _targets = new();
+    private readonly HashSet<Guid> _dismissed = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{EffectiveMix}";
+        if (signature == _loadedFor) return;
+        _loadedFor = signature;
+        _loaded = false;
+
+        var config = WidgetConfigJson.Read<PumbilityConfig>(Widget.ConfigJson);
+        _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
+            : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
+        _showTargets = config.ShowProjections;
+        _dismissed.Clear();
+        foreach (var id in config.DismissedCharts) _dismissed.Add(id);
+
+        var userId = CurrentUser.User.Id;
+        var statsTask = Mediator.Send(new GetPlayerStatsQuery(userId, _mix));
+        var historyTask = Mediator.Send(new GetPlayerHistoryQuery(userId, _mix));
+        _stats = await statsTask;
+        var history = (await historyTask)
+            .Where(h => h.SkillRating != null)
+            .OrderBy(h => h.Date)
+            .ToArray();
+
+        // Trend + weekly delta light up once the PR #141 capture has data.
+        _sparkPoints = history.Length >= 2 ? BuildSparkline(history) : null;
+        var weekAgo = history.LastOrDefault(h => h.Date <= DateTimeOffset.Now.AddDays(-7));
+        _weeklyDelta = weekAgo?.SkillRating is { } baseline ? (int)_stats.SkillRating - baseline : null;
+
+        _targets.Clear();
+        if (_showTargets && ((int)_stats.SkillRating > 0 || _stats.ClearCount > 0))
+        {
+            var projection = await Mediator.Send(new ProjectPumbilityGainsQuery(userId, _mix));
+            var charts = await ChartCatalog.GetCharts(_mix);
+            _targets = projection.ProjectedGains
+                .OrderByDescending(kv => kv.Value)
+                .Take(15)
+                .Where(kv => charts.ContainsKey(kv.Key))
+                .Select(kv => new TargetRow(kv.Key,
+                    $"{charts[kv.Key].Song.Name} {charts[kv.Key].DifficultyString}",
+                    kv.Value,
+                    projection.SkillAdjustments.TryGetValue(kv.Key, out var skills)
+                        ? skills
+                        : Array.Empty<SkillAdjustmentRecord>()))
+                .ToList();
+        }
+
+        _loaded = true;
+    }
+
+    private static string BuildSparkline(IReadOnlyList<PlayerRatingRecord> history)
+    {
+        var values = history.Select(h => (double)h.SkillRating!.Value).ToArray();
+        var min = values.Min();
+        var range = Math.Max(1, values.Max() - min);
+        return string.Join(" ", values.Select((v, i) =>
+            $"{(values.Length == 1 ? 0 : 100.0 * i / (values.Length - 1)):0.#},{(24 - 22.0 * (v - min) / range):0.#}"));
+    }
+
+    private async Task Dismiss(Guid chartId)
+    {
+        _dismissed.Add(chartId);
+        var config = WidgetConfigJson.Read<PumbilityConfig>(Widget.ConfigJson);
+        if (!config.DismissedCharts.Contains(chartId)) config.DismissedCharts.Add(chartId);
+        // Persist immediately (§2.1) but keep the board un-reloaded — this is the one
+        // widget action that mutates config outside edit mode, by design.
+        await Mediator.Send(new UpdateHomePageWidgetConfigCommand(Widget.Id,
+            WidgetConfigJson.Write(config), Widget.ConfigVersion));
+    }
+
+}

@@ -3225,4 +3225,28 @@
   <data name="Range" xml:space="preserve">
     <value>Période</value>
   </data>
+  <data name="Pumbility targets tuned to your skill profile." xml:space="preserve">
+    <value>Des objectifs Pumbility adaptés à votre profil de compétences.</value>
+  </data>
+  <data name="Trend starts tracking from today." xml:space="preserve">
+    <value>La tendance commence à s'enregistrer aujourd'hui.</value>
+  </data>
+  <data name="Best projected targets" xml:space="preserve">
+    <value>Meilleurs objectifs projetés</value>
+  </data>
+  <data name="No scores yet — Pumbility starts with your first import." xml:space="preserve">
+    <value>Aucun score pour l'instant — Pumbility démarre avec votre première importation.</value>
+  </data>
+  <data name="Show projected targets" xml:space="preserve">
+    <value>Afficher les objectifs projetés</value>
+  </data>
+  <data name="Dismissed charts" xml:space="preserve">
+    <value>Charts écartés</value>
+  </data>
+  <data name="Restore all" xml:space="preserve">
+    <value>Tout restaurer</value>
+  </data>
+  <data name="Dismiss" xml:space="preserve">
+    <value>Écarter</value>
+  </data>
 </root>

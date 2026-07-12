@@ -24,7 +24,17 @@ public static class WidgetRegistry
             SizePreset.TwoByOne,
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(CompetitiveLevelWidget),
-            typeof(CompetitiveLevelConfigPanel))
+            typeof(CompetitiveLevelConfigPanel)),
+        new("pumbility",
+            "PUMBILITY",
+            "Pumbility targets tuned to your skill profile.",
+            WidgetCategory.Progress,
+            Icons.Material.Filled.TrendingUp,
+            new[] { SizePreset.OneByOne, SizePreset.TwoByOne },
+            SizePreset.TwoByOne,
+            new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
+            typeof(PumbilityWidget),
+            typeof(PumbilityConfigPanel))
     };
 
     private static readonly IReadOnlyDictionary<string, WidgetDescriptor> ByTypeId =
