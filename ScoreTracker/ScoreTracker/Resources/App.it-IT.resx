@@ -3284,4 +3284,46 @@
   <data name="No entries yet." xml:space="preserve">
     <value>Ancora nessuna partecipazione.</value>
   </data>
+  <data name="Score tracking for Pump It Up" xml:space="preserve">
+    <value>Tracciamento punteggi per Pump It Up</value>
+  </data>
+  <data name="Track the grind." xml:space="preserve">
+    <value>Tieni traccia del grind.</value>
+  </data>
+  <data name="Find your next pass." xml:space="preserve">
+    <value>Trova il tuo prossimo pass.</value>
+  </data>
+  <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
+    <value>PIU Scores conserva tutta la tua cronologia di Pump It Up, importata direttamente dal tuo account PIUGAME, e la trasforma in tier list, classifiche e consigli su misura per come giochi davvero.</value>
+  </data>
+  <data name="Free, and built by a player." xml:space="preserve">
+    <value>Gratuito, e creato da un giocatore.</value>
+  </data>
+  <data name="Sign in" xml:space="preserve">
+    <value>Accedi</value>
+  </data>
+  <data name="New here? Signing in creates your account automatically — no forms, no site password." xml:space="preserve">
+    <value>Nuovo qui? Accedendo il tuo account viene creato automaticamente — niente moduli, niente password del sito.</value>
+  </data>
+  <data name="PIUGAME sign-in goes directly to piugame.com — your password is never stored or logged here." xml:space="preserve">
+    <value>L'accesso con PIUGAME va direttamente su piugame.com — la tua password non viene mai salvata né registrata qui.</value>
+  </data>
+  <data name="Already have an account? Any sign-in method you've linked works — and you can link more from your Account page." xml:space="preserve">
+    <value>Hai già un account? Qualsiasi metodo di accesso collegato funziona — e puoi collegarne altri dalla pagina Account.</value>
+  </data>
+  <data name="Just browsing?" xml:space="preserve">
+    <value>Stai solo dando un'occhiata?</value>
+  </data>
+  <data name="Explore the tier lists" xml:space="preserve">
+    <value>Esplora le tier list</value>
+  </data>
+  <data name="Countries" xml:space="preserve">
+    <value>Paesi</value>
+  </data>
+  <data name="Scores tracked" xml:space="preserve">
+    <value>Punteggi conservati</value>
+  </data>
+  <data name="Scores recorded, last 30 days" xml:space="preserve">
+    <value>Punteggi registrati negli ultimi 30 giorni</value>
+  </data>
 </root>

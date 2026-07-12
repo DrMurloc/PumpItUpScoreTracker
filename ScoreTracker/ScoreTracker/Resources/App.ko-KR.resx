@@ -3165,4 +3165,46 @@
   <data name="No entries yet." xml:space="preserve">
     <value>아직 참가 기록이 없습니다.</value>
   </data>
+  <data name="Score tracking for Pump It Up" xml:space="preserve">
+    <value>펌프 잇 업 스코어 트래킹</value>
+  </data>
+  <data name="Track the grind." xml:space="preserve">
+    <value>그라인딩을 기록하세요.</value>
+  </data>
+  <data name="Find your next pass." xml:space="preserve">
+    <value>다음 패스를 찾으세요.</value>
+  </data>
+  <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
+    <value>PIU Scores는 PIUGAME 계정에서 바로 가져온 펌프 잇 업 전체 기록을 보관하고, 티어리스트, 랭킹, 실제 플레이 스타일에 맞춘 추천으로 바꿔 드립니다.</value>
+  </data>
+  <data name="Free, and built by a player." xml:space="preserve">
+    <value>무료이며, 플레이어가 직접 만들었습니다.</value>
+  </data>
+  <data name="Sign in" xml:space="preserve">
+    <value>로그인</value>
+  </data>
+  <data name="New here? Signing in creates your account automatically — no forms, no site password." xml:space="preserve">
+    <value>처음이신가요? 로그인하면 계정이 자동으로 생성됩니다. 가입 양식도, 사이트 비밀번호도 필요 없습니다.</value>
+  </data>
+  <data name="PIUGAME sign-in goes directly to piugame.com — your password is never stored or logged here." xml:space="preserve">
+    <value>PIUGAME 로그인 정보는 piugame.com으로 바로 전송되며, 비밀번호는 여기에 저장되거나 기록되지 않습니다.</value>
+  </data>
+  <data name="Already have an account? Any sign-in method you've linked works — and you can link more from your Account page." xml:space="preserve">
+    <value>이미 계정이 있으신가요? 연결된 로그인 방법이라면 무엇이든 사용할 수 있고, 계정 페이지에서 더 연결할 수 있습니다.</value>
+  </data>
+  <data name="Just browsing?" xml:space="preserve">
+    <value>구경만 하시나요?</value>
+  </data>
+  <data name="Explore the tier lists" xml:space="preserve">
+    <value>티어리스트 둘러보기</value>
+  </data>
+  <data name="Countries" xml:space="preserve">
+    <value>국가</value>
+  </data>
+  <data name="Scores tracked" xml:space="preserve">
+    <value>기록된 스코어</value>
+  </data>
+  <data name="Scores recorded, last 30 days" xml:space="preserve">
+    <value>최근 30일간 기록된 스코어</value>
+  </data>
 </root>

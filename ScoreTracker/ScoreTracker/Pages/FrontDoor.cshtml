@@ -1,0 +1,115 @@
+@page "/Login"
+@using System.Globalization
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.Theming
+@model ScoreTracker.Web.Pages.FrontDoorModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<ScoreTracker.Web.App> L
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="@CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="~/" />
+    <title>@L["PIU Scores"]</title>
+    @* The shipped theme tokens — same single source as the Blazor shell (MixThemes),
+       so this page can never drift from the site palette. Anonymous visitors resolve
+       to Phoenix by the same rule the layout uses. *@
+    <style>@Html.Raw(MixThemes.CssVariablesFor(MixEnum.Phoenix))</style>
+    <link href="/css/front-door.css" rel="stylesheet" asp-append-version="true" />
+    <script type="text/javascript">
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "d2n3fzq6v8");
+    </script>
+</head>
+<body class="front-door">
+
+<header class="topbar">
+    <a class="wordmark" href="/">PIU <b>SCORES</b></a>
+    <span class="mix-pill">PHOENIX</span>
+    <nav class="topnav">
+        <a href="/Charts">@L["Charts"]</a>
+        <a href="/TierLists">@L["Tier Lists"]</a>
+        <a href="/Titles">@L["Titles"]</a>
+    </nav>
+    <span class="spacer"></span>
+    <a class="topbar-signin" href="#signin">@L["Sign in"]</a>
+</header>
+
+<main class="hero">
+    <div class="hero-copy">
+        <p class="eyebrow">@L["Score tracking for Pump It Up"]</p>
+        <h1>@L["Track the grind."]<br />@L["Find your next pass."]</h1>
+        <p class="sub">
+            @L["PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play."]
+            <b>@L["Free, and built by a player."]</b>
+        </p>
+    </div>
+
+    <div class="hero-signin" id="signin">
+        <div class="signin">
+            <h2>@L["Sign in"]</h2>
+            <p class="new-here">@L["New here? Signing in creates your account automatically — no forms, no site password."]</p>
+
+            <div class="provider-stack">
+                <a class="btn" href="/Login/Discord">
+                    <span class="badge badge-discord" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><ellipse cx="8.5" cy="12" rx="2" ry="2.3"/><ellipse cx="15.5" cy="12" rx="2" ry="2.3"/><path d="M4 17c1.5 1.6 4.2 2.5 8 2.5s6.5-.9 8-2.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                    </span>
+                    @L["Log In With", "Discord"]
+                </a>
+                <a class="btn" href="/Login/Google">
+                    <span class="badge badge-google" aria-hidden="true">G</span>
+                    @L["Log In With", "Google"]
+                </a>
+                <a class="btn" href="/PiuGameLogin">
+                    <span class="badge badge-piugame" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2 L14 8 H11.5 V14 H8.5 V8 H6 Z"/><rect x="6" y="15.5" width="8" height="2.5" rx="1"/></svg>
+                    </span>
+                    @L["Log In With", "PIUGAME"]
+                </a>
+            </div>
+
+            <p class="trust">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+                @L["PIUGAME sign-in goes directly to piugame.com — your password is never stored or logged here."]
+            </p>
+
+            <p class="fineprint">
+                @L["Already have an account? Any sign-in method you've linked works — and you can link more from your Account page."]
+                <a href="/Privacy" target="_blank">@L["Full Privacy Policy"]</a>
+            </p>
+        </div>
+        <p class="browse-hatch">@L["Just browsing?"] <a href="/TierLists">@L["Explore the tier lists"] →</a></p>
+    </div>
+
+    <div class="hero-stats">
+        <div class="stat-row">
+            <div class="stat"><div class="n">@Model.Ledger.TotalRecords.ToString("N0")</div><div class="l">@L["Scores tracked"]</div></div>
+            <div class="stat"><div class="n">@Model.Playerbase.Players.ToString("N0")</div><div class="l">@L["Players"]</div></div>
+            <div class="stat"><div class="n">@Model.Playerbase.Countries.ToString("N0")</div><div class="l">@L["Countries"]</div></div>
+            <div class="stat"><div class="n">@Model.CommunityCount.ToString("N0")</div><div class="l">@L["Communities"]</div></div>
+        </div>
+        <div class="pulse">
+            <div class="bars" aria-hidden="true">
+                @foreach (var day in Model.Ledger.DailyVolumes)
+                {
+                    var pct = Math.Min(day.Count, Model.PulseCap) * 100.0 / Model.PulseCap;
+                    <i style="height:@(pct.ToString("0", CultureInfo.InvariantCulture))%"></i>
+                }
+            </div>
+            <div class="cap">
+                <span>@L["Scores recorded, last 30 days"]</span>
+                <b>@Model.Ledger.DailyVolumes.Sum(v => (long)v.Count).ToString("N0")</b>
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

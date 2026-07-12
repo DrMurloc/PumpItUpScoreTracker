@@ -3284,4 +3284,46 @@
   <data name="No entries yet." xml:space="preserve">
     <value>No entries yet.</value>
   </data>
+  <data name="Score tracking for Pump It Up" xml:space="preserve">
+    <value>Score tracking for Pump It Up</value>
+  </data>
+  <data name="Track the grind." xml:space="preserve">
+    <value>Track the grind.</value>
+  </data>
+  <data name="Find your next pass." xml:space="preserve">
+    <value>Find your next pass.</value>
+  </data>
+  <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
+    <value>PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play.</value>
+  </data>
+  <data name="Free, and built by a player." xml:space="preserve">
+    <value>Free, and built by a player.</value>
+  </data>
+  <data name="Sign in" xml:space="preserve">
+    <value>Sign in</value>
+  </data>
+  <data name="New here? Signing in creates your account automatically — no forms, no site password." xml:space="preserve">
+    <value>New here? Signing in creates your account automatically — no forms, no site password.</value>
+  </data>
+  <data name="PIUGAME sign-in goes directly to piugame.com — your password is never stored or logged here." xml:space="preserve">
+    <value>PIUGAME sign-in goes directly to piugame.com — your password is never stored or logged here.</value>
+  </data>
+  <data name="Already have an account? Any sign-in method you've linked works — and you can link more from your Account page." xml:space="preserve">
+    <value>Already have an account? Any sign-in method you've linked works — and you can link more from your Account page.</value>
+  </data>
+  <data name="Just browsing?" xml:space="preserve">
+    <value>Just browsing?</value>
+  </data>
+  <data name="Explore the tier lists" xml:space="preserve">
+    <value>Explore the tier lists</value>
+  </data>
+  <data name="Countries" xml:space="preserve">
+    <value>Countries</value>
+  </data>
+  <data name="Scores tracked" xml:space="preserve">
+    <value>Scores tracked</value>
+  </data>
+  <data name="Scores recorded, last 30 days" xml:space="preserve">
+    <value>Scores recorded, last 30 days</value>
+  </data>
 </root>

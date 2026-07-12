@@ -3282,4 +3282,46 @@
   <data name="No entries yet." xml:space="preserve">
     <value>Aucune participation pour le moment.</value>
   </data>
+  <data name="Score tracking for Pump It Up" xml:space="preserve">
+    <value>Suivi de scores pour Pump It Up</value>
+  </data>
+  <data name="Track the grind." xml:space="preserve">
+    <value>Suivez le grind.</value>
+  </data>
+  <data name="Find your next pass." xml:space="preserve">
+    <value>Trouvez votre prochain pass.</value>
+  </data>
+  <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
+    <value>PIU Scores conserve tout votre historique Pump It Up, importé directement depuis votre compte PIUGAME, et le transforme en tier lists, classements et recommandations adaptés à votre façon de jouer.</value>
+  </data>
+  <data name="Free, and built by a player." xml:space="preserve">
+    <value>Gratuit, et créé par un joueur.</value>
+  </data>
+  <data name="Sign in" xml:space="preserve">
+    <value>Se connecter</value>
+  </data>
+  <data name="New here? Signing in creates your account automatically — no forms, no site password." xml:space="preserve">
+    <value>Nouveau ici ? La connexion crée votre compte automatiquement — pas de formulaire, pas de mot de passe du site.</value>
+  </data>
+  <data name="PIUGAME sign-in goes directly to piugame.com — your password is never stored or logged here." xml:space="preserve">
+    <value>La connexion PIUGAME va directement sur piugame.com — votre mot de passe n'est jamais stocké ni journalisé ici.</value>
+  </data>
+  <data name="Already have an account? Any sign-in method you've linked works — and you can link more from your Account page." xml:space="preserve">
+    <value>Vous avez déjà un compte ? Toute méthode de connexion déjà liée fonctionne — et vous pouvez en lier d'autres depuis votre page Compte.</value>
+  </data>
+  <data name="Just browsing?" xml:space="preserve">
+    <value>Vous ne faites que regarder ?</value>
+  </data>
+  <data name="Explore the tier lists" xml:space="preserve">
+    <value>Explorez les tier lists</value>
+  </data>
+  <data name="Countries" xml:space="preserve">
+    <value>Pays</value>
+  </data>
+  <data name="Scores tracked" xml:space="preserve">
+    <value>Scores conservés</value>
+  </data>
+  <data name="Scores recorded, last 30 days" xml:space="preserve">
+    <value>Scores enregistrés sur les 30 derniers jours</value>
+  </data>
 </root>

@@ -3162,4 +3162,46 @@
   <data name="No entries yet." xml:space="preserve">
     <value>Aún no hay participaciones.</value>
   </data>
+  <data name="Score tracking for Pump It Up" xml:space="preserve">
+    <value>Registro de puntuaciones para Pump It Up</value>
+  </data>
+  <data name="Track the grind." xml:space="preserve">
+    <value>Registra el grind.</value>
+  </data>
+  <data name="Find your next pass." xml:space="preserve">
+    <value>Encuentra tu próximo pase.</value>
+  </data>
+  <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
+    <value>PIU Scores guarda todo tu historial de Pump It Up, importado directamente desde tu cuenta de PIUGAME, y lo convierte en tier lists, clasificaciones y recomendaciones ajustadas a tu forma real de jugar.</value>
+  </data>
+  <data name="Free, and built by a player." xml:space="preserve">
+    <value>Gratis, y hecho por un jugador.</value>
+  </data>
+  <data name="Sign in" xml:space="preserve">
+    <value>Iniciar sesión</value>
+  </data>
+  <data name="New here? Signing in creates your account automatically — no forms, no site password." xml:space="preserve">
+    <value>¿Primera vez aquí? Al iniciar sesión tu cuenta se crea automáticamente: sin formularios y sin contraseña del sitio.</value>
+  </data>
+  <data name="PIUGAME sign-in goes directly to piugame.com — your password is never stored or logged here." xml:space="preserve">
+    <value>El inicio de sesión con PIUGAME va directamente a piugame.com: tu contraseña nunca se guarda ni se registra aquí.</value>
+  </data>
+  <data name="Already have an account? Any sign-in method you've linked works — and you can link more from your Account page." xml:space="preserve">
+    <value>¿Ya tienes una cuenta? Cualquier método de inicio de sesión que hayas vinculado funciona, y puedes vincular más desde tu página de Cuenta.</value>
+  </data>
+  <data name="Just browsing?" xml:space="preserve">
+    <value>¿Solo estás mirando?</value>
+  </data>
+  <data name="Explore the tier lists" xml:space="preserve">
+    <value>Explora las tier lists</value>
+  </data>
+  <data name="Countries" xml:space="preserve">
+    <value>Países</value>
+  </data>
+  <data name="Scores tracked" xml:space="preserve">
+    <value>Puntuaciones guardadas</value>
+  </data>
+  <data name="Scores recorded, last 30 days" xml:space="preserve">
+    <value>Puntuaciones registradas en los últimos 30 días</value>
+  </data>
 </root>

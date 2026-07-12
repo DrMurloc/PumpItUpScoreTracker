@@ -3285,4 +3285,46 @@
   <data name="No entries yet." xml:space="preserve">
     <value>まだエントリーがありません。</value>
   </data>
+  <data name="Score tracking for Pump It Up" xml:space="preserve">
+    <value>Pump It Up のスコアトラッキング</value>
+  </data>
+  <data name="Track the grind." xml:space="preserve">
+    <value>グラインドを記録しよう。</value>
+  </data>
+  <data name="Find your next pass." xml:space="preserve">
+    <value>次のパスを見つけよう。</value>
+  </data>
+  <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
+    <value>PIU Scores は PIUGAME アカウントから直接インポートした Pump It Up の全履歴を保存し、ティアリスト、ランキング、あなたのプレイスタイルに合わせたおすすめに変えます。</value>
+  </data>
+  <data name="Free, and built by a player." xml:space="preserve">
+    <value>無料、プレイヤーの手作りです。</value>
+  </data>
+  <data name="Sign in" xml:space="preserve">
+    <value>ログイン</value>
+  </data>
+  <data name="New here? Signing in creates your account automatically — no forms, no site password." xml:space="preserve">
+    <value>初めてですか？ログインするだけでアカウントが自動作成されます。フォームもサイト用パスワードも不要です。</value>
+  </data>
+  <data name="PIUGAME sign-in goes directly to piugame.com — your password is never stored or logged here." xml:space="preserve">
+    <value>PIUGAME ログイン情報は piugame.com に直接送信されます。パスワードがここに保存・記録されることはありません。</value>
+  </data>
+  <data name="Already have an account? Any sign-in method you've linked works — and you can link more from your Account page." xml:space="preserve">
+    <value>すでにアカウントをお持ちですか？連携済みのログイン方法ならどれでも使えます。アカウントページからさらに追加できます。</value>
+  </data>
+  <data name="Just browsing?" xml:space="preserve">
+    <value>見るだけですか？</value>
+  </data>
+  <data name="Explore the tier lists" xml:space="preserve">
+    <value>ティアリストを見る</value>
+  </data>
+  <data name="Countries" xml:space="preserve">
+    <value>国・地域</value>
+  </data>
+  <data name="Scores tracked" xml:space="preserve">
+    <value>記録済みスコア</value>
+  </data>
+  <data name="Scores recorded, last 30 days" xml:space="preserve">
+    <value>過去30日間のスコア記録</value>
+  </data>
 </root>

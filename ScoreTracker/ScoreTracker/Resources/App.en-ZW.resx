@@ -3207,4 +3207,46 @@
   <data name="No entries yet." xml:space="preserve">
     <value>No mrgl entries yet mrglglgl.</value>
   </data>
+  <data name="Score tracking for Pump It Up" xml:space="preserve">
+    <value>Mrglscrgl trglckrng mrgl Pump It Up</value>
+  </data>
+  <data name="Track the grind." xml:space="preserve">
+    <value>Trglck mrgl grrrind.</value>
+  </data>
+  <data name="Find your next pass." xml:space="preserve">
+    <value>Fmrgl mrgl nrglxt pass.</value>
+  </data>
+  <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
+    <value>PIU Scores mrglrps mrgl whrgl Pump It Up hrglstrgl, mrglprtd strglght frgl mrgl PIUGAME accrglnt, mrgl trglns mrgl mrgl Brglurgbrgl Rglgurggurgrgl, rrglnkngs, mrgl rrglcmmndrgltns trglnd mrgl hrgl mrgl mrglly plrgly.</value>
+  </data>
+  <data name="Free, and built by a player." xml:space="preserve">
+    <value>Frgle, mrgl bmrglt brgl mrgl plrglyr.</value>
+  </data>
+  <data name="Sign in" xml:space="preserve">
+    <value>Srglgn mrgln</value>
+  </data>
+  <data name="New here? Signing in creates your account automatically — no forms, no site password." xml:space="preserve">
+    <value>Nrglw hrgl? Srglgnrng mrgln crrgltes mrgl accrglnt mrglutmrgltcrglly — nrgl frglms, nrgl srglte prglsswrgld.</value>
+  </data>
+  <data name="PIUGAME sign-in goes directly to piugame.com — your password is never stored or logged here." xml:space="preserve">
+    <value>PIUGAME srglgn-mrgln grgls drglrctly mrgl piugame.com — mrgl prglsswrgld mrgl nrglvr strglrd mrgl lrglggd hrglre.</value>
+  </data>
+  <data name="Already have an account? Any sign-in method you've linked works — and you can link more from your Account page." xml:space="preserve">
+    <value>Mrglrdy hrglv mrgl accrglnt? Mrglny srglgn-mrgln mrglthrgld mrgl lrglnkd wrglks — mrgl mrgl crgln lrglnk mrglre frglm mrgl Accrglnt prglge.</value>
+  </data>
+  <data name="Just browsing?" xml:space="preserve">
+    <value>Jrglst brglwsrng?</value>
+  </data>
+  <data name="Explore the tier lists" xml:space="preserve">
+    <value>Mrglxplrgl mrgl Brglurgbrgl Rglgurggurgrgl</value>
+  </data>
+  <data name="Countries" xml:space="preserve">
+    <value>Crglntrgls</value>
+  </data>
+  <data name="Scores tracked" xml:space="preserve">
+    <value>Scrgls trglckd</value>
+  </data>
+  <data name="Scores recorded, last 30 days" xml:space="preserve">
+    <value>Scrgls rrglcrgldd, lrglst 30 drglys</value>
+  </data>
 </root>

@@ -346,6 +346,9 @@ app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 
 
 app.MapDefaultEndpoints();
+// Real Razor Pages (the static front door) route ahead of the Blazor fallback —
+// AddRazorPages() alone only wires services, not endpoints.
+app.MapRazorPages();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
