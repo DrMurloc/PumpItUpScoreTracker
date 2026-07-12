@@ -678,8 +678,79 @@ html.nav-away .page-dock,
 .rand-advanced-body {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
     padding-top: 8px;
+}
+
+/* Opt-in advanced sections: a quiet switch row until enabled. */
+.rand-adv-section {
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 10px;
+    padding: 4px 12px 6px;
+}
+
+.rand-adv-section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.rand-adv-section-content {
+    padding: 6px 2px 8px;
+}
+
+.rand-section-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.rand-owned-note {
+    color: var(--mix-ink-muted);
+}
+
+.rand-plain-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 4px;
+}
+
+.rand-coop-bounds {
+    display: flex;
+    gap: 10px;
+}
+
+/* Dynamic weight rows (FolderWeightList). */
+.weight-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+}
+
+.weight-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.weight-row-label {
+    min-width: 52px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: .82rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.weight-row-weight {
+    font-size: .7rem;
+    color: var(--mix-ink-muted);
+}
+
+.weight-row-field {
+    max-width: 90px;
 }
 
 /* ===== Armed action selector ===== */

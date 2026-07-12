@@ -1,0 +1,90 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+@* The dynamic weights editor (docs/design/randomizer-overhaul.md, field-test round 2):
+   a sparse list — one row per level you've added, each with its draw weight — instead
+   of a wall of every level. Adding reuses the FolderPicker level-grid vocabulary; the
+   popover stays open for multi-add. Weight fields are always present, which is what
+   retired the global Use Weights switch. *@
+<div class="weight-list">
+    @foreach (var level in ActiveLevels)
+    {
+        var captured = level;
+        <div class="weight-row">
+            <span class="weight-row-label">@LabelFor(captured)</span>
+            <span class="weight-row-weight">@L["Weight"]</span>
+            <MudNumericField T="int" Min="1" Max="99" Value="Weights[captured]"
+                             ValueChanged="v => SetWeight(captured, v)" Variant="Variant.Outlined"
+                             Margin="Margin.Dense" Class="weight-row-field"
+                             aria-label="@($"{LabelFor(captured)} {L["Weight"]}")"></MudNumericField>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close" Class="weight-row-remove"
+                           OnClick="() => Remove(captured)" aria-label="@($"{L["Remove"]} {LabelFor(captured)}")"></MudIconButton>
+        </div>
+    }
+    @* Inline expansion, not a popover: this lives inside the settings drawer, and the
+       grid staying open is what makes multi-add cheap. *@
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Class="weight-add-btn"
+               StartIcon="@(_open ? Icons.Material.Filled.Check : Icons.Material.Filled.Add)"
+               OnClick="() => _open = !_open"
+               aria-expanded="@(_open ? "true" : "false")">@(_open ? L["Done"] : L["Add Level"])</MudButton>
+    @if (_open)
+    {
+        <div class="folder-picker-levels weight-add-grid">
+            @foreach (var level in AllLevels)
+            {
+                var captured = level;
+                <button type="button"
+                        class="folder-picker-level @(IsActive(captured) ? "folder-picker-current" : null)"
+                        @onclick="() => ToggleLevel(captured)">@captured</button>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private bool _open;
+
+    /// <summary>The chart type's weight dictionary from RandomSettings, mutated in place.</summary>
+    [Parameter] public IDictionary<int, int> Weights { get; set; } = new Dictionary<int, int>();
+
+    [Parameter] public ChartType Type { get; set; } = ChartType.Single;
+
+    [Parameter] public EventCallback Changed { get; set; }
+
+    private IEnumerable<int> ActiveLevels => Weights.Where(kv => kv.Value > 0).Select(kv => kv.Key).OrderBy(k => k);
+
+    private IEnumerable<int> AllLevels => Type == ChartType.CoOp
+        ? Weights.Keys.OrderBy(k => k)
+        : Enumerable.Range(1, DifficultyLevel.Max);
+
+    private bool IsActive(int level)
+    {
+        return Weights.TryGetValue(level, out var weight) && weight > 0;
+    }
+
+    private string LabelFor(int level)
+    {
+        return Type == ChartType.CoOp ? $"{L["CoOp"]} ×{level}" : $"{Type.GetShortHand()}{level}";
+    }
+
+    private async Task ToggleLevel(int level)
+    {
+        // Multi-add: the popover stays open so a gap-y set is a few taps, not a trek.
+        Weights[level] = IsActive(level) ? 0 : 1;
+        await Changed.InvokeAsync();
+    }
+
+    private async Task SetWeight(int level, int weight)
+    {
+        Weights[level] = weight;
+        await Changed.InvokeAsync();
+    }
+
+    private async Task Remove(int level)
+    {
+        Weights[level] = 0;
+        await Changed.InvokeAsync();
+    }
+}

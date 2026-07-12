@@ -542,6 +542,7 @@ else
         // Deep copy so edits never mutate the saved snapshot until Save.
         _settings = JsonSerializer.Deserialize<RandomSettings>(
             JsonSerializer.Serialize(saved.Settings, JsonOptions.Value), JsonOptions.Value) ?? new RandomSettings();
+        NormalizeEmptyPool(_settings);
         _mix = saved.Mix;
         _ = OnSettingsChanged();
     }
