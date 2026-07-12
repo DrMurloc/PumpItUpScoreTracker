@@ -167,38 +167,32 @@ internal sealed class TierListBlendBuilder
     private const double SkillScoreFloor = 900_000;
     private const double SkillScoreRange = 100_000;
 
-    // Score-age workshop (owner-locked 2026-07-12): a best attempt's VOTE fades with
-    // age relative to the player's own record — never its value. Half-voice per 180
-    // days (owner-locked floor; slower for players whose whole history is older),
-    // normalized against the median factor so a uniformly-old history keeps its shape
-    // (a returning player is a coherent snapshot) and only stale-relative-to-you
-    // scores sink. Evidence-weighting, not value-weighting: old ceiling scores still
-    // prove the skill, just more quietly. Clamped so one fresh score in a dead
-    // window can't drown the rest.
-    public const double AgeHalfLifeFloorDays = 180;
-    public const double AgedScoreThresholdDays = 365; // the breakdown page's "over a year old" count
+    // Score-age workshop (owner-corrected 2026-07-12): a score is "old" only when it
+    // is BOTH past the grace floor AND an age OUTLIER in the player's own record —
+    // beyond mean + 1σ of their score ages, the same banding the Age lens uses. The
+    // grace floor exists so a new account's three-week-old scores never read as
+    // outdated next to last week's; the outlier test is what keeps a uniformly-old
+    // history (a returning player's coherent snapshot) at full voice — with no age
+    // spread, nothing is an outlier. Outliers are DIMINISHED, never excluded:
+    // half-voice per 180 days beyond the threshold, floored. Everything inside the
+    // threshold keeps weight 1. Evidence-weighting, not value-weighting — old
+    // ceiling scores still prove the skill, just more quietly.
+    public const double AgeGraceDays = 180; // owner-locked: younger than this is never "old"
+    public const double AgeOutlierStdDevs = 1.0;
+    private const double DiminishHalfLifeDays = 180;
     private const double MinAgeWeight = 0.1;
-    private const double MaxAgeWeight = 2.0;
 
-    public static IReadOnlyDictionary<Guid, double> RelativeAgeWeights(
+    public static IReadOnlyDictionary<Guid, double> AgeOutlierWeights(
         IEnumerable<(Guid Key, DateTimeOffset RecordedDate)> scores, DateTimeOffset now)
     {
         var ages = scores
             .ToDictionary(s => s.Key, s => Math.Max(0, (now - s.RecordedDate).TotalDays));
         if (!ages.Any()) return new Dictionary<Guid, double>();
-        var halfLife = Math.Max(AgeHalfLifeFloorDays, Median(ages.Values));
-        var factors = ages.ToDictionary(kv => kv.Key, kv => Math.Pow(0.5, kv.Value / halfLife));
-        var medianFactor = Median(factors.Values);
-        return factors.ToDictionary(kv => kv.Key,
-            kv => Math.Clamp(kv.Value / medianFactor, MinAgeWeight, MaxAgeWeight));
-    }
-
-    private static double Median(IEnumerable<double> values)
-    {
-        var sorted = values.OrderBy(v => v).ToArray();
-        return sorted.Length % 2 == 1
-            ? sorted[sorted.Length / 2]
-            : (sorted[sorted.Length / 2 - 1] + sorted[sorted.Length / 2]) / 2.0;
+        var threshold = Math.Max(AgeGraceDays,
+            ages.Values.Average() + AgeOutlierStdDevs * TierListProcessor.StdDev(ages.Values, false));
+        return ages.ToDictionary(kv => kv.Key, kv => kv.Value <= threshold
+            ? 1.0
+            : Math.Max(MinAgeWeight, Math.Pow(0.5, (kv.Value - threshold) / DiminishHalfLifeDays)));
     }
 
     private static double Proficiency(int score)
@@ -233,15 +227,12 @@ internal sealed class TierListBlendBuilder
                 : chart.Skills.Select(s => (s, DefaultSkillWeight)).ToArray();
         }
 
-        // Relative recency: each score's age weight, normalized over the whole ±3
-        // window (uniformly-old histories keep full shape). Baselines MUST use the
-        // same weights — a stale baseline against fresh observations reads as a
-        // phantom deviation.
-        var now = _clock.Now;
-        var ageWeights = RelativeAgeWeights(
-            scoredWindowCharts.Select(c => (c.Id, bestScores[c.Id].RecordedDate)), now);
-        var agedScoreCount = scoredWindowCharts
-            .Count(c => (now - bestScores[c.Id].RecordedDate).TotalDays > AgedScoreThresholdDays);
+        // Age outliers over the whole ±3 window: scores much older than the rest of
+        // the record vote quietly. Baselines MUST use the same weights — a stale
+        // baseline against fresh observations reads as a phantom deviation.
+        var ageWeights = AgeOutlierWeights(
+            scoredWindowCharts.Select(c => (c.Id, bestScores[c.Id].RecordedDate)), _clock.Now);
+        var outdatedScoreCount = ageWeights.Count(kv => kv.Value < 1.0);
 
         // Normalize before pooling: deviation from YOUR average within each folder,
         // measured on the floored proficiency scale.
@@ -277,7 +268,7 @@ internal sealed class TierListBlendBuilder
             return new SkillSourceComputation(
                 folderCharts.ToDictionary(c => c.Id,
                     c => new SongTierListEntry("Skill", c.Id, TierListCategory.Unrecorded, 0)),
-                pooledSkills, false, scoredWindowCharts.Length, agedScoreCount);
+                pooledSkills, false, scoredWindowCharts.Length, outdatedScoreCount);
 
         var estimates = new Dictionary<Guid, double>();
         var silent = new List<SongTierListEntry>();
@@ -298,7 +289,7 @@ internal sealed class TierListBlendBuilder
         return new SkillSourceComputation(
             TierListProcessor.ProcessIntoTierList("Skill", estimates).Concat(silent)
                 .ToDictionary(e => e.ChartId, e => e),
-            pooledSkills, true, scoredWindowCharts.Length, agedScoreCount);
+            pooledSkills, true, scoredWindowCharts.Length, outdatedScoreCount);
     }
 
     // Similar players, re-architected on C1's materialization: neighbors' folder
@@ -389,7 +380,7 @@ internal sealed record SkillSourceComputation(
     IReadOnlyDictionary<Skill, SkillEvidence> PooledSkills,
     bool Active,
     int ScoredChartCount,
-    int AgedScoreCount);
+    int OutdatedScoreCount);
 
 internal sealed record SimilarPlayersComputation(
     IReadOnlyDictionary<Guid, SongTierListEntry> Entries,

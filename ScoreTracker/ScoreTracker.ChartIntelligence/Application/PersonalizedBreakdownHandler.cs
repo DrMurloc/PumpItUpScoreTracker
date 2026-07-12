@@ -86,7 +86,7 @@ internal sealed class PersonalizedBreakdownHandler
             computation.Skill?.Active ?? false,
             skills.Count(s => s.Usable),
             computation.Skill?.ScoredChartCount ?? 0,
-            computation.Skill?.AgedScoreCount ?? 0,
+            computation.Skill?.OutdatedScoreCount ?? 0,
             computation.Similar?.NeighborCount ?? 0,
             communityModifiers.Values.Sum(),
             computation.Modifiers.GetValueOrDefault("Skill"),

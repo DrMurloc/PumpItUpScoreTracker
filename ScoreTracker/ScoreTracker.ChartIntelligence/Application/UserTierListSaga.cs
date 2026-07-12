@@ -107,9 +107,10 @@ internal sealed class UserTierListSaga : IConsumer<PlayerScoresUpdatedEvent>,
         var folderChartIds = (await _charts.GetCharts(mix, level, chartType, cancellationToken: cancellationToken))
             .Select(c => c.Id).ToArray();
         // Freshness is FOLDER-scoped on purpose (owner, score-age workshop): a
-        // uniformly-old folder is a coherent snapshot and keeps full voice; only
-        // entries stale relative to the player's own record here fade.
-        var freshness = TierListBlendBuilder.RelativeAgeWeights(
+        // uniformly-old folder is a coherent snapshot with no age outliers, so it
+        // keeps full voice; only entries much older than the rest of the player's
+        // own record here are diminished.
+        var freshness = TierListBlendBuilder.AgeOutlierWeights(
             folderChartIds.Where(bestScores.ContainsKey)
                 .Select(id => (id, bestScores[id].RecordedDate)),
             _clock.Now);

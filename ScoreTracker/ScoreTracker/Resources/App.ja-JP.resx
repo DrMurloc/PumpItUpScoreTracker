@@ -3168,10 +3168,10 @@
   <data name="{0} players found" xml:space="preserve">
     <value>{0}人のプレイヤーが見つかりました</value>
   </data>
-  <data name="Older scores count for less — {0} of your nearby scores are over a year old." xml:space="preserve">
-    <value>古いスコアは軽く数えられます — 近隣スコアのうち{0}件が1年以上前のものです。</value>
-  </data>
   <data name="Evidence already includes score age — older scores count for less." xml:space="preserve">
     <value>データ量には既にスコアの古さが反映されています — 古いスコアは軽く数えられます。</value>
+  </data>
+  <data name="Older scores count for less — {0} of your nearby scores are much older than the rest of your record." xml:space="preserve">
+    <value>古いスコアは軽く数えられます — 近隣スコアのうち{0}件が他と比べて大幅に古くなっています。</value>
   </data>
 </root>

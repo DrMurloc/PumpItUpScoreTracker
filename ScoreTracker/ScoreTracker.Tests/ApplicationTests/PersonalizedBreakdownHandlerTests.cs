@@ -168,7 +168,8 @@ public sealed class PersonalizedBreakdownHandlerTests
     {
         // Era-mixing is the distortion (score-age workshop): three skills backed by
         // fresh scores keep full evidence; the one skill whose scores are two years
-        // old — relative to an otherwise-fresh record — fades below the evidence gate.
+        // old sits past the grace floor AND beyond mean + 1σ of the record's ages —
+        // an outlier — so it diminishes below the evidence gate.
         var now = new DateTimeOffset(2026, 7, 12, 0, 0, 0, TimeSpan.Zero);
         var fresh = now.AddDays(-7);
         var old = now.AddDays(-730);
@@ -206,20 +207,69 @@ public sealed class PersonalizedBreakdownHandlerTests
         var result = await handler.Handle(Query("Pass", userId), CancellationToken.None);
 
         Assert.True(result.SkillSourceActive);
-        Assert.Equal(6, result.AgedScoreCount);
+        Assert.Equal(6, result.OutdatedScoreCount);
         var runs = result.Skills.Single(s => s.Skill == Skill.Runs);
         var twists = result.Skills.Single(s => s.Skill == Skill.Twists);
         Assert.True(runs.Usable);
-        Assert.False(twists.Usable, $"stale-relative evidence ({twists.Evidence:0.00}) should fall under the gate");
+        Assert.False(twists.Usable, $"outlier-aged evidence ({twists.Evidence:0.00}) should fall under the gate");
         Assert.True(twists.Evidence < runs.Evidence / 2);
+    }
+
+    [Fact]
+    public async Task NewAccountsShortHistoryIsNeverOutdated()
+    {
+        // The grace floor's whole purpose (owner): a three-week-old score on a fresh
+        // account IS a statistical age outlier next to last week's, but nothing
+        // younger than the floor may ever be treated as old.
+        var now = new DateTimeOffset(2026, 7, 12, 0, 0, 0, TimeSpan.Zero);
+        var lastWeek = now.AddDays(-7);
+        var threeWeeksAgo = now.AddDays(-21);
+        var userId = Guid.NewGuid();
+        var scored = new List<Chart>();
+        var scores = new List<RecordedPhoenixScore>();
+        var chips = new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>();
+        foreach (var (skill, recordedAt) in new[]
+                 {
+                     (Skill.Runs, lastWeek), (Skill.Jumps, lastWeek), (Skill.Bursts, lastWeek),
+                     (Skill.Twists, threeWeeksAgo)
+                 })
+            for (var i = 0; i < 6; i++)
+            {
+                var chart = new ChartBuilder().WithLevel(16).WithType(ChartType.Double).Build();
+                scored.Add(chart);
+                scores.Add(new RecordedPhoenixScore(chart.Id, 960_000, null, false, recordedAt));
+                chips[chart.Id] = new[] { new ChartSkillChipRecord(skill, true, 0.8m) };
+            }
+
+        var folderChart = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        chips[folderChart.Id] = new[] { new ChartSkillChipRecord(Skill.Runs, true, 0.8m) };
+        var charts = ChartsMock(scored.Concat(new[] { folderChart }));
+        var mediator = new Mock<IMediator>();
+        SetupTierList(mediator, "Pass Count", Array.Empty<SongTierListEntry>());
+        mediator.Setup(m => m.Send(It.IsAny<GetChartSkillChipsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(chips);
+        mediator.Setup(m => m.Send(It.IsAny<GetMyRelativeTierListQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<SongTierListEntry>());
+        var scoreReader = new Mock<IScoreReader>();
+        scoreReader.Setup(s => s.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(scores);
+        var handler = BuildHandler(charts: charts, mediator: mediator, scores: scoreReader,
+            clock: FakeDateTime.At(now));
+
+        var result = await handler.Handle(Query("Pass", userId), CancellationToken.None);
+
+        Assert.Equal(0, result.OutdatedScoreCount);
+        Assert.Equal(4, result.UsableSkillCount);
+        Assert.True(result.Skills.Single(s => s.Skill == Skill.Twists).Usable);
     }
 
     [Fact]
     public async Task UniformlyOldHistoryKeepsItsShape()
     {
         // A returning player is a coherent snapshot: when EVERYTHING is two years
-        // old, the normalized weights are all 1 and personalization behaves exactly
-        // as it would for a fresh account — the shape survives, nothing silences.
+        // old there is no age spread, so nothing is an outlier — personalization
+        // behaves exactly as it would for a fresh account, and the card has no
+        // outdated-score callout to make.
         var now = new DateTimeOffset(2026, 7, 12, 0, 0, 0, TimeSpan.Zero);
         var old = now.AddDays(-900);
         var userId = Guid.NewGuid();
@@ -258,7 +308,7 @@ public sealed class PersonalizedBreakdownHandlerTests
         var result = await handler.Handle(Query("Pass", userId), CancellationToken.None);
 
         Assert.True(result.SkillSourceActive);
-        Assert.Equal(18, result.AgedScoreCount);
+        Assert.Equal(0, result.OutdatedScoreCount);
         Assert.Equal(3, result.UsableSkillCount);
         Assert.True(result.Skills.Single(s => s.Skill == Skill.Runs).Deviation > 0);
         Assert.True(result.Skills.Single(s => s.Skill == Skill.Twists).Deviation < 0);

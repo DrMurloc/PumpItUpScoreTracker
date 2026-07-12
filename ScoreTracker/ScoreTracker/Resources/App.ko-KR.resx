@@ -3048,10 +3048,10 @@
   <data name="{0} players found" xml:space="preserve">
     <value>플레이어 {0}명 발견</value>
   </data>
-  <data name="Older scores count for less — {0} of your nearby scores are over a year old." xml:space="preserve">
-    <value>오래된 스코어는 덜 반영됩니다 — 주변 스코어 중 {0}개가 1년 이상 지났습니다.</value>
-  </data>
   <data name="Evidence already includes score age — older scores count for less." xml:space="preserve">
     <value>근거에는 이미 스코어의 나이가 반영되어 있습니다 — 오래된 스코어는 덜 반영됩니다.</value>
+  </data>
+  <data name="Older scores count for less — {0} of your nearby scores are much older than the rest of your record." xml:space="preserve">
+    <value>오래된 스코어는 덜 반영됩니다 — 주변 스코어 중 {0}개가 나머지 기록보다 훨씬 오래되었습니다.</value>
   </data>
 </root>

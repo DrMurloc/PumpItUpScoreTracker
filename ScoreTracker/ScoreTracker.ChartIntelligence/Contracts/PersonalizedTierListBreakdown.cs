@@ -16,7 +16,7 @@ namespace ScoreTracker.ChartIntelligence.Contracts
         bool SkillSourceActive,
         int UsableSkillCount,
         int ScoredChartCount,
-        int AgedScoreCount,
+        int OutdatedScoreCount,
         int SimilarPlayerCount,
         double CommunityWeight,
         double SkillWeight,

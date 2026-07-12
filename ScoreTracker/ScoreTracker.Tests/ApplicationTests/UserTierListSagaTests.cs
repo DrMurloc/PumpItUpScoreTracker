@@ -53,18 +53,20 @@ public sealed class UserTierListSagaTests
     [Fact]
     public async Task MaterializationStampsFolderScopedFreshness()
     {
-        // Score-age workshop: freshness normalizes within the player's own folder —
-        // the recently-improved chart votes louder than the two-year-old one, and the
-        // weights ride along to the repository with the entries.
+        // Score-age workshop: within the player's own folder, the two-year-old best
+        // sitting next to recent ones is an age outlier and votes quietly; the fresh
+        // entries keep full voice, and the weights ride to the repository.
         var now = new DateTimeOffset(2026, 7, 12, 0, 0, 0, TimeSpan.Zero);
-        var freshChart = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var freshA = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var freshB = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
         var staleChart = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
-        var charts = ChartsMock(new[] { freshChart, staleChart });
+        var charts = ChartsMock(new[] { freshA, freshB, staleChart });
         var scores = new Mock<IScoreReader>();
         scores.Setup(s => s.GetBestScores(MixEnum.Phoenix, UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
-                new RecordedPhoenixScore(freshChart.Id, PhoenixScore.From(950000), null, false, now.AddDays(-7)),
+                new RecordedPhoenixScore(freshA.Id, PhoenixScore.From(950000), null, false, now.AddDays(-7)),
+                new RecordedPhoenixScore(freshB.Id, PhoenixScore.From(950000), null, false, now.AddDays(-7)),
                 new RecordedPhoenixScore(staleChart.Id, PhoenixScore.From(950000), null, false, now.AddDays(-730))
             });
         var userTierLists = new Mock<IUserTierListRepository>();
@@ -78,11 +80,12 @@ public sealed class UserTierListSagaTests
         var saga = BuildSaga(charts: charts, scores: scores, userTierLists: userTierLists,
             clock: FakeDateTime.At(now));
 
-        await saga.Consume(BuildContext(ScoresUpdated(freshChart.Id)));
+        await saga.Consume(BuildContext(ScoresUpdated(freshA.Id)));
 
         Assert.NotNull(saved);
-        Assert.True(saved![freshChart.Id] > 1.0, $"fresh entry should vote louder ({saved[freshChart.Id]:0.00})");
-        Assert.True(saved[staleChart.Id] < 1.0, $"stale entry should vote quieter ({saved[staleChart.Id]:0.00})");
+        Assert.Equal(1.0, saved![freshA.Id]);
+        Assert.Equal(1.0, saved[freshB.Id]);
+        Assert.True(saved[staleChart.Id] < 1.0, $"outlier entry should vote quieter ({saved[staleChart.Id]:0.00})");
     }
 
     [Fact]
