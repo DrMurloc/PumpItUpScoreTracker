@@ -744,6 +744,9 @@ else
         }
 
         Snackbar.Add(L["{0} added to the draw", chart.Song.Name.ToString()], Severity.Success);
+        // ChartSelector's callback is a plain delegate (no EventCallback auto-render),
+        // and this fires from the popover's render scope — poke the page explicitly.
+        StateHasChanged();
     }
 
     // Draft-mode staff actions: confirm-on-second-tap — the tablet is in player hands.

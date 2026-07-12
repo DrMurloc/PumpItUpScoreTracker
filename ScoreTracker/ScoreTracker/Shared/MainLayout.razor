@@ -494,8 +494,10 @@
 
     public void Dispose()
     {
-        NavManager.LocationChanged -= OnLocationChanged;
-        PageDock.Changed -= OnDockChanged;
+        // Defensive: a circuit torn down mid-prerender (hard refresh) can dispose the
+        // layout before injection finished — observed once in the field as an NRE here.
+        if (NavManager is not null) NavManager.LocationChanged -= OnLocationChanged;
+        if (PageDock is not null) PageDock.Changed -= OnDockChanged;
     }
     private bool _showBite = false;
     private bool _showRecapPopup = false;

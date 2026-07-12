@@ -59,12 +59,17 @@ else
         <div class="rand-grid rand-grid-compact">
             @foreach (var card in _cards)
             {
+                var captured = card;
+                @* Spectators can't mark cards, but details are fair game — the tap opens
+                   the same ChartDetailsDialog the staff sees. *@
                 <DrawCardTile PullId="card.PullId" Chart="card.Chart" Order="card.Order" State="card.State"
-                              Density="UiDensity.Compact" Disabled="true"></DrawCardTile>
+                              Density="UiDensity.Compact" OnTap="_ => OpenDetails(captured)"></DrawCardTile>
             }
         </div>
     }
 }
+
+<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="@(_detailsChart?.Mix ?? _mix)"></ChartDetailsDialog>
 
 @inject IMediator Mediator
 @implements IDisposable
@@ -79,6 +84,14 @@ else
     private string _title = string.Empty;
     private MixEnum _mix = MixEnum.Phoenix;
     private List<CardVm> _cards = new();
+    private bool _detailsOpen;
+    private Chart? _detailsChart;
+
+    private void OpenDetails(CardVm card)
+    {
+        _detailsChart = card.Chart;
+        _detailsOpen = true;
+    }
 
     protected override async Task OnInitializedAsync()
     {
