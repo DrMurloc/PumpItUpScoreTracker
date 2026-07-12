@@ -17,5 +17,6 @@ namespace ScoreTracker.PlayerProgress.Infrastructure.Entities
         public double DoublesLevel { get; set; }
         public int CoOpRating { get; set; }
         public int PassCount { get; set; }
+        public int? SkillRating { get; set; }
     }
 }
