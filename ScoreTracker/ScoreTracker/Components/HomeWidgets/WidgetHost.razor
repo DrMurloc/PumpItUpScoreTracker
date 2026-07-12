@@ -90,8 +90,9 @@
     /// <summary>
     ///     The standing rule (field-test round 1): chart rows/cards inside widgets open
     ///     the shared ChartDetailsDialog. The page owns the dialog; widgets just raise.
+    ///     Suggestion widgets stamp their category on the context for dialog feedback.
     /// </summary>
-    [Parameter] public EventCallback<Chart> OnChartClick { get; set; }
+    [Parameter] public EventCallback<ChartClickContext> OnChartClick { get; set; }
 
     private WidgetDescriptor? _descriptor;
     private IDictionary<string, object> _parameters = new Dictionary<string, object>();

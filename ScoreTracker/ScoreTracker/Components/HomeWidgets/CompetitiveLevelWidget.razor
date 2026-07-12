@@ -60,7 +60,7 @@ else
 
     // Render-contract parameters (§2.2) — unused here, but every widget declares them.
     [Parameter] public bool EditMode { get; set; }
-    [Parameter] public EventCallback<SharedKernel.Models.Chart> OnChartClick { get; set; }
+    [Parameter] public EventCallback<ChartClickContext> OnChartClick { get; set; }
 
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
 

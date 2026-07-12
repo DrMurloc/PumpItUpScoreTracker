@@ -4,6 +4,7 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.HomePage.Contracts
 @using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Commands
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
@@ -50,8 +51,10 @@ else
                 @foreach (var row in section.Rows)
                 {
                     var chart = row.Chart;
+                    var sect = section;
+                    var r = row;
                     <div class="dash-target-row @(EditMode ? "" : "dash-clickable")"
-                         @onclick="() => OnChartClick.InvokeAsync(chart)">
+                         @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(chart, sect.CategoryKey))">
                         <span class="dash-mini-art">
                             <SongImage Song="chart.Song" Small="true"></SongImage>
                         </span>
@@ -73,30 +76,77 @@ else
                                 <span class="dash-target-detail dash-muted">@row.Detail</span>
                             }
                         </span>
+                        @if (EditMode)
+                        {
+                            @* Veto lives in edit mode (owner: declutters browse). *@
+                            <span @onclick:stopPropagation="true">
+                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close"
+                                               title="@L["Not a good suggestion?"]"
+                                               OnClick="() => OpenVeto(sect, r)"/>
+                            </span>
+                        }
                     </div>
                 }
             }
         </div>
     </div>
+
+    @* The WSIP veto flow, widget-shaped: reason + notes + hide, straight into the same
+       per-category feedback store the engine already honors. *@
+    <MudDialog @bind-Visible="_showVeto">
+        <TitleContent>
+            <MudText Typo="Typo.h6">@L["Not a good suggestion?"]</MudText>
+        </TitleContent>
+        <DialogContent>
+            @if (_vetoRow != null)
+            {
+                <div class="dash-target-row mb-2">
+                    <span class="dash-mini-art">
+                        <SongImage Song="_vetoRow.Chart.Song" Small="true"></SongImage>
+                    </span>
+                    <DifficultyBubble Chart="_vetoRow.Chart" Small="true"></DifficultyBubble>
+                    <span class="dash-target-name">@_vetoRow.Chart.Song.Name</span>
+                </div>
+            }
+            <MudSelect T="string" @bind-Value="_vetoReason" Label="@L["Reason"]" Class="mb-2">
+                <MudSelectItem Value="@("Doesn't Match My Personal Skills")">@L["Doesn't Match My Personal Skills"]</MudSelectItem>
+                <MudSelectItem Value="@("I Don't Like The Chart")">@L["I Don't Like The Chart"]</MudSelectItem>
+                <MudSelectItem Value="@("Not Relevant to Category")">@L["Not Relevant to Category"]</MudSelectItem>
+                <MudSelectItem Value="@("I Just Want to Hide The Chart")">@L["I Just Want to Hide The Chart"]</MudSelectItem>
+                <MudSelectItem Value="@("The Category Isn't Interesting to Me")">@L["The Category Isn't Interesting to Me"]</MudSelectItem>
+                <MudSelectItem Value="@("Other")">@L["Other"]</MudSelectItem>
+            </MudSelect>
+            <MudTextField @bind-Value="_vetoNotes" Lines="3" MaxLength="250" Label="@L["Additional Comments"]"/>
+            <MudCheckBox T="bool" @bind-Value="_vetoHide" Label="@L["Hide Chart for this Category"]"/>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="() => _showVeto = false">@L["Cancel"]</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="_isSavingVeto"
+                       OnClick="SubmitVeto">@L["Submit"]</MudButton>
+        </DialogActions>
+    </MudDialog>
 }
 
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
 @inject ChartCatalogCache ChartCatalog
 @inject IDateTimeOffsetAccessor Clock
+@inject ISnackbar Snackbar
 
 @code {
 
     [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
     [Parameter] public MixEnum EffectiveMix { get; set; }
     [Parameter] public bool EditMode { get; set; }
-    [Parameter] public EventCallback<Chart> OnChartClick { get; set; }
+    [Parameter] public EventCallback<ChartClickContext> OnChartClick { get; set; }
 
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
 
     private sealed record SuggestionRow(Chart Chart, RecordedPhoenixScore? Score, string? Detail);
 
-    private sealed record SuggestionSection(string Caption, List<SuggestionRow> Rows);
+    // CategoryKey is the engine's raw category name — the feedback store's key (the
+    // pushing-title section's key is the title's own name, matching WSIP's behavior).
+    private sealed record SuggestionSection(string CategoryKey, string Caption, List<SuggestionRow> Rows);
 
     private bool _loaded;
     private string? _loadedFor;
@@ -149,12 +199,46 @@ else
                 : byName.Where(kv => KnownNames.All(n => n != kv.Key)).Select(kv => (kv.Key, kv.Value)).ToArray();
             foreach (var (name, items) in matches)
                 _sections.Add(new SuggestionSection(
+                    name,
                     known != null ? L[name].Value : name,
                     items.Select(r => BuildRow(category, charts[r.ChartId], scores.GetValueOrDefault(r.ChartId)))
                         .ToList()));
         }
 
         _loaded = true;
+    }
+
+    private bool _showVeto;
+    private SuggestionSection? _vetoSection;
+    private SuggestionRow? _vetoRow;
+    private string _vetoReason = "Doesn't Match My Personal Skills";
+    private string _vetoNotes = string.Empty;
+    private bool _vetoHide = true;
+    private bool _isSavingVeto;
+
+    private void OpenVeto(SuggestionSection section, SuggestionRow row)
+    {
+        _vetoSection = section;
+        _vetoRow = row;
+        _vetoReason = "Doesn't Match My Personal Skills";
+        _vetoNotes = string.Empty;
+        _vetoHide = true;
+        _showVeto = true;
+    }
+
+    private async Task SubmitVeto()
+    {
+        if (_vetoSection == null || _vetoRow == null) return;
+        _isSavingVeto = true;
+        await Mediator.Send(new SubmitFeedbackCommand(new SuggestionFeedbackRecord(
+            _vetoSection.CategoryKey, _vetoReason, _vetoNotes, _vetoHide, IsPositive: false,
+            _vetoRow.Chart.Id)));
+        // Hidden charts leave the board immediately; the engine honors the hide on
+        // every future load, so this is just the optimistic version of the truth.
+        if (_vetoHide) _vetoSection.Rows.Remove(_vetoRow);
+        Snackbar.Add(L["Feedback Submitted, Thank You!"].Value, Severity.Success);
+        _showVeto = false;
+        _isSavingVeto = false;
     }
 
     private SuggestionRow BuildRow(RecommendationCategory category, Chart chart, RecordedPhoenixScore? score)

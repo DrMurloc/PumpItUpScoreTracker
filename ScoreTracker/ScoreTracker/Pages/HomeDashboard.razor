@@ -285,7 +285,8 @@ else if (_loaded)
         <ChartDetailsDialog @bind-Visible="_showChartDetails" Chart="_detailsChart"
                             Mix="EffectiveMixFor(_selectedPage)"
                             IsToDo="_detailsChart != null && _todos != null && _todos.Contains(_detailsChart.Id)"
-                            OnToDo="ToggleToDo"/>
+                            OnToDo="ToggleToDo"
+                            SuggestionCategory="_detailsSuggestionCategory"/>
     }
 
     <MudDialog @bind-Visible="_showConfigure" Options="CompactDialog">
@@ -441,16 +442,18 @@ else if (_loaded)
     // dialog (browse mode only — edit mode owns clicks for arranging).
     private bool _showChartDetails;
     private Chart? _detailsChart;
+    private string? _detailsSuggestionCategory;
     private ISet<Guid>? _todos;
 
-    private async Task OpenChartDetails(Chart chart)
+    private async Task OpenChartDetails(ChartClickContext context)
     {
         if (_editMode) return;
         _todos ??= (await Mediator.Send(new GetSavedChartsQuery()))
             .Where(t => t.ListType == ChartListType.ToDo)
             .Select(t => t.ChartId)
             .ToHashSet();
-        _detailsChart = chart;
+        _detailsChart = context.Chart;
+        _detailsSuggestionCategory = context.SuggestionCategory;
         _showChartDetails = true;
     }
 
