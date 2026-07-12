@@ -185,16 +185,17 @@ else
                pass rate per skill in this folder, weakest first (the By-Skill grouping
                is this same data rendered as sections). Category tint + printed name +
                printed count (rule 8). *@
-            @if (CurrentUser.IsLoggedIn && FolderSkillPassRates().Any())
+            @if (CurrentUser.IsLoggedIn && FolderSkillScores().Any())
             {
                 <div class="tier-folder-skills">
                     <MudText Typo="Typo.caption" Class="tier-folder-skills-title">@L["Your Skills in Folder"]</MudText>
-                    @foreach (var row in FolderSkillPassRates())
+                    @foreach (var row in FolderSkillScores())
                     {
+                        var percent = (int)Math.Round(100 * row.Percent);
                         <div class="tier-folder-skill-row skillcat-@(row.Skill.GetPrimaryCategory().ToString().ToLowerInvariant())">
                             <span class="tier-folder-skill-label">@row.Skill.GetName()</span>
-                            <span class="tier-folder-skill-track"><span class="tier-folder-skill-fill" style="width:@(row.Total == 0 ? 0 : 100 * row.Passed / row.Total)%"></span></span>
-                            <span class="tier-folder-skill-value">@row.Passed / @row.Total</span>
+                            <span class="tier-folder-skill-track"><span class="tier-folder-skill-fill" style="width:@percent%"></span></span>
+                            <span class="tier-folder-skill-value">@percent%</span>
                         </div>
                     }
                 </div>
@@ -901,21 +902,30 @@ else
     private IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>> _skillChips =
         new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>();
 
-    // Folder Stats: your pass rate per skill in this folder, weakest first. Skill
-    // membership follows the chips (dominance + qualified coverage) with the mapped
-    // tags as the pre-crawl fallback; skills on fewer than two charts are noise.
-    private IEnumerable<(Skill Skill, int Passed, int Total)> FolderSkillPassRates()
+    // Folder Stats: skill competence per the owner's formula — score-determined, never
+    // pass-determined. Per skill: sum(coverage × score) / sum(coverage × 1,000,000)
+    // over the folder's charts carrying it, so a 40%-stamina chart contributes twice a
+    // 20% one and unplayed charts count as zero. Whole-chart qualities (null coverage)
+    // and pre-crawl fallback tags weigh 1.0. Weakest first; <2 charts is noise.
+    private IEnumerable<(Skill Skill, double Percent, int Total)> FolderSkillScores()
     {
+        const double maxScore = 1_000_000;
         return _charts.Values
             .SelectMany(c => (_skillChips.TryGetValue(c.Id, out var chips) && chips.Count > 0
-                    ? chips.Select(chip => chip.Skill)
-                    : c.Skills)
-                .Distinct()
-                .Select(s => (Skill: s, Chart: c)))
+                    ? chips.Select(chip => (chip.Skill, Weight: (double?)chip.SegmentFraction ?? 1.0))
+                    : c.Skills.Select(s => (Skill: s, Weight: 1.0)))
+                .GroupBy(p => p.Skill).Select(g => g.First())
+                .Select(p => (p.Skill, p.Weight, Chart: c)))
             .GroupBy(p => p.Skill)
-            .Select(g => (Skill: g.Key, Passed: g.Count(p => Passed(p.Chart.Id)), Total: g.Count()))
+            .Select(g => (
+                Skill: g.Key,
+                Percent: g.Sum(p => p.Weight *
+                                    (_scores.TryGetValue(p.Chart.Id, out var s) && s.Score != null
+                                        ? Math.Min((int)s.Score.Value, maxScore)
+                                        : 0)) / g.Sum(p => p.Weight * maxScore),
+                Total: g.Count()))
             .Where(r => r.Total >= 2)
-            .OrderBy(r => (double)r.Passed / r.Total)
+            .OrderBy(r => r.Percent)
             .ThenBy(r => r.Skill.GetName());
     }
 

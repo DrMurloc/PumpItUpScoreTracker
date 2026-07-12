@@ -2781,9 +2781,6 @@
   <data name="On ToDo List" xml:space="preserve">
     <value>Dans la liste ToDo</value>
   </data>
-  <data name="Full score journey" xml:space="preserve">
-    <value>Parcours complet</value>
-  </data>
   <data name="Record Score" xml:space="preserve">
     <value>Enregistrer un score</value>
   </data>

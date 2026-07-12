@@ -2664,9 +2664,6 @@
   <data name="On ToDo List" xml:space="preserve">
     <value>ToDo 목록에 있음</value>
   </data>
-  <data name="Full score journey" xml:space="preserve">
-    <value>전체 기록 보기</value>
-  </data>
   <data name="Record Score" xml:space="preserve">
     <value>점수 기록</value>
   </data>

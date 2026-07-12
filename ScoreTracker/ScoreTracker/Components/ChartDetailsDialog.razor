@@ -131,10 +131,6 @@
                         </div>
                     }
                 </div>
-                @if (CurrentUser.IsLoggedIn)
-                {
-                    <MudLink Href="@($"/Player/{CurrentUser.User.Id}/Sessions")" Typo="Typo.caption">@L["Full score journey"]</MudLink>
-                }
             }
             @* Round 10: buttons never shrink into vertical letter-stacks (nowrap + wrap
                to their own line instead); the PIU Center link gets its own line.

@@ -2784,9 +2784,6 @@
   <data name="On ToDo List" xml:space="preserve">
     <value>ToDoリスト登録済み</value>
   </data>
-  <data name="Full score journey" xml:space="preserve">
-    <value>スコア履歴をすべて見る</value>
-  </data>
   <data name="Record Score" xml:space="preserve">
     <value>スコアを記録</value>
   </data>
