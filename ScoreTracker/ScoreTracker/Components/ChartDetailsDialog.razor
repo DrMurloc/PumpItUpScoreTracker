@@ -1,5 +1,6 @@
 @namespace ScoreTracker.Web.Components
 @using MediatR
+@using ScoreTracker.Catalog.Contracts
 @using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.ChartIntelligence.Contracts.Queries
 @using ScoreTracker.Domain.Models
@@ -20,7 +21,7 @@
    today's video dialog, then meta, the cross-mix score journey (ScoreEventJournal),
    placements across lenses, To-Do, quiet recording, and the PIU Center link-out
    (their full chart rendering is deliberately not imported — §8a). *@
-<MudDialog Visible="Visible" VisibleChanged="VisibleChanged" Options="_options">
+<MudDialog Visible="Visible" VisibleChanged="VisibleChanged" Options="_options" Class="chart-details-dialog">
     <DialogContent>
         @if (Chart != null)
         {
@@ -31,6 +32,16 @@
             <div class="chart-details-title">
                 <DifficultyBubble Chart="Chart"></DifficultyBubble>
                 <MudText Typo="Typo.h5">@Chart.Song.Name</MudText>
+                <MudSpacer></MudSpacer>
+                @if (CurrentUser.IsLoggedIn)
+                {
+                    <MudTooltip Text="@(IsToDo ? L["On ToDo List"] : L["Add to ToDo List"])">
+                        <MudIconButton Icon="@(IsToDo ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)"
+                                       Color="@(IsToDo ? Color.Info : Color.Default)"
+                                       OnClick="() => OnToDo.InvokeAsync(Chart.Id)"
+                                       aria-label="@L["To Do"]"></MudIconButton>
+                    </MudTooltip>
+                }
             </div>
             <div class="chart-details-meta">
                 @if (Chart.Song.Bpm != null)
@@ -91,7 +102,27 @@
                     }
                 </div>
             }
-            @if (Chart.Skills.Any())
+            @* Skill coverage bars — mapped skills ordered dominance-first (their top-3
+               pick, then segment coverage), tinted per category. Pre-crawl charts fall
+               back to the plain tag chips. *@
+            @if (_skillChips.Any())
+            {
+                <MudText Typo="Typo.overline">@L["Skills"]</MudText>
+                <div class="chart-details-skill-bars">
+                    @foreach (var chip in _skillChips.Take(6))
+                    {
+                        var percent = chip.SegmentFraction == null
+                            ? (int?)null
+                            : (int)Math.Round(chip.SegmentFraction.Value * 100);
+                        <div class="chart-details-skill-bar skillcat-@(chip.Skill.GetPrimaryCategory().ToString().ToLowerInvariant())">
+                            <span class="chart-details-skill-bar-label">@chip.Skill.GetName()</span>
+                            <span class="chart-details-skill-bar-track"><span class="chart-details-skill-bar-fill" style="width:@(percent ?? 0)%"></span></span>
+                            <span class="chart-details-skill-bar-value">@(percent == null ? "—" : $"{percent}%")</span>
+                        </div>
+                    }
+                </div>
+            }
+            else if (Chart.Skills.Any())
             {
                 <div class="chart-details-skills">
                     @foreach (var skill in Chart.Skills)
@@ -104,14 +135,9 @@
                to their own line instead); the PIU Center link gets its own line.
                Round 11: the score inputs are always visible (no Record Score toggle) and
                purpose-built — EditChartGrid brought duplicate To-Do/favorite buttons and
-               a layout that fell apart on phones. *@
+               a layout that fell apart on phones. To-Do moved to the title-row icon. *@
             @if (CurrentUser.IsLoggedIn)
             {
-                <div class="chart-details-actions">
-                    <MudButton Variant="Variant.Outlined" Color="Color.Info"
-                               StartIcon="@(IsToDo ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)"
-                               OnClick="() => OnToDo.InvokeAsync(Chart.Id)">@(IsToDo ? L["On ToDo List"] : L["Add to ToDo List"])</MudButton>
-                </div>
                 <div class="chart-details-record">
                     <MudText Typo="Typo.overline">@L["Record Score"]</MudText>
                     <div class="chart-details-record-row">
@@ -198,16 +224,52 @@
         margin: 8px 0;
     }
 
-    .chart-details-actions {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 8px;
+    /* Owner call (piucenter round 2): the desktop dialog ran wide enough that the
+       16:9 video outgrew laptop viewports — cap under MudBlazor's Small. */
+    .mud-dialog.chart-details-dialog {
+        max-width: 520px;
     }
 
-    .chart-details-actions .mud-button-root {
+    .chart-details-skill-bars {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 4px 16px;
+        margin: 2px 0 8px;
+    }
+
+    .chart-details-skill-bar {
+        display: grid;
+        grid-template-columns: 92px 1fr 38px;
+        align-items: center;
+        gap: 8px;
+        font-size: .75rem;
+    }
+
+    .chart-details-skill-bar-label {
+        color: color-mix(in srgb, var(--skill-chip) 60%, var(--mix-ink));
         white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .chart-details-skill-bar-track {
+        height: 5px;
+        border-radius: 3px;
+        background: color-mix(in srgb, var(--skill-chip) 14%, transparent);
+        overflow: hidden;
+    }
+
+    .chart-details-skill-bar-fill {
+        display: block;
+        height: 100%;
+        border-radius: 3px;
+        background: var(--skill-chip);
+    }
+
+    .chart-details-skill-bar-value {
+        text-align: right;
+        color: var(--mix-ink-muted);
+        font-variant-numeric: tabular-nums;
     }
 
     .chart-details-piucenter {
@@ -289,6 +351,9 @@
         _placements = await LoadPlacements(Chart.Id);
         // The alias table's key beats the guessed one (crawler project hardening).
         _externalKey = (await Mediator.Send(new GetChartStepAnalysisQuery(Chart.Id)))?.ExternalKey;
+        // Coverage bars: mapped skills, dominance-ordered, from the banked metrics.
+        _skillChips = (await Mediator.Send(new GetChartSkillChipsQuery(new[] { Chart.Id })))
+            .GetValueOrDefault(Chart.Id) ?? Array.Empty<ChartSkillChipRecord>();
     }
 
     private async Task<IReadOnlyList<(string, string)>> LoadPlacements(Guid chartId)
@@ -349,6 +414,7 @@
     }
 
     private string? _externalKey;
+    private IReadOnlyList<ChartSkillChipRecord> _skillChips = Array.Empty<ChartSkillChipRecord>();
 
     // The resolved alias key when the crawler has one; otherwise a best-effort guess
     // in the current key format ("<Song>_-_<Artist>_<S|D><level>_<SONGTYPE>").
