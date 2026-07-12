@@ -3327,4 +3327,73 @@
   <data name="Scores recorded, last 30 days" xml:space="preserve">
     <value>過去30日間のスコア記録</value>
   </data>
+  <data name="See where you stand" xml:space="preserve">
+    <value>自分の立ち位置を知ろう</value>
+  </data>
+  <data name="Everything below is live site data — the actual product, not screenshots." xml:space="preserve">
+    <value>この下はすべてサイトの実データです — スクリーンショットではなく、実際のプロダクトです。</value>
+  </data>
+  <data name="Tier lists, backed by data" xml:space="preserve">
+    <value>データに基づくティアリスト</value>
+  </data>
+  <data name="From {0} scores" xml:space="preserve">
+    <value>{0} スコアから算出</value>
+  </data>
+  <data name="Difficulty bands computed from the community's real pass and score data — recalculated as scores come in, not argued into a wiki." xml:space="preserve">
+    <value>コミュニティの実際のパス・スコアデータから難易度帯を算出 — スコアが入るたびに再計算され、wiki の議論で決まるものではありません。</value>
+  </data>
+  <data name="Every level, Singles and Doubles" xml:space="preserve">
+    <value>全レベル、シングルもダブルも</value>
+  </data>
+  <data name="This week's charts" xml:space="preserve">
+    <value>今週のチャート</value>
+  </data>
+  <data name="Rotates in {0}d {1}h" xml:space="preserve">
+    <value>あと {0}日 {1}時間でローテーション</value>
+  </data>
+  <data name="One shared board, one week — everyone posts their best on the same charts." xml:space="preserve">
+    <value>共有ボードはひとつ、期間は一週間 — 全員が同じチャートでベストを競います。</value>
+  </data>
+  <data name="leader" xml:space="preserve">
+    <value>リーダー</value>
+  </data>
+  <data name="+ {0} more" xml:space="preserve">
+    <value>他 {0} 件</value>
+  </data>
+  <data name="+ {0} more on this week's board" xml:space="preserve">
+    <value>今週のボードに他 {0} 件</value>
+  </data>
+  <data name="See the full board" xml:space="preserve">
+    <value>ボード全体を見る</value>
+  </data>
+  <data name="One-click import" xml:space="preserve">
+    <value>ワンクリックインポート</value>
+  </data>
+  <data name="Point it at your PIUGAME account once — grades, plates, and history land intact." xml:space="preserve">
+    <value>PIUGAME アカウントに一度つなぐだけ — グレード、プレート、履歴がそのまま届きます。</value>
+  </data>
+  <data name="{0} scores imported from PIUGAME" xml:space="preserve">
+    <value>PIUGAME から {0} スコアをインポート</value>
+  </data>
+  <data name="Session roundup captured on the way in — a new UG plate, 2 PBs, one folder lamp." xml:space="preserve">
+    <value>インポート時にセッションのまとめを記録 — 新しい UG プレート、自己ベスト2件、フォルダーランプ1件。</value>
+  </data>
+  <data name="Sign in and import yours" xml:space="preserve">
+    <value>ログインしてインポート</value>
+  </data>
+  <data name="Watch yourself climb" xml:space="preserve">
+    <value>自分の成長を見よう</value>
+  </data>
+  <data name="Pumbility rating, titles, and a season recap worth screenshotting." xml:space="preserve">
+    <value>Pumbility レーティング、タイトル、スクショしたくなるシーズンリキャップ。</value>
+  </data>
+  <data name="Top 8% · Sapphire" xml:space="preserve">
+    <value>上位 8% · サファイア</value>
+  </data>
+  <data name="{0}% to next title" xml:space="preserve">
+    <value>次のタイトルまで {0}%</value>
+  </data>
+  <data name="Browse every title — no account needed" xml:space="preserve">
+    <value>全タイトルを見る — アカウント不要</value>
+  </data>
 </root>

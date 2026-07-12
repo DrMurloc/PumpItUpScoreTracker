@@ -3326,4 +3326,73 @@
   <data name="Scores recorded, last 30 days" xml:space="preserve">
     <value>Scores recorded, last 30 days</value>
   </data>
+  <data name="See where you stand" xml:space="preserve">
+    <value>See where you stand</value>
+  </data>
+  <data name="Everything below is live site data — the actual product, not screenshots." xml:space="preserve">
+    <value>Everything below is live site data — the actual product, not screenshots.</value>
+  </data>
+  <data name="Tier lists, backed by data" xml:space="preserve">
+    <value>Tier lists, backed by data</value>
+  </data>
+  <data name="From {0} scores" xml:space="preserve">
+    <value>From {0} scores</value>
+  </data>
+  <data name="Difficulty bands computed from the community's real pass and score data — recalculated as scores come in, not argued into a wiki." xml:space="preserve">
+    <value>Difficulty bands computed from the community's real pass and score data — recalculated as scores come in, not argued into a wiki.</value>
+  </data>
+  <data name="Every level, Singles and Doubles" xml:space="preserve">
+    <value>Every level, Singles and Doubles</value>
+  </data>
+  <data name="This week's charts" xml:space="preserve">
+    <value>This week's charts</value>
+  </data>
+  <data name="Rotates in {0}d {1}h" xml:space="preserve">
+    <value>Rotates in {0}d {1}h</value>
+  </data>
+  <data name="One shared board, one week — everyone posts their best on the same charts." xml:space="preserve">
+    <value>One shared board, one week — everyone posts their best on the same charts.</value>
+  </data>
+  <data name="leader" xml:space="preserve">
+    <value>leader</value>
+  </data>
+  <data name="+ {0} more" xml:space="preserve">
+    <value>+ {0} more</value>
+  </data>
+  <data name="+ {0} more on this week's board" xml:space="preserve">
+    <value>+ {0} more on this week's board</value>
+  </data>
+  <data name="See the full board" xml:space="preserve">
+    <value>See the full board</value>
+  </data>
+  <data name="One-click import" xml:space="preserve">
+    <value>One-click import</value>
+  </data>
+  <data name="Point it at your PIUGAME account once — grades, plates, and history land intact." xml:space="preserve">
+    <value>Point it at your PIUGAME account once — grades, plates, and history land intact.</value>
+  </data>
+  <data name="{0} scores imported from PIUGAME" xml:space="preserve">
+    <value>{0} scores imported from PIUGAME</value>
+  </data>
+  <data name="Session roundup captured on the way in — a new UG plate, 2 PBs, one folder lamp." xml:space="preserve">
+    <value>Session roundup captured on the way in — a new UG plate, 2 PBs, one folder lamp.</value>
+  </data>
+  <data name="Sign in and import yours" xml:space="preserve">
+    <value>Sign in and import yours</value>
+  </data>
+  <data name="Watch yourself climb" xml:space="preserve">
+    <value>Watch yourself climb</value>
+  </data>
+  <data name="Pumbility rating, titles, and a season recap worth screenshotting." xml:space="preserve">
+    <value>Pumbility rating, titles, and a season recap worth screenshotting.</value>
+  </data>
+  <data name="Top 8% · Sapphire" xml:space="preserve">
+    <value>Top 8% · Sapphire</value>
+  </data>
+  <data name="{0}% to next title" xml:space="preserve">
+    <value>{0}% to next title</value>
+  </data>
+  <data name="Browse every title — no account needed" xml:space="preserve">
+    <value>Browse every title — no account needed</value>
+  </data>
 </root>

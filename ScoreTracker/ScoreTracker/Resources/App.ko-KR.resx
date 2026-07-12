@@ -3207,4 +3207,73 @@
   <data name="Scores recorded, last 30 days" xml:space="preserve">
     <value>최근 30일간 기록된 스코어</value>
   </data>
+  <data name="See where you stand" xml:space="preserve">
+    <value>내 위치를 확인하세요</value>
+  </data>
+  <data name="Everything below is live site data — the actual product, not screenshots." xml:space="preserve">
+    <value>아래는 모두 사이트의 실제 데이터입니다 — 스크린샷이 아니라 실제 프로덕트입니다.</value>
+  </data>
+  <data name="Tier lists, backed by data" xml:space="preserve">
+    <value>데이터 기반 티어리스트</value>
+  </data>
+  <data name="From {0} scores" xml:space="preserve">
+    <value>{0}개 스코어 기반</value>
+  </data>
+  <data name="Difficulty bands computed from the community's real pass and score data — recalculated as scores come in, not argued into a wiki." xml:space="preserve">
+    <value>커뮤니티의 실제 패스·스코어 데이터로 계산한 난이도 밴드 — 스코어가 들어올 때마다 다시 계산되며, 위키 논쟁으로 정해지지 않습니다.</value>
+  </data>
+  <data name="Every level, Singles and Doubles" xml:space="preserve">
+    <value>모든 레벨, 싱글과 더블</value>
+  </data>
+  <data name="This week's charts" xml:space="preserve">
+    <value>이번 주 채보</value>
+  </data>
+  <data name="Rotates in {0}d {1}h" xml:space="preserve">
+    <value>{0}일 {1}시간 후 로테이션</value>
+  </data>
+  <data name="One shared board, one week — everyone posts their best on the same charts." xml:space="preserve">
+    <value>하나의 공유 보드, 일주일 — 모두가 같은 채보에서 최고 기록을 겨룹니다.</value>
+  </data>
+  <data name="leader" xml:space="preserve">
+    <value>리더</value>
+  </data>
+  <data name="+ {0} more" xml:space="preserve">
+    <value>외 {0}개</value>
+  </data>
+  <data name="+ {0} more on this week's board" xml:space="preserve">
+    <value>이번 주 보드에 외 {0}개</value>
+  </data>
+  <data name="See the full board" xml:space="preserve">
+    <value>전체 보드 보기</value>
+  </data>
+  <data name="One-click import" xml:space="preserve">
+    <value>원클릭 임포트</value>
+  </data>
+  <data name="Point it at your PIUGAME account once — grades, plates, and history land intact." xml:space="preserve">
+    <value>PIUGAME 계정에 한 번만 연결하세요 — 등급, 플레이트, 기록이 그대로 들어옵니다.</value>
+  </data>
+  <data name="{0} scores imported from PIUGAME" xml:space="preserve">
+    <value>PIUGAME에서 {0}개 스코어 임포트됨</value>
+  </data>
+  <data name="Session roundup captured on the way in — a new UG plate, 2 PBs, one folder lamp." xml:space="preserve">
+    <value>임포트하는 동안 세션 요약이 기록됩니다 — 새 UG 플레이트, 개인 기록 2개, 폴더 램프 1개.</value>
+  </data>
+  <data name="Sign in and import yours" xml:space="preserve">
+    <value>로그인하고 임포트하세요</value>
+  </data>
+  <data name="Watch yourself climb" xml:space="preserve">
+    <value>성장하는 자신을 지켜보세요</value>
+  </data>
+  <data name="Pumbility rating, titles, and a season recap worth screenshotting." xml:space="preserve">
+    <value>Pumbility 레이팅, 타이틀, 그리고 스크린샷하고 싶어지는 시즌 리캡.</value>
+  </data>
+  <data name="Top 8% · Sapphire" xml:space="preserve">
+    <value>상위 8% · 사파이어</value>
+  </data>
+  <data name="{0}% to next title" xml:space="preserve">
+    <value>다음 타이틀까지 {0}%</value>
+  </data>
+  <data name="Browse every title — no account needed" xml:space="preserve">
+    <value>모든 타이틀 보기 — 계정 없이도</value>
+  </data>
 </root>

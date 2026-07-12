@@ -3326,4 +3326,73 @@
   <data name="Scores recorded, last 30 days" xml:space="preserve">
     <value>Punteggi registrati negli ultimi 30 giorni</value>
   </data>
+  <data name="See where you stand" xml:space="preserve">
+    <value>Guarda dove sei</value>
+  </data>
+  <data name="Everything below is live site data — the actual product, not screenshots." xml:space="preserve">
+    <value>Tutto qui sotto sono dati reali del sito — il prodotto vero, non screenshot.</value>
+  </data>
+  <data name="Tier lists, backed by data" xml:space="preserve">
+    <value>Tier list basate sui dati</value>
+  </data>
+  <data name="From {0} scores" xml:space="preserve">
+    <value>Da {0} punteggi</value>
+  </data>
+  <data name="Difficulty bands computed from the community's real pass and score data — recalculated as scores come in, not argued into a wiki." xml:space="preserve">
+    <value>Fasce di difficoltà calcolate dai passaggi e punteggi reali della community — ricalcolate man mano che arrivano i punteggi, non discusse su una wiki.</value>
+  </data>
+  <data name="Every level, Singles and Doubles" xml:space="preserve">
+    <value>Ogni livello, Singles e Doubles</value>
+  </data>
+  <data name="This week's charts" xml:space="preserve">
+    <value>I chart di questa settimana</value>
+  </data>
+  <data name="Rotates in {0}d {1}h" xml:space="preserve">
+    <value>Ruota tra {0}g {1}h</value>
+  </data>
+  <data name="One shared board, one week — everyone posts their best on the same charts." xml:space="preserve">
+    <value>Una sola classifica condivisa, una settimana — tutti registrano il proprio meglio sugli stessi chart.</value>
+  </data>
+  <data name="leader" xml:space="preserve">
+    <value>leader</value>
+  </data>
+  <data name="+ {0} more" xml:space="preserve">
+    <value>+ altri {0}</value>
+  </data>
+  <data name="+ {0} more on this week's board" xml:space="preserve">
+    <value>+ altri {0} nella classifica di questa settimana</value>
+  </data>
+  <data name="See the full board" xml:space="preserve">
+    <value>Vedi la classifica completa</value>
+  </data>
+  <data name="One-click import" xml:space="preserve">
+    <value>Importazione in un clic</value>
+  </data>
+  <data name="Point it at your PIUGAME account once — grades, plates, and history land intact." xml:space="preserve">
+    <value>Puntala una volta al tuo account PIUGAME — voti, targhe e cronologia arrivano intatti.</value>
+  </data>
+  <data name="{0} scores imported from PIUGAME" xml:space="preserve">
+    <value>{0} punteggi importati da PIUGAME</value>
+  </data>
+  <data name="Session roundup captured on the way in — a new UG plate, 2 PBs, one folder lamp." xml:space="preserve">
+    <value>Riepilogo di sessione catturato all'importazione — una nuova targa UG, 2 record personali, una lampada di cartella.</value>
+  </data>
+  <data name="Sign in and import yours" xml:space="preserve">
+    <value>Accedi e importa i tuoi</value>
+  </data>
+  <data name="Watch yourself climb" xml:space="preserve">
+    <value>Guardati salire</value>
+  </data>
+  <data name="Pumbility rating, titles, and a season recap worth screenshotting." xml:space="preserve">
+    <value>Rating Pumbility, titoli e un riepilogo di stagione da screenshot.</value>
+  </data>
+  <data name="Top 8% · Sapphire" xml:space="preserve">
+    <value>Top 8% · Zaffiro</value>
+  </data>
+  <data name="{0}% to next title" xml:space="preserve">
+    <value>{0}% al prossimo titolo</value>
+  </data>
+  <data name="Browse every title — no account needed" xml:space="preserve">
+    <value>Sfoglia tutti i titoli — senza account</value>
+  </data>
 </root>

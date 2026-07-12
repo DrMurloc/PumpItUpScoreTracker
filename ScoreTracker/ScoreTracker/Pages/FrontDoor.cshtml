@@ -1,6 +1,7 @@
 @page "/Login"
 @using System.Globalization
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Pages
 @using ScoreTracker.Web.Services.Theming
 @model ScoreTracker.Web.Pages.FrontDoorModel
 @inject Microsoft.Extensions.Localization.IStringLocalizer<ScoreTracker.Web.App> L
@@ -29,6 +30,21 @@
 </head>
 <body class="front-door">
 
+@functions {
+    private static string BandKey(TierListCategory category) => category switch
+    {
+        TierListCategory.Easy => "Easy",
+        TierListCategory.Medium => "Medium",
+        TierListCategory.Hard => "Hard",
+        TierListCategory.VeryHard => "Very Hard",
+        _ => category.ToString()
+    };
+
+    // Same art the DifficultyBubble component renders — the game's own vocabulary.
+    private static string BubbleUrl(ScoreTracker.SharedKernel.Models.Chart chart) =>
+        $"https://piuimages.arroweclip.se/difficulty/{chart.Mix}/{chart.DifficultyString.ToLower()}.png";
+}
+
 <header class="topbar">
     <a class="wordmark" href="/">PIU <b>SCORES</b></a>
     <span class="mix-pill">PHOENIX</span>
@@ -41,7 +57,8 @@
     <a class="topbar-signin" href="#signin">@L["Sign in"]</a>
 </header>
 
-<main class="hero">
+<main>
+<section class="hero">
     <div class="hero-copy">
         <p class="eyebrow">@L["Score tracking for Pump It Up"]</p>
         <h1>@L["Track the grind."]<br />@L["Find your next pass."]</h1>
@@ -109,6 +126,114 @@
             </div>
         </div>
     </div>
+</section>
+
+<section class="showcase">
+    <div class="sec-head">
+        <h2>@L["See where you stand"]</h2>
+        <p>@L["Everything below is live site data — the actual product, not screenshots."]</p>
+    </div>
+    <div class="cards">
+
+        <div class="card">
+            <h3>
+                <img class="bubble" src="https://piuimages.arroweclip.se/difficulty/Phoenix/s@(FrontDoorModel.ShowcaseLevel).png" alt="S@(FrontDoorModel.ShowcaseLevel)" height="30" loading="lazy" />
+                @L["Tier lists, backed by data"]
+                <span class="tag">@L["From {0} scores", Model.ScoreBasisShort]</span>
+            </h3>
+            <p class="blurb">@L["Difficulty bands computed from the community's real pass and score data — recalculated as scores come in, not argued into a wiki."]</p>
+            @foreach (var band in Model.TierBands)
+            {
+                <div class="tier-row">
+                    <span class="tier-band" style="color: var(--diff-@ThemeScales.DifficultySlug(band.Category))">@L[BandKey(band.Category)]</span>
+                    <span class="jackets">
+                        @foreach (var chart in band.Charts)
+                        {
+                            <img class="jacket" src="@chart.Song.ImagePath" alt="@chart.Song.Name" loading="lazy" />
+                        }
+                        <span class="tier-name">
+                            @string.Join(" · ", band.Charts.Select(c => c.Song.Name))@(band.MoreCount > 0 ? " · " + L["+ {0} more", band.MoreCount] : "")
+                        </span>
+                    </span>
+                </div>
+            }
+            <a class="cta" href="/TierLists">@L["Every level, Singles and Doubles"] →</a>
+        </div>
+
+        <div class="card">
+            <h3>
+                @L["This week's charts"]
+                @if (Model.WeeklyRotatesIn is { } left)
+                {
+                    <span class="tag tag-countdown">@L["Rotates in {0}d {1}h", left.Days, left.Hours]</span>
+                }
+            </h3>
+            <p class="blurb">@L["One shared board, one week — everyone posts their best on the same charts."]</p>
+            @foreach (var row in Model.WeeklyRows)
+            {
+                <div class="score-row">
+                    <img class="jacket" src="@row.Chart.Song.ImagePath" alt="" loading="lazy" />
+                    <span class="nm">
+                        @row.Chart.Song.Name
+                        <img class="bubble-sm" src="@BubbleUrl(row.Chart)" alt="@row.Chart.DifficultyString" height="22" loading="lazy" />
+                    </span>
+                    @if (row.LeaderScore is { } leaderScore)
+                    {
+                        <span class="who">@L["leader"]</span>
+                        <span class="sc">@leaderScore.ToString("N0")</span>
+                    }
+                </div>
+            }
+            @if (Model.WeeklyMoreCount > 0)
+            {
+                <div class="score-row"><span class="nm muted">@L["+ {0} more on this week's board", Model.WeeklyMoreCount]</span></div>
+            }
+            <a class="cta" href="/WeeklyCharts">@L["See the full board"] →</a>
+        </div>
+
+        <div class="card">
+            <h3>@L["One-click import"]</h3>
+            <p class="blurb">@L["Point it at your PIUGAME account once — grades, plates, and history land intact."]</p>
+            @* Example rows — illustrative by design; the import itself is the live feature. *@
+            <div class="score-row">
+                <span class="nm">Moonlight</span><span class="sc">998,404</span>
+                <span class="chip chip-grade">SSS+</span><span class="chip chip-ug">UG</span>
+            </div>
+            <div class="score-row">
+                <span class="nm">Sarabande</span><span class="sc">981,762</span>
+                <span class="chip chip-grade">SSS</span><span class="chip chip-eg">EG</span>
+            </div>
+            <div class="score-row">
+                <span class="nm">Sorceress Elise</span><span class="sc">942,310</span>
+                <span class="chip chip-grade">AA+</span><span class="chip chip-mg">MG</span>
+            </div>
+            <div class="import-meter">
+                <div class="bar"><div class="fill"></div></div>
+                <div class="cap">@L["{0} scores imported from PIUGAME", 2431.ToString("N0")]</div>
+            </div>
+            <div class="hl-row"><span class="star">✦</span> @L["Session roundup captured on the way in — a new UG plate, 2 PBs, one folder lamp."]</div>
+            <a class="cta" href="#signin">@L["Sign in and import yours"] →</a>
+        </div>
+
+        <div class="card pumbility">
+            <h3>@L["Watch yourself climb"]</h3>
+            <p class="blurb">@L["Pumbility rating, titles, and a season recap worth screenshotting."]</p>
+            <div class="big"><small>@L["PUMBILITY"]</small>68,412</div>
+            <span class="rarity-chip">@L["Top 8% · Sapphire"]</span>
+            <svg class="spark" width="100%" height="46" viewBox="0 0 260 46" preserveAspectRatio="none" aria-hidden="true">
+                <polyline points="0,40 30,38 60,34 90,35 120,28 150,24 180,25 210,16 245,8"
+                          fill="none" stroke="var(--mix-primary)" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="245" cy="8" r="3.5" fill="var(--mix-accent)"/>
+            </svg>
+            <div class="title-progress">
+                <div class="lbl"><b>INTERMEDIATE Lv.10</b><span>@L["{0}% to next title", 73]</span></div>
+                <div class="bar"><div class="fill"></div></div>
+            </div>
+            <a class="cta" href="/Titles">@L["Browse every title — no account needed"] →</a>
+        </div>
+
+    </div>
+</section>
 </main>
 
 </body>

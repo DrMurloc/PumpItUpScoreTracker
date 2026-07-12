@@ -193,6 +193,127 @@ body.front-door {
     margin-top: 14px; text-align: center; font-size: 14.5px;
 }
 
+/* ---------- showcase ---------- */
+.front-door .showcase { max-width: 1200px; margin: 0 auto; padding: 36px 28px 8px; }
+.front-door .sec-head h2 {
+    font-family: "Barlow Condensed", "Malgun Gothic", "Yu Gothic UI", "Apple SD Gothic Neo", "Hiragino Sans", "Arial Narrow", sans-serif;
+    font-weight: 700; font-size: 30px;
+    letter-spacing: .04em; text-transform: uppercase; margin: 0 0 4px;
+}
+.front-door .sec-head p { color: var(--mix-ink-muted); margin: 0 0 24px; font-size: 15px; }
+
+.front-door .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+.front-door .card {
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink-muted) 14%, transparent);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex; flex-direction: column; gap: 13px;
+}
+.front-door .card h3 {
+    font-family: "Barlow Condensed", "Malgun Gothic", "Yu Gothic UI", "Apple SD Gothic Neo", "Hiragino Sans", "Arial Narrow", sans-serif;
+    font-size: 20px; font-weight: 600;
+    letter-spacing: .05em; text-transform: uppercase; margin: 0;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.front-door .card .blurb { font-size: 13.5px; color: var(--mix-ink-muted); margin: -6px 0 0; }
+.front-door .card .cta { margin-top: auto; font-size: 14px; }
+.front-door .tag {
+    font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+    font-size: 11.5px; font-weight: 600;
+    letter-spacing: .12em; padding: 2px 9px; border-radius: 999px;
+    border: 1px solid var(--mix-accent); color: var(--mix-accent);
+}
+.front-door .tag-countdown { border-color: var(--mix-secondary); color: var(--mix-secondary); margin-left: auto; }
+
+.front-door .tier-row { display: flex; align-items: center; gap: 10px; }
+.front-door .tier-band {
+    font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+    font-size: 12.5px; font-weight: 600;
+    letter-spacing: .1em; text-transform: uppercase;
+    width: 84px; flex: none; text-align: right; padding-right: 2px;
+}
+.front-door .jackets { display: flex; gap: 6px; align-items: center; min-width: 0; }
+.front-door img.jacket {
+    width: 34px; height: 34px; border-radius: 6px; flex: none;
+    object-fit: cover;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+}
+.front-door .tier-name {
+    font-size: 13.5px; color: var(--mix-ink-muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.front-door .score-row {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13.5px;
+}
+.front-door .score-row .nm {
+    flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    display: flex; align-items: center; gap: 6px;
+}
+.front-door .score-row .nm.muted { color: var(--mix-ink-muted); }
+.front-door .score-row .sc { font-variant-numeric: tabular-nums; color: var(--mix-ink); font-weight: 600; }
+.front-door .score-row .who { font-size: 12.5px; color: var(--mix-ink-muted); }
+.front-door .chip {
+    font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: .06em; padding: 2px 8px; border-radius: 5px;
+    border: 1px solid; background: transparent; flex: none;
+}
+.front-door .chip-grade { color: var(--mix-ink); border-color: color-mix(in srgb, var(--mix-ink-muted) 40%, transparent); }
+.front-door .chip-ug { color: var(--plate-ug); border-color: var(--plate-ug); }
+.front-door .chip-eg { color: var(--plate-eg); border-color: var(--plate-eg); }
+.front-door .chip-mg { color: var(--plate-mg); border-color: var(--plate-mg); }
+
+.front-door .import-meter .bar {
+    height: 8px; border-radius: 4px; background: var(--mix-surface-muted);
+    overflow: hidden;
+}
+.front-door .import-meter .fill {
+    width: 82%; height: 100%; border-radius: 4px;
+    background: linear-gradient(90deg, var(--mix-primary), var(--plate-pg));
+}
+.front-door .import-meter .cap { font-size: 12.5px; color: var(--mix-ink-muted); margin-top: 6px; }
+.front-door .hl-row {
+    display: flex; gap: 8px; align-items: baseline;
+    font-size: 12.5px; color: var(--mix-accent);
+}
+.front-door .hl-row .star { font-weight: 700; }
+
+.front-door .pumbility .big {
+    font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+    font-weight: 700; font-size: 52px;
+    line-height: 1; font-variant-numeric: tabular-nums;
+    color: var(--mix-ink);
+}
+.front-door .pumbility .big small {
+    font-size: 16px; font-weight: 600; letter-spacing: .12em;
+    color: var(--mix-ink-muted); display: block; margin-bottom: 2px;
+}
+.front-door .rarity-chip {
+    display: inline-block; margin-top: -4px;
+    font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+    font-size: 13px; font-weight: 600; letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 3px 12px; border-radius: 999px;
+    color: var(--rarity-sapphire); border: 1px solid var(--rarity-sapphire);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--rarity-sapphire) 35%, transparent);
+    align-self: flex-start;
+}
+.front-door .spark { margin: 6px 0 2px; }
+.front-door .title-progress .lbl {
+    display: flex; justify-content: space-between;
+    font-size: 12.5px; color: var(--mix-ink-muted); margin-bottom: 5px;
+}
+.front-door .title-progress .lbl b {
+    color: var(--rarity-gold);
+    font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+    letter-spacing: .08em;
+}
+.front-door .title-progress .bar { height: 8px; border-radius: 4px; background: var(--mix-surface-muted); overflow: hidden; }
+.front-door .title-progress .fill { width: 73%; height: 100%; background: var(--rarity-gold); border-radius: 4px; }
+
 /* ---------- motion ---------- */
 @media (prefers-reduced-motion: no-preference) {
     .front-door .hero-copy, .front-door .hero-signin, .front-door .hero-stats {
@@ -216,4 +337,5 @@ body.front-door {
     }
     .front-door h1 { font-size: clamp(36px, 9vw, 48px); }
     .front-door .stat-row { gap: 22px; }
+    .front-door .cards { grid-template-columns: 1fr; }
 }
