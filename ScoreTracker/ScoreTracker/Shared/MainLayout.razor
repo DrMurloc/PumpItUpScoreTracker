@@ -65,7 +65,7 @@
         display: none;
     }
 </style>
-<MudLayout Class="@MixThemes.CssClassFor(_themeMix)">
+<MudLayout Class="@LayoutClass">
     @* Fixed: the drawer is viewport-pinned, so a scrolling app bar visibly detaches from it. *@
     @* No Color: the bar wears the palette's AppbarBackground so the shell re-skins per mix. *@
     <MudAppBar Fixed="true" Dense="true">
@@ -330,8 +330,17 @@
         </MudDrawer>
     </MudHidden>
 
-    @* Thumb-reach primary nav at phone/tablet widths; desktop uses the top nav. *@
+    @* Thumb-reach primary nav at phone/tablet widths; desktop uses the top nav.
+       Pages may register a dock of primary actions above it (PageDock component);
+       scrolling down slides the nav away so both bars only coexist at rest. Focus
+       mode drops the shell nav entirely — the page owns its exit affordance. *@
     <MudHidden Breakpoint="Breakpoint.MdAndUp">
+        @if (PageDock.DockContent != null)
+        {
+            <div class="page-dock">@PageDock.DockContent</div>
+        }
+        @if (!PageDock.FocusMode)
+        {
         <nav class="bottom-nav">
             @if (CurrentUser.IsLoggedIn && !_gatedMix)
             {
@@ -354,6 +363,7 @@
             }
             <button type="button" class="bn" @onclick="() => _showMore = true"><MudIcon Icon="@Icons.Material.Filled.MoreHoriz" Size="Size.Small"></MudIcon><span>@L["More"]</span></button>
         </nav>
+        }
     </MudHidden>
     <MudMainContent>
         <MudContainer>
@@ -416,10 +426,31 @@
 @inject IMediator Mediator;
 @inject IUiSettingsAccessor UiSettings;
 @inject NavigationManager NavManager;
+@inject PageDockService PageDock;
+@inject IJSRuntime JSRuntime;
 @code
 {
     private bool _showMore = false;
     private Guid? _userId = null;
+
+    // Mix theme class + dock state classes; focus-mode also collapses the app bar (CSS).
+    private string LayoutClass =>
+        MixThemes.CssClassFor(_themeMix)
+        + (PageDock.FocusMode ? " focus-mode" : "")
+        + (PageDock.DockContent != null ? " has-dock" : "");
+
+    private void OnDockChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("pageDock.watch");
+        }
+    }
 
     private Task GoToChart(Chart chart)
     {
@@ -442,6 +473,8 @@
     {
         _showMore = false;
         RedirectIfGated();
+        // Fresh page starts with the nav visible again.
+        _ = JSRuntime.InvokeVoidAsync("pageDock.reset");
         InvokeAsync(StateHasChanged);
     }
 
@@ -461,6 +494,7 @@
     public void Dispose()
     {
         NavManager.LocationChanged -= OnLocationChanged;
+        PageDock.Changed -= OnDockChanged;
     }
     private bool _showBite = false;
     private bool _showRecapPopup = false;
@@ -488,6 +522,7 @@
     protected override async Task OnInitializedAsync()
     {
         NavManager.LocationChanged += OnLocationChanged;
+        PageDock.Changed += OnDockChanged;
         _userId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null;
         // Mix first: the displayed rating follows the viewer's current mix.
         _currentMix = await UiSettings.GetSelectedMix();

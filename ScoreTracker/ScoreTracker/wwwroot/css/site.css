@@ -244,6 +244,66 @@
     .mud-main-content {
         padding-bottom: 72px;
     }
+
+    /* Pages with a dock need clearance for both bars (the at-rest worst case). */
+    .has-dock .mud-main-content {
+        padding-bottom: 132px;
+    }
+}
+
+/* ===== Page dock (docs/design/randomizer-overhaul.md) =====
+   Page-registered primary actions above the bottom nav. Scrolling down slides the
+   nav away (html.nav-away, set by page-dock.js) and the dock takes the bottom edge;
+   both bars only coexist at rest. */
+
+:root {
+    --bottom-nav-h: calc(53px + env(safe-area-inset-bottom));
+}
+
+.bottom-nav {
+    transition: transform .25s ease;
+}
+
+html.nav-away .bottom-nav {
+    transform: translateY(110%);
+}
+
+.page-dock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: var(--bottom-nav-h);
+    z-index: 1299;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--mix-nav);
+    border-top: 1px solid rgba(255, 255, 255, .08);
+    transition: bottom .25s ease, padding-bottom .25s ease;
+}
+
+html.nav-away .page-dock,
+.focus-mode .page-dock {
+    bottom: 0;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bottom-nav,
+    .page-dock {
+        transition: none;
+    }
+}
+
+/* Focus mode: shell chrome gone (bottom nav is unrendered; the app bar collapses
+   here). The page owes the user an explicit exit affordance. */
+.focus-mode .mud-appbar {
+    display: none;
+}
+
+.focus-mode .mud-main-content {
+    padding-top: 12px;
 }
 
 .more-sheet {
