@@ -72,7 +72,7 @@ else if (_loaded)
         else
         {
             <MudIconButton Icon="@Icons.Material.Filled.Edit" title="@L["Edit"]" Color="Color.Primary"
-                           OnClick="() => _editMode = true"/>
+                           OnClick="EnterEditMode"/>
         }
     </div>
 
@@ -305,6 +305,7 @@ else if (_loaded)
         if (!Guid.TryParse(widgetId, out var id)) return;
         await Mediator.Send(new MoveHomePageWidgetCommand(id, newIndex));
         await LoadPages();
+        await Track("homedash_widget_dragged");
     }
 
     public async ValueTask DisposeAsync()
@@ -372,9 +373,32 @@ else if (_loaded)
     private async Task CreateFirstPage()
     {
         _isSaving = true;
-        await Mediator.Send(new CreateHomePageCommand(L["Home"].Value));
+        var page = await Mediator.Send(new CreateHomePageCommand(L["Home"].Value));
+        // Beta starter: the trio, pre-placed — field-testers get a living board, not a
+        // blank canvas. The full curated default (D1) ships with the cutover.
+        foreach (var typeId in new[] { "competitive-level", "pumbility", "weekly-challenge" })
+        {
+            var descriptor = WidgetRegistry.TryGet(typeId);
+            if (descriptor == null) continue;
+            await Mediator.Send(new AddHomePageWidgetCommand(page.Id, descriptor.TypeId,
+                descriptor.DefaultSize.Token, null, "{}", 1));
+        }
+
         await LoadPages();
+        await Track("homedash_first_page_created");
         _isSaving = false;
+    }
+
+    private async Task Track(string eventName)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("dashboardGrid.track", eventName);
+        }
+        catch (JSException)
+        {
+            // Telemetry must never break the board.
+        }
     }
 
     private async Task CreatePage()
@@ -391,6 +415,12 @@ else if (_loaded)
         _selectedPage = page;
     }
 
+    private async Task EnterEditMode()
+    {
+        _editMode = true;
+        await Track("homedash_edit_entered");
+    }
+
     // D13 cascade: page default → current mix (widgets add their own override on top).
     private MixEnum EffectiveMixFor(HomePageRecord page)
     {
@@ -404,6 +434,7 @@ else if (_loaded)
         await Mediator.Send(new AddHomePageWidgetCommand(_selectedPage.Id, descriptor.TypeId,
             descriptor.DefaultSize.Token, null, "{}", 1));
         await LoadPages();
+        await Track("homedash_widget_added_" + descriptor.TypeId);
         _isSaving = false;
     }
 
@@ -423,6 +454,7 @@ else if (_loaded)
     {
         await Mediator.Send(new RemoveHomePageWidgetCommand(widget.Id));
         await LoadPages();
+        await Track("homedash_widget_removed_" + widget.WidgetType);
     }
 
     private void OpenRename(HomePageWidgetRecord widget)
@@ -526,6 +558,7 @@ else if (_loaded)
             await Mediator.Send(new SetHomePageMixCommand(_selectedPage.Id, _importResult.DefaultMix));
         _showImport = false;
         await LoadPages();
+        await Track("homedash_page_imported");
         _isSaving = false;
     }
 

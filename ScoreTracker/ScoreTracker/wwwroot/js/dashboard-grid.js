@@ -8,6 +8,13 @@
 window.dashboardGrid = {
     _state: null,
 
+    // D16: widget telemetry rides Clarity custom events; a no-op when Clarity isn't
+    // loaded (local dev). Which widgets earn future investment is THE roadmap
+    // question this page creates — instrumented from day one.
+    track: function (eventName) {
+        if (window.clarity) window.clarity('event', eventName);
+    },
+
     init: function (board, dotnetRef) {
         this.dispose();
         const state = { board: board, dotnetRef: dotnetRef, onDown: null };

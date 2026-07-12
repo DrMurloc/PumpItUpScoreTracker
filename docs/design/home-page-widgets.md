@@ -1,7 +1,8 @@
 # Home Page Widget Builder
 
-**Status**: spec locked 2026-07-12; **PR #1 (§5 + history capture) implemented — this PR**;
-PR #2 (shell + trio) next. Sequencing (owner): **PR #1 = Pumbility history capture + Projections v2
+**Status**: spec locked 2026-07-12; **PR #1 (§5 + history capture) merged as PR #141**;
+**PR #2 (shell + trio, C1–C10) implemented — this PR**. Next: owner field-test, then the §4 catalog
+walk (D18). Sequencing (owner): **PR #1 = Pumbility history capture + Projections v2
 (§5)** — small, merged fast so trend data accrues immediately; **PR #2 = the shell + starter trio
 (§2–§3)**. Mocks: [dashboard](https://claude.ai/code/artifact/d55215b1-ce72-4623-ba10-9950266f4847)
 · [widget spec sheets](https://claude.ai/code/artifact/809e2710-c596-4454-96fd-f5a8fc765871).

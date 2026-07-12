@@ -49,27 +49,26 @@ public sealed class HomeDashboardTests : IAsyncLifetime
         var timeout = new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 };
         await _page.GotoAsync("/Home");
 
-        // First-visit hero → create the first page.
+        // First-visit hero → create the first page; the beta starter pre-places the trio.
         await _page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Create" })
             .ClickAsync(new LocatorClickOptions { Timeout = 60_000 });
+        var titles = _page.Locator(".dash-cell .dash-widget-title");
+        await Expect(titles.First).ToBeVisibleAsync(timeout);
+        await Expect(titles).ToHaveCountAsync(3);
+        await Expect(titles.Nth(0)).ToHaveTextAsync("Competitive Level");
 
-        // Enter edit mode and add two widgets from the drawer.
+        // Edit mode: the drawer adds a SECOND Pumbility — multiple instances of one
+        // type are supported by design (per-instance config).
         await _page.Locator("button[title='Edit']").ClickAsync(new LocatorClickOptions { Timeout = 60_000 });
-        // Toolbar and empty-page hero both offer the button; either works.
         await _page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Add Widgets" }).First
             .ClickAsync();
         await _page.Locator(".dash-drawer-item", new PageLocatorOptions { HasTextString = "PUMBILITY" })
             .ClickAsync(new LocatorClickOptions { Timeout = 60_000 });
-        await _page.Locator(".dash-drawer-item", new PageLocatorOptions { HasTextString = "Weekly Charts" })
-            .ClickAsync();
         // The temporary drawer closes via its overlay — Escape isn't bound.
         await _page.Locator(".mud-overlay").ClickAsync();
         await Expect(_page.Locator(".mud-overlay")).ToBeHiddenAsync();
-
-        var titles = _page.Locator(".dash-cell .dash-widget-title");
-        await Expect(titles.First).ToBeVisibleAsync(timeout);
-        await Expect(titles.Nth(0)).ToHaveTextAsync("PUMBILITY");
-        await Expect(titles.Nth(1)).ToHaveTextAsync("Weekly Charts");
+        await Expect(titles).ToHaveCountAsync(4);
+        await Expect(titles.Nth(3)).ToHaveTextAsync("PUMBILITY");
 
         // Drag the first widget's handle onto the far side of the second widget.
         var handle = _page.Locator(".dash-cell").Nth(0).Locator(".dash-drag-handle");
@@ -84,14 +83,14 @@ public sealed class HomeDashboardTests : IAsyncLifetime
             (float)(targetBox.Y + targetBox.Height / 2), new MouseMoveOptions { Steps = 12 });
         await _page.Mouse.UpAsync();
 
-        await Expect(titles.Nth(0)).ToHaveTextAsync("Weekly Charts",
+        await Expect(titles.Nth(0)).ToHaveTextAsync("PUMBILITY",
             new LocatorAssertionsToHaveTextOptions { Timeout = 60_000 });
-        await Expect(titles.Nth(1)).ToHaveTextAsync("PUMBILITY");
+        await Expect(titles.Nth(1)).ToHaveTextAsync("Competitive Level");
 
         // The drop dispatched one MoveHomePageWidgetCommand — the order survives a reload.
         await _page.ReloadAsync();
         await Expect(titles.First).ToBeVisibleAsync(timeout);
-        await Expect(titles.Nth(0)).ToHaveTextAsync("Weekly Charts");
-        await Expect(titles.Nth(1)).ToHaveTextAsync("PUMBILITY");
+        await Expect(titles.Nth(0)).ToHaveTextAsync("PUMBILITY");
+        await Expect(titles.Nth(1)).ToHaveTextAsync("Competitive Level");
     }
 }
