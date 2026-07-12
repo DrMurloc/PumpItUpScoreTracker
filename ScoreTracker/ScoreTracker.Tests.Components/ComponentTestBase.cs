@@ -6,6 +6,7 @@ using Moq;
 using MudBlazor;
 using MudBlazor.Services;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Services;
 
@@ -18,8 +19,12 @@ namespace ScoreTracker.Tests.Components;
 /// </summary>
 public abstract class ComponentTestBase : TestContext
 {
+    /// <summary>Configure before rendering; components see it through DI.</summary>
+    protected Mock<ICurrentUserAccessor> CurrentUser { get; } = new();
+
     protected ComponentTestBase()
     {
+        Services.AddSingleton(CurrentUser.Object);
         JSInterop.Mode = JSRuntimeMode.Loose;
         // No MudPopoverProvider in a component-under-test's tree; tooltips render their
         // activator content regardless, which is all these facts assert on.

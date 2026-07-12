@@ -9,11 +9,13 @@
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Enums
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
-@inject ICurrentUserAccessor CurrentUser;
-@inject IMediator Mediator;
+@* The Advanced surface of the randomizer settings (docs/design/randomizer-overhaul.md):
+   per-level switch/weight grids for gap-y setups, song types, minimum counts, and the
+   power toggles. The front door — sliders, count presets, player filters — lives in
+   RandomizerSettingsPanel, which embeds this under its Advanced disclosure. *@
 <MudExpansionPanels>
 
-    <MudExpansionPanel Text="Singles Levels">
+    <MudExpansionPanel Text="@L["Singles Levels"]">
         <MudGrid>
             @foreach (var level in Settings.LevelWeights.Keys.OrderBy(k => k))
             {
@@ -30,7 +32,7 @@
             }
         </MudGrid>
     </MudExpansionPanel>
-    <MudExpansionPanel Text="Doubles Levels">
+    <MudExpansionPanel Text="@L["Doubles Levels"]">
         <MudGrid>
             @foreach (var level in Settings.DoubleLevelWeights.Keys.OrderBy(k => k))
             {
@@ -48,7 +50,7 @@
         </MudGrid>
     </MudExpansionPanel>
 
-    <MudExpansionPanel Text="CoOp Player Count">
+    <MudExpansionPanel Text="@L["Co-Op Player Count"]">
         <MudGrid>
             @foreach (var level in Settings.PlayerCountWeights.Keys.OrderBy(k => k))
             {
@@ -75,7 +77,7 @@
     </MudExpansionPanel>
 
 
-    <MudExpansionPanel Text="Song Types">
+    <MudExpansionPanel Text="@L["Song Types"]">
         <MudGrid>
             @foreach (var songType in Settings.SongTypeWeights.Keys)
             {
@@ -92,7 +94,7 @@
             }
         </MudGrid>
     </MudExpansionPanel>
-    <MudExpansionPanel Text="Minimum Count">
+    <MudExpansionPanel Text="@L["Minimum Count"]">
         <MudGrid>
             <MudItem xs="12">
                 <MudRadioGroup @bind-Value="@_minimumType">
@@ -179,86 +181,24 @@
             }
         </MudGrid>
     </MudExpansionPanel>
-    @if (CurrentUser.IsLoggedIn)
-    {
-        
-        <MudExpansionPanel Text="Player Baseed Settings">
-            <MudGrid>
-                <MudItem xs="12">
-                    <MudText>Passed</MudText>
-                    <MudRadioGroup T="bool?" @bind-Value="Settings.ClearStatus">
-                        <MudRadio T="bool?" Value="null" Color="Color.Primary">Off</MudRadio>
-                        <MudRadio T="bool?" Value="true" Color="Color.Secondary">Passed</MudRadio>
-                        <MudRadio T="bool?" Value="false">Not Passed</MudRadio>
-                    </MudRadioGroup>
-                </MudItem>
-                @for (var letterGradeIndex = PhoenixLetterGrade.A; letterGradeIndex <= PhoenixLetterGrade.SSSPlus; letterGradeIndex++)
-                {
-                    var letterGrade = letterGradeIndex;
-                    
-                    <MudItem xs="6" sm="4" md="3">
-                        <MudCheckBox T="bool" Label="@letterGrade.GetName()" Value="Settings.LetterGrades.Contains(letterGrade)" ValueChanged="v=>Task.FromResult(v?Settings.LetterGrades.Add(letterGrade):Settings.LetterGrades.Remove(letterGrade))"></MudCheckBox>
-                    
-                    </MudItem>
-                }
-            </MudGrid>
-
-        </MudExpansionPanel>
-    }
-    <MudExpansionPanel Text="Additional Settings">
+    <MudExpansionPanel Text="@L["Additional Settings"]">
         <MudGrid>
             <MudItem xs="4">
-                <MudNumericField T="int" Min="1" Max="30" Label="Chart Count" @bind-Value="Settings.Count"></MudNumericField>
-                @if (Settings.CustomMinimums.Any(kv => kv.Value > 0) || Settings.ChartTypeLevelMinimums.Any(kv => kv.Value > 0) || Settings.LevelMinimums.Any(kv => kv.Value > 0) || Settings.ChartTypeMinimums.Any(kv => kv.Value > 0))
-                {
-                    <br/>                    
-                    <MudText Color="Color.Warning">@(Settings.CustomMinimums.Sum(kv=>kv.Value)+Settings.ChartTypeLevelMinimums.Sum(kv=>kv.Value)+Settings.LevelMinimums.Sum(kv=>kv.Value)+Settings.ChartTypeMinimums.Sum(kv=>kv.Value)) Charts From Minimums</MudText>
-                }
-            </MudItem>
-            
-            <MudItem xs="4">
-                <MudSwitch Color="Color.Primary" Label="Allow Repeat Charts" @bind-Value="Settings.AllowRepeats"></MudSwitch>
+                <MudSwitch T="bool" Color="Color.Primary" Label="@L["Use Weights"]" @bind-Value="_useWeights"></MudSwitch>
             </MudItem>
             <MudItem xs="4">
-                <MudSwitch T="bool" Color="Color.Primary" Label="Use Weights" @bind-Value="_useWeights"></MudSwitch>
-            </MudItem>
-            
-            <MudItem xs="4">
-                <MudSwitch T="bool" Color="Color.Primary" Label="Use Scoring Level" @bind-Value="Settings.UseScoringLevels"></MudSwitch>
+                <MudSwitch T="bool" Color="Color.Primary" Label="@L["Use Scoring Level"]" @bind-Value="Settings.UseScoringLevels"></MudSwitch>
             </MudItem>
             <MudItem xs="4">
-                <MudSelect T="RandomSettings.ResultsOrdering" @bind-Value="Settings.Ordering" Label="Results Order">
+                <MudSelect T="RandomSettings.ResultsOrdering" @bind-Value="Settings.Ordering" Label="@L["Results Order"]">
                     @foreach (var option in Enum.GetValues<RandomSettings.ResultsOrdering>())
                     {
-                        <MudSelectItem T="RandomSettings.ResultsOrdering" Value="option">@option</MudSelectItem>
+                        <MudSelectItem T="RandomSettings.ResultsOrdering" Value="option">@L[option.ToString()]</MudSelectItem>
                     }
                 </MudSelect>
             </MudItem>
         </MudGrid>
     </MudExpansionPanel>
-    @if (_includedCharts.Any())
-    {
-        <MudExpansionPanel Text="Included Charts">
-            <MudTable Items="_includedCharts">
-                <RowTemplate>
-                    <MudTd>
-                        <MudTooltip Text="@context.Song.Name">
-                            <MudImage Src="@context.Song.ImagePath.ToString()" Height="35" Alt="@context.Song.Name" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
-                        </MudTooltip>
-                    </MudTd>
-                    <MudTd>
-                        <MudText>@context.Song.Name</MudText>
-                    </MudTd>
-                    <MudTd>
-                        <DifficultyBubble Chart="context"></DifficultyBubble>
-                    </MudTd>
-                </RowTemplate>
-                <PagerContent>
-                    <MudTablePager></MudTablePager>
-                </PagerContent>
-            </MudTable>
-        </MudExpansionPanel>
-    }
 </MudExpansionPanels>
 @code {
 
@@ -302,22 +242,12 @@
         Settings.ClearCustomMinimums();
         Settings.ChartTypeLevelMinimums[shortHand] = minimum;
     }
-    private string LevelString(int level) => $"Level {level}";
-    private string PlayerString(int players) => $"{players} Players";
+    private string LevelString(int level) => L["Level {0}", level];
+    private string PlayerString(int players) => L["{0} Players", players];
     private IReadOnlyCollection<string> _newCustomBuckets = new List<string>();
 
-
-    private IEnumerable<Chart> _includedCharts = Array.Empty<Chart>();
-
-    private bool _showChartList = false;
-    private async Task ShowIncludedCharts()
-    {
-        _includedCharts = await Mediator.Send(new GetIncludedRandomChartsQuery(Settings));
-        _showChartList = true;
-    }
-    protected override async Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
         _useWeights = Settings.HasWeightedSetting;
-
     }
 }

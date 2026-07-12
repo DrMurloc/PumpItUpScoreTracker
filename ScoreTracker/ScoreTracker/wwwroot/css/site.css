@@ -382,6 +382,134 @@ html.nav-away .page-dock,
     display: block;
 }
 
+/* ===== Randomizer settings panel ===== */
+
+.rand-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.rand-settings-row {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.rand-settings-label {
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+}
+
+.rand-type-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.rand-count-presets {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rand-count-preset,
+.rand-coop-chip,
+.rand-seg,
+.rand-grade-chip {
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 9px;
+    background: none;
+    cursor: pointer;
+    color: var(--mix-ink-muted);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.rand-count-preset {
+    min-width: 40px;
+    padding: 7px 0;
+    font-size: .82rem;
+}
+
+.rand-count-custom {
+    max-width: 76px;
+}
+
+.rand-count-preset.on,
+.rand-coop-chip.on,
+.rand-seg.on,
+.rand-grade-chip.on {
+    background: var(--mix-primary);
+    border-color: var(--mix-primary);
+    color: var(--mix-primary-contrast);
+}
+
+.rand-coop-chips {
+    display: flex;
+    gap: 6px;
+}
+
+.rand-coop-chip {
+    padding: 6px 13px;
+    font-size: .8rem;
+}
+
+.rand-my-results {
+    display: flex;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 9px;
+    overflow: hidden;
+}
+
+.rand-seg {
+    flex: 1;
+    border: none;
+    border-radius: 0;
+    padding: 8px 0;
+    font-size: .78rem;
+}
+
+.rand-grade-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.rand-grade-chip {
+    padding: 4px 10px;
+    font-size: .72rem;
+}
+
+.rand-gated-reason {
+    color: var(--mix-ink-muted);
+}
+
+.rand-advanced-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    border: 1px dashed var(--mud-palette-lines-default);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: none;
+    cursor: pointer;
+    color: var(--mix-ink-muted);
+    font-size: .8rem;
+}
+
+.rand-advanced-caret {
+    margin-left: auto;
+    font-size: .7rem;
+}
+
+.rand-advanced-body {
+    padding-top: 6px;
+}
+
 /* ===== Armed action selector ===== */
 
 .armed-selector {

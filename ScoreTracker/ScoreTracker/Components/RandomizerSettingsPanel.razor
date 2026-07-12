@@ -1,0 +1,247 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.Theming
+@inject ICurrentUserAccessor CurrentUser
+
+@* The randomizer's settings surface (docs/design/randomizer-overhaul.md): range
+   sliders are the front door — "S16–S18" is two drags, not twelve taps. The per-level
+   switch/weight grids survive demoted inside Advanced (RandomizerSettingsConfiguration)
+   for gap-y meme-tourney setups; a slider drag overwrites them with a contiguous range.
+   Mix is a property of the settings, chosen here, defaulting to the site mix — saved
+   settings never "disappear" on the wrong mix. The page owns the drawer chrome and the
+   live match-count footer. *@
+<div class="rand-settings">
+    <div class="rand-settings-row">
+        <MudSelect T="MixEnum" Value="Mix" ValueChanged="SetMix" Label="@L["Mix"]" Dense="true"
+                   Variant="Variant.Outlined" Margin="Margin.Dense">
+            @foreach (var mix in MixThemes.ThemedMixes)
+            {
+                <MudSelectItem T="MixEnum" Value="mix">@mix.GetName()</MudSelectItem>
+            }
+        </MudSelect>
+    </div>
+
+    <div class="rand-settings-row">
+        <span class="rand-settings-label">@L["Cards per draw"]</span>
+        <div class="rand-count-presets">
+            @foreach (var preset in CountPresets)
+            {
+                <button type="button" class="rand-count-preset @(Settings.Count == preset ? "on" : null)"
+                        @onclick="() => SetCount(preset)">@preset</button>
+            }
+            <MudNumericField T="int" Min="1" Max="30" Value="Settings.Count" ValueChanged="SetCount"
+                             Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true"
+                             Class="rand-count-custom" aria-label="@L["Cards per draw"]"></MudNumericField>
+        </div>
+        @if (MinimumsTotal > 0)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Warning">@L["{0} Charts From Minimums", MinimumsTotal]</MudText>
+        }
+    </div>
+
+    <div class="rand-settings-row">
+        <div class="rand-type-head">
+            <span class="rand-settings-label">@L["Singles"]</span>
+            <MudSwitch T="bool" Color="Color.Primary" Value="SinglesOn" ValueChanged="ToggleSingles"
+                       aria-label="@L["Singles"]"></MudSwitch>
+        </div>
+        <LevelRangeSlider Label="@L["Singles"].ToString()" Prefix="S" Min="MinLevel" Max="MaxLevel"
+                          ValueMin="SinglesRange.min" ValueMax="SinglesRange.max" Disabled="!SinglesOn"
+                          ValueMinChanged="v => SetSinglesRange(v, SinglesRange.max)"
+                          ValueMaxChanged="v => SetSinglesRange(SinglesRange.min, v)"></LevelRangeSlider>
+    </div>
+
+    <div class="rand-settings-row">
+        <div class="rand-type-head">
+            <span class="rand-settings-label">@L["Doubles"]</span>
+            <MudSwitch T="bool" Color="Color.Primary" Value="DoublesOn" ValueChanged="ToggleDoubles"
+                       aria-label="@L["Doubles"]"></MudSwitch>
+        </div>
+        <LevelRangeSlider Label="@L["Doubles"].ToString()" Prefix="D" Min="MinLevel" Max="MaxLevel"
+                          ValueMin="DoublesRange.min" ValueMax="DoublesRange.max" Disabled="!DoublesOn"
+                          ValueMinChanged="v => SetDoublesRange(v, DoublesRange.max)"
+                          ValueMaxChanged="v => SetDoublesRange(DoublesRange.min, v)"></LevelRangeSlider>
+    </div>
+
+    <div class="rand-settings-row">
+        <span class="rand-settings-label">@L["Co-Op"]</span>
+        <div class="rand-coop-chips">
+            @foreach (var players in Settings.PlayerCountWeights.Keys.OrderBy(k => k))
+            {
+                var count = players;
+                <button type="button" class="rand-coop-chip @(Settings.PlayerCountWeights[count] > 0 ? "on" : null)"
+                        @onclick="() => ToggleCoOp(count)">×@count</button>
+            }
+        </div>
+    </div>
+
+    @if (CurrentUser.IsLoggedIn)
+    {
+        <div class="rand-settings-row @(PlayerFiltersAvailable ? null : "rand-settings-gated")">
+            <span class="rand-settings-label">@L["My results"]</span>
+            @if (PlayerFiltersAvailable)
+            {
+                <div class="rand-my-results">
+                    <button type="button" class="rand-seg @(Settings.ClearStatus == null ? "on" : null)"
+                            @onclick="() => SetClearStatus(null)">@L["Any"]</button>
+                    <button type="button" class="rand-seg @(Settings.ClearStatus == false ? "on" : null)"
+                            @onclick="() => SetClearStatus(false)">@L["Not Passed"]</button>
+                    <button type="button" class="rand-seg @(Settings.ClearStatus == true ? "on" : null)"
+                            @onclick="() => SetClearStatus(true)">@L["Passed"]</button>
+                </div>
+                <div class="rand-grade-chips">
+                    @for (var grade = PhoenixLetterGrade.A; grade <= PhoenixLetterGrade.SSSPlus; grade++)
+                    {
+                        var letterGrade = grade;
+                        <button type="button" class="rand-grade-chip @(Settings.LetterGrades.Contains(letterGrade) ? "on" : null)"
+                                @onclick="() => ToggleGrade(letterGrade)">@letterGrade.GetName()</button>
+                    }
+                </div>
+            }
+            else
+            {
+                <MudText Typo="Typo.caption" Class="rand-gated-reason">@L["Score filters need Phoenix scoring — not available for this mix yet"]</MudText>
+            }
+        </div>
+    }
+
+    <MudSwitch T="bool" Color="Color.Primary" Label="@L["Allow Repeat Charts"]" Value="Settings.AllowRepeats"
+               ValueChanged="SetAllowRepeats"></MudSwitch>
+
+    <div class="rand-settings-row">
+        <button type="button" class="rand-advanced-toggle" @onclick="() => _showAdvanced = !_showAdvanced"
+                aria-expanded="@_showAdvanced">
+            <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small"></MudIcon>
+            @L["Per-level weights & gaps"]
+            <span class="rand-advanced-caret">@(_showAdvanced ? "▾" : "▸")</span>
+        </button>
+        @if (_showAdvanced)
+        {
+            <div class="rand-advanced-body">
+                <RandomizerSettingsConfiguration Settings="Settings"></RandomizerSettingsConfiguration>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+
+    private static readonly int[] CountPresets = { 3, 5, 7, 10 };
+
+    private bool _showAdvanced;
+
+    [Parameter] public RandomSettings Settings { get; set; } = new();
+
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    [Parameter] public EventCallback<MixEnum> MixChanged { get; set; }
+
+    /// <summary>Raised after any change — the page debounces the live match count off it.</summary>
+    [Parameter] public EventCallback SettingsChanged { get; set; }
+
+    private static int MinLevel => (int)DifficultyLevel.Min;
+    private static int MaxLevel => (int)DifficultyLevel.Max;
+
+    // Score filters ride Phoenix scoring (PhoenixLetterGrade, Phoenix records); older
+    // scales don't translate (legacy-mixes design).
+    private bool PlayerFiltersAvailable => Mix is MixEnum.Phoenix or MixEnum.Phoenix2;
+
+    private bool SinglesOn => Settings.LevelWeights.Any(kv => kv.Value > 0);
+    private bool DoublesOn => Settings.DoubleLevelWeights.Any(kv => kv.Value > 0);
+
+    private (int min, int max) SinglesRange => RangeOf(Settings.LevelWeights);
+    private (int min, int max) DoublesRange => RangeOf(Settings.DoubleLevelWeights);
+
+    private int MinimumsTotal => Settings.CustomMinimums.Sum(kv => kv.Value)
+                                 + Settings.ChartTypeLevelMinimums.Sum(kv => kv.Value ?? 0)
+                                 + Settings.LevelMinimums.Sum(kv => kv.Value ?? 0)
+                                 + Settings.ChartTypeMinimums.Sum(kv => kv.Value ?? 0);
+
+    private static (int min, int max) RangeOf(IDictionary<int, int> weights)
+    {
+        var active = weights.Where(kv => kv.Value > 0).Select(kv => kv.Key).ToArray();
+        // The dormant default range a re-enabled switch comes back to.
+        return active.Length == 0 ? (15, 18) : (active.Min(), active.Max());
+    }
+
+    private static void WriteRange(IDictionary<int, int> weights, int min, int max)
+    {
+        // The slider is the coarse control: a contiguous run of 1s. Gaps and per-level
+        // weights are Advanced's job and a drag deliberately overwrites them.
+        foreach (var key in weights.Keys.ToArray()) weights[key] = key >= min && key <= max ? 1 : 0;
+    }
+
+    private Task Notify() => SettingsChanged.InvokeAsync();
+
+    private async Task SetMix(MixEnum mix)
+    {
+        Mix = mix;
+        if (!PlayerFiltersAvailable)
+        {
+            Settings.ClearStatus = null;
+            Settings.LetterGrades.Clear();
+        }
+
+        await MixChanged.InvokeAsync(mix);
+        await Notify();
+    }
+
+    private async Task SetCount(int count)
+    {
+        Settings.Count = count;
+        await Notify();
+    }
+
+    private async Task ToggleSingles(bool on)
+    {
+        if (on) WriteRange(Settings.LevelWeights, 15, 18);
+        else foreach (var key in Settings.LevelWeights.Keys.ToArray()) Settings.LevelWeights[key] = 0;
+        await Notify();
+    }
+
+    private async Task ToggleDoubles(bool on)
+    {
+        if (on) WriteRange(Settings.DoubleLevelWeights, 15, 18);
+        else foreach (var key in Settings.DoubleLevelWeights.Keys.ToArray()) Settings.DoubleLevelWeights[key] = 0;
+        await Notify();
+    }
+
+    private async Task SetSinglesRange(int min, int max)
+    {
+        WriteRange(Settings.LevelWeights, min, max);
+        await Notify();
+    }
+
+    private async Task SetDoublesRange(int min, int max)
+    {
+        WriteRange(Settings.DoubleLevelWeights, min, max);
+        await Notify();
+    }
+
+    private async Task ToggleCoOp(int players)
+    {
+        Settings.PlayerCountWeights[players] = Settings.PlayerCountWeights[players] > 0 ? 0 : 1;
+        await Notify();
+    }
+
+    private async Task SetClearStatus(bool? status)
+    {
+        Settings.ClearStatus = status;
+        await Notify();
+    }
+
+    private async Task ToggleGrade(PhoenixLetterGrade grade)
+    {
+        if (!Settings.LetterGrades.Remove(grade)) Settings.LetterGrades.Add(grade);
+        await Notify();
+    }
+
+    private async Task SetAllowRepeats(bool allow)
+    {
+        Settings.AllowRepeats = allow;
+        await Notify();
+    }
+}
