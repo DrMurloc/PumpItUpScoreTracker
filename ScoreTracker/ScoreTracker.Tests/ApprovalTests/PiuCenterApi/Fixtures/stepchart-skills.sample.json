@@ -1,0 +1,66 @@
+﻿[
+    {
+        "jump":  {
+                     "S7":  [
+                                "Slam_-_Novasonic_S7_ARCADE",
+                                "Red_Swan_-_Yahpp_S7_ARCADE",
+                                "Nemesis_-_M2U_S7_ARCADE",
+                                "Break_It_Down_-_MAZO_S7_ARCADE",
+                                "Imaginarized_City_-_Reku_Mochizuki_S7_ARCADE",
+                                "HTTP_-_Quree_S7_ARCADE",
+                                "Pop_Sequence_-_Hommarju_S7_ARCADE",
+                                "Jam_O_Beat_-_Banya_Production_S7_ARCADE",
+                                "Mission_Possible_-_BanYa_S7_ARCADE",
+                                "Smile_Diary_-_you_S7_ARCADE",
+                                "Xenesis_-_Banya_Production_S7_ARCADE",
+                                "MATADOR_-_Cranky_S7_ARCADE",
+                                "Acquire_-_ryhki_S7_ARCADE",
+                                "The_Apocalypse_-_HyuN_feat._Elika_S7_ARCADE",
+                                "Phantom_-Intermezzo-_-_Banya_Production_S7_ARCADE",
+                                "Csikos_Post_-_Banya_S7_ARCADE",
+                                "Awakening_-_typeMARS_S7_ARCADE",
+                                "Beethoven_Virus_-_BanYa_S7_ARCADE",
+                                "Nyan-turne_(feat._KuTiNA)_-_Cashew__Castellia_S7_ARCADE",
+                                "What_Happened_-_Throwdown_S7_ARCADE"
+                            ],
+                     "S8":  [
+                                "Another_Truth_-_Novasonic_S8_ARCADE",
+                                "The_End_of_the_World_ft._Skizzo_-_MonstDeath_S8_ARCADE",
+                                "Katkoi_-_M2U_S8_ARCADE",
+                                "Christmas_Memories_-_Warak_S8_ARCADE",
+                                "Emperor_-_BanYa_S8_ARCADE",
+                                "BANYA_HIPHOP_REMIX_-_BanYa_S8_REMIX",
+                                "Final_Audition_3_-_BanYa_S8_ARCADE",
+                                "STAGER_-_Ras_S8_ARCADE",
+                                "Solitary_2_-_BanYa_S8_ARCADE",
+                                "Naissance_-_BanYa_S8_ARCADE",
+                                "Cutie_Song_-_Memme_S8_ARCADE",
+                                "Rolling_Christmas_-_BanYa_S8_ARCADE",
+                                "Visual_Dream_II_(In_Fiction)_-_ARAGON_S8_ARCADE",
+                                "Final_Audition_Ep._2-1_-_YAHPP_S8_ARCADE",
+                                "PaPa_Gonzales_-_BanYa_S8_ARCADE",
+                                "J_Bong_-_BanYa_S8_ARCADE",
+                                "Little_Munchkin_-_Castellia_S8_ARCADE",
+                                "TOMBOY_-_(G)I-DLE_S8_ARCADE",
+                                "Csikos_Post_-_Banya_S8_ARCADE",
+                                "The_People_didnt_know_Pumping_up_-_Banya_Production_S8_REMIX"
+                            ]
+                 },
+        "bracket_drill":  {
+                              "S16":  [
+                                          "Ignis_Fatuus(DM_Ashura_Mix)_-_BanYa__DM_Ashura_S16_ARCADE"
+                                      ],
+                              "S17":  [
+                                          "Final_Audition_2__-_SHORT_CUT_-_-_Banya_S17_SHORTCUT",
+                                          "Acquire_-_ryhki_S17_ARCADE",
+                                          "GLORIA_-_Croire_S17_ARCADE",
+                                          "Blaze_Emotion_(Band_Version)_-_Yahpp_S17_ARCADE",
+                                          "Your_Mind_-_Roy_Mikelate_S17_ARCADE"
+                                      ]
+                          }
+    },
+    {
+        "jump":  "Jumps require you to use both feet to hit two or more notes at the same time. This can take a lot of energy, so it is valuable to learn how to conserve energy on jumps. At fast NPS, jumps can alternatively be executed as a run, at double time rhythm.",
+        "bracket_drill":  "These identify brackets that occur in drills."
+    }
+]

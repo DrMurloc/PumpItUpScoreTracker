@@ -2706,12 +2706,6 @@
   <data name="On ToDo List" xml:space="preserve">
     <value>On Mrgl-Do List</value>
   </data>
-  <data name="Your journey — all mixes" xml:space="preserve">
-    <value>Your mrgljourney — all mixes</value>
-  </data>
-  <data name="Full score journey" xml:space="preserve">
-    <value>Full mrglscore journey</value>
-  </data>
   <data name="Record Score" xml:space="preserve">
     <value>Mrglrecord Score</value>
   </data>
@@ -2847,6 +2841,66 @@
   <data name="Advanced" xml:space="preserve">
     <value>Advmrglanced</value>
   </data>
+  <data name="Step Analysis" xml:space="preserve">
+    <value>Sterp Analrgsis</value>
+  </data>
+  <data name="Dominant Skills" xml:space="preserve">
+    <value>Dominrgnt Skrglls</value>
+  </data>
+  <data name="Notes per Second" xml:space="preserve">
+    <value>Nrgtes per Secrnd</value>
+  </data>
+  <data name="Sustain Time" xml:space="preserve">
+    <value>Sustrgn Time</value>
+  </data>
+  <data name="Time Under Tension" xml:space="preserve">
+    <value>Time Undrgr Tensrgn</value>
+  </data>
+  <data name="Step analysis data from PIU Center" xml:space="preserve">
+    <value>Sterp analrgsis data from PIU Center, mrgl</value>
+  </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>Shrgre of chart sectrgns featrgring each skrgll</value>
+  </data>
+  <data name="Show Skill Metric" xml:space="preserve">
+    <value>Shrgw Skrgll Metrgc</value>
+  </data>
+  <data name="Queued" xml:space="preserve">
+    <value>Qrgd, mrgl</value>
+  </data>
+  <data name="Key" xml:space="preserve">
+    <value>Krgy</value>
+  </data>
+  <data name="Last Checked" xml:space="preserve">
+    <value>Lrgst Chrgcked</value>
+  </data>
+  <data name="Run PIU Center Crawl" xml:space="preserve">
+    <value>Rrgn PIU Center Crrgwl</value>
+  </data>
+  <data name="Unmatched PIU Center Keys" xml:space="preserve">
+    <value>Unmrgtched PIU Center Krgys</value>
+  </data>
+  <data name="No unmatched keys" xml:space="preserve">
+    <value>No unmrgtched krgys, mrgl</value>
+  </data>
+  <data name="Select a key, pick the chart it belongs to, then bind" xml:space="preserve">
+    <value>Selrgct a krgy, prgck the chrgrt it belrgngs to, thrgn brgnd</value>
+  </data>
+  <data name="Bind Selected Chart" xml:space="preserve">
+    <value>Brgnd Selrgcted Chrgrt</value>
+  </data>
+  <data name="Uploading" xml:space="preserve">
+    <value>Uplrgding</value>
+  </data>
+  <data name="Upload PIU Center Snapshot" xml:space="preserve">
+    <value>Uplrgd PIU Center Snapshrgt, mrgl</value>
+  </data>
+  <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
+    <value>A snapshrgt zip imprgrts a fetched data relrgse directly - same pipelrgn as the crrgwl, no fetchrgn, mrgl</value>
+  </data>
+  <data name="There was an error uploading the snapshot" xml:space="preserve">
+    <value>There was an errgr uplrgding the snapshrgt, mrgl</value>
+  </data>
   <data name="More Mixes" xml:space="preserve">
     <value>More Mixes</value>
   </data>
@@ -2885,5 +2939,11 @@
   </data>
   <data name="Community Rating" xml:space="preserve">
     <value>Community Rating</value>
+  </data>
+  <data name="Your Skills in Folder" xml:space="preserve">
+    <value>Yrgr Skrglls in Frglder, mrgl</value>
+  </data>
+  <data name="Score History" xml:space="preserve">
+    <value>Scrgre Histrgry</value>
   </data>
 </root>

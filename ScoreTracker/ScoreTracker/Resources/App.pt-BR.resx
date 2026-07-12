@@ -2735,12 +2735,6 @@
   <data name="On ToDo List" xml:space="preserve">
     <value>Na lista ToDo</value>
   </data>
-  <data name="Your journey — all mixes" xml:space="preserve">
-    <value>Sua jornada — todas as versões</value>
-  </data>
-  <data name="Full score journey" xml:space="preserve">
-    <value>Jornada completa</value>
-  </data>
   <data name="Record Score" xml:space="preserve">
     <value>Registrar pontuação</value>
   </data>
@@ -2876,6 +2870,66 @@
   <data name="Advanced" xml:space="preserve">
     <value>Avançado</value>
   </data>
+  <data name="Step Analysis" xml:space="preserve">
+    <value>Análise de passos</value>
+  </data>
+  <data name="Dominant Skills" xml:space="preserve">
+    <value>Habilidades dominantes</value>
+  </data>
+  <data name="Notes per Second" xml:space="preserve">
+    <value>Notas por segundo</value>
+  </data>
+  <data name="Sustain Time" xml:space="preserve">
+    <value>Tempo sustentado</value>
+  </data>
+  <data name="Time Under Tension" xml:space="preserve">
+    <value>Tempo sob tensão</value>
+  </data>
+  <data name="Step analysis data from PIU Center" xml:space="preserve">
+    <value>Dados de análise de passos do PIU Center</value>
+  </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>Proporção de seções do chart com cada habilidade</value>
+  </data>
+  <data name="Show Skill Metric" xml:space="preserve">
+    <value>Mostrar métrica de habilidade</value>
+  </data>
+  <data name="Queued" xml:space="preserve">
+    <value>Na fila</value>
+  </data>
+  <data name="Key" xml:space="preserve">
+    <value>Chave</value>
+  </data>
+  <data name="Last Checked" xml:space="preserve">
+    <value>Última verificação</value>
+  </data>
+  <data name="Run PIU Center Crawl" xml:space="preserve">
+    <value>Executar varredura do PIU Center</value>
+  </data>
+  <data name="Unmatched PIU Center Keys" xml:space="preserve">
+    <value>Chaves do PIU Center sem correspondência</value>
+  </data>
+  <data name="No unmatched keys" xml:space="preserve">
+    <value>Nenhuma chave sem correspondência</value>
+  </data>
+  <data name="Select a key, pick the chart it belongs to, then bind" xml:space="preserve">
+    <value>Selecione uma chave, escolha o chart correspondente e vincule</value>
+  </data>
+  <data name="Bind Selected Chart" xml:space="preserve">
+    <value>Vincular chart selecionado</value>
+  </data>
+  <data name="Uploading" xml:space="preserve">
+    <value>Enviando</value>
+  </data>
+  <data name="Upload PIU Center Snapshot" xml:space="preserve">
+    <value>Enviar snapshot do PIU Center</value>
+  </data>
+  <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
+    <value>Um zip de snapshot importa diretamente uma versão de dados já baixada: mesmo processo da varredura, sem downloads</value>
+  </data>
+  <data name="There was an error uploading the snapshot" xml:space="preserve">
+    <value>Ocorreu um erro ao enviar o snapshot</value>
+  </data>
   <data name="More Mixes" xml:space="preserve">
     <value>Mais versões</value>
   </data>
@@ -2914,5 +2968,11 @@
   </data>
   <data name="Community Rating" xml:space="preserve">
     <value>Avaliação da comunidade</value>
+  </data>
+  <data name="Your Skills in Folder" xml:space="preserve">
+    <value>Suas habilidades na pasta</value>
+  </data>
+  <data name="Score History" xml:space="preserve">
+    <value>Histórico de pontuações</value>
   </data>
 </root>

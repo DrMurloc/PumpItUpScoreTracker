@@ -1,24 +1,21 @@
-﻿@page "/ChartUpdate"
+@page "/ChartUpdate"
 @using MediatR
-@using MudBlazor.Utilities
-@using ScoreTracker.Application.Commands
-@using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.Records
-@using ScoreTracker.Domain.Services.Contracts
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
-@using System.Text.RegularExpressions
 
+@* The hand-tag skill editor died with the PiuCenter skill flip (tags are
+   crawler-regenerated; the old rows live in ChartSkillArchive). What survives is the
+   Chabala difficulty attribution — the one hand-set lens. *@
 <PageTitle>@L["Chart Update"]</PageTitle>
 <ChartSelector ChartIdSelected="SelectChart"></ChartSelector>
 @if (_currentChart != null)
 {
     <MudGrid>
-
         <MudItem xs="12">
             <MudSelect T="TierListCategory" @bind-Value="_category" Label=@L["Difficulty"]>
                 @foreach (var category in Enum.GetValues<TierListCategory>())
@@ -28,24 +25,9 @@
             </MudSelect>
         </MudItem>
         <MudItem xs="12">
-            @foreach (var skill in Enum.GetValues<Skill>().Where(s => !_skills.Contains(s)).OrderBy(s => s.GetColor()))
-            {
-                <MudChip T="string" Style=@($"background-color:{skill.GetColor()}") OnClick="() => _skills.Add(skill)">@skill.GetName()</MudChip>
-            }
-        </MudItem>
-        @foreach (var skill in _skills.OrderBy(s => s.GetColor()))
-        {
-            <MudItem xs="6">
-                <MudChip T="string" Style=@($"background-color:{skill.GetColor()}") OnClick="() => _skills.Remove(skill)">@skill.GetName()</MudChip>
-            </MudItem>
-        }
-
-        <MudItem xs="12">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isSaving" OnClick="UpdateChart">@L["Save Chart"]</MudButton>
         </MudItem>
-
     </MudGrid>
-
 }
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
@@ -54,24 +36,17 @@
 @inject NavigationManager NavManager;
 @code
 {
-
     private Chart? _currentChart = null;
-
-
-    private ISet<Skill> _skills = Array.Empty<Skill>().ToHashSet();
     private TierListCategory _category = TierListCategory.Unrecorded;
     private bool _isSaving = false;
 
     private Task SelectChart(Chart c)
     {
         _currentChart = c;
-        if (c.Skills.Any())
-        {
-            _skills = c.Skills.ToHashSet();
-        }
         StateHasChanged();
         return Task.CompletedTask;
     }
+
     private async Task UpdateChart()
     {
         if (_currentChart == null)
@@ -79,7 +54,6 @@
             return;
         }
         _isSaving = true;
-        await Mediator.Send(new UpdateChartSkillCommand(new ChartSkillsRecord(_currentChart.Id, _skills, Array.Empty<Skill>())));
         await TierLists.SaveEntry(MixEnum.Phoenix, new SongTierListEntry("Chabala", _currentChart.Id, _category, 1), CancellationToken.None);
         Snackbar.Add(L["Updated X Y", _currentChart.Song.Name, _currentChart.DifficultyString].Value);
         _isSaving = false;

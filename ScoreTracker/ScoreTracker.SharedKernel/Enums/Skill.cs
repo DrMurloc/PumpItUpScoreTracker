@@ -56,8 +56,13 @@ public enum Skill
     [Name("Jacks")] [Description("Jacks")] [SkillCategory(SkillCategory.Tech)]
     Jacks,
 
+    // Functionally retired by the PiuCenter skill flip (no measurable counterpart) —
+    // the member survives so pre-flip rows still Enum.Parse; remove in a post-flip cleanup.
     [Name("Gimmicks")] [Description("Gimmicks")] [SkillCategory(SkillCategory.Tech)]
-    Gimmicks
+    Gimmicks,
+
+    [Name("Runs")] [Description("Sustained streams of steps")] [SkillCategory(SkillCategory.Stamina)]
+    Runs
 }
 
 [ExcludeFromCodeCoverage]
@@ -106,6 +111,12 @@ public static class SkillHelpers
     public static bool IsCategory(this Skill skill, SkillCategory category)
     {
         return Categories[skill].Contains(category);
+    }
+
+    /// <summary>The skill's leading category — the one its display color keys off.</summary>
+    public static SkillCategory GetPrimaryCategory(this Skill skill)
+    {
+        return Categories[skill].FirstOrDefault();
     }
 
     public static string GetDescription(this Skill skill)

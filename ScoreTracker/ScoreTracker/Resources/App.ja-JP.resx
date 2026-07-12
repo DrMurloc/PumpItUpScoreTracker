@@ -2784,12 +2784,6 @@
   <data name="On ToDo List" xml:space="preserve">
     <value>ToDoリスト登録済み</value>
   </data>
-  <data name="Your journey — all mixes" xml:space="preserve">
-    <value>あなたの記録 — 全バージョン</value>
-  </data>
-  <data name="Full score journey" xml:space="preserve">
-    <value>スコア履歴をすべて見る</value>
-  </data>
   <data name="Record Score" xml:space="preserve">
     <value>スコアを記録</value>
   </data>
@@ -2925,6 +2919,66 @@
   <data name="Advanced" xml:space="preserve">
     <value>詳細設定</value>
   </data>
+  <data name="Step Analysis" xml:space="preserve">
+    <value>ステップ分析</value>
+  </data>
+  <data name="Dominant Skills" xml:space="preserve">
+    <value>主要スキル</value>
+  </data>
+  <data name="Notes per Second" xml:space="preserve">
+    <value>秒間ノーツ数</value>
+  </data>
+  <data name="Sustain Time" xml:space="preserve">
+    <value>サステイン時間</value>
+  </data>
+  <data name="Time Under Tension" xml:space="preserve">
+    <value>負荷継続時間</value>
+  </data>
+  <data name="Step analysis data from PIU Center" xml:space="preserve">
+    <value>ステップ分析データ提供：PIU Center</value>
+  </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>各スキルが登場するチャートセクションの割合</value>
+  </data>
+  <data name="Show Skill Metric" xml:space="preserve">
+    <value>スキル指標を表示</value>
+  </data>
+  <data name="Queued" xml:space="preserve">
+    <value>キューに追加しました</value>
+  </data>
+  <data name="Key" xml:space="preserve">
+    <value>キー</value>
+  </data>
+  <data name="Last Checked" xml:space="preserve">
+    <value>最終確認</value>
+  </data>
+  <data name="Run PIU Center Crawl" xml:space="preserve">
+    <value>PIU Centerクロールを実行</value>
+  </data>
+  <data name="Unmatched PIU Center Keys" xml:space="preserve">
+    <value>未マッチのPIU Centerキー</value>
+  </data>
+  <data name="No unmatched keys" xml:space="preserve">
+    <value>未マッチのキーはありません</value>
+  </data>
+  <data name="Select a key, pick the chart it belongs to, then bind" xml:space="preserve">
+    <value>キーを選択し、対応するチャートを選んでバインドしてください</value>
+  </data>
+  <data name="Bind Selected Chart" xml:space="preserve">
+    <value>選択したチャートをバインド</value>
+  </data>
+  <data name="Uploading" xml:space="preserve">
+    <value>アップロード中</value>
+  </data>
+  <data name="Upload PIU Center Snapshot" xml:space="preserve">
+    <value>PIU Centerスナップショットをアップロード</value>
+  </data>
+  <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
+    <value>スナップショットzipは取得済みのデータリリースを直接インポートします。クロールと同じ処理で、フェッチはありません</value>
+  </data>
+  <data name="There was an error uploading the snapshot" xml:space="preserve">
+    <value>スナップショットのアップロード中にエラーが発生しました</value>
+  </data>
   <data name="More Mixes" xml:space="preserve">
     <value>その他のバージョン</value>
   </data>
@@ -2963,5 +3017,11 @@
   </data>
   <data name="Community Rating" xml:space="preserve">
     <value>コミュニティ評価</value>
+  </data>
+  <data name="Your Skills in Folder" xml:space="preserve">
+    <value>このフォルダでのあなたのスキル</value>
+  </data>
+  <data name="Score History" xml:space="preserve">
+    <value>スコア履歴</value>
   </data>
 </root>

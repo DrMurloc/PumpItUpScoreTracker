@@ -2,6 +2,8 @@
 @page "/TierLists/{ChartTypeRoute}/{LevelRoute:int}"
 @using MediatR
 @using ScoreTracker.Web.Enums
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.ChartIntelligence.Contracts
@@ -115,6 +117,14 @@ else
                 <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
             }
             <MudSpacer></MudSpacer>
+            @if (CurrentUser.IsLoggedIn)
+            {
+                @* Piucenter round 6: on desktop the Folder Stats trigger rides the
+                   toolbar next to Download, decluttering the row around the sections. *@
+                <MudButton Color="Color.Primary" Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.QueryStats"
+                           OnClick="() => _statsOpen = true">@L["Folder Stats"]</MudButton>
+            }
             <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined"
                        StartIcon="@(_isBuildingImage ? null : Icons.Material.Filled.FileDownload)"
                        Disabled="_isBuildingImage || _isLoading">
@@ -143,10 +153,9 @@ else
             }
         </div>
     }
-    @* 3 — progress strip (logged in) or the rule-9 import CTA (anonymous). Round 8:
-       below 960px the whole strip + legend live behind the Folder Stats drawer —
-       mobile's fold belongs to the tier sections (rule 1). The stats markup is one
-       shared fragment so the inline strip and the drawer can't drift apart. *@
+    @* 3 — folder progress (logged in) or the rule-9 import CTA (anonymous).
+       Piucenter round 5: folder progress lives ONLY in the Folder Stats drawer at
+       every width — the fold belongs to the tier sections (rule 1). *@
     @if (CurrentUser.IsLoggedIn)
     {
         RenderFragment folderStatsCore = @<text>
@@ -180,30 +189,36 @@ else
                     <span class="tier-cohort-bar-note">@L["You: {0} · similar players average {1}", PassedCount, _cohortSummary.AveragePasses.ToString("N1")]</span>
                 </div>
             }
+            @* Piucenter round 3: the personal skill distribution, at a glance — your
+               pass rate per skill in this folder, weakest first (the By-Skill grouping
+               is this same data rendered as sections). Category tint + printed name +
+               printed count (rule 8). *@
+            @if (CurrentUser.IsLoggedIn && FolderSkillScores().Any())
+            {
+                <div class="tier-folder-skills">
+                    <MudText Typo="Typo.caption" Class="tier-folder-skills-title">@L["Your Skills in Folder"]</MudText>
+                    @foreach (var row in FolderSkillScores())
+                    {
+                        var percent = (int)Math.Round(100 * row.Ability);
+                        <div class="tier-folder-skill-row skillcat-@(row.Skill.GetPrimaryCategory().ToString().ToLowerInvariant())">
+                            <span class="tier-folder-skill-label">@row.Skill.GetName()</span>
+                            <span class="tier-folder-skill-track"><span class="tier-folder-skill-fill" style="width:@percent%"></span></span>
+                            <span class="tier-folder-skill-value">@percent%</span>
+                            <span class="tier-folder-skill-count">@row.Played/@row.Total</span>
+                        </div>
+                    }
+                </div>
+            }
             @if (_unpassedTodos.Any())
             {
                 <MudText Typo="Typo.caption">@L.GetString("Unpassed ToDos", _unpassedTodos.Count(), _level)</MudText>
             }
         </text>;
 
-        <div class="tier-progress-strip tier-desktop-only">
-            @folderStatsCore
-            @* Folder Levels = Phoenix title-progress; legacy mixes have no title data
-               (owner: legacy title levels are a future-session problem). *@
-            @if (!IsLegacy)
-            {
-                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
-                           StartIcon="@(_titlesCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"
-                           OnClick="ToggleTitles" aria-expanded="@(_titlesCollapsed ? "false" : "true")">@L["Folder Levels"]</MudButton>
-                @if (!_titlesCollapsed)
-                {
-                    <MudGrid>
-                        <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == _level) || (_chartType == ChartType.CoOp && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
-                    </MudGrid>
-                }
-            }
-        </div>
-        @* 4 — the border language, printed (rule 8). *@
+        @* Piucenter round 5: the inline desktop strip died — the folder-skills block
+           regrew it past the fold, so the Folder Stats drawer is now folder progress's
+           ONE home at every width (the button shows everywhere). The legend stays
+           inline on desktop: it explains the borders on the cards beside it. *@
         <div class="tier-desktop-only">
             <BorderLegend></BorderLegend>
         </div>
@@ -256,8 +271,8 @@ else
     <div class="tier-content-bar">
         @if (CurrentUser.IsLoggedIn)
         {
-            @* Round 9: on compact, Folder Stats takes the Ranked-by slot (the lens
-               controls live in the Advanced drawer there). *@
+            @* Round 9: on compact, Folder Stats takes the Ranked-by slot; on desktop
+               it rides the toolbar next to Download (piucenter round 6). *@
             <MudButton Class="tier-compact-only" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.QueryStats" OnClick="() => _statsOpen = true">@L["Folder Stats"]</MudButton>
         }
@@ -413,7 +428,12 @@ else
                                     }
                                     @if (_settings.ShowSkills)
                                     {
-                                        <td class="tier-table-skills">@string.Join(", ", chart.Skills)</td>
+                                        <td class="tier-table-skills">
+                                            @foreach (var chip in SkillChipsFor(chart) ?? Array.Empty<TierListChartCard.CardSkillChip>())
+                                            {
+                                                <span class="tier-chart-card-skill @chip.CategoryClass">@chip.Label@(chip.Metric == null ? null : $" {chip.Metric}")</span>
+                                            }
+                                        </td>
                                     }
                                     @if (CurrentUser.IsLoggedIn)
                                     {
@@ -472,7 +492,7 @@ else
                                                TierLabel="@(ShowLensAnnotation ? (string)L[TierName(entry.Category)] : null)"
                                                TierColor="@(ShowLensAnnotation ? ThemeScales.DifficultyColor(entry.Category) : null)"
                                                StepArtist="@(_settings.ShowStepArtist ? chart.StepArtist?.ToString() : null)"
-                                               Skills="@(_settings.ShowSkills && !IsSkillView ? chart.Skills.Select(s => s.ToString()).ToArray() : null)"
+                                               Skills="@(_settings.ShowSkills ? SkillChipsFor(chart) : null)"
                                                AgeDays="@(_showAge && score != null ? (int)(_now - score.RecordedDate).TotalDays : null)"
                                                OnToDo="ToggleToDo"
                                                OnOpen="OpenDetails"></TierListChartCard>
@@ -549,6 +569,8 @@ else
                        Disabled="_density == UiDensity.Compact" Label=@L["Show Step Artist"]></MudSwitch>
             <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowSkills" ValueChanged="SetShowSkills"
                        Disabled="_density == UiDensity.Compact" Label=@L["Show Skills"]></MudSwitch>
+            <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowSkillMetric" ValueChanged="SetShowSkillMetric"
+                       Disabled="_density == UiDensity.Compact || !_settings.ShowSkills" Label=@L["Show Skill Metric"]></MudSwitch>
             @if (CurrentUser.IsLoggedIn)
             {
                 <MudSwitch T="bool" Color="Color.Primary" Value="_showAge" ValueChanged="SetShowAge"
@@ -610,7 +632,8 @@ else
 <style>
     /* Round 8: one clamp for 4K, one 960px breakpoint (matches the shell's bottom
        nav). Below it: two explicit toolbar rows, the bottom action bar takes over
-       Download/Filters, and the strip + legend live behind the Folder Stats drawer. */
+       Download/Filters, and the legend lives behind the Folder Stats drawer (folder
+       progress lives there at EVERY width since piucenter round 5). */
     .tier-page {
         max-width: 1680px;
         margin: 0 auto;
@@ -716,13 +739,6 @@ else
         display: flex;
         flex-wrap: wrap;
         gap: 4px;
-        margin: 8px 0;
-    }
-
-    .tier-progress-strip {
-        border: 1px solid var(--mud-palette-lines-default);
-        border-radius: 8px;
-        padding: 8px 12px;
         margin: 8px 0;
     }
 
@@ -891,6 +907,75 @@ else
     private IDictionary<Guid, RecordedPhoenixScore> _scores = new Dictionary<Guid, RecordedPhoenixScore>();
     private IDictionary<Guid, RecordedPhoenixScore> _folderScores = new Dictionary<Guid, RecordedPhoenixScore>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+
+    private IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>> _skillChips =
+        new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>();
+
+    // Folder Stats: skill competence split into its two factors (owner workshop) —
+    // ABILITY = sum(coverage × score) / sum(coverage × 1,000,000) over PLAYED charts
+    // ("how well does it go when you play them"), COMPLETION = played/total charts
+    // carrying the skill. Displayed separately; sorted by their product (the original
+    // amalgam), so both "bad at it" and "haven't touched it" float to the top.
+    // Score-determined, never pass-determined. Whole-chart qualities (null coverage)
+    // and pre-crawl fallback tags weigh 1.0. <2 charts is noise.
+    private IEnumerable<(Skill Skill, double Ability, int Played, int Total)> FolderSkillScores()
+    {
+        // Proficiency lives in the 900k-1M band (owner): 990,000 = 90%, anything at or
+        // under 900,000 = 0%. Raw score/1M flattened every skill to ~95%.
+        const double scoreFloor = 900_000;
+        const double scoreRange = 100_000;
+        return _charts.Values
+            .SelectMany(c => (_skillChips.TryGetValue(c.Id, out var chips) && chips.Count > 0
+                    ? chips.Select(chip => (chip.Skill, Weight: (double?)chip.SegmentFraction ?? 1.0))
+                    : c.Skills.Select(s => (Skill: s, Weight: 1.0)))
+                .GroupBy(p => p.Skill).Select(g => g.First())
+                .Select(p => (p.Skill, p.Weight, Chart: c)))
+            .GroupBy(p => p.Skill)
+            .Select(g =>
+            {
+                var played = g
+                    .Where(p => _scores.TryGetValue(p.Chart.Id, out var s) && s.Score != null)
+                    .ToArray();
+                var ability = played.Length == 0
+                    ? 0
+                    : played.Sum(p => p.Weight *
+                                      Math.Clamp((int)_scores[p.Chart.Id].Score!.Value - scoreFloor, 0,
+                                          scoreRange)) /
+                      played.Sum(p => p.Weight * scoreRange);
+                var coverageCompletion = g.Sum(p => p.Weight) == 0
+                    ? 0
+                    : played.Sum(p => p.Weight) / g.Sum(p => p.Weight);
+                return (Skill: g.Key, Ability: ability, Played: played.Length, Total: g.Count(),
+                    Sort: ability * coverageCompletion);
+            })
+            .Where(r => r.Total >= 2)
+            .OrderBy(r => r.Sort)
+            .ThenBy(r => r.Skill.GetName())
+            .Select(r => (r.Skill, r.Ability, r.Played, r.Total));
+    }
+
+    // Card + table chips: dominance-ordered metrics when banked, mapped tags as the
+    // pre-crawl fallback. Metric text is preformatted here so the card stays dumb.
+    private IReadOnlyList<TierListChartCard.CardSkillChip>? SkillChipsFor(Chart chart)
+    {
+        static string CategoryClass(Skill skill)
+        {
+            return $"skillcat-{skill.GetPrimaryCategory().ToString().ToLowerInvariant()}";
+        }
+
+        if (_skillChips.TryGetValue(chart.Id, out var chips) && chips.Count > 0)
+            return chips.Select(c => new TierListChartCard.CardSkillChip(
+                    c.Skill.GetName(),
+                    CategoryClass(c.Skill),
+                    _settings.ShowSkillMetric && c.SegmentFraction != null
+                        ? $"{(int)Math.Round(c.SegmentFraction.Value * 100)}%"
+                        : null))
+                .ToArray();
+        if (!chart.Skills.Any()) return null;
+        return chart.Skills
+            .Select(s => new TierListChartCard.CardSkillChip(s.GetName(), CategoryClass(s), null))
+            .ToArray();
+    }
     private IDictionary<Guid, double> _scoringLevels = new Dictionary<Guid, double>();
     private IDictionary<Guid, Chart> _allCharts = new Dictionary<Guid, Chart>();
     private ISet<Guid> _unPopularCharts = new HashSet<Guid>();
@@ -917,6 +1002,7 @@ else
         public bool ShowStepArtist { get; set; }
         public bool ShowSongName { get; set; } = true;
         public bool ShowSkills { get; set; } = true;
+        public bool ShowSkillMetric { get; set; }
         public int? MinNoteCount { get; set; }
         public int? MaxNoteCount { get; set; }
         public HashSet<string> StepArtists { get; set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -1019,6 +1105,12 @@ else
     private async Task SetShowSkills(bool show)
     {
         _settings.ShowSkills = show;
+        await SaveSettings();
+    }
+
+    private async Task SetShowSkillMetric(bool show)
+    {
+        _settings.ShowSkillMetric = show;
         await SaveSettings();
     }
 
@@ -1497,6 +1589,9 @@ else
             .Where(c => c.Level == _level && c.Type == _chartType)
             .ToDictionary(c => c.Id);
         _folderScores = _scores.Where(kv => _charts.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
+        // Dominance-ordered skills + segment coverage for the card chips and the
+        // table's Skills column; empty until the first piucenter crawl banks metrics.
+        _skillChips = await Mediator.Send(new GetChartSkillChipsQuery(_charts.Keys.ToArray()), cancellationToken);
 
         if (IsLegacy)
         {

@@ -2664,12 +2664,6 @@
   <data name="On ToDo List" xml:space="preserve">
     <value>ToDo 목록에 있음</value>
   </data>
-  <data name="Your journey — all mixes" xml:space="preserve">
-    <value>나의 기록 — 모든 시리즈</value>
-  </data>
-  <data name="Full score journey" xml:space="preserve">
-    <value>전체 기록 보기</value>
-  </data>
   <data name="Record Score" xml:space="preserve">
     <value>점수 기록</value>
   </data>
@@ -2805,6 +2799,66 @@
   <data name="Advanced" xml:space="preserve">
     <value>고급</value>
   </data>
+  <data name="Step Analysis" xml:space="preserve">
+    <value>스텝 분석</value>
+  </data>
+  <data name="Dominant Skills" xml:space="preserve">
+    <value>주요 스킬</value>
+  </data>
+  <data name="Notes per Second" xml:space="preserve">
+    <value>초당 노트 수</value>
+  </data>
+  <data name="Sustain Time" xml:space="preserve">
+    <value>지속 시간</value>
+  </data>
+  <data name="Time Under Tension" xml:space="preserve">
+    <value>부하 지속 시간</value>
+  </data>
+  <data name="Step analysis data from PIU Center" xml:space="preserve">
+    <value>스텝 분석 데이터 제공: PIU Center</value>
+  </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>각 스킬이 나오는 채보 구간 비율</value>
+  </data>
+  <data name="Show Skill Metric" xml:space="preserve">
+    <value>스킬 지표 표시</value>
+  </data>
+  <data name="Queued" xml:space="preserve">
+    <value>대기열에 추가됨</value>
+  </data>
+  <data name="Key" xml:space="preserve">
+    <value>키</value>
+  </data>
+  <data name="Last Checked" xml:space="preserve">
+    <value>마지막 확인</value>
+  </data>
+  <data name="Run PIU Center Crawl" xml:space="preserve">
+    <value>PIU Center 크롤 실행</value>
+  </data>
+  <data name="Unmatched PIU Center Keys" xml:space="preserve">
+    <value>매칭되지 않은 PIU Center 키</value>
+  </data>
+  <data name="No unmatched keys" xml:space="preserve">
+    <value>매칭되지 않은 키가 없습니다</value>
+  </data>
+  <data name="Select a key, pick the chart it belongs to, then bind" xml:space="preserve">
+    <value>키를 선택하고 해당 채보를 골라 연결하세요</value>
+  </data>
+  <data name="Bind Selected Chart" xml:space="preserve">
+    <value>선택한 채보 연결</value>
+  </data>
+  <data name="Uploading" xml:space="preserve">
+    <value>업로드 중</value>
+  </data>
+  <data name="Upload PIU Center Snapshot" xml:space="preserve">
+    <value>PIU Center 스냅샷 업로드</value>
+  </data>
+  <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
+    <value>스냅샷 zip은 이미 받아 둔 데이터 릴리스를 직접 가져옵니다. 크롤과 같은 과정이며 별도 다운로드가 없습니다</value>
+  </data>
+  <data name="There was an error uploading the snapshot" xml:space="preserve">
+    <value>스냅샷 업로드 중 오류가 발생했습니다</value>
+  </data>
   <data name="More Mixes" xml:space="preserve">
     <value>시리즈 더 보기</value>
   </data>
@@ -2843,5 +2897,11 @@
   </data>
   <data name="Community Rating" xml:space="preserve">
     <value>커뮤니티 평가</value>
+  </data>
+  <data name="Your Skills in Folder" xml:space="preserve">
+    <value>이 폴더에서의 내 스킬</value>
+  </data>
+  <data name="Score History" xml:space="preserve">
+    <value>점수 기록</value>
   </data>
 </root>

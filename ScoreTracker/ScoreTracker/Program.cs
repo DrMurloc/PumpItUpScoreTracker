@@ -7,6 +7,7 @@ using Microsoft.Extensions.Localization;
 using Microsoft.OpenApi;
 using MudBlazor.Services;
 using ScoreTracker.Application.Handlers;
+using ScoreTracker.Catalog.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.Communities.Wiring;
 using ScoreTracker.CompositionRoot;
@@ -66,6 +67,7 @@ builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSectio
 builder.Services.Configure<DevAuthConfiguration>(builder.Configuration.GetSection("DevAuth"));
 builder.Services.Configure<ProdSyncConfiguration>(builder.Configuration.GetSection("ProdSync"));
 builder.Services.Configure<PiuGameConfiguration>(builder.Configuration.GetSection("PiuGame"));
+builder.Services.Configure<PiuCenterConfiguration>(builder.Configuration.GetSection("PiuCenter"));
 builder.Services.Configure<GoogleConfiguration>(builder.Configuration.GetSection("Google"));
 var sqlConfig = builder.Configuration.GetSection("SQL").Get<SqlConfiguration>()!;
 builder.Services.AddMassTransit(o =>
@@ -83,6 +85,7 @@ builder.Services.AddMassTransit(o =>
     o.AddEventCompetitionConsumers();
     o.AddCommunitiesConsumers();
     o.AddUcsConsumers();
+    o.AddCatalogConsumers();
     o.AddIdentityConsumers();
 
     o.AddDelayedMessageScheduler();
@@ -322,7 +325,8 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     ("try-schedule-mom",                 r => r.PublishTryScheduleMoM(),                  "0 11 * * *"), // 06:00 ET
     ("flush-overdue-score-batches",      r => r.PublishFlushOverdueScoreBatches(),        "*/5 * * * *"), // every 5 min — safety net for stuck batches
     ("process-account-purges",           r => r.PublishProcessAccountPurges(),            "30 11 * * *"), // 06:30 ET — merged-account grace-window purges
-    ("refresh-folder-share-cards",       r => r.PublishRefreshFolderShareCards(),         "30 10 * * *") // 05:30 ET — og:images, right after the tier-list rebuilds
+    ("refresh-folder-share-cards",       r => r.PublishRefreshFolderShareCards(),         "30 10 * * *"), // 05:30 ET — og:images, right after the tier-list rebuilds
+    ("crawl-piucenter",                  r => r.PublishCrawlPiuCenter(),                  "0 6 * * 1")   // Mondays 01:00 ET — gap-driven, near no-op unless piucenter shipped a new data release
 };
 if (builder.Configuration["PreventRecurringJobs"] == "true")
 {

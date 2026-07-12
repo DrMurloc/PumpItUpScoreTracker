@@ -1,5 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
+using ScoreTracker.Catalog.Contracts;
+using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Domain;
@@ -101,7 +103,7 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
         if (userId != null)
         {
             if (modifiers.TryGetValue("Skill", out var skillWeight) && skillWeight > 0)
-                sources["Skill"] = (await BuildSkillEntries(request.Mix, folderCharts, userId.Value,
+                sources["Skill"] = (await BuildSkillEntries(request, folderCharts, userId.Value,
                         cancellationToken))
                     .ToDictionary(e => e.ChartId, e => e);
             if (modifiers.TryGetValue("Similar Players", out var similarWeight) && similarWeight > 0)
@@ -144,40 +146,103 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
         return new TierListResult(entries, provisional);
     }
 
-    // The player's skill-derived difficulty estimates — ported from the page's
-    // BuildSkillTierList: average unbroken score per skill in the folder, chart
-    // estimate = average of its skills' averages, with the page's original guards
-    // (under 10 scored charts or under 3 skills with data → nothing to say).
-    private async Task<IEnumerable<SongTierListEntry>> BuildSkillEntries(MixEnum mix,
+    // K7 (piucenter follow-up, owner-approved F3): the surrounding-folder skill
+    // inference. The old version only saw the viewed folder and went silent under 10
+    // scored charts — dead exactly when someone breaks into a new folder. Now every
+    // scored chart within ±3 folders votes: per folder the player's scores normalize
+    // to deviations from their own folder average (you can't compare raw scores
+    // across levels), each (chart, skill) observation is weighted by folder decay ×
+    // the skill's segment coverage (a token-drills chart barely votes on Drills), and
+    // folder-chart estimates are the coverage-weighted mean of their skills' pooled
+    // deviations. Constants are tunable; decay ladder owner-locked 2026-07-11.
+    private static readonly double[] FolderDecay = { 1.0, 0.6, 0.3, 0.15 };
+    private const int FolderWindow = 3;
+    private const double MinSkillEvidence = 2.0; // effective weighted observations per skill
+    private const int MinUsableSkills = 3;
+    private const double DefaultSkillWeight = 0.5; // top3-only chips and pre-crawl boolean tags
+    private const double EstimateOffset = 500_000; // ProcessIntoTierList treats exactly 0 as Unrecorded
+
+    // Proficiency lives in the 900k-1M band (owner): 990,000 = 90%, anything at or
+    // under 900,000 = 0%. Deviations pool over this floored scale so sub-900k scores
+    // read as zero proficiency instead of dragging skill estimates linearly.
+    private const double SkillScoreFloor = 900_000;
+    private const double SkillScoreRange = 100_000;
+
+    private static double Proficiency(int score)
+    {
+        return Math.Clamp(score - SkillScoreFloor, 0, SkillScoreRange) / SkillScoreRange;
+    }
+
+    private async Task<IEnumerable<SongTierListEntry>> BuildSkillEntries(GetBlendedTierListQuery request,
         IReadOnlyCollection<Chart> folderCharts, Guid userId, CancellationToken cancellationToken)
     {
-        if (!folderCharts.Any(c => c.Skills.Any()))
-            return folderCharts.Select(c => new SongTierListEntry("Skill", c.Id, TierListCategory.Unrecorded, 0));
-
-        var bestScores = (await _scores.GetBestScores(mix, userId, cancellationToken))
+        var level = (int)request.Level;
+        var bestScores = (await _scores.GetBestScores(request.Mix, userId, cancellationToken))
             .Where(s => s is { Score: not null, IsBroken: false })
             .ToDictionary(s => s.ChartId);
 
-        var skillAverages = folderCharts
-            .SelectMany(c => c.Skills.Select(s => (Chart: c, Skill: s)))
-            .GroupBy(p => p.Skill)
-            .ToDictionary(g => g.Key, g =>
-            {
-                var scored = g.Where(p => bestScores.ContainsKey(p.Chart.Id)).ToArray();
-                return scored.Any() ? scored.Average(p => (int)bestScores[p.Chart.Id].Score!.Value) : 0.0;
-            });
+        var scoredWindowCharts = (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
+            .Where(c => c.Type == request.ChartType && Math.Abs((int)c.Level - level) <= FolderWindow)
+            .Where(c => bestScores.ContainsKey(c.Id))
+            .ToArray();
 
-        var scoredInFolder = folderCharts.Count(c => bestScores.ContainsKey(c.Id));
-        if (scoredInFolder < 10 || skillAverages.Count(kv => kv.Value > 0) < 3)
+        var chips = await _mediator.Send(new GetChartSkillChipsQuery(
+            scoredWindowCharts.Select(c => c.Id).Union(folderCharts.Select(c => c.Id)).ToArray()),
+            cancellationToken);
+
+        IReadOnlyList<(Skill Skill, double Weight)> WeightsFor(Chart chart)
+        {
+            return chips.TryGetValue(chart.Id, out var chartChips) && chartChips.Count > 0
+                ? chartChips
+                    .Select(c => (c.Skill,
+                        c.SegmentFraction != null ? (double)c.SegmentFraction.Value : DefaultSkillWeight))
+                    .ToArray()
+                : chart.Skills.Select(s => (s, DefaultSkillWeight)).ToArray();
+        }
+
+        // Normalize before pooling: deviation from YOUR average within each folder,
+        // measured on the floored proficiency scale.
+        var folderBaselines = scoredWindowCharts
+            .GroupBy(c => (int)c.Level)
+            .ToDictionary(g => g.Key, g => g.Average(c => Proficiency((int)bestScores[c.Id].Score!.Value)));
+
+        var pooled = new Dictionary<Skill, (double WeightedDeviation, double Evidence)>();
+        foreach (var chart in scoredWindowCharts)
+        {
+            var decay = FolderDecay[Math.Abs((int)chart.Level - level)];
+            var deviation = Proficiency((int)bestScores[chart.Id].Score!.Value) - folderBaselines[(int)chart.Level];
+            foreach (var (skill, weight) in WeightsFor(chart))
+            {
+                var observationWeight = decay * weight;
+                var current = pooled.TryGetValue(skill, out var sums) ? sums : (0.0, 0.0);
+                pooled[skill] = (current.Item1 + observationWeight * deviation,
+                    current.Item2 + observationWeight);
+            }
+        }
+
+        var skillDeviations = pooled
+            .Where(kv => kv.Value.Evidence >= MinSkillEvidence)
+            .ToDictionary(kv => kv.Key, kv => kv.Value.WeightedDeviation / kv.Value.Evidence);
+        if (skillDeviations.Count < MinUsableSkills)
             return folderCharts.Select(c => new SongTierListEntry("Skill", c.Id, TierListCategory.Unrecorded, 0));
 
-        var estimates = folderCharts
-            .Where(c => c.Skills.Any(s => skillAverages[s] > 0))
-            .ToDictionary(c => c.Id, c => c.Skills.Where(s => skillAverages[s] > 0).Average(s => skillAverages[s]));
+        var estimates = new Dictionary<Guid, double>();
+        var silent = new List<SongTierListEntry>();
+        foreach (var chart in folderCharts)
+        {
+            var usable = WeightsFor(chart).Where(p => skillDeviations.ContainsKey(p.Skill)).ToArray();
+            if (usable.Length == 0)
+            {
+                silent.Add(new SongTierListEntry("Skill", chart.Id, TierListCategory.Unrecorded, 9999));
+                continue;
+            }
 
-        return TierListProcessor.ProcessIntoTierList("Skill", estimates)
-            .Concat(folderCharts.Where(c => !c.Skills.Any(s => skillAverages[s] > 0))
-                .Select(c => new SongTierListEntry("Skill", c.Id, TierListCategory.Unrecorded, 9999)));
+            estimates[chart.Id] = EstimateOffset +
+                                  usable.Sum(p => p.Weight * skillDeviations[p.Skill]) /
+                                  usable.Sum(p => p.Weight);
+        }
+
+        return TierListProcessor.ProcessIntoTierList("Skill", estimates).Concat(silent);
     }
 
     // Similar players, re-architected on C1's materialization: neighbors' folder

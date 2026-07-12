@@ -2,6 +2,8 @@
 @page "/Chart"
 @page "/Chart/{ChartId:guid}"
 @using MediatR
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.ScoreLedger.Contracts.Queries
 @using Microsoft.AspNetCore.Mvc
@@ -52,6 +54,59 @@
     <MudButton Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Custom.Brands.YouTube" OnClick="()=>VideoDisplayer.ShowVideo(_selectedChart.Id)">@L["Open Video"]</MudButton>
     <br />
     <br/>
+    @if (_stepAnalysis != null)
+    {
+        @* The ingested slice of piucenter's per-chart analysis (design doc §8a):
+           their dominant-skill pick, per-skill segment coverage, and headline numbers.
+           Their full scrollable chart rendering is deliberately NOT imported — the
+           link-out is the "see more". *@
+        <MudText Typo="Typo.h5">@L["Step Analysis"]</MudText>
+        <div class="step-analysis">
+            @if (_stepAnalysis.TopSkills.Any())
+            {
+                <div class="step-analysis-skills">
+                    <MudText Typo="Typo.caption" Class="step-analysis-label">@L["Dominant Skills"]</MudText>
+                    @foreach (var skill in _stepAnalysis.TopSkills)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@PrettySkill(skill)</MudChip>
+                    }
+                </div>
+            }
+            @if (_stepAnalysis.BadgeFractions.Any())
+            {
+                <div class="step-analysis-bars">
+                    @foreach (var pair in _stepAnalysis.BadgeFractions.OrderByDescending(kv => kv.Value).Take(8))
+                    {
+                        <div class="step-analysis-bar">
+                            <span class="step-analysis-bar-label">@PrettySkill(pair.Key)</span>
+                            <MudProgressLinear Color="Color.Primary" Value="@((double)(pair.Value * 100))"/>
+                            <span class="step-analysis-bar-value">@pair.Value.ToString("P0")</span>
+                        </div>
+                    }
+                </div>
+                <MudText Typo="Typo.caption" Class="step-analysis-note">@L["Share of chart sections featuring each skill"]</MudText>
+            }
+            <div class="step-analysis-stats">
+                @if (_stepAnalysis.Nps != null)
+                {
+                    <span>@L["Notes per Second"]: <b>@_stepAnalysis.Nps.Value.ToString("0.#")</b></span>
+                }
+                @if (_stepAnalysis.SustainTimeSeconds != null)
+                {
+                    <span>@L["Sustain Time"]: <b>@_stepAnalysis.SustainTimeSeconds.Value.ToString("0")s</b></span>
+                }
+                @if (_stepAnalysis.TimeUnderTensionSeconds != null)
+                {
+                    <span>@L["Time Under Tension"]: <b>@_stepAnalysis.TimeUnderTensionSeconds.Value.ToString("0")s</b></span>
+                }
+            </div>
+            <div class="step-analysis-footer">
+                <MudText Typo="Typo.caption">@L["Step analysis data from PIU Center"]</MudText>
+                <MudLink Href="@StepAnalysisUrl" Target="_blank" Typo="Typo.caption">@L["View full chart on PIU Center"]</MudLink>
+            </div>
+        </div>
+        <br/>
+    }
     @if (CurrentUser.IsLoggedIn)
     {
         <br/>
@@ -217,6 +272,68 @@
         <MudText>@_selectedChart.Id</MudText>
     }
 }
+<style>
+    .step-analysis {
+        max-width: 640px;
+    }
+
+    .step-analysis-skills {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+    }
+
+    .step-analysis-label {
+        margin-right: 4px;
+        color: var(--mix-ink-muted);
+    }
+
+    .step-analysis-bars {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 4px 24px;
+    }
+
+    .step-analysis-bar {
+        display: grid;
+        grid-template-columns: 150px 1fr 44px;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+    }
+
+    .step-analysis-bar-value {
+        text-align: right;
+        color: var(--mix-ink-muted);
+    }
+
+    .step-analysis-note {
+        color: var(--mix-ink-muted);
+    }
+
+    .step-analysis-stats {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+        font-size: 0.85rem;
+    }
+
+    .step-analysis-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+        flex-wrap: wrap;
+        border-top: 1px solid var(--mix-ink-muted);
+        margin-top: 10px;
+        padding-top: 6px;
+        opacity: 0.9;
+    }
+</style>
+
 <MudDialog @bind-Visible="_showChartOverview">
     <DialogContent>
         @if (_selectedChart != null && !_currentMix.UsesLegacyScoring())
@@ -325,6 +442,15 @@
     }
     private Chart? _selectedChart = null;
     private bool _isLoading = false;
+    private ChartStepAnalysisRecord? _stepAnalysis;
+
+    // piucenter's skill vocabulary renders as attributed source data — underscores
+    // prettified, names untranslated (like the key itself).
+    private static string PrettySkill(string skill) => skill.Replace('_', ' ');
+
+    private string StepAnalysisUrl => _stepAnalysis?.ExternalKey == null
+        ? "https://www.piucenter.com"
+        : $"https://www.piucenter.com/chart/{Uri.EscapeDataString(_stepAnalysis.ExternalKey)}";
     private IDictionary<PhoenixPlate, int> _plateBreakdowns = new Dictionary<PhoenixPlate, int>();
     private IDictionary<int, PhoenixScore> _scoreMinimums = new Dictionary<int, PhoenixScore>();
     private IDictionary<int,PhoenixScore> _scoreMaximums = new Dictionary<int,PhoenixScore>();
@@ -347,6 +473,7 @@
         _isLoading = true;
         _selectedChart = chart;
         StateHasChanged();
+        _stepAnalysis = await Mediator.Send(new GetChartStepAnalysisQuery(chart.Id));
         var scores = (await Mediator.Send(new GetPhoenixScoresForChartQuery(chart.Id, _currentMix))).ToArray();
         _plateBreakdowns = scores.Where(s => s.Plate != null).GroupBy(s => s.Plate!.Value).ToDictionary(g => g.Key, g => g.Count());
         foreach (var plate in Enum.GetValues<PhoenixPlate>().Where(p => !_plateBreakdowns.ContainsKey(p)))

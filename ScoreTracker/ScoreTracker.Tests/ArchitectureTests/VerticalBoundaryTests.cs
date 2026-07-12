@@ -1,4 +1,5 @@
 using ScoreTracker.WeeklyChallenge.Wiring;
+using ScoreTracker.Catalog.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.Communities.Wiring;
 using ScoreTracker.EventCompetition.Wiring;
@@ -78,6 +79,24 @@ public sealed class VerticalBoundaryTests
 
         Assert.Contains(services,
             d => d.ServiceType == typeof(ScoreTracker.OfficialMirror.Application.OfficialLeaderboardSaga));
+    }
+
+    [Fact]
+    public void MassTransitDiscoversTheCatalogsInternalConsumers()
+    {
+        // PiuCenterCrawlSaga consumes CrawlPiuCenterCommand — the Catalog's first bus
+        // consumer. Assembly scanning skips internal consumers, so the
+        // AddCatalogConsumers hook is the registration path; if it stops covering the
+        // saga, the weekly crawl silently never runs and skill data goes stale.
+        var services = new ServiceCollection();
+        services.AddMassTransit(x =>
+        {
+            x.AddCatalogConsumers();
+            x.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
+        });
+
+        Assert.Contains(services,
+            d => d.ServiceType == typeof(Catalog.Application.PiuCenterCrawlSaga));
     }
 
     [Fact]
