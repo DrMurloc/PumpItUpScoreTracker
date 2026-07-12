@@ -3090,4 +3090,10 @@
   <data name="{0} players found" xml:space="preserve">
     <value>{0} mrglplayers found</value>
   </data>
+  <data name="Older scores count for less — {0} of your nearby scores are over a year old." xml:space="preserve">
+    <value>Older mrglscores count for mrglless — {0} of your nearby mrglscores are over a mrglyear old. Mrgl!</value>
+  </data>
+  <data name="Evidence already includes score age — older scores count for less." xml:space="preserve">
+    <value>Mrglvidence already includes mrglscore age — older mrglscores count for mrglless.</value>
+  </data>
 </root>

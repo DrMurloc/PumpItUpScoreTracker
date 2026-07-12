@@ -3119,4 +3119,10 @@
   <data name="{0} players found" xml:space="preserve">
     <value>{0} jogadores encontrados</value>
   </data>
+  <data name="Older scores count for less — {0} of your nearby scores are over a year old." xml:space="preserve">
+    <value>Pontuações antigas contam menos — {0} das suas pontuações próximas têm mais de um ano.</value>
+  </data>
+  <data name="Evidence already includes score age — older scores count for less." xml:space="preserve">
+    <value>A evidência já considera a idade — pontuações antigas contam menos.</value>
+  </data>
 </root>

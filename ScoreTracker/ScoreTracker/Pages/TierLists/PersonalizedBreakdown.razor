@@ -129,6 +129,15 @@ else
                                 <span>@L["Silent — only {0} skills have enough evidence. Your list currently matches the community's. Score more charts near this folder to turn this on.", _breakdown.UsableSkillCount]</span>
                             </div>
                         }
+                        @* Card-level disclaimer, deliberately not per-row (owner): the age
+                           weighting is context, not data. *@
+                        @if (_breakdown.AgedScoreCount > 0)
+                        {
+                            <div class="bd-status bd-age-note">
+                                <MudIcon Icon="@Icons.Material.Filled.History" Class="bd-age-icon"></MudIcon>
+                                <span>@L["Older scores count for less — {0} of your nearby scores are over a year old.", _breakdown.AgedScoreCount]</span>
+                            </div>
+                        }
                     </div>
                     <div class="bd-card">
                         <div class="bd-card-head">
@@ -197,7 +206,7 @@ else
                                 </span>
                             </div>
                         }
-                        <MudText Typo="Typo.caption" Class="bd-caption bd-footnote">@L["Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet."]</MudText>
+                        <MudText Typo="Typo.caption" Class="bd-caption bd-footnote">@L["Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet."] @L["Evidence already includes score age — older scores count for less."]</MudText>
                     </div>
                     <div class="bd-card">
                         <MudText Typo="Typo.subtitle1">@L["In this folder"]</MudText>
@@ -449,6 +458,16 @@ else
 
     .bd-status-off {
         color: var(--mud-palette-warning);
+    }
+
+    .bd-status.bd-age-note {
+        color: var(--mud-palette-text-secondary);
+        margin-top: 4px;
+        align-items: center;
+    }
+
+    .bd-age-icon {
+        font-size: 1rem;
     }
 
     .bd-skills-grid {
