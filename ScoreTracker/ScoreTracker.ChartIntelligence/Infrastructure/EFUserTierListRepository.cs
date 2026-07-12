@@ -18,7 +18,8 @@ internal sealed class EFUserTierListRepository : IUserTierListRepository
     }
 
     public async Task SaveUserFolder(MixEnum mix, Guid userId, IReadOnlyCollection<Guid> folderChartIds,
-        IEnumerable<SongTierListEntry> entries, CancellationToken cancellationToken)
+        IEnumerable<SongTierListEntry> entries, IReadOnlyDictionary<Guid, double> freshnessByChart,
+        CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var mixId = MixIds.For(mix);
@@ -34,6 +35,7 @@ internal sealed class EFUserTierListRepository : IUserTierListRepository
             {
                 entity.Category = entry.Category.ToString();
                 entity.Order = entry.Order;
+                entity.Freshness = freshnessByChart.GetValueOrDefault(entity.ChartId, 1.0);
                 entryByChart.Remove(entity.ChartId);
             }
             else
@@ -48,7 +50,8 @@ internal sealed class EFUserTierListRepository : IUserTierListRepository
                 UserId = userId,
                 ChartId = entry.ChartId,
                 Category = entry.Category.ToString(),
-                Order = entry.Order
+                Order = entry.Order,
+                Freshness = freshnessByChart.GetValueOrDefault(entry.ChartId, 1.0)
             }, cancellationToken);
 
         await database.SaveChangesAsync(cancellationToken);
@@ -64,6 +67,6 @@ internal sealed class EFUserTierListRepository : IUserTierListRepository
                 .Where(e => e.MixId == mixId && ids.Contains(e.ChartId))
                 .ToArrayAsync(cancellationToken))
             .Select(e => new UserTierListEntryRecord(e.UserId, e.ChartId,
-                Enum.Parse<TierListCategory>(e.Category), e.Order));
+                Enum.Parse<TierListCategory>(e.Category), e.Order, e.Freshness));
     }
 }

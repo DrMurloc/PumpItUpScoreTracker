@@ -2551,9 +2551,6 @@
   <data name="My Sessions" xml:space="preserve">
     <value>내 세션</value>
   </data>
-  <data name="Weekly" xml:space="preserve">
-    <value>주간</value>
-  </data>
   <data name="More" xml:space="preserve">
     <value>더보기</value>
   </data>
@@ -2903,5 +2900,158 @@
   </data>
   <data name="Score History" xml:space="preserve">
     <value>점수 기록</value>
+  </data>
+  <data name="+{0} more" xml:space="preserve">
+    <value>외 {0}개</value>
+  </data>
+  <data name="Across everything you've scored nearby" xml:space="preserve">
+    <value>주변 폴더의 모든 스코어 기준</value>
+  </data>
+  <data name="Active — {0} scores nearby, {1} skills have enough evidence" xml:space="preserve">
+    <value>활성 — 주변 스코어 {0}개, 근거가 충분한 스킬 {1}개</value>
+  </data>
+  <data name="Back to Tier List" xml:space="preserve">
+    <value>티어리스트로 돌아가기</value>
+  </data>
+  <data name="Charts that moved" xml:space="preserve">
+    <value>움직인 채보</value>
+  </data>
+  <data name="Community Tier List" xml:space="preserve">
+    <value>커뮤니티 티어리스트</value>
+  </data>
+  <data name="Easier for you" xml:space="preserve">
+    <value>나에게 더 쉬움</value>
+  </data>
+  <data name="Every chart you've scored within 3 folders votes on your skills — closer folders and bigger skill coverage count more." xml:space="preserve">
+    <value>3개 폴더 이내에서 스코어를 기록한 모든 채보가 내 스킬에 투표합니다 — 가까운 폴더와 스킬 비중이 큰 채보일수록 더 크게 반영됩니다.</value>
+  </data>
+  <data name="Evidence" xml:space="preserve">
+    <value>근거</value>
+  </data>
+  <data name="Harder for you" xml:space="preserve">
+    <value>나에게 더 어려움</value>
+  </data>
+  <data name="How each skill runs against your own average" xml:space="preserve">
+    <value>각 스킬이 내 평균 대비 어떤지</value>
+  </data>
+  <data name="How is this personalized?" xml:space="preserve">
+    <value>어떻게 개인화되나요?</value>
+  </data>
+  <data name="In this folder" xml:space="preserve">
+    <value>이 폴더에서</value>
+  </data>
+  <data name="Personalized Breakdown" xml:space="preserve">
+    <value>개인화 분석</value>
+  </data>
+  <data name="Players Like You" xml:space="preserve">
+    <value>나와 비슷한 플레이어</value>
+  </data>
+  <data name="Players like you" xml:space="preserve">
+    <value>나와 비슷한 플레이어</value>
+  </data>
+  <data name="Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours." xml:space="preserve">
+    <value>경쟁 레벨이 ±1 이내인 플레이어 — 레벨이 가까울수록, 그리고 폴더 평가가 나와 일치할수록 더 크게 반영됩니다.</value>
+  </data>
+  <data name="Recalculated every few hours" xml:space="preserve">
+    <value>몇 시간마다 다시 계산됩니다</value>
+  </data>
+  <data name="Same skills, two questions: this folder view asks how the charts you've played here actually go — the blend view asks which skills run hot or cold across everything you've scored nearby. A skill can look fine here and still move charts." xml:space="preserve">
+    <value>같은 스킬, 두 가지 질문: 폴더 보기는 "여기서 플레이한 채보가 실제로 어떤가"를, 블렌드 보기는 "주변에서 기록한 모든 스코어 중 어떤 스킬이 강하고 약한가"를 묻습니다. 여기서는 괜찮아 보이는 스킬이 채보를 움직일 수도 있습니다.</value>
+  </data>
+  <data name="Show all {0}" xml:space="preserve">
+    <value>모두 보기 ({0})</value>
+  </data>
+  <data name="Show fewer" xml:space="preserve">
+    <value>접기</value>
+  </data>
+  <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
+    <value>비활성 — 아직 내 경쟁 레벨 범위에 플레이어가 없습니다.</value>
+  </data>
+  <data name="Silent — only {0} skills have enough evidence. Your list currently matches the community's. Score more charts near this folder to turn this on." xml:space="preserve">
+    <value>비활성 — 근거가 충분한 스킬이 {0}개뿐입니다. 지금은 내 리스트가 커뮤니티와 같습니다. 이 폴더 주변에서 스코어를 더 기록하면 활성화됩니다.</value>
+  </data>
+  <data name="The shared tier list for this folder, built from everyone's data." xml:space="preserve">
+    <value>이 폴더의 공유 티어리스트로, 모두의 데이터로 만들어집니다.</value>
+  </data>
+  <data name="Three sources vote on every chart. Sources with more weight move charts further." xml:space="preserve">
+    <value>세 가지 소스가 각 채보에 투표합니다. 가중치가 큰 소스일수록 채보를 더 크게 움직입니다.</value>
+  </data>
+  <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
+    <value>같은 스킬의 두 가지 보기. 왼쪽은 위 블렌드에 쓰이고, 오른쪽은 폴더 통계와 같은 이 폴더의 수치입니다.</value>
+  </data>
+  <data name="Vs. Peers" xml:space="preserve">
+    <value>또래 대비</value>
+  </data>
+  <data name="Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet." xml:space="preserve">
+    <value>또래 대비: 비슷한 경쟁 레벨 플레이어 대비 내 스코어 순위를, 이 폴더에서 해당 스킬이 있는 채보들로 평균한 값입니다. 회색 스킬은 아직 투표할 만큼 근거가 없습니다.</value>
+  </data>
+  <data name="What goes into your list" xml:space="preserve">
+    <value>리스트에 들어가는 것</value>
+  </data>
+  <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
+    <value>내 리스트가 커뮤니티와 다른 곳, 그리고 그걸 밀어낸 스킬. 채보를 탭하면 소스별 전체 분석을 볼 수 있습니다.</value>
+  </data>
+  <data name="You" xml:space="preserve">
+    <value>나</value>
+  </data>
+  <data name="Your Skill Estimate" xml:space="preserve">
+    <value>내 스킬 추정</value>
+  </data>
+  <data name="Your ability on the charts you've played here — the same numbers as Folder Stats" xml:space="preserve">
+    <value>여기서 플레이한 채보에서의 내 실력 — 폴더 통계와 같은 수치</value>
+  </data>
+  <data name="Your list currently matches the community's on every rated chart." xml:space="preserve">
+    <value>지금은 평가된 모든 채보에서 내 리스트가 커뮤니티와 일치합니다.</value>
+  </data>
+  <data name="Your personalized list moves {0} of {1} charts away from the community's." xml:space="preserve">
+    <value>내 개인화 리스트는 {1}개 채보 중 {0}개를 커뮤니티와 다르게 배치합니다.</value>
+  </data>
+  <data name="Your skill profile" xml:space="preserve">
+    <value>내 스킬 프로필</value>
+  </data>
+  <data name="Your skills" xml:space="preserve">
+    <value>내 스킬</value>
+  </data>
+  <data name="stronger" xml:space="preserve">
+    <value>강함</value>
+  </data>
+  <data name="weaker" xml:space="preserve">
+    <value>약함</value>
+  </data>
+  <data name="{0} / {1} charts rated" xml:space="preserve">
+    <value>{0} / {1} 채보 평가됨</value>
+  </data>
+  <data name="{0} charts match the community tier" xml:space="preserve">
+    <value>{0}개 채보가 커뮤니티 티어와 일치</value>
+  </data>
+  <data name="{0} don't have enough data to move" xml:space="preserve">
+    <value>{0}개는 데이터가 부족해 움직이지 않음</value>
+  </data>
+  <data name="{0} don't have enough skill data to move:" xml:space="preserve">
+    <value>{0}개는 스킬 데이터가 부족해 움직이지 않음:</value>
+  </data>
+  <data name="{0} easier for you" xml:space="preserve">
+    <value>{0}개가 나에게 더 쉬움</value>
+  </data>
+  <data name="{0} easier for you — mostly {1}" xml:space="preserve">
+    <value>{0}개가 나에게 더 쉬움 — 주로 {1}</value>
+  </data>
+  <data name="{0} harder for you" xml:space="preserve">
+    <value>{0}개가 나에게 더 어려움</value>
+  </data>
+  <data name="{0} harder for you — mostly {1}" xml:space="preserve">
+    <value>{0}개가 나에게 더 어려움 — 주로 {1}</value>
+  </data>
+  <data name="{0} match the community tier" xml:space="preserve">
+    <value>{0}개가 커뮤니티와 일치</value>
+  </data>
+  <data name="{0} players found" xml:space="preserve">
+    <value>플레이어 {0}명 발견</value>
+  </data>
+  <data name="Evidence already includes score age — older scores count for less." xml:space="preserve">
+    <value>근거에는 이미 스코어의 나이가 반영되어 있습니다 — 오래된 스코어는 덜 반영됩니다.</value>
+  </data>
+  <data name="Older scores count for less — {0} of your nearby scores are much older than the rest of your record." xml:space="preserve">
+    <value>오래된 스코어는 덜 반영됩니다 — 주변 스코어 중 {0}개가 나머지 기록보다 훨씬 오래되었습니다.</value>
   </data>
 </root>
