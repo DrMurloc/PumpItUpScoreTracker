@@ -98,7 +98,10 @@
     private IDictionary<string, object> _parameters = new Dictionary<string, object>();
 
     private string TitleText => Widget.Title
-                                ?? (_descriptor == null ? Widget.WidgetType : L[_descriptor.NameKey].Value);
+                                ?? (_descriptor == null
+                                    ? Widget.WidgetType
+                                    : L[_descriptor.DynamicNameKey?.Invoke(Widget.ConfigJson)
+                                        ?? _descriptor.NameKey].Value);
 
     protected override void OnParametersSet()
     {

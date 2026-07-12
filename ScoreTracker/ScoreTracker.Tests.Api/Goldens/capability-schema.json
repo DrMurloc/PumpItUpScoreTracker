@@ -350,7 +350,10 @@
               "Static"
             ]
           },
-          "spread": {
+          "spreadBelow": {
+            "type": "integer"
+          },
+          "spreadAbove": {
             "type": "integer"
           },
           "minLevel": {
@@ -366,6 +369,16 @@
               "ChartLevel",
               "ScoringLevel"
             ]
+          },
+          "difficultyLens": {
+            "enum": [
+              "None",
+              "PassDifficulty",
+              "ScoreDifficulty"
+            ]
+          },
+          "personalizedLens": {
+            "type": "boolean"
           }
         }
       }

@@ -120,7 +120,7 @@ namespace ScoreTracker.PlayerProgress.Application
             int competitiveLevel, CancellationToken cancellationToken)
         {
             var (min, max) = window.Mode == RecommendationLevelMode.Dynamic
-                ? (competitiveLevel - window.Spread, competitiveLevel + window.Spread)
+                ? (competitiveLevel - window.SpreadBelow, competitiveLevel + window.SpreadAbove)
                 : (window.MinLevel, window.MaxLevel);
             if (window.Basis != RecommendationLevelBasis.ScoringLevel)
                 return c => (int)c.Level >= min && (int)c.Level <= max;

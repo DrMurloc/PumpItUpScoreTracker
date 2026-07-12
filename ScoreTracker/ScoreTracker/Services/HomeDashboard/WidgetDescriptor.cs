@@ -68,4 +68,8 @@ public sealed record WidgetDescriptor(
     // into a JSON schema so AI-built dashboards know each widget's config vocabulary.
     Type? ConfigType = null,
     // When present, the add-drawer lists these instead of the single type entry.
-    IReadOnlyList<WidgetDrawerPreset>? DrawerPresets = null);
+    IReadOnlyList<WidgetDrawerPreset>? DrawerPresets = null,
+    // Optional config-aware title: given an instance's ConfigJson, return the name KEY
+    // to display (null → fall back to NameKey). Lets three rapid-fired presets of one
+    // type wear distinct titles, live-localized, with no title stored per instance.
+    Func<string, string?>? DynamicNameKey = null);

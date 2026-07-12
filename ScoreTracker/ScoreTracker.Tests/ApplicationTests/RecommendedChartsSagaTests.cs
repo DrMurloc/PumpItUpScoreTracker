@@ -169,7 +169,7 @@ public sealed class RecommendedChartsSagaTests
     [Fact]
     public async Task DynamicLevelWindowFollowsCompetitiveLevel()
     {
-        // CL 18 with spread 1 → window 17–19; the level-20 SSS+ falls outside it.
+        // CL 18, 1 below / 1 above → window 17–19; the level-20 SSS+ falls outside it.
         var inWindow = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build();
         var outside = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var ctx = new RecommendedChartsContext()
@@ -178,12 +178,32 @@ public sealed class RecommendedChartsSagaTests
             .WithScores(Score(inWindow.Id, 999500), Score(outside.Id, 999500));
 
         var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
-                LevelWindow: RecommendationLevelWindow.Dynamic(1)),
+                LevelWindow: RecommendationLevelWindow.Dynamic(1, 1)),
             CancellationToken.None)).ToArray();
 
         Assert.Contains(result,
             r => (string)r.Category == RecommendationCategories.PushPGs && r.ChartId == inWindow.Id);
         Assert.DoesNotContain(result, r => r.ChartId == outside.Id);
+    }
+
+    [Fact]
+    public async Task DynamicLevelWindowSpreadsAreAsymmetric()
+    {
+        // 3 below / 0 above at CL 18 → 15–18: relaxed picks below, nothing above.
+        var below = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
+        var above = new ChartBuilder().WithType(ChartType.Single).WithLevel(19).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCompetitiveLevel(18)
+            .WithCharts(below, above)
+            .WithScores(Score(below.Id, 999500), Score(above.Id, 999500));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                LevelWindow: RecommendationLevelWindow.Dynamic(3, 0)),
+            CancellationToken.None)).ToArray();
+
+        Assert.Contains(result,
+            r => (string)r.Category == RecommendationCategories.PushPGs && r.ChartId == below.Id);
+        Assert.DoesNotContain(result, r => r.ChartId == above.Id);
     }
 
     [Fact]

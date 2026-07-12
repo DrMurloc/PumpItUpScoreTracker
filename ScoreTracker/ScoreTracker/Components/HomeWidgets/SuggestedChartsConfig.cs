@@ -26,11 +26,23 @@ public enum SuggestedLevelMode
     /// <summary>No level filter — each category keeps its own natural range.</summary>
     Any,
 
-    /// <summary>Competitive level ± Spread; moves with the player.</summary>
+    /// <summary>[CL − SpreadBelow, CL + SpreadAbove]; moves with the player.</summary>
     Dynamic,
 
     /// <summary>Pinned MinLevel–MaxLevel; never drifts.</summary>
     Static
+}
+
+/// <summary>
+///     The optional Fill Gaps data point (owner, field-test round 3): unpassed charts
+///     have no score to show, so the right column can carry a tier-list difficulty
+///     instead — community by default, the player's personalized blend on request.
+/// </summary>
+public enum SuggestedDifficultyLens
+{
+    None,
+    PassDifficulty,
+    ScoreDifficulty
 }
 
 /// <summary>Suggested Charts widget config (public contract via export/import, D19).</summary>
@@ -52,13 +64,21 @@ public sealed record SuggestedChartsConfig
     /// </summary>
     public SuggestedLevelMode LevelMode { get; set; } = SuggestedLevelMode.Any;
 
-    public int Spread { get; set; } = 2;
+    public int SpreadBelow { get; set; } = 2;
+
+    public int SpreadAbove { get; set; } = 2;
 
     public int? MinLevel { get; set; }
 
     public int? MaxLevel { get; set; }
 
     public RecommendationLevelBasis LevelBasis { get; set; } = RecommendationLevelBasis.ChartLevel;
+
+    /// <summary>Fill Gaps only: the tier-list difficulty shown on each card/row.</summary>
+    public SuggestedDifficultyLens DifficultyLens { get; set; } = SuggestedDifficultyLens.None;
+
+    /// <summary>Bend the lens with the player's personalized blend (tier-list machinery).</summary>
+    public bool PersonalizedLens { get; set; }
 }
 
 public static class SuggestedGoals
@@ -93,7 +113,8 @@ public static class SuggestedGoals
     {
         return config.LevelMode switch
         {
-            SuggestedLevelMode.Dynamic => RecommendationLevelWindow.Dynamic(config.Spread, config.LevelBasis),
+            SuggestedLevelMode.Dynamic => RecommendationLevelWindow.Dynamic(
+                config.SpreadBelow, config.SpreadAbove, config.LevelBasis),
             SuggestedLevelMode.Static => RecommendationLevelWindow.Static(
                 config.MinLevel ?? 1, config.MaxLevel ?? DifficultyLevel.Max, config.LevelBasis),
             _ => null

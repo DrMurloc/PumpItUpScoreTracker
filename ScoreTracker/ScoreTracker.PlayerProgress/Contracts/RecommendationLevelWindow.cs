@@ -27,24 +27,27 @@ public enum RecommendationLevelBasis
 ///     (fills CL−3..CL−1, old scores CL−2..CL) and filters the score-based categories
 ///     (Push PGs, Improve Top 50) that were previously unbounded. Null = legacy behavior.
 ///     Title-driven categories ignore it — the pushing title pins its own level.
+///     Dynamic spreads are asymmetric (owner, field test): [CL − Below, CL + Above],
+///     so a config can push above the comfort zone or relax below it.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record RecommendationLevelWindow(
     RecommendationLevelMode Mode,
-    int Spread,
+    int SpreadBelow,
+    int SpreadAbove,
     int MinLevel,
     int MaxLevel,
     RecommendationLevelBasis Basis)
 {
-    public static RecommendationLevelWindow Dynamic(int spread,
+    public static RecommendationLevelWindow Dynamic(int spreadBelow, int spreadAbove,
         RecommendationLevelBasis basis = RecommendationLevelBasis.ChartLevel)
     {
-        return new RecommendationLevelWindow(RecommendationLevelMode.Dynamic, spread, 0, 0, basis);
+        return new RecommendationLevelWindow(RecommendationLevelMode.Dynamic, spreadBelow, spreadAbove, 0, 0, basis);
     }
 
     public static RecommendationLevelWindow Static(int minLevel, int maxLevel,
         RecommendationLevelBasis basis = RecommendationLevelBasis.ChartLevel)
     {
-        return new RecommendationLevelWindow(RecommendationLevelMode.Static, 0, minLevel, maxLevel, basis);
+        return new RecommendationLevelWindow(RecommendationLevelMode.Static, 0, 0, minLevel, maxLevel, basis);
     }
 }

@@ -355,9 +355,17 @@ re-roll in the body meta row. The page's vestigial `LevelOffset` UI is supersede
   and filters the previously unbounded PG/Top-50 categories; title-driven categories ignore it.
   Category names live in `RecommendationCategories` consts (the pushing-title category's name is the
   title's own name).
-- **Rendering**: `dash-targets` rows (mini art + bubble + name), section captions when a goal spans
-  categories, right-hand column = `LetterGradeIcon` + score with per-category detail ("−1,656 to PG",
-  "74 days old"). Sizes 1x2 / 2x1 / 2x2, default 1x2.
+- **Rendering** (through field-test rounds 2–3): wide sizes (columns > 1) render **horizontal card
+  strips** — compact art-forward chart cards with hover-revealed pager arrows (delegated clicks in
+  `dashboard-grid.js`, hidden on touch) and honest x-axis edge fades; 2x1 = one merged strip, 2x2 = a
+  captioned strip per section. The tall 1x2 keeps `dash-targets` rows but **drops the song name**
+  (art tooltip + details dialog carry it) — right column = `LetterGradeIcon` + score with per-category
+  detail ("−1,656 to PG", "74 days old"). Fill Gaps rows never show scores (unpassed by definition);
+  an optional **tier-list difficulty lens** (Pass/Score, `GetBlendedTierListQuery`, optional
+  Personalized blend) fills the column instead, colored via `ThemeScales.DifficultyColor`. Dynamic
+  level spreads are **asymmetric** (levels below / levels above). Instance titles follow the
+  configured goal via `WidgetDescriptor.DynamicNameKey` so three rapid-fired presets wear distinct
+  names. Sizes 1x2 / 2x1 / 2x2, default 1x2.
 - **Feedback**: veto ✕ (edit mode) → WSIP's reason dialog (reason/notes/hide, hide default-on) →
   `SubmitFeedbackCommand` into the same per-category server-side store the engine already honors —
   deliberately NOT widget config. Thumbs-up = one-tap **Good Suggestion** in the shared

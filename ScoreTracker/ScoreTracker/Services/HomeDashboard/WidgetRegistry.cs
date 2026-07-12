@@ -75,9 +75,20 @@ public static class WidgetRegistry
                     {
                         Goal = SuggestedGoal.FillGaps,
                         LevelMode = SuggestedLevelMode.Dynamic,
-                        Spread = 3
+                        // Fills reach down by identity; nothing above by default.
+                        SpreadBelow = 3,
+                        SpreadAbove = 0
                     }))
-            })
+            },
+            // Instance titles follow the configured goal so rapid-firing all three
+            // presets never yields three "Suggested Charts" (owner, field test).
+            DynamicNameKey: configJson =>
+                WidgetConfigJson.Read<SuggestedChartsConfig>(configJson).Goal switch
+                {
+                    SuggestedGoal.ScorePush => "Suggested · Score Push",
+                    SuggestedGoal.FillGaps => "Suggested · Fill Gaps",
+                    _ => "Suggested · Title Hunt"
+                })
     };
 
     private static readonly IReadOnlyDictionary<string, WidgetDescriptor> ByTypeId =

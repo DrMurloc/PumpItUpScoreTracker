@@ -1,4 +1,5 @@
 @using MediatR
+@using ScoreTracker.ChartIntelligence.Contracts.Queries
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
@@ -11,6 +12,7 @@
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.HomeDashboard
+@using ScoreTracker.Web.Services.Theming
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
 @* W4 (design doc §4, catalog walk pick 1): the WSIP suggester as one widget type —
@@ -55,21 +57,28 @@ else
                     var chart = row.Chart;
                     var sect = section;
                     var r = row;
+                    @* No song name at 1x2 (owner, round 3) — the width belongs to the
+                       score; the art tooltip and the details dialog carry the name. *@
                     <div class="dash-target-row @(EditMode ? "" : "dash-clickable")"
                          @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(chart, sect.CategoryKey))">
                         <span class="dash-mini-art">
                             <SongImage Song="chart.Song" Small="true"></SongImage>
                         </span>
                         <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
-                        <span class="dash-target-name">@chart.Song.Name</span>
                         <span class="dash-target-score">
-                            @if (row.Score?.Score != null)
+                            @if (row.Tier != null)
+                            {
+                                <span style="@($"color:{ThemeScales.DifficultyColor(row.Tier.Value)}")">
+                                    @TierName(row.Tier.Value)
+                                </span>
+                            }
+                            else if (row.ShowScore && row.Score?.Score != null)
                             {
                                 <LetterGradeIcon Grade="row.Score.Score.Value.LetterGrade"
                                                  IsBroken="row.Score.IsBroken" Height="16"/>
                                 <span>@(((int)row.Score.Score.Value).ToString("N0"))</span>
                             }
-                            else
+                            else if (row.ShowScore)
                             {
                                 <span class="dash-muted">—</span>
                             }
@@ -192,7 +201,10 @@ else
 
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
 
-    private sealed record SuggestionRow(Chart Chart, RecordedPhoenixScore? Score, string? Detail);
+    // Fill rows never show a score (they're unpassed by definition, owner round 3) —
+    // ShowScore is false and Tier optionally carries the configured tier-list lens.
+    private sealed record SuggestionRow(Chart Chart, RecordedPhoenixScore? Score, string? Detail,
+        TierListCategory? Tier = null, bool ShowScore = true);
 
     // CategoryKey is the engine's raw category name — the feedback store's key (the
     // pushing-title section's key is the title's own name, matching WSIP's behavior).
@@ -242,6 +254,27 @@ else
         var scores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _mix)))
             .ToDictionary(s => s.ChartId);
 
+        // Fill Gaps lens (owner, round 3): tier-list difficulty per fill chart — the
+        // blended list covers unplayed charts, and Personalized bends it with the
+        // player's skill estimates. One query per (type, level) folder in the results.
+        _lensTiers.Clear();
+        if (config.DifficultyLens != SuggestedDifficultyLens.None
+            && categories.Contains(RecommendationCategory.FillScores))
+        {
+            var lens = config.DifficultyLens == SuggestedDifficultyLens.PassDifficulty ? "Pass" : "Score";
+            var fillCharts = recommendations
+                .Where(r => (string)r.Category == RecommendationCategories.FillScores
+                            && charts.ContainsKey(r.ChartId))
+                .Select(r => charts[r.ChartId]);
+            foreach (var folder in fillCharts.GroupBy(c => (c.Type, c.Level)))
+            {
+                var tierList = await Mediator.Send(new GetBlendedTierListQuery(folder.Key.Type,
+                    folder.Key.Level, lens, config.PersonalizedLens, Mix: _mix));
+                foreach (var entry in tierList.Entries.Where(e => e.Category != TierListCategory.Unrecorded))
+                    _lensTiers[entry.ChartId] = entry.Category;
+            }
+        }
+
         // Category → section, in the goal's bundle order. The pushing-title category has
         // no fixed name (it's the title's own name), so it matches "everything else".
         var byName = recommendations.Where(r => charts.ContainsKey(r.ChartId))
@@ -286,13 +319,19 @@ else
             </div>
             <div class="dash-card-name">@ctx.Row.Chart.Song.Name</div>
             <div class="dash-card-score">
-                @if (ctx.Row.Score?.Score != null)
+                @if (ctx.Row.Tier != null)
+                {
+                    <span style="@($"color:{ThemeScales.DifficultyColor(ctx.Row.Tier.Value)}")">
+                        @TierName(ctx.Row.Tier.Value)
+                    </span>
+                }
+                else if (ctx.Row.ShowScore && ctx.Row.Score?.Score != null)
                 {
                     <LetterGradeIcon Grade="ctx.Row.Score.Score.Value.LetterGrade"
                                      IsBroken="ctx.Row.Score.IsBroken" Height="14"/>
                     <span>@(((int)ctx.Row.Score.Score.Value).ToString("N0"))</span>
                 }
-                else
+                else if (ctx.Row.ShowScore)
                 {
                     <span class="dash-muted">—</span>
                 }
@@ -336,6 +375,8 @@ else
         _isSavingVeto = false;
     }
 
+    private readonly Dictionary<Guid, TierListCategory> _lensTiers = new();
+
     private SuggestionRow BuildRow(RecommendationCategory category, Chart chart, RecordedPhoenixScore? score)
     {
         var detail = category switch
@@ -346,7 +387,25 @@ else
                 L["{0} days old", (int)(Clock.Now - score.RecordedDate).TotalDays].Value,
             _ => null
         };
-        return new SuggestionRow(chart, score, detail);
+        var isFill = category == RecommendationCategory.FillScores;
+        return new SuggestionRow(chart, score, detail,
+            isFill && _lensTiers.TryGetValue(chart.Id, out var tier) ? tier : null,
+            ShowScore: !isFill);
+    }
+
+    private string TierName(TierListCategory category)
+    {
+        return category switch
+        {
+            TierListCategory.Overrated => L["1+ Level Easier"],
+            TierListCategory.VeryEasy => L["Very Easy"],
+            TierListCategory.Easy => L["Easy"],
+            TierListCategory.Medium => L["Medium"],
+            TierListCategory.Hard => L["Hard"],
+            TierListCategory.VeryHard => L["Very Hard"],
+            TierListCategory.Underrated => L["1+ Level Harder"],
+            _ => L["Not Rated"]
+        };
     }
 
     private static readonly string[] KnownNames =

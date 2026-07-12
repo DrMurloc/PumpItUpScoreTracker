@@ -3393,4 +3393,13 @@
   <data name="Scroll left" xml:space="preserve">
     <value>Défiler vers la gauche</value>
   </data>
+  <data name="Levels above" xml:space="preserve">
+    <value>Niveaux au-dessus</value>
+  </data>
+  <data name="Levels below" xml:space="preserve">
+    <value>Niveaux en dessous</value>
+  </data>
+  <data name="Tier list difficulty" xml:space="preserve">
+    <value>Difficulté de tier list</value>
+  </data>
 </root>

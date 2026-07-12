@@ -34,7 +34,11 @@
     </MudSelect>
     @if (_levelMode == SuggestedLevelMode.Dynamic)
     {
-        <MudNumericField T="int" @bind-Value="_spread" Min="0" Max="5" Label="@L["± levels"]" Class="mb-1"/>
+        @* Asymmetric on purpose (owner): push above the comfort zone, or relax below. *@
+        <div class="d-flex gap-3 mb-1">
+            <MudNumericField T="int" @bind-Value="_spreadBelow" Min="0" Max="5" Label="@L["Levels below"]"/>
+            <MudNumericField T="int" @bind-Value="_spreadAbove" Min="0" Max="5" Label="@L["Levels above"]"/>
+        </div>
         <MudText Typo="Typo.caption" Class="dash-muted">@L["Follows your competitive level as it moves."]</MudText>
     }
     else if (_levelMode == SuggestedLevelMode.Static)
@@ -61,6 +65,24 @@
         </MudText>
     }
 }
+@if (_goal == SuggestedGoal.FillGaps)
+{
+    @* Unpassed charts have no score to show — an optional tier-list difficulty
+       fills the right column instead (owner, field-test round 3). *@
+    <MudSelect T="SuggestedDifficultyLens" @bind-Value="_lens" Label="@L["Tier list difficulty"]" Class="mb-1 mt-2">
+        <MudSelectItem T="SuggestedDifficultyLens" Value="SuggestedDifficultyLens.None">@L["None"]</MudSelectItem>
+        <MudSelectItem T="SuggestedDifficultyLens" Value="SuggestedDifficultyLens.PassDifficulty">
+            @L["Pass Difficulty"]
+        </MudSelectItem>
+        <MudSelectItem T="SuggestedDifficultyLens" Value="SuggestedDifficultyLens.ScoreDifficulty">
+            @L["Score Difficulty"]
+        </MudSelectItem>
+    </MudSelect>
+    @if (_lens != SuggestedDifficultyLens.None)
+    {
+        <MudCheckBox T="bool" @bind-Value="_personalized" Label="@L["Personalized"]"/>
+    }
+}
 <MudSelect T="MixEnum?" @bind-Value="_mix" Label="@L["Mix"]" Class="mb-3 mt-2">
     <MudSelectItem T="MixEnum?" Value="null">@L["Follow current mix"]</MudSelectItem>
     <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix">Phoenix</MudSelectItem>
@@ -82,10 +104,13 @@
     private ChartType? _chartType;
     private readonly HashSet<RecommendationCategory> _disabled = new();
     private SuggestedLevelMode _levelMode = SuggestedLevelMode.Any;
-    private int _spread = 2;
+    private int _spreadBelow = 2;
+    private int _spreadAbove = 2;
     private int _minLevel = 1;
     private int _maxLevel = DifficultyLevel.Max;
     private RecommendationLevelBasis _basis = RecommendationLevelBasis.ChartLevel;
+    private SuggestedDifficultyLens _lens = SuggestedDifficultyLens.None;
+    private bool _personalized;
 
     protected override void OnParametersSet()
     {
@@ -96,10 +121,13 @@
         _disabled.Clear();
         foreach (var category in config.DisabledCategories) _disabled.Add(category);
         _levelMode = config.LevelMode;
-        _spread = config.Spread;
+        _spreadBelow = config.SpreadBelow;
+        _spreadAbove = config.SpreadAbove;
         _minLevel = config.MinLevel ?? 1;
         _maxLevel = config.MaxLevel ?? DifficultyLevel.Max;
         _basis = config.LevelBasis;
+        _lens = config.DifficultyLens;
+        _personalized = config.PersonalizedLens;
     }
 
     private void SetGoal(SuggestedGoal goal)
@@ -145,10 +173,14 @@
             ChartType = _chartType,
             DisabledCategories = _disabled.ToList(),
             LevelMode = _goal == SuggestedGoal.TitleHunt ? SuggestedLevelMode.Any : _levelMode,
-            Spread = _spread,
+            SpreadBelow = _spreadBelow,
+            SpreadAbove = _spreadAbove,
             MinLevel = _minLevel <= 1 ? null : _minLevel,
             MaxLevel = _maxLevel >= DifficultyLevel.Max ? null : _maxLevel,
-            LevelBasis = _basis
+            LevelBasis = _basis,
+            DifficultyLens = _goal == SuggestedGoal.FillGaps ? _lens : SuggestedDifficultyLens.None,
+            PersonalizedLens = _goal == SuggestedGoal.FillGaps && _lens != SuggestedDifficultyLens.None
+                               && _personalized
         };
         await OnSave.InvokeAsync((WidgetConfigJson.Write(config), 1));
     }

@@ -1037,6 +1037,8 @@
     gap: 5px;
     font-variant-numeric: tabular-nums;
     font-size: .75rem;
+    /* Suggested rows drop the name at 1x2 — the score column right-aligns itself. */
+    margin-left: auto;
 }
 
 .dash-target-detail {
