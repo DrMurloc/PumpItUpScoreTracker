@@ -126,7 +126,7 @@ Every vertical's model contribution must be listed in [`VerticalModelContributio
 | Folder | What's there |
 |---|---|
 | *(root)* | `/WhatShouldIPlay` (home: recommendations + quick recording), `/Charts` (the core browser), `/Chart/{id}` (record + detail), `/Login`, `/Welcome`, `/Account` (profile, API tokens), `/UploadPhoenixScores` (bulk CSV import), `/UploadXXScores` |
-| `TierLists/` | `/TierLists`, `/ChartSkills`, `/PersonalizedTierList` — the site's most-used feature |
+| `TierLists/` | `/TierLists` (+ `/TierLists/{type}/{level}`, the consolidated tier-list page — the site's most-used feature) and `/TierLists/{type}/{level}/Breakdown` (the Personalized Breakdown: what goes into your personalized blend and which charts it moves — see [docs/design/personalized-breakdown.md](design/personalized-breakdown.md)) |
 | `Progress/` | `/Progress`, `/Phoenix/Progress`, `/Pumbility`, `/Titles`, `/CompetitiveLevel`, `/Player/{id}/Sessions` (public session roundups + score journal — the Discord score card's link target), `/Player/{id}/PhoenixRecap` (the season-recap slide deck, admin-computed — see [docs/design/phoenix-season-recap.md](design/phoenix-season-recap.md)) |
 | `Competition/` | `/Tournaments`, stamina + match tournament flows, qualifiers submission, `/WeeklyCharts`, `/UcsLeaderboards`, `/ScoreRankings`, `/Completion` |
 | `Communities/` | `/Communities`, invite links, community leaderboards |

@@ -2946,4 +2946,151 @@
   <data name="Score History" xml:space="preserve">
     <value>Scrgre Histrgry</value>
   </data>
+  <data name="+{0} more" xml:space="preserve">
+    <value>+{0} mrgl</value>
+  </data>
+  <data name="Across everything you've scored nearby" xml:space="preserve">
+    <value>Mrglcross everything you've scored mrglnearby</value>
+  </data>
+  <data name="Active — {0} scores nearby, {1} skills have enough evidence" xml:space="preserve">
+    <value>Mrglctive — {0} scores nearby, {1} mrglskills have enough mrglvidence</value>
+  </data>
+  <data name="Back to Tier List" xml:space="preserve">
+    <value>Mrglback to Mrgl List</value>
+  </data>
+  <data name="Charts that moved" xml:space="preserve">
+    <value>Mrglrglrgl that mrglmoved</value>
+  </data>
+  <data name="Community Tier List" xml:space="preserve">
+    <value>Mrglmunity Mrgl List</value>
+  </data>
+  <data name="Easier for you" xml:space="preserve">
+    <value>Mrgleasier for mrglyou</value>
+  </data>
+  <data name="Every chart you've scored within 3 folders votes on your skills — closer folders and bigger skill coverage count more." xml:space="preserve">
+    <value>Every mrglrgl you've scored within 3 mrglfolders votes on your mrglskills — closer mrglfolders and bigger mrglcoverage count mrglmore.</value>
+  </data>
+  <data name="Evidence" xml:space="preserve">
+    <value>Mrglvidence</value>
+  </data>
+  <data name="Harder for you" xml:space="preserve">
+    <value>Mrglharder for mrglyou</value>
+  </data>
+  <data name="How each skill runs against your own average" xml:space="preserve">
+    <value>How each mrglskill runs against your own mrglverage</value>
+  </data>
+  <data name="How is this personalized?" xml:space="preserve">
+    <value>How is this mrglsonalized?</value>
+  </data>
+  <data name="In this folder" xml:space="preserve">
+    <value>In this mrglfolder</value>
+  </data>
+  <data name="Personalized Breakdown" xml:space="preserve">
+    <value>Mrglsonalized Mrglbreakdown</value>
+  </data>
+  <data name="Players Like You" xml:space="preserve">
+    <value>Mrglplayers Like Mrglyou</value>
+  </data>
+  <data name="Players like you" xml:space="preserve">
+    <value>Mrglplayers like mrglyou</value>
+  </data>
+  <data name="Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours." xml:space="preserve">
+    <value>Mrglplayers within one grrrmrrgl level of you — closer mrglplayers count more, mrgl mrgl!</value>
+  </data>
+  <data name="Recalculated every few hours" xml:space="preserve">
+    <value>Mrglcalculated every few mrglhours</value>
+  </data>
+  <data name="Same skills, two questions: this folder view asks how the charts you've played here actually go — the blend view asks which skills run hot or cold across everything you've scored nearby. A skill can look fine here and still move charts." xml:space="preserve">
+    <value>Same mrglskills, two mrglquestions: this mrglfolder view asks how your mrglrglrgl go — the mrglblend view asks which mrglskills run hot or cold mrglnearby. Mrgl!</value>
+  </data>
+  <data name="Show all {0}" xml:space="preserve">
+    <value>Show all {0} mrgl</value>
+  </data>
+  <data name="Show fewer" xml:space="preserve">
+    <value>Show mrglfewer</value>
+  </data>
+  <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
+    <value>Mrglsilent — no mrglplayers found in your grrrmrrgl range yet. Mrgl.</value>
+  </data>
+  <data name="Silent — only {0} skills have enough evidence. Your list currently matches the community's. Score more charts near this folder to turn this on." xml:space="preserve">
+    <value>Mrglsilent — only {0} mrglskills have enough mrglvidence. Your mrgllist matches the mrglmunity's. Score more mrglrglrgl nearby! Mrgl!</value>
+  </data>
+  <data name="The shared tier list for this folder, built from everyone's data." xml:space="preserve">
+    <value>The shared mrgllist for this mrglfolder, built from everyone's mrgldata.</value>
+  </data>
+  <data name="Three sources vote on every chart. Sources with more weight move charts further." xml:space="preserve">
+    <value>Three mrglsources vote on every mrglrgl. Heavier mrglsources move mrglrglrgl further.</value>
+  </data>
+  <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
+    <value>Two mrglviews of the same mrglskills. Left feeds the mrglblend; right is this mrglfolder as Mrglfolder Stats shows it.</value>
+  </data>
+  <data name="Vs. Peers" xml:space="preserve">
+    <value>Vs. Mrglpeers</value>
+  </data>
+  <data name="Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet." xml:space="preserve">
+    <value>Vs. Mrglpeers: how your mrglscores rank against similar grrrmrrgl mrglplayers, averaged over this mrglfolder's mrglrglrgl featuring the mrglskill. Grey mrglskills need more mrglvidence. Mrgl!</value>
+  </data>
+  <data name="What goes into your list" xml:space="preserve">
+    <value>What goes into your mrgllist</value>
+  </data>
+  <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
+    <value>Where your mrgllist disagrees with the mrglmunity's, and the mrglskills that pushed it. Mrgltap a mrglrgl for its full mrglbreakdown.</value>
+  </data>
+  <data name="You" xml:space="preserve">
+    <value>Mrglyou</value>
+  </data>
+  <data name="Your Skill Estimate" xml:space="preserve">
+    <value>Your Mrglskill Mrglstimate</value>
+  </data>
+  <data name="Your ability on the charts you've played here — the same numbers as Folder Stats" xml:space="preserve">
+    <value>Your mrglbility on the mrglrglrgl you've played here — same mrglnumbers as Mrglfolder Stats</value>
+  </data>
+  <data name="Your list currently matches the community's on every rated chart." xml:space="preserve">
+    <value>Your mrgllist currently matches the mrglmunity's on every rated mrglrgl. Mrgl!</value>
+  </data>
+  <data name="Your personalized list moves {0} of {1} charts away from the community's." xml:space="preserve">
+    <value>Your mrglsonalized list moves {0} of {1} mrglrglrgl away from the mrglmunity's.</value>
+  </data>
+  <data name="Your skill profile" xml:space="preserve">
+    <value>Your mrglskill mrglprofile</value>
+  </data>
+  <data name="Your skills" xml:space="preserve">
+    <value>Your mrglskills</value>
+  </data>
+  <data name="stronger" xml:space="preserve">
+    <value>mrglstronger</value>
+  </data>
+  <data name="weaker" xml:space="preserve">
+    <value>mrglweaker</value>
+  </data>
+  <data name="{0} / {1} charts rated" xml:space="preserve">
+    <value>{0} / {1} mrglrglrgl rated</value>
+  </data>
+  <data name="{0} charts match the community tier" xml:space="preserve">
+    <value>{0} mrglrglrgl match the mrglmunity tier</value>
+  </data>
+  <data name="{0} don't have enough data to move" xml:space="preserve">
+    <value>{0} don't have enough mrgldata to move</value>
+  </data>
+  <data name="{0} don't have enough skill data to move:" xml:space="preserve">
+    <value>{0} don't have enough mrglskill data to move:</value>
+  </data>
+  <data name="{0} easier for you" xml:space="preserve">
+    <value>{0} mrgleasier for you</value>
+  </data>
+  <data name="{0} easier for you — mostly {1}" xml:space="preserve">
+    <value>{0} mrgleasier for you — mostly {1}</value>
+  </data>
+  <data name="{0} harder for you" xml:space="preserve">
+    <value>{0} mrglharder for you</value>
+  </data>
+  <data name="{0} harder for you — mostly {1}" xml:space="preserve">
+    <value>{0} mrglharder for you — mostly {1}</value>
+  </data>
+  <data name="{0} match the community tier" xml:space="preserve">
+    <value>{0} match the mrglmunity tier</value>
+  </data>
+  <data name="{0} players found" xml:space="preserve">
+    <value>{0} mrglplayers found</value>
+  </data>
 </root>
