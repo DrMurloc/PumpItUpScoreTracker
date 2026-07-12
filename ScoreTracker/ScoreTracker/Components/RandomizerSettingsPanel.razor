@@ -78,36 +78,6 @@
         </div>
     </div>
 
-    @if (CurrentUser.IsLoggedIn)
-    {
-        <div class="rand-settings-row @(PlayerFiltersAvailable ? null : "rand-settings-gated")">
-            <span class="rand-settings-label">@L["My results"]</span>
-            @if (PlayerFiltersAvailable)
-            {
-                <div class="rand-my-results">
-                    <button type="button" class="rand-seg @(Settings.ClearStatus == null ? "on" : null)"
-                            @onclick="() => SetClearStatus(null)">@L["Any"]</button>
-                    <button type="button" class="rand-seg @(Settings.ClearStatus == false ? "on" : null)"
-                            @onclick="() => SetClearStatus(false)">@L["Not Passed"]</button>
-                    <button type="button" class="rand-seg @(Settings.ClearStatus == true ? "on" : null)"
-                            @onclick="() => SetClearStatus(true)">@L["Passed"]</button>
-                </div>
-                <div class="rand-grade-chips">
-                    @for (var grade = PhoenixLetterGrade.A; grade <= PhoenixLetterGrade.SSSPlus; grade++)
-                    {
-                        var letterGrade = grade;
-                        <button type="button" class="rand-grade-chip @(Settings.LetterGrades.Contains(letterGrade) ? "on" : null)"
-                                @onclick="() => ToggleGrade(letterGrade)">@letterGrade.GetName()</button>
-                    }
-                </div>
-            }
-            else
-            {
-                <MudText Typo="Typo.caption" Class="rand-gated-reason">@L["Score filters need Phoenix scoring — not available for this mix yet"]</MudText>
-            }
-        </div>
-    }
-
     <MudSwitch T="bool" Color="Color.Primary" Label="@L["Allow Repeat Charts"]" Value="Settings.AllowRepeats"
                ValueChanged="SetAllowRepeats"></MudSwitch>
 
@@ -115,12 +85,44 @@
         <button type="button" class="rand-advanced-toggle" @onclick="() => _showAdvanced = !_showAdvanced"
                 aria-expanded="@_showAdvanced">
             <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small"></MudIcon>
-            @L["Per-level weights & gaps"]
-            <span class="rand-advanced-caret">@(_showAdvanced ? "▾" : "▸")</span>
+            @L["Advanced Filters"]
+            <MudIcon Icon="@(_showAdvanced ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                     Size="Size.Small" Class="rand-advanced-caret"></MudIcon>
         </button>
         @if (_showAdvanced)
         {
             <div class="rand-advanced-body">
+                @if (CurrentUser.IsLoggedIn)
+                {
+                    @* Advanced by design (field-test round 1): filtering the pool by your
+                       own scores is a power move, not a standard ask. *@
+                    <div class="rand-settings-row @(PlayerFiltersAvailable ? null : "rand-settings-gated")">
+                        <span class="rand-settings-label">@L["Filter By Personal Scores"]</span>
+                        @if (PlayerFiltersAvailable)
+                        {
+                            <div class="rand-my-results">
+                                <button type="button" class="rand-seg @(Settings.ClearStatus == null ? "on" : null)"
+                                        @onclick="() => SetClearStatus(null)">@L["Any"]</button>
+                                <button type="button" class="rand-seg @(Settings.ClearStatus == false ? "on" : null)"
+                                        @onclick="() => SetClearStatus(false)">@L["Not Passed"]</button>
+                                <button type="button" class="rand-seg @(Settings.ClearStatus == true ? "on" : null)"
+                                        @onclick="() => SetClearStatus(true)">@L["Passed"]</button>
+                            </div>
+                            <div class="rand-grade-chips">
+                                @for (var grade = PhoenixLetterGrade.A; grade <= PhoenixLetterGrade.SSSPlus; grade++)
+                                {
+                                    var letterGrade = grade;
+                                    <button type="button" class="rand-grade-chip @(Settings.LetterGrades.Contains(letterGrade) ? "on" : null)"
+                                            @onclick="() => ToggleGrade(letterGrade)">@letterGrade.GetName()</button>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.caption" Class="rand-gated-reason">@L["Score filters need Phoenix scoring — not available for this mix yet"]</MudText>
+                        }
+                    </div>
+                }
                 <RandomizerSettingsConfiguration Settings="Settings"></RandomizerSettingsConfiguration>
             </div>
         }

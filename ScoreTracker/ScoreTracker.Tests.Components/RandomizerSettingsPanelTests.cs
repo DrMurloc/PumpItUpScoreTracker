@@ -55,29 +55,36 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
     }
 
     [Fact]
-    public void PlayerFiltersAreGatedOffPhoenixScoring()
+    public void PersonalScoreFiltersAreGatedOffPhoenixScoring()
     {
         var settings = new RandomSettings { ClearStatus = false };
         settings.LetterGrades.Add(PhoenixLetterGrade.SSS);
         var cut = Render(settings, MixEnum.XX);
+        cut.Find(".rand-advanced-toggle").Click();
 
         Assert.NotEmpty(cut.FindAll(".rand-gated-reason"));
         Assert.Empty(cut.FindAll(".rand-my-results"));
     }
 
     [Fact]
-    public void PhoenixMixShowsThePassedSegmentsAndGradeChips()
+    public void PersonalScoreFiltersLiveInsideAdvancedFilters()
     {
         var cut = Render(new RandomSettings());
+
+        // Hidden until Advanced Filters expands (field-test round 1: not a standard ask).
+        Assert.Empty(cut.FindAll(".rand-my-results"));
+
+        cut.Find(".rand-advanced-toggle").Click();
 
         Assert.Equal(3, cut.FindAll(".rand-seg").Count);
         Assert.NotEmpty(cut.FindAll(".rand-grade-chip"));
     }
 
     [Fact]
-    public void LoggedOutHidesPlayerFiltersEntirely()
+    public void LoggedOutHidesPersonalScoreFiltersEntirely()
     {
         var cut = Render(new RandomSettings(), loggedIn: false);
+        cut.Find(".rand-advanced-toggle").Click();
 
         Assert.Empty(cut.FindAll(".rand-my-results"));
         Assert.Empty(cut.FindAll(".rand-gated-reason"));

@@ -299,6 +299,7 @@ else
         var densitySetting = await UiSettings.GetSetting(DensityKey);
         if (Enum.TryParse<UiDensity>(densitySetting, out var density)) _density = density;
 
+        var hasWorkingConfig = false;
         if (CurrentUser.IsLoggedIn)
         {
             _savedSettings = (await Mediator.Send(new GetRandomSettingsQuery()))
@@ -313,6 +314,7 @@ else
                     {
                         _settings = config.Settings;
                         _mix = config.Mix;
+                        hasWorkingConfig = true;
                     }
                 }
                 catch (JsonException)
@@ -323,6 +325,12 @@ else
             var draw = await Mediator.Send(new GetActiveDrawQuery(null));
             if (draw != null) await LoadDraw(draw);
         }
+
+        // Fresh RandomSettings has every weight at zero — an empty pool that "randomizes"
+        // into nothing. First visits start with a usable range instead (field-test round 1).
+        if (!hasWorkingConfig)
+            foreach (var key in _settings.LevelWeights.Keys.ToArray())
+                _settings.LevelWeights[key] = key is >= 15 and <= 18 ? 1 : 0;
 
         _loading = false;
         await RefreshMatchCount(CancellationToken.None);
@@ -349,6 +357,17 @@ else
         {
             await SaveWorkingConfig();
             var charts = (await Mediator.Send(new GetRandomChartsQuery(_settings, _mix))).ToArray();
+            // Never fail silently: an empty pool keeps the previous draw and says why.
+            if (!charts.Any())
+            {
+                Snackbar.Add(L["No charts match your filters — open Settings and widen the range"],
+                    Severity.Warning);
+                return;
+            }
+
+            if (charts.Length < _settings.Count)
+                Snackbar.Add(L["Only {0} charts match your filters", charts.Length], Severity.Info);
+
             if (CurrentUser.IsLoggedIn)
             {
                 var draw = await Mediator.Send(new CreateDrawCommand(null, _mix, charts.Select(c => c.Id).ToArray()));

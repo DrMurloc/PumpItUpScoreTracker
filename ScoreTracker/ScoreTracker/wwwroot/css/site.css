@@ -673,11 +673,13 @@ html.nav-away .page-dock,
 
 .rand-advanced-caret {
     margin-left: auto;
-    font-size: .7rem;
 }
 
 .rand-advanced-body {
-    padding-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-top: 8px;
 }
 
 /* ===== Armed action selector ===== */
