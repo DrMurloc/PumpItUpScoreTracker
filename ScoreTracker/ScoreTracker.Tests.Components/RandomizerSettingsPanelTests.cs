@@ -24,13 +24,9 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
         var settings = new RandomSettings();
         foreach (var key in settings.LevelWeights.Keys.ToArray())
             settings.LevelWeights[key] = key >= min && key <= max ? 1 : 0;
+        foreach (var key in settings.SongTypeWeights.Keys.ToArray())
+            settings.SongTypeWeights[key] = 1;
         return settings;
-    }
-
-    private static IRenderedComponent<MudSwitch<bool>> SectionSwitch(
-        IRenderedComponent<RandomizerSettingsPanel> cut, string label)
-    {
-        return cut.FindComponents<MudSwitch<bool>>().First(s => s.Instance.Label == label);
     }
 
     [Fact]
@@ -69,70 +65,97 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
     }
 
     [Fact]
-    public void AdvancedDisclosureRevealsTheOptInSections()
+    public void AdvancedShowsSectionsWithoutTogglesAndNoWeightRowsInSliderMode()
     {
-        var cut = Render(new RandomSettings());
-        Assert.Empty(cut.FindAll(".rand-adv-section"));
-
+        var cut = Render(WithSinglesRange(15, 18));
         cut.Find(".rand-advanced-toggle").Click();
 
-        // Six opt-in sections for a logged-in Phoenix user, all collapsed.
-        Assert.Equal(6, cut.FindAll(".rand-adv-section").Count);
-        Assert.Empty(cut.FindAll(".rand-adv-section-content"));
+        // Weighted Levels, Song Types, Minimum Counts, Personal Scores — all visible.
+        Assert.Equal(4, cut.FindAll(".rand-adv-section").Count);
+        // Slider mode: no weight rows yet, just the entry button.
+        Assert.Empty(cut.FindAll(".weight-row"));
+        Assert.NotEmpty(cut.FindAll(".weight-add-btn"));
     }
 
     [Fact]
-    public void OptingIntoDynamicSinglesDisablesTheBasicSliderAndShowsWeightRows()
+    public void OpeningTheSelectorHighlightsSliderLevelsWithoutEngagingWeightedMode()
     {
-        var settings = WithSinglesRange(16, 18);
+        var settings = WithSinglesRange(15, 18);
         var cut = Render(settings);
         cut.Find(".rand-advanced-toggle").Click();
 
-        SectionSwitch(cut, "Dynamic Singles Weights").Find("input").Change(true);
+        cut.Find(".weight-add-btn").Click();
 
-        Assert.NotEmpty(cut.FindAll(".rand-owned-note"));
-        // Rows seed from the slider's current range.
-        Assert.Equal(3, cut.FindComponents<FolderWeightList>()[0].FindAll(".weight-row").Count);
+        // The sliders' range arrives highlighted; looking around changes nothing.
+        Assert.Equal(4, cut.FindAll(".folder-picker-current").Count);
+        Assert.Empty(cut.FindAll(".weight-row"));
+        Assert.Empty(cut.FindAll(".rand-owned-note"));
     }
 
     [Fact]
-    public void OptingOutTakesTwoTapsAndSnapsWeightsToTheContiguousRange()
+    public void TogglingALevelInTheSelectorEngagesWeightedMode()
     {
-        // Gaps + a weight above 1: the section derives itself open.
-        var settings = new RandomSettings();
-        settings.LevelWeights[15] = 1;
+        var settings = WithSinglesRange(15, 18);
+        var cut = Render(settings);
+        cut.Find(".rand-advanced-toggle").Click();
+        cut.Find(".weight-add-btn").Click();
+
+        cut.FindAll(".folder-picker-level").First(b => b.TextContent == "20").Click();
+
+        Assert.Equal(1, settings.LevelWeights[20]);
+        // Weighted mode: rows for 15-18 + 20, and the basic controls hand over.
+        Assert.Equal(5, cut.FindAll(".weight-row").Count);
+        Assert.NotEmpty(cut.FindAll(".rand-owned-note"));
+    }
+
+    [Fact]
+    public void BackToSlidersTakesTwoTapsAndSnapsToTheContiguousRange()
+    {
+        // Gaps + a weight above 1: weighted mode derives itself on.
+        var settings = WithSinglesRange(15, 15);
         settings.LevelWeights[18] = 3;
         var cut = Render(settings);
 
-        var section = SectionSwitch(cut, "Dynamic Singles Weights");
-        Assert.True(section.Instance.Value);
+        Assert.NotEmpty(cut.FindAll(".weight-row"));
 
-        section.Find("input").Change(false);
-        // First tap: confirm caption, still opted in, data untouched.
-        Assert.Contains("Tap again to turn off and clear", cut.Markup);
+        cut.Find(".rand-back-to-sliders").Click();
+        Assert.Contains("Tap again to clear weights", cut.Markup);
         Assert.Equal(3, settings.LevelWeights[18]);
 
-        SectionSwitch(cut, "Dynamic Singles Weights").Find("input").Change(false);
-        // Second tap: section off, weights snap to the slider-expressible span.
+        cut.Find(".rand-back-to-sliders").Click();
         Assert.Equal(new[] { 15, 16, 17, 18 },
             settings.LevelWeights.Where(kv => kv.Value > 0).Select(kv => kv.Key).OrderBy(k => k).ToArray());
         Assert.All(settings.LevelWeights.Where(kv => kv.Value > 0), kv => Assert.Equal(1, kv.Value));
+        Assert.Empty(cut.FindAll(".weight-row"));
     }
 
     [Fact]
-    public void SongTypeFilteringDerivesOpenAndOptOutRestoresAllTypes()
+    public void SongTypeChipsToggleAndTheLastActiveTypeCannotBeRemoved()
     {
         var settings = WithSinglesRange(15, 18);
-        settings.SongTypeWeights[SongType.Arcade] = 1; // others stay 0 = filtering
         var cut = Render(settings);
+        cut.Find(".rand-advanced-toggle").Click();
 
-        var section = SectionSwitch(cut, "Song Types");
-        Assert.True(section.Instance.Value);
+        var chips = cut.FindAll(".rand-adv-section .rand-grade-chip");
+        // Song Types render first among chip rows; all four start lit.
+        chips[0].Click(); // Arcade off
+        Assert.Equal(0, settings.SongTypeWeights[SongType.Arcade]);
 
-        section.Find("input").Change(false);
-        SectionSwitch(cut, "Song Types").Find("input").Change(false);
+        // Turning the rest off leaves the final type lit.
+        cut.FindAll(".rand-adv-section .rand-grade-chip")[1].Click();
+        cut.FindAll(".rand-adv-section .rand-grade-chip")[2].Click();
+        cut.FindAll(".rand-adv-section .rand-grade-chip")[3].Click();
+        Assert.Equal(1, settings.SongTypeWeights.Values.Count(v => v > 0));
+    }
 
-        Assert.All(settings.SongTypeWeights.Values, v => Assert.Equal(1, v));
+    [Fact]
+    public void MinimumCountsRenderWithoutAnOptInToggle()
+    {
+        var cut = Render(WithSinglesRange(15, 18));
+        cut.Find(".rand-advanced-toggle").Click();
+
+        Assert.NotEmpty(cut.FindAll(".rand-min-mode"));
+        Assert.Contains("Guarantee at least", cut.Markup);
     }
 
     [Fact]
@@ -142,23 +165,9 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
         settings.LetterGrades.Add(PhoenixLetterGrade.SSS);
         var cut = Render(settings, MixEnum.XX);
 
-        // The section derives itself open from the data; XX shows the reason instead.
+        // Advanced derives itself open from the data; XX shows the reason.
         Assert.NotEmpty(cut.FindAll(".rand-gated-reason"));
-        Assert.Empty(cut.FindAll(".rand-my-results"));
-    }
-
-    [Fact]
-    public void PersonalScoreFiltersAreAnOptInSection()
-    {
-        var cut = Render(new RandomSettings());
-        cut.Find(".rand-advanced-toggle").Click();
-
-        Assert.Empty(cut.FindAll(".rand-my-results"));
-
-        SectionSwitch(cut, "Filter By Personal Scores").Find("input").Change(true);
-
-        Assert.Equal(3, cut.FindAll(".rand-seg").Count);
-        Assert.NotEmpty(cut.FindAll(".rand-grade-chip"));
+        Assert.Empty(cut.FindAll(".rand-personal-segs"));
     }
 
     [Fact]
@@ -168,6 +177,19 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
         cut.Find(".rand-advanced-toggle").Click();
 
         Assert.DoesNotContain("Filter By Personal Scores", cut.Markup);
-        Assert.Equal(5, cut.FindAll(".rand-adv-section").Count);
+        Assert.Equal(3, cut.FindAll(".rand-adv-section").Count);
+    }
+
+    [Fact]
+    public void AllowRepeatsLivesInAdvancedNow()
+    {
+        var settings = new RandomSettings();
+        var cut = Render(settings);
+        cut.Find(".rand-advanced-toggle").Click();
+
+        var repeats = cut.FindComponents<MudSwitch<bool>>().First(s => s.Instance.Label == "Allow Repeat Charts");
+        repeats.Find("input").Change(true);
+
+        Assert.True(settings.AllowRepeats);
     }
 }

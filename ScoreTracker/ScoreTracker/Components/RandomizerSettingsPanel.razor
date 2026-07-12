@@ -8,12 +8,11 @@
 @inject ICurrentUserAccessor CurrentUser
 
 @* The randomizer's settings surface (docs/design/randomizer-overhaul.md, field-test
-   round 2): range sliders are the front door; Advanced Filters is a stack of opt-in
-   sections that stay collapsed until enabled. Basic and advanced never fight — while a
-   Dynamic Weights section owns a chart type, its basic control disables; opting out
-   (tap-again confirmed) snaps the data back to the slider's contiguous range. Mix is a
-   property of the settings, defaulting to the site mix. The page owns the drawer
-   chrome and the live match-count footer. *@
+   round 3): sliders are the front door; Advanced Filters holds one Weighted Levels
+   area (the shared FolderGrid selector — weighted mode engages on the first level you
+   toggle there, and 'Back to sliders' is the two-tap exit) plus always-visible Song
+   Types / Minimum Counts / personal-score filters. Basic and weighted never fight:
+   while weighted mode owns the levels, the basic controls disable. *@
 <div class="rand-settings">
     <div class="rand-settings-row">
         <MudSelect T="MixEnum" Value="Mix" ValueChanged="SetMix" Label="@L["Mix"]" Dense="true"
@@ -46,9 +45,9 @@
     <div class="rand-settings-row">
         <div class="rand-type-head">
             <span class="rand-settings-label">@L["Singles"]</span>
-            @if (IsOpen(AdvSection.SinglesWeights))
+            @if (_weightedMode)
             {
-                <MudText Typo="Typo.caption" Class="rand-owned-note">@L["Managed by Dynamic Weights"]</MudText>
+                <MudText Typo="Typo.caption" Class="rand-owned-note">@L["Managed by Weighted Levels"]</MudText>
             }
             else
             {
@@ -58,7 +57,7 @@
         </div>
         <LevelRangeSlider Label="@L["Singles"].ToString()" Prefix="S" Min="MinLevel" Max="MaxLevel"
                           ValueMin="SinglesRange.min" ValueMax="SinglesRange.max"
-                          Disabled="@(!SinglesOn || IsOpen(AdvSection.SinglesWeights))"
+                          Disabled="@(!SinglesOn || _weightedMode)"
                           ValueMinChanged="v => SetSinglesRange(v, SinglesRange.max)"
                           ValueMaxChanged="v => SetSinglesRange(SinglesRange.min, v)"></LevelRangeSlider>
     </div>
@@ -66,9 +65,9 @@
     <div class="rand-settings-row">
         <div class="rand-type-head">
             <span class="rand-settings-label">@L["Doubles"]</span>
-            @if (IsOpen(AdvSection.DoublesWeights))
+            @if (_weightedMode)
             {
-                <MudText Typo="Typo.caption" Class="rand-owned-note">@L["Managed by Dynamic Weights"]</MudText>
+                <MudText Typo="Typo.caption" Class="rand-owned-note">@L["Managed by Weighted Levels"]</MudText>
             }
             else
             {
@@ -78,7 +77,7 @@
         </div>
         <LevelRangeSlider Label="@L["Doubles"].ToString()" Prefix="D" Min="MinLevel" Max="MaxLevel"
                           ValueMin="DoublesRange.min" ValueMax="DoublesRange.max"
-                          Disabled="@(!DoublesOn || IsOpen(AdvSection.DoublesWeights))"
+                          Disabled="@(!DoublesOn || _weightedMode)"
                           ValueMinChanged="v => SetDoublesRange(v, DoublesRange.max)"
                           ValueMaxChanged="v => SetDoublesRange(DoublesRange.min, v)"></LevelRangeSlider>
     </div>
@@ -86,24 +85,21 @@
     <div class="rand-settings-row">
         <div class="rand-type-head">
             <span class="rand-settings-label">@L["Co-Op"]</span>
-            @if (IsOpen(AdvSection.CoOpWeights))
+            @if (_weightedMode)
             {
-                <MudText Typo="Typo.caption" Class="rand-owned-note">@L["Managed by Dynamic Weights"]</MudText>
+                <MudText Typo="Typo.caption" Class="rand-owned-note">@L["Managed by Weighted Levels"]</MudText>
             }
         </div>
         <div class="rand-coop-chips">
             @foreach (var players in Settings.PlayerCountWeights.Keys.OrderBy(k => k))
             {
                 var count = players;
-                <button type="button" disabled="@IsOpen(AdvSection.CoOpWeights)"
+                <button type="button" disabled="@_weightedMode"
                         class="rand-coop-chip @(Settings.PlayerCountWeights[count] > 0 ? "on" : null)"
                         @onclick="() => ToggleCoOp(count)">×@count</button>
             }
         </div>
     </div>
-
-    <MudSwitch T="bool" Color="Color.Primary" Label="@L["Allow Repeat Charts"]" Value="Settings.AllowRepeats"
-               ValueChanged="SetAllowRepeats"></MudSwitch>
 
     <div class="rand-settings-row">
         <button type="button" class="rand-advanced-toggle" @onclick="() => _showAdvanced = !_showAdvanced"
@@ -116,48 +112,209 @@
         @if (_showAdvanced)
         {
             <div class="rand-advanced-body">
-                @Section(AdvSection.SinglesWeights, L["Dynamic Singles Weights"],
-                    @<FolderWeightList Weights="Settings.LevelWeights" Type="ChartType.Single" Changed="Notify"></FolderWeightList>)
 
-                @Section(AdvSection.DoublesWeights, L["Dynamic Doubles Weights"],
-                    @<FolderWeightList Weights="Settings.DoubleLevelWeights" Type="ChartType.Double" Changed="Notify"></FolderWeightList>)
-
-                @Section(AdvSection.CoOpWeights, L["Dynamic Co-Op Weights"],
-                    @<div class="rand-section-body">
-                        <FolderWeightList Weights="Settings.PlayerCountWeights" Type="ChartType.CoOp" Changed="Notify"></FolderWeightList>
-                        <div class="rand-coop-bounds">
-                            <MudNumericField T="double?" Value="Settings.MinCoOpLevel" ValueChanged="SetMinCoOpLevel"
-                                             Label="@L["Min CoOp Scoring Level"]" Clearable="true" Min="0"
-                                             Max="Settings.MaxCoOpLevel ?? DifficultyLevel.Max" Variant="Variant.Outlined"
-                                             Margin="Margin.Dense"></MudNumericField>
-                            <MudNumericField T="double?" Value="Settings.MaxCoOpLevel" ValueChanged="SetMaxCoOpLevel"
-                                             Label="@L["Max CoOp Scoring Level"]" Clearable="true"
-                                             Min="Settings.MinCoOpLevel ?? 0" Max="DifficultyLevel.Max"
-                                             Variant="Variant.Outlined" Margin="Margin.Dense"></MudNumericField>
+                <div class="rand-adv-section">
+                    <span class="rand-settings-label">@L["Weighted Levels"]</span>
+                    <MudText Typo="Typo.caption" Class="rand-section-hint">@L["Pick exact levels across Singles, Doubles, and Co-Op — each gets its own draw weight."]</MudText>
+                    @if (_weightedMode)
+                    {
+                        <div class="weight-list">
+                            @foreach (var row in WeightRows)
+                            {
+                                var (type, level) = row;
+                                var dict = DictFor(type);
+                                <div class="weight-row">
+                                    <span class="weight-row-label">@FolderLabel(type, level)</span>
+                                    <span class="weight-row-weight">@L["Weight"]</span>
+                                    <MudNumericField T="int" Min="1" Max="99" Value="dict[level]"
+                                                     ValueChanged="v => SetWeight(type, level, v)" Variant="Variant.Outlined"
+                                                     Margin="Margin.Dense" Class="weight-row-field"
+                                                     aria-label="@($"{FolderLabel(type, level)} {L["Weight"]}")"></MudNumericField>
+                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close" Class="weight-row-remove"
+                                                   OnClick="() => RemoveLevel(type, level)"
+                                                   aria-label="@($"{L["Remove"]} {FolderLabel(type, level)}")"></MudIconButton>
+                                </div>
+                            }
                         </div>
-                    </div>)
+                    }
+                    <div class="rand-weighted-actions">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Class="weight-add-btn"
+                                   StartIcon="@(_selectorOpen ? Icons.Material.Filled.Check : Icons.Material.Filled.Add)"
+                                   OnClick="() => _selectorOpen = !_selectorOpen"
+                                   aria-expanded="@(_selectorOpen ? "true" : "false")">@(_selectorOpen ? L["Done"] : L["Add Weighted Levels"])</MudButton>
+                        @if (_weightedMode)
+                        {
+                            <MudButton Variant="Variant.Text" Color="Color.Warning" Size="Size.Small" Class="rand-back-to-sliders"
+                                       StartIcon="@Icons.Material.Filled.Undo"
+                                       OnClick="BackToSliders">@(_confirmingBack ? L["Tap again to clear weights"] : L["Back to sliders"])</MudButton>
+                        }
+                    </div>
+                    @if (_selectorOpen)
+                    {
+                        @* The tier lists' selector, verbatim — levels the sliders already
+                           cover come in highlighted; the first toggle engages weighted mode. *@
+                        <FolderGrid InitialType="ChartType.Single" IsSelected="IsLevelActive"
+                                    LevelPicked="ToggleFolder"></FolderGrid>
+                    }
+                </div>
 
-                @Section(AdvSection.SongTypes, L["Song Types"],
-                    @<div class="rand-section-body">
+                <div class="rand-adv-section">
+                    <span class="rand-settings-label">@L["Song Types"]</span>
+                    <div class="rand-grade-chips">
                         @foreach (var songType in Settings.SongTypeWeights.Keys)
                         {
                             var captured = songType;
-                            <MudSwitch T="bool" Color="Color.Primary" Label="@L[captured.ToString()]"
-                                       Value="Settings.SongTypeWeights[captured] > 0"
-                                       ValueChanged="v => SetSongType(captured, v)"></MudSwitch>
+                            <button type="button" class="rand-grade-chip @(Settings.SongTypeWeights[captured] > 0 ? "on" : null)"
+                                    @onclick="() => ToggleSongType(captured)">@L[captured.ToString()]</button>
                         }
-                    </div>)
+                    </div>
+                </div>
 
-                @Section(AdvSection.Minimums, L["Minimum Counts"], MinimumsBody)
+                <div class="rand-adv-section">
+                    <span class="rand-settings-label">@L["Minimum Counts"]</span>
+                    <MudText Typo="Typo.caption" Class="rand-section-hint">@L["Guarantee at least this many cards from a group — the rest of the draw fills randomly."]</MudText>
+                    <div class="rand-seg-group rand-min-mode">
+                        <button type="button" class="rand-seg @(_minimumType == "Chart Type" ? "on" : null)"
+                                @onclick="@(() => _minimumType = "Chart Type")">@L["Chart Type"]</button>
+                        <button type="button" class="rand-seg @(_minimumType == "Difficulty" ? "on" : null)"
+                                @onclick="@(() => _minimumType = "Difficulty")">@L["Level"]</button>
+                        <button type="button" class="rand-seg @(_minimumType == "Chart Type Difficulty" ? "on" : null)"
+                                @onclick="@(() => _minimumType = "Chart Type Difficulty")">@L["Type + Level"]</button>
+                        <button type="button" class="rand-seg @(_minimumType == "Buckets" ? "on" : null)"
+                                @onclick="@(() => _minimumType = "Buckets")">@L["Buckets"]</button>
+                    </div>
+                    <MudGrid>
+                        @if (_minimumType == "Chart Type")
+                        {
+                            @foreach (var kv in Settings.ChartTypeMinimums.Where(kv => (kv.Key == ChartType.Single ? Settings.LevelWeights :
+                                          kv.Key == ChartType.Double ? Settings.DoubleLevelWeights : Settings.PlayerCountWeights)
+                                          .Any(g => g.Value > 0)))
+                            {
+                                <MudItem xs="4">
+                                    <MudNumericField T="int?" Min="0" Value="Settings.ChartTypeMinimums[kv.Key]"
+                                                     ValueChanged="v => SetChartTypeMinimum(kv.Key, v)" Label="@kv.Key.ToString()"
+                                                     Clearable="true" HideSpinButtons="true"></MudNumericField>
+                                </MudItem>
+                            }
+                        }
+                        else if (_minimumType == "Difficulty")
+                        {
+                            @foreach (var kv in Settings.LevelMinimums.Where(k => Settings.LevelWeights[k.Key] > 0 || Settings.DoubleLevelWeights[k.Key] > 0))
+                            {
+                                <MudItem xs="4">
+                                    <MudNumericField T="int?" Min="0" Value="Settings.LevelMinimums[kv.Key]"
+                                                     ValueChanged="v => SetLevelMinimum(kv.Key, v)" Label="@kv.Key.ToString()"
+                                                     Clearable="true" HideSpinButtons="true"></MudNumericField>
+                                </MudItem>
+                            }
+                        }
+                        else if (_minimumType == "Chart Type Difficulty")
+                        {
+                            @foreach (var kv in Settings.LevelWeights.Where(kv => kv.Value > 0).Select(kv => $"S{kv.Key}")
+                                          .Concat(Settings.DoubleLevelWeights.Where(kv => kv.Value > 0).Select(kv => $"D{kv.Key}"))
+                                          .Concat(Settings.PlayerCountWeights.Where(kv => kv.Value > 0).Select(kv => $"CoOp{kv.Key}")))
+                            {
+                                var captured = kv;
+                                <MudItem xs="4" sm="3">
+                                    <MudNumericField T="int?" Min="0" Value="Settings.ChartTypeLevelMinimums[captured]"
+                                                     ValueChanged="v => SetChartTypeLevelMinimum(captured, v)" Label="@captured"
+                                                     Clearable="true" HideSpinButtons="true"></MudNumericField>
+                                </MudItem>
+                            }
+                        }
+                        else if (_minimumType == "Buckets")
+                        {
+                            @foreach (var kv in Settings.CustomMinimums)
+                            {
+                                var captured = kv.Key;
+                                <MudItem xs="8">
+                                    @foreach (var level in LevelBucket.From(captured).GetDifficulties())
+                                    {
+                                        <MudChip T="string" Color="@(level.Item1 == ChartType.Single ? Color.Error : level.Item1 == ChartType.Double ? Color.Success : Color.Warning)"
+                                                 Value="@($"{level.Item1.ToString()[0]}{level.Item2}")"></MudChip>
+                                    }
+                                </MudItem>
+                                <MudItem xs="2">
+                                    @($"x{kv.Value}")
+                                </MudItem>
+                                <MudItem xs="2">
+                                    <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete"
+                                                   OnClick="() => RemoveBucket(captured)" aria-label="@L["Remove"]"></MudIconButton>
+                                </MudItem>
+                            }
+                            <MudItem xs="12" sm="8">
+                                <MudChipSet @bind-SelectedValues="_newCustomBuckets" CheckMark="true" SelectedColor="Color.Info"
+                                            SelectionMode="SelectionMode.MultiSelection">
+                                    @foreach (var single in Settings.LevelWeights.Where(w => w.Value > 0))
+                                    {
+                                        <MudChip Color="Color.Error" Value="@($"S{single.Key}")"></MudChip>
+                                    }
+                                    @foreach (var d in Settings.DoubleLevelWeights.Where(w => w.Value > 0))
+                                    {
+                                        <MudChip Color="Color.Success" Value="@($"D{d.Key}")"></MudChip>
+                                    }
+                                    @foreach (var d in Settings.PlayerCountWeights.Where(w => w.Value > 0))
+                                    {
+                                        <MudChip Color="Color.Warning" Value="@($"C{d.Key}")"></MudChip>
+                                    }
+                                </MudChipSet>
+                            </MudItem>
+                            <MudItem xs="4" sm="2">
+                                <MudNumericField T="int" Min="1" @bind-Value="_bucketSize" Label="@L["Bucket Size"]"
+                                                 Clearable="false" HideSpinButtons="true"></MudNumericField>
+                            </MudItem>
+                            <MudItem xs="12" sm="2">
+                                <MudButton StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="AddBucket">@L["Add"]</MudButton>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </div>
 
                 @if (CurrentUser.IsLoggedIn)
                 {
-                    @Section(AdvSection.PersonalScores, L["Filter By Personal Scores"], PersonalScoresBody)
+                    <div class="rand-adv-section @(PlayerFiltersAvailable ? null : "rand-settings-gated")">
+                        <span class="rand-settings-label">@L["Filter By Personal Scores"]</span>
+                        @if (PlayerFiltersAvailable)
+                        {
+                            <div class="rand-seg-group rand-personal-segs">
+                                <button type="button" class="rand-seg @(Settings.ClearStatus == null ? "on" : null)"
+                                        @onclick="() => SetClearStatus(null)">@L["Any"]</button>
+                                <button type="button" class="rand-seg @(Settings.ClearStatus == false ? "on" : null)"
+                                        @onclick="() => SetClearStatus(false)">@L["Not Passed"]</button>
+                                <button type="button" class="rand-seg @(Settings.ClearStatus == true ? "on" : null)"
+                                        @onclick="() => SetClearStatus(true)">@L["Passed"]</button>
+                            </div>
+                            <div class="rand-grade-chips">
+                                @for (var grade = PhoenixLetterGrade.A; grade <= PhoenixLetterGrade.SSSPlus; grade++)
+                                {
+                                    var letterGrade = grade;
+                                    <button type="button" class="rand-grade-chip @(Settings.LetterGrades.Contains(letterGrade) ? "on" : null)"
+                                            @onclick="() => ToggleGrade(letterGrade)">@letterGrade.GetName()</button>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.caption" Class="rand-gated-reason">@L["Score filters need Phoenix scoring — not available for this mix yet"]</MudText>
+                        }
+                    </div>
                 }
 
                 <div class="rand-plain-rows">
+                    <MudSwitch T="bool" Color="Color.Primary" Label="@L["Allow Repeat Charts"]"
+                               Value="Settings.AllowRepeats" ValueChanged="SetAllowRepeats"></MudSwitch>
                     <MudSwitch T="bool" Color="Color.Primary" Label="@L["Use Scoring Level"]"
                                Value="Settings.UseScoringLevels" ValueChanged="SetUseScoringLevels"></MudSwitch>
+                    <div class="rand-coop-bounds">
+                        <MudNumericField T="double?" Value="Settings.MinCoOpLevel" ValueChanged="SetMinCoOpLevel"
+                                         Label="@L["Min CoOp Scoring Level"]" Clearable="true" Min="0"
+                                         Max="Settings.MaxCoOpLevel ?? DifficultyLevel.Max" Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"></MudNumericField>
+                        <MudNumericField T="double?" Value="Settings.MaxCoOpLevel" ValueChanged="SetMaxCoOpLevel"
+                                         Label="@L["Max CoOp Scoring Level"]" Clearable="true"
+                                         Min="Settings.MinCoOpLevel ?? 0" Max="DifficultyLevel.Max"
+                                         Variant="Variant.Outlined" Margin="Margin.Dense"></MudNumericField>
+                    </div>
                     <MudSelect T="RandomSettings.ResultsOrdering" Value="Settings.Ordering" ValueChanged="SetOrdering"
                                Label="@L["Results Order"]" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense">
                         @foreach (var option in Enum.GetValues<RandomSettings.ResultsOrdering>())
@@ -175,19 +332,10 @@
 
     private static readonly int[] CountPresets = { 3, 5, 7, 10 };
 
-    private enum AdvSection
-    {
-        SinglesWeights,
-        DoublesWeights,
-        CoOpWeights,
-        SongTypes,
-        Minimums,
-        PersonalScores
-    }
-
     private bool _showAdvanced;
-    private readonly HashSet<AdvSection> _opened = new();
-    private AdvSection? _confirmingOff;
+    private bool _weightedMode;
+    private bool _selectorOpen;
+    private bool _confirmingBack;
     private RandomSettings? _derivedFor;
 
     private string _minimumType = "Chart Type";
@@ -221,29 +369,33 @@
                                  + Settings.LevelMinimums.Sum(kv => kv.Value ?? 0)
                                  + Settings.ChartTypeMinimums.Sum(kv => kv.Value ?? 0);
 
+    private IEnumerable<(ChartType Type, int Level)> WeightRows =>
+        Settings.LevelWeights.Where(kv => kv.Value > 0).OrderBy(kv => kv.Key)
+            .Select(kv => (ChartType.Single, kv.Key))
+        .Concat(Settings.DoubleLevelWeights.Where(kv => kv.Value > 0).OrderBy(kv => kv.Key)
+            .Select(kv => (ChartType.Double, kv.Key)))
+        .Concat(Settings.PlayerCountWeights.Where(kv => kv.Value > 0).OrderBy(kv => kv.Key)
+            .Select(kv => (ChartType.CoOp, kv.Key)));
+
     protected override void OnParametersSet()
     {
-        // Re-derive which sections are lit whenever a different settings object arrives
-        // (saved-settings load, reset) — the data says which sections it needs.
+        // Re-derive UI state whenever a different settings object arrives (saved-settings
+        // load, reset) — the data says whether weighted mode and Advanced start open.
         if (ReferenceEquals(_derivedFor, Settings)) return;
 
         _derivedFor = Settings;
-        _confirmingOff = null;
-        _opened.Clear();
-        if (IsDynamic(Settings.LevelWeights)) _opened.Add(AdvSection.SinglesWeights);
-        if (IsDynamic(Settings.DoubleLevelWeights)) _opened.Add(AdvSection.DoublesWeights);
-        if (IsDynamic(Settings.PlayerCountWeights) || Settings.MinCoOpLevel != null || Settings.MaxCoOpLevel != null)
-            _opened.Add(AdvSection.CoOpWeights);
-        // Some-but-not-all zeroed = a deliberate filter; all-zero is the meaningless
-        // fresh state (the page normalizes it to all-1) and derives nothing.
-        if (Settings.SongTypeWeights.Any(kv => kv.Value == 0) && Settings.SongTypeWeights.Any(kv => kv.Value > 0))
-            _opened.Add(AdvSection.SongTypes);
-        if (MinimumsTotal > 0) _opened.Add(AdvSection.Minimums);
-        if (Settings.ClearStatus != null || Settings.LetterGrades.Any()) _opened.Add(AdvSection.PersonalScores);
-        if (_opened.Any()) _showAdvanced = true;
+        _selectorOpen = false;
+        _confirmingBack = false;
+        _weightedMode = IsDynamic(Settings.LevelWeights) || IsDynamic(Settings.DoubleLevelWeights)
+                        || Settings.PlayerCountWeights.Any(kv => kv.Value > 1);
+        var songTypeFiltering = Settings.SongTypeWeights.Any(kv => kv.Value == 0)
+                                && Settings.SongTypeWeights.Any(kv => kv.Value > 0);
+        if (_weightedMode || songTypeFiltering || MinimumsTotal > 0
+            || Settings.ClearStatus != null || Settings.LetterGrades.Any())
+            _showAdvanced = true;
     }
 
-    // Dynamic = anything the slider can't express: gaps in the run or weights above 1.
+    // Weighted = anything the sliders can't express: gaps in the run or weights above 1.
     private static bool IsDynamic(IDictionary<int, int> weights)
     {
         var active = weights.Where(kv => kv.Value > 0).ToArray();
@@ -254,82 +406,64 @@
         return keys.Max() - keys.Min() + 1 != keys.Length;
     }
 
-    private bool IsOpen(AdvSection section)
+    private IDictionary<int, int> DictFor(ChartType type)
     {
-        return _opened.Contains(section);
+        return type == ChartType.Single ? Settings.LevelWeights :
+            type == ChartType.Double ? Settings.DoubleLevelWeights : Settings.PlayerCountWeights;
     }
 
-    private RenderFragment Section(AdvSection section, string title, RenderFragment body)
+    private bool IsLevelActive(ChartType type, int level)
     {
-        return @<div class="rand-adv-section">
-                   <div class="rand-adv-section-head">
-                       <MudSwitch T="bool" Color="Color.Primary" Value="IsOpen(section)"
-                                  ValueChanged="on => ToggleSection(section, on)" Label="@title"></MudSwitch>
-                       @if (_confirmingOff == section)
-                       {
-                           <MudText Typo="Typo.caption" Color="Color.Warning">@L["Tap again to turn off and clear"]</MudText>
-                       }
-                   </div>
-                   @if (IsOpen(section))
-                   {
-                       <div class="rand-adv-section-content">@body</div>
-                   }
-               </div>;
+        return DictFor(type).TryGetValue(level, out var weight) && weight > 0;
     }
 
-    private async Task ToggleSection(AdvSection section, bool on)
+    private string FolderLabel(ChartType type, int level)
     {
-        if (on)
-        {
-            _confirmingOff = null;
-            _opened.Add(section);
-            await Notify();
-            return;
-        }
+        return type == ChartType.CoOp ? $"{L["CoOp"]} ×{level}" : $"{type.GetShortHand()}{level}";
+    }
 
-        // Opting out clears the section's config — destructive, so it takes two taps.
-        if (_confirmingOff != section)
-        {
-            _confirmingOff = section;
-            return;
-        }
+    private async Task ToggleFolder((ChartType Type, int Level) folder)
+    {
+        // The first change in the selector is what engages weighted mode — opening and
+        // looking around leaves the sliders in charge.
+        _weightedMode = true;
+        _confirmingBack = false;
+        var dict = DictFor(folder.Type);
+        if (!dict.ContainsKey(folder.Level)) return;
 
-        _confirmingOff = null;
-        _opened.Remove(section);
-        ClearSection(section);
+        dict[folder.Level] = dict[folder.Level] > 0 ? 0 : 1;
         await Notify();
     }
 
-    private void ClearSection(AdvSection section)
+    private async Task SetWeight(ChartType type, int level, int weight)
     {
-        switch (section)
+        DictFor(type)[level] = weight;
+        await Notify();
+    }
+
+    private async Task RemoveLevel(ChartType type, int level)
+    {
+        DictFor(type)[level] = 0;
+        await Notify();
+    }
+
+    private async Task BackToSliders()
+    {
+        // Destructive (weights and gaps collapse to contiguous ranges): two real taps.
+        if (!_confirmingBack)
         {
-            case AdvSection.SinglesWeights:
-                SnapToRange(Settings.LevelWeights);
-                break;
-            case AdvSection.DoublesWeights:
-                SnapToRange(Settings.DoubleLevelWeights);
-                break;
-            case AdvSection.CoOpWeights:
-                foreach (var key in Settings.PlayerCountWeights.Keys.ToArray())
-                    Settings.PlayerCountWeights[key] = Settings.PlayerCountWeights[key] > 0 ? 1 : 0;
-                Settings.MinCoOpLevel = null;
-                Settings.MaxCoOpLevel = null;
-                break;
-            case AdvSection.SongTypes:
-                foreach (var key in Settings.SongTypeWeights.Keys.ToArray()) Settings.SongTypeWeights[key] = 1;
-                break;
-            case AdvSection.Minimums:
-                Settings.ClearChartTypeMinimums();
-                Settings.ClearLevelMinimums();
-                Settings.ClearChartTypeLevelMinimums();
-                Settings.ClearCustomMinimums();
-                break;
-            case AdvSection.PersonalScores:
-                Settings.ClearStatus = null;
-                Settings.LetterGrades.Clear();
-                break;
+            _confirmingBack = true;
+            return;
         }
+
+        _confirmingBack = false;
+        _weightedMode = false;
+        _selectorOpen = false;
+        if (Settings.LevelWeights.Any(kv => kv.Value > 0)) SnapToRange(Settings.LevelWeights);
+        if (Settings.DoubleLevelWeights.Any(kv => kv.Value > 0)) SnapToRange(Settings.DoubleLevelWeights);
+        foreach (var key in Settings.PlayerCountWeights.Keys.ToArray())
+            Settings.PlayerCountWeights[key] = Settings.PlayerCountWeights[key] > 0 ? 1 : 0;
+        await Notify();
     }
 
     // Back to what the slider can express: the active span as a contiguous run of 1s.
@@ -363,7 +497,6 @@
         {
             Settings.ClearStatus = null;
             Settings.LetterGrades.Clear();
-            _opened.Remove(AdvSection.PersonalScores);
         }
 
         await MixChanged.InvokeAsync(mix);
@@ -408,9 +541,13 @@
         await Notify();
     }
 
-    private async Task SetSongType(SongType type, bool on)
+    private async Task ToggleSongType(SongType type)
     {
-        Settings.SongTypeWeights[type] = on ? 1 : 0;
+        // Excluding every type would empty the pool outright; the last one stays lit.
+        if (Settings.SongTypeWeights[type] > 0
+            && Settings.SongTypeWeights.Count(kv => kv.Value > 0) == 1) return;
+
+        Settings.SongTypeWeights[type] = Settings.SongTypeWeights[type] > 0 ? 0 : 1;
         await Notify();
     }
 
@@ -499,124 +636,4 @@
         Settings.CustomMinimums.Remove(key);
         await Notify();
     }
-
-    private RenderFragment PersonalScoresBody => @<div class="rand-section-body @(PlayerFiltersAvailable ? null : "rand-settings-gated")">
-        @if (PlayerFiltersAvailable)
-        {
-            <div class="rand-my-results">
-                <button type="button" class="rand-seg @(Settings.ClearStatus == null ? "on" : null)"
-                        @onclick="() => SetClearStatus(null)">@L["Any"]</button>
-                <button type="button" class="rand-seg @(Settings.ClearStatus == false ? "on" : null)"
-                        @onclick="() => SetClearStatus(false)">@L["Not Passed"]</button>
-                <button type="button" class="rand-seg @(Settings.ClearStatus == true ? "on" : null)"
-                        @onclick="() => SetClearStatus(true)">@L["Passed"]</button>
-            </div>
-            <div class="rand-grade-chips">
-                @for (var grade = PhoenixLetterGrade.A; grade <= PhoenixLetterGrade.SSSPlus; grade++)
-                {
-                    var letterGrade = grade;
-                    <button type="button" class="rand-grade-chip @(Settings.LetterGrades.Contains(letterGrade) ? "on" : null)"
-                            @onclick="() => ToggleGrade(letterGrade)">@letterGrade.GetName()</button>
-                }
-            </div>
-        }
-        else
-        {
-            <MudText Typo="Typo.caption" Class="rand-gated-reason">@L["Score filters need Phoenix scoring — not available for this mix yet"]</MudText>
-        }
-    </div>;
-
-    private RenderFragment MinimumsBody => @<div class="rand-section-body">
-        <MudRadioGroup T="string" Value="_minimumType" ValueChanged="v => _minimumType = v">
-            <MudRadio Value="@("Chart Type")" Color="Color.Primary">@L["Chart Type"]</MudRadio>
-            <MudRadio Value="@("Difficulty")" Color="Color.Primary">@L["Difficulty Level"]</MudRadio>
-            <MudRadio Value="@("Chart Type Difficulty")" Color="Color.Primary">@L["Chart Type"] + @L["Difficulty Level"]</MudRadio>
-            <MudRadio Value="@("Buckets")" Color="Color.Primary">@L["Buckets"]</MudRadio>
-        </MudRadioGroup>
-        <MudGrid>
-            @if (_minimumType == "Chart Type")
-            {
-                @foreach (var kv in Settings.ChartTypeMinimums.Where(kv => (kv.Key == ChartType.Single ? Settings.LevelWeights :
-                              kv.Key == ChartType.Double ? Settings.DoubleLevelWeights : Settings.PlayerCountWeights)
-                              .Any(g => g.Value > 0)))
-                {
-                    <MudItem xs="4">
-                        <MudNumericField T="int?" Min="0" Value="Settings.ChartTypeMinimums[kv.Key]"
-                                         ValueChanged="v => SetChartTypeMinimum(kv.Key, v)" Label="@kv.Key.ToString()"
-                                         Clearable="true" HideSpinButtons="true"></MudNumericField>
-                    </MudItem>
-                }
-            }
-            else if (_minimumType == "Difficulty")
-            {
-                @foreach (var kv in Settings.LevelMinimums.Where(k => Settings.LevelWeights[k.Key] > 0 || Settings.DoubleLevelWeights[k.Key] > 0))
-                {
-                    <MudItem xs="4">
-                        <MudNumericField T="int?" Min="0" Value="Settings.LevelMinimums[kv.Key]"
-                                         ValueChanged="v => SetLevelMinimum(kv.Key, v)" Label="@kv.Key.ToString()"
-                                         Clearable="true" HideSpinButtons="true"></MudNumericField>
-                    </MudItem>
-                }
-            }
-            else if (_minimumType == "Chart Type Difficulty")
-            {
-                @foreach (var kv in Settings.LevelWeights.Where(kv => kv.Value > 0).Select(kv => $"S{kv.Key}")
-                              .Concat(Settings.DoubleLevelWeights.Where(kv => kv.Value > 0).Select(kv => $"D{kv.Key}"))
-                              .Concat(Settings.PlayerCountWeights.Where(kv => kv.Value > 0).Select(kv => $"CoOp{kv.Key}")))
-                {
-                    var captured = kv;
-                    <MudItem xs="4" sm="3">
-                        <MudNumericField T="int?" Min="0" Value="Settings.ChartTypeLevelMinimums[captured]"
-                                         ValueChanged="v => SetChartTypeLevelMinimum(captured, v)" Label="@captured"
-                                         Clearable="true" HideSpinButtons="true"></MudNumericField>
-                    </MudItem>
-                }
-            }
-            else if (_minimumType == "Buckets")
-            {
-                @foreach (var kv in Settings.CustomMinimums)
-                {
-                    var captured = kv.Key;
-                    <MudItem xs="8">
-                        @foreach (var level in LevelBucket.From(captured).GetDifficulties())
-                        {
-                            <MudChip T="string" Color="@(level.Item1 == ChartType.Single ? Color.Error : level.Item1 == ChartType.Double ? Color.Success : Color.Warning)"
-                                     Value="@($"{level.Item1.ToString()[0]}{level.Item2}")"></MudChip>
-                        }
-                    </MudItem>
-                    <MudItem xs="2">
-                        @($"x{kv.Value}")
-                    </MudItem>
-                    <MudItem xs="2">
-                        <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete"
-                                       OnClick="() => RemoveBucket(captured)" aria-label="@L["Remove"]"></MudIconButton>
-                    </MudItem>
-                }
-                <MudItem xs="12" sm="8">
-                    <MudChipSet @bind-SelectedValues="_newCustomBuckets" CheckMark="true" SelectedColor="Color.Info"
-                                SelectionMode="SelectionMode.MultiSelection">
-                        @foreach (var single in Settings.LevelWeights.Where(w => w.Value > 0))
-                        {
-                            <MudChip Color="Color.Error" Value="@($"S{single.Key}")"></MudChip>
-                        }
-                        @foreach (var d in Settings.DoubleLevelWeights.Where(w => w.Value > 0))
-                        {
-                            <MudChip Color="Color.Success" Value="@($"D{d.Key}")"></MudChip>
-                        }
-                        @foreach (var d in Settings.PlayerCountWeights.Where(w => w.Value > 0))
-                        {
-                            <MudChip Color="Color.Warning" Value="@($"C{d.Key}")"></MudChip>
-                        }
-                    </MudChipSet>
-                </MudItem>
-                <MudItem xs="4" sm="2">
-                    <MudNumericField T="int" Min="1" @bind-Value="_bucketSize" Label="@L["Bucket Size"]"
-                                     Clearable="false" HideSpinButtons="true"></MudNumericField>
-                </MudItem>
-                <MudItem xs="12" sm="2">
-                    <MudButton StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="AddBucket">@L["Add"]</MudButton>
-                </MudItem>
-            }
-        </MudGrid>
-    </div>;
 }

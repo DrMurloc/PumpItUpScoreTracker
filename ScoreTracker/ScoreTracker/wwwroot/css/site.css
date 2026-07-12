@@ -627,7 +627,7 @@ html.nav-away .page-dock,
     font-size: .8rem;
 }
 
-.rand-my-results {
+.rand-seg-group {
     display: flex;
     border: 1px solid var(--mud-palette-lines-default);
     border-radius: 9px;
@@ -708,6 +708,30 @@ html.nav-away .page-dock,
 
 .rand-owned-note {
     color: var(--mix-ink-muted);
+}
+
+.rand-section-hint {
+    color: var(--mix-ink-muted);
+    display: block;
+}
+
+.rand-weighted-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding-top: 4px;
+}
+
+.rand-min-mode {
+    max-width: 440px;
+}
+
+.folder-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 6px;
 }
 
 .rand-plain-rows {

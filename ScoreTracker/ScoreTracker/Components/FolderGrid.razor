@@ -1,0 +1,57 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+@* The difficulty selector's shared guts (one concept, one component): the
+   Singles/Doubles/CoOp segment row + the level grid. FolderPicker wraps it in its
+   popover for single-pick navigation (tier lists); the randomizer renders it inline in
+   multi-toggle mode for weighted-level selection. Type tabs are internal state — the
+   panel stays open across type switches in both hosts. *@
+<div class="folder-grid">
+    <MudButtonGroup OverrideStyles="false" Class="folder-picker-types">
+        <MudButton Variant="@TypeVariant(ChartType.Single)" Color="Color.Primary" Size="Size.Small"
+                   OnClick="() => _pendingType = ChartType.Single">@L["Singles"]</MudButton>
+        <MudButton Variant="@TypeVariant(ChartType.Double)" Color="Color.Primary" Size="Size.Small"
+                   OnClick="() => _pendingType = ChartType.Double">@L["Doubles"]</MudButton>
+        <MudButton Variant="@TypeVariant(ChartType.CoOp)" Color="Color.Primary" Size="Size.Small"
+                   OnClick="() => _pendingType = ChartType.CoOp">@L["CoOp"]</MudButton>
+    </MudButtonGroup>
+    <div class="folder-picker-levels">
+        @foreach (var level in LevelsFor(_pendingType))
+        {
+            var captured = level;
+            <button type="button"
+                    class="folder-picker-level @(IsSelected(_pendingType, captured) ? "folder-picker-current" : null)"
+                    @onclick="() => LevelPicked.InvokeAsync((_pendingType, captured))">@captured</button>
+        }
+    </div>
+</div>
+
+@code {
+    private ChartType _pendingType;
+
+    /// <summary>The tab shown on first render (and after a host re-anchor).</summary>
+    [Parameter] public ChartType InitialType { get; set; } = ChartType.Single;
+
+    /// <summary>Which (type, level) cells render highlighted.</summary>
+    [Parameter] public Func<ChartType, int, bool> IsSelected { get; set; } = (_, _) => false;
+
+    /// <summary>Fired per tap; the host decides toggle-and-stay (multi) or pick-and-close (single).</summary>
+    [Parameter] public EventCallback<(ChartType Type, int Level)> LevelPicked { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _pendingType = InitialType;
+    }
+
+    private Variant TypeVariant(ChartType type)
+    {
+        return _pendingType == type ? Variant.Filled : Variant.Outlined;
+    }
+
+    private static IEnumerable<int> LevelsFor(ChartType type)
+    {
+        return type == ChartType.CoOp ? Enumerable.Range(2, 4) : Enumerable.Range(1, DifficultyLevel.Max);
+    }
+}
