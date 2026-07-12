@@ -97,13 +97,7 @@ else
        centers, so the wrap is deliberate instead of ragged. *@
     <div class="tier-toolbar">
         <div class="tier-toolbar-row">
-            @if (!IsLegacy)
-            {
-                @* Legacy folder navigation is a future-session problem (owner call):
-                   old catalogs have era-scaled sparse folders the picker doesn't model
-                   yet, so legacy mixes land on their fullest folder and stay there. *@
-                <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></FolderPicker>
-            }
+            <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></FolderPicker>
             <MudButtonGroup OverrideStyles="false" Class="tier-views-group">
                 <MudButton Variant="@(_groupBy == "Difficulty" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Difficulty"))">@L["Tier List"]</MudButton>
                 <MudButton Variant="@(IsMyProgress ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping(CurrentUser.IsLoggedIn ? "Score" : "Scoring Level"))">@L["My Progress"]</MudButton>
@@ -194,14 +188,19 @@ else
 
         <div class="tier-progress-strip tier-desktop-only">
             @folderStatsCore
-            <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
-                       StartIcon="@(_titlesCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"
-                       OnClick="ToggleTitles" aria-expanded="@(_titlesCollapsed ? "false" : "true")">@L["Folder Levels"]</MudButton>
-            @if (!_titlesCollapsed)
+            @* Folder Levels = Phoenix title-progress; legacy mixes have no title data
+               (owner: legacy title levels are a future-session problem). *@
+            @if (!IsLegacy)
             {
-                <MudGrid>
-                    <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == _level) || (_chartType == ChartType.CoOp && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
-                </MudGrid>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
+                           StartIcon="@(_titlesCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"
+                           OnClick="ToggleTitles" aria-expanded="@(_titlesCollapsed ? "false" : "true")">@L["Folder Levels"]</MudButton>
+                @if (!_titlesCollapsed)
+                {
+                    <MudGrid>
+                        <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == _level) || (_chartType == ChartType.CoOp && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
+                    </MudGrid>
+                }
             }
         </div>
         @* 4 — the border language, printed (rule 8). *@
@@ -218,10 +217,13 @@ else
                 </div>
                 @folderStatsCore
                 <BorderLegend></BorderLegend>
-                <MudText Typo="Typo.overline">@L["Folder Levels"]</MudText>
-                <MudGrid>
-                    <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == _level) || (_chartType == ChartType.CoOp && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
-                </MudGrid>
+                @if (!IsLegacy)
+                {
+                    <MudText Typo="Typo.overline">@L["Folder Levels"]</MudText>
+                    <MudGrid>
+                        <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == _level) || (_chartType == ChartType.CoOp && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
+                    </MudGrid>
+                }
             </div>
         </MudDrawer>
     }
