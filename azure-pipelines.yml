@@ -107,6 +107,9 @@ stages:
     - script: dotnet test ScoreTracker/ScoreTracker.Tests.Api/ScoreTracker.Tests.Api.csproj -c $(buildConfiguration) --no-build --logger "trx;LogFileName=api.trx" --results-directory $(Agent.TempDirectory) --collect:"XPlat Code Coverage;Format=opencover"
       displayName: 'API wire-shape approval tests'
 
+    - script: dotnet test ScoreTracker/ScoreTracker.Tests.Components/ScoreTracker.Tests.Components.csproj -c $(buildConfiguration) --no-build --logger "trx;LogFileName=components.trx" --results-directory $(Agent.TempDirectory) --collect:"XPlat Code Coverage;Format=opencover"
+      displayName: 'Blazor component (bUnit) tests'
+
     - task: PublishTestResults@2
       displayName: 'Publish test results'
       condition: always()

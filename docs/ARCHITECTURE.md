@@ -21,7 +21,7 @@ Cross-vertical communication happens two ways, and only two ways:
 
 **Never SQL joins onto another vertical's tables.** A vertical's tables are private storage, not an integration surface. This is what keeps a vertical extractable: its data model can change shape without a ripple, because nothing else touches it below the contract line.
 
-The verticals: **ScoreLedger** (the system of record for scores), **PlayerProgress** (ratings, titles, history), **ChartIntelligence** (tier lists, difficulty analytics), **Catalog** (game content reads, videos, skills), **OfficialMirror** (the anti-corruption layer against the official PiuGame site), **WeeklyChallenge**, **EventCompetition** (tournaments), **Communities**, **Ucs** (user-created steps), **Identity** (accounts, logins, tokens), and **HomePage** (dashboard layout persistence — pages and widget instances; the widget *render components* live in Web's registry, see [docs/design/home-page-widgets.md](design/home-page-widgets.md)).
+The verticals: **ScoreLedger** (the system of record for scores), **PlayerProgress** (ratings, titles, history), **ChartIntelligence** (tier lists, difficulty analytics), **Catalog** (game content reads, videos, skills), **Randomizer** (chart draw generation, randomizer settings, tournament draws), **OfficialMirror** (the anti-corruption layer against the official PiuGame site), **WeeklyChallenge**, **EventCompetition** (tournaments), **Communities**, **Ucs** (user-created steps), **Identity** (accounts, logins, tokens), and **HomePage** (dashboard layout persistence — pages and widget instances; the widget *render components* live in Web's registry, see [docs/design/home-page-widgets.md](design/home-page-widgets.md)).
 
 ### Onion (dependency direction)
 
@@ -79,7 +79,8 @@ ScoreTracker.sln
 │   │                                  append-only ScoreEventJournal, IScoreReader
 │   ├── ScoreTracker.PlayerProgress    ratings, titles, player history, recommendations
 │   ├── ScoreTracker.ChartIntelligence tier lists, scoring/letter difficulties, votes
-│   ├── ScoreTracker.Catalog           chart/song reads, videos, skills, randomizer
+│   ├── ScoreTracker.Catalog           chart/song reads, videos, skills
+│   ├── ScoreTracker.Randomizer        chart draw generation + randomizer settings
 │   ├── ScoreTracker.OfficialMirror    PiuGame ACL: scraping, leaderboard mirror,
 │   │                                  world rankings, score import saga
 │   ├── ScoreTracker.WeeklyChallenge   weekly board rotation, entries, placements

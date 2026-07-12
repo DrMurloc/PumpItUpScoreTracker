@@ -1,0 +1,91 @@
+@page "/Randomizer/Settings/{Token:guid}"
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Randomizer.Contracts
+@using ScoreTracker.Randomizer.Contracts.Commands
+@using ScoreTracker.Randomizer.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+
+@* Settings share links (docs/design/randomizer-overhaul.md): TO-to-TO trading without
+   any tournament container. Preview, then import a copy into your own library. *@
+<PageTitle>@L["Shared Randomizer Settings"]</PageTitle>
+
+<div class="rand-empty">
+    @if (_loading)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary"></MudProgressCircular>
+    }
+    else if (_shared == null)
+    {
+        <MudIcon Icon="@Icons.Material.Filled.LinkOff" Style="font-size:2.6rem;"></MudIcon>
+        <MudText Typo="Typo.h6">@L["This settings link is invalid"]</MudText>
+        <MudText Typo="Typo.body2">@L["Ask whoever shared it for a fresh link."]</MudText>
+    }
+    else
+    {
+        <MudIcon Icon="@Icons.Material.Filled.Tune" Style="font-size:2.6rem;"></MudIcon>
+        <MudText Typo="Typo.h6">@_shared.SettingsName</MudText>
+        <div class="rand-chipbar" style="justify-content:center;">
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@_shared.Mix.GetName()</MudChip>
+            @foreach (var chip in SummaryChips)
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@chip</MudChip>
+            }
+        </div>
+        @if (CurrentUser.IsLoggedIn)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_busy"
+                       StartIcon="@Icons.Material.Filled.SaveAlt" OnClick="Import">@L["Save to my settings"]</MudButton>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2">@L["Log in to save these settings to your library."]</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/Login">@L["Login"]</MudButton>
+        }
+    }
+</div>
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@code {
+
+    [Parameter] public Guid Token { get; set; }
+
+    private bool _loading = true;
+    private bool _busy;
+    private SavedRandomizerSettings? _shared;
+
+    private IEnumerable<string> SummaryChips
+    {
+        get
+        {
+            if (_shared == null) yield break;
+
+            var singles = _shared.Settings.LevelWeights.Where(kv => kv.Value > 0).Select(kv => kv.Key).ToArray();
+            if (singles.Any()) yield return $"S{singles.Min()}–{singles.Max()}";
+            var doubles = _shared.Settings.DoubleLevelWeights.Where(kv => kv.Value > 0).Select(kv => kv.Key).ToArray();
+            if (doubles.Any()) yield return $"D{doubles.Min()}–{doubles.Max()}";
+            var coops = _shared.Settings.PlayerCountWeights.Where(kv => kv.Value > 0).Select(kv => kv.Key).ToArray();
+            if (coops.Any()) yield return $"Co-Op ×{string.Join(",×", coops)}";
+            yield return L["{0} cards", _shared.Settings.Count];
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _shared = await Mediator.Send(new GetSharedSettingsQuery(Token));
+        _loading = false;
+    }
+
+    private async Task Import()
+    {
+        if (_shared == null) return;
+
+        _busy = true;
+        await Mediator.Send(new SaveUserRandomSettingsCommand(_shared.SettingsName, _shared.Settings, _shared.Mix));
+        Snackbar.Add(L["{0} Saved!", _shared.SettingsName.ToString()], Severity.Success);
+        NavManager.NavigateTo("/ChartRandomizer");
+    }
+}

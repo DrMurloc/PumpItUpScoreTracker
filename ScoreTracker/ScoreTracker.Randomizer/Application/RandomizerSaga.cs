@@ -1,6 +1,6 @@
-using ScoreTracker.Catalog.Domain;
-using ScoreTracker.Catalog.Contracts.Queries;
-using ScoreTracker.Catalog.Contracts.Commands;
+using ScoreTracker.Randomizer.Domain;
+using ScoreTracker.Randomizer.Contracts.Queries;
+using ScoreTracker.Randomizer.Contracts.Commands;
 using MediatR;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
@@ -10,7 +10,7 @@ using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.ValueTypes;
 
-namespace ScoreTracker.Catalog.Application
+namespace ScoreTracker.Randomizer.Application
 {
     internal sealed class RandomizerSaga : IRequestHandler<GetRandomChartsQuery, IEnumerable<Chart>>,
         IRequestHandler<GetIncludedRandomChartsQuery, IEnumerable<Chart>>,
@@ -301,7 +301,8 @@ namespace ScoreTracker.Catalog.Application
 
         public async Task Handle(SaveUserRandomSettingsCommand request, CancellationToken cancellationToken)
         {
-            await _repo.SaveSettings(_currentUser.User.Id, request.SettingsName, request.Settings, cancellationToken);
+            await _repo.SaveSettings(_currentUser.User.Id, request.SettingsName, request.Settings, request.Mix,
+                cancellationToken);
         }
     }
 }

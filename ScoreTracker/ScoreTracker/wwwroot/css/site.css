@@ -244,10 +244,1077 @@
     .mud-main-content {
         padding-bottom: 72px;
     }
+
+    /* Pages with a dock need clearance for both bars (the at-rest worst case). */
+    .has-dock .mud-main-content {
+        padding-bottom: 132px;
+    }
+}
+
+/* ===== Page dock (docs/design/randomizer-overhaul.md) =====
+   Page-registered primary actions above the bottom nav. Scrolling down slides the
+   nav away (html.nav-away, set by page-dock.js) and the dock takes the bottom edge;
+   both bars only coexist at rest. */
+
+:root {
+    --bottom-nav-h: calc(53px + env(safe-area-inset-bottom));
+}
+
+.bottom-nav {
+    transition: transform .25s ease;
+}
+
+html.nav-away .bottom-nav {
+    transform: translateY(110%);
+}
+
+.page-dock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: var(--bottom-nav-h);
+    z-index: 1299;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--mix-nav);
+    border-top: 1px solid rgba(255, 255, 255, .08);
+    transition: bottom .25s ease, padding-bottom .25s ease;
+}
+
+html.nav-away .page-dock,
+.focus-mode .page-dock {
+    bottom: 0;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bottom-nav,
+    .page-dock {
+        transition: none;
+    }
+}
+
+/* Focus mode: shell chrome gone (bottom nav is unrendered; the app bar collapses
+   here). The page owes the user an explicit exit affordance. */
+.focus-mode .mud-appbar {
+    display: none;
+}
+
+.focus-mode .mud-main-content {
+    padding-top: 12px;
 }
 
 .more-sheet {
     overflow-y: auto;
+}
+
+/* ===== Randomizer draw cards (docs/design/randomizer-overhaul.md) =====
+   Rides the tier-chart-card base. Held deliberately wears the mix-primary ring, NOT
+   the owner-locked pass-green; vetoed dims + strikes in place (state words print in
+   chips/tooltips, so hue never travels alone). */
+
+.draw-card-order {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 6px;
+    display: grid;
+    place-items: center;
+    background: var(--mix-accent);
+    color: var(--mix-primary-contrast);
+    font-size: .72rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .55);
+}
+
+/* Held/vetoed border rules live with the tier-card border language further down —
+   the base card declares a `border` shorthand at equal specificity, so source order
+   is what lets the state colors win (same rule as the pass/To-Do states). */
+
+.draw-card-vetoed .tier-chart-card-jacket {
+    filter: grayscale(.85) brightness(.5);
+}
+
+.draw-card-vetoed .draw-card-name {
+    text-decoration: line-through;
+    color: var(--mud-palette-text-secondary);
+}
+
+.draw-card-state-chip {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    border-radius: 6px;
+    padding: 1px 7px;
+    font-size: .62rem;
+    font-weight: 800;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+}
+
+.draw-card-state-held-chip {
+    background: var(--mix-primary);
+    color: var(--mix-primary-contrast);
+}
+
+.draw-card-state-vetoed-chip {
+    background: var(--mud-palette-error);
+    color: var(--mud-palette-error-text);
+}
+
+/* Compact keeps a name line (identity survives unfamiliar jackets, rule 2). */
+.draw-card .tier-chart-card-name {
+    font-size: .72rem;
+    line-height: 1.5;
+    display: block;
+}
+
+/* ===== Randomizer page (draw-first layout) ===== */
+
+.rand-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+
+
+.rand-anon-note {
+    color: var(--mix-ink-muted);
+    margin-bottom: 4px;
+}
+
+.rand-chipbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin: 4px 0;
+}
+
+.rand-countline {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 8px;
+}
+
+.rand-count-n {
+    font-weight: 800;
+    color: var(--mix-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.rand-count-label {
+    font-size: .78rem;
+    color: var(--mix-ink-muted);
+}
+
+.rand-actionbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+/* Reference strip below the cards: what this draw was configured with. */
+.rand-draw-settings {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin-top: 18px;
+    opacity: .8;
+}
+
+.rand-draw-settings-label {
+    font-family: var(--font-display);
+    font-size: .68rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    margin-right: 8px;
+}
+
+.rand-grid {
+    display: grid;
+    gap: 8px;
+}
+
+.rand-grid-compact {
+    grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+}
+
+.rand-grid-comfortable {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+}
+
+/* A ghost of the card that will land there: same shape, surface, and radius as a
+   tier-chart-card, dashed to read as "empty slot". */
+.rand-add-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border: 2px dashed var(--mud-palette-lines-default);
+    border-radius: 8px;
+    background: var(--mud-palette-surface);
+    color: var(--mix-ink-muted);
+    min-height: 104px;
+    cursor: pointer;
+}
+
+.rand-add-tile:hover {
+    border-color: var(--mix-primary);
+    color: var(--mix-ink);
+}
+
+.rand-add-tile-plus {
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.rand-add-tile-label {
+    font-family: var(--font-display);
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+}
+
+.rand-add-tile:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: 2px;
+}
+
+.rand-add-anchor {
+    display: flex;
+}
+
+.rand-add-anchor .rand-add-tile {
+    flex: 1;
+    width: 100%;
+}
+
+.rand-add-pop {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 300px;
+    max-width: 90vw;
+}
+
+/* New match popover (round 12): the panel content inside whichever trigger's popover. */
+.rand-new-match-pop {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 300px;
+    max-width: 90vw;
+    padding: 14px;
+}
+
+/* Header + empty-state anchors hug their button; the dock anchor fills the CTA slot. */
+.rand-newmatch-anchor {
+    display: inline-flex;
+}
+
+.dock-cta-anchor {
+    flex: 1;
+    display: flex;
+}
+
+.rand-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 40px 16px;
+    text-align: center;
+    color: var(--mix-ink-muted);
+}
+
+.rand-table .rand-table-order {
+    font-weight: 800;
+    color: var(--mix-accent);
+    font-variant-numeric: tabular-nums;
+    width: 34px;
+}
+
+.rand-table .rand-table-name {
+    font-weight: 600;
+}
+
+.rand-table .rand-table-actions {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.rand-row-vetoed .rand-table-name {
+    text-decoration: line-through;
+    color: var(--mud-palette-text-secondary);
+}
+
+.rand-row-held .rand-table-name {
+    color: var(--mix-primary);
+}
+
+.rand-drawer {
+    display: flex;
+    flex-direction: column;
+}
+
+.rand-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 16px 8px;
+}
+
+/* The drawer is viewport-wide (bottom sheet), but its content column isn't — full-bleed
+   controls floated the Advanced toggle mid-screen on desktop (round 7). */
+.rand-drawer-body > * {
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.rand-drawer-footer > * {
+    flex-shrink: 0;
+}
+
+.rand-drawer-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid rgba(255, 255, 255, .08);
+}
+
+.rand-footer-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.rand-drawer-count {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-right: auto;
+}
+
+.rand-save-name {
+    max-width: 200px;
+}
+
+/* Dock content shared by randomizer (and future dock pages). */
+.page-dock .dock-cta {
+    flex: 1;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--mix-primary);
+    color: var(--mix-primary-contrast);
+    font-weight: 800;
+    letter-spacing: .04em;
+    box-shadow: 0 0 20px var(--mix-glow);
+}
+
+.page-dock .dock-side {
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 12px;
+}
+
+/* Tournament context + draft mode (docs/design/randomizer-overhaul.md C9). */
+
+.rand-context-select {
+    max-width: 260px;
+}
+
+.rand-create-tournament {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    border: 1px dashed var(--mud-palette-lines-default);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin: 6px 0;
+}
+
+.rand-create-tournament .mud-input-control {
+    flex: 1;
+    min-width: 200px;
+}
+
+.rand-invites {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin: 6px 0;
+}
+
+.rand-invite-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rand-invite-role {
+    font-weight: 700;
+    font-size: .82rem;
+    min-width: 82px;
+}
+
+.rand-invite-expiry {
+    font-size: .78rem;
+    color: var(--mix-ink-muted);
+    margin-right: auto;
+}
+
+.rand-invite-mint {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    border-top: 1px dashed var(--mud-palette-lines-default);
+    padding-top: 8px;
+}
+
+.rand-invite-mint .mud-input-control {
+    max-width: 150px;
+}
+
+/* Match picker (round 9): rides the header, right-aligned — the field carries only
+   "which match am I looking at". New match joins it on desktop; the dock CTA covers
+   phones. On phone widths it takes its own full line instead of squeezing the title. */
+.rand-header-match {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rand-header-match .rand-match-select {
+    min-width: 200px;
+    max-width: 300px;
+}
+
+@media (max-width: 599.98px) {
+    .rand-header-match {
+        flex: 1 1 100%;
+        margin-left: 0;
+    }
+
+    .rand-header-match .rand-match-select {
+        max-width: none;
+        flex: 1;
+    }
+}
+
+/* Manage-tournament drawer (round 8): stacked role-layered sections. */
+.rand-manage-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 26px;
+}
+
+.rand-manage-heading {
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--mix-ink-muted);
+}
+
+.rand-manage-rename {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.rand-manage-rename .mud-input-control {
+    flex: 1;
+    min-width: 200px;
+}
+
+.rand-manage-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.rand-staff-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rand-staff-row .rand-invite-role {
+    margin-right: auto;
+}
+
+/* Draft mode: the staff tablet in player hands — loud mode control, explicit exit. */
+.rand-draft-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+/* Two-line preset items: name + summary — legible on touch, no hover needed. */
+.rand-preset-item {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+    padding: 2px 0;
+}
+
+.rand-preset-name {
+    font-weight: 700;
+    font-size: .85rem;
+}
+
+/* Summaries render only on the open dropdown's list items — the closed select shows
+   just the preset name (round 7: the two-line clone skewed the input's layout).
+   Scoped to .mud-list-item, not .mud-popover, so it stays hidden even when the whole
+   select lives inside another popover, like the New match panel (round 12). */
+.rand-preset-summary {
+    display: none;
+    font-size: .7rem;
+    color: var(--mix-ink-muted);
+}
+
+.mud-list-item .rand-preset-summary {
+    display: block;
+}
+
+.rand-preset-select {
+    min-width: 220px;
+}
+
+.rand-drawer-presets {
+    margin-bottom: 14px;
+}
+
+.rand-exit-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 999px;
+    padding: 6px 14px;
+    background: none;
+    cursor: pointer;
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--mix-ink);
+}
+
+.rand-tour-pill {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: .82rem;
+    font-weight: 700;
+    background: var(--mix-surface);
+}
+
+.rand-draft-armed {
+    margin-bottom: 12px;
+}
+
+.rand-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-display);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    color: var(--mud-palette-error);
+}
+
+.rand-live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--mud-palette-error);
+    box-shadow: 0 0 8px var(--mud-palette-error);
+    animation: rand-live-pulse 1.6s infinite;
+}
+
+@keyframes rand-live-pulse {
+    50% {
+        opacity: .35;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rand-live-dot {
+        animation: none;
+    }
+}
+
+.rand-legend {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    margin-left: 10px;
+}
+
+.rand-legend i {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+}
+
+.rand-legend-held {
+    background: var(--mix-primary);
+}
+
+.rand-legend-vetoed {
+    background: var(--mud-palette-error);
+}
+
+.page-dock .rand-staff-btn {
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 12px;
+    color: var(--mud-palette-error);
+}
+
+/* ===== Randomizer settings panel ===== */
+
+.rand-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.rand-settings-row {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.rand-settings-label {
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+}
+
+.rand-type-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.rand-count-presets {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rand-count-preset,
+.rand-coop-chip,
+.rand-seg,
+.rand-grade-chip {
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 9px;
+    background: none;
+    cursor: pointer;
+    color: var(--mix-ink-muted);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.rand-count-preset {
+    min-width: 40px;
+    padding: 7px 0;
+    font-size: .82rem;
+}
+
+.rand-count-custom {
+    max-width: 76px;
+}
+
+.rand-count-preset.on,
+.rand-coop-chip.on,
+.rand-seg.on,
+.rand-grade-chip.on {
+    background: var(--mix-primary);
+    border-color: var(--mix-primary);
+    color: var(--mix-primary-contrast);
+}
+
+.rand-coop-chips {
+    display: flex;
+    gap: 6px;
+}
+
+.rand-coop-chip {
+    padding: 6px 13px;
+    font-size: .8rem;
+}
+
+.rand-seg-group {
+    display: flex;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 9px;
+    overflow: hidden;
+}
+
+.rand-seg {
+    flex: 1;
+    border: none;
+    border-radius: 0;
+    padding: 8px 0;
+    font-size: .78rem;
+}
+
+.rand-grade-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.rand-grade-chip {
+    padding: 4px 10px;
+    font-size: .72rem;
+}
+
+.rand-gated-reason {
+    color: var(--mix-ink-muted);
+}
+
+.rand-advanced-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
+    gap: 8px;
+    width: 100%;
+    border: 1px dashed var(--mud-palette-lines-default);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: none;
+    cursor: pointer;
+    color: var(--mix-ink-muted);
+    font-size: .8rem;
+}
+
+/* Slider heads carry a lone switch/note that belongs on the right; the Co-Op head
+   still has its label on the left (round 10 fix — a blanket flex-end dragged it over). */
+.rand-type-head > :only-child {
+    margin-left: auto;
+}
+
+.rand-advanced-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 8px;
+}
+
+/* Opt-in advanced sections: a quiet switch row until enabled. */
+.rand-adv-section {
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 10px;
+    padding: 4px 12px 6px;
+}
+
+.rand-adv-section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.rand-adv-section-content {
+    padding: 6px 2px 8px;
+}
+
+.rand-section-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.rand-owned-note {
+    color: var(--mix-ink-muted);
+}
+
+.rand-section-hint {
+    color: var(--mix-ink-muted);
+    display: block;
+}
+
+.rand-weighted-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding-top: 4px;
+}
+
+.rand-min-mode {
+    max-width: 440px;
+}
+
+.folder-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 6px;
+}
+
+.rand-plain-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 4px;
+}
+
+.rand-coop-bounds {
+    display: flex;
+    gap: 10px;
+}
+
+/* Dynamic weight rows (FolderWeightList). */
+.weight-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+}
+
+.weight-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.weight-row-label {
+    min-width: 52px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: .82rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.weight-row-weight {
+    font-size: .7rem;
+    color: var(--mix-ink-muted);
+}
+
+.weight-row-field {
+    max-width: 90px;
+}
+
+/* ===== Armed action selector ===== */
+
+.armed-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.armed-selector-label {
+    font-family: var(--font-display);
+    font-size: .68rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.armed-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: 2px solid var(--mud-palette-lines-default);
+    border-radius: 11px;
+    padding: 8px 16px;
+    background: none;
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-size: .8rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    color: var(--mix-ink-muted);
+}
+
+.armed-btn:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: 2px;
+}
+
+.armed-btn-on {
+    background: var(--mix-primary);
+    border-color: var(--mix-primary);
+    color: var(--mix-primary-contrast);
+    box-shadow: 0 0 18px var(--mix-glow);
+}
+
+.armed-btn-on-veto {
+    background: var(--mud-palette-error);
+    border-color: var(--mud-palette-error);
+    color: var(--mud-palette-error-text);
+}
+
+/* Staff-tablet sizing: readable at arm's length, tappable in a hurry. */
+.armed-selector-loud .armed-btn {
+    padding: 12px 24px;
+    font-size: .95rem;
+    border-radius: 13px;
+}
+
+/* ===== Level range slider (dual thumb) ===== */
+
+.range-slider {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.range-slider-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.range-slider-label {
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+}
+
+.range-slider-value {
+    margin-left: auto;
+    font-family: var(--font-display);
+    font-size: .78rem;
+    color: var(--mix-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.range-slider-track-wrap {
+    position: relative;
+    height: 28px;
+}
+
+.range-slider-track {
+    position: absolute;
+    top: 12px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--mix-surface-muted);
+}
+
+.range-slider-fill {
+    position: absolute;
+    top: 12px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--mix-primary);
+    box-shadow: 0 0 8px var(--mix-glow);
+}
+
+/* Two overlaid native inputs; only the thumbs take pointer events. */
+.range-slider-track-wrap input[type=range] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 28px;
+    margin: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    pointer-events: none;
+}
+
+.range-slider-track-wrap input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    pointer-events: auto;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--mix-primary);
+    border: 3px solid var(--mix-bg);
+    box-shadow: 0 0 0 1.5px var(--mix-primary);
+    cursor: pointer;
+    margin-top: 4px;
+}
+
+.range-slider-track-wrap input[type=range]::-moz-range-thumb {
+    pointer-events: auto;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--mix-primary);
+    border: 3px solid var(--mix-bg);
+    box-shadow: 0 0 0 1.5px var(--mix-primary);
+    cursor: pointer;
+}
+
+.range-slider-ticks {
+    position: relative;
+    height: 14px;
+    margin: 0 10px;
+}
+
+.range-slider-ticks span {
+    position: absolute;
+    transform: translateX(-50%);
+    font-family: var(--font-display);
+    font-size: .6rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.range-slider-disabled .range-slider-fill {
+    background: var(--mix-surface-muted);
+    box-shadow: none;
+}
+
+.range-slider-disabled .range-slider-value {
+    color: var(--mix-ink-muted);
+}
+
+.range-slider-disabled input[type=range]::-webkit-slider-thumb {
+    background: var(--mix-ink-muted);
+    box-shadow: 0 0 0 1.5px var(--mix-ink-muted);
+    opacity: .5;
+    cursor: default;
+}
+
+.range-slider-disabled input[type=range]::-moz-range-thumb {
+    background: var(--mix-ink-muted);
+    box-shadow: 0 0 0 1.5px var(--mix-ink-muted);
+    opacity: .5;
+    cursor: default;
 }
 
 /* Rarity treatment ramp — glow intensity rises with the band. Hue alone can't order the
@@ -581,6 +1648,20 @@
 .tier-chart-card-other-mix {
     border-color: var(--mud-palette-success);
     border-style: dashed;
+}
+
+/* Randomizer draw states join the same source-order contract: held = mix-primary ring
+   (deliberately NOT the pass-green), vetoed = error red — both in every density, on
+   top of the dim/strike second channels. */
+.draw-card-held {
+    border-color: var(--mix-primary);
+    border-style: solid;
+    box-shadow: 0 0 0 1px var(--mix-primary), 0 0 14px var(--mix-glow);
+}
+
+.draw-card-vetoed {
+    border-color: var(--mud-palette-error);
+    border-style: solid;
 }
 
 .folder-picker {

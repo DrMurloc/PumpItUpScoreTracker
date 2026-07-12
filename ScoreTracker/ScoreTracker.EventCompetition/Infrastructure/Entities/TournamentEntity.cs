@@ -17,5 +17,13 @@ namespace ScoreTracker.EventCompetition.Infrastructure.Entities
         public DateTimeOffset? StartDate { get; set; }
         public DateTimeOffset? EndDate { get; set; }
         public bool IsMoM { get; set; }
+
+        // Micro-tournaments (randomizer-created) start unlisted: invisible to
+        // GetAllTournaments and everything downstream of it, reachable via roles only.
+        public bool IsUnlisted { get; set; }
+
+        // Discord channel the randomizer's Push to Discord posts draws into (Head TO
+        // sets it; null = the push button never shows).
+        public ulong? DiscordChannelId { get; set; }
     }
 }
