@@ -4,6 +4,7 @@ using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -26,17 +27,19 @@ internal sealed class UserTierListSaga : IConsumer<PlayerScoresUpdatedEvent>,
     private static readonly TimeSpan BackfillDelayPerUser = TimeSpan.FromMilliseconds(100);
 
     private readonly IChartRepository _charts;
+    private readonly IDateTimeOffsetAccessor _clock;
     private readonly IMediator _mediator;
     private readonly IScoreReader _scores;
     private readonly IUserTierListRepository _userTierLists;
 
     public UserTierListSaga(IChartRepository charts, IMediator mediator, IScoreReader scores,
-        IUserTierListRepository userTierLists)
+        IUserTierListRepository userTierLists, IDateTimeOffsetAccessor clock)
     {
         _charts = charts;
         _mediator = mediator;
         _scores = scores;
         _userTierLists = userTierLists;
+        _clock = clock;
     }
 
     public async Task Consume(ConsumeContext<PlayerScoresUpdatedEvent> context)
@@ -47,8 +50,11 @@ internal sealed class UserTierListSaga : IConsumer<PlayerScoresUpdatedEvent>,
 
         var changedCharts = await _charts.GetCharts(message.Mix, chartIds: changedIds,
             cancellationToken: context.CancellationToken);
+        var bestScores = (await _scores.GetBestScores(message.Mix, message.UserId, context.CancellationToken))
+            .ToDictionary(s => s.ChartId);
         foreach (var (type, level) in Folders(changedCharts))
-            await MaterializeFolder(message.Mix, message.UserId, type, level, context.CancellationToken);
+            await MaterializeFolder(message.Mix, message.UserId, type, level, bestScores,
+                context.CancellationToken);
     }
 
     public async Task Consume(ConsumeContext<BackfillUserTierListsCommand> context)
@@ -60,11 +66,13 @@ internal sealed class UserTierListSaga : IConsumer<PlayerScoresUpdatedEvent>,
         var userIds = await _scores.GetActiveUserIds(mix, DateTimeOffset.MinValue, cancellationToken);
         foreach (var userId in userIds)
         {
-            var scoredCharts = (await _scores.GetBestScores(mix, userId, cancellationToken))
-                .Where(s => allCharts.ContainsKey(s.ChartId))
-                .Select(s => allCharts[s.ChartId]);
+            var bestScores = (await _scores.GetBestScores(mix, userId, cancellationToken))
+                .ToDictionary(s => s.ChartId);
+            var scoredCharts = bestScores.Keys
+                .Where(allCharts.ContainsKey)
+                .Select(id => allCharts[id]);
             foreach (var (type, level) in Folders(scoredCharts))
-                await MaterializeFolder(mix, userId, type, level, cancellationToken);
+                await MaterializeFolder(mix, userId, type, level, bestScores, cancellationToken);
 
             await Task.Delay(BackfillDelayPerUser, cancellationToken);
         }
@@ -90,7 +98,7 @@ internal sealed class UserTierListSaga : IConsumer<PlayerScoresUpdatedEvent>,
     }
 
     private async Task MaterializeFolder(MixEnum mix, Guid userId, ChartType chartType, DifficultyLevel level,
-        CancellationToken cancellationToken)
+        IReadOnlyDictionary<Guid, RecordedPhoenixScore> bestScores, CancellationToken cancellationToken)
     {
         var entries = await _mediator.Send(new GetMyRelativeTierListQuery(chartType, level, userId, mix),
             cancellationToken);
@@ -98,6 +106,13 @@ internal sealed class UserTierListSaga : IConsumer<PlayerScoresUpdatedEvent>,
         // cleanup must agree with it about which charts are "the folder".
         var folderChartIds = (await _charts.GetCharts(mix, level, chartType, cancellationToken: cancellationToken))
             .Select(c => c.Id).ToArray();
-        await _userTierLists.SaveUserFolder(mix, userId, folderChartIds, entries, cancellationToken);
+        // Freshness is FOLDER-scoped on purpose (owner, score-age workshop): a
+        // uniformly-old folder is a coherent snapshot and keeps full voice; only
+        // entries stale relative to the player's own record here fade.
+        var freshness = TierListBlendBuilder.RelativeAgeWeights(
+            folderChartIds.Where(bestScores.ContainsKey)
+                .Select(id => (id, bestScores[id].RecordedDate)),
+            _clock.Now);
+        await _userTierLists.SaveUserFolder(mix, userId, folderChartIds, entries, freshness, cancellationToken);
     }
 }
