@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.HomePage.Domain;
+using ScoreTracker.HomePage.Infrastructure;
 
 namespace ScoreTracker.HomePage.Wiring;
 
@@ -13,6 +15,7 @@ public static class HomePageRegistrationExtensions
     /// </summary>
     public static IServiceCollection AddHomePage(this IServiceCollection services)
     {
+        services.AddTransient<IHomePageRepository, EFHomePageRepository>();
         services.AddSingleton<IDbModelContribution, HomePageModelContribution>();
         return services;
     }
