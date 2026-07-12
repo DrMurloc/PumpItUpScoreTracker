@@ -255,6 +255,120 @@
           }
         }
       }
+    },
+    {
+      "type": "suggested-charts",
+      "name": "Suggested Charts",
+      "description": "Charts picked for you, tuned by goal.",
+      "category": "Play",
+      "supportedSizes": [
+        "1x2",
+        "2x1",
+        "2x2"
+      ],
+      "defaultSize": "1x2",
+      "supportedMixes": [
+        "Phoenix",
+        "Phoenix2"
+      ],
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "goal": {
+            "enum": [
+              "TitleHunt",
+              "ScorePush",
+              "FillGaps"
+            ]
+          },
+          "mix": {
+            "enum": [
+              "XX",
+              "Phoenix",
+              "Phoenix2",
+              "FirstDanceFloor",
+              "SecondUltimateRemix",
+              "ThirdObg",
+              "ObgSeasonEvolution",
+              "Collection",
+              "PerfectCollection",
+              "Extra",
+              "Premiere",
+              "Prex",
+              "Rebirth",
+              "Premiere2",
+              "Prex2",
+              "Premiere3",
+              "Prex3",
+              "Exceed",
+              "Exceed2",
+              "Zero",
+              "Nx",
+              "Nx2",
+              "NxAbsolute",
+              "Fiesta",
+              "FiestaEx",
+              "Fiesta2",
+              "Prime",
+              "Prime2",
+              "Infinity",
+              "Pro",
+              "Pro2"
+            ],
+            "nullable": true
+          },
+          "chartType": {
+            "enum": [
+              "Single",
+              "Double",
+              "SinglePerformance",
+              "DoublePerformance",
+              "CoOp",
+              "HalfDouble"
+            ],
+            "nullable": true
+          },
+          "disabledCategories": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "PushLevel",
+                "SkillTitles",
+                "PushPGs",
+                "ImproveTop50",
+                "RevisitOldScores",
+                "FillScores",
+                "WeeklyCharts"
+              ]
+            },
+            "nullable": true
+          },
+          "levelMode": {
+            "enum": [
+              "Any",
+              "Dynamic",
+              "Static"
+            ]
+          },
+          "spread": {
+            "type": "integer"
+          },
+          "minLevel": {
+            "type": "integer",
+            "nullable": true
+          },
+          "maxLevel": {
+            "type": "integer",
+            "nullable": true
+          },
+          "levelBasis": {
+            "enum": [
+              "ChartLevel",
+              "ScoringLevel"
+            ]
+          }
+        }
+      }
     }
   ]
 }

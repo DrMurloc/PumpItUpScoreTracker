@@ -1,0 +1,194 @@
+@using MediatR
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+@* W4 (design doc §4, catalog walk pick 1): the WSIP suggester as one widget type —
+   goal bundles are config (D10), the engine's veto store carries over untouched.
+   Rows are the dash-targets vocabulary; multi-category goals get section captions
+   inside the scroll. Shuffle re-runs the query so the engine re-rolls its picks. *@
+
+@if (!_loaded)
+{
+    <div class="dash-widget-message">
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
+    </div>
+}
+else if (!_sections.Any(s => s.Rows.Any()))
+{
+    <div class="dash-widget-message">
+        <div>
+            <MudText Typo="Typo.body2">@L["Nothing to suggest yet — play and import some scores first."]</MudText>
+            <MudLink Href="/UploadPhoenixScores" Typo="Typo.body2">@L["Upload Scores"]</MudLink>
+        </div>
+    </div>
+}
+else
+{
+    <div class="dash-suggested">
+        <div class="dash-widget-meta">
+            <span></span>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Shuffle"
+                           title="@L["Shuffle suggestions"]" OnClick="Shuffle"/>
+        </div>
+        <div class="dash-targets dash-scroll">
+            @foreach (var section in _sections.Where(s => s.Rows.Any()))
+            {
+                @if (_sections.Count(s => s.Rows.Any()) > 1)
+                {
+                    <MudText Typo="Typo.caption" Class="dash-muted dash-target-caption">@section.Caption</MudText>
+                }
+                @foreach (var row in section.Rows)
+                {
+                    var chart = row.Chart;
+                    <div class="dash-target-row @(EditMode ? "" : "dash-clickable")"
+                         @onclick="() => OnChartClick.InvokeAsync(chart)">
+                        <span class="dash-mini-art">
+                            <SongImage Song="chart.Song" Small="true"></SongImage>
+                        </span>
+                        <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                        <span class="dash-target-name">@chart.Song.Name</span>
+                        <span class="dash-target-score">
+                            @if (row.Score?.Score != null)
+                            {
+                                <LetterGradeIcon Grade="row.Score.Score.Value.LetterGrade"
+                                                 IsBroken="row.Score.IsBroken" Height="16"/>
+                                <span>@(((int)row.Score.Score.Value).ToString("N0"))</span>
+                            }
+                            else
+                            {
+                                <span class="dash-muted">—</span>
+                            }
+                            @if (row.Detail != null)
+                            {
+                                <span class="dash-target-detail dash-muted">@row.Detail</span>
+                            }
+                        </span>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject ChartCatalogCache ChartCatalog
+@inject IDateTimeOffsetAccessor Clock
+
+@code {
+
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public MixEnum EffectiveMix { get; set; }
+    [Parameter] public bool EditMode { get; set; }
+    [Parameter] public EventCallback<Chart> OnChartClick { get; set; }
+
+    private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
+
+    private sealed record SuggestionRow(Chart Chart, RecordedPhoenixScore? Score, string? Detail);
+
+    private sealed record SuggestionSection(string Caption, List<SuggestionRow> Rows);
+
+    private bool _loaded;
+    private string? _loadedFor;
+    private MixEnum _mix = MixEnum.Phoenix;
+    private List<SuggestionSection> _sections = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{EffectiveMix}";
+        if (signature == _loadedFor) return;
+        _loadedFor = signature;
+        await LoadAsync();
+    }
+
+    private async Task Shuffle()
+    {
+        // Same load, fresh dispatch — the engine's randomized picks re-roll server-side.
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loaded = false;
+        var config = WidgetConfigJson.Read<SuggestedChartsConfig>(Widget.ConfigJson);
+        _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
+            : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
+
+        var categories = SuggestedGoals.EffectiveCategories(config);
+        var recommendations = (await Mediator.Send(new GetRecommendedChartsQuery(
+                config.ChartType, LevelOffset: 0, _mix,
+                Categories: categories.ToHashSet(),
+                LevelWindow: SuggestedGoals.BuildWindow(config))))
+            .ToArray();
+
+        var charts = await ChartCatalog.GetCharts(_mix);
+        var scores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _mix)))
+            .ToDictionary(s => s.ChartId);
+
+        // Category → section, in the goal's bundle order. The pushing-title category has
+        // no fixed name (it's the title's own name), so it matches "everything else".
+        var byName = recommendations.Where(r => charts.ContainsKey(r.ChartId))
+            .GroupBy(r => (string)r.Category)
+            .ToDictionary(g => g.Key, g => g.ToArray());
+        _sections = new List<SuggestionSection>();
+        foreach (var category in categories)
+        {
+            var known = CategoryName(category);
+            var matches = known != null
+                ? byName.TryGetValue(known, out var m) ? new[] { (known, m) } : Array.Empty<(string, ChartRecommendation[])>()
+                : byName.Where(kv => KnownNames.All(n => n != kv.Key)).Select(kv => (kv.Key, kv.Value)).ToArray();
+            foreach (var (name, items) in matches)
+                _sections.Add(new SuggestionSection(
+                    known != null ? L[name].Value : name,
+                    items.Select(r => BuildRow(category, charts[r.ChartId], scores.GetValueOrDefault(r.ChartId)))
+                        .ToList()));
+        }
+
+        _loaded = true;
+    }
+
+    private SuggestionRow BuildRow(RecommendationCategory category, Chart chart, RecordedPhoenixScore? score)
+    {
+        var detail = category switch
+        {
+            RecommendationCategory.PushPGs when score?.Score != null =>
+                L["{0} to PG", (1000000 - (int)score.Score.Value).ToString("N0")].Value,
+            RecommendationCategory.RevisitOldScores when score != null =>
+                L["{0} days old", (int)(Clock.Now - score.RecordedDate).TotalDays].Value,
+            _ => null
+        };
+        return new SuggestionRow(chart, score, detail);
+    }
+
+    private static readonly string[] KnownNames =
+    {
+        RecommendationCategories.SkillTitles, RecommendationCategories.PushPGs,
+        RecommendationCategories.ImproveTop50, RecommendationCategories.RevisitOldScores,
+        RecommendationCategories.FillScores, RecommendationCategories.WeeklyCharts
+    };
+
+    private static string? CategoryName(RecommendationCategory category)
+    {
+        return category switch
+        {
+            RecommendationCategory.SkillTitles => RecommendationCategories.SkillTitles,
+            RecommendationCategory.PushPGs => RecommendationCategories.PushPGs,
+            RecommendationCategory.ImproveTop50 => RecommendationCategories.ImproveTop50,
+            RecommendationCategory.RevisitOldScores => RecommendationCategories.RevisitOldScores,
+            RecommendationCategory.FillScores => RecommendationCategories.FillScores,
+            RecommendationCategory.WeeklyCharts => RecommendationCategories.WeeklyCharts,
+            _ => null
+        };
+    }
+
+}

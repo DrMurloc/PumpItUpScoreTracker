@@ -48,7 +48,36 @@ public static class WidgetRegistry
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(WeeklyWidget),
             typeof(WeeklyConfigPanel),
-            typeof(WeeklyConfig))
+            typeof(WeeklyConfig)),
+        new("suggested-charts",
+            "Suggested Charts",
+            "Charts picked for you, tuned by goal.",
+            WidgetCategory.Play,
+            Icons.Material.Filled.Recommend,
+            new[] { SizePreset.OneByTwo, SizePreset.TwoByOne, SizePreset.TwoByTwo },
+            SizePreset.OneByTwo,
+            new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
+            typeof(SuggestedChartsWidget),
+            typeof(SuggestedChartsConfigPanel),
+            typeof(SuggestedChartsConfig),
+            // One widget type, goal-preset drawer entries (D10).
+            DrawerPresets: new[]
+            {
+                new WidgetDrawerPreset("Suggested · Title Hunt",
+                    "Charts toward your next title, plus skill titles one SSS away.",
+                    WidgetConfigJson.Write(new SuggestedChartsConfig { Goal = SuggestedGoal.TitleHunt })),
+                new WidgetDrawerPreset("Suggested · Score Push",
+                    "Closest PGs, top-50 picks, and old scores due a revisit.",
+                    WidgetConfigJson.Write(new SuggestedChartsConfig { Goal = SuggestedGoal.ScorePush })),
+                new WidgetDrawerPreset("Suggested · Fill Gaps",
+                    "Approachable unpassed charts around your level.",
+                    WidgetConfigJson.Write(new SuggestedChartsConfig
+                    {
+                        Goal = SuggestedGoal.FillGaps,
+                        LevelMode = SuggestedLevelMode.Dynamic,
+                        Spread = 3
+                    }))
+            })
     };
 
     private static readonly IReadOnlyDictionary<string, WidgetDescriptor> ByTypeId =
