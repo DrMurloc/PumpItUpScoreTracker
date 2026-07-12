@@ -347,8 +347,12 @@ internal sealed class TierListBlendBuilder
         foreach (var entry in neighborEntries)
         {
             chartWeights.TryGetValue(entry.ChartId, out var current);
+            // Freshness (materialized with the entry, folder-scoped per player):
+            // era-mixed entries vote quietly; a quit player's coherent snapshot
+            // still votes at full voice.
             chartWeights[entry.ChartId] =
-                current + (TierListCategory.Unrecorded - entry.Category) * userTotals[entry.UserId];
+                current + (TierListCategory.Unrecorded - entry.Category) * userTotals[entry.UserId] *
+                entry.Freshness;
         }
 
         return new SimilarPlayersComputation(

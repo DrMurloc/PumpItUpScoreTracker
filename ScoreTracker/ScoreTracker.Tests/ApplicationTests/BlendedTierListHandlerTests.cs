@@ -189,6 +189,60 @@ public sealed class BlendedTierListHandlerTests
     }
 
     [Fact]
+    public async Task SimilarPlayersVotesScaleWithEntryFreshness()
+    {
+        // Two equally-close neighbors disagree symmetrically, but one's entries were
+        // materialized from era-mixed (stale) scores — the fresh neighbor's read wins.
+        var chart1 = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var chart2 = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var userId = Guid.NewGuid();
+        var freshNeighbor = Guid.NewGuid();
+        var staleNeighbor = Guid.NewGuid();
+        var charts = ChartsMock(new[] { chart1, chart2 });
+        var mediator = new Mock<IMediator>();
+        SetupTierList(mediator, "Pass Count", Array.Empty<SongTierListEntry>());
+        mediator.Setup(m => m.Send(It.IsAny<GetMyRelativeTierListQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new SongTierListEntry("My Relative Scores", chart1.Id, TierListCategory.Medium, 0),
+                new SongTierListEntry("My Relative Scores", chart2.Id, TierListCategory.Medium, 0)
+            });
+        var playerStats = new Mock<IPlayerStatsReader>();
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(StatsFor(userId, doublesCompetitive: 17.5));
+        playerStats.Setup(p => p.GetPlayersByCompetitiveRange(MixEnum.Phoenix, ChartType.Double, 17.5, 1.0,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { freshNeighbor, staleNeighbor });
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                StatsFor(freshNeighbor, doublesCompetitive: 17.5),
+                StatsFor(staleNeighbor, doublesCompetitive: 17.5)
+            });
+        var userTierLists = new Mock<IUserTierListRepository>();
+        userTierLists.Setup(r => r.GetEntriesForCharts(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new UserTierListEntryRecord(freshNeighbor, chart1.Id, TierListCategory.Easy, 0),
+                new UserTierListEntryRecord(freshNeighbor, chart2.Id, TierListCategory.Hard, 0),
+                new UserTierListEntryRecord(staleNeighbor, chart1.Id, TierListCategory.Hard, 0, Freshness: 0.2),
+                new UserTierListEntryRecord(staleNeighbor, chart2.Id, TierListCategory.Easy, 0, Freshness: 0.2)
+            });
+        var handler = BuildHandler(charts: charts, mediator: mediator, playerStats: playerStats,
+            userTierLists: userTierLists);
+
+        var result = await handler.Handle(Query("Pass", personalized: true, userId: userId),
+            CancellationToken.None);
+
+        var entry1 = result.Entries.Single(e => e.ChartId == chart1.Id);
+        var entry2 = result.Entries.Single(e => e.ChartId == chart2.Id);
+        Assert.True(entry1.Category < entry2.Category,
+            $"the fresh neighbor's Easy vote on chart1 ({entry1.Category}) should outweigh the stale one's ({entry2.Category})");
+    }
+
+    [Fact]
     public async Task SimilarPlayersStaySilentForPlayersWithoutCompetitiveData()
     {
         // Competitive level 1 is the no-data floor — a fresh player has no cohort, so
